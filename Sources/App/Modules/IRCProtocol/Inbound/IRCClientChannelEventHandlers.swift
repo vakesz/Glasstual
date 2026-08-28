@@ -99,7 +99,7 @@ public extension IRCClient {
 
 		if postReceivedMessage(message, withText: modeString, destinedFor: channel),
 		   IRCInboundEventPolicy.shouldPrintGeneralEvent(
-		   	showJoinLeave: TextualPreferences.showJoinLeave(),
+		   	showJoinLeave: environment.preferences.showJoinLeave,
 		   	channelIgnoresEvents: channel.config.ignoreGeneralEventMessages
 		   )
 		{
@@ -117,7 +117,7 @@ public extension IRCClient {
 				assertionFailure("IRCChannel must bridge to IRCTreeItem")
 				return
 			}
-			AppController.shared.mainWindow.updateTitle(for: item)
+			output?.updateTitle(for: item)
 		}
 	}
 
@@ -172,14 +172,14 @@ public extension IRCClient {
 			channelName: channelName
 		)
 		if postReceivedMessage(message, withText: channelName, destinedFor: nil) {
-			let channel = AppController.shared.mainWindow.selectedChannel(on: self)
+			let channel = output?.selectedChannel(on: self)
 			print(text, by: nil, in: channel, as: .invite, command: message.command, receivedAt: message.receivedAt)
 		}
 		_ = notifyEvent(.invite, lineType: .invite, target: nil, nickname: sender, text: channelName)
 		// `JOIN 0` is the "leave every channel" form, and the invite target is
 		// whatever the inviting user typed, so only real channel names may be
 		// auto-joined here.
-		if TextualPreferences.autoJoinOnInvite(), stringIsChannelName(channelName) {
+		if environment.preferences.autojoinOnInvite, stringIsChannelName(channelName) {
 			joinUnlistedChannel(channelName)
 		}
 	}

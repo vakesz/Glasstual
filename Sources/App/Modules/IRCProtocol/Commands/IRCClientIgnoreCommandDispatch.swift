@@ -78,7 +78,7 @@ extension IRCClient {
 
 	private func showIgnoreConfiguration(isIgnore: Bool, context: String?) {
 		let selection = isIgnore ? MenuDialogSelection.serverNewIgnoreEntry : MenuDialogSelection.serverAddressBook
-		AppController.shared.menuController?.showServerPropertiesSheet(
+		menu?.showServerPropertiesSheet(
 			for: self,
 			selection: selection,
 			context: isIgnore ? (context ?? "") : nil

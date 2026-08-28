@@ -82,8 +82,8 @@ extension IRCClient {
 		guard isLoggedIn else { return true }
 		guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 		let remoteCommand: IRCRemoteCommand = command == .amsg ? .privmsg : .privmsgAction
-		for client in AppController.shared.world.clientList
-			where client === self || TextualPreferences.amsgAllConnections()
+		for client in (world?.clientList ?? [])
+			where client === self || environment.preferences.amsgAllConnections
 		{
 			let channels = client.channelList.filter { $0.isActive && $0.isChannel }
 			client.sendText(parsed.arguments.attributedRest, as: remoteCommand, toChannels: channels)
@@ -96,7 +96,7 @@ extension IRCClient {
 		guard command == .ctcp || command == .ctcpreply else { return false }
 		guard isLoggedIn else { return true }
 		var arguments = parsed.arguments
-		let selectedChannel = AppController.shared.mainWindow?.selectedChannel
+		let selectedChannel = output?.selectedChannel
 		let targetName: String
 		if let targetChannel, targetChannel !== selectedChannel {
 			guard targetChannel.isUtility == false else {
@@ -172,7 +172,7 @@ extension IRCClient {
 	private func applyModerationKickIfNeeded(_ invocation: ChannelModerationInvocation) {
 		guard ChannelModerationInvocation.kickCommands.contains(invocation.command) else { return }
 		let reason = invocation.remainingArguments.isEmpty
-			? TextualPreferences.defaultKickMessage()
+			? environment.preferences.defaultKickMessage
 			: invocation.remainingArguments
 		let maximumLength = Int(supportInfo.maximumKickLength)
 		let truncatedReason = ClientWireUtilities.truncated(reason, toByteCount: maximumLength)
@@ -285,7 +285,7 @@ extension IRCClient {
 		var arguments = parsed.arguments
 		let explicitChannel = stringIsChannelName(arguments.rest) ? arguments.next() : nil
 		if explicitChannel == nil, let targetChannel, targetChannel.isChannel == false {
-			AppController.shared.world.destroy(targetChannel)
+			world?.destroy(targetChannel)
 			return
 		}
 		guard let channelName = explicitChannel ?? targetChannel?.name else { return }
@@ -295,13 +295,13 @@ extension IRCClient {
 
 	private func dispatchChannelNavigationCommand(_ parsed: ParsedUserCommand) -> Bool {
 		guard parsed.localCommand == .goto else { return false }
-		guard let mainWindow = AppController.shared.mainWindow else { return true }
+		guard let mainWindow = output else { return true }
 		var arguments = parsed.arguments
 		let needle = arguments.next()
 		guard requireArguments(needle, for: parsed.command) else { return true }
 		var bestMatch = mainWindow.selectedItem
 		var bestScore: CGFloat = 0
-		for client in AppController.shared.world.clientList {
+		for client in world?.clientList ?? [] {
 			for channel in client.channelList {
 				let score = channel.name.matchScore(against: needle, lengthPenaltyWeight: 0.1)
 				guard score > bestScore else { continue }
@@ -310,7 +310,7 @@ extension IRCClient {
 			}
 		}
 		if let bestMatch {
-			mainWindow.select(bestMatch)
+			mainWindow.selectItem(bestMatch)
 		}
 		return true
 	}
@@ -320,7 +320,7 @@ extension IRCClient {
 		targetChannel: IRCChannel?
 	) -> Bool {
 		guard let command = parsed.localCommand else { return false }
-		guard let mainWindow = AppController.shared.mainWindow else { return false }
+		guard let mainWindow = output else { return false }
 		switch command {
 		case .clear:
 			if let targetChannel {
@@ -329,8 +329,8 @@ extension IRCClient {
 				mainWindow.clearContents(of: self)
 			}
 		case .clearall:
-			for client in AppController.shared.world.clientList
-				where client === self || TextualPreferences.clearAllConnections()
+			for client in (world?.clientList ?? [])
+				where client === self || environment.preferences.clearAllConnections
 			{
 				mainWindow.clearContents(of: client)
 				client.channelList.forEach { mainWindow.clearContents(of: $0) }
@@ -354,7 +354,7 @@ extension IRCClient {
 		let channelName = arguments.next()
 		if channelName.isEmpty {
 			if let targetChannel {
-				AppController.shared.world.destroy(targetChannel)
+				world?.destroy(targetChannel)
 			}
 			return
 		}
@@ -362,11 +362,11 @@ extension IRCClient {
 			printDebugInformation(IRCCommandStrings.channelNotFound(channelName))
 			return
 		}
-		AppController.shared.world.destroy(channel)
+		world?.destroy(channel)
 	}
 
 	private func setColorForCommandNickname(_ parsed: ParsedUserCommand) {
-		guard TextualPreferences.disableNicknameColorHashing() == false else {
+		guard environment.preferences.disableNicknameColorHashing == false else {
 			printDebugInformation(IRCCommandStrings.nicknameColorsMustBeEnabled)
 			return
 		}
@@ -377,7 +377,7 @@ extension IRCClient {
 			printDebugInformation(IRCCommandStrings.invalidNicknameForColor(nickname))
 			return
 		}
-		AppController.shared.menuController?.showNicknameColorSheet(forNickname: nickname)
+		menu?.showNicknameColorSheet(forNickname: nickname)
 	}
 
 	private func dispatchChannelMembershipCommand(
@@ -446,10 +446,10 @@ extension IRCClient {
 				alternateButton: PromptStrings.Action.no
 			)
 			guard shouldDelete else { return true }
-			AppController.shared.world.destroy(existingQuery)
+			world?.destroy(existingQuery)
 		}
 		targetChannel.name = nickname
-		if let mainWindow = AppController.shared.mainWindow {
+		if let mainWindow = output {
 			mainWindow.reloadTreeItem(targetChannel)
 			mainWindow.updateTitle(for: targetChannel)
 		}
@@ -482,9 +482,9 @@ extension IRCClient {
 			return
 		}
 		guard let query = findChannelOrCreate(nickname, isPrivateMessage: true),
-		      let mainWindow = AppController.shared.mainWindow
+		      let mainWindow = output
 		else { return }
-		mainWindow.select(query)
+		mainWindow.selectItem(query)
 		if arguments.isEmpty == false {
 			sendText(arguments.attributedRest, as: .privmsg, to: query)
 		}

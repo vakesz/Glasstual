@@ -228,13 +228,31 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	/// Timed commands the user scheduled, keyed by their identifier.
 	var timedCommandsByIdentifier: [String: TimedCommand] = [:]
 
+	/** Preferences and services this client reads instead of reaching for the
+	 application's singletons. The world it belongs to keeps the preference half
+	 current; a client made without one gets the live values and no window.
+
+	 Behind a lock because the preference values are read from the printing and
+	 connection queues while the main actor republishes them. */
+	private nonisolated let environmentStorage: Mutex<ClientEnvironment>
+
+	nonisolated var environment: ClientEnvironment {
+		get { environmentStorage.withLock { $0 } }
+		set { environmentStorage.withLock { $0 = newValue } }
+	}
+
 	@available(*, unavailable, message: "Use init(config:) or init(configDictionary:)")
 	override public init() {
 		fatalError("Unavailable")
 	}
 
-	@MainActor public init(config: IRCClientConfig) {
+	@MainActor public convenience init(config: IRCClientConfig) {
+		self.init(config: config, environment: .shared)
+	}
+
+	@MainActor init(config: IRCClientConfig, environment: ClientEnvironment) {
 		self.config = config
+		environmentStorage = Mutex(environment)
 		super.init()
 		writePasswordsToKeychain()
 		prepareInitialState()
@@ -353,8 +371,8 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	private func markConfigurationStaleIfChanged<T: Equatable>(from oldValue: T, to newValue: T) {
 		guard oldValue != newValue else { return }
 		configurationIsStale = true
-		Task { @MainActor in
-			AppController.shared.world.savePeriodically()
+		Task { @MainActor [environment] in
+			environment.world?.savePeriodically()
 		}
 	}
 }

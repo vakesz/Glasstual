@@ -36,7 +36,6 @@
   *
   *********************************************************************** */
 
-import AppKit
 import Foundation
 
 enum IRCLinePresentationPolicy {
@@ -110,7 +109,7 @@ public extension IRCClient {
 
 	@objc(printAndLog:completionBlock:)
 	func printAndLog(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?) {
-		(viewController as AnyObject as? LogController)?.print(logLine, completionBlock: completionBlock)
+		presentation?.print(logLine, completionBlock: completionBlock)
 		writeToLogFile(logLine)
 	}
 
@@ -324,7 +323,7 @@ public extension IRCClient {
 
 	@objc(printDebugInformation:asCommand:escapeMessage:)
 	func printDebugInformation(_ message: String, asCommand command: String, escapeMessage: Bool) {
-		let channel = AppController.shared.mainWindow.selectedChannel(on: self)
+		let channel = output?.selectedChannel(on: self)
 
 		printDebugInformation(
 			message,
@@ -401,8 +400,8 @@ private extension IRCClient {
 	func formatNicknameOnMainActor(_ nickname: String, in channel: IRCChannel?, format: String?) -> String {
 		let requestedFormat = format?.isEmpty == false ? format : nil
 		let themeFormat = SharedApplication.sharedThemeController().settings.themeNicknameFormat
-		let resolvedFormat = requestedFormat ?? themeFormat ?? TextualPreferences.themeNicknameFormat()
-		let finalFormat = resolvedFormat.isEmpty ? TextualPreferences.themeNicknameFormatDefault() : resolvedFormat
+		let resolvedFormat = requestedFormat ?? themeFormat ?? environment.preferences.themeNicknameFormat
+		let finalFormat = resolvedFormat.isEmpty ? environment.preferences.themeNicknameFormatDefault : resolvedFormat
 		let modeSymbol: String = if channel?.isChannel == true, let member = channel?.findMember(nickname) {
 			member.mark
 		} else {
@@ -466,21 +465,21 @@ private extension IRCClient {
 			return
 		}
 
-		guard let mainWindow = (AppController.shared.mainWindow as AnyObject?) as? MainWindow else {
+		guard let output else {
 			channel.print(logLine, completionBlock: request.completionBlock)
 			return
 		}
 		if IRCLinePresentationPolicy.needsScrollbackMark(
-			autoMark: TextualPreferences.autoAddScrollbackMark(),
-			itemIsVisible: mainWindow.isItemVisible(legacyTreeItem(channel)),
-			windowIsMain: mainWindow.isMainWindow,
+			autoMark: environment.preferences.autoAddScrollbackMark,
+			itemIsVisible: output.isItemVisible(legacyTreeItem(channel)),
+			windowIsMain: output.windowIsMain,
 			channelIsUnread: channel.isUnread,
 			lineType: lineType
 		) {
-			channel.viewController?.mark()
+			channel.presentation?.mark()
 		}
 		channel.print(logLine, completionBlock: request.completionBlock)
-		if mainWindow.isKeyWindow, mainWindow.isItemVisible(legacyTreeItem(channel)) {
+		if output.windowIsKey, output.isItemVisible(legacyTreeItem(channel)) {
 			scheduleReadMarker(for: channel, date: request.receivedAt)
 		}
 	}
@@ -500,10 +499,10 @@ private extension IRCClient {
 			return (nil, nil)
 		}
 
-		var excluded = TextualPreferences.highlightExcludeKeywords() ?? []
-		var matches = TextualPreferences.highlightMatchKeywords() ?? []
-		if TextualPreferences.highlightMatchingMethod() != .regularExpression,
-		   TextualPreferences.highlightCurrentNickname()
+		var excluded = environment.preferences.highlightExcludeKeywords
+		var matches = environment.preferences.highlightMatchKeywords
+		if environment.preferences.highlightMatchingMethod != .regularExpression,
+		   environment.preferences.highlightCurrentNickname
 		{
 			appendIfMissing(userNickname, to: &matches)
 		}

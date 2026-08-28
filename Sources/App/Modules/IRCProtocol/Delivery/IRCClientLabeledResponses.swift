@@ -147,9 +147,10 @@ public extension IRCClient {
 			messageIdentifier ?? NSNull(),
 			reason ?? NSNull(),
 		]
-		delivery.channel?.viewController?.evaluateFunction(
+		delivery.channel?.presentation?.evaluateFunction(
 			"_Glasstual.lineDeliveryStateChanged",
-			withArguments: arguments
+			withArguments: arguments,
+			onQueue: true
 		)
 	}
 

@@ -36,8 +36,8 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+import Foundation
 import GlasstualPluginKit
 import os
 
@@ -89,8 +89,32 @@ public final class World: NSObject {
 	/// Waits for the next local midnight so views can redraw their date rules.
 	private var midnightTask: Task<Void, Never>?
 	private let notifications = NotificationSubscriptions()
+	private var observers = WorldObserverList()
+
+	/** The environment handed to every client the world makes. The preference
+	 half is refreshed from the defaults store whenever it reports a write. */
+	var environment: ClientEnvironment
 
 	@objc public var isImportingConfiguration = false
+
+	/** The application's world shares the services box with
+	 `ClientEnvironment.shared`, so the window and menus only have to be
+	 installed once for both. */
+	@objc override public init() {
+		environment = ClientEnvironment(
+			preferences: .current(),
+			services: ClientEnvironment.shared.services
+		)
+		super.init()
+		environment.services.world = self
+		ClientEnvironment.shared.preferences = environment.preferences
+	}
+
+	init(environment: ClientEnvironment) {
+		self.environment = environment
+		super.init()
+		self.environment.services.world = self
+	}
 
 	@objc public var clientList: [IRCClient] {
 		get {
@@ -108,13 +132,31 @@ public final class World: NSObject {
 		clientsLock.withLock { UInt(clients.count) }
 	}
 
+	// MARK: - Observers
+
+	func addObserver(_ observer: any WorldObserver) {
+		observers.add(observer)
+	}
+
+	func removeObserver(_ observer: any WorldObserver) {
+		observers.remove(observer)
+	}
+
+	private func notifyObservers(_ event: (any WorldObserver) -> Void) {
+		observers.forEach(event)
+	}
+
+	/// Republishes the navigation list after a client changed shape on its own.
+	func noteNavigationListDidChange() {
+		notifyObservers { $0.worldNavigationListDidChange(self) }
+	}
+
 	// MARK: - Configuration
 
 	@objc public func setupConfiguration() {
 		isImportingConfiguration = true
 
-		let serverList = AppController.shared.mainWindow.serverList!
-		serverList.beginUpdates()
+		notifyObservers { $0.worldWillBeginBulkUpdate(self) }
 
 		for dictionary in TextualPreferences.clientList() ?? [] {
 			guard let config = PropertyListModel.decode(ClientConfig.self, from: dictionary) else {
@@ -124,7 +166,8 @@ public final class World: NSObject {
 			_ = createClient(with: config, reload: true)
 		}
 
-		serverList.endUpdates()
+		notifyObservers { $0.worldDidEndBulkUpdate(self) }
+
 		isImportingConfiguration = false
 		setupOtherServices()
 	}
@@ -176,6 +219,10 @@ public final class World: NSObject {
 	}
 
 	@objc private func userDefaultsDidChange(_: Notification) {
+		/* Every branch the connection code takes on a preference reads the
+		 snapshot, so it is refreshed before anything else reacts to the write. */
+		refreshEnvironmentPreferences()
+
 		guard SharedApplication.sharedThemeController().settings.postsPreferenceChangeNotifications else {
 			return
 		}
@@ -194,21 +241,39 @@ public final class World: NSObject {
 		}
 	}
 
+	/// Re-reads the defaults store and republishes the snapshot to every client.
+	func refreshEnvironmentPreferences() {
+		let preferences = ClientPreferences.current()
+		guard applyPreferences(preferences) else {
+			return
+		}
+
+		ClientEnvironment.shared.preferences = preferences
+	}
+
+	/// Republishes `preferences` to this world and every client it made.
+	/// Returns whether anything changed.
+	@discardableResult
+	func applyPreferences(_ preferences: ClientPreferences) -> Bool {
+		guard preferences != environment.preferences else {
+			return false
+		}
+
+		environment.preferences = preferences
+
+		for client in clientList {
+			client.environment.preferences = preferences
+		}
+
+		return true
+	}
+
 	@objc private func mainWindowAppearanceChanged(_: Notification) {
 		guard SharedApplication.sharedThemeController().settings.postsAppearanceChangeNotifications else {
 			return
 		}
 
-		informAllViewsMainWindowAppearanceChanged()
-	}
-
-	private func informAllViewsMainWindowAppearanceChanged() {
-		let appearance = AppController.shared.mainWindow.userInterfaceObjects
-		evaluateFunction(
-			onAllViews: "Glasstual.appearanceDidChange",
-			arguments: [appearance.shortAppearanceDescription],
-			onQueue: true
-		)
+		environment.output?.notifyAllViewsAppearanceDidChange()
 	}
 
 	// MARK: - Lifecycle
@@ -218,7 +283,8 @@ public final class World: NSObject {
 	}
 
 	@objc public func autoConnect(afterWakeup afterWakeUp: Bool) {
-		guard AppController.shared.ghostModeIsOn == false || afterWakeUp else {
+		let ghostModeIsOn = environment.services.applicationState?.ghostModeIsOn ?? false
+		guard ghostModeIsOn == false || afterWakeUp else {
 			return
 		}
 
@@ -240,7 +306,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func prepareForSleep() {
-		guard TextualPreferences.disconnectOnSleep() else {
+		guard environment.preferences.disconnectOnSleep else {
 			return
 		}
 
@@ -251,7 +317,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func prepareForScreenSleep() {
-		guard TextualPreferences.setAwayOnScreenSleep() else {
+		guard environment.preferences.awayOnScreenSleep else {
 			return
 		}
 
@@ -261,7 +327,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func wakeFromScreenSleep() {
-		guard TextualPreferences.setAwayOnScreenSleep() else {
+		guard environment.preferences.awayOnScreenSleep else {
 			return
 		}
 
@@ -277,7 +343,8 @@ public final class World: NSObject {
 	}
 
 	@objc public func preferencesChanged() {
-		AppController.shared.menuController?.preferencesChanged()
+		refreshEnvironmentPreferences()
+		notifyObservers { $0.worldPreferencesDidChange(self) }
 
 		for client in clientList {
 			client.preferencesChanged()
@@ -426,17 +493,12 @@ public final class World: NSObject {
 
 	@objc(evaluateFunctionOnAllViews:arguments:onQueue:)
 	public func evaluateFunction(onAllViews function: String, arguments: [Any]?, onQueue: Bool) {
-		guard AppController.shared.applicationIsTerminating == false else {
+		let isTerminating = environment.services.applicationState?.applicationIsTerminating ?? false
+		guard isTerminating == false else {
 			return
 		}
 
-		for client in clientList {
-			client.viewController.evaluateFunction(function, withArguments: arguments, onQueue: onQueue)
-
-			for channel in client.channelList {
-				channel.viewController.evaluateFunction(function, withArguments: arguments, onQueue: onQueue)
-			}
-		}
+		environment.output?.evaluateFunctionOnAllViews(function, arguments: arguments, onQueue: onQueue)
 	}
 
 	// MARK: - Factory
@@ -445,27 +507,33 @@ public final class World: NSObject {
 		createClient(with: config, reload: true)
 	}
 
-	public func createClient(with config: IRCClientConfig, reload: Bool) -> IRCClient {
-		let client = IRCClient(config: config)
-		client.setValue(createViewController(client: client, channel: nil), forKey: "viewController")
+	public func createClient(with config: IRCClientConfig, reload _: Bool) -> IRCClient {
+		let client = IRCClient(config: config, environment: environment)
 		client.channelList = client.config.channelList.map {
 			createChannel(with: $0, on: client, add: false, adjust: false, reload: false)
 		}
 
+		var addedIndex: Int?
+		var isOnlyClient = false
+
 		clientsLock.withLock {
 			clients.append(client)
-
-			if reload, let index = clients.firstIndex(where: { $0 === client }) {
-				AppController.shared.mainWindow.serverList?.addItem(toList: UInt(index), inParent: nil)
-			}
-
-			if clients.count == 1 {
-				AppController.shared.mainWindow.select(client)
-			}
+			addedIndex = clients.firstIndex { $0 === client }
+			isOnlyClient = clients.count == 1
 		}
 
-		_ = AppController.shared.mainWindow.reloadLoadingScreen()
-		AppController.shared.menuController?.populateNavigationChannelList()
+		if let addedIndex {
+			notifyObservers { $0.world(self, didAddClient: client, at: addedIndex) }
+		}
+
+		if isOnlyClient {
+			notifyObservers { $0.world(self, requestsSelectionOf: client) }
+		}
+
+		notifyObservers {
+			$0.worldClientListDidChange(self)
+			$0.worldNavigationListDidChange(self)
+		}
 		postClientListWasModifiedNotification()
 
 		return client
@@ -482,22 +550,22 @@ public final class World: NSObject {
 		adjust: Bool,
 		reload: Bool
 	) -> IRCChannel {
-		let swiftChannel = Channel(config: config)
-		swiftChannel.associatedClient = client
-		let channel = swiftChannel
-		swiftChannel.viewController = createViewController(client: client, channel: channel)
+		let channel = Channel(config: config)
+		channel.associatedClient = client
 
 		if add {
 			client.add(channel)
 		}
 
 		if reload, let index = client.channelList.firstIndex(where: { $0 === channel }) {
-			AppController.shared.mainWindow.serverList?.addItem(toList: UInt(index), inParent: client)
+			notifyObservers { $0.world(self, didAddChannel: channel, on: client, at: index) }
 		}
 
 		if adjust {
-			AppController.shared.mainWindow.adjustSelection()
-			AppController.shared.menuController?.populateNavigationChannelList()
+			notifyObservers {
+				$0.worldRequestsSelectionAdjustment(self)
+				$0.worldNavigationListDidChange(self)
+			}
 		}
 
 		return channel
@@ -537,19 +605,59 @@ public final class World: NSObject {
 		return createPrivateMessage(nickname, on: client, as: type)
 	}
 
-	private func createViewController(client: IRCClient, channel: IRCChannel?) -> LogController {
-		if let channel {
-			return LogController(channel: channel, in: AppController.shared.mainWindow)
+	// MARK: - Ordering
+
+	/// Moves a client within the list and tells observers to follow.
+	func moveClient(from oldIndex: Int, to newIndex: Int) {
+		var moved = false
+
+		clientsLock.withLock {
+			guard clients.indices.contains(oldIndex) else { return }
+			let client = clients.remove(at: oldIndex)
+			clients.insert(client, at: min(newIndex, clients.count))
+			moved = true
 		}
 
-		return LogController(client: client, in: AppController.shared.mainWindow)
+		guard moved else { return }
+
+		postClientListWasModifiedNotification()
+		notifyObservers {
+			$0.world(self, didMoveClientFrom: oldIndex, to: newIndex)
+			$0.worldNavigationListDidChange(self)
+		}
 	}
+
+	/// Moves a channel within its client and tells observers to follow.
+	func moveChannel(on client: IRCClient, from oldIndex: Int, to newIndex: Int) {
+		var channels = client.channelList
+		guard channels.indices.contains(oldIndex) else { return }
+
+		let channel = channels.remove(at: oldIndex)
+		channels.insert(channel, at: min(newIndex, channels.count))
+		client.channelList = channels
+
+		notifyObservers {
+			$0.world(self, didMoveChannelOn: client, from: oldIndex, to: newIndex)
+			$0.worldNavigationListDidChange(self)
+		}
+	}
+
+	/// Replaces a client's channels wholesale — a sort, not a drag.
+	func setChannelList(_ channels: [IRCChannel], on client: IRCClient) {
+		guard channels != client.channelList else { return }
+
+		client.channelList = channels
+		environment.output?.reloadServerListItems(for: client)
+		notifyObservers { $0.worldNavigationListDidChange(self) }
+	}
+
+	// MARK: - Destruction
 
 	private func selectOtherBeforeDestroy(_ target: IRCTreeItem) {
 		if target.isClient {
-			AppController.shared.mainWindow.deselectGroup(target)
+			notifyObservers { $0.world(self, requestsGroupDeselectionOf: target) }
 		} else {
-			AppController.shared.mainWindow.deselect(target)
+			notifyObservers { $0.world(self, requestsDeselectionOf: target) }
 		}
 	}
 
@@ -572,15 +680,17 @@ public final class World: NSObject {
 		)
 		selectOtherBeforeDestroy(client)
 		client.prepareForPermanentDestruction()
-		AppController.shared.mainWindow.serverList?.removeItem(fromList: client)
+		notifyObservers { $0.world(self, didRemoveClient: client) }
 
 		clientsLock.withLock {
 			clients.removeAll { $0 === client }
 		}
 
 		postClientListWasModifiedNotification()
-		_ = AppController.shared.mainWindow.reloadLoadingScreen()
-		AppController.shared.menuController?.populateNavigationChannelList()
+		notifyObservers {
+			$0.worldClientListDidChange(self)
+			$0.worldNavigationListDidChange(self)
+		}
 	}
 
 	@objc(destroyChannel:)
@@ -618,10 +728,12 @@ public final class World: NSObject {
 		}
 
 		if reload {
-			AppController.shared.mainWindow.serverList?.removeItem(fromList: channel)
+			notifyObservers { $0.world(self, didRemoveChannel: channel, on: client) }
 			client.remove(channel)
-			AppController.shared.mainWindow.adjustSelection()
-			AppController.shared.menuController?.populateNavigationChannelList()
+			notifyObservers {
+				$0.worldRequestsSelectionAdjustment(self)
+				$0.worldNavigationListDidChange(self)
+			}
 		}
 	}
 }

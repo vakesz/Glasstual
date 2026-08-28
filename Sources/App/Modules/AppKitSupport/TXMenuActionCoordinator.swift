@@ -674,7 +674,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	@objc(moveHighlightOrScrollbackForTag:)
 	public func moveHighlightOrScrollback(forTag tag: Int) {
-		guard let controller = selectedChannel?.viewController ?? selectedClient?.viewController else { return }
+		guard let controller = selectedChannel?.logController ?? selectedClient?.logController else { return }
 		switch tag {
 		case MenuNavigationTag.nextHighlight: controller.nextHighlight()
 		case MenuNavigationTag.previousHighlight: controller.previousHighlight()

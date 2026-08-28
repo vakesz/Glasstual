@@ -77,7 +77,7 @@ public extension IRCClient {
 		}
 		guard shouldPrint else { return }
 		if inWhoisResponse, message.params.count > 2 {
-			printReply(message, in: AppController.shared.mainWindow.selectedChannel(on: self))
+			printReply(message, in: output?.selectedChannel(on: self))
 		} else {
 			printReply(message)
 		}

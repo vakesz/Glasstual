@@ -186,7 +186,8 @@ public extension IRCClient {
 		   let reactedTo = clientTags["draft/reply"], !reactedTo.isEmpty,
 		   !sender.isEmpty
 		{
-			nativeItem.viewController.noteReaction(reaction, fromNickname: sender, toMessageIdentifier: reactedTo)
+			nativeItem.presentation?
+				.noteReaction(reaction, fromNickname: sender, toMessageIdentifier: reactedTo)
 		}
 
 		let event = tagMessageEvent(
@@ -197,7 +198,7 @@ public extension IRCClient {
 			messageIdentifier: messageIdentifier,
 			account: account
 		)
-		nativeItem.viewController.evaluateFunction(
+		nativeItem.presentation?.evaluateFunction(
 			"_Glasstual.tagMessageReceived",
 			withArguments: [event],
 			onQueue: false

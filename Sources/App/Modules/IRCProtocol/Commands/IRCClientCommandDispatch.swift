@@ -72,7 +72,7 @@ public extension IRCClient {
 	/// them were then gated again by hand inside their handlers.
 	private func allowsDeveloperModeCommand(_ parsed: ParsedUserCommand) -> Bool {
 		guard parsed.isDeveloperModeOnly,
-		      TextualPreferences.developerModeEnabled() == false
+		      environment.preferences.developerModeEnabled == false
 		else {
 			return true
 		}
@@ -217,7 +217,7 @@ public extension IRCClient {
 			let nickname = arguments.next()
 			guard requireArguments(nickname, for: parsed.command) else { return true }
 			let reason = arguments.isEmpty
-				? TextualPreferences.irCopDefaultKillMessage()
+				? environment.preferences.irCopDefaultKillMessage
 				: arguments.rest
 			send("KILL", arguments: [nickname, reason])
 
@@ -249,7 +249,7 @@ public extension IRCClient {
 
 		case .back:
 			guard isLoggedIn else { return true }
-			for client in currentClients() where client === self || TextualPreferences.awayAllConnections() {
+			for client in currentClients() where client === self || environment.preferences.awayAllConnections {
 				client.toggleAwayStatus(false, withComment: nil)
 			}
 
@@ -265,7 +265,7 @@ public extension IRCClient {
 			guard isConnected else { return true }
 			let nickname = arguments.next()
 			guard requireArguments(nickname, for: parsed.command) else { return true }
-			for client in currentClients() where client === self || TextualPreferences.nickAllConnections() {
+			for client in currentClients() where client === self || environment.preferences.nickAllConnections {
 				client.changeNickname(nickname)
 			}
 
@@ -276,7 +276,7 @@ public extension IRCClient {
 	}
 
 	private func broadcastAwayStatus(comment: String) {
-		for client in currentClients() where client === self || TextualPreferences.awayAllConnections() {
+		for client in currentClients() where client === self || environment.preferences.awayAllConnections {
 			let maximumLength = Int(client.supportInfo.maximumAwayLength)
 			let truncated = ClientWireUtilities.truncated(comment, toByteCount: maximumLength)
 			if truncated != comment {
@@ -347,13 +347,13 @@ public extension IRCClient {
 	}
 
 	private func toggleNotificationSoundMute(_ muted: Bool) {
-		let alreadyInState = TextualPreferences.soundIsMuted() == muted
+		let alreadyInState = environment.preferences.soundIsMuted == muted
 		guard alreadyInState == false else {
 			printDebugInformation(muted ? IRCCommandStrings.soundAlreadyMuted : IRCCommandStrings.soundNotMuted)
 			return
 		}
 		printDebugInformation(muted ? IRCCommandStrings.soundMuted : IRCCommandStrings.soundUnmuted)
-		AppController.shared.menuController?.toggleMuteOnNotificationSoundsShortcut(on: muted)
+		menu?.toggleMuteOnNotificationSoundsShortcut(on: muted)
 	}
 
 	private func dispatchNativeCapabilityCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
@@ -503,7 +503,7 @@ public extension IRCClient {
 			URLQueryItem(name: "time", value: String(Date().timeIntervalSince1970)),
 		]
 		if command == .mylag,
-		   let channel = AppController.shared.mainWindow.selectedChannel(on: self)
+		   let channel = output?.selectedChannel(on: self)
 		{
 			queryItems.append(URLQueryItem(name: "channel", value: channel.name))
 		}
@@ -530,7 +530,7 @@ public extension IRCClient {
 	}
 
 	private func currentClients() -> [IRCClient] {
-		AppController.shared.world.clientList
+		(world?.clientList ?? [])
 	}
 
 	private func resolvedTargetChannel(
@@ -541,11 +541,9 @@ public extension IRCClient {
 		if let targetChannelName {
 			return findChannel(targetChannelName)
 		}
-		guard let mainWindow = AppController.shared.mainWindow,
-		      mainWindow.selectedClient === self
-		else {
+		guard let output, output.selectedClient === self else {
 			return nil
 		}
-		return mainWindow.selectedChannel
+		return output.selectedChannel
 	}
 }

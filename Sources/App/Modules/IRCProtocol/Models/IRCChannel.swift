@@ -75,7 +75,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 				return
 			}
 
-			viewController?.setTopic(topic)
+			presentation?.setTopic(topic)
 		}
 	}
 
@@ -298,11 +298,11 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	@objc public var lastLine: LogLine? {
-		(viewController as AnyObject as? LogController)?.lastLine()
+		presentation?.lastPrintedLine()
 	}
 
 	@objc public func preferencesChanged() {
-		if TextualPreferences.displayPublicMessageCountOnDockBadge() == false, isChannel {
+		if clientPreferences.displayPublicMessageCountOnDockBadge == false, isChannel {
 			dockUnreadCount = 0
 		}
 	}
@@ -358,9 +358,9 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		if isUtility == false {
 			memberInfo = ChannelMemberList(channel: legacyChannel)
 
-			if isSelectedChannel, let mainWindow = AppController.shared.mainWindow {
-				mainWindow.memberList?.assign(to: legacyChannel)
-				mainWindow.updateMemberListVisibilityForSelection()
+			if isSelectedChannel, let output = associatedClient?.output {
+				output.assignMemberList(to: legacyChannel)
+				output.updateMemberListVisibilityForSelection()
 			}
 		}
 
@@ -421,8 +421,8 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			window.close()
 		}
 
-		AppController.shared.mainWindow.inputHistoryManager().destroy(self)
-		viewController?.prepareForPermanentDestruction()
+		associatedClient?.output?.destroyInputHistory(for: self)
+		presentation?.prepareForPermanentDestruction()
 	}
 
 	@MainActor
@@ -438,9 +438,9 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			config.destroySecretKeyKeychainItem()
 		}
 
-		let viewIdentifier = viewController?.uniqueIdentifier ?? ""
+		let viewIdentifier = presentation?.presentationIdentifier ?? ""
 		Self.terminationLogger.debug("Preparing view controller: <\(viewIdentifier, privacy: .public)>")
-		viewController?.prepareForApplicationTermination()
+		presentation?.prepareForApplicationTermination()
 	}
 
 	@objc public func closeDirectChatConnection() {
@@ -453,7 +453,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	@objc public func reopenLogFileIfNeeded() {
-		if TextualPreferences.logToDiskIsEnabled(), isUtility == false {
+		if clientPreferences.logToDiskIsEnabled, isUtility == false {
 			logFile?.reopenIfNeeded()
 		} else {
 			closeLogFile()
@@ -484,7 +484,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 	@objc(writeToLogLineToLogFile:)
 	public func writeToLogFile(_ logLine: LogLine) {
-		guard isUtility == false, TextualPreferences.logToDiskIsEnabled() else {
+		guard isUtility == false, clientPreferences.logToDiskIsEnabled else {
 			return
 		}
 
@@ -509,7 +509,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		_ logLine: LogLine,
 		completionBlock: LogControllerPrintOperationCompletion?
 	) {
-		viewController?.print(logLine, completionBlock: completionBlock)
+		presentation?.print(logLine, completionBlock: completionBlock)
 		writeToLogFile(logLine)
 	}
 
@@ -627,7 +627,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	private var isSelectedChannel: Bool {
-		self === AppController.shared.mainWindow.selectedItem
+		self === associatedClient?.output?.selectedItem
 	}
 
 	override open var isActive: Bool {

@@ -198,7 +198,7 @@ public extension IRCClient {
 			in: nil,
 			as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue
 		)
-		guard TextualPreferences.fileTransferRequestReplyAction() != .ignore,
+		guard environment.preferences.fileTransferRequestReplyAction != .ignore,
 		      let identifier = fileTransferController.addReceiver(
 		      	for: self, nickname: nickname, address: address, port: port,
 		      	filename: filename, filesize: totalFilesize, token: transferToken

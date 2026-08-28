@@ -279,9 +279,9 @@ enum PluginHostAdapter {
 		} ?? 0
 		var visibleLineCount = 0
 		for client in world?.clientList ?? [] {
-			visibleLineCount += Int(client.viewController.numberOfLines)
+			visibleLineCount += Int(client.logController?.numberOfLines ?? 0)
 			for channel in client.channelList {
-				visibleLineCount += Int(channel.viewController.numberOfLines)
+				visibleLineCount += Int(channel.logController?.numberOfLines ?? 0)
 			}
 		}
 

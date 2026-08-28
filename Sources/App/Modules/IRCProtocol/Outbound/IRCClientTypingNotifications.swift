@@ -78,7 +78,7 @@ public extension IRCClient {
 
 		if OutboundTypingPolicy.shouldFinish(
 			text: text,
-			notificationsEnabled: TextualPreferences.sendTypingNotifications()
+			notificationsEnabled: environment.preferences.sendTypingNotifications
 		) {
 			sendTypingDone(in: channel)
 			return
