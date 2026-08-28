@@ -196,6 +196,7 @@ class STSPolicyTests: XCTestCase {
 			forHost: "irc.example.net",
 			connectedPort: 6667,
 			secured: false,
+			certificateChainValidated: false,
 			upgradePort: &upgradePort
 		)
 
@@ -214,6 +215,7 @@ class STSPolicyTests: XCTestCase {
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
+			certificateChainValidated: true,
 			upgradePort: nil
 		)
 
@@ -240,6 +242,7 @@ class STSPolicyTests: XCTestCase {
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
+			certificateChainValidated: true,
 			upgradePort: nil
 		)
 

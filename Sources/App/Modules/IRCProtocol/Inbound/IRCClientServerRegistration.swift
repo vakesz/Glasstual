@@ -75,6 +75,7 @@ public extension IRCClient {
 		labelForBatchToken.removeAllObjects()
 		enabledCapabilityNames.removeAllObjects()
 		offeredCapabilities.removeAllObjects()
+		offeredCapabilityNames.removeAllObjects()
 		objc_sync_enter(pendingCapabilityRequestsMutable)
 		pendingCapabilityRequestsMutable.removeAllObjects()
 		objc_sync_exit(pendingCapabilityRequestsMutable)

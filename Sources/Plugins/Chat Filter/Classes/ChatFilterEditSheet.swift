@@ -62,8 +62,8 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	@IBOutlet private var cancelButton: NSButton!
 	@IBOutlet private var contentViewTabView: NSTabView!
 	@IBOutlet private var filterAgeLimitTextField: NSTextField!
-	@IBOutlet private var filterMatchTextField: NSTextField!
-	@IBOutlet private var filterSenderMatchTextField: NSTextField!
+	@IBOutlet private var filterMatchTextField: ChatFilterValidatedTextField!
+	@IBOutlet private var filterSenderMatchTextField: ChatFilterValidatedTextField!
 	@IBOutlet private var filterTitleTextField: NSTextField!
 	@IBOutlet private var filterNotesTextField: NSTextField!
 	@IBOutlet private var actionFloodIntervalField: NSTextField!
@@ -245,7 +245,9 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 
 	private func validate() -> Bool {
-		validate(filterEventNumericTextField, section: .events) &&
+		validate(filterMatchTextField, section: .general) &&
+			validate(filterEventNumericTextField, section: .events) &&
+			validate(filterSenderMatchTextField, section: .sender) &&
 			validate(filterForwardToDestinationTextField, section: .advanced)
 	}
 
@@ -375,6 +377,8 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 
 	private func setupTextFieldRules() {
+		setupRegularExpressionFieldRules()
+
 		for field in [filterForwardToDestinationTextField, filterEventNumericTextField] {
 			field?.valueDidChange = { [weak self] _ in
 				self?.toggleOkButton()
@@ -394,6 +398,32 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		filterEventNumericTextField.validationBlock = { [weak self] _ in
 			guard let self else { return nil }
 			return compileNumerics() == nil ? String(localized: .TPIChatFilterEditFilterSheet.commandsInvalid) : nil
+		}
+	}
+
+	/// Both match fields are compiled as regular expressions on every incoming
+	/// message. A pattern that does not compile would otherwise just never
+	/// match, with nothing to tell the user why.
+	private func setupRegularExpressionFieldRules() {
+		for field in [filterMatchTextField, filterSenderMatchTextField] {
+			field?.valueDidChange = { [weak self] _ in
+				self?.toggleOkButton()
+			}
+			field?.performValidationWhenEmpty = false
+			field?.stringValueIsInvalidOnEmpty = false
+			field?.stringValueUsesOnlyFirstToken = false
+			field?.validationBlock = { value in
+				do {
+					_ = try NSRegularExpression(pattern: value)
+
+					return nil
+				} catch {
+					return String(
+						localized: .TPIChatFilterEditFilterSheet
+							.regularExpressionInvalid(error.localizedDescription)
+					)
+				}
+			}
 		}
 	}
 
