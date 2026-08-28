@@ -241,10 +241,10 @@ public final class LogPolicy: NSObject {
 			guard let copy = item.copy() as? NSMenuItem else {
 				return nil
 			}
-			if copy.tag == 1202, let search = webKitItems.search {
+			if copy.command == .webSearch, let search = webKitItems.search {
 				return search
 			}
-			if copy.tag == 1203, let lookup = webKitItems.lookup {
+			if copy.command == .webDictionary, let lookup = webKitItems.lookup {
 				return lookup
 			}
 			return copy
