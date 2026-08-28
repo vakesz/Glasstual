@@ -159,6 +159,10 @@ enum IRCTransportSecurityStrings {
 	static func scramFailure(_ description: String) -> String {
 		String(localized: .IRC.stsSc2(description))
 	}
+
+	static var scramServerSignatureMissing: String {
+		String(localized: .IRC.stsSc3)
+	}
 }
 
 enum IRCTransportStrings {
