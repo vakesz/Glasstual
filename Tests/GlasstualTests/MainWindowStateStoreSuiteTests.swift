@@ -58,9 +58,10 @@ struct MainWindowStateStoreSuiteTests {
 			withExtension: "plist",
 			subdirectory: "Preferences"
 		))
-		let contents = try String(contentsOf: url, encoding: .utf8)
+		let plist = try PropertyListSerialization.propertyList(from: try Data(contentsOf: url), format: nil)
+		let listed = try #require(plist as? [String: Any])
 		for key in Self.keys {
-			#expect(contents.contains(key))
+			#expect(listed[key] != nil)
 		}
 	}
 }
