@@ -158,7 +158,7 @@ extension IRCClient {
 			if monitorAwayStatus {
 				user.markAsAway()
 			}
-			guard user.presentAwayMessageFor301 else { return }
+			guard user.claimAwayMessagePresentation() else { return }
 		}
 		guard shouldPrint else { return }
 		print(

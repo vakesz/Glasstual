@@ -50,15 +50,8 @@ enum ChannelUnreadPolicy {
 
 @MainActor
 public extension IRCClient {
-	private func legacyTreeItem(for channel: IRCChannel) -> IRCTreeItem {
-		guard let item = (channel as AnyObject) as? IRCTreeItem else {
-			preconditionFailure("IRCChannel must bridge to its Objective-C tree item")
-		}
-		return item
-	}
-
 	private func channelIsSelectedInKeyWindow(_ channel: IRCChannel, mainWindow: MainWindow) -> Bool {
-		mainWindow.isKeyWindow && mainWindow.isItemSelected(legacyTreeItem(for: channel))
+		mainWindow.isKeyWindow && mainWindow.isItemSelected(channel)
 	}
 
 	@objc(setHighlightStateForChannel:)
@@ -68,7 +61,7 @@ public extension IRCClient {
 
 		channel.nicknameHighlightCount += 1
 		DockIcon.updateDockIcon()
-		mainWindow.reloadTreeItem(legacyTreeItem(for: channel))
+		mainWindow.reloadTreeItem(channel)
 	}
 
 	@objc(setUnreadStateForChannel:)
@@ -95,7 +88,7 @@ public extension IRCClient {
 			isHighlight: isHighlight,
 			showsTreeBadgeCount: channel.config.showTreeBadgeCount
 		) {
-			mainWindow.serverList.refreshMessageCount(forItem: legacyTreeItem(for: channel))
+			mainWindow.serverList.refreshMessageCount(forItem: channel)
 		}
 	}
 }
