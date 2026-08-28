@@ -37,11 +37,16 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
+/// A theme, a plugin or the JavaScript running inside a style reads these keys
+/// by name, so the typed enums have to keep spelling them exactly as the
+/// retired string constants did.
 @MainActor
-final class ThemePresentationSchemaTests: XCTestCase {
-	func testRendererConfigurationSchemaRetainsExternalKeys() {
+@Suite("Theme presentation schema")
+struct ThemePresentationSchemaTests {
+	@Test("The renderer configuration keys keep the names themes and plugins pass in")
+	func rendererConfigurationSchemaRetainsExternalKeys() {
 		let expected = [
 			"TVCLogRendererConfigurationRenderLinksAttribute",
 			"TVCLogRendererConfigurationLineTypeAttribute",
@@ -54,12 +59,13 @@ final class ThemePresentationSchemaTests: XCTestCase {
 			"TVCLogRendererConfigurationInlineMediaEnabledAttribute",
 		]
 
-		XCTAssertEqual(LogRendererConfigurationKey.allCases.map(\.rawValue), expected)
-		XCTAssertEqual(String.renderLinksAttribute, expected[0])
-		XCTAssertEqual(String.attributedStringPreferredFontColorAttribute, expected[7])
+		#expect(LogRendererConfigurationKey.allCases.map(\.rawValue) == expected)
+		#expect(String.renderLinksAttribute == expected[0])
+		#expect(String.attributedStringPreferredFontColorAttribute == expected[7])
 	}
 
-	func testRendererResultSchemaRetainsExternalKeys() {
+	@Test("The renderer result keys keep the names their readers look up")
+	func rendererResultSchemaRetainsExternalKeys() {
 		let expected = [
 			"TVCLogRendererResultsListOfLinksInBodyAttribute",
 			"TVCLogRendererResultsListOfLinksMappedInBodyAttribute",
@@ -68,15 +74,15 @@ final class ThemePresentationSchemaTests: XCTestCase {
 			"TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute",
 		]
 
-		XCTAssertEqual(LogRendererResultKey.allCases.map(\.rawValue), expected)
-		XCTAssertEqual(String.listOfLinksInBodyAttribute, expected[0])
-		XCTAssertEqual(String.originalBodyWithoutEffectsAttribute, expected[4])
+		#expect(LogRendererResultKey.allCases.map(\.rawValue) == expected)
+		#expect(String.listOfLinksInBodyAttribute == expected[0])
+		#expect(String.originalBodyWithoutEffectsAttribute == expected[4])
 	}
 
-	func testTemplateNamesRetainThemeFileNames() {
-		XCTAssertEqual(
-			ThemeTemplateName.allCases.map(\.rawValue),
-			[
+	@Test("Each template name is the file name a theme ships")
+	func templateNamesRetainThemeFileNames() {
+		#expect(
+			ThemeTemplateName.allCases.map(\.rawValue) == [
 				"baseLayout",
 				"formattedMessageFragment",
 				"historyIndicator",
@@ -86,7 +92,8 @@ final class ThemePresentationSchemaTests: XCTestCase {
 		)
 	}
 
-	func testTemplateAttributeSchemaRetainsMustacheNames() {
+	@Test("Each template attribute is a mustache variable a theme can name")
+	func templateAttributeSchemaRetainsMustacheNames() {
 		let expected = Set([
 			"activeStyleAbsolutePath",
 			"activeStyleCSSFiles",
@@ -187,10 +194,11 @@ final class ThemePresentationSchemaTests: XCTestCase {
 			"viewTypeToken",
 		])
 
-		XCTAssertEqual(Set(ThemeTemplateAttribute.allCases.map(\.rawValue)), expected)
+		#expect(Set(ThemeTemplateAttribute.allCases.map(\.rawValue)) == expected)
 	}
 
-	func testThemeSettingsSchemaRetainsPropertyListKeys() {
+	@Test("Each theme setting is the key a style's property list writes")
+	func themeSettingsSchemaRetainsPropertyListKeys() {
 		let expected = Set([
 			"Appearance",
 			"Channel View Overlay Color",
@@ -208,25 +216,27 @@ final class ThemePresentationSchemaTests: XCTestCase {
 			"Underlying Window Color",
 		])
 
-		XCTAssertEqual(Set(ThemeSettingKey.allCases.map(\.rawValue)), expected)
-		XCTAssertEqual(ThemeFontSettingKey.name.rawValue, "Font Name")
-		XCTAssertEqual(ThemeFontSettingKey.size.rawValue, "Font Size")
-		XCTAssertEqual(ThemeNicknameColorToken.light.rawValue, "HSL-light")
-		XCTAssertEqual(ThemeNicknameColorToken.dark.rawValue, "HSL-dark")
+		#expect(Set(ThemeSettingKey.allCases.map(\.rawValue)) == expected)
+		#expect(ThemeFontSettingKey.name.rawValue == "Font Name")
+		#expect(ThemeFontSettingKey.size.rawValue == "Font Size")
+		#expect(ThemeNicknameColorToken.light.rawValue == "HSL-light")
+		#expect(ThemeNicknameColorToken.dark.rawValue == "HSL-dark")
 	}
 
-	func testTypedBuilderExportsExactStringsAndPreservesDynamicInput() {
+	@Test("The typed builder exports the exact strings and passes a third-party key through")
+	func typedBuilderExportsExactStringsAndPreservesDynamicInput() {
 		var attributes: ThemeTemplateAttributes = [
 			.channelName: "#swift",
 			.isChannelView: true,
 		]
 		attributes[.viewTypeToken] = "channel"
 
-		XCTAssertEqual(attributes.rawValues["channelName"] as? String, "#swift")
-		XCTAssertEqual(attributes.rawValues["isChannelView"] as? Bool, true)
-		XCTAssertEqual(attributes.rawValues["viewTypeToken"] as? String, "channel")
+		#expect(attributes.rawValues["channelName"] as? String == "#swift")
+		#expect(attributes.rawValues["isChannelView"] as? Bool == true)
+		#expect(attributes.rawValues["viewTypeToken"] as? String == "channel")
 
 		let configuration = LogRendererConfiguration(rawValues: ["thirdPartyRendererKey": 7])
-		XCTAssertEqual(configuration.rawValues["thirdPartyRendererKey"] as? Int, 7)
+
+		#expect(configuration.rawValues["thirdPartyRendererKey"] as? Int == 7)
 	}
 }

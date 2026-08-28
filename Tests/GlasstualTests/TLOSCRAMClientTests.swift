@@ -1,5 +1,5 @@
 @testable import Glasstual
-import XCTest
+import Testing
 
 /** *********************************************************************
  *                  _____         _               _
@@ -38,89 +38,95 @@ import XCTest
  *
  *********************************************************************** */
 @MainActor
-class TLOSCRAMClientTests: XCTestCase {
+@Suite("SCRAM-SHA-256 client")
+struct TLOSCRAMClientTests {
 	private let serverFirst =
 		"r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096"
 
-	private func exampleClient() -> SCRAMClient {
-		SCRAMClient(username: "user", password: "pencil", clientNonce: "rOprNGfwEbeRWgbNEkqO")
-	}
-
-	func testClientFirstMessage() {
+	@Test("The client's first message names the user and the client nonce")
+	func clientFirstMessage() {
 		let client = exampleClient()
 
-		XCTAssertEqual(client.clientFirstMessage, "n,,n=user,r=rOprNGfwEbeRWgbNEkqO")
-		XCTAssertEqual(client.state, .sentClientFirst)
+		#expect(client.clientFirstMessage == "n,,n=user,r=rOprNGfwEbeRWgbNEkqO")
+		#expect(client.state == .sentClientFirst)
 	}
 
-	func testClientFinalMessageMatchesRFC7677Vector() throws {
+	@Test("The client's final message matches the RFC 7677 test vector")
+	func clientFinalMessageMatchesRFC7677Vector() throws {
 		let client = exampleClient()
 		_ = client.clientFirstMessage
 
 		let clientFinal = try client.clientFinalMessage(forServerFirstMessage: serverFirst)
-
-		XCTAssertEqual(
-			clientFinal,
+		let expected =
 			"c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ="
-		)
+
+		#expect(clientFinal == expected)
 	}
 
-	func testVerifyServerFinalMessageSucceedsForCorrectSignature() throws {
+	@Test("The right server signature authenticates the exchange")
+	func verifyServerFinalMessageSucceedsForCorrectSignature() throws {
 		let client = exampleClient()
 		_ = client.clientFirstMessage
 		_ = try client.clientFinalMessage(forServerFirstMessage: serverFirst)
 
 		try client.verifyServerFinalMessage("v=6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=")
 
-		XCTAssertEqual(client.state, .authenticated)
+		#expect(client.state == .authenticated)
 	}
 
-	func testVerifyServerFinalMessageRejectsWrongSignature() throws {
+	@Test("A wrong server signature fails the exchange")
+	func verifyServerFinalMessageRejectsWrongSignature() throws {
 		let client = exampleClient()
 		_ = client.clientFirstMessage
 		_ = try client.clientFinalMessage(forServerFirstMessage: serverFirst)
 
-		XCTAssertThrowsError(
+		let error = #expect(throws: (any Error).self) {
 			try client.verifyServerFinalMessage("v=7rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=")
-		) { error in
-			XCTAssertEqual((error as NSError).code, SCRAMClientErrorCode.serverSignatureMismatch.rawValue)
 		}
-		XCTAssertEqual(client.state, .failed)
+		let code = error.map { ($0 as NSError).code }
+
+		#expect(code == SCRAMClientErrorCode.serverSignatureMismatch.rawValue)
+		#expect(client.state == .failed)
 	}
 
-	func testServerNonceMustBeginWithClientNonce() {
-		assertFailure(
+	@Test("The server nonce has to begin with the client nonce")
+	func serverNonceMustBeginWithClientNonce() {
+		expectFailure(
 			for: "r=differentNonce,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096",
 			code: .nonceMismatch
 		)
 	}
 
-	func testIterationCountBelowMinimumIsRejected() {
-		assertFailure(
+	@Test("An iteration count below the minimum is rejected")
+	func iterationCountBelowMinimumIsRejected() {
+		expectFailure(
 			for: "r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=1024",
 			code: .iterationCountTooLow
 		)
 	}
 
-	func testMalformedServerFirstMessageIsRejected() {
-		assertFailure(for: "nonsense", code: .malformedServerMessage)
+	@Test("A server-first message that parses into nothing is rejected")
+	func malformedServerFirstMessageIsRejected() {
+		expectFailure(for: "nonsense", code: .malformedServerMessage)
 	}
 
-	private func assertFailure(
+	private func exampleClient() -> SCRAMClient {
+		SCRAMClient(username: "user", password: "pencil", clientNonce: "rOprNGfwEbeRWgbNEkqO")
+	}
+
+	private func expectFailure(
 		for serverMessage: String,
 		code: SCRAMClientErrorCode,
-		file: StaticString = #filePath,
-		line: UInt = #line
+		sourceLocation: SourceLocation = #_sourceLocation
 	) {
 		let client = exampleClient()
 		_ = client.clientFirstMessage
 
-		XCTAssertThrowsError(
-			try client.clientFinalMessage(forServerFirstMessage: serverMessage),
-			file: file,
-			line: line
-		) { error in
-			XCTAssertEqual((error as NSError).code, code.rawValue, file: file, line: line)
+		let error = #expect(throws: (any Error).self, sourceLocation: sourceLocation) {
+			try client.clientFinalMessage(forServerFirstMessage: serverMessage)
 		}
+		let thrownCode = error.map { ($0 as NSError).code }
+
+		#expect(thrownCode == code.rawValue, sourceLocation: sourceLocation)
 	}
 }
