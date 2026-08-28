@@ -198,6 +198,7 @@
 		3AEFE13638F3DB8D9595904B /* IRCClientNickServTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0B3909E41AA0111046CBC6 /* IRCClientNickServTokens.swift */; };
 		3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 215C3A04759171741632CD9C /* IRC Connection Host.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3BEB819185CABD1560DD5032 /* Chat Filters.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 36917695947EA4E753801EF5 /* Chat Filters.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3C1E010CF2EC0E14E67C40B0 /* LogControllerPrintingOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */; };
 		3C23FDBCA513EF247CBD8235 /* TVCLogControllerInlineMediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95178F524E30A2C17D389D63 /* TVCLogControllerInlineMediaService.swift */; };
 		3C6412A080D08D93ADFE0452 /* ICLPayloadLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C75DD81A2AB2738EA6DC21B4 /* ICLPayloadLocal.swift */; };
 		3C807AA33362166422F986E7 /* IRCNetworkListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968458F41F39FFCE9F784AE7 /* IRCNetworkListTests.swift */; };
@@ -259,6 +260,7 @@
 		51999B32A2354482D4B546B9 /* TVCMainWindowAppearance.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61A3F5E6307AFC43CEB9BBD8 /* TVCMainWindowAppearance.plist */; };
 		5279FA27A0A15E84E9D76C16 /* System Info.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 0001CA74F07AAD0D95E12E46 /* System Info.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		52B80849DCCA99F22FCE1682 /* TDCFileTransferDialogSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08206AFFBFD52DE72D9E71AA /* TDCFileTransferDialogSocket.swift */; };
+		53537C46936246C47434AA20 /* LogLineRenderRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */; };
 		538BE80B9F67DCFBF8503A3A /* TVCMainWindowChannelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73EB5A2E8B07724A22ACDF3 /* TVCMainWindowChannelView.swift */; };
 		5399BEA25B922BDBA7951F9E /* TDCChannelPropertiesSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6D7CD19599DD9620F1E0F3E1 /* TDCChannelPropertiesSheet.xib */; };
 		53CE66B7BB3DEB439C7B14B7 /* Bundled Scripts in Resources */ = {isa = PBXBuildFile; fileRef = 9023E8DB4051AEED1327BF73 /* Bundled Scripts */; };
@@ -1592,6 +1594,7 @@
 		8B8B9A291B6DAE41527EA3ED /* TLOInternetAddressLookupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLOInternetAddressLookupTests.swift; sourceTree = "<group>"; };
 		8BE9A33B40A10164CA9FBEC5 /* IRCClientWHOReplies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientWHOReplies.swift; sourceTree = "<group>"; };
 		8C0E38D92316242FF7A724AC /* IRCModelMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCModelMigrationTests.swift; sourceTree = "<group>"; };
+		8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLineRenderRequestTests.swift; sourceTree = "<group>"; };
 		8C5D8A7EF4EA75277F8B2399 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		8C6E147D87FA79023BF83C2A /* TDCServerPropertiesSheetProxyAndTLS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCServerPropertiesSheetProxyAndTLS.swift; sourceTree = "<group>"; };
 		8CB8DAE9F6D186321FCF90A3 /* IRCClientOutboundPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientOutboundPolicyTests.swift; sourceTree = "<group>"; };
@@ -1713,6 +1716,7 @@
 		B86442E1276E3CFA8B2738EB /* ServerNicknameChangeContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerNicknameChangeContent.swift; sourceTree = "<group>"; };
 		B87295106D6591B8903E1B48 /* ExpressionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressionParser.swift; sourceTree = "<group>"; };
 		B8897CF5FBD50305511BD5BD /* TLONicknameCompletionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLONicknameCompletionStatus.swift; sourceTree = "<group>"; };
+		B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogControllerPrintingOperationTests.swift; sourceTree = "<group>"; };
 		B8D60D789692AB0FE22CE72A /* IRCClientRequestedCommandPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientRequestedCommandPresentation.swift; sourceTree = "<group>"; };
 		B987A67FB1E12C1CACD87B31 /* IRCCapability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCCapability.swift; sourceTree = "<group>"; };
 		B9AD1B819C52F16CB693B210 /* ServerNicknameChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerNicknameChangeView.swift; sourceTree = "<group>"; };
@@ -3533,7 +3537,9 @@
 				8CEE2370CEBE0BE8155FAC70 /* LocalizationCatalogBoundaryTests.swift */,
 				BAD735D56C4EB0680D6FBEA7 /* LocalizationCatalogMigrationTests.swift */,
 				650034F730E88BC269DCA2AB /* LogControllerMigrationTests.swift */,
+				B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */,
 				AD34F16E8513386E56B5B3E7 /* LoggingBridgeMigrationTests.swift */,
+				8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */,
 				B54DD3222626EA1DF4F40363 /* LogRendererMigrationTests.swift */,
 				61E6A9175F1544213D44EC35 /* LogScriptEventSinkMigrationTests.swift */,
 				6171380346CE1C1C16B0207D /* LogViewJavaScriptTests.swift */,
@@ -4989,6 +4995,8 @@
 				CF4179E62954717E022D14C7 /* LocalizationCatalogBoundaryTests.swift in Sources */,
 				216B4CD2C2ABC1C6C76A8CE2 /* LocalizationCatalogMigrationTests.swift in Sources */,
 				F08A7A1600E72FE1B6CDBA24 /* LogControllerMigrationTests.swift in Sources */,
+				3C1E010CF2EC0E14E67C40B0 /* LogControllerPrintingOperationTests.swift in Sources */,
+				53537C46936246C47434AA20 /* LogLineRenderRequestTests.swift in Sources */,
 				62354DD74841E96B0A80B170 /* LogRendererMigrationTests.swift in Sources */,
 				33D028184E4A5619E606340B /* LogScriptEventSinkMigrationTests.swift in Sources */,
 				71FE9585BDFA1D68C4AF0A0A /* LogViewJavaScriptTests.swift in Sources */,

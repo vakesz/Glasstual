@@ -172,13 +172,33 @@ public final class LogControllerPrintingOperation: Operation, @unchecked Sendabl
 	}
 
 	override public var isReady: Bool {
-		if dependencies.count < 1 || standalone {
-			/* A view controller that has gone away can never report itself
-			 loaded, so let the operation run and drop out in `executeBlock()`. */
-			return super.isReady && (viewController == nil || viewIsLoaded)
+		Self.isReady(
+			dependenciesAreReady: super.isReady,
+			hasDependencies: dependencies.isEmpty == false,
+			standalone: standalone,
+			hasViewController: viewController != nil,
+			viewIsLoaded: viewIsLoaded
+		)
+	}
+
+	/// The readiness rule, factored out of `isReady` so it can be exercised
+	/// without a live view controller. An operation that heads its own chain
+	/// waits for the view it prints into; one that has a dependency inherits its
+	/// readiness from that dependency instead. A view controller that has gone
+	/// away can never report itself loaded, so let the operation run and drop
+	/// out in `executeBlock()`.
+	static func isReady(
+		dependenciesAreReady: Bool,
+		hasDependencies: Bool,
+		standalone: Bool,
+		hasViewController: Bool,
+		viewIsLoaded: Bool
+	) -> Bool {
+		guard hasDependencies, standalone == false else {
+			return dependenciesAreReady && (hasViewController == false || viewIsLoaded)
 		}
 
-		return super.isReady
+		return dependenciesAreReady
 	}
 }
 
