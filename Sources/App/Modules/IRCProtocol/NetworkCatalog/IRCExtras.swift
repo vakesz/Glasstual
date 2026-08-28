@@ -537,22 +537,17 @@ public final class Extras: NSObject {
 
 			baseConfig.connectionName = serverAddress
 
-			let server = MutableServer()
-
-			server.serverAddress = serverAddress
-			server.serverPort = serverPort
-
-			server.prefersSecuredConnection = connectSecurely
+			var server = Server(
+				serverAddress: serverAddress,
+				serverPort: serverPort,
+				prefersSecuredConnection: connectSecurely
+			)
 
 			if let serverPassword {
 				server.serverPassword = serverPassword
 			}
 
-			guard let serverCopy = server.copy(asMutable: false, uniquing: false) as? Server else {
-				preconditionFailure("Server copies must preserve their model type")
-			}
-
-			baseConfig.setValue([serverCopy], forKey: "serverList")
+			baseConfig.serverList = [server]
 
 			var channelListConfigs = [Any]()
 

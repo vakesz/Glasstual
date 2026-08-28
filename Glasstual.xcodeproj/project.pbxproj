@@ -410,6 +410,7 @@
 		74C5C9EA5ED936EA8146C0B8 /* InlineContentMediaAssessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E290BF96750B1E31239ABC /* InlineContentMediaAssessor.swift */; };
 		75F598841473EE6FC4109464 /* HTMLEscapeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FC5124BCECF481B5BB8A0F /* HTMLEscapeHelper.swift */; };
 		764131230F50DE987B4970BC /* FileSystemMonitorStreamTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A9B6E403E306CC4B185930 /* FileSystemMonitorStreamTests.swift */; };
+		76528ACA0315BFAA56B26D02 /* IRCServerCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C16D05DD48A6A51DC6AC54 /* IRCServerCodableTests.swift */; };
 		76BC54343C1EBFF9ECEF1D43 /* IRCChannelMemberList.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1230AF05540E2AFA2DFC5A0 /* IRCChannelMemberList.swift */; };
 		76BC67EA8CA754CF16782520 /* PornhubModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC17127B0DBE5D547B42B069 /* PornhubModule.swift */; };
 		76E39874F352E9196A6F56ED /* TVCNotificationConfigurationView.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4F509CC3AD1438851091E1C4 /* TVCNotificationConfigurationView.xcstrings */; };
@@ -592,6 +593,7 @@
 		AA96DB3C9FF3313A09BD8DEC /* TDCChannelInviteSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 66B25B011171120876F59E9B /* TDCChannelInviteSheet.xcstrings */; };
 		AACD89457B4E84B16887BD4B /* AboutFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45BD3A7083CBCCE0DA2C8E31 /* AboutFeatureTests.swift */; };
 		AAE7F4FFC14D11A7527D8C91 /* NicknameColorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C26D8DA8EE02D483110453 /* NicknameColorSheet.swift */; };
+		AB43DF5128183F6930F42EF8 /* PropertyListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D377A7F87C658E675EEDEA /* PropertyListModel.swift */; };
 		AB9443C382015F20CBAD7A4A /* IRCTypingTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2828DC46619FF29EE78408D /* IRCTypingTracker.swift */; };
 		ABDEC3A05D5986874F524615 /* InlineContentKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BC36FC699375B0F38AE0F6AC /* InlineContentKit.framework */; };
 		AC5C2DC005B4B10A5BB8E109 /* IRCCommandIndexRemoteData.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5841087CAA8C7AF01918B5DF /* IRCCommandIndexRemoteData.plist */; };
@@ -1889,6 +1891,7 @@
 		C774430086BDD3AFF53241EF /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C85AD7D65612279A81A1D165 /* NicknameColorStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameColorStrings.swift; sourceTree = "<group>"; };
 		C8A88EC0A25F27E040E13138 /* TemplateCompiler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateCompiler.swift; sourceTree = "<group>"; };
+		C8D377A7F87C658E675EEDEA /* PropertyListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyListModel.swift; sourceTree = "<group>"; };
 		C8E89461E8CCDDD54B81990D /* TPCPreferencesLocal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TPCPreferencesLocal.swift; sourceTree = "<group>"; };
 		C908E69BAB59F7C7D8B931AC /* IRCClientIgnoreCommandDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientIgnoreCommandDispatch.swift; sourceTree = "<group>"; };
 		C9C47A7EC1A59E0B1B705363 /* FileTransferController+Lifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferController+Lifecycle.swift"; sourceTree = "<group>"; };
@@ -1906,6 +1909,7 @@
 		CFEB9D1ECB2C9907B612E1F5 /* NotificationStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationStrings.swift; sourceTree = "<group>"; };
 		D0068AFB21F0E2CCDAA15058 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCFileTransferDialog.xib; sourceTree = "<group>"; };
 		D05BB76EC65FF9BB8437A979 /* IRCUserPersistentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUserPersistentStore.swift; sourceTree = "<group>"; };
+		D0C16D05DD48A6A51DC6AC54 /* IRCServerCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCServerCodableTests.swift; sourceTree = "<group>"; };
 		D0C705AC900BC5A901E95AC8 /* IRCClientConnectionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientConnectionDelegate.swift; sourceTree = "<group>"; };
 		D147344645A6883C5A3CDFF1 /* TDCServerPropertiesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCServerPropertiesSheet.swift; sourceTree = "<group>"; };
 		D151C7145A03BD639D0F6400 /* IRCClientIsolationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientIsolationTests.swift; sourceTree = "<group>"; };
@@ -3075,6 +3079,7 @@
 				703A4ECF99B9ECA7EBEB842D /* NSWindowHelper.swift */,
 				CFA06BB0633CEE8493CF774F /* PasteboardCompatibility.swift */,
 				D5F10207397EABF47C117D55 /* PortMapper.swift */,
+				C8D377A7F87C658E675EEDEA /* PropertyListModel.swift */,
 				648C92B43D3C394720DFBAFB /* RegularExpression.swift */,
 				482593C190C92A33A25470E2 /* SecureTransportSupport.swift */,
 				75C4C840CCE7A9CA41B70C2E /* SWArrayHelper.swift */,
@@ -3702,6 +3707,7 @@
 				776946BFE546B3E818AE2AFE /* IRCPrefixTests.swift */,
 				6F93A11C0A7363603412475C /* IRCSendingMessageEmptyArgumentTests.swift */,
 				633A7D0C2EE2C6BD97FF2E75 /* IRCSendingMessageTests.swift */,
+				D0C16D05DD48A6A51DC6AC54 /* IRCServerCodableTests.swift */,
 				0B69DD9DF091AD8AF1F46B38 /* IRCServiceNoticeOriginTests.swift */,
 				DE35CB6EEB91C3BBF831E9C3 /* IRCStringCatalogMigrationTests.swift */,
 				70E6813EE66A96C5CE2B2C14 /* IRCSTSPolicyTests.swift */,
@@ -5222,6 +5228,7 @@
 				549547B32899039BAE9F0D3D /* IRCSTSPolicyTests.swift in Sources */,
 				85721A34BEE6488D3CFD8E8D /* IRCSendingMessageEmptyArgumentTests.swift in Sources */,
 				54225AEA1BA2586F3A8C889C /* IRCSendingMessageTests.swift in Sources */,
+				76528ACA0315BFAA56B26D02 /* IRCServerCodableTests.swift in Sources */,
 				D4ED7027014FD22F944A8125 /* IRCServiceNoticeOriginTests.swift in Sources */,
 				0F7A701D9D2D3256A18728E9 /* IRCStringCatalogMigrationTests.swift in Sources */,
 				198C7787E91B63EAA6FE9CE5 /* IRCTimedCommandTests.swift in Sources */,
@@ -5402,6 +5409,7 @@
 				19E3F776A324CD675715C102 /* NSWindowHelper.swift in Sources */,
 				A1DDBCF9AFCB9FD27AA35852 /* PasteboardCompatibility.swift in Sources */,
 				9CF736862293CDBE198D6EF5 /* PortMapper.swift in Sources */,
+				AB43DF5128183F6930F42EF8 /* PropertyListModel.swift in Sources */,
 				A9F439AA2DA8B4000B4C3452 /* RegularExpression.swift in Sources */,
 				B8A2FAB494C5A88DC42E57B5 /* SWArrayHelper.swift in Sources */,
 				C5AEABE3BA94E3169F04D37B /* SWDataHelper.swift in Sources */,

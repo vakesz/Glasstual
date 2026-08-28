@@ -465,15 +465,13 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 			config.connectionName = serverAddress
 		}
 
-		let server = MutableServer()
-		server.serverAddress = serverAddress
-		server.serverPort = serverPort
-		server.prefersSecuredConnection = prefersSecuredConnection
-
-		guard let immutableServer = server.copy() as? Server else {
-			preconditionFailure("MutableServer.copy() must return Server")
-		}
-		config.serverList = [immutableServer]
+		config.serverList = [
+			Server(
+				serverAddress: serverAddress,
+				serverPort: serverPort,
+				prefersSecuredConnection: prefersSecuredConnection
+			),
+		]
 
 		let password = accountPassword
 
