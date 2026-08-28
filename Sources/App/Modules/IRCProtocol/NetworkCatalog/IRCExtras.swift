@@ -140,7 +140,7 @@ public final class Extras: NSObject {
 		guard let serverPortValue = UInt16(exactly: baseURL.port ?? Int(IRCConnectionDefaults.serverPort)) else {
 			extrasLogger.error("Invalid internet port")
 
-			return
+			return nil
 		}
 		var connectSecurely = false
 
