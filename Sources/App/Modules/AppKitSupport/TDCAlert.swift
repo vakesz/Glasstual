@@ -232,7 +232,9 @@ public final class TDCAlert: NSObject {
 				suppressKey = suppressionKey(withBase: key)
 
 				if UserDefaults.standard.bool(forKey: suppressKey!) {
-					return (.default, nil)
+					/* The alert *was* suppressed; reporting nil left the caller's
+					 out-parameter holding whatever it was initialised to. */
+					return (.default, true)
 				}
 			}
 
@@ -253,7 +255,9 @@ public final class TDCAlert: NSObject {
 				alert.addButton(withTitle: buttonOther)
 			}
 
-			if suppressKey != nil || suppressText != nil {
+			/* Only a key can record the choice, so showing the checkbox without one gave
+			 the user a "do not show again" control that did nothing. */
+			if suppressKey != nil {
 				alert.showsSuppressionButton = true
 				alert.suppressionButton?.title = suppressText ?? ""
 			}
@@ -533,7 +537,9 @@ public extension TDCAlert {
 				alert.addButton(withTitle: buttonOther)
 			}
 
-			if suppressKey != nil || suppressText != nil {
+			/* Only a key can record the choice, so showing the checkbox without one gave
+			 the user a "do not show again" control that did nothing. */
+			if suppressKey != nil {
 				alert.showsSuppressionButton = true
 				alert.suppressionButton?.title = suppressText ?? ""
 			}
@@ -753,7 +759,9 @@ public extension TDCAlert {
 				alert.addButton(withTitle: buttonOther)
 			}
 
-			if suppressKey != nil || suppressText != nil {
+			/* Only a key can record the choice, so showing the checkbox without one gave
+			 the user a "do not show again" control that did nothing. */
+			if suppressKey != nil {
 				alert.showsSuppressionButton = true
 				alert.suppressionButton?.title = suppressText ?? ""
 			}

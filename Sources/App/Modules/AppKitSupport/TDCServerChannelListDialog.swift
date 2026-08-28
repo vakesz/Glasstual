@@ -123,9 +123,10 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 			newEntry.channelTopicFormatted = NSAttributedString()
 		}
 
-		objc_sync_enter(queuedWrites)
+		/* This type is @MainActor, so no lock is needed. The previous objc_sync_enter
+		 calls boxed the Swift Array into a fresh __SwiftValue on every call and locked
+		 nothing at all. */
 		queuedWrites.append(newEntry)
-		objc_sync_exit(queuedWrites)
 
 		if isWaitingForWrites == false {
 			isWaitingForWrites = true
@@ -196,10 +197,7 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 	}
 
 	private func writeQueuedWrites() {
-		objc_sync_enter(queuedWrites)
-
 		guard queuedWrites.isEmpty == false else {
-			objc_sync_exit(queuedWrites)
 			return
 		}
 
@@ -219,7 +217,6 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 			queuedWrites.removeAll()
 		}
 
-		objc_sync_exit(queuedWrites)
 		updateDialogTitle()
 	}
 
