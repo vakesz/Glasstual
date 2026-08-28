@@ -109,7 +109,7 @@ public protocol ConnectionDelegate: AnyObject {
 @objc(IRCConnection)
 public final class Connection: NSObject, RemoteConnectionClientProtocol {
 	@objc public private(set) weak var client: IRCClient!
-	@objc public private(set) var config: IRCConnectionConfig
+	public private(set) var config: IRCConnectionConfig
 	@objc public private(set) var isConnected = false
 	@objc public private(set) var isConnectedWithClientSideCertificate = false
 	@objc public private(set) var isConnecting = false
@@ -152,13 +152,9 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 		fatalError("init() is unavailable; use init(config:onClient:)")
 	}
 
-	@objc(initWithConfig:onClient:)
 	public init(config: IRCConnectionConfig, onClient client: IRCClient) {
-		guard let configCopy = config.copy() as? IRCConnectionConfig else {
-			preconditionFailure("IRCConnectionConfig.copy() returned an unexpected type")
-		}
 		self.client = client
-		self.config = configCopy
+		self.config = config
 		uniqueIdentifier = UUID().uuidString
 		(events, eventContinuation) = AsyncStream.makeStream()
 		super.init()
@@ -291,7 +287,7 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 		guard isConnecting == false, isConnected == false, isDisconnecting == false else { return }
 		warmProcessIfNeeded()
 		isConnecting = true
-		remoteObjectProxy()?.open(with: config)
+		remoteObjectProxy()?.open(with: ConnectionConfigEnvelope(config: config))
 
 		if TextualPreferences.appNapEnabled() == false {
 			remoteObjectProxy()?.disableAppNap()

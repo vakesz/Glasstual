@@ -66,7 +66,7 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 		balanceSuddenTermination()
 	}
 
-	func open(with config: IRCConnectionConfig) {
+	func open(with config: ConnectionConfigEnvelope) {
 		guard connection == nil else {
 			RCMLog.connection.error("Cannot open a connection that is already open")
 			return
@@ -77,7 +77,7 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 			return
 		}
 
-		let activeConnection = Connection(with: config, on: serviceConnection)
+		let activeConnection = Connection(with: config.config, on: serviceConnection)
 		activeConnection.open()
 		connection = activeConnection
 	}
