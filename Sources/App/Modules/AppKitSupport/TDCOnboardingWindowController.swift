@@ -193,6 +193,9 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		let incoming = steps[index]
 		currentStepIndex = index
 
+		/* Steps populate their outlets in loadView(); make sure the view exists
+		 before the step is asked to prepare it. */
+		incoming.loadViewIfNeeded()
 		incoming.stepWillAppear()
 
 		guard let container = contentContainerView else {

@@ -41,10 +41,19 @@ class GLTCompletionChannel: Channel, @unchecked Sendable {
 class InputHandlingMigrationTests: XCTestCase {
 	@objc
 	func testInputHistoryNavigatesEntriesAndSkipsConsecutiveDuplicates() {
-		let defaults = UserDefaults.standard
-		let originalChannelSpecificValue = defaults.bool(forKey: "SaveInputHistoryPerSelection")
+		let defaults = TextualUserDefaults.shared()
+		let preferenceKey = "SaveInputHistoryPerSelection"
+		let originalChannelSpecificValue = defaults
+			.persistentDomain(forName: ApplicationGroup.identifier)?[preferenceKey]
+		defer {
+			if let originalChannelSpecificValue {
+				defaults.set(originalChannelSpecificValue, forKey: preferenceKey)
+			} else {
+				defaults.removeObject(forKey: preferenceKey)
+			}
+		}
 
-		defaults.set(false, forKey: "SaveInputHistoryPerSelection")
+		defaults.set(false, forKey: preferenceKey)
 
 		let window = TVCMainWindow(
 			contentRect: .zero,
@@ -62,8 +71,6 @@ class InputHandlingMigrationTests: XCTestCase {
 		XCTAssertEqual(history.up(NSAttributedString(string: "second"))?.string, "first")
 		XCTAssertEqual(history.down(NSAttributedString(string: "first"))?.string, "second")
 		XCTAssertEqual(history.down(NSAttributedString(string: "second"))?.string, "")
-
-		defaults.set(originalChannelSpecificValue, forKey: "SaveInputHistoryPerSelection")
 	}
 
 	@objc
@@ -155,7 +162,14 @@ class InputHandlingMigrationTests: XCTestCase {
 	func testNicknameCompletionUsesChannelMembersAndConfiguredSuffix() {
 		let defaults = TextualUserDefaults.shared()
 		let preferenceKey = "Keyboard -> Tab Key Completion Suffix"
-		let originalSuffix = defaults.object(forKey: preferenceKey)
+		let originalSuffix = defaults.persistentDomain(forName: ApplicationGroup.identifier)?[preferenceKey]
+		defer {
+			if let originalSuffix {
+				defaults.set(originalSuffix, forKey: preferenceKey)
+			} else {
+				defaults.removeObject(forKey: preferenceKey)
+			}
+		}
 
 		defaults.set(": ", forKey: preferenceKey)
 
@@ -184,12 +198,6 @@ class InputHandlingMigrationTests: XCTestCase {
 
 		completion.completeNickname(true)
 		XCTAssertEqual(textField.string, "Alice: ")
-
-		if let originalSuffix {
-			defaults.set(originalSuffix, forKey: preferenceKey)
-		} else {
-			defaults.removeObject(forKey: preferenceKey)
-		}
 	}
 
 	@objc

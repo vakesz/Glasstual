@@ -231,7 +231,7 @@ public final class TDCAlert: NSObject {
 			if let key = suppressKey {
 				suppressKey = suppressionKey(withBase: key)
 
-				if UserDefaults.standard.bool(forKey: suppressKey!) {
+				if isSuppressed(fullKey: suppressKey!) {
 					return (.default, nil)
 				}
 			}
@@ -509,7 +509,7 @@ public extension TDCAlert {
 			if let key = suppressKey {
 				suppressKey = suppressionKey(withBase: key)
 
-				if UserDefaults.standard.bool(forKey: suppressKey!) {
+				if isSuppressed(fullKey: suppressKey!) {
 					context.completionBlock?(.default, true, nil)
 					return nil
 				}
@@ -729,7 +729,7 @@ public extension TDCAlert {
 			if let key = suppressKey {
 				suppressKey = suppressionKey(withBase: key)
 
-				if UserDefaults.standard.bool(forKey: suppressKey!) {
+				if isSuppressed(fullKey: suppressKey!) {
 					context.completionBlock?(.default, true, nil)
 					return
 				}
@@ -774,6 +774,16 @@ public extension TDCAlert {
 // MARK: - Utilities
 
 extension TDCAlert {
+	/// Whether the user has previously chosen "do not show again" for an alert
+	/// whose `suppressionKey:` argument was `baseKey`.
+	public static func isSuppressed(baseKey: String) -> Bool {
+		isSuppressed(fullKey: suppressionKey(withBase: baseKey))
+	}
+
+	static func isSuppressed(fullKey: String) -> Bool {
+		UserDefaults.standard.bool(forKey: fullKey)
+	}
+
 	@objc(suppressionKeyWithBase:)
 	public static func suppressionKey(withBase base: String) -> String {
 		if base.hasPrefix(suppressionPrefix) {

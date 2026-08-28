@@ -860,6 +860,13 @@ schemes:
       config: Debug
     test:
       config: Debug
+      gatherCoverageData: true
+      # Tests are injected into Glasstual.app (TEST_HOST). Point the shared
+      # defaults suite at a scratch domain so runs never touch real prefs.
+      environmentVariables:
+        - variable: GLASSTUAL_UI_REVIEW_SUITE
+          value: com.vakesz.glasstual.tests
+          isEnabled: true
       targets:
         - GlasstualTests
     profile:

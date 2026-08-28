@@ -41,14 +41,25 @@ import XCTest
 /// IRCv3 typing notifications, replies, and reactions.
 @MainActor
 final class IRCMessageTagsTests: XCTestCase {
+	private static let typingPreferenceKey = "SendTypingNotifications"
+	private var originalTypingPreference: Any?
+
 	override func setUp() {
 		super.setUp()
 
-		TextualUserDefaults.shared().set(true, forKey: "SendTypingNotifications")
+		let defaults = TextualUserDefaults.shared()
+		originalTypingPreference = defaults
+			.persistentDomain(forName: ApplicationGroup.identifier)?[Self.typingPreferenceKey]
+		defaults.set(true, forKey: Self.typingPreferenceKey)
 	}
 
 	override func tearDown() {
-		TextualUserDefaults.shared().set(true, forKey: "SendTypingNotifications")
+		let defaults = TextualUserDefaults.shared()
+		if let originalTypingPreference {
+			defaults.set(originalTypingPreference, forKey: Self.typingPreferenceKey)
+		} else {
+			defaults.removeObject(forKey: Self.typingPreferenceKey)
+		}
 
 		super.tearDown()
 	}
