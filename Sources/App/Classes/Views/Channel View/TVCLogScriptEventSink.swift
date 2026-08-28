@@ -479,14 +479,11 @@ extension TVCLogScriptEventSink {
 	}
 
 	private func handleChannelNameDoubleClicked(_ context: LogScriptEventContext) {
-		context.webViewPolicy.perform(
-			NSSelectorFromString("channelNameDoubleClickedInWebView:"),
-			with: context.webView
-		)
+		context.webViewPolicy.channelNameDoubleClicked(in: context.webView)
 	}
 
 	private func handleDisplayContextMenu(_ context: LogScriptEventContext) {
-		context.webViewPolicy.perform(NSSelectorFromString("displayContextMenuInWebView:"), with: context.webView)
+		context.webViewPolicy.displayContextMenu(in: context.webView)
 	}
 
 	private func handleCopySelectionWhenPermitted(_ context: LogScriptEventContext) {
@@ -561,10 +558,7 @@ extension TVCLogScriptEventSink {
 	}
 
 	private func handleNicknameDoubleClicked(_ context: LogScriptEventContext) {
-		context.webViewPolicy.perform(
-			NSSelectorFromString("nicknameDoubleClickedInWebView:"),
-			with: context.webView
-		)
+		context.webViewPolicy.nicknameDoubleClicked(in: context.webView)
 	}
 
 	private func handleNotifyJumpToLineCallback(_ context: LogScriptEventContext) {

@@ -50,7 +50,7 @@ public enum TVCTextViewCaretLocation: UInt {
 }
 
 @objc(TVCTextViewWithIRCFormatter)
-open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
+open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeyboardEventResponder {
 	private var keyEventHandler: KeyEventHandler!
 	private var preferredFontStorage: NSFont = .systemFont(ofSize: NSFont.systemFontSize)
 	private var preferredFontColorStorage: NSColor = .textColor
@@ -150,7 +150,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
 		keyEventHandler.register(character: character, modifiers: modifiers, perform: action)
 	}
 
-	@objc(performedCustomKeyboardEvent:)
 	public func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
 		keyEventHandler.processKeyEvent(event)
 	}

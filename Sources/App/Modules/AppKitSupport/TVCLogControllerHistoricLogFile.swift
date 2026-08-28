@@ -126,18 +126,30 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 			return
 		}
 
-		let fetchSelectors = [
-			"fetchEntriesForView:ascending:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:",
+		/* NSXPCInterface is selector-based, but the selectors are the ones the
+		 protocol declares, so #selector keeps them compile-checked. */
+		let fetchSelectors: [Selector] = [
+			#selector(HistoricLogServerProtocol.fetchEntries(
+				forView:ascending:fetchLimit:limitTo:withCompletionBlock:
+			)),
+			#selector(HistoricLogServerProtocol.fetchEntries(
+				forView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitTo:withCompletionBlock:
+			)),
+			#selector(HistoricLogServerProtocol.fetchEntries(
+				forView:beforeUniqueIdentifier:fetchLimit:limitTo:withCompletionBlock:
+			)),
+			#selector(HistoricLogServerProtocol.fetchEntries(
+				forView:afterUniqueIdentifier:fetchLimit:limitTo:withCompletionBlock:
+			)),
+			#selector(HistoricLogServerProtocol.fetchEntries(
+				forView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:
+			)),
 		]
 
-		for selectorName in fetchSelectors {
+		for selector in fetchSelectors {
 			remoteObjectInterface.setClasses(
 				replyClasses,
-				for: NSSelectorFromString(selectorName),
+				for: selector,
 				argumentIndex: 0,
 				ofReply: true
 			)

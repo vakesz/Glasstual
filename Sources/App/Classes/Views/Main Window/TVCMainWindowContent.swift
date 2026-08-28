@@ -95,7 +95,7 @@ extension MainWindow {
 
 	private func performThemeReload() {
 		for client in world.clientList {
-			client.viewController.perform(NSSelectorFromString("reloadTheme"))
+			client.viewController.reloadTheme()
 			for channel in client.channelList {
 				channel.viewController.reloadTheme()
 			}
@@ -810,7 +810,7 @@ public extension MainWindow {
 	func setupTrees() {
 		memberList.keyDelegate = self
 		memberList.target = menuController
-		memberList.doubleAction = NSSelectorFromString("memberInMemberListDoubleClicked:")
+		memberList.doubleAction = #selector(TXMenuController.memberInMemberListDoubleClicked(_:))
 		serverList.keyDelegate = self
 		serverList.delegate = self
 		serverList.dataSource = self

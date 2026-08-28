@@ -116,12 +116,19 @@ private final class NetworkPickerCellView: NSTableCellView {
 
 // MARK: - Picker
 
+/// What `NetworkPickerViewController` reports back.
+@MainActor
+public protocol NetworkPickerViewControllerDelegate: AnyObject {
+	func networkPickerSelectionDidChange(_ sender: NetworkPickerViewController)
+	func networkPickerDidConfirmSelection(_ sender: NetworkPickerViewController)
+}
+
 @objc(TDCNetworkPickerViewController)
 @MainActor
 public final class NetworkPickerViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate,
 	NSSearchFieldDelegate, NSTextFieldDelegate
 {
-	@objc public weak var delegate: AnyObject?
+	public weak var delegate: (any NetworkPickerViewControllerDelegate)?
 
 	@objc public private(set) var networkList: NetworkList
 	@objc public private(set) var selectedNetwork: Network?
@@ -387,10 +394,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	}
 
 	private func informDelegateSelectionChanged() {
-		let selector = NSSelectorFromString("networkPickerSelectionDidChange:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.networkPickerSelectionDidChange(self)
 	}
 
 	// MARK: - Values
@@ -516,10 +520,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 			return
 		}
 
-		let selector = NSSelectorFromString("networkPickerDidConfirmSelection:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.networkPickerDidConfirmSelection(self)
 	}
 
 	// MARK: - Text Field Delegate

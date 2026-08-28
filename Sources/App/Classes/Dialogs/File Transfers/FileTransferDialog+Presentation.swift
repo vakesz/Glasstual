@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import QuickLookUI
 
 extension FileTransferDialog {
@@ -82,7 +83,7 @@ extension FileTransferDialog {
 		}
 
 		if restorePosition {
-			window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
+			window.ce_restoreState(for: Self.self)
 		}
 	}
 
@@ -186,7 +187,7 @@ extension FileTransferDialog {
 	}
 
 	public func windowWillClose(_: Notification) {
-		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
+		window.ce_saveState(for: Self.self)
 
 		guard QLPreviewPanel.sharedPreviewPanelExists(),
 		      let panel = QLPreviewPanel.shared(),

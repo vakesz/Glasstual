@@ -13,6 +13,13 @@
 import AppKit
 import CocoaExtensions
 
+/// Told when a validated control's text changed. `sender` is the control, so
+/// one observer can serve several fields and tell them apart by identity.
+@MainActor
+public protocol ValidatedControlChangeObserver: AnyObject {
+	func validatedTextFieldTextDidChange(_ sender: NSControl)
+}
+
 @objc(TVCValidatedTextField)
 public final class ValidatedTextField: NSTextField {
 	@objc public var validationBlock: ((String) -> String?)?
@@ -20,7 +27,7 @@ public final class ValidatedTextField: NSTextField {
 	@objc public var stringValueIsTrimmed = false
 	@objc public var stringValueIsInvalidOnEmpty = false
 	@objc public var performValidationWhenEmpty = false
-	@objc public weak var textDidChangeCallback: AnyObject?
+	public weak var textDidChangeCallback: (any ValidatedControlChangeObserver)?
 	@objc public var defaultValue: String?
 
 	private var cachedValidValue = false
@@ -168,15 +175,7 @@ public final class ValidatedTextField: NSTextField {
 	}
 
 	private func informCallbackTextDidChange() {
-		guard let textDidChangeCallback else {
-			return
-		}
-
-		let selector = NSSelectorFromString("validatedTextFieldTextDidChange:")
-
-		if textDidChangeCallback.responds(to: selector) {
-			_ = textDidChangeCallback.perform(selector, with: self)
-		}
+		textDidChangeCallback?.validatedTextFieldTextDidChange(self)
 	}
 }
 
