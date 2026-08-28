@@ -318,7 +318,7 @@ public final class MenuActionCoordinator: NSObject {
 		case .addIgnore, .removeIgnore, .modifyIgnore, .memberListDoubleClick,
 		     .channelViewDoubleClick, .insertNickname, .whois, .privateMessage,
 		     .ctcpPing, .ctcpFinger, .ctcpTime, .ctcpVersion, .ctcpUserinfo,
-		     .ctcpClientInfo:
+		     .ctcpClientInfo, .changeColor:
 			break
 		@unknown default:
 			break

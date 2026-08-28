@@ -366,8 +366,21 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		return true
 	}
 
-	func controlTextDidChange(_: Notification) {
+	func controlTextDidChange(_ notification: Notification) {
+		if let field = notification.object as? NSTextField, field === actionFloodIntervalField {
+			restrictToDigits(field)
+		}
 		toggleOkButton()
+	}
+
+	/// The flood-control interval is a plain number field: anything but ASCII
+	/// digits is dropped as it is typed, replacing the formatter subclass
+	/// Textual used to install for the same purpose.
+	private func restrictToDigits(_ field: NSTextField) {
+		let digits = field.stringValue.filter { $0.isASCII && $0.isNumber }
+		guard digits != field.stringValue else { return }
+		NSSound.beep()
+		field.stringValue = digits
 	}
 
 	private func toggleOkButton() {

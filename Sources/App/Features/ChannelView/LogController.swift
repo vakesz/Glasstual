@@ -530,7 +530,7 @@ public final class LogController: NSObject {
 				ascending: false,
 				fetchLimit: 100,
 				limitToDate: limitDate
-			) { entries in
+			) { [weak self] entries in
 				guard operation.isCancelled == false else {
 					operation.finish()
 					return
@@ -538,7 +538,7 @@ public final class LogController: NSObject {
 				let entries = Array(entries.reversed())
 				let results = Self.render(entries, context: context, using: renderer)
 				let transfer = LogControllerMainActorTransfer(value: (entries: entries, results: results))
-				Task { @MainActor [weak self] in
+				Task { @MainActor in
 					defer { operation.finish() }
 					self?.applyReloadedHistory(
 						transfer.value.entries,

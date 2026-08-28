@@ -388,8 +388,12 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 			}
 			let trustReference = TrustReference(value: trust)
 
-			Task { @MainActor in
-				self.trustPanel = TrustPanelPresenter.present(
+			Task { @MainActor [weak self] in
+				guard let self else {
+					response.callback(false)
+					return
+				}
+				trustPanel = TrustPanelPresenter.present(
 					in: nil,
 					body: PromptStrings.TransportSecurity.certificateFailureBody(serverName: policyName),
 					title: PromptStrings.TransportSecurity.certificateFailureTitle(serverName: policyName),
@@ -397,15 +401,15 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 					alternateButton: PromptStrings.Action.cancel,
 					trust: trustReference.value,
 					completion: { [weak self] _, trusted, _ in
-						Task { @MainActor in
+						Task { @MainActor [weak self] in
 							guard let self else {
 								response.callback(false)
 								return
 							}
-							self.trustPanel = nil
-							self.trustPanelIsPresenting = false
-							if self.trustPanelDoNotInvokeCompletionBlock {
-								self.trustPanelDoNotInvokeCompletionBlock = false
+							trustPanel = nil
+							trustPanelIsPresenting = false
+							if trustPanelDoNotInvokeCompletionBlock {
+								trustPanelDoNotInvokeCompletionBlock = false
 								return
 							}
 							response.callback(trusted)

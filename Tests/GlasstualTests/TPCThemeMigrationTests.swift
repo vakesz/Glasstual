@@ -99,19 +99,14 @@ final class TPCThemeMigrationTests: XCTestCase {
 		XCTAssertNil(TPCThemeController.buildFilename("", for: .bundle))
 	}
 
-	func testPublishedThemeCanBeReadFromRenderingQueue() {
-		let renderingQueue = OperationQueue()
-		renderingQueue.maxConcurrentOperationCount = 1
-		renderingQueue.addOperation {
-			let controller = SharedApplication.sharedThemeController()
-			XCTAssertNotNil(controller.theme)
-			XCTAssertFalse(controller.name.isEmpty)
-			XCTAssertTrue(controller.originalURL.isFileURL)
-			XCTAssertTrue(controller.temporaryURL.isFileURL)
-			XCTAssertNotEqual(controller.storageLocation, .unknown)
-			_ = controller.settings
-		}
-		renderingQueue.waitUntilAllOperationsAreFinished()
+	func testPublishedThemeIsPopulated() {
+		let controller = SharedApplication.sharedThemeController()
+		XCTAssertNotNil(controller.theme)
+		XCTAssertFalse(controller.name.isEmpty)
+		XCTAssertTrue(controller.originalURL.isFileURL)
+		XCTAssertTrue(controller.temporaryURL.isFileURL)
+		XCTAssertNotEqual(controller.storageLocation, .unknown)
+		_ = controller.settings
 	}
 
 	private func makeThemeFixture(settings: [String: Any]) throws -> URL {

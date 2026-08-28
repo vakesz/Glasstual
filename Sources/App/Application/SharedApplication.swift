@@ -46,12 +46,9 @@ public final class SharedApplication: NSObject {
 		notificationController
 	}
 
-	/* ISOLATION-EXCEPTION: plugin dispatch runs on the IRC threads, so this
-	 singleton has to stay reachable without the main actor, but `PluginManager`
-	 is not yet `Sendable` (its load/unload scheduling flags are plain vars behind
-	 an `NSLock`). Owned by the plugin-layer task; drop the annotation once
-	 `PluginManager` conforms. */
-	private nonisolated(unsafe) static let pluginManager = PluginManager()
+	/// Plugin dispatch runs on the IRC threads, so this singleton has to stay
+	/// reachable without the main actor; `PluginManager` is `Sendable`.
+	private nonisolated static let pluginManager = PluginManager()
 
 	@objc
 	public nonisolated static func sharedPluginManager() -> PluginManager {

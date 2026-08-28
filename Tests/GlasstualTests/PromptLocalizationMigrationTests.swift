@@ -30,9 +30,6 @@ final class PromptLocalizationMigrationTests: XCTestCase {
 	}
 
 	func testSemanticBoundariesPreservePositionalPlaceholderContracts() {
-		let pluginSecurityNotice = "Plugins run with the same access as Glasstual itself. "
-			+ "Only load plugins from developers you trust. This choice is remembered until the plugin is signed "
-			+ "by a different Team ID or the approvals are reset in Settings > Addons."
 		XCTAssertEqual(
 			PromptStrings.ConnectionLink.title(
 				serverAddress: "irc.example.com",
