@@ -8,30 +8,30 @@ import Foundation
 
 nonisolated enum IRCDiagnosticStrings {
 	static var rawTrafficNotice: String {
-		String(localized: .IRC.ik6Dl)
+		String(localized: .IRC.serverTrafficWillBeOutput)
 	}
 
 	static var hiddenCommandResponsesNotice: String {
-		String(localized: .IRC.yemTd)
+		String(localized: .IRC.commandResponsesWhichAreNormallyHidden)
 	}
 
 	static func scriptFailure(filename: String, input: String, description: String) -> String {
-		String(localized: .IRC._2McH0(filename, input, description))
+		String(localized: .IRC.scriptExecutionFailure(filename, input, description))
 	}
 
 	static func scriptFailure(_ description: String) -> String {
-		String(localized: .IRC.ax0Mt(description))
+		String(localized: .IRC.scriptErrorsExecutionFailure(description))
 	}
 
 	static func malformedMessage(numeric: UInt, sequence: String) -> String {
 		// The numeric is server-controlled; an out-of-range one is reported
 		// as 0 rather than trapping the conversion.
-		String(localized: .IRC._3YoGw(Int32(exactly: numeric) ?? 0, sequence))
+		String(localized: .IRC.miscellaneousMessagesRelatedMessage(Int32(exactly: numeric) ?? 0, sequence))
 	}
 }
 
 nonisolated enum IRCLogStrings {
 	static func sessionMarker(startsSession: Bool) -> String {
-		startsSession ? String(localized: .IRC.qrgUa) : String(localized: .IRC.d5DUy)
+		startsSession ? String(localized: .IRC.beginSession) : String(localized: .IRC.endSession)
 	}
 }

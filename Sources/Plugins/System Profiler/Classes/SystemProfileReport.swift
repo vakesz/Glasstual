@@ -50,9 +50,9 @@ enum SystemProfileReport {
 
 		let storage = switch snapshot.storageLocation {
 		case .bundled:
-			SystemProfilerHostApplicationStrings.string(.bundledTheme)
+			String(localized: .BasicLanguage.bundledTheme)
 		case .custom:
-			SystemProfilerHostApplicationStrings.string(.customTheme)
+			String(localized: .BasicLanguage.customTheme)
 		case .unknown:
 			""
 		}
@@ -452,16 +452,5 @@ enum SystemProfileInformation {
 enum SystemProfilerLocalization {
 	static func string(_ resource: LocalizedStringResource) -> String {
 		String(localized: resource)
-	}
-}
-
-private enum SystemProfilerHostApplicationStrings {
-	enum Key: String {
-		case bundledTheme = "7lm-bq"
-		case customTheme = "bm2-4p"
-	}
-
-	static func string(_ key: Key) -> String {
-		Bundle.main.localizedString(forKey: key.rawValue, value: nil, table: "BasicLanguage")
 	}
 }

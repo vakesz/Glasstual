@@ -112,59 +112,42 @@ final class UIShellLocalizationCatalogTests: XCTestCase {
 		XCTAssertEqual(MainWindowStrings.Typing.caption(for: ["alice", "bob", "carol"]), "3 people are typing…")
 	}
 
-	func testCatalogSchemasRetainAllCompatibilityKeysAndPlaceholders() throws {
-		let expectedCounts = [
-			"TDCOnboardingWindow": 70,
-			"TDCServerPropertiesSheet": 37,
-			"TVCMainWindow": 59,
-		]
-		let formattedValues = [
-			"TDCOnboardingWindow": ["ob1-pg": "Step %1$ld of %2$ld"],
+	/// The placeholder contract of the multi-argument entries, which is what a
+	/// careless catalog edit actually breaks. Everything structural about
+	/// these tables is covered by `StringCatalogStructureTests`.
+	func testMultiArgumentValuesKeepTheirPlaceholderContracts() throws {
+		let expectedValues = [
+			"TDCOnboardingWindow": ["window-chrome-step": "Step %1$ld of %2$ld"],
 			"TDCServerPropertiesSheet": [
-				"k50-8n": "%@\n\nThese cipher suites are ordered by preference with the most preferred at the top.",
-				"wlz-tb": "Please enter a list of properly formatted nicknames.\n\n"
+				"these-cipher-suites-are-ordered":
+					"%@\n\nThese cipher suites are ordered by preference with the most preferred at the top.",
+				"please-enter-a-list-of-properly":
+					"Please enter a list of properly formatted nicknames.\n\n"
 					+ "Failed on nickname: “%@“\n\n"
 					+ "List of nicknames should be space separated.\n"
 					+ "For example: “Guest1 Guest2 Guest3“",
-				"yko-5g": "The “%@” includes the following cipher suites:",
+				"includes-the-following-cipher-suites": "The “%@” includes the following cipher suites:",
 			],
 			"TVCMainWindow": [
-				"acc-in": "Logged in as %@",
-				"dki-bg": "%@+",
-				"rpl-to": "Replying to %@",
-				"st-uc": "%@ users",
-				"typ-1": "%@ is typing…",
-				"typ-2": "%@ and %@ are typing…",
-				"typ-n": "%@ people are typing…",
+				"member-account-status-description-logged": "Logged in as %@",
+				"dock-icon-badge-shown": "%@+",
+				"input-bar-reply-banner-replying": "Replying to %@",
+				"main-window-connection-status-users": "%@ users",
+				"is-typing": "%@ is typing…",
+				"are-typing": "%@ and %@ are typing…",
 			],
 		]
 
-		var total = 0
-		for (tableName, expectedCount) in expectedCounts {
+		for (tableName, values) in expectedValues {
 			let catalog = try catalog(named: tableName)
-			XCTAssertEqual(catalog.sourceLanguage, "en", tableName)
-			XCTAssertEqual(catalog.version, "1.0", tableName)
-			XCTAssertEqual(catalog.strings.count, expectedCount, tableName)
-			total += catalog.strings.count
-
-			for (key, entry) in catalog.strings {
-				XCTAssertTrue(entry.comment.hasPrefix("Migrated from legacy key \(key)."), "\(tableName):\(key)")
-				XCTAssertEqual(entry.extractionState, "manual", "\(tableName):\(key)")
-				let english = try XCTUnwrap(entry.localizations["en"], "\(tableName):\(key)")
-				XCTAssertEqual(english.stringUnit.state, "translated", "\(tableName):\(key)")
-				XCTAssertFalse(english.stringUnit.value.isEmpty, "\(tableName):\(key)")
-			}
-
-			for (key, expectedValue) in formattedValues[tableName, default: [:]] {
+			for (key, expectedValue) in values {
 				XCTAssertEqual(
-					catalog.strings[key]?.localizations["en"]?.stringUnit.value,
+					catalog.strings[key]?.localizations["en"]?.stringUnit?.value,
 					expectedValue,
 					"\(tableName):\(key)"
 				)
 			}
 		}
-
-		XCTAssertEqual(total, 166)
 	}
 
 	func testLegacyTableFilesAreRetired() {
@@ -208,7 +191,8 @@ private struct UIShellCatalogEntry: Decodable {
 }
 
 private struct UIShellCatalogLocalization: Decodable {
-	let stringUnit: UIShellCatalogStringUnit
+	/// Absent on entries that carry plural variations instead.
+	let stringUnit: UIShellCatalogStringUnit?
 }
 
 private struct UIShellCatalogStringUnit: Decodable {

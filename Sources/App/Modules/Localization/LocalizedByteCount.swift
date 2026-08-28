@@ -12,20 +12,11 @@
 
 import Foundation
 
-nonisolated enum AboutStrings {
-	static var acknowledgementsButtonTitle: String {
-		String(localized: .TDCAboutDialog.acknowledgementsButton)
-	}
-
-	static var upstreamAttribution: String {
-		String(localized: .TDCAboutDialog.upstreamAttribution)
-	}
-
-	static func applicationIconAccessibilityLabel(applicationName: String) -> String {
-		String(localized: .TDCAboutDialog.iconAccessibility(applicationName))
-	}
-
-	static func versionDescription(applicationName: String, version: String) -> String {
-		String(localized: .TDCAboutDialog.applicationNameFollowed(applicationName, version))
+/// User-visible byte counts are formatted here rather than interpolated as
+/// raw integers, which keeps the String Catalog entries down to a plain
+/// `%@` placeholder that every locale can position freely.
+nonisolated enum LocalizedByteCount {
+	static func formatted(_ byteCount: UInt64) -> String {
+		Int64(clamping: byteCount).formatted(.byteCount(style: .file))
 	}
 }

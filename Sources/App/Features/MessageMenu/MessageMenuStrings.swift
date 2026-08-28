@@ -14,26 +14,26 @@ import Foundation
 
 nonisolated enum MessageMenuStrings {
 	static var emojiPlaceholder: String {
-		String(localized: .TXMenuController.rctPh)
+		String(localized: .TXMenuController.messageContextMenuRepliesEmoji)
 	}
 
 	static var otherReaction: String {
-		String(localized: .TXMenuController.rctOt)
+		String(localized: .TXMenuController.messageContextMenuRepliesOther)
 	}
 
 	static var react: String {
-		String(localized: .TXMenuController.rctTo)
+		String(localized: .TXMenuController.messageContextMenuRepliesReact)
 	}
 
 	static var reply: String {
-		String(localized: .TXMenuController.rplTo)
+		String(localized: .TXMenuController.messageContextMenuRepliesReply)
 	}
 
 	static var sendReaction: String {
-		String(localized: .TXMenuController.rctSd)
+		String(localized: .TXMenuController.messageContextMenuRepliesSend)
 	}
 
 	static var share: String {
-		String(localized: .TXMenuController.shrM1)
+		String(localized: .TXMenuController.titleOfTheStandardShare)
 	}
 }

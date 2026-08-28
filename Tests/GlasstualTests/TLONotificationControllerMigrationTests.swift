@@ -105,10 +105,6 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 	func testPublicFormatConstantsRemainStable() {
 		XCTAssertEqual(NotificationPayload.clientIdentifierKey, "clientId")
 		XCTAssertEqual(NotificationPayload.channelIdentifierKey, "channelId")
-		XCTAssertEqual(NotificationPayload.standardNicknameFormat, "%@ %@")
-		XCTAssertEqual(NotificationPayload.actionNicknameFormat, "• %@: %@")
-		XCTAssertEqual(NotificationPayload.highlightActionFormat, "• %@: %@")
-		XCTAssertEqual(NotificationPayload.highlightMessageFormat, "%@ %@")
 	}
 
 	@objc

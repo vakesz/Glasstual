@@ -16,26 +16,24 @@ nonisolated enum ChannelAccessListStrings {
 	static func heading(for entryType: ChannelBanListEntryType, channelName: String) -> String {
 		switch entryType {
 		case .ban:
-			String(localized: .TDCChannelBanListSheet.rhcKe(channelName))
+			String(localized: .TDCChannelBanListSheet.headingForTheBanBans(channelName))
 		case .banException:
-			String(localized: .TDCChannelBanListSheet.gbiWn(channelName))
+			String(localized: .TDCChannelBanListSheet.banExceptions(channelName))
 		case .inviteException:
-			String(localized: .TDCChannelBanListSheet.ylc6E(channelName))
+			String(localized: .TDCChannelBanListSheet.inviteExceptions(channelName))
 		case .quiet:
-			String(localized: .TDCChannelBanListSheet.g4RT6(channelName))
+			String(localized: .TDCChannelBanListSheet.headingForTheQuietQuiets(channelName))
 		}
 	}
 
 	static func entryCount(_ count: Int, maximum: Int) -> String {
-		let countDescription = formattedNumber(count) as String
-
 		guard maximum > 0 else {
-			return String(localized: .TDCChannelBanListSheet.n0FCn(countDescription))
+			return String(localized: .TDCChannelBanListSheet.entryCount(count))
 		}
 
 		return String(
-			localized: .TDCChannelBanListSheet.n0FMx(
-				countDescription,
+			localized: .TDCChannelBanListSheet.ofEntries(
+				formattedNumber(count) as String,
 				formattedNumber(maximum) as String
 			)
 		)

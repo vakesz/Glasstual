@@ -40,71 +40,71 @@ import Foundation
 
 nonisolated enum IRCCommandStrings {
 	static var channelRequired: String {
-		String(localized: .IRC.g01Qn)
+		String(localized: .IRC.thisCommandCanOnlyBeUsed)
 	}
 
 	static var queryRequired: String {
-		String(localized: .IRC.m6OZ1)
+		String(localized: .IRC.thisCommandCanOnlyBeUsedWithAQuery)
 	}
 
 	static var invalidArguments: String {
-		String(localized: .IRC.zefQ9)
+		String(localized: .IRC.oneOrMoreArgumentsAreNot)
 	}
 
 	static var nicknameColorsMustBeEnabled: String {
-		String(localized: .IRC._026Qv)
+		String(localized: .IRC.thisCommandCannotBeUsedUnless)
 	}
 
 	static var noEnabledCapabilities: String {
-		String(localized: .IRC._5WaLb)
+		String(localized: .IRC.thereAreNoCapabilities)
 	}
 
 	static var soundAlreadyMuted: String {
-		String(localized: .IRC.sdnYr)
+		String(localized: .IRC.soundIsAlreadyMuted)
 	}
 
 	static var soundMuted: String {
-		String(localized: .IRC.u48Aa)
+		String(localized: .IRC.soundHasBeenMuted)
 	}
 
 	static var soundNotMuted: String {
-		String(localized: .IRC._5RfMj)
+		String(localized: .IRC.soundIsNotMuted)
 	}
 
 	static var soundUnmuted: String {
-		String(localized: .IRC._190F2)
+		String(localized: .IRC.soundIsNoLongerMuted)
 	}
 
 	static var chatHistoryUnsupported: String {
-		String(localized: .IRC.hc1Ah)
+		String(localized: .IRC.thisServerDoesNotSupportChat)
 	}
 
 	static var silenceUnsupported: String {
-		String(localized: .IRC.m2VSd)
+		String(localized: .IRC.thisServerDoesNotAdvertiseSupport)
 	}
 
 	static var useAddressBookForTrackedUsers: String {
-		String(localized: .IRC.khw4Y)
+		String(localized: .IRC.pleaseUseTheAddressBook)
 	}
 
 	static var noNicknameWeights: String {
-		String(localized: .IRC.dje41)
+		String(localized: .IRC.noWeights)
 	}
 
 	static var appleSilicon: String {
-		String(localized: .IRC.g1UOs)
+		String(localized: .IRC.appleSilicon)
 	}
 
 	static var waitingForLagCheck: String {
-		String(localized: .IRC.qohKt)
+		String(localized: .IRC.waitingForResponseFromLagCheck)
 	}
 
 	static var setNameUnsupported: String {
-		String(localized: .IRC.setNm)
+		String(localized: .IRC.thisServerDoesNotSupportChanging)
 	}
 
 	static var commandUnavailableInWindow: String {
-		String(localized: .IRC.sxfQx)
+		String(localized: .IRC.thisCommandCannotBeUsedWithin)
 	}
 
 	static var developerModeRequired: String {
@@ -112,43 +112,43 @@ nonisolated enum IRCCommandStrings {
 	}
 
 	static func preventedSelfBan(serverAddress: String) -> String {
-		String(localized: .IRC._0R15L(serverAddress))
+		String(localized: .IRC.glasstualHasPreventedYouFromBanning(serverAddress))
 	}
 
 	static func unsupportedMode(_ mode: String) -> String {
-		String(localized: .IRC.dwiD1(mode))
+		String(localized: .IRC.modeIsNotSupported(mode))
 	}
 
 	static func kickMessageTooLong(networkName: String, maximumLength: Int) -> String {
-		String(localized: .IRC._59AIr(networkName, maximumLength))
+		String(localized: .IRC.youHaveExceededTheMaximumKick(networkName, maximumLength))
 	}
 
 	static func topicTooLong(networkName: String, maximumLength: Int) -> String {
-		String(localized: .IRC._1Oo3B(networkName, maximumLength))
+		String(localized: .IRC.youHaveExceededTheMaximumTopic(networkName, maximumLength))
 	}
 
 	static func awayMessageTooLong(networkName: String, maximumLength: Int) -> String {
-		String(localized: .IRC._41YP2(networkName, maximumLength))
+		String(localized: .IRC.youHaveExceededTheMaximumAway(networkName, maximumLength))
 	}
 
 	static func channelNotFound(_ channelName: String) -> String {
-		String(localized: .IRC.pxaOx(channelName))
+		String(localized: .IRC.cannotFindChannelNamed(channelName))
 	}
 
 	static func invalidNicknameForColor(_ nickname: String) -> String {
-		String(localized: .IRC._8Dy6F(nickname))
+		String(localized: .IRC.cannotSetColorForBecause(nickname))
 	}
 
 	static func pluginAndScriptConflict(command: String) -> String {
-		String(localized: .IRC.d3C9B(command))
+		String(localized: .IRC.commandIsDefinedByAPlugin(command))
 	}
 
 	static func enabledCapabilities(_ capabilities: String) -> String {
-		String(localized: .IRC._7P9Rs(capabilities))
+		String(localized: .IRC.followingCapabilitiesAreCurrentlyEnabled(capabilities))
 	}
 
 	static func nicknameWeights(channelName: String) -> String {
-		String(localized: .IRC.zudU3(channelName))
+		String(localized: .IRC.nicknameCompletionWeights(channelName))
 	}
 
 	static func nicknameWeight(
@@ -157,11 +157,11 @@ nonisolated enum IRCCommandStrings {
 		received: Double,
 		total: Double
 	) -> String {
-		String(localized: .IRC._24R8C(nickname, Float(sent), Float(received), Float(total)))
+		String(localized: .IRC.sentReceiveTotal(nickname, Float(sent), Float(received), Float(total)))
 	}
 
 	static func classicBinaryArchitecture(_ architecture: String) -> String {
-		String(localized: .IRC.b8P44(architecture))
+		String(localized: .IRC.asClassicBinaryOnAnMac(architecture))
 	}
 
 	static func version(
@@ -171,68 +171,74 @@ nonisolated enum IRCCommandStrings {
 		buildSuffix: String,
 		buildType: String
 	) -> String {
-		String(localized: .IRC.ccbUr(applicationName, shortVersion, buildVersion, buildSuffix, buildType))
+		String(localized: .IRC.myversionCommandBuild(
+			applicationName,
+			shortVersion,
+			buildVersion,
+			buildSuffix,
+			buildType
+		))
 	}
 
 	static func sharingVersion(_ version: String) -> String {
-		String(localized: .IRC.pqj1Y(version))
+		String(localized: .IRC.iAmUsing(version))
 	}
 
 	static func timeSinceFirstCommit(_ duration: String) -> String {
-		String(localized: .IRC.v9X18(duration))
+		String(localized: .IRC.timeSinceFirstCommit(duration))
 	}
 
 	static func invalidSyntax(_ syntax: String) -> String {
-		String(localized: .IRC.atq93(syntax))
+		String(localized: .IRC.invalidSyntax(syntax))
 	}
 }
 
 extension IRCCommandStrings {
 	nonisolated enum Defaults {
 		static var invalidSyntax: String {
-			String(localized: .IRC._1DzJb)
+			String(localized: .IRC.invalidSyntaxTypeDefaultsHelp)
 		}
 
 		static var help: String {
-			String(localized: .IRC.bkkLo)
+			String(localized: .IRC.defaultsCommandCanBeUsed)
 		}
 
 		static func unsupportedFeature(_ featureName: String, enabling: Bool) -> String {
 			if enabling {
-				return String(localized: .IRC.pc467(featureName))
+				return String(localized: .IRC.cannotEnableTheFeatureBecause(featureName))
 			}
 
-			return String(localized: .IRC.d7YPv(featureName))
+			return String(localized: .IRC.cannotDisableTheFeatureBecause(featureName))
 		}
 
 		static func featureChanged(_ featureName: String, enabled: Bool) -> String {
 			if enabled {
-				return String(localized: .IRC._5Ke18(featureName))
+				return String(localized: .IRC.enabledFeature(featureName))
 			}
 
-			return String(localized: .IRC._0GnCb(featureName))
+			return String(localized: .IRC.disabledFeature(featureName))
 		}
 	}
 
 	nonisolated enum Ignore {
 		static func alreadyExists(nickname: String) -> String {
-			String(localized: .IRC._5IxZn(nickname))
+			String(localized: .IRC.ignoreAlreadyExistsThatMatches(nickname))
 		}
 
 		static func notFound(nickname: String) -> String {
-			String(localized: .IRC.wu0Jp(nickname))
+			String(localized: .IRC.noIgnoresCouldBeFound(nickname))
 		}
 
 		static func ambiguous(nickname: String) -> String {
-			String(localized: .IRC.vrx1F(nickname))
+			String(localized: .IRC.cannotRemoveIgnoreForBecauseGlasstual(nickname))
 		}
 
 		static func added(nickname: String, hostmask: String) -> String {
-			String(localized: .IRC.ret20(nickname, hostmask))
+			String(localized: .IRC.addedIgnoreThatMatchesWithPattern(nickname, hostmask))
 		}
 
 		static func removed(nickname: String, hostmask: String) -> String {
-			String(localized: .IRC.jzgG8(nickname, hostmask))
+			String(localized: .IRC.removedIgnoreThatMatchesWithPattern(nickname, hostmask))
 		}
 	}
 }
@@ -247,43 +253,43 @@ enum IRCTimerHelpTopic: String {
 
 nonisolated enum IRCTimerStrings {
 	static var invalidSyntax: String {
-		String(localized: .IRC.jj994)
+		String(localized: .IRC.invalidSyntaxTypeTimerHelp)
 	}
 
 	static var separator: String {
-		String(localized: .IRC.aoxZz)
+		String(localized: .IRC.timerCommand)
 	}
 
 	static var active: String {
-		String(localized: .IRC.bhz9E)
+		String(localized: .IRC.timerCommandActive)
 	}
 
 	static var stopped: String {
-		String(localized: .IRC.ww4Sn)
+		String(localized: .IRC.timerCommandStopped)
 	}
 
 	static var noLimit: String {
-		String(localized: .IRC.o26Ae)
+		String(localized: .IRC.noLimit)
 	}
 
 	static var identifierInvalid: String {
-		String(localized: .IRC.p6LO4)
+		String(localized: .IRC.timerIdentifierIsNotProperlyFormatted)
 	}
 
 	static var allRemoved: String {
-		String(localized: .IRC._808Bs)
+		String(localized: .IRC.allTimersRemoved)
 	}
 
 	static var none: String {
-		String(localized: .IRC.pqk5K)
+		String(localized: .IRC.thereAreNoTimers)
 	}
 
 	static var invalidInterval: String {
-		String(localized: .IRC._327Pv)
+		String(localized: .IRC.timerIntervalMustBeAWhole)
 	}
 
 	static var invalidRepeatCount: String {
-		String(localized: .IRC.eudKc)
+		String(localized: .IRC.timerRepeatCountMust)
 	}
 
 	static func status(active isActive: Bool) -> String {
@@ -292,41 +298,41 @@ nonisolated enum IRCTimerStrings {
 
 	static func help(topic: IRCTimerHelpTopic?) -> String {
 		switch topic {
-		case .add: String(localized: .IRC._6R0Il)
-		case .remove: String(localized: .IRC.i2DX5)
-		case .list: String(localized: .IRC.x1NVe)
-		case .stop: String(localized: .IRC.bx2N1)
-		case .restart: String(localized: .IRC.r27Tv)
-		case nil: String(localized: .IRC.xkqRt)
+		case .add: String(localized: .IRC.timerSecondsRepeatCommandSeconds)
+		case .remove: String(localized: .IRC.timerRemoveIdentifierRemoveTheTimer)
+		case .list: String(localized: .IRC.timerListListTimers)
+		case .stop: String(localized: .IRC.timerStopIdentifierStopTheTimer)
+		case .restart: String(localized: .IRC.timerRestartIdentifierRestartTheTimer)
+		case nil: String(localized: .IRC.timerCommandCanBeUsed)
 		}
 	}
 
 	static func alreadyStopped(identifier: String) -> String {
-		String(localized: .IRC.ax6N9(identifier))
+		String(localized: .IRC.timerWithIdentifierIsAlreadyStopped(identifier))
 	}
 
 	static func stopped(identifier: String) -> String {
-		String(localized: .IRC.hs0Up(identifier))
+		String(localized: .IRC.timerWithIdentifierStopped(identifier))
 	}
 
 	static func restarted(identifier: String) -> String {
-		String(localized: .IRC.qb7Mi(identifier))
+		String(localized: .IRC.timerWithIdentifierRestarted(identifier))
 	}
 
 	static func cannotRestart(identifier: String) -> String {
-		String(localized: .IRC.dgpD4(identifier))
+		String(localized: .IRC.timerWithIdentifierCantBeRestarted(identifier))
 	}
 
 	static func removed(identifier: String) -> String {
-		String(localized: .IRC.p7SIs(identifier))
+		String(localized: .IRC.timerWithIdentifierRemoved(identifier))
 	}
 
 	static func notFound(identifier: String) -> String {
-		String(localized: .IRC.vzuXh(identifier))
+		String(localized: .IRC.timerWithIdentifierDoesNotExist(identifier))
 	}
 
 	static func count(_ count: Int) -> String {
-		count == 1 ? String(localized: .IRC._6TsOi(count)) : String(localized: .IRC.q1M1E(count))
+		String(localized: .IRC.timerCount(count))
 	}
 
 	static func summary(
@@ -336,7 +342,7 @@ nonisolated enum IRCTimerStrings {
 		nextFire: String,
 		command: String
 	) -> String {
-		String(localized: .IRC._4N62X(identifier, status, interval, nextFire, command))
+		String(localized: .IRC.idStatusIntervalNextFireCommand(identifier, status, interval, nextFire, command))
 	}
 
 	static func repeatingSummary(
@@ -349,7 +355,7 @@ nonisolated enum IRCTimerStrings {
 		command: String
 	) -> String {
 		String(
-			localized: .IRC.uw0V2(
+			localized: .IRC.idStatusIntervalNextFireRepeat(
 				identifier,
 				status,
 				interval,

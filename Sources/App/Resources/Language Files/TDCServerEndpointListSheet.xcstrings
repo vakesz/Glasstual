@@ -1,32 +1,8 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "iis-gr" : {
-      "comment" : "Validation error shown when a server address is not properly formatted.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The value you entered is not a properly formatted server address"
-          }
-        }
-      }
-    },
-    "k0c-3u" : {
-      "comment" : "Intentionally empty recovery suggestion for an invalid server address.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        }
-      }
-    },
-    "ox2-od" : {
-      "comment" : "Recovery suggestion for an invalid server port.",
+    "enter-a-whole-number-between-1" : {
+      "comment" : "Recovery suggestion for an invalid server port. Legacy key: ox2-od.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -37,8 +13,32 @@
         }
       }
     },
-    "qeb-ip" : {
-      "comment" : "Validation error shown when a server port is not properly formatted.",
+    "intentionally-empty-recovery-suggestion" : {
+      "comment" : "Intentionally empty recovery suggestion for an invalid server address. Legacy key: k0c-3u.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "value-you-entered-is-not" : {
+      "comment" : "Validation error shown when a server address is not properly formatted. Legacy key: iis-gr.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The value you entered is not a properly formatted server address"
+          }
+        }
+      }
+    },
+    "value-you-entered-is-not-a-properly-formatted-server" : {
+      "comment" : "Validation error shown when a server port is not properly formatted. Legacy key: qeb-ip.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
