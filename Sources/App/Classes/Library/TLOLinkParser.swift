@@ -196,7 +196,26 @@ public class LinkParser: NSObject {
 	private static let permittedSchemesDefaultKey = "com.adiumX.AutoHyperlinks.permittedSchemesDefault"
 	private static let permittedSchemesKey = "com.adiumX.AutoHyperlinks.permittedSchemes"
 
-	private static func isPermittedScheme(_ scheme: String) -> Bool {
+	/* Schemes that hand a remote peer's string to the file system, a network
+	 mount or a system settings pane. They are refused ahead of the user
+	 customization keys below so that a permissive `permittedSchemesAny`
+	 cannot re-enable them. */
+	private static let deniedSchemes: Set<String> = [
+		"file",
+		"smb", "afp", "nfs", "cifs", "ftp",
+		"x-apple.systempreferences",
+	]
+
+	/// Whether a scheme may be linked, and may be handed to `NSWorkspace`.
+	///
+	/// - Parameter scheme: A URL scheme, without the trailing colon.
+	static func isPermittedScheme(_ scheme: String) -> Bool {
+		let scheme = scheme.lowercased()
+
+		if deniedSchemes.contains(scheme) {
+			return false
+		}
+
 		if builtInSchemes.contains(scheme) {
 			return true
 		}
