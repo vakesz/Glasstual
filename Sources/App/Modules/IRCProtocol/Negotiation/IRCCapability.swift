@@ -165,7 +165,7 @@ public final class CapabilityRegistry: NSObject {
 	private static func capabilityTokens(in list: String) -> [(name: String, values: [String])] {
 		var tokens: [(name: String, values: [String])] = []
 
-		for token in list.components(separatedBy: CharacterSet.whitespaces) where token.isEmpty == false {
+		for token in LineParser.wireTokens(in: list) {
 			guard let equalsIndex = token.firstIndex(of: "=") else {
 				tokens.append((token, []))
 				continue

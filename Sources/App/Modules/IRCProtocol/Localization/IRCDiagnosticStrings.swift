@@ -24,7 +24,9 @@ enum IRCDiagnosticStrings {
 	}
 
 	static func malformedMessage(numeric: UInt, sequence: String) -> String {
-		String(localized: .IRC._3YoGw(Int32(numeric), sequence))
+		// The numeric is server-controlled; an out-of-range one is reported
+		// as 0 rather than trapping the conversion.
+		String(localized: .IRC._3YoGw(Int32(exactly: numeric) ?? 0, sequence))
 	}
 }
 

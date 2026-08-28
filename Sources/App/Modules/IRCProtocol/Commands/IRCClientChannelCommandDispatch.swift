@@ -165,12 +165,13 @@ extension IRCClient {
 			? TextualPreferences.defaultKickMessage()
 			: invocation.remainingArguments
 		let maximumLength = Int(supportInfo.maximumKickLength)
-		if maximumLength > 0, (reason as NSString).length > maximumLength {
+		let truncatedReason = ClientWireUtilities.truncated(reason, toByteCount: maximumLength)
+		if truncatedReason != reason {
 			printDebugInformation(
 				IRCCommandStrings.kickMessageTooLong(networkName: networkNameAlt, maximumLength: maximumLength)
 			)
 		}
-		send("KICK", arguments: [invocation.channelName, invocation.nickname, reason])
+		send("KICK", arguments: [invocation.channelName, invocation.nickname, truncatedReason])
 	}
 
 	private func dispatchUserPrivilegeCommand(
@@ -462,12 +463,13 @@ extension IRCClient {
 				return true
 			}
 			let maximumLength = Int(supportInfo.maximumTopicLength)
-			if maximumLength > 0, (topic as NSString).length > maximumLength {
+			let truncatedTopic = ClientWireUtilities.truncated(topic, toByteCount: maximumLength)
+			if truncatedTopic != topic {
 				printDebugInformation(
 					IRCCommandStrings.topicTooLong(networkName: networkNameAlt, maximumLength: maximumLength)
 				)
 			}
-			send("TOPIC", arguments: [channelName, topic])
+			send("TOPIC", arguments: [channelName, truncatedTopic])
 		default:
 			return false
 		}

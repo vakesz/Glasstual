@@ -253,7 +253,12 @@ public extension IRCClient {
 		for line in string.ceSplitIntoLines {
 			let remainder = NSMutableAttributedString(attributedString: line)
 			while remainder.length > 0 {
+				let lengthBeforeFormatting = remainder.length
 				let message = remainder.stringFormatted(forChannel: channel.name, on: self, with: lineType)
+
+				// Defensive: `stringFormatted` guarantees progress, but this
+				// loop must never spin if that ever stops being true.
+				guard remainder.length < lengthBeforeFormatting else { break }
 				if isAction {
 					connection.sendAction(message)
 				} else {

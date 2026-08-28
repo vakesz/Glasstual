@@ -80,11 +80,19 @@ public extension IRCClient {
 		      batch.batchIsOpen
 		else { return false }
 
+		// A server can nest batches arbitrarily deeply, so the walk to the
+		// root is bounded rather than trusting the chain to be short.
 		var rootBatch = batch
-		while let parent = rootBatch.parentBatchMessage {
+		var depth = 0
+		while let parent = rootBatch.parentBatchMessage, depth < IRCBatchPolicy.maximumParentDepth {
 			rootBatch = parent
+			depth += 1
 		}
-		rootBatch.queueEntry(message)
+
+		if rootBatch.queueEntry(message) == false {
+			batchProcessingLogger.error("Dropped a message from a batch that exceeded its queue limit")
+		}
+
 		return true
 	}
 
@@ -110,13 +118,18 @@ public extension IRCClient {
 	}
 
 	@objc(recursivelyProcessBatchMessage:depth:)
-	func recursivelyProcessBatchMessage(_ batchMessage: MessageBatch, depth _: Int) {
+	func recursivelyProcessBatchMessage(_ batchMessage: MessageBatch, depth: Int) {
 		guard !batchMessage.batchIsOpen else { return }
+		guard depth < IRCBatchPolicy.maximumParentDepth else {
+			batchProcessingLogger.error("Refused to process a batch nested deeper than the depth limit")
+			batchMessages.dequeueEntry(batchMessage)
+			return
+		}
 		for queuedEntry in batchMessage.queuedEntries {
 			if let message = queuedEntry as? Message {
 				processIncomingMessage(message)
 			} else if let nestedBatch = queuedEntry as? MessageBatch {
-				recursivelyProcessBatchMessage(nestedBatch)
+				recursivelyProcessBatchMessage(nestedBatch, depth: depth + 1)
 			}
 		}
 		batchMessages.dequeueEntry(batchMessage)

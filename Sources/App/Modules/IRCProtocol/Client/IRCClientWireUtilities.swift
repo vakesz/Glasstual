@@ -45,6 +45,10 @@ import Foundation
 @objc(IRCClientWireUtilities)
 public final class ClientWireUtilities: NSObject {
 	private static let credentialMask = "••••••"
+
+	/// Ceiling on `%<width>n` style padding in the nickname format. The width
+	/// comes from a user preference, so it needs a bound rather than trust.
+	private static let maximumFormatPaddingWidth = 256
 	private static let sensitiveServiceVerbs: Set<String> = [
 		"AUTH", "CONFIRM", "GHOST", "GROUP", "IDENTIFY", "LOGIN", "PASSWD", "PASSWORD", "RECOVER",
 		"REGAIN", "REGISTER", "RELEASE", "RESETPASS", "SENDPASS", "SET", "SETPASS", "SIDENTIFY",
@@ -171,7 +175,9 @@ public final class ClientWireUtilities: NSObject {
 			}
 
 			let substitutionLength = (substitution as NSString).length
-			let requestedWidth = abs(paddingWidth)
+			// `abs(Int.min)` traps, and no sane format asks for more padding
+			// than a line can hold, so the magnitude is clamped instead.
+			let requestedWidth = Int(min(paddingWidth.magnitude, UInt(maximumFormatPaddingWidth)))
 			let padding = String(repeating: " ", count: max(0, requestedWidth - substitutionLength))
 
 			if paddingWidth < 0 {
@@ -186,6 +192,35 @@ public final class ClientWireUtilities: NSObject {
 		}
 
 		return output
+	}
+
+	/// Truncates `text` to at most `maximumByteCount` UTF-8 bytes without
+	/// splitting a character. A `maximumByteCount` of zero means no limit.
+	///
+	/// ISUPPORT `AWAYLEN`, `KICKLEN` and `TOPICLEN` are byte budgets, so
+	/// measuring them in UTF-16 code units under-counts every non-ASCII
+	/// string and lets the server do the truncating instead.
+	@objc(truncatedString:toByteCount:)
+	public static func truncated(_ text: String, toByteCount maximumByteCount: Int) -> String {
+		guard maximumByteCount > 0, text.utf8.count > maximumByteCount else {
+			return text
+		}
+
+		var truncated = ""
+		var byteCount = 0
+
+		for character in text {
+			let characterBytes = String(character).utf8.count
+
+			guard byteCount + characterBytes <= maximumByteCount else {
+				break
+			}
+
+			byteCount += characterBytes
+			truncated.append(character)
+		}
+
+		return truncated
 	}
 
 	@objc(escapedDCCFilename:)
@@ -207,20 +242,14 @@ public final class ClientWireUtilities: NSObject {
 			return address
 		}
 
-		let octets = address.components(separatedBy: ".")
-
-		guard octets.count == 4 else {
+		guard let octets = ipv4Octets(address) else {
 			return nil
 		}
 
-		var packed: UInt64 = 0
+		var packed: UInt32 = 0
 
-		for (index, octet) in octets.enumerated() {
-			let value = (octet as NSString).integerValue
-			packed |= UInt64(bitPattern: Int64(value))
-			if index < octets.count - 1 {
-				packed &<<= 8
-			}
+		for octet in octets {
+			packed = (packed << 8) | UInt32(octet)
 		}
 
 		return String(packed)
@@ -229,12 +258,15 @@ public final class ClientWireUtilities: NSObject {
 	@objc(displayDCCAddress:)
 	public static func displayDCCAddress(_ address: String) -> String {
 		guard address.isEmpty == false,
-		      address.utf8.allSatisfy({ $0 >= 48 && $0 <= 57 })
+		      address.utf8.allSatisfy({ $0 >= 48 && $0 <= 57 }),
+		      // Anything wider than 32 bits is not a packed IPv4 address, and
+		      // saturating it would fabricate one the peer never sent.
+		      let packedValue = UInt32(address)
 		else {
 			return address
 		}
 
-		var packed = UInt64(address) ?? UInt64.max
+		var packed = packedValue
 		var octets: [String] = []
 
 		for _ in 0 ..< 4 {
@@ -243,6 +275,80 @@ public final class ClientWireUtilities: NSObject {
 		}
 
 		return octets.reversed().joined(separator: ".")
+	}
+
+	/// `true` when a peer supplied address is one the client is willing to
+	/// dial. The peer, not the user, chooses this address, so loopback,
+	/// link-local, multicast and private ranges are refused.
+	@objc(isDialableDCCAddress:)
+	public static func isDialableDCCAddress(_ address: String) -> Bool {
+		if let octets = ipv4Octets(address) {
+			return isDialableIPv4(octets)
+		}
+
+		guard address.isIPv6Address else {
+			return false
+		}
+
+		let normalized = address.lowercased()
+
+		guard normalized != "::1", normalized != "::" else {
+			return false
+		}
+
+		// fe80::/10 link-local and fc00::/7 unique-local.
+		let firstGroup = normalized.split(separator: ":", maxSplits: 1).first.map(String.init) ?? ""
+
+		guard firstGroup.hasPrefix("fe8") == false, firstGroup.hasPrefix("fe9") == false,
+		      firstGroup.hasPrefix("fea") == false, firstGroup.hasPrefix("feb") == false,
+		      firstGroup.hasPrefix("fc") == false, firstGroup.hasPrefix("fd") == false
+		else {
+			return false
+		}
+
+		return true
+	}
+
+	private static func isDialableIPv4(_ octets: [UInt8]) -> Bool {
+		switch (octets[0], octets[1]) {
+		case (0, _), (10, _), (127, _):
+			false
+		case (169, 254):
+			false
+		case (172, 16 ... 31):
+			false
+		case (192, 168):
+			false
+		case (100, 64 ... 127):
+			false
+		case (224 ... 255, _):
+			false
+		default:
+			true
+		}
+	}
+
+	private static func ipv4Octets(_ address: String) -> [UInt8]? {
+		let components = address.components(separatedBy: ".")
+
+		guard components.count == 4 else {
+			return nil
+		}
+
+		var octets: [UInt8] = []
+
+		for component in components {
+			guard component.isEmpty == false,
+			      component.utf8.allSatisfy({ $0 >= 48 && $0 <= 57 }),
+			      let value = UInt8(component)
+			else {
+				return nil
+			}
+
+			octets.append(value)
+		}
+
+		return octets
 	}
 
 	@objc(chatHistoryLatestCommandForTarget:selector:limit:)

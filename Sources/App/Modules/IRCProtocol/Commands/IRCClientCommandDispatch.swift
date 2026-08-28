@@ -273,7 +273,8 @@ public extension IRCClient {
 			guard isLoggedIn else { return true }
 			for client in currentClients() where client === self || TextualPreferences.awayAllConnections() {
 				let maximumLength = Int(client.supportInfo.maximumAwayLength)
-				if maximumLength > 0, (arguments as NSString).length > maximumLength {
+				let comment = ClientWireUtilities.truncated(arguments, toByteCount: maximumLength)
+				if comment != arguments {
 					client.printDebugInformation(
 						IRCCommandStrings.awayMessageTooLong(
 							networkName: networkNameAlt,
@@ -281,7 +282,7 @@ public extension IRCClient {
 						)
 					)
 				}
-				client.toggleAwayStatus(true, withComment: arguments)
+				client.toggleAwayStatus(true, withComment: comment)
 			}
 
 		case "autojoin":

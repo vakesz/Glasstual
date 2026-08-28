@@ -55,22 +55,37 @@ public final class ParsedLine: NSObject {
 		super.init()
 	}
 
-	private static func numericValue(of command: String) -> UInt {
-		guard command.isEmpty == false,
-		      command.unicodeScalars.allSatisfy(CharacterSet.decimalDigits.contains)
-		else {
+	/// IRC numerics are exactly three ASCII digits. `CharacterSet.decimalDigits`
+	/// also matches non-ASCII digits, which `integerValue` then reads as 0,
+	/// and an oversized run of digits saturates rather than being rejected.
+	static func numericValue(of command: String) -> UInt {
+		guard command.count == 3, isASCIIDigits(command), let numeric = UInt(command) else {
 			return 0
 		}
 
-		return UInt((command as NSString).integerValue)
+		return numeric
+	}
+
+	static func isASCIIDigits(_ string: String) -> Bool {
+		string.isEmpty == false && string.utf8.allSatisfy { $0 >= 48 && $0 <= 57 }
 	}
 }
 
 @objc(IRCLineParser)
 public final class LineParser: NSObject {
+	/// RFC 1459/2812 and IRCv3 separate tokens on SPACE (0x20) only, never on
+	/// the wider Unicode whitespace set.
+	private static let space: Unicode.Scalar = " "
+
+	/// Splits a wire string into tokens on SPACE (0x20), dropping empty runs.
+	@objc(wireTokensInString:)
+	public static func wireTokens(in string: String) -> [String] {
+		string.unicodeScalars.split(separator: space).map(String.init)
+	}
+
 	@objc(parsedLineFromLine:)
 	public static func parsedLine(fromLine line: String) -> ParsedLine? {
-		var remainder = line[...]
+		var remainder = line.unicodeScalars[...]
 		var messageTagSection: String?
 		var senderSection: String?
 
@@ -100,10 +115,7 @@ public final class LineParser: NSObject {
 			return nil
 		}
 
-		let command =
-			commandToken.unicodeScalars.allSatisfy(CharacterSet.decimalDigits.contains)
-				? commandToken
-				: commandToken.uppercased()
+		let command = ParsedLine.isASCIIDigits(commandToken) ? commandToken : commandToken.uppercased()
 		var parameters: [String] = []
 
 		while remainder.isEmpty == false {
@@ -123,8 +135,8 @@ public final class LineParser: NSObject {
 		)
 	}
 
-	private static func nextToken(from remainder: inout Substring) -> String {
-		guard let whitespace = remainder.firstIndex(where: isWhitespace) else {
+	private static func nextToken(from remainder: inout Substring.UnicodeScalarView) -> String {
+		guard let separator = remainder.firstIndex(of: space) else {
 			let token = String(remainder)
 
 			remainder = remainder[remainder.endIndex...]
@@ -132,15 +144,11 @@ public final class LineParser: NSObject {
 			return token
 		}
 
-		let token = String(remainder[..<whitespace])
-		let nextToken = remainder[whitespace...].firstIndex(where: { isWhitespace($0) == false })
+		let token = String(remainder[..<separator])
+		let nextToken = remainder[separator...].firstIndex(where: { $0 != space })
 
 		remainder = nextToken.map { remainder[$0...] } ?? remainder[remainder.endIndex...]
 
 		return token
-	}
-
-	private static func isWhitespace(_ character: Character) -> Bool {
-		character.unicodeScalars.allSatisfy(CharacterSet.whitespaces.contains)
 	}
 }

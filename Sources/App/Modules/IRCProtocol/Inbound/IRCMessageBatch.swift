@@ -95,6 +95,11 @@ public final class MessageBatchContainer: NSObject {
 
 @objc(IRCMessageBatchMessage)
 public final class MessageBatch: NSObject {
+	/// A batch the server never closes queues messages forever, so the queue
+	/// is bounded. The ceiling is well above the largest chat-history replay
+	/// any network offers.
+	@objc public static let maximumQueuedEntries = 5000
+
 	private let lock = NSLock()
 	private var entries: [Any] = []
 
@@ -108,14 +113,22 @@ public final class MessageBatch: NSObject {
 		lock.withLock { entries }
 	}
 
+	/// `true` when the entry was accepted; `false` when the queue is full.
+	@discardableResult
 	@objc(queueEntry:)
-	public func queueEntry(_ entry: Any) {
+	public func queueEntry(_ entry: Any) -> Bool {
 		guard entry is Message || entry is MessageBatch else {
-			return
+			return false
 		}
 
-		lock.withLock {
+		return lock.withLock {
+			guard entries.count < MessageBatch.maximumQueuedEntries else {
+				return false
+			}
+
 			entries.append(entry)
+
+			return true
 		}
 	}
 

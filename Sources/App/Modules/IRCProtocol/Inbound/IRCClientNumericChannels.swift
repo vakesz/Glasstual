@@ -143,7 +143,7 @@ extension IRCClient {
 			}
 			return
 		}
-		let online = message.sequence.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+		let online = LineParser.wireTokens(in: message.sequence)
 		let tracked = supportsAdvancedTracking ? [:] : trackedUsers.trackedUsers
 		for (nickname, previousValue) in tracked {
 			let isOnline = online.contains { $0.caseInsensitiveCompare(nickname) == .orderedSame }
@@ -216,7 +216,7 @@ extension IRCClient {
 			printReplyToHiddenCommandResponsesQuery(message)
 		}
 		guard let channel = findChannel(message.params[2]), !channel.channelNamesReceived else { return }
-		for rawName in message.params[3].components(separatedBy: .whitespaces) where !rawName.isEmpty {
+		for rawName in LineParser.wireTokens(in: message.params[3]) {
 			addName(rawName, to: channel)
 		}
 	}

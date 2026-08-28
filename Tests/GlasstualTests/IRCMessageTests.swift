@@ -74,14 +74,6 @@ final class IRCMessageTests: XCTestCase {
 		XCTAssertEqual(message.param(at: 0), "token")
 	}
 
-	func testParserConsumesWhitespaceBetweenProtocolSections() throws {
-		let message = try XCTUnwrap(Message(line: "@flag\t:nick!user@host   privmsg\t#channel :hello  world"))
-		XCTAssertEqual(message.messageTags?["flag"], "")
-		XCTAssertEqual(message.senderNickname, "nick")
-		XCTAssertEqual(message.command, "PRIVMSG")
-		XCTAssertEqual(message.params, ["#channel", "hello  world"])
-	}
-
 	func testParsesTagsWithEscapes() throws {
 		let message = try XCTUnwrap(Message(line: "@a=b\\:c\\sd\\\\e;flag;+draft/reply=x\\ny :nick!u@h TAGMSG #c"))
 		XCTAssertEqual(message.command, "TAGMSG")

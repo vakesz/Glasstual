@@ -2173,6 +2173,30 @@
         }
       }
     },
+    "sts-sc3" : {
+      "comment" : "SASL SCRAM. Shown when the server reports success without proving it knows the password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL SCRAM authentication failed: the server did not prove that it knows the password."
+          }
+        }
+      }
+    },
+    "sts-sc4" : {
+      "comment" : "SASL. Shown when the server sends an oversized AUTHENTICATE payload.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL authentication failed: the server sent an oversized payload."
+          }
+        }
+      }
+    },
     "sxf-qx" : {
       "comment" : "Common command errors. Migrated from legacy key sxf-qx; compatibility key retained.",
       "extractionState" : "manual",

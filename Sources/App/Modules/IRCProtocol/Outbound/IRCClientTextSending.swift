@@ -280,11 +280,16 @@ public extension IRCClient {
 		for line in text.ceSplitIntoLines {
 			let mutableLine = NSMutableAttributedString(attributedString: line)
 			while mutableLine.length > 0 {
+				let lengthBeforeFormatting = mutableLine.length
 				let message = mutableLine.stringFormatted(
 					forChannel: channel.name,
 					on: self,
 					with: outbound.lineType
 				)
+
+				// Defensive: `stringFormatted` guarantees progress, but this
+				// loop must never spin if that ever stops being true.
+				guard mutableLine.length < lengthBeforeFormatting else { break }
 				let lineReplyIdentifier = replyIdentifier
 				replyIdentifier = nil
 				nextLineReplyToMessageIdentifier = lineReplyIdentifier
@@ -342,11 +347,14 @@ public extension IRCClient {
 			for line in text.ceSplitIntoLines {
 				let mutableLine = NSMutableAttributedString(attributedString: line)
 				while mutableLine.length > 0 {
+					let lengthBeforeFormatting = mutableLine.length
 					let message = mutableLine.stringFormatted(
 						forChannel: targetList,
 						on: self,
 						with: outbound.lineType
 					)
+
+					guard mutableLine.length < lengthBeforeFormatting else { break }
 					if echoMessageEnabled == false {
 						for channel in groupChannels {
 							_ = printLocallyIfNeeded(
@@ -456,11 +464,14 @@ public extension IRCClient {
 			?? destinationName
 		let remainingText = NSMutableAttributedString(attributedString: text)
 		while remainingText.length > 0 {
+			let lengthBeforeFormatting = remainingText.length
 			let message = remainingText.stringFormatted(
 				forChannel: wireTarget,
 				on: self,
 				with: invocation.outbound.lineType
 			)
+
+			guard remainingText.length < lengthBeforeFormatting else { break }
 			let redactedMessage = Self.redactedServiceMessage(message, sentTo: wireTarget)
 			let deliveryLabel: String?
 			if silentlyConnecting {

@@ -49,6 +49,10 @@ enum IRCInboundEventPolicy {
 		(2 ... 65).contains(data.count)
 	}
 
+	/// Ceiling on the accumulated ZNC certificate chain. A full chain is a
+	/// few kilobytes; without a limit the bouncer can append forever.
+	static let maximumCertificateChainLength = 65536
+
 	static func shouldPrintGeneralEvent(
 		showJoinLeave: Bool,
 		channelIgnoresEvents: Bool
@@ -170,7 +174,10 @@ public extension IRCClient {
 			print(text, by: nil, in: channel, as: .invite, command: message.command, receivedAt: message.receivedAt)
 		}
 		_ = notifyEvent(.invite, lineType: .invite, target: nil, nickname: sender, text: channelName)
-		if TextualPreferences.autoJoinOnInvite() {
+		// `JOIN 0` is the "leave every channel" form, and the invite target is
+		// whatever the inviting user typed, so only real channel names may be
+		// auto-joined here.
+		if TextualPreferences.autoJoinOnInvite(), stringIsChannelName(channelName) {
 			joinUnlistedChannel(channelName)
 		}
 	}
@@ -190,9 +197,11 @@ public extension IRCClient {
 		      zncBouncerIsSendingCertificateInfo,
 		      message.senderIsServer,
 		      message.senderNickname == "znc.in",
-		      IRCInboundEventPolicy.acceptsCertificateChunk(message.sequence)
+		      IRCInboundEventPolicy.acceptsCertificateChunk(message.sequence),
+		      let chainData = zncBouncerCertificateChainDataMutable,
+		      chainData.length < IRCInboundEventPolicy.maximumCertificateChainLength
 		else { return }
-		zncBouncerCertificateChainDataMutable?.appendFormat("%@\n", message.sequence)
+		chainData.appendFormat("%@\n", message.sequence)
 	}
 
 	@objc(receiveChangeHost:)
