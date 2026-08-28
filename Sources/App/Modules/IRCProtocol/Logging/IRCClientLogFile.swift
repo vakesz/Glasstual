@@ -107,7 +107,7 @@ public extension IRCClient {
 		let message = IRCLogStrings.sessionMarker(startsSession: startsSession)
 
 		for body in [" ", message, " "] {
-			let line = MutableLogLine()
+			let line = LogLine()
 			line.messageBody = body
 			if let channel {
 				channel.writeToLogFile(line)

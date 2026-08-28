@@ -427,7 +427,7 @@ private extension IRCClient {
 			memberType: memberType
 		)
 		let lineType = IRCLinePresentationPolicy.normalized(request.lineType)
-		let logLine = MutableLogLine()
+		let logLine = LogLine()
 		logLine.command = command.lowercased()
 		logLine.messageIdentifier = request.referenceMessage?.messageIdentifier
 		logLine.deliveryState = nextLineDeliveryState
@@ -462,9 +462,7 @@ private extension IRCClient {
 			return
 		}
 		if chatHistoryPrependChannel === channel {
-			if let copiedLine = logLine.copy() as? LogLine {
-				chatHistoryPrependedLines?.append(copiedLine)
-			}
+			chatHistoryPrependedLines?.append(logLine.duplicate())
 			return
 		}
 

@@ -173,7 +173,7 @@ final class IRCModelMigrationTests: XCTestCase {
 	}
 
 	func testHighlightLogEntryStoresLineClientAndChannel() {
-		let line = MutableLogLine()
+		let line = LogLine()
 		line.messageBody = "hello world"
 		line.nickname = "alice"
 		line.lineType = .privateMessage
