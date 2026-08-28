@@ -31,6 +31,30 @@ private func maximumHostmaskNicknameLength(on client: IRCClient?) -> Int {
 	return configuredMaximum > 0 ? configuredMaximum : defaultHostmaskNicknameLength
 }
 
+/// A colour named by an IRC colour control code.
+public nonisolated enum IRCColor: Sendable {
+	/// An mIRC palette index.
+	case palette(Int)
+	/// A literal colour from a hexadecimal control code.
+	case rgb(NSColor)
+
+	/// The value the renderer stores as a text attribute.
+	public var attributeValue: AnyObject {
+		switch self {
+		case let .palette(index): NSNumber(value: index)
+		case let .rgb(color): color
+		}
+	}
+}
+
+/// What one colour control code says.
+public nonisolated struct IRCColorComponents: Sendable {
+	public let foreground: IRCColor?
+	public let background: IRCColor?
+	/// How many characters of the control code were read.
+	public let charactersConsumed: Int
+}
+
 public nonisolated extension NSString {
 	@objc(isValidInternetAddress)
 	var isValidInternetAddress: Bool {
@@ -216,13 +240,13 @@ public nonisolated extension NSString {
 		IRCFormatting.removingControlCodes(from: self as String)
 	}
 
-	@objc(colorComponentsOfCharacter:startingAt:foregroundColor:backgroundColor:)
-	func colorComponents(
-		ofCharacter character: unichar,
-		startingAt rangeStart: UInt,
-		foregroundColor: AutoreleasingUnsafeMutablePointer<AnyObject?>?,
-		backgroundColor: AutoreleasingUnsafeMutablePointer<AnyObject?>?
-	) -> UInt {
+	/// The colours a colour control code names, and how many characters of the
+	/// code were read.
+	///
+	/// A digit code names palette indices and a hex code names literal colours;
+	/// they used to be written through one `AnyObject?` out-parameter each, so
+	/// which kind arrived was not knowable at the call site.
+	func colorComponents(ofCharacter character: unichar, startingAt rangeStart: UInt) -> IRCColorComponents {
 		if character == UniChar(IRCTextFormatterControlCharacter.colorDigit) {
 			var foregroundNumber: NSNumber?
 			var backgroundNumber: NSNumber?
@@ -233,14 +257,11 @@ public nonisolated extension NSString {
 				backgroundColor: &backgroundNumber
 			)
 
-			if let foregroundNumber {
-				foregroundColor?.pointee = foregroundNumber
-			}
-			if let backgroundNumber {
-				backgroundColor?.pointee = backgroundNumber
-			}
-
-			return consumed
+			return IRCColorComponents(
+				foreground: foregroundNumber.map { .palette($0.intValue) },
+				background: backgroundNumber.map { .palette($0.intValue) },
+				charactersConsumed: Int(consumed)
+			)
 		}
 
 		if character == UniChar(IRCTextFormatterControlCharacter.colorHex) {
@@ -253,17 +274,14 @@ public nonisolated extension NSString {
 				backgroundColor: &backgroundNSColor
 			)
 
-			if let foregroundNSColor {
-				foregroundColor?.pointee = foregroundNSColor
-			}
-			if let backgroundNSColor {
-				backgroundColor?.pointee = backgroundNSColor
-			}
-
-			return consumed
+			return IRCColorComponents(
+				foreground: foregroundNSColor.map { .rgb($0) },
+				background: backgroundNSColor.map { .rgb($0) },
+				charactersConsumed: Int(consumed)
+			)
 		}
 
-		return 0
+		return IRCColorComponents(foreground: nil, background: nil, charactersConsumed: 0)
 	}
 
 	private func colorAsHex(

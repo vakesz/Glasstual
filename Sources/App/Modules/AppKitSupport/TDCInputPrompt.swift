@@ -15,15 +15,15 @@ import AppKit
 @objc(TDCInputPrompt)
 @MainActor
 public final class InputPrompt: NSObject {
-	@objc(alertWithMessage:title:defaultButton:alternateButton:prefillString:textField:)
-	public static func alert(
+	/// The alert and the text field inside it. The field used to be handed
+	/// back through an `AutoreleasingUnsafeMutablePointer` out-parameter.
+	private static func makeAlert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
 		alternateButton buttonAlternate: String?,
-		prefillString: String?,
-		textField textFieldOut: AutoreleasingUnsafeMutablePointer<NSTextField?>
-	) -> NSAlert {
+		prefillString: String?
+	) -> (alert: NSAlert, textField: NSTextField) {
 		let textField = NSTextField()
 		textField.translatesAutoresizingMaskIntoConstraints = false
 
@@ -72,9 +72,7 @@ public final class InputPrompt: NSObject {
 		alert.accessoryView = textField
 		alert.window.initialFirstResponder = textField
 
-		textFieldOut.pointee = textField
-
-		return alert
+		return (alert, textField)
 	}
 
 	@objc(promptWithMessage:title:defaultButton:alternateButton:prefillString:completionBlock:)
@@ -86,25 +84,23 @@ public final class InputPrompt: NSObject {
 		prefillString: String?,
 		completionBlock: @escaping (NSApplication.ModalResponse, String) -> Void
 	) {
-		var textField: NSTextField?
-		let alert = alert(
+		let (alert, textField) = makeAlert(
 			withMessage: bodyText,
 			title: titleText,
 			defaultButton: buttonDefault,
 			alternateButton: buttonAlternate,
-			prefillString: prefillString,
-			textField: &textField
+			prefillString: prefillString
 		)
 
 		let window = NSApp.keyWindow ?? NSApp.mainWindow
 
 		if let window {
 			alert.beginSheetModal(for: window) { response in
-				completionBlock(response, textField?.stringValue ?? "")
+				completionBlock(response, textField.stringValue)
 			}
 		} else {
 			let response = alert.runModal()
-			completionBlock(response, textField?.stringValue ?? "")
+			completionBlock(response, textField.stringValue)
 		}
 	}
 }

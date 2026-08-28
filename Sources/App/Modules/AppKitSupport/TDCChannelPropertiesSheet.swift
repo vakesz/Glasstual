@@ -19,6 +19,15 @@ private enum ChannelPropertiesSheetSelection: Int {
 	case notifications = 2
 }
 
+/// One pane of the channel-properties sheet: the view it shows and the control
+/// that takes focus when it appears. This used to be a `[[Any]]` indexed
+/// positionally, with `NSNull()` where a pane wanted no focused control.
+@MainActor
+private struct ChannelPropertiesPane {
+	let view: NSView
+	let firstResponder: NSControl?
+}
+
 /// What `ChannelPropertiesSheet` reports back. The configuration is a value
 /// type, so it cannot travel through `perform(_:with:with:)`.
 @MainActor
@@ -38,7 +47,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	public var config: ChannelConfig
 
 	private var secretKeyLengthAlertDisplayed = false
-	private var navigationTree: [[Any]] = []
+	private var panes: [ChannelPropertiesPane] = []
 
 	@IBOutlet private var autoJoinCheck: NSButton!
 	@IBOutlet private var disableInlineMediaCheck: NSButton!
@@ -106,10 +115,10 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	private func prepareInitialState() {
 		Bundle.main.loadNibNamed("TDCChannelPropertiesSheet", owner: self, topLevelObjects: nil)
 
-		navigationTree = [
-			[contentViewGeneralView as Any, channelNameTextField as Any],
-			[contentViewDefaultsView as Any, defaultTopicTextField as Any],
-			[contentViewNotifications as Any, NSNull()],
+		panes = [
+			ChannelPropertiesPane(view: contentViewGeneralView, firstResponder: channelNameTextField),
+			ChannelPropertiesPane(view: contentViewDefaultsView, firstResponder: defaultTopicTextField),
+			ChannelPropertiesPane(view: contentViewNotifications, firstResponder: nil),
 		]
 
 		channelNameTextField.stringValueIsInvalidOnEmpty = true
@@ -189,16 +198,14 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	}
 
 	private func performNavigate(to selection: ChannelPropertiesSheetSelection) {
-		guard selection.rawValue < navigationTree.count else {
+		guard panes.indices.contains(Int(selection.rawValue)) else {
 			return
 		}
 
-		let entry = navigationTree[selection.rawValue]
-		if let view = entry[0] as? NSView {
-			selectPane(view)
-		}
+		let pane = panes[Int(selection.rawValue)]
+		selectPane(pane.view)
 
-		if let firstResponder = entry[1] as? NSControl {
+		if let firstResponder = pane.firstResponder {
 			sheet.makeFirstResponder(firstResponder)
 		}
 	}
