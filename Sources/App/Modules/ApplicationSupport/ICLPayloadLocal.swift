@@ -46,6 +46,38 @@ private let payloadLogger = Logger(
 	category: "ICLPayload"
 )
 
+/** Which style and script resources an inline-content module may put into the
+ log view.
+
+ A module returns `styleResources` / `scriptResources` as URLs. File URLs are
+ copied into the theme's temporary directory; everything else was previously
+ handed to the page verbatim, which let a module load a `<script>` from any
+ host. The log view runs from a `file://` document with the native `app`
+ bridge attached, so whoever serves that script owns the bridge.
+
+ Task P2W introduces a wider `LogViewContentPolicy`; if both land, fold this
+ host set into it. */
+enum InlineResourceHostPolicy {
+	/// Hosts that may serve a remote script or stylesheet, over HTTPS only.
+	static let permittedHosts: Set<String> = [
+		/* TweetModule embeds Twitter's own widget bootstrap. */
+		"platform.twitter.com",
+	]
+
+	static func permits(_ url: URL) -> Bool {
+		if url.isFileURL {
+			return true
+		}
+		guard url.scheme?.lowercased() == "https" else {
+			return false
+		}
+		guard let host = url.host()?.lowercased() else {
+			return false
+		}
+		return permittedHosts.contains(host)
+	}
+}
+
 extension InlineContentPayload {
 	@objc(_resourcesTemporaryLocation)
 	func resourcesTemporaryLocation() -> String {
@@ -67,6 +99,13 @@ extension InlineContentPayload {
 		let fileManager = FileManager.default
 
 		func copyOperation(_ resourceURL: URL) -> String? {
+			guard InlineResourceHostPolicy.permits(resourceURL) else {
+				payloadLogger.error(
+					"Refusing inline resource from '\(resourceURL.host() ?? "<no host>", privacy: .public)'"
+				)
+				return nil
+			}
+
 			guard resourceURL.isFileURL else {
 				return resourceURL.absoluteString
 			}

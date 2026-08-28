@@ -349,7 +349,8 @@ open class LogLine: PortablePropertyObject {
 			logLineData: data,
 			uniqueIdentifier: uniqueIdentifier,
 			viewIdentifier: treeItem.uniqueIdentifier,
-			sessionIdentifier: sessionIdentifier
+			sessionIdentifier: sessionIdentifier,
+			creationDate: receivedAt.timeIntervalSince1970
 		)
 	}
 
