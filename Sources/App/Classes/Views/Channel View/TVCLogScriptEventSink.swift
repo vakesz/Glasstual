@@ -38,7 +38,6 @@
 
 import AppKit
 import GlasstualPluginKit
-import ObjectiveC
 import OSLog
 import WebKit
 
@@ -82,6 +81,26 @@ private final class LogScriptEventContext {
 	}
 }
 
+/** The argument contract and body of one bridged function.
+ Kept as data so the whole table stays in one place and can be checked for
+ completeness against `TVCLogScriptEventSink.ScriptMessage.allCases`. */
+@MainActor
+private struct ScriptMessageHandler {
+	let minimumArgumentCount: Int
+	let validate: ((Int, Any) -> Bool)?
+	let invoke: @MainActor (TVCLogScriptEventSink, LogScriptEventContext) -> Void
+
+	init(
+		minimum: Int = 0,
+		validate: ((Int, Any) -> Bool)? = nil,
+		invoke: @escaping @MainActor (TVCLogScriptEventSink, LogScriptEventContext) -> Void
+	) {
+		minimumArgumentCount = minimum
+		self.validate = validate
+		self.invoke = invoke
+	}
+}
+
 @objc(TVCLogScriptEventSink)
 @MainActor
 final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
@@ -97,12 +116,83 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 		self.init(webView: nil)
 	}
 
+	/** Every name registered with `WKUserContentController` maps to exactly one
+	 case. Dispatch used to go through `NSSelectorFromString` plus `perform`,
+	 which silently dropped any registered name that had no matching selector. */
+	enum ScriptMessage: String, CaseIterable, Sendable {
+		case appearance
+		case channelIsActive
+		case channelMemberCount
+		case channelName
+		case channelNameDoubleClicked
+		case displayContextMenu
+		case copySelectionWhenPermitted
+		case inlineMediaEnabledForView
+		case loadInlineMedia
+		case localUserHostmask
+		case localUserNickname
+		case logToConsole
+		case networkName
+		case nicknameColorStyleHash
+		case nicknameDoubleClicked
+		case notifyLinesAddedToView
+		case notifyLinesRemovedFromView
+		case notifyJumpToLineCallback
+		case printDebugInformation
+		case printDebugInformationToConsole
+		case renderMessagesBefore
+		case renderMessagesAfter
+		case renderMessagesInRange
+		case renderMessageWithSiblings
+		case renderTemplate
+		case retrievePreferencesWithMethodName
+		case sendPluginPayload
+		case serverAddress
+		case serverChannelCount
+		case serverIsConnected
+		case setChannelName
+		case setNickname
+		case setLineContext
+		case setSelection
+		case setURLAddress
+		case sidebarInversionIsEnabled
+		case styleSettingsRetrieveValue
+		case styleSettingsSetValue
+		case topicBarDoubleClicked
+		case finishedLayingOutView
+	}
+
+	/// The exact set of handler names `WKUserContentController` must register.
+	static let registeredMessageNames: [String] = ScriptMessage.allCases.map(\.rawValue)
+
 	func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
-		let selector = NSSelectorFromString("\(message.name):inWebView:")
-		guard responds(to: selector) else {
+		guard let scriptMessage = ScriptMessage(rawValue: message.name) else {
+			scriptEventLogger.error(
+				"Ignoring unregistered script message '\(message.name, privacy: .public)'"
+			)
 			return
 		}
-		perform(selector, with: message.body, with: message.webView)
+		guard let handler = Self.handlers[scriptMessage] else {
+			scriptEventLogger.fault(
+				"No handler bound for script message '\(message.name, privacy: .public)'"
+			)
+			return
+		}
+		guard let sourceWebView = message.webView else {
+			scriptEventLogger.fault(
+				"Script message '\(message.name, privacy: .public)' arrived without a web view"
+			)
+			return
+		}
+		processInputData(
+			message.body,
+			caller: "app.\(scriptMessage.rawValue)()",
+			webView: sourceWebView,
+			minimumArgumentCount: handler.minimumArgumentCount,
+			validate: handler.validate
+		) { context in
+			handler.invoke(self, context)
+		}
 	}
 
 	static func objectValueToCommon(_ object: Any) -> Any? {
@@ -234,464 +324,129 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 		}
 		webView.evaluateFunction("console.error", withArguments: [formatted])
 	}
-
-	private func dispatch(
-		_ inputData: Any,
-		_ webView: Any,
-		caller: String,
-		minimum: Int = 0,
-		validate: ((Int, Any) -> Bool)? = nil,
-		to handler: (LogScriptEventContext) -> Void
-	) {
-		processInputData(inputData, caller: caller, webView: webView, minimumArgumentCount: minimum,
-		                 validate: validate, handler: handler)
-	}
-
-	@objc(channelIsActive:inWebView:)
-	private func channelIsActive(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.channelIsActive()",
-			to: handleChannelIsActive
-		)
-	}
-
-	@objc(channelMemberCount:inWebView:)
-	private func channelMemberCount(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.channelMemberCount()",
-			to: handleChannelMemberCount
-		)
-	}
-
-	@objc(channelName:inWebView:)
-	private func channelName(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.channelName()",
-			to: handleChannelName
-		)
-	}
-
-	@objc(channelNameDoubleClicked:inWebView:)
-	private func channelNameDoubleClicked(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.channelNameDoubleClicked()",
-			to: handleChannelNameDoubleClicked
-		)
-	}
-
-	@objc(displayContextMenu:inWebView:)
-	private func displayContextMenu(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.displayContextMenu()",
-			to: handleDisplayContextMenu
-		)
-	}
-
-	@objc(copySelectionWhenPermitted:inWebView:)
-	private func copySelectionWhenPermitted(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.copySelectionWhenPermitted()",
-			to: handleCopySelectionWhenPermitted
-		)
-	}
-
-	@objc(inlineMediaEnabledForView:inWebView:)
-	private func inlineMediaEnabledForView(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.inlineMediaEnabledForView()",
-			to: handleInlineMediaEnabledForView
-		)
-	}
-
-	@objc(loadInlineMedia:inWebView:)
-	private func loadInlineMedia(_ data: Any, inWebView view: Any) {
-		dispatch(data, view, caller: "app.loadInlineMedia()", minimum: 4,
-		         validate: { $0 <= 2 ? $1 is String : $1 is NSNumber }, to: handleLoadInlineMedia)
-	}
-
-	@objc(localUserHostmask:inWebView:)
-	private func localUserHostmask(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.localUserHostmask()",
-			to: handleLocalUserHostmask
-		)
-	}
-
-	@objc(localUserNickname:inWebView:)
-	private func localUserNickname(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.localUserNickname()",
-			to: handleLocalUserNickname
-		)
-	}
-
-	@objc(logToConsole:inWebView:)
-	private func logToConsole(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.logToConsole()",
-			minimum: 1,
-			validate: { _, value in value is String },
-			to: handleLogToConsole
-		)
-	}
-
-	@objc(networkName:inWebView:)
-	private func networkName(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.networkName()",
-			to: handleNetworkName
-		)
-	}
-
-	@objc(nicknameColorStyleHash:inWebView:)
-	private func nicknameColorStyleHash(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.nicknameColorStyleHash()",
-			minimum: 2,
-			validate: { _, value in value is String },
-			to: handleNicknameColorStyleHash
-		)
-	}
-
-	@objc(nicknameDoubleClicked:inWebView:)
-	private func nicknameDoubleClicked(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.nicknameDoubleClicked()",
-			to: handleNicknameDoubleClicked
-		)
-	}
-
-	@objc(notifyJumpToLineCallback:inWebView:)
-	private func notifyJumpToLineCallback(_ data: Any, inWebView view: Any) {
-		dispatch(data, view, caller: "app.notifyJumpToLineCallback()", minimum: 3,
-		         validate: { $0 == 0 ? $1 is String : $1 is NSNumber }, to: handleNotifyJumpToLineCallback)
-	}
-
-	@objc(notifyLinesAddedToView:inWebView:)
-	private func notifyLinesAddedToView(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.notifyLinesAddedToView()",
-			minimum: 1,
-			validate: { _, value in value is String || value is [Any] },
-			to: handleNotifyLinesAddedToView
-		)
-	}
-
-	@objc(notifyLinesRemovedFromView:inWebView:)
-	private func notifyLinesRemovedFromView(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.notifyLinesRemovedFromView()",
-			minimum: 1,
-			validate: { _, value in value is String || value is [Any] },
-			to: handleNotifyLinesRemovedFromView
-		)
-	}
-
-	@objc(printDebugInformation:inWebView:)
-	private func printDebugInformation(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.printDebugInformation()",
-			minimum: 1,
-			validate: { _, value in value is String },
-			to: handlePrintDebugInformation
-		)
-	}
-
-	@objc(printDebugInformationToConsole:inWebView:)
-	private func printDebugInformationToConsole(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.printDebugInformationToConsole()",
-			minimum: 1,
-			validate: { _, value in value is String },
-			to: handlePrintDebugInformationToConsole
-		)
-	}
-
-	@objc(renderMessagesBefore:inWebView:)
-	private func renderMessagesBefore(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.renderMessagesBefore()",
-			minimum: 2,
-			validate: Self.stringThenNumber,
-			to: handleRenderMessagesBefore
-		)
-	}
-
-	@objc(renderMessagesAfter:inWebView:)
-	private func renderMessagesAfter(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.renderMessagesAfter()",
-			minimum: 2,
-			validate: Self.stringThenNumber,
-			to: handleRenderMessagesAfter
-		)
-	}
-
-	@objc(renderMessagesInRange:inWebView:)
-	private func renderMessagesInRange(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.renderMessagesInRange()",
-			minimum: 3,
-			validate: { $0 <= 1 ? $1 is String : $1 is NSNumber },
-			to: handleRenderMessagesInRange
-		)
-	}
-
-	@objc(renderMessageWithSiblings:inWebView:)
-	private func renderMessageWithSiblings(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.renderMessageWithSiblings()",
-			minimum: 3,
-			validate: { $0 == 0 ? $1 is String : $1 is NSNumber },
-			to: handleRenderMessageWithSiblings
-		)
-	}
-
-	@objc(retrievePreferencesWithMethodName:inWebView:)
-	private func retrievePreferencesWithMethodName(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.retrievePreferencesWithMethodName()",
-			minimum: 1,
-			validate: { _, value in value is String },
-			to: handleRetrievePreferences
-		)
-	}
-
-	@objc(renderTemplate:inWebView:)
-	private func renderTemplate(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.renderTemplate()",
-			minimum: 2,
-			validate: { $0 == 0 ? $1 is String : ($1 is NSNull || $1 is [AnyHashable: Any]) },
-			to: handleRenderTemplate
-		)
-	}
-
-	@objc(sendPluginPayload:inWebView:)
-	private func sendPluginPayload(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.sendPluginPayload()",
-			minimum: 2,
-			validate: { $0 != 0 || $1 is String },
-			to: handleSendPluginPayload
-		)
-	}
-
-	@objc(serverAddress:inWebView:)
-	private func serverAddress(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.serverAddress()",
-			to: handleServerAddress
-		)
-	}
-
-	@objc(serverChannelCount:inWebView:)
-	private func serverChannelCount(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.serverChannelCount()",
-			to: handleServerChannelCount
-		)
-	}
-
-	@objc(serverIsConnected:inWebView:)
-	private func serverIsConnected(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.serverIsConnected()",
-			to: handleServerIsConnected
-		)
-	}
-
-	@objc(setChannelName:inWebView:)
-	private func setChannelName(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.setChannelName()",
-			minimum: 1,
-			validate: Self.nullOrString,
-			to: handleSetChannelName
-		)
-	}
-
-	@objc(setNickname:inWebView:)
-	private func setNickname(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.setNickname()",
-			minimum: 1,
-			validate: Self.nullOrString,
-			to: handleSetNickname
-		)
-	}
-
-	@objc(setLineContext:inWebView:)
-	private func setLineContext(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.setLineContext()",
-			minimum: 1,
-			validate: { _, value in value is NSNull || value is [AnyHashable: Any] },
-			to: handleSetLineContext
-		)
-	}
-
-	@objc(setSelection:inWebView:)
-	private func setSelection(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.setSelection()",
-			minimum: 1,
-			validate: Self.nullOrString,
-			to: handleSetSelection
-		)
-	}
-
-	@objc(setURLAddress:inWebView:)
-	private func setURLAddress(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.setURLAddress()",
-			minimum: 1,
-			validate: Self.nullOrString,
-			to: handleSetURLAddress
-		)
-	}
-
-	@objc(sidebarInversionIsEnabled:inWebView:)
-	private func sidebarInversionIsEnabled(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.sidebarInversionIsEnabled()",
-			to: handleSidebarInversionIsEnabled
-		)
-	}
 }
 
 extension TVCLogScriptEventSink {
-	@objc(appearance:inWebView:)
-	private func appearance(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.appearance()",
-			to: handleAppearance
-		)
+	fileprivate static let handlers: [ScriptMessage: ScriptMessageHandler] = queryHandlers
+		.merging(mutationHandlers) { first, _ in first }
+
+	private static let queryHandlers: [ScriptMessage: ScriptMessageHandler] = [
+		.appearance: ScriptMessageHandler { $0.handleAppearance($1) },
+		.channelIsActive: ScriptMessageHandler { $0.handleChannelIsActive($1) },
+		.channelMemberCount: ScriptMessageHandler { $0.handleChannelMemberCount($1) },
+		.channelName: ScriptMessageHandler { $0.handleChannelName($1) },
+		.channelNameDoubleClicked: ScriptMessageHandler { $0.handleChannelNameDoubleClicked($1) },
+		.displayContextMenu: ScriptMessageHandler { $0.handleDisplayContextMenu($1) },
+		.copySelectionWhenPermitted: ScriptMessageHandler { $0.handleCopySelectionWhenPermitted($1) },
+		.inlineMediaEnabledForView: ScriptMessageHandler { $0.handleInlineMediaEnabledForView($1) },
+		.loadInlineMedia: ScriptMessageHandler(minimum: 4, validate: leadingStrings(3)) {
+			$0.handleLoadInlineMedia($1)
+		},
+		.localUserHostmask: ScriptMessageHandler { $0.handleLocalUserHostmask($1) },
+		.localUserNickname: ScriptMessageHandler { $0.handleLocalUserNickname($1) },
+		.logToConsole: ScriptMessageHandler(minimum: 1, validate: isString) { $0.handleLogToConsole($1) },
+		.networkName: ScriptMessageHandler { $0.handleNetworkName($1) },
+		.nicknameColorStyleHash: ScriptMessageHandler(minimum: 2, validate: isString) {
+			$0.handleNicknameColorStyleHash($1)
+		},
+		.nicknameDoubleClicked: ScriptMessageHandler { $0.handleNicknameDoubleClicked($1) },
+		.serverAddress: ScriptMessageHandler { $0.handleServerAddress($1) },
+		.serverChannelCount: ScriptMessageHandler { $0.handleServerChannelCount($1) },
+		.serverIsConnected: ScriptMessageHandler { $0.handleServerIsConnected($1) },
+		.sidebarInversionIsEnabled: ScriptMessageHandler { $0.handleSidebarInversionIsEnabled($1) },
+		.topicBarDoubleClicked: ScriptMessageHandler { $0.handleTopicBarDoubleClicked($1) },
+		.finishedLayingOutView: ScriptMessageHandler { $0.handleFinishedLayingOutView($1) },
+	]
+
+	private static let mutationHandlers: [ScriptMessage: ScriptMessageHandler] = [
+		.notifyLinesAddedToView: ScriptMessageHandler(minimum: 1, validate: stringOrArray) {
+			$0.handleNotifyLinesAddedToView($1)
+		},
+		.notifyLinesRemovedFromView: ScriptMessageHandler(minimum: 1, validate: stringOrArray) {
+			$0.handleNotifyLinesRemovedFromView($1)
+		},
+		.notifyJumpToLineCallback: ScriptMessageHandler(minimum: 3, validate: leadingStrings(1)) {
+			$0.handleNotifyJumpToLineCallback($1)
+		},
+		.printDebugInformation: ScriptMessageHandler(minimum: 1, validate: isString) {
+			$0.handlePrintDebugInformation($1)
+		},
+		.printDebugInformationToConsole: ScriptMessageHandler(minimum: 1, validate: isString) {
+			$0.handlePrintDebugInformationToConsole($1)
+		},
+		.renderMessagesBefore: ScriptMessageHandler(minimum: 2, validate: leadingStrings(1)) {
+			$0.handleRenderMessagesBefore($1)
+		},
+		.renderMessagesAfter: ScriptMessageHandler(minimum: 2, validate: leadingStrings(1)) {
+			$0.handleRenderMessagesAfter($1)
+		},
+		.renderMessagesInRange: ScriptMessageHandler(minimum: 3, validate: leadingStrings(2)) {
+			$0.handleRenderMessagesInRange($1)
+		},
+		.renderMessageWithSiblings: ScriptMessageHandler(minimum: 3, validate: leadingStrings(1)) {
+			$0.handleRenderMessageWithSiblings($1)
+		},
+		.renderTemplate: ScriptMessageHandler(minimum: 2, validate: templateArgument) {
+			$0.handleRenderTemplate($1)
+		},
+		.retrievePreferencesWithMethodName: ScriptMessageHandler(minimum: 1, validate: isString) {
+			$0.handleRetrievePreferences($1)
+		},
+		.sendPluginPayload: ScriptMessageHandler(minimum: 2, validate: pluginPayloadArgument) {
+			$0.handleSendPluginPayload($1)
+		},
+		.setChannelName: ScriptMessageHandler(minimum: 1, validate: nullOrString) {
+			$0.handleSetChannelName($1)
+		},
+		.setNickname: ScriptMessageHandler(minimum: 1, validate: nullOrString) { $0.handleSetNickname($1) },
+		.setLineContext: ScriptMessageHandler(minimum: 1, validate: lineContextArgument) {
+			$0.handleSetLineContext($1)
+		},
+		.setSelection: ScriptMessageHandler(minimum: 1, validate: nullOrString) { $0.handleSetSelection($1) },
+		.setURLAddress: ScriptMessageHandler(minimum: 1, validate: nullOrString) {
+			$0.handleSetURLAddress($1)
+		},
+		.styleSettingsRetrieveValue: ScriptMessageHandler(minimum: 1, validate: isString) {
+			$0.handleStyleSettingsRetrieveValue($1)
+		},
+		.styleSettingsSetValue: ScriptMessageHandler(minimum: 2, validate: styleSettingArgument) {
+			$0.handleStyleSettingsSetValue($1)
+		},
+	]
+
+	/// The first `count` arguments must be strings; every later one a number.
+	private nonisolated static func leadingStrings(_ count: Int) -> (Int, Any) -> Bool {
+		{ index, value in index < count ? value is String : value is NSNumber }
 	}
 
-	@objc(styleSettingsRetrieveValue:inWebView:)
-	private func styleSettingsRetrieveValue(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.styleSettingsRetrieveValue()",
-			minimum: 1,
-			validate: { _, value in value is String },
-			to: handleStyleSettingsRetrieveValue
-		)
+	private nonisolated static func isString(_: Int, _ value: Any) -> Bool {
+		value is String
 	}
 
-	@objc(styleSettingsSetValue:inWebView:)
-	private func styleSettingsSetValue(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.styleSettingsSetValue()",
-			minimum: 2,
-			validate: Self.styleSettingArgument,
-			to: handleStyleSettingsSetValue
-		)
-	}
-
-	@objc(topicBarDoubleClicked:inWebView:)
-	private func topicBarDoubleClicked(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.topicBarDoubleClicked()",
-			to: handleTopicBarDoubleClicked
-		)
-	}
-
-	@objc(finishedLayingOutView:inWebView:)
-	private func finishedLayingOutView(_ data: Any, inWebView view: Any) {
-		dispatch(
-			data,
-			view,
-			caller: "app.finishedLayingOutView()",
-			to: handleFinishedLayingOutView
-		)
-	}
-
-	private static func stringThenNumber(_ index: Int,
-	                                     _ value: Any) -> Bool
-	{
-		index == 0 ? value is String : value is NSNumber
-	}
-
-	private static func nullOrString(_: Int, _ value: Any) -> Bool {
+	private nonisolated static func nullOrString(_: Int, _ value: Any) -> Bool {
 		value is NSNull || value is String
 	}
 
-	private static func styleSettingArgument(_ index: Int, _ value: Any) -> Bool {
+	private nonisolated static func stringOrArray(_: Int, _ value: Any) -> Bool {
+		value is String || value is [Any]
+	}
+
+	private nonisolated static func templateArgument(_ index: Int, _ value: Any) -> Bool {
+		if index == 0 {
+			return value is String
+		}
+		return value is NSNull || value is [AnyHashable: Any]
+	}
+
+	private nonisolated static func lineContextArgument(_: Int, _ value: Any) -> Bool {
+		value is NSNull || value is [AnyHashable: Any]
+	}
+
+	private nonisolated static func pluginPayloadArgument(_ index: Int, _ value: Any) -> Bool {
+		index != 0 || value is String
+	}
+
+	private nonisolated static func styleSettingArgument(_ index: Int, _ value: Any) -> Bool {
 		if index == 0 {
 			return value is String
 		}
@@ -946,98 +701,50 @@ extension TVCLogScriptEventSink {
 		context.completion(TVCLogRenderer.renderTemplateNamed(name, attributes: attributes))
 	}
 
-	private func handleRetrievePreferences(_ context: LogScriptEventContext) {
-		guard let methodName = Self.objectValueToCommon(context.arguments[0]) as? String
-		else { context.completion(nil); return }
-		let selector = NSSelectorFromString(methodName)
-		guard let method = class_getClassMethod(TextualPreferences.self, selector) else { fail(
-			"Unknown method named: '%@'",
-			context,
-			[methodName]
-		); context.completion(nil); return }
-		guard method_getNumberOfArguments(method) == 2 else { fail(
-			"Method named '%@' takes arguments",
-			context,
-			[methodName]
-		); context.completion(nil); return }
-		let returnType = method_copyReturnType(method)
-		defer { free(returnType) }
-		let implementation = method_getImplementation(method)
-		context.completion(Self.invokePreference(
-			implementation,
-			selector: selector,
-			returnType: returnType,
-			context: context
-		))
-	}
+	/** Preferences a style is allowed to read through
+	 `app.retrievePreferencesWithMethodName()`.
 
-	private static func invokePreference(
-		_ implementation: IMP,
-		selector: Selector,
-		returnType: UnsafePointer<CChar>,
-		context: LogScriptEventContext
-	) -> Any? {
-		let target: AnyClass = TextualPreferences.self
-		switch returnType.pointee {
-		case 64: return unsafeBitCast(implementation, to: (@convention(c) (AnyClass, Selector) -> AnyObject?).self)(
-				target,
-				selector
-			)
-		case 66: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> Bool).self
-			)(target, selector))
-		case 99: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> Int8).self
-			)(target, selector))
-		case 67: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> UInt8).self
-			)(target, selector))
-		case 73: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> UInt32).self
-			)(target, selector))
-		case 83: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> UInt16).self
-			)(target, selector))
-		case 76, 81: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> UInt64).self
-			)(target, selector))
-		case 105: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> Int32).self
-			)(target, selector))
-		case 115: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> Int16).self
-			)(target, selector))
-		case 108, 113: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> Int64).self
-			)(target, selector))
-		case 102: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> Float).self
-			)(target, selector))
-		case 100: return NSNumber(value: unsafeBitCast(
-				implementation,
-				to: (@convention(c) (AnyClass, Selector) -> Double).self
-			)(target, selector))
-		case 118: fail(
-				"Method named '%@' does not return a value",
-				context,
-				[NSStringFromSelector(selector)]
-			); return nil
-		default: fail(
-				"Method named '%@' returns an unsupported type",
-				context,
-				[NSStringFromSelector(selector)]
-			); return nil
+	 The bridge used to resolve the name against the Objective-C runtime and
+	 call the resulting IMP, which reached every inherited `NSObject` class
+	 method as well. Styles only ever need presentation settings, so the set
+	 is enumerated rather than discovered. */
+	static let permittedPreferences: [String: @MainActor () -> Any?] = [
+		"autoAddScrollbackMark": { NSNumber(value: TextualPreferences.autoAddScrollbackMark()) },
+		"conversationTrackingIncludesUserModeSymbol": {
+			NSNumber(value: TextualPreferences.conversationTrackingIncludesUserModeSymbol())
+		},
+		"copyOnSelect": { NSNumber(value: TextualPreferences.copyOnSelect()) },
+		"disableNicknameColorHashing": { NSNumber(value: TextualPreferences.disableNicknameColorHashing()) },
+		"inlineMediaMaxHeight": { NSNumber(value: TextualPreferences.inlineMediaMaxHeight()) },
+		"inlineMediaMaxWidth": { NSNumber(value: TextualPreferences.inlineMediaMaxWidth()) },
+		"removeAllFormatting": { NSNumber(value: TextualPreferences.removeAllFormatting()) },
+		"rightToLeftFormatting": { NSNumber(value: TextualPreferences.rightToLeftFormatting()) },
+		"scrollbackVisibleLimit": { NSNumber(value: TextualPreferences.scrollbackVisibleLimit()) },
+		"showDateChanges": { NSNumber(value: TextualPreferences.showDateChanges()) },
+		"showInlineMedia": { NSNumber(value: TextualPreferences.showInlineMedia()) },
+		"showJoinLeave": { NSNumber(value: TextualPreferences.showJoinLeave()) },
+		"themeChannelViewFontName": { TextualPreferences.themeChannelViewFontName() },
+		"themeChannelViewFontSize": { NSNumber(value: Double(TextualPreferences.themeChannelViewFontSize())) },
+		"themeChannelViewUsesCustomScrollers": {
+			NSNumber(value: TextualPreferences.themeChannelViewUsesCustomScrollers())
+		},
+		"themeName": { TextualPreferences.themeName() },
+		"themeNicknameFormat": { TextualPreferences.themeNicknameFormat() },
+		"themeTimestampFormat": { TextualPreferences.themeTimestampFormat() },
+		"webKit2PreviewLinks": { NSNumber(value: TextualPreferences.webKit2PreviewLinks()) },
+	]
+
+	private func handleRetrievePreferences(_ context: LogScriptEventContext) {
+		guard let name = Self.objectValueToCommon(context.arguments[0]) as? String else {
+			context.completion(nil)
+			return
 		}
+		guard let read = Self.permittedPreferences[name] else {
+			fail("Preference named '%@' is not readable by a style", context, [name])
+			context.completion(nil)
+			return
+		}
+		context.completion(read())
 	}
 
 	private func handleSendPluginPayload(_ context: LogScriptEventContext) {
