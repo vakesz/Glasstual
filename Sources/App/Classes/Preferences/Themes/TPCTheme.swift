@@ -89,7 +89,7 @@ public final class Theme: NSObject {
 	fileprivate var variety: ThemeVariety?
 	private var varieties: [ThemeVariety] = []
 	private nonisolated let templateStore = ThemeTemplateStore()
-	private var fileSystemMonitor: XRFileSystemMonitor?
+	private var fileSystemMonitorTask: Task<Void, Never>?
 
 	public private(set) var cssFiles: [URL] = []
 	public private(set) var jsFiles: [URL] = []
@@ -120,7 +120,7 @@ public final class Theme: NSObject {
 	}
 
 	deinit {
-		fileSystemMonitor?.stopMonitoring()
+		fileSystemMonitorTask?.cancel()
 	}
 
 	public var appearance: TPCThemeAppearanceType {
@@ -221,18 +221,18 @@ public final class Theme: NSObject {
 	// MARK: Monitoring
 
 	private func startMonitoring() {
-		let monitor = XRFileSystemMonitor(fileURL: originalURL) { [weak self] events in
-			Task { @MainActor [weak self] in
-				self?.react(to: events)
+		let url = originalURL
+		fileSystemMonitorTask = Task { [weak self] in
+			for await events in XRFileSystemMonitor.events(for: url, latency: 5) {
+				guard let self else { return }
+				react(to: events)
 			}
 		}
-		monitor.startMonitoring(withLatency: 5)
-		fileSystemMonitor = monitor
 	}
 
 	private func stopMonitoring() {
-		fileSystemMonitor?.stopMonitoring()
-		fileSystemMonitor = nil
+		fileSystemMonitorTask?.cancel()
+		fileSystemMonitorTask = nil
 	}
 
 	private func react(to events: [XRFileSystemEvent]) {

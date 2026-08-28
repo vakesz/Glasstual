@@ -80,7 +80,7 @@ public final class ThemeController: NSObject {
 	private var currentCopyOperation: ThemeCopyOperation?
 	private var bundledThemes: [String: Theme] = [:]
 	private var customThemes: [String: Theme] = [:]
-	private var themeMonitor: XRFileSystemMonitor?
+	private var themeMonitorTask: Task<Void, Never>?
 
 	override public init() {
 		super.init()
@@ -88,7 +88,7 @@ public final class ThemeController: NSObject {
 	}
 
 	deinit {
-		themeMonitor?.stopMonitoring()
+		themeMonitorTask?.cancel()
 		NotificationCenter.default.removeObserver(self)
 	}
 
@@ -326,21 +326,17 @@ public final class ThemeController: NSObject {
 		}
 
 		let url = URL(fileURLWithPath: path, isDirectory: true)
-		let monitor = XRFileSystemMonitor(
-			fileURL: url,
-			context: NSNumber(value: TPCThemeStorageLocation.custom.rawValue)
-		) { [weak self] events in
-			Task { @MainActor [weak self] in
-				self?.react(toMonitoringEvents: events)
+		themeMonitorTask = Task { [weak self] in
+			for await events in XRFileSystemMonitor.events(for: url, latency: 1) {
+				guard let self else { return }
+				react(toMonitoringEvents: events)
 			}
 		}
-		monitor.startMonitoring(withLatency: 1)
-		themeMonitor = monitor
 	}
 
 	private func stopMonitoringThemes() {
-		themeMonitor?.stopMonitoring()
-		themeMonitor = nil
+		themeMonitorTask?.cancel()
+		themeMonitorTask = nil
 	}
 
 	private func react(toMonitoringEvents events: [XRFileSystemEvent]) {
@@ -350,12 +346,13 @@ public final class ThemeController: NSObject {
 	}
 
 	private func react(toMonitoringEvent event: XRFileSystemEvent) {
-		guard event.flags & UInt32(kFSEventStreamEventFlagItemIsDir) != 0,
-		      let context = themeMonitor?.contextObject(for: event.url.deletingLastPathComponent()) as? NSNumber,
-		      let location = TPCThemeStorageLocation(rawValue: context.uintValue)
-		else {
+		guard event.flags & UInt32(kFSEventStreamEventFlagItemIsDir) != 0 else {
 			return
 		}
+
+		/* Only the custom folder is watched, so every event that arrives here
+		 belongs to a custom theme. */
+		let location = TPCThemeStorageLocation.custom
 
 		let url = event.url
 		guard FileManager.default.fileExists(at: url) else {
