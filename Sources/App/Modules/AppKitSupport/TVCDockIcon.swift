@@ -84,7 +84,10 @@ public final class DockIcon: NSObject {
 			return
 		}
 
-		dockTile.badgeLabel = badgeString(forCount: messageCount + highlightCount)
+		/* Both counts are drawn inside the badge view. The system badge label
+		 has to be cleared or the highlight count is drawn twice, once in the
+		 label and once in the green pill sitting on top of it. */
+		dockTile.badgeLabel = nil
 
 		var badgeView = dockTile.contentView as? DockIconBadgeView
 
@@ -132,13 +135,23 @@ public final class DockIconBadgeView: NSView {
 
 		let badgeHeight = floor(bounds.size.height * 0.26)
 		let separator: CGFloat = 1.0
+		var top = bounds.maxY - badgeHeight - separator
 
 		if highlightCount > 0 {
-			let top = bounds.maxY - badgeHeight - separator
-
-			_ = drawBadge(
+			let pill = drawBadge(
 				withCount: highlightCount,
 				color: .systemGreen,
+				topRight: NSPoint(x: bounds.maxX, y: top),
+				height: badgeHeight
+			)
+
+			top = pill.minY - separator
+		}
+
+		if messageCount > 0 {
+			_ = drawBadge(
+				withCount: messageCount,
+				color: .systemRed,
 				topRight: NSPoint(x: bounds.maxX, y: top),
 				height: badgeHeight
 			)

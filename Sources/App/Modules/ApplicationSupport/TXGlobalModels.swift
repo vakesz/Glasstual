@@ -124,7 +124,13 @@ private func formatDateValue(
 	dateFormatter.timeStyle = timeStyle
 
 	if let string = dateObject as? String {
-		return dateFormatter.string(for: string)
+		/* DateFormatter.string(for:) returns nil for anything that is not an
+		 NSDate, so a string has to be parsed before it can be formatted. */
+		guard let date = parseDateValue(string) else {
+			return nil
+		}
+
+		return dateFormatter.string(from: date)
 	}
 
 	if let date = dateObject as? Date {
@@ -133,6 +139,23 @@ private func formatDateValue(
 
 	if let date = dateObject as? NSDate {
 		return dateFormatter.string(from: date as Date)
+	}
+
+	return nil
+}
+
+/// Parses the date representations servers actually send: an ISO 8601
+/// timestamp, or a Unix epoch in seconds. Anything else is left to the caller,
+/// which normally falls back to showing the server's text verbatim.
+private func parseDateValue(_ string: String) -> Date? {
+	let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+
+	if let date = isoStandardDateFormatter.date(from: trimmed) {
+		return date
+	}
+
+	if let seconds = TimeInterval(trimmed) {
+		return Date(timeIntervalSince1970: seconds)
 	}
 
 	return nil

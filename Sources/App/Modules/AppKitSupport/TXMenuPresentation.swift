@@ -213,6 +213,13 @@ public final class MenuPresentation: NSObject {
 				hasSymbol = true
 			}
 
+			/* Every item that ends up carrying an image wants this, not just
+			 the spacers added below; otherwise real symbols stay hidden while
+			 the blank spacers next to them are shown. */
+			if #available(macOS 27.0, *), item.image != nil {
+				item.preferredImageVisibility = .visible
+			}
+
 			if item.hasSubmenu {
 				apply(configuration, to: item.submenu)
 			}

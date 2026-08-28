@@ -135,7 +135,13 @@ public final class Extras: NSObject {
 		}
 
 		/* Continue normal parsing... */
-		let serverPortValue = UInt16(truncatingIfNeeded: baseURL.port ?? Int(IRCConnectionDefaults.serverPort))
+		// Truncating here would silently connect to a different port than the
+		// one the URI names (irc://host:99999 becomes 34463).
+		guard let serverPortValue = UInt16(exactly: baseURL.port ?? Int(IRCConnectionDefaults.serverPort)) else {
+			extrasLogger.error("Invalid internet port")
+
+			return
+		}
 		var connectSecurely = false
 
 		if addressScheme == "ircs" {
@@ -154,26 +160,20 @@ public final class Extras: NSObject {
 		let channelList = NSMutableString()
 
 		if let channelInfo {
-			let dataSections = channelInfo.components(separatedBy: ",")
-			let dataSectionsCount = dataSections.count
+			var dataSections = channelInfo.components(separatedBy: ",").filter { $0.isEmpty == false }
 
-			for (index, section) in dataSections.enumerated() {
-				if section.isEmpty {
-					continue
-				}
+			/* The trailing "needssl" token has to be recognised before the
+			 five-channel cap is applied, otherwise a URI with more channels
+			 than that silently downgrades to a plaintext connection. */
+			if let lastSection = dataSections.last,
+			   lastSection.caseInsensitiveCompare("needssl") == .orderedSame
+			{
+				connectSecurely = true
 
-				if index > 4 {
-					break
-				}
+				dataSections.removeLast()
+			}
 
-				let isLastObject = (index + 1) == dataSectionsCount
-
-				if isLastObject, section.caseInsensitiveCompare("needssl") == .orderedSame {
-					connectSecurely = true
-
-					continue
-				}
-
+			for section in dataSections.prefix(5) {
 				var sectionCopy = section
 
 				if (sectionCopy as NSString).hasPrefix("#") == false {

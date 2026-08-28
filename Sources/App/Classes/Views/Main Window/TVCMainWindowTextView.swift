@@ -75,6 +75,9 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	/** NSTextView has a private accessor named placeholderAttributedString.
 	 AppKit may call it, so this property deliberately has another name. */
 	private var inputPlaceholderAttributedString: NSAttributedString?
+	/** Keyed on the font it was measured with, so a font change invalidates it
+	 without anyone having to remember to. */
+	private var defaultLineHeightCache: (font: NSFont, height: CGFloat)?
 
 	@IBOutlet private var textViewHeightConstraint: NSLayoutConstraint!
 	@IBOutlet private var windowContentViewMinimumHeight: NSLayoutConstraint!
@@ -500,14 +503,28 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 		recalculateTextViewSize(force: true)
 	}
 
+	/// The height of one line in the input field's current font.
+	///
+	/// This is read from `draw(_:)` and from every size recalculation, so
+	/// building a TextKit 2 stack per call would mean one per keystroke and
+	/// one per redraw.
 	private var defaultLineHeight: CGFloat {
+		let font = preferredFont
+
+		if let cache = defaultLineHeightCache, cache.font == font {
+			return cache.height
+		}
+
 		let contentStorage = NSTextContentStorage()
 		let layoutManager = NSTextLayoutManager()
 		contentStorage.addTextLayoutManager(layoutManager)
 		layoutManager.textContainer = NSTextContainer(size: NSSize(width: 10000, height: 10000))
-		contentStorage.attributedString = NSAttributedString(string: "X", attributes: [.font: preferredFont])
+		contentStorage.attributedString = NSAttributedString(string: "X", attributes: [.font: font])
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
-		return layoutManager.usageBoundsForTextContainer.height
+
+		let height = layoutManager.usageBoundsForTextContainer.height
+		defaultLineHeightCache = (font, height)
+		return height
 	}
 
 	@objc public func recalculateTextViewSize() {
@@ -518,7 +535,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 		recalculateTextViewSize(force: true)
 	}
 
-	private func recalculateTextViewSize(force _: Bool, animated: Bool = false) {
+	private func recalculateTextViewSize(force: Bool, animated: Bool = false) {
 		guard let appearance = userInterfaceObjects,
 		      let window,
 		      let textViewHeightConstraint,
@@ -541,10 +558,15 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 
 		backgroundHeight += accessoryHeight
 
-		if animated {
-			textViewHeightConstraint.animator().constant = backgroundHeight
-		} else {
-			textViewHeightConstraint.constant = backgroundHeight
+		/* An unforced recalculation that arrives at the height already in
+		 place does not write the constraint: that would invalidate layout for
+		 the whole window on every keystroke. */
+		if force || backgroundHeight != textViewHeightConstraint.constant {
+			if animated {
+				textViewHeightConstraint.animator().constant = backgroundHeight
+			} else {
+				textViewHeightConstraint.constant = backgroundHeight
+			}
 		}
 
 		guard let scrollContentView = enclosingScrollView?.contentView else {

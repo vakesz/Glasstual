@@ -1251,6 +1251,12 @@ CA
                         <action selector="memberStartPrivateMessage:" target="267" id="2924"/>
                     </connections>
                 </menuItem>
+                <menuItem title="Change Color…" tag="1625" id="Gt5-cn-Kx2">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="memberChangeColor:" target="267" id="Vb9-3d-Qm4"/>
+                    </connections>
+                </menuItem>
                 <menuItem isSeparatorItem="YES" tag="1608" id="331">
                     <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                 </menuItem>

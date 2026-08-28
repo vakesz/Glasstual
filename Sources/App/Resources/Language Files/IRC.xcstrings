@@ -1177,6 +1177,18 @@
         }
       }
     },
+    "developer-mode-required" : {
+      "comment" : "Common command errors. Shown when a developer-only command is used with Developer Mode turned off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This command is only available while Developer Mode is enabled."
+          }
+        }
+      }
+    },
     "dgp-d4" : {
       "comment" : "/timer/ command. Migrated from legacy key dgp-d4; compatibility key retained.",
       "extractionState" : "manual",

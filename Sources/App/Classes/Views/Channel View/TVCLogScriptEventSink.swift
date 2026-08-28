@@ -812,8 +812,10 @@ extension TVCLogScriptEventSink {
 		let lineNumber = Self.standardizeLineNumber(rawLine)
 		guard !lineNumber.isEmpty else { fail("Length of line number is 0", context); completion(nil); return }
 		let successful = (Self.objectValueToCommon(context.arguments[1]) as? NSNumber)?.boolValue ?? false
-		let scrolled = (Self.objectValueToCommon(context.arguments[2]) as? NSNumber)?.boolValue ?? false
-		context.viewController.notifyJumpToLine(lineNumber, successful: successful, scrolledToBottom: scrolled)
+		/* The style also reports whether the jump landed at the bottom of the
+		 buffer. Scroll position is owned entirely by the style's JavaScript,
+		 so there is nothing on this side to tell; the argument is ignored. */
+		context.viewController.notifyJumpToLine(lineNumber, successful: successful)
 	}
 
 	private func handleNotifyLinesAddedToView(_ context: LogScriptEventContext) {

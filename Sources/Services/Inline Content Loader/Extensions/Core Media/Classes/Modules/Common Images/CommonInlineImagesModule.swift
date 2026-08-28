@@ -172,7 +172,9 @@ final class CommonInlineImagesModule: InlineImageModule {
 			      candidate.count >= 3,
 			      candidate.hasPrefix("sm") || candidate.hasPrefix("nm")
 			else { return nil }
-			let number = Int64(candidate.dropFirst(2)) ?? 0
+			/* Reject a non-numeric slug rather than falling back to 0, which
+			 requested the thumbnail for video 0. */
+			guard let number = Int64(candidate.dropFirst(2)), number >= 0 else { return nil }
 			return "https://tn-skr\((number % 4) + 1).smilevideo.jp/smile?i=\(number)"
 		}
 		return nil
