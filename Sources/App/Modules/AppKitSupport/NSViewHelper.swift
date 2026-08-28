@@ -13,17 +13,14 @@
 import AppKit
 
 public extension NSWindow {
-	@objc(changeFrameToMinAndDisplay:)
 	func changeFrame(toMinAndDisplay display: Bool) {
 		changeFrame(toMinAndDisplay: display, animate: false)
 	}
 
-	@objc(changeFrameToMinAndDisplay:animate:)
 	func changeFrame(toMinAndDisplay display: Bool, animate: Bool) {
 		changeFrame(to: contentMinSize, display: display, animate: animate)
 	}
 
-	@objc(changeFrameTo:display:animate:)
 	func changeFrame(to minSize: NSSize, display: Bool, animate: Bool) {
 		let oldFrame = frame
 		var newFrame = oldFrame
@@ -42,11 +39,11 @@ public extension NSWindow {
 public extension NSView {
 	/** The exact-class check this used to make rejected a subclass for no
 	 reason, and the cast that followed it was then redundant. */
-	@objc var mainWindow: TVCMainWindow? {
+	var mainWindow: TVCMainWindow? {
 		window as? TVCMainWindow
 	}
 
-	@objc func addConstraintsToSuperviewToHugEdges() {
+	func addConstraintsToSuperviewToHugEdges() {
 		guard let superview else {
 			return
 		}
@@ -97,7 +94,6 @@ public extension NSView {
 	 dimension constraints on top pinned the same edges a second time and
 	 brought a zero-size constraint at priority 550 with them, so every pane
 	 swap doubled the constraint count. */
-	@objc(replaceFirstSubview:)
 	func replaceFirstSubview(_ withSubview: NSView) {
 		subviews.first?.removeFromSuperviewWithoutNeedingDisplay()
 		addSubview(withSubview)
@@ -106,11 +102,11 @@ public extension NSView {
 }
 
 public extension NSCell {
-	@objc var window: NSWindow? {
+	var window: NSWindow? {
 		controlView?.window
 	}
 
-	@objc var mainWindow: TVCMainWindow? {
+	var mainWindow: TVCMainWindow? {
 		controlView?.mainWindow
 	}
 }

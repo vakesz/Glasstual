@@ -15,8 +15,9 @@ import CocoaExtensions
 import os
 import Synchronization
 
-@objc(TPCPathInfo)
-public final nonisolated class PathInfo: NSObject {
+/// Where the application keeps its files. Every accessor here creates the
+/// directory it names, so callers can write into it straight away.
+public nonisolated enum PathInfo {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PathInfo"
@@ -42,12 +43,10 @@ public final nonisolated class PathInfo: NSObject {
 
 	// MARK: - Directory creation
 
-	@objc(_createDirectoryAtPath:)
 	public static func createDirectory(atPath directoryPath: String) {
 		createDirectory(at: URL(fileURLWithPath: directoryPath, isDirectory: true))
 	}
 
-	@objc(_createDirectoryAtURL:)
 	public static func createDirectory(at directoryURL: URL) {
 		let alreadyEnsured = ensuredDirectories.withLock { ensured in
 			ensured.insert(directoryURL).inserted == false
@@ -72,23 +71,23 @@ public final nonisolated class PathInfo: NSObject {
 
 	// MARK: - Application Specific
 
-	@objc public static var applicationBundle: String {
+	public static var applicationBundle: String {
 		Bundle.main.bundlePath
 	}
 
-	@objc public static var applicationBundleURL: URL {
+	public static var applicationBundleURL: URL {
 		Bundle.main.bundleURL
 	}
 
-	@objc public static var applicationResources: String {
+	public static var applicationResources: String {
 		Bundle.main.resourcePath ?? ""
 	}
 
-	@objc public static var applicationResourcesURL: URL {
+	public static var applicationResourcesURL: URL {
 		Bundle.main.resourceURL ?? Bundle.main.bundleURL
 	}
 
-	@objc public static var applicationCaches: String? {
+	public static var applicationCaches: String? {
 		guard
 			var basePath = firstSearchPath(
 				for: .cachesDirectory,
@@ -104,15 +103,15 @@ public final nonisolated class PathInfo: NSObject {
 		return basePath
 	}
 
-	@objc public static var applicationCachesURL: URL? {
+	public static var applicationCachesURL: URL? {
 		fileURL(forPath: applicationCaches)
 	}
 
-	@objc public static var groupContainer: String? {
+	public static var groupContainer: String? {
 		groupContainerURL?.path
 	}
 
-	@objc public static var groupContainerURL: URL? {
+	public static var groupContainerURL: URL? {
 		guard
 			var baseURL = fileManager.containerURL(
 				forSecurityApplicationGroupIdentifier: ApplicationGroup.identifier
@@ -134,11 +133,11 @@ public final nonisolated class PathInfo: NSObject {
 		return baseURL
 	}
 
-	@objc public static var groupContainerApplicationCaches: String? {
+	public static var groupContainerApplicationCaches: String? {
 		groupContainerApplicationCachesURL?.path
 	}
 
-	@objc public static var groupContainerApplicationCachesURL: URL? {
+	public static var groupContainerApplicationCachesURL: URL? {
 		guard let sourceURL = groupContainerURL else {
 			return nil
 		}
@@ -149,7 +148,7 @@ public final nonisolated class PathInfo: NSObject {
 		return baseURL
 	}
 
-	@objc public static var applicationSupport: String? {
+	public static var applicationSupport: String? {
 		guard
 			var basePath = firstSearchPath(
 				for: .applicationSupportDirectory,
@@ -165,15 +164,15 @@ public final nonisolated class PathInfo: NSObject {
 		return basePath
 	}
 
-	@objc public static var applicationSupportURL: URL? {
+	public static var applicationSupportURL: URL? {
 		fileURL(forPath: applicationSupport)
 	}
 
-	@objc public static var groupContainerApplicationSupport: String? {
+	public static var groupContainerApplicationSupport: String? {
 		groupContainerApplicationSupportURL?.path
 	}
 
-	@objc public static var groupContainerApplicationSupportURL: URL? {
+	public static var groupContainerApplicationSupportURL: URL? {
 		guard let sourceURL = groupContainerURL else {
 			return nil
 		}
@@ -184,7 +183,7 @@ public final nonisolated class PathInfo: NSObject {
 		return baseURL
 	}
 
-	@objc public static var applicationLogs: String? {
+	public static var applicationLogs: String? {
 		guard
 			var basePath = firstSearchPath(
 				for: .libraryDirectory,
@@ -200,11 +199,11 @@ public final nonisolated class PathInfo: NSObject {
 		return basePath
 	}
 
-	@objc public static var applicationLogsURL: URL? {
+	public static var applicationLogsURL: URL? {
 		fileURL(forPath: applicationLogs)
 	}
 
-	@objc public static var applicationTemporary: String {
+	public static var applicationTemporary: String {
 		let basePath = (NSTemporaryDirectory() as NSString)
 			.appendingPathComponent("/\(productIdentifier)/")
 
@@ -213,11 +212,11 @@ public final nonisolated class PathInfo: NSObject {
 		return basePath
 	}
 
-	@objc public static var applicationTemporaryURL: URL {
+	public static var applicationTemporaryURL: URL {
 		URL(fileURLWithPath: applicationTemporary, isDirectory: true)
 	}
 
-	@objc public static var applicationTemporaryProcessSpecific: String {
+	public static var applicationTemporaryProcessSpecific: String {
 		let processIdentifier = ProcessInfo.processInfo.processIdentifier
 		let basePath = (applicationTemporary as NSString)
 			.appendingPathComponent("/tmp-\(processIdentifier)")
@@ -227,39 +226,39 @@ public final nonisolated class PathInfo: NSObject {
 		return basePath
 	}
 
-	@objc public static var applicationTemporaryProcessSpecificURL: URL {
+	public static var applicationTemporaryProcessSpecificURL: URL {
 		URL(fileURLWithPath: applicationTemporaryProcessSpecific, isDirectory: true)
 	}
 
-	@objc public static var bundledExtensions: String {
+	public static var bundledExtensions: String {
 		bundledExtensionsURL.path
 	}
 
-	@objc public static var bundledExtensionsURL: URL {
+	public static var bundledExtensionsURL: URL {
 		applicationResourcesURL.appendingPathComponent("/Bundled Extensions/")
 	}
 
-	@objc public static var bundledScripts: String {
+	public static var bundledScripts: String {
 		bundledScriptsURL.path
 	}
 
-	@objc public static var bundledScriptsURL: URL {
+	public static var bundledScriptsURL: URL {
 		applicationResourcesURL.appendingPathComponent("/Bundled Scripts/")
 	}
 
-	@objc public static var bundledThemes: String {
+	public static var bundledThemes: String {
 		bundledThemesURL.path
 	}
 
-	@objc public static var bundledThemesURL: URL {
+	public static var bundledThemesURL: URL {
 		applicationResourcesURL.appendingPathComponent("/Bundled Styles/")
 	}
 
-	@objc public static var customExtensions: String? {
+	public static var customExtensions: String? {
 		customExtensionsURL?.path
 	}
 
-	@objc public static var customExtensionsURL: URL? {
+	public static var customExtensionsURL: URL? {
 		guard let sourceURL = groupContainerApplicationSupportURL else {
 			return nil
 		}
@@ -270,7 +269,7 @@ public final nonisolated class PathInfo: NSObject {
 		return baseURL
 	}
 
-	@objc public static var customScripts: String? {
+	public static var customScripts: String? {
 		#if DEBUG
 			if ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_DIRECTORY"] != nil,
 			   let supportURL = groupContainerApplicationSupportURL
@@ -285,15 +284,15 @@ public final nonisolated class PathInfo: NSObject {
 		return firstSearchPath(for: .applicationScriptsDirectory)
 	}
 
-	@objc public static var customScriptsURL: URL? {
+	public static var customScriptsURL: URL? {
 		fileURL(forPath: customScripts)
 	}
 
-	@objc public static var customThemes: String? {
+	public static var customThemes: String? {
 		customThemesURL?.path
 	}
 
-	@objc public static var customThemesURL: URL? {
+	public static var customThemesURL: URL? {
 		guard let sourceURL = groupContainerApplicationSupportURL else {
 			return nil
 		}
@@ -306,86 +305,86 @@ public final nonisolated class PathInfo: NSObject {
 
 	// MARK: - System Specific
 
-	@objc public static var systemApplications: String? {
+	public static var systemApplications: String? {
 		firstSearchPath(for: .applicationDirectory, in: .systemDomainMask)
 	}
 
-	@objc public static var systemApplicationsURL: URL? {
+	public static var systemApplicationsURL: URL? {
 		fileURL(forPath: systemApplications)
 	}
 
-	@objc public static var systemDiagnosticReports: String {
+	public static var systemDiagnosticReports: String {
 		"/Library/Logs/DiagnosticReports"
 	}
 
-	@objc public static var systemDiagnosticReportsURL: URL {
+	public static var systemDiagnosticReportsURL: URL {
 		URL(fileURLWithPath: systemDiagnosticReports, isDirectory: true)
 	}
 
 	// MARK: - User Specific
 
-	@objc public static var userApplicationScripts: String? {
+	public static var userApplicationScripts: String? {
 		userApplicationScriptsURL?.path
 	}
 
-	@objc public static var userApplicationScriptsURL: URL? {
+	public static var userApplicationScriptsURL: URL? {
 		customScriptsURL?.deletingLastPathComponent()
 	}
 
-	@objc public static var userDiagnosticReports: String {
+	public static var userDiagnosticReports: String {
 		userDiagnosticReportsURL.path
 	}
 
-	@objc public static var userDiagnosticReportsURL: URL {
+	public static var userDiagnosticReportsURL: URL {
 		userHomeURL.appendingPathComponent("/Library/Logs/DiagnosticReports")
 	}
 
-	@objc public static var userDownloads: String? {
+	public static var userDownloads: String? {
 		firstSearchPath(for: .downloadsDirectory)
 	}
 
-	@objc public static var userDownloadsURL: URL? {
+	public static var userDownloadsURL: URL? {
 		fileURL(forPath: userDownloads)
 	}
 
-	@objc public static var userHome: String {
+	public static var userHome: String {
 		FileManager.pathOfHomeDirectoryOutsideSandbox
 	}
 
-	@objc public static var userHomeURL: URL {
+	public static var userHomeURL: URL {
 		FileManager.URLOfHomeDirectoryOutsideSandbox
 	}
 
-	@objc public static var userPreferences: String? {
+	public static var userPreferences: String? {
 		firstSearchPath(for: .libraryDirectory, appending: "/Preferences/")
 	}
 
-	@objc public static var userPreferencesURL: URL? {
+	public static var userPreferencesURL: URL? {
 		fileURL(forPath: userPreferences)
 	}
 
 	// MARK: - Transcript folder
 
-	@objc public static var transcriptFolder: String? {
+	public static var transcriptFolder: String? {
 		transcriptFolderURL?.path
 	}
 
-	@objc public static var transcriptFolderURL: URL? {
+	public static var transcriptFolderURL: URL? {
 		transcriptFolderURLStorage.withLock { $0 }
 	}
 
-	@objc public static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
+	public static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
 		stopUsingTranscriptFolderURL()
 
 		TextualUserDefaults.shared().set(transcriptFolderURL, forKey: transcriptBookmarkDefaultsKey)
 		startUsingTranscriptFolderURL()
 	}
 
-	@objc public static func startUsingTranscriptFolderURL() {
+	public static func startUsingTranscriptFolderURL() {
 		startUsingTranscriptFolderURL(refreshingStaleBookmark: true)
 	}
 
-	@objc public static func stopUsingTranscriptFolderURL() {
+	public static func stopUsingTranscriptFolderURL() {
 		let existingURL = transcriptFolderURLStorage.withLock { url -> URL? in
 			let existing = url
 			url = nil

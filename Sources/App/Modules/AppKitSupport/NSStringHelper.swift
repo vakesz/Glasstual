@@ -56,7 +56,6 @@ public nonisolated struct IRCColorComponents: Sendable {
 }
 
 public nonisolated extension NSString {
-	@objc(isValidInternetAddress)
 	var isValidInternetAddress: Bool {
 		guard length > 0 else {
 			return false
@@ -69,7 +68,6 @@ public nonisolated extension NSString {
 		return (self as String).onlyContainsCharacters(from: .textualAlphanumericDashPeriod)
 	}
 
-	@objc(isValidInternetPort)
 	var isValidInternetPort: Bool {
 		guard let value = Int(self as String) else {
 			return false
@@ -78,7 +76,7 @@ public nonisolated extension NSString {
 		return value.isValidInternetPort
 	}
 
-	@objc var stringByAppendingIRCFormattingStop: String {
+	var stringByAppendingIRCFormattingStop: String {
 		(self as String) + String(utf16CodeUnits: [UniChar(IRCTextFormatterControlCharacter.terminator)], count: 1)
 	}
 
@@ -98,37 +96,30 @@ public nonisolated extension NSString {
 		)
 	}
 
-	@objc(isHostmask)
 	var isHostmask: Bool {
 		hostmask != nil
 	}
 
-	@objc(isHostmaskAddress)
 	var isHostmaskAddress: Bool {
 		isHostmaskAddress(on: nil)
 	}
 
-	@objc(isHostmaskAddressOn:)
 	func isHostmaskAddress(on _: IRCClient?) -> Bool {
 		IRCHostmask.isValidAddress(self as String)
 	}
 
-	@objc(isHostmaskUsername)
 	var isHostmaskUsername: Bool {
 		isHostmaskUsername(on: nil)
 	}
 
-	@objc(isHostmaskUsernameOn:)
 	func isHostmaskUsername(on _: IRCClient?) -> Bool {
 		IRCHostmask.isValidUsername(self as String)
 	}
 
-	@objc(isHostmaskNickname)
 	var isHostmaskNickname: Bool {
 		IRCHostmask.isValidNickname(self as String, maximumLength: defaultHostmaskNicknameLength)
 	}
 
-	@objc(isHostmaskNicknameOn:)
 	@MainActor
 	func isHostmaskNickname(on client: IRCClient?) -> Bool {
 		IRCHostmask.isValidNickname(
@@ -137,7 +128,6 @@ public nonisolated extension NSString {
 		)
 	}
 
-	@objc(isChannelNameOn:)
 	@MainActor
 	func isChannelName(on client: IRCClient) -> Bool {
 		guard length > 0 else {
@@ -151,7 +141,6 @@ public nonisolated extension NSString {
 		return channelName.hasPrefix("~#") || channelNamePrefixes.contains(firstCharacter)
 	}
 
-	@objc(isChannelName)
 	var isChannelName: Bool {
 		guard length > 0 else {
 			return false
@@ -162,7 +151,7 @@ public nonisolated extension NSString {
 			|| firstCharacter == 0x21 || firstCharacter == 0x7E || firstCharacter == 0x3F
 	}
 
-	@objc var channelNameWithoutBang: String? {
+	var channelNameWithoutBang: String? {
 		guard isChannelName else {
 			return self as String
 		}
@@ -170,7 +159,6 @@ public nonisolated extension NSString {
 		return substring(from: 1)
 	}
 
-	@objc(channelNameWithoutBangOn:)
 	@MainActor
 	func channelNameWithoutBang(on client: IRCClient) -> String? {
 		guard isChannelName(on: client) else {
@@ -191,19 +179,18 @@ public nonisolated extension NSString {
 		return self as String
 	}
 
-	@objc var nicknameFromHostmask: String? {
+	var nicknameFromHostmask: String? {
 		hostmask?.nickname ?? (self as String)
 	}
 
-	@objc var usernameFromHostmask: String? {
+	var usernameFromHostmask: String? {
 		hostmask?.username
 	}
 
-	@objc var addressFromHostmask: String? {
+	var addressFromHostmask: String? {
 		hostmask?.address
 	}
 
-	@objc(attributedStringWithIRCFormatting:preferredFontColor:honorFormattingPreference:)
 	func attributedString(
 		withIRCFormatting preferredFont: NSFont,
 		preferredFontColor: NSColor?,
@@ -224,7 +211,6 @@ public nonisolated extension NSString {
 		return TVCLogRenderer.renderBody(asAttributedString: self as String, withAttributes: attributes)
 	}
 
-	@objc(attributedStringWithIRCFormatting:preferredFontColor:)
 	func attributedString(
 		withIRCFormatting preferredFont: NSFont,
 		preferredFontColor: NSColor?
@@ -236,7 +222,7 @@ public nonisolated extension NSString {
 		)
 	}
 
-	@objc var stripIRCEffects: String {
+	var stripIRCEffects: String {
 		IRCFormatting.removingControlCodes(from: self as String)
 	}
 
@@ -456,7 +442,6 @@ public nonisolated extension NSString {
 		return finish()
 	}
 
-	@objc(padNicknameWithCharacter:maximumLength:)
 	func padNickname(withCharacter padCharacter: unichar, maximumLength: UInt) -> String? {
 		precondition(padCharacter != 0)
 		precondition(maximumLength > 0)
@@ -491,7 +476,7 @@ public nonisolated extension NSString {
 		return nil
 	}
 
-	@objc var encodedMessageTagString: String {
+	var encodedMessageTagString: String {
 		guard length > 0 else {
 			return self as String
 		}
@@ -504,7 +489,7 @@ public nonisolated extension NSString {
 			.replacingOccurrences(of: "\n", with: "\\n")
 	}
 
-	@objc var decodedMessageTagString: String {
+	var decodedMessageTagString: String {
 		let length = length
 
 		guard length > 0 else {
@@ -558,7 +543,6 @@ public nonisolated extension NSString {
 		return NSString(characters: outputBuffer, length: outputLength) as String
 	}
 
-	@objc(isModeSymbol)
 	var isModeSymbol: Bool {
 		guard length == 1 else {
 			return false

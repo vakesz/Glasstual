@@ -123,67 +123,67 @@ public nonisolated extension NSColor {
 		NSColor.textual_color(hexadecimalValue: "#ffffff")!,
 	]
 
-	@objc class var formatterWhiteColor: NSColor {
+	class var formatterWhiteColor: NSColor {
 		calibratedRGB(1.00, 1.00, 1.00)
 	}
 
-	@objc class var formatterBlackColor: NSColor {
+	class var formatterBlackColor: NSColor {
 		calibratedRGB(0.00, 0.00, 0.00)
 	}
 
-	@objc class var formatterNavyBlueColor: NSColor {
+	class var formatterNavyBlueColor: NSColor {
 		calibratedRGB(0.04, 0.00, 0.52)
 	}
 
-	@objc class var formatterDarkGreenColor: NSColor {
+	class var formatterDarkGreenColor: NSColor {
 		calibratedRGB(0.00, 0.54, 0.08)
 	}
 
-	@objc class var formatterRedColor: NSColor {
+	class var formatterRedColor: NSColor {
 		calibratedRGB(1.00, 0.05, 0.04)
 	}
 
-	@objc class var formatterBrownColor: NSColor {
+	class var formatterBrownColor: NSColor {
 		calibratedRGB(0.55, 0.02, 0.02)
 	}
 
-	@objc class var formatterPurpleColor: NSColor {
+	class var formatterPurpleColor: NSColor {
 		calibratedRGB(0.55, 0.00, 0.53)
 	}
 
-	@objc class var formatterOrangeColor: NSColor {
+	class var formatterOrangeColor: NSColor {
 		calibratedRGB(1.00, 0.54, 0.09)
 	}
 
-	@objc class var formatterYellowColor: NSColor {
+	class var formatterYellowColor: NSColor {
 		calibratedRGB(1.00, 1.00, 0.15)
 	}
 
-	@objc class var formatterLimeGreenColor: NSColor {
+	class var formatterLimeGreenColor: NSColor {
 		calibratedRGB(0.00, 1.00, 0.15)
 	}
 
-	@objc class var formatterTealColor: NSColor {
+	class var formatterTealColor: NSColor {
 		calibratedRGB(0.00, 0.53, 0.53)
 	}
 
-	@objc class var formatterAquaCyanColor: NSColor {
+	class var formatterAquaCyanColor: NSColor {
 		calibratedRGB(0.00, 1.00, 1.00)
 	}
 
-	@objc class var formatterLightBlueColor: NSColor {
+	class var formatterLightBlueColor: NSColor {
 		calibratedRGB(0.07, 0.00, 0.98)
 	}
 
-	@objc class var formatterFuchsiaPinkColor: NSColor {
+	class var formatterFuchsiaPinkColor: NSColor {
 		calibratedRGB(1.00, 0.00, 0.98)
 	}
 
-	@objc class var formatterNormalGrayColor: NSColor {
+	class var formatterNormalGrayColor: NSColor {
 		calibratedRGB(0.53, 0.53, 0.53)
 	}
 
-	@objc class var formatterLightGrayColor: NSColor {
+	class var formatterLightGrayColor: NSColor {
 		calibratedRGB(0.80, 0.80, 0.80)
 	}
 }
