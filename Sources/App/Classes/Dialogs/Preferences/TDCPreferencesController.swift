@@ -742,7 +742,8 @@ extension PreferencesController {
 	}
 
 	private func saveWindowFrame() {
-		window.ce_restoreDefaultSize(display: false)
+		// Do not restore the nib's size first: that is the frame that would be
+		// written out, and the user's own size would never be remembered.
 		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
 	}
 }
@@ -1052,7 +1053,11 @@ extension PreferencesController {
 	private func releaseFontPanel() {
 		guard fontPanelIsOwned else { return }
 		fontPanelIsOwned = false
-		NSFontManager.shared.setValue(previousFontManagerAction, forKey: "action")
+		// KVC for a SEL-typed property wants an NSValue, not a bridged Swift
+		// Selector; the property is directly assignable.
+		if let previousFontManagerAction {
+			NSFontManager.shared.action = previousFontManagerAction
+		}
 		previousFontManagerAction = nil
 		if NSFontPanel.sharedFontPanelExists {
 			NSFontPanel.shared.orderOut(self)
