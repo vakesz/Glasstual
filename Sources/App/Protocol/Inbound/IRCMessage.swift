@@ -15,6 +15,36 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 
+/** The IRCv3 `server-time` format without the fractional seconds.
+
+ The specification writes the value as `YYYY-MM-DDThh:mm:ss.sssZ` and the
+ shared formatter matches that exactly, but servers that leave the fractional
+ part out are common. Refusing their timestamp files a whole replayed
+ scrollback at the moment it arrived instead of when it was said. */
+private nonisolated let serverTimeWholeSecondsFormatter: DateFormatter = {
+	let dateFormatter = DateFormatter()
+	dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+	dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
+	dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+	return dateFormatter
+}()
+
+/// A `time` (or bouncer `t`) tag read as a date, or `nil` when it carries no
+/// timestamp the client can act on.
+private nonisolated func serverTimeDate(from value: String) -> Date? {
+	let numeric = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: "."))
+
+	guard value.unicodeScalars.allSatisfy(numeric.contains) == false else {
+		/* A bouncer's Unix timestamp. `doubleValue` reads an unparsable string
+		 as zero, so an empty or punctuation-only tag used to backdate the
+		 message to 1970 and mark it historic; `Double` reports the failure. */
+		return Double(value).map(Date.init(timeIntervalSince1970:))
+	}
+
+	return sharedISOStandardDateFormatter().date(from: value)
+		?? serverTimeWholeSecondsFormatter.date(from: value)
+}
+
 /** One line received from the server, parsed.
 
  A message is a reference type because it is passed down a long handler chain
@@ -180,23 +210,9 @@ public final nonisolated class Message: NSObject {
 		if client.isCapabilityEnabled(.serverTime) {
 			let dateString = parsedTags.tags["time"] ?? parsedTags.tags["t"]
 
-			if let dateString {
-				let dateObject: Date? = if dateString.unicodeScalars
-					.allSatisfy(CharacterSet.decimalDigits.union(CharacterSet(charactersIn: ".")).contains)
-				{
-					/* An unparsable string reads as zero through `doubleValue`, so an
-					 empty or punctuation-only `time` tag used to backdate the message to
-					 1970 and mark it historic. IRCv3 server-time gives no meaning to such
-					 a value, so it has to leave the arrival time alone. */
-					Double(dateString).map(Date.init(timeIntervalSince1970:))
-				} else {
-					sharedISOStandardDateFormatter().date(from: dateString)
-				}
-
-				if let dateObject {
-					receivedAt = dateObject
-					isHistoric = true
-				}
+			if let dateString, let dateObject = serverTimeDate(from: dateString) {
+				receivedAt = dateObject
+				isHistoric = true
 			}
 		}
 
@@ -214,15 +230,9 @@ public final nonisolated class Message: NSObject {
 
 	@MainActor
 	public func parseSender(_ senderInfo: String, for client: IRCClient?) {
-		var parsed = Prefix(hostmask: senderInfo)
-
-		if let components = (senderInfo as NSString).hostmask(on: client) {
-			parsed.nickname = components.nickname
-			parsed.username = components.username
-			parsed.address = components.address
-		} else {
-			parsed.nickname = senderInfo
-			parsed.isServer = true
+		guard let parsed = (senderInfo as NSString).senderPrefix(on: client) else {
+			sender = Prefix(nickname: senderInfo, hostmask: senderInfo, isServer: true)
+			return
 		}
 
 		sender = parsed

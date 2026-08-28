@@ -246,7 +246,7 @@ public extension IRCClient {
 				if channel.isChannel {
 					guard let member = user.userAssociated(with: channel) else { return }
 					channel.memberInfo?.removeMember(member)
-				} else if channel.isPrivateMessage, sender.caseInsensitiveCompare(channel.name) == .orderedSame {
+				} else if channel.isPrivateMessage, casefoldNickname(sender) == casefoldNickname(channel.name) {
 					if channel.isActive {
 						channel.deactivate(); reloadTreeItem(channel)
 					}
@@ -336,7 +336,7 @@ public extension IRCClient {
 					guard let member = user.userAssociated(with: channel) else { return }
 					channel.memberInfo?.resortMember(member)
 				} else if channel.isPrivateMessage {
-					guard oldNickname.caseInsensitiveCompare(channel.name) == .orderedSame else { return }
+					guard casefoldNickname(oldNickname) == casefoldNickname(channel.name) else { return }
 					if findChannel(newNickname) == nil {
 						channel.name = newNickname
 						reloadTreeItem(channel)

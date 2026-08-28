@@ -120,6 +120,23 @@ struct IRCSpecCapabilityBehaviourTests {
 		#expect(message.isHistoric == false)
 	}
 
+	/// The specification writes the value with milliseconds, but servers that
+	/// leave them out are common, and refusing their timestamp files a whole
+	/// replayed scrollback at the moment it arrived.
+	@Test("server-time: a timestamp with no fractional part is still read")
+	func wholeSecondTimestampsAreRead() throws {
+		let client = client()
+
+		client.enableCapability(.serverTime)
+
+		let message = try #require(
+			Message(line: "@time=2011-10-19T16:40:51Z :nick!u@h PRIVMSG #chan :hi", on: client)
+		)
+
+		#expect(message.isHistoric)
+		#expect(message.receivedAt.timeIntervalSince1970 == 1_319_042_451)
+	}
+
 	/// Bouncers predating `server-time` send a Unix timestamp in a `t` tag,
 	/// which the client still reads for their sake.
 	@Test("server-time: a bouncer's Unix timestamp is still read")
@@ -210,6 +227,9 @@ struct IRCSpecCapabilityBehaviourTests {
 	@Test("account-notify: ACCOUNT sets and clears the account")
 	func accountNotifySetsAndClears() throws {
 		let client = client()
+
+		client.enableCapability(.accountNotify)
+
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)
@@ -242,6 +262,9 @@ struct IRCSpecCapabilityBehaviourTests {
 	@Test("chghost: CHGHOST replaces the user and host")
 	func changeHostReplacesUserAndHost() throws {
 		let client = client()
+
+		client.enableCapability(.changeHost)
+
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)
@@ -259,6 +282,9 @@ struct IRCSpecCapabilityBehaviourTests {
 	@Test("chghost: a malformed CHGHOST changes nothing")
 	func malformedChangeHostIsRejected() throws {
 		let client = client()
+
+		client.enableCapability(.changeHost)
+
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)
@@ -276,12 +302,36 @@ struct IRCSpecCapabilityBehaviourTests {
 	@Test("setname: SETNAME updates the real name")
 	func setNameUpdatesTheRealName() throws {
 		let client = client()
+
+		client.enableCapability(.setName)
+
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)
 		try deliver(":alice!ali@example.org SETNAME :Alice of Example", on: client)
 
 		#expect(try #require(channel.findMember("alice")).user.realName == "Alice of Example")
+	}
+
+	/// Each of these messages only exists because its capability was
+	/// negotiated, so an unnegotiated one rewrites nothing -- the same rule
+	/// `away-notify` already followed.
+	@Test("account-notify, chghost and setname are ignored without their capability")
+	func identityMessagesNeedTheirCapability() throws {
+		let client = client()
+		let channel = try joinedChannel("#chan", on: client)
+
+		try deliver(":alice!ali@example.org JOIN #chan", on: client)
+		try deliver(":alice!ali@example.org ACCOUNT aliceacct", on: client)
+		try deliver(":alice!ali@example.org CHGHOST newuser cloak.example.net", on: client)
+		try deliver(":alice!ali@example.org SETNAME :Someone Else", on: client)
+
+		let alice = try #require(channel.findMember("alice"))
+
+		#expect(alice.user.account == nil)
+		#expect(alice.user.username == "ali")
+		#expect(alice.user.address == "example.org")
+		#expect(alice.user.realName == nil)
 	}
 
 	// MARK: - standard-replies

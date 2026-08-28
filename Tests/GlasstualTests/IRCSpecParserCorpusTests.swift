@@ -221,9 +221,8 @@ struct IRCSpecParserCorpusTests {
 	}
 
 	/// The client's own encoder has to produce one of the encodings the corpus
-	/// accepts for the same atoms. Cases whose trailing parameter is empty are
-	/// covered separately: `SendingMessage` drops empty arguments by design.
-	@Test("msg-join", arguments: joinCases.filter { $0.atoms.params?.last?.isEmpty != true })
+	/// accepts for the same atoms.
+	@Test("msg-join", arguments: joinCases)
 	func atomsJoinIntoAnAcceptedLine(_ testCase: IRCSpecMessageJoinCase) throws {
 		let verb = try #require(testCase.atoms.verb)
 		let line = SendingMessage.string(
@@ -238,10 +237,7 @@ struct IRCSpecParserCorpusTests {
 	/// Whatever encoding the client picks, reading it back has to recover the
 	/// atoms it started from: msg-join and msg-split are two halves of one
 	/// grammar.
-	@Test(
-		"msg-join round trips through msg-split",
-		arguments: joinCases.filter { $0.atoms.params?.last?.isEmpty != true }
-	)
+	@Test("msg-join round trips through msg-split", arguments: joinCases)
 	func joinedLineParsesBackIntoItsAtoms(_ testCase: IRCSpecMessageJoinCase) throws {
 		let verb = try #require(testCase.atoms.verb)
 		let line = SendingMessage.string(
@@ -264,13 +260,14 @@ struct IRCSpecParserCorpusTests {
 		#expect(MessageTagParser.parsedTags(fromSection: section).tags == expectedTags)
 	}
 
-	/// Documented deviation: `SendingMessage` skips empty arguments rather
-	/// than writing the `:` that msg-join expects, so the last parameter is
-	/// lost. Pinned here so the behaviour cannot drift unnoticed.
-	@Test("msg-join: an empty trailing parameter is dropped, not written as ':'")
-	func emptyTrailingParameterIsDropped() {
-		#expect(SendingMessage.string(command: "foo", arguments: ["bar", "baz", ""]) == "FOO bar baz")
-		#expect(SendingMessage.string(command: "AWAY", arguments: [""]) == "AWAY")
+	/// RFC 1459 2.3.1: the trailing parameter may be empty, and msg-join says
+	/// it is written as a bare colon. A middle parameter has no such form, so
+	/// an empty one is still skipped rather than written as nothing.
+	@Test("msg-join: an empty trailing parameter is written as ':'")
+	func emptyTrailingParameterIsWrittenAsAColon() {
+		#expect(SendingMessage.string(command: "foo", arguments: ["bar", "baz", ""]) == "FOO bar baz :")
+		#expect(SendingMessage.string(command: "AWAY", arguments: [""]) == "AWAY :")
+		#expect(SendingMessage.string(command: "foo", arguments: ["bar", "", "baz"]) == "FOO bar baz")
 	}
 
 	// MARK: - userhost-split
@@ -279,23 +276,51 @@ struct IRCSpecParserCorpusTests {
 		(try? IRCSpecCorpus.load("userhost-split", as: IRCSpecUserhostSplitCase.self)) ?? []
 
 	/// RFC 2812 §2.3.1 `prefix = servername / (nickname [[ "!" user ] "@" host ])`.
-	/// `IRCHostmask` only recognises the fully qualified form, so the corpus'
-	/// partial sources are checked against what it does instead: reject.
+	/// The `!user` half is optional, so any source carrying an `@` names a
+	/// user; one without an `@` is a server name, whatever else it holds.
 	@Test("userhost-split", arguments: userhostCases)
 	func hostmaskSplitsIntoAtoms(_ testCase: IRCSpecUserhostSplitCase) throws {
-		let parsed = IRCHostmask(parsing: testCase.source)
-		let isFullyQualified = testCase.atoms.user != nil && testCase.atoms.host != nil
+		let parsed = Prefix.user(parsing: testCase.source, maximumNicknameLength: 50)
 
-		guard isFullyQualified else {
-			#expect(parsed == nil, "partial sources are not recognised as hostmasks")
+		guard testCase.atoms.host != nil else {
+			#expect(parsed == nil, "a source with no host is a server name")
 			return
 		}
 
-		let hostmask = try #require(parsed)
+		let prefix = try #require(parsed)
 
-		#expect(hostmask.nickname == testCase.atoms.nick)
-		#expect(hostmask.username == testCase.atoms.user)
-		#expect(hostmask.address == testCase.atoms.host)
+		#expect(prefix.isServer == false)
+		#expect(prefix.nickname == testCase.atoms.nick)
+		#expect(prefix.username == testCase.atoms.user)
+		#expect(prefix.address == testCase.atoms.host)
+		#expect(prefix.hostmask == testCase.source)
+	}
+
+	/// The same rule read off the wire: a `nick@host` prefix names a user, so
+	/// the message is not filed as one the server sent.
+	@Test("userhost-split: a nick@host prefix on a real line names a user")
+	func partialPrefixesOnTheWireNameAUser() throws {
+		let client = GLTTestClient()
+		let message = try #require(Message(line: ":coolguy@127.0.0.1 PRIVMSG #chan :hi", on: client))
+
+		#expect(message.senderIsServer == false)
+		#expect(message.senderNickname == "coolguy")
+		#expect(message.senderUsername == nil)
+		#expect(message.senderAddress == "127.0.0.1")
+	}
+
+	/// A prefix that cannot name a user is still a server name, and the whole
+	/// prefix stays the "nickname" the console prints.
+	@Test(
+		"userhost-split: a source with no host stays a server name",
+		arguments: ["irc.example.org", "coolguy", "coolguy!ag", "*"]
+	)
+	func sourcesWithoutAHostStayServerNames(_ source: String) throws {
+		let client = GLTTestClient()
+		let message = try #require(Message(line: ":\(source) NOTICE * :hello", on: client))
+
+		#expect(message.senderIsServer)
+		#expect(message.senderNickname == source)
 	}
 
 	// MARK: - mask-match

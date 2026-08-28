@@ -259,6 +259,59 @@ struct IRCSpecMembershipTests {
 		#expect(try #require(member("alice", in: channel)).mark == "+")
 	}
 
+	// MARK: - invite-notify
+
+	/// IRCv3 `invite-notify`: the server tells channel operators about an
+	/// invitation naming somebody else, `INVITE <nick> <channel>`. It belongs
+	/// in that channel's view, and it is not an invitation to us.
+	@Test("invite-notify: an INVITE for another user is reported in the channel")
+	func inviteForAnotherUserIsReportedInTheChannel() throws {
+		let client = client(nickname: "me")
+
+		client.enableCapability(.inviteNotify)
+
+		let channel = try joinedChannel("#chan", on: client)
+
+		try receive(":op!o@example.org INVITE alice #chan", on: client)
+
+		let printed = client.printedLines.compactMap { $0 as? [String: Any] }
+		let destinations = printed.compactMap { ($0["channel"] as? IRCChannel)?.name }
+
+		#expect(destinations == ["#chan"])
+		#expect(channel.memberExists("alice") == false)
+	}
+
+	/// An `INVITE` naming a channel the client is not in has nowhere to go and
+	/// must not open one.
+	@Test("invite-notify: an INVITE for an unknown channel is not reported")
+	func inviteForAnUnknownChannelIsNotReported() throws {
+		let client = client(nickname: "me")
+
+		client.enableCapability(.inviteNotify)
+
+		_ = try joinedChannel("#chan", on: client)
+
+		try receive(":op!o@example.org INVITE alice #other", on: client)
+
+		#expect(client.printedLines.count == 0)
+		#expect(client.findChannel("#other") == nil)
+	}
+
+	/// An invitation addressed to us is a different thing: it cannot be filed
+	/// in the invited channel, because we are not in it.
+	@Test("An INVITE addressed to us is reported outside the invited channel")
+	func inviteAddressedToUsIsReportedElsewhere() throws {
+		let client = client(nickname: "me")
+
+		try receive(":op!o@example.org INVITE me #elsewhere", on: client)
+
+		let printed = client.printedLines.compactMap { $0 as? [String: Any] }
+		let destinations = printed.compactMap { ($0["channel"] as? IRCChannel)?.name }
+
+		#expect(printed.isEmpty == false)
+		#expect(destinations.contains("#elsewhere") == false)
+	}
+
 	// MARK: - NAMES
 
 	/// RFC 2812 §5.2 RPL_NAMREPLY: `<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}`.

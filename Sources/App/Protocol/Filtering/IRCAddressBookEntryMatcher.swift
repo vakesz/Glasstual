@@ -67,10 +67,42 @@ nonisolated enum IRCHostmaskGlob {
 		return tokens
 	}
 
-	/// `tokens` must already be case folded by `compile(_:)` of a lowercased
-	/// hostmask; the subject is folded here.
-	static func matches(tokens: [IRCHostmaskGlobToken], subject: String) -> Bool {
-		let subject = Array(subject.lowercased().unicodeScalars)
+	/// Folds a hostmask for matching.
+	///
+	/// A nickname is a byte string with its own case rules: RFC 1459 §2.2
+	/// makes `[`, `]`, `\` and `~` the upper-case forms of `{`, `}`, `|` and
+	/// `^`, so an ignore on `nick[home]` has to match `nick{home}`. Swift's
+	/// `lowercased()` knows neither that nor where to stop — it folds
+	/// non-ASCII letters too, which no server does.
+	static func casefold(_ value: String, caseMapping: IRCISupportInfoCaseMapping) -> String {
+		ISupportTokenParser.casefold(value, caseMapping: caseMapping)
+	}
+
+	/// The compiled mask with every literal folded.
+	///
+	/// Folding the mask *before* compiling would eat its syntax: `\` is both
+	/// the escape character and the upper-case form of `|`, so `a\*b` would
+	/// fold to `a|*b` and stop meaning "a literal asterisk".
+	static func compile(_ hostmask: String, caseMapping: IRCISupportInfoCaseMapping) -> [IRCHostmaskGlobToken] {
+		compile(hostmask).map { token in
+			guard case let .literal(scalar) = token else {
+				return token
+			}
+
+			let folded = casefold(String(scalar), caseMapping: caseMapping)
+
+			return .literal(folded.unicodeScalars.first ?? scalar)
+		}
+	}
+
+	/// `tokens` must already be folded by `casefold(_:caseMapping:)` under the
+	/// same mapping; the subject is folded here.
+	static func matches(
+		tokens: [IRCHostmaskGlobToken],
+		subject: String,
+		caseMapping: IRCISupportInfoCaseMapping
+	) -> Bool {
+		let subject = Array(casefold(subject, caseMapping: caseMapping).unicodeScalars)
 
 		var tokenIndex = 0
 		var subjectIndex = 0
@@ -141,13 +173,27 @@ public final nonisolated class AddressBookEntryMatcher: NSObject {
 
 	private let globTokens: [IRCHostmaskGlobToken]?
 	private let regularExpression: NSRegularExpression?
+	private let caseMapping: IRCISupportInfoCaseMapping
 
+	/// An address book entry belongs to no one connection — the same ignore
+	/// applies on every network — so it folds under `rfc1459`, the mapping a
+	/// server that advertises none is assumed to use.
 	@objc(initWithEntryType:hostmask:)
-	public init(entryType: IRCAddressBookEntryType, hostmask: String) {
+	public convenience init(entryType: IRCAddressBookEntryType, hostmask: String) {
+		self.init(entryType: entryType, hostmask: hostmask, caseMapping: .rfc1459)
+	}
+
+	public init(
+		entryType: IRCAddressBookEntryType,
+		hostmask: String,
+		caseMapping: IRCISupportInfoCaseMapping
+	) {
+		self.caseMapping = caseMapping
+
 		switch entryType {
 		case .ignore:
 			regularExpressionPattern = IRCHostmaskGlob.regularExpressionPattern(for: hostmask)
-			globTokens = IRCHostmaskGlob.compile(hostmask.lowercased())
+			globTokens = IRCHostmaskGlob.compile(hostmask, caseMapping: caseMapping)
 			trackingNickname = nil
 			regularExpression = nil
 		case .userTracking:
@@ -175,7 +221,11 @@ public final nonisolated class AddressBookEntryMatcher: NSObject {
 	@objc(matchesHostmask:)
 	public func matches(hostmask: String) -> Bool {
 		if let globTokens {
-			return IRCHostmaskGlob.matches(tokens: globTokens, subject: hostmask)
+			return IRCHostmaskGlob.matches(
+				tokens: globTokens,
+				subject: hostmask,
+				caseMapping: caseMapping
+			)
 		}
 
 		guard let regularExpression else {

@@ -96,6 +96,16 @@ public nonisolated extension NSString {
 		)
 	}
 
+	/// The receiver read as an RFC 2812 2.3.1 message prefix, or `nil` when it
+	/// names a server rather than a user.
+	@MainActor
+	func senderPrefix(on client: IRCClient?) -> Prefix? {
+		Prefix.user(
+			parsing: self as String,
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
+		)
+	}
+
 	var isHostmask: Bool {
 		hostmask != nil
 	}
