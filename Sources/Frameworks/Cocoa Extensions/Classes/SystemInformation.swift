@@ -32,43 +32,57 @@
 
 import AppKit
 import Darwin
+import Synchronization
 
-@objc(XRSystemInformation)
-public final class SystemInformation: NSObject {
-	private static let sleepStateLock = NSLock()
-	private nonisolated(unsafe) static var sleeping = false
+public enum SystemInformation {
+	private struct SleepState {
+		var observing = false
+		var sleeping = false
+	}
 
-	private nonisolated(unsafe) static let sleepObservers: [NSObjectProtocol] = {
-		let center = NSWorkspace.shared.notificationCenter
-		return [
-			center.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: nil) { _ in
-				sleepStateLock.withLock { sleeping = true }
-			},
-			center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: nil) { _ in
-				sleepStateLock.withLock { sleeping = false }
-			},
-		]
-	}()
+	/// `Mutex` makes the invariant -- this is only ever read or written under
+	/// the lock -- one the compiler checks, which `nonisolated(unsafe)` plus an
+	/// `NSLock` did not.
+	private static let sleepState = Mutex(SleepState())
 
 	/** Must be called during launch. Relying on the first read of `systemIsSleeping` to
 	 register the observers means a sleep that happens before any read is never seen. */
-	@objc(beginObservingSleepState)
 	public static func beginObservingSleepState() {
-		_ = sleepObservers
+		let shouldRegister = sleepState.withLock { state in
+			guard !state.observing else {
+				return false
+			}
+
+			state.observing = true
+			return true
+		}
+
+		guard shouldRegister else {
+			return
+		}
+
+		/* The observations last for the life of the process, so the returned
+		 tokens have nothing to be kept for. */
+		let center = NSWorkspace.shared.notificationCenter
+
+		_ = center.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: nil) { _ in
+			sleepState.withLock { $0.sleeping = true }
+		}
+
+		_ = center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: nil) { _ in
+			sleepState.withLock { $0.sleeping = false }
+		}
 	}
 
-	@objc(systemIsSleeping)
 	public static var systemIsSleeping: Bool {
 		beginObservingSleepState()
-		return sleepStateLock.withLock { sleeping }
+		return sleepState.withLock(\.sleeping)
 	}
 
-	@objc(systemBuildVersion)
 	public static var systemBuildVersion: String? {
 		SystemVersion.shared.productBuildVersion
 	}
 
-	@objc(systemStandardVersion)
 	public static var systemStandardVersion: String {
 		let version = ProcessInfo.processInfo.operatingSystemVersion
 		if version.patchVersion == 0 {
@@ -77,76 +91,15 @@ public final class SystemInformation: NSObject {
 		return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
 	}
 
-	@objc(systemOperatingSystemName)
+	/// The name of the platform, without a marketing release name. The release
+	/// is already identified by `systemStandardVersion`, and a table of
+	/// marketing names is wrong the day the next major version ships.
 	public static var systemOperatingSystemName: String {
-		if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 26 {
-			return String(localized: .XRSystemInformation.operatingSystemTahoe)
-		}
-		return String(localized: .XRSystemInformation.operatingSystemMacos)
-	}
-
-	@available(*, deprecated, message: "Return value is not reliable on new Macs. No alternative available.")
-	@objc(systemModelName)
-	public static var systemModelName: String? {
-		guard let token = systemModelToken?.lowercased(), !token.isEmpty else { return nil }
-		return SystemModelFamily(token: token).localizedName
-	}
-
-	private static var systemModelToken: String? {
-		var buffer = [CChar](repeating: 0, count: 256)
-		var size = buffer.count
-		guard sysctlbyname("hw.model", &buffer, &size, nil, 0) == 0 else { return nil }
-		let bytes = buffer.prefix { $0 != 0 }.map(UInt8.init(bitPattern:))
-		return String(bytes: bytes, encoding: .utf8)
+		String(localized: .XRSystemInformation.operatingSystemMacos)
 	}
 }
 
-private enum SystemModelFamily {
-	case genericMac
-	case iMac
-	case macBook
-	case macBookAir
-	case macBookPro
-	case macMini
-	case macPro
-	case xserve
-
-	init(token: String) {
-		self = if token.hasPrefix("macbookpro") {
-			.macBookPro
-		} else if token.hasPrefix("macbookair") {
-			.macBookAir
-		} else if token.hasPrefix("macbook") {
-			.macBook
-		} else if token.hasPrefix("macpro") {
-			.macPro
-		} else if token.hasPrefix("macmini") {
-			.macMini
-		} else if token.hasPrefix("imac") {
-			.iMac
-		} else if token.hasPrefix("xserve") {
-			.xserve
-		} else {
-			.genericMac
-		}
-	}
-
-	var localizedName: String {
-		let resource: LocalizedStringResource = switch self {
-		case .genericMac: .XRSystemInformation.genericMac
-		case .iMac: .XRSystemInformation.imac
-		case .macBook: .XRSystemInformation.macbook
-		case .macBookAir: .XRSystemInformation.macbookAir
-		case .macBookPro: .XRSystemInformation.macbookPro
-		case .macMini: .XRSystemInformation.macMini
-		case .macPro: .XRSystemInformation.macPro
-		case .xserve: .XRSystemInformation.xserve
-		}
-		return String(localized: resource)
-	}
-}
-
-private struct SystemVersion: @unchecked Sendable {
+private struct SystemVersion: Sendable {
 	static let shared = SystemVersion()
 	let productBuildVersion: String?
 
