@@ -170,7 +170,13 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 			width: PreferencesLayout.windowWidth,
 			height: height
 		)
-		window.setFrame(window.frameRect(forContentRect: content), display: true, animate: animate)
+		/* A taller pane grows downwards from the anchored top edge, so keep the
+		 whole window above the Dock and inside the screen. */
+		var frame = window.frameRect(forContentRect: content)
+		if let screen {
+			frame = window.constrainFrameRect(frame, to: screen)
+		}
+		window.setFrame(frame, display: true, animate: animate)
 	}
 
 	override public func show() {
