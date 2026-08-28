@@ -379,7 +379,10 @@ enum SystemProfileInformation {
 		) >
 			0
 		{
-			address = region.pri_address + region.pri_size
+			let nextAddress = region.pri_address + region.pri_size
+			/* A zero-sized region would otherwise leave the address unchanged forever. */
+			guard nextAddress > address else { break }
+			address = nextAddress
 			if region.pri_share_mode == SM_PRIVATE {
 				usage += UInt64(region.pri_private_pages_resident) * UInt64(getpagesize())
 			}
@@ -388,13 +391,17 @@ enum SystemProfileInformation {
 	}
 
 	static func freeMemory() -> UInt64 {
+		/* mach_host_self() returns a send right that the caller owns. */
+		let host = mach_host_self()
+		defer { mach_port_deallocate(mach_task_self_, host) }
+
 		var pageSize: vm_size_t = 0
-		guard host_page_size(mach_host_self(), &pageSize) == KERN_SUCCESS else { return 0 }
+		guard host_page_size(host, &pageSize) == KERN_SUCCESS else { return 0 }
 		var statistics = vm_statistics64()
 		var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64_data_t>.size / MemoryLayout<integer_t>.size)
 		let status = withUnsafeMutablePointer(to: &statistics) { pointer in
 			pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { rebound in
-				host_statistics64(mach_host_self(), HOST_VM_INFO64, rebound, &count)
+				host_statistics64(host, HOST_VM_INFO64, rebound, &count)
 			}
 		}
 		guard status == KERN_SUCCESS else { return 0 }

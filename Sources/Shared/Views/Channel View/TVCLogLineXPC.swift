@@ -69,14 +69,15 @@ final class LogLineXPC: NSObject, NSSecureCoding, @unchecked Sendable {
 		super.init()
 	}
 
+	/** Fails rather than traps: one malformed row must not abort the shared service. */
 	@objc(initWithManagedObject:)
-	init(managedObject: NSManagedObject) {
+	init?(managedObject: NSManagedObject) {
 		guard
 			let data = managedObject.value(forKey: "logLineData") as? Data,
 			let uniqueIdentifier = managedObject.value(forKey: "logLineUniqueIdentifier") as? String,
 			let viewIdentifier = managedObject.value(forKey: "logLineViewIdentifier") as? String
 		else {
-			preconditionFailure("Managed log line is missing required values")
+			return nil
 		}
 
 		self.data = data

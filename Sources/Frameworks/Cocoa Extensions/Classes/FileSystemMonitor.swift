@@ -102,7 +102,6 @@ public final class XRFileSystemMonitor: NSObject, @unchecked Sendable {
 	@objc(startMonitoringWithLatency:)
 	public func startMonitoring(withLatency latency: TimeInterval) {
 		precondition(latency >= 0)
-		stopMonitoring()
 		let paths = urls.map(\.path) as CFArray
 		var context = FSEventStreamContext(
 			version: 0,
@@ -114,6 +113,15 @@ public final class XRFileSystemMonitor: NSObject, @unchecked Sendable {
 		let flags = FSEventStreamCreateFlags(
 			kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagNoDefer | kFSEventStreamCreateFlagUseCFTypes
 		)
+
+		/* Create-through-assign has to be atomic: two concurrent starts would otherwise
+		 both create and start a stream, and the loser would never be stored or stopped
+		 while still delivering callbacks through an unretained pointer to self. */
+		lock.lock()
+		defer { lock.unlock() }
+
+		tearDownStreamLocked()
+
 		guard let stream = FSEventStreamCreate(
 			nil,
 			fileSystemMonitorCallback,
@@ -129,15 +137,18 @@ public final class XRFileSystemMonitor: NSObject, @unchecked Sendable {
 			FSEventStreamRelease(stream)
 			return
 		}
-		lock.withLock { eventStream = stream }
+		eventStream = stream
 	}
 
 	public func stopMonitoring() {
-		let stream = lock.withLock { () -> FSEventStreamRef? in
-			defer { eventStream = nil }
-			return eventStream
-		}
-		guard let stream else { return }
+		lock.lock()
+		defer { lock.unlock() }
+		tearDownStreamLocked()
+	}
+
+	private func tearDownStreamLocked() {
+		guard let stream = eventStream else { return }
+		eventStream = nil
 		FSEventStreamStop(stream)
 		FSEventStreamInvalidate(stream)
 		FSEventStreamRelease(stream)
@@ -174,6 +185,8 @@ private let fileSystemMonitorCallback: FSEventStreamCallback =
 	{ _, info, eventCount, eventPaths, eventFlags, eventIdentifiers in
 		guard let info else { return }
 		let monitor = Unmanaged<XRFileSystemMonitor>.fromOpaque(info).takeUnretainedValue()
-		let paths = unsafeBitCast(eventPaths, to: NSArray.self)
+		/* eventPaths is a borrowed CFArray; bit-casting it would hand ARC an
+		 unbalanced release at the end of scope. */
+		let paths = Unmanaged<NSArray>.fromOpaque(eventPaths).takeUnretainedValue()
 		monitor.receive(paths: paths, flags: eventFlags, identifiers: eventIdentifiers, count: eventCount)
 	}

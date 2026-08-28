@@ -138,6 +138,7 @@ open class InlineVideoModule: InlineVideoFoundation {
 	@objc(performActionForURL:bypassVideoCheck:)
 	public func performAction(for url: URL, bypassVideoCheck: Bool) {
 		precondition(videoCheck == nil, "Module already initialized")
+		guard !url.isFileURL else { return cancel() }
 		payload.urlToInline = url
 		performAction(withVideoCheck: !bypassVideoCheck)
 	}
@@ -154,10 +155,7 @@ open class InlineVideoModule: InlineVideoFoundation {
 	}
 
 	private func performVideoCheck() {
-		let assessor = MediaAssessor(
-			url: payload.urlToInline,
-			expectedType: .video
-		) { [weak self] _, error in
+		let completion: (MediaAssessment?, NSError?) -> Void = { [weak self] _, error in
 			guard let self else { return }
 
 			if let error {
@@ -168,6 +166,14 @@ open class InlineVideoModule: InlineVideoFoundation {
 			}
 
 			videoCheck = nil
+		}
+
+		guard let assessor = MediaAssessor(
+			url: payload.urlToInline,
+			expectedType: .video,
+			completion: completion
+		) else {
+			return cancel()
 		}
 
 		videoCheck = assessor

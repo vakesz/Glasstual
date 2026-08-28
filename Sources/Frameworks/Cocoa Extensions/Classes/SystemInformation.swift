@@ -50,9 +50,16 @@ public final class SystemInformation: NSObject {
 		]
 	}()
 
+	/** Must be called during launch. Relying on the first read of `systemIsSleeping` to
+	 register the observers means a sleep that happens before any read is never seen. */
+	@objc(beginObservingSleepState)
+	public static func beginObservingSleepState() {
+		_ = sleepObservers
+	}
+
 	@objc(systemIsSleeping)
 	public static var systemIsSleeping: Bool {
-		_ = sleepObservers
+		beginObservingSleepState()
 		return sleepStateLock.withLock { sleeping }
 	}
 

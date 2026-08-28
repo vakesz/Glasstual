@@ -73,7 +73,13 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 	private var databaseDirectoryURL: URL?
 	private var contextObjects: [String: HistoricLogViewContext] = [:]
 	private let contextLock = NSRecursiveLock()
-	private var maximumLineCount: UInt = 100
+	private var maximumLineCountStorage: UInt = 100
+
+	/** Written from the XPC delivery thread and read from Core Data queues. */
+	private var maximumLineCount: UInt {
+		get { contextLock.withLock { maximumLineCountStorage } }
+		set { contextLock.withLock { maximumLineCountStorage = newValue } }
+	}
 
 	private let saveQueue = DispatchQueue(label: "HLSHistoricLogProcessMain.saveQueue")
 	private var saveTimer: DispatchSourceTimer?
@@ -133,7 +139,12 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 	}
 
 	func setMaximumLineCount(_ maximumLineCount: UInt) {
-		precondition(maximumLineCount > 0)
+		/* This service process is shared by every view; a bad value must not abort it. */
+		guard maximumLineCount > 0 else {
+			Self.logger.error("Ignoring a request to set the maximum line count to zero")
+			return
+		}
+
 		self.maximumLineCount = maximumLineCount
 	}
 
@@ -184,8 +195,8 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 			viewContext.reset()
 		}
 
-		_ = managedObjectContext?.performAndWait {
-			contextObjects.removeValue(forKey: viewIdentifier)
+		contextLock.withLock {
+			_ = contextObjects.removeValue(forKey: viewIdentifier)
 		}
 	}
 
@@ -264,7 +275,8 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 			return fetchEntries(
 				in: viewContext,
 				ascending: true,
-				fetchLimit: 0,
+				/* Unbounded here would put an entire view into one XPC reply. */
+				fetchLimit: maximumLineCount,
 				lowestEntryIdentifier: lowest,
 				highestEntryIdentifier: highest,
 				limitToDate: limitToDate
@@ -312,7 +324,12 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 		limitToDate: Date?,
 		completionBlock: @escaping ([LogLineXPC]) -> Void
 	) {
-		precondition(fetchLimit > 0)
+		guard fetchLimit > 0 else {
+			Self.logger.error("Ignoring a fetch request with a zero fetch limit")
+			completionBlock([])
+			return
+		}
+
 		guard let viewContext = context(forView: viewIdentifier) else {
 			completionBlock([])
 			return
@@ -394,7 +411,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 			let objects = try viewContext.fetch(request)
 			Self.logger
 				.debug("\(objects.count) results fetched for view \(viewContext.viewIdentifier, privacy: .public)")
-			return objects.map { LogLineXPC(managedObject: $0) }
+			return objects.compactMap { LogLineXPC(managedObject: $0) }
 		} catch {
 			Self.logger.error("Error occurred fetching objects: \(error.localizedDescription, privacy: .public)")
 			return []
@@ -488,7 +505,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 	private func saveAllContexts(cancellingResize: Bool) {
 		guard let context = managedObjectContext else { return }
 		Self.logger.debug("Performing save")
-		let viewContexts = context.performAndWait { Array(contextObjects.values) }
+		let viewContexts = contextLock.withLock { Array(contextObjects.values) }
 
 		for viewContext in viewContexts {
 			viewContext.performAndWait {
@@ -504,12 +521,13 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 	func saveData(completionBlock: (() -> Void)?) {
 		let completion = CallbackBox(completionBlock)
 		saveQueue.async { [weak self] in
+			/* The reply block is an XPC reply; it has to be invoked on every path. */
+			defer { completion.callback?() }
 			guard let self else { return }
 			if !connectionIsInvalidated {
 				rescheduleSave()
 			}
 			saveAllContexts(cancellingResize: false)
-			completion.callback?()
 		}
 	}
 
@@ -668,7 +686,7 @@ extension HistoricLogProcessMain {
 		Self.logger.debug(
 			"Context created for \(viewIdentifier, privacy: .public), line count: \(context.totalLineCount), newest identifier: \(context.newestIdentifier)"
 		)
-		parentContext.performAndWait { contextObjects[viewIdentifier] = context }
+		contextObjects[viewIdentifier] = context
 		return context
 	}
 

@@ -38,8 +38,14 @@
 import CocoaExtensions
 import CoreGraphics
 import Foundation
+import os
 
 public let inlineContentErrorDomain = "ICLInlineContentErrorDomain"
+
+private let payloadLogger = Logger(
+	subsystem: "com.vakesz.glasstual.InlineContentLoader",
+	category: "Payload"
+)
 
 @objc(ICLPayload)
 open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
@@ -284,7 +290,13 @@ public final class InlineContentPayloadMutable: InlineContentPayload, @unchecked
 	@objc override public var urlToInline: URL {
 		get { urlToInlineStorage }
 		set {
-			precondition(!newValue.isFileURL)
+			/* Modules build this from remote responses, so reject rather than abort a
+			 process shared by every inline load. Callers cancel when this is refused. */
+			guard !newValue.isFileURL else {
+				payloadLogger.error("Refusing to inline a file URL")
+				return
+			}
+
 			urlToInlineStorage = newValue
 		}
 	}

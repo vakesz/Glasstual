@@ -61,7 +61,11 @@ final class GyazoModule: InlineContentModule {
 
 		switch type {
 		case "photo":
-			guard let address = data["url"] as? String, let url = InlineContentHelpers.url(with: address) else {
+			guard
+				let address = data["url"] as? String,
+				let url = InlineContentHelpers.url(with: address),
+				!url.isFileURL
+			else {
 				return cancel()
 			}
 			payload.urlToInline = url
