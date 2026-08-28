@@ -53,14 +53,20 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 	private static let contentSize = NSSize(width: 390, height: 112)
 
 	private let nickname: String
+	/* The style generator normalises with lowercased() before looking an
+	 override up, so the sheet has to read and write under the same key or the
+	 override it stores is never applied. */
+	private let overrideKey: String
 	let model: NicknameColorModel
 
 	@objc(initWithNickname:)
 	public init(nickname: String) {
+		let normalizedKey = nickname.lowercased()
 		self.nickname = nickname
+		overrideKey = normalizedKey
 		model = NicknameColorModel(
 			nickname: nickname,
-			overrideColor: UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: nickname)
+			overrideColor: UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: normalizedKey)
 		)
 
 		super.init(window: nil)
@@ -113,7 +119,7 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 	@IBAction override public func ok(_ sender: Any?) {
 		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(
 			model.colorForPersistence,
-			forKey: nickname
+			forKey: overrideKey
 		)
 
 		(delegate as? NicknameColorSheetDelegate)?.nicknameColorSheetOnOk(self)
