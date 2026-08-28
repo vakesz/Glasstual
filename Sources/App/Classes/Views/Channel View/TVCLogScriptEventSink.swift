@@ -547,14 +547,13 @@ extension TVCLogScriptEventSink {
 
 	private func handleNicknameColorStyleHash(_ context: LogScriptEventContext) {
 		let input = Self.objectValueToCommon(context.arguments[0]) as? String ?? ""
+		/* The style does not take part in the hash, but an unknown one is still
+		 rejected: it means the style sheet and the application disagree. */
 		let style = Self.objectValueToCommon(context.arguments[1]) as? String
-		let colorStyle: TPCThemeSettingsNicknameColorStyle
-		switch style {
-		case "HSL-dark": colorStyle = .dark
-		case "HSL-light": colorStyle = .light
-		default: return fail("Invalid style", context)
+		guard style == "HSL-dark" || style == "HSL-light" else {
+			return fail("Invalid style", context)
 		}
-		context.completion(UserNicknameColorStyleGenerator.hash(for: input, colorStyle: colorStyle))
+		context.completion(UserNicknameColorStyleGenerator.hash(for: input))
 	}
 
 	private func handleNicknameDoubleClicked(_ context: LogScriptEventContext) {
