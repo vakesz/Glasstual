@@ -18,158 +18,103 @@ import os
 import Security
 import Synchronization
 
-private nonisolated enum PluginApprovalState: UInt {
-	case unknown = 0
-	case approved
-	case declined
+/// The result of scanning the extension folders, expressed as file URLs so the
+/// scan can run off the main actor and hand its findings back.
+private nonisolated struct PluginDiscovery: Sendable {
+	var loadable: [URL] = []
+	var obsolete: [URL] = []
+	var rejected: [URL] = []
 }
 
-private final nonisolated class PluginPendingApproval: NSObject {
-	let bundle: Bundle
-	let teamIdentifier: String
+/// Everything about the loaded plugins that a caller outside the main actor
+/// needs: a plugin's own object stays on the main actor, but which features
+/// exist, which commands are subscribed, and the suppression rules are values.
+///
+/// Message renderers are the exception: they run on the renderer's background
+/// queue, so `PluginMessageRendering` is `Sendable` and they are published here.
+private nonisolated struct PluginFacts: Sendable {
+	var pluginsLoaded = false
+	var supportedFeatures: PluginSupportedFeature = []
+	var outputSuppressionRules: [PluginOutputSuppressionRule] = []
+	var supportedUserInputCommands: [String] = []
+	var supportedServerInputCommands: [String] = []
+	var messageRenderers: [any PluginMessageRendering] = []
 
-	init(bundle: Bundle, teamIdentifier: String) {
-		self.bundle = bundle
-		self.teamIdentifier = teamIdentifier
-	}
-}
+	init() {}
 
-/// Carries the approval workflow across the plugin queue and the main actor.
-/// Access remains serialized by those queues; the envelope prevents Swift from
-/// treating its legacy Objective-C collection as independently transferable.
-private final nonisolated class PluginApprovalTransfer: @unchecked Sendable {
-	weak var manager: PluginManager?
-	let pendingApprovals: [PluginPendingApproval]
-	let loadedPlugins: NSMutableArray
-
-	init(
-		manager: PluginManager,
-		pendingApprovals: [PluginPendingApproval],
-		loadedPlugins: NSMutableArray
-	) {
-		self.manager = manager
-		self.pendingApprovals = pendingApprovals
-		self.loadedPlugins = loadedPlugins
-	}
-}
-
-private final class PluginLoadResult: Sendable {
-	let plugin = Mutex<PluginItem?>(nil)
-}
-
-/// An immutable view of every plugin capability published to the rest of the app.
-/// Plugin discovery builds this value off the main actor after every plugin has
-/// completed its main-actor lifecycle setup, then replaces it as one transaction.
-private nonisolated struct PluginRegistrySnapshot: Sendable {
-	static let notLoaded = Self()
-
-	let pluginsLoaded: Bool
-	let loadedPlugins: [PluginItem]?
-	let supportedFeatures: PluginSupportedFeature
-	let outputSuppressionRules: [PluginOutputSuppressionRule]
-	let supportedUserInputCommands: [String]
-	let supportedServerInputCommands: [String]
-	let pluginsWithPreferencePanes: [PluginItem]
-
-	private init() {
-		pluginsLoaded = false
-		loadedPlugins = nil
-		supportedFeatures = []
-		outputSuppressionRules = []
-		supportedUserInputCommands = []
-		supportedServerInputCommands = []
-		pluginsWithPreferencePanes = []
-	}
-
+	@MainActor
 	init(loadedPlugins: [PluginItem]) {
-		var supportedFeatures: PluginSupportedFeature = []
-		var outputSuppressionRules: [PluginOutputSuppressionRule] = []
 		var userInputCommands = Set<String>()
 		var serverInputCommands = Set<String>()
-		var pluginsWithPreferencePanes: [PluginItem] = []
 
 		for plugin in loadedPlugins {
 			supportedFeatures.formUnion(plugin.supportedFeatures)
+			outputSuppressionRules.append(contentsOf: plugin.outputSuppressionRules)
+			userInputCommands.formUnion(plugin.supportedUserInputCommands)
+			serverInputCommands.formUnion(plugin.supportedServerInputCommands)
 
-			if plugin.supportsFeature(.outputSuppressionRules),
-			   let rules = plugin.outputSuppressionRules
-			{
-				outputSuppressionRules.append(contentsOf: rules)
+			if let renderer = plugin.primaryClass as? any PluginMessageRendering {
+				messageRenderers.append(renderer)
 			}
-
-			if plugin.supportsFeature(.subscribedUserInputCommands),
-			   let commands = plugin.supportedUserInputCommands
-			{
-				userInputCommands.formUnion(commands)
-			}
-
-			if plugin.supportsFeature(.subscribedServerInputCommands),
-			   let commands = plugin.supportedServerInputCommands
-			{
-				serverInputCommands.formUnion(commands)
-			}
-
-			if plugin.supportsFeature(.preferencePane) {
-				pluginsWithPreferencePanes.append(plugin)
-			}
-		}
-
-		pluginsWithPreferencePanes.sort {
-			($0.pluginPreferencesPaneMenuItemTitle ?? "")
-				.compare($1.pluginPreferencesPaneMenuItemTitle ?? "") == .orderedAscending
 		}
 
 		pluginsLoaded = true
-		self.loadedPlugins = loadedPlugins
-		self.supportedFeatures = supportedFeatures
-		self.outputSuppressionRules = outputSuppressionRules
 		supportedUserInputCommands = userInputCommands.sorted()
 		supportedServerInputCommands = serverInputCommands.sorted()
-		self.pluginsWithPreferencePanes = pluginsWithPreferencePanes
 	}
 }
 
+/// Discovers, validates and loads Glasstual's plugin bundles.
+///
+/// Only first-party bundles load: one shipped inside the application, or one
+/// installed by the user that is signed by the same Team ID. There is no
+/// approval prompt — a bundle either satisfies the requirement or is refused
+/// and logged.
 @objc(THOPluginManager)
-public final nonisolated class PluginManager: NSObject {
+public final nonisolated class PluginManager: NSObject, Sendable {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginManager"
 	)
 
-	private static let approvalsDefaultsKey = "Plugin Approvals"
-	private static let approvalTeamIdentifierKey = "teamIdentifier"
-	private static let approvalDateKey = "approvedDate"
-	private static let approvalApprovedKey = "approved"
 	static let finishedLoadingNotification = Notification.Name(
 		"THOPluginManagerFinishedLoadingPluginsNotification"
 	)
 
 	@objc public var pluginsLoaded: Bool {
-		registry.withLock { $0.pluginsLoaded }
+		facts.withLock(\.pluginsLoaded)
 	}
 
+	/// The loaded plugins themselves. Main actor: a `PluginItem` owns a plugin's
+	/// live object and its preferences view.
+	@MainActor
 	@objc public var loadedPlugins: [PluginItem]? {
-		registry.withLock { $0.loadedPlugins }
+		pluginsLoaded ? Self.loadedPluginItems : nil
 	}
 
-	private var obsoleteBundles: [Bundle]?
-	private var rejectedBundles: [Bundle]?
-	private let registry = Mutex(PluginRegistrySnapshot.notLoaded)
+	/// Static because there is one plugin manager and its plugin objects must
+	/// live on the main actor, which lets the manager itself stay `Sendable`.
+	@MainActor
+	private static var loadedPluginItems: [PluginItem] = []
 
-	private var didScheduleLoad = false
-	private var didScheduleUnload = false
-	private let schedulingLock = NSLock()
+	private let facts = Mutex(PluginFacts())
+	private let scheduling = Mutex(Scheduling())
+
+	private nonisolated struct Scheduling {
+		var didScheduleLoad = false
+		var didScheduleUnload = false
+	}
 
 	// MARK: - Retain & Release
 
 	@objc
 	public func loadPlugins() {
-		let shouldSchedule = schedulingLock.withLock {
-			guard didScheduleLoad == false else {
+		let shouldSchedule = scheduling.withLock { state in
+			guard state.didScheduleLoad == false else {
 				return false
 			}
 
-			didScheduleLoad = true
+			state.didScheduleLoad = true
 			return true
 		}
 
@@ -177,19 +122,29 @@ public final nonisolated class PluginManager: NSObject {
 			return
 		}
 
-		performAsynchronously(on: PluginDispatcher.dispatchQueue()) { [weak self] in
-			self?.loadPluginsInternal()
+		Task { [weak self] in
+			/* Discovery reads directories and checks code signatures, which is
+			 slow enough to keep off the main actor. Loading itself is main-actor
+			 work: a plugin's load callback touches AppKit. */
+			let discovery = Self.discoverPluginBundles()
+
+			await MainActor.run {
+				self?.finishLoading(discovery)
+			}
 		}
 	}
 
+	/// Runs the plugins' unload callbacks. Main actor: the callbacks tear down
+	/// AppKit state the plugin set up while loading.
+	@MainActor
 	@objc
 	public func unloadPlugins() {
-		let shouldSchedule = schedulingLock.withLock {
-			guard didScheduleUnload == false else {
+		let shouldSchedule = scheduling.withLock { state in
+			guard state.didScheduleUnload == false else {
 				return false
 			}
 
-			didScheduleUnload = true
+			state.didScheduleUnload = true
 			return true
 		}
 
@@ -197,107 +152,79 @@ public final nonisolated class PluginManager: NSObject {
 			return
 		}
 
-		performAsynchronously(on: PluginDispatcher.dispatchQueue()) { [weak self] in
-			self?.unloadPluginsInternal()
+		let plugins = Self.loadedPluginItems
+		Self.loadedPluginItems = []
+		facts.withLock { $0 = PluginFacts() }
+
+		for plugin in plugins {
+			plugin.unloadBundle()
 		}
 	}
 
-	private func loadPluginsInternal() {
-		var loadedPlugins: [PluginItem] = []
-		var seenBundleIdentifiers = Set<String>()
-		var obsoleteBundles: [Bundle] = []
-		var rejectedBundles: [Bundle] = []
-		var pendingApprovals: [PluginPendingApproval] = []
+	@MainActor
+	private func finishLoading(_ discovery: PluginDiscovery) {
+		let host = PluginHostAdapter.makeContext()
+		let loadedPlugins = discovery.loadable.compactMap { url in
+			guard let bundle = Bundle(url: url) else {
+				Self.logger.error(
+					"Refusing to load the bundle at “\(url.path, privacy: .public)“ because it could not be opened"
+				)
+				return nil as PluginItem?
+			}
 
-		for bundle in discoveredPluginBundles() {
+			return PluginItem.load(bundle, host: host)
+		}
+
+		Self.loadedPluginItems = loadedPlugins
+		let newFacts = PluginFacts(loadedPlugins: loadedPlugins)
+		facts.withLock { $0 = newFacts }
+
+		NotificationCenter.default.post(name: Self.finishedLoadingNotification, object: self)
+
+		presentRejectedBundlesAlert(for: discovery.rejected)
+		Self.presentObsoleteBundlesAlert(for: discovery.obsolete.compactMap(Bundle.init(url:)))
+	}
+}
+
+nonisolated extension PluginManager {
+	// MARK: - Discovery
+
+	private static func discoverPluginBundles() -> PluginDiscovery {
+		var discovery = PluginDiscovery()
+		var seenBundleIdentifiers = Set<String>()
+
+		for bundle in candidateBundles() {
 			guard let bundleIdentifier = bundle.bundleIdentifier else {
+				logger.error(
+					"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because it declares no bundle identifier"
+				)
 				continue
 			}
 
 			guard seenBundleIdentifiers.insert(bundleIdentifier).inserted else {
-				Self.logger.info(
+				logger.info(
 					"Skipping the bundle at “\(bundle.bundlePath, privacy: .public)“ because a bundle with the identifier “\(bundleIdentifier, privacy: .public)“ was already found at an earlier location"
 				)
 				continue
 			}
 
 			guard supportsCurrentPluginProtocol(bundle) else {
-				obsoleteBundles.append(bundle)
+				discovery.obsolete.append(bundle.bundleURL)
 				continue
 			}
 
-			if isBundledExtension(bundle) == false {
-				var teamIdentifier: NSString?
-				var validationError: NSError?
-
-				if validateSignature(
-					of: bundle,
-					teamIdentifier: &teamIdentifier,
-					error: &validationError
-				) == false {
-					Self.logger.error(
-						"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its signature is missing or invalid: \(validationError?.localizedDescription ?? "", privacy: .public)"
-					)
-					rejectedBundles.append(bundle)
-					continue
-				}
-
-				guard let teamIdentifier = teamIdentifier as String? else {
-					rejectedBundles.append(bundle)
-					continue
-				}
-
-				let approvalState = approvalState(
-					forBundleIdentifier: bundleIdentifier,
-					teamIdentifier: teamIdentifier
-				)
-
-				if approvalState == .declined {
-					Self.logger.info(
-						"Not loading the bundle at “\(bundle.bundlePath, privacy: .public)“ because the user declined it"
-					)
-					continue
-				}
-
-				if approvalState == .unknown {
-					pendingApprovals.append(
-						PluginPendingApproval(bundle: bundle, teamIdentifier: teamIdentifier)
-					)
-					continue
-				}
+			guard isBundledExtension(bundle) || isSignedByThisApplication(bundle) else {
+				discovery.rejected.append(bundle.bundleURL)
+				continue
 			}
 
-			if let plugin = loadBundleAsPlugin(bundle) {
-				loadedPlugins.append(plugin)
-			}
+			discovery.loadable.append(bundle.bundleURL)
 		}
 
-		self.obsoleteBundles = obsoleteBundles
-		self.rejectedBundles = rejectedBundles
-
-		if pendingApprovals.isEmpty {
-			finishLoading(with: loadedPlugins)
-			return
-		}
-
-		let approvalTransfer = PluginApprovalTransfer(
-			manager: self,
-			pendingApprovals: pendingApprovals,
-			loadedPlugins: NSMutableArray(array: loadedPlugins)
-		)
-
-		performAsynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				approvalTransfer.manager?.promptForPendingApprovals(
-					approvalTransfer.pendingApprovals,
-					at: 0,
-					loadedPlugins: approvalTransfer.loadedPlugins
-				)
-			}
-		}
+		return discovery
 	}
 
-	private func discoveredPluginBundles() -> [Bundle] {
+	private static func candidateBundles() -> [Bundle] {
 		var searchPaths = [PathInfo.bundledExtensions]
 		if let customExtensions = PathInfo.customExtensions {
 			searchPaths.append(customExtensions)
@@ -321,9 +248,9 @@ public final nonisolated class PluginManager: NSObject {
 		}
 	}
 
-	private func supportsCurrentPluginProtocol(_ bundle: Bundle) -> Bool {
+	private static func supportsCurrentPluginProtocol(_ bundle: Bundle) -> Bool {
 		guard let minimumVersion = bundle.infoDictionary?["MinimumGlasstualVersion"] as? String else {
-			Self.logger.error(
+			logger.error(
 				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because it does not declare MinimumGlasstualVersion; the current minimum is \(PluginCompatibility.minimumHostVersion, privacy: .public)"
 			)
 			return false
@@ -333,7 +260,7 @@ public final nonisolated class PluginManager: NSObject {
 			PluginCompatibility.minimumHostVersion,
 			options: .numeric
 		) != .orderedAscending else {
-			Self.logger.error(
+			logger.error(
 				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its minimum Glasstual version \(minimumVersion, privacy: .public) is older than the supported plugin protocol \(PluginCompatibility.minimumHostVersion, privacy: .public)"
 			)
 			return false
@@ -341,76 +268,19 @@ public final nonisolated class PluginManager: NSObject {
 
 		return true
 	}
-
-	private func loadBundleAsPlugin(_ bundle: Bundle) -> PluginItem? {
-		let result = PluginLoadResult()
-
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				let plugin = PluginItem()
-
-				guard plugin.loadBundle(bundle, host: PluginHostAdapter.makeContext()) else {
-					return
-				}
-
-				result.plugin.withLock { $0 = plugin }
-			}
-		}
-
-		guard let plugin = result.plugin.withLock({ $0 }) else {
-			return nil
-		}
-
-		return plugin
-	}
-
-	private func finishLoading(with loadedPlugins: [PluginItem]) {
-		let snapshot = PluginRegistrySnapshot(loadedPlugins: loadedPlugins)
-		registry.withLock { $0 = snapshot }
-
-		performAsynchronouslyOnMainQueue { [weak self] in
-			guard let self else {
-				return
-			}
-
-			checkForRejectedBundles()
-			checkForObsoleteBundles()
-
-			NotificationCenter.default.post(
-				name: Self.finishedLoadingNotification,
-				object: self
-			)
-		}
-	}
-
-	private func unloadPluginsInternal() {
-		let plugins = registry.withLock { snapshot in
-			let plugins = snapshot.loadedPlugins ?? []
-			snapshot = .notLoaded
-			return plugins
-		}
-
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				for plugin in plugins {
-					plugin.unloadBundle()
-				}
-			}
-		}
-	}
 }
 
 nonisolated extension PluginManager {
 	// MARK: - Signature Validation
 
-	private func isBundledExtension(_ bundle: Bundle) -> Bool {
+	private static func isBundledExtension(_ bundle: Bundle) -> Bool {
 		let applicationPath = (Bundle.main.bundlePath as NSString).standardizingPath
 		let bundlePath = (bundle.bundlePath as NSString).standardizingPath
 
 		return bundlePath.hasPrefix(applicationPath + "/")
 	}
 
-	private nonisolated static let applicationTeamIdentifier: String? = {
+	private static let applicationTeamIdentifier: String? = {
 		var code: SecCode?
 		guard SecCodeCopySelf(SecCSFlags(rawValue: 0), &code) == errSecSuccess, let code else {
 			return nil
@@ -422,6 +292,10 @@ nonisolated extension PluginManager {
 			return nil
 		}
 
+		return teamIdentifier(of: staticCode)
+	}()
+
+	private static func teamIdentifier(of staticCode: SecStaticCode) -> String? {
 		var signingInformation: CFDictionary?
 		let status = SecCodeCopySigningInformation(
 			staticCode,
@@ -441,7 +315,7 @@ nonisolated extension PluginManager {
 		}
 
 		return team
-	}()
+	}
 
 	private static func error(withStatus status: OSStatus) -> NSError {
 		let message = SecCopyErrorMessageString(status, nil) as String? ?? "Unknown error"
@@ -453,15 +327,21 @@ nonisolated extension PluginManager {
 		)
 	}
 
-	@discardableResult
-	private func validateSignature(
-		of bundle: Bundle,
-		teamIdentifier: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		error: AutoreleasingUnsafeMutablePointer<NSError?>?
-	) -> Bool {
-		teamIdentifier?.pointee = nil
-		error?.pointee = nil
+	/// Whether `bundle` carries a valid signature from the same Team ID that
+	/// signed the running application. Every refusal is logged with its reason.
+	static func isSignedByThisApplication(_ bundle: Bundle) -> Bool {
+		do {
+			try validateSignature(of: bundle)
+			return true
+		} catch {
+			logger.error(
+				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its signature is missing or is not ours: \(error.localizedDescription, privacy: .public)"
+			)
+			return false
+		}
+	}
 
+	private static func validateSignature(of bundle: Bundle) throws {
 		var staticCode: SecStaticCode?
 		var status = SecStaticCodeCreateWithPath(
 			bundle.bundleURL as CFURL,
@@ -469,56 +349,19 @@ nonisolated extension PluginManager {
 			&staticCode
 		)
 
-		if status != errSecSuccess || staticCode == nil {
-			error?.pointee = Self.error(withStatus: status)
-			return false
-		}
-
-		guard let staticCode else {
-			error?.pointee = Self.error(withStatus: status)
-			return false
+		guard status == errSecSuccess, let staticCode else {
+			throw error(withStatus: status)
 		}
 
 		let validationFlags = SecCSFlags(rawValue: kSecCSCheckAllArchitectures | kSecCSStrictValidate)
+		try checkValidity(of: staticCode, flags: validationFlags, requirement: nil)
 
-		var validityError: Unmanaged<CFError>?
-		status = SecStaticCodeCheckValidityWithErrors(staticCode, validationFlags, nil, &validityError)
-
-		if status != errSecSuccess {
-			if let validityError {
-				error?.pointee = validityError.takeRetainedValue() as Error as NSError
-			} else {
-				error?.pointee = Self.error(withStatus: status)
-			}
-			return false
+		guard let team = teamIdentifier(of: staticCode) else {
+			throw error(withStatus: errSecCSSignatureUntrusted)
 		}
 
-		var signingInformation: CFDictionary?
-		status = SecCodeCopySigningInformation(
-			staticCode,
-			SecCSFlags(rawValue: kSecCSSigningInformation),
-			&signingInformation
-		)
-
-		guard status == errSecSuccess, let signingInformation else {
-			error?.pointee = Self.error(withStatus: status)
-			return false
-		}
-
-		let information = signingInformation as NSDictionary
-		let team = information[kSecCodeInfoTeamIdentifier as String] as? String
-
-		guard let team, team.isEmpty == false else {
-			error?.pointee = Self.error(withStatus: errSecCSSignatureUntrusted)
-			return false
-		}
-
-		let applicationTeam = Self.applicationTeamIdentifier
-		let sameTeam = (applicationTeam != nil && team == applicationTeam)
-
-		guard sameTeam, let applicationTeam else {
-			error?.pointee = Self.error(withStatus: errSecCSSignatureUntrusted)
-			return false
+		guard let applicationTeam = applicationTeamIdentifier, team == applicationTeam else {
+			throw error(withStatus: errSecCSSignatureUntrusted)
 		}
 
 		let requirementString =
@@ -531,214 +374,106 @@ nonisolated extension PluginManager {
 			&requirement
 		)
 
-		if status != errSecSuccess || requirement == nil {
-			error?.pointee = Self.error(withStatus: status)
-			return false
+		guard status == errSecSuccess, let requirement else {
+			throw error(withStatus: status)
 		}
 
-		guard let requirement else {
-			error?.pointee = Self.error(withStatus: status)
-			return false
-		}
+		try checkValidity(of: staticCode, flags: validationFlags, requirement: requirement)
+	}
 
-		validityError = nil
-		status = SecStaticCodeCheckValidityWithErrors(
+	private static func checkValidity(
+		of staticCode: SecStaticCode,
+		flags: SecCSFlags,
+		requirement: SecRequirement?
+	) throws {
+		var validityError: Unmanaged<CFError>?
+		let status = SecStaticCodeCheckValidityWithErrors(
 			staticCode,
-			validationFlags,
+			flags,
 			requirement,
 			&validityError
 		)
 
-		if status != errSecSuccess {
-			if let validityError {
-				error?.pointee = validityError.takeRetainedValue() as Error as NSError
-			} else {
-				error?.pointee = Self.error(withStatus: status)
-			}
-			return false
+		guard status != errSecSuccess else {
+			/* The out-parameter is populated on failure only, but release it
+			 defensively so a success path can never leak it. */
+			validityError?.release()
+			return
 		}
 
-		if let validityError {
-			_ = validityError.takeRetainedValue()
+		guard let validityError else {
+			throw error(withStatus: status)
 		}
 
-		teamIdentifier?.pointee = team as NSString
-
-		return true
+		throw validityError.takeRetainedValue() as Error
 	}
 }
 
-nonisolated extension PluginManager {
-	// MARK: - Approvals
-
-	private static var approvals: [String: [String: Any]] {
-		TextualUserDefaults.shared().dictionary(forKey: approvalsDefaultsKey)
-			as? [String: [String: Any]] ?? [:]
-	}
-
-	private func approvalState(
-		forBundleIdentifier bundleIdentifier: String,
-		teamIdentifier: String
-	) -> PluginApprovalState {
-		guard let record = Self.approvals[bundleIdentifier] else {
-			return .unknown
-		}
-
-		guard (record[Self.approvalTeamIdentifierKey] as? String) == teamIdentifier else {
-			return .unknown
-		}
-
-		let approved: Bool = if let number = record[Self.approvalApprovedKey] as? NSNumber {
-			number.boolValue
-		} else if let bool = record[Self.approvalApprovedKey] as? Bool {
-			bool
-		} else {
-			false
-		}
-
-		return approved ? .approved : .declined
-	}
-
-	private func recordApproval(
-		_ approved: Bool,
-		forBundleIdentifier bundleIdentifier: String,
-		teamIdentifier: String
-	) {
-		var approvals = Self.approvals
-
-		approvals[bundleIdentifier] = [
-			Self.approvalTeamIdentifierKey: teamIdentifier,
-			Self.approvalDateKey: Date(),
-			Self.approvalApprovedKey: approved,
-		]
-
-		TextualUserDefaults.shared().set(approvals, forKey: Self.approvalsDefaultsKey)
-	}
-
-	@objc
-	public static func resetApprovals() {
-		TextualUserDefaults.shared().removeObject(forKey: approvalsDefaultsKey)
-	}
+extension PluginManager {
+	// MARK: - Refused Bundles
 
 	@MainActor
-	private func promptForPendingApprovals(
-		_ pendingApprovals: [PluginPendingApproval],
-		at index: Int,
-		loadedPlugins: NSMutableArray
-	) {
-		if index >= pendingApprovals.count {
-			let plugins = loadedPlugins.compactMap { $0 as? PluginItem }
-
-			performAsynchronously(on: PluginDispatcher.dispatchQueue()) { [weak self] in
-				self?.finishLoading(with: plugins)
-			}
-
-			return
-		}
-
-		let pending = pendingApprovals[index]
-		let bundle = pending.bundle
-		let bundleIdentifier = bundle.bundleIdentifier ?? ""
-		let teamIdentifier = pending.teamIdentifier
-
-		var displayName = bundle.textualDisplayName ?? ""
-		if displayName.isEmpty {
-			displayName = (bundle.bundlePath as NSString).lastPathComponent
-		}
-
-		let tildePath = (bundle.bundleURL as NSURL).textualStandardizedTildePath ?? bundle.bundlePath
-		guard let window = NSObject.applicationController().mainWindow else {
-			return
-		}
-
-		TDCAlert.alertSheet(
-			with: window,
-			body: PromptStrings.Plugin.loadApprovalBody(
-				displayName: displayName,
-				bundleIdentifier: bundleIdentifier,
-				teamIdentifier: teamIdentifier,
-				location: tildePath
-			),
-			title: PromptStrings.Plugin.loadApprovalTitle(displayName: displayName),
-			defaultButton: PromptStrings.Plugin.loadDeniedButtonTitle,
-			alternateButton: PromptStrings.Plugin.loadButtonTitle,
-			otherButton: nil
-		) { [weak self] buttonClicked, _, _ in
-			guard let self else {
-				return
-			}
-
-			let approved = (buttonClicked == .alternate)
-
-			recordApproval(
-				approved,
-				forBundleIdentifier: bundleIdentifier,
-				teamIdentifier: teamIdentifier
-			)
-
-			performAsynchronously(on: PluginDispatcher.dispatchQueue()) {
-				if approved {
-					if let plugin = self.loadBundleAsPlugin(bundle) {
-						loadedPlugins.add(plugin)
-					}
-				} else {
-					Self.logger.info(
-						"Not loading the bundle at “\(bundle.bundlePath, privacy: .public)“ because the user declined it"
-					)
-				}
-
-				performAsynchronouslyOnMainQueue {
-					MainActor.assumeIsolated {
-						self.promptForPendingApprovals(
-							pendingApprovals,
-							at: index + 1,
-							loadedPlugins: loadedPlugins
-						)
-					}
-				}
-			}
-		}
-	}
-
-	// MARK: - Rejected Bundles
-
-	private func checkForRejectedBundles() {
-		guard let rejectedBundles, rejectedBundles.isEmpty == false else {
+	private func presentRejectedBundlesAlert(for rejectedBundles: [URL]) {
+		guard rejectedBundles.isEmpty == false else {
 			return
 		}
 
 		var bundleNames: [String] = []
 
-		for bundle in rejectedBundles {
-			let name = (bundle.bundlePath as NSString).lastPathComponent
+		for url in rejectedBundles {
+			let name = url.lastPathComponent
 			if bundleNames.contains(name) == false {
 				bundleNames.append(name)
 			}
 		}
 
-		let bundlesName = bundleNames.joined(separator: ", ")
+		_ = TDCAlert.alert(
+			withMessage: PromptStrings.Plugin.unsignedBody,
+			title: PromptStrings.Plugin.unsignedTitle(pluginNames: bundleNames.joined(separator: ", ")),
+			defaultButton: PromptStrings.Action.confirmation,
+			alternateButton: nil
+		)
+	}
 
-		self.rejectedBundles = nil
+	// MARK: - Obsolete Bundles
 
-		Task { @MainActor in
-			_ = TDCAlert.alert(
-				withMessage: PromptStrings.Plugin.unsignedBody,
-				title: PromptStrings.Plugin.unsignedTitle(pluginNames: bundlesName),
-				defaultButton: PromptStrings.Action.confirmation,
-				alternateButton: nil
-			)
+	@MainActor
+	private static func presentObsoleteBundlesAlert(for obsoleteBundles: [Bundle]) {
+		guard obsoleteBundles.isEmpty == false else {
+			return
+		}
+
+		let bundlesName = Bundle.textual_formattedDisplayNames(for: obsoleteBundles)
+
+		_ = TDCAlert.alert(
+			withMessage: PromptStrings.Plugin.incompatibleBody(
+				minimumVersion: PluginCompatibility.minimumHostVersion
+			),
+			title: PromptStrings.Plugin.incompatibleTitle(pluginNames: bundlesName),
+			defaultButton: PromptStrings.Plugin.incompatibleReminderButtonTitle,
+			alternateButton: nil,
+			otherButton: PromptStrings.Plugin.viewFilesButtonTitle,
+			suppressionKey: nil,
+			suppressionText: nil
+		) { buttonClicked, _, _ in
+			guard buttonClicked == .other else {
+				return
+			}
+
+			Bundle.textual_openInstallationLocations(for: obsoleteBundles)
+			presentObsoleteBundlesAlert(for: obsoleteBundles)
 		}
 	}
 }
 
-nonisolated extension PluginManager {
+public nonisolated extension PluginManager {
 	// MARK: - AppleScript Support
 
-	@objc public var supportedAppleScriptCommands: [String] {
+	@objc var supportedAppleScriptCommands: [String] {
 		supportedAppleScriptCommands(returnPathInfo: false) as? [String] ?? []
 	}
 
-	@objc public var supportedAppleScriptCommandsAndPaths: [String: String] {
+	@objc var supportedAppleScriptCommandsAndPaths: [String: String] {
 		supportedAppleScriptCommands(returnPathInfo: true) as? [String: String] ?? [:]
 	}
 
@@ -806,45 +541,8 @@ nonisolated extension PluginManager {
 			as? [String] ?? []
 	}
 
-	// MARK: - Obsolete Bundles
-
-	private func checkForObsoleteBundles() {
-		guard let obsoleteBundles, obsoleteBundles.isEmpty == false else {
-			return
-		}
-
-		Self.presentObsoleteBundlesAlert(for: obsoleteBundles)
-	}
-
-	/** Static so that the alert never carries the manager across actors: the
-	 manager is not `Sendable` and the alert needs nothing from it. */
-	private static func presentObsoleteBundlesAlert(for thirdPartyBundles: [Bundle]) {
-		let bundlesName = Bundle.textual_formattedDisplayNames(for: thirdPartyBundles)
-
-		Task { @MainActor in
-			_ = TDCAlert.alert(
-				withMessage: PromptStrings.Plugin.incompatibleBody(
-					minimumVersion: PluginCompatibility.minimumHostVersion
-				),
-				title: PromptStrings.Plugin.incompatibleTitle(pluginNames: bundlesName),
-				defaultButton: PromptStrings.Plugin.incompatibleReminderButtonTitle,
-				alternateButton: nil,
-				otherButton: PromptStrings.Plugin.viewFilesButtonTitle,
-				suppressionKey: nil,
-				suppressionText: nil
-			) { buttonClicked, _, _ in
-				guard buttonClicked == .other else {
-					return
-				}
-
-				Bundle.textual_openInstallationLocations(for: thirdPartyBundles)
-				presentObsoleteBundlesAlert(for: thirdPartyBundles)
-			}
-		}
-	}
-
 	@objc(findHandlerForOutgoingCommand:path:isScript:isExtension:)
-	public func findHandler(
+	func findHandler(
 		forOutgoingCommand command: String,
 		path: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		isScript: UnsafeMutablePointer<ObjCBool>?,
@@ -876,22 +574,34 @@ public nonisolated extension PluginManager {
 	// MARK: - Extension Information
 
 	func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {
-		registry.withLock { $0.supportedFeatures.contains(feature) }
+		facts.withLock { $0.supportedFeatures.contains(feature) }
 	}
 
 	var pluginOutputSuppressionRules: [PluginOutputSuppressionRule] {
-		registry.withLock { $0.outputSuppressionRules }
+		facts.withLock(\.outputSuppressionRules)
+	}
+
+	/// The plugins that rewrite message bodies, in load order. Published apart
+	/// from `loadedPlugins` because the renderer calls them off the main actor.
+	var messageRenderers: [any PluginMessageRendering] {
+		facts.withLock(\.messageRenderers)
 	}
 
 	@objc var supportedUserInputCommands: [String] {
-		registry.withLock { $0.supportedUserInputCommands }
+		facts.withLock(\.supportedUserInputCommands)
 	}
 
 	@objc var supportedServerInputCommands: [String] {
-		registry.withLock { $0.supportedServerInputCommands }
+		facts.withLock(\.supportedServerInputCommands)
 	}
 
+	@MainActor
 	@objc var pluginsWithPreferencePanes: [PluginItem] {
-		registry.withLock { $0.pluginsWithPreferencePanes }
+		Self.loadedPluginItems
+			.filter { $0.supportsFeature(.preferencePane) }
+			.sorted {
+				($0.pluginPreferencesPaneMenuItemTitle ?? "")
+					.compare($1.pluginPreferencesPaneMenuItemTitle ?? "") == .orderedAscending
+			}
 	}
 }

@@ -36,27 +36,7 @@
  *********************************************************************** */
 
 import AppKit
-@_spi(Host) import GlasstualPluginKit
-
-private nonisolated enum PluginHostMainActorBridge {
-	static func sync<Result: Sendable>(
-		_ operation: @escaping @MainActor @Sendable () -> Result
-	) -> Result {
-		if Thread.isMainThread {
-			return MainActor.assumeIsolated(operation)
-		}
-
-		return DispatchQueue.main.sync {
-			MainActor.assumeIsolated(operation)
-		}
-	}
-}
-
-/// Carries host objects and callbacks through a synchronous main-actor handoff.
-/// The caller remains blocked, so the wrapped value is never accessed concurrently.
-private nonisolated struct PluginHostTransfer<Value>: @unchecked Sendable {
-	let value: Value
-}
+import GlasstualPluginKit
 
 private typealias PluginMessagePrinter = (
 	String,
@@ -69,33 +49,25 @@ private typealias PluginMessagePrinter = (
 	@escaping (PluginPrintResult) -> Void
 ) -> Void
 
-nonisolated enum PluginHostAdapter {
+/// Builds the Plugin Kit view of the running application.
+///
+/// Plugin Kit is main-actor isolated end to end, and so is everything this
+/// reads, so the adapter injects plain main-actor closures: no thread hops, no
+/// transfer boxes and no runtime lookup by selector name.
+enum PluginHostAdapter {
 	static func makeContext() -> PluginHostContext {
-		PluginHostMainActorBridge.sync {
-			makeContextOnMainActor()
-		}
-	}
-
-	@MainActor
-	private static func makeContextOnMainActor() -> PluginHostContext {
 		PluginHostContext(
 			defaults: TextualUserDefaults.shared(),
 			clients: {
-				PluginHostMainActorBridge.sync {
-					guard let world = NSObject.applicationController().world else { return [] }
-					return world.clientList.map(makeClientOnMainActor)
-				}
+				guard let world = NSObject.applicationController().world else { return [] }
+				return world.clientList.map(makeClient)
 			},
 			selectedChannel: {
-				PluginHostMainActorBridge.sync {
-					NSObject.applicationController().mainWindow?.selectedChannel.map(makeChannelOnMainActor)
-				}
+				NSObject.applicationController().mainWindow?.selectedChannel.map(makeChannel)
 			},
-			metrics: {
-				PluginHostMainActorBridge.sync {
-					makeApplicationMetrics()
-				}
-			},
+			metrics: makeApplicationMetrics,
+			applicationSnapshot: makeApplicationSnapshot,
+			themeSnapshot: makeThemeSnapshot,
 			observeConnectionState: observeConnectionState,
 			removesFormatting: {
 				TextualPreferences.removeAllFormatting()
@@ -104,18 +76,7 @@ nonisolated enum PluginHostAdapter {
 	}
 
 	static func makeClient(_ client: IRCClient) -> PluginClient {
-		let clientReference = PluginHostTransfer(value: client)
-		return PluginHostMainActorBridge.sync {
-			makeClientOnMainActor(clientReference.value)
-		}
-	}
-
-	@MainActor
-	private static func makeClientOnMainActor(_ client: IRCClient) -> PluginClient {
-		let clientReference = PluginHostTransfer(value: client)
-
-		return PluginClient(
-			hostObject: client,
+		PluginClient(
 			identifier: client.uniqueIdentifier,
 			userNickname: client.userNickname,
 			networkName: client.networkName,
@@ -124,118 +85,71 @@ nonisolated enum PluginHostAdapter {
 			isLoggedIn: client.isLoggedIn,
 			isIRCop: client.userIsIRCop,
 			localUser: client.myself.map(makeUser),
-			channels: client.channelList.map(makeChannelOnMainActor),
+			channels: client.channelList.map(makeChannel),
 			isConnectedToZNC: client.isConnectedToZNC,
 			zncCertificateChainData: client.zncBouncerCertificateChainData,
 			maximumNicknameLength: client.isConnectedToZNC || client.supportInfo.configurationReceived == false
 				? PluginHost.defaultMaximumNicknameLength
 				: max(client.supportInfo.maximumNicknameLength, 1),
 			nicknameMatchesZNCUser: { nickname, zncNickname in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.nickname(nickname, isZNCUser: zncNickname)
-				}
+				client.nickname(nickname, isZNCUser: zncNickname)
 			},
 			isChannelName: { name in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.stringIsChannelName(name)
-				}
+				client.stringIsChannelName(name)
 			},
 			findChannel: { name in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.findChannel(name).map(makeChannelOnMainActor)
-				}
+				client.findChannel(name).map(makeChannel)
 			},
 			privateMessage: { name in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.findChannelOrCreate(name, isPrivateMessage: true)
-						.map(makeChannelOnMainActor)
-				}
+				client.findChannelOrCreate(name, isPrivateMessage: true).map(makeChannel)
 			},
 			utilityChannel: { name in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.findChannelOrCreate(name, isUtility: true)
-						.map(makeChannelOnMainActor)
-				}
+				client.findChannelOrCreate(name, isUtility: true).map(makeChannel)
 			},
 			isCapabilityEnabled: { rawValue in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.isCapabilityEnabled(ClientIRCv3SupportedCapability(rawValue: rawValue))
-				}
+				client.isCapabilityEnabled(ClientIRCv3SupportedCapability(rawValue: rawValue))
 			},
 			printDebug: { message, channel in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.printDebugInformation(message, in: channel.flatMap(hostChannel))
-				}
+				client.printDebugInformation(message, in: channel.flatMap { hostChannel($0, on: client) })
 			},
 			sendPrivateMessage: { message, channel in
-				PluginHostMainActorBridge.sync {
-					guard let channel = hostChannel(channel) else { return }
-					clientReference.value.sendPrivmsg(message, to: channel)
-				}
+				guard let channel = hostChannel(channel, on: client) else { return }
+				client.sendPrivmsg(message, to: channel)
 			},
 			sendCommand: { command in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.sendCommand(command)
-				}
+				client.sendCommand(command)
 			},
 			sendLine: { line in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.sendLine(line)
-				}
+				client.sendLine(line)
 			},
 			joinChannel: { channelName in
-				PluginHostMainActorBridge.sync {
-					clientReference.value.joinUnlistedChannel(channelName)
-				}
+				client.joinUnlistedChannel(channelName)
 			},
-			printMessage: makeMessagePrinter(for: clientReference),
+			printMessage: makeMessagePrinter(for: client),
 			markUnread: { channel, isHighlight in
-				PluginHostMainActorBridge.sync {
-					guard let channel = hostChannel(channel) else { return }
-					clientReference.value.setUnreadState(for: channel, isHighlight: isHighlight)
-				}
+				guard let channel = hostChannel(channel, on: client) else { return }
+				client.setUnreadState(for: channel, isHighlight: isHighlight)
 			},
 			markHighlight: { channel in
-				PluginHostMainActorBridge.sync {
-					guard let channel = hostChannel(channel) else { return }
-					clientReference.value.setHighlightState(for: channel)
-				}
+				guard let channel = hostChannel(channel, on: client) else { return }
+				client.setHighlightState(for: channel)
 			},
 			refreshSidebar: {
-				PluginHostMainActorBridge.sync {
-					NSObject.applicationController().mainWindow?.reloadTreeGroup(clientReference.value)
-				}
+				NSObject.applicationController().mainWindow?.reloadTreeGroup(client)
 			}
 		)
 	}
 
 	static func makeChannel(_ channel: IRCChannel) -> PluginChannel {
-		let channelReference = PluginHostTransfer(value: channel)
-		return PluginHostMainActorBridge.sync {
-			makeChannelOnMainActor(channelReference.value)
-		}
-	}
-
-	@MainActor
-	private static func makeChannelOnMainActor(_ channel: IRCChannel) -> PluginChannel {
-		let channelReference = PluginHostTransfer(value: channel)
-
-		return PluginChannel(
-			hostObject: channel,
+		PluginChannel(
 			identifier: channel.uniqueIdentifier,
 			name: channel.name,
 			type: channel.type,
 			isActive: channel.isActive,
 			members: (channel.memberList ?? []).map(makeMember),
-			autoJoin: {
-				PluginHostMainActorBridge.sync { channelReference.value.autoJoin }
-			},
-			setAutoJoin: { autoJoin in
-				PluginHostMainActorBridge.sync { channelReference.value.autoJoin = autoJoin }
-			},
-			deactivate: {
-				PluginHostMainActorBridge.sync { channelReference.value.deactivate() }
-			}
+			autoJoin: { channel.autoJoin },
+			setAutoJoin: { channel.autoJoin = $0 },
+			deactivate: { channel.deactivate() }
 		)
 	}
 
@@ -279,7 +193,8 @@ nonisolated enum PluginHostAdapter {
 		return mutableMessage.copy() as? Message ?? mutableMessage
 	}
 
-	static func messageKind(for lineType: TVCLogLineType) -> PluginMessageKind {
+	/// A pure mapping, so the off-main message renderer can call it too.
+	nonisolated static func messageKind(for lineType: TVCLogLineType) -> PluginMessageKind {
 		switch lineType {
 		case .privateMessage:
 			.privateMessage
@@ -316,31 +231,28 @@ nonisolated enum PluginHostAdapter {
 		)
 	}
 
-	private static func makeMessagePrinter(
-		for clientReference: PluginHostTransfer<IRCClient>
-	) -> PluginMessagePrinter {
+	private static func makeMessagePrinter(for client: IRCClient) -> PluginMessagePrinter {
 		{ message, nickname, channel, kind, command, receivedAt, isEncrypted, completion in
-			let completionReference = PluginHostTransfer(value: completion)
-			PluginHostMainActorBridge.sync {
-				guard let channel = hostChannel(channel) else { return }
-				clientReference.value.print(
-					message,
-					by: nickname,
-					in: channel,
-					as: logLineType(for: kind),
-					command: command,
-					receivedAt: receivedAt,
-					isEncrypted: isEncrypted,
-					referenceMessage: nil
-				) { context in
-					completionReference.value(PluginPrintResult(isHighlight: context.isHighlight))
-				}
+			guard let channel = hostChannel(channel, on: client) else { return }
+			client.print(
+				message,
+				by: nickname,
+				in: channel,
+				as: logLineType(for: kind),
+				command: command,
+				receivedAt: receivedAt,
+				isEncrypted: isEncrypted,
+				referenceMessage: nil
+			) { context in
+				completion(PluginPrintResult(isHighlight: context.isHighlight))
 			}
 		}
 	}
 
-	private static func hostChannel(_ channel: PluginChannel) -> IRCChannel? {
-		channel.hostObject as? IRCChannel
+	/// Plugin Kit values carry the host's identifier rather than the host object
+	/// itself, so a plugin can never reach into an app model it was not handed.
+	private static func hostChannel(_ channel: PluginChannel, on client: IRCClient) -> IRCChannel? {
+		client.channelList.first { $0.uniqueIdentifier == channel.identifier }
 	}
 
 	private static func logLineType(for kind: PluginMessageKind) -> TVCLogLineType {
@@ -362,7 +274,6 @@ nonisolated enum PluginHostAdapter {
 		}
 	}
 
-	@MainActor
 	private static func makeApplicationMetrics() -> PluginApplicationMetrics {
 		let application = NSObject.applicationController()
 		let world = application.world
@@ -386,22 +297,55 @@ nonisolated enum PluginHostAdapter {
 		)
 	}
 
+	private static func makeApplicationSnapshot() -> PluginApplicationSnapshot {
+		PluginApplicationSnapshot(
+			timeIntervalSinceLaunch: ApplicationInfo.timeIntervalSinceApplicationLaunch(),
+			timeIntervalSinceInstall: ApplicationInfo.timeIntervalSinceApplicationInstall(),
+			runCount: ApplicationInfo.applicationRunCount(),
+			birthday: ApplicationInfo.applicationBirthday()
+		)
+	}
+
+	private static func makeThemeSnapshot() -> PluginThemeSnapshot? {
+		let controller = SharedApplication.sharedThemeController()
+		guard let theme = controller.theme else {
+			return nil
+		}
+
+		let resolvedAppearance: PluginThemeAppearance = switch theme.appearance {
+		case .dark: .dark
+		case .light: .light
+		case .default:
+			SharedApplication.sharedAppearance().properties.isDarkAppearance ? .dark : .light
+		}
+
+		return PluginThemeSnapshot(
+			name: controller.name,
+			storageLocation: storageLocation(for: controller.storageLocation),
+			resolvedAppearance: resolvedAppearance
+		)
+	}
+
+	private static func storageLocation(
+		for location: TPCThemeStorageLocation
+	) -> PluginThemeStorageLocation {
+		switch location {
+		case .unknown: .unknown
+		case .bundle: .bundled
+		case .custom: .custom
+		}
+	}
+
 	private static func observeConnectionState(
 		_ handler: @escaping (Bool) -> Void
 	) -> PluginObservation {
-		let handlerReference = PluginHostTransfer(value: handler)
-		let tracker = PluginHostMainActorBridge.sync {
-			PluginConnectionTracker(handler: handlerReference.value)
-		}
+		let tracker = PluginConnectionTracker(handler: handler)
 		return PluginObservation {
-			PluginHostMainActorBridge.sync {
-				tracker.cancel()
-			}
+			tracker.cancel()
 		}
 	}
 }
 
-@MainActor
 private final class PluginConnectionTracker {
 	private let handler: (Bool) -> Void
 	private var clientObservations: [ObjectIdentifier: NSKeyValueObservation] = [:]
@@ -417,7 +361,9 @@ private final class PluginConnectionTracker {
 		]
 		notificationObservers = names.map { name in
 			center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-				MainActor.assumeIsolated {
+				// The queue is `.main`, but the callback signature is not
+				// isolated, so hop rather than assume.
+				Task { @MainActor in
 					self?.rebuild()
 				}
 			}
@@ -440,7 +386,7 @@ private final class PluginConnectionTracker {
 		for client in clients where clientObservations[ObjectIdentifier(client)] == nil {
 			clientObservations[ObjectIdentifier(client)] = client
 				.observe(\.isLoggedIn, options: [.new]) { [weak self] _, _ in
-					PluginHostMainActorBridge.sync {
+					Task { @MainActor in
 						self?.notify()
 					}
 				}

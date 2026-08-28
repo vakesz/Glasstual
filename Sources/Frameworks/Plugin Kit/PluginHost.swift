@@ -36,54 +36,12 @@
  *********************************************************************** */
 
 import Foundation
-import ObjectiveC.runtime
 
+/// Constants shared between Glasstual and the plugins it bundles.
+///
+/// The host injects everything else through `PluginHostContext`; nothing here
+/// reaches into the application by name or selector.
 public enum PluginHost {
 	public static let zncPlaybackCapabilityRawValue: UInt = 1 << 27
 	public static let defaultMaximumNicknameLength: UInt = 50
-
-	public static func maximumNicknameLength(on client: AnyObject) -> UInt {
-		guard HostRuntime.bool(client, selectorNamed: "isConnectedToZNC") == false,
-		      let supportInfo = HostRuntime.object(client, selectorNamed: "supportInfo"),
-		      HostRuntime.bool(supportInfo, selectorNamed: "configurationReceived") == true,
-		      let configuredMaximum = HostRuntime.uint(supportInfo, selectorNamed: "maximumNicknameLength"),
-		      configuredMaximum > 0
-		else {
-			return defaultMaximumNicknameLength
-		}
-
-		return configuredMaximum
-	}
-
-	public static func utilityChannel(named name: String, on client: AnyObject) -> AnyObject? {
-		let selector = NSSelectorFromString("findChannelOrCreate:isUtility:")
-		guard client.responds(to: selector),
-		      let method = class_getInstanceMethod(type(of: client), selector)
-		else {
-			return nil
-		}
-
-		typealias Implementation = @convention(c) (
-			AnyObject,
-			Selector,
-			NSString,
-			Bool
-		) -> Unmanaged<AnyObject>?
-
-		let implementation = unsafeBitCast(method_getImplementation(method), to: Implementation.self)
-		return implementation(client, selector, name as NSString, true)?.takeUnretainedValue()
-	}
-
-	public static func reloadTreeGroup(_ item: AnyObject, in window: AnyObject) {
-		let selector = NSSelectorFromString("reloadTreeGroup:")
-		guard window.responds(to: selector),
-		      let method = class_getInstanceMethod(type(of: window), selector)
-		else {
-			return
-		}
-
-		typealias Implementation = @convention(c) (AnyObject, Selector, AnyObject) -> Void
-		let implementation = unsafeBitCast(method_getImplementation(method), to: Implementation.self)
-		implementation(window, selector, item)
-	}
 }

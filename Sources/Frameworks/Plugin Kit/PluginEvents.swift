@@ -37,7 +37,10 @@
 
 import Foundation
 
-public final class PluginTextEvent: Sendable {
+/// Holds live `PluginClient`/`PluginChannel` references, so it lives on the
+/// main actor with them.
+@MainActor
+public final class PluginTextEvent {
 	public let text: String
 	public let author: PluginSender
 	public let destination: PluginChannel?
@@ -65,7 +68,8 @@ public final class PluginTextEvent: Sendable {
 	}
 }
 
-public final class PluginCommandInvocation: Sendable {
+@MainActor
+public final class PluginCommandInvocation {
 	public let client: PluginClient
 	public let command: String
 	public let message: String
@@ -87,7 +91,8 @@ public final class PluginCommandInvocation: Sendable {
 	}
 }
 
-public final class PluginIncomingCommandEvent: Sendable {
+@MainActor
+public final class PluginIncomingCommandEvent {
 	public let command: String
 	public let text: String?
 	public let author: PluginSender
@@ -125,6 +130,9 @@ public struct PluginRenderEvent: Sendable {
 	}
 }
 
+/// Wraps an untyped host value, so it is neither sendable nor usable off the
+/// main actor.
+@MainActor
 public struct PluginUserInput {
 	public let value: Any
 	public let commandRawValue: UInt
@@ -135,7 +143,11 @@ public struct PluginUserInput {
 	}
 }
 
-public final class PluginPostedMessage: @unchecked Sendable {
+/// One rendered message, handed to plugins after it appears in the view.
+///
+/// The host builds it inside the renderer, which runs off the main actor, so
+/// this type stays nonisolated.
+public final nonisolated class PluginPostedMessage {
 	public var isProcessedInBulk = false
 	public var messageContents = ""
 	public var lineNumber = ""
@@ -150,18 +162,33 @@ public final class PluginPostedMessage: @unchecked Sendable {
 	public init() {}
 }
 
-public final class PluginJavaScriptPayload: @unchecked Sendable {
+@MainActor
+public final class PluginJavaScriptPayload {
 	public var payloadLabel = ""
 	public var payloadContents: Any?
 
 	public init() {}
 }
 
-public final class PluginOutputSuppressionRule: @unchecked Sendable {
+/// A value: the plugin manager publishes these rules to the IRC layer, which
+/// reads them off the main actor.
+public struct PluginOutputSuppressionRule: Equatable, Sendable {
 	public var match = ""
 	public var restrictConsole = false
 	public var restrictChannel = false
 	public var restrictPrivateMessage = false
 
 	public init() {}
+
+	public init(
+		match: String,
+		restrictConsole: Bool = false,
+		restrictChannel: Bool = false,
+		restrictPrivateMessage: Bool = false
+	) {
+		self.match = match
+		self.restrictConsole = restrictConsole
+		self.restrictChannel = restrictChannel
+		self.restrictPrivateMessage = restrictPrivateMessage
+	}
 }

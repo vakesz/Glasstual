@@ -50,23 +50,6 @@ final class PromptLocalizationMigrationTests: XCTestCase {
 			),
 			"You have clicked a link that will connect you to “irc.example.com“ and join the channels: #swift, #macos"
 		)
-		XCTAssertEqual(
-			PromptStrings.Plugin.loadApprovalBody(
-				displayName: "Example",
-				bundleIdentifier: "com.example.plugin",
-				teamIdentifier: "TEAMID",
-				location: "~/Library/Application Support/Glasstual/Plugins/Example.bundle"
-			),
-			"""
-			The plugin “Example” has not been loaded before.
-
-			Bundle identifier: com.example.plugin
-			Team ID: TEAMID
-			Location: ~/Library/Application Support/Glasstual/Plugins/Example.bundle
-
-			\(pluginSecurityNotice)
-			"""
-		)
 	}
 
 	func testTransportSecurityUsesTypedCipherStatus() {
