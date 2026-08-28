@@ -177,7 +177,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 
 	private func prepareInitialState() {
 		inputHistory = InputHistory(window: self)
-		keyEventHandler = KeyEventHandler(target: self)
+		keyEventHandler = KeyEventHandler()
 		nicknameCompletionStatus = NicknameCompletionStatus(window: self)
 		updateAppearance()
 	}

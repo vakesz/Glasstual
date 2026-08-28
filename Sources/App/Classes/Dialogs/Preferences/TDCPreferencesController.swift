@@ -179,8 +179,8 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 			.fileTransferSendFailed, .fileTransferReceiveFailed,
 		]
 		notificationController.notifications = eventTypes.map { eventType in
-			guard let eventType else { return " " }
-			return PreferencesNotificationConfiguration.object(withEventType: eventType)
+			guard let eventType else { return .separator }
+			return .configuration(PreferencesNotificationConfiguration(eventType: eventType))
 		}
 	}
 

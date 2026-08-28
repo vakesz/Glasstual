@@ -14,6 +14,8 @@
 import AppKit
 
 public enum KeyCode: UInt16, Sendable {
+	/// `kVK_ANSI_A`. Zero is a real key code, not "no key".
+	case keyA = 0x00
 	case returnKey = 0x24
 	case tab = 0x30
 	case space = 0x31
@@ -31,73 +33,18 @@ public enum KeyCode: UInt16, Sendable {
 	case upArrow = 0x7E
 }
 
-@objc(TLOKeyEventHandler)
+/// Maps keyboard shortcuts onto closures. Registration used to also accept a
+/// selector to send to an `NSObject` target through the runtime; nothing but
+/// its own tests used that, and the closure form is checked by the compiler.
 @MainActor
-public final class KeyEventHandler: NSObject {
+public final class KeyEventHandler {
 	public typealias Action = @MainActor (NSEvent) -> Void
 	private typealias DispatchAction = @MainActor (NSEvent) -> Bool
 
-	private weak var target: NSObject?
 	private var codeHandlerMap: [UInt: [UInt16: DispatchAction]] = [:]
 	private var characterHandlerMap: [UInt: [UInt16: DispatchAction]] = [:]
 
-	@available(*, unavailable)
-	override public convenience init() {
-		fatalError("Use init(target:)")
-	}
-
-	@objc(initWithTarget:)
-	public init(target: Any) {
-		guard let target = target as? NSObject else {
-			preconditionFailure("Key event targets must inherit from NSObject")
-		}
-
-		self.target = target
-
-		super.init()
-	}
-
-	@objc(setKeyHandlerTarget:)
-	public func setKeyHandlerTarget(_ target: Any) {
-		guard let target = target as? NSObject else {
-			preconditionFailure("Key event targets must inherit from NSObject")
-		}
-
-		self.target = target
-	}
-
-	@objc(registerSelector:key:modifiers:)
-	public func register(_ selector: Selector, key keyCode: UInt, modifiers: UInt) {
-		guard let keyCode = UInt16(exactly: keyCode) else {
-			preconditionFailure("Key code must fit in UInt16")
-		}
-
-		register(keyCode: keyCode, modifiers: modifiers) { [weak self] event in
-			self?.invoke(selector, event: event) ?? false
-		}
-	}
-
-	@objc(registerSelector:character:modifiers:)
-	public func register(_ selector: Selector, character: UInt16, modifiers: UInt) {
-		register(characterCode: character, modifiers: modifiers) { [weak self] event in
-			self?.invoke(selector, event: event) ?? false
-		}
-	}
-
-	@objc(registerSelector:characters:modifiers:)
-	public func register(_ selector: Selector, characters characterRange: NSRange, modifiers: UInt) {
-		let upperBound = NSMaxRange(characterRange)
-
-		for value in characterRange.location ..< upperBound {
-			guard let character = UInt16(exactly: value) else {
-				continue
-			}
-
-			register(characterCode: character, modifiers: modifiers) { [weak self] event in
-				self?.invoke(selector, event: event) ?? false
-			}
-		}
-	}
+	public init() {}
 
 	public func register(
 		key: KeyCode,
@@ -125,7 +72,6 @@ public final class KeyEventHandler: NSObject {
 		}
 	}
 
-	@objc(processKeyEvent:)
 	public func processKeyEvent(_ event: NSEvent) -> Bool {
 		if let inputClient = NSTextInputContext.current?.client,
 		   inputClient.markedRange().length > 0
@@ -157,18 +103,5 @@ public final class KeyEventHandler: NSObject {
 	private func register(characterCode: UInt16, modifiers: UInt, perform action: @escaping DispatchAction) {
 		precondition(characterCode != 0)
 		characterHandlerMap[modifiers, default: [:]][characterCode] = action
-	}
-
-	private func invoke(_ selector: Selector, event: NSEvent) -> Bool {
-		guard let target else {
-			return false
-		}
-
-		guard target.responds(to: selector) else {
-			return false
-		}
-
-		target.perform(selector, with: event)
-		return true
 	}
 }

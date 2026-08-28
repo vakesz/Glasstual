@@ -96,7 +96,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 	}
 
 	private func prepareInitialState() {
-		keyEventHandler = KeyEventHandler(target: self)
+		keyEventHandler = KeyEventHandler()
 
 		delegate = self
 
@@ -113,26 +113,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 	}
 
 	// MARK: - Keyboard Shortcuts
-
-	@objc(setKeyHandlerTarget:)
-	public func setKeyHandlerTarget(_ target: Any) {
-		keyEventHandler.setKeyHandlerTarget(target)
-	}
-
-	@objc(registerSelector:key:modifiers:)
-	public func register(_ selector: Selector, key keyCode: UInt, modifiers: UInt) {
-		keyEventHandler.register(selector, key: keyCode, modifiers: modifiers)
-	}
-
-	@objc(registerSelector:character:modifiers:)
-	public func register(_ selector: Selector, character: UInt16, modifiers: UInt) {
-		keyEventHandler.register(selector, character: character, modifiers: modifiers)
-	}
-
-	@objc(registerSelector:characters:modifiers:)
-	public func register(_ selector: Selector, characters characterRange: NSRange, modifiers: UInt) {
-		keyEventHandler.register(selector, characters: characterRange, modifiers: modifiers)
-	}
 
 	public func register(
 		key: KeyCode,

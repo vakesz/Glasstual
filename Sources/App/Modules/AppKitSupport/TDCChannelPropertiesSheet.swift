@@ -130,26 +130,15 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	private func setupNotificationsController() {
 		notificationsController.allowsMixedState = true
 
-		var notifications: [Any] = []
-		notifications.append(
-			ChannelNotificationConfiguration(eventType: .highlight, in: self)
-		)
-		notifications.append(" ")
-		notifications.append(
-			ChannelNotificationConfiguration(eventType: .channelMessage, in: self)
-		)
-		notifications.append(
-			ChannelNotificationConfiguration(eventType: .channelNotice, in: self)
-		)
-		notifications.append(" ")
-		notifications.append(
-			ChannelNotificationConfiguration(eventType: .userJoined, in: self)
-		)
-		notifications.append(
-			ChannelNotificationConfiguration(eventType: .userParted, in: self)
-		)
-
-		notificationsController.notifications = notifications
+		notificationsController.notifications = [
+			.configuration(ChannelNotificationConfiguration(eventType: .highlight, in: self)),
+			.separator,
+			.configuration(ChannelNotificationConfiguration(eventType: .channelMessage, in: self)),
+			.configuration(ChannelNotificationConfiguration(eventType: .channelNotice, in: self)),
+			.separator,
+			.configuration(ChannelNotificationConfiguration(eventType: .userJoined, in: self)),
+			.configuration(ChannelNotificationConfiguration(eventType: .userParted, in: self)),
+		]
 		notificationsController.attachToView(contentViewNotificationsHost)
 	}
 
