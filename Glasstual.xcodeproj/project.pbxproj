@@ -480,6 +480,7 @@
 		875916B1EF868BD1D7144AA1 /* IRCClientNetsplitSummaries.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80E26470F1DF2924F087F9D4 /* IRCClientNetsplitSummaries.swift */; };
 		87A51A2A96F0BE62AC561951 /* IRCClientUserTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81443B60FA73AFB295D3E00 /* IRCClientUserTracking.swift */; };
 		87EA7AB83937C571725BE207 /* ServerNicknameChangeValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CAC03CCCF4F1F28D58F13AA /* ServerNicknameChangeValidationTests.swift */; };
+		8812468F2AA6CEA002A519FB /* IRCChannelModeSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD217CE75374675BBDE8E2A /* IRCChannelModeSymbol.swift */; };
 		887D78D40487177954D9BF93 /* IRCISupportCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6CCF1C44676320AE6EDF3 /* IRCISupportCorpusTests.swift */; };
 		88A2AE7ACF7935C0431C4598 /* IRCChannelConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0661B0ADDB86CFC6D643E121 /* IRCChannelConfig.swift */; };
 		89155BCAE6553BB7CEC69B18 /* Preferences+Internal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71932BD7BF990BB25B273EEB /* Preferences+Internal.swift */; };
@@ -1601,6 +1602,7 @@
 		5F2D55C660495CCFDE133A72 /* InlineContentModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineContentModule.swift; sourceTree = "<group>"; };
 		5F38C78F38E163ECD920658D /* IRCConnectionErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCConnectionErrors.swift; sourceTree = "<group>"; };
 		5FC7585C149C4943722F586E /* TXMenuActionCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TXMenuActionCoordinatorTests.swift; sourceTree = "<group>"; };
+		5FD217CE75374675BBDE8E2A /* IRCChannelModeSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannelModeSymbol.swift; sourceTree = "<group>"; };
 		6015F437CA3CC31A469D84D7 /* IRCAddressBookMatchCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCAddressBookMatchCache.swift; sourceTree = "<group>"; };
 		6075AB38361BDCAADCD8C956 /* TLOLinkParserCorpusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLOLinkParserCorpusTests.swift; sourceTree = "<group>"; };
 		61007C54B3B72295EFDB82FF /* Inline Content Loader.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = "Inline Content Loader.xpc"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3441,6 +3443,7 @@
 			children = (
 				8590BEA704D7666D960790E8 /* IRCChannelModeKind.swift */,
 				20076FD04C3F14D4900AE070 /* IRCChannelModeState.swift */,
+				5FD217CE75374675BBDE8E2A /* IRCChannelModeSymbol.swift */,
 				36A9AC0CD8DA4239A7032940 /* IRCClientModeChanges.swift */,
 				40F4A865B705DC84F8E04A07 /* IRCModeInfo.swift */,
 				B3E952F7833FE6766219F6A9 /* IRCModeParser.swift */,
@@ -5646,6 +5649,7 @@
 				B9C35EF84A492B54858B8376 /* IRCChannelMemberListController.swift in Sources */,
 				553301D93FF83FEB185ECD16 /* IRCChannelModeKind.swift in Sources */,
 				0A9005196AAC1A142C613E43 /* IRCChannelModeState.swift in Sources */,
+				8812468F2AA6CEA002A519FB /* IRCChannelModeSymbol.swift in Sources */,
 				991DA6E8E0AAB26D871992D2 /* IRCChannelUser.swift in Sources */,
 				C33C09A2C961A090C7DE3B68 /* IRCClient.swift in Sources */,
 				560A4089EE3BA82418B48590 /* IRCClientAddressBook.swift in Sources */,

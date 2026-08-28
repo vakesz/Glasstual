@@ -91,7 +91,8 @@ public extension IRCClient {
 		guard let channel = findChannel(channelName), channel.isChannel else { return }
 		if !message.isPrintOnlyMessage, let modeInfo = channel.modeInfo {
 			for mode in modeInfo.updateModes(modeString) where mode.isModeForChangingMemberMode(on: self) {
-				channel.changeMember(mode.modeParameter ?? "", mode: mode.modeSymbol, value: mode.modeIsSet)
+				guard let symbol = ChannelModeSymbol(mode.modeSymbol) else { continue }
+				channel.changeMember(mode.modeParameter ?? "", mode: symbol, value: mode.modeIsSet)
 			}
 		}
 

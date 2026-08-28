@@ -231,6 +231,8 @@ extension IRCClient {
 			modes += mode
 			nameStart = rawName.index(after: nameStart)
 		}
+		/* The prefixes arrive in the server's rank order, so the set built from
+		 them is already ordered. */
 		let hostmask = String(rawName[nameStart...])
 		let parsed = (hostmask as NSString).hostmask(on: self)
 		let nickname = parsed?.nickname ?? hostmask
@@ -250,7 +252,7 @@ extension IRCClient {
 		} else {
 			mutableMember = ChannelUserMutable(user: user)
 		}
-		mutableMember.modes = modes
+		mutableMember.modes = ChannelModeSymbolSet(letters: modes)
 		channel.memberInfo?.addMember(mutableMember, checkForDuplicates: true)
 	}
 

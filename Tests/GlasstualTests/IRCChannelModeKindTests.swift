@@ -115,3 +115,79 @@ struct IRCCapabilityBitTests {
 		#expect(Set(named.map(\.rawValue)).count == named.count)
 	}
 }
+
+/// A member's modes are an ordered set whose order comes from ISUPPORT
+/// `PREFIX`, not from the letters themselves.
+struct ChannelModeSymbolSetTests {
+	/// Ranks matching the usual `PREFIX=(qaohv)~&@%+`, highest first.
+	private func rank(_ symbol: ChannelModeSymbol) -> UInt {
+		let order: [Character] = ["q", "a", "o", "h", "v"]
+
+		guard let index = order.firstIndex(of: symbol.character) else {
+			return 0
+		}
+
+		return UInt(order.count - index)
+	}
+
+	@Test
+	func readsAndWritesARunOfLetters() {
+		#expect(ChannelModeSymbolSet(letters: "ov").letters == "ov")
+		#expect(ChannelModeSymbolSet().isEmpty)
+	}
+
+	@Test
+	func dropsARepeatedLetter() {
+		#expect(ChannelModeSymbolSet(letters: "oov").letters == "ov")
+	}
+
+	@Test
+	func marksTheMemberWithTheHighestRankedMode() {
+		#expect(ChannelModeSymbolSet(letters: "ov").highest == ChannelModeSymbol("o"))
+		#expect(ChannelModeSymbolSet().highest == nil)
+	}
+
+	@Test
+	func insertsAModeWhereItsRankPutsIt() {
+		var modes = ChannelModeSymbolSet(letters: "ov")
+		modes.insert(ChannelModeSymbol("q"), rankedBy: rank)
+		#expect(modes.letters == "qov")
+
+		modes.insert(ChannelModeSymbol("h"), rankedBy: rank)
+		#expect(modes.letters == "qohv")
+	}
+
+	@Test
+	func leavesAModeTheMemberAlreadyHoldsWhereItIs() {
+		var modes = ChannelModeSymbolSet(letters: "ov")
+		modes.insert(ChannelModeSymbol("o"), rankedBy: rank)
+
+		#expect(modes.letters == "ov")
+	}
+
+	/// A mode the server never advertised ranks zero and sorts to the end
+	/// rather than disappearing.
+	@Test
+	func keepsAnUnrankedModeAtTheEnd() {
+		var modes = ChannelModeSymbolSet(letters: "ov")
+		modes.insert(ChannelModeSymbol("Z"), rankedBy: rank)
+
+		#expect(modes.letters == "ovZ")
+	}
+
+	@Test
+	func removesAMode() {
+		var modes = ChannelModeSymbolSet(letters: "ov")
+		modes.remove(ChannelModeSymbol("o"))
+
+		#expect(modes.letters == "v")
+		#expect(modes.contains(ChannelModeSymbol("o")) == false)
+	}
+
+	@Test
+	func onlyReadsASingleLetterAsASymbol() {
+		#expect(ChannelModeSymbol("o") == ChannelModeSymbol("o" as Character))
+		#expect(ChannelModeSymbol("ov") == nil)
+		#expect(ChannelModeSymbol("") == nil)
+	}
+}

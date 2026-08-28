@@ -568,8 +568,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		)
 	}
 
-	@objc(changeMember:mode:value:)
-	public func changeMember(_ nickname: String, mode: String, value: Bool) {
+	public func changeMember(_ nickname: String, mode: ChannelModeSymbol, value: Bool) {
 		memberInfo?.changeMember(nickname, mode: mode, value: value)
 	}
 
