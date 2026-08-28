@@ -129,8 +129,7 @@ private extension IRCClient {
 			if shouldPrint {
 				printErrorReply(message, in: channel, withSequence: 2)
 			}
-		}
-		if shouldPrint {
+		} else if shouldPrint {
 			printErrorReply(message)
 		}
 		return true
