@@ -2659,16 +2659,16 @@ Gw
             </constraints>
             <point key="canvasLocation" x="582" y="6373"/>
         </customView>
-        <arrayController objectClassName="IRCAddressBookEntry" selectsInsertedObjects="NO" avoidsEmptySelection="NO" automaticallyRearrangesObjects="YES" id="aez-lt-zBV">
+        <arrayController objectClassName="NSObject" selectsInsertedObjects="NO" avoidsEmptySelection="NO" automaticallyRearrangesObjects="YES" id="aez-lt-zBV">
             <classReference key="objectClass" className="IRCAddressBookEntry"/>
         </arrayController>
-        <arrayController objectClassName="IRCChannelConfig" selectsInsertedObjects="NO" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" automaticallyRearrangesObjects="YES" id="XlX-J4-ZJt">
+        <arrayController objectClassName="NSObject" selectsInsertedObjects="NO" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" automaticallyRearrangesObjects="YES" id="XlX-J4-ZJt">
             <classReference key="objectClass" className="IRCChannelConfig"/>
         </arrayController>
-        <arrayController objectClassName="IRCHighlightMatchCondition" selectsInsertedObjects="NO" avoidsEmptySelection="NO" automaticallyRearrangesObjects="YES" id="XVW-tl-Aro">
+        <arrayController objectClassName="NSObject" selectsInsertedObjects="NO" avoidsEmptySelection="NO" automaticallyRearrangesObjects="YES" id="XVW-tl-Aro">
             <classReference key="objectClass" className="IRCHighlightMatchCondition"/>
         </arrayController>
-        <arrayController objectClassName="IRCServer" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" automaticallyRearrangesObjects="YES" id="Wea-hF-mxO">
+        <arrayController objectClassName="NSObject" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" automaticallyRearrangesObjects="YES" id="Wea-hF-mxO">
             <classReference key="objectClass" className="IRCServer"/>
         </arrayController>
     </objects>
