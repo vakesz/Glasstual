@@ -66,7 +66,7 @@ extension InlineContentPayload {
 		let basePath = resourcesTemporaryLocation() as NSString
 		let fileManager = FileManager.default
 
-		func copyOperation(_ resourceURL: URL) -> String {
+		func copyOperation(_ resourceURL: URL) -> String? {
 			guard resourceURL.isFileURL else {
 				return resourceURL.absoluteString
 			}
@@ -89,12 +89,16 @@ extension InlineContentPayload {
 				payloadLogger.error(
 					"Copy operation for '\(tildePath, privacy: .public)' failed with error: \(error.localizedDescription, privacy: .public)"
 				)
+
+				/* Returning the destination anyway hands WebKit a path to a
+				 file that does not exist. */
+				return nil
 			}
 
 			return destinationPath
 		}
 
-		return resources.map { copyOperation($0) }
+		return resources.compactMap { copyOperation($0) }
 	}
 
 	@objc public var javaScriptObject: [String: Any] {
