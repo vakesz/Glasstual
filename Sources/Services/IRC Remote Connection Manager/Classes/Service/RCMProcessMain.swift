@@ -97,7 +97,7 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	func exportSecureConnectionInformation(_ completionBlock: SecureConnectionInformationReceiver) {
 		/* The caller blocks on this reply, so it has to be invoked on every path. */
 		guard let connection = requireConnection(#function) else {
-			completionBlock(nil, tlsProtocolVersionUnknown, tlsCipherSuiteUnknown, [], nil)
+			completionBlock(.none)
 			return
 		}
 
@@ -105,7 +105,15 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 			try connection.exportSecureConnectionInformation(to: completionBlock)
 		} catch {
 			RCMLog.connection.error("Unable to export secure connection information: \(error.localizedDescription)")
-			completionBlock(nil, tlsProtocolVersionUnknown, tlsCipherSuiteUnknown, [], error.localizedDescription)
+			completionBlock(
+				SecureConnectionInformation(
+					policyName: nil,
+					protocolVersion: tlsProtocolVersionUnknown,
+					cipherSuite: tlsCipherSuiteUnknown,
+					certificateChain: [],
+					trustFailureDescription: error.localizedDescription
+				)
+			)
 		}
 	}
 

@@ -59,10 +59,10 @@ final class IRCISupportInfoTests: XCTestCase {
 	func testChannelModesAreParsedIntoParameterClasses() {
 		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst")
 
-		XCTAssertEqual(supportInfo.channelModes["b"], 1)
-		XCTAssertEqual(supportInfo.channelModes["k"], 2)
-		XCTAssertEqual(supportInfo.channelModes["l"], 3)
-		XCTAssertEqual(supportInfo.channelModes["t"], 4)
+		XCTAssertEqual(supportInfo.channelModeKinds["b"], .list)
+		XCTAssertEqual(supportInfo.channelModeKinds["k"], .setting)
+		XCTAssertEqual(supportInfo.channelModeKinds["l"], .settingWhenSet)
+		XCTAssertEqual(supportInfo.channelModeKinds["t"], .flag)
 
 		XCTAssertTrue(supportInfo.modeHasParameter("b", whenModeIsSet: true))
 		XCTAssertTrue(supportInfo.modeHasParameter("b", whenModeIsSet: false))
@@ -77,8 +77,8 @@ final class IRCISupportInfoTests: XCTestCase {
 	func testPrefixIsParsedInRankOrder() {
 		let supportInfo = supportInfoWithConfiguration("PREFIX=(qaohv)~&@%+")
 
-		XCTAssertEqual(supportInfo.userModeSymbols[IRCISupportUserModes.symbolsKey], ["q", "a", "o", "h", "v"])
-		XCTAssertEqual(supportInfo.userModeSymbols[IRCISupportUserModes.charactersKey], ["~", "&", "@", "%", "+"])
+		XCTAssertEqual(supportInfo.userModePrefixPairs.map(\.modeSymbol), ["q", "a", "o", "h", "v"])
+		XCTAssertEqual(supportInfo.userModePrefixPairs.map(\.character), ["~", "&", "@", "%", "+"])
 		XCTAssertEqual(supportInfo.modeSymbol(forUserPrefix: "@"), "o")
 		XCTAssertEqual(supportInfo.userPrefix(forModeSymbol: "v"), "+")
 
@@ -156,8 +156,8 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "PRIVMSG"), 4)
 		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "notice"), 3)
 		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "join"), 0)
-		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: "b"), 60)
-		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: "I"), 60)
+		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("b")), 60)
+		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("I")), 60)
 
 		let targets = ["a", "b", "c", "d", "e"]
 

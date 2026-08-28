@@ -38,14 +38,6 @@
 
 import Foundation
 
-private enum ModeParameterPolicy: UInt {
-	case alwaysList = 1
-	case alwaysSetting = 2
-	case whenSet = 3
-	case never = 4
-	case userPrefix = 100
-}
-
 @objc(IRCModeParser)
 public final class ModeParser: NSObject {
 	@available(*, unavailable)
@@ -53,8 +45,10 @@ public final class ModeParser: NSObject {
 		fatalError("ModeParser is a static namespace")
 	}
 
-	@objc(parseModeString:channelModes:)
-	public static func parse(_ modeString: String, channelModes: [String: NSNumber]) -> [ModeInfo] {
+	public static func parse(
+		_ modeString: String,
+		channelModeKinds: [Character: ChannelModeKind]
+	) -> [ModeInfo] {
 		let tokens = modeString.split(whereSeparator: { $0.isWhitespace }).map(String.init)
 		var tokenIndex = 0
 		var modeIsSet = false
@@ -77,19 +71,17 @@ public final class ModeParser: NSObject {
 				case "-":
 					modeIsSet = false
 				default:
-					let modeSymbol = String(character)
+					let policy = channelModeKinds[character]?.parameterPolicy ?? .never
 					var modeParameter: String?
 
-					if modeHasParameter(modeSymbol, whenSet: modeIsSet, channelModes: channelModes),
-					   tokenIndex < tokens.count
-					{
+					if policy.requiresParameter(whenModeIsSet: modeIsSet), tokenIndex < tokens.count {
 						modeParameter = tokens[tokenIndex]
 						tokenIndex += 1
 					}
 
 					modes.append(
 						ModeInfo(
-							modeSymbol: modeSymbol,
+							modeSymbol: String(character),
 							modeIsSet: modeIsSet,
 							modeParameter: modeParameter
 						)
@@ -99,26 +91,5 @@ public final class ModeParser: NSObject {
 		}
 
 		return modes
-	}
-
-	private static func modeHasParameter(
-		_ modeSymbol: String,
-		whenSet: Bool,
-		channelModes: [String: NSNumber]
-	) -> Bool {
-		guard let rawPolicy = channelModes[modeSymbol]?.uintValue,
-		      let policy = ModeParameterPolicy(rawValue: rawPolicy)
-		else {
-			return false
-		}
-
-		switch policy {
-		case .alwaysList, .alwaysSetting, .userPrefix:
-			return true
-		case .whenSet:
-			return whenSet
-		case .never:
-			return false
-		}
 	}
 }

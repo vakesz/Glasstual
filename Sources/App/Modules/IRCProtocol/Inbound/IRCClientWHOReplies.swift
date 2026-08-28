@@ -129,7 +129,7 @@ extension IRCClient {
 			}
 		} else {
 			let member = ChannelUserMutable(user: finalUser)
-			member.modes = parsedFlags.userModes
+			member.modes = ChannelModeSymbolSet(letters: parsedFlags.userModes)
 			channel.memberInfo?.addMember(member)
 		}
 

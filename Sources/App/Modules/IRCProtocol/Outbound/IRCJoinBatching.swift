@@ -86,7 +86,7 @@ enum IRCJoinBatching {
 		for targets: [Target],
 		maximumLineLength: Int = 0,
 		maximumTargets: UInt = 0,
-		channelLimits: [String: UInt] = [:]
+		channelLimits: [Character: UInt] = [:]
 	) -> [Batch] {
 		let budget = lineBudget(maximumLineLength: maximumLineLength)
 		let targetCap = maximumTargets == 0 ? Int.max : Int(maximumTargets)
@@ -120,12 +120,12 @@ enum IRCJoinBatching {
 		for entries: [(name: String, key: String)],
 		budget: Int,
 		targetCap: Int,
-		channelLimits: [String: UInt]
+		channelLimits: [Character: UInt]
 	) -> [Batch] {
 		var result: [Batch] = []
 		var current = Batch(channels: [], keys: [])
 		var currentLength = 0
-		var countByPrefix: [String: Int] = [:]
+		var countByPrefix: [Character: Int] = [:]
 
 		func flush() {
 			guard current.channels.isEmpty == false else { return }
@@ -136,8 +136,10 @@ enum IRCJoinBatching {
 		}
 
 		for entry in entries {
-			let prefix = entry.name.first.map(String.init) ?? ""
-			let prefixLimit = channelLimits[prefix].map { Int($0) } ?? Int.max
+			// A nameless entry has no prefix, so no per-prefix limit applies.
+			let prefix = entry.name.first
+			let prefixLimit = prefix.flatMap { channelLimits[$0] }.map { Int($0) } ?? Int.max
+			let prefixCount = prefix.map { countByPrefix[$0, default: 0] } ?? 0
 			// One comma in the channel list, plus one in the key list when
 			// this batch carries keys.
 			let separators = entry.key.isEmpty ? 1 : 2
@@ -146,7 +148,7 @@ enum IRCJoinBatching {
 			if current.channels.isEmpty == false,
 			   currentLength + separators + entryLength > budget
 			   || current.channels.count >= targetCap
-			   || countByPrefix[prefix, default: 0] >= prefixLimit
+			   || prefixCount >= prefixLimit
 			{
 				flush()
 			}
@@ -159,7 +161,9 @@ enum IRCJoinBatching {
 			if entry.key.isEmpty == false {
 				current.keys.append(entry.key)
 			}
-			countByPrefix[prefix, default: 0] += 1
+			if let prefix {
+				countByPrefix[prefix, default: 0] += 1
+			}
 		}
 		flush()
 

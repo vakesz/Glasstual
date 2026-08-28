@@ -52,8 +52,8 @@ struct IRCClientTextEncodingCorpusTests {
 		requiresUTF8: Bool = false
 	) -> IRCTextEncodingPolicy {
 		IRCTextEncodingPolicy(
-			primary: primary.rawValue,
-			fallback: fallback.rawValue,
+			primary: primary,
+			fallback: fallback,
 			requiresUTF8: requiresUTF8
 		)
 	}
@@ -197,8 +197,8 @@ struct IRCClientTextEncodingClientCorpusTests {
 	func defaultsToUTF8WithALatin1Fallback() {
 		let client = GLTTestClient()
 
-		#expect(client.effectivePrimaryEncoding == String.Encoding.utf8.rawValue)
-		#expect(client.effectiveFallbackEncoding == String.Encoding.isoLatin1.rawValue)
+		#expect(client.effectivePrimaryEncoding == .utf8)
+		#expect(client.effectiveFallbackEncoding == .isoLatin1)
 	}
 
 	@Test
@@ -208,8 +208,8 @@ struct IRCClientTextEncodingClientCorpusTests {
 			"fallbackEncoding": String.Encoding.ascii.rawValue,
 		])
 
-		#expect(client.effectivePrimaryEncoding == String.Encoding.isoLatin1.rawValue)
-		#expect(client.effectiveFallbackEncoding == String.Encoding.ascii.rawValue)
+		#expect(client.effectivePrimaryEncoding == .isoLatin1)
+		#expect(client.effectiveFallbackEncoding == .ascii)
 	}
 
 	@Test
@@ -221,8 +221,8 @@ struct IRCClientTextEncodingClientCorpusTests {
 
 		client.supportInfo.processConfigurationData("UTF8ONLY")
 
-		#expect(client.effectivePrimaryEncoding == String.Encoding.utf8.rawValue)
-		#expect(client.effectiveFallbackEncoding == String.Encoding.utf8.rawValue)
+		#expect(client.effectivePrimaryEncoding == .utf8)
+		#expect(client.effectiveFallbackEncoding == .utf8)
 	}
 
 	@Test(arguments: ["hello", "h\u{00E9}llo", "\u{2713} check", "\u{65E5}\u{672C}\u{8A9E}"])

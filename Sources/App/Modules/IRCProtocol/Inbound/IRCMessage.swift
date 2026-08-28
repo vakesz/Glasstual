@@ -142,21 +142,6 @@ open nonisolated class Message: PortablePropertyObject {
 		nil
 	}
 
-	@objc(populateDefaultsPostflight)
-	override public func populateDefaultsPostflight() {
-		if commandStorage.isEmpty {
-			commandStorage = ""
-		}
-
-		if messageTagsStorage.isEmpty {
-			messageTagsStorage = [:]
-		}
-
-		if paramsStorage.isEmpty {
-			paramsStorage = []
-		}
-	}
-
 	@objc(paramAt:)
 	public func param(at index: UInt) -> String {
 		let index = Int(index)

@@ -121,26 +121,8 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		)
 
 		let remoteObjectInterface = NSXPCInterface(with: HistoricLogServerProtocol.self)
-		guard let replyClasses = NSSet(objects: NSArray.self, LogLineXPC.self) as? Set<AnyHashable> else {
-			assertionFailure("Unable to bridge the historic-log XPC reply classes")
+		guard HistoricLogInterface.configure(remoteObjectInterface) else {
 			return
-		}
-
-		let fetchSelectors = [
-			"fetchEntriesForView:ascending:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:",
-		]
-
-		for selectorName in fetchSelectors {
-			remoteObjectInterface.setClasses(
-				replyClasses,
-				for: NSSelectorFromString(selectorName),
-				argumentIndex: 0,
-				ofReply: true
-			)
 		}
 
 		serviceConnection.remoteObjectInterface = remoteObjectInterface

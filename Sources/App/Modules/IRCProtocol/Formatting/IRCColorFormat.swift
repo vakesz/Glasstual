@@ -349,7 +349,7 @@ public extension NSAttributedString {
 		with lineType: TVCLogLineType,
 		effectiveRange: NSRangePointer?
 	) -> String {
-		let encoding = String.Encoding(rawValue: client.effectivePrimaryEncoding)
+		let encoding = client.effectivePrimaryEncoding
 
 		var minimumLength: UInt = 1
 

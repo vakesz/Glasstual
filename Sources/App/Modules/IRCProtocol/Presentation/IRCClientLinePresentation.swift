@@ -251,22 +251,6 @@ public extension IRCClient {
 		      receivedAt: message.receivedAt)
 	}
 
-	@objc(printUnknownReply:)
-	func printUnknownReply(_ message: Message) {
-		printUnknownReply(message, in: nil)
-	}
-
-	@objc(printUnknownReply:inChannel:)
-	func printUnknownReply(_ message: Message, in channel: IRCChannel?) {
-		printUnknownReply(message, in: channel, withSequence: 1)
-	}
-
-	@objc(printUnknownReply:inChannel:withSequence:)
-	func printUnknownReply(_ message: Message, in channel: IRCChannel?, withSequence sequence: UInt) {
-		print(message.sequence(sequence), by: nil, in: channel, as: .debug, command: message.command,
-		      receivedAt: message.receivedAt)
-	}
-
 	@objc(printErrorReply:)
 	func printErrorReply(_ message: Message) {
 		printErrorReply(message, in: nil)

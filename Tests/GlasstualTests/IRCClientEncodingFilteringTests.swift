@@ -43,8 +43,8 @@ import XCTest
 final class IRCClientEncodingFilteringTests: XCTestCase {
 	func testUTF8OnlyOverridesConfiguredEncodings() {
 		let policy = IRCTextEncodingPolicy(
-			primary: String.Encoding.ascii.rawValue,
-			fallback: String.Encoding.isoLatin1.rawValue,
+			primary: .ascii,
+			fallback: .isoLatin1,
 			requiresUTF8: true
 		)
 
@@ -54,8 +54,8 @@ final class IRCClientEncodingFilteringTests: XCTestCase {
 
 	func testEncodingFallsBackWithoutLossBeforeASCII() {
 		let policy = IRCTextEncodingPolicy(
-			primary: String.Encoding.ascii.rawValue,
-			fallback: String.Encoding.utf8.rawValue,
+			primary: .ascii,
+			fallback: .utf8,
 			requiresUTF8: false
 		)
 
@@ -64,8 +64,8 @@ final class IRCClientEncodingFilteringTests: XCTestCase {
 
 	func testDecodingFallsBackToLatin1ForArbitraryBytes() {
 		let policy = IRCTextEncodingPolicy(
-			primary: String.Encoding.utf8.rawValue,
-			fallback: String.Encoding.ascii.rawValue,
+			primary: .utf8,
+			fallback: .ascii,
 			requiresUTF8: false
 		)
 

@@ -110,21 +110,18 @@ final class IRCClientShellPolicyTests: XCTestCase {
 	func testReachabilityDisconnectRequiresAllConditions() {
 		XCTAssertTrue(
 			IRCClientReachabilityPolicy.shouldDisconnect(
-				isReachable: false,
 				isLoggedIn: true,
 				disconnectWhenUnreachable: true
 			)
 		)
 		XCTAssertFalse(
 			IRCClientReachabilityPolicy.shouldDisconnect(
-				isReachable: true,
 				isLoggedIn: true,
-				disconnectWhenUnreachable: true
+				disconnectWhenUnreachable: false
 			)
 		)
 		XCTAssertFalse(
 			IRCClientReachabilityPolicy.shouldDisconnect(
-				isReachable: false,
 				isLoggedIn: false,
 				disconnectWhenUnreachable: true
 			)

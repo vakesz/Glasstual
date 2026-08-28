@@ -38,14 +38,39 @@
 
 import Foundation
 
+/// CTCP wraps an extended message between two `0x01` bytes. ACTION is the one
+/// extended message Glasstual both writes and reads, on the IRC connection and
+/// on a direct chat alike, so its framing is spelled out once here instead of
+/// at each of those sites.
 enum CTCPPayload {
+	static let delimiter = "\u{01}"
+
+	private static let actionCommand = "ACTION"
+
 	static func framed(command: String, text: String?, sanitizingLineBreaks: Bool) -> String {
 		var payload = text.map { "\(command) \($0)" } ?? command
 		if sanitizingLineBreaks {
 			payload = payload.replacingOccurrences(of: "\r", with: " ")
 			payload = payload.replacingOccurrences(of: "\n", with: " ")
 		}
-		return "\u{01}\(payload)\u{01}"
+		return "\(delimiter)\(payload)\(delimiter)"
+	}
+
+	static func action(_ message: String) -> String {
+		framed(command: actionCommand, text: message, sanitizingLineBreaks: false)
+	}
+
+	/// The message inside an ACTION frame, or `nil` when the line is not one.
+	/// A frame missing its closing delimiter still parses: some clients omit
+	/// it.
+	static func actionText(in line: String) -> String? {
+		let prefix = "\(delimiter)\(actionCommand) "
+		guard line.hasPrefix(prefix) else { return nil }
+		var body = line.dropFirst(prefix.count)
+		if body.hasSuffix(delimiter) {
+			body = body.dropLast()
+		}
+		return String(body)
 	}
 }
 

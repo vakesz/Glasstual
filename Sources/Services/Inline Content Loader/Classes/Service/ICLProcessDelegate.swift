@@ -41,17 +41,6 @@ import Foundation
 final class InlineContentProcessDelegate: NSObject, NSXPCListenerDelegate {
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
 		let exportedInterface = NSXPCInterface(with: InlineContentServerProtocol.self)
-		guard let allowedPluginLocationClasses = NSSet(objects: NSArray.self, NSURL.self) as? Set<AnyHashable>
-		else {
-			assertionFailure("Could not construct the XPC plugin-location class set")
-			return false
-		}
-		exportedInterface.setClasses(
-			allowedPluginLocationClasses,
-			for: #selector((any InlineContentServerProtocol).warmServiceByLoadingPlugins(atLocations:)),
-			argumentIndex: 0,
-			ofReply: false
-		)
 
 		connection.exportedInterface = exportedInterface
 		connection.remoteObjectInterface = NSXPCInterface(with: InlineContentClientProtocol.self)

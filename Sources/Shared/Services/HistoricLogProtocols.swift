@@ -112,3 +112,38 @@ protocol HistoricLogClientProtocol: AnyObject {
 	@objc(willDeleteUniqueIdentifiers:inView:)
 	func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewIdentifier: String)
 }
+
+enum HistoricLogInterface {
+	/// The five fetches that reply with an array. NSXPC derives an allowlist
+	/// from a declared class but not from a collection of one, so each has to
+	/// be told what its reply may contain. Both ends of the connection call
+	/// this, so the two allowlists cannot drift apart.
+	static func configure(_ interface: NSXPCInterface) -> Bool {
+		guard let replyClasses = NSSet(objects: NSArray.self, LogLineXPC.self) as? Set<AnyHashable> else {
+			assertionFailure("Unable to bridge the historic-log XPC reply classes")
+
+			return false
+		}
+
+		let fetchSelectors: [Selector] = [
+			#selector((any HistoricLogServerProtocol)
+				.fetchEntries(forView:ascending:fetchLimit:limitTo:withCompletionBlock:)),
+			#selector((any HistoricLogServerProtocol)
+				.fetchEntries(
+					forView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitTo:withCompletionBlock:
+				)),
+			#selector((any HistoricLogServerProtocol)
+				.fetchEntries(forView:beforeUniqueIdentifier:fetchLimit:limitTo:withCompletionBlock:)),
+			#selector((any HistoricLogServerProtocol)
+				.fetchEntries(forView:afterUniqueIdentifier:fetchLimit:limitTo:withCompletionBlock:)),
+			#selector((any HistoricLogServerProtocol)
+				.fetchEntries(forView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:)),
+		]
+
+		for selector in fetchSelectors {
+			interface.setClasses(replyClasses, for: selector, argumentIndex: 0, ofReply: true)
+		}
+
+		return true
+	}
+}

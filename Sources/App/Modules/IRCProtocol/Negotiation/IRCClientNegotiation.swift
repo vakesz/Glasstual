@@ -118,7 +118,7 @@ enum ClientNegotiationUtilities {
 
 extension IRCClient {
 	@objc(isBrokenIRCd_aka_Twitch) var isBrokenIRCdKnownAsTwitch: Bool {
-		serverAddress?.hasSuffix(".twitch.tv") ?? false
+		serverAddress?.hasSuffix(IRCServerQuirks.twitchAddressSuffix) ?? false
 	}
 
 	@objc var supportsAdvancedTracking: Bool {
@@ -173,28 +173,16 @@ extension IRCClient {
 		ClientWireUtilities.targetLooksLikeService(target)
 	}
 
-	func setCapabilityEnabled(_ capability: ClientIRCv3SupportedCapability) {
+	func enableCapability(_ capability: ClientIRCv3SupportedCapability) {
 		capabilities.formUnion(capability)
 	}
 
-	func enableCapability(_ capability: ClientIRCv3SupportedCapability) {
-		setCapabilityEnabled(capability)
-	}
-
-	func setCapabilityDisabled(_ capability: ClientIRCv3SupportedCapability) {
-		capabilities.subtract(capability)
-	}
-
 	func disableCapability(_ capability: ClientIRCv3SupportedCapability) {
-		setCapabilityDisabled(capability)
+		capabilities.subtract(capability)
 	}
 
 	public func isCapabilityEnabled(_ capability: ClientIRCv3SupportedCapability) -> Bool {
 		capabilities.contains(capability)
-	}
-
-	func capabilityIsEnabled(_ capability: ClientIRCv3SupportedCapability) -> Bool {
-		isCapabilityEnabled(capability)
 	}
 
 	private var capabilityRegistry: CapabilityRegistry {
@@ -204,10 +192,6 @@ extension IRCClient {
 	@objc(isCapabilitySupported:)
 	public func isCapabilitySupported(_ capability: String) -> Bool {
 		capabilityRegistry.isCapabilitySupported(capability)
-	}
-
-	@objc(pendingCapabilityRequests) public var queuedCapabilityRequests: [String] {
-		pendingCapabilityRequests
 	}
 
 	@objc public var enabledCapabilitiesStringValue: String {
@@ -268,18 +252,16 @@ extension IRCClient {
 		}
 
 		let connectedPort = socket?.config.serverPort ?? 0
-		var upgradePort: UInt16 = 0
 		let action = STSPolicyStore.shared.applyCapabilityValues(
 			parsed,
 			forHost: host,
 			connectedPort: connectedPort,
 			secured: isSecured,
-			certificateChainValidated: socket?.isSecuredWithValidatedCertificate ?? false,
-			upgradePort: &upgradePort
+			certificateChainValidated: socket?.isSecuredWithValidatedCertificate ?? false
 		)
 
 		switch action {
-		case .upgrade:
+		case let .upgrade(upgradePort):
 			guard performedSTSUpgrade == false, upgradePort > 0 else {
 				return
 			}
@@ -296,19 +278,16 @@ extension IRCClient {
 			}
 
 			disconnect()
-		case .stored:
-			let policyPort = STSPolicyStore.shared.policy(forHost: host)?.port ?? connectedPort
+		case let .stored(policyPort):
 			printDebugInformation(toConsole: IRCTransportSecurityStrings.storedPolicy(port: policyPort))
 		case .cleared:
 			printDebugInformation(toConsole: IRCTransportSecurityStrings.policyWithdrawn)
 		case .none:
 			break
-		@unknown default:
-			break
 		}
 	}
 
-	@MainActor @objc(sendNextCapability) public func sendNextQueuedCapability() {
+	@MainActor public func sendNextQueuedCapability() {
 		guard capabilityNegotiationIsPaused == false else {
 			return
 		}
@@ -370,12 +349,12 @@ extension IRCClient {
 		}
 
 		if enabled {
-			setCapabilityEnabled(capability.identifier)
+			enableCapability(capability.identifier)
 			if enabledCapabilityNames.contains(name) == false {
 				enabledCapabilityNames.append(name)
 			}
 		} else {
-			setCapabilityDisabled(capability.identifier)
+			disableCapability(capability.identifier)
 			enabledCapabilityNames.removeAll { $0 == name }
 		}
 
@@ -452,15 +431,10 @@ extension IRCClient {
 		)
 	}
 
-	@objc(selectSASLMechanismFromOffered:)
-	func chooseSASLMechanism(fromOffered mechanisms: [String]) -> Bool {
+	func selectSASLMechanism(fromOffered mechanisms: [String]) -> Bool {
 		saslOfferedMechanisms = mechanisms
 		saslMechanism = nextSASLMechanism(from: mechanisms)
 		return saslMechanism != nil
-	}
-
-	func selectSASLMechanism(fromOffered mechanisms: [String]) -> Bool {
-		chooseSASLMechanism(fromOffered: mechanisms)
 	}
 
 	@MainActor private func receiveSASLAuthenticatePayload(_ payload: String) {
@@ -571,8 +545,8 @@ extension IRCClient {
 	/// Ends SASL after a success numeric that the SCRAM exchange did not back up.
 	@MainActor func abortUnverifiedSASLSuccess() {
 		abortSASLNegotiation(reason: IRCTransportSecurityStrings.scramServerSignatureMissing)
-		setCapabilityDisabled(.isInSASLNegotiation)
-		setCapabilityDisabled(.isIdentifiedWithSASL)
+		disableCapability(.isInSASLNegotiation)
+		disableCapability(.isIdentifiedWithSASL)
 		resumeQueuedCapabilityNegotiation()
 	}
 
@@ -583,8 +557,8 @@ extension IRCClient {
 		saslIncomingPayload = nil
 	}
 
-	@MainActor @objc(retrySASLNegotiationWithMechanisms:)
-	func retrySASL(withMechanisms mechanisms: [String]) -> Bool {
+	@MainActor
+	func retrySASLNegotiation(withMechanisms mechanisms: [String]) -> Bool {
 		if let saslMechanism,
 		   saslTriedMechanisms.contains(where: {
 		   	$0.caseInsensitiveCompare(saslMechanism) == .orderedSame
@@ -617,15 +591,15 @@ extension IRCClient {
 			return false
 		}
 
-		setCapabilityEnabled(.isInSASLNegotiation)
+		enableCapability(.isInSASLNegotiation)
 		sendCapabilityAuthenticate(saslMechanism)
 
 		return true
 	}
 
 	@objc func resetSASLNegotiation() {
-		setCapabilityDisabled(.isInSASLNegotiation)
-		setCapabilityDisabled(.isIdentifiedWithSASL)
+		disableCapability(.isInSASLNegotiation)
+		disableCapability(.isIdentifiedWithSASL)
 		saslScramClient = nil
 		saslIncomingPayload = nil
 	}
@@ -633,16 +607,6 @@ extension IRCClient {
 	@MainActor
 	func receiveCapabilityOrAuthenticationRequest(_ message: Message) {
 		handleCapabilityOrAuthenticationRequest(message)
-	}
-
-	@MainActor
-	func sendNextCapability() {
-		sendNextQueuedCapability()
-	}
-
-	@MainActor
-	func retrySASLNegotiation(withMechanisms mechanisms: [String]) -> Bool {
-		retrySASL(withMechanisms: mechanisms)
 	}
 
 	private func capabilityTokens(_ string: String) -> [String] {

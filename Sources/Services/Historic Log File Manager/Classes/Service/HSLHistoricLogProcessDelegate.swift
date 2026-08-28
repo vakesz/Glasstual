@@ -42,26 +42,8 @@ final class HistoricLogProcessDelegate: NSObject, NSXPCListenerDelegate {
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
 		let exportedInterface = NSXPCInterface(with: HistoricLogServerProtocol.self)
 
-		guard let replyClasses = NSSet(objects: NSArray.self, LogLineXPC.self) as? Set<AnyHashable> else {
-			assertionFailure("Unable to bridge the historic-log XPC reply classes")
+		guard HistoricLogInterface.configure(exportedInterface) else {
 			return false
-		}
-
-		let fetchSelectors = [
-			"fetchEntriesForView:ascending:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:",
-		]
-
-		for selectorName in fetchSelectors {
-			exportedInterface.setClasses(
-				replyClasses,
-				for: NSSelectorFromString(selectorName),
-				argumentIndex: 0,
-				ofReply: true
-			)
 		}
 
 		connection.exportedInterface = exportedInterface

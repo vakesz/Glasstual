@@ -334,7 +334,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 
 	@objc(sendAction:)
 	public func sendAction(_ message: String) {
-		sendLine(String(format: "%cACTION %@%c", 0x01, message, 0x01))
+		sendLine(CTCPPayload.action(message))
 	}
 
 	private func sendLine(_ line: String) {
@@ -409,20 +409,9 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		}
 
 		var isAction = false
-		let actionPrefix = String(format: "%cACTION ", 0x01)
 
-		if line.hasPrefix(actionPrefix) {
-			let prefixLength = actionPrefix.count
-			let suffixLength = line.hasSuffix(String(format: "%c", 0x01)) ? 1 : 0
-
-			if line.count > (prefixLength + suffixLength) {
-				let start = line.index(line.startIndex, offsetBy: prefixLength)
-				let end = line.index(line.endIndex, offsetBy: -suffixLength)
-				line = String(line[start ..< end])
-			} else {
-				line = ""
-			}
-
+		if let actionText = CTCPPayload.actionText(in: line) {
+			line = actionText
 			isAction = true
 		}
 

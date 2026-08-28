@@ -102,20 +102,15 @@ public final class STSPolicyStore: NSObject, @unchecked Sendable {
 		}
 	}
 
-	@objc(applyPolicyForHost:toPort:secured:)
-	public func applyPolicy(
-		forHost host: String,
-		toPort port: UnsafeMutablePointer<UInt16>,
-		secured: UnsafeMutablePointer<ObjCBool>
-	) -> Bool {
+	/// The endpoint a stored policy pins `host` to, or `nil` when there is no
+	/// policy. A stored policy always requires a secured connection, so the
+	/// port is the whole answer.
+	public func enforcedEndpoint(forHost host: String) -> STSPolicyEndpoint? {
 		guard let policy = policy(forHost: host) else {
-			return false
+			return nil
 		}
 
-		port.pointee = policy.port
-		secured.pointee = true
-
-		return true
+		return STSPolicyEndpoint(port: policy.port)
 	}
 
 	/// The longest an advertised policy is allowed to last.
@@ -124,23 +119,19 @@ public final class STSPolicyStore: NSObject, @unchecked Sendable {
 	/// host could pin it effectively forever.
 	public static let maximumPolicyDuration: TimeInterval = 365 * 24 * 60 * 60
 
-	@objc(applyCapabilityValues:forHost:connectedPort:secured:certificateChainValidated:upgradePort:)
 	public func applyCapabilityValues(
 		_ values: STSCapabilityValues,
 		forHost host: String,
 		connectedPort: UInt16,
 		secured: Bool,
-		certificateChainValidated: Bool,
-		upgradePort: UnsafeMutablePointer<UInt16>?
+		certificateChainValidated: Bool
 	) -> IRCSTSPolicyAction {
 		if secured == false {
 			guard values.port > 0 else {
 				return .none
 			}
 
-			upgradePort?.pointee = values.port
-
-			return .upgrade
+			return .upgrade(port: values.port)
 		}
 
 		/* IRCv3 requires a policy offered over a connection whose certificate
@@ -174,7 +165,7 @@ public final class STSPolicyStore: NSObject, @unchecked Sendable {
 
 		setPolicy(policy, forHost: host)
 
-		return .stored
+		return .stored(port: policyPort)
 	}
 
 	private func key(forHost host: String) -> String {

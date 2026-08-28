@@ -24,8 +24,7 @@ struct STSPolicyTrustTests {
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
-			certificateChainValidated: false,
-			upgradePort: nil
+			certificateChainValidated: false
 		)
 
 		#expect(action == .none)
@@ -46,8 +45,7 @@ struct STSPolicyTrustTests {
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
-			certificateChainValidated: false,
-			upgradePort: nil
+			certificateChainValidated: false
 		)
 
 		#expect(action == .none)
@@ -62,11 +60,10 @@ struct STSPolicyTrustTests {
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
-			certificateChainValidated: true,
-			upgradePort: nil
+			certificateChainValidated: true
 		)
 
-		#expect(action == .stored)
+		#expect(action == .stored(port: 6697))
 		#expect(store.policy(forHost: "irc.example.net")?.port == 6697)
 	}
 
@@ -78,11 +75,10 @@ struct STSPolicyTrustTests {
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
-			certificateChainValidated: true,
-			upgradePort: nil
+			certificateChainValidated: true
 		)
 
-		#expect(action == .stored)
+		#expect(action == .stored(port: 6697))
 
 		let policy = try #require(store.policy(forHost: "irc.example.net"))
 		let cap = Date(timeIntervalSinceNow: STSPolicyStore.maximumPolicyDuration)
@@ -94,17 +90,14 @@ struct STSPolicyTrustTests {
 	@Test("A plaintext connection still upgrades regardless of validation")
 	func plaintextStillUpgrades() throws {
 		let store = store()
-		var upgradePort: UInt16 = 0
 		let action = try store.applyCapabilityValues(
 			values(["port=6697", "duration=300"]),
 			forHost: "irc.example.net",
 			connectedPort: 6667,
 			secured: false,
-			certificateChainValidated: false,
-			upgradePort: &upgradePort
+			certificateChainValidated: false
 		)
 
-		#expect(action == .upgrade)
-		#expect(upgradePort == 6697)
+		#expect(action == .upgrade(port: 6697))
 	}
 }

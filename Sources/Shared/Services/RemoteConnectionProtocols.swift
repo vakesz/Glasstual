@@ -39,13 +39,7 @@ import CocoaExtensions
 import Foundation
 import Security
 
-typealias SecureConnectionInformationReceiver = @Sendable (
-	String?,
-	tls_protocol_version_t,
-	tls_ciphersuite_t,
-	[Data],
-	String?
-) -> Void
+typealias SecureConnectionInformationReceiver = @Sendable (SecureConnectionInformation) -> Void
 
 /// Commands the application sends to the isolated connection host.
 @objc(RCMConnectionManagerServerProtocol)

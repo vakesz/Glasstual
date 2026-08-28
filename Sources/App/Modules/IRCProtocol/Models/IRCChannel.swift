@@ -53,10 +53,6 @@ public extension Notification.Name {
 /// the runtime name below.
 public typealias IRCChannel = Channel
 
-private enum ChannelStatusChange {
-	static let configurationNotification = Notification.Name.ircChannelConfigurationWasUpdated
-}
-
 @objc(IRCChannel)
 open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProtocol {
 	private static let logger = Logger(
@@ -121,10 +117,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		self
 	}
 
-	private var legacyTreeItem: IRCTreeItem {
-		self
-	}
-
 	@available(*, unavailable)
 	override public init() {
 		fatalError("Use init(config:)")
@@ -177,7 +169,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 		if fireChangedNotification {
 			NotificationCenter.default.post(
-				name: ChannelStatusChange.configurationNotification,
+				name: .ircChannelConfigurationWasUpdated,
 				object: self
 			)
 		}
@@ -230,7 +222,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			// here: it refuses a configuration whose channelName differs.
 			associatedClient?.updateStoredChannelList()
 			NotificationCenter.default.post(
-				name: ChannelStatusChange.configurationNotification,
+				name: .ircChannelConfigurationWasUpdated,
 				object: self
 			)
 		}
@@ -298,7 +290,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	@objc public var logFilePath: URL? {
-		guard let writePath = FileLogger.writePath(for: legacyTreeItem) else {
+		guard let writePath = FileLogger.writePath(for: self) else {
 			return nil
 		}
 
@@ -429,7 +421,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			window.close()
 		}
 
-		AppController.shared.mainWindow.inputHistoryManager().destroy(legacyTreeItem)
+		AppController.shared.mainWindow.inputHistoryManager().destroy(self)
 		viewController?.prepareForPermanentDestruction()
 	}
 
@@ -576,8 +568,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		)
 	}
 
-	@objc(changeMember:mode:value:)
-	public func changeMember(_ nickname: String, mode: String, value: Bool) {
+	public func changeMember(_ nickname: String, mode: ChannelModeSymbol, value: Bool) {
 		memberInfo?.changeMember(nickname, mode: mode, value: value)
 	}
 
@@ -589,11 +580,14 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo?.numberOfMembers ?? 0
 	}
 
-	@objc open var memberList: [ChannelUser]? {
-		memberInfo?.memberList
+	/// Empty rather than absent when the channel has no member list yet: a
+	/// channel nobody has joined has no members, which is not a different
+	/// answer from "no members".
+	@objc open var memberList: [ChannelUser] {
+		memberInfo?.memberList ?? []
 	}
 
-	open var channelMembers: [ChannelUser]? {
+	open var channelMembers: [ChannelUser] {
 		memberList
 	}
 

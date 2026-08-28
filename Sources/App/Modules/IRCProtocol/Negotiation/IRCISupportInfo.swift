@@ -48,11 +48,27 @@ import Synchronization
 
 nonisolated enum IRCISupportUserModes {
 	static let highestPrefixRank: UInt = 100
-	static let symbolsKey = "modeSymbols"
-	static let charactersKey = "characters"
 }
 
-private nonisolated let channelUserModeValue = 100
+/// One token of an ISUPPORT line as the server sent it.
+///
+/// A token is either `KEY=value` or a bare `KEY` standing for a feature the
+/// server merely announces. The cache keeps them verbatim so the raw-traffic
+/// view can replay the line the server actually sent.
+enum ISupportValue: Sendable, Equatable {
+	case flag
+	case text(String)
+}
+
+/// The two prefix modes every server is assumed to have until it says
+/// otherwise.
+private nonisolated let defaultUserModePrefixPairs: [(modeSymbol: String, character: String)] = [
+	(modeSymbol: "o", character: "@"), (modeSymbol: "v", character: "+"),
+]
+
+private nonisolated let defaultChannelModeKinds: [Character: ChannelModeKind] = [
+	"o": .userPrefix, "v": .userPrefix,
+]
 
 /** The ISUPPORT values a channel member needs in order to rank and mark itself.
  Members are ranked, compared and rendered off the main actor, so the client
@@ -89,7 +105,7 @@ nonisolated struct IRCUserPrefixTable: Sendable {
 	}
 
 	func casefold(_ string: String) -> String {
-		ISupportTokenParser.casefold(string, caseMapping: caseMapping.rawValue)
+		ISupportTokenParser.casefold(string, caseMapping: caseMapping)
 	}
 }
 
@@ -117,27 +133,19 @@ public class IRCISupportInfo: NSObject {
 	@objc public private(set) var extendedBanTypes: [String] = []
 	@objc public private(set) var extendedListTokens: [String] = []
 	@objc public private(set) var clientTagDenyList: [String] = []
-	@objc public private(set) var channelModes: [String: NSNumber] = [
-		"o": NSNumber(value: channelUserModeValue), "v": NSNumber(value: channelUserModeValue),
-	]
-	@objc public private(set) var channelLimits: [String: NSNumber] = [:]
-	@objc public private(set) var maximumListEntries: [String: NSNumber] = [:]
-	@objc public private(set) var maximumTargetsByCommand: [String: NSNumber] = [:]
-	/// Mode symbol / prefix character pairs from ISUPPORT `PREFIX=`.
-	///
-	/// Stored as pairs so the two halves can never disagree in length; the
-	/// dictionary form below is kept for the Objective-C facing surface.
-	private(set) var userModePrefixPairs: [(modeSymbol: String, character: String)] = [
-		(modeSymbol: "o", character: "@"), (modeSymbol: "v", character: "+"),
-	] {
+	/// What class the server put each channel mode in, and therefore whether
+	/// the mode carries a parameter.
+	public private(set) var channelModeKinds: [Character: ChannelModeKind] = defaultChannelModeKinds
+	/// `CHANLIMIT`, keyed by channel prefix.
+	public private(set) var channelLimits: [Character: UInt] = [:]
+	/// `MAXLIST`, keyed by list mode.
+	public private(set) var maximumListEntries: [Character: UInt] = [:]
+	/// `TARGMAX`, keyed by uppercased command name.
+	public private(set) var maximumTargetsByCommand: [String: UInt] = [:]
+	/// Mode symbol / prefix character pairs from ISUPPORT `PREFIX=`, stored as
+	/// pairs so the two halves can never disagree in length.
+	private(set) var userModePrefixPairs = defaultUserModePrefixPairs {
 		didSet { publishUserPrefixTable() }
-	}
-
-	@objc public var userModeSymbols: [String: [String]] {
-		[
-			IRCISupportUserModes.symbolsKey: userModePrefixPairs.map(\.modeSymbol),
-			IRCISupportUserModes.charactersKey: userModePrefixPairs.map(\.character),
-		]
 	}
 
 	@objc public private(set) var banExceptionModeSymbol: String?
@@ -162,7 +170,7 @@ public class IRCISupportInfo: NSObject {
 		client?.userPrefixes.withLock { $0 = table }
 	}
 
-	private var cachedConfiguration: [[String: Any]] = []
+	private var cachedConfiguration: [[String: ISupportValue]] = []
 
 	override public init() {
 		client = nil
@@ -192,10 +200,8 @@ public class IRCISupportInfo: NSObject {
 	@objc public func reset() {
 		cachedConfiguration = []
 		serverAddress = nil
-		userModePrefixPairs = [
-			(modeSymbol: "o", character: "@"), (modeSymbol: "v", character: "+"),
-		]
-		channelModes = ["o": NSNumber(value: channelUserModeValue), "v": NSNumber(value: channelUserModeValue)]
+		userModePrefixPairs = defaultUserModePrefixPairs
+		channelModeKinds = defaultChannelModeKinds
 
 		for key in Self.resettableSettings() {
 			resetSetting(key)
@@ -329,7 +335,7 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(removeCachedSetting:)
 	public func removeCachedSetting(_ key: String) {
-		var updatedConfiguration: [[String: Any]] = []
+		var updatedConfiguration: [[String: ISupportValue]] = []
 
 		for configuration in cachedConfiguration {
 			var configurationMutable = configuration
@@ -355,7 +361,7 @@ public class IRCISupportInfo: NSObject {
 		}
 
 		let client = client
-		var configuration: [String: Any] = [:]
+		var configuration: [String: ISupportValue] = [:]
 		let segments = LineParser.wireTokens(in: trimmed)
 
 		for segment in segments {
@@ -381,11 +387,7 @@ public class IRCISupportInfo: NSObject {
 				continue
 			}
 
-			if let segmentValue {
-				configuration[segmentKey] = segmentValue
-			} else {
-				configuration[segmentKey] = true
-			}
+			configuration[segmentKey] = segmentValue.map(ISupportValue.text) ?? .flag
 
 			if let segmentValue {
 				processValueSegment(segmentKey: segmentKey, segmentValue: segmentValue)
@@ -405,15 +407,17 @@ public class IRCISupportInfo: NSObject {
 			return 0
 		}
 
-		let prefix = String(channel.prefix(1))
+		guard let prefix = channel.first else {
+			return 0
+		}
 
-		return channelLimits[prefix]?.uintValue ?? 0
+		return channelLimits[prefix] ?? 0
 	}
 
 	@objc(maximumTargetsForCommand:)
 	public func maximumTargets(forCommand command: String) -> UInt {
 		if let limit = maximumTargetsByCommand[command.uppercased()] {
-			return limit.uintValue
+			return limit
 		}
 
 		return maximumTargets
@@ -424,9 +428,8 @@ public class IRCISupportInfo: NSObject {
 		ISupportTokenParser.chunkTargets(targets, limit: limit)
 	}
 
-	@objc(maximumListEntriesForModeSymbol:)
-	public func maximumListEntries(forModeSymbol modeSymbol: String) -> UInt {
-		maximumListEntries[modeSymbol]?.uintValue ?? 0
+	public func maximumListEntries(forModeSymbol modeSymbol: ChannelModeSymbol) -> UInt {
+		maximumListEntries[modeSymbol.character] ?? 0
 	}
 
 	@objc(extendedListSupportsToken:)
@@ -494,22 +497,18 @@ public class IRCISupportInfo: NSObject {
 		IRCISupportStrings.extendedBanDescription(type: type, argument: argument)
 	}
 
-	@objc(stringValueForConfiguration:)
-	public func stringValue(forConfiguration configuration: [String: Any]) -> String? {
+	func stringValue(forConfiguration configuration: [String: ISupportValue]) -> String? {
 		if configuration.isEmpty {
 			return nil
 		}
 
 		var stringValue = ""
-		let sortedKeys =
-			(configuration as NSDictionary).sortedDictionaryKeys as? [String] ?? configuration.keys.sorted()
 
-		for key in sortedKeys {
-			let value = configuration[key]
-
-			if let value = value as? String {
+		for key in configuration.keys.sorted() {
+			switch configuration[key] {
+			case let .text(value):
 				stringValue.append("\u{02}\(key)\u{02}=\(value) ")
-			} else {
+			case .flag, nil:
 				stringValue.append("\u{02}\(key) \u{02}")
 			}
 		}
@@ -519,27 +518,23 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(parseModes:)
 	public func parseModes(_ modeString: String) -> [ModeInfo] {
-		ModeParser.parse(modeString, channelModes: channelModes)
+		ModeParser.parse(modeString, channelModeKinds: channelModeKinds)
 	}
 
 	@objc(casefoldString:)
 	public func casefoldString(_ string: String) -> String {
-		ISupportTokenParser.casefold(string, caseMapping: caseMapping.rawValue)
+		ISupportTokenParser.casefold(string, caseMapping: caseMapping)
 	}
 
 	@objc(modeHasParameter:whenModeIsSet:)
 	public func modeHasParameter(_ modeSymbol: String, whenModeIsSet: Bool) -> Bool {
-		let modeIndex = (channelModes as NSDictionary).ce_unsignedInteger(forKey: modeSymbol)
-
-		if modeIndex == 1 || modeIndex == 2 || modeIndex == channelUserModeValue {
-			return true
+		guard let symbol = modeSymbol.first, modeSymbol.count == 1 else {
+			return false
 		}
 
-		if modeIndex == 3 {
-			return whenModeIsSet
-		}
+		let policy = channelModeKinds[symbol]?.parameterPolicy ?? .never
 
-		return false
+		return policy.requiresParameter(whenModeIsSet: whenModeIsSet)
 	}
 
 	@objc(userPrefixForModeSymbol:)
@@ -693,7 +688,7 @@ private extension IRCISupportInfo {
 		case "CASEMAPPING":
 			parseCaseMapping(value)
 		case "CHANMODES":
-			channelModes = ISupportTokenParser.channelModes(from: value, merging: channelModes)
+			channelModeKinds = ISupportTokenParser.channelModeKinds(from: value, merging: channelModeKinds)
 		case "CHANTYPES":
 			updateChannelNamePrefixes(from: value)
 		case "NETWORK":
@@ -853,13 +848,13 @@ private extension IRCISupportInfo {
 		userModePrefixPairs = zip(configuration.modeSymbols, configuration.characters)
 			.map { (modeSymbol: $0, character: $1) }
 
-		var updatedChannelModes = channelModes
+		var updatedChannelModes = channelModeKinds
 
-		for modeSymbol in configuration.modeSymbols {
-			updatedChannelModes[modeSymbol] = NSNumber(value: channelUserModeValue)
+		for modeSymbol in configuration.modeSymbols.compactMap(\.first) {
+			updatedChannelModes[modeSymbol] = .userPrefix
 		}
 
-		channelModes = updatedChannelModes
+		channelModeKinds = updatedChannelModes
 	}
 
 	func extractCharacters(_ characters: [String], fromChannelNamed channel: String) -> String {

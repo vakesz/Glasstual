@@ -318,14 +318,14 @@ extension ConnectionSocketProtocol where Self: ConnectionSocket {
 	}
 
 	func exportSecureConnectionInformation(to receiver: SecureConnectionInformationReceiver) throws {
-		let policyName = tlsPolicyName
-
-		let protocolType = tlsNegotiatedProtocol ?? tlsProtocolVersionUnknown
-
-		let cipherSuite = tlsNegotiatedCipherSuite ?? tlsCipherSuiteUnknown
-
-		let certificateChain = tlsCertificateChainData ?? []
-
-		receiver(policyName, protocolType, cipherSuite, certificateChain, tlsTrustFailureDescription)
+		receiver(
+			SecureConnectionInformation(
+				policyName: tlsPolicyName,
+				protocolVersion: tlsNegotiatedProtocol ?? tlsProtocolVersionUnknown,
+				cipherSuite: tlsNegotiatedCipherSuite ?? tlsCipherSuiteUnknown,
+				certificateChain: tlsCertificateChainData ?? [],
+				trustFailureDescription: tlsTrustFailureDescription
+			)
+		)
 	}
 }

@@ -313,14 +313,17 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 	}
 
 	@objc public func openSecuredConnectionCertificateModal() {
-		exportSecureConnectionInformation { policyName, protocolType, cipherSuite, certificateChain, failure in
+		exportSecureConnectionInformation { information in
+			let cipherSuite = information.cipherSuite
+			let failure = information.trustFailureDescription
 			guard
-				let policyName,
+				let policyName = information.policyName,
 				let trust = SecureTransportSupport.trust(
-					fromCertificateChain: certificateChain,
+					fromCertificateChain: information.certificateChain,
 					policyName: policyName
 				),
-				let protocolDescription = SecureTransportSupport.description(forProtocolType: protocolType),
+				let protocolDescription = SecureTransportSupport
+				.description(forProtocolType: information.protocolVersion),
 				let cipherDescription = SecureTransportSupport.description(forCipherSuite: cipherSuite)
 			else { return }
 
@@ -368,12 +371,12 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 		 from it. */
 		certificateTrustWasOverridden = true
 
-		exportSecureConnectionInformation { [weak self] policyName, _, _, certificateChain, _ in
+		exportSecureConnectionInformation { [weak self] information in
 			guard
 				let self,
-				let policyName,
+				let policyName = information.policyName,
 				let trust = SecureTransportSupport.trust(
-					fromCertificateChain: certificateChain,
+					fromCertificateChain: information.certificateChain,
 					policyName: policyName
 				)
 			else {
