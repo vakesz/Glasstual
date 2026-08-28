@@ -124,32 +124,21 @@ private func makeAvatarImage(initial: String, color: NSColor, size: CGFloat) -> 
 	}
 }
 
-private func userModeColor(defaultsKey: String) -> NSColor? {
-	guard let color = TextualUserDefaults.shared().color(forKey: defaultsKey),
-	      color != .clear
-	else {
-		return nil
-	}
+private func userModeColor(_ badge: UserListModeBadge) -> NSColor? {
+	let color = TextualUserDefaults.shared().color(for: badge.preferenceKey)
 
-	return color
+	return color.alphaComponent > 0 ? color : nil
 }
 
 private func color(for rank: UserRank) -> NSColor? {
 	switch rank {
-	case .irCopByMode:
-		userModeColor(defaultsKey: "User List Mode Badge Colors -> +y")
-	case .channelOwner:
-		userModeColor(defaultsKey: "User List Mode Badge Colors -> +q")
-	case .superOperator:
-		userModeColor(defaultsKey: "User List Mode Badge Colors -> +a")
-	case .normalOperator:
-		userModeColor(defaultsKey: "User List Mode Badge Colors -> +o")
-	case .halfOperator:
-		userModeColor(defaultsKey: "User List Mode Badge Colors -> +h")
-	case .voiced:
-		userModeColor(defaultsKey: "User List Mode Badge Colors -> +v")
-	default:
-		nil
+	case .irCopByMode: userModeColor(.ircOperator)
+	case .channelOwner: userModeColor(.channelOwner)
+	case .superOperator: userModeColor(.superOperator)
+	case .normalOperator: userModeColor(.normalOperator)
+	case .halfOperator: userModeColor(.halfOperator)
+	case .voiced: userModeColor(.voiced)
+	default: nil
 	}
 }
 

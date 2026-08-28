@@ -38,11 +38,12 @@
 
 import Foundation
 
-nonisolated let TPCPreferencesThemeNameDefaultsKey = "Theme -> Name"
-nonisolated let TPCPreferencesThemeFontNameDefaultsKey = "Theme -> Font Name"
-nonisolated let TPCPreferencesThemeFontSizeDefaultsKey = "Theme -> Font Size"
-nonisolated let TPCPreferencesThemeNameMissingLocallyDefaultsKey = "Theme -> Name -> Did Not Exist During Last Sync"
-nonisolated let TPCPreferencesThemeFontNameMissingLocallyDefaultsKey = "Theme -> Font Name -> Did Not Exist During Last Sync"
+/* The names come from the key declarations so the literals exist once. */
+nonisolated let TPCPreferencesThemeNameDefaultsKey = Preferences.Theme.name.name
+nonisolated let TPCPreferencesThemeFontNameDefaultsKey = Preferences.Theme.fontName.name
+nonisolated let TPCPreferencesThemeFontSizeDefaultsKey = Preferences.Theme.fontSize.name
+nonisolated let TPCPreferencesThemeNameMissingLocallyDefaultsKey = Preferences.Theme.nameMissingLocally.name
+nonisolated let TPCPreferencesThemeFontNameMissingLocallyDefaultsKey = Preferences.Theme.fontNameMissingLocally.name
 nonisolated let TPCPreferencesDictionaryVersion: UInt = 602
 
 @objc public enum TXNicknameHighlightMatchType: UInt, Sendable {
@@ -114,3 +115,19 @@ nonisolated let TPCPreferencesDictionaryVersion: UInt = 602
 	case light
 	case dark
 }
+
+/* Every one of these is stored as the integer it declares, so the typed store
+ reads and writes them directly. A stored value with no matching case decodes to
+ nothing and the read falls back to the key's declared default, which is what
+ the hand-written `?? .someCase` at each call site used to do. */
+extension TXNicknameHighlightMatchType: PreferenceEnum {}
+extension TXTabKeyAction: PreferenceEnum {}
+extension TXUserDoubleClickAction: PreferenceEnum {}
+extension TXNoticeSendLocation: PreferenceEnum {}
+extension TXCommandWKeyAction: PreferenceEnum {}
+extension TXHostmaskBanFormat: PreferenceEnum {}
+extension TVCMainWindowTextViewFontSize: PreferenceEnum {}
+extension TXFileTransferRequestReply: PreferenceEnum {}
+extension TXFileTransferIPAddressMethodDetection: PreferenceEnum {}
+extension TXChannelViewArrangement: PreferenceEnum {}
+extension TXPreferredAppearance: PreferenceEnum {}

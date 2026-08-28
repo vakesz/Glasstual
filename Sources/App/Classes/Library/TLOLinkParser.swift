@@ -190,12 +190,6 @@ public nonisolated class LinkParser: NSObject {
 		"spotify", "dict", "magnet", "message",
 	]
 
-	/* The defaults keys are those used by the AutoHyperlinks framework
-	 which preceded this parser so that user customizations carry over. */
-	private static let permittedSchemesAnyKey = "com.adiumX.AutoHyperlinks.permittedSchemesAny"
-	private static let permittedSchemesDefaultKey = "com.adiumX.AutoHyperlinks.permittedSchemesDefault"
-	private static let permittedSchemesKey = "com.adiumX.AutoHyperlinks.permittedSchemes"
-
 	/** Schemes that hand a remote peer's string to the file system, a network
 	 mount or a system settings pane. They are refused ahead of the user
 	 customization keys below so that a permissive `permittedSchemesAny`
@@ -220,21 +214,14 @@ public nonisolated class LinkParser: NSObject {
 			return true
 		}
 
-		let defaults = UserDefaults.standard
-
-		if defaults.bool(forKey: permittedSchemesAnyKey) {
+		/* The declarations keep the key names the AutoHyperlinks framework that
+		 preceded this parser used, so a user customization carries over. */
+		if Preferences.LinkSchemes.permitAny.value {
 			return true
 		}
 
-		if let schemes = defaults.stringArray(forKey: permittedSchemesDefaultKey), schemes.contains(scheme) {
-			return true
-		}
-
-		if let schemes = defaults.stringArray(forKey: permittedSchemesKey), schemes.contains(scheme) {
-			return true
-		}
-
-		return false
+		return Preferences.LinkSchemes.permittedDefault.value.contains(scheme)
+			|| Preferences.LinkSchemes.permitted.value.contains(scheme)
 	}
 
 	private static let linkDetector: NSDataDetector = {
