@@ -49,6 +49,10 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		}
 	}
 
+	/// Written by the sheet's checkbox through TPCPreferencesUserDefaultsController,
+	/// which is backed by the group container -- not by `.standard`.
+	static let advancedEncodingsKey = "Server Properties Window Sheet -> Include Advanced Encodings"
+
 	func populateEncodings() {
 		primaryEncodingButton.removeAllItems()
 		fallbackEncodingButton.removeAllItems()
@@ -56,11 +60,10 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		var names = (encodingList as NSDictionary).sortedDictionaryKeys as? [String] ?? []
 		let utf8Title = String.localizedName(of: .utf8)
 		names.removeAll { $0 == utf8Title }
-		primaryEncodingButton.addItem(withTitle: utf8Title)
-		fallbackEncodingButton.addItem(withTitle: utf8Title)
+		addEncodingItem(titled: utf8Title)
 		let favored = ["Unicode", "Western", "Central European"]
 		populateEncodingPopup(names, preferredEncodings: favored, ignoreFavored: false)
-		if UserDefaults.standard.bool(forKey: "Server Properties Window Sheet -> Include Advanced Encodings") {
+		if TextualUserDefaults.shared().bool(forKey: Self.advancedEncodingsKey) {
 			populateEncodingPopup(names, preferredEncodings: favored, ignoreFavored: true)
 		}
 	}
@@ -82,27 +85,42 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 				primaryEncodingButton.menu?.addItem(.separator())
 				fallbackEncodingButton.menu?.addItem(.separator())
 			}
-			primaryEncodingButton.addItem(withTitle: encoding)
-			fallbackEncodingButton.addItem(withTitle: encoding)
+			addEncodingItem(titled: encoding)
 		}
 	}
 
+	/// Every item carries its numeric encoding in `tag`. Localized titles are
+	/// not stable identity, and a title is missing altogether while the advanced
+	/// encodings are hidden.
+	private func addEncodingItem(titled title: String) {
+		let tag = Int(encodingList[title]?.uintValue ?? 0)
+		for button in [primaryEncodingButton, fallbackEncodingButton] {
+			button?.addItem(withTitle: title)
+			button?.lastItem?.tag = tag
+		}
+	}
+
+	/// Selects `encoding`, adding an item for it when the menu does not carry
+	/// one. Without that, a server configured with an advanced encoding shows
+	/// UTF-8 and has its configuration rewritten on OK.
+	func selectEncoding(_ encoding: UInt, in button: NSPopUpButton) {
+		let tag = Int(encoding)
+		if button.menu?.items.contains(where: { $0.tag == tag }) != true {
+			guard let title = (encodingList as NSDictionary)
+				.ce_firstKey(for: NSNumber(value: encoding)) as? String
+			else { return }
+			button.addItem(withTitle: title)
+			button.lastItem?.tag = tag
+		}
+		button.selectItem(withTag: tag)
+	}
+
 	@IBAction private func toggleAdvancedEncodings(_: Any?) {
-		var primary = primaryEncodingButton.titleOfSelectedItem
-		var fallback = fallbackEncodingButton.titleOfSelectedItem
+		let primary = UInt(max(primaryEncodingButton.selectedTag(), 0))
+		let fallback = UInt(max(fallbackEncodingButton.selectedTag(), 0))
 		populateEncodings()
-		if primary.flatMap({ primaryEncodingButton.item(withTitle: $0) }) == nil {
-			primary = String.localizedName(of: .utf8)
-		}
-		if fallback.flatMap({ fallbackEncodingButton.item(withTitle: $0) }) == nil {
-			fallback = String.localizedName(of: .isoLatin1)
-		}
-		if let primary {
-			primaryEncodingButton.selectItem(withTitle: primary)
-		}
-		if let fallback {
-			fallbackEncodingButton.selectItem(withTitle: fallback)
-		}
+		selectEncoding(primary == 0 ? String.Encoding.utf8.rawValue : primary, in: primaryEncodingButton)
+		selectEncoding(fallback == 0 ? String.Encoding.isoLatin1.rawValue : fallback, in: fallbackEncodingButton)
 	}
 
 	func updateChannelListPage() {
