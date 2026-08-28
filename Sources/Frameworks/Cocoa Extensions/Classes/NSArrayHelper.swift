@@ -32,33 +32,22 @@
 
 import Foundation
 
-private let mutableArrayMutationLock = NSRecursiveLock()
-
 private func arraySnapshot(_ array: NSArray) -> [Any] {
-	let snapshot = {
-		guard let snapshot = array.copy() as? NSArray else {
-			return array.map(\.self)
-		}
-		return snapshot.map(\.self)
+	/* A caller may hand this an array another thread is mutating, so the values
+	 are read out of a snapshot rather than the array itself. */
+	guard let snapshot = array.copy() as? NSArray else {
+		return array.map(\.self)
 	}
-	if array is NSMutableArray {
-		return mutableArrayMutationLock.withLock(snapshot)
-	}
-	return snapshot()
+
+	return snapshot.map(\.self)
 }
 
 private func arrayObject(at index: Int, in array: NSArray) -> Any {
-	if array is NSMutableArray {
-		return mutableArrayMutationLock.withLock { array.object(at: index) }
-	}
-	return array.object(at: index)
+	array.object(at: index)
 }
 
 private func arrayCount(_ array: NSArray) -> Int {
-	if array is NSMutableArray {
-		return mutableArrayMutationLock.withLock { array.count }
-	}
-	return array.count
+	array.count
 }
 
 private func indices(count: Int, options: NSEnumerationOptions) -> AnySequence<Int> {
@@ -277,51 +266,5 @@ public extension NSArray {
 	private static func ce_trimmedValue(_ value: Any) -> Any {
 		guard let string = value as? NSString else { return value }
 		return string.ceTrim
-	}
-}
-
-public extension NSMutableArray {
-	@objc(addObjectWithoutDuplication:)
-	func ce_addObjectWithoutDuplication(_ object: Any) {
-		mutableArrayMutationLock.withLock {
-			if !contains(object) {
-				add(object)
-			}
-		}
-	}
-
-	@objc(performSelectorOnObjectValueAndReplace:)
-	func ce_performSelectorOnObjectValueAndReplace(_ selector: Selector) {
-		mutableArrayMutationLock.withLock {
-			guard count > 0 else { return }
-			let values = map(\.self)
-			for (index, value) in values.enumerated() {
-				guard let receiver = value as? NSObject, receiver.responds(to: selector) else {
-					preconditionFailure("Object does not respond to \(NSStringFromSelector(selector))")
-				}
-				guard let replacement = receiver.perform(selector)?.takeUnretainedValue() else {
-					preconditionFailure("Selector \(NSStringFromSelector(selector)) returned nil")
-				}
-				replaceObject(at: index, with: replacement)
-			}
-		}
-	}
-
-	@objc func shuffle() {
-		mutableArrayMutationLock.withLock {
-			guard count > 1 else { return }
-			for index in stride(from: count - 1, through: 1, by: -1) {
-				exchangeObject(at: index, withObjectAt: Int.random(in: 0 ... index))
-			}
-		}
-	}
-
-	@objc(moveObjectAtIndex:toIndex:)
-	func ce_moveObject(at fromIndex: UInt, to toIndex: UInt) {
-		mutableArrayMutationLock.withLock {
-			let object = object(at: Int(fromIndex))
-			removeObject(at: Int(fromIndex))
-			insert(object, at: Int(fromIndex < toIndex ? toIndex - 1 : toIndex))
-		}
 	}
 }
