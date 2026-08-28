@@ -11,9 +11,8 @@
  *********************************************************************** */
 
 import Foundation
-import Testing
-
 @testable import Glasstual
+import Testing
 
 /// Two preferences were dropped because nothing read them: the "block insecure
 /// inline media" switch and the "no mode" user-list badge colour. Both had a
