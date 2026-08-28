@@ -308,7 +308,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting to %1$@ for a direct chat (%2$@ port %3$lu)…"
+            "value" : "Connecting to %1$@ for a direct chat (%2$@ port %3$@)…"
           }
         }
       }
@@ -320,7 +320,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting to [%1$@] on port %2$lu"
+            "value" : "Connecting to [%1$@] on port %2$@"
           }
         }
       }
@@ -332,7 +332,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting using HTTP proxy [%1$@] on port %2$lu"
+            "value" : "Connecting using HTTP proxy [%1$@] on port %2$@"
           }
         }
       }
@@ -344,7 +344,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting using SOCKS5 proxy [%1$@] on port %2$lu"
+            "value" : "Connecting using SOCKS5 proxy [%1$@] on port %2$@"
           }
         }
       }
@@ -1796,7 +1796,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The server offers Strict Transport Security. Reconnecting with TLS on port %lu."
+            "value" : "The server offers Strict Transport Security. Reconnecting with TLS on port %@."
           }
         }
       }
@@ -1952,7 +1952,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stored a Strict Transport Security policy for this host: TLS on port %lu."
+            "value" : "Stored a Strict Transport Security policy for this host: TLS on port %@."
           }
         }
       }
@@ -1964,7 +1964,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A Strict Transport Security policy is in effect for this host. Using TLS on port %lu."
+            "value" : "A Strict Transport Security policy is in effect for this host. Using TLS on port %@."
           }
         }
       }
@@ -2518,7 +2518,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Waiting for %1$@ to connect on port %2$lu…"
+            "value" : "Waiting for %1$@ to connect on port %2$@…"
           }
         }
       }

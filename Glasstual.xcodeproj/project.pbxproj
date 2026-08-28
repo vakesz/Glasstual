@@ -799,6 +799,7 @@
 		E9854783454FDD93A11E1CF3 /* THOPluginDispatcherSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EF7098F65C6EAB8405FBB0 /* THOPluginDispatcherSupport.swift */; };
 		E9AA6E11FFA5104F42D6DF12 /* TDCServerEndpointListSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3859B4073CE6E601D2E0639C /* TDCServerEndpointListSheet.xcstrings */; };
 		E9BAA75E7515471A1670D322 /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = E65C9A0A40E32DFD38D640D4 /* Box.swift */; };
+		EA24AF9200F3895B5474D314 /* StringCatalogStructureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92755B8FE13E90BE855A0C76 /* StringCatalogStructureTests.swift */; };
 		EA735DC56D4A01A68B59D793 /* HistoricLogFileStorageModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1D72DB576E7D11015F7A6E83 /* HistoricLogFileStorageModel.xcdatamodeld */; };
 		EAA533EEC75822786E04D7BB /* IRCISupportInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B6C4B9A7BB72C07EDB5E39 /* IRCISupportInfo.swift */; };
 		EAD820EC46B5AF2F00FD1B69 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275224561A1DA40A1DE82E8F /* WebKit.framework */; };
@@ -1735,6 +1736,7 @@
 		91A2175DB5B12C724DF97B05 /* IRCConnectionStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCConnectionStrings.swift; sourceTree = "<group>"; };
 		91C0BEDDB028C1EC634AD377 /* TDCServerPropertiesSheet.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TDCServerPropertiesSheet.xcstrings; sourceTree = "<group>"; };
 		924B596C9F00539C80DA412B /* TDCNetworkPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCNetworkPickerViewController.swift; sourceTree = "<group>"; };
+		92755B8FE13E90BE855A0C76 /* StringCatalogStructureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringCatalogStructureTests.swift; sourceTree = "<group>"; };
 		93312E045A596C0F27097226 /* ICMInlineHTML.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = ICMInlineHTML.css; sourceTree = "<group>"; };
 		93EFA699775F599BCE1D27A4 /* GyazoModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GyazoModule.swift; sourceTree = "<group>"; };
 		9434510058F918F7B0BF1724 /* Mustache.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Mustache.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3757,6 +3759,7 @@
 				2CAC03CCCF4F1F28D58F13AA /* ServerNicknameChangeValidationTests.swift */,
 				34282F9B03FCA36C2A770B80 /* ServerPropertiesSheetMigrationTests.swift */,
 				F244B1130EBAE97E39077F8E /* ServerPropertiesSheetValueTests.swift */,
+				92755B8FE13E90BE855A0C76 /* StringCatalogStructureTests.swift */,
 				775BDFF7D9A125283A240DE6 /* StringTokenizerMigrationTests.swift */,
 				5C136DC22778D3ECC22A53BE /* STSPolicyTrustTests.swift */,
 				6E7C5ADCBB4E5A3EA9245087 /* ThemePresentationSchemaTests.swift */,
@@ -5284,6 +5287,7 @@
 				144A003D331035789F10D5B8 /* ServerPropertiesSheetMigrationTests.swift in Sources */,
 				6E25518BAB0DE9D8CFFCB393 /* ServerPropertiesSheetValueTests.swift in Sources */,
 				6BFDAC20B3FEA74E384C922B /* StreamableModule.swift in Sources */,
+				EA24AF9200F3895B5474D314 /* StringCatalogStructureTests.swift in Sources */,
 				B8DF0A2137E691D0774EB027 /* StringTokenizerMigrationTests.swift in Sources */,
 				A9C07B7C28A644184EB39BE5 /* TLOInternetAddressLookupTests.swift in Sources */,
 				61880265A8320130EC290AF1 /* TLOKeyEventHandlerTests.swift in Sources */,
