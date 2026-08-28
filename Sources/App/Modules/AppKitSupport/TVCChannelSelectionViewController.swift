@@ -259,7 +259,7 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 	}
 
 	private func rebuildCachedChannelList() {
-		let clientList = NSObject.applicationController().world.clientList
+		let clientList = AppController.shared.world.clientList
 		var channelList: [ObjectIdentifier: [IRCChannel]] = [:]
 
 		for client in clientList {

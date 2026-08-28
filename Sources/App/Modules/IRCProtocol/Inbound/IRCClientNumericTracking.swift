@@ -187,7 +187,7 @@ extension IRCClient {
 			account: message.params[2]
 		)
 		if TextualPreferences.locationToSendNotices() == .selectedChannel,
-		   let channel = NSObject.applicationController().mainWindow.selectedChannel(on: self)
+		   let channel = AppController.shared.mainWindow.selectedChannel(on: self)
 		{
 			printDebugInformation(text, in: channel)
 		} else {

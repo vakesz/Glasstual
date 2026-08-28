@@ -115,7 +115,7 @@ public extension IRCClient {
 				assertionFailure("IRCChannel must bridge to IRCTreeItem")
 				return
 			}
-			NSObject.applicationController().mainWindow.updateTitle(for: item)
+			AppController.shared.mainWindow.updateTitle(for: item)
 		}
 	}
 
@@ -170,7 +170,7 @@ public extension IRCClient {
 			channelName: channelName
 		)
 		if postReceivedMessage(message, withText: channelName, destinedFor: nil) {
-			let channel = NSObject.applicationController().mainWindow.selectedChannel(on: self)
+			let channel = AppController.shared.mainWindow.selectedChannel(on: self)
 			print(text, by: nil, in: channel, as: .invite, command: message.command, receivedAt: message.receivedAt)
 		}
 		_ = notifyEvent(.invite, lineType: .invite, target: nil, nickname: sender, text: channelName)

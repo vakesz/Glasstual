@@ -176,7 +176,7 @@ public final class InputHistory: NSObject {
 	@MainActor @objc public func noteInputHistoryObjectScopeDidChange() {
 		withLock {
 			if TextualPreferences.inputHistoryIsChannelSpecific() {
-				for client in NSObject.applicationController().world.clientList {
+				for client in AppController.shared.world.clientList {
 					applyGlobalHistory(to: client.uniqueIdentifier)
 
 					for channel in client.channelList {

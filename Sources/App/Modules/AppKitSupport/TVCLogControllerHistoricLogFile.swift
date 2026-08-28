@@ -603,7 +603,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 	public func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewId: String) {
 		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
-				guard let item = NSObject.applicationController().world?.findItem(withId: viewId) else {
+				guard let item = AppController.shared.world?.findItem(withId: viewId) else {
 					return
 				}
 

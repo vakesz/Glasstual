@@ -1131,7 +1131,7 @@ public extension LogController {
 		guard let activeTheme = themeController.theme, let associatedClient else {
 			return ""
 		}
-		let settings = themeController.settings
+		let settings: ThemeSettings = themeController.settings
 		var tokens = generateOverrideStyle()
 		tokens[.applicationResourcePath] = PathInfo.applicationResources
 		tokens[.applicationTemplatesPath] = activeTheme.applicationTemplateRepositoryPath
@@ -1167,7 +1167,7 @@ public extension LogController {
 	}
 
 	private func generateOverrideStyle() -> ThemeTemplateAttributes {
-		let settings = SharedApplication.sharedThemeController().settings
+		let settings: ThemeSettings = SharedApplication.sharedThemeController().settings
 		guard let channelFont = settings.themeChannelViewFont ?? TextualPreferences.themeChannelViewFont() else {
 			return [:]
 		}
@@ -1238,7 +1238,7 @@ public extension LogController {
 
 	@objc(logViewWebViewReceivedDropWithFile:)
 	func logViewWebViewReceivedDrop(withFile filename: String) {
-		NSObject.applicationController().menuController?.memberSendDroppedFiles(toSelectedChannel: [filename])
+		AppController.shared.menuController?.memberSendDroppedFiles(toSelectedChannel: [filename])
 	}
 
 	nonisolated func lastLine() -> LogLine? {

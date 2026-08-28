@@ -87,7 +87,7 @@ extension MainWindow {
 		isReloadingTheme = true
 		NotificationCenter.default.post(name: .mainWindowWillReloadTheme, object: self)
 		DispatchQueue.main.async { [weak self] in
-			guard let self, NSObject.applicationController().applicationIsTerminating == false else { return }
+			guard let self, AppController.shared.applicationIsTerminating == false else { return }
 			LogView.emptyCaches()
 			performThemeReload()
 		}
@@ -642,14 +642,14 @@ public extension MainWindow {
 	}
 
 	@objc func reloadLoadingScreen() -> Bool {
-		guard let world = NSObject.applicationController().world else {
+		guard let world = AppController.shared.world else {
 			loadingScreen.showProgressView(withReason: MainWindowStrings.Loading.configuration)
 			return false
 		}
 		if world.isImportingConfiguration {
 			return false
 		}
-		if NSObject.applicationController().applicationIsLaunched == false {
+		if AppController.shared.applicationIsLaunched == false {
 			loadingScreen.showProgressView(withReason: MainWindowStrings.Loading.configuration)
 			return false
 		}
@@ -1012,7 +1012,7 @@ public extension MainWindow {
 		if let item = item as? IRCTreeItem {
 			return Int(item.numberOfChildren)
 		}
-		return Int(NSObject.applicationController().world?.clientCount ?? 0)
+		return Int(AppController.shared.world?.clientCount ?? 0)
 	}
 
 	func outlineView(_: NSOutlineView, isItemExpandable item: Any) -> Bool {
@@ -1026,7 +1026,7 @@ public extension MainWindow {
 			}
 			return child
 		}
-		return NSObject.applicationController().world!.clientList[index]
+		return AppController.shared.world!.clientList[index]
 	}
 
 	func outlineView(_: NSOutlineView, objectValueFor _: NSTableColumn?, byItem item: Any?) -> Any? {

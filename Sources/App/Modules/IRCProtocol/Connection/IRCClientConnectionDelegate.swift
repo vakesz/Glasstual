@@ -170,7 +170,7 @@ public extension IRCClient {
 		endLoggingSessions()
 		resetAllPropertyValues()
 
-		if !terminating, let mainWindow = NSObject.applicationController().mainWindow {
+		if !terminating, let mainWindow = AppController.shared.mainWindow {
 			mainWindow.reloadTreeGroup(self)
 			mainWindow.updateTitle(for: self)
 		}
@@ -225,7 +225,7 @@ public extension IRCClient {
 		isConnected = true
 		userNickname = config.nickname
 		tryingNicknameSentNickname = config.nickname
-		NSObject.applicationController().mainWindow?.updateTitle(for: self)
+		AppController.shared.mainWindow?.updateTitle(for: self)
 		NotificationCenter.default.post(name: .ircClientDidConnect, object: self)
 
 		let registration = IRCClientRegistrationPolicy.values(

@@ -194,7 +194,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	@objc(processingPayloadSucceeded:)
 	public func processingPayloadSucceeded(_ payload: InlineContentPayload) {
 		performOnMain {
-			guard let item = NSObject.applicationController().world.findItem(withId: payload.viewIdentifier) else {
+			guard let item = AppController.shared.world.findItem(withId: payload.viewIdentifier) else {
 				return
 			}
 
@@ -206,7 +206,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	public func processingPayload(_ payload: InlineContentPayload, failedWithError error: Error) {
 		let error = error as NSError
 		performOnMain {
-			guard let item = NSObject.applicationController().world.findItem(withId: payload.viewIdentifier) else {
+			guard let item = AppController.shared.world.findItem(withId: payload.viewIdentifier) else {
 				return
 			}
 
@@ -244,7 +244,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	private static func askPermissionToEnableInlineMediaOnMain(
 		completionBlock: @escaping @Sendable (Bool) -> Void
 	) {
-		let clientList = NSObject.applicationController().world.clientList
+		let clientList = AppController.shared.world.clientList
 		let presentDialog = clientList.contains { client in
 			client.config.proxyType != .none
 		}
@@ -256,7 +256,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 
 		var window = NSApp.keyWindow
 		if window == nil {
-			window = NSObject.applicationController().mainWindow
+			window = AppController.shared.mainWindow
 		}
 
 		guard let window else {

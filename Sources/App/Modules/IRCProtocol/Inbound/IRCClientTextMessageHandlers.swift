@@ -283,7 +283,7 @@ public extension IRCClient {
 				processNickServNotice(text, from: message)
 			}
 			if TextualPreferences.locationToSendNotices() == .selectedChannel {
-				query = NSObject.applicationController().mainWindow.selectedChannel(on: self)
+				query = AppController.shared.mainWindow.selectedChannel(on: self)
 			}
 			if query == nil, TextualPreferences.locationToSendNotices() == .query {
 				query = findChannelOrCreate(isSelfMessage ? target : sender, as: .privateMessage)
@@ -326,7 +326,7 @@ public extension IRCClient {
 		if !isNotice, let query, !query.isActive {
 			query.activate()
 			if let item = (query as AnyObject) as? IRCTreeItem {
-				NSObject.applicationController().mainWindow.reloadTreeItem(item)
+				AppController.shared.mainWindow.reloadTreeItem(item)
 			}
 		}
 	}

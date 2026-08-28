@@ -74,7 +74,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private var world: IRCWorld {
-		NSObject.applicationController().world
+		AppController.shared.world
 	}
 
 	private var windowController: WindowController {

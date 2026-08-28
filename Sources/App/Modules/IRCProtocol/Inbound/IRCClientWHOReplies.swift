@@ -124,7 +124,7 @@ extension IRCClient {
 						replaceInAllChannels: TextualPreferences.memberListSortFavorsServerStaff()
 					)
 				} else if existingUser?.isAway != finalUser.isAway {
-					NSObject.applicationController().mainWindow?.updateDrawingForUserInUserList(finalUser)
+					AppController.shared.mainWindow?.updateDrawingForUserInUserList(finalUser)
 				}
 			}
 		} else {

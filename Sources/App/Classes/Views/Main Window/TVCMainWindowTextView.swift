@@ -246,7 +246,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 
 	@objc private func typingStateDidChange(_ notification: Notification) {
 		guard let channel = notification.userInfo?[MainWindowTextViewNotification.typingChannelKey] as? IRCChannel,
-		      channel === NSObject.applicationController().mainWindow.selectedChannel
+		      channel === AppController.shared.mainWindow.selectedChannel
 		else {
 			return
 		}
@@ -255,7 +255,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	@objc private func selectionDidChange(_: Notification) {
-		let selectedChannel = NSObject.applicationController().mainWindow.selectedChannel
+		let selectedChannel = AppController.shared.mainWindow.selectedChannel
 
 		if let typingChannel, typingChannel !== selectedChannel {
 			typingChannel.associatedClient?.localUserClearedText(in: typingChannel)
@@ -267,7 +267,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	private func updateTypingRow() {
-		let channel = NSObject.applicationController().mainWindow.selectedChannel
+		let channel = AppController.shared.mainWindow.selectedChannel
 		var nicknames: [String] = []
 
 		if let channel, channel.isUtility == false {
@@ -278,7 +278,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	private func noteTextChangedForTyping() {
-		guard let channel = NSObject.applicationController().mainWindow.selectedChannel,
+		guard let channel = AppController.shared.mainWindow.selectedChannel,
 		      let client = channel.associatedClient
 		else {
 			return

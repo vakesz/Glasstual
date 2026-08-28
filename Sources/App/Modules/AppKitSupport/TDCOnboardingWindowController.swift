@@ -109,7 +109,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 			return false
 		}
 
-		return (NSObject.applicationController().world?.clientCount ?? 0) == 0
+		return (AppController.shared.world?.clientCount ?? 0) == 0
 	}
 
 	@objc public init() {
@@ -431,8 +431,8 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 		/* Onboarding runs at launch, exactly when these are least likely to exist. */
 		guard
-			let world = NSObject.applicationController().world,
-			let mainWindow = NSObject.applicationController().mainWindow
+			let world = AppController.shared.world,
+			let mainWindow = AppController.shared.mainWindow
 		else {
 			onboardingLogger.error("Cannot create a connection before the world is ready")
 			return

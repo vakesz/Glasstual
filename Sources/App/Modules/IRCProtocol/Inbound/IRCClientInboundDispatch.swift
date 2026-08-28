@@ -77,7 +77,7 @@ private extension IRCClient {
 	func processIncomingDataOnMainActor(_ data: String) {
 		guard isConnected, !isTerminating else { return }
 		lastMessageReceived = Date().timeIntervalSince1970
-		NSObject.applicationController().world.noteMessageReceived(length: UInt(data.utf16.count))
+		AppController.shared.world.noteMessageReceived(length: UInt(data.utf16.count))
 		rawDataLogIncomingTraffic(data)
 
 		let normalizedData = TextualPreferences.removeAllFormatting() ? (data as NSString).stripIRCEffects : data

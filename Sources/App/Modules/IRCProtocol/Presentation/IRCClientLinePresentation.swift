@@ -340,7 +340,7 @@ public extension IRCClient {
 
 	@objc(printDebugInformation:asCommand:escapeMessage:)
 	func printDebugInformation(_ message: String, asCommand command: String, escapeMessage: Bool) {
-		let channel = NSObject.applicationController().mainWindow.selectedChannel(on: self)
+		let channel = AppController.shared.mainWindow.selectedChannel(on: self)
 
 		printDebugInformation(
 			message,
@@ -484,7 +484,7 @@ private extension IRCClient {
 			return
 		}
 
-		guard let mainWindow = (NSObject.applicationController().mainWindow as AnyObject?) as? MainWindow else {
+		guard let mainWindow = (AppController.shared.mainWindow as AnyObject?) as? MainWindow else {
 			channel.print(logLine, completionBlock: request.completionBlock)
 			return
 		}

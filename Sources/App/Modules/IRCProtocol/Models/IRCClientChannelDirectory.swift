@@ -71,7 +71,7 @@ public extension IRCClient {
 			return channel
 		}
 
-		guard let world = NSObject.applicationController().world else { return nil }
+		guard let world = AppController.shared.world else { return nil }
 
 		if type == .channel {
 			let channel = world.createChannel(

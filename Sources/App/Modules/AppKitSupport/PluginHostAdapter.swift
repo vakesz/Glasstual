@@ -82,13 +82,13 @@ nonisolated enum PluginHostAdapter {
 			defaults: TextualUserDefaults.shared(),
 			clients: {
 				PluginHostMainActorBridge.sync {
-					guard let world = NSObject.applicationController().world else { return [] }
+					guard let world = AppController.shared.world else { return [] }
 					return world.clientList.map(makeClientOnMainActor)
 				}
 			},
 			selectedChannel: {
 				PluginHostMainActorBridge.sync {
-					NSObject.applicationController().mainWindow?.selectedChannel.map(makeChannelOnMainActor)
+					AppController.shared.mainWindow?.selectedChannel.map(makeChannelOnMainActor)
 				}
 			},
 			metrics: {
@@ -203,7 +203,7 @@ nonisolated enum PluginHostAdapter {
 			},
 			refreshSidebar: {
 				PluginHostMainActorBridge.sync {
-					NSObject.applicationController().mainWindow?.reloadTreeGroup(clientReference.value)
+					AppController.shared.mainWindow?.reloadTreeGroup(clientReference.value)
 				}
 			}
 		)
@@ -364,7 +364,7 @@ nonisolated enum PluginHostAdapter {
 
 	@MainActor
 	private static func makeApplicationMetrics() -> PluginApplicationMetrics {
-		let application = NSObject.applicationController()
+		let application: ApplicationController = AppController.shared
 		let world = application.world
 		let mainWindow = application.mainWindow
 		let lastMessageReceived = mainWindow?.selectedClient.map {
@@ -433,7 +433,7 @@ private final class PluginConnectionTracker {
 	}
 
 	private func rebuild() {
-		let clients = NSObject.applicationController().world.clientList
+		let clients = AppController.shared.world.clientList
 		let identifiers = Set(clients.map(ObjectIdentifier.init))
 		clientObservations = clientObservations.filter { identifiers.contains($0.key) }
 
@@ -450,7 +450,7 @@ private final class PluginConnectionTracker {
 	}
 
 	private func notify() {
-		let isConnected = NSObject.applicationController().world.clientList.contains(where: \.isLoggedIn)
+		let isConnected = AppController.shared.world.clientList.contains(where: \.isLoggedIn)
 		handler(isConnected)
 	}
 }

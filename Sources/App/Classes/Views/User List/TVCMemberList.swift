@@ -612,7 +612,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 			return false
 		}
 
-		NSObject.applicationController().menuController?.memberSendDroppedFiles(files, row: UInt(row))
+		AppController.shared.menuController?.memberSendDroppedFiles(files, row: UInt(row))
 		return true
 	}
 
@@ -748,7 +748,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 			selectItem(at: row)
 		}
 
-		return NSObject.applicationController().menuController?.userControlMenu
+		return AppController.shared.menuController?.userControlMenu
 	}
 
 	override public func keyDown(with event: NSEvent) {

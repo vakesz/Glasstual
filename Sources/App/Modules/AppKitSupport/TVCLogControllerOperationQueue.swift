@@ -266,7 +266,7 @@ public final nonisolated class LogControllerPrintingOperationQueue: OperationQue
 		isStandalone: Bool,
 		requiresExplicitFinish: Bool
 	) {
-		guard NSObject.applicationController().applicationIsTerminating == false else {
+		guard AppController.shared.applicationIsTerminating == false else {
 			return
 		}
 

@@ -43,7 +43,7 @@ public extension MenuActionCoordinator {
 	@objc(channelPropertiesDidAccept:config:)
 	func channelPropertiesDidAccept(_ sender: ChannelPropertiesSheet, config: ChannelConfig) {
 		guard let client = sender.client else { return }
-		let world = NSObject.applicationController().world!
+		let world = AppController.shared.world!
 		guard let channel = sender.channel else {
 			_ = world.createChannel(with: config, on: client)
 			mainWindow.expandClient(client)
@@ -63,7 +63,7 @@ public extension MenuActionCoordinator {
 
 	@objc(serverPropertiesDidAccept:config:)
 	func serverPropertiesDidAccept(_ sender: ServerPropertiesSheet, config: IRCClientConfig) {
-		let world = NSObject.applicationController().world!
+		let world = AppController.shared.world!
 		guard let client = sender.client else {
 			let client = world.createClient(with: config, reload: true)
 			mainWindow.expandClient(client)

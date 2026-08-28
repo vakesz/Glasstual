@@ -63,7 +63,7 @@ public extension IRCClient {
 
 	@objc(setHighlightStateForChannel:)
 	func setHighlightState(for channel: IRCChannel) {
-		guard let mainWindow = NSObject.applicationController().mainWindow else { return }
+		guard let mainWindow = AppController.shared.mainWindow else { return }
 		guard channelIsSelectedInKeyWindow(channel, mainWindow: mainWindow) == false else { return }
 
 		channel.nicknameHighlightCount += 1
@@ -78,7 +78,7 @@ public extension IRCClient {
 
 	@objc(setUnreadStateForChannel:isHighlight:)
 	func setUnreadState(for channel: IRCChannel, isHighlight: Bool) {
-		guard let mainWindow = NSObject.applicationController().mainWindow else { return }
+		guard let mainWindow = AppController.shared.mainWindow else { return }
 		guard channelIsSelectedInKeyWindow(channel, mainWindow: mainWindow) == false else { return }
 
 		if ChannelUnreadPolicy.incrementsDockUnreadCount(
