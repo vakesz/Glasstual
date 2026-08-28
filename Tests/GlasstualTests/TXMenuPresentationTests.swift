@@ -5,24 +5,45 @@
 
 import AppKit
 @testable import Glasstual
-import XCTest
+import Testing
+
+/// A headless AppKit host can be built without the SF Symbols catalogue, and
+/// can decline to hold a symbol image on a menu item. The symbol pass has
+/// nothing to place on such a host, so the tests that check it are skipped.
+private nonisolated func menuSymbolImagesAreAvailable() -> Bool {
+	guard
+		let symbol = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil),
+		NSImage(systemSymbolName: "arrowshape.turn.up.left", accessibilityDescription: nil) != nil
+	else {
+		return false
+	}
+
+	let item = NSMenuItem(title: "Copy", action: nil, keyEquivalent: "")
+	item.image = symbol
+
+	return item.image != nil
+}
 
 @MainActor
-final class TXMenuPresentationTests: XCTestCase {
-	func testMainMenuSymbolMappingsResolveThroughSystemCatalog() {
+@Suite("Menu presentation")
+struct TXMenuPresentationTests {
+	@Test("Every symbol a menu command names resolves in the system catalogue")
+	func mainMenuSymbolMappingsResolveThroughSystemCatalog() {
 		let mappings = MenuPresentation.symbolMappings
 
-		XCTAssertEqual(MenuCommand.settings.symbolName, "gear")
-		XCTAssertEqual(MenuCommand.findText.symbolName, "magnifyingglass")
-		XCTAssertNil(MenuPresentation.symbolName(forTag: -1))
+		#expect(MenuCommand.settings.symbolName == "gear")
+		#expect(MenuCommand.findText.symbolName == "magnifyingglass")
+		#expect(MenuPresentation.symbolName(forTag: -1) == nil)
 
 		let unavailableSymbols = mappings.values.filter {
 			NSImage(systemSymbolName: $0, accessibilityDescription: $0) == nil
 		}
-		XCTAssertTrue(unavailableSymbols.isEmpty, "Unavailable symbols: \(unavailableSymbols.sorted())")
+
+		#expect(unavailableSymbols.isEmpty, "Unavailable symbols: \(unavailableSymbols.sorted())")
 	}
 
-	func testSymbolPassAssignsMappedImageWithoutChangingMenuIdentity() {
+	@Test("The symbol pass adds an image without touching the item's title, tag or key equivalent")
+	func symbolPassAssignsMappedImageWithoutChangingMenuIdentity() {
 		let menu = NSMenu(title: "Application")
 		let item = NSMenuItem(title: "Settings…", action: nil, keyEquivalent: ",")
 		item.tag = 102
@@ -30,29 +51,27 @@ final class TXMenuPresentationTests: XCTestCase {
 
 		MenuPresentation.apply(to: menu)
 
-		XCTAssertEqual(item.title, "Settings…")
-		XCTAssertEqual(item.tag, 102)
-		XCTAssertEqual(item.keyEquivalent, ",")
-		XCTAssertNotNil(item.image)
+		#expect(item.title == "Settings…")
+		#expect(item.tag == 102)
+		#expect(item.keyEquivalent == ",")
+		#expect(item.image != nil)
 	}
 
-	func testSymbolPassPadsPlainItemsAndPreservesSubmenus() throws {
+	@Test(
+		"An item with no symbol is padded to align with its neighbours, submenus included",
+		.enabled(if: menuSymbolImagesAreAvailable(), "SF Symbols are unavailable in this test host")
+	)
+	func symbolPassPadsPlainItemsAndPreservesSubmenus() throws {
 		let menu = NSMenu(title: "Root")
 		let symbolItem = NSMenuItem(title: "Copy", action: nil, keyEquivalent: "")
-		guard
-			let rootSymbol = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil),
-			let submenuSymbol = NSImage(
-				systemSymbolName: "arrowshape.turn.up.left",
-				accessibilityDescription: nil
-			)
-		else {
-			throw XCTSkip("SF Symbols are unavailable in this test host")
-		}
-		symbolItem.image = rootSymbol
+		symbolItem.image = try #require(NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil))
 		let plainItem = NSMenuItem(title: "Paste", action: nil, keyEquivalent: "")
 		let submenu = NSMenu(title: "Nested")
 		let nestedSymbol = NSMenuItem(title: "Reply", action: nil, keyEquivalent: "")
-		nestedSymbol.image = submenuSymbol
+		nestedSymbol.image = try #require(NSImage(
+			systemSymbolName: "arrowshape.turn.up.left",
+			accessibilityDescription: nil
+		))
 		let nestedPlain = NSMenuItem(title: "React", action: nil, keyEquivalent: "")
 
 		submenu.addItem(nestedSymbol)
@@ -60,20 +79,21 @@ final class TXMenuPresentationTests: XCTestCase {
 		plainItem.submenu = submenu
 		menu.addItem(symbolItem)
 		menu.addItem(plainItem)
-		guard symbolItem.image != nil, nestedSymbol.image != nil else {
-			throw XCTSkip("The AppKit test host does not retain SF Symbol menu images")
-		}
 
 		MenuPresentation.apply(to: menu)
 
-		XCTAssertNotNil(symbolItem.image)
-		XCTAssertNotNil(plainItem.image)
-		XCTAssertNotNil(nestedSymbol.image)
-		XCTAssertNotNil(nestedPlain.image)
-		XCTAssertFalse(try XCTUnwrap(plainItem.image).isTemplate)
+		#expect(symbolItem.image != nil)
+		#expect(plainItem.image != nil)
+		#expect(nestedSymbol.image != nil)
+		#expect(nestedPlain.image != nil)
+
+		let paddingImage = try #require(plainItem.image)
+
+		#expect(paddingImage.isTemplate == false)
 	}
 
-	func testReplyMenuRetainsResponderSelectorsAndContext() throws {
+	@Test("A reply menu carries the responder selectors and the message it was built for")
+	func replyMenuRetainsResponderSelectorsAndContext() throws {
 		let target = MenuTarget()
 		let items = MenuPresentation.messageReplyItems(
 			messageIdentifier: "message-42",
@@ -82,37 +102,31 @@ final class TXMenuPresentationTests: XCTestCase {
 			target: target
 		)
 
-		XCTAssertEqual(items.count, 3)
-		XCTAssertTrue(items[0].isSeparatorItem)
-		XCTAssertEqual(items[1].action, #selector(MenuTarget.replyToMessage(_:)))
-		XCTAssertTrue(items[1].target === target)
-		XCTAssertEqual(
-			(items[1].representedObject as? MessageMenuContext)?.messageIdentifier,
-			"message-42"
-		)
+		#expect(items.count == 3)
+		#expect(items[0].isSeparatorItem)
+		#expect(items[1].action == #selector(MenuTarget.replyToMessage(_:)))
+		#expect(items[1].target === target)
+		#expect((items[1].representedObject as? MessageMenuContext)?.messageIdentifier == "message-42")
 
-		let reactionItems = try XCTUnwrap(items[2].submenu).items
-		XCTAssertEqual(reactionItems.count, 8)
-		XCTAssertEqual(reactionItems[0].action, #selector(MenuTarget.reactToMessage(_:)))
-		XCTAssertEqual(
-			(reactionItems[0].representedObject as? MessageMenuContext)?.emoji,
-			"👍"
-		)
-		XCTAssertEqual(
-			reactionItems.last?.action,
-			#selector(MenuTarget.reactToMessageWithOtherEmoji(_:))
-		)
+		let reactionItems = try #require(items[2].submenu).items
+
+		#expect(reactionItems.count == 8)
+		#expect(reactionItems[0].action == #selector(MenuTarget.reactToMessage(_:)))
+		#expect((reactionItems[0].representedObject as? MessageMenuContext)?.emoji == "👍")
+		#expect(reactionItems.last?.action == #selector(MenuTarget.reactToMessageWithOtherEmoji(_:)))
 	}
 
-	func testEmptyShareMenuItemKeepsMenuShape() {
+	@Test("A share menu with nothing to share is present but disabled")
+	func emptyShareMenuItemKeepsMenuShape() {
 		let item = MenuPresentation.shareMenuItem(for: [])
 
-		XCTAssertFalse(item.isEnabled)
-		XCTAssertNotNil(item.image)
+		#expect(item.isEnabled == false)
+		#expect(item.image != nil)
 	}
 
-	func testMenuValidationRejectsCommandSpecificFailure() {
-		XCTAssertFalse(
+	@Test("A command that vetoes itself is disabled whatever the window state is")
+	func menuValidationRejectsCommandSpecificFailure() {
+		#expect(
 			MenuValidationPolicy.validate(
 				tag: 100,
 				commandSpecificResult: false,
@@ -120,13 +134,14 @@ final class TXMenuPresentationTests: XCTestCase {
 				mainWindowHasAttachedSheet: false,
 				mainWindowIsFocused: true,
 				mainWindowIsBeneathMouse: false
-			)
+			) == false
 		)
 	}
 
-	func testTopLevelMenusRemainAvailableDuringLaunch() {
+	@Test("The top level menu titles stay available while the application is still launching")
+	func topLevelMenusRemainAvailableDuringLaunch() {
 		for tag in 1 ... 10 {
-			XCTAssertTrue(
+			#expect(
 				MenuValidationPolicy.validate(
 					tag: tag,
 					commandSpecificResult: true,
@@ -139,7 +154,8 @@ final class TXMenuPresentationTests: XCTestCase {
 		}
 	}
 
-	func testSheetPolicyAllowsSettingsButDisablesChannelActions() {
+	@Test("A sheet leaves Settings reachable but disables the channel commands behind it")
+	func sheetPolicyAllowsSettingsButDisablesChannelActions() {
 		let validate: (Int) -> Bool = { tag in
 			MenuValidationPolicy.validate(
 				tag: tag,
@@ -151,14 +167,15 @@ final class TXMenuPresentationTests: XCTestCase {
 			)
 		}
 
-		XCTAssertTrue(validate(102))
-		XCTAssertTrue(validate(200))
-		XCTAssertFalse(validate(600))
+		#expect(validate(102))
+		#expect(validate(200))
+		#expect(validate(600) == false)
 	}
 
-	func testEssentialCommandsRemainAvailableBeforeLaunch() {
+	@Test("The commands a user needs before the application has launched stay enabled")
+	func essentialCommandsRemainAvailableBeforeLaunch() {
 		for tag in [100, 113, 203, 205, 305, 812, 900, 910, 912, 9_100_004] {
-			XCTAssertTrue(
+			#expect(
 				MenuValidationPolicy.validate(
 					tag: tag,
 					commandSpecificResult: true,
