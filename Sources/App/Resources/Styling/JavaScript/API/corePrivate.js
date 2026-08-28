@@ -63,8 +63,63 @@ Glasstual.initializeCore = function(resourcesPath)
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scriptSink.js");
 };
 
+/* Remote resources are refused unless they come over HTTPS from a host the
+   app knows about. This page is a file:// document holding the native "app"
+   bridge, so whoever serves a <script> here owns that bridge. Keep this list
+   in step with InlineResourceHostPolicy.permittedHosts on the Swift side. */
+Glasstual.permittedResourceHosts = ["platform.twitter.com"];
+
+Glasstual.resourceFileIsPermitted = function(file)
+{
+	if (typeof file !== "string" || file.length === 0) {
+		return false;
+	}
+
+	var scheme = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(file);
+
+	/* Resources copied into the theme's temporary directory by the app
+	   arrive as plain filesystem paths, without a scheme. */
+	if (scheme === null) {
+		return true;
+	}
+
+	var schemeName = scheme[1].toLowerCase();
+
+	if (schemeName === "file") {
+		return true;
+	}
+
+	if (schemeName !== "https") {
+		console.error("Refusing resource with scheme '" + schemeName + "'");
+
+		return false;
+	}
+
+	var host = null;
+
+	try {
+		host = new URL(file).hostname.toLowerCase();
+	} catch (error) {
+		console.error("Refusing resource with an unparsable address");
+
+		return false;
+	}
+
+	if (Glasstual.permittedResourceHosts.indexOf(host) < 0) {
+		console.error("Refusing resource from host '" + host + "'");
+
+		return false;
+	}
+
+	return true;
+};
+
 Glasstual.includeStyleResourceFile = function(file)
 {
+	if (Glasstual.resourceFileIsPermitted(file) === false) {
+		return;
+	}
+
 	if (/loaded|complete/.test(document.readyState)) {
 		var newFile = document.createElement("link");
 
@@ -82,6 +137,10 @@ Glasstual.includeStyleResourceFile = function(file)
 
 Glasstual.includeScriptResourceFile = function(file)
 {
+	if (Glasstual.resourceFileIsPermitted(file) === false) {
+		return;
+	}
+
 	if (/loaded|complete/.test(document.readyState)) {
 		var newFile = document.createElement("script");
 

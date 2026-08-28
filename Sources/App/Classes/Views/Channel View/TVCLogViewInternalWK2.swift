@@ -75,49 +75,10 @@ private enum WebKitStyleResourceAccess {
 final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	@MainActor
 	private enum SharedResources {
-		static let messageHandlerNames = [
-			"appearance",
-			"channelIsActive",
-			"channelMemberCount",
-			"channelName",
-			"channelNameDoubleClicked",
-			"displayContextMenu",
-			"copySelectionWhenPermitted",
-			"encryptionAuthenticateUser",
-			"inlineMediaEnabledForView",
-			"loadInlineMedia",
-			"localUserHostmask",
-			"localUserNickname",
-			"logToConsole",
-			"networkName",
-			"nicknameColorStyleHash",
-			"nicknameDoubleClicked",
-			"notifyLinesAddedToView",
-			"notifyLinesRemovedFromView",
-			"notifyJumpToLineCallback",
-			"printDebugInformation",
-			"printDebugInformationToConsole",
-			"renderMessagesBefore",
-			"renderMessagesAfter",
-			"renderMessagesInRange",
-			"renderMessageWithSiblings",
-			"renderTemplate",
-			"retrievePreferencesWithMethodName",
-			"sendPluginPayload",
-			"serverAddress",
-			"serverChannelCount",
-			"serverIsConnected",
-			"setChannelName",
-			"setNickname",
-			"setLineContext",
-			"setSelection",
-			"setURLAddress",
-			"sidebarInversionIsEnabled",
-			"styleSettingsRetrieveValue",
-			"styleSettingsSetValue",
-			"topicBarDoubleClicked",
-			"finishedLayingOutView",
-		]
+		/** Owned by the sink so a registered name without a handler cannot
+		 exist. `encryptionAuthenticateUser` was registered here and
+		 implemented nowhere; it is gone along with the rest of OTR. */
+		static let messageHandlerNames = TVCLogScriptEventSink.registeredMessageNames
 
 		static let scriptSink = TVCLogScriptEventSink(webView: nil)
 		static let policy = LogPolicy()

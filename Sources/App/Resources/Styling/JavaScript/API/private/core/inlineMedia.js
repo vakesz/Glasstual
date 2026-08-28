@@ -364,6 +364,10 @@ _InlineMediaLoader.processPayload = function(payload) /* PRIVATE */
 		for (var i = 0; i < styleResources.length; i++) {
 			var file = styleResources[i];
 
+			if (Glasstual.resourceFileIsPermitted(file) === false) {
+				continue;
+			}
+
 			if (_InlineMediaLoader._loadedStyleResources.indexOf(file) < 0) {
 				_InlineMediaLoader._loadedStyleResources.push(file);
 
@@ -378,6 +382,10 @@ _InlineMediaLoader.processPayload = function(payload) /* PRIVATE */
 	if (Array.isArray(scriptResources)) {
 		for (var i = 0; i < scriptResources.length; i++) {
 			var file = scriptResources[i];
+
+			if (Glasstual.resourceFileIsPermitted(file) === false) {
+				continue;
+			}
 
 			if (_InlineMediaLoader._loadedScriptResources.indexOf(file) < 0) {
 				_InlineMediaLoader._loadedScriptResources.push(file);

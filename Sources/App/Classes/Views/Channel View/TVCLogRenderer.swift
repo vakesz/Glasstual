@@ -40,6 +40,7 @@ import AppKit
 import CocoaExtensions
 import Foundation
 import Mustache
+import OSLog
 
 public typealias TVCLogRendererConfigurationAttribute = String
 public typealias TVCLogRendererResultsAttribute = String
@@ -60,6 +61,40 @@ public extension String {
 	static let keywordMatchFoundAttribute = LogRendererResultKey.keywordMatchFound.rawValue
 	static let listOfUsersFoundAttribute = LogRendererResultKey.users.rawValue
 	static let originalBodyWithoutEffectsAttribute = LogRendererResultKey.bodyWithoutEffects.rawValue
+}
+
+private let rendererLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "LogRenderer"
+)
+
+/** Patterns that are the same for every rendered line.
+
+ They used to be recompiled per line — `findAllChannelNames()` runs on every
+ private message — and an invalid pattern makes `replacingOccurrences(options:
+ .regularExpression)` silently return its input, so a broken filter would look
+ exactly like a working one.
+
+ These stay `NSRegularExpression` rather than Swift `Regex` literals: the
+ combining-marks pattern names a Unicode *block*, which the literal parser
+ rejects ("Unicode block property is not currently supported"), and `Regex`
+ matches grapheme clusters by default, which would stop the combining marks
+ from being seen individually at all. */
+private enum RendererPatterns {
+	/// Three or more stacked combining marks — "Zalgo" text.
+	static let combiningMarks = compile("[\\p{InCombining_Diacritical_Marks}]{3,}")
+
+	/// A channel name mentioned inside a private message or notice.
+	static let channelName = compile("#([a-zA-Z0-9\\#\\-]+)")
+
+	private static func compile(_ pattern: String) -> NSRegularExpression? {
+		do {
+			return try NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+		} catch {
+			rendererLogger.fault("Renderer pattern '\(pattern, privacy: .public)' did not compile")
+			return nil
+		}
+	}
 }
 
 private enum RendererFormatting {
@@ -284,10 +319,23 @@ public final class LogRenderer: NSObject {
 		guard filteredTypes.contains(lineType) else {
 			return
 		}
-		body = body.replacingOccurrences(
-			of: "([\\p{InCombining_Diacritical_Marks}]{3,})",
-			with: unicodeReplacementCharacter,
-			options: .regularExpression
+		body = Self.strippingDangerousUnicodeCharacters(body)
+	}
+
+	/** Collapses runs of three or more stacked combining marks — "Zalgo" text,
+	 which paints over neighbouring lines — into one replacement character.
+
+	 Returns `text` unchanged if the pattern failed to compile, which is why
+	 `RendererPatterns` logs that case: a silent no-op filter looks exactly
+	 like a working one. */
+	static func strippingDangerousUnicodeCharacters(_ text: String) -> String {
+		guard let expression = RendererPatterns.combiningMarks else {
+			return text
+		}
+		return expression.stringByReplacingMatches(
+			in: text,
+			range: NSRange(location: 0, length: (text as NSString).length),
+			withTemplate: unicodeReplacementCharacter
 		)
 	}
 
@@ -348,7 +396,10 @@ public final class LogRenderer: NSObject {
 		guard isRenderingPrivateMessageOrNotice else {
 			return
 		}
-		for range in ranges(ofRegularExpression: "#([a-zA-Z0-9\\#\\-]+)") {
+		guard let expression = RendererPatterns.channelName else {
+			return
+		}
+		for range in ranges(of: expression) {
 			guard isSurroundedByNonAlphanumerics(range),
 			      bodyWithAttributes.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
 			else {
@@ -421,10 +472,61 @@ public final class LogRenderer: NSObject {
 		return result
 	}
 
+	/** Schemes that must never reach an `href`, whatever the link parser or the
+	 user's `permittedSchemes` defaults say. `javascript:` and `data:` execute
+	 in the log view, which holds the native `app` bridge. */
+	private static let refusedAnchorSchemes: Set<String> = [
+		"javascript", "data", "vbscript", "blob", "filesystem", "about",
+	]
+
+	/** Whether a parsed link may be rendered as an anchor.
+
+	 `LinkParser` already refuses unknown schemes when the text carries one,
+	 but its permitted set is user-configurable (`permittedSchemesAny` opens it
+	 to everything), so the decision is repeated here — at the boundary where
+	 the value stops being a parse result and becomes an attribute of the
+	 rendered document. A refused link is rendered as escaped plain text. */
+	static func isRenderableAnchorLocation(_ location: String) -> Bool {
+		guard let scheme = anchorScheme(location) else {
+			/* Without a scheme the href resolves against the theme's file:// base. */
+			rendererLogger.error("Refusing to render an anchor without a URL scheme")
+			return false
+		}
+		guard refusedAnchorSchemes.contains(scheme) == false, LinkParser.isPermittedScheme(scheme) else {
+			rendererLogger.error("Refusing to render anchor with scheme '\(scheme, privacy: .public)'")
+			return false
+		}
+		return true
+	}
+
+	/// The scheme of `location`, lowercased, if it is syntactically a URL scheme.
+	private static func anchorScheme(_ location: String) -> String? {
+		guard let colon = location.firstIndex(of: ":") else {
+			return nil
+		}
+		let scheme = location[location.startIndex ..< colon]
+		guard let first = scheme.first, first.isLetter else {
+			return nil
+		}
+		let isSchemeCharacter = { (character: Character) in
+			character.isLetter || character.isNumber || character == "+" || character == "-" || character == "."
+		}
+		guard scheme.allSatisfy(isSchemeCharacter) else {
+			return nil
+		}
+		return scheme.lowercased()
+	}
+
 	private func ranges(ofRegularExpression pattern: String) -> [NSRange] {
+		/* The pattern is a user-configured highlight keyword, so it cannot be
+		 cached alongside the fixed patterns in `RendererPatterns`. */
 		guard let expression = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
 			return []
 		}
+		return ranges(of: expression)
+	}
+
+	private func ranges(of expression: NSRegularExpression) -> [NSRange] {
 		let range = NSRange(location: 0, length: (body as NSString).length)
 		return expression.matches(in: body, range: range).map(\.range)
 	}
@@ -484,7 +586,9 @@ public final class LogRenderer: NSObject {
 		var tokens: ThemeTemplateAttributes = [:]
 		var html: String?
 
-		if let link = attributes[RendererFormatting.url] as? LinkParserResult {
+		if let link = attributes[RendererFormatting.url] as? LinkParserResult,
+		   Self.isRenderableAnchorLocation(link.stringValue)
+		{
 			if viewController?.inlineMediaEnabledForView == true,
 			   let mapped = output.value(for: .mappedLinks, as: [String: String].self),
 			   let identifier = mapped[link.stringValue]
