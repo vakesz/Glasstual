@@ -74,6 +74,7 @@ public final class FileTransferDialogWindow: NSWindow {
 		}
 	}
 
+	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
 	override public nonisolated func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {
 		guard let panel else { return }
 
@@ -82,6 +83,7 @@ public final class FileTransferDialogWindow: NSWindow {
 		}
 	}
 
+	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
 	override public nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
 		guard let panel else { return }
 
@@ -149,12 +151,14 @@ public final class FileTransferDialog: WindowBase,
 		true
 	}
 
+	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
 	@objc override public nonisolated func beginPreviewPanelControl(_ panel: QLPreviewPanel) {
 		MainActor.assumeIsolated {
 			beginPreviewPanelControlOnMainActor(panel)
 		}
 	}
 
+	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
 	@objc override public nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel) {
 		MainActor.assumeIsolated {
 			endPreviewPanelControlOnMainActor(panel)
