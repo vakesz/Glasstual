@@ -95,7 +95,7 @@ public final class CommandIndex: NSObject {
 /// Counted from the syntax string the index carries: every top-level `<group>`
 /// is required and every `[group]` is optional. It describes the documented
 /// syntax, not what a particular handler goes on to read.
-public struct CommandArity: Sendable, Equatable {
+public nonisolated struct CommandArity: Sendable, Equatable {
 	public let required: Int
 	public let optional: Int
 
@@ -150,7 +150,7 @@ public struct CommandArity: Sendable, Equatable {
 }
 
 /// What the command index knows about one local command.
-public struct LocalCommandDescriptor: Sendable {
+public nonisolated struct LocalCommandDescriptor: Sendable {
 	public let command: IRCLocalCommand
 
 	/// The command is kept out of completion and refused unless the

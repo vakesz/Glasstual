@@ -16,14 +16,12 @@ final class InlineContentProtocolMigrationTests: XCTestCase {
 
 	func testXPCSelectorsRemainCompatibleWithExistingProcesses() {
 		XCTAssertEqual(
-			NSStringFromSelector(
-				#selector((any InlineContentServerProtocol).warmServiceByLoadingPlugins(atLocations:))
-			),
-			"warmServiceByLoadingPluginsAtLocations:"
+			NSStringFromSelector(#selector((any InlineContentServerProtocol).warmServiceByLoadingPlugins)),
+			"warmServiceByLoadingPlugins"
 		)
 		XCTAssertEqual(
-			NSStringFromSelector(#selector((any InlineContentServerProtocol).warmServiceByRegistering(defaults:))),
-			"warmServiceByRegisteringDefaults:"
+			NSStringFromSelector(#selector((any InlineContentServerProtocol).warmService(with:))),
+			"warmServiceWithPreferences:"
 		)
 		XCTAssertEqual(
 			NSStringFromSelector(#selector((any InlineContentServerProtocol).process(_:))),

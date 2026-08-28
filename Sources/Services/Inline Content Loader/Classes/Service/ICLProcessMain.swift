@@ -277,27 +277,22 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 		serviceConnection = nil
 	}
 
-	@objc(warmServiceByLoadingPluginsAtLocations:)
-	func warmServiceByLoadingPlugins(atLocations pluginLocations: [URL]) {
+	@objc(warmServiceByLoadingPlugins)
+	func warmServiceByLoadingPlugins() {
 		Self.warmLock.withLock {
 			guard !Self.loadedPlugins else { return }
 			Self.loadedPlugins = true
 
-			if !pluginLocations.isEmpty {
-				Self.logger.info(
-					"Ignoring \(pluginLocations.count, privacy: .public) external module location(s); only bundled modules are loaded"
-				)
-			}
 			InlineContentPluginManager.shared.loadBundledPlugins()
 		}
 	}
 
-	@objc(warmServiceByRegisteringDefaults:)
-	func warmServiceByRegistering(defaults: [String: Any]) {
+	@objc(warmServiceWithPreferences:)
+	func warmService(with preferences: InlineContentServicePreferences) {
 		Self.warmLock.withLock {
 			guard !Self.registeredDefaults else { return }
 			Self.registeredDefaults = true
-			TextualUserDefaults.shared().register(defaults: defaults)
+			TextualUserDefaults.shared().register(defaults: preferences.registrationDomain)
 		}
 	}
 
