@@ -395,7 +395,7 @@ public final class LogRenderer: NSObject {
 		}
 		if TextualPreferences.automaticallyDetectHighlightSpam() {
 			let nicknamePercent = Double(nicknameLength) / Double((body as NSString).length) * 100
-			if nicknamePercent > 75, nicknameCount > 10 || nicknamePercent > 50, nicknameCount > 20 {
+			if (nicknamePercent > 75 && nicknameCount > 10) || (nicknamePercent > 50 && nicknameCount > 20) {
 				output[.keywordMatchFound] = false
 			}
 		}

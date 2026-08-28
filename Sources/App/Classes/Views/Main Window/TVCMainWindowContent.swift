@@ -252,7 +252,7 @@ extension MainWindow {
 	func textFormattingBackgroundColor(_: NSEvent) {
 		guard formattingMenu.textHasSpoiler == false, formattingMenu.textHasForegroundColor else { return }
 		if formattingMenu.textHasBackgroundColor {
-			formattingMenu.removeForegroundColorCharFromTextBox(nil)
+			formattingMenu.removeBackgroundColorCharFromTextBox(nil)
 			return
 		}
 		var point = inputTextField.frame.origin
@@ -1173,21 +1173,31 @@ public extension MainWindow {
 		if draggedItem.isClient {
 			var clients = world.clientList
 			guard let original = clients.firstIndex(where: { $0 === draggedItem }) else { return false }
+			let target = destinationIndex(proposed: index, movingFrom: original)
 			let moved = clients.remove(at: original)
-			clients.insert(moved, at: min(index, clients.count))
+			clients.insert(moved, at: min(target, clients.count))
 			world.clientList = clients
-			list.moveItem(at: original, inParent: nil, to: index, inParent: nil)
+			list.moveItem(at: original, inParent: nil, to: target, inParent: nil)
 		} else {
 			guard let client = item as? IRCClient, draggedItem.associatedClient === client else { return false }
 			var channels = client.channelList
 			guard let original = channels.firstIndex(where: { $0 === draggedItem }) else { return false }
+			let target = destinationIndex(proposed: index, movingFrom: original)
 			let moved = channels.remove(at: original)
-			channels.insert(moved, at: min(index, channels.count))
+			channels.insert(moved, at: min(target, channels.count))
 			client.channelList = channels
-			list.moveItem(at: original, inParent: client, to: index, inParent: client)
+			list.moveItem(at: original, inParent: client, to: target, inParent: client)
 		}
 		menuController.populateNavigationChannelList()
 		return true
+	}
+
+	/// `childIndex` from `acceptDrop` counts the dragged item itself, but both
+	/// the model array and `NSOutlineView.moveItem(at:inParent:to:inParent:)`
+	/// want the index the item lands on once it has been removed. Moving
+	/// downward therefore shifts by one; moving upward does not.
+	private func destinationIndex(proposed index: Int, movingFrom original: Int) -> Int {
+		index > original ? index - 1 : index
 	}
 
 	private func draggedItem(from info: any NSDraggingInfo) -> IRCTreeItem? {
