@@ -66,7 +66,7 @@ public final class ValidatedComboBox: NSComboBox {
 		var processedValue = stringValue
 
 		if stringValueUsesOnlyFirstToken {
-			processedValue = (processedValue as NSString).ceTrimAndGetFirstToken
+			processedValue = processedValue.firstToken
 		} else if stringValueIsTrimmed {
 			processedValue = processedValue.trimmingCharacters(in: .whitespacesAndNewlines)
 		}

@@ -55,15 +55,15 @@ enum DCCFileTransferRequestParser {
 	static let maximumFilesize: UInt64 = 1_000_000_000_000
 
 	static func parse(_ source: String) -> DCCFileTransferRequest? {
-		let input = NSMutableString(string: source)
-		let command = input.ceUppercaseToken
+		var input = CommandTokenizer(source)
+		let command = input.nextUppercaseToken()
 		guard command == "SEND" || command == "RESUME" || command == "ACCEPT" else { return nil }
 
-		let filenameToken = input.hasPrefix("\"") ? input.ceTokenInsideQuotes : input.ceToken
-		let section2 = input.ceToken
-		let section3 = input.ceToken
-		let section4 = input.ceToken
-		let section5 = input.ceToken
+		let filenameToken = input.remainder.hasPrefix("\"") ? input.nextQuotedToken() : input.nextToken()
+		let section2 = input.nextToken()
+		let section3 = input.nextToken()
+		let section4 = input.nextToken()
+		let section5 = input.nextToken()
 		let filename = filenameToken.trimmingCharacters(in: .whitespacesAndNewlines).safeFilename
 
 		if command == "SEND" {
