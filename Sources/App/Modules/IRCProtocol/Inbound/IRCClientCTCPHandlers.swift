@@ -41,9 +41,10 @@ import os
 
 enum IRCCTCPPolicy {
 	static func commandAndArguments(from text: String) -> (command: String, arguments: String)? {
-		let parts = text.split(maxSplits: 1, whereSeparator: { $0.isWhitespace })
-		guard let command = parts.first, !command.isEmpty else { return nil }
-		return (command.uppercased(), parts.count > 1 ? String(parts[1]) : "")
+		// CTCP tokens are separated by SPACE (0x20), not by Unicode whitespace.
+		let parts = text.unicodeScalars.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: false)
+		guard let command = parts.first, command.isEmpty == false else { return nil }
+		return (String(command).uppercased(), parts.count > 1 ? String(parts[1]) : "")
 	}
 
 	static func formData(_ text: String) -> [String: String] {

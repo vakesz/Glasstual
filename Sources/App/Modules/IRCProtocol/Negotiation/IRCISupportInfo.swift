@@ -302,9 +302,9 @@ public class IRCISupportInfo: NSObject {
 
 		let client = client
 		var configuration: [String: Any] = [:]
-		let segments = trimmed.components(separatedBy: .whitespaces)
+		let segments = LineParser.wireTokens(in: trimmed)
 
-		for segment in segments where segment.isEmpty == false {
+		for segment in segments {
 			var segmentKey = segment
 			var segmentValue: String?
 

@@ -138,7 +138,7 @@ public final class CapabilityRegistry: NSObject {
 	public static func parseCapabilityList(_ list: String) -> [String: [String]] {
 		var offered: [String: [String]] = [:]
 
-		for token in list.components(separatedBy: CharacterSet.whitespaces) where token.isEmpty == false {
+		for token in LineParser.wireTokens(in: list) {
 			guard let equalsIndex = token.firstIndex(of: "=") else {
 				offered[token.lowercased()] = []
 				continue
