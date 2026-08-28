@@ -70,14 +70,11 @@ public nonisolated class Server: PortablePropertyDict {
 	}
 
 	@objc public var serverPasswordFromKeychain: String? {
-		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
+		serverPasswordKeychainItem.password
+	}
 
-		return KeychainStore.password(
-			forItem: "Glasstual (Server Password)",
-			kind: "application password",
-			username: nil,
-			service: serviceName
-		)
+	private var serverPasswordKeychainItem: KeychainItem {
+		.serverPassword(uniqueIdentifierStorage)
 	}
 
 	override public init() {
@@ -191,29 +188,14 @@ public nonisolated class Server: PortablePropertyDict {
 			return
 		}
 
-		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
-
-		KeychainStore.modifyOrAddItem(
-			"Glasstual (Server Password)",
-			kind: "application password",
-			username: nil,
-			newPassword: serverPasswordStorage,
-			service: serviceName
-		)
+		serverPasswordKeychainItem.write(serverPasswordStorage)
 
 		self.serverPasswordStorage = nil
 	}
 
 	@objc
 	public func destroyServerPasswordKeychainItem() {
-		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
-
-		KeychainStore.deleteItem(
-			"Glasstual (Server Password)",
-			kind: "application password",
-			username: nil,
-			service: serviceName
-		)
+		serverPasswordKeychainItem.delete()
 
 		serverPasswordStorage = nil
 	}
