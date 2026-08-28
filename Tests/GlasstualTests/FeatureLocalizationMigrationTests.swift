@@ -116,7 +116,6 @@ final class FeatureLocalizationMigrationTests: XCTestCase {
 		XCTAssertEqual(PreferencesStrings.paneTitle(.fileTransfers), "File Transfers")
 		XCTAssertEqual(PreferencesStrings.addOnsGroupTitle, "Add-ons")
 		XCTAssertEqual(PreferencesStrings.advancedGroupTitle, "Advanced")
-		XCTAssertEqual(PreferencesStrings.version(marketingVersion: "6.0", build: "42"), "Version 6.0 (42)")
 		XCTAssertEqual(
 			PreferencesStrings.preferredSelectionBody(
 				styleName: "Default",

@@ -80,12 +80,24 @@ struct PreferencesCompatibilityPane: View {
 
 	var body: some View {
 		PreferencesPaneLayout {
-			Section {
-				PreferencesToggle(
-					title: PreferencesCompatibilityStrings.echoMessage,
-					isOn: model.preferences.binding(for: Preferences.Connection.echoMessageCapability)
-				)
-			}
+			PreferencesCompatibilitySections(model: model)
+		}
+	}
+}
+
+/// The pane as one form section, for the Advanced group that gathers it with
+/// its neighbours.
+struct PreferencesCompatibilitySections: View {
+	let model: PreferencesPaneModel
+
+	var body: some View {
+		Section {
+			PreferencesToggle(
+				title: PreferencesCompatibilityStrings.echoMessage,
+				isOn: model.preferences.binding(for: Preferences.Connection.echoMessageCapability)
+			)
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.compatibility))
 		}
 	}
 }
@@ -93,51 +105,57 @@ struct PreferencesCompatibilityPane: View {
 struct PreferencesCommandScopePane: View {
 	let model: PreferencesPaneModel
 
+	var body: some View {
+		PreferencesPaneLayout {
+			PreferencesCommandScopeSections(model: model)
+		}
+	}
+}
+
+/// The pane as one form section, for the Advanced group that gathers it with
+/// its neighbours.
+struct PreferencesCommandScopeSections: View {
+	let model: PreferencesPaneModel
+
 	private var noticeDestination: Binding<TXNoticeSendLocation> {
 		model.preferences.binding(for: Preferences.Commands.noticeDestination)
 	}
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				PreferencesToggle(
-					title: PreferencesCommandScopeStrings.amsg,
-					isOn: model.preferences.binding(for: Preferences.Commands.amsgAllConnections)
-				)
-				PreferencesToggle(
-					title: PreferencesCommandScopeStrings.away,
-					isOn: model.preferences.binding(for: Preferences.Commands.awayAllConnections)
-				)
-				PreferencesToggle(
-					title: PreferencesCommandScopeStrings.nick,
-					isOn: model.preferences.binding(for: Preferences.Commands.nickAllConnections)
-				)
-				PreferencesToggle(
-					title: PreferencesCommandScopeStrings.clearall,
-					isOn: model.preferences.binding(for: Preferences.Commands.clearAllConnections)
-				)
+		Section {
+			PreferencesToggle(
+				title: PreferencesCommandScopeStrings.amsg,
+				isOn: model.preferences.binding(for: Preferences.Commands.amsgAllConnections)
+			)
+			PreferencesToggle(
+				title: PreferencesCommandScopeStrings.away,
+				isOn: model.preferences.binding(for: Preferences.Commands.awayAllConnections)
+			)
+			PreferencesToggle(
+				title: PreferencesCommandScopeStrings.nick,
+				isOn: model.preferences.binding(for: Preferences.Commands.nickAllConnections)
+			)
+			PreferencesToggle(
+				title: PreferencesCommandScopeStrings.clearall,
+				isOn: model.preferences.binding(for: Preferences.Commands.clearAllConnections)
+			)
+			PreferencesToggle(
+				title: PreferencesCommandScopeStrings.focusOnMessage,
+				isOn: model.preferences.binding(for: Preferences.Commands.giveFocusOnMessageCommand)
+			)
+			Picker(selection: noticeDestination) {
+				Text(verbatim: PreferencesCommandScopeStrings.noticeServerConsole)
+					.tag(TXNoticeSendLocation.serverConsole)
+				Text(verbatim: PreferencesCommandScopeStrings.noticeSelectedChannel)
+					.tag(TXNoticeSendLocation.selectedChannel)
+				Text(verbatim: PreferencesCommandScopeStrings.noticeQuery)
+					.tag(TXNoticeSendLocation.query)
+			} label: {
+				Text(verbatim: PreferencesCommandScopeStrings.noticeLabel)
 			}
-
-			Section {
-				PreferencesToggle(
-					title: PreferencesCommandScopeStrings.focusOnMessage,
-					isOn: model.preferences.binding(for: Preferences.Commands.giveFocusOnMessageCommand)
-				)
-			}
-
-			Section {
-				Picker(selection: noticeDestination) {
-					Text(verbatim: PreferencesCommandScopeStrings.noticeServerConsole)
-						.tag(TXNoticeSendLocation.serverConsole)
-					Text(verbatim: PreferencesCommandScopeStrings.noticeSelectedChannel)
-						.tag(TXNoticeSendLocation.selectedChannel)
-					Text(verbatim: PreferencesCommandScopeStrings.noticeQuery)
-						.tag(TXNoticeSendLocation.query)
-				} label: {
-					Text(verbatim: PreferencesCommandScopeStrings.noticeLabel)
-				}
-				.pickerStyle(.radioGroup)
-			}
+			.pickerStyle(.radioGroup)
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.commandScope))
 		}
 	}
 }
@@ -145,39 +163,48 @@ struct PreferencesCommandScopePane: View {
 struct PreferencesChannelManagementPane: View {
 	let model: PreferencesPaneModel
 
+	var body: some View {
+		PreferencesPaneLayout {
+			PreferencesChannelManagementSections(model: model)
+		}
+	}
+}
+
+/// The pane as one form section, for the Advanced group that gathers it with
+/// its neighbours.
+struct PreferencesChannelManagementSections: View {
+	let model: PreferencesPaneModel
+
 	private var banFormat: Binding<TXHostmaskBanFormat> {
 		model.preferences.binding(for: Preferences.Commands.banFormat)
 	}
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				Picker(selection: banFormat) {
-					Text(verbatim: PreferencesChannelManagementStrings.banFormatWhnin)
-						.tag(TXHostmaskBanFormat.whnin)
-					Text(verbatim: PreferencesChannelManagementStrings.banFormatWhainn)
-						.tag(TXHostmaskBanFormat.whainn)
-					Text(verbatim: PreferencesChannelManagementStrings.banFormatWhanni)
-						.tag(TXHostmaskBanFormat.whanni)
-					Text(verbatim: PreferencesChannelManagementStrings.banFormatExact)
-						.tag(TXHostmaskBanFormat.exact)
-				} label: {
-					Text(verbatim: PreferencesChannelManagementStrings.banFormatLabel)
-				}
-				PreferencesNote(PreferencesChannelManagementStrings.banFormatNote)
+		Section {
+			Picker(selection: banFormat) {
+				Text(verbatim: PreferencesChannelManagementStrings.banFormatWhnin)
+					.tag(TXHostmaskBanFormat.whnin)
+				Text(verbatim: PreferencesChannelManagementStrings.banFormatWhainn)
+					.tag(TXHostmaskBanFormat.whainn)
+				Text(verbatim: PreferencesChannelManagementStrings.banFormatWhanni)
+					.tag(TXHostmaskBanFormat.whanni)
+				Text(verbatim: PreferencesChannelManagementStrings.banFormatExact)
+					.tag(TXHostmaskBanFormat.exact)
+			} label: {
+				Text(verbatim: PreferencesChannelManagementStrings.banFormatLabel)
 			}
-
-			Section {
-				VStack(alignment: .leading, spacing: 6) {
-					Text(verbatim: PreferencesChannelManagementStrings.kickReasonLabel)
-					TextField(
-						"",
-						text: model.preferences.binding(for: Preferences.Commands.kickMessage)
-					)
-					.labelsHidden()
-					.accessibilityLabel(Text(verbatim: PreferencesChannelManagementStrings.kickReasonLabel))
-				}
+			PreferencesNote(PreferencesChannelManagementStrings.banFormatNote)
+			VStack(alignment: .leading, spacing: 6) {
+				Text(verbatim: PreferencesChannelManagementStrings.kickReasonLabel)
+				TextField(
+					"",
+					text: model.preferences.binding(for: Preferences.Commands.kickMessage)
+				)
+				.labelsHidden()
+				.accessibilityLabel(Text(verbatim: PreferencesChannelManagementStrings.kickReasonLabel))
 			}
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.channelManagement))
 		}
 	}
 }

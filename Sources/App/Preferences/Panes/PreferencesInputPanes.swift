@@ -235,32 +235,38 @@ struct PreferencesDefaultIdentityPane: View {
 
 	var body: some View {
 		PreferencesPaneLayout {
-			Section {
-				PreferencesNote(PreferencesDefaultIdentityStrings.note)
-			}
+			PreferencesDefaultIdentitySections(model: model)
+		}
+	}
+}
 
-			Section {
-				field(
-					label: PreferencesDefaultIdentityStrings.nickname,
-					key: Preferences.Identity.nickname
-				)
-				field(
-					label: PreferencesDefaultIdentityStrings.awayNickname,
-					key: Preferences.Identity.awayNickname
-				)
-				field(
-					label: PreferencesDefaultIdentityStrings.username,
-					key: Preferences.Identity.username
-				)
-				field(
-					label: PreferencesDefaultIdentityStrings.realname,
-					key: Preferences.Identity.realName
-				)
-			}
+/// The pane as one form section, for the Advanced group that gathers it with
+/// its neighbours.
+struct PreferencesDefaultIdentitySections: View {
+	let model: PreferencesPaneModel
 
-			Section {
-				PreferencesNote(PreferencesDefaultIdentityStrings.allOptional)
-			}
+	var body: some View {
+		Section {
+			PreferencesNote(PreferencesDefaultIdentityStrings.note)
+			field(
+				label: PreferencesDefaultIdentityStrings.nickname,
+				key: Preferences.Identity.nickname
+			)
+			field(
+				label: PreferencesDefaultIdentityStrings.awayNickname,
+				key: Preferences.Identity.awayNickname
+			)
+			field(
+				label: PreferencesDefaultIdentityStrings.username,
+				key: Preferences.Identity.username
+			)
+			field(
+				label: PreferencesDefaultIdentityStrings.realname,
+				key: Preferences.Identity.realName
+			)
+			PreferencesNote(PreferencesDefaultIdentityStrings.allOptional)
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.defaultIdentity))
 		}
 	}
 
@@ -280,29 +286,35 @@ struct PreferencesIRCopMessagesPane: View {
 
 	var body: some View {
 		PreferencesPaneLayout {
-			Section {
-				field(
-					label: PreferencesIRCopStrings.killLabel,
-					note: nil,
-					key: Preferences.Commands.irCopKillMessage
-				)
-			}
+			PreferencesIRCopMessagesSections(model: model)
+		}
+	}
+}
 
-			Section {
-				field(
-					label: PreferencesIRCopStrings.glineLabel,
-					note: PreferencesIRCopStrings.includesBanLength,
-					key: Preferences.Commands.irCopGlineMessage
-				)
-			}
+/// The pane as one form section, for the Advanced group that gathers it with
+/// its neighbours.
+struct PreferencesIRCopMessagesSections: View {
+	let model: PreferencesPaneModel
 
-			Section {
-				field(
-					label: PreferencesIRCopStrings.shunLabel,
-					note: PreferencesIRCopStrings.includesBanLength,
-					key: Preferences.Commands.irCopShunMessage
-				)
-			}
+	var body: some View {
+		Section {
+			field(
+				label: PreferencesIRCopStrings.killLabel,
+				note: nil,
+				key: Preferences.Commands.irCopKillMessage
+			)
+			field(
+				label: PreferencesIRCopStrings.glineLabel,
+				note: PreferencesIRCopStrings.includesBanLength,
+				key: Preferences.Commands.irCopGlineMessage
+			)
+			field(
+				label: PreferencesIRCopStrings.shunLabel,
+				note: PreferencesIRCopStrings.includesBanLength,
+				key: Preferences.Commands.irCopShunMessage
+			)
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.defaultIRCopMessages))
 		}
 	}
 

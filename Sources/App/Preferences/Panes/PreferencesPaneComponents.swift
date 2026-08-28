@@ -13,7 +13,11 @@
 import AppKit
 import SwiftUI
 
-/// The grouped `Form` every pane is laid out in, so the metrics live once.
+/** The grouped `Form` every pane is laid out in, so the metrics live once.
+
+ The form does not scroll on its own: it takes the height its content needs and
+ the window is resized to match, the way a preference window behaves. The one
+ scroll view is the root view's, for the panes taller than the screen. */
 struct PreferencesPaneLayout<Content: View>: View {
 	@ViewBuilder let content: Content
 
@@ -22,7 +26,9 @@ struct PreferencesPaneLayout<Content: View>: View {
 			content
 		}
 		.formStyle(.grouped)
+		.scrollDisabled(true)
 		.scrollContentBackground(.hidden)
+		.fixedSize(horizontal: false, vertical: true)
 	}
 }
 

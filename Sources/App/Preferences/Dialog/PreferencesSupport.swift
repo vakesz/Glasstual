@@ -39,20 +39,23 @@
 import AppKit
 import CocoaExtensions
 
+/** The window has the fixed width a preference-style toolbar wants and grows
+ or shrinks to whatever the selected pane needs, up to what the screen has. */
 enum PreferencesLayout {
-	static let sidebarMinimumWidth = 200.0
-	static let sidebarMaximumWidth = 260.0
-	static let sidebarPreferredWidth = 215.0
-	static let detailMinimumWidth = 620.0
-	static let windowMinimumWidth = 980.0
-	static let windowMinimumHeight = 600.0
-	static let windowDefaultWidth = 1020.0
-	static let windowDefaultHeight = 700.0
+	static let windowWidth = 760.0
+	static let windowMinimumHeight = 180.0
+	static let windowScreenInset = 120.0
+	/// What a grouped `Form` insets its own rows by, so the sub-page picker
+	/// lines up with the content below it.
+	static let contentInset = 20.0
 }
 
-enum PreferencesIdentifiers {
-	static let toolbarBack = NSToolbarItem.Identifier("TDCPreferencesControllerBack")
-	static let toolbarForward = NSToolbarItem.Identifier("TDCPreferencesControllerForward")
+/// The Settings window itself, which closes on Escape the way a settings
+/// window is expected to.
+final class PreferencesWindow: NSWindow {
+	override func cancelOperation(_: Any?) {
+		performClose(nil)
+	}
 }
 
 struct PreferencesPaneDescriptor: Equatable {
@@ -61,11 +64,138 @@ struct PreferencesPaneDescriptor: Equatable {
 	let group: PreferencesPaneGroup
 }
 
-struct PreferencesSidebarEntry: Equatable {
+/// One pane: a toolbar section on its own, or one segment of a section that
+/// holds several.
+struct PreferencesPaneEntry: Equatable, Identifiable {
 	let identifier: String
 	let title: String
 	let symbolName: String
 	let group: PreferencesPaneGroup
+
+	var id: String {
+		identifier
+	}
+}
+
+/// A toolbar item. The seven main panes are a section each; the add-on and
+/// advanced panes are gathered behind one item apiece.
+enum PreferencesSectionIdentifier: String, CaseIterable, Sendable {
+	case general
+	case behavior
+	case notifications
+	case highlights
+	case interface
+	case style
+	case controls
+	case addOns = "addons"
+	case advanced
+
+	var symbolName: String {
+		switch self {
+		case .general: "gearshape"
+		case .behavior: "slider.horizontal.3"
+		case .notifications: "bell"
+		case .highlights: "text.magnifyingglass"
+		case .interface: "macwindow"
+		case .style: "paintbrush"
+		case .controls: "keyboard"
+		case .addOns: "puzzlepiece.extension"
+		case .advanced: "gearshape.2"
+		}
+	}
+
+	/// Which panes the section shows, `nil` for the two that gather a group.
+	var pane: PreferencesPaneIdentifier? {
+		switch self {
+		case .general: .general
+		case .behavior: .behavior
+		case .notifications: .notifications
+		case .highlights: .highlights
+		case .interface: .interface
+		case .style: .style
+		case .controls: .controls
+		case .addOns, .advanced: nil
+		}
+	}
+}
+
+/** One segment of a section's picker.
+
+ A sub-page usually shows one pane; the Advanced section gathers eleven panes
+ into five sub-pages, each drawn as one form whose sections carry the old pane
+ names. */
+struct PreferencesSubPage: Equatable, Identifiable {
+	let identifier: String
+	let title: String
+	let panes: [PreferencesPaneEntry]
+
+	var id: String {
+		identifier
+	}
+
+	func contains(_ paneIdentifier: String) -> Bool {
+		identifier == paneIdentifier || panes.contains { $0.identifier == paneIdentifier }
+	}
+}
+
+/// How the sub-pages of the Advanced section are grouped, so no picker ever
+/// carries more segments than fit across the window.
+enum PreferencesAdvancedGroup: String, CaseIterable, Sendable {
+	case connection
+	case channels
+	case identity
+	case media
+	case system
+
+	var identifier: String {
+		"advanced.\(rawValue)"
+	}
+
+	var panes: [PreferencesPaneIdentifier] {
+		switch self {
+		case .connection: [.compatibility, .floodControl, .incomingData]
+		case .channels: [.channelManagement, .commandScope]
+		case .identity: [.defaultIdentity, .defaultIRCopMessages]
+		case .media: [.fileTransfers, .inlineMedia]
+		case .system: [.logLocation, .hidden]
+		}
+	}
+}
+
+struct PreferencesSection: Equatable, Identifiable {
+	let identifier: PreferencesSectionIdentifier
+	let title: String
+	let subPages: [PreferencesSubPage]
+
+	var id: String {
+		identifier.rawValue
+	}
+
+	var symbolName: String {
+		identifier.symbolName
+	}
+
+	/// A picker only fits so many segments across a fixed-width window; past
+	/// that the sub-pages are listed in a pop-up instead.
+	static let maximumSegments = 5
+
+	/* A segment is about this wide per character, plus the inset each one keeps
+	 around its label. The estimate is deliberately generous: a row that would
+	 be close to the edge falls back to the pop-up rather than truncating. */
+	private static let segmentCharacterWidth = 7.5
+	private static let segmentPadding = 28.0
+
+	/** Whether the sub-pages fit a segmented row: few enough of them, and short
+	 enough labels to lay out across the window without truncating. */
+	var usesSegmentedPicker: Bool {
+		guard subPages.count <= Self.maximumSegments else {
+			return false
+		}
+		let characters = subPages.reduce(0) { $0 + $1.title.count }
+		let width = Double(characters) * Self.segmentCharacterWidth
+			+ Double(subPages.count) * Self.segmentPadding
+		return width <= PreferencesLayout.windowWidth - 2 * PreferencesLayout.contentInset
+	}
 }
 
 enum PreferencesPaneIdentifier: String, CaseIterable, Sendable {

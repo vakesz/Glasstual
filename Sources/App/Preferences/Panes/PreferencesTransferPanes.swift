@@ -15,44 +15,47 @@ import SwiftUI
 struct PreferencesFileTransfersPane: View {
 	let model: PreferencesPaneModel
 
+	var body: some View {
+		PreferencesPaneLayout {
+			PreferencesFileTransfersSections(model: model)
+		}
+	}
+}
+
+/// The pane as one form section, for the Advanced group that gathers it with
+/// inline media.
+struct PreferencesFileTransfersSections: View {
+	let model: PreferencesPaneModel
+
 	private var usesManualAddress: Bool {
 		model.preferences[Preferences.FileTransfers.ipAddressDetectionMethod] == .manual
 	}
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				replyActionPicker
-			}
-
-			Section {
-				detectionPicker
-				manualAddressField
-				portRange
-			}
-
-			Section {
-				PreferencesFolderPicker(
-					label: PreferencesFileTransfersStrings.destinationLabel,
-					accessibilityLabel: PreferencesStrings.downloadDestinationAccessibilityLabel,
-					folder: model.downloadFolder,
-					emptyTitle: PreferencesStrings.noDownloadDestination,
-					select: { model.actions?.selectDownloadFolder() },
-					clear: { model.actions?.clearDownloadFolder() }
-				)
-				PreferencesNote(PreferencesFileTransfersStrings.destinationNote)
-			}
-
-			Section {
-				PreferencesToggle(
-					title: PreferencesFileTransfersStrings.reverseDcc,
-					isOn: model.preferences.binding(for: Preferences.FileTransfers.requestsAreReversed)
-				)
-				PreferencesToggle(
-					title: PreferencesFileTransfersStrings.preventSleep,
-					isOn: model.preferences.binding(for: Preferences.FileTransfers.preventIdleSystemSleep)
-				)
-			}
+		Section {
+			replyActionPicker
+			detectionPicker
+			manualAddressField
+			portRange
+			PreferencesFolderPicker(
+				label: PreferencesFileTransfersStrings.destinationLabel,
+				accessibilityLabel: PreferencesStrings.downloadDestinationAccessibilityLabel,
+				folder: model.downloadFolder,
+				emptyTitle: PreferencesStrings.noDownloadDestination,
+				select: { model.actions?.selectDownloadFolder() },
+				clear: { model.actions?.clearDownloadFolder() }
+			)
+			PreferencesNote(PreferencesFileTransfersStrings.destinationNote)
+			PreferencesToggle(
+				title: PreferencesFileTransfersStrings.reverseDcc,
+				isOn: model.preferences.binding(for: Preferences.FileTransfers.requestsAreReversed)
+			)
+			PreferencesToggle(
+				title: PreferencesFileTransfersStrings.preventSleep,
+				isOn: model.preferences.binding(for: Preferences.FileTransfers.preventIdleSystemSleep)
+			)
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.fileTransfers))
 		}
 	}
 
@@ -167,6 +170,18 @@ struct PreferencesFolderPicker: View {
 }
 
 struct PreferencesInlineMediaPane: View {
+	let model: PreferencesPaneModel
+
+	var body: some View {
+		PreferencesPaneLayout {
+			PreferencesInlineMediaSections(model: model)
+		}
+	}
+}
+
+/// The pane's three sections, the first headed by the pane's own name, for the
+/// Advanced group that gathers it with file transfers.
+struct PreferencesInlineMediaSections: View {
 	/** The tags the nib's popup carried, in the order it listed them. */
 	private static let fileSizeChoices: [(tag: UInt, megabytes: Int)] = [
 		(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 10), (7, 15), (8, 20), (9, 50), (10, 100),
@@ -179,31 +194,29 @@ struct PreferencesInlineMediaPane: View {
 	}
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				VStack(alignment: .leading, spacing: 4) {
-					PreferencesToggle(title: PreferencesInlineMediaStrings.show, isOn: showsInlineMedia)
-						.disabled(model.isReloadingTheme)
-					PreferencesNote(PreferencesInlineMediaStrings.showNote)
-				}
-			} header: {
-				Text(verbatim: PreferencesSectionStrings.general)
+		Section {
+			VStack(alignment: .leading, spacing: 4) {
+				PreferencesToggle(title: PreferencesInlineMediaStrings.show, isOn: showsInlineMedia)
+					.disabled(model.isReloadingTheme)
+				PreferencesNote(PreferencesInlineMediaStrings.showNote)
 			}
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.inlineMedia))
+		}
 
-			Section {
-				fileSizePicker
-				heightField
-				widthField
-				checkEverything
-			} header: {
-				Text(verbatim: PreferencesInlineMediaStrings.headingImages)
-			}
+		Section {
+			fileSizePicker
+			heightField
+			widthField
+			checkEverything
+		} header: {
+			Text(verbatim: PreferencesInlineMediaStrings.headingImages)
+		}
 
-			Section {
-				limitations
-			} header: {
-				Text(verbatim: PreferencesInlineMediaStrings.headingLimitations)
-			}
+		Section {
+			limitations
+		} header: {
+			Text(verbatim: PreferencesInlineMediaStrings.headingLimitations)
 		}
 	}
 
@@ -319,33 +332,57 @@ struct PreferencesInlineMediaPane: View {
 struct PreferencesLogLocationPane: View {
 	let model: PreferencesPaneModel
 
+	var body: some View {
+		PreferencesPaneLayout {
+			PreferencesLogLocationSections(model: model)
+		}
+	}
+}
+
+/// The pane as one form section, for the Advanced group that gathers it with
+/// the hidden preferences.
+struct PreferencesLogLocationSections: View {
+	let model: PreferencesPaneModel
+
 	private var logsToDisk: Bool {
 		model.preferences[Preferences.Logging.logToDisk]
 	}
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				PreferencesToggle(
-					title: PreferencesLogLocationStrings.label,
-					isOn: model.preferences.binding(for: Preferences.Logging.logToDisk)
-				)
-				PreferencesFolderPicker(
-					label: PreferencesLogLocationStrings.label,
-					accessibilityLabel: PreferencesStrings.transcriptFolderAccessibilityLabel,
-					folder: model.transcriptFolder,
-					emptyTitle: PreferencesStrings.noTranscriptFolder,
-					select: { model.actions?.selectTranscriptFolder() },
-					clear: { model.actions?.clearTranscriptFolder() }
-				)
-				.labelsHidden()
-				.disabled(logsToDisk == false)
-			}
+		Section {
+			PreferencesToggle(
+				title: PreferencesLogLocationStrings.label,
+				isOn: model.preferences.binding(for: Preferences.Logging.logToDisk)
+			)
+			PreferencesFolderPicker(
+				label: PreferencesLogLocationStrings.label,
+				accessibilityLabel: PreferencesStrings.transcriptFolderAccessibilityLabel,
+				folder: model.transcriptFolder,
+				emptyTitle: PreferencesStrings.noTranscriptFolder,
+				select: { model.actions?.selectTranscriptFolder() },
+				clear: { model.actions?.clearTranscriptFolder() }
+			)
+			.labelsHidden()
+			.disabled(logsToDisk == false)
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.logLocation))
 		}
 	}
 }
 
 struct PreferencesHiddenPane: View {
+	let model: PreferencesPaneModel
+
+	var body: some View {
+		PreferencesPaneLayout {
+			PreferencesHiddenSections(model: model)
+		}
+	}
+}
+
+/// The pane as one form section, for the Advanced group that gathers it with
+/// the log location.
+struct PreferencesHiddenSections: View {
 	private static let scrollbackPresets = [
 		"100", "500", "1000", "1500", "2000", "2500", "3000", "3500", "4000", "4500", "5000",
 	]
@@ -353,73 +390,68 @@ struct PreferencesHiddenPane: View {
 	let model: PreferencesPaneModel
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				HStack(alignment: .firstTextBaseline, spacing: 4) {
-					Text(verbatim: PreferencesHiddenStrings.warningLabel)
-						.bold()
-					Text(verbatim: PreferencesHiddenStrings.warning)
-					Spacer()
-				}
+		Section {
+			HStack(alignment: .firstTextBaseline, spacing: 4) {
+				Text(verbatim: PreferencesHiddenStrings.warningLabel)
+					.bold()
+				Text(verbatim: PreferencesHiddenStrings.warning)
+				Spacer()
 			}
+			PreferencesToggle(
+				title: PreferencesHiddenStrings.appNap,
+				isOn: model.preferences.invertedBinding(for: Preferences.Internals.appSleepDisabled)
+			)
+			PreferencesToggle(
+				title: PreferencesHiddenStrings.webkitProcessPool,
+				isOn: model.preferences.binding(for: Preferences.Appearance.webViewProcessPoolLimited)
+			)
+			PreferencesToggle(
+				title: PreferencesHiddenStrings.webkitPreviewLinks,
+				isOn: model.preferences.binding(for: Preferences.Appearance.webViewPreviewLinks)
+			)
+			PreferencesToggle(
+				title: PreferencesHiddenStrings.customScrollbars,
+				isOn: model.preferences.invertedBinding(
+					for: Preferences.Appearance.webViewCustomScrollersDisabled
+				)
+			)
+			PreferencesToggle(
+				title: PreferencesHiddenStrings.loadHistoryLazily,
+				isOn: model.preferences.binding(for: Preferences.Logging.loadHistoryLazily)
+			)
+			PreferencesToggle(
+				title: PreferencesHiddenStrings.sidebarTranslucency,
+				isOn: model.preferences.invertedBinding(
+					for: Preferences.Appearance.disableSidebarTranslucency
+				)
+			)
+			scrollbackLimitRow
+			PreferencesNote(PreferencesHiddenStrings.restartNote)
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.hidden))
+		}
+	}
 
-			Section {
-				PreferencesToggle(
-					title: PreferencesHiddenStrings.appNap,
-					isOn: model.preferences.invertedBinding(for: Preferences.Internals.appSleepDisabled)
-				)
-				PreferencesToggle(
-					title: PreferencesHiddenStrings.webkitProcessPool,
-					isOn: model.preferences.binding(for: Preferences.Appearance.webViewProcessPoolLimited)
-				)
-				PreferencesToggle(
-					title: PreferencesHiddenStrings.webkitPreviewLinks,
-					isOn: model.preferences.binding(for: Preferences.Appearance.webViewPreviewLinks)
-				)
-				PreferencesToggle(
-					title: PreferencesHiddenStrings.customScrollbars,
-					isOn: model.preferences.invertedBinding(
-						for: Preferences.Appearance.webViewCustomScrollersDisabled
-					)
-				)
-				PreferencesToggle(
-					title: PreferencesHiddenStrings.loadHistoryLazily,
-					isOn: model.preferences.binding(for: Preferences.Logging.loadHistoryLazily)
-				)
-				PreferencesToggle(
-					title: PreferencesHiddenStrings.sidebarTranslucency,
-					isOn: model.preferences.invertedBinding(
-						for: Preferences.Appearance.disableSidebarTranslucency
-					)
-				)
-			}
-
-			Section {
-				LabeledContent {
-					HStack(spacing: 6) {
-						PreferencesComboField(
-							title: PreferencesHiddenStrings.scrollbackVisibleLimit,
-							presets: Self.scrollbackPresets,
-							text: model.preferences.numberFieldBinding(
-								for: Preferences.Logging.scrollbackVisibleLimit,
-								range: PreferencesValueValidation.scrollbackVisibleRange,
-								allowingZero: true
-							) {
-								TextualPreferences.performReloadAction(.scrollbackVisibleLimit)
-							}
-						)
-						Text(verbatim: PreferencesHiddenStrings.scrollbackVisibleLimitNote)
-							.font(.callout)
-							.foregroundStyle(.secondary)
+	private var scrollbackLimitRow: some View {
+		LabeledContent {
+			HStack(spacing: 6) {
+				PreferencesComboField(
+					title: PreferencesHiddenStrings.scrollbackVisibleLimit,
+					presets: Self.scrollbackPresets,
+					text: model.preferences.numberFieldBinding(
+						for: Preferences.Logging.scrollbackVisibleLimit,
+						range: PreferencesValueValidation.scrollbackVisibleRange,
+						allowingZero: true
+					) {
+						TextualPreferences.performReloadAction(.scrollbackVisibleLimit)
 					}
-				} label: {
-					Text(verbatim: PreferencesHiddenStrings.scrollbackVisibleLimit)
-				}
+				)
+				Text(verbatim: PreferencesHiddenStrings.scrollbackVisibleLimitNote)
+					.font(.callout)
+					.foregroundStyle(.secondary)
 			}
-
-			Section {
-				PreferencesNote(PreferencesHiddenStrings.restartNote)
-			}
+		} label: {
+			Text(verbatim: PreferencesHiddenStrings.scrollbackVisibleLimit)
 		}
 	}
 }

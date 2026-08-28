@@ -22,6 +22,28 @@ nonisolated enum PreferencesSectionStrings {
 	}
 }
 
+nonisolated enum PreferencesAdvancedStrings {
+	static var channels: String {
+		String(localized: .TDCPreferencesController.advancedChannels)
+	}
+
+	static var connection: String {
+		String(localized: .TDCPreferencesController.advancedConnection)
+	}
+
+	static var identity: String {
+		String(localized: .TDCPreferencesController.advancedIdentity)
+	}
+
+	static var media: String {
+		String(localized: .TDCPreferencesController.advancedMedia)
+	}
+
+	static var system: String {
+		String(localized: .TDCPreferencesController.advancedSystem)
+	}
+}
+
 nonisolated enum PreferencesGeneralStrings {
 	static var confirmQuit: String {
 		String(localized: .TDCPreferencesController.generalConfirmQuit)

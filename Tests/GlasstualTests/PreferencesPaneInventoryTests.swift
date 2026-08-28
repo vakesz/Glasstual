@@ -31,19 +31,70 @@ struct PreferencesPaneInventoryTests {
 		}
 	}
 
-	@Test("Every catalogued pane has a sidebar entry")
-	func everyPaneHasASidebarEntry() {
-		let identifiers = Set(PreferencesController.sidebarEntries().map(\.identifier))
+	@Test("Every catalogued pane belongs to exactly one sub-page")
+	func everyPaneBelongsToOneSubPage() {
+		var seen: [String: Int] = [:]
+		for section in PreferencesController.sections() {
+			for pane in section.subPages.flatMap(\.panes) {
+				seen[pane.identifier, default: 0] += 1
+			}
+		}
 		for pane in PreferencesPaneIdentifier.allCases {
-			#expect(identifiers.contains(pane.rawValue), "no sidebar entry for \(pane.rawValue)")
+			#expect(seen[pane.rawValue] == 1, "\(pane.rawValue) appears in \(seen[pane.rawValue] ?? 0) sub-pages")
 		}
 	}
 
-	@Test("A sidebar entry names a pane the window can show")
-	func sidebarEntriesResolve() {
-		for entry in PreferencesController.sidebarEntries() {
-			#expect(PreferencesController.paneExists(entry.identifier), "unknown pane \(entry.identifier)")
+	@Test("Every section has a title, a symbol and at least one sub-page")
+	func sectionsAreComplete() {
+		let sections = PreferencesController.sections()
+		#expect(Set(sections.map(\.identifier)) == Set(PreferencesSectionIdentifier.allCases))
+		for section in sections {
+			#expect(section.title.isEmpty == false)
+			#expect(section.symbolName.isEmpty == false)
+			#expect(section.subPages.isEmpty == false, "\(section.identifier.rawValue) shows nothing")
 		}
+	}
+
+	@Test("A sub-page names something the window can show")
+	func subPagesResolve() {
+		for section in PreferencesController.sections() {
+			for subPage in section.subPages {
+				#expect(
+					PreferencesController.paneExists(subPage.identifier),
+					"unknown sub-page \(subPage.identifier)"
+				)
+				for pane in subPage.panes {
+					#expect(PreferencesController.paneExists(pane.identifier), "unknown pane \(pane.identifier)")
+				}
+			}
+		}
+	}
+
+	/** The picker sits in a window of fixed width, so a section that would need
+	 more segments than fit has to fall back to a pop-up rather than truncate. */
+	@Test("A segmented picker is only used where its labels fit")
+	func segmentedPickersFit() {
+		for section in PreferencesController.sections() where section.usesSegmentedPicker {
+			#expect(
+				section.subPages.count <= PreferencesSection.maximumSegments,
+				"\(section.identifier.rawValue) asks for \(section.subPages.count) segments"
+			)
+		}
+	}
+
+	@Test("The Advanced section keeps to five sub-pages")
+	func advancedSectionIsGrouped() {
+		let advanced = PreferencesController.sections().first { $0.identifier == .advanced }
+		let subPages = try? #require(advanced?.subPages)
+		#expect(subPages?.count == PreferencesAdvancedGroup.allCases.count)
+		#expect(advanced?.usesSegmentedPicker == true)
+	}
+
+	@Test("A pane identifier stored before the grouping still finds its sub-page")
+	func storedPaneIdentifiersResolve() {
+		let advanced = PreferencesController.sections().first { $0.identifier == .advanced }
+		let subPage = advanced?.subPages.first { $0.contains(PreferencesPaneIdentifier.hidden.rawValue) }
+		#expect(subPage?.identifier == PreferencesAdvancedGroup.system.identifier)
 	}
 
 	@Test("An identifier nothing answers to is not shown")
@@ -52,11 +103,11 @@ struct PreferencesPaneInventoryTests {
 		#expect(PreferencesController.paneExists("plugin-9999") == false)
 	}
 
-	@Test("Every sidebar entry carries a symbol and a title")
-	func sidebarEntriesAreLabelled() {
-		for entry in PreferencesController.sidebarEntries() {
-			#expect(entry.title.isEmpty == false)
-			#expect(entry.symbolName.isEmpty == false)
+	@Test("The seven main sections show one pane each")
+	func mainSectionsHoldOnePane() {
+		for section in PreferencesController.sections() where section.identifier.pane != nil {
+			#expect(section.subPages.count == 1, "\(section.identifier.rawValue) is not a single pane")
+			#expect(section.subPages.first?.identifier == section.identifier.pane?.rawValue)
 		}
 	}
 }
