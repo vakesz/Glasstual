@@ -15,7 +15,9 @@ import os
 
 @objc(TXSharedApplication)
 public final class SharedApplication: NSObject {
-	private static let lock = NSLock()
+	/** Recursive: a singleton's initializer may legitimately ask for another singleton
+	 on the same thread (the theme controller reads the appearance while loading). */
+	private static let lock = NSRecursiveLock()
 
 	private nonisolated(unsafe) static var appearance: Appearance?
 	private nonisolated(unsafe) static var networkReachabilityNotifier: Reachability?
@@ -48,6 +50,12 @@ public final class SharedApplication: NSObject {
 
 	@objc
 	public static func sharedAppearance() -> Appearance {
+		/* Reading an already-created value must not hop to the main queue: callers on
+		 other threads reach these accessors while the main thread is blocked. */
+		if let existing = lock.withLock({ appearance }) {
+			return existing
+		}
+
 		guard Thread.isMainThread else {
 			return DispatchQueue.main.sync { sharedAppearance() }
 		}
@@ -64,6 +72,12 @@ public final class SharedApplication: NSObject {
 
 	@objc
 	public static func sharedNotificationController() -> NotificationController {
+		/* Reading an already-created value must not hop to the main queue: callers on
+		 other threads reach these accessors while the main thread is blocked. */
+		if let existing = lock.withLock({ notificationController }) {
+			return existing
+		}
+
 		guard Thread.isMainThread else {
 			return DispatchQueue.main.sync { sharedNotificationController() }
 		}
@@ -97,6 +111,12 @@ public final class SharedApplication: NSObject {
 
 	@objc
 	public static func sharedThemeController() -> TPCThemeController {
+		/* Reading an already-created value must not hop to the main queue: callers on
+		 other threads reach these accessors while the main thread is blocked. */
+		if let existing = lock.withLock({ themeController }) {
+			return existing
+		}
+
 		guard Thread.isMainThread else {
 			return DispatchQueue.main.sync { sharedThemeController() }
 		}
@@ -113,6 +133,12 @@ public final class SharedApplication: NSObject {
 
 	@objc
 	public static func sharedFileTransferDialog() -> TDCFileTransferDialog {
+		/* Reading an already-created value must not hop to the main queue: callers on
+		 other threads reach these accessors while the main thread is blocked. */
+		if let existing = lock.withLock({ fileTransferDialog }) {
+			return existing
+		}
+
 		guard Thread.isMainThread else {
 			return DispatchQueue.main.sync { sharedFileTransferDialog() }
 		}

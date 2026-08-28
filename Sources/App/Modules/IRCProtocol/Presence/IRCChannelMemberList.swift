@@ -140,7 +140,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	private var controller: IRCChannelMemberListController?
 	private var memberContainer: [ChannelUser] = []
 
-	/* Both are weak: a member list can outlive its owners during teardown, and
+	/** Both are weak: a member list can outlive its owners during teardown, and
 	 force-unwrapping them turned that into a crash. */
 	private var client: IRCClient? {
 		clientStorage

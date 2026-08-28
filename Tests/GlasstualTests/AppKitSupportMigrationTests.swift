@@ -122,7 +122,7 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertEqual(TVCTextViewCaretLocation.lastLine.rawValue, 3)
 	}
 
-	func testPreviouslySuppressedAlertReturnsWithoutPresentingOrMutatingTheResponsePointer() {
+	func testPreviouslySuppressedAlertReturnsWithoutPresentingAndReportsSuppression() {
 		let baseKey = "AppKitSupportMigrationTests.\(UUID().uuidString)"
 		let defaultsKey = TDCAlert.suppressionKey(withBase: baseKey)
 		var suppressionResponse = ObjCBool(false)
@@ -142,7 +142,8 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		)
 
 		XCTAssertEqual(response, .default)
-		XCTAssertFalse(suppressionResponse.boolValue)
+		/* The alert *was* suppressed, so the out-parameter has to say so. */
+		XCTAssertTrue(suppressionResponse.boolValue)
 	}
 
 	func testPreferencesControllerLoadsWindowFromNib() {
