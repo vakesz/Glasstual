@@ -73,11 +73,9 @@ public nonisolated protocol FileTransferDialogSocketDelegate: AnyObject {
 public typealias TDCFileTransferDialogSocketDelegate = FileTransferDialogSocketDelegate
 public typealias TDCFileTransferDialogSocket = FileTransferDialogSocket
 
-/**
- A sendable handle for a dispatch work item whose only cross-queue operation is
- cancellation. `DispatchWorkItem.cancel()` is thread-safe, while the work item
- itself has not adopted `Sendable`.
- */
+/* ISOLATION-EXCEPTION: a sendable handle for a dispatch work item whose only
+ cross-queue operation is cancellation. `DispatchWorkItem.cancel()` is
+ thread-safe, while the work item itself has not adopted `Sendable`. */
 private final nonisolated class FileTransferTimeout: @unchecked Sendable {
 	let workItem: DispatchWorkItem
 
@@ -93,10 +91,10 @@ private final nonisolated class FileTransferTimeout: @unchecked Sendable {
 /**
  A queue-confined Network.framework wrapper used by DCC file transfers.
 
- Every mutable network object belongs to `socketQueue`. The two flags read by
- other queues use `Mutex`, and the class is `@unchecked Sendable` only because
- Network.framework and Objective-C delegate callbacks cannot express that
- queue confinement to Swift's type system.
+ ISOLATION-EXCEPTION: every mutable network object belongs to `socketQueue`. The
+ two flags read by other queues use `Mutex`, and the class is `@unchecked
+ Sendable` only because Network.framework's delegate callbacks cannot express
+ that queue confinement to Swift's type system.
  */
 @objc(TDCFileTransferDialogSocket)
 public final nonisolated class FileTransferDialogSocket: NSObject, @unchecked Sendable {

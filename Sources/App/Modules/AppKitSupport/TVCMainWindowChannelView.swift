@@ -26,6 +26,9 @@ private final class MainWindowChannelViewDelegate: NSObject, NSSplitViewDelegate
 	}
 }
 
+/* ISOLATION-EXCEPTION: `NSView.sortSubviews(using:context:)` takes a C function
+ pointer, which cannot carry isolation. AppKit sorts subviews during layout on
+ the main thread. */
 private nonisolated func sortChannelViewSubviews(
 	_ firstView: NSView,
 	_ secondView: NSView,
@@ -350,6 +353,8 @@ private final class MainWindowChannelViewSubview: NSView {
 
 		if backingViewIsLoading {
 			backingViewLayoutObservation = backingView.observe(\.isLayingOutView, options: [.new]) { [weak self] _, _ in
+				/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
+				 nonisolated. AppKit posts these changes on the main thread. */
 				MainActor.assumeIsolated {
 					self?.toggleOverlayView()
 				}

@@ -22,14 +22,12 @@ private let notificationConfigurationLogger = Logger(
 	category: "NotificationConfiguration"
 )
 
-private final class NotificationObservation: @unchecked Sendable {
-	let keyPath: String?
-	let object: AnyObject?
-
-	init(keyPath: String?, object: Any?) {
-		self.keyPath = keyPath
-		self.object = object as AnyObject?
-	}
+/** Carries a KVO change from the nonisolated observation handler to the main
+ actor. `NotificationConfiguration` is main-actor isolated, so this is a plain
+ `Sendable` value rather than an unchecked box. */
+private struct NotificationObservation: Sendable {
+	let keyPath: String
+	let object: NotificationConfiguration
 }
 
 @objc(TVCNotificationConfigurationViewController)
@@ -274,6 +272,7 @@ public final class NotificationConfigurationViewController: NSObject {
 	) -> NSKeyValueObservation {
 		alert.observe(keyPath, options: .new) { [weak self] object, _ in
 			let observation = NotificationObservation(keyPath: name, object: object)
+
 			Task { @MainActor [weak self] in
 				self?.handle(observation)
 			}

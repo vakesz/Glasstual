@@ -227,6 +227,8 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.typingDidChange)
 				.receive(on: DispatchQueue.main)
 				.sink { [weak self] notification in
+					/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
+					 publisher above delivers on the main queue. */
 					MainActor.assumeIsolated {
 						self?.typingStateDidChange(notification)
 					}
@@ -236,6 +238,8 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.selectionDidChange)
 				.receive(on: DispatchQueue.main)
 				.sink { [weak self] notification in
+					/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
+					 publisher above delivers on the main queue. */
 					MainActor.assumeIsolated {
 						self?.selectionDidChange(notification)
 					}
@@ -294,10 +298,9 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
-		MainActor.assumeIsolated {
-			setUserDefaultsObserved(window != nil)
-			setTypingObserved(window != nil)
-		}
+
+		setUserDefaultsObserved(window != nil)
+		setTypingObserved(window != nil)
 	}
 
 	private func setUserDefaultsObserved(_ observed: Bool) {
@@ -321,6 +324,8 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 		)
 		.receive(on: DispatchQueue.main)
 		.sink { [weak self] _ in
+			/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The publisher
+			 above delivers on the main queue. */
 			MainActor.assumeIsolated {
 				guard let self else {
 					return

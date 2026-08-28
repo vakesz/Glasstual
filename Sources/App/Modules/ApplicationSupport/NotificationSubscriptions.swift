@@ -53,6 +53,8 @@ final class NotificationSubscriptions {
 		using handler: @escaping @MainActor () -> Void
 	) {
 		let token = center.addObserver(forName: name, object: nil, queue: nil) { _ in
+			/* ISOLATION-EXCEPTION: the whole point of this overload is to run inline on
+			 the posting thread, which for these notifications is the main thread. */
 			MainActor.assumeIsolated {
 				handler()
 			}
