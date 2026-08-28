@@ -198,12 +198,10 @@ public final class ThemeController: NSObject {
 		)
 	}
 
-	public nonisolated func prepareForApplicationTermination() {
-		MainActor.assumeIsolated {
-			Self.logger.info("Preparing theme controller")
-			stopMonitoringThemes()
-			removeTemporaryCopyOfTheme()
-		}
+	public func prepareForApplicationTermination() {
+		Self.logger.info("Preparing theme controller")
+		stopMonitoringThemes()
+		removeTemporaryCopyOfTheme()
 	}
 
 	public func themeExists(_ themeName: String) -> Bool {

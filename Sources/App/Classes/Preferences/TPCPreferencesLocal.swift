@@ -39,11 +39,23 @@
 import AppKit
 import CocoaExtensions
 import Combine
+import Synchronization
 
+/* ISOLATION-EXCEPTION: `TextualUserDefaults` is an `NSUserDefaults` subclass and
+ not yet `Sendable`. `UserDefaults` is documented as thread-safe, and this is a
+ `let` bound once to the shared instance. */
 private nonisolated(unsafe) let preferences = TextualUserDefaults.shared()
-private nonisolated(unsafe) var excludeKeywords: [String]?
-private nonisolated(unsafe) var matchKeywords: [String]?
-private nonisolated(unsafe) var keywordDefaultsObservation: AnyCancellable?
+
+/** Highlight keywords are rewritten by a defaults observation on whichever thread
+ wrote the default and read by message rendering on the IRC threads, so the cache
+ is a value behind a lock rather than a pair of unguarded globals. */
+private struct HighlightKeywords {
+	var match: [String]?
+	var exclude: [String]?
+}
+
+private nonisolated let highlightKeywords = Mutex(HighlightKeywords())
+private nonisolated let highlightKeywordObservation = Mutex<AnyCancellable?>(nil)
 
 public nonisolated extension TextualPreferences {
 	private class func bool(_ key: String) -> Bool {
@@ -548,20 +560,12 @@ public nonisolated extension TextualPreferences {
 		); preferences.removeObject(forKey: TPCPreferencesThemeNameMissingLocallyDefaultsKey)
 	}
 
+	/** Main-actor because it asks the theme controller whether a style is on disk.
+	 The translation blocked the calling thread on the main queue instead, which
+	 deadlocks when the caller is what the main thread is waiting for. */
+	@MainActor
 	class func setThemeNameWithExistenceCheck(_ value: String) {
-		let themeExists: Bool = if Thread.isMainThread {
-			MainActor.assumeIsolated {
-				SharedApplication.sharedThemeController().themeExists(value)
-			}
-		} else {
-			DispatchQueue.main.sync {
-				MainActor.assumeIsolated {
-					SharedApplication.sharedThemeController().themeExists(value)
-				}
-			}
-		}
-
-		if themeExists {
+		if SharedApplication.sharedThemeController().themeExists(value) {
 			setThemeName(value)
 		} else {
 			set(
@@ -1044,16 +1048,25 @@ public nonisolated extension TextualPreferences {
 	}
 
 	private class func reloadHighlightKeywords() {
-		matchKeywords = loadKeywords(for: "Highlight List -> Primary Matches")
-		excludeKeywords = loadKeywords(for: "Highlight List -> Excluded Matches")
+		let match = loadKeywords(for: "Highlight List -> Primary Matches")
+		let exclude = loadKeywords(for: "Highlight List -> Excluded Matches")
+
+		highlightKeywords.withLock { keywords in
+			keywords.match = match
+			keywords.exclude = exclude
+		}
 	}
 
 	class func loadExcludeKeywords() {
-		excludeKeywords = loadKeywords(for: "Highlight List -> Excluded Matches")
+		let exclude = loadKeywords(for: "Highlight List -> Excluded Matches")
+
+		highlightKeywords.withLock { $0.exclude = exclude }
 	}
 
 	class func loadMatchKeywords() {
-		matchKeywords = loadKeywords(for: "Highlight List -> Primary Matches")
+		let match = loadKeywords(for: "Highlight List -> Primary Matches")
+
+		highlightKeywords.withLock { $0.match = match }
 	}
 
 	private class func cleanKeywords(for key: String) {
@@ -1071,11 +1084,11 @@ public nonisolated extension TextualPreferences {
 	}
 
 	class func highlightMatchKeywords() -> [String]? {
-		matchKeywords
+		highlightKeywords.withLock { $0.match }
 	}
 
 	class func highlightExcludeKeywords() -> [String]? {
-		excludeKeywords
+		highlightKeywords.withLock { $0.exclude }
 	}
 
 	class func registerWebKit2DynamicDefaults() {
@@ -1116,13 +1129,14 @@ public nonisolated extension TextualPreferences {
 		ApplicationInfo.incrementApplicationRunCount()
 		registerDefaults()
 		PathInfo.startUsingTranscriptFolderURL()
-		keywordDefaultsObservation = NotificationCenter.default.publisher(
-			for: UserDefaults.didChangeNotification,
-			object: preferences
-		)
-		.sink { _ in
-			loadMatchKeywords()
-			loadExcludeKeywords()
+		highlightKeywordObservation.withLock { stored in
+			stored = NotificationCenter.default.publisher(
+				for: UserDefaults.didChangeNotification,
+				object: preferences
+			)
+			.sink { _ in
+				reloadHighlightKeywords()
+			}
 		}
 		reloadHighlightKeywords()
 	}
