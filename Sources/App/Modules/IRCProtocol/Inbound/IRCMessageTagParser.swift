@@ -54,8 +54,17 @@ public final class ParsedMessageTags: NSObject {
 
 @objc(IRCMessageTagParser)
 public final class MessageTagParser: NSObject {
+	/// IRCv3 message-tags caps the tag section at 8191 bytes. Anything longer
+	/// is a server that is not playing by the rules, so its tags are dropped
+	/// rather than parsed into an unbounded dictionary.
+	@objc public static let maximumSectionLength = 8191
+
 	@objc(parsedTagsFromSection:)
 	public static func parsedTags(fromSection section: String) -> ParsedMessageTags {
+		guard section.utf8.count <= maximumSectionLength else {
+			return ParsedMessageTags(tags: [:])
+		}
+
 		var tags: [String: String] = [:]
 
 		for component in section.split(separator: ";", omittingEmptySubsequences: true) {

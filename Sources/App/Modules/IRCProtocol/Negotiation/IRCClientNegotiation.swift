@@ -39,6 +39,11 @@
 import Foundation
 
 enum ClientNegotiationUtilities {
+	/// Ceiling on the reassembled `AUTHENTICATE` payload. Every mechanism the
+	/// client supports fits in a fraction of this; without it a server can
+	/// grow the buffer 400 characters at a time forever.
+	static let maximumSASLPayloadLength = 16384
+
 	static func supportedSASLMechanisms(
 		hasClientCertificate: Bool,
 		externalMechanismDisabled: Bool,
@@ -458,6 +463,13 @@ extension IRCClient {
 
 		if saslIncomingPayload == nil {
 			saslIncomingPayload = NSMutableString()
+		}
+
+		let accumulated = (saslIncomingPayload?.length ?? 0) + (chunk as NSString).length
+
+		guard accumulated <= ClientNegotiationUtilities.maximumSASLPayloadLength else {
+			abortSASLNegotiation(reason: IRCTransportSecurityStrings.saslPayloadTooLarge)
+			return
 		}
 
 		saslIncomingPayload?.append(chunk)
