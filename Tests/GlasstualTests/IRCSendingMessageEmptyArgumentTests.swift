@@ -23,11 +23,26 @@ struct IRCSendingMessageEmptyArgumentTests {
 		#expect(line == "MODE #chat +o nick")
 	}
 
-	@Test("A trailing empty argument is simply omitted")
-	func trailingEmptyArgumentIsOmitted() {
+	/// RFC 1459 2.3.1 allows an empty trailing parameter, and the `ircdocs`
+	/// msg-join vectors expect one to be written as a bare colon. Dropping it
+	/// changes the command: "AWAY :" clears an away message, "AWAY" asks for
+	/// nothing.
+	@Test("A trailing empty argument is written as a bare colon")
+	func trailingEmptyArgumentIsWrittenAsAColon() {
 		let line = SendingMessage.string(command: "KILL", arguments: ["nick", ""])
 
-		#expect(line == "KILL nick")
+		#expect(line == "KILL nick :")
+	}
+
+	@Test("A command whose only argument is empty still writes the colon")
+	func aLoneEmptyArgumentIsWrittenAsAColon() {
+		#expect(SendingMessage.string(command: "AWAY", arguments: [""]) == "AWAY :")
+	}
+
+	@Test("A command with no arguments at all writes no colon")
+	func noArgumentsWritesNoColon() {
+		#expect(SendingMessage.string(command: "AWAY", arguments: []) == "AWAY")
+		#expect(SendingMessage.string(command: "AWAY", arguments: nil) == "AWAY")
 	}
 
 	@Test("Non-empty arguments are unaffected")
