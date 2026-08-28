@@ -59,22 +59,6 @@ public final class ChannelSpotlightSearchResult: NSObject {
 		channel?.associatedClient?.uniqueIdentifier ?? ""
 	}
 
-	@objc(compare:)
-	public func compare(_ other: ChannelSpotlightSearchResult) -> ComparisonResult {
-		let localDistance = distance.doubleValue
-		let remoteDistance = other.distance.doubleValue
-
-		if localDistance > remoteDistance {
-			return .orderedAscending
-		}
-
-		if localDistance < remoteDistance {
-			return .orderedDescending
-		}
-
-		return .orderedSame
-	}
-
 	@objc(recalculateDistanceWith:)
 	public func recalculateDistance(with searchString: String) {
 		guard searchString.isEmpty == false, let channel else {
