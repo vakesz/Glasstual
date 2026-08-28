@@ -294,8 +294,36 @@ extension PreferencesController {
 			guard plugins.indices.contains(pluginIndex) else { return nil }
 			return plugins[pluginIndex].pluginPreferencesPaneView
 		}
-		guard let pane = PreferencesPaneCatalog.descriptor(for: identifier) else { return nil }
-		return value(forKey: pane.contentViewKey) as? NSView
+		guard let pane = PreferencesPaneIdentifier(rawValue: identifier) else { return nil }
+		return contentView(for: pane)
+	}
+
+	/** Panes used to be resolved with `value(forKey:)` against 19 outlet names
+	 spelled as strings, so renaming an outlet broke a pane at runtime. The
+	 switch is exhaustive over the identifiers, so a new pane without a view is
+	 a compile error. */
+	private func contentView(for pane: PreferencesPaneIdentifier) -> NSView? {
+		switch pane {
+		case .addOns: contentViewInstalledAddons
+		case .behavior: contentViewBehavior
+		case .channelManagement: contentViewChannelManagement
+		case .commandScope: contentViewCommandScope
+		case .compatibility: contentViewCompatibility
+		case .controls: contentViewControls
+		case .defaultIRCopMessages: contentViewDefaultIRCopMessages
+		case .defaultIdentity: contentViewDefaultIdentity
+		case .fileTransfers: contentViewFileTransfers
+		case .floodControl: contentViewFloodControl
+		case .general: contentViewGeneral
+		case .hidden: contentViewHiddenPreferences
+		case .highlights: contentViewHighlights
+		case .incomingData: contentViewIncomingData
+		case .inlineMedia: contentViewInlineMedia
+		case .interface: contentViewInterface
+		case .logLocation: contentViewLogLocation
+		case .notifications: contentViewNotifications
+		case .style: contentViewStyle
+		}
 	}
 
 	private func sidebarItem(for identifier: String) -> PreferencesSidebarItem? {

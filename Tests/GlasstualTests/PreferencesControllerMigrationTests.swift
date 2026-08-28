@@ -47,8 +47,8 @@ final class PreferencesControllerMigrationTests: XCTestCase {
 		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "general")?.group, .main)
 		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "addons")?.group, .addOns)
 		XCTAssertEqual(
-			PreferencesPaneCatalog.descriptor(for: "compatibility")?.contentViewKey,
-			"contentViewCompatibility"
+			PreferencesPaneCatalog.descriptor(for: "compatibility")?.symbolName,
+			"wrench.and.screwdriver"
 		)
 		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "hidden")?.group, .advanced)
 		XCTAssertEqual(Set(PreferencesPaneCatalog.panes.map(\.identifier)), Set(PreferencesPaneIdentifier.allCases))
