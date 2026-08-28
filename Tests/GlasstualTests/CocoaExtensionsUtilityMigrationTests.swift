@@ -41,9 +41,4 @@ final class CocoaExtensionsUtilityMigrationTests: XCTestCase {
 		defaults.setColor(nil, forKey: "color")
 		XCTAssertNil(defaults.object(forKey: "color"))
 	}
-
-	func testAccessibilityRuntimeContractRemainsStable() {
-		XCTAssertNotNil(NSClassFromString("XRAccessibility"))
-		XCTAssertTrue(Accessibility.responds(to: NSSelectorFromString("isVoiceOverEnabled")))
-	}
 }

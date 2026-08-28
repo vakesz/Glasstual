@@ -30,18 +30,15 @@
  *
  *********************************************************************** */
 
-import Foundation
+import AppKit
 
-@objc(XRAccessibility)
-public final class Accessibility: NSObject {
-	@objc(isVoiceOverEnabled)
+public enum Accessibility {
+	/// Whether VoiceOver is running.
+	///
+	/// Reading `com.apple.universalaccess`'s preferences instead is denied by
+	/// the app sandbox, and the denial is indistinguishable from "off" -- so
+	/// that form always answered `false` in a shipping build.
 	public static var isVoiceOverEnabled: Bool {
-		CFPreferencesGetAppBooleanValue(
-			"voiceOverOnOffKey" as CFString,
-			"com.apple.universalaccess" as CFString,
-			nil
-		)
+		NSWorkspace.shared.isVoiceOverEnabled
 	}
 }
-
-public typealias XRAccessibility = Accessibility

@@ -55,7 +55,7 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	init(xpcConnection: NSXPCConnection) {
 		serviceConnection = xpcConnection
 		super.init()
-		_LogToConsoleSetDefaultSubsystemToMainBundle("General")
+		Logging.setDefaultSubsystem(toMainBundleCategory: "General")
 	}
 
 	func clientConnectionEnded() {
