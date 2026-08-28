@@ -112,6 +112,8 @@ public extension FileManager {
 				try removeItem(at: destination, movingToTrash: options.contains(.moveToTrash))
 			}
 
+			try createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+
 			let values = try source.resourceValues(forKeys: [.isSymbolicLinkKey, .isApplicationKey, .isPackageKey])
 			let shouldLink = values.isSymbolicLink == true ||
 				(options.contains(.symlinkPackages) &&
