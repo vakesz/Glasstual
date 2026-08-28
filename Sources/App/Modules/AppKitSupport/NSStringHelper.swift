@@ -179,10 +179,6 @@ public nonisolated extension NSString {
 		hostmask?.address
 	}
 
-	@objc var stringWithValidURIScheme: String? {
-		LinkParser.urlWithProperScheme(self as String)
-	}
-
 	@objc(attributedStringWithIRCFormatting:preferredFontColor:honorFormattingPreference:)
 	func attributedString(
 		withIRCFormatting preferredFont: NSFont,
@@ -442,24 +438,6 @@ public nonisolated extension NSString {
 		return finish()
 	}
 
-	@objc(base64EncodingWithLineLength:)
-	func base64Encoding(withLineLength lineLength: UInt) -> [String] {
-		guard length > 0 else {
-			return [self as String]
-		}
-
-		guard let selfData = data(using: String.Encoding.utf8.rawValue), lineLength > 0 else {
-			return [self as String]
-		}
-
-		/* Base64 output is pure ASCII, so chunking it by character count and by
-		 byte count are the same thing and neither can split a character. */
-		let encodedString = selfData.base64EncodedString(options: [])
-		return stride(from: 0, to: encodedString.count, by: Int(lineLength)).map { offset in
-			String(encodedString.dropFirst(offset).prefix(Int(lineLength)))
-		}
-	}
-
 	@objc(padNicknameWithCharacter:maximumLength:)
 	func padNickname(withCharacter padCharacter: unichar, maximumLength: UInt) -> String? {
 		precondition(padCharacter != 0)
@@ -480,11 +458,13 @@ public nonisolated extension NSString {
 				continue
 			}
 
-			let stringHead = substring.substring(to: i)
-			var stringHeadMutable = stringHead
+			/* The tail used to be hardcoded to "_" while the head branch above
+			 used the caller's character. The sole caller passes "_", so the two
+			 agreed by accident. */
+			var stringHeadMutable = substring.substring(to: i)
 
 			for _ in i ..< substring.length {
-				stringHeadMutable += "_"
+				stringHeadMutable += padCharacterString
 			}
 
 			return stringHeadMutable

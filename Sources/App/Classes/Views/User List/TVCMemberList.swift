@@ -178,7 +178,11 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	@objc(itemAtRow:)
 	public func item(atRow row: Int) -> Any? {
-		precondition(row >= 0)
+		/* -1 is what the table reports for "no row", so it is an answer, not a
+		 programming error. */
+		guard row >= 0 else {
+			return nil
+		}
 
 		let memberIndex = memberIndex(forRow: row)
 		guard members.indices.contains(memberIndex) else {
@@ -687,9 +691,6 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		}
 	}
 
-	@objc(drawContextMenuHighlightForRow:)
-	public func drawContextMenuHighlight(forRow _: Int32) {}
-
 	override public var allowsVibrancy: Bool {
 		true
 	}
@@ -766,10 +767,10 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 			return
 		}
 
-		switch event.keyCode {
-		case 125, 126: // down / up arrow
+		switch KeyCode(rawValue: event.keyCode) {
+		case .downArrow, .upArrow:
 			super.keyDown(with: event)
-		case 123, 124, 116, 121: // left / right / page up / page down
+		case .leftArrow, .rightArrow, .pageUp, .pageDown:
 			break
 		default:
 			keyDelegate.memberListKeyDown(event)

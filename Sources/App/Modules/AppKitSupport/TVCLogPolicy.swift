@@ -292,12 +292,19 @@ public final class LogPolicy: NSObject {
 		]
 	}
 
+	/** Spelled through LogLine's own mapping rather than as literals, so a
+	 renamed line type is a compile error rather than a reply menu that
+	 quietly stops appearing. */
+	private static let replyableLineTypes: Set<String> = Set(
+		[TVCLogLineType.privateMessage, .action, .notice].compactMap(LogLine.string(for:))
+	)
+
 	private func messageMenuItems(for target: LogPolicyTarget, in webView: LogView) -> [NSMenuItem] {
 		guard
 			let messageIdentifier = target.lineMessageIdentifier,
 			messageIdentifier.isEmpty == false,
 			let lineType = target.lineType,
-			lineType == "privmsg" || lineType == "action" || lineType == "notice",
+			Self.replyableLineTypes.contains(lineType),
 			let channel = webView.viewController?.associatedChannel,
 			channel.isUtility == false
 		else {

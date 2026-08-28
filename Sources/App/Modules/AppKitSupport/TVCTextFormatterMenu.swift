@@ -405,29 +405,22 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		var rainbowArrayIndex = 0
 		let colorCodes: [UInt] = [4, 7, 8, 3, 12, 2, 6]
 
-		for charCountIndex in 0 ..< mutableStringCopy.length {
-			if rainbowArrayIndex > 6 {
-				rainbowArrayIndex = 0
-			}
+		/* Coloured by composed character sequence, not by UTF-16 unit: a
+		 surrogate pair or a combining sequence used to be split across two
+		 colour codes, which broke the character. */
+		mutableStringCopy.string.enumerateSubstrings(
+			in: mutableStringCopy.string.startIndex ..< mutableStringCopy.string.endIndex,
+			options: .byComposedCharacterSequences
+		) { [self] _, substringRange, _, _ in
+			let currentColorCode = colorCodes[rainbowArrayIndex % colorCodes.count]
+			let currentCharacterRange = NSRange(substringRange, in: mutableStringCopy.string)
 
-			let currentColorCode = colorCodes[rainbowArrayIndex]
-			let currentCharacterRange = NSRange(location: charCountIndex, length: 1)
-
-			if asForegroundColor {
-				applyEffect(
-					.foregroundColor,
-					withValue: NSNumber(value: currentColorCode),
-					inRange: currentCharacterRange,
-					to: mutableStringCopy
-				)
-			} else {
-				applyEffect(
-					.backgroundColor,
-					withValue: NSNumber(value: currentColorCode),
-					inRange: currentCharacterRange,
-					to: mutableStringCopy
-				)
-			}
+			applyEffect(
+				asForegroundColor ? .foregroundColor : .backgroundColor,
+				withValue: NSNumber(value: currentColorCode),
+				inRange: currentCharacterRange,
+				to: mutableStringCopy
+			)
 
 			rainbowArrayIndex += 1
 		}

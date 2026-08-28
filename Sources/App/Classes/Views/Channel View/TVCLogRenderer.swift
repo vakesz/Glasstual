@@ -350,7 +350,11 @@ public final nonisolated class LogRenderer: NSObject {
 		var mapped: [String: String] = [:]
 		for link in links {
 			bodyWithAttributes.addAttribute(RendererFormatting.url, value: link, range: link.range)
-			mapped[link.stringValue, default: link.uniqueIdentifier] = mapped[link.stringValue] ?? link.uniqueIdentifier
+			/* First identifier wins: the `default:` subscript this used to write
+			 through was discarded by the assignment. */
+			if mapped[link.stringValue] == nil {
+				mapped[link.stringValue] = link.uniqueIdentifier
+			}
 		}
 		output[.links] = links
 		output[.mappedLinks] = mapped

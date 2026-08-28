@@ -552,10 +552,6 @@ public class ServerListRowCell: NSTableRowView {
 		return cachedChildCell
 	}
 
-	private var isGroupItem: Bool {
-		self is ServerListGroupRowCell
-	}
-
 	override public func accessibilityLabel() -> String? {
 		if let label = childCell?.accessibilityLabel(), label.isEmpty == false {
 			return label

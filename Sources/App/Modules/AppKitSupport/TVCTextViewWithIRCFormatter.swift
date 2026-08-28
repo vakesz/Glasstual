@@ -58,7 +58,9 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 	@objc public var preferredFont: NSFont {
 		get { preferredFontStorage }
 		set {
-			guard newValue !== preferredFontStorage else {
+			/* Fonts and colours are compared by value: `!==` re-applied on an
+			 equal-but-distinct instance and skipped on the same instance. */
+			guard newValue != preferredFontStorage else {
 				return
 			}
 
@@ -70,7 +72,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 	@objc public var preferredFontColor: NSColor {
 		get { preferredFontColorStorage }
 		set {
-			guard newValue !== preferredFontColorStorage else {
+			guard newValue != preferredFontColorStorage else {
 				return
 			}
 

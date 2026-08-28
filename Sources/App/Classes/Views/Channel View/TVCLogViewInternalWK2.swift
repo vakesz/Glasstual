@@ -212,10 +212,6 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		)
 	}
 
-	@objc var maintainsInactiveSelection: Bool {
-		true
-	}
-
 	@objc(_t_evaluateJavaScript:completionHandler:)
 	func evaluate(_ code: String, completionHandler: ((Any?) -> Void)?) {
 		evaluateJavaScript(code) { [weak self] result, error in
