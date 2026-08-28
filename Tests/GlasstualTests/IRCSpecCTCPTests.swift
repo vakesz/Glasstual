@@ -308,19 +308,35 @@ struct IRCSpecCTCPTests {
 
 	// MARK: - Delimiters inside a payload
 
-	/// Documented deviation: modern.ircdocs.horse defines no quoting, so an
-	/// outbound payload carrying a `0x01` of its own is written unchanged and
-	/// the receiver's parser stops at it. Pinned here because the truncation
-	/// is silent — see the report.
-	@Test("A delimiter inside an outbound payload is not escaped")
-	func delimitersInsideOutboundPayloadsAreNotEscaped() {
+	/// modern.ircdocs.horse defines no way to quote a delimiter inside a CTCP
+	/// message, so one that reached the wire would end the frame early at the
+	/// receiver: the tail is dropped and what follows reads as a second
+	/// extended message. The only way to send the text the user wrote is to
+	/// remove the delimiter.
+	@Test("A delimiter inside an outbound payload is removed")
+	func delimitersInsideOutboundPayloadsAreRemoved() {
 		let framed = CTCPPayload.action("waves\(Self.delimiter)VERSION")
 
-		#expect(framed == "\(Self.delimiter)ACTION waves\(Self.delimiter)VERSION\(Self.delimiter)")
+		#expect(framed == "\(Self.delimiter)ACTION wavesVERSION\(Self.delimiter)")
 
 		let classified = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: framed)
 
-		#expect(classified.text == "waves")
+		#expect(classified.lineType == .action)
+		#expect(classified.text == "wavesVERSION")
+	}
+
+	/// The same holds for a reply the client sends on the user's behalf: an
+	/// echoed PING parameter must not be able to close the frame.
+	@Test("A delimiter cannot be smuggled through a CTCP reply")
+	func delimitersCannotBeSmuggledThroughAReply() {
+		let framed = CTCPPayload.framed(
+			command: "VERSION",
+			text: "first\(Self.delimiter)\(Self.delimiter)second",
+			sanitizingLineBreaks: true
+		)
+
+		#expect(framed == "\(Self.delimiter)VERSION firstsecond\(Self.delimiter)")
+		#expect(framed.filter { String($0) == Self.delimiter }.count == 2)
 	}
 
 	/// A CTCP reply may not carry a line break: the reply is one line, and a
