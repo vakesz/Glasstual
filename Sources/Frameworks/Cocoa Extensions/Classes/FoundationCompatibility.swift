@@ -36,69 +36,23 @@ import CoreFoundation
 import ObjectiveC
 
 private nonisolated(unsafe) var archivedConstraintConstantKey: UInt8 = 0
-private nonisolated(unsafe) let hexadecimalCharacterSet = NSCharacterSet(
-	charactersIn: "abcdefABCDEF0123456789"
-)
-private nonisolated(unsafe) let percentEncodedCharacterSet = NSCharacterSet(
-	charactersIn: "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
-)
-private nonisolated(unsafe) let alphanumericUnderscoreCharacterSet = NSCharacterSet(
-	charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-)
-private nonisolated(unsafe) let alphanumericUnderscoreDashCharacterSet = NSCharacterSet(
-	charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
-)
-private nonisolated(unsafe) let alphanumericDashSlashSet = NSCharacterSet(
-	charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-/"
-)
-private nonisolated(unsafe) let alphanumericDashPeriodSet = NSCharacterSet(
-	charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-."
-)
-private nonisolated(unsafe) let letterCharacterSet = NSCharacterSet(
-	charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-)
-private nonisolated(unsafe) let decimalCharacterSet = NSCharacterSet(charactersIn: "0123456789.")
 
-public extension NSCharacterSet {
-	@objc(hexadecimalCharacterSet)
-	class var textualHexadecimalCharacterSet: NSCharacterSet {
-		hexadecimalCharacterSet
-	}
+/// `CharacterSet` is a `Sendable` value type, so these need no isolation
+/// annotation and no `NSCharacterSet` bridging at the point of use.
+public extension CharacterSet {
+	static let textualHexadecimal = CharacterSet(charactersIn: "abcdefABCDEF0123456789")
 
-	@objc(percentEncodedCharacterSet)
-	class var textualPercentEncodedCharacterSet: NSCharacterSet {
-		percentEncodedCharacterSet
-	}
+	static let textualPercentEncoded = CharacterSet(
+		charactersIn: "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
+	)
 
-	@objc(Ato9Underscore)
-	class var textualAlphanumericSet: NSCharacterSet {
-		alphanumericUnderscoreCharacterSet
-	}
+	static let textualAlphanumericDashPeriod = CharacterSet(
+		charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-."
+	)
 
-	@objc(Ato9UnderscoreDash)
-	class var textualAlphanumericDashSet: NSCharacterSet {
-		alphanumericUnderscoreDashCharacterSet
-	}
-
-	@objc(Ato9UnderscoreDashForwardSlash)
-	class var textualAlphanumericDashSlashSet: NSCharacterSet {
-		alphanumericDashSlashSet
-	}
-
-	@objc(Ato9UnderscoreDashPeriod)
-	class var textualAlphanumericDashPeriodSet: NSCharacterSet {
-		alphanumericDashPeriodSet
-	}
-
-	@objc(AtoZCharacterSet)
-	class var textualLetterCharacterSet: NSCharacterSet {
-		letterCharacterSet
-	}
-
-	@objc(ZeroToNineDecimalCharacterSet)
-	class var textualDecimalCharacterSet: NSCharacterSet {
-		decimalCharacterSet
-	}
+	static let textualLetter = CharacterSet(
+		charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	)
 }
 
 public extension NSCoder {
@@ -107,114 +61,23 @@ public extension NSCoder {
 		decodeObject(of: NSDictionary.self, forKey: key)
 	}
 
-	@objc(decodeDataForKey:)
-	func textual_decodeData(forKey key: String) -> NSData? {
-		decodeObject(of: NSData.self, forKey: key)
-	}
-
 	@objc(decodeStringForKey:)
 	func textual_decodeString(forKey key: String) -> NSString? {
 		decodeObject(of: NSString.self, forKey: key)
 	}
-
-	@objc(decodeUnsignedIntegerForKey:)
-	func textual_decodeUnsignedInteger(forKey key: String) -> UInt {
-		decodeObject(of: NSNumber.self, forKey: key)?.uintValue ?? 0
-	}
-
-	@objc(decodeUnsignedShortForKey:)
-	func textual_decodeUnsignedShort(forKey key: String) -> UInt16 {
-		decodeObject(of: NSNumber.self, forKey: key)?.uint16Value ?? 0
-	}
-
-	@objc(encodeData:forKey:)
-	func textual_encodeData(_ value: Data, forKey key: String) {
-		encode(value as NSData, forKey: key)
-	}
-
-	@objc(encodeString:forKey:)
-	func textual_encodeString(_ value: String, forKey key: String) {
-		encode(value as NSString, forKey: key)
-	}
-
-	@objc(encodeUnsignedInteger:forKey:)
-	func textual_encodeUnsignedInteger(_ value: UInt, forKey key: String) {
-		encode(NSNumber(value: value), forKey: key)
-	}
-
-	@objc(encodeUnsignedShort:forKey:)
-	func textual_encodeUnsignedShort(_ value: UInt16, forKey key: String) {
-		encode(NSNumber(value: value), forKey: key)
-	}
-
-	@objc(maybeEncodeObject:forKey:)
-	func textual_maybeEncodeObject(_ value: Any?, forKey key: String) {
-		guard let value else {
-			return
-		}
-
-		encode(value, forKey: key)
-	}
 }
 
-public extension NSTabView {
-	@objc(indexOfSelectedItem)
-	var textualIndexOfSelectedItem: UInt {
-		guard let selectedTabViewItem else {
-			return UInt.max
-		}
-
-		return UInt(indexOfTabViewItem(selectedTabViewItem))
-	}
-}
-
-public extension ByteCountFormatter {
-	@objc(stringFromByteCountWithPaddedDigits:)
-	class func textual_stringFromByteCountWithPaddedDigits(_ byteCount: Int64) -> String? {
-		let formatter = ByteCountFormatter()
-		formatter.zeroPadsFractionDigits = true
-
-		return formatter.string(fromByteCount: byteCount)
-	}
-}
-
-public extension NSError {
-	private func textual_isError(inDomain domain: String, code: Int) -> Bool {
-		self.domain == domain && self.code == code
-	}
-
-	@objc(isURLSessionCancelError)
-	var textualIsURLSessionCancelError: Bool {
-		textual_isError(inDomain: NSURLErrorDomain, code: NSURLErrorCancelled)
+public extension Int64 {
+	/// A file-style byte count with a zero-padded fraction, e.g. "1.20 MB".
+	var textualPaddedByteCountDescription: String {
+		formatted(.byteCount(style: .file).sign(strategy: .never))
 	}
 }
 
 public extension NSNumber {
-	@objc(isBooleanValue)
-	var textualIsBooleanValue: Bool {
-		CFGetTypeID(self) == CFBooleanGetTypeID()
-	}
-
 	@objc(integerStringValueWithLeadingZero)
 	var textualIntegerStringValueWithLeadingZero: String {
-		String(format: "%02lld", int64Value)
-	}
-}
-
-public extension NSDate {
-	@objc(timeIntervalSince1970)
-	class func textual_timeIntervalSince1970() -> TimeInterval {
-		Date().timeIntervalSince1970
-	}
-
-	@objc(timeIntervalSinceNow:)
-	class func textual_timeIntervalSinceNow(_ intervalSince1970: TimeInterval) -> TimeInterval {
-		textual_timeIntervalSince1970() - intervalSince1970
-	}
-
-	@objc(isInSameDayAsDate:)
-	func textual_isInSameDay(as otherDate: Date) -> Bool {
-		Calendar.current.isDate(self as Date, inSameDayAs: otherDate)
+		int64Value.formatted(.number.precision(.integerLength(2...)).grouping(.never))
 	}
 }
 
@@ -290,23 +153,5 @@ public extension NSLayoutConstraint {
 	@objc(zeroOutConstant)
 	func textual_zeroOutConstant() {
 		constant = 0
-	}
-}
-
-public extension NSIndexSet {
-	@objc(subsetWithMaximumIndexes:)
-	func textual_subset(withMaximumIndexes maximumNumberOfIndexes: UInt) -> NSIndexSet {
-		precondition(maximumNumberOfIndexes > 0)
-
-		let limitedIndexes = NSMutableIndexSet()
-		var remaining = maximumNumberOfIndexes
-
-		enumerate { index, stop in
-			limitedIndexes.add(index)
-			remaining -= 1
-			stop.pointee = ObjCBool(remaining == 0)
-		}
-
-		return NSIndexSet(indexSet: limitedIndexes as IndexSet)
 	}
 }
