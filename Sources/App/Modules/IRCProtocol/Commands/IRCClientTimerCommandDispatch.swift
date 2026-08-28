@@ -42,22 +42,22 @@ import Foundation
 @MainActor
 extension IRCClient {
 	func dispatchTimerCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		guard parsed.command.caseInsensitiveCompare("timer") == .orderedSame else { return false }
-		let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-		guard arguments.length > 0 else {
+		guard parsed.localCommand == .timer else { return false }
+		var arguments = parsed.arguments
+		guard arguments.isEmpty == false else {
 			printDebugInformation(IRCTimerStrings.invalidSyntax)
 			return true
 		}
-		let action = arguments.nextTokenAsString().lowercased()
+		let action = arguments.next().lowercased()
 		switch action {
 		case "help":
-			showTimerHelp(topic: arguments.nextTokenAsString())
+			showTimerHelp(topic: arguments.next())
 		case "stop":
-			stopTimer(identifier: arguments.nextTokenAsString())
+			stopTimer(identifier: arguments.next())
 		case "restart":
-			restartTimer(identifier: arguments.nextTokenAsString())
+			restartTimer(identifier: arguments.next())
 		case "remove":
-			removeTimer(identifier: arguments.nextTokenAsString())
+			removeTimer(identifier: arguments.next())
 		case "list":
 			listTimers()
 		default:
@@ -131,23 +131,24 @@ extension IRCClient {
 
 	private func addTimer(
 		intervalString: String,
-		arguments: NSMutableAttributedString,
+		arguments: CommandArguments,
 		targetChannel: IRCChannel?
 	) {
 		guard let interval = Int(intervalString), interval > 0 else {
 			printDebugInformation(IRCTimerStrings.invalidInterval)
 			return
 		}
-		let repeatToken = arguments.nextTokenAsString()
+		var arguments = arguments
+		let repeatToken = arguments.next()
 		let explicitRepeat = Int(repeatToken)
 		let repeatCount: Int
 		let command: String
 		if let explicitRepeat {
 			repeatCount = explicitRepeat
-			command = arguments.string.trimmingCharacters(in: .whitespacesAndNewlines)
+			command = arguments.rest.trimmingCharacters(in: .whitespacesAndNewlines)
 		} else {
 			repeatCount = 1
-			command = [repeatToken, arguments.string]
+			command = [repeatToken, arguments.rest]
 				.filter { $0.isEmpty == false }
 				.joined(separator: " ")
 				.trimmingCharacters(in: .whitespacesAndNewlines)

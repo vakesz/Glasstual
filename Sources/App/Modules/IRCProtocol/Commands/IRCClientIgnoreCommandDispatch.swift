@@ -35,11 +35,11 @@ import Foundation
 @MainActor
 extension IRCClient {
 	func dispatchIgnoreCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		let command = parsed.command.lowercased()
-		guard command == "ignore" || command == "unignore" else { return false }
-		let isIgnore = command == "ignore"
-		let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-		let nickname = arguments.nextTokenAsString()
+		let command = parsed.localCommand
+		guard command == .ignore || command == .unignore else { return false }
+		let isIgnore = command == .ignore
+		var arguments = parsed.arguments
+		let nickname = arguments.next()
 		guard nickname.isEmpty == false, targetChannel != nil, let member = findUser(nickname) else {
 			showIgnoreConfiguration(isIgnore: isIgnore, context: isIgnore ? nickname : nil)
 			return true

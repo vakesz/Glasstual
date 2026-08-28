@@ -5,8 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
  *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,30 +38,6 @@
 import CocoaExtensions
 import Foundation
 
-struct ParsedUserCommand {
-	let command: String
-	let arguments: NSMutableAttributedString
-
-	init?(_ input: Any) {
-		let source: NSAttributedString
-		if let string = input as? String {
-			source = NSAttributedString(string: string)
-		} else if let attributed = input as? NSAttributedString {
-			source = attributed
-		} else {
-			assertionFailure("Command input must be String or NSAttributedString")
-			return nil
-		}
-
-		guard source.length > 0 else { return nil }
-		arguments = NSMutableAttributedString(attributedString: source)
-		if arguments.string.hasPrefix("/") {
-			arguments.deleteCharacters(in: NSRange(location: 0, length: 1))
-		}
-		command = arguments.nextTokenAsString()
-	}
-}
-
 @MainActor
 public extension IRCClient {
 	@objc(sendCommand:)
@@ -73,6 +48,7 @@ public extension IRCClient {
 	@objc(sendCommand:completeTarget:target:)
 	func sendCommand(_ input: Any, completeTarget: Bool, target targetChannelName: String?) {
 		guard let parsed = ParsedUserCommand(input) else { return }
+		guard allowsDeveloperModeCommand(parsed) else { return }
 		let targetChannel = resolvedTargetChannel(
 			completeTarget: completeTarget,
 			targetChannelName: targetChannelName
@@ -90,6 +66,20 @@ public extension IRCClient {
 		dispatchAddonOrRawCommand(parsed, targetChannel: targetChannel)
 	}
 
+	/// Refuses a command the index marks `developerModeOnly` unless the
+	/// preference is on. The flag used to reach only the completion list, so
+	/// every developer command was still reachable by typing its name; two of
+	/// them were then gated again by hand inside their handlers.
+	private func allowsDeveloperModeCommand(_ parsed: ParsedUserCommand) -> Bool {
+		guard parsed.isDeveloperModeOnly,
+		      TextualPreferences.developerModeEnabled() == false
+		else {
+			return true
+		}
+		printDebugInformation(IRCCommandStrings.developerModeRequired)
+		return false
+	}
+
 	private func dispatchAddonOrRawCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) {
 		let lowercaseCommand = parsed.command.lowercased()
 		var addonPath: NSString?
@@ -105,10 +95,10 @@ public extension IRCClient {
 		if pluginFound.boolValue, scriptFound.boolValue {
 			printDebugInformation(IRCCommandStrings.pluginAndScriptConflict(command: parsed.command.uppercased()))
 		} else if pluginFound.boolValue {
-			processBundlesUserMessage(parsed.arguments.string, command: lowercaseCommand)
+			processBundlesUserMessage(parsed.arguments.rest, command: lowercaseCommand)
 		} else if scriptFound.boolValue, let addonPath {
 			var context = [
-				"inputString": parsed.arguments.string,
+				"inputString": parsed.arguments.rest,
 				"path": addonPath as String,
 			]
 			if let targetChannel {
@@ -116,38 +106,34 @@ public extension IRCClient {
 			}
 			executeGlasstualCmdScript(inContext: context)
 		} else {
-			sendCommand(parsed.command.uppercased(), withData: parsed.arguments.string)
+			sendCommand(parsed.command.uppercased(), withData: parsed.arguments.rest)
 		}
 	}
 
 	private func dispatchDCCCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		guard parsed.command.caseInsensitiveCompare("dcc") == .orderedSame else { return false }
-		handleDCCCommand(
-			NSMutableAttributedString(attributedString: parsed.arguments),
-			command: parsed.command,
-			targetChannel: targetChannel
-		)
+		guard parsed.localCommand == .dcc else { return false }
+		handleDCCCommand(parsed.arguments, command: parsed.command, targetChannel: targetChannel)
 		return true
 	}
 
 	private func dispatchNativeCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		let command = parsed.command.lowercased()
-		let arguments = parsed.arguments.string
+		guard let command = parsed.localCommand else { return false }
+		let arguments = parsed.arguments.rest
 
 		switch command {
-		case "aquote", "araw":
+		case .aquote, .araw:
 			guard isConnected else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			for client in currentClients() {
 				client.sendLine(arguments)
 			}
 
-		case "quote", "raw":
+		case .quote, .raw:
 			guard isConnected else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			sendLine(arguments)
 
-		case "cap", "caps":
+		case .cap, .caps:
 			let capabilities = enabledCapabilitiesStringValue
 			printDebugInformation(
 				capabilities.isEmpty
@@ -155,8 +141,8 @@ public extension IRCClient {
 					: IRCCommandStrings.enabledCapabilities(capabilities)
 			)
 
-		case "debug", "echo":
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+		case .debug, .echo:
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			if arguments.caseInsensitiveCompare("raw on") == .orderedSame {
 				createRawDataLogQuery()
 			} else if arguments.caseInsensitiveCompare("raw off") == .orderedSame {
@@ -172,40 +158,39 @@ public extension IRCClient {
 	}
 
 	private func dispatchNativeRequestCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		let command = parsed.command.lowercased()
-		let arguments = parsed.arguments.string
+		guard let command = parsed.localCommand else { return false }
+		let arguments = parsed.arguments.rest
 		switch command {
-		case "ison":
+		case .ison:
 			guard isLoggedIn else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			createHiddenCommandResponses()
 			requestedCommands.recordIsonRequestOpenedAsVisible()
 			send("ISON", arguments: [arguments])
 
-		case "names":
+		case .names:
 			guard isLoggedIn else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			createHiddenCommandResponses()
 			send("NAMES", arguments: [arguments])
 
-		case "recv":
-			guard requireDeveloperMode() else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+		case .recv:
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			guard let socket else { return true }
 			ircConnection(socket, didReceiveData: arguments)
 
-		case "setname":
+		case .setname:
 			guard isLoggedIn else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			guard isCapabilityEnabled(.setName) else {
 				printDebugInformation(IRCCommandStrings.setNameUnsupported)
 				return true
 			}
 			send("SETNAME", arguments: [arguments])
 
-		case "wallops":
+		case .wallops:
 			guard isLoggedIn else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			send("WALLOPS", arguments: [arguments])
 
 		default:
@@ -215,25 +200,25 @@ public extension IRCClient {
 	}
 
 	private func dispatchNativeOperatorCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		switch parsed.command.lowercased() {
-		case "gline", "gzline", "shun", "tempshun", "zline":
+		guard let command = parsed.localCommand else { return false }
+		var arguments = parsed.arguments
+		switch command {
+		case .gline, .gzline, .shun, .tempshun, .zline:
 			guard isLoggedIn else { return true }
-			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let firstSegment = mutableArguments.nextTokenAsString()
-			let secondSegment = mutableArguments.nextTokenAsString()
+			let firstSegment = arguments.next()
+			let secondSegment = arguments.next()
 			send(
 				parsed.command.uppercased(),
-				arguments: [firstSegment, secondSegment, mutableArguments.string]
+				arguments: [firstSegment, secondSegment, arguments.rest]
 			)
 
-		case "kill":
+		case .kill:
 			guard isLoggedIn else { return true }
-			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let nickname = mutableArguments.nextTokenAsString()
+			let nickname = arguments.next()
 			guard requireArguments(nickname, for: parsed.command) else { return true }
-			let reason = mutableArguments.string.isEmpty
+			let reason = arguments.isEmpty
 				? TextualPreferences.irCopDefaultKillMessage()
-				: mutableArguments.string
+				: arguments.rest
 			send("KILL", arguments: [nickname, reason])
 
 		default:
@@ -243,12 +228,11 @@ public extension IRCClient {
 	}
 
 	private func dispatchNativeSessionCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		let command = parsed.command.lowercased()
-		let arguments = parsed.arguments.string
+		guard let command = parsed.localCommand else { return false }
+		var arguments = parsed.arguments
 		switch command {
-		case "conn":
-			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let serverAddress = mutableArguments.nextTokenAsString().lowercased()
+		case .conn:
+			let serverAddress = arguments.next().lowercased()
 			if serverAddress.isEmpty == false {
 				guard (serverAddress as NSString).isValidInternetAddress else {
 					printDebugInformation(IRCCommandStrings.invalidArguments)
@@ -263,36 +247,23 @@ public extension IRCClient {
 				connect()
 			}
 
-		case "back":
+		case .back:
 			guard isLoggedIn else { return true }
 			for client in currentClients() where client === self || TextualPreferences.awayAllConnections() {
 				client.toggleAwayStatus(false, withComment: nil)
 			}
 
-		case "away":
+		case .away:
 			guard isLoggedIn else { return true }
-			for client in currentClients() where client === self || TextualPreferences.awayAllConnections() {
-				let maximumLength = Int(client.supportInfo.maximumAwayLength)
-				let comment = ClientWireUtilities.truncated(arguments, toByteCount: maximumLength)
-				if comment != arguments {
-					client.printDebugInformation(
-						IRCCommandStrings.awayMessageTooLong(
-							networkName: networkNameAlt,
-							maximumLength: maximumLength
-						)
-					)
-				}
-				client.toggleAwayStatus(true, withComment: comment)
-			}
+			broadcastAwayStatus(comment: arguments.rest)
 
-		case "autojoin":
+		case .autojoin:
 			guard isLoggedIn else { return true }
 			performAutoJoin(initiatedByUser: true)
 
-		case "nick":
+		case .nick:
 			guard isConnected else { return true }
-			let mutableArguments = NSMutableAttributedString(string: arguments)
-			let nickname = mutableArguments.nextTokenAsString()
+			let nickname = arguments.next()
 			guard requireArguments(nickname, for: parsed.command) else { return true }
 			for client in currentClients() where client === self || TextualPreferences.nickAllConnections() {
 				client.changeNickname(nickname)
@@ -304,65 +275,69 @@ public extension IRCClient {
 		return true
 	}
 
+	private func broadcastAwayStatus(comment: String) {
+		for client in currentClients() where client === self || TextualPreferences.awayAllConnections() {
+			let maximumLength = Int(client.supportInfo.maximumAwayLength)
+			let truncated = ClientWireUtilities.truncated(comment, toByteCount: maximumLength)
+			if truncated != comment {
+				client.printDebugInformation(
+					IRCCommandStrings.awayMessageTooLong(
+						networkName: networkNameAlt,
+						maximumLength: maximumLength
+					)
+				)
+			}
+			client.toggleAwayStatus(true, withComment: truncated)
+		}
+	}
+
 	private func dispatchNativeNotificationAndConnectionCommand(
 		_ parsed: ParsedUserCommand,
 		targetChannel: IRCChannel?
 	) -> Bool {
-		let command = parsed.command.lowercased()
-		let arguments = parsed.arguments.string
+		guard let command = parsed.localCommand else { return false }
+		var arguments = parsed.arguments
 		switch command {
-		case "mute":
-			if TextualPreferences.soundIsMuted() {
-				printDebugInformation(IRCCommandStrings.soundAlreadyMuted)
-			} else {
-				printDebugInformation(IRCCommandStrings.soundMuted)
-				AppController.shared.menuController?.toggleMuteOnNotificationSoundsShortcut(on: true)
-			}
+		case .mute:
+			toggleNotificationSoundMute(true)
 
-		case "unmute":
-			if TextualPreferences.soundIsMuted() == false {
-				printDebugInformation(IRCCommandStrings.soundNotMuted)
-			} else {
-				printDebugInformation(IRCCommandStrings.soundUnmuted)
-				AppController.shared.menuController?.toggleMuteOnNotificationSoundsShortcut(on: false)
-			}
+		case .unmute:
+			toggleNotificationSoundMute(false)
 
-		case "notifybubble":
-			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let notificationChannel = stringIsChannelName(mutableArguments.string)
-				? findChannel(mutableArguments.nextTokenAsString())
+		case .notifybubble:
+			let notificationChannel = stringIsChannelName(arguments.rest)
+				? findChannel(arguments.next())
 				: nil
-			guard requireArguments(mutableArguments.string, for: parsed.command) else { return true }
+			guard requireArguments(arguments, for: parsed.command) else { return true }
 			SharedApplication.sharedNotificationController().scheduleNotification(
 				title: ApplicationInfo.applicationNameWithoutVersion(),
-				message: mutableArguments.string,
+				message: arguments.rest,
 				for: notificationChannel,
 				on: self
 			)
 
-		case "notifysound":
-			let mutableArguments = NSMutableAttributedString(string: arguments)
-			let sound = mutableArguments.nextTokenAsString()
+		case .notifysound:
+			let sound = arguments.next()
 			guard requireArguments(sound, for: parsed.command) else { return true }
 			SoundPlayer.playAlertSound(sound)
 
-		case "notifyspeak":
+		case .notifyspeak:
 			guard requireArguments(arguments, for: parsed.command) else { return true }
-			SharedApplication.sharedSpeechSynthesizer().speak(text: arguments)
+			SharedApplication.sharedSpeechSynthesizer().speak(text: arguments.rest)
 
-		case "quit":
+		case .quit:
 			guard isConnected else { return true }
 			if arguments.isEmpty {
 				quit()
 			} else {
-				quit(withComment: arguments)
+				quit(withComment: arguments.rest)
 			}
 
-		case "server":
+		case .server:
 			guard requireArguments(arguments, for: parsed.command) else { return true }
-			Extras.createConnectionToServer(arguments, channelList: nil, connectWhenCreated: true)
+			Extras.createConnectionToServer(arguments.rest, channelList: nil, connectWhenCreated: true)
 
-		case "sslcontext":
+		case .sslcontext:
 			presentCertificateTrustInformation()
 
 		default:
@@ -371,20 +346,30 @@ public extension IRCClient {
 		return true
 	}
 
+	private func toggleNotificationSoundMute(_ muted: Bool) {
+		let alreadyInState = TextualPreferences.soundIsMuted() == muted
+		guard alreadyInState == false else {
+			printDebugInformation(muted ? IRCCommandStrings.soundAlreadyMuted : IRCCommandStrings.soundNotMuted)
+			return
+		}
+		printDebugInformation(muted ? IRCCommandStrings.soundMuted : IRCCommandStrings.soundUnmuted)
+		AppController.shared.menuController?.toggleMuteOnNotificationSoundsShortcut(on: muted)
+	}
+
 	private func dispatchNativeCapabilityCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		let command = parsed.command.lowercased()
-		let arguments = parsed.arguments.string
+		guard let command = parsed.localCommand else { return false }
+		let arguments = parsed.arguments.rest
 		switch command {
-		case "chathistory":
+		case .chathistory:
 			guard isLoggedIn else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			guard isCapabilityEnabled(.chatHistory) else {
 				printDebugInformation(IRCCommandStrings.chatHistoryUnsupported)
 				return true
 			}
 			sendLine("CHATHISTORY \(arguments)")
 
-		case "umode":
+		case .umode:
 			guard isLoggedIn else { return true }
 			var parameters = [userNickname]
 			if arguments.isEmpty == false {
@@ -392,9 +377,9 @@ public extension IRCClient {
 			}
 			send("MODE", arguments: parameters)
 
-		case "monitor", "watch":
+		case .monitor, .watch:
 			guard isLoggedIn else { return true }
-			guard requireArguments(arguments, for: parsed.command) else { return true }
+			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			let components = arguments.components(separatedBy: .whitespaces)
 			if components.contains(where: { $0.hasPrefix("-") || $0.hasPrefix("+") }) {
 				printDebugInformation(IRCCommandStrings.useAddressBookForTrackedUsers)
@@ -405,7 +390,7 @@ public extension IRCClient {
 			}
 			sendCommand(parsed.command.uppercased(), withData: arguments)
 
-		case "silence":
+		case .silence:
 			guard isLoggedIn else { return true }
 			guard supportInfo.silenceSupported else {
 				printDebugInformation(IRCCommandStrings.silenceUnsupported)
@@ -423,77 +408,33 @@ public extension IRCClient {
 		if dispatchLagCommand(parsed) {
 			return true
 		}
-		let command = parsed.command.lowercased()
-		let arguments = parsed.arguments.string
+		guard let command = parsed.localCommand else { return false }
+		var arguments = parsed.arguments
 		switch command {
-		case "who":
+		case .who:
 			guard isLoggedIn else { return true }
 			guard requireArguments(arguments, for: parsed.command) else { return true }
 			createHiddenCommandResponses()
 			requestedCommands.recordWhoRequestOpenedAsVisible()
-			send("WHO", arguments: [arguments])
+			send("WHO", arguments: [arguments.rest])
 
-		case "whois":
+		case .whois:
 			guard isLoggedIn else { return true }
-			let mutableArguments = NSMutableAttributedString(string: arguments)
-			var firstNickname = mutableArguments.nextTokenAsString()
+			var firstNickname = arguments.next()
 			if firstNickname.isEmpty, let targetChannel, targetChannel.isPrivateMessage {
 				firstNickname = targetChannel.name
 			}
 			guard requireArguments(firstNickname, for: parsed.command) else { return true }
-			let secondNickname = mutableArguments.nextTokenAsString()
-			if secondNickname.isEmpty {
-				send("WHOIS", arguments: [firstNickname, firstNickname])
-			} else {
-				send("WHOIS", arguments: [firstNickname, secondNickname])
-			}
+			let secondNickname = arguments.next()
+			send("WHOIS", arguments: [firstNickname, secondNickname.isEmpty ? firstNickname : secondNickname])
 
-		case "weights":
-			guard let targetChannel, targetChannel.isChannel else {
-				printDebugInformation(IRCCommandStrings.channelRequired)
-				return true
-			}
-			printDebugInformation(IRCCommandStrings.nicknameWeights(channelName: targetChannel.name))
-			var hasWeights = false
-			for member in targetChannel.memberList ?? [] {
-				let incomingWeight = member.incomingWeight
-				let outgoingWeight = member.outgoingWeight
-				let combinedWeight = incomingWeight + outgoingWeight
-				guard combinedWeight > 0 else { continue }
-				hasWeights = true
-				printDebugInformation(
-					IRCCommandStrings.nicknameWeight(
-						member.user.nickname,
-						sent: outgoingWeight,
-						received: incomingWeight,
-						total: combinedWeight
-					)
-				)
-			}
-			if hasWeights == false {
-				printDebugInformation(IRCCommandStrings.noNicknameWeights)
-			}
+		case .weights:
+			printNicknameWeights(in: targetChannel)
 
-		case "myversion":
-			let applicationName = ApplicationInfo.applicationNameWithoutVersion()
-			let versionLong = ApplicationInfo.applicationVersion()
-			let versionShort = ApplicationInfo.applicationVersionShort()
-			let buildType = IRCCommandStrings.classicBinaryArchitecture(IRCCommandStrings.appleSilicon)
-			var message = IRCCommandStrings.version(
-				applicationName: applicationName,
-				shortVersion: versionShort,
-				buildVersion: versionLong,
-				buildSuffix: "",
-				buildType: buildType
-			)
-			if let targetChannel {
-				message = IRCCommandStrings.sharingVersion(message)
-				sendPrivmsg(message, to: targetChannel)
-			} else {
-				printDebugInformation(toConsole: message)
-			}
+		case .myversion:
+			printApplicationVersion(to: targetChannel)
 
-		case "tage":
+		case .tage:
 			let elapsed = Date().timeIntervalSince1970 - ApplicationInfo.applicationBirthday()
 			let readableElapsed = humanReadableTimeInterval(elapsed, false, 0) as String? ?? ""
 			let message = IRCCommandStrings.timeSinceFirstCommit(readableElapsed)
@@ -510,23 +451,64 @@ public extension IRCClient {
 		return true
 	}
 
+	private func printNicknameWeights(in targetChannel: IRCChannel?) {
+		guard let targetChannel, targetChannel.isChannel else {
+			printDebugInformation(IRCCommandStrings.channelRequired)
+			return
+		}
+		printDebugInformation(IRCCommandStrings.nicknameWeights(channelName: targetChannel.name))
+		var hasWeights = false
+		for member in targetChannel.memberList ?? [] {
+			let incomingWeight = member.incomingWeight
+			let outgoingWeight = member.outgoingWeight
+			let combinedWeight = incomingWeight + outgoingWeight
+			guard combinedWeight > 0 else { continue }
+			hasWeights = true
+			printDebugInformation(
+				IRCCommandStrings.nicknameWeight(
+					member.user.nickname,
+					sent: outgoingWeight,
+					received: incomingWeight,
+					total: combinedWeight
+				)
+			)
+		}
+		if hasWeights == false {
+			printDebugInformation(IRCCommandStrings.noNicknameWeights)
+		}
+	}
+
+	private func printApplicationVersion(to targetChannel: IRCChannel?) {
+		let buildType = IRCCommandStrings.classicBinaryArchitecture(IRCCommandStrings.appleSilicon)
+		var message = IRCCommandStrings.version(
+			applicationName: ApplicationInfo.applicationNameWithoutVersion(),
+			shortVersion: ApplicationInfo.applicationVersionShort(),
+			buildVersion: ApplicationInfo.applicationVersion(),
+			buildSuffix: "",
+			buildType: buildType
+		)
+		if let targetChannel {
+			message = IRCCommandStrings.sharingVersion(message)
+			sendPrivmsg(message, to: targetChannel)
+		} else {
+			printDebugInformation(toConsole: message)
+		}
+	}
+
 	private func dispatchLagCommand(_ parsed: ParsedUserCommand) -> Bool {
-		let command = parsed.command.lowercased()
-		guard command == "lagcheck" || command == "mylag" else { return false }
+		guard let command = parsed.localCommand, command == .lagcheck || command == .mylag else { return false }
 		guard isLoggedIn, let socket else { return true }
-		var context: [String: Any] = [
-			"connection": socket.uniqueIdentifier,
-			"time": Date().timeIntervalSince1970,
+		var queryItems = [
+			URLQueryItem(name: "connection", value: socket.uniqueIdentifier),
+			URLQueryItem(name: "time", value: String(Date().timeIntervalSince1970)),
 		]
-		if command == "mylag",
+		if command == .mylag,
 		   let channel = AppController.shared.mainWindow.selectedChannel(on: self)
 		{
-			context["channel"] = channel.name
+			queryItems.append(URLQueryItem(name: "channel", value: channel.name))
 		}
 		var components = URLComponents()
-		components.queryItems = context.map { key, value in
-			URLQueryItem(name: key, value: String(describing: value))
-		}
+		components.queryItems = queryItems
 		let payload = components.percentEncodedQuery ?? ""
 		sendCTCPQuery(userNickname, command: "LAGCHECK", text: payload)
 		printDebugInformation(IRCCommandStrings.waitingForLagCheck)
@@ -539,13 +521,11 @@ public extension IRCClient {
 		return false
 	}
 
-	/// Gates a command that is marked `developerModeOnly` in the command
-	/// index. The index itself is only consulted for the completion list, so
-	/// developer-only commands are otherwise reachable by anyone who types
-	/// them.
-	func requireDeveloperMode() -> Bool {
-		guard TextualPreferences.developerModeEnabled() == false else { return true }
-		printDebugInformation(IRCCommandStrings.developerModeRequired)
+	/// Rejects a command line that carries fewer arguments than the command
+	/// index declares required, printing the index's own syntax line.
+	func requireArguments(_ arguments: CommandArguments, for command: String) -> Bool {
+		guard arguments.satisfiesDeclaredArity == false else { return true }
+		printInvalidSyntaxMessage(for: command)
 		return false
 	}
 
