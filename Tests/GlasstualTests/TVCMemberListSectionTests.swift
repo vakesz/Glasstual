@@ -242,14 +242,10 @@ final class TVCMemberListSectionTests: XCTestCase {
 
 	private func makeMember(named nickname: String, modes: ChannelModeSymbolSet = "") -> ChannelUser {
 		let user = User(nickname: nickname, on: client)
-		let member = ChannelUserMutable(user: user)
+		let member = ChannelUser(user: user)
 		member.modes = modes
 
-		guard let copiedMember = member.copy() as? ChannelUser else {
-			preconditionFailure("Channel member copies must preserve their model type")
-		}
-
-		return copiedMember
+		return member
 	}
 
 	private func insert(_ member: ChannelUser, at index: Int) {

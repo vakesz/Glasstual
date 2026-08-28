@@ -80,27 +80,27 @@ final class IRCUserRelationsTests: XCTestCase {
 		XCTAssertNil(relations.userAssociated(with: privateMessage))
 	}
 
-	func testChannelUserCopiesPreserveIdentityModesAndConversationWeights() throws {
+	func testChannelUserCopiesPreserveIdentityModesAndConversationWeights() {
 		let user = User(nickname: "alice", on: client)
-		let member = ChannelUserMutable(user: user)
+		let member = ChannelUser(user: user)
 
 		member.modes = "ov"
-		member.perform(NSSelectorFromString("incomingConversation"))
-		member.perform(NSSelectorFromString("outgoingConversation"))
+		member.incomingConversation()
+		member.outgoingConversation()
 
-		let copy = try XCTUnwrap(member.copy() as? ChannelUser)
-		let uniqueMutableCopy = try XCTUnwrap(member.uniqueCopyMutable() as? ChannelUserMutable)
+		let copy = member.duplicate()
 
+		XCTAssertFalse(copy === member)
 		XCTAssertTrue(copy.user === user)
 		XCTAssertEqual(copy.modes, "ov")
 		XCTAssertEqual(copy.ranks, [.normalOperator, .voiced])
 		XCTAssertEqual(copy.incomingWeight, 100)
 		XCTAssertEqual(copy.outgoingWeight, 20)
 		XCTAssertEqual(copy.creationTime, member.creationTime)
-		XCTAssertTrue(uniqueMutableCopy.user === user)
-		XCTAssertEqual(uniqueMutableCopy.modes, "ov")
-		XCTAssertEqual(uniqueMutableCopy.incomingWeight, 100)
-		XCTAssertEqual(uniqueMutableCopy.outgoingWeight, 20)
+
+		copy.modes = "o"
+
+		XCTAssertEqual(member.modes, "ov")
 	}
 
 	func testChannelMemberListAddsSortsAndRemovesMembers() {

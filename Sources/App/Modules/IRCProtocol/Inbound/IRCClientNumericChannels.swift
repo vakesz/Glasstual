@@ -238,20 +238,20 @@ extension IRCClient {
 		if let existing = findUser(nickname) {
 			user = existing
 		} else {
-			let mutable = UserMutable(nickname: nickname, on: self)
-			mutable.username = parsed?.username
-			mutable.address = parsed?.address
-			user = addAndReturn(mutable)
+			let newUser = User(nickname: nickname, on: self)
+			newUser.username = parsed?.username
+			newUser.address = parsed?.address
+			user = addAndReturn(newUser)
 		}
-		let mutableMember: ChannelUserMutable
+		let editedMember: ChannelUser
 		if let member = user.userAssociated(with: channel) {
-			guard nicknameIsMyself(nickname), let copy = member.mutableCopy() as? ChannelUserMutable else { return }
-			mutableMember = copy
+			guard nicknameIsMyself(nickname) else { return }
+			editedMember = member.duplicate()
 		} else {
-			mutableMember = ChannelUserMutable(user: user)
+			editedMember = ChannelUser(user: user)
 		}
-		mutableMember.modes = ChannelModeSymbolSet(letters: modes)
-		channel.memberInfo?.addMember(mutableMember, checkForDuplicates: true)
+		editedMember.modes = ChannelModeSymbolSet(letters: modes)
+		channel.memberInfo?.addMember(editedMember, checkForDuplicates: true)
 	}
 
 	private func handleEndOfNamesNumeric(_ message: Message, shouldPrint: Bool) {

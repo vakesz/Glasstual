@@ -50,14 +50,12 @@ final class IRCClientDirectoryMigrationTests: XCTestCase {
 		XCTAssertEqual(client.numberOfUsers, 1)
 	}
 
-	func testAddingMutableUserStoresImmutableSnapshot() {
+	func testAddingADraftUserStoresThatInstance() {
 		let client = GLTTestClient()
-		let mutableUser = UserMutable(nickname: "Alice", on: client)
-		let storedUser = client.addAndReturn(mutableUser)
+		let draftUser = client.draftUser(withNickname: "Alice")
+		let storedUser = client.addAndReturn(draftUser)
 
-		mutableUser.nickname = "Changed"
-
-		XCTAssertFalse(storedUser is UserMutable)
+		XCTAssertTrue(storedUser === draftUser)
 		XCTAssertEqual(storedUser.nickname, "Alice")
 		XCTAssertTrue(client.findUser("Alice") === storedUser)
 		XCTAssertNil(client.findUser("Changed"))
