@@ -156,8 +156,8 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "PRIVMSG"), 4)
 		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "notice"), 3)
 		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "join"), 0)
-		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: "b"), 60)
-		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: "I"), 60)
+		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("b")), 60)
+		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("I")), 60)
 
 		let targets = ["a", "b", "c", "d", "e"]
 

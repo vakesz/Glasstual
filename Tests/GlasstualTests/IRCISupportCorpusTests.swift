@@ -324,8 +324,8 @@ struct IRCISupportCorpusTests {
 
 		#expect(supportInfo.channelNamePrefixes == ["#", "&"])
 		#expect(supportInfo.statusMessageModeSymbols == ["@", "+"])
-		#expect(supportInfo.maximumListEntries(forModeSymbol: "b") == 100)
-		#expect(supportInfo.maximumListEntries(forModeSymbol: "q") == 0)
+		#expect(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("b")) == 100)
+		#expect(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("q")) == 0)
 		#expect(supportInfo.extendedBanPrefix == "~")
 		#expect(supportInfo.extendedBanTypes == ["q", "j", "m"])
 		#expect(supportInfo.extendedListSupportsToken("c"))
