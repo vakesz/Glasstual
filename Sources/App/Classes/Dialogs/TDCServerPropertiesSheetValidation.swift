@@ -133,7 +133,8 @@ extension ServerPropertiesSheet {
 
 		configure(proxyAddressTextField, invalidOnEmpty: false, firstTokenOnly: true) { [weak self] value in
 			guard let self else { return nil }
-			guard [5, 6].contains(proxyTypeButton.selectedTag()) else { return nil }
+			guard ServerPropertiesSheet.proxyTypeUsesAddress(proxyTypeButton.selectedTag())
+			else { return nil }
 			return ServerPropertiesValidation.isInternetAddress(value)
 				? nil
 				: ServerPropertiesStrings.Validation.invalidProxyAddress
@@ -142,7 +143,8 @@ extension ServerPropertiesSheet {
 
 		configure(proxyPortTextField, invalidOnEmpty: false, firstTokenOnly: false) { [weak self] value in
 			guard let self else { return nil }
-			guard [5, 6].contains(proxyTypeButton.selectedTag()) else { return nil }
+			guard ServerPropertiesSheet.proxyTypeUsesAddress(proxyTypeButton.selectedTag())
+			else { return nil }
 			return ServerPropertiesValidation.isInternetPort(value) ? nil : CommonValidationStrings.invalidInternetPort
 		}
 		proxyPortTextField.performValidationWhenEmpty = true

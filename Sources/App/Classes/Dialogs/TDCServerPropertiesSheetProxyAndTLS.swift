@@ -64,11 +64,11 @@ extension ServerPropertiesSheet {
 	}
 
 	@IBAction func proxyTypeChanged(_: Any?) {
-		let proxyType = IRCConnectionProxyType(rawValue: UInt(proxyTypeButton.selectedTag())) ?? .none
+		let proxyType = ServerPropertiesSheet.proxyType(forTag: proxyTypeButton.selectedTag())
 		let isAutomatic = proxyType == .automatic
 		let isTor = proxyType == .tor
 		let socks = proxyType == .socks5
-		let http = proxyType.rawValue == 6
+		let http = proxyType == .HTTP
 		let enabled = socks || http
 		contentViewProxyServerInputView.isHidden = !enabled
 		contentViewProxyServerTorBrowserView.isHidden = !isTor
