@@ -836,6 +836,10 @@ targets:
         com.apple.security.inherit: true
     sources:
       - path: Tests/GlasstualTests
+      # The Core Media modules ship in a loadable plugin the test host never
+      # loads. Compiling them into the test bundle is the only way to cover
+      # their URL matching; the plugin target keeps its own copy.
+      - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes
     dependencies:
       - target: Glasstual
       - target: CocoaExtensions
@@ -843,6 +847,8 @@ targets:
       - target: InlineContentKit
         embed: false
       - target: GlasstualPluginKit
+        embed: false
+      - target: Mustache
         embed: false
 
 # ---------------------------------------------------------------------------
