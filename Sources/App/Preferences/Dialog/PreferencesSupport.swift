@@ -43,45 +43,16 @@ enum PreferencesLayout {
 	static let sidebarMinimumWidth = 200.0
 	static let sidebarMaximumWidth = 260.0
 	static let sidebarPreferredWidth = 215.0
-	static let paneContentInset = 20.0
+	static let detailMinimumWidth = 620.0
 	static let windowMinimumWidth = 980.0
 	static let windowMinimumHeight = 600.0
+	static let windowDefaultWidth = 1020.0
+	static let windowDefaultHeight = 700.0
 }
 
 enum PreferencesIdentifiers {
 	static let toolbarBack = NSToolbarItem.Identifier("TDCPreferencesControllerBack")
 	static let toolbarForward = NSToolbarItem.Identifier("TDCPreferencesControllerForward")
-	static let paneCell = NSUserInterfaceItemIdentifier("TDCPreferencesControllerPaneCell")
-	static let groupCell = NSUserInterfaceItemIdentifier("TDCPreferencesControllerGroupCell")
-}
-
-final class PreferencesSidebarItem: NSObject {
-	let identifier: String?
-	let title: String
-	let symbolName: String?
-	let children: [PreferencesSidebarItem]?
-
-	init(
-		identifier: String? = nil,
-		title: String,
-		symbolName: String? = nil,
-		children: [PreferencesSidebarItem]? = nil
-	) {
-		self.identifier = identifier
-		self.title = title
-		self.symbolName = symbolName
-		self.children = children
-	}
-
-	var isGroup: Bool {
-		children != nil
-	}
-}
-
-final class PreferencesPaneContainerView: NSView {
-	override var isFlipped: Bool {
-		true
-	}
 }
 
 struct PreferencesPaneDescriptor: Equatable {
@@ -251,40 +222,5 @@ nonisolated enum PreferencesValueValidation {
 			return 0
 		}
 		return min(max(value, range.lowerBound), range.upperBound)
-	}
-}
-
-@objc(TXColorUnarchiveFromDataTransformer)
-final nonisolated class ColorUnarchiveFromDataTransformer: NSSecureUnarchiveFromDataTransformer {
-	static let register: Void = {
-		ValueTransformer.setValueTransformer(
-			ColorUnarchiveFromDataTransformer(),
-			forName: NSValueTransformerName("TXColorUnarchiveFromData")
-		)
-	}()
-
-	override static func transformedValueClass() -> AnyClass {
-		NSColor.self
-	}
-
-	override static func allowsReverseTransformation() -> Bool {
-		true
-	}
-
-	override static var allowedTopLevelClasses: [AnyClass] {
-		super.allowedTopLevelClasses + [NSColor.self]
-	}
-
-	override func transformedValue(_ value: Any?) -> Any? {
-		if let color = value as? NSColor {
-			return color
-		}
-		guard let data = value as? Data else { return nil }
-		return try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data)
-	}
-
-	override func reverseTransformedValue(_ value: Any?) -> Any? {
-		guard let color = value as? NSColor else { return nil }
-		return try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)
 	}
 }

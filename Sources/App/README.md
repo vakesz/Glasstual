@@ -411,7 +411,7 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/AppKitSupport/NSColorHelper.swift` | `Sources/App/UI/NSColorHelper.swift` |
 | `Sources/App/Modules/AppKitSupport/NSTableViewHelper.swift` | `Sources/App/UI/NSTableViewHelper.swift` |
 | `Sources/App/Modules/AppKitSupport/NSViewHelper.swift` | `Sources/App/UI/NSViewHelper.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCPreferencesGroupBox.swift` | `Sources/App/UI/PreferencesGroupBox.swift` |
+| `Sources/App/Modules/AppKitSupport/TDCPreferencesGroupBox.swift` | removed with the nib-drawn preference panes |
 | `Sources/App/Modules/AppKitSupport/TDCReactionPopoverController.swift` | `Sources/App/UI/ReactionPopoverController.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCSheetBase.swift` | `Sources/App/UI/SheetBase.swift` |
 | `Sources/App/Modules/AppKitSupport/SheetContextProtocols.swift` | `Sources/App/UI/SheetContextProtocols.swift` |
