@@ -42,11 +42,6 @@ import os
 
 public let inlineContentErrorDomain = "ICLInlineContentErrorDomain"
 
-private let payloadLogger = Logger(
-	subsystem: "com.vakesz.glasstual.InlineContentLoader",
-	category: "Payload"
-)
-
 @objc(ICLPayload)
 open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
 	fileprivate static let logger = Logger(

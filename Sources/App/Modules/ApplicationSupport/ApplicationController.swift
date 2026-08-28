@@ -151,12 +151,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		notifications.observe(NSWorkspace.didWakeNotification, center: workspaceCenter) { [weak self] notification in
 			self?.computerDidWakeUp(notification)
 		}
-		notifications.observe(NSWorkspace.willSleepNotification, center: workspaceCenter) { [weak self] notification in
-			self?.computerWillSleep(notification)
+		notifications.observeSynchronously(NSWorkspace.willSleepNotification, center: workspaceCenter) { [weak self] in
+			self?.computerWillSleep()
 		}
 		notifications
-			.observe(NSWorkspace.willPowerOffNotification, center: workspaceCenter) { [weak self] notification in
-				self?.computerWillPowerOff(notification)
+			.observeSynchronously(NSWorkspace.willPowerOffNotification, center: workspaceCenter) { [weak self] in
+				self?.computerWillPowerOff()
 			}
 		notifications
 			.observe(NSWorkspace.screensDidWakeNotification, center: workspaceCenter) { [weak self] notification in
@@ -536,7 +536,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	@objc
-	private func computerWillSleep(_: Notification) {
+	private func computerWillSleep() {
 		Self.logger.log("Preparing for sleep")
 
 		world.prepareForSleep()
@@ -558,7 +558,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	@objc
-	private func computerWillPowerOff(_: Notification) {
+	private func computerWillPowerOff() {
 		terminateGracefully()
 	}
 }
