@@ -219,6 +219,16 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 			mutableConfig.channelName = newValue
 			config = mutableConfig
+
+			// A rename changes what the on-disk channel list and every
+			// name-keyed lookup resolve to, so persist it and tell observers
+			// exactly as updateConfig(_:) does. updateConfig cannot be used
+			// here: it refuses a configuration whose channelName differs.
+			associatedClient?.updateStoredChannelList()
+			NotificationCenter.default.post(
+				name: ChannelStatusChange.configurationNotification,
+				object: self
+			)
 		}
 	}
 
