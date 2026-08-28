@@ -17,9 +17,6 @@ Build Results/
 rule_docs/
 /Generated/Xcode/
 
-# Prebuilt static libraries are part of the tree even if a global ignore hides *.a.
-!Sources/Frameworks/Static Libraries/Libraries/*.a
-
 # Local agent/tool state.
 .agents/
 .claude/

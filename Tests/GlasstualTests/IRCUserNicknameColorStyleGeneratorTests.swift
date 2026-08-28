@@ -5,17 +5,14 @@ import XCTest
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
-@objc
 @MainActor
 class IRCUserNicknameColorStyleGeneratorTests: XCTestCase {
-	@objc
 	func testHashRemainsCompatibleWithLegacyMD5ByteOrder() {
 		let hash = UserNicknameColorStyleGenerator.hash(for: "alice")
 
 		XCTAssertEqual(hash.uint32Value, 2_746_080_018)
 	}
 
-	@objc
 	func testLightAndDarkStylesRemainStable() {
 		let hash: NSNumber = 2_746_080_018
 
@@ -29,7 +26,6 @@ class IRCUserNicknameColorStyleGeneratorTests: XCTestCase {
 		)
 	}
 
-	@objc
 	func testHueSpecificAdjustmentsRemainStable() {
 		XCTAssertEqual(
 			UserNicknameColorStyleGenerator.nicknameColorStyle(forHash: 1_507_889_104, colorStyle: .dark),

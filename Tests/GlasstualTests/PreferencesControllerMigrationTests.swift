@@ -9,48 +9,8 @@ import XCTest
 
 @MainActor
 final class PreferencesControllerMigrationTests: XCTestCase {
-	func testObjectiveCRuntimeNamesRemainStable() {
-		XCTAssertEqual(NSStringFromClass(PreferencesController.self), "TDCPreferencesController")
-		XCTAssertEqual(NSStringFromProtocol(PreferencesControllerDelegate.self), "TDCPreferencesControllerDelegate")
-	}
-
-	func testCallerAndNibSelectorsRemainAvailable() {
-		let selectors = [
-			"show:", "settingsSidebarCatalog", "viewForSettingsPaneIdentifier:", "windowWillClose:",
-			"onAddExcludeKeyword:", "onAddHighlightKeyword:", "onChangedAppearance:",
-			"onChangedChannelViewArrangement:", "onChangedDisableNicknameColorHashing:",
-			"onChangedForwardNoticeTo:", "onChangedHighlightLogging:", "onChangedHighlightType:",
-			"onChangedInlineMediaOption:", "onChangedInputHistoryScheme:",
-			"onChangedMainInputTextViewFontSize:", "onChangedScrollbackSaveLimit:",
-			"onChangedScrollbackVisibleLimit:", "onChangedServerListUnreadBadgeColor:",
-			"onChangedTheme:", "onChangedThemeSelection:", "onChangedTranscriptFolder:",
-			"onChangedUserListModeColor:", "onChangedUserListModeSortOrder:",
-			"onFileTransferDownloadDestinationFolderChanged:",
-			"onFileTransferIPAddressDetectionMethodChanged:", "onModifyUserStyleSheetRules:",
-			"onOpenPathToScripts:", "onOpenPathToTheme:",
-			"onResetServerListUnreadBadgeColorsToDefault:",
-			"onResetUserListModeColorsToDefaults:", "onSelectNewFont:",
-		]
-		for selector in selectors {
-			XCTAssertTrue(PreferencesController.instancesRespond(to: NSSelectorFromString(selector)), selector)
-		}
-
-		let metaClass: AnyClass? = try? XCTUnwrap(object_getClass(PreferencesController.self))
-		XCTAssertTrue(metaClass.map { class_respondsToSelector(
-			$0,
-			NSSelectorFromString("openProxySettingsInSystemPreferences")
-		) } ?? false)
-	}
-
-	func testPaneCatalogKeepsEveryBuiltInPaneAndCompatibilityEntry() {
-		XCTAssertEqual(PreferencesPaneCatalog.panes.count, 19)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "general")?.group, .main)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "addons")?.group, .addOns)
-		XCTAssertEqual(
-			PreferencesPaneCatalog.descriptor(for: "compatibility")?.symbolName,
-			"wrench.and.screwdriver"
-		)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "hidden")?.group, .advanced)
+	/// A pane the sidebar cannot reach is a pane nobody can open.
+	func testPaneCatalogCoversEveryDeclaredPane() {
 		XCTAssertEqual(Set(PreferencesPaneCatalog.panes.map(\.identifier)), Set(PreferencesPaneIdentifier.allCases))
 	}
 

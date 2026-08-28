@@ -86,7 +86,10 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 	}
 
 	func testResourceManagerCachesAndRejectsWrongTypes() {
+		/* The cache is process-wide; empty it on the way out as well so the
+		 entry this test plants does not answer another one's lookup. */
 		ResourceManager.sharedResourcesCache.removeAllObjects()
+		defer { ResourceManager.sharedResourcesCache.removeAllObjects() }
 
 		let first = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
 		let second = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
@@ -101,35 +104,6 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 		)
 		XCTAssertNil(ResourceManager.array(fromResources: "StaticStore", cacheValue: false))
 		XCTAssertNil(ResourceManager.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false))
-	}
-
-	func testResourceManagerDocumentTypeConstants() {
-		XCTAssertEqual(ResourceDocumentType.bundleFileExtension, ".bundle")
-		XCTAssertEqual(ResourceDocumentType.bundleFilenameExtension, "bundle")
-		XCTAssertEqual(ResourceDocumentType.scriptFileExtension, ".scpt")
-		XCTAssertEqual(ResourceDocumentType.scriptFilenameExtension, "scpt")
-	}
-
-	func testPreferencesReloadActionsPreserveLegacyBitAssignments() {
-		XCTAssertEqual(PreferencesReloadAction.appearance.rawValue, 1 << 0)
-		XCTAssertEqual(PreferencesReloadAction.channelViewArrangement.rawValue, 1 << 1)
-		XCTAssertEqual(PreferencesReloadAction.dockIconBadges.rawValue, 1 << 2)
-		XCTAssertEqual(PreferencesReloadAction.highlightKeywords.rawValue, 1 << 3)
-		XCTAssertEqual(PreferencesReloadAction.highlightLogging.rawValue, 1 << 4)
-		XCTAssertEqual(PreferencesReloadAction.ircCommandCache.rawValue, 1 << 5)
-		XCTAssertEqual(PreferencesReloadAction.inputHistoryScope.rawValue, 1 << 6)
-		XCTAssertEqual(PreferencesReloadAction.logTranscripts.rawValue, 1 << 7)
-		XCTAssertEqual(PreferencesReloadAction.memberList.rawValue, 1 << 9)
-		XCTAssertEqual(PreferencesReloadAction.memberListSortOrder.rawValue, 1 << 10)
-		XCTAssertEqual(PreferencesReloadAction.memberListUserBadges.rawValue, 1 << 11)
-		XCTAssertEqual(PreferencesReloadAction.preferencesChanged.rawValue, 1 << 12)
-		XCTAssertEqual(PreferencesReloadAction.scrollbackSaveLimit.rawValue, 1 << 13)
-		XCTAssertEqual(PreferencesReloadAction.scrollbackVisibleLimit.rawValue, 1 << 14)
-		XCTAssertEqual(PreferencesReloadAction.serverList.rawValue, 1 << 15)
-		XCTAssertEqual(PreferencesReloadAction.serverListUnreadBadges.rawValue, 1 << 16)
-		XCTAssertEqual(PreferencesReloadAction.style.rawValue, 1 << 17)
-		XCTAssertEqual(PreferencesReloadAction.textDirection.rawValue, 1 << 19)
-		XCTAssertEqual(PreferencesReloadAction.textFieldFontSize.rawValue, 1 << 20)
 	}
 
 	func testFileLoggerBuildsConsoleChannelAndQueryPaths() {

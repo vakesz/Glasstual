@@ -307,12 +307,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	public func applicationShouldOpenUntitledFile(_: NSApplication) -> Bool {
-		if applicationIsTerminating {
-			return false
-		}
-
-		mainWindow.makeKeyAndOrderFront(nil)
-		return true
+		/* Glasstual has one window and no document controller, but it does
+		 declare an NSDocumentClass for importing scripts and extensions.
+		 Saying yes here invites AppKit to make an untitled document out of
+		 that importer; `applicationShouldHandleReopen` already brings the main
+		 window forward, which is what a reopen is actually asking for. */
+		false
 	}
 
 	public func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {

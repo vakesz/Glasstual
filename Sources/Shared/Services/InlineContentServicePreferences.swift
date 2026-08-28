@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -53,6 +53,7 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 	@objc public let limitNaughtyContent: Bool
 	@objc public let limitUnsafeContent: Bool
 	@objc public let checkEverything: Bool
+	@objc public let allowsCleartextHTTP: Bool
 
 	public init(
 		maximumFilesize: UInt,
@@ -62,7 +63,8 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 		limitBasicsToFiles: Bool,
 		limitNaughtyContent: Bool,
 		limitUnsafeContent: Bool,
-		checkEverything: Bool
+		checkEverything: Bool,
+		allowsCleartextHTTP: Bool
 	) {
 		self.maximumFilesize = maximumFilesize
 		self.scalingWidth = scalingWidth
@@ -72,6 +74,7 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 		self.limitNaughtyContent = limitNaughtyContent
 		self.limitUnsafeContent = limitUnsafeContent
 		self.checkEverything = checkEverything
+		self.allowsCleartextHTTP = allowsCleartextHTTP
 
 		super.init()
 	}
@@ -86,7 +89,8 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 			limitBasicsToFiles: Preferences.InlineMedia.limitBasicsToFiles.value,
 			limitNaughtyContent: Preferences.InlineMedia.limitNaughtyContent.value,
 			limitUnsafeContent: Preferences.InlineMedia.limitUnsafeContent.value,
-			checkEverything: Preferences.InlineMedia.checkEverything.value
+			checkEverything: Preferences.InlineMedia.checkEverything.value,
+			allowsCleartextHTTP: Preferences.InlineMedia.allowsCleartextHTTP.value
 		)
 	}
 
@@ -102,6 +106,7 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 			Preferences.InlineMedia.limitNaughtyContent.name: limitNaughtyContent,
 			Preferences.InlineMedia.limitUnsafeContent.name: limitUnsafeContent,
 			Preferences.InlineMedia.checkEverything.name: checkEverything,
+			Preferences.InlineMedia.allowsCleartextHTTP.name: allowsCleartextHTTP,
 		]
 	}
 
@@ -120,6 +125,7 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 		static let limitNaughtyContent = "limitNaughtyContent"
 		static let limitUnsafeContent = "limitUnsafeContent"
 		static let checkEverything = "checkEverything"
+		static let allowsCleartextHTTP = "allowsCleartextHTTP"
 	}
 
 	public init?(coder: NSCoder) {
@@ -131,6 +137,11 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 		limitNaughtyContent = coder.decodeBool(forKey: CodingKey.limitNaughtyContent)
 		limitUnsafeContent = coder.decodeBool(forKey: CodingKey.limitUnsafeContent)
 		checkEverything = coder.decodeBool(forKey: CodingKey.checkEverything)
+		/* Absent from an older archive, where the gate did not exist and
+		 cleartext was always allowed. */
+		allowsCleartextHTTP = coder.containsValue(forKey: CodingKey.allowsCleartextHTTP)
+			? coder.decodeBool(forKey: CodingKey.allowsCleartextHTTP)
+			: true
 
 		super.init()
 	}
@@ -144,5 +155,6 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 		coder.encode(limitNaughtyContent, forKey: CodingKey.limitNaughtyContent)
 		coder.encode(limitUnsafeContent, forKey: CodingKey.limitUnsafeContent)
 		coder.encode(checkEverything, forKey: CodingKey.checkEverything)
+		coder.encode(allowsCleartextHTTP, forKey: CodingKey.allowsCleartextHTTP)
 	}
 }

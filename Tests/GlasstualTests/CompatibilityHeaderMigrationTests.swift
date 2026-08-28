@@ -21,7 +21,7 @@ final class CompatibilityHeaderMigrationTests: XCTestCase {
 		let clientConfig = ClientConfig()
 		XCTAssertFalse(clientConfig.connectionName.isEmpty)
 		XCTAssertFalse(clientConfig.nickname.isEmpty)
-		XCTAssertNotNil(clientConfig.channelList)
+		XCTAssertTrue(clientConfig.channelList.isEmpty)
 		XCTAssertNil(clientConfig.identityClientSideCertificate)
 		XCTAssertEqual(clientConfig.awayNickname, "")
 		XCTAssertNil(clientConfig.proxyAddress)

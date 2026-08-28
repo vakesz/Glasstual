@@ -69,7 +69,8 @@ struct InlineContentServicePreferencesTests {
 		limitBasicsToFiles: false,
 		limitNaughtyContent: true,
 		limitUnsafeContent: false,
-		checkEverything: true
+		checkEverything: true,
+		allowsCleartextHTTP: false
 	)
 
 	@Test
@@ -89,6 +90,7 @@ struct InlineContentServicePreferencesTests {
 		#expect(decoded.limitNaughtyContent)
 		#expect(decoded.limitUnsafeContent == false)
 		#expect(decoded.checkEverything)
+		#expect(decoded.allowsCleartextHTTP == false)
 	}
 
 	/// The service reads these through `TextualPreferences`, so the domain has
@@ -97,7 +99,7 @@ struct InlineContentServicePreferencesTests {
 	func producesARegistrationDomainKeyedByThePreferenceNames() {
 		let domain = sample.registrationDomain
 
-		#expect(domain.count == 8)
+		#expect(domain.count == 9)
 		#expect(domain[Preferences.InlineMedia.maximumFilesize.name] as? UInt == 7)
 		#expect(domain[Preferences.InlineMedia.scalingWidth.name] as? UInt == 640)
 		#expect(domain[Preferences.InlineMedia.checkEverything.name] as? Bool == true)

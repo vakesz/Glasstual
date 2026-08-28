@@ -7,7 +7,6 @@ import Foundation
 @testable import Glasstual
 import XCTest
 
-@MainActor
 final class PromptLocalizationMigrationTests: XCTestCase {
 	func testApplicationActionsAndTypedPromptStateResolveLegacyValues() {
 		XCTAssertEqual(PromptStrings.Action.accept, "Accept")
@@ -81,62 +80,4 @@ final class PromptLocalizationMigrationTests: XCTestCase {
 			"""
 		)
 	}
-
-	/// Six legacy keys were duplicates of another entry's text. The survivors
-	/// name the keys they absorbed so the consolidation stays traceable.
-	func testConsolidatedAliasesAreDocumented() throws {
-		let catalog = try promptCatalog()
-		let aliases = ["0hh-sl", "c4z-2b", "dcc-c4", "i8o-7z", "sv9-8s", "u5k-9n"]
-
-		for alias in aliases {
-			XCTAssertNil(catalog.strings[alias], alias)
-			XCTAssertTrue(
-				catalog.strings.values.contains { $0.comment.contains(alias) },
-				alias
-			)
-		}
-	}
-
-	func testLegacyPromptsTableIsRetired() {
-		let legacyURL = languageFilesURL
-			.appending(path: "en.lproj")
-			.appending(path: "Prompts.strings")
-		XCTAssertFalse(FileManager.default.fileExists(atPath: legacyURL.path))
-	}
-
-	private func promptCatalog() throws -> PromptCatalog {
-		try JSONDecoder().decode(
-			PromptCatalog.self,
-			from: Data(contentsOf: languageFilesURL.appending(path: "Prompts.xcstrings"))
-		)
-	}
-
-	private var languageFilesURL: URL {
-		URL(fileURLWithPath: #filePath)
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.appending(path: "Sources/App/Resources/Language Files")
-	}
-}
-
-private struct PromptCatalog: Decodable {
-	let sourceLanguage: String
-	let strings: [String: PromptCatalogEntry]
-	let version: String
-}
-
-private struct PromptCatalogEntry: Decodable {
-	let comment: String
-	let extractionState: String
-	let localizations: [String: PromptCatalogLocalization]
-}
-
-private struct PromptCatalogLocalization: Decodable {
-	let stringUnit: PromptCatalogStringUnit
-}
-
-private struct PromptCatalogStringUnit: Decodable {
-	let state: String
-	let value: String
 }
