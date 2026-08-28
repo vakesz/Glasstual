@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
  *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,214 +38,110 @@
 import CocoaExtensions
 import Foundation
 
-@objc(IRCServer)
-public nonisolated class Server: PortablePropertyDict {
-	fileprivate var prefersSecuredConnectionStorage = false
-	fileprivate var serverAddressStorage = ""
-	fileprivate var serverPasswordStorage: String?
-	fileprivate var serverPortStorage: UInt16 = 0
-	fileprivate var uniqueIdentifierStorage = ""
-	fileprivate var defaultsStorage: [String: Any] = [:]
+/** One endpoint in a connection's server list.
 
-	@objc public var destroyKeychainItemsDuringDealloc = false
+ The password is not part of the value: it lives in the keychain under this
+ endpoint's `uniqueIdentifier`, and `pendingServerPassword` only holds one that
+ the user has just typed and that has not been flushed there yet. */
+public nonisolated struct Server: Codable, Sendable, Equatable, Hashable {
+	public var uniqueIdentifier: String
+	public var serverAddress: String
+	public var serverPort: UInt16
+	public var prefersSecuredConnection: Bool
 
-	@objc public var uniqueIdentifier: String {
-		uniqueIdentifierStorage
+	/** A password waiting to be written to the keychain, or one read back out
+	 of it so that a duplicate can carry it to its own identifier. It is never
+	 encoded — see `serverPassword`. */
+	public var pendingServerPassword: String?
+
+	public init(
+		uniqueIdentifier: String = UUID().uuidString,
+		serverAddress: String = "",
+		serverPort: UInt16 = UInt16(IRCConnectionDefaults.serverPort),
+		prefersSecuredConnection: Bool = false,
+		pendingServerPassword: String? = nil
+	) {
+		self.uniqueIdentifier = uniqueIdentifier
+		self.serverAddress = serverAddress
+		self.serverPort = serverPort
+		self.prefersSecuredConnection = prefersSecuredConnection
+		self.pendingServerPassword = pendingServerPassword
 	}
 
-	@objc public var serverAddress: String {
-		serverAddressStorage
+	private enum CodingKeys: String, CodingKey {
+		case uniqueIdentifier
+		case serverAddress
+		case serverPort
+		case prefersSecuredConnection
 	}
 
-	@objc public var serverPort: UInt16 {
-		serverPortStorage
-	}
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
 
-	@objc public var prefersSecuredConnection: Bool {
-		prefersSecuredConnectionStorage
-	}
-
-	@objc public var serverPassword: String? {
-		serverPasswordStorage ?? serverPasswordFromKeychain
-	}
-
-	@objc public var serverPasswordFromKeychain: String? {
-		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
-
-		return KeychainStore.password(
-			forItem: "Glasstual (Server Password)",
-			kind: "application password",
-			username: nil,
-			service: serviceName
+		let identifier = container.decode(String.self, forKey: .uniqueIdentifier, aliases: [], default: "")
+		uniqueIdentifier = identifier.isEmpty ? UUID().uuidString : identifier
+		serverAddress = container.decode(String.self, forKey: .serverAddress, aliases: [], default: "")
+		serverPort = container.decode(
+			UInt16.self,
+			forKey: .serverPort,
+			aliases: [],
+			default: UInt16(IRCConnectionDefaults.serverPort)
+		)
+		prefersSecuredConnection = container.decode(
+			Bool.self,
+			forKey: .prefersSecuredConnection,
+			aliases: [],
+			default: false
 		)
 	}
 
-	override public init() {
-		super.init(dictionary: [:])
+	public func encode(to encoder: any Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+
+		try container.encode(prefersSecuredConnection, forKey: .prefersSecuredConnection)
+		try container.encode(serverAddress, forKey: .serverAddress)
+		try container.encode(uniqueIdentifier, forKey: .uniqueIdentifier)
+		try container.encode(serverPort, forKey: .serverPort)
 	}
+}
 
-	@objc(initWithDictionary:)
-	public required init(dictionary dic: [String: Any]) {
-		super.init(dictionary: dic)
-	}
-
-	public required init?(coder _: NSCoder) {
-		nil
-	}
-
-	deinit {
-		if destroyKeychainItemsDuringDealloc {
-			destroyServerPasswordKeychainItem()
-		}
-	}
-
-	@objc(initializedClassHealthCheck)
-	override public func initializedClassHealthCheck() {
-		/* Health checks are disabled because Server Properties might
-		 write an empty server address to the class then perform a
-		 copy on the object which would throw an exception. */
-	}
-
-	@objc(populateDefaultsPreflight)
-	override public func populateDefaultsPreflight() {
-		if initializedAsCopy {
-			return
-		}
-
-		defaultsStorage = ["serverPort": NSNumber(value: IRCConnectionDefaults.serverPort)]
-	}
-
-	@objc(populateDefaultsPostflight)
-	override public func populateDefaultsPostflight() {
-		if initializedAsCopy {
-			return
-		}
-
-		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = UUID().uuidString
-		}
-	}
-
-	@objc(populateDictionaryValues:)
-	override public func populateDictionaryValues(_ dic: [String: Any]) {
-		let defaultsMutable = NSMutableDictionary(dictionary: defaultsStorage)
-		defaultsMutable.addEntries(from: dic)
-
-		var prefersSecured = false
-		defaultsMutable.ce_assignBool(to: &prefersSecured, forKey: "prefersSecuredConnection")
-		prefersSecuredConnectionStorage = prefersSecured
-
-		if let address = defaultsMutable["serverAddress"] as? String {
-			serverAddressStorage = address
-		}
-
-		if let identifier = defaultsMutable["uniqueIdentifier"] as? String {
-			uniqueIdentifierStorage = identifier
-		}
-
-		var port: UInt16 = 0
-		defaultsMutable.ce_assignUnsignedShort(to: &port, forKey: "serverPort")
-		serverPortStorage = port
-	}
-
-	override public func dictionaryValue(for _: PortablePropertyDictTarget) -> [String: Any] {
-		let dic = NSMutableDictionary()
-
-		dic.ce_setBool(prefersSecuredConnectionStorage, forKey: "prefersSecuredConnection")
-		dic.ce_maybeSetObject(serverAddressStorage, forKey: "serverAddress")
-		dic.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-		dic.ce_setUnsignedShort(serverPortStorage, forKey: "serverPort")
-
-		guard let values = dic as? [String: Any] else {
-			preconditionFailure("Server dictionaries must use String keys")
-		}
-
-		return values
-	}
-
-	override public func copy(asMutable mutableCopy: Bool, uniquing: Bool) -> Any {
-		guard let copy = super.copy(asMutable: mutableCopy, uniquing: false) as? Server else {
-			preconditionFailure("Server copies must preserve their model type")
-		}
-
-		copy.defaultsStorage = defaultsStorage
-		copy.serverPasswordStorage = serverPasswordStorage
-		/* destroyKeychainItemsDuringDealloc is deliberately not copied: a copy
-		 shares the original's uniqueIdentifier, so propagating the flag makes
-		 the deallocation of any transient copy delete the live keychain item. */
-
-		if uniquing {
-			copy.uniqueIdentifierStorage = UUID().uuidString
-		}
+public nonisolated extension Server {
+	/// A copy under a fresh identity, carrying the password across so the
+	/// duplicate does not silently lose it.
+	func uniqueCopy() -> Server {
+		var copy = self
+		copy.pendingServerPassword = pendingServerPassword ?? serverPasswordFromKeychain
+		copy.uniqueIdentifier = UUID().uuidString
 
 		return copy
 	}
 
-	override public var mutableClass: PortablePropertyDict {
-		unsafeBitCast(MutableServer.self, to: PortablePropertyDict.self)
+	var keychainItem: KeychainItem {
+		.serverPassword(uniqueIdentifier)
 	}
 
-	@objc
-	public func writeServerPasswordToKeychain() {
-		guard let serverPasswordStorage else {
+	var serverPasswordFromKeychain: String? {
+		keychainItem.password
+	}
+
+	/// The password to connect with: an unflushed edit if there is one, and
+	/// otherwise whatever the keychain holds.
+	var serverPassword: String? {
+		get { pendingServerPassword ?? serverPasswordFromKeychain }
+		set { pendingServerPassword = newValue }
+	}
+
+	mutating func writeServerPasswordToKeychain() {
+		guard let pendingServerPassword else {
 			return
 		}
 
-		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
-
-		KeychainStore.modifyOrAddItem(
-			"Glasstual (Server Password)",
-			kind: "application password",
-			username: nil,
-			newPassword: serverPasswordStorage,
-			service: serviceName
-		)
-
-		self.serverPasswordStorage = nil
+		keychainItem.write(pendingServerPassword)
+		self.pendingServerPassword = nil
 	}
 
-	@objc
-	public func destroyServerPasswordKeychainItem() {
-		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
-
-		KeychainStore.deleteItem(
-			"Glasstual (Server Password)",
-			kind: "application password",
-			username: nil,
-			service: serviceName
-		)
-
-		serverPasswordStorage = nil
-	}
-}
-
-@objc(IRCServerMutable)
-public final nonisolated class MutableServer: Server {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyDict {
-		unsafeBitCast(Server.self, to: PortablePropertyDict.self)
-	}
-
-	@objc override public var prefersSecuredConnection: Bool {
-		get { prefersSecuredConnectionStorage }
-		set { prefersSecuredConnectionStorage = newValue }
-	}
-
-	@objc override public var serverAddress: String {
-		get { serverAddressStorage }
-		set { serverAddressStorage = newValue }
-	}
-
-	@objc override public var serverPassword: String? {
-		get { serverPasswordStorage ?? serverPasswordFromKeychain }
-		set { serverPasswordStorage = newValue }
-	}
-
-	@objc override public var serverPort: UInt16 {
-		get { serverPortStorage }
-		set { serverPortStorage = newValue }
+	mutating func destroyServerPasswordKeychainItem() {
+		keychainItem.delete()
+		pendingServerPassword = nil
 	}
 }

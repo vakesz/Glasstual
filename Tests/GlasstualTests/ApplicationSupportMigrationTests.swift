@@ -207,10 +207,7 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 	}
 
 	private func makeChannel(named name: String, type: ChannelType, client: IRCClient) -> Channel {
-		let channel = Channel(configDictionary: [
-			"channelName": name,
-			"channelType": type.rawValue,
-		])
+		let channel = Channel(config: ChannelConfig(channelName: name, type: type))
 
 		channel.setValue(client, forKey: "associatedClient")
 

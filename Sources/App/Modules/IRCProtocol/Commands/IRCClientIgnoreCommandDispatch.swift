@@ -58,7 +58,7 @@ extension IRCClient {
 			printDebugInformation(IRCCommandStrings.Ignore.ambiguous(nickname: member.nickname))
 			return true
 		}
-		guard let mutableConfig = config.mutableCopy() as? IRCClientConfigMutable else { return true }
+		var mutableConfig = config
 		if isIgnore {
 			let ignore = AddressBookEntry.newIgnoreEntry(forHostmask: member.banMask)
 			printDebugInformation(
@@ -69,7 +69,7 @@ extension IRCClient {
 			printDebugInformation(
 				IRCCommandStrings.Ignore.removed(nickname: member.nickname, hostmask: ignore.hostmask)
 			)
-			mutableConfig.ignoreList.removeAll { $0 === ignore }
+			mutableConfig.ignoreList.removeAll { $0.uniqueIdentifier == ignore.uniqueIdentifier }
 		}
 		updateConfig(mutableConfig)
 		clearAddressBookCache(forHostmask: hostmask)

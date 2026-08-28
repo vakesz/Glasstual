@@ -55,11 +55,13 @@ public extension IRCClient {
 	func cacheHighlight(in channel: IRCChannel, with logLine: LogLine) {
 		guard TextualPreferences.logHighlights() else { return }
 
-		let mutableEntry = MutableHighlightLogEntry()
-		mutableEntry.clientId = uniqueIdentifier
-		mutableEntry.channelId = channel.uniqueIdentifier
-		mutableEntry.lineLogged = logLine
-		guard let newEntry = mutableEntry.copy() as? HighlightLogEntry else { return }
+		guard let copiedLine = logLine.copy() as? LogLine else { return }
+
+		let newEntry = HighlightLogEntry(
+			lineLogged: copiedLine,
+			clientId: uniqueIdentifier,
+			channelId: channel.uniqueIdentifier
+		)
 		cachedHighlights.insert(newEntry, at: 0)
 
 		guard let sheet = SharedApplication.sharedWindowController()

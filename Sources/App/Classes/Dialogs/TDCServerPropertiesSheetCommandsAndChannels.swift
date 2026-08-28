@@ -39,7 +39,7 @@
 import AppKit
 import CocoaExtensions
 
-extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
+extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesSheetDelegate {
 	func configureTables() {
 		for table in [addressBookTable, channelListTable, highlightsTable] {
 			table?.target = self
@@ -194,7 +194,6 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		highlightSheet = controller
 	}
 
-	@objc(highlightEntrySheet:onOk:)
 	public func highlightEntrySheet(_: HighlightEntrySheet, didSave config: HighlightMatchCondition) {
 		if let index = highlightList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
 			highlightListArrayController.textual_replaceObject(atArrangedObjectIndex: UInt(index), with: config)
@@ -203,7 +202,6 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		}
 	}
 
-	@objc(highlightEntrySheetWillClose:)
 	public func highlightEntrySheetDidClose(_: HighlightEntrySheet) {
 		highlightSheet = nil
 	}
@@ -234,12 +232,10 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		channelSheet = controller
 	}
 
-	@objc(channelPropertiesSheet:onOk:)
 	public func channelPropertiesSheet(_: ChannelPropertiesSheet, onOk config: ChannelConfig) {
 		storeChannelConfig(config)
 	}
 
-	@objc(channelPropertiesSheetWillClose:)
 	public func channelPropertiesSheetWillClose(_: ChannelPropertiesSheet) {
 		channelSheet = nil
 	}
@@ -269,10 +265,11 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 
 	@objc private func channelAutoJoinToggled(_ sender: NSButton) {
 		let row = channelListTable.row(for: sender)
-		guard channelList.indices.contains(row),
-		      let config = channelList[row].mutableCopy() as? MutableChannelConfig else { return }
+		guard channelList.indices.contains(row) else { return }
+
+		var config = channelList[row]
 		config.autoJoin = sender.state == .on
-		storeChannelConfig(serverPropertiesModel(config.copy(), as: ChannelConfig.self))
+		storeChannelConfig(config)
 	}
 
 	@objc private func tableViewDoubleClicked(_ sender: Any?) {

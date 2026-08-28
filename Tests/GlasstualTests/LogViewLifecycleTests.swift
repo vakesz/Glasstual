@@ -10,7 +10,7 @@ import XCTest
 @MainActor
 final class LogViewLifecycleTests: XCTestCase {
 	func testLateWebViewFinishedLoadingIsIgnoredAfterWeakClientDeallocation() throws {
-		var client: IRCClient? = IRCClient(configDictionary: [:])
+		var client: IRCClient? = IRCClient(config: ClientConfig())
 		let window = TVCMainWindow(
 			contentRect: .zero,
 			styleMask: .borderless,
@@ -35,7 +35,7 @@ final class LogViewLifecycleTests: XCTestCase {
 	}
 
 	func testLateWebViewCallbacksAreIgnoredAfterControllerDeallocation() throws {
-		let client = IRCClient(configDictionary: [:])
+		let client = IRCClient(config: ClientConfig())
 		let window = TVCMainWindow(
 			contentRect: .zero,
 			styleMask: .borderless,

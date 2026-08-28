@@ -39,7 +39,7 @@
 import AppKit
 import CocoaExtensions
 
-extension ServerPropertiesSheet {
+extension ServerPropertiesSheet: ServerEndpointListSheetDelegate {
 	func loadPrimaryServerEndpoint() {
 		guard let server = serverList.first else {
 			serverAddressComboBox.stringValue = ""
@@ -76,10 +76,10 @@ extension ServerPropertiesSheet {
 			previousPrimaryServer = server
 			return
 		}
-		let server = MutableServer()
-		server.serverPort = UInt16(clamping: serverPortTextField.integerValue)
-		server.prefersSecuredConnection = prefersSecuredConnectionCheck.state == .on
-		previousPrimaryServer = server
+		previousPrimaryServer = Server(
+			serverPort: UInt16(clamping: serverPortTextField.integerValue),
+			prefersSecuredConnection: prefersSecuredConnectionCheck.state == .on
+		)
 	}
 
 	private func populateDefaultsForPreconfiguredNetwork() {
@@ -142,32 +142,29 @@ extension ServerPropertiesSheet {
 		serverEndpointSheet = controller
 	}
 
-	@objc(serverEndpointListSheet:onOk:)
 	public func serverEndpointListSheet(_: ServerEndpointListSheet, onOk serverList: [Server]) {
 		serverListArrayController.textual_removeAllArrangedObjects()
 		serverListArrayController.add(contentsOf: serverList)
 		loadPrimaryServerEndpoint()
 	}
 
-	@objc(serverEndpointListSheetWillClose:)
 	public func serverEndpointListSheetWillClose(_: ServerEndpointListSheet) {
 		serverEndpointSheet = nil
 	}
 
 	private func rebuildMutableServerEndpointList() {
 		guard !populatingPrimaryServer else { return }
-		let server = serverList.first?.mutableCopy() as? MutableServer ?? MutableServer()
+		var server = serverList.first ?? Server()
 		let address = serverAddressComboBox.value
 		server.serverAddress = networkList.network(named: address)?.serverAddress ?? address.lowercased()
 		server.serverPort = UInt16(clamping: serverPortTextField.integerValue)
 		server.prefersSecuredConnection = prefersSecuredConnectionCheck.state == .on
 		server.serverPassword = serverPasswordTextField.stringValue
 			.trimmingCharacters(in: .whitespacesAndNewlines)
-		let immutable = serverPropertiesModel(server.copy(), as: Server.self)
 		if serverList.isEmpty {
-			serverListArrayController.addObject(immutable)
+			serverListArrayController.addObject(server)
 		} else {
-			serverListArrayController.textual_replaceObject(atArrangedObjectIndex: 0, with: immutable)
+			serverListArrayController.textual_replaceObject(atArrangedObjectIndex: 0, with: server)
 		}
 	}
 

@@ -124,9 +124,9 @@ public extension MenuActionCoordinator {
 	}
 
 	private func duplicateServer() {
-		guard let client = selectedClient,
-		      let config = client.config.uniqueCopyMutable() as? MutableClientConfig
-		else { return }
+		guard let client = selectedClient else { return }
+
+		var config = client.config.uniqueCopy()
 		config.connectionName += "_"
 		let newClient = world.createClient(with: config, reload: true)
 		if newClient.config.sidebarItemExpanded {

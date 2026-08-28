@@ -85,14 +85,12 @@ private let clientTerminationLogger = Logger(
 
 @MainActor
 public extension IRCClient {
-	@objc(updateConfig:)
 	func updateConfig(_ newConfig: ClientConfig) {
 		updateConfig(newConfig, updateSelection: true)
 	}
 
-	@objc(updateConfig:updateSelection:)
 	func updateConfig(_ newConfig: ClientConfig, updateSelection: Bool) {
-		guard isTerminating == false, config.isEqual(newConfig) == false else { return }
+		guard isTerminating == false, config != newConfig else { return }
 		guard config.uniqueIdentifier == newConfig.uniqueIdentifier else {
 			clientConfigurationLogger.error("Tried to load configuration for incorrect client")
 			return
@@ -137,6 +135,16 @@ public extension IRCClient {
 		config.writeProxyPasswordToKeychain()
 	}
 
+	/// Flushes every endpoint's password to the keychain.
+	@objc(writeServerPasswordsToKeychain)
+	func writeServerPasswordsToKeychain() {
+		config.serverList = config.serverList.map { server in
+			var server = server
+			server.writeServerPasswordToKeychain()
+			return server
+		}
+	}
+
 	@objc(destroyServerPasswordKeychainItemAfterMigration)
 	func destroyServerPasswordKeychainItemAfterMigration() {
 		config.destroyServerPasswordKeychainItemAfterMigration()
@@ -144,28 +152,21 @@ public extension IRCClient {
 
 	@objc(updateStoredConfiguration)
 	func updateStoredConfiguration() {
-		guard configurationIsStale,
-		      let mutableConfig = config.mutableCopy() as? MutableClientConfig
-		else { return }
+		guard configurationIsStale else { return }
 
-		mutableConfig.lastMessageServerTime = lastMessageServerTime
-		mutableConfig.sidebarItemExpanded = sidebarItemIsExpanded
-		config = mutableConfig
+		config.lastMessageServerTime = lastMessageServerTime
+		config.sidebarItemExpanded = sidebarItemIsExpanded
 	}
 
 	@objc(updateStoredChannelList)
 	func updateStoredChannelList() {
-		guard let mutableConfig = config.mutableCopy() as? MutableClientConfig else { return }
-
-		mutableConfig.channelList = IRCClientConfigurationPolicy.storedChannelConfigurations(
+		config.channelList = IRCClientConfigurationPolicy.storedChannelConfigurations(
 			from: channelList,
 			rememberQueries: TextualPreferences.rememberServerListQueryStates()
 		)
-		config = mutableConfig
 		NotificationCenter.default.post(name: .init("IRCClientChannelListWasModifiedNotification"), object: self)
 	}
 
-	@objc(configurationDictionary)
 	func configurationDictionary() -> [String: Any] {
 		updateStoredConfiguration()
 		return config.dictionaryValue
@@ -280,22 +281,9 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(enumerateServers:)
-	func enumerateServers(_ body: (Server, UInt, UnsafeMutablePointer<ObjCBool>) -> Void) {
-		(config.serverList as NSArray).enumerateObjects { object, index, stop in
-			guard let server = object as? Server else { return }
-			body(server, UInt(index), stop)
-		}
-	}
-
-	@objc(writeServerPasswordsToKeychain)
-	func writeServerPasswordsToKeychain() {
-		config.serverList.forEach { $0.writeServerPasswordToKeychain() }
-	}
-
 	@objc(destroyServerPasswordsKeychainItems)
 	func destroyServerPasswordsKeychainItems() {
-		config.serverList.forEach { $0.destroyServerPasswordKeychainItem() }
+		config.serverList.forEach { $0.keychainItem.delete() }
 	}
 
 	private func reconcileChannels(with configurations: [ChannelConfig]) {
@@ -331,19 +319,22 @@ public extension IRCClient {
 	}
 
 	private func reconcileServers(from oldServers: [Server], to newServers: [Server]) {
+		/* An endpoint the user removed no longer has anywhere to keep its
+		 password, so the keychain item goes with it. The endpoint the client is
+		 connected to right now keeps its secret until the connection ends. */
 		let newIdentifiers = Set(newServers.map(\.uniqueIdentifier))
 		for oldServer in oldServers where newIdentifiers.contains(oldServer.uniqueIdentifier) == false {
 			if oldServer.uniqueIdentifier == server?.uniqueIdentifier {
-				server?.destroyKeychainItemsDuringDealloc = true
+				retiredServerKeychainItems.insert(oldServer.keychainItem)
 			} else {
-				oldServer.destroyServerPasswordKeychainItem()
+				oldServer.keychainItem.delete()
 			}
 		}
 
 		if newServers.isEmpty {
 			lastServerSelected = UInt(NSNotFound)
 		} else {
-			newServers.forEach { $0.writeServerPasswordToKeychain() }
+			writeServerPasswordsToKeychain()
 		}
 	}
 }

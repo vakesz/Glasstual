@@ -41,7 +41,9 @@ import XCTest
 
 @MainActor
 final class RemoteConnectionProtocolTests: XCTestCase {
-	func testOpenAllowsIRCConnectionConfigPayload() {
+	/// The configuration is a value type now, so it crosses the connection
+	/// inside an `NSSecureCoding` envelope.
+	func testOpenAllowsTheConnectionConfigurationEnvelope() {
 		let interface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
 		let allowedClasses = interface.classes(
 			for: #selector((any RemoteConnectionServerProtocol).open(with:)),
@@ -49,6 +51,6 @@ final class RemoteConnectionProtocolTests: XCTestCase {
 			ofReply: false
 		)
 
-		XCTAssertTrue((allowedClasses as NSSet).contains(IRCConnectionConfig.self))
+		XCTAssertTrue((allowedClasses as NSSet).contains(ConnectionConfigEnvelope.self))
 	}
 }

@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -46,7 +47,7 @@ struct IRCHighlightHealthCheckTests {
 	/// release; `precondition` turned a hand-edited plist into a crash.
 	@Test
 	func aConditionMissingItsKeywordLoadsAndIsFlagged() {
-		let condition = HighlightMatchCondition(dictionary: ["matchIsExcluded": true])
+		let condition = HighlightMatchCondition(matchIsExcluded: true)
 
 		#expect(condition.isWellFormed == false)
 		#expect(condition.matchKeyword.isEmpty)
@@ -54,7 +55,7 @@ struct IRCHighlightHealthCheckTests {
 
 	@Test
 	func aCompleteConditionIsWellFormed() {
-		let condition = HighlightMatchCondition(dictionary: ["matchKeyword": "hello"])
+		let condition = HighlightMatchCondition(matchKeyword: "hello")
 
 		#expect(condition.isWellFormed)
 		#expect(condition.matchKeyword == "hello")
@@ -63,15 +64,15 @@ struct IRCHighlightHealthCheckTests {
 	/// A malformed persisted entry is skipped rather than carried forward.
 	@Test
 	func malformedHighlightEntriesAreSkippedOnLoad() {
-		let config = IRCClientConfig(dictionary: [
+		let config = PropertyListModel.decode(IRCClientConfig.self, from: [
 			"highlightList": [
 				["matchKeyword": "keep"],
 				["matchIsExcluded": true],
 			],
-		], ignorePrivateMessages: false)
+		])
 
-		#expect(config.highlightList.count == 1)
-		#expect(config.highlightList.first?.matchKeyword == "keep")
+		#expect(config?.highlightList.count == 1)
+		#expect(config?.highlightList.first?.matchKeyword == "keep")
 	}
 }
 

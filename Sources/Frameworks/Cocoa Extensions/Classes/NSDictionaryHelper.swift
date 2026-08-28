@@ -64,26 +64,18 @@
 
 import Foundation
 
-private let mutableDictionaryMutationLock = NSRecursiveLock()
-
 private func dictionaryEntries(_ dictionary: NSDictionary) -> [(key: Any, value: Any)] {
-	let snapshot = {
-		guard let snapshot = dictionary.copy() as? NSDictionary else {
-			return Array(dictionary)
-		}
-		return Array(snapshot)
+	/* A caller may hand this a dictionary another thread is mutating, so the
+	 entries are read out of a snapshot rather than the dictionary itself. */
+	guard let snapshot = dictionary.copy() as? NSDictionary else {
+		return Array(dictionary)
 	}
-	if dictionary is NSMutableDictionary {
-		return mutableDictionaryMutationLock.withLock(snapshot)
-	}
-	return snapshot()
+
+	return Array(snapshot)
 }
 
 private func dictionaryObject(forKey key: Any, in dictionary: NSDictionary) -> Any? {
-	if dictionary is NSMutableDictionary {
-		return mutableDictionaryMutationLock.withLock { dictionary.object(forKey: key) }
-	}
-	return dictionary.object(forKey: key)
+	dictionary.object(forKey: key)
 }
 
 private enum DictionaryValueConversion {
@@ -154,11 +146,6 @@ private enum DictionaryValueConversion {
 			nil
 		}
 	}
-}
-
-private func dictionaryObjectByPerforming(_ selector: Selector, on value: Any) -> AnyObject? {
-	guard let receiver = value as? NSObject, receiver.responds(to: selector) else { return nil }
-	return receiver.perform(selector)?.takeUnretainedValue()
 }
 
 public extension NSDictionary {
@@ -297,67 +284,6 @@ public extension NSDictionary {
 		DictionaryValueConversion.double(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(assignObjectTo:forKey:)
-	func ce_assignObject(to pointer: UnsafeMutablePointer<AnyObject?>, forKey key: Any) {
-		ce_assignObject(to: pointer, forKey: key, performCopy: true)
-	}
-
-	@objc(assignObjectTo:forKey:performCopy:)
-	func ce_assignObject(to pointer: UnsafeMutablePointer<AnyObject?>, forKey key: Any, performCopy: Bool) {
-		guard let object = dictionaryObject(forKey: key, in: self) else {
-			if !performCopy {
-				pointer.pointee = nil
-			}
-			return
-		}
-		if !performCopy {
-			pointer.pointee = object as AnyObject
-		} else if let copyable = object as? NSCopying {
-			pointer.pointee = copyable.copy(with: nil) as AnyObject
-		}
-	}
-
-	@objc(assignStringTo:forKey:)
-	func ce_assignString(to pointer: UnsafeMutablePointer<NSString?>, forKey key: Any) {
-		guard let string = ce_string(forKey: key) else { return }
-		pointer.pointee = string as NSString
-	}
-
-	@objc(assignArrayTo:forKey:)
-	func ce_assignArray(to pointer: UnsafeMutablePointer<NSArray?>, forKey key: Any) {
-		guard let array = ce_array(forKey: key) else { return }
-		pointer.pointee = array.copy() as? NSArray
-	}
-
-	@objc(assignBoolTo:forKey:)
-	func ce_assignBool(to pointer: UnsafeMutablePointer<Bool>, forKey key: Any) {
-		guard let number = dictionaryObject(forKey: key, in: self) as? NSNumber else { return }
-		pointer.pointee = number.boolValue
-	}
-
-	@objc(assignUnsignedIntegerTo:forKey:)
-	func ce_assignUnsignedInteger(to pointer: UnsafeMutablePointer<UInt>, forKey key: Any) {
-		guard let number = dictionaryObject(forKey: key, in: self) as? NSNumber else { return }
-		pointer.pointee = number.uintValue
-	}
-
-	@objc(assignUnsignedShortTo:forKey:)
-	func ce_assignUnsignedShort(to pointer: UnsafeMutablePointer<UInt16>, forKey key: Any) {
-		guard let number = dictionaryObject(forKey: key, in: self) as? NSNumber else { return }
-		pointer.pointee = number.uint16Value
-	}
-
-	@objc(assignDoubleTo:forKey:)
-	func ce_assignDouble(to pointer: UnsafeMutablePointer<Double>, forKey key: Any) {
-		guard let number = dictionaryObject(forKey: key, in: self) as? NSNumber else { return }
-		pointer.pointee = number.doubleValue
-	}
-
-	@objc(containsKey:)
-	func ce_containsKey(_ key: Any) -> Bool {
-		dictionaryObject(forKey: key, in: self) != nil
-	}
-
 	@objc(firstKeyForObject:)
 	func ce_firstKey(for object: Any) -> Any? {
 		for (key, value) in dictionaryEntries(self) where (value as AnyObject).isEqual(object) {
@@ -468,117 +394,5 @@ public extension NSDictionary {
 			}
 			return "\(stringKey)=\(encodingBlock(stringValue))"
 		}.joined(separator: separator)
-	}
-}
-
-public extension NSMutableDictionary {
-	@objc(setObjectWithoutOverride:forKey:)
-	func ce_setObjectWithoutOverride(_ value: Any?, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			guard let value, object(forKey: key) == nil else { return }
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(maybeSetObject:forKey:)
-	func ce_maybeSetObject(_ value: Any?, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			guard let value else { return }
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setBool:forKey:)
-	func ce_setBool(_ value: Bool, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setInteger:forKey:)
-	func ce_setInteger(_ value: Int, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setUnsignedInteger:forKey:)
-	func ce_setUnsignedInteger(_ value: UInt, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setShort:forKey:)
-	func ce_setShort(_ value: Int16, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setUnsignedShort:forKey:)
-	func ce_setUnsignedShort(_ value: UInt16, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setLong:forKey:)
-	func ce_setLong(_ value: Int, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setUnsignedLong:forKey:)
-	func ce_setUnsignedLong(_ value: UInt, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setLongLong:forKey:)
-	func ce_setLongLong(_ value: Int64, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setUnsignedLongLong:forKey:)
-	func ce_setUnsignedLongLong(_ value: UInt64, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setDouble:forKey:)
-	func ce_setDouble(_ value: Double, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(setFloat:forKey:)
-	func ce_setFloat(_ value: Float, forKey key: String) {
-		mutableDictionaryMutationLock.withLock {
-			setObject(value, forKey: key as NSString)
-		}
-	}
-
-	@objc(performSelectorOnObjectValueAndReplace:)
-	func ce_performSelectorOnObjectValueAndReplace(_ selector: Selector) {
-		mutableDictionaryMutationLock.withLock {
-			guard count > 0 else { return }
-			let snapshot = copy() as? NSDictionary ?? self
-			for (key, value) in snapshot {
-				guard let replacement = dictionaryObjectByPerforming(selector, on: value) else {
-					preconditionFailure("Selector \(NSStringFromSelector(selector)) returned nil")
-				}
-				guard let copiedKey = key as? NSCopying else {
-					preconditionFailure("NSDictionary key does not conform to NSCopying")
-				}
-				setObject(replacement, forKey: copiedKey)
-			}
-		}
 	}
 }

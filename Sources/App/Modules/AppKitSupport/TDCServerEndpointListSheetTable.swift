@@ -12,18 +12,57 @@
 
 import AppKit
 
+/** A reference box for one row of the server-endpoint table.
+
+ `Server` is a value type, but the table's cell views edit their row through
+ KVC — the nib binds each control to a property on the cell view, which reads
+ and writes `objectValue`. A value in the array controller would hand every
+ cell its own copy, so the row is boxed here and the box is what the controller
+ arranges. The mirrored properties are `@objc dynamic` because the port cell
+ observes the port that the TLS checkbox in a different cell changes. */
+@objc(TDCServerEndpointListEntry)
+@MainActor
+public final class ServerEndpointListEntry: NSObject {
+	public var server: Server
+
+	public init(server: Server) {
+		self.server = server
+		super.init()
+	}
+
+	@objc public dynamic var serverAddress: String {
+		get { server.serverAddress }
+		set { server.serverAddress = newValue }
+	}
+
+	@objc public dynamic var serverPort: UInt16 {
+		get { server.serverPort }
+		set { server.serverPort = newValue }
+	}
+
+	@objc public dynamic var prefersSecuredConnection: Bool {
+		get { server.prefersSecuredConnection }
+		set { server.prefersSecuredConnection = newValue }
+	}
+
+	public var serverPassword: String? {
+		get { server.serverPassword }
+		set { server.serverPassword = newValue }
+	}
+}
+
 @objc(TDCServerEndpointListSheetTableCellView)
 public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 	@objc dynamic var serverAddress: String {
 		get {
-			guard let objectValue = objectValue as? MutableServer else {
+			guard let objectValue = objectValue as? ServerEndpointListEntry else {
 				return ""
 			}
 
 			return objectValue.serverAddress
 		}
 		set {
-			guard let objectValue = objectValue as? MutableServer else {
+			guard let objectValue = objectValue as? ServerEndpointListEntry else {
 				return
 			}
 
@@ -33,14 +72,14 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 
 	@objc dynamic var serverPort: String {
 		get {
-			guard let objectValue = objectValue as? MutableServer else {
+			guard let objectValue = objectValue as? ServerEndpointListEntry else {
 				return ""
 			}
 
 			return String(objectValue.serverPort)
 		}
 		set {
-			guard let objectValue = objectValue as? MutableServer else {
+			guard let objectValue = objectValue as? ServerEndpointListEntry else {
 				return
 			}
 
@@ -50,7 +89,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 
 	@objc dynamic var prefersSecuredConnection: NSNumber {
 		get {
-			guard let objectValue = objectValue as? MutableServer else {
+			guard let objectValue = objectValue as? ServerEndpointListEntry else {
 				return NSNumber(value: NSControl.StateValue.off.rawValue)
 			}
 
@@ -61,7 +100,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 			)
 		}
 		set {
-			guard let objectValue = objectValue as? MutableServer else {
+			guard let objectValue = objectValue as? ServerEndpointListEntry else {
 				return
 			}
 
@@ -86,14 +125,14 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 
 	@objc dynamic var serverPassword: String {
 		get {
-			guard let objectValue = objectValue as? MutableServer else {
+			guard let objectValue = objectValue as? ServerEndpointListEntry else {
 				return ""
 			}
 
 			return objectValue.serverPassword ?? ""
 		}
 		set {
-			guard let objectValue = objectValue as? MutableServer else {
+			guard let objectValue = objectValue as? ServerEndpointListEntry else {
 				return
 			}
 
@@ -153,7 +192,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 		willChangeValue(forKey: keyPath)
 		didChangeValue(forKey: keyPath)
 
-		guard keyPath == "serverPort", let objectValue = objectValue as? MutableServer else {
+		guard keyPath == "serverPort", let objectValue = objectValue as? ServerEndpointListEntry else {
 			return
 		}
 

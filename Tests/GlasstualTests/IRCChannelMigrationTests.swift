@@ -30,10 +30,7 @@ final class IRCChannelMigrationTests: XCTestCase {
 	func testConfigUpdateRejectsAnotherChannelIdentity() {
 		let channel = makeChannel(name: "#one", type: .channel)
 		let originalIdentifier = channel.uniqueIdentifier
-		let replacement = ChannelConfig(dictionary: [
-			"channelName": "#two",
-			"channelType": ChannelType.channel.rawValue,
-		])
+		let replacement = ChannelConfig(channelName: "#two")
 
 		channel.updateConfig(replacement)
 
@@ -54,9 +51,6 @@ final class IRCChannelMigrationTests: XCTestCase {
 		name: String = "#channel",
 		type: ChannelType
 	) -> Channel {
-		Channel(configDictionary: [
-			"channelName": name,
-			"channelType": type.rawValue,
-		])
+		Channel(config: ChannelConfig(channelName: name, type: type))
 	}
 }

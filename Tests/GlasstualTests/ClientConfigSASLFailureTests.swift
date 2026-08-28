@@ -28,36 +28,37 @@ struct ClientConfigSASLFailureTests {
 		#expect(IRCClientConfig().disconnectOnSASLFailure == false)
 	}
 
-	@Test("The mutable config carries the setter")
-	func mutableConfigSetsIt() {
-		let config = IRCClientConfigMutable()
+	@Test("The setting can be turned on")
+	func configSetsIt() {
+		var config = IRCClientConfig()
 		config.disconnectOnSASLFailure = true
 		#expect(config.disconnectOnSASLFailure)
 	}
 
 	@Test("The value survives a round trip through the dictionary representation")
-	func roundTripsThroughADictionary() {
-		let config = IRCClientConfigMutable()
+	func roundTripsThroughADictionary() throws {
+		var config = IRCClientConfig()
 		config.disconnectOnSASLFailure = true
 
-		let dictionary = config.dictionaryValue(for: .default)
+		let dictionary = config.dictionaryValue
 		#expect(dictionary[Self.key] as? Bool == true)
 
-		let restored = IRCClientConfig(dictionary: dictionary)
+		let restored = try #require(PropertyListModel.decode(IRCClientConfig.self, from: dictionary))
 		#expect(restored.disconnectOnSASLFailure)
 	}
 
 	@Test("A dictionary without the key reads back as off")
-	func absentKeyReadsAsOff() {
-		var dictionary = IRCClientConfigMutable().dictionaryValue(for: .default)
+	func absentKeyReadsAsOff() throws {
+		var dictionary = IRCClientConfig().dictionaryValue
 		dictionary.removeValue(forKey: Self.key)
 
-		#expect(IRCClientConfig(dictionary: dictionary).disconnectOnSASLFailure == false)
+		let restored = try #require(PropertyListModel.decode(IRCClientConfig.self, from: dictionary))
+		#expect(restored.disconnectOnSASLFailure == false)
 	}
 
 	@Test("An off value is not written to the dictionary")
 	func offIsTheDefault() {
-		#expect(IRCClientConfig().dictionaryValue(for: .default)[Self.key] == nil)
+		#expect(IRCClientConfig().dictionaryValue[Self.key] == nil)
 	}
 
 	@Test("The numerics that mean SASL was refused are the ones the option acts on")

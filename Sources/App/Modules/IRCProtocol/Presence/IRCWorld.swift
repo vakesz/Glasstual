@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import GlasstualPluginKit
 import os
 
@@ -120,7 +121,10 @@ public final class World: NSObject {
 		serverList.beginUpdates()
 
 		for dictionary in TextualPreferences.clientList() ?? [] {
-			let config = IRCClientConfig(dictionary: dictionary)
+			guard let config = PropertyListModel.decode(ClientConfig.self, from: dictionary) else {
+				continue
+			}
+
 			_ = createClient(with: config, reload: true)
 		}
 
@@ -441,12 +445,10 @@ public final class World: NSObject {
 
 	// MARK: - Factory
 
-	@objc(createClientWithConfig:)
 	public func createClient(with config: IRCClientConfig) -> IRCClient {
 		createClient(with: config, reload: true)
 	}
 
-	@objc(createClientWithConfig:reload:)
 	public func createClient(with config: IRCClientConfig, reload: Bool) -> IRCClient {
 		let client = IRCClient(config: config)
 		client.setValue(createViewController(client: client, channel: nil), forKey: "viewController")
@@ -473,12 +475,10 @@ public final class World: NSObject {
 		return client
 	}
 
-	@objc(createChannelWithConfig:onClient:)
 	public func createChannel(with config: ChannelConfig, on client: IRCClient) -> IRCChannel {
 		createChannel(with: config, on: client, add: true, adjust: true, reload: true)
 	}
 
-	@objc(createChannelWithConfig:onClient:add:adjust:reload:)
 	public func createChannel(
 		with config: ChannelConfig,
 		on client: IRCClient,
@@ -519,9 +519,7 @@ public final class World: NSObject {
 	) -> IRCChannel {
 		precondition(type == .privateMessage || type == .utility || type == .directChat)
 
-		let config = MutableChannelConfig()
-		config.channelName = nickname
-		config.type = type
+		let config = ChannelConfig(channelName: nickname, type: type)
 
 		let channel = createChannel(with: config, on: client, add: true, adjust: true, reload: true)
 		if client.isLoggedIn, channel.isPrivateMessage {

@@ -19,7 +19,7 @@ import Observation
 final class HighlightEntryModel {
 	let channels: [HighlightEntryChannel]
 
-	private let workingConfiguration: MutableHighlightMatchCondition
+	private var workingConfiguration: HighlightMatchCondition
 
 	private(set) var behavior: HighlightMatchBehavior
 	private(set) var keyword: String
@@ -31,7 +31,7 @@ final class HighlightEntryModel {
 		configuration: HighlightMatchCondition?,
 		channels: [HighlightEntryChannel]
 	) {
-		let workingConfiguration = Self.mutableConfiguration(copying: configuration)
+		let workingConfiguration = configuration ?? HighlightMatchCondition()
 		let availableChannelIDs = Set(channels.map(\.id))
 
 		self.channels = channels
@@ -85,11 +85,7 @@ final class HighlightEntryModel {
 		workingConfiguration.matchKeyword = normalizedKeyword
 		workingConfiguration.matchChannelId = channelSelection.channelID
 
-		guard let configuration = workingConfiguration.copy() as? HighlightMatchCondition else {
-			preconditionFailure("Highlight configuration copies must preserve their model type")
-		}
-
-		return configuration
+		return workingConfiguration
 	}
 
 	private func refreshValidation() {
@@ -100,19 +96,5 @@ final class HighlightEntryModel {
 		keyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 			? ApplicationStrings.requiredField
 			: nil
-	}
-
-	private static func mutableConfiguration(
-		copying configuration: HighlightMatchCondition?
-	) -> MutableHighlightMatchCondition {
-		guard let configuration else {
-			return MutableHighlightMatchCondition()
-		}
-
-		guard let copy = configuration.mutableCopy() as? MutableHighlightMatchCondition else {
-			preconditionFailure("Highlight configuration mutable copies must preserve their model type")
-		}
-
-		return copy
 	}
 }

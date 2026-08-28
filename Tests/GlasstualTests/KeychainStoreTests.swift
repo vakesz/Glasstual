@@ -18,7 +18,7 @@ import Testing
 @Suite("Keychain store", .serialized)
 @MainActor
 struct KeychainStoreTests {
-	private static let kind = "application password"
+	private static let kind = KeychainItemClass.applicationPassword
 	private static let service = "com.vakesz.glasstual.tests.keychain"
 
 	private func uniqueName() -> String {

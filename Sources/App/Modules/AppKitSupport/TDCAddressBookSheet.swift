@@ -13,11 +13,19 @@
 
 import AppKit
 
+/// What `AddressBookSheet` reports back. The entry is a value type, so it
+/// cannot travel through `perform(_:with:with:)`.
+@MainActor
+public protocol AddressBookSheetDelegate: AnyObject {
+	func addressBookSheet(_ sender: AddressBookSheet, onOk entry: AddressBookEntry)
+	func addressBookSheetWillClose(_ sender: AddressBookSheet)
+}
+
 @objc(TDCAddressBookSheet)
 @MainActor
 public final class AddressBookSheet: SheetBase {
-	private var config: MutableAddressBookEntry!
-	private var entryType: IRCAddressBookEntryType = .ignore
+	private var config: AddressBookEntry
+	private var entryType: IRCAddressBookEntryType
 
 	@IBOutlet private var ignoreClientToClientProtocolCheck: NSButton!
 	@IBOutlet private var ignoreFileTransferRequestsCheck: NSButton!
@@ -36,28 +44,30 @@ public final class AddressBookSheet: SheetBase {
 	@IBOutlet private var ignoreEntryView: NSWindow!
 	@IBOutlet private var userTrackingEntryView: NSWindow!
 
-	@objc(initWithEntryType:)
 	public init(entryType: IRCAddressBookEntryType) {
+		config = entryType == .userTracking
+			? AddressBookEntry.newUserTrackingEntry()
+			: AddressBookEntry.newIgnoreEntry()
+		self.entryType = entryType
+
 		super.init(window: nil)
 
-		if entryType == .ignore {
-			config = MutableAddressBookEntry.newIgnoreEntry()
-		} else if entryType == .userTracking {
-			config = MutableAddressBookEntry.newUserTrackingEntry()
-		}
-
-		self.entryType = entryType
 		prepareInitialState()
 		loadConfig()
 	}
 
-	@objc(initWithConfig:)
 	public init(config: AddressBookEntry) {
-		super.init(window: nil)
-		self.config = config.mutableCopy() as? MutableAddressBookEntry
+		self.config = config
 		entryType = config.entryType
+
+		super.init(window: nil)
+
 		prepareInitialState()
 		loadConfig()
+	}
+
+	private var entryDelegate: (any AddressBookSheetDelegate)? {
+		delegate as? any AddressBookSheetDelegate
 	}
 
 	private func prepareInitialState() {
@@ -139,10 +149,7 @@ public final class AddressBookSheet: SheetBase {
 			config.trackUserActivity = trackUserActivityCheck.state == .on
 		}
 
-		let selector = NSSelectorFromString("addressBookSheet:onOk:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self, with: config.copy())
-		}
+		entryDelegate?.addressBookSheet(self, onOk: config)
 
 		super.ok(nil)
 	}
@@ -160,9 +167,6 @@ public final class AddressBookSheet: SheetBase {
 	}
 
 	@objc public func windowWillClose(_: Notification) {
-		let selector = NSSelectorFromString("addressBookSheetWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		entryDelegate?.addressBookSheetWillClose(self)
 	}
 }

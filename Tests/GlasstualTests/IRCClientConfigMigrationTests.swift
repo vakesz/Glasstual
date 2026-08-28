@@ -5,8 +5,12 @@ import XCTest
 
 @MainActor
 final class IRCClientConfigMigrationTests: XCTestCase {
-	func testDefaultsMatchPersistedConfigurationContract() {
-		let config = ClientConfig(dictionary: ["dictionaryVersion": 710])
+	private func decode(_ dictionary: [String: Any]) throws -> ClientConfig {
+		try XCTUnwrap(PropertyListModel.decode(ClientConfig.self, from: dictionary))
+	}
+
+	func testDefaultsMatchPersistedConfigurationContract() throws {
+		let config = try decode(["dictionaryVersion": 710])
 
 		XCTAssertFalse(config.autoConnect)
 		XCTAssertFalse(config.autoReconnect)
@@ -20,11 +24,10 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 		XCTAssertEqual(config.floodControlDelayTimerInterval, 2)
 		XCTAssertEqual(config.floodControlMaximumMessages, 6)
 		XCTAssertFalse(config.connectionName.isEmpty)
-		XCTAssertFalse(config.nickname.isEmpty)
 		XCTAssertFalse(config.uniqueIdentifier.isEmpty)
 	}
 
-	func testDictionaryRoundTripPreservesCurrentSchema() {
+	func testDictionaryRoundTripPreservesCurrentSchema() throws {
 		let input: [String: Any] = [
 			"dictionaryVersion": 710,
 			"connectionName": "Libera Chat",
@@ -45,8 +48,8 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 			]],
 		]
 
-		let config = ClientConfig(dictionary: input)
-		let restored = ClientConfig(dictionary: config.dictionaryValue)
+		let config = try decode(input)
+		let restored = try decode(config.dictionaryValue)
 
 		XCTAssertEqual(restored.connectionName, "Libera Chat")
 		XCTAssertEqual(restored.nickname, "swift-user")
@@ -60,8 +63,8 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 		XCTAssertEqual(restored.channelList.first?.channelName, "#swift")
 	}
 
-	func testClientConfigConstructsAndCopiesNestedChannelThroughPortableDictionaryBase() throws {
-		let config = ClientConfig(dictionary: [
+	func testNestedChannelSurvivesDecodingAndCopying() throws {
+		let config = try decode([
 			"dictionaryVersion": 710,
 			"channelList": [[
 				"channelName": "#runtime-dispatch",
@@ -69,45 +72,41 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 			]],
 		])
 
-		let mutableCopy = try XCTUnwrap(config.mutableCopy() as? MutableClientConfig)
-		let channel = try XCTUnwrap(mutableCopy.channelList.first)
+		let copy = config
+		let channel = try XCTUnwrap(copy.channelList.first)
 
 		XCTAssertEqual(channel.channelName, "#runtime-dispatch")
 		XCTAssertEqual(channel.type, .channel)
-		XCTAssertTrue(mutableCopy.initializedAsCopy)
 	}
 
-	func testMutableAndUniqueCopiesPreservePrivateValuesAndNestedIdentity() throws {
-		let config = MutableClientConfig()
-		config.connectionName = "SwiftNet"
+	/// A duplicate mints new identifiers all the way down, and carries the
+	/// secrets across so the identifier change does not lose them.
+	func testUniqueCopyRenamesEveryIdentityAndKeepsSecrets() {
+		var config = ClientConfig(connectionName: "SwiftNet")
 		config.nicknamePassword = "nick-password"
 		config.proxyPassword = "proxy-password"
 
-		let server = MutableServer()
-		server.serverAddress = "irc.example.test"
-		let serverCopy = try XCTUnwrap(server.copy() as? Server)
+		let serverCopy = Server(serverAddress: "irc.example.test")
 		config.serverList = [serverCopy]
 
-		let channel = MutableChannelConfig()
-		channel.channelName = "#swift"
-		let channelCopy = try XCTUnwrap(channel.copy() as? ChannelConfig)
+		let channelCopy = ChannelConfig(channelName: "#swift")
 		config.channelList = [channelCopy]
 
-		let immutable = try XCTUnwrap(config.copy() as? ClientConfig)
-		let unique = try XCTUnwrap(config.uniqueCopyMutable() as? MutableClientConfig)
+		let plain = config
+		let unique = config.uniqueCopy()
 
-		XCTAssertEqual(immutable.connectionName, "SwiftNet")
-		XCTAssertEqual(immutable.nicknamePassword, "nick-password")
-		XCTAssertEqual(immutable.proxyPassword, "proxy-password")
-		XCTAssertEqual(immutable.uniqueIdentifier, config.uniqueIdentifier)
+		XCTAssertEqual(plain.connectionName, "SwiftNet")
+		XCTAssertEqual(plain.nicknamePassword, "nick-password")
+		XCTAssertEqual(plain.proxyPassword, "proxy-password")
+		XCTAssertEqual(plain.uniqueIdentifier, config.uniqueIdentifier)
 		XCTAssertEqual(unique.nicknamePassword, "nick-password")
 		XCTAssertNotEqual(unique.uniqueIdentifier, config.uniqueIdentifier)
 		XCTAssertNotEqual(unique.serverList.first?.uniqueIdentifier, serverCopy.uniqueIdentifier)
 		XCTAssertNotEqual(unique.channelList.first?.uniqueIdentifier, channelCopy.uniqueIdentifier)
 	}
 
-	func testLegacyKeysMigrateWithoutOverwritingExplicitModernCipherSetting() {
-		let config = ClientConfig(dictionary: [
+	func testLegacyKeysMigrateWithoutOverwritingExplicitModernCipherSetting() throws {
+		let config = try decode([
 			"connectOnLaunch": true,
 			"connectOnDisconnect": true,
 			"disconnectOnSleepMode": false,

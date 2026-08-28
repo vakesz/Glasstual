@@ -17,20 +17,23 @@ final class ServerPropertiesSheetMigrationTests: XCTestCase {
 			"initWithClient:",
 			"start",
 			"startWithSelection:context:",
-			"serverEndpointListSheet:onOk:",
-			"serverEndpointListSheetWillClose:",
-			"highlightEntrySheet:onOk:",
-			"highlightEntrySheetWillClose:",
-			"channelPropertiesSheet:onOk:",
-			"channelPropertiesSheetWillClose:",
-			"addressBookSheet:onOk:",
-			"addressBookSheetWillClose:",
 			"windowWillClose:",
 		]
 
 		for selector in selectors {
 			XCTAssertTrue(ServerPropertiesSheet.instancesRespond(to: NSSelectorFromString(selector)), selector)
 		}
+	}
+
+	/// These sheets report value types, which cannot travel through
+	/// `perform(_:with:with:)` or an `@objc` protocol, so their callbacks moved
+	/// off the Objective-C selector surface and onto typed Swift protocols.
+	func testValueReportingSheetDelegatesAreTyped() {
+		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any ServerEndpointListSheetDelegate.Type))
+		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any HighlightEntrySheetDelegate.Type))
+		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any AddressBookSheetDelegate.Type))
+		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any ChannelPropertiesSheetDelegate.Type))
+		XCTAssertTrue((TXMenuController.self as Any.Type) is (any ServerPropertiesSheetDelegate.Type))
 	}
 
 	func testNibActionSelectorsRemainAvailable() {

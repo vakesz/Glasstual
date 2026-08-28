@@ -39,7 +39,7 @@
 import AppKit
 import CocoaExtensions
 
-extension ServerPropertiesSheet {
+extension ServerPropertiesSheet: AddressBookSheetDelegate {
 	func updateIdentityPage() {
 		hideAutojoinDelayedWarningsCheck.isHidden = autojoinWaitsForNickServCheck.state == .off
 	}
@@ -97,7 +97,9 @@ extension ServerPropertiesSheet {
 	}
 
 	func editAddressBookEntry(with entry: AddressBookEntry) {
-		guard let index = addressBookList.firstIndex(where: { $0 === entry }) else { return }
+		guard let index = addressBookList.firstIndex(where: {
+			$0.uniqueIdentifier == entry.uniqueIdentifier
+		}) else { return }
 		addressBookTable.selectItem(at: index)
 		editAddressBookEntry(nil)
 	}
@@ -112,7 +114,6 @@ extension ServerPropertiesSheet {
 		addressBookSheet = controller
 	}
 
-	@objc(addressBookSheet:onOk:)
 	public func addressBookSheet(_: AddressBookSheet, onOk config: AddressBookEntry) {
 		if let index = addressBookList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
 			addressBookArrayController.textual_replaceObject(atArrangedObjectIndex: UInt(index), with: config)
@@ -121,7 +122,6 @@ extension ServerPropertiesSheet {
 		}
 	}
 
-	@objc(addressBookSheetWillClose:)
 	public func addressBookSheetWillClose(_: AddressBookSheet) {
 		addressBookSheet = nil
 	}

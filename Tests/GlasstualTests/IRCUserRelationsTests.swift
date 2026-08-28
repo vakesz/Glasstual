@@ -138,10 +138,7 @@ final class IRCUserRelationsTests: XCTestCase {
 	}
 
 	private func makeChannel(named name: String, type: ChannelType = .channel) -> Channel {
-		let channel = Channel(configDictionary: [
-			"channelName": name,
-			"channelType": type.rawValue,
-		])
+		let channel = Channel(config: ChannelConfig(channelName: name, type: type))
 
 		channel.setValue(client, forKey: "associatedClient")
 

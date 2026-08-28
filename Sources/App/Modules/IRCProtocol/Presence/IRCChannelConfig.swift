@@ -40,542 +40,345 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 
-@objc(IRCChannelConfig)
-public nonisolated class ChannelConfig: PortablePropertyDict {
-	fileprivate var autoJoinStorage = true
-	fileprivate var ignoreGeneralEventMessagesStorage = false
-	fileprivate var ignoreHighlightsStorage = false
-	fileprivate var inlineMediaDisabledStorage = false
-	fileprivate var inlineMediaEnabledStorage = false
-	fileprivate var pushNotificationsStorage = true
-	fileprivate var showTreeBadgeCountStorage = true
-	fileprivate var typeStorage = ChannelType.channel
-	fileprivate var channelNameStorage = ""
-	fileprivate var labelStorage: String?
-	fileprivate var defaultModesStorage: String?
-	fileprivate var defaultTopicStorage: String?
-	fileprivate var secretKeyStorage: String?
-	fileprivate var uniqueIdentifierStorage = ""
-	fileprivate var defaultsStorage: [String: Any] = [:]
+/// One notification override a channel carries: either a sound name or an
+/// on/off flag. A channel with no override for an event inherits the
+/// application-wide setting, which the sheets show as a mixed checkbox.
+public nonisolated enum ChannelNotificationSetting: Codable, Sendable, Equatable, Hashable {
+	case sound(String)
+	case flag(Bool)
 
-	private let notificationsLock = NSLock()
-	private var notificationsStorage: [String: Any] = [:]
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.singleValueContainer()
 
-	@objc public var autoJoin: Bool {
-		autoJoinStorage
+		if let flag = try? container.decode(Bool.self) {
+			self = .flag(flag)
+		} else {
+			self = try .sound(container.decode(String.self))
+		}
 	}
 
-	@objc public var ignoreGeneralEventMessages: Bool {
-		ignoreGeneralEventMessagesStorage
+	public func encode(to encoder: any Encoder) throws {
+		var container = encoder.singleValueContainer()
+
+		switch self {
+		case let .sound(name): try container.encode(name)
+		case let .flag(value): try container.encode(value)
+		}
+	}
+}
+
+/** A channel or query as its connection stores it.
+
+ A query keeps only its name, identifier and type; the channel settings below
+ are read and written only for `.channel`, which is what earlier releases did
+ and what keeps a stored configuration re-encoding unchanged. */
+public nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable {
+	public var uniqueIdentifier: String
+	public var channelName: String
+	public var type: ChannelType
+
+	public var autoJoin = true
+	public var ignoreGeneralEventMessages = false
+	public var ignoreHighlights = false
+	public var inlineMediaDisabled = false
+	public var inlineMediaEnabled = false
+	public var pushNotifications = true
+	public var showTreeBadgeCount = true
+
+	public var label: String?
+	public var defaultModes: String?
+	public var defaultTopic: String?
+
+	/// Per-event overrides, keyed the way `TextualPreferences.key(for:category:)`
+	/// spells an event and a category.
+	public var notifications: [String: ChannelNotificationSetting] = [:]
+
+	/** A channel key waiting to be written to the keychain, or one read back
+	 out of it so a duplicate can carry it to its own identifier. Never
+	 encoded — see `secretKey`. */
+	public var pendingSecretKey: String?
+
+	public init(
+		uniqueIdentifier: String = UUID().uuidString,
+		channelName: String = "",
+		type: ChannelType = .channel
+	) {
+		self.uniqueIdentifier = uniqueIdentifier
+		self.channelName = channelName
+		self.type = type
 	}
 
-	@objc public var ignoreHighlights: Bool {
-		ignoreHighlightsStorage
+	public static func seed(withName channelName: String) -> ChannelConfig {
+		ChannelConfig(channelName: channelName)
 	}
 
-	@objc public var inlineMediaDisabled: Bool {
-		inlineMediaDisabledStorage
+	private enum CodingKeys: String, CodingKey {
+		case uniqueIdentifier
+		case channelName
+		case channelType
+		case autoJoin
+		case ignoreGeneralEventMessages
+		case ignoreHighlights
+		case inlineMediaDisabled
+		case inlineMediaEnabled
+		case pushNotifications
+		case showTreeBadgeCount
+		case label
+		case defaultModes = "defaultMode"
+		case defaultTopic
+		case notifications
+
+		// Spellings written by releases before these settings were renamed.
+		case joinOnConnect
+		case ignoreJPQActivity
+		case enableNotifications
+		case enableTreeBadgeCountDrawing
+		case ignoreInlineMedia
 	}
 
-	@objc public var inlineMediaEnabled: Bool {
-		inlineMediaEnabledStorage
-	}
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
 
-	@objc public var pushNotifications: Bool {
-		pushNotificationsStorage
-	}
-
-	@objc public var showTreeBadgeCount: Bool {
-		showTreeBadgeCountStorage
-	}
-
-	public var type: ChannelType {
-		typeStorage
-	}
-
-	/// Compatibility getter for Objective-C plug-ins that still declare
-	/// `-type` as the legacy `IRCChannelType` enum.
-	@objc(type)
-	public var objectiveCTypeRawValue: UInt {
-		type.rawValue
-	}
-
-	@objc public var channelName: String {
-		channelNameStorage
-	}
-
-	@objc public var uniqueIdentifier: String {
-		uniqueIdentifierStorage
-	}
-
-	@objc public var label: String? {
-		labelStorage
-	}
-
-	@objc public var defaultModes: String? {
-		defaultModesStorage
-	}
-
-	@objc public var defaultTopic: String? {
-		defaultTopicStorage
-	}
-
-	@objc public var secretKey: String? {
-		secretKeyStorage ?? secretKeyFromKeychain
-	}
-
-	@objc public var secretKeyFromKeychain: String? {
-		KeychainStore.password(
-			forItem: "Glasstual (Channel JOIN Key)",
-			kind: "application password",
-			username: nil,
-			service: secretKeyServiceName
+		let identifier = container.decode(String.self, forKey: .uniqueIdentifier, aliases: [], default: "")
+		uniqueIdentifier = identifier.isEmpty ? UUID().uuidString : identifier
+		channelName = container.decode(String.self, forKey: .channelName, aliases: [], default: "")
+		type = ChannelType(rawValue: container.decode(UInt.self, forKey: .channelType, aliases: [], default: 0))
+			?? .channel
+		pushNotifications = container.decode(
+			Bool.self,
+			forKey: .pushNotifications,
+			aliases: [.enableNotifications],
+			default: true
 		)
-	}
-
-	private var notifications: [String: Any] {
-		notificationsLock.withLock { notificationsStorage }
-	}
-
-	private var secretKeyServiceName: String {
-		"glasstual.cjoinkey.\(uniqueIdentifierStorage)"
-	}
-
-	override public init() {
-		super.init(dictionary: [:])
-	}
-
-	@objc(initWithDictionary:)
-	public required init(dictionary dic: [String: Any]) {
-		super.init(dictionary: dic)
-	}
-
-	public required init?(coder _: NSCoder) {
-		nil
-	}
-
-	@objc(seedWithName:)
-	public class func seed(withName channelName: String) -> ChannelConfig {
-		ChannelConfig(dictionary: ["channelName": channelName])
-	}
-
-	@objc(initializedClassHealthCheck)
-	override public func initializedClassHealthCheck() {
-		if isMutable || initializedAsCopy {
-			return
-		}
-
-		precondition(channelNameStorage.isEmpty == false)
-	}
-
-	@objc(populateDefaultsPreflight)
-	override public func populateDefaultsPreflight() {
-		if initializedAsCopy {
-			return
-		}
-
-		defaultsStorage = [
-			"autoJoin": true,
-			"channelType": ChannelType.channel.rawValue,
-			"ignoreGeneralEventMessages": false,
-			"ignoreHighlights": false,
-			"inlineMediaEnabled": false,
-			"inlineMediaDisabled": false,
-			"pushNotifications": true,
-			"showTreeBadgeCount": true,
-		]
-	}
-
-	@objc(populateDefaultsPostflight)
-	override public func populateDefaultsPostflight() {
-		if initializedAsCopy {
-			return
-		}
-
-		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = UUID().uuidString
-		}
-	}
-
-	@objc(populateDefaultsByAppendingDictionary:)
-	public func populateDefaults(byAppending defaultsToAppend: [String: Any]) {
-		defaultsStorage.merge(defaultsToAppend) { _, replacement in replacement }
-	}
-
-	@objc(populateDictionaryValues:)
-	override public func populateDictionaryValues(_ dic: [String: Any]) {
-		let values = NSMutableDictionary(dictionary: defaultsStorage)
-		values.addEntries(from: dic)
-
-		assignBool("pushNotifications", to: &pushNotificationsStorage, in: values)
-		assignBool("showTreeBadgeCount", to: &showTreeBadgeCountStorage, in: values)
-
-		if let channelName = values["channelName"] as? String {
-			channelNameStorage = channelName
-		}
-
-		if let uniqueIdentifier = values["uniqueIdentifier"] as? String {
-			uniqueIdentifierStorage = uniqueIdentifier
-		}
-
-		if let typeValue = values["channelType"] as? NSNumber,
-		   let type = ChannelType(rawValue: typeValue.uintValue)
-		{
-			typeStorage = type
-		}
-
-		guard typeStorage == .channel else {
-			return
-		}
-
-		assignBool("autoJoin", to: &autoJoinStorage, in: values)
-		assignBool("ignoreGeneralEventMessages", to: &ignoreGeneralEventMessagesStorage, in: values)
-		assignBool("ignoreHighlights", to: &ignoreHighlightsStorage, in: values)
-		assignBool("inlineMediaDisabled", to: &inlineMediaDisabledStorage, in: values)
-		assignBool("inlineMediaEnabled", to: &inlineMediaEnabledStorage, in: values)
-
-		labelStorage = values["label"] as? String
-		defaultModesStorage = values["defaultMode"] as? String
-		defaultTopicStorage = values["defaultTopic"] as? String
-
-		if let notifications = values["notifications"] as? [String: Any] {
-			notificationsLock.withLock {
-				notificationsStorage = notifications
-			}
-		}
-
-		guard initializedAsCopy == false else {
-			return
-		}
-
-		assignBool("joinOnConnect", to: &autoJoinStorage, in: values)
-		assignBool("ignoreJPQActivity", to: &ignoreGeneralEventMessagesStorage, in: values)
-		assignBool("enableNotifications", to: &pushNotificationsStorage, in: values)
-		assignBool("enableTreeBadgeCountDrawing", to: &showTreeBadgeCountStorage, in: values)
-
-		migrateInlineMediaSettings(from: dic)
-	}
-
-	override public func dictionaryValue(for target: PortablePropertyDictTarget) -> [String: Any] {
-		let dic = NSMutableDictionary()
-
-		dic.ce_setBool(pushNotificationsStorage, forKey: "pushNotifications")
-		dic.ce_setBool(showTreeBadgeCountStorage, forKey: "showTreeBadgeCount")
-
-		if typeStorage == .channel {
-			dic.ce_maybeSetObject(labelStorage, forKey: "label")
-			dic.ce_maybeSetObject(defaultModesStorage, forKey: "defaultMode")
-			dic.ce_maybeSetObject(defaultTopicStorage, forKey: "defaultTopic")
-			dic.ce_maybeSetObject(notifications, forKey: "notifications")
-			dic.ce_setBool(autoJoinStorage, forKey: "autoJoin")
-			dic.ce_setBool(ignoreGeneralEventMessagesStorage, forKey: "ignoreGeneralEventMessages")
-			dic.ce_setBool(ignoreHighlightsStorage, forKey: "ignoreHighlights")
-			dic.ce_setBool(inlineMediaDisabledStorage, forKey: "inlineMediaDisabled")
-			dic.ce_setBool(inlineMediaEnabledStorage, forKey: "inlineMediaEnabled")
-		}
-
-		dic.ce_maybeSetObject(channelNameStorage, forKey: "channelName")
-		dic.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-		dic.ce_setUnsignedInteger(UInt(typeStorage.rawValue), forKey: "channelType")
-
-		if target == .copy || target == .mutableCopy {
-			guard let values = dic as? [String: Any] else {
-				preconditionFailure("Channel configuration dictionaries must use String keys")
-			}
-
-			return values
-		}
-
-		let compacted = dic.ce_dictionaryByRemovingDefaults(
-			defaultsStorage as NSDictionary,
-			allowEmptyValues: true
-		)
-		guard let values = compacted as? [String: Any] else {
-			preconditionFailure("Channel configuration dictionaries must use String keys")
-		}
-
-		return values
-	}
-
-	override public func isEqual(_ object: Any?) -> Bool {
-		guard let object = object as? ChannelConfig else {
-			return false
-		}
-
-		if self === object {
-			return true
-		}
-
-		return NSDictionary(dictionary: dictionaryValue).isEqual(to: object.dictionaryValue)
-			&& secretKeyStorage == object.secretKeyStorage
-	}
-
-	override public var hash: Int {
-		uniqueIdentifierStorage.hashValue
-	}
-
-	override public func copy(asMutable mutableCopy: Bool, uniquing: Bool) -> Any {
-		guard let config = super.copy(asMutable: mutableCopy, uniquing: false) as? ChannelConfig else {
-			preconditionFailure("ChannelConfig copies must preserve their model type")
-		}
-
-		config.defaultsStorage = defaultsStorage
-		config.secretKeyStorage = secretKeyStorage
-
-		if uniquing {
-			/* The keychain item is keyed on uniqueIdentifier, so read the key
-			 back under the *old* identifier before minting a new one. The copy
-			 writes it out again under its own identifier when it is saved. */
-			config.secretKeyStorage = secretKeyStorage ?? secretKeyFromKeychain
-			config.uniqueIdentifierStorage = UUID().uuidString
-		}
-
-		return config
-	}
-
-	override public var mutableClass: PortablePropertyDict {
-		unsafeBitCast(MutableChannelConfig.self, to: PortablePropertyDict.self)
-	}
-
-	@objc public func writeSecretKeyToKeychain() {
-		guard let secretKeyStorage else {
-			return
-		}
-
-		KeychainStore.modifyOrAddItem(
-			"Glasstual (Channel JOIN Key)",
-			kind: "application password",
-			username: nil,
-			newPassword: secretKeyStorage,
-			service: secretKeyServiceName
+		showTreeBadgeCount = container.decode(
+			Bool.self,
+			forKey: .showTreeBadgeCount,
+			aliases: [.enableTreeBadgeCountDrawing],
+			default: true
 		)
 
-		self.secretKeyStorage = nil
+		guard type == .channel else {
+			return
+		}
+
+		decodeChannelSettings(from: container)
 	}
 
-	@objc public func destroySecretKeyKeychainItem() {
-		KeychainStore.deleteItem(
-			"Glasstual (Channel JOIN Key)",
-			kind: "application password",
-			username: nil,
-			service: secretKeyServiceName
+	private mutating func decodeChannelSettings(from container: KeyedDecodingContainer<CodingKeys>) {
+		autoJoin = container.decode(Bool.self, forKey: .autoJoin, aliases: [.joinOnConnect], default: true)
+		ignoreGeneralEventMessages = container.decode(
+			Bool.self,
+			forKey: .ignoreGeneralEventMessages,
+			aliases: [.ignoreJPQActivity],
+			default: false
 		)
+		ignoreHighlights = container.decode(Bool.self, forKey: .ignoreHighlights, aliases: [], default: false)
+		label = container.decodeOptional(String.self, forKey: .label)
+		defaultModes = container.decodeOptional(String.self, forKey: .defaultModes)
+		defaultTopic = container.decodeOptional(String.self, forKey: .defaultTopic)
+		notifications = container.decodeOptional(
+			[String: ChannelNotificationSetting].self,
+			forKey: .notifications
+		) ?? [:]
 
-		secretKeyStorage = nil
+		decodeInlineMediaSettings(from: container)
 	}
 
-	@objc(soundForEvent:)
-	public func sound(forEvent event: TXNotificationType) -> String? {
-		guard let key = TextualPreferences.key(for: event, category: "Sound") else {
-			return nil
-		}
+	/** Before these two settings existed a channel only recorded that it opted
+	 out of inline media, which meant the opposite of the application-wide
+	 setting. Both keys being present means the migration already ran. */
+	private mutating func decodeInlineMediaSettings(from container: KeyedDecodingContainer<CodingKeys>) {
+		let storedDisabled = container.decodeOptional(Bool.self, forKey: .inlineMediaDisabled)
+		let storedEnabled = container.decodeOptional(Bool.self, forKey: .inlineMediaEnabled)
 
-		return notificationsLock.withLock { notificationsStorage[key] as? String }
-	}
+		inlineMediaDisabled = storedDisabled ?? false
+		inlineMediaEnabled = storedEnabled ?? false
 
-	@objc(notificationEnabledForEvent:)
-	public func notificationEnabled(forEvent event: TXNotificationType) -> NSControl.StateValue {
-		state(for: event, category: "Enabled")
-	}
-
-	@objc(disabledWhileAwayForEvent:)
-	public func disabledWhileAway(forEvent event: TXNotificationType) -> NSControl.StateValue {
-		state(for: event, category: "Disable While Away")
-	}
-
-	@objc(bounceDockIconForEvent:)
-	public func bounceDockIcon(forEvent event: TXNotificationType) -> NSControl.StateValue {
-		state(for: event, category: "Bounce Dock Icon")
-	}
-
-	@objc(bounceDockIconRepeatedlyForEvent:)
-	public func bounceDockIconRepeatedly(forEvent event: TXNotificationType) -> NSControl.StateValue {
-		state(for: event, category: "Bounce Dock Icon Repeatedly")
-	}
-
-	@objc(speakEvent:)
-	public func speakEvent(_ event: TXNotificationType) -> NSControl.StateValue {
-		state(for: event, category: "Speak")
-	}
-
-	fileprivate func setSoundStorage(_ value: String?, forEvent event: TXNotificationType) {
-		guard let key = TextualPreferences.key(for: event, category: "Sound") else {
-			return
-		}
-
-		notificationsLock.withLock {
-			notificationsStorage[key] = value
-		}
-	}
-
-	fileprivate func setState(_ value: NSControl.StateValue, forEvent event: TXNotificationType, category: String) {
-		guard let key = TextualPreferences.key(for: event, category: category) else {
-			return
-		}
-
-		notificationsLock.withLock {
-			switch value {
-			case .on:
-				notificationsStorage[key] = true
-			case .off:
-				notificationsStorage[key] = false
-			case .mixed:
-				_ = notificationsStorage.removeValue(forKey: key)
-			default:
-				assertionFailure("Bad notification state")
-			}
-		}
-	}
-
-	private func state(for event: TXNotificationType, category: String) -> NSControl.StateValue {
-		guard let key = TextualPreferences.key(for: event, category: category) else {
-			return .off
-		}
-
-		return notificationsLock.withLock {
-			guard let value = notificationsStorage[key] as? NSNumber else {
-				return .mixed
-			}
-
-			return value.boolValue ? .on : .off
-		}
-	}
-
-	private func assignBool(_ key: String, to storage: inout Bool, in dictionary: NSDictionary) {
-		var value = storage
-		dictionary.ce_assignBool(to: &value, forKey: key)
-		storage = value
-	}
-
-	private func migrateInlineMediaSettings(from dictionary: [String: Any]) {
-		if dictionary["inlineMediaEnabled"] != nil, dictionary["inlineMediaDisabled"] != nil {
-			return
-		}
-
-		guard let ignoreInlineMedia = dictionary["ignoreInlineMedia"] as? NSNumber,
-		      ignoreInlineMedia.boolValue
+		guard storedDisabled == nil || storedEnabled == nil,
+		      container.decodeOptional(Bool.self, forKey: .ignoreInlineMedia) == true
 		else {
 			return
 		}
 
-		inlineMediaDisabledStorage = TextualPreferences.showInlineMedia()
-		inlineMediaEnabledStorage = !inlineMediaDisabledStorage
-	}
-}
-
-@objc(IRCChannelConfigMutable)
-public final nonisolated class MutableChannelConfig: ChannelConfig {
-	override public static var isMutable: Bool {
-		true
+		inlineMediaDisabled = TextualPreferences.showInlineMedia()
+		inlineMediaEnabled = inlineMediaDisabled == false
 	}
 
-	override public var immutableClass: PortablePropertyDict {
-		unsafeBitCast(ChannelConfig.self, to: PortablePropertyDict.self)
-	}
+	/** Writes the canonical keys only, and only those that differ from the
+	 default — the same dictionary `ce_dictionaryByRemovingDefaults` produced. */
+	public func encode(to encoder: any Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
 
-	override public var type: ChannelType {
-		get { typeStorage }
-		set { typeStorage = newValue }
-	}
+		if pushNotifications == false {
+			try container.encode(false, forKey: .pushNotifications)
+		}
 
-	/// Compatibility property for Objective-C callers of `-type` and
-	/// `-setType:`. Native callers use the strongly typed property above.
-	@objc(type)
-	override public var objectiveCTypeRawValue: UInt {
-		get { type.rawValue }
-		set {
-			guard let type = ChannelType(rawValue: newValue) else { return }
-			self.type = type
+		if showTreeBadgeCount == false {
+			try container.encode(false, forKey: .showTreeBadgeCount)
+		}
+
+		if type == .channel {
+			try encodeChannelSettings(into: &container)
+		}
+
+		try container.encode(channelName, forKey: .channelName)
+		try container.encode(uniqueIdentifier, forKey: .uniqueIdentifier)
+
+		if type != .channel {
+			try container.encode(type.rawValue, forKey: .channelType)
 		}
 	}
 
-	@objc override public var autoJoin: Bool {
-		get { autoJoinStorage }
-		set { autoJoinStorage = newValue }
+	private func encodeChannelSettings(into container: inout KeyedEncodingContainer<CodingKeys>) throws {
+		try container.encodeIfPresent(label, forKey: .label)
+		try container.encodeIfPresent(defaultModes, forKey: .defaultModes)
+		try container.encodeIfPresent(defaultTopic, forKey: .defaultTopic)
+		// Written even when empty, as it always has been.
+		try container.encode(notifications, forKey: .notifications)
+
+		if autoJoin == false {
+			try container.encode(false, forKey: .autoJoin)
+		}
+
+		let flags: [(Bool, CodingKeys)] = [
+			(ignoreGeneralEventMessages, .ignoreGeneralEventMessages),
+			(ignoreHighlights, .ignoreHighlights),
+			(inlineMediaDisabled, .inlineMediaDisabled),
+			(inlineMediaEnabled, .inlineMediaEnabled),
+		]
+
+		for (value, key) in flags where value {
+			try container.encode(true, forKey: key)
+		}
+	}
+}
+
+public nonisolated extension ChannelConfig {
+	var keychainItem: KeychainItem {
+		.channelSecretKey(uniqueIdentifier)
 	}
 
-	@objc override public var ignoreGeneralEventMessages: Bool {
-		get { ignoreGeneralEventMessagesStorage }
-		set { ignoreGeneralEventMessagesStorage = newValue }
+	var secretKeyFromKeychain: String? {
+		keychainItem.password
 	}
 
-	@objc override public var ignoreHighlights: Bool {
-		get { ignoreHighlightsStorage }
-		set { ignoreHighlightsStorage = newValue }
+	/// The key to JOIN with: an unflushed edit if there is one, and otherwise
+	/// whatever the keychain holds.
+	var secretKey: String? {
+		get { pendingSecretKey ?? secretKeyFromKeychain }
+		set { pendingSecretKey = newValue }
 	}
 
-	@objc override public var inlineMediaDisabled: Bool {
-		get { inlineMediaDisabledStorage }
-		set { inlineMediaDisabledStorage = newValue }
+	mutating func writeSecretKeyToKeychain() {
+		guard let pendingSecretKey else {
+			return
+		}
+
+		keychainItem.write(pendingSecretKey)
+		self.pendingSecretKey = nil
 	}
 
-	@objc override public var inlineMediaEnabled: Bool {
-		get { inlineMediaEnabledStorage }
-		set { inlineMediaEnabledStorage = newValue }
+	mutating func destroySecretKeyKeychainItem() {
+		keychainItem.delete()
+		pendingSecretKey = nil
 	}
 
-	@objc override public var pushNotifications: Bool {
-		get { pushNotificationsStorage }
-		set { pushNotificationsStorage = newValue }
+	/// A copy under a fresh identity, carrying the channel key across so the
+	/// duplicate does not silently lose it.
+	func uniqueCopy() -> ChannelConfig {
+		var copy = self
+		copy.pendingSecretKey = pendingSecretKey ?? secretKeyFromKeychain
+		copy.uniqueIdentifier = UUID().uuidString
+
+		return copy
 	}
 
-	@objc override public var showTreeBadgeCount: Bool {
-		get { showTreeBadgeCountStorage }
-		set { showTreeBadgeCountStorage = newValue }
+	func sound(forEvent event: TXNotificationType) -> String? {
+		guard let key = TextualPreferences.key(for: event, category: "Sound"),
+		      case let .sound(name) = notifications[key]
+		else {
+			return nil
+		}
+
+		return name
 	}
 
-	@objc override public var channelName: String {
-		get { channelNameStorage }
-		set { channelNameStorage = newValue }
+	func notificationEnabled(forEvent event: TXNotificationType) -> NSControl.StateValue {
+		state(for: event, category: "Enabled")
 	}
 
-	@objc override public var label: String? {
-		get { labelStorage }
-		set { labelStorage = newValue }
+	func disabledWhileAway(forEvent event: TXNotificationType) -> NSControl.StateValue {
+		state(for: event, category: "Disable While Away")
 	}
 
-	@objc override public var defaultModes: String? {
-		get { defaultModesStorage }
-		set { defaultModesStorage = newValue }
+	func bounceDockIcon(forEvent event: TXNotificationType) -> NSControl.StateValue {
+		state(for: event, category: "Bounce Dock Icon")
 	}
 
-	@objc override public var defaultTopic: String? {
-		get { defaultTopicStorage }
-		set { defaultTopicStorage = newValue }
+	func bounceDockIconRepeatedly(forEvent event: TXNotificationType) -> NSControl.StateValue {
+		state(for: event, category: "Bounce Dock Icon Repeatedly")
 	}
 
-	@objc override public var secretKey: String? {
-		get { secretKeyStorage ?? secretKeyFromKeychain }
-		set { secretKeyStorage = newValue }
+	func speakEvent(_ event: TXNotificationType) -> NSControl.StateValue {
+		state(for: event, category: "Speak")
 	}
 
-	@objc(setSound:forEvent:)
-	public func setSound(_ value: String?, forEvent event: TXNotificationType) {
-		setSoundStorage(value, forEvent: event)
+	mutating func setSound(_ value: String?, forEvent event: TXNotificationType) {
+		guard let key = TextualPreferences.key(for: event, category: "Sound") else {
+			return
+		}
+
+		notifications[key] = value.map { ChannelNotificationSetting.sound($0) }
 	}
 
-	@objc(setNotificationEnabled:forEvent:)
-	public func setNotificationEnabled(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setNotificationEnabled(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Enabled")
 	}
 
-	@objc(setDisabledWhileAway:forEvent:)
-	public func setDisabledWhileAway(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setDisabledWhileAway(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Disable While Away")
 	}
 
-	@objc(setBounceDockIcon:forEvent:)
-	public func setBounceDockIcon(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setBounceDockIcon(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Bounce Dock Icon")
 	}
 
-	@objc(setBounceDockIconRepeatedly:forEvent:)
-	public func setBounceDockIconRepeatedly(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setBounceDockIconRepeatedly(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Bounce Dock Icon Repeatedly")
 	}
 
-	@objc(setEventIsSpoken:forEvent:)
-	public func setEventIsSpoken(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setEventIsSpoken(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Speak")
+	}
+
+	private mutating func setState(
+		_ value: NSControl.StateValue,
+		forEvent event: TXNotificationType,
+		category: String
+	) {
+		guard let key = TextualPreferences.key(for: event, category: category) else {
+			return
+		}
+
+		switch value {
+		case .on:
+			notifications[key] = .flag(true)
+		case .off:
+			notifications[key] = .flag(false)
+		case .mixed:
+			notifications.removeValue(forKey: key)
+		default:
+			assertionFailure("Bad notification state")
+		}
+	}
+
+	private func state(for event: TXNotificationType, category: String) -> NSControl.StateValue {
+		guard let key = TextualPreferences.key(for: event, category: category),
+		      case let .flag(value) = notifications[key]
+		else {
+			return .mixed
+		}
+
+		return value ? .on : .off
 	}
 }

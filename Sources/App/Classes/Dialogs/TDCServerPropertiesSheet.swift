@@ -71,13 +71,21 @@ func serverPropertiesModel<Model>(_ value: Any, as _: Model.Type) -> Model {
 	return model
 }
 
+/// What `ServerPropertiesSheet` reports back. The configuration is a value
+/// type, so it cannot travel through `perform(_:with:with:)`.
+@MainActor
+public protocol ServerPropertiesSheetDelegate: AnyObject {
+	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: ClientConfig)
+	func serverPropertiesSheetWillClose(_ sender: ServerPropertiesSheet)
+}
+
 @objc(TDCServerPropertiesSheet)
 @MainActor
 public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegate, TDCClientPrototype {
 	@objc public private(set) var client: IRCClient?
 	@objc public private(set) var clientId: String?
 
-	var config: MutableClientConfig
+	var config: ClientConfig
 	let networkList = NetworkList()
 	var encodingList: [String: NSNumber] = [:]
 	var addressBookSheet: AddressBookSheet?
@@ -188,9 +196,9 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 
 		if let client {
 			client.updateStoredConfiguration()
-			config = client.config.mutableCopy() as? MutableClientConfig ?? MutableClientConfig()
+			config = client.config
 		} else {
-			config = MutableClientConfig()
+			config = ClientConfig()
 		}
 
 		super.init(window: nil)
@@ -348,10 +356,7 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		closeChildSheets()
 		clearChannelListPredicate()
 		saveConfig()
-		let selector = NSSelectorFromString("serverPropertiesSheet:onOk:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self, with: config.copy() as AnyObject)
-		}
+		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheet(self, onOk: config)
 		super.ok(sender)
 	}
 
@@ -388,7 +393,7 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 			guard response == .default, let self else { return }
 			close()
 			client.updateStoredConfiguration()
-			config = client.config.mutableCopy() as? MutableClientConfig ?? MutableClientConfig()
+			config = client.config
 			loadConfig()
 			start()
 		}
@@ -559,9 +564,6 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 			table?.unregisterDraggedTypes()
 		}
 		sheet.makeFirstResponder(nil)
-		let selector = NSSelectorFromString("serverPropertiesSheetWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheetWillClose(self)
 	}
 }
