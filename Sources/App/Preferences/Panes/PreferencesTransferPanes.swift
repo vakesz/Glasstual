@@ -167,7 +167,7 @@ struct PreferencesFolderPicker: View {
 }
 
 struct PreferencesInlineMediaPane: View {
-	/* The tags the nib's popup carried, in the order it listed them. */
+	/** The tags the nib's popup carried, in the order it listed them. */
 	private static let fileSizeChoices: [(tag: UInt, megabytes: Int)] = [
 		(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 10), (7, 15), (8, 20), (9, 50), (10, 100),
 	]
@@ -292,7 +292,7 @@ struct PreferencesInlineMediaPane: View {
 					title: PreferencesInlineMediaStrings.limitBasicsToFiles,
 					isOn: model.preferences.gatedBinding(
 						for: Preferences.InlineMedia.limitBasicsToFiles,
-						enabledWhen: { self.limitsToBasics }
+						enabledWhen: { limitsToBasics }
 					)
 				)
 				.disabled(limitsToBasics == false)

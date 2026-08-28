@@ -42,7 +42,7 @@ struct PreferencesNotificationsPane: View {
 						title: PreferencesNotificationsStrings.speakChannelName,
 						isOn: model.preferences.gatedBinding(
 							for: Preferences.Notifications.flag(.channelMessage, .speakChannelName),
-							enabledWhen: { self.onlySpeakForSelection == false }
+							enabledWhen: { onlySpeakForSelection == false }
 						)
 					)
 					.disabled(onlySpeakForSelection)
@@ -117,7 +117,7 @@ struct PreferencesHighlightsPane: View {
 					title: PreferencesHighlightsStrings.trackLocalNickname,
 					isOn: model.preferences.gatedBinding(
 						for: Preferences.Highlights.trackLocalNickname,
-						enabledWhen: { self.usesRegularExpression == false }
+						enabledWhen: { usesRegularExpression == false }
 					)
 				)
 				.disabled(usesRegularExpression)

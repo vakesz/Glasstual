@@ -106,7 +106,9 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertTrue(TDCAlert.isSuppressed(baseKey: baseKey))
 	}
 
-	func testPreferencesControllerLoadsWindowFromNib() {
+	/// The Settings window is built in code now that its panes are SwiftUI, so
+	/// what matters is that construction still produces one.
+	func testPreferencesControllerBuildsItsWindow() {
 		let controller = PreferencesController()
 
 		XCTAssertNotNil(controller.value(forKey: "window"))

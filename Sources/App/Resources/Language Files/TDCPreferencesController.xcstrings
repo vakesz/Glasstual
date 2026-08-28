@@ -1394,7 +1394,7 @@
       }
     },
     "flood-control-note": {
-      "comment": "Explanation below the channel join delay sliders.",
+      "comment": "Flood-control explanation below the channel join delay sliders.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1850,7 +1850,7 @@
       }
     },
     "incoming-data-unicode-spam-note": {
-      "comment": "Explanation below the combining diacritical marks checkbox.",
+      "comment": "Explanation below the combining diacritical marks checkbox, which filters unicode spam.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2018,7 +2018,7 @@
       }
     },
     "inline-media-limit-naughty-note": {
-      "comment": "Explanation below the safe-for-public checkbox.",
+      "comment": "Explanation below the safe-for-public inline media checkbox.",
       "extractionState": "manual",
       "localizations": {
         "en": {

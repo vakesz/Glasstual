@@ -110,7 +110,7 @@ final class PreferencesPaneModel {
 		notificationConfiguration.attachToView(notificationHostView)
 	}
 
-	/* The nil entries are the separators the alert list draws between groups of
+	/** The nil entries are the separators the alert list draws between groups of
 	 related events; the order is the one the nib shipped. */
 	private static let notificationItems: [NotificationConfigurationItem] = {
 		let eventTypes: [TXNotificationType?] = [

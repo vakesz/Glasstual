@@ -157,7 +157,7 @@ struct PreferencesInterfacePane: View {
 }
 
 struct PreferencesStylePane: View {
-	/* The values the nib's combo boxes offered. */
+	/** The values the nib's combo boxes offered. */
 	private static let scrollbackPresets = [
 		"1000", "2000", "3000", "4000", "5000", "10000", "20000", "30000", "40000", "50000",
 	]
@@ -340,7 +340,7 @@ struct PreferencesStylePane: View {
 		}
 	}
 
-	/* The two placeholders are template tokens the style engine reads, so they
+	/** The two placeholders are template tokens the style engine reads, so they
 	 stay in the code rather than in a translatable string. */
 	private static var nicknameFormatNote: String {
 		"\(PreferencesStyleStrings.formatSymbolsLabel) "

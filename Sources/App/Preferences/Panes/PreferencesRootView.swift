@@ -144,8 +144,6 @@ struct PreferencesPaneRouter: View {
 				PreferencesHostedView(view: view, height: Self.pluginPaneHeight)
 					.padding(20)
 			}
-		} else {
-			EmptyView()
 		}
 	}
 }
