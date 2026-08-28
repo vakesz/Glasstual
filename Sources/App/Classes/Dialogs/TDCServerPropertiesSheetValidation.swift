@@ -60,24 +60,29 @@ enum ServerPropertiesValidation {
 		value.rangeOfCharacter(from: .newlines) == nil
 	}
 
+	/// The longest quit or away message a server will carry.
+	static let maximumCommentLength = 390
+
 	static func isLeavingComment(_ value: String) -> Bool {
-		isSingleLine(value) && value.count <= 390
+		isSingleLine(value) && value.count <= maximumCommentLength
 	}
 
 	static func areAlternateNicknamesValid(_ value: String) -> Bool {
-		value.components(separatedBy: .whitespaces).allSatisfy(isNickname)
+		invalidAlternateNickname(in: value) == nil
+	}
+
+	/// The first nickname in a whitespace-separated list that is not valid, so
+	/// the field can name it.
+	static func invalidAlternateNickname(in value: String) -> String? {
+		value.components(separatedBy: .whitespaces).first { isNickname($0) == false }
 	}
 }
 
 extension ServerPropertiesSheet {
 	func configureValidatedFields() {
 		configure(alternateNicknamesTextField, invalidOnEmpty: false, firstTokenOnly: false) { value in
-			for nickname in value.components(separatedBy: .whitespaces)
-				where !ServerPropertiesValidation.isNickname(nickname)
-			{
-				return ServerPropertiesStrings.Validation.invalidAlternateNickname(nickname)
-			}
-			return nil
+			ServerPropertiesValidation.invalidAlternateNickname(in: value)
+				.map(ServerPropertiesStrings.Validation.invalidAlternateNickname)
 		}
 
 		configure(awayNicknameTextField, invalidOnEmpty: false, firstTokenOnly: true) { value in
@@ -98,11 +103,12 @@ extension ServerPropertiesSheet {
 				: ServerPropertiesStrings.Validation.invalidRealName
 		}
 
+		let maximumLength = ServerPropertiesValidation.maximumCommentLength
 		let leavingCommentValidation: (String) -> String? = { value in
 			if !ServerPropertiesValidation.isSingleLine(value) {
 				return CommonValidationStrings.singleLineRequired
 			}
-			return value.count > 390 ? CommonValidationStrings.maximumLength(390) : nil
+			return value.count > maximumLength ? CommonValidationStrings.maximumLength(maximumLength) : nil
 		}
 		configure(
 			normalLeavingCommentTextField,

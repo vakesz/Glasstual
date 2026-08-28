@@ -21,9 +21,21 @@ public final class ServerChannelListDialogEntry: NSObject {
 	@objc public var channelTopicFormatted = NSAttributedString()
 }
 
+/// What `ServerChannelListDialog` reports back.
+@MainActor
+public protocol ServerChannelListDialogDelegate: AnyObject {
+	func serverChannelListDialogOnUpdate(_ sender: ServerChannelListDialog)
+	func serverChannelListDialog(_ sender: ServerChannelListDialog, joinChannels channels: [String])
+	func serverChannelDialogWillClose(_ sender: ServerChannelListDialog)
+}
+
 @objc(TDCServerChannelListDialog)
 @MainActor
 public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
+	var listDelegate: (any ServerChannelListDialogDelegate)? {
+		delegate as? any ServerChannelListDialogDelegate
+	}
+
 	@objc public private(set) var client: IRCClient!
 	@objc public private(set) var clientId: String?
 	@objc public var contentAlreadyReceived = false
@@ -97,7 +109,7 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 	}
 
 	override public func show() {
-		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
+		window.ce_restoreState(for: Self.self)
 		super.show()
 	}
 
@@ -232,10 +244,7 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 	@IBAction private func onUpdate(_: Any?) {
 		clear()
 
-		let selector = NSSelectorFromString("serverChannelListDialogOnUpdate:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		listDelegate?.serverChannelListDialogOnUpdate(self)
 	}
 
 	@IBAction private func onJoinChannels(_ sender: Any?) {
@@ -252,10 +261,7 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 			channelNames.append(arrangedObjects[index].channelName)
 		}
 
-		let joinSelector = NSSelectorFromString("serverChannelListDialog:joinChannels:")
-		if let delegate, delegate.responds(to: joinSelector) {
-			_ = delegate.perform(joinSelector, with: self, with: channelNames)
-		}
+		listDelegate?.serverChannelListDialog(self, joinChannels: channelNames)
 
 		channelListTable.deselectAll(sender)
 	}
@@ -290,11 +296,8 @@ extension ServerChannelListDialog: NSWindowDelegate {
 		textual_cancelPerformRequests()
 		channelListTable.dataSource = nil
 		channelListTable.delegate = nil
-		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
+		window.ce_saveState(for: Self.self)
 
-		let selector = NSSelectorFromString("serverChannelDialogWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		listDelegate?.serverChannelDialogWillClose(self)
 	}
 }

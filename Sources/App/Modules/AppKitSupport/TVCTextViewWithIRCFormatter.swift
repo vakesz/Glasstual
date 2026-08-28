@@ -50,7 +50,7 @@ public enum TVCTextViewCaretLocation: UInt {
 }
 
 @objc(TVCTextViewWithIRCFormatter)
-open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
+open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeyboardEventResponder {
 	private var keyEventHandler: KeyEventHandler!
 	private var preferredFontStorage: NSFont = .systemFont(ofSize: NSFont.systemFontSize)
 	private var preferredFontColorStorage: NSColor = .textColor
@@ -58,7 +58,9 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
 	@objc public var preferredFont: NSFont {
 		get { preferredFontStorage }
 		set {
-			guard newValue !== preferredFontStorage else {
+			/* Fonts and colours are compared by value: `!==` re-applied on an
+			 equal-but-distinct instance and skipped on the same instance. */
+			guard newValue != preferredFontStorage else {
 				return
 			}
 
@@ -70,7 +72,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
 	@objc public var preferredFontColor: NSColor {
 		get { preferredFontColorStorage }
 		set {
-			guard newValue !== preferredFontColorStorage else {
+			guard newValue != preferredFontColorStorage else {
 				return
 			}
 
@@ -96,7 +98,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
 	}
 
 	private func prepareInitialState() {
-		keyEventHandler = KeyEventHandler(target: self)
+		keyEventHandler = KeyEventHandler()
 
 		delegate = self
 
@@ -114,26 +116,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
 
 	// MARK: - Keyboard Shortcuts
 
-	@objc(setKeyHandlerTarget:)
-	public func setKeyHandlerTarget(_ target: Any) {
-		keyEventHandler.setKeyHandlerTarget(target)
-	}
-
-	@objc(registerSelector:key:modifiers:)
-	public func register(_ selector: Selector, key keyCode: UInt, modifiers: UInt) {
-		keyEventHandler.register(selector, key: keyCode, modifiers: modifiers)
-	}
-
-	@objc(registerSelector:character:modifiers:)
-	public func register(_ selector: Selector, character: UInt16, modifiers: UInt) {
-		keyEventHandler.register(selector, character: character, modifiers: modifiers)
-	}
-
-	@objc(registerSelector:characters:modifiers:)
-	public func register(_ selector: Selector, characters characterRange: NSRange, modifiers: UInt) {
-		keyEventHandler.register(selector, characters: characterRange, modifiers: modifiers)
-	}
-
 	public func register(
 		key: KeyCode,
 		modifiers: NSEvent.ModifierFlags = [],
@@ -150,7 +132,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
 		keyEventHandler.register(character: character, modifiers: modifiers, perform: action)
 	}
 
-	@objc(performedCustomKeyboardEvent:)
 	public func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
 		keyEventHandler.processKeyEvent(event)
 	}

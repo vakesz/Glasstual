@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import SwiftUI
 
 @objc(TDCAboutDialogDelegate)
@@ -105,7 +106,7 @@ public final class AboutDialog: WindowBase, NSWindowDelegate, @unchecked Sendabl
 
 	private func showOnMainActor() {
 		let window = prepareWindow()
-		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
+		window.ce_restoreState(for: Self.self)
 		super.show()
 	}
 
@@ -114,7 +115,7 @@ public final class AboutDialog: WindowBase, NSWindowDelegate, @unchecked Sendabl
 	}
 
 	@objc public func windowWillClose(_: Notification) {
-		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
+		window.ce_saveState(for: Self.self)
 		(delegate as? AboutDialogDelegate)?.aboutDialogWillClose(self)
 	}
 }

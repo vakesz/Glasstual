@@ -109,7 +109,7 @@ public final class ServerEndpointListSheet: SheetBase {
 
 	private func removeSelectedEntry() {
 		let selectedRows = entryTable.selectedRowIndexes
-		entryTableController.perform(NSSelectorFromString("removeObjectsAtArrangedObjectIndexes:"), with: selectedRows)
+		entryTableController.remove(atArrangedObjectIndexes: selectedRows)
 	}
 
 	@objc public func windowWillClose(_: Notification) {

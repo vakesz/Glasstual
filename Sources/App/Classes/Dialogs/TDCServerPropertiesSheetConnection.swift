@@ -39,7 +39,7 @@
 import AppKit
 import CocoaExtensions
 
-extension ServerPropertiesSheet: ServerEndpointListSheetDelegate {
+extension ServerPropertiesSheet: ServerEndpointListSheetDelegate, ValidatedControlChangeObserver {
 	func loadPrimaryServerEndpoint() {
 		guard let server = serverList.first else {
 			serverAddressComboBox.stringValue = ""
@@ -120,11 +120,11 @@ extension ServerPropertiesSheet: ServerEndpointListSheetDelegate {
 		}
 	}
 
-	@objc public func validatedTextFieldTextDidChange(_ sender: Any) {
-		if sender as AnyObject === serverAddressComboBox {
+	public func validatedTextFieldTextDidChange(_ sender: NSControl) {
+		if sender === serverAddressComboBox {
 			populateDefaultsForPreconfiguredNetwork()
 			rebuildMutableServerEndpointListIfNeeded()
-		} else if sender as AnyObject === serverPortTextField {
+		} else if sender === serverPortTextField {
 			rebuildMutableServerEndpointListIfNeeded()
 		}
 	}

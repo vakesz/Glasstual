@@ -427,7 +427,7 @@ extension PluginManager {
 			}
 		}
 
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Plugin.unsignedBody,
 			title: PromptStrings.Plugin.unsignedTitle(pluginNames: bundleNames.joined(separator: ", ")),
 			defaultButton: PromptStrings.Action.confirmation,
@@ -445,7 +445,7 @@ extension PluginManager {
 
 		let bundlesName = Bundle.textual_formattedDisplayNames(for: obsoleteBundles)
 
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Plugin.incompatibleBody(
 				minimumVersion: PluginCompatibility.minimumHostVersion
 			),
@@ -455,8 +455,8 @@ extension PluginManager {
 			otherButton: PromptStrings.Plugin.viewFilesButtonTitle,
 			suppressionKey: nil,
 			suppressionText: nil
-		) { buttonClicked, _, _ in
-			guard buttonClicked == .other else {
+		) { outcome in
+			guard outcome.response == .other else {
 				return
 			}
 

@@ -81,21 +81,6 @@ public extension MenuActionCoordinator {
 		present(sheet) { $0.start() }
 	}
 
-	private var windowController: WindowController {
-		SharedApplication.sharedWindowController()
-	}
-
-	private func present<Dialog: AnyObject>(_ dialog: Dialog, start: (Dialog) -> Void) {
-		(dialog as? SheetBase)?.delegate = menuController
-		(dialog as? SheetBase)?.window = mainWindow
-		(dialog as? WindowBase)?.delegate = menuController
-		if let onboarding = dialog as? OnboardingWindowController {
-			onboarding.delegate = menuController
-		}
-		start(dialog)
-		windowController.addWindow(toWindowList: dialog)
-	}
-
 	private func showChannelProperties() {
 		windowController.popMainWindowSheetIfExists()
 		guard let channel = selectedChannel, channel.isChannel else { return }
@@ -108,7 +93,7 @@ public extension MenuActionCoordinator {
 		guard let client = selectedClient, let selectedChannel,
 		      client.isLoggedIn, selectedChannel.isChannel, selectedChannel.isActive
 		else { return }
-		let nicknames = selectedMembers(for: sender as Any, returnNicknames: true).compactMap { $0 as? String }
+		let nicknames = selectedNicknames(for: sender as Any)
 		guard nicknames.isEmpty == false else { return }
 		deselectMembers(for: sender as Any)
 		let channels = client.channelList.compactMap { channel in

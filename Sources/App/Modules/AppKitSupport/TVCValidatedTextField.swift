@@ -13,6 +13,13 @@
 import AppKit
 import CocoaExtensions
 
+/// Told when a validated control's text changed. `sender` is the control, so
+/// one observer can serve several fields and tell them apart by identity.
+@MainActor
+public protocol ValidatedControlChangeObserver: AnyObject {
+	func validatedTextFieldTextDidChange(_ sender: NSControl)
+}
+
 @objc(TVCValidatedTextField)
 public final class ValidatedTextField: NSTextField {
 	@objc public var validationBlock: ((String) -> String?)?
@@ -20,7 +27,7 @@ public final class ValidatedTextField: NSTextField {
 	@objc public var stringValueIsTrimmed = false
 	@objc public var stringValueIsInvalidOnEmpty = false
 	@objc public var performValidationWhenEmpty = false
-	@objc public weak var textDidChangeCallback: AnyObject?
+	public weak var textDidChangeCallback: (any ValidatedControlChangeObserver)?
 	@objc public var defaultValue: String?
 
 	private var cachedValidValue = false
@@ -59,16 +66,6 @@ public final class ValidatedTextField: NSTextField {
 
 	@objc public var valueIsValid: Bool {
 		cachedValidValue
-	}
-
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-		MainActor.assumeIsolated {
-			cachedValidValue = false
-		}
 	}
 
 	/** Isolated so the popover teardown runs on the main actor whichever thread
@@ -168,15 +165,7 @@ public final class ValidatedTextField: NSTextField {
 	}
 
 	private func informCallbackTextDidChange() {
-		guard let textDidChangeCallback else {
-			return
-		}
-
-		let selector = NSSelectorFromString("validatedTextFieldTextDidChange:")
-
-		if textDidChangeCallback.responds(to: selector) {
-			_ = textDidChangeCallback.perform(selector, with: self)
-		}
+		textDidChangeCallback?.validatedTextFieldTextDidChange(self)
 	}
 }
 

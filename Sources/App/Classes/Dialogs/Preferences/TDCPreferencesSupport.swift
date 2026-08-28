@@ -87,7 +87,6 @@ final class PreferencesPaneContainerView: NSView {
 struct PreferencesPaneDescriptor: Equatable {
 	let identifier: PreferencesPaneIdentifier
 	let symbolName: String
-	let contentViewKey: String
 	let group: PreferencesPaneGroup
 }
 
@@ -131,115 +130,96 @@ enum PreferencesPaneCatalog {
 		PreferencesPaneDescriptor(
 			identifier: .general,
 			symbolName: "gearshape",
-			contentViewKey: "contentViewGeneral",
 			group: .main
 		),
 		PreferencesPaneDescriptor(
 			identifier: .behavior,
 			symbolName: "slider.horizontal.3",
-			contentViewKey: "contentViewBehavior",
 			group: .main
 		),
 		PreferencesPaneDescriptor(
 			identifier: .notifications,
 			symbolName: "bell",
-			contentViewKey: "contentViewNotifications",
 			group: .main
 		),
 		PreferencesPaneDescriptor(
 			identifier: .highlights,
 			symbolName: "text.magnifyingglass",
-			contentViewKey: "contentViewHighlights",
 			group: .main
 		),
 		PreferencesPaneDescriptor(
 			identifier: .interface,
 			symbolName: "macwindow",
-			contentViewKey: "contentViewInterface",
 			group: .main
 		),
 		PreferencesPaneDescriptor(
 			identifier: .style,
 			symbolName: "paintbrush",
-			contentViewKey: "contentViewStyle",
 			group: .main
 		),
 		PreferencesPaneDescriptor(
 			identifier: .controls,
 			symbolName: "keyboard",
-			contentViewKey: "contentViewControls",
 			group: .main
 		),
 		PreferencesPaneDescriptor(
 			identifier: .addOns,
 			symbolName: "puzzlepiece.extension",
-			contentViewKey: "contentViewInstalledAddons",
 			group: .addOns
 		),
 		PreferencesPaneDescriptor(
 			identifier: .channelManagement,
 			symbolName: "person.2",
-			contentViewKey: "contentViewChannelManagement",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .commandScope,
 			symbolName: "terminal",
-			contentViewKey: "contentViewCommandScope",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .compatibility,
 			symbolName: "wrench.and.screwdriver",
-			contentViewKey: "contentViewCompatibility",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .floodControl,
 			symbolName: "timer",
-			contentViewKey: "contentViewFloodControl",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .incomingData,
 			symbolName: "arrow.down.circle",
-			contentViewKey: "contentViewIncomingData",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .fileTransfers,
 			symbolName: "arrow.down.app",
-			contentViewKey: "contentViewFileTransfers",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .inlineMedia,
 			symbolName: "photo",
-			contentViewKey: "contentViewInlineMedia",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .logLocation,
 			symbolName: "folder",
-			contentViewKey: "contentViewLogLocation",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .defaultIdentity,
 			symbolName: "person.crop.circle",
-			contentViewKey: "contentViewDefaultIdentity",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .defaultIRCopMessages,
 			symbolName: "shield",
-			contentViewKey: "contentViewDefaultIRCopMessages",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
 			identifier: .hidden,
 			symbolName: "eye.slash",
-			contentViewKey: "contentViewHiddenPreferences",
 			group: .advanced
 		),
 	]

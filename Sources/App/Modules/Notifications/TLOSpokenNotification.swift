@@ -44,7 +44,7 @@ public struct SpokenNotification: Sendable {
 			channelIdentifier = nil
 		} else {
 			clientIdentifier = target?.associatedClient?.uniqueIdentifier
-			channelIdentifier = ((target as AnyObject?) as? IRCChannel)?.uniqueIdentifier
+			channelIdentifier = (target as? IRCChannel)?.uniqueIdentifier
 		}
 
 		self.nickname = nickname

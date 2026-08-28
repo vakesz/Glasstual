@@ -1,38 +1,31 @@
 @testable import Glasstual
 import XCTest
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "TPCPreferencesLocal.h"
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
-@objc
 @MainActor
 class TLONotificationConfigurationTests: XCTestCase {
-	@objc
-	func testBaseConfigurationPreservesEventAndDisplayName() {
-		let configuration = NotificationConfiguration.configuration(withEventType: .highlight)
-		let displayName = configuration.displayName
+	func testConfigurationsPreserveEventAndDisplayName() {
+		let configuration: any NotificationConfiguration =
+			PreferencesNotificationConfiguration(eventType: .highlight)
 
 		XCTAssertEqual(configuration.eventType, .highlight)
-		XCTAssertFalse(displayName.isEmpty)
+		XCTAssertFalse(configuration.displayName.isEmpty)
 	}
 
-	@objc
 	func testLocalizedSoundTitlesAndConstantsRemainAvailable() {
-		XCTAssertFalse(NotificationConfiguration.localizedAlertDefaultSoundTitle().isEmpty)
-		XCTAssertFalse(NotificationConfiguration.localizedAlertNoSoundTitle().isEmpty)
+		XCTAssertFalse(NotificationAlertSound.localizedDefaultTitle.isEmpty)
+		XCTAssertFalse(NotificationAlertSound.localizedNoSoundTitle.isEmpty)
 
 		XCTAssertEqual(NotificationAlertSound.defaultPreferenceValue, "Default")
 		XCTAssertEqual(NotificationAlertSound.noSoundPreferenceValue, "None")
 	}
 
-	@objc
 	func testPreferencesConfigurationReadsExistingGlobalValues() {
 		let eventType = TXNotificationType.highlight
-		let configuration = PreferencesNotificationConfiguration.object(withEventType: eventType)
+		let configuration = PreferencesNotificationConfiguration(eventType: eventType)
 		let expectedSound = TextualPreferences.sound(for: eventType)
 			?? NotificationAlertSound.noSoundPreferenceValue
 
@@ -40,22 +33,35 @@ class TLONotificationConfigurationTests: XCTestCase {
 
 		XCTAssertEqual(configuration.alertSound, expectedSound)
 
-		XCTAssertEqual(configuration.pushNotification != .off, TextualPreferences.notificationEnabled(for: eventType))
-		XCTAssertEqual(configuration.speakEvent != .off, TextualPreferences.speak(eventType))
-		XCTAssertEqual(configuration.disabledWhileAway != .off, TextualPreferences.disabledWhileAway(for: eventType))
-		XCTAssertEqual(configuration.bounceDockIcon != .off, TextualPreferences.bounceDockIcon(for: eventType))
 		XCTAssertEqual(
-			configuration.bounceDockIconRepeatedly != .off,
+			configuration.pushNotification != NSControl.StateValue.off,
+			TextualPreferences.notificationEnabled(for: eventType)
+		)
+		XCTAssertEqual(configuration.speakEvent != NSControl.StateValue.off, TextualPreferences.speak(eventType))
+		XCTAssertEqual(
+			configuration.disabledWhileAway != NSControl.StateValue.off,
+			TextualPreferences.disabledWhileAway(for: eventType)
+		)
+		XCTAssertEqual(
+			configuration.bounceDockIcon != NSControl.StateValue.off,
+			TextualPreferences.bounceDockIcon(for: eventType)
+		)
+		XCTAssertEqual(
+			configuration.bounceDockIconRepeatedly != NSControl.StateValue.off,
 			TextualPreferences.bounceDockIconRepeatedly(for: eventType)
 		)
 	}
 
-	@objc
-	func testBaseFactoryRemainsPolymorphicForSubclasses() {
-		let configuration: NotificationConfiguration = PreferencesNotificationConfiguration
-			.configuration(withEventType: .invite)
+	/// The pane holds whichever implementation it was handed, without knowing
+	/// which one it is.
+	func testBothImplementationsSatisfyTheProtocol() {
+		let configurations: [any NotificationConfiguration] = [
+			PreferencesNotificationConfiguration(eventType: .invite),
+			ChannelNotificationConfiguration(eventType: .invite),
+		]
 
-		XCTAssertTrue(configuration is PreferencesNotificationConfiguration)
-		XCTAssertEqual(configuration.eventType, .invite)
+		for configuration in configurations {
+			XCTAssertEqual(configuration.eventType, .invite)
+		}
 	}
 }

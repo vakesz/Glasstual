@@ -39,7 +39,7 @@
 import AppKit
 
 @MainActor
-extension IRCClient {
+extension IRCClient: ChannelBanListSheetDelegate, ServerChannelListDialogDelegate {
 	private var clientDialogWindowKey: String {
 		"TDCServerChannelListDialog -> \(uniqueIdentifier)"
 	}
@@ -76,14 +76,12 @@ extension IRCClient {
 		windowController.addWindow(toWindowList: sheet)
 	}
 
-	@objc(channelBanListSheetOnUpdate:)
-	func channelBanListSheetOnUpdate(_ sender: ChannelBanListSheet) {
+	public func channelBanListSheetOnUpdate(_ sender: ChannelBanListSheet) {
 		guard let channel = sender.channel else { return }
 		sendModes("+\(sender.modeSymbol)", withParametersString: nil, in: channel)
 	}
 
-	@objc(channelBanListSheetWillClose:)
-	func channelBanListSheetWillClose(_ sender: ChannelBanListSheet) {
+	public func channelBanListSheetWillClose(_ sender: ChannelBanListSheet) {
 		guard let channel = sender.channel else { return }
 
 		for change in sender.listOfChanges ?? [] {
@@ -112,18 +110,15 @@ extension IRCClient {
 		windowController.addWindow(toWindowList: dialog, withDescription: clientDialogWindowKey)
 	}
 
-	@objc(serverChannelListDialogOnUpdate:)
-	func serverChannelListDialogOnUpdate(_ sender: ServerChannelListDialog) {
+	public func serverChannelListDialogOnUpdate(_ sender: ServerChannelListDialog) {
 		requestChannelList(withArguments: sender.serverSideListArguments)
 	}
 
-	@objc(serverChannelListDialog:joinChannels:)
-	func serverChannelListDialog(_: ServerChannelListDialog, joinChannels channels: [String]) {
+	public func serverChannelListDialog(_: ServerChannelListDialog, joinChannels channels: [String]) {
 		joinUnlistedChannelsAndSelectBestMatch(channels)
 	}
 
-	@objc(serverChannelDialogWillClose:)
-	func serverChannelDialogWillClose(_: ServerChannelListDialog) {
+	public func serverChannelDialogWillClose(_: ServerChannelListDialog) {
 		SharedApplication.sharedWindowController().removeWindow(fromWindowList: clientDialogWindowKey)
 	}
 }

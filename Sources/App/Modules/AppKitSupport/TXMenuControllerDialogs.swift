@@ -145,7 +145,6 @@ public extension TXMenuController {
 		dialogDidClose(sender)
 	}
 
-	@objc(onboardingWindowControllerWillClose:)
 	func onboardingWindowControllerWillClose(_ sender: OnboardingWindowController) {
 		dialogDidClose(sender)
 	}
@@ -163,7 +162,6 @@ public extension TXMenuController {
 		dialogDidClose(sender)
 	}
 
-	@objc(serverHighlightListSheetWillClose:)
 	func serverHighlightListSheetWillClose(_ sender: ServerHighlightListSheet) {
 		dialogDidClose(sender)
 	}
@@ -198,12 +196,10 @@ public extension TXMenuController {
 		dialogDidClose(sender)
 	}
 
-	@objc(channelSpotlightController:selectChannel:)
 	func channelSpotlightController(_ sender: ChannelSpotlightController, selectChannel channel: IRCChannel) {
 		actionCoordinator.channelSpotlightDidSelect(sender, channel: channel)
 	}
 
-	@objc(channelSpotlightControllerWillClose:)
 	func channelSpotlightControllerWillClose(_ sender: ChannelSpotlightController) {
 		dialogDidClose(sender)
 	}
@@ -233,8 +229,9 @@ public extension TXMenuController {
 }
 
 extension TXMenuController: AboutDialogDelegate, ChannelInviteSheetDelegate, ChannelModifyTopicSheetDelegate,
-	ChannelModifyModesSheetDelegate, ChannelPropertiesSheetDelegate, NicknameColorSheetDelegate,
-	ServerChangeNicknameSheetDelegate, ServerPropertiesSheetDelegate
+	ChannelModifyModesSheetDelegate, ChannelPropertiesSheetDelegate, ChannelSpotlightControllerDelegate,
+	NicknameColorSheetDelegate, OnboardingWindowControllerDelegate, ServerChangeNicknameSheetDelegate,
+	ServerHighlightListSheetDelegate, ServerPropertiesSheetDelegate
 {}
 
 @MainActor

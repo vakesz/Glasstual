@@ -12,6 +12,13 @@
 
 import AppKit
 
+/// What `ChannelBanListSheet` reports back.
+@MainActor
+public protocol ChannelBanListSheetDelegate: AnyObject {
+	func channelBanListSheetOnUpdate(_ sender: ChannelBanListSheet)
+	func channelBanListSheetWillClose(_ sender: ChannelBanListSheet)
+}
+
 @objc(TDCChannelBanListSheetEntryType)
 public enum ChannelBanListEntryType: UInt {
 	case ban = 0
@@ -19,8 +26,16 @@ public enum ChannelBanListEntryType: UInt {
 	case inviteException
 	case quiet
 
-	var supportListType: IRCISupportInfoListType? {
-		IRCISupportInfoListType(rawValue: rawValue)
+	/** Spelled out rather than mapped by raw value: the two enums are declared
+	 in different modules and reordering either one would silently point the
+	 sheet at the wrong mode. */
+	var supportListType: IRCISupportInfoListType {
+		switch self {
+		case .ban: .ban
+		case .banException: .banException
+		case .inviteException: .inviteException
+		case .quiet: .quiet
+		}
 	}
 }
 
@@ -94,13 +109,13 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 	}
 
 	@objc public func clear() {
-		willChangeValue(forKey: "entryCount")
-		willChangeValue(forKey: "entryCountDescription")
+		willChangeValue(forKey: #keyPath(entryCount))
+		willChangeValue(forKey: #keyPath(entryCountDescription))
 
 		entryTableController.content = nil
 
-		didChangeValue(forKey: "entryCountDescription")
-		didChangeValue(forKey: "entryCount")
+		didChangeValue(forKey: #keyPath(entryCountDescription))
+		didChangeValue(forKey: #keyPath(entryCount))
 	}
 
 	@objc(addEntry:setBy:creationDate:)
@@ -121,13 +136,13 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 		newEntry.entryAuthor = author!
 		newEntry.entryCreationDate = entryCreationDate
 
-		willChangeValue(forKey: "entryCount")
-		willChangeValue(forKey: "entryCountDescription")
+		willChangeValue(forKey: #keyPath(entryCount))
+		willChangeValue(forKey: #keyPath(entryCountDescription))
 
 		entryTableController.addObject(newEntry)
 
-		didChangeValue(forKey: "entryCountDescription")
-		didChangeValue(forKey: "entryCount")
+		didChangeValue(forKey: #keyPath(entryCountDescription))
+		didChangeValue(forKey: #keyPath(entryCount))
 	}
 
 	@objc public dynamic var entryCount: NSNumber {
@@ -145,10 +160,7 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 	@IBAction private func onUpdate(_: Any?) {
 		clear()
 
-		let selector = NSSelectorFromString("channelBanListSheetOnUpdate:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		banListDelegate?.channelBanListSheetOnUpdate(self)
 	}
 
 	@IBAction private func onRemoveEntry(_: Any?) {
@@ -172,30 +184,27 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 		super.cancel(nil)
 	}
 
+	private var banListDelegate: (any ChannelBanListSheetDelegate)? {
+		delegate as? any ChannelBanListSheetDelegate
+	}
+
 	@objc(channel:supportsEntryType:)
 	public static func channel(
 		_ channel: IRCChannel,
 		supportsEntryType entryType: ChannelBanListEntryType
 	) -> Bool {
-		guard let listType = entryType.supportListType else {
+		guard let client = channel.associatedClient else {
 			return false
 		}
 
-		return channel.associatedClient!.supportInfo.isListSupported(listType)
+		return client.supportInfo.isListSupported(entryType.supportListType)
 	}
 
 	@objc public var modeSymbol: String {
-		guard let listType = entryType.supportListType else {
-			return ""
-		}
-
-		return client.supportInfo.modeSymbol(forList: listType) ?? ""
+		client.supportInfo.modeSymbol(forList: entryType.supportListType) ?? ""
 	}
 
 	@objc public func windowWillClose(_: Notification) {
-		let selector = NSSelectorFromString("channelBanListSheetWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		banListDelegate?.channelBanListSheetWillClose(self)
 	}
 }

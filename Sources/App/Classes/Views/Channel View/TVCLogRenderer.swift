@@ -245,21 +245,27 @@ public final nonisolated class LogRenderer: NSObject {
 				toggle(RendererFormatting.underline)
 			case UniChar(IRCTextFormatterControlCharacter.colorDigit),
 			     UniChar(IRCTextFormatterControlCharacter.colorHex):
-				var foreground: AnyObject?
-				var background: AnyObject?
-				let consumed = Int((attributedBody.string as NSString).colorComponents(
+				let components = (attributedBody.string as NSString).colorComponents(
 					ofCharacter: character,
-					startingAt: UInt(position),
-					foregroundColor: &foreground,
-					backgroundColor: &background
-				))
-				applyColor(foreground, key: RendererFormatting.foregroundColor, at: position, to: attributedBody)
-				if let background {
-					applyColor(background, key: RendererFormatting.backgroundColor, at: position, to: attributedBody)
-				} else if foreground == nil, position > 0 {
+					startingAt: UInt(position)
+				)
+				applyColor(
+					components.foreground,
+					key: RendererFormatting.foregroundColor,
+					at: position,
+					to: attributedBody
+				)
+				if components.background != nil {
+					applyColor(
+						components.background,
+						key: RendererFormatting.backgroundColor,
+						at: position,
+						to: attributedBody
+					)
+				} else if components.foreground == nil, position > 0 {
 					removeAttribute(RendererFormatting.backgroundColor, at: position, from: attributedBody)
 				}
-				let safeConsumed = max(consumed, 1)
+				let safeConsumed = max(components.charactersConsumed, 1)
 				attributedBody.deleteCharacters(in: NSRange(location: position, length: safeConsumed))
 				removedCount += safeConsumed
 				index += safeConsumed - 1
@@ -282,7 +288,7 @@ public final nonisolated class LogRenderer: NSObject {
 	}
 
 	private func applyColor(
-		_ color: AnyObject?,
+		_ color: IRCColor?,
 		key: NSAttributedString.Key,
 		at position: Int,
 		to attributedBody: NSMutableAttributedString
@@ -290,7 +296,7 @@ public final nonisolated class LogRenderer: NSObject {
 		if let color {
 			attributedBody.addAttribute(
 				key,
-				value: color,
+				value: color.attributeValue,
 				range: NSRange(location: position, length: attributedBody.length - position)
 			)
 		} else if position > 0 {
@@ -350,7 +356,11 @@ public final nonisolated class LogRenderer: NSObject {
 		var mapped: [String: String] = [:]
 		for link in links {
 			bodyWithAttributes.addAttribute(RendererFormatting.url, value: link, range: link.range)
-			mapped[link.stringValue, default: link.uniqueIdentifier] = mapped[link.stringValue] ?? link.uniqueIdentifier
+			/* First identifier wins: the `default:` subscript this used to write
+			 through was discarded by the assignment. */
+			if mapped[link.stringValue] == nil {
+				mapped[link.stringValue] = link.uniqueIdentifier
+			}
 		}
 		output[.links] = links
 		output[.mappedLinks] = mapped

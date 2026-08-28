@@ -95,7 +95,7 @@ extension MainWindow {
 
 	private func performThemeReload() {
 		for client in world.clientList {
-			client.viewController.perform(NSSelectorFromString("reloadTheme"))
+			client.viewController.reloadTheme()
 			for channel in client.channelList {
 				channel.viewController.reloadTheme()
 			}
@@ -810,7 +810,7 @@ public extension MainWindow {
 	func setupTrees() {
 		memberList.keyDelegate = self
 		memberList.target = menuController
-		memberList.doubleAction = NSSelectorFromString("memberInMemberListDoubleClicked:")
+		memberList.doubleAction = #selector(TXMenuController.memberInMemberListDoubleClicked(_:))
 		serverList.keyDelegate = self
 		serverList.delegate = self
 		serverList.dataSource = self
@@ -1039,17 +1039,18 @@ public extension MainWindow {
 			return nil
 		}
 
-		if (item as? IRCTreeItem)?
-			.isClient != false
-		{
+		/* A row is a child row only for an item that is a channel. Anything the
+		 outline view hands back that is not a tree item at all is drawn as a
+		 group row, which is what the outline's root rows are. */
+		guard let treeItem = item as? IRCTreeItem, treeItem.isClient == false else {
 			return ServerListGroupRowCell(serverList: serverList)
 		}
 		return ServerListChildRowCell(serverList: serverList)
 	}
 
 	func outlineView(_ outlineView: NSOutlineView, viewFor _: NSTableColumn?, item: Any) -> NSView? {
-		let identifier = NSUserInterfaceItemIdentifier((item as? IRCTreeItem)?
-			.isClient != false ? "GroupView" : "ChildView")
+		let isChildRow = (item as? IRCTreeItem)?.isClient == false
+		let identifier = NSUserInterfaceItemIdentifier(isChildRow ? "ChildView" : "GroupView")
 		return outlineView.makeView(withIdentifier: identifier, owner: self)
 	}
 
@@ -1147,7 +1148,7 @@ public extension MainWindow {
 		let channels = client.channelList
 		let previous = index > 0 && index - 1 < channels.count ? channels[index - 1] : nil
 		let next = index < channels.count ? channels[index] : nil
-		if draggedItem.isChannel, previous?.isChannel == false, previous != nil {
+		if draggedItem.isChannel, previous?.isChannel == false {
 			return []
 		}
 		if draggedItem.isChannel == false, next?.isChannel == true {

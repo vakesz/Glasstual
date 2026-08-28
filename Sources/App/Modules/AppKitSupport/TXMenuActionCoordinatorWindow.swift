@@ -121,7 +121,7 @@ public extension MenuActionCoordinator {
 				guard channel.isActive else { return }
 				client.part(channel)
 			} else {
-				AppController.shared.world?.destroy(channel)
+				world?.destroy(channel)
 			}
 		case .disconnect:
 			guard client.isConnecting || client.isConnected else { return }
@@ -144,7 +144,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func sortChannelList() {
-		guard let world = AppController.shared.world else { return }
+		guard let world else { return }
 		for client in world.clientList {
 			let sortedChannels = client.channelList.sorted(by: MenuWindowPolicy.channelsOrderedBeforeQueries)
 			guard sortedChannels != client.channelList else { continue }

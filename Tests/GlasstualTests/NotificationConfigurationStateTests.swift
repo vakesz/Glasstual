@@ -48,7 +48,7 @@ struct NotificationConfigurationStateTests {
 
 	@Test("Preferences-backed configurations report on or off, never mixed", arguments: notificationEvents)
 	func preferencesConfigurationIsNeverMixed(event: TXNotificationType) {
-		let configuration = PreferencesNotificationConfiguration.object(withEventType: event)
+		let configuration = PreferencesNotificationConfiguration(eventType: event)
 
 		#expect(configuration.speakEvent != .mixed)
 		#expect(configuration.pushNotification != .mixed)
@@ -63,7 +63,9 @@ struct NotificationConfigurationStateTests {
 	func viewControllerAcceptsMixedConfigurations() {
 		let controller = NotificationConfigurationViewController()
 		controller.allowsMixedState = true
-		controller.notifications = notificationEvents.map { ChannelNotificationConfiguration(eventType: $0) }
+		controller.notifications = notificationEvents.map {
+			.configuration(ChannelNotificationConfiguration(eventType: $0))
+		}
 		controller.reload()
 	}
 
@@ -71,7 +73,7 @@ struct NotificationConfigurationStateTests {
 	@Test("Emptying the notification list leaves the view controller usable")
 	func viewControllerAcceptsAnEmptyNotificationList() {
 		let controller = NotificationConfigurationViewController()
-		controller.notifications = [ChannelNotificationConfiguration(eventType: .highlight)]
+		controller.notifications = [.configuration(ChannelNotificationConfiguration(eventType: .highlight))]
 		controller.notifications = []
 		controller.reload()
 	}

@@ -41,38 +41,12 @@ import AppKit
 /// Owns the visual policy for AppKit menu symbols. Keeping this policy in one
 /// place prevents nib menus and menus assembled at runtime from drifting.
 @MainActor
-@objc(TXMenuPresentation)
-public final class MenuPresentation: NSObject {
+public enum MenuPresentation {
 	private static let symbolConfiguration = NSImage.SymbolConfiguration(
 		pointSize: NSFont.systemFontSize,
 		weight: .regular,
 		scale: .medium
 	)
-	private static let symbolNamesByTag: [Int: String] = [
-		102: "gear", 113: "power", 200: "bell.slash", 201: "speaker.slash",
-		203: "printer", 205: "xmark", 300: "arrow.uturn.backward", 301: "arrow.uturn.forward",
-		303: "scissors", 304: "doc.on.doc", 305: "doc.on.clipboard", 306: "trash",
-		307: "selection.pin.in.out", 400: "bookmark", 403: "envelope.open", 404: "eraser",
-		406: "textformat.size.larger", 407: "textformat.size.smaller",
-		409: "arrow.up.left.and.arrow.down.right", 500: "bolt", 501: "bolt.badge.clock",
-		502: "bolt.slash", 503: "xmark.circle", 505: "list.bullet", 506: "pencil",
-		508: "plus", 509: "plus.square.on.square", 510: "trash", 512: "plus.circle",
-		514: "slider.horizontal.3", 600: "arrow.right.square", 601: "arrow.left.square",
-		603: "plus.circle", 604: "trash", 606: "doc.text", 608: "text.quote",
-		609: "slider.horizontal.3", 611: "hand.raised", 616: "gearshape",
-		712: "arrow.down.to.line", 716: "magnifyingglass", 800: "minus", 801: "plus.rectangle",
-		803: "person.2", 804: "sidebar.left", 812: "macwindow", 813: "person.crop.circle",
-		814: "hand.raised", 815: "doc.text", 816: "exclamationmark.bubble",
-		817: "arrow.up.arrow.down.circle", 900: "info.circle", 907: "questionmark.circle",
-		912: "hand.wave", 1000: "arrow.right.square", 1100: "link", 1200: "pencil",
-		1202: "magnifyingglass", 1203: "book", 1205: "doc.on.doc", 1206: "doc.on.clipboard",
-		1208: "doc.text", 1209: "number", 1300: "plus", 1302: "plus.circle", 1400: "plus",
-		1600: "hand.raised", 1601: "pencil", 1602: "hand.raised.slash", 1604: "envelope",
-		1606: "info.circle", 1607: "bubble.left", 1619: "nosign", 1620: "figure.walk",
-		1621: "nosign", 1623: "arrow.left.arrow.right", 1624: "shield", 1700: "bell.slash",
-		1701: "speaker.slash", 1800: "xmark", 1802: "doc.text", 3_090_000: "magnifyingglass",
-	]
-
 	/// One stable instance lets repeated passes distinguish padding from a
 	/// real symbol. A transparent bitmap is treated as no image on macOS 26.
 	private static let symbolSpacer: NSImage? = {
@@ -92,32 +66,31 @@ public final class MenuPresentation: NSObject {
 	}()
 
 	static func symbolName(forTag tag: Int) -> String? {
-		symbolNamesByTag[tag]
+		MenuCommand(rawValue: tag)?.symbolName
 	}
 
-	static var symbolMappings: [Int: String] {
-		symbolNamesByTag
+	static var symbolMappings: [MenuCommand: String] {
+		MenuCommand.symbolNames
 	}
 
-	@objc(applyToMenu:)
 	public static func apply(to menu: NSMenu?) {
 		apply(symbolConfiguration, to: menu)
 	}
 
-	@objc(messageReplyItemsForMessageIdentifier:nickname:excerpt:target:)
 	public static func messageReplyItems(
 		messageIdentifier: String,
 		nickname: String?,
 		excerpt: String?,
 		target: AnyObject
 	) -> [NSMenuItem] {
-		var context = ["messageIdentifier": messageIdentifier]
-
-		context["nickname"] = nickname
-		context["excerpt"] = excerpt
+		let context = MessageMenuContext(
+			messageIdentifier: messageIdentifier,
+			nickname: nickname,
+			excerpt: excerpt
+		)
 
 		let separator = NSMenuItem.separator()
-		separator.tag = 1210
+		separator.command = .webReplySeparator
 
 		let reply = NSMenuItem(
 			title: MessageMenuStrings.reply,
@@ -125,7 +98,7 @@ public final class MenuPresentation: NSObject {
 			keyEquivalent: ""
 		)
 		reply.target = target
-		reply.tag = 1211
+		reply.command = .webReply
 		reply.representedObject = context
 		reply.image = NSImage(
 			systemSymbolName: "arrowshape.turn.up.left",
@@ -133,7 +106,7 @@ public final class MenuPresentation: NSObject {
 		)
 
 		let react = NSMenuItem(title: MessageMenuStrings.react, action: nil, keyEquivalent: "")
-		react.tag = 1212
+		react.command = .webReact
 		react.image = NSImage(systemSymbolName: "face.smiling", accessibilityDescription: react.title)
 
 		let reactMenu = NSMenu(title: react.title)
@@ -145,8 +118,8 @@ public final class MenuPresentation: NSObject {
 				keyEquivalent: ""
 			)
 			item.target = target
-			item.tag = 1212
-			item.representedObject = context.merging(["emoji": emoji]) { _, replacement in replacement }
+			item.command = .webReact
+			item.representedObject = context.reacting(with: emoji)
 			reactMenu.addItem(item)
 		}
 
@@ -158,7 +131,7 @@ public final class MenuPresentation: NSObject {
 			keyEquivalent: ""
 		)
 		other.target = target
-		other.tag = 1212
+		other.command = .webReact
 		other.representedObject = context
 		reactMenu.addItem(other)
 		react.submenu = reactMenu
@@ -166,7 +139,6 @@ public final class MenuPresentation: NSObject {
 		return [separator, reply, react]
 	}
 
-	@objc(shareMenuItemForItems:)
 	public static func shareMenuItem(for items: [Any]) -> NSMenuItem {
 		let title = MessageMenuStrings.share
 		let menuItem: NSMenuItem
@@ -240,5 +212,39 @@ public final class MenuPresentation: NSObject {
 				item.preferredImageVisibility = .visible
 			}
 		}
+	}
+}
+
+/// The payload carried by the reply/react items of the channel view's context
+/// menu. `NSMenuItem.representedObject` is `Any?`, so this stays a class the
+/// action side can cast to in one step instead of a `[String: String]` unpacked
+/// by literal key.
+@MainActor
+public final class MessageMenuContext {
+	public let messageIdentifier: String
+	public let nickname: String?
+	public let excerpt: String?
+	public let emoji: String?
+
+	public init(
+		messageIdentifier: String,
+		nickname: String?,
+		excerpt: String?,
+		emoji: String? = nil
+	) {
+		self.messageIdentifier = messageIdentifier
+		self.nickname = nickname
+		self.excerpt = excerpt
+		self.emoji = emoji
+	}
+
+	/// The same message, carrying the emoji a reaction item stands for.
+	public func reacting(with emoji: String) -> MessageMenuContext {
+		MessageMenuContext(
+			messageIdentifier: messageIdentifier,
+			nickname: nickname,
+			excerpt: excerpt,
+			emoji: emoji
+		)
 	}
 }

@@ -14,7 +14,15 @@
 import Foundation
 
 private let inputHistoryMaximumCount = 100
-private let inputHistoryGlobalObjectKey = "TLOInputHistoryDefaultObject"
+
+/// Which history buffer the input field is typing into. The global scope used
+/// to be the magic key "TLOInputHistoryDefaultObject" in the same dictionary as
+/// the per-item buffers, where a tree item with that identifier would have
+/// collided with it.
+enum InputHistoryScope: Hashable, Sendable {
+	case global
+	case item(String)
+}
 
 @MainActor
 private final class InputHistoryObject {
@@ -100,7 +108,7 @@ private final class InputHistoryObject {
 @MainActor
 public final class InputHistory: NSObject {
 	private weak var window: TVCMainWindow?
-	private var historyObjects: [String: InputHistoryObject] = [:]
+	private var historyObjects: [InputHistoryScope: InputHistoryObject] = [:]
 	private var currentTreeItem: String?
 
 	@available(*, unavailable)
@@ -128,7 +136,7 @@ public final class InputHistory: NSObject {
 		}
 
 		let itemIdentifier = treeItem.uniqueIdentifier
-		historyObjects.removeValue(forKey: itemIdentifier)
+		historyObjects.removeValue(forKey: .item(itemIdentifier))
 
 		if currentTreeItem == itemIdentifier {
 			currentTreeItem = nil
@@ -166,7 +174,7 @@ public final class InputHistory: NSObject {
 				}
 			}
 
-			historyObjects.removeValue(forKey: inputHistoryGlobalObjectKey)
+			historyObjects.removeValue(forKey: .global)
 		} else {
 			historyObjects.removeAll()
 			currentTreeItem = nil
@@ -189,32 +197,35 @@ public final class InputHistory: NSObject {
 	}
 
 	private func applyGlobalHistory(to itemIdentifier: String) {
-		guard let globalObject = historyObjects[inputHistoryGlobalObjectKey] else {
+		guard let globalObject = historyObjects[.global] else {
 			return
 		}
 
 		let newObject = globalObject.copied()
 		newObject.lastHistoryItem = nil
-		historyObjects[itemIdentifier] = newObject
+		historyObjects[.item(itemIdentifier)] = newObject
+	}
+
+	/// `nil` when history is channel-specific and nothing is focused.
+	var currentScope: InputHistoryScope? {
+		guard TextualPreferences.inputHistoryIsChannelSpecific() else {
+			return .global
+		}
+
+		return currentTreeItem.map(InputHistoryScope.item)
 	}
 
 	private func currentObjectForFocusedTreeView() -> InputHistoryObject? {
-		let currentObjectKey: String? = if TextualPreferences.inputHistoryIsChannelSpecific() {
-			currentTreeItem
-		} else {
-			inputHistoryGlobalObjectKey
-		}
-
-		guard let currentObjectKey else {
+		guard let scope = currentScope else {
 			return nil
 		}
 
-		if let currentObject = historyObjects[currentObjectKey] {
+		if let currentObject = historyObjects[scope] {
 			return currentObject
 		}
 
 		let currentObject = InputHistoryObject()
-		historyObjects[currentObjectKey] = currentObject
+		historyObjects[scope] = currentObject
 
 		return currentObject
 	}

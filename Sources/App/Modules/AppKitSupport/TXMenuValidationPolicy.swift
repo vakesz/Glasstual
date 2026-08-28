@@ -41,40 +41,27 @@ import Foundation
 /// Applies the application-wide part of menu validation after the selected
 /// command has passed its command-specific checks.
 @MainActor
-@objc(TXMenuValidationPolicy)
-public final class MenuValidationPolicy: NSObject {
-	private static let topLevelMenuTags = IndexSet(integersIn: 1 ... 10)
-
-	private static let commandsAvailableDuringSheets: Set<Int> = [
-		100, // About
-		102, // Settings
-		200, // Disable notifications
-		201, // Disable notification sounds
-		1700, // Dock: disable notifications
-		1701, // Dock: disable notification sounds
-		9_100_000, // Enable developer mode
-		9_100_002, // Hidden settings
-	]
-
-	private static let essentialCommands: Set<Int> = [
-		100, // About
-		113, // Quit
-		203, // Print
-		205, // Close window
-		305, // Paste
-		812, // Main window
-		900, // Acknowledgements
-		910, // Advanced
-		912, // Welcome
-		9_100_004, // Export preferences
-	]
-
-	@objc(
-		validateTag:commandSpecificResult:applicationIsLaunched:mainWindowHasAttachedSheet:
-		mainWindowIsFocused:mainWindowIsBeneathMouse:
-	)
+public enum MenuValidationPolicy {
 	public static func validate(
 		tag: Int,
+		commandSpecificResult: Bool,
+		applicationIsLaunched: Bool,
+		mainWindowHasAttachedSheet: Bool,
+		mainWindowIsFocused: Bool,
+		mainWindowIsBeneathMouse: Bool
+	) -> Bool {
+		validate(
+			command: MenuCommand(rawValue: tag),
+			commandSpecificResult: commandSpecificResult,
+			applicationIsLaunched: applicationIsLaunched,
+			mainWindowHasAttachedSheet: mainWindowHasAttachedSheet,
+			mainWindowIsFocused: mainWindowIsFocused,
+			mainWindowIsBeneathMouse: mainWindowIsBeneathMouse
+		)
+	}
+
+	public static func validate(
+		command: MenuCommand?,
 		commandSpecificResult: Bool,
 		applicationIsLaunched: Bool,
 		mainWindowHasAttachedSheet: Bool,
@@ -85,7 +72,7 @@ public final class MenuValidationPolicy: NSObject {
 			return false
 		}
 
-		if topLevelMenuTags.contains(tag) {
+		if command?.isTopLevelMenu == true {
 			return true
 		}
 
@@ -97,12 +84,12 @@ public final class MenuValidationPolicy: NSObject {
 
 		if result == false,
 		   anotherWindowOrSheetHasFocus,
-		   commandsAvailableDuringSheets.contains(tag)
+		   command?.isAvailableDuringSheets == true
 		{
 			result = true
 		}
 
-		if result == false, essentialCommands.contains(tag) {
+		if result == false, command?.isEssential == true {
 			result = true
 		}
 

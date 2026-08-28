@@ -26,8 +26,15 @@ final class ApplicationInfrastructureMigrationTests: XCTestCase {
 
 	func testApplicationResponderSelectorsRemainAvailable() {
 		XCTAssertTrue(Application.responds(to: NSSelectorFromString("checkForOtherCopiesOfGlasstualRunning")))
-		XCTAssertTrue(Application.instancesRespond(to: NSSelectorFromString("performedCustomKeyboardEvent:")))
-		XCTAssertTrue(Application.instancesRespond(to: NSSelectorFromString("sendCustomKeyboardEvent:toObject:")))
+	}
+
+	/** Custom key-down handling used to be looked up by selector and called
+	 through a bit-cast IMP. It is a Swift protocol now, so the contract is that
+	 the classes offered the event conform to it. */
+	func testCustomKeyboardEventRespondersConformToTheProtocol() {
+		XCTAssertTrue((Application.self as Any.Type) is any CustomKeyboardEventResponder.Type)
+		XCTAssertTrue((MainWindow.self as Any.Type) is any CustomKeyboardEventResponder.Type)
+		XCTAssertTrue((TextViewWithIRCFormatter.self as Any.Type) is any CustomKeyboardEventResponder.Type)
 	}
 
 	func testWindowControllerSelectorsRemainAvailable() {
