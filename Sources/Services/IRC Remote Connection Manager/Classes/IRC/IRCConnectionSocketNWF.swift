@@ -48,7 +48,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 	fileprivate var connection: NWConnection?
 
-	fileprivate var connectTimeoutWorkItem: DispatchWorkItem?
+	fileprivate var connectTimeoutTask: Task<Void, Never>?
 
 	fileprivate var trustRef: SecTrust?
 
@@ -192,23 +192,32 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	fileprivate func scheduleConnectTimeout() {
 		cancelConnectTimeout()
 
-		let workItem = DispatchWorkItem { [weak self] in
-			self?.onConnectTimeout()
+		let timeout = Duration.seconds(connectTimeout)
+		let queue = queue
+
+		connectTimeoutTask = Task { [weak self] in
+			try? await Task.sleep(for: timeout, clock: .continuous)
+
+			guard Task.isCancelled == false, let self else {
+				return
+			}
+
+			/* Back onto the socket's queue: everything the timeout inspects and
+			 closes is confined to it. */
+			queue.async {
+				self.onConnectTimeout()
+			}
 		}
-
-		connectTimeoutWorkItem = workItem
-
-		queue.asyncAfter(deadline: .now() + connectTimeout, execute: workItem)
 	}
 
 	fileprivate func cancelConnectTimeout() {
-		connectTimeoutWorkItem?.cancel()
+		connectTimeoutTask?.cancel()
 
-		connectTimeoutWorkItem = nil
+		connectTimeoutTask = nil
 	}
 
 	fileprivate func onConnectTimeout() {
-		connectTimeoutWorkItem = nil
+		connectTimeoutTask = nil
 		let connectionIdentifier = uniqueIdentifier
 		let timeout = connectTimeout
 

@@ -62,11 +62,9 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 
 	fileprivate var sendQueue: [Data] = []
 
-	fileprivate lazy var floodControlTimer: TimerImplementation = .init(
-		actionBlock: { [weak self] _ in
-			self?.onFloodControlTimer()
-		}, on: queue
-	)
+	/// Ticks the flood-control window. A `ContinuousClock` task rather than a
+	/// timer, so it keeps its cadence across system sleep and cancels cleanly.
+	fileprivate var floodControlTask: Task<Void, Never>?
 
 	fileprivate var floodControlCurrentMessageCount = 0
 	fileprivate var floodControlEnforced = false
@@ -244,21 +242,33 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	}
 
 	fileprivate func startFloodControlTimer() {
-		if floodControlTimer.timerIsActive {
+		guard floodControlTask == nil else {
 			return
 		}
 
-		let timerInterval = Double(config.floodControlDelayInterval)
+		let interval = Duration.seconds(Double(config.floodControlDelayInterval))
+		let queue = queue
 
-		floodControlTimer.start(timerInterval, onRepeat: true)
+		floodControlTask = Task { [weak self] in
+			while Task.isCancelled == false {
+				try? await Task.sleep(for: interval, clock: .continuous)
+
+				guard Task.isCancelled == false, let self else {
+					return
+				}
+
+				/* Back onto the connection's queue: every counter this touches
+				 is confined to it. */
+				queue.async {
+					self.onFloodControlTimer()
+				}
+			}
+		}
 	}
 
 	fileprivate func stopFloodControlTimer() {
-		if floodControlTimer.timerIsActive == false {
-			return
-		}
-
-		floodControlTimer.stop()
+		floodControlTask?.cancel()
+		floodControlTask = nil
 	}
 
 	fileprivate func onFloodControlTimer() {
