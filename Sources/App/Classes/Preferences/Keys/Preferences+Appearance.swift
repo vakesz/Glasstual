@@ -242,9 +242,10 @@ public nonisolated extension Preferences {
 	nonisolated enum Badges {
 		public static let userListMode = UserListModeBadge.allCases.map(\.preferenceKey)
 
-		/// Unregistered: with no value stored the server-list cell falls back to
-		/// the colour its appearance defines, which the shipped default cannot
-		/// express because it changes with the window's active state.
+		/** Unregistered on purpose: with nothing stored the server-list cell uses
+		 the colour its appearance defines, which changes with the window's
+		 active state and so cannot be written as a fixed default. Read it with
+		 `storedColor(for:)`, not `color(for:)`. */
 		public static let serverListUnreadHighlight = PreferenceKey(
 			"Server List Unread Message Count Badge Colors -> Highlight",
 			default: PreferenceColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0),

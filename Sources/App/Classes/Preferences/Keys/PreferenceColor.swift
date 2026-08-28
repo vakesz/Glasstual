@@ -100,6 +100,12 @@ public nonisolated extension TextualUserDefaults {
 		self[key].color
 	}
 
+	/// The stored colour, or `nil` when the user has not chosen one — for the
+	/// wells whose "unset" state means "let the appearance decide".
+	func storedColor(for key: PreferenceKey<PreferenceColor>) -> NSColor? {
+		self[stored: key]?.color
+	}
+
 	func setColor(_ color: NSColor?, for key: PreferenceKey<PreferenceColor>) {
 		guard let color, let value = PreferenceColor(color) else {
 			removeValue(for: key)

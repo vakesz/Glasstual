@@ -49,10 +49,6 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		}
 	}
 
-	/// Written by the sheet's checkbox through TPCPreferencesUserDefaultsController,
-	/// which is backed by the group container -- not by `.standard`.
-	static let advancedEncodingsKey = "Server Properties Window Sheet -> Include Advanced Encodings"
-
 	func populateEncodings() {
 		primaryEncodingButton.removeAllItems()
 		fallbackEncodingButton.removeAllItems()
@@ -63,7 +59,7 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		addEncodingItem(titled: utf8Title)
 		let favored = ["Unicode", "Western", "Central European"]
 		populateEncodingPopup(names, preferredEncodings: favored, ignoreFavored: false)
-		if TextualUserDefaults.shared().bool(forKey: Self.advancedEncodingsKey) {
+		if Preferences.Internals.includeAdvancedEncodings.value {
 			populateEncodingPopup(names, preferredEncodings: favored, ignoreFavored: true)
 		}
 	}

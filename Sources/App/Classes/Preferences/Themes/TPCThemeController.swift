@@ -610,7 +610,10 @@ public final class ThemeController: NSObject {
 			return
 		}
 
-		let suppressionKey = "incompatible_theme_dialog_\((cachedThemeName as NSString).hash)"
+		// Keyed by the style name. `NSString.hash` is not a documented stable
+		// identity across releases, so a change to it silently resurrected the
+		// alert and orphaned the key the user had already suppressed.
+		let suppressionKey = "incompatible_theme_dialog_\(cachedThemeName)"
 		_ = TDCAlert.alert(
 			withMessage: PromptStrings.Theme.incompatibleBody,
 			title: PromptStrings.Theme.incompatibleTitle(name: name),
@@ -633,7 +636,7 @@ public final class ThemeController: NSObject {
 			return
 		}
 
-		let suppressionKey = "theme_appearance_dialog_\((cachedThemeName as NSString).hash)"
+		let suppressionKey = "theme_appearance_dialog_\(cachedThemeName)"
 		_ = TDCAlert.alert(
 			withMessage: PromptStrings.Theme.wantsDarkAppearanceBody,
 			title: PromptStrings.Theme.wantsDarkAppearanceTitle(name: name),
