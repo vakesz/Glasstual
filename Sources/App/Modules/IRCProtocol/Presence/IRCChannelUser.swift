@@ -17,21 +17,22 @@ import GlasstualPluginKit
 import Synchronization
 
 @objc(IRCChannelUser)
-/* ISOLATION-EXCEPTION: A member is an `NSCoding`/`NSCopying` model whose base
- class is nonisolated, and the renderer collects members off the main actor
- while it marks up nicknames. Its one mutable field is behind `userLock`. */
-open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable {
+/* ISOLATION-EXCEPTION: the renderer collects members off the main actor while it
+ marks up nicknames. The field that changes under it is behind `userLock`. */
+public final nonisolated class ChannelUser: NSObject, @unchecked Sendable {
 	private let userLock = NSLock()
-	private var userStorage: User?
+	private var userStorage: User
 
-	fileprivate var modesStorage = ChannelModeSymbolSet()
+	/// Editable through `duplicate()`; the member list replaces stored members
+	/// rather than editing them in place.
+	public internal(set) var modes = ChannelModeSymbolSet()
 	private var incomingWeightStorage = 0.0
 	private var outgoingWeightStorage = 0.0
 	private var lastWeightFade = CFAbsoluteTimeGetCurrent()
 	private var creationTimeStorage = Date().timeIntervalSince1970
 
 	@objc public var user: User {
-		userLock.withLock { userStorage! }
+		userLock.withLock { userStorage }
 	}
 
 	private var client: IRCClient? {
@@ -45,12 +46,8 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 		client?.userPrefixes.withLock { $0 } ?? IRCUserPrefixTable()
 	}
 
-	open var modes: ChannelModeSymbolSet {
-		modesStorage
-	}
-
 	@objc public var mark: String {
-		guard let highest = modesStorage.highest else {
+		guard let highest = modes.highest else {
 			return ""
 		}
 
@@ -58,13 +55,13 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 	}
 
 	public var rank: UserRank {
-		rank(forModeSymbol: modesStorage.highest.map { String($0.character) })
+		rank(forModeSymbol: modes.highest.map { String($0.character) })
 	}
 
 	public var ranks: UserRank {
 		var result: UserRank = []
 
-		for mode in modesStorage {
+		for mode in modes {
 			let rank = rank(forModeSymbol: String(mode.character))
 			if rank != .none {
 				result.insert(rank)
@@ -117,22 +114,28 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 		creationTimeStorage
 	}
 
-	@available(*, unavailable)
-	override public init() {
-		fatalError("init() is unavailable; use init(user:)")
-	}
-
-	@objc(initWithUser:)
 	public init(user: User) {
 		userStorage = user
 		super.init()
 	}
 
-	public required init?(coder _: NSCoder) {
-		nil
+	private init(copying other: ChannelUser) {
+		userStorage = other.user
+		modes = other.modes
+		creationTimeStorage = other.creationTimeStorage
+		incomingWeightStorage = other.incomingWeightStorage
+		outgoingWeightStorage = other.outgoingWeightStorage
+		lastWeightFade = other.lastWeightFade
+
+		super.init()
 	}
 
-	@objc(changeUserToUser:)
+	/// An editable copy. Membership changes replace a stored member with a
+	/// duplicate rather than editing the one the list already holds.
+	public func duplicate() -> ChannelUser {
+		ChannelUser(copying: self)
+	}
+
 	public func changeUser(to user: User) {
 		userLock.withLock {
 			userStorage = user
@@ -140,11 +143,11 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 	}
 
 	public func userModesContains(_ mode: ChannelModeSymbol) -> Bool {
-		modesStorage.contains(mode)
+		modes.contains(mode)
 	}
 
 	private var channelRank: UInt {
-		guard let highest = modesStorage.highest else {
+		guard let highest = modes.highest else {
 			return 0
 		}
 
@@ -264,7 +267,7 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 		return localNickname.compare(remoteNickname)
 	}
 
-	@objc public class var channelRankComparator: Comparator {
+	@objc public static var channelRankComparator: Comparator {
 		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
 
 		return { first, second in
@@ -285,7 +288,7 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 			return false
 		}
 
-		return self === other || user === other.user && modesStorage == other.modesStorage
+		return self === other || user === other.user && modes == other.modes
 	}
 
 	/** `isEqual` compares values, so `hash` has to as well: inheriting the identity
@@ -293,63 +296,17 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 	override public var hash: Int {
 		var hasher = Hasher()
 		hasher.combine(ObjectIdentifier(user))
-		hasher.combine(modesStorage)
+		hasher.combine(modes)
 		return hasher.finalize()
 	}
 
-	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
-		populateCopy(newObject)
-	}
-
-	@objc(populateDuringUniqueCopy:mutableCopy:)
-	override public func populateDuringUniqueCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
-		populateCopy(newObject)
-	}
-
-	private func populateCopy(_ newObject: PortablePropertyObject) {
-		guard let object = newObject as? ChannelUser else {
-			return
-		}
-
-		object.userStorage = user
-		object.modesStorage = modesStorage
-		object.creationTimeStorage = creationTimeStorage
-		object.incomingWeightStorage = incomingWeightStorage
-		object.outgoingWeightStorage = outgoingWeightStorage
-		object.lastWeightFade = lastWeightFade
-	}
-
-	override public var mutableClass: PortablePropertyObject {
-		unsafeBitCast(ChannelUserMutable.self, to: PortablePropertyObject.self)
-	}
-
-	@objc(associateWithChannel:)
 	@MainActor
 	public func associate(with channel: IRCChannel) {
 		user.associate(self, with: channel)
 	}
 
-	@objc(disassociateWithChannel:)
 	@MainActor
 	public func disassociate(with channel: IRCChannel) {
 		user.disassociateUser(with: channel)
-	}
-}
-
-/// ISOLATION-EXCEPTION: as `ChannelUser`, whose storage it shares.
-@objc(IRCChannelUserMutable)
-public final nonisolated class ChannelUserMutable: ChannelUser, @unchecked Sendable {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyObject {
-		unsafeBitCast(ChannelUser.self, to: PortablePropertyObject.self)
-	}
-
-	override public var modes: ChannelModeSymbolSet {
-		get { modesStorage }
-		set { modesStorage = newValue }
 	}
 }

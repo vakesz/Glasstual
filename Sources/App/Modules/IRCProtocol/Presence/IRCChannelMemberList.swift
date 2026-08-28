@@ -205,9 +205,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	}
 
 	@objc(addMember:checkForDuplicates:)
-	public func addMember(_ proposedMember: ChannelUser, checkForDuplicates: Bool) {
-		let member = immutableMember(proposedMember)
-
+	public func addMember(_ member: ChannelUser, checkForDuplicates: Bool) {
 		guard let channel else {
 			return
 		}
@@ -257,17 +255,8 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	}
 
 	@objc(resortMember:)
-	public func resortMember(_ proposedMember: ChannelUser) {
-		let member = immutableMember(proposedMember)
+	public func resortMember(_ member: ChannelUser) {
 		replaceMember(member, with: member, resort: true)
-	}
-
-	private func immutableMember(_ proposedMember: ChannelUser) -> ChannelUser {
-		guard proposedMember is ChannelUserMutable else { return proposedMember }
-		guard let member = proposedMember.copy() as? ChannelUser else {
-			preconditionFailure("ChannelUserMutable copies must use ChannelUser")
-		}
-		return member
 	}
 
 	private func performReplacement(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool) {
@@ -327,12 +316,10 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	@objc(replaceMember:withMember:resort:replaceInAllChannels:)
 	public func replaceMember(
 		_ oldMember: ChannelUser,
-		with proposedMember: ChannelUser,
+		with newMember: ChannelUser,
 		resort: Bool,
 		replaceInAllChannels: Bool
 	) {
-		let newMember = immutableMember(proposedMember)
-
 		performReplacement(oldMember, with: newMember, resort: resort)
 
 		guard replaceInAllChannels else {
@@ -349,14 +336,12 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	}
 
 	public func changeMember(_ nickname: String, mode: ChannelModeSymbol, value: Bool) {
-		guard let client,
-		      let member = findMember(nickname),
-		      let mutableMember = member.mutableCopy() as? ChannelUserMutable
-		else {
+		guard let client, let member = findMember(nickname) else {
 			return
 		}
 
-		var modes = mutableMember.modes
+		let editedMember = member.duplicate()
+		var modes = editedMember.modes
 
 		if value {
 			guard modes.contains(mode) == false else {
@@ -373,7 +358,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			modes.remove(mode)
 		}
 
-		mutableMember.modes = modes
+		editedMember.modes = modes
 
 		var replaceInAllChannels = false
 		if value, mode == ChannelModeSymbol("Y"), member.user.isIRCop == false {
@@ -385,7 +370,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 		replaceMember(
 			member,
-			with: mutableMember,
+			with: editedMember,
 			resort: true,
 			replaceInAllChannels: replaceInAllChannels
 		)

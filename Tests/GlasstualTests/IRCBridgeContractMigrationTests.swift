@@ -94,8 +94,8 @@ final class IRCBridgeContractMigrationTests: XCTestCase {
 		named nickname: String,
 		modes: ChannelModeSymbolSet,
 		on client: IRCClient
-	) -> ChannelUserMutable {
-		let member = ChannelUserMutable(user: User(nickname: nickname, on: client))
+	) -> ChannelUser {
+		let member = ChannelUser(user: User(nickname: nickname, on: client))
 		member.modes = modes
 		return member
 	}

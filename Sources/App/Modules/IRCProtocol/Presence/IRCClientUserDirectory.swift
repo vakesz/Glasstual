@@ -60,16 +60,14 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(mutableCopyOfUserWithNickname:)
-	internal func mutableCopyOfUser(withNickname nickname: String) -> UserMutable {
+	/// An editable stand-in for `nickname`: a duplicate of the stored user, or a
+	/// fresh one when the directory has never seen the nickname.
+	internal func draftUser(withNickname nickname: String) -> User {
 		guard let user = findUser(nickname) else {
-			return UserMutable(nickname: nickname, on: self)
+			return User(nickname: nickname, on: self)
 		}
 
-		guard let mutableUser = user.mutableCopy() as? UserMutable else {
-			preconditionFailure("IRCUser mutable copies must use IRCUserMutable")
-		}
-		return mutableUser
+		return user.duplicate()
 	}
 
 	@objc var numberOfUsers: UInt {
@@ -87,19 +85,9 @@ public extension IRCClient {
 
 	@objc(addUserAndReturn:)
 	internal func addAndReturn(_ user: User) -> User {
-		let storedUser: User
-		if user is UserMutable {
-			guard let immutableUser = user.copy() as? User else {
-				preconditionFailure("IRCUserMutable copies must use IRCUser")
-			}
-			storedUser = immutableUser
-		} else {
-			storedUser = user
-		}
-
-		usersByNickname[casefoldNickname(storedUser.nickname)] = storedUser
-		storedUser.becamePrimaryUser()
-		return storedUser
+		usersByNickname[casefoldNickname(user.nickname)] = user
+		user.becamePrimaryUser()
+		return user
 	}
 
 	@objc(findUserOrCreate:)
@@ -142,21 +130,17 @@ public extension IRCClient {
 		rename(user, to: newNickname)
 	}
 
-	@objc(modifyUser:withBlock:)
-	internal func modify(_ user: User, block: (UserMutable) -> Void) {
-		guard let mutableUser = user.mutableCopy() as? UserMutable else {
-			preconditionFailure("IRCUser mutable copies must use IRCUserMutable")
-		}
+	internal func modify(_ user: User, block: (User) -> Void) {
+		let editedUser = user.duplicate()
 
-		block(mutableUser)
-		if user.nickname != mutableUser.nickname {
+		block(editedUser)
+		if user.nickname != editedUser.nickname {
 			remove(user)
 		}
-		add(mutableUser)
+		add(editedUser)
 	}
 
-	@objc(modifyUserUserWithNickname:withBlock:)
-	internal func modifyUser(withNickname nickname: String, block: (UserMutable) -> Void) {
+	internal func modifyUser(withNickname nickname: String, block: (User) -> Void) {
 		guard let user = findUser(nickname) else { return }
 		modify(user, block: block)
 	}
