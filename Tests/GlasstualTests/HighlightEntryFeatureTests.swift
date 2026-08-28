@@ -111,10 +111,7 @@ final class HighlightEntryFeatureTests: XCTestCase {
 
 	func testAdapterHostsSwiftUIAndUsesTypedDelegateCallbacks() throws {
 		let source = HighlightMatchCondition(uniqueIdentifier: "highlight-a", matchKeyword: "ping")
-		let channel = ChannelConfig(dictionary: [
-			"channelName": "#swift",
-			"uniqueIdentifier": "channel-a",
-		])
+		let channel = ChannelConfig(uniqueIdentifier: "channel-a", channelName: "#swift")
 		let adapter = HighlightEntrySheet(config: source, channels: [channel])
 		let delegate = HighlightEntryDelegateSpy()
 

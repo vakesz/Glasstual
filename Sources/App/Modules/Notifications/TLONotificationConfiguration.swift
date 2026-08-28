@@ -151,38 +151,38 @@ public final class ChannelNotificationConfiguration: NotificationConfiguration {
 
 	override public var alertSound: String? {
 		get { config?.sound(forEvent: eventType) }
-		set { config?.setSound(newValue, forEvent: eventType) }
+		set { sheet?.config.setSound(newValue, forEvent: eventType) }
 	}
 
 	override public var pushNotification: NSControl.StateValue {
 		get { config?.notificationEnabled(forEvent: eventType) ?? .mixed }
-		set { config?.setNotificationEnabled(newValue, forEvent: eventType) }
+		set { sheet?.config.setNotificationEnabled(newValue, forEvent: eventType) }
 	}
 
 	override public var speakEvent: NSControl.StateValue {
 		get { config?.speakEvent(eventType) ?? .mixed }
-		set { config?.setEventIsSpoken(newValue, forEvent: eventType) }
+		set { sheet?.config.setEventIsSpoken(newValue, forEvent: eventType) }
 	}
 
 	override public var disabledWhileAway: NSControl.StateValue {
 		get { config?.disabledWhileAway(forEvent: eventType) ?? .mixed }
-		set { config?.setDisabledWhileAway(newValue, forEvent: eventType) }
+		set { sheet?.config.setDisabledWhileAway(newValue, forEvent: eventType) }
 	}
 
 	override public var bounceDockIcon: NSControl.StateValue {
 		get { config?.bounceDockIcon(forEvent: eventType) ?? .mixed }
-		set { config?.setBounceDockIcon(newValue, forEvent: eventType) }
+		set { sheet?.config.setBounceDockIcon(newValue, forEvent: eventType) }
 	}
 
 	override public var bounceDockIconRepeatedly: NSControl.StateValue {
 		get { config?.bounceDockIconRepeatedly(forEvent: eventType) ?? .mixed }
-		set { config?.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
+		set { sheet?.config.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
 	}
 
 	/// A nil config (the sheet is gone) reads back as `.mixed`: the neutral
 	/// value the checkbox already understands, and the default for a channel
 	/// that carries no override of its own.
-	private var config: MutableChannelConfig? {
+	private var config: ChannelConfig? {
 		sheet?.config
 	}
 }

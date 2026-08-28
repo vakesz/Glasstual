@@ -473,12 +473,10 @@ public final class World: NSObject {
 		return client
 	}
 
-	@objc(createChannelWithConfig:onClient:)
 	public func createChannel(with config: ChannelConfig, on client: IRCClient) -> IRCChannel {
 		createChannel(with: config, on: client, add: true, adjust: true, reload: true)
 	}
 
-	@objc(createChannelWithConfig:onClient:add:adjust:reload:)
 	public func createChannel(
 		with config: ChannelConfig,
 		on client: IRCClient,
@@ -519,9 +517,7 @@ public final class World: NSObject {
 	) -> IRCChannel {
 		precondition(type == .privateMessage || type == .utility || type == .directChat)
 
-		let config = MutableChannelConfig()
-		config.channelName = nickname
-		config.type = type
+		let config = ChannelConfig(channelName: nickname, type: type)
 
 		let channel = createChannel(with: config, on: client, add: true, adjust: true, reload: true)
 		if client.isLoggedIn, channel.isPrivateMessage {

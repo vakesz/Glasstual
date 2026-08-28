@@ -69,7 +69,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		category: "Termination"
 	)
 
-	@objc public private(set) var config: ChannelConfig {
+	public private(set) var config: ChannelConfig {
 		didSet { refreshDescription() }
 	}
 
@@ -130,27 +130,19 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		fatalError("Use init(config:)")
 	}
 
-	@objc(initWithConfigDictionary:)
-	public convenience init(configDictionary: [String: Any]) {
-		self.init(config: ChannelConfig(dictionary: configDictionary))
-	}
-
-	@objc(initWithConfig:)
 	public init(config: ChannelConfig) {
 		self.config = config
 
 		super.init()
 
 		refreshDescription()
-		config.writeSecretKeyToKeychain()
+		self.config.writeSecretKeyToKeychain()
 	}
 
-	@objc(updateConfig:)
 	public func updateConfig(_ config: ChannelConfig) {
 		updateConfig(config, fireChangedNotification: true, updateStoredChannelList: true)
 	}
 
-	@objc(updateConfig:fireChangedNotification:)
 	public func updateConfig(_ config: ChannelConfig, fireChangedNotification: Bool) {
 		updateConfig(
 			config,
@@ -159,13 +151,12 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		)
 	}
 
-	@objc(updateConfig:fireChangedNotification:updateStoredChannelList:)
 	public func updateConfig(
 		_ config: ChannelConfig,
 		fireChangedNotification: Bool,
 		updateStoredChannelList: Bool
 	) {
-		if config.isEqual(self.config) {
+		if config == self.config {
 			return
 		}
 
@@ -178,7 +169,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 
 		self.config = config
-		config.writeSecretKeyToKeychain()
+		self.config.writeSecretKeyToKeychain()
 
 		if updateStoredChannelList {
 			associatedClient?.updateStoredChannelList()
@@ -193,7 +184,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	@objc public var configurationDictionary: [String: Any] {
-		config.dictionaryValue
+		PropertyListModel.encode(config)
 	}
 
 	@objc(copyWithZone:)
@@ -231,12 +222,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 				return
 			}
 
-			guard let mutableConfig = config.mutableCopy() as? MutableChannelConfig else {
-				return
-			}
-
-			mutableConfig.channelName = newValue
-			config = mutableConfig
+			config.channelName = newValue
 
 			// A rename changes what the on-disk channel list and every
 			// name-keyed lookup resolve to, so persist it and tell observers
@@ -261,12 +247,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 				return
 			}
 
-			guard let mutableConfig = config.mutableCopy() as? MutableChannelConfig else {
-				return
-			}
-
-			mutableConfig.autoJoin = newValue
-			config = mutableConfig
+			config.autoJoin = newValue
 		}
 	}
 

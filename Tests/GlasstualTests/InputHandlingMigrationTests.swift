@@ -177,7 +177,7 @@ class InputHandlingMigrationTests: XCTestCase {
 
 		let client = GLTTestClient()
 		let member = GLTTestClient.testChannelUser(nickname: "Alice", on: client)
-		let channel: GLTCompletionChannel! = GLTCompletionChannel(configDictionary: ["channelName": "#chat"])
+		let channel: GLTCompletionChannel! = GLTCompletionChannel(config: ChannelConfig(channelName: "#chat"))
 
 		channel.testMembers = [member]
 

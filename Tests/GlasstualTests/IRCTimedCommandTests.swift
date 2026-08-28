@@ -46,7 +46,7 @@ final class IRCTimedCommandTests: XCTestCase {
 	@objc
 	func testInitializationCapturesCommandContextAndUniqueIdentifiers() {
 		let client = GLTTestClient()
-		let channel = Channel(configDictionary: ["channelName": "#chat"])
+		let channel = Channel(config: ChannelConfig(channelName: "#chat"))
 
 		let first = TimedCommand(command: "WHO #chat", onClient: client, inChannel: channel)
 		let second = TimedCommand(command: "PING", onClient: client)
