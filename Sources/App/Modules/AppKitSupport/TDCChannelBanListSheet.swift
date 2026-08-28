@@ -109,13 +109,13 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 	}
 
 	@objc public func clear() {
-		willChangeValue(forKey: "entryCount")
-		willChangeValue(forKey: "entryCountDescription")
+		willChangeValue(forKey: #keyPath(entryCount))
+		willChangeValue(forKey: #keyPath(entryCountDescription))
 
 		entryTableController.content = nil
 
-		didChangeValue(forKey: "entryCountDescription")
-		didChangeValue(forKey: "entryCount")
+		didChangeValue(forKey: #keyPath(entryCountDescription))
+		didChangeValue(forKey: #keyPath(entryCount))
 	}
 
 	@objc(addEntry:setBy:creationDate:)
@@ -136,13 +136,13 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 		newEntry.entryAuthor = author!
 		newEntry.entryCreationDate = entryCreationDate
 
-		willChangeValue(forKey: "entryCount")
-		willChangeValue(forKey: "entryCountDescription")
+		willChangeValue(forKey: #keyPath(entryCount))
+		willChangeValue(forKey: #keyPath(entryCountDescription))
 
 		entryTableController.addObject(newEntry)
 
-		didChangeValue(forKey: "entryCountDescription")
-		didChangeValue(forKey: "entryCount")
+		didChangeValue(forKey: #keyPath(entryCountDescription))
+		didChangeValue(forKey: #keyPath(entryCount))
 	}
 
 	@objc public dynamic var entryCount: NSNumber {

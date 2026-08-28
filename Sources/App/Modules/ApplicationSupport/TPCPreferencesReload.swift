@@ -309,7 +309,7 @@ public extension TextualPreferences {
 
 		if reloadAction.contains(.scrollbackVisibleLimit) {
 			for client in appController.world.clientList {
-				(client.viewController as AnyObject as? LogController)?.changeScrollbackLimit()
+				client.viewController?.changeScrollbackLimit()
 
 				for channel in client.channelList {
 					channel.viewController.changeScrollbackLimit()

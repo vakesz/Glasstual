@@ -20,7 +20,7 @@ private let unreadBadgeHeight: CGFloat = 16.0
 private let unreadBadgeTextPadding: CGFloat = 7.0
 
 private func nativeChannel(from item: IRCTreeItem?) -> IRCChannel? {
-	(item as AnyObject?) as? IRCChannel
+	item as? IRCChannel
 }
 
 private final class ServerListCellDrawingContext: NSObject {

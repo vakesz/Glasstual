@@ -102,11 +102,7 @@ public extension MenuActionCoordinator {
 
 	@objc(channelSpotlightDidSelect:channel:)
 	func channelSpotlightDidSelect(_: ChannelSpotlightController, channel: IRCChannel) {
-		guard let treeItem = (channel as AnyObject) as? IRCTreeItem else {
-			assertionFailure("IRCChannel must bridge to its legacy tree-item interface")
-			return
-		}
-		mainWindow.select(treeItem)
+		mainWindow.select(channel)
 	}
 
 	@objc(serverNicknameDidAccept:nickname:)

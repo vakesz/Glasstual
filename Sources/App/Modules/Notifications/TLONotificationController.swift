@@ -563,66 +563,71 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	@objc(speakEvent:inChannel:)
 	public func speakEvent(_ event: TXNotificationType, in channel: IRCChannel?) -> Bool {
-		if let channel {
-			let channelValue = channel.config.speakEvent(event)
-
-			if channelValue != .mixed {
-				return channelValue == .on
-			}
-		}
-
-		return TextualPreferences.speak(event)
+		resolve(
+			event,
+			in: channel,
+			channelValue: { $0.speakEvent($1) },
+			globalValue: TextualPreferences.speak
+		)
 	}
 
 	@objc(notificationEnabledForEvent:inChannel:)
 	public func notificationEnabled(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
-		if let channel {
-			let channelValue = channel.config.notificationEnabled(forEvent: event)
-
-			if channelValue != .mixed {
-				return channelValue == .on
-			}
-		}
-
-		return TextualPreferences.notificationEnabled(for: event)
+		resolve(
+			event,
+			in: channel,
+			channelValue: { $0.notificationEnabled(forEvent: $1) },
+			globalValue: TextualPreferences.notificationEnabled(for:)
+		)
 	}
 
 	@objc(disabledWhileAwayForEvent:inChannel:)
 	public func disabledWhileAway(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
-		if let channel {
-			let channelValue = channel.config.disabledWhileAway(forEvent: event)
-
-			if channelValue != .mixed {
-				return channelValue == .on
-			}
-		}
-
-		return TextualPreferences.disabledWhileAway(for: event)
+		resolve(
+			event,
+			in: channel,
+			channelValue: { $0.disabledWhileAway(forEvent: $1) },
+			globalValue: TextualPreferences.disabledWhileAway(for:)
+		)
 	}
 
 	@objc(bounceDockIconForEvent:inChannel:)
 	public func bounceDockIcon(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
-		if let channel {
-			let channelValue = channel.config.bounceDockIcon(forEvent: event)
-
-			if channelValue != .mixed {
-				return channelValue == .on
-			}
-		}
-
-		return TextualPreferences.bounceDockIcon(for: event)
+		resolve(
+			event,
+			in: channel,
+			channelValue: { $0.bounceDockIcon(forEvent: $1) },
+			globalValue: TextualPreferences.bounceDockIcon(for:)
+		)
 	}
 
 	@objc(bounceDockIconRepeatedlyForEvent:inChannel:)
 	public func bounceDockIconRepeatedly(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
-		if let channel {
-			let channelValue = channel.config.bounceDockIconRepeatedly(forEvent: event)
+		resolve(
+			event,
+			in: channel,
+			channelValue: { $0.bounceDockIconRepeatedly(forEvent: $1) },
+			globalValue: TextualPreferences.bounceDockIconRepeatedly(for:)
+		)
+	}
 
-			if channelValue != .mixed {
-				return channelValue == .on
+	/// A channel's override wins when it has one; `.mixed` means "no override",
+	/// so the application-wide preference answers. Five settings shared this
+	/// shape as five byte-identical bodies.
+	private func resolve(
+		_ event: TXNotificationType,
+		in channel: IRCChannel?,
+		channelValue: (ChannelConfig, TXNotificationType) -> NSControl.StateValue,
+		globalValue: (TXNotificationType) -> Bool
+	) -> Bool {
+		if let channel {
+			let override = channelValue(channel.config, event)
+
+			if override != .mixed {
+				return override == .on
 			}
 		}
 
-		return TextualPreferences.bounceDockIconRepeatedly(for: event)
+		return globalValue(event)
 	}
 }

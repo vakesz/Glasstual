@@ -115,7 +115,7 @@ func legacyTreeItem(_ item: TreeItem) -> IRCTreeItem {
 
 @inline(__always)
 func nativeChannel(_ item: IRCTreeItem?) -> IRCChannel? {
-	(item as AnyObject?) as? IRCChannel
+	item as? IRCChannel
 }
 
 @MainActor

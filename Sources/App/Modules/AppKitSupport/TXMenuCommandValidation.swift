@@ -47,7 +47,7 @@ extension MenuActionCoordinator {
 			return controller
 		}
 
-		return (selectedClient?.viewController as AnyObject?) as? LogController
+		return selectedClient?.viewController
 	}
 
 	private var selectedBackingView: LogView? {
