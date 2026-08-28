@@ -184,7 +184,11 @@ public final nonisolated class Message: NSObject {
 				let dateObject: Date? = if dateString.unicodeScalars
 					.allSatisfy(CharacterSet.decimalDigits.union(CharacterSet(charactersIn: ".")).contains)
 				{
-					Date(timeIntervalSince1970: (dateString as NSString).doubleValue)
+					/* An unparsable string reads as zero through `doubleValue`, so an
+					 empty or punctuation-only `time` tag used to backdate the message to
+					 1970 and mark it historic. IRCv3 server-time gives no meaning to such
+					 a value, so it has to leave the arrival time alone. */
+					Double(dateString).map(Date.init(timeIntervalSince1970:))
 				} else {
 					sharedISOStandardDateFormatter().date(from: dateString)
 				}

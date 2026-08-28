@@ -825,6 +825,13 @@ targets:
       # separate process the test host never starts. Compiling them into the
       # test bundle is the only way to cover their URL matching.
       - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes
+      # Specification corpora the IRCSpec suites read back at runtime. Only
+      # the converted JSON ships; the YAML originals and the conversion
+      # script stay out of the bundle.
+      - path: Tests/Corpora/IRCSpec/parser-tests
+        buildPhase: resources
+        includes:
+          - "*.json"
     dependencies:
       - target: Glasstual
       - target: CocoaExtensions
