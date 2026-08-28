@@ -188,7 +188,7 @@ public extension IRCClient {
 		}
 
 		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Performing disconnect")
-		disconnectCallback = { [weak self] in
+		addDisconnectCallback { [weak self] in
 			self?.prepareForApplicationTerminationPostflight()
 		}
 		quit()

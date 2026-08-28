@@ -585,7 +585,7 @@ public final class World: NSObject {
 	@objc(destroyClient:)
 	public func destroyClient(_ client: IRCClient) {
 		if client.isConnecting || client.isConnected {
-			client.disconnectCallback = { [weak self, weak client] in
+			client.addDisconnectCallback { [weak self, weak client] in
 				guard let client else {
 					return
 				}

@@ -273,7 +273,7 @@ extension IRCClient {
 			performedSTSUpgrade = true
 			printDebugInformation(toConsole: IRCTransportSecurityStrings.offeredPolicy(port: upgradePort))
 
-			disconnectCallback = { [weak self] in
+			addDisconnectCallback { [weak self] in
 				guard let self else { return }
 				temporaryServerAddressOverride = host
 				temporaryServerPortOverride = upgradePort
