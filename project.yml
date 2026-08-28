@@ -702,6 +702,9 @@ targets:
         type: file
         buildPhase: resources
       - path: Sources/App/Resources/Language Files
+        excludes:
+          # Notes for whoever edits the catalogues; not a shipped resource.
+          - LocalizationCatalogNotices.md
       - path: Sources/App/Resources/Property Lists
         excludes:
           - Preferences
