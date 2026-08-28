@@ -96,6 +96,9 @@ public final class ValidatedComboBox: NSComboBox {
 		cachedValidValue
 	}
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
@@ -125,10 +128,10 @@ public final class ValidatedComboBox: NSComboBox {
 		}
 	}
 
-	deinit {
-		MainActor.assumeIsolated {
-			closeValidationErrorPopover()
-		}
+	/** Isolated so the popover teardown runs on the main actor whichever thread
+	 drops the last reference. */
+	isolated deinit {
+		closeValidationErrorPopover()
 		NotificationCenter.default.removeObserver(self)
 	}
 

@@ -383,10 +383,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 	private func updatePredicate() {
 		if TextualPreferences.channelNavigationIsServerSpecific() {
-			let applicationController: ApplicationController = AppController.shared
-			let clientId = MainActor.assumeIsolated {
-				applicationController.mainWindow.selectedClient?.uniqueIdentifier ?? ""
-			}
+			let clientId = AppController.shared.mainWindow.selectedClient?.uniqueIdentifier ?? ""
 
 			searchResultsController.filterPredicate = NSPredicate(
 				format: "distance >= 0.5 && clientId LIKE[c] %@",

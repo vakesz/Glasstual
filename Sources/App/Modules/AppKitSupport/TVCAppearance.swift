@@ -265,26 +265,9 @@ open class ApplicationAppearance: ViewAppearance, TXAppearanceProperties {
 	}
 
 	@objc(initWithAppearanceAtURL:)
+	@MainActor
 	public init?(appearanceAt appearanceLocation: URL) {
-		nonisolated(unsafe) var capturedProperties: AppearancePropertyCollection?
-
-		if Thread.isMainThread {
-			MainActor.assumeIsolated {
-				capturedProperties = SharedApplication.sharedAppearance().properties
-			}
-		} else {
-			DispatchQueue.main.sync {
-				MainActor.assumeIsolated {
-					capturedProperties = SharedApplication.sharedAppearance().properties
-				}
-			}
-		}
-
-		guard let applicationProperties = capturedProperties else {
-			return nil
-		}
-
-		self.applicationProperties = applicationProperties
+		applicationProperties = SharedApplication.sharedAppearance().properties
 
 		super.init(appearanceNamed: applicationProperties.appearanceName, at: appearanceLocation)
 	}
