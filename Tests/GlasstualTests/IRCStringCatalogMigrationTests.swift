@@ -13,11 +13,15 @@ final class IRCStringCatalogMigrationTests: XCTestCase {
 		let catalog = try loadCatalog()
 		XCTAssertEqual(catalog.sourceLanguage, "en")
 		XCTAssertEqual(catalog.version, "1.0")
-		XCTAssertEqual(catalog.strings.count, 220)
+		// Strings added after the migration are allowed; the migrated set has
+		// to stay byte-for-byte identical, which the digest below pins.
+		let legacyKeys = catalog.strings.keys.filter { key in
+			catalog.strings[key]?.comment.contains("Migrated from legacy key \(key)") == true
+		}
+		XCTAssertEqual(legacyKeys.count, 220)
 
-		let canonicalValues = catalog.strings.keys.sorted().map { key in
+		let canonicalValues = legacyKeys.sorted().map { key in
 			let entry = catalog.strings[key]!
-			XCTAssertTrue(entry.comment.contains("Migrated from legacy key \(key)"), key)
 			XCTAssertEqual(entry.localizations["en"]?.stringUnit.state, "translated", key)
 
 			return key + "\u{1F}" + (entry.localizations["en"]?.stringUnit.value ?? "")
