@@ -157,7 +157,9 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	var nextLineDeliveryState: TVCLogLineDeliveryState = .none
 	var nextLineReplyToMessageIdentifier: String?
 	var logFile: FileLogger?
-	@objc public dynamic var logFileSessionCount: UInt = 0
+	/** Whether a logging session banner has been written and not yet closed. A line
+	 counter cannot express this: writing the banner is itself a write. */
+	@objc public dynamic var logFileSessionIsOpen = false
 	var chatHistoryPrependChannel: IRCChannel?
 	var chatHistoryPrependedLines: NSMutableArray?
 	var batchMessages: MessageBatchContainer!

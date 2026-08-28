@@ -225,6 +225,12 @@ public final class NicknameCompletionStatus: NSObject {
 		var noUserHadGreaterWeightThanOriginal = true
 		let sortedMembers: [ChannelUser]
 
+		/* Decay once, up front: doing it inside the comparator mutated the values the
+		 sort was ordering by. */
+		for member in members {
+			member.decayConversation()
+		}
+
 		if !searchPatternIsEmpty {
 			sortedMembers = members.sorted { $0.compare(usingWeights: $1) == .orderedAscending }
 			greatestWeightUser = sortedMembers.first
