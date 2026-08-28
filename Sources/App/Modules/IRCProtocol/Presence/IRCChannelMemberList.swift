@@ -476,22 +476,8 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return false
 		}
 
-		let applicationController = applicationController()
-		let channel: IRCChannel?
-
-		if Thread.isMainThread {
-			channel = MainActor.assumeIsolated {
-				(applicationController.world.findItem(withId: channelID) as AnyObject?) as? IRCChannel
-			}
-		} else {
-			nonisolated(unsafe) var resolvedChannel: IRCChannel?
-			performSynchronouslyOnMainQueue {
-				resolvedChannel = MainActor.assumeIsolated {
-					(applicationController.world.findItem(withId: channelID) as AnyObject?) as? IRCChannel
-				}
-			}
-			channel = resolvedChannel
-		}
+		let world = applicationController().world
+		let channel = (world?.findItem(withId: channelID) as AnyObject?) as? IRCChannel
 
 		guard let channel else {
 			return false

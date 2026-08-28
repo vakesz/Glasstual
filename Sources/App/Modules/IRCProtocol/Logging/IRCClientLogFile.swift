@@ -38,83 +38,47 @@
 
 import Foundation
 
-private enum IRCClientLogFileMainActorBridge {
-	static func sync(_ operation: @escaping @MainActor @Sendable () -> Void) {
-		if Thread.isMainThread {
-			MainActor.assumeIsolated(operation)
-		} else {
-			DispatchQueue.main.sync {
-				MainActor.assumeIsolated(operation)
-			}
-		}
-	}
-}
-
-private struct IRCLogLineReference: @unchecked Sendable {
-	let value: LogLine
-}
-
-private struct IRCLogChannelReference: @unchecked Sendable {
-	let value: IRCChannel?
-}
-
 public extension IRCClient {
 	@objc(reopenLogFileIfNeeded)
 	func reopenLogFileIfNeeded() {
-		IRCClientLogFileMainActorBridge.sync { [self] in
-			if TextualPreferences.logToDiskIsEnabled() {
-				logFile?.reopenIfNeeded()
-			} else {
-				closeClientLogFile()
-			}
+		if TextualPreferences.logToDiskIsEnabled() {
+			logFile?.reopenIfNeeded()
+		} else {
+			closeClientLogFile()
 		}
 	}
 
 	@objc(closeLogFile)
 	func closeLogFile() {
-		IRCClientLogFileMainActorBridge.sync { [self] in
-			closeClientLogFile()
-		}
+		closeClientLogFile()
 	}
 
 	@objc(writeToLogLineToLogFile:)
 	func writeToLogFile(_ logLine: LogLine) {
-		let lineReference = IRCLogLineReference(value: logLine)
-		IRCClientLogFileMainActorBridge.sync { [self, lineReference] in
-			writeClientLogLine(lineReference.value)
-		}
+		writeClientLogLine(logLine)
 	}
 
 	@objc(logFileRecordSessionChanged:inChannel:)
 	func logFileRecordSessionChanged(_ startsSession: Bool, in channel: IRCChannel?) {
-		let channelReference = IRCLogChannelReference(value: channel)
-		IRCClientLogFileMainActorBridge.sync { [self, channelReference] in
-			recordLogSessionChange(startsSession, in: channelReference.value)
-		}
+		recordLogSessionChange(startsSession, in: channel)
 	}
 
 	@objc(endLoggingSessions)
 	func endLoggingSessions() {
-		IRCClientLogFileMainActorBridge.sync { [self] in
-			for channel in channelList where channel.isUtility == false {
-				channel.logFileWriteSessionEnd()
-			}
-			finishClientLogSession()
+		for channel in channelList where channel.isUtility == false {
+			channel.logFileWriteSessionEnd()
 		}
+		finishClientLogSession()
 	}
 
 	@objc(logFileWriteSessionBegin)
 	func logFileWriteSessionBegin() {
-		IRCClientLogFileMainActorBridge.sync { [self] in
-			beginClientLogSession()
-		}
+		beginClientLogSession()
 	}
 
 	@objc(logFileWriteSessionEnd)
 	func logFileWriteSessionEnd() {
-		IRCClientLogFileMainActorBridge.sync { [self] in
-			finishClientLogSession()
-		}
+		finishClientLogSession()
 	}
 
 	@MainActor

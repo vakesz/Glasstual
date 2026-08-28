@@ -84,32 +84,7 @@ enum IRCLinePresentationPolicy {
 	}
 }
 
-private enum IRCClientPrintMainActorBridge {
-	static func sync<Result: Sendable>(
-		_ operation: @escaping @MainActor @Sendable () -> Result
-	) -> Result {
-		if Thread.isMainThread {
-			return MainActor.assumeIsolated(operation)
-		}
-		return DispatchQueue.main.sync {
-			MainActor.assumeIsolated(operation)
-		}
-	}
-}
-
-private struct IRCPrintChannelReference: @unchecked Sendable {
-	let value: IRCChannel?
-}
-
-private struct IRCPrintCompletionReference: @unchecked Sendable {
-	let value: LogControllerPrintOperationCompletion?
-}
-
-private struct IRCLogLinePresentationReference: @unchecked Sendable {
-	let value: LogLine
-}
-
-struct IRCLinePrintRequest: @unchecked Sendable {
+struct IRCLinePrintRequest {
 	let messageBody: String
 	let nickname: String?
 	let channel: IRCChannel?
@@ -130,23 +105,13 @@ public extension IRCClient {
 
 	@objc(formatNickname:inChannel:withFormat:)
 	func formatNickname(_ nickname: String, in channel: IRCChannel?, withFormat format: String?) -> String {
-		let channelReference = IRCPrintChannelReference(value: channel)
-		return IRCClientPrintMainActorBridge.sync { [self, nickname, channelReference, format] in
-			formatNicknameOnMainActor(nickname, in: channelReference.value, format: format)
-		}
+		formatNicknameOnMainActor(nickname, in: channel, format: format)
 	}
 
 	@objc(printAndLog:completionBlock:)
 	func printAndLog(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?) {
-		let lineReference = IRCLogLinePresentationReference(value: logLine)
-		let completionReference = IRCPrintCompletionReference(value: completionBlock)
-		IRCClientPrintMainActorBridge.sync { [self, lineReference, completionReference] in
-			(viewController as AnyObject as? LogController)?.print(
-				lineReference.value,
-				completionBlock: completionReference.value
-			)
-			writeToLogFile(lineReference.value)
-		}
+		(viewController as AnyObject as? LogController)?.print(logLine, completionBlock: completionBlock)
+		writeToLogFile(logLine)
 	}
 
 	@objc(print:by:inChannel:asType:command:)
@@ -265,9 +230,7 @@ public extension IRCClient {
 				return
 			}
 		#endif
-		IRCClientPrintMainActorBridge.sync { [self, request] in
-			printOnMainActor(request)
-		}
+		printOnMainActor(request)
 	}
 }
 
@@ -377,9 +340,7 @@ public extension IRCClient {
 
 	@objc(printDebugInformation:asCommand:escapeMessage:)
 	func printDebugInformation(_ message: String, asCommand command: String, escapeMessage: Bool) {
-		let channel = IRCClientPrintMainActorBridge.sync { [self] in
-			IRCPrintChannelReference(value: NSObject.applicationController().mainWindow.selectedChannel(on: self))
-		}.value
+		let channel = NSObject.applicationController().mainWindow.selectedChannel(on: self)
 
 		printDebugInformation(
 			message,

@@ -78,23 +78,6 @@ final class LabeledDelivery: NSObject, @unchecked Sendable {
 	var timeoutWorkItem: DispatchWorkItem?
 }
 
-private enum LabeledResponseMainActorBridge {
-	static func sync<Result: Sendable>(_ operation: @escaping @MainActor @Sendable () -> Result) -> Result {
-		if Thread.isMainThread {
-			return MainActor.assumeIsolated(operation)
-		}
-		return DispatchQueue.main.sync { MainActor.assumeIsolated(operation) }
-	}
-}
-
-private struct LabeledResponseChannelReference: @unchecked Sendable {
-	let value: IRCChannel?
-}
-
-private struct LabeledResponseMessageReference: @unchecked Sendable {
-	let value: Message
-}
-
 public extension IRCClient {
 	@objc(labeledResponseTrackingEnabled)
 	func labeledResponseTrackingEnabled() -> Bool {
@@ -103,51 +86,42 @@ public extension IRCClient {
 
 	@objc(nextMessageLabel)
 	func nextMessageLabel() -> String {
-		LabeledResponseMainActorBridge.sync { [self] in
-			labelCounter += 1
-			return "g\(labelCounter)"
-		}
+		labelCounter += 1
+		return "g\(labelCounter)"
 	}
 
 	@objc(registerPendingDeliveryForChannel:)
 	func registerPendingDelivery(for channel: IRCChannel?) -> String? {
-		let channelReference = LabeledResponseChannelReference(value: channel)
-		return LabeledResponseMainActorBridge.sync { [self, channelReference] () -> String? in
-			guard labeledResponseTrackingEnabled() else { return nil }
-			let label = nextMessageLabel()
-			let delivery = LabeledDelivery()
-			delivery.label = label
-			delivery.channel = channelReference.value
-			delivery.state = .pending
+		guard labeledResponseTrackingEnabled() else { return nil }
+		let label = nextMessageLabel()
+		let delivery = LabeledDelivery()
+		delivery.label = label
+		delivery.channel = channel
+		delivery.state = .pending
 
-			let timeout = DispatchWorkItem { [weak self] in
-				self?.timeoutDelivery(withLabel: label)
-			}
-			delivery.timeoutWorkItem = timeout
-			pendingDeliveries[label] = delivery
-			DispatchQueue.main.asyncAfter(deadline: .now() + IRCLabeledResponsePolicy.timeoutInterval, execute: timeout)
-			return label
+		let timeout = DispatchWorkItem { [weak self] in
+			Task { @MainActor in self?.timeoutDelivery(withLabel: label) }
 		}
+		delivery.timeoutWorkItem = timeout
+		pendingDeliveries[label] = delivery
+		DispatchQueue.main.asyncAfter(deadline: .now() + IRCLabeledResponsePolicy.timeoutInterval, execute: timeout)
+		return label
 	}
 
 	@objc(attachLineNumber:toDeliveryWithLabel:)
 	func attachLineNumber(_ lineNumber: String, toDeliveryWithLabel label: String) {
-		LabeledResponseMainActorBridge.sync { [self] in
-			nativeDelivery(pendingDeliveries[label])?.lineNumber = lineNumber
-		}
+		nativeDelivery(pendingDeliveries[label])?.lineNumber = lineNumber
 	}
 
 	@objc(timeoutDeliveryWithLabel:)
 	func timeoutDelivery(withLabel label: String) {
-		LabeledResponseMainActorBridge.sync { [self] in
-			guard let delivery = nativeDelivery(pendingDeliveries[label]), !delivery.resolved else { return }
-			resolveDelivery(
-				withLabel: label,
-				state: .failed,
-				messageIdentifier: nil,
-				reason: IRCConnectionStrings.labeledResponseNotAcknowledged
-			)
-		}
+		guard let delivery = nativeDelivery(pendingDeliveries[label]), !delivery.resolved else { return }
+		resolveDelivery(
+			withLabel: label,
+			state: .failed,
+			messageIdentifier: nil,
+			reason: IRCConnectionStrings.labeledResponseNotAcknowledged
+		)
 	}
 
 	@objc(resolveDeliveryWithLabel:state:messageIdentifier:reason:)
@@ -157,45 +131,38 @@ public extension IRCClient {
 		messageIdentifier: String?,
 		reason: String?
 	) {
-		LabeledResponseMainActorBridge.sync { [self] in
-			guard let delivery = nativeDelivery(pendingDeliveries[label]), !delivery.resolved else { return }
-			delivery.resolved = true
-			delivery.state = state
-			delivery.timeoutWorkItem?.cancel()
-			delivery.timeoutWorkItem = nil
-			/* Without this the table grows by one entry per outgoing message for the
-			 whole session, and a server reusing a stale label would keep matching it. */
-			pendingDeliveries.removeObject(forKey: label)
-			guard let lineNumber = delivery.lineNumber else { return }
+		guard let delivery = nativeDelivery(pendingDeliveries[label]), !delivery.resolved else { return }
+		delivery.resolved = true
+		delivery.state = state
+		delivery.timeoutWorkItem?.cancel()
+		delivery.timeoutWorkItem = nil
+		/* Without this the table grows by one entry per outgoing message for the
+		 whole session, and a server reusing a stale label would keep matching it. */
+		pendingDeliveries.removeObject(forKey: label)
+		guard let lineNumber = delivery.lineNumber else { return }
 
-			let arguments: [Any] = [
-				lineNumber,
-				LogLine.string(for: state) ?? "",
-				messageIdentifier ?? NSNull(),
-				reason ?? NSNull(),
-			]
-			delivery.channel?.viewController?.evaluateFunction(
-				"_Glasstual.lineDeliveryStateChanged",
-				withArguments: arguments
-			)
-		}
+		let arguments: [Any] = [
+			lineNumber,
+			LogLine.string(for: state) ?? "",
+			messageIdentifier ?? NSNull(),
+			reason ?? NSNull(),
+		]
+		delivery.channel?.viewController?.evaluateFunction(
+			"_Glasstual.lineDeliveryStateChanged",
+			withArguments: arguments
+		)
 	}
 
 	@objc(resolveLabeledResponseForMessage:)
 	func resolveLabeledResponse(for message: Message) -> Bool {
-		let messageReference = LabeledResponseMessageReference(value: message)
-		return LabeledResponseMainActorBridge.sync { [self, messageReference] in
-			resolveLabeledResponseOnMainActor(messageReference.value)
-		}
+		resolveLabeledResponseOnMainActor(message)
 	}
 
 	/// The state of a delivery still awaiting a response. Resolved deliveries are
 	/// removed, so a resolved or unknown label reports `.none`.
 	@objc(deliveryStateForLabel:)
 	func deliveryState(forLabel label: String) -> TVCLogLineDeliveryState {
-		LabeledResponseMainActorBridge.sync { [self] in
-			nativeDelivery(pendingDeliveries[label])?.state ?? .none
-		}
+		nativeDelivery(pendingDeliveries[label])?.state ?? .none
 	}
 }
 

@@ -47,18 +47,7 @@ public extension IRCClient {
 		}
 
 		socket?.sendLine(line)
-		let length = UInt(line.count)
-		if Thread.isMainThread {
-			MainActor.assumeIsolated {
-				NSObject.applicationController().world?.noteMessageSent(length: length)
-			}
-		} else {
-			DispatchQueue.main.sync {
-				MainActor.assumeIsolated {
-					NSObject.applicationController().world?.noteMessageSent(length: length)
-				}
-			}
-		}
+		NSObject.applicationController().world?.noteMessageSent(length: UInt(line.count))
 	}
 
 	@objc(send:arguments:)

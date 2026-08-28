@@ -118,9 +118,7 @@ public extension IRCClient {
 			receivedAt: message.receivedAt,
 			message: message
 		)
-		let shouldPrint = MainActor.assumeIsolated {
-			context.dispatch()
-		}
+		let shouldPrint = context.dispatch()
 		if shouldPrint, let destination, collapseNetsplitMessage(message, in: destination) {
 			return false
 		}
