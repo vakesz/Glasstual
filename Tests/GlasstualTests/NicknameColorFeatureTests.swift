@@ -99,12 +99,15 @@ final class NicknameColorFeatureTests: XCTestCase {
 
 	func testAdapterPersistsSelectionAndPreservesDelegateCallbacks() throws {
 		let nickname = "nickname-color-feature-\(UUID().uuidString)"
+		// The generator looks overrides up by lowercased nickname, so that is
+		// the key the sheet has to have written under.
+		let overrideKey = nickname.lowercased()
 		let customColor = NSColor(calibratedRed: 0.15, green: 0.35, blue: 0.75, alpha: 0.9)
 		let delegate = NicknameColorDelegateSpy()
 
-		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(nil, forKey: nickname)
+		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(nil, forKey: overrideKey)
 		defer {
-			UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(nil, forKey: nickname)
+			UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(nil, forKey: overrideKey)
 		}
 
 		let adapter = NicknameColorSheet(nickname: nickname)
@@ -113,7 +116,7 @@ final class NicknameColorFeatureTests: XCTestCase {
 		adapter.ok(nil)
 
 		let persistedColor = try XCTUnwrap(
-			UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: nickname)
+			UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: overrideKey)
 		)
 		assertColorsEqual(persistedColor, customColor)
 		XCTAssertTrue(delegate.didAccept)
@@ -122,7 +125,7 @@ final class NicknameColorFeatureTests: XCTestCase {
 		defaultColorButton.state = .on
 		adapter.useDefaultColorToggled(defaultColorButton)
 		adapter.ok(nil)
-		XCTAssertNil(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: nickname))
+		XCTAssertNil(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: overrideKey))
 
 		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
 		XCTAssertTrue(delegate.didClose)
