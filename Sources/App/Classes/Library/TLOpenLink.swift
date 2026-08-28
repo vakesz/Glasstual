@@ -36,14 +36,24 @@
  *********************************************************************** */
 
 import AppKit
+import os
+
+private let openLinkLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "OpenLink"
+)
 
 @objc(TLOpenLink)
 public class OpenLink: NSObject {
 	@objc(open:inBackground:)
 	public static func open(url: URL, inBackground: Bool = TextualPreferences.openBrowserInBackground()) {
-		/* Links come from other people. Opening a file: URL would launch
-		 whatever is at that path with the user's privileges. */
-		if url.isFileURL {
+		/* Links come from other people. `NSWorkspace` launches whatever app has
+		 registered the scheme, so the same allowlist that decides what becomes
+		 clickable also decides what may be opened — callers (web view navigation
+		 policy included) are not trusted to have filtered already. */
+		guard let scheme = url.scheme, LinkParser.isPermittedScheme(scheme) else {
+			openLinkLogger.info("Refused to open URL with scheme '\(url.scheme ?? "(none)", privacy: .public)'")
+
 			return
 		}
 

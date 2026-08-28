@@ -63,9 +63,23 @@ public final class InlineContentHelpers: NSObject {
 		return task
 	}
 
+	/// Schemes a payload is allowed to fetch or render.
+	///
+	/// The value ends up in the `src` attribute of an element in the log view,
+	/// so anything outside HTTP is either useless or a way to reach a local
+	/// resource from a remote message.
+	public static let permittedSchemes: Set<String> = ["http", "https"]
+
 	@objc(URLWithString:)
 	public static func url(with address: String) -> URL? {
-		URL(string: address.hasPrefix("//") ? "https:\(address)" : address)
+		guard let url = URL(string: address.hasPrefix("//") ? "https:\(address)" : address),
+		      let scheme = url.scheme?.lowercased(),
+		      permittedSchemes.contains(scheme)
+		else {
+			return nil
+		}
+
+		return url
 	}
 
 	@objc
