@@ -428,6 +428,7 @@ targets:
       - path: Sources/Services/Inline Content Loader/Resources/Modules/InlineImageLiveResize.js
         buildPhase: resources
       - path: Sources/Shared/Application/ApplicationGroup.swift
+      - path: Sources/Shared/Preferences/PreferenceKey.swift
       - path: Sources/Shared/Preferences/TPCPreferences.swift
       - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
       - path: Sources/Shared/Services/InlineContentProtocols.swift

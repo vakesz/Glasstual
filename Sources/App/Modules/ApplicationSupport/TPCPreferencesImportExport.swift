@@ -136,8 +136,31 @@ public final class PreferencesImportExport: NSObject {
 		}
 	}
 
+	/** An imported plist is untrusted input: it can carry a string where an
+	 integer belongs, or a dictionary where a boolean does. The declaration for
+	 the key decides what the value has to be, coercing the representations that
+	 are genuinely the same value and rejecting the rest with a log line. A key
+	 the catalogue does not know is passed through, because its shape belongs to
+	 whichever subsystem wrote it. */
+	static func validatedValue(_ object: Any, forKey key: String) -> Any? {
+		guard let declaration = Preferences.key(named: key) else {
+			return object
+		}
+
+		guard let coerced = declaration.coerce(object) else {
+			importExportLogger.error("Import rejected a value of the wrong type for \(key, privacy: .public)")
+			return nil
+		}
+
+		return coerced
+	}
+
 	@objc(import:withKey:)
 	public static func importValue(_ object: Any, withKey key: String) {
+		guard let object = validatedValue(object, forKey: key) else {
+			return
+		}
+
 		if key == TPCPreferencesThemeNameDefaultsKey {
 			guard let value = object as? String else {
 				return
@@ -207,49 +230,54 @@ public final class PreferencesImportExport: NSObject {
 		exportedPreferencesDictionary(filterJunk, filterDefaults: filterJunk)
 	}
 
-	@objc(exportedPreferencesDictionary:filterDefaults:)
-	public static func exportedPreferencesDictionary(_ filterJunk: Bool, filterDefaults: Bool) -> [String: Any] {
-		var finalDictionary = TextualUserDefaults.shared().dictionaryRepresentation()
+	/** The exportable set is the values the user actually wrote — the persistent
+	 domains of the two stores the declarations name — rather than the whole
+	 search list, which is where the arguments and global domains used to leak in
+	 and have to be subtracted again by name. */
+	private static func writtenValues() -> [String: Any] {
+		let defaults = TextualUserDefaults.shared()
+		var written = defaults.persistentDomain(forName: defaults.suiteName) ?? [:]
 
-		var keysToStrip: [String] = []
-
-		let argumentsDomain = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
-		keysToStrip.append(contentsOf: argumentsDomain.keys)
-
-		if filterJunk {
-			let globalsDomain = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain) ?? [:]
-			keysToStrip.append(contentsOf: globalsDomain.keys)
+		if let bundleIdentifier = Bundle.main.bundleIdentifier,
+		   let standard = UserDefaults.standard.persistentDomain(forName: bundleIdentifier)
+		{
+			// The handful of declarations stored in the application's own domain
+			// rather than the container are exported alongside the rest.
+			for (key, value) in standard where Preferences.storage(for: key) == .standard {
+				written[key] = value
+			}
 		}
 
-		if filterDefaults {
+		return written
+	}
+
+	@objc(exportedPreferencesDictionary:filterDefaults:)
+	public static func exportedPreferencesDictionary(_ filterJunk: Bool, filterDefaults: Bool) -> [String: Any] {
+		let registeredDefaults = TextualPreferences.defaultPreferences()
+			.merging(UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)) { current, _ in
+				current
+			}
+
+		var exported: [String: Any] = [:]
+
+		for (key, value) in writtenValues() {
+			if filterJunk, isKeyNameSupposedToBeIgnored(key) {
+				continue
+			}
+
 			// Filter by value, not by name. Stripping every key that merely has
 			// a registered default drops the settings the user actually chose,
 			// which is most of them.
-			let registeredDefaults = TextualPreferences.defaultPreferences()
-			keysToStrip.append(contentsOf: finalDictionary.keys.filter { key in
-				guard let registered = registeredDefaults[key] else {
-					return false
-				}
-
-				return valueMatchesDefault(finalDictionary[key], registered)
-			})
-		}
-
-		for key in keysToStrip {
-			finalDictionary.removeValue(forKey: key)
-		}
-
-		if filterJunk {
-			let ignoredKeys = finalDictionary.keys.filter { key in
-				isKeyNameSupposedToBeIgnored(key)
+			if filterDefaults, let registered = registeredDefaults[key],
+			   valueMatchesDefault(value, registered)
+			{
+				continue
 			}
 
-			for key in ignoredKeys {
-				finalDictionary.removeValue(forKey: key)
-			}
+			exported[key] = value
 		}
 
-		return finalDictionary
+		return exported
 	}
 
 	static func valueMatchesDefault(_ value: Any?, _ registeredDefault: Any) -> Bool {
