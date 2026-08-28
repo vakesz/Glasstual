@@ -36,107 +36,24 @@
  *
  *********************************************************************** */
 
-import CocoaExtensions
 import Foundation
 
-@objc(IRCModeInfo)
-public nonisolated class ModeInfo: PortablePropertyObject {
-	fileprivate var isSetStorage: Bool
-	fileprivate var symbolStorage: String
-	fileprivate var parameterStorage: String?
+/** A single mode change: the symbol, whether it is being set or unset, and the
+ optional parameter that came with it. The symbol identifies the mode, so it is
+ fixed for the lifetime of a value; the other two fields vary. */
+public nonisolated struct ModeInfo: Hashable, Sendable {
+	public let modeSymbol: String
+	public var modeIsSet: Bool
+	public var modeParameter: String?
 
-	@objc public var modeIsSet: Bool {
-		isSetStorage
-	}
-
-	@objc public var modeSymbol: String {
-		symbolStorage
-	}
-
-	@objc public var modeParameter: String? {
-		parameterStorage
-	}
-
-	@available(*, unavailable)
-	override public init() {
-		fatalError("Use init(modeSymbol:)")
-	}
-
-	@objc(initWithModeSymbol:)
-	public convenience init(modeSymbol: String) {
-		self.init(modeSymbol: modeSymbol, modeIsSet: false, modeParameter: nil)
-	}
-
-	@objc(initWithModeSymbol:modeIsSet:)
-	public convenience init(modeSymbol: String, modeIsSet: Bool) {
-		self.init(modeSymbol: modeSymbol, modeIsSet: modeIsSet, modeParameter: nil)
-	}
-
-	@objc(initWithModeSymbol:modeIsSet:modeParameter:)
-	public init(modeSymbol: String, modeIsSet: Bool, modeParameter: String?) {
+	public init(modeSymbol: String, modeIsSet: Bool = false, modeParameter: String? = nil) {
 		precondition(modeSymbol.count == 1, "A mode symbol must contain exactly one character")
 
-		isSetStorage = modeIsSet
-		symbolStorage = modeSymbol
-		parameterStorage = modeParameter
-
-		super.init()
+		self.modeSymbol = modeSymbol
+		self.modeIsSet = modeIsSet
+		self.modeParameter = modeParameter
 	}
 
-	public required init?(coder _: NSCoder) {
-		nil
-	}
-
-	override public func copy(with _: NSZone? = nil) -> Any {
-		if type(of: self) == ModeInfo.self {
-			return self
-		}
-
-		return ModeInfo(copying: self)
-	}
-
-	override public func mutableCopy(with _: NSZone? = nil) -> Any {
-		MutableModeInfo(copying: self)
-	}
-
-	override public func copy(asMutable mutableCopy: Bool) -> Any {
-		copy(asMutable: mutableCopy, uniquing: false)
-	}
-
-	override public func copy(asMutable mutableCopy: Bool, uniquing _: Bool) -> Any {
-		mutableCopy ? MutableModeInfo(copying: self) : ModeInfo(copying: self)
-	}
-
-	override public func uniqueCopy(asMutable mutableCopy: Bool) -> Any {
-		copy(asMutable: mutableCopy, uniquing: true)
-	}
-
-	override public func uniqueCopy() -> Any {
-		ModeInfo(copying: self)
-	}
-
-	override public func uniqueCopyMutable() -> Any {
-		MutableModeInfo(copying: self)
-	}
-
-	override public func isEqual(_ object: Any?) -> Bool {
-		guard let other = object as? ModeInfo else {
-			return false
-		}
-
-		return modeIsSet == other.modeIsSet && modeSymbol == other.modeSymbol && modeParameter == other.modeParameter
-	}
-
-	override public var hash: Int {
-		var hasher = Hasher()
-		hasher.combine(modeIsSet)
-		hasher.combine(modeSymbol)
-		hasher.combine(modeParameter)
-
-		return hasher.finalize()
-	}
-
-	@objc(isModeForChangingMemberModeOn:)
 	@MainActor
 	public func isModeForChangingMemberMode(on client: IRCClient) -> Bool {
 		guard modeParameter?.isEmpty == false else {
@@ -144,43 +61,5 @@ public nonisolated class ModeInfo: PortablePropertyObject {
 		}
 
 		return client.supportInfo.modeSymbolIsUserPrefix(modeSymbol)
-	}
-
-	fileprivate convenience init(copying mode: ModeInfo) {
-		self.init(
-			modeSymbol: mode.modeSymbol,
-			modeIsSet: mode.modeIsSet,
-			modeParameter: mode.modeParameter
-		)
-	}
-}
-
-@objc(IRCModeInfoMutable)
-public final nonisolated class MutableModeInfo: ModeInfo {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	@objc override public var modeIsSet: Bool {
-		get { isSetStorage }
-		set { isSetStorage = newValue }
-	}
-
-	@objc override public var modeSymbol: String {
-		get { symbolStorage }
-		set {
-			precondition(newValue.count == 1, "A mode symbol must contain exactly one character")
-
-			symbolStorage = newValue
-		}
-	}
-
-	@objc override public var modeParameter: String? {
-		get { parameterStorage }
-		set { parameterStorage = newValue }
-	}
-
-	override public func copy(with _: NSZone? = nil) -> Any {
-		ModeInfo(copying: self)
 	}
 }

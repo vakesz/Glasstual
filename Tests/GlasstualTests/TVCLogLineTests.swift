@@ -45,14 +45,14 @@ import XCTest
 @MainActor
 class TVCLogLineTests: XCTestCase {
 	func testMessageIdentifierSurvivesArchivingAndCopying() throws {
-		let line = MutableLogLine()
+		let line = LogLine()
 		line.command = "privmsg"
 		line.lineType = .privateMessage
 		line.nickname = "alice"
 		line.messageBody = "hello"
 		line.messageIdentifier = "63E1033A0"
 
-		let copy = try XCTUnwrap(line.copy() as? LogLine)
+		let copy = line.duplicate()
 		XCTAssertEqual(copy.messageIdentifier, "63E1033A0")
 
 		let data = try NSKeyedArchiver.archivedData(withRootObject: copy, requiringSecureCoding: true)
@@ -64,18 +64,18 @@ class TVCLogLineTests: XCTestCase {
 	}
 
 	func testMessageIdentifierIsOptional() throws {
-		let line = MutableLogLine()
+		let line = LogLine()
 		line.messageBody = "hello"
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.copy(), requiringSecureCoding: true)
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.duplicate(), requiringSecureCoding: true)
 		let decoded = try XCTUnwrap(LogLine(data: data))
 
 		XCTAssertNil(decoded.messageIdentifier)
 	}
 
-	func testMutableCopyPreservesCompleteValueState() throws {
+	func testDuplicatePreservesCompleteValueState() {
 		let receivedAt = Date(timeIntervalSince1970: 1_725_000_000)
-		let line = MutableLogLine()
+		let line = LogLine()
 		line.isEncrypted = true
 		line.isFirstForDay = true
 		line.receivedAt = receivedAt
@@ -92,9 +92,9 @@ class TVCLogLineTests: XCTestCase {
 		line.excludeKeywords = ["ignore"]
 		line.rendererAttributes = ["key": "value"]
 
-		let copy = try XCTUnwrap(line.copy() as? LogLine)
+		let copy = line.duplicate()
 
-		XCTAssertFalse(copy is MutableLogLine)
+		XCTAssertFalse(copy === line)
 		XCTAssertTrue(copy.isEncrypted)
 		XCTAssertTrue(copy.isFirstForDay)
 		XCTAssertEqual(copy.receivedAt, receivedAt)
@@ -115,10 +115,10 @@ class TVCLogLineTests: XCTestCase {
 	}
 
 	func testPendingDeliveryStateIsNotRestoredFromArchive() throws {
-		let line = MutableLogLine()
+		let line = LogLine()
 		line.deliveryState = .pending
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.copy(), requiringSecureCoding: true)
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.duplicate(), requiringSecureCoding: true)
 		let decoded = try XCTUnwrap(LogLine(data: data))
 
 		XCTAssertEqual(decoded.deliveryState, .none)

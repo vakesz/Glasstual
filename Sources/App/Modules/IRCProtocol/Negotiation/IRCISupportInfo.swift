@@ -516,7 +516,6 @@ public class IRCISupportInfo: NSObject {
 		return stringValue
 	}
 
-	@objc(parseModes:)
 	public func parseModes(_ modeString: String) -> [ModeInfo] {
 		ModeParser.parse(modeString, channelModeKinds: channelModeKinds)
 	}
@@ -578,12 +577,10 @@ public class IRCISupportInfo: NSObject {
 		extractCharacters(statusMessageModeSymbols, fromChannelNamed: channel)
 	}
 
-	@objc(createModeWithSymbol:)
 	public func createMode(withSymbol modeSymbol: String) -> ModeInfo {
 		ModeInfo(modeSymbol: modeSymbol)
 	}
 
-	@objc(createModeWithSymbol:modeIsSet:modeParameter:)
 	public func createMode(
 		withSymbol modeSymbol: String,
 		modeIsSet: Bool,

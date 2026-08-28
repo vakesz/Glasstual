@@ -90,24 +90,24 @@ extension IRCClient {
 		)
 
 		let existingUser = findUser(reply.nickname)
-		let mutableUser = mutableCopyOfUser(withNickname: reply.nickname)
-		mutableUser.nickname = reply.nickname
-		mutableUser.username = reply.username
-		mutableUser.address = reply.address
-		mutableUser.isAway = parsedFlags.isAway
-		mutableUser.isIRCop = parsedFlags.isIRCop
+		let editedUser = draftUser(withNickname: reply.nickname)
+		editedUser.nickname = reply.nickname
+		editedUser.username = reply.username
+		editedUser.address = reply.address
+		editedUser.isAway = parsedFlags.isAway
+		editedUser.isIRCop = parsedFlags.isIRCop
 		if supportInfo.botModeSymbol != nil {
-			mutableUser.isBot = parsedFlags.isBot
+			editedUser.isBot = parsedFlags.isBot
 		}
-		mutableUser.realName = reply.realName
+		editedUser.realName = reply.realName
 		if reply.updatesAccount {
-			mutableUser.account = reply.account
+			editedUser.account = reply.account
 		}
 
-		let userChanged = existingUser.map { !$0.isEqual(mutableUser) } ?? false
+		let userChanged = existingUser.map { !$0.isEqual(editedUser) } ?? false
 		let finalUser: User
 		if existingUser == nil || userChanged {
-			finalUser = addAndReturn(mutableUser)
+			finalUser = addAndReturn(editedUser)
 		} else if let existingUser {
 			finalUser = existingUser
 		} else {
@@ -128,7 +128,7 @@ extension IRCClient {
 				}
 			}
 		} else {
-			let member = ChannelUserMutable(user: finalUser)
+			let member = ChannelUser(user: finalUser)
 			member.modes = ChannelModeSymbolSet(letters: parsedFlags.userModes)
 			channel.memberInfo?.addMember(member)
 		}

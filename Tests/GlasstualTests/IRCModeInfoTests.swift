@@ -55,44 +55,6 @@ final class ModeInfoTests: XCTestCase {
 		XCTAssertTrue(set.modeIsSet)
 	}
 
-	func testMutableCopyCanChangeWithoutChangingOriginal() throws {
-		let original = ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
-		let changed = try XCTUnwrap(original.mutableCopy() as? MutableModeInfo)
-		changed.modeIsSet = false
-		changed.modeParameter = nil
-
-		XCTAssertFalse(original.isMutable)
-		XCTAssertTrue(changed.isMutable)
-		XCTAssertTrue(original.modeIsSet)
-		XCTAssertEqual(original.modeParameter, "secret")
-		XCTAssertFalse(changed.modeIsSet)
-		XCTAssertNil(changed.modeParameter)
-	}
-
-	func testUniqueCopyEntryPointsPreserveValuesAndRequestedMutability() throws {
-		let original = ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
-		let unique = try XCTUnwrap(original.uniqueCopy() as? ModeInfo)
-		let uniqueMutable = try XCTUnwrap(original.uniqueCopyMutable() as? MutableModeInfo)
-
-		XCTAssertFalse(unique === original)
-		XCTAssertEqual(unique, original)
-		XCTAssertFalse(unique.isMutable)
-		XCTAssertTrue(uniqueMutable.isMutable)
-		XCTAssertEqual(uniqueMutable, original)
-	}
-
-	func testEqualityAndHashUseAllFields() throws {
-		let first = ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
-		let second = try XCTUnwrap(first.mutableCopy() as? MutableModeInfo)
-
-		XCTAssertEqual(first, second)
-		XCTAssertEqual(first.hash, second.hash)
-
-		second.modeParameter = "other"
-
-		XCTAssertNotEqual(first, second)
-	}
-
 	func testMemberModeRequiresAParameterAndPrefixMode() {
 		let client = GLTTestClient()
 		client.supportInfo.processConfigurationData("PREFIX=(ov)@+")

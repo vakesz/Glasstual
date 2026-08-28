@@ -15,100 +15,54 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 
+/** One line received from the server, parsed.
+
+ A message is a reference type because it is passed down a long handler chain
+ and because it points back at the `MessageBatch` that contains it. Handlers
+ treat it as read-only; the two places that need a changed message start from
+ `duplicate()`, which never touches the receiver. */
 @objc(IRCMessage)
-open nonisolated class Message: PortablePropertyObject {
-	fileprivate var isHistoricStorage = false
-	fileprivate var isEventOnlyMessageStorage = false
-	fileprivate var isPrintOnlyMessageStorage = false
-	fileprivate var senderStorage: Prefix = .init()
-	fileprivate var paramsStorage: [String] = []
-	fileprivate var receivedAtStorage = Date()
-	fileprivate var messageTagsStorage: [String: String] = [:]
-	fileprivate var batchTokenStorage: String?
-	fileprivate var commandStorage = ""
-	fileprivate var messageIdentifierStorage: String?
-	fileprivate var senderAccountStorage: String?
-	fileprivate var commandNumericStorage: UInt = 0
-	fileprivate var parentBatchMessageStorage: MessageBatch?
+public final nonisolated class Message: NSObject {
+	public internal(set) var sender = Prefix()
+	public internal(set) var command = ""
+	public internal(set) var commandNumeric: UInt = 0
+	public internal(set) var params: [String] = []
+	public internal(set) var receivedAt = Date()
+	public internal(set) var isHistoric = false
+	public internal(set) var isEventOnlyMessage = false
+	public internal(set) var isPrintOnlyMessage = false
+	public internal(set) var batchToken: String?
+	public internal(set) var messageTags: [String: String]? = [:]
+	public internal(set) var messageIdentifier: String?
+	public internal(set) var senderAccount: String?
+	public internal(set) var parentBatchMessage: MessageBatch?
 
-	@objc public var sender: Prefix {
-		senderStorage
+	public var paramsCount: UInt {
+		UInt(params.count)
 	}
 
-	@objc public var command: String {
-		commandStorage
+	public var senderNickname: String? {
+		sender.nickname
 	}
 
-	@objc public var commandNumeric: UInt {
-		commandNumericStorage
+	public var senderUsername: String? {
+		sender.username
 	}
 
-	@objc public var params: [String] {
-		paramsStorage
+	public var senderAddress: String? {
+		sender.address
 	}
 
-	@objc public var receivedAt: Date {
-		receivedAtStorage
+	public var senderHostmask: String? {
+		sender.hostmask
 	}
 
-	@objc public var isHistoric: Bool {
-		isHistoricStorage
+	public var senderIsServer: Bool {
+		sender.isServer
 	}
 
-	@objc public var isEventOnlyMessage: Bool {
-		isEventOnlyMessageStorage
-	}
-
-	@objc public var isPrintOnlyMessage: Bool {
-		isPrintOnlyMessageStorage
-	}
-
-	@objc public var batchToken: String? {
-		batchTokenStorage
-	}
-
-	@objc public var messageTags: [String: String]? {
-		messageTagsStorage
-	}
-
-	@objc public var messageIdentifier: String? {
-		messageIdentifierStorage
-	}
-
-	@objc public var senderAccount: String? {
-		senderAccountStorage
-	}
-
-	@objc public var parentBatchMessage: MessageBatch? {
-		parentBatchMessageStorage
-	}
-
-	@objc public var paramsCount: UInt {
-		UInt(paramsStorage.count)
-	}
-
-	@objc public var senderNickname: String? {
-		senderStorage.nickname
-	}
-
-	@objc public var senderUsername: String? {
-		senderStorage.username
-	}
-
-	@objc public var senderAddress: String? {
-		senderStorage.address
-	}
-
-	@objc public var senderHostmask: String? {
-		senderStorage.hostmask
-	}
-
-	@objc public var senderIsServer: Bool {
-		senderStorage.isServer
-	}
-
-	@objc public var sequence: String {
-		if paramsStorage.count < 2 {
+	public var sequence: String {
+		if params.count < 2 {
 			return sequence(0)
 		}
 
@@ -117,16 +71,13 @@ open nonisolated class Message: PortablePropertyObject {
 
 	override public init() {
 		super.init()
-		populateDefaultsPostflight()
 	}
 
-	@objc(initWithLine:)
 	@MainActor
 	public convenience init?(line: String) {
 		self.init(line: line, on: nil)
 	}
 
-	@objc(initWithLine:onClient:)
 	@MainActor
 	public init?(line: String, on client: IRCClient?) {
 		super.init()
@@ -134,73 +85,61 @@ open nonisolated class Message: PortablePropertyObject {
 		guard parseLine(line, for: client) else {
 			return nil
 		}
-
-		populateDefaultsPostflight()
 	}
 
-	public required init?(coder _: NSCoder) {
-		nil
+	private init(copying other: Message) {
+		sender = other.sender
+		command = other.command
+		commandNumeric = other.commandNumeric
+		params = other.params
+		receivedAt = other.receivedAt
+		isHistoric = other.isHistoric
+		isEventOnlyMessage = other.isEventOnlyMessage
+		isPrintOnlyMessage = other.isPrintOnlyMessage
+		batchToken = other.batchToken
+		messageTags = other.messageTags
+		messageIdentifier = other.messageIdentifier
+		senderAccount = other.senderAccount
+		parentBatchMessage = other.parentBatchMessage
+
+		super.init()
 	}
 
-	@objc(paramAt:)
+	/// An editable copy. Handlers treat the message they are given as read-only,
+	/// so a rewrite starts here rather than by editing the original.
+	public func duplicate() -> Message {
+		Message(copying: self)
+	}
+
 	public func param(at index: UInt) -> String {
 		let index = Int(index)
 
-		if index < paramsStorage.count {
-			return paramsStorage[index]
+		if index < params.count {
+			return params[index]
 		}
 
 		return ""
 	}
 
-	@objc(sequence:)
 	public func sequence(_ index: UInt) -> String {
 		let start = Int(index)
-		guard start < paramsStorage.count else {
+		guard start < params.count else {
 			return ""
 		}
 
-		return paramsStorage[start...].joined(separator: " ")
+		return params[start...].joined(separator: " ")
 	}
 
-	@objc
 	public func markAsNotHistoric() {
-		isHistoricStorage = false
+		isHistoric = false
 	}
 
-	@objc
 	public func markAsHistoric() {
-		isHistoricStorage = true
-	}
-
-	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
-		guard let object = newObject as? Message else {
-			return
-		}
-
-		object.batchTokenStorage = batchTokenStorage
-		object.commandStorage = commandStorage
-		object.commandNumericStorage = commandNumericStorage
-		object.isHistoricStorage = isHistoricStorage
-		object.isEventOnlyMessageStorage = isEventOnlyMessageStorage
-		object.isPrintOnlyMessageStorage = isPrintOnlyMessageStorage
-		object.messageTagsStorage = messageTagsStorage
-		object.messageIdentifierStorage = messageIdentifierStorage
-		object.senderAccountStorage = senderAccountStorage
-		object.paramsStorage = paramsStorage
-		object.receivedAtStorage = receivedAtStorage
-		object.senderStorage = senderStorage
-		object.parentBatchMessageStorage = parentBatchMessageStorage
-	}
-
-	override public var mutableClass: PortablePropertyObject {
-		unsafeBitCast(MessageMutable.self, to: PortablePropertyObject.self)
+		isHistoric = true
 	}
 
 	// MARK: - Line Parser
 
-	@objc(parseLine:forClient:)
 	@discardableResult
 	@MainActor
 	public func parseLine(_ line: String, for client: IRCClient?) -> Bool {
@@ -216,32 +155,23 @@ open nonisolated class Message: PortablePropertyObject {
 			parseSender(senderSection, for: client)
 		} else {
 			let serverAddress = client?.serverAddress ?? ""
-			let sender = MutablePrefix()
-			sender.nickname = serverAddress
-			sender.hostmask = serverAddress
-			sender.isServer = true
-			guard let immutableSender = sender.copy() as? Prefix else {
-				assertionFailure("Mutable prefixes must produce immutable Prefix copies")
-				return false
-			}
-			senderStorage = immutableSender
+			sender = Prefix(nickname: serverAddress, hostmask: serverAddress, isServer: true)
 		}
 
-		commandStorage = parsed.command
-		commandNumericStorage = parsed.commandNumeric
-		paramsStorage = parsed.parameters
+		command = parsed.command
+		commandNumeric = parsed.commandNumeric
+		params = parsed.parameters
 
 		return true
 	}
 
-	@objc(parseExtensions:forClient:)
 	@MainActor
 	public func parseExtensions(_ extensionInfo: String, for client: IRCClient?) {
 		let parsedTags = MessageTagParser.parsedTags(fromSection: extensionInfo)
 
-		messageTagsStorage = parsedTags.tags
-		messageIdentifierStorage = parsedTags.messageIdentifier
-		senderAccountStorage = parsedTags.senderAccount
+		messageTags = parsedTags.tags
+		messageIdentifier = parsedTags.messageIdentifier
+		senderAccount = parsedTags.senderAccount
 
 		guard let client else {
 			return
@@ -260,8 +190,8 @@ open nonisolated class Message: PortablePropertyObject {
 				}
 
 				if let dateObject {
-					receivedAtStorage = dateObject
-					isHistoricStorage = true
+					receivedAt = dateObject
+					isHistoric = true
 				}
 			}
 		}
@@ -272,32 +202,26 @@ open nonisolated class Message: PortablePropertyObject {
 			   	CharacterSet.alphanumerics.contains($0) || $0 == "_" || $0 == "-"
 			   })
 			{
-				batchTokenStorage = batchToken
-				parentBatchMessageStorage = client.queuedBatchMessage(withToken: batchToken) as? MessageBatch
+				self.batchToken = batchToken
+				parentBatchMessage = client.queuedBatchMessage(withToken: batchToken) as? MessageBatch
 			}
 		}
 	}
 
-	@objc(parseSender:forClient:)
 	@MainActor
 	public func parseSender(_ senderInfo: String, for client: IRCClient?) {
-		let sender = MutablePrefix()
-		sender.hostmask = senderInfo
+		var parsed = Prefix(hostmask: senderInfo)
 
 		if let components = (senderInfo as NSString).hostmask(on: client) {
-			sender.nickname = components.nickname
-			sender.username = components.username
-			sender.address = components.address
+			parsed.nickname = components.nickname
+			parsed.username = components.username
+			parsed.address = components.address
 		} else {
-			sender.nickname = senderInfo
-			sender.isServer = true
+			parsed.nickname = senderInfo
+			parsed.isServer = true
 		}
 
-		guard let immutableSender = sender.copy() as? Prefix else {
-			assertionFailure("Mutable prefixes must produce immutable Prefix copies")
-			return
-		}
-		senderStorage = immutableSender
+		sender = parsed
 	}
 
 	public func didReceiveServerInputConcreteObject() -> PluginServerInput {
@@ -315,76 +239,5 @@ open nonisolated class Message: PortablePropertyObject {
 		messageObject.messageCommandNumeric = commandNumeric
 
 		return messageObject
-	}
-}
-
-@objc(IRCMessageMutable)
-public final nonisolated class MessageMutable: Message {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyObject {
-		unsafeBitCast(Message.self, to: PortablePropertyObject.self)
-	}
-
-	@objc override public var batchToken: String? {
-		get { batchTokenStorage }
-		set { batchTokenStorage = newValue }
-	}
-
-	@objc override public var command: String {
-		get { commandStorage }
-		set { commandStorage = newValue }
-	}
-
-	@objc override public var commandNumeric: UInt {
-		get { commandNumericStorage }
-		set { commandNumericStorage = newValue }
-	}
-
-	@objc override public var isHistoric: Bool {
-		get { isHistoricStorage }
-		set { isHistoricStorage = newValue }
-	}
-
-	@objc override public var isEventOnlyMessage: Bool {
-		get { isEventOnlyMessageStorage }
-		set { isEventOnlyMessageStorage = newValue }
-	}
-
-	@objc override public var isPrintOnlyMessage: Bool {
-		get { isPrintOnlyMessageStorage }
-		set { isPrintOnlyMessageStorage = newValue }
-	}
-
-	@objc override public var messageTags: [String: String]? {
-		get { messageTagsStorage }
-		set { messageTagsStorage = newValue ?? [:] }
-	}
-
-	@objc override public var messageIdentifier: String? {
-		get { messageIdentifierStorage }
-		set { messageIdentifierStorage = newValue }
-	}
-
-	@objc override public var senderAccount: String? {
-		get { senderAccountStorage }
-		set { senderAccountStorage = newValue }
-	}
-
-	@objc override public var params: [String] {
-		get { paramsStorage }
-		set { paramsStorage = newValue }
-	}
-
-	@objc override public var receivedAt: Date {
-		get { receivedAtStorage }
-		set { receivedAtStorage = newValue }
-	}
-
-	@objc override public var sender: Prefix {
-		get { senderStorage }
-		set { senderStorage = newValue }
 	}
 }
