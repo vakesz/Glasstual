@@ -23,51 +23,87 @@ private func pendingOperationsKey(for viewController: LogController) -> String {
 	viewController.uniqueIdentifier
 }
 
-public typealias LogControllerPrintingBlock = (Operation) -> Void
+public typealias LogControllerPrintingBlock = (LogControllerPrintingOperation) -> Void
+
+/** Every mutable bit of the operation's KVO-backed state lives in this struct so
+ that one lock covers all of it. KVO notifications are always posted outside the
+ lock: the completion observer re-enters the queue's own bookkeeping, which takes
+ a different lock, and posting under `stateLock` would invert the two. */
+private struct LogControllerPrintingOperationState {
+	var executing = false
+	var finished = false
+	/** Claimed by whichever caller of `finish()` wins the race so that only one
+	 of them posts the KVO notifications. */
+	var finishing = false
+	/** Snapshot of the view controller's `viewIsLoaded`. `isReady` is consulted
+	 by the queue on any thread and so must not read main-actor state. */
+	var viewIsLoaded = false
+}
 
 @objc(TVCLogControllerPrintingOperation)
-private final class LogControllerPrintingOperation: Operation, @unchecked Sendable {
-	@objc var executionBlock: LogControllerPrintingBlock?
-	@objc weak var viewController: LogController?
-	@objc var pendingOperationsKey = ""
-	@objc var standalone = false
-	@objc var requiresExplicitFinish = false
+public final class LogControllerPrintingOperation: Operation, @unchecked Sendable {
+	var executionBlock: LogControllerPrintingBlock?
+	weak var viewController: LogController?
+	var pendingOperationsKey = ""
+	var standalone = false
+	var requiresExplicitFinish = false
 	var finishedObservation: NSKeyValueObservation?
 	private let stateLock = NSLock()
-	private var operationExecuting = false
-	private var operationFinished = false
+	private var state = LogControllerPrintingOperationState()
 
-	@objc var isPending: Bool {
+	private func withState<Result>(_ body: (inout LogControllerPrintingOperationState) -> Result) -> Result {
+		stateLock.lock()
+		defer { stateLock.unlock() }
+		return body(&state)
+	}
+
+	var isPending: Bool {
 		isCancelled == false && isExecuting == false && isFinished == false
 	}
 
-	override var isAsynchronous: Bool {
+	/// Whether the view controller this operation prints into has finished
+	/// loading its web view. Cached because `isReady` is read off the main actor.
+	var viewIsLoaded: Bool {
+		get { withState { $0.viewIsLoaded } }
+		set { withState { $0.viewIsLoaded = newValue } }
+	}
+
+	override public var isAsynchronous: Bool {
 		requiresExplicitFinish
 	}
 
-	@objc override dynamic var isExecuting: Bool {
-		requiresExplicitFinish ? operationExecuting : super.isExecuting
+	@objc override public dynamic var isExecuting: Bool {
+		requiresExplicitFinish ? withState { $0.executing } : super.isExecuting
 	}
 
-	@objc override dynamic var isFinished: Bool {
-		requiresExplicitFinish ? operationFinished : super.isFinished
+	@objc override public dynamic var isFinished: Bool {
+		requiresExplicitFinish ? withState { $0.finished } : super.isFinished
 	}
 
-	override func start() {
+	override public func start() {
 		guard requiresExplicitFinish else {
 			super.start()
 			return
 		}
 
 		if isCancelled {
-			willChangeValue(forKey: "isFinished")
-			operationFinished = true
-			didChangeValue(forKey: "isFinished")
+			finish()
+			return
+		}
+
+		let claimed = withState { state -> Bool in
+			guard state.executing == false, state.finished == false else {
+				return false
+			}
+			return true
+		}
+
+		guard claimed else {
 			return
 		}
 
 		willChangeValue(forKey: "isExecuting")
-		operationExecuting = true
+		withState { $0.executing = true }
 		didChangeValue(forKey: "isExecuting")
 
 		executeBlock()
@@ -77,11 +113,11 @@ private final class LogControllerPrintingOperation: Operation, @unchecked Sendab
 		}
 	}
 
-	override func main() {
+	override public func main() {
 		executeBlock()
 	}
 
-	override func cancel() {
+	override public func cancel() {
 		super.cancel()
 
 		if requiresExplicitFinish {
@@ -89,20 +125,33 @@ private final class LogControllerPrintingOperation: Operation, @unchecked Sendab
 		}
 	}
 
-	@objc func finish() {
-		stateLock.lock()
-		guard requiresExplicitFinish, operationFinished == false else {
-			stateLock.unlock()
+	/// Marks an asynchronous operation complete. Safe to call from any thread
+	/// and safe to call more than once; only the first call posts KVO.
+	public func finish() {
+		guard requiresExplicitFinish else {
+			return
+		}
+
+		let claimed = withState { state -> Bool in
+			guard state.finished == false, state.finishing == false else {
+				return false
+			}
+			state.finishing = true
+			return true
+		}
+
+		guard claimed else {
 			return
 		}
 
 		willChangeValue(forKey: "isExecuting")
 		willChangeValue(forKey: "isFinished")
-		operationExecuting = false
-		operationFinished = true
+		withState { state in
+			state.executing = false
+			state.finished = true
+		}
 		didChangeValue(forKey: "isFinished")
 		didChangeValue(forKey: "isExecuting")
-		stateLock.unlock()
 	}
 
 	private func executeBlock() {
@@ -122,13 +171,34 @@ private final class LogControllerPrintingOperation: Operation, @unchecked Sendab
 		}
 	}
 
-	override var isReady: Bool {
-		if dependencies.count < 1 || standalone {
-			let viewController = viewController
-			return super.isReady && (viewController == nil || viewController!.viewIsLoaded)
+	override public var isReady: Bool {
+		Self.isReady(
+			dependenciesAreReady: super.isReady,
+			hasDependencies: dependencies.isEmpty == false,
+			standalone: standalone,
+			hasViewController: viewController != nil,
+			viewIsLoaded: viewIsLoaded
+		)
+	}
+
+	/// The readiness rule, factored out of `isReady` so it can be exercised
+	/// without a live view controller. An operation that heads its own chain
+	/// waits for the view it prints into; one that has a dependency inherits its
+	/// readiness from that dependency instead. A view controller that has gone
+	/// away can never report itself loaded, so let the operation run and drop
+	/// out in `executeBlock()`.
+	static func isReady(
+		dependenciesAreReady: Bool,
+		hasDependencies: Bool,
+		standalone: Bool,
+		hasViewController: Bool,
+		viewIsLoaded: Bool
+	) -> Bool {
+		guard hasDependencies, standalone == false else {
+			return dependenciesAreReady && (hasViewController == false || viewIsLoaded)
 		}
 
-		return super.isReady
+		return dependenciesAreReady
 	}
 }
 
@@ -150,7 +220,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 		qualityOfService = .default
 	}
 
-	@objc(enqueueMessageBlock:for:)
+	@MainActor
 	public func enqueueMessageBlock(
 		_ callbackBlock: @escaping LogControllerPrintingBlock,
 		for viewController: LogController
@@ -158,7 +228,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 		enqueueMessageBlock(callbackBlock, for: viewController, isStandalone: false)
 	}
 
-	@objc(enqueueMessageBlock:for:isStandalone:)
+	@MainActor
 	public func enqueueMessageBlock(
 		_ callbackBlock: @escaping LogControllerPrintingBlock,
 		for viewController: LogController,
@@ -172,7 +242,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 		)
 	}
 
-	@objc(enqueueAsynchronousMessageBlock:for:isStandalone:)
+	@MainActor
 	public func enqueueAsynchronousMessageBlock(
 		_ callbackBlock: @escaping LogControllerPrintingBlock,
 		for viewController: LogController,
@@ -186,30 +256,17 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 		)
 	}
 
+	/** Enqueueing is main-actor work: the termination flag and the view
+	 controller's load state are both main-actor state, and reading them here
+	 replaces the synchronous main-queue hop this used to make per message. */
+	@MainActor
 	private func enqueueMessageBlock(
 		_ callbackBlock: @escaping LogControllerPrintingBlock,
 		for viewController: LogController,
 		isStandalone: Bool,
 		requiresExplicitFinish: Bool
 	) {
-		let applicationController = NSObject.applicationController()
-		let applicationIsTerminating: Bool
-
-		if Thread.isMainThread {
-			applicationIsTerminating = MainActor.assumeIsolated {
-				applicationController.applicationIsTerminating
-			}
-		} else {
-			nonisolated(unsafe) var terminating = false
-			performSynchronouslyOnMainQueue {
-				terminating = MainActor.assumeIsolated {
-					applicationController.applicationIsTerminating
-				}
-			}
-			applicationIsTerminating = terminating
-		}
-
-		guard applicationIsTerminating == false else {
+		guard NSObject.applicationController().applicationIsTerminating == false else {
 			return
 		}
 
@@ -218,17 +275,13 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 		operation.standalone = isStandalone
 		operation.requiresExplicitFinish = requiresExplicitFinish
 		operation.viewController = viewController
+		operation.viewIsLoaded = viewController.viewIsLoaded
 		operation.pendingOperationsKey = pendingOperationsKey(for: viewController)
 
 		addPendingOperation(operation)
 	}
 
-	@objc(finishOperation:)
-	public func finishOperation(_ operation: Operation) {
-		(operation as? LogControllerPrintingOperation)?.finish()
-	}
-
-	@objc(pendingOperationsForViewController:)
+	@MainActor
 	private func pendingOperations(for viewController: LogController) -> [LogControllerPrintingOperation] {
 		let key = pendingOperationsKey(for: viewController)
 
@@ -308,14 +361,14 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 		operation.finishedObservation = nil
 	}
 
-	@objc(cancelOperationsForViewController:)
+	@MainActor
 	public func cancelOperations(for viewController: LogController) {
 		for operation in pendingOperations(for: viewController) {
 			operation.cancel()
 		}
 	}
 
-	@objc(cancelOperationsForClient:)
+	@MainActor
 	public func cancelOperations(for client: IRCClient) {
 		guard let viewController = client.viewController as AnyObject as? LogController else {
 			return
@@ -323,14 +376,20 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 		cancelOperations(for: viewController)
 	}
 
-	@objc(cancelOperationsForChannel:)
+	@MainActor
 	public func cancelOperations(for channel: IRCChannel) {
 		cancelOperations(for: channel.viewController)
 	}
 
-	@objc(updateReadinessState:)
+	/// Republishes the readiness of every operation waiting on `viewController`
+	/// after its web view finished loading.
+	@MainActor
 	public func updateReadinessState(for viewController: LogController) {
+		let viewIsLoaded = viewController.viewIsLoaded
+
 		for operation in pendingOperations(for: viewController) {
+			operation.viewIsLoaded = viewIsLoaded
+
 			if operation.isPending == false || operation.dependencies.count > 0 {
 				continue
 			}

@@ -212,6 +212,7 @@
 		3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 215C3A04759171741632CD9C /* IRC Connection Host.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3BCC700EE0E7B6105A5EB3AE /* PreferencesExportFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3CDBF47F23D32AC1A9F109 /* PreferencesExportFilterTests.swift */; };
 		3BEB819185CABD1560DD5032 /* Chat Filters.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 36917695947EA4E753801EF5 /* Chat Filters.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3C1E010CF2EC0E14E67C40B0 /* LogControllerPrintingOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */; };
 		3C23FDBCA513EF247CBD8235 /* TVCLogControllerInlineMediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95178F524E30A2C17D389D63 /* TVCLogControllerInlineMediaService.swift */; };
 		3C6412A080D08D93ADFE0452 /* ICLPayloadLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C75DD81A2AB2738EA6DC21B4 /* ICLPayloadLocal.swift */; };
 		3C807AA33362166422F986E7 /* IRCNetworkListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968458F41F39FFCE9F784AE7 /* IRCNetworkListTests.swift */; };
@@ -282,6 +283,7 @@
 		51999B32A2354482D4B546B9 /* TVCMainWindowAppearance.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61A3F5E6307AFC43CEB9BBD8 /* TVCMainWindowAppearance.plist */; };
 		5279FA27A0A15E84E9D76C16 /* System Info.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 0001CA74F07AAD0D95E12E46 /* System Info.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		52B80849DCCA99F22FCE1682 /* TDCFileTransferDialogSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08206AFFBFD52DE72D9E71AA /* TDCFileTransferDialogSocket.swift */; };
+		53537C46936246C47434AA20 /* LogLineRenderRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */; };
 		538BE80B9F67DCFBF8503A3A /* TVCMainWindowChannelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73EB5A2E8B07724A22ACDF3 /* TVCMainWindowChannelView.swift */; };
 		5399BEA25B922BDBA7951F9E /* TDCChannelPropertiesSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6D7CD19599DD9620F1E0F3E1 /* TDCChannelPropertiesSheet.xib */; };
 		53CE66B7BB3DEB439C7B14B7 /* Bundled Scripts in Resources */ = {isa = PBXBuildFile; fileRef = 9023E8DB4051AEED1327BF73 /* Bundled Scripts */; };
@@ -797,6 +799,7 @@
 		EA735DC56D4A01A68B59D793 /* HistoricLogFileStorageModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1D72DB576E7D11015F7A6E83 /* HistoricLogFileStorageModel.xcdatamodeld */; };
 		EAA533EEC75822786E04D7BB /* IRCISupportInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B6C4B9A7BB72C07EDB5E39 /* IRCISupportInfo.swift */; };
 		EAD820EC46B5AF2F00FD1B69 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275224561A1DA40A1DE82E8F /* WebKit.framework */; };
+		EC072F7C94B190A3EA9A424F /* TVCLogControllerRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3B1F79118A701DA3D53AD7 /* TVCLogControllerRendering.swift */; };
 		EC2A61C8624EAE4EFA3CC272 /* SWErrorHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130FF6724C55BC140CD59B6E /* SWErrorHelper.swift */; };
 		EC3DA32316660A78B4F1F0CF /* TDCOnboardingIdentityStepViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BF09F5D892E187B16F3FEC /* TDCOnboardingIdentityStepViewController.swift */; };
 		EC64E6C055A4EE27A5978953 /* TVCMemberListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A7E6A0AD468F2ADDF8D5FC7 /* TVCMemberListCell.swift */; };
@@ -1702,6 +1705,7 @@
 		8B8B9A291B6DAE41527EA3ED /* TLOInternetAddressLookupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLOInternetAddressLookupTests.swift; sourceTree = "<group>"; };
 		8BE9A33B40A10164CA9FBEC5 /* IRCClientWHOReplies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientWHOReplies.swift; sourceTree = "<group>"; };
 		8C0E38D92316242FF7A724AC /* IRCModelMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCModelMigrationTests.swift; sourceTree = "<group>"; };
+		8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLineRenderRequestTests.swift; sourceTree = "<group>"; };
 		8C23C67B94A180C472A07F41 /* DateValueFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateValueFormattingTests.swift; sourceTree = "<group>"; };
 		8C5D8A7EF4EA75277F8B2399 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		8C6E147D87FA79023BF83C2A /* TDCServerPropertiesSheetProxyAndTLS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCServerPropertiesSheetProxyAndTLS.swift; sourceTree = "<group>"; };
@@ -1755,6 +1759,7 @@
 		9D5EB95BE62D733284F8F9D3 /* TVCLogViewInternalWK2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCLogViewInternalWK2.swift; sourceTree = "<group>"; };
 		9DE562AD8044C9A68BE92AAA /* TPI_ChatFilterExtension.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TPI_ChatFilterExtension.xcstrings; sourceTree = "<group>"; };
 		9E237B43AA9F0A9E4561FE5C /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		9E3B1F79118A701DA3D53AD7 /* TVCLogControllerRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCLogControllerRendering.swift; sourceTree = "<group>"; };
 		9E756365C506CC1350070B9B /* ChannelMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelMode.swift; sourceTree = "<group>"; };
 		9EC8CD77BE091CC228675209 /* ChannelModesFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelModesFeatureTests.swift; sourceTree = "<group>"; };
 		9F07683820B12A28D5AC7920 /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
@@ -1834,6 +1839,7 @@
 		B86442E1276E3CFA8B2738EB /* ServerNicknameChangeContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerNicknameChangeContent.swift; sourceTree = "<group>"; };
 		B87295106D6591B8903E1B48 /* ExpressionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressionParser.swift; sourceTree = "<group>"; };
 		B8897CF5FBD50305511BD5BD /* TLONicknameCompletionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLONicknameCompletionStatus.swift; sourceTree = "<group>"; };
+		B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogControllerPrintingOperationTests.swift; sourceTree = "<group>"; };
 		B8D60D789692AB0FE22CE72A /* IRCClientRequestedCommandPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientRequestedCommandPresentation.swift; sourceTree = "<group>"; };
 		B977E1F944514004739E1295 /* IRCHostmaskSeparatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCHostmaskSeparatorTests.swift; sourceTree = "<group>"; };
 		B987A67FB1E12C1CACD87B31 /* IRCCapability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCCapability.swift; sourceTree = "<group>"; };
@@ -2261,6 +2267,7 @@
 			children = (
 				B62603021EA8CEE470D42E10 /* LogLineTypes.swift */,
 				205EFB027E32912BCBA54FC4 /* TVCLogController.swift */,
+				9E3B1F79118A701DA3D53AD7 /* TVCLogControllerRendering.swift */,
 				1EC09A72327BF88C1DE04AF7 /* TVCLogLine.swift */,
 				2E75F2F4E2F0D23F2150ACD7 /* TVCLogRenderer.swift */,
 				826FA6A6F9DB582C71AC6578 /* TVCLogScriptEventSink.swift */,
@@ -3706,7 +3713,9 @@
 				8CEE2370CEBE0BE8155FAC70 /* LocalizationCatalogBoundaryTests.swift */,
 				BAD735D56C4EB0680D6FBEA7 /* LocalizationCatalogMigrationTests.swift */,
 				650034F730E88BC269DCA2AB /* LogControllerMigrationTests.swift */,
+				B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */,
 				AD34F16E8513386E56B5B3E7 /* LoggingBridgeMigrationTests.swift */,
+				8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */,
 				9B562D6F1BBEFFBE09214007 /* LogLineTypeRawValueTests.swift */,
 				1CB87F592817BD468FEC14CB /* LogLineXPCTests.swift */,
 				B54DD3222626EA1DF4F40363 /* LogRendererMigrationTests.swift */,
@@ -5226,6 +5235,8 @@
 				CF4179E62954717E022D14C7 /* LocalizationCatalogBoundaryTests.swift in Sources */,
 				216B4CD2C2ABC1C6C76A8CE2 /* LocalizationCatalogMigrationTests.swift in Sources */,
 				F08A7A1600E72FE1B6CDBA24 /* LogControllerMigrationTests.swift in Sources */,
+				3C1E010CF2EC0E14E67C40B0 /* LogControllerPrintingOperationTests.swift in Sources */,
+				53537C46936246C47434AA20 /* LogLineRenderRequestTests.swift in Sources */,
 				E5EFD2984C33C9A7908A9FCD /* LogLineTypeRawValueTests.swift in Sources */,
 				F3088A37444E303333E19072 /* LogLineXPCTests.swift in Sources */,
 				62354DD74841E96B0A80B170 /* LogRendererMigrationTests.swift in Sources */,
@@ -5766,6 +5777,7 @@
 				3EA58295D78EDFA45892C0B8 /* TVCLogControllerHistoricLogFile.swift in Sources */,
 				3C23FDBCA513EF247CBD8235 /* TVCLogControllerInlineMediaService.swift in Sources */,
 				C0972520CF543723E182C524 /* TVCLogControllerOperationQueue.swift in Sources */,
+				EC072F7C94B190A3EA9A424F /* TVCLogControllerRendering.swift in Sources */,
 				278C62EEB9CC4DA31CAF970F /* TVCLogLine.swift in Sources */,
 				68F752C51FC2DCD923612A60 /* TVCLogLineXPC.swift in Sources */,
 				E06E82D21C2B3A2DDB2637B1 /* TVCLogPolicy.swift in Sources */,
