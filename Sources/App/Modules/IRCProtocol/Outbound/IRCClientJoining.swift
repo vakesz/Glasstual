@@ -92,16 +92,20 @@ extension IRCClient {
 			channel.status = .joining
 		}
 
-		let withoutKeys = pending.filter { ($0.secretKey ?? "").isEmpty }
-		if withoutKeys.isEmpty == false {
-			send("JOIN", arguments: [withoutKeys.map(\.name).joined(separator: ",")])
-		}
-		let withKeys = pending.filter { ($0.secretKey ?? "").isEmpty == false }
-		if withKeys.isEmpty == false {
-			send("JOIN", arguments: [
-				withKeys.map(\.name).joined(separator: ","),
-				withKeys.compactMap(\.secretKey).joined(separator: ","),
-			])
+		// One JOIN per line that fits the protocol budget; a single line with
+		// every autojoin channel on it is truncated by the server.
+		let batches = IRCJoinBatching.batches(
+			for: pending.map { IRCJoinBatching.Target(name: $0.name, key: $0.secretKey) },
+			maximumLineLength: Int(supportInfo.maximumLineLength),
+			maximumTargets: supportInfo.maximumTargets(forCommand: "JOIN"),
+			channelLimits: supportInfo.channelLimits.mapValues(\.uintValue)
+		)
+		for batch in batches {
+			var arguments = [batch.channels.joined(separator: ",")]
+			if batch.keys.isEmpty == false {
+				arguments.append(batch.keys.joined(separator: ","))
+			}
+			send("JOIN", arguments: arguments)
 		}
 	}
 
