@@ -66,13 +66,7 @@ public extension IRCClient {
 	private func postThemeEvent(_ eventToken: String, to item: AnyObject) {
 		// The opt-out lives here so that no overload can bypass it.
 		guard themePostsHandleEventNotifications, !isTerminating else { return }
-		let viewController: LogController? = if let channel = item as? IRCChannel {
-			channel.viewController
-		} else if let treeItem = item as? IRCTreeItem {
-			(treeItem.viewController as AnyObject?) as? LogController
-		} else {
-			nil
-		}
-		viewController?.evaluateFunction("Glasstual.handleEvent", withArguments: [eventToken], onQueue: false)
+		let presentation = (item as? IRCTreeItem)?.presentation
+		presentation?.evaluateFunction("Glasstual.handleEvent", withArguments: [eventToken], onQueue: false)
 	}
 }

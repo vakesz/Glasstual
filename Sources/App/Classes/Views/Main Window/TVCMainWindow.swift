@@ -140,6 +140,9 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	private var sidebarFooterController: NSSplitViewItemAccessoryViewController?
 	var inputHistory: InputHistory!
 	var nicknameCompletionStatus: NicknameCompletionStatus!
+	/// The views the tree items are drawn into. The window owns them; the items
+	/// hold only a weak back-reference the registry installs.
+	private(set) lazy var logControllers = LogControllerRegistry(window: self)
 	private var appearanceStorage: MainWindowAppearance?
 	public var userInterfaceObjects: MainWindowAppearance {
 		guard let appearanceStorage else {
@@ -215,6 +218,9 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		SharedApplication.sharedThemeController().load()
 		controller.menuController?.prepareInitialState()
 		registerKeyHandlers()
+		/* Both have to be listening before the stored clients are restored:
+		 that restore is what publishes the tree they draw. */
+		controller.installClientServices()
 		controller.world.setupConfiguration()
 		setupTrees()
 		DockIcon.drawWithoutCount()

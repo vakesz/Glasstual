@@ -201,7 +201,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 
 	@MainActor
 	private func processingPayloadSucceeded(_ payload: InlineContentPayload, forItem item: IRCTreeItem) {
-		item.viewController?.processingInlineMediaPayloadSucceeded(payload)
+		item.logController?.processingInlineMediaPayloadSucceeded(payload)
 	}
 
 	@MainActor
@@ -210,7 +210,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 		forItem item: IRCTreeItem,
 		failedWithError error: NSError
 	) {
-		item.viewController?.processingInlineMediaPayload(
+		item.logController?.processingInlineMediaPayload(
 			payload,
 			failedWithError: error
 		)

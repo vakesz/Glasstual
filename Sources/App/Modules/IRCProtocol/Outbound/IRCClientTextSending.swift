@@ -178,7 +178,7 @@ public extension IRCClient {
 			}
 			if groupedChannels.count > 1 {
 				sendText(arguments, as: remoteCommand(for: invocation.outbound), toChannels: groupedChannels)
-				if TextualPreferences.giveFocusOnMessageCommand() {
+				if environment.preferences.giveFocusOnMessageCommand {
 					destinationToSelect = groupedChannels.first
 				}
 				let groupedNames = Set(groupedChannels.map(\.name))
@@ -195,7 +195,7 @@ public extension IRCClient {
 				localCommand: parsed.command,
 				silentlyConnecting: silentlyConnecting
 			)
-			if destinationToSelect == nil, TextualPreferences.giveFocusOnMessageCommand() {
+			if destinationToSelect == nil, environment.preferences.giveFocusOnMessageCommand {
 				destinationToSelect = selected
 			}
 		}
@@ -212,7 +212,7 @@ public extension IRCClient {
 	@objc(inputText:asCommand:)
 	@MainActor
 	func inputText(_ input: Any, as command: IRCRemoteCommand) {
-		guard let destination = AppController.shared.mainWindow.selectedItem else { return }
+		guard let destination = output?.selectedItem else { return }
 		inputText(input, as: command, destination: destination)
 	}
 
@@ -455,7 +455,7 @@ public extension IRCClient {
 		let destinationName = explicitPrefix.isEmpty ? rawDestination : String(rawDestination.dropFirst())
 		var channel = findChannel(destinationName)
 		if invocation.isSecretMessage == false, channel == nil, stringIsNickname(destinationName) {
-			channel = AppController.shared.world.createPrivateMessage(destinationName, on: self)
+			channel = world?.createPrivateMessage(destinationName, on: self)
 		}
 
 		let destinationIsChannel = channel?.isChannel == true ||
@@ -519,6 +519,6 @@ public extension IRCClient {
 		guard let channel,
 		      let treeItem = (channel as AnyObject) as? IRCTreeItem
 		else { return }
-		AppController.shared.mainWindow.select(treeItem)
+		output?.selectItem(treeItem)
 	}
 }

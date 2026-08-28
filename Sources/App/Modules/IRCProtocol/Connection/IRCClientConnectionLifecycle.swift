@@ -97,7 +97,7 @@ public extension IRCClient {
 		isConnecting = true
 		stopReconnectTimer()
 		reconnectEnabled = true
-		AppController.shared.mainWindow.updateTitle(for: self)
+		output?.updateTitle(for: self)
 		if mode == .reconnect {
 			printDebugInformation(toConsole: IRCConnectionStrings.reconnecting)
 		} else if mode == .retry {
@@ -128,7 +128,7 @@ public extension IRCClient {
 		}
 		socketConfig.floodControlDelayInterval = config.floodControlDelayTimerInterval
 		socketConfig.floodControlMaximumMessages = config.floodControlMaximumMessages
-		socketConfig.connectionPrefersModernCiphersOnly = TextualPreferences.preferModernCiphers()
+		socketConfig.connectionPrefersModernCiphersOnly = environment.preferences.preferModernCiphers
 		let connection = Connection(config: socketConfig, onClient: self)
 		socket = connection
 		connection.open()
@@ -233,7 +233,7 @@ public extension IRCClient {
 		reconnectEnabled = false
 		reconnectEnabledBecauseOfSleepMode = false
 		stopReconnectTimer()
-		AppController.shared.mainWindow.updateTitle(for: self)
+		output?.updateTitle(for: self)
 	}
 
 	@objc(toggleAwayStatusWithComment:)

@@ -36,7 +36,7 @@
  *
  *********************************************************************** */
 
-import AppKit
+import Foundation
 
 enum ChannelUnreadPolicy {
 	static func incrementsDockUnreadCount(isChannel: Bool, displaysPublicMessageCount: Bool) -> Bool {
@@ -50,18 +50,18 @@ enum ChannelUnreadPolicy {
 
 @MainActor
 public extension IRCClient {
-	private func channelIsSelectedInKeyWindow(_ channel: IRCChannel, mainWindow: MainWindow) -> Bool {
-		mainWindow.isKeyWindow && mainWindow.isItemSelected(channel)
+	private func channelIsSelectedInKeyWindow(_ channel: IRCChannel, output: any ClientOutput) -> Bool {
+		output.windowIsKey && output.isItemSelectedInWindow(channel)
 	}
 
 	@objc(setHighlightStateForChannel:)
 	func setHighlightState(for channel: IRCChannel) {
-		guard let mainWindow = AppController.shared.mainWindow else { return }
-		guard channelIsSelectedInKeyWindow(channel, mainWindow: mainWindow) == false else { return }
+		guard let output else { return }
+		guard channelIsSelectedInKeyWindow(channel, output: output) == false else { return }
 
 		channel.nicknameHighlightCount += 1
 		DockIcon.updateDockIcon()
-		mainWindow.reloadTreeItem(channel)
+		output.reloadTreeItem(channel)
 	}
 
 	@objc(setUnreadStateForChannel:)
@@ -71,12 +71,12 @@ public extension IRCClient {
 
 	@objc(setUnreadStateForChannel:isHighlight:)
 	func setUnreadState(for channel: IRCChannel, isHighlight: Bool) {
-		guard let mainWindow = AppController.shared.mainWindow else { return }
-		guard channelIsSelectedInKeyWindow(channel, mainWindow: mainWindow) == false else { return }
+		guard let output else { return }
+		guard channelIsSelectedInKeyWindow(channel, output: output) == false else { return }
 
 		if ChannelUnreadPolicy.incrementsDockUnreadCount(
 			isChannel: channel.isChannel,
-			displaysPublicMessageCount: TextualPreferences.displayPublicMessageCountOnDockBadge()
+			displaysPublicMessageCount: environment.preferences.displayPublicMessageCountOnDockBadge
 		) {
 			channel.dockUnreadCount += 1
 			DockIcon.updateDockIcon()
@@ -88,7 +88,7 @@ public extension IRCClient {
 			isHighlight: isHighlight,
 			showsTreeBadgeCount: channel.config.showTreeBadgeCount
 		) {
-			mainWindow.serverList.refreshMessageCount(forItem: channel)
+			output.refreshMessageCount(for: channel)
 		}
 	}
 }

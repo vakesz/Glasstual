@@ -64,7 +64,7 @@ extension IRCClient {
 			print(text, by: nil, in: nil, as: .debug, command: message.command, receivedAt: message.receivedAt)
 		case IRCNumeric.motd.rawValue, IRCNumeric.motdstart.rawValue, IRCNumeric.endofmotd.rawValue,
 		     IRCNumeric.nomotd.rawValue:
-			guard shouldPrint, TextualPreferences.displayServerMOTD() else { return true }
+			guard shouldPrint, environment.preferences.displayServerMOTD else { return true }
 			if numeric == IRCNumeric.nomotd.rawValue {
 				printErrorReply(message)
 			} else {
@@ -79,7 +79,7 @@ extension IRCClient {
 		case IRCNumeric.endofsilelist.rawValue:
 			if shouldPrint {
 				printDebugInformation(IRCInboundStrings.Numeric.endOfSilenceList,
-				                      in: AppController.shared.mainWindow.selectedChannel(on: self),
+				                      in: output?.selectedChannel(on: self),
 				                      asCommand: message.command)
 			}
 		case IRCNumeric.unaway.rawValue, IRCNumeric.nowaway.rawValue:
@@ -153,7 +153,7 @@ extension IRCClient {
 	private func handleAwayNumeric(_ message: Message, shouldPrint: Bool) {
 		guard message.params.count == 3 else { return }
 		let nickname = message.params[1]
-		let channel = findChannel(nickname) ?? AppController.shared.mainWindow.selectedChannel(on: self)
+		let channel = findChannel(nickname) ?? output?.selectedChannel(on: self)
 		if let user = findUser(nickname) {
 			if monitorAwayStatus {
 				user.markAsAway()
@@ -181,14 +181,14 @@ extension IRCClient {
 		}
 		guard shouldPrint, !entry.isEmpty else { return }
 		printDebugInformation(IRCInboundStrings.Numeric.silenceEntry(entry.joined(separator: " ")),
-		                      in: AppController.shared.mainWindow.selectedChannel(on: self),
+		                      in: output?.selectedChannel(on: self),
 		                      asCommand: message.command)
 	}
 
 	private func handleOwnAwayNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
 		let away = numeric == IRCNumeric.nowaway.rawValue
 		userIsAway = away
-		AppController.shared.mainWindow.updateTitle()
+		output?.updateTitle()
 		if shouldPrint {
 			printReply(message)
 		}

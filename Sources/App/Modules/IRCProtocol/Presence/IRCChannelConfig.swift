@@ -36,8 +36,11 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+
+// AppKit: a per-event override is shown as an NSControl mixed-state value.
+import AppKit
+import Foundation
 import GlasstualPluginKit
 
 /// One notification override a channel carries: either a sound name or an

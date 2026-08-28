@@ -10,8 +10,11 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+
+// AppKit: the Glasstual URL scheme opens folders through NSWorkspace.
+import AppKit
+import Foundation
 import os
 
 public typealias IRCExtras = Extras
@@ -55,7 +58,7 @@ public final class Extras: NSObject {
 			return
 		}
 
-		let menuController = AppController.shared.menuController
+		let menuController = ClientEnvironment.shared.menu
 
 		switch action {
 		case .acknowledgements, .contributors:
@@ -502,7 +505,7 @@ public final class Extras: NSObject {
 		var existingClient: IRCClient?
 
 		if mergeConnectionIfPossible, channelListCount > 0 {
-			existingClient = AppController.shared.world.findClient(withServerAddress: serverAddress)
+			existingClient = ClientEnvironment.shared.world?.findClient(withServerAddress: serverAddress)
 		}
 
 		if let matchedClient = existingClient,
@@ -528,11 +531,11 @@ public final class Extras: NSObject {
 				}
 			}
 
-			AppController.shared.world.save()
+			ClientEnvironment.shared.world?.save()
 
 			if selectFirstChannelAdded, let firstChannelAdded {
 				if let treeItem = (firstChannelAdded as AnyObject) as? IRCTreeItem {
-					AppController.shared.mainWindow.select(treeItem)
+					ClientEnvironment.shared.output?.selectItem(treeItem)
 				}
 			}
 		} else {
@@ -554,9 +557,10 @@ public final class Extras: NSObject {
 
 			baseConfig.channelList = (channelList ?? []).map(ChannelConfig.seed(withName:))
 
-			let client = AppController.shared.world.createClient(with: baseConfig, reload: true)
+			guard let client = ClientEnvironment.shared.world?.createClient(with: baseConfig, reload: true)
+			else { return }
 
-			AppController.shared.world.save()
+			ClientEnvironment.shared.world?.save()
 
 			if connectWhenCreated {
 				client.connect()

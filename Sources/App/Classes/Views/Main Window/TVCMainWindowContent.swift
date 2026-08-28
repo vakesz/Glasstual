@@ -49,9 +49,9 @@ extension MainWindow {
 		guard (0.5 ... 3).contains(next) else { return }
 		textSizeMultiplier = next
 		for client in world.clientList {
-			client.viewController.changeTextSize(bigger)
+			client.logController?.changeTextSize(bigger)
 			for channel in client.channelList {
-				channel.viewController.changeTextSize(bigger)
+				channel.logController?.changeTextSize(bigger)
 			}
 		}
 	}
@@ -65,11 +65,11 @@ extension MainWindow {
 		let markScrollback = TextualPreferences.autoAddScrollbackMark()
 		for client in world.clientList {
 			if markScrollback {
-				client.viewController.mark()
+				client.logController?.mark()
 			}
 			for channel in client.channelList {
 				if markScrollback {
-					channel.viewController.mark()
+					channel.logController?.mark()
 				}
 				channel.resetState()
 			}
@@ -95,9 +95,9 @@ extension MainWindow {
 
 	private func performThemeReload() {
 		for client in world.clientList {
-			client.viewController.reloadTheme()
+			client.logController?.reloadTheme()
 			for channel in client.channelList {
-				channel.viewController.reloadTheme()
+				channel.logController?.reloadTheme()
 			}
 		}
 		isReloadingTheme = false
@@ -107,14 +107,14 @@ extension MainWindow {
 	@objc(clearContentsOfClient:)
 	public func clearContents(of client: IRCClient) {
 		client.resetState()
-		client.viewController.clear()
+		client.logController?.clear()
 		reloadTreeItem(client)
 	}
 
 	@objc(clearContentsOfChannel:)
 	public func clearContents(of channel: IRCChannel) {
 		channel.resetState()
-		channel.viewController.clear()
+		channel.logController?.clear()
 		reloadTreeItem(legacyTreeItem(channel))
 	}
 
@@ -445,11 +445,10 @@ public extension MainWindow {
 	}
 
 	var selectedViewController: LogController? {
-		if let controller = selectedChannel?.viewController {
+		if let controller = selectedChannel?.logController {
 			return controller
 		}
-		guard let controller = selectedClient?.viewController else { return nil }
-		return nativeLogController(controller)
+		return selectedClient?.logController
 	}
 
 	@objc func channelViewSelectionChange(to item: IRCTreeItem) {
@@ -501,12 +500,12 @@ public extension MainWindow {
 
 		updateChannelViewBoxContentViewSelection()
 		for item in previousItems where newItems.contains(where: { $0 === item }) == false {
-			nativeLogController(item.viewController).notifyDidBecomeHidden()
+			item.logController?.notifyDidBecomeHidden()
 		}
 		for item in newItems where previousItems.contains(where: { $0 === item }) == false {
-			nativeLogController(item.viewController).notifyDidBecomeVisible()
+			item.logController?.notifyDidBecomeVisible()
 			if item !== selectedItem {
-				nativeLogController(item.viewController).notifySelectionChanged()
+				item.logController?.notifySelectionChanged()
 			}
 		}
 		selectionDidChangePostflight()
@@ -526,7 +525,7 @@ public extension MainWindow {
 			noteItemWasViewed(changedTo)
 		}
 		if let changedFrom {
-			nativeLogController(changedFrom.viewController).notifySelectionChanged()
+			changedFrom.logController?.notifySelectionChanged()
 		}
 
 		guard let changedTo else {
@@ -553,7 +552,7 @@ public extension MainWindow {
 		inputHistory.moveFocus(to: changedTo)
 		inputTextField.resetSpellingIgnores()
 		updateMemberListVisibilityForSelection()
-		nativeLogController(changedTo.viewController).notifySelectionChanged()
+		changedTo.logController?.notifySelectionChanged()
 		storeLastSelectedChannel()
 		NotificationCenter.default.post(name: .mainWindowSelectionChanged, object: self)
 		DockIcon.updateDockIcon()
@@ -1158,32 +1157,26 @@ public extension MainWindow {
 	}
 
 	func outlineView(
-		_ outlineView: NSOutlineView,
+		_: NSOutlineView,
 		acceptDrop info: any NSDraggingInfo,
 		item: Any?,
 		childIndex index: Int
 	) -> Bool {
-		guard index >= 0, let draggedItem = draggedItem(from: info),
-		      let list = outlineView as? ServerList else { return false }
+		guard index >= 0, let draggedItem = draggedItem(from: info) else { return false }
+		/* The world performs the move and tells its observers — this window
+		 among them — to follow, rather than the drop rewriting both. */
 		if draggedItem.isClient {
-			var clients = world.clientList
-			guard let original = clients.firstIndex(where: { $0 === draggedItem }) else { return false }
-			let target = destinationIndex(proposed: index, movingFrom: original)
-			let moved = clients.remove(at: original)
-			clients.insert(moved, at: min(target, clients.count))
-			world.clientList = clients
-			list.moveItem(at: original, inParent: nil, to: target, inParent: nil)
+			guard let original = world.clientList.firstIndex(where: { $0 === draggedItem }) else { return false }
+			world.moveClient(from: original, to: destinationIndex(proposed: index, movingFrom: original))
 		} else {
 			guard let client = item as? IRCClient, draggedItem.associatedClient === client else { return false }
-			var channels = client.channelList
-			guard let original = channels.firstIndex(where: { $0 === draggedItem }) else { return false }
-			let target = destinationIndex(proposed: index, movingFrom: original)
-			let moved = channels.remove(at: original)
-			channels.insert(moved, at: min(target, channels.count))
-			client.channelList = channels
-			list.moveItem(at: original, inParent: client, to: target, inParent: client)
+			guard let original = client.channelList.firstIndex(where: { $0 === draggedItem }) else { return false }
+			world.moveChannel(
+				on: client,
+				from: original,
+				to: destinationIndex(proposed: index, movingFrom: original)
+			)
 		}
-		menuController.populateNavigationChannelList()
 		return true
 	}
 

@@ -194,7 +194,7 @@ extension IRCClient {
 				guard memberCount <= UserTrackingWhoBatchPolicy.maximumInitialChannelSize else { continue }
 			} else {
 				guard isCapabilityEnabled(.awayNotify) == false,
-				      memberCount <= TextualPreferences.trackUserAwayStatusMaximumChannelSize()
+				      memberCount <= environment.preferences.trackUserAwayStatusMaximumChannelSize
 				else { continue }
 			}
 

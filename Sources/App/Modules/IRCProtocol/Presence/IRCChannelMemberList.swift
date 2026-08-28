@@ -35,7 +35,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
 import Foundation
 
@@ -128,6 +127,12 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		channelStorage
 	}
 
+	/// The owning client's preference snapshot, or the declared defaults once
+	/// that client has gone.
+	private var preferences: ClientPreferences {
+		clientStorage?.environment.preferences ?? ClientPreferences()
+	}
+
 	@available(*, unavailable)
 	override public init() {
 		fatalError("init() is unavailable; use init(channel:)")
@@ -154,7 +159,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		var lowerBound = 0
 		var upperBound = memberContainer.count
 		/* Read once rather than on every comparison. */
-		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
+		let favorIRCop = preferences.memberListSortFavorsServerStaff
 
 		while lowerBound < upperBound {
 			let index = lowerBound + (upperBound - lowerBound) / 2
@@ -283,13 +288,10 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return
 		}
 
-		guard let controller,
-		      let memberList = AppController.shared.mainWindow.memberList
+		guard let controller, let output = clientStorage?.output, output.beginMemberListUpdates()
 		else {
 			return
 		}
-
-		memberList.beginUpdates()
 
 		if resort {
 			if let oldIndex {
@@ -297,10 +299,10 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			}
 			controller.insert(newMember, atArrangedObjectIndex: newIndex)
 		} else {
-			memberList.refreshDrawing(forRow: memberList.rowForMember(at: newIndex))
+			output.refreshMemberListDrawing(forMemberAt: newIndex)
 		}
 
-		memberList.endUpdates()
+		output.endMemberListUpdates()
 	}
 
 	@objc(replaceMember:withMember:)
@@ -365,7 +367,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			client.modify(member.user) { user in
 				user.isIRCop = true
 			}
-			replaceInAllChannels = TextualPreferences.memberListSortFavorsServerStaff()
+			replaceInAllChannels = preferences.memberListSortFavorsServerStaff
 		}
 
 		replaceMember(
@@ -379,7 +381,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	@objc
 	public func sortMembers() {
 		/* Snapshot the preference so the comparator stays pure for the whole sort. */
-		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
+		let favorIRCop = preferences.memberListSortFavorsServerStaff
 
 		memberContainer.sort {
 			$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
@@ -443,7 +445,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return false
 		}
 
-		let world = AppController.shared.world
+		let world = ClientEnvironment.shared.world
 		let channel = (world?.findItem(withId: channelID) as AnyObject?) as? IRCChannel
 
 		guard let channel else {

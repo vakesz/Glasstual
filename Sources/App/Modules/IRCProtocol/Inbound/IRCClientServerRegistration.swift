@@ -123,15 +123,15 @@ public extension IRCClient {
 		}
 		requestPlayback()
 
-		let mainWindow = AppController.shared.mainWindow
+		let output = output
 		for channel in channelList where channel.isPrivateMessage {
 			channel.activate()
 			if let treeItem = (channel as AnyObject) as? IRCTreeItem {
-				mainWindow?.reloadTreeItem(treeItem)
+				output?.reloadTreeItem(treeItem)
 			}
 		}
-		mainWindow?.reloadTreeItem(self)
-		mainWindow?.updateTitle(for: self)
+		output?.reloadTreeItem(self)
+		output?.updateTitle(for: self)
 
 		if !config.autojoinWaitsForNickServ || isCapabilityEnabled(.isIdentifiedWithSASL) {
 			performAutoJoin(initiatedByUser: false)

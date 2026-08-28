@@ -121,10 +121,10 @@ extension IRCClient {
 						member,
 						with: member,
 						resort: true,
-						replaceInAllChannels: TextualPreferences.memberListSortFavorsServerStaff()
+						replaceInAllChannels: environment.preferences.memberListSortFavorsServerStaff
 					)
 				} else if existingUser?.isAway != finalUser.isAway {
-					AppController.shared.mainWindow?.updateDrawingForUserInUserList(finalUser)
+					output?.updateDrawingForUser(finalUser)
 				}
 			}
 		} else {

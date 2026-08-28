@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+// AppKit: the highlight's attributed text is built with a system font.
 import AppKit
 import CocoaExtensions
 import os
@@ -85,7 +86,7 @@ public final nonisolated class HighlightLogEntry: NSObject {
 	}
 
 	@objc @MainActor public var channel: IRCChannel? {
-		AppController.shared.world.findChannel(
+		ClientEnvironment.shared.world?.findChannel(
 			withId: channelId,
 			onClientWithId: clientId
 		)

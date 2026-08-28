@@ -52,6 +52,11 @@ final class GLTTestClient: IRCClient, @unchecked Sendable {
 	let printedLines = NSMutableArray()
 	var forwardsProcessedMessages = false
 
+	/** The window, menus and application this client talks to. Held here rather
+	 than reached for through the application's singletons, so a test client
+	 works with no running user interface. */
+	private(set) var fixture: GLTClientEnvironmentFixture!
+
 	@MainActor convenience init() {
 		self.init(configDictionary: [:])
 	}
@@ -65,14 +70,24 @@ final class GLTTestClient: IRCClient, @unchecked Sendable {
 	 come back from the pending value and never reach the real keychain. */
 	@MainActor convenience init(
 		configDictionary dictionary: [String: Any],
-		nicknamePassword: String?
+		nicknamePassword: String?,
+		fixture: GLTClientEnvironmentFixture = GLTClientEnvironmentFixture()
 	) {
-		self.init(config: PropertyListModel.decode(ClientConfig.self, from: dictionary) ?? ClientConfig())
+		self.init(
+			config: PropertyListModel.decode(ClientConfig.self, from: dictionary) ?? ClientConfig(),
+			environment: fixture.environment
+		)
 
+		self.fixture = fixture
 		config.pendingNicknamePassword = nicknamePassword
 		linePrintObserver = { [weak self] request in
 			self?.recordPrintedLine(request)
 		}
+	}
+
+	/// The window double this client draws into.
+	var recordedOutput: GLTRecordingClientOutput {
+		fixture.output
 	}
 
 	static func testChannelUser(nickname: String, on client: IRCClient) -> ChannelUser {

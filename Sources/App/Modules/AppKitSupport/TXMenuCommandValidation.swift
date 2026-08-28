@@ -43,11 +43,11 @@ import GlasstualPluginKit
 @MainActor
 extension MenuActionCoordinator {
 	private var selectedViewController: LogController? {
-		if let controller = selectedChannel?.viewController {
+		if let controller = selectedChannel?.logController {
 			return controller
 		}
 
-		return selectedClient?.viewController
+		return selectedClient?.logController
 	}
 
 	private var selectedBackingView: LogView? {

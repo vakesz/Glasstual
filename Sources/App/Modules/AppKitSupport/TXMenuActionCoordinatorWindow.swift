@@ -147,9 +147,7 @@ public extension MenuActionCoordinator {
 		guard let world else { return }
 		for client in world.clientList {
 			let sortedChannels = client.channelList.sorted(by: MenuWindowPolicy.channelsOrderedBeforeQueries)
-			guard sortedChannels != client.channelList else { continue }
-			client.channelList = sortedChannels
-			client.reloadServerListItems()
+			world.setChannelList(sortedChannels, on: client)
 		}
 		world.save()
 	}

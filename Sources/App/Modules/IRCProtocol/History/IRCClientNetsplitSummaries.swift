@@ -67,7 +67,7 @@ public extension IRCClient {
 		for channel in channelList {
 			guard let nicknames = recordedNicknames?[channel.uniqueIdentifier],
 			      nicknames.isEmpty == false,
-			      TextualPreferences.showJoinLeave(),
+			      environment.preferences.showJoinLeave,
 			      !channel.config.ignoreGeneralEventMessages
 			else { continue }
 
