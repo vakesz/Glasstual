@@ -107,6 +107,10 @@ enum IRCCommandStrings {
 		String(localized: .IRC.sxfQx)
 	}
 
+	static var developerModeRequired: String {
+		String(localized: .IRC.developerModeRequired)
+	}
+
 	static func preventedSelfBan(serverAddress: String) -> String {
 		String(localized: .IRC._0R15L(serverAddress))
 	}

@@ -189,6 +189,7 @@ public extension IRCClient {
 			send("NAMES", arguments: [arguments])
 
 		case "recv":
+			guard requireDeveloperMode() else { return true }
 			guard requireArguments(arguments, for: parsed.command) else { return true }
 			guard let socket else { return true }
 			ircConnection(socket, didReceiveData: arguments)
@@ -534,6 +535,16 @@ public extension IRCClient {
 	func requireArguments(_ arguments: String, for command: String) -> Bool {
 		guard arguments.isEmpty else { return true }
 		printInvalidSyntaxMessage(for: command)
+		return false
+	}
+
+	/// Gates a command that is marked `developerModeOnly` in the command
+	/// index. The index itself is only consulted for the completion list, so
+	/// developer-only commands are otherwise reachable by anyone who types
+	/// them.
+	func requireDeveloperMode() -> Bool {
+		guard TextualPreferences.developerModeEnabled() == false else { return true }
+		printDebugInformation(IRCCommandStrings.developerModeRequired)
 		return false
 	}
 
