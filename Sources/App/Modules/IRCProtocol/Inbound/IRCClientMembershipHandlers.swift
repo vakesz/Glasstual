@@ -70,7 +70,7 @@ public extension IRCClient {
 		}
 
 		if !printOnly {
-			let user = mutableCopyOfUser(withNickname: sender)
+			let user = draftUser(withNickname: sender)
 			user.nickname = sender
 			user.username = message.senderUsername
 			user.address = message.senderAddress

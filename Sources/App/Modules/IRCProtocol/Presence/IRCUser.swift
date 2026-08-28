@@ -48,19 +48,29 @@ private let userLogger = Logger(
 	category: "IRCUser"
 )
 
-@objc(IRCUser)
-open nonisolated class User: PortablePropertyObject {
-	fileprivate weak var clientStorage: IRCClient?
-	fileprivate var persistentStore = UserPersistentStore()
+/** Someone visible to this client, identified by object identity: the user
+ directory and every member list hold the same instance.
 
-	fileprivate var nicknameStorage = ""
-	fileprivate var usernameStorage: String?
-	fileprivate var addressStorage: String?
-	fileprivate var realNameStorage: String?
-	fileprivate var accountStorage: String?
-	fileprivate var isAwayStorage = false
-	fileprivate var isIRCopStorage = false
-	fileprivate var isBotStorage = false
+ Changing a user means taking a `duplicate()`, editing that, and handing it back
+ to the directory, which relinks the relations. Editing an instance the
+ directory already holds is what the setters' `internal` access guards against. */
+@objc(IRCUser)
+public final nonisolated class User: NSObject {
+	/// `nil` once the client has been torn down. Users routinely outlive
+	/// their client through the shared persistent store and the removal
+	/// timer, so this must not be force-unwrapped.
+	public private(set) weak var client: IRCClient?
+
+	private var persistentStore = UserPersistentStore()
+
+	public internal(set) var nickname = ""
+	public internal(set) var username: String?
+	public internal(set) var address: String?
+	public internal(set) var realName: String?
+	public internal(set) var account: String?
+	public internal(set) var isAway = false
+	public internal(set) var isIRCop = false
+	public internal(set) var isBot = false
 
 	/** The relation map is keyed by channel and reads the channel's kind, so it
 	 and everything that reaches it live on the main actor. */
@@ -75,70 +85,24 @@ open nonisolated class User: PortablePropertyObject {
 		return relations
 	}
 
-	/// `nil` once the client has been torn down. Users routinely outlive
-	/// their client through the shared persistent store and the removal
-	/// timer, so this must not be force-unwrapped.
-	@objc public var client: IRCClient? {
-		clientStorage
-	}
-
-	@objc public var nickname: String {
-		nicknameStorage
-	}
-
-	@objc public var username: String? {
-		usernameStorage
-	}
-
-	@objc public var address: String? {
-		addressStorage
-	}
-
-	@objc public var realName: String? {
-		realNameStorage
-	}
-
-	@objc public var account: String? {
-		accountStorage
-	}
-
-	@objc public var isAway: Bool {
-		get { isAwayStorage }
-		set {
-			if isAwayStorage != newValue {
-				isAwayStorage = newValue
-			}
-		}
-	}
-
-	@objc public var isIRCop: Bool {
-		isIRCopStorage
-	}
-
-	@objc public var isBot: Bool {
-		isBotStorage
-	}
-
-	@objc public var hostmaskFragment: String? {
-		guard let username = usernameStorage, let address = addressStorage else {
+	public var hostmaskFragment: String? {
+		guard let username, let address else {
 			return nil
 		}
 
 		return "\(username)@\(address)"
 	}
 
-	@objc public var hostmask: String? {
-		guard let username = usernameStorage, let address = addressStorage else {
+	public var hostmask: String? {
+		guard let username, let address else {
 			return nil
 		}
 
-		return "\(nicknameStorage)!\(username)@\(address)"
+		return "\(nickname)!\(username)@\(address)"
 	}
 
-	@objc public var banMask: String {
-		let nickname = nicknameStorage
-
-		guard let username = usernameStorage, let address = addressStorage else {
+	public var banMask: String {
+		guard let username, let address else {
 			return "\(nickname)!*@*"
 		}
 
@@ -156,12 +120,12 @@ open nonisolated class User: PortablePropertyObject {
 		}
 	}
 
-	@objc public var lowercaseNickname: String {
-		nicknameStorage.lowercased()
+	public var lowercaseNickname: String {
+		nickname.lowercased()
 	}
 
-	@objc public var uppercaseNickname: String {
-		nicknameStorage.uppercased()
+	public var uppercaseNickname: String {
+		nickname.uppercased()
 	}
 
 	/// Whether the RPL_AWAY (301) reply for this user should be shown, taking
@@ -171,7 +135,7 @@ open nonisolated class User: PortablePropertyObject {
 	/// rate limited. Asking is what opens the next window, which is why this
 	/// is a method: it used to read as a property and quietly moved the clock
 	/// on every access.
-	@objc public func claimAwayMessagePresentation() -> Bool {
+	public func claimAwayMessagePresentation() -> Bool {
 		let now = CFAbsoluteTimeGetCurrent()
 
 		guard (persistentStore.presentAwayMessageFor301LastEvent + presentAwayMessageFor301Threshold) < now else {
@@ -183,47 +147,53 @@ open nonisolated class User: PortablePropertyObject {
 		return true
 	}
 
-	@objc @MainActor public var relations: [IRCChannel: ChannelUser] {
+	@MainActor public var relations: [IRCChannel: ChannelUser] {
 		relationsInt.relations
 	}
 
-	@available(*, unavailable)
-	override public init() {
-		fatalError("init() is unavailable; use init(nickname:on:)")
-	}
-
-	@objc(initWithNickname:onClient:)
 	@MainActor
 	public init(nickname: String, on client: IRCClient) {
+		self.nickname = nickname
+		self.client = client
+
 		super.init()
 
-		nicknameStorage = nickname
-		clientStorage = client
-		createNewPersistentStoreObject()
-	}
-
-	public required init?(coder _: NSCoder) {
-		nil
-	}
-
-	@MainActor
-	private func createNewPersistentStoreObject() {
-		persistentStore = UserPersistentStore()
 		persistentStore.relations = UserRelations()
 	}
 
-	@objc
+	/** Shares the persistent store — the removal timer, the relation map and the
+	 away-message clock belong to the person, not to this snapshot of them. */
+	private init(copying other: User) {
+		client = other.client
+		persistentStore = other.persistentStore
+		nickname = other.nickname
+		username = other.username
+		address = other.address
+		realName = other.realName
+		account = other.account
+		isAway = other.isAway
+		isIRCop = other.isIRCop
+		isBot = other.isBot
+
+		super.init()
+	}
+
+	/// An editable copy. The directory stores whichever instance it is handed,
+	/// so edit the duplicate and add it back rather than editing a stored user.
+	public func duplicate() -> User {
+		User(copying: self)
+	}
+
 	public func markAsAway() {
 		isAway = true
 	}
 
-	@objc
 	public func markAsReturned() {
 		isAway = false
 	}
 
 	override public var description: String {
-		"<IRCUser \(nicknameStorage)>"
+		"<IRCUser \(nickname)>"
 	}
 
 	override public func isEqual(_ object: Any?) -> Bool {
@@ -239,53 +209,31 @@ open nonisolated class User: PortablePropertyObject {
 			return false
 		}
 
-		return clientStorage === other.clientStorage
-			&& nicknameStorage == other.nicknameStorage
-			&& usernameStorage == other.usernameStorage
-			&& addressStorage == other.addressStorage
-			&& realNameStorage == other.realNameStorage
-			&& accountStorage == other.accountStorage
-			&& isAwayStorage == other.isAwayStorage
-			&& isIRCopStorage == other.isIRCopStorage
-			&& isBotStorage == other.isBotStorage
+		return client === other.client
+			&& nickname == other.nickname
+			&& username == other.username
+			&& address == other.address
+			&& realName == other.realName
+			&& account == other.account
+			&& isAway == other.isAway
+			&& isIRCop == other.isIRCop
+			&& isBot == other.isBot
 	}
 
 	/** `isEqual` compares values, so `hash` has to as well: inheriting the identity
 	 hash makes equal-but-distinct users behave incorrectly in sets and dictionaries. */
 	override public var hash: Int {
 		var hasher = Hasher()
-		hasher.combine(clientStorage.map(ObjectIdentifier.init))
-		hasher.combine(nicknameStorage)
-		hasher.combine(usernameStorage)
-		hasher.combine(addressStorage)
-		hasher.combine(realNameStorage)
-		hasher.combine(accountStorage)
-		hasher.combine(isAwayStorage)
-		hasher.combine(isIRCopStorage)
-		hasher.combine(isBotStorage)
+		hasher.combine(client.map(ObjectIdentifier.init))
+		hasher.combine(nickname)
+		hasher.combine(username)
+		hasher.combine(address)
+		hasher.combine(realName)
+		hasher.combine(account)
+		hasher.combine(isAway)
+		hasher.combine(isIRCop)
+		hasher.combine(isBot)
 		return hasher.finalize()
-	}
-
-	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
-		guard let object = newObject as? User else {
-			return
-		}
-
-		object.clientStorage = clientStorage
-		object.persistentStore = persistentStore
-		object.nicknameStorage = nicknameStorage
-		object.usernameStorage = usernameStorage
-		object.addressStorage = addressStorage
-		object.realNameStorage = realNameStorage
-		object.accountStorage = accountStorage
-		object.isAwayStorage = isAwayStorage
-		object.isIRCopStorage = isIRCopStorage
-		object.isBotStorage = isBotStorage
-	}
-
-	override public var mutableClass: PortablePropertyObject {
-		unsafeBitCast(UserMutable.self, to: PortablePropertyObject.self)
 	}
 
 	// MARK: - Remove-user timer
@@ -319,7 +267,6 @@ open nonisolated class User: PortablePropertyObject {
 		removeUserTimer.activate()
 	}
 
-	@objc
 	public func cancelRemoveUserTimer() {
 		guard let removeUserTimer = persistentStore.removeUserTimer else {
 			return
@@ -330,8 +277,8 @@ open nonisolated class User: PortablePropertyObject {
 	}
 
 	private func removeUserTimerBlockToFire() -> () -> Void {
-		weak let client = clientStorage
-		let nickname = nicknameStorage
+		weak let client = client
+		let nickname = nickname
 
 		/* The timer fires off the main actor and a user is not `Sendable`, so the
 		 handler carries the nickname and looks the user up again on the way in. */
@@ -348,27 +295,23 @@ open nonisolated class User: PortablePropertyObject {
 
 	// MARK: - Relations
 
-	@objc(associateUser:withChannel:)
 	@MainActor
 	public func associate(_ user: ChannelUser, with channel: IRCChannel) {
 		relationsInt.associate(user, with: channel)
 		toggleRemoveUserTimer()
 	}
 
-	@objc(disassociateUserWithChannel:)
 	@MainActor
 	public func disassociateUser(with channel: IRCChannel) {
 		relationsInt.disassociateUser(with: channel)
 		toggleRemoveUserTimer()
 	}
 
-	@objc(userAssociatedWithChannel:)
 	@MainActor
 	public func userAssociated(with channel: IRCChannel) -> ChannelUser? {
 		relationsInt.userAssociated(with: channel)
 	}
 
-	@objc
 	@MainActor
 	public func relinkRelations() {
 		for relatedUser in relationsInt.relatedUsers {
@@ -376,86 +319,16 @@ open nonisolated class User: PortablePropertyObject {
 		}
 	}
 
-	@objc
 	@MainActor
 	public func becamePrimaryUser() {
 		updateRemoveUserTimerBlockToFire()
 		relinkRelations()
 	}
 
-	@objc(enumerateRelations:)
 	@MainActor
 	public func enumerateRelations(
 		_ block: (IRCChannel, ChannelUser, UnsafeMutablePointer<ObjCBool>) -> Void
 	) {
 		relationsInt.enumerateRelations(block)
-	}
-}
-
-@objc(IRCUserMutable)
-public final nonisolated class UserMutable: User {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyObject {
-		unsafeBitCast(User.self, to: PortablePropertyObject.self)
-	}
-
-	@objc(initWithClient:)
-	public convenience init(client: IRCClient) {
-		self.init(nickname: "", on: client)
-	}
-
-	@objc override public var nickname: String {
-		get { nicknameStorage }
-		set { nicknameStorage = newValue }
-	}
-
-	@objc override public var username: String? {
-		get { usernameStorage }
-		set { usernameStorage = newValue }
-	}
-
-	@objc override public var address: String? {
-		get { addressStorage }
-		set { addressStorage = newValue }
-	}
-
-	@objc override public var realName: String? {
-		get { realNameStorage }
-		set { realNameStorage = newValue }
-	}
-
-	@objc override public var account: String? {
-		get { accountStorage }
-		set { accountStorage = newValue }
-	}
-
-	@objc override public var isAway: Bool {
-		get { isAwayStorage }
-		set {
-			if isAwayStorage != newValue {
-				isAwayStorage = newValue
-			}
-		}
-	}
-
-	@objc override public var isIRCop: Bool {
-		get { isIRCopStorage }
-		set {
-			if isIRCopStorage != newValue {
-				isIRCopStorage = newValue
-			}
-		}
-	}
-
-	@objc override public var isBot: Bool {
-		get { isBotStorage }
-		set {
-			if isBotStorage != newValue {
-				isBotStorage = newValue
-			}
-		}
 	}
 }

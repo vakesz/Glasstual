@@ -54,7 +54,7 @@ struct IRCUserHashEqualityTests {
 		let client = GLTTestClient()
 		let user = User(nickname: "Alice", on: client)
 		let plain = ChannelUser(user: user)
-		let operatorMember = ChannelUserMutable(user: user)
+		let operatorMember = ChannelUser(user: user)
 		operatorMember.modes = "o"
 
 		#expect(plain.isEqual(operatorMember) == false)

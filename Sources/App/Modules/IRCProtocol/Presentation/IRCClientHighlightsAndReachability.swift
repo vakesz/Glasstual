@@ -58,10 +58,8 @@ public extension IRCClient {
 	func cacheHighlight(in channel: IRCChannel, with logLine: LogLine) {
 		guard TextualPreferences.logHighlights() else { return }
 
-		guard let copiedLine = logLine.copy() as? LogLine else { return }
-
 		let newEntry = HighlightLogEntry(
-			lineLogged: copiedLine,
+			lineLogged: logLine.duplicate(),
 			clientId: uniqueIdentifier,
 			channelId: channel.uniqueIdentifier
 		)

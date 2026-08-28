@@ -477,7 +477,7 @@ final class IRCClientHistoryTests: XCTestCase {
 		text: String,
 		date: Date
 	) -> LogLine {
-		let line = MutableLogLine()
+		let line = LogLine()
 		line.command = "privmsg"
 		line.lineType = .privateMessage
 		line.messageIdentifier = messageIdentifier
@@ -485,11 +485,7 @@ final class IRCClientHistoryTests: XCTestCase {
 		line.messageBody = text
 		line.receivedAt = date
 
-		guard let copiedLine = line.copy() as? LogLine else {
-			preconditionFailure("Log-line copies must preserve their model type")
-		}
-
-		return copiedLine
+		return line.duplicate()
 	}
 
 	private func index(_ line: LogLine, for channel: Channel) {
