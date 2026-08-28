@@ -245,7 +245,7 @@ nonisolated enum MainWindowStrings {
 			case 2:
 				return String(localized: .TVCMainWindow.areTyping(nicknames[0], nicknames[1]))
 			default:
-				return String(localized: .TVCMainWindow.peopleAreTyping(String(nicknames.count)))
+				return String(localized: .TVCMainWindow.typingCount(nicknames.count))
 			}
 		}
 	}

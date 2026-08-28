@@ -27,15 +27,13 @@ nonisolated enum ChannelAccessListStrings {
 	}
 
 	static func entryCount(_ count: Int, maximum: Int) -> String {
-		let countDescription = formattedNumber(count) as String
-
 		guard maximum > 0 else {
-			return String(localized: .TDCChannelBanListSheet.describesTheNumberEntries(countDescription))
+			return String(localized: .TDCChannelBanListSheet.entryCount(count))
 		}
 
 		return String(
 			localized: .TDCChannelBanListSheet.ofEntries(
-				countDescription,
+				formattedNumber(count) as String,
 				formattedNumber(maximum) as String
 			)
 		)

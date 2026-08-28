@@ -13,6 +13,20 @@
         }
       }
     },
+    "highlight-count" : {
+      "comment" : "Nickname-highlight count for a spotlight result. The argument is the number of highlights. Legacy keys: 0lz-oh, c4u-21.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%ld highlight" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%ld highlights" } }
+            }
+          }
+        }
+      }
+    },
     "joins-two-channel-status" : {
       "comment" : "Joins two channel status descriptions. The arguments are the first and second descriptions. Legacy key: et7-c5.",
       "extractionState" : "manual",
@@ -49,50 +63,16 @@
         }
       }
     },
-    "plural-nickname-highlight-count-highlights" : {
-      "comment" : "Plural nickname-highlight count. The argument is a localized number. Legacy key: c4u-21.",
+    "unread-message-count" : {
+      "comment" : "Unread-message count for a spotlight result. The argument is the number of messages. Legacy keys: 43s-x4, vzj-30.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ highlights"
-          }
-        }
-      }
-    },
-    "singular-nickname-highlight-count" : {
-      "comment" : "Singular nickname-highlight count. The argument is a localized number. Legacy key: 0lz-oh.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ highlight"
-          }
-        }
-      }
-    },
-    "unread-message" : {
-      "comment" : "Singular unread-message count. The argument is a localized number. Legacy key: 43s-x4.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ unread message"
-          }
-        }
-      }
-    },
-    "unread-messages" : {
-      "comment" : "Plural unread-message count. The argument is a localized number. Legacy key: vzj-30.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ unread messages"
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%ld unread message" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%ld unread messages" } }
+            }
           }
         }
       }

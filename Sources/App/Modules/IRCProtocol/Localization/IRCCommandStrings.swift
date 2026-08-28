@@ -332,7 +332,7 @@ nonisolated enum IRCTimerStrings {
 	}
 
 	static func count(_ count: Int) -> String {
-		count == 1 ? String(localized: .IRC.thereIsTimer(count)) : String(localized: .IRC.thereAreTimers(count))
+		String(localized: .IRC.timerCount(count))
 	}
 
 	static func summary(

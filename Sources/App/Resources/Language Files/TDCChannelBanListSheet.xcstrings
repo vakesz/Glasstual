@@ -13,14 +13,16 @@
         }
       }
     },
-    "describes-the-number-entries" : {
-      "comment" : "Describes the number of entries in a channel access list. The argument is a localized number. Legacy key: n0f-cn.",
+    "entry-count" : {
+      "comment" : "Number of entries in a channel access list. The argument is the number of entries. Legacy key: n0f-cn.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ entries"
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%ld entry" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%ld entries" } }
+            }
           }
         }
       }
