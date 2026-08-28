@@ -37,6 +37,12 @@
 
 import CocoaExtensions
 import Foundation
+import os
+
+private let highlightConditionLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "IRCHighlightMatchCondition"
+)
 
 @objc(IRCHighlightMatchCondition)
 public class HighlightMatchCondition: PortablePropertyDict {
@@ -74,13 +80,25 @@ public class HighlightMatchCondition: PortablePropertyDict {
 		nil
 	}
 
+	/// `true` when the persisted dictionary carried everything the entry
+	/// needs. A hand-edited or truncated plist must be skipped on load, not
+	/// abort the process.
+	@objc public var isWellFormed: Bool {
+		matchKeywordStorage.isEmpty == false
+	}
+
 	@objc(initializedClassHealthCheck)
 	override public func initializedClassHealthCheck() {
 		if isMutable || initializedAsCopy {
 			return
 		}
 
-		precondition(!matchKeywordStorage.isEmpty)
+		// The Objective-C original used NSParameterAssert, which compiles out
+		// in release; a `precondition` here turned a malformed plist into an
+		// abort with no recovery path. Callers check `isWellFormed` instead.
+		if isWellFormed == false {
+			highlightConditionLogger.error("Loaded a highlight condition with no match keyword")
+		}
 	}
 
 	@objc(populateDictionaryValues:)
