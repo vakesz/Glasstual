@@ -421,8 +421,7 @@ public final class MenuActionCoordinator: NSObject {
 		guard let client = selectedClient, selectedChannel != nil else { return }
 		for nickname in selectedNicknames(for: sender) {
 			guard let query = client.findChannelOrCreate(nickname, isPrivateMessage: true) else { continue }
-			guard let treeItem = (query as AnyObject) as? IRCTreeItem else { continue }
-			mainWindow.select(treeItem)
+			mainWindow.select(query)
 		}
 		deselectMembers(for: sender)
 	}
@@ -608,9 +607,7 @@ public final class MenuActionCoordinator: NSObject {
 				if channelCount < 10 {
 					item.keyEquivalentModifierMask = .command
 				}
-				if let treeItem = (channel as AnyObject) as? IRCTreeItem {
-					item.textualUserInfo = AppController.shared.world.pasteboardString(for: treeItem)
-				}
+				item.textualUserInfo = AppController.shared.world.pasteboardString(for: channel)
 				submenu.addItem(item)
 				channelCount += 1
 			}
@@ -677,8 +674,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	@objc(moveHighlightOrScrollbackForTag:)
 	public func moveHighlightOrScrollback(forTag tag: Int) {
-		guard let legacyController = selectedChannel?.viewController ?? selectedClient?.viewController else { return }
-		guard let controller = (legacyController as AnyObject) as? LogController else { return }
+		guard let controller = selectedChannel?.viewController ?? selectedClient?.viewController else { return }
 		switch tag {
 		case MenuNavigationTag.nextHighlight: controller.nextHighlight()
 		case MenuNavigationTag.previousHighlight: controller.previousHighlight()

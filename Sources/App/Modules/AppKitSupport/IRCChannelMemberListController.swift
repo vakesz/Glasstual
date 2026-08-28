@@ -42,7 +42,7 @@ public final class IRCChannelMemberListController: NSArrayController {
 			memberList.assign(nil)
 		}
 
-		let newList = (channel?.memberInfo as AnyObject?) as? ChannelMemberList
+		let newList = channel?.memberInfo as? ChannelMemberList
 
 		if let newList {
 			newList.assign(self)

@@ -375,7 +375,7 @@ public final nonisolated class LogControllerPrintingOperationQueue: OperationQue
 
 	@MainActor
 	public func cancelOperations(for client: IRCClient) {
-		guard let viewController = client.viewController as AnyObject as? LogController else {
+		guard let viewController = client.viewController else {
 			return
 		}
 		cancelOperations(for: viewController)

@@ -170,7 +170,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	// MARK: - Appearance
 
 	private func applicationAppearanceChanged() {
-		guard let panel = window as? ChannelSpotlightPanel,
+		guard window is ChannelSpotlightPanel,
 		      let appearance = ChannelSpotlightAppearance()
 		else {
 			return

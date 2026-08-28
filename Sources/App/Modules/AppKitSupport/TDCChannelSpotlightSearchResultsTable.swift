@@ -118,8 +118,8 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 	}
 
 	private func channelNameChanged() {
-		willChangeValue(forKey: "channelName")
-		didChangeValue(forKey: "channelName")
+		willChangeValue(forKey: #keyPath(channelName))
+		didChangeValue(forKey: #keyPath(channelName))
 	}
 
 	@objc public var keyboardShortcut: String {
@@ -149,8 +149,8 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 	}
 
 	private func keyboardShortcutChanged() {
-		willChangeValue(forKey: "keyboardShortcut")
-		didChangeValue(forKey: "keyboardShortcut")
+		willChangeValue(forKey: #keyPath(keyboardShortcut))
+		didChangeValue(forKey: #keyPath(keyboardShortcut))
 	}
 
 	@objc public var unreadCountDescription: String {
@@ -173,8 +173,8 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 	}
 
 	private func unreadCountDescriptionChanged() {
-		willChangeValue(forKey: "unreadCountDescription")
-		didChangeValue(forKey: "unreadCountDescription")
+		willChangeValue(forKey: #keyPath(unreadCountDescription))
+		didChangeValue(forKey: #keyPath(unreadCountDescription))
 		updateAccessibilityLabel()
 	}
 

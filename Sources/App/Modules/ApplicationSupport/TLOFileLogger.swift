@@ -77,7 +77,7 @@ public final class FileLogger: NSObject {
 	}
 
 	isolated deinit {
-		closeHandleForDeallocation()
+		close()
 	}
 
 	// MARK: - Plain Text API
@@ -125,10 +125,6 @@ public final class FileLogger: NSObject {
 	// MARK: - File Handle Management
 
 	@objc public func close() {
-		closeHandle(removeObserver: true)
-	}
-
-	private func closeHandleForDeallocation() {
 		closeHandle(removeObserver: true)
 	}
 
@@ -257,10 +253,7 @@ public final class FileLogger: NSObject {
 
 	private func writePath(relativeTo sourcePath: String) -> String? {
 		if let channel {
-			guard let treeItem = (channel as AnyObject) as? IRCTreeItem else {
-				return nil
-			}
-			return Self.writePath(for: treeItem, relativeTo: sourcePath)
+			return Self.writePath(for: channel, relativeTo: sourcePath)
 		}
 
 		guard let client else {
