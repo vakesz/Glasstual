@@ -181,7 +181,7 @@ IRCv3 capabilities Glasstual negotiates when the server offers them:
 - `userhost-in-names`
 - ZNC: `znc.in/playback`, `znc.in/self-message`, `znc.in/server-time`, `znc.in/server-time-iso`, `znc.in/tlsinfo`
 
-When the server advertises `WHOX`, channel `WHO` requests use `WHO <channel> %tcuhnfar,152` so the initial member list carries accounts, real names and bot flags. `netsplit` and `netjoin` batches are collapsed into one summary line per channel instead of a QUIT or JOIN per user (hidden along with joins and quits when those are switched off). The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Modules/IRCProtocol/Negotiation/IRCCapability.swift`.
+When the server advertises `WHOX`, channel `WHO` requests use `WHO <channel> %tcuhnfar,152` so the initial member list carries accounts, real names and bot flags. `netsplit` and `netjoin` batches are collapsed into one summary line per channel instead of a QUIT or JOIN per user (hidden along with joins and quits when those are switched off). The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Protocol/Negotiation/IRCCapability.swift`.
 
 ## Licenses
 
