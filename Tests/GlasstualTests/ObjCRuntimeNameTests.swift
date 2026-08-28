@@ -37,10 +37,32 @@ struct ObjCRuntimeNameTests {
 			(ValidatedTextField.self as AnyClass, "TVCValidatedTextField"),
 			(ValidatedComboBox.self as AnyClass, "TVCValidatedComboBox"),
 			(TextViewWithIRCFormatter.self as AnyClass, "TVCTextViewWithIRCFormatter"),
+			(Application.self as AnyClass, "TXApplication"),
+			(ApplicationController.self as AnyClass, "TXMasterController"),
+			(TXMenuController.self as AnyClass, "TXMenuController"),
+			(TXMenuControllerMainWindowProxy.self as AnyClass, "TXMenuControllerMainWindowProxy"),
+			(MainWindow.self as AnyClass, "TVCMainWindow"),
+			(MainWindowTextView.self as AnyClass, "TVCMainWindowTextView"),
+			(MainWindowTextViewContentView.self as AnyClass, "TVCMainWindowTextViewContentView"),
+			(MemberList.self as AnyClass, "TVCMemberList"),
+			(MemberListCell.self as AnyClass, "TVCMemberListCell"),
+			(MemberListHeaderCell.self as AnyClass, "TVCMemberListHeaderCell"),
+			(MemberListUserInfoPopover.self as AnyClass, "TVCMemberListUserInfoPopover"),
+			(AutoExpandingTokenField.self as AnyClass, "TVCAutoExpandingTokenField"),
+			(ServerPropertiesSheet.self as AnyClass, "TDCServerPropertiesSheet"),
 		]
 	)
 	func classKeepsItsRuntimeName(_ type: AnyClass, _ name: String) {
 		#expect(NSStringFromClass(type) == name)
+	}
+
+	/// The file transfer dialog's array controller names its element class with
+	/// `objectClassName` rather than `customClass`, which is the attribute
+	/// `NibRuntimeNameTests` sweeps, so this one is pinned by hand.
+	@Test("The file transfer array controller's element class keeps its runtime name")
+	func arrayControllerElementKeepsItsRuntimeName() {
+		#expect(NSStringFromClass(TDCFileTransferDialogTransferController.self)
+			== "TDCFileTransferDialogTransferController")
 	}
 
 	/// `TVCValidatedComboBox` sets this as its cell class from the nib; no Swift

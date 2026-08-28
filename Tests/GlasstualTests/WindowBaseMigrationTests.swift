@@ -5,7 +5,7 @@
 
 import AppKit
 @testable import Glasstual
-import XCTest
+import Testing
 
 private final class WindowBaseSpy: NSWindow {
 	private(set) var orderFrontCount = 0
@@ -21,8 +21,10 @@ private final class WindowBaseSpy: NSWindow {
 }
 
 @MainActor
-final class WindowBaseMigrationTests: XCTestCase {
-	func testWindowBaseForwardsWindowLifecycleActions() {
+@Suite("Window base")
+struct WindowBaseMigrationTests {
+	@Test("Showing orders the window front, and both ok and cancel close it")
+	func windowBaseForwardsWindowLifecycleActions() {
 		let window = WindowBaseSpy()
 		let controller = WindowBase()
 		controller.window = window
@@ -31,7 +33,7 @@ final class WindowBaseMigrationTests: XCTestCase {
 		controller.ok(nil)
 		controller.cancel(nil)
 
-		XCTAssertEqual(window.orderFrontCount, 1)
-		XCTAssertEqual(window.closeCount, 2)
+		#expect(window.orderFrontCount == 1)
+		#expect(window.closeCount == 2)
 	}
 }

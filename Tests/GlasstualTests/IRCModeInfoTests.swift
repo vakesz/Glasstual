@@ -1,6 +1,6 @@
 import CocoaExtensions
 @testable import Glasstual
-import XCTest
+import Testing
 
 /** *********************************************************************
  *                  _____         _               _
@@ -38,22 +38,25 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-final class ModeInfoTests: XCTestCase {
-	func testConvenienceInitializers() {
+@Suite("Mode info")
+struct ModeInfoTests {
+	@Test("A mode built from a symbol alone is unset and carries no parameter")
+	func convenienceInitializers() {
 		let unset = ModeInfo(modeSymbol: "n")
 		let set = ModeInfo(modeSymbol: "t", modeIsSet: true)
 
-		XCTAssertEqual(unset.modeSymbol, "n")
-		XCTAssertFalse(unset.modeIsSet)
-		XCTAssertNil(unset.modeParameter)
-		XCTAssertEqual(set.modeSymbol, "t")
-		XCTAssertTrue(set.modeIsSet)
+		#expect(unset.modeSymbol == "n")
+		#expect(unset.modeIsSet == false)
+		#expect(unset.modeParameter == nil)
+		#expect(set.modeSymbol == "t")
+		#expect(set.modeIsSet)
 	}
 
 	/// `GLTTestClient` and its support info are main-actor isolated; the rest
 	/// of this suite works on plain values.
 	@MainActor
-	func testMemberModeRequiresAParameterAndPrefixMode() {
+	@Test("A member mode change needs both a prefix mode and a parameter")
+	func memberModeRequiresAParameterAndPrefixMode() {
 		let client = GLTTestClient()
 		client.supportInfo.processConfigurationData("PREFIX=(ov)@+")
 
@@ -61,8 +64,8 @@ final class ModeInfoTests: XCTestCase {
 		let missingParameter = ModeInfo(modeSymbol: "o", modeIsSet: true)
 		let channelMode = ModeInfo(modeSymbol: "n", modeIsSet: true, modeParameter: "nick")
 
-		XCTAssertTrue(memberMode.isModeForChangingMemberMode(on: client))
-		XCTAssertFalse(missingParameter.isModeForChangingMemberMode(on: client))
-		XCTAssertFalse(channelMode.isModeForChangingMemberMode(on: client))
+		#expect(memberMode.isModeForChangingMemberMode(on: client))
+		#expect(missingParameter.isModeForChangingMemberMode(on: client) == false)
+		#expect(channelMode.isModeForChangingMemberMode(on: client) == false)
 	}
 }

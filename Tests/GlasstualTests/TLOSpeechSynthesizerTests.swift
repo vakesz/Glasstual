@@ -3,8 +3,9 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
 private final class SpeechSynthesizerEngineSpy: NSObject, SpeechSynthesizerEngine {
@@ -39,8 +40,10 @@ private final class SpeechSynthesizerEngineDelegateSpy: NSObject, SpeechSynthesi
 }
 
 @MainActor
-final class TLOSpeechSynthesizerTests: XCTestCase {
-	func testAVSpeechEngineKeepsItsDelegateWeak() {
+@Suite("Speech synthesizer queue")
+struct TLOSpeechSynthesizerTests {
+	@Test("The AV engine does not keep its delegate alive")
+	func avSpeechEngineKeepsItsDelegateWeak() {
 		let engine = AVSpeechSynthesizerEngine()
 		weak var weakDelegate: SpeechSynthesizerEngineDelegateSpy?
 
@@ -49,30 +52,32 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 			weakDelegate = delegate
 			engine.delegate = delegate
 
-			XCTAssertTrue(engine.delegate === delegate)
+			#expect(engine.delegate === delegate)
 		}
 
-		XCTAssertNil(weakDelegate)
-		XCTAssertNil(engine.delegate)
+		#expect(weakDelegate == nil)
+		#expect(engine.delegate == nil)
 	}
 
-	func testQueuedTextStartsInOrderAsUtterancesComplete() {
+	@Test("Queued text is spoken in order as each utterance finishes")
+	func queuedTextStartsInOrderAsUtterancesComplete() {
 		let engine = SpeechSynthesizerEngineSpy()
 		let synthesizer = SpeechSynthesizer(engine: engine)
 
 		synthesizer.speak(text: "first")
 		synthesizer.speak(text: "second")
 
-		XCTAssertEqual(engine.spokenTexts, ["first"])
-		XCTAssertEqual(synthesizer.pendingItemCount, 1)
+		#expect(engine.spokenTexts == ["first"])
+		#expect(synthesizer.pendingItemCount == 1)
 
 		engine.completeCurrentUtterance()
 
-		XCTAssertEqual(engine.spokenTexts, ["first", "second"])
-		XCTAssertEqual(synthesizer.pendingItemCount, 0)
+		#expect(engine.spokenTexts == ["first", "second"])
+		#expect(synthesizer.pendingItemCount == 0)
 	}
 
-	func testStoppingRejectsNewItemsAndStopsCurrentUtterance() {
+	@Test("Stopping cuts the current utterance short and refuses new items")
+	func stoppingRejectsNewItemsAndStopsCurrentUtterance() {
 		let engine = SpeechSynthesizerEngineSpy()
 		let synthesizer = SpeechSynthesizer(engine: engine)
 
@@ -80,12 +85,13 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		synthesizer.isStopped = true
 		synthesizer.speak(text: "ignored")
 
-		XCTAssertEqual(engine.stopCount, 1)
-		XCTAssertEqual(engine.spokenTexts, ["active"])
-		XCTAssertEqual(synthesizer.pendingItemCount, 0)
+		#expect(engine.stopCount == 1)
+		#expect(engine.spokenTexts == ["active"])
+		#expect(synthesizer.pendingItemCount == 0)
 	}
 
-	func testClearQueueLeavesCurrentUtteranceAlone() {
+	@Test("Clearing the queue leaves whatever is being spoken alone")
+	func clearQueueLeavesCurrentUtteranceAlone() {
 		let engine = SpeechSynthesizerEngineSpy()
 		let synthesizer = SpeechSynthesizer(engine: engine)
 
@@ -93,12 +99,13 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		synthesizer.speak(text: "queued")
 		synthesizer.clearQueue()
 
-		XCTAssertTrue(engine.isSpeaking)
-		XCTAssertEqual(synthesizer.pendingItemCount, 0)
-		XCTAssertEqual(engine.spokenTexts, ["active"])
+		#expect(engine.isSpeaking)
+		#expect(synthesizer.pendingItemCount == 0)
+		#expect(engine.spokenTexts == ["active"])
 	}
 
-	func testClearQueueForClientRemovesOnlyMatchingNotifications() {
+	@Test("Clearing one client's notifications leaves the other client's queued")
+	func clearQueueForClientRemovesOnlyMatchingNotifications() {
 		let engine = SpeechSynthesizerEngineSpy()
 		engine.simulateActiveUtterance()
 
@@ -128,14 +135,15 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		synthesizer.speak(text: "plain text")
 		synthesizer.clearQueue(for: firstClient)
 
-		XCTAssertEqual(synthesizer.pendingItemCount, 2)
+		#expect(synthesizer.pendingItemCount == 2)
 
 		engine.completeCurrentUtterance()
 
-		XCTAssertEqual(synthesizer.pendingItemCount, 1)
+		#expect(synthesizer.pendingItemCount == 1)
 	}
 
-	func testNotificationWithoutSpokenTextDoesNotBlockFollowingText() {
+	@Test("A notification with nothing to say does not hold up the text behind it")
+	func notificationWithoutSpokenTextDoesNotBlockFollowingText() {
 		let engine = SpeechSynthesizerEngineSpy()
 		engine.simulateActiveUtterance()
 
@@ -153,7 +161,7 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 
 		engine.completeCurrentUtterance()
 
-		XCTAssertEqual(engine.spokenTexts, ["valid"])
-		XCTAssertEqual(synthesizer.pendingItemCount, 0)
+		#expect(engine.spokenTexts == ["valid"])
+		#expect(synthesizer.pendingItemCount == 0)
 	}
 }

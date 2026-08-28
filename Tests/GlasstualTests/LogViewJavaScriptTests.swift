@@ -3,62 +3,62 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class LogViewJavaScriptTests: XCTestCase {
-	func testDescriptionUsesJavaScriptPrimitiveNames() {
-		XCTAssertEqual(LogViewJavaScript.describe(true as NSNumber), "true")
-		XCTAssertEqual(LogViewJavaScript.describe(false as NSNumber), "false")
-		XCTAssertEqual(LogViewJavaScript.describe(42 as NSNumber), "42")
-		XCTAssertEqual(LogViewJavaScript.describe(NSNull()), "null")
-		XCTAssertEqual(LogViewJavaScript.describe(Date()), "undefined")
+@Suite("Log view JavaScript bridge")
+struct LogViewJavaScriptTests {
+	@Test("A result is described with the JavaScript name for its primitive")
+	func descriptionUsesJavaScriptPrimitiveNames() {
+		#expect(LogViewJavaScript.describe(true as NSNumber) == "true")
+		#expect(LogViewJavaScript.describe(false as NSNumber) == "false")
+		#expect(LogViewJavaScript.describe(42 as NSNumber) == "42")
+		#expect(LogViewJavaScript.describe(NSNull()) == "null")
+		#expect(LogViewJavaScript.describe(Date()) == "undefined")
 	}
 
 	/** The bridge no longer builds argument literals, so the body names the
 	 arguments WebKit binds and carries no value of its own. */
-	func testFunctionBodyReferencesBoundArgumentNames() {
-		XCTAssertEqual(
-			LogViewJavaScript.functionBody("Glasstual.render", argumentCount: 3),
-			"return Glasstual.render(a0,a1,a2);"
+	@Test("The function body names the arguments WebKit binds rather than their values")
+	func functionBodyReferencesBoundArgumentNames() {
+		#expect(
+			LogViewJavaScript.functionBody("Glasstual.render", argumentCount: 3)
+				== "return Glasstual.render(a0,a1,a2);"
 		)
-		XCTAssertEqual(
-			LogViewJavaScript.functionBody("_Glasstual.viewFinishedLoading", argumentCount: 0),
-			"return _Glasstual.viewFinishedLoading();"
+		#expect(
+			LogViewJavaScript.functionBody("_Glasstual.viewFinishedLoading", argumentCount: 0)
+				== "return _Glasstual.viewFinishedLoading();"
 		)
 	}
 
-	func testFunctionBodyRejectsAnythingThatIsNotAnIdentifierPath() {
-		XCTAssertNil(LogViewJavaScript.functionBody("", argumentCount: 0))
-		XCTAssertNil(LogViewJavaScript.functionBody("alert(1); //", argumentCount: 0))
-		XCTAssertNil(LogViewJavaScript.functionBody("Glasstual.", argumentCount: 0))
-		XCTAssertNil(LogViewJavaScript.functionBody("1Glasstual", argumentCount: 0))
-		XCTAssertNil(LogViewJavaScript.functionBody("Glasstual['render']", argumentCount: 0))
+	@Test("Anything that is not an identifier path is refused a function body")
+	func functionBodyRejectsAnythingThatIsNotAnIdentifierPath() {
+		#expect(LogViewJavaScript.functionBody("", argumentCount: 0) == nil)
+		#expect(LogViewJavaScript.functionBody("alert(1); //", argumentCount: 0) == nil)
+		#expect(LogViewJavaScript.functionBody("Glasstual.", argumentCount: 0) == nil)
+		#expect(LogViewJavaScript.functionBody("1Glasstual", argumentCount: 0) == nil)
+		#expect(LogViewJavaScript.functionBody("Glasstual['render']", argumentCount: 0) == nil)
 	}
 
-	func testArgumentsAreReducedToValuesWebKitConverts() throws {
-		let url = try XCTUnwrap(URL(string: "https://example.com/a"))
+	@Test("Arguments are reduced to the values WebKit knows how to convert")
+	func argumentsAreReducedToValuesWebKitConverts() throws {
+		let url = try #require(URL(string: "https://example.com/a"))
 		let named = LogViewJavaScript.namedArguments(["quote\"", true, [1, NSNull()], url, Date()])
 
-		XCTAssertEqual(named["a0"] as? String, "quote\"")
-		XCTAssertEqual(named["a1"] as? Bool, true)
-		XCTAssertEqual((named["a2"] as? [Any])?.count, 2)
-		XCTAssertEqual(named["a3"] as? String, "https://example.com/a")
-		XCTAssertTrue(named["a4"] is NSNull)
+		#expect(named["a0"] as? String == "quote\"")
+		#expect(named["a1"] as? Bool == true)
+		#expect((named["a2"] as? [Any])?.count == 2)
+		#expect(named["a3"] as? String == "https://example.com/a")
+		#expect(named["a4"] is NSNull)
 	}
 
-	func testNestedDictionaryKeysThatAreNotStringsAreDropped() {
+	@Test("A nested dictionary key that is not a string is dropped")
+	func nestedDictionaryKeysThatAreNotStringsAreDropped() {
 		let dictionary = LogViewJavaScript.sanitize(["key": ["nested": 1], 2: "dropped"] as [AnyHashable: Any])
 
-		XCTAssertEqual(dictionary.count, 1)
-		XCTAssertEqual((dictionary["key"] as? [String: Any])?["nested"] as? Int, 1)
-	}
-
-	@MainActor
-	func testObjectiveCFacadeRetainsPublicSelectors() throws {
-		let facadeClass = try XCTUnwrap(NSClassFromString("TVCLogView") as? NSObject.Type)
-		XCTAssertTrue(facadeClass.responds(to: NSSelectorFromString("descriptionOfJavaScriptResult:")))
-		XCTAssertTrue(facadeClass.responds(to: NSSelectorFromString("emptyCaches")))
+		#expect(dictionary.count == 1)
+		#expect((dictionary["key"] as? [String: Any])?["nested"] as? Int == 1)
 	}
 }

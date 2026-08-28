@@ -36,73 +36,85 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCClientNotificationPolicyTests: XCTestCase {
-	func testAdmissionDiscardsTerminatingAndCollapsedNetsplitEvents() {
-		XCTAssertEqual(admission(event: .highlight, terminating: true), .discard)
-		XCTAssertEqual(admission(event: .userJoined, collapsingNetsplit: true), .discard)
-		XCTAssertEqual(admission(event: .userDisconnected, collapsingNetsplit: true), .discard)
-		XCTAssertEqual(admission(event: .userParted, collapsingNetsplit: true), .proceed)
+@Suite("Notification policy")
+struct IRCClientNotificationPolicyTests {
+	@Test("A terminating client and a collapsed netsplit discard the event")
+	func admissionDiscardsTerminatingAndCollapsedNetsplitEvents() {
+		#expect(admission(event: .highlight, terminating: true) == .discard)
+		#expect(admission(event: .userJoined, collapsingNetsplit: true) == .discard)
+		#expect(admission(event: .userDisconnected, collapsingNetsplit: true) == .discard)
+		#expect(admission(event: .userParted, collapsingNetsplit: true) == .proceed)
 	}
 
-	func testAdmissionDiscardsLocalTextAndSuppressedOutput() {
-		XCTAssertEqual(admission(event: .channelMessage, nicknameIsLocalUser: true), .discard)
-		XCTAssertEqual(admission(event: .kick, nicknameIsLocalUser: true), .proceed)
-		XCTAssertEqual(admission(event: .privateMessage, outputIsSuppressed: true), .discard)
+	@Test("Our own text and suppressed output are discarded, but our own kick is not")
+	func admissionDiscardsLocalTextAndSuppressedOutput() {
+		#expect(admission(event: .channelMessage, nicknameIsLocalUser: true) == .discard)
+		#expect(admission(event: .kick, nicknameIsLocalUser: true) == .proceed)
+		#expect(admission(event: .privateMessage, outputIsSuppressed: true) == .discard)
 	}
 
-	func testAdmissionTreatsChannelPreferencesAsHandled() {
-		XCTAssertEqual(admission(event: .highlight, ignoresHighlights: true), .handled)
-		XCTAssertEqual(admission(event: .channelMessage, disablesPush: true), .handled)
-		XCTAssertEqual(admission(event: .highlight, disablesPush: true), .proceed)
+	@Test("A target that ignores highlights or disables push has handled the event itself")
+	func admissionTreatsChannelPreferencesAsHandled() {
+		#expect(admission(event: .highlight, ignoresHighlights: true) == .handled)
+		#expect(admission(event: .channelMessage, disablesPush: true) == .handled)
+		#expect(admission(event: .highlight, disablesPush: true) == .proceed)
 	}
 
-	func testFocusedSelectedTargetBecomesSpeechOnly() {
-		XCTAssertTrue(IRCNotificationPolicy.shouldOnlySpeak(
+	@Test("An event for the selected target in a focused window is spoken, not posted")
+	func focusedSelectedTargetBecomesSpeechOnly() {
+		#expect(IRCNotificationPolicy.shouldOnlySpeak(
 			postWhileFocused: true,
 			mainWindowIsFocused: true,
 			targetIsSelected: true
 		))
-		XCTAssertFalse(IRCNotificationPolicy.shouldOnlySpeak(
+		#expect(IRCNotificationPolicy.shouldOnlySpeak(
 			postWhileFocused: false,
 			mainWindowIsFocused: true,
 			targetIsSelected: true
-		))
+		) == false)
 	}
 
-	func testPostingPolicyPreservesAddressBookFocusExceptionAndAwayPreference() {
-		XCTAssertFalse(shouldPost(event: .channelMessage, postWhileFocused: false, focused: true))
-		XCTAssertTrue(shouldPost(event: .addressBookMatch, postWhileFocused: false, focused: true))
-		XCTAssertFalse(shouldPost(event: .highlight, disabledWhileAway: true, userIsAway: true))
-		XCTAssertFalse(shouldPost(event: .highlight, enabled: false))
+	@Test("An address book match posts while focused, and away silences a highlight")
+	func postingPolicyPreservesAddressBookFocusExceptionAndAwayPreference() {
+		#expect(shouldPost(event: .channelMessage, postWhileFocused: false, focused: true) == false)
+		#expect(shouldPost(event: .addressBookMatch, postWhileFocused: false, focused: true))
+		#expect(shouldPost(event: .highlight, disabledWhileAway: true, userIsAway: true) == false)
+		#expect(shouldPost(event: .highlight, enabled: false) == false)
 	}
 
-	func testNotificationUserInfoIncludesChannelOnlyWhenPresent() {
+	@Test("The channel identifier is carried only when there is a channel")
+	func notificationUserInfoIncludesChannelOnlyWhenPresent() {
 		let clientOnly = IRCNotificationPolicy.notificationUserInfo(
 			clientIdentifier: "client",
 			channelIdentifier: nil
 		)
-		XCTAssertEqual(clientOnly[NotificationPayload.clientIdentifierKey] as? String, "client")
-		XCTAssertNil(clientOnly[NotificationPayload.channelIdentifierKey])
+
+		#expect(clientOnly[NotificationPayload.clientIdentifierKey] as? String == "client")
+		#expect(clientOnly[NotificationPayload.channelIdentifierKey] == nil)
 
 		let channel = IRCNotificationPolicy.notificationUserInfo(
 			clientIdentifier: "client",
 			channelIdentifier: "channel"
 		)
-		XCTAssertEqual(channel[NotificationPayload.channelIdentifierKey] as? String, "channel")
+
+		#expect(channel[NotificationPayload.channelIdentifierKey] as? String == "channel")
 	}
 
-	func testSpokenChannelMessagesRespectSelectionPreference() {
+	@Test("Speaking only the selection silences an unselected channel and drops its name")
+	func spokenChannelMessagesRespectSelectionPreference() {
 		let hidden = IRCSpokenNotificationPolicy.channelMessageVisibility(
 			onlySpeakSelection: true,
 			channelIsSelected: false,
 			includeConfiguredChannelName: true,
 			includeConfiguredNickname: true
 		)
-		XCTAssertFalse(hidden.shouldSpeak)
+
+		#expect(hidden.shouldSpeak == false)
 
 		let selected = IRCSpokenNotificationPolicy.channelMessageVisibility(
 			onlySpeakSelection: true,
@@ -110,12 +122,14 @@ final class IRCClientNotificationPolicyTests: XCTestCase {
 			includeConfiguredChannelName: true,
 			includeConfiguredNickname: true
 		)
-		XCTAssertTrue(selected.shouldSpeak)
-		XCTAssertFalse(selected.includesChannelName)
-		XCTAssertTrue(selected.includesNickname)
+
+		#expect(selected.shouldSpeak)
+		#expect(selected.includesChannelName == false)
+		#expect(selected.includesNickname)
 	}
 
-	func testHighlightVisibilityIncludesUnselectedChannelWhenSelectionSpeechIsEnabled() {
+	@Test("A highlight in an unselected channel is named when selection speech is on")
+	func highlightVisibilityIncludesUnselectedChannelWhenSelectionSpeechIsEnabled() {
 		let visibility = IRCSpokenNotificationPolicy.highlightVisibility(
 			isChannel: true,
 			onlySpeakSelection: true,
@@ -123,8 +137,9 @@ final class IRCClientNotificationPolicyTests: XCTestCase {
 			includeConfiguredChannelName: false,
 			includeConfiguredNickname: false
 		)
-		XCTAssertTrue(visibility.includesChannelName)
-		XCTAssertFalse(visibility.includesNickname)
+
+		#expect(visibility.includesChannelName)
+		#expect(visibility.includesNickname == false)
 	}
 
 	private func admission(

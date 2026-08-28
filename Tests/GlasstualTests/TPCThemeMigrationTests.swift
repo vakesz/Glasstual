@@ -3,12 +3,15 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class TPCThemeMigrationTests: XCTestCase {
-	func testGlobalThemeLoadsResourcesAndSettings() throws {
+@Suite("Theme loading", .serialized)
+struct TPCThemeMigrationTests {
+	@Test("A theme reads its resources and its global settings")
+	func globalThemeLoadsResourcesAndSettings() throws {
 		let fixture = try makeThemeFixture(settings: [
 			"Appearance": "dark",
 			"Force Invert Sidebars": true,
@@ -22,21 +25,22 @@ final class TPCThemeMigrationTests: XCTestCase {
 
 		let theme = TPCTheme(url: fixture, inStorageLocation: .custom)
 
-		XCTAssertTrue(theme.usable)
-		XCTAssertEqual(theme.name, fixture.lastPathComponent)
-		XCTAssertEqual(theme.originalURL, fixture.standardizedFileURL)
-		XCTAssertEqual(theme.appearance, .dark)
-		XCTAssertEqual(theme.cssFiles.map(\.lastPathComponent), ["design.css"])
-		XCTAssertEqual(theme.jsFiles.map(\.lastPathComponent), ["scripts.js"])
-		XCTAssertEqual(theme.settings.appearance, .dark)
-		XCTAssertTrue(theme.settings.invertSidebarColors)
-		XCTAssertEqual(theme.settings.indentationOffset, 12.5)
-		XCTAssertEqual(theme.settings.nicknameColorStyle, .light)
-		XCTAssertEqual(theme.settings.templateEngineVersion, UInt(TPCThemeSettingsNewestTemplateEngineVersion))
-		XCTAssertFalse(theme.settings.usesIncompatibleTemplateEngineVersion)
+		#expect(theme.usable)
+		#expect(theme.name == fixture.lastPathComponent)
+		#expect(theme.originalURL == fixture.standardizedFileURL)
+		#expect(theme.appearance == .dark)
+		#expect(theme.cssFiles.map(\.lastPathComponent) == ["design.css"])
+		#expect(theme.jsFiles.map(\.lastPathComponent) == ["scripts.js"])
+		#expect(theme.settings.appearance == .dark)
+		#expect(theme.settings.invertSidebarColors)
+		#expect(theme.settings.indentationOffset == 12.5)
+		#expect(theme.settings.nicknameColorStyle == .light)
+		#expect(theme.settings.templateEngineVersion == UInt(TPCThemeSettingsNewestTemplateEngineVersion))
+		#expect(theme.settings.usesIncompatibleTemplateEngineVersion == false)
 	}
 
-	func testVarietyOverridesGlobalSettingsAndResourceOrderIsStable() throws {
+	@Test("A variety overrides the global settings and appends its own resources")
+	func varietyOverridesGlobalSettingsAndResourceOrderIsStable() throws {
 		let fixture = try makeThemeFixture(settings: [
 			"Appearance": "light",
 			"Nickname Format": "global",
@@ -55,57 +59,63 @@ final class TPCThemeMigrationTests: XCTestCase {
 
 		let theme = TPCTheme(url: fixture, inStorageLocation: .custom)
 
-		XCTAssertTrue(theme.usable)
-		XCTAssertEqual(theme.cssFiles.map(\.lastPathComponent), ["design.css", "design.css"])
-		XCTAssertEqual(theme.jsFiles.map(\.lastPathComponent), ["scripts.js"])
-		XCTAssertEqual(theme.settings.themeNicknameFormat, "variety")
+		#expect(theme.usable)
+		#expect(theme.cssFiles.map(\.lastPathComponent) == ["design.css", "design.css"])
+		#expect(theme.jsFiles.map(\.lastPathComponent) == ["scripts.js"])
+		#expect(theme.settings.themeNicknameFormat == "variety")
 	}
 
-	func testInvalidTemplateVersionFallsBackAndIsReported() throws {
+	@Test("An unsupported template version falls back to the newest one and says so")
+	func invalidTemplateVersionFallsBackAndIsReported() throws {
 		let fixture = try makeThemeFixture(settings: [
 			"Indentation Offset": -1,
 			"Template Engine Versions": ["default": 99],
 		])
 		defer { try? FileManager.default.removeItem(at: fixture) }
 
-		let settings = try XCTUnwrap(TPCTheme(url: fixture, inStorageLocation: .custom).settings)
+		let settings = TPCTheme(url: fixture, inStorageLocation: .custom).settings
 
-		XCTAssertEqual(settings.indentationOffset, Double(TPCThemeSettingsDisabledIndentationOffset))
-		XCTAssertEqual(settings.templateEngineVersion, UInt(TPCThemeSettingsNewestTemplateEngineVersion))
-		XCTAssertTrue(settings.usesIncompatibleTemplateEngineVersion)
+		#expect(settings.indentationOffset == Double(TPCThemeSettingsDisabledIndentationOffset))
+		#expect(settings.templateEngineVersion == UInt(TPCThemeSettingsNewestTemplateEngineVersion))
+		#expect(settings.usesIncompatibleTemplateEngineVersion)
 	}
 
-	func testThemeControllerParsesCanonicalThemeNames() {
-		XCTAssertEqual(TPCThemeController.extractThemeSource("resource:Default"), "resource")
-		XCTAssertEqual(TPCThemeController.extractThemeName("resource:Default"), "Default")
-		XCTAssertEqual(TPCThemeController.storageLocation(ofThemeWithName: "resource:Default"), .bundle)
+	@Test("A canonical theme name is split into its source, name and storage location")
+	func themeControllerParsesCanonicalThemeNames() {
+		#expect(TPCThemeController.extractThemeSource("resource:Default") == "resource")
+		#expect(TPCThemeController.extractThemeName("resource:Default") == "Default")
+		#expect(TPCThemeController.storageLocation(ofThemeWithName: "resource:Default") == .bundle)
 
-		XCTAssertEqual(TPCThemeController.extractThemeSource("user:Solarized"), "user")
-		XCTAssertEqual(TPCThemeController.extractThemeName("user:Solarized"), "Solarized")
-		XCTAssertEqual(TPCThemeController.storageLocation(ofThemeWithName: "user:Solarized"), .custom)
+		#expect(TPCThemeController.extractThemeSource("user:Solarized") == "user")
+		#expect(TPCThemeController.extractThemeName("user:Solarized") == "Solarized")
+		#expect(TPCThemeController.storageLocation(ofThemeWithName: "user:Solarized") == .custom)
 	}
 
-	func testThemeControllerRejectsMalformedThemeNames() {
-		XCTAssertNil(TPCThemeController.extractThemeSource("Default"))
-		XCTAssertNil(TPCThemeController.extractThemeName("resource:"))
-		XCTAssertNil(TPCThemeController.extractThemeName("user:"))
-		XCTAssertEqual(TPCThemeController.storageLocation(ofThemeWithName: "Default"), .unknown)
+	@Test("A malformed theme name resolves to nothing")
+	func themeControllerRejectsMalformedThemeNames() {
+		#expect(TPCThemeController.extractThemeSource("Default") == nil)
+		#expect(TPCThemeController.extractThemeName("resource:") == nil)
+		#expect(TPCThemeController.extractThemeName("user:") == nil)
+		#expect(TPCThemeController.storageLocation(ofThemeWithName: "Default") == .unknown)
 	}
 
-	func testThemeControllerBuildsCanonicalThemeNames() {
-		XCTAssertEqual(TPCThemeController.buildFilename("Default", for: .bundle), "resource:Default")
-		XCTAssertEqual(TPCThemeController.buildFilename("Solarized", for: .custom), "user:Solarized")
-		XCTAssertNil(TPCThemeController.buildFilename("Default", for: .unknown))
-		XCTAssertNil(TPCThemeController.buildFilename("", for: .bundle))
+	@Test("A canonical theme name is built back from its parts")
+	func themeControllerBuildsCanonicalThemeNames() {
+		#expect(TPCThemeController.buildFilename("Default", for: .bundle) == "resource:Default")
+		#expect(TPCThemeController.buildFilename("Solarized", for: .custom) == "user:Solarized")
+		#expect(TPCThemeController.buildFilename("Default", for: .unknown) == nil)
+		#expect(TPCThemeController.buildFilename("", for: .bundle) == nil)
 	}
 
-	func testPublishedThemeIsPopulated() {
+	@Test("The shared controller has published a theme")
+	func publishedThemeIsPopulated() {
 		let controller = SharedApplication.sharedThemeController()
-		XCTAssertNotNil(controller.theme)
-		XCTAssertFalse(controller.name.isEmpty)
-		XCTAssertTrue(controller.originalURL.isFileURL)
-		XCTAssertTrue(controller.temporaryURL.isFileURL)
-		XCTAssertNotEqual(controller.storageLocation, .unknown)
+
+		#expect(controller.theme != nil)
+		#expect(controller.name.isEmpty == false)
+		#expect(controller.originalURL.isFileURL)
+		#expect(controller.temporaryURL.isFileURL)
+		#expect(controller.storageLocation != .unknown)
 		_ = controller.settings
 	}
 

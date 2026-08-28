@@ -1,8 +1,4 @@
-import CocoaExtensions
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/*  *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -38,21 +34,28 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+
+@testable import Glasstual
+import Testing
+
 @MainActor
-class IRCPrefixTests: XCTestCase {
-	func testDefaultsAreNonnullableEmptyStrings() {
+@Suite("IRC prefix")
+struct IRCPrefixTests {
+	@Test("A default prefix is empty rather than nil")
+	func defaultsAreNonnullableEmptyStrings() {
 		let prefix = Prefix()
 
-		XCTAssertFalse(prefix.isServer)
+		#expect(prefix.isServer == false)
 
-		XCTAssertEqual(prefix.nickname, "")
-		XCTAssertEqual(prefix.hostmask, "")
+		#expect(prefix.nickname == "")
+		#expect(prefix.hostmask == "")
 
-		XCTAssertNil(prefix.username)
-		XCTAssertNil(prefix.address)
+		#expect(prefix.username == nil)
+		#expect(prefix.address == nil)
 	}
 
-	func testCopyingAValueDoesNotChangeTheOriginal() {
+	@Test("Copying a prefix and changing the copy leaves the original alone")
+	func copyingAValueDoesNotChangeTheOriginal() {
 		let source = Prefix(
 			nickname: "nick",
 			username: "user",
@@ -64,15 +67,16 @@ class IRCPrefixTests: XCTestCase {
 		var changed = source
 		changed.nickname = "other"
 
-		XCTAssertEqual(source.nickname, "nick")
-		XCTAssertEqual(changed.nickname, "other")
-		XCTAssertEqual(changed.username, "user")
-		XCTAssertEqual(changed.address, "host")
-		XCTAssertEqual(changed.hostmask, "nick!user@host")
-		XCTAssertTrue(changed.isServer)
+		#expect(source.nickname == "nick")
+		#expect(changed.nickname == "other")
+		#expect(changed.username == "user")
+		#expect(changed.address == "host")
+		#expect(changed.hostmask == "nick!user@host")
+		#expect(changed.isServer)
 	}
 
-	func testEqualityAndHashUseAllFields() {
+	@Test("Equality and hashing take every field into account")
+	func equalityAndHashUseAllFields() {
 		let first = Prefix(
 			nickname: "nick",
 			username: "user",
@@ -82,11 +86,11 @@ class IRCPrefixTests: XCTestCase {
 
 		var second = first
 
-		XCTAssertEqual(first, second)
-		XCTAssertEqual(first.hashValue, second.hashValue)
+		#expect(first == second)
+		#expect(first.hashValue == second.hashValue)
 
 		second.isServer = true
 
-		XCTAssertNotEqual(first, second)
+		#expect(first != second)
 	}
 }

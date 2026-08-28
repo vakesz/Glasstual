@@ -35,13 +35,16 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import Mustache
 import Synchronization
-import XCTest
+import Testing
 
-final class ThemeTemplateStoreTests: XCTestCase {
-	func testBundledDefaultTemplatesCompile() throws {
+@Suite("Theme template store")
+struct ThemeTemplateStoreTests {
+	@Test("Every default template the app bundles compiles")
+	func bundledDefaultTemplatesCompile() throws {
 		let templatesURL = PathInfo.applicationResourcesURL
 			.appending(path: ThemeResourcePath.defaultTemplates.rawValue, directoryHint: .isDirectory)
 			.appending(
@@ -54,7 +57,7 @@ final class ThemeTemplateStoreTests: XCTestCase {
 			options: .skipsHiddenFiles
 		).filter { $0.pathExtension == "mustache" }
 
-		XCTAssertFalse(templateURLs.isEmpty, "The app bundle must contain its default theme templates")
+		#expect(templateURLs.isEmpty == false, "The app bundle must contain its default theme templates")
 
 		let repository = TemplateRepository(baseURL: templatesURL)
 		for templateURL in templateURLs {
@@ -62,17 +65,21 @@ final class ThemeTemplateStoreTests: XCTestCase {
 			do {
 				_ = try repository.template(named: name)
 			} catch let error as MustacheError {
-				XCTFail(
-					"Template \(name) failed with \(error.kind): " +
-						"\(error.message ?? "no message") at line \(error.lineNumber.map(String.init) ?? "unknown")"
+				Issue.record(
+					"""
+					Template \(name) failed with \(error.kind): \
+					\(error.message ?? "no message") \
+					at line \(error.lineNumber.map(String.init) ?? "unknown")
+					"""
 				)
 			} catch {
-				XCTFail("Template \(name) failed: \(String(describing: error))")
+				Issue.record("Template \(name) failed: \(String(describing: error))")
 			}
 		}
 	}
 
-	func testMissingOverrideFallsBackWithoutReportingAnError() throws {
+	@Test("A theme that overrides nothing falls back silently")
+	func missingOverrideFallsBackWithoutReportingAnError() throws {
 		let missingOverridesURL = FileManager.default.temporaryDirectory
 			.appending(path: UUID().uuidString, directoryHint: .isDirectory)
 		let overrideRepository = TemplateRepository(baseURL: missingOverridesURL)
@@ -83,15 +90,19 @@ final class ThemeTemplateStoreTests: XCTestCase {
 		)
 		let failures = Mutex<[String]>([])
 
-		let template = try XCTUnwrap(store.template(named: "message") { error in
+		let template = try #require(store.template(named: "message") { error in
 			failures.withLock { $0.append(String(describing: error)) }
 		})
 
-		XCTAssertEqual(try template.render(), "fallback")
-		XCTAssertEqual(failures.withLock { $0 }, [])
+		#expect(try template.render() == "fallback")
+
+		let reported = failures.withLock { $0 }
+
+		#expect(reported.isEmpty)
 	}
 
-	func testConcurrentLookupWaitsUntilRecursiveTemplateCompilationFinishes() {
+	@Test("A lookup that arrives mid-compilation waits rather than reading the source again")
+	func concurrentLookupWaitsUntilRecursiveTemplateCompilationFinishes() {
 		let dataSource = BlockingPartialDataSource()
 		let repository = TemplateRepository(dataSource: dataSource)
 		let store = ThemeTemplateStore(repositories: [repository])
@@ -104,7 +115,7 @@ final class ThemeTemplateStoreTests: XCTestCase {
 			Self.renderTemplate(from: store, results: results)
 		}
 
-		XCTAssertEqual(dataSource.partialLoadStarted.wait(timeout: .now() + 2), .success)
+		#expect(dataSource.partialLoadStarted.wait(timeout: .now() + 2) == .success)
 
 		let secondLookupStarted = DispatchSemaphore(value: 0)
 		lookupGroup.enter()
@@ -114,18 +125,23 @@ final class ThemeTemplateStoreTests: XCTestCase {
 			Self.renderTemplate(from: store, results: results)
 		}
 
-		XCTAssertEqual(secondLookupStarted.wait(timeout: .now() + 2), .success)
+		#expect(secondLookupStarted.wait(timeout: .now() + 2) == .success)
 
 		dataSource.allowPartialLoad.signal()
-		XCTAssertEqual(lookupGroup.wait(timeout: .now() + 2), .success)
-		XCTAssertEqual(results.failures.withLock { $0 }, [])
-		XCTAssertEqual(results.renderedValues.withLock { $0.sorted() }, ["compiled", "compiled"])
+
+		#expect(lookupGroup.wait(timeout: .now() + 2) == .success)
+
+		let failures = results.failures.withLock { $0 }
+		let rendered = results.renderedValues.withLock { $0.sorted() }
+
+		#expect(failures.isEmpty)
+		#expect(rendered == ["compiled", "compiled"])
 
 		/* Two loads: "root" and "recursive-partial", each read once. The second
 		 lookup arrived while the first was parked inside the partial and still
 		 never reached the data source, which is what waiting for the in-flight
 		 compilation means. Without that, it would have read "root" again. */
-		XCTAssertEqual(dataSource.loadCount, 2)
+		#expect(dataSource.loadCount == 2)
 	}
 
 	private static func renderTemplate(

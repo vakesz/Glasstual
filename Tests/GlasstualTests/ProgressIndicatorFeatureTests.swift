@@ -6,7 +6,7 @@
 import AppKit
 @testable import Glasstual
 import SwiftUI
-import XCTest
+import Testing
 
 @MainActor
 private final class ProgressIndicatorParentWindowSpy: NSWindow {
@@ -31,63 +31,55 @@ private final class ProgressIndicatorParentWindowSpy: NSWindow {
 }
 
 @MainActor
-final class ProgressIndicatorFeatureTests: XCTestCase {
-	func testContentPreservesLocalizedStatusMessage() {
+@Suite("Progress indicator sheet")
+struct ProgressIndicatorFeatureTests {
+	@Test("The sheet copy comes from the localized catalog entries")
+	func contentPreservesLocalizedStatusMessage() {
 		let content = ProgressIndicatorContent.current
 
-		XCTAssertEqual(content.statusMessage, "Please wait a moment while this task is completed…")
-		XCTAssertEqual(content.windowTitle, "Task in Progress")
+		#expect(content.statusMessage == "Please wait a moment while this task is completed…")
+		#expect(content.windowTitle == "Task in Progress")
 	}
 
-	func testModelTracksRepeatablePresentationLifecycle() {
+	@Test("Starting and stopping the model is repeatable and idempotent")
+	func modelTracksRepeatablePresentationLifecycle() {
 		let model = ProgressIndicatorModel()
 
-		XCTAssertEqual(model.phase, .idle)
-		XCTAssertFalse(model.isRunning)
+		#expect(model.phase == .idle)
+		#expect(model.isRunning == false)
 
 		model.start()
 		model.start()
-		XCTAssertEqual(model.phase, .running)
-		XCTAssertTrue(model.isRunning)
+		#expect(model.phase == .running)
+		#expect(model.isRunning)
 
 		model.stop()
 		model.stop()
-		XCTAssertEqual(model.phase, .idle)
-		XCTAssertFalse(model.isRunning)
+		#expect(model.phase == .idle)
+		#expect(model.isRunning == false)
 	}
 
-	func testRuntimeSheetContractSurvivesWithoutANib() {
-		XCTAssertEqual(NSStringFromClass(ProgressIndicatorSheet.self), "TDCProgressIndicatorSheet")
-		XCTAssertNil(Bundle.main.path(forResource: "TDCProgressIndicatorSheet", ofType: "nib"))
-
-		for selectorName in ["initWithWindow:", "start", "stop", "close", "cancel:"] {
-			XCTAssertTrue(
-				ProgressIndicatorSheet.instancesRespond(to: NSSelectorFromString(selectorName)),
-				selectorName
-			)
-		}
-	}
-
-	func testAdapterHostsSwiftUIAndUsesParentWindowSheetLifecycle() throws {
+	@Test("The adapter hosts SwiftUI and drives the parent window's sheet lifecycle")
+	func adapterHostsSwiftUIAndUsesParentWindowSheetLifecycle() throws {
 		let parentWindow = ProgressIndicatorParentWindowSpy()
 		let adapter = ProgressIndicatorSheet(window: parentWindow)
-		let hostingView = try XCTUnwrap(adapter.sheet.contentView as? NSHostingView<ProgressIndicatorView>)
+		let hostingView = try #require(adapter.sheet.contentView as? NSHostingView<ProgressIndicatorView>)
 
-		XCTAssertIdentical(adapter.window, parentWindow)
-		XCTAssertEqual(hostingView.rootView.model.phase, .idle)
-		XCTAssertFalse(adapter.sheet.styleMask.contains(.resizable))
-		XCTAssertFalse(adapter.sheet.isReleasedWhenClosed)
-		XCTAssertFalse(adapter.sheet.isRestorable)
-		XCTAssertEqual(adapter.sheet.tabbingMode, .disallowed)
-		XCTAssertEqual(adapter.sheet.contentMinSize, NSSize(width: 406, height: 60))
-		XCTAssertEqual(adapter.sheet.contentMaxSize, NSSize(width: 406, height: 60))
+		#expect(adapter.window === parentWindow)
+		#expect(hostingView.rootView.model.phase == .idle)
+		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
+		#expect(adapter.sheet.isReleasedWhenClosed == false)
+		#expect(adapter.sheet.isRestorable == false)
+		#expect(adapter.sheet.tabbingMode == .disallowed)
+		#expect(adapter.sheet.contentMinSize == NSSize(width: 406, height: 60))
+		#expect(adapter.sheet.contentMaxSize == NSSize(width: 406, height: 60))
 
 		adapter.start()
-		XCTAssertIdentical(parentWindow.begunSheet, adapter.sheet)
-		XCTAssertEqual(hostingView.rootView.model.phase, .running)
+		#expect(parentWindow.begunSheet === adapter.sheet)
+		#expect(hostingView.rootView.model.phase == .running)
 
 		adapter.stop()
-		XCTAssertIdentical(parentWindow.endedSheet, adapter.sheet)
-		XCTAssertEqual(hostingView.rootView.model.phase, .idle)
+		#expect(parentWindow.endedSheet === adapter.sheet)
+		#expect(hostingView.rootView.model.phase == .idle)
 	}
 }

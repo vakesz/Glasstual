@@ -37,60 +37,60 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCClientNegotiationUtilitiesTests: XCTestCase {
-	func testSupportedMechanismsRespectCredentialsCertificateAndPreference() {
-		XCTAssertEqual(
+@Suite("Client SASL negotiation")
+struct IRCClientNegotiationUtilitiesTests {
+	@Test("The mechanism list follows the credentials, the certificate and the preference")
+	func supportedMechanismsRespectCredentialsCertificateAndPreference() {
+		#expect(
 			ClientNegotiationUtilities.supportedSASLMechanisms(
 				hasClientCertificate: true,
 				externalMechanismDisabled: false,
 				hasPassword: true,
 				preferredMechanism: "plain"
-			),
-			["PLAIN", "EXTERNAL", "SCRAM-SHA-256"]
+			) == ["PLAIN", "EXTERNAL", "SCRAM-SHA-256"]
 		)
-
-		XCTAssertEqual(
+		#expect(
 			ClientNegotiationUtilities.supportedSASLMechanisms(
 				hasClientCertificate: true,
 				externalMechanismDisabled: true,
 				hasPassword: false,
 				preferredMechanism: nil
-			),
-			[]
+			) == []
 		)
 	}
 
-	func testNextMechanismMatchesServerAndTriedListsCaseInsensitively() {
-		XCTAssertEqual(
+	@Test("The next mechanism matches the offered and tried lists without regard to case")
+	func nextMechanismMatchesServerAndTriedListsCaseInsensitively() {
+		#expect(
 			ClientNegotiationUtilities.nextSASLMechanism(
 				from: ["SCRAM-SHA-256", "PLAIN"],
 				offered: ["plain", "scram-sha-256"],
 				tried: ["SCRAM-sha-256"]
-			),
-			"PLAIN"
+			) == "PLAIN"
 		)
-
-		XCTAssertNil(ClientNegotiationUtilities.nextSASLMechanism(
+		#expect(ClientNegotiationUtilities.nextSASLMechanism(
 			from: ["PLAIN"],
 			offered: ["EXTERNAL"],
 			tried: []
-		))
+		) == nil)
 	}
 
-	func testSASLWireChunksTerminateEmptyAndExactLengthPayloads() {
-		XCTAssertEqual(ClientNegotiationUtilities.saslWireChunks(for: ""), ["+"])
+	@Test("An empty payload and one that fills the last chunk both end with a terminator")
+	func saslWireChunksTerminateEmptyAndExactLengthPayloads() {
+		#expect(ClientNegotiationUtilities.saslWireChunks(for: "") == ["+"])
 
 		let exactLengthChunks = ClientNegotiationUtilities.saslWireChunks(
 			for: String(repeating: "a", count: 300)
 		)
 
-		XCTAssertEqual(exactLengthChunks.map(\.count), [400, 1])
-		XCTAssertEqual(exactLengthChunks.last, "+")
+		#expect(exactLengthChunks.map(\.count) == [400, 1])
+		#expect(exactLengthChunks.last == "+")
 
 		let shortChunks = ClientNegotiationUtilities.saslWireChunks(for: "hello")
-		XCTAssertEqual(shortChunks, ["aGVsbG8="])
+
+		#expect(shortChunks == ["aGVsbG8="])
 	}
 }

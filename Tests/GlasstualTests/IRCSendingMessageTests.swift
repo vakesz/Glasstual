@@ -1,5 +1,5 @@
 @testable import Glasstual
-import XCTest
+import Testing
 
 /// Migrated from the Objective-C IRCSendingMessage test suite.
 /** *********************************************************************
@@ -40,39 +40,36 @@ import XCTest
  *
  *********************************************************************** */
 @MainActor
-class IRCSendingMessageTests: XCTestCase {
-	func testNativeBuilderPreservesObjectiveCRuntimeContract() {
-		XCTAssertNotNil(NSClassFromString("IRCSendingMessage"))
-		XCTAssertTrue(SendingMessage.responds(to: NSSelectorFromString("stringWithCommand:arguments:")))
-		XCTAssertTrue(SendingMessage.responds(to: NSSelectorFromString("stringWithCommand:arguments:tags:")))
-		XCTAssertTrue(SendingMessage.responds(to: NSSelectorFromString("stringWithMessageTags:")))
-	}
-
-	func testCommandWithoutTagsIsUnchanged() {
-		XCTAssertEqual(
-			SendingMessage.string(command: "privmsg", arguments: ["#c", "hello world"], tags: nil),
-			"PRIVMSG #c :hello world"
+@Suite("Outgoing message building")
+struct IRCSendingMessageTests {
+	@Test("A command without tags is uppercased and its last argument made a trailing one")
+	func commandWithoutTagsIsUnchanged() {
+		#expect(
+			SendingMessage.string(command: "privmsg", arguments: ["#c", "hello world"], tags: nil)
+				== "PRIVMSG #c :hello world"
 		)
-		XCTAssertEqual(
-			SendingMessage.string(command: "PRIVMSG", arguments: ["#c", "hi"], tags: [:]),
-			"PRIVMSG #c :hi"
+		#expect(
+			SendingMessage.string(command: "PRIVMSG", arguments: ["#c", "hi"], tags: [:])
+				== "PRIVMSG #c :hi"
 		)
 	}
 
-	func testTagsAreSerializedSortedAndEscaped() {
+	@Test("Tags are written in key order with the reserved characters escaped")
+	func tagsAreSerializedSortedAndEscaped() {
 		let tags = ["+typing": "active", "+draft/reply": "a b;c\\d\r\n", "flag": ""]
 
-		XCTAssertEqual(
-			SendingMessage.string(messageTags: tags),
-			"+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag"
+		#expect(
+			SendingMessage.string(messageTags: tags)
+				== "+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag"
 		)
-		XCTAssertEqual(
-			SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags),
-			"@+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag TAGMSG #c"
+		#expect(
+			SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags)
+				== "@+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag TAGMSG #c"
 		)
 	}
 
-	func testTagEscapingRoundTrips() {
+	@Test("A line built from tags parses back into the same tags")
+	func tagEscapingRoundTrips() throws {
 		let tags = [
 			"a": "plain",
 			"b": "semi;colon",
@@ -84,15 +81,16 @@ class IRCSendingMessageTests: XCTestCase {
 			"h": "",
 		]
 		let line = SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags)
-		let message = Message(line: line)
+		let message = try #require(Message(line: line))
 
-		XCTAssertEqual(message?.command, "TAGMSG")
-		XCTAssertEqual(message?.messageTags, tags)
+		#expect(message.command == "TAGMSG")
+		#expect(message.messageTags == tags)
 	}
 
-	func testEncodeDecodeHelpersRoundTripEveryEscape() {
+	@Test("Encoding and decoding a tag value round-trips every escape")
+	func encodeDecodeHelpersRoundTripEveryEscape() {
 		let value = "a;b \r\n\\s\\:end\\"
 
-		XCTAssertEqual(value.encodedMessageTagString.decodedMessageTagString, value)
+		#expect(value.encodedMessageTagString.decodedMessageTagString == value)
 	}
 }

@@ -37,13 +37,15 @@
 
 import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class RemoteConnectionProtocolTests: XCTestCase {
+@Suite("Remote connection protocol")
+struct RemoteConnectionProtocolTests {
 	/// The configuration is a value type now, so it crosses the connection
 	/// inside an `NSSecureCoding` envelope.
-	func testOpenAllowsTheConnectionConfigurationEnvelope() {
+	@Test("Opening a connection allows the configuration envelope across XPC")
+	func openAllowsTheConnectionConfigurationEnvelope() {
 		let interface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
 		let allowedClasses = interface.classes(
 			for: #selector((any RemoteConnectionServerProtocol).open(with:)),
@@ -51,6 +53,6 @@ final class RemoteConnectionProtocolTests: XCTestCase {
 			ofReply: false
 		)
 
-		XCTAssertTrue((allowedClasses as NSSet).contains(ConnectionConfigEnvelope.self))
+		#expect((allowedClasses as NSSet).contains(ConnectionConfigEnvelope.self))
 	}
 }

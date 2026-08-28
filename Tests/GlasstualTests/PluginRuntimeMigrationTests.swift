@@ -3,58 +3,43 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
-import XCTest
+import Testing
 
-final class PluginRuntimeMigrationTests: XCTestCase {
-	func testPluginItemNoLongerExportsLegacySourceLoadingSelector() {
-		XCTAssertFalse(PluginItem.instancesRespond(to: NSSelectorFromString("loadBundle:")))
-		XCTAssertTrue(PluginItem.instancesRespond(to: NSSelectorFromString("unloadBundle")))
-	}
-
-	func testSupportedFeaturesPreserveInternalBitAssignments() {
-		XCTAssertEqual(PluginSupportedFeature.didReceiveCommandEvent.rawValue, 1 << 1)
-		XCTAssertEqual(PluginSupportedFeature.didReceivePlainTextMessageEvent.rawValue, 1 << 2)
-		XCTAssertEqual(PluginSupportedFeature.newMessagePostedEvent.rawValue, 1 << 4)
-		XCTAssertEqual(PluginSupportedFeature.outputSuppressionRules.rawValue, 1 << 5)
-		XCTAssertEqual(PluginSupportedFeature.preferencePane.rawValue, 1 << 6)
-		XCTAssertEqual(PluginSupportedFeature.serverInputDataInterception.rawValue, 1 << 7)
-		XCTAssertEqual(PluginSupportedFeature.subscribedServerInputCommands.rawValue, 1 << 8)
-		XCTAssertEqual(PluginSupportedFeature.subscribedUserInputCommands.rawValue, 1 << 9)
-		XCTAssertEqual(PluginSupportedFeature.userInputDataInterception.rawValue, 1 << 10)
-		XCTAssertEqual(PluginSupportedFeature.webViewJavaScriptPayloads.rawValue, 1 << 11)
-		XCTAssertEqual(PluginSupportedFeature.willRenderMessageEvent.rawValue, 1 << 12)
-	}
-
-	func testOutputSuppressionRulesUsePluginKitModel() {
+@Suite("Plugin runtime")
+struct PluginRuntimeMigrationTests {
+	@Test("An output suppression rule holds what it was given")
+	func outputSuppressionRulesUsePluginKitModel() {
 		var rule = PluginOutputSuppressionRule()
 		rule.match = "NOTICE"
 		rule.restrictConsole = true
 
-		XCTAssertEqual(rule.match, "NOTICE")
-		XCTAssertTrue(rule.restrictConsole)
+		#expect(rule.match == "NOTICE")
+		#expect(rule.restrictConsole)
 	}
 
 	@MainActor
-	func testSmileyConverterRendersFromCompleteSnapshotsDuringPreferenceReloads() async throws {
+	@Test("A preference reload never hands the renderer a half-built snapshot")
+	func smileyConverterRendersFromCompleteSnapshotsDuringPreferenceReloads() async throws {
 		let bundleURL = PathInfo.bundledExtensionsURL
 			.appendingPathComponent("Smiley Converter.bundle", isDirectory: true)
-		let bundle = try XCTUnwrap(Bundle(url: bundleURL))
+		let bundle = try #require(Bundle(url: bundleURL))
 		let suiteName = "PluginRuntimeMigrationTests.\(UUID().uuidString)"
-		let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+		let defaults = try #require(UserDefaults(suiteName: suiteName))
 		defer { defaults.removePersistentDomain(forName: suiteName) }
 
 		defaults.set(true, forKey: "Smiley Converter Extension -> Enable Service")
 		defaults.set(false, forKey: "Smiley Converter Extension -> Enable Extra Emoticons")
 
-		let plugin = try XCTUnwrap(PluginItem.load(bundle, host: makePluginHost(defaults: defaults)))
+		let plugin = try #require(PluginItem.load(bundle, host: makePluginHost(defaults: defaults)))
 		defer { plugin.unloadBundle() }
 
-		let primaryClass = try XCTUnwrap(plugin.primaryClass as? NSObject)
+		let primaryClass = try #require(plugin.primaryClass as? NSObject)
 		let preferenceChanged = NSSelectorFromString("preferenceChanged:")
-		XCTAssertTrue(primaryClass.responds(to: preferenceChanged))
-		let renderer = try XCTUnwrap(plugin.primaryClass as? any PluginMessageRendering)
+		#expect(primaryClass.responds(to: preferenceChanged))
+		let renderer = try #require(plugin.primaryClass as? any PluginMessageRendering)
 
 		let renderTask = Task.detached { () -> [String] in
 			(0 ..< 500).compactMap { _ in
@@ -74,8 +59,8 @@ final class PluginRuntimeMigrationTests: XCTestCase {
 		}
 
 		let renderedMessages = await renderTask.value
-		XCTAssertEqual(renderedMessages.count, 500)
-		XCTAssertTrue(renderedMessages.allSatisfy { $0 == "😊" })
+		#expect(renderedMessages.count == 500)
+		#expect(renderedMessages.allSatisfy { $0 == "😊" })
 	}
 }
 

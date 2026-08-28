@@ -3,14 +3,17 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 private let bundledPluginCount = 6
 
 @MainActor
-final class PluginManagerRegistryTests: XCTestCase {
-	func testAllBundledPluginPrincipalsFinishLoadingBeforeTestsStart() throws {
+@Suite("Bundled plugin registry")
+struct PluginManagerRegistryTests {
+	@Test("Every bundled plugin principal has finished loading before the tests start")
+	func allBundledPluginPrincipalsFinishLoadingBeforeTestsStart() throws {
 		let manager = SharedApplication.sharedPluginManager()
 
 		let bundleURLs = try FileManager.default.contentsOfDirectory(
@@ -18,21 +21,21 @@ final class PluginManagerRegistryTests: XCTestCase {
 			includingPropertiesForKeys: nil
 		).filter { $0.pathExtension == ResourceDocumentType.bundleFilenameExtension }
 
-		XCTAssertEqual(bundleURLs.count, bundledPluginCount)
+		#expect(bundleURLs.count == bundledPluginCount)
 
-		let bundles = try bundleURLs.map { try XCTUnwrap(Bundle(url: $0)) }
-		let loadedPlugins = try XCTUnwrap(manager.loadedPlugins)
+		let bundles = try bundleURLs.map { try #require(Bundle(url: $0)) }
+		let loadedPlugins = try #require(manager.loadedPlugins)
 
 		for bundle in bundles {
-			let bundleIdentifier = try XCTUnwrap(bundle.bundleIdentifier)
-			let plugin = try XCTUnwrap(
+			let bundleIdentifier = try #require(bundle.bundleIdentifier)
+			let plugin = try #require(
 				loadedPlugins.first { $0.bundle.bundleIdentifier == bundleIdentifier },
 				"Bundled plugin did not finish loading: \(bundle.bundlePath)"
 			)
-			let expectedPrincipalClass: AnyClass = try XCTUnwrap(bundle.principalClass)
-			let principal = try XCTUnwrap(plugin.primaryClass as? NSObject)
+			let expectedPrincipalClass: AnyClass = try #require(bundle.principalClass)
+			let principal = try #require(plugin.primaryClass as? NSObject)
 
-			XCTAssertTrue(principal.isKind(of: expectedPrincipalClass), bundleIdentifier)
+			#expect(principal.isKind(of: expectedPrincipalClass), "\(bundleIdentifier)")
 		}
 	}
 }
