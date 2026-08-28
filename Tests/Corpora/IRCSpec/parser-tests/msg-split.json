@@ -1,0 +1,394 @@
+{
+  "tests": [
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "asdf"
+        ],
+        "verb": "foo"
+      },
+      "input": "foo bar baz asdf"
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "asdf"
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "input": ":coolguy foo bar baz asdf"
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "asdf quux"
+        ],
+        "verb": "foo"
+      },
+      "input": "foo bar baz :asdf quux"
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          ""
+        ],
+        "verb": "foo"
+      },
+      "input": "foo bar baz :"
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          ":asdf"
+        ],
+        "verb": "foo"
+      },
+      "input": "foo bar baz ::asdf"
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "asdf quux"
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "input": ":coolguy foo bar baz :asdf quux"
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "  asdf quux "
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "input": ":coolguy foo bar baz :  asdf quux "
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "lol :) "
+        ],
+        "source": "coolguy",
+        "verb": "PRIVMSG"
+      },
+      "input": ":coolguy PRIVMSG bar :lol :) "
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          ""
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "input": ":coolguy foo bar baz :"
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "  "
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "input": ":coolguy foo bar baz :  "
+    },
+    {
+      "atoms": {
+        "tags": {
+          "a": "b",
+          "c": "32",
+          "k": "",
+          "rt": "ql7"
+        },
+        "verb": "foo"
+      },
+      "input": "@a=b;c=32;k;rt=ql7 foo"
+    },
+    {
+      "atoms": {
+        "tags": {
+          "a": "b\\and\nk",
+          "c": "72 45",
+          "d": "gh;764"
+        },
+        "verb": "foo"
+      },
+      "input": "@a=b\\\\and\\nk;c=72\\s45;d=gh\\:764 foo"
+    },
+    {
+      "atoms": {
+        "params": [
+          "cd"
+        ],
+        "source": "quux",
+        "tags": {
+          "a": "b",
+          "c": "",
+          "h": ""
+        },
+        "verb": "ab"
+      },
+      "input": "@c;h=;a=b :quux ab cd"
+    },
+    {
+      "atoms": {
+        "params": [
+          "#chan"
+        ],
+        "source": "src",
+        "verb": "JOIN"
+      },
+      "input": ":src JOIN #chan"
+    },
+    {
+      "atoms": {
+        "params": [
+          "#chan"
+        ],
+        "source": "src",
+        "verb": "JOIN"
+      },
+      "input": ":src JOIN :#chan"
+    },
+    {
+      "atoms": {
+        "source": "src",
+        "verb": "AWAY"
+      },
+      "input": ":src AWAY"
+    },
+    {
+      "atoms": {
+        "source": "src",
+        "verb": "AWAY"
+      },
+      "input": ":src AWAY "
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz"
+        ],
+        "source": "cool\tguy",
+        "verb": "foo"
+      },
+      "input": ":cool\tguy foo bar baz"
+    },
+    {
+      "atoms": {
+        "params": [
+          "foo",
+          "bar baz"
+        ],
+        "source": "coolguy!ag@net\u00035w\u0003ork.admin",
+        "verb": "PRIVMSG"
+      },
+      "input": ":coolguy!ag@net\u00035w\u0003ork.admin PRIVMSG foo :bar baz"
+    },
+    {
+      "atoms": {
+        "params": [
+          "foo",
+          "bar baz"
+        ],
+        "source": "coolguy!~ag@n\u0002et\u000305w\u000fork.admin",
+        "verb": "PRIVMSG"
+      },
+      "input": ":coolguy!~ag@n\u0002et\u000305w\u000fork.admin PRIVMSG foo :bar baz"
+    },
+    {
+      "atoms": {
+        "params": [
+          "param1",
+          "param2",
+          "param3 param3"
+        ],
+        "source": "irc.example.com",
+        "tags": {
+          "tag1": "value1",
+          "tag2": "",
+          "vendor1/tag3": "value2",
+          "vendor2/tag4": ""
+        },
+        "verb": "COMMAND"
+      },
+      "input": "@tag1=value1;tag2;vendor1/tag3=value2;vendor2/tag4= :irc.example.com COMMAND param1 param2 :param3 param3"
+    },
+    {
+      "atoms": {
+        "params": [
+          "param1",
+          "param2",
+          "param3 param3"
+        ],
+        "source": "irc.example.com",
+        "verb": "COMMAND"
+      },
+      "input": ":irc.example.com COMMAND param1 param2 :param3 param3"
+    },
+    {
+      "atoms": {
+        "params": [
+          "param1",
+          "param2",
+          "param3 param3"
+        ],
+        "tags": {
+          "tag1": "value1",
+          "tag2": "",
+          "vendor1/tag3": "value2",
+          "vendor2/tag4": ""
+        },
+        "verb": "COMMAND"
+      },
+      "input": "@tag1=value1;tag2;vendor1/tag3=value2;vendor2/tag4 COMMAND param1 param2 :param3 param3"
+    },
+    {
+      "atoms": {
+        "verb": "COMMAND"
+      },
+      "input": "COMMAND"
+    },
+    {
+      "atoms": {
+        "tags": {
+          "foo": "\\\\;\\s \r\n"
+        },
+        "verb": "COMMAND"
+      },
+      "input": "@foo=\\\\\\\\\\:\\\\s\\s\\r\\n COMMAND"
+    },
+    {
+      "atoms": {
+        "params": [
+          "#momo",
+          "Erroneous Nickname: Illegal characters"
+        ],
+        "source": "gravel.mozilla.org",
+        "verb": "432"
+      },
+      "input": ":gravel.mozilla.org 432  #momo :Erroneous Nickname: Illegal characters"
+    },
+    {
+      "atoms": {
+        "params": [
+          "#tckk",
+          "+n"
+        ],
+        "source": "gravel.mozilla.org",
+        "verb": "MODE"
+      },
+      "input": ":gravel.mozilla.org MODE #tckk +n "
+    },
+    {
+      "atoms": {
+        "params": [
+          "#foo-bar",
+          "+o",
+          "foobar"
+        ],
+        "source": "services.esper.net",
+        "verb": "MODE"
+      },
+      "input": ":services.esper.net MODE #foo-bar +o foobar  "
+    },
+    {
+      "atoms": {
+        "tags": {
+          "tag1": "value\\ntest"
+        },
+        "verb": "COMMAND"
+      },
+      "input": "@tag1=value\\\\ntest COMMAND"
+    },
+    {
+      "atoms": {
+        "tags": {
+          "tag1": "value1"
+        },
+        "verb": "COMMAND"
+      },
+      "input": "@tag1=value\\1 COMMAND"
+    },
+    {
+      "atoms": {
+        "tags": {
+          "tag1": "value1"
+        },
+        "verb": "COMMAND"
+      },
+      "input": "@tag1=value1\\ COMMAND"
+    },
+    {
+      "atoms": {
+        "tags": {
+          "tag1": "5",
+          "tag2": "3",
+          "tag3": "4"
+        },
+        "verb": "COMMAND"
+      },
+      "input": "@tag1=1;tag2=3;tag3=4;tag1=5 COMMAND"
+    },
+    {
+      "atoms": {
+        "tags": {
+          "tag1": "5",
+          "tag2": "3",
+          "tag3": "4",
+          "vendor/tag2": "8"
+        },
+        "verb": "COMMAND"
+      },
+      "input": "@tag1=1;tag2=3;tag3=4;tag1=5;vendor/tag2=8 COMMAND"
+    },
+    {
+      "atoms": {
+        "params": [
+          "#channel",
+          "+i"
+        ],
+        "source": "SomeOp",
+        "verb": "MODE"
+      },
+      "input": ":SomeOp MODE #channel :+i"
+    },
+    {
+      "atoms": {
+        "params": [
+          "#channel",
+          "+oo",
+          "SomeUser",
+          "AnotherUser"
+        ],
+        "source": "SomeOp",
+        "verb": "MODE"
+      },
+      "input": ":SomeOp MODE #channel +oo SomeUser :AnotherUser"
+    }
+  ]
+}
