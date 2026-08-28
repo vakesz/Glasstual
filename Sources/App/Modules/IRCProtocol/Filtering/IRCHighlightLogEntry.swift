@@ -37,6 +37,12 @@
 
 import AppKit
 import CocoaExtensions
+import os
+
+private let highlightLogEntryLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "IRCHighlightLogEntry"
+)
 
 @objc(IRCHighlightLogEntry)
 public class HighlightLogEntry: PortablePropertyObject {
@@ -137,15 +143,22 @@ public class HighlightLogEntry: PortablePropertyObject {
 		nil
 	}
 
+	/// `true` when the entry carries everything its accessors need.
+	@objc public var isWellFormed: Bool {
+		lineLoggedStorage != nil && clientIdStorage.isEmpty == false && channelIdStorage.isEmpty == false
+	}
+
 	@objc(initializedClassHealthCheck)
 	override public func initializedClassHealthCheck() {
 		if isMutable || initializedAsCopy {
 			return
 		}
 
-		precondition(lineLoggedStorage != nil)
-		precondition(!clientIdStorage.isEmpty)
-		precondition(!channelIdStorage.isEmpty)
+		// A `precondition` here turned a malformed persisted entry into an
+		// abort; callers check `isWellFormed` instead.
+		if isWellFormed == false {
+			highlightLogEntryLogger.error("Loaded an incomplete highlight log entry")
+		}
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)

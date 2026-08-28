@@ -802,7 +802,11 @@ extension ClientConfig {
 			return ignorePrivateMessages && config.type == .privateMessage ? nil : config
 		}
 		ignoreListStorage = dictionaries(values["ignoreList"]).map(AddressBookEntry.init(dictionary:))
-		highlightListStorage = dictionaries(values["highlightList"]).map(HighlightMatchCondition.init(dictionary:))
+		// A persisted entry missing its keyword can never match; skip it
+		// rather than carrying a half-built condition through the app.
+		highlightListStorage = dictionaries(values["highlightList"])
+			.map(HighlightMatchCondition.init(dictionary:))
+			.filter(\.isWellFormed)
 		serverListStorage = dictionaries(values["serverList"]).map(Server.init(dictionary:))
 
 		guard dictionaryVersionStorage != ClientConfigDefaults.dictionaryVersion else {
