@@ -36,6 +36,12 @@
  *********************************************************************** */
 
 import Foundation
+import os
+
+private let preferencesReloadLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "PreferencesReload"
+)
 
 public struct PreferencesReloadAction: OptionSet, Sendable {
 	public let rawValue: UInt
@@ -68,6 +74,12 @@ public struct PreferencesReloadAction: OptionSet, Sendable {
 @MainActor
 public extension TextualPreferences {
 	class func performReloadAction(forKeys keys: [String]) {
+		performReloadAction(reloadAction(forKeys: keys))
+	}
+
+	/// The mapping is kept separate from performing it so it can be checked
+	/// without a main window.
+	class func reloadAction(forKeys keys: [String]) -> PreferencesReloadAction {
 		var reloadAction: PreferencesReloadAction = []
 
 		if keys.contains(where: styleReloadKeys.contains) {
@@ -133,8 +145,16 @@ public extension TextualPreferences {
 			reloadAction.insert(.channelViewArrangement)
 		}
 
+		if keys.contains("LogTranscript") {
+			reloadAction.insert(.logTranscripts)
+		}
+
+		if keys.contains(IRCWorldClientListDefaultsKey) {
+			reloadAction.insert(.serverList)
+		}
+
 		reloadAction.insert(.preferencesChanged)
-		performReloadAction(reloadAction)
+		return reloadAction
 	}
 
 	class func performReloadAction(_ reloadAction: PreferencesReloadAction) {
@@ -153,7 +173,12 @@ public extension TextualPreferences {
 		changedKey key: String?
 	) -> Bool {
 		let appController = NSObject.applicationController()
-		let mainWindow = appController.mainWindow!
+		// Reachable during preference import and during theme validation at
+		// launch, both of which can run before the main window exists.
+		guard let mainWindow = appController.mainWindow else {
+			preferencesReloadLogger.debug("No main window to reload the interface of")
+			return false
+		}
 		let memberList = mainWindow.memberList
 		let serverList = mainWindow.serverList
 
@@ -242,7 +267,10 @@ public extension TextualPreferences {
 		didReloadActiveStyle: Bool
 	) {
 		let appController = NSObject.applicationController()
-		let mainWindow = appController.mainWindow!
+		guard let mainWindow = appController.mainWindow else {
+			preferencesReloadLogger.debug("No main window to reload input and storage for")
+			return
+		}
 		let inputTextField = mainWindow.inputTextField
 
 		if reloadAction.contains(.textDirection) {
