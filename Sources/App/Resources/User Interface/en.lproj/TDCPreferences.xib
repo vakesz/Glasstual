@@ -6803,66 +6803,12 @@ You should therefore not rely solely on this preference.</string>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="84h-O7-xuk" secondAttribute="trailing" constant="16" id="gbx-01-292"/>
                                     </constraints>
                                 </customView>
-                                <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="gbx-01-301">
-                                    <rect key="frame" x="0.0" y="0.0" width="100" height="20"/>
-                                </box>
-                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="gbx-01-296">
-                                    <rect key="frame" x="0.0" y="0.0" width="100" height="20"/>
-                                    <subviews>
-                                        <stackView distribution="fill" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="250" verticalStackHuggingPriority="250" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="f8P-S1-YSA">
-                                            <rect key="frame" x="185" y="75" width="300" height="24"/>
-                                            <subviews>
-                                                <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="q3y-Yb-Su8">
-                                                    <rect key="frame" x="-2" y="5" width="248" height="15"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="User list no mode badge background color:" id="MDs-d0-Vsf">
-                                                        <font key="font" metaFont="cellTitle"/>
-                                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <colorWell tag="4" translatesAutoresizingMaskIntoConstraints="NO" id="TME-nn-0HB">
-                                                    <rect key="frame" x="249" y="-2" width="54" height="28"/>
-                                                    <constraints>
-                                                        <constraint firstAttribute="height" constant="24" id="9wm-sm-3re"/>
-                                                        <constraint firstAttribute="width" constant="48" id="PjF-CW-dxo"/>
-                                                    </constraints>
-                                                    <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                                    <connections>
-                                                        <accessibilityConnection property="title" destination="q3y-Yb-Su8" id="56v-co-5U0"/>
-                                                        <action selector="onChangedUserListModeColor:" target="-2" id="1mr-Mm-7IP"/>
-                                                        <binding destination="-2" name="value" keyPath="self.userListNoModeColor" id="xQQ-6V-kdK"/>
-                                                    </connections>
-                                                </colorWell>
-                                            </subviews>
-                                            <visibilityPriorities>
-                                                <integer value="1000"/>
-                                                <integer value="1000"/>
-                                            </visibilityPriorities>
-                                            <customSpacing>
-                                                <real value="3.4028234663852886e+38"/>
-                                                <real value="3.4028234663852886e+38"/>
-                                            </customSpacing>
-                                        </stackView>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="f8P-S1-YSA" firstAttribute="top" secondItem="gbx-01-296" secondAttribute="top" constant="12" id="gbx-01-297"/>
-                                        <constraint firstAttribute="bottom" secondItem="f8P-S1-YSA" secondAttribute="bottom" constant="12" id="gbx-01-298"/>
-                                        <constraint firstItem="f8P-S1-YSA" firstAttribute="leading" secondItem="gbx-01-296" secondAttribute="leading" constant="16" id="gbx-01-299"/>
-                                        <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="f8P-S1-YSA" secondAttribute="trailing" constant="16" id="gbx-01-300"/>
-                                    </constraints>
-                                </customView>
                             </subviews>
                             <constraints>
                                 <constraint firstItem="gbx-01-288" firstAttribute="top" secondItem="gbx-01-287" secondAttribute="top" id="gbx-01-293"/>
                                 <constraint firstItem="gbx-01-288" firstAttribute="leading" secondItem="gbx-01-287" secondAttribute="leading" id="gbx-01-294"/>
                                 <constraint firstAttribute="trailing" secondItem="gbx-01-288" secondAttribute="trailing" id="gbx-01-295"/>
-                                <constraint firstItem="gbx-01-301" firstAttribute="top" secondItem="gbx-01-288" secondAttribute="bottom" id="gbx-01-302"/>
-                                <constraint firstItem="gbx-01-301" firstAttribute="leading" secondItem="gbx-01-287" secondAttribute="leading" constant="16" id="gbx-01-303"/>
-                                <constraint firstAttribute="trailing" secondItem="gbx-01-301" secondAttribute="trailing" constant="16" id="gbx-01-304"/>
-                                <constraint firstItem="gbx-01-296" firstAttribute="top" secondItem="gbx-01-301" secondAttribute="bottom" id="gbx-01-305"/>
-                                <constraint firstItem="gbx-01-296" firstAttribute="leading" secondItem="gbx-01-287" secondAttribute="leading" id="gbx-01-306"/>
-                                <constraint firstAttribute="trailing" secondItem="gbx-01-296" secondAttribute="trailing" id="gbx-01-307"/>
-                                <constraint firstAttribute="bottom" secondItem="gbx-01-296" secondAttribute="bottom" id="gbx-01-308"/>
+                                <constraint firstAttribute="bottom" secondItem="gbx-01-288" secondAttribute="bottom" id="gbx-01-302"/>
                             </constraints>
                         </customView>
                         <customView translatesAutoresizingMaskIntoConstraints="NO" id="gbx-01-309">

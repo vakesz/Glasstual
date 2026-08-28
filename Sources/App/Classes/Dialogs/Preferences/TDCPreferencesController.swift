@@ -842,14 +842,6 @@ public extension PreferencesController {
 		) }
 	}
 
-	@objc dynamic var userListNoModeColor: NSColor {
-		get { TextualUserDefaults.shared().color(forKey: "User List Mode Badge Colors -> no mode") ?? .clear }
-		set { TextualUserDefaults.shared().setColor(
-			newValue == .clear ? nil : newValue,
-			forKey: "User List Mode Badge Colors -> no mode"
-		) }
-	}
-
 	@objc dynamic var logTranscript: Bool {
 		get { TextualPreferences.logToDisk() }
 		set { TextualPreferences.setLogToDisk(newValue) }
@@ -1182,7 +1174,7 @@ extension PreferencesController {
 	@IBAction @objc(onResetUserListModeColorsToDefaults:)
 	private func onResetUserListModeColorsToDefaults(_: Any?) {
 		let defaults = TextualUserDefaults.shared()
-		for item in ["+y", "+q", "+a", "+o", "+h", "+v", "no mode"] {
+		for item in ["+y", "+q", "+a", "+o", "+h", "+v"] {
 			defaults.removeObject(forKey: "User List Mode Badge Colors -> \(item)")
 		}
 		onChangedUserListModeColor(nil)
@@ -1235,7 +1227,6 @@ extension PreferencesController {
 			10: "User List Mode Badge Colors -> +y", 9: "User List Mode Badge Colors -> +q",
 			8: "User List Mode Badge Colors -> +a", 7: "User List Mode Badge Colors -> +o",
 			6: "User List Mode Badge Colors -> +h", 5: "User List Mode Badge Colors -> +v",
-			4: "User List Mode Badge Colors -> no mode",
 		]
 		guard let control = sender as? NSControl, let preferenceKey = preferenceMap[control.tag] else {
 			TextualPreferences.performReloadAction([.memberListUserBadges, .memberList])
