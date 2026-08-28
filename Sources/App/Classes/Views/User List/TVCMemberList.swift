@@ -662,7 +662,6 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 			"User List Mode Badge Colors -> +o": .normalOperator,
 			"User List Mode Badge Colors -> +h": .halfOperator,
 			"User List Mode Badge Colors -> +v": .voiced,
-			"User List Mode Badge Colors -> no mode": .none,
 		]
 
 		guard let rank = preferenceRanks[preferenceKey] else {

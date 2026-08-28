@@ -332,7 +332,6 @@ public extension TextualPreferences {
 			"User List Mode Badge Colors -> +o",
 			"User List Mode Badge Colors -> +h",
 			"User List Mode Badge Colors -> +v",
-			"User List Mode Badge Colors -> no mode",
 		]
 	}
 }
