@@ -70,11 +70,7 @@ public final class ObservablePreferences {
 				NotificationCenter.default.publisher(for: name, object: TextualUserDefaults.shared())
 					.receive(on: DispatchQueue.main)
 					.sink { [weak self] _ in
-						/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated.
-						 The publisher above delivers on the main queue. */
-						MainActor.assumeIsolated {
-							self?.invalidate()
-						}
+						self?.invalidate()
 					}
 			)
 		}
