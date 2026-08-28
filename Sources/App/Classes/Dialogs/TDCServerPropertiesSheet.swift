@@ -117,6 +117,7 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 	@IBOutlet var autoDisconnectOnSleepCheck: NSButton!
 	@IBOutlet var autoReconnectCheck: NSButton!
 	@IBOutlet var autojoinWaitsForNickServCheck: NSButton!
+	@IBOutlet var disconnectOnSASLFailureCheck: NSButton!
 	@IBOutlet var clientCertificateChangeCertificateButton: NSButton!
 	@IBOutlet var clientCertificateResetCertificateButton: NSButton!
 	@IBOutlet var clientCertificateSHA1FingerprintCopyButton: NSButton!
@@ -419,6 +420,7 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		realNameTextField.stringValue = config.realName.isEmpty ? TextualPreferences.defaultRealName() : config.realName
 		nicknamePasswordTextField.stringValue = config.nicknamePassword ?? ""
 		autojoinWaitsForNickServCheck.state = config.autojoinWaitsForNickServ ? .on : .off
+		disconnectOnSASLFailureCheck.state = config.disconnectOnSASLFailure ? .on : .off
 		hideAutojoinDelayedWarningsCheck.state = config.hideAutojoinDelayedWarnings ? .off : .on
 
 		normalLeavingCommentTextField.stringValue = config.normalLeavingComment
@@ -486,6 +488,7 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 			nicknamePasswordTextField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
 		)
 		config.autojoinWaitsForNickServ = autojoinWaitsForNickServCheck.state == .on
+		config.disconnectOnSASLFailure = disconnectOnSASLFailureCheck.state == .on
 		config.hideAutojoinDelayedWarnings = hideAutojoinDelayedWarningsCheck.state != .on
 		config.alternateNicknames = uniqueNonempty(
 			alternateNicknamesTextField.value.components(separatedBy: .whitespaces)
