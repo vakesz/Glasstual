@@ -608,6 +608,7 @@
 		ADDF471DF15502417C0751CD /* ICMInlineImage.css in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81308F0290E9261DADDCDBFC /* ICMInlineImage.css */; };
 		AF12601A5DF8EBD45A35753A /* IRCClientRequestedCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F0F08A9F671C8D4D9C169C /* IRCClientRequestedCommands.swift */; };
 		AF6875ED514A61B806BD43DA /* NSStringHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BA611CF9175A06F2B22660 /* NSStringHelper.swift */; };
+		AFAD053F7E322141BAC5C04A /* PreferenceCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04790B0A34DFC407C43E65E /* PreferenceCatalogTests.swift */; };
 		B0004E3E2592A30E25A4D7C7 /* IRCChannelModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58D05576E90E57FBB8AE0136 /* IRCChannelModeTests.swift */; };
 		B0626787C550A44E65276B80 /* TPI_ChatFilterLogic.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1E92B1C2B4ADDD4EF7CCF2F9 /* TPI_ChatFilterLogic.xcstrings */; };
 		B0ECC54CA72584E693597B8D /* MustacheBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F07D8846E83AB27F1069D6 /* MustacheBox.swift */; };
@@ -1785,6 +1786,7 @@
 		9E756365C506CC1350070B9B /* ChannelMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelMode.swift; sourceTree = "<group>"; };
 		9EC8CD77BE091CC228675209 /* ChannelModesFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelModesFeatureTests.swift; sourceTree = "<group>"; };
 		9F07683820B12A28D5AC7920 /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
+		A04790B0A34DFC407C43E65E /* PreferenceCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceCatalogTests.swift; sourceTree = "<group>"; };
 		A074AE5DBAA21DA603C014E7 /* TXMenuActionCoordinatorDialogs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TXMenuActionCoordinatorDialogs.swift; sourceTree = "<group>"; };
 		A15507F1C521D329913E12B2 /* IRCUserNicknameColorStyleGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUserNicknameColorStyleGenerator.swift; sourceTree = "<group>"; };
 		A1631F3EA4F5A7F27B016581 /* TXMenuActionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TXMenuActionCoordinator.swift; sourceTree = "<group>"; };
@@ -3778,6 +3780,7 @@
 				8CD7976B48644C9033535F1B /* PluginManagerRegistryTests.swift */,
 				F35D2C55EF33D1BA88FCA206 /* PluginRuntimeMigrationTests.swift */,
 				D837B0E331DF555948AD83DD /* PortablePropertyMigrationTests.swift */,
+				A04790B0A34DFC407C43E65E /* PreferenceCatalogTests.swift */,
 				0081C1D8922E92563E768111 /* PreferencesControllerMigrationTests.swift */,
 				FF3CDBF47F23D32AC1A9F109 /* PreferencesExportFilterTests.swift */,
 				D9BC56086EAFF5B63F218274 /* PreferencesReloadActionMappingTests.swift */,
@@ -5307,6 +5310,7 @@
 				C9E610237C0C7D74DF36329D /* PluginRuntimeMigrationTests.swift in Sources */,
 				76BC67EA8CA754CF16782520 /* PornhubModule.swift in Sources */,
 				A5FA55D6477732B4C7AF2B0B /* PortablePropertyMigrationTests.swift in Sources */,
+				AFAD053F7E322141BAC5C04A /* PreferenceCatalogTests.swift in Sources */,
 				696293FAD4713BBE0534558E /* PreferencesControllerMigrationTests.swift in Sources */,
 				3BCC700EE0E7B6105A5EB3AE /* PreferencesExportFilterTests.swift in Sources */,
 				1AC400A0B0474CB6593CC478 /* PreferencesReloadActionMappingTests.swift in Sources */,

@@ -100,10 +100,13 @@ public nonisolated extension Preferences {
 	/// Whether a stored name is one this application owns. Names made at
 	/// runtime are matched by their family's pattern.
 	static func isCatalogued(_ name: String) -> Bool {
-		if let key = keysByName[name] {
-			return key.isCatalogued
+		if let key = keysByName[name], key.isCatalogued {
+			return true
 		}
 
+		// A key declared `.uncatalogued` is still catalogued when a family
+		// covers it: the per-event notification settings are declared one by one
+		// so they carry defaults, but the catalogue lists them by prefix.
 		return allFamilies.contains { $0.isCatalogued && $0.matches(name) }
 	}
 
@@ -147,8 +150,13 @@ public nonisolated extension Preferences {
 			catalogue { $0.isCatalogued } families: { $0.isCatalogued }
 		}
 
+		/// Only catalogued names: this list exists to tell an import which of the
+		/// keys it may carry belong outside the container, and an uncatalogued
+		/// key is never imported in the first place.
 		public static var keysExcludedFromContainer: [String: Any] {
-			catalogue { $0.storage == .standard } families: { $0.storage == .standard }
+			catalogue { $0.storage == .standard && $0.isCatalogued } families: {
+				$0.storage == .standard && $0.isCatalogued
+			}
 		}
 
 		public static var keysExcludedFromExport: [String: Any] {
