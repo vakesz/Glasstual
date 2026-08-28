@@ -36,140 +36,28 @@
  *
  *********************************************************************** */
 
-import CocoaExtensions
 import Foundation
 
-@objc(IRCPrefix)
-public nonisolated class Prefix: PortablePropertyObject {
-	fileprivate var serverStorage = false
-	fileprivate var hostmaskStorage = ""
-	fileprivate var nicknameStorage = ""
-	fileprivate var usernameStorage: String?
-	fileprivate var addressStorage: String?
+/** Who sent a message: either a user (nickname!username@address) or the server
+ itself. A plain value — callers that need to change a field copy and assign. */
+public nonisolated struct Prefix: Hashable, Sendable {
+	public var isServer: Bool
+	public var hostmask: String
+	public var nickname: String
+	public var username: String?
+	public var address: String?
 
-	@objc public var isServer: Bool {
-		serverStorage
-	}
-
-	@objc public var hostmask: String {
-		hostmaskStorage
-	}
-
-	@objc public var nickname: String {
-		nicknameStorage
-	}
-
-	@objc public var username: String? {
-		usernameStorage
-	}
-
-	@objc public var address: String? {
-		addressStorage
-	}
-
-	override public init() {
-		super.init()
-	}
-
-	public required init?(coder: NSCoder) {
-		super.init(coder: coder)
-	}
-
-	override public func copy(with _: NSZone? = nil) -> Any {
-		if type(of: self) == Prefix.self {
-			return self
-		}
-
-		return Prefix(copying: self)
-	}
-
-	override public func mutableCopy(with _: NSZone? = nil) -> Any {
-		MutablePrefix(copying: self)
-	}
-
-	override public func copy(asMutable mutableCopy: Bool) -> Any {
-		copy(asMutable: mutableCopy, uniquing: false)
-	}
-
-	override public func copy(asMutable mutableCopy: Bool, uniquing _: Bool) -> Any {
-		mutableCopy ? MutablePrefix(copying: self) : Prefix(copying: self)
-	}
-
-	override public func uniqueCopy(asMutable mutableCopy: Bool) -> Any {
-		copy(asMutable: mutableCopy, uniquing: true)
-	}
-
-	override public func uniqueCopy() -> Any {
-		Prefix(copying: self)
-	}
-
-	override public func uniqueCopyMutable() -> Any {
-		MutablePrefix(copying: self)
-	}
-
-	override public func isEqual(_ object: Any?) -> Bool {
-		guard let other = object as? Prefix else {
-			return false
-		}
-
-		return isServer == other.isServer && nickname == other.nickname && username == other.username
-			&& address == other.address && hostmask == other.hostmask
-	}
-
-	override public var hash: Int {
-		var hasher = Hasher()
-		hasher.combine(isServer)
-		hasher.combine(nickname)
-		hasher.combine(username)
-		hasher.combine(address)
-		hasher.combine(hostmask)
-
-		return hasher.finalize()
-	}
-
-	fileprivate convenience init(copying prefix: Prefix) {
-		self.init()
-
-		serverStorage = prefix.isServer
-		hostmaskStorage = prefix.hostmask
-		nicknameStorage = prefix.nickname
-		usernameStorage = prefix.username
-		addressStorage = prefix.address
-	}
-}
-
-@objc(IRCPrefixMutable)
-public final nonisolated class MutablePrefix: Prefix {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	@objc override public var isServer: Bool {
-		get { serverStorage }
-		set { serverStorage = newValue }
-	}
-
-	@objc override public var hostmask: String {
-		get { hostmaskStorage }
-		set { hostmaskStorage = newValue }
-	}
-
-	@objc override public var nickname: String {
-		get { nicknameStorage }
-		set { nicknameStorage = newValue }
-	}
-
-	@objc override public var username: String? {
-		get { usernameStorage }
-		set { usernameStorage = newValue }
-	}
-
-	@objc override public var address: String? {
-		get { addressStorage }
-		set { addressStorage = newValue }
-	}
-
-	override public func copy(with _: NSZone? = nil) -> Any {
-		Prefix(copying: self)
+	public init(
+		nickname: String = "",
+		username: String? = nil,
+		address: String? = nil,
+		hostmask: String = "",
+		isServer: Bool = false
+	) {
+		self.nickname = nickname
+		self.username = username
+		self.address = address
+		self.hostmask = hostmask
+		self.isServer = isServer
 	}
 }

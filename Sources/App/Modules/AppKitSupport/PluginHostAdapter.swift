@@ -173,24 +173,18 @@ enum PluginHostAdapter {
 	}
 
 	static func applying(_ pluginMessage: PluginServerMessage, to message: Message) -> Message {
-		guard let mutableMessage = message.mutableCopy() as? MessageMutable,
-		      let mutableSender = message.sender.mutableCopy() as? MutablePrefix
-		else {
-			return message
+		message.modified { copy in
+			copy.sender = Prefix(
+				nickname: pluginMessage.sender.nickname,
+				username: pluginMessage.sender.username,
+				address: pluginMessage.sender.address,
+				hostmask: pluginMessage.sender.hostmask,
+				isServer: pluginMessage.sender.isServer
+			)
+			copy.command = pluginMessage.command
+			copy.params = pluginMessage.parameters
+			copy.isPrintOnlyMessage = pluginMessage.isPrintOnlyMessage
 		}
-
-		mutableSender.nickname = pluginMessage.sender.nickname
-		mutableSender.username = pluginMessage.sender.username
-		mutableSender.address = pluginMessage.sender.address
-		mutableSender.hostmask = pluginMessage.sender.hostmask
-		mutableSender.isServer = pluginMessage.sender.isServer
-
-		mutableMessage.sender = mutableSender
-		mutableMessage.command = pluginMessage.command
-		mutableMessage.params = pluginMessage.parameters
-		mutableMessage.isPrintOnlyMessage = pluginMessage.isPrintOnlyMessage
-
-		return mutableMessage.copy() as? Message ?? mutableMessage
 	}
 
 	/// A pure mapping, so the off-main message renderer can call it too.

@@ -158,15 +158,14 @@ enum IRCServiceNoticePolicy {
 public extension IRCClient {
 	@objc(receiveWallops:)
 	func receiveWallops(_ message: Message) {
-		guard let payload = message.params.first,
-		      let mutable = message.mutableCopy() as? MessageMutable
-		else { return }
-		mutable.command = "NOTICE"
-		mutable.params = [
-			userNickname,
-			String(format: TVCLogLineSpecialNoticeMessageFormat, message.command, payload),
-		]
-		guard let rewritten = mutable.copy() as? Message else { return }
+		guard let payload = message.params.first else { return }
+		let rewritten = message.modified { copy in
+			copy.command = "NOTICE"
+			copy.params = [
+				userNickname,
+				String(format: TVCLogLineSpecialNoticeMessageFormat, message.command, payload),
+			]
+		}
 		receivePrivmsgAndNotice(rewritten)
 	}
 

@@ -100,12 +100,12 @@ final class IRCMessageTests: XCTestCase {
 
 	func testMessageIdentifierSurvivesCopy() throws {
 		let message = try XCTUnwrap(Message(line: "@msgid=abc;account=bob :bob!b@h PRIVMSG #c :hi"))
-		let mutableCopy = try XCTUnwrap(message.mutableCopy() as? MessageMutable)
-		XCTAssertEqual(mutableCopy.messageIdentifier, "abc")
-		XCTAssertEqual(mutableCopy.senderAccount, "bob")
-		mutableCopy.messageIdentifier = "def"
+		let copy = message.modified { copy in
+			XCTAssertEqual(copy.messageIdentifier, "abc")
+			XCTAssertEqual(copy.senderAccount, "bob")
+			copy.messageIdentifier = "def"
+		}
 
-		let copy = try XCTUnwrap(mutableCopy.copy() as? Message)
 		XCTAssertEqual(copy.messageIdentifier, "def")
 		XCTAssertEqual(message.messageIdentifier, "abc")
 	}
