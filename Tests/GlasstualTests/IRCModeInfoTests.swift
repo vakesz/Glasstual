@@ -2,16 +2,12 @@ import CocoaExtensions
 @testable import Glasstual
 import XCTest
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "GLTTestClient.h"
-/// #import "ModeInfo.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -42,7 +38,6 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@MainActor
 final class ModeInfoTests: XCTestCase {
 	func testConvenienceInitializers() {
 		let unset = ModeInfo(modeSymbol: "n")
@@ -55,6 +50,9 @@ final class ModeInfoTests: XCTestCase {
 		XCTAssertTrue(set.modeIsSet)
 	}
 
+	/// `GLTTestClient` and its support info are main-actor isolated; the rest
+	/// of this suite works on plain values.
+	@MainActor
 	func testMemberModeRequiresAParameterAndPrefixMode() {
 		let client = GLTTestClient()
 		client.supportInfo.processConfigurationData("PREFIX=(ov)@+")

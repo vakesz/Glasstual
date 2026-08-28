@@ -2,10 +2,8 @@ import CocoaExtensions
 @testable import Glasstual
 import XCTest
 
-@objc
 @MainActor
 class RCMSecureTransportTests: XCTestCase {
-	@objc
 	func testCompatibilityCipherListIncludesDeprecatedSuites() {
 		let cipherSuites = SecureTransportSupport.cipherSuites(
 			inCollection: .default,
@@ -19,7 +17,6 @@ class RCMSecureTransportTests: XCTestCase {
 		XCTAssertLessThan(try XCTUnwrap(dheIndex), try XCTUnwrap(rsaIndex))
 	}
 
-	@objc
 	func testModernCipherListExcludesDeprecatedSuites() {
 		let cipherSuites = SecureTransportSupport.cipherSuites(
 			inCollection: .default,

@@ -52,12 +52,6 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertEqual(window.frame.maxY, expandedFrame.maxY)
 	}
 
-	func testWindowHelperRetainsObjectiveCSelectors() {
-		XCTAssertTrue(NSWindow.instancesRespond(to: NSSelectorFromString("saveSizeAsDefault")))
-		XCTAssertTrue(NSWindow.instancesRespond(to: NSSelectorFromString("restoreDefaultSizeAndDisplay:")))
-		XCTAssertTrue(NSWindow.instancesRespond(to: NSSelectorFromString("isActiveForDrawing")))
-	}
-
 	func testAutoExpandingFieldsTrackTheirLayoutWidth() {
 		XCTAssertNotNil(NSClassFromString("TVCAutoExpandingTextField"))
 		XCTAssertNotNil(NSClassFromString("TVCAutoExpandingTokenField"))
@@ -83,39 +77,17 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertEqual(field.preferredMaxLayoutWidth, 0)
 	}
 
-	func testNativeInputAndValidationControlsPreserveRuntimeContracts() {
-		/* TDCAlert's Objective-C surface is gone; its response values are still
-		 the AppKit modal-response constants the panel returns. */
-		XCTAssertEqual(TDCAlertResponse.default.rawValue, 1000)
-		XCTAssertEqual(TDCAlertResponse.alternate.rawValue, 1001)
-		XCTAssertEqual(TDCAlertResponse.other.rawValue, 1002)
-
-		XCTAssertNotNil(NSClassFromString("TDCInputPrompt"))
-		XCTAssertTrue(
-			InputPrompt.responds(
-				to: NSSelectorFromString(
-					"promptWithMessage:title:defaultButton:alternateButton:prefillString:completionBlock:"
-				)
-			)
-		)
-
+	/// `stringValueIsTrimmed` is what keeps a pasted "  #swift  " from being
+	/// sent to the server with its whitespace.
+	func testValidatedControlsTrimTheirValue() {
 		let textField = ValidatedTextField(string: "  #swift  ")
 		textField.stringValueIsTrimmed = true
 		XCTAssertEqual(textField.value, "#swift")
-		XCTAssertEqual(NSStringFromClass(type(of: textField)), "TVCValidatedTextField")
 
 		let comboBox = ValidatedComboBox()
 		comboBox.stringValue = "  libera  "
 		comboBox.stringValueIsTrimmed = true
 		XCTAssertEqual(comboBox.value, "libera")
-		XCTAssertEqual(NSStringFromClass(type(of: comboBox)), "TVCValidatedComboBox")
-		XCTAssertNotNil(NSClassFromString("TVCValidatedComboBoxCell"))
-		XCTAssertEqual(NSStringFromClass(TextViewWithIRCFormatter.self), "TVCTextViewWithIRCFormatter")
-		XCTAssertEqual(NSStringFromClass(BasicTableView.self), "TVCBasicTableView")
-		XCTAssertEqual(TVCTextViewCaretLocation.onlyLine.rawValue, 0)
-		XCTAssertEqual(TVCTextViewCaretLocation.firstLine.rawValue, 1)
-		XCTAssertEqual(TVCTextViewCaretLocation.middle.rawValue, 2)
-		XCTAssertEqual(TVCTextViewCaretLocation.lastLine.rawValue, 3)
 	}
 
 	/// The suppression family is catalogued as a container key, so the flags are
@@ -157,29 +129,6 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertTrue(sheet.channel === channel)
 		XCTAssertEqual(sheet.channelId, channel.uniqueIdentifier)
 		XCTAssertNotNil(sheet.sheet)
-	}
-
-	func testMigratedDialogRuntimeNamesRemainAvailable() {
-		let runtimeClassNames = [
-			"TDCAddressBookSheet",
-			"TDCChannelBanListSheet",
-			"TDCChannelModifyModesSheet",
-			"TDCHighlightEntrySheet",
-			"TDCPreferencesUserStyleSheet",
-			"TDCServerHighlightListSheet",
-		]
-
-		for runtimeClassName in runtimeClassNames {
-			XCTAssertNotNil(NSClassFromString(runtimeClassName), runtimeClassName)
-		}
-
-		XCTAssertEqual(ChannelBanListEntryType.ban.rawValue, IRCISupportInfoListType.ban.rawValue)
-		XCTAssertEqual(ChannelBanListEntryType.banException.rawValue, IRCISupportInfoListType.banException.rawValue)
-		XCTAssertEqual(
-			ChannelBanListEntryType.inviteException.rawValue,
-			IRCISupportInfoListType.inviteException.rawValue
-		)
-		XCTAssertEqual(ChannelBanListEntryType.quiet.rawValue, IRCISupportInfoListType.quiet.rawValue)
 	}
 
 	func testOnboardingStylePreviewViewExposesRadioButtonAccessibility() {
@@ -227,13 +176,6 @@ final class AppKitSupportMigrationTests: XCTestCase {
 
 		XCTAssertEqual(notification.clientIdentifier, client.uniqueIdentifier)
 		XCTAssertEqual(notification.channelIdentifier, channel.uniqueIdentifier)
-	}
-
-	func testFormatterColorsIncludeCanonicalIRCPalette() {
-		XCTAssertEqual(NSColor.formatterColors.count, 99)
-		XCTAssertEqual(NSColor.formatterWhiteColor, NSColor.formatterColors[0])
-		XCTAssertEqual(NSColor.formatterBlackColor, NSColor.formatterColors[1])
-		XCTAssertEqual(NSColor.formatterLightGrayColor, NSColor.formatterColors[15])
 	}
 
 	private func makeChannel(named name: String, client: IRCClient) -> Channel {

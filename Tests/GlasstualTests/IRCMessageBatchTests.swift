@@ -1,15 +1,12 @@
 @testable import Glasstual
 import XCTest
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "IRCMessage.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -40,10 +37,8 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 @MainActor
 class IRCMessageBatchTests: XCTestCase {
-	@objc
 	func batchWithToken(_ token: String) -> MessageBatch {
 		let batch = MessageBatch()
 
@@ -52,7 +47,6 @@ class IRCMessageBatchTests: XCTestCase {
 		return batch
 	}
 
-	@objc
 	func testContainerQueuesAndDequeuesBatchesByToken() {
 		let container = MessageBatchContainer()
 		let batch = batchWithToken("history-1")
@@ -77,7 +71,6 @@ class IRCMessageBatchTests: XCTestCase {
 		XCTAssertEqual(batch.queuedEntries.count, 0)
 	}
 
-	@objc
 	func testBatchKeepsMessagesAndNestedBatchesInOrder() {
 		let parent = batchWithToken("parent")
 		let child = batchWithToken("child")
@@ -110,7 +103,6 @@ class IRCMessageBatchTests: XCTestCase {
 		XCTAssertTrue(parent.queuedEntries.first?.object === second)
 	}
 
-	@objc
 	func testDequeuingEveryBatchKeepsTheirContents() {
 		let container = MessageBatchContainer()
 		let batch = batchWithToken("batch")
