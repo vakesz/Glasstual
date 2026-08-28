@@ -224,6 +224,7 @@
 		39D0A5C2AEF5B70E987ACB87 /* Preferences+FileTransfers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99CA1A5ED9B1D14B9BCA33A7 /* Preferences+FileTransfers.swift */; };
 		39F3BA7C79E0FFD69E35F3F5 /* InlineContentPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853B5D2AAFEE2AC7AC162318 /* InlineContentPlugin.swift */; };
 		3A17DAE9F9F4181855A5AD14 /* Preferences+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A01B91D4C3E92154CAFF5A /* Preferences+Notifications.swift */; };
+		3ADDB643D591C264D061003B /* IRCSpecISupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AED35C3431DBBB5D7422FB73 /* IRCSpecISupportTests.swift */; };
 		3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 215C3A04759171741632CD9C /* IRC Connection Host.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3B52AAFD736039328CE08280 /* MenuActionCoordinatorEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4C4DEC71DCB7EB01246BFC /* MenuActionCoordinatorEditing.swift */; };
 		3BCC700EE0E7B6105A5EB3AE /* PreferencesExportFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3CDBF47F23D32AC1A9F109 /* PreferencesExportFilterTests.swift */; };
@@ -586,6 +587,7 @@
 		A42E7CCECBBB2F8A3AA3A2E1 /* AppearanceSchemaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8382FEF5CB2BA1DFE6AFA598 /* AppearanceSchemaTests.swift */; };
 		A45A133CE16387A81F2FC697 /* InlineContentProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15FD5C15A34C8A9E0E32A9A6 /* InlineContentProtocols.swift */; };
 		A45B92C59415D108268335C8 /* LogControllerHistoricLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC45C726827FAD1E8F1D359F /* LogControllerHistoricLogFile.swift */; };
+		A462D73FCCA9B3A9D9068823 /* IRCSpecMessageGrammarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8E4546297A1333A6ACE387 /* IRCSpecMessageGrammarTests.swift */; };
 		A506690F49EEE1B9DAF2721E /* RCMSecureTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6BDFD87F97AA87B49FCC888 /* RCMSecureTransportTests.swift */; };
 		A5986EFEC7C0F0CB004B234A /* IRCClientRequestedCommandsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDCA16F810EE48FBB19C5AF3 /* IRCClientRequestedCommandsTests.swift */; };
 		A59D217CD90CE06258049F4F /* PornhubModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC17127B0DBE5D547B42B069 /* PornhubModule.swift */; };
@@ -1421,6 +1423,7 @@
 		2D4D8328EC15B661C5D0B115 /* NicknameColorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameColorSheet.swift; sourceTree = "<group>"; };
 		2D87202A4B450420150DA8C1 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		2D8BFC6139B4E3D9A24C8C31 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TVCMainWindow.xib; sourceTree = "<group>"; };
+		2D8E4546297A1333A6ACE387 /* IRCSpecMessageGrammarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSpecMessageGrammarTests.swift; sourceTree = "<group>"; };
 		2DCECDF18AF2200FC24EBCB8 /* ChannelTopicFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelTopicFeatureTests.swift; sourceTree = "<group>"; };
 		2DFF9CCB6CA3D23DE784C9FE /* IRCUserRelations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUserRelations.swift; sourceTree = "<group>"; };
 		2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CocoaExtensions.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1849,6 +1852,7 @@
 		AD01BE51BA82946644EF0E54 /* Preferences+Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Preferences+Input.swift"; sourceTree = "<group>"; };
 		AD682ADEDE460F3B0F602F11 /* Makefile */ = {isa = PBXFileReference; path = Makefile; sourceTree = "<group>"; };
 		ADA8AFB201414F1E54CB75FA /* TDCAlertRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCAlertRequestTests.swift; sourceTree = "<group>"; };
+		AED35C3431DBBB5D7422FB73 /* IRCSpecISupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSpecISupportTests.swift; sourceTree = "<group>"; };
 		AF72164992CBEB61EDC9E64E /* IRCProtocolLimits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCProtocolLimits.swift; sourceTree = "<group>"; };
 		AFF5DE2E5BA977B7D8BF6A7E /* IRCClientDialogPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientDialogPresentation.swift; sourceTree = "<group>"; };
 		B0545BE1E38BFEEA58C24640 /* PreferencesStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStrings.swift; sourceTree = "<group>"; };
@@ -3788,6 +3792,8 @@
 				D0C16D05DD48A6A51DC6AC54 /* IRCServerCodableTests.swift */,
 				0B69DD9DF091AD8AF1F46B38 /* IRCServiceNoticeOriginTests.swift */,
 				8FB826DBC21BC7EBDBD6F928 /* IRCServiceValueTests.swift */,
+				AED35C3431DBBB5D7422FB73 /* IRCSpecISupportTests.swift */,
+				2D8E4546297A1333A6ACE387 /* IRCSpecMessageGrammarTests.swift */,
 				A1B05823BFF201C101176F16 /* IRCSpecParserCorpusTests.swift */,
 				DE35CB6EEB91C3BBF831E9C3 /* IRCStringCatalogMigrationTests.swift */,
 				70E6813EE66A96C5CE2B2C14 /* IRCSTSPolicyTests.swift */,
@@ -5188,6 +5194,8 @@
 				76528ACA0315BFAA56B26D02 /* IRCServerCodableTests.swift in Sources */,
 				D4ED7027014FD22F944A8125 /* IRCServiceNoticeOriginTests.swift in Sources */,
 				61959C28A8C7D4DCED48142F /* IRCServiceValueTests.swift in Sources */,
+				3ADDB643D591C264D061003B /* IRCSpecISupportTests.swift in Sources */,
+				A462D73FCCA9B3A9D9068823 /* IRCSpecMessageGrammarTests.swift in Sources */,
 				4DDDD6C61FA2A132134C44B3 /* IRCSpecParserCorpusTests.swift in Sources */,
 				0F7A701D9D2D3256A18728E9 /* IRCStringCatalogMigrationTests.swift in Sources */,
 				198C7787E91B63EAA6FE9CE5 /* IRCTimedCommandTests.swift in Sources */,
