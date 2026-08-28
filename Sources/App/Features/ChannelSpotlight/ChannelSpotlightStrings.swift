@@ -26,24 +26,11 @@ nonisolated enum ChannelSpotlightStrings {
 	}
 
 	static func unreadMessages(_ count: Int) -> String {
-		let countDescription = formattedNumber(count) as String
-
-		if count == 1 {
-			return String(localized: .TDCChannelSpotlightController.unreadMessage(countDescription))
-		}
-
-		return String(localized: .TDCChannelSpotlightController.unreadMessages(countDescription))
+		String(localized: .TDCChannelSpotlightController.unreadMessageCount(count))
 	}
 
 	static func highlights(_ count: Int) -> String {
-		let countDescription = formattedNumber(count) as String
-
-		if count == 1 {
-			return String(localized: .TDCChannelSpotlightController.singularNicknameHighlightCount(countDescription))
-		}
-
-		return String(localized: .TDCChannelSpotlightController
-			.pluralNicknameHighlightCountHighlights(countDescription))
+		String(localized: .TDCChannelSpotlightController.highlightCount(count))
 	}
 
 	static func combined(_ firstDescription: String, _ secondDescription: String) -> String {

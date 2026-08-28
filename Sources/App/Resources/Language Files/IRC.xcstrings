@@ -2017,30 +2017,6 @@
         }
       }
     },
-    "there-are-timers" : {
-      "comment" : "/timer/ command. Legacy key: q1m-1e.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "There are %ld timers:"
-          }
-        }
-      }
-    },
-    "there-is-timer" : {
-      "comment" : "/timer/ command. Legacy key: 6ts-oi.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "There is %ld timer:"
-          }
-        }
-      }
-    },
     "this-command-can-only-be-used" : {
       "comment" : "Common command errors. Legacy key: g01-qn.",
       "extractionState" : "manual",
@@ -2193,6 +2169,20 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stopped"
+          }
+        }
+      }
+    },
+    "timer-count" : {
+      "comment" : "/timer/ command. The argument is the number of timers. Legacy keys: 6ts-oi, q1m-1e.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "There is %ld timer:" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "There are %ld timers:" } }
+            }
           }
         }
       }

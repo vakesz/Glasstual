@@ -493,18 +493,6 @@
         }
       }
     },
-    "people-are-typing": {
-      "comment": "Input bar: reply banner and typing row. Legacy key: typ-n.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ people are typing…"
-          }
-        }
-      }
-    },
     "search-channels": {
       "comment": "Toolbar & input bar accessibility. Legacy key: ib-sf.",
       "extractionState": "manual",
@@ -645,6 +633,20 @@
           "stringUnit": {
             "state": "translated",
             "value": "Settings…"
+          }
+        }
+      }
+    },
+    "typing-count": {
+      "comment": "Typing row for three or more people. The argument is the number of people typing. Legacy key: typ-n.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": { "stringUnit": { "state": "translated", "value": "%ld person is typing\u2026" } },
+              "other": { "stringUnit": { "state": "translated", "value": "%ld people are typing\u2026" } }
+            }
           }
         }
       }

@@ -31,7 +31,7 @@ nonisolated enum ChannelInviteStrings {
 	}
 
 	static func inviteeCount(_ count: Int) -> String {
-		String(localized: .TDCChannelInviteSheet.describesAnInvitationUsers(count))
+		String(localized: .TDCChannelInviteSheet.inviteeCount(count))
 	}
 
 	static func inviteePair(_ firstNickname: String, _ secondNickname: String) -> String {

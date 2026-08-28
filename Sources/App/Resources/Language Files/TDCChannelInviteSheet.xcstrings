@@ -25,18 +25,6 @@
         }
       }
     },
-    "describes-an-invitation-users" : {
-      "comment" : "Describes an invitation with three or more users. The argument is the number of users. Legacy key: c8p-sb.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%ld users"
-          }
-        }
-      }
-    },
     "heading-above-the-channel-invite" : {
       "comment" : "Heading above the channel picker. The argument describes the users being invited. Legacy key: 0lg-er.",
       "extractionState" : "manual",
@@ -57,6 +45,20 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invite"
+          }
+        }
+      }
+    },
+    "invitee-count" : {
+      "comment" : "Describes an invitation with three or more users. The argument is the number of users. Legacy key: c8p-sb.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%ld user" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%ld users" } }
+            }
           }
         }
       }

@@ -26,10 +26,6 @@ nonisolated enum ServerChannelListStrings {
 	}
 
 	static func windowTitle(publicChannelCount: Int) -> String {
-		String(
-			localized: .TDCServerChannelListDialog.channelListPublicChannels(
-				formattedNumber(publicChannelCount) as String
-			)
-		)
+		String(localized: .TDCServerChannelListDialog.publicChannelCount(publicChannelCount))
 	}
 }
