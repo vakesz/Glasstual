@@ -94,6 +94,7 @@ public extension IRCClient {
 		}
 	}
 
+	@MainActor
 	@objc(receiveTagMessage:)
 	func receiveTagMessage(_ message: Message) {
 		guard let target = message.params.first else { return }
@@ -166,6 +167,7 @@ public extension IRCClient {
 	}
 
 	@objc(deliverClientTags:fromSender:toTarget:inItem:timestamp:messageIdentifier:account:)
+	@MainActor
 	func deliverTags(
 		_ clientTags: [String: String],
 		fromSender sender: String,
