@@ -249,7 +249,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 		channelListStorage
 	}
 
-	@objc public var highlightList: [HighlightMatchCondition] {
+	public var highlightList: [HighlightMatchCondition] {
 		highlightListStorage
 	}
 
@@ -550,9 +550,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 			config.channelListStorage = channelListStorage.map {
 				checkedModel($0.uniqueCopy(), as: ChannelConfig.self)
 			}
-			config.highlightListStorage = highlightListStorage.map {
-				checkedModel($0.uniqueCopy(), as: HighlightMatchCondition.self)
-			}
+			config.highlightListStorage = highlightListStorage.map { $0.uniqueCopy() }
 			config.ignoreListStorage = ignoreListStorage.map {
 				checkedModel($0.uniqueCopy(), as: AddressBookEntry.self)
 			}
@@ -649,7 +647,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 		}
 
 		setSerialized(channelListStorage, on: dictionary, key: "channelList")
-		setSerialized(highlightListStorage, on: dictionary, key: "highlightList")
+		setEncoded(highlightListStorage, on: dictionary, key: "highlightList")
 		setSerialized(ignoreListStorage, on: dictionary, key: "ignoreList")
 		setEncoded(serverListStorage, on: dictionary, key: "serverList")
 
@@ -785,7 +783,7 @@ nonisolated extension ClientConfig {
 		// A persisted entry missing its keyword can never match; skip it
 		// rather than carrying a half-built condition through the app.
 		highlightListStorage = dictionaries(values["highlightList"])
-			.map(HighlightMatchCondition.init(dictionary:))
+			.compactMap { PropertyListModel.decode(HighlightMatchCondition.self, from: $0) }
 			.filter(\.isWellFormed)
 		serverListStorage = dictionaries(values["serverList"]).compactMap {
 			PropertyListModel.decode(Server.self, from: $0)
@@ -1211,7 +1209,7 @@ public final nonisolated class MutableClientConfig: ClientConfig {
 		get { channelListStorage } set { channelListStorage = newValue }
 	}
 
-	@objc override public var highlightList: [HighlightMatchCondition] {
+	override public var highlightList: [HighlightMatchCondition] {
 		get { highlightListStorage } set { highlightListStorage = newValue }
 	}
 
