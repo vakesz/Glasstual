@@ -162,7 +162,14 @@ extension TDCFileTransferDialogTransferController {
 
 		if isSender {
 			if isReversed {
-				buildTransferToken()
+				/* Offering a reverse DCC without a token is a malformed request
+				 rather than a transfer the peer can complete. Report it. */
+				guard buildTransferToken() else {
+					fileTransferLogger.error("Could not mint a reverse DCC transfer token")
+					close(with: .connectionUnavailable)
+					return
+				}
+
 				client.sendFile(
 					peerNickname,
 					port: 0,
@@ -298,14 +305,23 @@ extension TDCFileTransferDialogTransferController {
 		noteIPAddressLookupSucceeded()
 	}
 
-	private func buildTransferToken() {
+	/// Mints the token that identifies a reverse-DCC offer.
+	///
+	/// The token is the only thing tying an inbound connection on the listening
+	/// port to this offer, so it is drawn from the system CSPRNG over the full
+	/// 64-bit range rather than the four decimal digits a third party could
+	/// enumerate during the window the port is open.
+	private func buildTransferToken() -> Bool {
 		for _ in 0 ..< 300 {
-			let candidate = String(randomNumber(9999))
+			let candidate = String(UInt64.random(in: 1 ... UInt64.max))
 			if !transferDialog.fileTransferExists(withToken: candidate) {
 				transferToken = candidate
-				return
+				return true
 			}
 		}
+
+		transferToken = nil
+		return false
 	}
 
 	private func sendTransferResumeRequestToClient() {

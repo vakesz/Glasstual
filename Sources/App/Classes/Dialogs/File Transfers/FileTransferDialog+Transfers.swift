@@ -37,12 +37,46 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
 
 extension FileTransferDialog {
-	@objc(fileTransferMatchingPort:)
-	public func fileTransfer(matchingPort port: UInt16) -> TDCFileTransferDialogTransferController? {
-		firstFileTransfer { $0.hostPort == port }
+	/// Locates the transfer a DCC `RESUME`/`ACCEPT` refers to.
+	///
+	/// A port on its own identifies nothing: it is unique to neither a network
+	/// nor a peer, so matching on it alone lets any user on any connected
+	/// network move the resume offset of somebody else's transfer. The client,
+	/// the peer nickname and the filename all have to agree.
+	@objc(fileTransferMatchingPort:client:peerNickname:filename:)
+	public func fileTransfer(
+		matchingPort port: UInt16,
+		client: IRCClient,
+		peerNickname: String,
+		filename: String
+	) -> TDCFileTransferDialogTransferController? {
+		firstFileTransfer {
+			$0.hostPort == port
+				&& Self.transfer($0, belongsTo: client, peerNickname: peerNickname, filename: filename)
+		}
+	}
+
+	private static func transfer(
+		_ transfer: TDCFileTransferDialogTransferController,
+		belongsTo client: IRCClient,
+		peerNickname: String,
+		filename: String
+	) -> Bool {
+		guard transfer.clientId == client.uniqueIdentifier,
+		      transfer.peerNickname.caseInsensitiveCompare(peerNickname) == .orderedSame
+		else {
+			return false
+		}
+
+		/* The peer echoes back the name we sent it, which crossed the wire in
+		 its sanitised form, so compare the sanitised forms. */
+		let ourFilename = String((transfer.filename as NSString).ceSafeFilename)
+
+		return ourFilename.caseInsensitiveCompare(filename) == .orderedSame
 	}
 
 	@objc(fileTransferWithUniqueIdentifier:)
@@ -55,9 +89,17 @@ extension FileTransferDialog {
 		firstFileTransfer { $0.transferToken == transferToken } != nil
 	}
 
-	@objc(fileTransferSenderMatchingToken:)
-	public func fileTransferSender(matchingToken transferToken: String) -> TDCFileTransferDialogTransferController? {
-		firstFileTransfer { $0.transferToken == transferToken && $0.isSender }
+	@objc(fileTransferSenderMatchingToken:client:peerNickname:filename:)
+	public func fileTransferSender(
+		matchingToken transferToken: String,
+		client: IRCClient,
+		peerNickname: String,
+		filename: String
+	) -> TDCFileTransferDialogTransferController? {
+		firstFileTransfer {
+			$0.transferToken == transferToken && $0.isSender
+				&& Self.transfer($0, belongsTo: client, peerNickname: peerNickname, filename: filename)
+		}
 	}
 
 	@objc(fileTransferReceiverMatchingToken:)
@@ -81,7 +123,7 @@ extension FileTransferDialog {
 		filesize totalFilesize: UInt64,
 		token transferToken: String?
 	) -> String? {
-		guard receiverCount <= FileTransferDialogConstants.receiverHardLimit else {
+		guard receiverCount < FileTransferDialogConstants.receiverHardLimit else {
 			fileTransferDialogLogger.error(
 				"Maximum receiver count of \(FileTransferDialogConstants.receiverHardLimit, privacy: .public) exceeded"
 			)

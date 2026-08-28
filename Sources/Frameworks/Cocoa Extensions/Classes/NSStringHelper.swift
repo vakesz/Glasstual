@@ -590,18 +590,56 @@ public extension NSString {
 		UTF16StringOperations.addressBytes(self, family: AF_INET6)
 	}
 
+	/// The receiver reduced to something safe to use as a single path component.
+	///
+	/// Filenames arrive from remote peers over DCC and from user-set client and
+	/// channel names. Anything that could redirect the write (path separators,
+	/// `.`, `..`, a leading dot) or that the file system cannot hold (control
+	/// and format characters, more than `NAME_MAX` bytes) is substituted or cut
+	/// rather than passed through.
 	@objc(safeFilename)
 	var ceSafeFilename: NSString {
 		guard length > 0 else {
 			return self
 		}
 
-		var result = ceTrim.replacingOccurrences(of: "/", with: "_")
-		result = result.replacingOccurrences(of: ":", with: "_")
-		if UserDefaults.standard.bool(forKey: "Cocoa Extensions Framework -> Exclude Bars from Safe Filenames") {
-			result = result.replacingOccurrences(of: "|", with: "_")
+		let disallowed = CharacterSet(charactersIn: "/:").union(.controlCharacters)
+		let substituted = String(ceTrim).unicodeScalars.map {
+			disallowed.contains($0) ? Unicode.Scalar("_") : $0
 		}
-		return result as NSString
+
+		var result = String(String.UnicodeScalarView(substituted))
+
+		while result.hasPrefix(".") {
+			result = "_" + result.dropFirst()
+		}
+
+		return Self.truncated(result, toUTF8Bytes: Self.maximumFilenameBytes) as NSString
+	}
+
+	/// `NAME_MAX` on APFS and HFS+.
+	private static let maximumFilenameBytes = 255
+
+	private static func truncated(_ value: String, toUTF8Bytes limit: Int) -> String {
+		guard value.utf8.count > limit else {
+			return value
+		}
+
+		var result = ""
+		var byteCount = 0
+
+		for character in value {
+			let width = String(character).utf8.count
+
+			guard byteCount + width <= limit else {
+				break
+			}
+
+			result.append(character)
+			byteCount += width
+		}
+
+		return result
 	}
 
 	@objc(occurrencesOfCharacter:)
