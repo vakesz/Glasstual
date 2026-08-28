@@ -32,16 +32,31 @@
 
 import Darwin
 import Foundation
+import os
 
-private enum FileOperationOptions {
-	static let removeIfExists: UInt = 1 << 1
-	static let enumerateDirectories: UInt = 1 << 2
-	static let createDirectory: UInt = 1 << 3
-	static let continueOnError: UInt = 1 << 4
-	static let moveToTrash: UInt = 1 << 5
-	static let moveToDestination: UInt = 1 << 6
-	static let includeDotFiles: UInt = 1 << 7
-	static let symlinkPackages: UInt = 1 << 8
+private let fileOperationLogger = Logger(
+	subsystem: "com.vakesz.glasstual.frameworks.CocoaExtensions",
+	category: "FileOperations"
+)
+
+public struct FileOperationOptions: OptionSet, Sendable {
+	public let rawValue: UInt
+
+	public init(rawValue: UInt) {
+		self.rawValue = rawValue
+	}
+
+	/// Delete whatever already sits at the destination instead of failing.
+	public static let removeIfExists = FileOperationOptions(rawValue: 1 << 1)
+
+	/// Send the replaced item to the trash rather than deleting it outright.
+	public static let moveToTrash = FileOperationOptions(rawValue: 1 << 5)
+
+	/// Move the source instead of copying it.
+	public static let moveToDestination = FileOperationOptions(rawValue: 1 << 6)
+
+	/// Link, rather than copy, applications and other bundles.
+	public static let symlinkPackages = FileOperationOptions(rawValue: 1 << 8)
 }
 
 public extension FileManager {
@@ -72,135 +87,53 @@ public extension FileManager {
 		return fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
 	}
 
-	@objc(buildPathArrayWithPaths:)
-	func buildPathArray(with paths: [String]) -> [String] {
-		paths.filter { $0.isEmpty == false && directoryExists(atPath: $0) }
-	}
-
-	@objc(replaceItemAtURL:withItemAtURL:)
 	func replaceItem(at destination: URL, withItemAt source: URL) -> Bool {
-		replaceItem(
-			at: destination,
-			withItemAt: source,
-			options: FileOperationOptions.moveToTrash | FileOperationOptions.removeIfExists
-		)
+		replaceItem(at: destination, withItemAt: source, options: [.moveToTrash, .removeIfExists])
 	}
 
-	@objc(replaceItemAtURL:withItemAtURL:options:)
-	func replaceItem(at destination: URL, withItemAt source: URL, options: UInt) -> Bool {
-		guard source.isFileURL, destination.isFileURL else { return false }
+	/// Puts `source` where `destination` is, copying, moving or linking it
+	/// depending on `options`. Theme and plugin installation run through here,
+	/// so a failure is logged rather than swallowed into a bare `false`.
+	func replaceItem(at destination: URL, withItemAt source: URL, options: FileOperationOptions) -> Bool {
+		guard source.isFileURL, destination.isFileURL else {
+			fileOperationLogger.error("Refusing to replace a non-file URL")
+			return false
+		}
+
 		do {
 			if fileExists(at: destination) {
-				guard options & FileOperationOptions.removeIfExists != 0 else { return true }
-				try removeItem(at: destination, movingToTrash: options & FileOperationOptions.moveToTrash != 0)
+				guard options.contains(.removeIfExists) else {
+					fileOperationLogger.error(
+						"Destination [\(destination.standardizedTildePath ?? "", privacy: .public)] already exists"
+					)
+					return false
+				}
+
+				try removeItem(at: destination, movingToTrash: options.contains(.moveToTrash))
 			}
 
 			let values = try source.resourceValues(forKeys: [.isSymbolicLinkKey, .isApplicationKey, .isPackageKey])
 			let shouldLink = values.isSymbolicLink == true ||
-				(options & FileOperationOptions.symlinkPackages != 0 &&
+				(options.contains(.symlinkPackages) &&
 					(values.isApplication == true || values.isPackage == true))
 			if shouldLink {
 				try createSymbolicLink(at: destination, withDestinationURL: source.resolvingSymlinksInPath())
-			} else if options & FileOperationOptions.moveToDestination != 0 {
+			} else if options.contains(.moveToDestination) {
 				try moveItem(at: source, to: destination)
 			} else {
 				try copyItem(at: source, to: destination)
 			}
 			return true
 		} catch {
-			return false
-		}
-	}
-
-	@objc(mergeDirectoryAtURL:withDirectoryAtURL:options:)
-	func mergeDirectory(at source: URL, withDirectoryAt destination: URL, options: UInt) -> Bool {
-		mergeItem(at: source, into: destination, options: options, depth: 0)
-	}
-
-	@objc(removeContentsOfDirectoryAtURL:options:)
-	func removeContents(ofDirectoryAt url: URL, options: UInt) -> Bool {
-		removeContents(ofDirectoryAt: url, excluding: nil, options: options)
-	}
-
-	@objc(removeContentsOfDirectoryAtURL:excludingURLs:options:)
-	func removeContents(ofDirectoryAt url: URL, excluding urls: [URL]?, options: UInt) -> Bool {
-		guard url.isFileURL, directoryExists(at: url) else { return false }
-		let exclusions = Set(urls ?? [])
-		do {
-			let children = try contentsOfDirectory(
-				at: url,
-				includingPropertiesForKeys: [.isDirectoryKey, .isPackageKey]
+			fileOperationLogger.error(
+				"""
+				Could not place [\(source.standardizedTildePath ?? "", privacy: .public)] \
+				at [\(destination.standardizedTildePath ?? "", privacy: .public)]: \
+				\(error.localizedDescription, privacy: .public)
+				"""
 			)
-			var succeeded = true
-			for child in children where exclusions.contains(child) == false {
-				do {
-					try removeTree(
-						at: child,
-						exclusions: exclusions,
-						moveToTrash: options & FileOperationOptions.moveToTrash != 0
-					)
-				} catch {
-					succeeded = false
-					if options & FileOperationOptions.continueOnError == 0 {
-						return false
-					}
-				}
-			}
-			return succeeded
-		} catch {
 			return false
 		}
-	}
-
-	private func mergeItem(at source: URL, into destination: URL, options: UInt, depth: Int) -> Bool {
-		guard source.isFileURL, destination.isFileURL else { return false }
-		do {
-			let values = try source.resourceValues(forKeys: [
-				.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey, .isApplicationKey, .isPackageKey,
-			])
-			guard depth > 0 || values.isDirectory == true else { return false }
-			let isContainedDirectory = values.isDirectory == true && values.isApplication != true && values
-				.isPackage != true
-			if isContainedDirectory == false || depth > 0 && options & FileOperationOptions.enumerateDirectories == 0 {
-				return replaceItem(at: destination, withItemAt: source, options: options)
-			}
-			if options & FileOperationOptions.createDirectory != 0 {
-				try createDirectory(at: destination, withIntermediateDirectories: true)
-			}
-			let children = try contentsOfDirectory(at: source, includingPropertiesForKeys: [
-				.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey, .isApplicationKey, .isPackageKey,
-			])
-			for child in children {
-				if options & FileOperationOptions.includeDotFiles == 0,
-				   child.lastPathComponent.hasPrefix(".")
-				{
-					continue
-				}
-				let childDestination = destination.appendingPathComponent(child.lastPathComponent)
-				if mergeItem(at: child, into: childDestination, options: options, depth: depth + 1) == false,
-				   options & FileOperationOptions.continueOnError == 0
-				{
-					return false
-				}
-			}
-			return true
-		} catch {
-			return false
-		}
-	}
-
-	private func removeTree(at url: URL, exclusions: Set<URL>, moveToTrash: Bool) throws {
-		guard exclusions.contains(url) == false else { return }
-		let values = try url.resourceValues(forKeys: [.isDirectoryKey, .isApplicationKey, .isPackageKey])
-		if values.isDirectory == true, values.isApplication != true, values.isPackage != true {
-			for child in try contentsOfDirectory(at: url, includingPropertiesForKeys: nil) {
-				try removeTree(at: child, exclusions: exclusions, moveToTrash: moveToTrash)
-			}
-			if try contentsOfDirectory(atPath: url.path).isEmpty == false {
-				return
-			}
-		}
-		try removeItem(at: url, movingToTrash: moveToTrash)
 	}
 
 	private func removeItem(at url: URL, movingToTrash: Bool) throws {

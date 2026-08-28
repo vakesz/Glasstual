@@ -37,25 +37,6 @@ import ObjectiveC
 private nonisolated(unsafe) var menuItemUserInfoKey: UInt8 = 0
 
 public extension NSFont {
-	@objc(convertToItalics)
-	var textualConvertToItalics: NSFont? {
-		let manager = NSFontManager.shared
-		let italicFont = manager.convert(self, toHaveTrait: .italicFontMask)
-
-		guard textual_fontTraitIsSet(.italicFontMask) == false else {
-			return self
-		}
-
-		let fontTransform = AffineTransform(scaleByX: pointSize, byY: pointSize)
-		let shear = CGFloat(-tan(-14.0 * (Double.pi / 180)))
-		let italicTransform = AffineTransform(m11: 1, m12: 0, m21: shear, m22: 1, tX: 0, tY: 0)
-
-		var combinedTransform = fontTransform
-		combinedTransform.append(italicTransform)
-
-		return NSFont(descriptor: italicFont.fontDescriptor, textTransform: combinedTransform) ?? self
-	}
-
 	@objc(fontTraitSet:)
 	func textual_fontTraitIsSet(_ trait: NSFontTraitMask) -> Bool {
 		NSFontManager.shared.traits(of: self).contains(trait)
@@ -76,11 +57,6 @@ public extension NSFont {
 public extension NSScreen {
 	private var textualDisplayIdentifier: CGDirectDisplayID? {
 		(deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
-	}
-
-	@objc(runningInHighResolutionMode)
-	var textualRunningInHighResolutionMode: Bool {
-		abs(backingScaleFactor - 1) > 0.01
 	}
 
 	@objc(screenResolutionString)
@@ -136,36 +112,12 @@ public extension NSMenuItem {
 
 		textualUserInfo = userInfo
 	}
-
-	@objc(menuItemWithTitle:target:action:)
-	class func textual_menuItem(title: String, target: AnyObject, action: Selector) -> NSMenuItem {
-		textual_menuItem(
-			title: title,
-			target: target,
-			action: action,
-			keyEquivalent: "",
-			keyEquivalentMask: []
-		)
-	}
-
-	@objc(menuItemWithTitle:target:action:keyEquivalent:keyEquivalentMask:)
-	class func textual_menuItem(
-		title: String,
-		target: AnyObject,
-		action: Selector,
-		keyEquivalent: String,
-		keyEquivalentMask: NSEvent.ModifierFlags
-	) -> NSMenuItem {
-		let item = NSMenuItem(title: title, action: action, keyEquivalent: keyEquivalent)
-		item.keyEquivalentModifierMask = keyEquivalentMask
-		item.target = target
-
-		return item
-	}
 }
 
+/** These are Swift extension members, not Objective-C categories: an @objc
+ method on NSObject installs an unprefixed selector on every class in the
+ process and can collide with a current or future Apple implementation. */
 public extension NSObject {
-	@objc(isEqualIgnoringCase:)
 	func textual_isEqualIgnoringCase(_ other: Any) -> Bool {
 		if let left = self as? NSString, let right = other as? NSString {
 			return left.caseInsensitiveCompare(right as String) == .orderedSame
@@ -173,27 +125,14 @@ public extension NSObject {
 		return isEqual(other)
 	}
 
-	@objc(cancelPerformRequests)
 	func textual_cancelPerformRequests() {
 		NSObject.cancelPreviousPerformRequests(withTarget: self)
 	}
 
-	@objc(cancelPerformRequestsWithSelector:)
-	func textual_cancelPerformRequests(with selector: Selector) {
-		NSObject.cancelPreviousPerformRequests(withTarget: self, selector: selector, object: nil)
-	}
-
-	@objc(cancelPerformRequestsWithSelector:object:)
-	func textual_cancelPerformRequests(with selector: Selector, object: Any?) {
-		NSObject.cancelPreviousPerformRequests(withTarget: self, selector: selector, object: object)
-	}
-
-	@objc(performSelectorInCommonModes:afterDelay:)
 	func textual_performSelectorInCommonModes(_ selector: Selector, afterDelay delay: TimeInterval) {
 		perform(selector, with: nil, afterDelay: delay, inModes: [.common])
 	}
 
-	@objc(performSelectorInCommonModes:withObject:afterDelay:)
 	func textual_performSelectorInCommonModes(
 		_ selector: Selector,
 		with object: Any?,

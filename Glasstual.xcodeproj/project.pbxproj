@@ -442,6 +442,7 @@
 		83303847B56E0BA917E2936E /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17DB0F7F8B3E14252886398 /* Common.swift */; };
 		835D66EA2F22A43AFEBE71FF /* TemplateASTNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579EB1F7B886C5F50DE0A2F8 /* TemplateASTNode.swift */; };
 		835E63BA04BCE89025587050 /* ICMInlineHTML.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = DEEC085C11AE72B6535A0277 /* ICMInlineHTML.js */; };
+		837CF606CE154F9F630F1E3A /* FrameworkUtilityHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61347040EB79CA9A9B6DB1A /* FrameworkUtilityHelperTests.swift */; };
 		83C877F47BA8A27D8757B7D5 /* ColorHexadecimalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1756699825E5A84359393403 /* ColorHexadecimalTests.swift */; };
 		83E4622E0090C9769370E22D /* CoreFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88945C68521BC34E37E012E3 /* CoreFunctions.swift */; };
 		84241CA601686D5BE9D66492 /* TLONicknameCompletionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8897CF5FBD50305511BD5BD /* TLONicknameCompletionStatus.swift */; };
@@ -804,7 +805,6 @@
 		EC3DA32316660A78B4F1F0CF /* TDCOnboardingIdentityStepViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BF09F5D892E187B16F3FEC /* TDCOnboardingIdentityStepViewController.swift */; };
 		EC64E6C055A4EE27A5978953 /* TVCMemberListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A7E6A0AD468F2ADDF8D5FC7 /* TVCMemberListCell.swift */; };
 		EC9270A7F7AD38EC5CE53996 /* IRCPrefix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D991DF65ADF98A457ECD2EA /* IRCPrefix.swift */; };
-		EC95F8581747B8D1EE3227F3 /* XRGlobalModelsSwiftMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E7C9FB2939A6F412D701A9D /* XRGlobalModelsSwiftMigrationTests.swift */; };
 		ED5D56BAAE023944A2D23516 /* NSDictionaryHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE75B9972E35A7D3CD2385B /* NSDictionaryHelper.swift */; };
 		ED98113206A93E0975E254EF /* GlasstualPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26CEBB2889F146B2FFA4C8B0 /* GlasstualPluginKit.framework */; };
 		EDAC2C06ACFEE7EE9F81D8DF /* IRCClientHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5287AD6B08C2C8F0CFCFF283 /* IRCClientHistoryTests.swift */; };
@@ -1347,7 +1347,6 @@
 		1CF0C39135952E40B9FF50D4 /* IRCCapabilityDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCCapabilityDefaults.swift; sourceTree = "<group>"; };
 		1D19E36D642A1A5AEBF9A368 /* StringHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringHelper.swift; sourceTree = "<group>"; };
 		1D893C2A28BB12A1BBC67F26 /* IRCColorFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCColorFormat.swift; sourceTree = "<group>"; };
-		1E7C9FB2939A6F412D701A9D /* XRGlobalModelsSwiftMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XRGlobalModelsSwiftMigrationTests.swift; sourceTree = "<group>"; };
 		1E92B1C2B4ADDD4EF7CCF2F9 /* TPI_ChatFilterLogic.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TPI_ChatFilterLogic.xcstrings; sourceTree = "<group>"; };
 		1EA862AD6C1F92F92F7C2616 /* TVCLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCLogView.swift; sourceTree = "<group>"; };
 		1EC09A72327BF88C1DE04AF7 /* TVCLogLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCLogLine.swift; sourceTree = "<group>"; };
@@ -1781,6 +1780,7 @@
 		A5B550C72E125F99B5E98D31 /* MainWindowStateStoreSuiteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowStateStoreSuiteTests.swift; sourceTree = "<group>"; };
 		A5C678ACAC26C777EF92D9FB /* Documentation */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Documentation; path = Sources/App/Resources/Documentation; sourceTree = SOURCE_ROOT; };
 		A5F5918B8DDE42432D4CE95A /* InlineContentRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineContentRuntime.swift; sourceTree = "<group>"; };
+		A61347040EB79CA9A9B6DB1A /* FrameworkUtilityHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameworkUtilityHelperTests.swift; sourceTree = "<group>"; };
 		A647EA82BBD8E83C6D177623 /* IRCLocalizedFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCLocalizedFormat.swift; sourceTree = "<group>"; };
 		A7A55A9D885F6301551E661D /* TVCMemberListUserInfoPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCMemberListUserInfoPopover.swift; sourceTree = "<group>"; };
 		A7C543BF794FD084E8A39414 /* BasicLanguage.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = BasicLanguage.xcstrings; sourceTree = "<group>"; };
@@ -3622,6 +3622,7 @@
 				169910219E3488ED9BD0E4D5 /* FileTransferDialogMigrationTests.swift */,
 				BBFF3B8F0B683FB060FE413F /* FileTransferDialogSocketMigrationTests.swift */,
 				4A1081B512E57233D9384A35 /* FileTransferScopeTests.swift */,
+				A61347040EB79CA9A9B6DB1A /* FrameworkUtilityHelperTests.swift */,
 				887B6DBBC6D0F3D5AFAC6D5D /* GLTTestClient.swift */,
 				71DDECF1C473231C5B408226 /* HighlightEntryFeatureTests.swift */,
 				6B17C185AD99905A9CD250F0 /* HistoricLogProtocolMigrationTests.swift */,
@@ -3768,7 +3769,6 @@
 				A4D9E49257AFCAE0D682476A /* TXMenuPresentationTests.swift */,
 				F669BF3D0EA4CCA7E7297257 /* UIShellLocalizationCatalogTests.swift */,
 				A9BB73B631F81EE7C2C72FDD /* WindowBaseMigrationTests.swift */,
-				1E7C9FB2939A6F412D701A9D /* XRGlobalModelsSwiftMigrationTests.swift */,
 			);
 			path = GlasstualTests;
 			sourceTree = "<group>";
@@ -5143,6 +5143,7 @@
 				FA606C4CE6E59250E2574D6E /* FileTransferDialogMigrationTests.swift in Sources */,
 				C349935BD2425C205B4C9E92 /* FileTransferDialogSocketMigrationTests.swift in Sources */,
 				F304124FC78B0B55B3F2035F /* FileTransferScopeTests.swift in Sources */,
+				837CF606CE154F9F630F1E3A /* FrameworkUtilityHelperTests.swift in Sources */,
 				F439A1D8929258C993FE6E1B /* GLTTestClient.swift in Sources */,
 				C877A5F1592819269B4BF561 /* GyazoModule.swift in Sources */,
 				9755DC47DC9C01123FAB8B3C /* HighlightEntryFeatureTests.swift in Sources */,
@@ -5295,7 +5296,6 @@
 				5D1A623EE603B3840C5C8925 /* UIShellLocalizationCatalogTests.swift in Sources */,
 				5B3DDF6B083A5EDDE556470C /* VimeoModule.swift in Sources */,
 				07F12043DCC5D9B3E43B7191 /* WindowBaseMigrationTests.swift in Sources */,
-				EC95F8581747B8D1EE3227F3 /* XRGlobalModelsSwiftMigrationTests.swift in Sources */,
 				EDD83E7C47A3B17926622EFA /* XkcdModule.swift in Sources */,
 				ACB078DFA0CD025766D16D83 /* YouTubeModule.swift in Sources */,
 			);

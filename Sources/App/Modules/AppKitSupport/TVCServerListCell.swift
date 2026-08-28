@@ -491,10 +491,6 @@ public class ServerListRowCell: NSTableRowView {
 
 	override public var isSelected: Bool {
 		didSet {
-			if isSelected == false, isInvalidatingSelectionBackground {
-				return
-			}
-
 			setNeedsDisplayOnChild()
 		}
 	}

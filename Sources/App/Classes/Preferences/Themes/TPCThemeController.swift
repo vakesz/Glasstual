@@ -601,7 +601,7 @@ public final class ThemeController: NSObject {
 		_ = FileManager.default.replaceItem(
 			at: temporaryURL,
 			withItemAt: originalURL,
-			options: 1 << 1
+			options: .removeIfExists
 		)
 	}
 
@@ -892,7 +892,7 @@ private final class ThemeCopyOperation {
 			let succeeded = FileManager.default.replaceItem(
 				at: destinationURL,
 				withItemAt: sourceURL,
-				options: (1 << 5) | (1 << 1)
+				options: [.moveToTrash, .removeIfExists]
 			)
 			await self?.finishCopy(succeeded: succeeded, destinationURL: destinationURL)
 		}
