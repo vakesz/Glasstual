@@ -235,13 +235,27 @@ extension FileTransferDialog {
 	}
 
 	@objc public func updateMaintenanceTimer() {
-		let activeTransfers = activeFileTransfers
-		if maintenanceTimer?.timerIsActive == true {
-			if activeTransfers.isEmpty {
-				maintenanceTimer?.stop()
+		guard activeFileTransfers.isEmpty == false else {
+			maintenanceTask?.cancel()
+			maintenanceTask = nil
+
+			return
+		}
+
+		guard maintenanceTask == nil else {
+			return
+		}
+
+		maintenanceTask = Task { @MainActor [weak self] in
+			while Task.isCancelled == false {
+				try? await Task.sleep(for: FileTransferDialogConstants.maintenanceInterval)
+
+				guard Task.isCancelled == false, let self else {
+					return
+				}
+
+				onMaintenanceTimer()
 			}
-		} else if !activeTransfers.isEmpty {
-			maintenanceTimer?.start(FileTransferDialogConstants.maintenanceInterval, onRepeat: true)
 		}
 	}
 
