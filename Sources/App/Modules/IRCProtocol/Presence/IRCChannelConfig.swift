@@ -125,20 +125,15 @@ public nonisolated class ChannelConfig: PortablePropertyDict {
 	}
 
 	@objc public var secretKeyFromKeychain: String? {
-		KeychainStore.password(
-			forItem: "Glasstual (Channel JOIN Key)",
-			kind: "application password",
-			username: nil,
-			service: secretKeyServiceName
-		)
+		secretKeyKeychainItem.password
 	}
 
 	private var notifications: [String: Any] {
 		notificationsLock.withLock { notificationsStorage }
 	}
 
-	private var secretKeyServiceName: String {
-		"glasstual.cjoinkey.\(uniqueIdentifierStorage)"
+	private var secretKeyKeychainItem: KeychainItem {
+		.channelSecretKey(uniqueIdentifierStorage)
 	}
 
 	override public init() {
@@ -342,24 +337,13 @@ public nonisolated class ChannelConfig: PortablePropertyDict {
 			return
 		}
 
-		KeychainStore.modifyOrAddItem(
-			"Glasstual (Channel JOIN Key)",
-			kind: "application password",
-			username: nil,
-			newPassword: secretKeyStorage,
-			service: secretKeyServiceName
-		)
+		secretKeyKeychainItem.write(secretKeyStorage)
 
 		self.secretKeyStorage = nil
 	}
 
 	@objc public func destroySecretKeyKeychainItem() {
-		KeychainStore.deleteItem(
-			"Glasstual (Channel JOIN Key)",
-			kind: "application password",
-			username: nil,
-			service: secretKeyServiceName
-		)
+		secretKeyKeychainItem.delete()
 
 		secretKeyStorage = nil
 	}

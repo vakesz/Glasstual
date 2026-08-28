@@ -741,6 +741,7 @@
 		D7268F230C1DA790A2EACD64 /* IRCClientNegotiationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7ABC3762AB276A169D6B9E /* IRCClientNegotiationTests.swift */; };
 		D72DF59F6B75FB60DF3758D9 /* IRCClientRequestedCommandPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D60D789692AB0FE22CE72A /* IRCClientRequestedCommandPresentation.swift */; };
 		D737001F2134030D617F32EC /* XRPortablePropertyObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F06F2BF7EDC888D498E57FF /* XRPortablePropertyObject.swift */; };
+		D739358A8875C82066954D4D /* KeychainItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D65DEFCE9B4803207126D0 /* KeychainItemTests.swift */; };
 		D7C82748833957E0802111AC /* HighlightEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D7A819AA32586C74FB1AF9 /* HighlightEntrySheet.swift */; };
 		D7D28766B7B7A02FA779C687 /* SWDictionaryHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1991340A0CC8ADBC649AA8 /* SWDictionaryHelper.swift */; };
 		D820DB3662A4870F625EC79A /* ThemePresentationSchemaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7C5ADCBB4E5A3EA9245087 /* ThemePresentationSchemaTests.swift */; };
@@ -1874,6 +1875,7 @@
 		C17DB0F7F8B3E14252886398 /* Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
 		C22784D4403CA4D55506E433 /* BasicLanguage.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = BasicLanguage.xcstrings; sourceTree = "<group>"; };
 		C27A539663A8D1F739BDCE5C /* IRCClientDialogPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientDialogPresentation.swift; sourceTree = "<group>"; };
+		C2D65DEFCE9B4803207126D0 /* KeychainItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainItemTests.swift; sourceTree = "<group>"; };
 		C3783A1626BDEA73C1506E0F /* IRCClientChannelEventHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientChannelEventHandlers.swift; sourceTree = "<group>"; };
 		C3BF09F5D892E187B16F3FEC /* TDCOnboardingIdentityStepViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCOnboardingIdentityStepViewController.swift; sourceTree = "<group>"; };
 		C46C012BA82B619853AE23FA /* IRCClientTimedCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientTimedCommands.swift; sourceTree = "<group>"; };
@@ -3711,6 +3713,7 @@
 				77972D5F9CE734C1CB62F751 /* IRCValueModelHeaderMigrationTests.swift */,
 				6FE55F40425E83D52A8A9A92 /* IRCWireTokenisationTests.swift */,
 				303A05F60D3CE71F7E4211C4 /* IRCWorldMigrationTests.swift */,
+				C2D65DEFCE9B4803207126D0 /* KeychainItemTests.swift */,
 				3547C502B2F9F014CC5E589C /* KeychainStoreTests.swift */,
 				A3D6AA792436C90B0E71853F /* LinkSchemePolicyTests.swift */,
 				8CEE2370CEBE0BE8155FAC70 /* LocalizationCatalogBoundaryTests.swift */,
@@ -5236,6 +5239,7 @@
 				A9D2FBEAECB201DFBE6F7098 /* InlineMediaModuleCorpusTests.swift in Sources */,
 				7844EC60B87D1A69FD592E83 /* InlineResourceHostPolicyTests.swift in Sources */,
 				E2BB6044ABAE16CA2F400368 /* InputHandlingMigrationTests.swift in Sources */,
+				D739358A8875C82066954D4D /* KeychainItemTests.swift in Sources */,
 				5C81406A22ED5DF2C77E7AE4 /* KeychainStoreTests.swift in Sources */,
 				A26FF3A272F12600C88ECD5A /* LinkSchemePolicyTests.swift in Sources */,
 				CF4179E62954717E022D14C7 /* LocalizationCatalogBoundaryTests.swift in Sources */,

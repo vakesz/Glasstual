@@ -345,12 +345,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 	}
 
 	@objc public var nicknamePasswordFromKeychain: String? {
-		KeychainStore.password(
-			forItem: "Glasstual (NickServ)",
-			kind: "application password",
-			username: nil,
-			service: "glasstual.nickserv.\(uniqueIdentifierStorage)"
-		)
+		KeychainItem.nicknamePassword(uniqueIdentifierStorage).password
 	}
 
 	@objc public var proxyPassword: String? {
@@ -358,12 +353,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 	}
 
 	@objc public var proxyPasswordFromKeychain: String? {
-		KeychainStore.password(
-			forItem: "Glasstual (Proxy Server Password)",
-			kind: "application password",
-			username: nil,
-			service: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
-		)
+		KeychainItem.proxyPassword(uniqueIdentifierStorage).password
 	}
 
 	@objc public var showConnectionPrefersIPv4Warning: Bool {
@@ -677,13 +667,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 	@objc open func writeNicknamePasswordToKeychain() {
 		guard let nicknamePasswordStorage else { return }
 
-		KeychainStore.modifyOrAddItem(
-			"Glasstual (NickServ)",
-			kind: "application password",
-			username: nil,
-			newPassword: nicknamePasswordStorage,
-			service: "glasstual.nickserv.\(uniqueIdentifierStorage)"
-		)
+		KeychainItem.nicknamePassword(uniqueIdentifierStorage).write(nicknamePasswordStorage)
 		self.nicknamePasswordStorage = nil
 		invalidateNicknamePasswordKeychainCache()
 	}
@@ -691,46 +675,25 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 	@objc open func writeProxyPasswordToKeychain() {
 		guard let proxyPasswordStorage else { return }
 
-		KeychainStore.modifyOrAddItem(
-			"Glasstual (Proxy Server Password)",
-			kind: "application password",
-			username: nil,
-			newPassword: proxyPasswordStorage,
-			service: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
-		)
+		KeychainItem.proxyPassword(uniqueIdentifierStorage).write(proxyPasswordStorage)
 		self.proxyPasswordStorage = nil
 	}
 
 	@objc public func destroyNicknamePasswordKeychainItem() {
-		KeychainStore.deleteItem(
-			"Glasstual (NickServ)",
-			kind: "application password",
-			username: nil,
-			service: "glasstual.nickserv.\(uniqueIdentifierStorage)"
-		)
+		KeychainItem.nicknamePassword(uniqueIdentifierStorage).delete()
 		nicknamePasswordStorage = nil
 		invalidateNicknamePasswordKeychainCache()
 	}
 
 	@objc public func destroyProxyPasswordKeychainItem() {
-		KeychainStore.deleteItem(
-			"Glasstual (Proxy Server Password)",
-			kind: "application password",
-			username: nil,
-			service: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
-		)
+		KeychainItem.proxyPassword(uniqueIdentifierStorage).delete()
 		proxyPasswordStorage = nil
 	}
 
 	@objc public func destroyServerPasswordKeychainItemAfterMigration() {
 		guard migratedServerPasswordPendingDestroy else { return }
 		migratedServerPasswordPendingDestroy = false
-		KeychainStore.deleteItem(
-			"Glasstual (Server Password)",
-			kind: "application password",
-			username: nil,
-			service: "glasstual.server.\(uniqueIdentifierStorage)"
-		)
+		KeychainItem.serverPassword(uniqueIdentifierStorage).delete()
 	}
 }
 
@@ -1029,12 +992,7 @@ nonisolated extension ClientConfig {
 			return
 		}
 
-		let password = KeychainStore.password(
-			forItem: "Glasstual (Server Password)",
-			kind: "application password",
-			username: nil,
-			service: "glasstual.server.\(uniqueIdentifierStorage)"
-		)
+		let password = KeychainItem.serverPassword(uniqueIdentifierStorage).password
 		let server = MutableServer()
 		server.serverAddress = address
 		server.serverPort = port
