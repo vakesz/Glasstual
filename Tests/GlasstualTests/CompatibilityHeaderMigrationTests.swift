@@ -6,64 +6,70 @@
 import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
-import XCTest
+import Testing
 
 @MainActor
-final class CompatibilityHeaderMigrationTests: XCTestCase {
-	func testOptionalAndRequiredConfigurationValuesKeepTheirContracts() {
+@Suite("Objective-C compatibility surface")
+struct CompatibilityHeaderMigrationTests {
+	@Test("Configuration values keep their optional and required contracts")
+	func configurationValuesKeepTheirContracts() {
 		let channel = ChannelConfig.seed(withName: "#swift")
-		XCTAssertEqual(channel.channelName, "#swift")
-		XCTAssertFalse(channel.uniqueIdentifier.isEmpty)
-		XCTAssertNil(channel.label)
-		XCTAssertNil(channel.defaultModes)
-		XCTAssertNil(channel.defaultTopic)
+		#expect(channel.channelName == "#swift")
+		#expect(channel.uniqueIdentifier.isEmpty == false)
+		#expect(channel.label == nil)
+		#expect(channel.defaultModes == nil)
+		#expect(channel.defaultTopic == nil)
 
 		let clientConfig = ClientConfig()
-		XCTAssertFalse(clientConfig.connectionName.isEmpty)
-		XCTAssertFalse(clientConfig.nickname.isEmpty)
-		XCTAssertTrue(clientConfig.channelList.isEmpty)
-		XCTAssertNil(clientConfig.identityClientSideCertificate)
-		XCTAssertEqual(clientConfig.awayNickname, "")
-		XCTAssertNil(clientConfig.proxyAddress)
+		#expect(clientConfig.connectionName.isEmpty == false)
+		#expect(clientConfig.nickname.isEmpty == false)
+		#expect(clientConfig.channelList.isEmpty)
+		#expect(clientConfig.identityClientSideCertificate == nil)
+		#expect(clientConfig.awayNickname == "")
+		#expect(clientConfig.proxyAddress == nil)
 
 		let client = GLTTestClient()
 		let connection = Connection(config: Glasstual.IRCConnectionConfig(), onClient: client)
-		XCTAssertNotNil(connection.client)
-		XCTAssertFalse(connection.uniqueIdentifier.isEmpty)
-		XCTAssertNil(connection.connectedAddress)
+		#expect(connection.client != nil)
+		#expect(connection.uniqueIdentifier.isEmpty == false)
+		#expect(connection.connectedAddress == nil)
 	}
 
-	func testNSStringHostmaskAccessorsPreserveParsedComponents() {
+	@Test("The NSString hostmask accessors return the parsed components")
+	func nsStringHostmaskAccessorsPreserveParsedComponents() {
 		let source: NSString = "nick!user@example.test"
 
-		XCTAssertEqual(source.nicknameFromHostmask, "nick")
-		XCTAssertEqual(source.usernameFromHostmask, "user")
-		XCTAssertEqual(source.addressFromHostmask, "example.test")
-		XCTAssertNil(("not a hostmask" as NSString).usernameFromHostmask)
+		#expect(source.nicknameFromHostmask == "nick")
+		#expect(source.usernameFromHostmask == "user")
+		#expect(source.addressFromHostmask == "example.test")
+		#expect(("not a hostmask" as NSString).usernameFromHostmask == nil)
 	}
 
-	func testSharedFormattingRemovesCompleteControlSequences() {
+	@Test("A complete control sequence is removed by both formatting entry points")
+	func sharedFormattingRemovesCompleteControlSequences() {
 		let formatted = "\u{02}bold\u{02} \u{03}04,12palette \u{04}A1B2C3,001122hex\u{0F}"
 		let expected = "bold palette hex"
 
-		XCTAssertEqual(IRCFormatting.removingControlCodes(from: formatted), expected)
-		XCTAssertEqual((formatted as NSString).stripIRCEffects, expected)
+		#expect(IRCFormatting.removingControlCodes(from: formatted) == expected)
+		#expect((formatted as NSString).stripIRCEffects == expected)
 	}
 
-	func testSharedFormattingPreservesMalformedColorSeparatorsAndUnicode() {
-		XCTAssertEqual(IRCFormatting.removingControlCodes(from: "\u{03}04,text"), ",text")
-		XCTAssertEqual(IRCFormatting.removingControlCodes(from: "\u{04}AABBCC,no"), ",no")
-		XCTAssertEqual(IRCFormatting.removingControlCodes(from: "\u{03},plain 😀"), ",plain 😀")
+	@Test("A malformed colour separator is left in the text")
+	func sharedFormattingPreservesMalformedColorSeparatorsAndUnicode() {
+		#expect(IRCFormatting.removingControlCodes(from: "\u{03}04,text") == ",text")
+		#expect(IRCFormatting.removingControlCodes(from: "\u{04}AABBCC,no") == ",no")
+		#expect(IRCFormatting.removingControlCodes(from: "\u{03},plain 😀") == ",plain 😀")
 	}
 
-	func testSharedHostmaskParserPreservesValidationRules() throws {
-		let hostmask = try XCTUnwrap(IRCHostmask(parsing: "nick!user@example.test"))
+	@Test("The hostmask parser keeps its validation rules")
+	func sharedHostmaskParserPreservesValidationRules() throws {
+		let hostmask = try #require(IRCHostmask(parsing: "nick!user@example.test"))
 
-		XCTAssertEqual(hostmask.nickname, "nick")
-		XCTAssertEqual(hostmask.username, "user")
-		XCTAssertEqual(hostmask.address, "example.test")
-		XCTAssertNil(IRCHostmask(parsing: "*!user@example.test"))
-		XCTAssertNil(IRCHostmask(parsing: "nick!user name@example.test"))
-		XCTAssertNil(IRCHostmask(parsing: "long-nickname!user@example.test", maximumNicknameLength: 4))
+		#expect(hostmask.nickname == "nick")
+		#expect(hostmask.username == "user")
+		#expect(hostmask.address == "example.test")
+		#expect(IRCHostmask(parsing: "*!user@example.test") == nil)
+		#expect(IRCHostmask(parsing: "nick!user name@example.test") == nil)
+		#expect(IRCHostmask(parsing: "long-nickname!user@example.test", maximumNicknameLength: 4) == nil)
 	}
 }
