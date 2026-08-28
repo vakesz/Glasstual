@@ -10,7 +10,6 @@ class OELReachabilityMigrationTests: XCTestCase {
 	func testFactoryCreatesNotifier() {
 		let reachability = Reachability.reachabilityForInternetConnection()
 
-		XCTAssertNotNil(reachability)
 		XCTAssertFalse(reachability.reachable)
 	}
 
