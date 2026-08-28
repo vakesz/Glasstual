@@ -194,6 +194,35 @@ public final class ClientWireUtilities: NSObject {
 		return output
 	}
 
+	/// Truncates `text` to at most `maximumByteCount` UTF-8 bytes without
+	/// splitting a character. A `maximumByteCount` of zero means no limit.
+	///
+	/// ISUPPORT `AWAYLEN`, `KICKLEN` and `TOPICLEN` are byte budgets, so
+	/// measuring them in UTF-16 code units under-counts every non-ASCII
+	/// string and lets the server do the truncating instead.
+	@objc(truncatedString:toByteCount:)
+	public static func truncated(_ text: String, toByteCount maximumByteCount: Int) -> String {
+		guard maximumByteCount > 0, text.utf8.count > maximumByteCount else {
+			return text
+		}
+
+		var truncated = ""
+		var byteCount = 0
+
+		for character in text {
+			let characterBytes = String(character).utf8.count
+
+			guard byteCount + characterBytes <= maximumByteCount else {
+				break
+			}
+
+			byteCount += characterBytes
+			truncated.append(character)
+		}
+
+		return truncated
+	}
+
 	@objc(escapedDCCFilename:)
 	public static func escapedDCCFilename(_ filename: String) -> String {
 		var escaped = (filename as NSString).ceSafeFilename as String
