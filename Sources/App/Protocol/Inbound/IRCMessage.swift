@@ -214,15 +214,9 @@ public final nonisolated class Message: NSObject {
 
 	@MainActor
 	public func parseSender(_ senderInfo: String, for client: IRCClient?) {
-		var parsed = Prefix(hostmask: senderInfo)
-
-		if let components = (senderInfo as NSString).hostmask(on: client) {
-			parsed.nickname = components.nickname
-			parsed.username = components.username
-			parsed.address = components.address
-		} else {
-			parsed.nickname = senderInfo
-			parsed.isServer = true
+		guard let parsed = (senderInfo as NSString).senderPrefix(on: client) else {
+			sender = Prefix(nickname: senderInfo, hostmask: senderInfo, isServer: true)
+			return
 		}
 
 		sender = parsed
