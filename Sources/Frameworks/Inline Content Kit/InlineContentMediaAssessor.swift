@@ -133,7 +133,6 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		request?.session?.invalidateAndCancel()
 	}
 
-	@objc(assessorForURL:completionBlock:)
 	public static func assessor(
 		for url: URL,
 		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
@@ -141,7 +140,6 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		MediaAssessor(url: url, expectedType: .unknown, completion: completionBlock)
 	}
 
-	@objc(assessorForAddress:completionBlock:)
 	public static func assessor(
 		forAddress address: String,
 		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
@@ -149,7 +147,6 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		assessor(forAddress: address, with: .unknown, completionBlock: completionBlock)
 	}
 
-	@objc(assessorForURL:withType:completionBlock:)
 	public static func assessor(
 		for url: URL,
 		with type: InlineContentMediaType,
@@ -158,7 +155,6 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		MediaAssessor(url: url, expectedType: type, completion: completionBlock)
 	}
 
-	@objc(assessorForAddress:withType:completionBlock:)
 	public static func assessor(
 		forAddress address: String,
 		with type: InlineContentMediaType,
@@ -301,12 +297,13 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 			shouldDownloadBody = shouldDownloadBody || limits.imageMaximumHeight > 0
 		}
 
-		let assessment = MediaAssessmentMutable(
+		let assessment = MediaAssessment(
 			url: response.url ?? configuration?.url ?? URL(string: "about:blank")!,
-			type: mediaType
+			type: mediaType,
+			contentType: contentType,
+			contentLength: contentLength
 		)
-		assessment.contentType = contentType
-		assessment.contentLength = contentLength
+
 		return MediaAssessorState(
 			assessment: assessment,
 			shouldDownloadBody: shouldDownloadBody

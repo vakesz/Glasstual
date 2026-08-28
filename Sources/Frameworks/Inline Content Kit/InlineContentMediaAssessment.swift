@@ -38,111 +38,27 @@
 import CocoaExtensions
 import Foundation
 
-@objc(ICLMediaAssessment)
-/* ISOLATION-EXCEPTION: an NSSecureCoding transport object, copied across the
- XPC boundary rather than shared. See `InlineContentPayload`. */
-open class MediaAssessment: PortablePropertyObject, @unchecked Sendable {
-	fileprivate var urlStorage = URL(string: "about:blank")!
-	fileprivate var typeStorage = InlineContentMediaType.unknown
-	fileprivate var contentTypeStorage = "application/binary"
-	fileprivate var contentLengthStorage: UInt64 = 0
+/** What a HEAD or partial GET told the assessor about a remote resource.
 
-	@objc public var url: URL {
-		urlStorage
-	}
+ The assessment never leaves the process that made the request: the
+ inline-content service hands it to a module's completion block and drops it.
+ It is a plain value rather than an `NSSecureCoding` transport object, and the
+ caller is the one that decides whether the URL it names may be inlined. */
+public struct MediaAssessment: Codable, Sendable, Equatable, Hashable {
+	public var url: URL
+	public var type: InlineContentMediaType
+	public var contentType: String
+	public var contentLength: UInt64
 
-	@objc open var type: InlineContentMediaType {
-		typeStorage
-	}
-
-	@objc open var contentType: String {
-		contentTypeStorage
-	}
-
-	@objc open var contentLength: UInt64 {
-		contentLengthStorage
-	}
-
-	@available(*, unavailable, message: "Use init(url:type:)")
-	override public required init() {
-		fatalError("Use init(url:type:)")
-	}
-
-	@objc(initWithURL:asType:)
-	public init(url: URL, type: InlineContentMediaType) {
-		precondition(!url.isFileURL)
-		urlStorage = url
-		typeStorage = type
-		super.init()
-	}
-
-	public required init?(coder: NSCoder) {
-		super.init(coder: coder)
-	}
-
-	override public class var supportsSecureCoding: Bool {
-		true
-	}
-
-	override public func populate(with decoder: NSCoder) -> Bool {
-		guard let decodedURL = decoder.decodeObject(of: NSURL.self, forKey: "url") as URL? else {
-			return false
-		}
-
-		urlStorage = decodedURL
-		typeStorage = InlineContentMediaType(rawValue: UInt(decoder.decodeInteger(forKey: "type"))) ?? .unknown
-		contentTypeStorage = decoder.decodeObject(of: NSString.self, forKey: "contentType") as String?
-			?? "application/binary"
-		contentLengthStorage = decoder.decodeObject(of: NSNumber.self, forKey: "contentLength")?.uint64Value ?? 0
-		return true
-	}
-
-	override public func encode(with coder: NSCoder) {
-		coder.encode(urlStorage, forKey: "url")
-		coder.encode(typeStorage.rawValue, forKey: "type")
-		coder.encode(contentTypeStorage, forKey: "contentType")
-		coder.encode(NSNumber(value: contentLengthStorage), forKey: "contentLength")
-	}
-
-	override public func copy(asMutable mutableCopy: Bool, uniquing _: Bool) -> Any {
-		let copy: MediaAssessment = if mutableCopy {
-			MediaAssessmentMutable(url: urlStorage, type: typeStorage)
-		} else {
-			MediaAssessment(url: urlStorage, type: typeStorage)
-		}
-		copy.contentTypeStorage = contentTypeStorage
-		copy.contentLengthStorage = contentLengthStorage
-		return copy
-	}
-
-	override public var mutableClass: PortablePropertyObject {
-		unsafeBitCast(MediaAssessmentMutable.self, to: PortablePropertyObject.self)
-	}
-}
-
-@objc(ICLMediaAssessmentMutable)
-/* ISOLATION-EXCEPTION: see `MediaAssessment`. */
-public final class MediaAssessmentMutable: MediaAssessment, @unchecked Sendable {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyObject {
-		unsafeBitCast(MediaAssessment.self, to: PortablePropertyObject.self)
-	}
-
-	@objc override public var type: InlineContentMediaType {
-		get { typeStorage }
-		set { typeStorage = newValue }
-	}
-
-	@objc override public var contentType: String {
-		get { contentTypeStorage }
-		set { contentTypeStorage = newValue }
-	}
-
-	@objc override public var contentLength: UInt64 {
-		get { contentLengthStorage }
-		set { contentLengthStorage = newValue }
+	public init(
+		url: URL,
+		type: InlineContentMediaType,
+		contentType: String = "application/binary",
+		contentLength: UInt64 = 0
+	) {
+		self.url = url
+		self.type = type
+		self.contentType = contentType
+		self.contentLength = contentLength
 	}
 }
