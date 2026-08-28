@@ -144,13 +144,20 @@ public final class ISupportTokenParser: NSObject {
 		let prefixStart = closingParenthesis + 1
 		let prefixes = token.substring(from: prefixStart)
 
-		guard (modeSymbols as NSString).length == (prefixes as NSString).length else {
+		// Compare the arrays that are actually indexed later, not the UTF-16
+		// lengths of the strings they came from: `characters(in:)` maps
+		// grapheme clusters, so "(ab)👍" has matching UTF-16 lengths but
+		// produces two mode symbols and one prefix.
+		let modeSymbolCharacters = characters(in: modeSymbols)
+		let prefixCharacters = characters(in: prefixes)
+
+		guard modeSymbolCharacters.count == prefixCharacters.count else {
 			return nil
 		}
 
 		return ISupportPrefixConfiguration(
-			modeSymbols: characters(in: modeSymbols),
-			characters: characters(in: prefixes)
+			modeSymbols: modeSymbolCharacters,
+			characters: prefixCharacters
 		)
 	}
 

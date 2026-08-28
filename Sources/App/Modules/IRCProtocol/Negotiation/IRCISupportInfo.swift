@@ -83,10 +83,21 @@ public class IRCISupportInfo: NSObject {
 	@objc public private(set) var channelLimits: [String: NSNumber] = [:]
 	@objc public private(set) var maximumListEntries: [String: NSNumber] = [:]
 	@objc public private(set) var maximumTargetsByCommand: [String: NSNumber] = [:]
-	@objc public private(set) var userModeSymbols: [String: [String]] = [
-		IRCISupportUserModes.symbolsKey: ["o", "v"],
-		IRCISupportUserModes.charactersKey: ["@", "+"],
+	/// Mode symbol / prefix character pairs from ISUPPORT `PREFIX=`.
+	///
+	/// Stored as pairs so the two halves can never disagree in length; the
+	/// dictionary form below is kept for the Objective-C facing surface.
+	private(set) var userModePrefixPairs: [(modeSymbol: String, character: String)] = [
+		(modeSymbol: "o", character: "@"), (modeSymbol: "v", character: "+"),
 	]
+
+	@objc public var userModeSymbols: [String: [String]] {
+		[
+			IRCISupportUserModes.symbolsKey: userModePrefixPairs.map(\.modeSymbol),
+			IRCISupportUserModes.charactersKey: userModePrefixPairs.map(\.character),
+		]
+	}
+
 	@objc public private(set) var banExceptionModeSymbol: String?
 	@objc public private(set) var inviteExceptionModeSymbol: String?
 	@objc public private(set) var botModeSymbol: String?
@@ -127,9 +138,8 @@ public class IRCISupportInfo: NSObject {
 	@objc public func reset() {
 		cachedConfiguration = []
 		serverAddress = nil
-		userModeSymbols = [
-			IRCISupportUserModes.symbolsKey: ["o", "v"],
-			IRCISupportUserModes.charactersKey: ["@", "+"],
+		userModePrefixPairs = [
+			(modeSymbol: "o", character: "@"), (modeSymbol: "v", character: "+"),
 		]
 		channelModes = ["o": NSNumber(value: channelUserModeValue), "v": NSNumber(value: channelUserModeValue)]
 
@@ -480,19 +490,7 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(userPrefixForModeSymbol:)
 	public func userPrefix(forModeSymbol modeSymbol: String) -> String? {
-		guard let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey],
-		      let characters = userModeSymbols[IRCISupportUserModes.charactersKey]
-		else {
-			return nil
-		}
-
-		let modeSymbolIndex = modeSymbols.firstIndex(of: modeSymbol)
-
-		guard let modeSymbolIndex else {
-			return nil
-		}
-
-		return characters[modeSymbolIndex]
+		userModePrefixPairs.first { $0.modeSymbol == modeSymbol }?.character
 	}
 
 	@objc(modeSymbolIsUserPrefix:)
@@ -502,19 +500,7 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(modeSymbolForUserPrefix:)
 	public func modeSymbol(forUserPrefix character: String) -> String? {
-		guard let characters = userModeSymbols[IRCISupportUserModes.charactersKey],
-		      let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey]
-		else {
-			return nil
-		}
-
-		let characterIndex = characters.firstIndex(of: character)
-
-		guard let characterIndex else {
-			return nil
-		}
-
-		return modeSymbols[characterIndex]
+		userModePrefixPairs.first { $0.character == character }?.modeSymbol
 	}
 
 	@objc(characterIsUserPrefix:)
@@ -524,14 +510,15 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(rankForUserPrefixWithMode:)
 	public func rankForUserPrefix(withMode modeSymbol: String) -> UInt {
-		guard let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey] else {
+		guard let modeSymbolIndex = userModePrefixPairs.firstIndex(where: { $0.modeSymbol == modeSymbol })
+		else {
 			return 0
 		}
 
-		let modeSymbolIndex = modeSymbols.firstIndex(of: modeSymbol)
-
-		guard let modeSymbolIndex else {
-			return 0
+		// A server may advertise more prefix modes than the rank ceiling; the
+		// lowest-ranked ones all collapse to rank 1 rather than underflowing.
+		guard UInt(modeSymbolIndex) < IRCISupportUserModes.highestPrefixRank else {
+			return 1
 		}
 
 		return IRCISupportUserModes.highestPrefixRank - UInt(modeSymbolIndex)
@@ -809,10 +796,8 @@ private extension IRCISupportInfo {
 			return
 		}
 
-		userModeSymbols = [
-			IRCISupportUserModes.symbolsKey: configuration.modeSymbols,
-			IRCISupportUserModes.charactersKey: configuration.characters,
-		]
+		userModePrefixPairs = zip(configuration.modeSymbols, configuration.characters)
+			.map { (modeSymbol: $0, character: $1) }
 
 		var updatedChannelModes = channelModes
 
