@@ -67,14 +67,16 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 	@IBOutlet public var muteNotificationsSoundsFileMenuItem: NSMenuItem?
 
 	@objc public var pointedNickname: String?
-	var actionCoordinator: MenuActionCoordinator!
+	/** Created on first use rather than in prepareInitialState(): menu
+	 validation can run before the main window finishes loading (a theme-load
+	 alert during launch is enough), and an unset coordinator crashed there. */
+	lazy var actionCoordinator = MenuActionCoordinator(menuController: self)
 
 	public var mainWindowSegmentedControllerCellMenu: NSMenu {
 		segmentedControllerMenuOutlet
 	}
 
 	@objc public func prepareInitialState() {
-		actionCoordinator = MenuActionCoordinator(menuController: self)
 		actionCoordinator.prepareInitialState()
 	}
 
