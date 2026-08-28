@@ -36,8 +36,8 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+import Foundation
 import os
 
 enum IRCClientConfigurationPolicy {
