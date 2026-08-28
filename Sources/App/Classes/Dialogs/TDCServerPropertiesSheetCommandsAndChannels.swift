@@ -163,7 +163,10 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesS
 			return
 		}
 		let count = (channelListArrayController.arrangedObjects as? [Any])?.count ?? 0
-		let to = target.flatMap { unfilteredChannelIndex(identifier: $0.uniqueIdentifier) } ?? count
+		/* A drop past the last row proposes `count`, which is one past the end;
+		 the destination has to be an index that exists. */
+		let lastIndex = max(count - 1, 0)
+		let to = min(target.flatMap { unfilteredChannelIndex(identifier: $0.uniqueIdentifier) } ?? lastIndex, lastIndex)
 		if from != to {
 			channelListArrayController.textual_moveObject(atArrangedObjectIndex: UInt(from), to: UInt(to))
 		}
@@ -373,13 +376,23 @@ extension ServerPropertiesSheet: NSTableViewDataSource, NSTableViewDelegate {
 		      draggedRow >= 0, draggedRow < tableView.numberOfRows
 		else { return false }
 
+		/* `row` is a drop position, so it can be one past the last row. Moving
+		 to it would index out of range. */
+		let destination = min(row, tableView.numberOfRows - 1)
+
 		if tableView === channelListTable, channelList.indices.contains(draggedRow) {
-			let target = channelList.indices.contains(row) ? channelList[row] : nil
+			let target = channelList.indices.contains(destination) ? channelList[destination] : nil
 			moveChannelConfig(channelList[draggedRow], above: target)
 		} else if tableView === highlightsTable {
-			highlightListArrayController.textual_moveObject(atArrangedObjectIndex: UInt(draggedRow), to: UInt(row))
+			highlightListArrayController.textual_moveObject(
+				atArrangedObjectIndex: UInt(draggedRow),
+				to: UInt(destination)
+			)
 		} else if tableView === addressBookTable {
-			addressBookArrayController.textual_moveObject(atArrangedObjectIndex: UInt(draggedRow), to: UInt(row))
+			addressBookArrayController.textual_moveObject(
+				atArrangedObjectIndex: UInt(draggedRow),
+				to: UInt(destination)
+			)
 		}
 		return true
 	}

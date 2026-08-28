@@ -355,12 +355,12 @@ public final class ServerList: NSOutlineView {
 			return
 		}
 
-		switch event.keyCode {
-		case 125, 126: // down / up arrow
+		switch KeyCode(rawValue: event.keyCode) {
+		case .downArrow, .upArrow:
 			/* Let the outline view move the selection, as the member list does. */
 			super.keyDown(with: event)
 
-		case 123, 124, 116, 121: // left / right / page up / page down
+		case .leftArrow, .rightArrow, .pageUp, .pageDown:
 			break
 
 		default:

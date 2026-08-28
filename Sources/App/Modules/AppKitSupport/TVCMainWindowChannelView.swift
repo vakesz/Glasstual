@@ -249,12 +249,12 @@ public final class MainWindowChannelView: NSSplitView {
 
 	@objc
 	private func themeAppearanceChanged(_: Notification) {
-		updateVibrancy()
-	}
-
-	private func updateVibrancy() {
+		/* Clearing the appearance lets the view inherit the window's. */
 		appearance = nil
 	}
+
+	/// Primary, secondary and tertiary mouse buttons.
+	fileprivate static let allMouseButtonsMask = 0x1 | 0x2 | 0x4
 
 	override public var needsDisplayWhenApplicationAppearanceChanges: Bool {
 		true
@@ -408,7 +408,7 @@ private final class MainWindowChannelViewSubview: NSView {
 		 Primary button events are not delayed so that the click is not
 		 held back from the view while the recognizer decides. */
 		let clickRecognizer = NSClickGestureRecognizer(target: self, action: #selector(overlayViewClicked(_:)))
-		clickRecognizer.buttonMask = 0x1 | 0x2 | 0x4 // left, right, other
+		clickRecognizer.buttonMask = MainWindowChannelView.allMouseButtonsMask
 		clickRecognizer.numberOfClicksRequired = 1
 		clickRecognizer.delaysPrimaryMouseButtonEvents = false
 		overlayView.addGestureRecognizer(clickRecognizer)
