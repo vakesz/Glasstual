@@ -13,11 +13,22 @@
 import AppKit
 import CocoaExtensions
 
+/// What `ChannelSpotlightController` reports back.
+@MainActor
+public protocol ChannelSpotlightControllerDelegate: AnyObject {
+	func channelSpotlightController(_ sender: ChannelSpotlightController, selectChannel channel: IRCChannel)
+	func channelSpotlightControllerWillClose(_ sender: ChannelSpotlightController)
+}
+
 @objc(TDCChannelSpotlightController)
 @MainActor
 public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource, NSTableViewDelegate,
 	NSControlTextEditingDelegate, NSWindowDelegate
 {
+	private var spotlightDelegate: (any ChannelSpotlightControllerDelegate)? {
+		delegate as? any ChannelSpotlightControllerDelegate
+	}
+
 	public private(set) var userInterfaceObjects: ChannelSpotlightAppearance!
 
 	@IBOutlet private var visualEffectView: NSVisualEffectView!
@@ -273,7 +284,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 			}
 		}
 
-		searchResultsTable.perform(NSSelectorFromString("keyDown:"), with: event)
+		searchResultsTable.keyDown(with: event)
 
 		return nil
 	}
@@ -319,11 +330,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	}
 
 	private func delegatePostSelectChannel(_ channel: IRCChannel) {
-		let selector = NSSelectorFromString("channelSpotlightController:selectChannel:")
-
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self, with: channel)
-		}
+		spotlightDelegate?.channelSpotlightController(self, selectChannel: channel)
 
 		close()
 	}
@@ -356,7 +363,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		let window = window!
 
 		window.ce_saveSizeAsDefault()
-		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
+		window.ce_restoreState(for: Self.self)
 	}
 
 	private func saveWindowFrame() {
@@ -370,7 +377,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		 the frame because the window wont register the changes
 		 to the constants in -resetSearch until next layout pass. */
 		window.ce_restoreDefaultSize(display: false)
-		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
+		window.ce_saveState(for: Self.self)
 	}
 
 	// MARK: - Search Field
@@ -515,10 +522,6 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 		notifications.cancelAll()
 
-		let selector = NSSelectorFromString("channelSpotlightControllerWillClose:")
-
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		spotlightDelegate?.channelSpotlightControllerWillClose(self)
 	}
 }

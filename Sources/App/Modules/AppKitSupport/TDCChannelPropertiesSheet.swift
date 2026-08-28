@@ -114,7 +114,6 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 
 		channelNameTextField.stringValueIsInvalidOnEmpty = true
 		channelNameTextField.stringValueUsesOnlyFirstToken = true
-		channelNameTextField.textDidChangeCallback = self
 
 		channelNameTextField.validationBlock = { currentValue in
 			if (currentValue as NSString).isChannelName == false {

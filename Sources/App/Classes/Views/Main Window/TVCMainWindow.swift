@@ -122,7 +122,8 @@ func nativeChannel(_ item: IRCTreeItem?) -> IRCChannel? {
 @objc(TVCMainWindow)
 @objcMembers
 public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, NSToolbarDelegate,
-	MemberListKeyEventDelegate, NSOutlineViewDataSource, NSOutlineViewDelegate, TVCServerListDelegate
+	MemberListKeyEventDelegate, NSOutlineViewDataSource, NSOutlineViewDelegate, TVCServerListDelegate,
+	CustomKeyboardEventResponder
 {
 	@IBOutlet var channelView: MainWindowChannelView!
 	@IBOutlet public var mainMenuProxy: TXMenuControllerMainWindowProxy!
@@ -874,7 +875,7 @@ extension MainWindow {
 		}
 	}
 
-	@objc public func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
+	public func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
 		keyEventHandler.processKeyEvent(event)
 	}
 
@@ -1022,47 +1023,47 @@ public extension MainWindow {
 		)
 	}
 
-	@objc func selectPreviousChannel(_: NSEvent) {
+	@objc func selectPreviousChannel(_: NSEvent?) {
 		navigateChannelEntries(false, withNavigationType: .all)
 	}
 
-	@objc func selectNextChannel(_: NSEvent) {
+	@objc func selectNextChannel(_: NSEvent?) {
 		navigateChannelEntries(true, withNavigationType: .all)
 	}
 
-	@objc func selectPreviousUnreadChannel(_: NSEvent) {
+	@objc func selectPreviousUnreadChannel(_: NSEvent?) {
 		navigateChannelEntries(false, withNavigationType: .unread)
 	}
 
-	@objc func selectNextUnreadChannel(_: NSEvent) {
+	@objc func selectNextUnreadChannel(_: NSEvent?) {
 		navigateChannelEntries(true, withNavigationType: .unread)
 	}
 
-	@objc func selectPreviousActiveChannel(_: NSEvent) {
+	@objc func selectPreviousActiveChannel(_: NSEvent?) {
 		navigateChannelEntries(false, withNavigationType: .active)
 	}
 
-	@objc func selectNextActiveChannel(_: NSEvent) {
+	@objc func selectNextActiveChannel(_: NSEvent?) {
 		navigateChannelEntries(true, withNavigationType: .active)
 	}
 
-	@objc func selectPreviousServer(_: NSEvent) {
+	@objc func selectPreviousServer(_: NSEvent?) {
 		navigateServerEntries(false, withNavigationType: .all)
 	}
 
-	@objc func selectNextServer(_: NSEvent) {
+	@objc func selectNextServer(_: NSEvent?) {
 		navigateServerEntries(true, withNavigationType: .all)
 	}
 
-	@objc func selectPreviousActiveServer(_: NSEvent) {
+	@objc func selectPreviousActiveServer(_: NSEvent?) {
 		navigateServerEntries(false, withNavigationType: .active)
 	}
 
-	@objc func selectNextActiveServer(_: NSEvent) {
+	@objc func selectNextActiveServer(_: NSEvent?) {
 		navigateServerEntries(true, withNavigationType: .active)
 	}
 
-	@objc func selectPreviousSelection(_: NSEvent) {
+	@objc func selectPreviousSelection(_: NSEvent?) {
 		selectPreviousItem()
 	}
 

@@ -12,6 +12,13 @@
 
 import AppKit
 
+/// What `PreferencesUserStyleSheet` reports back.
+@MainActor
+public protocol PreferencesUserStyleSheetDelegate: AnyObject {
+	func userStyleSheetRulesChanged(_ sender: PreferencesUserStyleSheet)
+	func userStyleSheetWillClose(_ sender: PreferencesUserStyleSheet)
+}
+
 @objc(TDCPreferencesUserStyleSheet)
 @MainActor
 public final class PreferencesUserStyleSheet: SheetBase {
@@ -63,10 +70,7 @@ public final class PreferencesUserStyleSheet: SheetBase {
 
 		TextualPreferences.setThemeUserStyleSheetRules(rules)
 
-		let selector = NSSelectorFromString("userStyleSheetRulesChanged:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		styleSheetDelegate?.userStyleSheetRulesChanged(self)
 	}
 
 	@IBAction override public func ok(_: Any?) {
@@ -77,14 +81,15 @@ public final class PreferencesUserStyleSheet: SheetBase {
 		super.ok(nil)
 	}
 
+	private var styleSheetDelegate: (any PreferencesUserStyleSheetDelegate)? {
+		delegate as? any PreferencesUserStyleSheetDelegate
+	}
+
 	private var defaultRules: String {
 		UserStyleStrings.defaultRules
 	}
 
 	@objc public func windowWillClose(_: Notification) {
-		let selector = NSSelectorFromString("userStyleSheetWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		styleSheetDelegate?.userStyleSheetWillClose(self)
 	}
 }

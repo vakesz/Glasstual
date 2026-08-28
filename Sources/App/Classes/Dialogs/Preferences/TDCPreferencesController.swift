@@ -56,7 +56,7 @@ public protocol PreferencesControllerDelegate: AnyObject {
 @objc(TDCPreferencesController)
 @MainActor
 public final class PreferencesController: WindowBase, NSOutlineViewDataSource, NSOutlineViewDelegate, NSToolbarDelegate,
-	NSToolbarItemValidation
+	NSToolbarItemValidation, PreferencesUserStyleSheetDelegate
 {
 	@IBOutlet private var excludeKeywordsArrayController: NSArrayController!
 	@IBOutlet private var highlightKeywordsArrayController: NSArrayController!
@@ -731,7 +731,7 @@ extension PreferencesController {
 
 	private func restoreWindowFrame() {
 		window.ce_saveSizeAsDefault()
-		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
+		window.ce_restoreState(for: Self.self)
 		if window.frame.width < PreferencesLayout.windowMinimumWidth || window.frame.height < PreferencesLayout
 			.windowMinimumHeight
 		{
@@ -743,7 +743,7 @@ extension PreferencesController {
 	private func saveWindowFrame() {
 		// Do not restore the nib's size first: that is the frame that would be
 		// written out, and the user's own size would never be remembered.
-		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
+		window.ce_saveState(for: Self.self)
 	}
 }
 
@@ -1082,13 +1082,11 @@ extension PreferencesController {
 		userStyleSheet = sheet
 	}
 
-	@objc(userStyleSheetRulesChanged:)
-	private func userStyleSheetRulesChanged(_: PreferencesUserStyleSheet) {
+	public func userStyleSheetRulesChanged(_: PreferencesUserStyleSheet) {
 		onChangedTheme(nil)
 	}
 
-	@objc(userStyleSheetWillClose:)
-	private func userStyleSheetWillClose(_: PreferencesUserStyleSheet) {
+	public func userStyleSheetWillClose(_: PreferencesUserStyleSheet) {
 		userStyleSheet = nil
 	}
 

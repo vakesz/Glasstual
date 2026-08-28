@@ -46,7 +46,7 @@ public final class ValidatedComboBox: NSComboBox {
 	@objc public var stringValueIsTrimmed = false
 	@objc public var stringValueIsInvalidOnEmpty = false
 	@objc public var performValidationWhenEmpty = false
-	@objc public weak var textDidChangeCallback: AnyObject?
+	public weak var textDidChangeCallback: (any ValidatedControlChangeObserver)?
 	@objc public var caseInsensitiveComplete = false
 	@objc public var defaultValue: String?
 
@@ -283,11 +283,7 @@ public final class ValidatedComboBox: NSComboBox {
 			return
 		}
 
-		let selector = NSSelectorFromString("validatedTextFieldTextDidChange:")
-
-		if textDidChangeCallback.responds(to: selector) {
-			_ = textDidChangeCallback.perform(selector, with: self)
-		}
+		textDidChangeCallback.validatedTextFieldTextDidChange(self)
 	}
 }
 

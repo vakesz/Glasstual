@@ -79,10 +79,16 @@ private final class OnboardingPageIndicatorView: NSView {
 
 // MARK: - Window Controller
 
+/// What `OnboardingWindowController` reports back.
+@MainActor
+public protocol OnboardingWindowControllerDelegate: AnyObject {
+	func onboardingWindowControllerWillClose(_ sender: OnboardingWindowController)
+}
+
 @objc(TDCOnboardingWindowController)
 @MainActor
 public final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
-	@objc public weak var delegate: AnyObject?
+	public weak var delegate: (any OnboardingWindowControllerDelegate)?
 
 	@IBOutlet private var iconImageView: NSImageView!
 	@IBOutlet private var titleTextField: NSTextField!
@@ -454,9 +460,6 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 	}
 
 	public func windowWillClose(_: Notification) {
-		let selector = NSSelectorFromString("onboardingWindowControllerWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.onboardingWindowControllerWillClose(self)
 	}
 }

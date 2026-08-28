@@ -12,9 +12,15 @@
 
 import AppKit
 
+/// What `ServerHighlightListSheet` reports back.
+@MainActor
+public protocol ServerHighlightListSheetDelegate: AnyObject {
+	func serverHighlightListSheetWillClose(_ sender: ServerHighlightListSheet)
+}
+
 @objc(TDCServerHighlightListSheet)
 @MainActor
-public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype {
+public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, TableViewPasteboardDelegate {
 	@objc public private(set) var client: IRCClient!
 	@objc public private(set) var clientId: String?
 
@@ -121,7 +127,7 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype {
 		}
 	}
 
-	@objc public func copy(_: Any?) {
+	public func copy(_: Any?) {
 		let selectedRows = highlightListTable.selectedRowIndexes
 
 		if selectedRows.isEmpty {
@@ -161,9 +167,6 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype {
 		highlightListTable.dataSource = nil
 		highlightListTable.delegate = nil
 
-		let selector = NSSelectorFromString("serverHighlightListSheetWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		(delegate as? any ServerHighlightListSheetDelegate)?.serverHighlightListSheetWillClose(self)
 	}
 }

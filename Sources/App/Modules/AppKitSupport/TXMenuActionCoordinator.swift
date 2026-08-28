@@ -65,6 +65,23 @@ enum MenuMemberCommand {
 	}
 }
 
+/// One of the main window's navigation commands.
+enum MenuNavigationAction: Sendable, CaseIterable {
+	case nextServer
+	case previousServer
+	case nextActiveServer
+	case previousActiveServer
+	case nextChannel
+	case previousChannel
+	case nextActiveChannel
+	case previousActiveChannel
+	case nextUnreadChannel
+	case previousUnreadChannel
+	case moveBackward
+	case moveForward
+	case previousSelection
+}
+
 enum MenuNavigationTag {
 	static let nextServer = 7_000_000
 	static let previousServer = 7_000_001
@@ -541,7 +558,7 @@ public final class MenuActionCoordinator: NSObject {
 			for channel in client.channelList {
 				let item = NSMenuItem(
 					title: channel.name,
-					action: NSSelectorFromString("_navigateToChannelInNavigationList:"),
+					action: #selector(TXMenuController.navigateToChannelInNavigationList(_:)),
 					keyEquivalent: channelCount < 10 ? String((channelCount + 1) % 10) : ""
 				)
 				item.target = menuController
@@ -568,30 +585,51 @@ public final class MenuActionCoordinator: NSObject {
 
 	@objc(performNavigationAction:)
 	public func performNavigationAction(_ sender: Any?) {
-		guard selectedClient != nil, let menuItem = sender as? NSMenuItem,
-		      let selector = Self.navigationSelector(for: menuItem.tag)
+		guard selectedClient != nil,
+		      let menuItem = sender as? NSMenuItem,
+		      let action = Self.navigationAction(for: menuItem.tag)
 		else { return }
-		mainWindow.perform(selector, with: sender)
+		perform(action)
 	}
 
-	static func navigationSelector(for tag: Int) -> Selector? {
-		let selectorName: String? = switch tag {
-		case MenuNavigationTag.nextServer: "selectNextServer:"
-		case MenuNavigationTag.previousServer: "selectPreviousServer:"
-		case MenuNavigationTag.nextActiveServer: "selectNextActiveServer:"
-		case MenuNavigationTag.previousActiveServer: "selectPreviousActiveServer:"
-		case MenuNavigationTag.nextChannel: "selectNextChannel:"
-		case MenuNavigationTag.previousChannel: "selectPreviousChannel:"
-		case MenuNavigationTag.nextActiveChannel: "selectNextActiveChannel:"
-		case MenuNavigationTag.previousActiveChannel: "selectPreviousActiveChannel:"
-		case MenuNavigationTag.nextUnreadChannel: "selectNextUnreadChannel:"
-		case MenuNavigationTag.previousUnreadChannel: "selectPreviousUnreadChannel:"
-		case MenuNavigationTag.moveBackward: "selectPreviousWindow:"
-		case MenuNavigationTag.moveForward: "selectNextWindow:"
-		case MenuNavigationTag.previousSelection: "selectPreviousSelection:"
+	/// The menu items used to be dispatched by selector string onto the main
+	/// window, whose handlers are declared `(NSEvent)` and were handed an
+	/// `NSMenuItem`. They are called directly now, with no event.
+	static func navigationAction(for tag: Int) -> MenuNavigationAction? {
+		switch tag {
+		case MenuNavigationTag.nextServer: .nextServer
+		case MenuNavigationTag.previousServer: .previousServer
+		case MenuNavigationTag.nextActiveServer: .nextActiveServer
+		case MenuNavigationTag.previousActiveServer: .previousActiveServer
+		case MenuNavigationTag.nextChannel: .nextChannel
+		case MenuNavigationTag.previousChannel: .previousChannel
+		case MenuNavigationTag.nextActiveChannel: .nextActiveChannel
+		case MenuNavigationTag.previousActiveChannel: .previousActiveChannel
+		case MenuNavigationTag.nextUnreadChannel: .nextUnreadChannel
+		case MenuNavigationTag.previousUnreadChannel: .previousUnreadChannel
+		case MenuNavigationTag.moveBackward: .moveBackward
+		case MenuNavigationTag.moveForward: .moveForward
+		case MenuNavigationTag.previousSelection: .previousSelection
 		default: nil
 		}
-		return selectorName.map(NSSelectorFromString)
+	}
+
+	private func perform(_ action: MenuNavigationAction) {
+		switch action {
+		case .nextServer: mainWindow.selectNextServer(nil)
+		case .previousServer: mainWindow.selectPreviousServer(nil)
+		case .nextActiveServer: mainWindow.selectNextActiveServer(nil)
+		case .previousActiveServer: mainWindow.selectPreviousActiveServer(nil)
+		case .nextChannel: mainWindow.selectNextChannel(nil)
+		case .previousChannel: mainWindow.selectPreviousChannel(nil)
+		case .nextActiveChannel: mainWindow.selectNextActiveChannel(nil)
+		case .previousActiveChannel: mainWindow.selectPreviousActiveChannel(nil)
+		case .nextUnreadChannel: mainWindow.selectNextUnreadChannel(nil)
+		case .previousUnreadChannel: mainWindow.selectPreviousUnreadChannel(nil)
+		case .moveBackward: mainWindow.selectPreviousWindow(nil)
+		case .moveForward: mainWindow.selectNextWindow(nil)
+		case .previousSelection: mainWindow.selectPreviousSelection(nil)
+		}
 	}
 
 	@objc(moveHighlightOrScrollbackForTag:)

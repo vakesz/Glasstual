@@ -39,24 +39,31 @@
 import AppKit
 import CocoaExtensions
 
+/// Handles Copy on behalf of a `BasicTableView`. Conforming is what makes the
+/// table's Copy command available.
+@MainActor
+public protocol TableViewPasteboardDelegate: AnyObject {
+	func copy(_ sender: Any?)
+}
+
 @objc(TVCBasicTableView)
 public class BasicTableView: NSTableView {
-	@objc public weak var pasteboardDelegate: AnyObject?
+	public weak var pasteboardDelegate: (any TableViewPasteboardDelegate)?
 
-	/** Whether Copy is available depends on the pasteboard delegate. Answering that
-	 through validation rather than by overriding `responds(to:)` keeps the decision
-	 on the main actor: the runtime calls `responds(to:)` from contexts this class
-	 does not control. */
+	/** Whether Copy is available depends on whether a pasteboard delegate is
+	 attached. Answering that through validation rather than by overriding
+	 `responds(to:)` keeps the decision on the main actor: the runtime calls
+	 `responds(to:)` from contexts this class does not control. */
 	override public func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
 		guard item.action == #selector(copy(_:)) else {
 			return true
 		}
 
-		return pasteboardDelegate?.responds(to: #selector(copy(_:))) == true
+		return pasteboardDelegate != nil
 	}
 
 	@objc public func copy(_ sender: Any?) {
-		_ = pasteboardDelegate?.perform(#selector(copy(_:)), with: sender)
+		pasteboardDelegate?.copy(sender)
 	}
 
 	override public func menu(for event: NSEvent) -> NSMenu? {
