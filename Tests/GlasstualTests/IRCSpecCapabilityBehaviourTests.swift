@@ -210,6 +210,9 @@ struct IRCSpecCapabilityBehaviourTests {
 	@Test("account-notify: ACCOUNT sets and clears the account")
 	func accountNotifySetsAndClears() throws {
 		let client = client()
+
+		client.enableCapability(.accountNotify)
+
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)
@@ -242,6 +245,9 @@ struct IRCSpecCapabilityBehaviourTests {
 	@Test("chghost: CHGHOST replaces the user and host")
 	func changeHostReplacesUserAndHost() throws {
 		let client = client()
+
+		client.enableCapability(.changeHost)
+
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)
@@ -259,6 +265,9 @@ struct IRCSpecCapabilityBehaviourTests {
 	@Test("chghost: a malformed CHGHOST changes nothing")
 	func malformedChangeHostIsRejected() throws {
 		let client = client()
+
+		client.enableCapability(.changeHost)
+
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)
@@ -276,12 +285,36 @@ struct IRCSpecCapabilityBehaviourTests {
 	@Test("setname: SETNAME updates the real name")
 	func setNameUpdatesTheRealName() throws {
 		let client = client()
+
+		client.enableCapability(.setName)
+
 		let channel = try joinedChannel("#chan", on: client)
 
 		try deliver(":alice!ali@example.org JOIN #chan", on: client)
 		try deliver(":alice!ali@example.org SETNAME :Alice of Example", on: client)
 
 		#expect(try #require(channel.findMember("alice")).user.realName == "Alice of Example")
+	}
+
+	/// Each of these messages only exists because its capability was
+	/// negotiated, so an unnegotiated one rewrites nothing -- the same rule
+	/// `away-notify` already followed.
+	@Test("account-notify, chghost and setname are ignored without their capability")
+	func identityMessagesNeedTheirCapability() throws {
+		let client = client()
+		let channel = try joinedChannel("#chan", on: client)
+
+		try deliver(":alice!ali@example.org JOIN #chan", on: client)
+		try deliver(":alice!ali@example.org ACCOUNT aliceacct", on: client)
+		try deliver(":alice!ali@example.org CHGHOST newuser cloak.example.net", on: client)
+		try deliver(":alice!ali@example.org SETNAME :Someone Else", on: client)
+
+		let alice = try #require(channel.findMember("alice"))
+
+		#expect(alice.user.account == nil)
+		#expect(alice.user.username == "ali")
+		#expect(alice.user.address == "example.org")
+		#expect(alice.user.realName == nil)
 	}
 
 	// MARK: - standard-replies

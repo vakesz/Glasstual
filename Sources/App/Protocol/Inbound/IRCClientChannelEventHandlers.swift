@@ -206,8 +206,11 @@ public extension IRCClient {
 		zncBouncerCertificateChainDataMutable = chainData + "\(message.sequence)\n"
 	}
 
+	/// IRCv3 `chghost`, gated the same way `account-notify` is: a hostmask
+	/// rewrite nobody negotiated is not one to believe.
 	@objc(receiveChangeHost:)
 	func receiveChangeHost(_ message: Message) {
+		guard isCapabilityEnabled(.changeHost) else { return }
 		guard message.params.count == 2, let nickname = message.senderNickname else { return }
 		let username = message.params[0]
 		guard username.isHostmaskUsername(on: self) else {
