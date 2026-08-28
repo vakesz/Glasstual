@@ -235,6 +235,10 @@ public extension TXMenuController {
 		member(.privateMessage, sender)
 	}
 
+	@IBAction func memberChangeColor(_ sender: Any?) {
+		member(.changeColor, sender)
+	}
+
 	@IBAction func memberSendCTCPPing(_ sender: Any?) {
 		member(.ctcpPing, sender)
 	}

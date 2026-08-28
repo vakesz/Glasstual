@@ -60,7 +60,6 @@ public extension IRCClient {
 	@objc(postEventToViewController:)
 	func postEvent(toViewController eventToken: String) {
 		ThemeEventMainActorBridge.sync { [self, eventToken] in
-			guard themePostsHandleEventNotifications else { return }
 			postThemeEvent(eventToken, to: self)
 			for channel in channelList {
 				postThemeEvent(eventToken, to: channel)
@@ -71,7 +70,6 @@ public extension IRCClient {
 	@objc(postEventToViewController:forChannel:)
 	func postEvent(toViewController eventToken: String, for channel: IRCChannel) {
 		ThemeEventMainActorBridge.sync { [self, eventToken, channel] in
-			guard themePostsHandleEventNotifications else { return }
 			postThemeEvent(eventToken, to: channel)
 		}
 	}
@@ -91,7 +89,8 @@ public extension IRCClient {
 
 	@MainActor
 	private func postThemeEvent(_ eventToken: String, to item: AnyObject) {
-		guard !isTerminating else { return }
+		// The opt-out lives here so that no overload can bypass it.
+		guard themePostsHandleEventNotifications, !isTerminating else { return }
 		let viewController: LogController? = if let channel = item as? IRCChannel {
 			channel.viewController
 		} else if let treeItem = item as? IRCTreeItem {

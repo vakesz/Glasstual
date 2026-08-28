@@ -239,7 +239,10 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 			return
 		}
 
-		loadingObservation = observe(\.isLoading, options: [.initial, .new]) { [weak self] _, change in
+		/* No .initial: the observation is installed before the load starts, so
+		 the initial callback reports isLoading == false and would declare the
+		 view finished against a blank page. */
+		loadingObservation = observe(\.isLoading, options: [.new]) { [weak self] _, change in
 			MainActor.assumeIsolated {
 				guard let self else {
 					return

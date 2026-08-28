@@ -217,6 +217,15 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	// MARK: - NSApplication Delegate
 
 	public func applicationWillFinishLaunching(_: Notification) {
+		#if !DEBUG
+			/* Asking the user about another running copy needs an alert, and
+			 an alert needs NSApp — so this cannot run before
+			 NSApplicationMain, which is where it used to live. */
+			if Application.shouldContinueLaunching() == false {
+				exit(EXIT_SUCCESS)
+			}
+		#endif
+
 		/* UserNotifications.framework wants delegation set before app has
 		 finished launching. A simple access to the singleton will set this
 		 for us which we can just do here. */
@@ -293,16 +302,10 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		menuController?.dockMenu
 	}
 
-	/** Returns `.terminateNow` when termination may begin immediately,
-	 `.terminateCancel` when refused outright. When a confirmation is needed
-	 the answer is deferred: the sheet's completion reports to NSApp and
-	 begins termination itself. */
+	/** Returns `.terminateNow` when termination may begin immediately. When a
+	 confirmation is needed the answer is deferred with `.terminateLater`: the
+	 sheet's completion reports to NSApp and begins termination itself. */
 	private func queryTerminate() -> NSApplication.TerminateReply {
-		if applicationIsTerminating {
-			Self.terminationLogger.debug("Termination is already in progress")
-			return .terminateNow
-		}
-
 		if TextualPreferences.confirmQuit() == false {
 			return .terminateNow
 		}
@@ -343,6 +346,14 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	public func applicationShouldTerminate(_: NSApplication) -> NSApplication.TerminateReply {
+		if applicationIsTerminating {
+			/* Termination is already under way. Answering .terminateNow here
+			 used to schedule step one a second time, tearing everything down
+			 twice. */
+			Self.terminationLogger.debug("Termination is already in progress")
+			return .terminateLater
+		}
+
 		let reply = queryTerminate()
 
 		if reply != .terminateNow {

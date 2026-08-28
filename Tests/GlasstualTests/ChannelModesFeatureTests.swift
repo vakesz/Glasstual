@@ -98,8 +98,10 @@ final class ChannelModesFeatureTests: XCTestCase {
 		let (_, model) = try makeModel()
 
 		for (input, expected) in [
-			("", "0"),
-			("not a number", "0"),
+			// An empty field stays empty, and junk leaves the last valid
+			// value alone rather than collapsing to 0.
+			("", ""),
+			("not a number", ""),
 			("-1", "0"),
 			("00007", "7"),
 			("0", "0"),
@@ -123,8 +125,10 @@ final class ChannelModesFeatureTests: XCTestCase {
 		let (_, unlimitedModel) = try makeModel(maximumKeyLength: 0)
 		XCTAssertFalse(unlimitedModel.updateSecretKey(String(repeating: "x", count: 1000)))
 
+		// KEYLEN is an octet count, so a single emoji is four bytes over a
+		// one-byte limit.
 		let (_, graphemeModel) = try makeModel(maximumKeyLength: 1)
-		XCTAssertFalse(graphemeModel.updateSecretKey("💬"))
+		XCTAssertTrue(graphemeModel.updateSecretKey("💬"))
 	}
 
 	func testContentUsesNamespacedLocalizedCopyAndSharedValidationCopy() {

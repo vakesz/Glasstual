@@ -156,7 +156,7 @@ final class TXMenuActionCoordinatorTests: XCTestCase {
 	}
 
 	func testActionRawValuesPreserveObjectiveCContracts() {
-		XCTAssertEqual(TXMenuMemberAction.allCases.map(\.rawValue), Array(0 ... 27))
+		XCTAssertEqual(TXMenuMemberAction.allCases.map(\.rawValue), Array(0 ... 28))
 		XCTAssertEqual(TXMenuEditingAction.allCases.map(\.rawValue), Array(0 ... 3))
 		XCTAssertEqual(TXMenuChannelViewAction.allCases.map(\.rawValue), Array(0 ... 12))
 		XCTAssertEqual(TXMenuServerChannelAction.allCases.map(\.rawValue), Array(0 ... 14))

@@ -170,7 +170,9 @@ public class Server: PortablePropertyDict {
 
 		copy.defaultsStorage = defaultsStorage
 		copy.serverPasswordStorage = serverPasswordStorage
-		copy.destroyKeychainItemsDuringDealloc = destroyKeychainItemsDuringDealloc
+		/* destroyKeychainItemsDuringDealloc is deliberately not copied: a copy
+		 shares the original's uniqueIdentifier, so propagating the flag makes
+		 the deallocation of any transient copy delete the live keychain item. */
 
 		if uniquing {
 			copy.uniqueIdentifierStorage = UUID().uuidString

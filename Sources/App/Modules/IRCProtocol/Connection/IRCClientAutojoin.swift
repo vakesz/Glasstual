@@ -185,7 +185,7 @@ public extension IRCClient {
 		}
 
 		isAutojoining = true
-		channelsToAutojoin = NSMutableArray(array: channels.shuffled())
+		channelsToAutojoin = NSMutableArray(array: channels)
 		startAutojoinTimer()
 	}
 }

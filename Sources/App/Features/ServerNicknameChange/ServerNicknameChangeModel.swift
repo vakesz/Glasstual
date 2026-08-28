@@ -54,6 +54,8 @@ final class ServerNicknameChangeModel {
 	}
 
 	private func refreshValidation() {
-		validationError = validator(proposedNickname)
+		// The sheet submits normalizedNickname, so that is what has to be
+		// validated; validating the raw text let trimmed-away junk through.
+		validationError = validator(normalizedNickname)
 	}
 }

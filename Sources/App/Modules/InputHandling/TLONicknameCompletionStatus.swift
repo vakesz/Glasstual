@@ -47,7 +47,6 @@ public final class NicknameCompletionStatus: NSObject {
 	private var isCompletingCommand = false
 	private var isCompletingNickname = false
 	private var searchPatternIsAtStart = false
-	private var searchPatternIsAtEnd = false
 	private var completionCacheIsConstructed = false
 
 	@available(*, unavailable)
@@ -216,31 +215,53 @@ public final class NicknameCompletionStatus: NSObject {
 		)
 	}
 
+	/// The member whose conversation weight is strictly greater than at least
+	/// one other member's, if any.
+	///
+	/// `nil` when every member carries the same weight: there is then no
+	/// "most highly weighted" user and the alphabetical order stands alone.
+	/// Weights are read once each because reading one decays it.
+	private func mostWeightedMember(of members: [ChannelUser]) -> ChannelUser? {
+		let weighted = members.map { (member: $0, weight: $0.totalWeight) }
+
+		guard let heaviest = weighted.reduce(nil, { best, next -> (member: ChannelUser, weight: Double)? in
+			guard let best else {
+				return next
+			}
+
+			return next.weight > best.weight ? next : best
+		}) else {
+			return nil
+		}
+
+		guard weighted.contains(where: { $0.weight < heaviest.weight }) else {
+			return nil
+		}
+
+		return heaviest.member
+	}
+
 	private func nicknameCandidates(
 		from members: [ChannelUser],
 		client: IRCClient,
 		searchPatternIsEmpty: Bool
 	) -> [Candidate] {
-		var greatestWeightUser: ChannelUser?
-		var noUserHadGreaterWeightThanOriginal = true
 		let sortedMembers: [ChannelUser]
+		let priorityMember: ChannelUser?
 
-		if !searchPatternIsEmpty {
-			sortedMembers = members.sorted { $0.compare(usingWeights: $1) == .orderedAscending }
-			greatestWeightUser = sortedMembers.first
-		} else {
-			greatestWeightUser = members.first
-
-			for member in members.dropFirst() {
-				if let currentGreatest = greatestWeightUser, currentGreatest.totalWeight < member.totalWeight {
-					greatestWeightUser = member
-					noUserHadGreaterWeightThanOriginal = false
-				}
-			}
-
-			sortedMembers = members.sorted { (left: ChannelUser, right: ChannelUser) -> Bool in
+		if searchPatternIsEmpty {
+			/* With no search pattern the list reads alphabetically and only
+			 the single most highly weighted user is lifted to the top — and
+			 only when one user genuinely outweighs the others. */
+			sortedMembers = members.sorted { left, right in
 				left.user.nickname.caseInsensitiveCompare(right.user.nickname) == .orderedAscending
 			}
+			priorityMember = mostWeightedMember(of: members)
+		} else {
+			/* With a search pattern the whole list is already ordered by
+			 conversation weight, so there is no separate priority candidate. */
+			sortedMembers = members.sorted { $0.compare(usingWeights: $1) == .orderedAscending }
+			priorityMember = nil
 		}
 
 		var candidates: [Candidate] = []
@@ -265,11 +286,11 @@ public final class NicknameCompletionStatus: NSObject {
 			}
 		}
 
-		if !noUserHadGreaterWeightThanOriginal, let greatestWeightUser {
-			addNickname(greatestWeightUser.user.nickname, includeTrimmedVariant: includeTrimmedNicknames)
+		if let priorityMember {
+			addNickname(priorityMember.user.nickname, includeTrimmedVariant: includeTrimmedNicknames)
 		}
 
-		for member in sortedMembers where noUserHadGreaterWeightThanOriginal || member !== greatestWeightUser {
+		for member in sortedMembers where member !== priorityMember {
 			addNickname(member.user.nickname, includeTrimmedVariant: includeTrimmedNicknames)
 		}
 
@@ -304,7 +325,10 @@ public final class NicknameCompletionStatus: NSObject {
 		   let currentTextViewStringValue
 		{
 			let text = currentTextViewStringValue as NSString
-			let maximumCompletionSuffixEndPoint = text.length - 1
+			// text.length, not length - 1: the last character index is a valid
+			// place for whitespace to already be, and excluding it appended a
+			// second space at the end of the line.
+			let maximumCompletionSuffixEndPoint = text.length
 			let nextCharacterInRange = NSMaxRange(rangeOfCompletionSuffix)
 
 			if nextCharacterInRange < maximumCompletionSuffixEndPoint,
@@ -505,7 +529,6 @@ public final class NicknameCompletionStatus: NSObject {
 
 		rangeOfCompletionSuffix = completionSuffixRange
 		cachedCompletionSuffix = completionSuffixRange.length == 0 ? "" : text.substring(with: completionSuffixRange)
-		searchPatternIsAtEnd = NSMaxRange(completionSuffixRange) == totalTextLength
 
 		return true
 	}
@@ -535,7 +558,6 @@ public final class NicknameCompletionStatus: NSObject {
 		isCompletingChannelName = false
 		isCompletingCommand = false
 		isCompletingNickname = false
-		searchPatternIsAtEnd = false
 		searchPatternIsAtStart = false
 	}
 }

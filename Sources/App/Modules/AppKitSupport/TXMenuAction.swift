@@ -67,6 +67,7 @@ import Foundation
 	case shun = 25
 	case setVhost = 26
 	case sendFile = 27
+	case changeColor = 28
 }
 
 @objc public enum TXMenuEditingAction: Int, CaseIterable {
