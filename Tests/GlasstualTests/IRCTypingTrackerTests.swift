@@ -35,39 +35,35 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import Synchronization
-import XCTest
+import Testing
 
 @MainActor
-final class IRCTypingTrackerTests: XCTestCase {
-	private var client: GLTTestClient!
-	private var tracker: IRCTypingTracker!
+@Suite("Typing tracker")
+struct IRCTypingTrackerTests {
+	private let client: GLTTestClient
+	private let tracker: IRCTypingTracker
 
-	override func setUp() async throws {
-		try await super.setUp()
+	init() {
+		let client = GLTTestClient()
 
-		client = GLTTestClient()
+		self.client = client
 		tracker = IRCTypingTracker(client: client)
 	}
 
-	override func tearDown() async throws {
-		tracker.removeAll()
-		tracker = nil
-		client = nil
-
-		try await super.tearDown()
+	@Test("A tag value only names a state when it is spelled exactly")
+	func stateParsing() {
+		#expect(IRCTypingTracker.state(forTagValue: "active") == .active)
+		#expect(IRCTypingTracker.state(forTagValue: "paused") == .paused)
+		#expect(IRCTypingTracker.state(forTagValue: "ACTIVE") == .done)
+		#expect(IRCTypingTracker.state(forTagValue: "done") == .done)
+		#expect(IRCTypingTracker.state(forTagValue: nil) == .done)
 	}
 
-	func testStateParsing() {
-		XCTAssertEqual(IRCTypingTracker.state(forTagValue: "active"), .active)
-		XCTAssertEqual(IRCTypingTracker.state(forTagValue: "paused"), .paused)
-		XCTAssertEqual(IRCTypingTracker.state(forTagValue: "ACTIVE"), .done)
-		XCTAssertEqual(IRCTypingTracker.state(forTagValue: "done"), .done)
-		XCTAssertEqual(IRCTypingTracker.state(forTagValue: nil), .done)
-	}
-
-	func testOrderingCaseFoldingAndNotificationSuppression() {
+	@Test("Nicknames keep their first spelling and their arrival order, and a repeat is not announced")
+	func orderingCaseFoldingAndNotificationSuppression() {
 		let channel = makeChannel(named: "#chat")
 		let start = Date(timeIntervalSince1970: 1000)
 		let notificationCount = Mutex(0)
@@ -91,12 +87,13 @@ final class IRCTypingTrackerTests: XCTestCase {
 		tracker.noteTypingState(.paused, fromNickname: "ALICE", in: channel, at: start.addingTimeInterval(2))
 		tracker.noteTypingState(.paused, fromNickname: "alice", in: channel, at: start.addingTimeInterval(3))
 
-		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(4)), ["Alice", "bob"])
-		XCTAssertEqual(notificationCount.withLock { $0 }, 3)
-		XCTAssertTrue(notifiedChannel.withLock { $0 === channel })
+		#expect(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(4)) == ["Alice", "bob"])
+		#expect(notificationCount.withLock { $0 } == 3)
+		#expect(notifiedChannel.withLock { $0 === channel })
 	}
 
-	func testEmptyNicknameIsIgnored() {
+	@Test("A state with no nickname is dropped without announcing anything")
+	func emptyNicknameIsIgnored() {
 		let channel = makeChannel(named: "#chat")
 		let notificationCount = Mutex(0)
 		let token = NotificationCenter.default.addObserver(
@@ -112,11 +109,12 @@ final class IRCTypingTrackerTests: XCTestCase {
 
 		tracker.noteTypingState(.active, fromNickname: "", in: channel)
 
-		XCTAssertEqual(tracker.typingNicknames(in: channel), [])
-		XCTAssertEqual(notificationCount.withLock { $0 }, 0)
+		#expect(tracker.typingNicknames(in: channel) == [])
+		#expect(notificationCount.withLock { $0 } == 0)
 	}
 
-	func testRemoveNicknameAcrossChannels() {
+	@Test("Removing a nickname removes it from every channel, whatever case it was seen in")
+	func removeNicknameAcrossChannels() {
 		let firstChannel = makeChannel(named: "#one")
 		let secondChannel = makeChannel(named: "#two")
 		let start = Date()
@@ -125,29 +123,29 @@ final class IRCTypingTrackerTests: XCTestCase {
 		tracker.noteTypingState(.paused, fromNickname: "mara", in: secondChannel, at: start)
 		tracker.removeNickname("MARA")
 
-		XCTAssertEqual(tracker.typingNicknames(in: firstChannel, at: start), [])
-		XCTAssertEqual(tracker.typingNicknames(in: secondChannel, at: start), [])
+		#expect(tracker.typingNicknames(in: firstChannel, at: start) == [])
+		#expect(tracker.typingNicknames(in: secondChannel, at: start) == [])
 	}
 
-	func testTimeoutBoundaryAndExplicitExpiry() {
+	@Test("An active entry expires before a paused one, and neither expires early")
+	func timeoutBoundaryAndExplicitExpiry() {
 		let channel = makeChannel(named: "#chat")
 		let start = Date(timeIntervalSince1970: 1000)
 
 		tracker.noteTypingState(.active, fromNickname: "active", in: channel, at: start)
 		tracker.noteTypingState(.paused, fromNickname: "paused", in: channel, at: start)
 
-		XCTAssertEqual(
-			tracker.typingNicknames(in: channel, at: start.addingTimeInterval(6)),
-			["active", "paused"]
+		#expect(
+			tracker.typingNicknames(in: channel, at: start.addingTimeInterval(6)) == ["active", "paused"]
 		)
 
 		tracker.expireEntries(at: start.addingTimeInterval(6.001))
 
-		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(30)), ["paused"])
+		#expect(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(30)) == ["paused"])
 
 		tracker.expireEntries(at: start.addingTimeInterval(30.001))
 
-		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start), [])
+		#expect(tracker.typingNicknames(in: channel, at: start) == [])
 	}
 
 	private func makeChannel(named name: String) -> Channel {

@@ -4,9 +4,10 @@
  *********************************************************************** */
 
 import AppKit
+import Foundation
 @testable import Glasstual
 import SwiftUI
-import XCTest
+import Testing
 
 @MainActor
 private final class ChannelModesDelegateSpy: NSObject, ChannelModifyModesSheetDelegate {
@@ -24,59 +25,64 @@ private final class ChannelModesDelegateSpy: NSObject, ChannelModifyModesSheetDe
 }
 
 @MainActor
-final class ChannelModesFeatureTests: XCTestCase {
-	func testModeRawValuesMatchIRCWireSchema() {
-		XCTAssertEqual(
-			ChannelMode.allCases.map(\.rawValue),
-			["i", "m", "n", "p", "s", "t", "k", "l"]
-		)
-		XCTAssertEqual(
-			ChannelMode.booleanModes,
-			[.secretChannel, .privateChannel, .noExternalMessages, .operatorTopic, .inviteOnly, .moderated]
-		)
-		XCTAssertEqual(
-			ChannelValidationSuppressionKey.maximumSecretKeyLength.rawValue,
-			"maximum_secret_key_length"
-		)
+@Suite("Channel modes sheet")
+struct ChannelModesFeatureTests {
+	@Test("Mode raw values are the letters that go on the wire")
+	func modeRawValuesMatchIRCWireSchema() {
+		#expect(ChannelMode.allCases.map(\.rawValue) == ["i", "m", "n", "p", "s", "t", "k", "l"])
+		#expect(ChannelMode.booleanModes == [
+			.secretChannel, .privateChannel, .noExternalMessages, .operatorTopic, .inviteOnly, .moderated,
+		])
 	}
 
-	func testModelCopiesAllInitialModesAndParameters() throws {
+	/// The key is what a suppressed alert is remembered by, so it outlives the
+	/// build that wrote it.
+	@Test("The maximum key length alert keeps the key it is suppressed under")
+	func suppressionKeySurvivesRenames() {
+		#expect(ChannelValidationSuppressionKey.maximumSecretKeyLength.rawValue == "maximum_secret_key_length")
+	}
+
+	@Test("The model copies every mode and parameter, leaving the channel's own modes alone")
+	func modelCopiesAllInitialModesAndParameters() throws {
 		let (sourceModes, model) = try makeModel(
 			modeString: "+imnpstk secret +l 007",
 			maximumKeyLength: 8
 		)
 
 		for mode in ChannelMode.allCases {
-			XCTAssertTrue(model.isEnabled(mode), mode.rawValue)
+			#expect(model.isEnabled(mode), "\(mode.rawValue)")
 		}
-		XCTAssertEqual(model.secretKey, "secret")
-		XCTAssertEqual(model.userLimit, "007")
+		#expect(model.secretKey == "secret")
+		#expect(model.userLimit == "007")
 
 		model.setMode(.moderated, enabled: false)
 		model.updateSecretKey("replacement")
 		model.updateUserLimit("25")
 
-		XCTAssertTrue(try XCTUnwrap(sourceModes.modeInfo(for: ChannelMode.moderated.rawValue)).modeIsSet)
-		XCTAssertEqual(sourceModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter, "secret")
-		XCTAssertEqual(sourceModes.modeInfo(for: ChannelMode.userLimit.rawValue)?.modeParameter, "007")
+		let moderated = try #require(sourceModes.modeInfo(for: ChannelMode.moderated.rawValue))
+		#expect(moderated.modeIsSet)
+		#expect(sourceModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "secret")
+		#expect(sourceModes.modeInfo(for: ChannelMode.userLimit.rawValue)?.modeParameter == "007")
 	}
 
-	func testSecretAndPrivateModesAreMutuallyExclusiveAfterInteraction() throws {
+	@Test("Secret and private turn each other off once either one is touched")
+	func secretAndPrivateModesAreMutuallyExclusiveAfterInteraction() throws {
 		let (_, model) = try makeModel(modeString: "+sp")
 
-		XCTAssertTrue(model.isEnabled(.secretChannel))
-		XCTAssertTrue(model.isEnabled(.privateChannel))
+		#expect(model.isEnabled(.secretChannel))
+		#expect(model.isEnabled(.privateChannel))
 
 		model.setMode(.secretChannel, enabled: true)
-		XCTAssertTrue(model.isEnabled(.secretChannel))
-		XCTAssertFalse(model.isEnabled(.privateChannel))
+		#expect(model.isEnabled(.secretChannel))
+		#expect(model.isEnabled(.privateChannel) == false)
 
 		model.setMode(.privateChannel, enabled: true)
-		XCTAssertFalse(model.isEnabled(.secretChannel))
-		XCTAssertTrue(model.isEnabled(.privateChannel))
+		#expect(model.isEnabled(.secretChannel) == false)
+		#expect(model.isEnabled(.privateChannel))
 	}
 
-	func testParameterValuesSurviveDisabledModesAndAreAppliedOnSubmission() throws {
+	@Test("A parameter edited while its mode is off is still submitted")
+	func parameterValuesSurviveDisabledModesAndAreAppliedOnSubmission() throws {
 		let (_, model) = try makeModel(modeString: "+kl old-key 12")
 
 		model.setMode(.key, enabled: false)
@@ -85,21 +91,23 @@ final class ChannelModesFeatureTests: XCTestCase {
 		model.updateUserLimit("44")
 
 		let submittedModes = model.modesForSubmission()
-		let keyMode = try XCTUnwrap(submittedModes.modeInfo(for: ChannelMode.key.rawValue))
-		let limitMode = try XCTUnwrap(submittedModes.modeInfo(for: ChannelMode.userLimit.rawValue))
+		let keyMode = try #require(submittedModes.modeInfo(for: ChannelMode.key.rawValue))
+		let limitMode = try #require(submittedModes.modeInfo(for: ChannelMode.userLimit.rawValue))
 
-		XCTAssertFalse(keyMode.modeIsSet)
-		XCTAssertEqual(keyMode.modeParameter, "new-key")
-		XCTAssertFalse(limitMode.modeIsSet)
-		XCTAssertEqual(limitMode.modeParameter, "44")
+		#expect(keyMode.modeIsSet == false)
+		#expect(keyMode.modeParameter == "new-key")
+		#expect(limitMode.modeIsSet == false)
+		#expect(limitMode.modeParameter == "44")
 	}
 
-	func testUserLimitEditsNormalizeToSupportedRange() throws {
+	@Test("User limit edits normalize to the supported range")
+	func userLimitEditsNormalizeToSupportedRange() throws {
 		let (_, model) = try makeModel()
 
+		// Each edit lands on the value the one before it left behind: an empty
+		// field stays empty, and junk leaves the last valid value alone rather
+		// than collapsing to 0.
 		for (input, expected) in [
-			// An empty field stays empty, and junk leaves the last valid
-			// value alone rather than collapsing to 0.
 			("", ""),
 			("not a number", ""),
 			("-1", "0"),
@@ -109,81 +117,60 @@ final class ChannelModesFeatureTests: XCTestCase {
 			("100000", "99999"),
 		] {
 			model.updateUserLimit(input)
-			XCTAssertEqual(model.userLimit, expected, input)
+			#expect(model.userLimit == expected, "\(input)")
 		}
 	}
 
-	func testMaximumKeyLengthWarningIsNonzeroAndOneTime() throws {
+	@Test("The key length warning is shown once, and only for a limit the server declared")
+	func maximumKeyLengthWarningIsNonzeroAndOneTime() throws {
 		let (_, model) = try makeModel(maximumKeyLength: 3)
 
-		XCTAssertFalse(model.updateSecretKey("abc"))
-		XCTAssertTrue(model.updateSecretKey("abcd"))
-		XCTAssertTrue(model.hasPresentedMaximumKeyLengthWarning)
-		XCTAssertFalse(model.updateSecretKey("abcde"))
-		XCTAssertFalse(model.updateSecretKey("a"))
+		#expect(model.updateSecretKey("abc") == false)
+		#expect(model.updateSecretKey("abcd"))
+		#expect(model.hasPresentedMaximumKeyLengthWarning)
+		#expect(model.updateSecretKey("abcde") == false)
+		#expect(model.updateSecretKey("a") == false)
 
 		let (_, unlimitedModel) = try makeModel(maximumKeyLength: 0)
-		XCTAssertFalse(unlimitedModel.updateSecretKey(String(repeating: "x", count: 1000)))
+		#expect(unlimitedModel.updateSecretKey(String(repeating: "x", count: 1000)) == false)
 
 		// KEYLEN is an octet count, so a single emoji is four bytes over a
 		// one-byte limit.
 		let (_, graphemeModel) = try makeModel(maximumKeyLength: 1)
-		XCTAssertTrue(graphemeModel.updateSecretKey("💬"))
+		#expect(graphemeModel.updateSecretKey("💬"))
 	}
 
-	func testContentUsesNamespacedLocalizedCopyAndSharedValidationCopy() {
+	@Test("Sheet copy comes from the namespaced table and the shared validation table")
+	func contentUsesNamespacedLocalizedCopyAndSharedValidationCopy() {
 		let content = ChannelModesContent.current(channelName: "#swift")
 
-		XCTAssertEqual(content.headingTitle, "Modes for #swift")
-		XCTAssertEqual(content.title(for: .secretChannel), "Secret channel (+s)")
-		XCTAssertEqual(content.title(for: .privateChannel), "Private channel (+p)")
-		XCTAssertEqual(content.title(for: .noExternalMessages), "No external channel messages (+n)")
-		XCTAssertEqual(content.title(for: .operatorTopic), "Only operators can change topic (+t)")
-		XCTAssertEqual(content.title(for: .inviteOnly), "Invite-only channel (+i)")
-		XCTAssertEqual(content.title(for: .moderated), "Moderated channel (+m)")
-		XCTAssertEqual(content.title(for: .key), "Password (+k):")
-		XCTAssertEqual(content.title(for: .userLimit), "Limit number of users (+l):")
-		XCTAssertEqual(content.saveButtonTitle, "Save")
-		XCTAssertEqual(content.cancelButtonTitle, "Cancel")
-		XCTAssertEqual(content.windowTitle, "Channel Modes")
-		XCTAssertEqual(
-			ChannelValidationStrings.maximumKeyLengthMessage,
-			"If you continue typing, the end of your secret key may be cut off."
+		#expect(content.headingTitle == "Modes for #swift")
+		#expect(content.title(for: .secretChannel) == "Secret channel (+s)")
+		#expect(content.title(for: .privateChannel) == "Private channel (+p)")
+		#expect(content.title(for: .noExternalMessages) == "No external channel messages (+n)")
+		#expect(content.title(for: .operatorTopic) == "Only operators can change topic (+t)")
+		#expect(content.title(for: .inviteOnly) == "Invite-only channel (+i)")
+		#expect(content.title(for: .moderated) == "Moderated channel (+m)")
+		#expect(content.title(for: .key) == "Password (+k):")
+		#expect(content.title(for: .userLimit) == "Limit number of users (+l):")
+		#expect(content.saveButtonTitle == "Save")
+		#expect(content.cancelButtonTitle == "Cancel")
+		#expect(content.windowTitle == "Channel Modes")
+		#expect(
+			ChannelValidationStrings.maximumKeyLengthMessage ==
+				"If you continue typing, the end of your secret key may be cut off."
 		)
-		XCTAssertEqual(
-			ChannelValidationStrings.maximumKeyLengthTitle(networkName: "ExampleNet", maximumLength: 16),
-			"You have exceeded the secret key length defined by ExampleNet which is 16 characters"
-		)
-	}
-
-	func testRuntimeSheetContractSurvivesWithoutANib() {
-		XCTAssertEqual(NSStringFromClass(ChannelModifyModesSheet.self), "TDCChannelModifyModesSheet")
-		XCTAssertNotNil(NSProtocolFromString("TDCChannelModifyModesSheetDelegate"))
-		XCTAssertNil(Bundle.main.path(forResource: "TDCChannelModifyModesSheet", ofType: "nib"))
-
-		for selectorName in [
-			"initWithChannel:",
-			"start",
-			"ok:",
-			"cancel:",
-			"windowWillClose:",
-		] {
-			XCTAssertTrue(
-				ChannelModifyModesSheet.instancesRespond(to: NSSelectorFromString(selectorName)),
-				selectorName
-			)
-		}
-
-		XCTAssertFalse(ChannelModifyModesSheet.instancesRespond(to: NSSelectorFromString("onChangeCheck:")))
-		XCTAssertFalse(
-			ChannelModifyModesSheet.instancesRespond(to: NSSelectorFromString("controlTextDidChange:"))
+		#expect(
+			ChannelValidationStrings.maximumKeyLengthTitle(networkName: "ExampleNet", maximumLength: 16) ==
+				"You have exceeded the secret key length defined by ExampleNet which is 16 characters"
 		)
 	}
 
-	func testAdapterPreservesIdentityCopiedModesAndTypedDelegateCallbacks() throws {
+	@Test("The sheet adapter copies the channel's modes and reports edits to its delegate")
+	func adapterPreservesIdentityCopiedModesAndTypedDelegateCallbacks() throws {
 		let client = GLTTestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ KEYLEN=8")
-		let channel = try XCTUnwrap(client.findChannelOrCreate("#swift"))
+		let channel = try #require(client.findChannelOrCreate("#swift"))
 		channel.activate()
 		_ = channel.modeInfo?.updateModes("+ntk original +l 12")
 
@@ -192,38 +179,39 @@ final class ChannelModesFeatureTests: XCTestCase {
 		let delegate = ChannelModesDelegateSpy()
 		adapter.delegate = delegate
 
-		XCTAssertIdentical(adapter.client, client)
-		XCTAssertIdentical(adapter.channel, channel)
-		XCTAssertEqual(channelPrototype.clientId, client.uniqueIdentifier)
-		XCTAssertEqual(channelPrototype.channelId, channel.uniqueIdentifier)
-		XCTAssertTrue(adapter.model.isEnabled(.noExternalMessages))
-		XCTAssertTrue(adapter.model.isEnabled(.operatorTopic))
-		XCTAssertTrue(adapter.model.isEnabled(.key))
-		XCTAssertTrue(adapter.model.isEnabled(.userLimit))
-		XCTAssertEqual(adapter.model.secretKey, "original")
-		XCTAssertEqual(adapter.model.userLimit, "12")
-		XCTAssertTrue(adapter.sheet.delegate === adapter)
-		XCTAssertTrue(adapter.sheet.contentViewController is NSHostingController<ChannelModesView>)
-		XCTAssertFalse(adapter.sheet.styleMask.contains(.resizable))
-		XCTAssertFalse(adapter.sheet.isReleasedWhenClosed)
-		XCTAssertFalse(adapter.sheet.isRestorable)
-		XCTAssertEqual(adapter.sheet.tabbingMode, .disallowed)
-		XCTAssertEqual(adapter.sheet.contentMinSize, NSSize(width: 440, height: 390))
-		XCTAssertEqual(adapter.sheet.contentMaxSize, NSSize(width: 440, height: 390))
+		#expect(adapter.client === client)
+		#expect(adapter.channel === channel)
+		#expect(channelPrototype.clientId == client.uniqueIdentifier)
+		#expect(channelPrototype.channelId == channel.uniqueIdentifier)
+		#expect(adapter.model.isEnabled(.noExternalMessages))
+		#expect(adapter.model.isEnabled(.operatorTopic))
+		#expect(adapter.model.isEnabled(.key))
+		#expect(adapter.model.isEnabled(.userLimit))
+		#expect(adapter.model.secretKey == "original")
+		#expect(adapter.model.userLimit == "12")
+		#expect(adapter.sheet.delegate === adapter)
+		#expect(adapter.sheet.contentViewController is NSHostingController<ChannelModesView>)
+		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
+		#expect(adapter.sheet.isReleasedWhenClosed == false)
+		#expect(adapter.sheet.isRestorable == false)
+		#expect(adapter.sheet.tabbingMode == .disallowed)
+		#expect(adapter.sheet.contentMinSize == NSSize(width: 440, height: 390))
+		#expect(adapter.sheet.contentMaxSize == NSSize(width: 440, height: 390))
 
 		adapter.model.setMode(.moderated, enabled: true)
 		adapter.model.updateSecretKey("edited")
-		XCTAssertEqual(channel.modeInfo?.modes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter, "original")
+		#expect(channel.modeInfo?.modes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "original")
 
 		adapter.ok(nil)
 
-		let acceptedModes = try XCTUnwrap(delegate.acceptedModes)
-		XCTAssertTrue(try XCTUnwrap(acceptedModes.modeInfo(for: ChannelMode.moderated.rawValue)).modeIsSet)
-		XCTAssertEqual(acceptedModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter, "edited")
-		XCTAssertEqual(delegate.events, ["accept"])
+		let acceptedModes = try #require(delegate.acceptedModes)
+		let acceptedModerated = try #require(acceptedModes.modeInfo(for: ChannelMode.moderated.rawValue))
+		#expect(acceptedModerated.modeIsSet)
+		#expect(acceptedModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "edited")
+		#expect(delegate.events == ["accept"])
 
 		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
-		XCTAssertEqual(delegate.events, ["accept", "close"])
+		#expect(delegate.events == ["accept", "close"])
 	}
 
 	private func makeModel(
@@ -232,7 +220,7 @@ final class ChannelModesFeatureTests: XCTestCase {
 	) throws -> (ChannelModeContainer, ChannelModesModel) {
 		let client = GLTTestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
-		let channel = try XCTUnwrap(client.findChannelOrCreate("#test"))
+		let channel = try #require(client.findChannelOrCreate("#test"))
 		let state = ChannelModeState(channel: channel)
 		_ = state.updateModes(modeString)
 

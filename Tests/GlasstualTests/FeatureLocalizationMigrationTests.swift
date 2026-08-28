@@ -4,73 +4,74 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class FeatureLocalizationMigrationTests: XCTestCase {
-	func testChannelPropertiesStringsPreserveLegacyValues() {
-		XCTAssertEqual(
-			ChannelPropertiesStrings.invalidChannelName,
-			"Please enter a properly formatted channel name."
+@Suite("Migrated feature copy")
+struct FeatureLocalizationMigrationTests {
+	@Test("Channel properties copy still reads the way the legacy table did")
+	func channelPropertiesStringsPreserveLegacyValues() {
+		#expect(ChannelPropertiesStrings.invalidChannelName == "Please enter a properly formatted channel name.")
+		#expect(
+			ChannelPropertiesStrings.configurationChangedTitle ==
+				"This channel's configuration has changed. Do you want to reload the Channel Properties dialog?"
 		)
-		XCTAssertEqual(
-			ChannelPropertiesStrings.configurationChangedTitle,
-			"This channel's configuration has changed. Do you want to reload the Channel Properties dialog?"
-		)
-		XCTAssertEqual(
-			ChannelPropertiesStrings.unsavedChangesWarning,
-			"You will loose unsaved changes if you click “Yes”"
+		#expect(
+			ChannelPropertiesStrings.unsavedChangesWarning ==
+				"You will loose unsaved changes if you click “Yes”"
 		)
 	}
 
-	func testFileTransferFailureStringsUseTypedErrors() {
+	@Test("Every typed transfer failure names its own cause")
+	func fileTransferFailureStringsUseTypedErrors() {
 		let peer = "Alice"
-		XCTAssertEqual(
-			FileTransferStrings.failure(.connectionUnavailable, peerNickname: peer),
-			"Transfer with Alice failed. Could not establish connection"
+		#expect(
+			FileTransferStrings.failure(.connectionUnavailable, peerNickname: peer) ==
+				"Transfer with Alice failed. Could not establish connection"
 		)
-		XCTAssertEqual(
-			FileTransferStrings.failure(.fileHandlerFailed, peerNickname: peer),
-			"Transfer with Alice failed. File handler threw an exception"
+		#expect(
+			FileTransferStrings.failure(.fileHandlerFailed, peerNickname: peer) ==
+				"Transfer with Alice failed. File handler threw an exception"
 		)
-		XCTAssertEqual(
-			FileTransferStrings.failure(.invalidResumePosition, peerNickname: peer),
-			"Transfer with Alice failed. Proposed resume position is bad"
+		#expect(
+			FileTransferStrings.failure(.invalidResumePosition, peerNickname: peer) ==
+				"Transfer with Alice failed. Proposed resume position is bad"
 		)
-		XCTAssertEqual(
-			FileTransferStrings.failure(.noListeningPort, peerNickname: peer),
-			"Transfer with Alice failed. There is no open port"
+		#expect(
+			FileTransferStrings.failure(.noListeningPort, peerNickname: peer) ==
+				"Transfer with Alice failed. There is no open port"
 		)
-		XCTAssertEqual(
-			FileTransferStrings.failure(.notConnectedToIRC, peerNickname: peer),
-			"Transfer with Alice failed. You are not connected to IRC"
+		#expect(
+			FileTransferStrings.failure(.notConnectedToIRC, peerNickname: peer) ==
+				"Transfer with Alice failed. You are not connected to IRC"
 		)
-		XCTAssertEqual(
-			FileTransferStrings.failure(.sourceFileUnreadable, peerNickname: peer),
-			"Transfer with Alice failed. Could not read source file"
+		#expect(
+			FileTransferStrings.failure(.sourceFileUnreadable, peerNickname: peer) ==
+				"Transfer with Alice failed. Could not read source file"
 		)
-		XCTAssertEqual(
-			FileTransferStrings.failure(.sourceIPAddressUnknown, peerNickname: peer),
-			"Transfer with Alice failed. Unknown source IP address"
+		#expect(
+			FileTransferStrings.failure(.sourceIPAddressUnknown, peerNickname: peer) ==
+				"Transfer with Alice failed. Unknown source IP address"
 		)
-		XCTAssertEqual(
-			FileTransferStrings.failure(.storageFull, peerNickname: peer),
-			"Transfer with Alice failed. No space left on device"
+		#expect(
+			FileTransferStrings.failure(.storageFull, peerNickname: peer) ==
+				"Transfer with Alice failed. No space left on device"
 		)
-		XCTAssertEqual(
-			FileTransferStrings.failure(.underlying("Timed out"), peerNickname: peer),
-			"Transfer with Alice failed: Timed out"
+		#expect(
+			FileTransferStrings.failure(.underlying("Timed out"), peerNickname: peer) ==
+				"Transfer with Alice failed: Timed out"
 		)
 	}
 
-	func testFileTransferStatusesPreserveDirectionAndDeduplicateAcceptanceMessage() {
-		XCTAssertEqual(
-			FileTransferStrings.status(.stopped, direction: .incoming, peerNickname: "Alice"),
-			"Transfer from Alice is stopped. Control click to start."
+	@Test("A transfer status names its direction, and the two waiting states share one sentence")
+	func fileTransferStatusesPreserveDirectionAndDeduplicateAcceptanceMessage() {
+		#expect(
+			FileTransferStrings.status(.stopped, direction: .incoming, peerNickname: "Alice") ==
+				"Transfer from Alice is stopped. Control click to start."
 		)
-		XCTAssertEqual(
-			FileTransferStrings.status(.stopped, direction: .outgoing, peerNickname: "Alice"),
-			"Transfer to Alice is stopped. Control click to start."
+		#expect(
+			FileTransferStrings.status(.stopped, direction: .outgoing, peerNickname: "Alice") ==
+				"Transfer to Alice is stopped. Control click to start."
 		)
 		let listening = FileTransferStrings.status(
 			.isListeningAsSender,
@@ -82,12 +83,13 @@ final class FeatureLocalizationMigrationTests: XCTestCase {
 			direction: .outgoing,
 			peerNickname: "Alice"
 		)
-		XCTAssertEqual(listening, "Transfer to Alice is ready. Waiting for them to accept.")
-		XCTAssertEqual(waiting, listening)
+		#expect(listening == "Transfer to Alice is ready. Waiting for them to accept.")
+		#expect(waiting == listening)
 	}
 
-	func testFileTransferProgressPreservesPositionalPlaceholderContracts() {
-		XCTAssertEqual(
+	@Test("Transfer progress fills its positional placeholders in the declared order")
+	func fileTransferProgressPreservesPositionalPlaceholderContracts() {
+		#expect(
 			FileTransferStrings.progress(
 				direction: .incoming,
 				processedSize: "1 MB",
@@ -95,10 +97,9 @@ final class FeatureLocalizationMigrationTests: XCTestCase {
 				speed: "2 MB",
 				peerNickname: "Alice",
 				timeRemaining: "2 seconds"
-			),
-			"1 MB of 4 MB (2 MB/s) received from Alice — 2 seconds remaining"
+			) == "1 MB of 4 MB (2 MB/s) received from Alice — 2 seconds remaining"
 		)
-		XCTAssertEqual(
+		#expect(
 			FileTransferStrings.progress(
 				direction: .outgoing,
 				processedSize: "1 MB",
@@ -106,24 +107,23 @@ final class FeatureLocalizationMigrationTests: XCTestCase {
 				speed: "2 MB",
 				peerNickname: "Alice",
 				timeRemaining: nil
-			),
-			"1 MB of 4 MB (2 MB/s) sent to Alice"
+			) == "1 MB of 4 MB (2 MB/s) sent to Alice"
 		)
 	}
 
-	func testPreferencesStringsUseTypedPaneAndOverrideState() {
-		XCTAssertEqual(PreferencesStrings.paneTitle(.general), "General")
-		XCTAssertEqual(PreferencesStrings.paneTitle(.fileTransfers), "File Transfers")
-		XCTAssertEqual(PreferencesStrings.addOnsGroupTitle, "Add-ons")
-		XCTAssertEqual(PreferencesStrings.advancedGroupTitle, "Advanced")
-		XCTAssertEqual(PreferencesStrings.version(marketingVersion: "6.0", build: "42"), "Version 6.0 (42)")
-		XCTAssertEqual(
+	@Test("Preferences copy is keyed by the typed pane and the typed override")
+	func preferencesStringsUseTypedPaneAndOverrideState() {
+		#expect(PreferencesStrings.paneTitle(.general) == "General")
+		#expect(PreferencesStrings.paneTitle(.fileTransfers) == "File Transfers")
+		#expect(PreferencesStrings.addOnsGroupTitle == "Add-ons")
+		#expect(PreferencesStrings.advancedGroupTitle == "Advanced")
+		#expect(PreferencesStrings.version(marketingVersion: "6.0", build: "42") == "Version 6.0 (42)")
+		#expect(
 			PreferencesStrings.preferredSelectionBody(
 				styleName: "Default",
 				overrides: [.nicknameFormat, .timestampFormat]
-			),
-			"The style named “Default” has chosen to override the following preferences with ones that it prefers "
-				+ "for the best viewing experience:\n\n• Nickname Format\n• Timestamp Format"
+			) == "The style named “Default” has chosen to override the following preferences with ones that it "
+				+ "prefers for the best viewing experience:\n\n• Nickname Format\n• Timestamp Format"
 		)
 	}
 }

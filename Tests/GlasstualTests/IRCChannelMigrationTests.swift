@@ -1,50 +1,55 @@
 @testable import Glasstual
 import GlasstualPluginKit
-import XCTest
+import Testing
 
 @MainActor
-final class IRCChannelMigrationTests: XCTestCase {
-	func testChannelKindsExposeStableRendererNames() {
-		XCTAssertEqual(makeChannel(type: .channel).channelTypeString, "channel")
-		XCTAssertEqual(makeChannel(type: .privateMessage).channelTypeString, "query")
-		XCTAssertEqual(makeChannel(type: .utility).channelTypeString, "utility")
-		XCTAssertEqual(makeChannel(type: .directChat).channelTypeString, "direct-chat")
+@Suite("Channel kinds and configuration")
+struct IRCChannelMigrationTests {
+	@Test("Each channel kind names itself the way the renderer expects")
+	func channelKindsExposeStableRendererNames() {
+		#expect(makeChannel(type: .channel).channelTypeString == "channel")
+		#expect(makeChannel(type: .privateMessage).channelTypeString == "query")
+		#expect(makeChannel(type: .utility).channelTypeString == "utility")
+		#expect(makeChannel(type: .directChat).channelTypeString == "direct-chat")
 	}
 
-	func testOnlyConversationKindsAllowExpectedMutableProperties() {
+	@Test("A channel is renamed only where the kind allows it")
+	func onlyConversationKindsAllowExpectedMutableProperties() {
 		let channel = makeChannel(name: "#original", type: .channel)
 		channel.name = "#renamed"
 		channel.autoJoin = false
 
-		XCTAssertEqual(channel.name, "#original")
-		XCTAssertFalse(channel.autoJoin)
+		#expect(channel.name == "#original")
+		#expect(channel.autoJoin == false)
 
 		let query = makeChannel(name: "old-nick", type: .privateMessage)
 		query.name = "new-nick"
 		query.autoJoin = false
 
-		XCTAssertEqual(query.name, "new-nick")
-		XCTAssertTrue(query.autoJoin)
+		#expect(query.name == "new-nick")
+		#expect(query.autoJoin)
 	}
 
-	func testConfigUpdateRejectsAnotherChannelIdentity() {
+	@Test("A config belonging to another channel is refused")
+	func configUpdateRejectsAnotherChannelIdentity() {
 		let channel = makeChannel(name: "#one", type: .channel)
 		let originalIdentifier = channel.uniqueIdentifier
 		let replacement = ChannelConfig(channelName: "#two")
 
 		channel.updateConfig(replacement)
 
-		XCTAssertEqual(channel.name, "#one")
-		XCTAssertEqual(channel.uniqueIdentifier, originalIdentifier)
+		#expect(channel.name == "#one")
+		#expect(channel.uniqueIdentifier == originalIdentifier)
 	}
 
-	func testJoiningStatusCannotBeAppliedByReset() {
+	@Test("Resetting the status cannot leave a channel mid-join")
+	func joiningStatusCannotBeAppliedByReset() {
 		let channel = makeChannel(type: .channel)
 
 		channel.resetStatus(.joining)
 
-		XCTAssertEqual(channel.status, .parted)
-		XCTAssertFalse(channel.isActive)
+		#expect(channel.status == .parted)
+		#expect(channel.isActive == false)
 	}
 
 	private func makeChannel(
