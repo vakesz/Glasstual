@@ -126,27 +126,20 @@ public nonisolated extension Preferences {
 			PreferenceKey(event.preferenceKeyName(for: .sound), default: "", traits: .uncatalogued)
 		}
 
-		/// The shipped defaults, by event. Anything absent defaults to off.
-		private static let registeredDefaults: [(TXNotificationType, NotificationSetting, Bool)] = [
-			(.addressBookMatch, .enabled, true),
-			(.highlight, .enabled, true),
-			(.highlight, .bounceDockIcon, true),
-			(.newPrivateMessage, .enabled, true),
-			(.newPrivateMessage, .bounceDockIcon, true),
-			(.privateMessage, .enabled, true),
-			(.privateMessage, .bounceDockIcon, true),
-			(.channelMessage, .speakChannelName, true),
-			(.channelMessage, .speakNickname, true),
-			(.fileTransferReceiveRequested, .enabled, true),
-			(.fileTransferReceiveRequested, .bounceDockIcon, true),
-			(.fileTransferSendSuccessful, .enabled, true),
-			(.fileTransferSendSuccessful, .bounceDockIcon, true),
-			(.fileTransferReceiveSuccessful, .enabled, true),
-			(.fileTransferReceiveSuccessful, .bounceDockIcon, true),
-			(.fileTransferSendFailed, .enabled, true),
-			(.fileTransferSendFailed, .bounceDockIcon, true),
-			(.fileTransferReceiveFailed, .enabled, true),
-			(.fileTransferReceiveFailed, .bounceDockIcon, true),
+		/** The settings that ship switched on, by event; anything not listed
+		 defaults to off. `.enabled` and `.bounceDockIcon` travel together for
+		 every event that has either, which is why one list covers both. */
+		private static let enabledByDefault: [(event: TXNotificationType, settings: [NotificationSetting])] = [
+			(.addressBookMatch, [.enabled]),
+			(.channelMessage, [.speakChannelName, .speakNickname]),
+			(.highlight, [.enabled, .bounceDockIcon]),
+			(.newPrivateMessage, [.enabled, .bounceDockIcon]),
+			(.privateMessage, [.enabled, .bounceDockIcon]),
+			(.fileTransferReceiveRequested, [.enabled, .bounceDockIcon]),
+			(.fileTransferSendSuccessful, [.enabled, .bounceDockIcon]),
+			(.fileTransferReceiveSuccessful, [.enabled, .bounceDockIcon]),
+			(.fileTransferSendFailed, [.enabled, .bounceDockIcon]),
+			(.fileTransferReceiveFailed, [.enabled, .bounceDockIcon]),
 		]
 
 		private static let registeredSounds: [(TXNotificationType, String)] = [
@@ -162,14 +155,16 @@ public nonisolated extension Preferences {
 				publicMessageCountOnDockBadge,
 			]
 
-			for (event, setting, value) in registeredDefaults {
-				keys.append(
-					PreferenceKey(
-						event.preferenceKeyName(for: setting),
-						default: value,
-						traits: .uncatalogued
+			for (event, settings) in enabledByDefault {
+				for setting in settings {
+					keys.append(
+						PreferenceKey(
+							event.preferenceKeyName(for: setting),
+							default: true,
+							traits: .uncatalogued
+						)
 					)
-				)
+				}
 			}
 
 			for (event, soundName) in registeredSounds {

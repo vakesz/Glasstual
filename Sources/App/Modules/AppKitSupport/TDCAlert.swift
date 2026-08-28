@@ -737,7 +737,7 @@ extension TDCAlert {
 		suppressionFlag(fullKey).value
 	}
 
-	/* The suppression family is catalogued as a container key, but the flags
+	/** The suppression family is catalogued as a container key, but the flags
 	 used to be written to `.standard`, so an imported "do not ask again" never
 	 took effect and the two stores disagreed about what had been suppressed. */
 	private static func suppressionFlag(_ fullKey: String) -> PreferenceKey<Bool> {

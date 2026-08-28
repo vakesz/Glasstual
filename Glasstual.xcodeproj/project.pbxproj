@@ -60,6 +60,7 @@
 		0F7A701D9D2D3256A18728E9 /* IRCStringCatalogMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE35CB6EEB91C3BBF831E9C3 /* IRCStringCatalogMigrationTests.swift */; };
 		0FABA64F695DD34E3FAD3644 /* HistoricLogProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DA908CA829B8856C6C20EA /* HistoricLogProtocols.swift */; };
 		0FF67F1AF6E852D2359F02F9 /* RCMProcessMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A78D97EA705959A7C50703 /* RCMProcessMain.swift */; };
+		102B5FD3CC067473A60D4298 /* TypedPreferenceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2464F20D634DC8B67F1F7EAE /* TypedPreferenceStoreTests.swift */; };
 		105101084153875EC26A0007 /* TPCPreferencesUserDefaultsLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59CE902956B863ED18F00788 /* TPCPreferencesUserDefaultsLocal.swift */; };
 		10A20CFEB81D9A3EBCBD0332 /* ICMInlineHTML.css in CopyFiles */ = {isa = PBXBuildFile; fileRef = 93312E045A596C0F27097226 /* ICMInlineHTML.css */; };
 		10EC3338BA3D33BA1010071A /* NetworkPickerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E312CD53017D15AA6BD72D2 /* NetworkPickerDetailView.swift */; };
@@ -849,6 +850,7 @@
 		F428331ACA53862E5D047B44 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 155DC73CE55522ABE53E2D52 /* Network.framework */; };
 		F43323689753E91228A70E5E /* IRCFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D5BC2258EDDC9944BF535 /* IRCFormatting.swift */; };
 		F439A1D8929258C993FE6E1B /* GLTTestClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887B6DBBC6D0F3D5AFAC6D5D /* GLTTestClient.swift */; };
+		F540865F6AA22514DED72E77 /* ObservablePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EA9D62DBBA902998E85A6D6 /* ObservablePreferences.swift */; };
 		F542823FCAE08BD34D27D97F /* IRCConnectionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E9A21E98437CCDB2A9431F /* IRCConnectionConfig.swift */; };
 		F551BCD7BA58DF809FC4A62E /* TXMenuControllerActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFC2BA8E55A38B99B89DFC4F /* TXMenuControllerActions.swift */; };
 		F59D4CC07B9B841E2D67B268 /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
@@ -1382,6 +1384,7 @@
 		236592432B91C05E6C36B533 /* FileTransferController+Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferController+Socket.swift"; sourceTree = "<group>"; };
 		237A8CE9C3674C2CDFD073DF /* InlineContentPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineContentPayload.swift; sourceTree = "<group>"; };
 		23CD51E15A6412C54A091AEE /* TDCChannelSpotlightController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCChannelSpotlightController.swift; sourceTree = "<group>"; };
+		2464F20D634DC8B67F1F7EAE /* TypedPreferenceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedPreferenceStoreTests.swift; sourceTree = "<group>"; };
 		2477BFC73E3BDF019DCC3AA3 /* ServerChannelListStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerChannelListStrings.swift; sourceTree = "<group>"; };
 		24A6C3343DA64474F9F07A80 /* TDCOnboardingStylePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCOnboardingStylePreviewView.swift; sourceTree = "<group>"; };
 		24C9432A2BBE2EB1C66ED4AF /* PluginHostAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginHostAdapter.swift; sourceTree = "<group>"; };
@@ -1636,6 +1639,7 @@
 		6E1A454DCBB1D352AEAB4D9A /* JavascriptEscapeHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavascriptEscapeHelper.swift; sourceTree = "<group>"; };
 		6E65686A5B0E5373D15A3C40 /* ApplicationSupportMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationSupportMigrationTests.swift; sourceTree = "<group>"; };
 		6E7C5ADCBB4E5A3EA9245087 /* ThemePresentationSchemaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePresentationSchemaTests.swift; sourceTree = "<group>"; };
+		6EA9D62DBBA902998E85A6D6 /* ObservablePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservablePreferences.swift; sourceTree = "<group>"; };
 		6EE0D45228DFB6C19EF65F84 /* InputHandlingMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputHandlingMigrationTests.swift; sourceTree = "<group>"; };
 		6EFF1C4832F2305B39538ACE /* IRCClientNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientNotifications.swift; sourceTree = "<group>"; };
 		6F4B38B0C8DE2FB62C652AD8 /* RenderingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderingEngine.swift; sourceTree = "<group>"; };
@@ -2496,6 +2500,7 @@
 		2F27B385A8CB920FE05E893D /* Keys */ = {
 			isa = PBXGroup;
 			children = (
+				6EA9D62DBBA902998E85A6D6 /* ObservablePreferences.swift */,
 				C230E45FDDCE6E6AF533B86D /* PreferenceCatalog.swift */,
 				86F13A24CF9F2A00C3764B9C /* PreferenceColor.swift */,
 				5340B9F7D346362AD86D473E /* Preferences+Appearance.swift */,
@@ -3814,6 +3819,7 @@
 				4B8B719B78CBE8F381D8C44F /* TVCMemberListSectionTests.swift */,
 				5FC7585C149C4943722F586E /* TXMenuActionCoordinatorTests.swift */,
 				A4D9E49257AFCAE0D682476A /* TXMenuPresentationTests.swift */,
+				2464F20D634DC8B67F1F7EAE /* TypedPreferenceStoreTests.swift */,
 				F669BF3D0EA4CCA7E7297257 /* UIShellLocalizationCatalogTests.swift */,
 				A9BB73B631F81EE7C2C72FDD /* WindowBaseMigrationTests.swift */,
 				1E7C9FB2939A6F412D701A9D /* XRGlobalModelsSwiftMigrationTests.swift */,
@@ -5346,6 +5352,7 @@
 				D820DB3662A4870F625EC79A /* ThemePresentationSchemaTests.swift in Sources */,
 				8D036A438BCB089C32F92E99 /* ThemeTemplateStoreTests.swift in Sources */,
 				039D706A8AABA203A0C6E0BC /* TweetModule.swift in Sources */,
+				102B5FD3CC067473A60D4298 /* TypedPreferenceStoreTests.swift in Sources */,
 				5D1A623EE603B3840C5C8925 /* UIShellLocalizationCatalogTests.swift in Sources */,
 				5B3DDF6B083A5EDDE556470C /* VimeoModule.swift in Sources */,
 				07F12043DCC5D9B3E43B7191 /* WindowBaseMigrationTests.swift in Sources */,
@@ -5723,6 +5730,7 @@
 				B660BAE4D4D367A22E68B940 /* NotificationStrings.swift in Sources */,
 				D2B6A05C13597455FCF17376 /* NotificationSubscriptions.swift in Sources */,
 				5B241CA207E0F1A8D014BFCB /* OELReachability.swift in Sources */,
+				F540865F6AA22514DED72E77 /* ObservablePreferences.swift in Sources */,
 				E3D7BEB4515C3C0DFDB9FA10 /* OnboardingStrings.swift in Sources */,
 				7C58B59831CB0883452AC887 /* PluginHostAdapter.swift in Sources */,
 				F29122206DF7A527E1B7EC64 /* PreferenceCatalog.swift in Sources */,
