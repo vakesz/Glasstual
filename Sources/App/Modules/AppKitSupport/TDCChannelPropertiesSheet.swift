@@ -314,11 +314,12 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 				return
 			}
 
-			close()
+			/* Reload in place. Closing and re-opening the same window in one turn made
+			 AppKit reject the second beginSheet (endSheet is asynchronous), and cancel()
+			 had already torn down the configuration observer. */
 			config = channel.config.mutableCopy() as? MutableChannelConfig ?? MutableChannelConfig()
 			loadConfig()
 			reloadNotificationsController()
-			start()
 		}
 	}
 

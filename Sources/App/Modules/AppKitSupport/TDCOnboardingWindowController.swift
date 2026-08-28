@@ -426,8 +426,14 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 		config.channelList = channelList
 
-		let world = NSObject.applicationController().world!
-		let mainWindow = NSObject.applicationController().mainWindow!
+		/* Onboarding runs at launch, exactly when these are least likely to exist. */
+		guard
+			let world = NSObject.applicationController().world,
+			let mainWindow = NSObject.applicationController().mainWindow
+		else {
+			onboardingLogger.error("Cannot create a connection before the world is ready")
+			return
+		}
 
 		/* -initWithConfig: moves the account password into the keychain. */
 		guard let clientConfig = config.copy() as? IRCClientConfig else {
