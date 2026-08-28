@@ -69,7 +69,7 @@ extension IRCClient {
 			printDebugInformation(
 				IRCCommandStrings.Ignore.removed(nickname: member.nickname, hostmask: ignore.hostmask)
 			)
-			mutableConfig.ignoreList.removeAll { $0 === ignore }
+			mutableConfig.ignoreList.removeAll { $0.uniqueIdentifier == ignore.uniqueIdentifier }
 		}
 		updateConfig(mutableConfig)
 		clearAddressBookCache(forHostmask: hostmask)

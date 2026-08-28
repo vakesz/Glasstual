@@ -214,7 +214,6 @@ extension IRCClient {
 		}
 	}
 
-	@objc(updateUserTrackingStatusForEntry:withMessage:)
 	func updateUserTrackingStatus(for entry: AddressBookEntry, message: Message) {
 		guard supportsAdvancedTracking == false else { return }
 

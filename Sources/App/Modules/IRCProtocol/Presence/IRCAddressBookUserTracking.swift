@@ -89,7 +89,6 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		}
 	}
 
-	@objc(statusOfEntry:)
 	public func status(of addressBookEntry: AddressBookEntry) -> IRCAddressBookUserTrackingStatus {
 		guard let nickname = addressBookEntry.trackingNickname else {
 			return .unknown
