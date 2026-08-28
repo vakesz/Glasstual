@@ -1,12 +1,61 @@
 # Repository guidance
 
-- The end state is a native macOS application written entirely in Swift with its application UI implemented in SwiftUI. Migrate every `.h`, `.m`, and `.c` source, including first-party frameworks, services, and bundled plugins. Keep Objective-C and AppKit interoperability only while a named unmigrated consumer or SwiftUI replacement still needs it.
-- Organize Swift by product domain and feature under `Sources/`. Migrate UI feature by feature to SwiftUI, preserving macOS menus, commands, keyboard handling, accessibility, state restoration, and plugin behavior before removing each AppKit implementation. Put shared implementation behind small, domain-named interfaces instead of recreating Objective-C class folders or embedding business logic in views.
-- Model closed domain state with Swift enums, option sets, and value types. Keep external wire, template, persistence, and plugin strings at typed boundary adapters instead of scattering magic strings through application logic.
-- Store user-facing text in feature- or table-namespaced String Catalogs and consume generated, typed `LocalizedStringResource` symbols. Preserve translations, placeholders, translator comments, and attribution; merge keys only when their meaning and formatting contract are identical.
-- Target macOS 26 and newer with current Swift, SwiftUI, and AppKit APIs. Remove compatibility branches below that floor, keep newer availability gates where required, and preserve a native macOS interaction model and accessibility behavior.
-- Treat `project.yml` as the source of truth for targets, schemes, build settings, generated Info.plist files, signing, capabilities, and entitlements. Run `xcodegen generate --spec project.yml` after changing it or adding files. Never edit `Glasstual.xcodeproj` or files under `Generated/Xcode/` by hand.
-- Keep first-party, service, plugin, and vendored source under `Sources/`. Preserve every upstream copyright notice, license, acknowledgement, and provenance record when moving or rewriting code.
-- Run SwiftFormat and SwiftLint across all of `Sources/` and `Tests/`. Fix diagnostics in source or tune a rule with a documented repository-wide reason. Do not add path exclusions, baselines, inline disables, or blanket rule suppressions.
-- Before handing off code changes, regenerate the project and run the relevant build, tests, and `make lint`. Report any runtime, signing, network, or release boundary that was not exercised.
-- Never add Codex attribution or `Co-Authored-By: Codex` trailers to commits.
+Glasstual is a macOS 26+ IRC client, arm64 only, written entirely in Swift 6
+with `SWIFT_STRICT_CONCURRENCY=complete`. The Objective-C port finished: there
+are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
+
+## Architecture
+
+- The UI is AppKit. SwiftUI appears only inside sheet content views under
+  `Sources/App/Features/*/`, each hosted by an AppKit shell (`…Sheet.swift`)
+  that owns presentation, validation and the delegate callbacks. Extend that
+  pattern for new sheets; keep windows, menus, the main window and the channel
+  view in AppKit.
+- Group by feature, not by former Objective-C class folder. A feature owns its
+  view, its shell, its view model and its string catalogue together.
+- Model closed domain state with enums, option sets and value types. Persist
+  and archive with `Codable`; reach for `NSSecureCoding` only where an
+  `NSXPCInterface` allowlist requires it.
+- The app runs `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`. Parsers, wire
+  types, and anything an XPC service shares opt out with `nonisolated`. Do not
+  reach for `@unchecked Sendable`, `nonisolated(unsafe)` or
+  `MainActor.assumeIsolated` to settle an isolation error; move the boundary
+  instead. Where one is unavoidable, mark it `ISOLATION-EXCEPTION:` with the
+  reason, as the existing ones are.
+- Preferences are typed `PreferenceKey` declarations under
+  `Sources/App/Classes/Preferences/Keys/`, with the handful the XPC services
+  also read in `Sources/Shared/Preferences/`. Read and write through the key,
+  never through a raw defaults string.
+- `@objc` marks a runtime boundary and nothing else: a class or action a nib
+  binds, a KVO-observed property, an XPC protocol member, or a plugin
+  principal class. A Swift-to-Swift call never needs one.
+- Keep external wire, template, persistence and plugin strings at typed
+  boundary adapters rather than scattering literals through logic.
+- User-facing text lives in feature-namespaced String Catalogs, consumed
+  through the generated typed symbols. Preserve translations, placeholders,
+  translator comments and attribution; merge two keys only when their meaning
+  and formatting contract are identical.
+
+## Working in the tree
+
+- `project.yml` is the source of truth for targets, schemes, build settings,
+  generated Info.plists, signing, capabilities and entitlements. Sources are
+  globbed from directories, so run `make generate` after adding or removing a
+  file and commit the regenerated `Glasstual.xcodeproj`. `Glasstual.xcodeproj`
+  and `Generated/Xcode/` are never edited by hand.
+- Preserve every upstream copyright notice, license, acknowledgement and
+  provenance record when moving or rewriting code. Vendored source stays under
+  `Sources/Frameworks/Static Libraries/` with its `PROVENANCE.md` current.
+- SwiftFormat and SwiftLint run over all of `Sources/` and `Tests/`. Fix
+  findings in the source, or tune a rule once in `.swiftlint.yml` /
+  `.swiftformat` with a repository-wide reason. Path exclusions, baselines,
+  inline disables and blanket suppressions stay out of the tree.
+- New tests use Swift Testing (`@Test`, `#expect`, `#require`) in
+  `Tests/GlasstualTests/`, named after their subject. Test what the code
+  decides, not what the compiler already guarantees: a runtime-name pin earns
+  its place only where a nib or a protocol constant depends on it.
+- Before handing off: `make generate`, `make build`, `make test` and
+  `make lint`, all green. Report any runtime, signing, network or release
+  boundary the change touched but the checks did not exercise.
+- Commits carry no AI attribution: no `Co-Authored-By` trailer, no generated-by
+  note.

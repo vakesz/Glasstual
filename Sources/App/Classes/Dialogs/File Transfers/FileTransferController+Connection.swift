@@ -263,8 +263,10 @@ extension TDCFileTransferDialogTransferController {
 		}
 
 		if portMapping.isMapped {
-			// swiftformat:disable:next redundantSelf
-			fileTransferLogger.info("Mapped DCC port \(self.hostPort, privacy: .public)")
+			/* Bound to a local because the log message is an autoclosure, where
+			 `self.` would be required and SwiftFormat would strip it. */
+			let mappedPort = hostPort
+			fileTransferLogger.info("Mapped DCC port \(mappedPort, privacy: .public)")
 			updateIPAddress()
 			return
 		}
