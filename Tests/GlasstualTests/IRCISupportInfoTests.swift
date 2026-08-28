@@ -3,24 +3,17 @@ import XCTest
 
 typealias SupportInfo = Glasstual.IRCISupportInfo
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "GLTTestClient.h"
-/// #import "ModeInfo.h"
-@objc
 @MainActor
 final class IRCISupportInfoTests: XCTestCase {
-	@objc
 	func supportInfoWithConfiguration(_ configuration: String) -> SupportInfo {
 		let client = GLTTestClient()
-		let supportInfo: SupportInfo! = SupportInfo(client: client)
+		let supportInfo = SupportInfo(client: client)
 
 		supportInfo.processConfigurationData(configuration)
 
 		return supportInfo
 	}
 
-	@objc
 	func testDefaultCaseMappingIsRFC1459() {
 		let supportInfo = supportInfoWithConfiguration("NETWORK=Example")
 
@@ -28,7 +21,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(supportInfo.casefoldString("Nick[]\\~"), "nick{}|^")
 	}
 
-	@objc
 	func testASCIICaseMappingLeavesBracketsAlone() {
 		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=ascii")
 
@@ -36,7 +28,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(supportInfo.casefoldString("Nick[]\\~"), "nick[]\\~")
 	}
 
-	@objc
 	func testStrictRFC1459DoesNotFoldTilde() {
 		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=strict-rfc1459")
 
@@ -44,7 +35,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(supportInfo.casefoldString("A[]\\~"), "a{}|~")
 	}
 
-	@objc
 	func testNonASCIICharactersAreNotFolded() {
 		let rfc = supportInfoWithConfiguration("CASEMAPPING=rfc1459")
 		let ascii = supportInfoWithConfiguration("CASEMAPPING=ascii")
@@ -55,7 +45,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(ascii.casefoldString("ŞİRİN"), "Şİrİn")
 	}
 
-	@objc
 	func testChannelModesAreParsedIntoParameterClasses() {
 		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst")
 
@@ -73,7 +62,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertFalse(supportInfo.modeHasParameter("t", whenModeIsSet: true))
 	}
 
-	@objc
 	func testPrefixIsParsedInRankOrder() {
 		let supportInfo = supportInfoWithConfiguration("PREFIX=(qaohv)~&@%+")
 
@@ -93,10 +81,9 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertTrue(supportInfo.modeHasParameter("o", whenModeIsSet: false))
 	}
 
-	@objc
 	func testParseModesUsesChannelModeClasses() {
 		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
-		let modes: [ModeInfo]! = supportInfo.parseModes("+nt-k+l secret 10")
+		let modes = supportInfo.parseModes("+nt-k+l secret 10")
 
 		XCTAssertEqual(modes.count, 4)
 
@@ -113,10 +100,9 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(modes[3].modeParameter, "10")
 	}
 
-	@objc
 	func testParseModesDoesNotConsumeParameterWhenUnsetModeDoesNotRequireOne() {
 		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
-		let modes: [ModeInfo]! = supportInfo.parseModes("-l leftover +t")
+		let modes = supportInfo.parseModes("-l leftover +t")
 
 		XCTAssertEqual(modes.count, 2)
 
@@ -131,10 +117,9 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertTrue(modes[1].modeIsSet)
 	}
 
-	@objc
 	func testParseModesAllowsMissingRequiredParameter() {
 		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
-		let modes: [ModeInfo]! = supportInfo.parseModes("+k")
+		let modes = supportInfo.parseModes("+k")
 
 		XCTAssertEqual(modes.count, 1)
 
@@ -145,7 +130,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertNil(modes[0].modeParameter)
 	}
 
-	@objc
 	func testLimitTokensAndTargetChunking() {
 		let supportInfo =
 			supportInfoWithConfiguration("CHANLIMIT=#&:50,+: TARGMAX=privmsg:4,JOIN: MAXTARGETS=3 MAXLIST=beI:60")
@@ -168,7 +152,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(conservativeChunks, [["a"], ["b"]])
 	}
 
-	@objc
 	func testClientTagDenyAllowsExceptionsToWildcard() {
 		let supportInfo = supportInfoWithConfiguration("CLIENTTAGDENY=*,-draft/typing,-example/allowed")
 
@@ -177,7 +160,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertFalse(supportInfo.isClientTagDenied("example/allowed"))
 	}
 
-	@objc
 	func testExtendedBanTokenSeparatesPrefixAndTypes() {
 		let supportInfo = supportInfoWithConfiguration("EXTBAN=$,ac")
 
@@ -189,7 +171,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertNil(supportInfo.descriptionForExtendedBanMask("$q:quiet"))
 	}
 
-	@objc
 	func testMalformedPrefixDoesNotReplaceDefaults() {
 		let supportInfo = supportInfoWithConfiguration("PREFIX=invalid")
 
@@ -197,7 +178,6 @@ final class IRCISupportInfoTests: XCTestCase {
 		XCTAssertEqual(supportInfo.userPrefix(forModeSymbol: "v"), "+")
 	}
 
-	@objc
 	func testResettingSilenceClearsSupportAndLimitTogether() {
 		let supportInfo = supportInfoWithConfiguration("SILENCE=25")
 
@@ -218,7 +198,7 @@ final class IRCISupportInfoTests: XCTestCase {
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.

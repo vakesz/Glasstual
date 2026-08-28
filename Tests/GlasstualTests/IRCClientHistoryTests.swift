@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
@@ -45,8 +45,16 @@ final class IRCClientHistoryTests: XCTestCase {
 	private static let joinLeavePreferenceKey = "DisplayEventInLogView -> Join, Part, Quit"
 	private var previousJoinLeavePreference: Any?
 	private var changedJoinLeavePreference = false
+	/// The historic log file keeps a per-view dedup index in a process-wide
+	/// singleton, so anything indexed here outlives the test that indexed it.
+	private var indexedItems: [IRCTreeItem] = []
 
 	override func tearDown() async throws {
+		for item in indexedItems {
+			LogControllerHistoricLogFile.shared().forgetItem(item)
+		}
+		indexedItems = []
+
 		if changedJoinLeavePreference {
 			let defaults = TextualUserDefaults.shared()
 
@@ -489,6 +497,7 @@ final class IRCClientHistoryTests: XCTestCase {
 	}
 
 	private func index(_ line: LogLine, for channel: Channel) {
+		indexedItems.append(channel)
 		LogControllerHistoricLogFile.shared().indexLogLine(line, for: channel)
 	}
 

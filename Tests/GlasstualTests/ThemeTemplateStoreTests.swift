@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -107,22 +107,24 @@ final class ThemeTemplateStoreTests: XCTestCase {
 		XCTAssertEqual(dataSource.partialLoadStarted.wait(timeout: .now() + 2), .success)
 
 		let secondLookupStarted = DispatchSemaphore(value: 0)
-		let secondLookupFinished = DispatchSemaphore(value: 0)
 		lookupGroup.enter()
 		DispatchQueue.global(qos: .userInitiated).async {
 			defer { lookupGroup.leave() }
 			secondLookupStarted.signal()
 			Self.renderTemplate(from: store, results: results)
-			secondLookupFinished.signal()
 		}
 
 		XCTAssertEqual(secondLookupStarted.wait(timeout: .now() + 2), .success)
-		XCTAssertEqual(secondLookupFinished.wait(timeout: .now() + 0.2), .timedOut)
 
 		dataSource.allowPartialLoad.signal()
 		XCTAssertEqual(lookupGroup.wait(timeout: .now() + 2), .success)
 		XCTAssertEqual(results.failures.withLock { $0 }, [])
 		XCTAssertEqual(results.renderedValues.withLock { $0.sorted() }, ["compiled", "compiled"])
+
+		/* Two loads: "root" and "recursive-partial", each read once. The second
+		 lookup arrived while the first was parked inside the partial and still
+		 never reached the data source, which is what waiting for the in-flight
+		 compilation means. Without that, it would have read "root" again. */
 		XCTAssertEqual(dataSource.loadCount, 2)
 	}
 

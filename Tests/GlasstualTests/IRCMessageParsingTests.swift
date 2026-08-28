@@ -6,7 +6,7 @@ import XCTest
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,12 +37,10 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 @MainActor
 class IRCMessageParsingTests: XCTestCase {
-	@objc
 	func testMessageTagsDecodeEscapesAndMetadata() {
-		let parsed: ParsedMessageTags! = MessageTagParser
+		let parsed = MessageTagParser
 			.parsedTags(fromSection: "msgid=abc;account=alice;a=b\\:c\\sd\\\\e\\r\\n;flag")
 
 		XCTAssertEqual(parsed.tags["a"], "b;c d\\e\r\n")
@@ -51,9 +49,8 @@ class IRCMessageParsingTests: XCTestCase {
 		XCTAssertEqual(parsed.senderAccount, "alice")
 	}
 
-	@objc
 	func testMessageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
-		let parsed: ParsedMessageTags! = MessageTagParser
+		let parsed = MessageTagParser
 			.parsedTags(fromSection: "a=first;;a=second;b=x\\qy;c=end\\")
 
 		XCTAssertEqual(parsed.tags["a"], "second")

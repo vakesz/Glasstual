@@ -1,16 +1,12 @@
 @testable import Glasstual
 import XCTest
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
-@objc
 @MainActor
 class OELReachabilityMigrationTests: XCTestCase {
-	@objc
 	func testFactoryCreatesNotifier() {
 		let reachability = Reachability.reachabilityForInternetConnection()
 
@@ -18,7 +14,6 @@ class OELReachabilityMigrationTests: XCTestCase {
 		XCTAssertFalse(reachability.reachable)
 	}
 
-	@objc
 	func testFirstPathSeedsWithoutEvent() {
 		var currentlyReachable = false
 		var receivedInitialPath = false
@@ -33,7 +28,6 @@ class OELReachabilityMigrationTests: XCTestCase {
 		XCTAssertTrue(receivedInitialPath)
 	}
 
-	@objc
 	func testUnchangedPathProducesNoEvent() {
 		var currentlyReachable = true
 		var receivedInitialPath = true
@@ -47,7 +41,6 @@ class OELReachabilityMigrationTests: XCTestCase {
 		XCTAssertTrue(currentlyReachable)
 	}
 
-	@objc
 	func testReachabilityTransitionsEmitExpectedEvents() {
 		var currentlyReachable = true
 		var receivedInitialPath = true
@@ -70,7 +63,6 @@ class OELReachabilityMigrationTests: XCTestCase {
 		XCTAssertTrue(currentlyReachable)
 	}
 
-	@objc
 	func testStartAndStopNotifierRoundTrip() {
 		let reachability = Reachability.reachabilityForInternetConnection()
 

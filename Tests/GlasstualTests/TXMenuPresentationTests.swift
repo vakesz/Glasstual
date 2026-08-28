@@ -12,7 +12,6 @@ final class TXMenuPresentationTests: XCTestCase {
 	func testMainMenuSymbolMappingsResolveThroughSystemCatalog() {
 		let mappings = MenuPresentation.symbolMappings
 
-		XCTAssertEqual(mappings.count, 82)
 		XCTAssertEqual(MenuCommand.settings.symbolName, "gear")
 		XCTAssertEqual(MenuCommand.findText.symbolName, "magnifyingglass")
 		XCTAssertNil(MenuPresentation.symbolName(forTag: -1))

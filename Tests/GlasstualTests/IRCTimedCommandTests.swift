@@ -1,13 +1,10 @@
 @testable import Glasstual
 import XCTest
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "GLTTestClient.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_
  *
@@ -40,10 +37,8 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 @MainActor
 final class IRCTimedCommandTests: XCTestCase {
-	@objc
 	func testInitializationCapturesCommandContextAndUniqueIdentifiers() {
 		let client = GLTTestClient()
 		let channel = Channel(config: ChannelConfig(channelName: "#chat"))
@@ -60,7 +55,6 @@ final class IRCTimedCommandTests: XCTestCase {
 		XCTAssertNotEqual(first.identifier, second.identifier)
 	}
 
-	@objc
 	func testRestartRequiresPreviousStartAndPreservesTimerConfiguration() {
 		let client = GLTTestClient()
 		let command = TimedCommand(command: "PING", onClient: client)

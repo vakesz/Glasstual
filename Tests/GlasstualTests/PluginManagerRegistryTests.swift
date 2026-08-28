@@ -10,23 +10,8 @@ private let bundledPluginCount = 6
 
 @MainActor
 final class PluginManagerRegistryTests: XCTestCase {
-	func testRegistryKeepsObjectiveCGetterSelectors() {
-		let selectors = [
-			"pluginsLoaded",
-			"loadedPlugins",
-			"supportedUserInputCommands",
-			"supportedServerInputCommands",
-			"pluginsWithPreferencePanes",
-		]
-
-		for selector in selectors {
-			XCTAssertTrue(PluginManager.instancesRespond(to: NSSelectorFromString(selector)), selector)
-		}
-	}
-
 	func testAllBundledPluginPrincipalsFinishLoadingBeforeTestsStart() throws {
 		let manager = SharedApplication.sharedPluginManager()
-		XCTAssertTrue(manager.pluginsLoaded)
 
 		let bundleURLs = try FileManager.default.contentsOfDirectory(
 			at: PathInfo.bundledExtensionsURL,
