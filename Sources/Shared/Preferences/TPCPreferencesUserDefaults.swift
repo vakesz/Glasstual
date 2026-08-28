@@ -59,7 +59,12 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
 	private nonisolated(unsafe) static let sharedInstance =
 		TextualUserDefaults(storageSuiteName: storageSuiteName)
 
+	/// The suite this instance is bound to, kept because `UserDefaults` does not
+	/// expose it and `persistentDomain(forName:)` needs it.
+	public let suiteName: String
+
 	private init(storageSuiteName: String) {
+		suiteName = storageSuiteName
 		super.init(suiteName: storageSuiteName)!
 	}
 
@@ -83,7 +88,12 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
 
 	@objc(setObject:forKey:postNotification:)
 	public func set(_ value: Any?, forKey defaultName: String, postNotification: Bool) {
-		let oldValue = object(forKey: defaultName)
+		/* Compared against the persistent domain, not `object(forKey:)`: the
+		 latter falls through to the registration domain, so writing a value that
+		 happened to equal the shipped default returned early and nothing was
+		 persisted. The user's explicit choice then looked like "never touched"
+		 and would silently follow a change to the default in a later release. */
+		let oldValue = persistentDomain(forName: suiteName)?[defaultName]
 		if let oldValue = oldValue as? NSObject, oldValue.isEqual(value) {
 			return
 		}

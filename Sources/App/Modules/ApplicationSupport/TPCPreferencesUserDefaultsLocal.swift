@@ -37,75 +37,32 @@
 
 import Foundation
 
-private enum PreferencesComparator: UInt {
-	case equal = 0
-	case anchorFront = 1
-	case anchorBack = 2
-}
-
+/* These three questions used to be answered by loading a plist and comparing the
+ name against every entry with a per-entry comparator. They are now answered by
+ the key declarations, which is the same data without the second copy. */
 public extension TextualUserDefaults {
 	@objc(keyIsExcludedFromExportImport:)
 	class func keyIsExcludedFromExportImport(_ defaultName: String) -> Bool {
-		if matchesCachedKey(defaultName, resource: "KeysExcludedFromExport") {
-			return true
-		}
-
-		return keyAppearsInPreferenceCatalog(defaultName) == false
+		Preferences.isExcludedFromExport(defaultName)
 	}
 
 	@objc(keyAppearsInMasterList:)
 	class func keyAppearsInPreferenceCatalog(_ defaultName: String) -> Bool {
-		matchesCachedKey(defaultName, resource: "PreferenceKeyMasterList")
+		Preferences.isCatalogued(defaultName)
 	}
 
 	@objc(keyIsExcludedFromContainer:)
 	class func keyIsExcludedFromContainer(_ defaultName: String) -> Bool {
-		matchesCachedKey(defaultName, resource: "KeysExcludedFromContainer")
+		Preferences.storage(for: defaultName) == .standard
 	}
 
 	@objc(_migrateObject:forKey:)
 	func migrateObject(_ value: Any?, forKey defaultName: String) {
-		if Self.keyIsExcludedFromContainer(defaultName) {
-			UserDefaults.standard.set(value, forKey: defaultName)
+		guard Self.keyIsExcludedFromContainer(defaultName) else {
+			setObjectWithoutNotification(value, forKey: defaultName)
 			return
 		}
 
-		setObjectWithoutNotification(value, forKey: defaultName)
-	}
-
-	private class func matchesCachedKey(_ defaultName: String, resource: String) -> Bool {
-		guard
-			let cachedValues = ResourceManager.dictionary(
-				fromResources: resource,
-				inDirectory: "Preferences"
-			) as? [String: NSNumber]
-		else {
-			return false
-		}
-
-		for (cachedKey, cachedObject) in cachedValues {
-			let comparator = PreferencesComparator(rawValue: cachedObject.uintValue) ?? .equal
-
-			if key(defaultName, matches: cachedKey, using: comparator) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	private class func key(
-		_ defaultName1: String,
-		matches defaultName2: String,
-		using comparator: PreferencesComparator
-	) -> Bool {
-		switch comparator {
-		case .equal:
-			defaultName1 == defaultName2
-		case .anchorFront:
-			defaultName1.hasPrefix(defaultName2)
-		case .anchorBack:
-			defaultName1.hasSuffix(defaultName2)
-		}
+		UserDefaults.standard.set(value, forKey: defaultName)
 	}
 }
