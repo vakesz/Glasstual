@@ -61,18 +61,18 @@ enum IRCClientAutojoinPolicy {
 public extension IRCClient {
 	@objc(startAutojoinTimer)
 	func startAutojoinTimer() {
-		guard !autojoinTimer.timerIsActive else { return }
+		guard !autojoinTimer.isActive else { return }
 		let interval = TextualPreferences.autojoinDelayAfterIdentification()
 		guard interval > 0 else {
 			onAutojoinTimer()
 			return
 		}
-		autojoinTimer.start(interval, onRepeat: false)
+		autojoinTimer.start(interval, repeats: false)
 	}
 
 	@objc(stopAutojoinTimer)
 	func stopAutojoinTimer() {
-		guard autojoinTimer.timerIsActive else { return }
+		guard autojoinTimer.isActive else { return }
 		autojoinTimer.stop()
 	}
 
@@ -83,13 +83,13 @@ public extension IRCClient {
 
 	@objc(startAutojoinDelayedWarningTimer)
 	func startAutojoinDelayedWarningTimer() {
-		guard !autojoinDelayedWarningTimer.timerIsActive else { return }
-		autojoinDelayedWarningTimer.start(IRCClientAutojoinPolicy.delayedWarningInterval, onRepeat: true)
+		guard !autojoinDelayedWarningTimer.isActive else { return }
+		autojoinDelayedWarningTimer.start(IRCClientAutojoinPolicy.delayedWarningInterval, repeats: true)
 	}
 
 	@objc(stopAutojoinDelayedWarningTimer)
 	func stopAutojoinDelayedWarningTimer() {
-		guard autojoinDelayedWarningTimer.timerIsActive else { return }
+		guard autojoinDelayedWarningTimer.isActive else { return }
 		autojoinDelayedWarningTimer.stop()
 	}
 
@@ -112,14 +112,14 @@ public extension IRCClient {
 
 	@objc(startAutojoinNextJoinTimer)
 	func startAutojoinNextJoinTimer() {
-		guard !autojoinNextJoinTimer.timerIsActive else { return }
-		autojoinNextJoinTimer.start(TextualPreferences.autojoinDelayBetweenChannelJoins(), onRepeat: true)
+		guard !autojoinNextJoinTimer.isActive else { return }
+		autojoinNextJoinTimer.start(TextualPreferences.autojoinDelayBetweenChannelJoins(), repeats: true)
 		onAutojoinNextJoinTimer()
 	}
 
 	@objc(stopAutojoinNextJoinTimer)
 	func stopAutojoinNextJoinTimer() {
-		guard autojoinNextJoinTimer.timerIsActive else { return }
+		guard autojoinNextJoinTimer.isActive else { return }
 		autojoinNextJoinTimer.stop()
 		channelsToAutojoin = nil
 	}

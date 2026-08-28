@@ -206,23 +206,28 @@ public extension IRCClient {
 		}
 		send("QUIT", arguments: [comment])
 
-		/* Held so that a reconnect inside the two-second window cannot have this stale
-		 block tear down the *new* session. */
-		let workItem = DispatchWorkItem { [weak self] in self?.disconnect() }
-		pendingDisconnectWorkItem = workItem
-		DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
+		/* Held so that a reconnect inside the two-second window cannot have this
+		 stale block tear down the *new* session. */
+		pendingDisconnectTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(2))
+
+			guard Task.isCancelled == false, let self else { return }
+
+			pendingDisconnectTask = nil
+			disconnect()
+		}
 	}
 
 	@objc(cancelDelayedDisconnect)
 	func cancelDelayedDisconnect() {
-		pendingDisconnectWorkItem?.cancel()
-		pendingDisconnectWorkItem = nil
+		pendingDisconnectTask?.cancel()
+		pendingDisconnectTask = nil
 	}
 
 	@objc(cancelScheduledConnection)
 	func cancelScheduledConnection() {
-		pendingConnectionWorkItem?.cancel()
-		pendingConnectionWorkItem = nil
+		pendingConnectionTask?.cancel()
+		pendingConnectionTask = nil
 	}
 
 	@objc(cancelReconnect)
@@ -286,8 +291,13 @@ public extension IRCClient {
 			return
 		}
 
-		let workItem = DispatchWorkItem { MainActor.assumeIsolated { action() } }
-		pendingConnectionWorkItem = workItem
-		DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Int(delay)), execute: workItem)
+		pendingConnectionTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(delay))
+
+			guard Task.isCancelled == false, let self else { return }
+
+			pendingConnectionTask = nil
+			action()
+		}
 	}
 }

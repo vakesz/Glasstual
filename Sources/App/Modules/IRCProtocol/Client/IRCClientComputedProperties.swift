@@ -56,7 +56,7 @@ public extension IRCClient {
 	}
 
 	@objc var isReconnecting: Bool {
-		reconnectTimer.timerIsActive
+		reconnectTimer.isActive
 	}
 
 	@objc var isSecured: Bool {

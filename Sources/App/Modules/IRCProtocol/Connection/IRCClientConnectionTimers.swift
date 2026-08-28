@@ -88,13 +88,13 @@ public extension IRCClient {
 
 	@objc(startPongTimer)
 	func startPongTimer() {
-		guard !pongTimer.timerIsActive else { return }
-		pongTimer.start(IRCClientConnectionTimerPolicy.pongCheckInterval, onRepeat: true)
+		guard !pongTimer.isActive else { return }
+		pongTimer.start(IRCClientConnectionTimerPolicy.pongCheckInterval, repeats: true)
 	}
 
 	@objc(stopPongTimer)
 	func stopPongTimer() {
-		guard pongTimer.timerIsActive else { return }
+		guard pongTimer.isActive else { return }
 		pongTimer.stop()
 	}
 
@@ -133,13 +133,13 @@ public extension IRCClient {
 		let enabled = reconnectEnabledBecauseOfSleepMode
 			? !config.autoSleepModeDisconnect
 			: config.autoReconnect
-		guard enabled, !reconnectTimer.timerIsActive else { return }
-		reconnectTimer.start(IRCClientConnectionTimerPolicy.reconnectInterval, onRepeat: true)
+		guard enabled, !reconnectTimer.isActive else { return }
+		reconnectTimer.start(IRCClientConnectionTimerPolicy.reconnectInterval, repeats: true)
 	}
 
 	@objc(stopReconnectTimer)
 	func stopReconnectTimer() {
-		guard reconnectTimer.timerIsActive else { return }
+		guard reconnectTimer.isActive else { return }
 		reconnectTimer.stop()
 	}
 
@@ -151,13 +151,13 @@ public extension IRCClient {
 
 	@objc(startRetryTimer)
 	func startRetryTimer() {
-		guard !retryTimer.timerIsActive else { return }
+		guard !retryTimer.isActive else { return }
 		retryTimer.start(IRCClientConnectionTimerPolicy.retryInterval)
 	}
 
 	@objc(stopRetryTimer)
 	func stopRetryTimer() {
-		guard retryTimer.timerIsActive else { return }
+		guard retryTimer.isActive else { return }
 		retryTimer.stop()
 	}
 
