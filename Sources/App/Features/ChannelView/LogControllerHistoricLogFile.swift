@@ -14,7 +14,7 @@ import CocoaExtensions
 import Foundation
 import os
 
-private let historicLogLogger = Logger(
+private nonisolated let historicLogLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "HistoricLog"
 )
@@ -23,7 +23,7 @@ private let historicLogLogger = Logger(
  that chat history replayed by the server can be checked against the
  local scrollback without a round trip to the XPC service. The index is
  filled from every line written and every line fetched. */
-private final class LogControllerHistoricLogViewIndex: NSObject {
+private final nonisolated class LogControllerHistoricLogViewIndex: NSObject {
 	let messageIdentifiers = NSMutableSet()
 	let fallbackKeys = NSMutableSet()
 	var newestDate: Date?
@@ -34,7 +34,7 @@ private final class LogControllerHistoricLogViewIndex: NSObject {
  callbacks arrive on the connection's queue, so this type cannot be isolated. Its
  mutable state is guarded by `processStateLock`. Owned by the XPC-service task. */
 @objc(TVCLogControllerHistoricLogFile)
-public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProtocol, @unchecked Sendable {
+public final nonisolated class LogControllerHistoricLogFile: NSObject, HistoricLogClientProtocol, @unchecked Sendable {
 	private let viewIndexes = NSMutableDictionary()
 	private let processStateLock = NSLock()
 	@objc public private(set) var isSaving = false
@@ -175,12 +175,14 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 			lastErrorMessage = PromptStrings.Logging.lastError(lastErrorMessage)
 		}
 
-		TDCAlert.alert(
-			withMessage: lastErrorMessage,
-			title: PromptStrings.Logging.scrollbackFailureTitle,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil
-		)
+		Task { @MainActor in
+			TDCAlert.alert(
+				withMessage: lastErrorMessage,
+				title: PromptStrings.Logging.scrollbackFailureTitle,
+				defaultButton: PromptStrings.Action.confirmation,
+				alternateButton: nil
+			)
+		}
 	}
 
 	private func resetContext() {
@@ -246,7 +248,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		} as? HistoricLogServerProtocol
 	}
 
-	private func logLines(from xpcObjects: [LogLineXPC], for item: IRCTreeItem) -> [LogLine] {
+	private func logLines(from xpcObjects: [LogLineXPC], forView viewIdentifier: String) -> [LogLine] {
 		var logLines: [LogLine] = []
 		logLines.reserveCapacity(xpcObjects.count)
 
@@ -258,15 +260,15 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 				continue
 			}
 
-			indexLogLine(logLine, for: item)
+			indexLogLine(logLine, forView: viewIdentifier)
 			logLines.append(logLine)
 		}
 
 		return logLines
 	}
 
-	private func viewIndex(for item: IRCTreeItem, create: Bool) -> LogControllerHistoricLogViewIndex? {
-		guard let viewId = item.uniqueIdentifier as String? else {
+	private func viewIndex(forView viewIdentifier: String, create: Bool) -> LogControllerHistoricLogViewIndex? {
+		guard let viewId = viewIdentifier as String? else {
 			return nil
 		}
 
@@ -302,8 +304,8 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 	}
 
 	@objc(indexLogLine:forItem:)
-	public func indexLogLine(_ logLine: LogLine, for item: IRCTreeItem) {
-		guard let index = viewIndex(for: item, create: true) else {
+	public func indexLogLine(_ logLine: LogLine, forView viewIdentifier: String) {
+		guard let index = viewIndex(forView: viewIdentifier, create: true) else {
 			return
 		}
 
@@ -336,8 +338,8 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 	}
 
 	@objc(containsMessageIdentifier:forItem:)
-	public func containsMessageIdentifier(_ messageIdentifier: String, for item: IRCTreeItem) -> Bool {
-		guard let index = viewIndex(for: item, create: false) else {
+	public func containsMessageIdentifier(_ messageIdentifier: String, forView viewIdentifier: String) -> Bool {
+		guard let index = viewIndex(forView: viewIdentifier, create: false) else {
 			return false
 		}
 
@@ -351,9 +353,9 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		receivedAt: Date,
 		nickname: String?,
 		messageBody: String,
-		for item: IRCTreeItem
+		forView viewIdentifier: String
 	) -> Bool {
-		guard let index = viewIndex(for: item, create: false),
+		guard let index = viewIndex(forView: viewIdentifier, create: false),
 		      let fallbackKey = Self.fallbackKey(
 		      	for: receivedAt,
 		      	nickname: nickname,
@@ -369,8 +371,8 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 	}
 
 	@objc(newestLineDateForItem:)
-	public func newestLineDate(for item: IRCTreeItem) -> Date? {
-		guard let index = viewIndex(for: item, create: false) else {
+	public func newestLineDate(forView viewIdentifier: String) -> Date? {
+		guard let index = viewIndex(forView: viewIdentifier, create: false) else {
 			return nil
 		}
 
@@ -380,8 +382,8 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 	}
 
 	@objc(oldestLineDateForItem:)
-	public func oldestLineDate(for item: IRCTreeItem) -> Date? {
-		guard let index = viewIndex(for: item, create: false) else {
+	public func oldestLineDate(forView viewIdentifier: String) -> Date? {
+		guard let index = viewIndex(forView: viewIdentifier, create: false) else {
 			return nil
 		}
 
@@ -390,8 +392,8 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		return index.oldestDate
 	}
 
-	private func forgetIndex(for item: IRCTreeItem) {
-		guard let viewId = item.uniqueIdentifier as String? else {
+	private func forgetIndex(forView viewIdentifier: String) {
+		guard let viewId = viewIdentifier as String? else {
 			return
 		}
 
@@ -402,7 +404,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 
 	@objc(fetchEntriesForItem:ascending:fetchLimit:limitToDate:withCompletionBlock:)
 	public func fetchEntries(
-		for item: IRCTreeItem,
+		forView viewIdentifier: String,
 		ascending: Bool,
 		fetchLimit: UInt,
 		limitToDate: Date?,
@@ -413,12 +415,12 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		remoteObjectProxy(withErrorHandler: { _ in
 			completionBlock([])
 		})?.fetchEntries(
-			forView: item.uniqueIdentifier,
+			forView: viewIdentifier,
 			ascending: ascending,
 			fetchLimit: fetchLimit,
 			limitTo: limitToDate,
 			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, for: item) ?? []
+				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
 				completionBlock(logLines)
 			}
 		)
@@ -426,7 +428,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 
 	@objc(fetchEntriesForItem:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:)
 	public func fetchEntries(
-		for item: IRCTreeItem,
+		forView viewIdentifier: String,
 		withUniqueIdentifier uniqueId: String,
 		beforeFetchLimit fetchLimitBefore: UInt,
 		afterFetchLimit fetchLimitAfter: UInt,
@@ -438,13 +440,13 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		remoteObjectProxy(withErrorHandler: { _ in
 			completionBlock([])
 		})?.fetchEntries(
-			forView: item.uniqueIdentifier,
+			forView: viewIdentifier,
 			withUniqueIdentifier: uniqueId,
 			beforeFetchLimit: fetchLimitBefore,
 			afterFetchLimit: fetchLimitAfter,
 			limitTo: limitToDate,
 			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, for: item) ?? []
+				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
 				completionBlock(logLines)
 			}
 		)
@@ -452,7 +454,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 
 	@objc(fetchEntriesForItem:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
 	public func fetchEntries(
-		for item: IRCTreeItem,
+		forView viewIdentifier: String,
 		beforeUniqueIdentifier uniqueId: String,
 		fetchLimit: UInt,
 		limitToDate: Date?,
@@ -463,12 +465,12 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		remoteObjectProxy(withErrorHandler: { _ in
 			completionBlock([])
 		})?.fetchEntries(
-			forView: item.uniqueIdentifier,
+			forView: viewIdentifier,
 			beforeUniqueIdentifier: uniqueId,
 			fetchLimit: fetchLimit,
 			limitTo: limitToDate,
 			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, for: item) ?? []
+				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
 				completionBlock(logLines)
 			}
 		)
@@ -476,7 +478,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 
 	@objc(fetchEntriesForItem:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
 	public func fetchEntries(
-		for item: IRCTreeItem,
+		forView viewIdentifier: String,
 		afterUniqueIdentifier uniqueId: String,
 		fetchLimit: UInt,
 		limitToDate: Date?,
@@ -487,12 +489,12 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		remoteObjectProxy(withErrorHandler: { _ in
 			completionBlock([])
 		})?.fetchEntries(
-			forView: item.uniqueIdentifier,
+			forView: viewIdentifier,
 			afterUniqueIdentifier: uniqueId,
 			fetchLimit: fetchLimit,
 			limitTo: limitToDate,
 			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, for: item) ?? []
+				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
 				completionBlock(logLines)
 			}
 		)
@@ -500,7 +502,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 
 	@objc(fetchEntriesForItem:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:)
 	public func fetchEntries(
-		for item: IRCTreeItem,
+		forView viewIdentifier: String,
 		afterUniqueIdentifier uniqueIdAfter: String,
 		beforeUniqueIdentifier uniqueIdBefore: String,
 		fetchLimit: UInt,
@@ -511,12 +513,12 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 		remoteObjectProxy(withErrorHandler: { _ in
 			completionBlock([])
 		})?.fetchEntries(
-			forView: item.uniqueIdentifier,
+			forView: viewIdentifier,
 			afterUniqueIdentifier: uniqueIdAfter,
 			beforeUniqueIdentifier: uniqueIdBefore,
 			fetchLimit: fetchLimit,
 			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, for: item) ?? []
+				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
 				completionBlock(logLines)
 			}
 		)
@@ -562,25 +564,25 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 	}
 
 	@objc(forgetItem:)
-	public func forgetItem(_ item: IRCTreeItem) {
-		forgetIndex(for: item)
+	public func forgetView(_ viewIdentifier: String) {
+		forgetIndex(forView: viewIdentifier)
 		warmProcessIfNeeded()
-		remoteObjectProxy()?.forgetView(item.uniqueIdentifier)
+		remoteObjectProxy()?.forgetView(viewIdentifier)
 	}
 
 	@objc(resetDataForItem:)
-	public func resetData(for item: IRCTreeItem) {
-		forgetIndex(for: item)
+	public func resetData(forView viewIdentifier: String) {
+		forgetIndex(forView: viewIdentifier)
 		warmProcessIfNeeded()
-		remoteObjectProxy()?.resetData(forView: item.uniqueIdentifier)
+		remoteObjectProxy()?.resetData(forView: viewIdentifier)
 	}
 
 	@objc(writeNewEntryWithLogLine:forItem:)
-	public func writeNewEntry(with logLine: LogLine, for item: IRCTreeItem) {
-		indexLogLine(logLine, for: item)
+	public func writeNewEntry(with logLine: LogLine, forView viewIdentifier: String) {
+		indexLogLine(logLine, forView: viewIdentifier)
 		warmProcessIfNeeded()
 
-		let newEntry = logLine.xpcObject(for: item)
+		let newEntry = logLine.xpcObject(forView: viewIdentifier)
 		remoteObjectProxy()?.writeLogLine(newEntry)
 	}
 

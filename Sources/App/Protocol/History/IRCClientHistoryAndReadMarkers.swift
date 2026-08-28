@@ -125,7 +125,7 @@ public extension IRCClient {
 	func newestKnownLineDate(for channel: IRCChannel) -> Date? {
 		let viewDate = channel.lastLine?.receivedAt
 		let storeDate = legacyTreeItem(channel).flatMap {
-			LogControllerHistoricLogFile.shared().newestLineDate(for: $0)
+			LogControllerHistoricLogFile.shared().newestLineDate(forView: $0.uniqueIdentifier)
 		}
 		return [viewDate, storeDate].compactMap(\.self).max()
 	}
@@ -158,14 +158,14 @@ public extension IRCClient {
 		      let item = legacyTreeItem(channel) else { return false }
 		let historicLog = LogControllerHistoricLogFile.shared()
 		if let identifier = message.messageIdentifier, !identifier.isEmpty {
-			return historicLog.containsMessageIdentifier(identifier, for: item)
+			return historicLog.containsMessageIdentifier(identifier, forView: item.uniqueIdentifier)
 		}
 		guard message.isHistoric, let text = message.params.last else { return false }
 		return historicLog.containsLine(
 			receivedAt: message.receivedAt,
 			nickname: message.senderNickname,
 			messageBody: text,
-			for: item
+			forView: item.uniqueIdentifier
 		)
 	}
 

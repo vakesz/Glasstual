@@ -306,8 +306,7 @@ public final nonisolated class LogLine: NSObject, NSSecureCoding {
 		true
 	}
 
-	@MainActor
-	func xpcObject(for treeItem: IRCTreeItem) -> LogLineXPC {
+	func xpcObject(forView viewIdentifier: String) -> LogLineXPC {
 		guard let data = try? NSKeyedArchiver.archivedData(
 			withRootObject: self,
 			requiringSecureCoding: true
@@ -318,7 +317,7 @@ public final nonisolated class LogLine: NSObject, NSSecureCoding {
 		return LogLineXPC(
 			logLineData: data,
 			uniqueIdentifier: uniqueIdentifier,
-			viewIdentifier: treeItem.uniqueIdentifier,
+			viewIdentifier: viewIdentifier,
 			sessionIdentifier: sessionIdentifier,
 			creationDate: receivedAt.timeIntervalSince1970
 		)
