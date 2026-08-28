@@ -214,7 +214,7 @@ public class IRCISupportInfo: NSObject {
 			"AWAYLEN", "BOT", "CALLERID", "CASEMAPPING", "CHANLIMIT", "CHANNELLEN",
 			"CHANTYPES", "CHATHISTORY", "CLIENTTAGDENY", "DEAF", "ELIST", "EXCEPTS",
 			"EXTBAN", "INVEX", "KEYLEN", "KICKLEN", "LINELEN", "MAXLIST",
-			"MAXTARGETS", "MODES", "NETWORK", "NICKLEN", "SAFELIST", "SILENCE",
+			"MAXTARGETS", "MODES", "NETWORK", "NICKLEN", "PREFIX", "SAFELIST", "SILENCE",
 			"STATUSMSG", "TARGMAX", "TOPICLEN", "UTF8ONLY", "WHOX",
 		]
 	}
@@ -286,6 +286,8 @@ public class IRCISupportInfo: NSObject {
 			banExceptionModeSymbol = nil
 		case "INVEX":
 			inviteExceptionModeSymbol = nil
+		case "PREFIX":
+			userModePrefixPairs = defaultUserModePrefixPairs
 		case "STATUSMSG":
 			statusMessageModeSymbols = []
 		default:
@@ -352,6 +354,11 @@ public class IRCISupportInfo: NSObject {
 		cachedConfiguration = updatedConfiguration
 	}
 
+	/// The tokens whose value is a list of characters, and for which
+	/// modern.ircdocs.horse therefore reads an explicitly empty value as "the
+	/// server has none of these" rather than as the bare token.
+	private static let keysWithMeaningfulEmptyValue: Set<String> = ["CHANTYPES", "PREFIX", "STATUSMSG"]
+
 	@objc(processConfigurationData:)
 	public func processConfigurationData(_ configurationData: String) {
 		let trimmed = configurationData.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -372,7 +379,12 @@ public class IRCISupportInfo: NSObject {
 				segmentKey = String(segment[..<equalSignIndex])
 				segmentValue = String(segment[segment.index(after: equalSignIndex)...])
 
-				if segmentValue?.isEmpty == true {
+				/* For most tokens an empty value says no more than the bare
+				 token does, but modern.ircdocs.horse gives one a meaning of its
+				 own for the three that list characters: the server has none. */
+				if segmentValue?.isEmpty == true,
+				   Self.keysWithMeaningfulEmptyValue.contains(segmentKey.uppercased()) == false
+				{
 					segmentValue = nil
 				}
 			}
@@ -728,12 +740,10 @@ private extension IRCISupportInfo {
 		return parsedValue > 0 ? UInt(parsedValue) : nil
 	}
 
+	/// An empty `CHANTYPES` is the server saying it supports no channel types
+	/// at all, which is not the same as it saying nothing.
 	func updateChannelNamePrefixes(from value: String) {
-		let prefixes = value.map(String.init)
-
-		if prefixes.isEmpty == false {
-			channelNamePrefixes = prefixes
-		}
+		channelNamePrefixes = value.map(String.init)
 	}
 
 	func processFlagSegment(segmentKey: String, segmentValue: String?, client: IRCClient?) {
@@ -838,6 +848,13 @@ private extension IRCISupportInfo {
 	}
 
 	func parseUserModeSymbols(_ modeString: String) {
+		/* An empty PREFIX is the server saying it has no membership prefixes,
+		 which has to clear the assumed op/voice pair rather than leave it. */
+		guard modeString.isEmpty == false else {
+			userModePrefixPairs = []
+			return
+		}
+
 		guard let configuration = ISupportTokenParser.userPrefixConfiguration(from: modeString) else {
 			return
 		}
