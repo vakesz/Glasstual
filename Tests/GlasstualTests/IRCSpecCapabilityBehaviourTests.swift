@@ -120,6 +120,23 @@ struct IRCSpecCapabilityBehaviourTests {
 		#expect(message.isHistoric == false)
 	}
 
+	/// The specification writes the value with milliseconds, but servers that
+	/// leave them out are common, and refusing their timestamp files a whole
+	/// replayed scrollback at the moment it arrived.
+	@Test("server-time: a timestamp with no fractional part is still read")
+	func wholeSecondTimestampsAreRead() throws {
+		let client = client()
+
+		client.enableCapability(.serverTime)
+
+		let message = try #require(
+			Message(line: "@time=2011-10-19T16:40:51Z :nick!u@h PRIVMSG #chan :hi", on: client)
+		)
+
+		#expect(message.isHistoric)
+		#expect(message.receivedAt.timeIntervalSince1970 == 1_319_042_451)
+	}
+
 	/// Bouncers predating `server-time` send a Unix timestamp in a `t` tag,
 	/// which the client still reads for their sake.
 	@Test("server-time: a bouncer's Unix timestamp is still read")
