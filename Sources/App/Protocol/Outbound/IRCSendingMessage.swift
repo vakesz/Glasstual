@@ -52,18 +52,26 @@ public final class SendingMessage: NSObject {
 		let colonPosition = CommandIndex.colonPosition(forRemoteCommand: command)
 
 		for (index, argument) in arguments.enumerated() {
+			let isLastArgument = index == arguments.count - 1
+
 			/* Skip only this argument. Breaking here dropped every argument after an
 			 empty one, so e.g. KILL with an empty reason lost the reason *and* anything
-			 that followed it. */
-			guard argument.isEmpty == false else {
+			 that followed it. An empty *last* argument is a different thing: RFC 1459
+			 2.3.1 lets the trailing parameter be empty, and dropping it changes what
+			 the command means -- "AWAY :" clears an away message where "AWAY" asks for
+			 nothing at all. */
+			guard argument.isEmpty == false || isLastArgument else {
 				continue
 			}
 
 			line.append(" ")
 
-			if colonPosition == NSNotFound {
-				let isLastArgument = index == arguments.count - 1
+			guard argument.isEmpty == false else {
+				line.append(":")
+				continue
+			}
 
+			if colonPosition == NSNotFound {
 				if isLastArgument, argument.hasPrefix(":") || argument.contains(" ") {
 					line.append(":")
 				}

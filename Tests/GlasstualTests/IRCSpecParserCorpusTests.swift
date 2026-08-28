@@ -221,9 +221,8 @@ struct IRCSpecParserCorpusTests {
 	}
 
 	/// The client's own encoder has to produce one of the encodings the corpus
-	/// accepts for the same atoms. Cases whose trailing parameter is empty are
-	/// covered separately: `SendingMessage` drops empty arguments by design.
-	@Test("msg-join", arguments: joinCases.filter { $0.atoms.params?.last?.isEmpty != true })
+	/// accepts for the same atoms.
+	@Test("msg-join", arguments: joinCases)
 	func atomsJoinIntoAnAcceptedLine(_ testCase: IRCSpecMessageJoinCase) throws {
 		let verb = try #require(testCase.atoms.verb)
 		let line = SendingMessage.string(
@@ -238,10 +237,7 @@ struct IRCSpecParserCorpusTests {
 	/// Whatever encoding the client picks, reading it back has to recover the
 	/// atoms it started from: msg-join and msg-split are two halves of one
 	/// grammar.
-	@Test(
-		"msg-join round trips through msg-split",
-		arguments: joinCases.filter { $0.atoms.params?.last?.isEmpty != true }
-	)
+	@Test("msg-join round trips through msg-split", arguments: joinCases)
 	func joinedLineParsesBackIntoItsAtoms(_ testCase: IRCSpecMessageJoinCase) throws {
 		let verb = try #require(testCase.atoms.verb)
 		let line = SendingMessage.string(
@@ -264,13 +260,14 @@ struct IRCSpecParserCorpusTests {
 		#expect(MessageTagParser.parsedTags(fromSection: section).tags == expectedTags)
 	}
 
-	/// Documented deviation: `SendingMessage` skips empty arguments rather
-	/// than writing the `:` that msg-join expects, so the last parameter is
-	/// lost. Pinned here so the behaviour cannot drift unnoticed.
-	@Test("msg-join: an empty trailing parameter is dropped, not written as ':'")
-	func emptyTrailingParameterIsDropped() {
-		#expect(SendingMessage.string(command: "foo", arguments: ["bar", "baz", ""]) == "FOO bar baz")
-		#expect(SendingMessage.string(command: "AWAY", arguments: [""]) == "AWAY")
+	/// RFC 1459 2.3.1: the trailing parameter may be empty, and msg-join says
+	/// it is written as a bare colon. A middle parameter has no such form, so
+	/// an empty one is still skipped rather than written as nothing.
+	@Test("msg-join: an empty trailing parameter is written as ':'")
+	func emptyTrailingParameterIsWrittenAsAColon() {
+		#expect(SendingMessage.string(command: "foo", arguments: ["bar", "baz", ""]) == "FOO bar baz :")
+		#expect(SendingMessage.string(command: "AWAY", arguments: [""]) == "AWAY :")
+		#expect(SendingMessage.string(command: "foo", arguments: ["bar", "", "baz"]) == "FOO bar baz")
 	}
 
 	// MARK: - userhost-split
