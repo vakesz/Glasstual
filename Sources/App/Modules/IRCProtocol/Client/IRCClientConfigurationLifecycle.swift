@@ -112,7 +112,7 @@ public extension IRCClient {
 		controller.mainWindow?.updateTitle(for: self)
 		clearAddressBookCache()
 		populateISONTrackedUsersList()
-		NotificationCenter.default.post(name: .init("IRCClientConfigurationWasUpdatedNotification"), object: self)
+		NotificationCenter.default.post(name: .IRCClientConfigurationWasUpdated, object: self)
 	}
 
 	@objc(reloadServerListItems)
@@ -160,11 +160,12 @@ public extension IRCClient {
 
 	@objc(updateStoredChannelList)
 	func updateStoredChannelList() {
+		rebuildChannelIndex()
 		config.channelList = IRCClientConfigurationPolicy.storedChannelConfigurations(
 			from: channelList,
 			rememberQueries: TextualPreferences.rememberServerListQueryStates()
 		)
-		NotificationCenter.default.post(name: .init("IRCClientChannelListWasModifiedNotification"), object: self)
+		NotificationCenter.default.post(name: .IRCClientChannelListWasModified, object: self)
 	}
 
 	func configurationDictionary() -> [String: Any] {

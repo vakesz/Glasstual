@@ -1161,7 +1161,7 @@ public extension LogController {
 		let textDirection: ChannelViewTextDirectionToken = TextualPreferences.rightToLeftFormatting()
 			? .rightToLeft : .leftToRight
 		tokens[.textDirectionToken] = textDirection.rawValue
-		let appearanceToken: ChannelViewAppearanceToken = settings.underlyingWindowColorIsDark ? .dark : .light
+		let appearanceToken: ThemeAppearanceToken = settings.underlyingWindowColorIsDark ? .dark : .light
 		tokens[.appearanceToken] = appearanceToken.rawValue
 		return TVCLogRenderer.renderTemplateNamed(.baseLayout, attributes: tokens) ?? ""
 	}

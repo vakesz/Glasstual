@@ -49,13 +49,13 @@ struct IRCTextEncodingPolicy {
 	let primary: String.Encoding
 	let fallback: String.Encoding
 
-	init(primary: UInt, fallback: UInt, requiresUTF8: Bool) {
+	init(primary: String.Encoding, fallback: String.Encoding, requiresUTF8: Bool) {
 		if requiresUTF8 {
 			self.primary = .utf8
 			self.fallback = .utf8
 		} else {
-			self.primary = String.Encoding(rawValue: primary)
-			self.fallback = String.Encoding(rawValue: fallback)
+			self.primary = primary
+			self.fallback = fallback
 		}
 	}
 
@@ -74,19 +74,22 @@ struct IRCTextEncodingPolicy {
 
 public extension IRCClient {
 	private var textEncodingPolicy: IRCTextEncodingPolicy {
+		/* The configuration persists the encodings as their raw values, which
+		 is what the on-disk format has always held; they become the type here
+		 and stay typed from here on. */
 		IRCTextEncodingPolicy(
-			primary: config.primaryEncoding,
-			fallback: config.fallbackEncoding,
+			primary: String.Encoding(rawValue: config.primaryEncoding),
+			fallback: String.Encoding(rawValue: config.fallbackEncoding),
 			requiresUTF8: supportInfo.utf8Only
 		)
 	}
 
-	@objc var effectivePrimaryEncoding: UInt {
-		textEncodingPolicy.primary.rawValue
+	var effectivePrimaryEncoding: String.Encoding {
+		textEncodingPolicy.primary
 	}
 
-	@objc var effectiveFallbackEncoding: UInt {
-		textEncodingPolicy.fallback.rawValue
+	var effectiveFallbackEncoding: String.Encoding {
+		textEncodingPolicy.fallback
 	}
 
 	@objc(convertToCommonEncoding:)

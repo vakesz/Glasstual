@@ -432,6 +432,7 @@ targets:
       - path: Sources/Shared/Preferences/TPCPreferences.swift
       - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
       - path: Sources/Shared/Services/InlineContentProtocols.swift
+      - path: Sources/Shared/Services/InlineContentServicePreferences.swift
     dependencies:
       - sdk: ImageIO.framework
       - target: Mustache
@@ -506,6 +507,7 @@ targets:
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
       - path: Sources/Shared/Services/RemoteConnectionProtocols.swift
+      - path: Sources/Shared/Services/SecureConnectionInformation.swift
     dependencies:
       - sdk: Security.framework
       - sdk: SecurityInterface.framework

@@ -51,21 +51,21 @@ private enum ClientDefaultFeature: String {
 @MainActor
 extension IRCClient {
 	func dispatchDefaultsCommand(_ parsed: ParsedUserCommand) -> Bool {
-		guard parsed.command.caseInsensitiveCompare("defaults") == .orderedSame else { return false }
-		let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-		guard arguments.length > 0 else {
+		guard parsed.localCommand == .defaults else { return false }
+		var arguments = parsed.arguments
+		guard arguments.isEmpty == false else {
 			printDebugInformation(IRCCommandStrings.Defaults.invalidSyntax)
 			return true
 		}
-		let action = arguments.nextTokenAsString().lowercased()
+		let action = arguments.next().lowercased()
 		if action == "help" {
 			printDebugInformation(multiline: IRCCommandStrings.Defaults.help)
 			return true
 		}
-		var featureName = arguments.nextQuotedTokenAsString()
+		var featureName = arguments.nextQuoted()
 		let appliesToAll = featureName == "-a"
 		if appliesToAll {
-			featureName = arguments.nextQuotedTokenAsString()
+			featureName = arguments.nextQuoted()
 		}
 		guard featureName.isEmpty == false else {
 			printDebugInformation(IRCCommandStrings.Defaults.invalidSyntax)

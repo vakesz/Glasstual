@@ -64,7 +64,7 @@ public protocol ChannelMemberListing: AnyObject {
 	func findMember(_ nickname: String) -> ChannelUser?
 
 	@objc var numberOfMembers: UInt { get }
-	@objc var memberList: [ChannelUser]? { get }
+	@objc var memberList: [ChannelUser] { get }
 
 	@objc(sortMembers)
 	func sortMembers()
@@ -88,9 +88,6 @@ public protocol ChannelMemberListPrivateProtocol: AnyObject {
 		resort: Bool,
 		replaceInAllChannels: Bool
 	)
-
-	@objc(changeMember:mode:value:)
-	func changeMember(_ nickname: String, mode: String, value: Bool)
 
 	@objc(resortMember:)
 	func resortMember(_ member: ChannelUser)
@@ -149,7 +146,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 	@objc(assignController:)
 	public func assign(_ controller: IRCChannelMemberListController?) {
-		controller?.replaceContents(memberList ?? [])
+		controller?.replaceContents(memberList)
 		self.controller = controller
 	}
 
@@ -351,10 +348,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 	}
 
-	@objc(changeMember:mode:value:)
-	public func changeMember(_ nickname: String, mode: String, value: Bool) {
-		precondition(mode.count == 1)
-
+	public func changeMember(_ nickname: String, mode: ChannelModeSymbol, value: Bool) {
 		guard let client,
 		      let member = findMember(nickname),
 		      let mutableMember = member.mutableCopy() as? ChannelUserMutable
@@ -362,39 +356,27 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return
 		}
 
-		let oldModes = mutableMember.modes
-		var processModes = true
+		var modes = mutableMember.modes
 
-		if oldModes.isEmpty {
-			if value {
-				processModes = false
-				mutableMember.modes = mode
-			} else {
+		if value {
+			guard modes.contains(mode) == false else {
 				return
 			}
-		} else if value, oldModes.contains(mode) {
-			return
-		}
 
-		if processModes {
-			var symbols = oldModes.map(String.init)
-
-			if value == false {
-				symbols.removeAll { $0 == mode }
-			} else {
-				let supportInfo = client.supportInfo
-				let newRank = supportInfo.rankForUserPrefix(withMode: mode)
-				let insertionIndex = symbols.firstIndex {
-					supportInfo.rankForUserPrefix(withMode: $0) < newRank
-				} ?? symbols.endIndex
-				symbols.insert(mode, at: insertionIndex)
+			let supportInfo = client.supportInfo
+			modes.insert(mode) { supportInfo.rankForUserPrefix(withMode: String($0.character)) }
+		} else {
+			guard modes.isEmpty == false else {
+				return
 			}
 
-			mutableMember.modes = symbols.joined()
+			modes.remove(mode)
 		}
 
+		mutableMember.modes = modes
+
 		var replaceInAllChannels = false
-		if value, mode == "Y", member.user.isIRCop == false {
+		if value, mode == ChannelModeSymbol("Y"), member.user.isIRCop == false {
 			client.modify(member.user) { user in
 				user.isIRCop = true
 			}
@@ -418,7 +400,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
 		}
 
-		controller?.replaceContents(memberList ?? [])
+		controller?.replaceContents(memberList)
 	}
 
 	@objc
@@ -441,7 +423,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		UInt(memberContainer.count)
 	}
 
-	@objc public var memberList: [ChannelUser]? {
+	@objc public var memberList: [ChannelUser] {
 		memberContainer
 	}
 

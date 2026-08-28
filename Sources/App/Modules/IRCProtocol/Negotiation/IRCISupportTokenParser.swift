@@ -63,56 +63,61 @@ public final nonisolated class ISupportExtendedBanConfiguration: NSObject {
 
 @objc(IRCISupportTokenParser)
 public final nonisolated class ISupportTokenParser: NSObject {
-	private static let userModeParameterClass = 100
-
 	@available(*, unavailable)
 	override public init() {
 		fatalError("ISupportTokenParser is a static namespace")
 	}
 
-	@objc(channelLimitsFromToken:)
-	public static func channelLimits(from token: String) -> [String: NSNumber] {
-		var limits: [String: NSNumber] = [:]
+	/// `CHANLIMIT`, keyed by the channel prefix each limit applies to.
+	public static func channelLimits(from token: String) -> [Character: UInt] {
+		var limits: [Character: UInt] = [:]
 
 		for (keys, value) in colonSeparatedEntries(in: token) {
-			let limit = max((value as NSString).integerValue, 0)
+			let limit = nonNegativeInteger(value)
 
 			for prefix in keys {
-				limits[String(prefix)] = NSNumber(value: limit)
+				limits[prefix] = limit
 			}
 		}
 
 		return limits
 	}
 
-	@objc(maximumTargetsFromToken:)
-	public static func maximumTargets(from token: String) -> [String: NSNumber] {
-		var limits: [String: NSNumber] = [:]
+	/// `TARGMAX`, keyed by the uppercased command name.
+	public static func maximumTargets(from token: String) -> [String: UInt] {
+		var limits: [String: UInt] = [:]
 
 		for (command, value) in colonSeparatedEntries(in: token) {
-			limits[command.uppercased()] = NSNumber(value: max((value as NSString).integerValue, 0))
+			limits[command.uppercased()] = nonNegativeInteger(value)
 		}
 
 		return limits
 	}
 
-	@objc(maximumListEntriesFromToken:)
-	public static func maximumListEntries(from token: String) -> [String: NSNumber] {
-		var limits: [String: NSNumber] = [:]
+	/// `MAXLIST`, keyed by the list mode each limit applies to. An entry with no
+	/// positive limit says nothing and is left out.
+	public static func maximumListEntries(from token: String) -> [Character: UInt] {
+		var limits: [Character: UInt] = [:]
 
 		for (modeSymbols, value) in colonSeparatedEntries(in: token) {
-			let limit = (value as NSString).integerValue
+			let limit = nonNegativeInteger(value)
 
 			guard limit > 0 else {
 				continue
 			}
 
 			for modeSymbol in modeSymbols {
-				limits[String(modeSymbol)] = NSNumber(value: limit)
+				limits[modeSymbol] = limit
 			}
 		}
 
 		return limits
+	}
+
+	/// A token's value as a count. A server that sends something that is not a
+	/// number is saying nothing, which is zero.
+	private static func nonNegativeInteger(_ value: String) -> UInt {
+		UInt(value) ?? 0
 	}
 
 	@objc(extendedBanConfigurationFromToken:)
@@ -161,35 +166,29 @@ public final nonisolated class ISupportTokenParser: NSObject {
 		)
 	}
 
-	@objc(channelModesFromToken:mergingModes:)
-	public static func channelModes(from token: String, merging existingModes: [String: NSNumber])
-		-> [String: NSNumber]
-	{
+	/// The `CHANMODES` groups, merged over what the server has already
+	/// advertised. Groups past D have no defined meaning, so their modes are
+	/// left out and read back as "takes no parameter".
+	public static func channelModeKinds(
+		from token: String,
+		merging existingModes: [Character: ChannelModeKind]
+	) -> [Character: ChannelModeKind] {
 		var channelModes = existingModes
 
 		for (index, modeClass) in token.split(separator: ",", omittingEmptySubsequences: false).enumerated() {
+			guard let kind = ChannelModeKind(chanModesGroupIndex: index) else {
+				continue
+			}
+
 			for modeSymbol in modeClass {
-				channelModes[String(modeSymbol)] = NSNumber(value: index + 1)
+				channelModes[modeSymbol] = kind
 			}
 		}
 
 		return channelModes
 	}
 
-	static func addingUserModes(_ modeSymbols: [String], to existingModes: [String: NSNumber])
-		-> [String: NSNumber]
-	{
-		var channelModes = existingModes
-
-		for modeSymbol in modeSymbols {
-			channelModes[modeSymbol] = NSNumber(value: userModeParameterClass)
-		}
-
-		return channelModes
-	}
-
-	@objc(casefoldString:caseMapping:)
-	public static func casefold(_ string: String, caseMapping: UInt) -> String {
+	public static func casefold(_ string: String, caseMapping: IRCISupportInfoCaseMapping) -> String {
 		guard string.isEmpty == false else {
 			return string
 		}
@@ -201,7 +200,7 @@ public final nonisolated class ISupportTokenParser: NSObject {
 				return lowercase
 			}
 
-			guard caseMapping != 2 else {
+			guard caseMapping != .ascii else {
 				return scalar
 			}
 
@@ -209,7 +208,7 @@ public final nonisolated class ISupportTokenParser: NSObject {
 			case "[": return "{"
 			case "]": return "}"
 			case "\\": return "|"
-			case "~" where caseMapping == 0: return "^"
+			case "~" where caseMapping == .rfc1459: return "^"
 			default: return scalar
 			}
 		}

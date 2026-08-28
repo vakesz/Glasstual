@@ -81,8 +81,8 @@ struct IRCISupportPrefixTests {
 
 		#expect(supportInfo.userPrefix(forModeSymbol: "v") == "+")
 		#expect(supportInfo.modeSymbol(forUserPrefix: "~") == "q")
-		#expect(supportInfo.userModeSymbols[IRCISupportUserModes.symbolsKey] == ["q", "a", "o", "h", "v"])
-		#expect(supportInfo.userModeSymbols[IRCISupportUserModes.charactersKey] == ["~", "&", "@", "%", "+"])
+		#expect(supportInfo.userModePrefixPairs.map(\.modeSymbol) == ["q", "a", "o", "h", "v"])
+		#expect(supportInfo.userModePrefixPairs.map(\.character) == ["~", "&", "@", "%", "+"])
 	}
 
 	/// More prefix modes than the rank ceiling used to underflow `UInt`.

@@ -105,6 +105,13 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		set { userNicknameStorage = newValue }
 	}
 
+	/// Forgets the nickname the server assigned, so `userNickname` falls back
+	/// to the configured one. The property itself is not optional, so this
+	/// cannot be expressed as an assignment through it.
+	func forgetUserNickname() {
+		userNicknameStorage = nil
+	}
+
 	@objc public dynamic var preAwayUserNickname: String?
 	/** Several features install a post-disconnect action (reconnect, destroy-after-quit,
 	 STS upgrade, server redirect). A single slot meant whichever installed last silently
@@ -156,6 +163,12 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var tryingNicknameNumber: UInt = 0
 	var tryingNicknameSentNickname: String?
 	var channelListPrivate: [IRCChannel] = []
+	/** `findChannel(_:)` sits on the path of nearly every inbound line, so the
+	 channel list is mirrored by casefolded name. The mirror is rebuilt whenever
+	 the list or a channel's configuration changes; a lookup still verifies its
+	 hit and falls back to a scan, because a rename or a new CASEMAPPING can
+	 arrive without either. */
+	var channelsByFoldedName: [String: IRCChannel] = [:]
 	@objc public dynamic weak var lastSelectedChannel: IRCChannel?
 	var addressBookMatchCache: AddressBookMatchCache!
 	var collapsedNetsplitBatch: Any?

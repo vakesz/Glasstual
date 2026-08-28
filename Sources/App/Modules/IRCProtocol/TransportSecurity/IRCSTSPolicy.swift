@@ -40,11 +40,32 @@ import Foundation
 public typealias IRCSTSCapabilityValues = STSCapabilityValues
 public typealias IRCSTSPolicy = STSPolicy
 
-@objc public enum IRCSTSPolicyAction: UInt {
+/// What a server's STS offer amounted to.
+///
+/// The port used to leave through an out-parameter the caller had to know to
+/// read, and only for one of the four outcomes; it rides on the case that
+/// carries it instead.
+public nonisolated enum IRCSTSPolicyAction: Sendable, Equatable {
+	/// Nothing to do: no offer, or one that has to be ignored.
 	case none
-	case upgrade
-	case stored
+
+	/// The connection should be reopened, secured, on this port.
+	case upgrade(port: UInt16)
+
+	/// A policy pinning the host to this port was stored.
+	case stored(port: UInt16)
+
+	/// The host's stored policy was withdrawn.
 	case cleared
+}
+
+/// The endpoint a stored STS policy pins a host to.
+public nonisolated struct STSPolicyEndpoint: Sendable, Equatable {
+	public let port: UInt16
+
+	public init(port: UInt16) {
+		self.port = port
+	}
 }
 
 @objc(IRCSTSPolicy)

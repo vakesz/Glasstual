@@ -24,10 +24,10 @@ extension CapabilityRegistry {
 			client.selectSASLMechanism(fromOffered: mechanisms)
 		}
 
-		let saslGeneric = ClientIRCv3SupportedCapability(rawValue: 1 << 22)
-		let zncPlaybackModule = ClientIRCv3SupportedCapability(rawValue: 1 << 27)
-		let zncServerTime = ClientIRCv3SupportedCapability(rawValue: 1 << 25)
-		let zncServerTimeISO = ClientIRCv3SupportedCapability(rawValue: 1 << 26)
+		let saslGeneric = ClientIRCv3SupportedCapability.saslGeneric
+		let zncPlaybackModule = ClientIRCv3SupportedCapability.zncPlaybackModule
+		let zncServerTime = ClientIRCv3SupportedCapability.zncServerTime
+		let zncServerTimeISO = ClientIRCv3SupportedCapability.zncServerTimeISO
 
 		return [
 			Capability.capability(named: "account-notify", identifier: .accountNotify),

@@ -136,7 +136,8 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 
 	@objc public dynamic var entryCountDescription: String {
 		let entryCount = tableEntries.count
-		let maximumEntries = Int(client.supportInfo.maximumListEntries(forModeSymbol: modeSymbol))
+		let maximumEntries = ChannelModeSymbol(modeSymbol)
+			.map { Int(client.supportInfo.maximumListEntries(forModeSymbol: $0)) } ?? 0
 
 		return ChannelAccessListStrings.entryCount(entryCount, maximum: maximumEntries)
 	}

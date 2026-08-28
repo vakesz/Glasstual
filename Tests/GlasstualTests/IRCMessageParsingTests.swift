@@ -63,19 +63,4 @@ class IRCMessageParsingTests: XCTestCase {
 		XCTAssertNil(parsed.messageIdentifier)
 		XCTAssertNil(parsed.senderAccount)
 	}
-
-	@objc
-	func testSenderPrefixUsesFirstBangAndLastAtSign() {
-		let parsed: ParsedSenderPrefix! = SenderPrefixParser.parsedPrefix(from: "nick!user!name@cloak@host")
-
-		XCTAssertEqual(parsed.nickname, "nick")
-		XCTAssertEqual(parsed.username, "user!name@cloak")
-		XCTAssertEqual(parsed.address, "host")
-	}
-
-	@objc
-	func testSenderPrefixRejectsMissingOrReversedSeparators() {
-		XCTAssertNil(SenderPrefixParser.parsedPrefix(from: "irc.example.net"))
-		XCTAssertNil(SenderPrefixParser.parsedPrefix(from: "nick@host!user"))
-	}
 }

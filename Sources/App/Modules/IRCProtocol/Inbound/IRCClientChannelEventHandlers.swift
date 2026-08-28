@@ -41,8 +41,9 @@ import os
 
 enum IRCInboundEventPolicy {
 	static func cancelsReconnect(forError message: String) -> Bool {
-		guard message.hasPrefix("Closing Link:") else { return false }
-		return message.hasSuffix("(Excess Flood)") || message.hasSuffix("(Max SendQ exceeded)")
+		guard message.hasPrefix(IRCServerQuirks.LinkClosed.prefix) else { return false }
+		return message.hasSuffix(IRCServerQuirks.LinkClosed.excessFlood)
+			|| message.hasSuffix(IRCServerQuirks.LinkClosed.sendQueueExceeded)
 	}
 
 	static func acceptsCertificateChunk(_ data: String) -> Bool {
@@ -91,7 +92,8 @@ public extension IRCClient {
 		guard let channel = findChannel(channelName), channel.isChannel else { return }
 		if !message.isPrintOnlyMessage, let modeInfo = channel.modeInfo {
 			for mode in modeInfo.updateModes(modeString) where mode.isModeForChangingMemberMode(on: self) {
-				channel.changeMember(mode.modeParameter ?? "", mode: mode.modeSymbol, value: mode.modeIsSet)
+				guard let symbol = ChannelModeSymbol(mode.modeSymbol) else { continue }
+				channel.changeMember(mode.modeParameter ?? "", mode: symbol, value: mode.modeIsSet)
 			}
 		}
 
@@ -196,7 +198,7 @@ public extension IRCClient {
 		guard message.params.count == 2,
 		      zncBouncerIsSendingCertificateInfo,
 		      message.senderIsServer,
-		      message.senderNickname == "znc.in",
+		      message.senderNickname == IRCServerQuirks.ZNC.messageSender,
 		      IRCInboundEventPolicy.acceptsCertificateChunk(message.sequence),
 		      let chainData = zncBouncerCertificateChainDataMutable,
 		      (chainData as NSString).length < IRCInboundEventPolicy.maximumCertificateChainLength

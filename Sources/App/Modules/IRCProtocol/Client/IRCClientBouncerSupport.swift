@@ -63,7 +63,7 @@ enum BouncerNotificationPolicy {
 		guard context.ignoresPlayback else { return true }
 
 		if context.supportsBatch {
-			return context.batchType != "znc.in/playback"
+			return context.batchType != IRCServerQuirks.ZNC.playbackBatchType
 		}
 
 		return context.isHistoric == false
@@ -79,7 +79,7 @@ public extension IRCClient {
 
 	@objc(nicknameIsZNCUser:)
 	func nicknameIsZNCUser(_ nickname: String) -> Bool {
-		isConnectedToZNC && nickname.hasPrefix("*")
+		isConnectedToZNC && nickname.hasPrefix(IRCServerQuirks.ZNC.modulePrefix)
 	}
 
 	@objc(nickname:isZNCUser:)
@@ -90,12 +90,12 @@ public extension IRCClient {
 	@objc(nicknameAsZNCUser:)
 	func nicknameAsZNCUser(_ nickname: String) -> String? {
 		guard isConnectedToZNC else { return nil }
-		return "*\(nickname)"
+		return IRCServerQuirks.ZNC.nickname(forModuleNamed: nickname)
 	}
 
 	@objc(isSafeToPostNotificationForMessage:inChannel:)
 	internal func isSafeToPostNotification(for message: Message, in channel: IRCChannel?) -> Bool {
-		let requestedHistory = batchMessage(ofType: "chathistory", containing: message) != nil
+		let requestedHistory = batchMessage(ofType: IRCServerQuirks.chatHistoryBatchType, containing: message) != nil
 		let channelIsBouncerUser = channel.map { nicknameIsZNCUser($0.name) } ?? false
 
 		let context = BouncerNotificationContext(
@@ -104,7 +104,7 @@ public extension IRCClient {
 			ignoresBouncerUsers: config.zncIgnoreUserNotifications,
 			channelIsBouncerUser: channelIsBouncerUser,
 			ignoresPlayback: config.zncIgnorePlaybackNotifications,
-			supportsBatch: capabilityIsEnabled(.batch),
+			supportsBatch: isCapabilityEnabled(.batch),
 			batchType: message.parentBatchMessage?.batchType,
 			isHistoric: message.isHistoric
 		)
@@ -114,7 +114,7 @@ public extension IRCClient {
 	@objc(updateConnectedToZNCPropertyWithMessage:)
 	internal func detectZNC(from message: Message) {
 		guard isConnectedToZNC == false, message.senderIsServer else { return }
-		guard message.senderNickname == "irc.znc.in" else { return }
+		guard message.senderNickname == IRCServerQuirks.ZNC.serverName else { return }
 
 		isConnectedToZNC = true
 		bouncerSupportLogger.info("ZNC detected")

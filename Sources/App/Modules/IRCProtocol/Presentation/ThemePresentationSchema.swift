@@ -241,6 +241,9 @@ enum ThemeFontSettingKey: String, CaseIterable, Sendable {
 	case size = "Font Size"
 }
 
+/// The two appearances a style declares and a channel view renders under. One
+/// vocabulary: the theme's declared appearance and the view's current one are
+/// compared against each other.
 enum ThemeAppearanceToken: String, CaseIterable, Sendable {
 	case dark
 	case light
@@ -285,11 +288,6 @@ enum ChannelViewTypeToken: String, Sendable {
 enum ChannelViewTextDirectionToken: String, Sendable {
 	case leftToRight = "ltr"
 	case rightToLeft = "rtl"
-}
-
-enum ChannelViewAppearanceToken: String, Sendable {
-	case dark
-	case light
 }
 
 enum LogLineClassToken: String, Sendable {

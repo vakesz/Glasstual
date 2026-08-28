@@ -40,11 +40,13 @@ import InlineContentKit
 
 @objc(ICLInlineContentServerProtocol)
 protocol InlineContentServerProtocol: AnyObject {
-	@objc(warmServiceByLoadingPluginsAtLocations:)
-	func warmServiceByLoadingPlugins(atLocations pluginLocations: [URL])
+	/// Loads the bundled modules. The service has never loaded modules from
+	/// anywhere else, so there is nothing to point it at.
+	@objc(warmServiceByLoadingPlugins)
+	func warmServiceByLoadingPlugins()
 
-	@objc(warmServiceByRegisteringDefaults:)
-	func warmServiceByRegistering(defaults: [String: Any])
+	@objc(warmServiceWithPreferences:)
+	func warmService(with preferences: InlineContentServicePreferences)
 
 	@objc(processURL:withUniqueIdentifier:atLineNumber:index:inView:)
 	func process(

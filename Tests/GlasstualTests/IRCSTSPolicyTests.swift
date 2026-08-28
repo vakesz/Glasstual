@@ -161,26 +161,18 @@ class STSPolicyTests: XCTestCase {
 			forHost: "irc.example.net"
 		)
 
-		var port: UInt16 = 6667
-		var secured = ObjCBool(false)
-		let applied = store.applyPolicy(forHost: "irc.example.net", toPort: &port, secured: &secured)
+		let enforced: STSPolicyEndpoint! = store.enforcedEndpoint(forHost: "irc.example.net")
 
-		XCTAssertTrue(applied)
-		XCTAssertEqual(port, 6697)
-		XCTAssertTrue(secured.boolValue)
+		XCTAssertNotNil(enforced)
+		XCTAssertEqual(enforced.port, 6697)
 	}
 
 	@objc
 	func testApplyPolicyNeverDowngrades() {
 		let store = store()
-		var port: UInt16 = 6697
-		var secured = ObjCBool(true)
-		/* No policy: parameters are left untouched, never downgraded. */
-		let applied = store.applyPolicy(forHost: "irc.example.net", toPort: &port, secured: &secured)
 
-		XCTAssertFalse(applied)
-		XCTAssertEqual(port, 6697)
-		XCTAssertTrue(secured.boolValue)
+		/* No policy: nothing to enforce, so the caller keeps what it had. */
+		XCTAssertNil(store.enforcedEndpoint(forHost: "irc.example.net"))
 	}
 
 	@objc
@@ -190,18 +182,15 @@ class STSPolicyTests: XCTestCase {
 			"port=6697",
 			"duration=300",
 		])
-		var upgradePort: UInt16 = 0
 		let action: IRCSTSPolicyAction = store.applyCapabilityValues(
 			values,
 			forHost: "irc.example.net",
 			connectedPort: 6667,
 			secured: false,
-			certificateChainValidated: false,
-			upgradePort: &upgradePort
+			certificateChainValidated: false
 		)
 
-		XCTAssertEqual(action, .upgrade)
-		XCTAssertEqual(upgradePort, 6697)
+		XCTAssertEqual(action, .upgrade(port: 6697))
 		/* Nothing is stored from an insecure connection. */
 		XCTAssertNil(store.policy(forHost: "irc.example.net"))
 	}
@@ -215,11 +204,10 @@ class STSPolicyTests: XCTestCase {
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
-			certificateChainValidated: true,
-			upgradePort: nil
+			certificateChainValidated: true
 		)
 
-		XCTAssertEqual(action, .stored)
+		XCTAssertEqual(action, .stored(port: 6697))
 
 		let policy: STSPolicy! = store.policy(forHost: "irc.example.net")
 
@@ -242,8 +230,7 @@ class STSPolicyTests: XCTestCase {
 			forHost: "irc.example.net",
 			connectedPort: 6697,
 			secured: true,
-			certificateChainValidated: true,
-			upgradePort: nil
+			certificateChainValidated: true
 		)
 
 		XCTAssertEqual(action, .cleared)

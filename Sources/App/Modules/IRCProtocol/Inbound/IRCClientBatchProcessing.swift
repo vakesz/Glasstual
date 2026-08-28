@@ -47,8 +47,8 @@ enum IRCBatchPolicy {
 			return nil
 		}
 		let token = String(reference.dropFirst())
-		let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_ -"))
-		guard token.unicodeScalars.allSatisfy({ allowed.contains($0) && $0 != " " }) else { return nil }
+		let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
+		guard token.unicodeScalars.allSatisfy(allowed.contains) else { return nil }
 		return (token, modifier == "+")
 	}
 
@@ -217,9 +217,9 @@ private extension IRCClient {
 		}
 		batchMessages.queueEntry(batch)
 
-		if batch.batchType == "znc.in/playback" {
+		if batch.batchType == IRCServerQuirks.ZNC.playbackBatchType {
 			zncBouncerIsPlayingBackHistory = isConnectedToZNC
-		} else if batch.batchType == "znc.in/tlsinfo" {
+		} else if batch.batchType == IRCServerQuirks.ZNC.certificateInfoBatchType {
 			zncBouncerIsSendingCertificateInfo = isConnectedToZNC
 			if message.batchToken == nil {
 				zncBouncerCertificateChainDataMutable = ""
@@ -246,9 +246,9 @@ private extension IRCClient {
 			recursivelyProcessBatchMessage(batch)
 		}
 
-		if batch.batchType == "znc.in/playback" {
+		if batch.batchType == IRCServerQuirks.ZNC.playbackBatchType {
 			zncBouncerIsPlayingBackHistory = false
-		} else if batch.batchType == "znc.in/tlsinfo" {
+		} else if batch.batchType == IRCServerQuirks.ZNC.certificateInfoBatchType {
 			zncBouncerIsSendingCertificateInfo = false
 		}
 	}

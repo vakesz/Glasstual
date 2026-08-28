@@ -124,81 +124,74 @@ private extension IRCClient {
 	}
 
 	func dispatchRemoteCommand(_ message: Message) {
-		let command = CommandIndex.index(ofRemoteCommand: message.command)
+		guard let command = IRCRemoteCommand(rawValue: CommandIndex.index(ofRemoteCommand: message.command)) else {
+			return
+		}
 		if dispatchCoreRemoteCommand(command, message: message) {
 			return
 		}
 		dispatchExtendedRemoteCommand(command, message: message)
 	}
 
-	func dispatchCoreRemoteCommand(_ command: UInt, message: Message) -> Bool {
+	func dispatchCoreRemoteCommand(_ command: IRCRemoteCommand, message: Message) -> Bool {
 		switch command {
-		case IRCRemoteCommand.notice.rawValue, IRCRemoteCommand.privmsg.rawValue:
-			dispatchLegacyHandler("receivePrivmsgAndNotice:", message: message)
-		case IRCRemoteCommand.error.rawValue:
+		case .notice, .privmsg:
+			receivePrivmsgAndNotice(message)
+		case .error:
 			receiveError(message)
-		case IRCRemoteCommand.invite.rawValue:
+		case .invite:
 			receiveInvite(message)
-		case IRCRemoteCommand.join.rawValue:
-			dispatchLegacyHandler("receiveJoin:", message: message)
-		case IRCRemoteCommand.kick.rawValue:
-			dispatchLegacyHandler("receiveKick:", message: message)
-		case IRCRemoteCommand.kill.rawValue:
-			dispatchLegacyHandler("receiveKill:", message: message)
-		case IRCRemoteCommand.mode.rawValue:
+		case .join:
+			receiveJoin(message)
+		case .kick:
+			receiveKick(message)
+		case .kill:
+			receiveKill(message)
+		case .mode:
 			receiveMode(message)
-		case IRCRemoteCommand.nick.rawValue:
-			dispatchLegacyHandler("receiveNick:", message: message)
-		case IRCRemoteCommand.part.rawValue:
-			dispatchLegacyHandler("receivePart:", message: message)
-		case IRCRemoteCommand.ping.rawValue:
+		case .nick:
+			receiveNick(message)
+		case .part:
+			receivePart(message)
+		case .ping:
 			receivePing(message)
-		case IRCRemoteCommand.quit.rawValue:
-			dispatchLegacyHandler("receiveQuit:", message: message)
-		case IRCRemoteCommand.topic.rawValue:
+		case .quit:
+			receiveQuit(message)
+		case .topic:
 			receiveTopic(message)
-		case IRCRemoteCommand.wallops.rawValue:
-			dispatchLegacyHandler("receiveWallops:", message: message)
+		case .wallops:
+			receiveWallops(message)
 		default:
 			return false
 		}
 		return true
 	}
 
-	func dispatchExtendedRemoteCommand(_ command: UInt, message: Message) {
+	func dispatchExtendedRemoteCommand(_ command: IRCRemoteCommand, message: Message) {
 		switch command {
-		case IRCRemoteCommand.authenticate.rawValue, IRCRemoteCommand.cap.rawValue:
+		case .authenticate, .cap:
 			detectZNC(from: message)
 			handleCapabilityOrAuthenticationRequest(message)
-		case IRCRemoteCommand.away.rawValue:
+		case .away:
 			receiveAwayNotifyCapability(message)
-		case IRCRemoteCommand.batch.rawValue:
+		case .batch:
 			receiveBatch(message)
-		case IRCRemoteCommand.certinfo.rawValue:
+		case .certinfo:
 			receiveCertInfo(message)
-		case IRCRemoteCommand.chghost.rawValue:
+		case .chghost:
 			receiveChangeHost(message)
-		case IRCRemoteCommand.account.rawValue:
+		case .account:
 			receiveAccountNotify(message)
-		case IRCRemoteCommand.setname.rawValue:
+		case .setname:
 			receiveSetName(message)
-		case IRCRemoteCommand.tagmsg.rawValue:
+		case .tagmsg:
 			receiveTagMessage(message)
-		case IRCRemoteCommand.fail.rawValue, IRCRemoteCommand.warn.rawValue, IRCRemoteCommand.note.rawValue:
+		case .fail, .warn, .note:
 			receiveStandardReply(message)
-		case IRCRemoteCommand.markread.rawValue:
+		case .markread:
 			receiveReadMarker(message)
 		default:
 			break
 		}
-	}
-
-	/// These handlers remain Objective-C during the adjacent protocol-handler
-	/// migration. Keep their dynamic boundary in one place without exposing
-	/// implementation-only selectors as public Swift API.
-	func dispatchLegacyHandler(_ selectorName: String, message: Message) {
-		let selector = NSSelectorFromString(selectorName)
-		precondition(responds(to: selector), "Missing IRC handler: \(selectorName)")
-		_ = perform(selector, with: message)
 	}
 }

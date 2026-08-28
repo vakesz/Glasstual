@@ -65,19 +65,19 @@ struct OutboundMessageCommandPolicy {
 	let isOperatorMessage: Bool
 	let isSecretMessage: Bool
 
-	init?(command: String, silentlyConnecting: Bool) {
+	init?(command: IRCLocalCommand?, silentlyConnecting: Bool) {
 		switch command {
-		case "msg", "omsg", "smsg", "umsg":
+		case .msg, .omsg, .smsg, .umsg:
 			remoteCommand = .privmsg
-			isOperatorMessage = command == "omsg"
-			isSecretMessage = command == "smsg" || silentlyConnecting
-		case "me", "sme", "ume":
+			isOperatorMessage = command == .omsg
+			isSecretMessage = command == .smsg || silentlyConnecting
+		case .me, .sme, .ume:
 			remoteCommand = .privmsgAction
 			isOperatorMessage = false
-			isSecretMessage = command == "sme"
-		case "notice", "onotice", "unotice":
+			isSecretMessage = command == .sme
+		case .notice, .onotice, .unotice:
 			remoteCommand = .notice
-			isOperatorMessage = command == "onotice"
+			isOperatorMessage = command == .onotice
 			isSecretMessage = false
 		default:
 			return nil
@@ -90,7 +90,7 @@ private struct OutboundMessageInvocation {
 	let isOperatorMessage: Bool
 	let isSecretMessage: Bool
 
-	init?(command: String, silentlyConnecting: Bool) {
+	init?(command: IRCLocalCommand?, silentlyConnecting: Bool) {
 		guard let policy = OutboundMessageCommandPolicy(
 			command: command,
 			silentlyConnecting: silentlyConnecting
@@ -103,12 +103,17 @@ private struct OutboundMessageInvocation {
 }
 
 public extension IRCClient {
+	/// An empty ACTION would be dropped by most servers, so it goes out with a
+	/// single space instead.
+	private static func actionBody(_ body: NSAttributedString) -> NSAttributedString {
+		body.length == 0 ? NSAttributedString(string: " ") : body
+	}
+
 	@MainActor
 	internal func dispatchMessageCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		let command = parsed.command.lowercased()
 		let silentlyConnecting = isPerformingConnectCommands && config.runConnectCommandsSilently
 		guard let invocation = OutboundMessageInvocation(
-			command: command,
+			command: parsed.localCommand,
 			silentlyConnecting: silentlyConnecting
 		) else { return false }
 		guard isLoggedIn else {
@@ -116,7 +121,7 @@ public extension IRCClient {
 			return true
 		}
 
-		let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
+		var cursor = parsed.arguments
 		let operatorPrefix: String?
 		if invocation.isOperatorMessage {
 			guard let prefix = supportInfo.statusMessagePrefix(forModeSymbol: "o") else {
@@ -137,28 +142,27 @@ public extension IRCClient {
 				return true
 			}
 			if targetChannel.isDirectChat {
-				if arguments.length == 0 {
-					arguments.append(NSAttributedString(string: " "))
-				}
-				sendDirectChatText(arguments, as: .privmsgAction, to: targetChannel)
+				// An empty action still has to carry a body onto the wire.
+				sendDirectChatText(Self.actionBody(cursor.attributedRest), as: .privmsgAction, to: targetChannel)
 				return true
 			}
 			targetName = targetChannel.name
 		} else if invocation.isOperatorMessage,
-		          stringIsChannelName(arguments.string) == false,
+		          stringIsChannelName(cursor.rest) == false,
 		          targetChannel?.isChannel == true,
 		          let targetChannel
 		{
 			targetName = targetChannel.name
 		} else {
-			targetName = arguments.nextTokenAsString()
+			targetName = cursor.next()
 		}
 		guard requireArguments(targetName, for: parsed.command) else { return true }
 
-		if arguments.length == 0 {
-			guard invocation.outbound.lineType == .action else { return true }
-			arguments.append(NSAttributedString(string: " "))
+		let body = cursor.attributedRest
+		if body.length == 0, invocation.outbound.lineType != .action {
+			return true
 		}
+		let arguments = Self.actionBody(body)
 
 		var destinations = targetName.components(separatedBy: ",")
 		var destinationToSelect: IRCChannel?
@@ -301,7 +305,7 @@ public extension IRCClient {
 					outbound: outbound
 				)
 
-				let wireMessage = outbound.lineType == .action ? "\u{01}ACTION \(message)\u{01}" : message
+				let wireMessage = outbound.lineType == .action ? CTCPPayload.action(message) : message
 				nextLineReplyToMessageIdentifier = nil
 
 				var tags: [String: String] = [:]

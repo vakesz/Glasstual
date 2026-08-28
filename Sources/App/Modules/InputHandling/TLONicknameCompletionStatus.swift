@@ -209,7 +209,7 @@ public final class NicknameCompletionStatus: NSObject {
 		}
 
 		return nicknameCandidates(
-			from: channel.channelMembers ?? [],
+			from: channel.channelMembers,
 			client: client,
 			searchPatternIsEmpty: searchPatternIsEmpty
 		)

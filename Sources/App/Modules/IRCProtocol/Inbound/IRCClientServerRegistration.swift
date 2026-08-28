@@ -116,7 +116,10 @@ public extension IRCClient {
 		isPerformingConnectCommands = false
 
 		if isCapabilityEnabled(.zncCertInfoModule) {
-			sendCommand("send-data", toZNCModuleNamed: "tlsinfo")
+			sendCommand(
+				IRCServerQuirks.ZNC.sendCertificateChainCommand,
+				toZNCModuleNamed: IRCServerQuirks.ZNC.certificateInfoModule
+			)
 		}
 		requestPlayback()
 
@@ -134,7 +137,7 @@ public extension IRCClient {
 			performAutoJoin(initiatedByUser: false)
 		} else if isConnectedToZNC {
 			textual_performSelectorInCommonModes(
-				NSSelectorFromString("performAutoJoin"),
+				#selector(performAutoJoin as () -> Void),
 				with: nil,
 				afterDelay: 3
 			)

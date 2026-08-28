@@ -82,13 +82,7 @@ struct IRCNumericReplyCorpusTests {
 
 	@Test(arguments: Self.classificationCases)
 	func classifiesErrorNumerics(testCase: NumericCase) {
-		#expect(IRCNumericReplyPolicy.isError(testCase.numeric) == testCase.isError)
-	}
-
-	/// The catalog and the policy must agree for every numeric the client knows.
-	@Test(arguments: IRCNumeric.allCases)
-	func catalogAgreesWithThePolicy(numeric: IRCNumeric) {
-		#expect(numeric.isErrorReply == IRCNumericReplyPolicy.isError(numeric.rawValue))
+		#expect(IRCNumeric.isErrorReply(testCase.numeric) == testCase.isError)
 	}
 
 	/// Replies whose text the client rewrites are printed even when a plugin

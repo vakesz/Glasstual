@@ -79,6 +79,85 @@ public final class CommandIndex: NSObject {
 	public static func syntax(forLocalCommand command: String) -> String? {
 		storage.syntax(forLocalCommand: command)
 	}
+
+	/// Everything the index knows about one local command, or `nil` when the
+	/// name is not in the index. Unlike `index(ofLocalCommand:)` this does not
+	/// hide developer-mode commands: it reports the flag, so the dispatcher can
+	/// refuse such a command with a message instead of mistaking it for one it
+	/// has never heard of and forwarding it to the server.
+	public static func descriptor(forLocalCommand command: String) -> LocalCommandDescriptor? {
+		storage.descriptor(forLocalCommand: command)
+	}
+}
+
+/// How many argument groups a command's index entry declares.
+///
+/// Counted from the syntax string the index carries: every top-level `<group>`
+/// is required and every `[group]` is optional. It describes the documented
+/// syntax, not what a particular handler goes on to read.
+public nonisolated struct CommandArity: Sendable, Equatable {
+	public let required: Int
+	public let optional: Int
+
+	public static let none = CommandArity(required: 0, optional: 0)
+
+	public init(required: Int, optional: Int) {
+		self.required = required
+		self.optional = optional
+	}
+
+	public init(syntax: String?) {
+		guard let syntax else {
+			self = .none
+
+			return
+		}
+
+		var required = 0
+		var optional = 0
+		var depth = 0
+		var openedWith: Character?
+
+		for character in syntax {
+			switch character {
+			case "<", "[":
+				if depth == 0 {
+					openedWith = character
+				}
+
+				depth += 1
+			case ">", "]":
+				guard depth > 0 else {
+					continue
+				}
+
+				depth -= 1
+
+				if depth == 0 {
+					if openedWith == "<" {
+						required += 1
+					} else {
+						optional += 1
+					}
+				}
+			default:
+				continue
+			}
+		}
+
+		self.init(required: required, optional: optional)
+	}
+}
+
+/// What the command index knows about one local command.
+public nonisolated struct LocalCommandDescriptor: Sendable {
+	public let command: IRCLocalCommand
+
+	/// The command is kept out of completion and refused unless the
+	/// developer-mode preference is on.
+	public let isDeveloperModeOnly: Bool
+
+	public let arity: CommandArity
 }
 
 /* ISOLATION-EXCEPTION: the command tables are built once and read from the
@@ -164,6 +243,22 @@ private final class CommandIndexStorage: @unchecked Sendable {
 			}
 
 			return unsignedIntegerValue(data[Key.indexValue])
+		}
+	}
+
+	func descriptor(forLocalCommand command: String) -> LocalCommandDescriptor? {
+		withLock {
+			guard let data = localData[command.lowercased()],
+			      let value = IRCLocalCommand(rawValue: unsignedIntegerValue(data[Key.indexValue]))
+			else {
+				return nil
+			}
+
+			return LocalCommandDescriptor(
+				command: value,
+				isDeveloperModeOnly: boolValue(data[Key.developerModeOnly]),
+				arity: CommandArity(syntax: data[Key.arguments] as? String)
+			)
 		}
 	}
 

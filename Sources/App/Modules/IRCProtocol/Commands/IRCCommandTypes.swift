@@ -85,7 +85,8 @@ import Foundation
 	case leave = 5036
 	case list = 5037
 	case locops = 5039
-	case messageShortcut = 5040
+	/// `/m`, the shorthand for `/mode`.
+	case modeShortcut = 5040
 	case me = 5041
 	case mode = 5042
 	case monitor = 5106
@@ -122,6 +123,7 @@ import Foundation
 	case sme = 5064
 	case smsg = 5065
 	case sslcontext = 5066
+	/// `/t`, the shorthand for `/topic`.
 	case topicShortcut = 5067
 	case tage = 5093
 	case tempshun = 5068

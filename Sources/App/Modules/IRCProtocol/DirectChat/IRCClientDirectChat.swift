@@ -59,7 +59,12 @@ struct DCCChatOffer: Equatable {
 enum DCCChatPolicy {
 	static func parseOffer(_ source: String) -> DCCChatOffer? {
 		var input = CommandTokenizer(source)
-		guard input.nextUppercaseToken() == "CHAT", input.nextUppercaseToken() == "CHAT" else { return nil }
+		/* A DCC CHAT offer names the DCC subcommand and then the chat protocol,
+		 both spelled "CHAT". The two reads look identical because the tokens
+		 are. */
+		let dccSubcommand = input.nextUppercaseToken()
+		let chatProtocol = input.nextUppercaseToken()
+		guard dccSubcommand == "CHAT", chatProtocol == "CHAT" else { return nil }
 		let address = ClientWireUtilities.displayDCCAddress(input.nextToken())
 		let portText = input.nextToken()
 		let rawToken = input.nextToken()
@@ -104,19 +109,19 @@ public extension IRCClient {
 		return channel?.isDirectChat == true ? channel : nil
 	}
 
-	@objc(handleDCCCommand:command:targetChannel:)
 	func handleDCCCommand(
-		_ input: NSMutableAttributedString,
+		_ input: CommandArguments,
 		command: String,
 		targetChannel: IRCChannel?
 	) {
-		switch input.nextTokenAsString().uppercased() {
+		var input = input
+		switch input.next().uppercased() {
 		case "CHAT":
 			guard isLoggedIn else {
 				printDebugInformation(toConsole: IRCTransportStrings.notConnected)
 				return
 			}
-			var nickname = input.nextTokenAsString()
+			var nickname = input.next()
 			if nickname.isEmpty, let targetChannel {
 				if targetChannel.isPrivateMessage {
 					nickname = targetChannel.name
@@ -131,8 +136,8 @@ public extension IRCClient {
 			}
 			startDirectChat(withNickname: nickname)
 		case "SEND":
-			let nickname = input.nextTokenAsString()
-			let path = (input.string.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).expandingTildeInPath
+			let nickname = input.next()
+			let path = (input.rest.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).expandingTildeInPath
 			guard !nickname.isEmpty, stringIsNickname(nickname), !path.isEmpty else {
 				printInvalidSyntaxMessage(for: command)
 				return

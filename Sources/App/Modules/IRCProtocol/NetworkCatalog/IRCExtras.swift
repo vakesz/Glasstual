@@ -26,59 +26,62 @@ private nonisolated let extrasLogger = Logger(
 public final class Extras: NSObject {
 	// MARK: - Glasstual URL Scheme
 
+	/// The tokens `glasstual://<token>` accepts.
+	///
+	/// Several spellings are kept for the same action because the older ones
+	/// have been documented and linked to; the raw values are that vocabulary,
+	/// so an unrecognised token stops here rather than falling through a chain
+	/// of string comparisons.
+	nonisolated enum GlasstualSchemeAction: String, CaseIterable {
+		case acknowledgements
+		case applicationSupportFolder = "application-support-folder"
+		case contributors
+		case customScriptsFolder = "custom-scripts-folder"
+		case unsupervisedScriptFolder = "unsupervised-script-folder"
+		case unsupervisedScriptsFolder = "unsupervised-scripts-folder"
+		case customStyleFolder = "custom-style-folder"
+		case customStylesFolder = "custom-styles-folder"
+		case diagnosticReportsFolder = "diagnostic-reports-folder"
+		/// Navigate to an item named by the source location.
+		case goto
+		/// Connect to the #glasstual channel.
+		case supportChannel = "support-channel"
+		/// Connect to the #glasstual-testing channel.
+		case testingChannel = "testing-channel"
+	}
+
 	private static func performSpecialActionForGlasstualScheme(_ action: String, source sourceLocation: String) {
-		/*
-		 Syntax: glasstual://<token>
-
-		 Reserved tokens:
-
-		 acknowledgements					— Open acknowledgements file
-		 application-support-folder			— Open the Application Support folder
-		 contributors						— Open contributors file
-		 custom-scripts-folder				– Open the custom scripts storage location folder
-		 custom-style-folder					— Open the custom style storage location folder
-		 custom-styles-folder				— Open the custom style storage location folder
-		 diagnostic-reports-folder			— System diagnostic reports folder
-		 goto 								— Navigate to an item
-		 support-channel						— Connect to the #glasstual channel
-		 testing-channel						— Connect to the #glasstual-testing channel
-		 unsupervised-script-folder			— Open the custom scripts storage location folder
-		 unsupervised-scripts-folder			— Open the custom scripts storage location folder
-		 */
+		guard let action = GlasstualSchemeAction(rawValue: action) else {
+			return
+		}
 
 		let menuController = AppController.shared.menuController
 
-		if action == "acknowledgements" {
+		switch action {
+		case .acknowledgements, .contributors:
 			menuController?.openAcknowledgements(nil)
-		} else if action == "application-support-folder" {
-			if let url = PathInfo.groupContainerApplicationSupportURL {
-				NSWorkspace.shared.open(url)
-			}
-		} else if action == "contributors" {
-			menuController?.openAcknowledgements(nil)
-		} else if action == "custom-scripts-folder"
-			|| action == "unsupervised-script-folder"
-			|| action == "unsupervised-scripts-folder"
-		{
-			if let url = PathInfo.customScriptsURL {
-				NSWorkspace.shared.open(url)
-			}
-		} else if action == "custom-style-folder" || action == "custom-styles-folder" {
-			if let url = PathInfo.customThemesURL {
-				NSWorkspace.shared.open(url)
-			}
-		} else if action == "diagnostic-reports-folder" {
-			NSWorkspace.shared.open(PathInfo.userDiagnosticReportsURL)
-			NSWorkspace.shared.open(PathInfo.systemDiagnosticReportsURL)
-		} else if action == "goto" {
-			if let url = URL(string: sourceLocation) {
-				menuController?.perform(NSSelectorFromString("navigateToTreeItemAtURL:"), with: url)
-			}
-		} else if action == "support-channel" {
+		case .applicationSupportFolder:
+			open(PathInfo.groupContainerApplicationSupportURL)
+		case .customScriptsFolder, .unsupervisedScriptFolder, .unsupervisedScriptsFolder:
+			open(PathInfo.customScriptsURL)
+		case .customStyleFolder, .customStylesFolder:
+			open(PathInfo.customThemesURL)
+		case .diagnosticReportsFolder:
+			open(PathInfo.userDiagnosticReportsURL)
+			open(PathInfo.systemDiagnosticReportsURL)
+		case .goto:
+			guard let url = URL(string: sourceLocation) else { return }
+			menuController?.navigateToTreeItem(at: url)
+		case .supportChannel:
 			menuController?.connectToGlasstualHelpChannel(nil)
-		} else if action == "testing-channel" {
+		case .testingChannel:
 			menuController?.connectToGlasstualTestingChannel(nil)
 		}
+	}
+
+	private static func open(_ url: URL?) {
+		guard let url else { return }
+		NSWorkspace.shared.open(url)
 	}
 
 	// MARK: - IRC Protocol URI Parsing

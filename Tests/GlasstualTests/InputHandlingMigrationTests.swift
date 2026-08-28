@@ -33,7 +33,7 @@ private final class GLTCompletionWindow: NicknameCompletionWindow {
 class GLTCompletionChannel: Channel, @unchecked Sendable {
 	@objc var testMembers: [ChannelUser] = []
 
-	override var channelMembers: [ChannelUser]? {
+	override var channelMembers: [ChannelUser] {
 		testMembers
 	}
 }
