@@ -533,7 +533,7 @@ public final class Extras: NSObject {
 				}
 			}
 		} else {
-			let baseConfig = IRCClientConfigMutable()
+			var baseConfig = ClientConfig()
 
 			baseConfig.connectionName = serverAddress
 
@@ -549,22 +549,9 @@ public final class Extras: NSObject {
 
 			baseConfig.serverList = [server]
 
-			var channelListConfigs = [Any]()
+			baseConfig.channelList = (channelList ?? []).map(ChannelConfig.seed(withName:))
 
-			channelListConfigs.reserveCapacity(channelListCount)
-
-			for channelName in channelList ?? [] {
-				let channelConfig = ChannelConfig.seed(withName: channelName)
-
-				channelListConfigs.append(channelConfig)
-			}
-
-			baseConfig.setValue(channelListConfigs, forKey: "channelList")
-
-			let client = AppController.shared.world.createClient(
-				with: bridgeClientConfigToObjectiveC(baseConfig),
-				reload: true
-			)
+			let client = AppController.shared.world.createClient(with: baseConfig, reload: true)
 
 			AppController.shared.world.save()
 

@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -63,15 +64,15 @@ struct IRCHighlightHealthCheckTests {
 	/// A malformed persisted entry is skipped rather than carried forward.
 	@Test
 	func malformedHighlightEntriesAreSkippedOnLoad() {
-		let config = IRCClientConfig(dictionary: [
+		let config = PropertyListModel.decode(IRCClientConfig.self, from: [
 			"highlightList": [
 				["matchKeyword": "keep"],
 				["matchIsExcluded": true],
 			],
-		], ignorePrivateMessages: false)
+		])
 
-		#expect(config.highlightList.count == 1)
-		#expect(config.highlightList.first?.matchKeyword == "keep")
+		#expect(config?.highlightList.count == 1)
+		#expect(config?.highlightList.first?.matchKeyword == "keep")
 	}
 }
 

@@ -85,14 +85,12 @@ private let clientTerminationLogger = Logger(
 
 @MainActor
 public extension IRCClient {
-	@objc(updateConfig:)
 	func updateConfig(_ newConfig: ClientConfig) {
 		updateConfig(newConfig, updateSelection: true)
 	}
 
-	@objc(updateConfig:updateSelection:)
 	func updateConfig(_ newConfig: ClientConfig, updateSelection: Bool) {
-		guard isTerminating == false, config.isEqual(newConfig) == false else { return }
+		guard isTerminating == false, config != newConfig else { return }
 		guard config.uniqueIdentifier == newConfig.uniqueIdentifier else {
 			clientConfigurationLogger.error("Tried to load configuration for incorrect client")
 			return
@@ -137,6 +135,16 @@ public extension IRCClient {
 		config.writeProxyPasswordToKeychain()
 	}
 
+	/// Flushes every endpoint's password to the keychain.
+	@objc(writeServerPasswordsToKeychain)
+	func writeServerPasswordsToKeychain() {
+		config.serverList = config.serverList.map { server in
+			var server = server
+			server.writeServerPasswordToKeychain()
+			return server
+		}
+	}
+
 	@objc(destroyServerPasswordKeychainItemAfterMigration)
 	func destroyServerPasswordKeychainItemAfterMigration() {
 		config.destroyServerPasswordKeychainItemAfterMigration()
@@ -144,28 +152,21 @@ public extension IRCClient {
 
 	@objc(updateStoredConfiguration)
 	func updateStoredConfiguration() {
-		guard configurationIsStale,
-		      let mutableConfig = config.mutableCopy() as? MutableClientConfig
-		else { return }
+		guard configurationIsStale else { return }
 
-		mutableConfig.lastMessageServerTime = lastMessageServerTime
-		mutableConfig.sidebarItemExpanded = sidebarItemIsExpanded
-		config = mutableConfig
+		config.lastMessageServerTime = lastMessageServerTime
+		config.sidebarItemExpanded = sidebarItemIsExpanded
 	}
 
 	@objc(updateStoredChannelList)
 	func updateStoredChannelList() {
-		guard let mutableConfig = config.mutableCopy() as? MutableClientConfig else { return }
-
-		mutableConfig.channelList = IRCClientConfigurationPolicy.storedChannelConfigurations(
+		config.channelList = IRCClientConfigurationPolicy.storedChannelConfigurations(
 			from: channelList,
 			rememberQueries: TextualPreferences.rememberServerListQueryStates()
 		)
-		config = mutableConfig
 		NotificationCenter.default.post(name: .init("IRCClientChannelListWasModifiedNotification"), object: self)
 	}
 
-	@objc(configurationDictionary)
 	func configurationDictionary() -> [String: Any] {
 		updateStoredConfiguration()
 		return config.dictionaryValue
@@ -278,18 +279,6 @@ public extension IRCClient {
 		if rawDataLogQuery === channel {
 			rawDataLogQuery = nil
 		}
-	}
-
-	@objc(writeServerPasswordsToKeychain)
-	func writeServerPasswordsToKeychain() {
-		guard let mutableConfig = config.mutableCopy() as? MutableClientConfig else { return }
-
-		mutableConfig.serverList = mutableConfig.serverList.map { server in
-			var server = server
-			server.writeServerPasswordToKeychain()
-			return server
-		}
-		config = mutableConfig
 	}
 
 	@objc(destroyServerPasswordsKeychainItems)

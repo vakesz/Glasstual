@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
 import UniformTypeIdentifiers
 
@@ -169,16 +170,16 @@ public final class PreferencesImportExport: NSObject {
 
 	@objc(importClientConfiguration:)
 	public static func importClientConfiguration(_ config: [String: Any]) {
-		let clientConfig = IRCClientConfig(dictionary: config)
+		guard let clientConfig = PropertyListModel.decode(ClientConfig.self, from: config) else {
+			return
+		}
+
 		let world = AppController.shared.world!
 
 		if let client = world.findClient(withId: clientConfig.uniqueIdentifier) {
-			client.updateConfig(bridgeClientConfigToObjectiveC(clientConfig))
+			client.updateConfig(clientConfig)
 		} else {
-			_ = world.createClient(
-				with: bridgeClientConfigToObjectiveC(clientConfig),
-				reload: true
-			)
+			_ = world.createClient(with: clientConfig, reload: true)
 		}
 	}
 

@@ -61,7 +61,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		var linePrintObserver: ((IRCLinePrintRequest) -> Void)?
 	#endif
 
-	@objc public dynamic var config: IRCClientConfig {
+	public var config: IRCClientConfig {
 		didSet { refreshDescription() }
 	}
 
@@ -220,12 +220,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		fatalError("Unavailable")
 	}
 
-	@objc(initWithConfigDictionary:)
-	@MainActor public convenience init(configDictionary: [String: Any]) {
-		self.init(config: IRCClientConfig(dictionary: configDictionary))
-	}
-
-	@objc(initWithConfig:)
 	@MainActor public init(config: IRCClientConfig) {
 		self.config = config
 		super.init()
