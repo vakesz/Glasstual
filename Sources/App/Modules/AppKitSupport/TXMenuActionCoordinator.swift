@@ -205,6 +205,8 @@ public final class MenuActionCoordinator: NSObject {
 			performCTCP("USERINFO", sender: sender)
 		case .ctcpClientInfo:
 			performCTCP("CLIENTINFO", sender: sender)
+		case .changeColor:
+			changeColorForSelectedMember(sender: sender)
 		case .giveOp, .takeOp, .giveHalfop, .takeHalfop, .giveVoice, .takeVoice,
 		     .kick, .ban, .kickban, .kill, .gline, .shun, .setVhost, .sendFile:
 			performModerationAction(action, sender: sender)
@@ -318,11 +320,17 @@ public final class MenuActionCoordinator: NSObject {
 		let selectedRange = textView.selectedRange
 		var insertion = ""
 		if selectedRange.location > 0 {
-			let index = textView.stringValue.index(
-				textView.stringValue.startIndex,
-				offsetBy: selectedRange.location - 1
-			)
-			if textView.stringValue[index].isWhitespace == false {
+			/* selectedRange is measured in UTF-16 code units, so it must be
+			 read back through NSString. Feeding it to String.index(_:offsetBy:)
+			 counts Characters and lands on the wrong one — or traps — as soon
+			 as the field holds an emoji. */
+			let text = textView.stringValue as NSString
+			let previous = text.character(at: selectedRange.location - 1)
+			/* A surrogate half is never whitespace, so nil reads as false. */
+			let isWhitespace = Unicode.Scalar(previous).map { scalar in
+				CharacterSet.whitespacesAndNewlines.contains(scalar)
+			} ?? false
+			if isWhitespace == false {
 				insertion.append(" ")
 			}
 		}
@@ -331,6 +339,14 @@ public final class MenuActionCoordinator: NSObject {
 		textView.replaceCharacters(in: selectedRange, with: insertion)
 		textView.resetFontColor(in: selectedRange)
 		textView.focus()
+	}
+
+	private func changeColorForSelectedMember(sender: Any) {
+		guard selectedClient != nil, selectedChannel != nil,
+		      let nickname = nicknames(for: sender).first
+		else { return }
+
+		showNicknameColorSheet(for: nickname)
 	}
 
 	private func performForNicknames(sender: Any, action: (IRCClient, String) -> Void) {

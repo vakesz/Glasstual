@@ -52,8 +52,12 @@ enum MenuWindowPolicy {
 	}
 
 	static func channelsOrderedBeforeQueries(_ lhs: IRCChannel, _ rhs: IRCChannel) -> Bool {
-		if lhs.isChannel, rhs.isChannel == false {
-			return true
+		/* Both directions have to be answered. Without the second branch a
+		 query and a channel compare as "unordered" one way and "ordered" the
+		 other, which is not a strict weak ordering and lets sort(by:) produce
+		 garbage. */
+		if lhs.isChannel != rhs.isChannel {
+			return lhs.isChannel
 		}
 		return lhs.name.lowercased().compare(rhs.name.lowercased()) == .orderedAscending
 	}
