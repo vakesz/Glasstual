@@ -431,6 +431,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		viewController?.prepareForPermanentDestruction()
 	}
 
+	@MainActor
 	@objc public func prepareForApplicationTermination() {
 		let channelIdentifier = uniqueIdentifier
 		Self.terminationLogger.debug("Preparing channel: <\(channelIdentifier, privacy: .public)>")
@@ -497,11 +498,13 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		logFile?.writeLogLine(logLine)
 	}
 
+	@MainActor
 	@objc(print:)
 	public func print(_ logLine: LogLine) {
 		print(logLine, completionBlock: nil)
 	}
 
+	@MainActor
 	@objc(print:completionBlock:)
 	public func print(
 		_ logLine: LogLine,

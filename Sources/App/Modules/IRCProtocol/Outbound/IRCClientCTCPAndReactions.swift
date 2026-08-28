@@ -62,6 +62,7 @@ private enum OutboundMainQueue {
 }
 
 public extension IRCClient {
+	@MainActor
 	@objc(sendReaction:toMessageIdentifier:inChannel:)
 	@discardableResult
 	func sendReaction(_ emoji: String, toMessageIdentifier messageIdentifier: String, in channel: IRCChannel) -> Bool {
