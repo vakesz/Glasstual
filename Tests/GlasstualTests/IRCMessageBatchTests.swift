@@ -68,9 +68,9 @@ class IRCMessageBatchTests: XCTestCase {
 		XCTAssertTrue(container.queuedEntry(withBatchToken: "history-1") === batch)
 
 		XCTAssertTrue(container.queuedEntries["history-1"] === batch)
-		XCTAssertTrue(batch.queuedEntries.first as? Message === message)
+		XCTAssertTrue(batch.queuedEntries.first?.object === message)
 
-		container.dequeueEntry("history-1")
+		container.dequeueEntry(withBatchToken: "history-1")
 
 		XCTAssertNil(container.queuedEntry(withBatchToken: "history-1"))
 
@@ -78,7 +78,7 @@ class IRCMessageBatchTests: XCTestCase {
 	}
 
 	@objc
-	func testBatchAcceptsMessagesAndNestedBatchesOnly() {
+	func testBatchKeepsMessagesAndNestedBatchesInOrder() {
 		let parent = batchWithToken("parent")
 		let child = batchWithToken("child")
 		guard
@@ -93,26 +93,25 @@ class IRCMessageBatchTests: XCTestCase {
 
 		parent.queueEntry(first)
 		parent.queueEntry(first)
-		parent.queueEntry("invalid")
 		parent.queueEntry(child)
 		parent.queueEntry(second)
 
 		XCTAssertEqual(parent.queuedEntries.count, 4)
-		XCTAssertTrue(parent.queuedEntries[0] as? Message === first)
-		XCTAssertTrue(parent.queuedEntries[1] as? Message === first)
-		XCTAssertTrue(parent.queuedEntries[2] as? MessageBatch === child)
-		XCTAssertTrue(parent.queuedEntries[3] as? Message === second)
+		XCTAssertTrue(parent.queuedEntries[0].object === first)
+		XCTAssertTrue(parent.queuedEntries[1].object === first)
+		XCTAssertTrue(parent.queuedEntries[2].object === child)
+		XCTAssertTrue(parent.queuedEntries[3].object === second)
 
 		XCTAssertTrue(child.parentBatchMessage === parent)
 
 		parent.dequeueEntry(first)
 		parent.dequeueEntry(child)
 
-		XCTAssertTrue(parent.queuedEntries.first as? Message === second)
+		XCTAssertTrue(parent.queuedEntries.first?.object === second)
 	}
 
 	@objc
-	func testContainerIgnoresNonBatchEntriesAndDequeueAllKeepsBatchContents() {
+	func testDequeuingEveryBatchKeepsTheirContents() {
 		let container = MessageBatchContainer()
 		let batch = batchWithToken("batch")
 		guard let message = Message(line: "PING :token") else {
@@ -122,12 +121,11 @@ class IRCMessageBatchTests: XCTestCase {
 
 		batch.queueEntry(message)
 
-		container.queueEntry("invalid")
 		container.queueEntry(batch)
 		container.dequeueEntries()
 
 		XCTAssertEqual(container.queuedEntries.count, 0)
 
-		XCTAssertTrue(batch.queuedEntries.first as? Message === message)
+		XCTAssertTrue(batch.queuedEntries.first?.object === message)
 	}
 }

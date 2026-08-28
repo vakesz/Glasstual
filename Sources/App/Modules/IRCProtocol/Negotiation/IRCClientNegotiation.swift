@@ -207,13 +207,11 @@ extension IRCClient {
 	}
 
 	@objc(pendingCapabilityRequests) public var queuedCapabilityRequests: [String] {
-		synchronized(pendingCapabilityRequestsMutable) {
-			pendingCapabilityRequestsMutable.compactMap { $0 as? String }
-		}
+		pendingCapabilityRequests
 	}
 
 	@objc public var enabledCapabilitiesStringValue: String {
-		var enabled = enabledCapabilityNames.array.compactMap { $0 as? String }
+		var enabled = enabledCapabilityNames
 
 		if isCapabilityEnabled(.isIdentifiedWithSASL), enabled.contains("sasl") == false {
 			enabled.append("sasl")
@@ -234,26 +232,24 @@ extension IRCClient {
 
 		let requestable = capabilityRegistry.capabilitiesToRequest(fromOffered: offered)
 
-		synchronized(pendingCapabilityRequestsMutable) {
-			for capability in requestable {
-				let name = capability.name
+		for capability in requestable {
+			let name = capability.name
 
-				guard enabledCapabilityNames.contains(name) == false else {
-					continue
-				}
+			guard enabledCapabilityNames.contains(name) == false else {
+				continue
+			}
 
-				if let hook = capability.negotiationHook, hook(self, offered[name] ?? []) == false {
-					continue
-				}
+			if let hook = capability.negotiationHook, hook(self, offered[name] ?? []) == false {
+				continue
+			}
 
-				/* Request the spelling the server advertised, not our
-				 lowercased canonical form: IRCv3 names are case-sensitive
-				 and a strict server will NAK anything else. */
-				let requestName = offeredCapabilityNames[name] as? String ?? name
+			/* Request the spelling the server advertised, not our
+			 lowercased canonical form: IRCv3 names are case-sensitive
+			 and a strict server will NAK anything else. */
+			let requestName = offeredCapabilityNames[name] ?? name
 
-				if pendingCapabilityRequestsMutable.contains(requestName) == false {
-					pendingCapabilityRequestsMutable.add(requestName)
-				}
+			if pendingCapabilityRequests.contains(requestName) == false {
+				pendingCapabilityRequests.append(requestName)
 			}
 		}
 	}
@@ -317,14 +313,9 @@ extension IRCClient {
 			return
 		}
 
-		let capability: String? = synchronized(pendingCapabilityRequestsMutable) {
-			guard let first = pendingCapabilityRequestsMutable.firstObject as? String else {
-				return nil
-			}
-
-			pendingCapabilityRequestsMutable.removeObject(at: 0)
-			return first
-		}
+		let capability: String? = pendingCapabilityRequests.isEmpty
+			? nil
+			: pendingCapabilityRequests.removeFirst()
 
 		guard let capability else {
 			if isLoggedIn == false {
@@ -380,10 +371,12 @@ extension IRCClient {
 
 		if enabled {
 			setCapabilityEnabled(capability.identifier)
-			enabledCapabilityNames.add(name)
+			if enabledCapabilityNames.contains(name) == false {
+				enabledCapabilityNames.append(name)
+			}
 		} else {
 			setCapabilityDisabled(capability.identifier)
-			enabledCapabilityNames.remove(name)
+			enabledCapabilityNames.removeAll { $0 == name }
 		}
 
 		if enabled, name == "sasl", sendSASLIdentificationRequest() {
@@ -421,8 +414,8 @@ extension IRCClient {
 					return
 				}
 
-				queueCapabilityRequests(from: offeredCapabilities as? [String: [String]] ?? [:])
-				offeredCapabilities.removeAllObjects()
+				queueCapabilityRequests(from: offeredCapabilities)
+				offeredCapabilities.removeAll()
 			case "ACK":
 				capabilityTokens(actions).forEach { toggleCapability($0, enabled: true) }
 			case "NAK", "DEL":
@@ -455,7 +448,7 @@ extension IRCClient {
 		ClientNegotiationUtilities.nextSASLMechanism(
 			from: supportedSASLMechanisms,
 			offered: offered,
-			tried: saslTriedMechanisms.compactMap { $0 as? String }
+			tried: saslTriedMechanisms
 		)
 	}
 
@@ -478,23 +471,23 @@ extension IRCClient {
 		let chunk = payload == "+" ? "" : payload
 
 		if saslIncomingPayload == nil {
-			saslIncomingPayload = NSMutableString()
+			saslIncomingPayload = ""
 		}
 
-		let accumulated = (saslIncomingPayload?.length ?? 0) + (chunk as NSString).length
+		let accumulated = ((saslIncomingPayload ?? "") as NSString).length + (chunk as NSString).length
 
 		guard accumulated <= ClientNegotiationUtilities.maximumSASLPayloadLength else {
 			abortSASLNegotiation(reason: IRCTransportSecurityStrings.saslPayloadTooLarge)
 			return
 		}
 
-		saslIncomingPayload?.append(chunk)
+		saslIncomingPayload? += chunk
 
 		guard chunk.count != 400 else {
 			return
 		}
 
-		let assembled = saslIncomingPayload as String? ?? ""
+		let assembled = saslIncomingPayload ?? ""
 		saslIncomingPayload = nil
 		sendSASLIdentificationInformation(forServerData: assembled)
 	}
@@ -594,10 +587,10 @@ extension IRCClient {
 	func retrySASL(withMechanisms mechanisms: [String]) -> Bool {
 		if let saslMechanism,
 		   saslTriedMechanisms.contains(where: {
-		   	($0 as? String)?.caseInsensitiveCompare(saslMechanism) == .orderedSame
+		   	$0.caseInsensitiveCompare(saslMechanism) == .orderedSame
 		   }) == false
 		{
-			saslTriedMechanisms.add(saslMechanism)
+			saslTriedMechanisms.append(saslMechanism)
 		}
 
 		saslScramClient = nil
@@ -635,12 +628,6 @@ extension IRCClient {
 		setCapabilityDisabled(.isIdentifiedWithSASL)
 		saslScramClient = nil
 		saslIncomingPayload = nil
-	}
-
-	/// Swift-facing names preserve the protocol vocabulary used by callers while
-	/// the Objective-C selectors remain stable for binary interoperability.
-	var pendingCapabilityRequests: [String] {
-		queuedCapabilityRequests
 	}
 
 	@MainActor

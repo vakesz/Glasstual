@@ -55,7 +55,7 @@ public extension Notification.Name {
 }
 
 @objc(IRCClient)
-open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
+open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	#if DEBUG
 		var linePrintObserver: ((IRCLinePrintRequest) -> Void)?
 	#endif
@@ -114,17 +114,19 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	public var capabilities: ClientIRCv3SupportedCapability = []
 	@objc dynamic var socket: Connection?
 	var capabilityNegotiationIsPaused = false
-	let pendingCapabilityRequestsMutable = NSMutableArray()
-	let enabledCapabilityNames = NSMutableOrderedSet()
-	let offeredCapabilities = NSMutableDictionary()
+	/// Capability names still waiting to be sent, in the order they were queued.
+	var pendingCapabilityRequests: [String] = []
+	/// Capability names the server acknowledged, in the order they arrived.
+	var enabledCapabilityNames: [String] = []
+	var offeredCapabilities: [String: [String]] = [:]
 	/// Lowercased capability name to the exact spelling the server advertised.
-	let offeredCapabilityNames = NSMutableDictionary()
+	var offeredCapabilityNames: [String: String] = [:]
 	var lastAwayMessage: String?
 	var saslOfferedMechanisms: [String]?
 	var saslScramClient: SCRAMClient?
-	var saslIncomingPayload: NSMutableString?
+	var saslIncomingPayload: String?
 	var saslMechanism: String?
-	let saslTriedMechanisms = NSMutableArray()
+	var saslTriedMechanisms: [String] = []
 	var temporaryServerAddressOverride: String?
 	var temporaryServerPortOverride: UInt16 = 0
 	var performedSTSUpgrade = false
@@ -148,7 +150,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	var lastServerSelected = UInt(NSNotFound)
 	var tryingNicknameNumber: UInt = 0
 	var tryingNicknameSentNickname: String?
-	let channelListPrivate = NSMutableArray()
+	var channelListPrivate: [IRCChannel] = []
 	@objc public dynamic weak var lastSelectedChannel: IRCChannel?
 	var addressBookMatchCache: AddressBookMatchCache!
 	var collapsedNetsplitBatch: Any?
@@ -163,7 +165,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	var reconnectTimer: TimerImplementation!
 	var retryTimer: TimerImplementation!
 	var autojoinDelayedWarningCount: UInt = 0
-	var channelsToAutojoin: NSMutableArray?
+	var channelsToAutojoin: [IRCChannel]?
 	var requestedCommands: ClientRequestedCommands!
 	var rawDataLogQuery: IRCChannel?
 	var hiddenCommandResponsesQuery: IRCChannel?
@@ -177,23 +179,36 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	 counter cannot express this: writing the banner is itself a write. */
 	@objc public dynamic var logFileSessionIsOpen = false
 	var chatHistoryPrependChannel: IRCChannel?
-	var chatHistoryPrependedLines: NSMutableArray?
+	var chatHistoryPrependedLines: [LogLine]?
 	var batchMessages: MessageBatchContainer!
-	let chatHistoryFailedTargets = NSMutableSet()
-	let chatHistoryPendingBeforeTargets = NSMutableSet()
-	let readMarkerSentDates = NSMutableDictionary()
-	let readMarkerPendingChannels = NSMutableSet()
+	/// Casefolded targets whose history request the server refused.
+	var chatHistoryFailedTargets: Set<String> = []
+	/// Casefolded targets with a history request in flight.
+	var chatHistoryPendingBeforeTargets: Set<String> = []
+	/// The newest read marker sent per channel, keyed by channel identifier.
+	var readMarkerSentDates: [String: Date] = [:]
+	var readMarkerPendingChannels: [IRCChannel] = []
 	var readMarkerTimer: TimerImplementation!
-	var collapsedNetsplitNicknames: NSMutableDictionary?
-	let pendingDeliveries = NSMutableDictionary()
-	let labelForBatchToken = NSMutableDictionary()
+	/// Nicknames seen in the netsplit batch being collapsed, per channel
+	/// identifier, in the order they arrived.
+	var collapsedNetsplitNicknames: [String: [String]]?
+	var pendingDeliveries: [String: LabeledDelivery] = [:]
+	var labelForBatchToken: [String: String] = [:]
 	var labelCounter: UInt = 0
 	var zncBouncerIsSendingCertificateInfo = false
 	var zncBouncerIsPlayingBackHistory = false
-	var zncBouncerCertificateChainDataMutable: NSMutableString?
-	let typingStateSent = NSMutableDictionary()
-	let typingActiveSentAt = NSMutableDictionary()
+	var zncBouncerCertificateChainDataMutable: String?
+	/// The typing state last sent to the server, keyed by channel identifier.
+	var typingStateSent: [String: TypingState] = [:]
+	/// When `.active` was last sent, keyed by channel identifier.
+	var typingActiveSentAt: [String: Date] = [:]
+	/// The pending "paused" notification per channel, keyed by identifier.
+	var typingPauseTasks: [String: Task<Void, Never>] = [:]
 	var trackedUsers: AddressBookUserTrackingContainer!
+	/// Users the client has seen, keyed by their casefolded nickname.
+	var usersByNickname: [String: User] = [:]
+	/// Timed commands the user scheduled, keyed by their identifier.
+	var timedCommandsByIdentifier: [String: TimedCommand] = [:]
 
 	@available(*, unavailable, message: "Use init(config:) or init(configDictionary:)")
 	override public init() {

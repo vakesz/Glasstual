@@ -479,7 +479,7 @@ private extension IRCClient {
 		}
 		if chatHistoryPrependChannel === channel {
 			if let copiedLine = logLine.copy() as? LogLine {
-				chatHistoryPrependedLines?.add(copiedLine)
+				chatHistoryPrependedLines?.append(copiedLine)
 			}
 			return
 		}

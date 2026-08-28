@@ -126,9 +126,10 @@ public extension IRCClient {
 			return
 		}
 		for queuedEntry in batchMessage.queuedEntries {
-			if let message = queuedEntry as? Message {
+			switch queuedEntry {
+			case let .message(message):
 				processIncomingMessage(message)
-			} else if let nestedBatch = queuedEntry as? MessageBatch {
+			case let .batch(nestedBatch):
 				recursivelyProcessBatchMessage(nestedBatch, depth: depth + 1)
 			}
 		}
@@ -221,7 +222,7 @@ private extension IRCClient {
 		} else if batch.batchType == "znc.in/tlsinfo" {
 			zncBouncerIsSendingCertificateInfo = isConnectedToZNC
 			if message.batchToken == nil {
-				zncBouncerCertificateChainDataMutable = NSMutableString()
+				zncBouncerCertificateChainDataMutable = ""
 			}
 		}
 	}

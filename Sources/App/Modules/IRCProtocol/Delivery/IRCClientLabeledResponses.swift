@@ -110,12 +110,12 @@ public extension IRCClient {
 
 	@objc(attachLineNumber:toDeliveryWithLabel:)
 	func attachLineNumber(_ lineNumber: String, toDeliveryWithLabel label: String) {
-		nativeDelivery(pendingDeliveries[label])?.lineNumber = lineNumber
+		pendingDeliveries[label]?.lineNumber = lineNumber
 	}
 
 	@objc(timeoutDeliveryWithLabel:)
 	func timeoutDelivery(withLabel label: String) {
-		guard let delivery = nativeDelivery(pendingDeliveries[label]), !delivery.resolved else { return }
+		guard let delivery = pendingDeliveries[label], !delivery.resolved else { return }
 		resolveDelivery(
 			withLabel: label,
 			state: .failed,
@@ -131,14 +131,14 @@ public extension IRCClient {
 		messageIdentifier: String?,
 		reason: String?
 	) {
-		guard let delivery = nativeDelivery(pendingDeliveries[label]), !delivery.resolved else { return }
+		guard let delivery = pendingDeliveries[label], !delivery.resolved else { return }
 		delivery.resolved = true
 		delivery.state = state
 		delivery.timeoutWorkItem?.cancel()
 		delivery.timeoutWorkItem = nil
 		/* Without this the table grows by one entry per outgoing message for the
 		 whole session, and a server reusing a stale label would keep matching it. */
-		pendingDeliveries.removeObject(forKey: label)
+		pendingDeliveries.removeValue(forKey: label)
 		guard let lineNumber = delivery.lineNumber else { return }
 
 		let arguments: [Any] = [
@@ -162,7 +162,7 @@ public extension IRCClient {
 	/// removed, so a resolved or unknown label reports `.none`.
 	@objc(deliveryStateForLabel:)
 	func deliveryState(forLabel label: String) -> TVCLogLineDeliveryState {
-		nativeDelivery(pendingDeliveries[label])?.state ?? .none
+		pendingDeliveries[label]?.state ?? .none
 	}
 }
 
@@ -179,12 +179,12 @@ private extension IRCClient {
 
 		var label = message.messageTags?["label"]
 		if label?.isEmpty ?? true, let batchToken = message.batchToken, !batchToken.isEmpty {
-			label = labelForBatchToken.object(forKey: batchToken) as? String
+			label = labelForBatchToken[batchToken]
 		}
 		guard
 			let label,
 			!label.isEmpty,
-			let delivery = nativeDelivery(pendingDeliveries[label]),
+			let delivery = pendingDeliveries[label],
 			!delivery.resolved
 		else {
 			/* An unknown or already-resolved label must not consume the message: the
@@ -219,14 +219,9 @@ private extension IRCClient {
 			labelForBatchToken[String(reference.dropFirst())] = label
 		} else if reference.hasPrefix("-") {
 			let token = String(reference.dropFirst())
-			if let label = labelForBatchToken.object(forKey: token) as? String {
-				labelForBatchToken.removeObject(forKey: token)
+			if let label = labelForBatchToken.removeValue(forKey: token) {
 				resolveDelivery(withLabel: label, state: .delivered, messageIdentifier: nil, reason: nil)
 			}
 		}
-	}
-
-	func nativeDelivery(_ delivery: Any?) -> LabeledDelivery? {
-		delivery as? LabeledDelivery
 	}
 }
