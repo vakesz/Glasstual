@@ -61,7 +61,7 @@ extension IRCClient {
 
 		let command = "clear \(channel.name)"
 		if isConnectedToZNC {
-			sendCommand(command, toZNCModuleNamed: "playback")
+			sendCommand(command, toZNCModuleNamed: IRCServerQuirks.ZNC.playbackModule)
 		} else {
 			send("PRIVMSG", arguments: ["*playback", command])
 		}
@@ -82,7 +82,7 @@ extension IRCClient {
 		)
 
 		if isConnectedToZNC {
-			sendCommand(command, toZNCModuleNamed: "playback")
+			sendCommand(command, toZNCModuleNamed: IRCServerQuirks.ZNC.playbackModule)
 		} else {
 			send("PRIVMSG", arguments: ["*playback", command])
 		}

@@ -63,8 +63,6 @@ public final nonisolated class ISupportExtendedBanConfiguration: NSObject {
 
 @objc(IRCISupportTokenParser)
 public final nonisolated class ISupportTokenParser: NSObject {
-	private static let userModeParameterClass = 100
-
 	@available(*, unavailable)
 	override public init() {
 		fatalError("ISupportTokenParser is a static namespace")
@@ -161,35 +159,29 @@ public final nonisolated class ISupportTokenParser: NSObject {
 		)
 	}
 
-	@objc(channelModesFromToken:mergingModes:)
-	public static func channelModes(from token: String, merging existingModes: [String: NSNumber])
-		-> [String: NSNumber]
-	{
+	/// The `CHANMODES` groups, merged over what the server has already
+	/// advertised. Groups past D have no defined meaning, so their modes are
+	/// left out and read back as "takes no parameter".
+	public static func channelModeKinds(
+		from token: String,
+		merging existingModes: [Character: ChannelModeKind]
+	) -> [Character: ChannelModeKind] {
 		var channelModes = existingModes
 
 		for (index, modeClass) in token.split(separator: ",", omittingEmptySubsequences: false).enumerated() {
+			guard let kind = ChannelModeKind(chanModesGroupIndex: index) else {
+				continue
+			}
+
 			for modeSymbol in modeClass {
-				channelModes[String(modeSymbol)] = NSNumber(value: index + 1)
+				channelModes[modeSymbol] = kind
 			}
 		}
 
 		return channelModes
 	}
 
-	static func addingUserModes(_ modeSymbols: [String], to existingModes: [String: NSNumber])
-		-> [String: NSNumber]
-	{
-		var channelModes = existingModes
-
-		for modeSymbol in modeSymbols {
-			channelModes[modeSymbol] = NSNumber(value: userModeParameterClass)
-		}
-
-		return channelModes
-	}
-
-	@objc(casefoldString:caseMapping:)
-	public static func casefold(_ string: String, caseMapping: UInt) -> String {
+	public static func casefold(_ string: String, caseMapping: IRCISupportInfoCaseMapping) -> String {
 		guard string.isEmpty == false else {
 			return string
 		}
@@ -201,7 +193,7 @@ public final nonisolated class ISupportTokenParser: NSObject {
 				return lowercase
 			}
 
-			guard caseMapping != 2 else {
+			guard caseMapping != .ascii else {
 				return scalar
 			}
 
@@ -209,7 +201,7 @@ public final nonisolated class ISupportTokenParser: NSObject {
 			case "[": return "{"
 			case "]": return "}"
 			case "\\": return "|"
-			case "~" where caseMapping == 0: return "^"
+			case "~" where caseMapping == .rfc1459: return "^"
 			default: return scalar
 			}
 		}
