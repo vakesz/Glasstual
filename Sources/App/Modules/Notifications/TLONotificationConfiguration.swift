@@ -55,27 +55,27 @@ public class NotificationConfiguration: NSObject {
 		set { rejectAbstractSetter(newValue, selectorName: "setAlertSound:") }
 	}
 
-	@objc public dynamic var speakEvent: UInt {
+	@objc public dynamic var speakEvent: NSControl.StateValue {
 		get { abstractValue(for: "speakEvent") }
 		set { rejectAbstractSetter(newValue, selectorName: "setSpeakEvent:") }
 	}
 
-	@objc public dynamic var pushNotification: UInt {
+	@objc public dynamic var pushNotification: NSControl.StateValue {
 		get { abstractValue(for: "pushNotification") }
 		set { rejectAbstractSetter(newValue, selectorName: "setPushNotification:") }
 	}
 
-	@objc public dynamic var disabledWhileAway: UInt {
+	@objc public dynamic var disabledWhileAway: NSControl.StateValue {
 		get { abstractValue(for: "disabledWhileAway") }
 		set { rejectAbstractSetter(newValue, selectorName: "setDisabledWhileAway:") }
 	}
 
-	@objc public dynamic var bounceDockIcon: UInt {
+	@objc public dynamic var bounceDockIcon: NSControl.StateValue {
 		get { abstractValue(for: "bounceDockIcon") }
 		set { rejectAbstractSetter(newValue, selectorName: "setBounceDockIcon:") }
 	}
 
-	@objc public dynamic var bounceDockIconRepeatedly: UInt {
+	@objc public dynamic var bounceDockIconRepeatedly: NSControl.StateValue {
 		get { abstractValue(for: "bounceDockIconRepeatedly") }
 		set { rejectAbstractSetter(newValue, selectorName: "setBounceDockIconRepeatedly:") }
 	}
@@ -108,29 +108,29 @@ public final class PreferencesNotificationConfiguration: NotificationConfigurati
 		set { TextualPreferences.setSound(newValue, for: eventType) }
 	}
 
-	override public var pushNotification: UInt {
-		get { TextualPreferences.notificationEnabled(for: eventType) ? 1 : 0 }
-		set { TextualPreferences.setNotificationEnabled(newValue != 0, for: eventType) }
+	override public var pushNotification: NSControl.StateValue {
+		get { TextualPreferences.notificationEnabled(for: eventType) ? .on : .off }
+		set { TextualPreferences.setNotificationEnabled(newValue != .off, for: eventType) }
 	}
 
-	override public var speakEvent: UInt {
-		get { TextualPreferences.speak(eventType) ? 1 : 0 }
-		set { TextualPreferences.setEventIsSpoken(newValue != 0, for: eventType) }
+	override public var speakEvent: NSControl.StateValue {
+		get { TextualPreferences.speak(eventType) ? .on : .off }
+		set { TextualPreferences.setEventIsSpoken(newValue != .off, for: eventType) }
 	}
 
-	override public var disabledWhileAway: UInt {
-		get { TextualPreferences.disabledWhileAway(for: eventType) ? 1 : 0 }
-		set { TextualPreferences.setDisabledWhileAway(newValue != 0, for: eventType) }
+	override public var disabledWhileAway: NSControl.StateValue {
+		get { TextualPreferences.disabledWhileAway(for: eventType) ? .on : .off }
+		set { TextualPreferences.setDisabledWhileAway(newValue != .off, for: eventType) }
 	}
 
-	override public var bounceDockIcon: UInt {
-		get { TextualPreferences.bounceDockIcon(for: eventType) ? 1 : 0 }
-		set { TextualPreferences.setBounceDockIcon(newValue != 0, for: eventType) }
+	override public var bounceDockIcon: NSControl.StateValue {
+		get { TextualPreferences.bounceDockIcon(for: eventType) ? .on : .off }
+		set { TextualPreferences.setBounceDockIcon(newValue != .off, for: eventType) }
 	}
 
-	override public var bounceDockIconRepeatedly: UInt {
-		get { TextualPreferences.bounceDockIconRepeatedly(for: eventType) ? 1 : 0 }
-		set { TextualPreferences.setBounceDockIconRepeatedly(newValue != 0, for: eventType) }
+	override public var bounceDockIconRepeatedly: NSControl.StateValue {
+		get { TextualPreferences.bounceDockIconRepeatedly(for: eventType) ? .on : .off }
+		set { TextualPreferences.setBounceDockIconRepeatedly(newValue != .off, for: eventType) }
 	}
 }
 
@@ -154,44 +154,35 @@ public final class ChannelNotificationConfiguration: NotificationConfiguration {
 		set { config?.setSound(newValue, forEvent: eventType) }
 	}
 
-	override public var pushNotification: UInt {
-		get { unsignedValue(config?.notificationEnabled(forEvent: eventType)) }
-		set { config?.setNotificationEnabled(controlState(from: newValue), forEvent: eventType) }
+	override public var pushNotification: NSControl.StateValue {
+		get { config?.notificationEnabled(forEvent: eventType) ?? .mixed }
+		set { config?.setNotificationEnabled(newValue, forEvent: eventType) }
 	}
 
-	override public var speakEvent: UInt {
-		get { unsignedValue(config?.speakEvent(eventType)) }
-		set { config?.setEventIsSpoken(controlState(from: newValue), forEvent: eventType) }
+	override public var speakEvent: NSControl.StateValue {
+		get { config?.speakEvent(eventType) ?? .mixed }
+		set { config?.setEventIsSpoken(newValue, forEvent: eventType) }
 	}
 
-	override public var disabledWhileAway: UInt {
-		get { unsignedValue(config?.disabledWhileAway(forEvent: eventType)) }
-		set { config?.setDisabledWhileAway(controlState(from: newValue), forEvent: eventType) }
+	override public var disabledWhileAway: NSControl.StateValue {
+		get { config?.disabledWhileAway(forEvent: eventType) ?? .mixed }
+		set { config?.setDisabledWhileAway(newValue, forEvent: eventType) }
 	}
 
-	override public var bounceDockIcon: UInt {
-		get { unsignedValue(config?.bounceDockIcon(forEvent: eventType)) }
-		set { config?.setBounceDockIcon(controlState(from: newValue), forEvent: eventType) }
+	override public var bounceDockIcon: NSControl.StateValue {
+		get { config?.bounceDockIcon(forEvent: eventType) ?? .mixed }
+		set { config?.setBounceDockIcon(newValue, forEvent: eventType) }
 	}
 
-	override public var bounceDockIconRepeatedly: UInt {
-		get { unsignedValue(config?.bounceDockIconRepeatedly(forEvent: eventType)) }
-		set { config?.setBounceDockIconRepeatedly(controlState(from: newValue), forEvent: eventType) }
+	override public var bounceDockIconRepeatedly: NSControl.StateValue {
+		get { config?.bounceDockIconRepeatedly(forEvent: eventType) ?? .mixed }
+		set { config?.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
 	}
 
+	/// A nil config (the sheet is gone) reads back as `.mixed`: the neutral
+	/// value the checkbox already understands, and the default for a channel
+	/// that carries no override of its own.
 	private var config: MutableChannelConfig? {
 		sheet?.config
-	}
-
-	private func unsignedValue(_ state: NSControl.StateValue?) -> UInt {
-		guard let state else {
-			return 0
-		}
-
-		return UInt(bitPattern: state.rawValue)
-	}
-
-	private func controlState(from value: UInt) -> NSControl.StateValue {
-		NSControl.StateValue(rawValue: Int(bitPattern: value))
 	}
 }

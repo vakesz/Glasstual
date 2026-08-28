@@ -117,6 +117,7 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 	@IBOutlet var autoDisconnectOnSleepCheck: NSButton!
 	@IBOutlet var autoReconnectCheck: NSButton!
 	@IBOutlet var autojoinWaitsForNickServCheck: NSButton!
+	@IBOutlet var disconnectOnSASLFailureCheck: NSButton!
 	@IBOutlet var clientCertificateChangeCertificateButton: NSButton!
 	@IBOutlet var clientCertificateResetCertificateButton: NSButton!
 	@IBOutlet var clientCertificateSHA1FingerprintCopyButton: NSButton!
@@ -419,18 +420,14 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		realNameTextField.stringValue = config.realName.isEmpty ? TextualPreferences.defaultRealName() : config.realName
 		nicknamePasswordTextField.stringValue = config.nicknamePassword ?? ""
 		autojoinWaitsForNickServCheck.state = config.autojoinWaitsForNickServ ? .on : .off
+		disconnectOnSASLFailureCheck.state = config.disconnectOnSASLFailure ? .on : .off
 		hideAutojoinDelayedWarningsCheck.state = config.hideAutojoinDelayedWarnings ? .off : .on
 
 		normalLeavingCommentTextField.stringValue = config.normalLeavingComment
 		sleepModeQuitMessageTextField.stringValue = config.sleepModeLeavingComment
 
-		let encodings = encodingList as NSDictionary
-		if let title = encodings.ce_firstKey(for: NSNumber(value: config.primaryEncoding)) as? String {
-			primaryEncodingButton.selectItem(withTitle: title)
-		}
-		if let title = encodings.ce_firstKey(for: NSNumber(value: config.fallbackEncoding)) as? String {
-			fallbackEncodingButton.selectItem(withTitle: title)
-		}
+		selectEncoding(config.primaryEncoding, in: primaryEncodingButton)
+		selectEncoding(config.fallbackEncoding, in: fallbackEncodingButton)
 
 		proxyTypeButton.selectItem(withTag: Int(config.proxyType.rawValue))
 		proxyAddressTextField.stringValue = config.proxyAddress ?? ""
@@ -486,10 +483,12 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		config.realName = realNameTextField.value
 		let versionReply = ctcpVersionReplyTextField.value
 		config.ctcpVersionReply = versionReply.isEmpty ? nil : versionReply
-		config.awayNickname = awayNicknameTextField.value
-		config.nicknamePassword = nicknamePasswordTextField.stringValue
-			.trimmingCharacters(in: .whitespacesAndNewlines)
+		config.awayNickname = Self.nilIfEmpty(awayNicknameTextField.value)
+		config.nicknamePassword = Self.nilIfEmpty(
+			nicknamePasswordTextField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+		)
 		config.autojoinWaitsForNickServ = autojoinWaitsForNickServCheck.state == .on
+		config.disconnectOnSASLFailure = disconnectOnSASLFailureCheck.state == .on
 		config.hideAutojoinDelayedWarnings = hideAutojoinDelayedWarningsCheck.state != .on
 		config.alternateNicknames = uniqueNonempty(
 			alternateNicknamesTextField.value.components(separatedBy: .whitespaces)
@@ -497,28 +496,54 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 
 		config.sleepModeLeavingComment = sleepModeQuitMessageTextField.value
 		config.normalLeavingComment = normalLeavingCommentTextField.value
-		config.primaryEncoding = encodingList[primaryEncodingButton.title]?.uintValue ?? String.Encoding.utf8.rawValue
-		config.fallbackEncoding = encodingList[fallbackEncodingButton.title]?.uintValue ?? String.Encoding.isoLatin1
-			.rawValue
+		config.primaryEncoding = Self.encoding(forTag: primaryEncodingButton.selectedTag(), default: .utf8)
+		config.fallbackEncoding = Self.encoding(forTag: fallbackEncodingButton.selectedTag(), default: .isoLatin1)
 
-		config.proxyType = IRCConnectionProxyType(rawValue: UInt(proxyTypeButton.selectedTag())) ?? .automatic
-		config.proxyAddress = proxyAddressTextField.lowercaseValue
+		config.proxyType = Self.proxyType(forTag: proxyTypeButton.selectedTag())
+		config.proxyAddress = Self.nilIfEmpty(proxyAddressTextField.lowercaseValue)
 		config.proxyPort = UInt16(clamping: proxyPortTextField.integerValue)
-		config.proxyUsername = (proxyUsernameTextField.stringValue as NSString).ceTrimAndGetFirstToken
-		config.proxyPassword = proxyPasswordTextField.stringValue
-			.trimmingCharacters(in: .whitespacesAndNewlines)
+		config.proxyUsername = Self.nilIfEmpty(
+			(proxyUsernameTextField.stringValue as NSString).ceTrimAndGetFirstToken
+		)
+		config.proxyPassword = Self.nilIfEmpty(
+			proxyPasswordTextField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+		)
 		config.loginCommands = connectCommandsField.string
 			.components(separatedBy: .newlines)
 			.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 			.filter { !$0.isEmpty }
 		config.setInvisibleModeOnConnect = setInvisibleModeOnConnectCheck.state == .on
 		config.runConnectCommandsSilently = runConnectCommandsSilentlyCheck.state == .on
-		config.floodControlMaximumMessages = UInt(floodControlMessageCountSlider.integerValue)
-		config.floodControlDelayTimerInterval = UInt(floodControlDelayTimerSlider.integerValue)
+		config.floodControlMaximumMessages = floodControlMessageCountSliderTempValue
+		config.floodControlDelayTimerInterval = floodControlDelayTimerSliderTempValue
 		config.channelList = channelList
 		config.highlightList = highlightList
 		config.ignoreList = addressBookList
 		config.serverList = serverList
+	}
+
+	/// `dictionaryValue(for:)` omits a nil but persists an empty string, so
+	/// every optional field has to normalise the same way.
+	static func nilIfEmpty(_ value: String) -> String? {
+		value.isEmpty ? nil : value
+	}
+
+	/// One fallback, shared by the sheet, its validators and saveConfig, which
+	/// used to disagree about what an unrecognised tag meant.
+	static func proxyType(forTag tag: Int) -> IRCConnectionProxyType {
+		guard tag >= 0, let type = IRCConnectionProxyType(rawValue: UInt(tag)) else {
+			return .none
+		}
+
+		return type
+	}
+
+	static func proxyTypeUsesAddress(_ tag: Int) -> Bool {
+		[.socks5, .HTTP].contains(proxyType(forTag: tag))
+	}
+
+	static func encoding(forTag tag: Int, default fallback: String.Encoding) -> UInt {
+		tag > 0 ? UInt(tag) : fallback.rawValue
 	}
 
 	private func uniqueNonempty(_ values: [String]) -> [String] {

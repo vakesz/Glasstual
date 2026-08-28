@@ -69,6 +69,7 @@ open class ClientConfig: PortablePropertyDict {
 	fileprivate var autoReconnectStorage = false
 	fileprivate var autoSleepModeDisconnectStorage = true
 	fileprivate var autojoinWaitsForNickServStorage = false
+	fileprivate var disconnectOnSASLFailureStorage = false
 	fileprivate var connectionPrefersIPv4Storage = false
 	fileprivate var hideAutojoinDelayedWarningsStorage = false
 	fileprivate var hideNetworkUnavailabilityNoticesStorage = false
@@ -140,6 +141,12 @@ open class ClientConfig: PortablePropertyDict {
 
 	@objc public var autojoinWaitsForNickServ: Bool {
 		autojoinWaitsForNickServStorage
+	}
+
+	/// Ends the connection when the server rejects SASL (904, 905 or 906)
+	/// instead of completing registration unauthenticated.
+	@objc public var disconnectOnSASLFailure: Bool {
+		disconnectOnSASLFailureStorage
 	}
 
 	@objc public var hideAutojoinDelayedWarnings: Bool {
@@ -444,6 +451,7 @@ open class ClientConfig: PortablePropertyDict {
 			"autoReconnect": false,
 			"autoSleepModeDisconnect": true,
 			"autojoinWaitsForNickServ": false,
+			"disconnectOnSASLFailure": false,
 			"cachedLastServerTimeCapabilityReceivedAtTimestamp": 0,
 			"cipherSuites": CipherSuiteCollection.default.rawValue,
 			"connectionName": ApplicationStrings.untitledConnection,
@@ -597,6 +605,7 @@ open class ClientConfig: PortablePropertyDict {
 			"autoReconnect": autoReconnectStorage,
 			"autoSleepModeDisconnect": autoSleepModeDisconnectStorage,
 			"autojoinWaitsForNickServ": autojoinWaitsForNickServStorage,
+			"disconnectOnSASLFailure": disconnectOnSASLFailureStorage,
 			"hideAutojoinDelayedWarnings": hideAutojoinDelayedWarningsStorage,
 			"hideNetworkUnavailabilityNotices": hideNetworkUnavailabilityNoticesStorage,
 			"performDisconnectOnPongTimer": performDisconnectOnPongTimerStorage,
@@ -838,6 +847,10 @@ extension ClientConfig {
 		autojoinWaitsForNickServStorage = boolValue(
 			values["autojoinWaitsForNickServ"],
 			fallback: autojoinWaitsForNickServStorage
+		)
+		disconnectOnSASLFailureStorage = boolValue(
+			values["disconnectOnSASLFailure"],
+			fallback: disconnectOnSASLFailureStorage
 		)
 		hideAutojoinDelayedWarningsStorage = boolValue(
 			values["hideAutojoinDelayedWarnings"],
@@ -1103,6 +1116,10 @@ public final class MutableClientConfig: ClientConfig {
 
 	@objc override public var autojoinWaitsForNickServ: Bool {
 		get { autojoinWaitsForNickServStorage } set { autojoinWaitsForNickServStorage = newValue }
+	}
+
+	@objc override public var disconnectOnSASLFailure: Bool {
+		get { disconnectOnSASLFailureStorage } set { disconnectOnSASLFailureStorage = newValue }
 	}
 
 	@objc override public var hideAutojoinDelayedWarnings: Bool {

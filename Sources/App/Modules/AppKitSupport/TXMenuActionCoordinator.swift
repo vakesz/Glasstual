@@ -486,8 +486,9 @@ public final class MenuActionCoordinator: NSObject {
 
 	@objc(sendDroppedFiles:row:)
 	public func sendDroppedFiles(_ files: [String], row: UInt) {
-		guard let client = selectedClient, let channel = selectedChannel,
-		      client.isLoggedIn, channel.isPrivateMessage,
+		// The member list is only ever populated for channels, so no
+		// isPrivateMessage check here: the file goes to the row's nickname.
+		guard let client = selectedClient, client.isLoggedIn,
 		      let member = mainWindow.memberList.item(atRow: Int(row)) as? ChannelUser
 		else { return }
 		sendDroppedFiles(files, nickname: member.user.nickname)

@@ -30,7 +30,6 @@
  *
  *********************************************************************** */
 
-import Darwin
 import Foundation
 import Security
 
@@ -45,7 +44,6 @@ public final class KeychainStore: NSObject {
 			username: username,
 			service: service
 		) as CFDictionary)
-		_ = deleteLegacyItem(name: name, kind: kind, username: username, service: service)
 		return status == errSecSuccess
 	}
 
@@ -86,11 +84,7 @@ public final class KeychainStore: NSObject {
 		var query = protectedQuery(name: name, kind: kind, username: username, service: service)
 		query[kSecAttrAccessible] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
 		query[kSecValueData] = Data(password.utf8)
-		let status = SecItemAdd(query as CFDictionary, nil)
-		if status == errSecSuccess {
-			_ = deleteLegacyItem(name: name, kind: kind, username: username, service: service)
-		}
-		return status == errSecSuccess
+		return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
 	}
 
 	@objc(getPasswordFromKeychainItem:withItemKind:forUsername:serviceName:)
@@ -108,52 +102,25 @@ public final class KeychainStore: NSObject {
 	) -> String? {
 		var status = errSecSuccess
 		var query = protectedQuery(name: name, kind: kind, username: username, service: service)
-		var password = password(matching: &query, status: &status)
-		if status == errSecItemNotFound {
-			password = migrateLegacyItem(name: name, kind: kind, username: username, service: service, status: &status)
-		}
+		let password = password(matching: &query, status: &status)
 		statusPointer?.pointee = status
 		return password
-	}
-
-	private static func baseQuery(name: String, kind: String, username: String?, service: String) -> [CFString: Any] {
-		var query: [CFString: Any] = [
-			kSecClass: kind == "internet password" ? kSecClassInternetPassword : kSecClassGenericPassword,
-			kSecAttrLabel: name,
-			kSecAttrDescription: kind,
-			kSecAttrService: service,
-		]
-		if let username, username.isEmpty == false {
-			query[kSecAttrAccount] = username
-		}
-		return query
 	}
 
 	private static func protectedQuery(name: String, kind: String, username: String?,
 	                                   service: String) -> [CFString: Any]
 	{
-		var query = baseQuery(name: name, kind: kind, username: username, service: service)
-		query[kSecUseDataProtectionKeychain] = true
+		var query: [CFString: Any] = [
+			kSecClass: kind == "internet password" ? kSecClassInternetPassword : kSecClassGenericPassword,
+			kSecAttrLabel: name,
+			kSecAttrDescription: kind,
+			kSecAttrService: service,
+			kSecUseDataProtectionKeychain: true,
+		]
+		if let username, username.isEmpty == false {
+			query[kSecAttrAccount] = username
+		}
 		return query
-	}
-
-	private static func legacyQuery(name: String, kind: String, username: String?,
-	                                service: String) -> [CFString: Any]?
-	{
-		var keychain: SecKeychain?
-		typealias CopyDefaultKeychain = @convention(c) (UnsafeMutablePointer<SecKeychain?>?) -> OSStatus
-		guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "SecKeychainCopyDefault") else { return nil }
-		let copyDefault = unsafeBitCast(symbol, to: CopyDefaultKeychain.self)
-		guard copyDefault(&keychain) == errSecSuccess, let keychain else { return nil }
-		var query = baseQuery(name: name, kind: kind, username: username, service: service)
-		query[kSecMatchSearchList] = [keychain]
-		return query
-	}
-
-	private static func deleteLegacyItem(name: String, kind: String, username: String?, service: String) -> Bool {
-		guard let query = legacyQuery(name: name, kind: kind, username: username, service: service)
-		else { return false }
-		return SecItemDelete(query as CFDictionary) == errSecSuccess
 	}
 
 	private static func password(matching query: inout [CFString: Any], status: inout OSStatus) -> String? {
@@ -163,19 +130,5 @@ public final class KeychainStore: NSObject {
 		status = SecItemCopyMatching(query as CFDictionary, &result)
 		guard status == errSecSuccess, let data = result as? Data else { return nil }
 		return String(data: data, encoding: .utf8)
-	}
-
-	private static func migrateLegacyItem(
-		name: String,
-		kind: String,
-		username: String?,
-		service: String,
-		status: inout OSStatus
-	) -> String? {
-		guard var query = legacyQuery(name: name, kind: kind, username: username, service: service),
-		      let password = password(matching: &query, status: &status)
-		else { return nil }
-		_ = addItem(name, kind: kind, username: username, password: password, service: service)
-		return password
 	}
 }

@@ -40,12 +40,12 @@ class TLONotificationConfigurationTests: XCTestCase {
 
 		XCTAssertEqual(configuration.alertSound, expectedSound)
 
-		XCTAssertEqual(configuration.pushNotification != 0, TextualPreferences.notificationEnabled(for: eventType))
-		XCTAssertEqual(configuration.speakEvent != 0, TextualPreferences.speak(eventType))
-		XCTAssertEqual(configuration.disabledWhileAway != 0, TextualPreferences.disabledWhileAway(for: eventType))
-		XCTAssertEqual(configuration.bounceDockIcon != 0, TextualPreferences.bounceDockIcon(for: eventType))
+		XCTAssertEqual(configuration.pushNotification != .off, TextualPreferences.notificationEnabled(for: eventType))
+		XCTAssertEqual(configuration.speakEvent != .off, TextualPreferences.speak(eventType))
+		XCTAssertEqual(configuration.disabledWhileAway != .off, TextualPreferences.disabledWhileAway(for: eventType))
+		XCTAssertEqual(configuration.bounceDockIcon != .off, TextualPreferences.bounceDockIcon(for: eventType))
 		XCTAssertEqual(
-			configuration.bounceDockIconRepeatedly != 0,
+			configuration.bounceDockIconRepeatedly != .off,
 			TextualPreferences.bounceDockIconRepeatedly(for: eventType)
 		)
 	}
