@@ -44,39 +44,45 @@ let TVCLogLineNoticeNicknameFormat = "-%@-"
 let TVCLogLineSpecialNoticeMessageFormat = "[%@]: %@"
 let TVCLogLineDefaultCommandValue = "-100"
 
+/** The raw values are persisted — they are written into the renderer
+ attribute dictionary and archived with every log line — so a number may never
+ be reused and a new case may only ever be appended. `offTheRecordEncryptionStatus`
+ stays at 15 for the sake of already-archived lines even though OTR is gone. */
 @objc public enum TVCLogLineType: UInt, Sendable {
-	case undefined
-	case action
-	case actionNoHighlight
-	case ctcp
-	case ctcpQuery
-	case ctcpReply
-	case dccFileTransfer
-	case debug
-	case invite
-	case join
-	case kick
-	case kill
-	case mode
-	case nick
-	case notice
-	case offTheRecordEncryptionStatus
-	case part
-	case privateMessage
-	case privateMessageNoHighlight
-	case quit
-	case topic
-	case website
+	case undefined = 0
+	case action = 1
+	case actionNoHighlight = 2
+	case ctcp = 3
+	case ctcpQuery = 4
+	case ctcpReply = 5
+	case dccFileTransfer = 6
+	case debug = 7
+	case invite = 8
+	case join = 9
+	case kick = 10
+	case kill = 11
+	case mode = 12
+	case nick = 13
+	case notice = 14
+	case offTheRecordEncryptionStatus = 15
+	case part = 16
+	case privateMessage = 17
+	case privateMessageNoHighlight = 18
+	case quit = 19
+	case topic = 20
+	case website = 21
 }
 
+/** Persisted alongside the log line; see `TVCLogLineType`. */
 @objc public enum TVCLogLineMemberType: UInt, Sendable {
-	case normal
-	case localUser
+	case normal = 0
+	case localUser = 1
 }
 
+/** Persisted alongside the log line; see `TVCLogLineType`. */
 @objc public enum TVCLogLineDeliveryState: UInt, Sendable {
-	case none
-	case pending
-	case delivered
-	case failed
+	case none = 0
+	case pending = 1
+	case delivered = 2
+	case failed = 3
 }
