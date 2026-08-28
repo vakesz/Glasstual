@@ -84,11 +84,14 @@ public final class ValidatedTextField: NSTextField {
 		}
 	}
 
-	override public func textDidChange(_: Notification) {
+	override public func textDidChange(_ notification: Notification) {
+		super.textDidChange(notification)
 		valueChangedAction()
 	}
 
 	override public func viewWillMove(toWindow newWindow: NSWindow?) {
+		super.viewWillMove(toWindow: newWindow)
+
 		if newWindow == nil {
 			closeValidationErrorPopover()
 		}
