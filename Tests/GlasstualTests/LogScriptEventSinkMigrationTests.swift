@@ -46,9 +46,4 @@ final class LogScriptEventSinkMigrationTests: XCTestCase {
 		XCTAssertEqual(TVCLogScriptEventSink.objectValueToCommon("Tom &amp; Jerry") as? String, "Tom & Jerry")
 		XCTAssertEqual(TVCLogScriptEventSink.objectValueToCommon(NSNumber(value: 7)) as? NSNumber, 7)
 	}
-
-	func testLocalizationFormatsArgumentsAfterLookup() {
-		XCTAssertEqual(localizedString("Hello, %@", "Glasstual"), "Hello, Glasstual")
-		XCTAssertEqual(localizedString("Count: %ld", 3), "Count: 3")
-	}
 }

@@ -502,7 +502,6 @@ targets:
       - path: Sources/Services/IRC Remote Connection Manager/Resources/Language Files
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
-      - path: Sources/Shared/Library/TLOLocalization.swift
       - path: Sources/Shared/Library/TLOTimer.swift
       - path: Sources/Shared/Services/RemoteConnectionProtocols.swift
     dependencies:
