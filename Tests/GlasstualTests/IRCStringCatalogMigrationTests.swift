@@ -5,55 +5,57 @@
 
 import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCStringCatalogMigrationTests: XCTestCase {
-	func testGeneratedAndLegacyFormatterBoundariesPreservePlaceholders() {
-		XCTAssertEqual(
-			IRCCommandStrings.topicTooLong(networkName: "Libera.Chat", maximumLength: 390),
-			"You have exceeded the maximum topic length for Libera.Chat which is 390 characters. "
-				+ "The end of your topic may have been cut off."
+@Suite("IRC string catalog")
+struct IRCStringCatalogMigrationTests {
+	@Test("Generated and legacy formatters place the same values in the same order")
+	func generatedAndLegacyFormatterBoundariesPreservePlaceholders() {
+		let topicTooLong = "You have exceeded the maximum topic length for Libera.Chat which is 390 characters. "
+			+ "The end of your topic may have been cut off."
+
+		#expect(IRCCommandStrings.topicTooLong(networkName: "Libera.Chat", maximumLength: 390) == topicTooLong)
+		#expect(
+			IRCConnectionStrings.connecting(host: "irc.example", port: 6697)
+				== "Connecting to [irc.example] on port 6697"
 		)
-		XCTAssertEqual(
-			IRCConnectionStrings.connecting(host: "irc.example", port: 6697),
-			"Connecting to [irc.example] on port 6697"
-		)
-		XCTAssertEqual(
-			IRCFileTransferStrings.request(nickname: "Alice", filename: "archive.zip", byteCount: 1024),
-			"Received file transfer request from Alice, archive.zip (1 kB)"
+		#expect(
+			IRCFileTransferStrings.request(nickname: "Alice", filename: "archive.zip", byteCount: 1024)
+				== "Received file transfer request from Alice, archive.zip (1 kB)"
 		)
 	}
 
-	func testTypedDynamicSelectionsPreserveBehavior() {
-		XCTAssertEqual(IRCTimerStrings.status(active: true), "Active")
-		XCTAssertTrue(IRCTimerStrings.help(topic: .restart).contains("/timer restart <identifier>"))
-		XCTAssertEqual(IRCCTCPStrings.lagRating(.excellent), "Yeah, okay…")
-		XCTAssertEqual(IRCCTCPStrings.lagRating(.verySlow), "Very slow")
-		XCTAssertEqual(
-			IRCISupportStrings.extendedBanDescription(type: "a", argument: "staff"),
-			"Users logged in to account “staff”"
+	@Test("Typed selections pick the same entry the untyped lookups used to")
+	func typedDynamicSelectionsPreserveBehavior() {
+		#expect(IRCTimerStrings.status(active: true) == "Active")
+		#expect(IRCTimerStrings.help(topic: .restart).contains("/timer restart <identifier>"))
+		#expect(IRCCTCPStrings.lagRating(.excellent) == "Yeah, okay…")
+		#expect(IRCCTCPStrings.lagRating(.verySlow) == "Very slow")
+		#expect(
+			IRCISupportStrings.extendedBanDescription(type: "a", argument: "staff")
+				== "Users logged in to account “staff”"
 		)
-		XCTAssertEqual(
-			IRCISupportStrings.extendedBanDescription(type: "?", argument: "mask"),
-			"Extended ban of type “?”: mask"
+		#expect(
+			IRCISupportStrings.extendedBanDescription(type: "?", argument: "mask")
+				== "Extended ban of type “?”: mask"
 		)
-		XCTAssertEqual(
+		#expect(
 			IRCChannelAccessListStrings.entry(
 				kind: .ban,
 				channelName: "#swift",
 				mask: "*!*@example",
 				setBy: "Alice",
 				date: "26 Aug 2026"
-			),
-			"Ban in #swift: *!*@example set by Alice on 26 Aug 2026"
+			) == "Ban in #swift: *!*@example set by Alice on 26 Aug 2026"
 		)
 	}
 
-	func testSetNameUsesRetainedCatalogEntry() {
-		XCTAssertEqual(
-			IRCCommandStrings.setNameUnsupported,
-			"This server does not support changing the real name (setname)"
+	@Test("The retained setname entry still reads back")
+	func setNameUsesRetainedCatalogEntry() {
+		#expect(
+			IRCCommandStrings.setNameUnsupported
+				== "This server does not support changing the real name (setname)"
 		)
 	}
 }
