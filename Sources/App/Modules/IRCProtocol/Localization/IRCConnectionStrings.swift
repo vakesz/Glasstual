@@ -95,11 +95,11 @@ nonisolated enum IRCConnectionStrings {
 	}
 
 	static func socksProxy(host: String, port: UInt16) -> String {
-		IRCLegacyFormat.socksProxy.format(host, port)
+		String(localized: .IRC.ni5Cy(host, UInt(port)))
 	}
 
 	static func httpProxy(host: String, port: UInt16) -> String {
-		IRCLegacyFormat.httpProxy.format(host, port)
+		String(localized: .IRC.obyAv(host, UInt(port)))
 	}
 
 	static func cipherSuite(protocolName: String, cipherName: String, deprecated: Bool) -> String {
@@ -119,7 +119,7 @@ nonisolated enum IRCConnectionStrings {
 	}
 
 	static func connecting(host: String, port: UInt16) -> String {
-		IRCLegacyFormat.serverConnection.format(host, port)
+		String(localized: .IRC.o77Ls(host, UInt(port)))
 	}
 
 	static func delayedAutoConnect(seconds: UInt) -> String {
@@ -145,15 +145,15 @@ nonisolated enum IRCTransportSecurityStrings {
 	}
 
 	static func enforcedPolicy(port: UInt16) -> String {
-		IRCLegacyFormat.enforcedStrictTransportSecurity.format(port)
+		String(localized: .IRC.stsP1(UInt(port)))
 	}
 
 	static func offeredPolicy(port: UInt16) -> String {
-		IRCLegacyFormat.offeredStrictTransportSecurity.format(port)
+		String(localized: .IRC.stsP2(UInt(port)))
 	}
 
 	static func storedPolicy(port: UInt16) -> String {
-		IRCLegacyFormat.storedStrictTransportSecurity.format(port)
+		String(localized: .IRC.stsP3(UInt(port)))
 	}
 
 	static func scramFailure(_ description: String) -> String {

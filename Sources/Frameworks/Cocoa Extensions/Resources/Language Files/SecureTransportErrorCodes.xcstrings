@@ -3,7 +3,7 @@
   "strings" : {
     "-9800" : {
       "comment" : "Reason for errSSLProtocol.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -15,7 +15,7 @@
     },
     "-9801" : {
       "comment" : "Reason for errSSLNegotiation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -27,7 +27,7 @@
     },
     "-9802" : {
       "comment" : "Reason for errSSLFatalAlert.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -39,7 +39,7 @@
     },
     "-9803" : {
       "comment" : "Reason for errSSLWouldBlock.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -51,7 +51,7 @@
     },
     "-9804" : {
       "comment" : "Reason for errSSLSessionNotFound.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -63,7 +63,7 @@
     },
     "-9805" : {
       "comment" : "Reason for errSSLClosedGraceful.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -75,7 +75,7 @@
     },
     "-9806" : {
       "comment" : "Reason for errSSLClosedAbort.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -87,7 +87,7 @@
     },
     "-9807" : {
       "comment" : "Reason for errSSLXCertChainInvalid.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -99,7 +99,7 @@
     },
     "-9808" : {
       "comment" : "Reason for errSSLBadCert.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -111,7 +111,7 @@
     },
     "-9809" : {
       "comment" : "Reason for errSSLCrypto.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -123,7 +123,7 @@
     },
     "-9810" : {
       "comment" : "Reason for errSSLInternal.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -135,7 +135,7 @@
     },
     "-9811" : {
       "comment" : "Reason for errSSLModuleAttach.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -147,7 +147,7 @@
     },
     "-9812" : {
       "comment" : "Reason for errSSLUnknownRootCert.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -159,7 +159,7 @@
     },
     "-9813" : {
       "comment" : "Reason for errSSLNoRootCert.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -171,7 +171,7 @@
     },
     "-9814" : {
       "comment" : "Reason for errSSLCertExpired.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -183,7 +183,7 @@
     },
     "-9815" : {
       "comment" : "Reason for errSSLCertNotYetValid.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -195,7 +195,7 @@
     },
     "-9816" : {
       "comment" : "Reason for errSSLClosedNoNotify.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -207,7 +207,7 @@
     },
     "-9817" : {
       "comment" : "Reason for errSSLBufferOverflow.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -219,7 +219,7 @@
     },
     "-9818" : {
       "comment" : "Reason for errSSLBadCipherSuite.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -231,7 +231,7 @@
     },
     "-9819" : {
       "comment" : "Reason for errSSLPeerUnexpectedMsg.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -243,7 +243,7 @@
     },
     "-9820" : {
       "comment" : "Reason for errSSLPeerBadRecordMac.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -255,7 +255,7 @@
     },
     "-9821" : {
       "comment" : "Reason for errSSLPeerDecryptionFail.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -267,7 +267,7 @@
     },
     "-9822" : {
       "comment" : "Reason for errSSLPeerRecordOverflow.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -279,7 +279,7 @@
     },
     "-9823" : {
       "comment" : "Reason for errSSLPeerDecompressFail.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -291,7 +291,7 @@
     },
     "-9824" : {
       "comment" : "Reason for errSSLPeerHandshakeFail.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -303,7 +303,7 @@
     },
     "-9825" : {
       "comment" : "Reason for errSSLPeerBadCert.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -315,7 +315,7 @@
     },
     "-9826" : {
       "comment" : "Reason for errSSLPeerUnsupportedCert.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -327,7 +327,7 @@
     },
     "-9827" : {
       "comment" : "Reason for errSSLPeerCertRevoked.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -339,7 +339,7 @@
     },
     "-9828" : {
       "comment" : "Reason for errSSLPeerCertExpired.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -351,7 +351,7 @@
     },
     "-9829" : {
       "comment" : "Reason for errSSLPeerCertUnknown.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -363,7 +363,7 @@
     },
     "-9830" : {
       "comment" : "Reason for errSSLIllegalParam.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -375,7 +375,7 @@
     },
     "-9831" : {
       "comment" : "Reason for errSSLPeerUnknownCA.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -387,7 +387,7 @@
     },
     "-9832" : {
       "comment" : "Reason for errSSLPeerAccessDenied.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -399,7 +399,7 @@
     },
     "-9833" : {
       "comment" : "Reason for errSSLPeerDecodeError.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -411,7 +411,7 @@
     },
     "-9834" : {
       "comment" : "Reason for errSSLPeerDecryptError.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -423,7 +423,7 @@
     },
     "-9835" : {
       "comment" : "Reason for errSSLPeerExportRestriction.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -435,7 +435,7 @@
     },
     "-9836" : {
       "comment" : "Reason for errSSLPeerProtocolVersion.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -447,7 +447,7 @@
     },
     "-9837" : {
       "comment" : "Reason for errSSLPeerInsufficientSecurity.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -459,7 +459,7 @@
     },
     "-9838" : {
       "comment" : "Reason for errSSLPeerInternalError.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -471,7 +471,7 @@
     },
     "-9839" : {
       "comment" : "Reason for errSSLPeerUserCancelled.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -483,7 +483,7 @@
     },
     "-9840" : {
       "comment" : "Reason for errSSLPeerNoRenegotiation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -495,7 +495,7 @@
     },
     "-9841" : {
       "comment" : "Reason for errSSLPeerAuthCompleted.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -507,7 +507,7 @@
     },
     "-9842" : {
       "comment" : "Reason for errSSLClientCertRequested.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -519,7 +519,7 @@
     },
     "-9843" : {
       "comment" : "Reason for errSSLHostNameMismatch.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -531,7 +531,7 @@
     },
     "-9844" : {
       "comment" : "Reason for errSSLConnectionRefused.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -543,7 +543,7 @@
     },
     "-9845" : {
       "comment" : "Reason for errSSLDecryptionFail.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -555,7 +555,7 @@
     },
     "-9846" : {
       "comment" : "Reason for errSSLBadRecordMac.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -567,7 +567,7 @@
     },
     "-9847" : {
       "comment" : "Reason for errSSLRecordOverflow.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -579,7 +579,7 @@
     },
     "-9848" : {
       "comment" : "Reason for errSSLBadConfiguration.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -591,7 +591,7 @@
     },
     "-9849" : {
       "comment" : "Reason for errSSLUnexpectedRecord.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -603,7 +603,7 @@
     },
     "-9850" : {
       "comment" : "Reason for errSSLWeakPeerEphemeralDHKey.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -615,7 +615,7 @@
     },
     "-9851" : {
       "comment" : "Reason for errSSLClientHelloReceived.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -627,7 +627,7 @@
     },
     "-9852" : {
       "comment" : "Reason for errSSLTransportReset.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -639,7 +639,7 @@
     },
     "-9853" : {
       "comment" : "Reason for errSSLNetworkTimeout.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -651,7 +651,7 @@
     },
     "-9854" : {
       "comment" : "Reason for errSSLConfigurationFailed.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -663,7 +663,7 @@
     },
     "-9855" : {
       "comment" : "Reason for errSSLUnsupportedExtension.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -675,7 +675,7 @@
     },
     "-9856" : {
       "comment" : "Reason for errSSLUnexpectedMessage.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -687,7 +687,7 @@
     },
     "-9857" : {
       "comment" : "Reason for errSSLDecompressFail.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -699,7 +699,7 @@
     },
     "-9858" : {
       "comment" : "Reason for errSSLHandshakeFail.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -711,7 +711,7 @@
     },
     "-9859" : {
       "comment" : "Reason for errSSLDecodeError.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -723,7 +723,7 @@
     },
     "-9860" : {
       "comment" : "Reason for errSSLInappropriateFallback.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -735,7 +735,7 @@
     },
     "-9861" : {
       "comment" : "Reason for errSSLMissingExtension.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -747,7 +747,7 @@
     },
     "-9862" : {
       "comment" : "Reason for errSSLBadCertificateStatusResponse.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -759,7 +759,7 @@
     },
     "-9863" : {
       "comment" : "Reason for errSSLCertificateRequired.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -771,7 +771,7 @@
     },
     "-9864" : {
       "comment" : "Reason for errSSLUnknownPSKIdentity.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -783,7 +783,7 @@
     },
     "-9865" : {
       "comment" : "Reason for errSSLUnrecognizedName.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -795,7 +795,7 @@
     },
     "-9880" : {
       "comment" : "Reason for errSSLATSViolation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -807,7 +807,7 @@
     },
     "-9881" : {
       "comment" : "Reason for errSSLATSMinimumVersionViolation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -819,7 +819,7 @@
     },
     "-9882" : {
       "comment" : "Reason for errSSLATSCiphersuiteViolation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -831,7 +831,7 @@
     },
     "-9883" : {
       "comment" : "Reason for errSSLATSMinimumKeySizeViolation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -843,7 +843,7 @@
     },
     "-9884" : {
       "comment" : "Reason for errSSLATSLeafCertificateHashAlgorithmViolation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -855,7 +855,7 @@
     },
     "-9885" : {
       "comment" : "Reason for errSSLATSCertificateHashAlgorithmViolation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -867,7 +867,7 @@
     },
     "-9886" : {
       "comment" : "Reason for errSSLATSCertificateTrustViolation.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -879,7 +879,7 @@
     },
     "-9890" : {
       "comment" : "Reason for errSSLEarlyDataRejected.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -891,7 +891,7 @@
     },
     "-9999" : {
       "comment" : "Reason for errSSLUnknownError, which is defined by this library rather than Secure Transport.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {

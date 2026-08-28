@@ -96,18 +96,17 @@ public nonisolated class HighlightLogEntry: PortablePropertyObject {
 		let logLine = lineLogged
 		let channel = channel
 
-		let nicknameBody: String?
-		let messageBody: String
-
-		if logLine.lineType == .action {
-			nicknameBody = logLine.nickname
-			messageBody = NotificationPayload.highlightActionFormat
+		let formatted = if logLine.lineType == .action {
+			NotificationStrings.actionBody(
+				nickname: logLine.nickname ?? "",
+				text: logLine.messageBody
+			)
 		} else {
-			nicknameBody = logLine.formattedNickname(in: channel)
-			messageBody = NotificationPayload.highlightMessageFormat
+			NotificationStrings.messageBody(
+				formattedNickname: logLine.formattedNickname(in: channel) ?? "",
+				text: logLine.messageBody
+			)
 		}
-
-		let formatted = String(format: messageBody, nicknameBody ?? "", logLine.messageBody)
 
 		return (formatted as NSString).attributedString(
 			withIRCFormatting: NSFont.systemFont(ofSize: 13.0),

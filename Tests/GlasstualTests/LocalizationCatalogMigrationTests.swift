@@ -33,7 +33,7 @@ final class LocalizationCatalogMigrationTests: XCTestCase {
 				filename: "archive.zip",
 				byteCount: 1024
 			),
-			"archive.zip (1024 bytes)"
+			"archive.zip (1 kB)"
 		)
 		XCTAssertEqual(NotificationSoundStrings.defaultSound, "Default Sound")
 		XCTAssertEqual(NotificationSoundStrings.noSound, "No Sound")
