@@ -284,6 +284,13 @@ public extension IRCClient {
 	private func processFileTransferRequest(_ request: DCCFileTransferRequest, sender: String) {
 		switch request {
 		case let .send(filename, address, port, filesize, token):
+			// The offer decides which host the client dials, so a peer must
+			// not be able to point it at loopback or a private network.
+			guard ClientWireUtilities.isDialableDCCAddress(address) else {
+				dccFileTransferLogger.error("Refused a DCC SEND offer for a non-routable address")
+				printInvalidDCCRequest(from: sender)
+				return
+			}
 			if let token {
 				let transfer = fileTransferController.fileTransferSender(matchingToken: token)
 				if port == 0 {
