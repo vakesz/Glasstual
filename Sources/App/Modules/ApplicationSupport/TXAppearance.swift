@@ -25,14 +25,16 @@ public extension Notification.Name {
 	static let systemAppearanceChanged = Notification.Name("TXSystemAppearanceChangedNotification")
 }
 
-@objc(TXAppearancePropertyCollection)
-public final class AppearancePropertyCollection: NSObject, TXAppearanceProperties {
-	@objc public var appearanceName = ""
-	@objc public var appearanceType: TXAppearanceType = .light
-	@objc public var isDarkAppearance = false
-	@objc public var appKitAppearanceTarget: TXAppKitAppearanceTarget = .none
+/// An immutable snapshot of the appearance the application is currently
+/// drawing in. It is built once per appearance change and only ever read
+/// afterwards, so it is a value.
+public struct AppearancePropertyCollection: TXAppearanceProperties, Equatable, Sendable {
+	public var appearanceName = ""
+	public var appearanceType: TXAppearanceType = .light
+	public var isDarkAppearance = false
+	public var appKitAppearanceTarget: TXAppKitAppearanceTarget = .none
 
-	@objc public var appKitAppearance: NSAppearance? {
+	public var appKitAppearance: NSAppearance? {
 		if appKitAppearanceTarget == .none {
 			return nil
 		}
@@ -44,19 +46,19 @@ public final class AppearancePropertyCollection: NSObject, TXAppearancePropertie
 		return Self.appKitLightAppearance()
 	}
 
-	@objc public var shortAppearanceDescription: String {
+	public var shortAppearanceDescription: String {
 		isDarkAppearance ? "dark" : "light"
 	}
 
-	@MainActor @objc public static func systemWideDarkModeEnabled() -> Bool {
+	@MainActor public static func systemWideDarkModeEnabled() -> Bool {
 		NSApp.effectiveAppearance.bestMatch(from: [NSAppearance.Name.darkAqua]) != nil
 	}
 
-	@objc public static func appKitDarkAppearance() -> NSAppearance? {
+	public static func appKitDarkAppearance() -> NSAppearance? {
 		NSAppearance(named: .darkAqua)
 	}
 
-	@objc public static func appKitLightAppearance() -> NSAppearance? {
+	public static func appKitLightAppearance() -> NSAppearance? {
 		NSAppearance(named: .aqua)
 	}
 }
@@ -64,8 +66,11 @@ public final class AppearancePropertyCollection: NSObject, TXAppearancePropertie
 @objc(TXAppearance)
 @MainActor
 public final class Appearance: NSObject {
-	@objc public private(set) var properties: AppearancePropertyCollection!
+	public private(set) var properties = AppearancePropertyCollection()
 
+	/// `properties` starts at its default value, so "has the appearance ever
+	/// been resolved" needs its own flag rather than a nil check.
+	private var hasResolvedAppearance = false
 	private var isApplyingAppearance = false
 	private var effectiveAppearanceObservation: NSKeyValueObservation?
 
@@ -157,9 +162,9 @@ public final class Appearance: NSObject {
 
 		let oldProperties = properties
 		let changeAppearance =
-			oldProperties == nil
-				|| oldProperties!.appearanceType != appearanceType
-				|| oldProperties!.appKitAppearanceTarget != appKitAppearanceTarget
+			hasResolvedAppearance == false
+				|| oldProperties.appearanceType != appearanceType
+				|| oldProperties.appKitAppearanceTarget != appKitAppearanceTarget
 
 		var systemChanged = systemChanged
 
@@ -171,12 +176,13 @@ public final class Appearance: NSObject {
 			systemChanged = false
 		}
 
-		let newProperties = AppearancePropertyCollection()
-		newProperties.appearanceName = appearanceDefaultName
-		newProperties.appearanceType = appearanceType
-		newProperties.isDarkAppearance = isAppearanceDark
-		newProperties.appKitAppearanceTarget = appKitAppearanceTarget
-		properties = newProperties
+		properties = AppearancePropertyCollection(
+			appearanceName: appearanceDefaultName,
+			appearanceType: appearanceType,
+			isDarkAppearance: isAppearanceDark,
+			appKitAppearanceTarget: appKitAppearanceTarget
+		)
+		hasResolvedAppearance = true
 
 		if preferredAppearance == .inherited {
 			applyAppKitAppearance(nil)

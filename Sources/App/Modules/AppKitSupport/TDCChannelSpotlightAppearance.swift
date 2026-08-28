@@ -12,42 +12,48 @@
 
 import AppKit
 
-@objc(TDCChannelSpotlightAppearance)
-public final class ChannelSpotlightAppearance: ApplicationAppearance {
-	@objc public private(set) var searchFieldTextColor: NSColor?
-	@objc public private(set) var searchFieldNoResultsTextColor: NSColor?
-	@objc public private(set) var searchResultKeyboardShortcutDeselectedOffset: CGFloat = 0
-	@objc public private(set) var searchResultKeyboardShortcutSelectedOffset: CGFloat = 0
+/// The shape of `TDCChannelSpotlightAppearance.plist`.
+struct ChannelSpotlightAppearanceSchema: Decodable, Sendable {
+	struct SearchField: Decodable, Sendable {
+		let controlTextColor: AppearanceColor?
+		let noResultsTextColor: AppearanceColor?
+	}
 
-	@objc(initWithWindow:)
-	public init?(window _: ChannelSpotlightPanel) {
-		guard let appearanceLocation = Bundle.main.url(
-			forResource: "TDCChannelSpotlightAppearance",
-			withExtension: "plist"
+	struct SearchResult: Decodable, Sendable {
+		let keyboardShortcutDeselectedOffset: Double
+		let keyboardShortcutSelectedOffset: Double
+	}
+
+	let searchField: SearchField
+	let searchResult: SearchResult
+
+	private enum CodingKeys: String, CodingKey {
+		case searchField = "Search Field"
+		case searchResult = "Search Result"
+	}
+}
+
+public final class ChannelSpotlightAppearance: ApplicationAppearance {
+	public private(set) var searchFieldTextColor: NSColor?
+	public private(set) var searchFieldNoResultsTextColor: NSColor?
+	public private(set) var searchResultKeyboardShortcutDeselectedOffset: CGFloat = 0
+	public private(set) var searchResultKeyboardShortcutSelectedOffset: CGFloat = 0
+
+	@MainActor
+	public init?() {
+		super.init(applicationProperties: Self.currentApplicationProperties)
+
+		guard let schema = AppearanceSchema.load(
+			ChannelSpotlightAppearanceSchema.self,
+			resource: "TDCChannelSpotlightAppearance",
+			appearanceName: appearanceName
 		) else {
 			return nil
 		}
 
-		super.init(appearanceAt: appearanceLocation)
-
-		guard let properties = appearanceProperties else {
-			return nil
-		}
-
-		let searchField = properties["Search Field"] as? [String: Any] ?? [:]
-		searchFieldTextColor = color(inGroup: searchField, withKey: "controlTextColor")
-		searchFieldNoResultsTextColor = color(inGroup: searchField, withKey: "noResultsTextColor")
-
-		let searchResult = properties["Search Result"] as? [String: Any] ?? [:]
-		searchResultKeyboardShortcutDeselectedOffset = measurement(
-			inGroup: searchResult,
-			withKey: "keyboardShortcutDeselectedOffset"
-		)
-		searchResultKeyboardShortcutSelectedOffset = measurement(
-			inGroup: searchResult,
-			withKey: "keyboardShortcutSelectedOffset"
-		)
-
-		flushAppearanceProperties()
+		searchFieldTextColor = schema.searchField.controlTextColor?.color
+		searchFieldNoResultsTextColor = schema.searchField.noResultsTextColor?.color
+		searchResultKeyboardShortcutDeselectedOffset = schema.searchResult.keyboardShortcutDeselectedOffset
+		searchResultKeyboardShortcutSelectedOffset = schema.searchResult.keyboardShortcutSelectedOffset
 	}
 }

@@ -596,7 +596,7 @@ extension MainWindow {
 	}
 
 	private func updateAppearance() {
-		guard let appearance = MainWindowAppearance(window: self) else { return }
+		guard let appearance = MainWindowAppearance() else { return }
 		appearanceStorage = appearance
 		self.appearance = appearance.appKitAppearanceTarget == .window ? appearance.appKitAppearance : nil
 		notifyMainWindowAppearanceChanged()
