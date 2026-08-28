@@ -54,18 +54,19 @@ final class LogLineXPC: NSObject, NSSecureCoding, @unchecked Sendable {
 	@objc let sessionIdentifier: UInt
 	@objc let creationDate: TimeInterval
 
-	@objc(initWithLogLineData:uniqueIdentifier:viewIdentifier:sessionIdentifier:)
+	@objc(initWithLogLineData:uniqueIdentifier:viewIdentifier:sessionIdentifier:creationDate:)
 	init(
 		logLineData data: Data,
 		uniqueIdentifier: String,
 		viewIdentifier: String,
-		sessionIdentifier: UInt
+		sessionIdentifier: UInt,
+		creationDate: TimeInterval
 	) {
 		self.data = data
 		self.uniqueIdentifier = uniqueIdentifier
 		self.viewIdentifier = viewIdentifier
 		self.sessionIdentifier = sessionIdentifier
-		creationDate = 0
+		self.creationDate = creationDate
 		super.init()
 	}
 
@@ -97,11 +98,23 @@ final class LogLineXPC: NSObject, NSSecureCoding, @unchecked Sendable {
 			return nil
 		}
 
+		/* The archive crosses an XPC boundary, so a negative or non-finite
+		 value has to fail the decode rather than trap the service. */
+		guard let sessionIdentifier = UInt(exactly: coder.decodeInteger(forKey: CodingKey.sessionIdentifier)) else {
+			return nil
+		}
+
+		let creationDate = coder.decodeDouble(forKey: CodingKey.creationDate)
+
+		guard creationDate.isFinite, creationDate >= 0 else {
+			return nil
+		}
+
 		self.data = data
 		self.uniqueIdentifier = uniqueIdentifier
 		self.viewIdentifier = viewIdentifier
-		sessionIdentifier = UInt(coder.decodeInteger(forKey: CodingKey.sessionIdentifier))
-		creationDate = coder.decodeDouble(forKey: CodingKey.creationDate)
+		self.sessionIdentifier = sessionIdentifier
+		self.creationDate = creationDate
 		super.init()
 	}
 
@@ -109,7 +122,7 @@ final class LogLineXPC: NSObject, NSSecureCoding, @unchecked Sendable {
 		coder.encode(data, forKey: CodingKey.data)
 		coder.encode(uniqueIdentifier, forKey: CodingKey.uniqueIdentifier)
 		coder.encode(viewIdentifier, forKey: CodingKey.viewIdentifier)
-		coder.encode(Int(sessionIdentifier), forKey: CodingKey.sessionIdentifier)
+		coder.encode(Int(exactly: sessionIdentifier) ?? 0, forKey: CodingKey.sessionIdentifier)
 		coder.encode(creationDate, forKey: CodingKey.creationDate)
 	}
 
