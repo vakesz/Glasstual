@@ -27,8 +27,9 @@ final class ChannelTopicModel {
 		self.maximumLength = Int(clamping: maximumLength)
 	}
 
+	/// TOPICLEN is an octet count, so the topic is measured in UTF-8 bytes.
 	var formattedTopicLength: Int {
-		formattedTopic.utf16.count
+		formattedTopic.utf8.count
 	}
 
 	var topicForSubmission: String {

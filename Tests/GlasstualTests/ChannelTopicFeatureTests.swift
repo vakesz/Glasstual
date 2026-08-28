@@ -42,7 +42,7 @@ final class ChannelTopicFeatureTests: XCTestCase {
 		)
 	}
 
-	func testModelWarnsOnlyOnceAfterCrossingNonzeroUTF16Limit() {
+	func testModelWarnsOnlyOnceAfterCrossingNonzeroOctetLimit() {
 		let model = ChannelTopicModel(formattedTopic: "1234", maximumLength: 5)
 
 		XCTAssertEqual(model.formattedTopicLength, 4)
@@ -53,7 +53,8 @@ final class ChannelTopicFeatureTests: XCTestCase {
 
 		let emojiModel = ChannelTopicModel(formattedTopic: "", maximumLength: 1)
 		XCTAssertTrue(emojiModel.updateFormattedTopic("💬"))
-		XCTAssertEqual(emojiModel.formattedTopicLength, 2)
+		// TOPICLEN is an octet count, so an emoji is four, not two.
+		XCTAssertEqual(emojiModel.formattedTopicLength, 4)
 
 		let unlimitedModel = ChannelTopicModel(formattedTopic: "", maximumLength: 0)
 		XCTAssertFalse(unlimitedModel.updateFormattedTopic(String(repeating: "x", count: 1000)))

@@ -72,8 +72,9 @@ final class ChannelModesModel {
 	func updateSecretKey(_ secretKey: String) -> Bool {
 		self.secretKey = secretKey
 
+		/* KEYLEN is an octet count, so the key is measured in UTF-8 bytes. */
 		guard maximumKeyLength > 0,
-		      secretKey.count > maximumKeyLength,
+		      secretKey.utf8.count > maximumKeyLength,
 		      hasPresentedMaximumKeyLengthWarning == false
 		else {
 			return false
@@ -84,9 +85,22 @@ final class ChannelModesModel {
 	}
 
 	func updateUserLimit(_ userLimit: String) {
-		let numericLimit = Int(userLimit) ?? 0
-		let clampedLimit = min(max(numericLimit, 0), Self.maximumUserLimit)
-		self.userLimit = String(clampedLimit)
+		let trimmed = userLimit.trimmingCharacters(in: .whitespaces)
+
+		/* An empty field means "no limit" and has to stay empty; coercing it
+		 to 0 made the text snap back the moment the user cleared it. */
+		guard trimmed.isEmpty == false else {
+			self.userLimit = ""
+			return
+		}
+
+		/* Junk is rejected rather than silently turned into 0: leaving the
+		 property alone makes the field revert to its last valid value. */
+		guard let numericLimit = Int(trimmed) else {
+			return
+		}
+
+		self.userLimit = String(min(max(numericLimit, 0), Self.maximumUserLimit))
 	}
 
 	func modesForSubmission() -> ChannelModeContainer {
