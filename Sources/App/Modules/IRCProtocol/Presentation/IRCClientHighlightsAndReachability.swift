@@ -39,8 +39,11 @@
 import Foundation
 
 enum IRCClientReachabilityPolicy {
-	static func shouldDisconnect(isReachable: Bool, isLoggedIn: Bool, disconnectWhenUnreachable: Bool) -> Bool {
-		isReachable == false && isLoggedIn && disconnectWhenUnreachable
+	/// Whether losing reachability should tear the session down. Callers only
+	/// ask once the connection is already known to be unreachable, so there is
+	/// no reachability argument.
+	static func shouldDisconnect(isLoggedIn: Bool, disconnectWhenUnreachable: Bool) -> Bool {
+		isLoggedIn && disconnectWhenUnreachable
 	}
 }
 
@@ -81,7 +84,6 @@ public extension IRCClient {
 	@objc(disconnectOnReachabilityChange)
 	func disconnectOnReachabilityChange() {
 		guard IRCClientReachabilityPolicy.shouldDisconnect(
-			isReachable: false,
 			isLoggedIn: isLoggedIn,
 			disconnectWhenUnreachable: config.performDisconnectOnReachabilityChange
 		) else { return }

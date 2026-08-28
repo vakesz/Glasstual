@@ -121,7 +121,7 @@ public extension IRCClient {
 		retiredServerKeychainItems.forEach { $0.delete() }
 		retiredServerKeychainItems.removeAll()
 		userHostmask = nil
-		setValue(nil, forKey: "userNickname")
+		forgetUserNickname()
 		tryingNicknameNumber = 0
 		tryingNicknameSentNickname = nil
 		preAwayUserNickname = nil
@@ -228,7 +228,7 @@ public extension IRCClient {
 		userNickname = config.nickname
 		tryingNicknameSentNickname = config.nickname
 		AppController.shared.mainWindow?.updateTitle(for: self)
-		NotificationCenter.default.post(name: .ircClientDidConnect, object: self)
+		NotificationCenter.default.post(name: .IRCClientDidConnect, object: self)
 
 		let registration = IRCClientRegistrationPolicy.values(
 			nickname: config.nickname,
@@ -249,7 +249,7 @@ public extension IRCClient {
 		precondition(sender === socket)
 		changeStateOff(withError: disconnectError)
 		invokeDisconnectCallbacks()
-		NotificationCenter.default.post(name: .ircClientDidDisconnect, object: self)
+		NotificationCenter.default.post(name: .IRCClientDidDisconnect, object: self)
 	}
 
 	@objc(ircConnectionDidCloseReadStream:)
@@ -304,9 +304,4 @@ private extension IRCClient {
 		}
 		postEvent(toViewController: "serverDisconnected")
 	}
-}
-
-private extension Notification.Name {
-	static let ircClientDidConnect = Notification.Name("IRCClientDidConnectNotification")
-	static let ircClientDidDisconnect = Notification.Name("IRCClientDidDisconnectNotification")
 }

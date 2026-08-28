@@ -146,7 +146,7 @@ enum PluginHostAdapter {
 			name: channel.name,
 			type: channel.type,
 			isActive: channel.isActive,
-			members: (channel.memberList ?? []).map(makeMember),
+			members: channel.memberList.map(makeMember),
 			autoJoin: { channel.autoJoin },
 			setAutoJoin: { channel.autoJoin = $0 },
 			deactivate: { channel.deactivate() }

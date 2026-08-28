@@ -174,6 +174,14 @@ enum IRCNumeric: UInt, CaseIterable, Sendable {
 	case badchannel = 926
 
 	var isErrorReply: Bool {
-		rawValue > 400 && rawValue < 597 && self != .nomotd
+		Self.isErrorReply(rawValue)
+	}
+
+	/// Numerics between 401 and 596 are errors by convention; RPL_NOMOTD sits
+	/// inside that range without being one. The test takes a raw value because
+	/// servers send error numerics this enum has no case for and those still
+	/// have to reach the error path.
+	static func isErrorReply(_ rawValue: UInt) -> Bool {
+		rawValue > 400 && rawValue < 597 && rawValue != IRCNumeric.nomotd.rawValue
 	}
 }
