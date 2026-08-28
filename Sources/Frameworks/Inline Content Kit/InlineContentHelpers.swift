@@ -42,6 +42,19 @@ private struct InlineContentUncheckedTransfer<Value>: @unchecked Sendable {
 	let value: Value
 }
 
+/// Bounds on what a remote endpoint can cost the inline-content service.
+///
+/// Every request here is triggered by a message somebody else sent, so a slow
+/// or hostile endpoint must not be able to hold a request open on the default
+/// sixty-second/seven-day timeouts or hand back an unbounded body.
+public enum InlineContentNetworkLimits {
+	public static let requestTimeout: TimeInterval = 15
+	public static let resourceTimeout: TimeInterval = 30
+
+	/// oEmbed and similar metadata replies are a few kilobytes.
+	public static let maximumJSONResponseSize = 1024 * 1024
+}
+
 @objc(ICLHelpers)
 public final class InlineContentHelpers: NSObject {
 	private static let logger = Logger(
@@ -54,6 +67,8 @@ public final class InlineContentHelpers: NSObject {
 		configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
 		configuration.httpShouldSetCookies = false
 		configuration.httpCookieAcceptPolicy = .never
+		configuration.timeoutIntervalForRequest = InlineContentNetworkLimits.requestTimeout
+		configuration.timeoutIntervalForResource = InlineContentNetworkLimits.resourceTimeout
 		return URLSession(configuration: configuration)
 	}()
 
@@ -152,6 +167,14 @@ public final class InlineContentHelpers: NSObject {
 				if let error {
 					logger.error("Request failed: \(error.localizedDescription, privacy: .public)")
 				}
+				return completion.value(false, nil)
+			}
+
+			guard data.count <= InlineContentNetworkLimits.maximumJSONResponseSize else {
+				logger.error(
+					"Discarded a \(data.count, privacy: .public) byte response that exceeds the size limit"
+				)
+
 				return completion.value(false, nil)
 			}
 

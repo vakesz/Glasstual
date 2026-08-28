@@ -46,7 +46,7 @@ public final class RegularExpression: NSObject {
 		category: "RegularExpression"
 	)
 
-	/* Patterns here come from chat filters, plugin rules and address book
+	/** Patterns here come from chat filters, plugin rules and address book
 	 entries, and are evaluated once per incoming message. Compiling is the
 	 expensive part, so hold on to the result; `NSRegularExpression` is
 	 immutable and safe to match on from several threads. */

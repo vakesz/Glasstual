@@ -317,8 +317,8 @@ public extension IRCClient {
 				sender: sender,
 				filename: filename
 			),
-			      transfer.transferStatus == .waitingForReceiverToAccept || transfer
-			      .transferStatus == .isListeningAsSender
+				transfer.transferStatus == .waitingForReceiverToAccept || transfer
+				.transferStatus == .isListeningAsSender
 			else {
 				printInvalidDCCRequest(from: sender)
 				return
@@ -331,7 +331,7 @@ public extension IRCClient {
 				sender: sender,
 				filename: filename
 			),
-			      transfer.transferStatus == .waitingForResumeAccept
+				transfer.transferStatus == .waitingForResumeAccept
 			else {
 				printInvalidDCCRequest(from: sender)
 				return

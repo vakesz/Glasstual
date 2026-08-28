@@ -88,6 +88,21 @@ InlineMediaPrototype.prototype.hideOnClick = function(mediaId) /* PUBLIC */
 	return false; // Do not perform navigation
 };
 
+/* The identifier is read off the element rather than interpolated into the
+   onclick attribute. HTML escaping does not protect a JavaScript string
+   literal: the HTML parser decodes entities before the JavaScript parser
+   ever sees the attribute. */
+InlineMediaPrototype.prototype.hideOnClickEvent = function(event) /* PUBLIC */
+{
+	var element = (event ? event.currentTarget : null);
+
+	if (!element) {
+		return false; // Do not perform navigation
+	}
+
+	return this.hideOnClick(element.dataset.mediaId);
+};
+
 InlineMediaPrototype.prototype.toggleOnClick = function(mediaId) /* PUBLIC */
 {
 	if (this.isSafeToPerformToggle() === false) {

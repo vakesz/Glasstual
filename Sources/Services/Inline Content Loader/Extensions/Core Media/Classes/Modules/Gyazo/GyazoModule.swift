@@ -40,6 +40,16 @@ import InlineContentKit
 
 @objc(ICMGyazo)
 final class GyazoModule: InlineContentModule {
+	/** Renders through the framework's own template into an escaped attribute,
+	 and carries no adult content of its own. */
+	override static var contentUntrusted: Bool {
+		false
+	}
+
+	override static var contentNotSafeForWork: Bool {
+		false
+	}
+
 	private var contentIdentifier = ""
 
 	private func loadContent() {

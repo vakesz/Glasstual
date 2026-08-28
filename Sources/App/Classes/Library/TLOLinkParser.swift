@@ -196,13 +196,13 @@ public class LinkParser: NSObject {
 	private static let permittedSchemesDefaultKey = "com.adiumX.AutoHyperlinks.permittedSchemesDefault"
 	private static let permittedSchemesKey = "com.adiumX.AutoHyperlinks.permittedSchemes"
 
-	/* Schemes that hand a remote peer's string to the file system, a network
+	/** Schemes that hand a remote peer's string to the file system, a network
 	 mount or a system settings pane. They are refused ahead of the user
 	 customization keys below so that a permissive `permittedSchemesAny`
 	 cannot re-enable them. */
 	private static let deniedSchemes: Set<String> = [
 		"file",
-		"smb", "afp", "nfs", "cifs", "ftp",
+		"smb", "afp", "nfs", "cifs",
 		"x-apple.systempreferences",
 	]
 
