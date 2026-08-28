@@ -173,18 +173,20 @@ enum PluginHostAdapter {
 	}
 
 	static func applying(_ pluginMessage: PluginServerMessage, to message: Message) -> Message {
-		message.modified { copy in
-			copy.sender = Prefix(
-				nickname: pluginMessage.sender.nickname,
-				username: pluginMessage.sender.username,
-				address: pluginMessage.sender.address,
-				hostmask: pluginMessage.sender.hostmask,
-				isServer: pluginMessage.sender.isServer
-			)
-			copy.command = pluginMessage.command
-			copy.params = pluginMessage.parameters
-			copy.isPrintOnlyMessage = pluginMessage.isPrintOnlyMessage
-		}
+		let copy = message.duplicate()
+
+		copy.sender = Prefix(
+			nickname: pluginMessage.sender.nickname,
+			username: pluginMessage.sender.username,
+			address: pluginMessage.sender.address,
+			hostmask: pluginMessage.sender.hostmask,
+			isServer: pluginMessage.sender.isServer
+		)
+		copy.command = pluginMessage.command
+		copy.params = pluginMessage.parameters
+		copy.isPrintOnlyMessage = pluginMessage.isPrintOnlyMessage
+
+		return copy
 	}
 
 	/// A pure mapping, so the off-main message renderer can call it too.

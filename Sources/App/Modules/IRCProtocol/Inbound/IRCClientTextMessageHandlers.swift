@@ -159,13 +159,12 @@ public extension IRCClient {
 	@objc(receiveWallops:)
 	func receiveWallops(_ message: Message) {
 		guard let payload = message.params.first else { return }
-		let rewritten = message.modified { copy in
-			copy.command = "NOTICE"
-			copy.params = [
-				userNickname,
-				String(format: TVCLogLineSpecialNoticeMessageFormat, message.command, payload),
-			]
-		}
+		let rewritten = message.duplicate()
+		rewritten.command = "NOTICE"
+		rewritten.params = [
+			userNickname,
+			String(format: TVCLogLineSpecialNoticeMessageFormat, message.command, payload),
+		]
 		receivePrivmsgAndNotice(rewritten)
 	}
 
