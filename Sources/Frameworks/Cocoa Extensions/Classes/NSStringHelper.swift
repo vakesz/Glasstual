@@ -610,8 +610,10 @@ public extension NSString {
 
 		var result = String(String.UnicodeScalarView(substituted))
 
-		while result.hasPrefix(".") {
-			result = "_" + result.dropFirst()
+		let leadingDots = result.prefix { $0 == "." }.count
+
+		if leadingDots > 0 {
+			result = String(repeating: "_", count: leadingDots) + result.dropFirst(leadingDots)
 		}
 
 		return Self.truncated(result, toUTF8Bytes: Self.maximumFilenameBytes) as NSString

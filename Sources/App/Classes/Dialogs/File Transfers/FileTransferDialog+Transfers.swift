@@ -60,7 +60,7 @@ extension FileTransferDialog {
 		}
 	}
 
-	private static func transfer(
+	static func transfer(
 		_ transfer: TDCFileTransferDialogTransferController,
 		belongsTo client: IRCClient,
 		peerNickname: String,

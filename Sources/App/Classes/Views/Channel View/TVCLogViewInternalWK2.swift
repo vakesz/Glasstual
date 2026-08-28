@@ -168,7 +168,11 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		allowsLinkPreview = TextualPreferences.webKit2PreviewLinks()
 		underPageBackgroundColor = .clear
 		customUserAgent = LogView.commonUserAgent
-		isInspectable = true
+		/* The log view holds a native bridge and runs third-party theme
+		 JavaScript; the inspector is a development tool, not a shipped one. */
+		#if DEBUG
+			isInspectable = true
+		#endif
 		navigationDelegate = self
 		uiDelegate = self
 	}

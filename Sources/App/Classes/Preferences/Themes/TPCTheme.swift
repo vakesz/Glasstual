@@ -707,16 +707,22 @@ public final class ThemeSettings: NSObject {
 
 	private static func color(forKey key: ThemeSettingKey, in values: ThemeSettingValues) -> NSColor? {
 		guard let value = values.value(for: key, as: String.self) else { return nil }
-		let hexadecimalValue = value.hasPrefix("#") ? String(value.dropFirst()) : value
-		guard !hexadecimalValue.isEmpty,
-		      hexadecimalValue.count <= 8,
-		      hexadecimalValue.count.isMultiple(of: 2),
+		var hexadecimalValue = value.hasPrefix("#") ? String(value.dropFirst()) : value
+
+		/* CSS shorthand: #rgb and #rgba repeat each digit. Two- and four-digit
+		 values are not a colour notation at all and used to be shifted as if
+		 they were RGB, producing an arbitrary colour. */
+		if hexadecimalValue.count == 3 || hexadecimalValue.count == 4 {
+			hexadecimalValue = String(hexadecimalValue.flatMap { [$0, $0] })
+		}
+
+		guard hexadecimalValue.count == 6 || hexadecimalValue.count == 8,
 		      var color = UInt64(hexadecimalValue, radix: 16)
 		else {
 			return nil
 		}
 
-		if hexadecimalValue.count < 8 {
+		if hexadecimalValue.count == 6 {
 			color = color << 8 | 0xFF
 		}
 		return NSColor(

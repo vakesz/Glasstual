@@ -107,6 +107,7 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 			&& certificateTrustWasOverridden == false
 			&& config.connectionShouldValidateCertificateChain
 	}
+
 	@objc public private(set) var isSending = false
 	@objc public private(set) var EOFReceived = false
 	@objc public private(set) var connectedAddress: String?
