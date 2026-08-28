@@ -44,22 +44,36 @@ private nonisolated let highlightLogEntryLogger = Logger(
 	category: "IRCHighlightLogEntry"
 )
 
+/** An entry in a client's in-memory highlight log.
+
+ The entry is never written to disk, so it is not `Codable`. It stays an `@objc`
+ `NSObject` because `TDCServerHighlightListSheet` puts it into an
+ `NSArrayController` and binds table columns to `channelName`,
+ `renderedMessage` and `timeLoggedFormatted` — and sorts on `timeLogged` — by
+ KVC key path from its nib. */
 @objc(IRCHighlightLogEntry)
-public nonisolated class HighlightLogEntry: PortablePropertyObject {
-	fileprivate var lineLoggedStorage: LogLine!
-	fileprivate var clientIdStorage = ""
-	fileprivate var channelIdStorage = ""
+public final nonisolated class HighlightLogEntry: NSObject {
+	@objc public var lineLogged: LogLine
+	@objc public var clientId: String
+	@objc public var channelId: String
 
-	@objc public var lineLogged: LogLine {
-		lineLoggedStorage
+	@objc public init(lineLogged: LogLine, clientId: String, channelId: String) {
+		self.lineLogged = lineLogged
+		self.clientId = clientId
+		self.channelId = channelId
+
+		super.init()
+
+		// An incomplete entry used to abort the app from a health check; it is
+		// only logged now, and callers that care check `isWellFormed`.
+		if isWellFormed == false {
+			highlightLogEntryLogger.error("Created an incomplete highlight log entry")
+		}
 	}
 
-	@objc public var clientId: String {
-		clientIdStorage
-	}
-
-	@objc public var channelId: String {
-		channelIdStorage
+	/// `true` when the entry carries everything its accessors need.
+	@objc public var isWellFormed: Bool {
+		clientId.isEmpty == false && channelId.isEmpty == false
 	}
 
 	@objc public var timeLogged: Date {
@@ -72,17 +86,13 @@ public nonisolated class HighlightLogEntry: PortablePropertyObject {
 
 	@objc @MainActor public var channel: IRCChannel? {
 		AppController.shared.world.findChannel(
-			withId: channelIdStorage,
-			onClientWithId: clientIdStorage
+			withId: channelId,
+			onClientWithId: clientId
 		)
 	}
 
 	@objc @MainActor public var channelName: String {
-		if let channel {
-			return channel.name
-		}
-
-		return ApplicationStrings.unknownValue
+		channel?.name ?? ApplicationStrings.unknownValue
 	}
 
 	@objc public var timeLoggedFormatted: String {
@@ -118,78 +128,6 @@ public nonisolated class HighlightLogEntry: PortablePropertyObject {
 	/** `NSObject.description` is nonisolated, so it cannot resolve the channel or
 	 format the line against it; the identifiers name the entry instead. */
 	override public var description: String {
-		"<IRCHighlightLogEntry [\(channelIdStorage)]: \(lineNumber)>"
-	}
-
-	override public init() {
-		super.init()
-	}
-
-	public required init?(coder _: NSCoder) {
-		nil
-	}
-
-	/// `true` when the entry carries everything its accessors need.
-	@objc public var isWellFormed: Bool {
-		lineLoggedStorage != nil && clientIdStorage.isEmpty == false && channelIdStorage.isEmpty == false
-	}
-
-	@objc(initializedClassHealthCheck)
-	override public func initializedClassHealthCheck() {
-		if isMutable || initializedAsCopy {
-			return
-		}
-
-		// A `precondition` here turned a malformed persisted entry into an
-		// abort; callers check `isWellFormed` instead.
-		if isWellFormed == false {
-			highlightLogEntryLogger.error("Loaded an incomplete highlight log entry")
-		}
-	}
-
-	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
-		guard let object = newObject as? HighlightLogEntry else {
-			return
-		}
-
-		object.lineLoggedStorage = lineLoggedStorage
-		object.clientIdStorage = clientIdStorage
-		object.channelIdStorage = channelIdStorage
-	}
-
-	override public var mutableClass: PortablePropertyObject {
-		unsafeBitCast(MutableHighlightLogEntry.self, to: PortablePropertyObject.self)
-	}
-}
-
-@objc(IRCHighlightLogEntryMutable)
-public final nonisolated class MutableHighlightLogEntry: HighlightLogEntry {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyObject {
-		unsafeBitCast(HighlightLogEntry.self, to: PortablePropertyObject.self)
-	}
-
-	@objc override public var lineLogged: LogLine {
-		get { lineLoggedStorage }
-		set {
-			guard let copiedLine = newValue.copy() as? LogLine else {
-				preconditionFailure("LogLine.copy() must return a LogLine")
-			}
-			lineLoggedStorage = copiedLine
-		}
-	}
-
-	@objc override public var clientId: String {
-		get { clientIdStorage }
-		set { clientIdStorage = newValue }
-	}
-
-	@objc override public var channelId: String {
-		get { channelIdStorage }
-		set { channelIdStorage = newValue }
+		"<IRCHighlightLogEntry [\(channelId)]: \(lineNumber)>"
 	}
 }

@@ -176,17 +176,14 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(unique.serverPassword, "s3cret")
 	}
 
-	func testHighlightLogEntryMutableStoresLineClientAndChannel() {
+	func testHighlightLogEntryStoresLineClientAndChannel() {
 		let line = MutableLogLine()
 		line.messageBody = "hello world"
 		line.nickname = "alice"
 		line.lineType = .privateMessage
 		line.receivedAt = Date(timeIntervalSince1970: 1_700_000_000)
 
-		let entry = MutableHighlightLogEntry()
-		entry.lineLogged = line
-		entry.clientId = "client-a"
-		entry.channelId = "channel-b"
+		let entry = HighlightLogEntry(lineLogged: line, clientId: "client-a", channelId: "channel-b")
 
 		XCTAssertEqual(entry.clientId, "client-a")
 		XCTAssertEqual(entry.channelId, "channel-b")
