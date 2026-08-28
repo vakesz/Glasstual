@@ -6,13 +6,18 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 
 ## Architecture
 
-- The UI is AppKit. SwiftUI appears only inside sheet content views under
-  `Sources/App/Features/*/`, each hosted by an AppKit shell (`…Sheet.swift`)
-  that owns presentation, validation and the delegate callbacks. Extend that
-  pattern for new sheets; keep windows, menus, the main window and the channel
-  view in AppKit.
-- Group by feature, not by former Objective-C class folder. A feature owns its
-  view, its shell, its view model and its string catalogue together.
+- The direction is SwiftUI. New UI is written in SwiftUI and hosted by an
+  AppKit shell (`…Sheet.swift` / window controller) that owns presentation,
+  validation, menus, keyboard handling, state restoration and the delegate
+  callbacks; existing AppKit surfaces migrate feature by feature behind those
+  shells. The main window, menu bar, member list and WebKit channel view stay
+  AppKit until a migration is planned and measured — never rewrite them as a
+  side effect of another change.
+- Layout is by feature: `Sources/App/{Application,Protocol,Preferences,
+  Features/<Feature>,UI,Localization,Resources}`. `Sources/App/README.md`
+  describes each directory's scope and the conventions; a feature owns its
+  controllers, views, models and strings together, and nothing goes back
+  under a former Objective-C class folder.
 - Model closed domain state with enums, option sets and value types. Persist
   and archive with `Codable`; reach for `NSSecureCoding` only where an
   `NSXPCInterface` allowlist requires it.
@@ -23,7 +28,7 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
   instead. Where one is unavoidable, mark it `ISOLATION-EXCEPTION:` with the
   reason, as the existing ones are.
 - Preferences are typed `PreferenceKey` declarations under
-  `Sources/App/Classes/Preferences/Keys/`, with the handful the XPC services
+  `Sources/App/Preferences/Keys/`, with the handful the XPC services
   also read in `Sources/Shared/Preferences/`. Read and write through the key,
   never through a raw defaults string.
 - `@objc` marks a runtime boundary and nothing else: a class or action a nib
