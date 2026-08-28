@@ -41,7 +41,10 @@ import Testing
 @MainActor
 @Suite("Labeled response tracking")
 struct IRCLabeledResponseTests {
-	@Test("Tracking needs both echo-message and labeled-response")
+	/// A label rides on a `label` tag, so labeled-response needs message-tags
+	/// and nothing else: with no other response the server sends ACK, which
+	/// resolves the delivery without echo-message.
+	@Test("Tracking needs message-tags and labeled-response")
 	func trackingRequiresBothCapabilities() {
 		let client = GLTTestClient()
 		client.enableCapability(.labeledResponse)
@@ -49,7 +52,7 @@ struct IRCLabeledResponseTests {
 		#expect(client.labeledResponseTrackingEnabled() == false)
 		#expect(client.registerPendingDelivery(for: nil) == nil)
 
-		client.enableCapability(.echoMessage)
+		client.enableCapability(.messageTags)
 
 		#expect(client.labeledResponseTrackingEnabled())
 	}

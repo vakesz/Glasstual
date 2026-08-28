@@ -336,14 +336,105 @@ struct IRCSpecBatchTests {
 		#expect(client.deliveryState(forLabel: label) == .none)
 	}
 
-	/// Labels are only issued when the client can actually correlate the
-	/// answer, which needs `labeled-response` and `echo-message` both.
-	@Test("labeled-response: no label is issued without the capabilities")
+	/// A label can only go out on a `label` tag, so `labeled-response` needs
+	/// `message-tags`; without either there is nothing to correlate with.
+	@Test("labeled-response: no label is issued without message-tags")
 	func noLabelWithoutTheCapabilities() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me"])
-		let channel = try #require(client.findChannelOrCreate("#chan"))
+		let bare = GLTTestClient(configDictionary: ["nickname": "me"])
+		let bareChannel = try #require(bare.findChannelOrCreate("#chan"))
 
-		#expect(client.registerPendingDelivery(for: channel) == nil)
+		#expect(bare.registerPendingDelivery(for: bareChannel) == nil)
+
+		let untagged = GLTTestClient(configDictionary: ["nickname": "me"])
+
+		untagged.enableCapability(.labeledResponse)
+
+		let untaggedChannel = try #require(untagged.findChannelOrCreate("#chan"))
+
+		#expect(untagged.registerPendingDelivery(for: untaggedChannel) == nil)
+	}
+
+	/// `labeled-response` does not need `echo-message`: when the server has no
+	/// other response it MUST send `ACK`, which resolves the delivery on its
+	/// own. Requiring echo meant a server offering labelled responses without
+	/// it had every message go out untracked.
+	@Test("labeled-response: labels are issued without echo-message")
+	func labelsAreIssuedWithoutEchoMessage() throws {
+		let client = GLTTestClient(configDictionary: ["nickname": "me"])
+
+		client.enableCapability(.messageTags)
+		client.enableCapability(.labeledResponse)
+
+		#expect(client.labeledResponseTrackingEnabled())
+
+		let channel = try #require(client.findChannelOrCreate("#chan"))
+		let label = try #require(client.registerPendingDelivery(for: channel))
+
+		#expect(client.deliveryState(forLabel: label) == .pending)
+
+		let ack = try message("@label=\(label) ACK", on: client)
+
+		#expect(client.resolveLabeledResponse(for: ack))
+		#expect(client.deliveryState(forLabel: label) == .none)
+	}
+
+	/// A `TARGMAX`-grouped message is still one command, so it still carries a
+	/// label. The label used to be discarded on this path, which left every
+	/// grouped message uncorrelated and its delivery state stuck.
+	@Test("labeled-response: a grouped message carries one label")
+	func groupedMessagesCarryOneLabel() throws {
+		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+
+		client.enableCapability(.messageTags)
+		client.enableCapability(.labeledResponse)
+		client.userHostmask = "me!user@example.org"
+		client.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")
+
+		let first = try #require(client.findChannelOrCreate("#one"))
+		let second = try #require(client.findChannelOrCreate("#two"))
+
+		first.activate()
+		second.activate()
+
+		client.sendText(NSAttributedString(string: "hello"), as: .privmsg, toChannels: [first, second])
+
+		let lines = client.sentLines.compactMap { $0 as? String }
+		let sent = try #require(lines.first)
+
+		#expect(lines.count == 1)
+		#expect(sent.hasPrefix("@label="))
+		#expect(sent.hasSuffix(" PRIVMSG #one,#two :hello"))
+
+		let parsed = try #require(LineParser.parsedLine(fromLine: sent))
+		let section = try #require(parsed.messageTagSection)
+		let label = try #require(MessageTagParser.parsedTags(fromSection: section).tags["label"])
+
+		#expect(client.deliveryState(forLabel: label) == .pending)
+
+		let acknowledgement = try message("@label=\(label) ACK", on: client)
+
+		#expect(client.resolveLabeledResponse(for: acknowledgement))
+		#expect(client.deliveryState(forLabel: label) == .none)
+	}
+
+	/// Without the capabilities there is no label to put on it, and the
+	/// grouped command goes out plain.
+	@Test("labeled-response: a grouped message is untagged without the capabilities")
+	func groupedMessagesAreUntaggedWithoutTheCapabilities() throws {
+		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+
+		client.userHostmask = "me!user@example.org"
+		client.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")
+
+		let first = try #require(client.findChannelOrCreate("#one"))
+		let second = try #require(client.findChannelOrCreate("#two"))
+
+		first.activate()
+		second.activate()
+
+		client.sendText(NSAttributedString(string: "hello"), as: .privmsg, toChannels: [first, second])
+
+		#expect(client.sentLines.compactMap { $0 as? String } == ["PRIVMSG #one,#two :hello"])
 	}
 
 	/// Labels are unique within a connection; reusing one would let a stale

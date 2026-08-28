@@ -353,6 +353,66 @@ struct IRCSpecISupportTests {
 		#expect(info.whoxSupported == false)
 	}
 
+	/// modern.ircdocs.horse: for the tokens whose value is a list of
+	/// characters, an explicitly empty value says the server has none of them.
+	/// That is not the same as the bare token, which says nothing.
+	@Test("PREFIX=, CHANTYPES= and STATUSMSG= mean the server has none")
+	func anEmptyValueMeansNone() {
+		let info = supportInfo("PREFIX=(ov)@+ CHANTYPES=#& STATUSMSG=@+")
+
+		#expect(info.userPrefix(forModeSymbol: "o") == "@")
+		#expect(info.channelNamePrefixes == ["#", "&"])
+		#expect(info.statusMessageModeSymbols == ["@", "+"])
+
+		info.processConfigurationData("PREFIX= CHANTYPES= STATUSMSG=")
+
+		#expect(info.userPrefix(forModeSymbol: "o") == nil)
+		#expect(info.userPrefix(forModeSymbol: "v") == nil)
+		#expect(info.modeSymbolIsUserPrefix("o") == false)
+		#expect(info.channelNamePrefixes.isEmpty)
+		#expect(info.statusMessageModeSymbols.isEmpty)
+	}
+
+	/// A server with no channel types has no channel names either, so nothing
+	/// the user types can be mistaken for one.
+	@Test("CHANTYPES= leaves no string that reads as a channel name")
+	func anEmptyChannelTypeListRecognisesNoChannels() {
+		let client = GLTTestClient()
+
+		client.supportInfo.processConfigurationData("CHANTYPES=")
+
+		#expect(client.stringIsChannelName("#chan") == false)
+		#expect(client.stringIsChannelName("&chan") == false)
+	}
+
+	/// Only those three tokens read an empty value that way: everywhere else
+	/// `KEY=` is the bare token, and must not be read as the number zero or as
+	/// an empty list that wipes a default.
+	@Test("An empty value elsewhere is still just the bare token")
+	func anEmptyValueElsewhereIsTheBareToken() {
+		let info = supportInfo("NICKLEN=16 CHANMODES=beI,k,l,imnpst")
+
+		info.processConfigurationData("NICKLEN= CHANMODES= SAFELIST=")
+
+		#expect(info.maximumNicknameLength == 16)
+		#expect(info.modeHasParameter("b", whenModeIsSet: true))
+		#expect(info.safeListSupported)
+	}
+
+	/// `-TOKEN` still withdraws the three, which puts the defaults back rather
+	/// than leaving the empty list behind.
+	@Test("-PREFIX and -CHANTYPES restore the defaults after an empty value")
+	func withdrawingRestoresTheDefaults() {
+		let info = supportInfo("PREFIX= CHANTYPES=")
+
+		#expect(info.channelNamePrefixes.isEmpty)
+
+		info.processConfigurationData("-PREFIX -CHANTYPES")
+
+		#expect(info.channelNamePrefixes == ["#"])
+		#expect(info.userPrefix(forModeSymbol: "o") == "@")
+	}
+
 	/// Token names are case-insensitive on the wire even though every server
 	/// sends them upper-cased.
 	@Test("Token names are matched case-insensitively")

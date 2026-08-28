@@ -210,8 +210,11 @@ struct IRCISupportCorpusTests {
 		#expect(supportInfo.userPrefix(forModeSymbol: "q") == nil)
 	}
 
-	/// Malformed PREFIX tokens are ignored; the defaults survive.
-	@Test(arguments: ["PREFIX=", "PREFIX=(ov)@", "PREFIX=ov@+", "PREFIX=()", "PREFIX=(ov", "PREFIX=(o)v)@+"])
+	/// Malformed PREFIX tokens are ignored; the defaults survive. `PREFIX=` is
+	/// not malformed -- modern.ircdocs.horse reads an empty value as "the
+	/// server has no prefix modes" -- so it is covered by IRCSpecISupportTests
+	/// instead.
+	@Test(arguments: ["PREFIX=(ov)@", "PREFIX=ov@+", "PREFIX=()", "PREFIX=(ov", "PREFIX=(o)v)@+"])
 	func malformedPrefixTokensKeepTheDefaults(configuration: String) {
 		let supportInfo = Self.supportInfo(configuration)
 
