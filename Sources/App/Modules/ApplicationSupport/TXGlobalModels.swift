@@ -38,6 +38,11 @@
 import Foundation
 import GlasstualPluginKit
 
+/* These were `@_cdecl` C entry points for the Objective-C half of the
+ application, which no longer exists; `@_cdecl` is an unsupported underscored
+ attribute and every caller is Swift. The date formatters also existed twice,
+ once taking `AnyObject` and once `Any`; only the `Any` form is kept. */
+
 private nonisolated let isoStandardDateFormatter: DateFormatter = {
 	let dateFormatter = DateFormatter()
 	dateFormatter.locale = Locale(identifier: "en_US_POSIX")
@@ -46,7 +51,6 @@ private nonisolated let isoStandardDateFormatter: DateFormatter = {
 	return dateFormatter
 }()
 
-@_cdecl("TXFormattedTimestamp")
 public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? {
 	var global = time_t(date.timeIntervalSince1970)
 	var localTime = tm()
@@ -70,7 +74,6 @@ public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -
 	return NSString(string: timestamp)
 }
 
-@_cdecl("TXHumanReadableTimeInterval")
 public nonisolated func humanReadableTimeInterval(
 	_ dateInterval: TimeInterval,
 	_ shortValue: Bool,
@@ -83,23 +86,8 @@ public nonisolated func humanReadableTimeInterval(
 	) as NSString
 }
 
-@_cdecl("TXFormatDateLongStyle")
-public nonisolated func formatDateLongStyle(_ dateObject: AnyObject, _ relativeOutput: Bool) -> NSString? {
-	formatDateValue(dateObject, .long, .long, relativeOutput) as NSString?
-}
-
 public nonisolated func formatDateLongStyle(_ dateObject: Any, _ relativeOutput: Bool) -> String? {
 	formatDateValue(dateObject, .long, .long, relativeOutput)
-}
-
-@_cdecl("TXFormatDate")
-public nonisolated func formatDate(
-	_ dateObject: AnyObject,
-	_ dateStyle: DateFormatter.Style,
-	_ timeStyle: DateFormatter.Style,
-	_ relativeOutput: Bool
-) -> NSString? {
-	formatDateValue(dateObject, dateStyle, timeStyle, relativeOutput) as NSString?
 }
 
 public nonisolated func formatDate(
@@ -161,17 +149,14 @@ private nonisolated func parseDateValue(_ string: String) -> Date? {
 	return nil
 }
 
-@_cdecl("TXSharedISOStandardDateFormatter")
 public nonisolated func sharedISOStandardDateFormatter() -> DateFormatter {
 	isoStandardDateFormatter
 }
 
-@_cdecl("TXRandomNumber")
 public nonisolated func randomNumber(_ maximum: UInt32) -> UInt {
 	UInt(UInt32.random(in: 0 ..< maximum))
 }
 
-@_cdecl("TXFormattedNumber")
 public nonisolated func formattedNumber(_ number: Int) -> NSString {
 	PluginHost.formattedNumber(number) as NSString
 }
