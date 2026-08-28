@@ -323,6 +323,10 @@ public class ChannelConfig: PortablePropertyDict {
 		config.secretKeyStorage = secretKeyStorage
 
 		if uniquing {
+			/* The keychain item is keyed on uniqueIdentifier, so read the key
+			 back under the *old* identifier before minting a new one. The copy
+			 writes it out again under its own identifier when it is saved. */
+			config.secretKeyStorage = secretKeyStorage ?? secretKeyFromKeychain
 			config.uniqueIdentifierStorage = UUID().uuidString
 		}
 
