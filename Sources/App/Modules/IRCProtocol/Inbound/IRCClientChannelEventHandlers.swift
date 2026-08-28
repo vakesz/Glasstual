@@ -174,7 +174,10 @@ public extension IRCClient {
 			print(text, by: nil, in: channel, as: .invite, command: message.command, receivedAt: message.receivedAt)
 		}
 		_ = notifyEvent(.invite, lineType: .invite, target: nil, nickname: sender, text: channelName)
-		if TextualPreferences.autoJoinOnInvite() {
+		// `JOIN 0` is the "leave every channel" form, and the invite target is
+		// whatever the inviting user typed, so only real channel names may be
+		// auto-joined here.
+		if TextualPreferences.autoJoinOnInvite(), stringIsChannelName(channelName) {
 			joinUnlistedChannel(channelName)
 		}
 	}
