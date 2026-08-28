@@ -46,66 +46,6 @@
       "extractionState" : "manual",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Custom" } } }
     },
-    "eoq-pr-128" : {
-      "comment" : "Plural time-unit label for seconds. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "seconds" } } }
-    },
-    "eoq-pr-16" : {
-      "comment" : "Plural time-unit label for days. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "days" } } }
-    },
-    "eoq-pr-32" : {
-      "comment" : "Plural time-unit label for hours. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "hours" } } }
-    },
-    "eoq-pr-4" : {
-      "comment" : "Plural time-unit label for years. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "years" } } }
-    },
-    "eoq-pr-64" : {
-      "comment" : "Plural time-unit label for minutes. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "minutes" } } }
-    },
-    "eoq-pr-8" : {
-      "comment" : "Plural time-unit label for months. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "months" } } }
-    },
-    "fko-64-128" : {
-      "comment" : "Singular time-unit label for second. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "second" } } }
-    },
-    "fko-64-16" : {
-      "comment" : "Singular time-unit label for day. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "day" } } }
-    },
-    "fko-64-32" : {
-      "comment" : "Singular time-unit label for hour. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "hour" } } }
-    },
-    "fko-64-4" : {
-      "comment" : "Singular time-unit label for year. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "year" } } }
-    },
-    "fko-64-64" : {
-      "comment" : "Singular time-unit label for minute. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "minute" } } }
-    },
-    "fko-64-8" : {
-      "comment" : "Singular time-unit label for month. Legacy compatibility key retained.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "month" } } }
-    },
     "fo8-1h" : {
       "comment" : "Required-field validation message. Legacy compatibility key retained.",
       "extractionState" : "manual",
