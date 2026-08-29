@@ -41,8 +41,8 @@ public enum SystemInformation {
 	}
 
 	/// `Mutex` makes the invariant -- this is only ever read or written under
-	/// the lock -- one the compiler checks, which `nonisolated(unsafe)` plus an
-	/// `NSLock` did not.
+	/// the lock -- one the compiler checks, which an unchecked global beside a
+	/// hand-held lock did not.
 	private static let sleepState = Mutex(SleepState())
 
 	/** Must be called during launch. Relying on the first read of `systemIsSleeping` to
