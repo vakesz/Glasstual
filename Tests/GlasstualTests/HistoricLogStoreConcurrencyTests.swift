@@ -171,7 +171,11 @@ struct HistoricLogStoreConcurrencyTests {
 				group.addTask { await harness.lineCount(inView: view, limit: UInt(lineCount)) }
 			}
 
-			return await group.reduce(into: [Int]()) { $0.append($1) }
+			var collected: [Int] = []
+			for await count in group {
+				collected.append(count)
+			}
+			return collected
 		}
 
 		#expect(results.count == 10)
