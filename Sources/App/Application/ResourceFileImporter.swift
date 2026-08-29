@@ -12,39 +12,50 @@
 
 import AppKit
 import CocoaExtensions
+import os
 import UniformTypeIdentifiers
 
-private let scriptDocumentTypeName = "Glasstual IRC Client Script"
-private let pluginDocumentTypeName = "Glasstual IRC Client Extension"
+/// What `ResourceFileImporter` can install.
+public enum ResourceFileKind: Equatable, Sendable {
+	case script
+	case extensionBundle
+}
 
-@objc(TPCResourceManagerDocumentTypeImporter)
-public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePanelDelegate {
-	override public nonisolated static var autosavesInPlace: Bool {
-		true
-	}
-
-	/* ISOLATION-EXCEPTION: `NSDocument.read(from:ofType:)` is declared nonisolated,
-	 so the override cannot be isolated. AppKit opens documents on the main thread. */
-	override public nonisolated func read(from url: URL, ofType typeName: String) throws {
-		try MainActor.assumeIsolated {
-			try performRead(from: url, ofType: typeName)
+/// Installs a script or an extension the user opened from the Finder.
+///
+/// This was an `NSDocument` subclass named as the `NSDocumentClass` of two
+/// declared document types. `NSDocument.read(from:ofType:)` is nonisolated, so
+/// the one thing the importer does — put alerts and a save panel on screen —
+/// had to start with a runtime assumption about the calling thread, and the
+/// document machinery brought an untitled document on reopen with it.
+/// `NSApplicationDelegate.application(_:open:)` is main-actor isolated by
+/// declaration and hands over the same URLs.
+@MainActor
+public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
+	public func open(_ urls: [URL]) {
+		for url in urls {
+			open(url)
 		}
 	}
 
-	@MainActor
-	private func performRead(from url: URL, ofType typeName: String) throws {
-		if typeName == scriptDocumentTypeName {
+	private func open(_ url: URL) {
+		switch Self.kind(of: url) {
+		case .script:
 			performImportOfScriptFile(url)
-
-			return
-		}
-
-		if typeName == pluginDocumentTypeName {
+		case .extensionBundle:
 			performImportOfPluginFile(url)
-
-			return
+		case nil:
+			Self.logger.error(
+				"Opened file '\(url.lastPathComponent, privacy: .public)' is neither a script nor an extension"
+			)
 		}
+	}
 
+	/// What kind of installable `url` names, or nil for anything else.
+	///
+	/// Separated from the import itself because the import puts alerts and a
+	/// save panel on screen: this is the part with an answer worth testing.
+	public static func kind(of url: URL) -> ResourceFileKind? {
 		var contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType
 
 		if contentType == nil {
@@ -52,31 +63,31 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		}
 
 		guard let contentType else {
-			throw CocoaError(.fileReadUnknown)
+			return nil
 		}
 
 		if let scriptType = UTType(filenameExtension: ResourceDocumentType.scriptFilenameExtension),
 		   contentType.conforms(to: scriptType)
 		{
-			performImportOfScriptFile(url)
-
-			return
+			return .script
 		}
 
 		if contentType.conforms(to: .bundle),
 		   url.pathExtension == ResourceDocumentType.bundleFilenameExtension
 		{
-			performImportOfPluginFile(url)
-
-			return
+			return .extensionBundle
 		}
 
-		throw CocoaError(.fileReadUnknown)
+		return nil
 	}
+
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "ResourceFileImporter"
+	)
 
 	// MARK: - Custom Plugin Files
 
-	@MainActor
 	private func performImportOfPluginFile(_ url: URL) {
 		let filename = url.lastPathComponent
 
@@ -140,7 +151,6 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		return Array(components.prefix(directoryComponents.count)) == directoryComponents
 	}
 
-	@MainActor
 	private func performImportOfScriptFile(_ url: URL) {
 		let filename = url.lastPathComponent
 
@@ -189,7 +199,6 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		}
 	}
 
-	@MainActor
 	private func performImportOfScriptFilePostflight(_ filename: String) {
 		let filenameWithoutExtension = (filename as NSString).deletingPathExtension
 

@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import Combine
 import os
 
 private let appearanceDefaultName = "Tahoe"
@@ -71,8 +72,14 @@ public final class Appearance: NSObject {
 	/// `properties` starts at its default value, so "has the appearance ever
 	/// been resolved" needs its own flag rather than a nil check.
 	private var hasResolvedAppearance = false
-	private var isApplyingAppearance = false
-	private var effectiveAppearanceObservation: NSKeyValueObservation?
+
+	/// The effective appearance this object's last write to `NSApp` produced.
+	///
+	/// The observation below is delivered on a later main-actor turn, so a
+	/// "currently applying" flag would already have been cleared by the time the
+	/// change arrives. The resulting name is what identifies it as our own.
+	private var selfAppliedAppearanceName: NSAppearance.Name?
+	private var effectiveAppearanceObservation: Task<Void, Never>?
 
 	override public init() {
 		super.init()
@@ -95,15 +102,23 @@ public final class Appearance: NSObject {
 			object: nil
 		)
 
-		effectiveAppearanceObservation = NSApp.observe(\.effectiveAppearance, options: .new) { [weak self] _, _ in
-			/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
-			 declared nonisolated. AppKit posts `effectiveAppearance` changes on the
-			 main thread, which is what makes the assumption hold. */
-			MainActor.assumeIsolated {
-				guard let self, self.isApplyingAppearance == false else {
+		/* `observe`'s change handler is nonisolated; awaiting the key path's
+		 values reads this object's state where it lives. */
+		effectiveAppearanceObservation = Task { @MainActor [weak self] in
+			for await appearance in NSApp.publisher(for: \.effectiveAppearance, options: .new).bufferedValues {
+				guard let self else {
 					return
 				}
-				self.applicationAppearanceChanged()
+
+				/* The change this object caused itself is not news, and
+				 answering it would post a system-appearance change nothing
+				 asked for. */
+				if selfAppliedAppearanceName == appearance.name {
+					selfAppliedAppearanceName = nil
+					continue
+				}
+
+				applicationAppearanceChanged()
 			}
 		}
 	}
@@ -118,14 +133,12 @@ public final class Appearance: NSObject {
 	private func removeObservers() {
 		NSWorkspace.shared.notificationCenter.removeObserver(self)
 
-		effectiveAppearanceObservation?.invalidate()
+		effectiveAppearanceObservation?.cancel()
 		effectiveAppearanceObservation = nil
 	}
 
 	private func applicationAppearanceChanged() {
-		Task { @MainActor [weak self] in
-			self?.updateAppearanceBySystemChange(true)
-		}
+		updateAppearanceBySystemChange(true)
 	}
 
 	@objc private func accessibilityDisplayOptionsDidChange(_: Notification) {
@@ -210,9 +223,14 @@ public final class Appearance: NSObject {
 			return
 		}
 
-		isApplyingAppearance = true
+		let previousEffectiveName = NSApp.effectiveAppearance.name
 		NSApp.appearance = appearance
-		isApplyingAppearance = false
+		let newEffectiveName = NSApp.effectiveAppearance.name
+
+		/* Only remember it when the write actually moved the effective
+		 appearance; otherwise there is no observation to discount and the name
+		 would swallow the next genuine change to it. */
+		selfAppliedAppearanceName = newEffectiveName == previousEffectiveName ? nil : newEffectiveName
 	}
 
 	private func notifyApplicationAppearanceChanged() {

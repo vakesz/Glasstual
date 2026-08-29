@@ -173,17 +173,23 @@ public final class MemberListCell: NSTableCellView {
 		return cache
 	}()
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
+	private var hasConfigured = false
 
-		MainActor.assumeIsolated {
-			cellTextField.usesSingleLineMode = true
-			cellTextField.maximumNumberOfLines = 1
-			cellTextField.lineBreakMode = .byTruncatingTail
+	/// Nib-time configuration, run by the table view when it vends the cell.
+	///
+	/// `awakeFromNib` is nonisolated, so this used to reach the text field
+	/// behind a runtime assumption. `tableView(_:viewFor:row:)` is on the main
+	/// actor by declaration and runs before the cell is ever drawn.
+	public func configure() {
+		guard hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+
+		cellTextField.usesSingleLineMode = true
+		cellTextField.maximumNumberOfLines = 1
+		cellTextField.lineBreakMode = .byTruncatingTail
 	}
 
 	@objc(avatarImageForNickname:size:)
@@ -362,6 +368,11 @@ public final class MemberListCell: NSTableCellView {
 		guard let memberList, let cellItem, let userInfoPopover = memberList.memberListUserInfoPopover else {
 			return
 		}
+
+		/* Configured here rather than at nib load: `awakeFromNib` is nonisolated,
+		 and the member list's outlets are not connected yet when the list joins
+		 its window. The call is idempotent. */
+		userInfoPopover.configure()
 
 		let nickname = cellItem.user.nickname
 

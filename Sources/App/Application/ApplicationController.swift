@@ -21,6 +21,23 @@ private let pluginsFinishedLoadingNotification = Notification.Name(
 	"THOPluginManagerFinishedLoadingPluginsNotification"
 )
 
+/// AppKit ships `NSWorkspace.WillSleepMessage` but no power-off equivalent, so
+/// the interop shape is spelled out here: the notification to bridge from, and
+/// how to make the message. Declaring it as a `MainActorMessage` is what makes
+/// Foundation deliver the power-off warning synchronously *on* the main actor
+/// instead of handing a nonisolated block to a caller who has to assume.
+private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage {
+	typealias Subject = NSWorkspace
+
+	static var name: Notification.Name {
+		NSWorkspace.willPowerOffNotification
+	}
+
+	static func makeMessage(_: Notification) -> Self? {
+		Self()
+	}
+}
+
 @objc(TXMasterController)
 @MainActor
 public final class ApplicationController: NSObject, NSApplicationDelegate {
@@ -34,7 +51,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		category: "Termination"
 	)
 
-	private static var awakeFromNibCalled = false
+	private var hasWokenFromMainNib = false
 
 	private var worldStorage: IRCWorld!
 	private var mainWindowStorage: TVCMainWindow!
@@ -52,6 +69,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private var terminateHistoricLogSaveStarted = false
 	private var terminateStepThreePerformed = false
 	private let notifications = NotificationSubscriptions()
+	private lazy var resourceFileImporter = ResourceFileImporter()
 
 	/** Nib connects these via KVC (`setValue:forKey:`). IUO matches the
 	 ObjC nonnull headers while still allowing nil before wake / in tests. */
@@ -111,30 +129,31 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		#endif
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-
-		MainActor.assumeIsolated {
-			guard Self.awakeFromNibCalled == false else {
-				return
-			}
-
-			Self.awakeFromNibCalled = true
-			awakeFromNibInternal()
+	/// Loads the main window once the main menu nib has finished decoding.
+	///
+	/// This used to be `awakeFromNib`, which AppKit declares nonisolated, so
+	/// every line of it sat behind a runtime assumption about the decoding
+	/// thread. `applicationWillFinishLaunching(_:)` is main-actor isolated by
+	/// declaration and NSApplication posts it right after the main nib is
+	/// loaded — the same point in the launch, with the isolation checked.
+	private func wakeFromMainNib() {
+		guard hasWokenFromMainNib == false else {
+			return
 		}
-	}
 
-	private func awakeFromNibInternal() {
+		hasWokenFromMainNib = true
+
 		TextualPreferences.initPreferences()
 
 		_ = SharedApplication.sharedAppearance()
 
-		/* Wait until -awakeFromNib to wake the window so that the menu
-		 controller created by the main nib has time to load. */
+		/* Wait until the menu controller created by the main nib has loaded
+		 before waking the window. */
 		Bundle.main.loadNibNamed("TVCMainWindow", owner: self, topLevelObjects: nil)
+
+		/* The window's own nib-time setup: `awakeFromNib` cannot be isolated,
+		 and by here the outlet the nib connected is in place. */
+		mainWindowStorage?.configure()
 	}
 
 	@objc
@@ -173,11 +192,11 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		notifications.observe(NSWorkspace.didWakeNotification, center: workspaceCenter) { [weak self] notification in
 			self?.computerDidWakeUp(notification)
 		}
-		notifications.observeSynchronously(NSWorkspace.willSleepNotification, center: workspaceCenter) { [weak self] in
+		notifications.observeSynchronously(NSWorkspace.WillSleepMessage.self, center: workspaceCenter) { [weak self] in
 			self?.computerWillSleep()
 		}
 		notifications
-			.observeSynchronously(NSWorkspace.willPowerOffNotification, center: workspaceCenter) { [weak self] in
+			.observeSynchronously(WorkspaceWillPowerOffMessage.self, center: workspaceCenter) { [weak self] in
 				self?.computerWillPowerOff()
 			}
 		notifications
@@ -241,6 +260,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	// MARK: - NSApplication Delegate
 
 	public func applicationWillFinishLaunching(_: Notification) {
+		wakeFromMainNib()
+
 		#if !DEBUG
 			/* Asking the user about another running copy needs an alert, and
 			 an alert needs NSApp — so this cannot run before
@@ -306,13 +327,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		return true
 	}
 
-	public func applicationShouldOpenUntitledFile(_: NSApplication) -> Bool {
-		/* Glasstual has one window and no document controller, but it does
-		 declare an NSDocumentClass for importing scripts and extensions.
-		 Saying yes here invites AppKit to make an untitled document out of
-		 that importer; `applicationShouldHandleReopen` already brings the main
-		 window forward, which is what a reopen is actually asking for. */
-		false
+	/** Scripts and extensions the user opened from the Finder. The declared
+	 document types used to name an `NSDocument` subclass, whose nonisolated
+	 `read(from:ofType:)` had to assume the main actor before it could put an
+	 alert on screen; this delegate method is isolated by declaration. */
+	public func application(_: NSApplication, open urls: [URL]) {
+		resourceFileImporter.open(urls)
 	}
 
 	public func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {

@@ -52,6 +52,7 @@ public enum TVCTextViewCaretLocation: UInt {
 @objc(TVCTextViewWithIRCFormatter)
 open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeyboardEventResponder {
 	private var keyEventHandler: KeyEventHandler!
+	private var hasPreparedInitialState = false
 	private var preferredFontStorage: NSFont = .systemFont(ofSize: NSFont.systemFontSize)
 	private var preferredFontColorStorage: NSColor = .textColor
 
@@ -97,7 +98,17 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		prepareInitialState()
 	}
 
-	private func prepareInitialState() {
+	/// Idempotent, and reachable from outside, because the input field is built
+	/// with `init(usingTextLayoutManager:)` — an inherited Objective-C
+	/// convenience initialiser whose chain through the designated ones is
+	/// AppKit's business, not something to depend on.
+	func prepareInitialState() {
+		guard hasPreparedInitialState == false else {
+			return
+		}
+
+		hasPreparedInitialState = true
+
 		keyEventHandler = KeyEventHandler()
 
 		delegate = self

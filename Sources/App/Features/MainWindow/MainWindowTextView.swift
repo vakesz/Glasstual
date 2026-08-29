@@ -53,6 +53,11 @@ private enum MainWindowTextViewAnimation {
 	static let accessoryDuration: TimeInterval = 0.18
 }
 
+/* The insets the xib used to hold on the scroll view inside the input bar. */
+private let inputBarTrailingInset: CGFloat = 10.0
+private let inputBarVerticalInset: CGFloat = 3.0
+private let inputBarMinimumHeight: CGFloat = 19.0
+
 private let mainWindowTextViewLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "MainWindowTextView"
@@ -79,40 +84,36 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	 without anyone having to remember to. */
 	private var defaultLineHeightCache: (font: NSFont, height: CGFloat)?
 
-	@IBOutlet private var textViewHeightConstraint: NSLayoutConstraint!
-	@IBOutlet private var windowContentViewMinimumHeight: NSLayoutConstraint!
-	@IBOutlet public var contentView: MainWindowTextViewContentView!
-	@IBOutlet private var inputBarContainerView: NSView!
-	@IBOutlet private var inputBarTopConstraint: NSLayoutConstraint!
+	/* Handed over by the content view, which builds this view in code. They
+	 were outlets until the input field had to be a TextKit 2 view, which only
+	 an `init(usingTextLayoutManager:)` produces. */
+	fileprivate var textViewHeightConstraint: NSLayoutConstraint?
+	fileprivate var windowContentViewMinimumHeight: NSLayoutConstraint?
+	public fileprivate(set) weak var contentView: MainWindowTextViewContentView?
+	fileprivate weak var inputBarContainerView: NSView?
+	fileprivate var inputBarTopConstraint: NSLayoutConstraint?
 
 	private var accessoryView: MainWindowInputAccessoryView?
 	private var accessoryHeightConstraint: NSLayoutConstraint?
 	private var accessoryHeight: CGFloat = 0
 	private var observingTyping = false
-	private var typingObservations: Set<AnyCancellable> = []
+	private var typingObservations: [Task<Void, Never>] = []
 	private weak var typingChannel: IRCChannel?
 	private var userInterfaceObjects: MainWindowTextViewAppearance?
 	private var observingUserDefaults = false
-	private var userDefaultsObservation: AnyCancellable?
+	private var userDefaultsObservation: Task<Void, Never>?
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-
-		MainActor.assumeIsolated {
-			/* Reading layoutManager makes NSTextView fall back to TextKit 1. All
-			 sizing in this class therefore stays on NSTextLayoutManager. */
-			if textLayoutManager == nil {
-				mainWindowTextViewLogger.error("Input text view is not using TextKit 2")
-			}
-
-			backgroundColor = .clear
-			enclosingScrollView?.drawsBackground = false
-			updateTextDirection()
-			installAccessoryView()
-		}
+	/// Finishes the view once the content view has connected it to the nib's
+	/// container and constraints.
+	///
+	/// This was `awakeFromNib`, which is nonisolated — and the view is no longer
+	/// decoded from the nib at all, because a nib-instantiated `NSTextView` is
+	/// always TextKit 1.
+	fileprivate func configure() {
+		backgroundColor = .clear
+		enclosingScrollView?.drawsBackground = false
+		updateTextDirection()
+		installAccessoryView()
 	}
 
 	// MARK: - Accessory strip
@@ -223,32 +224,41 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 		observingTyping = observed
 
-		if observed {
-			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.typingDidChange)
-				.receive(on: DispatchQueue.main)
-				.sink { [weak self] notification in
-					/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
-					 publisher above delivers on the main queue. */
-					MainActor.assumeIsolated {
-						self?.typingStateDidChange(notification)
-					}
-				}
-				.store(in: &typingObservations)
-
-			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.selectionDidChange)
-				.receive(on: DispatchQueue.main)
-				.sink { [weak self] notification in
-					/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
-					 publisher above delivers on the main queue. */
-					MainActor.assumeIsolated {
-						self?.selectionDidChange(notification)
-					}
-				}
-				.store(in: &typingObservations)
-		} else {
+		guard observed else {
 			typingObservations.forEach { $0.cancel() }
 			typingObservations.removeAll()
+			return
 		}
+
+		/* `sink` runs its closure nonisolated; awaiting the publisher's values
+		 inside a main-actor task delivers on the same later main-queue turn
+		 with the isolation checked instead of assumed. */
+		typingObservations = [
+			Task { @MainActor [weak self] in
+				let publisher = NotificationCenter.default
+					.publisher(for: MainWindowTextViewNotification.typingDidChange)
+
+				for await notification in publisher.bufferedValues {
+					guard let self else {
+						return
+					}
+
+					typingStateDidChange(notification)
+				}
+			},
+			Task { @MainActor [weak self] in
+				let publisher = NotificationCenter.default
+					.publisher(for: MainWindowTextViewNotification.selectionDidChange)
+
+				for await notification in publisher.bufferedValues {
+					guard let self else {
+						return
+					}
+
+					selectionDidChange(notification)
+				}
+			},
+		]
 	}
 
 	@objc private func typingStateDidChange(_ notification: Notification) {
@@ -318,19 +328,21 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		}
 
 		observedPreferenceKeys.forEach(applyObservedPreference)
-		userDefaultsObservation = NotificationCenter.default.publisher(
-			for: UserDefaults.didChangeNotification,
-			object: defaults
-		)
-		.receive(on: DispatchQueue.main)
-		.sink { [weak self] _ in
-			/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The publisher
-			 above delivers on the main queue. */
-			MainActor.assumeIsolated {
+
+		/* Same reason as the typing observations: `sink` cannot be isolated, and
+		 the body writes nine main-actor properties of this view. */
+		userDefaultsObservation = Task { @MainActor [weak self] in
+			let publisher = NotificationCenter.default.publisher(
+				for: UserDefaults.didChangeNotification,
+				object: defaults
+			)
+
+			for await _ in publisher.bufferedValues {
 				guard let self else {
 					return
 				}
-				observedPreferenceKeys.forEach(self.applyObservedPreference)
+
+				observedPreferenceKeys.forEach(applyObservedPreference)
 			}
 		}
 	}
@@ -621,7 +633,98 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 @objc(TVCMainWindowTextViewContentView)
 public final class MainWindowTextViewContentView: NSView {
-	@IBOutlet private var textView: MainWindowTextView!
+	@IBOutlet private var inputBarContainerView: NSView!
+	@IBOutlet private var inputBarTopConstraint: NSLayoutConstraint!
+	@IBOutlet private var textViewHeightConstraint: NSLayoutConstraint!
+	@IBOutlet private var windowContentViewMinimumHeight: NSLayoutConstraint!
+
+	private var textViewStorage: MainWindowTextView?
+
+	/// The input field, built the first time it is asked for.
+	///
+	/// It used to come out of the nib. `usesTextKit2` in a xib is accepted by
+	/// ibtool and then ignored, so a decoded `NSTextView` is always TextKit 1 —
+	/// only `init(usingTextLayoutManager:)` builds the TextKit 2 network, and
+	/// only code can call it.
+	public var textView: MainWindowTextView {
+		if let textViewStorage {
+			return textViewStorage
+		}
+
+		/* Stored before it is laid out, not after: putting the accessory strip
+		 together builds controls, and a control joining the window asks the
+		 window delegate for a field editor — which answers with this very
+		 property. Storing last made that a recursion. */
+		let textView = MainWindowTextView(usingTextLayoutManager: true)
+		textView.prepareInitialState()
+		textViewStorage = textView
+
+		install(textView)
+
+		return textView
+	}
+
+	/// Builds the input field, if it is not built already. The main window calls
+	/// this once its nib has finished decoding, so that everything reading
+	/// `textView` afterwards finds the same one.
+	public func configure() {
+		_ = textView
+	}
+
+	private func install(_ textView: MainWindowTextView) {
+		let scrollView = makeScrollView()
+		scrollView.documentView = textView
+
+		textView.minSize = NSSize(width: 0, height: inputBarMinimumHeight)
+		textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+		textView.isVerticallyResizable = true
+		textView.isHorizontallyResizable = false
+		textView.autoresizingMask = [.width]
+		textView.textContainer?.widthTracksTextView = true
+		textView.allowsUndo = true
+		textView.isRichText = false
+		textView.drawsBackground = false
+		textView.insertionPointColor = .controlTextColor
+		textView.setAccessibilityLabel(MainWindowStrings.Conversation.inputPlaceholder)
+
+		inputBarContainerView.addSubview(scrollView)
+
+		NSLayoutConstraint.activate([
+			scrollView.leadingAnchor.constraint(equalTo: inputBarContainerView.leadingAnchor),
+			inputBarContainerView.trailingAnchor.constraint(
+				equalTo: scrollView.trailingAnchor,
+				constant: inputBarTrailingInset
+			),
+			scrollView.topAnchor.constraint(
+				equalTo: inputBarContainerView.topAnchor,
+				constant: inputBarVerticalInset
+			),
+			inputBarContainerView.bottomAnchor.constraint(
+				equalTo: scrollView.bottomAnchor,
+				constant: inputBarVerticalInset
+			),
+		])
+
+		textView.contentView = self
+		textView.inputBarContainerView = inputBarContainerView
+		textView.inputBarTopConstraint = inputBarTopConstraint
+		textView.textViewHeightConstraint = textViewHeightConstraint
+		textView.windowContentViewMinimumHeight = windowContentViewMinimumHeight
+		textView.configure()
+	}
+
+	private func makeScrollView() -> NSScrollView {
+		let scrollView = NSScrollView(frame: .zero)
+		scrollView.translatesAutoresizingMaskIntoConstraints = false
+		scrollView.borderType = .noBorder
+		scrollView.autohidesScrollers = true
+		scrollView.hasHorizontalScroller = false
+		scrollView.hasVerticalScroller = false
+		scrollView.usesPredominantAxisScrolling = false
+		scrollView.drawsBackground = false
+		scrollView.contentView.drawsBackground = false
+		return scrollView
+	}
 
 	override public var allowsVibrancy: Bool {
 		false

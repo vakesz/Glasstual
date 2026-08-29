@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import AppKit
+import Combine
 import GlasstualPluginKit
 
 private typealias PluginMessagePrinter = (
@@ -347,7 +348,7 @@ enum PluginHostAdapter {
 
 private final class PluginConnectionTracker {
 	private let handler: (Bool) -> Void
-	private var clientObservations: [ObjectIdentifier: NSKeyValueObservation] = [:]
+	private var clientObservations: [ObjectIdentifier: Task<Void, Never>] = [:]
 	private var notificationObservers: [NSObjectProtocol] = []
 
 	init(handler: @escaping (Bool) -> Void) {
@@ -374,21 +375,32 @@ private final class PluginConnectionTracker {
 		let center = NotificationCenter.default
 		notificationObservers.forEach(center.removeObserver)
 		notificationObservers.removeAll()
+		clientObservations.values.forEach { $0.cancel() }
 		clientObservations.removeAll()
 	}
 
 	private func rebuild() {
 		let clients = AppController.shared.world.clientList
 		let identifiers = Set(clients.map(ObjectIdentifier.init))
+		for (identifier, observation) in clientObservations where identifiers.contains(identifier) == false {
+			observation.cancel()
+		}
+
 		clientObservations = clientObservations.filter { identifiers.contains($0.key) }
 
 		for client in clients where clientObservations[ObjectIdentifier(client)] == nil {
-			clientObservations[ObjectIdentifier(client)] = client
-				.observe(\.isLoggedIn, options: [.new]) { [weak self] _, _ in
-					Task { @MainActor in
-						self?.notify()
+			/* `observe`'s change handler is nonisolated and had to hop anyway;
+			 awaiting the key path inside the task is the same delivery with the
+			 isolation stated once. */
+			clientObservations[ObjectIdentifier(client)] = Task { @MainActor [weak self] in
+				for await _ in client.publisher(for: \.isLoggedIn, options: [.new]).bufferedValues {
+					guard let self else {
+						return
 					}
+
+					notify()
 				}
+			}
 		}
 
 		notify()

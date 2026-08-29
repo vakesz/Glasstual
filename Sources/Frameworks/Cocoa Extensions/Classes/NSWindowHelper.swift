@@ -36,7 +36,18 @@ import ObjectiveC
 @MainActor
 private enum WindowStateStorage {
 	static let frameKeyPrefix = "NSWindow Frame -> Internal (v3) -> "
-	nonisolated(unsafe) static var defaultSizeAssociationKey: UInt8 = 0
+
+	/** The address the default size is keyed on. It was a mutable `UInt8` whose
+	 address was taken, which needed an escape hatch to be a global at all. A
+	 static string literal lives in the binary's constant data, so its bytes have
+	 exactly the property a key needs — a unique, stable address — and the
+	 literal itself is a value. */
+	nonisolated static let defaultSizeKeyToken: StaticString =
+		"com.vakesz.glasstual.windowDefaultSize" // nonisolated: let
+
+	nonisolated static var defaultSizeAssociationKey: UnsafeRawPointer { // nonisolated: pure
+		UnsafeRawPointer(defaultSizeKeyToken.utf8Start)
+	}
 }
 
 public extension NSWindow {
@@ -133,7 +144,7 @@ public extension NSWindow {
 		get {
 			guard let value = objc_getAssociatedObject(
 				self,
-				&WindowStateStorage.defaultSizeAssociationKey
+				WindowStateStorage.defaultSizeAssociationKey
 			) as? NSValue else {
 				return .zero
 			}
@@ -142,7 +153,7 @@ public extension NSWindow {
 		set {
 			objc_setAssociatedObject(
 				self,
-				&WindowStateStorage.defaultSizeAssociationKey,
+				WindowStateStorage.defaultSizeAssociationKey,
 				NSValue(size: newValue),
 				.OBJC_ASSOCIATION_RETAIN_NONATOMIC
 			)

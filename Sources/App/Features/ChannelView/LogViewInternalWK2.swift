@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import AppKit
+import Combine
 import os
 import WebKit
 
@@ -86,7 +87,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	@objc(t_viewIsLoading) var viewIsLoading = false
 	@objc(t_viewIsNavigating) var viewIsNavigating = false
 
-	private var loadingObservation: NSKeyValueObservation?
+	private var loadingObservation: Task<Void, Never>?
 
 	init() {
 		super.init(frame: .zero, configuration: SharedResources.configuration)
@@ -121,7 +122,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	}
 
 	deinit {
-		loadingObservation?.invalidate()
+		loadingObservation?.cancel()
 	}
 
 	@objc var webViewPolicy: LogPolicy {
@@ -180,22 +181,29 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 
 		/* No .initial: the observation is installed before the load starts, so
 		 the initial callback reports isLoading == false and would declare the
-		 view finished against a blank page. */
-		loadingObservation = observe(\.isLoading, options: [.new]) { [weak self] _, change in
-			/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
-			 nonisolated. WebKit posts load state on the main thread. */
-			MainActor.assumeIsolated {
+		 view finished against a blank page.
+
+		 Awaiting the key path's values inside a main-actor task rather than
+		 taking `observe`'s nonisolated change handler: the body writes
+		 `viewIsLoading`, which the whole class owns on the main actor. */
+		loadingObservation = Task { @MainActor [weak self] in
+			guard let publisher = self?.publisher(for: \.isLoading, options: [.new]) else {
+				return
+			}
+
+			for await isLoading in publisher.bufferedValues {
 				guard let self else {
 					return
 				}
-				self.viewIsLoading = change.newValue ?? self.isLoading
-				self.maybeInformDelegateWebViewFinishedLoading()
+
+				viewIsLoading = isLoading
+				maybeInformDelegateWebViewFinishedLoading()
 			}
 		}
 	}
 
 	private func stopObservingLoading() {
-		loadingObservation?.invalidate()
+		loadingObservation?.cancel()
 		loadingObservation = nil
 	}
 

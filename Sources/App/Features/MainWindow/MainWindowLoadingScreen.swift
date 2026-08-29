@@ -26,14 +26,21 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 		isHidden == false
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-		MainActor.assumeIsolated {
-			applyWelcomeViewAppearance()
+	private var hasConfigured = false
+
+	/// Nib-time configuration, run by the main window once its nib has finished
+	/// decoding.
+	///
+	/// It was `awakeFromNib`, which is nonisolated. `viewDidMoveToWindow` is
+	/// isolated but too early: AppKit installs the content view before it
+	/// connects the outlets, so the welcome view below would still be nil.
+	public func configure() {
+		guard hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+		applyWelcomeViewAppearance()
 	}
 
 	private func applyWelcomeViewAppearance() {
@@ -166,15 +173,21 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 			return
 		}
 
-		NSAnimationContext.runAnimationGroup { context in
-			context.duration = 1.0
-			self.animator().alphaValue = 0.0
-		} completionHandler: {
-			/* ISOLATION-EXCEPTION: `NSAnimationContext`'s completion handler is
-			 nonisolated. AppKit runs it on the main thread. */
-			MainActor.assumeIsolated {
-				phaseTwoBlock()
+		/* `NSAnimationContext`'s completion handler is nonisolated, so running
+		 phase two from inside it took a runtime assumption. Resuming a
+		 continuation is all the handler does now — the work after the `await`
+		 is back on the main actor by declaration. */
+		Task { @MainActor in
+			await withCheckedContinuation { continuation in
+				NSAnimationContext.runAnimationGroup { context in
+					context.duration = 1.0
+					self.animator().alphaValue = 0.0
+				} completionHandler: {
+					continuation.resume()
+				}
 			}
+
+			phaseTwoBlock()
 		}
 	}
 
