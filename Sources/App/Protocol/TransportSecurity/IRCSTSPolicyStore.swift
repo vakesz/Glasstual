@@ -41,12 +41,13 @@ public typealias IRCSTSPolicyStore = STSPolicyStore
 
 public let IRCSTSPolicyStoreDefaultsKey = "IRC -> STS Policies"
 
+/// The STS policies this client has been told to honour, keyed by host.
+///
+/// Main-actor, like the connection setup and the capability negotiation that
+/// are its only callers, so the policies need no lock of their own.
 @objc(IRCSTSPolicyStore)
-/* ISOLATION-EXCEPTION: policies are read while a connection is being set up on
- whichever queue reaches the store first; every access goes through its lock. */
-public final class STSPolicyStore: NSObject, @unchecked Sendable {
+public final class STSPolicyStore: NSObject {
 	private let userDefaults: UserDefaults?
-	private let lock = NSRecursiveLock()
 	private var policies: [String: STSPolicy] = [:]
 
 	@objc(sharedStore)
@@ -63,43 +64,35 @@ public final class STSPolicyStore: NSObject, @unchecked Sendable {
 
 	@objc(policyForHost:)
 	public func policy(forHost host: String) -> STSPolicy? {
-		lock.withLock {
-			let key = key(forHost: host)
+		let key = key(forHost: host)
 
-			guard let policy = policies[key] else {
-				return nil
-			}
-
-			if policy.isExpired {
-				policies.removeValue(forKey: key)
-				save()
-
-				return nil
-			}
-
-			return policy
+		guard let policy = policies[key] else {
+			return nil
 		}
+
+		if policy.isExpired {
+			policies.removeValue(forKey: key)
+			save()
+
+			return nil
+		}
+
+		return policy
 	}
 
 	@objc(setPolicy:forHost:)
 	public func setPolicy(_ policy: STSPolicy, forHost host: String) {
-		lock.withLock {
-			policies[key(forHost: host)] = policy
-			save()
-		}
+		policies[key(forHost: host)] = policy
+		save()
 	}
 
 	@objc(removePolicyForHost:)
 	public func removePolicy(forHost host: String) {
-		lock.withLock {
-			let key = key(forHost: host)
-
-			guard policies.removeValue(forKey: key) != nil else {
-				return
-			}
-
-			save()
+		guard policies.removeValue(forKey: key(forHost: host)) != nil else {
+			return
 		}
+
+		save()
 	}
 
 	/// The endpoint a stored policy pins `host` to, or `nil` when there is no
@@ -173,22 +166,20 @@ public final class STSPolicyStore: NSObject, @unchecked Sendable {
 	}
 
 	private func load() {
-		lock.withLock {
-			guard let stored = userDefaults?.dictionary(forKey: IRCSTSPolicyStoreDefaultsKey) else {
-				return
+		guard let stored = userDefaults?.dictionary(forKey: IRCSTSPolicyStoreDefaultsKey) else {
+			return
+		}
+
+		for (host, value) in stored {
+			guard
+				let dictionary = value as? [String: Any],
+				let policy = STSPolicy(dictionary: dictionary),
+				policy.isExpired == false
+			else {
+				continue
 			}
 
-			for (host, value) in stored {
-				guard
-					let dictionary = value as? [String: Any],
-					let policy = STSPolicy(dictionary: dictionary),
-					policy.isExpired == false
-				else {
-					continue
-				}
-
-				policies[key(forHost: host)] = policy
-			}
+			policies[key(forHost: host)] = policy
 		}
 	}
 

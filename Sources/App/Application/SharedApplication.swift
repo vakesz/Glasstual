@@ -48,10 +48,10 @@ public final class SharedApplication: NSObject {
 
 	/// Plugin dispatch runs on the IRC threads, so this singleton has to stay
 	/// reachable without the main actor; `PluginManager` is `Sendable`.
-	private nonisolated static let pluginManager = PluginManager()
+	private nonisolated static let pluginManager = PluginManager() // nonisolated: let
 
 	@objc
-	public nonisolated static func sharedPluginManager() -> PluginManager {
+	public nonisolated static func sharedPluginManager() -> PluginManager { // nonisolated: let
 		pluginManager
 	}
 

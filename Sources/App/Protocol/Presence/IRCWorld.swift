@@ -74,7 +74,6 @@ private func nativeChannel(from item: IRCTreeItem?) -> IRCChannel? {
 @MainActor
 @objc(IRCWorld)
 public final class World: NSObject {
-	private let clientsLock = NSRecursiveLock()
 	private var clients: [IRCClient] = []
 
 	@objc public private(set) var messagesSent: UInt = 0
@@ -118,18 +117,16 @@ public final class World: NSObject {
 
 	@objc public var clientList: [IRCClient] {
 		get {
-			clientsLock.withLock { clients }
+			clients
 		}
 		set {
-			clientsLock.withLock {
-				clients = newValue
-				postClientListWasModifiedNotification()
-			}
+			clients = newValue
+			postClientListWasModifiedNotification()
 		}
 	}
 
 	@objc public var clientCount: UInt {
-		clientsLock.withLock { UInt(clients.count) }
+		UInt(clients.count)
 	}
 
 	// MARK: - Observers
@@ -513,14 +510,9 @@ public final class World: NSObject {
 			createChannel(with: $0, on: client, add: false, adjust: false, reload: false)
 		}
 
-		var addedIndex: Int?
-		var isOnlyClient = false
-
-		clientsLock.withLock {
-			clients.append(client)
-			addedIndex = clients.firstIndex { $0 === client }
-			isOnlyClient = clients.count == 1
-		}
+		clients.append(client)
+		let addedIndex = clients.firstIndex { $0 === client }
+		let isOnlyClient = clients.count == 1
 
 		if let addedIndex {
 			notifyObservers { $0.world(self, didAddClient: client, at: addedIndex) }
@@ -609,16 +601,10 @@ public final class World: NSObject {
 
 	/// Moves a client within the list and tells observers to follow.
 	func moveClient(from oldIndex: Int, to newIndex: Int) {
-		var moved = false
+		guard clients.indices.contains(oldIndex) else { return }
 
-		clientsLock.withLock {
-			guard clients.indices.contains(oldIndex) else { return }
-			let client = clients.remove(at: oldIndex)
-			clients.insert(client, at: min(newIndex, clients.count))
-			moved = true
-		}
-
-		guard moved else { return }
+		let client = clients.remove(at: oldIndex)
+		clients.insert(client, at: min(newIndex, clients.count))
 
 		postClientListWasModifiedNotification()
 		notifyObservers {
@@ -682,9 +668,7 @@ public final class World: NSObject {
 		client.prepareForPermanentDestruction()
 		notifyObservers { $0.world(self, didRemoveClient: client) }
 
-		clientsLock.withLock {
-			clients.removeAll { $0 === client }
-		}
+		clients.removeAll { $0 === client }
 
 		postClientListWasModifiedNotification()
 		notifyObservers {

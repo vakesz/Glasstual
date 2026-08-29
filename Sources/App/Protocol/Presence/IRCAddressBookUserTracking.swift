@@ -58,13 +58,10 @@ public extension Notification.Name {
 public final class AddressBookUserTrackingContainer: NSObject {
 	@objc public private(set) weak var client: IRCClient?
 
-	private let lock = NSLock()
 	private var availabilityByNickname: [String: Bool] = [:]
 
 	@objc public var trackedUsers: [String: NSNumber] {
-		withLock {
-			availabilityByNickname.mapValues(NSNumber.init(value:))
-		}
+		availabilityByNickname.mapValues(NSNumber.init(value:))
 	}
 
 	@available(*, unavailable)
@@ -80,13 +77,11 @@ public final class AddressBookUserTrackingContainer: NSObject {
 
 	@objc(statusOfUser:)
 	public func status(ofUser nickname: String) -> IRCAddressBookUserTrackingStatus {
-		withLock {
-			guard let canonicalNickname = canonicalNickname(matching: nickname) else {
-				return .unknown
-			}
-
-			return availabilityByNickname[canonicalNickname] == true ? .available : .notAvailable
+		guard let canonicalNickname = canonicalNickname(matching: nickname) else {
+			return .unknown
 		}
+
+		return availabilityByNickname[canonicalNickname] == true ? .available : .notAvailable
 	}
 
 	public func status(of addressBookEntry: AddressBookEntry) -> IRCAddressBookUserTrackingStatus {
@@ -99,65 +94,43 @@ public final class AddressBookUserTrackingContainer: NSObject {
 
 	@objc(_statusOfUser:)
 	public func storedStatus(ofUser nickname: String) -> IRCAddressBookUserTrackingStatus {
-		withLock {
-			availabilityByNickname[nickname] == true ? .available : .notAvailable
-		}
+		availabilityByNickname[nickname] == true ? .available : .notAvailable
 	}
 
 	@objc(addTrackedUser:)
 	public func addTrackedUser(_ nickname: String) {
-		let added = withLock {
-			guard canonicalNickname(matching: nickname) == nil else {
-				return false
-			}
-
-			availabilityByNickname[nickname] = false
-			return true
+		guard canonicalNickname(matching: nickname) == nil else {
+			return
 		}
 
-		if added {
-			postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
-		}
+		availabilityByNickname[nickname] = false
+		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
 	}
 
 	@objc(_addTrackedUser:)
 	public func addTrackedUserWithoutDuplicateCheck(_ nickname: String) {
-		withLock {
-			availabilityByNickname[nickname] = false
-		}
-
+		availabilityByNickname[nickname] = false
 		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
 	}
 
 	@objc(removeTrackedUser:)
 	public func removeTrackedUser(_ nickname: String) {
-		let removedNickname = withLock {
-			guard let canonicalNickname = canonicalNickname(matching: nickname) else {
-				return nil as String?
-			}
-
-			availabilityByNickname.removeValue(forKey: canonicalNickname)
-			return canonicalNickname
+		guard let canonicalNickname = canonicalNickname(matching: nickname) else {
+			return
 		}
 
-		if let removedNickname {
-			postNotification(named: .addressBookTrackingRemovedUser, nickname: removedNickname)
-		}
+		availabilityByNickname.removeValue(forKey: canonicalNickname)
+		postNotification(named: .addressBookTrackingRemovedUser, nickname: canonicalNickname)
 	}
 
 	@objc(_removeTrackedUser:)
 	public func removeTrackedUserWithoutLookup(_ nickname: String) {
-		withLock {
-			availabilityByNickname.removeValue(forKey: nickname)
-		}
-
+		availabilityByNickname.removeValue(forKey: nickname)
 		postNotification(named: .addressBookTrackingRemovedUser, nickname: nickname)
 	}
 
 	@objc public func clearTrackedUsers() {
-		withLock {
-			availabilityByNickname.removeAll()
-		}
+		availabilityByNickname.removeAll()
 
 		NotificationCenter.default.post(
 			name: .addressBookTrackingRemovedAllUsers,
@@ -171,35 +144,41 @@ public final class AddressBookUserTrackingContainer: NSObject {
 			return
 		}
 
-		let shouldNotify = withLock {
-			let canonicalNickname = canonicalNickname(matching: nickname)
-
-			switch newStatus {
-			case .available, .signedOn:
-				availabilityByNickname[canonicalNickname ?? nickname] = true
-				return true
-			case .notAvailable, .signedOff:
-				guard let canonicalNickname else {
-					return false
-				}
-
-				availabilityByNickname[canonicalNickname] = false
-				return true
-			case .away, .notAway:
-				return canonicalNickname != nil
-			case .unknown:
-				return false
-			@unknown default:
-				return false
-			}
+		guard record(newStatus, for: nickname) else {
+			return
 		}
 
-		if shouldNotify {
-			NotificationCenter.default.post(
-				name: .addressBookTrackingStatusChanged,
-				object: self,
-				userInfo: ["nickname": nickname, "status": NSNumber(value: newStatus.rawValue)]
-			)
+		NotificationCenter.default.post(
+			name: .addressBookTrackingStatusChanged,
+			object: self,
+			userInfo: ["nickname": nickname, "status": NSNumber(value: newStatus.rawValue)]
+		)
+	}
+
+	/// Applies the new status and reports whether it is worth telling anyone.
+	private func record(
+		_ newStatus: IRCAddressBookUserTrackingStatus,
+		for nickname: String
+	) -> Bool {
+		let canonicalNickname = canonicalNickname(matching: nickname)
+
+		switch newStatus {
+		case .available, .signedOn:
+			availabilityByNickname[canonicalNickname ?? nickname] = true
+			return true
+		case .notAvailable, .signedOff:
+			guard let canonicalNickname else {
+				return false
+			}
+
+			availabilityByNickname[canonicalNickname] = false
+			return true
+		case .away, .notAway:
+			return canonicalNickname != nil
+		case .unknown:
+			return false
+		@unknown default:
+			return false
 		}
 	}
 
@@ -215,13 +194,5 @@ public final class AddressBookUserTrackingContainer: NSObject {
 			object: self,
 			userInfo: ["nickname": nickname]
 		)
-	}
-
-	@discardableResult
-	private func withLock<Result>(_ body: () throws -> Result) rethrows -> Result {
-		lock.lock()
-		defer { lock.unlock() }
-
-		return try body()
 	}
 }

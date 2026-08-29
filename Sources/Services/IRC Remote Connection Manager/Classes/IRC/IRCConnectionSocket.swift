@@ -261,7 +261,7 @@ protocol ConnectionSocketDelegate: AnyObject {
 	func connection(
 		_ connection: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t
 	)
-	func connection(_ connection: ConnectionSocket, requiresTrust response: @escaping (Bool) -> Void)
+	func connection(_ connection: ConnectionSocket, requiresTrust response: @escaping TrustDecisionHandler)
 	func connectionClosedReadStream(_ connection: ConnectionSocket)
 	func connectionDisconnected(_ connection: ConnectionSocket)
 	func connection(_ connection: ConnectionSocket, disconnectedWith error: ConnectionError)
