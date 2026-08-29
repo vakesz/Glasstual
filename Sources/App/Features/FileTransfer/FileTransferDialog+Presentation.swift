@@ -197,12 +197,31 @@ extension FileTransferDialog {
 		guard QLPreviewPanel.sharedPreviewPanelExists(),
 		      let panel = QLPreviewPanel.shared(),
 		      panel.isVisible,
-		      panel.currentController as AnyObject? === self
+		      controlsPreviewPanel(panel)
 		else {
 			return
 		}
 
 		panel.orderOut(nil)
+	}
+
+	/** Whether the shared Quick Look panel is showing this dialog's items.
+
+	 The panel's controller is the *window*: `beginPreviewPanelControl` travels
+	 the responder chain, and the dialog is the window's delegate rather than a
+	 responder. The comparison used to be against the dialog, so it never
+	 matched: the panel was not ordered out when the dialog closed and did not
+	 reload when the selection changed. */
+	func controlsPreviewPanel(_ panel: QLPreviewPanel) -> Bool {
+		Self.previewPanel(controlledBy: panel.currentController, is: window)
+	}
+
+	static func previewPanel(controlledBy controller: Any?, is window: NSWindow?) -> Bool {
+		guard let window else {
+			return false
+		}
+
+		return controller as AnyObject? === window
 	}
 
 	@IBAction private func openReceivedFile(_: Any?) {
@@ -278,10 +297,7 @@ extension FileTransferDialog {
 	private func toggleQuickLookPanel() {
 		guard let panel = QLPreviewPanel.shared() else { return }
 
-		if QLPreviewPanel.sharedPreviewPanelExists(),
-		   panel.isVisible,
-		   panel.currentController as AnyObject? === self
-		{
+		if QLPreviewPanel.sharedPreviewPanelExists(), panel.isVisible, controlsPreviewPanel(panel) {
 			panel.orderOut(nil)
 			return
 		}
@@ -312,7 +328,7 @@ extension FileTransferDialog {
 	func reloadQuickLookPanel() {
 		guard QLPreviewPanel.sharedPreviewPanelExists(),
 		      let panel = QLPreviewPanel.shared(),
-		      panel.currentController as AnyObject? === self
+		      controlsPreviewPanel(panel)
 		else {
 			return
 		}
