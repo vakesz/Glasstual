@@ -37,6 +37,7 @@
 
 import AppKit
 import GlasstualPluginKit
+import os
 
 private enum ChatFilterEditSection: Int {
 	case general, channels, events, sender, notes, advanced
@@ -122,8 +123,25 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		fatalError("init(coder:) is unavailable")
 	}
 
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['Chat Filter']"
+	)
+
 	private func prepareInitialState() {
-		Bundle(for: Self.self).loadNibNamed("TPI_ChatFilterEditFilterSheet", owner: self, topLevelObjects: nil)
+		/* Every step below reads an outlet the nib connects, so a failed load
+		 has to stop here rather than crash on the first implicitly unwrapped
+		 one. `start()` refuses to present a sheet that was never built. */
+		guard Bundle(for: Self.self).loadNibNamed(
+			"TPI_ChatFilterEditFilterSheet",
+			owner: self,
+			topLevelObjects: nil
+		) else {
+			Self.logger.error("Could not load TPI_ChatFilterEditFilterSheet")
+
+			return
+		}
+
 		populateTokenFields()
 		setupTextFieldRules()
 		loadFilter()
@@ -133,7 +151,8 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 
 	func start() {
-		guard let window else { return }
+		guard let window, let sheet else { return }
+
 		window.beginSheet(sheet)
 	}
 
