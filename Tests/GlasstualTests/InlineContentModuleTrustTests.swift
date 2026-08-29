@@ -1,3 +1,4 @@
+@testable import CoreMediaModules
 import Foundation
 import InlineContentKit
 import Testing
