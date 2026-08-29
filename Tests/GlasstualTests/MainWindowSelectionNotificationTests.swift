@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,54 +36,42 @@
  *********************************************************************** */
 
 import Foundation
-import InlineContentKit
+@testable import Glasstual
+import Testing
 
-/// Dailymotion's own player, embedded through this module's template.
-struct DailymotionModule: InlineContentModule {
-	static var domains: [String]? {
-		["dailymotion.com", "www.dailymotion.com", "mobile.dailymotion.com"]
+/** The selection notification had four declarations and one bare string
+ literal. Four of them agreed, which is exactly why nobody noticed: an observer
+ that watched a fifth, mistyped name would simply never fire. One declaration
+ now carries the name, and this pins what it posts under. */
+@MainActor
+struct MainWindowSelectionNotificationTests {
+	private static let postedName = "TVCMainWindowSelectionChangedNotification"
+
+	@Test("The selection notification keeps the name every observer registered under")
+	func selectionNotificationKeepsItsPostedName() {
+		#expect(Notification.Name.mainWindowSelectionChanged.rawValue == Self.postedName)
 	}
 
-	static var contentImageOrVideo: Bool {
-		true
-	}
+	/// An observer registered the old way — with the raw string the deleted
+	/// declarations spelled out — still hears what the constant posts.
+	@Test("Posting the constant reaches an observer registered under the raw name")
+	func postingTheConstantReachesTheRawName() async {
+		let center = NotificationCenter.default
+		let received = await confirmation("selection notification observed") { confirm in
+			let token = center.addObserver(
+				forName: Notification.Name(Self.postedName),
+				object: nil,
+				queue: nil
+			) { _ in
+				confirm()
+			}
 
-	static var contentUntrusted: Bool {
-		false
-	}
+			center.post(name: .mainWindowSelectionChanged, object: nil)
+			center.removeObserver(token)
 
-	static var contentNotSafeForWork: Bool {
-		false
-	}
+			return true
+		}
 
-	private let identifier: String
-
-	static func module(for url: URL) -> (any InlineContentModule)? {
-		guard let identifier = videoIdentifier(for: url) else { return nil }
-
-		return DailymotionModule(identifier: identifier)
-	}
-
-	private static func videoIdentifier(for url: URL) -> String? {
-		let path = url.path(percentEncoded: true)
-		guard path.hasPrefix("/video/") else { return nil }
-		let identifier = String(path.dropFirst(7).prefix { $0 != "_" })
-		/* `allSatisfy` is vacuously true, so the emptiness check has to be its
-		 own: /video/ with nothing after it names no video. */
-		guard identifier.isEmpty == false,
-		      identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) })
-		else { return nil }
-		return identifier
-	}
-
-	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
-		InlineVideoContent.embed(
-			payload,
-			templateURL: CoreMediaBundle.current.url(forResource: "ICMDailymotion", withExtension: "mustache"),
-			attributes: [
-				"uniqueIdentifier": payload.uniqueIdentifier,
-				"videoIdentifier": identifier,
-			]
-		)
+		#expect(received)
 	}
 }

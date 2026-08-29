@@ -77,30 +77,31 @@ public final class DockIcon: NSObject {
 
 		let dockTile = NSApp.dockTile
 
-		if highlightCount == 0 {
+		guard highlightCount > 0 || messageCount > 0 else {
+			dockTile.badgeLabel = nil
 			dockTile.contentView = nil
-			dockTile.badgeLabel = badgeString(forCount: messageCount)
 			dockTile.display()
+
 			return
 		}
 
-		/* Both counts are drawn inside the badge view. The system badge label
-		 has to be cleared or the highlight count is drawn twice, once in the
-		 label and once in the green pill sitting on top of it. */
+		/* One strategy draws both counts: the badge view. Falling back to the
+		 system badge label whenever the highlight count was zero made the icon
+		 change shape depending on whether anyone had said your name, and the
+		 label has to be cleared anyway or the count is drawn twice — once in
+		 the label and once in the pill sitting on top of it. */
 		dockTile.badgeLabel = nil
 
-		var badgeView = dockTile.contentView as? DockIconBadgeView
+		let badgeView = dockTile.contentView as? DockIconBadgeView ?? {
+			let view = DockIconBadgeView(frame: NSRect(origin: .zero, size: dockTile.size))
+			dockTile.contentView = view
 
-		if badgeView == nil {
-			badgeView = DockIconBadgeView(
-				frame: NSRect(x: 0, y: 0, width: dockTile.size.width, height: dockTile.size.height)
-			)
-			dockTile.contentView = badgeView
-		}
+			return view
+		}()
 
-		badgeView?.highlightCount = highlightCount
-		badgeView?.messageCount = messageCount
-		badgeView?.needsDisplay = true
+		badgeView.highlightCount = highlightCount
+		badgeView.messageCount = messageCount
+		badgeView.needsDisplay = true
 		dockTile.display()
 	}
 

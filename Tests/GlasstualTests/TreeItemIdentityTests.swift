@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,54 +36,33 @@
  *********************************************************************** */
 
 import Foundation
-import InlineContentKit
+@testable import Glasstual
+import Testing
 
-/// Dailymotion's own player, embedded through this module's template.
-struct DailymotionModule: InlineContentModule {
-	static var domains: [String]? {
-		["dailymotion.com", "www.dailymotion.com", "mobile.dailymotion.com"]
+/** `IRCTreeItem` is a type alias for `TreeItem`, so the three `legacyTreeItem`
+ shims that "converted" a channel to one were identity functions — one of them
+ an `as?` cast that could never fail. Their callers pass the channel straight
+ through now; these pin the facts that made that safe. */
+@MainActor
+struct TreeItemIdentityTests {
+	@Test("A channel is already a tree item, so no conversion is involved")
+	func channelIsATreeItem() throws {
+		let client = GLTTestClient()
+		let channel = try #require(client.findChannelOrCreate("#chat"))
+		let item: IRCTreeItem = channel
+
+		#expect(item === channel)
+		#expect(item.uniqueIdentifier == channel.uniqueIdentifier)
 	}
 
-	static var contentImageOrVideo: Bool {
-		true
-	}
+	/// The historic log is keyed by the tree item's identifier, which is the
+	/// channel's own — the shims' only observable contribution.
+	@Test("The identifier the historic log is keyed by is the channel's own")
+	func historicLogKeyIsTheChannelIdentifier() throws {
+		let client = GLTTestClient()
+		let channel = try #require(client.findChannelOrCreate("#chat"))
 
-	static var contentUntrusted: Bool {
-		false
-	}
-
-	static var contentNotSafeForWork: Bool {
-		false
-	}
-
-	private let identifier: String
-
-	static func module(for url: URL) -> (any InlineContentModule)? {
-		guard let identifier = videoIdentifier(for: url) else { return nil }
-
-		return DailymotionModule(identifier: identifier)
-	}
-
-	private static func videoIdentifier(for url: URL) -> String? {
-		let path = url.path(percentEncoded: true)
-		guard path.hasPrefix("/video/") else { return nil }
-		let identifier = String(path.dropFirst(7).prefix { $0 != "_" })
-		/* `allSatisfy` is vacuously true, so the emptiness check has to be its
-		 own: /video/ with nothing after it names no video. */
-		guard identifier.isEmpty == false,
-		      identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) })
-		else { return nil }
-		return identifier
-	}
-
-	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
-		InlineVideoContent.embed(
-			payload,
-			templateURL: CoreMediaBundle.current.url(forResource: "ICMDailymotion", withExtension: "mustache"),
-			attributes: [
-				"uniqueIdentifier": payload.uniqueIdentifier,
-				"videoIdentifier": identifier,
-			]
-		)
+		#expect(channel.uniqueIdentifier.isEmpty == false)
+		#expect((channel as AnyObject as? IRCTreeItem)?.uniqueIdentifier == channel.uniqueIdentifier)
 	}
 }

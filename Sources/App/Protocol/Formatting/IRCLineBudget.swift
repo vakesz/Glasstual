@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,54 +36,53 @@
  *********************************************************************** */
 
 import Foundation
-import InlineContentKit
 
-/// Dailymotion's own player, embedded through this module's template.
-struct DailymotionModule: InlineContentModule {
-	static var domains: [String]? {
-		["dailymotion.com", "www.dailymotion.com", "mobile.dailymotion.com"]
+/** How many bytes of one IRC line are left.
+
+ An IRC line is capped in **bytes**, not characters: 512 including the CR LF,
+ or whatever `LINELEN` raises that to. The framing the server prepends — the
+ sender's hostmask, the command, the target, the separators — is charged before
+ any of the message body is, so what the body actually gets is the difference.
+
+ The arithmetic is signed on purpose. A server-assigned hostmask plus a long
+ channel name can make the framing alone longer than the whole line, and the
+ unsigned subtraction that used to compute the remainder wrapped that case into
+ a budget of four billion bytes. Here it simply reads as exhausted. */
+nonisolated struct IRCLineBudget: Equatable, Sendable { // nonisolated: value
+	/// What the wire framing costs before the body starts.
+	let overhead: Int
+
+	/// The longest line, in bytes, the server accepts.
+	let maximum: Int
+
+	/// Bytes charged so far, framing included.
+	private(set) var used: Int
+
+	init(overhead: Int, maximum: Int) {
+		self.overhead = max(overhead, 0)
+		self.maximum = max(maximum, 0)
+		used = self.overhead
 	}
 
-	static var contentImageOrVideo: Bool {
-		true
+	/// `true` once nothing more fits — including when the framing alone
+	/// already overran the line.
+	var isOverBudget: Bool {
+		used > maximum
 	}
 
-	static var contentUntrusted: Bool {
-		false
+	/// The bytes still available. Never negative.
+	var remaining: Int {
+		max(maximum - used, 0)
 	}
 
-	static var contentNotSafeForWork: Bool {
-		false
+	/// Whether `byteCount` more bytes would still fit.
+	func fits(_ byteCount: Int) -> Bool {
+		used + max(byteCount, 0) <= maximum
 	}
 
-	private let identifier: String
-
-	static func module(for url: URL) -> (any InlineContentModule)? {
-		guard let identifier = videoIdentifier(for: url) else { return nil }
-
-		return DailymotionModule(identifier: identifier)
-	}
-
-	private static func videoIdentifier(for url: URL) -> String? {
-		let path = url.path(percentEncoded: true)
-		guard path.hasPrefix("/video/") else { return nil }
-		let identifier = String(path.dropFirst(7).prefix { $0 != "_" })
-		/* `allSatisfy` is vacuously true, so the emptiness check has to be its
-		 own: /video/ with nothing after it names no video. */
-		guard identifier.isEmpty == false,
-		      identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) })
-		else { return nil }
-		return identifier
-	}
-
-	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
-		InlineVideoContent.embed(
-			payload,
-			templateURL: CoreMediaBundle.current.url(forResource: "ICMDailymotion", withExtension: "mustache"),
-			attributes: [
-				"uniqueIdentifier": payload.uniqueIdentifier,
-				"videoIdentifier": identifier,
-			]
-		)
+	/// Charges `byteCount` bytes against the line. A negative count is ignored
+	/// rather than refunding bytes that were never spent.
+	mutating func charge(_ byteCount: Int) {
+		used += max(byteCount, 0)
 	}
 }

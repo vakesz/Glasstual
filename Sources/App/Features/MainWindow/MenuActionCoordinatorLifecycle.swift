@@ -40,7 +40,6 @@ import AppKit
 
 enum MenuLifecyclePolicy {
 	static let generalChannelMenuTag = 1209
-	static let mainWindowSelectionChanged = Notification.Name("TVCMainWindowSelectionChangedNotification")
 
 	static func shouldResetSelectionAfterMenuCloses(performedAction: Bool) -> Bool {
 		performedAction == false
@@ -83,7 +82,7 @@ public extension MenuActionCoordinator {
 		notificationCenter.addObserver(
 			self,
 			selector: #selector(mainWindowSelectionChanged(_:)),
-			name: MenuLifecyclePolicy.mainWindowSelectionChanged,
+			name: .mainWindowSelectionChanged,
 			object: nil
 		)
 	}

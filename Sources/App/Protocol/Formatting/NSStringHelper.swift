@@ -11,6 +11,8 @@
  *
  *********************************************************************** */
 
+// AppKit: nickname colouring and the formatting helpers below build attributed
+// strings out of NSColor and NSFont.
 import AppKit
 import CocoaExtensions
 import GlasstualPluginKit

@@ -45,7 +45,6 @@ public typealias TVCMainWindowTextView = MainWindowTextView
 
 private enum MainWindowTextViewNotification {
 	static let typingDidChange = Notification.Name("IRCTypingTrackerDidChangeNotification")
-	static let selectionDidChange = Notification.Name("TVCMainWindowSelectionChangedNotification")
 	static let typingChannelKey = "channel"
 }
 
@@ -248,7 +247,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 			},
 			Task { @MainActor [weak self] in
 				let publisher = NotificationCenter.default
-					.publisher(for: MainWindowTextViewNotification.selectionDidChange)
+					.publisher(for: .mainWindowSelectionChanged)
 
 				for await notification in publisher.bufferedValues {
 					guard let self else {

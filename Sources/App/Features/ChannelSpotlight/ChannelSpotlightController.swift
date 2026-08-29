@@ -70,7 +70,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		notifications.observe(NSNotification.Name("IRCWorldClientListWasModifiedNotification")) { [weak self] _ in
 			self?.clientListChanged()
 		}
-		notifications.observe(NSNotification.Name("TVCMainWindowSelectionChangedNotification")) { [weak self] _ in
+		notifications.observe(.mainWindowSelectionChanged) { [weak self] _ in
 			self?.mainWindowSelectionChanged()
 		}
 		notifications

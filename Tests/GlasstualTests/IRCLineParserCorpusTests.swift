@@ -191,10 +191,7 @@ struct IRCLineParserCorpusTests {
 		LineCase("PING \u{0301}x", command: "PING", parameters: ["\u{0301}x"]),
 	]
 
-	@Test(
-		.disabled("Phase 1: token splitting uses CharacterSet.whitespaces over graphemes, not 0x20 over scalars"),
-		arguments: Self.splittingLines
-	)
+	@Test(arguments: Self.splittingLines)
 	func splitsTokensOnSpaceOnly(testCase: LineCase) throws {
 		let parsed = try #require(LineParser.parsedLine(fromLine: testCase.line))
 

@@ -38,6 +38,40 @@ private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage
 	}
 }
 
+/** What `applicationShouldTerminate` does with the request.
+
+ Every route ends at `.terminateLater` and the three termination steps report
+ back to NSApp themselves, so what is actually being decided is whether to
+ start those steps, ask the user first, or leave a shutdown already in flight
+ alone. */
+enum ApplicationTerminationPolicy {
+	enum Decision: Equatable {
+		/// Termination is already running: do nothing and let it finish.
+		case alreadyTerminating
+		/// Run the termination steps now.
+		case begin
+		/// Ask before quitting on top of a live connection.
+		case confirm
+	}
+
+	static func decision(
+		isTerminating: Bool,
+		skipConfirmation: Bool,
+		confirmQuitPreference: Bool,
+		hasLiveConnection: Bool
+	) -> Decision {
+		if isTerminating {
+			return .alreadyTerminating
+		}
+
+		if skipConfirmation || confirmQuitPreference == false || hasLiveConnection == false {
+			return .begin
+		}
+
+		return .confirm
+	}
+}
+
 @objc(TXMasterController)
 @MainActor
 public final class ApplicationController: NSObject, NSApplicationDelegate {
@@ -68,6 +102,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 	private var terminateHistoricLogSaveStarted = false
 	private var terminateStepThreePerformed = false
+	private var skipTerminateConfirmation = false
 	private let notifications = NotificationSubscriptions()
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
@@ -346,26 +381,36 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		menuController?.dockMenu
 	}
 
-	/** Returns `.terminateNow` when termination may begin immediately. When a
-	 confirmation is needed the answer is deferred with `.terminateLater`: the
-	 sheet's completion reports to NSApp and begins termination itself. */
-	private func queryTerminate() -> NSApplication.TerminateReply {
-		if TextualPreferences.confirmQuit() == false {
-			return .terminateNow
-		}
+	/** The answer is always `.terminateLater`: every route to shutting down
+	 runs the three termination steps, and step three is what reports back to
+	 NSApp. */
+	public func applicationShouldTerminate(_: NSApplication) -> NSApplication.TerminateReply {
+		let stillConnected = world.clientList.contains { $0.isConnecting || $0.isConnected }
 
-		var stillConnected = false
-
-		for client in world.clientList {
-			if client.isConnecting || client.isConnected {
-				stillConnected = true
+		switch ApplicationTerminationPolicy.decision(
+			isTerminating: applicationIsTerminating,
+			skipConfirmation: skipTerminateConfirmation,
+			confirmQuitPreference: TextualPreferences.confirmQuit(),
+			hasLiveConnection: stillConnected
+		) {
+		case .alreadyTerminating:
+			/* Termination is already under way. Answering .terminateNow here
+			 used to schedule step one a second time, tearing everything down
+			 twice. */
+			Self.terminationLogger.debug("Termination is already in progress")
+		case .begin:
+			Task { @MainActor [weak self] in
+				self?.performApplicationTerminationStepOne()
 			}
+		case .confirm:
+			presentTerminationConfirmation()
 		}
 
-		if stillConnected == false {
-			return .terminateNow
-		}
+		return .terminateLater
+	}
 
+	/// The sheet's completion reports to NSApp and begins termination itself.
+	private func presentTerminationConfirmation() {
 		TDCAlert.alertSheet(
 			with: mainWindow,
 			body: PromptStrings.Application.quitBody,
@@ -385,30 +430,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 			self?.performApplicationTerminationStepOne()
 		}
-
-		return .terminateLater
-	}
-
-	public func applicationShouldTerminate(_: NSApplication) -> NSApplication.TerminateReply {
-		if applicationIsTerminating {
-			/* Termination is already under way. Answering .terminateNow here
-			 used to schedule step one a second time, tearing everything down
-			 twice. */
-			Self.terminationLogger.debug("Termination is already in progress")
-			return .terminateLater
-		}
-
-		let reply = queryTerminate()
-
-		if reply != .terminateNow {
-			return reply
-		}
-
-		Task { @MainActor [weak self] in
-			self?.performApplicationTerminationStepOne()
-		}
-
-		return .terminateLater
 	}
 
 	private func terminatingClientsDidFinish() {
@@ -545,9 +566,17 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		NSApp.reply(toApplicationShouldTerminate: true)
 	}
 
+	/** Quit without arguing about it — the machine is powering off.
+
+	 This used to set `applicationIsTerminating` itself, which made
+	 `applicationShouldTerminate` read termination as already under way and
+	 answer `.terminateLater` without ever running step one: no client left IRC
+	 gracefully and no historic log was saved. The flag belongs to step one;
+	 all this path skips is the confirmation sheet. */
 	@objc
 	public func terminateGracefully() {
-		applicationIsTerminating = true
+		skipTerminateConfirmation = true
+
 		NSApp.terminate(nil)
 	}
 

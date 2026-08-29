@@ -59,6 +59,10 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 	public internal(set) var params: [String] = []
 	public internal(set) var receivedAt = Date()
 	public internal(set) var isHistoric = false
+	/// `true` when a negotiated `server-time` (or bouncer `t`) tag supplied
+	/// `receivedAt`. The resume point a bouncer replays from is the newest
+	/// such stamp, whether or not the line turned out to be replay.
+	public internal(set) var hasServerTime = false
 	public internal(set) var isEventOnlyMessage = false
 	public internal(set) var isPrintOnlyMessage = false
 	public internal(set) var batchToken: String?
@@ -124,6 +128,7 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 		params = other.params
 		receivedAt = other.receivedAt
 		isHistoric = other.isHistoric
+		hasServerTime = other.hasServerTime
 		isEventOnlyMessage = other.isEventOnlyMessage
 		isPrintOnlyMessage = other.isPrintOnlyMessage
 		batchToken = other.batchToken
@@ -207,15 +212,9 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 			return
 		}
 
-		if client.isCapabilityEnabled(.serverTime) {
-			let dateString = parsedTags.tags["time"] ?? parsedTags.tags["t"]
-
-			if let dateString, let dateObject = serverTimeDate(from: dateString) {
-				receivedAt = dateObject
-				isHistoric = true
-			}
-		}
-
+		/* The batch is resolved first because whether the line is replay is
+		 decided by the batch it sits in, not by the fact that it carries a
+		 timestamp. */
 		if client.isCapabilityEnabled(.batch) {
 			if let batchToken = parsedTags.tags["batch"],
 			   batchToken.unicodeScalars.allSatisfy({
@@ -224,6 +223,21 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 			{
 				self.batchToken = batchToken
 				parentBatchMessage = client.queuedBatchMessage(withToken: batchToken) as? MessageBatch
+			}
+		}
+
+		if client.isCapabilityEnabled(.serverTime) {
+			let dateString = parsedTags.tags["time"] ?? parsedTags.tags["t"]
+
+			if let dateString, let dateObject = serverTimeDate(from: dateString) {
+				let arrivedAt = receivedAt
+				receivedAt = dateObject
+				hasServerTime = true
+				isHistoric = IRCClientHistoricMessagePolicy.isHistoric(
+					serverTime: dateObject,
+					arrivedAt: arrivedAt,
+					inReplayBatch: parentBatchMessage?.isReplay ?? false
+				)
 			}
 		}
 	}

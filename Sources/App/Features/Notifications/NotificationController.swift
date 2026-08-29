@@ -56,7 +56,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		NotificationCenter.default.addObserver(
 			self,
 			selector: #selector(mainWindowSelectionChanged(_:)),
-			name: .TVCMainWindowSelectionChanged,
+			name: .mainWindowSelectionChanged,
 			object: nil
 		)
 

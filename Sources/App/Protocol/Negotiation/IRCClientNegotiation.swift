@@ -204,13 +204,6 @@ extension IRCClient {
 		return enabled.joined(separator: ", ")
 	}
 
-	/// Remembers the exact spelling the server used for each offered capability.
-	private func recordOfferedCapabilityNames(from list: String) {
-		for (key, name) in CapabilityRegistry.offeredNames(fromCapabilityList: list) {
-			offeredCapabilityNames[key] = name
-		}
-	}
-
 	@MainActor private func queueCapabilityRequests(from offered: [String: [String]]) {
 		handleSTSCapability(from: offered)
 
@@ -227,13 +220,10 @@ extension IRCClient {
 				continue
 			}
 
-			/* Request the spelling the server advertised, not our
-			 lowercased canonical form: IRCv3 names are case-sensitive
-			 and a strict server will NAK anything else. */
-			let requestName = offeredCapabilityNames[name] ?? name
-
-			if pendingCapabilityRequests.contains(requestName) == false {
-				pendingCapabilityRequests.append(requestName)
+			/* `name` matched the offer exactly — capability names are
+			 case-sensitive — so it is already the spelling to echo back. */
+			if pendingCapabilityRequests.contains(name) == false {
+				pendingCapabilityRequests.append(name)
 			}
 		}
 	}
@@ -387,8 +377,6 @@ extension IRCClient {
 					offeredCapabilities[name] = values
 				}
 
-				recordOfferedCapabilityNames(from: actions)
-
 				if moreToCome {
 					return
 				}
@@ -400,7 +388,6 @@ extension IRCClient {
 			case "NAK", "DEL":
 				capabilityTokens(actions).forEach { toggleCapability($0, enabled: false) }
 			case "NEW":
-				recordOfferedCapabilityNames(from: actions)
 				queueCapabilityRequests(from: CapabilityRegistry.parseCapabilityList(actions))
 			default:
 				break

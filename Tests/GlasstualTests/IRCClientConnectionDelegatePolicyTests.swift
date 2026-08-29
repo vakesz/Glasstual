@@ -109,12 +109,12 @@ struct IRCClientConnectionDelegatePolicyTests {
 		)
 	}
 
-	@Test("The stored server time only advances for a newer historic message")
-	func historicMessagePolicyAdvancesOnlyNewHistoricServerTime() {
+	@Test("The stored server time only advances for a newer stamped message")
+	func historicMessagePolicyAdvancesOnlyNewServerTime() {
 		#expect(
 			IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
 				isLoggedIn: true,
-				isHistoric: true,
+				hasServerTime: true,
 				receivedTime: 20,
 				lastServerTime: 10
 			)
@@ -122,25 +122,17 @@ struct IRCClientConnectionDelegatePolicyTests {
 		#expect(
 			IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
 				isLoggedIn: true,
-				isHistoric: true,
+				hasServerTime: true,
 				receivedTime: 10,
 				lastServerTime: 10
 			) == false
 		)
-	}
-
-	@Test("A playback message outside a chat history batch is marked current")
-	func playbackMessagesOutsideChatHistoryBecomeCurrent() {
 		#expect(
-			IRCClientHistoricMessagePolicy.shouldMarkCurrent(
-				playbackCapabilityEnabled: true,
-				isContainedInChatHistoryBatch: false
-			)
-		)
-		#expect(
-			IRCClientHistoricMessagePolicy.shouldMarkCurrent(
-				playbackCapabilityEnabled: true,
-				isContainedInChatHistoryBatch: true
+			IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
+				isLoggedIn: true,
+				hasServerTime: false,
+				receivedTime: 20,
+				lastServerTime: 10
 			) == false
 		)
 	}

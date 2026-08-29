@@ -115,7 +115,7 @@ extension MainWindow {
 	public func clearContents(of channel: IRCChannel) {
 		channel.resetState()
 		channel.logController?.clear()
-		reloadTreeItem(legacyTreeItem(channel))
+		reloadTreeItem(channel)
 	}
 
 	@objc public func clearAllViews() {
@@ -835,7 +835,7 @@ public extension MainWindow {
 		guard item.isClient, let client = item.associatedClient else { return }
 		reloadTreeItem(client)
 		for channel in client.channelList {
-			reloadTreeItem(legacyTreeItem(channel))
+			reloadTreeItem(channel)
 		}
 	}
 

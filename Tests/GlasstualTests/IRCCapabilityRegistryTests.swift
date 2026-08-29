@@ -72,7 +72,7 @@ struct IRCCapabilityRegistryTests {
 
 	@Test("A CAP list is split into names and their comma separated values")
 	func parseCapabilityList() {
-		let offered = CapabilityRegistry.parseCapabilityList("multi-prefix SASL=PLAIN,EXTERNAL  cap-notify x=")
+		let offered = CapabilityRegistry.parseCapabilityList("multi-prefix sasl=PLAIN,EXTERNAL  cap-notify x=")
 
 		#expect(offered["multi-prefix"] == [])
 		#expect(offered["sasl"] == ["PLAIN", "EXTERNAL"])
@@ -84,17 +84,19 @@ struct IRCCapabilityRegistryTests {
 
 	@Test("A repeated name takes its last value and empty names and values are dropped")
 	func parseCapabilityListUsesLastDuplicateAndIgnoresEmptyNamesAndValues() {
-		let offered = CapabilityRegistry.parseCapabilityList("SASL=PLAIN sasl=EXTERNAL,,SCRAM-SHA-256 =bad")
+		let offered = CapabilityRegistry.parseCapabilityList("sasl=PLAIN sasl=EXTERNAL,,SCRAM-SHA-256 =bad")
 
 		#expect(offered["sasl"] == ["EXTERNAL", "SCRAM-SHA-256"])
 		#expect(offered.count == 1)
 	}
 
-	@Test("Capabilities are looked up without regard to case, by name or by identifier")
-	func lookupIsCaseInsensitive() {
+	@Test("Capabilities are looked up by their exact name, or by identifier")
+	func lookupIsByExactName() {
 		let registry = registryWithGateAllowed(true)
 
-		#expect(registry.capability(named: "Message-Tags")?.name == "message-tags")
+		#expect(registry.capability(named: "message-tags")?.name == "message-tags")
+		/* IRCv3 makes capability names case-sensitive. */
+		#expect(registry.capability(named: "Message-Tags") == nil)
 		#expect(registry.capability(named: "unknown") == nil)
 		#expect(registry.capability(for: .echoMessage)?.name == "echo-message")
 		#expect(registry.capability(for: ClientIRCv3SupportedCapability.batch) == nil)

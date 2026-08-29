@@ -69,11 +69,16 @@ struct YouTubeModule: InlineContentModule {
 		let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
 		var identifier: String?
 
-		if url.host(percentEncoded: true) == "youtu.be" {
+		let host = url.host(percentEncoded: true)
+
+		if host == "youtu.be" {
 			identifier = String(url.path(percentEncoded: true).dropFirst())
-		} else if url.host(percentEncoded: true)?.hasSuffix("youtube.com") == true,
+		} else if host == "youtube.com" || host?.hasSuffix(".youtube.com") == true,
 		          url.path(percentEncoded: true) == "/watch"
 		{
+			/* The host has to be youtube.com itself or one of its subdomains.
+			 A bare suffix test also claims notyoutube.com, which is somebody
+			 else's site entirely. */
 			identifier = queryItems.first(where: { $0.name == "v" })?.value
 		}
 
