@@ -145,6 +145,13 @@ and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
   `Tests/GlasstualTests/`, named after their subject. Test what the code
   decides, not what the compiler already guarantees: a runtime-name pin earns
   its place only where a nib or a protocol constant depends on it.
+- A test that does not run is not a passing test. `make lint` runs
+  `scripts/test-hygiene.sh`, which bans `.disabled(…)` and `withKnownIssue`
+  under `Tests/` unless `scripts/test-hygiene-allowlist.txt` accounts for the
+  file, the construct and the exact number of sites, with a reason. Six
+  `.disabled("Phase 1: …")` traits once hid unmet exit criteria for weeks;
+  parking a failure there is not what the list is for. Fix the code or delete
+  the test.
 - Before handing off: `make generate`, `make build`, `make test` and
   `make lint`, all green. Report any runtime, signing, network or release
   boundary the change touched but the checks did not exercise.
