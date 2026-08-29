@@ -403,8 +403,14 @@ public struct IRCLineCursor {
 		remaining = text
 	}
 
+	/// How much of the text is still to be sent. Each line consumes a prefix,
+	/// so this only ever falls, and reaching zero is what ends the message.
+	public var length: Int {
+		remaining.length
+	}
+
 	public var isEmpty: Bool {
-		remaining.length == 0
+		length == 0
 	}
 
 	/** The next wire line, or `nil` once there is nothing left to send.

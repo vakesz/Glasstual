@@ -248,11 +248,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		client?.associate(member.user, with: channel)
-		willChangeValue(forKey: "numberOfMembers")
-		willChangeValue(forKey: "memberList")
 		let sortedIndex = sortedInsert(member)
-		didChangeValue(forKey: "numberOfMembers")
-		didChangeValue(forKey: "memberList")
 
 		guard channel.isChannel else {
 			return
@@ -422,8 +418,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	public func clearMembers() {
 		let channel = channel
 
-		willChangeValue(forKey: "numberOfMembers")
-		willChangeValue(forKey: "memberList")
 		if let channel {
 			for member in memberContainer {
 				client?.disassociate(member.user, from: channel)
@@ -431,8 +425,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 		memberContainer.removeAll()
 		indexByUserID.removeAll()
-		didChangeValue(forKey: "numberOfMembers")
-		didChangeValue(forKey: "memberList")
 
 		controller?.replaceContents([])
 	}

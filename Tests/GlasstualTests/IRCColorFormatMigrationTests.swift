@@ -216,6 +216,34 @@ struct IRCColorFormatMigrationTests {
 		#expect(cursor.isEmpty)
 	}
 
+	/** What `nextLine` relies on to terminate: each line consumes a prefix, the
+	 cursor never grows, and the lines together account for every character. A
+	 pass that consumed nothing would loop forever. */
+	@Test("The lines together consume every character exactly once")
+	func linesConsumeEveryCharacterExactlyOnce() {
+		let client = GLTTestClient()
+		let payload = String(String(repeating: "word ", count: 160).prefix(800))
+		var cursor = IRCLineCursor(NSAttributedString(string: payload))
+		let payloadLength = cursor.length
+
+		#expect(payloadLength == (payload as NSString).length)
+
+		var consumed = 0
+		while true {
+			let before = cursor.length
+			guard cursor.nextLine(forChannel: "#test", on: client, with: .notice) != nil else {
+				break
+			}
+			let after = cursor.length
+
+			#expect(after < before, "a line that consumes nothing never ends the message")
+			consumed += before - after
+		}
+
+		#expect(consumed == payloadLength)
+		#expect(cursor.isEmpty)
+	}
+
 	private func controlCharacter(at index: Int, in string: String) -> unichar {
 		(string as NSString).character(at: index)
 	}

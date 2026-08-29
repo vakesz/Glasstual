@@ -55,7 +55,7 @@ public final class ServerList: NSOutlineView, AppearanceObserving {
 		notifications.observe(NSWindow.didResignMainNotification, object: mainWindow) { [weak self] notification in
 			self?.windowMainStateChanged(notification)
 		}
-		notifications.observe(.TVCMainWindowRedrawSubviews, object: mainWindow) { [weak self] notification in
+		notifications.observe(.mainWindowRedrawSubviews, object: mainWindow) { [weak self] notification in
 			self?.mainWindowRequiresRedraw(notification)
 		}
 	}

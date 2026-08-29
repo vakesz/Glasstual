@@ -98,10 +98,10 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 		notifications.observe(.themeListDidChange) { [weak self] _ in
 			self?.model.refreshThemes()
 		}
-		notifications.observe(.TVCMainWindowWillReloadTheme) { [weak self] _ in
+		notifications.observe(.mainWindowWillReloadTheme) { [weak self] _ in
 			self?.model.isReloadingTheme = true
 		}
-		notifications.observe(.TVCMainWindowDidReloadTheme) { [weak self] notification in
+		notifications.observe(.mainWindowDidReloadTheme) { [weak self] notification in
 			self?.themeReloadCompleted(notification)
 		}
 	}
