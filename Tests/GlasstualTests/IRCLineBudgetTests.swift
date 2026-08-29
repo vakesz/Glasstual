@@ -40,6 +40,63 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+/// The byte budget one IRC line has, and what happens when the framing alone
+/// has already spent it.
+struct IRCLineBudgetTests {
+	@Test("A fresh budget has already been charged for the framing")
+	func overheadIsChargedUpFront() {
+		let budget = IRCLineBudget(overhead: 40, maximum: 510)
+
+		#expect(budget.used == 40)
+		#expect(budget.remaining == 470)
+		#expect(budget.isOverBudget == false)
+		#expect(budget.fits(470))
+		#expect(budget.fits(471) == false)
+	}
+
+	@Test("Charging accumulates until the line is full")
+	func chargingAccumulates() {
+		var budget = IRCLineBudget(overhead: 10, maximum: 20)
+
+		budget.charge(5)
+
+		#expect(budget.used == 15)
+		#expect(budget.remaining == 5)
+		#expect(budget.isOverBudget == false)
+
+		budget.charge(6)
+
+		#expect(budget.isOverBudget)
+		#expect(budget.remaining == 0)
+	}
+
+	/// A server-assigned hostmask plus a long channel name can make the framing
+	/// alone longer than the whole line. In unsigned arithmetic the remainder
+	/// wrapped to four billion and the splitter believed it had room for
+	/// everything.
+	@Test("Framing longer than the line reads as exhausted, not as unlimited")
+	func overheadPastTheMaximumIsExhausted() {
+		let budget = IRCLineBudget(overhead: 700, maximum: 510)
+
+		#expect(budget.isOverBudget)
+		#expect(budget.remaining == 0)
+		#expect(budget.fits(0) == false)
+		#expect(budget.fits(1) == false)
+	}
+
+	@Test("Negative counts are clamped rather than refunding bytes")
+	func negativeCountsAreClamped() {
+		var budget = IRCLineBudget(overhead: -5, maximum: -1)
+
+		#expect(budget.overhead == 0)
+		#expect(budget.maximum == 0)
+
+		budget.charge(-10)
+
+		#expect(budget.used == 0)
+	}
+}
+
 @MainActor
 struct IRCTextWrapBoundsTests {
 	/// The search window start was computed in unsigned arithmetic, so a

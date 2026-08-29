@@ -344,6 +344,54 @@ private func wireByteCount(_ string: String, encoding: UInt) -> Int {
 	return count > 0 ? count : string.utf8.count
 }
 
+extension IRCLineBudget {
+	/** The budget for one line of `lineType` addressed to `channelName`.
+
+	 The framing charged up front is what the *server* will prepend when it
+	 relays the line: `:hostmask COMMAND target :`, plus the CR LF. The
+	 hostmask is only known once the server has told us, so a constant stands
+	 in until it has. */
+	@MainActor
+	static func forMessage(
+		toChannel channelName: String,
+		on client: IRCClient,
+		lineType: TVCLogLineType,
+		encoding: UInt
+	) -> IRCLineBudget {
+		var overhead = 1
+
+		if let userHostmask = client.userHostmask {
+			overhead += wireByteCount(userHostmask, encoding: encoding)
+		} else {
+			overhead += truncationHostmaskConstant
+		}
+
+		switch lineType {
+		case .privateMessage, .privateMessageNoHighlight:
+			overhead += truncationPRIVMSGCommandConstant
+		case .action, .actionNoHighlight:
+			overhead += truncationACTIONCommandConstant
+		case .notice:
+			overhead += truncationNOTICECommandConstant
+		default:
+			preconditionFailure("Line type not supported")
+		}
+
+		overhead += wireByteCount(channelName, encoding: encoding)
+		overhead += 2
+		overhead += 2
+
+		var maximum = 510
+		let serverLineLength = Int(client.supportInfo.maximumLineLength)
+
+		if serverLineLength > (overhead + 2) {
+			maximum = serverLineLength - 2
+		}
+
+		return IRCLineBudget(overhead: overhead, maximum: maximum)
+	}
+}
+
 public extension NSAttributedString {
 	@objc(stringFormattedForChannel:onClient:withLineType:effectiveRange:)
 	func stringFormatted(
@@ -353,41 +401,16 @@ public extension NSAttributedString {
 		effectiveRange: NSRangePointer?
 	) -> String {
 		let encoding = client.effectivePrimaryEncoding
-
-		var minimumLength: UInt = 1
-
-		if let userHostmask = client.userHostmask {
-			minimumLength += UInt(wireByteCount(userHostmask, encoding: encoding.rawValue))
-		} else {
-			minimumLength += UInt(truncationHostmaskConstant)
-		}
-
-		switch lineType {
-		case .privateMessage, .privateMessageNoHighlight:
-			minimumLength += UInt(truncationPRIVMSGCommandConstant)
-		case .action, .actionNoHighlight:
-			minimumLength += UInt(truncationACTIONCommandConstant)
-		case .notice:
-			minimumLength += UInt(truncationNOTICECommandConstant)
-		default:
-			preconditionFailure("Line type not supported")
-		}
-
-		minimumLength += UInt(wireByteCount(channelName, encoding: encoding.rawValue))
-		minimumLength += 2
-		minimumLength += 2
-
-		var maximumLength = UInt(510)
-		let serverLineLength = client.supportInfo.maximumLineLength
-
-		if serverLineLength > (minimumLength + 2) {
-			maximumLength = serverLineLength - 2
-		}
+		var budget = IRCLineBudget.forMessage(
+			toChannel: channelName,
+			on: client,
+			lineType: lineType,
+			encoding: encoding.rawValue
+		)
 
 		let string = string as NSString
 		let result = NSMutableString()
 
-		var resultLength = minimumLength
 		var deletionLength: UInt = 0
 		var consumedAnyCharacter = false
 		var limitRange = NSRange(location: 0, length: string.length)
@@ -402,15 +425,11 @@ public extension NSAttributedString {
 			let formatters = TextFormatterEffects.effects(in: attributes)
 			let formattersLength = formatters.maximumLength
 
-			if segmentRange.location > 0 {
-				let newLength = resultLength + formattersLength + 2
-
-				if newLength > maximumLength {
-					break
-				}
+			if segmentRange.location > 0, budget.fits(Int(formattersLength) + 2) == false {
+				break
 			}
 
-			resultLength += formattersLength
+			budget.charge(Int(formattersLength))
 			formatters.appendToStart(of: result)
 
 			var i = 0
@@ -425,9 +444,9 @@ public extension NSAttributedString {
 					characterSize = characterRange.length
 				}
 
-				resultLength += UInt(characterSize)
+				budget.charge(characterSize)
 
-				if resultLength > maximumLength {
+				if budget.isOverBudget {
 					if consumedAnyCharacter {
 						let indexDifference = result.wrapIRCTextFormatterResult(
 							with: UInt(segmentRange.location),
@@ -477,7 +496,11 @@ public extension NSAttributedString {
 		}
 
 		colorFormatLogger.debug(
-			"Minimum length: \(minimumLength, privacy: .public); Final length: \(resultLength, privacy: .public); Difference: \(Int(maximumLength) - Int(resultLength), privacy: .public);"
+			"""
+			Minimum length: \(budget.overhead, privacy: .public); \
+			Final length: \(budget.used, privacy: .public); \
+			Difference: \(budget.maximum - budget.used, privacy: .public);
+			"""
 		)
 
 		return result as String

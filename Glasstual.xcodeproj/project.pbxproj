@@ -778,6 +778,7 @@
 		C906E93BE607761A3D53D5F2 /* OpenLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = A952A700EDF8373931F88881 /* OpenLink.swift */; };
 		C90E3566A4C2E2415F3DA665 /* ChannelAccessListStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B29241B8FBB12ED2250DD59 /* ChannelAccessListStrings.swift */; };
 		C956A19646BAB24B65A5E77A /* EmptyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F4C5535443690CAF660799 /* EmptyValue.swift */; };
+		C95C781ABE2D0B8C4BDFA0A7 /* IRCLineBudget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99F40CDF938DBEA8BE50F48 /* IRCLineBudget.swift */; };
 		C9BAAC7567A8124344AB3A8D /* LICENSE-GRMustache-Swift.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2E2DD8EB9D77A80CEA01B473 /* LICENSE-GRMustache-Swift.txt */; };
 		C9D84DA28AF920643BE6CF4D /* IRCJoinBatching.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB08076F13AB7B49757E0D1E /* IRCJoinBatching.swift */; };
 		C9E610237C0C7D74DF36329D /* PluginRuntimeMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35D2C55EF33D1BA88FCA206 /* PluginRuntimeMigrationTests.swift */; };
@@ -1976,6 +1977,7 @@
 		A952A700EDF8373931F88881 /* OpenLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenLink.swift; sourceTree = "<group>"; };
 		A96570BA25273316D37CB585 /* BasicTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicTableView.swift; sourceTree = "<group>"; };
 		A97EA96A30721F3141DFD9A2 /* TDCNicknameColorSheet.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TDCNicknameColorSheet.xcstrings; sourceTree = "<group>"; };
+		A99F40CDF938DBEA8BE50F48 /* IRCLineBudget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCLineBudget.swift; sourceTree = "<group>"; };
 		A9BB73B631F81EE7C2C72FDD /* WindowBaseMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowBaseMigrationTests.swift; sourceTree = "<group>"; };
 		A9BB9E1863F8DBF963CC4A98 /* ServerPropertiesSheetCommandsAndChannels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerPropertiesSheetCommandsAndChannels.swift; sourceTree = "<group>"; };
 		AA2C5919E1E303B472382A68 /* InlineContentMediaAssessment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineContentMediaAssessment.swift; sourceTree = "<group>"; };
@@ -3136,6 +3138,7 @@
 			children = (
 				04492778D9920AB7996CD43C /* IRCClientTextEncoding.swift */,
 				DB19F275539C93A3C1AC7209 /* IRCColorFormat.swift */,
+				A99F40CDF938DBEA8BE50F48 /* IRCLineBudget.swift */,
 				20B702B439C3585F322C47E5 /* NSStringHelper.swift */,
 			);
 			path = Formatting;
@@ -5945,6 +5948,7 @@
 				EDB625C236709DC82236F310 /* IRCISupportTokenParser.swift in Sources */,
 				F49A6A42E7990AD4CA107F7F /* IRCInboundStrings.swift in Sources */,
 				C9D84DA28AF920643BE6CF4D /* IRCJoinBatching.swift in Sources */,
+				C95C781ABE2D0B8C4BDFA0A7 /* IRCLineBudget.swift in Sources */,
 				8C957EB4C5A91BD90ACBEDC6 /* IRCLineParser.swift in Sources */,
 				C1661852564613CAD119B9F8 /* IRCMessage.swift in Sources */,
 				96E4DC33E225720E1F7CCF5A /* IRCMessageBatch.swift in Sources */,
