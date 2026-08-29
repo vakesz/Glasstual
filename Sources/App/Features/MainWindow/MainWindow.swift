@@ -47,11 +47,13 @@ public extension Notification.Name {
 	static let TVCMainWindowRedrawSubviews = Notification.Name("TVCMainWindowRedrawSubviewsNotification")
 	static let TVCMainWindowWillReloadTheme = Notification.Name("TVCMainWindowWillReloadThemeNotification")
 	static let TVCMainWindowDidReloadTheme = Notification.Name("TVCMainWindowDidReloadThemeNotification")
-	static let TVCMainWindowSelectionChanged = Notification.Name("TVCMainWindowSelectionChangedNotification")
 	static let mainWindowAppearanceChanged = Notification.Name("TVCMainWindowAppearanceChangedNotification")
 	static let mainWindowRedrawSubviews = Notification.Name("TVCMainWindowRedrawSubviewsNotification")
 	static let mainWindowWillReloadTheme = Notification.Name("TVCMainWindowWillReloadThemeNotification")
 	static let mainWindowDidReloadTheme = Notification.Name("TVCMainWindowDidReloadThemeNotification")
+	/// The one declaration of the selection notification. It was declared in
+	/// four places and written as a bare string in a fifth, so an observer
+	/// could quietly watch a name nobody posted.
 	static let mainWindowSelectionChanged = Notification.Name("TVCMainWindowSelectionChangedNotification")
 }
 
