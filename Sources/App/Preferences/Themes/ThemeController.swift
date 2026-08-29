@@ -71,6 +71,9 @@ public struct ThemeSnapshot: Sendable {
 	public let temporaryURL: URL
 	public let nicknameColorStyle: TPCThemeSettingsNicknameColorStyle
 	public let timestampFormat: String?
+	/** Where the theme's templates are read from. A render job builds its own
+	 repositories out of these, so no compiled template is ever shared. */
+	public let templateSources: ThemeTemplateSources
 }
 
 private struct PublishedTheme {
@@ -560,7 +563,8 @@ public final class ThemeController: NSObject {
 			originalURL: theme.originalURL,
 			temporaryURL: theme.temporaryURL,
 			nicknameColorStyle: theme.settings.nicknameColorStyle,
-			timestampFormat: theme.settings.themeTimestampFormat
+			timestampFormat: theme.settings.themeTimestampFormat,
+			templateSources: theme.templateSources
 		)
 
 		Self.snapshotStorage.withLock { $0 = snapshot }

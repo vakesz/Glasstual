@@ -297,7 +297,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		return URL(fileURLWithPath: writePath)
 	}
 
-	@objc public var lastLine: LogLine? {
+	public var lastLine: LogLine? {
 		presentation?.lastPrintedLine()
 	}
 
@@ -482,7 +482,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		logFileSessionIsOpen = false
 	}
 
-	@objc(writeToLogLineToLogFile:)
 	public func writeToLogFile(_ logLine: LogLine) {
 		guard isUtility == false, clientPreferences.logToDiskIsEnabled else {
 			return
@@ -498,13 +497,11 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	@MainActor
-	@objc(print:)
 	public func print(_ logLine: LogLine) {
 		print(logLine, completionBlock: nil)
 	}
 
 	@MainActor
-	@objc(print:completionBlock:)
 	public func print(
 		_ logLine: LogLine,
 		completionBlock: LogControllerPrintOperationCompletion?
@@ -513,47 +510,38 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		writeToLogFile(logLine)
 	}
 
-	@objc(addUser:)
 	public func addUser(_ user: User) {
 		memberInfo?.addUser(user)
 	}
 
-	@objc(addMember:)
 	public func addMember(_ member: ChannelUser) {
 		memberInfo?.addMember(member)
 	}
 
-	@objc(addMember:checkForDuplicates:)
 	public func addMember(_ member: ChannelUser, checkForDuplicates: Bool) {
 		memberInfo?.addMember(member, checkForDuplicates: checkForDuplicates)
 	}
 
-	@objc(removeMemberWithNickname:)
 	public func removeMember(withNickname nickname: String) {
 		memberInfo?.removeMember(withNickname: nickname)
 	}
 
-	@objc(removeMember:)
 	public func removeMember(_ member: ChannelUser) {
 		memberInfo?.removeMember(member)
 	}
 
-	@objc(resortMember:)
 	public func resortMember(_ member: ChannelUser) {
 		memberInfo?.resortMember(member)
 	}
 
-	@objc(replaceMember:withMember:)
 	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser) {
 		memberInfo?.replaceMember(oldMember, with: newMember)
 	}
 
-	@objc(replaceMember:withMember:resort:)
 	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool) {
 		memberInfo?.replaceMember(oldMember, with: newMember, resort: resort)
 	}
 
-	@objc(replaceMember:withMember:resort:replaceInAllChannels:)
 	public func replaceMember(
 		_ oldMember: ChannelUser,
 		with newMember: ChannelUser,
@@ -572,6 +560,35 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo?.changeMember(nickname, mode: mode, value: value)
 	}
 
+	/** Records conversation activity against the member `nickname` names.
+
+	 A member is a value the list owns, so activity is reported to the list
+	 rather than written through a member the caller happens to be holding. */
+	public func recordConversation(
+		with nickname: String,
+		direction: ChannelConversationDirection
+	) {
+		memberInfo?.updateMember(withNickname: nickname) { member in
+			switch direction {
+			case .outgoing: member.outgoingConversation()
+			case .incoming: member.incomingConversation()
+			case .mention: member.conversation()
+			}
+		}
+	}
+
+	/// Applies time decay to every member's conversation weights. Call once
+	/// before ordering by weight, never from inside a comparator.
+	public func decayMemberConversations() {
+		guard let memberInfo else {
+			return
+		}
+
+		for member in memberInfo.memberList {
+			memberInfo.updateMember(withUserID: member.id) { $0.decayConversation() }
+		}
+	}
+
 	@objc public func clearMembers() {
 		memberInfo?.clearMembers()
 	}
@@ -583,7 +600,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	/// Empty rather than absent when the channel has no member list yet: a
 	/// channel nobody has joined has no members, which is not a different
 	/// answer from "no members".
-	@objc open var memberList: [ChannelUser] {
+	open var memberList: [ChannelUser] {
 		memberInfo?.memberList ?? []
 	}
 
@@ -591,7 +608,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberList
 	}
 
-	@objc(pasteboardDataForMembers:)
 	public func pasteboardData(for members: [ChannelUser]) -> Data {
 		memberInfo?.pasteboardData(for: members) ?? Data()
 	}
@@ -604,7 +620,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		ChannelMemberList.readNicknames(from: pasteboardData, with: callback)
 	}
 
-	@objc(readMembersFromPasteboardData:withBlock:)
 	public class func readMembers(
 		from pasteboardData: Data,
 		with callback: (IRCChannel, [ChannelUser]) -> Void
@@ -617,7 +632,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo?.memberExists(nickname) ?? false
 	}
 
-	@objc(findMember:)
 	open func findMember(_ nickname: String) -> ChannelUser? {
 		memberInfo?.findMember(nickname)
 	}

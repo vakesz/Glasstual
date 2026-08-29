@@ -131,7 +131,6 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 		selectedMembers(sender).isEmpty == false
 	}
 
-	@objc(selectedMembers:)
 	public func selectedMembers(_ sender: Any) -> [ChannelUser] {
 		actionCoordinator.selectedMembers(for: sender)
 	}

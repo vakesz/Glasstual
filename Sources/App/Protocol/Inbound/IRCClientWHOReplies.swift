@@ -90,7 +90,7 @@ extension IRCClient {
 		)
 
 		let existingUser = findUser(reply.nickname)
-		let editedUser = draftUser(withNickname: reply.nickname)
+		var editedUser = draftUser(withNickname: reply.nickname)
 		editedUser.nickname = reply.nickname
 		editedUser.username = reply.username
 		editedUser.address = reply.address
@@ -104,7 +104,7 @@ extension IRCClient {
 			editedUser.account = reply.account
 		}
 
-		let userChanged = existingUser.map { !$0.isEqual(editedUser) } ?? false
+		let userChanged = existingUser.map { $0 != editedUser } ?? false
 		let finalUser: User
 		if existingUser == nil || userChanged {
 			finalUser = addAndReturn(editedUser)
@@ -113,9 +113,9 @@ extension IRCClient {
 		} else {
 			preconditionFailure("An unchanged WHO user must already exist")
 		}
-		if let member = existingUser?.userAssociated(with: channel) {
+		if let existingUser, let member = userAssociated(existingUser, with: channel) {
 			if userChanged {
-				let staffStatusChanged = existingUser?.isIRCop != finalUser.isIRCop
+				let staffStatusChanged = existingUser.isIRCop != finalUser.isIRCop
 				if staffStatusChanged {
 					channel.memberInfo?.replaceMember(
 						member,
@@ -123,12 +123,12 @@ extension IRCClient {
 						resort: true,
 						replaceInAllChannels: environment.preferences.memberListSortFavorsServerStaff
 					)
-				} else if existingUser?.isAway != finalUser.isAway {
+				} else if existingUser.isAway != finalUser.isAway {
 					output?.updateDrawingForUser(finalUser)
 				}
 			}
 		} else {
-			let member = ChannelUser(user: finalUser)
+			var member = ChannelUser(user: finalUser, prefixes: currentUserPrefixes)
 			member.modes = ChannelModeSymbolSet(letters: parsedFlags.userModes)
 			channel.memberInfo?.addMember(member)
 		}

@@ -219,7 +219,7 @@ enum PluginHostAdapter {
 		)
 	}
 
-	private static func makeMember(_ member: ChannelUser) -> PluginChannelMember {
+	static func makeMember(_ member: ChannelUser) -> PluginChannelMember {
 		PluginChannelMember(
 			user: makeUser(member.user),
 			mark: member.mark,

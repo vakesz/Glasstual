@@ -95,7 +95,7 @@ struct IRCBridgeContractMigrationTests {
 		modes: ChannelModeSymbolSet,
 		on client: IRCClient
 	) -> ChannelUser {
-		let member = ChannelUser(user: User(nickname: nickname, on: client))
+		var member = ChannelUser(user: User(nickname: nickname), prefixes: client.currentUserPrefixes)
 		member.modes = modes
 		return member
 	}

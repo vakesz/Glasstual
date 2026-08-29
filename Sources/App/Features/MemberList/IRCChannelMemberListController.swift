@@ -54,7 +54,6 @@ public final class IRCChannelMemberListController: NSObject {
 		}
 	}
 
-	@objc(replaceContents:)
 	public func replaceContents(_ contents: [ChannelUser]) {
 		members = contents
 		tableView?.membersReplaced()
@@ -67,6 +66,18 @@ public final class IRCChannelMemberListController: NSObject {
 
 		members.insert(member, at: index)
 		tableView?.memberInserted(at: UInt(index))
+	}
+
+	/// Puts an edited member back at the row it already occupies. A member is a
+	/// value, so an edit has to be handed over rather than seen through a shared
+	/// reference; the ordering is unchanged, so only the row is redrawn.
+	public func replace(_ member: ChannelUser, atArrangedObjectIndex index: Int) {
+		guard members.indices.contains(index) else {
+			return
+		}
+
+		members[index] = member
+		tableView?.refreshDrawing(for: member)
 	}
 
 	public func remove(atArrangedObjectIndex index: Int) {

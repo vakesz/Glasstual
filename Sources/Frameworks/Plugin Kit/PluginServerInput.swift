@@ -37,9 +37,12 @@
 
 import Foundation
 
-/// Mutable per-line state the host fills in from the parsed message and hands
-/// to one plugin at a time. Nonisolated because the parser that fills it in is.
-public final nonisolated class PluginServerInput {
+/** One parsed server line, handed to the plugins that subscribed to its command.
+
+ A value: the host fills it in from the parsed message and passes a copy to each
+ subscriber, so a plugin that edits its own copy cannot change what the next one
+ sees. */
+public struct PluginServerInput: Sendable {
 	public var senderIsServer = false
 	public var senderNickname = ""
 	public var senderUsername: String?

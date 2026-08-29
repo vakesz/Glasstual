@@ -60,7 +60,7 @@ extension IRCClient {
 		}
 		var mutableConfig = config
 		if isIgnore {
-			let ignore = AddressBookEntry.newIgnoreEntry(forHostmask: member.banMask)
+			let ignore = AddressBookEntry.newIgnoreEntry(forHostmask: banMask(for: member))
 			printDebugInformation(
 				IRCCommandStrings.Ignore.added(nickname: member.nickname, hostmask: ignore.hostmask)
 			)

@@ -70,7 +70,7 @@ public extension IRCClient {
 		}
 
 		if !printOnly {
-			let user = draftUser(withNickname: sender)
+			var user = draftUser(withNickname: sender)
 			user.nickname = sender
 			user.username = message.senderUsername
 			user.address = message.senderAddress
@@ -78,7 +78,10 @@ public extension IRCClient {
 				user.account = Self.account(fromWireValue: message.params[1])
 				user.realName = message.params[2]
 			}
-			channel.memberInfo?.addMember(ChannelUser(user: addAndReturn(user)), checkForDuplicates: true)
+			channel.memberInfo?.addMember(
+				ChannelUser(user: addAndReturn(user), prefixes: currentUserPrefixes),
+				checkForDuplicates: true
+			)
 		}
 
 		if !printOnly, !isLocalUser, let query = findChannel(sender), !query.isActive {
@@ -244,7 +247,7 @@ public extension IRCClient {
 		func process(_ channel: IRCChannel) {
 			if !isLocalUser, !printOnly, let user {
 				if channel.isChannel {
-					guard let member = user.userAssociated(with: channel) else { return }
+					guard let member = userAssociated(user, with: channel) else { return }
 					channel.memberInfo?.removeMember(member)
 				} else if channel.isPrivateMessage, casefoldNickname(sender) == casefoldNickname(channel.name) {
 					if channel.isActive {
@@ -333,7 +336,7 @@ public extension IRCClient {
 		func process(_ channel: IRCChannel) {
 			if !printOnly, let user {
 				if channel.isChannel {
-					guard let member = user.userAssociated(with: channel) else { return }
+					guard let member = userAssociated(user, with: channel) else { return }
 					channel.memberInfo?.resortMember(member)
 				} else if channel.isPrivateMessage {
 					guard casefoldNickname(oldNickname) == casefoldNickname(channel.name) else { return }

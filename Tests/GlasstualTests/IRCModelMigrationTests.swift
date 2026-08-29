@@ -184,7 +184,7 @@ struct IRCModelMigrationTests {
 
 	@Test("A highlight log entry records the line it was made from and where it came from")
 	func highlightLogEntryStoresLineClientAndChannel() {
-		let line = LogLine()
+		var line = LogLine()
 		line.messageBody = "hello world"
 		line.nickname = "alice"
 		line.lineType = .privateMessage

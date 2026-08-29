@@ -82,7 +82,6 @@ public final class FileLogger: NSObject {
 
 	// MARK: - Plain Text API
 
-	@objc(writeLogLine:)
 	public func writeLogLine(_ logLine: LogLine) {
 		let stringToWrite: String = if let channel {
 			logLine.renderedBodyForTranscriptLog(in: channel)

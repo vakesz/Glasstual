@@ -62,8 +62,13 @@ public enum SCRAMClientErrorCode: Int {
 ///
 /// Channel binding is not offered (`n,,`). Passwords are used as typed;
 /// SASLprep is not applied, which matches what IRC servers do.
+///
+/// The exchange is driven from `IRCClientNegotiation`, which is main-actor
+/// state, so the client's state machine belongs to the same domain. Only the
+/// PBKDF2 derivation leaves it, and that is a pure function.
 @objc(TLOSCRAMClient)
-public final nonisolated class SCRAMClient: NSObject {
+@MainActor
+public final class SCRAMClient: NSObject {
 	@objc(TLOSCRAMClientState)
 	public enum State: Int {
 		case initial
@@ -332,8 +337,9 @@ public final nonisolated class SCRAMClient: NSObject {
 		pbkdf2(password: password, salt: salt, iterations: iterations)
 	}
 
-	/// PBKDF2-HMAC-SHA256 producing a 32 byte key.
-	static func pbkdf2(password: String, salt: Data, iterations: Int) -> Data? {
+	/// PBKDF2-HMAC-SHA256 producing a 32 byte key. Pure, so the offloaded
+	/// wrapper above can call it from the cooperative pool.
+	nonisolated static func pbkdf2(password: String, salt: Data, iterations: Int) -> Data? { // nonisolated: pure
 		guard let roundCount = UInt32(exactly: iterations) else {
 			return nil
 		}
