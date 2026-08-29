@@ -5,7 +5,6 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
@@ -14,42 +13,62 @@
 import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
-import Synchronization
+
+/// Which side of a conversation a member took part in.
+public nonisolated enum ChannelConversationDirection: Sendable { // nonisolated: value
+	/// The local user spoke to them.
+	case outgoing
+	/// They spoke to the local user.
+	case incoming
+	/// They took part without addressing anyone in particular.
+	case mention
+}
 
 /** A member of a channel.
 
- Not `Sendable`, and it no longer needs to be: rendering used to collect members
- off the main actor, and now the render context carries a ``RenderedMember``
- value snapshot instead, so a member is only ever read where the member list
- lives. That is what retired the lock this type used to hold around `user`. */
-@objc(IRCChannelUser)
-public final nonisolated class ChannelUser: NSObject {
-	private var userStorage: User
+ A value, owned by the channel's member list. Its identity is the person's:
+ one member per `User.ID` per channel, which is what a replacement looks itself
+ up by.
 
-	/// Editable through `duplicate()`; the member list replaces stored members
-	/// rather than editing them in place.
+ `prefixes` is the client's ISUPPORT `PREFIX` table as it stood when the list
+ last stamped the member. Ranking and marks read it rather than the live client,
+ because a member no longer knows one; `ChannelMemberList.sortMembers()`
+ restamps, which is what picks up a `PREFIX` that arrived after the member did. */
+public nonisolated struct ChannelUser: Identifiable, Hashable, Sendable { // nonisolated: value
+	/// The member is the person: one entry per user in a channel.
+	public var id: User.ID {
+		user.id
+	}
+
+	public internal(set) var user: User
 	public internal(set) var modes = ChannelModeSymbolSet()
+	var prefixes: IRCUserPrefixTable
+
 	private var incomingWeightStorage = 0.0
 	private var outgoingWeightStorage = 0.0
 	private var lastWeightFade = CFAbsoluteTimeGetCurrent()
 	private var creationTimeStorage = Date().timeIntervalSince1970
 
-	@objc public var user: User {
-		userStorage
+	init(user: User, prefixes: IRCUserPrefixTable = IRCUserPrefixTable()) {
+		self.user = user
+		self.prefixes = prefixes
 	}
 
-	private var client: IRCClient? {
-		user.client
+	/** Two members are the same when they are the same person with the same
+	 modes. The conversation weights and the prefix stamp are derived state that
+	 changes constantly; comparing them would make every member unequal to the
+	 one the list held a moment ago, which is the comparison the member list and
+	 its drawing actually ask for. */
+	public static func == (lhs: Self, rhs: Self) -> Bool {
+		lhs.id == rhs.id && lhs.modes == rhs.modes
 	}
 
-	/** Ranking and marks come from the client's published ISUPPORT values rather
-	 than its live support table: members are ranked and rendered off the main
-	 actor. Absent a client the IRC defaults apply. */
-	private var prefixes: IRCUserPrefixTable {
-		client?.userPrefixes.withLock { $0 } ?? IRCUserPrefixTable()
+	public func hash(into hasher: inout Hasher) {
+		hasher.combine(id)
+		hasher.combine(modes)
 	}
 
-	@objc public var mark: String {
+	public var mark: String {
 		guard let highest = modes.highest else {
 			return ""
 		}
@@ -78,69 +97,36 @@ public final nonisolated class ChannelUser: NSObject {
 		return result
 	}
 
-	/// Objective-C compatibility for the legacy `IRCUserRank` return type.
-	@objc(rank)
-	public var objectiveCRankRawValue: UInt {
-		rank.rawValue
-	}
-
-	/// Objective-C compatibility for the legacy `IRCUserRank` bit mask.
-	@objc(ranks)
-	public var objectiveCRanksRawValue: UInt {
-		ranks.rawValue
-	}
-
-	@objc public var isOp: Bool {
+	public var isOp: Bool {
 		hasRank(of: "o", orHigher: nil)
 	}
 
-	@objc public var isHalfOp: Bool {
+	public var isHalfOp: Bool {
 		hasRank(of: "h", orHigher: "o")
 	}
 
 	/** Pure by design. Decaying from a getter mutated the values a sort was ordering
 	 by, which breaks the strict weak ordering `sort` requires; call
 	 `decayConversation()` once before sorting instead. */
-	@objc public var totalWeight: Double {
+	public var totalWeight: Double {
 		incomingWeightStorage + outgoingWeightStorage
 	}
 
-	@objc public var incomingWeight: Double {
+	public var incomingWeight: Double {
 		incomingWeightStorage
 	}
 
-	@objc public var outgoingWeight: Double {
+	public var outgoingWeight: Double {
 		outgoingWeightStorage
 	}
 
-	@objc public var creationTime: TimeInterval {
+	public var creationTime: TimeInterval {
 		creationTimeStorage
 	}
 
-	public init(user: User) {
-		userStorage = user
-		super.init()
-	}
-
-	private init(copying other: ChannelUser) {
-		userStorage = other.user
-		modes = other.modes
-		creationTimeStorage = other.creationTimeStorage
-		incomingWeightStorage = other.incomingWeightStorage
-		outgoingWeightStorage = other.outgoingWeightStorage
-		lastWeightFade = other.lastWeightFade
-
-		super.init()
-	}
-
-	/// An editable copy. Membership changes replace a stored member with a
-	/// duplicate rather than editing the one the list already holds.
-	public func duplicate() -> ChannelUser {
-		ChannelUser(copying: self)
-	}
-
-	public func changeUser(to user: User) {
-		userStorage = user
+	/// Points the member at `user`, which is the same person with edited values.
+	public mutating func changeUser(to user: User) {
+		self.user = user
 	}
 
 	public func userModesContains(_ mode: ChannelModeSymbol) -> Bool {
@@ -156,7 +142,6 @@ public final nonisolated class ChannelUser: NSObject {
 	}
 
 	private func hasRank(of modeSymbol: String, orHigher fallbackModeSymbol: String?) -> Bool {
-		let prefixes = prefixes
 		var threshold = prefixes.rank(forModeSymbol: modeSymbol)
 
 		if threshold == 0, let fallbackModeSymbol {
@@ -185,25 +170,21 @@ public final nonisolated class ChannelUser: NSObject {
 		}
 	}
 
-	@objc
-	public func outgoingConversation() {
+	public mutating func outgoingConversation() {
 		outgoingWeightStorage += outgoingWeightStorage.rounded() == 0 ? 20 : 5
 	}
 
-	@objc
-	public func incomingConversation() {
+	public mutating func incomingConversation() {
 		incomingWeightStorage += incomingWeightStorage.rounded() == 0 ? 100 : 20
 	}
 
-	@objc
-	public func conversation() {
+	public mutating func conversation() {
 		incomingWeightStorage += incomingWeightStorage.rounded() == 0 ? 4 : 1
 	}
 
 	/// Applies time decay to the conversation weights. Call once before ordering by
 	/// `totalWeight`, never from inside a comparator.
-	@objc
-	public func decayConversation() {
+	public mutating func decayConversation() {
 		let now = CFAbsoluteTimeGetCurrent()
 		let minutes = (now - lastWeightFade) / 60
 
@@ -222,7 +203,6 @@ public final nonisolated class ChannelUser: NSObject {
 		}
 	}
 
-	@objc(compareUsingWeights:)
 	public func compare(usingWeights other: ChannelUser) -> ComparisonResult {
 		let localWeight = totalWeight
 		let remoteWeight = other.totalWeight
@@ -261,53 +241,15 @@ public final nonisolated class ChannelUser: NSObject {
 			return .orderedDescending
 		}
 
-		let prefixes = prefixes
 		let localNickname = prefixes.casefold(user.nickname)
 		let remoteNickname = prefixes.casefold(other.user.nickname)
 
 		return localNickname.compare(remoteNickname)
 	}
+}
 
-	@objc public static var channelRankComparator: Comparator {
-		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
-
-		return { first, second in
-			guard let first = first as? ChannelUser, let second = second as? ChannelUser else {
-				return .orderedSame
-			}
-
-			return first.compareRank(to: second, favoringServerStaff: favorIRCop)
-		}
-	}
-
-	override public var description: String {
-		"<IRCChannelUser \(mark)\(user.nickname)>"
-	}
-
-	override public func isEqual(_ object: Any?) -> Bool {
-		guard let other = object as? ChannelUser else {
-			return false
-		}
-
-		return self === other || user === other.user && modes == other.modes
-	}
-
-	/** `isEqual` compares values, so `hash` has to as well: inheriting the identity
-	 hash makes equal-but-distinct members behave incorrectly in sets and dictionaries. */
-	override public var hash: Int {
-		var hasher = Hasher()
-		hasher.combine(ObjectIdentifier(user))
-		hasher.combine(modes)
-		return hasher.finalize()
-	}
-
-	@MainActor
-	public func associate(with channel: IRCChannel) {
-		user.associate(self, with: channel)
-	}
-
-	@MainActor
-	public func disassociate(with channel: IRCChannel) {
-		user.disassociateUser(with: channel)
+extension ChannelUser: CustomStringConvertible {
+	public var description: String {
+		"<ChannelUser \(mark)\(user.nickname)>"
 	}
 }

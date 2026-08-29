@@ -1,6 +1,11 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "certificate-not-trusted" : {
+      "comment" : "Error shown when the user declines a server certificate the system would not trust on its own.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The certificate for this server is not trusted" } } }
+    },
     "connection-timed-out" : {
       "comment" : "Error shown when an IRC connection attempt exceeds its timeout. Migrated from legacy key Connection timed out.",
       "extractionState" : "manual",

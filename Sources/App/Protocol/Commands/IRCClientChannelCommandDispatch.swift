@@ -163,7 +163,8 @@ extension IRCClient {
 			printDebugInformation(IRCCommandStrings.unsupportedMode(String(modeSymbol)))
 			return false
 		}
-		let banMask = invocation.channel?.findMember(invocation.nickname)?.user.banMask ?? invocation.nickname
+		let banTarget = invocation.channel?.findMember(invocation.nickname)?.user
+		let banMask = banTarget.map(banMask(for:)) ?? invocation.nickname
 		let removesMode = ChannelModerationInvocation.removingCommands.contains(invocation.command)
 		send("MODE", arguments: [invocation.channelName, "\(removesMode ? "-" : "+")\(modeSymbol)", banMask])
 		return true

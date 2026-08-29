@@ -54,12 +54,11 @@ public extension IRCClient {
 		cachedHighlights = []
 	}
 
-	@objc(cacheHighlightInChannel:withLogLine:)
 	func cacheHighlight(in channel: IRCChannel, with logLine: LogLine) {
 		guard environment.preferences.logHighlights else { return }
 
 		let newEntry = HighlightLogEntry(
-			lineLogged: logLine.duplicate(),
+			lineLogged: logLine,
 			clientId: uniqueIdentifier,
 			channelId: channel.uniqueIdentifier
 		)

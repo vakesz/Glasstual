@@ -13,7 +13,7 @@ import Testing
 struct PluginKitMigrationTests {
 	@Test("Server input is a plain container the host fills in")
 	func serverInputIsAPlainSwiftValueContainer() {
-		let input = PluginServerInput()
+		var input = PluginServerInput()
 		input.senderNickname = "alice"
 		input.messageCommand = "PRIVMSG"
 		input.messageParameters = ["#glasstual", "hello"]
@@ -21,6 +21,47 @@ struct PluginKitMigrationTests {
 		#expect(input.senderNickname == "alice")
 		#expect(input.messageCommand == "PRIVMSG")
 		#expect(input.messageParameters == ["#glasstual", "hello"])
+	}
+
+	@Test("Server input is a value: a handler's edits do not reach the next handler")
+	func serverInputCopiesRatherThanShares() {
+		var input = PluginServerInput()
+		input.senderNickname = "alice"
+
+		var handed = input
+		handed.senderNickname = "mallory"
+
+		#expect(input.senderNickname == "alice")
+	}
+
+	@Test("A posted message is a value the host finishes on the main actor")
+	func postedMessageCarriesTypedSendableParts() {
+		var message = PluginPostedMessage()
+		message.lineNumber = "1234"
+		message.messageContents = "see https://example.com"
+		message.hyperlinks = [
+			PluginHyperlink(
+				uniqueIdentifier: "link-1",
+				stringValue: "https://example.com",
+				range: NSRange(location: 4, length: 19),
+				strictMatch: true
+			),
+		]
+		message.users = [
+			PluginChannelMember(
+				user: PluginUser(nickname: "alice", hostmask: nil, address: nil, isIRCop: false),
+				mark: "@",
+				ranks: [.normalOperator],
+				creationTime: 0
+			),
+		]
+
+		var copied = message
+		copied.isProcessedInBulk = true
+
+		#expect(message.isProcessedInBulk == false)
+		#expect(copied.hyperlinks.first?.stringValue == "https://example.com")
+		#expect(copied.users.first?.user.nickname == "alice")
 	}
 
 	@Test("The host context hands a plugin typed models and a cancellable observation")

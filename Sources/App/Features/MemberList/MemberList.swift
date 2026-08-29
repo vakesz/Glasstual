@@ -209,7 +209,9 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 			return -1
 		}
 
-		guard let index = members.firstIndex(where: { $0 === item as AnyObject }) else {
+		guard let member = item as? ChannelUser,
+		      let index = members.firstIndex(where: { $0.id == member.id })
+		else {
 			return -1
 		}
 
@@ -676,7 +678,6 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		rowView(atRow: row, makeIfNecessary: false)?.needsDisplay = true
 	}
 
-	@objc(refreshDrawingForMember:)
 	public func refreshDrawing(for member: ChannelUser) {
 		refreshDrawing(forRow: row(forItem: member))
 	}

@@ -102,7 +102,7 @@ struct TVCMemberListSectionTests {
 			let row = memberList.row(forItem: member)
 			let item = memberList.item(atRow: row) as? ChannelUser
 
-			#expect(item === member)
+			#expect(item == member)
 		}
 	}
 
@@ -212,8 +212,8 @@ struct TVCMemberListSectionTests {
 	}
 
 	private func makeMember(named nickname: String, modes: ChannelModeSymbolSet = "") -> ChannelUser {
-		let user = User(nickname: nickname, on: client)
-		let member = ChannelUser(user: user)
+		let user = User(nickname: nickname)
+		var member = ChannelUser(user: user, prefixes: client.currentUserPrefixes)
 		member.modes = modes
 
 		return member

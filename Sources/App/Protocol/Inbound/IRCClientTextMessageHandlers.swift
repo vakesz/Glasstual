@@ -253,13 +253,12 @@ public extension IRCClient {
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message,
 			      completionBlock: completion)
 		}
-		guard !isNotice, let member = channel.memberInfo?.findMember(sender) else { return }
+		guard !isNotice, channel.memberInfo?.findMember(sender) != nil else { return }
 		let localNickname = userNickname.trimmingCharacters(in: CharacterSet(charactersIn: "_"))
-		if text.localizedCaseInsensitiveContains(localNickname) {
-			member.outgoingConversation()
-		} else {
-			member.conversation()
-		}
+		channel.recordConversation(
+			with: sender,
+			direction: text.localizedCaseInsensitiveContains(localNickname) ? .outgoing : .mention
+		)
 	}
 
 	private func receivePrivateText(

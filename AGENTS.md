@@ -52,8 +52,7 @@ checks on every `make lint`.
   `DispatchQueue.main.sync`. Each one asserts something the checker cannot see
   and nothing re-checks. When one of them would settle an isolation error, the
   boundary is in the wrong place: move the state into the domain that uses it,
-  or hand a `Sendable` snapshot across. The ones still in the tree carry an
-  `ISOLATION-EXCEPTION:` comment and are being removed, not imitated.
+  or hand a `Sendable` snapshot across. None are left in the tree.
 - **Never add** an `NSLock`, `NSRecursiveLock`, `objc_sync_enter`, a private
   `DispatchQueue(label:)`, an `OperationQueue()`, or a
   `perform{A,}synchronouslyOnMainQueue` hop. `Mutex<Value>` is the only
@@ -87,20 +86,11 @@ checks on every `make lint`.
   `nonisolated` site: a nonisolated class with mutable state becomes an actor,
   a main-actor class, or a `Mutex`-guarded value.
 
-The gate counts three categories under `Sources/` and fails when one rises
-above the ceiling recorded in `scripts/isolation-ceilings.env`. The ceilings
-only ever fall. After merging work that removes sites, lower them and commit
-the result in the same change:
-
-```
-make isolation-ratchet   # or: ./scripts/isolation-gate.sh --ratchet
-```
-
-Phase 8 finishes when all three read `0`, at which point the ceilings go away
-and the gate becomes a flat ban: `./scripts/isolation-gate.sh --ban` ignores the
-ceilings file and requires zero of each. The flip is adding that flag to the
-`isolation-gate` target in the Makefile and deleting
-`scripts/isolation-ceilings.env` in the same change.
+The gate counts three categories under `Sources/` and fails when it finds any.
+All three are at zero and stay there: there is no ceiling to raise, no
+ratchet, and no exception to add. A change that trips the gate has put a
+boundary in the wrong place — move the state into the domain that uses it, or
+hand a `Sendable` snapshot across.
 
 Two runtime checks back the static ones, both local-only because they are far
 too slow for CI: `make tsan` runs the suite under ThreadSanitizer, and

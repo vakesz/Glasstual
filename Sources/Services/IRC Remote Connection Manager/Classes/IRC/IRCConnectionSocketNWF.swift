@@ -85,6 +85,15 @@ actor ConnectionSocket {
 	private var secured = false
 	private(set) var sending = false
 
+	/** Holds the connection while the application is being asked about a chain
+	 the system would not trust on its own.
+
+	 The handshake completes rather than blocking the verify block's thread, so
+	 the peer may start talking before the user answers. Nothing it says reaches
+	 the application and nothing the application writes reaches it until the
+	 answer arrives. */
+	private var trustGate = ConnectionTrustGate<SocketEvent>()
+
 	private var alternateDisconnectError: ConnectionError?
 
 	var disconnected: Bool {
@@ -289,6 +298,57 @@ actor ConnectionSocket {
 		events.yield(.disconnected(error))
 	}
 
+	// MARK: - Trust Gate
+
+	/** Asks the application whether to trust a chain the system would not.
+
+	 Called from the TLS verify block, which has already completed the handshake
+	 rather than parking its thread on a semaphore. From here until the answer
+	 arrives the connection is gated: what the peer sends is held, what the
+	 application writes is held, and neither side learns anything about the
+	 other. */
+	func requestTrustDecision() {
+		guard disconnecting == false, trustGate.begin() else { return }
+
+		client.ircConnectionRequestInsecureCertificateTrust { [weak self] trusted in
+			Task { await self?.completeTrustDecision(trusted: trusted) }
+		}
+	}
+
+	/// The application answered. "Yes" releases what was held, in order; "no"
+	/// drops it, unread, and closes the connection.
+	private func completeTrustDecision(trusted: Bool) {
+		let outcome = trustGate.resolve(trusted: trusted)
+
+		guard outcome.closes == false else {
+			/* Nothing the peer said is delivered: the user just said they do
+			 not trust it. The partial line in the read buffer goes too. */
+			readInBuffer.removeAll()
+
+			return close(
+				with: .badCertificate(
+					failureReason: trustExport.value.failureDescription
+						?? String(localized: .ConnectionErrors.certificateNotTrusted)
+				)
+			)
+		}
+
+		for event in outcome.deliver {
+			events.yield(event)
+		}
+
+		writeNextHeldData()
+	}
+
+	/// Delivers `event`, or holds it until the trust prompt is answered.
+	private func yieldOrHold(_ event: SocketEvent) {
+		guard trustGate.hold(event) == false else {
+			return
+		}
+
+		events.yield(event)
+	}
+
 	// MARK: - Read & Write
 
 	private func read() {
@@ -319,7 +379,7 @@ actor ConnectionSocket {
 				readIn(content)
 			}
 
-			events.yield(.closedReadStream)
+			yieldOrHold(.closedReadStream)
 
 			return
 		}
@@ -343,7 +403,7 @@ actor ConnectionSocket {
 		}
 
 		for line in lines {
-			events.yield(.received(line))
+			yieldOrHold(.received(line))
 		}
 
 		if let remainder = remainingData {
@@ -370,9 +430,16 @@ actor ConnectionSocket {
 	func write(_ data: Data) {
 		guard connected, disconnecting == false else { return }
 
+		/* Nothing goes to a peer the user has not vouched for yet. */
+		guard trustGate.holdWrite(data) == false else { return }
+
 		/* We only allow one write at a time. */
 		guard sending == false else { return }
 
+		startWriting(data)
+	}
+
+	private func startWriting(_ data: Data) {
 		sending = true
 
 		events.yield(.willSend(data))
@@ -392,6 +459,16 @@ actor ConnectionSocket {
 		}
 
 		events.yield(.didSend)
+
+		writeNextHeldData()
+	}
+
+	private func writeNextHeldData() {
+		guard sending == false, let data = trustGate.nextWrite() else {
+			return
+		}
+
+		startWriting(data)
 	}
 
 	// MARK: - Secure Connection Information
@@ -584,20 +661,23 @@ extension ConnectionSocket {
 // MARK: - Trust
 
 private extension ConnectionSocket {
-	/// Installs the block Network.framework calls with the peer's chain.
-	///
-	/// The block runs outside the actor, on a queue of its own, and everything
-	/// it touches is `Sendable`: the configuration, the client proxy, and the
-	/// `Mutex` it records the exported chain in. The `SecTrust` is created,
-	/// evaluated and released inside one call and reaches nothing else.
+	/** Installs the block Network.framework calls with the peer's chain.
+
+	 The block runs outside the actor, on a queue of its own, and everything it
+	 touches is `Sendable`: the configuration, the actor, and the `Mutex` it
+	 records the exported chain in. The `SecTrust` is created, evaluated and
+	 released inside one call and reaches nothing else.
+
+	 A recoverable failure completes the handshake and asks the actor to put the
+	 question to the user, rather than parking this thread until it is answered.
+	 The connection is gated from that moment: see `requestTrustDecision()`. */
 	nonisolated func installVerifyBlock(on options: sec_protocol_options_t) { // nonisolated: pure
 		let config = config
-		let client = client
 		let trustExport = trustExport
 
 		sec_protocol_options_set_verify_block(
 			options,
-			{ _, trust, complete in
+			{ [weak self] _, trust, complete in
 				/* sec_trust_copy_ref() follows the Create Rule; the result is +1. */
 				let trustRef = sec_trust_copy_ref(trust).takeRetainedValue()
 
@@ -642,36 +722,19 @@ private extension ConnectionSocket {
 					return complete(false)
 				}
 
-				complete(Self.askClientAboutTrust(client))
+				guard let self else {
+					return complete(false)
+				}
+
+				/* The handshake finishes now and the traffic waits instead: the
+				 verify block is synchronous, and parking its thread for as long
+				 as a panel is on screen is a blocked thread nothing owns. */
+				Task { await requestTrustDecision() }
+
+				complete(true)
 			},
 			DispatchQueue.global(qos: .userInitiated)
 		)
-	}
-
-	/// Asks the application whether to trust a chain the system would not, and
-	/// waits for the answer.
-	///
-	/// Network.framework's verify block is synchronous and its completion is
-	/// not `Sendable`, so the answer cannot be carried into a task and handed
-	/// back later: the block has to still be on the stack when it arrives. The
-	/// wait happens on the verify block's own global-queue thread, never on the
-	/// socket's actor or on the connection's own queue, and it only ever
-	/// happens while a certificate panel is in front of the user.
-	nonisolated static func askClientAboutTrust( // nonisolated: pure
-		_ client: any RemoteConnectionClientProtocol
-	) -> Bool {
-		let answer = Locked(false)
-		let arrived = DispatchSemaphore(value: 0)
-
-		client.ircConnectionRequestInsecureCertificateTrust { trusted in
-			answer.set(trusted)
-
-			arrived.signal()
-		}
-
-		arrived.wait()
-
-		return answer.value
 	}
 }
 

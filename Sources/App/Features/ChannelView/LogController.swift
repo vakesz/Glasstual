@@ -504,7 +504,7 @@ public final class LogController: NSObject {
 			}
 		}
 		appendHistoricMessageFragment(html, lineNumbers: lineNumbers, isReload: isReload)
-		for pluginObject in pluginObjects {
+		for var pluginObject in pluginObjects {
 			pluginObject.isProcessedInBulk = true
 			PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
 		}
@@ -564,7 +564,7 @@ public final class LogController: NSObject {
 				to: entries.map { LogLineSnapshot($0, in: context) },
 				for: viewController
 			)
-			let results = Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
+			let results = Self.renderJob(snapshots, context: context)
 			return (entries: entries, results: results)
 		} apply: { [weak self] (loaded: (entries: [LogLine], results: [LogLineRenderResult])) in
 			self?.applyReloadedHistory(
@@ -887,7 +887,7 @@ public extension LogController {
 				return nil
 			}
 			let snapshots = Self.applyingMessageRenderers(to: lines, for: viewController)
-			return Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
+			return Self.renderJob(snapshots, context: context)
 		} apply: { [weak self] (results: [LogLineRenderResult]) in
 			self?.applyFetchedRender(results, completionBlock: completionBlock)
 		}
@@ -901,7 +901,7 @@ public extension LogController {
 	) {
 		let channel = associatedChannel
 		for pluginMessage in results.compactMap(\.pluginMessage) {
-			let pluginObject = pluginMessage.makeObject(resolvingMembersIn: channel)
+			var pluginObject = pluginMessage.makeObject(resolvingMembersIn: channel)
 			pluginObject.isProcessedInBulk = true
 			PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
 		}
@@ -998,7 +998,7 @@ public extension LogController {
 				return nil
 			}
 			let snapshots = Self.applyingMessageRenderers(to: lines, for: viewController)
-			let results = Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
+			let results = Self.renderJob(snapshots, context: context)
 			guard results.isEmpty == false else {
 				return nil
 			}
@@ -1017,7 +1017,6 @@ public extension LogController {
 		print(logLine, completionBlock: nil)
 	}
 
-	@objc(print:completionBlock:)
 	func print(
 		_ inputLogLine: LogLine,
 		completionBlock postPrintBlock: LogControllerPrintOperationCompletion?
@@ -1027,7 +1026,7 @@ public extension LogController {
 		}
 		/* A snapshot: the caller still holds the line it handed over, and rendering
 		 continues off the main actor after this returns. */
-		let logLine = inputLogLine.duplicate()
+		let logLine = inputLogLine
 		lastLineStorage = logLine
 		noteOldestLineCandidate(logLine)
 		let context = makeRenderContext()
@@ -1040,7 +1039,7 @@ public extension LogController {
 				line: Self.applyingMessageRenderers(to: [line], for: viewController)[0],
 				context: context
 			)
-			guard let result = Self.render(request, using: ThemeLogLineRenderer()) else {
+			guard let result = Self.renderJob(request) else {
 				logControllerLogger
 					.error("Failed to render log line \(request.line.sourceDescription, privacy: .public)")
 				return nil
@@ -1086,11 +1085,10 @@ public extension LogController {
 		LogControllerHistoricLogFile.shared().writeNewEntry(with: logLine, forView: associatedItem.uniqueIdentifier)
 		/* The body was scanned against the member snapshot the line rendered
 		 with; the conversation weight belongs to whoever is in the channel now. */
-		for member in result.mentionedNicknames.compactMap({ channel?.findMember($0) }) {
-			if logLine.memberType == .localUser {
-				member.outgoingConversation()
-			} else {
-				member.conversation()
+		if let channel {
+			let direction: ChannelConversationDirection = logLine.memberType == .localUser ? .outgoing : .mention
+			for nickname in result.mentionedNicknames where channel.findMember(nickname) != nil {
+				channel.recordConversation(with: nickname, direction: direction)
 			}
 		}
 		postPrintBlock?(LogControllerPrintOperationContext(

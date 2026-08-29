@@ -70,7 +70,14 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 whenever they change. Channel members rank, compare and mark themselves on
 	 the printing queue and must not read the live table for them. */
 	nonisolated let userPrefixes = Mutex(IRCUserPrefixTable()) // nonisolated: let
-	@objc public dynamic var cachedHighlights: [HighlightLogEntry] = []
+
+	/// The prefix table as it stands now. A member is stamped with it when the
+	/// list creates or edits one, because a member does not know its client.
+	nonisolated var currentUserPrefixes: IRCUserPrefixTable { // nonisolated: pure
+		userPrefixes.withLock { $0 }
+	}
+
+	public var cachedHighlights: [HighlightLogEntry] = []
 	/// The endpoint this connection selected, while it lasts.
 	public var server: Server?
 	/** Keychain items belonging to endpoints the user deleted while the client
@@ -225,6 +232,10 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var trackedUsers: AddressBookUserTrackingContainer!
 	/// Users the client has seen, keyed by their casefolded nickname.
 	var usersByNickname: [String: User] = [:]
+	/** The state that belongs to a person rather than to one `User` value: the
+	 channels they are in, the away-message clock, the removal timer. Keyed by
+	 identity so an edit or a rename keeps it. */
+	var userStores: [User.ID: UserPersistentStore] = [:]
 	/// Timed commands the user scheduled, keyed by their identifier.
 	var timedCommandsByIdentifier: [String: TimedCommand] = [:]
 

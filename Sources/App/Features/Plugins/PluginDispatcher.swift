@@ -22,12 +22,23 @@ import GlasstualPluginKit
 /// to the event, because building a `PluginClient` walks the whole channel list.
 @objc(THOPluginDispatcher)
 public final nonisolated class PluginDispatcher: NSObject { // nonisolated: value
-	/// Holds a rendered message between the render pass and the JavaScript
-	/// callback that reports the line has appeared. Entries are evicted as they
-	/// are dequeued; a line that is never dequeued ages out with the cache.
+	/** Holds a rendered message between the render pass and the JavaScript
+	 callback that reports the line has appeared.
+
+	 Entries are removed as they are dequeued. A line that is never dequeued --
+	 the view was closed, the theme reloaded -- would otherwise accumulate, so
+	 the oldest is dropped once the buffer is full. That is the eviction the
+	 `NSCache` this replaces performed, made deterministic: a message is a value
+	 now, and a cache needs a class. */
 	@MainActor
-	private static let didPostNewMessageObjectCache =
-		NSCache<NSString, THOPluginDidPostNewMessageConcreteObject>()
+	private static var pendingPostedMessages: [String: THOPluginDidPostNewMessageConcreteObject] = [:]
+
+	/// Insertion order of `pendingPostedMessages`, oldest first.
+	@MainActor
+	private static var pendingPostedMessageOrder: [String] = []
+
+	/// Roughly a full screen of scrollback in each of a few busy views.
+	private static let pendingPostedMessageLimit = 1024
 
 	@MainActor
 	private static var plugins: [PluginItem] {
@@ -296,7 +307,7 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		}
 
 		let pluginClient = PluginHostAdapter.makeClient(client)
-		let messageObject = inputObject.didReceiveServerInputConcreteObject()
+		var messageObject = inputObject.didReceiveServerInputConcreteObject()
 		messageObject.networkAddress = pluginClient.serverAddress
 		messageObject.networkName = pluginClient.networkName
 
@@ -307,7 +318,15 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 
 	@MainActor
 	public static func enqueueDidPostNewMessage(_ messageObject: THOPluginDidPostNewMessageConcreteObject) {
-		didPostNewMessageObjectCache.setObject(messageObject, forKey: messageObject.lineNumber as NSString)
+		let key = messageObject.lineNumber
+
+		if pendingPostedMessages.updateValue(messageObject, forKey: key) == nil {
+			pendingPostedMessageOrder.append(key)
+		}
+
+		while pendingPostedMessageOrder.count > pendingPostedMessageLimit {
+			pendingPostedMessages.removeValue(forKey: pendingPostedMessageOrder.removeFirst())
+		}
 	}
 
 	@objc(dequeueDidPostNewMessageWithLineNumber:forViewController:)
@@ -316,12 +335,11 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		withLineNumber messageLineNumber: String,
 		forViewController _: LogController
 	) {
-		let key = messageLineNumber as NSString
-		guard let messageObject = didPostNewMessageObjectCache.object(forKey: key) else {
+		guard let messageObject = pendingPostedMessages.removeValue(forKey: messageLineNumber) else {
 			return
 		}
 
-		didPostNewMessageObjectCache.removeObject(forKey: key)
+		pendingPostedMessageOrder.removeAll { $0 == messageLineNumber }
 
 		let handlers: [any PluginPostedMessageHandling] = handlers(for: .newMessagePostedEvent)
 

@@ -156,9 +156,9 @@ extension IRCClient {
 		let channel = findChannel(nickname) ?? output?.selectedChannel(on: self)
 		if let user = findUser(nickname) {
 			if monitorAwayStatus {
-				user.markAsAway()
+				modify(user) { $0.markAsAway() }
 			}
-			guard user.claimAwayMessagePresentation() else { return }
+			guard claimAwayMessagePresentation(for: user) else { return }
 		}
 		guard shouldPrint else { return }
 		print(

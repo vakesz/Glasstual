@@ -38,32 +38,23 @@
 
 import CocoaExtensions
 import Foundation
-import os
 
-private nonisolated let removeUserTimerInterval: TimeInterval = 60 * 5 // nonisolated: let
-private nonisolated let presentAwayMessageFor301Threshold: CFAbsoluteTime = 300.0 // nonisolated: let
+/** Someone visible to this client.
 
-private let userLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCUser"
-)
+ A value. `id` is the person: it is minted once, when the client first sees the
+ nickname, and travels through every edit and every rename, so a copy taken to
+ be edited and handed back to the directory still names the same person. The
+ state that belongs to the person rather than to this snapshot of them -- which
+ channels they are in, the away-message clock, the removal timer -- lives in the
+ client's `UserPersistentStore` for that `id`.
 
-/** Someone visible to this client, identified by object identity: the user
- directory and every member list hold the same instance.
+ Editing means taking a copy, editing that, and handing it back to the directory
+ (`IRCClient.modify(_:block:)`), which relinks the channels the person is in. */
+public nonisolated struct User: Identifiable, Hashable, Sendable, CustomStringConvertible { // nonisolated: value
+	/// The person, stable across renames and edits.
+	public let id: UUID
 
- Changing a user means taking a `duplicate()`, editing that, and handing it back
- to the directory, which relinks the relations. Editing an instance the
- directory already holds is what the setters' `internal` access guards against. */
-@objc(IRCUser)
-public final nonisolated class User: NSObject {
-	/// `nil` once the client has been torn down. Users routinely outlive
-	/// their client through the shared persistent store and the removal
-	/// timer, so this must not be force-unwrapped.
-	public private(set) weak var client: IRCClient?
-
-	private var persistentStore = UserPersistentStore()
-
-	public internal(set) var nickname = ""
+	public internal(set) var nickname: String
 	public internal(set) var username: String?
 	public internal(set) var address: String?
 	public internal(set) var realName: String?
@@ -72,17 +63,16 @@ public final nonisolated class User: NSObject {
 	public internal(set) var isIRCop = false
 	public internal(set) var isBot = false
 
-	/** The relation map is keyed by channel and reads the channel's kind, so it
-	 and everything that reaches it live on the main actor. */
-	@MainActor
-	private var relationsInt: UserRelations {
-		if let relations = persistentStore.relations {
-			return relations
-		}
+	public init(nickname: String) {
+		id = UUID()
+		self.nickname = nickname
+	}
 
-		let relations = UserRelations()
-		persistentStore.relations = relations
-		return relations
+	/// A user with a caller-supplied identity. Only the directory and its tests
+	/// pick an `id`; everyone else takes a copy of an existing user.
+	init(id: UUID, nickname: String) {
+		self.id = id
+		self.nickname = nickname
 	}
 
 	public var hostmaskFragment: String? {
@@ -101,12 +91,14 @@ public final nonisolated class User: NSObject {
 		return "\(nickname)!\(username)@\(address)"
 	}
 
-	public var banMask: String {
+	/// The ban mask the preference asks for. The format is passed in because a
+	/// user does not know its client; `IRCClient.banMask(for:)` reads it.
+	public func banMask(format: TXHostmaskBanFormat) -> String {
 		guard let username, let address else {
 			return "\(nickname)!*@*"
 		}
 
-		switch client?.environment.preferences.banFormat ?? ClientPreferences().banFormat {
+		switch format {
 		case .whnin:
 			return "*!*@\(address)"
 		case .whainn:
@@ -128,207 +120,15 @@ public final nonisolated class User: NSObject {
 		nickname.uppercased()
 	}
 
-	/// Whether the RPL_AWAY (301) reply for this user should be shown, taking
-	/// the slot when it is.
-	///
-	/// A server repeats 301 for every message sent to an away user, so it is
-	/// rate limited. Asking is what opens the next window, which is why this
-	/// is a method: it used to read as a property and quietly moved the clock
-	/// on every access.
-	public func claimAwayMessagePresentation() -> Bool {
-		let now = CFAbsoluteTimeGetCurrent()
-
-		guard (persistentStore.presentAwayMessageFor301LastEvent + presentAwayMessageFor301Threshold) < now else {
-			return false
-		}
-
-		persistentStore.presentAwayMessageFor301LastEvent = now
-
-		return true
-	}
-
-	@MainActor public var relations: [IRCChannel: ChannelUser] {
-		relationsInt.relations
-	}
-
-	@MainActor
-	public init(nickname: String, on client: IRCClient) {
-		self.nickname = nickname
-		self.client = client
-
-		super.init()
-
-		persistentStore.relations = UserRelations()
-	}
-
-	/** Shares the persistent store — the removal timer, the relation map and the
-	 away-message clock belong to the person, not to this snapshot of them. */
-	private init(copying other: User) {
-		client = other.client
-		persistentStore = other.persistentStore
-		nickname = other.nickname
-		username = other.username
-		address = other.address
-		realName = other.realName
-		account = other.account
-		isAway = other.isAway
-		isIRCop = other.isIRCop
-		isBot = other.isBot
-
-		super.init()
-	}
-
-	/// An editable copy. The directory stores whichever instance it is handed,
-	/// so edit the duplicate and add it back rather than editing a stored user.
-	public func duplicate() -> User {
-		User(copying: self)
-	}
-
-	public func markAsAway() {
+	public mutating func markAsAway() {
 		isAway = true
 	}
 
-	public func markAsReturned() {
+	public mutating func markAsReturned() {
 		isAway = false
 	}
 
-	override public var description: String {
-		"<IRCUser \(nickname)>"
-	}
-
-	override public func isEqual(_ object: Any?) -> Bool {
-		guard let object else {
-			return false
-		}
-
-		if object as AnyObject === self {
-			return true
-		}
-
-		guard let other = object as? User else {
-			return false
-		}
-
-		return client === other.client
-			&& nickname == other.nickname
-			&& username == other.username
-			&& address == other.address
-			&& realName == other.realName
-			&& account == other.account
-			&& isAway == other.isAway
-			&& isIRCop == other.isIRCop
-			&& isBot == other.isBot
-	}
-
-	/** `isEqual` compares values, so `hash` has to as well: inheriting the identity
-	 hash makes equal-but-distinct users behave incorrectly in sets and dictionaries. */
-	override public var hash: Int {
-		var hasher = Hasher()
-		hasher.combine(client.map(ObjectIdentifier.init))
-		hasher.combine(nickname)
-		hasher.combine(username)
-		hasher.combine(address)
-		hasher.combine(realName)
-		hasher.combine(account)
-		hasher.combine(isAway)
-		hasher.combine(isIRCop)
-		hasher.combine(isBot)
-		return hasher.finalize()
-	}
-
-	// MARK: - Remove-user timer
-
-	private func updateRemoveUserTimerBlockToFire() {
-		guard let removeUserTimer = persistentStore.removeUserTimer else {
-			return
-		}
-
-		removeUserTimer.setEventHandler(handler: removeUserTimerBlockToFire())
-	}
-
-	@MainActor
-	private func toggleRemoveUserTimer() {
-		if relationsInt.numberOfRelations > 0 {
-			cancelRemoveUserTimer()
-		} else {
-			startRemoveUserTimer()
-		}
-	}
-
-	private func startRemoveUserTimer() {
-		if persistentStore.removeUserTimer != nil {
-			return
-		}
-
-		let removeUserTimer = DispatchSource.makeTimerSource(queue: .main)
-		removeUserTimer.schedule(deadline: .now() + removeUserTimerInterval)
-		removeUserTimer.setEventHandler(handler: removeUserTimerBlockToFire())
-		persistentStore.removeUserTimer = removeUserTimer
-		removeUserTimer.activate()
-	}
-
-	public func cancelRemoveUserTimer() {
-		guard let removeUserTimer = persistentStore.removeUserTimer else {
-			return
-		}
-
-		removeUserTimer.cancel()
-		persistentStore.removeUserTimer = nil
-	}
-
-	private func removeUserTimerBlockToFire() -> () -> Void {
-		weak let client = client
-		let nickname = nickname
-
-		/* The timer fires off the main actor and a user is not `Sendable`, so the
-		 handler carries the nickname and looks the user up again on the way in. */
-		return {
-			Task { @MainActor [weak client] in
-				guard let client, let user = client.findUser(nickname) else {
-					return
-				}
-
-				client.remove(user)
-			}
-		}
-	}
-
-	// MARK: - Relations
-
-	@MainActor
-	public func associate(_ user: ChannelUser, with channel: IRCChannel) {
-		relationsInt.associate(user, with: channel)
-		toggleRemoveUserTimer()
-	}
-
-	@MainActor
-	public func disassociateUser(with channel: IRCChannel) {
-		relationsInt.disassociateUser(with: channel)
-		toggleRemoveUserTimer()
-	}
-
-	@MainActor
-	public func userAssociated(with channel: IRCChannel) -> ChannelUser? {
-		relationsInt.userAssociated(with: channel)
-	}
-
-	@MainActor
-	public func relinkRelations() {
-		for relatedUser in relationsInt.relatedUsers {
-			relatedUser.changeUser(to: self)
-		}
-	}
-
-	@MainActor
-	public func becamePrimaryUser() {
-		updateRemoveUserTimerBlockToFire()
-		relinkRelations()
-	}
-
-	@MainActor
-	public func enumerateRelations(
-		_ block: (IRCChannel, ChannelUser, UnsafeMutablePointer<ObjCBool>) -> Void
-	) {
-		relationsInt.enumerateRelations(block)
+	public var description: String {
+		"<User \(nickname)>"
 	}
 }
