@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -57,7 +58,7 @@ struct PreferenceCatalogTests {
 
 			let domain = key.storage == .container ? container : standard
 
-			guard let registered = domain[key.name] else {
+			guard let registered = domain[key.name].flatMap(PropertyListValue.init(propertyList:)) else {
 				Issue.record("\(key.name) has a declared default but is not in the registration domain")
 				continue
 			}
@@ -89,7 +90,7 @@ struct PreferenceCatalogTests {
 		case excludedFromContainer = "KeysExcludedFromContainer"
 		case excludedFromExport = "KeysExcludedFromExport"
 
-		var generated: [String: Any] {
+		var generated: [String: PropertyListValue] {
 			switch self {
 			case .keyCatalog: Preferences.GeneratedResources.keyCatalog
 			case .excludedFromContainer: Preferences.GeneratedResources.keysExcludedFromContainer
@@ -102,8 +103,7 @@ struct PreferenceCatalogTests {
 	func cataloguePlistsMatchDeclarations(catalogue: Catalogue) throws {
 		let name = catalogue.rawValue
 		let generated = catalogue.generated
-		let stored = try #require(Self.plist(named: name)) as? [String: NSNumber]
-		let storedValues = try #require(stored)
+		let storedValues = try #require(Self.plist(named: name))
 
 		let generatedNames = Set(generated.keys)
 		let storedNames = Set(storedValues.keys)
@@ -118,7 +118,7 @@ struct PreferenceCatalogTests {
 		)
 
 		for (key, value) in storedValues {
-			guard let expected = generated[key] as? NSNumber else {
+			guard let expected = generated[key] else {
 				continue
 			}
 
@@ -213,7 +213,7 @@ struct PreferenceCatalogTests {
 
 	// MARK: - Helpers
 
-	private static func plist(named name: String) -> [String: Any]? {
+	private static func plist(named name: String) -> [String: PropertyListValue]? {
 		guard let url = Bundle.main.url(
 			forResource: name,
 			withExtension: "plist",
@@ -225,16 +225,16 @@ struct PreferenceCatalogTests {
 			return nil
 		}
 
-		return plist as? [String: Any]
+		return [String: PropertyListValue](propertyList: plist)
 	}
 
 	/** Archived colours are not byte-identical between two archives of the same
 	 colour, and a number that was written as a real compares equal to the same
 	 number written as an integer, so equality here is by value rather than by
 	 representation. */
-	private static func valuesMatch(_ lhs: Any, _ rhs: Any) -> Bool {
-		if let lhs = PreferenceColor.preferenceValue(from: lhs),
-		   let rhs = PreferenceColor.preferenceValue(from: rhs)
+	private static func valuesMatch(_ lhs: PropertyListValue, _ rhs: PropertyListValue) -> Bool {
+		if let lhs = PreferenceColor.preferenceValue(from: lhs.propertyListObject),
+		   let rhs = PreferenceColor.preferenceValue(from: rhs.propertyListObject)
 		{
 			let components = [
 				(lhs.red, rhs.red), (lhs.green, rhs.green),
@@ -244,6 +244,6 @@ struct PreferenceCatalogTests {
 			return components.allSatisfy { abs($0.0 - $0.1) < 0.001 }
 		}
 
-		return (lhs as AnyObject).isEqual(rhs as AnyObject)
+		return (lhs.propertyListObject as AnyObject).isEqual(rhs.propertyListObject)
 	}
 }

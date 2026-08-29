@@ -96,7 +96,7 @@ struct IRCConnectionConfigEnvelopeTests {
 	func unsupportedProxyTypeIsRefused() throws {
 		let data = try PropertyListEncoder().encode(sampleConfig())
 		let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-		var encoded = try #require(plist as? [String: Any])
+		var encoded = try #require([String: PropertyListValue](propertyList: plist))
 		encoded["proxyType"] = 4
 
 		let config = try #require(PropertyListModel.decode(IRCConnectionConfig.self, from: encoded))

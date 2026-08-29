@@ -45,15 +45,15 @@ struct IRCServerCodableTests {
 			"serverPort",
 			"prefersSecuredConnection",
 		])
-		#expect(encoded["serverAddress"] as? String == "irc.example.test")
-		#expect(encoded["serverPort"] as? Int == 6697)
-		#expect(encoded["prefersSecuredConnection"] as? Bool == true)
+		#expect(encoded["serverAddress"]?.string == "irc.example.test")
+		#expect(encoded["serverPort"]?.integer == 6697)
+		#expect(encoded["prefersSecuredConnection"]?.boolean == true)
 	}
 
 	@Test("A dictionary written by the previous release re-encodes unchanged")
 	func roundTripsAStoredDictionary() throws {
 		// Captured from the class-based `Server.dictionaryValue`.
-		let fixture: [String: Any] = [
+		let fixture: [String: PropertyListValue] = [
 			"prefersSecuredConnection": true,
 			"serverAddress": "irc.example.test",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-000000000001",
@@ -62,7 +62,7 @@ struct IRCServerCodableTests {
 
 		let server = try #require(PropertyListModel.decode(Server.self, from: fixture))
 
-		#expect(NSDictionary(dictionary: PropertyListModel.encode(server)) == NSDictionary(dictionary: fixture))
+		#expect(PropertyListModel.encode(server) == fixture)
 	}
 
 	@Test("A missing port falls back to the default rather than zero")

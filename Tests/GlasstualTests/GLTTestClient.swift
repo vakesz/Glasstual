@@ -74,7 +74,10 @@ final class GLTTestClient: IRCClient {
 		fixture: GLTClientEnvironmentFixture = GLTClientEnvironmentFixture()
 	) {
 		self.init(
-			config: PropertyListModel.decode(ClientConfig.self, from: dictionary) ?? ClientConfig(),
+			config: PropertyListModel.decode(
+				ClientConfig.self,
+				from: [String: PropertyListValue](propertyList: dictionary) ?? [:]
+			) ?? ClientConfig(),
 			environment: fixture.environment
 		)
 

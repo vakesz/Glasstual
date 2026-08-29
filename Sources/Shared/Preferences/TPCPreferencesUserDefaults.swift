@@ -150,8 +150,12 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 		register(defaults: [defaultName: value])
 	}
 
-	public var registeredDefaults: [String: Any] {
-		volatileDomain(forName: UserDefaults.registrationDomain)
+	/// The registration domain, narrowed out of the `Any` the volatile domain
+	/// hands back.
+	public var registeredDefaults: [String: PropertyListValue] {
+		[String: PropertyListValue](
+			propertyList: volatileDomain(forName: UserDefaults.registrationDomain)
+		) ?? [:]
 	}
 }
 
@@ -170,6 +174,8 @@ public final nonisolated class TextualUserDefaultsController: NSUserDefaultsCont
 		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}
 
+	/* `[String: Any]` is NSUserDefaultsController's own signature; the override
+	 exists to ignore both arguments, so nothing reads them. */
 	override public init(defaults _: UserDefaults?, initialValues _: [String: Any]?) {
 		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}

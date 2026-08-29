@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 /** One entry of a highlight list.
@@ -55,7 +56,7 @@ public nonisolated struct HighlightKeyword: Hashable, Sendable { // nonisolated:
 
 nonisolated extension HighlightKeyword: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> HighlightKeyword? {
-		guard let entry = object as? [String: Any], let string = entry[field] as? String else {
+		guard let string = PropertyListValue(propertyList: object)?.dictionary?[field]?.string else {
 			return nil
 		}
 

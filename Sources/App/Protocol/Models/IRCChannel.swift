@@ -173,7 +173,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	public var configurationDictionary: [String: Any] {
+	public var configurationDictionary: [String: PropertyListValue] {
 		PropertyListModel.encode(config)
 	}
 
