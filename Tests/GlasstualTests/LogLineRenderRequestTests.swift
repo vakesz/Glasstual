@@ -228,3 +228,40 @@ struct LogLineRenderContextReactionTests {
 		#expect(context.reactions(for: line) == nil)
 	}
 }
+
+/// Deliverable of the render-pipeline step: the context carries a value
+/// snapshot of the members, so nothing reaches back into the live member list
+/// while a line renders off the main actor.
+@Suite("Log line render member snapshot")
+@MainActor
+struct LogLineRenderMemberSnapshotTests {
+	@Test("The sender's mode symbol comes from the snapshot rather than a live member")
+	func modeSymbolComesFromTheSnapshot() {
+		let context = LogLineRenderContext(
+			isChannel: true,
+			nicknameFormat: "<%@%n>",
+			members: [RenderedMember(nickname: "Alice", mark: "@")]
+		)
+
+		#expect(makeSnapshot(in: context).formattedNickname == "<@alice>")
+	}
+
+	@Test("Members are matched the way IRC compares nicknames")
+	func memberLookupIsCaseInsensitive() {
+		let context = LogLineRenderContext(members: [RenderedMember(nickname: "Alice", mark: "+")])
+
+		#expect(context.member(named: "ALICE")?.mark == "+")
+		#expect(context.member(named: "bob") == nil)
+	}
+
+	@Test("Outside a channel there is no mode symbol to draw")
+	func queryViewsHaveNoModeSymbol() {
+		let context = LogLineRenderContext(
+			isChannel: false,
+			nicknameFormat: "<%@%n>",
+			members: [RenderedMember(nickname: "alice", mark: "@")]
+		)
+
+		#expect(makeSnapshot(in: context).formattedNickname == "<alice>")
+	}
+}
