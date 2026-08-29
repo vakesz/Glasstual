@@ -915,6 +915,13 @@ targets:
         buildPhase: resources
         includes:
           - "*.json"
+      # A throwaway self-signed identity for the loopback TLS listener the
+      # trust-gate test drives the connection service against. See the README
+      # beside it, which is not a shipped resource.
+      - path: Tests/Corpora/TLS
+        buildPhase: resources
+        includes:
+          - "*.p12"
     dependencies:
       - target: Glasstual
       - target: CocoaExtensions
