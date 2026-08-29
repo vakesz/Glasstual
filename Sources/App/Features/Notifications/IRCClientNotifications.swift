@@ -273,7 +273,7 @@ public extension IRCClient {
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?,
-		userInfo: [String: Any]?
+		userInfo: NotificationPayload?
 	) -> Bool {
 		deliverNotification(
 			event,
@@ -292,7 +292,7 @@ public extension IRCClient {
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?,
-		userInfo suppliedUserInfo: [String: Any]?
+		userInfo suppliedUserInfo: NotificationPayload?
 	) -> Bool {
 		let outputIsSuppressed = if let target, let text {
 			outputRuleMatched(in: text, channel: target)
