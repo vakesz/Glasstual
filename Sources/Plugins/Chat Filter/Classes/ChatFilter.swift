@@ -70,8 +70,14 @@ nonisolated struct ChatFilterEvent: OptionSet { // nonisolated: value
 	static let defaultMessages: Self = [.plainTextMessage, .actionMessage]
 }
 
+/** One filter rule.
+
+ A main-actor model: the plugin holds its filters in an `NSArrayController` and
+ the edit sheet binds to them by KVC key path, both of which are main-actor
+ AppKit, and the engine reads them from main-actor plugin callbacks. */
 @objc(TPI_ChatFilter)
-nonisolated class ChatFilter: NSObject, NSCopying, NSMutableCopying {
+@MainActor
+class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 	fileprivate var ignoreContentStorage = false
 	fileprivate var ignoreOperatorsStorage = true
 	fileprivate var logMatchStorage = false
@@ -355,7 +361,7 @@ nonisolated class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 }
 
 @objc(TPI_ChatFilterMutable)
-final nonisolated class MutableChatFilter: ChatFilter {
+final class MutableChatFilter: ChatFilter {
 	@objc override dynamic var filterIgnoreContent: Bool {
 		get { ignoreContentStorage }
 		set { ignoreContentStorage = newValue }
