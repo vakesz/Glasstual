@@ -497,7 +497,6 @@
 		83C877F47BA8A27D8757B7D5 /* ColorHexadecimalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1756699825E5A84359393403 /* ColorHexadecimalTests.swift */; };
 		83E4622E0090C9769370E22D /* CoreFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88945C68521BC34E37E012E3 /* CoreFunctions.swift */; };
 		8468F7DA7397C1D1338CE246 /* Caffeine.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 200F2426B56BF1D746237D48 /* Caffeine.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		848B49021A8502EBBB54ED5E /* XRGlobalModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6828E9D5A07C0054223D336D /* XRGlobalModels.swift */; };
 		85721A34BEE6488D3CFD8E8D /* IRCSendingMessageEmptyArgumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F93A11C0A7363603412475C /* IRCSendingMessageEmptyArgumentTests.swift */; };
 		85776C1B823CB1A238D4F91E /* ApplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84C1D3583E8E7B99F9EB905 /* ApplicationController.swift */; };
 		858D5A8D2676ED0CB6D3F7E6 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFDBA3CE291B8484D74DFA07 /* UserNotifications.framework */; };
@@ -1682,7 +1681,6 @@
 		67DB7A2AC6C3F36D1C122F1F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		68072D04C201D87F7E5C314D /* ThemePresentationSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePresentationSchema.swift; sourceTree = "<group>"; };
 		68174AC6ABA886C59568262E /* SpeechSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechSynthesizer.swift; sourceTree = "<group>"; };
-		6828E9D5A07C0054223D336D /* XRGlobalModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XRGlobalModels.swift; sourceTree = "<group>"; };
 		68A9E706845844ED0BB13D6D /* ICMYouTube.mustache */ = {isa = PBXFileReference; path = ICMYouTube.mustache; sourceTree = "<group>"; };
 		68BCDA2A1428EA9A94476B23 /* TDCServerChangeNicknameSheet.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TDCServerChangeNicknameSheet.xcstrings; sourceTree = "<group>"; };
 		68E1C532678519AA5906FFF9 /* HSLHistoricLogProcessDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSLHistoricLogProcessDelegate.swift; sourceTree = "<group>"; };
@@ -3202,7 +3200,6 @@
 				B7BA89368072237E649007DB /* TrustPanelPresenter.swift */,
 				AB3878DFBB7473D4F5313DDB /* URLHelper.swift */,
 				F1F100E638A248E85F01521B /* UserDefaultsCompatibility.swift */,
-				6828E9D5A07C0054223D336D /* XRGlobalModels.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -5516,7 +5513,6 @@
 				B293CBFC39B39ACBD5588DD6 /* TrustPanelPresenter.swift in Sources */,
 				FCE58EC984ABE504D22F4EB4 /* URLHelper.swift in Sources */,
 				3546269C5BC80616CA920A2F /* UserDefaultsCompatibility.swift in Sources */,
-				848B49021A8502EBBB54ED5E /* XRGlobalModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

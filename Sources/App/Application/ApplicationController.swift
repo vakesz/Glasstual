@@ -94,7 +94,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 				return
 			}
 
-			performAsynchronouslyOnMainQueue { [weak self] in
+			Task { @MainActor [weak self] in
 				self?.terminatingClientsDidFinish()
 			}
 		}
@@ -404,7 +404,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			return reply
 		}
 
-		performAsynchronouslyOnMainQueue { [weak self] in
+		Task { @MainActor [weak self] in
 			self?.performApplicationTerminationStepOne()
 		}
 
