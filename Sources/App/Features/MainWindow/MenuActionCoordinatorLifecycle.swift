@@ -74,6 +74,10 @@ public extension MenuActionCoordinator {
 		notifications.observe(.mainWindowSelectionChanged) { [weak self] notification in
 			self?.mainWindowSelectionChanged(notification)
 		}
+
+		// The first selection is already in place by the time the menu is built.
+		attachChannelMenu(to: menuController.mainMenuChannelMenuItem)
+		attachQueryMenu(to: menuController.mainMenuQueryMenuItem)
 	}
 
 	func prepareForApplicationTermination() {
@@ -157,6 +161,9 @@ public extension MenuActionCoordinator {
 		if menuIsOpen == false {
 			resetSelectedItems()
 		}
+
+		attachChannelMenu(to: menuController?.mainMenuChannelMenuItem)
+		attachQueryMenu(to: menuController?.mainMenuQueryMenuItem)
 
 		menuController?.mainMenuChannelMenuItem?.submenu?.update()
 		menuController?.mainMenuQueryMenuItem?.submenu?.update()
