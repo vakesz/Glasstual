@@ -517,32 +517,37 @@ public final class LogController: NSObject {
 		guard let associatedItem else {
 			return
 		}
+		let viewIdentifier = associatedItem.uniqueIdentifier
 		let context = makeRenderContext()
 		let limitDate = Date(timeIntervalSince1970: viewLoadedTimestamp)
+		let request = HistoricLogFetchRequest(
+			viewIdentifier: viewIdentifier,
+			kind: .newest(ascending: false, fetchLimit: 100, limitToDate: limitDate)
+		)
 		printingQueue.enqueueAsynchronousMessageBlock({ [weak self] operation in
 			guard let self else {
 				operation.finish()
 				return
 			}
 			let renderer = ThemeLogLineRenderer(viewController: self)
-			LogControllerHistoricLogFile.shared().fetchEntries(
-				forView: associatedItem.uniqueIdentifier,
-				ascending: false,
-				fetchLimit: 100,
-				limitToDate: limitDate
-			) { [weak self] entries in
+			/* Everything the render needs is a value, so the fetch can be awaited
+			 from inside the operation. The slot stays open until the history has
+			 been applied, which is what keeps later prints behind it. */
+			Task {
+				let xpcEntries = await HistoricLogClient.shared.fetchEntries(request)
 				guard operation.isCancelled == false else {
 					operation.finish()
 					return
 				}
-				let entries = Array(entries.reversed())
+				let entries = Array(HistoricLogClient.logLines(from: xpcEntries).reversed())
 				let results = Self.render(entries, context: context, using: renderer)
 				let transfer = LogControllerMainActorTransfer(value: (entries: entries, results: results))
 				Task { @MainActor in
 					defer { operation.finish() }
-					self?.applyReloadedHistory(
+					self.applyReloadedHistory(
 						transfer.value.entries,
 						results: transfer.value.results,
+						forView: viewIdentifier,
 						firstLoad: firstLoad
 					)
 				}
@@ -553,8 +558,10 @@ public final class LogController: NSObject {
 	private func applyReloadedHistory(
 		_ entries: [LogLine],
 		results: [LogLineRenderResult],
+		forView viewIdentifier: String,
 		firstLoad: Bool
 	) {
+		LogControllerHistoricLogFile.shared().indexLogLines(entries, forView: viewIdentifier)
 		if lastLineStorage == nil {
 			lastLineStorage = entries.last
 		}
@@ -807,50 +814,63 @@ public extension LogController {
 		guard let associatedItem else {
 			return
 		}
+		let viewIdentifier = associatedItem.uniqueIdentifier
+		let kind: HistoricLogFetchRequest.Kind = after
+			? .after(uniqueIdentifier: lineNumber, fetchLimit: maximumNumberOfLines, limitToDate: nil)
+			: .before(uniqueIdentifier: lineNumber, fetchLimit: maximumNumberOfLines, limitToDate: nil)
+		fetchAndRender(
+			HistoricLogFetchRequest(viewIdentifier: viewIdentifier, kind: kind),
+			completionBlock: completionBlock
+		) { controller, entries in
+			guard after == false else {
+				return
+			}
+			controller.noteOldestLineCandidate(entries.first)
+			if entries.isEmpty {
+				controller.noteLocalScrollbackExhausted()
+			}
+		}
+	}
+
+	/** Fetches, indexes and renders one range of scrollback.
+
+	 The fetch is awaited on the main actor — the client queues it behind
+	 anything else already asked for this view — and only the render is handed
+	 to the printing queue. */
+	private func fetchAndRender(
+		_ request: HistoricLogFetchRequest,
+		completionBlock: @escaping ([[AnyHashable: Any]]) -> Void,
+		noteFetched: (@MainActor (LogController, [LogLine]) -> Void)? = nil
+	) {
+		let viewIdentifier = request.viewIdentifier
+		Task { @MainActor [weak self] in
+			let xpcEntries = await HistoricLogClient.shared.fetchEntries(request)
+			guard let self else {
+				return
+			}
+			let entries = LogControllerHistoricLogFile.shared()
+				.decodeAndIndex(xpcEntries, forView: viewIdentifier)
+			noteFetched?(self, entries)
+			renderFetchedLogLines(entries, completionBlock: completionBlock)
+		}
+	}
+
+	private func renderFetchedLogLines(
+		_ logLines: [LogLine],
+		completionBlock: @escaping ([[AnyHashable: Any]]) -> Void
+	) {
 		let context = makeRenderContext()
 		printingQueue.enqueueMessageBlock({ [weak self] operation in
 			guard let self else {
 				return
 			}
-			let renderer = ThemeLogLineRenderer(viewController: self)
-			let historicLog = LogControllerHistoricLogFile.shared()
-			let completion: ([LogLine]) -> Void = { [weak self] entries in
-				self?.finishRendering(
-					entries,
-					context: context,
-					renderer: renderer,
-					operation: operation,
-					completionBlock: completionBlock
-				)
-			}
-			if after {
-				historicLog.fetchEntries(
-					forView: associatedItem.uniqueIdentifier,
-					afterUniqueIdentifier: lineNumber,
-					fetchLimit: maximumNumberOfLines,
-					limitToDate: nil,
-					withCompletionBlock: completion
-				)
-			} else {
-				historicLog.fetchEntries(
-					forView: associatedItem.uniqueIdentifier,
-					beforeUniqueIdentifier: lineNumber,
-					fetchLimit: maximumNumberOfLines,
-					limitToDate: nil
-				) { [weak self] entries in
-					guard let self, operation.isCancelled == false else {
-						return
-					}
-					let transfer = LogControllerMainActorTransfer(value: entries)
-					Task { @MainActor [weak self] in
-						self?.noteOldestLineCandidate(transfer.value.first)
-						if transfer.value.isEmpty {
-							self?.noteLocalScrollbackExhausted()
-						}
-					}
-					completion(entries)
-				}
-			}
+			finishRendering(
+				logLines,
+				context: context,
+				renderer: ThemeLogLineRenderer(viewController: self),
+				operation: operation,
+				completionBlock: completionBlock
+			)
 		}, for: self, isStandalone: true)
 	}
 
@@ -864,27 +884,17 @@ public extension LogController {
 		guard let associatedItem else {
 			return
 		}
-		let context = makeRenderContext()
-		printingQueue.enqueueMessageBlock({ [weak self] operation in
-			guard let self else {
-				return
-			}
-			let renderer = ThemeLogLineRenderer(viewController: self)
-			LogControllerHistoricLogFile.shared().fetchEntries(
-				forView: associatedItem.uniqueIdentifier,
-				afterUniqueIdentifier: lineNumberAfter,
-				beforeUniqueIdentifier: lineNumberBefore,
-				fetchLimit: maximumNumberOfLines
-			) { [weak self] entries in
-				self?.finishRendering(
-					entries,
-					context: context,
-					renderer: renderer,
-					operation: operation,
-					completionBlock: completionBlock
+		fetchAndRender(
+			HistoricLogFetchRequest(
+				viewIdentifier: associatedItem.uniqueIdentifier,
+				kind: .between(
+					afterUniqueIdentifier: lineNumberAfter,
+					beforeUniqueIdentifier: lineNumberBefore,
+					fetchLimit: maximumNumberOfLines
 				)
-			}
-		}, for: self, isStandalone: true)
+			),
+			completionBlock: completionBlock
+		)
 	}
 
 	@objc(renderLogLineAtLineNumber:numberOfLinesBefore:numberOfLinesAfter:completionBlock:)
@@ -897,28 +907,18 @@ public extension LogController {
 		guard let associatedItem else {
 			return
 		}
-		let context = makeRenderContext()
-		printingQueue.enqueueMessageBlock({ [weak self] operation in
-			guard let self else {
-				return
-			}
-			let renderer = ThemeLogLineRenderer(viewController: self)
-			LogControllerHistoricLogFile.shared().fetchEntries(
-				forView: associatedItem.uniqueIdentifier,
-				withUniqueIdentifier: lineNumber,
-				beforeFetchLimit: numberOfLinesBefore,
-				afterFetchLimit: numberOfLinesAfter,
-				limitToDate: nil
-			) { [weak self] entries in
-				self?.finishRendering(
-					entries,
-					context: context,
-					renderer: renderer,
-					operation: operation,
-					completionBlock: completionBlock
+		fetchAndRender(
+			HistoricLogFetchRequest(
+				viewIdentifier: associatedItem.uniqueIdentifier,
+				kind: .around(
+					uniqueIdentifier: lineNumber,
+					before: numberOfLinesBefore,
+					after: numberOfLinesAfter,
+					limitToDate: nil
 				)
-			}
-		}, for: self, isStandalone: true)
+			),
+			completionBlock: completionBlock
+		)
 	}
 
 	/// Renders `logLines` off the main actor and delivers them back on it.
@@ -982,9 +982,7 @@ public extension LogController {
 		guard !terminating, !logLines.isEmpty, let associatedItem else {
 			return
 		}
-		for logLine in logLines {
-			LogControllerHistoricLogFile.shared().indexLogLine(logLine, forView: associatedItem.uniqueIdentifier)
-		}
+		LogControllerHistoricLogFile.shared().indexLogLines(logLines, forView: associatedItem.uniqueIdentifier)
 		noteOldestLineCandidate(logLines.first)
 		let context = makeRenderContext()
 		enqueuePrintingWork { [weak self] _ in

@@ -42,14 +42,14 @@ nonisolated protocol HistoricLogServerProtocol: AnyObject {
 	@objc(openDatabaseInDirectory:withCompletionBlock:)
 	func openDatabase(
 		inDirectory databaseDirectory: String,
-		withCompletionBlock completionBlock: ((Bool) -> Void)?
+		withCompletionBlock completionBlock: (@Sendable (Bool) -> Void)?
 	)
 
 	@objc(writeLogLine:)
 	func writeLogLine(_ logLine: LogLineXPC)
 
 	@objc(saveDataWithCompletionBlock:)
-	func saveData(completionBlock: (() -> Void)?)
+	func saveData(completionBlock: (@Sendable () -> Void)?)
 
 	@objc(forgetView:)
 	func forgetView(_ viewIdentifier: String)
@@ -63,7 +63,7 @@ nonisolated protocol HistoricLogServerProtocol: AnyObject {
 		ascending: Bool,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	)
 
 	@objc(fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:)
@@ -73,7 +73,7 @@ nonisolated protocol HistoricLogServerProtocol: AnyObject {
 		beforeFetchLimit fetchLimitBefore: UInt,
 		afterFetchLimit fetchLimitAfter: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	)
 
 	@objc(fetchEntriesForView:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
@@ -82,7 +82,7 @@ nonisolated protocol HistoricLogServerProtocol: AnyObject {
 		beforeUniqueIdentifier uniqueIdentifier: String,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	)
 
 	@objc(fetchEntriesForView:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
@@ -91,7 +91,7 @@ nonisolated protocol HistoricLogServerProtocol: AnyObject {
 		afterUniqueIdentifier uniqueIdentifier: String,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	)
 
 	@objc(fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:)
@@ -100,7 +100,7 @@ nonisolated protocol HistoricLogServerProtocol: AnyObject {
 		afterUniqueIdentifier uniqueIdentifierAfter: String,
 		beforeUniqueIdentifier uniqueIdentifierBefore: String,
 		fetchLimit: UInt,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	)
 
 	@objc(setMaximumLineCount:)
