@@ -39,9 +39,8 @@ import Foundation
 
 public typealias IRCAddressBookMatchCache = AddressBookMatchCache
 
-@objc(IRCAddressBookMatchCache)
 public final class AddressBookMatchCache: NSObject {
-	@objc public private(set) weak var client: IRCClient?
+	public private(set) weak var client: IRCClient?
 
 	/** Hostmask to the rule that matched it, or to `nil` when nothing did.
 	 The entry is a value type now, so this is a plain dictionary trimmed at a
@@ -50,19 +49,17 @@ public final class AddressBookMatchCache: NSObject {
 	private var matchOrder: [String] = []
 	private static let matchLimit = 100
 
-	@objc(initWithClient:)
 	public init(client: IRCClient) {
 		self.client = client
 
 		super.init()
 	}
 
-	@objc public func clearCachedMatches() {
+	public func clearCachedMatches() {
 		matches.removeAll()
 		matchOrder.removeAll()
 	}
 
-	@objc(clearCachedMatchesForHostmask:)
 	public func clearCachedMatches(forHostmask hostmask: String) {
 		matches.removeValue(forKey: hostmask)
 		matchOrder.removeAll { $0 == hostmask }

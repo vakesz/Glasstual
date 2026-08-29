@@ -140,7 +140,6 @@ enum DCCFileTransferRequestParser {
 
 @MainActor
 public extension IRCClient {
-	@objc(notifyFileTransfer:nickname:filename:filesize:requestIdentifier:)
 	func notifyFileTransfer(
 		_ type: TXNotificationType,
 		nickname: String,
@@ -183,7 +182,6 @@ public extension IRCClient {
 		processFileTransferRequest(request, sender: sender)
 	}
 
-	@objc(receivedDCCSend:filename:address:port:filesize:token:)
 	func receivedDCCSend(
 		_ nickname: String,
 		filename: String,
@@ -213,7 +211,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(sendFileResume:port:filename:filesize:token:)
 	func sendFileResume(
 		_ nickname: String, port: UInt16, filename: String, filesize: UInt64, token: String?
 	) {
@@ -226,7 +223,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(sendFileResumeAccept:port:filename:filesize:token:)
 	func sendFileResumeAccept(
 		_ nickname: String, port: UInt16, filename: String, filesize: UInt64, token: String?
 	) {
@@ -239,7 +235,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(sendFile:port:filename:filesize:token:)
 	func sendFile(
 		_ nickname: String, port: UInt16, filename: String, filesize: UInt64, token: String?
 	) {
@@ -256,17 +251,15 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(DCCSendEscapeFilename:)
 	func DCCSendEscapeFilename(_ filename: String) -> String {
 		ClientWireUtilities.escapedDCCFilename(filename)
 	}
 
-	@objc var DCCTransferAddress: String? {
+	var DCCTransferAddress: String? {
 		guard let address = fileTransferController.IPAddress else { return nil }
 		return DCCFormattedAddress(address)
 	}
 
-	@objc(DCCFormattedAddress:)
 	func DCCFormattedAddress(_ address: String) -> String? {
 		let formattedAddress = ClientWireUtilities.wireDCCAddress(address)
 		if formattedAddress == nil {
@@ -275,7 +268,6 @@ public extension IRCClient {
 		return formattedAddress
 	}
 
-	@objc(DCCAddressFromString:)
 	func DCCAddressFromString(_ string: String) -> String {
 		ClientWireUtilities.displayDCCAddress(string)
 	}

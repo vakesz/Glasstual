@@ -184,7 +184,7 @@ struct ApplicationSupportMigrationTests {
 	private func makeChannel(named name: String, type: ChannelType, client: IRCClient) -> Channel {
 		let channel = Channel(config: ChannelConfig(channelName: name, type: type))
 
-		channel.setValue(client, forKey: "associatedClient")
+		channel.associatedClient = client
 
 		return channel
 	}

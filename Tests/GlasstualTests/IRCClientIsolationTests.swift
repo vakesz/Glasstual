@@ -12,7 +12,7 @@ import Testing
 struct IRCConnectionInboundDeliveryTests {
 	private func connectedClient() -> (GLTTestClient, Connection) {
 		let client = GLTTestClient()
-		client.setValue(true, forKey: "isConnected")
+		client.isConnected = true
 		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
 		client.socket = connection
 		return (client, connection)

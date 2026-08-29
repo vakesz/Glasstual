@@ -42,7 +42,6 @@ import Foundation
 /// Pure transformations used by `IRCClient` at the wire and presentation
 /// seams. Keeping these transformations independent of connection state makes
 /// protocol output deterministic and directly testable.
-@objc(IRCClientWireUtilities)
 public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: value
 	private static let credentialMask = "••••••"
 
@@ -54,7 +53,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 		"REGAIN", "REGISTER", "RELEASE", "RESETPASS", "SENDPASS", "SET", "SETPASS", "SIDENTIFY",
 	]
 
-	@objc(compileModeChangesWithSymbol:isSet:parameters:maximumModes:)
 	public static func compileModeChanges(
 		symbol: String,
 		isSet: Bool,
@@ -96,7 +94,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 		return results
 	}
 
-	@objc(redactedServiceMessage:sentTo:)
 	public static func redactedServiceMessage(_ message: String, sentTo target: String?) -> String {
 		guard targetLooksLikeService(target) else {
 			return message
@@ -127,7 +124,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 		}.joined(separator: " ")
 	}
 
-	@objc(targetLooksLikeService:)
 	public static func targetLooksLikeService(_ target: String?) -> Bool {
 		guard var nickname = target, nickname.isEmpty == false else {
 			return false
@@ -143,7 +139,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 			|| ["authserv", "l", "q", "x"].contains(lowercaseNickname)
 	}
 
-	@objc(formatNickname:modeSymbol:format:)
 	public static func formatNickname(_ nickname: String, modeSymbol: String, format: String) -> String {
 		let scanner = Scanner(string: format)
 		scanner.charactersToBeSkipped = nil
@@ -200,7 +195,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 	/// ISUPPORT `AWAYLEN`, `KICKLEN` and `TOPICLEN` are byte budgets, so
 	/// measuring them in UTF-16 code units under-counts every non-ASCII
 	/// string and lets the server do the truncating instead.
-	@objc(truncatedString:toByteCount:)
 	public static func truncated(_ text: String, toByteCount maximumByteCount: Int) -> String {
 		guard maximumByteCount > 0, text.utf8.count > maximumByteCount else {
 			return text
@@ -223,7 +217,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 		return truncated
 	}
 
-	@objc(escapedDCCFilename:)
 	public static func escapedDCCFilename(_ filename: String) -> String {
 		var escaped = filename.safeFilename
 
@@ -236,7 +229,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 		return "\"\(escaped)\""
 	}
 
-	@objc(wireDCCAddress:)
 	public static func wireDCCAddress(_ address: String) -> String? {
 		if address.isIPv6Address {
 			return address
@@ -255,7 +247,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 		return String(packed)
 	}
 
-	@objc(displayDCCAddress:)
 	public static func displayDCCAddress(_ address: String) -> String {
 		guard address.isEmpty == false,
 		      address.utf8.allSatisfy({ $0 >= 48 && $0 <= 57 }),
@@ -280,7 +271,6 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 	/// `true` when a peer supplied address is one the client is willing to
 	/// dial. The peer, not the user, chooses this address, so loopback,
 	/// link-local, multicast and private ranges are refused.
-	@objc(isDialableDCCAddress:)
 	public static func isDialableDCCAddress(_ address: String) -> Bool {
 		if let octets = ipv4Octets(address) {
 			return isDialableIPv4(octets)
@@ -351,12 +341,10 @@ public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: v
 		return octets
 	}
 
-	@objc(chatHistoryLatestCommandForTarget:selector:limit:)
 	public static func chatHistoryLatestCommand(target: String, selector: String, limit: UInt) -> String {
 		"CHATHISTORY LATEST \(target) \(selector) \(limit)"
 	}
 
-	@objc(chatHistoryBeforeCommandForTarget:selector:limit:)
 	public static func chatHistoryBeforeCommand(target: String, selector: String, limit: UInt) -> String {
 		"CHATHISTORY BEFORE \(target) \(selector) \(limit)"
 	}

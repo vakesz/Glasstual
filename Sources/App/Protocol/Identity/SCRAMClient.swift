@@ -41,7 +41,6 @@ import Foundation
 import Security
 
 /// Error codes in `SCRAMClient.errorDomain`.
-@objc(TLOSCRAMClientErrorCode)
 public enum SCRAMClientErrorCode: Int {
 	case invalidState = 1
 	case malformedServerMessage
@@ -66,10 +65,8 @@ public enum SCRAMClientErrorCode: Int {
 /// The exchange is driven from `IRCClientNegotiation`, which is main-actor
 /// state, so the client's state machine belongs to the same domain. Only the
 /// PBKDF2 derivation leaves it, and that is a pure function.
-@objc(TLOSCRAMClient)
 @MainActor
 public final class SCRAMClient: NSObject {
-	@objc(TLOSCRAMClientState)
 	public enum State: Int {
 		case initial
 		case sentClientFirst
@@ -78,10 +75,10 @@ public final class SCRAMClient: NSObject {
 		case failed
 	}
 
-	@objc public static let errorDomain = "TLOSCRAMClientErrorDomain"
+	public static let errorDomain = "TLOSCRAMClientErrorDomain"
 
 	/// The mechanism name as advertised in `sasl=` values and on the wire.
-	@objc public static let mechanismName = "SCRAM-SHA-256"
+	public static let mechanismName = "SCRAM-SHA-256"
 
 	private static let gs2Header = "n,,"
 	private static let minimumIterationCount = 4096
@@ -91,7 +88,7 @@ public final class SCRAMClient: NSObject {
 	/// well above what any deployed IRC server asks for.
 	private static let maximumIterationCount = 600_000
 
-	@objc public private(set) var state: State = .initial
+	public private(set) var state: State = .initial
 
 	private let username: String
 	private let password: String
@@ -101,13 +98,13 @@ public final class SCRAMClient: NSObject {
 	private var serverSignature = Data()
 
 	/// Creates a client with a fresh random nonce.
-	@objc public convenience init(username: String, password: String) {
+	public convenience init(username: String, password: String) {
 		self.init(username: username, password: password, clientNonce: SCRAMClient.makeNonce())
 	}
 
 	/// Creates a client with a caller supplied nonce. Only tests should
 	/// pick their own nonce.
-	@objc public init(username: String, password: String, clientNonce: String) {
+	public init(username: String, password: String, clientNonce: String) {
 		self.username = username
 		self.password = password
 		self.clientNonce = clientNonce
@@ -116,7 +113,7 @@ public final class SCRAMClient: NSObject {
 	// MARK: - Messages
 
 	/// `n,,n=<user>,r=<nonce>`. Moves the state to `sentClientFirst`.
-	@objc public var clientFirstMessage: String {
+	public var clientFirstMessage: String {
 		if state == .initial {
 			clientFirstMessageBare = "n=\(SCRAMClient.escapeSASLName(username)),r=\(clientNonce)"
 
@@ -129,7 +126,6 @@ public final class SCRAMClient: NSObject {
 	/// Parses `r=,s=,i=` and returns `c=,r=,p=`. Throws on a malformed
 	/// message, a nonce that does not begin with ours, or an iteration
 	/// count below the RFC 7677 minimum.
-	@objc(clientFinalMessageForServerFirstMessage:error:)
 	public func clientFinalMessage(forServerFirstMessage serverFirst: String) throws -> String {
 		let challenge = try parseServerFirstMessage(serverFirst)
 
@@ -237,7 +233,6 @@ public final class SCRAMClient: NSObject {
 
 	/// Checks `v=` against the expected server signature. A mismatch means
 	/// the server does not know the password and must not be trusted.
-	@objc(verifyServerFinalMessage:error:)
 	public func verifyServerFinalMessage(_ serverFinal: String) throws {
 		guard state == .sentClientFinal else {
 			throw fail(.invalidState, "SCRAM exchange is not waiting for the server's final message")

@@ -38,14 +38,13 @@
 
 import Foundation
 
-@objc(IRCTimedCommand)
 public final class TimedCommand: NSObject {
 	private static var lastIdentifier = 0
 
-	@objc public let identifier: String
-	@objc public let clientId: String
-	@objc public let channelId: String?
-	@objc public let command: String
+	public let identifier: String
+	public let clientId: String
+	public let channelId: String?
+	public let command: String
 
 	private var timer: ClientTimer!
 	private var startedBefore = false
@@ -55,12 +54,10 @@ public final class TimedCommand: NSObject {
 		fatalError("Use init(command:onClient:inChannel:)")
 	}
 
-	@objc(initWithCommand:onClient:)
 	public convenience init(command: String, onClient client: IRCClient) {
 		self.init(command: command, onClient: client, inChannel: nil)
 	}
 
-	@objc(initWithCommand:onClient:inChannel:)
 	public init(command: String, onClient client: IRCClient, inChannel channel: IRCChannel?) {
 		identifier = Self.nextIdentifier()
 		clientId = client.uniqueIdentifier
@@ -82,27 +79,24 @@ public final class TimedCommand: NSObject {
 		timer.stop()
 	}
 
-	@objc(start:)
 	public func start(_ interval: TimeInterval) {
 		start(interval, onRepeat: false, iterations: 0)
 	}
 
-	@objc(start:onRepeat:)
 	public func start(_ interval: TimeInterval, onRepeat repeatTimer: Bool) {
 		start(interval, onRepeat: repeatTimer, iterations: 0)
 	}
 
-	@objc(start:onRepeat:iterations:)
 	public func start(_ interval: TimeInterval, onRepeat repeatTimer: Bool, iterations: UInt) {
 		timer.start(interval, repeats: repeatTimer, iterations: iterations)
 		startedBefore = true
 	}
 
-	@objc public func stop() {
+	public func stop() {
 		timer.stop()
 	}
 
-	@objc public func restart() -> Bool {
+	public func restart() -> Bool {
 		guard startedBefore else {
 			return false
 		}
@@ -116,27 +110,27 @@ public final class TimedCommand: NSObject {
 		timerInterval - timeRemaining
 	}
 
-	@objc public var timeRemaining: TimeInterval {
+	public var timeRemaining: TimeInterval {
 		timer.timeRemaining
 	}
 
-	@objc public var timerInterval: TimeInterval {
+	public var timerInterval: TimeInterval {
 		timer.interval
 	}
 
-	@objc public var timerIsActive: Bool {
+	public var timerIsActive: Bool {
 		timer.isActive
 	}
 
-	@objc public var repeatTimer: Bool {
+	public var repeatTimer: Bool {
 		timer.repeats
 	}
 
-	@objc public var iterations: UInt {
+	public var iterations: UInt {
 		timer.iterations
 	}
 
-	@objc public var currentIteration: UInt {
+	public var currentIteration: UInt {
 		timer.currentIteration
 	}
 

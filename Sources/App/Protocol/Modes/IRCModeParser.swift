@@ -38,7 +38,6 @@
 
 import Foundation
 
-@objc(IRCModeParser)
 public final class ModeParser: NSObject {
 	@available(*, unavailable)
 	override public init() {

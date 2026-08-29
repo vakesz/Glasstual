@@ -64,7 +64,6 @@ enum IRCChatHistoryPolicy {
 }
 
 public extension IRCClient {
-	@objc(resetChatHistoryState)
 	func resetChatHistoryState() {
 		chatHistoryFailedTargets.removeAll()
 		chatHistoryPendingBeforeTargets.removeAll()
@@ -75,12 +74,10 @@ public extension IRCClient {
 		readMarkerTimer.stop()
 	}
 
-	@objc(chatHistoryRequestLimit)
 	func chatHistoryRequestLimit() -> UInt {
 		IRCChatHistoryPolicy.requestLimit(serverMaximum: supportInfo.chatHistoryMaximumLines)
 	}
 
-	@objc(chatHistoryIsAvailableForChannel:)
 	func chatHistoryIsAvailable(for channel: IRCChannel) -> Bool {
 		let target = casefoldedTarget(channel.name)
 		return IRCChatHistoryPolicy.canUseServerHistory(
@@ -93,17 +90,14 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(casefoldedTarget:)
 	func casefoldedTarget(_ target: String) -> String {
 		supportInfo.casefoldString(target)
 	}
 
-	@objc(chatHistoryTimestampForDate:)
 	func chatHistoryTimestamp(for date: Date) -> String {
 		"timestamp=\(sharedISOStandardDateFormatter().string(from: date))"
 	}
 
-	@objc(chatHistoryLatestCommandForTarget:since:)
 	func chatHistoryLatestCommand(target: String, since date: Date?) -> String {
 		ClientWireUtilities.chatHistoryLatestCommand(
 			target: target,
@@ -112,7 +106,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(chatHistoryBeforeCommandForTarget:date:)
 	func chatHistoryBeforeCommand(target: String, date: Date) -> String {
 		ClientWireUtilities.chatHistoryBeforeCommand(
 			target: target,
@@ -121,27 +114,23 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(newestKnownLineDateForChannel:)
 	func newestKnownLineDate(for channel: IRCChannel) -> Date? {
 		let viewDate = channel.lastLine?.receivedAt
 		let storeDate = LogControllerHistoricLogFile.shared().newestLineDate(forView: channel.uniqueIdentifier)
 		return [viewDate, storeDate].compactMap(\.self).max()
 	}
 
-	@objc(noteChannelActivated:)
 	func noteChannelActivated(_ channel: IRCChannel) {
 		guard !isTerminating else { return }
 		requestChatHistory(for: channel)
 		requestReadMarker(for: channel)
 	}
 
-	@objc(requestChatHistoryForChannel:)
 	func requestChatHistory(for channel: IRCChannel) {
 		guard chatHistoryIsAvailable(for: channel) else { return }
 		sendLine(chatHistoryLatestCommand(target: channel.name, since: newestKnownLineDate(for: channel)))
 	}
 
-	@objc(requestChatHistoryBeforeDate:inChannel:)
 	func requestChatHistory(before date: Date, in channel: IRCChannel) {
 		guard chatHistoryIsAvailable(for: channel) else { return }
 		let target = casefoldedTarget(channel.name)
@@ -150,7 +139,6 @@ public extension IRCClient {
 		sendLine(chatHistoryBeforeCommand(target: channel.name, date: date))
 	}
 
-	@objc(chatHistoryMessageIsDuplicate:)
 	func chatHistoryMessageIsDuplicate(_ message: Message) -> Bool {
 		guard let channel = channel(forTargetedMessage: message) else { return false }
 		let historicLog = LogControllerHistoricLogFile.shared()
@@ -166,7 +154,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(replayChatHistoryBatch:)
 	func replayChatHistoryBatch(_ batchMessage: MessageBatch) {
 		let target = batchMessage.batchParameters?.first
 		let channel = target.flatMap(findChannel(_:))
@@ -190,7 +177,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(flushChatHistoryPrependedLines)
 	func flushChatHistoryPrependedLines() {
 		let channel = chatHistoryPrependChannel
 		let lines = chatHistoryPrependedLines ?? []
@@ -200,7 +186,6 @@ public extension IRCClient {
 		channel.presentation?.prependHistoricLogLines(lines)
 	}
 
-	@objc(noteChatHistoryFailure:)
 	func noteChatHistoryFailure(_ message: Message) -> Bool {
 		let target = message.params.dropFirst(2).dropLast().first(where: { findChannel($0) != nil })
 		guard let target else { return true }
@@ -211,7 +196,6 @@ public extension IRCClient {
 		return true
 	}
 
-	@objc(readMarkerIsAvailableForChannel:)
 	func readMarkerIsAvailable(for channel: IRCChannel) -> Bool {
 		IRCChatHistoryPolicy.canUseServerHistory(
 			isLoggedIn: isLoggedIn,
@@ -223,19 +207,16 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(requestReadMarkerForChannel:)
 	func requestReadMarker(for channel: IRCChannel) {
 		guard readMarkerIsAvailable(for: channel) else { return }
 		send("MARKREAD", arguments: [channel.name])
 	}
 
-	@objc(markChannelAsRead:)
 	func markChannel(asRead channel: IRCChannel) {
 		guard let date = newestKnownLineDate(for: channel) else { return }
 		scheduleReadMarker(for: channel, date: date)
 	}
 
-	@objc(scheduleReadMarkerForChannel:date:)
 	func scheduleReadMarker(for channel: IRCChannel, date: Date) {
 		guard readMarkerIsAvailable(for: channel),
 		      IRCChatHistoryPolicy.shouldAdvanceMarker(
@@ -249,7 +230,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(onReadMarkerTimer)
 	func onReadMarkerTimer() {
 		let channels = readMarkerPendingChannels
 		readMarkerPendingChannels.removeAll()
@@ -258,7 +238,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(sendReadMarkerForChannel:)
 	func sendReadMarker(for channel: IRCChannel) {
 		guard readMarkerIsAvailable(for: channel), let newestDate = newestKnownLineDate(for: channel),
 		      IRCChatHistoryPolicy.shouldAdvanceMarker(
@@ -270,7 +249,6 @@ public extension IRCClient {
 		send("MARKREAD", arguments: [channel.name, chatHistoryTimestamp(for: newestDate)])
 	}
 
-	@objc(receiveReadMarker:)
 	func receiveReadMarker(_ message: Message) {
 		guard message.params.count >= 2, let channel = findChannel(message.params[0]),
 		      message.params[1].hasPrefix("timestamp="),
@@ -285,7 +263,6 @@ public extension IRCClient {
 		applyReadMarker(date, to: channel)
 	}
 
-	@objc(applyReadMarkerDate:toChannel:)
 	func applyReadMarker(_ date: Date, to channel: IRCChannel) {
 		applyReadMarkerOnMainActor(date, to: channel)
 	}

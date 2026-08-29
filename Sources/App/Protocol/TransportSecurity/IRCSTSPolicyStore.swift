@@ -45,15 +45,12 @@ public let IRCSTSPolicyStoreDefaultsKey = "IRC -> STS Policies"
 ///
 /// Main-actor, like the connection setup and the capability negotiation that
 /// are its only callers, so the policies need no lock of their own.
-@objc(IRCSTSPolicyStore)
 public final class STSPolicyStore: NSObject {
 	private let userDefaults: UserDefaults?
 	private var policies: [String: STSPolicy] = [:]
 
-	@objc(sharedStore)
 	public static let shared = STSPolicyStore(userDefaults: TextualUserDefaults.container)
 
-	@objc(initWithUserDefaults:)
 	public init(userDefaults: UserDefaults?) {
 		self.userDefaults = userDefaults
 
@@ -62,7 +59,6 @@ public final class STSPolicyStore: NSObject {
 		load()
 	}
 
-	@objc(policyForHost:)
 	public func policy(forHost host: String) -> STSPolicy? {
 		let key = key(forHost: host)
 
@@ -80,13 +76,11 @@ public final class STSPolicyStore: NSObject {
 		return policy
 	}
 
-	@objc(setPolicy:forHost:)
 	public func setPolicy(_ policy: STSPolicy, forHost host: String) {
 		policies[key(forHost: host)] = policy
 		save()
 	}
 
-	@objc(removePolicyForHost:)
 	public func removePolicy(forHost host: String) {
 		guard policies.removeValue(forKey: key(forHost: host)) != nil else {
 			return

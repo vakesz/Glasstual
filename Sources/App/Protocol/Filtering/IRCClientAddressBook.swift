@@ -77,11 +77,10 @@ public extension IRCClient {
 		addressBookMatchCache.findAddressBookEntry(forHostmask: hostmask)
 	}
 
-	@objc func clearAddressBookCache() {
+	func clearAddressBookCache() {
 		addressBookMatchCache.clearCachedMatches()
 	}
 
-	@objc(clearAddressBookCacheForHostmask:)
 	internal func clearAddressBookCache(forHostmask hostmask: String) {
 		for cacheKey in IRCAddressBookLookupPolicy.cacheKeys(forHostmask: hostmask) {
 			addressBookMatchCache.clearCachedMatches(forHostmask: cacheKey)

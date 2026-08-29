@@ -95,7 +95,7 @@ final class GLTTestClient: IRCClient {
 	}
 
 	func markAsLoggedIn() {
-		setValue(true, forKey: "isLoggedIn")
+		isLoggedIn = true
 	}
 
 	override func sendCapability(_ subcommand: String, data: String?) {

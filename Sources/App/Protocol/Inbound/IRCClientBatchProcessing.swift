@@ -73,12 +73,10 @@ private let batchProcessingLogger = Logger(
 )
 
 public extension IRCClient {
-	@objc(queuedBatchMessageWithToken:)
 	func queuedBatchMessage(withToken batchToken: String) -> Any? {
 		batchMessages.queuedEntry(withBatchToken: batchToken)
 	}
 
-	@objc(filterBatchCommandIncomingData:)
 	func filterBatchCommandIncomingData(_ message: Message) -> Bool {
 		guard message.command.caseInsensitiveCompare("BATCH") != .orderedSame,
 		      let batchToken = message.batchToken,
@@ -102,7 +100,6 @@ public extension IRCClient {
 		return true
 	}
 
-	@objc(receiveBatch:)
 	func receiveBatch(_ message: Message) {
 		guard let reference = message.params.first,
 		      let tokenInfo = IRCBatchPolicy.normalizedToken(reference)
@@ -118,12 +115,10 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(recursivelyProcessBatchMessage:)
 	func recursivelyProcessBatchMessage(_ batchMessage: MessageBatch) {
 		recursivelyProcessBatchMessage(batchMessage, depth: 0)
 	}
 
-	@objc(recursivelyProcessBatchMessage:depth:)
 	func recursivelyProcessBatchMessage(_ batchMessage: MessageBatch, depth: Int) {
 		guard !batchMessage.batchIsOpen else { return }
 		guard depth < IRCBatchPolicy.maximumParentDepth else {
@@ -142,17 +137,14 @@ public extension IRCClient {
 		batchMessages.dequeueEntry(batchMessage)
 	}
 
-	@objc(batchTypeIsChatHistory:)
 	func batchTypeIsChatHistory(_ batchType: String?) -> Bool {
 		IRCBatchPolicy.isChatHistory(batchType)
 	}
 
-	@objc(batchTypeIsNetsplit:)
 	func batchTypeIsNetsplit(_ batchType: String?) -> Bool {
 		IRCBatchPolicy.isNetsplit(batchType)
 	}
 
-	@objc(batchMessageOfType:containingMessage:)
 	func batchMessage(ofType batchType: String, containing message: Message) -> MessageBatch? {
 		var batch = message.parentBatchMessage
 		var depth = 0
@@ -166,7 +158,6 @@ public extension IRCClient {
 		return nil
 	}
 
-	@objc(channelForTargetedMessage:)
 	func channel(forTargetedMessage message: Message) -> IRCChannel? {
 		guard var target = message.params.first else { return nil }
 		if !stringIsChannelName(target), nicknameIsMyself(target) {
@@ -176,7 +167,6 @@ public extension IRCClient {
 		return findChannel(target)
 	}
 
-	@objc(receiveStandardReply:)
 	func receiveStandardReply(_ message: Message) {
 		guard message.params.count >= 3 else { return }
 		let command = message.params[0]

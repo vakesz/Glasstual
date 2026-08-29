@@ -59,14 +59,12 @@ private let inboundIdentityLogger = Logger(
 )
 
 public extension IRCClient {
-	@objc(accountFromWireValue:)
 	class func account(fromWireValue value: String?) -> String? {
 		IRCIdentityPolicy.account(fromWireValue: value)
 	}
 
 	/// IRCv3 `account-notify`. A server only sends this once the capability is
 	/// negotiated, so an unnegotiated one is not evidence of anything.
-	@objc(receiveAccountNotify:)
 	func receiveAccountNotify(_ message: Message) {
 		guard isCapabilityEnabled(.accountNotify) else { return }
 		guard let wireAccount = message.params.first, let nickname = message.senderNickname else { return }
@@ -75,14 +73,12 @@ public extension IRCClient {
 	}
 
 	/// IRCv3 `setname`, gated the same way `account-notify` is.
-	@objc(receiveSetName:)
 	func receiveSetName(_ message: Message) {
 		guard isCapabilityEnabled(.setName) else { return }
 		guard let realName = message.params.first, let nickname = message.senderNickname else { return }
 		modifyUser(withNickname: nickname) { $0.realName = realName }
 	}
 
-	@objc(updateUserIdentityFromMessageTags:)
 	func updateUserIdentity(fromMessageTags message: Message) {
 		guard !message.senderIsServer, let nickname = message.senderNickname, !nickname.isEmpty else { return }
 		let account = message.senderAccount
@@ -100,7 +96,6 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	@objc(receiveTagMessage:)
 	func receiveTagMessage(_ message: Message) {
 		guard let target = message.params.first else { return }
 		updateUserIdentity(fromMessageTags: message)
@@ -171,7 +166,6 @@ public extension IRCClient {
 		_ = postReceivedMessage(message)
 	}
 
-	@objc(deliverClientTags:fromSender:toTarget:inItem:timestamp:messageIdentifier:account:)
 	@MainActor
 	func deliverTags(
 		_ clientTags: [String: String],
@@ -210,7 +204,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(tagMessageEventWithClientTags:sender:target:timestamp:messageIdentifier:account:)
 	func tagMessageEvent(
 		withClientTags clientTags: [String: String],
 		sender: String,

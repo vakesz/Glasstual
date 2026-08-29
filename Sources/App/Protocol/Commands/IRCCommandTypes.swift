@@ -37,7 +37,7 @@
 
 import Foundation
 
-@objc public enum IRCLocalCommand: UInt, Sendable {
+public enum IRCLocalCommand: UInt, Sendable {
 	case adchat = 5001
 	case ame = 5002
 	case amsg = 5003
@@ -147,7 +147,7 @@ import Foundation
 	case zline = 5082
 }
 
-@objc public enum IRCRemoteCommand: UInt, Sendable {
+public enum IRCRemoteCommand: UInt, Sendable {
 	case account = 1070
 	case adchat = 1003
 	case authenticate = 1005

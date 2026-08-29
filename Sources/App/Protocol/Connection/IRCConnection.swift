@@ -146,16 +146,15 @@ private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtoc
 	}
 }
 
-@objc(IRCConnection)
 public final class Connection: NSObject {
-	@objc public private(set) weak var client: IRCClient!
+	public private(set) weak var client: IRCClient!
 	public private(set) var config: IRCConnectionConfig
-	@objc public private(set) var isConnected = false
-	@objc public private(set) var isConnectedWithClientSideCertificate = false
-	@objc public private(set) var isConnecting = false
-	@objc public private(set) var isDisconnecting = false
-	@objc public private(set) var isSecured = false
-	@objc public private(set) var certificateTrustWasOverridden = false
+	public private(set) var isConnected = false
+	public private(set) var isConnectedWithClientSideCertificate = false
+	public private(set) var isConnecting = false
+	public private(set) var isDisconnecting = false
+	public private(set) var isSecured = false
+	public private(set) var certificateTrustWasOverridden = false
 
 	/// Whether TLS is established *and* the server's chain validated on its own.
 	///
@@ -163,16 +162,16 @@ public final class Connection: NSObject {
 	/// through the trust panel or the connection is configured to skip chain
 	/// validation. Anything that outlives the connection — an STS policy, for
 	/// instance — has to key on this instead.
-	@objc public var isSecuredWithValidatedCertificate: Bool {
+	public var isSecuredWithValidatedCertificate: Bool {
 		isSecured
 			&& certificateTrustWasOverridden == false
 			&& config.connectionShouldValidateCertificateChain
 	}
 
-	@objc public private(set) var isSending = false
-	@objc public private(set) var EOFReceived = false
-	@objc public private(set) var connectedAddress: String?
-	@objc public private(set) var uniqueIdentifier: String
+	public private(set) var isSending = false
+	public private(set) var EOFReceived = false
+	public private(set) var connectedAddress: String?
+	public private(set) var uniqueIdentifier: String
 
 	/// The host's callbacks, in arrival order, on their way to the main actor.
 	private nonisolated let events: AsyncStream<ConnectionEvent> // nonisolated: let
@@ -274,7 +273,7 @@ public final class Connection: NSObject {
 		resetState()
 	}
 
-	@objc public func resetState() {
+	public func resetState() {
 		isConnecting = false
 		isConnected = false
 		isConnectedWithClientSideCertificate = false
@@ -325,7 +324,7 @@ public final class Connection: NSObject {
 		} as? RemoteConnectionServerProtocol
 	}
 
-	@objc public func open() {
+	public func open() {
 		guard isConnecting == false, isConnected == false, isDisconnecting == false else { return }
 		warmProcessIfNeeded()
 		isConnecting = true
@@ -338,7 +337,7 @@ public final class Connection: NSObject {
 		remoteObjectProxy()?.disableSuddenTermination()
 	}
 
-	@objc public func close() {
+	public func close() {
 		guard isDisconnecting == false else { return }
 
 		if isConnecting || isConnected {
@@ -349,12 +348,12 @@ public final class Connection: NSObject {
 		}
 	}
 
-	@objc public func enforceFloodControl() {
+	public func enforceFloodControl() {
 		guard isConnected else { return }
 		remoteObjectProxy()?.enforceFloodControl()
 	}
 
-	@objc public func openSecuredConnectionCertificateModal() {
+	public func openSecuredConnectionCertificateModal() {
 		exportSecureConnectionInformation { information in
 			/* The hop comes first, and the `SecTrust` is rebuilt on the other
 			 side of it. What crosses is `SecureConnectionInformation`, which is
@@ -515,7 +514,6 @@ public final class Connection: NSObject {
 		client.convert(toCommonEncoding: string)
 	}
 
-	@objc(sendLine:)
 	public func sendLine(_ line: String) {
 		let cleanLine = line
 			.replacingOccurrences(of: "\r", with: "")
@@ -531,7 +529,7 @@ public final class Connection: NSObject {
 		}
 	}
 
-	@objc public func clearSendQueue() {
+	public func clearSendQueue() {
 		remoteObjectProxy()?.clearSendQueue()
 	}
 

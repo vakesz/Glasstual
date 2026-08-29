@@ -38,13 +38,13 @@
 import CocoaExtensions
 import Foundation
 
-@objc public enum IRCAddressBookEntryType: UInt, Sendable, Codable {
+public enum IRCAddressBookEntryType: UInt, Sendable, Codable {
 	case ignore = 0
 	case userTracking = 1
 	case mixed = 2
 }
 
-@objc public enum IRCAddressBookUserTrackingStatus: UInt, Sendable {
+public enum IRCAddressBookUserTrackingStatus: UInt, Sendable {
 	case unknown = 0
 	case signedOff = 1
 	case signedOn = 2

@@ -40,51 +40,53 @@ import Foundation
 
 public typealias IRCTreeItem = TreeItem
 
-@objc(IRCTreeItem)
 open class TreeItem: NSObject {
-	@objc open var isActive: Bool {
+	open var isActive: Bool {
 		false
 	}
 
-	@objc open var isClient: Bool {
+	open var isClient: Bool {
 		false
 	}
 
-	@objc open var isChannel: Bool {
+	open var isChannel: Bool {
 		false
 	}
 
-	@objc open var isPrivateMessage: Bool {
+	open var isPrivateMessage: Bool {
 		false
 	}
 
-	@objc open var associatedChannel: IRCChannel? {
+	open var associatedChannel: IRCChannel? {
 		nil
 	}
 
-	@objc open var label: String {
+	open var label: String {
 		""
 	}
 
-	@objc open var name: String {
+	open var name: String {
 		""
 	}
 
-	@objc open var uniqueIdentifier: String {
+	open var uniqueIdentifier: String {
 		""
 	}
 
-	@objc open var numberOfChildren: Int {
+	open var numberOfChildren: Int {
 		0
 	}
 
-	@objc public var dockUnreadCount = 0
+	public var dockUnreadCount = 0
+	/* KVO: the server list and the channel spotlight table redraw one row from
+	 `publisher(for:)` on these two, so both stay visible to key-value
+	 observing. */
 	@objc public dynamic var nicknameHighlightCount = 0
 	@objc public dynamic var treeUnreadCount = 0
 
 	/** Weak: the world owns its clients, and an item routinely outlives the
 	 client that made it while teardown finishes. */
-	@objc open weak var associatedClient: IRCClient! {
+	open weak var associatedClient: IRCClient! {
 		didSet { associatedClientDidChange() }
 	}
 
@@ -99,17 +101,17 @@ open class TreeItem: NSObject {
 		associatedClient?.environment.preferences ?? ClientPreferences()
 	}
 
-	@objc public var isUnread: Bool {
+	public var isUnread: Bool {
 		treeUnreadCount > 0
 	}
 
-	@objc public func resetState() {
+	public func resetState() {
 		dockUnreadCount = 0
 		nicknameHighlightCount = 0
 		treeUnreadCount = 0
 	}
 
-	@objc(childAtIndex:) open func child(at _: Int) -> TreeItem? {
+	open func child(at _: Int) -> TreeItem? {
 		nil
 	}
 

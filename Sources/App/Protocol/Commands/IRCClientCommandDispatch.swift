@@ -40,12 +40,10 @@ import Foundation
 
 @MainActor
 public extension IRCClient {
-	@objc(sendCommand:)
 	func sendCommand(_ input: Any) {
 		sendCommand(input, completeTarget: true, target: nil)
 	}
 
-	@objc(sendCommand:completeTarget:target:)
 	func sendCommand(_ input: Any, completeTarget: Bool, target targetChannelName: String?) {
 		guard let parsed = ParsedUserCommand(input) else { return }
 		guard allowsDeveloperModeCommand(parsed) else { return }

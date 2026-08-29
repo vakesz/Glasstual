@@ -58,11 +58,10 @@ public enum BatchEntry {
 ///
 /// Main-actor, like everything else that reads an inbound message, so the
 /// entries need no lock of their own.
-@objc(IRCMessageBatchMessageContainer)
 public final class MessageBatchContainer: NSObject {
 	private var entries: [String: MessageBatch] = [:]
 
-	@objc public var queuedEntries: [String: MessageBatch] {
+	public var queuedEntries: [String: MessageBatch] {
 		entries
 	}
 
@@ -78,30 +77,28 @@ public final class MessageBatchContainer: NSObject {
 		entries.removeValue(forKey: token)?.dequeueEntries()
 	}
 
-	@objc public func dequeueEntries() {
+	public func dequeueEntries() {
 		entries.removeAll()
 	}
 
-	@objc(queuedEntryWithBatchToken:)
 	public func queuedEntry(withBatchToken batchToken: String) -> MessageBatch? {
 		entries[batchToken]
 	}
 }
 
-@objc(IRCMessageBatchMessage)
 public final class MessageBatch: NSObject {
 	/// A batch the server never closes queues messages forever, so the queue
 	/// is bounded. The ceiling is well above the largest chat-history replay
 	/// any network offers.
-	@objc public static let maximumQueuedEntries = 5000
+	public static let maximumQueuedEntries = 5000
 
 	private var entries: [BatchEntry] = []
 
-	@objc public var batchIsOpen = false
-	@objc public var batchToken = ""
-	@objc public var batchType: String?
-	@objc public var batchParameters: [String]?
-	@objc public weak var parentBatchMessage: MessageBatch?
+	public var batchIsOpen = false
+	public var batchToken = ""
+	public var batchType: String?
+	public var batchParameters: [String]?
+	public weak var parentBatchMessage: MessageBatch?
 
 	public var queuedEntries: [BatchEntry] {
 		entries
@@ -142,7 +139,7 @@ public final class MessageBatch: NSObject {
 		dequeueEntry(.batch(batch))
 	}
 
-	@objc public func dequeueEntries() {
+	public func dequeueEntries() {
 		entries.removeAll()
 	}
 

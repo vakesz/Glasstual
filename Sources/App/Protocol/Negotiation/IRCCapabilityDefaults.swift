@@ -7,7 +7,7 @@
 import Foundation
 
 extension CapabilityRegistry {
-	@objc public static var defaultRegistry: CapabilityRegistry {
+	public static var defaultRegistry: CapabilityRegistry {
 		defaultRegistryStorage
 	}
 

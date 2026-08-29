@@ -49,7 +49,6 @@ enum IRCNumericReplyPolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(receiveNumericReply:)
 	func receiveNumericReply(_ message: Message) {
 		let numeric = message.commandNumeric
 		if IRCNumeric.isErrorReply(numeric) {

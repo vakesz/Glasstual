@@ -203,20 +203,17 @@ public extension IRCClient {
 		return true
 	}
 
-	@objc(inputText:destination:)
 	@MainActor
 	func inputText(_ input: Any, destination: IRCTreeItem) {
 		inputText(input, as: .privmsg, destination: destination)
 	}
 
-	@objc(inputText:asCommand:)
 	@MainActor
 	func inputText(_ input: Any, as command: IRCRemoteCommand) {
 		guard let destination = output?.selectedItem else { return }
 		inputText(input, as: command, destination: destination)
 	}
 
-	@objc(inputText:asCommand:destination:)
 	@MainActor
 	func inputText(_ input: Any, as command: IRCRemoteCommand, destination: IRCTreeItem) {
 		guard isTerminating == false, let text = attributedInput(input), text.length > 0 else { return }
@@ -260,7 +257,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(sendText:asCommand:toChannel:)
 	@MainActor
 	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, to channel: IRCChannel) {
 		guard text.length > 0 else { return }
@@ -327,7 +323,6 @@ public extension IRCClient {
 		processBundlesUserMessage(text.string, command: outbound.wireCommand)
 	}
 
-	@objc(sendText:asCommand:toChannels:)
 	@MainActor
 	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, toChannels channels: [IRCChannel]) {
 		guard text.length > 0, channels.isEmpty == false, let outbound = OutboundTextCommand(command) else { return }

@@ -62,7 +62,6 @@ enum IRCNicknameRetryPolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(resetCapabilityNegotiation)
 	func resetCapabilityNegotiation() {
 		capabilities = []
 		capabilityNegotiationIsPaused = false
@@ -78,20 +77,17 @@ public extension IRCClient {
 		pendingCapabilityRequests.removeAll()
 	}
 
-	@objc(receivePing:)
 	func receivePing(_ message: Message) {
 		guard !message.params.isEmpty else { return }
 		sendPong(message.sequence(0))
 		_ = postReceivedMessage(message)
 	}
 
-	@objc(receiveAwayNotifyCapability:)
 	func receiveAwayNotifyCapability(_ message: Message) {
 		guard isCapabilityEnabled(.awayNotify), let nickname = message.senderNickname else { return }
 		modifyUser(withNickname: nickname, asAway: !message.sequence.isEmpty)
 	}
 
-	@objc(receiveInit:)
 	func receiveInit(_ message: Message) {
 		guard let nickname = message.params.first else { return }
 		startPongTimer()
@@ -135,23 +131,28 @@ public extension IRCClient {
 		if !config.autojoinWaitsForNickServ || isCapabilityEnabled(.isIdentifiedWithSASL) {
 			performAutoJoin(initiatedByUser: false)
 		} else if isConnectedToZNC {
-			textual_performSelectorInCommonModes(
-				#selector(performAutoJoin as () -> Void),
-				with: nil,
-				afterDelay: 3
-			)
+			postRegistrationAutoJoinTask?.cancel()
+			postRegistrationAutoJoinTask = Task { [weak self] in
+				try? await Task.sleep(for: .seconds(3))
+
+				guard Task.isCancelled == false, let self else { return }
+
+				performAutoJoin()
+			}
 		} else {
 			startAutojoinDelayedWarningTimer()
 		}
 
-		textual_performSelectorInCommonModes(
-			#selector(populateISONTrackedUsersList),
-			with: nil,
-			afterDelay: 10
-		)
+		trackedUserPopulationTask?.cancel()
+		trackedUserPopulationTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(10))
+
+			guard Task.isCancelled == false, let self else { return }
+
+			populateISONTrackedUsersList()
+		}
 	}
 
-	@objc(receiveNicknameCollisionError:)
 	func receiveNicknameCollisionError(_: Message) {
 		guard isConnected, !isLoggedIn else { return }
 		printDebugInformation(
@@ -170,7 +171,6 @@ public extension IRCClient {
 		tryingNicknameNumber += 1
 	}
 
-	@objc(tryAnotherNickname)
 	func tryAnotherNickname() {
 		guard isConnected, !isLoggedIn else { return }
 		let nickname = IRCNicknameRetryPolicy.padded(

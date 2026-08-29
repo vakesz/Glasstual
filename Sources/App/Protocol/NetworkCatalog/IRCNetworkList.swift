@@ -37,13 +37,12 @@
 
 import Foundation
 
-@objc public enum IRCNetworkRegistration: UInt, Sendable {
+public enum IRCNetworkRegistration: UInt, Sendable {
 	case none = 0
 	case optional = 1
 	case required = 2
 }
 
-@objc(IRCNetworkList)
 public final nonisolated class NetworkList: NSObject { // nonisolated: value
 	private static let popularNetworkNames = [
 		"Libera.Chat",
@@ -61,8 +60,8 @@ public final nonisolated class NetworkList: NSObject { // nonisolated: value
 		"DumaNet",
 	]
 
-	@objc public let listOfNetworks: [Network]
-	@objc public let popularNetworks: [Network]
+	public let listOfNetworks: [Network]
+	public let popularNetworks: [Network]
 
 	override public init() {
 		let networks = Self.loadNetworks().sorted {
@@ -80,17 +79,14 @@ public final nonisolated class NetworkList: NSObject { // nonisolated: value
 		super.init()
 	}
 
-	@objc(networkNamed:)
 	public func network(named networkName: String) -> Network? {
 		listOfNetworks.first { $0.networkName.caseInsensitiveCompare(networkName) == .orderedSame }
 	}
 
-	@objc(networkWithServerAddress:)
 	public func network(withServerAddress serverAddress: String) -> Network? {
 		listOfNetworks.first { $0.serverAddress.caseInsensitiveCompare(serverAddress) == .orderedSame }
 	}
 
-	@objc(accountFieldsApplyToRegistration:saslSupported:)
 	public static func accountFieldsApply(
 		to registration: IRCNetworkRegistration,
 		saslSupported: Bool
@@ -98,7 +94,6 @@ public final nonisolated class NetworkList: NSObject { // nonisolated: value
 		saslSupported || registration != .none
 	}
 
-	@objc(registrationFromString:)
 	public static func registration(from string: String?) -> IRCNetworkRegistration {
 		switch string?.lowercased() {
 		case "required":
@@ -139,25 +134,23 @@ public final nonisolated class NetworkList: NSObject { // nonisolated: value
 	}
 }
 
-@objc(IRCNetwork)
 public final nonisolated class Network: NSObject { // nonisolated: value
-	@objc public let networkName: String
-	@objc public let networkDescription: String
-	@objc public let serverAddress: String
-	@objc public let serverPort: UInt16
-	@objc public let prefersSecuredConnection: Bool
-	@objc public let website: String?
-	@objc public let saslSupported: Bool
-	@objc public let registration: IRCNetworkRegistration
-	@objc public let registrationNote: String?
-	@objc public let suggestedChannels: [String]
+	public let networkName: String
+	public let networkDescription: String
+	public let serverAddress: String
+	public let serverPort: UInt16
+	public let prefersSecuredConnection: Bool
+	public let website: String?
+	public let saslSupported: Bool
+	public let registration: IRCNetworkRegistration
+	public let registrationNote: String?
+	public let suggestedChannels: [String]
 
 	@available(*, unavailable)
 	override public init() {
 		fatalError("Use init(dictionary:)")
 	}
 
-	@objc(initWithDictionary:)
 	public init?(dictionary: [String: Any]) {
 		guard
 			let networkName = dictionary["name"] as? String,
@@ -191,7 +184,7 @@ public final nonisolated class Network: NSObject { // nonisolated: value
 		super.init()
 	}
 
-	@objc public var accountFieldsApply: Bool {
+	public var accountFieldsApply: Bool {
 		NetworkList.accountFieldsApply(to: registration, saslSupported: saslSupported)
 	}
 

@@ -53,7 +53,6 @@ public extension Notification.Name {
 /// the runtime name below.
 public typealias IRCChannel = Channel
 
-@objc(IRCChannel)
 open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProtocol {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -69,7 +68,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		didSet { refreshDescription() }
 	}
 
-	@objc public var topic: String? {
+	public var topic: String? {
 		didSet {
 			guard topic != oldValue else {
 				return
@@ -91,22 +90,21 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 	/// Compatibility getter for Objective-C plug-ins that still declare the
 	/// historic `IRCChannelStatus` enum in their bridging header.
-	@objc(status)
 	public var objectiveCStatusRawValue: UInt {
 		status.rawValue
 	}
 
-	@objc public var directChatConnection: DirectChatConnection?
-	@objc public var sentInitialWhoRequest = false
-	@objc public var channelModesReceived = false
-	@objc public var channelNamesReceived = false
-	@objc public var errorOnLastJoinAttempt = false
-	@objc public private(set) var channelJoinTime: TimeInterval = 0
-	@objc public private(set) var modeInfo: ChannelModeState?
-	@objc public private(set) var memberInfo: ChannelMemberList?
+	public var directChatConnection: DirectChatConnection?
+	public var sentInitialWhoRequest = false
+	public var channelModesReceived = false
+	public var channelNamesReceived = false
+	public var errorOnLastJoinAttempt = false
+	public private(set) var channelJoinTime: TimeInterval = 0
+	public private(set) var modeInfo: ChannelModeState?
+	public private(set) var memberInfo: ChannelMemberList?
 	/** Whether a logging session banner has been written and not yet closed. A line
 	 counter cannot express this: writing the banner is itself a write. */
-	@objc public private(set) var logFileSessionIsOpen = false
+	public private(set) var logFileSessionIsOpen = false
 
 	private var logFile: FileLogger?
 	private var statusChangedByAction = false
@@ -175,11 +173,10 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	@objc public var configurationDictionary: [String: Any] {
+	public var configurationDictionary: [String: Any] {
 		PropertyListModel.encode(config)
 	}
 
-	@objc(copyWithZone:)
 	public func copy(with _: NSZone? = nil) -> Any {
 		self
 	}
@@ -228,11 +225,11 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	@objc public var secretKey: String? {
+	public var secretKey: String? {
 		config.secretKey
 	}
 
-	@objc public var autoJoin: Bool {
+	public var autoJoin: Bool {
 		get { config.autoJoin }
 		set {
 			guard isChannel, newValue != config.autoJoin else {
@@ -251,15 +248,15 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		config.type == .privateMessage
 	}
 
-	@objc public var isUtility: Bool {
+	public var isUtility: Bool {
 		config.type == .utility
 	}
 
-	@objc public var isDirectChat: Bool {
+	public var isDirectChat: Bool {
 		config.type == .directChat
 	}
 
-	@objc public var isPrivateMessageForZNCUser: Bool {
+	public var isPrivateMessageForZNCUser: Bool {
 		isPrivateMessage && associatedClient?.nicknameIsZNCUser(name) == true
 	}
 
@@ -269,12 +266,11 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 	/// Compatibility getter for Objective-C plug-ins that still declare the
 	/// historic `IRCChannelType` enum in their bridging header.
-	@objc(type)
 	public var objectiveCTypeRawValue: UInt {
 		type.rawValue
 	}
 
-	@objc public var channelTypeString: String {
+	public var channelTypeString: String {
 		switch type {
 		case .channel:
 			"channel"
@@ -289,7 +285,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	@objc public var logFilePath: URL? {
+	public var logFilePath: URL? {
 		guard let writePath = FileLogger.writePath(for: self) else {
 			return nil
 		}
@@ -301,7 +297,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		presentation?.lastPrintedLine()
 	}
 
-	@objc public func preferencesChanged() {
+	public func preferencesChanged() {
 		if clientPreferences.displayPublicMessageCountOnDockBadge == false, isChannel {
 			dockUnreadCount = 0
 		}
@@ -341,13 +337,12 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo = nil
 	}
 
-	@objc(resetStatus:)
 	public func resetStatusFromObjectiveC(_ rawValue: UInt) {
 		guard let status = ChannelStatus(rawValue: rawValue) else { return }
 		resetStatus(status)
 	}
 
-	@objc open func activate() {
+	open func activate() {
 		statusChangedByAction = true
 		resetStatus(.joined)
 
@@ -387,7 +382,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	@objc open func deactivate() {
+	open func deactivate() {
 		statusChangedByAction = true
 		resetStatus(.parted)
 
@@ -396,7 +391,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	@MainActor @objc public func prepareForPermanentDestruction() {
+	@MainActor public func prepareForPermanentDestruction() {
 		statusChangedByAction = true
 		resetStatus(.terminated)
 		closeDirectChatConnection()
@@ -426,7 +421,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	@MainActor
-	@objc public func prepareForApplicationTermination() {
+	public func prepareForApplicationTermination() {
 		let channelIdentifier = uniqueIdentifier
 		Self.terminationLogger.debug("Preparing channel: <\(channelIdentifier, privacy: .public)>")
 		statusChangedByAction = true
@@ -443,7 +438,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		presentation?.prepareForApplicationTermination()
 	}
 
-	@objc public func closeDirectChatConnection() {
+	public func closeDirectChatConnection() {
 		guard let connection = directChatConnection else {
 			return
 		}
@@ -452,7 +447,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		connection.close()
 	}
 
-	@objc public func reopenLogFileIfNeeded() {
+	public func reopenLogFileIfNeeded() {
 		if clientPreferences.logToDiskIsEnabled, isUtility == false {
 			logFile?.reopenIfNeeded()
 		} else {
@@ -460,14 +455,14 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	@objc public func closeLogFile() {
+	public func closeLogFile() {
 		logFile?.close()
 		/* Leaving the handle in place made the lazy re-creation below unreachable, so
 		 every later write went to a closed logger. */
 		logFile = nil
 	}
 
-	@objc public func logFileWriteSessionBegin() {
+	public func logFileWriteSessionBegin() {
 		guard logFileSessionIsOpen == false else { return }
 
 		/* Set before writing: the banner is written through writeToLogFile. */
@@ -475,7 +470,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		associatedClient?.logFileRecordSessionChanged(true, in: legacyChannel)
 	}
 
-	@objc public func logFileWriteSessionEnd() {
+	public func logFileWriteSessionEnd() {
 		guard logFileSessionIsOpen else { return }
 
 		associatedClient?.logFileRecordSessionChanged(false, in: legacyChannel)
@@ -589,11 +584,11 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	@objc public func clearMembers() {
+	public func clearMembers() {
 		memberInfo?.clearMembers()
 	}
 
-	@objc public var numberOfMembers: UInt {
+	public var numberOfMembers: UInt {
 		memberInfo?.numberOfMembers ?? 0
 	}
 
@@ -612,7 +607,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo?.pasteboardData(for: members) ?? Data()
 	}
 
-	@objc(readNicknamesFromPasteboardData:withBlock:)
 	public class func readNicknames(
 		from pasteboardData: Data,
 		with callback: (IRCChannel, [String]) -> Void
@@ -627,7 +621,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		ChannelMemberList.readMembers(from: pasteboardData, with: callback)
 	}
 
-	@objc(memberExists:)
 	public func memberExists(_ nickname: String) -> Bool {
 		memberInfo?.memberExists(nickname) ?? false
 	}
@@ -636,7 +629,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo?.findMember(nickname)
 	}
 
-	@objc public func sortMembers() {
+	public func sortMembers() {
 		memberInfo?.sortMembers()
 	}
 

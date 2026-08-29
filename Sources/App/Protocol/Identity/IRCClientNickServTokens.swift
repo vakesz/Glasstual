@@ -39,7 +39,6 @@
 import Foundation
 
 public extension IRCClient {
-	@objc(nickServSupportedNeedIdentificationTokens)
 	var nickServNeedIdentificationTokens: [String] {
 		ResourceManager.array(
 			fromResources: "StaticStore",
@@ -47,7 +46,6 @@ public extension IRCClient {
 		) as? [String] ?? []
 	}
 
-	@objc(nickServSupportedSuccessfulIdentificationTokens)
 	var nickServSuccessfulIdentificationTokens: [String] {
 		ResourceManager.array(
 			fromResources: "StaticStore",

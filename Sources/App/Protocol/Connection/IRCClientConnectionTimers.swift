@@ -74,7 +74,6 @@ enum IRCClientConnectionTimerPolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(stopAllTimers)
 	func stopAllTimers() {
 		stopAutojoinTimer()
 		stopAutojoinDelayedWarningTimer()
@@ -86,19 +85,16 @@ public extension IRCClient {
 		stopWhoTimer()
 	}
 
-	@objc(startPongTimer)
 	func startPongTimer() {
 		guard !pongTimer.isActive else { return }
 		pongTimer.start(IRCClientConnectionTimerPolicy.pongCheckInterval, repeats: true)
 	}
 
-	@objc(stopPongTimer)
 	func stopPongTimer() {
 		guard pongTimer.isActive else { return }
 		pongTimer.stop()
 	}
 
-	@objc(onPongTimer)
 	func onPongTimer() {
 		guard isLoggedIn else {
 			stopPongTimer()
@@ -128,7 +124,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(startReconnectTimer)
 	func startReconnectTimer() {
 		let enabled = reconnectEnabledBecauseOfSleepMode
 			? !config.autoSleepModeDisconnect
@@ -137,31 +132,26 @@ public extension IRCClient {
 		reconnectTimer.start(IRCClientConnectionTimerPolicy.reconnectInterval, repeats: true)
 	}
 
-	@objc(stopReconnectTimer)
 	func stopReconnectTimer() {
 		guard reconnectTimer.isActive else { return }
 		reconnectTimer.stop()
 	}
 
-	@objc(onReconnectTimer)
 	func onReconnectTimer() {
 		guard !isConnecting, !isConnected else { return }
 		connect(.reconnect)
 	}
 
-	@objc(startRetryTimer)
 	func startRetryTimer() {
 		guard !retryTimer.isActive else { return }
 		retryTimer.start(IRCClientConnectionTimerPolicy.retryInterval)
 	}
 
-	@objc(stopRetryTimer)
 	func stopRetryTimer() {
 		guard retryTimer.isActive else { return }
 		retryTimer.stop()
 	}
 
-	@objc(onRetryTimer)
 	func onRetryTimer() {
 		guard isConnected else { return }
 		addDisconnectCallback { [weak self] in

@@ -138,7 +138,7 @@ struct IRCUserRelationsTests {
 	private func makeChannel(named name: String, type: ChannelType = .channel) -> Channel {
 		let channel = Channel(config: ChannelConfig(channelName: name, type: type))
 
-		channel.setValue(client, forKey: "associatedClient")
+		channel.associatedClient = client
 
 		return channel
 	}

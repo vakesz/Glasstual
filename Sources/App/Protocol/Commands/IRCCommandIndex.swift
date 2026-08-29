@@ -37,9 +37,7 @@
 
 import Foundation
 
-@objc(IRCCommandIndex)
 public final class CommandIndex: NSObject {
-	@objc(populateCommandIndex)
 	public static func populateCommandIndex() {
 		/* Reading the tables is what builds them, and Swift guarantees that
 		 happens exactly once. Called at start-up so the first command does not
@@ -47,24 +45,20 @@ public final class CommandIndex: NSObject {
 		_ = commandIndexTables.isEmpty
 	}
 
-	@objc(invalidateCaches)
 	public static func invalidateCaches() {
 		/* Nothing left to invalidate: the developer-mode split is decided when
 		 the tables are built, so both command lists already exist. Kept because
 		 the preference reload still calls it. */
 	}
 
-	@objc(localCommandList)
 	public static func localCommandList() -> [String] {
 		commandIndexTables.commandNames(developerModeEnabled: TextualPreferences.developerModeEnabled())
 	}
 
-	@objc(indexOfRemoteCommand:)
 	public static func index(ofRemoteCommand command: String) -> UInt {
 		commandIndexTables.remote[command.lowercased()]?.index ?? CommandIndexTables.notFound
 	}
 
-	@objc(indexOfLocalCommand:)
 	public static func index(ofLocalCommand command: String) -> UInt {
 		guard let entry = commandIndexTables.local[command.lowercased()] else {
 			return CommandIndexTables.notFound
@@ -77,7 +71,6 @@ public final class CommandIndex: NSObject {
 		return entry.index
 	}
 
-	@objc(colonPositionForRemoteCommand:)
 	public static func colonPosition(forRemoteCommand command: String) -> UInt {
 		guard let entry = commandIndexTables.remote[command.lowercased()],
 		      entry.outgoingColonIndex >= 0
@@ -88,7 +81,6 @@ public final class CommandIndex: NSObject {
 		return UInt(entry.outgoingColonIndex)
 	}
 
-	@objc(syntaxForLocalCommand:)
 	public static func syntax(forLocalCommand command: String) -> String? {
 		guard let entry = commandIndexTables.local[command.lowercased()] else {
 			return nil
