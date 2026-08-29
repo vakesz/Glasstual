@@ -42,7 +42,7 @@ private enum WindowStateStorage {
 	 static string literal lives in the binary's constant data, so its bytes have
 	 exactly the property a key needs — a unique, stable address — and the
 	 literal itself is a value. */
-	nonisolated static let defaultSizeKeyToken: StaticString =
+	nonisolated static let defaultSizeKeyToken: StaticString = // nonisolated: let
 		"com.vakesz.glasstual.windowDefaultSize" // nonisolated: let
 
 	nonisolated static var defaultSizeAssociationKey: UnsafeRawPointer { // nonisolated: pure

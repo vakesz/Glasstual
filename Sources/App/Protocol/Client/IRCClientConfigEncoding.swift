@@ -46,7 +46,7 @@ import GlasstualPluginKit
  out entirely — the same trimming `ce_dictionaryByRemovingDefaults` did, which
  is what keeps a stored client list re-encoding to exactly what is on disk.
  The two keychain-backed passwords are never part of the output. */
-nonisolated extension ClientConfig {
+nonisolated extension ClientConfig { // nonisolated: value
 	private typealias Container = KeyedEncodingContainer<CodingKeys>
 
 	public func encode(to encoder: any Encoder) throws {

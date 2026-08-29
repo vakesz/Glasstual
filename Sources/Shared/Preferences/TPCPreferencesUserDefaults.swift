@@ -38,12 +38,12 @@
 import AppKit
 import CocoaExtensions
 
-public nonisolated extension Notification.Name {
+public nonisolated extension Notification.Name { // nonisolated: value
 	static let textualUserDefaultsDidChange = Self("TPCPreferencesUserDefaultsDidChangeNotification")
 }
 
 @objc(TPCPreferencesUserDefaults)
-public final nonisolated class TextualUserDefaults: UserDefaults {
+public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolated: value
 	private static let storageSuiteName: String = {
 		#if DEBUG
 			if let reviewSuite = ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_SUITE"],
@@ -86,7 +86,7 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
 	 and the `object` a notification is posted with -- neither of which anything
 	 outside the main actor looks at. A caller that reads in a loop should hold
 	 the handle rather than ask for one per read. */
-	public nonisolated static func suite() -> TextualUserDefaults {
+	public static func suite() -> TextualUserDefaults {
 		TextualUserDefaults(storageSuiteName: storageSuiteName)
 	}
 
@@ -95,7 +95,7 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
 	 object, so a private handle is what they want; the service rewrite routes
 	 them at ``suite()`` and this goes with it. */
 	@objc(sharedUserDefaults)
-	public nonisolated static func shared() -> TextualUserDefaults {
+	public static func shared() -> TextualUserDefaults {
 		suite()
 	}
 
@@ -178,7 +178,7 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
  controls through `UserDefaults.didChangeNotification`, which the controller
  already watches. */
 @objc(TPCPreferencesUserDefaultsController)
-public final nonisolated class TextualUserDefaultsController: NSUserDefaultsController {
+public final nonisolated class TextualUserDefaultsController: NSUserDefaultsController { // nonisolated: value
 	required init?(coder _: NSCoder) {
 		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}

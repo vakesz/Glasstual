@@ -189,7 +189,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	 whenever the configuration changes. */
 	private let descriptionSnapshot = Mutex("<IRCChannel>")
 
-	override open nonisolated var description: String {
+	override open nonisolated var description: String { // nonisolated: pure
 		descriptionSnapshot.withLock { $0 }
 	}
 

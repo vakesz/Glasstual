@@ -42,7 +42,7 @@ import os
 import Security
 import SecurityInterface
 
-private nonisolated let connectionLogger = Logger(
+private nonisolated let connectionLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCConnection"
 )
@@ -116,8 +116,8 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 	@objc public private(set) var uniqueIdentifier: String
 
 	/// The host's callbacks, in arrival order, on their way to the main actor.
-	private nonisolated let events: AsyncStream<ConnectionEvent>
-	private nonisolated let eventContinuation: AsyncStream<ConnectionEvent>.Continuation
+	private nonisolated let events: AsyncStream<ConnectionEvent> // nonisolated: let
+	private nonisolated let eventContinuation: AsyncStream<ConnectionEvent>.Continuation // nonisolated: let
 	private var eventTask: Task<Void, Never>?
 
 	private var serviceConnection: NSXPCConnection?
@@ -477,26 +477,28 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 	/* Every callback below arrives on the NSXPC queue. They only hand the value
 	 to `events`; the main actor does the work, in the order the host sent it. */
 
-	public nonisolated func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16) {
+	public nonisolated func ircConnectionWillConnect(toProxy proxyHost: String, // nonisolated: xpc-shim
+	                                                 port proxyPort: UInt16)
+	{
 		eventContinuation.yield(.willConnectToProxy(host: proxyHost, port: proxyPort))
 	}
 
-	public nonisolated func ircConnectionDidConnect(toHost host: String?) {
+	public nonisolated func ircConnectionDidConnect(toHost host: String?) { // nonisolated: xpc-shim
 		eventContinuation.yield(.didConnect(host: host))
 	}
 
-	public nonisolated func ircConnectionDidSecureConnection(
+	public nonisolated func ircConnectionDidSecureConnection( // nonisolated: xpc-shim
 		withProtocolType protocolType: tls_protocol_version_t,
 		cipherSuite: tls_ciphersuite_t
 	) {
 		eventContinuation.yield(.didSecure(protocolType: protocolType, cipherSuite: cipherSuite))
 	}
 
-	public nonisolated func ircConnectionDidCloseReadStream() {
+	public nonisolated func ircConnectionDidCloseReadStream() { // nonisolated: xpc-shim
 		eventContinuation.yield(.didCloseReadStream)
 	}
 
-	public nonisolated func ircConnectionDidDisconnectWithError(_ disconnectError: Error?) {
+	public nonisolated func ircConnectionDidDisconnectWithError(_ disconnectError: Error?) { // nonisolated: xpc-shim
 		eventContinuation.yield(.didDisconnect(error: disconnectError))
 	}
 
@@ -505,21 +507,21 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 		client?.ircConnection(self, didDisconnectWithError: error)
 	}
 
-	public nonisolated func ircConnectionDidReceive(_ data: Data) {
+	public nonisolated func ircConnectionDidReceive(_ data: Data) { // nonisolated: xpc-shim
 		eventContinuation.yield(.didReceive(data))
 	}
 
-	public nonisolated func ircConnectionRequestInsecureCertificateTrust(
+	public nonisolated func ircConnectionRequestInsecureCertificateTrust( // nonisolated: xpc-shim
 		_ trustBlock: @escaping TrustDecisionHandler
 	) {
 		eventContinuation.yield(.requestInsecureCertificateTrust(trustBlock))
 	}
 
-	public nonisolated func ircConnectionWillSend(_ data: Data) {
+	public nonisolated func ircConnectionWillSend(_ data: Data) { // nonisolated: xpc-shim
 		eventContinuation.yield(.willSend(data))
 	}
 
-	public nonisolated func ircConnectionDidSendData() {
+	public nonisolated func ircConnectionDidSendData() { // nonisolated: xpc-shim
 		eventContinuation.yield(.didSendData)
 	}
 }

@@ -97,7 +97,7 @@ public final class ThemeController: NSObject {
 
 	/** Static because the controller is a singleton and the readers are outside the
 	 main actor, where the main-actor accessor is unreachable. */
-	private nonisolated static let snapshotStorage = Mutex<ThemeSnapshot?>(nil)
+	private nonisolated static let snapshotStorage = Mutex<ThemeSnapshot?>(nil) // nonisolated: let
 	private var currentCopyOperation: ThemeCopyOperation?
 	private var bundledThemes: [String: Theme] = [:]
 	private var customThemes: [String: Theme] = [:]
@@ -114,7 +114,7 @@ public final class ThemeController: NSObject {
 	}
 
 	/** The active theme's off-main-actor readable values. Nil until `reload()`. */
-	public nonisolated static var activeSnapshot: ThemeSnapshot? {
+	public nonisolated static var activeSnapshot: ThemeSnapshot? { // nonisolated: pure
 		snapshotStorage.withLock { $0 }
 	}
 

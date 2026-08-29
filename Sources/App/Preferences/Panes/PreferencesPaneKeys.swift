@@ -18,7 +18,7 @@ import Foundation
  `PreferencesPaneInventoryTests` checks against the catalogue: a key a pane
  binds to that the catalogue does not know is a setting that would never be
  exported, imported or registered. */
-nonisolated enum PreferencesPaneKeys {
+nonisolated enum PreferencesPaneKeys { // nonisolated: value
 	static let keysByPane: [PreferencesPaneIdentifier: [any AnyPreferenceKey]] = [
 		.general: [Preferences.Connection.confirmQuit],
 		.behavior: [

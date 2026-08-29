@@ -15,7 +15,7 @@ import Foundation
 import os
 import Synchronization
 
-public nonisolated enum ResourceDocumentType {
+public nonisolated enum ResourceDocumentType { // nonisolated: value
 	public static let bundleFileExtension = ".bundle"
 	public static let bundleFilenameExtension = "bundle"
 	public static let scriptFileExtension = ".scpt"
@@ -23,7 +23,7 @@ public nonisolated enum ResourceDocumentType {
 }
 
 @objc(TPCResourceManager)
-public final nonisolated class ResourceManager: NSObject {
+public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "ResourceManager"

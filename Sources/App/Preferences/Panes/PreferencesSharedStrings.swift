@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum PreferencesSectionStrings {
+nonisolated enum PreferencesSectionStrings { // nonisolated: value
 	static var advanced: String {
 		String(localized: .TDCPreferencesController.headingAdvanced)
 	}
@@ -22,7 +22,7 @@ nonisolated enum PreferencesSectionStrings {
 	}
 }
 
-nonisolated enum PreferencesAdvancedStrings {
+nonisolated enum PreferencesAdvancedStrings { // nonisolated: value
 	static var channels: String {
 		String(localized: .TDCPreferencesController.advancedChannels)
 	}
@@ -44,13 +44,13 @@ nonisolated enum PreferencesAdvancedStrings {
 	}
 }
 
-nonisolated enum PreferencesGeneralStrings {
+nonisolated enum PreferencesGeneralStrings { // nonisolated: value
 	static var confirmQuit: String {
 		String(localized: .TDCPreferencesController.generalConfirmQuit)
 	}
 }
 
-nonisolated enum PreferencesBehaviorStrings {
+nonisolated enum PreferencesBehaviorStrings { // nonisolated: value
 	static var autojoinOnInvite: String {
 		String(localized: .TDCPreferencesController.behaviorAutojoinOnInvite)
 	}
@@ -84,13 +84,13 @@ nonisolated enum PreferencesBehaviorStrings {
 	}
 }
 
-nonisolated enum PreferencesCompatibilityStrings {
+nonisolated enum PreferencesCompatibilityStrings { // nonisolated: value
 	static var echoMessage: String {
 		String(localized: .TDCPreferencesController.compatibilityEchoMessage)
 	}
 }
 
-nonisolated enum PreferencesCommandScopeStrings {
+nonisolated enum PreferencesCommandScopeStrings { // nonisolated: value
 	static var amsg: String {
 		String(localized: .TDCPreferencesController.commandScopeAmsg)
 	}
@@ -128,7 +128,7 @@ nonisolated enum PreferencesCommandScopeStrings {
 	}
 }
 
-nonisolated enum PreferencesChannelManagementStrings {
+nonisolated enum PreferencesChannelManagementStrings { // nonisolated: value
 	static var banFormatExact: String {
 		String(localized: .TDCPreferencesController.channelManagementBanFormatExact)
 	}

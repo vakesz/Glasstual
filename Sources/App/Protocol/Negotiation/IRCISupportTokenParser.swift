@@ -38,7 +38,7 @@
 import Foundation
 
 @objc(IRCISupportPrefixConfiguration)
-public final nonisolated class ISupportPrefixConfiguration: NSObject {
+public final nonisolated class ISupportPrefixConfiguration: NSObject { // nonisolated: value
 	@objc public let modeSymbols: [String]
 	@objc public let characters: [String]
 
@@ -50,7 +50,7 @@ public final nonisolated class ISupportPrefixConfiguration: NSObject {
 }
 
 @objc(IRCISupportExtendedBanConfiguration)
-public final nonisolated class ISupportExtendedBanConfiguration: NSObject {
+public final nonisolated class ISupportExtendedBanConfiguration: NSObject { // nonisolated: value
 	@objc public let prefix: String?
 	@objc public let types: [String]
 
@@ -62,7 +62,7 @@ public final nonisolated class ISupportExtendedBanConfiguration: NSObject {
 }
 
 @objc(IRCISupportTokenParser)
-public final nonisolated class ISupportTokenParser: NSObject {
+public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: value
 	@available(*, unavailable)
 	override public init() {
 		fatalError("ISupportTokenParser is a static namespace")

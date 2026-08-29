@@ -39,9 +39,9 @@ import Foundation
 
 // MARK: - Messages
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// What is shown in a channel view, and how incoming text is treated.
-	nonisolated enum Messages {
+	enum Messages {
 		public static let showDateChanges = PreferenceKey(
 			"DisplayEventInLogView -> Date Changes",
 			default: true
@@ -89,9 +89,9 @@ public nonisolated extension Preferences {
 
 // MARK: - Logging
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Transcript logging and the scrollback the log view keeps.
-	nonisolated enum Logging {
+	enum Logging {
 		public static let logToDisk = PreferenceKey("LogTranscript", default: false)
 		public static let logHighlights = PreferenceKey("LogHighlights", default: true)
 		public static let reloadScrollbackOnLaunch = PreferenceKey("ReloadScrollbackOnLaunch", default: true)

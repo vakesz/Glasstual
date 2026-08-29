@@ -38,7 +38,7 @@
 import Foundation
 
 @objc(IRCParsedLine)
-public final nonisolated class ParsedLine: NSObject {
+public final nonisolated class ParsedLine: NSObject { // nonisolated: value
 	@objc public let messageTagSection: String?
 	@objc public let senderSection: String?
 	@objc public let command: String
@@ -72,7 +72,7 @@ public final nonisolated class ParsedLine: NSObject {
 }
 
 @objc(IRCLineParser)
-public final nonisolated class LineParser: NSObject {
+public final nonisolated class LineParser: NSObject { // nonisolated: value
 	/// RFC 1459/2812 and IRCv3 separate tokens on SPACE (0x20) only, never on
 	/// the wider Unicode whitespace set.
 	private static let space: Unicode.Scalar = " "

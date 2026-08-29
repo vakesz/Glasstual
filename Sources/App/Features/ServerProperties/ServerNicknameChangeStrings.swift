@@ -13,7 +13,7 @@
 
 import Foundation
 
-nonisolated enum ServerNicknameChangeStrings {
+nonisolated enum ServerNicknameChangeStrings { // nonisolated: value
 	static var changeButtonTitle: String {
 		String(localized: .TDCServerChangeNicknameSheet.changeButton)
 	}

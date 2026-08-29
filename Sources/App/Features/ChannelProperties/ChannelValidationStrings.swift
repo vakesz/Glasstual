@@ -37,7 +37,7 @@
 
 import Foundation
 
-nonisolated enum ChannelValidationStrings {
+nonisolated enum ChannelValidationStrings { // nonisolated: value
 	static var maximumKeyLengthMessage: String {
 		String(localized: .ChannelValidation.maximumKeyLengthMessage)
 	}

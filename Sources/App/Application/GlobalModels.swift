@@ -43,7 +43,7 @@ import GlasstualPluginKit
  attribute and every caller is Swift. The date formatters also existed twice,
  once taking `AnyObject` and once `Any`; only the `Any` form is kept. */
 
-private nonisolated let isoStandardDateFormatter: DateFormatter = {
+private nonisolated let isoStandardDateFormatter: DateFormatter = { // nonisolated: let
 	let dateFormatter = DateFormatter()
 	dateFormatter.locale = Locale(identifier: "en_US_POSIX")
 	dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
@@ -51,7 +51,7 @@ private nonisolated let isoStandardDateFormatter: DateFormatter = {
 	return dateFormatter
 }()
 
-public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? {
+public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? { // nonisolated: pure
 	var global = time_t(date.timeIntervalSince1970)
 	var localTime = tm()
 
@@ -74,7 +74,7 @@ public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -
 	return NSString(string: timestamp)
 }
 
-public nonisolated func humanReadableTimeInterval(
+public nonisolated func humanReadableTimeInterval( // nonisolated: pure
 	_ dateInterval: TimeInterval,
 	_ shortValue: Bool,
 	_ orderMatrix: UInt
@@ -86,11 +86,11 @@ public nonisolated func humanReadableTimeInterval(
 	) as NSString
 }
 
-public nonisolated func formatDateLongStyle(_ dateObject: Any, _ relativeOutput: Bool) -> String? {
+public nonisolated func formatDateLongStyle(_ dateObject: Any, _ relativeOutput: Bool) -> String? { // nonisolated: pure
 	formatDateValue(dateObject, .long, .long, relativeOutput)
 }
 
-public nonisolated func formatDate(
+public nonisolated func formatDate( // nonisolated: pure
 	_ dateObject: Any,
 	_ dateStyle: DateFormatter.Style,
 	_ timeStyle: DateFormatter.Style,
@@ -99,7 +99,7 @@ public nonisolated func formatDate(
 	formatDateValue(dateObject, dateStyle, timeStyle, relativeOutput)
 }
 
-private nonisolated func formatDateValue(
+private nonisolated func formatDateValue( // nonisolated: pure
 	_ dateObject: Any,
 	_ dateStyle: DateFormatter.Style,
 	_ timeStyle: DateFormatter.Style,
@@ -135,7 +135,7 @@ private nonisolated func formatDateValue(
 /// Parses the date representations servers actually send: an ISO 8601
 /// timestamp, or a Unix epoch in seconds. Anything else is left to the caller,
 /// which normally falls back to showing the server's text verbatim.
-private nonisolated func parseDateValue(_ string: String) -> Date? {
+private nonisolated func parseDateValue(_ string: String) -> Date? { // nonisolated: pure
 	let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
 
 	if let date = isoStandardDateFormatter.date(from: trimmed) {
@@ -149,14 +149,14 @@ private nonisolated func parseDateValue(_ string: String) -> Date? {
 	return nil
 }
 
-public nonisolated func sharedISOStandardDateFormatter() -> DateFormatter {
+public nonisolated func sharedISOStandardDateFormatter() -> DateFormatter { // nonisolated: pure
 	isoStandardDateFormatter
 }
 
-public nonisolated func randomNumber(_ maximum: UInt32) -> UInt {
+public nonisolated func randomNumber(_ maximum: UInt32) -> UInt { // nonisolated: pure
 	UInt(UInt32.random(in: 0 ..< maximum))
 }
 
-public nonisolated func formattedNumber(_ number: Int) -> NSString {
+public nonisolated func formattedNumber(_ number: Int) -> NSString { // nonisolated: pure
 	PluginHost.formattedNumber(number) as NSString
 }

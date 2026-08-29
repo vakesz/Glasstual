@@ -78,7 +78,7 @@ nonisolated struct FileTransferPreviewState: Sendable { // nonisolated: value
 public final class FileTransferDialogWindow: NSWindow {
 	nonisolated let previewState = Mutex(FileTransferPreviewState()) // nonisolated: let
 
-	override public nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel!) -> Bool {
+	override public nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel!) -> Bool { // nonisolated: pure
 		previewState.withLock { $0.acceptsPreviews }
 	}
 
@@ -86,7 +86,7 @@ public final class FileTransferDialogWindow: NSWindow {
 	 in `toggleQuickLookPanel()`, so these two only have to confirm it and can
 	 wait for a main-actor turn. Nothing crosses isolation: the panel is a
 	 singleton the main actor fetches for itself. */
-	override public nonisolated func beginPreviewPanelControl(_: QLPreviewPanel!) {
+	override public nonisolated func beginPreviewPanelControl(_: QLPreviewPanel!) { // nonisolated: pure
 		Task { @MainActor in
 			guard let panel = QLPreviewPanel.shared() else { return }
 
@@ -94,7 +94,7 @@ public final class FileTransferDialogWindow: NSWindow {
 		}
 	}
 
-	override public nonisolated func endPreviewPanelControl(_: QLPreviewPanel!) {
+	override public nonisolated func endPreviewPanelControl(_: QLPreviewPanel!) { // nonisolated: pure
 		Task { @MainActor in
 			guard let panel = QLPreviewPanel.shared() else { return }
 

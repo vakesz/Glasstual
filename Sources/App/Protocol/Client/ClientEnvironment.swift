@@ -44,7 +44,7 @@ import Foundation
  has one place to read from and tests can hand it a different one. `IRCWorld`
  rebuilds the snapshot whenever the defaults store reports a write, which is the
  only way any of these values can change. */
-nonisolated struct ClientPreferences: Sendable, Equatable {
+nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: value
 	// MARK: Connection
 
 	var autojoinDelayAfterIdentification: TimeInterval = 0
@@ -142,7 +142,7 @@ final class ClientServices {
  It is a value so that it can be handed to a client at construction and copied
  into the objects the client makes; the services inside it are shared by
  reference, because they are the one window and the one menu bar. */
-nonisolated struct ClientEnvironment: Sendable {
+nonisolated struct ClientEnvironment: Sendable { // nonisolated: value
 	var preferences: ClientPreferences
 	var services: ClientServices
 

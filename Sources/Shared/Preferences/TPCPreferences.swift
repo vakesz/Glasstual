@@ -41,7 +41,7 @@ import Foundation
 @objc(TPCPreferences)
 public class TextualPreferences: NSObject {}
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/** Inline media: what is fetched, how large it may be, and how far it is
 	 scaled.
 
@@ -49,7 +49,7 @@ public nonisolated extension Preferences {
 	 catalogue because the inline-content XPC service compiles this file and
 	 reads the same declarations, instead of keeping a second copy of the key
 	 names. */
-	nonisolated enum InlineMedia {
+	enum InlineMedia {
 		public static let maximumFilesize = PreferenceKey("InlineMediaMaximumFilesize", default: UInt(2))
 		public static let scalingWidth = PreferenceKey("InlineMediaScalingWidth", default: UInt(300))
 		public static let maximumHeight = PreferenceKey("InlineMediaMaximumHeight", default: UInt(0))

@@ -95,7 +95,7 @@ public final class InternetAddressLookup: NSObject {
 	}
 
 	@objc(addressFromData:response:allowIPv4:allowIPv6:)
-	public nonisolated static func address(
+	public nonisolated static func address( // nonisolated: pure
 		from data: Data?,
 		response: URLResponse?,
 		allowIPv4: Bool,

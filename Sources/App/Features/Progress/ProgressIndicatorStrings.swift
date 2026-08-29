@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum ProgressIndicatorStrings {
+nonisolated enum ProgressIndicatorStrings { // nonisolated: value
 	static var statusMessage: String {
 		String(localized: .TDCProgressIndicatorSheet.statusMessage)
 	}

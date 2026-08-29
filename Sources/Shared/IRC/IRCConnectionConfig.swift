@@ -39,14 +39,14 @@ import CocoaExtensions
 import Foundation
 import os
 
-private nonisolated let connectionConfigLogger = Logger(
+private nonisolated let connectionConfigLogger = Logger( // nonisolated: let
 	subsystem: "com.vakesz.glasstual",
 	category: "Connection"
 )
 
 /// Raw values are persisted. Values 4 and 7 are retired and must not be reused.
 @objc
-public nonisolated enum IRCConnectionProxyType: UInt, Codable, Sendable {
+public nonisolated enum IRCConnectionProxyType: UInt, Codable, Sendable { // nonisolated: value
 	case none = 0
 	case automatic = 1
 	case socks5 = 5
@@ -56,13 +56,13 @@ public nonisolated enum IRCConnectionProxyType: UInt, Codable, Sendable {
 
 /// Controls which IP address families Network.framework may use.
 @objc
-public nonisolated enum IRCConnectionAddressType: UInt, Codable, Sendable {
+public nonisolated enum IRCConnectionAddressType: UInt, Codable, Sendable { // nonisolated: value
 	case `default` = 0
 	case v4 = 1
 	case v6 = 2
 }
 
-public nonisolated enum IRCConnectionDefaults {
+public nonisolated enum IRCConnectionDefaults { // nonisolated: value
 	public static let serverPort: UInt16 = 6667
 	public static let proxyPort: UInt16 = 1080
 	public static let floodControlDelayInterval: UInt = 2
@@ -79,7 +79,7 @@ public nonisolated enum IRCConnectionDefaults {
  value: the host cannot reach back into the application's copy. The proxy
  password travels with it by design — the host is the process that has to
  present it — and it goes no further than that XPC connection. */
-public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable {
+public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { // nonisolated: value
 	public var serverAddress = ""
 	public var serverPort = IRCConnectionDefaults.serverPort
 	public var addressType = IRCConnectionAddressType.default
@@ -287,7 +287,7 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable {
  to, so the encoded configuration travels as one `Data` blob inside this
  envelope rather than as a class with a property per setting. */
 @objc(RCMConnectionConfigEnvelope)
-public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding {
+public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // nonisolated: value
 	public let config: IRCConnectionConfig
 
 	public init(config: IRCConnectionConfig) {

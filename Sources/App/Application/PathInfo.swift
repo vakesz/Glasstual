@@ -17,7 +17,7 @@ import Synchronization
 
 /// Where the application keeps its files. Every accessor here creates the
 /// directory it names, so callers can write into it straight away.
-public nonisolated enum PathInfo {
+public nonisolated enum PathInfo { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PathInfo"

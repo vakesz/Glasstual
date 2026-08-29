@@ -39,7 +39,7 @@
 import Foundation
 
 /// The `+typing` states the client tells the server about.
-nonisolated enum TypingState: String, Sendable {
+nonisolated enum TypingState: String, Sendable { // nonisolated: value
 	case active
 	case paused
 	case done

@@ -39,7 +39,7 @@ import AppKit
 import CocoaExtensions
 
 @objc(TPCApplicationInfo)
-public final nonisolated class ApplicationInfo: NSObject {
+public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
 	private static let runtimeDefaultsKey = "TXRunTime"
 	private static let runCountDefaultsKey = "TXRunCount"
 

@@ -39,7 +39,7 @@ import Foundation
 import InlineContentKit
 
 @objc(ICLInlineContentServerProtocol)
-nonisolated protocol InlineContentServerProtocol: AnyObject {
+nonisolated protocol InlineContentServerProtocol: AnyObject { // nonisolated: xpc-shim
 	/// Loads the bundled modules. The service has never loaded modules from
 	/// anywhere else, so there is nothing to point it at.
 	@objc(warmServiceByLoadingPlugins)
@@ -62,7 +62,7 @@ nonisolated protocol InlineContentServerProtocol: AnyObject {
 }
 
 @objc(ICLInlineContentClientProtocol)
-nonisolated protocol InlineContentClientProtocol: AnyObject {
+nonisolated protocol InlineContentClientProtocol: AnyObject { // nonisolated: xpc-shim
 	@objc(processingPayloadSucceeded:)
 	func processingPayloadSucceeded(_ payload: InlineContentPayload)
 

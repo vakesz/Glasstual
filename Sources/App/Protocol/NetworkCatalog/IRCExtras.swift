@@ -19,7 +19,7 @@ import os
 
 public typealias IRCExtras = Extras
 
-private nonisolated let extrasLogger = Logger(
+private nonisolated let extrasLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCExtras"
 )
@@ -35,7 +35,7 @@ public final class Extras: NSObject {
 	/// have been documented and linked to; the raw values are that vocabulary,
 	/// so an unrecognised token stops here rather than falling through a chain
 	/// of string comparisons.
-	nonisolated enum GlasstualSchemeAction: String, CaseIterable {
+	nonisolated enum GlasstualSchemeAction: String, CaseIterable { // nonisolated: value
 		case acknowledgements
 		case applicationSupportFolder = "application-support-folder"
 		case contributors
@@ -96,7 +96,7 @@ public final class Extras: NSObject {
 
 	/// Parses an `irc:`/`ircs:` URI into the server-info string and channel list
 	/// that `createConnectionToServer` understands. Pure; no side effects.
-	nonisolated static func intent(forIRCProtocolURI location: String) -> URIIntent? {
+	nonisolated static func intent(forIRCProtocolURI location: String) -> URIIntent? { // nonisolated: pure
 		guard !location.isEmpty else {
 			return nil
 		}
@@ -221,7 +221,9 @@ public final class Extras: NSObject {
 
 	/// The connection half of `intent(forIRCProtocolURI:)`; `nil` for
 	/// `glasstual:` actions and malformed input.
-	nonisolated static func connectionIntent(forIRCProtocolURI location: String) -> URIConnectionIntent? {
+	nonisolated static func connectionIntent(forIRCProtocolURI location: String) // nonisolated: pure
+		-> URIConnectionIntent?
+	{
 		guard case let .connect(intent) = intent(forIRCProtocolURI: location) else {
 			return nil
 		}
@@ -297,7 +299,7 @@ public final class Extras: NSObject {
 
 	/// Parses the `[-SSL] host[:port] [password]` server-info form into a
 	/// connection request. Pure; no side effects.
-	nonisolated static func connectionRequest(
+	nonisolated static func connectionRequest( // nonisolated: pure
 		parsing serverInfo: String,
 		channelList: String?,
 		connectWhenCreated: Bool,
@@ -447,7 +449,7 @@ public final class Extras: NSObject {
 
 	/// Splits a comma-separated channel list, dropping non-channel names and
 	/// case-insensitive duplicates. `nil` when there is nothing to join.
-	nonisolated static func parseChannelList(_ channelList: String?) -> [String]? {
+	nonisolated static func parseChannelList(_ channelList: String?) -> [String]? { // nonisolated: pure
 		guard let channelList, channelList.isEmpty == false else {
 			return nil
 		}
