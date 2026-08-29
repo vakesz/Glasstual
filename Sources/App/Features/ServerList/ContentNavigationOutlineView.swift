@@ -101,7 +101,7 @@ public final class ContentNavigationOutlineView: NSOutlineView {
 
 	private var hasConfigured = false
 
-	/* `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and it runs
+	/** `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and it runs
 	 with the outlets connected and before the first row is asked for. */
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()

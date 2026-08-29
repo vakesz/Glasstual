@@ -12,6 +12,7 @@
 
 import AppKit
 import CocoaExtensions
+import Combine
 
 /** The delegate lives in an object of its own rather than on the split view.
  AppKit answers -respondsToSelector: for toggleSidebar: on any NSSplitView by
@@ -23,33 +24,6 @@ import CocoaExtensions
 private final class MainWindowChannelViewDelegate: NSObject, NSSplitViewDelegate {
 	func splitView(_: NSSplitView, canCollapseSubview _: NSView) -> Bool {
 		false
-	}
-}
-
-/* ISOLATION-EXCEPTION: `NSView.sortSubviews(using:context:)` takes a C function
- pointer, which cannot carry isolation. AppKit sorts subviews during layout on
- the main thread. */
-private nonisolated func sortChannelViewSubviews(
-	_ firstView: NSView,
-	_ secondView: NSView,
-	_: UnsafeMutableRawPointer?
-) -> ComparisonResult {
-	MainActor.assumeIsolated {
-		guard let firstView = firstView as? MainWindowChannelViewSubview,
-		      let secondView = secondView as? MainWindowChannelViewSubview
-		else {
-			return .orderedSame
-		}
-
-		if firstView.itemIndex < secondView.itemIndex {
-			return .orderedAscending
-		}
-
-		if firstView.itemIndex > secondView.itemIndex {
-			return .orderedDescending
-		}
-
-		return .orderedSame
 	}
 }
 
@@ -172,10 +146,39 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 		}
 
 		if hadExistingSubviews {
-			sortSubviews(sortChannelViewSubviews, context: nil)
+			orderSubviewsByItemIndex()
 		}
 
 		adjustSubviews()
+	}
+
+	/// Puts the subviews back in ascending `itemIndex` order.
+	///
+	/// `sortSubviews(_:context:)` takes a C function pointer, which cannot carry
+	/// isolation, so the comparator had to assume it was on the main actor.
+	/// Restacking with `addSubview(_:positioned:relativeTo:)` reaches the same
+	/// order from code that is isolated by declaration. Ties keep the order they
+	/// already had, which is what a stable sort would have done.
+	func orderSubviewsByItemIndex() {
+		let ordered = subviews
+			.enumerated()
+			.compactMap { position, view in
+				(view as? MainWindowChannelViewSubview).map { (position: position, view: $0) }
+			}
+			.sorted { first, second in
+				if first.view.itemIndex == second.view.itemIndex {
+					return first.position < second.position
+				}
+
+				return first.view.itemIndex < second.view.itemIndex
+			}
+
+		var previous: NSView?
+
+		for entry in ordered {
+			addSubview(entry.view, positioned: .above, relativeTo: previous)
+			previous = entry.view
+		}
 	}
 
 	@objc(selectionChangeTo:)
@@ -255,10 +258,11 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 
 // MARK: - Overlay View
 
-private final class MainWindowChannelViewSubview: NSView {
+/** Internal rather than private so the subview ordering can be tested. */
+final class MainWindowChannelViewSubview: NSView {
 	var itemIndex: Int = 0
 	var overlayVisible = false
-	private var backingViewLayoutObservation: NSKeyValueObservation?
+	private var backingViewLayoutObservation: Task<Void, Never>?
 	var uniqueIdentifier = ""
 	weak var parentView: MainWindowChannelView?
 	private var overlayView: MainWindowChannelViewSubviewOverlayView?
@@ -326,7 +330,7 @@ private final class MainWindowChannelViewSubview: NSView {
 			return
 		}
 
-		backingViewLayoutObservation?.invalidate()
+		backingViewLayoutObservation?.cancel()
 		backingViewLayoutObservation = nil
 
 		/* Removing the web view from its superview also removes the
@@ -344,11 +348,16 @@ private final class MainWindowChannelViewSubview: NSView {
 		}
 
 		if backingViewIsLoading {
-			backingViewLayoutObservation = backingView.observe(\.isLayingOutView, options: [.new]) { [weak self] _, _ in
-				/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
-				 nonisolated. AppKit posts these changes on the main thread. */
-				MainActor.assumeIsolated {
-					self?.toggleOverlayView()
+			/* `observe(_:options:changeHandler:)` hands back a nonisolated
+			 closure; awaiting the same key path's values inside a main-actor
+			 task keeps the handler where the view lives. */
+			backingViewLayoutObservation = Task { @MainActor [weak self] in
+				for await _ in backingView.publisher(for: \.isLayingOutView, options: [.new]).values {
+					guard let self else {
+						return
+					}
+
+					toggleOverlayView()
 				}
 			}
 		}
