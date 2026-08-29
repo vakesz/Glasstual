@@ -164,6 +164,102 @@ struct TVCMemberListSectionTests {
 		#expect(delegate.tableView?(memberList, typeSelectStringFor: nil, row: 1) == "carol")
 	}
 
+	// MARK: - Snapshot diffs
+
+	@Test("A join keeps the order and the person who was selected")
+	func joinKeepsOrderAndSelection() {
+		let alice = makeMember(named: "alice")
+		let bob = makeMember(named: "bob")
+
+		controller.replaceContents([alice, bob])
+		select(bob)
+
+		controller.insert(makeMember(named: "aaron"), atArrangedObjectIndex: 0)
+
+		#expect(rowDescriptions == ["aaron", "alice", "bob"])
+		#expect(selectedNicknames == ["bob"])
+	}
+
+	@Test("A part keeps the order and the person who was selected")
+	func partKeepsOrderAndSelection() {
+		let alice = makeMember(named: "alice")
+		let bob = makeMember(named: "bob")
+		let carol = makeMember(named: "carol")
+
+		controller.replaceContents([alice, bob, carol])
+		select(carol)
+
+		controller.remove(atArrangedObjectIndex: 0)
+
+		#expect(rowDescriptions == ["bob", "carol"])
+		#expect(selectedNicknames == ["carol"])
+	}
+
+	@Test("A part takes the selection with it when the person selected left")
+	func partClearsSelectionOfDepartedMember() {
+		let alice = makeMember(named: "alice")
+		let bob = makeMember(named: "bob")
+
+		controller.replaceContents([alice, bob])
+		select(alice)
+
+		controller.remove(atArrangedObjectIndex: 0)
+
+		#expect(rowDescriptions == ["bob"])
+		#expect(selectedNicknames.isEmpty)
+	}
+
+	@Test("A rename keeps the row and the selection, because the person is the same")
+	func renameKeepsRowAndSelection() {
+		let alice = makeMember(named: "alice")
+		let bob = makeMember(named: "bob")
+
+		controller.replaceContents([alice, bob])
+		select(alice)
+
+		var renamed = alice
+		renamed.user.nickname = "alicia"
+		controller.replace(renamed, atArrangedObjectIndex: 0)
+
+		#expect(rowDescriptions == ["alicia", "bob"])
+		#expect(selectedNicknames == ["alicia"])
+	}
+
+	@Test("A mode change moves the member into its new section and the selection follows")
+	func modeChangeMovesMemberAndKeepsSelection() {
+		let alice = makeMember(named: "alice")
+		let bob = makeMember(named: "bob")
+
+		controller.replaceContents([alice, bob])
+		select(bob)
+
+		/* An op promotion resorts the member list, which reaches the table as one
+		 new ordering. */
+		var promoted = bob
+		promoted.modes = "o"
+		controller.replaceContents([promoted, alice])
+
+		#expect(rowDescriptions == ["[Operators]", "bob", "[Members]", "alice"])
+		#expect(selectedNicknames == ["bob"])
+	}
+
+	@Test("An edit in place redraws the row without moving it")
+	func inPlaceEditKeepsTheRow() {
+		let alice = makeMember(named: "alice")
+		let bob = makeMember(named: "bob")
+
+		controller.replaceContents([alice, bob])
+		select(bob)
+
+		var away = alice
+		away.user.isAway = true
+		controller.replace(away, atArrangedObjectIndex: 0)
+
+		#expect(rowDescriptions == ["alice", "bob"])
+		#expect(selectedNicknames == ["bob"])
+		#expect((memberList.item(atRow: 0) as? ChannelUser)?.user.isAway == true)
+	}
+
 	@Test("A nickname is drawn on one line and truncated at the tail")
 	func memberCellUsesSingleLineTailTruncation() {
 		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
@@ -197,14 +293,8 @@ struct TVCMemberListSectionTests {
 
 	private var rowDescriptions: [String] {
 		(0 ..< memberList.numberOfRows).compactMap { row in
-			if memberList.isGroupRow(row) {
-				let section = memberList.dataSource?.tableView?(
-					memberList,
-					objectValueFor: nil,
-					row: row
-				) as? MemberListSection
-
-				return section.map { "[\($0.title)]" }
+			if let section = memberList.section(atRow: row) {
+				return "[\(section.title)]"
 			}
 
 			return (memberList.item(atRow: row) as? ChannelUser)?.user.nickname
@@ -221,5 +311,16 @@ struct TVCMemberListSectionTests {
 
 	private func insert(_ member: ChannelUser, at index: Int) {
 		controller.insert(member, atArrangedObjectIndex: index)
+	}
+
+	private var selectedNicknames: [String] {
+		memberList.selectedRowIndexes.compactMap {
+			(memberList.item(atRow: $0) as? ChannelUser)?.user.nickname
+		}
+	}
+
+	private func select(_ member: ChannelUser) {
+		let row = memberList.row(forItem: member)
+		memberList.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
 	}
 }

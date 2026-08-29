@@ -43,6 +43,8 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 
 	private func setInitialValues() {
 		channelNameChanged()
+		keyboardShortcutChanged()
+		unreadCountDescriptionChanged()
 	}
 
 	private func updateAppearance() {
@@ -75,7 +77,7 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		}
 	}
 
-	@objc public var channelName: NSAttributedString {
+	public var channelName: NSAttributedString {
 		guard let searchResult = objectValue as? ChannelSpotlightSearchResult,
 		      let channel = searchResult.channel
 		else {
@@ -120,12 +122,21 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		return resultString
 	}
 
+	/// The three fields used to be pulled by bindings whenever the cell said the
+	/// value had changed. Nothing is watching now, so the cell writes them.
+	///
+	/// Each is guarded on its outlet: a cell built in code has none, and the
+	/// values below reach for the controller through the row view, which such a
+	/// cell does not have either.
 	private func channelNameChanged() {
-		willChangeValue(forKey: #keyPath(channelName))
-		didChangeValue(forKey: #keyPath(channelName))
+		guard let channelNameField else {
+			return
+		}
+
+		channelNameField.attributedStringValue = channelName
 	}
 
-	@objc public var keyboardShortcut: String {
+	public var keyboardShortcut: String {
 		guard let searchResult = objectValue as? ChannelSpotlightSearchResult else {
 			return ""
 		}
@@ -152,11 +163,14 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 	}
 
 	private func keyboardShortcutChanged() {
-		willChangeValue(forKey: #keyPath(keyboardShortcut))
-		didChangeValue(forKey: #keyPath(keyboardShortcut))
+		guard let keyboardShortcutField else {
+			return
+		}
+
+		keyboardShortcutField.stringValue = keyboardShortcut
 	}
 
-	@objc public var unreadCountDescription: String {
+	public var unreadCountDescription: String {
 		guard let searchResult = objectValue as? ChannelSpotlightSearchResult,
 		      let channel = searchResult.channel
 		else {
@@ -176,8 +190,8 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 	}
 
 	private func unreadCountDescriptionChanged() {
-		willChangeValue(forKey: #keyPath(unreadCountDescription))
-		didChangeValue(forKey: #keyPath(unreadCountDescription))
+		unreadCountDescriptionField?.stringValue = unreadCountDescription
+
 		updateAccessibilityLabel()
 	}
 
