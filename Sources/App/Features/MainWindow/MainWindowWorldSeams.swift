@@ -122,8 +122,8 @@ extension MainWindow: ClientOutput {
 		isMainWindow
 	}
 
-	var alertPresentationWindow: NSWindow? {
-		self
+	func presentAlertSheet(_ request: AlertRequest, completion: @escaping TDCAlertCompletionBlock) {
+		TDCAlert.alertSheet(with: self, request: request, completionBlock: completion)
 	}
 
 	func reloadServerListItems(for client: IRCClient) {

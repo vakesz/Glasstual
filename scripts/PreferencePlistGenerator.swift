@@ -4,11 +4,12 @@
 
  One argument: the directory the plists are written into. */
 
+import CocoaExtensions
 import Foundation
 
 @main
 enum PreferencePlistGenerator {
-	private static var resources: [(name: String, contents: [String: Any])] {
+	private static var resources: [(name: String, contents: [String: PropertyListValue])] {
 		[
 			("KeysExcludedFromContainer", Preferences.GeneratedResources.keysExcludedFromContainer),
 			("KeysExcludedFromExport", Preferences.GeneratedResources.keysExcludedFromExport),
@@ -30,12 +31,16 @@ enum PreferencePlistGenerator {
 		}
 	}
 
-	private static func write(_ contents: [String: Any], named name: String, into directory: URL) {
+	private static func write(_ contents: [String: PropertyListValue], named name: String, into directory: URL) {
 		let url = directory.appendingPathComponent("\(name).plist")
 
 		let data: Data
 		do {
-			data = try PropertyListSerialization.data(fromPropertyList: contents, format: .xml, options: 0)
+			data = try PropertyListSerialization.data(
+				fromPropertyList: contents.propertyListObject,
+				format: .xml,
+				options: 0
+			)
 		} catch {
 			fail("could not serialise \(name): \(error)")
 		}

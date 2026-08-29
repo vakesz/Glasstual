@@ -110,7 +110,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		"TDCOnboardingWindow"
 	}
 
-	@objc public static func shouldPresentOnLaunch() -> Bool {
+	public static func shouldPresentOnLaunch() -> Bool {
 		if TextualPreferences.onboardingCompleted() {
 			return false
 		}
@@ -118,7 +118,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		return (AppController.shared.world?.clientCount ?? 0) == 0
 	}
 
-	@objc public init() {
+	public init() {
 		super.init(window: nil)
 		prepareInitialState()
 	}
@@ -177,7 +177,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		showStep(at: 0, animated: false)
 	}
 
-	@objc public func show() {
+	public func show() {
 		let window = window // Loads the nib
 		window?.center()
 		showWindow(nil)
@@ -332,7 +332,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		skip(sender)
 	}
 
-	@objc override public func cancelOperation(_ sender: Any?) {
+	override public func cancelOperation(_ sender: Any?) {
 		skip(sender)
 	}
 

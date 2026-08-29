@@ -38,13 +38,13 @@
 
 import Foundation
 
-@objc public enum IRCClientConnectMode: UInt, Sendable {
+public enum IRCClientConnectMode: UInt, Sendable {
 	case normal
 	case retry
 	case reconnect
 }
 
-@objc public enum IRCClientDisconnectMode: UInt, Sendable {
+public enum IRCClientDisconnectMode: UInt, Sendable {
 	case normal
 	case computerSleep
 	case badCertificate

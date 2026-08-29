@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import InlineContentKit
 
@@ -81,8 +82,8 @@ struct PornhubModule: InlineContentModule {
 			payload,
 			templateURL: CoreMediaBundle.current.url(forResource: "ICMPornhub", withExtension: "mustache"),
 			attributes: [
-				"uniqueIdentifier": payload.uniqueIdentifier,
-				"videoIdentifier": identifier,
+				"uniqueIdentifier": .string(payload.uniqueIdentifier),
+				"videoIdentifier": .string(identifier),
 			]
 		)
 	}

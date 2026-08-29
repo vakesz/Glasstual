@@ -262,9 +262,9 @@ nonisolated struct LogLineRenderResult: Sendable { // nonisolated: value
 nonisolated protocol LogLineRendering { // nonisolated: value
 	func renderBody(
 		_ body: String,
-		attributes: [String: Any],
+		attributes: LogRendererConfiguration,
 		members: [RenderedMember],
-		results: inout [String: Any]
+		results: inout LogRendererResults
 	) -> String
 	/** Mutating because a renderer caches the templates it compiles. The cache
 	 belongs to the render job that made the renderer and dies with it, which is
@@ -282,9 +282,9 @@ nonisolated struct ThemeLogLineRenderer: LogLineRendering { // nonisolated: valu
 
 	func renderBody(
 		_ body: String,
-		attributes: [String: Any],
+		attributes: LogRendererConfiguration,
 		members: [RenderedMember],
-		results: inout [String: Any]
+		results: inout LogRendererResults
 	) -> String {
 		TVCLogRenderer.renderBody(
 			body,
@@ -401,14 +401,13 @@ extension LogController {
 		rendererAttributes[.memberType] = line.memberType.rawValue
 		rendererAttributes[.inlineMediaEnabled] = request.context.inlineMediaEnabled
 
-		var rawResults: [String: Any] = [:]
+		var results = LogRendererResults()
 		let renderedBody = renderer.renderBody(
 			line.messageBody,
-			attributes: rendererAttributes.rawValues,
+			attributes: rendererAttributes,
 			members: request.context.members,
-			results: &rawResults
+			results: &results
 		)
-		let results = LogRendererResults(rawValues: rawResults)
 		let highlighted = (results[.keywordMatchFound] as? NSNumber)?.boolValue ?? false
 		let inlineMedia = request.context.inlineMediaEnabled &&
 			(lineType == .privateMessage || lineType == .action)

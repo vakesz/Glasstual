@@ -51,7 +51,6 @@ private nonisolated func serverTimeDate(from value: String) -> Date? { // noniso
  and because it points back at the `MessageBatch` that contains it. Handlers
  treat it as read-only; the two places that need a changed message start from
  `duplicate()`, which never touches the receiver. */
-@objc(IRCMessage)
 public final nonisolated class Message: NSObject { // nonisolated: value
 	public internal(set) var sender = Prefix()
 	public internal(set) var command = ""

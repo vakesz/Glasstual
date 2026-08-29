@@ -39,7 +39,6 @@
 import Foundation
 
 extension IRCClient {
-	@objc(descriptionForTimedCommand:)
 	func description(for timedCommand: TimedCommand) -> String {
 		let timerInterval = humanReadableTimeInterval(timedCommand.timerInterval, false, 0) as String? ?? ""
 		let timeRemaining = humanReadableTimeInterval(timedCommand.timeRemaining, false, 0) as String? ?? ""
@@ -70,47 +69,38 @@ extension IRCClient {
 		)
 	}
 
-	@objc(timedCommandWithIdentifier:)
 	func timedCommand(withIdentifier identifier: String) -> TimedCommand? {
 		timedCommandsByIdentifier[identifier]
 	}
 
-	@objc(listOfTimedCommands)
 	func listOfTimedCommands() -> [TimedCommand] {
 		Array(timedCommandsByIdentifier.values)
 	}
 
-	@objc(addTimedCommand:)
 	func addTimedCommand(_ timedCommand: TimedCommand) {
 		timedCommandsByIdentifier[timedCommand.identifier] = timedCommand
 	}
 
-	@objc(removeTimedCommands)
 	func removeTimedCommands() {
 		timedCommandsByIdentifier.removeAll()
 	}
 
-	@objc(removeTimedCommand:)
 	func removeTimedCommand(_ timedCommand: TimedCommand) {
 		timedCommandsByIdentifier.removeValue(forKey: timedCommand.identifier)
 	}
 
-	@objc(stopTimedCommand:)
 	func stopTimedCommand(_ timedCommand: TimedCommand) {
 		timedCommand.stop()
 	}
 
-	@objc(startTimedCommand:interval:)
 	func startTimedCommand(_ timedCommand: TimedCommand, interval: UInt) {
 		startTimedCommand(timedCommand, interval: interval, onRepeat: false, iterations: 0)
 	}
 
-	@objc(startTimedCommand:interval:onRepeat:)
 	func startTimedCommand(_ timedCommand: TimedCommand, interval: UInt, onRepeat: Bool) {
 		startTimedCommand(timedCommand, interval: interval, onRepeat: onRepeat, iterations: 0)
 	}
 
-	@objc(startTimedCommand:interval:onRepeat:iterations:)
 	func startTimedCommand(
 		_ timedCommand: TimedCommand,
 		interval: UInt,
@@ -120,12 +110,10 @@ extension IRCClient {
 		timedCommand.start(TimeInterval(interval), onRepeat: onRepeat, iterations: iterations)
 	}
 
-	@objc(restartTimedCommand:)
 	func restartTimedCommand(_ timedCommand: TimedCommand) -> Bool {
 		timedCommand.restart()
 	}
 
-	@objc(onTimedCommand:)
 	@MainActor
 	func onTimedCommand(_ timedCommand: TimedCommand) {
 		if timedCommand.timerIsActive == false {

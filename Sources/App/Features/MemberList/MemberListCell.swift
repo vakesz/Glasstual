@@ -192,7 +192,6 @@ public final class MemberListCell: NSTableCellView {
 		cellTextField.lineBreakMode = .byTruncatingTail
 	}
 
-	@objc(avatarImageForNickname:size:)
 	public static func avatarImage(forNickname nickname: String, size: CGFloat) -> NSImage {
 		let color = avatarColor(forNickname: nickname)
 		let initial = avatarInitial(forNickname: nickname)
@@ -356,13 +355,11 @@ public final class MemberListCell: NSTableCellView {
 		statusImageView.cell?.setAccessibilityElement(false)
 	}
 
-	@objc(setStatusImageVisible:)
 	public func setStatusImageVisible(_ visible: Bool) {
 		statusImageView.isHidden = (visible == false)
 		statusImageWidthConstraint.constant = visible ? statusImageWidth : 0.0
 	}
 
-	@objc
 	public func drawWithExpansionFrame() {
 		guard let memberList, let cellItem, let userInfoPopover = memberList.memberListUserInfoPopover else {
 			return
@@ -514,12 +511,10 @@ public final class MemberListHeaderCell: NSTableCellView {
 
 // MARK: - Row View Cell
 
-@objc(TVCMemberListRowCell)
 public final class MemberListRowCell: NSTableRowView {
 	@objc public private(set) weak var memberList: MemberList?
 	private weak var cachedChildCell: MemberListCell?
 
-	@objc(initWithMemberList:)
 	public init(memberList: MemberList) {
 		self.memberList = memberList
 		super.init(frame: .zero)
@@ -564,7 +559,6 @@ public final class MemberListRowCell: NSTableRowView {
 		}
 	}
 
-	@objc
 	public func refreshEmphasis() {
 		isEmphasized = isEmphasized
 	}

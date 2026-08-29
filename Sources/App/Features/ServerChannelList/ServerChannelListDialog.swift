@@ -116,9 +116,9 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 		delegate as? any ServerChannelListDialogDelegate
 	}
 
-	@objc public private(set) var client: IRCClient!
-	@objc public private(set) var clientId: String?
-	@objc public var contentAlreadyReceived = false
+	public private(set) var client: IRCClient!
+	public private(set) var clientId: String?
+	public var contentAlreadyReceived = false
 
 	@IBOutlet private var updateButton: NSButton!
 	@IBOutlet private var searchTextField: NSSearchField!
@@ -126,6 +126,8 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 	@IBOutlet private var channelListTable: BasicTableView!
 
 	private var isWaitingForWrites = false
+	/// Coalesces a burst of LIST replies into one table write a second.
+	private var queuedWritesTask: Task<Void, Never>?
 	private var queuedWrites: [ServerChannelListDialogEntry] = []
 	private var minimumUserCountLabel: NSTextField?
 	private var minimumUserCountTextField: NSTextField?
@@ -143,7 +145,6 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 		fatalError("Use init(client:)")
 	}
 
-	@objc(initWithClient:)
 	public init(client: IRCClient) {
 		super.init()
 
@@ -153,7 +154,7 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 		prepareInitialState()
 	}
 
-	@objc public var serverSideListArguments: String? {
+	public var serverSideListArguments: String? {
 		Self.listArguments(
 			forMinimumUserCount: UInt(minimumUserCountTextField?.integerValue ?? 0),
 			pattern: searchTextField.stringValue,
@@ -161,7 +162,6 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 		)
 	}
 
-	@objc(listArgumentsForMinimumUserCount:pattern:supportedTokens:)
 	public static func listArguments(
 		forMinimumUserCount minimumUserCount: UInt,
 		pattern: String?,
@@ -196,17 +196,17 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 	}
 
 	override public func show() {
-		window.ce_restoreState(for: Self.self)
+		window.ce_restoreState(for: .serverChannelList)
 		super.show()
 	}
 
-	@objc public func clear() {
+	public func clear() {
 		allEntries.removeAll()
 
 		applyEntries()
 	}
 
-	@objc public func addChannel(_ channel: String, count: UInt, topic: String?) {
+	public func addChannel(_ channel: String, count: UInt, topic: String?) {
 		var newEntry = ServerChannelListDialogEntry()
 		newEntry.channelName = channel
 		newEntry.channelMemberCount = Int(count)
@@ -219,7 +219,14 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 
 		if isWaitingForWrites == false {
 			isWaitingForWrites = true
-			textual_performSelectorInCommonModes(#selector(queuedWritesTimer), with: nil, afterDelay: 1.0)
+			queuedWritesTask = Task { [weak self] in
+				try? await Task.sleep(for: .seconds(1))
+
+				guard Task.isCancelled == false, let self else { return }
+
+				isWaitingForWrites = false
+				writeQueuedWrites()
+			}
 		}
 	}
 
@@ -380,11 +387,6 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 		minimumUserCountTextField = textField
 	}
 
-	@objc private func queuedWritesTimer() {
-		isWaitingForWrites = false
-		writeQueuedWrites()
-	}
-
 	/// Moves everything the server has named into the list.
 	///
 	/// The queue used to be drained through the filter, and anything the search
@@ -465,7 +467,7 @@ extension ServerChannelListDialog: NSWindowDelegate {
 		channelListTable.dataSource = nil
 		channelListTable.delegate = nil
 		channelListDataSource = nil
-		window.ce_saveState(for: Self.self)
+		window.ce_saveState(for: .serverChannelList)
 
 		listDelegate?.serverChannelDialogWillClose(self)
 	}

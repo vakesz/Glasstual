@@ -35,11 +35,10 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
-@objc(IRCCommandIndex)
 public final class CommandIndex: NSObject {
-	@objc(populateCommandIndex)
 	public static func populateCommandIndex() {
 		/* Reading the tables is what builds them, and Swift guarantees that
 		 happens exactly once. Called at start-up so the first command does not
@@ -47,24 +46,20 @@ public final class CommandIndex: NSObject {
 		_ = commandIndexTables.isEmpty
 	}
 
-	@objc(invalidateCaches)
 	public static func invalidateCaches() {
 		/* Nothing left to invalidate: the developer-mode split is decided when
 		 the tables are built, so both command lists already exist. Kept because
 		 the preference reload still calls it. */
 	}
 
-	@objc(localCommandList)
 	public static func localCommandList() -> [String] {
 		commandIndexTables.commandNames(developerModeEnabled: TextualPreferences.developerModeEnabled())
 	}
 
-	@objc(indexOfRemoteCommand:)
 	public static func index(ofRemoteCommand command: String) -> UInt {
 		commandIndexTables.remote[command.lowercased()]?.index ?? CommandIndexTables.notFound
 	}
 
-	@objc(indexOfLocalCommand:)
 	public static func index(ofLocalCommand command: String) -> UInt {
 		guard let entry = commandIndexTables.local[command.lowercased()] else {
 			return CommandIndexTables.notFound
@@ -77,7 +72,6 @@ public final class CommandIndex: NSObject {
 		return entry.index
 	}
 
-	@objc(colonPositionForRemoteCommand:)
 	public static func colonPosition(forRemoteCommand command: String) -> UInt {
 		guard let entry = commandIndexTables.remote[command.lowercased()],
 		      entry.outgoingColonIndex >= 0
@@ -88,7 +82,6 @@ public final class CommandIndex: NSObject {
 		return UInt(entry.outgoingColonIndex)
 	}
 
-	@objc(syntaxForLocalCommand:)
 	public static func syntax(forLocalCommand command: String) -> String? {
 		guard let entry = commandIndexTables.local[command.lowercased()] else {
 			return nil
@@ -260,14 +253,14 @@ nonisolated struct CommandIndexTables: Sendable { // nonisolated: value
 			local: commandData(from: localValues).mapValues { data in
 				LocalEntry(
 					index: unsignedIntegerValue(data[Key.indexValue]),
-					isDeveloperModeOnly: boolValue(data[Key.developerModeOnly]),
-					arguments: data[Key.arguments] as? String
+					isDeveloperModeOnly: data[Key.developerModeOnly]?.boolean ?? false,
+					arguments: data[Key.arguments]?.string
 				)
 			},
 			remote: commandData(from: remoteValues).mapValues { data in
 				RemoteEntry(
 					index: unsignedIntegerValue(data[Key.indexValue]),
-					outgoingColonIndex: integerValue(data[Key.outgoingColonIndex])
+					outgoingColonIndex: data[Key.outgoingColonIndex]?.integer ?? 0
 				)
 			}
 		)
@@ -275,26 +268,20 @@ nonisolated struct CommandIndexTables: Sendable { // nonisolated: value
 
 	private static let reservedKey = "Reserved Information"
 
-	private static func commandData(from values: [String: Any]?) -> [String: [String: Any]] {
+	private static func commandData(
+		from values: [String: PropertyListValue]?
+	) -> [String: [String: PropertyListValue]] {
 		guard var values else {
 			return [:]
 		}
 
 		values.removeValue(forKey: reservedKey)
 
-		return values.compactMapValues { $0 as? [String: Any] }
+		return values.compactMapValues(\.dictionary)
 	}
 
-	private static func boolValue(_ value: Any?) -> Bool {
-		(value as? NSNumber)?.boolValue ?? false
-	}
-
-	private static func integerValue(_ value: Any?) -> Int {
-		(value as? NSNumber)?.intValue ?? 0
-	}
-
-	private static func unsignedIntegerValue(_ value: Any?) -> UInt {
-		(value as? NSNumber)?.uintValue ?? 0
+	private static func unsignedIntegerValue(_ value: PropertyListValue?) -> UInt {
+		value?.integer.map(UInt.init(clamping:)) ?? 0
 	}
 
 	private enum Key {

@@ -56,7 +56,6 @@ private let schemeHandlerLogger = Logger(
  Rendered documents are held in memory and served from there, so nothing is
  written into the theme's temporary directory any more. */
 @MainActor
-@objc(TVCLogViewSchemeHandler)
 public final class LogViewThemeSchemeHandler: NSObject, WKURLSchemeHandler {
 	public static let shared = LogViewThemeSchemeHandler()
 
@@ -207,11 +206,11 @@ public final class LogViewThemeSchemeHandler: NSObject, WKURLSchemeHandler {
 	}
 
 	private func fail(_ task: any WKURLSchemeTask, url: URL?, code: URLError.Code) {
-		var userInfo: [String: Any] = [:]
-		if let url {
-			userInfo[NSURLErrorFailingURLErrorKey] = url
-		}
-		task.didFailWithError(NSError(domain: NSURLErrorDomain, code: code.rawValue, userInfo: userInfo))
+		task.didFailWithError(NSError(
+			domain: NSURLErrorDomain,
+			code: code.rawValue,
+			userInfo: url.map { [NSURLErrorFailingURLErrorKey: $0] }
+		))
 	}
 
 	// MARK: Policy

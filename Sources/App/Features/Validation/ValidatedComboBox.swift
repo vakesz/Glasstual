@@ -41,24 +41,26 @@ import CocoaExtensions
 @objc(TVCValidatedComboBox)
 @MainActor
 public final class ValidatedComboBox: NSComboBox {
-	@objc public var validationBlock: ((String) -> String?)?
-	@objc public var stringValueUsesOnlyFirstToken = false
-	@objc public var stringValueIsTrimmed = false
-	@objc public var stringValueIsInvalidOnEmpty = false
-	@objc public var performValidationWhenEmpty = false
+	public var validationBlock: ((String) -> String?)?
+	public var stringValueUsesOnlyFirstToken = false
+	public var stringValueIsTrimmed = false
+	public var stringValueIsInvalidOnEmpty = false
+	public var performValidationWhenEmpty = false
 	public weak var textDidChangeCallback: (any ValidatedControlChangeObserver)?
-	@objc public var caseInsensitiveComplete = false
-	@objc public var defaultValue: String?
+	public var caseInsensitiveComplete = false
+	public var defaultValue: String?
 
 	private var cachedValidValue = false
-	@objc public private(set) var valueIsPredefined = false
+	public private(set) var valueIsPredefined = false
 	private var validationPerformed = false
+	/// The combo box's own selection and pop-up notifications.
+	private let notifications = NotificationSubscriptions()
 	private var listVisible = false
 	private var selectionChangedWhileListVisible = false
 	private var selectionChangedWhileSetting = false
-	@objc public private(set) var lastValidationErrorDescription: String?
+	public private(set) var lastValidationErrorDescription: String?
 
-	@objc public var value: String {
+	public var value: String {
 		if let selected = objectValueOfSelectedItem as? String {
 			return selected
 		}
@@ -80,19 +82,19 @@ public final class ValidatedComboBox: NSComboBox {
 		return processedValue
 	}
 
-	@objc public var lowercaseValue: String {
+	public var lowercaseValue: String {
 		value.lowercased()
 	}
 
-	@objc public var uppercaseValue: String {
+	public var uppercaseValue: String {
 		value.uppercased()
 	}
 
-	@objc public var valueIsEmpty: Bool {
+	public var valueIsEmpty: Bool {
 		stringValue.isEmpty
 	}
 
-	@objc public var valueIsValid: Bool {
+	public var valueIsValid: Bool {
 		cachedValidValue
 	}
 
@@ -111,33 +113,24 @@ public final class ValidatedComboBox: NSComboBox {
 
 		cachedValidValue = false
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(comboBoxSelectionDidChange(_:)),
-			name: NSComboBox.selectionDidChangeNotification,
-			object: self
-		)
+		notifications.observe(NSComboBox.selectionDidChangeNotification, object: self) { [weak self] notification in
+			self?.comboBoxSelectionDidChange(notification)
+		}
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(comboBoxWillPopUp(_:)),
-			name: NSComboBox.willPopUpNotification,
-			object: self
-		)
+		notifications.observe(NSComboBox.willPopUpNotification, object: self) { [weak self] notification in
+			self?.comboBoxWillPopUp(notification)
+		}
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(comboBoxWillDismiss(_:)),
-			name: NSComboBox.willDismissNotification,
-			object: self
-		)
+		notifications.observe(NSComboBox.willDismissNotification, object: self) { [weak self] notification in
+			self?.comboBoxWillDismiss(notification)
+		}
 	}
 
 	/** Isolated so the popover teardown runs on the main actor whichever thread
 	 drops the last reference. */
 	isolated deinit {
 		closeValidationErrorPopover()
-		NotificationCenter.default.removeObserver(self)
+		notifications.cancelAll()
 	}
 
 	override public var stringValue: String {
@@ -184,7 +177,7 @@ public final class ValidatedComboBox: NSComboBox {
 		}
 	}
 
-	@objc private func comboBoxSelectionDidChange(_: Notification) {
+	private func comboBoxSelectionDidChange(_: Notification) {
 		selectionChangedWhileListVisible = listVisible
 
 		if selectionChangedWhileSetting {
@@ -193,11 +186,11 @@ public final class ValidatedComboBox: NSComboBox {
 		}
 	}
 
-	@objc private func comboBoxWillPopUp(_: Notification) {
+	private func comboBoxWillPopUp(_: Notification) {
 		listVisible = true
 	}
 
-	@objc private func comboBoxWillDismiss(_: Notification) {
+	private func comboBoxWillDismiss(_: Notification) {
 		listVisible = false
 
 		if selectionChangedWhileListVisible {
@@ -206,7 +199,7 @@ public final class ValidatedComboBox: NSComboBox {
 		}
 	}
 
-	@objc public func performValidation() {
+	public func performValidation() {
 		let stringToValidate = stringValue
 		var errorDescription: String?
 
@@ -224,7 +217,7 @@ public final class ValidatedComboBox: NSComboBox {
 		updateBackgroundForValidity()
 	}
 
-	@objc @discardableResult
+	@discardableResult
 	public func showValidationErrorPopover() -> Bool {
 		if validationPerformed == false {
 			performValidation()
@@ -242,7 +235,7 @@ public final class ValidatedComboBox: NSComboBox {
 		return true
 	}
 
-	@objc public func closeValidationErrorPopover() {
+	public func closeValidationErrorPopover() {
 		ErrorMessagePopoverController.sharedController().closeMessage(for: self)
 	}
 

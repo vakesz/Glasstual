@@ -5,18 +5,13 @@
 
 import CocoaExtensions
 import Foundation
-import ObjectiveC.runtime
 import Testing
-
-private typealias DictionaryBoolGetter = @convention(c) (AnyObject, Selector, AnyObject) -> Bool
-private typealias DictionaryIntegerGetter = @convention(c) (AnyObject, Selector, AnyObject) -> Int
-private typealias DictionaryObjectMethod = @convention(c) (AnyObject, Selector, AnyObject) -> Unmanaged<AnyObject>
 
 @MainActor
 @Suite("Dictionary and array helpers")
 struct DictionaryHelperMigrationTests {
 	@Test("A typed read accepts a number and the string spelling of one")
-	func typedAccessorsAcceptNumbersAndNumericStrings() throws {
+	func typedAccessorsAcceptNumbersAndNumericStrings() {
 		let dictionary: NSDictionary = [
 			"double": "4.25",
 			"enabled": "YES",
@@ -28,11 +23,8 @@ struct DictionaryHelperMigrationTests {
 			"unsignedShort": NSNumber(value: UInt16(65000)),
 		]
 
-		let enabled = try invokeBool(dictionary, selector: "boolForKey:", key: "enabled")
-		let integer = try invokeInteger(dictionary, selector: "integerForKey:", key: "integer")
-
-		#expect(enabled)
-		#expect(integer == 42)
+		#expect(dictionary.ce_bool(forKey: "enabled"))
+		#expect(dictionary.ce_integer(forKey: "integer") == 42)
 		#expect(dictionary.ce_short(forKey: "short") == -12)
 		#expect(dictionary.ce_unsignedShort(forKey: "unsignedShort") == 65000)
 		#expect(dictionary.ce_unsignedInteger(forKey: "unsignedInteger") == 123)
@@ -43,18 +35,14 @@ struct DictionaryHelperMigrationTests {
 	}
 
 	@Test("A value of the wrong type reads as the supplied default")
-	func typedAccessorsUseDefaultsForWrongTypes() throws {
+	func typedAccessorsUseDefaultsForWrongTypes() {
 		let dictionary: NSDictionary = ["name": NSArray()]
-		let selector = NSSelectorFromString("integerForKey:orUseDefault:")
-		typealias Getter = @convention(c) (AnyObject, Selector, AnyObject, Int) -> Int
-		let implementation = try #require(dictionary.method(for: selector))
-		let value = unsafeBitCast(implementation, to: Getter.self)(dictionary, selector, "name" as NSString, 19)
 
-		#expect(value == 19)
+		#expect(dictionary.ce_integer(forKey: "name", orUseDefault: 19) == 19)
 	}
 
 	@Test("Removing defaults drops the values equal to a default and the empty ones")
-	func removingDefaultsDropsEqualAndEmptyValues() throws {
+	func removingDefaultsDropsEqualAndEmptyValues() {
 		let hashTable = NSHashTable<AnyObject>(options: .strongMemory)
 		let mapTable = NSMapTable<AnyObject, AnyObject>.strongToStrongObjects()
 		let dictionary: NSDictionary = [
@@ -68,11 +56,7 @@ struct DictionaryHelperMigrationTests {
 			"orderedSet": NSOrderedSet(),
 			"pointerArray": NSPointerArray.strongObjects(),
 		]
-		let result = try #require(invokeObject(
-			dictionary,
-			selector: "dictionaryByRemovingDefaults:",
-			argument: ["default": "same"] as NSDictionary
-		) as? NSDictionary)
+		let result = dictionary.ce_dictionaryByRemovingDefaults(["default": "same"] as NSDictionary)
 
 		#expect(result == ["kept": "value"] as NSDictionary)
 	}
@@ -100,49 +84,11 @@ struct DictionaryHelperMigrationTests {
 	}
 
 	@Test("Form data percent-encodes strings and spells numbers and null out")
-	func formDataSupportsStringsNumbersAndNull() throws {
+	func formDataSupportsStringsNumbersAndNull() {
 		let dictionary: NSDictionary = ["query": "hello world", "page": 2, "empty": NSNull()]
-		let result = try #require(invokeObject(
-			dictionary,
-			selector: "formDataUsingSeparator:",
-			argument: "&" as NSString
-		) as? String)
+		let result = dictionary.ce_formData(usingSeparator: "&")
 		let fields = Set(result.split(separator: "&").map(String.init))
 
 		#expect(fields == ["query=hello%20world", "page=2", "empty="])
-	}
-
-	private func invokeBool(_ dictionary: NSDictionary, selector name: String, key: String) throws -> Bool {
-		let selector = NSSelectorFromString(name)
-		let implementation = try #require(dictionary.method(for: selector))
-		return unsafeBitCast(implementation, to: DictionaryBoolGetter.self)(
-			dictionary,
-			selector,
-			key as NSString
-		)
-	}
-
-	private func invokeInteger(_ dictionary: NSDictionary, selector name: String, key: String) throws -> Int {
-		let selector = NSSelectorFromString(name)
-		let implementation = try #require(dictionary.method(for: selector))
-		return unsafeBitCast(implementation, to: DictionaryIntegerGetter.self)(
-			dictionary,
-			selector,
-			key as NSString
-		)
-	}
-
-	private func invokeObject(
-		_ dictionary: NSDictionary,
-		selector name: String,
-		argument: AnyObject
-	) throws -> AnyObject {
-		let selector = NSSelectorFromString(name)
-		let implementation = try #require(dictionary.method(for: selector))
-		return unsafeBitCast(implementation, to: DictionaryObjectMethod.self)(
-			dictionary,
-			selector,
-			argument
-		).takeUnretainedValue()
 	}
 }

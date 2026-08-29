@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 /** Every declaration in one place, and everything derived from them: the
@@ -83,8 +84,8 @@ public nonisolated extension Preferences { // nonisolated: value
 
 	/// The registration domain for one defaults database, built from the
 	/// declarations rather than read from a plist.
-	static func registrationDomain(for storage: PreferenceStorage) -> [String: Any] {
-		var domain: [String: Any] = [:]
+	static func registrationDomain(for storage: PreferenceStorage) -> [String: PropertyListValue] {
+		var domain: [String: PropertyListValue] = [:]
 
 		for key in allKeys where key.storage == storage {
 			guard let value = key.registeredDefault else {
@@ -146,45 +147,45 @@ public nonisolated extension Preferences { // nonisolated: value
 	/// files have: name to comparator for the catalogues, name to value for the
 	/// registration domains.
 	enum GeneratedResources {
-		public static var keyCatalog: [String: Any] {
+		public static var keyCatalog: [String: PropertyListValue] {
 			catalogue { $0.isCatalogued } families: { $0.isCatalogued }
 		}
 
 		/// Only catalogued names: this list exists to tell an import which of the
 		/// keys it may carry belong outside the container, and an uncatalogued
 		/// key is never imported in the first place.
-		public static var keysExcludedFromContainer: [String: Any] {
+		public static var keysExcludedFromContainer: [String: PropertyListValue] {
 			catalogue { $0.storage == .standard && $0.isCatalogued } families: {
 				$0.storage == .standard && $0.isCatalogued
 			}
 		}
 
-		public static var keysExcludedFromExport: [String: Any] {
+		public static var keysExcludedFromExport: [String: PropertyListValue] {
 			catalogue { $0.traits.contains(.excludedFromExport) } families: {
 				$0.traits.contains(.excludedFromExport)
 			}
 		}
 
-		public static var registeredUserDefaults: [String: Any] {
+		public static var registeredUserDefaults: [String: PropertyListValue] {
 			Preferences.registrationDomain(for: .standard)
 		}
 
-		public static var registeredUserDefaultsInContainer: [String: Any] {
+		public static var registeredUserDefaultsInContainer: [String: PropertyListValue] {
 			Preferences.registrationDomain(for: .container)
 		}
 
 		private static func catalogue(
 			_ includesKey: (any AnyPreferenceKey) -> Bool,
 			families includesFamily: (PreferenceKeyFamily) -> Bool
-		) -> [String: Any] {
-			var result: [String: Any] = [:]
+		) -> [String: PropertyListValue] {
+			var result: [String: PropertyListValue] = [:]
 
 			for key in Preferences.allKeys where includesKey(key) {
-				result[key.name] = NSNumber(value: PreferenceKeyFamily.Match.exact.rawValue)
+				result[key.name] = .integer(Int(PreferenceKeyFamily.Match.exact.rawValue))
 			}
 
 			for family in Preferences.allFamilies where includesFamily(family) {
-				result[family.pattern] = NSNumber(value: family.match.rawValue)
+				result[family.pattern] = .integer(Int(family.match.rawValue))
 			}
 
 			return result

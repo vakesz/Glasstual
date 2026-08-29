@@ -39,7 +39,6 @@
 import Foundation
 
 public extension IRCClient {
-	@objc(compileListOfModeChangesForModeSymbol:modeIsSet:parameterString:)
 	func compileListOfModeChanges(
 		forModeSymbol modeSymbol: String,
 		modeIsSet: Bool,
@@ -53,7 +52,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(compileListOfModeChangesForModeSymbol:modeIsSet:parameterString:characterSet:)
 	func compileListOfModeChanges(
 		forModeSymbol modeSymbol: String,
 		modeIsSet: Bool,
@@ -67,7 +65,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(compileListOfModeChangesForModeSymbol:modeIsSet:modeParameters:)
 	func compileListOfModeChanges(
 		forModeSymbol modeSymbol: String,
 		modeIsSet: Bool,

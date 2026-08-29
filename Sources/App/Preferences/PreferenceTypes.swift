@@ -50,58 +50,58 @@ nonisolated let TPCPreferencesThemeFontNameMissingLocallyDefaultsKey = Preferenc
 	.name
 nonisolated let TPCPreferencesDictionaryVersion: UInt = 602 // nonisolated: let
 
-@objc public enum TXNicknameHighlightMatchType: UInt, Sendable {
+public enum TXNicknameHighlightMatchType: UInt, Sendable {
 	case partial
 	case exact
 	case regularExpression
 }
 
-@objc public enum TXTabKeyAction: UInt, Sendable {
+public enum TXTabKeyAction: UInt, Sendable {
 	case nicknameComplete = 0
 	case unreadChannel = 1
 	case none = 100
 }
 
-@objc public enum TXUserDoubleClickAction: UInt, Sendable {
+public enum TXUserDoubleClickAction: UInt, Sendable {
 	case whois = 100
 	case privateMessage = 200
 	case insertTextField = 300
 }
 
-@objc public enum TXNoticeSendLocation: UInt, Sendable {
+public enum TXNoticeSendLocation: UInt, Sendable {
 	case serverConsole
 	case selectedChannel
 	case query
 }
 
-@objc public enum TXCommandWKeyAction: UInt, Sendable {
+public enum TXCommandWKeyAction: UInt, Sendable {
 	case closeWindow
 	case partChannel
 	case disconnect
 	case terminate
 }
 
-@objc public enum TXHostmaskBanFormat: UInt, Sendable {
+public enum TXHostmaskBanFormat: UInt, Sendable {
 	case whnin
 	case whainn
 	case whanni
 	case exact
 }
 
-@objc public enum TVCMainWindowTextViewFontSize: UInt, Sendable {
+public enum TVCMainWindowTextViewFontSize: UInt, Sendable {
 	case normal = 1
 	case large
 	case extraLarge
 	case humongous
 }
 
-@objc public enum TXFileTransferRequestReply: UInt, Sendable {
+public enum TXFileTransferRequestReply: UInt, Sendable {
 	case ignore = 1
 	case openDialog
 	case automaticallyDownload
 }
 
-@objc public enum TXFileTransferIPAddressMethodDetection: UInt, Sendable {
+public enum TXFileTransferIPAddressMethodDetection: UInt, Sendable {
 	// Raw values preserve existing preferences.
 	case routerOnly = 3
 	case routerAndFirstParty = 1
@@ -109,12 +109,12 @@ nonisolated let TPCPreferencesDictionaryVersion: UInt = 602 // nonisolated: let
 	case manual = 2
 }
 
-@objc public enum TXChannelViewArrangement: UInt, Sendable {
+public enum TXChannelViewArrangement: UInt, Sendable {
 	case horizontal
 	case vertical
 }
 
-@objc public enum TXPreferredAppearance: UInt, Sendable {
+public enum TXPreferredAppearance: UInt, Sendable {
 	case inherited
 	case light
 	case dark

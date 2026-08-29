@@ -66,7 +66,7 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 	@IBOutlet public var muteNotificationsSoundsDockMenuItem: NSMenuItem?
 	@IBOutlet public var muteNotificationsSoundsFileMenuItem: NSMenuItem?
 
-	@objc public var pointedNickname: String?
+	public var pointedNickname: String?
 	/** Created on first use rather than in prepareInitialState(): menu
 	 validation can run before the main window finishes loading (a theme-load
 	 alert during launch is enough), and an unset coordinator crashed there. */
@@ -76,21 +76,20 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 		segmentedControllerMenuOutlet
 	}
 
-	@objc public func prepareInitialState() {
+	public func prepareInitialState() {
 		actionCoordinator.prepareInitialState()
 	}
 
-	@objc(applySymbolsToMenu:)
 	public func applySymbols(to menu: NSMenu?) {
 		MenuPresentation.apply(to: menu)
 	}
 
-	@objc public func prepareForApplicationTermination() {
+	public func prepareForApplicationTermination() {
 		menuControllerLogger.debug("Preparing menu controller")
 		actionCoordinator.prepareForApplicationTermination()
 	}
 
-	@objc public func preferencesChanged() {
+	public func preferencesChanged() {
 		actionCoordinator.preferencesChanged()
 	}
 
@@ -106,27 +105,26 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 		actionCoordinator.menuDidClose(menu)
 	}
 
-	@objc public func resetSelectedItems() {
+	public func resetSelectedItems() {
 		actionCoordinator.resetSelectedItems()
 	}
 
-	@objc public var selectedClient: IRCClient? {
+	public var selectedClient: IRCClient? {
 		actionCoordinator.selectedClient
 	}
 
-	@objc public var selectedChannel: IRCChannel? {
+	public var selectedChannel: IRCChannel? {
 		actionCoordinator.selectedChannel
 	}
 
-	@objc public var selectedViewController: LogController? {
+	public var selectedViewController: LogController? {
 		actionCoordinator.objcSelectedViewController()
 	}
 
-	@objc public var selectedViewControllerBackingView: LogView? {
+	public var selectedViewControllerBackingView: LogView? {
 		actionCoordinator.objcSelectedViewControllerBackingView()
 	}
 
-	@objc(checkSelectedMembers:)
 	public func checkSelectedMembers(_ sender: Any) -> Bool {
 		selectedMembers(sender).isEmpty == false
 	}
@@ -135,12 +133,10 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 		actionCoordinator.selectedMembers(for: sender)
 	}
 
-	@objc(selectedMembersNicknames:)
 	public func selectedMembersNicknames(_ sender: Any) -> [String] {
 		actionCoordinator.selectedNicknames(for: sender)
 	}
 
-	@objc(deselectMembers:)
 	public func deselectMembers(_ sender: Any) {
 		actionCoordinator.deselectMembers(for: sender)
 	}
@@ -158,5 +154,9 @@ extension TXMenuController: WorldObserver {
 	}
 }
 
-/// The sheets the IRC layer raises. Every requirement already existed.
-extension TXMenuController: ClientMenuPresenting {}
+/// The sheets the IRC layer raises, and the one folder it asks to be shown.
+extension TXMenuController: ClientMenuPresenting {
+	func revealInFinder(_ url: URL) {
+		NSWorkspace.shared.open(url)
+	}
+}

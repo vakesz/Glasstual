@@ -40,7 +40,7 @@ import Foundation
 import os
 
 extension TDCFileTransferDialogTransferController {
-	@objc public func onMaintenanceTimer() {
+	public func onMaintenanceTimer() {
 		dispatchPrecondition(condition: .onQueue(.main))
 		guard transferStatus == .receiving || transferStatus == .sending else {
 			assertionFailure("Maintenance timer fired for an inactive transfer")

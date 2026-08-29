@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 public typealias IRCSTSCapabilityValues = STSCapabilityValues
@@ -68,13 +69,11 @@ public nonisolated struct STSPolicyEndpoint: Sendable, Equatable { // nonisolate
 	}
 }
 
-@objc(IRCSTSPolicy)
 public final nonisolated class STSPolicy: NSObject { // nonisolated: value
-	@objc public let port: UInt16
-	@objc public let expiresAt: Date
-	@objc public let preload: Bool
+	public let port: UInt16
+	public let expiresAt: Date
+	public let preload: Bool
 
-	@objc(initWithPort:expiresAt:preload:)
 	public init(port: UInt16, expiresAt: Date, preload: Bool) {
 		precondition(port > 0)
 
@@ -85,7 +84,7 @@ public final nonisolated class STSPolicy: NSObject { // nonisolated: value
 		super.init()
 	}
 
-	@objc public var isExpired: Bool {
+	public var isExpired: Bool {
 		expiresAt.timeIntervalSinceNow <= 0
 	}
 
@@ -93,28 +92,28 @@ public final nonisolated class STSPolicy: NSObject { // nonisolated: value
 		"<\(NSStringFromClass(type(of: self))) port=\(port) expiresAt=\(expiresAt)>"
 	}
 
-	convenience init?(dictionary: [String: Any]) {
+	convenience init?(dictionary: [String: PropertyListValue]) {
 		guard
-			let port = dictionary[StorageKey.port] as? NSNumber,
-			let expiresAt = dictionary[StorageKey.expiresAt] as? NSNumber,
-			port.intValue > 0,
-			port.intValue <= UInt16.max
+			let port = dictionary[StorageKey.port]?.integer,
+			let expiresAt = dictionary[StorageKey.expiresAt]?.double,
+			port > 0,
+			port <= UInt16.max
 		else {
 			return nil
 		}
 
 		self.init(
-			port: port.uint16Value,
-			expiresAt: Date(timeIntervalSince1970: expiresAt.doubleValue),
+			port: UInt16(port),
+			expiresAt: Date(timeIntervalSince1970: expiresAt),
 			preload: Self.boolValue(dictionary[StorageKey.preload])
 		)
 	}
 
-	var dictionaryValue: [String: Any] {
+	var dictionaryValue: [String: PropertyListValue] {
 		[
-			StorageKey.port: NSNumber(value: port),
-			StorageKey.expiresAt: NSNumber(value: expiresAt.timeIntervalSince1970),
-			StorageKey.preload: NSNumber(value: preload),
+			StorageKey.port: .integer(Int(port)),
+			StorageKey.expiresAt: .double(expiresAt.timeIntervalSince1970),
+			StorageKey.preload: .boolean(preload),
 		]
 	}
 
@@ -124,15 +123,13 @@ public final nonisolated class STSPolicy: NSObject { // nonisolated: value
 		static let preload = "preload"
 	}
 
-	private static func boolValue(_ value: Any?) -> Bool {
-		if let number = value as? NSNumber {
-			return number.boolValue
+	/// A policy written by an older build spells `preload` as the string the
+	/// header carried, so a string still reads as the flag it stood for.
+	private static func boolValue(_ value: PropertyListValue?) -> Bool {
+		if let boolean = value?.boolean {
+			return boolean
 		}
 
-		if let string = value as? NSString {
-			return string.boolValue
-		}
-
-		return false
+		return (value?.string as NSString?)?.boolValue ?? false
 	}
 }

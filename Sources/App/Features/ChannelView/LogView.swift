@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import Foundation
 import os
 import WebKit
@@ -81,46 +82,12 @@ enum LogViewJavaScript {
 		return "return \(function)(\(names.joined(separator: ",")));"
 	}
 
-	/** Reduces a bridged argument to the types `callAsyncJavaScript` converts.
-	 Anything else becomes `null` rather than being passed through, because an
-	 unsupported value makes the whole call throw. */
-	static func sanitize(_ value: Any) -> Any {
-		switch value {
-		case let url as URL:
-			url.absoluteString
-		case let string as String:
-			string
-		case let number as NSNumber:
-			number
-		case let array as [Any]:
-			array.map(sanitize)
-		case let dictionary as [AnyHashable: Any]:
-			sanitize(dictionary)
-		default:
-			NSNull()
-		}
-	}
-
-	static func sanitize(_ dictionary: [AnyHashable: Any]) -> [String: Any] {
-		var result: [String: Any] = [:]
-		for (key, value) in dictionary {
-			guard let key = key as? String else {
-				logViewLogger
-					.debug(
-						"Ignoring non-string JavaScript dictionary key: \(String(describing: type(of: key)), privacy: .public)"
-					)
-				continue
-			}
-			result[key] = sanitize(value)
-		}
-		return result
-	}
-
-	/** Binds `arguments` to the names `functionBody` generates. */
-	static func namedArguments(_ arguments: [Any]?) -> [String: Any] {
-		var result: [String: Any] = [:]
+	/** Binds `arguments` to the names `functionBody` generates, each one
+	 reduced to a value the bridge converts. */
+	static func namedArguments(_ arguments: [Any]?) -> [String: JavaScriptValue] {
+		var result: [String: JavaScriptValue] = [:]
 		for (index, value) in (arguments ?? []).enumerated() {
-			result[argumentName(at: index)] = sanitize(value)
+			result[argumentName(at: index)] = JavaScriptValue(bridging: value)
 		}
 		return result
 	}
@@ -146,14 +113,17 @@ enum LogViewJavaScript {
 	}
 }
 
-@objc(TVCLogView)
 @MainActor
 public final class LogView: NSObject {
 	static let commonUserAgent = "Glasstual/1.0"
 
-	@objc public weak var viewController: LogController?
-	@objc public var contextMenuTarget = LogPolicyTarget()
-	@objc public var selection: String?
+	public weak var viewController: LogController?
+	public var contextMenuTarget = LogPolicyTarget()
+	public var selection: String?
+	/** Observed with `publisher(for:)` by the channel view's loading overlay,
+	 which is key-value observation: the property has to stay visible to the
+	 Objective-C runtime and dynamically dispatched or the key path resolves
+	 to nothing. */
 	@objc public private(set) dynamic var isLayingOutView = false
 
 	private let backingView: LogViewWebView
@@ -168,7 +138,6 @@ public final class LogView: NSObject {
 		fatalError("Use init(viewController:)")
 	}
 
-	@objc(initWithViewController:)
 	public init(viewController: LogController) {
 		self.viewController = viewController
 		backingView = LogViewWebView()
@@ -185,28 +154,28 @@ public final class LogView: NSObject {
 		}
 	}
 
-	@objc public var hasSelection: Bool {
+	public var hasSelection: Bool {
 		selection?.isEmpty == false
 	}
 
-	@objc public func clearSelection() {
+	public func clearSelection() {
 		evaluateFunction("Glasstual.clearSelection")
 	}
 
-	@objc public var webView: NSView {
+	public var webView: NSView {
 		backingView
 	}
 
-	@objc public var webViewPolicy: LogPolicy {
+	public var webViewPolicy: LogPolicy {
 		backingView.webViewPolicy
 	}
 
-	@objc public func takeContextMenuTarget() -> LogPolicyTarget {
+	public func takeContextMenuTarget() -> LogPolicyTarget {
 		defer { contextMenuTarget = LogPolicyTarget() }
 		return contextMenuTarget
 	}
 
-	@objc public func copyContentString() {
+	public func copyContentString() {
 		stringByEvaluatingFunction("Glasstual.documentHTML") { result in
 			guard let result else {
 				return
@@ -216,7 +185,6 @@ public final class LogView: NSObject {
 		}
 	}
 
-	@objc(print)
 	public func printContent() {
 		guard let window = backingView.window else {
 			return
@@ -230,7 +198,6 @@ public final class LogView: NSObject {
 		operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
 	}
 
-	@objc(keyDown:inView:)
 	public func keyDown(_ event: NSEvent, in _: NSView) -> Bool {
 		guard let viewController else {
 			return false
@@ -244,7 +211,7 @@ public final class LogView: NSObject {
 		return false
 	}
 
-	@objc public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+	public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
 		guard
 			let viewController,
 			let fileURL = NSURL(from: sender.draggingPasteboard) as URL?,
@@ -256,7 +223,7 @@ public final class LogView: NSObject {
 		return true
 	}
 
-	@objc public func informDelegateWebViewFinishedLoading() {
+	public func informDelegateWebViewFinishedLoading() {
 		guard let viewController else {
 			return
 		}
@@ -272,15 +239,15 @@ public final class LogView: NSObject {
 		viewController.logViewWebViewFinishedLoading()
 	}
 
-	@objc public func informDelegateWebViewClosedUnexpectedly() {
+	public func informDelegateWebViewClosedUnexpectedly() {
 		viewController?.logViewWebViewClosedUnexpectedly()
 	}
 
-	@objc public func setViewFinishedLayout() {
+	public func setViewFinishedLayout() {
 		isLayingOutView = false
 	}
 
-	@objc public static func emptyCaches() {
+	public static func emptyCaches() {
 		LogViewWebView.emptyCaches()
 	}
 
@@ -297,7 +264,7 @@ public final class LogView: NSObject {
 	/** The document is served from memory by `LogViewThemeSchemeHandler` under
 	 a URL inside `baseURL`, so relative references still resolve against the
 	 theme while nothing is written to disk. */
-	@objc public func loadHTMLString(_ string: String, baseURL: URL) {
+	public func loadHTMLString(_ string: String, baseURL: URL) {
 		isLayingOutView = true
 		recreateTemporaryCopyOfThemeIfNecessary()
 
@@ -318,27 +285,27 @@ public final class LogView: NSObject {
 		backingView.load(URLRequest(url: documentURL))
 	}
 
-	@objc public func stopLoading() {
+	/** The backing view cancels its own pending completion, so stopping here
+	 is enough to keep a torn-down load from reporting. */
+	public func stopLoading() {
 		backingView.stopLoading()
 	}
 
-	@objc(findString:movingForward:)
 	public func findString(_ searchString: String, movingForward: Bool) {
 		backingView.find(searchString, movingForward: movingForward)
 	}
 
-	@objc public func evaluateJavaScript(_ code: String) {
+	public func evaluateJavaScript(_ code: String) {
 		evaluateJavaScript(code, completionHandler: nil)
 	}
 
-	@objc(evaluateJavaScript:completionHandler:)
 	public func evaluateJavaScript(_ code: String, completionHandler: ((Any?) -> Void)?) {
 		DispatchQueue.main.async { [weak self] in
 			self?.backingView.evaluate(code, completionHandler: completionHandler)
 		}
 	}
 
-	@objc public static func descriptionOfJavaScriptResult(_ result: Any) -> String {
+	public static func descriptionOfJavaScriptResult(_ result: Any) -> String {
 		LogViewJavaScript.describe(result)
 	}
 
@@ -353,16 +320,14 @@ public final class LogView: NSObject {
 		return result as? T
 	}
 
-	@objc public func evaluateFunction(_ function: String) {
+	public func evaluateFunction(_ function: String) {
 		evaluateFunction(function, withArguments: nil, completionHandler: nil)
 	}
 
-	@objc(evaluateFunction:withArguments:)
 	public func evaluateFunction(_ function: String, withArguments arguments: [Any]?) {
 		evaluateFunction(function, withArguments: arguments, completionHandler: nil)
 	}
 
-	@objc(evaluateFunction:withArguments:completionHandler:)
 	public func evaluateFunction(
 		_ function: String,
 		withArguments arguments: [Any]?,
@@ -377,12 +342,10 @@ public final class LogView: NSObject {
 		}
 	}
 
-	@objc(booleanByEvaluatingFunction:completionHandler:)
 	public func booleanByEvaluatingFunction(_ function: String, completionHandler: ((Bool) -> Void)?) {
 		booleanByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
 	}
 
-	@objc(booleanByEvaluatingFunction:withArguments:completionHandler:)
 	public func booleanByEvaluatingFunction(
 		_ function: String,
 		withArguments arguments: [Any]?,
@@ -393,12 +356,10 @@ public final class LogView: NSObject {
 		}
 	}
 
-	@objc(stringByEvaluatingFunction:completionHandler:)
 	public func stringByEvaluatingFunction(_ function: String, completionHandler: ((String?) -> Void)?) {
 		stringByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
 	}
 
-	@objc(stringByEvaluatingFunction:withArguments:completionHandler:)
 	public func stringByEvaluatingFunction(
 		_ function: String,
 		withArguments arguments: [Any]?,
@@ -409,12 +370,10 @@ public final class LogView: NSObject {
 		}
 	}
 
-	@objc(arrayByEvaluatingFunction:completionHandler:)
 	public func arrayByEvaluatingFunction(_ function: String, completionHandler: (([Any]?) -> Void)?) {
 		arrayByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
 	}
 
-	@objc(arrayByEvaluatingFunction:withArguments:completionHandler:)
 	public func arrayByEvaluatingFunction(
 		_ function: String,
 		withArguments arguments: [Any]?,
@@ -425,26 +384,23 @@ public final class LogView: NSObject {
 		}
 	}
 
-	@objc(dictionaryByEvaluatingFunction:completionHandler:)
 	public func dictionaryByEvaluatingFunction(
 		_ function: String,
-		completionHandler: (([String: Any]?) -> Void)?
+		completionHandler: (([String: JavaScriptValue]?) -> Void)?
 	) {
 		dictionaryByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
 	}
 
-	@objc(dictionaryByEvaluatingFunction:withArguments:completionHandler:)
 	public func dictionaryByEvaluatingFunction(
 		_ function: String,
 		withArguments arguments: [Any]?,
-		completionHandler: (([String: Any]?) -> Void)?
+		completionHandler: (([String: JavaScriptValue]?) -> Void)?
 	) {
 		evaluateFunction(function, withArguments: arguments) { result in
-			completionHandler?(result as? [String: Any])
+			completionHandler?((result as? [AnyHashable: Any]).map(JavaScriptValue.object(bridging:)))
 		}
 	}
 
-	@objc(logToJavaScriptConsole:)
 	public func logToJavaScriptConsole(_ message: String) {
 		evaluateFunction("console.log", withArguments: [message])
 	}

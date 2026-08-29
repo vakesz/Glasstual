@@ -71,7 +71,6 @@ enum InlineResourceHostPolicy {
 }
 
 extension InlineContentPayload {
-	@objc(_resourcesTemporaryLocation)
 	func resourcesTemporaryLocation() -> String {
 		let sourcePath = SharedApplication.sharedThemeController().temporaryPath as NSString
 		let basePath = sourcePath.appendingPathComponent("/ICLPayload-Resources/")
@@ -81,7 +80,6 @@ extension InlineContentPayload {
 
 	/** WebKit2 uses sandboxed processes. Copy resource files into the
 	 application's temporary folder so WebKit can access them. */
-	@objc(_copyResourcesToTemporaryLocation:)
 	func copyResourcesToTemporaryLocation(_ resources: [URL]?) -> [String]? {
 		guard let resources else {
 			return nil
@@ -132,32 +130,32 @@ extension InlineContentPayload {
 		return resources.compactMap { copyOperation($0) }
 	}
 
-	@objc public var javaScriptObject: [String: Any] {
-		var dictionary: [String: Any] = [
-			"contentLength": UInt(contentLength),
-			"contentSize": [
-				"width": contentSize.width,
-				"height": contentSize.height,
-			],
-			"html": html,
-			"url": url,
-			"urlToInline": urlToInline,
-			"lineNumber": lineNumber,
-			"uniqueIdentifier": uniqueIdentifier,
-			"index": index,
+	public var javaScriptObject: [String: JavaScriptValue] {
+		var dictionary: [String: JavaScriptValue] = [
+			"contentLength": .integer(Int(contentLength)),
+			"contentSize": .object([
+				"width": .double(contentSize.width),
+				"height": .double(contentSize.height),
+			]),
+			"html": .string(html),
+			"url": .string(url.absoluteString),
+			"urlToInline": .string(urlToInline.absoluteString),
+			"lineNumber": .string(lineNumber),
+			"uniqueIdentifier": .string(uniqueIdentifier),
+			"index": .integer(Int(index)),
 		]
 
 		if let copiedStyleResources = copyResourcesToTemporaryLocation(styleResources) {
-			dictionary["styleResources"] = copiedStyleResources
+			dictionary["styleResources"] = .array(copiedStyleResources.map(JavaScriptValue.string))
 		}
 		if let copiedScriptResources = copyResourcesToTemporaryLocation(scriptResources) {
-			dictionary["scriptResources"] = copiedScriptResources
+			dictionary["scriptResources"] = .array(copiedScriptResources.map(JavaScriptValue.string))
 		}
 
 		if let entrypoint {
-			dictionary["entrypoint"] = entrypoint
+			dictionary["entrypoint"] = .string(entrypoint)
 			/* Use the property (not storage) so default entrypoint payload values are applied. */
-			dictionary["entrypointPayload"] = entrypointPayload
+			dictionary["entrypointPayload"] = .object(entrypointPayload)
 		}
 
 		return dictionary

@@ -56,7 +56,6 @@ let fileTransferLogger = Logger(
 	category: "FileTransfer"
 )
 
-@objc(TDCFileTransferDialogTransferStatus)
 public enum FileTransferStatus: UInt, Sendable {
 	case complete
 	case connecting
@@ -81,27 +80,26 @@ public enum FileTransferStatus: UInt, Sendable {
 /// starts one, follows its `AsyncStream` of events on the main actor, and
 /// turns them into the status the dialog, IRCClient and the maintenance timer
 /// read -- all of which are main-actor too.
-@objc(TDCFileTransferDialogTransferController)
 @MainActor
 public final class TDCFileTransferDialogTransferController: NSObject, TDCClientPrototype {
-	@objc public internal(set) var client: IRCClient?
-	@objc public internal(set) var clientId: String?
-	@objc public weak var transferTableCell: FileTransferDialogTableCell?
+	public internal(set) var client: IRCClient?
+	public internal(set) var clientId: String?
+	public weak var transferTableCell: FileTransferDialogTableCell?
 
-	@objc public internal(set) var isResume = false
-	@objc public internal(set) var isReversed = false
-	@objc public internal(set) var isSender = false
-	@objc public internal(set) var totalFilesize: UInt64 = 0
-	@objc public internal(set) var processedFilesize: UInt64 = 0
-	@objc public internal(set) var currentRecord: UInt64 = 0
-	@objc public internal(set) var errorMessageDescription: String?
-	@objc public internal(set) var path: String?
-	@objc public internal(set) var filename = ""
-	@objc public internal(set) var hostAddress = ""
-	@objc public internal(set) var peerNickname = ""
-	@objc public internal(set) var transferToken: String?
-	@objc public internal(set) var uniqueIdentifier = UUID().uuidString
-	@objc public internal(set) var hostPort: UInt16 = 0
+	public internal(set) var isResume = false
+	public internal(set) var isReversed = false
+	public internal(set) var isSender = false
+	public internal(set) var totalFilesize: UInt64 = 0
+	public internal(set) var processedFilesize: UInt64 = 0
+	public internal(set) var currentRecord: UInt64 = 0
+	public internal(set) var errorMessageDescription: String?
+	public internal(set) var path: String?
+	public internal(set) var filename = ""
+	public internal(set) var hostAddress = ""
+	public internal(set) var peerNickname = ""
+	public internal(set) var transferToken: String?
+	public internal(set) var uniqueIdentifier = UUID().uuidString
+	public internal(set) var hostPort: UInt16 = 0
 
 	var speedRecordsPrivate: [NSNumber] = []
 	var portMapping: XRPortMapper?
@@ -111,7 +109,7 @@ public final class TDCFileTransferDialogTransferController: NSObject, TDCClientP
 	var lifecycleNotifications = NotificationSubscriptions()
 	var portMapperNotifications = NotificationSubscriptions()
 
-	@objc public internal(set) var transferStatus: FileTransferStatus = .stopped {
+	public internal(set) var transferStatus: FileTransferStatus = .stopped {
 		didSet {
 			dispatchPrecondition(condition: .onQueue(.main))
 			if oldValue != transferStatus {
@@ -132,7 +130,6 @@ public final class TDCFileTransferDialogTransferController: NSObject, TDCClientP
 		prepareInitialState()
 	}
 
-	@objc(receiverForClient:nickname:address:port:filename:filesize:token:)
 	public static func receiver(
 		for client: IRCClient,
 		nickname: String,
@@ -157,7 +154,6 @@ public final class TDCFileTransferDialogTransferController: NSObject, TDCClientP
 		return controller
 	}
 
-	@objc(senderForClient:nickname:path:)
 	public static func sender(
 		for client: IRCClient,
 		nickname: String,

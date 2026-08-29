@@ -39,7 +39,7 @@
 import Foundation
 
 public extension FileTransferDialog {
-	@objc var IPAddress: String? {
+	var IPAddress: String? {
 		get {
 			if TextualPreferences.fileTransferIPAddressDetectionMethod() == .manual {
 				let address = TextualPreferences.fileTransferManuallyEnteredIPAddress()
@@ -51,14 +51,14 @@ public extension FileTransferDialog {
 		set { cachedIPAddress = newValue }
 	}
 
-	@MainActor @objc func clearIPAddress() {
+	@MainActor func clearIPAddress() {
 		IPAddress = nil
 		ipAddressRequest?.cancelLookup()
 		ipAddressRequest = nil
 		flushIPAddressCompletionBlocks(with: nil)
 	}
 
-	@MainActor @objc(requestIPAddress:)
+	@MainActor
 	func requestIPAddress(_ completion: @escaping (String?) -> Void) {
 		if let address = IPAddress {
 			completion(address)
@@ -75,7 +75,7 @@ public extension FileTransferDialog {
 		requestIPAddress()
 	}
 
-	@MainActor @objc func requestIPAddress() {
+	@MainActor func requestIPAddress() {
 		guard ipAddressRequest == nil else { return }
 
 		let request = InternetAddressLookup(delegate: self)

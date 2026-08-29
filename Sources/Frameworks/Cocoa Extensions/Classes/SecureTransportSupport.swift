@@ -68,7 +68,6 @@ import Security
 public let tlsProtocolVersionUnknown = tls_protocol_version_t(rawValue: 0)!
 public let tlsCipherSuiteUnknown = tls_ciphersuite_t(rawValue: 0)!
 
-@objc
 public enum CipherSuiteCollection: UInt, Sendable {
 	case `default` = 0
 	case mozilla2015 = 1

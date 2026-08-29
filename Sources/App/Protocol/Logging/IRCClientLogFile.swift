@@ -39,7 +39,6 @@
 import Foundation
 
 public extension IRCClient {
-	@objc(reopenLogFileIfNeeded)
 	func reopenLogFileIfNeeded() {
 		if environment.preferences.logToDiskIsEnabled {
 			logFile?.reopenIfNeeded()
@@ -48,7 +47,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(closeLogFile)
 	func closeLogFile() {
 		closeClientLogFile()
 	}
@@ -57,12 +55,10 @@ public extension IRCClient {
 		writeClientLogLine(logLine)
 	}
 
-	@objc(logFileRecordSessionChanged:inChannel:)
 	func logFileRecordSessionChanged(_ startsSession: Bool, in channel: IRCChannel?) {
 		recordLogSessionChange(startsSession, in: channel)
 	}
 
-	@objc(endLoggingSessions)
 	func endLoggingSessions() {
 		for channel in channelList where channel.isUtility == false {
 			channel.logFileWriteSessionEnd()
@@ -70,12 +66,10 @@ public extension IRCClient {
 		finishClientLogSession()
 	}
 
-	@objc(logFileWriteSessionBegin)
 	func logFileWriteSessionBegin() {
 		beginClientLogSession()
 	}
 
-	@objc(logFileWriteSessionEnd)
 	func logFileWriteSessionEnd() {
 		finishClientLogSession()
 	}

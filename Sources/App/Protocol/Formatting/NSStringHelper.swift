@@ -215,12 +215,12 @@ public nonisolated extension NSString { // nonisolated: pure
 			return NSAttributedString(string: stripIRCEffects)
 		}
 
-		var attributes: [TVCLogRendererConfigurationAttribute: Any] = [:]
+		var attributes = LogRendererConfiguration()
 
-		attributes[.attributedStringPreferredFontAttribute] = preferredFont
+		attributes[.preferredFont] = preferredFont
 
 		if let preferredFontColor {
-			attributes[.attributedStringPreferredFontColorAttribute] = preferredFontColor
+			attributes[.preferredFontColor] = preferredFontColor
 		}
 
 		return TVCLogRenderer.renderBody(asAttributedString: self as String, withAttributes: attributes)

@@ -45,9 +45,7 @@ public typealias TrustPanelCompletion = (SecTrust, Bool, Any?) -> Void
 /// Main actor throughout: it drives an AppKit sheet, and every caller is
 /// already there.
 @MainActor
-@objc(RCMTrustPanel)
 public final class TrustPanelPresenter: NSObject {
-	@objc(presentTrustPanelInWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:)
 	public static func present(
 		in window: NSWindow?,
 		body: String,
@@ -69,7 +67,6 @@ public final class TrustPanelPresenter: NSObject {
 		)
 	}
 
-	@objc(presentTrustPanelInWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:contextInfo:)
 	public static func present(
 		in window: NSWindow?,
 		body: String,

@@ -98,7 +98,7 @@ struct IRCModelMigrationTests {
 		var config = ChannelConfig()
 		let event = TXNotificationType.highlight
 
-		#expect(config.notificationEnabled(forEvent: event) == .mixed)
+		#expect(config.notificationEnabled(forEvent: event) == .inherited)
 
 		config.setNotificationEnabled(.on, forEvent: event)
 		#expect(config.notificationEnabled(forEvent: event) == .on)
@@ -106,8 +106,8 @@ struct IRCModelMigrationTests {
 		config.setNotificationEnabled(.off, forEvent: event)
 		#expect(config.notificationEnabled(forEvent: event) == .off)
 
-		config.setNotificationEnabled(.mixed, forEvent: event)
-		#expect(config.notificationEnabled(forEvent: event) == .mixed)
+		config.setNotificationEnabled(.inherited, forEvent: event)
+		#expect(config.notificationEnabled(forEvent: event) == .inherited)
 	}
 
 	@Test("A highlight condition decodes the legacy channel key and encodes it back")
@@ -125,10 +125,10 @@ struct IRCModelMigrationTests {
 
 		let dictionary = PropertyListModel.encode(condition)
 
-		#expect(dictionary["matchKeyword"] as? String == "alert")
-		#expect(dictionary["matchChannelID"] as? String == "chan-1")
-		#expect(dictionary["matchIsExcluded"] as? Bool == true)
-		#expect(dictionary["uniqueIdentifier"] as? String == condition.uniqueIdentifier)
+		#expect(dictionary["matchKeyword"]?.string == "alert")
+		#expect(dictionary["matchChannelID"]?.string == "chan-1")
+		#expect(dictionary["matchIsExcluded"]?.boolean == true)
+		#expect(dictionary["uniqueIdentifier"]?.string == condition.uniqueIdentifier)
 	}
 
 	@Test("Editing a highlight condition leaves the value it was copied from alone")

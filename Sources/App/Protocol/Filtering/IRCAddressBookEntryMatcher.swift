@@ -166,10 +166,9 @@ nonisolated enum IRCHostmaskGlob { // nonisolated: value
 	}
 }
 
-@objc(IRCAddressBookEntryMatcher)
 public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // nonisolated: value
-	@objc public let regularExpressionPattern: String
-	@objc public let trackingNickname: String?
+	public let regularExpressionPattern: String
+	public let trackingNickname: String?
 
 	private let globTokens: [IRCHostmaskGlobToken]?
 	private let regularExpression: NSRegularExpression?
@@ -178,7 +177,6 @@ public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // 
 	/// An address book entry belongs to no one connection — the same ignore
 	/// applies on every network — so it folds under `rfc1459`, the mapping a
 	/// server that advertises none is assumed to use.
-	@objc(initWithEntryType:hostmask:)
 	public convenience init(entryType: IRCAddressBookEntryType, hostmask: String) {
 		self.init(entryType: entryType, hostmask: hostmask, caseMapping: .rfc1459)
 	}
@@ -218,7 +216,6 @@ public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // 
 		super.init()
 	}
 
-	@objc(matchesHostmask:)
 	public func matches(hostmask: String) -> Bool {
 		if let globTokens {
 			return IRCHostmaskGlob.matches(

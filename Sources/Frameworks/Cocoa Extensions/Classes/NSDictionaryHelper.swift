@@ -149,142 +149,114 @@ private enum DictionaryValueConversion {
 }
 
 public extension NSDictionary {
-	@objc(boolForKey:)
 	func ce_bool(forKey key: Any) -> Bool {
 		ce_bool(forKey: key, orUseDefault: false)
 	}
 
-	@objc(integerForKey:)
 	func ce_integer(forKey key: Any) -> Int {
 		ce_integer(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(unsignedIntegerForKey:)
 	func ce_unsignedInteger(forKey key: Any) -> UInt {
 		ce_unsignedInteger(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(shortForKey:)
 	func ce_short(forKey key: Any) -> Int16 {
 		ce_short(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(unsignedShortForKey:)
 	func ce_unsignedShort(forKey key: Any) -> UInt16 {
 		ce_unsignedShort(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(longForKey:)
 	func ce_long(forKey key: Any) -> Int {
 		ce_long(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(unsignedLongForKey:)
 	func ce_unsignedLong(forKey key: Any) -> UInt {
 		ce_unsignedLong(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(longLongForKey:)
 	func ce_longLong(forKey key: Any) -> Int64 {
 		ce_longLong(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(unsignedLongLongForKey:)
 	func ce_unsignedLongLong(forKey key: Any) -> UInt64 {
 		ce_unsignedLongLong(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(doubleForKey:)
 	func ce_double(forKey key: Any) -> Double {
 		ce_double(forKey: key, orUseDefault: 0)
 	}
 
-	@objc(stringForKey:)
 	func ce_string(forKey key: Any) -> String? {
 		ce_string(forKey: key, orUseDefault: nil)
 	}
 
-	@objc(dictionaryForKey:)
 	func ce_dictionary(forKey key: Any) -> NSDictionary? {
 		ce_dictionary(forKey: key, orUseDefault: nil)
 	}
 
-	@objc(arrayForKey:)
 	func ce_array(forKey key: Any) -> NSArray? {
 		ce_array(forKey: key, orUseDefault: nil)
 	}
 
-	@objc(objectForKey:orUseDefault:)
 	func ce_object(forKey key: Any, orUseDefault defaultValue: Any?) -> Any? {
 		dictionaryObject(forKey: key, in: self) ?? defaultValue
 	}
 
-	@objc(stringForKey:orUseDefault:)
 	func ce_string(forKey key: Any, orUseDefault defaultValue: String?) -> String? {
 		dictionaryObject(forKey: key, in: self) as? String ?? defaultValue
 	}
 
-	@objc(arrayForKey:orUseDefault:)
 	func ce_array(forKey key: Any, orUseDefault defaultValue: NSArray?) -> NSArray? {
 		dictionaryObject(forKey: key, in: self) as? NSArray ?? defaultValue
 	}
 
-	@objc(dictionaryForKey:orUseDefault:)
 	func ce_dictionary(forKey key: Any, orUseDefault defaultValue: NSDictionary?) -> NSDictionary? {
 		dictionaryObject(forKey: key, in: self) as? NSDictionary ?? defaultValue
 	}
 
-	@objc(boolForKey:orUseDefault:)
 	func ce_bool(forKey key: Any, orUseDefault defaultValue: Bool) -> Bool {
 		DictionaryValueConversion.bool(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(integerForKey:orUseDefault:)
 	func ce_integer(forKey key: Any, orUseDefault defaultValue: Int) -> Int {
 		DictionaryValueConversion.integer(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(unsignedIntegerForKey:orUseDefault:)
 	func ce_unsignedInteger(forKey key: Any, orUseDefault defaultValue: UInt) -> UInt {
 		DictionaryValueConversion.unsignedInteger(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(shortForKey:orUseDefault:)
 	func ce_short(forKey key: Any, orUseDefault defaultValue: Int16) -> Int16 {
 		DictionaryValueConversion.short(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(unsignedShortForKey:orUseDefault:)
 	func ce_unsignedShort(forKey key: Any, orUseDefault defaultValue: UInt16) -> UInt16 {
 		DictionaryValueConversion.unsignedShort(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(longForKey:orUseDefault:)
 	func ce_long(forKey key: Any, orUseDefault defaultValue: Int) -> Int {
 		DictionaryValueConversion.long(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(unsignedLongForKey:orUseDefault:)
 	func ce_unsignedLong(forKey key: Any, orUseDefault defaultValue: UInt) -> UInt {
 		DictionaryValueConversion.unsignedLong(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(longLongForKey:orUseDefault:)
 	func ce_longLong(forKey key: Any, orUseDefault defaultValue: Int64) -> Int64 {
 		DictionaryValueConversion.longLong(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(unsignedLongLongForKey:orUseDefault:)
 	func ce_unsignedLongLong(forKey key: Any, orUseDefault defaultValue: UInt64) -> UInt64 {
 		DictionaryValueConversion.unsignedLongLong(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(doubleForKey:orUseDefault:)
 	func ce_double(forKey key: Any, orUseDefault defaultValue: Double) -> Double {
 		DictionaryValueConversion.double(from: dictionaryObject(forKey: key, in: self)) ?? defaultValue
 	}
 
-	@objc(firstKeyForObject:)
 	func ce_firstKey(for object: Any) -> Any? {
 		for (key, value) in dictionaryEntries(self) where (value as AnyObject).isEqual(object) {
 			return key
@@ -292,7 +264,6 @@ public extension NSDictionary {
 		return nil
 	}
 
-	@objc(keyIgnoringCase:)
 	func ce_keyIgnoringCase(_ key: AnyObject) -> Any? {
 		for (candidate, _) in dictionaryEntries(self) {
 			guard let receiver = candidate as? NSObject else { continue }
@@ -303,11 +274,11 @@ public extension NSDictionary {
 		return nil
 	}
 
-	@objc var sortedDictionaryKeys: [Any] {
+	var sortedDictionaryKeys: [Any] {
 		ce_sortedDictionaryKeys(reversed: false)
 	}
 
-	@objc var sortedDictionaryKeysReversed: [Any] {
+	var sortedDictionaryKeysReversed: [Any] {
 		ce_sortedDictionaryKeys(reversed: true)
 	}
 
@@ -321,12 +292,10 @@ public extension NSDictionary {
 		return reversed ? keys.reversed() : keys
 	}
 
-	@objc(dictionaryByRemovingDefaults:)
 	func ce_dictionaryByRemovingDefaults(_ defaults: NSDictionary?) -> NSDictionary {
 		ce_dictionaryByRemovingDefaults(defaults, allowEmptyValues: false)
 	}
 
-	@objc(dictionaryByRemovingDefaults:allowEmptyValues:)
 	func ce_dictionaryByRemovingDefaults(_ defaults: NSDictionary?, allowEmptyValues: Bool) -> NSDictionary {
 		let entries = dictionaryEntries(self)
 		guard !entries.isEmpty else { return self }
@@ -352,7 +321,6 @@ public extension NSDictionary {
 		return result.copy() as? NSDictionary ?? result
 	}
 
-	@objc(dictionaryByAddingEntries:)
 	func ce_dictionaryByAddingEntries(_ entries: NSDictionary) -> NSDictionary {
 		let currentEntries = dictionaryEntries(self)
 		guard !currentEntries.isEmpty else { return entries.copy() as? NSDictionary ?? entries }
@@ -368,14 +336,12 @@ public extension NSDictionary {
 		return result.copy() as? NSDictionary ?? result
 	}
 
-	@objc(formDataUsingSeparator:)
 	func ce_formData(usingSeparator separator: String) -> String {
 		ce_formData(usingSeparator: separator) { value in
 			value.percentEncoded ?? value
 		}
 	}
 
-	@objc(formDataUsingSeparator:encodingBlock:)
 	func ce_formData(usingSeparator separator: String, encodingBlock: (String) -> String) -> String {
 		dictionaryEntries(self).compactMap { key, value -> String? in
 			let stringKey: String

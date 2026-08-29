@@ -60,19 +60,16 @@ enum OutboundTypingPolicy {
 }
 
 public extension IRCClient {
-	@objc(typingNotificationsAvailableForChannel:)
 	func typingNotificationsAvailable(for channel: IRCChannel?) -> Bool {
 		guard let channel, channel.isUtility == false else { return false }
 		guard channel.isChannel || channel.isPrivateMessage else { return false }
 		return isLoggedIn && isCapabilityEnabled(.messageTags)
 	}
 
-	@objc(noteLocalUserTyping:inChannel:)
 	func noteLocalUserTyping(_ text: String, in channel: IRCChannel?) {
 		noteLocalUserTyping(text, in: channel, at: Date())
 	}
 
-	@objc(noteLocalUserTyping:inChannel:atDate:)
 	func noteLocalUserTyping(_ text: String, in channel: IRCChannel?, at date: Date) {
 		guard typingNotificationsAvailable(for: channel), let channel else { return }
 
@@ -117,7 +114,6 @@ public extension IRCClient {
 		typingPauseTasks.removeValue(forKey: key)?.cancel()
 	}
 
-	@objc(typingPauseTimerFired:)
 	func typingPauseTimerFired(_ channel: IRCChannel) {
 		let key = channel.uniqueIdentifier
 		guard typingStateSent[key] == .active else { return }
@@ -132,7 +128,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(sendTypingDoneInChannel:)
 	func sendTypingDone(in channel: IRCChannel?) {
 		guard let channel else { return }
 		let key = channel.uniqueIdentifier
@@ -148,12 +143,10 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(localUserSentMessageInChannel:)
 	func localUserSentMessage(in channel: IRCChannel?) {
 		sendTypingDone(in: channel)
 	}
 
-	@objc(localUserClearedTextInChannel:)
 	func localUserClearedText(in channel: IRCChannel?) {
 		sendTypingDone(in: channel)
 	}

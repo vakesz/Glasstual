@@ -80,7 +80,6 @@ enum IRCClientRegistrationPolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(resetAllPropertyValues)
 	func resetAllPropertyValues() {
 		batchMessages.dequeueEntries()
 		typingTracker.removeAll()
@@ -131,12 +130,10 @@ public extension IRCClient {
 		removeAllUsers()
 	}
 
-	@objc(changeStateOff)
 	func changeStateOff() {
 		changeStateOff(withError: nil)
 	}
 
-	@objc(changeStateOffWithError:)
 	func changeStateOff(withError disconnectError: Error?) {
 		guard IRCClientDisconnectPolicy.shouldTransitionOff(
 			isConnecting: isConnecting,
@@ -178,7 +175,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(ircConnection:willConnectToProxy:port:)
 	func ircConnection(_ sender: Connection, willConnectToProxy proxyHost: String, port proxyPort: UInt16) {
 		precondition(sender === socket)
 		switch sender.config.proxyType {
@@ -191,7 +187,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(ircConnectionDidSecureConnection:withProtocolType:cipherSuite:)
 	func ircConnectionDidSecureConnection(
 		_ sender: Connection,
 		withProtocolType protocolType: tls_protocol_version_t,
@@ -211,7 +206,6 @@ public extension IRCClient {
 		printDebugInformation(toConsole: IRCConnectionStrings.secured(using: description))
 	}
 
-	@objc(ircConnectionDidConnect:)
 	func ircConnectionDidConnect(_ sender: Connection) {
 		precondition(sender === socket)
 		guard !isTerminating else { return }
@@ -244,7 +238,6 @@ public extension IRCClient {
 		send("USER", arguments: [registration.username, registration.modeSymbols, "*", registration.realName])
 	}
 
-	@objc(ircConnection:didDisconnectWithError:)
 	func ircConnection(_ sender: Connection, didDisconnectWithError disconnectError: Error?) {
 		precondition(sender === socket)
 		changeStateOff(withError: disconnectError)
@@ -252,7 +245,6 @@ public extension IRCClient {
 		NotificationCenter.default.post(name: .IRCClientDidDisconnect, object: self)
 	}
 
-	@objc(ircConnectionDidCloseReadStream:)
 	func ircConnectionDidCloseReadStream(_ sender: Connection) {
 		precondition(sender === socket)
 		guard !isTerminating, !isDisconnecting else { return }
@@ -263,7 +255,6 @@ public extension IRCClient {
 		printDebugInformation(toConsole: IRCConnectionStrings.serverClosedReadStream)
 	}
 
-	@objc(ircConnection:willSendData:)
 	func ircConnection(_ sender: Connection, willSendData data: String) {
 		precondition(sender === socket)
 		guard !isTerminating else { return }

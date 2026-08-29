@@ -1,3 +1,4 @@
+import CocoaExtensions
 import CoreGraphics
 import Foundation
 import InlineContentKit
@@ -132,11 +133,11 @@ struct InlineContentPayloadEnvelopeTests {
 
 		let context = InlineContentPayload(values: values).entrypointPayload
 
-		#expect(context["class"] as? String == "inlineImageCell")
-		#expect(context["html"] as? String == "<img>")
-		#expect(context["uniqueIdentifier"] as? String == "unique-1")
-		#expect(context["lineNumber"] as? String == "42")
-		#expect(context["url"] as? URL == values.url)
-		#expect(context["urlToInline"] as? URL == values.urlToInline)
+		#expect(context["class"]?.string == "inlineImageCell")
+		#expect(context["html"]?.string == "<img>")
+		#expect(context["uniqueIdentifier"]?.string == "unique-1")
+		#expect(context["lineNumber"]?.string == "42")
+		#expect(context["url"]?.string == values.url.absoluteString)
+		#expect(context["urlToInline"]?.string == values.urlToInline.absoluteString)
 	}
 }

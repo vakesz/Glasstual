@@ -36,22 +36,21 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 public extension IRCClient {
-	@objc(nickServSupportedNeedIdentificationTokens)
 	var nickServNeedIdentificationTokens: [String] {
 		ResourceManager.array(
 			fromResources: "StaticStore",
 			key: "IRCClient List of NickServ Needs Identification Tokens"
-		) as? [String] ?? []
+		)?.compactMap(\.string) ?? []
 	}
 
-	@objc(nickServSupportedSuccessfulIdentificationTokens)
 	var nickServSuccessfulIdentificationTokens: [String] {
 		ResourceManager.array(
 			fromResources: "StaticStore",
 			key: "IRCClient List of NickServ Successfully Identified Tokens"
-		) as? [String] ?? []
+		)?.compactMap(\.string) ?? []
 	}
 }

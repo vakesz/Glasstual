@@ -64,7 +64,6 @@ public struct AppearancePropertyCollection: TXAppearanceProperties, Equatable, S
 	}
 }
 
-@objc(TXAppearance)
 @MainActor
 public final class Appearance: NSObject {
 	public private(set) var properties = AppearancePropertyCollection()
@@ -80,6 +79,8 @@ public final class Appearance: NSObject {
 	/// change arrives. The resulting name is what identifies it as our own.
 	private var selfAppliedAppearanceName: NSAppearance.Name?
 	private var effectiveAppearanceObservation: Task<Void, Never>?
+	/// The workspace's accessibility-options notification.
+	private let notifications = NotificationSubscriptions()
 
 	override public init() {
 		super.init()
@@ -95,12 +96,12 @@ public final class Appearance: NSObject {
 	private func prepareInitialState() {
 		updateAppearance()
 
-		NSWorkspace.shared.notificationCenter.addObserver(
-			self,
-			selector: #selector(accessibilityDisplayOptionsDidChange(_:)),
-			name: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
-			object: nil
-		)
+		notifications.observe(
+			NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
+			center: NSWorkspace.shared.notificationCenter
+		) { [weak self] notification in
+			self?.accessibilityDisplayOptionsDidChange(notification)
+		}
 
 		/* `observe`'s change handler is nonisolated; awaiting the key path's
 		 values reads this object's state where it lives. */
@@ -123,7 +124,7 @@ public final class Appearance: NSObject {
 		}
 	}
 
-	@objc public func prepareForApplicationTermination() {
+	public func prepareForApplicationTermination() {
 		appearanceTerminationLogger.debug("Removing appearance change observers")
 		removeObservers()
 	}
@@ -131,7 +132,7 @@ public final class Appearance: NSObject {
 	/** Two independent registrations, so they get torn down independently: an
 	 already-invalidated KVO token used to skip the workspace observer too. */
 	private func removeObservers() {
-		NSWorkspace.shared.notificationCenter.removeObserver(self)
+		notifications.cancelAll()
 
 		effectiveAppearanceObservation?.cancel()
 		effectiveAppearanceObservation = nil
@@ -141,11 +142,11 @@ public final class Appearance: NSObject {
 		updateAppearanceBySystemChange(true)
 	}
 
-	@objc private func accessibilityDisplayOptionsDidChange(_: Notification) {
+	private func accessibilityDisplayOptionsDidChange(_: Notification) {
 		updateAppearanceBySystemChange(true)
 	}
 
-	@objc public func updateAppearance() {
+	public func updateAppearance() {
 		updateAppearanceBySystemChange(false)
 	}
 

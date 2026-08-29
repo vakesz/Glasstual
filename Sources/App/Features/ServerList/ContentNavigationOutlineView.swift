@@ -13,15 +13,14 @@
 import AppKit
 import CocoaExtensions
 
-@objc(TVCContentNavigationOutlineViewItem)
 public final class ContentNavigationOutlineViewItem: NSObject {
-	@objc public private(set) var label = ""
-	@objc public private(set) var identifier: UInt = 0
+	public private(set) var label = ""
+	public private(set) var identifier: UInt = 0
 	@objc public private(set) weak var view: NSView?
-	@objc public private(set) weak var firstResponder: NSControl?
-	@objc public private(set) var children: [ContentNavigationOutlineViewItem]?
+	public private(set) weak var firstResponder: NSControl?
+	public private(set) var children: [ContentNavigationOutlineViewItem]?
 
-	@objc public var isGroupItem: Bool {
+	public var isGroupItem: Bool {
 		children != nil
 	}
 
@@ -30,7 +29,6 @@ public final class ContentNavigationOutlineViewItem: NSObject {
 		fatalError("Use init(label:identifier:view:firstResponder:)")
 	}
 
-	@objc(initWithLabel:identifier:view:firstResponder:)
 	public init(
 		label: String,
 		identifier: UInt,
@@ -45,7 +43,6 @@ public final class ContentNavigationOutlineViewItem: NSObject {
 		super.init()
 	}
 
-	@objc(initWithLabel:identifier:view:firstResponder:children:)
 	public init(
 		label: String,
 		identifier: UInt,
@@ -67,8 +64,8 @@ public final class ContentNavigationOutlineViewItem: NSObject {
 
 @objc(TVCContentNavigationOutlineView)
 public final class ContentNavigationOutlineView: NSOutlineView {
-	@objc public var contentViewPreferredWidth: UInt = 0
-	@objc public var contentViewPreferredHeight: UInt = 0
+	public var contentViewPreferredWidth: UInt = 0
+	public var contentViewPreferredHeight: UInt = 0
 
 	/** The guard used to compare `newValue as NSArray` against a stored
 	 NSArray. Bridging makes a fresh object every time, so it never matched and
@@ -85,8 +82,8 @@ public final class ContentNavigationOutlineView: NSOutlineView {
 		}
 	}
 
-	@objc public var expandParentOnDoubleClick = false
-	@objc public private(set) weak var selectedItem: ContentNavigationOutlineViewItem?
+	public var expandParentOnDoubleClick = false
+	public private(set) weak var selectedItem: ContentNavigationOutlineViewItem?
 
 	@IBOutlet private var contentView: NSView!
 	private weak var lastSelection: ContentNavigationOutlineViewItem?
@@ -118,7 +115,6 @@ public final class ContentNavigationOutlineView: NSOutlineView {
 		doubleAction = #selector(outlineViewDoubleClicked(_:))
 	}
 
-	@objc(navigateToItemWithIdentifier:)
 	public func navigateToItem(withIdentifier identifier: UInt) {
 		for groupItem in groupItems as? [ContentNavigationOutlineViewItem] ?? [] {
 			if groupItem.identifier == identifier {

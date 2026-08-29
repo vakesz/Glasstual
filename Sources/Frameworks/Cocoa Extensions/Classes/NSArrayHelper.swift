@@ -58,12 +58,10 @@ private func indices(count: Int, options: NSEnumerationOptions) -> AnySequence<I
 }
 
 public extension NSArray {
-	@objc(unsignedIntegerAtIndex:)
 	func ce_unsignedInteger(at index: UInt) -> UInt {
 		(arrayObject(at: Int(index), in: self) as? NSNumber)?.uintValue ?? 0
 	}
 
-	@objc(doubleAtIndex:)
 	func ce_double(at index: UInt) -> Double {
 		switch arrayObject(at: Int(index), in: self) {
 		case let number as NSNumber:
@@ -75,7 +73,6 @@ public extension NSArray {
 		}
 	}
 
-	@objc(containsObjectIgnoringCase:)
 	func ce_containsObjectIgnoringCase(_ candidate: AnyObject) -> Bool {
 		arraySnapshot(self).contains { value in
 			guard let object = value as? NSObject else { return false }
@@ -87,24 +84,21 @@ public extension NSArray {
 		NSRange(location: 0, length: arrayCount(self))
 	}
 
-	@objc var stringArrayControllerObjects: [NSDictionary] {
+	var stringArrayControllerObjects: [NSDictionary] {
 		arraySnapshot(self).compactMap { object in
 			guard let string = object as? String else { return nil }
 			return ["string": string] as NSDictionary
 		}
 	}
 
-	@objc(arrayByRemovingEmptyValues)
 	func ce_arrayByRemovingEmptyValues() -> [Any] {
 		ce_arrayByRemovingEmptyValues(true, trimming: false, uniquing: false)
 	}
 
-	@objc(arrayByRemovingEmptyValuesAndUniquing)
 	func ce_arrayByRemovingEmptyValuesAndUniquing() -> [Any] {
 		ce_arrayByRemovingEmptyValues(true, trimming: false, uniquing: true)
 	}
 
-	@objc(arrayByRemovingEmptyValues:trimming:uniquing:)
 	func ce_arrayByRemovingEmptyValues(
 		_ removeEmptyValues: Bool,
 		trimming trimValues: Bool,
@@ -129,14 +123,12 @@ public extension NSArray {
 		return result
 	}
 
-	@objc(objectPassingTest:)
 	func ce_objectPassingTest(
 		_ predicate: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Bool
 	) -> Any? {
 		ce_objectPassingTest(predicate, withOptions: [])
 	}
 
-	@objc(objectPassingTest:withOptions:)
 	func ce_objectPassingTest(
 		_ predicate: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Bool,
 		withOptions options: NSEnumerationOptions
@@ -157,7 +149,6 @@ public extension NSArray {
 		return nil
 	}
 
-	@objc(enumerateSubarraysOfSize:usingBlock:)
 	func ce_enumerateSubarrays(
 		ofSize subarraySize: UInt,
 		using block: (NSArray, UnsafeMutablePointer<ObjCBool>) -> Void
@@ -165,7 +156,6 @@ public extension NSArray {
 		ce_enumerateSubarrays(ofSize: subarraySize, using: block, withOptions: [])
 	}
 
-	@objc(enumerateSubarraysOfSize:usingBlock:withOptions:)
 	func ce_enumerateSubarrays(
 		ofSize subarraySize: UInt,
 		using block: (NSArray, UnsafeMutablePointer<ObjCBool>) -> Void,
@@ -193,14 +183,12 @@ public extension NSArray {
 		}
 	}
 
-	@objc(arrayByApplyingBlock:)
 	func ce_arrayByApplying(
 		_ block: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Any
 	) -> [Any] {
 		ce_arrayByApplying(block, withOptions: [])
 	}
 
-	@objc(arrayByApplyingBlock:withOptions:)
 	func ce_arrayByApplying(
 		_ block: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Any,
 		withOptions options: NSEnumerationOptions

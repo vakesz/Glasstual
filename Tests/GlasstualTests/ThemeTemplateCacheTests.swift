@@ -44,14 +44,20 @@ import Testing
 /// off the main actor the way the pipeline does.
 @Suite("Theme template cache")
 nonisolated struct ThemeTemplateCacheTests {
-	@Test("Every default template the app bundles compiles")
-	func bundledDefaultTemplatesCompile() throws {
-		let templatesURL = PathInfo.applicationResourcesURL
+	/// The directory of templates the application ships for the current engine
+	/// version, which is what a theme falls back to.
+	private static func bundledDefaultTemplatesURL() throws -> URL {
+		PathInfo.applicationResourcesURL
 			.appending(path: ThemeResourcePath.defaultTemplates.rawValue, directoryHint: .isDirectory)
 			.appending(
 				path: "Version \(TPCThemeSettingsNewestTemplateEngineVersion)",
 				directoryHint: .isDirectory
 			)
+	}
+
+	@Test("Every default template the app bundles compiles")
+	func bundledDefaultTemplatesCompile() throws {
+		let templatesURL = try Self.bundledDefaultTemplatesURL()
 		let templateURLs = try FileManager.default.contentsOfDirectory(
 			at: templatesURL,
 			includingPropertiesForKeys: nil,
@@ -73,6 +79,38 @@ nonisolated struct ThemeTemplateCacheTests {
 				Issue.record("Template \(name) did not compile")
 			}
 		}
+	}
+
+	/** The line-type table is a bundled property list the cache reads at
+	 runtime, so nothing in the compiler notices when it comes back empty --
+	 and an empty table means every line whose theme ships no override of its
+	 own renders to nothing at all. That is what happened when the resource
+	 reader started handing back a typed value and the cast above it kept
+	 asking for `[String: String]`. */
+	@Test(
+		"Every line type a theme does not override resolves the bundled template",
+		arguments: [
+			TVCLogLineType.privateMessage,
+			.action,
+			.notice,
+			.join,
+			.part,
+			.quit,
+			.topic,
+			.mode,
+			.kick,
+			.nick,
+			.debug,
+		]
+	)
+	func everyLineTypeResolvesItsBundledTemplate(lineType: TVCLogLineType) throws {
+		var cache = try ThemeTemplateCache(sources: ThemeTemplateSources(
+			repositoryURLs: [],
+			fallbackURL: Self.bundledDefaultTemplatesURL(),
+			generation: 1
+		))
+
+		#expect(cache.template(for: lineType) != nil)
 	}
 
 	@Test("A theme that overrides nothing falls back to the bundled template")

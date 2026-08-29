@@ -184,7 +184,7 @@ struct AppKitBridgeIsolationTests {
 
 		let client = GLTTestClient()
 		let channel = Channel(config: ChannelConfig(channelName: "#observed"))
-		channel.setValue(client, forKey: "associatedClient")
+		channel.associatedClient = client
 
 		cell.objectValue = ChannelSpotlightSearchResult(channel: channel)
 

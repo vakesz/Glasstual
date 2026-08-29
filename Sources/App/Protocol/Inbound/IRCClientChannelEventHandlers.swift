@@ -69,7 +69,6 @@ private let inboundEventLogger = Logger(
 
 @MainActor
 public extension IRCClient {
-	@objc(receiveMode:)
 	func receiveMode(_ message: Message) {
 		guard message.params.count > 1, let channelName = message.params.first else { return }
 		let sender = message.senderNickname ?? ""
@@ -121,7 +120,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveTopic:)
 	func receiveTopic(_ message: Message) {
 		guard message.params.count == 2,
 		      let channel = findChannel(message.params[0]), channel.isChannel
@@ -140,7 +138,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(receiveInvite:)
 	func receiveInvite(_ message: Message) {
 		guard message.params.count == 2 else { return }
 		let sender = message.senderNickname ?? ""
@@ -184,7 +181,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveError:)
 	func receiveError(_ message: Message) {
 		let text = message.sequence
 		if IRCInboundEventPolicy.cancelsReconnect(forError: text) {
@@ -193,7 +189,6 @@ public extension IRCClient {
 		printError(text, asCommand: message.command)
 	}
 
-	@objc(receiveCertInfo:)
 	func receiveCertInfo(_ message: Message) {
 		guard message.params.count == 2,
 		      zncBouncerIsSendingCertificateInfo,
@@ -208,7 +203,6 @@ public extension IRCClient {
 
 	/// IRCv3 `chghost`, gated the same way `account-notify` is: a hostmask
 	/// rewrite nobody negotiated is not one to believe.
-	@objc(receiveChangeHost:)
 	func receiveChangeHost(_ message: Message) {
 		guard isCapabilityEnabled(.changeHost) else { return }
 		guard message.params.count == 2, let nickname = message.senderNickname else { return }

@@ -54,7 +54,6 @@ extension MenuActionCoordinator {
 		selectedViewController?.backingView
 	}
 
-	@objc(validateMenuItem:)
 	public func validate(_ menuItem: NSMenuItem) -> Bool {
 		let appController: ApplicationController = AppController.shared
 		guard appController.applicationIsTerminating == false else { return false }
@@ -460,7 +459,9 @@ extension MenuActionCoordinator {
 
 	private var searchProviderName: String {
 		let services = UserDefaults.standard.dictionary(forKey: "NSPreferredWebServices")
-		let provider = services?["NSWebServicesProviderWebSearch"] as? [String: Any]
-		return provider?["NSDefaultDisplayName"] as? String ?? "Google"
+		let provider = services?["NSWebServicesProviderWebSearch"]
+			.flatMap(PropertyListValue.init(propertyList:))
+
+		return provider?.dictionary?["NSDefaultDisplayName"]?.string ?? "Google"
 	}
 }

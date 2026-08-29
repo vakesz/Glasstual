@@ -41,7 +41,7 @@ struct ClientConfigSASLFailureTests {
 		config.disconnectOnSASLFailure = true
 
 		let dictionary = config.dictionaryValue
-		#expect(dictionary[Self.key] as? Bool == true)
+		#expect(dictionary[Self.key]?.boolean == true)
 
 		let restored = try #require(PropertyListModel.decode(IRCClientConfig.self, from: dictionary))
 		#expect(restored.disconnectOnSASLFailure)

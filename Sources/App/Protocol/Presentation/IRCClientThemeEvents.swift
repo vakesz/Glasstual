@@ -39,7 +39,6 @@
 import Foundation
 
 public extension IRCClient {
-	@objc(postEventToViewController:)
 	func postEvent(toViewController eventToken: String) {
 		postThemeEvent(eventToken, to: self)
 		for channel in channelList {
@@ -47,12 +46,10 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(postEventToViewController:forChannel:)
 	func postEvent(toViewController eventToken: String, for channel: IRCChannel) {
 		postThemeEvent(eventToken, to: channel)
 	}
 
-	@objc(postEventToViewController:forItem:)
 	func postEvent(toViewController eventToken: String, forItem item: AnyObject) {
 		postThemeEvent(eventToken, to: item)
 	}

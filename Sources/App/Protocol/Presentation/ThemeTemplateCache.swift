@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import Mustache
 import os
@@ -59,7 +60,8 @@ nonisolated struct ThemeTemplateCache { // nonisolated: value
 	/// ships no template of its own for that type.
 	private nonisolated static let lineTypeFallbacks: [String: String] = // nonisolated: let
 		ResourceManager
-		.dictionary(fromResources: ThemeResourcePath.templateLineTypes.rawValue) as? [String: String] ?? [:]
+		.dictionary(fromResources: ThemeResourcePath.templateLineTypes.rawValue)?
+		.compactMapValues(\.string) ?? [:]
 
 	private var sources: ThemeTemplateSources?
 	private var repositories: [TemplateRepository] = []

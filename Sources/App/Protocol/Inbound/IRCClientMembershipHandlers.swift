@@ -51,7 +51,6 @@ enum IRCMembershipEventPolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(receiveJoin:)
 	func receiveJoin(_ message: Message) {
 		guard let channelName = message.params.first, let sender = message.senderNickname else { return }
 		let printOnly = message.isPrintOnlyMessage
@@ -125,7 +124,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receivePart:)
 	func receivePart(_ message: Message) {
 		guard !(isQuitting && isConnectedToZNC),
 		      let channelName = message.params.first,
@@ -170,7 +168,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveKick:)
 	func receiveKick(_ message: Message) {
 		guard message.params.count > 1,
 		      let channel = findChannel(message.params[0]), channel.isChannel,
@@ -186,10 +183,16 @@ public extension IRCClient {
 				_ = notifyEvent(.kick, lineType: .kick, target: channel, nickname: sender, text: comment)
 				if environment.preferences.rejoinOnKick, !channel.errorOnLastJoinAttempt {
 					printDebugInformation(IRCInboundStrings.Membership.rejoinScheduled, in: channel)
-					NSObject.cancelPreviousPerformRequests(
-						withTarget: self, selector: #selector(joinKickedChannel(_:)), object: channel
-					)
-					perform(#selector(joinKickedChannel(_:)), with: channel, afterDelay: 3)
+					let key = channel.uniqueIdentifier
+					rejoinTasks[key]?.cancel()
+					rejoinTasks[key] = Task { [weak self, weak channel] in
+						try? await Task.sleep(for: .seconds(3))
+
+						guard Task.isCancelled == false, let self, let channel else { return }
+
+						rejoinTasks[key] = nil
+						join(channel)
+					}
 				}
 			} else {
 				channel.removeMember(withNickname: target)
@@ -216,7 +219,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveQuit:)
 	func receiveQuit(_ message: Message) {
 		guard !message.params.isEmpty, let sender = message.senderNickname else { return }
 		let printOnly = message.isPrintOnlyMessage
@@ -284,7 +286,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveKill:)
 	func receiveKill(_ message: Message) {
 		guard let nickname = message.params.first else { return }
 		for channel in channelList {
@@ -292,7 +293,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveNick:)
 	func receiveNick(_ message: Message) {
 		guard !message.params.isEmpty, let oldNickname = message.senderNickname else { return }
 		let printOnly = message.isPrintOnlyMessage

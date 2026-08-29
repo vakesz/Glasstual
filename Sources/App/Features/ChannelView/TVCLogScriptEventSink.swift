@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import GlasstualPluginKit
 import OSLog
 import WebKit
@@ -101,12 +102,10 @@ private struct ScriptMessageHandler {
 	}
 }
 
-@objc(TVCLogScriptEventSink)
 @MainActor
 final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	private weak var webView: LogView?
 
-	@objc(initWithWebView:)
 	init(webView: LogView?) {
 		self.webView = webView
 		super.init()
@@ -699,7 +698,8 @@ extension TVCLogScriptEventSink {
 			"Length of template name is 0",
 			context
 		); context.completion(nil); return }
-		let attributes = Self.objectValueToCommon(context.arguments[1]) as? [String: Any]
+		let attributes = (Self.objectValueToCommon(context.arguments[1]) as? [AnyHashable: Any])
+			.map(JavaScriptValue.object(bridging:))
 		context.completion(TVCLogRenderer.renderTemplateNamed(name, attributes: attributes))
 	}
 

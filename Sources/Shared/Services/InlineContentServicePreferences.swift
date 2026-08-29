@@ -35,27 +35,28 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 /// The preferences the inline-content service reads.
 ///
 /// The app used to warm the service by handing it its entire registered
-/// defaults domain as `[String: Any]`: every preference the app has, untyped,
-/// crossing a process boundary with no class allowlist, so that the service
-/// could read eight values. This carries those eight and nothing else.
+/// defaults domain: every preference the app has, untyped, crossing a process
+/// boundary with no class allowlist, so that the service could read eight
+/// values. This carries those eight and nothing else.
 @objc(ICLInlineContentServicePreferences)
 public final nonisolated class InlineContentServicePreferences: NSObject, NSSecureCoding, // nonisolated: value
 	Sendable
 {
-	@objc public let maximumFilesize: UInt
-	@objc public let scalingWidth: UInt
-	@objc public let maximumHeight: UInt
-	@objc public let limitToBasics: Bool
-	@objc public let limitBasicsToFiles: Bool
-	@objc public let limitNaughtyContent: Bool
-	@objc public let limitUnsafeContent: Bool
-	@objc public let checkEverything: Bool
-	@objc public let allowsCleartextHTTP: Bool
+	public let maximumFilesize: UInt
+	public let scalingWidth: UInt
+	public let maximumHeight: UInt
+	public let limitToBasics: Bool
+	public let limitBasicsToFiles: Bool
+	public let limitNaughtyContent: Bool
+	public let limitUnsafeContent: Bool
+	public let checkEverything: Bool
+	public let allowsCleartextHTTP: Bool
 
 	public init(
 		maximumFilesize: UInt,
@@ -83,7 +84,7 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 
 	/// The values the app currently holds, read through a private handle: the
 	/// client that pushes them to the service is an actor of its own.
-	@objc public static func current() -> InlineContentServicePreferences {
+	public static func current() -> InlineContentServicePreferences {
 		InlineContentServicePreferences(
 			maximumFilesize: Preferences.InlineMedia.maximumFilesize.detachedValue,
 			scalingWidth: Preferences.InlineMedia.scalingWidth.detachedValue,
@@ -99,17 +100,17 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 
 	/// The same values as a defaults registration domain, so that the service's
 	/// `TextualPreferences` accessors read them through their usual keys.
-	@objc public var registrationDomain: [String: Any] {
+	public var registrationDomain: [String: PropertyListValue] {
 		[
-			Preferences.InlineMedia.maximumFilesize.name: maximumFilesize,
-			Preferences.InlineMedia.scalingWidth.name: scalingWidth,
-			Preferences.InlineMedia.maximumHeight.name: maximumHeight,
-			Preferences.InlineMedia.limitToBasics.name: limitToBasics,
-			Preferences.InlineMedia.limitBasicsToFiles.name: limitBasicsToFiles,
-			Preferences.InlineMedia.limitNaughtyContent.name: limitNaughtyContent,
-			Preferences.InlineMedia.limitUnsafeContent.name: limitUnsafeContent,
-			Preferences.InlineMedia.checkEverything.name: checkEverything,
-			Preferences.InlineMedia.allowsCleartextHTTP.name: allowsCleartextHTTP,
+			Preferences.InlineMedia.maximumFilesize.name: .integer(Int(maximumFilesize)),
+			Preferences.InlineMedia.scalingWidth.name: .integer(Int(scalingWidth)),
+			Preferences.InlineMedia.maximumHeight.name: .integer(Int(maximumHeight)),
+			Preferences.InlineMedia.limitToBasics.name: .boolean(limitToBasics),
+			Preferences.InlineMedia.limitBasicsToFiles.name: .boolean(limitBasicsToFiles),
+			Preferences.InlineMedia.limitNaughtyContent.name: .boolean(limitNaughtyContent),
+			Preferences.InlineMedia.limitUnsafeContent.name: .boolean(limitUnsafeContent),
+			Preferences.InlineMedia.checkEverything.name: .boolean(checkEverything),
+			Preferences.InlineMedia.allowsCleartextHTTP.name: .boolean(allowsCleartextHTTP),
 		]
 	}
 

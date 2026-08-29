@@ -37,10 +37,9 @@
 
 import Foundation
 
-@objc(IRCISupportPrefixConfiguration)
 public final nonisolated class ISupportPrefixConfiguration: NSObject { // nonisolated: value
-	@objc public let modeSymbols: [String]
-	@objc public let characters: [String]
+	public let modeSymbols: [String]
+	public let characters: [String]
 
 	init(modeSymbols: [String], characters: [String]) {
 		self.modeSymbols = modeSymbols
@@ -49,10 +48,9 @@ public final nonisolated class ISupportPrefixConfiguration: NSObject { // noniso
 	}
 }
 
-@objc(IRCISupportExtendedBanConfiguration)
 public final nonisolated class ISupportExtendedBanConfiguration: NSObject { // nonisolated: value
-	@objc public let prefix: String?
-	@objc public let types: [String]
+	public let prefix: String?
+	public let types: [String]
 
 	init(prefix: String?, types: [String]) {
 		self.prefix = prefix
@@ -61,7 +59,6 @@ public final nonisolated class ISupportExtendedBanConfiguration: NSObject { // n
 	}
 }
 
-@objc(IRCISupportTokenParser)
 public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: value
 	@available(*, unavailable)
 	override public init() {
@@ -120,7 +117,6 @@ public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: v
 		UInt(value) ?? 0
 	}
 
-	@objc(extendedBanConfigurationFromToken:)
 	public static func extendedBanConfiguration(from token: String) -> ISupportExtendedBanConfiguration {
 		guard let comma = token.firstIndex(of: ",") else {
 			return ISupportExtendedBanConfiguration(prefix: nil, types: characters(in: token))
@@ -135,7 +131,6 @@ public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: v
 		)
 	}
 
-	@objc(userPrefixConfigurationFromToken:)
 	public static func userPrefixConfiguration(from token: String) -> ISupportPrefixConfiguration? {
 		let token = token as NSString
 		let openingParenthesis = token.range(of: "(").location
@@ -224,7 +219,6 @@ public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: v
 		return String(String.UnicodeScalarView(scalars))
 	}
 
-	@objc(isClientTag:deniedByEntries:)
 	public static func isClientTag(_ tagName: String, deniedBy entries: [String]) -> Bool {
 		var denied = false
 
@@ -243,7 +237,6 @@ public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: v
 		return denied
 	}
 
-	@objc(chunkTargets:limit:)
 	public static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
 		let chunkSize = max(Int(limit), 1)
 		var chunks: [[String]] = []

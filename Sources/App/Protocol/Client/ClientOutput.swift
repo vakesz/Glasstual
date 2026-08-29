@@ -36,9 +36,7 @@
  *
  *********************************************************************** */
 
-// AppKit: `alertPresentationWindow` hands the window layer's window back for a
-// sheet; nothing else here touches AppKit.
-import AppKit
+import Foundation
 
 /** The view a single tree item is drawn into, as the protocol layer sees it.
 
@@ -90,8 +88,12 @@ protocol ClientOutput: AnyObject {
 
 	var windowIsKey: Bool { get }
 	var windowIsMain: Bool { get }
-	/// The window a sheet raised by the protocol layer should hang from.
-	var alertPresentationWindow: NSWindow? { get }
+	/** Puts a sheet in front of the user.
+
+	 The protocol layer says what to ask; what the sheet hangs from is the window
+	 layer's business. This used to hand an `NSWindow` back, which is how AppKit
+	 reached into the protocol layer at all. */
+	func presentAlertSheet(_ request: AlertRequest, completion: @escaping TDCAlertCompletionBlock)
 
 	// MARK: Server list
 
@@ -137,6 +139,9 @@ protocol ClientMenuPresenting: AnyObject {
 	func navigateToTreeItem(at url: URL)
 	func connectToGlasstualHelpChannel(_ sender: Any?)
 	func connectToGlasstualTestingChannel(_ sender: Any?)
+	/// Reveals a folder of the application's in the Finder. What "reveal" means
+	/// is the app layer's business; the protocol layer only knows the folder.
+	func revealInFinder(_ url: URL)
 }
 
 /** Application-wide state the protocol layer branches on. A separate seam from

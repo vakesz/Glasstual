@@ -39,30 +39,16 @@
 import Foundation
 
 public extension IRCClient {
-	@objc(sendLine:)
-	func sendLine(_ line: String) {
-		guard isConnected else {
-			printDebugInformation(toConsole: IRCTransportStrings.notConnected)
-			return
-		}
-
-		socket?.sendLine(line)
-		world?.noteMessageSent(length: UInt(line.count))
-	}
-
-	@objc(send:arguments:)
 	func send(_ command: String, arguments: [String]) {
 		sendLine(SendingMessage.string(command: command, arguments: arguments))
 	}
 
-	@objc(sendCommand:arguments:tags:)
 	func sendCommand(_ command: String, arguments: [String], tags: [String: String]?) {
 		let negotiatedTags = isCapabilityEnabled(.messageTags) ? tags : nil
 		let line = SendingMessage.string(command: command, arguments: arguments, tags: negotiatedTags)
 		sendLine(line)
 	}
 
-	@objc(sendTagMessage:toTarget:)
 	@discardableResult
 	func sendTagMessage(_ tags: [String: String], toTarget target: String) -> Bool {
 		guard isCapabilityEnabled(.messageTags), tags.isEmpty == false, target.isEmpty == false else {

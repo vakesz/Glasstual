@@ -93,17 +93,14 @@ enum DCCChatPolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(directChatChannelNameForNickname:)
 	func directChatChannelName(forNickname nickname: String) -> String {
 		DCCChatPolicy.channelName(for: nickname)
 	}
 
-	@objc(directChatChannelForConnection:)
 	func directChatChannel(for connection: DirectChatConnection) -> IRCChannel? {
 		channelList.first { $0.isDirectChat && $0.directChatConnection === connection }
 	}
 
-	@objc(directChatChannelForNickname:)
 	func directChatChannel(forNickname nickname: String) -> IRCChannel? {
 		let channel = findChannel(directChatChannelName(forNickname: nickname))
 		return channel?.isDirectChat == true ? channel : nil
@@ -152,7 +149,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receivedDCCChatQuery:text:)
 	func receivedDCCChatQuery(_ sender: String, text: String) {
 		guard let offer = DCCChatPolicy.parseOffer(text) else {
 			printInvalidDCCChatRequest(from: sender)
@@ -169,15 +165,15 @@ public extension IRCClient {
 
 		print(IRCDirectChatStrings.incomingRequest(sender: sender), by: nil, in: nil,
 		      as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue)
-		guard let window = output?.alertPresentationWindow else { return }
-		TDCAlert.alertSheet(
-			with: window,
-			body: PromptStrings.DirectChat.body(sender: sender),
+		let request = AlertRequest(
 			title: PromptStrings.DirectChat.title(sender: sender),
+			body: PromptStrings.DirectChat.body(sender: sender),
 			defaultButton: PromptStrings.DirectChat.acceptButtonTitle,
-			alternateButton: PromptStrings.DirectChat.declineButtonTitle,
-			otherButton: nil,
-			completionBlock: { [weak self] outcome in
+			alternateButton: PromptStrings.DirectChat.declineButtonTitle
+		)
+		output?.presentAlertSheet(
+			request,
+			completion: { [weak self] outcome in
 				guard let self else { return }
 				guard outcome.response == .default else {
 					print(IRCDirectChatStrings.declined(sender: sender), by: nil, in: nil,
@@ -194,13 +190,11 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(startDirectChatWithNickname:)
 	func startDirectChat(withNickname nickname: String) {
 		guard !nicknameIsMyself(nickname) else { return }
 		openDirectChat(withNickname: nickname, listeningWithToken: nil)
 	}
 
-	@objc(prepareDirectChatChannelForNickname:)
 	func prepareDirectChatChannel(forNickname nickname: String) -> IRCChannel? {
 		guard let channel = findChannelOrCreate(
 			directChatChannelName(forNickname: nickname), as: .directChat
@@ -212,7 +206,6 @@ public extension IRCClient {
 		return channel
 	}
 
-	@objc(openDirectChatWithNickname:address:port:)
 	func openDirectChat(withNickname nickname: String, address: String, port: UInt16) {
 		guard let channel = prepareDirectChatChannel(forNickname: nickname) else { return }
 		let connection = DirectChatConnection.connection(
@@ -229,7 +222,6 @@ public extension IRCClient {
 		connection.open()
 	}
 
-	@objc(openDirectChatWithNickname:listeningWithToken:)
 	func openDirectChat(withNickname nickname: String, listeningWithToken token: String?) {
 		guard let channel = prepareDirectChatChannel(forNickname: nickname) else { return }
 		let connection = DirectChatConnection.listeningConnection(
@@ -243,7 +235,6 @@ public extension IRCClient {
 		connection.open()
 	}
 
-	@objc(sendDirectChatText:asCommand:toChannel:)
 	func sendDirectChatText(
 		_ string: NSAttributedString,
 		as command: IRCRemoteCommand,
@@ -256,14 +247,8 @@ public extension IRCClient {
 		let isAction = command == .privmsgAction
 		let lineType: TVCLogLineType = isAction ? .action : .privateMessage
 		for line in string.splitIntoLines {
-			let remainder = NSMutableAttributedString(attributedString: line)
-			while remainder.length > 0 {
-				let lengthBeforeFormatting = remainder.length
-				let message = remainder.stringFormatted(forChannel: channel.name, on: self, with: lineType)
-
-				// Defensive: `stringFormatted` guarantees progress, but this
-				// loop must never spin if that ever stops being true.
-				guard remainder.length < lengthBeforeFormatting else { break }
+			var cursor = IRCLineCursor(line)
+			while let message = cursor.nextLine(forChannel: channel.name, on: self, with: lineType) {
 				if isAction {
 					connection.sendAction(message)
 				} else {

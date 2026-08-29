@@ -43,7 +43,7 @@ import os
 /// guarded by `contextLock` and `saveQueue`.
 ///
 /// One store exists per accepted XPC connection. The exported object
-/// (`HistoricLogProcessMain`) does nothing but forward each `@objc` call back
+/// (`HistoricLogProcessMain`) does nothing but forward each `` call back
 /// in here, so the per-view contexts, line counts, resize timers and the save
 /// debounce all live in a single isolation domain. The connection itself never
 /// enters the actor — only the client proxy, which is `Sendable` because

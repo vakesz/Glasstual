@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 /// Presents a URL as an inline image.
@@ -85,12 +86,12 @@ public enum InlineImageContent {
 		values.scriptResources = scriptResources
 		values.entrypoint = entrypoint
 
-		let attributes: [String: Any] = [
-			"anchorLink": values.url.absoluteString,
-			"classAttribute": values.classAttribute,
-			"imageURL": values.urlToInline.absoluteString,
-			"preferredMaximumWidth": InlineContentPreferences.current.maximumWidth,
-			"uniqueIdentifier": values.uniqueIdentifier,
+		let attributes: [String: JavaScriptValue] = [
+			"anchorLink": .string(values.url.absoluteString),
+			"classAttribute": .string(values.classAttribute),
+			"imageURL": .string(values.urlToInline.absoluteString),
+			"preferredMaximumWidth": .integer(Int(InlineContentPreferences.current.maximumWidth)),
+			"uniqueIdentifier": .string(values.uniqueIdentifier),
 		]
 
 		return InlineContentTemplate.outcome(templateURL, attributes, into: values)

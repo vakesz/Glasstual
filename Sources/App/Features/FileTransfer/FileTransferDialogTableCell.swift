@@ -31,7 +31,6 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 	@IBOutlet private var filenameTextFieldConstraint: NSLayoutConstraint!
 	@IBOutlet private var transferProgressTextFieldConstraint: NSLayoutConstraint!
 
-	@objc
 	public func prepareInitialState() {
 		let filename = filename
 
@@ -52,11 +51,11 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 		reloadStatusInformation()
 	}
 
-	@objc public var fileIcon: NSImage? {
+	public var fileIcon: NSImage? {
 		fileIconView.image
 	}
 
-	@objc public var fileIconFrameOnScreen: NSRect {
+	public var fileIconFrameOnScreen: NSRect {
 		guard let iconView = fileIconView, let window = iconView.window else {
 			return .zero
 		}
@@ -65,7 +64,6 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 		return window.convertToScreen(frameInWindow)
 	}
 
-	@objc
 	public func reloadStatusInformation() {
 		let transferStatus = transferStatus
 
@@ -165,12 +163,10 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 		return humanReadableTimeInterval(interval, true, units) as String?
 	}
 
-	@objc
 	public func updateClearButton() {
 		cellItem?.updateClearButton()
 	}
 
-	@objc
 	public func onMaintenanceTimer() {
 		cellItem?.onMaintenanceTimer()
 	}

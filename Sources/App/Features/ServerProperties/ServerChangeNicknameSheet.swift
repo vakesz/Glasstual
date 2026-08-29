@@ -39,28 +39,23 @@
 import AppKit
 import SwiftUI
 
-@objc(TDCServerChangeNicknameSheetDelegate)
 @MainActor
 public protocol ServerChangeNicknameSheetDelegate: NSObjectProtocol {
-	@objc(serverChangeNicknameSheet:didInputNickname:)
 	func serverChangeNicknameSheet(_ sender: ServerChangeNicknameSheet, didInputNickname nickname: String)
 
-	@objc(serverChangeNicknameSheetWillClose:)
 	func serverChangeNicknameSheetWillClose(_ sender: ServerChangeNicknameSheet)
 }
 
-@objc(TDCServerChangeNicknameSheet)
 @MainActor
 public final class ServerChangeNicknameSheet: SheetBase, NSWindowDelegate, TDCClientPrototype {
 	private static let contentSize = NSSize(width: 350, height: 131)
 
-	@objc public private(set) var client: IRCClient?
-	@objc public private(set) var clientId: String?
+	public private(set) var client: IRCClient?
+	public private(set) var clientId: String?
 
 	private let content: ServerNicknameChangeContent
 	private let model: ServerNicknameChangeModel
 
-	@objc(initWithClient:)
 	public init(client: IRCClient) {
 		let currentNickname = client.userNickname
 
@@ -115,7 +110,7 @@ public final class ServerChangeNicknameSheet: SheetBase, NSWindowDelegate, TDCCl
 		sheet = hostedSheet
 	}
 
-	@objc public func start() {
+	public func start() {
 		startSheet()
 	}
 
@@ -132,11 +127,11 @@ public final class ServerChangeNicknameSheet: SheetBase, NSWindowDelegate, TDCCl
 		super.ok(sender)
 	}
 
-	@objc public func okOrError() -> Bool {
+	public func okOrError() -> Bool {
 		model.validateForSubmission()
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		(delegate as? ServerChangeNicknameSheetDelegate)?.serverChangeNicknameSheetWillClose(self)
 	}
 }

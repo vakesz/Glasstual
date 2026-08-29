@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 // MARK: - Values
@@ -228,10 +229,10 @@ public protocol AnyPreferenceKey: Sendable {
 	nonisolated var traits: PreferenceTraits { get } // nonisolated: pure
 
 	/// The registration-domain entry, or `nil` for an unregistered key.
-	nonisolated var registeredDefault: Any? { get } // nonisolated: pure
+	nonisolated var registeredDefault: PropertyListValue? { get } // nonisolated: pure
 
-	/// Validates and coerces an imported object, or returns `nil` to reject it.
-	nonisolated func coerce(_ object: Any) -> Any? // nonisolated: pure
+	/// Validates and coerces an imported value, or returns `nil` to reject it.
+	nonisolated func coerce(_ value: PropertyListValue) -> PropertyListValue? // nonisolated: pure
 }
 
 public nonisolated extension AnyPreferenceKey { // nonisolated: value
@@ -265,12 +266,16 @@ public nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKe
 		self.traits = traits
 	}
 
-	public var registeredDefault: Any? {
-		traits.contains(.unregistered) ? nil : defaultValue.preferenceObject
+	public var registeredDefault: PropertyListValue? {
+		traits.contains(.unregistered) ? nil : PropertyListValue(propertyList: defaultValue.preferenceObject)
 	}
 
-	public func coerce(_ object: Any) -> Any? {
-		Value.preferenceValue(from: object)?.preferenceObject
+	public func coerce(_ value: PropertyListValue) -> PropertyListValue? {
+		guard let coerced = Value.preferenceValue(from: value.propertyListObject) else {
+			return nil
+		}
+
+		return PropertyListValue(propertyList: coerced.preferenceObject)
 	}
 }
 
@@ -306,16 +311,18 @@ public nonisolated struct UntypedPreferenceKey: AnyPreferenceKey { // nonisolate
 		}
 	}
 
-	public var registeredDefault: Any? {
+	public var registeredDefault: PropertyListValue? {
 		switch registration {
 		case .none: nil
-		case .emptyDictionary: [String: Any]()
-		case .emptyArray: [Any]()
+		case .emptyDictionary: .dictionary([:])
+		case .emptyArray: .array([])
 		}
 	}
 
-	public func coerce(_ object: Any) -> Any? {
-		PropertyListSerialization.propertyList(object, isValidFor: .binary) ? object : nil
+	/// A ``PropertyListValue`` is a property list by construction, so a key with
+	/// no declared type has nothing left to check.
+	public func coerce(_ value: PropertyListValue) -> PropertyListValue? {
+		value
 	}
 }
 
@@ -412,12 +419,15 @@ public nonisolated extension TextualUserDefaults { // nonisolated: pure
 		store(for: key.storage).removeObject(forKey: key.name)
 	}
 
-	func object(for key: some AnyPreferenceKey) -> Any? {
+	/** The stored value of a key whose shape belongs to the subsystem that
+	 writes it, narrowed out of the `Any` `UserDefaults` returns. */
+	func propertyListValue(for key: some AnyPreferenceKey) -> PropertyListValue? {
 		store(for: key.storage).object(forKey: key.name)
+			.flatMap(PropertyListValue.init(propertyList:))
 	}
 
-	func setObject(_ value: Any?, for key: some AnyPreferenceKey) {
-		store(for: key.storage).set(value, forKey: key.name)
+	func setPropertyListValue(_ value: PropertyListValue?, for key: some AnyPreferenceKey) {
+		store(for: key.storage).set(value?.propertyListObject, forKey: key.name)
 	}
 }
 
@@ -469,12 +479,12 @@ public extension PreferenceKey {
 }
 
 public extension AnyPreferenceKey {
-	/// The raw stored object, for the handful of keys whose value shape belongs
-	/// to the subsystem that writes it.
+	/// The stored value, for the handful of keys whose value shape belongs to
+	/// the subsystem that writes it.
 	@MainActor
-	var object: Any? {
-		get { Preferences.defaults.object(for: self) }
-		nonmutating set { Preferences.defaults.setObject(newValue, for: self) }
+	var propertyListValue: PropertyListValue? {
+		get { Preferences.defaults.propertyListValue(for: self) }
+		nonmutating set { Preferences.defaults.setPropertyListValue(newValue, for: self) }
 	}
 
 	@MainActor

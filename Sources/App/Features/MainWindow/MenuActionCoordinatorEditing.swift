@@ -46,7 +46,6 @@ enum MenuFindTag {
 
 @MainActor
 public extension MenuActionCoordinator {
-	@objc(performEditingAction:sender:)
 	func performEditingAction(_ action: TXMenuEditingAction, sender: Any?) {
 		switch action {
 		case .showFindPrompt:

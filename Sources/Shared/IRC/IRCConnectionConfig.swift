@@ -45,7 +45,6 @@ private nonisolated let connectionConfigLogger = Logger( // nonisolated: let
 )
 
 /// Raw values are persisted. Values 4 and 7 are retired and must not be reused.
-@objc
 public nonisolated enum IRCConnectionProxyType: UInt, Codable, Sendable { // nonisolated: value
 	case none = 0
 	case automatic = 1
@@ -55,7 +54,6 @@ public nonisolated enum IRCConnectionProxyType: UInt, Codable, Sendable { // non
 }
 
 /// Controls which IP address families Network.framework may use.
-@objc
 public nonisolated enum IRCConnectionAddressType: UInt, Codable, Sendable { // nonisolated: value
 	case `default` = 0
 	case v4 = 1

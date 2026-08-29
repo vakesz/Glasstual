@@ -27,14 +27,14 @@ struct IRCColorFormatMigrationTests {
 		#expect(bold.length == 2)
 		#expect(bold.value == nil)
 
-		let buffer = NSMutableString()
-		bold.appendToStart(of: buffer)
+		var buffer = ""
+		bold.appendToStart(of: &buffer)
 		buffer.append("x")
-		bold.appendToEnd(of: buffer)
+		bold.appendToEnd(of: &buffer)
 
-		#expect(buffer.length == 3)
-		#expect(controlCharacter(at: 0, in: buffer as String) == unichar(IRCTextFormatterControlCharacter.bold))
-		#expect(controlCharacter(at: 2, in: buffer as String) == unichar(IRCTextFormatterControlCharacter.bold))
+		#expect(buffer.count == 3)
+		#expect(controlCharacter(at: 0, in: buffer) == unichar(IRCTextFormatterControlCharacter.bold))
+		#expect(controlCharacter(at: 2, in: buffer) == unichar(IRCTextFormatterControlCharacter.bold))
 	}
 
 	@Test("Spoiler is an alias, so it never becomes an effect of its own")
@@ -60,25 +60,25 @@ struct IRCColorFormatMigrationTests {
 		#expect(hexForeground.value?.count == 6)
 		#expect(backgroundOnly != nil)
 
-		let digitPair: [String: Any] = [
-			IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue: 4,
-			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: 14,
+		let digitPair: [NSAttributedString.Key: Any] = [
+			formatterKey(.foregroundColorAttributeName): 4,
+			formatterKey(.backgroundColorAttributeName): 14,
 		]
 		let matching = TextFormatterEffects(attributes: digitPair)
 
 		#expect(matching.effects.count == 2)
 		#expect(matching.maximumLength == 7)
 
-		let mismatched: [String: Any] = [
-			IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue: 4,
-			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: NSColor.blue,
+		let mismatched: [NSAttributedString.Key: Any] = [
+			formatterKey(.foregroundColorAttributeName): 4,
+			formatterKey(.backgroundColorAttributeName): NSColor.blue,
 		]
 		let onlyForeground = TextFormatterEffects(attributes: mismatched)
 
 		#expect(onlyForeground.effects.count == 1)
 
-		let backgroundAlone: [String: Any] = [
-			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: 4,
+		let backgroundAlone: [NSAttributedString.Key: Any] = [
+			formatterKey(.backgroundColorAttributeName): 4,
 		]
 
 		#expect(TextFormatterEffects(attributes: backgroundAlone).effects.isEmpty)
@@ -166,12 +166,12 @@ struct IRCColorFormatMigrationTests {
 
 	@Test("Wrapping deletes back to the nearest whitespace inside the maximum distance")
 	func wrapHelperDeletesBackToWhitespaceInsideMaxDistance() {
-		let string = NSMutableString(string: "aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii")
+		var string = "aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii"
 		let deleted = string.wrapIRCTextFormatterResult(with: 0, maxDistance: 25)
 
 		#expect(deleted != UInt(bitPattern: NSNotFound))
 		#expect(string.hasPrefix("aaaa bbbb cccc dddd eeee ffff gggg hhhh"))
-		#expect(string.range(of: "iiii").location == NSNotFound)
+		#expect(string.contains("iiii") == false)
 		#expect(string.hasSuffix(" ") == false)
 	}
 
@@ -196,18 +196,24 @@ struct IRCColorFormatMigrationTests {
 		#expect(effectiveRange.length < payload.utf16.count)
 	}
 
-	@Test("Formatting a mutable string deletes the prefix it consumed")
-	func mutableChannelFormattingDeletesConsumedPrefix() {
+	@Test("The cursor drops the prefix each line consumed")
+	func lineCursorDropsTheConsumedPrefix() {
 		let client = GLTTestClient()
 		let payload = String(String(repeating: "word ", count: 160).prefix(800))
-		let string = NSMutableAttributedString(string: payload)
-		let originalLength = string.length
+		var cursor = IRCLineCursor(NSAttributedString(string: payload))
 
-		let formatted = string.stringFormatted(forChannel: "#test", on: client, with: .notice)
+		let formatted = cursor.nextLine(forChannel: "#test", on: client, with: .notice)
 
-		#expect(formatted.isEmpty == false)
-		#expect(string.length < originalLength)
-		#expect(string.length + formatted.utf16.count == originalLength)
+		#expect(formatted?.isEmpty == false)
+		#expect(cursor.isEmpty == false)
+
+		var remaining = 0
+		while cursor.nextLine(forChannel: "#test", on: client, with: .notice) != nil {
+			remaining += 1
+		}
+
+		#expect(remaining > 0)
+		#expect(cursor.isEmpty)
 	}
 
 	private func controlCharacter(at index: Int, in string: String) -> unichar {

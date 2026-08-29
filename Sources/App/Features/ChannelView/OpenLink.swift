@@ -43,9 +43,7 @@ private let openLinkLogger = Logger(
 	category: "OpenLink"
 )
 
-@objc(TLOpenLink)
 public class OpenLink: NSObject {
-	@objc(open:inBackground:)
 	public static func open(url: URL, inBackground: Bool = TextualPreferences.openBrowserInBackground()) {
 		/* Links come from other people. `NSWorkspace` launches whatever app has
 		 registered the scheme, so the same allowlist that decides what becomes
@@ -71,7 +69,6 @@ public class OpenLink: NSObject {
 		NSWorkspace.shared.open(url)
 	}
 
-	@objc(openWithString:inBackground:)
 	public static func open(string: String, inBackground: Bool = TextualPreferences.openBrowserInBackground()) {
 		guard let urlToOpen = URL(string: string) else {
 			return
@@ -82,12 +79,10 @@ public class OpenLink: NSObject {
 }
 
 public extension OpenLink {
-	@objc(open:)
 	static func openBridged(url: URL) {
 		open(url: url)
 	}
 
-	@objc(openWithString:)
 	static func openBridged(string: String) {
 		open(string: string)
 	}

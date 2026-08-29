@@ -119,12 +119,11 @@ enum IRCNotificationPolicy {
 		return true
 	}
 
-	static func notificationUserInfo(clientIdentifier: String, channelIdentifier: String?) -> [String: Any] {
-		var userInfo: [String: Any] = [NotificationPayload.clientIdentifierKey: clientIdentifier]
-		if let channelIdentifier {
-			userInfo[NotificationPayload.channelIdentifierKey] = channelIdentifier
-		}
-		return userInfo
+	static func notificationUserInfo(
+		clientIdentifier: String,
+		channelIdentifier: String?
+	) -> NotificationPayload {
+		NotificationPayload(clientIdentifier: clientIdentifier, channelIdentifier: channelIdentifier)
 	}
 
 	static func textEventDescription(

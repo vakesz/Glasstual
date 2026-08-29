@@ -156,7 +156,6 @@ enum IRCServiceNoticePolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(receiveWallops:)
 	func receiveWallops(_ message: Message) {
 		guard let payload = message.params.first else { return }
 		let rewritten = message.duplicate()
@@ -168,7 +167,6 @@ public extension IRCClient {
 		receivePrivmsgAndNotice(rewritten)
 	}
 
-	@objc(receivePrivmsgAndNotice:)
 	func receivePrivmsgAndNotice(_ message: Message) {
 		guard message.params.count > 1 else { return }
 		updateUserIdentity(fromMessageTags: message)
@@ -185,7 +183,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveText:lineType:text:)
 	func receiveText(_ message: Message, lineType originalLineType: TVCLogLineType, text originalText: String) {
 		guard message.params.count > 1 else { return }
 		var text = originalText

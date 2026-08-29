@@ -134,7 +134,6 @@ private let payloadLogger = Logger(
 /// annotation to be sent between the application and the inline-content
 /// service. It is `final` because a class with subclasses cannot be `Sendable`;
 /// modules work on `InlineContentPayloadValues` and never see this at all.
-@objc(ICLPayload)
 public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
 	public let values: InlineContentPayloadValues
 
@@ -146,7 +145,6 @@ public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
 		super.init()
 	}
 
-	@objc(initWithURL:withUniqueIdentifier:atLineNumber:index:inView:)
 	public convenience init(
 		url: URL,
 		withUniqueIdentifier uniqueIdentifier: String,
@@ -167,76 +165,76 @@ public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
 
 	// MARK: - Accessors
 
-	@objc public var url: URL {
+	public var url: URL {
 		values.url
 	}
 
-	@objc public var address: String {
+	public var address: String {
 		values.url.absoluteString
 	}
 
-	@objc public var urlToInline: URL {
+	public var urlToInline: URL {
 		values.urlToInline
 	}
 
-	@objc public var addressToInline: String {
+	public var addressToInline: String {
 		values.urlToInline.absoluteString
 	}
 
-	@objc public var uniqueIdentifier: String {
+	public var uniqueIdentifier: String {
 		values.uniqueIdentifier
 	}
 
-	@objc public var viewIdentifier: String {
+	public var viewIdentifier: String {
 		values.viewIdentifier
 	}
 
-	@objc public var lineNumber: String {
+	public var lineNumber: String {
 		values.lineNumber
 	}
 
-	@objc public var index: UInt {
+	public var index: UInt {
 		values.index
 	}
 
-	@objc public var contentLength: UInt64 {
+	public var contentLength: UInt64 {
 		values.contentLength
 	}
 
-	@objc public var contentSize: CGSize {
+	public var contentSize: CGSize {
 		values.contentSize
 	}
 
-	@objc public var styleResources: [URL] {
+	public var styleResources: [URL] {
 		values.styleResources
 	}
 
-	@objc public var scriptResources: [URL] {
+	public var scriptResources: [URL] {
 		values.scriptResources
 	}
 
-	@objc public var html: String {
+	public var html: String {
 		values.html
 	}
 
-	@objc public var entrypoint: String? {
+	public var entrypoint: String? {
 		values.entrypoint
 	}
 
-	@objc public var classAttribute: String {
+	public var classAttribute: String {
 		values.classAttribute
 	}
 
 	/// The context the entrypoint script is called with. Every module has been
 	/// content with the defaults, so it is derived rather than stored.
-	@objc public var entrypointPayload: [String: Any] {
+	public var entrypointPayload: [String: JavaScriptValue] {
 		[
-			"class": values.classAttribute,
-			"html": values.html,
-			"url": values.url,
-			"urlToInline": values.urlToInline,
-			"lineNumber": values.lineNumber,
-			"uniqueIdentifier": values.uniqueIdentifier,
+			"class": .string(values.classAttribute),
+			"html": .string(values.html),
+			"url": .string(values.url.absoluteString),
+			"urlToInline": .string(values.urlToInline.absoluteString),
+			"lineNumber": .string(values.lineNumber),
+			"uniqueIdentifier": .string(values.uniqueIdentifier),
 		]
 	}
 

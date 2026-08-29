@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import InlineContentKit
 
@@ -94,9 +95,9 @@ struct YouTubeModule: InlineContentModule {
 			payload,
 			templateURL: CoreMediaBundle.current.url(forResource: "ICMYouTube", withExtension: "mustache"),
 			attributes: [
-				"uniqueIdentifier": payload.uniqueIdentifier,
-				"videoIdentifier": identifier,
-				"videoStartTime": startTime,
+				"uniqueIdentifier": .string(payload.uniqueIdentifier),
+				"videoIdentifier": .string(identifier),
+				"videoStartTime": .double(startTime),
 			]
 		)
 	}

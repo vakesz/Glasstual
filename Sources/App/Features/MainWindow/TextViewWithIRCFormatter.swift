@@ -41,7 +41,6 @@ import CocoaExtensions
 private let textViewWidthPadding: CGFloat = 1.0
 private let textViewHeightPadding: CGFloat = 2.0
 
-@objc
 public enum TVCTextViewCaretLocation: UInt {
 	case onlyLine
 	case firstLine
@@ -49,14 +48,13 @@ public enum TVCTextViewCaretLocation: UInt {
 	case lastLine
 }
 
-@objc(TVCTextViewWithIRCFormatter)
 open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeyboardEventResponder {
 	private var keyEventHandler: KeyEventHandler!
 	private var hasPreparedInitialState = false
 	private var preferredFontStorage: NSFont = .systemFont(ofSize: NSFont.systemFontSize)
 	private var preferredFontColorStorage: NSColor = .textColor
 
-	@objc public var preferredFont: NSFont {
+	public var preferredFont: NSFont {
 		get { preferredFontStorage }
 		set {
 			/* Fonts and colours are compared by value: `!==` re-applied on an
@@ -70,7 +68,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		}
 	}
 
-	@objc public var preferredFontColor: NSColor {
+	public var preferredFontColor: NSColor {
 		get { preferredFontColorStorage }
 		set {
 			guard newValue != preferredFontColorStorage else {
@@ -150,7 +148,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		keyEventHandler.processKeyEvent(event)
 	}
 
-	@objc(keyDownToSuper:)
 	public func keyDownToSuper(_ event: NSEvent) {
 		super.keyDown(with: event)
 	}
@@ -165,7 +162,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		[.string, .fileURL]
 	}
 
-	@objc public var stringValue: String {
+	public var stringValue: String {
 		get { string }
 		set {
 			textStorage?.replaceCharacters(in: range, with: newValue)
@@ -173,7 +170,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		}
 	}
 
-	@objc public var stringValueWithIRCFormatting: String {
+	public var stringValueWithIRCFormatting: String {
 		get { attributedString().stringFormattedForIRC }
 		set {
 			guard let formattedValue = (newValue as NSString).attributedString(
@@ -188,7 +185,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		}
 	}
 
-	@objc open var attributedStringValue: NSAttributedString {
+	open var attributedStringValue: NSAttributedString {
 		get { attributedString() }
 		set {
 			undoManager?.removeAllActions()
@@ -203,7 +200,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		}
 	}
 
-	@objc
 	public func updateAllFontSizesToMatchTheDefaultFont() {
 		guard let textStorage else {
 			return
@@ -230,7 +226,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		textStorage.endEditing()
 	}
 
-	@objc
 	public func resetTypeSetterAttributes() {
 		typingAttributes = [
 			.font: preferredFontStorage,
@@ -244,12 +239,10 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		self.typingAttributes = typingAttributesMutable
 	}
 
-	@objc(resetFontInRange:)
 	public func resetFont(in range: NSRange) {
 		textStorage?.addAttributes([.font: preferredFont], range: range)
 	}
 
-	@objc(resetFontColorInRange:)
 	public func resetFontColor(in range: NSRange) {
 		textStorage?.addAttributes([.foregroundColor: preferredFontColor], range: range)
 	}
@@ -278,7 +271,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 	/** Lays out the whole document, then visits every line in order. The
 	 character range handed to the block is relative to the document.
 	 Return NO from the block to stop. */
-	@objc(enumerateLineFragmentsUsingBlock:)
 	public func enumerateLineFragments(
 		using block: @escaping (NSTextLineFragment, NSRange) -> Bool
 	) {
@@ -324,7 +316,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		return ranges
 	}
 
-	@objc public var selectedRect: NSRect {
+	public var selectedRect: NSRect {
 		guard let layoutManager = textLayoutManager,
 		      let textRange = textRange(forCharacterRange: selectedRange())
 		else {
@@ -352,7 +344,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		return boundingRect.offsetBy(dx: containerOrigin.x, dy: containerOrigin.y)
 	}
 
-	@objc public var caretLocation: TVCTextViewCaretLocation {
+	public var caretLocation: TVCTextViewCaretLocation {
 		let currentStringLength = stringLength
 
 		if currentStringLength == 0 {
@@ -392,7 +384,6 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		return .middle
 	}
 
-	@objc(highestHeightBelowHeight:withPadding:)
 	public func highestHeight(below maximumHeight: CGFloat, withPadding valuePadding: CGFloat) -> CGFloat {
 		var totalLineHeight = valuePadding
 

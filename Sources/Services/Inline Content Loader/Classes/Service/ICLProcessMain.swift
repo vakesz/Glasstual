@@ -41,9 +41,8 @@ import InlineContentKit
 /// The object NSXPC exports for an inline-content connection.
 ///
 /// It holds the connection — which is not `Sendable` and so passes nowhere —
-/// and the service actor, which owns every piece of state. Each `@objc` call is
+/// and the service actor, which owns every piece of state. Each `` call is
 /// a one-line hop into the actor.
-@objc(ICLProcessMain)
 final class InlineContentProcess: NSObject, InlineContentServerProtocol {
 	private let service: InlineContentService
 	private let serviceConnection: NSXPCConnection

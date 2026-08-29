@@ -13,7 +13,7 @@
 import AppKit
 
 public extension NSTableView {
-	@objc class func preferredGlobalTableViewFont() -> NSFont {
+	class func preferredGlobalTableViewFont() -> NSFont {
 		NSFont.systemFont(ofSize: 13.0)
 	}
 }

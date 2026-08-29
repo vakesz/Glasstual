@@ -25,7 +25,10 @@ struct ApplicationSupportMigrationTests {
 				== bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
 		)
 		#expect(ApplicationInfo.applicationBundleIdentifier() == bundle.bundleIdentifier)
-		#expect(ApplicationInfo.applicationInfoPlist() as NSDictionary == bundle.infoDictionary as NSDictionary?)
+		#expect(
+			ApplicationInfo.applicationInfoPlist().propertyListObject as NSDictionary
+				== bundle.infoDictionary as NSDictionary?
+		)
 	}
 
 	@Test("The process metadata describes a running application")
@@ -184,7 +187,7 @@ struct ApplicationSupportMigrationTests {
 	private func makeChannel(named name: String, type: ChannelType, client: IRCClient) -> Channel {
 		let channel = Channel(config: ChannelConfig(channelName: name, type: type))
 
-		channel.setValue(client, forKey: "associatedClient")
+		channel.associatedClient = client
 
 		return channel
 	}

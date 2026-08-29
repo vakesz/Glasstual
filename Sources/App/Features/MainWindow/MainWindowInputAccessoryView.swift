@@ -19,12 +19,11 @@ private enum LayoutMetrics {
 	static let replyBannerHeight: CGFloat = 30
 }
 
-@objc(TVCMainWindowInputAccessoryView)
 @MainActor
 public final class MainWindowInputAccessoryView: NSView {
-	@objc public var cancelReplyBlock: (() -> Void)?
-	@objc public private(set) var replyMessageIdentifier: String?
-	@objc public var contentDidChangeBlock: (() -> Void)?
+	public var cancelReplyBlock: (() -> Void)?
+	public private(set) var replyMessageIdentifier: String?
+	public var contentDidChangeBlock: (() -> Void)?
 
 	private var stackView: NSStackView!
 	private var replyBanner: NSView!
@@ -151,7 +150,6 @@ public final class MainWindowInputAccessoryView: NSView {
 		}
 	}
 
-	@objc(showReplyToMessageIdentifier:nickname:excerpt:)
 	public func showReply(
 		toMessageIdentifier messageIdentifier: String,
 		nickname: String?,
@@ -188,7 +186,7 @@ public final class MainWindowInputAccessoryView: NSView {
 		setView(replyBanner, visible: true)
 	}
 
-	@objc public func hideReply() {
+	public func hideReply() {
 		guard replyMessageIdentifier != nil else {
 			return
 		}
@@ -238,7 +236,6 @@ public final class MainWindowInputAccessoryView: NSView {
 		typingLabel = label
 	}
 
-	@objc(setTypingNicknames:)
 	public func setTypingNicknames(_ nicknames: [String]) {
 		if nicknames.isEmpty {
 			if typingRow.isHidden == false {
@@ -272,11 +269,11 @@ public final class MainWindowInputAccessoryView: NSView {
 		contentDidChangeBlock?()
 	}
 
-	@objc public var hasContent: Bool {
+	public var hasContent: Bool {
 		replyBanner.isHidden == false || typingRow.isHidden == false
 	}
 
-	@objc public var preferredHeight: CGFloat {
+	public var preferredHeight: CGFloat {
 		var height: CGFloat = 0
 		var rows = 0
 

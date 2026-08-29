@@ -39,7 +39,6 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 
-@objc(TPI_ChatFilterLogic)
 final class ChatFilterEngine: NSObject {
 	private weak var parentObject: NSObject?
 	private let host: PluginHostContext
@@ -335,7 +334,7 @@ final class ChatFilterEngine: NSObject {
 		return true
 	}
 
-	@objc func reloadFilterActionPerforms() {
+	func reloadFilterActionPerforms() {
 		let validIdentifiers = Set(filters.lazy.filter { $0.filterActionFloodControlInterval > 0 }
 			.map(\.uniqueIdentifier))
 		lastActionDates = lastActionDates.filter { validIdentifiers.contains($0.key) }

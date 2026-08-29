@@ -70,7 +70,6 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 /// installed by the user that is signed by the same Team ID. There is no
 /// approval prompt — a bundle either satisfies the requirement or is refused
 /// and logged.
-@objc(THOPluginManager)
 public final nonisolated class PluginManager: NSObject, Sendable { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -81,14 +80,14 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 		"THOPluginManagerFinishedLoadingPluginsNotification"
 	)
 
-	@objc public var pluginsLoaded: Bool {
+	public var pluginsLoaded: Bool {
 		facts.withLock(\.pluginsLoaded)
 	}
 
 	/// The loaded plugins themselves. Main actor: a `PluginItem` owns a plugin's
 	/// live object and its preferences view.
 	@MainActor
-	@objc public var loadedPlugins: [PluginItem]? {
+	public var loadedPlugins: [PluginItem]? {
 		pluginsLoaded ? Self.loadedPluginItems : nil
 	}
 
@@ -107,7 +106,6 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 
 	// MARK: - Retain & Release
 
-	@objc
 	public func loadPlugins() {
 		let shouldSchedule = scheduling.withLock { state in
 			guard state.didScheduleLoad == false else {
@@ -137,7 +135,6 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 	/// Runs the plugins' unload callbacks. Main actor: the callbacks tear down
 	/// AppKit state the plugin set up while loading.
 	@MainActor
-	@objc
 	public func unloadPlugins() {
 		let shouldSchedule = scheduling.withLock { state in
 			guard state.didScheduleUnload == false else {
@@ -469,11 +466,11 @@ extension PluginManager {
 public nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - AppleScript Support
 
-	@objc var supportedAppleScriptCommands: [String] {
+	var supportedAppleScriptCommands: [String] {
 		supportedAppleScriptCommands(returnPathInfo: false) as? [String] ?? []
 	}
 
-	@objc var supportedAppleScriptCommandsAndPaths: [String: String] {
+	var supportedAppleScriptCommandsAndPaths: [String: String] {
 		supportedAppleScriptCommands(returnPathInfo: true) as? [String: String] ?? [:]
 	}
 
@@ -544,11 +541,10 @@ public nonisolated extension PluginManager { // nonisolated: pure
 	}
 
 	private var listOfForbiddenCommandNames: [String] {
-		ResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")
-			as? [String] ?? []
+		ResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")?
+			.compactMap(\.string) ?? []
 	}
 
-	@objc(findHandlerForOutgoingCommand:path:isScript:isExtension:)
 	func findHandler(
 		forOutgoingCommand command: String,
 		path: AutoreleasingUnsafeMutablePointer<NSString?>?,
@@ -594,16 +590,16 @@ public nonisolated extension PluginManager { // nonisolated: pure
 		facts.withLock(\.messageRenderers)
 	}
 
-	@objc var supportedUserInputCommands: [String] {
+	var supportedUserInputCommands: [String] {
 		facts.withLock(\.supportedUserInputCommands)
 	}
 
-	@objc var supportedServerInputCommands: [String] {
+	var supportedServerInputCommands: [String] {
 		facts.withLock(\.supportedServerInputCommands)
 	}
 
 	@MainActor
-	@objc var pluginsWithPreferencePanes: [PluginItem] {
+	var pluginsWithPreferencePanes: [PluginItem] {
 		Self.loadedPluginItems
 			.filter { $0.supportsFeature(.preferencePane) }
 			.sorted {

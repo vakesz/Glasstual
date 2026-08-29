@@ -14,31 +14,26 @@
 import AppKit
 import SwiftUI
 
-@objc(TDCChannelModifyModesSheetDelegate)
 @MainActor
 public protocol ChannelModifyModesSheetDelegate: NSObjectProtocol {
-	@objc(channelModifyModesSheet:onOk:)
 	func channelModifyModesSheet(_ sender: ChannelModifyModesSheet, onOk modes: ChannelModeContainer)
 
-	@objc(channelModifyModesSheetWillClose:)
 	func channelModifyModesSheetWillClose(_ sender: ChannelModifyModesSheet)
 }
 
-@objc(TDCChannelModifyModesSheet)
 @MainActor
 public final class ChannelModifyModesSheet: SheetBase, NSWindowDelegate, TDCChannelPrototype {
 	private static let contentSize = NSSize(width: 440, height: 390)
 
-	@objc public private(set) var client: IRCClient?
-	@objc public private(set) var channel: IRCChannel?
-	@objc public private(set) var clientId: String?
-	@objc public private(set) var channelId: String?
+	public private(set) var client: IRCClient?
+	public private(set) var channel: IRCChannel?
+	public private(set) var clientId: String?
+	public private(set) var channelId: String?
 
 	let model: ChannelModesModel
 
 	private let content: ChannelModesContent
 
-	@objc(initWithChannel:)
 	public init(channel: IRCChannel) {
 		guard let client = channel.associatedClient else {
 			preconditionFailure("ChannelModifyModesSheet requires an associated client")
@@ -98,7 +93,7 @@ public final class ChannelModifyModesSheet: SheetBase, NSWindowDelegate, TDCChan
 		sheet = hostedSheet
 	}
 
-	@objc public func start() {
+	public func start() {
 		startSheet()
 	}
 
@@ -140,7 +135,7 @@ public final class ChannelModifyModesSheet: SheetBase, NSWindowDelegate, TDCChan
 		super.ok(sender)
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		(delegate as? ChannelModifyModesSheetDelegate)?.channelModifyModesSheetWillClose(self)
 	}
 }

@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -54,8 +55,8 @@ struct IRCCommandIndexCorpusTests {
 		var indexes: Set<UInt> = []
 
 		for (key, value) in values where key != reservedKey {
-			let entry = try #require(value as? [String: Any], "\(name): \(key) is not a dictionary")
-			let index = try #require((entry["indexValue"] as? NSNumber)?.uintValue, "\(name): \(key) has no index")
+			let entry = try #require(value.dictionary, "\(name): \(key) is not a dictionary")
+			let index = try #require(entry["indexValue"]?.integer.map(UInt.init), "\(name): \(key) has no index")
 
 			indexes.insert(index)
 		}
@@ -119,9 +120,9 @@ struct IRCCommandIndexCorpusTests {
 		)
 
 		for (name, value) in values where name != Self.reservedKey {
-			let entry = try #require(value as? [String: Any])
-			let index = try #require((entry["indexValue"] as? NSNumber)?.uintValue)
-			let developerOnly = (entry["developerModeOnly"] as? NSNumber)?.boolValue ?? false
+			let entry = try #require(value.dictionary)
+			let index = try #require(entry["indexValue"]?.integer.map(UInt.init))
+			let developerOnly = entry["developerModeOnly"]?.boolean ?? false
 			let resolved = CommandIndex.index(ofLocalCommand: name)
 
 			if developerOnly {
@@ -143,8 +144,8 @@ struct IRCCommandIndexCorpusTests {
 		)
 
 		for (name, value) in values where name != Self.reservedKey {
-			let entry = try #require(value as? [String: Any])
-			let index = try #require((entry["indexValue"] as? NSNumber)?.uintValue)
+			let entry = try #require(value.dictionary)
+			let index = try #require(entry["indexValue"]?.integer.map(UInt.init))
 
 			#expect(CommandIndex.index(ofRemoteCommand: name) == index, "\(name)")
 			#expect(CommandIndex.index(ofRemoteCommand: name.uppercased()) == index, "\(name)")

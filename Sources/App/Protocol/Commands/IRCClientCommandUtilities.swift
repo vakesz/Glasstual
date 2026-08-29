@@ -39,12 +39,10 @@
 import Foundation
 
 public extension IRCClient {
-	@objc(sendCommand:withData:)
 	func sendCommand(_ command: String, withData data: String) {
 		sendLine("\(command) \(data)")
 	}
 
-	@objc(printInvalidSyntaxMessageForCommand:)
 	func printInvalidSyntaxMessage(for command: String) {
 		guard let syntax = CommandIndex.syntax(forLocalCommand: command) else { return }
 		printDebugInformation(IRCCommandStrings.invalidSyntax(syntax))

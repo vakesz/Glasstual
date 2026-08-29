@@ -34,29 +34,20 @@ import GlasstualPluginKit
 
 @MainActor
 extension IRCClient {
-	@objc(joinKickedChannel:)
-	func joinKickedChannel(_ channel: IRCChannel) {
-		join(channel)
-	}
-
-	@objc(joinChannel:)
 	func join(_ channel: IRCChannel) {
 		join(channel, password: nil)
 	}
 
-	@objc(joinUnlistedChannel:)
 	func joinUnlistedChannel(_ channelName: String) {
 		joinUnlistedChannel(channelName, password: nil)
 	}
 
-	@objc(joinChannel:password:)
 	func join(_ channel: IRCChannel, password: String?) {
 		guard channel.isChannel, channel.isActive == false else { return }
 		channel.status = .joining
 		forceJoinChannel(channel.name, password: password ?? channel.secretKey)
 	}
 
-	@objc(joinUnlistedChannel:password:)
 	func joinUnlistedChannel(_ channelName: String, password: String?) {
 		guard stringIsChannelName(channelName) else {
 			if channelName == "0" {
@@ -71,7 +62,6 @@ extension IRCClient {
 		}
 	}
 
-	@objc(forceJoinChannel:password:)
 	func forceJoinChannel(_ channelName: String, password: String?) {
 		guard isLoggedIn, channelName.isEmpty == false else { return }
 		warnIfJoiningChannelsExceedsLimit([channelName])
@@ -82,7 +72,6 @@ extension IRCClient {
 		send("JOIN", arguments: arguments)
 	}
 
-	@objc(joinChannels:)
 	func joinChannels(_ channels: [IRCChannel]) {
 		guard isLoggedIn, channels.isEmpty == false else { return }
 		let pending = channels.filter { $0.isChannel && $0.isActive == false }
@@ -109,7 +98,6 @@ extension IRCClient {
 		}
 	}
 
-	@objc(warnIfJoiningChannelsExceedsLimit:)
 	func warnIfJoiningChannelsExceedsLimit(_ channelNames: [String]) {
 		guard supportInfo.channelLimits.isEmpty == false else { return }
 
@@ -141,12 +129,10 @@ extension IRCClient {
 		}
 	}
 
-	@objc(joinUnlistedChannelsWithStringAndSelectBestMatch:)
 	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: String) {
 		joinUnlistedChannelsAndSelectBestMatch(channelNames, passwords: nil)
 	}
 
-	@objc(joinUnlistedChannelsWithStringAndSelectBestMatch:passwords:)
 	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: String, passwords: String?) {
 		guard channelNames.isEmpty == false else { return }
 		joinUnlistedChannelsAndSelectBestMatch(
@@ -155,12 +141,10 @@ extension IRCClient {
 		)
 	}
 
-	@objc(joinUnlistedChannelsAndSelectBestMatch:)
 	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: [String]) {
 		joinUnlistedChannelsAndSelectBestMatch(channelNames, passwords: nil)
 	}
 
-	@objc(joinUnlistedChannelsAndSelectBestMatch:passwords:)
 	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: [String], passwords: String?) {
 		guard isLoggedIn, channelNames.isEmpty == false else { return }
 

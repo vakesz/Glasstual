@@ -38,7 +38,6 @@
 import Foundation
 import Synchronization
 
-@objc(ICLMediaType)
 public enum InlineContentMediaType: UInt, Codable, Sendable {
 	case unknown = 0
 	case image

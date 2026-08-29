@@ -49,7 +49,6 @@ enum IRCClientReachabilityPolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(clearCachedHighlights)
 	func clearCachedHighlights() {
 		cachedHighlights = []
 	}
@@ -72,13 +71,11 @@ public extension IRCClient {
 		sheet.addEntry(firstEntry)
 	}
 
-	@objc(noteReachabilityChanged:)
 	func noteReachabilityChanged(_ reachable: Bool) {
 		guard reachable == false else { return }
 		disconnectOnReachabilityChange()
 	}
 
-	@objc(disconnectOnReachabilityChange)
 	func disconnectOnReachabilityChange() {
 		guard IRCClientReachabilityPolicy.shouldDisconnect(
 			isLoggedIn: isLoggedIn,

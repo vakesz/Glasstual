@@ -47,7 +47,6 @@ extension FileTransferDialog {
 	/// nor a peer, so matching on it alone lets any user on any connected
 	/// network move the resume offset of somebody else's transfer. The client,
 	/// the peer nickname and the filename all have to agree.
-	@objc(fileTransferMatchingPort:client:peerNickname:filename:)
 	public func fileTransfer(
 		matchingPort port: UInt16,
 		client: IRCClient,
@@ -79,17 +78,14 @@ extension FileTransferDialog {
 		return ourFilename.caseInsensitiveCompare(filename) == .orderedSame
 	}
 
-	@objc(fileTransferWithUniqueIdentifier:)
 	public func fileTransfer(withUniqueIdentifier identifier: String) -> TDCFileTransferDialogTransferController? {
 		firstFileTransfer { $0.uniqueIdentifier == identifier }
 	}
 
-	@objc(fileTransferExistsWithToken:)
 	public func fileTransferExists(withToken transferToken: String) -> Bool {
 		firstFileTransfer { $0.transferToken == transferToken } != nil
 	}
 
-	@objc(fileTransferSenderMatchingToken:client:peerNickname:filename:)
 	public func fileTransferSender(
 		matchingToken transferToken: String,
 		client: IRCClient,
@@ -102,18 +98,16 @@ extension FileTransferDialog {
 		}
 	}
 
-	@objc(fileTransferReceiverMatchingToken:)
 	public func fileTransferReceiver(matchingToken transferToken: String) -> TDCFileTransferDialogTransferController? {
 		firstFileTransfer { $0.transferToken == transferToken && !$0.isSender }
 	}
 
-	@objc public func prepareForApplicationTermination() {
+	public func prepareForApplicationTermination() {
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 		close()
 		prepareForPermanentDestruction(allFileTransfers)
 	}
 
-	@objc(addReceiverForClient:nickname:address:port:filename:filesize:token:)
 	public func addReceiver(
 		for client: IRCClient,
 		nickname: String,
@@ -152,7 +146,6 @@ extension FileTransferDialog {
 		return controller.uniqueIdentifier
 	}
 
-	@objc(addSenderForClient:nickname:path:autoOpen:)
 	public func addSender(
 		for client: IRCClient,
 		nickname: String,
@@ -177,11 +170,11 @@ extension FileTransferDialog {
 		return controller.uniqueIdentifier
 	}
 
-	@objc public func updateClearButton() {
+	public func updateClearButton() {
 		clearButton?.isEnabled = !stoppedFileTransfers.isEmpty
 	}
 
-	@objc func clientWillBeDestroyed(_ notification: Notification) {
+	func clientWillBeDestroyed(_ notification: Notification) {
 		guard let client = notification.object as? IRCClient else { return }
 		removeFileTransfers(matching: client)
 	}
@@ -230,7 +223,7 @@ extension FileTransferDialog {
 		removeFileTransfers(selectedFileTransfers)
 	}
 
-	@objc public func updateMaintenanceTimer() {
+	public func updateMaintenanceTimer() {
 		guard activeFileTransfers.isEmpty == false else {
 			maintenanceTask?.cancel()
 			maintenanceTask = nil

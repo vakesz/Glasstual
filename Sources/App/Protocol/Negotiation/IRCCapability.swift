@@ -41,14 +41,13 @@ import Foundation
 public typealias IRCCapabilityPreferenceGate = @convention(block) () -> Bool
 public typealias IRCCapabilityNegotiationHook = @convention(block) (IRCClient, [String]) -> Bool
 
-@objc(IRCCapability)
 public final nonisolated class Capability: NSObject { // nonisolated: value
-	@objc public let name: String
+	public let name: String
 	public let identifier: ClientIRCv3SupportedCapability
-	@objc public let requestedByDefault: Bool
-	@objc public let preferenceGate: IRCCapabilityPreferenceGate?
-	@objc public let dependencies: [String]
-	@objc public let negotiationHook: IRCCapabilityNegotiationHook?
+	public let requestedByDefault: Bool
+	public let preferenceGate: IRCCapabilityPreferenceGate?
+	public let dependencies: [String]
+	public let negotiationHook: IRCCapabilityNegotiationHook?
 
 	public static func capability(named name: String, identifier: ClientIRCv3SupportedCapability) -> Capability {
 		capability(named: name, identifier: identifier, requestedByDefault: true)
@@ -92,7 +91,7 @@ public final nonisolated class Capability: NSObject { // nonisolated: value
 		super.init()
 	}
 
-	@objc public var isEnabledByPreferences: Bool {
+	public var isEnabledByPreferences: Bool {
 		preferenceGate?() ?? true
 	}
 
@@ -101,13 +100,11 @@ public final nonisolated class Capability: NSObject { // nonisolated: value
 	}
 }
 
-@objc(IRCCapabilityRegistry)
 public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: value
-	@objc public let capabilities: [Capability]
+	public let capabilities: [Capability]
 
 	private let capabilitiesByName: [String: Capability]
 
-	@objc(initWithCapabilities:)
 	public init(capabilities: [Capability]) {
 		self.capabilities = capabilities
 		capabilitiesByName = Dictionary(
@@ -117,7 +114,6 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 		super.init()
 	}
 
-	@objc(capabilityNamed:)
 	public func capability(named name: String) -> Capability? {
 		capabilitiesByName[name]
 	}
@@ -132,7 +128,6 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 		}
 	}
 
-	@objc(isCapabilitySupported:)
 	public func isCapabilitySupported(_ name: String) -> Bool {
 		capability(named: name)?.isEnabledByPreferences ?? false
 	}
@@ -143,7 +138,6 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 	 exactly as the server wrote it. Folding case here made `SASL` and `sasl`
 	 one entry and forced a second table to remember which spelling to echo
 	 back in `CAP REQ`; a name that matches is now already the right spelling. */
-	@objc(parseCapabilityList:)
 	public static func parseCapabilityList(_ list: String) -> [String: [String]] {
 		var offered: [String: [String]] = [:]
 
@@ -178,7 +172,6 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 		return tokens
 	}
 
-	@objc(capabilitiesToRequestFromOffered:)
 	public func capabilitiesToRequest(fromOffered offered: [String: [String]]) -> [Capability] {
 		capabilities.filter { isRequestable($0, fromOffered: offered, depth: 0) }
 	}

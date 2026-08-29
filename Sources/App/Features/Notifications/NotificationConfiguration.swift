@@ -104,6 +104,26 @@ public final class PreferencesNotificationConfiguration: NotificationConfigurati
 	}
 }
 
+/// The checkbox is where a channel's three-valued override meets AppKit: on,
+/// off, and "no override", which a mixed-state checkbox already draws.
+extension ChannelEventOverride {
+	var controlState: NSControl.StateValue {
+		switch self {
+		case .on: .on
+		case .off: .off
+		case .inherited: .mixed
+		}
+	}
+
+	init(controlState: NSControl.StateValue) {
+		switch controlState {
+		case .on: self = .on
+		case .off: self = .off
+		default: self = .inherited
+		}
+	}
+}
+
 /// One channel's override of the application-wide settings.
 @MainActor
 public final class ChannelNotificationConfiguration: NotificationConfiguration {
@@ -126,28 +146,28 @@ public final class ChannelNotificationConfiguration: NotificationConfiguration {
 	}
 
 	public var pushNotification: NSControl.StateValue {
-		get { config?.notificationEnabled(forEvent: eventType) ?? .mixed }
-		set { sheet?.config.setNotificationEnabled(newValue, forEvent: eventType) }
+		get { (config?.notificationEnabled(forEvent: eventType) ?? .inherited).controlState }
+		set { sheet?.config.setNotificationEnabled(.init(controlState: newValue), forEvent: eventType) }
 	}
 
 	public var speakEvent: NSControl.StateValue {
-		get { config?.speakEvent(eventType) ?? .mixed }
-		set { sheet?.config.setEventIsSpoken(newValue, forEvent: eventType) }
+		get { (config?.speakEvent(eventType) ?? .inherited).controlState }
+		set { sheet?.config.setEventIsSpoken(.init(controlState: newValue), forEvent: eventType) }
 	}
 
 	public var disabledWhileAway: NSControl.StateValue {
-		get { config?.disabledWhileAway(forEvent: eventType) ?? .mixed }
-		set { sheet?.config.setDisabledWhileAway(newValue, forEvent: eventType) }
+		get { (config?.disabledWhileAway(forEvent: eventType) ?? .inherited).controlState }
+		set { sheet?.config.setDisabledWhileAway(.init(controlState: newValue), forEvent: eventType) }
 	}
 
 	public var bounceDockIcon: NSControl.StateValue {
-		get { config?.bounceDockIcon(forEvent: eventType) ?? .mixed }
-		set { sheet?.config.setBounceDockIcon(newValue, forEvent: eventType) }
+		get { (config?.bounceDockIcon(forEvent: eventType) ?? .inherited).controlState }
+		set { sheet?.config.setBounceDockIcon(.init(controlState: newValue), forEvent: eventType) }
 	}
 
 	public var bounceDockIconRepeatedly: NSControl.StateValue {
-		get { config?.bounceDockIconRepeatedly(forEvent: eventType) ?? .mixed }
-		set { sheet?.config.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
+		get { (config?.bounceDockIconRepeatedly(forEvent: eventType) ?? .inherited).controlState }
+		set { sheet?.config.setBounceDockIconRepeatedly(.init(controlState: newValue), forEvent: eventType) }
 	}
 
 	/// A nil config (the sheet is gone) reads back as `.mixed`: the neutral

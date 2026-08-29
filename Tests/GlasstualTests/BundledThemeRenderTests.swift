@@ -97,8 +97,8 @@ nonisolated struct BundledThemeRenderTests {
 	 Every attribute the message template reads is set, including the ones it
 	 reads only to decide whether to write an element at all, so the fragment
 	 covers those branches rather than the empty case of most of them. */
-	static var fixedLine: [String: Any] {
-		[
+	static var fixedLine: ThemeTemplateAttributes {
+		ThemeTemplateAttributes(rawValues: [
 			"applicationResourcePath": "/Resources",
 			"formattedMessage": "hello &amp; welcome",
 			"formattedNickname": "<alice>",
@@ -116,7 +116,7 @@ nonisolated struct BundledThemeRenderTests {
 			"nicknameColorHashingEnabled": false,
 			"nicknameType": "normal",
 			"timestamp": "1577881496",
-		]
+		])
 	}
 
 	// MARK: - Helpers
