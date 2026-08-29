@@ -230,14 +230,20 @@ public extension PropertyListValue {
 		}
 	}
 
-	/// The value in the shape `PropertyListSerialization`, `UserDefaults` and
-	/// `WKWebView` take. The one place `Any` is the right answer.
+	/** The value in the shape `PropertyListSerialization` and `UserDefaults`
+	 take. The one place `Any` is the right answer.
+
+	 The three number cases widen to `NSNumber` rather than to their Swift
+	 types, because that is what the framework itself hands back and what a
+	 caller further along casts against: a font size stored as an integer has
+	 always read as a `Double` through `NSNumber`, and would stop if it widened
+	 to `Int`. */
 	var propertyListObject: Any {
 		switch self {
 		case let .string(value): value
-		case let .boolean(value): value
-		case let .integer(value): value
-		case let .double(value): value
+		case let .boolean(value): NSNumber(value: value)
+		case let .integer(value): NSNumber(value: value)
+		case let .double(value): NSNumber(value: value)
 		case let .date(value): value
 		case let .data(value): value
 		case let .array(value): value.map(\.propertyListObject)

@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 enum ChatFilterDestination: UInt {
@@ -184,7 +185,7 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 		populate(from: [:])
 	}
 
-	init(dictionary: [String: Any]) {
+	init(dictionary: [String: PropertyListValue]) {
 		super.init()
 		populate(from: dictionary)
 	}
@@ -196,21 +197,21 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 	convenience init?(contentsOf url: URL) {
 		guard let data = try? Data(contentsOf: url),
 		      let propertyList = try? PropertyListSerialization.propertyList(from: data, format: nil),
-		      let dictionary = propertyList as? [String: Any]
+		      let dictionary = [String: PropertyListValue](propertyList: propertyList)
 		else {
 			return nil
 		}
 		self.init(dictionary: dictionary)
 	}
 
-	private func populate(from dictionary: [String: Any]) {
+	private func populate(from dictionary: [String: PropertyListValue]) {
 		ignoreContentStorage = bool(dictionary["filterIgnoreContent"])
 		ignoreOperatorsStorage = optionalBool(dictionary["filterIgnoresOperators"]) ?? true
 		limitedToMyselfStorage = bool(dictionary["filterLimitedToMyself"])
 		logMatchStorage = bool(dictionary["filterLogMatch"])
-		limitedToChannelIDsStorage = dictionary["filterLimitedToChannelsIDs"] as? [String] ?? []
-		limitedToClientIDsStorage = dictionary["filterLimitedToClientsIDs"] as? [String] ?? []
-		eventNumericsStorage = dictionary["filterEventsNumerics"] as? [String] ?? []
+		limitedToChannelIDsStorage = dictionary["filterLimitedToChannelsIDs"]?.stringArray ?? []
+		limitedToClientIDsStorage = dictionary["filterLimitedToClientsIDs"]?.stringArray ?? []
+		eventNumericsStorage = dictionary["filterEventsNumerics"]?.stringArray ?? []
 		actionStorage = string(dictionary["filterAction"])
 		forwardDestinationStorage = string(dictionary["filterForwardToDestination"])
 		matchStorage = string(dictionary["filterMatch"])
@@ -224,8 +225,8 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 			.greaterThan
 		ageLimitStorage = uint(dictionary["filterAgeLimit"])
 
-		if let rawEvents = dictionary["filterEvents"] as? NSNumber {
-			eventsStorage = ChatFilterEvent(rawValue: rawEvents.uintValue)
+		if let rawEvents = dictionary["filterEvents"]?.integer {
+			eventsStorage = ChatFilterEvent(rawValue: UInt(clamping: rawEvents))
 		} else {
 			var events = ChatFilterEvent.defaultMessages
 			if optionalBool(dictionary["filterCommandPRIVMSG"]) == false {
@@ -245,43 +246,42 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 		}
 	}
 
-	var dictionaryValue: [String: Any] {
-		let values: [String: Any] = [
-			"filterCommandPRIVMSG": isEventTypeEnabled(.plainTextMessage),
-			"filterCommandPRIVMSG_ACTION": isEventTypeEnabled(.actionMessage),
-			"filterCommandNOTICE": isEventTypeEnabled(.noticeMessage),
-			"filterLimitedToChannelsIDs": limitedToChannelIDsStorage,
-			"filterLimitedToClientsIDs": limitedToClientIDsStorage,
-			"filterEventsNumerics": eventNumericsStorage,
-			"filterAction": actionStorage,
-			"filterForwardToDestination": forwardDestinationStorage,
-			"filterMatch": matchStorage,
-			"filterNotes": notesStorage,
-			"filterSenderMatch": senderMatchStorage,
-			"filterTitle": titleStorage,
-			"uniqueIdentifier": identifierStorage,
-			"filterIgnoreContent": ignoreContentStorage,
-			"filterIgnoresOperators": ignoreOperatorsStorage,
-			"filterLimitedToMyself": limitedToMyselfStorage,
-			"filterLogMatch": logMatchStorage,
-			"filterActionFloodControlInterval": actionFloodControlIntervalStorage,
-			"filterEvents": eventsStorage.rawValue,
-			"filterLimitedToValue": destinationStorage.rawValue,
-			"filterAgeComparator": ageComparatorStorage.rawValue,
-			"filterAgeLimit": ageLimitStorage,
+	var dictionaryValue: [String: PropertyListValue] {
+		let values: [String: PropertyListValue] = [
+			"filterCommandPRIVMSG": .boolean(isEventTypeEnabled(.plainTextMessage)),
+			"filterCommandPRIVMSG_ACTION": .boolean(isEventTypeEnabled(.actionMessage)),
+			"filterCommandNOTICE": .boolean(isEventTypeEnabled(.noticeMessage)),
+			"filterLimitedToChannelsIDs": PropertyListValue(limitedToChannelIDsStorage),
+			"filterLimitedToClientsIDs": PropertyListValue(limitedToClientIDsStorage),
+			"filterEventsNumerics": PropertyListValue(eventNumericsStorage),
+			"filterAction": .string(actionStorage),
+			"filterForwardToDestination": .string(forwardDestinationStorage),
+			"filterMatch": .string(matchStorage),
+			"filterNotes": .string(notesStorage),
+			"filterSenderMatch": .string(senderMatchStorage),
+			"filterTitle": .string(titleStorage),
+			"uniqueIdentifier": .string(identifierStorage),
+			"filterIgnoreContent": .boolean(ignoreContentStorage),
+			"filterIgnoresOperators": .boolean(ignoreOperatorsStorage),
+			"filterLimitedToMyself": .boolean(limitedToMyselfStorage),
+			"filterLogMatch": .boolean(logMatchStorage),
+			"filterActionFloodControlInterval": .integer(Int(actionFloodControlIntervalStorage)),
+			"filterEvents": .integer(Int(eventsStorage.rawValue)),
+			"filterLimitedToValue": .integer(Int(destinationStorage.rawValue)),
+			"filterAgeComparator": .integer(Int(ageComparatorStorage.rawValue)),
+			"filterAgeLimit": .integer(Int(ageLimitStorage)),
 		]
-		let defaults: [String: Any] = [
-			"filterEvents": ChatFilterEvent.defaultMessages.rawValue,
+		let defaults: [String: PropertyListValue] = [
+			"filterEvents": .integer(Int(ChatFilterEvent.defaultMessages.rawValue)),
 			"filterIgnoreContent": false,
 			"filterIgnoresOperators": true,
 			"filterLimitedToMyself": false,
 			"filterLogMatch": false,
-			"filterLimitedToValue": ChatFilterDestination.unrestricted.rawValue,
-			"filterAgeComparator": ChatFilterAgeComparator.greaterThan.rawValue,
+			"filterLimitedToValue": .integer(Int(ChatFilterDestination.unrestricted.rawValue)),
+			"filterAgeComparator": .integer(Int(ChatFilterAgeComparator.greaterThan.rawValue)),
 		]
 		return values.filter { key, value in
-			guard let defaultValue = defaults[key] else { return true }
-			return (value as? NSObject)?.isEqual(defaultValue) == false
+			defaults[key] != value
 		}
 	}
 
@@ -335,23 +335,20 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 		commandCache.removeAllObjects()
 	}
 
-	private func string(_ value: Any?) -> String {
-		value as? String ?? ""
+	private func string(_ value: PropertyListValue?) -> String {
+		value?.string ?? ""
 	}
 
-	private func bool(_ value: Any?) -> Bool {
-		optionalBool(value) ?? false
+	private func bool(_ value: PropertyListValue?) -> Bool {
+		value?.boolean ?? false
 	}
 
-	private func optionalBool(_ value: Any?) -> Bool? {
-		if let number = value as? NSNumber {
-			return number.boolValue
-		}
-		return value as? Bool
+	private func optionalBool(_ value: PropertyListValue?) -> Bool? {
+		value?.boolean
 	}
 
-	private func uint(_ value: Any?) -> UInt {
-		(value as? NSNumber)?.uintValue ?? value as? UInt ?? 0
+	private func uint(_ value: PropertyListValue?) -> UInt {
+		value?.integer.map(UInt.init(clamping:)) ?? 0
 	}
 }
 

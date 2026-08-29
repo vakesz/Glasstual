@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import GlasstualPluginKit
 import os
 
@@ -136,8 +137,10 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 
 	private func loadFilters() {
 		filterArrayController.remove(contentsOf: filterArrayController.arrangedObjects as? [Any] ?? [])
-		let configurations = defaults.array(forKey: Self.defaultsKey) as? [[String: Any]] ?? []
-		for configuration in configurations {
+		let configurations = [PropertyListValue](
+			propertyList: defaults.array(forKey: Self.defaultsKey) ?? []
+		) ?? []
+		for configuration in configurations.compactMap(\.dictionary) {
 			filterArrayController.addObject(ChatFilter(dictionary: configuration))
 		}
 		reloadFilterCount()
@@ -145,7 +148,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 
 	private func saveFilters() {
 		isSaving = true
-		defaults.set(filters.map(\.dictionaryValue), forKey: Self.defaultsKey)
+		defaults.set(filters.map(\.dictionaryValue.propertyListObject), forKey: Self.defaultsKey)
 		reloadFilterCount()
 	}
 

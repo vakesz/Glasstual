@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 public enum IRCNetworkRegistration: UInt, Sendable {
@@ -108,7 +109,7 @@ public final nonisolated class NetworkList: NSObject { // nonisolated: value
 	private static func loadNetworks() -> [Network] {
 		if let resource = ResourceManager.array(fromResources: "IRCNetworks", cacheValue: false) {
 			return resource.compactMap { entry in
-				guard let dictionary = entry as? [String: Any] else {
+				guard let dictionary = entry.dictionary else {
 					return nil
 				}
 
@@ -123,11 +124,11 @@ public final nonisolated class NetworkList: NSObject { // nonisolated: value
 		}
 
 		return legacyList.compactMap { name, configuration in
-			guard var dictionary = configuration as? [String: Any] else {
+			guard var dictionary = configuration.dictionary else {
 				return nil
 			}
 
-			dictionary["name"] = name
+			dictionary["name"] = .string(name)
 
 			return Network(dictionary: dictionary)
 		}
@@ -151,35 +152,35 @@ public final nonisolated class Network: NSObject { // nonisolated: value
 		fatalError("Use init(dictionary:)")
 	}
 
-	public init?(dictionary: [String: Any]) {
+	public init?(dictionary: [String: PropertyListValue]) {
 		guard
-			let networkName = dictionary["name"] as? String,
+			let networkName = dictionary["name"]?.string,
 			networkName.isEmpty == false,
-			let serverAddress = dictionary["serverAddress"] as? String,
+			let serverAddress = dictionary["serverAddress"]?.string,
 			serverAddress.isEmpty == false
 		else {
 			return nil
 		}
 
-		let prefersSecuredConnection = Self.boolValue(dictionary["prefersSecuredConnection"])
-		let configuredPort = (dictionary["serverPort"] as? NSNumber)?.uint16Value ?? 0
+		let prefersSecuredConnection = dictionary["prefersSecuredConnection"]?.boolean ?? false
+		let configuredPort = dictionary["serverPort"]?.integer.map(UInt16.init(clamping:)) ?? 0
 
 		self.networkName = networkName
-		networkDescription = dictionary["description"] as? String ?? ""
+		networkDescription = dictionary["description"]?.string ?? ""
 		self.serverAddress = serverAddress
 		serverPort = configuredPort == 0 ? (prefersSecuredConnection ? 6697 : 6667) : configuredPort
 		self.prefersSecuredConnection = prefersSecuredConnection
-		website = dictionary["website"] as? String
-		saslSupported = Self.boolValue(dictionary["saslSupported"])
-		registration = NetworkList.registration(from: dictionary["registration"] as? String)
+		website = dictionary["website"]?.string
+		saslSupported = dictionary["saslSupported"]?.boolean ?? false
+		registration = NetworkList.registration(from: dictionary["registration"]?.string)
 
-		if let note = dictionary["registrationNote"] as? String, note.isEmpty == false {
+		if let note = dictionary["registrationNote"]?.string, note.isEmpty == false {
 			registrationNote = note
 		} else {
 			registrationNote = nil
 		}
 
-		suggestedChannels = dictionary["suggestedChannels"] as? [String] ?? []
+		suggestedChannels = dictionary["suggestedChannels"]?.stringArray ?? []
 
 		super.init()
 	}
@@ -190,9 +191,5 @@ public final nonisolated class Network: NSObject { // nonisolated: value
 
 	override public var description: String {
 		"<\(NSStringFromClass(type(of: self))) \(networkName) \(serverAddress):\(serverPort)>"
-	}
-
-	private static func boolValue(_ value: Any?) -> Bool {
-		(value as? NSNumber)?.boolValue ?? false
 	}
 }

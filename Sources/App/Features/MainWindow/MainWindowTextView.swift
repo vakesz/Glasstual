@@ -386,7 +386,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	private var defaultSpellingIgnores: [String] {
 		(ResourceManager.array(fromResources: "StaticStore", key: "Spelling Ignores") ?? [])
-			.compactMap { $0 as? String }
+			.compactMap(\.string)
 	}
 
 	// MARK: - Text and responder behavior

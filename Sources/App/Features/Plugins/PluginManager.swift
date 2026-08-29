@@ -534,8 +534,8 @@ public nonisolated extension PluginManager { // nonisolated: pure
 	}
 
 	private var listOfForbiddenCommandNames: [String] {
-		ResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")
-			as? [String] ?? []
+		ResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")?
+			.compactMap(\.string) ?? []
 	}
 
 	func findHandler(
