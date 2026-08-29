@@ -83,7 +83,7 @@ nonisolated protocol RemoteConnectionServerProtocol: AnyObject { // nonisolated:
 
 /// Events the isolated connection host sends back to the application.
 @objc(RCMConnectionManagerClientProtocol)
-nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable {
+nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable { // nonisolated: xpc-shim
 	@objc(ircConnectionWillConnectToProxy:port:)
 	func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16)
 
