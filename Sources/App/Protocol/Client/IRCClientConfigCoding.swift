@@ -128,7 +128,6 @@ nonisolated extension ClientConfig { // nonisolated: value
 		case connectionDisconnectDefaultMessage
 		case proxyServerAddress
 		case proxyServerUsername
-		case proxyServerPassword
 		case proxyServerType
 		case proxyServerPort
 		case identityRealname
