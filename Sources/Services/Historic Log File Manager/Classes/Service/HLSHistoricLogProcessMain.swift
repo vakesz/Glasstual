@@ -117,7 +117,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 
 	func openDatabase(
 		inDirectory databaseDirectory: String,
-		withCompletionBlock completionBlock: ((Bool) -> Void)?
+		withCompletionBlock completionBlock: (@Sendable (Bool) -> Void)?
 	) {
 		setDatabasePath(in: databaseDirectory)
 		guard let databaseURL else {
@@ -218,7 +218,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 		beforeUniqueIdentifier uniqueIdentifier: String,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
 		fetchEntries(
 			forView: viewIdentifier,
@@ -235,7 +235,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 		afterUniqueIdentifier uniqueIdentifier: String,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
 		fetchEntries(
 			forView: viewIdentifier,
@@ -253,7 +253,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 		beforeFetchLimit fetchLimitBefore: UInt,
 		afterFetchLimit fetchLimitAfter: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
 		guard let viewContext = context(forView: viewIdentifier) else {
 			completionBlock([])
@@ -290,7 +290,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 		afterUniqueIdentifier uniqueIdentifierAfter: String,
 		beforeUniqueIdentifier uniqueIdentifierBefore: String,
 		fetchLimit: UInt,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
 		guard let viewContext = context(forView: viewIdentifier) else {
 			completionBlock([])
@@ -322,7 +322,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 		fetchType: UniqueIdentifierFetchType,
 		fetchLimit: UInt,
 		limitToDate: Date?,
-		completionBlock: @escaping ([LogLineXPC]) -> Void
+		completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
 		guard fetchLimit > 0 else {
 			Self.logger.error("Ignoring a fetch request with a zero fetch limit")
@@ -372,7 +372,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 		ascending: Bool,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
 		guard let viewContext = context(forView: viewIdentifier) else {
 			completionBlock([])
@@ -518,7 +518,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchec
 		context.performAndWait { quickSave(context) }
 	}
 
-	func saveData(completionBlock: (() -> Void)?) {
+	func saveData(completionBlock: (@Sendable () -> Void)?) {
 		let completion = CallbackBox(completionBlock)
 		saveQueue.async { [weak self] in
 			/* The reply block is an XPC reply; it has to be invoked on every path. */
