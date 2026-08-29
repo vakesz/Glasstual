@@ -38,7 +38,7 @@
 import Foundation
 
 @objc(HLSHistoricLogServerProtocol)
-public nonisolated protocol HistoricLogServerProtocol: AnyObject {
+public nonisolated protocol HistoricLogServerProtocol: AnyObject { // nonisolated: xpc-shim
 	@objc(openDatabaseInDirectory:withCompletionBlock:)
 	func openDatabase(
 		inDirectory databaseDirectory: String,
@@ -108,12 +108,12 @@ public nonisolated protocol HistoricLogServerProtocol: AnyObject {
 }
 
 @objc(HLSHistoricLogClientProtocol)
-public nonisolated protocol HistoricLogClientProtocol: AnyObject, Sendable {
+public nonisolated protocol HistoricLogClientProtocol: AnyObject, Sendable { // nonisolated: xpc-shim
 	@objc(willDeleteUniqueIdentifiers:inView:)
 	func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewIdentifier: String)
 }
 
-public nonisolated enum HistoricLogInterface {
+public nonisolated enum HistoricLogInterface { // nonisolated: value
 	/// The five fetches that reply with an array. NSXPC derives an allowlist
 	/// from a declared class but not from a collection of one, so each has to
 	/// be told what its reply may contain. Both ends of the connection call

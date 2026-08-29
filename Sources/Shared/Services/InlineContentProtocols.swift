@@ -62,7 +62,7 @@ nonisolated protocol InlineContentServerProtocol: AnyObject { // nonisolated: xp
 }
 
 @objc(ICLInlineContentClientProtocol)
-nonisolated protocol InlineContentClientProtocol: AnyObject, Sendable {
+nonisolated protocol InlineContentClientProtocol: AnyObject, Sendable { // nonisolated: xpc-shim
 	@objc(processingPayloadSucceeded:)
 	func processingPayloadSucceeded(_ payload: InlineContentPayload)
 
