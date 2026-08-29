@@ -40,12 +40,10 @@ import Foundation
 
 @MainActor
 public extension IRCClient {
-	@objc(removeRequestedCommands)
 	func removeRequestedCommands() {
 		requestedCommands.removeCommands()
 	}
 
-	@objc(createHiddenCommandResponses)
 	func createHiddenCommandResponses() {
 		guard !isTerminating, hiddenCommandResponsesQuery == nil,
 		      let query = findChannelOrCreate("Hidden Responses", isUtility: true)
@@ -59,7 +57,6 @@ public extension IRCClient {
 		printDebugInformation(IRCDiagnosticStrings.hiddenCommandResponsesNotice, in: query)
 	}
 
-	@objc(printReplyToHiddenCommandResponsesQuery:)
 	func printReplyToHiddenCommandResponsesQuery(_ message: Message) {
 		guard let query = hiddenCommandResponsesQuery else { return }
 		printReply(message, in: query)

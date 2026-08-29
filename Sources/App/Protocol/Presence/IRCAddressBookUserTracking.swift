@@ -54,13 +54,12 @@ public extension Notification.Name {
 	)
 }
 
-@objc(IRCAddressBookUserTrackingContainer)
 public final class AddressBookUserTrackingContainer: NSObject {
-	@objc public private(set) weak var client: IRCClient?
+	public private(set) weak var client: IRCClient?
 
 	private var availabilityByNickname: [String: Bool] = [:]
 
-	@objc public var trackedUsers: [String: NSNumber] {
+	public var trackedUsers: [String: NSNumber] {
 		availabilityByNickname.mapValues(NSNumber.init(value:))
 	}
 
@@ -69,13 +68,11 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		fatalError("Use init(client:)")
 	}
 
-	@objc(initWithClient:)
 	public init(client: IRCClient) {
 		self.client = client
 		super.init()
 	}
 
-	@objc(statusOfUser:)
 	public func status(ofUser nickname: String) -> IRCAddressBookUserTrackingStatus {
 		guard let canonicalNickname = canonicalNickname(matching: nickname) else {
 			return .unknown
@@ -92,12 +89,10 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		return status(ofUser: nickname)
 	}
 
-	@objc(_statusOfUser:)
 	public func storedStatus(ofUser nickname: String) -> IRCAddressBookUserTrackingStatus {
 		availabilityByNickname[nickname] == true ? .available : .notAvailable
 	}
 
-	@objc(addTrackedUser:)
 	public func addTrackedUser(_ nickname: String) {
 		guard canonicalNickname(matching: nickname) == nil else {
 			return
@@ -107,13 +102,11 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
 	}
 
-	@objc(_addTrackedUser:)
 	public func addTrackedUserWithoutDuplicateCheck(_ nickname: String) {
 		availabilityByNickname[nickname] = false
 		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
 	}
 
-	@objc(removeTrackedUser:)
 	public func removeTrackedUser(_ nickname: String) {
 		guard let canonicalNickname = canonicalNickname(matching: nickname) else {
 			return
@@ -123,13 +116,12 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		postNotification(named: .addressBookTrackingRemovedUser, nickname: canonicalNickname)
 	}
 
-	@objc(_removeTrackedUser:)
 	public func removeTrackedUserWithoutLookup(_ nickname: String) {
 		availabilityByNickname.removeValue(forKey: nickname)
 		postNotification(named: .addressBookTrackingRemovedUser, nickname: nickname)
 	}
 
-	@objc public func clearTrackedUsers() {
+	public func clearTrackedUsers() {
 		availabilityByNickname.removeAll()
 
 		NotificationCenter.default.post(
@@ -138,7 +130,6 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		)
 	}
 
-	@objc(statusOfTrackedNickname:changedTo:)
 	public func status(ofTrackedNickname nickname: String, changedTo newStatus: IRCAddressBookUserTrackingStatus) {
 		guard newStatus != .unknown else {
 			return

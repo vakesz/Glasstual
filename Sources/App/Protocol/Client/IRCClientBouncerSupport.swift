@@ -71,29 +71,24 @@ enum BouncerNotificationPolicy {
 }
 
 public extension IRCClient {
-	@objc(zncPlaybackClearChannel:)
 	internal func clearZNCPlayback(for channel: IRCChannel) {
 		guard isConnectedToZNC else { return }
 		clearPlayback(for: channel)
 	}
 
-	@objc(nicknameIsZNCUser:)
 	func nicknameIsZNCUser(_ nickname: String) -> Bool {
 		isConnectedToZNC && nickname.hasPrefix(IRCServerQuirks.ZNC.modulePrefix)
 	}
 
-	@objc(nickname:isZNCUser:)
 	func nickname(_ nickname: String, isZNCUser zncNickname: String) -> Bool {
 		nickname == nicknameAsZNCUser(zncNickname)
 	}
 
-	@objc(nicknameAsZNCUser:)
 	func nicknameAsZNCUser(_ nickname: String) -> String? {
 		guard isConnectedToZNC else { return nil }
 		return IRCServerQuirks.ZNC.nickname(forModuleNamed: nickname)
 	}
 
-	@objc(isSafeToPostNotificationForMessage:inChannel:)
 	internal func isSafeToPostNotification(for message: Message, in channel: IRCChannel?) -> Bool {
 		let requestedHistory = batchMessage(ofType: IRCServerQuirks.chatHistoryBatchType, containing: message) != nil
 		let channelIsBouncerUser = channel.map { nicknameIsZNCUser($0.name) } ?? false
@@ -111,7 +106,6 @@ public extension IRCClient {
 		return BouncerNotificationPolicy.shouldPost(context)
 	}
 
-	@objc(updateConnectedToZNCPropertyWithMessage:)
 	internal func detectZNC(from message: Message) {
 		guard isConnectedToZNC == false, message.senderIsServer else { return }
 		guard message.senderNickname == IRCServerQuirks.ZNC.serverName else { return }
@@ -120,7 +114,6 @@ public extension IRCClient {
 		bouncerSupportLogger.info("ZNC detected")
 	}
 
-	@objc(sendCommand:toZNCModuleNamed:)
 	func sendCommand(_ command: String, toZNCModuleNamed module: String) {
 		guard let destination = nicknameAsZNCUser(module) else { return }
 		sendLine("ZNC \(destination) \(command)")

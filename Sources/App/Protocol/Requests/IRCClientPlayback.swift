@@ -54,7 +54,6 @@ enum PlaybackRequestPolicy {
 }
 
 extension IRCClient {
-	@objc(playbackClearChannel:)
 	func clearPlayback(for channel: IRCChannel) {
 		guard isCapabilityEnabled(.playback) else { return }
 		guard channel.isPrivateMessage, channel.isPrivateMessageForZNCUser == false else { return }
@@ -67,7 +66,7 @@ extension IRCClient {
 		}
 	}
 
-	@objc func requestPlayback() {
+	func requestPlayback() {
 		guard isCapabilityEnabled(.playback) else { return }
 
 		/* chathistory is requested per target as channels are joined and only

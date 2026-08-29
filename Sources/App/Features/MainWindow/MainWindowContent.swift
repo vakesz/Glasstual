@@ -293,7 +293,6 @@ extension MainWindow {
 		inputText(value, asCommand: command)
 	}
 
-	@objc(inputText:asCommand:)
 	public func inputText(_ string: Any, asCommand command: IRCRemoteCommand) {
 		guard selectedItem != nil,
 		      let value = PluginDispatcher.interceptUserInput(string, command: command)

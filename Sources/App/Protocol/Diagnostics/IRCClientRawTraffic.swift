@@ -39,7 +39,6 @@
 import Foundation
 
 public extension IRCClient {
-	@objc(createRawDataLogQuery)
 	func createRawDataLogQuery() {
 		guard !isTerminating, rawDataLogQuery == nil,
 		      let query = findChannelOrCreate("Server Traffic", isUtility: true)
@@ -53,25 +52,21 @@ public extension IRCClient {
 		rawDataLog(IRCDiagnosticStrings.rawTrafficNotice)
 	}
 
-	@objc(destroyRawDataLogQuery)
 	func destroyRawDataLogQuery() {
 		guard !isTerminating, let query = rawDataLogQuery else { return }
 		world?.destroy(query)
 	}
 
-	@objc(rawDataLog:)
 	func rawDataLog(_ data: String) {
 		guard !isTerminating else { return }
 		printDebugInformation(data, in: rawDataLogQuery)
 	}
 
-	@objc(rawDataLogOutgoingTraffic:)
 	func rawDataLogOutgoingTraffic(_ data: String) {
 		guard rawDataLogQuery != nil else { return }
 		rawDataLog("<< \(data)")
 	}
 
-	@objc(rawDataLogIncomingTraffic:)
 	func rawDataLogIncomingTraffic(_ data: String) {
 		guard rawDataLogQuery != nil else { return }
 		rawDataLog(">> \(data)")

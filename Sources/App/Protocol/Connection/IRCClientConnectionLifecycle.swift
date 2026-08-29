@@ -40,17 +40,14 @@ private let connectionLifecycleLogger = Logger(
 
 @MainActor
 public extension IRCClient {
-	@objc(connect)
 	func connect() {
 		connect(.normal)
 	}
 
-	@objc(connect:)
 	func connect(_ mode: IRCClientConnectMode) {
 		connect(mode, bypassProxy: false)
 	}
 
-	@objc(connect:bypassProxy:)
 	func connect(_ mode: IRCClientConnectMode, bypassProxy: Bool) {
 		guard isConnecting == false, isConnected == false, isQuitting == false, isDisconnecting == false else {
 			return
@@ -135,7 +132,6 @@ public extension IRCClient {
 		postEvent(toViewController: "serverConnecting")
 	}
 
-	@objc(autoConnectWithDelay:afterWakeUp:)
 	func autoConnect(withDelay delay: UInt, afterWakeUp: Bool) {
 		connectDelay = delay
 		if afterWakeUp {
@@ -145,18 +141,15 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(autoConnect)
 	func autoConnect() {
 		scheduleConnection(after: connectDelay, action: autoConnectPerformConnect)
 	}
 
-	@objc(autoConnectPerformConnect)
 	func autoConnectPerformConnect() {
 		guard isConnecting == false, isConnected == false else { return }
 		connect()
 	}
 
-	@objc(autoConnectAfterWakeUp)
 	func autoConnectAfterWakeUp() {
 		if connectDelay > 0 {
 			printDebugInformation(toConsole: IRCConnectionStrings.delayedAutoConnect(seconds: connectDelay))
@@ -164,14 +157,12 @@ public extension IRCClient {
 		scheduleConnection(after: connectDelay, action: autoConnectAfterWakeUpPerformConnect)
 	}
 
-	@objc(autoConnectAfterWakeUpPerformConnect)
 	func autoConnectAfterWakeUpPerformConnect() {
 		guard isConnecting == false, isConnected == false else { return }
 		reconnectEnabledBecauseOfSleepMode = true
 		connect(.reconnect)
 	}
 
-	@objc(disconnect)
 	func disconnect() {
 		cancelDelayedDisconnect()
 		guard isConnecting || isConnected, let socket else { return }
@@ -180,7 +171,6 @@ public extension IRCClient {
 		socket.close()
 	}
 
-	@objc(quit)
 	func quit() {
 		let comment = disconnectType == .computerSleep
 			? config.sleepModeLeavingComment
@@ -188,7 +178,6 @@ public extension IRCClient {
 		quit(withComment: comment)
 	}
 
-	@objc(quitWithComment:)
 	func quit(withComment comment: String) {
 		guard isConnecting || isConnected, isQuitting == false, isDisconnecting == false else { return }
 		isQuitting = true
@@ -216,19 +205,16 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(cancelDelayedDisconnect)
 	func cancelDelayedDisconnect() {
 		pendingDisconnectTask?.cancel()
 		pendingDisconnectTask = nil
 	}
 
-	@objc(cancelScheduledConnection)
 	func cancelScheduledConnection() {
 		pendingConnectionTask?.cancel()
 		pendingConnectionTask = nil
 	}
 
-	@objc(cancelReconnect)
 	func cancelReconnect() {
 		reconnectEnabled = false
 		reconnectEnabledBecauseOfSleepMode = false
@@ -236,7 +222,6 @@ public extension IRCClient {
 		output?.updateTitle(for: self)
 	}
 
-	@objc(toggleAwayStatusWithComment:)
 	func toggleAwayStatus(withComment comment: String?) {
 		if userIsAway {
 			toggleAwayStatus(false, withComment: nil)
@@ -248,12 +233,10 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(toggleAwayStatus:)
 	func toggleAwayStatus(_ setAway: Bool) {
 		toggleAwayStatus(setAway, withComment: IRCConnectionStrings.defaultAwayMessage)
 	}
 
-	@objc(toggleAwayStatus:withComment:)
 	func toggleAwayStatus(_ setAway: Bool, withComment comment: String?) {
 		guard isLoggedIn, setAway == false || comment != nil else { return }
 		if setAway, let comment {
@@ -275,7 +258,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(presentCertificateTrustInformation)
 	func presentCertificateTrustInformation() {
 		guard isSecured else { return }
 		socket?.openSecuredConnectionCertificateModal()

@@ -68,7 +68,6 @@ private let ctcpLogger = Logger(
 
 @MainActor
 public extension IRCClient {
-	@objc(receiveCTCPQuery:text:)
 	func receiveCTCPQuery(_ message: Message, text: String) {
 		let sender = message.senderNickname ?? ""
 		let isLocalUser = nicknameIsMyself(sender)
@@ -126,7 +125,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveCTCPLagCheckQuery:text:)
 	func receiveCTCPLagCheckQuery(_ message: Message, text: String) {
 		guard messageIsFromMyself(message) else { return }
 		let context = IRCCTCPPolicy.formData(text)
@@ -143,7 +141,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(receiveCTCPReply:text:)
 	func receiveCTCPReply(_ message: Message, text: String) {
 		if let hostmask = message.senderHostmask,
 		   findAddressBookEntry(forHostmask: hostmask)?.ignoreClientToClientProtocol == true

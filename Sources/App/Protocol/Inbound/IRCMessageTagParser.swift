@@ -37,11 +37,10 @@
 
 import Foundation
 
-@objc(IRCParsedMessageTags)
 public final class ParsedMessageTags: NSObject {
-	@objc public let tags: [String: String]
-	@objc public let messageIdentifier: String?
-	@objc public let senderAccount: String?
+	public let tags: [String: String]
+	public let messageIdentifier: String?
+	public let senderAccount: String?
 
 	init(tags: [String: String]) {
 		self.tags = tags
@@ -52,14 +51,12 @@ public final class ParsedMessageTags: NSObject {
 	}
 }
 
-@objc(IRCMessageTagParser)
 public final class MessageTagParser: NSObject {
 	/// IRCv3 message-tags caps the tag section at 8191 bytes. Anything longer
 	/// is a server that is not playing by the rules, so its tags are dropped
 	/// rather than parsed into an unbounded dictionary.
-	@objc public static let maximumSectionLength = 8191
+	public static let maximumSectionLength = 8191
 
-	@objc(parsedTagsFromSection:)
 	public static func parsedTags(fromSection section: String) -> ParsedMessageTags {
 		guard section.utf8.count <= maximumSectionLength else {
 			return ParsedMessageTags(tags: [:])

@@ -68,13 +68,11 @@ public nonisolated struct STSPolicyEndpoint: Sendable, Equatable { // nonisolate
 	}
 }
 
-@objc(IRCSTSPolicy)
 public final nonisolated class STSPolicy: NSObject { // nonisolated: value
-	@objc public let port: UInt16
-	@objc public let expiresAt: Date
-	@objc public let preload: Bool
+	public let port: UInt16
+	public let expiresAt: Date
+	public let preload: Bool
 
-	@objc(initWithPort:expiresAt:preload:)
 	public init(port: UInt16, expiresAt: Date, preload: Bool) {
 		precondition(port > 0)
 
@@ -85,7 +83,7 @@ public final nonisolated class STSPolicy: NSObject { // nonisolated: value
 		super.init()
 	}
 
-	@objc public var isExpired: Bool {
+	public var isExpired: Bool {
 		expiresAt.timeIntervalSinceNow <= 0
 	}
 

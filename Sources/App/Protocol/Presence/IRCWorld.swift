@@ -72,14 +72,13 @@ private func nativeChannel(from item: IRCTreeItem?) -> IRCChannel? {
 }
 
 @MainActor
-@objc(IRCWorld)
 public final class World: NSObject {
 	private var clients: [IRCClient] = []
 
-	@objc public private(set) var messagesSent: UInt = 0
-	@objc public private(set) var messagesReceived: UInt = 0
-	@objc public private(set) var bandwidthIn: UInt64 = 0
-	@objc public private(set) var bandwidthOut: UInt64 = 0
+	public private(set) var messagesSent: UInt = 0
+	public private(set) var messagesReceived: UInt = 0
+	public private(set) var bandwidthIn: UInt64 = 0
+	public private(set) var bandwidthOut: UInt64 = 0
 
 	/// Pending debounce of the preference-change broadcast, if any.
 	private var preferencesDidChangeTask: Task<Void, Never>?
@@ -94,12 +93,12 @@ public final class World: NSObject {
 	 half is refreshed from the defaults store whenever it reports a write. */
 	var environment: ClientEnvironment
 
-	@objc public var isImportingConfiguration = false
+	public var isImportingConfiguration = false
 
 	/** The application's world shares the services box with
 	 `ClientEnvironment.shared`, so the window and menus only have to be
 	 installed once for both. */
-	@objc override public init() {
+	override public init() {
 		environment = ClientEnvironment(
 			preferences: .current(),
 			services: ClientEnvironment.shared.services
@@ -115,7 +114,7 @@ public final class World: NSObject {
 		self.environment.services.world = self
 	}
 
-	@objc public var clientList: [IRCClient] {
+	public var clientList: [IRCClient] {
 		get {
 			clients
 		}
@@ -125,7 +124,7 @@ public final class World: NSObject {
 		}
 	}
 
-	@objc public var clientCount: UInt {
+	public var clientCount: UInt {
 		UInt(clients.count)
 	}
 
@@ -150,7 +149,7 @@ public final class World: NSObject {
 
 	// MARK: - Configuration
 
-	@objc public func setupConfiguration() {
+	public func setupConfiguration() {
 		isImportingConfiguration = true
 
 		notifyObservers { $0.worldWillBeginBulkUpdate(self) }
@@ -188,11 +187,11 @@ public final class World: NSObject {
 		clientList.map { $0.configurationDictionary() }
 	}
 
-	@objc public func save() {
+	public func save() {
 		TextualPreferences.setClientList(clientConfigurations)
 	}
 
-	@objc public func savePeriodically() {
+	public func savePeriodically() {
 		let now = CFAbsoluteTimeGetCurrent()
 		guard savePeriodicallyLastSave + WorldTiming.savePeriodicallyThreshold < now else {
 			return
@@ -202,7 +201,7 @@ public final class World: NSObject {
 		save()
 	}
 
-	@objc public func prepareForApplicationTermination() {
+	public func prepareForApplicationTermination() {
 		notifications.cancelAll()
 
 		midnightTask?.cancel()
@@ -215,7 +214,7 @@ public final class World: NSObject {
 		}
 	}
 
-	@objc private func userDefaultsDidChange(_: Notification) {
+	private func userDefaultsDidChange(_: Notification) {
 		/* Every branch the connection code takes on a preference reads the
 		 snapshot, so it is refreshed before anything else reacts to the write. */
 		refreshEnvironmentPreferences()
@@ -265,7 +264,7 @@ public final class World: NSObject {
 		return true
 	}
 
-	@objc private func mainWindowAppearanceChanged(_: Notification) {
+	private func mainWindowAppearanceChanged(_: Notification) {
 		guard SharedApplication.sharedThemeController().settings.postsAppearanceChangeNotifications else {
 			return
 		}
@@ -279,7 +278,7 @@ public final class World: NSObject {
 		NotificationCenter.default.post(name: .ircWorldClientListWasModified, object: self)
 	}
 
-	@objc public func autoConnect(afterWakeup afterWakeUp: Bool) {
+	public func autoConnect(afterWakeup afterWakeUp: Bool) {
 		let ghostModeIsOn = environment.services.applicationState?.ghostModeIsOn ?? false
 		guard ghostModeIsOn == false || afterWakeUp else {
 			return
@@ -302,7 +301,7 @@ public final class World: NSObject {
 		}
 	}
 
-	@objc public func prepareForSleep() {
+	public func prepareForSleep() {
 		guard environment.preferences.disconnectOnSleep else {
 			return
 		}
@@ -313,7 +312,7 @@ public final class World: NSObject {
 		}
 	}
 
-	@objc public func prepareForScreenSleep() {
+	public func prepareForScreenSleep() {
 		guard environment.preferences.awayOnScreenSleep else {
 			return
 		}
@@ -323,7 +322,7 @@ public final class World: NSObject {
 		}
 	}
 
-	@objc public func wakeFromScreenSleep() {
+	public func wakeFromScreenSleep() {
 		guard environment.preferences.awayOnScreenSleep else {
 			return
 		}
@@ -333,13 +332,13 @@ public final class World: NSObject {
 		}
 	}
 
-	@objc public func noteReachabilityChanged(_ reachable: Bool) {
+	public func noteReachabilityChanged(_ reachable: Bool) {
 		for client in clientList {
 			client.noteReachabilityChanged(reachable)
 		}
 	}
 
-	@objc public func preferencesChanged() {
+	public func preferencesChanged() {
 		refreshEnvironmentPreferences()
 		notifyObservers { $0.worldPreferencesDidChange(self) }
 
@@ -394,19 +393,17 @@ public final class World: NSObject {
 		)
 	}
 
-	@objc private func dateChanged(_: Any?) {
+	private func dateChanged(_: Any?) {
 		setupMidnightTimer(firingNotification: true)
 	}
 
 	// MARK: - Traffic counters
 
-	@objc(noteMessageSentWithLength:)
 	public func noteMessageSent(length: UInt) {
 		messagesSent &+= 1
 		bandwidthOut &+= UInt64(length)
 	}
 
-	@objc(noteMessageReceivedWithLength:)
 	public func noteMessageReceived(length: UInt) {
 		messagesReceived &+= 1
 		bandwidthIn &+= UInt64(length)
@@ -414,7 +411,6 @@ public final class World: NSObject {
 
 	// MARK: - Tree items
 
-	@objc(findItemsWithIds:)
 	public func findItems(withIds itemIds: [String]) -> [IRCTreeItem] {
 		let identifiers = Set(itemIds)
 		var items: [IRCTreeItem] = []
@@ -432,7 +428,6 @@ public final class World: NSObject {
 		return items
 	}
 
-	@objc(findItemWithId:)
 	public func findItem(withId itemId: String?) -> IRCTreeItem? {
 		guard let itemId else {
 			return nil
@@ -451,28 +446,23 @@ public final class World: NSObject {
 		return nil
 	}
 
-	@objc(findClientWithId:)
 	public func findClient(withId clientId: String) -> IRCClient? {
 		findItem(withId: clientId) as? IRCClient
 	}
 
-	@objc(findChannelWithId:onClientWithId:)
 	public func findChannel(withId channelId: String, onClientWithId clientId: String) -> IRCChannel? {
 		guard let client = findClient(withId: clientId) else { return nil }
 		return client.channelList.first { $0.uniqueIdentifier == channelId }
 	}
 
-	@objc(findItemWithPasteboardString:)
 	public func findItem(withPasteboardString string: String) -> IRCTreeItem? {
 		findItem(withId: string)
 	}
 
-	@objc(pasteboardStringForItem:)
 	public func pasteboardString(for item: IRCTreeItem) -> String {
 		item.uniqueIdentifier
 	}
 
-	@objc(findClientWithServerAddress:)
 	public func findClient(withServerAddress serverAddress: String) -> IRCClient? {
 		clientList.first { client in
 			client.config.serverList.contains { server in
@@ -483,12 +473,10 @@ public final class World: NSObject {
 
 	// MARK: - JavaScript
 
-	@objc(evaluateFunctionOnAllViews:arguments:)
 	public func evaluateFunction(onAllViews function: String, arguments: [Any]?) {
 		evaluateFunction(onAllViews: function, arguments: arguments, onQueue: true)
 	}
 
-	@objc(evaluateFunctionOnAllViews:arguments:onQueue:)
 	public func evaluateFunction(onAllViews function: String, arguments: [Any]?, onQueue: Bool) {
 		let isTerminating = environment.services.applicationState?.applicationIsTerminating ?? false
 		guard isTerminating == false else {
@@ -563,7 +551,6 @@ public final class World: NSObject {
 		return channel
 	}
 
-	@objc(createPrivateMessage:onClient:)
 	public func createPrivateMessage(_ nickname: String, on client: IRCClient) -> IRCChannel {
 		createPrivateMessage(nickname, on: client, as: .privateMessage)
 	}
@@ -585,7 +572,6 @@ public final class World: NSObject {
 		return channel
 	}
 
-	@objc(createPrivateMessage:onClient:asType:)
 	public func createPrivateMessageFromObjectiveC(
 		_ nickname: String,
 		on client: IRCClient,
@@ -647,7 +633,6 @@ public final class World: NSObject {
 		}
 	}
 
-	@objc(destroyClient:)
 	public func destroyClient(_ client: IRCClient) {
 		if client.isConnecting || client.isConnected {
 			client.addDisconnectCallback { [weak self, weak client] in
@@ -677,17 +662,14 @@ public final class World: NSObject {
 		}
 	}
 
-	@objc(destroyChannel:)
 	public func destroyChannel(_ channel: IRCChannel) {
 		destroyChannel(channel, reload: true, part: true)
 	}
 
-	@objc(destroyChannel:reload:)
 	public func destroyChannel(_ channel: IRCChannel, reload: Bool) {
 		destroyChannel(channel, reload: reload, part: true)
 	}
 
-	@objc(destroyChannel:reload:part:)
 	public func destroyChannel(_ channel: IRCChannel, reload: Bool, part partChannel: Bool) {
 		NotificationCenter.default.post(
 			name: .ircWorldWillDestroyChannel,

@@ -68,7 +68,7 @@ struct IRCUserDuplicateTests {
 	func replacingAMemberStoresTheEditedCopy() throws {
 		let client = GLTTestClient()
 		let channel = Channel(config: ChannelConfig(channelName: "#chat", type: .channel))
-		channel.setValue(client, forKey: "associatedClient")
+		channel.associatedClient = client
 
 		channel.activate()
 		let memberList = try #require(channel.memberInfo)
@@ -106,7 +106,7 @@ struct IRCUserDuplicateTests {
 	func renamingRelinksTheMemberLists() throws {
 		let client = GLTTestClient()
 		let channel = Channel(config: ChannelConfig(channelName: "#chat", type: .channel))
-		channel.setValue(client, forKey: "associatedClient")
+		channel.associatedClient = client
 
 		channel.activate()
 		let memberList = try #require(channel.memberInfo)

@@ -17,7 +17,6 @@ import AppKit
 import Foundation
 import os
 
-@objc
 public enum IRCTextFormatterEffectType: Int, Sendable {
 	case none
 	case bold
@@ -139,33 +138,28 @@ private func monospaceFontMatching(_ baseFont: NSFont?) -> NSFont {
 	return NSFont(descriptor: descriptor, size: pointSize) ?? monospaceFont
 }
 
-@objc(IRCTextFormatterEffect)
 public final class TextFormatterEffect: NSObject {
-	@objc public private(set) var type: IRCTextFormatterEffectType = .none
-	@objc public private(set) var value: String?
-	@objc public private(set) var controlCharacter: unichar = 0
-	@objc public private(set) var length: UInt = 0
+	public private(set) var type: IRCTextFormatterEffectType = .none
+	public private(set) var value: String?
+	public private(set) var controlCharacter: unichar = 0
+	public private(set) var length: UInt = 0
 
 	override public convenience init() {
 		self.init(effect: .none, withValue: nil)!
 	}
 
-	@objc(effectWithType:)
 	public static func effect(with type: IRCTextFormatterEffectType) -> TextFormatterEffect? {
 		self.init(effect: type, withValue: nil)
 	}
 
-	@objc(effectWithType:withValue:)
 	public static func effect(with type: IRCTextFormatterEffectType, withValue value: Any?) -> TextFormatterEffect? {
 		self.init(effect: type, withValue: value)
 	}
 
-	@objc(initWithEffect:)
 	public convenience init?(effect type: IRCTextFormatterEffectType) {
 		self.init(effect: type, withValue: nil)
 	}
 
-	@objc(initWithEffect:withValue:)
 	public init?(effect type: IRCTextFormatterEffectType, withValue value: Any?) {
 		super.init()
 
@@ -227,7 +221,6 @@ public final class TextFormatterEffect: NSObject {
 		return true
 	}
 
-	@objc(appendToStartOf:)
 	public func appendToStart(of string: NSMutableString) {
 		if type == .backgroundColor {
 			string.appendFormat(",%@", value ?? "")
@@ -243,7 +236,6 @@ public final class TextFormatterEffect: NSObject {
 		}
 	}
 
-	@objc(appendToEndOf:)
 	public func appendToEnd(of string: NSMutableString) {
 		if type == .backgroundColor {
 			return
@@ -253,21 +245,18 @@ public final class TextFormatterEffect: NSObject {
 	}
 }
 
-@objc(IRCTextFormatterEffects)
 public final class TextFormatterEffects: NSObject {
-	@objc public private(set) var effects: [TextFormatterEffect] = []
-	@objc public private(set) var maximumLength: UInt = 0
+	public private(set) var effects: [TextFormatterEffect] = []
+	public private(set) var maximumLength: UInt = 0
 
 	override public convenience init() {
 		self.init(attributes: [:])
 	}
 
-	@objc(effectsInAttributes:)
 	public static func effects(in attributes: [String: Any]) -> TextFormatterEffects {
 		TextFormatterEffects(attributes: attributes)
 	}
 
-	@objc(initWithAttributes:)
 	public init(attributes: [String: Any]) {
 		super.init()
 
@@ -321,14 +310,12 @@ public final class TextFormatterEffects: NSObject {
 		self.maximumLength = maximumLength
 	}
 
-	@objc(appendToStartOf:)
 	public func appendToStart(of string: NSMutableString) {
 		for effect in effects {
 			effect.appendToStart(of: string)
 		}
 	}
 
-	@objc(appendToEndOf:)
 	public func appendToEnd(of string: NSMutableString) {
 		for effect in effects.reversed() {
 			effect.appendToEnd(of: string)
@@ -393,7 +380,6 @@ extension IRCLineBudget {
 }
 
 public extension NSAttributedString {
-	@objc(stringFormattedForChannel:onClient:withLineType:effectiveRange:)
 	func stringFormatted(
 		forChannel channelName: String,
 		on client: IRCClient,
@@ -506,7 +492,7 @@ public extension NSAttributedString {
 		return result as String
 	}
 
-	@objc var stringFormattedForIRC: String {
+	var stringFormattedForIRC: String {
 		let string = string as NSString
 		let result = NSMutableString()
 		let fullRange = NSRange(location: 0, length: length)
@@ -522,7 +508,6 @@ public extension NSAttributedString {
 		return result as String
 	}
 
-	@objc(IRCFormatterAttributeSetInRange:range:)
 	func ircFormatterAttributeSet(inRange effect: IRCTextFormatterEffectType, range limitRange: NSRange) -> Bool {
 		var returnValue = false
 
@@ -633,7 +618,6 @@ public extension NSMutableAttributedString {
 		}
 	}
 
-	@objc(stringFormattedForChannel:onClient:withLineType:)
 	func stringFormatted(
 		forChannel channelName: String,
 		on client: IRCClient,
@@ -652,7 +636,6 @@ public extension NSMutableAttributedString {
 		return result
 	}
 
-	@objc(setIRCFormatterAttribute:value:range:)
 	func setIRCFormatterAttribute(
 		_ effect: IRCTextFormatterEffectType,
 		value: Any?,
@@ -663,7 +646,6 @@ public extension NSMutableAttributedString {
 		}
 	}
 
-	@objc(removeIRCFormatterAttribute:range:)
 	func removeIRCFormatterAttribute(_ effect: IRCTextFormatterEffectType, range limitRange: NSRange) {
 		enumerateAttributes(in: limitRange, options: .reverse) { attributes, effectiveRange, _ in
 			guard var baseFont = attributes[.font] as? NSFont else {
@@ -728,7 +710,6 @@ public extension NSMutableAttributedString {
 }
 
 public nonisolated extension NSMutableString { // nonisolated: pure
-	@objc(wrapIRCTextFormatterResultWith:maxDistance:)
 	func wrapIRCTextFormatterResult(with minimumIndex: UInt, maxDistance: UInt) -> UInt {
 		let selfLength = length
 		let distance = Int(clamping: maxDistance)

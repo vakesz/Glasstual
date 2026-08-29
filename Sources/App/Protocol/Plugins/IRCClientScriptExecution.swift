@@ -90,7 +90,6 @@ enum ScriptExecutionSupport {
 
 @MainActor
 extension IRCClient {
-	@objc(outputDescriptionForError:forGlasstualCmdScriptAtPath:inputString:)
 	func outputDescription(
 		for error: Error,
 		forGlasstualCmdScriptAtPath path: String,
@@ -112,7 +111,6 @@ extension IRCClient {
 		scriptExecutionLogger.error("\(IRCDiagnosticStrings.scriptFailure(description), privacy: .public)")
 	}
 
-	@objc(sendGlasstualCmdScriptResult:toChannel:)
 	func sendGlasstualCmdScriptResult(_ result: String, toChannel channelName: String?) {
 		let destination: IRCTreeItem? = if let channelName {
 			(findChannel(channelName) as AnyObject?) as? IRCTreeItem
@@ -126,7 +124,6 @@ extension IRCClient {
 		inputText(result.trimmingCharacters(in: .whitespacesAndNewlines), destination: destination)
 	}
 
-	@objc(executeGlasstualCmdScriptInContext:)
 	func executeGlasstualCmdScript(inContext context: [String: String]) {
 		guard let path = context["path"] else { return }
 		let input = context["inputString"] ?? ""

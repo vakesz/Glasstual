@@ -71,7 +71,6 @@ enum IRCClientHistoricMessagePolicy {
 }
 
 public extension IRCClient {
-	@objc(ircConnection:didReceiveData:)
 	func ircConnection(_ sender: Connection, didReceiveData data: String) {
 		guard !data.isEmpty else { return }
 		/* The connection delivers its callbacks on the main actor in wire order,
@@ -79,10 +78,25 @@ public extension IRCClient {
 		guard sender === socket else { return }
 		processIncomingDataOnMainActor(data)
 	}
+}
 
-	@objc(processIncomingMessage:)
-	func processIncomingMessage(_ message: Message) {
-		processIncomingMessageOnMainActor(message)
+/// `IRCClient.processIncomingMessage` is the overridable seam in front of this,
+/// so the dispatch entry point is internal while the rest of the file is not.
+@MainActor
+extension IRCClient {
+	func processIncomingMessageOnMainActor(_ message: Message) {
+		processIncomingMessageAttributes(message)
+		if resolveLabeledResponse(for: message) {
+			processBundlesServerMessage(message)
+			return
+		}
+
+		if message.commandNumeric > 0 {
+			receiveNumericReply(message)
+		} else {
+			dispatchRemoteCommand(message)
+		}
+		processBundlesServerMessage(message)
 	}
 }
 
@@ -115,21 +129,6 @@ private extension IRCClient {
 		) else { return }
 
 		lastMessageServerTime = receivedTime
-	}
-
-	func processIncomingMessageOnMainActor(_ message: Message) {
-		processIncomingMessageAttributes(message)
-		if resolveLabeledResponse(for: message) {
-			processBundlesServerMessage(message)
-			return
-		}
-
-		if message.commandNumeric > 0 {
-			receiveNumericReply(message)
-		} else {
-			dispatchRemoteCommand(message)
-		}
-		processBundlesServerMessage(message)
 	}
 
 	func dispatchRemoteCommand(_ message: Message) {

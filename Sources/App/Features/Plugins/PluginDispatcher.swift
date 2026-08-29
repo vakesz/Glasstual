@@ -176,7 +176,6 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		return returnValue
 	}
 
-	@objc(interceptUserInput:command:)
 	@MainActor
 	public static func interceptUserInput(_ inputObject: Any, command commandString: IRCRemoteCommand) -> Any? {
 		let interceptors: [any PluginUserInputIntercepting] = handlers(for: .userInputDataInterception)

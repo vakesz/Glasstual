@@ -24,7 +24,6 @@ private nonisolated let extrasLogger = Logger( // nonisolated: let
 	category: "IRCExtras"
 )
 
-@objc(IRCExtras)
 @MainActor
 public final class Extras: NSObject {
 	// MARK: - Glasstual URL Scheme
@@ -89,7 +88,6 @@ public final class Extras: NSObject {
 
 	// MARK: - IRC Protocol URI Parsing
 
-	@objc(parseIRCProtocolURI:)
 	public static func parseIRCProtocolURI(_ location: String) {
 		parseIRCProtocolURI(location, withDescriptor: nil)
 	}
@@ -241,7 +239,6 @@ public final class Extras: NSObject {
 		let channelList: String?
 	}
 
-	@objc(parseIRCProtocolURI:withDescriptor:)
 	public static func parseIRCProtocolURI(_ location: String, withDescriptor _: NSAppleEventDescriptor?) {
 		switch intent(forIRCProtocolURI: location) {
 		case let .glasstualAction(host, source):
@@ -261,7 +258,6 @@ public final class Extras: NSObject {
 
 	// MARK: - Connection Creation
 
-	@objc(createConnectionToServer:channelList:connectWhenCreated:)
 	public static func createConnectionToServer(
 		_ serverInfo: String,
 		channelList: String?,
@@ -276,7 +272,6 @@ public final class Extras: NSObject {
 		)
 	}
 
-	@objc(createConnectionToServer:channelList:connectWhenCreated:mergeConnectionIfPossible:selectFirstChannelAdded:)
 	public static func createConnectionToServer(
 		_ serverInfo: String,
 		channelList: String?,

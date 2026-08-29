@@ -54,7 +54,6 @@ public extension IRCClient {
 		output.windowIsKey && output.isItemSelectedInWindow(channel)
 	}
 
-	@objc(setHighlightStateForChannel:)
 	func setHighlightState(for channel: IRCChannel) {
 		guard let output else { return }
 		guard channelIsSelectedInKeyWindow(channel, output: output) == false else { return }
@@ -64,12 +63,10 @@ public extension IRCClient {
 		output.reloadTreeItem(channel)
 	}
 
-	@objc(setUnreadStateForChannel:)
 	func setUnreadState(for channel: IRCChannel) {
 		setUnreadState(for: channel, isHighlight: false)
 	}
 
-	@objc(setUnreadStateForChannel:isHighlight:)
 	func setUnreadState(for channel: IRCChannel, isHighlight: Bool) {
 		guard let output else { return }
 		guard channelIsSelectedInKeyWindow(channel, output: output) == false else { return }

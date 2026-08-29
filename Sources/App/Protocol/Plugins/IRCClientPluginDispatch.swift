@@ -54,7 +54,6 @@ private struct PluginIncomingCommandContext {
 }
 
 public extension IRCClient {
-	@objc(processBundlesUserMessage:command:)
 	func processBundlesUserMessage(_ message: String, command: String) {
 		PluginDispatcher.userInputCommandInvoked(
 			onClient: self,
@@ -63,17 +62,14 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(processBundlesServerMessage:)
 	func processBundlesServerMessage(_ message: Message) {
 		PluginDispatcher.didReceiveServerInput(message, onClient: self)
 	}
 
-	@objc(postReceivedMessage:)
 	func postReceivedMessage(_ message: Message) -> Bool {
 		postReceivedMessage(message, withText: message.sequence, destinedFor: nil)
 	}
 
-	@objc(postReceivedMessage:withText:destinedFor:)
 	func postReceivedMessage(_ message: Message, withText text: String?, destinedFor destination: IRCChannel?) -> Bool {
 		postReceivedCommand(
 			message.command,
@@ -83,7 +79,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(postReceivedCommand:withText:destinedFor:referenceMessage:)
 	func postReceivedCommand(
 		_ command: String,
 		withText text: String?,

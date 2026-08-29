@@ -59,7 +59,6 @@ enum IRCClientAutojoinPolicy {
 
 @MainActor
 public extension IRCClient {
-	@objc(startAutojoinTimer)
 	func startAutojoinTimer() {
 		guard !autojoinTimer.isActive else { return }
 		let interval = environment.preferences.autojoinDelayAfterIdentification
@@ -70,30 +69,25 @@ public extension IRCClient {
 		autojoinTimer.start(interval, repeats: false)
 	}
 
-	@objc(stopAutojoinTimer)
 	func stopAutojoinTimer() {
 		guard autojoinTimer.isActive else { return }
 		autojoinTimer.stop()
 	}
 
-	@objc(onAutojoinTimer)
 	func onAutojoinTimer() {
 		startAutojoinNextJoinTimer()
 	}
 
-	@objc(startAutojoinDelayedWarningTimer)
 	func startAutojoinDelayedWarningTimer() {
 		guard !autojoinDelayedWarningTimer.isActive else { return }
 		autojoinDelayedWarningTimer.start(IRCClientAutojoinPolicy.delayedWarningInterval, repeats: true)
 	}
 
-	@objc(stopAutojoinDelayedWarningTimer)
 	func stopAutojoinDelayedWarningTimer() {
 		guard autojoinDelayedWarningTimer.isActive else { return }
 		autojoinDelayedWarningTimer.stop()
 	}
 
-	@objc(onAutojoinDelayedWarningTimer)
 	func onAutojoinDelayedWarningTimer() {
 		guard isLoggedIn, !config.hideAutojoinDelayedWarnings,
 		      autojoinDelayedWarningCount < IRCClientAutojoinPolicy.maximumDelayedWarningCount
@@ -110,26 +104,22 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(startAutojoinNextJoinTimer)
 	func startAutojoinNextJoinTimer() {
 		guard !autojoinNextJoinTimer.isActive else { return }
 		autojoinNextJoinTimer.start(environment.preferences.autojoinDelayBetweenChannelJoins, repeats: true)
 		onAutojoinNextJoinTimer()
 	}
 
-	@objc(stopAutojoinNextJoinTimer)
 	func stopAutojoinNextJoinTimer() {
 		guard autojoinNextJoinTimer.isActive else { return }
 		autojoinNextJoinTimer.stop()
 		channelsToAutojoin = nil
 	}
 
-	@objc(onAutojoinNextJoinTimer)
 	func onAutojoinNextJoinTimer() {
 		autojoinNextChannel()
 	}
 
-	@objc(autojoinNextChannel)
 	func autojoinNextChannel() {
 		guard isAutojoining, let pendingChannels = channelsToAutojoin else { return }
 		let count = IRCClientAutojoinPolicy.nextBatchCount(
@@ -147,17 +137,14 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(autojoinChannels:)
 	func autojoinChannels(_ channels: [IRCChannel]) {
 		joinChannels(channels)
 	}
 
-	@objc(performAutoJoin)
 	func performAutoJoin() {
 		performAutoJoin(initiatedByUser: false)
 	}
 
-	@objc(performAutoJoinInitiatedByUser:)
 	func performAutoJoin(initiatedByUser: Bool) {
 		guard !isAutojoining else { return }
 		stopAutojoinDelayedWarningTimer()

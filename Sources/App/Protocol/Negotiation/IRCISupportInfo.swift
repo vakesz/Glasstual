@@ -33,14 +33,14 @@ import CocoaExtensions
 import Foundation
 import Synchronization
 
-@objc public enum IRCISupportInfoListType: UInt, Sendable {
+public enum IRCISupportInfoListType: UInt, Sendable {
 	case ban = 0
 	case banException = 1
 	case inviteException = 2
 	case quiet = 3
 }
 
-@objc public nonisolated enum IRCISupportInfoCaseMapping: UInt, Sendable { // nonisolated: value
+public nonisolated enum IRCISupportInfoCaseMapping: UInt, Sendable { // nonisolated: value
 	case rfc1459 = 0
 	case strictRFC1459 = 1
 	case ascii = 2
@@ -113,30 +113,29 @@ nonisolated struct IRCUserPrefixTable: Sendable { // nonisolated: value
 	}
 }
 
-@objc(IRCISupportInfo)
 public class IRCISupportInfo: NSObject {
-	@objc public private(set) weak var client: IRCClient?
-	@objc public internal(set) var serverAddress: String?
-	@objc public private(set) var maximumAwayLength: UInt = 0
-	@objc public private(set) var maximumChannelNameLength: UInt = 0
-	@objc public private(set) var maximumKeyLength: UInt = 0
-	@objc public private(set) var maximumKickLength: UInt = 0
-	@objc public private(set) var maximumNicknameLength: UInt = 0
-	@objc public private(set) var maximumTopicLength: UInt = 0
-	@objc public private(set) var maximumModeCount: UInt = 0
-	@objc public private(set) var maximumLineLength: UInt = 0
-	@objc public private(set) var maximumTargets: UInt = 0
-	@objc public private(set) var maximumSilenceEntries: UInt = 0
-	@objc public private(set) var chatHistoryMaximumLines: UInt = 0
-	@objc public private(set) var silenceSupported = false
-	@objc public private(set) var safeListSupported = false
-	@objc public private(set) var whoxSupported = false
-	@objc public private(set) var utf8Only = false
-	@objc public private(set) var channelNamePrefixes: [String] = ["#"]
-	@objc public private(set) var statusMessageModeSymbols: [String] = []
-	@objc public private(set) var extendedBanTypes: [String] = []
-	@objc public private(set) var extendedListTokens: [String] = []
-	@objc public private(set) var clientTagDenyList: [String] = []
+	public private(set) weak var client: IRCClient?
+	public internal(set) var serverAddress: String?
+	public private(set) var maximumAwayLength: UInt = 0
+	public private(set) var maximumChannelNameLength: UInt = 0
+	public private(set) var maximumKeyLength: UInt = 0
+	public private(set) var maximumKickLength: UInt = 0
+	public private(set) var maximumNicknameLength: UInt = 0
+	public private(set) var maximumTopicLength: UInt = 0
+	public private(set) var maximumModeCount: UInt = 0
+	public private(set) var maximumLineLength: UInt = 0
+	public private(set) var maximumTargets: UInt = 0
+	public private(set) var maximumSilenceEntries: UInt = 0
+	public private(set) var chatHistoryMaximumLines: UInt = 0
+	public private(set) var silenceSupported = false
+	public private(set) var safeListSupported = false
+	public private(set) var whoxSupported = false
+	public private(set) var utf8Only = false
+	public private(set) var channelNamePrefixes: [String] = ["#"]
+	public private(set) var statusMessageModeSymbols: [String] = []
+	public private(set) var extendedBanTypes: [String] = []
+	public private(set) var extendedListTokens: [String] = []
+	public private(set) var clientTagDenyList: [String] = []
 	/// What class the server put each channel mode in, and therefore whether
 	/// the mode carries a parameter.
 	public private(set) var channelModeKinds: [Character: ChannelModeKind] = defaultChannelModeKinds
@@ -152,15 +151,15 @@ public class IRCISupportInfo: NSObject {
 		didSet { publishUserPrefixTable() }
 	}
 
-	@objc public private(set) var banExceptionModeSymbol: String?
-	@objc public private(set) var inviteExceptionModeSymbol: String?
-	@objc public private(set) var botModeSymbol: String?
-	@objc public private(set) var callerIDModeSymbol: String?
-	@objc public private(set) var deafModeSymbol: String?
-	@objc public private(set) var extendedBanPrefix: String?
-	@objc public private(set) var networkName: String?
-	@objc public private(set) var networkNameFormatted: String?
-	@objc public private(set) var caseMapping: IRCISupportInfoCaseMapping = .rfc1459 {
+	public private(set) var banExceptionModeSymbol: String?
+	public private(set) var inviteExceptionModeSymbol: String?
+	public private(set) var botModeSymbol: String?
+	public private(set) var callerIDModeSymbol: String?
+	public private(set) var deafModeSymbol: String?
+	public private(set) var extendedBanPrefix: String?
+	public private(set) var networkName: String?
+	public private(set) var networkNameFormatted: String?
+	public private(set) var caseMapping: IRCISupportInfoCaseMapping = .rfc1459 {
 		didSet { publishUserPrefixTable() }
 	}
 
@@ -182,18 +181,17 @@ public class IRCISupportInfo: NSObject {
 		prepareInitialState()
 	}
 
-	@objc(initWithClient:)
 	public init(client: IRCClient?) {
 		self.client = client
 		super.init()
 		prepareInitialState()
 	}
 
-	@objc public var configurationReceived: Bool {
+	public var configurationReceived: Bool {
 		cachedConfiguration.isEmpty == false
 	}
 
-	@objc public var stringValueForLastUpdate: String? {
+	public var stringValueForLastUpdate: String? {
 		guard let configuration = cachedConfiguration.last else {
 			return nil
 		}
@@ -201,7 +199,7 @@ public class IRCISupportInfo: NSObject {
 		return stringValue(forConfiguration: configuration)
 	}
 
-	@objc public func reset() {
+	public func reset() {
 		cachedConfiguration = []
 		serverAddress = nil
 		userModePrefixPairs = defaultUserModePrefixPairs
@@ -212,7 +210,6 @@ public class IRCISupportInfo: NSObject {
 		}
 	}
 
-	@objc(resettableSettings)
 	public static func resettableSettings() -> [String] {
 		[
 			"AWAYLEN", "BOT", "CALLERID", "CASEMAPPING", "CHANLIMIT", "CHANNELLEN",
@@ -223,7 +220,6 @@ public class IRCISupportInfo: NSObject {
 		]
 	}
 
-	@objc(resetSetting:)
 	public func resetSetting(_ key: String) {
 		let normalizedKey = key.uppercased()
 
@@ -339,7 +335,6 @@ public class IRCISupportInfo: NSObject {
 		}
 	}
 
-	@objc(removeCachedSetting:)
 	public func removeCachedSetting(_ key: String) {
 		var updatedConfiguration: [[String: ISupportValue]] = []
 
@@ -363,7 +358,6 @@ public class IRCISupportInfo: NSObject {
 	/// server has none of these" rather than as the bare token.
 	private static let keysWithMeaningfulEmptyValue: Set<String> = ["CHANTYPES", "PREFIX", "STATUSMSG"]
 
-	@objc(processConfigurationData:)
 	public func processConfigurationData(_ configurationData: String) {
 		let trimmed = configurationData.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -417,7 +411,6 @@ public class IRCISupportInfo: NSObject {
 		}
 	}
 
-	@objc(channelLimitForChannelNamed:)
 	public func channelLimit(forChannelNamed channel: String) -> UInt {
 		if channel.isEmpty {
 			return 0
@@ -430,7 +423,6 @@ public class IRCISupportInfo: NSObject {
 		return channelLimits[prefix] ?? 0
 	}
 
-	@objc(maximumTargetsForCommand:)
 	public func maximumTargets(forCommand command: String) -> UInt {
 		if let limit = maximumTargetsByCommand[command.uppercased()] {
 			return limit
@@ -439,7 +431,6 @@ public class IRCISupportInfo: NSObject {
 		return maximumTargets
 	}
 
-	@objc(chunkTargets:limit:)
 	public static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
 		ISupportTokenParser.chunkTargets(targets, limit: limit)
 	}
@@ -448,17 +439,14 @@ public class IRCISupportInfo: NSObject {
 		maximumListEntries[modeSymbol.character] ?? 0
 	}
 
-	@objc(extendedListSupportsToken:)
 	public func extendedListSupportsToken(_ token: String) -> Bool {
 		extendedListTokens.contains(token.uppercased())
 	}
 
-	@objc(isClientTagDenied:)
 	public func isClientTagDenied(_ tagName: String) -> Bool {
 		ISupportTokenParser.isClientTag(tagName, deniedBy: clientTagDenyList)
 	}
 
-	@objc(descriptionForExtendedBanMask:)
 	public func descriptionForExtendedBanMask(_ mask: String) -> String? {
 		if extendedBanTypes.isEmpty {
 			return nil
@@ -508,7 +496,6 @@ public class IRCISupportInfo: NSObject {
 		return description
 	}
 
-	@objc(localizedDescriptionForExtendedBanType:argument:)
 	public static func localizedDescription(forExtendedBanType type: String, argument: String?) -> String {
 		IRCISupportStrings.extendedBanDescription(type: type, argument: argument)
 	}
@@ -536,12 +523,10 @@ public class IRCISupportInfo: NSObject {
 		ModeParser.parse(modeString, channelModeKinds: channelModeKinds)
 	}
 
-	@objc(casefoldString:)
 	public func casefoldString(_ string: String) -> String {
 		ISupportTokenParser.casefold(string, caseMapping: caseMapping)
 	}
 
-	@objc(modeHasParameter:whenModeIsSet:)
 	public func modeHasParameter(_ modeSymbol: String, whenModeIsSet: Bool) -> Bool {
 		guard let symbol = modeSymbol.first, modeSymbol.count == 1 else {
 			return false
@@ -552,27 +537,22 @@ public class IRCISupportInfo: NSObject {
 		return policy.requiresParameter(whenModeIsSet: whenModeIsSet)
 	}
 
-	@objc(userPrefixForModeSymbol:)
 	public func userPrefix(forModeSymbol modeSymbol: String) -> String? {
 		userModePrefixPairs.first { $0.modeSymbol == modeSymbol }?.character
 	}
 
-	@objc(modeSymbolIsUserPrefix:)
 	public func modeSymbolIsUserPrefix(_ modeSymbol: String) -> Bool {
 		userPrefix(forModeSymbol: modeSymbol) != nil
 	}
 
-	@objc(modeSymbolForUserPrefix:)
 	public func modeSymbol(forUserPrefix character: String) -> String? {
 		userModePrefixPairs.first { $0.character == character }?.modeSymbol
 	}
 
-	@objc(characterIsUserPrefix:)
 	public func characterIsUserPrefix(_ character: String) -> Bool {
 		modeSymbol(forUserPrefix: character) != nil
 	}
 
-	@objc(rankForUserPrefixWithMode:)
 	public func rankForUserPrefix(withMode modeSymbol: String) -> UInt {
 		guard let modeSymbolIndex = userModePrefixPairs.firstIndex(where: { $0.modeSymbol == modeSymbol })
 		else {
@@ -588,7 +568,6 @@ public class IRCISupportInfo: NSObject {
 		return IRCISupportUserModes.highestPrefixRank - UInt(modeSymbolIndex)
 	}
 
-	@objc(extractStatusMessagePrefixFromChannelNamed:)
 	public func extractStatusMessagePrefix(fromChannelNamed channel: String) -> String {
 		extractCharacters(statusMessageModeSymbols, fromChannelNamed: channel)
 	}
@@ -605,12 +584,10 @@ public class IRCISupportInfo: NSObject {
 		ModeInfo(modeSymbol: modeSymbol, modeIsSet: modeIsSet, modeParameter: modeParameter)
 	}
 
-	@objc(isListSupported:)
 	public func isListSupported(_ listType: IRCISupportInfoListType) -> Bool {
 		modeSymbol(forList: listType) != nil
 	}
 
-	@objc(modeSymbolForList:)
 	public func modeSymbol(forList listType: IRCISupportInfoListType) -> String? {
 		switch listType {
 		case .ban:
@@ -630,7 +607,6 @@ public class IRCISupportInfo: NSObject {
 		}
 	}
 
-	@objc(statusMessagePrefixForModeSymbol:)
 	public func statusMessagePrefix(forModeSymbol modeSymbol: String) -> String? {
 		guard let character = userPrefix(forModeSymbol: modeSymbol) else {
 			return nil

@@ -291,7 +291,7 @@ struct IRCClientUserIdentityTests {
 		#expect(sentLines(of: client) == ["AWAY :brb"])
 
 		client.sentLines.removeAllObjects()
-		client.setValue(false, forKey: "isLoggedIn")
+		client.isLoggedIn = false
 		client.connectType = .reconnect
 		client.enableCapability(.preAway)
 		client.sendNextQueuedCapability()
@@ -306,7 +306,7 @@ struct IRCClientUserIdentityTests {
 		client.markAsLoggedIn()
 		client.toggleAwayStatus(true, withComment: "brb")
 		client.sentLines.removeAllObjects()
-		client.setValue(false, forKey: "isLoggedIn")
+		client.isLoggedIn = false
 		client.connectType = .reconnect
 		client.sendNextQueuedCapability()
 

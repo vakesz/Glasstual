@@ -82,7 +82,6 @@ enum CTCPPayload {
 
 public extension IRCClient {
 	@MainActor
-	@objc(sendReaction:toMessageIdentifier:inChannel:)
 	@discardableResult
 	func sendReaction(_ emoji: String, toMessageIdentifier messageIdentifier: String, in channel: IRCChannel) -> Bool {
 		guard emoji.isEmpty == false, messageIdentifier.isEmpty == false, channel.isUtility == false else {
@@ -109,29 +108,24 @@ public extension IRCClient {
 		return true
 	}
 
-	@objc(sendPrivmsg:toChannel:)
 	func sendPrivmsg(_ message: String, to channel: IRCChannel) {
 		sendText(NSAttributedString(string: message), as: .privmsg, to: channel)
 	}
 
-	@objc(sendAction:toChannel:)
 	func sendAction(_ message: String, to channel: IRCChannel) {
 		sendText(NSAttributedString(string: message), as: .privmsgAction, to: channel)
 	}
 
-	@objc(sendNotice:toChannel:)
 	func sendNotice(_ message: String, to channel: IRCChannel) {
 		sendText(NSAttributedString(string: message), as: .notice, to: channel)
 	}
 
-	@objc(sendPrivmsgToSelectedChannel:)
 	@MainActor
 	func sendPrivmsgToSelectedChannel(_ message: String) {
 		guard let channel = output?.selectedChannel(on: self) else { return }
 		sendPrivmsg(message, to: channel)
 	}
 
-	@objc(sendCTCPQuery:command:text:)
 	func sendCTCPQuery(_ nickname: String, command: String, text: String?) {
 		send(
 			"PRIVMSG",
@@ -139,7 +133,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(sendCTCPReply:command:text:)
 	func sendCTCPReply(_ nickname: String, command: String, text: String?) {
 		send(
 			"NOTICE",
@@ -147,7 +140,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(sendCTCPPing:)
 	func sendCTCPPing(_ nickname: String) {
 		sendCTCPQuery(nickname, command: "PING", text: String(Date().timeIntervalSince1970))
 	}

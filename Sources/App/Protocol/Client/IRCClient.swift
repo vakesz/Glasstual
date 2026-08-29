@@ -55,17 +55,52 @@ public extension Notification.Name {
 	static let IRCClientUserNicknameChanged = Self("IRCClientUserNicknameChangedNotification")
 }
 
-@objc(IRCClient)
 open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	#if DEBUG
 		var linePrintObserver: ((IRCLinePrintRequest) -> Void)?
 	#endif
 
+	/* The three seams a test double replaces live in the class body rather than
+	 in the extensions that hold the rest of the transport and dispatch, because
+	 Swift only dispatches a class-body method through the vtable. They used to
+	 be `@objc` in an extension, which made the override work through the
+	 Objective-C runtime instead. */
+
+	/// Writes one already-framed line to the server.
+	public func sendLine(_ line: String) {
+		guard isConnected else {
+			printDebugInformation(toConsole: IRCTransportStrings.notConnected)
+			return
+		}
+
+		socket?.sendLine(line)
+		world?.noteMessageSent(length: UInt(line.count))
+	}
+
+	/// Sends one `CAP` subcommand, with its argument when the subcommand takes
+	/// one.
+	public func sendCapability(_ subcommand: String, data: String?) {
+		guard isConnected else { return }
+
+		var arguments = [subcommand]
+
+		if let data {
+			arguments.append(data)
+		}
+
+		send("CAP", arguments: arguments)
+	}
+
+	/// Hands one parsed message to the inbound state machine.
+	public func processIncomingMessage(_ message: Message) {
+		processIncomingMessageOnMainActor(message)
+	}
+
 	public var config: IRCClientConfig {
 		didSet { refreshDescription() }
 	}
 
-	@objc public dynamic lazy var supportInfo = IRCISupportInfo(client: self)
+	public lazy var supportInfo = IRCISupportInfo(client: self)
 	/** The ISUPPORT prefix and case-mapping values, republished by `supportInfo`
 	 whenever they change. Channel members rank, compare and mark themselves on
 	 the printing queue and must not read the live table for them. */
@@ -84,30 +119,32 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 was still connected to one of them. They are removed once the connection
 	 ends, so the live connection keeps its password until then. */
 	var retiredServerKeychainItems: Set<KeychainItem> = []
-	@objc public dynamic var isConnecting = false
-	@objc public dynamic var isConnected = false {
+	public var isConnecting = false
+	public var isConnected = false {
 		didSet { refreshDescription() }
 	}
 
+	/// KVO: `PluginHostAdapter` watches this through `publisher(for:)` to tell
+	/// plugins when a client finished registering.
 	@objc public dynamic var isLoggedIn = false {
 		didSet { refreshDescription() }
 	}
 
-	@objc public dynamic var isQuitting = false
-	@objc dynamic var isDisconnecting = false
-	@objc public dynamic var userIsAway = false
-	@objc public dynamic var userIsIRCop = false
-	@objc public dynamic var userIsIdentifiedWithNickServ = false
-	@objc public dynamic var isWaitingForNickServ = false
-	@objc public dynamic var serverHasNickServ = false
-	@objc public dynamic var lastMessageReceived: TimeInterval = 0
-	@objc public dynamic var lastMessageServerTime: TimeInterval = 0 {
+	public var isQuitting = false
+	var isDisconnecting = false
+	public var userIsAway = false
+	public var userIsIRCop = false
+	public var userIsIdentifiedWithNickServ = false
+	public var isWaitingForNickServ = false
+	public var serverHasNickServ = false
+	public var lastMessageReceived: TimeInterval = 0
+	public var lastMessageServerTime: TimeInterval = 0 {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: lastMessageServerTime) }
 	}
 
-	@objc public dynamic var userHostmask: String?
+	public var userHostmask: String?
 	private var userNicknameStorage: String?
-	@objc public dynamic var userNickname: String {
+	public var userNickname: String {
 		get { userNicknameStorage ?? config.nickname }
 		set { userNicknameStorage = newValue }
 	}
@@ -119,7 +156,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		userNicknameStorage = nil
 	}
 
-	@objc public dynamic var preAwayUserNickname: String?
+	public var preAwayUserNickname: String?
 	/** Several features install a post-disconnect action (reconnect, destroy-after-quit,
 	 STS upgrade, server redirect). A single slot meant whichever installed last silently
 	 replaced the others; every registered action now runs. */
@@ -128,10 +165,16 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 cannot have a stale block act on the new session. */
 	var pendingDisconnectTask: Task<Void, Never>?
 	var pendingConnectionTask: Task<Void, Never>?
-	@objc public dynamic var connectType: IRCClientConnectMode = .normal
-	@objc public dynamic var disconnectType: IRCClientDisconnectMode = .normal
+	/// The post-registration work the client used to schedule with
+	/// `perform(_:afterDelay:)`: the ZNC autojoin retry, the first ISON sweep,
+	/// and one rejoin per channel the server kicked us out of.
+	var postRegistrationAutoJoinTask: Task<Void, Never>?
+	var trackedUserPopulationTask: Task<Void, Never>?
+	var rejoinTasks: [String: Task<Void, Never>] = [:]
+	public var connectType: IRCClientConnectMode = .normal
+	public var disconnectType: IRCClientDisconnectMode = .normal
 	public var capabilities: ClientIRCv3SupportedCapability = []
-	@objc dynamic var socket: Connection?
+	var socket: Connection?
 	var capabilityNegotiationIsPaused = false
 	/// Capability names still waiting to be sent, in the order they were queued.
 	var pendingCapabilityRequests: [String] = []
@@ -149,15 +192,15 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var temporaryServerPortOverride: UInt16 = 0
 	var performedSTSUpgrade = false
 	var forceSecuredConnectionOnNextConnect = false
-	@objc dynamic var sidebarItemIsExpanded = false {
+	var sidebarItemIsExpanded = false {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: sidebarItemIsExpanded) }
 	}
 
 	var isTerminating = false
 	var configurationIsStale = false
 	var isPerformingConnectCommands = false
-	@objc public dynamic var isAutojoined = false
-	@objc public dynamic var isAutojoining = false
+	public var isAutojoined = false
+	public var isAutojoining = false
 	var reconnectEnabledBecauseOfSleepMode = false
 	var timeoutWarningShownToUser = false
 	var invokingISONCommandForFirstTime = false
@@ -175,10 +218,10 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 hit and falls back to a scan, because a rename or a new CASEMAPPING can
 	 arrive without either. */
 	var channelsByFoldedName: [String: IRCChannel] = [:]
-	@objc public dynamic weak var lastSelectedChannel: IRCChannel?
+	public weak var lastSelectedChannel: IRCChannel?
 	var addressBookMatchCache: AddressBookMatchCache!
 	var collapsedNetsplitBatch: Any?
-	@objc public dynamic var isConnectedToZNC = false
+	public var isConnectedToZNC = false
 	var successfulConnects: UInt = 0
 	var isonTimer: ClientTimer!
 	var whoTimer: ClientTimer!
@@ -201,7 +244,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var logFile: FileLogger?
 	/** Whether a logging session banner has been written and not yet closed. A line
 	 counter cannot express this: writing the banner is itself a write. */
-	@objc public dynamic var logFileSessionIsOpen = false
+	public var logFileSessionIsOpen = false
 	var chatHistoryPrependChannel: IRCChannel?
 	var chatHistoryPrependedLines: [LogLine]?
 	var batchMessages: MessageBatchContainer!
@@ -213,6 +256,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var readMarkerSentDates: [String: Date] = [:]
 	var readMarkerPendingChannels: [IRCChannel] = []
 	var readMarkerTimer: ClientTimer!
+	private let notifications = NotificationSubscriptions()
 	/// Nicknames seen in the netsplit batch being collapsed, per channel
 	/// identifier, in the order they arrived.
 	var collapsedNetsplitNicknames: [String: [String]]?
@@ -269,12 +313,14 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	}
 
 	isolated deinit {
-		NotificationCenter.default.removeObserver(self)
+		notifications.cancelAll()
 		[
 			autojoinTimer, autojoinNextJoinTimer, autojoinDelayedWarningTimer,
 			isonTimer, pongTimer, reconnectTimer, retryTimer, whoTimer, readMarkerTimer,
 		].forEach { $0?.stop() }
-		NSObject.cancelPreviousPerformRequests(withTarget: self)
+		postRegistrationAutoJoinTask?.cancel()
+		trackedUserPopulationTask?.cancel()
+		rejoinTasks.values.forEach { $0.cancel() }
 	}
 
 	/** `NSObject.description` is nonisolated, so it cannot read the main-actor
@@ -348,12 +394,9 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		whoTimer = makeTimer { $0.onWhoTimer() }
 		readMarkerTimer = makeTimer { $0.onReadMarkerTimer() }
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(willDestroyChannel(_:)),
-			name: .ircWorldWillDestroyChannel,
-			object: nil
-		)
+		notifications.observe(.ircWorldWillDestroyChannel) { [weak self] notification in
+			self?.willDestroyChannel(notification)
+		}
 	}
 
 	private func makeTimer(_ action: @MainActor @escaping (IRCClient) -> Void) -> ClientTimer {

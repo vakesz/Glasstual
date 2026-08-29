@@ -39,31 +39,31 @@
 import Foundation
 
 public extension IRCClient {
-	@objc var networkName: String? {
+	var networkName: String? {
 		supportInfo.networkNameFormatted
 	}
 
-	@objc var networkNameAlt: String {
+	var networkNameAlt: String {
 		networkName ?? config.connectionName
 	}
 
-	@objc var serverAddress: String? {
+	var serverAddress: String? {
 		supportInfo.serverAddress ?? socket?.config.serverAddress ?? server?.serverAddress
 	}
 
-	@objc var fileTransferController: FileTransferDialog {
+	var fileTransferController: FileTransferDialog {
 		SharedApplication.sharedFileTransferDialog()
 	}
 
-	@objc var isReconnecting: Bool {
+	var isReconnecting: Bool {
 		reconnectTimer.isActive
 	}
 
-	@objc var isSecured: Bool {
+	var isSecured: Bool {
 		socket?.isSecured ?? false
 	}
 
-	@objc var zncBouncerCertificateChainData: Data? {
+	var zncBouncerCertificateChainData: Data? {
 		guard isConnectedToZNC,
 		      zncBouncerIsSendingCertificateInfo == false,
 		      let certificateData = zncBouncerCertificateChainDataMutable

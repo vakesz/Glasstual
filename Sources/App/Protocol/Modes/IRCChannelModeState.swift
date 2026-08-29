@@ -38,19 +38,17 @@
 
 import Foundation
 
-@objc(IRCChannelMode)
 public final class ChannelModeState: NSObject {
 	private weak var client: IRCClient?
 	private weak var channel: IRCChannel?
 
-	@objc public private(set) var modes: ChannelModeContainer
+	public private(set) var modes: ChannelModeContainer
 
 	@available(*, unavailable)
 	override public init() {
 		fatalError("Use ChannelModeState.init(channel:)")
 	}
 
-	@objc(initWithChannel:)
 	public init(channel: IRCChannel) {
 		guard let associatedClient = channel.associatedClient else {
 			fatalError("ChannelModeState requires an associated client")
@@ -75,7 +73,6 @@ public final class ChannelModeState: NSObject {
 		return parsedModes
 	}
 
-	@objc(getChangeCommand:)
 	public func changeCommand(for modes: ChannelModeContainer) -> String {
 		let modesSetOld = self.modes.modes
 		let modesSetNew = modes.modes
@@ -130,12 +127,10 @@ public final class ChannelModeState: NSObject {
 		return modeRemoveString + modeAddString + modeRemoveParamString + modeAddParamString
 	}
 
-	@objc
 	public func clear() {
 		modes.clear()
 	}
 
-	@objc(modeIsDefined:)
 	public func modeIsDefined(_ modeSymbol: String) -> Bool {
 		modes.modeIsDefined(modeSymbol)
 	}
@@ -144,11 +139,11 @@ public final class ChannelModeState: NSObject {
 		modes.modeInfo(for: modeSymbol)
 	}
 
-	@objc public var string: String {
+	public var string: String {
 		string(maskingPassword: false)
 	}
 
-	@objc public var stringWithMaskedPassword: String {
+	public var stringWithMaskedPassword: String {
 		string(maskingPassword: true)
 	}
 
@@ -186,7 +181,6 @@ public final class ChannelModeState: NSObject {
 	}
 }
 
-@objc(IRCChannelModeContainer)
 public final class ChannelModeContainer: NSObject, NSCopying {
 	private weak var client: IRCClient?
 	private var modeObjects: [String: ModeInfo] = [:]
@@ -196,7 +190,6 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		super.init()
 	}
 
-	@objc
 	public func clear() {
 		modeObjects.removeAll()
 	}
@@ -228,7 +221,6 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		return true
 	}
 
-	@objc(modeIsDefined:)
 	public func modeIsDefined(_ modeSymbol: String) -> Bool {
 		modes[modeSymbol] != nil
 	}
@@ -245,12 +237,10 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		}
 	}
 
-	@objc(changeMode:modeIsSet:)
 	public func changeMode(_ modeSymbol: String, modeIsSet: Bool) {
 		changeMode(modeSymbol, modeIsSet: modeIsSet, modeParameter: nil)
 	}
 
-	@objc(changeMode:modeIsSet:modeParameter:)
 	public func changeMode(_ modeSymbol: String, modeIsSet: Bool, modeParameter: String?) {
 		guard modeIsPermitted(modeSymbol) else {
 			return
