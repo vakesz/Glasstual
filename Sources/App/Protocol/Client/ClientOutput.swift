@@ -61,6 +61,12 @@ protocol TreeItemPresentation: AnyObject {
 	func mark()
 	func mark(at date: Date)
 	func noteReaction(_ emoji: String, fromNickname nickname: String, toMessageIdentifier identifier: String)
+	func updateDeliveryState(
+		forLineNumber lineNumber: String,
+		state: TVCLogLineDeliveryState,
+		messageIdentifier: String?,
+		reason: String?
+	)
 	func prependHistoricLogLines(_ logLines: [LogLine])
 	func evaluateFunction(_ function: String, withArguments arguments: [Any]?, onQueue: Bool)
 

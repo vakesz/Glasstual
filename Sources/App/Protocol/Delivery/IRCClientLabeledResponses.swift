@@ -148,16 +148,11 @@ public extension IRCClient {
 		pendingDeliveries.removeValue(forKey: label)
 		guard let lineNumber = delivery.lineNumber else { return }
 
-		let arguments: [Any] = [
-			lineNumber,
-			LogLine.string(for: state) ?? "",
-			messageIdentifier ?? NSNull(),
-			reason ?? NSNull(),
-		]
-		delivery.channel?.presentation?.evaluateFunction(
-			"_Glasstual.lineDeliveryStateChanged",
-			withArguments: arguments,
-			onQueue: true
+		delivery.channel?.presentation?.updateDeliveryState(
+			forLineNumber: lineNumber,
+			state: state,
+			messageIdentifier: messageIdentifier,
+			reason: reason
 		)
 	}
 

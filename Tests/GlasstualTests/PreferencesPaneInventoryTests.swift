@@ -110,6 +110,42 @@ struct PreferencesPaneInventoryTests {
 			#expect(section.subPages.first?.identifier == section.identifier.pane?.rawValue)
 		}
 	}
+
+	@Test("Changing sections replaces the section and sub-page together")
+	func selectionChangesAtomically() {
+		let model = PreferencesPaneModel()
+		model.sections = PreferencesController.sections()
+		var changes: [PreferencesSelection] = []
+		model.onSelectionChange = { changes.append($0) }
+
+		let selection = PreferencesSelection(
+			sectionIdentifier: .advanced,
+			subPageIdentifier: PreferencesAdvancedGroup.channels.identifier
+		)
+
+		#expect(model.select(selection))
+		#expect(model.selection == selection)
+		#expect(model.currentSection?.subPages.contains { $0.identifier == model.selection.subPageIdentifier } == true)
+		#expect(changes == [selection])
+	}
+
+	@Test("An invalid section and sub-page pair is rejected without publishing")
+	func invalidSelectionIsRejected() {
+		let model = PreferencesPaneModel()
+		model.sections = PreferencesController.sections()
+		let original = model.selection
+		var changeCount = 0
+		model.onSelectionChange = { _ in changeCount += 1 }
+
+		let invalid = PreferencesSelection(
+			sectionIdentifier: .general,
+			subPageIdentifier: PreferencesAdvancedGroup.channels.identifier
+		)
+
+		#expect(model.select(invalid) == false)
+		#expect(model.selection == original)
+		#expect(changeCount == 0)
+	}
 }
 
 /// The bindings the panes hand to their controls read and write the key store.

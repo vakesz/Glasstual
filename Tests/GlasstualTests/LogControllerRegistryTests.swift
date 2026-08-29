@@ -91,6 +91,21 @@ struct LogControllerRegistryTests {
 		#expect(context.registry.existingController(for: context.client) === controller)
 		#expect(context.client.presentation === controller)
 		#expect(context.client.logController === controller)
+		#expect(controller.backingView == nil)
+	}
+
+	@Test("A backing view is made only when the controller is asked to show one")
+	func backingViewIsLazyAndStable() {
+		let context = RegistryFixture()
+		let controller = context.registry.controller(for: context.client)
+
+		#expect(controller.backingView == nil)
+
+		let first = controller.ensureBackingView()
+		let second = controller.ensureBackingView()
+
+		#expect(controller.backingView === first)
+		#expect(second === first)
 	}
 
 	@Test("Asking twice returns the same controller")

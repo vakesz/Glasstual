@@ -480,11 +480,11 @@ public nonisolated extension PluginManager { // nonisolated: pure
 	private func supportedAppleScriptCommands(returnPathInfo: Bool) -> Any {
 		let forbiddenCommands = listOfForbiddenCommandNames
 
-		var scriptPaths: [String] = []
+		var scriptLocations: [(path: String, isBundled: Bool)] = []
 		if let customScripts = PathInfo.customScripts {
-			scriptPaths.append(customScripts)
+			scriptLocations.append((customScripts, false))
 		}
-		scriptPaths.append(PathInfo.bundledScripts)
+		scriptLocations.append((PathInfo.bundledScripts, true))
 
 		let returnValue: NSObject = if returnPathInfo {
 			NSMutableDictionary()
@@ -492,31 +492,38 @@ public nonisolated extension PluginManager { // nonisolated: pure
 			NSMutableArray()
 		}
 
-		for path in scriptPaths {
+		for location in scriptLocations {
+			let path = location.path
 			guard let pathFiles = try? FileManager.default.contentsOfDirectory(atPath: path) else {
 				continue
 			}
 
-			for file in pathFiles {
+			for file in pathFiles where file.hasPrefix(".") == false {
 				let filePath = (path as NSString).appendingPathComponent(file)
-				let fileExtension = (file as NSString).pathExtension
+				let fileExtension = (file as NSString).pathExtension.lowercased()
 				let fileWithoutExtension = (file as NSString).deletingPathExtension
 				let command = fileWithoutExtension.lowercased()
 
 				let executable = FileManager.default.isExecutableFile(atPath: filePath)
 
 				if executable == false,
-				   fileExtension != ResourceDocumentType.scriptFilenameExtension
+				   fileExtension != ResourceDocumentType.scriptFilenameExtension.lowercased()
 				{
-					Self.logger.info(
-						"WARNING: File “\(file, privacy: .public)“ found in unsupervised script folder but it isn't AppleScript or an executable. It will be ignored."
-					)
+					if location.isBundled {
+						Self.logger.error(
+							"Bundled script resource “\(file, privacy: .public)“ is neither AppleScript nor executable"
+						)
+					} else {
+						Self.logger.info(
+							"Ignoring unsupported custom script file “\(file, privacy: .public)“"
+						)
+					}
 					continue
 				}
 
 				if forbiddenCommands.contains(command) {
 					Self.logger.info(
-						"WARNING: The command “\(fileWithoutExtension, privacy: .public)“ exists as a script file, but it is being ignored because the command name is forbidden."
+						"Ignoring script command “\(fileWithoutExtension, privacy: .public)“ because its command name is reserved"
 					)
 					continue
 				}

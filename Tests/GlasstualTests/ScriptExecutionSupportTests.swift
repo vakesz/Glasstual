@@ -104,4 +104,22 @@ struct ScriptExecutionSupportTests {
 		// fork, which is enough to tell the two spellings apart.
 		#expect(source?.contains(ScriptExecutionSupport.handlerName) == true)
 	}
+
+	@Test("The bundled scripts folder contains only commands the loader can execute")
+	func bundledScriptsContainOnlyLoadableCommands() throws {
+		let directory = try #require(Bundle.main.resourceURL?.appendingPathComponent("Bundled Scripts"))
+		let entries = try FileManager.default.contentsOfDirectory(
+			at: directory,
+			includingPropertiesForKeys: [.isExecutableKey],
+			options: [.skipsHiddenFiles]
+		)
+
+		for entry in entries {
+			let isScript = entry.pathExtension.caseInsensitiveCompare(
+				ResourceDocumentType.scriptFilenameExtension
+			) == .orderedSame
+			let isExecutable = try entry.resourceValues(forKeys: [.isExecutableKey]).isExecutable == true
+			#expect(isScript || isExecutable, "Unsupported bundled script resource: \(entry.lastPathComponent)")
+		}
+	}
 }

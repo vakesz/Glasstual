@@ -205,8 +205,16 @@ extension PreferencesController: PreferencesPaneActionHandler {
 	}
 
 	func openCustomAddOnsFolder() {
-		guard let url = PathInfo.groupContainerApplicationSupportURL else { return }
-		NSWorkspace.shared.open(url)
+		if let scriptsURL = PathInfo.customScriptsURL,
+		   FileManager.default.fileExists(atPath: scriptsURL.path)
+		{
+			NSWorkspace.shared.open(scriptsURL)
+		} else if let applicationScriptsURL = PathInfo.userApplicationScriptsURL {
+			/* A sandboxed app may read its Application Scripts directory but may
+			 not create it. Finder gives the user the right place to create the
+			 bundle-ID folder named in the pane's installation note. */
+			NSWorkspace.shared.open(applicationScriptsURL)
+		}
 	}
 
 	// MARK: - Inline media
