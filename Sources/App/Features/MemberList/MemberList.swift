@@ -49,42 +49,59 @@ public protocol MemberListKeyEventDelegate: AnyObject {
 	func memberListKeyDown(_ event: NSEvent)
 }
 
+/// The identity of one run of members that share a rank.
+///
+/// The data source sections the list by this. Ranks are contiguous once the
+/// members are sorted, so `ordinal` is normally zero for every section; it is
+/// carried anyway because a snapshot holding two equal section identifiers
+/// traps, and a member that arrives ahead of its sort must not be able to take
+/// the window down.
+public nonisolated struct MemberListSectionIdentifier: Hashable, Sendable { // nonisolated: value
+	public let rank: UserRank
+	public let ordinal: Int
+}
+
+/// The header row a section draws, and the value its cell view reads.
 @objc(TVCMemberListSection)
 public final nonisolated class MemberListSection: NSObject { // nonisolated: value
-	public fileprivate(set) var rank: UserRank = .none
-	@objc public fileprivate(set) var title = ""
-	@objc public fileprivate(set) var memberRange = NSRange(location: 0, length: 0)
+	public let identifier: MemberListSectionIdentifier
+	@objc public let title: String
+
+	public var rank: UserRank {
+		identifier.rank
+	}
 
 	@objc(rank)
 	public var objectiveCRankRawValue: UInt {
 		rank.rawValue
 	}
 
-	override public init() {
-		super.init()
-	}
-
-	fileprivate init(rank: UserRank, title: String, memberRange: NSRange) {
-		self.rank = rank
+	fileprivate init(identifier: MemberListSectionIdentifier, title: String) {
+		self.identifier = identifier
 		self.title = title
-		self.memberRange = memberRange
 		super.init()
 	}
 
 	override public var description: String {
-		"<TVCMemberListSection \(title) \(NSStringFromRange(memberRange))>"
+		"<TVCMemberListSection \(title)>"
 	}
 }
 
+private typealias MemberListDataSource =
+	NSTableViewDiffableDataSource<MemberListSectionIdentifier, User.ID>
+private typealias MemberListSnapshot =
+	NSDiffableDataSourceSnapshot<MemberListSectionIdentifier, User.ID>
+
 @objc(TVCMemberList)
-public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDelegate, AppearanceObserving {
+public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObserving {
 	@objc public var isHiddenByUser = false
 	public weak var keyDelegate: (any MemberListKeyEventDelegate)?
 
 	@IBOutlet public private(set) var memberListUserInfoPopover: MemberListUserInfoPopover!
 	@IBOutlet public private(set) var contentController: IRCChannelMemberListController!
 
-	private var sections: [MemberListSection] = []
+	private var memberDataSource: MemberListDataSource?
+	private var sectionHeadersAreShown = false
 	private var userPopoverTrackingArea: NSTrackingArea?
 	private var userPopoverMouseIsInView = false
 	private var userPopoverTask: Task<Void, Never>?
@@ -93,10 +110,6 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	private var members: [ChannelUser] {
 		contentController?.arrangedObjects ?? []
-	}
-
-	private var isGrouped: Bool {
-		sections.count > 1
 	}
 
 	private var hasConfigured = false
@@ -114,10 +127,61 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 		hasConfigured = true
 
-		dataSource = self
+		let memberDataSource = makeDataSource()
+		self.memberDataSource = memberDataSource
+		dataSource = memberDataSource
 		delegate = self
 		updateTrackingAreas()
 		registerForDraggedTypes([.fileURL])
+		applyMembers()
+	}
+
+	// MARK: - Data source
+
+	private func makeDataSource() -> MemberListDataSource {
+		let dataSource = MemberListDataSource(tableView: self) { [weak self] tableView, _, _, userID in
+			let view = tableView.makeView(withIdentifier: memberViewIdentifier, owner: self)
+
+			guard let cell = view as? MemberListCell else {
+				return view ?? NSView()
+			}
+
+			/* Cell views used to configure themselves in `awakeFromNib`, which is
+			 nonisolated; here the main actor is a fact rather than an assumption. */
+			cell.configure()
+			cell.objectValue = self?.member(withID: userID)
+
+			return cell
+		}
+
+		/* Only member rows get a row view; the data source draws the section
+		 headers with its own group-styled row, which is what the delegate used
+		 to ask for by answering `nil`. */
+		dataSource.rowViewProvider = { [weak self] _, _, _ in
+			guard let self else {
+				return NSTableRowView()
+			}
+
+			return MemberListRowCell(memberList: self)
+		}
+
+		return dataSource
+	}
+
+	private func makeSectionHeaderViewProvider()
+		-> (NSTableView, Int, MemberListSectionIdentifier) -> NSView
+	{
+		{ [weak self] tableView, _, identifier in
+			let view = tableView.makeView(withIdentifier: sectionHeaderViewIdentifier, owner: self)
+
+			guard let cell = view as? MemberListHeaderCell else {
+				return view ?? NSView()
+			}
+
+			cell.objectValue = MemberList.makeSection(identifier: identifier)
+
+			return cell
+		}
 	}
 
 	override public func viewDidMoveToWindow() {
@@ -187,134 +251,150 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		contentController.assign(to: channel)
 	}
 
+	private func member(withID id: User.ID) -> ChannelUser? {
+		contentController?.member(withID: id)
+	}
+
 	@objc(itemAtRow:)
 	public func item(atRow row: Int) -> Any? {
 		/* -1 is what the table reports for "no row", so it is an answer, not a
 		 programming error. */
-		guard row >= 0 else {
+		guard row >= 0, let id = memberDataSource?.itemIdentifier(forRow: row) else {
 			return nil
 		}
 
-		let memberIndex = memberIndex(forRow: row)
-		guard members.indices.contains(memberIndex) else {
-			return nil
-		}
-
-		return members[memberIndex]
+		return member(withID: id)
 	}
 
 	@objc(rowForItem:)
 	public func row(forItem item: Any?) -> Int {
-		guard let item else {
-			return -1
-		}
-
 		guard let member = item as? ChannelUser,
-		      let index = members.firstIndex(where: { $0.id == member.id })
+		      let row = memberDataSource?.row(forItemIdentifier: member.id)
 		else {
 			return -1
 		}
 
-		return rowForMember(at: index)
+		return row
 	}
 
-	@objc
-	public func membersReplaced() {
-		rebuildSections()
-		reloadData()
+	/// Rebuilds the list from the members the controller holds.
+	///
+	/// The table used to be told what changed — a row inserted here, a section
+	/// header dropped there — and kept a parallel array of section ranges in
+	/// step by hand, with four ways for the two to disagree. The data source
+	/// diffs two snapshots instead, so a caller only has to say that the
+	/// membership moved.
+	public func membersChanged() {
+		applyMembers()
 	}
 
-	@objc(memberInsertedAtIndex:)
-	public func memberInserted(at memberIndex: UInt) {
-		let memberIndex = Int(memberIndex)
-		guard members.indices.contains(memberIndex) else {
-			membersReplaced()
+	private func applyMembers() {
+		guard let memberDataSource else {
 			return
 		}
 
-		let rank = Self.sectionRank(for: members[memberIndex])
-		let wasGrouped = isGrouped
-		var absorbingSectionIndex: Int?
-		var insertionIndex = sections.endIndex
+		let snapshot = makeSnapshot()
+		let showSectionHeaders = snapshot.numberOfSections > 1
 
-		for (index, section) in sections.enumerated() {
-			if memberIndex < section.memberRange.location {
-				insertionIndex = index
+		/* Members of a single rank are drawn as a flat list, and the data source
+		 gives every section it has a header row, so whether the provider is
+		 installed is what decides. */
+		if showSectionHeaders != sectionHeadersAreShown {
+			sectionHeadersAreShown = showSectionHeaders
+			memberDataSource.sectionHeaderViewProvider =
+				showSectionHeaders ? makeSectionHeaderViewProvider() : nil
+		}
+
+		let selectedMembers = selectedMemberIDs
+
+		memberDataSource.apply(snapshot, animatingDifferences: false)
+
+		restoreSelection(to: selectedMembers)
+		refreshVisibleCellValues()
+	}
+
+	private func makeSnapshot() -> MemberListSnapshot {
+		var snapshot = MemberListSnapshot()
+		var ordinalsByRank: [UserRank: Int] = [:]
+		var currentSection: MemberListSectionIdentifier?
+		var admitted: Set<User.ID> = []
+
+		for member in members {
+			let rank = Self.sectionRank(for: member)
+
+			if currentSection?.rank != rank {
+				let ordinal = ordinalsByRank[rank, default: 0]
+				ordinalsByRank[rank] = ordinal + 1
+
+				let section = MemberListSectionIdentifier(rank: rank, ordinal: ordinal)
+				snapshot.appendSections([section])
+				currentSection = section
+			}
+
+			/* One channel holds one member per person, so a repeat is a bug
+			 upstream rather than something to draw twice — and a snapshot with
+			 two equal item identifiers traps. */
+			guard let currentSection, admitted.insert(member.id).inserted else {
+				continue
+			}
+
+			snapshot.appendItems([member.id], toSection: currentSection)
+		}
+
+		return snapshot
+	}
+
+	// MARK: - Selection
+
+	private var selectedMemberIDs: [User.ID] {
+		guard let memberDataSource else {
+			return []
+		}
+
+		return selectedRowIndexes.compactMap { memberDataSource.itemIdentifier(forRow: $0) }
+	}
+
+	/// Puts the selection back on the people who held it.
+	///
+	/// Applying a snapshot clears the selection outright — it is held by row,
+	/// and every row below a join or a part has moved — so the people are
+	/// remembered and looked up again afterwards.
+	private func restoreSelection(to memberIDs: [User.ID]) {
+		guard let memberDataSource, memberIDs.isEmpty == false else {
+			return
+		}
+
+		let rows = IndexSet(memberIDs.compactMap { memberDataSource.row(forItemIdentifier: $0) })
+
+		guard rows != selectedRowIndexes else {
+			return
+		}
+
+		selectRowIndexes(rows, byExtendingSelection: false)
+	}
+
+	/// Hands every on-screen cell the value it now draws.
+	///
+	/// A diff moves rows by identity; it does not tell a cell that the member
+	/// behind an unchanged identity was edited. Restamping what is visible is
+	/// cheaper than tracking which edits a cell has already seen.
+	private func refreshVisibleCellValues() {
+		let visible = rows(in: visibleRect)
+
+		guard visible.length > 0 else {
+			return
+		}
+
+		for row in visible.location ..< NSMaxRange(visible) {
+			switch view(atColumn: 0, row: row, makeIfNecessary: false) {
+			case let cell as MemberListCell:
+				cell.objectValue = item(atRow: row)
+			case let header as MemberListHeaderCell:
+				header.objectValue = section(atRow: row)
+			default:
 				break
 			}
-
-			if memberIndex <= NSMaxRange(section.memberRange) {
-				if section.rank == rank {
-					absorbingSectionIndex = index
-					break
-				}
-
-				if memberIndex < NSMaxRange(section.memberRange) {
-					membersReplaced()
-					return
-				}
-
-				insertionIndex = index + 1
-			}
 		}
-
-		if let sectionIndex = absorbingSectionIndex {
-			let section = sections[sectionIndex]
-			section.memberRange.length += 1
-			shiftSections(after: sectionIndex, by: 1)
-			insertRows(at: IndexSet(integer: rowForMember(at: memberIndex)), withAnimation: [])
-			return
-		}
-
-		let section = Self.makeSection(rank: rank, memberRange: NSRange(location: memberIndex, length: 1))
-		sections.insert(section, at: insertionIndex)
-		shiftSections(after: insertionIndex, by: 1)
-
-		var rows = IndexSet(integer: rowForMember(at: memberIndex))
-
-		if isGrouped {
-			if wasGrouped {
-				rows.insert(headerRow(forSectionAt: insertionIndex))
-			} else {
-				for sectionIndex in sections.indices {
-					rows.insert(headerRow(forSectionAt: sectionIndex))
-				}
-			}
-		}
-
-		insertRows(at: rows, withAnimation: [])
-	}
-
-	@objc(memberRemovedAtIndex:)
-	public func memberRemoved(at memberIndex: UInt) {
-		let memberIndex = Int(memberIndex)
-		guard let sectionIndex = sectionIndex(containingMemberAt: memberIndex) else {
-			membersReplaced()
-			return
-		}
-
-		let section = sections[sectionIndex]
-		let wasGrouped = isGrouped
-		var rows = IndexSet(integer: rowForMember(at: memberIndex))
-
-		if section.memberRange.length == 1 {
-			if wasGrouped {
-				rows.insert(headerRow(forSectionAt: sectionIndex))
-
-				if sections.count == 2 {
-					let survivingSection = sectionIndex == 0 ? 1 : 0
-					rows.insert(headerRow(forSectionAt: survivingSection))
-				}
-			}
-
-			sections.remove(at: sectionIndex)
-			shiftSections(after: sectionIndex - 1, by: -1)
-		} else {
-			section.memberRange.length -= 1
-			shiftSections(after: sectionIndex, by: -1)
-		}
-
-		removeRows(at: rows, withAnimation: [])
 	}
 
 	// MARK: - Sections and row geometry
@@ -331,122 +411,35 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		MainWindowStrings.MemberList.sectionTitle(for: rank)
 	}
 
-	private static func makeSection(rank: UserRank, memberRange: NSRange) -> MemberListSection {
-		MemberListSection(rank: rank, title: title(forSectionRank: rank), memberRange: memberRange)
+	private static func makeSection(identifier: MemberListSectionIdentifier) -> MemberListSection {
+		MemberListSection(identifier: identifier, title: title(forSectionRank: identifier.rank))
 	}
 
-	private func rebuildSections() {
-		var rebuilt: [MemberListSection] = []
-
-		for (index, member) in members.enumerated() {
-			let rank = Self.sectionRank(for: member)
-
-			if let current = rebuilt.last, current.rank == rank {
-				current.memberRange.length += 1
-			} else {
-				rebuilt.append(
-					Self.makeSection(rank: rank, memberRange: NSRange(location: index, length: 1))
-				)
-			}
+	/// The section drawn on `row`, or `nil` when the row holds a member.
+	public func section(atRow row: Int) -> MemberListSection? {
+		guard row >= 0, let identifier = memberDataSource?.sectionIdentifier(forRow: row) else {
+			return nil
 		}
 
-		sections = rebuilt
-	}
-
-	private func shiftSections(after sectionIndex: Int, by delta: Int) {
-		let firstShiftedIndex = sectionIndex + 1
-		guard sections.indices.contains(firstShiftedIndex) else {
-			return
-		}
-
-		for index in firstShiftedIndex ..< sections.endIndex {
-			sections[index].memberRange.location += delta
-		}
-	}
-
-	private func sectionIndex(containingMemberAt memberIndex: Int) -> Int? {
-		sections.firstIndex { NSLocationInRange(memberIndex, $0.memberRange) }
+		return Self.makeSection(identifier: identifier)
 	}
 
 	@objc(isGroupRow:)
 	public func isGroupRow(_ row: Int) -> Bool {
-		sectionIndex(forHeaderRow: row) != nil
-	}
-
-	private func headerRow(forSectionAt sectionIndex: Int) -> Int {
-		guard isGrouped else {
-			return -1
+		guard row >= 0 else {
+			return false
 		}
 
-		return sections[sectionIndex].memberRange.location + sectionIndex
-	}
-
-	private func sectionIndex(forHeaderRow row: Int) -> Int? {
-		guard isGrouped, row >= 0 else {
-			return nil
-		}
-
-		for (index, section) in sections.enumerated() {
-			let headerRow = section.memberRange.location + index
-			if headerRow == row {
-				return index
-			}
-			if headerRow > row {
-				break
-			}
-		}
-
-		return nil
+		return memberDataSource?.sectionIdentifier(forRow: row) != nil
 	}
 
 	@objc(rowForMemberAtIndex:)
 	public func rowForMember(at memberIndex: Int) -> Int {
-		guard memberIndex >= 0 else {
+		guard let member = contentController?.member(at: memberIndex) else {
 			return -1
 		}
 
-		guard isGrouped else {
-			return memberIndex
-		}
-
-		let precedingHeaderCount = sections.prefix { $0.memberRange.location <= memberIndex }.count
-		return memberIndex + precedingHeaderCount
-	}
-
-	private func memberIndex(forRow row: Int) -> Int {
-		guard row >= 0 else {
-			return -1
-		}
-
-		guard isGrouped else {
-			return row
-		}
-
-		for (index, section) in sections.enumerated() {
-			let headerRow = section.memberRange.location + index
-			if row == headerRow {
-				return -1
-			}
-			if row <= headerRow + section.memberRange.length {
-				return row - index - 1
-			}
-		}
-
-		return -1
-	}
-
-	// MARK: - NSTableViewDataSource
-
-	public func numberOfRows(in _: NSTableView) -> Int {
-		members.count + (isGrouped ? sections.count : 0)
-	}
-
-	public func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {
-		if let sectionIndex = sectionIndex(forHeaderRow: row) {
-			return sections[sectionIndex]
-		}
-
-		return item(atRow: row)
+		return row(forItem: member)
 	}
 
 	// MARK: - NSTableViewDelegate
@@ -465,25 +458,6 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	public func tableView(_: NSTableView, typeSelectStringFor _: NSTableColumn?, row: Int) -> String? {
 		(item(atRow: row) as? ChannelUser)?.user.nickname
-	}
-
-	public func tableView(_: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
-		let identifier = isGroupRow(row) ? sectionHeaderViewIdentifier : memberViewIdentifier
-		let view = makeView(withIdentifier: identifier, owner: self)
-
-		/* Cell views used to configure themselves in `awakeFromNib`, which is
-		 nonisolated; here the main actor is a fact rather than an assumption. */
-		(view as? MemberListCell)?.configure()
-
-		return view
-	}
-
-	public func tableView(_: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
-		guard isGroupRow(row) == false else {
-			return nil
-		}
-
-		return MemberListRowCell(memberList: self)
 	}
 
 	public func tableView(_: NSTableView, didAdd _: NSTableRowView, forRow row: Int) {
@@ -679,7 +653,18 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 	}
 
 	public func refreshDrawing(for member: ChannelUser) {
-		refreshDrawing(forRow: row(forItem: member))
+		let row = row(forItem: member)
+
+		guard row >= 0 else {
+			return
+		}
+
+		/* A member is a value, so the cell holds a copy: an edit has to be handed
+		 over. The identity did not change, so the data source has nothing to
+		 diff and would leave the old copy on screen. */
+		(view(atColumn: 0, row: row, makeIfNecessary: false) as? MemberListCell)?.objectValue = member
+
+		refreshDrawing(forRow: row)
 	}
 
 	@objc(refreshDrawingForChangesToPreference:)
