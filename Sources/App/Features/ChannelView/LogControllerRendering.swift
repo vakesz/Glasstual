@@ -295,26 +295,28 @@ nonisolated struct ThemeLogLineRenderer: LogLineRendering { // nonisolated: valu
 }
 
 extension LogController {
-	/** Takes the render snapshot of `logLine` with the message-renderer plugin
-	 hook applied to its body.
+	/** Runs the message-renderer plugin hook over each line's body.
 
-	 The hook is the one plugin dispatch that is not main-actor, and it ignores
-	 the view controller it is handed. Passing the controller through is
-	 therefore safe from any domain — it is a reference to a main-actor class,
-	 which is `Sendable`, and nothing here touches its state. */
-	nonisolated static func makeSnapshot(
-		of logLine: LogLine,
-		in context: LogLineRenderContext,
+	 Called from inside a render job, which is where it ran before: the hook is
+	 the one plugin dispatch that is not main-actor isolated, and a plugin that
+	 rewrites message bodies has no business doing it on the main thread.
+	 Passing the view controller across domains is safe because the hook ignores
+	 it — it is a reference to a main-actor class, so it is `Sendable`, and
+	 nothing here touches its state. */
+	nonisolated static func applyingMessageRenderers(
+		to lines: [LogLineSnapshot],
 		for viewController: LogController
-	) -> LogLineSnapshot {
-		var snapshot = LogLineSnapshot(logLine, in: context)
-		snapshot.messageBody = PluginDispatcher.willRenderMessage(
-			snapshot.messageBody,
-			forViewController: viewController,
-			lineType: snapshot.lineType,
-			memberType: snapshot.memberType
-		)
-		return snapshot
+	) -> [LogLineSnapshot] {
+		lines.map { line in
+			var line = line
+			line.messageBody = PluginDispatcher.willRenderMessage(
+				line.messageBody,
+				forViewController: viewController,
+				lineType: line.lineType,
+				memberType: line.memberType
+			)
+			return line
+		}
 	}
 
 	/// Renders every line of `lines`, skipping the ones that fail.
