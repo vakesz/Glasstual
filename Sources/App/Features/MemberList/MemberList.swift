@@ -118,7 +118,6 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		delegate = self
 		updateTrackingAreas()
 		registerForDraggedTypes([.fileURL])
-		memberListUserInfoPopover?.configure()
 	}
 
 	override public func viewDidMoveToWindow() {

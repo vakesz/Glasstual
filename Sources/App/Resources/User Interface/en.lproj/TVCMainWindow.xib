@@ -24,50 +24,12 @@
                     <customView translatesAutoresizingMaskIntoConstraints="NO" id="phB-0r-qij" userLabel="Text Field" customClass="TVCMainWindowTextViewContentView">
                         <rect key="frame" x="0.0" y="0.0" width="800" height="38"/>
                         <subviews>
+                            <!-- The input field and its scroll view are built in
+                                 TVCMainWindowTextViewContentView. A decoded NSTextView is
+                                 always TextKit 1; only init(usingTextLayoutManager:) makes
+                                 a TextKit 2 one, and only code can call it. -->
                             <customView translatesAutoresizingMaskIntoConstraints="NO" id="nbK-l5-9k5" userLabel="Input Bar Container">
                                 <rect key="frame" x="172" y="6" width="618" height="25"/>
-                                <subviews>
-                                    <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xnK-JZ-PNd">
-                                        <rect key="frame" x="0.0" y="3" width="608" height="19"/>
-                                        <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="R89-6i-JgM">
-                                            <rect key="frame" x="0.0" y="0.0" width="608" height="19"/>
-                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <subviews>
-                                                <textView editable="NO" selectable="NO" drawsBackground="NO" importsGraphics="NO" verticallyResizable="YES" continuousSpellChecking="YES" allowsUndo="YES" allowsNonContiguousLayout="YES" spellingCorrection="YES" grammarChecking="YES" smartInsertDelete="YES" id="Ub5-no-pBU" customClass="TVCMainWindowTextView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="608" height="19"/>
-                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
-                                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    <size key="minSize" width="608" height="19"/>
-                                                    <size key="maxSize" width="1397" height="10000000"/>
-                                                    <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                    <accessibility description="Main Text Field"/>
-                                                    <connections>
-                                                        <outlet property="contentView" destination="phB-0r-qij" id="q5a-XP-rcM"/>
-                                                        <outlet property="inputBarContainerView" destination="nbK-l5-9k5" id="acc-00-001"/>
-                                                        <outlet property="inputBarTopConstraint" destination="awN-Bn-Ddd" id="acc-00-002"/>
-                                                        <outlet property="textViewHeightConstraint" destination="4wi-57-9OA" id="WKH-Kh-F86"/>
-                                                        <outlet property="windowContentViewMinimumHeight" destination="XJm-Dd-FjI" id="yUG-1i-yuZ"/>
-                                                    </connections>
-                                                </textView>
-                                            </subviews>
-                                        </clipView>
-                                        <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="CHU-gl-rY2">
-                                            <rect key="frame" x="-100" y="-100" width="87" height="18"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                        </scroller>
-                                        <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="kWB-tP-6YF">
-                                            <rect key="frame" x="481" y="1" width="16" height="13"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                        </scroller>
-                                    </scrollView>
-                                </subviews>
-                                <constraints>
-                                    <constraint firstAttribute="bottom" secondItem="xnK-JZ-PNd" secondAttribute="bottom" constant="3" id="dVz-Ga-jCK"/>
-                                    <constraint firstItem="xnK-JZ-PNd" firstAttribute="leading" secondItem="nbK-l5-9k5" secondAttribute="leading" id="h2j-vU-jjP"/>
-                                    <constraint firstItem="xnK-JZ-PNd" firstAttribute="top" secondItem="nbK-l5-9k5" secondAttribute="top" constant="3" id="lXH-1e-q4x"/>
-                                    <constraint firstAttribute="trailing" secondItem="xnK-JZ-PNd" secondAttribute="trailing" constant="10" id="xYw-C2-alv"/>
-                                </constraints>
                             </customView>
                         </subviews>
                         <constraints>
@@ -78,7 +40,10 @@
                             <constraint firstAttribute="bottom" secondItem="nbK-l5-9k5" secondAttribute="bottom" constant="6" id="hXg-Rj-6BH"/>
                         </constraints>
                         <connections>
-                            <outlet property="textView" destination="Ub5-no-pBU" id="tIm-bm-cE5"/>
+                            <outlet property="inputBarContainerView" destination="nbK-l5-9k5" id="tIm-bm-cE5"/>
+                            <outlet property="inputBarTopConstraint" destination="awN-Bn-Ddd" id="tIm-bm-cE6"/>
+                            <outlet property="textViewHeightConstraint" destination="4wi-57-9OA" id="tIm-bm-cE7"/>
+                            <outlet property="windowContentViewMinimumHeight" destination="XJm-Dd-FjI" id="tIm-bm-cE8"/>
                         </connections>
                     </customView>
                     <splitView autosaveName="" dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dVR-2U-X51" userLabel="Thin Split View">
@@ -373,7 +338,7 @@
                 <outlet property="channelView" destination="dCp-Wp-aIX" id="SRq-MD-Vzk"/>
                 <outlet property="nibContentSplitView" destination="dVR-2U-X51" id="UTS-m3-2nd"/>
                 <outlet property="formattingMenu" destination="j7v-mc-UwU" id="4X3-MP-pDp"/>
-                <outlet property="inputTextField" destination="Ub5-no-pBU" id="mCF-mM-bHc"/>
+                <outlet property="inputContentView" destination="phB-0r-qij" id="mCF-mM-bHc"/>
                 <outlet property="loadingScreen" destination="Se1-ja-hFN" id="niK-Fq-MHr"/>
                 <outlet property="mainMenuProxy" destination="U6M-jc-NbT" id="QeA-Xy-1ah"/>
                 <outlet property="memberList" destination="bgh-q2-4XX" id="j80-GF-rXN"/>

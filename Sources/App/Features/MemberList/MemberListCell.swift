@@ -369,6 +369,11 @@ public final class MemberListCell: NSTableCellView {
 			return
 		}
 
+		/* Configured here rather than at nib load: `awakeFromNib` is nonisolated,
+		 and the member list's outlets are not connected yet when the list joins
+		 its window. The call is idempotent. */
+		userInfoPopover.configure()
+
 		let nickname = cellItem.user.nickname
 
 		userInfoPopover.nicknameField.stringValue = nickname
