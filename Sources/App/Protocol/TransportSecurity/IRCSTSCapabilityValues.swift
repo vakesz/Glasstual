@@ -37,16 +37,20 @@
 
 import Foundation
 
-@objc(IRCSTSCapabilityValues)
-public final nonisolated class STSCapabilityValues: NSObject {
-	@objc public private(set) var port: UInt16 = 0
-	@objc public private(set) var hasDuration = false
-	@objc public private(set) var duration: TimeInterval = 0
-	@objc public private(set) var preload = false
+/** The `sts` capability's parsed key/value list.
 
-	@objc(valuesFromCapabilityValues:)
+ A value: capability negotiation parses one, the policy store reads it, and
+ nothing keeps it past the negotiation that built it. */
+public struct STSCapabilityValues: Hashable, Sendable, CustomStringConvertible {
+	public private(set) var port: UInt16 = 0
+	public private(set) var hasDuration = false
+	public private(set) var duration: TimeInterval = 0
+	public private(set) var preload = false
+
+	private init() {}
+
 	public static func values(fromCapabilityValues values: [String]) -> STSCapabilityValues? {
-		let result = STSCapabilityValues()
+		var result = STSCapabilityValues()
 		var recognizedKey = false
 
 		for value in values {
@@ -81,8 +85,8 @@ public final nonisolated class STSCapabilityValues: NSObject {
 		return recognizedKey ? result : nil
 	}
 
-	override public var description: String {
-		"<\(NSStringFromClass(type(of: self))) port=\(port) duration=\(String(format: "%.0f", duration)) preload=\(preload ? 1 : 0)>"
+	public var description: String {
+		"<STSCapabilityValues port=\(port) duration=\(String(format: "%.0f", duration)) preload=\(preload ? 1 : 0)>"
 	}
 
 	private static func split(value: String) -> (key: String, value: String) {
