@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import Combine
 import os
 import WebKit

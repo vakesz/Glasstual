@@ -20,9 +20,9 @@ import UserNotifications
 
  `UNNotificationContent.userInfo` is a property-list dictionary, so the keys
  below are the only place the strings appear; every producer and reader inside
- the application works with the value. It used to be a `[String: Any]` passed
- whole from the protocol layer to the delegate callback, with each reader
- guessing at the keys. */
+ the application works with the value. It used to be an untyped dictionary
+ passed whole from the protocol layer to the delegate callback, with each
+ reader guessing at the keys. */
 public nonisolated struct NotificationPayload: Equatable, Sendable { // nonisolated: value
 	static let clientIdentifierKey = "clientId"
 	static let channelIdentifierKey = "channelId"
@@ -56,15 +56,15 @@ public nonisolated struct NotificationPayload: Equatable, Sendable { // nonisola
 	}
 
 	/// The property list UserNotifications stores with the request.
-	public var userInfo: [String: Any] {
-		var result: [String: Any] = [:]
+	public var userInfo: [String: PropertyListValue] {
+		var result: [String: PropertyListValue] = [:]
 
-		result[Self.clientIdentifierKey] = clientIdentifier
-		result[Self.channelIdentifierKey] = channelIdentifier
-		result[Self.fileTransferIdentifierKey] = fileTransferIdentifier
+		result[Self.clientIdentifierKey] = clientIdentifier.map(PropertyListValue.string)
+		result[Self.channelIdentifierKey] = channelIdentifier.map(PropertyListValue.string)
+		result[Self.fileTransferIdentifierKey] = fileTransferIdentifier.map(PropertyListValue.string)
 
 		if fileTransferIdentifier != nil {
-			result[Self.fileTransferTypeKey] = fileTransferEventRawValue
+			result[Self.fileTransferTypeKey] = .integer(fileTransferEventRawValue)
 		}
 
 		return result
@@ -323,7 +323,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		content.body = message
 
 		if let userInfo {
-			content.userInfo = userInfo.userInfo
+			content.userInfo = userInfo.userInfo.propertyListObject
 		}
 
 		if let categoryIdentifier {

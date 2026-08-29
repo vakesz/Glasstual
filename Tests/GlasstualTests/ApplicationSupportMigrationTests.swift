@@ -25,7 +25,10 @@ struct ApplicationSupportMigrationTests {
 				== bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
 		)
 		#expect(ApplicationInfo.applicationBundleIdentifier() == bundle.bundleIdentifier)
-		#expect(ApplicationInfo.applicationInfoPlist() as NSDictionary == bundle.infoDictionary as NSDictionary?)
+		#expect(
+			ApplicationInfo.applicationInfoPlist().propertyListObject as NSDictionary
+				== bundle.infoDictionary as NSDictionary?
+		)
 	}
 
 	@Test("The process metadata describes a running application")

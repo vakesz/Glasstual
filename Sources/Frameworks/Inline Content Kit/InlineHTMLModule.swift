@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 /// Presents markup a remote endpoint supplied.
@@ -73,10 +74,10 @@ public enum InlineHTMLContent {
 		values.scriptResources = scriptResources + extraScriptResources
 		values.entrypoint = overrideEntrypoint ?? entrypoint
 
-		let attributes: [String: Any] = [
-			"classAttribute": values.classAttribute,
-			"unescapedHTML": unescapedHTML,
-			"uniqueIdentifier": values.uniqueIdentifier,
+		let attributes: [String: JavaScriptValue] = [
+			"classAttribute": .string(values.classAttribute),
+			"unescapedHTML": .string(unescapedHTML),
+			"uniqueIdentifier": .string(values.uniqueIdentifier),
 		]
 
 		return InlineContentTemplate.outcome(templateURL, attributes, into: values)

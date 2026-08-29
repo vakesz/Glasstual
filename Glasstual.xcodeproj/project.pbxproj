@@ -123,6 +123,7 @@
 		1B20F592FC358C8BE7011D2A /* IRCConnectionSocketNWF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1918C5344C30AA02CD98ED27 /* IRCConnectionSocketNWF.swift */; };
 		1B38646AA92EDBB82CDE8C1F /* GlasstualPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26CEBB2889F146B2FFA4C8B0 /* GlasstualPluginKit.framework */; };
 		1B4C67DADC1CE0E625272DBC /* ServerHighlightListSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9300D2C8D5D7B4699F6B420C /* ServerHighlightListSheet.swift */; };
+		1B4ECE83153E146E08769DBF /* JavaScriptValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28AA766BD2E53066C8313ECA /* JavaScriptValue.swift */; };
 		1BC2AC1654DCDBFB6E5C9B26 /* IRCClientConnectionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CAB6CE6E85E6D5922EB6184 /* IRCClientConnectionDelegate.swift */; };
 		1C0AB3508C528B0C9E5D3C27 /* LogController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61B6BC21DF5295BED01D0FC /* LogController.swift */; };
 		1C3EFF5876E8AB44E6B9CAC1 /* OELReachabilityMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD132868A53BF863A07E2FB /* OELReachabilityMigrationTests.swift */; };
@@ -557,7 +558,6 @@
 		8E562DA76F3B84DC0A5FD302 /* conversionTable2.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1969A3CB2FC6ED8060A85305 /* conversionTable2.plist */; };
 		8EC15FE97A4831266E76577E /* NSStringHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20B702B439C3585F322C47E5 /* NSStringHelper.swift */; };
 		8ED26A8ECE13C129C66BB234 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2A880549A214E51D063FAA22 /* PrivacyInfo.xcprivacy */; };
-		8EFF09104E1A86F1EF26F782 /* JavaScriptValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A814BF792347DBB14E47679 /* JavaScriptValue.swift */; };
 		8FC1B354FB9522C99E691101 /* TVCMemberListSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8B719B78CBE8F381D8C44F /* TVCMemberListSectionTests.swift */; };
 		90285526874FD94D3B247B7F /* MainWindowMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E301BCD9B73663E8A8B61D8D /* MainWindowMigrationTests.swift */; };
 		902855B5D5EDF9ABC59824BA /* FileTransferDialog+NetworkAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25DC4ABE8CDAB693CF2030E /* FileTransferDialog+NetworkAddress.swift */; };
@@ -1530,6 +1530,7 @@
 		286B3947483F49CAD3CEF64D /* IRCSpecCasemappingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSpecCasemappingTests.swift; sourceTree = "<group>"; };
 		2890CB13CA61A65A05477FA0 /* NSTextFieldHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSTextFieldHelper.swift; sourceTree = "<group>"; };
 		28A587A1CD90B62A1FC24CD1 /* IRCClientBouncerSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientBouncerSupport.swift; sourceTree = "<group>"; };
+		28AA766BD2E53066C8313ECA /* JavaScriptValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaScriptValue.swift; sourceTree = "<group>"; };
 		28CCFDC87B42BBD96BEBFCED /* IRCClientLinePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientLinePresentation.swift; sourceTree = "<group>"; };
 		28D82C6CC241A1894344B8B9 /* IRCClientOutboundTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientOutboundTransport.swift; sourceTree = "<group>"; };
 		29389313B5C56E632B4D9F39 /* OnboardingNotificationsStepViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNotificationsStepViewController.swift; sourceTree = "<group>"; };
@@ -1722,7 +1723,6 @@
 		592CF6F60E8F3FE2FF9B56F2 /* Context.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Context.swift; sourceTree = "<group>"; };
 		59960A5AFD4CF73B8ED47813 /* IRCChannelModeQueryPurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannelModeQueryPurityTests.swift; sourceTree = "<group>"; };
 		59AD9BBFB6ED6AF9F4B175F9 /* ApplicationInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationInfo.swift; sourceTree = "<group>"; };
-		5A814BF792347DBB14E47679 /* JavaScriptValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaScriptValue.swift; sourceTree = "<group>"; };
 		5AB0E9D6D44A50F84E689A99 /* IRCCapabilityRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCCapabilityRegistryTests.swift; sourceTree = "<group>"; };
 		5AC2AF19BEC6D45667D46942 /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
 		5B5B3ACB88BC66DEA764F596 /* IRCClientDCCPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientDCCPolicyTests.swift; sourceTree = "<group>"; };
@@ -3316,6 +3316,7 @@
 				DA154EC0C340C43ED429EA84 /* FileManagerCompatibility.swift */,
 				64A53CFA1C62F35CAAFDFC53 /* FileSystemMonitor.swift */,
 				3A44DE3542E30E0C0F094AFB /* FoundationCompatibility.swift */,
+				28AA766BD2E53066C8313ECA /* JavaScriptValue.swift */,
 				DE8E71EA406D1B3A58AD4542 /* KeychainStore.swift */,
 				09BC0C1D790966218EA761DF /* Logging.swift */,
 				6DE4839337DAE1A760B41111 /* NSArrayHelper.swift */,
@@ -3426,7 +3427,6 @@
 				4B33474F6FC474BCDEB5BABB /* ChannelTopicView.swift */,
 				8FA5DCD3F6101C57A8B56B41 /* HTMLEntities.swift */,
 				83B85A24B4B6C254D47C60EE /* IRCFormattingTopicEditor.swift */,
-				5A814BF792347DBB14E47679 /* JavaScriptValue.swift */,
 				88E4DE21DE3D377FB32C06D0 /* LinkParser.swift */,
 				A61B6BC21DF5295BED01D0FC /* LogController.swift */,
 				4BEB7E3CB7FA778DCD4BBAEE /* LogControllerHistoricLogClient.swift */,
@@ -5755,6 +5755,7 @@
 				D06AC5DF2A9029C1CBB0AC20 /* FileManagerCompatibility.swift in Sources */,
 				BAA7DD43AACCE90295AB60D2 /* FileSystemMonitor.swift in Sources */,
 				C17DDB9611BF18A284B18C9B /* FoundationCompatibility.swift in Sources */,
+				1B4ECE83153E146E08769DBF /* JavaScriptValue.swift in Sources */,
 				B20BE7AE935AEC96579BA4BA /* KeychainStore.swift in Sources */,
 				A1BEC2320E116D4561D7D2C1 /* Logging.swift in Sources */,
 				28B24D6BFA369468C27FEC3F /* NSArrayHelper.swift in Sources */,
@@ -6096,7 +6097,6 @@
 				D25247397D8677B1E2D43F3C /* InputHistory.swift in Sources */,
 				33DA96024B63EC0BA18B3D1C /* InputPrompt.swift in Sources */,
 				8719E58AEC229B595173A8A9 /* InternetAddressLookup.swift in Sources */,
-				8EFF09104E1A86F1EF26F782 /* JavaScriptValue.swift in Sources */,
 				15B8B9AC686E14F3987F3C92 /* KeyEventHandler.swift in Sources */,
 				8C276694B8A0F396CBFDB76C /* LinkParser.swift in Sources */,
 				E3D801368CA81F3C868EDE57 /* LocalizedByteCount.swift in Sources */,

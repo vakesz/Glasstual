@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -85,9 +86,7 @@ public enum InlineContentHelpers {
 
 	/// The string at `key`, optionally under a chain of nested objects.
 	///
-	/// Only strings are read back. Every caller wants one, and keeping the
-	/// result a `String` is what lets this be `async` at all: a decoded
-	/// `[String: Any]` is not `Sendable` and could not leave the request.
+	/// Only strings are read back, because every caller wants one.
 	public static func jsonString(
 		_ key: String,
 		inHierarchy hierarchy: [String]? = nil,
@@ -96,12 +95,12 @@ public enum InlineContentHelpers {
 		guard var context = await jsonObject(from: url) else { return nil }
 
 		for step in hierarchy ?? [] {
-			guard let nested = context[step] as? [String: Any] else { return nil }
+			guard let nested = context[step]?.object else { return nil }
 
 			context = nested
 		}
 
-		return context[key] as? String
+		return context[key]?.string
 	}
 
 	/// Every top-level string in the reply, which is all the modules that read
@@ -109,7 +108,7 @@ public enum InlineContentHelpers {
 	public static func jsonStrings(from url: URL) async -> [String: String]? {
 		guard let object = await jsonObject(from: url) else { return nil }
 
-		return object.compactMapValues { $0 as? String }
+		return object.compactMapValues(\.string)
 	}
 
 	private static let session: URLSession = {
@@ -122,9 +121,8 @@ public enum InlineContentHelpers {
 		return URLSession(configuration: configuration)
 	}()
 
-	/// The decoded reply, which never leaves this file: `[String: Any]` is not
-	/// `Sendable`, so the readers above pull `Sendable` values out of it here.
-	private static func jsonObject(from url: URL) async -> [String: Any]? {
+	/// The decoded reply, narrowed out of the `Any` `JSONSerialization` returns.
+	private static func jsonObject(from url: URL) async -> [String: JavaScriptValue]? {
 		let data: Data?
 
 		do {
@@ -138,7 +136,8 @@ public enum InlineContentHelpers {
 		guard let data else { return nil }
 
 		do {
-			return try JSONSerialization.jsonObject(with: data) as? [String: Any]
+			return try (JSONSerialization.jsonObject(with: data) as? [AnyHashable: Any])
+				.map(JavaScriptValue.object(bridging:))
 		} catch {
 			logger.error("Failed to decode response: \(error.localizedDescription, privacy: .public)")
 

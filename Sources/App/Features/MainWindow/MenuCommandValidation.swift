@@ -459,7 +459,9 @@ extension MenuActionCoordinator {
 
 	private var searchProviderName: String {
 		let services = UserDefaults.standard.dictionary(forKey: "NSPreferredWebServices")
-		let provider = services?["NSWebServicesProviderWebSearch"] as? [String: Any]
-		return provider?["NSDefaultDisplayName"] as? String ?? "Google"
+		let provider = services?["NSWebServicesProviderWebSearch"]
+			.flatMap(PropertyListValue.init(propertyList:))
+
+		return provider?.dictionary?["NSDefaultDisplayName"]?.string ?? "Google"
 	}
 }

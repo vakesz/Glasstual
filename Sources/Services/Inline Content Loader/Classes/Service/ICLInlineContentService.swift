@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import InlineContentKit
 import os
@@ -87,7 +88,7 @@ actor InlineContentService {
 
 		registeredDefaults = true
 
-		TextualUserDefaults.suite().register(defaults: preferences.registrationDomain)
+		TextualUserDefaults.suite().register(defaults: preferences.registrationDomain.propertyListObject)
 	}
 
 	// MARK: - Processing

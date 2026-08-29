@@ -12,18 +12,20 @@
 
 import Foundation
 
-/** One value the WebKit bridge converts between Swift and the page.
+/** One value the web layer moves: a script argument, a template attribute, an
+ entrypoint payload, a decoded JSON reply.
 
  `callAsyncJavaScript(_:arguments:…)` takes `[String: Any]` and throws on the
  whole call if one value in it is a type it cannot convert, so an argument has
  to be reduced to what JavaScript has before it is handed over. That reduction
  used to hand back `Any` and hope; this is the closed set it reduces to, with
  `bridging` narrowing what a caller passed and ``bridgedObject`` widening it
- again for the one call that needs it.
+ again for the calls that need it.
 
  A value the page has no equivalent for becomes ``null`` rather than travelling
  as itself, which is what keeps one unsupported argument from failing the call
- it was part of. */
+ it was part of. Being a value rather than an `Any`, it is also `Sendable`, so
+ a decoded reply can leave the request that read it. */
 public nonisolated enum JavaScriptValue: Hashable, Sendable { // nonisolated: value
 	case null
 	case string(String)
@@ -77,6 +79,42 @@ public nonisolated extension JavaScriptValue { // nonisolated: value
 
 	var isNull: Bool {
 		self == .null
+	}
+}
+
+extension JavaScriptValue: ExpressibleByStringLiteral {
+	public init(stringLiteral value: String) {
+		self = .string(value)
+	}
+}
+
+extension JavaScriptValue: ExpressibleByBooleanLiteral {
+	public init(booleanLiteral value: Bool) {
+		self = .boolean(value)
+	}
+}
+
+extension JavaScriptValue: ExpressibleByIntegerLiteral {
+	public init(integerLiteral value: Int) {
+		self = .integer(value)
+	}
+}
+
+extension JavaScriptValue: ExpressibleByFloatLiteral {
+	public init(floatLiteral value: Double) {
+		self = .double(value)
+	}
+}
+
+extension JavaScriptValue: ExpressibleByArrayLiteral {
+	public init(arrayLiteral elements: JavaScriptValue...) {
+		self = .array(elements)
+	}
+}
+
+extension JavaScriptValue: ExpressibleByDictionaryLiteral {
+	public init(dictionaryLiteral elements: (String, JavaScriptValue)...) {
+		self = .object(Dictionary(elements) { _, last in last })
 	}
 }
 

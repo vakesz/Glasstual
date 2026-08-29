@@ -82,16 +82,24 @@ private func appendControlCharacter(_ character: unichar, to string: inout Strin
 	string.unicodeScalars.append(scalar)
 }
 
-private func stringKeyedAttributes(_ attributes: [NSAttributedString.Key: Any]) -> [String: Any] {
-	Dictionary(uniqueKeysWithValues: attributes.map { ($0.key.rawValue, $0.value) })
-}
-
 func formatterKey(_ name: IRCTextFormatterAttributeName) -> NSAttributedString.Key {
 	NSAttributedString.Key(name.rawValue)
 }
 
-private func attributeName(_ name: IRCTextFormatterAttributeName) -> String {
-	name.rawValue
+/** Whether a formatting flag is set on an attribute run.
+
+ An attribute set by this application is a `Bool`; one that came back out of an
+ archive or a pasteboard is the `NSNumber` the archive wrote, so both read as
+ the flag they stand for. */
+private func formatterFlag(
+	_ name: IRCTextFormatterAttributeName,
+	in attributes: [NSAttributedString.Key: Any]
+) -> Bool {
+	switch attributes[formatterKey(name)] {
+	case let value as Bool: value
+	case let value as NSNumber: value.boolValue
+	default: false
+	}
 }
 
 private func formatterColorIsValid(_ value: Any?) -> Bool {
@@ -103,27 +111,27 @@ private func formatterColorIsValid(_ value: Any?) -> Bool {
 
 private func formatterEffectIsSet(
 	_ effect: IRCTextFormatterEffectType,
-	in attributes: NSDictionary
+	in attributes: [NSAttributedString.Key: Any]
 ) -> Bool {
 	switch effect {
 	case .none:
 		false
 	case .bold:
-		attributes.ce_bool(forKey: attributeName(.boldAttributeName))
+		formatterFlag(.boldAttributeName, in: attributes)
 	case .italic:
-		attributes.ce_bool(forKey: attributeName(.italicAttributeName))
+		formatterFlag(.italicAttributeName, in: attributes)
 	case .monospace:
-		attributes.ce_bool(forKey: attributeName(.monospaceAttributeName))
+		formatterFlag(.monospaceAttributeName, in: attributes)
 	case .strikethrough:
-		attributes.ce_bool(forKey: attributeName(.strikethroughAttributeName))
+		formatterFlag(.strikethroughAttributeName, in: attributes)
 	case .underline:
-		attributes.ce_bool(forKey: attributeName(.underlineAttributeName))
+		formatterFlag(.underlineAttributeName, in: attributes)
 	case .foregroundColor:
-		formatterColorIsValid(attributes[attributeName(.foregroundColorAttributeName)])
+		formatterColorIsValid(attributes[formatterKey(.foregroundColorAttributeName)])
 	case .backgroundColor:
-		formatterColorIsValid(attributes[attributeName(.backgroundColorAttributeName)])
+		formatterColorIsValid(attributes[formatterKey(.backgroundColorAttributeName)])
 	case .spoiler:
-		attributes.ce_bool(forKey: attributeName(.spoilerAttributeName))
+		formatterFlag(.spoilerAttributeName, in: attributes)
 	}
 }
 
@@ -256,28 +264,28 @@ public final class TextFormatterEffects: NSObject {
 		self.init(attributes: [:])
 	}
 
-	public static func effects(in attributes: [String: Any]) -> TextFormatterEffects {
+	public static func effects(in attributes: [NSAttributedString.Key: Any]) -> TextFormatterEffects {
 		TextFormatterEffects(attributes: attributes)
 	}
 
-	public init(attributes: [String: Any]) {
+	public init(attributes: [NSAttributedString.Key: Any]) {
 		super.init()
 
 		setup(with: attributes)
 	}
 
-	private func setup(with attributes: [String: Any]) {
+	private func setup(with attributes: [NSAttributedString.Key: Any]) {
 		var maximumLength: UInt = 0
 		var effects: [TextFormatterEffect] = []
 		effects.reserveCapacity(7)
 
 		let foregroundColor = TextFormatterEffect(
 			effect: .foregroundColor,
-			withValue: attributes[attributeName(IRCTextFormatterAttributeName.foregroundColorAttributeName)]
+			withValue: attributes[formatterKey(.foregroundColorAttributeName)]
 		)
 		let backgroundColor = TextFormatterEffect(
 			effect: .backgroundColor,
-			withValue: attributes[attributeName(IRCTextFormatterAttributeName.backgroundColorAttributeName)]
+			withValue: attributes[formatterKey(.backgroundColorAttributeName)]
 		)
 
 		if let foregroundColor {
@@ -292,10 +300,8 @@ public final class TextFormatterEffects: NSObject {
 			}
 		}
 
-		let dictionary = attributes as NSDictionary
-
 		func appendBooleanEffect(_ type: IRCTextFormatterEffectType, key: IRCTextFormatterAttributeName) {
-			guard dictionary.ce_bool(forKey: attributeName(key)), let effect = TextFormatterEffect(effect: type) else {
+			guard formatterFlag(key, in: attributes), let effect = TextFormatterEffect(effect: type) else {
 				return
 			}
 
@@ -463,8 +469,10 @@ public extension NSAttributedString {
 			var breakLoopAfterAppend = false
 			var segmentRange = NSRange()
 
-			let attributes = stringKeyedAttributes(
-				attributes(at: limitRange.location, longestEffectiveRange: &segmentRange, in: limitRange)
+			let attributes = attributes(
+				at: limitRange.location,
+				longestEffectiveRange: &segmentRange,
+				in: limitRange
 			)
 			let formatters = TextFormatterEffects.effects(in: attributes)
 			let formattersLength = formatters.maximumLength
@@ -556,7 +564,7 @@ public extension NSAttributedString {
 		let fullRange = NSRange(location: 0, length: length)
 
 		enumerateAttributes(in: fullRange, options: []) { attributes, effectiveRange, _ in
-			let formatters = TextFormatterEffects.effects(in: stringKeyedAttributes(attributes))
+			let formatters = TextFormatterEffects.effects(in: attributes)
 
 			formatters.appendToStart(of: &result)
 			result.append(string.substring(with: effectiveRange))
@@ -570,8 +578,7 @@ public extension NSAttributedString {
 		var returnValue = false
 
 		enumerateAttributes(in: limitRange, options: []) { attributes, _, stop in
-			let dictionary = stringKeyedAttributes(attributes) as NSDictionary
-			if formatterEffectIsSet(effect, in: dictionary) {
+			if formatterEffectIsSet(effect, in: attributes) {
 				returnValue = true
 				stop.pointee = true
 			}

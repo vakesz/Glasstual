@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -211,17 +212,17 @@ public extension IRCClient {
 		timestamp: Date,
 		messageIdentifier: String?,
 		account: String?
-	) -> [String: Any] {
-		var event: [String: Any] = [
-			"sender": sender,
-			"target": target,
-			"tags": clientTags,
-			"timestamp": timestamp.timeIntervalSince1970,
-			"fromLocalUser": sender == userNickname,
-			"localUserNickname": userNickname,
+	) -> [String: JavaScriptValue] {
+		var event: [String: JavaScriptValue] = [
+			"sender": .string(sender),
+			"target": .string(target),
+			"tags": .object(clientTags.mapValues(JavaScriptValue.string)),
+			"timestamp": .double(timestamp.timeIntervalSince1970),
+			"fromLocalUser": .boolean(sender == userNickname),
+			"localUserNickname": .string(userNickname),
 		]
-		event["msgid"] = messageIdentifier
-		event["account"] = account
+		event["msgid"] = messageIdentifier.map(JavaScriptValue.string)
+		event["account"] = account.map(JavaScriptValue.string)
 		return event
 	}
 }
