@@ -47,11 +47,11 @@ import Foundation
 /// `Sendable`, so it cannot enter the store. The store does not need it — it
 /// pushes through the client proxy the listener delegate resolved for it.
 @objc(HLSHistoricLogProcessMain)
-final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
+public final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 	private let store: HistoricLogStore
 	private let serviceConnection: NSXPCConnection
 
-	init(store: HistoricLogStore, connection: NSXPCConnection) {
+	public init(store: HistoricLogStore, connection: NSXPCConnection) {
 		self.store = store
 		serviceConnection = connection
 
@@ -60,7 +60,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 
 	// MARK: - Database
 
-	func openDatabase(
+	public func openDatabase(
 		inDirectory databaseDirectory: String,
 		withCompletionBlock completionBlock: (@Sendable (Bool) -> Void)?
 	) {
@@ -71,13 +71,13 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		}
 	}
 
-	func setMaximumLineCount(_ maximumLineCount: UInt) {
+	public func setMaximumLineCount(_ maximumLineCount: UInt) {
 		Task { [store] in
 			await store.setMaximumLineCount(maximumLineCount)
 		}
 	}
 
-	func saveData(completionBlock: (@Sendable () -> Void)?) {
+	public func saveData(completionBlock: (@Sendable () -> Void)?) {
 		Task { [store] in
 			/* The reply block is an XPC reply; it has to be invoked on every path. */
 			defer { completionBlock?() }
@@ -86,19 +86,19 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		}
 	}
 
-	func forgetView(_ viewIdentifier: String) {
+	public func forgetView(_ viewIdentifier: String) {
 		Task { [store] in
 			await store.forgetView(viewIdentifier)
 		}
 	}
 
-	func resetData(forView viewIdentifier: String) {
+	public func resetData(forView viewIdentifier: String) {
 		Task { [store] in
 			await store.resetData(forView: viewIdentifier)
 		}
 	}
 
-	func writeLogLine(_ logLine: LogLineXPC) {
+	public func writeLogLine(_ logLine: LogLineXPC) {
 		Task { [store] in
 			await store.writeLogLine(logLine)
 		}
@@ -106,7 +106,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 
 	// MARK: - Fetching
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		ascending: Bool,
 		fetchLimit: UInt,
@@ -125,7 +125,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		withUniqueIdentifier uniqueIdentifier: String,
 		beforeFetchLimit fetchLimitBefore: UInt,
@@ -146,7 +146,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		beforeUniqueIdentifier uniqueIdentifier: String,
 		fetchLimit: UInt,
@@ -166,7 +166,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		afterUniqueIdentifier uniqueIdentifier: String,
 		fetchLimit: UInt,
@@ -186,7 +186,7 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		afterUniqueIdentifier uniqueIdentifierAfter: String,
 		beforeUniqueIdentifier uniqueIdentifierBefore: String,

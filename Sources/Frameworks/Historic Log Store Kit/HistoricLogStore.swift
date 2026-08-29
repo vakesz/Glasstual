@@ -48,7 +48,7 @@ import os
 /// debounce all live in a single isolation domain. The connection itself never
 /// enters the actor — only the client proxy, which is `Sendable` because
 /// `HistoricLogClientProtocol` refines it.
-actor HistoricLogStore {
+public actor HistoricLogStore {
 	/// Everything the store knows about one log view. The context is the only
 	/// thing Core Data owns; the counts are kept here so a write does not have
 	/// to re-count the table on every line.
@@ -73,6 +73,12 @@ actor HistoricLogStore {
 	private var saveTask: Task<Void, Never>?
 	private var connectionIsInvalidated = false
 
+	/// Where the name of the database file is kept between launches.
+	///
+	/// The service reads it from the shared defaults; a test hands in one of
+	/// its own so a run never touches, or is steered by, the real preference.
+	private let filenameStore: any HistoricLogFilenameStoring
+
 	/// How long the service waits between unattended saves.
 	private static let saveInterval = Duration.seconds(120)
 
@@ -80,16 +86,20 @@ actor HistoricLogStore {
 	/// Spreading the work keeps a hundred views from resizing in lockstep.
 	private static let maximumResizeDelay: UInt32 = 1800
 
+	public init(filenameStore: any HistoricLogFilenameStoring) {
+		self.filenameStore = filenameStore
+	}
+
 	// MARK: - Connection Lifecycle
 
 	/// Takes ownership of the client proxy the listener delegate resolved.
-	func attach(client: any HistoricLogClientProtocol) {
+	public func attach(client: any HistoricLogClientProtocol) {
 		self.client = client
 	}
 
 	/// The application owns the connection's lifetime; this runs from its
 	/// invalidation handler.
-	func detach() async {
+	public func detach() async {
 		HistoricLogDatabase.logger.debug("Connection invalidated")
 
 		client = nil
@@ -104,7 +114,7 @@ actor HistoricLogStore {
 
 	// MARK: - Database
 
-	func openDatabase(inDirectory databaseDirectory: String) -> Bool {
+	public func openDatabase(inDirectory databaseDirectory: String) -> Bool {
 		databaseDirectoryURL = URL(fileURLWithPath: databaseDirectory, isDirectory: true)
 
 		setDatabasePath()
@@ -137,7 +147,7 @@ actor HistoricLogStore {
 		return true
 	}
 
-	func setMaximumLineCount(_ maximumLineCount: UInt) {
+	public func setMaximumLineCount(_ maximumLineCount: UInt) {
 		/* This service process is shared by every view; a bad value must not abort it. */
 		guard maximumLineCount > 0 else {
 			HistoricLogDatabase.logger.error("Ignoring a request to set the maximum line count to zero")
@@ -153,13 +163,13 @@ actor HistoricLogStore {
 	}
 
 	private func databaseSaveFilename() -> String {
-		TextualUserDefaults.shared().string(forKey: HistoricLogDatabase.filenameKey) ?? resetDatabaseFilename()
+		filenameStore.databaseFilename ?? resetDatabaseFilename()
 	}
 
 	private func resetDatabaseFilename() -> String {
 		let filename = "logControllerHistoricLog_\(UUID().uuidString).sqlite"
 
-		TextualUserDefaults.shared().set(filename, forKey: HistoricLogDatabase.filenameKey)
+		filenameStore.databaseFilename = filename
 
 		return filename
 	}
@@ -207,7 +217,7 @@ actor HistoricLogStore {
 		return context
 	}
 
-	func forgetView(_ viewIdentifier: String) async {
+	public func forgetView(_ viewIdentifier: String) async {
 		HistoricLogDatabase.logger.debug("Forgetting view: \(viewIdentifier, privacy: .public)")
 
 		guard let context = await context(forView: viewIdentifier) else { return }
@@ -227,7 +237,7 @@ actor HistoricLogStore {
 		reportDeletion(result, inView: viewIdentifier)
 	}
 
-	func resetData(forView viewIdentifier: String) async {
+	public func resetData(forView viewIdentifier: String) async {
 		HistoricLogDatabase.logger.debug("Resetting the contents of view: \(viewIdentifier, privacy: .public)")
 
 		guard let context = await context(forView: viewIdentifier) else { return }
@@ -249,7 +259,7 @@ actor HistoricLogStore {
 
 	// MARK: - Writing
 
-	func writeLogLine(_ logLine: LogLineXPC) async {
+	public func writeLogLine(_ logLine: LogLineXPC) async {
 		let viewIdentifier = logLine.viewIdentifier
 
 		guard let context = await context(forView: viewIdentifier) else { return }
@@ -276,7 +286,7 @@ actor HistoricLogStore {
 
 	// MARK: - Fetching
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		ascending: Bool,
 		fetchLimit: UInt,
@@ -295,7 +305,7 @@ actor HistoricLogStore {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		aroundUniqueIdentifier uniqueIdentifier: String,
 		beforeFetchLimit: UInt,
@@ -328,7 +338,7 @@ actor HistoricLogStore {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		relativeTo uniqueIdentifier: String,
 		direction: FetchDirection,
@@ -374,7 +384,7 @@ actor HistoricLogStore {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		afterUniqueIdentifier uniqueIdentifierAfter: String,
 		beforeUniqueIdentifier uniqueIdentifierBefore: String,
@@ -413,7 +423,7 @@ actor HistoricLogStore {
 
 	// MARK: - Saving
 
-	func saveData() async {
+	public func saveData() async {
 		if connectionIsInvalidated == false {
 			rescheduleSave()
 		}
@@ -520,7 +530,7 @@ actor HistoricLogStore {
 }
 
 /// Which side of a known entry a relative fetch reads.
-enum FetchDirection: Sendable {
+public enum FetchDirection: Sendable {
 	case before
 	case after
 }

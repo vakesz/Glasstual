@@ -1,5 +1,6 @@
 import Foundation
 @testable import Glasstual
+import HistoricLogStoreKit
 import Testing
 
 /// `LogLineXPC` is the wire format between the app and the historic-log
