@@ -100,16 +100,26 @@ struct IRCSpecCapabilityNegotiationTests {
 		#expect(offered["sts"] == ["duration=300", "port=6697"])
 	}
 
-	/// capability-negotiation: "Capability names are case-sensitive." Matching
-	/// is done case-insensitively so an oddly-cased server still works, but
-	/// what goes back out has to be the spelling the server advertised.
-	@Test("CAP REQ echoes the spelling the server advertised")
+	/// capability-negotiation: "Capability names are case-sensitive." A name
+	/// that matches is therefore already the spelling to echo back.
+	@Test("CAP REQ echoes the name the server advertised")
 	func requestsEchoTheAdvertisedSpelling() throws {
+		let client = client()
+
+		try receive(":irc.example.net CAP * LS :multi-prefix", on: client)
+
+		#expect(capabilityCommands(of: client) == ["REQ multi-prefix"])
+	}
+
+	/// Case-sensitivity cuts both ways: `Multi-Prefix` is not `multi-prefix`,
+	/// so it is a capability this client does not implement.
+	@Test("CAP REQ does not ask for a capability advertised under another case")
+	func differentlyCasedCapabilityIsNotRequested() throws {
 		let client = client()
 
 		try receive(":irc.example.net CAP * LS :Multi-Prefix", on: client)
 
-		#expect(capabilityCommands(of: client) == ["REQ Multi-Prefix"])
+		#expect(capabilityCommands(of: client) == ["END"])
 	}
 
 	/// A capability the client does not implement is never requested, however

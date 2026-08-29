@@ -139,7 +139,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var enabledCapabilityNames: [String] = []
 	var offeredCapabilities: [String: [String]] = [:]
 	/// Lowercased capability name to the exact spelling the server advertised.
-	var offeredCapabilityNames: [String: String] = [:]
 	var lastAwayMessage: String?
 	var saslOfferedMechanisms: [String]?
 	var saslScramClient: SCRAMClient?
