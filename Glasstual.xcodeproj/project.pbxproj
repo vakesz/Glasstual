@@ -210,6 +210,7 @@
 		33DA96024B63EC0BA18B3D1C /* InputPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F4C5A7CC8E571616937E1B /* InputPrompt.swift */; };
 		33F542BAA44AC4DFED83FDD7 /* IRCWorldObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138C028D05830D40E3CF6264 /* IRCWorldObserver.swift */; };
 		3409657B7365984112D7D827 /* IRCClientBouncerPlaybackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8760B9B14E1D6D5CA30C1837 /* IRCClientBouncerPlaybackTests.swift */; };
+		348C563433DEB62D146A1323 /* HistoricLogClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B3835AD6CDDFED50F27244 /* HistoricLogClientTests.swift */; };
 		34D457A3568E57F9164E9E2B /* STSPolicyTrustTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C136DC22778D3ECC22A53BE /* STSPolicyTrustTests.swift */; };
 		3546269C5BC80616CA920A2F /* UserDefaultsCompatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F100E638A248E85F01521B /* UserDefaultsCompatibility.swift */; };
 		35629707062588AC0AB97AD1 /* PluginManagerRegistryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD7976B48644C9033535F1B /* PluginManagerRegistryTests.swift */; };
@@ -1756,6 +1757,7 @@
 		85530474F94B7E057FF6959D /* PluginKitMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginKitMigrationTests.swift; sourceTree = "<group>"; };
 		8581F264DDC7A7B5E16FD76A /* IRCNetworkList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCNetworkList.swift; sourceTree = "<group>"; };
 		85A9B6E403E306CC4B185930 /* FileSystemMonitorStreamTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystemMonitorStreamTests.swift; sourceTree = "<group>"; };
+		85B3835AD6CDDFED50F27244 /* HistoricLogClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoricLogClientTests.swift; sourceTree = "<group>"; };
 		8602952DE02223FB3FA7F718 /* InlineContentModuleTrustTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineContentModuleTrustTests.swift; sourceTree = "<group>"; };
 		8618C251F40EC8876FB72810 /* Reachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		8633299C3890216A037C0E53 /* MenuActionCoordinatorLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuActionCoordinatorLifecycle.swift; sourceTree = "<group>"; };
@@ -3756,6 +3758,7 @@
 				8BDA120D5196FA9A80CC3B18 /* GLTClientEnvironmentFixture.swift */,
 				887B6DBBC6D0F3D5AFAC6D5D /* GLTTestClient.swift */,
 				71DDECF1C473231C5B408226 /* HighlightEntryFeatureTests.swift */,
+				85B3835AD6CDDFED50F27244 /* HistoricLogClientTests.swift */,
 				E28E902D44CBF3530FF46A92 /* HTMLEntityTests.swift */,
 				8602952DE02223FB3FA7F718 /* InlineContentModuleTrustTests.swift */,
 				302924725389D19E73F4CEB3 /* InlineContentURLPolicyTests.swift */,
@@ -5195,6 +5198,7 @@
 				C877A5F1592819269B4BF561 /* GyazoModule.swift in Sources */,
 				E33CDA4DDEE3BB46F98D19B7 /* HTMLEntityTests.swift in Sources */,
 				9755DC47DC9C01123FAB8B3C /* HighlightEntryFeatureTests.swift in Sources */,
+				348C563433DEB62D146A1323 /* HistoricLogClientTests.swift in Sources */,
 				95F3B0C7E563AF3F4CA92E9A /* IRCAddressBookCodableTests.swift in Sources */,
 				B47DB07F2ADBC206225A56DD /* IRCAddressBookMatchCacheTests.swift in Sources */,
 				1370A786F30441457CAD9A20 /* IRCAddressBookTests.swift in Sources */,
