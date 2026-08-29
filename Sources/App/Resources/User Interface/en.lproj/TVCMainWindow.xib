@@ -1883,12 +1883,11 @@
             </constraints>
             <point key="canvasLocation" x="32" y="581"/>
         </customView>
-        <arrayController objectClassName="IRCChannelMember" preservesSelection="NO" selectsInsertedObjects="NO" avoidsEmptySelection="NO" id="hdH-wA-Q1P" customClass="IRCChannelMemberListController">
-            <classReference key="objectClass" className="IRCChannelMember"/>
+        <customObject id="hdH-wA-Q1P" userLabel="Member List Content" customClass="IRCChannelMemberListController">
             <connections>
                 <outlet property="tableView" destination="bgh-q2-4XX" id="hkO-aM-hXC"/>
             </connections>
-        </arrayController>
+        </customObject>
     </objects>
     <resources>
         <image name="NSApplicationIcon" width="512" height="512"/>

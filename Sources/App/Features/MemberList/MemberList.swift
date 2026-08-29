@@ -92,7 +92,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 	private var lastRowShownUserInfoPopover = -1
 
 	private var members: [ChannelUser] {
-		contentController?.arrangedObjects as? [ChannelUser] ?? []
+		contentController?.arrangedObjects ?? []
 	}
 
 	private var isGrouped: Bool {
