@@ -20,6 +20,15 @@ public protocol ChannelSpotlightControllerDelegate: AnyObject {
 	func channelSpotlightControllerWillClose(_ sender: ChannelSpotlightController)
 }
 
+private nonisolated enum ChannelSpotlightSection: Hashable, Sendable { // nonisolated: value
+	case results
+}
+
+private typealias ChannelSpotlightDataSource =
+	NSTableViewDiffableDataSource<ChannelSpotlightSection, ChannelSpotlightSearchResult.ID>
+private typealias ChannelSpotlightSnapshot =
+	NSDiffableDataSourceSnapshot<ChannelSpotlightSection, ChannelSpotlightSearchResult.ID>
+
 @objc(TDCChannelSpotlightController)
 @MainActor
 public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource, NSTableViewDelegate,
@@ -38,7 +47,14 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	@IBOutlet private var searchResultsViewHeightConstraint: NSLayoutConstraint!
 	@IBOutlet private var searchField: NSTextField!
 	@IBOutlet private var searchResultsTable: NSTableView!
-	@IBOutlet private var searchResultsController: NSArrayController!
+
+	/// Every channel the spotlight knows about, in the order it found them.
+	private var allSearchResults: [ChannelSpotlightSearchResult] = []
+	/// The subset the table draws, best match first.
+	private var displayedSearchResults: [ChannelSpotlightSearchResult] = []
+	private var searchResultsDataSource: ChannelSpotlightDataSource?
+	/// The only server to show channels from, or `nil` for every server.
+	private var restrictedClientID: String?
 
 	private var mouseEventMonitor: Any?
 	private lazy var notifications = NotificationSubscriptions()
@@ -53,13 +69,13 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 		searchResultsTable.doubleAction = #selector(delegatePostSelectChannelForDoubleClickedRow(_:))
 
+		let searchResultsDataSource = makeSearchResultsDataSource()
+		self.searchResultsDataSource = searchResultsDataSource
+		searchResultsTable.dataSource = searchResultsDataSource
+
 		mouseEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
 			self?.respondToKeyDownEvent(event) ?? event
 		}
-
-		searchResultsController.sortDescriptors = [
-			NSSortDescriptor(key: "distance", ascending: false, selector: #selector(NSNumber.compare(_:))),
-		]
 
 		notifications.observe(NSNotification.Name("TXApplicationAppearanceChangedNotification")) { [weak self] _ in
 			self?.applicationAppearanceChanged()
@@ -78,7 +94,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 				self?.preferencesChanged(notification)
 			}
 
-		populateArrayController()
+		populateSearchResults()
 
 		searchField.controlSize = .large
 
@@ -89,7 +105,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		noResultsLabelLeadingConstraint.textual_archiveConstant()
 		searchResultsViewHeightConstraint.textual_archiveConstant()
 
-		updatePredicate()
+		updateClientRestriction()
 	}
 
 	// MARK: - Glass Effect
@@ -386,20 +402,79 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		searchField.stringValue
 	}
 
-	// MARK: - Search Results
+	// MARK: - Search results
 
-	private func updatePredicate() {
-		if TextualPreferences.channelNavigationIsServerSpecific() {
-			let clientId = AppController.shared.mainWindow.selectedClient?.uniqueIdentifier ?? ""
+	private func makeSearchResultsDataSource() -> ChannelSpotlightDataSource {
+		let dataSource = ChannelSpotlightDataSource(
+			tableView: searchResultsTable
+		) { [weak self] tableView, column, _, resultID in
+			let view = tableView.makeView(withIdentifier: column.identifier, owner: self)
 
-			searchResultsController.filterPredicate = NSPredicate(
-				format: "distance >= 0.5 && clientId LIKE[c] %@",
-				clientId
-			)
-		} else {
-			searchResultsController.filterPredicate = NSPredicate(format: "distance >= 0.5")
+			guard let cell = view as? ChannelSpotlightSearchResultCellView else {
+				return view ?? NSView()
+			}
+
+			cell.objectValue = self?.searchResult(withID: resultID)
+
+			return cell
 		}
 
+		/* The delegate's `rowViewForRow` is not consulted once a diffable data
+		 source is installed, so the row view is handed over here instead. */
+		dataSource.rowViewProvider = { [weak self] _, _, _ in
+			guard let self else {
+				return NSTableRowView()
+			}
+
+			return ChannelSpotlightSearchResultRowView(controller: self)
+		}
+
+		return dataSource
+	}
+
+	private func searchResult(
+		withID id: ChannelSpotlightSearchResult.ID
+	) -> ChannelSpotlightSearchResult? {
+		displayedSearchResults.first { $0.id == id }
+	}
+
+	/// Re-derives the rows to draw and hands them to the table.
+	private func applySearchResults() {
+		guard let searchResultsDataSource else {
+			return
+		}
+
+		displayedSearchResults = ChannelSpotlightSearchResults.displayed(
+			allSearchResults,
+			restrictedToClient: restrictedClientID,
+			distance: \.distance,
+			clientID: \.clientId
+		)
+
+		/* A channel belongs to one client and appears once, so a repeat would be
+		 a bug upstream — but a snapshot holding two equal item identifiers traps,
+		 and that is not worth a crash. */
+		var admitted: Set<ChannelSpotlightSearchResult.ID> = []
+		displayedSearchResults = displayedSearchResults.filter { admitted.insert($0.id).inserted }
+
+		var snapshot = ChannelSpotlightSnapshot()
+		snapshot.appendSections([.results])
+		snapshot.appendItems(displayedSearchResults.map(\.id), toSection: .results)
+		searchResultsDataSource.apply(snapshot, animatingDifferences: false)
+	}
+
+	/// Notes which server the list is restricted to, if any.
+	///
+	/// Channel navigation can be per-server, which the array controller
+	/// expressed as a `clientId LIKE[c]` clause on its filter predicate.
+	private func updateClientRestriction() {
+		if TextualPreferences.channelNavigationIsServerSpecific() {
+			restrictedClientID = AppController.shared.mainWindow.selectedClient?.uniqueIdentifier ?? ""
+		} else {
+			restrictedClientID = nil
+		}
+
+		applySearchResults()
 		updateControlsState()
 	}
 
@@ -414,16 +489,16 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		}
 	}
 
-	@objc public var searchResults: [ChannelSpotlightSearchResult] {
-		searchResultsController.content as? [ChannelSpotlightSearchResult] ?? []
+	public var searchResults: [ChannelSpotlightSearchResult] {
+		allSearchResults
 	}
 
 	@objc public var searchResultsFiltered: [ChannelSpotlightSearchResult] {
-		searchResultsController.arrangedObjects as? [ChannelSpotlightSearchResult] ?? []
+		displayedSearchResults
 	}
 
 	@objc public var searchResultsCount: UInt {
-		UInt(searchResultsFiltered.count)
+		UInt(displayedSearchResults.count)
 	}
 
 	@objc public var selectedSearchResult: Int {
@@ -433,18 +508,17 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	private func recalculateDistanceForSearchResults() {
 		let searchString = searchField.stringValue
 
-		for searchResult in searchResults {
+		for searchResult in allSearchResults {
 			searchResult.recalculateDistance(with: searchString)
 		}
 
+		/* The scores decide both which rows are shown and their order, so the
+		 table has to be told; the array controller used to notice through KVO. */
+		applySearchResults()
 		updateControlsState()
 	}
 
-	private func populateArrayController() {
-		let filterPredicate = searchResultsController.filterPredicate
-
-		searchResultsController.filterPredicate = nil
-
+	private func populateSearchResults() {
 		let searchString = searchField.stringValue
 		var searchResults: [ChannelSpotlightSearchResult] = []
 
@@ -460,9 +534,9 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 			}
 		}
 
-		searchResultsController.textual_removeAllArrangedObjects()
-		searchResultsController.add(contentsOf: searchResults)
-		searchResultsController.filterPredicate = filterPredicate
+		allSearchResults = searchResults
+
+		applySearchResults()
 	}
 
 	private func searchResult(for channel: IRCChannel) -> ChannelSpotlightSearchResult {
@@ -473,12 +547,6 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		recalculateDistanceForSearchResults()
 	}
 
-	// MARK: - Table View Delegate
-
-	public func tableView(_: NSTableView, rowViewForRow _: Int) -> NSTableRowView? {
-		ChannelSpotlightSearchResultRowView(controller: self)
-	}
-
 	// MARK: - Notifications
 
 	private func mainWindowSelectionChanged() {
@@ -486,24 +554,24 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		 to be per-server. This could be made more efficient by checking if it is server
 		 specific and comparing the selected client identifier to what is in predicate.
 		 That involves a lot more work for something that shouldn't be fired a lot. */
-		updatePredicate()
+		updateClientRestriction()
 	}
 
 	private func preferencesChanged(_ notification: Notification) {
 		let changedKey = notification.userInfo?["changedKey"] as? String
 
 		if changedKey == "ChannelNavigationIsServerSpecific" {
-			updatePredicate()
+			updateClientRestriction()
 		}
 	}
 
 	private func clientListChanged() {
-		populateArrayController()
+		populateSearchResults()
 		updateControlsState()
 	}
 
 	private func channelListChanged() {
-		populateArrayController()
+		populateSearchResults()
 		updateControlsState()
 	}
 

@@ -8,7 +8,6 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="TDCServerChannelListDialog">
             <connections>
-                <outlet property="channelListController" destination="gJL-Lo-AKT" id="NLh-Wh-ISB"/>
                 <outlet property="channelListTable" destination="fir-Vj-Dlr" id="GeF-8A-eTo"/>
                 <outlet property="networkNameTextField" destination="132" id="GUU-qy-Vpo"/>
                 <outlet property="searchTextField" destination="103" id="m09-ig-hTb"/>
@@ -54,7 +53,7 @@
                                             <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="channelName"/>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                             <prototypeCellViews>
-                                                <tableCellView translatesAutoresizingMaskIntoConstraints="NO" id="088-fI-26f">
+                                                <tableCellView identifier="channelName" translatesAutoresizingMaskIntoConstraints="NO" id="088-fI-26f">
                                                     <rect key="frame" x="1" y="1" width="116" height="16"/>
                                                     <subviews>
                                                         <textField horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="LAi-KB-a4L">
@@ -64,9 +63,6 @@
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                             </textFieldCell>
-                                                            <connections>
-                                                                <binding destination="088-fI-26f" name="value" keyPath="objectValue.channelName" id="mfe-UI-61a"/>
-                                                            </connections>
                                                         </textField>
                                                     </subviews>
                                                     <constraints>
@@ -95,7 +91,7 @@
                                             <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="channelMemberCount"/>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                             <prototypeCellViews>
-                                                <tableCellView translatesAutoresizingMaskIntoConstraints="NO" id="65a-1B-tHU">
+                                                <tableCellView identifier="channelMemberCount" translatesAutoresizingMaskIntoConstraints="NO" id="65a-1B-tHU">
                                                     <rect key="frame" x="120" y="1" width="91" height="16"/>
                                                     <subviews>
                                                         <textField horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="9UU-Fz-GXc">
@@ -105,9 +101,6 @@
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                             </textFieldCell>
-                                                            <connections>
-                                                                <binding destination="65a-1B-tHU" name="value" keyPath="objectValue.channelMemberCount" id="GP7-TZ-7DS"/>
-                                                            </connections>
                                                         </textField>
                                                     </subviews>
                                                     <constraints>
@@ -136,7 +129,7 @@
                                             <sortDescriptor key="sortDescriptorPrototype" selector="caseInsensitiveCompare:" sortKey="channelTopicUnformatted"/>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                             <prototypeCellViews>
-                                                <tableCellView translatesAutoresizingMaskIntoConstraints="NO" id="lXg-AU-UCu">
+                                                <tableCellView identifier="channelTopic" translatesAutoresizingMaskIntoConstraints="NO" id="lXg-AU-UCu">
                                                     <rect key="frame" x="214" y="1" width="382" height="16"/>
                                                     <subviews>
                                                         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tvH-QA-89d">
@@ -146,9 +139,6 @@
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                             </textFieldCell>
-                                                            <connections>
-                                                                <binding destination="lXg-AU-UCu" name="value" keyPath="objectValue.channelTopicFormatted" id="rGL-us-Xnl"/>
-                                                            </connections>
                                                         </textField>
                                                     </subviews>
                                                     <constraints>
@@ -165,10 +155,6 @@
                                         </tableColumn>
                                     </tableColumns>
                                     <connections>
-                                        <binding destination="gJL-Lo-AKT" name="content" keyPath="arrangedObjects" id="52X-ys-8XF"/>
-                                        <binding destination="gJL-Lo-AKT" name="selectionIndexes" keyPath="selectionIndexes" previousBinding="52X-ys-8XF" id="zq3-si-kb2"/>
-                                        <binding destination="gJL-Lo-AKT" name="sortDescriptors" keyPath="sortDescriptors" previousBinding="zq3-si-kb2" id="9Rn-KF-1bQ"/>
-                                        <outlet property="dataSource" destination="-2" id="agf-xc-8d4"/>
                                         <outlet property="delegate" destination="-2" id="rJx-Wd-ijQ"/>
                                     </connections>
                                 </tableView>
@@ -248,12 +234,6 @@ Gw
                         </searchFieldCell>
                         <accessibility description="Channel List Search"/>
                         <connections>
-                            <binding destination="gJL-Lo-AKT" name="predicate" keyPath="filterPredicate" id="wAJ-2T-bDW">
-                                <dictionary key="options">
-                                    <string key="NSDisplayName">predicate</string>
-                                    <string key="NSPredicateFormat">(channelName contains[c] $value OR channelTopicUnformatted contains[c] $value)</string>
-                                </dictionary>
-                            </binding>
                             <outlet property="delegate" destination="-2" id="105"/>
                         </connections>
                     </searchField>
@@ -282,13 +262,5 @@ Gw
             </connections>
             <point key="canvasLocation" x="496" y="415"/>
         </window>
-        <arrayController objectClassName="TDCServerChannelListDialogEntry" selectsInsertedObjects="NO" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" automaticallyRearrangesObjects="YES" id="gJL-Lo-AKT">
-            <declaredKeys>
-                <string>channelName</string>
-                <string>channelMemberCount</string>
-                <string>channelTopicFormatted</string>
-                <string>channelTopicUnformatted</string>
-            </declaredKeys>
-        </arrayController>
     </objects>
 </document>

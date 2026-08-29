@@ -187,9 +187,7 @@ extension FileTransferDialog {
 	}
 
 	@IBAction private func clear(_: Any?) {
-		let transfers = stoppedFileTransfers
-		prepareForPermanentDestruction(transfers)
-		fileTransfersController.remove(contentsOf: transfers)
+		removeFileTransfers(stoppedFileTransfers)
 		updateClearButton()
 	}
 
@@ -229,9 +227,7 @@ extension FileTransferDialog {
 	}
 
 	@IBAction private func removeTransferFromList(_: Any?) {
-		let transfers = selectedFileTransfers
-		prepareForPermanentDestruction(transfers)
-		fileTransfersController.remove(contentsOf: transfers)
+		removeFileTransfers(selectedFileTransfers)
 	}
 
 	@objc public func updateMaintenanceTimer() {
@@ -276,12 +272,14 @@ extension FileTransferDialog {
 		fileTransfers(matching: \.isSender)
 	}
 
-	private var arrangedFileTransfers: [TDCFileTransferDialogTransferController] {
-		fileTransfersController?.arrangedObjects as? [TDCFileTransferDialogTransferController] ?? []
+	/// The transfers the table is drawing, in row order.
+	var arrangedFileTransfers: [TDCFileTransferDialogTransferController] {
+		navigationSelection.shownTransfers(in: storedFileTransfers, isSender: \.isSender)
 	}
 
+	/// Every transfer, whatever the toolbar is showing.
 	private var allFileTransfers: [TDCFileTransferDialogTransferController] {
-		arrangedFileTransfers
+		storedFileTransfers
 	}
 
 	private var receiverCount: Int {
@@ -300,18 +298,26 @@ extension FileTransferDialog {
 	}
 
 	private func addFileTransfer(_ controller: TDCFileTransferDialogTransferController) {
-		let predicate = fileTransfersController.filterPredicate
-		fileTransfersController.filterPredicate = nil
-		fileTransfersController.insert(controller, atArrangedObjectIndex: 0)
-		fileTransfersController.filterPredicate = predicate
+		/* Newest first, and stored whether or not the toolbar is showing its
+		 direction — the filter is applied when the rows are built. */
+		storedFileTransfers.insert(controller, at: 0)
+
+		applyFileTransfers()
 	}
 
 	private func removeFileTransfers(matching client: IRCClient) {
-		let transfers = fileTransfers { $0.client === client }
-		guard !transfers.isEmpty else { return }
+		removeFileTransfers(fileTransfers { $0.client === client })
+	}
+
+	private func removeFileTransfers(_ transfers: [TDCFileTransferDialogTransferController]) {
+		guard transfers.isEmpty == false else { return }
 
 		prepareForPermanentDestruction(transfers)
-		fileTransfersController.remove(contentsOf: transfers)
+
+		let removed = Set(transfers.map(\.uniqueIdentifier))
+		storedFileTransfers.removeAll { removed.contains($0.uniqueIdentifier) }
+
+		applyFileTransfers()
 	}
 
 	private func prepareForPermanentDestruction(
