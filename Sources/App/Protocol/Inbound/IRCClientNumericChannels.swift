@@ -288,7 +288,9 @@ extension IRCClient {
 		let extended = message.params.count > 4 + offset
 		let author = extended ? (message.params[3 + offset] as NSString).nicknameFromHostmask : nil
 		let date = extended ? Date(timeIntervalSince1970: TimeInterval(message.params[4 + offset]) ?? 0) : nil
-		if let sheet = SharedApplication.sharedWindowController().window(fromWindowList: "TDCChannelBanListSheet")
+		if let sheet = SharedApplication.sharedWindowController().window(
+			fromWindowList: WindowController.windowDescription(forClass: ChannelBanListSheet.self)
+		)
 			as? ChannelBanListSheet
 		{
 			if sheet.contentAlreadyReceived {
@@ -309,7 +311,9 @@ extension IRCClient {
 	}
 
 	private func handleEndOfModeListNumeric(_ message: Message, shouldPrint: Bool) {
-		if let sheet = SharedApplication.sharedWindowController().window(fromWindowList: "TDCChannelBanListSheet")
+		if let sheet = SharedApplication.sharedWindowController().window(
+			fromWindowList: WindowController.windowDescription(forClass: ChannelBanListSheet.self)
+		)
 			as? ChannelBanListSheet
 		{
 			sheet.contentAlreadyReceived = true

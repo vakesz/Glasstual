@@ -160,9 +160,8 @@ public extension MenuActionCoordinator {
 	}
 
 	private func showPreferences(_ selection: PreferencesControllerSelection) {
-		if let controller = windowController
-			.window(fromWindowList: "TDCPreferencesController") as? PreferencesController
-		{
+		let key = WindowController.windowDescription(forClass: PreferencesController.self)
+		if let controller = windowController.window(fromWindowList: key) as? PreferencesController {
 			controller.show(selection)
 			return
 		}

@@ -399,11 +399,11 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		config.destroySecretKeyKeychainItem()
 
 		let descriptions = [
-			"TDCChannelPropertiesSheet",
-			"TDCChannelModifyTopicSheet",
-			"TDCChannelModifyModesSheet",
-			"TDCChannelBanListSheet",
-		]
+			ChannelPropertiesSheet.self,
+			ChannelModifyTopicSheet.self,
+			ChannelModifyModesSheet.self,
+			ChannelBanListSheet.self,
+		].map { WindowController.windowDescription(forClass: $0) }
 		let windows = SharedApplication.sharedWindowController().windows(fromWindowList: descriptions)
 
 		for case let window as SheetBase in windows {

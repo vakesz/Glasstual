@@ -52,6 +52,19 @@ public final class WindowController: NSObject {
 		return "\(windowClass) -> \(String(describing: relatedObject))"
 	}
 
+	/** The registry keys on the runtime class name, so a caller names the class
+	 itself. A string literal spelling that name silently stops matching the day
+	 the class gives up its Objective-C name. */
+	public nonisolated static func windowDescription(forClass windowClass: AnyClass) -> String { // nonisolated: pure
+		NSStringFromClass(windowClass)
+	}
+
+	public nonisolated static func windowDescription(forClass windowClass: AnyClass, // nonisolated: pure
+	                                                 inRelationTo relatedObject: Any) -> String
+	{
+		"\(NSStringFromClass(windowClass)) -> \(String(describing: relatedObject))"
+	}
+
 	public func addWindow(toWindowList window: Any) {
 		addWindow(toWindowList: window, inRelationTo: nil)
 	}
