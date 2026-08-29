@@ -38,15 +38,133 @@
 
 import AppKit
 import CocoaExtensions
+import GlasstualPluginKit
+
+nonisolated enum ServerPropertiesTableSection: Hashable, Sendable { // nonisolated: value
+	case rows
+}
+
+/// A diffable data source that still answers the drag-and-drop questions.
+///
+/// `NSTableViewDiffableDataSource` implements only the row-count half of
+/// `NSTableViewDataSource`, and a table asks its *data source* — not its
+/// delegate — where a drag may land, so both answers have to come from the one
+/// object. The three methods below are `@objc` because they satisfy optional
+/// requirements of a protocol the superclass, not this class, declares, and
+/// Swift will not expose them to the runtime on its own.
+///
+/// The class is `nonisolated` because the initializer it inherits is: a
+/// main-actor subclass cannot re-declare it. It holds no state of its own, and
+/// each `@objc` entry point — every one of them called by AppKit on the main
+/// thread — hops back onto the main actor by declaration. The sheet is reached
+/// through the table's delegate rather than a stored reference so that there is
+/// nothing here for the two isolations to disagree about.
+nonisolated class ServerPropertiesTableDataSource: // nonisolated: xpc-shim
+	NSTableViewDiffableDataSource<ServerPropertiesTableSection, String>
+{
+	@MainActor
+	@objc
+	func tableView(_: NSTableView, pasteboardWriterForRow row: Int) -> (any NSPasteboardWriting)? {
+		let item = NSPasteboardItem()
+		item.setString(String(row), forType: serverPropertiesTableDragToken)
+
+		return item
+	}
+
+	@MainActor
+	@objc
+	func tableView(
+		_ tableView: NSTableView,
+		validateDrop _: any NSDraggingInfo,
+		proposedRow row: Int,
+		proposedDropOperation _: NSTableView.DropOperation
+	) -> NSDragOperation {
+		tableView.setDropRow(row, dropOperation: .above)
+
+		return .move
+	}
+
+	@MainActor
+	@objc
+	func tableView(
+		_ tableView: NSTableView,
+		acceptDrop info: any NSDraggingInfo,
+		row: Int,
+		dropOperation _: NSTableView.DropOperation
+	) -> Bool {
+		guard let sheet = tableView.delegate as? ServerPropertiesSheet else {
+			return false
+		}
+
+		return sheet.acceptTableDrop(info, in: tableView, atRow: row)
+	}
+}
 
 extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesSheetDelegate {
 	func configureTables() {
+		addressBookTableDataSource = makeTableDataSource(for: addressBookTable)
+		channelListTableDataSource = makeTableDataSource(for: channelListTable)
+		highlightsTableDataSource = makeTableDataSource(for: highlightsTable)
+
+		addressBookTable.dataSource = addressBookTableDataSource
+		channelListTable.dataSource = channelListTableDataSource
+		highlightsTable.dataSource = highlightsTableDataSource
+
 		for table in [addressBookTable, channelListTable, highlightsTable] {
+			table?.delegate = self
 			table?.target = self
 			table?.doubleAction = #selector(tableViewDoubleClicked(_:))
 			table?.registerForDraggedTypes([serverPropertiesTableDragToken])
 			table?.draggingDestinationFeedbackStyle = .gap
 		}
+	}
+
+	private func makeTableDataSource(for table: BasicTableView) -> ServerPropertiesTableDataSource {
+		ServerPropertiesTableDataSource(tableView: table) { [weak self] view, column, row, _ in
+			self?.tableCell(in: view, column: column, row: row) ?? NSView()
+		}
+	}
+
+	/// The channel list draws only real channels; a private message carries a
+	/// channel config too, and it has no business in this table.
+	///
+	/// This was an `NSPredicate(format: "type == 0")` on the array controller,
+	/// which could never have worked: the configs are Swift structs, so the
+	/// controller boxed them, and asking a box for `type` by key raises
+	/// `NSUnknownKeyException`. Setting the predicate on a client that had any
+	/// channel configured therefore threw on the way into the sheet.
+	static func displayedChannels(in channelList: [ChannelConfig]) -> [ChannelConfig] {
+		channelList.filter { $0.type == .channel }
+	}
+
+	var displayedChannelList: [ChannelConfig] {
+		Self.displayedChannels(in: channelList)
+	}
+
+	func applyAddressBookList() {
+		apply(addressBookList.map(\.uniqueIdentifier), to: addressBookTableDataSource)
+		updateAddressBookPage()
+	}
+
+	func applyChannelList() {
+		apply(displayedChannelList.map(\.uniqueIdentifier), to: channelListTableDataSource)
+		updateChannelListPage()
+	}
+
+	func applyHighlightList() {
+		apply(highlightList.map(\.uniqueIdentifier), to: highlightsTableDataSource)
+		updateHighlightsPage()
+	}
+
+	private func apply(_ identifiers: [String], to dataSource: ServerPropertiesTableDataSource?) {
+		guard let dataSource else {
+			return
+		}
+
+		var snapshot = NSDiffableDataSourceSnapshot<ServerPropertiesTableSection, String>()
+		snapshot.appendSections([.rows])
+		snapshot.appendItems(identifiers, toSection: .rows)
+		dataSource.apply(snapshot, animatingDifferences: false)
 	}
 
 	func populateEncodings() {
@@ -125,52 +243,50 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesS
 		editChannelButton.isEnabled = enabled
 	}
 
-	func clearChannelListPredicate() {
-		channelListArrayController.filterPredicate = nil
-	}
-
-	func setChannelListPredicate() {
-		channelListArrayController.filterPredicate = NSPredicate(format: "type == 0")
-	}
-
 	private func unfilteredChannelIndex(identifier: String) -> Int? {
-		let all = channelListArrayController.arrangedObjects as? [ChannelConfig] ?? []
-		return all.firstIndex { $0.uniqueIdentifier == identifier }
+		channelList.firstIndex { $0.uniqueIdentifier == identifier }
 	}
 
 	private func storeChannelConfig(_ config: ChannelConfig) {
-		clearChannelListPredicate()
 		if let index = unfilteredChannelIndex(identifier: config.uniqueIdentifier) {
-			channelListArrayController.textual_replaceObject(atArrangedObjectIndex: UInt(index), with: config)
+			channelList[index] = config
 		} else {
-			channelListArrayController.addObject(config)
+			channelList.append(config)
 		}
-		setChannelListPredicate()
+
+		applyChannelList()
 	}
 
 	private func removeChannelConfig(_ config: ChannelConfig) {
-		clearChannelListPredicate()
-		if let index = unfilteredChannelIndex(identifier: config.uniqueIdentifier) {
-			channelListArrayController.removeObject(UInt(index))
+		guard let index = unfilteredChannelIndex(identifier: config.uniqueIdentifier) else {
+			return
 		}
-		setChannelListPredicate()
+
+		channelList.remove(at: index)
+
+		applyChannelList()
 	}
 
 	private func moveChannelConfig(_ config: ChannelConfig, above target: ChannelConfig?) {
-		clearChannelListPredicate()
 		guard let from = unfilteredChannelIndex(identifier: config.uniqueIdentifier) else {
-			setChannelListPredicate()
 			return
 		}
-		let count = (channelListArrayController.arrangedObjects as? [Any])?.count ?? 0
-		/* A drop past the last row proposes `count`, which is one past the end;
-		 the destination has to be an index that exists. */
-		let lastIndex = max(count - 1, 0)
-		let to = min(target.flatMap { unfilteredChannelIndex(identifier: $0.uniqueIdentifier) } ?? lastIndex, lastIndex)
-		if from != to {
-			channelListArrayController.textual_moveObject(atArrangedObjectIndex: UInt(from), to: UInt(to))
+
+		/* The move is over the whole list, not the rows on screen, because a
+		 private message sitting between two channels still holds a position. */
+		let lastIndex = max(channelList.count - 1, 0)
+		let to = min(
+			target.flatMap { unfilteredChannelIndex(identifier: $0.uniqueIdentifier) } ?? lastIndex,
+			lastIndex
+		)
+
+		guard from != to else {
+			return
 		}
-		setChannelListPredicate()
+
+		channelList.insert(channelList.remove(at: from), at: to)
+
+		applyChannelList()
 	}
 
 	func updateHighlightsPage() {
@@ -199,10 +315,12 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesS
 
 	public func highlightEntrySheet(_: HighlightEntrySheet, didSave config: HighlightMatchCondition) {
 		if let index = highlightList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
-			highlightListArrayController.textual_replaceObject(atArrangedObjectIndex: UInt(index), with: config)
+			highlightList[index] = config
 		} else {
-			highlightListArrayController.addObject(config)
+			highlightList.append(config)
 		}
+
+		applyHighlightList()
 	}
 
 	public func highlightEntrySheetDidClose(_: HighlightEntrySheet) {
@@ -210,11 +328,15 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesS
 	}
 
 	@IBAction private func deleteHighlight(_: Any?) {
-		removeSelectedRow(
-			from: highlightsTable,
-			controller: highlightListArrayController,
-			remainingCount: { self.highlightList.count }
-		)
+		let row = highlightsTable.selectedRow
+
+		guard highlightList.indices.contains(row) else {
+			return
+		}
+
+		highlightList.remove(at: row)
+		applyHighlightList()
+		selectNearestRow(in: highlightsTable, previousRow: row, remainingCount: highlightList.count)
 	}
 
 	@IBAction private func addChannel(_: Any?) {
@@ -227,8 +349,9 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesS
 
 	@IBAction private func editChannel(_: Any?) {
 		let row = channelListTable.selectedRow
-		guard channelList.indices.contains(row) else { return }
-		let controller = ChannelPropertiesSheet(config: channelList[row])
+		let displayed = displayedChannelList
+		guard displayed.indices.contains(row) else { return }
+		let controller = ChannelPropertiesSheet(config: displayed[row])
 		controller.delegate = self
 		controller.window = sheet
 		controller.start()
@@ -245,32 +368,27 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesS
 
 	@IBAction private func deleteChannel(_: Any?) {
 		let row = channelListTable.selectedRow
-		guard channelList.indices.contains(row) else { return }
-		removeChannelConfig(channelList[row])
-		selectNearestRow(in: channelListTable, previousRow: row, remainingCount: channelList.count)
+		let displayed = displayedChannelList
+		guard displayed.indices.contains(row) else { return }
+		removeChannelConfig(displayed[row])
+		selectNearestRow(
+			in: channelListTable,
+			previousRow: row,
+			remainingCount: displayedChannelList.count
+		)
 	}
 
-	func removeSelectedRow(
-		from table: BasicTableView,
-		controller: NSArrayController,
-		remainingCount: () -> Int
-	) {
-		let row = table.selectedRow
-		guard row >= 0 else { return }
-		controller.removeObject(UInt(row))
-		selectNearestRow(in: table, previousRow: row, remainingCount: remainingCount())
-	}
-
-	private func selectNearestRow(in table: BasicTableView, previousRow: Int, remainingCount: Int) {
+	func selectNearestRow(in table: BasicTableView, previousRow: Int, remainingCount: Int) {
 		guard remainingCount > 0 else { return }
 		table.selectItem(at: min(previousRow, remainingCount - 1))
 	}
 
 	@objc private func channelAutoJoinToggled(_ sender: NSButton) {
 		let row = channelListTable.row(for: sender)
-		guard channelList.indices.contains(row) else { return }
+		let displayed = displayedChannelList
+		guard displayed.indices.contains(row) else { return }
 
-		var config = channelList[row]
+		var config = displayed[row]
 		config.autoJoin = sender.state == .on
 		storeChannelConfig(config)
 	}
@@ -286,24 +404,37 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesS
 	}
 }
 
-extension ServerPropertiesSheet: NSTableViewDataSource, NSTableViewDelegate {
-	public func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-		guard let column = tableColumn else { return nil }
+extension ServerPropertiesSheet: NSTableViewDelegate {
+	/// The view for one cell. The data source asks for this now — the delegate's
+	/// `tableView(_:viewFor:row:)` is never consulted once a diffable data
+	/// source is installed.
+	func tableCell(in tableView: NSTableView, column: NSTableColumn, row: Int) -> NSView? {
 		let cell = tableView.makeView(withIdentifier: column.identifier, owner: self) as? NSTableCellView
-		if tableView === channelListTable, column.identifier.rawValue == "join", channelList.indices.contains(row) {
+		let displayedChannels = displayedChannelList
+
+		if tableView === channelListTable,
+		   column.identifier.rawValue == "join",
+		   displayedChannels.indices.contains(row)
+		{
 			let checkbox = cell?.subviews.first as? NSButton
-			checkbox?.state = channelList[row].autoJoin ? .on : .off
+			checkbox?.state = displayedChannels[row].autoJoin ? .on : .off
 			checkbox?.target = self
 			checkbox?.action = #selector(channelAutoJoinToggled(_:))
 			return cell
 		}
+
 		cell?.textField?.stringValue = stringValue(for: tableView, column: column.identifier.rawValue, row: row) ?? ""
 		return cell
 	}
 
 	private func stringValue(for tableView: NSTableView, column: String, row: Int) -> String? {
-		if tableView === channelListTable, channelList.indices.contains(row) {
-			let config = channelList[row]
+		if tableView === channelListTable {
+			let displayed = displayedChannelList
+			guard displayed.indices.contains(row) else {
+				return nil
+			}
+
+			let config = displayed[row]
 			if column == "name" {
 				return config.channelName
 			}
@@ -349,28 +480,9 @@ extension ServerPropertiesSheet: NSTableViewDataSource, NSTableViewDelegate {
 		}
 	}
 
-	public func tableView(_: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
-		let item = NSPasteboardItem()
-		item.setString(String(row), forType: serverPropertiesTableDragToken)
-		return item
-	}
-
-	public func tableView(
-		_ tableView: NSTableView,
-		validateDrop _: any NSDraggingInfo,
-		proposedRow row: Int,
-		proposedDropOperation _: NSTableView.DropOperation
-	) -> NSDragOperation {
-		tableView.setDropRow(row, dropOperation: .above)
-		return .move
-	}
-
-	public func tableView(
-		_ tableView: NSTableView,
-		acceptDrop info: any NSDraggingInfo,
-		row: Int,
-		dropOperation _: NSTableView.DropOperation
-	) -> Bool {
+	/// Reorders the list behind `tableView`. Called by the table's data source,
+	/// which is where a table asks about dropping.
+	func acceptTableDrop(_ info: any NSDraggingInfo, in tableView: NSTableView, atRow row: Int) -> Bool {
 		guard let value = info.draggingPasteboard.string(forType: serverPropertiesTableDragToken),
 		      let draggedRow = Int(value),
 		      draggedRow >= 0, draggedRow < tableView.numberOfRows
@@ -380,20 +492,27 @@ extension ServerPropertiesSheet: NSTableViewDataSource, NSTableViewDelegate {
 		 to it would index out of range. */
 		let destination = min(row, tableView.numberOfRows - 1)
 
-		if tableView === channelListTable, channelList.indices.contains(draggedRow) {
-			let target = channelList.indices.contains(destination) ? channelList[destination] : nil
-			moveChannelConfig(channelList[draggedRow], above: target)
+		if tableView === channelListTable {
+			let displayed = displayedChannelList
+			guard displayed.indices.contains(draggedRow) else { return false }
+			let target = displayed.indices.contains(destination) ? displayed[destination] : nil
+			moveChannelConfig(displayed[draggedRow], above: target)
 		} else if tableView === highlightsTable {
-			highlightListArrayController.textual_moveObject(
-				atArrangedObjectIndex: UInt(draggedRow),
-				to: UInt(destination)
-			)
+			move(&highlightList, from: draggedRow, to: destination)
+			applyHighlightList()
 		} else if tableView === addressBookTable {
-			addressBookArrayController.textual_moveObject(
-				atArrangedObjectIndex: UInt(draggedRow),
-				to: UInt(destination)
-			)
+			move(&addressBookList, from: draggedRow, to: destination)
+			applyAddressBookList()
 		}
+
 		return true
+	}
+
+	private func move(_ list: inout [some Any], from: Int, to: Int) {
+		guard list.indices.contains(from), list.indices.contains(to), from != to else {
+			return
+		}
+
+		list.insert(list.remove(at: from), at: to)
 	}
 }

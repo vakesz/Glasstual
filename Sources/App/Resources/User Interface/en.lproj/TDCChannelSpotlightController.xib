@@ -11,7 +11,6 @@
                 <outlet property="noResultsLabel" destination="Gag-Uy-6zA" id="hU8-te-kTl"/>
                 <outlet property="noResultsLabelLeadingConstraint" destination="mSk-dR-BZk" id="hU8-te-kTm"/>
                 <outlet property="searchField" destination="1E4-kg-4iF" id="bZT-CB-oym"/>
-                <outlet property="searchResultsController" destination="fxa-x1-fZ7" id="xfS-1h-r9R"/>
                 <outlet property="searchResultsTable" destination="tt4-3F-bvy" id="x3U-fE-QVn"/>
                 <outlet property="searchResultsView" destination="bUM-jd-4A3" id="MHg-3d-1uU"/>
                 <outlet property="searchResultsViewHeightConstraint" destination="Cw6-e1-FPi" id="FxS-bL-7wh"/>
@@ -21,16 +20,6 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <arrayController objectClassName="TDCChannelSpotlightSearchResult" editable="NO" selectsInsertedObjects="NO" clearsFilterPredicateOnInsertion="NO" automaticallyRearrangesObjects="YES" id="fxa-x1-fZ7" userLabel="Spotlight Array Controller">
-            <declaredKeys>
-                <string>channelName</string>
-                <string>keyboardShortcut</string>
-                <string>unreadCountDescription</string>
-            </declaredKeys>
-            <metadata>
-                <string key="libraryAssetSourceID">Xcode.InterfaceBuilderKit.ClassDescriptions.Cocoa:IBLibrary-ArrayController</string>
-            </metadata>
-        </arrayController>
         <window title="Channel Spotlight" allowsToolTipsWhenApplicationIsInactive="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="BfF-sG-KJr" customClass="TDCChannelSpotlightPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="272" y="172" width="600" height="194"/>
@@ -79,7 +68,7 @@
                                                     <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="calibratedRGB"/>
                                                     <color key="gridColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="calibratedRGB"/>
                                                     <tableColumns>
-                                                        <tableColumn width="588" minWidth="40" maxWidth="1000" id="5Rr-IZ-SKM">
+                                                        <tableColumn identifier="searchResult" width="588" minWidth="40" maxWidth="1000" id="5Rr-IZ-SKM">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -91,7 +80,7 @@
                                                             </textFieldCell>
                                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                             <prototypeCellViews>
-                                                                <tableCellView id="G8b-ye-mjd" customClass="TDCChannelSpotlightSearchResultCellView">
+                                                                <tableCellView identifier="searchResult" id="G8b-ye-mjd" customClass="TDCChannelSpotlightSearchResultCellView">
                                                                     <rect key="frame" x="0.0" y="0.0" width="600" height="46"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                     <subviews>
@@ -102,9 +91,6 @@
                                                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                             </textFieldCell>
-                                                                            <connections>
-                                                                                <binding destination="G8b-ye-mjd" name="value" keyPath="self.channelName" id="1l0-Lg-xo1"/>
-                                                                            </connections>
                                                                         </textField>
                                                                         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="Js1-ti-O0L">
                                                                             <rect key="frame" x="8" y="7" width="172" height="15"/>
@@ -113,9 +99,6 @@
                                                                                 <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                                                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                             </textFieldCell>
-                                                                            <connections>
-                                                                                <binding destination="G8b-ye-mjd" name="value" keyPath="self.unreadCountDescription" id="F6Q-hG-sKu"/>
-                                                                            </connections>
                                                                         </textField>
                                                                         <textField verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="ipN-YI-lSG">
                                                                             <rect key="frame" x="561" y="11" width="31" height="24"/>
@@ -124,9 +107,6 @@
                                                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                             </textFieldCell>
-                                                                            <connections>
-                                                                                <binding destination="G8b-ye-mjd" name="value" keyPath="self.keyboardShortcut" id="p58-66-TYl"/>
-                                                                            </connections>
                                                                         </textField>
                                                                     </subviews>
                                                                     <constraints>
@@ -151,8 +131,6 @@
                                                     </tableColumns>
                                                     <accessibility description="List of channels"/>
                                                     <connections>
-                                                        <binding destination="fxa-x1-fZ7" name="content" keyPath="arrangedObjects" id="YXr-4Y-eSX"/>
-                                                        <binding destination="fxa-x1-fZ7" name="selectionIndexes" keyPath="selectionIndexes" previousBinding="YXr-4Y-eSX" id="yHd-km-35x"/>
                                                         <outlet property="delegate" destination="-2" id="S2O-kY-KVM"/>
                                                     </connections>
                                                 </tableView>

@@ -184,10 +184,17 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 	@IBOutlet var sleepModeQuitMessageTextField: ValidatedTextField!
 	@IBOutlet var usernameTextField: ValidatedTextField!
 	@IBOutlet var connectCommandsField: NSTextView!
-	@IBOutlet var addressBookArrayController: NSArrayController!
-	@IBOutlet var channelListArrayController: NSArrayController!
-	@IBOutlet var highlightListArrayController: NSArrayController!
-	@IBOutlet var serverListArrayController: NSArrayController!
+	/* The four lists the sheet edits. They used to live in `NSArrayController`s
+	 that the nib bound to the tables; the tables read them through a diffable
+	 data source now, so the sheet owns them outright. */
+	var addressBookList: [AddressBookEntry] = []
+	var channelList: [ChannelConfig] = []
+	var highlightList: [HighlightMatchCondition] = []
+	var serverList: [Server] = []
+
+	var addressBookTableDataSource: ServerPropertiesTableDataSource?
+	var channelListTableDataSource: ServerPropertiesTableDataSource?
+	var highlightsTableDataSource: ServerPropertiesTableDataSource?
 
 	@objc(initWithClient:)
 	public init(client: IRCClient?) {
@@ -204,22 +211,6 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		super.init(window: nil)
 		prepareInitialState()
 		loadConfig()
-	}
-
-	var addressBookList: [AddressBookEntry] {
-		addressBookArrayController.arrangedObjects as? [AddressBookEntry] ?? []
-	}
-
-	var channelList: [ChannelConfig] {
-		channelListArrayController.arrangedObjects as? [ChannelConfig] ?? []
-	}
-
-	var highlightList: [HighlightMatchCondition] {
-		highlightListArrayController.arrangedObjects as? [HighlightMatchCondition] ?? []
-	}
-
-	var serverList: [Server] {
-		serverListArrayController.arrangedObjects as? [Server] ?? []
 	}
 
 	private func prepareInitialState() {
@@ -354,7 +345,6 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		guard okOrError() else { return }
 		removeConfigurationDidChangeObserver()
 		closeChildSheets()
-		clearChannelListPredicate()
 		saveConfig()
 		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheet(self, onOk: config)
 		super.ok(sender)
@@ -446,18 +436,16 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		floodControlDelayTimerSliderTempValue = config.floodControlDelayTimerInterval
 		floodControlMessageCountSliderTempValue = config.floodControlMaximumMessages
 
-		clearChannelListPredicate()
-		addressBookArrayController.textual_removeAllArrangedObjects()
-		channelListArrayController.textual_removeAllArrangedObjects()
-		highlightListArrayController.textual_removeAllArrangedObjects()
-		serverListArrayController.textual_removeAllArrangedObjects()
-		addressBookArrayController.add(contentsOf: config.ignoreList)
-		channelListArrayController.add(contentsOf: config.channelList)
-		highlightListArrayController.add(contentsOf: config.highlightList)
-		serverListArrayController.add(contentsOf: config.serverList)
+		addressBookList = config.ignoreList
+		channelList = config.channelList
+		highlightList = config.highlightList
+		serverList = config.serverList
+
+		applyAddressBookList()
+		applyChannelList()
+		applyHighlightList()
 
 		loadPrimaryServerEndpoint()
-		setChannelListPredicate()
 		updateAddressBookPage()
 		updateChannelListPage()
 		updateClientCertificatePage()

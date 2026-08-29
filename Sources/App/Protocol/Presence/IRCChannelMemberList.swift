@@ -298,35 +298,31 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			client?.associate(newMember.user, with: channel)
 		}
 
-		var oldIndex: Int?
 		let newIndex: Int? = if resort {
 			{
-				oldIndex = removeStoredMember(oldMember)
+				/* The old position is not needed any more: a resort is handed to
+				 the table as one new ordering. */
+				_ = removeStoredMember(oldMember)
 				return sortedInsert(newMember)
 			}()
 		} else {
 			replaceStoredMember(oldMember, with: newMember)
 		}
 
-		guard let newIndex, channel.isChannel else {
-			return
-		}
-
-		guard let controller, let output = clientStorage?.output, output.beginMemberListUpdates()
-		else {
+		/* A controller is only attached to the channel whose member list is on
+		 screen, so this is also the test for "is anyone drawing this?". */
+		guard let newIndex, let controller, channel.isChannel else {
 			return
 		}
 
 		if resort {
-			if let oldIndex {
-				controller.remove(atArrangedObjectIndex: oldIndex)
-			}
-			controller.insert(newMember, atArrangedObjectIndex: newIndex)
+			/* Handed over as one ordering rather than a removal followed by an
+			 insert: taking the person out of the list, even for an instant, is
+			 what used to drop a selection that was on them. */
+			controller.replaceContents(memberList)
 		} else {
-			output.refreshMemberListDrawing(forMemberAt: newIndex)
+			controller.replace(newMember, atArrangedObjectIndex: newIndex)
 		}
-
-		output.endMemberListUpdates()
 	}
 
 	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser) {
