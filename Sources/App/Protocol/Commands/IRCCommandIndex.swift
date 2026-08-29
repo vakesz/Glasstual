@@ -39,45 +39,68 @@ import Foundation
 
 @objc(IRCCommandIndex)
 public final class CommandIndex: NSObject {
-	private static let storage = CommandIndexStorage()
-
 	@objc(populateCommandIndex)
 	public static func populateCommandIndex() {
-		storage.populateIfNeeded()
+		/* Reading the tables is what builds them, and Swift guarantees that
+		 happens exactly once. Called at start-up so the first command does not
+		 pay for it. */
+		_ = commandIndexTables.isEmpty
 	}
 
 	@objc(invalidateCaches)
 	public static func invalidateCaches() {
-		storage.invalidateCaches()
+		/* Nothing left to invalidate: the developer-mode split is decided when
+		 the tables are built, so both command lists already exist. Kept because
+		 the preference reload still calls it. */
 	}
 
 	@objc(localCommandList)
 	public static func localCommandList() -> [String] {
-		storage.localCommandList(developerModeEnabled: TextualPreferences.developerModeEnabled())
+		commandIndexTables.commandNames(developerModeEnabled: TextualPreferences.developerModeEnabled())
 	}
 
 	@objc(indexOfRemoteCommand:)
 	public static func index(ofRemoteCommand command: String) -> UInt {
-		storage.index(of: command, isLocal: false, developerModeEnabled: false)
+		commandIndexTables.remote[command.lowercased()]?.index ?? CommandIndexTables.notFound
 	}
 
 	@objc(indexOfLocalCommand:)
 	public static func index(ofLocalCommand command: String) -> UInt {
-		storage.index(
-			of: command,
-			isLocal: true,
-			developerModeEnabled: TextualPreferences.developerModeEnabled()
-		)
+		guard let entry = commandIndexTables.local[command.lowercased()] else {
+			return CommandIndexTables.notFound
+		}
+
+		if entry.isDeveloperModeOnly, TextualPreferences.developerModeEnabled() == false {
+			return CommandIndexTables.notFound
+		}
+
+		return entry.index
 	}
 
 	@objc(colonPositionForRemoteCommand:)
 	public static func colonPosition(forRemoteCommand command: String) -> UInt {
-		storage.colonPosition(forRemoteCommand: command)
+		guard let entry = commandIndexTables.remote[command.lowercased()],
+		      entry.outgoingColonIndex >= 0
+		else {
+			return CommandIndexTables.notFound
+		}
+
+		return UInt(entry.outgoingColonIndex)
 	}
 
 	@objc(syntaxForLocalCommand:)
 	public static func syntax(forLocalCommand command: String) -> String? {
-		storage.syntax(forLocalCommand: command)
+		guard let entry = commandIndexTables.local[command.lowercased()] else {
+			return nil
+		}
+
+		let name = command.uppercased()
+
+		guard let arguments = entry.arguments else {
+			return name
+		}
+
+		return "\(name) \(arguments)"
 	}
 
 	/// Everything the index knows about one local command, or `nil` when the
@@ -86,7 +109,17 @@ public final class CommandIndex: NSObject {
 	/// refuse such a command with a message instead of mistaking it for one it
 	/// has never heard of and forwarding it to the server.
 	public static func descriptor(forLocalCommand command: String) -> LocalCommandDescriptor? {
-		storage.descriptor(forLocalCommand: command)
+		guard let entry = commandIndexTables.local[command.lowercased()],
+		      let value = IRCLocalCommand(rawValue: entry.index)
+		else {
+			return nil
+		}
+
+		return LocalCommandDescriptor(
+			command: value,
+			isDeveloperModeOnly: entry.isDeveloperModeOnly,
+			arity: CommandArity(syntax: entry.arguments)
+		)
 	}
 }
 
@@ -160,163 +193,108 @@ public nonisolated struct LocalCommandDescriptor: Sendable {
 	public let arity: CommandArity
 }
 
-/* ISOLATION-EXCEPTION: the command tables are built once and read from the
- command dispatcher and the plugin queue alike; the storage is lock-guarded. */
-private final class CommandIndexStorage: @unchecked Sendable {
-	private typealias CommandData = [String: [String: Any]]
+/** Built once, lazily, by Swift's own global initialisation -- the lifecycle the
+ old storage hand-rolled behind a lock. */
+private nonisolated let commandIndexTables = CommandIndexTables.loaded() // nonisolated: let
+
+/// The command tables, parsed once from the bundled index resources.
+///
+/// Everything an entry says is settled when the table is built, so the whole
+/// thing is an immutable value that any isolation domain can read. That is what
+/// replaced the lock: there is nothing left to synchronise.
+nonisolated struct CommandIndexTables: Sendable { // nonisolated: value
+	struct LocalEntry: Sendable {
+		let index: UInt
+		let isDeveloperModeOnly: Bool
+		let arguments: String?
+	}
+
+	struct RemoteEntry: Sendable {
+		let index: UInt
+		let outgoingColonIndex: Int
+	}
+
+	static let notFound = UInt(NSNotFound)
+
+	let local: [String: LocalEntry]
+	let remote: [String: RemoteEntry]
+
+	/// Upper-cased local command names, with and without the developer-mode
+	/// ones. Both are settled here, which is what the cache the old storage
+	/// kept -- and had to invalidate -- was standing in for.
+	private let publicCommandNames: [String]
+	private let allCommandNames: [String]
+
+	var isEmpty: Bool {
+		local.isEmpty && remote.isEmpty
+	}
+
+	init(local: [String: LocalEntry], remote: [String: RemoteEntry]) {
+		self.local = local
+		self.remote = remote
+		allCommandNames = local.keys.map { $0.uppercased() }
+		publicCommandNames = local
+			.filter { $0.value.isDeveloperModeOnly == false }
+			.keys
+			.map { $0.uppercased() }
+	}
+
+	func commandNames(developerModeEnabled: Bool) -> [String] {
+		developerModeEnabled ? allCommandNames : publicCommandNames
+	}
+
+	static func loaded() -> CommandIndexTables {
+		let localValues = ResourceManager.dictionary(
+			fromResources: "IRCCommandIndexLocalData",
+			cacheValue: false
+		)
+		let remoteValues = ResourceManager.dictionary(
+			fromResources: "IRCCommandIndexRemoteData",
+			cacheValue: false
+		)
+
+		assert(localValues != nil)
+		assert(remoteValues != nil)
+
+		return CommandIndexTables(
+			local: commandData(from: localValues).mapValues { data in
+				LocalEntry(
+					index: unsignedIntegerValue(data[Key.indexValue]),
+					isDeveloperModeOnly: boolValue(data[Key.developerModeOnly]),
+					arguments: data[Key.arguments] as? String
+				)
+			},
+			remote: commandData(from: remoteValues).mapValues { data in
+				RemoteEntry(
+					index: unsignedIntegerValue(data[Key.indexValue]),
+					outgoingColonIndex: integerValue(data[Key.outgoingColonIndex])
+				)
+			}
+		)
+	}
 
 	private static let reservedKey = "Reserved Information"
-	private static let notFound = UInt(NSNotFound)
 
-	private let lock = NSLock()
-	private var hasPopulated = false
-	private var localData: CommandData = [:]
-	private var remoteData: CommandData = [:]
-	private var cachedLocalCommandList: [String]?
-
-	func populateIfNeeded() {
-		withLock {
-			guard hasPopulated == false else {
-				return
-			}
-
-			hasPopulated = true
-
-			let localValues = ResourceManager.dictionary(
-				fromResources: "IRCCommandIndexLocalData",
-				cacheValue: false
-			)
-			let remoteValues = ResourceManager.dictionary(
-				fromResources: "IRCCommandIndexRemoteData",
-				cacheValue: false
-			)
-
-			assert(localValues != nil)
-			assert(remoteValues != nil)
-
-			localData = commandData(from: localValues)
-			remoteData = commandData(from: remoteValues)
-		}
-	}
-
-	func invalidateCaches() {
-		withLock {
-			cachedLocalCommandList = nil
-		}
-	}
-
-	func localCommandList(developerModeEnabled: Bool) -> [String] {
-		withLock {
-			if let cachedLocalCommandList {
-				return cachedLocalCommandList
-			}
-
-			var commandList: [String] = []
-
-			for (command, data) in localData {
-				if developerModeEnabled == false, boolValue(data[Key.developerModeOnly]) {
-					continue
-				}
-
-				commandList.append(command.uppercased())
-			}
-
-			cachedLocalCommandList = commandList
-
-			return commandList
-		}
-	}
-
-	func index(of command: String, isLocal: Bool, developerModeEnabled: Bool) -> UInt {
-		withLock {
-			let data = isLocal ? localData[command.lowercased()] : remoteData[command.lowercased()]
-
-			guard let data else {
-				return Self.notFound
-			}
-
-			if isLocal,
-			   developerModeEnabled == false,
-			   boolValue(data[Key.developerModeOnly])
-			{
-				return Self.notFound
-			}
-
-			return unsignedIntegerValue(data[Key.indexValue])
-		}
-	}
-
-	func descriptor(forLocalCommand command: String) -> LocalCommandDescriptor? {
-		withLock {
-			guard let data = localData[command.lowercased()],
-			      let value = IRCLocalCommand(rawValue: unsignedIntegerValue(data[Key.indexValue]))
-			else {
-				return nil
-			}
-
-			return LocalCommandDescriptor(
-				command: value,
-				isDeveloperModeOnly: boolValue(data[Key.developerModeOnly]),
-				arity: CommandArity(syntax: data[Key.arguments] as? String)
-			)
-		}
-	}
-
-	func colonPosition(forRemoteCommand command: String) -> UInt {
-		withLock {
-			guard let data = remoteData[command.lowercased()] else {
-				return Self.notFound
-			}
-
-			let position = integerValue(data[Key.outgoingColonIndex])
-
-			return position < 0 ? Self.notFound : UInt(position)
-		}
-	}
-
-	func syntax(forLocalCommand command: String) -> String? {
-		withLock {
-			guard let data = localData[command.lowercased()] else {
-				return nil
-			}
-
-			let command = command.uppercased()
-
-			guard let arguments = data[Key.arguments] as? String else {
-				return command
-			}
-
-			return "\(command) \(arguments)"
-		}
-	}
-
-	private func commandData(from values: [String: Any]?) -> CommandData {
+	private static func commandData(from values: [String: Any]?) -> [String: [String: Any]] {
 		guard var values else {
 			return [:]
 		}
 
-		values.removeValue(forKey: Self.reservedKey)
+		values.removeValue(forKey: reservedKey)
 
 		return values.compactMapValues { $0 as? [String: Any] }
 	}
 
-	private func boolValue(_ value: Any?) -> Bool {
+	private static func boolValue(_ value: Any?) -> Bool {
 		(value as? NSNumber)?.boolValue ?? false
 	}
 
-	private func integerValue(_ value: Any?) -> Int {
+	private static func integerValue(_ value: Any?) -> Int {
 		(value as? NSNumber)?.intValue ?? 0
 	}
 
-	private func unsignedIntegerValue(_ value: Any?) -> UInt {
+	private static func unsignedIntegerValue(_ value: Any?) -> UInt {
 		(value as? NSNumber)?.uintValue ?? 0
-	}
-
-	private func withLock<Result>(_ body: () -> Result) -> Result {
-		lock.lock()
-		defer { lock.unlock() }
-
-		return body()
 	}
 
 	private enum Key {

@@ -32,7 +32,11 @@
 
 import Foundation
 
-public func performSynchronously(
+/* Everything in the tree that can reach the main actor directly now does, or
+ hops with `Task { @MainActor in }`. What is left below is a shim for callers
+ in other people's files; nothing new should call either function. */
+
+private func performSynchronously(
 	on queue: DispatchQueue,
 	_ block: @convention(block) () -> Void
 ) {
@@ -41,7 +45,7 @@ public func performSynchronously(
 	}
 }
 
-public func performAsynchronously(
+private func performAsynchronously(
 	on queue: DispatchQueue,
 	_ block: @escaping @convention(block) () -> Void
 ) {
@@ -51,6 +55,16 @@ public func performAsynchronously(
 	queue.async(execute: workItem)
 }
 
+/// Runs `block` on the main queue and waits for it to finish.
+///
+/// SHIM. Four callers remain, all in ChannelView's XPC clients
+/// (`LogControllerHistoricLogFile`, `LogControllerInlineMediaService`), which
+/// need a main-queue result to have landed before an XPC reply returns. Phase
+/// 8c turns those into actors and this goes with them.
+///
+/// The `Thread.isMainThread` test is the last isolation exception in Cocoa
+/// Extensions: without it, a caller already on the main queue would deadlock in
+/// the `sync` below.
 public func performSynchronouslyOnMainQueue(_ block: @convention(block) () -> Void) {
 	if Thread.isMainThread {
 		autoreleasepool(invoking: block)
@@ -59,6 +73,11 @@ public func performSynchronouslyOnMainQueue(_ block: @convention(block) () -> Vo
 	}
 }
 
+/// Runs `block` on the main queue without waiting for it.
+///
+/// SHIM. Three callers remain, in `ApplicationController` and
+/// `LogControllerHistoricLogFile`; both belong to other phases. New code hops
+/// with `Task { @MainActor in }` instead.
 public func performAsynchronouslyOnMainQueue(_ block: @escaping @convention(block) () -> Void) {
 	performAsynchronously(on: .main, block)
 }

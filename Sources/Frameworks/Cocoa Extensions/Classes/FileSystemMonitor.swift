@@ -63,6 +63,13 @@ public enum XRFileSystemMonitor {
 		let paths = urls.map(\.standardizedFileURL.path) as CFArray
 
 		return AsyncStream { continuation in
+			/* FSEvents takes a dispatch queue, and this one has to be serial:
+			 teardown runs on it so that invalidating the stream cannot overlap
+			 a callback already executing, which would leave that callback
+			 reading a session the teardown has released. A concurrent queue
+			 also gives up batch ordering, which a file monitor needs. This is
+			 not a synchronisation domain for mutable state -- the session's
+			 state is already in a `Mutex` -- so an actor cannot replace it. */
 			let queue = DispatchQueue(label: "com.vakesz.glasstual.file-system-monitor")
 			let session = FileSystemEventSession(continuation: continuation)
 

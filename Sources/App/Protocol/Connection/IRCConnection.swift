@@ -47,25 +47,6 @@ private nonisolated let connectionLogger = Logger(
 	category: "IRCConnection"
 )
 
-/** ISOLATION-EXCEPTION: `TrustDecisionHandler` is a plain closure that NSXPC
- hands over on its own queue and the handshake blocks until it is answered, so
- it cannot be made `Sendable` or awaited. The box is immutable and the callback
- is invoked once, from the trust panel on the main actor. */
-private final nonisolated class TrustResponseBox: @unchecked Sendable {
-	let callback: TrustDecisionHandler
-
-	init(_ callback: @escaping TrustDecisionHandler) {
-		self.callback = callback
-	}
-}
-
-/** ISOLATION-EXCEPTION: Security.framework does not annotate `SecTrust` as
- `Sendable`. Ownership passes to the trust panel unchanged and the value is not
- touched again on this side. */
-private nonisolated struct TrustReference: @unchecked Sendable {
-	let value: SecTrust
-}
-
 /** Everything the connection host reports. NSXPC delivers these on its own
  queue; they are drained on the main actor in arrival order so that the client
  sees them in wire order. */
@@ -76,7 +57,7 @@ private enum ConnectionEvent: Sendable {
 	case didCloseReadStream
 	case didDisconnect(error: Error?)
 	case didReceive(Data)
-	case requestInsecureCertificateTrust(TrustResponseBox)
+	case requestInsecureCertificateTrust(TrustDecisionHandler)
 	case willSend(Data)
 	case didSendData
 	case serviceInterrupted
@@ -314,53 +295,61 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 
 	@objc public func openSecuredConnectionCertificateModal() {
 		exportSecureConnectionInformation { information in
-			let cipherSuite = information.cipherSuite
-			let failure = information.trustFailureDescription
-			guard
-				let policyName = information.policyName,
-				let trust = SecureTransportSupport.trust(
-					fromCertificateChain: information.certificateChain,
-					policyName: policyName
-				),
-				let protocolDescription = SecureTransportSupport
-				.description(forProtocolType: information.protocolVersion),
-				let cipherDescription = SecureTransportSupport.description(forCipherSuite: cipherSuite)
-			else { return }
-
-			let cipherStatus: PromptCipherStatus = SecureTransportSupport.isCipherSuiteDeprecated(cipherSuite)
-				? .deprecated
-				: .current
-			let summary = PromptStrings.TransportSecurity.cipherSummary(
-				policyName: protocolDescription,
-				cipherSuite: cipherDescription,
-				status: cipherStatus
-			)
-			var body = PromptStrings.TransportSecurity.certificateSummary(
-				policyName: policyName,
-				cipherSummary: summary
-			)
-			let trustReference = TrustReference(value: trust)
-			if let failure {
-				body += PromptStrings.TransportSecurity.trustFailure(failure)
-			}
-
+			/* The hop comes first, and the `SecTrust` is rebuilt on the other
+			 side of it. What crosses is `SecureConnectionInformation`, which is
+			 `Sendable` and already carries the DER chain. */
 			Task { @MainActor in
-				_ = TrustPanelPresenter.present(
-					in: NSApp.keyWindow,
-					body: body,
-					title: PromptStrings.TransportSecurity.encryptedConnectionTitle(policyName: policyName),
-					defaultButton: PromptStrings.Action.close,
-					alternateButton: nil,
-					trust: trustReference.value
-				) { _, _, _ in }
+				Self.presentCertificateModal(for: information)
 			}
 		}
 	}
 
-	private func openInsecureCertificateTrustPanel(_ response: TrustResponseBox) {
+	@MainActor
+	private static func presentCertificateModal(for information: SecureConnectionInformation) {
+		let cipherSuite = information.cipherSuite
+
+		guard
+			let policyName = information.policyName,
+			let trust = SecureTransportSupport.trust(
+				fromCertificateChain: information.certificateChain,
+				policyName: policyName
+			),
+			let protocolDescription = SecureTransportSupport
+			.description(forProtocolType: information.protocolVersion),
+			let cipherDescription = SecureTransportSupport.description(forCipherSuite: cipherSuite)
+		else { return }
+
+		let cipherStatus: PromptCipherStatus = SecureTransportSupport.isCipherSuiteDeprecated(cipherSuite)
+			? .deprecated
+			: .current
+		let summary = PromptStrings.TransportSecurity.cipherSummary(
+			policyName: protocolDescription,
+			cipherSuite: cipherDescription,
+			status: cipherStatus
+		)
+		var body = PromptStrings.TransportSecurity.certificateSummary(
+			policyName: policyName,
+			cipherSummary: summary
+		)
+
+		if let failure = information.trustFailureDescription {
+			body += PromptStrings.TransportSecurity.trustFailure(failure)
+		}
+
+		_ = TrustPanelPresenter.present(
+			in: NSApp.keyWindow,
+			body: body,
+			title: PromptStrings.TransportSecurity.encryptedConnectionTitle(policyName: policyName),
+			defaultButton: PromptStrings.Action.close,
+			alternateButton: nil,
+			trust: trust
+		) { _, _, _ in }
+	}
+
+	private func openInsecureCertificateTrustPanel(_ response: @escaping TrustDecisionHandler) {
 		guard trustPanelIsPresenting == false else {
 			/* The connection host blocks its handshake until this reply arrives. */
-			response.callback(false)
+			response(false)
 			return
 		}
 		trustPanelIsPresenting = true
@@ -372,53 +361,65 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 		certificateTrustWasOverridden = true
 
 		exportSecureConnectionInformation { [weak self] information in
-			guard
-				let self,
-				let policyName = information.policyName,
-				let trust = SecureTransportSupport.trust(
-					fromCertificateChain: information.certificateChain,
-					policyName: policyName
-				)
-			else {
-				Task { @MainActor in
-					self?.trustPanelIsPresenting = false
-				}
-				response.callback(false)
-				return
-			}
-			let trustReference = TrustReference(value: trust)
-
 			Task { @MainActor [weak self] in
 				guard let self else {
-					response.callback(false)
+					response(false)
 					return
 				}
-				trustPanel = TrustPanelPresenter.present(
-					in: nil,
-					body: PromptStrings.TransportSecurity.certificateFailureBody(serverName: policyName),
-					title: PromptStrings.TransportSecurity.certificateFailureTitle(serverName: policyName),
-					defaultButton: PromptStrings.TransportSecurity.invalidCertificateContinueButtonTitle,
-					alternateButton: PromptStrings.Action.cancel,
-					trust: trustReference.value,
-					completion: { [weak self] _, trusted, _ in
-						Task { @MainActor [weak self] in
-							guard let self else {
-								response.callback(false)
-								return
-							}
-							trustPanel = nil
-							trustPanelIsPresenting = false
-							if trustPanelDoNotInvokeCompletionBlock {
-								trustPanelDoNotInvokeCompletionBlock = false
-								return
-							}
-							response.callback(trusted)
-						}
-					},
-					context: nil
-				)
+
+				presentInsecureCertificateTrustPanel(for: information, response: response)
 			}
 		}
+	}
+
+	/// Builds the `SecTrust` from the chain the service exported and puts it in
+	/// front of the user.
+	///
+	/// The rebuild happens here rather than in the export callback so that no
+	/// Security.framework object ever leaves the main actor.
+	private func presentInsecureCertificateTrustPanel(
+		for information: SecureConnectionInformation,
+		response: @escaping TrustDecisionHandler
+	) {
+		guard
+			let policyName = information.policyName,
+			let trust = SecureTransportSupport.trust(
+				fromCertificateChain: information.certificateChain,
+				policyName: policyName
+			)
+		else {
+			trustPanelIsPresenting = false
+			response(false)
+			return
+		}
+
+		trustPanel = TrustPanelPresenter.present(
+			in: nil,
+			body: PromptStrings.TransportSecurity.certificateFailureBody(serverName: policyName),
+			title: PromptStrings.TransportSecurity.certificateFailureTitle(serverName: policyName),
+			defaultButton: PromptStrings.TransportSecurity.invalidCertificateContinueButtonTitle,
+			alternateButton: PromptStrings.Action.cancel,
+			trust: trust,
+			completion: { [weak self] _, trusted, _ in
+				Task { @MainActor [weak self] in
+					guard let self else {
+						response(false)
+						return
+					}
+
+					trustPanel = nil
+					trustPanelIsPresenting = false
+
+					if trustPanelDoNotInvokeCompletionBlock {
+						trustPanelDoNotInvokeCompletionBlock = false
+						return
+					}
+
+					response(trusted)
+				}
+			},
+			context: nil
+		)
 	}
 
 	private func closeInsecureCertificateTrustPanel() {
@@ -511,7 +512,7 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 	public nonisolated func ircConnectionRequestInsecureCertificateTrust(
 		_ trustBlock: @escaping TrustDecisionHandler
 	) {
-		eventContinuation.yield(.requestInsecureCertificateTrust(TrustResponseBox(trustBlock)))
+		eventContinuation.yield(.requestInsecureCertificateTrust(trustBlock))
 	}
 
 	public nonisolated func ircConnectionWillSend(_ data: Data) {

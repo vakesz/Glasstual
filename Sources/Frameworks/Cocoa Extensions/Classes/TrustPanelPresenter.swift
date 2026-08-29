@@ -34,7 +34,10 @@ import AppKit
 import Security
 import SecurityInterface
 
-public typealias TrustDecisionHandler = (Bool) -> Void
+/* `@Sendable` because the connection host calls this from its own XPC queue
+ while the answer is decided on the main actor, and the closure is what carries
+ the decision back across. */
+public typealias TrustDecisionHandler = @Sendable (Bool) -> Void
 public typealias TrustPanelCompletion = (SecTrust, Bool, Any?) -> Void
 
 /// Presents the system's certificate trust sheet.

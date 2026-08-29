@@ -51,6 +51,11 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	fileprivate var connectTimeoutTask: Task<Void, Never>?
 
 	fileprivate var trustRef: SecTrust?
+	/** Security.framework's completion is a C block, so it is not `Sendable`.
+	 It stays here, on the queue-confined socket, and the sendable callback the
+	 trust decision travels through refers to this socket instead: the block
+	 itself never crosses an isolation boundary. */
+	private var pendingTLSVerifyCompletion: sec_protocol_verify_complete_t?
 
 	// MARK: - Open/Close Socket
 
@@ -547,9 +552,20 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 		self.trustRef = trustRef
 
-		tlsVerify(trustRef) { underlyingResponse in
-			response(underlyingResponse)
+		pendingTLSVerifyCompletion = response
+
+		tlsVerify(trustRef) { [self] underlyingResponse in
+			completePendingTLSVerify(with: underlyingResponse)
 		}
+	}
+
+	private func completePendingTLSVerify(with trusted: Bool) {
+		guard let completion = pendingTLSVerifyCompletion else {
+			return
+		}
+
+		pendingTLSVerifyCompletion = nil
+		completion(trusted)
 	}
 
 	var tlsNegotiatedProtocol: tls_protocol_version_t? {

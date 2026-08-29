@@ -56,6 +56,13 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
 		return ApplicationGroup.identifier
 	}()
 
+	/* ISOLATION-EXCEPTION: Foundation marks `UserDefaults` explicitly
+	 non-Sendable, so a stored reference to the one shared instance cannot be
+	 expressed any other way. The subclass adds no mutable stored state -- only
+	 the immutable `suiteName` below -- and `UserDefaults` is documented as
+	 thread-safe. Identity matters here: KVO bindings and the change
+	 notification are attached to this object, so it cannot be reconstructed
+	 per call the way `UserDefaults.standard` is. */
 	private nonisolated(unsafe) static let sharedInstance =
 		TextualUserDefaults(storageSuiteName: storageSuiteName)
 

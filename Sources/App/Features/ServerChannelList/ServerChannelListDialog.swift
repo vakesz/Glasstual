@@ -135,9 +135,9 @@ public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 			newEntry.channelTopicFormatted = NSAttributedString()
 		}
 
-		/* This type is @MainActor, so no lock is needed. The previous objc_sync_enter
-		 calls boxed the Swift Array into a fresh __SwiftValue on every call and locked
-		 nothing at all. */
+		/* This type is @MainActor, so no synchronisation is needed. What used to
+		 be here boxed the Swift Array into a fresh __SwiftValue on every call and
+		 so locked nothing at all. */
 		queuedWrites.append(newEntry)
 
 		if isWaitingForWrites == false {

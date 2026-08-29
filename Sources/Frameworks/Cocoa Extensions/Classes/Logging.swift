@@ -69,7 +69,7 @@ import Synchronization
 public enum Logging {
 	/// The logger the app or service installs during start-up.
 	///
-	/// It lives in a `Mutex` rather than a `nonisolated(unsafe) var`: it is
+	/// It lives in a `Mutex` rather than an unchecked mutable global: it is
 	/// written once from the launch path and read from every thread
 	/// afterwards, and the lock is what makes that safe rather than a promise.
 	private static let defaultSubsystemStorage = Mutex<Logger?>(nil)

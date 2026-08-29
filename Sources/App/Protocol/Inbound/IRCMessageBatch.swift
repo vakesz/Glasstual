@@ -54,19 +54,20 @@ public enum BatchEntry {
 	}
 }
 
+/// The batches a connection currently has open, keyed by their token.
+///
+/// Main-actor, like everything else that reads an inbound message, so the
+/// entries need no lock of their own.
 @objc(IRCMessageBatchMessageContainer)
 public final class MessageBatchContainer: NSObject {
-	private let lock = NSLock()
 	private var entries: [String: MessageBatch] = [:]
 
 	@objc public var queuedEntries: [String: MessageBatch] {
-		lock.withLock { entries }
+		entries
 	}
 
 	public func queueEntry(_ entry: MessageBatch) {
-		lock.withLock {
-			entries[entry.batchToken] = entry
-		}
+		entries[entry.batchToken] = entry
 	}
 
 	public func dequeueEntry(_ entry: MessageBatch) {
@@ -74,20 +75,16 @@ public final class MessageBatchContainer: NSObject {
 	}
 
 	public func dequeueEntry(withBatchToken token: String) {
-		lock.withLock {
-			entries.removeValue(forKey: token)?.dequeueEntries()
-		}
+		entries.removeValue(forKey: token)?.dequeueEntries()
 	}
 
 	@objc public func dequeueEntries() {
-		lock.withLock {
-			entries.removeAll()
-		}
+		entries.removeAll()
 	}
 
 	@objc(queuedEntryWithBatchToken:)
 	public func queuedEntry(withBatchToken batchToken: String) -> MessageBatch? {
-		lock.withLock { entries[batchToken] }
+		entries[batchToken]
 	}
 }
 
@@ -98,7 +95,6 @@ public final class MessageBatch: NSObject {
 	/// any network offers.
 	@objc public static let maximumQueuedEntries = 5000
 
-	private let lock = NSLock()
 	private var entries: [BatchEntry] = []
 
 	@objc public var batchIsOpen = false
@@ -108,21 +104,19 @@ public final class MessageBatch: NSObject {
 	@objc public weak var parentBatchMessage: MessageBatch?
 
 	public var queuedEntries: [BatchEntry] {
-		lock.withLock { entries }
+		entries
 	}
 
 	/// `true` when the entry was accepted; `false` when the queue is full.
 	@discardableResult
 	public func queueEntry(_ entry: BatchEntry) -> Bool {
-		lock.withLock {
-			guard entries.count < MessageBatch.maximumQueuedEntries else {
-				return false
-			}
-
-			entries.append(entry)
-
-			return true
+		guard entries.count < MessageBatch.maximumQueuedEntries else {
+			return false
 		}
+
+		entries.append(entry)
+
+		return true
 	}
 
 	@discardableResult
@@ -137,9 +131,7 @@ public final class MessageBatch: NSObject {
 
 	public func dequeueEntry(_ entry: BatchEntry) {
 		let object = entry.object
-		lock.withLock {
-			entries.removeAll { $0.object === object }
-		}
+		entries.removeAll { $0.object === object }
 	}
 
 	public func dequeueEntry(_ message: Message) {
@@ -151,8 +143,6 @@ public final class MessageBatch: NSObject {
 	}
 
 	@objc public func dequeueEntries() {
-		lock.withLock {
-			entries.removeAll()
-		}
+		entries.removeAll()
 	}
 }

@@ -35,7 +35,15 @@ import AppKit
 import CoreFoundation
 import ObjectiveC
 
-private nonisolated(unsafe) var archivedConstraintConstantKey: UInt8 = 0
+/** An associated-object key is only an address: nothing ever reads or writes
+ through it. A static string literal supplies one from the binary's constant
+ data, which makes it stable, unique to this property and `Sendable` -- none of
+ which a mutable global was. */
+private let archivedConstraintConstantName: StaticString = "com.vakesz.glasstual.archivedConstraintConstant"
+
+private var archivedConstraintConstantKey: UnsafeRawPointer {
+	UnsafeRawPointer(archivedConstraintConstantName.utf8Start)
+}
 
 /// `CharacterSet` is a `Sendable` value type, so these need no isolation
 /// annotation and no `NSCharacterSet` bridging at the point of use.
@@ -120,7 +128,7 @@ public extension Bundle {
 
 public extension NSLayoutConstraint {
 	private var textualArchivedConstantNumber: NSNumber? {
-		objc_getAssociatedObject(self, &archivedConstraintConstantKey) as? NSNumber
+		objc_getAssociatedObject(self, archivedConstraintConstantKey) as? NSNumber
 	}
 
 	@objc(archivedConstant)
@@ -129,7 +137,7 @@ public extension NSLayoutConstraint {
 		set {
 			objc_setAssociatedObject(
 				self,
-				&archivedConstraintConstantKey,
+				archivedConstraintConstantKey,
 				NSNumber(value: Double(newValue)),
 				.OBJC_ASSOCIATION_COPY
 			)

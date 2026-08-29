@@ -189,7 +189,6 @@ public final class ChannelModeState: NSObject {
 @objc(IRCChannelModeContainer)
 public final class ChannelModeContainer: NSObject, NSCopying {
 	private weak var client: IRCClient?
-	private let modeObjectsLock = NSLock()
 	private var modeObjects: [String: ModeInfo] = [:]
 
 	public init(client: IRCClient?) {
@@ -199,16 +198,11 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 
 	@objc
 	public func clear() {
-		modeObjectsLock.lock()
 		modeObjects.removeAll()
-		modeObjectsLock.unlock()
 	}
 
 	public var modes: [String: ModeInfo] {
-		modeObjectsLock.lock()
-		let modes = modeObjects
-		modeObjectsLock.unlock()
-		return modes
+		modeObjects
 	}
 
 	private var unwantedModes: [String] {
@@ -242,10 +236,7 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 	/** A pure lookup. Materialising a placeholder here made `changeCommand(for:)`
 	 emit `-mode` for modes the channel never had. */
 	public func modeInfo(for modeSymbol: String) -> ModeInfo? {
-		modeObjectsLock.lock()
-		defer { modeObjectsLock.unlock() }
-
-		return modeObjects[modeSymbol]
+		modeObjects[modeSymbol]
 	}
 
 	public func apply(_ modes: [ModeInfo]) {
@@ -267,21 +258,12 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 
 		let modeUpdated = ModeInfo(modeSymbol: modeSymbol, modeIsSet: modeIsSet, modeParameter: modeParameter)
 
-		modeObjectsLock.lock()
 		modeObjects[modeSymbol] = modeUpdated
-		modeObjectsLock.unlock()
 	}
 
 	public func copy(with _: NSZone? = nil) -> Any {
 		let object = ChannelModeContainer(client: client)
-
-		modeObjectsLock.lock()
-		let snapshot = modeObjects
-		modeObjectsLock.unlock()
-
-		object.modeObjectsLock.lock()
-		object.modeObjects = snapshot
-		object.modeObjectsLock.unlock()
+		object.modeObjects = modeObjects
 
 		return object
 	}

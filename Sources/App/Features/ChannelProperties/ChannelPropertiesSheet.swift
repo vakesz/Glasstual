@@ -379,7 +379,9 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 
 		navigateToSelection(selection)
 
-		performAsynchronouslyOnMainQueue {
+		/* The popover has to wait for the field editor to settle, so it goes
+		 out on the next main-actor turn rather than this one. */
+		Task { @MainActor in
 			textField.showValidationErrorPopover()
 		}
 

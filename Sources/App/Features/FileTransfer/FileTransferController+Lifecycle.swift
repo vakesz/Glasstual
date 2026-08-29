@@ -56,14 +56,8 @@ extension TDCFileTransferDialogTransferController {
 		dispatchPrecondition(condition: .onQueue(.main))
 		NSObject.cancelPreviousPerformRequests(withTarget: self)
 
-		listeningServer?.disconnect()
-		listeningServer = nil
-		listeningServerConnectedClient?.disconnect()
-		listeningServerConnectedClient = nil
-		connectionToRemoteServer?.disconnect()
-		connectionToRemoteServer = nil
+		stopTransfer()
 		closePortMapping()
-		closeFileHandle()
 
 		if ![.complete, .fatalError, .recoverableError].contains(transferStatus) {
 			transferStatus = .stopped
