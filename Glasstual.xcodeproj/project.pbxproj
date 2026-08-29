@@ -230,6 +230,7 @@
 		3732BD44D07714E862282D87 /* StandardLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F6415733439ACFD49DBECC /* StandardLibrary.swift */; };
 		377EE167EA109152074E3C85 /* Smiley Converter.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = F5EB1AD83A6B0C7A8413C0C2 /* Smiley Converter.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3802A910C0B9DACE9D5483ED /* ProgressIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 628273CF260885820C3C97F5 /* ProgressIndicatorView.swift */; };
+		383632080F879C5D793A5B12 /* ConnectionTrustGateLoopbackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49ABE4E6C566FA4C3BF6EE3 /* ConnectionTrustGateLoopbackTests.swift */; };
 		38A4A5871A9E2BC6D0F2817D /* InlineContentProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15FD5C15A34C8A9E0E32A9A6 /* InlineContentProtocols.swift */; };
 		38BEAA44E498D8B6404ED9C6 /* HighlightEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1986125573694078E8A7D0 /* HighlightEntrySheet.swift */; };
 		38F86A2DB5029D9407D63B8F /* ICMAssessedMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6726B97019A593D710127E1D /* ICMAssessedMedia.swift */; };
@@ -284,6 +285,7 @@
 		44F961FC6BF3AF87083E116A /* ColorCompatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EBE007B9AD9C7B314DA684 /* ColorCompatibility.swift */; };
 		456181EABDCF1D496736A6DF /* MenuCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC223B216D31DF324294816 /* MenuCommandTests.swift */; };
 		4590B73D5D55D0E7D1582886 /* OnboardingNotificationsStepViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29389313B5C56E632B4D9F39 /* OnboardingNotificationsStepViewController.swift */; };
+		45A71A0DBE9A79B7409D5C2D /* LoopbackTestIdentity.p12 in Resources */ = {isa = PBXBuildFile; fileRef = 05DB0900C47E06A754C3270D /* LoopbackTestIdentity.p12 */; };
 		4604FC2342F85F390AA75C34 /* HistoricLogStoreKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9CCDCC1112D857225335E4FF /* HistoricLogStoreKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4668A23F73D954B7159B506A /* IRCChannelConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F871AFEDD645B0B748B7382 /* IRCChannelConfig.swift */; };
 		466C2A5E9D06103D07F08CCB /* VariableTag.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BCDBB2D4974427C4273D2E /* VariableTag.swift */; };
@@ -1372,6 +1374,7 @@
 		05379A6D98A350FBF31C6814 /* ServerNicknameChangeFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerNicknameChangeFeatureTests.swift; sourceTree = "<group>"; };
 		0541086A5E9E1BDF467C780D /* MainWindowChannelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowChannelView.swift; sourceTree = "<group>"; };
 		05B77E835A00C07F82583BDB /* LogRenderPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogRenderPipeline.swift; sourceTree = "<group>"; };
+		05DB0900C47E06A754C3270D /* LoopbackTestIdentity.p12 */ = {isa = PBXFileReference; path = LoopbackTestIdentity.p12; sourceTree = "<group>"; };
 		05DDA61743BCE9A598A7D55C /* BasicLanguage.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = BasicLanguage.xcstrings; sourceTree = "<group>"; };
 		06149AD9F2BC7F085EDACF82 /* PreferencesControllerActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesControllerActions.swift; sourceTree = "<group>"; };
 		061B053A8B68AEB5BD5740AB /* IRCMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCMessageTests.swift; sourceTree = "<group>"; };
@@ -2005,6 +2008,7 @@
 		B39AD1D09B560E12A209926F /* ChannelSpotlightStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelSpotlightStrings.swift; sourceTree = "<group>"; };
 		B3EA2EAFEE081E2BDFEC38DF /* SWStringHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWStringHelper.swift; sourceTree = "<group>"; };
 		B3F6415733439ACFD49DBECC /* StandardLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardLibrary.swift; sourceTree = "<group>"; };
+		B49ABE4E6C566FA4C3BF6EE3 /* ConnectionTrustGateLoopbackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionTrustGateLoopbackTests.swift; sourceTree = "<group>"; };
 		B52D29DDE8E7D793FDD099B6 /* Preferences+Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Preferences+Appearance.swift"; sourceTree = "<group>"; };
 		B538C169399BB840F827263E /* ChannelSelectionViewControllerNibTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelSelectionViewControllerNibTests.swift; sourceTree = "<group>"; };
 		B548F3BA4A59323378314842 /* IRCISupportStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCISupportStrings.swift; sourceTree = "<group>"; };
@@ -3860,6 +3864,7 @@
 				02FB463925A31CBBBBAAD01C /* CommandIndexTablesTests.swift */,
 				72A01D9C1204E2BD0F36B28E /* CommandTokenizerTests.swift */,
 				7FAE9C0DE503189535D5D474 /* CompatibilityHeaderMigrationTests.swift */,
+				B49ABE4E6C566FA4C3BF6EE3 /* ConnectionTrustGateLoopbackTests.swift */,
 				0501CEA51837344289382FF3 /* ConnectionTrustGateTests.swift */,
 				8C23C67B94A180C472A07F41 /* DateValueFormattingTests.swift */,
 				17A263CA43328F9BC5C62BF9 /* DCCChatLoopbackTests.swift */,
@@ -4088,6 +4093,7 @@
 			isa = PBXGroup;
 			children = (
 				EF2BEC8ABC9CAE03B7A8C71D /* IRCSpec */,
+				BDE137AAA79F31F987E1B652 /* TLS */,
 			);
 			path = Corpora;
 			sourceTree = "<group>";
@@ -4098,6 +4104,14 @@
 				48956BD9BAA58690AEDAA1D5 /* Language Files */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		BDE137AAA79F31F987E1B652 /* TLS */ = {
+			isa = PBXGroup;
+			children = (
+				05DB0900C47E06A754C3270D /* LoopbackTestIdentity.p12 */,
+			);
+			path = TLS;
 			sourceTree = "<group>";
 		};
 		BF76AAF0838B64273AAEBD40 /* Images */ = {
@@ -5260,6 +5274,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45A71A0DBE9A79B7409D5C2D /* LoopbackTestIdentity.p12 in Resources */,
 				DF066CB410EF230A08290934 /* mask-match.json in Resources */,
 				D736239B3202E6B3AFA1020D /* msg-join.json in Resources */,
 				DE91CBBDF92500D8EB85B6F5 /* msg-split.json in Resources */,
@@ -5397,6 +5412,7 @@
 				E079BE05F02A9DE1552D6D98 /* CommandIndexTablesTests.swift in Sources */,
 				C7F759022DBF2D179238DD47 /* CommandTokenizerTests.swift in Sources */,
 				C1F7EFE04A6552D137123770 /* CompatibilityHeaderMigrationTests.swift in Sources */,
+				383632080F879C5D793A5B12 /* ConnectionTrustGateLoopbackTests.swift in Sources */,
 				48C0BC6E0DCCEF2E5EF0435E /* ConnectionTrustGateTests.swift in Sources */,
 				4E29687B66B5FA18B457B711 /* DCCChatLoopbackTests.swift in Sources */,
 				9D27257A66505EE4E29B4D88 /* DCCTransferLoopbackTests.swift in Sources */,
