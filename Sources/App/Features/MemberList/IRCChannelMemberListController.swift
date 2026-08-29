@@ -12,29 +12,28 @@
 
 import AppKit
 
-/* ISOLATION-EXCEPTION: the nonisolated overrides below have to carry the
- controller and the inserted object (typed `Any` by `NSArrayController`) across
- the main-actor assumption. Neither value leaves the main actor. */
-private nonisolated struct UncheckedMainActorValue<Value>: @unchecked Sendable {
-	let value: Value
-}
-
+/// The ordered members the member list draws, and the only writer of them.
+///
+/// This was an `NSArrayController` subclass, which bought nothing — the table
+/// view is driven by a data source, not by bindings, so the controller was only
+/// ever an array with change notifications attached. It cost something, though:
+/// `insert(_:atArrangedObjectIndex:)` and `remove(atArrangedObjectIndex:)` are
+/// declared nonisolated on `NSController`, so both overrides had to carry the
+/// controller and the inserted member across a main-actor assumption inside an
+/// `@unchecked Sendable` box. A plain main-actor model needs neither.
 @objc(IRCChannelMemberListController)
 @MainActor
-public final class IRCChannelMemberListController: NSArrayController {
-	/** NSController's initializers are nonisolated, so they have to be spelled out
-	 to opt back out of the module's main-actor default. */
-	override public nonisolated init(content: Any?) {
-		super.init(content: content)
-	}
-
-	public required nonisolated init?(coder: NSCoder) {
-		super.init(coder: coder)
-	}
-
+public final class IRCChannelMemberListController: NSObject {
 	private weak var memberList: ChannelMemberList?
+	private var members: [ChannelUser] = []
 
 	@IBOutlet public private(set) var tableView: MemberList!
+
+	/// Named for what the array controller used to call it: the member list
+	/// reads its rows from here.
+	public var arrangedObjects: [ChannelUser] {
+		members
+	}
 
 	@objc(assignToChannel:)
 	public func assign(to channel: IRCChannel?) {
@@ -57,38 +56,25 @@ public final class IRCChannelMemberListController: NSArrayController {
 
 	@objc(replaceContents:)
 	public func replaceContents(_ contents: [ChannelUser]) {
-		content = NSMutableArray(array: contents)
-		tableView.membersReplaced()
+		members = contents
+		tableView?.membersReplaced()
 	}
 
-	/* ISOLATION-EXCEPTION: `NSArrayController`'s mutation methods are declared
-	 nonisolated, so the overrides cannot be isolated. The controller is bound to a
-	 table view and only ever driven from the main actor. */
-	override public nonisolated func insert(_ object: Any, atArrangedObjectIndex index: Int) {
-		let controller = UncheckedMainActorValue(value: self)
-		let object = UncheckedMainActorValue(value: object)
-
-		MainActor.assumeIsolated {
-			controller.value.insertOnMain(object.value, atArrangedObjectIndex: index)
+	public func insert(_ member: ChannelUser, atArrangedObjectIndex index: Int) {
+		guard index >= 0, index <= members.count else {
+			return
 		}
+
+		members.insert(member, at: index)
+		tableView?.memberInserted(at: UInt(index))
 	}
 
-	private func insertOnMain(_ object: Any, atArrangedObjectIndex index: Int) {
-		super.insert(object, atArrangedObjectIndex: index)
-		tableView.memberInserted(at: UInt(index))
-	}
-
-	/* ISOLATION-EXCEPTION: see `insert(_:atArrangedObjectIndex:)` above. */
-	override public nonisolated func remove(atArrangedObjectIndex index: Int) {
-		let controller = UncheckedMainActorValue(value: self)
-
-		MainActor.assumeIsolated {
-			controller.value.removeOnMain(atArrangedObjectIndex: index)
+	public func remove(atArrangedObjectIndex index: Int) {
+		guard members.indices.contains(index) else {
+			return
 		}
-	}
 
-	private func removeOnMain(atArrangedObjectIndex index: Int) {
-		super.remove(atArrangedObjectIndex: index)
-		tableView.memberRemoved(at: UInt(index))
+		members.remove(at: index)
+		tableView?.memberRemoved(at: UInt(index))
 	}
 }
