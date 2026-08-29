@@ -7,8 +7,11 @@ import CocoaExtensions
 import Foundation
 import Testing
 
+/// Nonisolated: `XRFileSystemMonitor` is, and both tests need the writer and
+/// the consumer to run at the same time. On the main actor they would take
+/// turns, which is not the shape FSEvents is being asked about.
 @Suite("File-system monitor stream")
-struct FileSystemMonitorStreamTests {
+nonisolated struct FileSystemMonitorStreamTests {
 	@Test("The stream reports a file written into a watched folder")
 	func reportsAWrite() async throws {
 		let folder = try makeTemporaryFolder()
