@@ -72,7 +72,7 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/ApplicationSupport/TPCPathInfo.swift` | `Sources/App/Application/PathInfo.swift` |
 | `Sources/App/Modules/Networking/OELReachability.swift` | `Sources/App/Application/Reachability.swift` |
 | `Sources/App/Modules/ApplicationSupport/TPCResourceManager.swift` | `Sources/App/Application/ResourceManager.swift` |
-| `Sources/App/Modules/ApplicationSupport/TPCResourceManagerDocumentTypeImporter.swift` | `Sources/App/Application/ResourceManagerDocumentTypeImporter.swift` |
+| `Sources/App/Modules/ApplicationSupport/TPCResourceManagerDocumentTypeImporter.swift` | `Sources/App/Application/ResourceFileImporter.swift` |
 | `Sources/App/Modules/ApplicationSupport/TXSharedApplication.swift` | `Sources/App/Application/SharedApplication.swift` |
 | `Sources/App/Modules/AppKitSupport/TXWindowController.swift` | `Sources/App/Application/WindowController.swift` |
 | `Sources/App/Modules/ApplicationSupport/main.swift` | `Sources/App/Application/main.swift` |

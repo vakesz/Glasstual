@@ -12,39 +12,27 @@
 
 import AppKit
 import CocoaExtensions
+import os
 import UniformTypeIdentifiers
 
-private let scriptDocumentTypeName = "Glasstual IRC Client Script"
-private let pluginDocumentTypeName = "Glasstual IRC Client Extension"
-
-@objc(TPCResourceManagerDocumentTypeImporter)
-public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePanelDelegate {
-	override public nonisolated static var autosavesInPlace: Bool {
-		true
-	}
-
-	/* ISOLATION-EXCEPTION: `NSDocument.read(from:ofType:)` is declared nonisolated,
-	 so the override cannot be isolated. AppKit opens documents on the main thread. */
-	override public nonisolated func read(from url: URL, ofType typeName: String) throws {
-		try MainActor.assumeIsolated {
-			try performRead(from: url, ofType: typeName)
+/// Installs a script or an extension the user opened from the Finder.
+///
+/// This was an `NSDocument` subclass named as the `NSDocumentClass` of two
+/// declared document types. `NSDocument.read(from:ofType:)` is nonisolated, so
+/// the one thing the importer does — put alerts and a save panel on screen —
+/// had to start with a runtime assumption about the calling thread, and the
+/// document machinery brought an untitled document on reopen with it.
+/// `NSApplicationDelegate.application(_:open:)` is main-actor isolated by
+/// declaration and hands over the same URLs.
+@MainActor
+public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
+	public func open(_ urls: [URL]) {
+		for url in urls {
+			open(url)
 		}
 	}
 
-	@MainActor
-	private func performRead(from url: URL, ofType typeName: String) throws {
-		if typeName == scriptDocumentTypeName {
-			performImportOfScriptFile(url)
-
-			return
-		}
-
-		if typeName == pluginDocumentTypeName {
-			performImportOfPluginFile(url)
-
-			return
-		}
-
+	private func open(_ url: URL) {
 		var contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType
 
 		if contentType == nil {
@@ -52,7 +40,8 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		}
 
 		guard let contentType else {
-			throw CocoaError(.fileReadUnknown)
+			reportUnsupportedFile(url)
+			return
 		}
 
 		if let scriptType = UTType(filenameExtension: ResourceDocumentType.scriptFilenameExtension),
@@ -71,12 +60,22 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 			return
 		}
 
-		throw CocoaError(.fileReadUnknown)
+		reportUnsupportedFile(url)
 	}
+
+	private func reportUnsupportedFile(_ url: URL) {
+		Self.logger.error(
+			"Opened file '\(url.lastPathComponent, privacy: .public)' is neither a script nor an extension"
+		)
+	}
+
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "ResourceFileImporter"
+	)
 
 	// MARK: - Custom Plugin Files
 
-	@MainActor
 	private func performImportOfPluginFile(_ url: URL) {
 		let filename = url.lastPathComponent
 
@@ -140,7 +139,6 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		return Array(components.prefix(directoryComponents.count)) == directoryComponents
 	}
 
-	@MainActor
 	private func performImportOfScriptFile(_ url: URL) {
 		let filename = url.lastPathComponent
 
@@ -189,7 +187,6 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		}
 	}
 
-	@MainActor
 	private func performImportOfScriptFilePostflight(_ filename: String) {
 		let filenameWithoutExtension = (filename as NSString).deletingPathExtension
 
