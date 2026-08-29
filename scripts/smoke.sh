@@ -65,6 +65,7 @@ setup_failure() {
 
 seed_preferences() {
 	[ -f "$source_plist" ] || setup_failure "no preferences to copy at $source_plist"
+	[ -r "$source_plist" ] || setup_failure "cannot read $source_plist -- grant this terminal Full Disk Access, or run with SMOKE_SEED=0 to reuse an existing seed"
 
 	mkdir -p "$container_prefs" || setup_failure "cannot write to $container_prefs"
 	cp "$source_plist" "$seed_plist" || setup_failure "cannot seed $seed_plist"
