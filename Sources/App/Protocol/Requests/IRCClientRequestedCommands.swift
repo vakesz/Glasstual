@@ -49,13 +49,10 @@ public final class ClientRequestedCommands: NSObject {
 		let responseIsHidden: Bool
 	}
 
-	private let lock = NSLock()
 	private var requests: [Request] = []
 
 	@objc public func removeCommands() {
-		lock.withLock {
-			requests.removeAll()
-		}
+		requests.removeAll()
 	}
 
 	@objc(inVisibleIsonRequest)
@@ -93,28 +90,22 @@ public final class ClientRequestedCommands: NSObject {
 	}
 
 	private func addRequest(for command: Command, responseIsHidden: Bool) {
-		lock.withLock {
-			requests.append(Request(command: command, responseIsHidden: responseIsHidden))
-		}
+		requests.append(Request(command: command, responseIsHidden: responseIsHidden))
 	}
 
 	private func removeFirstRequest(for command: Command) {
-		lock.withLock {
-			guard let index = requests.firstIndex(where: { $0.command == command }) else {
-				return
-			}
-
-			requests.remove(at: index)
+		guard let index = requests.firstIndex(where: { $0.command == command }) else {
+			return
 		}
+
+		requests.remove(at: index)
 	}
 
 	private func responseIsVisible(for command: Command) -> Bool {
-		lock.withLock {
-			guard let request = requests.first(where: { $0.command == command }) else {
-				return false
-			}
-
-			return request.responseIsHidden == false
+		guard let request = requests.first(where: { $0.command == command }) else {
+			return false
 		}
+
+		return request.responseIsHidden == false
 	}
 }

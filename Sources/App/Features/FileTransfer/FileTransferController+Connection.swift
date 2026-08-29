@@ -209,7 +209,6 @@ extension TDCFileTransferDialogTransferController {
 	}
 
 	private func openConnectionToHost() {
-		dispatchPrecondition(condition: .onQueue(.main))
 		closeAndPostNotification(false)
 		resetProperties()
 		transferStatus = .connecting
@@ -220,22 +219,21 @@ extension TDCFileTransferDialogTransferController {
 			return
 		}
 
-		let connection = TDCFileTransferDialogSocket(
-			delegate: self,
-			delegateQueue: DispatchQueue.main
-		)
-		connectionToRemoteServer = connection
-		connection.connect(
-			toHost: hostAddress,
-			port: hostPort,
-			viaInterface: TextualPreferences.fileTransferIPAddressInterfaceName(),
-			timeout: FileTransferLimits.connectTimeout
-		)
+		guard let filePath = prepareTransferFile() else { return }
+
+		startTransfer(with: transferConfiguration(
+			endpoint: .connect(
+				host: hostAddress,
+				port: hostPort,
+				interfaceName: TextualPreferences.fileTransferIPAddressInterfaceName(),
+				timeout: .seconds(FileTransferLimits.connectTimeout)
+			),
+			filePath: filePath
+		))
 		disableSystemSleep()
 	}
 
 	private func openConnectionAsServer() {
-		dispatchPrecondition(condition: .onQueue(.main))
 		closeAndPostNotification(false)
 		resetProperties()
 		transferStatus = .initializing
@@ -247,13 +245,45 @@ extension TDCFileTransferDialogTransferController {
 			return
 		}
 
-		let server = TDCFileTransferDialogSocket(
-			delegate: self,
-			delegateQueue: DispatchQueue.main
-		)
-		listeningServer = server
-		server.listenOnPortRange(from: portRangeStart, to: portRangeEnd)
+		guard let filePath = prepareTransferFile() else { return }
+
+		startTransfer(with: transferConfiguration(
+			endpoint: .listen(portRange: portRangeStart ... portRangeEnd),
+			filePath: filePath
+		))
 		disableSystemSleep()
+	}
+
+	private func transferConfiguration(
+		endpoint: DCCTransfer.Endpoint,
+		filePath: String
+	) -> DCCTransfer.Configuration {
+		DCCTransfer.Configuration(
+			role: isSender ? .sender : .receiver,
+			endpoint: endpoint,
+			filePath: filePath,
+			fileSize: totalFilesize,
+			resumeOffset: processedFilesize,
+			/* Only a reverse DCC names the peer up front. For a plain DCC SEND
+				we listen and the peer announces itself by arriving, so there is
+				nothing to check the inbound address against. */
+			expectedPeerAddress: isActingAsServer ? hostAddress : "",
+			sendTimeout: .seconds(FileTransferLimits.sendTimeout)
+		)
+	}
+
+	/// The file this transfer reads from, or the one it writes into.
+	private func prepareTransferFile() -> String? {
+		if !isSender, !isResume {
+			setNonexistentFilename()
+		}
+
+		guard let filePath else {
+			close(with: .sourceFileUnreadable)
+			return nil
+		}
+
+		return filePath
 	}
 
 	@objc private func portMapperDidFinishWork(_: Notification?) {
@@ -369,7 +399,6 @@ extension TDCFileTransferDialogTransferController {
 		}
 		currentRecord = 0
 		errorMessageDescription = nil
-		sendQueueSize = 0
 		speedRecordsPrivate.removeAll(keepingCapacity: true)
 	}
 }

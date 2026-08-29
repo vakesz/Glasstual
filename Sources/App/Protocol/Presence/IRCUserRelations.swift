@@ -15,23 +15,22 @@ import Foundation
 @objc(IRCUserRelations)
 @MainActor
 public final class UserRelations: NSObject {
-	private let lock = NSLock()
 	private var storage: [IRCChannel: ChannelUser] = [:]
 
 	@objc public var relations: [IRCChannel: ChannelUser] {
-		withLock { storage }
+		storage
 	}
 
 	@objc public var relatedChannels: [IRCChannel] {
-		withLock { Array(storage.keys) }
+		Array(storage.keys)
 	}
 
 	@objc public var relatedUsers: [ChannelUser] {
-		withLock { Array(storage.values) }
+		Array(storage.values)
 	}
 
 	@objc public var numberOfRelations: UInt {
-		withLock { UInt(storage.count) }
+		UInt(storage.count)
 	}
 
 	@objc(associateUser:withChannel:)
@@ -40,9 +39,7 @@ public final class UserRelations: NSObject {
 			return
 		}
 
-		withLock {
-			storage[channel] = user
-		}
+		storage[channel] = user
 	}
 
 	@objc(disassociateUserWithChannel:)
@@ -51,9 +48,7 @@ public final class UserRelations: NSObject {
 			return
 		}
 
-		withLock {
-			storage.removeValue(forKey: channel)
-		}
+		storage.removeValue(forKey: channel)
 	}
 
 	@objc(userAssociatedWithChannel:)
@@ -62,7 +57,7 @@ public final class UserRelations: NSObject {
 			return nil
 		}
 
-		return withLock { storage[channel] }
+		return storage[channel]
 	}
 
 	@objc(enumerateRelations:)
@@ -81,13 +76,5 @@ public final class UserRelations: NSObject {
 				}
 			}
 		}
-	}
-
-	@discardableResult
-	private func withLock<Result>(_ operation: () -> Result) -> Result {
-		lock.lock()
-		defer { lock.unlock() }
-
-		return operation()
 	}
 }

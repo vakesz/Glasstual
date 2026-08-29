@@ -89,7 +89,13 @@ private final nonisolated class FileTransferTimeout: @unchecked Sendable {
 }
 
 /**
- A queue-confined Network.framework wrapper used by DCC file transfers.
+ A queue-confined Network.framework wrapper, now used only by DCC CHAT.
+
+ DCC file transfers moved to the `DCCTransfer` actor, which owns its connection
+ outright; this wrapper survives because `DirectChatConnection` has not been
+ converted yet, and it moved next to that one remaining caller. It still needs
+ the same treatment -- an actor over `NWConnection`/`NWListener` with an
+ `AsyncStream` of events -- and the two exceptions below go with it.
 
  ISOLATION-EXCEPTION: every mutable network object belongs to `socketQueue`. The
  two flags read by other queues use `Mutex`, and the class is `@unchecked
