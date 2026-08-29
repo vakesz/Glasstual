@@ -55,7 +55,9 @@ struct AppKitBridgeIsolationTests {
 
 		memberList.configure()
 
-		#expect(memberList.dataSource === memberList)
+		/* The list is no longer its own data source: `configure()` builds a
+		 diffable one and hands the table to it. The delegate is still the view. */
+		#expect(memberList.dataSource is NSTableViewDiffableDataSource<MemberListSectionIdentifier, User.ID>)
 		#expect(memberList.delegate === memberList)
 
 		/* A second pass would install a second tracking area and re-register the
