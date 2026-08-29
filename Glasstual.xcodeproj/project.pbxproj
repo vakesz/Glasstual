@@ -315,6 +315,7 @@
 		5014A3B602E6D0DA63A756EB /* TVCLogLineXPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D1B1025D6CCF710E0C520F /* TVCLogLineXPC.swift */; };
 		505D60B74BA4E662F0D8AF80 /* IRCBridgeContractMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6E2E12EF7FE34C60E3FE9E /* IRCBridgeContractMigrationTests.swift */; };
 		50865B3AA79F02D994852764 /* IRCNumericReplyCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31AFB9D0E735935FF32A76DE /* IRCNumericReplyCorpusTests.swift */; };
+		518C569244E685DF38BE71E6 /* LogRenderPipelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B50B65ECCE5DD899A702E0E /* LogRenderPipelineTests.swift */; };
 		51999B32A2354482D4B546B9 /* TVCMainWindowAppearance.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61A3F5E6307AFC43CEB9BBD8 /* TVCMainWindowAppearance.plist */; };
 		5268BE9E9AE9C662A9BA1E3A /* IRCChannelModeKindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58E2128111647865D1F33D7 /* IRCChannelModeKindTests.swift */; };
 		5279FA27A0A15E84E9D76C16 /* System Info.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 0001CA74F07AAD0D95E12E46 /* System Info.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1835,6 +1836,7 @@
 		9A1EB2F01E66E09C18674D8D /* IRCExtrasMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCExtrasMigrationTests.swift; sourceTree = "<group>"; };
 		9AB3CF7D3B60370A393C9157 /* GlasstualTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlasstualTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B3DFBE5771D85B87EB9EA81 /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
+		9B50B65ECCE5DD899A702E0E /* LogRenderPipelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogRenderPipelineTests.swift; sourceTree = "<group>"; };
 		9B562D6F1BBEFFBE09214007 /* LogLineTypeRawValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLineTypeRawValueTests.swift; sourceTree = "<group>"; };
 		9BE2BF9D852E77AFB598C13B /* ChannelPropertiesStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelPropertiesStrings.swift; sourceTree = "<group>"; };
 		9C5315E176DE7F0C909CE4FE /* OnboardingStepViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStepViewController.swift; sourceTree = "<group>"; };
@@ -3894,6 +3896,7 @@
 				1CB87F592817BD468FEC14CB /* LogLineXPCTests.swift */,
 				B54DD3222626EA1DF4F40363 /* LogRendererMigrationTests.swift */,
 				BFB501D3F16D7355583620ED /* LogRendererSafetyTests.swift */,
+				9B50B65ECCE5DD899A702E0E /* LogRenderPipelineTests.swift */,
 				35EB251897AACA96E9AED04A /* LogScriptBridgeTests.swift */,
 				61E6A9175F1544213D44EC35 /* LogScriptEventSinkMigrationTests.swift */,
 				2B55F746BBD353691A2D826B /* LogViewContentPolicyTests.swift */,
@@ -5334,6 +5337,7 @@
 				53537C46936246C47434AA20 /* LogLineRenderRequestTests.swift in Sources */,
 				E5EFD2984C33C9A7908A9FCD /* LogLineTypeRawValueTests.swift in Sources */,
 				F3088A37444E303333E19072 /* LogLineXPCTests.swift in Sources */,
+				518C569244E685DF38BE71E6 /* LogRenderPipelineTests.swift in Sources */,
 				62354DD74841E96B0A80B170 /* LogRendererMigrationTests.swift in Sources */,
 				80743127EE90051A2EB8D3A8 /* LogRendererSafetyTests.swift in Sources */,
 				4159CE0503F6E5781DC515E3 /* LogScriptBridgeTests.swift in Sources */,
