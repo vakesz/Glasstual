@@ -271,7 +271,9 @@ public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
 		coder.encode(values.lineNumber, forKey: "lineNumber")
 		coder.encode(values.uniqueIdentifier, forKey: "uniqueIdentifier")
 		coder.encode(values.viewIdentifier, forKey: "viewIdentifier")
-		coder.encode(values.index, forKey: "index")
+		/* Int, not UInt: the UInt overload archives an NSNumber object, which
+		 decodeInteger(forKey:) then refuses to read back. */
+		coder.encode(Int(values.index), forKey: "index")
 		coder.encode(values.classAttribute, forKey: "classAttribute")
 	}
 
