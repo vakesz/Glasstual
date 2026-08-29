@@ -241,7 +241,9 @@ public nonisolated enum UserNicknameColorStyleGenerator {
 		}
 	}
 
+	/// A private handle, not the main actor's: a nickname colour is resolved
+	/// while a line renders, which happens off the main actor.
 	private static var userDefaults: TextualUserDefaults {
-		TextualUserDefaults.shared()
+		TextualUserDefaults.suite()
 	}
 }

@@ -623,7 +623,7 @@ public final class ThemeSettings: NSObject {
 			resultError?.pointee = Self.missingStoreNameError as NSString
 			return nil
 		}
-		return TextualUserDefaults.shared().dictionary(forKey: storeKey)?[key]
+		return TextualUserDefaults.container.dictionary(forKey: storeKey)?[key]
 	}
 
 	@objc(styleSettingsSetValue:forKey:error:)
@@ -642,14 +642,14 @@ public final class ThemeSettings: NSObject {
 		}
 
 		let shouldRemove = value == nil || value is NSNull
-		var settings = TextualUserDefaults.shared().dictionary(forKey: storeKey) ?? [:]
+		var settings = TextualUserDefaults.container.dictionary(forKey: storeKey) ?? [:]
 		if shouldRemove {
 			guard !settings.isEmpty else { return true }
 			settings.removeValue(forKey: key)
 		} else {
 			settings[key] = value
 		}
-		TextualUserDefaults.shared().set(settings, forKey: storeKey)
+		TextualUserDefaults.container.set(settings, forKey: storeKey)
 		return true
 	}
 

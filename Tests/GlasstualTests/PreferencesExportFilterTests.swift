@@ -23,7 +23,7 @@ struct PreferencesExportFilterTests {
 	private static let key = "ScrollbackMaximumSavedLineCount"
 
 	private func withRestoredValue(_ body: () -> Void) {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		let original = defaults.object(forKey: Self.key)
 		defer {
 			if let original {
@@ -39,7 +39,7 @@ struct PreferencesExportFilterTests {
 	func changedValueIsExported() {
 		withRestoredValue {
 			let registered = TextualPreferences.defaultPreferences()[Self.key] as? Int ?? 0
-			TextualUserDefaults.shared().set(registered + 1234, forKey: Self.key)
+			TextualUserDefaults.container.set(registered + 1234, forKey: Self.key)
 
 			let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
 			#expect(exported[Self.key] as? Int == registered + 1234)
@@ -53,7 +53,7 @@ struct PreferencesExportFilterTests {
 				Issue.record("\(Self.key) has no registered default")
 				return
 			}
-			TextualUserDefaults.shared().set(registered, forKey: Self.key)
+			TextualUserDefaults.container.set(registered, forKey: Self.key)
 
 			let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
 			#expect(exported[Self.key] == nil)
@@ -67,7 +67,7 @@ struct PreferencesExportFilterTests {
 				Issue.record("\(Self.key) has no registered default")
 				return
 			}
-			TextualUserDefaults.shared().set(registered, forKey: Self.key)
+			TextualUserDefaults.container.set(registered, forKey: Self.key)
 
 			let exported = PreferencesImportExport.exportedPreferencesDictionary(false, filterDefaults: false)
 			#expect(exported[Self.key] != nil)

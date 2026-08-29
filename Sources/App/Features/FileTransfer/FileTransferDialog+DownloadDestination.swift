@@ -45,7 +45,7 @@ public extension FileTransferDialog {
 	}
 
 	@objc func startUsingDownloadDestinationURL() {
-		guard let bookmark = TextualUserDefaults.shared().data(
+		guard let bookmark = TextualUserDefaults.container.data(
 			forKey: FileTransferDialogConstants.bookmarkKey
 		) else {
 			return
@@ -84,7 +84,7 @@ public extension FileTransferDialog {
 	func setDownloadDestinationURL(_ bookmark: Data?) {
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 		downloadDestinationURLPrivate = nil
-		TextualUserDefaults.shared().set(bookmark, forKey: FileTransferDialogConstants.bookmarkKey)
+		TextualUserDefaults.container.set(bookmark, forKey: FileTransferDialogConstants.bookmarkKey)
 		startUsingDownloadDestinationURL()
 	}
 

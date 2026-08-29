@@ -324,7 +324,7 @@ public class ServerListCell: NSTableCellView {
 	}
 
 	private func messageCountBadgeHighlightColorByUser() -> NSColor? {
-		guard let color = TextualUserDefaults.shared()
+		guard let color = TextualUserDefaults.container
 			.storedColor(for: Preferences.Badges.serverListUnreadHighlight),
 			color.alphaComponent > 0
 		else {

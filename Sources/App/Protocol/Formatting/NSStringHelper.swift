@@ -201,6 +201,9 @@ public nonisolated extension NSString {
 		hostmask?.address
 	}
 
+	/// Main-actor: it reads a preference the main actor owns and it renders
+	/// with `NSFont`/`NSColor`, which is what every caller hands it anyway.
+	@MainActor
 	func attributedString(
 		withIRCFormatting preferredFont: NSFont,
 		preferredFontColor: NSColor?,
@@ -221,6 +224,7 @@ public nonisolated extension NSString {
 		return TVCLogRenderer.renderBody(asAttributedString: self as String, withAttributes: attributes)
 	}
 
+	@MainActor
 	func attributedString(
 		withIRCFormatting preferredFont: NSFont,
 		preferredFontColor: NSColor?
