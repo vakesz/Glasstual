@@ -39,7 +39,7 @@ import Foundation
 import Synchronization
 
 /// What went wrong before a body could be handed back.
-public enum InlineContentBodyError: Error, Sendable {
+public enum InlineContentBodyError: Error, Equatable, Sendable {
 	/// The endpoint answered with something other than HTTP, or with nothing.
 	case notHTTP
 	/// The body passed the caller's byte cap; the transfer was cut off there.
@@ -119,6 +119,12 @@ public struct InlineContentBodyTransfer: Sendable {
 	/// Stops the transfer. Harmless once it has already finished.
 	public func cancel() {
 		task.cancel()
+	}
+
+	/// Whether the transfer was stopped rather than allowed to finish — by
+	/// `cancel()`, by the cap, or by a cancelled caller.
+	public var isCancelled: Bool {
+		task.state == .canceling || (task.error as? URLError)?.code == .cancelled
 	}
 
 	/// The whole body in one piece, which is what both readers here want.
