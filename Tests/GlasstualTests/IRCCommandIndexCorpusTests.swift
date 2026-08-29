@@ -180,7 +180,7 @@ struct IRCCommandIndexCorpusTests {
 
 	// MARK: - Outgoing colon positions
 
-	struct ColonCase: Sendable {
+	nonisolated struct ColonCase: Sendable {
 		let command: String
 		let position: UInt
 

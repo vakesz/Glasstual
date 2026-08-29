@@ -19,29 +19,40 @@ struct DCCChatLoopbackTests {
 	@Test("Lines cross in both directions, in order", .timeLimit(.minutes(1)))
 	func linesCrossInBothDirections() async throws {
 		let listening = ChatFixture.listeningConnection()
-		var events = listening.events.makeAsyncIterator()
+		var dialled: DCCChatConnection?
+		var peer: Task<[String], Never>?
+		var replies: [String] = []
 
 		await listening.start()
 
-		let port = try #require(await ChatFixture.boundPort(from: &events))
-		let dialled = ChatFixture.diallingConnection(port: port)
-		let peer = ChatFixture.drive(dialled, replying: ["reply one", "reply two"], afterLines: 3)
+		events: for await event in listening.events {
+			switch event {
+			case let .listening(port):
+				let connection = ChatFixture.diallingConnection(port: port)
+				dialled = connection
+				peer = ChatFixture.drive(connection, replying: ["reply one", "reply two"], afterLines: 3)
 
-		await dialled.start()
+				await connection.start()
+			case .connected:
+				try await listening.send(Data("first".utf8))
+				try await listening.send(Data("second".utf8))
+				try await listening.send(Data("third".utf8))
+			case let .line(data):
+				replies.append(ChatFixture.decode(data))
 
-		#expect(await ChatFixture.waitForConnection(from: &events))
-
-		try await listening.send(Data("first".utf8))
-		try await listening.send(Data("second".utf8))
-		try await listening.send(Data("third".utf8))
-
-		let replies = await ChatFixture.lines(from: &events, count: 2)
+				if replies.count == 2 {
+					break events
+				}
+			case .closed:
+				break events
+			}
+		}
 
 		#expect(replies == ["reply one", "reply two"])
-		#expect(await peer.value == ["first", "second", "third"])
+		#expect(await peer?.value == ["first", "second", "third"])
 
 		await listening.close()
-		await dialled.close()
+		await dialled?.close()
 	}
 
 	/// The framing is what a chat depends on: a peer that writes a line in
@@ -49,17 +60,15 @@ struct DCCChatLoopbackTests {
 	@Test("Fragmented and coalesced writes still arrive as lines", .timeLimit(.minutes(1)))
 	func fragmentedAndCoalescedWritesArriveAsLines() async throws {
 		let listening = ChatFixture.listeningConnection()
-		var events = listening.events.makeAsyncIterator()
+		var dialled: DCCChatConnection?
+		var peer: Task<[String], Never>?
 
 		await listening.start()
 
-		let port = try #require(await ChatFixture.boundPort(from: &events))
-		let dialled = ChatFixture.diallingConnection(port: port)
-		let peer = ChatFixture.drive(dialled, replying: [], afterLines: 3)
-
-		await dialled.start()
-
-		#expect(await ChatFixture.waitForConnection(from: &events))
+		try await ChatFixture.connect(listening) { connection in
+			dialled = connection
+			peer = ChatFixture.drive(connection, replying: [], afterLines: 3)
+		}
 
 		/* Written unframed, so the fragments arrive as the peer sent them: one
 		 line in three writes, then two lines in one. */
@@ -68,54 +77,50 @@ struct DCCChatLoopbackTests {
 		try await listening.write(Data(" line\n".utf8))
 		try await listening.write(Data("two\nthree\n".utf8))
 
-		#expect(await peer.value == ["fragmented line", "two", "three"])
+		#expect(await peer?.value == ["fragmented line", "two", "three"])
 
 		await listening.close()
-		await dialled.close()
+		await dialled?.close()
 	}
 
 	@Test("A peer that hangs up ends the session without an error", .timeLimit(.minutes(1)))
 	func aPeerThatHangsUpEndsTheSessionWithoutAnError() async throws {
 		let listening = ChatFixture.listeningConnection()
-		var events = listening.events.makeAsyncIterator()
+		var dialled: DCCChatConnection?
+		var verdict: Task<DCCTransferError??, Never>?
 
 		await listening.start()
 
-		let port = try #require(await ChatFixture.boundPort(from: &events))
-		let dialled = ChatFixture.diallingConnection(port: port)
-		let verdict = ChatFixture.verdict(of: dialled)
-
-		await dialled.start()
-
-		#expect(await ChatFixture.waitForConnection(from: &events))
+		try await ChatFixture.connect(listening) { connection in
+			dialled = connection
+			verdict = ChatFixture.verdict(of: connection)
+		}
 
 		await listening.close()
 
-		let closed = try #require(await verdict.value)
+		let closed = try #require(await verdict?.value)
 		#expect(closed == nil)
 
-		await dialled.close()
+		await dialled?.close()
 	}
 
 	@Test("Cancelling a session ends its events without a verdict", .timeLimit(.minutes(1)))
 	func cancellingASessionEndsItsEventsWithoutAVerdict() async throws {
 		let listening = ChatFixture.listeningConnection()
-		var events = listening.events.makeAsyncIterator()
+		var dialled: DCCChatConnection?
+		var collected: Task<[DCCChatEvent], Never>?
 
 		await listening.start()
 
-		let port = try #require(await ChatFixture.boundPort(from: &events))
-		let dialled = ChatFixture.diallingConnection(port: port)
-		let collected = ChatFixture.allEvents(of: dialled)
+		try await ChatFixture.connect(listening) { connection in
+			dialled = connection
+			collected = ChatFixture.allEvents(of: connection)
+		}
 
-		await dialled.start()
+		await dialled?.close()
 
-		#expect(await ChatFixture.waitForConnection(from: &events))
-
-		await dialled.close()
-
-		let events2 = await collected.value
-		#expect(events2.contains {
+		let events = await collected?.value ?? []
+		#expect(events.contains {
 			if case .closed = $0 {
 				true
 			} else {
@@ -129,25 +134,23 @@ struct DCCChatLoopbackTests {
 	@Test("A peer that never sends a newline is cut off at the cap", .timeLimit(.minutes(1)))
 	func aPeerThatNeverSendsANewlineIsCutOff() async throws {
 		let listening = ChatFixture.listeningConnection(maximumLineLength: 4096)
-		var events = listening.events.makeAsyncIterator()
+		var dialled: DCCChatConnection?
+		var verdict: Task<DCCTransferError??, Never>?
 
 		await listening.start()
 
-		let port = try #require(await ChatFixture.boundPort(from: &events))
-		let dialled = ChatFixture.diallingConnection(port: port, maximumLineLength: 4096)
-		let verdict = ChatFixture.verdict(of: dialled)
-
-		await dialled.start()
-
-		#expect(await ChatFixture.waitForConnection(from: &events))
+		try await ChatFixture.connect(listening, maximumLineLength: 4096) { connection in
+			dialled = connection
+			verdict = ChatFixture.verdict(of: connection)
+		}
 
 		try await listening.write(Data(repeating: UInt8(ascii: "a"), count: 8192))
 
-		let closed = try #require(await verdict.value)
+		let closed = try #require(await verdict?.value)
 		#expect(closed == .badParameter)
 
 		await listening.close()
-		await dialled.close()
+		await dialled?.close()
 	}
 }
 
@@ -177,46 +180,31 @@ enum ChatFixture {
 		))
 	}
 
-	// MARK: - Reading one side from the test body
+	/// Dials `listening` once it reports its port, and returns when the two
+	/// ends are connected.
+	///
+	/// `prepare` runs before the dialling side starts, which is where a test
+	/// attaches its consumer: an `AsyncStream` takes one, and what is yielded
+	/// before it attaches is buffered rather than dropped.
+	static func connect(
+		_ listening: DCCChatConnection,
+		maximumLineLength: Int = 16 * 1024,
+		prepare: (DCCChatConnection) -> Void
+	) async throws {
+		for await event in listening.events {
+			switch event {
+			case let .listening(port):
+				let connection = diallingConnection(port: port, maximumLineLength: maximumLineLength)
+				prepare(connection)
 
-	static func boundPort(from events: inout AsyncStream<DCCChatEvent>.Iterator) async -> UInt16? {
-		while let event = await events.next() {
-			if case let .listening(port) = event {
-				return port
+				await connection.start()
+			default:
+				/* `connected` is the one that ends the wait; anything else at
+				 this point is a failure the caller's assertions will report. */
+				return
 			}
 		}
-
-		return nil
 	}
-
-	static func waitForConnection(from events: inout AsyncStream<DCCChatEvent>.Iterator) async -> Bool {
-		while let event = await events.next() {
-			if case .connected = event {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	static func lines(
-		from events: inout AsyncStream<DCCChatEvent>.Iterator,
-		count: Int
-	) async -> [String] {
-		var lines: [String] = []
-
-		while lines.count < count, let event = await events.next() {
-			guard case let .line(data) = event else {
-				continue
-			}
-
-			lines.append(decode(data))
-		}
-
-		return lines
-	}
-
-	// MARK: - Driving the other side from a task
 
 	/// Reads `connection` until it has `expected` lines, sends `replies`, and
 	/// returns what it read.
@@ -282,7 +270,9 @@ enum ChatFixture {
 		}
 	}
 
-	private static func decode(_ data: Data) -> String {
-		String(decoding: data, as: UTF8.self).trimmingCharacters(in: .newlines)
+	/// A line as text. The fixture only ever sends UTF-8, so anything else is
+	/// the test's own bug and should read as one.
+	nonisolated static func decode(_ data: Data) -> String {
+		(String(bytes: data, encoding: .utf8) ?? "<not utf-8>").trimmingCharacters(in: .newlines)
 	}
 }

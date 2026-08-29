@@ -56,7 +56,7 @@ struct IRCISupportCorpusTests {
 
 	// MARK: - CASEMAPPING
 
-	struct CasefoldCase: Sendable {
+	nonisolated struct CasefoldCase: Sendable {
 		let configuration: String
 		let input: String
 		let folded: String
@@ -119,7 +119,7 @@ struct IRCISupportCorpusTests {
 
 	// MARK: - CHANMODES
 
-	struct ModeParameterCase: Sendable {
+	nonisolated struct ModeParameterCase: Sendable {
 		let modeSymbol: String
 		let whenSet: Bool
 		let hasParameter: Bool
@@ -168,7 +168,7 @@ struct IRCISupportCorpusTests {
 
 	// MARK: - PREFIX
 
-	struct PrefixCase: Sendable {
+	nonisolated struct PrefixCase: Sendable {
 		let modeSymbol: String
 		let character: String
 		let rank: UInt
@@ -260,7 +260,7 @@ struct IRCISupportCorpusTests {
 		#expect(supportInfo.configurationReceived == false)
 	}
 
-	struct ChannelLimitCase: Sendable {
+	nonisolated struct ChannelLimitCase: Sendable {
 		let channel: String
 		let limit: UInt
 
@@ -283,7 +283,7 @@ struct IRCISupportCorpusTests {
 		#expect(supportInfo.channelLimit(forChannelNamed: testCase.channel) == testCase.limit)
 	}
 
-	struct TargetLimitCase: Sendable {
+	nonisolated struct TargetLimitCase: Sendable {
 		let command: String
 		let limit: UInt
 

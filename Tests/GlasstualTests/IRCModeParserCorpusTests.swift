@@ -45,7 +45,7 @@ import Testing
 /// `PREFIX=(ov)@+`, the shape almost every network advertises.
 @MainActor
 struct IRCModeParserCorpusTests {
-	struct ParsedMode: Sendable, Equatable {
+	nonisolated struct ParsedMode: Sendable, Equatable {
 		let symbol: String
 		let isSet: Bool
 		let parameter: String?
@@ -57,7 +57,7 @@ struct IRCModeParserCorpusTests {
 		}
 	}
 
-	struct ModeCase: Sendable {
+	nonisolated struct ModeCase: Sendable {
 		let modeString: String
 		let expected: [ParsedMode]
 

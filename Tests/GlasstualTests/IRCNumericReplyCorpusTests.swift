@@ -43,7 +43,7 @@ import Testing
 /// ladder, and the WHOX request/response token.
 @MainActor
 struct IRCNumericReplyCorpusTests {
-	struct NumericCase: Sendable {
+	nonisolated struct NumericCase: Sendable {
 		let numeric: UInt
 		let isError: Bool
 
@@ -116,7 +116,7 @@ struct IRCNumericReplyCorpusTests {
 
 	// MARK: - Nickname retry ladder
 
-	struct AlternateCase: Sendable {
+	nonisolated struct AlternateCase: Sendable {
 		let attempt: UInt
 		let nicknames: [String]
 		let chosen: String?
@@ -140,7 +140,7 @@ struct IRCNumericReplyCorpusTests {
 		#expect(IRCNicknameRetryPolicy.alternate(at: testCase.attempt, from: testCase.nicknames) == testCase.chosen)
 	}
 
-	struct PaddingCase: Sendable {
+	nonisolated struct PaddingCase: Sendable {
 		let nickname: String?
 		let maximumLength: UInt
 		let padded: String
