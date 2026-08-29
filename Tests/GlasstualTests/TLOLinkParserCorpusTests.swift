@@ -199,14 +199,18 @@ struct TLOLinkParserCorpusTests {
 /// Corpus for the policy `OpenLink` applies before handing a URL to
 /// `NSWorkspace`.
 ///
-/// `OpenLink` exposes no predicate, so the gate it applies today is mirrored
-/// by `refusesToday(_:)`. Opening is only exercised for URLs that must be
-/// refused — driving the openable cases would launch applications.
+/// `refusesToday(_:)` asks the production allowlist itself — the same call
+/// `OpenLink.open(url:inBackground:)` makes — rather than mirroring it, so the
+/// suite cannot pass against a copy of the rule that has drifted. Opening is
+/// only exercised for URLs that must be refused: driving the openable cases
+/// would launch applications.
 @MainActor
 struct TLOpenLinkCorpusTests {
-	/// Mirrors the single check in `OpenLink.open(url:inBackground:)`.
+	/// The gate in `OpenLink.open(url:inBackground:)`, called directly.
 	private static func refusesToday(_ url: URL) -> Bool {
-		url.isFileURL
+		guard let scheme = url.scheme else { return true }
+
+		return LinkParser.isPermittedScheme(scheme) == false
 	}
 
 	@Test(arguments: [
@@ -235,18 +239,18 @@ struct TLOpenLinkCorpusTests {
 	}
 
 	/// Schemes that reach local shares or system surfaces must be refused too.
-	@Test(
-		.disabled("Phase 1: OpenLink gates on isFileURL only, so smb: and x-apple.systempreferences: are opened"),
-		arguments: [
-			"smb://example.com/share",
-			"afp://example.com/share",
-			"x-apple.systempreferences:com.apple.preference.security",
-		]
-	)
+	@Test(arguments: [
+		"smb://example.com/share",
+		"afp://example.com/share",
+		"x-apple.systempreferences:com.apple.preference.security",
+	])
 	func refusesLocalShareAndSystemSchemes(address: String) throws {
 		let url = try #require(URL(string: address))
 
 		#expect(Self.refusesToday(url))
+
+		/* Exercise the production guard: it must return without opening. */
+		OpenLink.open(url: url, inBackground: true)
 	}
 
 	@Test
