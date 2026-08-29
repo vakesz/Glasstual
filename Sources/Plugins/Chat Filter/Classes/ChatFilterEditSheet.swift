@@ -356,14 +356,18 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		field.objectValue = tokens(from: string)
 	}
 
+	/// A `%_name_%` placeholder in a filter action. Computed rather than
+	/// stored: `Regex` is not `Sendable`.
+	private static var actionToken: Regex<Substring> {
+		/%_[a-zA-Z0-9_]+_%/
+	}
+
 	private func tokens(from value: String?) -> [Any] {
 		guard let value, !value.isEmpty else { return value.map { [$0] } ?? [] }
-		let expression = try? NSRegularExpression(pattern: "%_([a-zA-Z0-9_]+)_%")
-		let range = NSRange(value.startIndex..., in: value)
 		var result: [Any] = []
 		var cursor = value.startIndex
-		for match in expression?.matches(in: value, range: range) ?? [] {
-			guard let tokenRange = Range(match.range, in: value) else { continue }
+		for match in value.matches(of: Self.actionToken) {
+			let tokenRange = match.range
 			if cursor < tokenRange.lowerBound {
 				result.append(String(value[cursor ..< tokenRange.lowerBound]))
 			}
