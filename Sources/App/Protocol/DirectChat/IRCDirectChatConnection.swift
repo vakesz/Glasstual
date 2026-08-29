@@ -15,11 +15,11 @@ import CocoaExtensions
 import Foundation
 import os
 
-private let connectTimeout: TimeInterval = 30.0
+private let connectTimeout: Duration = .seconds(30)
 /** A listener whose peer never dials in would otherwise hold a mapped router port for
  the lifetime of the application. */
-private let listenTimeout: TimeInterval = 300.0
-private let writeTimeout: TimeInterval = 30.0
+private let listenTimeout: Duration = .seconds(300)
+private let writeTimeout: Duration = .seconds(30)
 private let maximumLineLength = 1024 * 16
 
 private let directChatLogger = Logger(
@@ -56,10 +56,13 @@ public protocol IRCDirectChatConnectionDelegate: NSObjectProtocol {
 }
 
 /** A DCC CHAT session. One instance is one TCP connection to one peer.
- All state belongs to the main queue: the socket delivers its callbacks
- there and every method below must be called from there. */
+
+ The socket itself belongs to a ``DCCChatConnection`` actor, which does the
+ framing and hands whole lines back through its event stream. Everything here —
+ the state machine, the port mapping, the encoding, the delegate — belongs to
+ the main actor, and the event loop below is the one seam between the two. */
 @objc(IRCDirectChatConnection)
-public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDelegate {
+public final class DirectChatConnection: NSObject {
 	@objc public private(set) weak var client: IRCClient?
 	@objc public private(set) weak var delegate: IRCDirectChatConnectionDelegate?
 	@objc public private(set) var peerNickname: String
@@ -81,11 +84,14 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	@objc public private(set) var state: IRCDirectChatConnectionState = .idle
 
 	private let role: Role
-	private var listeningServer: TDCFileTransferDialogSocket?
-	private var connection: TDCFileTransferDialogSocket?
+	private var chat: DCCChatConnection?
+	private var eventTask: Task<Void, Never>?
+	private var listenTimeoutTask: Task<Void, Never>?
+	/** Sends are chained rather than each getting its own task: two `Task`s
+	 started in the same turn reach the actor in whatever order the scheduler
+	 picks, and a chat that reorders the user's lines is a bug. */
+	private var outboundTask: Task<Void, Never>?
 	private var portMapping: XRPortMapper?
-	private var listenTimeoutWorkItem: DispatchWorkItem?
-	private var lineBuffer = NSMutableData()
 
 	@objc public var isConnected: Bool {
 		state == .connected
@@ -116,7 +122,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	}
 
 	isolated deinit {
-		tearDownSockets()
+		tearDown()
 	}
 
 	@objc(connectionToPeer:address:port:onClient:delegate:)
@@ -162,8 +168,6 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 
 	@objc
 	public func open() {
-		dispatchPrecondition(condition: .onQueue(.main))
-
 		guard state == .idle else {
 			return
 		}
@@ -179,78 +183,73 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	private func openConnection(to hostAddress: String) {
 		state = .connecting
 
-		let connection = TDCFileTransferDialogSocket(
-			delegate: self,
-			delegateQueue: DispatchQueue.main
-		)
-		self.connection = connection
-
-		connection.connect(
-			toHost: hostAddress,
+		start(endpoint: .connect(
+			host: hostAddress,
 			port: hostPort,
-			viaInterface: preferences.fileTransferIPAddressInterfaceName,
+			interfaceName: preferences.fileTransferIPAddressInterfaceName,
 			timeout: connectTimeout
-		)
+		))
 	}
 
 	private func openListener() {
 		let portRangeStart = preferences.fileTransferPortRangeStart
 		let portRangeEnd = preferences.fileTransferPortRangeEnd
 
-		if portRangeStart == 0 || portRangeStart > portRangeEnd {
-			close(
-				with: TDCFileTransferDialogSocket.error(
-					withCode: .noOpenPort,
-					description: "The file transfer port range is invalid"
-				)
-			)
+		guard portRangeStart > 0, portRangeStart <= portRangeEnd else {
+			close(with: DCCTransferError.noOpenPort)
 			return
 		}
 
 		state = .listening
 
-		let listeningServer = TDCFileTransferDialogSocket(
-			delegate: self,
-			delegateQueue: DispatchQueue.main
-		)
-		self.listeningServer = listeningServer
-		listeningServer.listenOnPortRange(from: portRangeStart, to: portRangeEnd)
+		start(endpoint: .listen(portRange: portRangeStart ... portRangeEnd))
 		startListenTimeout()
+	}
+
+	private func start(endpoint: DCCChatConnection.Endpoint) {
+		let chat = DCCChatConnection(configuration: DCCChatConnection.Configuration(
+			endpoint: endpoint,
+			maximumLineLength: maximumLineLength,
+			sendTimeout: writeTimeout
+		))
+		self.chat = chat
+
+		eventTask = Task { @MainActor [weak self] in
+			for await event in chat.events {
+				guard let self else { return }
+
+				handle(event)
+			}
+		}
+
+		Task { await chat.start() }
 	}
 
 	private func startListenTimeout() {
 		cancelListenTimeout()
 
-		let workItem = DispatchWorkItem { [weak self] in
-			guard let self, state == .listening else { return }
+		listenTimeoutTask = Task { @MainActor [weak self] in
+			try? await Task.sleep(for: listenTimeout)
 
-			close(
-				with: TDCFileTransferDialogSocket.error(
-					withCode: .connectTimeout,
-					description: "The peer did not connect before the offer expired"
-				)
-			)
+			guard Task.isCancelled == false, let self, state == .listening else { return }
+
+			close(with: DCCTransferError.connectTimeout)
 		}
-
-		listenTimeoutWorkItem = workItem
-		DispatchQueue.main.asyncAfter(deadline: .now() + listenTimeout, execute: workItem)
 	}
 
 	private func cancelListenTimeout() {
-		listenTimeoutWorkItem?.cancel()
-		listenTimeoutWorkItem = nil
+		listenTimeoutTask?.cancel()
+		listenTimeoutTask = nil
 	}
 
 	@objc
 	public func close() {
-		dispatchPrecondition(condition: .onQueue(.main))
-
 		guard state != .closed else {
 			return
 		}
 
 		state = .closed
-		tearDownSockets()
+		tearDown()
 	}
 
 	private func close(with error: Error?) {
@@ -262,8 +261,14 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		delegate?.directChatConnection(self, didCloseWithError: error)
 	}
 
-	private func tearDownSockets() {
+	private func tearDown() {
 		cancelListenTimeout()
+
+		eventTask?.cancel()
+		eventTask = nil
+
+		outboundTask?.cancel()
+		outboundTask = nil
 
 		if let portMapping {
 			NotificationCenter.default.removeObserver(
@@ -275,14 +280,10 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 			portMapping.close()
 		}
 
-		if let listeningServer {
-			self.listeningServer = nil
-			listeningServer.disconnect()
-		}
+		if let chat {
+			self.chat = nil
 
-		if let connection {
-			self.connection = nil
-			connection.disconnect()
+			Task { await chat.close() }
 		}
 	}
 
@@ -309,8 +310,6 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 
 	@objc
 	private func portMapperDidFinishWork(_: Notification?) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
 		guard state == .listening, let portMapping else {
 			return
 		}
@@ -333,6 +332,8 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		delegate?.directChatConnection(self, didStartListeningOnPort: hostPort)
 	}
 
+	// MARK: - Sending
+
 	@objc(sendMessage:)
 	public func sendMessage(_ message: String) {
 		sendLine(message)
@@ -344,9 +345,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	}
 
 	private func sendLine(_ line: String) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
-		guard isConnected, let client else {
+		guard isConnected, let chat, let client else {
 			return
 		}
 
@@ -359,45 +358,41 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 			return
 		}
 
-		let data = NSMutableData(data: encoded)
-		data.append(Data("\r\n".utf8))
-		connection?.write(data as Data, timeout: writeTimeout)
+		let previous = outboundTask
+		outboundTask = Task { @MainActor [weak self] in
+			_ = await previous?.value
+
+			do {
+				try await chat.send(encoded)
+			} catch {
+				self?.close(with: error)
+			}
+		}
 	}
 
-	private func consumeReceivedData(_ data: Data) {
-		lineBuffer.append(data)
+	// MARK: - Receiving
 
-		while lineBuffer.length > 0 {
-			let newlineRange = lineBuffer.range(
-				of: Data([0x0A]),
-				options: [],
-				in: NSRange(location: 0, length: lineBuffer.length)
-			)
+	private func handle(_ event: DCCChatEvent) {
+		switch event {
+		case let .listening(port):
+			guard state == .listening else { return }
 
-			if newlineRange.location == NSNotFound {
-				if lineBuffer.length > maximumLineLength {
-					close(
-						with: TDCFileTransferDialogSocket.error(
-							withCode: .badParameter,
-							description: "The peer sent a line which is too long"
-						)
-					)
-				}
-				return
-			}
+			hostPort = port
+			mapListeningPort(port)
+		case .connected:
+			guard state == .listening || state == .connecting else { return }
 
-			let lineData = lineBuffer.subdata(with: NSRange(location: 0, length: newlineRange.location))
-			lineBuffer.replaceBytes(
-				in: NSRange(location: 0, length: newlineRange.location + 1),
-				withBytes: nil,
-				length: 0
-			)
+			cancelListenTimeout()
+			state = .connected
+			delegate?.directChatConnectionDidConnect(self)
+		case let .line(data):
+			guard isConnected else { return }
 
-			consumeReceivedLine(lineData)
-
-			if state == .closed {
-				return
-			}
+			consumeReceivedLine(data)
+		case let .closed(error):
+			/* A peer that hangs up cleanly ends the conversation; only a real
+			 fault is worth reporting as one. */
+			close(with: error)
 		}
 	}
 
@@ -422,101 +417,5 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		}
 
 		delegate?.directChatConnection(self, didReceiveMessage: line, isAction: isAction)
-	}
-
-	// MARK: - Socket Delegate
-
-	public func socket(_ socket: TDCFileTransferDialogSocket, didStartListeningOnPort port: UInt16) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
-		guard socket === listeningServer else {
-			return
-		}
-
-		hostPort = port
-		mapListeningPort(port)
-	}
-
-	public func socket(_ socket: TDCFileTransferDialogSocket, didFailToListenWithError error: Error) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
-		guard socket === listeningServer else {
-			return
-		}
-
-		close(with: error)
-	}
-
-	public func socket(
-		_ socket: TDCFileTransferDialogSocket,
-		didAcceptConnection connection: TDCFileTransferDialogSocket
-	) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
-		if socket !== listeningServer || state != .listening {
-			connection.disconnect()
-			return
-		}
-
-		/* One peer only. Stop listening the moment somebody connects. */
-		listeningServer = nil
-		socket.disconnect()
-		self.connection = connection
-		connectionDidBecomeReady()
-	}
-
-	public func socketDidConnect(_ socket: TDCFileTransferDialogSocket) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
-		guard socket === connection, state == .connecting else {
-			return
-		}
-
-		connectionDidBecomeReady()
-	}
-
-	private func connectionDidBecomeReady() {
-		state = .connected
-		connection?.readData()
-		delegate?.directChatConnectionDidConnect(self)
-	}
-
-	public func socket(_ socket: TDCFileTransferDialogSocket, didRead data: Data) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
-		guard socket === connection, isConnected else {
-			return
-		}
-
-		consumeReceivedData(data)
-
-		if isConnected {
-			socket.readData()
-		}
-	}
-
-	public func socketDidWriteData(_: TDCFileTransferDialogSocket) {
-		/* Nothing to do. Writes are fire and forget. */
-	}
-
-	public func socket(_ socket: TDCFileTransferDialogSocket, didDisconnectWithError error: Error?) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
-		guard socket === connection || socket === listeningServer else {
-			return
-		}
-
-		var closeError = error
-
-		/* A clean close by the peer arrives as a "closed by peer" error.
-		 Treat that as a normal end of the conversation. */
-		if let nsError = error as NSError?,
-		   nsError.domain == TDCFileTransferDialogSocketErrorDomain,
-		   nsError.code == TDCFileTransferDialogSocketError.closedByPeer.rawValue
-		{
-			closeError = nil
-		}
-
-		close(with: closeError)
 	}
 }
