@@ -143,11 +143,32 @@ public struct PluginUserInput {
 	}
 }
 
-/// One rendered message, handed to plugins after it appears in the view.
-///
-/// The host builds it inside the renderer, which runs off the main actor, so
-/// this type stays nonisolated.
-public final nonisolated class PluginPostedMessage {
+/// One hyperlink the renderer found in a message body.
+public struct PluginHyperlink: Equatable, Sendable {
+	/// Identifier unique to this occurrence of the link.
+	public let uniqueIdentifier: String
+	/// The address including its scheme; bare domains are prefixed `http://`.
+	public let stringValue: String
+	/// The range of the match in the body that was scanned.
+	public let range: NSRange
+	/// `true` when the match carried an explicit scheme.
+	public let strictMatch: Bool
+
+	public init(uniqueIdentifier: String, stringValue: String, range: NSRange, strictMatch: Bool) {
+		self.uniqueIdentifier = uniqueIdentifier
+		self.stringValue = stringValue
+		self.range = range
+		self.strictMatch = strictMatch
+	}
+}
+
+/** One rendered message, handed to plugins after it appears in the view.
+
+ A value. The renderer runs off the main actor and produces the parts; the host
+ finishes the message on the main actor, where the nicknames the body mentioned
+ can be resolved against the live member list, and hands it to the plugins
+ there. Nothing holds it afterwards. */
+public struct PluginPostedMessage: Sendable {
 	public var isProcessedInBulk = false
 	public var messageContents = ""
 	public var lineNumber = ""
@@ -155,8 +176,8 @@ public final nonisolated class PluginPostedMessage {
 	public var lineTypeRawValue: UInt = 0
 	public var memberTypeRawValue: UInt = 0
 	public var receivedAt = Date()
-	public var hyperlinks: [AnyObject] = []
-	public var users: [AnyObject] = []
+	public var hyperlinks: [PluginHyperlink] = []
+	public var users: [PluginChannelMember] = []
 	public var keywordMatchFound = false
 
 	public init() {}
