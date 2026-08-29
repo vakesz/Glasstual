@@ -146,53 +146,42 @@ public enum InlineContentHelpers {
 		}
 	}
 
-	/** The reply body, read a byte at a time and abandoned the moment it passes
-	 the size limit.
+	/** The reply body, read in the chunks the network delivers and abandoned
+	 the moment it passes the size limit.
 
 	 Buffering the whole reply and measuring it afterwards means a hostile
 	 endpoint decides how much memory the service spends: the cap only refuses
 	 the body once it has already been paid for. `MediaAssessor` reads its
-	 bodies the same way. */
+	 bodies through the same reader. */
 	private static func body(from url: URL) async throws -> Data? {
-		let (bytes, response) = try await session.bytes(from: url)
-
-		guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-			bytes.task.cancel()
-
-			return nil
-		}
-
 		let maximum = InlineContentNetworkLimits.maximumJSONResponseSize
 
-		/* A declared length over the cap is refused before a byte of body is
-		 read. A server that declares nothing, or lies, is caught by the count
-		 below. */
-		guard response.expectedContentLength <= Int64(maximum) else {
-			logger.error("Refused a reply declaring \(response.expectedContentLength, privacy: .public) bytes")
-			bytes.task.cancel()
+		let transfer: InlineContentBodyTransfer
+
+		do {
+			transfer = try await InlineContentBodyReader.begin(
+				url,
+				using: session,
+				limit: InlineContentBodyLimit(maximumByteCount: maximum, refusesDeclaredOverrun: true)
+			)
+		} catch InlineContentBodyError.bodyTooLarge {
+			logger.error("Refused a reply declaring more than \(maximum, privacy: .public) bytes")
 
 			return nil
 		}
 
-		var body = Data()
+		guard transfer.response.statusCode == 200 else {
+			transfer.cancel()
 
-		do {
-			for try await byte in bytes {
-				body.append(byte)
-
-				guard body.count <= maximum else {
-					logger.error("Discarded a response that exceeds the \(maximum, privacy: .public) byte limit")
-					bytes.task.cancel()
-
-					return nil
-				}
-			}
-		} catch {
-			bytes.task.cancel()
-
-			throw error
+			return nil
 		}
 
-		return body
+		do {
+			return try await transfer.data()
+		} catch InlineContentBodyError.bodyTooLarge {
+			logger.error("Discarded a response that exceeds the \(maximum, privacy: .public) byte limit")
+
+			return nil
+		}
 	}
 }
