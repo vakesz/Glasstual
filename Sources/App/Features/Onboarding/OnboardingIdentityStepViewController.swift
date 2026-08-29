@@ -12,7 +12,6 @@
 
 import AppKit
 
-@objc(TDCOnboardingIdentityStepViewController)
 @MainActor
 public final class OnboardingIdentityStepViewController: OnboardingStepViewController {
 	private var nicknameField: ValidatedTextField!

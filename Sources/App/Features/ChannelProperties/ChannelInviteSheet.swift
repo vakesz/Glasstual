@@ -39,29 +39,24 @@
 import AppKit
 import SwiftUI
 
-@objc(TDCChannelInviteSheetDelegate)
 @MainActor
 public protocol ChannelInviteSheetDelegate: NSObjectProtocol {
-	@objc(channelInviteSheet:onSelectChannel:)
 	func channelInviteSheet(_ sender: ChannelInviteSheet, onSelectChannel channelName: String)
 
-	@objc(channelInviteSheetWillClose:)
 	func channelInviteSheetWillClose(_ sender: ChannelInviteSheet)
 }
 
-@objc(TDCChannelInviteSheet)
 @MainActor
 public final class ChannelInviteSheet: SheetBase, NSWindowDelegate, TDCClientPrototype {
 	private static let contentWidth: CGFloat = 340
 
-	@objc public private(set) var client: IRCClient?
-	@objc public private(set) var clientId: String?
-	@objc public private(set) var nicknames: [String] = []
+	public private(set) var client: IRCClient?
+	public private(set) var clientId: String?
+	public private(set) var nicknames: [String] = []
 
 	private var availableChannels: [String] = []
 	private var selectedChannel = ""
 
-	@objc(initWithNicknames:onClient:)
 	public init(nicknames: [String], on client: IRCClient) {
 		super.init(window: nil)
 		self.nicknames = nicknames
@@ -69,7 +64,6 @@ public final class ChannelInviteSheet: SheetBase, NSWindowDelegate, TDCClientPro
 		clientId = client.uniqueIdentifier
 	}
 
-	@objc(startWithChannels:)
 	public func start(withChannels channels: [String]) {
 		guard channels.isEmpty == false else {
 			return
@@ -132,7 +126,7 @@ public final class ChannelInviteSheet: SheetBase, NSWindowDelegate, TDCClientPro
 		super.ok(nil)
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		(delegate as? ChannelInviteSheetDelegate)?.channelInviteSheetWillClose(self)
 	}
 }

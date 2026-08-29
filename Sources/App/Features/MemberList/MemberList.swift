@@ -62,16 +62,14 @@ public nonisolated struct MemberListSectionIdentifier: Hashable, Sendable { // n
 }
 
 /// The header row a section draws, and the value its cell view reads.
-@objc(TVCMemberListSection)
 public final nonisolated class MemberListSection: NSObject { // nonisolated: value
 	public let identifier: MemberListSectionIdentifier
-	@objc public let title: String
+	public let title: String
 
 	public var rank: UserRank {
 		identifier.rank
 	}
 
-	@objc(rank)
 	public var objectiveCRankRawValue: UInt {
 		rank.rawValue
 	}
@@ -94,8 +92,12 @@ private typealias MemberListSnapshot =
 
 @objc(TVCMemberList)
 public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObserving {
-	@objc public var isHiddenByUser = false
+	public var isHiddenByUser = false
 	public weak var keyDelegate: (any MemberListKeyEventDelegate)?
+
+	/// The window and scroll-view subscriptions, re-made on every move to a
+	/// window and dropped with the table.
+	private let notifications = NotificationSubscriptions()
 
 	@IBOutlet public private(set) var memberListUserInfoPopover: MemberListUserInfoPopover!
 	@IBOutlet public private(set) var contentController: IRCChannelMemberListController!
@@ -191,62 +193,39 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 			configure()
 		}
 
-		let center = NotificationCenter.default
-		center.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: nil)
-		center.removeObserver(self, name: NSWindow.didResignKeyNotification, object: nil)
-		center.removeObserver(self, name: NSWindow.didBecomeMainNotification, object: nil)
-		center.removeObserver(self, name: NSWindow.didResignMainNotification, object: nil)
-		center.removeObserver(self, name: .TVCMainWindowRedrawSubviews, object: nil)
-		center.removeObserver(self, name: NSView.boundsDidChangeNotification, object: nil)
+		/* Emptied first: -viewDidMoveToWindow can run twice for the same window,
+		 and a second pass must not leave a duplicate set behind. */
+		notifications.cancelAll()
 
 		guard let mainWindow else {
 			return
 		}
 
-		center.addObserver(
-			self,
-			selector: #selector(windowDidBecomeKey(_:)),
-			name: NSWindow.didBecomeKeyNotification,
-			object: mainWindow
-		)
-		center.addObserver(
-			self,
-			selector: #selector(windowDidResignKey(_:)),
-			name: NSWindow.didResignKeyNotification,
-			object: mainWindow
-		)
-		center.addObserver(
-			self,
-			selector: #selector(windowMainStateChanged(_:)),
-			name: NSWindow.didBecomeMainNotification,
-			object: mainWindow
-		)
-		center.addObserver(
-			self,
-			selector: #selector(windowMainStateChanged(_:)),
-			name: NSWindow.didResignMainNotification,
-			object: mainWindow
-		)
-		center.addObserver(
-			self,
-			selector: #selector(mainWindowRequiresRedraw(_:)),
-			name: .TVCMainWindowRedrawSubviews,
-			object: mainWindow
-		)
+		notifications.observe(NSWindow.didBecomeKeyNotification, object: mainWindow) { [weak self] notification in
+			self?.windowDidBecomeKey(notification)
+		}
+		notifications.observe(NSWindow.didResignKeyNotification, object: mainWindow) { [weak self] notification in
+			self?.windowDidResignKey(notification)
+		}
+		notifications.observe(NSWindow.didBecomeMainNotification, object: mainWindow) { [weak self] notification in
+			self?.windowMainStateChanged(notification)
+		}
+		notifications.observe(NSWindow.didResignMainNotification, object: mainWindow) { [weak self] notification in
+			self?.windowMainStateChanged(notification)
+		}
+		notifications.observe(.TVCMainWindowRedrawSubviews, object: mainWindow) { [weak self] notification in
+			self?.mainWindowRequiresRedraw(notification)
+		}
 
 		if let contentView = scrollViewContentView {
-			center.addObserver(
-				self,
-				selector: #selector(scrollViewBoundsDidChange(_:)),
-				name: NSView.boundsDidChangeNotification,
-				object: contentView
-			)
+			notifications.observe(NSView.boundsDidChangeNotification, object: contentView) { [weak self] notification in
+				self?.scrollViewBoundsDidChange(notification)
+			}
 		}
 	}
 
 	// MARK: - Content
 
-	@objc(assignToChannel:)
 	public func assign(to channel: IRCChannel?) {
 		contentController.assign(to: channel)
 	}
@@ -255,7 +234,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		contentController?.member(withID: id)
 	}
 
-	@objc(itemAtRow:)
 	public func item(atRow row: Int) -> Any? {
 		/* -1 is what the table reports for "no row", so it is an answer, not a
 		 programming error. */
@@ -266,7 +244,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		return member(withID: id)
 	}
 
-	@objc(rowForItem:)
 	public func row(forItem item: Any?) -> Int {
 		guard let member = item as? ChannelUser,
 		      let row = memberDataSource?.row(forItemIdentifier: member.id)
@@ -424,7 +401,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		return Self.makeSection(identifier: identifier)
 	}
 
-	@objc(isGroupRow:)
 	public func isGroupRow(_ row: Int) -> Bool {
 		guard row >= 0 else {
 			return false
@@ -433,7 +409,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		return memberDataSource?.sectionIdentifier(forRow: row) != nil
 	}
 
-	@objc(rowForMemberAtIndex:)
 	public func rowForMember(at memberIndex: Int) -> Int {
 		guard let member = contentController?.member(at: memberIndex) else {
 			return -1
@@ -483,12 +458,10 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		addTrackingArea(trackingArea)
 	}
 
-	@objc
 	private func destroyUserInfoPopoverOnWindowKeyChange() {
 		destroyUserInfoPopover()
 	}
 
-	@objc
 	private func destroyUserInfoPopover() {
 		userPopoverTask?.cancel()
 		userPopoverTask = nil
@@ -551,7 +524,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		(view(atColumn: 0, row: row, makeIfNecessary: false) as? MemberListCell)?.drawWithExpansionFrame()
 	}
 
-	@objc
 	private func popDelayedUserInfoExpansionFrame() {
 		userPopoverTask = nil
 
@@ -566,7 +538,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		enclosingScrollView?.contentView
 	}
 
-	@objc
 	private func scrollViewBoundsDidChange(_ notification: Notification) {
 		guard TextualPreferences.memberListUpdatesUserInfoPopoverOnScroll() else {
 			return
@@ -622,24 +593,20 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 
 	// MARK: - Drawing updates
 
-	@objc
 	public func refreshAllDrawings() {
 		refreshAllDrawings(skipOcclusionCheck: false)
 	}
 
-	@objc(refreshAllDrawings:)
 	public func refreshAllDrawings(skipOcclusionCheck: Bool) {
 		for row in 0 ..< numberOfRows {
 			refreshDrawing(forRow: row, skipOcclusionCheck: skipOcclusionCheck)
 		}
 	}
 
-	@objc(refreshDrawingForRow:)
 	public func refreshDrawing(forRow row: Int) {
 		refreshDrawing(forRow: row, skipOcclusionCheck: false)
 	}
 
-	@objc(refreshDrawingForRow:skipOcclusionCheck:)
 	public func refreshDrawing(forRow row: Int, skipOcclusionCheck: Bool) {
 		guard row >= 0 else {
 			return
@@ -667,7 +634,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		refreshDrawing(forRow: row)
 	}
 
-	@objc(refreshDrawingForChangesToPreference:)
 	public func refreshDrawing(forChangesToPreference preferenceKey: String) {
 		guard let badge = UserListModeBadge.badge(forPreferenceKeyNamed: preferenceKey) else {
 			return
@@ -712,12 +678,10 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		needsDisplay = true
 	}
 
-	@objc
 	private func windowDidBecomeKey(_ notification: Notification) {
 		windowKeyStateChanged(notification)
 	}
 
-	@objc
 	private func windowDidResignKey(_ notification: Notification) {
 		destroyUserInfoPopoverOnWindowKeyChange()
 		windowKeyStateChanged(notification)
@@ -727,7 +691,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		respondToRequiresRedraw()
 	}
 
-	@objc
 	private func windowMainStateChanged(_: Notification) {
 		enumerateAvailableRowViews { rowView, _ in
 			(rowView as? MemberListRowCell)?.refreshEmphasis()
@@ -736,7 +699,6 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		respondToRequiresRedraw()
 	}
 
-	@objc
 	private func mainWindowRequiresRedraw(_: Notification) {
 		respondToRequiresRedraw()
 	}

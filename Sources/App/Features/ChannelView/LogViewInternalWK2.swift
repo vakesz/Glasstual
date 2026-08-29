@@ -45,7 +45,6 @@ private let logViewWebKitLogger = Logger(
 	category: "LogViewWebKit"
 )
 
-@objc(TVCLogViewInternalWK2)
 @MainActor
 final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	/** One configuration, one user content controller, one script sink and one
@@ -83,9 +82,9 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		}()
 	}
 
-	@objc(t_parentView) weak var parentView: LogView?
-	@objc(t_viewIsLoading) var viewIsLoading = false
-	@objc(t_viewIsNavigating) var viewIsNavigating = false
+	weak var parentView: LogView?
+	var viewIsLoading = false
+	var viewIsNavigating = false
 
 	private var loadingObservation: Task<Void, Never>?
 
@@ -98,7 +97,6 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		fatalError("init(coder:) has not been implemented")
 	}
 
-	@objc(initWithHostView:)
 	convenience init(hostView: LogView) {
 		self.init()
 		attach(to: hostView)
@@ -125,7 +123,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		loadingObservation?.cancel()
 	}
 
-	@objc var webViewPolicy: LogPolicy {
+	var webViewPolicy: LogPolicy {
 		SharedResources.policy
 	}
 
@@ -151,7 +149,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		parentView?.performDragOperation(sender) ?? false
 	}
 
-	@objc static func emptyCaches() {
+	static func emptyCaches() {
 		let types: Set<String> = [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache]
 		SharedResources.configuration.websiteDataStore.removeData(
 			ofTypes: types,
@@ -161,7 +159,6 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		}
 	}
 
-	@objc(findString:movingForward:)
 	func find(_ searchString: String, movingForward: Bool) {
 		let configuration = WKFindConfiguration()
 		configuration.backwards = movingForward == false
@@ -212,15 +209,9 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 			return
 		}
 		stopObservingLoading()
-		parentView?.perform(
-			#selector(LogView.informDelegateWebViewFinishedLoading),
-			with: nil,
-			afterDelay: 1.2,
-			inModes: [.common]
-		)
+		parentView?.informDelegateWebViewFinishedLoading(after: .milliseconds(1200))
 	}
 
-	@objc(_t_evaluateJavaScript:completionHandler:)
 	func evaluate(_ code: String, completionHandler: ((Any?) -> Void)?) {
 		evaluateJavaScript(code) { [weak self] result, error in
 			if let error {
@@ -329,7 +320,6 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	 retaining WebKit's Inspect Element, Look Up, and Search items. If
 	 WebKit stops invoking this private delegate method, its default menu
 	 remains available. */
-	@objc(_webView:contextMenu:forElement:)
 	func webView(_ webView: WKWebView, contextMenu menu: NSMenu, forElement _: Any) -> NSMenu {
 		precondition(webView === self)
 		guard let parentView else {

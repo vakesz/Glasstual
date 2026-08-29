@@ -100,7 +100,7 @@ protocol ServerEndpointListCellDelegate: AnyObject {
 
  Each of the four columns has its own prototype of this class; the column's
  identifier is what tells an instance which field of the endpoint it draws. The
- nib used to bind a control to a mirrored `@objc dynamic` property here, which
+ nib used to bind a control to a mirrored `dynamic` property here, which
  read and wrote the row through KVC — including a KVO republish so the port cell
  would redraw when the checkbox in the security cell moved the port. None of
  that survives: the cell is handed a value, and hands an edit back. */
@@ -164,8 +164,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 		textField.action = #selector(textFieldEdited(_:))
 	}
 
-	@objc
-	private func textFieldEdited(_ sender: NSTextField) {
+	@objc private func textFieldEdited(_ sender: NSTextField) {
 		guard let server, let column else {
 			return
 		}
@@ -204,8 +203,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 		}
 	}
 
-	@objc
-	private func securedConnectionToggled(_ sender: NSButton) {
+	@objc private func securedConnectionToggled(_ sender: NSButton) {
 		guard let server else {
 			return
 		}

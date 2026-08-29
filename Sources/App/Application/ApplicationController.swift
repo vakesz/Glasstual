@@ -91,17 +91,20 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private var mainWindowStorage: TVCMainWindow!
 	private weak var menuControllerStorage: TXMenuController?
 
-	@objc public private(set) var debugModeIsOn = false
-	@objc public private(set) var ghostModeIsOn = false
-	@objc public private(set) var applicationIsActive = false
-	@objc public private(set) var applicationIsLaunched = false
-	@objc public private(set) var applicationIsTerminating = false
-	@objc public private(set) var applicationIsChangingActiveState = false
+	public private(set) var debugModeIsOn = false
+	public private(set) var ghostModeIsOn = false
+	public private(set) var applicationIsActive = false
+	public private(set) var applicationIsLaunched = false
+	public private(set) var applicationIsTerminating = false
+	public private(set) var applicationIsChangingActiveState = false
 
-	@objc public var skipTerminateSave = false
+	public var skipTerminateSave = false
 
 	private var terminateHistoricLogSaveStarted = false
 	private var terminateStepThreePerformed = false
+	/// The safety net that unblocks NSTerminateLater if the historic-log
+	/// service never answers.
+	private var historicLogSaveTimeoutTask: Task<Void, Never>?
 	private var skipTerminateConfirmation = false
 	private let notifications = NotificationSubscriptions()
 	private lazy var resourceFileImporter = ResourceFileImporter()
@@ -118,12 +121,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		set { menuControllerStorage = newValue }
 	}
 
-	@objc public var world: IRCWorld! {
+	public var world: IRCWorld! {
 		get { worldStorage }
 		set { worldStorage = newValue }
 	}
 
-	@objc public var terminatingClientCount: UInt = 0 {
+	public var terminatingClientCount: UInt = 0 {
 		didSet {
 			if terminatingClientCount != 0 || applicationIsTerminating == false {
 				return
@@ -191,7 +194,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		mainWindowStorage?.configure()
 	}
 
-	@objc
 	public func applicationWakeStepOne() {
 		world = IRCWorld()
 	}
@@ -215,7 +217,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		}
 	}
 
-	@objc
 	public func applicationWakeStepTwo() {
 		CommandIndex.populateCommandIndex()
 
@@ -271,7 +272,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		SharedApplication.sharedPluginManager().loadPlugins()
 	}
 
-	@objc
 	private func pluginsFinishedLoading(_: Notification) {
 		applicationDidFinishLaunching()
 	}
@@ -447,30 +447,25 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 					return
 				}
 
-				perform(
-					#selector(completeHistoricLogSaveAndContinueTermination),
-					on: .main,
-					with: nil,
-					waitUntilDone: false
-				)
+				Task { @MainActor [weak self] in
+					self?.completeHistoricLogSaveAndContinueTermination()
+				}
 			}
 
 		/* Safety net: should the historic log service never answer, do not
 		 leave the application hanging in NSTerminateLater forever. */
-		perform(
-			#selector(completeHistoricLogSaveAndContinueTermination),
-			with: nil,
-			afterDelay: terminationHistoricLogSaveTimeout
-		)
+		historicLogSaveTimeoutTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(terminationHistoricLogSaveTimeout))
+
+			guard Task.isCancelled == false, let self else { return }
+
+			completeHistoricLogSaveAndContinueTermination()
+		}
 	}
 
-	@objc
 	private func completeHistoricLogSaveAndContinueTermination() {
-		NSObject.cancelPreviousPerformRequests(
-			withTarget: self,
-			selector: #selector(completeHistoricLogSaveAndContinueTermination),
-			object: nil
-		)
+		historicLogSaveTimeoutTask?.cancel()
+		historicLogSaveTimeoutTask = nil
 
 		if terminateStepThreePerformed {
 			return
@@ -573,7 +568,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	 answer `.terminateLater` without ever running step one: no client left IRC
 	 gracefully and no historic log was saved. The flag belongs to step one;
 	 all this path skips is the confirmation sheet. */
-	@objc
 	public func terminateGracefully() {
 		skipTerminateConfirmation = true
 
@@ -582,8 +576,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 	// MARK: - NSWorkspace Notifications
 
-	@objc
-	private func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent _: NSAppleEventDescriptor) {
+	@objc private func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent _: NSAppleEventDescriptor) {
 		guard let stringValue = event.atIndex(1)?.stringValue else {
 			return
 		}
@@ -591,19 +584,16 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		Extras.parseIRCProtocolURI(stringValue, withDescriptor: event)
 	}
 
-	@objc
 	private func computerScreenWillSleep(_: Notification) {
 		Self.logger.log("Preparing for screen sleep")
 		world.prepareForScreenSleep()
 	}
 
-	@objc
 	private func computerScreenDidWake(_: Notification) {
 		Self.logger.log("Waking from screen sleep")
 		world.wakeFromScreenSleep()
 	}
 
-	@objc
 	private func computerWillSleep() {
 		Self.logger.log("Preparing for sleep")
 
@@ -615,7 +605,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		SharedApplication.sharedNetworkReachabilityNotifier().stopNotifier()
 	}
 
-	@objc
 	private func computerDidWakeUp(_: Notification) {
 		Self.logger.log("Waking from sleep")
 
@@ -625,7 +614,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		world.autoConnect(afterWakeup: true)
 	}
 
-	@objc
 	private func computerWillPowerOff() {
 		terminateGracefully()
 	}

@@ -39,15 +39,12 @@ import AppKit
 import CocoaExtensions
 import SwiftUI
 
-@objc(TDCAboutDialogDelegate)
 @MainActor
 public protocol AboutDialogDelegate: NSObjectProtocol {
-	@objc(aboutDialogWillClose:)
 	func aboutDialogWillClose(_ sender: AboutDialog)
 }
 
 @MainActor
-@objc(TDCAboutDialog)
 public final class AboutDialog: WindowBase, NSWindowDelegate {
 	private static let contentSize = NSSize(width: 218, height: 244)
 
@@ -98,9 +95,9 @@ public final class AboutDialog: WindowBase, NSWindowDelegate {
 		return hostedWindow
 	}
 
-	@objc override public func show() {
+	override public func show() {
 		let window = prepareWindow()
-		window.ce_restoreState(for: Self.self)
+		window.ce_restoreState(for: .about)
 		super.show()
 	}
 
@@ -108,8 +105,8 @@ public final class AboutDialog: WindowBase, NSWindowDelegate {
 		AppController.shared.menuController?.openAcknowledgements(sender)
 	}
 
-	@objc public func windowWillClose(_: Notification) {
-		window.ce_saveState(for: Self.self)
+	public func windowWillClose(_: Notification) {
+		window.ce_saveState(for: .about)
 		(delegate as? AboutDialogDelegate)?.aboutDialogWillClose(self)
 	}
 }

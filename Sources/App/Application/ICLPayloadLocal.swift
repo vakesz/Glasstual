@@ -71,7 +71,6 @@ enum InlineResourceHostPolicy {
 }
 
 extension InlineContentPayload {
-	@objc(_resourcesTemporaryLocation)
 	func resourcesTemporaryLocation() -> String {
 		let sourcePath = SharedApplication.sharedThemeController().temporaryPath as NSString
 		let basePath = sourcePath.appendingPathComponent("/ICLPayload-Resources/")
@@ -81,7 +80,6 @@ extension InlineContentPayload {
 
 	/** WebKit2 uses sandboxed processes. Copy resource files into the
 	 application's temporary folder so WebKit can access them. */
-	@objc(_copyResourcesToTemporaryLocation:)
 	func copyResourcesToTemporaryLocation(_ resources: [URL]?) -> [String]? {
 		guard let resources else {
 			return nil
@@ -132,7 +130,7 @@ extension InlineContentPayload {
 		return resources.compactMap { copyOperation($0) }
 	}
 
-	@objc public var javaScriptObject: [String: Any] {
+	public var javaScriptObject: [String: Any] {
 		var dictionary: [String: Any] = [
 			"contentLength": UInt(contentLength),
 			"contentSize": [

@@ -28,19 +28,17 @@ private struct WebKitMenuItems {
 	var search: NSMenuItem?
 }
 
-@objc(TVCLogPolicyTarget)
 public final class LogPolicyTarget: NSObject {
-	@objc public var anchorURL: String?
-	@objc public var channelName: String?
-	@objc public var nickname: String?
-	@objc public var lineNumber: String?
-	@objc public var lineMessageIdentifier: String?
-	@objc public var lineType: String?
-	@objc public var lineNickname: String?
-	@objc public var lineExcerpt: String?
+	public var anchorURL: String?
+	public var channelName: String?
+	public var nickname: String?
+	public var lineNumber: String?
+	public var lineMessageIdentifier: String?
+	public var lineType: String?
+	public var lineNickname: String?
+	public var lineExcerpt: String?
 }
 
-@objc(TVCLogPolicy)
 @MainActor
 public final class LogPolicy: NSObject {
 	private nonisolated static let logger = Logger( // nonisolated: let
@@ -48,7 +46,6 @@ public final class LogPolicy: NSObject {
 		category: "LogPolicy"
 	)
 
-	@objc(displayContextMenuInWebView:)
 	public func displayContextMenu(in webView: LogView) {
 		let contextMenu = constructContextMenu(for: webView, withDefaultMenuItems: [])
 
@@ -78,7 +75,6 @@ public final class LogPolicy: NSObject {
 		NSMenu.popUpContextMenu(contextMenu, with: event!, for: webViewBacking)
 	}
 
-	@objc(channelNameDoubleClickedInWebView:)
 	public func channelNameDoubleClicked(in webView: LogView) {
 		guard let channelName = webView.takeContextMenuTarget().channelName else {
 			return
@@ -87,7 +83,6 @@ public final class LogPolicy: NSObject {
 		AppController.shared.menuController?.joinChannelClicked(channelName)
 	}
 
-	@objc(nicknameDoubleClickedInWebView:)
 	public func nicknameDoubleClicked(in webView: LogView) {
 		guard let nickname = webView.takeContextMenuTarget().nickname else {
 			return
@@ -97,11 +92,10 @@ public final class LogPolicy: NSObject {
 		AppController.shared.menuController?.memberInChannelViewDoubleClicked(nil)
 	}
 
-	@objc public func topicBarDoubleClicked() {
+	public func topicBarDoubleClicked() {
 		AppController.shared.menuController?.showChannelModifyTopicSheet(nil)
 	}
 
-	@objc(webView2:logView:didReceiveAuthenticationChallenge:completionHandler:)
 	public func webView2(
 		_: WKWebView,
 		logView _: LogView,
@@ -115,7 +109,6 @@ public final class LogPolicy: NSObject {
 		}
 	}
 
-	@objc(webView2:logView:decidePolicyForNavigationAction:decisionHandler:)
 	public func webView2(
 		_: WKWebView,
 		logView _: LogView,
@@ -147,7 +140,6 @@ public final class LogPolicy: NSObject {
 		decisionHandler(.allow)
 	}
 
-	@objc(webView2:logView:contextMenuWithDefaultMenu:)
 	public func webView2(
 		_: WKWebView,
 		logView: LogView,
@@ -318,7 +310,7 @@ public final class LogPolicy: NSObject {
 		) ?? []
 	}
 
-	@objc public func openWebpage(_ webpageURL: URL) {
+	public func openWebpage(_ webpageURL: URL) {
 		var openInBackground = TextualPreferences.openBrowserInBackground()
 
 		let keyboardKeys = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)

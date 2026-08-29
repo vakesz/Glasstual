@@ -34,7 +34,7 @@ public final class NotificationConfigurationViewController: NSObject {
 		}
 	}
 
-	@objc public var allowsMixedState = false {
+	public var allowsMixedState = false {
 		didSet {
 			if allowsMixedState != oldValue {
 				updateMixedState()
@@ -60,7 +60,7 @@ public final class NotificationConfigurationViewController: NSObject {
 		prepareInitialState()
 	}
 
-	@objc public func attachToView(_ view: NSView) {
+	public func attachToView(_ view: NSView) {
 		if attachedView == nil {
 			attachedView = view
 		} else {
@@ -88,7 +88,7 @@ public final class NotificationConfigurationViewController: NSObject {
 		)
 	}
 
-	@objc public func reload() {
+	public func reload() {
 		guard let alert = activeAlert else {
 			return
 		}

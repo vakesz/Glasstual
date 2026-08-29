@@ -12,7 +12,6 @@
 
 import AppKit
 
-@objc(TDCOnboardingAppearanceStepViewController)
 @MainActor
 public final class OnboardingAppearanceStepViewController: OnboardingStepViewController {
 	private var bubblesPreview: OnboardingStylePreviewView!

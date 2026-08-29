@@ -69,12 +69,10 @@ extension FileTransferDialog {
 		self.keyDownEventMonitor = nil
 	}
 
-	@objc(show:)
 	public func show(_ makeKeyWindow: Bool) {
 		show(makeKeyWindow, restorePosition: true)
 	}
 
-	@objc(show:restorePosition:)
 	public func show(_ makeKeyWindow: Bool, restorePosition: Bool) {
 		if makeKeyWindow {
 			window.makeKeyAndOrderFront(nil)
@@ -83,7 +81,7 @@ extension FileTransferDialog {
 		}
 
 		if restorePosition {
-			window.ce_restoreState(for: Self.self)
+			window.ce_restoreState(for: .fileTransfers)
 		}
 	}
 
@@ -192,7 +190,7 @@ extension FileTransferDialog {
 	}
 
 	public func windowWillClose(_: Notification) {
-		window.ce_saveState(for: Self.self)
+		window.ce_saveState(for: .fileTransfers)
 
 		guard QLPreviewPanel.sharedPreviewPanelExists(),
 		      let panel = QLPreviewPanel.shared(),

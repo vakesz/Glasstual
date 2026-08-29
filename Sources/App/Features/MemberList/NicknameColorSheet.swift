@@ -38,16 +38,12 @@
 import AppKit
 import SwiftUI
 
-@objc(TDCNicknameColorSheetDelegate)
 public protocol NicknameColorSheetDelegate: NSObjectProtocol {
-	@objc(nicknameColorSheetOnOk:)
 	func nicknameColorSheetOnOk(_ sender: NicknameColorSheet)
 
-	@objc(nicknameColorSheetWillClose:)
 	func nicknameColorSheetWillClose(_ sender: NicknameColorSheet)
 }
 
-@objc(TDCNicknameColorSheet)
 @MainActor
 public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 	private static let contentSize = NSSize(width: 390, height: 112)
@@ -59,7 +55,6 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 	private let overrideKey: String
 	let model: NicknameColorModel
 
-	@objc(initWithNickname:)
 	public init(nickname: String) {
 		let normalizedKey = nickname.lowercased()
 		self.nickname = nickname
@@ -112,7 +107,7 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 		sheet = hostedSheet
 	}
 
-	@objc public func start() {
+	public func start() {
 		startSheet()
 	}
 
@@ -153,7 +148,7 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 		}
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		(delegate as? NicknameColorSheetDelegate)?.nicknameColorSheetWillClose(self)
 	}
 }

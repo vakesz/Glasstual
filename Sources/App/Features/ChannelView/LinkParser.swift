@@ -45,23 +45,22 @@ import Foundation
 /// `Sendable` because every stored property is an immutable value: a rendered
 /// line carries its links from the render pipeline back to the main actor, and
 /// a checked conformance has to be declared beside the type it applies to.
-@objc(TLOLinkParserResult)
 public final nonisolated class LinkParserResult: NSObject, Sendable { // nonisolated: value
 	/// Random identifier that is unique to this result.
-	@objc public let uniqueIdentifier: String
+	public let uniqueIdentifier: String
 
 	/// The address of the link including its scheme.
 	///
 	/// Scheme-less matches (such as `example.com`) are prefixed with `http://`.
-	@objc public let stringValue: String
+	public let stringValue: String
 
 	/// The range of the match in the string that was scanned.
-	@objc public let range: NSRange
+	public let range: NSRange
 
 	/// `true` when the match carried an explicit scheme.
 	///
 	/// `false` for matches that were inferred from a bare domain name.
-	@objc public let strictMatch: Bool
+	public let strictMatch: Bool
 
 	init(stringValue: String, range: NSRange, strictMatch: Bool) {
 		uniqueIdentifier = UUID().uuidString
@@ -71,12 +70,10 @@ public final nonisolated class LinkParserResult: NSObject, Sendable { // nonisol
 	}
 }
 
-@objc(TLOLinkParser)
 public nonisolated class LinkParser: NSObject { // nonisolated: value
 	/// Locates hyperlinks in `string`.
 	///
 	/// Results are sorted by location and never overlap.
-	@objc(locateLinksInString:)
 	public static func locateLinks(in string: String) -> [LinkParserResult] {
 		let scanString = string as NSString
 
@@ -157,7 +154,6 @@ public nonisolated class LinkParser: NSObject { // nonisolated: value
 
 	/// Returns `string` with a scheme prepended when it is a URL in its entirety,
 	/// or `nil` when the string is not a URL.
-	@objc(URLWithProperScheme:)
 	public static func urlWithProperScheme(_ string: String) -> String? {
 		let fullRange = NSRange(location: 0, length: (string as NSString).length)
 
@@ -168,7 +164,6 @@ public nonisolated class LinkParser: NSObject { // nonisolated: value
 		return result.stringValue
 	}
 
-	@objc
 	public static let bannedLineTypes =
 		[
 			LogLine.string(for: .mode),

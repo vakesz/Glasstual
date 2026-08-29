@@ -54,7 +54,6 @@ extension MenuActionCoordinator {
 		selectedViewController?.backingView
 	}
 
-	@objc(validateMenuItem:)
 	public func validate(_ menuItem: NSMenuItem) -> Bool {
 		let appController: ApplicationController = AppController.shared
 		guard appController.applicationIsTerminating == false else { return false }

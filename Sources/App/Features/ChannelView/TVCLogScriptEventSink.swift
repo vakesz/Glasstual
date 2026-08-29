@@ -101,12 +101,10 @@ private struct ScriptMessageHandler {
 	}
 }
 
-@objc(TVCLogScriptEventSink)
 @MainActor
 final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	private weak var webView: LogView?
 
-	@objc(initWithWebView:)
 	init(webView: LogView?) {
 		self.webView = webView
 		super.init()

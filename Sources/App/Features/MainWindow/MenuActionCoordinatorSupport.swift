@@ -40,7 +40,6 @@ import AppKit
 
 @MainActor
 public extension MenuActionCoordinator {
-	@objc(performSupportAction:sender:)
 	func performSupportAction(_ action: TXMenuSupportAction, sender _: Any?) {
 		switch action {
 		case .openLogLocation: openLog(at: PathInfo.transcriptFolderURL)

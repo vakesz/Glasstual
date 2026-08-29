@@ -82,8 +82,8 @@ public protocol ServerPropertiesSheetDelegate: AnyObject {
 @objc(TDCServerPropertiesSheet)
 @MainActor
 public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegate, TDCClientPrototype {
-	@objc public private(set) var client: IRCClient?
-	@objc public private(set) var clientId: String?
+	public private(set) var client: IRCClient?
+	public private(set) var clientId: String?
 
 	var config: ClientConfig
 	let networkList = NetworkList()
@@ -96,6 +96,8 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 	var populatingPrimaryServer = false
 	var lastServerAddressValue: String?
 	var previousPrimaryServer: Server?
+	/// The client-configuration notification, held while the sheet is up.
+	private let notifications = NotificationSubscriptions()
 	@objc private dynamic var floodControlDelayTimerSliderTempValue: UInt = 0
 	@objc private dynamic var floodControlMessageCountSliderTempValue: UInt = 0
 
@@ -196,7 +198,6 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 	var channelListTableDataSource: ServerPropertiesTableDataSource?
 	var highlightsTableDataSource: ServerPropertiesTableDataSource?
 
-	@objc(initWithClient:)
 	public init(client: IRCClient?) {
 		self.client = client
 		clientId = client?.uniqueIdentifier
@@ -296,11 +297,10 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		navigationOutlineView.expandItem(tree[0])
 	}
 
-	@objc public func start() {
+	public func start() {
 		start(withSelection: ServerPropertiesSelection.default.rawValue, context: nil)
 	}
 
-	@objc(startWithSelection:context:)
 	public func start(withSelection selectionValue: UInt, context: Any?) {
 		startSheet()
 		let selection = ServerPropertiesSelection(rawValue: selectionValue) ?? .default
@@ -358,19 +358,16 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 
 	private func addConfigurationDidChangeObserver() {
 		guard let client else { return }
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(underlyingConfigurationChanged(_:)),
-			name: .IRCClientConfigurationWasUpdated,
-			object: client
-		)
+		notifications.observe(.IRCClientConfigurationWasUpdated, object: client) { [weak self] notification in
+			self?.underlyingConfigurationChanged(notification)
+		}
 	}
 
 	private func removeConfigurationDidChangeObserver() {
-		NotificationCenter.default.removeObserver(self, name: .IRCClientConfigurationWasUpdated, object: nil)
+		notifications.cancelAll()
 	}
 
-	@objc private func underlyingConfigurationChanged(_ notification: Notification) {
+	private func underlyingConfigurationChanged(_ notification: Notification) {
 		guard let client = notification.object as? IRCClient else { return }
 		TDCAlert.alertSheet(
 			with: sheet.ceDeepestWindow,
@@ -544,7 +541,7 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		return values.filter { !$0.isEmpty && seen.insert($0).inserted }
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		removeConfigurationDidChangeObserver()
 		for table in [addressBookTable, channelListTable, highlightsTable] {
 			table?.delegate = nil

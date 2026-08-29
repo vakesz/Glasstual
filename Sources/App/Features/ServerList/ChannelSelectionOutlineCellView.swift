@@ -15,11 +15,10 @@ import CocoaExtensions
 
 @objc(TVCChannelSelectionOutlineCellView)
 public final class ChannelSelectionOutlineCellView: NSTableCellView {
-	@objc public weak var parentController: ChannelSelectionViewController?
+	public weak var parentController: ChannelSelectionViewController?
 
 	@IBOutlet public var selectedCheckbox: NSButton!
 
-	@objc
 	public func prepareInitialState() {
 		guard let outlineView = parentController?.outlineView, let cellItem else {
 			return

@@ -46,7 +46,6 @@ enum MenuDialogSelection {
 
 @MainActor
 public extension MenuActionCoordinator {
-	@objc(performDialogAction:sender:)
 	func performDialogAction(_ action: TXMenuDialogAction, sender: Any?) {
 		switch action {
 		case .showChannelProperties: showChannelProperties()
@@ -68,12 +67,10 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	@objc(showServerPropertiesForClient:selection:context:)
 	func showServerProperties(for client: IRCClient, selection: UInt, context: Any?) {
 		presentServerProperties(for: client, selection: selection, context: context)
 	}
 
-	@objc(showNicknameColorSheetForNickname:)
 	func showNicknameColorSheet(for nickname: String) {
 		windowController.popMainWindowSheetIfExists()
 		guard selectedClient != nil else { return }

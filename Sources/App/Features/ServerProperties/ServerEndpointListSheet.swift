@@ -29,12 +29,12 @@ private typealias ServerEndpointListSnapshot =
  `NSTableViewDiffableDataSource` implements only the row-count half of
  `NSTableViewDataSource`, and a table asks its *data source* — not its delegate
  — where a drag may land, so both answers have to come from the one object. The
- three methods are `@objc` because they satisfy optional requirements of a
+ three methods are `` because they satisfy optional requirements of a
  protocol the superclass, not this class, declares, and Swift will not expose
  them to the runtime on its own.
 
  The class is `nonisolated` because the initializer it inherits is: a main-actor
- subclass cannot re-declare it. It holds no state, and each `@objc` entry point
+ subclass cannot re-declare it. It holds no state, and each `` entry point
  — every one of them called by AppKit on the main thread — hops back onto the
  main actor by declaration. The sheet is reached through the table's delegate
  rather than a stored reference, so there is nothing here for the two isolations
@@ -43,7 +43,6 @@ private final nonisolated class ServerEndpointListDataSource: // nonisolated: xp
 	NSTableViewDiffableDataSource<ServerEndpointListSection, String>
 {
 	@MainActor
-	@objc
 	func tableView(_: NSTableView, pasteboardWriterForRow row: Int) -> (any NSPasteboardWriting)? {
 		let item = NSPasteboardItem()
 		item.setString(String(row), forType: endpointEntryTableDragToken)
@@ -52,7 +51,6 @@ private final nonisolated class ServerEndpointListDataSource: // nonisolated: xp
 	}
 
 	@MainActor
-	@objc
 	func tableView(
 		_ tableView: NSTableView,
 		validateDrop _: any NSDraggingInfo,
@@ -65,7 +63,6 @@ private final nonisolated class ServerEndpointListDataSource: // nonisolated: xp
 	}
 
 	@MainActor
-	@objc
 	func tableView(
 		_ tableView: NSTableView,
 		acceptDrop info: any NSDraggingInfo,
@@ -307,7 +304,7 @@ public final class ServerEndpointListSheet: SheetBase {
 		applyEntries()
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		endpointDelegate?.serverEndpointListSheetWillClose(self)
 	}
 }

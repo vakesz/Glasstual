@@ -65,7 +65,6 @@ enum MenuWindowPolicy {
 
 @MainActor
 public extension MenuActionCoordinator {
-	@objc(performWindowAction:sender:)
 	func performWindowAction(_ action: TXMenuWindowAction, sender: Any?) {
 		switch action {
 		case .close: closeWindow(sender)
@@ -91,7 +90,6 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	@objc(setNotificationsMuted:)
 	func setNotificationsMuted(_ muted: Bool) {
 		SharedApplication.sharedNotificationController().areNotificationsDisabled = muted
 		let state: NSControl.StateValue = muted ? .on : .off
@@ -99,7 +97,6 @@ public extension MenuActionCoordinator {
 		menuController?.muteNotificationsDockMenuItem?.state = state
 	}
 
-	@objc(setNotificationSoundsMuted:)
 	func setNotificationSoundsMuted(_ muted: Bool) {
 		TextualPreferences.setSoundIsMuted(muted)
 		let state: NSControl.StateValue = muted ? .on : .off

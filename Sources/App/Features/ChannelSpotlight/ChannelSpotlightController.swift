@@ -379,7 +379,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		let window = window!
 
 		window.ce_saveSizeAsDefault()
-		window.ce_restoreState(for: Self.self)
+		window.ce_restoreState(for: .channelSpotlight)
 	}
 
 	private func saveWindowFrame() {
@@ -393,12 +393,12 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		 the frame because the window wont register the changes
 		 to the constants in -resetSearch until next layout pass. */
 		window.ce_restoreDefaultSize(display: false)
-		window.ce_saveState(for: Self.self)
+		window.ce_saveState(for: .channelSpotlight)
 	}
 
 	// MARK: - Search Field
 
-	@objc public var searchString: String {
+	public var searchString: String {
 		searchField.stringValue
 	}
 
@@ -493,15 +493,15 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		allSearchResults
 	}
 
-	@objc public var searchResultsFiltered: [ChannelSpotlightSearchResult] {
+	public var searchResultsFiltered: [ChannelSpotlightSearchResult] {
 		displayedSearchResults
 	}
 
-	@objc public var searchResultsCount: UInt {
+	public var searchResultsCount: UInt {
 		UInt(displayedSearchResults.count)
 	}
 
-	@objc public var selectedSearchResult: Int {
+	public var selectedSearchResult: Int {
 		searchResultsTable.selectedRow
 	}
 

@@ -31,7 +31,6 @@ enum CompletionKind: Sendable {
 	case command
 }
 
-@objc(TLONicknameCompletionStatus)
 @MainActor
 public final class NicknameCompletionStatus: NSObject {
 	private struct Candidate {
@@ -61,7 +60,6 @@ public final class NicknameCompletionStatus: NSObject {
 		fatalError("Use init(window:)")
 	}
 
-	@objc(initWithWindow:)
 	public init(window: MainWindow) {
 		self.window = window
 
@@ -78,12 +76,11 @@ public final class NicknameCompletionStatus: NSObject {
 		clear()
 	}
 
-	@objc(completeNickname:)
 	public func completeNickname(_ movingForward: Bool) {
 		performCompletion(movingForward: movingForward)
 	}
 
-	@objc public func clear() {
+	public func clear() {
 		clearCache()
 
 		currentTextViewStringValue = nil

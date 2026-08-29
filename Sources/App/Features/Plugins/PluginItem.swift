@@ -41,21 +41,20 @@ public nonisolated struct PluginSupportedFeature: OptionSet, Sendable { // nonis
 /// The value is immutable: `load(_:host:)` is the only way to make one, and it
 /// either returns a fully populated item or `nil`. Nothing observes a
 /// half-configured plugin.
-@objc(THOPluginItem)
 public final nonisolated class PluginItem: NSObject { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginItem"
 	)
 
-	@objc public let bundle: Bundle
-	@objc public let primaryClass: AnyObject
+	public let bundle: Bundle
+	public let primaryClass: AnyObject
 	public let supportedFeatures: PluginSupportedFeature
-	@objc public let supportedUserInputCommands: [String]
-	@objc public let supportedServerInputCommands: [String]
+	public let supportedUserInputCommands: [String]
+	public let supportedServerInputCommands: [String]
 	public let outputSuppressionRules: [PluginOutputSuppressionRule]
-	@objc public let pluginPreferencesPaneMenuItemTitle: String?
-	@objc public let pluginPreferencesPaneView: NSView?
+	public let pluginPreferencesPaneMenuItemTitle: String?
+	public let pluginPreferencesPaneView: NSView?
 
 	private init(
 		bundle: Bundle,
@@ -137,7 +136,6 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 	}
 
 	@MainActor
-	@objc
 	public func unloadBundle() {
 		(primaryClass as? any GlasstualPlugin)?.pluginWillUnload()
 	}

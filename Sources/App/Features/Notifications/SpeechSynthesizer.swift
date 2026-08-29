@@ -16,7 +16,6 @@ import Foundation
  notification path, both of which end up on the main actor. Isolating the whole
  type removes the recursive lock that used to be held across a synchronous
  main-queue hop while formatting a notification. */
-@objc(TLOSpeechSynthesizer)
 @MainActor
 public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate {
 	private let engine: SpeechSynthesizerEngine
@@ -27,7 +26,6 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		self.init(engine: AVSpeechSynthesizerEngine())
 	}
 
-	@objc(initWithEngine:)
 	public init(engine: SpeechSynthesizerEngine) {
 		self.engine = engine
 
@@ -36,7 +34,7 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		engine.delegate = self
 	}
 
-	@objc public var isStopped: Bool {
+	public var isStopped: Bool {
 		get {
 			stopped
 		}
@@ -63,23 +61,21 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		speakNextItem()
 	}
 
-	@objc(speakText:)
 	public func speak(text: String) {
 		speak(.text(text))
 	}
 
-	@objc public func clearQueue() {
+	public func clearQueue() {
 		pendingItems.removeAll()
 	}
 
-	@objc(clearQueueForClient:)
 	public func clearQueue(for client: IRCClient) {
 		let clientIdentifier = client.uniqueIdentifier
 
 		pendingItems.removeAll { $0.belongs(to: clientIdentifier) }
 	}
 
-	@objc public func stopSpeakingAndMoveForward() {
+	public func stopSpeakingAndMoveForward() {
 		guard engine.isSpeaking else {
 			return
 		}
@@ -87,7 +83,7 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 		engine.stopSpeakingImmediately()
 	}
 
-	@objc public var pendingItemCount: UInt {
+	public var pendingItemCount: UInt {
 		UInt(pendingItems.count)
 	}
 

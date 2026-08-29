@@ -40,6 +40,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	@IBOutlet public var backgroundColorMenu: NSMenu!
 
 	private var observingColorPanel = false
+	/// The shared colour panel's close notification, held while the panel is up.
+	private let notifications = NotificationSubscriptions()
 
 	private var hasConfigured = false
 
@@ -63,7 +65,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		return firstResponder
 	}
 
-	@objc public var firstResponderSupportsFormatting: Bool {
+	public var firstResponderSupportsFormatting: Bool {
 		textField != nil
 	}
 
@@ -183,35 +185,35 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		return textField.attributedString().ircFormatterAttributeSet(inRange: formatterEffect, range: selectedTextRange)
 	}
 
-	@objc public var textIsBold: Bool {
+	public var textIsBold: Bool {
 		propertyIsSet(.bold)
 	}
 
-	@objc public var textIsItalicized: Bool {
+	public var textIsItalicized: Bool {
 		propertyIsSet(.italic)
 	}
 
-	@objc public var textIsMonospace: Bool {
+	public var textIsMonospace: Bool {
 		propertyIsSet(.monospace)
 	}
 
-	@objc public var textIsStruckthrough: Bool {
+	public var textIsStruckthrough: Bool {
 		propertyIsSet(.strikethrough)
 	}
 
-	@objc public var textIsUnderlined: Bool {
+	public var textIsUnderlined: Bool {
 		propertyIsSet(.underline)
 	}
 
-	@objc public var textHasForegroundColor: Bool {
+	public var textHasForegroundColor: Bool {
 		propertyIsSet(.foregroundColor)
 	}
 
-	@objc public var textHasBackgroundColor: Bool {
+	public var textHasBackgroundColor: Bool {
 		propertyIsSet(.backgroundColor)
 	}
 
-	@objc public var textHasSpoiler: Bool {
+	public var textHasSpoiler: Bool {
 		propertyIsSet(.spoiler)
 	}
 
@@ -449,29 +451,22 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		if observingColorPanel == false {
 			observingColorPanel = true
 
-			NotificationCenter.default.addObserver(
-				self,
-				selector: #selector(colorPanelWillClose(_:)),
-				name: NSWindow.willCloseNotification,
-				object: colorPanel
-			)
+			notifications.observe(NSWindow.willCloseNotification, object: colorPanel) { [weak self] notification in
+				self?.colorPanelWillClose(notification)
+			}
 		}
 
 		colorPanel.orderFront(nil)
 	}
 
-	@objc private func colorPanelWillClose(_ notification: Notification) {
+	private func colorPanelWillClose(_ notification: Notification) {
 		guard let colorPanel = notification.object as? NSColorPanel else {
 			return
 		}
 
 		observingColorPanel = false
 
-		NotificationCenter.default.removeObserver(
-			self,
-			name: NSWindow.willCloseNotification,
-			object: colorPanel
-		)
+		notifications.cancelAll()
 
 		/* NSColorPanel has no target getter, so this cannot check whether
 		 another caller took the panel over in the meantime. */
@@ -534,7 +529,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 	// MARK: - Remove Formatting
 
-	@IBAction @objc(removeBoldCharFromTextBox:)
+	@IBAction
 	public func removeBoldCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -543,7 +538,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.bold, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(removeItalicCharFromTextBox:)
+	@IBAction
 	public func removeItalicCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -552,7 +547,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.italic, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(removeMonospaceCharFromTextBox:)
+	@IBAction
 	public func removeMonospaceCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -561,7 +556,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.monospace, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(removeStrikethroughCharFromTextBox:)
+	@IBAction
 	public func removeStrikethroughCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -570,7 +565,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.strikethrough, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(removeUnderlineCharFromTextBox:)
+	@IBAction
 	public func removeUnderlineCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -597,7 +592,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.backgroundColor, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(removeSpoilerCharFromTextBox:)
+	@IBAction
 	public func removeSpoilerCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return

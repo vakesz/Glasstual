@@ -38,7 +38,7 @@
 
 import Foundation
 
-@objc public enum TXMenuMemberAction: Int, CaseIterable {
+public enum TXMenuMemberAction: Int, CaseIterable {
 	case addIgnore = 0
 	case removeIgnore = 1
 	case modifyIgnore = 2
@@ -47,12 +47,12 @@ import Foundation
 	case insertNickname = 5
 	case whois = 6
 	case privateMessage = 7
-	@objc(TXMenuMemberActionCTCPPing) case ctcpPing = 8
-	@objc(TXMenuMemberActionCTCPFinger) case ctcpFinger = 9
-	@objc(TXMenuMemberActionCTCPTime) case ctcpTime = 10
-	@objc(TXMenuMemberActionCTCPVersion) case ctcpVersion = 11
-	@objc(TXMenuMemberActionCTCPUserinfo) case ctcpUserinfo = 12
-	@objc(TXMenuMemberActionCTCPClientInfo) case ctcpClientInfo = 13
+	case ctcpPing = 8
+	case ctcpFinger = 9
+	case ctcpTime = 10
+	case ctcpVersion = 11
+	case ctcpUserinfo = 12
+	case ctcpClientInfo = 13
 	case giveOp = 14
 	case takeOp = 15
 	case giveHalfop = 16
@@ -70,14 +70,14 @@ import Foundation
 	case changeColor = 28
 }
 
-@objc public enum TXMenuEditingAction: Int, CaseIterable {
+public enum TXMenuEditingAction: Int, CaseIterable {
 	case showFindPrompt = 0
 	case copy = 1
 	case paste = 2
 	case print = 3
 }
 
-@objc public enum TXMenuChannelViewAction: Int, CaseIterable {
+public enum TXMenuChannelViewAction: Int, CaseIterable {
 	case reply = 0
 	case react = 1
 	case reactWithOtherEmoji = 2
@@ -93,7 +93,7 @@ import Foundation
 	case copyURL = 12
 }
 
-@objc public enum TXMenuServerChannelAction: Int, CaseIterable {
+public enum TXMenuServerChannelAction: Int, CaseIterable {
 	case connect = 0
 	case connectBypassingProxy = 1
 	case disconnect = 2
@@ -111,7 +111,7 @@ import Foundation
 	case empty = 14
 }
 
-@objc public enum TXMenuSupportAction: Int, CaseIterable {
+public enum TXMenuSupportAction: Int, CaseIterable {
 	case openLogLocation = 0
 	case openChannelLogs = 1
 	case openAcknowledgements = 2
@@ -120,7 +120,7 @@ import Foundation
 	case connectToTestingChannel = 5
 }
 
-@objc public enum TXMenuIRCAction: Int, CaseIterable {
+public enum TXMenuIRCAction: Int, CaseIterable {
 	case showBanList = 0
 	case showBanExceptionList = 1
 	case showInviteExceptionList = 2
@@ -129,7 +129,7 @@ import Foundation
 	case toggleInviteMode = 5
 }
 
-@objc public enum TXMenuWindowAction: Int, CaseIterable {
+public enum TXMenuWindowAction: Int, CaseIterable {
 	case close = 0
 	case showMainWindow = 1
 	case centerMainWindow = 2
@@ -149,7 +149,7 @@ import Foundation
 	case resetSuppressedWarnings = 16
 }
 
-@objc public enum TXMenuDialogAction: Int, CaseIterable {
+public enum TXMenuDialogAction: Int, CaseIterable {
 	case showChannelProperties = 0
 	case sendInvite = 1
 	case showAddressBook = 2

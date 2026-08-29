@@ -104,19 +104,16 @@ public extension TXMenuController {
 		dialog(.showHiddenPreferences, sender)
 	}
 
-	@objc(showServerPropertiesSheetForClient:withSelection:context:)
 	func showServerPropertiesSheet(for client: IRCClient, selection: UInt, context: Any?) {
 		actionCoordinator.showServerProperties(for: client, selection: selection, context: context)
 	}
 
 	/** Named for its argument so that the member-list menu can own the plain
 	 memberChangeColor: selector. */
-	@objc(showNicknameColorSheetForNickname:)
 	func showNicknameColorSheet(forNickname nickname: String) {
 		actionCoordinator.showNicknameColorSheet(for: nickname)
 	}
 
-	@objc(showPreferencesWindowWithSelection:)
 	func showPreferencesWindow(with selection: PreferencesControllerSelection) {
 		let action: TXMenuDialogAction = switch selection {
 		case .default: .showPreferences
@@ -135,12 +132,10 @@ public extension TXMenuController {
 		dialogDidClose(sender)
 	}
 
-	@objc(channelInviteSheet:onSelectChannel:)
 	func channelInviteSheet(_ sender: ChannelInviteSheet, onSelectChannel channelName: String) {
 		actionCoordinator.channelInviteDidSelect(sender, channelName: channelName)
 	}
 
-	@objc(channelInviteSheetWillClose:)
 	func channelInviteSheetWillClose(_ sender: ChannelInviteSheet) {
 		dialogDidClose(sender)
 	}
@@ -149,7 +144,6 @@ public extension TXMenuController {
 		dialogDidClose(sender)
 	}
 
-	@objc(aboutDialogWillClose:)
 	func aboutDialogWillClose(_ sender: AboutDialog) {
 		dialogDidClose(sender)
 	}
@@ -166,32 +160,26 @@ public extension TXMenuController {
 		dialogDidClose(sender)
 	}
 
-	@objc(nicknameColorSheetOnOk:)
 	func nicknameColorSheetOnOk(_ sender: NicknameColorSheet) {
 		actionCoordinator.nicknameColorDidAccept(sender)
 	}
 
-	@objc(nicknameColorSheetWillClose:)
 	func nicknameColorSheetWillClose(_ sender: NicknameColorSheet) {
 		dialogDidClose(sender)
 	}
 
-	@objc(channelModifyTopicSheet:onOk:)
 	func channelModifyTopicSheet(_ sender: ChannelModifyTopicSheet, onOk topic: String) {
 		actionCoordinator.channelTopicDidAccept(sender, topic: topic)
 	}
 
-	@objc(channelModifyTopicSheetWillClose:)
 	func channelModifyTopicSheetWillClose(_ sender: ChannelModifyTopicSheet) {
 		dialogDidClose(sender)
 	}
 
-	@objc(channelModifyModesSheet:onOk:)
 	func channelModifyModesSheet(_ sender: ChannelModifyModesSheet, onOk modes: ChannelModeContainer) {
 		actionCoordinator.channelModesDidAccept(sender, modes: modes)
 	}
 
-	@objc(channelModifyModesSheetWillClose:)
 	func channelModifyModesSheetWillClose(_ sender: ChannelModifyModesSheet) {
 		dialogDidClose(sender)
 	}
@@ -204,17 +192,14 @@ public extension TXMenuController {
 		dialogDidClose(sender)
 	}
 
-	@objc(serverChangeNicknameSheet:didInputNickname:)
 	func serverChangeNicknameSheet(_ sender: ServerChangeNicknameSheet, didInputNickname nickname: String) {
 		actionCoordinator.serverNicknameDidAccept(sender, nickname: nickname)
 	}
 
-	@objc(serverChangeNicknameSheetWillClose:)
 	func serverChangeNicknameSheetWillClose(_ sender: ServerChangeNicknameSheet) {
 		dialogDidClose(sender)
 	}
 
-	@objc(preferencesDialogWillClose:)
 	func preferencesDialogWillClose(_ sender: PreferencesController) {
 		actionCoordinator.preferencesDialogDidClose(sender)
 	}

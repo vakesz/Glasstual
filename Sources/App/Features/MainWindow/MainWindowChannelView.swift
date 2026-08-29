@@ -32,6 +32,8 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 	/* -[NSSplitView delegate] is weak, so the delegate is owned here. */
 	private var splitViewDelegate = MainWindowChannelViewDelegate()
 	private var itemIndexSelected = NSNotFound
+	/// The theme-appearance notification, re-made on every move to a window.
+	private let notifications = NotificationSubscriptions()
 
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
@@ -43,24 +45,17 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 		}
 
 		/* -viewDidMoveToWindow is not guaranteed to alternate between a window
-		 and nil. Remove any previous registration first so that moving within
-		 the same window does not leave duplicate observers behind. */
-		NotificationCenter.default.removeObserver(
-			self,
-			name: .themeAppearanceChanged,
-			object: nil
-		)
+		 and nil, so the bag is emptied first: moving within the same window
+		 must not leave a duplicate subscription behind. */
+		notifications.cancelAll()
 
 		guard window != nil else {
 			return
 		}
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(themeAppearanceChanged(_:)),
-			name: .themeAppearanceChanged,
-			object: nil
-		)
+		notifications.observe(.themeAppearanceChanged) { [weak self] notification in
+			self?.themeAppearanceChanged(notification)
+		}
 	}
 
 	private func resetSubviews() {
@@ -69,7 +64,6 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 		}
 	}
 
-	@objc
 	public func populateSubviews() {
 		guard let mainWindow else {
 			return
@@ -181,7 +175,6 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 		}
 	}
 
-	@objc(selectionChangeTo:)
 	func selectionChange(to itemIndex: Int) {
 		guard let mainWindow else {
 			return
@@ -227,7 +220,6 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 		return overlayView
 	}
 
-	@objc(holdingPriorityForSubviewAtIndex:)
 	override public func holdingPriorityForSubview(at _: Int) -> NSLayoutConstraint.Priority {
 		NSLayoutConstraint.Priority(350.0)
 	}
@@ -240,13 +232,11 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 		.separatorColor
 	}
 
-	@objc
 	public func updateArrangement() {
 		let arrangement = TextualPreferences.channelViewArrangement()
 		isVertical = (arrangement == .vertical)
 	}
 
-	@objc
 	private func themeAppearanceChanged(_: Notification) {
 		/* Clearing the appearance lets the view inherit the window's. */
 		appearance = nil
@@ -417,8 +407,7 @@ final class MainWindowChannelViewSubview: NSView {
 		self.overlayView = overlayView
 	}
 
-	@objc
-	private func overlayViewClicked(_: NSClickGestureRecognizer) {
+	@objc private func overlayViewClicked(_: NSClickGestureRecognizer) {
 		guard overlayVisible else {
 			return
 		}
