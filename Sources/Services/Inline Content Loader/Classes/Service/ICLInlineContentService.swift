@@ -87,7 +87,7 @@ actor InlineContentService {
 
 		registeredDefaults = true
 
-		TextualUserDefaults.shared().register(defaults: preferences.registrationDomain)
+		TextualUserDefaults.suite().register(defaults: preferences.registrationDomain)
 	}
 
 	// MARK: - Processing

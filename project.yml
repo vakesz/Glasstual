@@ -828,9 +828,11 @@ targets:
   # The Core Media modules on their own, so the test bundle can cover their URL
   # matching without handing them its isolation. The inline-content service
   # compiles the same sources into itself; a unit-test bundle cannot, because
-  # they subclass a nonisolated type in Inline Content Kit and the bundle is
-  # main-actor by default. A static library keeps them out of the app's product
-  # and out of its link line.
+  # they conform to a nonisolated protocol in Inline Content Kit and the bundle
+  # is main-actor by default, which would make every conformance main-actor
+  # too. A static library keeps them out of the app's product and out of its
+  # link line, and lets them keep the service's isolation default rather than
+  # carrying eleven `nonisolated` annotations they do not otherwise need.
   CoreMediaModules:
     platform: macOS
     type: library.static

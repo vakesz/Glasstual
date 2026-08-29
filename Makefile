@@ -11,7 +11,7 @@ TSAN_RESULT_BUNDLE ?= build/Glasstual-tsan.xcresult
 GENERATED_XCODE_DIR := Generated/Xcode
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
 
-.PHONY: help generate validate-generated-metadata build release archive run test tsan smoke coverage lint isolation-gate isolation-ratchet format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate validate-generated-metadata build release archive run test tsan smoke coverage lint isolation-gate format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -79,11 +79,8 @@ ensure-linters: ensure-formatters
 	@command -v actionlint >/dev/null 2>&1 || brew install actionlint
 	@command -v shellcheck >/dev/null 2>&1 || brew install shellcheck
 
-isolation-gate: ## Check the isolation escape-hatch census against its ceilings
-	./scripts/isolation-gate.sh
-
-isolation-ratchet: ## Lower the isolation ceilings to today's counts, then commit them
-	./scripts/isolation-gate.sh --ratchet
+isolation-gate: ## Check that the isolation escape-hatch census is still zero
+	./scripts/isolation-gate.sh --ban
 
 lint: ensure-linters format-check isolation-gate ## Run whole-tree linters and format checks
 	swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests

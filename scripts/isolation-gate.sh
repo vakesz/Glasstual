@@ -1,6 +1,7 @@
 #!/bin/bash
-# Isolation gate for Phase 8: counts concurrency escape hatches under Sources/
-# and fails when a category rises above its recorded ceiling.
+# Isolation gate: counts concurrency escape hatches under Sources/ and fails
+# when it finds any. Phase 8 took all three categories to zero, so the gate is
+# a flat ban -- there is no ceiling to raise and nothing to ratchet.
 #
 # Categories
 #   hatch        the five escape hatches that defeat the isolation checker
@@ -19,31 +20,22 @@
 # as unmarked. The marker vocabulary is closed.
 #
 # Usage
-#   scripts/isolation-gate.sh            check the tree against the ceilings
-#   scripts/isolation-gate.sh --ratchet  rewrite the ceilings to today's counts
-#   scripts/isolation-gate.sh --ban      require zero, ignoring the ceilings
-#
-# Ceilings live in scripts/isolation-ceilings.env and only ever go down: run
-# --ratchet at each merge that removes hatches, and commit the result.
+#   scripts/isolation-gate.sh            require zero of each
+#   scripts/isolation-gate.sh --ban      the same, spelled out
 
 set -uo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$script_dir/.." && pwd)"
-ceilings_file="$script_dir/isolation-ceilings.env"
 
-ratchet=0
-ban=0
 case "${1-}" in
-	--ratchet) ratchet=1 ;;
-	--ban) ban=1 ;;
-	"") ;;
+	--ban | "") ;;
 	--help | -h)
-		sed -n '2,27p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+		sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 		exit 0
 		;;
 	*)
-		echo "isolation-gate: unknown argument '$1' (expected --ratchet or --ban)" >&2
+		echo "isolation-gate: unknown argument '$1' (expected --ban)" >&2
 		exit 2
 		;;
 esac
@@ -171,72 +163,26 @@ if [ "$misplaced_count" -ne 0 ]; then
 	exit 1
 fi
 
-write_ceilings() {
-	cat > "$ceilings_file" <<EOF
-# Isolation-gate ceilings, written by scripts/isolation-gate.sh --ratchet.
-# Each count is a maximum, never a target: the gate fails when the tree rises
-# above one. Ratchet after every merge that removes sites, so the numbers only
-# fall. Phase 8 finishes when all three read 0 and the gate becomes a ban.
-ISOLATION_CEILING_HATCH=$hatch_count
-ISOLATION_CEILING_LOCKQUEUE=$lockqueue_count
-ISOLATION_CEILING_NONISOLATED_UNMARKED=$nonisolated_count
-EOF
-}
-
-if [ "$ratchet" -eq 1 ]; then
-	write_ceilings
-	echo "isolation-gate: ceilings rewritten to hatch=$hatch_count lock/queue=$lockqueue_count unmarked-nonisolated=$nonisolated_count"
-	echo "isolation-gate: commit ${ceilings_file#"$repo_root"/}"
-	exit 0
-fi
-
-# `--ban` is the end state: zero of each, with the ceilings file out of the
-# picture. Phase 8 flips the gate to it by adding the flag in the Makefile, and
-# the ceilings file is deleted in the same change.
-if [ "$ban" -eq 1 ]; then
-	ISOLATION_CEILING_HATCH=0
-	ISOLATION_CEILING_LOCKQUEUE=0
-	ISOLATION_CEILING_NONISOLATED_UNMARKED=0
-else
-	if [ ! -f "$ceilings_file" ]; then
-		echo "isolation-gate: $ceilings_file is missing; run scripts/isolation-gate.sh --ratchet to create it" >&2
-		exit 2
-	fi
-
-	# shellcheck source=/dev/null
-	. "$ceilings_file"
-fi
-
-: "${ISOLATION_CEILING_HATCH:?isolation-gate: ISOLATION_CEILING_HATCH missing from the ceilings file}"
-: "${ISOLATION_CEILING_LOCKQUEUE:?isolation-gate: ISOLATION_CEILING_LOCKQUEUE missing from the ceilings file}"
-: "${ISOLATION_CEILING_NONISOLATED_UNMARKED:?isolation-gate: ISOLATION_CEILING_NONISOLATED_UNMARKED missing from the ceilings file}"
-
-printf 'isolation-gate: %d hatches (max %d), %d lock/queue sites (max %d), %d unmarked nonisolated (max %d) across %d files\n' \
-	"$hatch_count" "$ISOLATION_CEILING_HATCH" \
-	"$lockqueue_count" "$ISOLATION_CEILING_LOCKQUEUE" \
-	"$nonisolated_count" "$ISOLATION_CEILING_NONISOLATED_UNMARKED" \
-	"${#files[@]}"
+printf 'isolation-gate: %d hatches, %d lock/queue sites, %d unmarked nonisolated across %d files\n' \
+	"$hatch_count" "$lockqueue_count" "$nonisolated_count" "${#files[@]}"
 
 status=0
 
-report_over() {
-	local category="$1" count="$2" ceiling="$3" label="$4"
-	[ "$count" -le "$ceiling" ] && return 0
-	echo "isolation-gate: $label rose to $count, above the ceiling of $ceiling" >&2
+report_any() {
+	local category="$1" count="$2" label="$3"
+	[ "$count" -eq 0 ] && return 0
+	echo "isolation-gate: $label: $count" >&2
 	list_of "$category" >&2
 	status=1
 }
 
-report_over hatch "$hatch_count" "$ISOLATION_CEILING_HATCH" "escape hatches"
-report_over lockqueue "$lockqueue_count" "$ISOLATION_CEILING_LOCKQUEUE" "lock/queue sites"
-report_over nonisolated "$nonisolated_count" "$ISOLATION_CEILING_NONISOLATED_UNMARKED" "unmarked nonisolated sites"
+report_any hatch "$hatch_count" "escape hatches"
+report_any lockqueue "$lockqueue_count" "lock/queue sites"
+report_any nonisolated "$nonisolated_count" "unmarked nonisolated sites"
 
 if [ "$status" -ne 0 ]; then
-	if [ "$ban" -eq 1 ]; then
-		echo "isolation-gate: --ban allows none of these; there is no ceiling to raise" >&2
-	else
-		echo "isolation-gate: remove the new sites, or run scripts/isolation-gate.sh --ratchet if the ceiling is genuinely lower now" >&2
-	fi
+	echo "isolation-gate: none of these are allowed; there is no ceiling to raise" >&2
+	echo "isolation-gate: move the state into the domain that uses it, or hand a Sendable snapshot across" >&2
 fi
 
 exit "$status"
