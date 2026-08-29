@@ -78,19 +78,22 @@ struct IRCHighlightHealthCheckTests {
 
 @MainActor
 struct IRCUserClientReferenceTests {
-	/// `clientStorage` is weak and `client` force-unwrapped it, so any access
-	/// after teardown trapped.
+	/** A user used to hold a weak client and a member reached its own client
+	 through it, so both read live state that could already have gone. Neither
+	 holds a client now: a user is a value, and a member carries the prefix table
+	 the list stamped it with. */
 	@Test
-	func userClientIsOptionalAndSurvivesTeardown() throws {
+	func aUserAndItsMemberOutliveTheirClient() throws {
 		var client: GLTTestClient? = GLTTestClient()
-		let user = try User(nickname: "nick", on: #require(client))
-		let member = ChannelUser(user: user)
+		let user = User(nickname: "nick")
+		var member = try ChannelUser(user: user, prefixes: #require(client).currentUserPrefixes)
+		member.modes = ChannelModeSymbolSet(letters: "o")
 
-		#expect(user.client != nil)
+		#expect(member.mark == "@")
 
 		client = nil
 
-		#expect(user.client == nil)
-		#expect(member.mark.isEmpty)
+		#expect(member.mark == "@")
+		#expect(member.user.nickname == "nick")
 	}
 }

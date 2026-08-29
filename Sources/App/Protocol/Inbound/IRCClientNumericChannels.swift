@@ -238,17 +238,17 @@ extension IRCClient {
 		if let existing = findUser(nickname) {
 			user = existing
 		} else {
-			let newUser = User(nickname: nickname, on: self)
+			var newUser = User(nickname: nickname)
 			newUser.username = parsed?.username
 			newUser.address = parsed?.address
 			user = addAndReturn(newUser)
 		}
-		let editedMember: ChannelUser
-		if let member = user.userAssociated(with: channel) {
+		var editedMember: ChannelUser
+		if let member = userAssociated(user, with: channel) {
 			guard nicknameIsMyself(nickname) else { return }
-			editedMember = member.duplicate()
+			editedMember = member
 		} else {
-			editedMember = ChannelUser(user: user)
+			editedMember = ChannelUser(user: user, prefixes: currentUserPrefixes)
 		}
 		editedMember.modes = ChannelModeSymbolSet(letters: modes)
 		channel.memberInfo?.addMember(editedMember, checkForDuplicates: true)

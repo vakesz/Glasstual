@@ -14,50 +14,56 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+/// Both types are Swift values with Swift equality: no `NSObject` `isEqual` or
+/// `hash` override, and no object identity to fall back on.
 @MainActor
 struct IRCUserHashEqualityTests {
-	@Test("Equal users hash equally, so they behave in sets and dictionaries")
-	func equalUsersHashEqually() {
-		let client = GLTTestClient()
-		let first = User(nickname: "Alice", on: client)
-		let second = User(nickname: "Alice", on: client)
+	@Test("A copy of a user is equal to it and hashes with it")
+	func copiesOfAUserHashEqually() {
+		let user = User(nickname: "Alice")
+		let copy = user
 
-		#expect(first.isEqual(second))
-		#expect(first.hash == second.hash)
-		#expect(NSSet(array: [first, second]).count == 1)
+		#expect(copy == user)
+		#expect(Set([user, copy]).count == 1)
 	}
 
-	@Test("Users that differ do not compare equal")
-	func differentUsersAreNotEqual() {
-		let client = GLTTestClient()
-		let first = User(nickname: "Alice", on: client)
-		let second = User(nickname: "Bob", on: client)
+	@Test("Two users with the same nickname are two people")
+	func separatelyCreatedUsersAreDistinct() {
+		let first = User(nickname: "Alice")
+		let second = User(nickname: "Alice")
 
-		#expect(first.isEqual(second) == false)
-		#expect(NSSet(array: [first, second]).count == 2)
+		#expect(first != second)
+		#expect(Set([first, second]).count == 2)
 	}
 
-	@Test("Equal channel members hash equally")
+	@Test("An edited user is not equal to the one it was copied from")
+	func editedUsersAreNotEqual() {
+		let user = User(nickname: "Alice")
+		var edited = user
+		edited.nickname = "Bob"
+
+		#expect(edited != user)
+		#expect(edited.id == user.id)
+	}
+
+	@Test("Members of the same person with the same modes are equal")
 	func equalChannelMembersHashEqually() {
-		let client = GLTTestClient()
-		let user = User(nickname: "Alice", on: client)
+		let user = User(nickname: "Alice")
 		let first = ChannelUser(user: user)
 		let second = ChannelUser(user: user)
 
-		#expect(first.isEqual(second))
-		#expect(first.hash == second.hash)
-		#expect(NSSet(array: [first, second]).count == 1)
+		#expect(first == second)
+		#expect(Set([first, second]).count == 1)
 	}
 
 	@Test("Channel members with different modes are distinct")
 	func channelMembersWithDifferentModesAreDistinct() {
-		let client = GLTTestClient()
-		let user = User(nickname: "Alice", on: client)
+		let user = User(nickname: "Alice")
 		let plain = ChannelUser(user: user)
-		let operatorMember = ChannelUser(user: user)
+		var operatorMember = ChannelUser(user: user)
 		operatorMember.modes = "o"
 
-		#expect(plain.isEqual(operatorMember) == false)
-		#expect(NSSet(array: [plain, operatorMember]).count == 2)
+		#expect(plain != operatorMember)
+		#expect(Set([plain, operatorMember]).count == 2)
 	}
 }

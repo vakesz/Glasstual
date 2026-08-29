@@ -47,8 +47,8 @@ struct IRCClientDirectoryMigrationTests {
 		let client = GLTTestClient()
 		let user = client.findUserOrCreate("Alice")
 
-		#expect(client.findUser("ALICE") === user)
-		#expect(client.findUserOrCreate("alice") === user)
+		#expect(client.findUser("ALICE") == user)
+		#expect(client.findUserOrCreate("alice") == user)
 		#expect(client.numberOfUsers == 1)
 	}
 
@@ -58,9 +58,9 @@ struct IRCClientDirectoryMigrationTests {
 		let draftUser = client.draftUser(withNickname: "Alice")
 		let storedUser = client.addAndReturn(draftUser)
 
-		#expect(storedUser === draftUser)
+		#expect(storedUser == draftUser)
 		#expect(storedUser.nickname == "Alice")
-		#expect(client.findUser("Alice") === storedUser)
+		#expect(client.findUser("Alice") == storedUser)
 		#expect(client.findUser("Changed") == nil)
 	}
 

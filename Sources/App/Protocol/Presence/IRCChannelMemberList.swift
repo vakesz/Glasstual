@@ -39,48 +39,32 @@ import CocoaExtensions
 import Foundation
 
 /// The member-list operations shared by channels and their backing store.
-///
-/// Objective-C plug-ins continue to see the historic protocol name and
-/// selectors while native code uses this domain name.
-@objc(IRCChannelMemberListPrototype)
 public protocol ChannelMemberListing: AnyObject {
-	@objc(addUser:)
 	func addUser(_ user: User)
 
-	@objc(addMember:)
 	func addMember(_ member: ChannelUser)
 
-	@objc(removeMember:)
 	func removeMember(_ member: ChannelUser)
 
-	@objc(removeMemberWithNickname:)
 	func removeMember(withNickname nickname: String)
 
-	@objc(memberExists:)
 	func memberExists(_ nickname: String) -> Bool
 
-	@objc(findMember:)
 	func findMember(_ nickname: String) -> ChannelUser?
 
-	@objc var numberOfMembers: UInt { get }
-	@objc var memberList: [ChannelUser] { get }
+	var numberOfMembers: UInt { get }
+	var memberList: [ChannelUser] { get }
 
-	@objc(sortMembers)
 	func sortMembers()
 }
 
-@objc(IRCChannelMemberListPrivatePrototype)
 public protocol ChannelMemberListPrivateProtocol: AnyObject {
-	@objc(addMember:checkForDuplicates:)
 	func addMember(_ member: ChannelUser, checkForDuplicates: Bool)
 
-	@objc(replaceMember:withMember:)
 	func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser)
 
-	@objc(replaceMember:withMember:resort:)
 	func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool)
 
-	@objc(replaceMember:withMember:resort:replaceInAllChannels:)
 	func replaceMember(
 		_ oldMember: ChannelUser,
 		with newMember: ChannelUser,
@@ -88,34 +72,30 @@ public protocol ChannelMemberListPrivateProtocol: AnyObject {
 		replaceInAllChannels: Bool
 	)
 
-	@objc(resortMember:)
 	func resortMember(_ member: ChannelUser)
 
-	@objc(clearMembers)
 	func clearMembers()
 
-	@objc(pasteboardDataForMembers:)
 	func pasteboardData(for members: [ChannelUser]) -> Data
 
-	@objc(readNicknamesFromPasteboardData:withBlock:)
 	static func readNicknames(
 		from pasteboardData: Data,
 		with callback: (IRCChannel, [String]) -> Void
 	) -> Bool
 
-	@objc(readMembersFromPasteboardData:withBlock:)
 	static func readMembers(
 		from pasteboardData: Data,
 		with callback: (IRCChannel, [ChannelUser]) -> Void
 	) -> Bool
 }
 
-@objc(IRCChannelMemberList)
 public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMemberListPrivateProtocol {
 	private weak var clientStorage: IRCClient?
 	private weak var channelStorage: IRCChannel?
 	private var controller: IRCChannelMemberListController?
 	private var memberContainer: [ChannelUser] = []
+	/// Position in `memberContainer` by the member's identity.
+	private var indexByUserID: [User.ID: Int] = [:]
 
 	/** Both are weak: a member list can outlive its owners during teardown, and
 	 force-unwrapping them turned that into a crash. */
@@ -138,7 +118,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		fatalError("init() is unavailable; use init(channel:)")
 	}
 
-	@objc(initWithChannel:)
 	public init(channel: IRCChannel) {
 		clientStorage = channel.associatedClient
 		channelStorage = channel
@@ -149,7 +128,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		controller?.assign(to: nil)
 	}
 
-	@objc(assignController:)
 	public func assign(_ controller: IRCChannelMemberListController?) {
 		controller?.replaceContents(memberList)
 		self.controller = controller
@@ -178,49 +156,98 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	private func sortedInsert(_ member: ChannelUser) -> Int {
 		let index = sortedIndex(for: member)
 		memberContainer.insert(member, at: index)
+		reindexMembers()
 		return index
 	}
 
 	private func replaceStoredMember(_ oldMember: ChannelUser, with newMember: ChannelUser) -> Int? {
-		guard let index = memberContainer.firstIndex(where: { $0 === oldMember }) else {
+		guard let index = indexByUserID[oldMember.id] else {
 			return nil
 		}
 
 		memberContainer[index] = newMember
+		reindexMembers()
 		return index
 	}
 
 	private func removeStoredMember(_ member: ChannelUser) -> Int? {
-		guard let index = memberContainer.firstIndex(where: { $0 === member }) else {
+		guard let index = indexByUserID[member.id] else {
 			return nil
 		}
 
 		memberContainer.remove(at: index)
+		reindexMembers()
 		return index
 	}
 
-	@objc(addUser:)
-	public func addUser(_ user: User) {
-		addMember(ChannelUser(user: user))
+	/** Rebuilds the identity index.
+
+	 A member is a value now, so the list cannot be searched by object identity;
+	 a member's identity is the person's, and one channel holds one member per
+	 person. The index is rebuilt rather than patched because an insert or a
+	 removal shifts every position after it anyway. */
+	private func reindexMembers() {
+		indexByUserID = Dictionary(
+			memberContainer.enumerated().map { ($0.element.id, $0.offset) },
+			uniquingKeysWith: { _, latest in latest }
+		)
 	}
 
-	@objc(addMember:)
+	/// The member for `id`, or `nil` when that person is not in this channel.
+	func findMember(withUserID id: User.ID) -> ChannelUser? {
+		indexByUserID[id].map { memberContainer[$0] }
+	}
+
+	/** Edits the stored member for `id` in place.
+
+	 A caller that read a member and mutated its copy would throw the change
+	 away; this is where an edit to a member lands. */
+	func updateMember(withUserID id: User.ID, _ block: (inout ChannelUser) -> Void) {
+		guard let index = indexByUserID[id] else {
+			return
+		}
+
+		block(&memberContainer[index])
+		controller?.replace(memberContainer[index], atArrangedObjectIndex: index)
+	}
+
+	/// Edits the stored member for `nickname` in place, if the channel has one.
+	func updateMember(withNickname nickname: String, _ block: (inout ChannelUser) -> Void) {
+		guard let user = client?.findUser(nickname) else {
+			return
+		}
+
+		updateMember(withUserID: user.id, block)
+	}
+
+	/// The client's ISUPPORT `PREFIX` table as it stands now. Members are
+	/// stamped with it because a member no longer holds a client to ask.
+	private var currentPrefixes: IRCUserPrefixTable {
+		clientStorage?.currentUserPrefixes ?? IRCUserPrefixTable()
+	}
+
+	public func addUser(_ user: User) {
+		addMember(ChannelUser(user: user, prefixes: currentPrefixes))
+	}
+
 	public func addMember(_ member: ChannelUser) {
 		addMember(member, checkForDuplicates: false)
 	}
 
-	@objc(addMember:checkForDuplicates:)
 	public func addMember(_ member: ChannelUser, checkForDuplicates: Bool) {
 		guard let channel else {
 			return
 		}
 
-		if checkForDuplicates, let oldMember = member.user.userAssociated(with: channel) {
+		/* Asked of this list rather than of the channel's relations: the list is
+		 what holds the members, and the answer has to be the one this call is
+		 about to replace. */
+		if checkForDuplicates, let oldMember = findMember(withUserID: member.id) {
 			replaceMember(oldMember, with: member)
 			return
 		}
 
-		member.associate(with: channel)
+		client?.associate(member.user, with: channel)
 		willChangeValue(forKey: "numberOfMembers")
 		willChangeValue(forKey: "memberList")
 		let sortedIndex = sortedInsert(member)
@@ -235,20 +262,18 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		client?.postEvent(toViewController: "channelMemberAdded", for: channel)
 	}
 
-	@objc(removeMemberWithNickname:)
 	public func removeMember(withNickname nickname: String) {
 		if let member = findMember(nickname) {
 			removeMember(member)
 		}
 	}
 
-	@objc(removeMember:)
 	public func removeMember(_ member: ChannelUser) {
 		guard let channel else {
 			return
 		}
 
-		member.disassociate(with: channel)
+		client?.disassociate(member.user, from: channel)
 		let sortedIndex = removeStoredMember(member)
 
 		guard let sortedIndex, channel.isChannel else {
@@ -259,7 +284,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		client?.postEvent(toViewController: "channelMemberRemoved", for: channel)
 	}
 
-	@objc(resortMember:)
 	public func resortMember(_ member: ChannelUser) {
 		replaceMember(member, with: member, resort: true)
 	}
@@ -269,9 +293,9 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return
 		}
 
-		if oldMember !== newMember {
-			oldMember.disassociate(with: channel)
-			newMember.associate(with: channel)
+		if oldMember.id != newMember.id {
+			client?.disassociate(oldMember.user, from: channel)
+			client?.associate(newMember.user, with: channel)
 		}
 
 		var oldIndex: Int?
@@ -305,17 +329,14 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		output.endMemberListUpdates()
 	}
 
-	@objc(replaceMember:withMember:)
 	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser) {
 		replaceMember(oldMember, with: newMember, resort: true, replaceInAllChannels: false)
 	}
 
-	@objc(replaceMember:withMember:resort:)
 	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool) {
 		replaceMember(oldMember, with: newMember, resort: resort, replaceInAllChannels: false)
 	}
 
-	@objc(replaceMember:withMember:resort:replaceInAllChannels:)
 	public func replaceMember(
 		_ oldMember: ChannelUser,
 		with newMember: ChannelUser,
@@ -329,11 +350,10 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		let thisChannel = channel
-		for (targetChannel, member) in newMember.user.relations where targetChannel !== thisChannel {
-			guard let memberList = (targetChannel.memberInfo as AnyObject) as? ChannelMemberList else {
-				continue
-			}
-			memberList.performReplacement(member, with: member, resort: resort)
+		for (targetChannel, member) in client?.relations(of: newMember.user) ?? []
+			where targetChannel !== thisChannel
+		{
+			targetChannel.memberInfo?.performReplacement(member, with: member, resort: resort)
 		}
 	}
 
@@ -342,7 +362,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return
 		}
 
-		let editedMember = member.duplicate()
+		var editedMember = member
 		var modes = editedMember.modes
 
 		if value {
@@ -361,11 +381,17 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		editedMember.modes = modes
+		editedMember.prefixes = currentPrefixes
 
 		var replaceInAllChannels = false
 		if value, mode == ChannelModeSymbol("Y"), member.user.isIRCop == false {
 			client.modify(member.user) { user in
 				user.isIRCop = true
+			}
+			/* `modify` relinked the member lists, so take the member the list
+			 holds now rather than the one read before the edit. */
+			if let relinked = findMember(withUserID: member.id) {
+				editedMember.changeUser(to: relinked.user)
 			}
 			replaceInAllChannels = preferences.memberListSortFavorsServerStaff
 		}
@@ -378,43 +404,51 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		)
 	}
 
-	@objc
 	public func sortMembers() {
 		/* Snapshot the preference so the comparator stays pure for the whole sort. */
 		let favorIRCop = preferences.memberListSortFavorsServerStaff
 
+		/* Restamp first: ranking reads the prefix table the member carries, and
+		 a PREFIX that arrived after the member did has to reach it. */
+		let prefixes = currentPrefixes
+		for index in memberContainer.indices {
+			memberContainer[index].prefixes = prefixes
+		}
+
 		memberContainer.sort {
 			$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
 		}
+		reindexMembers()
 
 		controller?.replaceContents(memberList)
 	}
 
-	@objc
 	public func clearMembers() {
 		let channel = channel
 
 		willChangeValue(forKey: "numberOfMembers")
 		willChangeValue(forKey: "memberList")
 		if let channel {
-			memberContainer.forEach { $0.disassociate(with: channel) }
+			for member in memberContainer {
+				client?.disassociate(member.user, from: channel)
+			}
 		}
 		memberContainer.removeAll()
+		indexByUserID.removeAll()
 		didChangeValue(forKey: "numberOfMembers")
 		didChangeValue(forKey: "memberList")
 
 		controller?.replaceContents([])
 	}
 
-	@objc public var numberOfMembers: UInt {
+	public var numberOfMembers: UInt {
 		UInt(memberContainer.count)
 	}
 
-	@objc public var memberList: [ChannelUser] {
+	public var memberList: [ChannelUser] {
 		memberContainer
 	}
 
-	@objc(pasteboardDataForMembers:)
 	public func pasteboardData(for members: [ChannelUser]) -> Data {
 		let payload: [String: Any] = [
 			"channelId": channel?.uniqueIdentifier ?? "",
@@ -429,7 +463,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 	}
 
-	@objc(readNicknamesFromPasteboardData:withBlock:)
 	public static func readNicknames(
 		from pasteboardData: Data,
 		with callback: (IRCChannel, [String]) -> Void
@@ -456,38 +489,24 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		return true
 	}
 
-	@objc(readMembersFromPasteboardData:withBlock:)
 	public static func readMembers(
 		from pasteboardData: Data,
 		with callback: (IRCChannel, [ChannelUser]) -> Void
 	) -> Bool {
 		readNicknames(from: pasteboardData) { channel, nicknames in
-			let members = nicknames.compactMap { nickname -> ChannelUser? in
-				guard let member = channel.findMember(nickname) else {
-					return nil
-				}
-				return (member as AnyObject) as? ChannelUser
-			}
-			callback(channel, members)
+			callback(channel, nicknames.compactMap { channel.findMember($0) })
 		}
 	}
 
-	@objc(memberExists:)
 	public func memberExists(_ nickname: String) -> Bool {
 		findMember(nickname) != nil
 	}
 
-	@objc(findMember:)
 	public func findMember(_ nickname: String) -> ChannelUser? {
-		guard let client,
-		      let channel,
-		      let legacyUser = client.findUser(nickname),
-		      let user = (legacyUser as AnyObject) as? User,
-		      let member = user.userAssociated(with: channel)
-		else {
+		guard let user = client?.findUser(nickname) else {
 			return nil
 		}
 
-		return member
+		return findMember(withUserID: user.id)
 	}
 }

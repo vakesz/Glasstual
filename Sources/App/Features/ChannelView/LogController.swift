@@ -1085,11 +1085,10 @@ public extension LogController {
 		LogControllerHistoricLogFile.shared().writeNewEntry(with: logLine, forView: associatedItem.uniqueIdentifier)
 		/* The body was scanned against the member snapshot the line rendered
 		 with; the conversation weight belongs to whoever is in the channel now. */
-		for member in result.mentionedNicknames.compactMap({ channel?.findMember($0) }) {
-			if logLine.memberType == .localUser {
-				member.outgoingConversation()
-			} else {
-				member.conversation()
+		if let channel {
+			let direction: ChannelConversationDirection = logLine.memberType == .localUser ? .outgoing : .mention
+			for nickname in result.mentionedNicknames where channel.findMember(nickname) != nil {
+				channel.recordConversation(with: nickname, direction: direction)
 			}
 		}
 		postPrintBlock?(LogControllerPrintOperationContext(

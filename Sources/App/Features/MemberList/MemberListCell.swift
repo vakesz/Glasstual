@@ -254,7 +254,6 @@ public final class MemberListCell: NSTableCellView {
 		setAccessibilityLabel(accessibilityDescription)
 	}
 
-	@objc(privilegesDescriptionForUser:)
 	public static func privilegesDescription(for cellItem: ChannelUser) -> String {
 		var userRank = cellItem.rank
 
