@@ -60,7 +60,8 @@ nonisolated enum ServerPropertiesTableSection: Hashable, Sendable { // nonisolat
 /// through the table's delegate rather than a stored reference so that there is
 /// nothing here for the two isolations to disagree about.
 nonisolated class ServerPropertiesTableDataSource: // nonisolated: xpc-shim
-	NSTableViewDiffableDataSource<ServerPropertiesTableSection, String> {
+	NSTableViewDiffableDataSource<ServerPropertiesTableSection, String>
+{
 	@MainActor
 	@objc
 	func tableView(_: NSTableView, pasteboardWriterForRow row: Int) -> (any NSPasteboardWriting)? {
@@ -119,11 +120,9 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate, ChannelPropertiesS
 	}
 
 	private func makeTableDataSource(for table: BasicTableView) -> ServerPropertiesTableDataSource {
-		let dataSource = ServerPropertiesTableDataSource(tableView: table) {
-			[weak self] tableView, column, row, _ in
-			self?.tableCell(in: tableView, column: column, row: row) ?? NSView()
+		ServerPropertiesTableDataSource(tableView: table) { [weak self] view, column, row, _ in
+			self?.tableCell(in: view, column: column, row: row) ?? NSView()
 		}
-		return dataSource
 	}
 
 	/// The channel list draws only real channels; a private message carries a
@@ -509,7 +508,7 @@ extension ServerPropertiesSheet: NSTableViewDelegate {
 		return true
 	}
 
-	private func move<Element>(_ list: inout [Element], from: Int, to: Int) {
+	private func move(_ list: inout [some Any], from: Int, to: Int) {
 		guard list.indices.contains(from), list.indices.contains(to), from != to else {
 			return
 		}

@@ -11,218 +11,211 @@
  *********************************************************************** */
 
 import AppKit
-import Combine
 
-/** A reference box for one row of the server-endpoint table.
+/// The table's columns, named the way the nib identifies them. A cell view
+/// learns which column it is drawing from its own identifier, which the nib
+/// gives it.
+nonisolated enum ServerEndpointColumn: String { // nonisolated: value
+	case serverAddress
+	case serverPort
+	case prefersSecuredConnection
+	case serverPassword
+}
 
- `Server` is a value type, but the table's cell views edit their row through
- KVC — the nib binds each control to a property on the cell view, which reads
- and writes `objectValue`. A value in the array controller would hand every
- cell its own copy, so the row is boxed here and the box is what the controller
- arranges. The mirrored properties are `@objc dynamic` because the port cell
- observes the port that the TLS checkbox in a different cell changes. */
-@objc(TDCServerEndpointListEntry)
-@MainActor
-public final class ServerEndpointListEntry: NSObject {
-	public var server: Server
+/** Everything the nib used to get from bindings.
 
-	public init(server: Server) {
-		self.server = server
-		super.init()
+ Each column was bound with `NSValidatesImmediately`, so an address or a port
+ the person typed reached `NSObject.validateValue(_:forKey:)` on the cell view
+ before it reached the model, and an editor that threw was rejected. There is
+ no KVC hook left to hang that on, so the rules are stated here as pure
+ functions over the value and called when editing ends. */
+nonisolated enum ServerEndpointValidation { // nonisolated: value
+	static let errorDomain = "GlasstualErrorDomain"
+	static let invalidAddressCode = 71013
+	static let invalidPortCode = 71014
+
+	/// The ports a person did not choose: the defaults each transport implies.
+	/// Ticking "connect securely" moves between them, and leaves any other port
+	/// alone because that one was chosen deliberately.
+	static let plainTextPort: UInt16 = 6667
+	static let securedPort: UInt16 = 6697
+
+	static func validatedAddress(_ address: String) throws -> String {
+		guard (address as NSString).isValidInternetAddress else {
+			throw NSError(
+				domain: errorDomain,
+				code: invalidAddressCode,
+				userInfo: [
+					NSLocalizedDescriptionKey: ServerEndpointStrings.invalidAddressDescription,
+					NSLocalizedRecoverySuggestionErrorKey: ServerEndpointStrings.invalidAddressRecoverySuggestion,
+				]
+			)
+		}
+
+		return address
 	}
 
-	@objc public dynamic var serverAddress: String {
-		get { server.serverAddress }
-		set { server.serverAddress = newValue }
+	static func validatedPort(_ port: String) throws -> UInt16 {
+		guard (port as NSString).isValidInternetPort, let value = UInt16(port) else {
+			throw NSError(
+				domain: errorDomain,
+				code: invalidPortCode,
+				userInfo: [
+					NSLocalizedDescriptionKey: ServerEndpointStrings.invalidPortDescription,
+					NSLocalizedRecoverySuggestionErrorKey: ServerEndpointStrings.invalidPortRecoverySuggestion,
+				]
+			)
+		}
+
+		return value
 	}
 
-	@objc public dynamic var serverPort: UInt16 {
-		get { server.serverPort }
-		set { server.serverPort = newValue }
-	}
+	/// `server` with its transport switched, carrying the port with it.
+	static func server(_ server: Server, preferringSecuredConnection prefers: Bool) -> Server {
+		var updated = server
+		updated.prefersSecuredConnection = prefers
 
-	@objc public dynamic var prefersSecuredConnection: Bool {
-		get { server.prefersSecuredConnection }
-		set { server.prefersSecuredConnection = newValue }
-	}
+		if prefers, server.serverPort == plainTextPort {
+			updated.serverPort = securedPort
+		} else if prefers == false, server.serverPort == securedPort {
+			updated.serverPort = plainTextPort
+		}
 
-	public var serverPassword: String? {
-		get { server.serverPassword }
-		set { server.serverPassword = newValue }
+		return updated
 	}
 }
 
+/// Where a cell view sends an edit. The sheet owns the endpoints; a cell only
+/// draws one and reports what the person typed into it.
+@MainActor
+protocol ServerEndpointListCellDelegate: AnyObject {
+	func endpointCell(_ cell: ServerEndpointListSheetTableCellView, didEdit server: Server)
+	func endpointCell(
+		_ cell: ServerEndpointListSheetTableCellView,
+		didRejectEditWith error: any Error
+	)
+}
+
+/** One cell of the server-endpoint table.
+
+ Each of the four columns has its own prototype of this class; the column's
+ identifier is what tells an instance which field of the endpoint it draws. The
+ nib used to bind a control to a mirrored `@objc dynamic` property here, which
+ read and wrote the row through KVC — including a KVO republish so the port cell
+ would redraw when the checkbox in the security cell moved the port. None of
+ that survives: the cell is handed a value, and hands an edit back. */
 @objc(TDCServerEndpointListSheetTableCellView)
 public final class ServerEndpointListSheetTableCellView: NSTableCellView {
-	@objc dynamic var serverAddress: String {
-		get {
-			guard let objectValue = objectValue as? ServerEndpointListEntry else {
-				return ""
-			}
+	/// The securely-connect column draws a checkbox rather than a text field,
+	/// so it needs an outlet of its own.
+	@IBOutlet var checkbox: NSButton?
 
-			return objectValue.serverAddress
-		}
-		set {
-			guard let objectValue = objectValue as? ServerEndpointListEntry else {
-				return
-			}
+	weak var editDelegate: (any ServerEndpointListCellDelegate)?
 
-			objectValue.serverAddress = newValue
-		}
+	private(set) var server: Server?
+
+	private var column: ServerEndpointColumn? {
+		identifier.flatMap { ServerEndpointColumn(rawValue: $0.rawValue) }
 	}
 
-	@objc dynamic var serverPort: String {
-		get {
-			guard let objectValue = objectValue as? ServerEndpointListEntry else {
-				return ""
-			}
-
-			return String(objectValue.serverPort)
-		}
-		set {
-			guard let objectValue = objectValue as? ServerEndpointListEntry else {
-				return
-			}
-
-			objectValue.serverPort = UInt16(Int(newValue) ?? 0)
-		}
+	/// True while the person is typing in this cell. Redrawing then would take
+	/// the half-typed text away from them.
+	var isBeingEdited: Bool {
+		textField?.currentEditor() != nil
 	}
 
-	@objc dynamic var prefersSecuredConnection: NSNumber {
-		get {
-			guard let objectValue = objectValue as? ServerEndpointListEntry else {
-				return NSNumber(value: NSControl.StateValue.off.rawValue)
-			}
+	func configure(with server: Server, delegate: any ServerEndpointListCellDelegate) {
+		editDelegate = delegate
 
-			return NSNumber(
-				value: objectValue.prefersSecuredConnection
-					? NSControl.StateValue.on.rawValue
-					: NSControl.StateValue.off.rawValue
-			)
-		}
-		set {
-			guard let objectValue = objectValue as? ServerEndpointListEntry else {
-				return
-			}
-
-			let prefersSecuredConnection =
-				newValue.uintValue == NSControl.StateValue.on.rawValue
-
-			if prefersSecuredConnection {
-				objectValue.prefersSecuredConnection = true
-
-				if objectValue.serverPort == 6667 {
-					objectValue.serverPort = 6697
-				}
-			} else {
-				objectValue.prefersSecuredConnection = false
-
-				if objectValue.serverPort == 6697 {
-					objectValue.serverPort = 6667
-				}
-			}
-		}
+		refresh(with: server)
 	}
 
-	@objc dynamic var serverPassword: String {
-		get {
-			guard let objectValue = objectValue as? ServerEndpointListEntry else {
-				return ""
-			}
+	/// Re-draws the cell from `server` without disturbing an edit in progress.
+	func refresh(with server: Server) {
+		self.server = server
 
-			return objectValue.serverPassword ?? ""
-		}
-		set {
-			guard let objectValue = objectValue as? ServerEndpointListEntry else {
-				return
-			}
-
-			objectValue.serverPassword = newValue
-		}
-	}
-
-	private var serverPortObservation: Task<Void, Never>?
-
-	/* `NSObject.validateValue(_:forKey:)` is declared nonisolated; the body
-	 reads the pointer it is handed and throws, and touches nothing else. */
-	override public nonisolated func validateValue( // nonisolated: pure
-		_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>,
-		forKey inKey: String
-	)
-		throws
-	{
-		if inKey == "serverAddress" {
-			let address = (ioValue.pointee as? String) ?? (ioValue.pointee as? NSString as String?) ?? ""
-
-			if (address as NSString).isValidInternetAddress == false {
-				throw NSError(
-					domain: "GlasstualErrorDomain",
-					code: 71013,
-					userInfo: [
-						NSLocalizedDescriptionKey: ServerEndpointStrings.invalidAddressDescription,
-						NSLocalizedRecoverySuggestionErrorKey: ServerEndpointStrings.invalidAddressRecoverySuggestion,
-					]
-				)
-			}
-		} else if inKey == "serverPort" {
-			let port = (ioValue.pointee as? String) ?? (ioValue.pointee as? NSString as String?) ?? ""
-
-			if (port as NSString).isValidInternetPort == false {
-				throw NSError(
-					domain: "GlasstualErrorDomain",
-					code: 71014,
-					userInfo: [
-						NSLocalizedDescriptionKey: ServerEndpointStrings.invalidPortDescription,
-						NSLocalizedRecoverySuggestionErrorKey: ServerEndpointStrings.invalidPortRecoverySuggestion,
-					]
-				)
-			}
-		}
-	}
-
-	override public var objectValue: Any? {
-		didSet {
-			stopObservingObjectValue()
-			startObservingObjectValue()
-		}
-	}
-
-	private func startObservingObjectValue() {
-		guard let keyPath = identifier?.rawValue else {
+		guard isBeingEdited == false else {
 			return
 		}
 
-		willChangeValue(forKey: keyPath)
-		didChangeValue(forKey: keyPath)
+		switch column {
+		case .serverAddress:
+			drawTextField(showing: server.serverAddress)
+		case .serverPort:
+			drawTextField(showing: String(server.serverPort))
+		case .serverPassword:
+			drawTextField(showing: server.serverPassword ?? "")
+		case .prefersSecuredConnection:
+			checkbox?.state = server.prefersSecuredConnection ? .on : .off
+			checkbox?.target = self
+			checkbox?.action = #selector(securedConnectionToggled(_:))
+		case nil:
+			break
+		}
+	}
 
-		guard keyPath == "serverPort", let objectValue = objectValue as? ServerEndpointListEntry else {
+	private func drawTextField(showing value: String) {
+		guard let textField else {
 			return
 		}
 
-		/* `observe`'s change handler is nonisolated, and re-announcing the key
-		 path touches this cell; awaiting the entry's values does it from the
-		 main actor by declaration. */
-		serverPortObservation = Task { @MainActor [weak self] in
-			for await _ in objectValue.publisher(for: \.serverPort, options: .new).bufferedValues {
-				guard let self else {
-					return
-				}
+		textField.stringValue = value
+		textField.target = self
+		textField.action = #selector(textFieldEdited(_:))
+	}
 
-				announceServerPortChange()
+	@objc
+	private func textFieldEdited(_ sender: NSTextField) {
+		guard let server, let column else {
+			return
+		}
+
+		do {
+			var edited = server
+
+			switch column {
+			case .serverAddress:
+				edited.serverAddress = try ServerEndpointValidation.validatedAddress(sender.stringValue)
+			case .serverPort:
+				edited.serverPort = try ServerEndpointValidation.validatedPort(sender.stringValue)
+			case .serverPassword:
+				edited.serverPassword = sender.stringValue
+			case .prefersSecuredConnection:
+				return
 			}
+
+			self.server = edited
+			editDelegate?.endpointCell(self, didEdit: edited)
+		} catch {
+			/* Put back what the endpoint still says, so the field never shows a
+			 value the model rejected. Written straight to the control rather
+			 than through `refresh`, because the field editor is still attached
+			 while the end-of-editing action runs. */
+			switch column {
+			case .serverAddress:
+				drawTextField(showing: server.serverAddress)
+			case .serverPort:
+				drawTextField(showing: String(server.serverPort))
+			default:
+				break
+			}
+
+			editDelegate?.endpointCell(self, didRejectEditWith: error)
 		}
 	}
 
-	/// Its own method because `willChangeValue`/`didChangeValue` are unavailable
-	/// from an asynchronous context: a change announced across a suspension is
-	/// undefined. Nothing suspends between these two calls.
-	private func announceServerPortChange() {
-		willChangeValue(forKey: #keyPath(serverPort))
-		didChangeValue(forKey: #keyPath(serverPort))
-	}
+	@objc
+	private func securedConnectionToggled(_ sender: NSButton) {
+		guard let server else {
+			return
+		}
 
-	private func stopObservingObjectValue() {
-		serverPortObservation?.cancel()
-		serverPortObservation = nil
+		let edited = ServerEndpointValidation.server(
+			server,
+			preferringSecuredConnection: sender.state == .on
+		)
+
+		self.server = edited
+		editDelegate?.endpointCell(self, didEdit: edited)
 	}
 }
