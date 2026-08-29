@@ -560,9 +560,10 @@ public final class LogController: NSObject {
 			}
 			let xpcEntries = await HistoricLogClient.shared.fetchEntries(request)
 			let entries = Array(HistoricLogClient.logLines(from: xpcEntries).reversed())
-			let snapshots = entries.map {
-				Self.makeSnapshot(of: $0, in: context, for: viewController)
-			}
+			let snapshots = Self.applyingMessageRenderers(
+				to: entries.map { LogLineSnapshot($0, in: context) },
+				for: viewController
+			)
 			let results = Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
 			return (entries: entries, results: results)
 		} apply: { [weak self] (loaded: (entries: [LogLine], results: [LogLineRenderResult])) in
@@ -880,10 +881,14 @@ public extension LogController {
 		completionBlock: @escaping ([[AnyHashable: Any]]) -> Void
 	) {
 		let context = makeRenderContext()
-		let snapshots = logLines.map { Self.makeSnapshot(of: $0, in: context, for: self) }
-		enqueueRenderJob(isStandalone: true) {
-			Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
-		} apply: { [weak self] results in
+		let lines = logLines.map { LogLineSnapshot($0, in: context) }
+		enqueueRenderJob(isStandalone: true) { [weak self] in
+			guard let viewController = self else {
+				return nil
+			}
+			let snapshots = Self.applyingMessageRenderers(to: lines, for: viewController)
+			return Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
+		} apply: { [weak self] (results: [LogLineRenderResult]) in
 			self?.applyFetchedRender(results, completionBlock: completionBlock)
 		}
 	}
@@ -987,8 +992,12 @@ public extension LogController {
 		LogControllerHistoricLogFile.shared().indexLogLines(logLines, forView: associatedItem.uniqueIdentifier)
 		noteOldestLineCandidate(logLines.first)
 		let context = makeRenderContext()
-		let snapshots = logLines.map { Self.makeSnapshot(of: $0, in: context, for: self) }
-		enqueueRenderJob {
+		let lines = logLines.map { LogLineSnapshot($0, in: context) }
+		enqueueRenderJob { [weak self] in
+			guard let viewController = self else {
+				return nil
+			}
+			let snapshots = Self.applyingMessageRenderers(to: lines, for: viewController)
 			let results = Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
 			guard results.isEmpty == false else {
 				return nil
@@ -1022,11 +1031,15 @@ public extension LogController {
 		lastLineStorage = logLine
 		noteOldestLineCandidate(logLine)
 		let context = makeRenderContext()
-		let request = LogLineRenderRequest(
-			line: Self.makeSnapshot(of: logLine, in: context, for: self),
-			context: context
-		)
-		enqueueRenderJob {
+		let line = LogLineSnapshot(logLine, in: context)
+		enqueueRenderJob { [weak self] in
+			guard let viewController = self else {
+				return nil
+			}
+			let request = LogLineRenderRequest(
+				line: Self.applyingMessageRenderers(to: [line], for: viewController)[0],
+				context: context
+			)
 			guard let result = Self.render(request, using: ThemeLogLineRenderer()) else {
 				logControllerLogger
 					.error("Failed to render log line \(request.line.sourceDescription, privacy: .public)")
