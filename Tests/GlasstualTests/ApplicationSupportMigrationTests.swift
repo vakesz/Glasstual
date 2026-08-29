@@ -88,20 +88,18 @@ struct ApplicationSupportMigrationTests {
 	func resourceManagerCachesAndRejectsWrongTypes() {
 		/* The cache is process-wide; empty it on the way out as well so the
 		 entry this test plants does not answer another one's lookup. */
-		ResourceManager.sharedResourcesCache.removeAllObjects()
-		defer { ResourceManager.sharedResourcesCache.removeAllObjects() }
+		ResourceManager.removeAllCachedResources()
+		defer { ResourceManager.removeAllCachedResources() }
 
 		let first = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
 		let second = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
-		let cacheKey = "StaticStore.plist / Root Folder / Root Object" as NSString
-		let cached = ResourceManager.sharedResourcesCache.object(forKey: cacheKey) as? NSDictionary
 
 		#expect(first != nil)
 		#expect(first as NSDictionary? == second as NSDictionary?)
-		#expect(cached != nil)
-		#expect(cached == first as NSDictionary?)
+		#expect(ResourceManager.hasCachedResource(named: "StaticStore"))
 		#expect(ResourceManager.array(fromResources: "StaticStore", cacheValue: false) == nil)
 		#expect(ResourceManager.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false) == nil)
+		#expect(ResourceManager.hasCachedResource(named: "DoesNotExistAnywhere") == false)
 	}
 
 	@Test("A transcript path is built from the client folder and the item's kind")
