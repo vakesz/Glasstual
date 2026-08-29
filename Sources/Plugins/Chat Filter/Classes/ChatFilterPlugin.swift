@@ -60,7 +60,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 	@IBOutlet private var filterTable: NSTableView!
 	@IBOutlet var filterArrayController: NSArrayController!
 
-	@objc private dynamic var atleastOneFilterExists = false
+	private var atleastOneFilterExists = false
 	private var activeChatFilterIndex = -1
 	private var activeEditSheet: ChatFilterEditSheet?
 	private var engine: ChatFilterEngine?
@@ -79,7 +79,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		return host.defaults
 	}
 
-	@objc override init() {
+	override init() {
 		super.init()
 	}
 

@@ -53,8 +53,6 @@ public extension Notification.Name {
 /// Main actor throughout: every caller is a DCC transfer or dialog that already
 /// runs there, and the mDNSResponder callback is delivered on the main queue.
 @MainActor
-@objc(XRPortMapper)
-@objcMembers
 public final class XRPortMapper: NSObject {
 	public dynamic var mapTCP = true
 	public dynamic var mapUDP = false
@@ -71,7 +69,6 @@ public final class XRPortMapper: NSObject {
 		self.init(port: 0)
 	}
 
-	@objc(initWithPort:)
 	public init(port: UInt16) {
 		self.port = port
 		super.init()

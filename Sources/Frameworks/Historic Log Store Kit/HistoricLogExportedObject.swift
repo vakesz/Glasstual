@@ -46,7 +46,6 @@ import Foundation
 /// The connection is held here and passed nowhere: `NSXPCConnection` is not
 /// `Sendable`, so it cannot enter the store. The store does not need it — it
 /// pushes through the client proxy the listener delegate resolved for it.
-@objc(HLSHistoricLogProcessMain)
 public final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 	private let store: HistoricLogStore
 	private let serviceConnection: NSXPCConnection

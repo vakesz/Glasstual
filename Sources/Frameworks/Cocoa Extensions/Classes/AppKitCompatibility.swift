@@ -46,12 +46,10 @@ private var menuItemUserInfoKey: UnsafeRawPointer {
 }
 
 public extension NSFont {
-	@objc(fontTraitSet:)
 	func textual_fontTraitIsSet(_ trait: NSFontTraitMask) -> Bool {
 		NSFontManager.shared.traits(of: self).contains(trait)
 	}
 
-	@objc(fontIsAvailable:)
 	class func textual_fontIsAvailable(_ fontName: String) -> Bool {
 		if NSFont(name: fontName, size: 9) != nil {
 			return true
@@ -68,7 +66,6 @@ public extension NSScreen {
 		(deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
 	}
 
-	@objc(screenResolutionString)
 	var textualScreenResolutionString: String {
 		guard
 			let displayIdentifier = textualDisplayIdentifier,
@@ -80,7 +77,6 @@ public extension NSScreen {
 		return "\(displayMode.pixelWidth) x \(displayMode.pixelHeight)"
 	}
 
-	@objc(screenRefreshRate)
 	var textualScreenRefreshRate: CGFloat {
 		if maximumFramesPerSecond > 0 {
 			return CGFloat(maximumFramesPerSecond)
@@ -98,7 +94,6 @@ public extension NSScreen {
 }
 
 public extension NSMenuItem {
-	@objc(userInfo)
 	var textualUserInfo: String? {
 		get { objc_getAssociatedObject(self, menuItemUserInfoKey) as? String }
 		set {
@@ -111,7 +106,6 @@ public extension NSMenuItem {
 		}
 	}
 
-	@objc(setUserInfo:recursively:)
 	func textual_setUserInfo(_ userInfo: String?, recursively: Bool) {
 		if recursively, let submenu {
 			for item in submenu.items {
@@ -123,7 +117,7 @@ public extension NSMenuItem {
 	}
 }
 
-/** These are Swift extension members, not Objective-C categories: an @objc
+/** These are Swift extension members, not Objective-C categories: an
  method on NSObject installs an unprefixed selector on every class in the
  process and can collide with a current or future Apple implementation. */
 public extension NSObject {
@@ -152,19 +146,16 @@ public extension NSObject {
 }
 
 public extension NSArrayController {
-	@objc(removeAllArrangedObjects)
 	func textual_removeAllArrangedObjects() {
 		let count = (arrangedObjects as? [Any])?.count ?? 0
 		remove(atArrangedObjectIndexes: IndexSet(integersIn: 0 ..< count))
 	}
 
-	@objc(replaceObjectAtArrangedObjectIndex:withObject:)
 	func textual_replaceObject(atArrangedObjectIndex index: UInt, with object: Any) {
 		insert(object, atArrangedObjectIndex: Int(index) + 1)
 		remove(atArrangedObjectIndex: Int(index))
 	}
 
-	@objc(moveObjectAtArrangedObjectIndex:toIndex:)
 	func textual_moveObject(atArrangedObjectIndex sourceIndex: UInt, to destinationIndex: UInt) {
 		guard let objects = arrangedObjects as? [Any] else {
 			return

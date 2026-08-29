@@ -34,11 +34,11 @@ import AppKit
 
 @MainActor
 public extension NSTextField {
-	@objc var trimmedStringValue: String {
+	var trimmedStringValue: String {
 		stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
 	}
 
-	@objc var trimmedFirstTokenStringValue: String {
+	var trimmedFirstTokenStringValue: String {
 		let value = trimmedStringValue
 		guard let space = value.firstIndex(of: " "), space > value.startIndex else { return value }
 		return String(value[..<space])
@@ -47,24 +47,24 @@ public extension NSTextField {
 
 @MainActor
 public extension NSTextView {
-	@objc(isFocused) var focused: Bool {
+	var focused: Bool {
 		window?.firstResponder === self
 	}
 
-	@objc func focus() {
+	func focus() {
 		guard !focused else { return }
 		window?.makeFirstResponder(self)
 	}
 
-	@objc var range: NSRange {
+	var range: NSRange {
 		NSRange(location: 0, length: Int(stringLength))
 	}
 
-	@objc var stringLength: UInt {
+	var stringLength: UInt {
 		UInt((string as NSString).length)
 	}
 
-	@objc var scrollView: NSScrollView? {
+	var scrollView: NSScrollView? {
 		enclosingScrollView
 	}
 }

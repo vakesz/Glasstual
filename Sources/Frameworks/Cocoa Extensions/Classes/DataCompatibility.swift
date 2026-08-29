@@ -85,17 +85,14 @@ public extension NSData {
 		self as Data
 	}
 
-	@objc(sha1)
 	var textualSha1: String {
 		textual_hexadecimalString(for: Insecure.SHA1.hash(data: textualData))
 	}
 
-	@objc(sha256)
 	var textualSha256: String {
 		textual_hexadecimalString(for: SHA256.hash(data: textualData))
 	}
 
-	@objc(sha512)
 	var textualSha512: String {
 		textual_hexadecimalString(for: SHA512.hash(data: textualData))
 	}

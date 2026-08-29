@@ -165,15 +165,15 @@ public extension IRCClient {
 
 		print(IRCDirectChatStrings.incomingRequest(sender: sender), by: nil, in: nil,
 		      as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue)
-		guard let window = output?.alertPresentationWindow else { return }
-		TDCAlert.alertSheet(
-			with: window,
-			body: PromptStrings.DirectChat.body(sender: sender),
+		let request = AlertRequest(
 			title: PromptStrings.DirectChat.title(sender: sender),
+			body: PromptStrings.DirectChat.body(sender: sender),
 			defaultButton: PromptStrings.DirectChat.acceptButtonTitle,
-			alternateButton: PromptStrings.DirectChat.declineButtonTitle,
-			otherButton: nil,
-			completionBlock: { [weak self] outcome in
+			alternateButton: PromptStrings.DirectChat.declineButtonTitle
+		)
+		output?.presentAlertSheet(
+			request,
+			completion: { [weak self] outcome in
 				guard let self else { return }
 				guard outcome.response == .default else {
 					print(IRCDirectChatStrings.declined(sender: sender), by: nil, in: nil,
@@ -247,14 +247,8 @@ public extension IRCClient {
 		let isAction = command == .privmsgAction
 		let lineType: TVCLogLineType = isAction ? .action : .privateMessage
 		for line in string.splitIntoLines {
-			let remainder = NSMutableAttributedString(attributedString: line)
-			while remainder.length > 0 {
-				let lengthBeforeFormatting = remainder.length
-				let message = remainder.stringFormatted(forChannel: channel.name, on: self, with: lineType)
-
-				// Defensive: `stringFormatted` guarantees progress, but this
-				// loop must never spin if that ever stops being true.
-				guard remainder.length < lengthBeforeFormatting else { break }
+			var cursor = IRCLineCursor(line)
+			while let message = cursor.nextLine(forChannel: channel.name, on: self, with: lineType) {
 				if isAction {
 					connection.sendAction(message)
 				} else {

@@ -60,28 +60,25 @@ public struct FileOperationOptions: OptionSet, Sendable {
 }
 
 public extension FileManager {
-	@objc class var pathOfHomeDirectoryOutsideSandbox: String {
+	class var pathOfHomeDirectoryOutsideSandbox: String {
 		guard let password = getpwuid(getuid()), let directory = password.pointee.pw_dir else {
 			return NSHomeDirectory()
 		}
 		return String(cString: directory)
 	}
 
-	@objc class var URLOfHomeDirectoryOutsideSandbox: URL {
+	class var URLOfHomeDirectoryOutsideSandbox: URL {
 		URL(fileURLWithPath: pathOfHomeDirectoryOutsideSandbox, isDirectory: true)
 	}
 
-	@objc(fileExistsAtURL:)
 	func fileExists(at url: URL) -> Bool {
 		fileExists(atPath: url.path)
 	}
 
-	@objc(directoryExistsAtURL:)
 	func directoryExists(at url: URL) -> Bool {
 		directoryExists(atPath: url.path)
 	}
 
-	@objc(directoryExistsAtPath:)
 	func directoryExists(atPath path: String) -> Bool {
 		var isDirectory = ObjCBool(false)
 		return fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue

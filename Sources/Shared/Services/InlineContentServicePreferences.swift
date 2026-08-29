@@ -47,15 +47,15 @@ import Foundation
 public final nonisolated class InlineContentServicePreferences: NSObject, NSSecureCoding, // nonisolated: value
 	Sendable
 {
-	@objc public let maximumFilesize: UInt
-	@objc public let scalingWidth: UInt
-	@objc public let maximumHeight: UInt
-	@objc public let limitToBasics: Bool
-	@objc public let limitBasicsToFiles: Bool
-	@objc public let limitNaughtyContent: Bool
-	@objc public let limitUnsafeContent: Bool
-	@objc public let checkEverything: Bool
-	@objc public let allowsCleartextHTTP: Bool
+	public let maximumFilesize: UInt
+	public let scalingWidth: UInt
+	public let maximumHeight: UInt
+	public let limitToBasics: Bool
+	public let limitBasicsToFiles: Bool
+	public let limitNaughtyContent: Bool
+	public let limitUnsafeContent: Bool
+	public let checkEverything: Bool
+	public let allowsCleartextHTTP: Bool
 
 	public init(
 		maximumFilesize: UInt,
@@ -83,7 +83,7 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 
 	/// The values the app currently holds, read through a private handle: the
 	/// client that pushes them to the service is an actor of its own.
-	@objc public static func current() -> InlineContentServicePreferences {
+	public static func current() -> InlineContentServicePreferences {
 		InlineContentServicePreferences(
 			maximumFilesize: Preferences.InlineMedia.maximumFilesize.detachedValue,
 			scalingWidth: Preferences.InlineMedia.scalingWidth.detachedValue,
@@ -99,7 +99,7 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 
 	/// The same values as a defaults registration domain, so that the service's
 	/// `TextualPreferences` accessors read them through their usual keys.
-	@objc public var registrationDomain: [String: Any] {
+	public var registrationDomain: [String: Any] {
 		[
 			Preferences.InlineMedia.maximumFilesize.name: maximumFilesize,
 			Preferences.InlineMedia.scalingWidth.name: scalingWidth,

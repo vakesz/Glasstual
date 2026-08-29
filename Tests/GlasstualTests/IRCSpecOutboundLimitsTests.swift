@@ -75,17 +75,12 @@ struct IRCSpecOutboundLimitsTests {
 		on client: GLTTestClient,
 		as lineType: TVCLogLineType
 	) -> [String] {
-		let remaining = NSMutableAttributedString(string: text)
+		var cursor = IRCLineCursor(NSAttributedString(string: text))
 		var pieces: [String] = []
 
-		while remaining.length > 0, pieces.count < 200 {
-			let lengthBefore = remaining.length
-			let piece = remaining.stringFormatted(forChannel: target, on: client, with: lineType)
-
-			guard remaining.length < lengthBefore else {
-				break
-			}
-
+		while pieces.count < 200,
+		      let piece = cursor.nextLine(forChannel: target, on: client, with: lineType)
+		{
 			pieces.append(piece)
 		}
 

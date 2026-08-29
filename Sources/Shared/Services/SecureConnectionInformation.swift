@@ -45,16 +45,21 @@ import Network
 /// where a `nil` policy name in the first position was the only signal that
 /// the other four meant nothing. As one value the "nothing negotiated" case is
 /// a single `nil`, and the array no longer crosses the boundary loose.
+///
+/// The explicit Objective-C name is the archive's: `Sources/Shared` is compiled
+/// into each target, so without one the class is `Glasstual.…` on one side of
+/// the connection and `IRC_Connection_Host.…` on the other, and the decode
+/// fails.
 @objc(RCMSecureConnectionInformation)
 public final nonisolated class SecureConnectionInformation: NSObject, NSSecureCoding, Sendable { // nonisolated: value
 	/// The name the certificate chain was evaluated against.
-	@objc public let policyName: String?
+	public let policyName: String?
 
 	/// Why the chain failed to validate, when it did.
-	@objc public let trustFailureDescription: String?
+	public let trustFailureDescription: String?
 
 	/// The DER-encoded chain, leaf first.
-	@objc public let certificateChain: [Data]
+	public let certificateChain: [Data]
 
 	private let protocolVersionRawValue: UInt16
 	private let cipherSuiteRawValue: UInt16

@@ -41,9 +41,8 @@ import Foundation
 /// The object NSXPC exports for a connection host.
 ///
 /// It holds the connection — which is not `Sendable` and so passes nowhere —
-/// and the host actor, which owns every piece of state. Each `@objc` call is a
+/// and the host actor, which owns every piece of state. Each `` call is a
 /// one-line hop into the actor.
-@objc(RCMProcessMain)
 final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	private let host: ConnectionHost
 	private let serviceConnection: NSXPCConnection

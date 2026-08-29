@@ -154,5 +154,9 @@ extension TXMenuController: WorldObserver {
 	}
 }
 
-/// The sheets the IRC layer raises. Every requirement already existed.
-extension TXMenuController: ClientMenuPresenting {}
+/// The sheets the IRC layer raises, and the one folder it asks to be shown.
+extension TXMenuController: ClientMenuPresenting {
+	func revealInFinder(_ url: URL) {
+		NSWorkspace.shared.open(url)
+	}
+}

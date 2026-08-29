@@ -41,22 +41,18 @@ import Foundation
  name against every entry with a per-entry comparator. They are now answered by
  the key declarations, which is the same data without the second copy. */
 public extension TextualUserDefaults {
-	@objc(keyIsExcludedFromExportImport:)
 	class func keyIsExcludedFromExportImport(_ defaultName: String) -> Bool {
 		Preferences.isExcludedFromExport(defaultName)
 	}
 
-	@objc(keyAppearsInMasterList:)
 	class func keyAppearsInPreferenceCatalog(_ defaultName: String) -> Bool {
 		Preferences.isCatalogued(defaultName)
 	}
 
-	@objc(keyIsExcludedFromContainer:)
 	class func keyIsExcludedFromContainer(_ defaultName: String) -> Bool {
 		Preferences.storage(for: defaultName) == .standard
 	}
 
-	@objc(_migrateObject:forKey:)
 	func migrateObject(_ value: Any?, forKey defaultName: String) {
 		guard Self.keyIsExcludedFromContainer(defaultName) else {
 			setObjectWithoutNotification(value, forKey: defaultName)

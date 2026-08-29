@@ -38,7 +38,6 @@
 
 import Foundation
 
-@objc(TPCPreferences)
 public class TextualPreferences: NSObject {}
 
 public nonisolated extension Preferences { // nonisolated: value

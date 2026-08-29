@@ -591,20 +591,20 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	/// A channel's override wins when it has one; `.mixed` means "no override",
-	/// so the application-wide preference answers. Five settings shared this
-	/// shape as five byte-identical bodies.
+	/// A channel's override wins when it has one; `.inherited` means "no
+	/// override", so the application-wide preference answers. Five settings
+	/// shared this shape as five byte-identical bodies.
 	private func resolve(
 		_ event: TXNotificationType,
 		in channel: IRCChannel?,
-		channelValue: (ChannelConfig, TXNotificationType) -> NSControl.StateValue,
+		channelValue: (ChannelConfig, TXNotificationType) -> ChannelEventOverride,
 		globalValue: (TXNotificationType) -> Bool
 	) -> Bool {
 		if let channel {
-			let override = channelValue(channel.config, event)
-
-			if override != .mixed {
-				return override == .on
+			switch channelValue(channel.config, event) {
+			case .on: return true
+			case .off: return false
+			case .inherited: break
 			}
 		}
 
