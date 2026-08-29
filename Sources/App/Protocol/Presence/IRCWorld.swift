@@ -178,7 +178,7 @@ public final class World: NSObject {
 			.observe(.textualUserDefaultsDidChange) { [weak self] notification in
 				self?.userDefaultsDidChange(notification)
 			}
-		notifications.observe(.TVCMainWindowAppearanceChanged) { [weak self] notification in
+		notifications.observe(.mainWindowAppearanceChanged) { [weak self] notification in
 			self?.mainWindowAppearanceChanged(notification)
 		}
 	}

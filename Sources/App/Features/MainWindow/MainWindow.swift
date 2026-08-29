@@ -43,10 +43,6 @@ import Foundation
 public typealias TVCMainWindow = MainWindow
 
 public extension Notification.Name {
-	static let TVCMainWindowAppearanceChanged = Notification.Name("TVCMainWindowAppearanceChangedNotification")
-	static let TVCMainWindowRedrawSubviews = Notification.Name("TVCMainWindowRedrawSubviewsNotification")
-	static let TVCMainWindowWillReloadTheme = Notification.Name("TVCMainWindowWillReloadThemeNotification")
-	static let TVCMainWindowDidReloadTheme = Notification.Name("TVCMainWindowDidReloadThemeNotification")
 	static let mainWindowAppearanceChanged = Notification.Name("TVCMainWindowAppearanceChangedNotification")
 	static let mainWindowRedrawSubviews = Notification.Name("TVCMainWindowRedrawSubviewsNotification")
 	static let mainWindowWillReloadTheme = Notification.Name("TVCMainWindowWillReloadThemeNotification")
