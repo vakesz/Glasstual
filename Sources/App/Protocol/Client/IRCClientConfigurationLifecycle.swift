@@ -107,7 +107,6 @@ public extension IRCClient {
 
 		world?.noteNavigationListDidChange()
 		writePasswordsToKeychain()
-		destroyServerPasswordKeychainItemAfterMigration()
 		output?.updateTitle(for: self)
 		clearAddressBookCache()
 		populateISONTrackedUsersList()
@@ -133,11 +132,6 @@ public extension IRCClient {
 			server.writeServerPasswordToKeychain()
 			return server
 		}
-	}
-
-	@objc(destroyServerPasswordKeychainItemAfterMigration)
-	func destroyServerPasswordKeychainItemAfterMigration() {
-		config.destroyServerPasswordKeychainItemAfterMigration()
 	}
 
 	@objc(updateStoredConfiguration)

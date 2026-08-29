@@ -138,11 +138,6 @@ public nonisolated struct ClientConfig: Codable, Equatable, Sendable { // noniso
 	/// A proxy password waiting to be written to the keychain. Never encoded.
 	public var pendingProxyPassword: String?
 
-	/** Set when a pre-server-list configuration's server password was moved to
-	 the endpoint that replaced it; the old item is deleted once the new one has
-	 been written. */
-	var migratedServerPasswordPendingDestroy = false
-
 	/** The single address, port and TLS flag that releases before the server
 	 list stored. They are still written out so an older build can read the
 	 file, and are only read back when there is no server list. */
@@ -259,17 +254,6 @@ public nonisolated extension ClientConfig { // nonisolated: value
 	mutating func destroyProxyPasswordKeychainItem() {
 		proxyPasswordKeychainItem.delete()
 		pendingProxyPassword = nil
-	}
-
-	/// Removes the pre-server-list server password once the endpoint that
-	/// replaced it has written its own copy.
-	mutating func destroyServerPasswordKeychainItemAfterMigration() {
-		guard migratedServerPasswordPendingDestroy else {
-			return
-		}
-
-		migratedServerPasswordPendingDestroy = false
-		KeychainItem.serverPassword(uniqueIdentifier).delete()
 	}
 }
 

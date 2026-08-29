@@ -56,7 +56,6 @@ nonisolated extension ClientConfig { // nonisolated: value
 		migrateRenamedIdentityKeys(from: container)
 		migrateRenamedConnectionKeys(from: container)
 		migrateFloodControl(from: container)
-		migrateProxyPassword(from: container)
 		migrateCipherSuites(from: container)
 		migrateServerList(from: container)
 	}
@@ -181,17 +180,6 @@ nonisolated extension ClientConfig { // nonisolated: value
 		floodControlMaximumMessages = ClientConfigDefaults.maximumFloodMessages
 	}
 
-	/// The proxy password used to sit in the property list in the clear. It is
-	/// moved to the keychain on the first read and never written back.
-	private mutating func migrateProxyPassword(from container: Container) {
-		guard let password = container.decodeOptional(String.self, forKey: .proxyServerPassword) else {
-			return
-		}
-
-		pendingProxyPassword = password
-		writeProxyPasswordToKeychain()
-	}
-
 	/// A build that predates named cipher suites recorded only whether it
 	/// wanted the modern ones.
 	private mutating func migrateCipherSuites(from container: Container) {
@@ -204,8 +192,10 @@ nonisolated extension ClientConfig { // nonisolated: value
 		cipherSuites = .none
 	}
 
-	/// The single stored endpoint becomes the first entry of the server list,
-	/// carrying its keychain item across to the new identifier.
+	/// The single stored endpoint becomes the first entry of the server list.
+	/// No keychain item is carried over: a version 0 configuration comes from a
+	/// Textual-era export whose keychain items this app cannot reach, so the
+	/// password is entered again under the new identifier.
 	private mutating func migrateServerList(from container: Container) {
 		guard container.decodeOptional(Bool.self, forKey: .migratedToServerListV1Layout) != true,
 		      serverList.isEmpty
@@ -224,16 +214,13 @@ nonisolated extension ClientConfig { // nonisolated: value
 			return
 		}
 
-		var server = Server(
+		let server = Server(
 			serverAddress: address,
 			serverPort: port,
-			prefersSecuredConnection: legacyPrefersSecuredConnection,
-			pendingServerPassword: KeychainItem.serverPassword(uniqueIdentifier).password
+			prefersSecuredConnection: legacyPrefersSecuredConnection
 		)
-		server.writeServerPasswordToKeychain()
 
 		serverList = [server]
-		migratedServerPasswordPendingDestroy = true
 	}
 }
 
