@@ -16,9 +16,73 @@ import CocoaExtensions
 import os
 import UserNotifications
 
-nonisolated enum NotificationPayload { // nonisolated: value
+/** What a delivered notification carries back when the person clicks it.
+
+ `UNNotificationContent.userInfo` is a property-list dictionary, so the keys
+ below are the only place the strings appear; every producer and reader inside
+ the application works with the value. It used to be a `[String: Any]` passed
+ whole from the protocol layer to the delegate callback, with each reader
+ guessing at the keys. */
+public nonisolated struct NotificationPayload: Equatable, Sendable { // nonisolated: value
 	static let clientIdentifierKey = "clientId"
 	static let channelIdentifierKey = "channelId"
+	private static let fileTransferIdentifierKey = "fileTransferUniqueIdentifier"
+	private static let fileTransferTypeKey = "fileTransferNotificationType"
+
+	public var clientIdentifier: String?
+	public var channelIdentifier: String?
+	/// The transfer a file-transfer notification is about, and its event.
+	public var fileTransferIdentifier: String?
+	public var fileTransferEventRawValue: Int = 0
+
+	public init(
+		clientIdentifier: String? = nil,
+		channelIdentifier: String? = nil,
+		fileTransferIdentifier: String? = nil,
+		fileTransferEventRawValue: Int = 0
+	) {
+		self.clientIdentifier = clientIdentifier
+		self.channelIdentifier = channelIdentifier
+		self.fileTransferIdentifier = fileTransferIdentifier
+		self.fileTransferEventRawValue = fileTransferEventRawValue
+	}
+
+	/// Reads a payload back out of the dictionary UserNotifications kept.
+	public init(userInfo: [AnyHashable: Any]) {
+		clientIdentifier = userInfo[Self.clientIdentifierKey] as? String
+		channelIdentifier = userInfo[Self.channelIdentifierKey] as? String
+		fileTransferIdentifier = userInfo[Self.fileTransferIdentifierKey] as? String
+		fileTransferEventRawValue = (userInfo as NSDictionary).ce_integer(forKey: Self.fileTransferTypeKey)
+	}
+
+	/// The property list UserNotifications stores with the request.
+	public var userInfo: [String: Any] {
+		var result: [String: Any] = [:]
+
+		result[Self.clientIdentifierKey] = clientIdentifier
+		result[Self.channelIdentifierKey] = channelIdentifier
+		result[Self.fileTransferIdentifierKey] = fileTransferIdentifier
+
+		if fileTransferIdentifier != nil {
+			result[Self.fileTransferTypeKey] = fileTransferEventRawValue
+		}
+
+		return result
+	}
+
+	/// The notification group this payload belongs to: one thread per channel,
+	/// or per client for a notification the whole connection raised.
+	public var threadIdentifier: String? {
+		guard let clientIdentifier else {
+			return nil
+		}
+
+		guard let channelIdentifier else {
+			return clientIdentifier
+		}
+
+		return "\(clientIdentifier)-\(channelIdentifier)"
+	}
 }
 
 private let fileTransferCategoryIdentifier = "TXNotificationCategoryIdentifierFileTransfer"
@@ -131,7 +195,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		_ eventType: TXNotificationType,
 		title eventTitle: String?,
 		description eventDescription: String?,
-		userInfo eventContext: [String: Any]?
+		userInfo eventContext: NotificationPayload?
 	) {
 		var (title, body) = notificationContent(
 			for: eventType,
@@ -152,16 +216,12 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			nil
 		}
 
-		let clientId = eventContext?[NotificationPayload.clientIdentifierKey] as? String
-		let channelId = eventContext?[NotificationPayload.channelIdentifierKey] as? String
-		let threadIdentifier = Self.threadIdentifier(forClient: clientId, channel: channelId)
-
 		scheduleNotification(
 			title: title ?? "",
 			message: body ?? "",
 			userInfo: eventContext,
 			notificationIdentifier: nil,
-			threadIdentifier: threadIdentifier,
+			threadIdentifier: eventContext?.threadIdentifier,
 			categoryIdentifier: categoryIdentifier
 		)
 	}
@@ -177,21 +237,19 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	public static func threadIdentifier(forClient clientIdentifier: String?, channel channelIdentifier: String?)
-		-> String?
-	{
-		guard let clientIdentifier else {
-			return nil
-		}
-
-		if let channelIdentifier {
-			return "\(clientIdentifier)-\(channelIdentifier)"
-		}
-
-		return clientIdentifier
+	/// The grouping the payload names; kept as a static so callers that hold
+	/// two identifiers rather than a payload can ask for it too.
+	public static func threadIdentifier(
+		forClient clientIdentifier: String?,
+		channel channelIdentifier: String?
+	) -> String? {
+		NotificationPayload(
+			clientIdentifier: clientIdentifier,
+			channelIdentifier: channelIdentifier
+		).threadIdentifier
 	}
 
-	public func scheduleNotification(title: String, message: String, userInfo: [String: Any]?) {
+	public func scheduleNotification(title: String, message: String, userInfo: NotificationPayload?) {
 		scheduleNotification(
 			title: title,
 			message: message,
@@ -205,7 +263,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	public func scheduleNotification(
 		title: String,
 		message: String,
-		userInfo: [String: Any]?,
+		userInfo: NotificationPayload?,
 		threadIdentifier: String
 	) {
 		scheduleNotification(
@@ -236,25 +294,17 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		for channel: IRCChannel?,
 		on client: IRCClient
 	) {
-		let clientId = client.uniqueIdentifier
-		let channelId = channel?.uniqueIdentifier
-		let threadIdentifier = Self.threadIdentifier(forClient: clientId, channel: channelId)
-
-		let userInfo: [String: Any] = if let channelId {
-			[
-				NotificationPayload.clientIdentifierKey: clientId,
-				NotificationPayload.channelIdentifierKey: channelId,
-			]
-		} else {
-			[NotificationPayload.clientIdentifierKey: clientId]
-		}
+		let payload = NotificationPayload(
+			clientIdentifier: client.uniqueIdentifier,
+			channelIdentifier: channel?.uniqueIdentifier
+		)
 
 		scheduleNotification(
 			title: title,
 			message: message,
-			userInfo: userInfo,
+			userInfo: payload,
 			notificationIdentifier: nil,
-			threadIdentifier: threadIdentifier,
+			threadIdentifier: payload.threadIdentifier,
 			categoryIdentifier: nil
 		)
 	}
@@ -262,7 +312,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	private func scheduleNotification(
 		title: String,
 		message: String,
-		userInfo: [String: Any]?,
+		userInfo: NotificationPayload?,
 		notificationIdentifier: String?,
 		threadIdentifier: String?,
 		categoryIdentifier: String?
@@ -273,7 +323,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		content.body = message
 
 		if let userInfo {
-			content.userInfo = userInfo
+			content.userInfo = userInfo.userInfo
 		}
 
 		if let categoryIdentifier {
@@ -357,21 +407,14 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	) async {
 		let actionIdentifier = response.actionIdentifier
 		let message = (response as? UNTextInputNotificationResponse)?.userText
-		let userInfo = response.notification.request.content.userInfo
-
-		let clientId = userInfo[NotificationPayload.clientIdentifierKey] as? String
-		let channelId = userInfo[NotificationPayload.channelIdentifierKey] as? String
-		let fileTransferNotificationType = (userInfo as NSDictionary).ce_integer(
-			forKey: "fileTransferNotificationType"
-		)
-		let fileTransferUniqueIdentifier = userInfo["fileTransferUniqueIdentifier"] as? String
+		let payload = NotificationPayload(userInfo: response.notification.request.content.userInfo)
 
 		notificationResponseReceived(
 			actionIdentifier: actionIdentifier,
-			clientId: clientId,
-			channelId: channelId,
-			fileTransferNotificationType: fileTransferNotificationType,
-			fileTransferUniqueIdentifier: fileTransferUniqueIdentifier,
+			clientId: payload.clientIdentifier,
+			channelId: payload.channelIdentifier,
+			fileTransferNotificationType: payload.fileTransferEventRawValue,
+			fileTransferUniqueIdentifier: payload.fileTransferIdentifier,
 			withReplyMessage: message
 		)
 	}
@@ -428,11 +471,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		inScopeOfClientIdentifier clientIdentifier: String,
 		channelIdentifier: String?
 	) -> Bool {
-		let clientIdRight = userInfo[NotificationPayload.clientIdentifierKey] as? String
-		let channelIdRight = userInfo[NotificationPayload.channelIdentifierKey] as? String
+		let payload = NotificationPayload(userInfo: userInfo)
 
 		/* Equality of nil is valid so both channel IDs can be absent. */
-		return clientIdentifier == clientIdRight && channelIdentifier == channelIdRight
+		return clientIdentifier == payload.clientIdentifier && channelIdentifier == payload.channelIdentifier
 	}
 
 	// MARK: - Notification Callback

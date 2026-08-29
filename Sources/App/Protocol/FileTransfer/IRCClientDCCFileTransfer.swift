@@ -158,11 +158,10 @@ public extension IRCClient {
 			target: nil,
 			nickname: nickname,
 			text: description,
-			userInfo: [
-				"isFileTransferNotification": true,
-				"fileTransferUniqueIdentifier": identifier,
-				"fileTransferNotificationType": type.rawValue,
-			]
+			userInfo: NotificationPayload(
+				fileTransferIdentifier: identifier,
+				fileTransferEventRawValue: Int(type.rawValue)
+			)
 		)
 	}
 
