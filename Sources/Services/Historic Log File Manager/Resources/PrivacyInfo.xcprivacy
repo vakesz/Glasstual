@@ -9,7 +9,14 @@
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
 	<!-- This service compiles TPCPreferencesUserDefaults and keeps the
-	     scrollback database filename in the shared app-group suite. -->
+	     scrollback database filename in the shared app-group suite.
+
+	     That is the whole list. The app also declares file timestamps, free
+	     disk space and system boot time, but those are the app's own: this
+	     process talks to Core Data and to the app, and calls no FileManager,
+	     no stat, no statfs and no systemUptime. Adding the app's codes here
+	     would declare an access that does not happen. -->
+
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>

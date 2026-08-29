@@ -487,6 +487,8 @@ targets:
         excludes:
           # Notes for whoever edits the catalogues; not a shipped resource.
           - LocalizationCatalogNotices.md
+      - path: Sources/Services/IRC Remote Connection Manager/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
       - path: Sources/Shared/Services/ConnectionTrustGate.swift
@@ -713,6 +715,41 @@ targets:
         com.apple.security.network.client: true
         com.apple.security.network.server: true
         com.apple.security.print: true
+    # The five plists under Resources/Property Lists/Preferences are derived
+    # from the typed `PreferenceKey` declarations, never hand-edited. Deriving
+    # them here means a key cannot reach the bundle without its catalogue and
+    # registration entries; `PreferenceCatalogTests` fails if a checked-in copy
+    # has drifted, and `make lint` runs the same generator with `--check`.
+    preBuildScripts:
+      - name: Generate preference plists
+        script: '"$SRCROOT/scripts/generate-preference-plists.sh"'
+        inputFiles:
+          - $(SRCROOT)/scripts/generate-preference-plists.sh
+          - $(SRCROOT)/scripts/PreferencePlistGenerator.swift
+          - $(SRCROOT)/scripts/PreferenceGeneratorStandIns.swift
+          - $(SRCROOT)/Sources/App/Features/Notifications/NotificationEvent.swift
+          # Named one by one because the build phase is sandboxed to exactly
+          # the files listed here; naming the directory does not cover them.
+          - $(SRCROOT)/Sources/App/Preferences/Keys/PreferenceCatalog.swift
+          - $(SRCROOT)/Sources/App/Preferences/Keys/PreferenceColor.swift
+          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Appearance.swift
+          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Connection.swift
+          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+FileTransfers.swift
+          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Input.swift
+          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Internal.swift
+          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Messages.swift
+          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Notifications.swift
+          - $(SRCROOT)/Sources/App/Preferences/PreferenceTypes.swift
+          - $(SRCROOT)/Sources/Shared/Application/ApplicationGroup.swift
+          - $(SRCROOT)/Sources/Shared/Preferences/PreferenceKey.swift
+          - $(SRCROOT)/Sources/Shared/Preferences/TPCPreferences.swift
+          - $(SRCROOT)/Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
+        outputFiles:
+          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/KeysExcludedFromContainer.plist
+          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/KeysExcludedFromExport.plist
+          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/PreferenceKeyMasterList.plist
+          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/RegisteredUserDefaults.plist
+          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/RegisteredUserDefaultsInContainer.plist
     sources:
       - path: Sources/App/Application
       - path: Sources/App/Features
@@ -878,6 +915,13 @@ targets:
         buildPhase: resources
         includes:
           - "*.json"
+      # A throwaway self-signed identity for the loopback TLS listener the
+      # trust-gate test drives the connection service against. See the README
+      # beside it, which is not a shipped resource.
+      - path: Tests/Corpora/TLS
+        buildPhase: resources
+        includes:
+          - "*.p12"
     dependencies:
       - target: Glasstual
       - target: CocoaExtensions

@@ -24,7 +24,7 @@ owner.
 | `AddressBook` | Ignore and notify entries for a server. |
 | `ChannelProperties` | The channel properties sheet, its ban/access lists, invites and validation. |
 | `ChannelSpotlight` | The channel spotlight search panel. |
-| `ChannelView` | The message log: log controllers, renderer, WebKit view and scheme handler, link parsing, topic and mode editing. |
+| `ChannelView` | The message log: log controllers, renderer, WebKit view and scheme handler, link parsing, topic and mode editing. The log document has one origin and no file-system read access — see the cross-origin note in `AGENTS.md` before changing what a theme can reach. |
 | `FileTransfer` | The file transfer dialog, its transfer controllers and DCC sockets. |
 | `MainWindow` | The main window, its text input view, the menu bar action coordinator and input handling (history, key events, nickname completion). |
 | `MemberList` | The channel member list, its cells, the user info popover and nickname colouring. |
