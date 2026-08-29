@@ -90,15 +90,6 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 		TextualUserDefaults(storageSuiteName: storageSuiteName)
 	}
 
-	/** Compatibility spelling of ``suite()`` for the two XPC-service call sites
-	 that still use it. Both are outside the main actor and neither observes the
-	 object, so a private handle is what they want; the service rewrite routes
-	 them at ``suite()`` and this goes with it. */
-	@objc(sharedUserDefaults)
-	public static func shared() -> TextualUserDefaults {
-		suite()
-	}
-
 	@objc(_setObject:forKey:)
 	public func setObjectWithoutNotification(_ value: Any?, forKey defaultName: String) {
 		super.set(value, forKey: defaultName)

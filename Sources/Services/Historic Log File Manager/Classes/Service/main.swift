@@ -43,8 +43,8 @@ private struct HistoricLogDefaultsFilenameStore: HistoricLogFilenameStoring {
 	private static let key = "TVCLogControllerHistoricLogFileSavePath_v3"
 
 	var databaseFilename: String? {
-		get { TextualUserDefaults.shared().string(forKey: Self.key) }
-		nonmutating set { TextualUserDefaults.shared().set(newValue, forKey: Self.key) }
+		get { TextualUserDefaults.suite().string(forKey: Self.key) }
+		nonmutating set { TextualUserDefaults.suite().set(newValue, forKey: Self.key) }
 	}
 }
 
