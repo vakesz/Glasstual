@@ -348,6 +348,7 @@
 		55DE78DA3FCB4D0511478508 /* XkcdModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB6D62D6844B47FD9EF804C /* XkcdModule.swift */; };
 		55DFF2C8BA62EEF62F70111B /* ICMInlineImage.mustache in CopyFiles */ = {isa = PBXBuildFile; fileRef = FA1EEBC48DDFA9BB58A45EE0 /* ICMInlineImage.mustache */; };
 		56270EDCB8033F32DDF7DC60 /* ProgressIndicatorStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A86ACE574376EA72D6F62BE /* ProgressIndicatorStrings.swift */; };
+		56B00106E3FD2452A0C5E401 /* InlineContentBodyReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6577C11184F859A95B6BAB32 /* InlineContentBodyReader.swift */; };
 		56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61007C54B3B72295EFDB82FF /* Inline Content Loader.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5708A0F3B145BC5EB0782403 /* TDCChannelSpotlightAppearance.plist in Resources */ = {isa = PBXBuildFile; fileRef = 077D5139E36E3AD258489A5E /* TDCChannelSpotlightAppearance.plist */; };
 		582317476C09528768BF2672 /* IRCUserRelationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5813C2720D30898A298CCF78 /* IRCUserRelationsTests.swift */; };
@@ -1748,6 +1749,7 @@
 		648C92B43D3C394720DFBAFB /* RegularExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegularExpression.swift; sourceTree = "<group>"; };
 		64A53CFA1C62F35CAAFDFC53 /* FileSystemMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystemMonitor.swift; sourceTree = "<group>"; };
 		65564BE15901BE0FA1AFE71B /* AppearanceTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceTypes.swift; sourceTree = "<group>"; };
+		6577C11184F859A95B6BAB32 /* InlineContentBodyReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineContentBodyReader.swift; sourceTree = "<group>"; };
 		65B7CC328874B80AE09F4812 /* IRCClientChannelDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientChannelDirectory.swift; sourceTree = "<group>"; };
 		65D77F6FA4F5D510B57C650E /* IRCClientTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientTypes.swift; sourceTree = "<group>"; };
 		660A0A65D84A9CD20E19CF33 /* TemplateAST.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateAST.swift; sourceTree = "<group>"; };
@@ -3429,6 +3431,7 @@
 		861CCF6BF11889304F50B30C /* Inline Content Kit */ = {
 			isa = PBXGroup;
 			children = (
+				6577C11184F859A95B6BAB32 /* InlineContentBodyReader.swift */,
 				F261D4EDBE5329C5172E1B6A /* InlineContentHelpers.swift */,
 				AA2C5919E1E303B472382A68 /* InlineContentMediaAssessment.swift */,
 				53E290BF96750B1E31239ABC /* InlineContentMediaAssessor.swift */,
@@ -5743,6 +5746,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				56B00106E3FD2452A0C5E401 /* InlineContentBodyReader.swift in Sources */,
 				4AA3FBDAA6AF38A1A4218047 /* InlineContentHelpers.swift in Sources */,
 				E1E201544162D7FD8BCEBD85 /* InlineContentMediaAssessment.swift in Sources */,
 				74C5C9EA5ED936EA8146C0B8 /* InlineContentMediaAssessor.swift in Sources */,
