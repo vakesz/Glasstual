@@ -147,7 +147,7 @@ public extension IRCClient {
 		NotificationCenter.default.post(name: .IRCClientChannelListWasModified, object: self)
 	}
 
-	func configurationDictionary() -> [String: Any] {
+	func configurationDictionary() -> [String: PropertyListValue] {
 		updateStoredConfiguration()
 		return config.dictionaryValue
 	}

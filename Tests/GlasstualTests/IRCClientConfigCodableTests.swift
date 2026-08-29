@@ -17,7 +17,7 @@ import Testing
 struct IRCClientConfigCodableTests {
 	/// Captured from the class-based `IRCClientConfig.dictionaryValue`, with
 	/// one entry in each owned list.
-	private static let worldFixture: [String: Any] = [
+	private static let worldFixture: [String: PropertyListValue] = [
 		"dictionaryVersion": 710,
 		"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-00000000000A",
 		"connectionName": "Libera Chat",
@@ -42,7 +42,7 @@ struct IRCClientConfigCodableTests {
 		"channelList": [[
 			"channelName": "#swift",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-00000000000C",
-			"notifications": [String: Any](),
+			"notifications": .dictionary([:]),
 		]],
 		"highlightList": [[
 			"matchKeyword": "release",
@@ -61,8 +61,7 @@ struct IRCClientConfigCodableTests {
 		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: Self.worldFixture))
 
 		#expect(
-			NSDictionary(dictionary: PropertyListModel.encode(config))
-				== NSDictionary(dictionary: Self.worldFixture)
+			PropertyListModel.encode(config) == Self.worldFixture
 		)
 	}
 

@@ -94,7 +94,9 @@ public final class PreferencesImportExport: NSObject {
 			return
 		}
 
-		guard let dictionary = propertyList as? [String: Any] else {
+		/* `Any` is what the serializer returns; it is narrowed here so the
+		 import works in typed values from this point on. */
+		guard let dictionary = [String: PropertyListValue](propertyList: propertyList) else {
 			importExportLogger.error("Import failed: root object is not a dictionary")
 			return
 		}
@@ -113,17 +115,20 @@ public final class PreferencesImportExport: NSObject {
 		importPostflightCleanup(Array(dictionary.keys))
 	}
 
-	public static func importContentsOfDictionary(_ dictionary: [String: Any]) {
+	public static func importContentsOfDictionary(_ dictionary: [String: PropertyListValue]) {
 		importContentsOfDictionary(dictionary, reloadPreferences: true)
 	}
 
-	public static func importContentsOfDictionary(_ dictionary: [String: Any], reloadPreferences: Bool) {
-		for (key, object) in dictionary {
+	public static func importContentsOfDictionary(
+		_ dictionary: [String: PropertyListValue],
+		reloadPreferences: Bool
+	) {
+		for (key, value) in dictionary {
 			guard isKeyNameSupposedToBeIgnored(key) == false else {
 				continue
 			}
 
-			importValue(object, withKey: key)
+			importValue(value, withKey: key)
 		}
 
 		if reloadPreferences {
@@ -137,12 +142,12 @@ public final class PreferencesImportExport: NSObject {
 	 are genuinely the same value and rejecting the rest with a log line. A key
 	 the catalogue does not know is passed through, because its shape belongs to
 	 whichever subsystem wrote it. */
-	static func validatedValue(_ object: Any, forKey key: String) -> Any? {
+	static func validatedValue(_ value: PropertyListValue, forKey key: String) -> PropertyListValue? {
 		guard let declaration = Preferences.key(named: key) else {
-			return object
+			return value
 		}
 
-		guard let coerced = declaration.coerce(object) else {
+		guard let coerced = declaration.coerce(value) else {
 			importExportLogger.error("Import rejected a value of the wrong type for \(key, privacy: .public)")
 			return nil
 		}
@@ -150,41 +155,33 @@ public final class PreferencesImportExport: NSObject {
 		return coerced
 	}
 
-	public static func importValue(_ object: Any, withKey key: String) {
-		guard let object = validatedValue(object, forKey: key) else {
+	public static func importValue(_ value: PropertyListValue, withKey key: String) {
+		guard let value = validatedValue(value, forKey: key) else {
 			return
 		}
 
 		if key == TPCPreferencesThemeNameDefaultsKey {
-			guard let value = object as? String else {
+			guard let name = value.string else {
 				return
 			}
 
-			TextualPreferences.setThemeNameWithExistenceCheck(value)
+			TextualPreferences.setThemeNameWithExistenceCheck(name)
 		} else if key == TPCPreferencesThemeFontNameDefaultsKey {
-			guard let value = object as? String else {
+			guard let name = value.string else {
 				return
 			}
 
-			TextualPreferences.setThemeChannelViewFontNameWithExistenceCheck(value)
+			TextualPreferences.setThemeChannelViewFontNameWithExistenceCheck(name)
 		} else if key == IRCWorldClientListDefaultsKey {
-			guard let clientList = object as? [Any] else {
-				return
-			}
-
-			for entry in clientList {
-				guard let config = entry as? [String: Any] else {
-					continue
-				}
-
+			for config in value.array?.compactMap(\.dictionary) ?? [] {
 				importClientConfiguration(config)
 			}
 		} else {
-			TextualUserDefaults.container.migrateObject(object, forKey: key)
+			TextualUserDefaults.container.migrateObject(value.propertyListObject, forKey: key)
 		}
 	}
 
-	public static func importClientConfiguration(_ config: [String: Any]) {
+	public static func importClientConfiguration(_ config: [String: PropertyListValue]) {
 		guard let clientConfig = PropertyListModel.decode(ClientConfig.self, from: config) else {
 			return
 		}
@@ -211,11 +208,11 @@ public final class PreferencesImportExport: NSObject {
 		TextualUserDefaults.keyIsExcludedFromExportImport(key)
 	}
 
-	public static func exportedPreferencesDictionary() -> [String: Any] {
+	public static func exportedPreferencesDictionary() -> [String: PropertyListValue] {
 		exportedPreferencesDictionary(true, filterDefaults: true)
 	}
 
-	public static func exportedPreferencesDictionary(_ filterJunk: Bool) -> [String: Any] {
+	public static func exportedPreferencesDictionary(_ filterJunk: Bool) -> [String: PropertyListValue] {
 		exportedPreferencesDictionary(filterJunk, filterDefaults: filterJunk)
 	}
 
@@ -223,12 +220,16 @@ public final class PreferencesImportExport: NSObject {
 	 domains of the two stores the declarations name — rather than the whole
 	 search list, which is where the arguments and global domains used to leak in
 	 and have to be subtracted again by name. */
-	private static func writtenValues() -> [String: Any] {
+	private static func writtenValues() -> [String: PropertyListValue] {
 		let defaults = TextualUserDefaults.container
-		var written = defaults.persistentDomain(forName: defaults.suiteName) ?? [:]
+		var written = [String: PropertyListValue](
+			propertyList: defaults.persistentDomain(forName: defaults.suiteName) ?? [:]
+		) ?? [:]
 
 		if let bundleIdentifier = Bundle.main.bundleIdentifier,
-		   let standard = UserDefaults.standard.persistentDomain(forName: bundleIdentifier)
+		   let standard = [String: PropertyListValue](
+		   	propertyList: UserDefaults.standard.persistentDomain(forName: bundleIdentifier) ?? [:]
+		   )
 		{
 			// The handful of declarations stored in the application's own domain
 			// rather than the container are exported alongside the rest.
@@ -240,13 +241,17 @@ public final class PreferencesImportExport: NSObject {
 		return written
 	}
 
-	public static func exportedPreferencesDictionary(_ filterJunk: Bool, filterDefaults: Bool) -> [String: Any] {
+	public static func exportedPreferencesDictionary(
+		_ filterJunk: Bool,
+		filterDefaults: Bool
+	) -> [String: PropertyListValue] {
+		let standardRegistrations = [String: PropertyListValue](
+			propertyList: UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)
+		) ?? [:]
 		let registeredDefaults = TextualPreferences.defaultPreferences()
-			.merging(UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)) { current, _ in
-				current
-			}
+			.merging(standardRegistrations) { current, _ in current }
 
-		var exported: [String: Any] = [:]
+		var exported: [String: PropertyListValue] = [:]
 
 		for (key, value) in writtenValues() {
 			if filterJunk, isKeyNameSupposedToBeIgnored(key) {
@@ -268,12 +273,15 @@ public final class PreferencesImportExport: NSObject {
 		return exported
 	}
 
-	static func valueMatchesDefault(_ value: Any?, _ registeredDefault: Any) -> Bool {
+	/** `NSNumber` equality is what has always decided this, and it is looser
+	 than the value's own: a flag a plist editor wrote as `1` still counts as
+	 the default it was written from. */
+	static func valueMatchesDefault(_ value: PropertyListValue?, _ registeredDefault: PropertyListValue) -> Bool {
 		guard let value else {
 			return false
 		}
 
-		return (value as AnyObject).isEqual(registeredDefault)
+		return (value.propertyListObject as AnyObject).isEqual(registeredDefault.propertyListObject)
 	}
 
 	public static func export(in window: NSWindow) {
@@ -327,7 +335,7 @@ public final class PreferencesImportExport: NSObject {
 		let propertyList: Data
 		do {
 			propertyList = try PropertyListSerialization.data(
-				fromPropertyList: exportedPreferences,
+				fromPropertyList: exportedPreferences.propertyListObject,
 				format: .binary,
 				options: 0
 			)

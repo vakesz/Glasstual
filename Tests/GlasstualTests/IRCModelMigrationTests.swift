@@ -125,10 +125,10 @@ struct IRCModelMigrationTests {
 
 		let dictionary = PropertyListModel.encode(condition)
 
-		#expect(dictionary["matchKeyword"] as? String == "alert")
-		#expect(dictionary["matchChannelID"] as? String == "chan-1")
-		#expect(dictionary["matchIsExcluded"] as? Bool == true)
-		#expect(dictionary["uniqueIdentifier"] as? String == condition.uniqueIdentifier)
+		#expect(dictionary["matchKeyword"]?.string == "alert")
+		#expect(dictionary["matchChannelID"]?.string == "chan-1")
+		#expect(dictionary["matchIsExcluded"]?.boolean == true)
+		#expect(dictionary["uniqueIdentifier"]?.string == condition.uniqueIdentifier)
 	}
 
 	@Test("Editing a highlight condition leaves the value it was copied from alone")

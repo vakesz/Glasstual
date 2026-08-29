@@ -150,12 +150,14 @@ public extension TextualPreferences {
 		false
 	}
 
-	class func clientList() -> [[String: Any]]? {
-		Preferences.Connection.clientList.object as? [[String: Any]]
+	class func clientList() -> [[String: PropertyListValue]]? {
+		Preferences.Connection.clientList.propertyListValue?.array?.compactMap(\.dictionary)
 	}
 
-	class func setClientList(_ value: [[String: Any]]?) {
-		Preferences.Connection.clientList.object = value
+	class func setClientList(_ value: [[String: PropertyListValue]]?) {
+		Preferences.Connection.clientList.propertyListValue = value.map { list in
+			.array(list.map(PropertyListValue.dictionary))
+		}
 	}
 }
 
@@ -820,8 +822,8 @@ public extension TextualPreferences {
 		Preferences.Internals.dictionaryVersion.value = TPCPreferencesDictionaryVersion
 	}
 
-	class func defaultPreferences() -> [String: Any] {
-		preferences.volatileDomain(forName: UserDefaults.registrationDomain)
+	class func defaultPreferences() -> [String: PropertyListValue] {
+		preferences.registeredDefaults
 	}
 
 	class func registerDynamicDefaults() {
@@ -834,8 +836,8 @@ public extension TextualPreferences {
 	 read out of a plist, so a key that exists in the code always has a default
 	 and a read of it cannot come back empty because a plist entry was renamed. */
 	class func registerDefaults() {
-		UserDefaults.standard.register(defaults: Preferences.registrationDomain(for: .standard))
-		preferences.register(defaults: Preferences.registrationDomain(for: .container))
+		UserDefaults.standard.register(defaults: Preferences.registrationDomain(for: .standard).propertyListObject)
+		preferences.register(defaults: Preferences.registrationDomain(for: .container).propertyListObject)
 		registerDynamicDefaults()
 	}
 

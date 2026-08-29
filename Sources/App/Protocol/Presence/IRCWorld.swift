@@ -183,7 +183,7 @@ public final class World: NSObject {
 		}
 	}
 
-	private var clientConfigurations: [[String: Any]] {
+	private var clientConfigurations: [[String: PropertyListValue]] {
 		clientList.map { $0.configurationDictionary() }
 	}
 

@@ -192,7 +192,7 @@ public nonisolated extension ClientConfig { // nonisolated: value
 	}
 
 	/// The dictionary shape the stored client list uses.
-	var dictionaryValue: [String: Any] {
+	var dictionaryValue: [String: PropertyListValue] {
 		PropertyListModel.encode(self)
 	}
 }

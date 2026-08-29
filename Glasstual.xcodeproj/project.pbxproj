@@ -857,6 +857,7 @@
 		DB11D88B6D963F6B9A4E494B /* OnboardingStepViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C5315E176DE7F0C909CE4FE /* OnboardingStepViewController.swift */; };
 		DB278784D3CEA202F9A2418E /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE3CB48865CA4E3A162E8229 /* QuartzCore.framework */; };
 		DB379D44B0B3856D221D35CE /* ServerChannelListStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2477BFC73E3BDF019DCC3AA3 /* ServerChannelListStrings.swift */; };
+		DBFD97F89F3C9DD2B858C592 /* PropertyListValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF5C20D4252529E82BC7051 /* PropertyListValue.swift */; };
 		DC434F07F43BD9299F2418E5 /* ChannelTopicContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F011AD5FF84C5A0AA1C744 /* ChannelTopicContent.swift */; };
 		DC8C4592CAEE04483630ACC9 /* PreferencesPaneComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320F4891A1A7139D5309559B /* PreferencesPaneComponents.swift */; };
 		DCEB18C177DF218B4AEC2103 /* IRCSpecCapabilityBehaviourTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E016A614216C2BF4F2EA56BC /* IRCSpecCapabilityBehaviourTests.swift */; };
@@ -1798,6 +1799,7 @@
 		6D9790186E8EF08F803B317B /* TXMenuControllerDialogs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TXMenuControllerDialogs.swift; sourceTree = "<group>"; };
 		6DDE258A526126AF271E986D /* IRCClientMembershipHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientMembershipHandlers.swift; sourceTree = "<group>"; };
 		6DE4839337DAE1A760B41111 /* NSArrayHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSArrayHelper.swift; sourceTree = "<group>"; };
+		6DF5C20D4252529E82BC7051 /* PropertyListValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyListValue.swift; sourceTree = "<group>"; };
 		6E1A454DCBB1D352AEAB4D9A /* JavascriptEscapeHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavascriptEscapeHelper.swift; sourceTree = "<group>"; };
 		6E65686A5B0E5373D15A3C40 /* ApplicationSupportMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationSupportMigrationTests.swift; sourceTree = "<group>"; };
 		6E7C5ADCBB4E5A3EA9245087 /* ThemePresentationSchemaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePresentationSchemaTests.swift; sourceTree = "<group>"; };
@@ -3321,6 +3323,7 @@
 				CFA06BB0633CEE8493CF774F /* PasteboardCompatibility.swift */,
 				D5F10207397EABF47C117D55 /* PortMapper.swift */,
 				C8D377A7F87C658E675EEDEA /* PropertyListModel.swift */,
+				6DF5C20D4252529E82BC7051 /* PropertyListValue.swift */,
 				648C92B43D3C394720DFBAFB /* RegularExpression.swift */,
 				482593C190C92A33A25470E2 /* SecureTransportSupport.swift */,
 				1D19E36D642A1A5AEBF9A368 /* StringHelper.swift */,
@@ -5375,6 +5378,7 @@
 				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Messages.swift",
 				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Notifications.swift",
 				"$(SRCROOT)/Sources/App/Preferences/PreferenceTypes.swift",
+				"$(SRCROOT)/Sources/Frameworks/Cocoa Extensions/Classes/PropertyListValue.swift",
 				"$(SRCROOT)/Sources/Shared/Application/ApplicationGroup.swift",
 				"$(SRCROOT)/Sources/Shared/Preferences/PreferenceKey.swift",
 				"$(SRCROOT)/Sources/Shared/Preferences/TPCPreferences.swift",
@@ -5757,6 +5761,7 @@
 				A1DDBCF9AFCB9FD27AA35852 /* PasteboardCompatibility.swift in Sources */,
 				9CF736862293CDBE198D6EF5 /* PortMapper.swift in Sources */,
 				AB43DF5128183F6930F42EF8 /* PropertyListModel.swift in Sources */,
+				DBFD97F89F3C9DD2B858C592 /* PropertyListValue.swift in Sources */,
 				A9F439AA2DA8B4000B4C3452 /* RegularExpression.swift in Sources */,
 				C5AEABE3BA94E3169F04D37B /* SWDataHelper.swift in Sources */,
 				EC2A61C8624EAE4EFA3CC272 /* SWErrorHelper.swift in Sources */,
