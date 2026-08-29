@@ -68,7 +68,11 @@ struct DailymotionModule: InlineContentModule {
 		let path = url.path(percentEncoded: true)
 		guard path.hasPrefix("/video/") else { return nil }
 		let identifier = String(path.dropFirst(7).prefix { $0 != "_" })
-		guard identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else { return nil }
+		/* `allSatisfy` is vacuously true, so the emptiness check has to be its
+		 own: /video/ with nothing after it names no video. */
+		guard identifier.isEmpty == false,
+		      identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) })
+		else { return nil }
 		return identifier
 	}
 
