@@ -36,30 +36,41 @@
  *********************************************************************** */
 
 import Foundation
+import os
+
+private let processDelegateLogger = Logger(
+	subsystem: "com.vakesz.glasstual.InlineContentLoader",
+	category: "Process"
+)
 
 @objc(ICLProcessDelegate)
 final class InlineContentProcessDelegate: NSObject, NSXPCListenerDelegate {
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-		let exportedInterface = NSXPCInterface(with: InlineContentServerProtocol.self)
-
-		connection.exportedInterface = exportedInterface
+		connection.exportedInterface = NSXPCInterface(with: InlineContentServerProtocol.self)
 		connection.remoteObjectInterface = NSXPCInterface(with: InlineContentClientProtocol.self)
 
-		let exportedObject = InlineContentProcess(xpcConnection: connection)
-		connection.exportedObject = exportedObject
-		/* Without this, an interrupted (rather than invalidated) client leaves in-flight
-		 modules retained and completing against a dead proxy. */
-		connection.interruptionHandler = {
-			exportedObject.connectionInvalidated()
-		}
-		connection.invalidationHandler = { [weak connection] in
-			exportedObject.connectionInvalidated()
-			connection?.exportedObject = nil
-			connection?.interruptionHandler = nil
-			connection?.invalidationHandler = nil
+		/* The service owns every piece of mutable state. The connection stays out
+		 here — it is not Sendable — and only the client proxy, which is, crosses
+		 into the actor. */
+		let service = InlineContentService()
+
+		connection.exportedObject = InlineContentProcess(service: service, connection: connection)
+
+		guard let client = connection.remoteObjectProxy as? any InlineContentClientProtocol else {
+			processDelegateLogger.error("Client does not conform to the inline content client protocol")
+
+			return false
 		}
 
+		/* An interrupted (rather than invalidated) client leaves in-flight
+		 modules running against a dead proxy, so both paths detach. */
+		connection.interruptionHandler = { Task { await service.detach() } }
+		connection.invalidationHandler = { Task { await service.detach() } }
+
+		Task { await service.attach(client: client) }
+
 		connection.resume()
+
 		return true
 	}
 }

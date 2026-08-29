@@ -38,13 +38,32 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICMCommonInlineVideos)
-final class CommonInlineVideosModule: InlineVideoModule {
+/// Any URL that names a video file, plus the one host that hides one.
+struct CommonInlineVideosModule: InlineContentModule {
 	private static let validFileExtensions = ["mp4", "mov", "m4v", "3gp", "3g2"]
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var contentImageOrVideo: Bool {
+		true
+	}
+
+	static var contentIsFile: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let address: String
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		guard let address = finalAddress(for: url) else { return nil }
-		return super.actionBlock(forAddress: address)
+
+		return CommonInlineVideosModule(address: address)
 	}
 
 	private static func finalAddress(for url: URL) -> String? {
@@ -63,7 +82,7 @@ final class CommonInlineVideosModule: InlineVideoModule {
 		return "https://clips.dropcam.com/\(filename)"
 	}
 
-	override static var contentIsFile: Bool {
-		true
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		await InlineVideoContent.produce(payload, address: address)
 	}
 }

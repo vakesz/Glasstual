@@ -38,16 +38,17 @@
 import CoreData
 import Foundation
 import os
-import Synchronization
 
 /// Owns the historic log Core Data stack and everything that used to be
 /// guarded by `contextLock` and `saveQueue`.
 ///
-/// One store exists per accepted XPC connection. It creates the exported
-/// object (`HistoricLogProcessMain`), which does nothing but forward each
-/// `@objc` call back in here, so the per-view contexts, line counts, resize
-/// timers and the save debounce all live in a single isolation domain.
-actor HistoricLogStore {
+/// One store exists per accepted XPC connection. The exported object
+/// (`HistoricLogProcessMain`) does nothing but forward each `@objc` call back
+/// in here, so the per-view contexts, line counts, resize timers and the save
+/// debounce all live in a single isolation domain. The connection itself never
+/// enters the actor — only the client proxy, which is `Sendable` because
+/// `HistoricLogClientProtocol` refines it.
+public actor HistoricLogStore {
 	/// Everything the store knows about one log view. The context is the only
 	/// thing Core Data owns; the counts are kept here so a write does not have
 	/// to re-count the table on every line.
@@ -58,8 +59,9 @@ actor HistoricLogStore {
 		var resizeTask: Task<Void, Never>?
 	}
 
-	/// Where deletion notices wait for the exported object to deliver them.
-	private let notices: HistoricLogNotices
+	/// The client half of the connection. Unsolicited messages go straight
+	/// through it; it is dropped when the connection invalidates.
+	private var client: (any HistoricLogClientProtocol)?
 
 	private var rootContext: NSManagedObjectContext?
 	private var databaseURL: URL?
@@ -71,6 +73,12 @@ actor HistoricLogStore {
 	private var saveTask: Task<Void, Never>?
 	private var connectionIsInvalidated = false
 
+	/// Where the name of the database file is kept between launches.
+	///
+	/// The service reads it from the shared defaults; a test hands in one of
+	/// its own so a run never touches, or is steered by, the real preference.
+	private let filenameStore: any HistoricLogFilenameStoring
+
 	/// How long the service waits between unattended saves.
 	private static let saveInterval = Duration.seconds(120)
 
@@ -78,15 +86,23 @@ actor HistoricLogStore {
 	/// Spreading the work keeps a hundred views from resizing in lockstep.
 	private static let maximumResizeDelay: UInt32 = 1800
 
-	init(notices: HistoricLogNotices) {
-		self.notices = notices
+	public init(filenameStore: any HistoricLogFilenameStoring) {
+		self.filenameStore = filenameStore
 	}
 
 	// MARK: - Connection Lifecycle
 
-	func connectionInvalidated() async {
+	/// Takes ownership of the client proxy the listener delegate resolved.
+	public func attach(client: any HistoricLogClientProtocol) {
+		self.client = client
+	}
+
+	/// The application owns the connection's lifetime; this runs from its
+	/// invalidation handler.
+	public func detach() async {
 		HistoricLogDatabase.logger.debug("Connection invalidated")
 
+		client = nil
 		connectionIsInvalidated = true
 
 		cancelScheduledSave()
@@ -94,9 +110,11 @@ actor HistoricLogStore {
 		await saveAllContexts(cancellingResize: true)
 	}
 
+	// MARK: - Connection Lifecycle
+
 	// MARK: - Database
 
-	func openDatabase(inDirectory databaseDirectory: String) -> Bool {
+	public func openDatabase(inDirectory databaseDirectory: String) -> Bool {
 		databaseDirectoryURL = URL(fileURLWithPath: databaseDirectory, isDirectory: true)
 
 		setDatabasePath()
@@ -129,7 +147,7 @@ actor HistoricLogStore {
 		return true
 	}
 
-	func setMaximumLineCount(_ maximumLineCount: UInt) {
+	public func setMaximumLineCount(_ maximumLineCount: UInt) {
 		/* This service process is shared by every view; a bad value must not abort it. */
 		guard maximumLineCount > 0 else {
 			HistoricLogDatabase.logger.error("Ignoring a request to set the maximum line count to zero")
@@ -145,13 +163,13 @@ actor HistoricLogStore {
 	}
 
 	private func databaseSaveFilename() -> String {
-		TextualUserDefaults.shared().string(forKey: HistoricLogDatabase.filenameKey) ?? resetDatabaseFilename()
+		filenameStore.databaseFilename ?? resetDatabaseFilename()
 	}
 
 	private func resetDatabaseFilename() -> String {
 		let filename = "logControllerHistoricLog_\(UUID().uuidString).sqlite"
 
-		TextualUserDefaults.shared().set(filename, forKey: HistoricLogDatabase.filenameKey)
+		filenameStore.databaseFilename = filename
 
 		return filename
 	}
@@ -199,7 +217,7 @@ actor HistoricLogStore {
 		return context
 	}
 
-	func forgetView(_ viewIdentifier: String) async {
+	public func forgetView(_ viewIdentifier: String) async {
 		HistoricLogDatabase.logger.debug("Forgetting view: \(viewIdentifier, privacy: .public)")
 
 		guard let context = await context(forView: viewIdentifier) else { return }
@@ -219,7 +237,7 @@ actor HistoricLogStore {
 		reportDeletion(result, inView: viewIdentifier)
 	}
 
-	func resetData(forView viewIdentifier: String) async {
+	public func resetData(forView viewIdentifier: String) async {
 		HistoricLogDatabase.logger.debug("Resetting the contents of view: \(viewIdentifier, privacy: .public)")
 
 		guard let context = await context(forView: viewIdentifier) else { return }
@@ -241,7 +259,7 @@ actor HistoricLogStore {
 
 	// MARK: - Writing
 
-	func writeLogLine(_ logLine: LogLineXPC) async {
+	public func writeLogLine(_ logLine: LogLineXPC) async {
 		let viewIdentifier = logLine.viewIdentifier
 
 		guard let context = await context(forView: viewIdentifier) else { return }
@@ -268,7 +286,7 @@ actor HistoricLogStore {
 
 	// MARK: - Fetching
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		ascending: Bool,
 		fetchLimit: UInt,
@@ -287,7 +305,7 @@ actor HistoricLogStore {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		aroundUniqueIdentifier uniqueIdentifier: String,
 		beforeFetchLimit: UInt,
@@ -320,7 +338,7 @@ actor HistoricLogStore {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		relativeTo uniqueIdentifier: String,
 		direction: FetchDirection,
@@ -366,7 +384,7 @@ actor HistoricLogStore {
 		}
 	}
 
-	func fetchEntries(
+	public func fetchEntries(
 		forView viewIdentifier: String,
 		afterUniqueIdentifier uniqueIdentifierAfter: String,
 		beforeUniqueIdentifier uniqueIdentifierBefore: String,
@@ -405,7 +423,7 @@ actor HistoricLogStore {
 
 	// MARK: - Saving
 
-	func saveData() async {
+	public func saveData() async {
 		if connectionIsInvalidated == false {
 			rescheduleSave()
 		}
@@ -505,42 +523,14 @@ actor HistoricLogStore {
 	// MARK: - Client Notifications
 
 	private func reportDeletion(_ result: HistoricLogDatabase.DeletionResult, inView viewIdentifier: String) {
-		guard result.uniqueIdentifiers.isEmpty == false, connectionIsInvalidated == false else { return }
+		guard result.uniqueIdentifiers.isEmpty == false else { return }
 
-		notices.post(.init(uniqueIdentifiers: result.uniqueIdentifiers, viewIdentifier: viewIdentifier))
-	}
-}
-
-/// A truncation the client has to hear about.
-struct HistoricLogDeletionNotice: Sendable {
-	let uniqueIdentifiers: [String]
-	let viewIdentifier: String
-}
-
-/// The queue of deletion notices between the store and the exported object.
-///
-/// `NSXPCConnection` is not `Sendable` and region isolation will not let the
-/// listener's connection be sent into an actor, so the store cannot hold the
-/// remote object proxy. It leaves notices here instead and the exported object,
-/// which does hold the connection, delivers them on its next XPC call.
-final class HistoricLogNotices: Sendable {
-	private let pending = Mutex<[HistoricLogDeletionNotice]>([])
-
-	func post(_ notice: HistoricLogDeletionNotice) {
-		pending.withLock { $0.append(notice) }
-	}
-
-	func drain() -> [HistoricLogDeletionNotice] {
-		pending.withLock { queue in
-			defer { queue.removeAll() }
-
-			return queue
-		}
+		client?.willDeleteUniqueIdentifiers(result.uniqueIdentifiers, inView: viewIdentifier)
 	}
 }
 
 /// Which side of a known entry a relative fetch reads.
-enum FetchDirection: Sendable {
+public enum FetchDirection: Sendable {
 	case before
 	case after
 }

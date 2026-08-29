@@ -38,43 +38,49 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICMStreamable)
-final class StreamableModule: InlineVideoModule {
-	private func performAction(forVideo identifier: String) {
-		let address = "https://api.streamable.com/videos/\(identifier)"
-		_ = InlineContentHelpers.requestJSONObject(
-			"url",
-			ofType: NSString.self,
-			inHierarchy: ["files", "mp4"],
-			fromAddress: address
-		) { [weak self] object in
-			guard let self, let address = object as? String else {
-				self?.notifyUnsafeToLoadVideo()
-				return
-			}
-			performAction(forAddress: address)
-		}
+/// A Streamable page, resolved to its MP4 through the site's API.
+struct StreamableModule: InlineContentModule {
+	static var domains: [String]? {
+		["streamable.com", "www.streamable.com"]
 	}
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var contentImageOrVideo: Bool {
+		true
+	}
+
+	static var contentIsFile: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let identifier: String
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 		guard !identifier.isEmpty,
 		      identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) })
 		else { return nil }
-		return { module in
-			(module as? StreamableModule)?.performAction(forVideo: identifier)
+
+		return StreamableModule(identifier: identifier)
+	}
+
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		guard let metadata = InlineContentHelpers.url(with: "https://api.streamable.com/videos/\(identifier)"),
+		      let address = await InlineContentHelpers.jsonString("url", inHierarchy: ["files", "mp4"], from: metadata)
+		else {
+			return .cancelled
 		}
-	}
 
-	override static var domains: [String]? {
-		["streamable.com", "www.streamable.com"]
-	}
+		var values = payload
+		values.classAttribute = "inlineStreamable"
 
-	override static var contentIsFile: Bool {
-		true
-	}
-
-	override func finalizePreflight() {
-		payload.classAttribute = "inlineStreamable"
+		return await InlineVideoContent.produce(values, address: address)
 	}
 }

@@ -38,13 +38,37 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICMCommonInlineImages)
-final class CommonInlineImagesModule: InlineImageModule {
+/// Any URL that names an image file, plus the many hosts that hide one behind
+/// a page URL.
+struct CommonInlineImagesModule: InlineContentModule {
 	private static let validFileExtensions = ["jpg", "jpeg", "png", "gif", "tif", "tiff", "svg", "bmp"]
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var contentImageOrVideo: Bool {
+		true
+	}
+
+	static var contentIsFile: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let address: String
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		guard let address = finalAddress(for: url) else { return nil }
-		return super.actionBlock(forAddress: address)
+
+		return CommonInlineImagesModule(address: address)
+	}
+
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		await InlineImageContent.produce(payload, address: address)
 	}
 
 	private static func finalAddress(for url: URL) -> String? {
@@ -220,10 +244,6 @@ final class CommonInlineImagesModule: InlineImageModule {
 
 	private static func hostMatches(_ host: String, domain: String) -> Bool {
 		host == domain || host.hasSuffix(".\(domain)")
-	}
-
-	override static var contentIsFile: Bool {
-		true
 	}
 }
 

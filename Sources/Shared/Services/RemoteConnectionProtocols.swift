@@ -57,8 +57,10 @@ nonisolated protocol RemoteConnectionServerProtocol: AnyObject {
 	@objc(sendData:bypassQueue:)
 	func send(_ data: Data, bypassQueue: Bool)
 
+	/// The receiver is an XPC reply block: the service answers it once, and it
+	/// may answer after this call has returned.
 	@objc(exportSecureConnectionInformation:)
-	func exportSecureConnectionInformation(_ receiver: SecureConnectionInformationReceiver)
+	func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver)
 
 	@objc(enforceFloodControl)
 	func enforceFloodControl()
@@ -81,7 +83,7 @@ nonisolated protocol RemoteConnectionServerProtocol: AnyObject {
 
 /// Events the isolated connection host sends back to the application.
 @objc(RCMConnectionManagerClientProtocol)
-nonisolated protocol RemoteConnectionClientProtocol: AnyObject {
+nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable {
 	@objc(ircConnectionWillConnectToProxy:port:)
 	func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16)
 

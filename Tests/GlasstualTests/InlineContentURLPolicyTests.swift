@@ -5,7 +5,6 @@ import Testing
 /// The URL a module resolves ends up in a `src` attribute in the log view, so
 /// it is filtered rather than trusted.
 @Suite("Inline content URL policy")
-@MainActor
 struct InlineContentURLPolicyTests {
 	@Test("HTTP addresses resolve")
 	func webAddressesResolve() {
@@ -42,19 +41,19 @@ struct InlineContentURLPolicyTests {
 
 	@Test("A payload will not take an out-of-policy inline URL")
 	func payloadRejectsOutOfPolicyURL() throws {
-		let payload = try InlineContentPayloadMutable(
+		var values = try InlineContentPayloadValues(
 			url: #require(URL(string: "https://example.com/page")),
-			withUniqueIdentifier: "identifier",
-			atLineNumber: "1",
+			uniqueIdentifier: "identifier",
+			lineNumber: "1",
 			index: 0,
-			inView: "view"
+			viewIdentifier: "view"
 		)
 
-		payload.urlToInline = try #require(URL(string: "https://example.com/image.png"))
-		#expect(payload.urlToInline.absoluteString == "https://example.com/image.png")
+		#expect(try values.setURLToInline(#require(URL(string: "https://example.com/image.png"))))
+		#expect(values.urlToInline.absoluteString == "https://example.com/image.png")
 
-		/* Rejected rather than trapped, and the previous value stands. */
-		payload.urlToInline = URL(fileURLWithPath: "/etc/passwd")
-		#expect(payload.urlToInline.absoluteString == "https://example.com/image.png")
+		/* Refused rather than trapped, and the previous value stands. */
+		#expect(values.setURLToInline(URL(fileURLWithPath: "/etc/passwd")) == false)
+		#expect(values.urlToInline.absoluteString == "https://example.com/image.png")
 	}
 }

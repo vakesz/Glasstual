@@ -39,7 +39,7 @@ import CoreData
 import Foundation
 
 @objc(TVCLogLineXPC)
-final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable {
+public final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable {
 	private enum CodingKey {
 		static let data = "data"
 		static let uniqueIdentifier = "uniqueIdentifier"
@@ -48,14 +48,14 @@ final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable {
 		static let creationDate = "entryCreationDate"
 	}
 
-	@objc let data: Data
-	@objc let uniqueIdentifier: String
-	@objc let viewIdentifier: String
-	@objc let sessionIdentifier: UInt
-	@objc let creationDate: TimeInterval
+	@objc public let data: Data
+	@objc public let uniqueIdentifier: String
+	@objc public let viewIdentifier: String
+	@objc public let sessionIdentifier: UInt
+	@objc public let creationDate: TimeInterval
 
 	@objc(initWithLogLineData:uniqueIdentifier:viewIdentifier:sessionIdentifier:creationDate:)
-	init(
+	public init(
 		logLineData data: Data,
 		uniqueIdentifier: String,
 		viewIdentifier: String,
@@ -72,7 +72,7 @@ final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable {
 
 	/** Fails rather than traps: one malformed row must not abort the shared service. */
 	@objc(initWithManagedObject:)
-	init?(managedObject: NSManagedObject) {
+	public init?(managedObject: NSManagedObject) {
 		guard
 			let data = managedObject.value(forKey: "logLineData") as? Data,
 			let uniqueIdentifier = managedObject.value(forKey: "logLineUniqueIdentifier") as? String,
@@ -89,7 +89,7 @@ final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable {
 		super.init()
 	}
 
-	required init?(coder: NSCoder) {
+	public required init?(coder: NSCoder) {
 		guard
 			let data = coder.decodeObject(of: NSData.self, forKey: CodingKey.data) as Data?,
 			let uniqueIdentifier = coder.decodeObject(of: NSString.self, forKey: CodingKey.uniqueIdentifier) as String?,
@@ -118,7 +118,7 @@ final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable {
 		super.init()
 	}
 
-	func encode(with coder: NSCoder) {
+	public func encode(with coder: NSCoder) {
 		coder.encode(data, forKey: CodingKey.data)
 		coder.encode(uniqueIdentifier, forKey: CodingKey.uniqueIdentifier)
 		coder.encode(viewIdentifier, forKey: CodingKey.viewIdentifier)
@@ -126,11 +126,11 @@ final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable {
 		coder.encode(creationDate, forKey: CodingKey.creationDate)
 	}
 
-	static var supportsSecureCoding: Bool {
+	public static var supportsSecureCoding: Bool {
 		true
 	}
 
-	override var description: String {
+	override public var description: String {
 		"<TVCLogLineXPC \(uniqueIdentifier) - \(creationDate)>"
 	}
 }

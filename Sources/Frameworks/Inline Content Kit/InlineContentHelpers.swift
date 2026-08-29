@@ -38,10 +38,6 @@
 import Foundation
 import os
 
-private struct InlineContentUncheckedTransfer<Value>: @unchecked Sendable {
-	let value: Value
-}
-
 /// Bounds on what a remote endpoint can cost the inline-content service.
 ///
 /// Every request here is triggered by a message somebody else sent, so a slow
@@ -55,28 +51,11 @@ public enum InlineContentNetworkLimits {
 	public static let maximumJSONResponseSize = 1024 * 1024
 }
 
-@objc(ICLHelpers)
-public final class InlineContentHelpers: NSObject {
+public enum InlineContentHelpers {
 	private static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "JSON"
 	)
-
-	private static let jsonSession: URLSession = {
-		let configuration = URLSessionConfiguration.ephemeral
-		configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-		configuration.httpShouldSetCookies = false
-		configuration.httpCookieAcceptPolicy = .never
-		configuration.timeoutIntervalForRequest = InlineContentNetworkLimits.requestTimeout
-		configuration.timeoutIntervalForResource = InlineContentNetworkLimits.resourceTimeout
-		return URLSession(configuration: configuration)
-	}()
-
-	private static func cancelledTask() -> URLSessionDataTask {
-		let task = jsonSession.dataTask(with: URL(string: "about:blank")!)
-		task.cancel()
-		return task
-	}
 
 	/// Schemes a payload is allowed to fetch or render.
 	///
@@ -85,7 +64,6 @@ public final class InlineContentHelpers: NSObject {
 	/// resource from a remote message.
 	public static let permittedSchemes: Set<String> = ["http", "https"]
 
-	@objc(URLWithString:)
 	public static func url(with address: String) -> URL? {
 		guard let url = URL(string: address.hasPrefix("//") ? "https:\(address)" : address),
 		      let scheme = url.scheme?.lowercased(),
@@ -97,124 +75,81 @@ public final class InlineContentHelpers: NSObject {
 		return url
 	}
 
-	@objc
 	public static var genericValidationFailedError: NSError {
 		NSError(
-			domain: "ICLInlineContentErrorDomain",
+			domain: inlineContentErrorDomain,
 			code: 1003,
 			userInfo: [NSLocalizedDescriptionKey: "Validation failed"]
 		)
 	}
 
-	@objc(requestJSONObject:ofType:inHierarchy:fromURL:completionBlock:)
-	public static func requestJSONObject(
-		_ objectKey: String,
-		ofType objectType: AnyClass,
-		inHierarchy hierarchy: [String]?,
-		from url: URL,
-		completionBlock: @escaping (Any?) -> Void
-	) -> URLSessionDataTask {
-		requestJSONData(from: url) { success, data in
-			guard success, var context = data else { return completionBlock(nil) }
+	/// The string at `key`, optionally under a chain of nested objects.
+	///
+	/// Only strings are read back. Every caller wants one, and keeping the
+	/// result a `String` is what lets this be `async` at all: a decoded
+	/// `[String: Any]` is not `Sendable` and could not leave the request.
+	public static func jsonString(
+		_ key: String,
+		inHierarchy hierarchy: [String]? = nil,
+		from url: URL
+	) async -> String? {
+		guard var context = await jsonObject(from: url) else { return nil }
 
-			for key in hierarchy ?? [] {
-				guard let nested = context[key] as? [String: Any] else { return completionBlock(nil) }
-				context = nested
-			}
+		for step in hierarchy ?? [] {
+			guard let nested = context[step] as? [String: Any] else { return nil }
 
-			guard
-				let value = context[objectKey],
-				let object = value as? NSObject,
-				object.isKind(of: objectType)
-			else {
-				return completionBlock(nil)
-			}
-
-			completionBlock(value)
-		}
-	}
-
-	@objc(requestJSONObject:ofType:inHierarchy:fromAddress:completionBlock:)
-	public static func requestJSONObject(
-		_ objectKey: String,
-		ofType objectType: AnyClass,
-		inHierarchy hierarchy: [String]?,
-		fromAddress address: String,
-		completionBlock: @escaping (Any?) -> Void
-	) -> URLSessionDataTask {
-		guard let url = url(with: address) else {
-			completionBlock(nil)
-			return cancelledTask()
+			context = nested
 		}
 
-		return requestJSONObject(
-			objectKey,
-			ofType: objectType,
-			inHierarchy: hierarchy,
-			from: url,
-			completionBlock: completionBlock
-		)
+		return context[key] as? String
 	}
 
-	@objc(requestJSONDataFromURL:completionBlock:)
-	public static func requestJSONData(
-		from url: URL,
-		completionBlock: @escaping (Bool, [String: Any]?) -> Void
-	) -> URLSessionDataTask {
-		let completion = InlineContentUncheckedTransfer(value: completionBlock)
-		let task = jsonSession.dataTask(with: url) { data, response, error in
-			guard let data, (response as? HTTPURLResponse)?.statusCode == 200 else {
-				if let error {
-					logger.error("Request failed: \(error.localizedDescription, privacy: .public)")
-				}
-				return completion.value(false, nil)
-			}
+	/// Every top-level string in the reply, which is all the modules that read
+	/// more than one field need.
+	public static func jsonStrings(from url: URL) async -> [String: String]? {
+		guard let object = await jsonObject(from: url) else { return nil }
 
-			guard data.count <= InlineContentNetworkLimits.maximumJSONResponseSize else {
-				logger.error(
-					"Discarded a \(data.count, privacy: .public) byte response that exceeds the size limit"
-				)
+		return object.compactMapValues { $0 as? String }
+	}
 
-				return completion.value(false, nil)
-			}
+	private static let session: URLSession = {
+		let configuration = URLSessionConfiguration.ephemeral
+		configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+		configuration.httpShouldSetCookies = false
+		configuration.httpCookieAcceptPolicy = .never
+		configuration.timeoutIntervalForRequest = InlineContentNetworkLimits.requestTimeout
+		configuration.timeoutIntervalForResource = InlineContentNetworkLimits.resourceTimeout
+		return URLSession(configuration: configuration)
+	}()
 
-			do {
-				guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-					return completion.value(false, nil)
-				}
-				completion.value(true, object)
-			} catch {
-				logger.error("Failed to decode response: \(error.localizedDescription, privacy: .public)")
-				completion.value(false, nil)
-			}
+	/// The decoded reply, which never leaves this file: `[String: Any]` is not
+	/// `Sendable`, so the readers above pull `Sendable` values out of it here.
+	private static func jsonObject(from url: URL) async -> [String: Any]? {
+		let data: Data
+		let response: URLResponse
+
+		do {
+			(data, response) = try await session.data(from: url)
+		} catch {
+			logger.error("Request failed: \(error.localizedDescription, privacy: .public)")
+
+			return nil
 		}
 
-		task.resume()
-		return task
-	}
+		guard (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
 
-	@objc(requestJSONDataFromAddress:completionBlock:)
-	public static func requestJSONData(
-		fromAddress address: String,
-		completionBlock: @escaping (Bool, [String: Any]?) -> Void
-	) -> URLSessionDataTask {
-		guard let url = url(with: address) else {
-			completionBlock(false, nil)
-			return cancelledTask()
+		guard data.count <= InlineContentNetworkLimits.maximumJSONResponseSize else {
+			logger.error("Discarded a \(data.count, privacy: .public) byte response that exceeds the size limit")
+
+			return nil
 		}
 
-		return requestJSONData(from: url, completionBlock: completionBlock)
-	}
-}
+		do {
+			return try JSONSerialization.jsonObject(with: data) as? [String: Any]
+		} catch {
+			logger.error("Failed to decode response: \(error.localizedDescription, privacy: .public)")
 
-extension NSString {
-	@objc(isDomain:)
-	func icl_isDomain(_ domain: String) -> Bool {
-		isEqual(to: domain)
-	}
-
-	@objc(isDomainOrSubdomain:)
-	func icl_isDomainOrSubdomain(_ domain: String) -> Bool {
-		isEqual(to: domain) || hasSuffix(".\(domain)")
+			return nil
+		}
 	}
 }

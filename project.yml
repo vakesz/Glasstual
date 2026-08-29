@@ -315,6 +315,24 @@ targets:
       - sdk: Foundation.framework
       - sdk: CoreGraphics.framework
 
+  HistoricLogStoreKit:
+    templates: [GlasstualFramework]
+    productName: HistoricLogStoreKit
+    settings:
+      base:
+        PRODUCT_NAME: HistoricLogStoreKit
+        PRODUCT_MODULE_NAME: HistoricLogStoreKit
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.historic-log-store-kit
+    info:
+      properties:
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2016 - 2018 Codeux Software, LLC and respective contributors.
+    sources:
+      # The store lives in a framework rather than in the XPC service so that
+      # the test bundle can drive it over a real anonymous NSXPCListener.
+      - path: Sources/Frameworks/Historic Log Store Kit
+    dependencies:
+      - sdk: CoreData.framework
+
   InlineContentKit:
     templates: [GlasstualFramework]
     productName: InlineContentKit
@@ -380,9 +398,9 @@ targets:
       - path: Sources/Services/Historic Log File Manager/Resources
       - path: Sources/Shared/Application/ApplicationGroup.swift
       - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
-      - path: Sources/Shared/Services/HistoricLogProtocols.swift
-      - path: Sources/Shared/Views/Channel View/TVCLogLineXPC.swift
     dependencies:
+      - target: HistoricLogStoreKit
+        embed: false
       - sdk: CoreData.framework
 
   InlineContentLoader:
@@ -747,6 +765,9 @@ targets:
       - target: InlineContentKit
         embed: true
         codeSign: true
+      - target: HistoricLogStoreKit
+        embed: true
+        codeSign: true
       - target: GlasstualPluginKit
         embed: true
         codeSign: true
@@ -835,6 +856,8 @@ targets:
       - target: CocoaExtensions
         embed: false
       - target: InlineContentKit
+        embed: false
+      - target: HistoricLogStoreKit
         embed: false
       - target: GlasstualPluginKit
         embed: false

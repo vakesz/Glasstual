@@ -47,14 +47,13 @@ import InlineContentKit
 /// Media — is linked into the service and listed here. Being a `let`, the table
 /// needs neither a load step nor a lock: it is built once, on first use.
 enum InlineContentModuleRegistry {
-	static let modules: [InlineContentModule.Type] = CoreMediaPlugin.modules
-		.compactMap { $0 as? InlineContentModule.Type } + [AssessedMediaModule.self]
+	static let modules: [any InlineContentModule.Type] = CoreMediaPlugin.modules + [AssessedMediaModule.self]
 
 	/// The modules a host can be served by. Lookups use a lowercased host, so
 	/// the keys are lowercased too; `*` collects the modules that claim no
 	/// domain of their own.
-	static let modulesByDomain: [String: [InlineContentModule.Type]] = {
-		var mapped: [String: [InlineContentModule.Type]] = [:]
+	static let modulesByDomain: [String: [any InlineContentModule.Type]] = {
+		var mapped: [String: [any InlineContentModule.Type]] = [:]
 
 		for module in modules {
 			let domains = module.domains
