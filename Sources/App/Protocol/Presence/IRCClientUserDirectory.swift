@@ -129,14 +129,24 @@ public extension IRCClient {
 		rename(user, to: newNickname)
 	}
 
-	/// Edits a copy of `user` and stores the result under its new nickname.
+	/** Edits a copy of `user` and stores the result under its new nickname.
+
+	 A rename drops the old key and the address-book match cached against the
+	 old hostmask, but keeps the person: their store is keyed by identity, so
+	 the channels they are in and their removal timer survive the rename. */
 	internal func modify(_ user: User, block: (inout User) -> Void) {
 		var editedUser = user
 
 		block(&editedUser)
+
 		if user.nickname != editedUser.nickname {
+			if let hostmask = user.hostmask {
+				clearAddressBookCache(forHostmask: hostmask)
+			}
+
 			removeUser(withNickname: user.nickname)
 		}
+
 		add(editedUser)
 	}
 
