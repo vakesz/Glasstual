@@ -39,7 +39,7 @@ import CoreData
 import Foundation
 
 @objc(TVCLogLineXPC)
-final nonisolated class LogLineXPC: NSObject, NSSecureCoding, @unchecked Sendable {
+final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable {
 	private enum CodingKey {
 		static let data = "data"
 		static let uniqueIdentifier = "uniqueIdentifier"
