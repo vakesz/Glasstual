@@ -14,6 +14,26 @@ import CocoaExtensions
 import Combine
 import Foundation
 
+/// How many values a `bufferedValues` sequence holds while its consumer is
+/// between turns. Generous: the sequences below carry notifications and
+/// key-value changes, never a stream.
+private let observationBufferSize = 64
+
+extension Publisher where Failure == Never {
+	/// The publisher's values as an async sequence that survives a burst.
+	///
+	/// `AsyncPublisher` asks upstream for one value at a time, and neither
+	/// `NotificationCenter.Publisher` nor a key-value observing publisher keeps
+	/// what it cannot deliver: everything posted between one `next()` and the
+	/// request that follows it is dropped on the floor. Five notifications
+	/// posted in one main-actor turn arrive as one. Buffering keeps the upstream
+	/// demand standing, so the burst arrives whole and in order — which is what
+	/// `sink`, with its unlimited demand, used to give.
+	var bufferedValues: AsyncPublisher<Publishers.Buffer<Self>> {
+		buffer(size: observationBufferSize, prefetch: .keepFull, whenFull: .dropOldest).values
+	}
+}
+
 /// Owns notification subscriptions for one lifecycle-bound object.
 ///
 /// Notifications are delivered on the main actor because every current
@@ -37,7 +57,7 @@ final class NotificationSubscriptions {
 		 values inside a main-actor task is what gives the handler isolation the
 		 compiler checks; a `sink` closure is nonisolated and cannot. */
 		let task = Task { @MainActor in
-			for await notification in center.publisher(for: name, object: object).values {
+			for await notification in center.publisher(for: name, object: object).bufferedValues {
 				handler(notification)
 			}
 		}

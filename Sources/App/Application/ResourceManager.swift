@@ -121,7 +121,8 @@ public final nonisolated class ResourceManager: NSObject {
 			return nil
 		}
 
-		guard let fileContents = fileContents(of: resourceURL, name: name, subpath: subpath, cache: cacheContents) else {
+		guard let fileContents = fileContents(of: resourceURL, name: name, subpath: subpath, cache: cacheContents)
+		else {
 			return nil
 		}
 

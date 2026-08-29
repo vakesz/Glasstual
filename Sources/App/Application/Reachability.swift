@@ -45,7 +45,7 @@ enum ReachabilityPathEvent: Int {
 }
 
 /** Reachability changes drive `IRCWorld`, which lives on the main actor, so the
- notifier does too: no lock, no queue hop, no `@unchecked Sendable`. */
+ notifier does too: no lock, no queue hop, no opting out of the checker. */
 @objc(OELReachability)
 @MainActor
 public final class Reachability: NSObject {
@@ -122,7 +122,7 @@ public final class Reachability: NSObject {
 	}
 
 	@objc(evaluatePathChange:currentlyReachable:receivedInitialPath:)
-	public nonisolated static func evaluatePathChange(
+	public nonisolated static func evaluatePathChange( // nonisolated: pure
 		reachable: Bool,
 		currentlyReachable: UnsafeMutablePointer<ObjCBool>,
 		receivedInitialPath: UnsafeMutablePointer<ObjCBool>
@@ -142,7 +142,7 @@ public final class Reachability: NSObject {
 		return event.rawValue
 	}
 
-	nonisolated static func evaluatePathChange(
+	nonisolated static func evaluatePathChange( // nonisolated: pure
 		reachable: Bool,
 		currentlyReachable: inout Bool,
 		receivedInitialPath: inout Bool

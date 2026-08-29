@@ -238,7 +238,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 				let publisher = NotificationCenter.default
 					.publisher(for: MainWindowTextViewNotification.typingDidChange)
 
-				for await notification in publisher.values {
+				for await notification in publisher.bufferedValues {
 					guard let self else {
 						return
 					}
@@ -250,7 +250,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 				let publisher = NotificationCenter.default
 					.publisher(for: MainWindowTextViewNotification.selectionDidChange)
 
-				for await notification in publisher.values {
+				for await notification in publisher.bufferedValues {
 					guard let self else {
 						return
 					}
@@ -337,7 +337,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 				object: defaults
 			)
 
-			for await _ in publisher.values {
+			for await _ in publisher.bufferedValues {
 				guard let self else {
 					return
 				}

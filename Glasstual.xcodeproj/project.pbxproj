@@ -926,6 +926,7 @@
 		F9C1B79DABB97CECE99DBB99 /* IRCISupportInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE773962B69B19F83C123EEB /* IRCISupportInfoTests.swift */; };
 		F9E15A3B69CF0F7235703FCD /* TDCChannelModifyModesSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 42734F8DCF18773287947274 /* TDCChannelModifyModesSheet.xcstrings */; };
 		FA71A4220CE0DEDDA4A1CE67 /* HighlightEntryContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77EB22A905823012F710E310 /* HighlightEntryContent.swift */; };
+		FB03695B49DB11F5D8AF35D7 /* AppKitBridgeIsolationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E4E7E409A9D7E8D1990C83 /* AppKitBridgeIsolationTests.swift */; };
 		FB4D974905045D3A27288190 /* PromptStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECBAC7DA0FE75617C8D7555D /* PromptStrings.swift */; };
 		FB6FFDAA49A64CF97FF1BE34 /* ImgurGifvModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54D94F808879BB7077B8963 /* ImgurGifvModule.swift */; };
 		FB7A5419E0E1B0055A839C3E /* TDCChannelPropertiesSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C617A65A3BBB6D53EC32C8C8 /* TDCChannelPropertiesSheet.xcstrings */; };
@@ -1600,6 +1601,7 @@
 		5844500C5E7A233DC689A387 /* TXMenuAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TXMenuAction.swift; sourceTree = "<group>"; };
 		58D05576E90E57FBB8AE0136 /* IRCChannelModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannelModeTests.swift; sourceTree = "<group>"; };
 		58E3755A9BEDC163DDFAE3FF /* IRCClientChannelCommandDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientChannelCommandDispatch.swift; sourceTree = "<group>"; };
+		58E4E7E409A9D7E8D1990C83 /* AppKitBridgeIsolationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppKitBridgeIsolationTests.swift; sourceTree = "<group>"; };
 		58E52D92E4C6FFC13B40BB2C /* BasicLanguage.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = BasicLanguage.xcstrings; sourceTree = "<group>"; };
 		58F24D33B3A324E07232AA6B /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCChannelSpotlightController.xib; sourceTree = "<group>"; };
 		592CF6F60E8F3FE2FF9B56F2 /* Context.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Context.swift; sourceTree = "<group>"; };
@@ -3724,6 +3726,7 @@
 				45BD3A7083CBCCE0DA2C8E31 /* AboutFeatureTests.swift */,
 				674E8A0995007A2CEBD014BA /* AppearanceMigrationTests.swift */,
 				8382FEF5CB2BA1DFE6AFA598 /* AppearanceSchemaTests.swift */,
+				58E4E7E409A9D7E8D1990C83 /* AppKitBridgeIsolationTests.swift */,
 				1771146410DA6A76C6B9B6E7 /* AppKitSupportMigrationTests.swift */,
 				43C60986D7A4E9E0C432E1DD /* ApplicationInfrastructureMigrationTests.swift */,
 				E6CE5CF5090C4705513DD365 /* ApplicationLayerIsolationTests.swift */,
@@ -5155,6 +5158,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AACD89457B4E84B16887BD4B /* AboutFeatureTests.swift in Sources */,
+				FB03695B49DB11F5D8AF35D7 /* AppKitBridgeIsolationTests.swift in Sources */,
 				F86F10BF0087C1CC8705F56A /* AppKitSupportMigrationTests.swift in Sources */,
 				2A6B08F33945A1F6929278B2 /* AppearanceMigrationTests.swift in Sources */,
 				A42E7CCECBBB2F8A3AA3A2E1 /* AppearanceSchemaTests.swift in Sources */,

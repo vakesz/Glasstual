@@ -15,6 +15,12 @@ import CocoaExtensions
 import os
 import UniformTypeIdentifiers
 
+/// What `ResourceFileImporter` can install.
+public enum ResourceFileKind: Equatable, Sendable {
+	case script
+	case extensionBundle
+}
+
 /// Installs a script or an extension the user opened from the Finder.
 ///
 /// This was an `NSDocument` subclass named as the `NSDocumentClass` of two
@@ -33,6 +39,23 @@ public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
 	}
 
 	private func open(_ url: URL) {
+		switch Self.kind(of: url) {
+		case .script:
+			performImportOfScriptFile(url)
+		case .extensionBundle:
+			performImportOfPluginFile(url)
+		case nil:
+			Self.logger.error(
+				"Opened file '\(url.lastPathComponent, privacy: .public)' is neither a script nor an extension"
+			)
+		}
+	}
+
+	/// What kind of installable `url` names, or nil for anything else.
+	///
+	/// Separated from the import itself because the import puts alerts and a
+	/// save panel on screen: this is the part with an answer worth testing.
+	public static func kind(of url: URL) -> ResourceFileKind? {
 		var contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType
 
 		if contentType == nil {
@@ -40,33 +63,22 @@ public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
 		}
 
 		guard let contentType else {
-			reportUnsupportedFile(url)
-			return
+			return nil
 		}
 
 		if let scriptType = UTType(filenameExtension: ResourceDocumentType.scriptFilenameExtension),
 		   contentType.conforms(to: scriptType)
 		{
-			performImportOfScriptFile(url)
-
-			return
+			return .script
 		}
 
 		if contentType.conforms(to: .bundle),
 		   url.pathExtension == ResourceDocumentType.bundleFilenameExtension
 		{
-			performImportOfPluginFile(url)
-
-			return
+			return .extensionBundle
 		}
 
-		reportUnsupportedFile(url)
-	}
-
-	private func reportUnsupportedFile(_ url: URL) {
-		Self.logger.error(
-			"Opened file '\(url.lastPathComponent, privacy: .public)' is neither a script nor an extension"
-		)
+		return nil
 	}
 
 	private static let logger = Logger(

@@ -105,7 +105,7 @@ public final class Appearance: NSObject {
 		/* `observe`'s change handler is nonisolated; awaiting the key path's
 		 values reads this object's state where it lives. */
 		effectiveAppearanceObservation = Task { @MainActor [weak self] in
-			for await appearance in NSApp.publisher(for: \.effectiveAppearance, options: .new).values {
+			for await appearance in NSApp.publisher(for: \.effectiveAppearance, options: .new).bufferedValues {
 				guard let self else {
 					return
 				}

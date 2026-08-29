@@ -136,6 +136,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	public var inputTextField: MainWindowTextView! {
 		inputContentView?.textView
 	}
+
 	@IBOutlet private var nibContentSplitView: NSSplitView!
 	@IBOutlet public var loadingScreen: MainWindowLoadingScreenView!
 	@IBOutlet public var memberList: MemberList!

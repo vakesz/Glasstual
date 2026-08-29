@@ -352,7 +352,7 @@ final class MainWindowChannelViewSubview: NSView {
 			 closure; awaiting the same key path's values inside a main-actor
 			 task keeps the handler where the view lives. */
 			backingViewLayoutObservation = Task { @MainActor [weak self] in
-				for await _ in backingView.publisher(for: \.isLayingOutView, options: [.new]).values {
+				for await _ in backingView.publisher(for: \.isLayingOutView, options: [.new]).bufferedValues {
 					guard let self else {
 						return
 					}
