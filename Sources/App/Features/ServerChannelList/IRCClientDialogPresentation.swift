@@ -41,7 +41,10 @@ import AppKit
 @MainActor
 extension IRCClient: ChannelBanListSheetDelegate, ServerChannelListDialogDelegate {
 	private var clientDialogWindowKey: String {
-		"TDCServerChannelListDialog -> \(uniqueIdentifier)"
+		WindowController.windowDescription(
+			forClass: ServerChannelListDialog.self,
+			inRelationTo: uniqueIdentifier
+		)
 	}
 
 	func createChannelInviteExceptionListSheet() {
