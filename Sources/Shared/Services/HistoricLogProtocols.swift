@@ -108,7 +108,7 @@ nonisolated protocol HistoricLogServerProtocol: AnyObject {
 }
 
 @objc(HLSHistoricLogClientProtocol)
-nonisolated protocol HistoricLogClientProtocol: AnyObject {
+nonisolated protocol HistoricLogClientProtocol: AnyObject, Sendable {
 	@objc(willDeleteUniqueIdentifiers:inView:)
 	func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewIdentifier: String)
 }
