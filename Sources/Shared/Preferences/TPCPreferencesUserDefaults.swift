@@ -56,15 +56,15 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
 		return ApplicationGroup.identifier
 	}()
 
-	/* ISOLATION-EXCEPTION: Foundation marks `UserDefaults` explicitly
-	 non-Sendable, so a stored reference to the one shared instance cannot be
-	 expressed any other way. The subclass adds no mutable stored state -- only
-	 the immutable `suiteName` below -- and `UserDefaults` is documented as
-	 thread-safe. Identity matters here: KVO bindings and the change
-	 notification are attached to this object, so it cannot be reconstructed
-	 per call the way `UserDefaults.standard` is. */
-	private nonisolated(unsafe) static let sharedInstance =
-		TextualUserDefaults(storageSuiteName: storageSuiteName)
+	/** The handle the main actor keeps for the lifetime of the process, so the
+	 preference reads on every render path do not build one per access.
+
+	 Foundation marks `UserDefaults` non-Sendable, which is why this is not a
+	 process-wide global. It does not need to be one: a suite is a file, and a
+	 second `UserDefaults` over the same suite reads and writes the same values.
+	 Code outside the main actor takes its own handle from ``suite()``. */
+	@MainActor
+	public static let container = TextualUserDefaults(storageSuiteName: storageSuiteName)
 
 	/// The suite this instance is bound to, kept because `UserDefaults` does not
 	/// expose it and `persistentDomain(forName:)` needs it.
@@ -79,9 +79,24 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
 		self.init(storageSuiteName: Self.storageSuiteName)
 	}
 
+	/** A private handle on the store, for code that is not on the main actor.
+
+	 One suite is one file, so this reads and writes exactly what ``container``
+	 does. Only object identity differs, and identity matters to nothing but KVO
+	 and the `object` a notification is posted with -- neither of which anything
+	 outside the main actor looks at. A caller that reads in a loop should hold
+	 the handle rather than ask for one per read. */
+	public nonisolated static func suite() -> TextualUserDefaults {
+		TextualUserDefaults(storageSuiteName: storageSuiteName)
+	}
+
+	/** Compatibility spelling of ``suite()`` for the two XPC-service call sites
+	 that still use it. Both are outside the main actor and neither observes the
+	 object, so a private handle is what they want; the service rewrite routes
+	 them at ``suite()`` and this goes with it. */
 	@objc(sharedUserDefaults)
-	public static func shared() -> TextualUserDefaults {
-		sharedInstance
+	public nonisolated static func shared() -> TextualUserDefaults {
+		suite()
 	}
 
 	@objc(_setObject:forKey:)
@@ -153,13 +168,22 @@ public final nonisolated class TextualUserDefaults: UserDefaults {
 	}
 }
 
+/** The bindings controller the nibs instantiate, pointed at the application
+ container rather than `UserDefaults.standard`.
+
+ It takes its own handle on the suite: `NSUserDefaultsController`'s initialisers
+ are nonisolated, so they cannot reach the main actor's instance, and they do
+ not need to -- the controller is the only observer of the object it holds, and
+ the values behind it are the same file. Writes made elsewhere reach bound
+ controls through `UserDefaults.didChangeNotification`, which the controller
+ already watches. */
 @objc(TPCPreferencesUserDefaultsController)
 public final nonisolated class TextualUserDefaultsController: NSUserDefaultsController {
 	required init?(coder _: NSCoder) {
-		super.init(defaults: TextualUserDefaults.shared(), initialValues: nil)
+		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}
 
 	override public init(defaults _: UserDefaults?, initialValues _: [String: Any]?) {
-		super.init(defaults: TextualUserDefaults.shared(), initialValues: nil)
+		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}
 }

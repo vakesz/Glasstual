@@ -93,19 +93,19 @@ public final nonisolated class ApplicationInfo: NSObject {
 		return -launchDate.timeIntervalSinceNow
 	}
 
-	@objc public static func timeIntervalSinceApplicationInstall() -> TimeInterval {
+	@objc @MainActor public static func timeIntervalSinceApplicationInstall() -> TimeInterval {
 		userDefaults.double(forKey: runtimeDefaultsKey) + timeIntervalSinceApplicationLaunch()
 	}
 
-	@objc public static func saveTimeIntervalSinceApplicationInstall() {
+	@objc @MainActor public static func saveTimeIntervalSinceApplicationInstall() {
 		userDefaults.set(timeIntervalSinceApplicationInstall(), forKey: runtimeDefaultsKey)
 	}
 
-	@objc public static func applicationRunCount() -> UInt {
+	@objc @MainActor public static func applicationRunCount() -> UInt {
 		userDefaults.unsignedInteger(forKey: runCountDefaultsKey)
 	}
 
-	@objc public nonisolated static func incrementApplicationRunCount() {
+	@objc @MainActor public static func incrementApplicationRunCount() {
 		userDefaults.setUnsignedInteger(applicationRunCount() + 1, forKey: runCountDefaultsKey)
 	}
 
@@ -117,7 +117,8 @@ public final nonisolated class ApplicationInfo: NSObject {
 		Bundle.main.object(forInfoDictionaryKey: key) as? String ?? ""
 	}
 
+	@MainActor
 	private static var userDefaults: TextualUserDefaults {
-		TextualUserDefaults.shared()
+		TextualUserDefaults.container
 	}
 }

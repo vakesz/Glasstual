@@ -77,6 +77,13 @@ public nonisolated extension Preferences {
 	}
 }
 
+/** The inline-media settings, read through a private handle on the store
+ (``PreferenceKey/detachedValue``) rather than the main actor's.
+
+ The inline-content service compiles this file and calls every one of these from
+ its own isolation, so they cannot be main-actor. None of them is on a hot path:
+ the service reads them once per fetch, and the app reads them when it builds
+ the script bridge. */
 public extension TextualPreferences {
 	class func inlineImagesMaxFilesize() -> UInt64 {
 		let megabytesByPreference: [UInt: UInt64] = [
@@ -84,55 +91,55 @@ public extension TextualPreferences {
 			6: 10, 7: 15, 8: 20, 9: 50, 10: 100,
 		]
 
-		return (megabytesByPreference[Preferences.InlineMedia.maximumFilesize.value] ?? 2) * 1_048_576
+		return (megabytesByPreference[Preferences.InlineMedia.maximumFilesize.detachedValue] ?? 2) * 1_048_576
 	}
 
 	class func inlineMediaMaxWidth() -> UInt {
-		Preferences.InlineMedia.scalingWidth.value
+		Preferences.InlineMedia.scalingWidth.detachedValue
 	}
 
 	class func inlineMediaMaxHeight() -> UInt {
-		Preferences.InlineMedia.maximumHeight.value
+		Preferences.InlineMedia.maximumHeight.detachedValue
 	}
 
 	class func setInlineMediaMaxWidth(_ value: UInt) {
-		Preferences.InlineMedia.scalingWidth.value = value
+		Preferences.InlineMedia.scalingWidth.detachedValue = value
 	}
 
 	class func setInlineMediaMaxHeight(_ value: UInt) {
-		Preferences.InlineMedia.maximumHeight.value = value
+		Preferences.InlineMedia.maximumHeight.detachedValue = value
 	}
 
 	class func inlineMediaLimitToBasics() -> Bool {
-		Preferences.InlineMedia.limitToBasics.value
+		Preferences.InlineMedia.limitToBasics.detachedValue
 	}
 
 	class func setInlineMediaLimitToBasics(_ value: Bool) {
-		Preferences.InlineMedia.limitToBasics.value = value
+		Preferences.InlineMedia.limitToBasics.detachedValue = value
 	}
 
 	class func inlineMediaLimitBasicsToFiles() -> Bool {
-		Preferences.InlineMedia.limitBasicsToFiles.value
+		Preferences.InlineMedia.limitBasicsToFiles.detachedValue
 	}
 
 	class func setInlineMediaLimitBasicsToFiles(_ value: Bool) {
-		Preferences.InlineMedia.limitBasicsToFiles.value = value
+		Preferences.InlineMedia.limitBasicsToFiles.detachedValue = value
 	}
 
 	class func inlineMediaLimitNaughtyContent() -> Bool {
-		Preferences.InlineMedia.limitNaughtyContent.value
+		Preferences.InlineMedia.limitNaughtyContent.detachedValue
 	}
 
 	class func inlineMediaLimitUnsafeContent() -> Bool {
-		Preferences.InlineMedia.limitUnsafeContent.value
+		Preferences.InlineMedia.limitUnsafeContent.detachedValue
 	}
 
 	class func inlineMediaCheckEverything() -> Bool {
-		Preferences.InlineMedia.checkEverything.value
+		Preferences.InlineMedia.checkEverything.detachedValue
 	}
 
 	class func inlineMediaAllowsCleartextHTTP() -> Bool {
-		Preferences.InlineMedia.allowsCleartextHTTP.value
+		Preferences.InlineMedia.allowsCleartextHTTP.detachedValue
 	}
 
 	/// Whether inline media may be loaded from `url`.
@@ -142,7 +149,7 @@ public extension TextualPreferences {
 	class func permitsInlineMedia(at url: URL) -> Bool {
 		switch url.scheme?.lowercased() {
 		case "https": true
-		case "http": Preferences.InlineMedia.allowsCleartextHTTP.value
+		case "http": Preferences.InlineMedia.allowsCleartextHTTP.detachedValue
 		default: false
 		}
 	}

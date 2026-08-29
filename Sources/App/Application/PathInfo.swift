@@ -24,7 +24,13 @@ public nonisolated enum PathInfo {
 	)
 
 	private static let transcriptBookmarkDefaultsKey = "LogTranscriptDestinationSecurityBookmark_5"
-	private static let transcriptFolderURLStorage = Mutex<URL?>(nil)
+
+	/** The security-scoped transcript folder, held open for as long as the
+	 process is using it. Main-actor state: every caller -- the preferences pane
+	 that picks the folder, the file logger that writes into it, the menu item
+	 that opens it -- is already there. */
+	@MainActor
+	private static var transcriptFolderURLStorage: URL?
 
 	/** Directories this process has already created. Several of the path
 	 accessors below are read on hot paths — the transcript folder is asked for
@@ -365,42 +371,44 @@ public nonisolated enum PathInfo {
 
 	// MARK: - Transcript folder
 
+	@MainActor
 	public static var transcriptFolder: String? {
 		transcriptFolderURL?.path
 	}
 
+	@MainActor
 	public static var transcriptFolderURL: URL? {
-		transcriptFolderURLStorage.withLock { $0 }
+		transcriptFolderURLStorage
 	}
 
+	@MainActor
 	public static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
 		stopUsingTranscriptFolderURL()
 
-		TextualUserDefaults.shared().set(transcriptFolderURL, forKey: transcriptBookmarkDefaultsKey)
+		TextualUserDefaults.container.set(transcriptFolderURL, forKey: transcriptBookmarkDefaultsKey)
 		startUsingTranscriptFolderURL()
 	}
 
+	@MainActor
 	public static func startUsingTranscriptFolderURL() {
 		startUsingTranscriptFolderURL(refreshingStaleBookmark: true)
 	}
 
+	@MainActor
 	public static func stopUsingTranscriptFolderURL() {
-		let existingURL = transcriptFolderURLStorage.withLock { url -> URL? in
-			let existing = url
-			url = nil
-
-			return existing
-		}
+		let existingURL = transcriptFolderURLStorage
+		transcriptFolderURLStorage = nil
 
 		existingURL?.stopAccessingSecurityScopedResource()
 	}
 
+	@MainActor
 	private static func startUsingTranscriptFolderURL(refreshingStaleBookmark: Bool) {
 		/* Security-scoped access is reference counted, so any previous access has to be
 		 released before a new one is taken; launch plus a preference reload both call in. */
 		stopUsingTranscriptFolderURL()
 
-		guard let bookmark = TextualUserDefaults.shared().data(forKey: transcriptBookmarkDefaultsKey) else {
+		guard let bookmark = TextualUserDefaults.container.data(forKey: transcriptBookmarkDefaultsKey) else {
 			return
 		}
 
@@ -446,7 +454,7 @@ public nonisolated enum PathInfo {
 				return
 			}
 
-			TextualUserDefaults.shared().set(newBookmark, forKey: transcriptBookmarkDefaultsKey)
+			TextualUserDefaults.container.set(newBookmark, forKey: transcriptBookmarkDefaultsKey)
 			startUsingTranscriptFolderURL(refreshingStaleBookmark: false)
 
 			return
@@ -459,25 +467,23 @@ public nonisolated enum PathInfo {
 			return
 		}
 
-		transcriptFolderURLStorage.withLock { $0 = resolvedBookmark }
+		transcriptFolderURLStorage = resolvedBookmark
 	}
 
 	// MARK: - Helpers
 
+	@MainActor
 	private static func warnUserAboutStaleTranscriptFolderURL() {
 		guard TextualPreferences.logToDisk() else {
 			return
 		}
 
-		/* Bookmark resolution runs outside the main actor, the alert on it. */
-		Task { @MainActor in
-			TDCAlert.alert(
-				withMessage: PromptStrings.Logging.staleLocationBody,
-				title: PromptStrings.Logging.staleLocationTitle,
-				defaultButton: PromptStrings.Action.confirmation,
-				alternateButton: nil
-			)
-		}
+		TDCAlert.alert(
+			withMessage: PromptStrings.Logging.staleLocationBody,
+			title: PromptStrings.Logging.staleLocationTitle,
+			defaultButton: PromptStrings.Action.confirmation,
+			alternateButton: nil
+		)
 	}
 
 	private static func firstSearchPath(

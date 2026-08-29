@@ -51,7 +51,7 @@ public final class STSPolicyStore: NSObject {
 	private var policies: [String: STSPolicy] = [:]
 
 	@objc(sharedStore)
-	public static let shared = STSPolicyStore(userDefaults: TextualUserDefaults.shared())
+	public static let shared = STSPolicyStore(userDefaults: TextualUserDefaults.container)
 
 	@objc(initWithUserDefaults:)
 	public init(userDefaults: UserDefaults?) {

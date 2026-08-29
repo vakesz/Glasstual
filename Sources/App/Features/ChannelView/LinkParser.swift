@@ -220,12 +220,12 @@ public nonisolated class LinkParser: NSObject {
 
 		/* The declarations keep the key names the AutoHyperlinks framework that
 		 preceded this parser used, so a user customization carries over. */
-		if Preferences.LinkSchemes.permitAny.value {
+		if Preferences.LinkSchemes.permitAny.detachedValue {
 			return true
 		}
 
-		return Preferences.LinkSchemes.permittedDefault.value.contains(scheme)
-			|| Preferences.LinkSchemes.permitted.value.contains(scheme)
+		return Preferences.LinkSchemes.permittedDefault.detachedValue.contains(scheme)
+			|| Preferences.LinkSchemes.permitted.detachedValue.contains(scheme)
 	}
 
 	private static let linkDetector: NSDataDetector = {

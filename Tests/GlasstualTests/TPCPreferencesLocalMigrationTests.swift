@@ -13,7 +13,7 @@ import Testing
 struct TPCPreferencesLocalMigrationTests {
 	@Test("The compatibility numeric setter announces the key it changed")
 	func compatibilityNumericSetterPostsPreferenceNotification() async {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		let key = "TPCPreferencesLocalMigrationTests.\(UUID().uuidString)"
 		let center = NotificationCenter.default
 		defer { defaults.removeObject(forKey: key) }
@@ -37,7 +37,7 @@ struct TPCPreferencesLocalMigrationTests {
 
 	@Test("The scalar setters still write the defaults keys the stored schema uses")
 	func scalarSettersKeepTheirEstablishedDefaultsKeys() {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		let soundKey = "Notification Sound Is Muted"
 		let portKey = "File Transfers -> File Transfer Port Range Start"
 		let oldSound = defaults.object(forKey: soundKey)

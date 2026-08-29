@@ -79,18 +79,19 @@ public final nonisolated class InlineContentServicePreferences: NSObject, NSSecu
 		super.init()
 	}
 
-	/// The values the app currently holds.
+	/// The values the app currently holds, read through a private handle: the
+	/// client that pushes them to the service is an actor of its own.
 	@objc public static func current() -> InlineContentServicePreferences {
 		InlineContentServicePreferences(
-			maximumFilesize: Preferences.InlineMedia.maximumFilesize.value,
-			scalingWidth: Preferences.InlineMedia.scalingWidth.value,
-			maximumHeight: Preferences.InlineMedia.maximumHeight.value,
-			limitToBasics: Preferences.InlineMedia.limitToBasics.value,
-			limitBasicsToFiles: Preferences.InlineMedia.limitBasicsToFiles.value,
-			limitNaughtyContent: Preferences.InlineMedia.limitNaughtyContent.value,
-			limitUnsafeContent: Preferences.InlineMedia.limitUnsafeContent.value,
-			checkEverything: Preferences.InlineMedia.checkEverything.value,
-			allowsCleartextHTTP: Preferences.InlineMedia.allowsCleartextHTTP.value
+			maximumFilesize: Preferences.InlineMedia.maximumFilesize.detachedValue,
+			scalingWidth: Preferences.InlineMedia.scalingWidth.detachedValue,
+			maximumHeight: Preferences.InlineMedia.maximumHeight.detachedValue,
+			limitToBasics: Preferences.InlineMedia.limitToBasics.detachedValue,
+			limitBasicsToFiles: Preferences.InlineMedia.limitBasicsToFiles.detachedValue,
+			limitNaughtyContent: Preferences.InlineMedia.limitNaughtyContent.detachedValue,
+			limitUnsafeContent: Preferences.InlineMedia.limitUnsafeContent.detachedValue,
+			checkEverything: Preferences.InlineMedia.checkEverything.detachedValue,
+			allowsCleartextHTTP: Preferences.InlineMedia.allowsCleartextHTTP.detachedValue
 		)
 	}
 

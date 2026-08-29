@@ -421,15 +421,26 @@ public nonisolated extension TextualUserDefaults {
 	}
 }
 
-public nonisolated extension Preferences {
+public extension Preferences {
+	/** The shared store, which the main actor keeps for the lifetime of the
+	 process so bindings observe one object and a read costs nothing. */
+	@MainActor
 	static var defaults: TextualUserDefaults {
-		TextualUserDefaults.shared()
+		TextualUserDefaults.container
+	}
+
+	/** A private handle on the same store, for code that runs outside the main
+	 actor. Reads and writes land in the same file; only KVO identity differs,
+	 and nothing off the main actor observes it. */
+	nonisolated static var detachedDefaults: TextualUserDefaults { // nonisolated: pure
+		TextualUserDefaults.suite()
 	}
 }
 
-public nonisolated extension PreferenceKey {
+public extension PreferenceKey {
 	/// The effective value in the shared store: what the user chose, or the
 	/// declared default.
+	@MainActor
 	var value: Value {
 		get { Preferences.defaults[self] }
 		nonmutating set { Preferences.defaults[self] = newValue }
@@ -437,20 +448,36 @@ public nonisolated extension PreferenceKey {
 
 	/// The stored value, or `nil` when nothing has been written and no default
 	/// was registered.
+	@MainActor
 	var storedValue: Value? {
 		get { Preferences.defaults[stored: self] }
 		nonmutating set { Preferences.defaults[stored: self] = newValue }
 	}
+
+	/// ``value``, read through a private handle on the store, for code that
+	/// runs outside the main actor.
+	nonisolated var detachedValue: Value { // nonisolated: pure
+		get { Preferences.detachedDefaults[self] }
+		nonmutating set { Preferences.detachedDefaults[self] = newValue }
+	}
+
+	/// ``storedValue`` through the same private handle.
+	nonisolated var detachedStoredValue: Value? { // nonisolated: pure
+		get { Preferences.detachedDefaults[stored: self] }
+		nonmutating set { Preferences.detachedDefaults[stored: self] = newValue }
+	}
 }
 
-public nonisolated extension AnyPreferenceKey {
+public extension AnyPreferenceKey {
 	/// The raw stored object, for the handful of keys whose value shape belongs
 	/// to the subsystem that writes it.
+	@MainActor
 	var object: Any? {
 		get { Preferences.defaults.object(for: self) }
 		nonmutating set { Preferences.defaults.setObject(newValue, for: self) }
 	}
 
+	@MainActor
 	func reset() {
 		Preferences.defaults.removeValue(for: self)
 	}
