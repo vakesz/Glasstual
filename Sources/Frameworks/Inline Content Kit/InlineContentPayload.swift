@@ -227,14 +227,14 @@ public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
 
 	/// The context the entrypoint script is called with. Every module has been
 	/// content with the defaults, so it is derived rather than stored.
-	public var entrypointPayload: [String: Any] {
+	public var entrypointPayload: [String: JavaScriptValue] {
 		[
-			"class": values.classAttribute,
-			"html": values.html,
-			"url": values.url,
-			"urlToInline": values.urlToInline,
-			"lineNumber": values.lineNumber,
-			"uniqueIdentifier": values.uniqueIdentifier,
+			"class": .string(values.classAttribute),
+			"html": .string(values.html),
+			"url": .string(values.url.absoluteString),
+			"urlToInline": .string(values.urlToInline.absoluteString),
+			"lineNumber": .string(values.lineNumber),
+			"uniqueIdentifier": .string(values.uniqueIdentifier),
 		]
 	}
 

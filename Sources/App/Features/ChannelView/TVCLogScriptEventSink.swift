@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import GlasstualPluginKit
 import OSLog
 import WebKit

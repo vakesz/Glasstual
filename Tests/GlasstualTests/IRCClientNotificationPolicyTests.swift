@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -104,7 +105,7 @@ struct IRCClientNotificationPolicyTests {
 		)
 
 		#expect(channel.channelIdentifier == "channel")
-		#expect(channel.userInfo[NotificationPayload.channelIdentifierKey] as? String == "channel")
+		#expect(channel.userInfo[NotificationPayload.channelIdentifierKey]?.string == "channel")
 	}
 
 	@Test("Speaking only the selection silences an unselected channel and drops its name")

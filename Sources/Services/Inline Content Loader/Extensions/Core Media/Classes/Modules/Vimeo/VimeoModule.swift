@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import InlineContentKit
 
@@ -75,8 +76,8 @@ struct VimeoModule: InlineContentModule {
 			payload,
 			templateURL: CoreMediaBundle.current.url(forResource: "ICMVimeo", withExtension: "mustache"),
 			attributes: [
-				"uniqueIdentifier": payload.uniqueIdentifier,
-				"videoIdentifier": identifier,
+				"uniqueIdentifier": .string(payload.uniqueIdentifier),
+				"videoIdentifier": .string(identifier),
 			]
 		)
 	}

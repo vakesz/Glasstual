@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 /// How the inline player is configured for one video.
@@ -105,18 +106,18 @@ public enum InlineVideoContent {
 
 		let playbackSpeed = (0.125 ... 6.0).contains(options.playbackSpeed) ? options.playbackSpeed : 1.0
 
-		let attributes: [String: Any] = [
-			"anchorLink": values.url.absoluteString,
-			"classAttribute": values.classAttribute,
-			"preferredMaximumWidth": InlineContentPreferences.current.maximumWidth,
-			"uniqueIdentifier": values.uniqueIdentifier,
-			"videoAutoplayEnabled": options.autoplayEnabled,
-			"videoControlsEnabled": options.controlsEnabled,
-			"videoLoopEnabled": options.loopEnabled,
-			"videoMuteEnabled": options.muteEnabled,
-			"videoPlaybackSpeed": playbackSpeed,
-			"videoStartTime": options.startTime,
-			"videoURL": values.urlToInline.absoluteString,
+		let attributes: [String: JavaScriptValue] = [
+			"anchorLink": .string(values.url.absoluteString),
+			"classAttribute": .string(values.classAttribute),
+			"preferredMaximumWidth": .integer(Int(InlineContentPreferences.current.maximumWidth)),
+			"uniqueIdentifier": .string(values.uniqueIdentifier),
+			"videoAutoplayEnabled": .boolean(options.autoplayEnabled),
+			"videoControlsEnabled": .boolean(options.controlsEnabled),
+			"videoLoopEnabled": .boolean(options.loopEnabled),
+			"videoMuteEnabled": .boolean(options.muteEnabled),
+			"videoPlaybackSpeed": .double(playbackSpeed),
+			"videoStartTime": .double(options.startTime),
+			"videoURL": .string(values.urlToInline.absoluteString),
 		]
 
 		return InlineContentTemplate.outcome(templateURL, attributes, into: values)
@@ -144,7 +145,7 @@ public enum InlineVideoContent {
 	public static func embed(
 		_ values: InlineContentPayloadValues,
 		templateURL: URL?,
-		attributes: [String: Any]
+		attributes: [String: JavaScriptValue]
 	) -> InlineContentOutcome {
 		var values = values
 

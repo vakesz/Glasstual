@@ -105,6 +105,6 @@ private struct SystemVersion: Sendable {
 
 	private init() {
 		let path = "/System/Library/CoreServices/SystemVersion.plist"
-		productBuildVersion = (NSDictionary(contentsOfFile: path) as? [String: Any])?["ProductBuildVersion"] as? String
+		productBuildVersion = NSDictionary(contentsOfFile: path)?["ProductBuildVersion"] as? String
 	}
 }

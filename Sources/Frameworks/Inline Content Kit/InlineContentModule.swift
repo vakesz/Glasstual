@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import Mustache
 import os
@@ -59,7 +60,7 @@ public enum InlineContentTemplate {
 	/// Returns nil when the template is missing or unreadable, which the
 	/// caller reports as "nothing to show" rather than as a failure: a missing
 	/// component is a packaging problem, not something the server did.
-	public static func render(_ url: URL?, _ attributes: [String: Any]) throws -> String? {
+	public static func render(_ url: URL?, _ attributes: [String: JavaScriptValue]) throws -> String? {
 		guard let url, url.isFileURL else { return nil }
 
 		let template: Template
@@ -74,14 +75,14 @@ public enum InlineContentTemplate {
 			return nil
 		}
 
-		return try template.render(attributes)
+		return try template.render(attributes.mapValues(\.bridgedObject))
 	}
 
 	/// Renders and folds the two failure shapes into one outcome, which is what
 	/// every module wants: a missing template cancels, a render error fails.
 	public static func outcome(
 		_ url: URL?,
-		_ attributes: [String: Any],
+		_ attributes: [String: JavaScriptValue],
 		into values: InlineContentPayloadValues
 	) -> InlineContentOutcome {
 		var values = values

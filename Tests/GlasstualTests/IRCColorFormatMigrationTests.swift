@@ -60,25 +60,25 @@ struct IRCColorFormatMigrationTests {
 		#expect(hexForeground.value?.count == 6)
 		#expect(backgroundOnly != nil)
 
-		let digitPair: [String: Any] = [
-			IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue: 4,
-			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: 14,
+		let digitPair: [NSAttributedString.Key: Any] = [
+			formatterKey(.foregroundColorAttributeName): 4,
+			formatterKey(.backgroundColorAttributeName): 14,
 		]
 		let matching = TextFormatterEffects(attributes: digitPair)
 
 		#expect(matching.effects.count == 2)
 		#expect(matching.maximumLength == 7)
 
-		let mismatched: [String: Any] = [
-			IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue: 4,
-			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: NSColor.blue,
+		let mismatched: [NSAttributedString.Key: Any] = [
+			formatterKey(.foregroundColorAttributeName): 4,
+			formatterKey(.backgroundColorAttributeName): NSColor.blue,
 		]
 		let onlyForeground = TextFormatterEffects(attributes: mismatched)
 
 		#expect(onlyForeground.effects.count == 1)
 
-		let backgroundAlone: [String: Any] = [
-			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: 4,
+		let backgroundAlone: [NSAttributedString.Key: Any] = [
+			formatterKey(.backgroundColorAttributeName): 4,
 		]
 
 		#expect(TextFormatterEffects(attributes: backgroundAlone).effects.isEmpty)

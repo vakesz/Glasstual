@@ -100,9 +100,9 @@ struct InlineContentServicePreferencesTests {
 		let domain = sample.registrationDomain
 
 		#expect(domain.count == 9)
-		#expect(domain[Preferences.InlineMedia.maximumFilesize.name] as? UInt == 7)
-		#expect(domain[Preferences.InlineMedia.scalingWidth.name] as? UInt == 640)
-		#expect(domain[Preferences.InlineMedia.checkEverything.name] as? Bool == true)
+		#expect(domain[Preferences.InlineMedia.maximumFilesize.name]?.integer == 7)
+		#expect(domain[Preferences.InlineMedia.scalingWidth.name]?.integer == 640)
+		#expect(domain[Preferences.InlineMedia.checkEverything.name]?.boolean == true)
 	}
 
 	/// The whole point of the type: it carries exactly the keys the service

@@ -76,8 +76,8 @@ public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
 		return identifier
 	}
 
-	public static func applicationInfoPlist() -> [String: Any] {
-		Bundle.main.infoDictionary ?? [:]
+	public static func applicationInfoPlist() -> [String: PropertyListValue] {
+		Bundle.main.infoDictionary.flatMap { [String: PropertyListValue](propertyList: $0) } ?? [:]
 	}
 
 	public static func applicationLaunchDate() -> Date? {
