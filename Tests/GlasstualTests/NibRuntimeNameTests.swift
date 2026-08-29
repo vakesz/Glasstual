@@ -21,18 +21,44 @@ import Testing
 @Suite("Nib runtime names")
 @MainActor
 struct NibRuntimeNameTests {
+	/// Every nib in the tree, the plugins' included: a plugin's sheet names its
+	/// classes and binds its key paths the same way the application's does, and
+	/// the runtime is no kinder to it.
 	private static func nibURLs() throws -> [URL] {
-		let directory = URL(fileURLWithPath: #filePath)
+		let sources = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
-			.appending(path: "Sources/App/Resources/User Interface/en.lproj")
+			.appending(path: "Sources")
 
-		return try FileManager.default
-			.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+		guard let enumerator = FileManager.default.enumerator(
+			at: sources,
+			includingPropertiesForKeys: nil
+		) else {
+			return []
+		}
+
+		return enumerator
+			.compactMap { $0 as? URL }
 			.filter { $0.pathExtension == "xib" }
-			.sorted { $0.lastPathComponent < $1.lastPathComponent }
+			.sorted { $0.path < $1.path }
 	}
+
+	/// The plugins ship as loadable bundles, so their classes only reach the
+	/// runtime once the bundle is loaded. Loading the code does not instantiate
+	/// a principal class, so this stays free of the plugins' own side effects.
+	private static let bundledExtensionsAreLoaded: Bool = {
+		let bundles = (try? FileManager.default.contentsOfDirectory(
+			at: PathInfo.bundledExtensionsURL,
+			includingPropertiesForKeys: nil
+		)) ?? []
+
+		for url in bundles where url.pathExtension == "bundle" {
+			_ = Bundle(url: url)?.load()
+		}
+
+		return true
+	}()
 
 	private static func attributeValues(_ attribute: String, in url: URL) throws -> Set<String> {
 		let document = try XMLDocument(contentsOf: url)
@@ -51,6 +77,8 @@ struct NibRuntimeNameTests {
 
 	@Test("Every class a nib names is present in the Objective-C runtime")
 	func nibClassesResolve() throws {
+		#expect(Self.bundledExtensionsAreLoaded)
+
 		let urls = try Self.nibURLs()
 		#expect(urls.isEmpty == false)
 
@@ -72,6 +100,8 @@ struct NibRuntimeNameTests {
 	/// NSUnknownKeyException while the nib loads.
 	@Test("Every outlet a nib connects is key-value coding compliant on its owner")
 	func nibOutletsAreCodingCompliant() throws {
+		#expect(Self.bundledExtensionsAreLoaded)
+
 		var missing: [String] = []
 		var checked = 0
 
@@ -132,6 +162,8 @@ struct NibRuntimeNameTests {
 
 	@Test("Every action a nib sends is answered by something in the application")
 	func nibActionsAreAnswered() throws {
+		#expect(Self.bundledExtensionsAreLoaded)
+
 		var missing: [String] = []
 		var checked = 0
 
@@ -173,6 +205,8 @@ struct NibRuntimeNameTests {
 	/// so only the ones rooted at the nib's own object are ours to check.
 	@Test("Every binding a nib makes against its owner is key-value coding compliant")
 	func nibBindingsAreCodingCompliant() throws {
+		#expect(Self.bundledExtensionsAreLoaded)
+
 		var missing: [String] = []
 
 		for url in try Self.nibURLs() {

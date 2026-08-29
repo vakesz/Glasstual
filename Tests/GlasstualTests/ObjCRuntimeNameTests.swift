@@ -13,6 +13,7 @@
 import AppKit
 import CocoaExtensions
 @testable import Glasstual
+import Synchronization
 import Testing
 
 /// The Objective-C names something outside the compiler depends on and no nib
@@ -46,6 +47,43 @@ struct ObjCRuntimeNameTests {
 		#expect(WindowStateKey.about.rawValue == "TDCAboutDialog")
 		#expect(WindowStateKey.channelSpotlight.rawValue == "TDCChannelSpotlightController")
 		#expect(WindowStateKey.fileTransfers.rawValue == "TDCFileTransferDialog")
+	}
+
+	/// `publisher(for:)` resolves a key path through key-value observing, which
+	/// needs the property visible to the Objective-C runtime: a key path to a
+	/// property without `@objc` has no KVC string and the observation traps the
+	/// first time the view sets it up. Nothing in the compiler checks that, so
+	/// the four key paths the application observes are pinned here.
+	@Test("The key paths the application observes resolve through key-value coding")
+	func observedKeyPathsResolve() {
+		let observed: [(String, AnyKeyPath)] = [
+			("LogView.isLayingOutView", \LogView.isLayingOutView),
+			("IRCClient.isLoggedIn", \IRCClient.isLoggedIn),
+			("IRCTreeItem.nicknameHighlightCount", \IRCTreeItem.nicknameHighlightCount),
+			("IRCTreeItem.treeUnreadCount", \IRCTreeItem.treeUnreadCount),
+		]
+
+		for (name, keyPath) in observed {
+			#expect(keyPath._kvcKeyPathString != nil, "\(name) is no longer observable")
+		}
+	}
+
+	/// Visible to the runtime is only half of it: an observed property also has
+	/// to be dynamically dispatched, or the setter never posts a change and the
+	/// observation goes quiet without failing anywhere.
+	@Test("An observed property still posts its changes")
+	func observedPropertyPostsChanges() {
+		let item = IRCTreeItem()
+
+		let received = Mutex<[Int]>([])
+		let observation = item.observe(\.treeUnreadCount, options: [.new]) { _, change in
+			received.withLock { $0.append(change.newValue ?? -1) }
+		}
+		defer { observation.invalidate() }
+
+		item.treeUnreadCount = 7
+
+		#expect(received.withLock { $0 } == [7])
 	}
 
 	/// mIRC colour codes index this table, so the order is protocol, not

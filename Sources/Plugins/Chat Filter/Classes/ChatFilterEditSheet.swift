@@ -104,8 +104,11 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	@IBOutlet private var filterLimitedToMyselfCheck: NSButton!
 	@IBOutlet private var filterLimitToSelectionOutlineView: NSObject!
 
-	dynamic var filterIgnoreOperatorsCheckEnabled = true
-	dynamic var filterIgnoreOperatorsCheckValue: Bool {
+	/* TPI_ChatFilterEditFilterSheet.xib binds a checkbox's `enabled` and
+	 `value` to these two through `self.`-rooted key paths, so both have to
+	 stay key-value coding compliant on the sheet. */
+	@objc dynamic var filterIgnoreOperatorsCheckEnabled = true
+	@objc dynamic var filterIgnoreOperatorsCheckValue: Bool {
 		get { filterIgnoreOperatorsCheckEnabled && filter.filterIgnoreOperators }
 		set { filter.filterIgnoreOperators = newValue }
 	}
