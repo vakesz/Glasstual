@@ -38,126 +38,90 @@
 import CocoaExtensions
 import Foundation
 
+/// The object NSXPC exports for a connection host.
+///
+/// It holds the connection — which is not `Sendable` and so passes nowhere —
+/// and the host actor, which owns every piece of state. Each `@objc` call is a
+/// one-line hop into the actor.
 @objc(RCMProcessMain)
 final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
-	private var connection: Connection?
-	private var serviceConnection: NSXPCConnection?
-	/** `ProcessInfo.disableSuddenTermination()` is a counter. The host process is shared by
-	 every connection, so an unbalanced disable would permanently pin the whole service. */
-	private var suddenTerminationDisableCount = 0
+	private let host: ConnectionHost
+	private let serviceConnection: NSXPCConnection
 
-	@available(*, unavailable)
-	override init() {
-		fatalError("init() is unavailable; use init(xpcConnection:)")
-	}
+	init(host: ConnectionHost, connection: NSXPCConnection) {
+		self.host = host
+		serviceConnection = connection
 
-	@objc(initWithXPCConnection:)
-	init(xpcConnection: NSXPCConnection) {
-		serviceConnection = xpcConnection
 		super.init()
+
 		Logging.setDefaultSubsystem(toMainBundleCategory: "General")
 	}
 
-	func clientConnectionEnded() {
-		let activeConnection = connection
-		connection = nil
-		activeConnection?.close()
-		serviceConnection = nil
-		balanceSuddenTermination()
-	}
-
 	func open(with config: ConnectionConfigEnvelope) {
-		guard connection == nil else {
-			RCMLog.connection.error("Cannot open a connection that is already open")
-			return
-		}
+		let config = config.config
 
-		guard let serviceConnection else {
-			RCMLog.connection.error("Cannot open a connection after the client connection ended")
-			return
+		Task { [host] in
+			await host.open(with: config)
 		}
-
-		let activeConnection = Connection(with: config.config, on: serviceConnection)
-		activeConnection.open()
-		connection = activeConnection
 	}
 
 	func close() {
-		requireConnection(#function)?.close()
+		Task { [host] in
+			await host.close()
+		}
 	}
 
 	func send(_ data: Data) {
-		requireConnection(#function)?.send(data)
+		send(data, bypassQueue: false)
 	}
 
 	func send(_ data: Data, bypassQueue: Bool) {
-		requireConnection(#function)?.send(data, bypassQueue: bypassQueue)
+		Task { [host] in
+			await host.send(data, bypassQueue: bypassQueue)
+		}
 	}
 
-	func exportSecureConnectionInformation(_ completionBlock: SecureConnectionInformationReceiver) {
-		/* The caller blocks on this reply, so it has to be invoked on every path. */
-		guard let connection = requireConnection(#function) else {
-			completionBlock(.none)
-			return
-		}
-
-		do {
-			try connection.exportSecureConnectionInformation(to: completionBlock)
-		} catch {
-			RCMLog.connection.error("Unable to export secure connection information: \(error.localizedDescription)")
-			completionBlock(
-				SecureConnectionInformation(
-					policyName: nil,
-					protocolVersion: tlsProtocolVersionUnknown,
-					cipherSuite: tlsCipherSuiteUnknown,
-					certificateChain: [],
-					trustFailureDescription: error.localizedDescription
-				)
-			)
+	func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver) {
+		/* The caller treats this as a reply block, so it has to be invoked on
+		 every path. */
+		Task { [host] in
+			await receiver(host.secureConnectionInformation())
 		}
 	}
 
 	func enforceFloodControl() {
-		requireConnection(#function)?.enforceFloodControl()
+		Task { [host] in
+			await host.enforceFloodControl()
+		}
 	}
 
 	func clearSendQueue() {
-		requireConnection(#function)?.clearSendQueue()
+		Task { [host] in
+			await host.clearSendQueue()
+		}
 	}
 
 	func enableAppNap() {
-		UserDefaults.standard.register(defaults: ["NSAppSleepDisabled": false])
+		Task { [host] in
+			await host.enableAppNap()
+		}
 	}
 
 	func disableAppNap() {
-		UserDefaults.standard.register(defaults: ["NSAppSleepDisabled": true])
+		Task { [host] in
+			await host.disableAppNap()
+		}
 	}
 
 	func enableSuddenTermination() {
-		guard suddenTerminationDisableCount > 0 else { return }
-		suddenTerminationDisableCount -= 1
-		ProcessInfo.processInfo.enableSuddenTermination()
+		Task { [host] in
+			await host.enableSuddenTermination()
+		}
 	}
 
 	func disableSuddenTermination() {
-		suddenTerminationDisableCount += 1
-		ProcessInfo.processInfo.disableSuddenTermination()
-	}
-
-	private func balanceSuddenTermination() {
-		while suddenTerminationDisableCount > 0 {
-			enableSuddenTermination()
+		Task { [host] in
+			await host.disableSuddenTermination()
 		}
-	}
-
-	/** The service process is shared by every connection, so an unexpected call has to be
-	 rejected rather than aborted — a trap here would drop every other server as well. */
-	private func requireConnection(_ caller: String) -> Connection? {
-		guard let connection else {
-			RCMLog.connection.error("\(caller, privacy: .public) invoked without performing setup first")
-			return nil
-		}
-
-		return connection
 	}
 }
