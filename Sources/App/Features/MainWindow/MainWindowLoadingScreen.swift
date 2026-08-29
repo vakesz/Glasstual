@@ -26,14 +26,19 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 		isHidden == false
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-		MainActor.assumeIsolated {
-			applyWelcomeViewAppearance()
+	private var hasConfigured = false
+
+	/* `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and the
+	 welcome view is not on screen before the screen is in a window. */
+	override public func viewDidMoveToWindow() {
+		super.viewDidMoveToWindow()
+
+		guard window != nil, hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+		applyWelcomeViewAppearance()
 	}
 
 	private func applyWelcomeViewAppearance() {

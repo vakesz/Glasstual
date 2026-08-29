@@ -59,18 +59,14 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 	private var splitViewDelegate = MainWindowChannelViewDelegate()
 	private var itemIndexSelected = NSNotFound
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-		MainActor.assumeIsolated {
-			delegate = splitViewDelegate
-		}
-	}
-
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
+
+		/* Was `awakeFromNib`, which is nonisolated. The delegate only has to be
+		 in place before the split view lays out, and it is idempotent. */
+		if window != nil, delegate == nil {
+			delegate = splitViewDelegate
+		}
 
 		/* -viewDidMoveToWindow is not guaranteed to alternate between a window
 		 and nil. Remove any previous registration first so that moving within

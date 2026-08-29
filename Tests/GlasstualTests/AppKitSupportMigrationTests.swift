@@ -121,7 +121,7 @@ struct AppKitSupportMigrationTests {
 	func memberInfoPopoverUsesTransientBehavior() {
 		let popover = MemberListUserInfoPopover()
 
-		popover.awakeFromNib()
+		popover.configure()
 
 		#expect(popover.behavior == .transient)
 	}

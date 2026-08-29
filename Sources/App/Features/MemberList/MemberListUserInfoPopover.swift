@@ -24,15 +24,19 @@ public final class MemberListUserInfoPopover: NSPopover {
 	@IBOutlet public var privilegesField: NSTextField!
 	@IBOutlet public var awayStatusField: NSTextField!
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
+	private var hasConfigured = false
 
-		MainActor.assumeIsolated {
-			behavior = .transient
+	/// Nib-time configuration, run by the owning member list once the outlet is
+	/// connected. `awakeFromNib` is nonisolated, so reaching `behavior` from it
+	/// took a runtime assumption about the calling thread; the owner is already
+	/// on the main actor and the compiler can see it.
+	public func configure() {
+		guard hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+		behavior = .transient
 	}
 
 	override public func mouseDown(with _: NSEvent) {

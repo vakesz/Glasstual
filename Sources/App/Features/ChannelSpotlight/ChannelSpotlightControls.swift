@@ -62,22 +62,27 @@ public final class ChannelSpotlightTextField: NSTextField {
 
 @objc(TDCChannelSpotlightImageView)
 public final class ChannelSpotlightImageView: NSImageView {
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
+	private var hasConfigured = false
 
-		MainActor.assumeIsolated {
-			let symbol = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
-			var configuration = NSImage.SymbolConfiguration(pointSize: 20.0, weight: .medium)
-			configuration = configuration.applying(
-				NSImage.SymbolConfiguration(hierarchicalColor: .secondaryLabelColor)
-			)
+	/* `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and the
+	 symbol only has to be in place before the view is drawn. */
+	override public func viewDidMoveToWindow() {
+		super.viewDidMoveToWindow()
 
-			image = symbol?.withSymbolConfiguration(configuration)
-			contentTintColor = .secondaryLabelColor
+		guard window != nil, hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+
+		let symbol = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
+		var configuration = NSImage.SymbolConfiguration(pointSize: 20.0, weight: .medium)
+		configuration = configuration.applying(
+			NSImage.SymbolConfiguration(hierarchicalColor: .secondaryLabelColor)
+		)
+
+		image = symbol?.withSymbolConfiguration(configuration)
+		contentTintColor = .secondaryLabelColor
 	}
 
 	override public var mouseDownCanMoveWindow: Bool {

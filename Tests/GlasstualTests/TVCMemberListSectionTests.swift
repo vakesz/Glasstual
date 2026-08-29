@@ -51,7 +51,7 @@ struct TVCMemberListSectionTests {
 		let client = GLTTestClient()
 		let memberList = MemberList(frame: NSRect(x: 0, y: 0, width: 150, height: 400))
 		memberList.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("member")))
-		memberList.awakeFromNib()
+		memberList.configure()
 
 		let controller = IRCChannelMemberListController()
 		controller.setValue(memberList, forKey: "tableView")
@@ -169,7 +169,7 @@ struct TVCMemberListSectionTests {
 		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
 		let nicknameField = NSTextField(labelWithString: "")
 		cell.setValue(nicknameField, forKey: "cellTextField")
-		cell.awakeFromNib()
+		cell.configure()
 
 		#expect(nicknameField.usesSingleLineMode)
 		#expect(nicknameField.maximumNumberOfLines == 1)

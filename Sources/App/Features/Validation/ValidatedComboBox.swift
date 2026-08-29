@@ -96,36 +96,41 @@ public final class ValidatedComboBox: NSComboBox {
 		cachedValidValue
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
+	private var hasConfigured = false
 
-		MainActor.assumeIsolated {
-			cachedValidValue = false
+	/* `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and none of
+	 these notifications can arrive before the box is in a window. */
+	override public func viewDidMoveToWindow() {
+		super.viewDidMoveToWindow()
 
-			NotificationCenter.default.addObserver(
-				self,
-				selector: #selector(comboBoxSelectionDidChange(_:)),
-				name: NSComboBox.selectionDidChangeNotification,
-				object: self
-			)
-
-			NotificationCenter.default.addObserver(
-				self,
-				selector: #selector(comboBoxWillPopUp(_:)),
-				name: NSComboBox.willPopUpNotification,
-				object: self
-			)
-
-			NotificationCenter.default.addObserver(
-				self,
-				selector: #selector(comboBoxWillDismiss(_:)),
-				name: NSComboBox.willDismissNotification,
-				object: self
-			)
+		guard window != nil, hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+
+		cachedValidValue = false
+
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(comboBoxSelectionDidChange(_:)),
+			name: NSComboBox.selectionDidChangeNotification,
+			object: self
+		)
+
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(comboBoxWillPopUp(_:)),
+			name: NSComboBox.willPopUpNotification,
+			object: self
+		)
+
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(comboBoxWillDismiss(_:)),
+			name: NSComboBox.willDismissNotification,
+			object: self
+		)
 	}
 
 	/** Isolated so the popover teardown runs on the main actor whichever thread

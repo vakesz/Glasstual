@@ -185,16 +185,20 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		updateAppearance()
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-		MainActor.assumeIsolated {
-			guard hasAwakenedFromNib == false else { return }
-			hasAwakenedFromNib = true
-			finishAwakeningFromNib()
+	/// Brings the window up once its nib has finished decoding.
+	///
+	/// The application controller calls this immediately after `loadNibNamed`
+	/// returns. It used to be `awakeFromNib`, which AppKit declares nonisolated:
+	/// everything below touches main-actor state and so sat behind a runtime
+	/// assumption about the decoding thread. The owner is on the main actor
+	/// already, so the call is checked instead of assumed.
+	public func configure() {
+		guard hasAwakenedFromNib == false else {
+			return
 		}
+
+		hasAwakenedFromNib = true
+		finishAwakeningFromNib()
 	}
 
 	private func finishAwakeningFromNib() {
@@ -207,6 +211,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		isRestorable = true
 		restorationClass = Self.self
 		installWindowChrome()
+		formattingMenu?.configure()
 		installFormattingMenuDecorations()
 		updateAppearance()
 		_ = reloadLoadingScreen()
