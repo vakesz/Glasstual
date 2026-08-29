@@ -37,6 +37,7 @@
 
 import AppKit
 import GlasstualPluginKit
+import os
 
 private enum ChatFilterEditSection: Int {
 	case general, channels, events, sender, notes, advanced
@@ -122,8 +123,25 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		fatalError("init(coder:) is unavailable")
 	}
 
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['Chat Filter']"
+	)
+
 	private func prepareInitialState() {
-		Bundle(for: Self.self).loadNibNamed("TPI_ChatFilterEditFilterSheet", owner: self, topLevelObjects: nil)
+		/* Every step below reads an outlet the nib connects, so a failed load
+		 has to stop here rather than crash on the first implicitly unwrapped
+		 one. `start()` refuses to present a sheet that was never built. */
+		guard Bundle(for: Self.self).loadNibNamed(
+			"TPI_ChatFilterEditFilterSheet",
+			owner: self,
+			topLevelObjects: nil
+		) else {
+			Self.logger.error("Could not load TPI_ChatFilterEditFilterSheet")
+
+			return
+		}
+
 		populateTokenFields()
 		setupTextFieldRules()
 		loadFilter()
@@ -133,7 +151,8 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 
 	func start() {
-		guard let window else { return }
+		guard let window, let sheet else { return }
+
 		window.beginSheet(sheet)
 	}
 
@@ -337,14 +356,18 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		field.objectValue = tokens(from: string)
 	}
 
+	/// A `%_name_%` placeholder in a filter action. Computed rather than
+	/// stored: `Regex` is not `Sendable`.
+	private static var actionToken: Regex<Substring> {
+		/%_[a-zA-Z0-9_]+_%/
+	}
+
 	private func tokens(from value: String?) -> [Any] {
 		guard let value, !value.isEmpty else { return value.map { [$0] } ?? [] }
-		let expression = try? NSRegularExpression(pattern: "%_([a-zA-Z0-9_]+)_%")
-		let range = NSRange(value.startIndex..., in: value)
 		var result: [Any] = []
 		var cursor = value.startIndex
-		for match in expression?.matches(in: value, range: range) ?? [] {
-			guard let tokenRange = Range(match.range, in: value) else { continue }
+		for match in value.matches(of: Self.actionToken) {
+			let tokenRange = match.range
 			if cursor < tokenRange.lowerBound {
 				result.append(String(value[cursor ..< tokenRange.lowerBound]))
 			}

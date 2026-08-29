@@ -162,28 +162,20 @@ public enum InlineVideoContent {
 			return TimeInterval(timestamp) ?? 0
 		}
 
-		guard let expression = try? NSRegularExpression(
-			pattern: "([0-9]+)([hms])",
-			options: .caseInsensitive
-		) else {
-			return 0
-		}
+		// One `<number><unit>` pair. A local `let` rather than a stored static:
+		// `Regex` is not `Sendable`, and the compiler has already parsed the
+		// literal — what is left is a cheap constructor call.
+		let component = /([0-9]+)([hmsHMS])/
 
 		var value: TimeInterval = 0
 		var matchedUnits = Set<String>()
-		let range = NSRange(timestamp.startIndex ..< timestamp.endIndex, in: timestamp)
 
-		for match in expression.matches(in: timestamp, range: range) {
-			guard
-				let valueRange = Range(match.range(at: 1), in: timestamp),
-				let unitRange = Range(match.range(at: 2), in: timestamp)
-			else {
-				continue
-			}
+		for match in timestamp.matches(of: component) {
+			let unit = match.2.lowercased()
 
-			let unit = timestamp[unitRange].lowercased()
 			guard matchedUnits.insert(unit).inserted else { continue }
-			let component = TimeInterval(timestamp[valueRange]) ?? 0
+
+			let component = TimeInterval(match.1) ?? 0
 
 			switch unit {
 			case "h": value += component * 3600

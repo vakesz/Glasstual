@@ -75,7 +75,6 @@ public extension IRCClient {
 		labelForBatchToken.removeAll()
 		enabledCapabilityNames.removeAll()
 		offeredCapabilities.removeAll()
-		offeredCapabilityNames.removeAll()
 		pendingCapabilityRequests.removeAll()
 	}
 

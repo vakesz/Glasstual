@@ -145,4 +145,23 @@ public final class MessageBatch: NSObject {
 	@objc public func dequeueEntries() {
 		entries.removeAll()
 	}
+
+	/// `true` when this batch, or one it is nested inside, replays lines that
+	/// were said earlier. The walk is bounded the same way the rest of the
+	/// batch code bounds it, so a server that reports a cycle cannot hang us.
+	public var isReplay: Bool {
+		var batch: MessageBatch? = self
+		var depth = 0
+
+		while let current = batch, depth < IRCBatchPolicy.maximumParentDepth {
+			if IRCBatchPolicy.isReplay(current.batchType) {
+				return true
+			}
+
+			batch = current.parentBatchMessage
+			depth += 1
+		}
+
+		return false
+	}
 }

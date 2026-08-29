@@ -44,6 +44,10 @@ import Synchronization
 	case rfc1459 = 0
 	case strictRFC1459 = 1
 	case ascii = 2
+	/// RFC 7613 §3.3 `UsernameCaseMapped`: Unicode case folding and NFC, with
+	/// none of the ASCII bracket-to-brace equivalences the RFC 1459 mappings
+	/// inherited from Scandinavian keyboards.
+	case rfc7613 = 3
 }
 
 nonisolated enum IRCISupportUserModes { // nonisolated: value
@@ -842,6 +846,8 @@ private extension IRCISupportInfo {
 			self.caseMapping = .ascii
 		} else if caseMapping.caseInsensitiveCompare("strict-rfc1459") == .orderedSame {
 			self.caseMapping = .strictRFC1459
+		} else if caseMapping.caseInsensitiveCompare("rfc7613") == .orderedSame {
+			self.caseMapping = .rfc7613
 		} else {
 			self.caseMapping = .rfc1459
 		}

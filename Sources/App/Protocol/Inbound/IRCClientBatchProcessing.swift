@@ -59,6 +59,12 @@ enum IRCBatchPolicy {
 	static func isNetsplit(_ type: String?) -> Bool {
 		type == "netsplit" || type == "netjoin"
 	}
+
+	/// A batch whose contents were said before the client asked for them:
+	/// `chathistory` (IRCv3) or a bouncer's `playback` batch (ZNC).
+	static func isReplay(_ type: String?) -> Bool {
+		isChatHistory(type) || type == "playback" || type == "znc.in/playback"
+	}
 }
 
 private let batchProcessingLogger = Logger(

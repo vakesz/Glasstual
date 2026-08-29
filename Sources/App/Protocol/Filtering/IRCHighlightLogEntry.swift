@@ -51,9 +51,8 @@ private nonisolated let highlightLogEntryLogger = Logger( // nonisolated: let
  read by `ServerHighlightListSheet`, which sorts and draws the entries itself
  rather than binding an `NSArrayController` to them by KVC key path.
 
- The entry is never written to disk, so it is not `Codable`. Its identity is the
- line it logged: `lineNumber` names one printed line. */
-public nonisolated struct HighlightLogEntry: Hashable, Sendable, CustomStringConvertible { // nonisolated: value
+ Its identity is the line it logged: `lineNumber` names one printed line. */
+public nonisolated struct HighlightLogEntry: Codable, Hashable, Sendable { // nonisolated: value
 	public var lineLogged: LogLine
 	public var clientId: String
 	public var channelId: String
@@ -122,7 +121,9 @@ public nonisolated struct HighlightLogEntry: Hashable, Sendable, CustomStringCon
 			preferredFontColor: .controlTextColor
 		) ?? NSAttributedString(string: formatted)
 	}
+}
 
+extension HighlightLogEntry: CustomStringConvertible {
 	/** `description` cannot resolve the channel or format the line against it —
 	 both need the main actor — so the identifiers name the entry instead. */
 	public var description: String {

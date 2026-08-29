@@ -48,7 +48,7 @@ let TVCLogLineDefaultCommandValue = "-100"
  attribute dictionary and archived with every log line — so a number may never
  be reused and a new case may only ever be appended. `offTheRecordEncryptionStatus`
  stays at 15 for the sake of already-archived lines even though OTR is gone. */
-@objc public enum TVCLogLineType: UInt, Sendable {
+@objc public enum TVCLogLineType: UInt, Codable, Sendable {
 	case undefined = 0
 	case action = 1
 	case actionNoHighlight = 2
@@ -74,13 +74,13 @@ let TVCLogLineDefaultCommandValue = "-100"
 }
 
 /** Persisted alongside the log line; see `TVCLogLineType`. */
-@objc public enum TVCLogLineMemberType: UInt, Sendable {
+@objc public enum TVCLogLineMemberType: UInt, Codable, Sendable {
 	case normal = 0
 	case localUser = 1
 }
 
 /** Persisted alongside the log line; see `TVCLogLineType`. */
-@objc public enum TVCLogLineDeliveryState: UInt, Sendable {
+@objc public enum TVCLogLineDeliveryState: UInt, Codable, Sendable {
 	case none = 0
 	case pending = 1
 	case delivered = 2
