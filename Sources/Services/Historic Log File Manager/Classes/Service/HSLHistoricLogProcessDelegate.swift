@@ -49,15 +49,26 @@ final class HistoricLogProcessDelegate: NSObject, NSXPCListenerDelegate {
 		connection.exportedInterface = exportedInterface
 		connection.remoteObjectInterface = NSXPCInterface(with: HistoricLogClientProtocol.self)
 
-		let exportedObject = HistoricLogProcessMain(connection: connection)
-		connection.exportedObject = exportedObject
+		/* The store owns every piece of mutable state; the exported object owns
+		 the connection, which cannot be sent into an actor, and carries the
+		 store's deletion notices back to the client. */
+		let notices = HistoricLogNotices()
+		let store = HistoricLogStore(notices: notices)
+
+		connection.exportedObject = HistoricLogProcessMain(
+			store: store,
+			notices: notices,
+			connection: connection
+		)
 		connection.invalidationHandler = { [weak connection] in
-			exportedObject.connectionInvalidated()
+			Task { await store.connectionInvalidated() }
+
 			connection?.exportedObject = nil
 			connection?.invalidationHandler = nil
 		}
 
 		connection.resume()
+
 		return true
 	}
 }

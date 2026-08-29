@@ -304,6 +304,7 @@
 		4DD207100D847D6F5E744B3E /* IRCHostmaskGlobTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA63C805AF20F5FF9DC747 /* IRCHostmaskGlobTests.swift */; };
 		4DDDD6C61FA2A132134C44B3 /* IRCSpecParserCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B05823BFF201C101176F16 /* IRCSpecParserCorpusTests.swift */; };
 		4E021EF78FC3F69AFD786A25 /* IRCLabeledResponseRetirementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D544929B3F1620347D7AC1E4 /* IRCLabeledResponseRetirementTests.swift */; };
+		4E4224247615A5F9576ABD1A /* HLSHistoricLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 706BF8856C36F40A94A0E575 /* HLSHistoricLogStore.swift */; };
 		4E465EE48DA92CDF59C35D70 /* IRCSpecTransportSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF2904432BD6121EBB29A3B /* IRCSpecTransportSecurityTests.swift */; };
 		4E5ECBEFF2044E44BB36CD79 /* IRCClientHistoryAndReadMarkers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9F34E99AD58F2E26CA49DA /* IRCClientHistoryAndReadMarkers.swift */; };
 		4EC4B841B2CB8C565D691CDE /* InlineContentURLPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302924725389D19E73F4CEB3 /* InlineContentURLPolicyTests.swift */; };
@@ -387,6 +388,7 @@
 		657B0769BD78F87B83F592A3 /* PreferencesRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799861E982D7382DCB59AA4F /* PreferencesRootView.swift */; };
 		66852027091D4A38DA729324 /* Preferences+Internal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D344CEBA9DEB6776D25F12D /* Preferences+Internal.swift */; };
 		66E7B12F8E1852168627CF52 /* IRCISupportPrefixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F361C4DD4D59D989F75A8860 /* IRCISupportPrefixTests.swift */; };
+		6737D908C1FC0F86E5884D67 /* HLSHistoricLogDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA05FB4493ECB05C9E226B /* HLSHistoricLogDatabase.swift */; };
 		67B13235224BFD5492280EE8 /* ServerPropertiesSheetProxyAndTLS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE850A92B27DBB6A770546A /* ServerPropertiesSheetProxyAndTLS.swift */; };
 		67B5D14BAB01F75D30979CB3 /* PreferencesUserDefaultsLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 463B8BD0746AD7C29A77D5F9 /* PreferencesUserDefaultsLocal.swift */; };
 		6801DBA04A06DE256DA9CF20 /* TPCPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7526C404C923DEA6854E2C4A /* TPCPreferences.swift */; };
@@ -821,7 +823,6 @@
 		DB11D88B6D963F6B9A4E494B /* OnboardingStepViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C5315E176DE7F0C909CE4FE /* OnboardingStepViewController.swift */; };
 		DB278784D3CEA202F9A2418E /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE3CB48865CA4E3A162E8229 /* QuartzCore.framework */; };
 		DB379D44B0B3856D221D35CE /* ServerChannelListStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2477BFC73E3BDF019DCC3AA3 /* ServerChannelListStrings.swift */; };
-		DB7CB428888E79E4AD9D3BC2 /* HLSHistoricLogViewContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C2DCCB756BBE0671C5FAA0 /* HLSHistoricLogViewContext.swift */; };
 		DC434F07F43BD9299F2418E5 /* ChannelTopicContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F011AD5FF84C5A0AA1C744 /* ChannelTopicContent.swift */; };
 		DC8C4592CAEE04483630ACC9 /* PreferencesPaneComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320F4891A1A7139D5309559B /* PreferencesPaneComponents.swift */; };
 		DCEB18C177DF218B4AEC2103 /* IRCSpecCapabilityBehaviourTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E016A614216C2BF4F2EA56BC /* IRCSpecCapabilityBehaviourTests.swift */; };
@@ -1329,6 +1330,7 @@
 		0ABEDF4B0F6FAF37F1ADC4AA /* validate-hostname.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "validate-hostname.json"; sourceTree = "<group>"; };
 		0B41DE00FBAC33E4099BF05B /* ChannelModesContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelModesContent.swift; sourceTree = "<group>"; };
 		0B69DD9DF091AD8AF1F46B38 /* IRCServiceNoticeOriginTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCServiceNoticeOriginTests.swift; sourceTree = "<group>"; };
+		0BAA05FB4493ECB05C9E226B /* HLSHistoricLogDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSHistoricLogDatabase.swift; sourceTree = "<group>"; };
 		0BC04A37537536CC23E3EF16 /* LogViewSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewSchemeHandler.swift; sourceTree = "<group>"; };
 		0C024594D8234E3B2BDC7C2D /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TPI_ChatFilterExtension.xib; sourceTree = "<group>"; };
 		0C1BE238EF18988445B22978 /* InlineMediaModuleCorpusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineMediaModuleCorpusTests.swift; sourceTree = "<group>"; };
@@ -1698,6 +1700,7 @@
 		6FE55F40425E83D52A8A9A92 /* IRCWireTokenisationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCWireTokenisationTests.swift; sourceTree = "<group>"; };
 		703332EFCEAC485EAA31737A /* IRCClientTextEncodingCorpusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientTextEncodingCorpusTests.swift; sourceTree = "<group>"; };
 		703A4ECF99B9ECA7EBEB842D /* NSWindowHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSWindowHelper.swift; sourceTree = "<group>"; };
+		706BF8856C36F40A94A0E575 /* HLSHistoricLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSHistoricLogStore.swift; sourceTree = "<group>"; };
 		70B8C3021575D883A099E2FB /* TDCFileTransferDialog.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TDCFileTransferDialog.xcstrings; sourceTree = "<group>"; };
 		70C730B42BACE7617C97E28C /* IRCClientEncodingFilteringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientEncodingFilteringTests.swift; sourceTree = "<group>"; };
 		70E6813EE66A96C5CE2B2C14 /* IRCSTSPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSTSPolicyTests.swift; sourceTree = "<group>"; };
@@ -1996,7 +1999,6 @@
 		D28F13698392CF35EBDE896B /* IRCModeInfoValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCModeInfoValueTests.swift; sourceTree = "<group>"; };
 		D2DEDE3B5C54A5F2768D554F /* CommonValidationStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonValidationStrings.swift; sourceTree = "<group>"; };
 		D3B630B7CAA3000955F3B2FE /* IRCClientRequestedCommandPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientRequestedCommandPresentation.swift; sourceTree = "<group>"; };
-		D3C2DCCB756BBE0671C5FAA0 /* HLSHistoricLogViewContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSHistoricLogViewContext.swift; sourceTree = "<group>"; };
 		D3E0D27EACF1D6114AE62C6F /* RemoteConnectionProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConnectionProtocolTests.swift; sourceTree = "<group>"; };
 		D42159B79FC155669A974143 /* ChannelSelectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelSelectionViewController.swift; sourceTree = "<group>"; };
 		D49BA4A6D309AFE8FFEFAF3F /* NSColorHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColorHelper.swift; sourceTree = "<group>"; };
@@ -2691,7 +2693,6 @@
 			isa = PBXGroup;
 			children = (
 				A8E4038835D2CE3B332178F7 /* Service */,
-				D3C2DCCB756BBE0671C5FAA0 /* HLSHistoricLogViewContext.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -3581,7 +3582,9 @@
 		A8E4038835D2CE3B332178F7 /* Service */ = {
 			isa = PBXGroup;
 			children = (
+				0BAA05FB4493ECB05C9E226B /* HLSHistoricLogDatabase.swift */,
 				361BDB7EF4075AEB28B636BD /* HLSHistoricLogProcessMain.swift */,
+				706BF8856C36F40A94A0E575 /* HLSHistoricLogStore.swift */,
 				68E1C532678519AA5906FFF9 /* HSLHistoricLogProcessDelegate.swift */,
 				E47063D1045E743A5413A62A /* main.swift */,
 			);
@@ -5135,8 +5138,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				B627E36B418181BC351364B4 /* ApplicationGroup.swift in Sources */,
+				6737D908C1FC0F86E5884D67 /* HLSHistoricLogDatabase.swift in Sources */,
 				DAC08EE01659D4AF29F62C8D /* HLSHistoricLogProcessMain.swift in Sources */,
-				DB7CB428888E79E4AD9D3BC2 /* HLSHistoricLogViewContext.swift in Sources */,
+				4E4224247615A5F9576ABD1A /* HLSHistoricLogStore.swift in Sources */,
 				CA6A9E329056B55DF78489B2 /* HSLHistoricLogProcessDelegate.swift in Sources */,
 				EA735DC56D4A01A68B59D793 /* HistoricLogFileStorageModel.xcdatamodeld in Sources */,
 				C38A893F88891842C00454E2 /* HistoricLogProtocols.swift in Sources */,
