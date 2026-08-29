@@ -85,20 +85,35 @@ extension MenuActionCoordinator {
 		}
 	}
 
+	/** The Channel and Query menu bar items carry their menu only while the
+	 selection has one to show. AppKit never validates a menu bar item, so the
+	 selection has to hand the menu over itself; validation calls the same code
+	 for the items that do get validated. */
+	func attachChannelMenu(to item: NSMenuItem?) {
+		guard let item else { return }
+		let visible = selectedChannel?.isChannel == true
+		item.isHidden = visible == false
+		item.submenu = visible ? menuController?.mainMenuChannelMenu : nil
+	}
+
+	func attachQueryMenu(to item: NSMenuItem?) {
+		guard let item else { return }
+		let channel = selectedChannel
+		let visible = channel.map { $0.isPrivateMessage || $0.isUtility || $0.isDirectChat } == true
+		item.isHidden = visible == false
+		item.submenu = visible ? menuController?.mainMenuQueryMenu : nil
+	}
+
 	private func validateGeneralCommand(_ item: NSMenuItem) -> Bool {
 		let client = selectedClient
 		let channel = selectedChannel
 
 		switch item.command {
 		case .channelMenu:
-			let visible = channel?.isChannel == true
-			item.isHidden = visible == false
-			item.submenu = visible ? menuController?.mainMenuChannelMenu : nil
+			attachChannelMenu(to: item)
 			return true
 		case .queryMenu:
-			let visible = channel.map { $0.isPrivateMessage || $0.isUtility || $0.isDirectChat } == true
-			item.isHidden = visible == false
-			item.submenu = visible ? menuController?.mainMenuQueryMenu : nil
+			attachQueryMenu(to: item)
 			return true
 		case .closeWindow:
 			return validateCloseWindow(item, client: client, channel: channel)
