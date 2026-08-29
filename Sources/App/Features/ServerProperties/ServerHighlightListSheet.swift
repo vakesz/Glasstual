@@ -30,8 +30,8 @@ private enum HighlightListSortKey: String {
 public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, TableViewPasteboardDelegate,
 	NSTableViewDataSource, NSTableViewDelegate
 {
-	@objc public private(set) var client: IRCClient!
-	@objc public private(set) var clientId: String?
+	public private(set) var client: IRCClient!
+	public private(set) var clientId: String?
 
 	@IBOutlet private var headerTitleTextField: NSTextField!
 	@IBOutlet private var highlightListTable: BasicTableView!
@@ -43,7 +43,6 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, Tabl
 	 fills the cells in `tableView(_:viewFor:row:)`. */
 	private var highlightEntries: [HighlightLogEntry] = []
 
-	@objc(initWithClient:)
 	public init(client: IRCClient) {
 		super.init(window: nil)
 		self.client = client
@@ -66,7 +65,7 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, Tabl
 		addEntries(client.cachedHighlights)
 	}
 
-	@objc public func start() {
+	public func start() {
 		startSheet()
 	}
 
@@ -219,7 +218,7 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, Tabl
 		return view
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		highlightListTable.dataSource = nil
 		highlightListTable.delegate = nil
 

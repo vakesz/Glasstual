@@ -51,7 +51,6 @@ enum MenuServerActionPolicy {
 
 @MainActor
 public extension MenuActionCoordinator {
-	@objc(performServerChannelAction:sender:)
 	func performServerChannelAction(_ action: TXMenuServerChannelAction, sender: Any?) {
 		switch action {
 		case .connect: connect(bypassingProxy: false)

@@ -56,7 +56,6 @@ public extension TXMenuController {
 		edit(.print, sender)
 	}
 
-	@objc(messageReplyMenuItemsForMessageIdentifier:nickname:excerpt:)
 	func messageReplyMenuItems(messageIdentifier: String, nickname: String?, excerpt: String?) -> [NSMenuItem] {
 		actionCoordinator.messageReplyItems(
 			messageIdentifier: messageIdentifier,
@@ -186,7 +185,6 @@ public extension TXMenuController {
 		serverChannel(.empty, sender)
 	}
 
-	@objc(shareMenuItemForItems:)
 	func shareMenuItem(for items: [Any]) -> NSMenuItem {
 		actionCoordinator.shareMenuItem(for: items)
 	}
@@ -208,8 +206,7 @@ public extension TXMenuController {
 		member(.modifyIgnore, sender)
 	}
 
-	@objc(memberInMemberListDoubleClicked:)
-	func memberInMemberListDoubleClicked(_ sender: Any) {
+	@objc func memberInMemberListDoubleClicked(_ sender: Any) {
 		member(.memberListDoubleClick, sender)
 	}
 
@@ -217,7 +214,6 @@ public extension TXMenuController {
 		member(.channelViewDoubleClick, sender)
 	}
 
-	@objc(memberInsertNameIntoTextField:)
 	func memberInsertNameIntoTextField(_ sender: Any) {
 		member(.insertNickname, sender)
 	}
@@ -226,7 +222,6 @@ public extension TXMenuController {
 		member(.whois, sender)
 	}
 
-	@objc(whoisSelectedMembers:)
 	func whoisSelectedMembers(_ sender: Any) {
 		member(.whois, sender)
 	}
@@ -319,7 +314,7 @@ public extension TXMenuController {
 		member(.sendFile, sender)
 	}
 
-	@objc var fileTransferController: TDCFileTransferDialog {
+	var fileTransferController: TDCFileTransferDialog {
 		SharedApplication.sharedFileTransferDialog()
 	}
 
@@ -327,17 +322,14 @@ public extension TXMenuController {
 		fileTransferController.show(true, restorePosition: true)
 	}
 
-	@objc(memberSendDroppedFilesToSelectedChannel:)
 	func memberSendDroppedFiles(toSelectedChannel files: [String]) {
 		actionCoordinator.sendDroppedFilesToSelectedChannel(files)
 	}
 
-	@objc(memberSendDroppedFiles:row:)
 	func memberSendDroppedFiles(_ files: [String], row: UInt) {
 		actionCoordinator.sendDroppedFiles(files, row: row)
 	}
 
-	@objc(memberSendDroppedFiles:to:)
 	func memberSendDroppedFiles(_ files: [String], to nickname: String) {
 		actionCoordinator.sendDroppedFiles(files, nickname: nickname)
 	}
@@ -422,12 +414,10 @@ public extension TXMenuController {
 		window(.exportPreferences, sender)
 	}
 
-	@objc(toggleMuteOnNotificationsShortcutOn:)
 	func toggleMuteOnNotificationsShortcut(on: Bool) {
 		actionCoordinator.setNotificationsMuted(on)
 	}
 
-	@objc(toggleMuteOnNotificationSoundsShortcutOn:)
 	func toggleMuteOnNotificationSoundsShortcut(on: Bool) {
 		actionCoordinator.setNotificationSoundsMuted(on)
 	}
@@ -468,27 +458,23 @@ public extension TXMenuController {
 		window(.resetSuppressedWarnings, sender)
 	}
 
-	@objc(navigateToTreeItemAtURL:)
 	func navigateToTreeItem(at url: URL) {
 		actionCoordinator.navigateToTreeItem(at: url)
 	}
 
-	@objc(navigateToTreeItemWithIdentifier:)
 	func navigateToTreeItem(withIdentifier identifier: String) {
 		actionCoordinator.navigateToTreeItem(withIdentifier: identifier)
 	}
 
-	@objc(navigateToTreeItem:)
 	func navigateToTreeItem(_ item: IRCTreeItem) {
 		actionCoordinator.navigateToTreeItem(item)
 	}
 
-	@objc func populateNavigationChannelList() {
+	func populateNavigationChannelList() {
 		actionCoordinator.populateNavigationChannelList()
 	}
 
-	@objc(_navigateToChannelInNavigationList:)
-	func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
+	@objc func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
 		actionCoordinator.navigateToChannelInNavigationList(sender)
 	}
 

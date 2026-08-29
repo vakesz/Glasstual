@@ -40,16 +40,14 @@ import AppKit
 import CocoaExtensions
 import SwiftUI
 
-@objc public enum PreferencesControllerSelection: UInt, Sendable {
+public enum PreferencesControllerSelection: UInt, Sendable {
 	case `default`
 	case notifications
 	case style
 	case hiddenPreferences
 }
 
-@objc(TDCPreferencesControllerDelegate)
 public protocol PreferencesControllerDelegate: AnyObject {
-	@objc(preferencesDialogWillClose:)
 	func preferencesDialogWillClose(_ sender: PreferencesController)
 }
 
@@ -60,7 +58,6 @@ public protocol PreferencesControllerDelegate: AnyObject {
  present — the font panel, the folder choosers, the style sheet editor and the
  alerts. The panes themselves are SwiftUI and reach back through
  `PreferencesPaneActionHandler`. */
-@objc(TDCPreferencesController)
 @MainActor
 public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindowDelegate,
 	PreferencesUserStyleSheetDelegate
@@ -136,7 +133,7 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 		hostedWindow.title = PreferencesStrings.accessibilityTitle
 		window = hostedWindow
 		installToolbar()
-		window.ce_restoreState(for: Self.self)
+		window.ce_restoreState(for: .preferences)
 	}
 
 	private func installToolbar() {
@@ -183,7 +180,6 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 		show(.default)
 	}
 
-	@objc(show:)
 	public func show(_ selection: PreferencesControllerSelection) {
 		let requestedPane: PreferencesPaneIdentifier = switch selection {
 		case .notifications: .notifications
@@ -439,19 +435,18 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 
 	// MARK: - Closing
 
-	@objc(openProxySettingsInSystemPreferences)
 	public static func openProxySettingsInSystemPreferences() {
 		guard let url = URL(string: "x-apple.systempreferences:com.apple.Network-Settings.extension?Proxies")
 		else { return }
 		NSWorkspace.shared.open(url)
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		notifications.cancelAll()
 		releaseFontPanel()
 		// The window keeps wherever the user put it: nothing moves the frame
 		// before it is written out.
-		window.ce_saveState(for: Self.self)
+		window.ce_saveState(for: .preferences)
 		(delegate as? PreferencesControllerDelegate)?.preferencesDialogWillClose(self)
 	}
 }

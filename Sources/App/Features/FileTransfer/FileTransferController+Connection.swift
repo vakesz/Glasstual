@@ -41,15 +41,14 @@ import Foundation
 import os
 
 extension TDCFileTransferDialogTransferController {
-	@objc public func open() {
+	public func open() {
 		open(withPath: nil)
 	}
 
-	@objc public func openWithPathOrUserDownloads() {
+	public func openWithPathOrUserDownloads() {
 		open(withPath: path == nil ? PathInfo.userDownloads : nil)
 	}
 
-	@objc(openWithPath:)
 	public func open(withPath path: String?) {
 		dispatchPrecondition(condition: .onQueue(.main))
 
@@ -101,7 +100,7 @@ extension TDCFileTransferDialogTransferController {
 		portMapping.close()
 	}
 
-	@objc public func noteIPAddressLookupSucceeded() {
+	public func noteIPAddressLookupSucceeded() {
 		if isSender {
 			transferStatus = isReversed ? .waitingForReceiverToAccept : .isListeningAsSender
 		} else if isReversed {
@@ -112,11 +111,10 @@ extension TDCFileTransferDialogTransferController {
 		sendTransferRequestToClient()
 	}
 
-	@objc public func noteIPAddressLookupFailed() {
+	public func noteIPAddressLookupFailed() {
 		close(with: .sourceIPAddressUnknown)
 	}
 
-	@objc(didReceiveResumeRequest:)
 	public func didReceiveResumeRequest(_ proposedPosition: UInt64) {
 		dispatchPrecondition(condition: .onQueue(.main))
 		guard proposedPosition > 0, currentFilesize >= proposedPosition else { return }
@@ -126,7 +124,6 @@ extension TDCFileTransferDialogTransferController {
 		sendTransferResumeAcceptToClient()
 	}
 
-	@objc(didReceiveResumeAccept:)
 	public func didReceiveResumeAccept(_ proposedPosition: UInt64) {
 		dispatchPrecondition(condition: .onQueue(.main))
 		NSObject.cancelPreviousPerformRequests(
@@ -148,7 +145,6 @@ extension TDCFileTransferDialogTransferController {
 		openTransfer()
 	}
 
-	@objc(didReceiveSendRequest:hostPort:)
 	public func didReceiveSendRequest(_ hostAddress: String, hostPort: UInt16) {
 		dispatchPrecondition(condition: .onQueue(.main))
 		self.hostAddress = hostAddress
@@ -157,7 +153,7 @@ extension TDCFileTransferDialogTransferController {
 		openConnectionToHost()
 	}
 
-	@objc public func sendTransferRequestToClient() {
+	public func sendTransferRequestToClient() {
 		guard let client else { return }
 
 		if isSender {
@@ -286,7 +282,7 @@ extension TDCFileTransferDialogTransferController {
 		return filePath
 	}
 
-	@objc private func portMapperDidFinishWork(_: Notification?) {
+	private func portMapperDidFinishWork(_: Notification?) {
 		guard transferStatus == .mappingListeningPort, let portMapping else {
 			assertionFailure("Port mapping completed in an invalid transfer state")
 			return

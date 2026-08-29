@@ -211,11 +211,10 @@ public extension IRCClient {
 		return AppController.shared.mainWindow?.isItemSelected(channel) ?? false
 	}
 
-	@objc func clearEventsToSpeak() {
+	func clearEventsToSpeak() {
 		SharedApplication.sharedSpeechSynthesizer().clearQueue(for: self)
 	}
 
-	@objc(speakEvent:lineType:target:nickname:text:)
 	func speakEvent(
 		_ event: TXNotificationType,
 		lineType: TVCLogLineType,
@@ -244,7 +243,6 @@ public extension IRCClient {
 		SharedApplication.sharedSpeechSynthesizer().speak(.notification(notification))
 	}
 
-	@objc(notifyText:lineType:target:nickname:text:)
 	func notifyText(
 		_ event: TXNotificationType,
 		lineType: TVCLogLineType,
@@ -255,12 +253,10 @@ public extension IRCClient {
 		notifyEvent(event, lineType: lineType, target: target, nickname: nickname, text: text, userInfo: nil)
 	}
 
-	@objc(notifyEvent:lineType:)
 	func notifyEvent(_ event: TXNotificationType, lineType: TVCLogLineType) -> Bool {
 		notifyEvent(event, lineType: lineType, target: nil, nickname: nil, text: nil, userInfo: nil)
 	}
 
-	@objc(notifyEvent:lineType:target:nickname:text:)
 	func notifyEvent(
 		_ event: TXNotificationType,
 		lineType: TVCLogLineType,
@@ -271,7 +267,6 @@ public extension IRCClient {
 		notifyEvent(event, lineType: lineType, target: target, nickname: nickname, text: text, userInfo: nil)
 	}
 
-	@objc(notifyEvent:lineType:target:nickname:text:userInfo:)
 	func notifyEvent(
 		_ event: TXNotificationType,
 		lineType: TVCLogLineType,

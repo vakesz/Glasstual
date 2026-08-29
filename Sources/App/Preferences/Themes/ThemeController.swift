@@ -105,15 +105,17 @@ public final class ThemeController: NSObject {
 	private var bundledThemes: [String: Theme] = [:]
 	private var customThemes: [String: Theme] = [:]
 	private var themeMonitorTask: Task<Void, Never>?
+	/// The theme-integrity and theme-change notifications this controller answers.
+	private let notifications = NotificationSubscriptions()
 
 	override public init() {
 		super.init()
 		prepareInitialState()
 	}
 
-	deinit {
+	isolated deinit {
 		themeMonitorTask?.cancel()
-		NotificationCenter.default.removeObserver(self)
+		notifications.cancelAll()
 	}
 
 	/** The active theme's off-main-actor readable values. Nil until `reload()`. */
@@ -162,43 +164,25 @@ public final class ThemeController: NSObject {
 		populateThemes()
 		startMonitoringThemes()
 
-		let center = NotificationCenter.default
-		center.addObserver(
-			self,
-			selector: #selector(applicationAppearanceChanged(_:)),
-			name: Notification.Name("TXApplicationAppearanceChangedNotification"),
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeIntegrityCompromised(_:)),
-			name: .themeIntegrityCompromised,
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeWasDeleted(_:)),
-			name: .themeWasDeleted,
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeWasModified(_:)),
-			name: .themeWasModified,
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeVarietyChanged(_:)),
-			name: .themeAppearanceChanged,
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeVarietyChanged(_:)),
-			name: .themeVarietyChanged,
-			object: nil
-		)
+		notifications
+			.observe(Notification.Name("TXApplicationAppearanceChangedNotification")) { [weak self] notification in
+				self?.applicationAppearanceChanged(notification)
+			}
+		notifications.observe(.themeIntegrityCompromised) { [weak self] notification in
+			self?.themeIntegrityCompromised(notification)
+		}
+		notifications.observe(.themeWasDeleted) { [weak self] notification in
+			self?.themeWasDeleted(notification)
+		}
+		notifications.observe(.themeWasModified) { [weak self] notification in
+			self?.themeWasModified(notification)
+		}
+		notifications.observe(.themeAppearanceChanged) { [weak self] notification in
+			self?.themeVarietyChanged(notification)
+		}
+		notifications.observe(.themeVarietyChanged) { [weak self] notification in
+			self?.themeVarietyChanged(notification)
+		}
 	}
 
 	public func prepareForApplicationTermination() {

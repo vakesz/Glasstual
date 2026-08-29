@@ -22,7 +22,6 @@ public nonisolated enum ResourceDocumentType { // nonisolated: value
 	public static let scriptFilenameExtension = "scpt"
 }
 
-@objc(TPCResourceManager)
 public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -53,7 +52,7 @@ public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 		}
 	}
 
-	@objc public static func copyResourcesToApplicationSupportFolder() {
+	public static func copyResourcesToApplicationSupportFolder() {
 		guard let sourcePath = PathInfo.customScripts,
 		      let destinationRoot = PathInfo.groupContainerApplicationSupport
 		else {

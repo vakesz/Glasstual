@@ -121,16 +121,15 @@ public protocol NetworkPickerViewControllerDelegate: AnyObject {
 	func networkPickerDidConfirmSelection(_ sender: NetworkPickerViewController)
 }
 
-@objc(TDCNetworkPickerViewController)
 @MainActor
 public final class NetworkPickerViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate,
 	NSSearchFieldDelegate, NSTextFieldDelegate
 {
 	public weak var delegate: (any NetworkPickerViewControllerDelegate)?
 
-	@objc public private(set) var networkList: NetworkList
-	@objc public private(set) var selectedNetwork: Network?
-	@objc public private(set) var customServerSelected = false
+	public private(set) var networkList: NetworkList
+	public private(set) var selectedNetwork: Network?
+	public private(set) var customServerSelected = false
 
 	private var rows: [NetworkPickerRow] = []
 	private var searchField: NSSearchField!
@@ -140,7 +139,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	private var accountNameEdited = false
 	private var defaultNicknameStorage: String?
 
-	@objc public var defaultNickname: String? {
+	public var defaultNickname: String? {
 		get { defaultNicknameStorage }
 		set {
 			defaultNicknameStorage = newValue
@@ -151,7 +150,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		}
 	}
 
-	@objc public init() {
+	public init() {
 		networkList = NetworkList()
 		super.init(nibName: nil, bundle: nil)
 	}
@@ -304,11 +303,10 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 
 	// MARK: - Selection
 
-	@objc public var hasSelection: Bool {
+	public var hasSelection: Bool {
 		selectedNetwork != nil || customServerSelected
 	}
 
-	@objc(selectNetwork:)
 	public func selectNetwork(_ network: Network) {
 		selectedNetwork = network
 		customServerSelected = false
@@ -319,7 +317,6 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		informDelegateSelectionChanged()
 	}
 
-	@objc(selectServerAddress:port:secured:)
 	public func selectServerAddress(_ serverAddress: String, port: UInt16, secured: Bool) {
 		if let network = networkList.network(withServerAddress: serverAddress)
 			?? networkList.network(named: serverAddress)
@@ -339,7 +336,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		informDelegateSelectionChanged()
 	}
 
-	@objc public func clearSelection() {
+	public func clearSelection() {
 		selectedNetwork = nil
 		customServerSelected = false
 		accountNameEdited = false
@@ -395,31 +392,31 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 
 	// MARK: - Values
 
-	@objc public var serverAddress: String {
+	public var serverAddress: String {
 		detailView.serverAddress
 	}
 
-	@objc public var serverPort: UInt16 {
+	public var serverPort: UInt16 {
 		detailView.serverPort
 	}
 
-	@objc public var prefersSecuredConnection: Bool {
+	public var prefersSecuredConnection: Bool {
 		detailView.prefersSecuredConnection
 	}
 
-	@objc public var accountName: String {
+	public var accountName: String {
 		detailView.accountName
 	}
 
-	@objc public var accountPassword: String {
+	public var accountPassword: String {
 		detailView.accountPassword
 	}
 
-	@objc public var usesSASL: Bool {
+	public var usesSASL: Bool {
 		detailView.usesSASL
 	}
 
-	@objc public var suggestedChannels: [String] {
+	public var suggestedChannels: [String] {
 		selectedNetwork?.suggestedChannels ?? []
 	}
 
@@ -480,7 +477,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 
 	// MARK: - Actions
 
-	@objc public func focusSearchField() {
+	public func focusSearchField() {
 		view.window?.makeFirstResponder(searchField)
 	}
 

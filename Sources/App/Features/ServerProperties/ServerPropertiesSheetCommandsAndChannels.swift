@@ -49,13 +49,13 @@ nonisolated enum ServerPropertiesTableSection: Hashable, Sendable { // nonisolat
 /// `NSTableViewDiffableDataSource` implements only the row-count half of
 /// `NSTableViewDataSource`, and a table asks its *data source* — not its
 /// delegate — where a drag may land, so both answers have to come from the one
-/// object. The three methods below are `@objc` because they satisfy optional
+/// object. The three methods below are `` because they satisfy optional
 /// requirements of a protocol the superclass, not this class, declares, and
 /// Swift will not expose them to the runtime on its own.
 ///
 /// The class is `nonisolated` because the initializer it inherits is: a
 /// main-actor subclass cannot re-declare it. It holds no state of its own, and
-/// each `@objc` entry point — every one of them called by AppKit on the main
+/// each `` entry point — every one of them called by AppKit on the main
 /// thread — hops back onto the main actor by declaration. The sheet is reached
 /// through the table's delegate rather than a stored reference so that there is
 /// nothing here for the two isolations to disagree about.
@@ -63,7 +63,6 @@ nonisolated class ServerPropertiesTableDataSource: // nonisolated: xpc-shim
 	NSTableViewDiffableDataSource<ServerPropertiesTableSection, String>
 {
 	@MainActor
-	@objc
 	func tableView(_: NSTableView, pasteboardWriterForRow row: Int) -> (any NSPasteboardWriting)? {
 		let item = NSPasteboardItem()
 		item.setString(String(row), forType: serverPropertiesTableDragToken)
@@ -72,7 +71,6 @@ nonisolated class ServerPropertiesTableDataSource: // nonisolated: xpc-shim
 	}
 
 	@MainActor
-	@objc
 	func tableView(
 		_ tableView: NSTableView,
 		validateDrop _: any NSDraggingInfo,
@@ -85,7 +83,6 @@ nonisolated class ServerPropertiesTableDataSource: // nonisolated: xpc-shim
 	}
 
 	@MainActor
-	@objc
 	func tableView(
 		_ tableView: NSTableView,
 		acceptDrop info: any NSDraggingInfo,

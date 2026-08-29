@@ -20,7 +20,6 @@ import GlasstualPluginKit
 /// inline on the main actor: there is no plugin queue to hop to and no snapshot
 /// to hand across it. Nothing is built until a plugin has actually subscribed
 /// to the event, because building a `PluginClient` walks the whole channel list.
-@objc(THOPluginDispatcher)
 public final nonisolated class PluginDispatcher: NSObject { // nonisolated: value
 	/** Holds a rendered message between the render pass and the JavaScript
 	 callback that reports the line has appeared.
@@ -151,7 +150,6 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		return true
 	}
 
-	@objc(interceptServerInput:for:)
 	@MainActor
 	public static func interceptServerInput(_ inputObject: Message, for client: IRCClient) -> Message? {
 		let interceptors: [any PluginServerMessageIntercepting] = handlers(for: .serverInputDataInterception)
@@ -224,7 +222,6 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 	/// The one dispatch that is not main-actor: the message renderer runs on its
 	/// own queue and calls this synchronously, so the renderers are published as
 	/// a `Sendable` list of their own.
-	@objc(willRenderMessage:forViewController:lineType:memberType:)
 	public static func willRenderMessage(
 		_ newMessage: String,
 		forViewController _: LogController,
@@ -251,7 +248,6 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		return returnValue
 	}
 
-	@objc(userInputCommandInvokedOnClient:commandString:messageString:)
 	@MainActor
 	public static func userInputCommandInvoked(
 		onClient client: IRCClient,
@@ -293,7 +289,6 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		}
 	}
 
-	@objc(didReceiveServerInput:onClient:)
 	@MainActor
 	public static func didReceiveServerInput(_ inputObject: Message, onClient client: IRCClient) {
 		let handlers: [any PluginServerInputHandling] = handlers(
@@ -328,7 +323,6 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		}
 	}
 
-	@objc(dequeueDidPostNewMessageWithLineNumber:forViewController:)
 	@MainActor
 	public static func dequeueDidPostNewMessage(
 		withLineNumber messageLineNumber: String,

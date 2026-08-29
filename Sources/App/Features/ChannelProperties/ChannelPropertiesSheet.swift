@@ -39,14 +39,16 @@ public protocol ChannelPropertiesSheetDelegate: AnyObject {
 @objc(TDCChannelPropertiesSheet)
 @MainActor
 public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelegate, TDCChannelPrototype {
-	@objc public private(set) var client: IRCClient?
-	@objc public private(set) var channel: IRCChannel?
-	@objc public private(set) var clientId: String?
-	@objc public private(set) var channelId: String?
+	public private(set) var client: IRCClient?
+	public private(set) var channel: IRCChannel?
+	public private(set) var clientId: String?
+	public private(set) var channelId: String?
 
 	public var config: ChannelConfig
 
 	private var secretKeyLengthAlertDisplayed = false
+	/// The channel-configuration notification, held while the sheet is up.
+	private let notifications = NotificationSubscriptions()
 	private var panes: [ChannelPropertiesPane] = []
 
 	@IBOutlet private var autoJoinCheck: NSButton!
@@ -214,7 +216,6 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		contentView.replaceFirstSubview(view)
 	}
 
-	@objc
 	public func start() {
 		startSheet()
 		performNavigate(to: .general)
@@ -267,23 +268,15 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 			return
 		}
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(underlyingConfigurationChanged(_:)),
-			name: .ircChannelConfigurationWasUpdated,
-			object: channel
-		)
+		notifications.observe(.ircChannelConfigurationWasUpdated, object: channel) { [weak self] notification in
+			self?.underlyingConfigurationChanged(notification)
+		}
 	}
 
 	private func removeConfigurationDidChangeObserver() {
-		NotificationCenter.default.removeObserver(
-			self,
-			name: .ircChannelConfigurationWasUpdated,
-			object: nil
-		)
+		notifications.cancelAll()
 	}
 
-	@objc
 	private func underlyingConfigurationChanged(_ notification: Notification) {
 		guard let channel = notification.object as? IRCChannel else {
 			return
@@ -388,7 +381,6 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		return false
 	}
 
-	@objc
 	public func windowWillClose(_: Notification) {
 		removeConfigurationDidChangeObserver()
 		sheet.makeFirstResponder(nil)

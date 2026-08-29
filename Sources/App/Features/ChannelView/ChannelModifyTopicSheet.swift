@@ -14,17 +14,13 @@
 import AppKit
 import SwiftUI
 
-@objc(TDCChannelModifyTopicSheetDelegate)
 @MainActor
 public protocol ChannelModifyTopicSheetDelegate: NSObjectProtocol {
-	@objc(channelModifyTopicSheet:onOk:)
 	func channelModifyTopicSheet(_ sender: ChannelModifyTopicSheet, onOk topic: String)
 
-	@objc(channelModifyTopicSheetWillClose:)
 	func channelModifyTopicSheetWillClose(_ sender: ChannelModifyTopicSheet)
 }
 
-@objc(TDCChannelModifyTopicSheet)
 @MainActor
 public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChannelPrototype {
 	private enum SuppressionKey: String {
@@ -33,16 +29,15 @@ public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChan
 
 	private static let contentSize = NSSize(width: 600, height: 201)
 
-	@objc public private(set) var client: IRCClient?
-	@objc public private(set) var channel: IRCChannel?
-	@objc public private(set) var clientId: String?
-	@objc public private(set) var channelId: String?
+	public private(set) var client: IRCClient?
+	public private(set) var channel: IRCChannel?
+	public private(set) var clientId: String?
+	public private(set) var channelId: String?
 
 	let model: ChannelTopicModel
 
 	private let content: ChannelTopicContent
 
-	@objc(initWithChannel:)
 	public init(channel: IRCChannel) {
 		let client = channel.associatedClient
 
@@ -95,7 +90,7 @@ public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChan
 		sheet = hostedSheet
 	}
 
-	@objc public func start() {
+	public func start() {
 		startSheet()
 	}
 
@@ -137,7 +132,7 @@ public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChan
 		super.ok(sender)
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		(delegate as? ChannelModifyTopicSheetDelegate)?.channelModifyTopicSheetWillClose(self)
 	}
 }

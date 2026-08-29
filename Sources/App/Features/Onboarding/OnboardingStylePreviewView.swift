@@ -12,7 +12,6 @@
 
 import AppKit
 
-@objc(TDCOnboardingStylePreviewView)
 public final class OnboardingStylePreviewView: NSView {
 	private var canvas: NSView!
 	private var messageStack: NSStackView!
@@ -26,7 +25,7 @@ public final class OnboardingStylePreviewView: NSView {
 	private var selectedStorage = false
 	private var messageFontSizeStorage: CGFloat = 13
 
-	@objc public var styleName: String {
+	public var styleName: String {
 		get { styleNameStorage }
 		set {
 			styleNameStorage = newValue
@@ -34,7 +33,7 @@ public final class OnboardingStylePreviewView: NSView {
 		}
 	}
 
-	@objc public var styleTitle: String {
+	public var styleTitle: String {
 		get { styleTitleStorage }
 		set {
 			styleTitleStorage = newValue
@@ -42,7 +41,7 @@ public final class OnboardingStylePreviewView: NSView {
 		}
 	}
 
-	@objc public var styleDescription: String {
+	public var styleDescription: String {
 		get { styleDescriptionStorage }
 		set {
 			styleDescriptionStorage = newValue
@@ -50,15 +49,15 @@ public final class OnboardingStylePreviewView: NSView {
 		}
 	}
 
-	@objc public var selected: Bool {
-		@objc(isSelected) get { selectedStorage }
-		@objc(setSelected:) set {
+	public var selected: Bool {
+		get { selectedStorage }
+		set {
 			selectedStorage = newValue
 			updateSelectionAppearance()
 		}
 	}
 
-	@objc public var messageFontSize: CGFloat {
+	public var messageFontSize: CGFloat {
 		get { messageFontSizeStorage }
 		set {
 			messageFontSizeStorage = newValue
@@ -66,8 +65,8 @@ public final class OnboardingStylePreviewView: NSView {
 		}
 	}
 
-	@objc public weak var target: AnyObject?
-	@objc public var action: Selector?
+	public weak var target: AnyObject?
+	public var action: Selector?
 
 	override public init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)

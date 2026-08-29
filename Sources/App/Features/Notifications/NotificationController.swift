@@ -31,14 +31,15 @@ private nonisolated let notificationControllerLogger = Logger( // nonisolated: l
 	category: "NotificationController"
 )
 
-@objc(TLONotificationController)
 @MainActor
 public final class NotificationController: NSObject, UNUserNotificationCenterDelegate {
-	@objc public var areNotificationsDisabled = false
+	public var areNotificationsDisabled = false
 
 	/** The title/message hash is not unique on its own: repeating the same message in
 	 the same channel would otherwise replace the earlier notification. */
 	private var notificationSequenceNumber: UInt64 = 0
+	/// The main-window selection notification this controller answers.
+	private let notifications = NotificationSubscriptions()
 
 	override public init() {
 		super.init()
@@ -46,19 +47,16 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		prepareInitialState()
 	}
 
-	deinit {
-		NotificationCenter.default.removeObserver(self)
+	isolated deinit {
+		notifications.cancelAll()
 	}
 
 	private func prepareInitialState() {
 		UNUserNotificationCenter.current().delegate = self
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(mainWindowSelectionChanged(_:)),
-			name: .mainWindowSelectionChanged,
-			object: nil
-		)
+		notifications.observe(.mainWindowSelectionChanged) { [weak self] notification in
+			self?.mainWindowSelectionChanged(notification)
+		}
 
 		/* On a first launch the onboarding window explains the permission
 		 before asking for it, so the request is left to that flow. */
@@ -115,7 +113,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		UNUserNotificationCenter.current().setNotificationCategories(categoriesToRegister)
 	}
 
-	@objc
 	private func mainWindowSelectionChanged(_: Notification) {
 		guard let mainWindow = AppController.shared.mainWindow,
 		      let client = mainWindow.selectedClient
@@ -126,12 +123,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		dismissNotifications(for: mainWindow.selectedChannel, on: client)
 	}
 
-	@objc(titleForEvent:)
 	public func title(forEvent event: TXNotificationType) -> String {
 		NotificationStrings.eventTypeTitle(for: event)
 	}
 
-	@objc(notify:title:description:userInfo:)
 	public func notify(
 		_ eventType: TXNotificationType,
 		title eventTitle: String?,
@@ -182,7 +177,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	@objc(threadIdentifierForClient:channel:)
 	public static func threadIdentifier(forClient clientIdentifier: String?, channel channelIdentifier: String?)
 		-> String?
 	{
@@ -197,7 +191,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		return clientIdentifier
 	}
 
-	@objc(scheduleNotificationWithTitle:message:userInfo:)
 	public func scheduleNotification(title: String, message: String, userInfo: [String: Any]?) {
 		scheduleNotification(
 			title: title,
@@ -209,7 +202,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	@objc(scheduleNotificationWithTitle:message:userInfo:threadIdentifier:)
 	public func scheduleNotification(
 		title: String,
 		message: String,
@@ -226,7 +218,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	@objc(scheduleNotificationWithTitle:message:forChannel:)
 	public func scheduleNotification(title: String, message: String, for channel: IRCChannel) {
 		guard let client = channel.associatedClient else {
 			return
@@ -235,12 +226,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		scheduleNotification(title: title, message: message, for: channel, on: client)
 	}
 
-	@objc(scheduleNotificationWithTitle:message:onClient:)
 	public func scheduleNotification(title: String, message: String, on client: IRCClient) {
 		scheduleNotification(title: title, message: message, for: nil, on: client)
 	}
 
-	@objc(scheduleNotificationWithTitle:message:forChannel:onClient:)
 	public func scheduleNotification(
 		title: String,
 		message: String,
@@ -316,7 +305,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		scheduleNotification(content: content, identifier: identifier)
 	}
 
-	@objc(notificationIdentifierWithTitle:message:threadIdentifier:)
 	public static func notificationIdentifier(
 		title: String,
 		message: String,
@@ -388,7 +376,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	@objc(dismissNotificationsForChannel:onClient:)
 	public func dismissNotifications(for channel: IRCChannel?, on client: IRCClient) {
 		let clientId = client.uniqueIdentifier
 		let channelId = channel?.uniqueIdentifier
@@ -436,7 +423,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		}
 	}
 
-	@objc(userInfo:isInScopeOfClientIdentifier:channelIdentifier:)
 	public nonisolated static func isNotification( // nonisolated: pure
 		userInfo: [AnyHashable: Any],
 		inScopeOfClientIdentifier clientIdentifier: String,
@@ -552,7 +538,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	// MARK: - Preferences
 
-	@objc(soundForEvent:inChannel:)
 	public func sound(forEvent event: TXNotificationType, in channel: IRCChannel?) -> String? {
 		if let channel, let channelValue = channel.config.sound(forEvent: event) {
 			return channelValue
@@ -561,7 +546,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		return TextualPreferences.sound(for: event)
 	}
 
-	@objc(speakEvent:inChannel:)
 	public func speakEvent(_ event: TXNotificationType, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
@@ -571,7 +555,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	@objc(notificationEnabledForEvent:inChannel:)
 	public func notificationEnabled(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
@@ -581,7 +564,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	@objc(disabledWhileAwayForEvent:inChannel:)
 	public func disabledWhileAway(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
@@ -591,7 +573,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	@objc(bounceDockIconForEvent:inChannel:)
 	public func bounceDockIcon(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
@@ -601,7 +582,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	@objc(bounceDockIconRepeatedlyForEvent:inChannel:)
 	public func bounceDockIconRepeatedly(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,

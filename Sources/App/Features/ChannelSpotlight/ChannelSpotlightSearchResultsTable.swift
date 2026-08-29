@@ -303,12 +303,10 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 
 // MARK: -
 
-@objc(TDCChannelSpotlightSearchResultRowView)
 public final class ChannelSpotlightSearchResultRowView: NSTableRowView {
-	@objc public private(set) weak var controller: ChannelSpotlightController!
+	public private(set) weak var controller: ChannelSpotlightController!
 	private weak var childCellStorage: ChannelSpotlightSearchResultCellView?
 
-	@objc(initWithController:)
 	public init(controller: ChannelSpotlightController) {
 		self.controller = controller
 		super.init(frame: .zero)

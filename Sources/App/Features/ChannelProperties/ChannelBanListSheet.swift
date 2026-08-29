@@ -19,7 +19,6 @@ public protocol ChannelBanListSheetDelegate: AnyObject {
 	func channelBanListSheetWillClose(_ sender: ChannelBanListSheet)
 }
 
-@objc(TDCChannelBanListSheetEntryType)
 public enum ChannelBanListEntryType: UInt {
 	case ban = 0
 	case banException
@@ -73,13 +72,13 @@ private typealias ChannelBanListDataSource =
 @objc(TDCChannelBanListSheet)
 @MainActor
 public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
-	@objc public private(set) var client: IRCClient!
-	@objc public private(set) var channel: IRCChannel!
-	@objc public private(set) var clientId: String?
-	@objc public private(set) var channelId: String?
-	@objc public private(set) var entryType: ChannelBanListEntryType = .ban
-	@objc public private(set) var listOfChanges: [String]?
-	@objc public var contentAlreadyReceived = false
+	public private(set) var client: IRCClient!
+	public private(set) var channel: IRCChannel!
+	public private(set) var clientId: String?
+	public private(set) var channelId: String?
+	public private(set) var entryType: ChannelBanListEntryType = .ban
+	public private(set) var listOfChanges: [String]?
+	public var contentAlreadyReceived = false
 
 	@IBOutlet private var headerTitleTextField: NSTextField!
 	@IBOutlet private var entryTable: BasicTableView!
@@ -89,7 +88,6 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 	private var tableEntries: [ChannelBanListSheetEntry] = []
 	private var entryDataSource: ChannelBanListDataSource?
 
-	@objc(initWithEntryType:inChannel:)
 	public init?(entryType: ChannelBanListEntryType, inChannel channel: IRCChannel) {
 		guard Self.channel(channel, supportsEntryType: entryType) else {
 			return nil
@@ -203,17 +201,16 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 		ascending ? lhs < rhs : lhs > rhs
 	}
 
-	@objc public func start() {
+	public func start() {
 		startSheet()
 	}
 
-	@objc public func clear() {
+	public func clear() {
 		tableEntries.removeAll()
 
 		applyEntries()
 	}
 
-	@objc(addEntry:setBy:creationDate:)
 	public func addEntry(
 		_ entryMask: String,
 		setBy entryAuthor: String?,
@@ -266,7 +263,6 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 		delegate as? any ChannelBanListSheetDelegate
 	}
 
-	@objc(channel:supportsEntryType:)
 	public static func channel(
 		_ channel: IRCChannel,
 		supportsEntryType entryType: ChannelBanListEntryType
@@ -278,11 +274,11 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 		return client.supportInfo.isListSupported(entryType.supportListType)
 	}
 
-	@objc public var modeSymbol: String {
+	public var modeSymbol: String {
 		client.supportInfo.modeSymbol(forList: entryType.supportListType) ?? ""
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		banListDelegate?.channelBanListSheetWillClose(self)
 	}
 }

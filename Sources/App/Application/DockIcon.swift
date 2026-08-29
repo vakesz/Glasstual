@@ -12,12 +12,11 @@
 
 import AppKit
 
-@objc(TVCDockIcon)
 public final class DockIcon: NSObject {
 	@MainActor private static var cachedHighlightCount: Int = -1
 	@MainActor private static var cachedMessageCount: Int = -1
 
-	@MainActor @objc public static func updateDockIcon() {
+	@MainActor public static func updateDockIcon() {
 		guard TextualPreferences.displayDockBadge() else {
 			return
 		}
@@ -47,12 +46,12 @@ public final class DockIcon: NSObject {
 		}
 	}
 
-	@MainActor @objc public static func resetCachedCount() {
+	@MainActor public static func resetCachedCount() {
 		cachedMessageCount = -1
 		cachedHighlightCount = -1
 	}
 
-	@MainActor @objc public static func drawWithoutCount() {
+	@MainActor public static func drawWithoutCount() {
 		if cachedHighlightCount == 0, cachedMessageCount == 0 {
 			return
 		}
@@ -66,7 +65,6 @@ public final class DockIcon: NSObject {
 		dockTile.display()
 	}
 
-	@objc(drawWithHighlightCount:messageCount:)
 	@MainActor public static func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
 		if cachedHighlightCount == Int(highlightCount), cachedMessageCount == Int(messageCount) {
 			return
@@ -105,7 +103,6 @@ public final class DockIcon: NSObject {
 		dockTile.display()
 	}
 
-	@objc(badgeStringForCount:)
 	public static func badgeString(forCount count: UInt) -> String {
 		if count > 9999 {
 			return MainWindowStrings.Dock.overflowBadge(maximum: formattedNumber(9999) as String)
@@ -115,10 +112,9 @@ public final class DockIcon: NSObject {
 	}
 }
 
-@objc(TVCDockIconBadgeView)
 public final class DockIconBadgeView: NSView {
-	@objc public var highlightCount: UInt = 0
-	@objc public var messageCount: UInt = 0
+	public var highlightCount: UInt = 0
+	public var messageCount: UInt = 0
 
 	override public var isFlipped: Bool {
 		false

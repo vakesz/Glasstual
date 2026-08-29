@@ -74,7 +74,6 @@ private let observedPreferenceKeys = [
 	Preferences.Input.textReplacement.name,
 ]
 
-@objc(TVCMainWindowTextView)
 public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObserving {
 	/** NSTextView has a private accessor named placeholderAttributedString.
 	 AppKit may call it, so this property deliberately has another name. */
@@ -185,11 +184,10 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	// MARK: - Replies
 
-	@objc public var replyMessageIdentifier: String? {
+	public var replyMessageIdentifier: String? {
 		accessoryView?.replyMessageIdentifier
 	}
 
-	@objc(beginReplyToMessageIdentifier:nickname:excerpt:)
 	public func beginReply(
 		toMessageIdentifier messageIdentifier: String,
 		nickname: String?,
@@ -200,11 +198,10 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		focus()
 	}
 
-	@objc public func cancelReply() {
+	public func cancelReply() {
 		accessoryView?.hideReply()
 	}
 
-	@objc(consumeReplyIntoClient:)
 	public func consumeReply(into client: IRCClient?) {
 		guard let replyMessageIdentifier else {
 			return
@@ -260,7 +257,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		]
 	}
 
-	@objc private func typingStateDidChange(_ notification: Notification) {
+	private func typingStateDidChange(_ notification: Notification) {
 		guard let channel = notification.userInfo?[MainWindowTextViewNotification.typingChannelKey] as? IRCChannel,
 		      channel === AppController.shared.mainWindow.selectedChannel
 		else {
@@ -270,7 +267,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		updateTypingRow()
 	}
 
-	@objc private func selectionDidChange(_: Notification) {
+	private func selectionDidChange(_: Notification) {
 		let selectedChannel = AppController.shared.mainWindow.selectedChannel
 
 		if let typingChannel, typingChannel !== selectedChannel {
@@ -380,7 +377,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	// MARK: - Spelling
 
-	@objc public func resetSpellingIgnores() {
+	public func resetSpellingIgnores() {
 		NSSpellChecker.shared.setIgnoredWords(
 			defaultSpellingIgnores,
 			inSpellDocumentWithTag: spellCheckerDocumentTag
@@ -422,7 +419,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		}
 	}
 
-	@objc public func updateTextDirection() {
+	public func updateTextDirection() {
 		baseWritingDirection = TextualPreferences.rightToLeftFormatting() ? .rightToLeft : .leftToRight
 	}
 
@@ -534,7 +531,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		updatePlaceholderVisibility()
 	}
 
-	@objc public func updateTextBasedOnPreferredFontSize() {
+	public func updateTextBasedOnPreferredFontSize() {
 		guard let appearance = userInterfaceObjects else {
 			return
 		}
@@ -573,11 +570,11 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		return height
 	}
 
-	@objc public func recalculateTextViewSize() {
+	public func recalculateTextViewSize() {
 		recalculateTextViewSize(force: false)
 	}
 
-	@objc public func recalculateTextViewSizeForced() {
+	public func recalculateTextViewSizeForced() {
 		recalculateTextViewSize(force: true)
 	}
 

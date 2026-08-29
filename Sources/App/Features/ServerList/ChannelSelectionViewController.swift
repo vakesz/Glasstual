@@ -30,14 +30,16 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 	private var cachedClientList: [IRCClient] = []
 	private var cachedChannelList: [ObjectIdentifier: [IRCChannel]] = [:]
 	private var expandOutlineViewWorkItem: DispatchWorkItem?
+	/// The world and client channel-list notifications this view answers.
+	private let notifications = NotificationSubscriptions()
 
 	override public init() {
 		super.init()
 		prepareInitialState()
 	}
 
-	deinit {
-		NotificationCenter.default.removeObserver(self)
+	isolated deinit {
+		notifications.cancelAll()
 	}
 
 	private func prepareInitialState() {
@@ -47,7 +49,6 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 		rebuildCachedChannelList()
 	}
 
-	@objc(attachToView:)
 	public func attach(to view: NSView) {
 		precondition(attachedView == nil, "Table view is already attached to a view")
 
@@ -85,7 +86,6 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 		return outlineView.item(atRow: row) as? IRCTreeItem
 	}
 
-	@objc(selectionCheckboxClickedInCell:)
 	public func selectionCheckboxClicked(inCell clickedCell: ChannelSelectionOutlineCellView) {
 		guard let item = item(from: clickedCell) else {
 			return
@@ -188,7 +188,7 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 
 	// MARK: - Properties
 
-	@objc public var selectedClientIds: [String] {
+	public var selectedClientIds: [String] {
 		get { cachedSelectedClientIdsStorage }
 		set {
 			cachedSelectedClientIdsStorage = newValue
@@ -196,7 +196,7 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 		}
 	}
 
-	@objc public var selectedChannelIds: [String] {
+	public var selectedChannelIds: [String] {
 		get { cachedSelectedChannelIdsStorage }
 		set {
 			cachedSelectedChannelIdsStorage = newValue
@@ -207,19 +207,15 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 	// MARK: - Cache Management
 
 	private func addObserverForChannelListUpdates() {
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(channelListChanged(_:)),
-			name: NSNotification.Name("IRCWorldClientListWasModifiedNotification"),
-			object: nil
-		)
+		notifications
+			.observe(NSNotification.Name("IRCWorldClientListWasModifiedNotification")) { [weak self] notification in
+				self?.channelListChanged(notification)
+			}
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(channelListChanged(_:)),
-			name: NSNotification.Name("IRCClientChannelListWasModifiedNotification"),
-			object: nil
-		)
+		notifications
+			.observe(NSNotification.Name("IRCClientChannelListWasModifiedNotification")) { [weak self] notification in
+				self?.channelListChanged(notification)
+			}
 	}
 
 	private func reloadOutlineView() {
@@ -249,7 +245,7 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 		DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
 	}
 
-	@objc private func channelListChanged(_: Any?) {
+	private func channelListChanged(_: Any?) {
 		/* Cancel before reloading, not after: the reload is what schedules the
 		 expand through outlineView(_:didAdd:forRow:), and cancelling
 		 afterwards leaves the tree collapsed. */

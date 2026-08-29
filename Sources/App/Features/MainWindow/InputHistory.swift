@@ -104,7 +104,6 @@ private final class InputHistoryObject {
 
 /** The input history follows the focused view, so it lives where the text field
  does: on the main actor. That is what makes the plain stored state safe. */
-@objc(TLOInputHistory)
 @MainActor
 public final class InputHistory: NSObject {
 	private weak var window: TVCMainWindow?
@@ -116,14 +115,12 @@ public final class InputHistory: NSObject {
 		fatalError("Use init(window:)")
 	}
 
-	@objc(initWithWindow:)
 	public init(window: TVCMainWindow) {
 		self.window = window
 
 		super.init()
 	}
 
-	@objc(destroy:)
 	public func destroy(_ treeItem: IRCTreeItem) {
 		guard TextualPreferences.inputHistoryIsChannelSpecific() else {
 			return
@@ -143,7 +140,6 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	@objc(moveFocusTo:)
 	public func moveFocus(to treeItem: IRCTreeItem) {
 		guard TextualPreferences.inputHistoryIsChannelSpecific(),
 		      let textView = window?.inputTextField as? TextViewWithIRCFormatter
@@ -164,7 +160,7 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	@objc public func noteInputHistoryObjectScopeDidChange() {
+	public func noteInputHistoryObjectScopeDidChange() {
 		if TextualPreferences.inputHistoryIsChannelSpecific() {
 			for client in AppController.shared.world.clientList {
 				applyGlobalHistory(to: client.uniqueIdentifier)
@@ -181,17 +177,14 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	@objc(add:)
 	public func add(_ string: NSAttributedString) {
 		currentObjectForFocusedTreeView()?.add(string)
 	}
 
-	@objc(up:)
 	public func up(_ string: NSAttributedString) -> NSAttributedString? {
 		currentObjectForFocusedTreeView()?.up(string)
 	}
 
-	@objc(down:)
 	public func down(_ string: NSAttributedString) -> NSAttributedString? {
 		currentObjectForFocusedTreeView()?.down(string)
 	}

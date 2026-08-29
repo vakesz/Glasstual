@@ -47,7 +47,6 @@ public protocol HighlightEntrySheetDelegate: AnyObject {
 	func highlightEntrySheetDidClose(_ sender: HighlightEntrySheet)
 }
 
-@objc(TDCHighlightEntrySheet)
 @MainActor
 public final class HighlightEntrySheet: SheetBase, NSWindowDelegate {
 	private static let contentSize = NSSize(width: 500, height: 150)

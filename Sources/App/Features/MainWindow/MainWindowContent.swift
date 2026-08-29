@@ -44,7 +44,7 @@ import GlasstualPluginKit
 // MARK: - View controls and input
 
 extension MainWindow {
-	@objc public func changeTextSize(_ bigger: Bool) {
+	public func changeTextSize(_ bigger: Bool) {
 		let next = bigger ? textSizeMultiplier * 1.2 : textSizeMultiplier / 1.2
 		guard (0.5 ... 3).contains(next) else { return }
 		textSizeMultiplier = next
@@ -56,11 +56,10 @@ extension MainWindow {
 		}
 	}
 
-	@objc public func markAllAsRead() {
+	public func markAllAsRead() {
 		markAllAsRead(inGroup: nil)
 	}
 
-	@objc(markAllAsReadInGroup:)
 	public func markAllAsRead(inGroup item: IRCTreeItem?) {
 		let markScrollback = TextualPreferences.autoAddScrollbackMark()
 		for client in world.clientList {
@@ -82,7 +81,7 @@ extension MainWindow {
 		}
 	}
 
-	@objc public func reloadTheme() {
+	public func reloadTheme() {
 		guard isReloadingTheme == false else { return }
 		isReloadingTheme = true
 		NotificationCenter.default.post(name: .mainWindowWillReloadTheme, object: self)
@@ -104,21 +103,19 @@ extension MainWindow {
 		NotificationCenter.default.post(name: .mainWindowDidReloadTheme, object: self)
 	}
 
-	@objc(clearContentsOfClient:)
 	public func clearContents(of client: IRCClient) {
 		client.resetState()
 		client.logController?.clear()
 		reloadTreeItem(client)
 	}
 
-	@objc(clearContentsOfChannel:)
 	public func clearContents(of channel: IRCChannel) {
 		channel.resetState()
 		channel.logController?.clear()
 		reloadTreeItem(channel)
 	}
 
-	@objc public func clearAllViews() {
+	public func clearAllViews() {
 		for client in world.clientList {
 			clearContents(of: client)
 			for channel in client.channelList {
@@ -279,7 +276,7 @@ extension MainWindow {
 		makeFirstResponder(view)
 	}
 
-	@objc public func textEntered() {
+	public func textEntered() {
 		inputTextAsCommand(.privmsg)
 	}
 
@@ -348,11 +345,11 @@ public extension MainWindow {
 		}
 	}
 
-	@objc func locationOfMouseInWindow() -> UInt {
+	func locationOfMouseInWindow() -> UInt {
 		locationOfMouseValue(NSEvent.mouseLocation).rawValue
 	}
 
-	@objc func locationOfMouse(_ location: NSPoint) -> UInt {
+	func locationOfMouse(_ location: NSPoint) -> UInt {
 		locationOfMouseValue(location).rawValue
 	}
 
@@ -379,7 +376,7 @@ public extension MainWindow {
 		return titleLocation
 	}
 
-	@objc func preferencesChanged() {
+	func preferencesChanged() {
 		if TextualPreferences.displayDockBadge() {
 			DockIcon.resetCachedCount(); DockIcon.updateDockIcon()
 		} else {
@@ -450,30 +447,30 @@ public extension MainWindow {
 		return selectedClient?.logController
 	}
 
-	@objc func channelViewSelectionChange(to item: IRCTreeItem) {
+	func channelViewSelectionChange(to item: IRCTreeItem) {
 		selectItemInSelectedItems(
 			item,
 			refreshChannelView: false
 		)
 	}
 
-	@objc func updateChannelViewArrangement() {
+	func updateChannelViewArrangement() {
 		channelView.updateArrangement()
 	}
 
-	@objc func updateChannelViewBoxContentViewSelection() {
+	func updateChannelViewBoxContentViewSelection() {
 		channelView.populateSubviews()
 	}
 
-	@objc func isItemVisible(_ item: IRCTreeItem) -> Bool {
+	func isItemVisible(_ item: IRCTreeItem) -> Bool {
 		isItemSelected(item) || isItemInSelectedGroup(item)
 	}
 
-	@objc func isItemSelected(_ item: IRCTreeItem?) -> Bool {
+	func isItemSelected(_ item: IRCTreeItem?) -> Bool {
 		item != nil && selectedItem === item
 	}
 
-	@objc func isItemInSelectedGroup(_ item: IRCTreeItem) -> Bool {
+	func isItemInSelectedGroup(_ item: IRCTreeItem) -> Bool {
 		selectedItems.contains(where: { $0 === item })
 	}
 
@@ -574,11 +571,11 @@ public extension MainWindow {
 		serverListSplitItem.isCollapsed = !state.isServerListVisible
 	}
 
-	@objc func expandServerList() {
+	func expandServerList() {
 		serverListSplitItem.animator().isCollapsed = false
 	}
 
-	@objc func collapseServerList() {
+	func collapseServerList() {
 		serverListSplitItem.animator().isCollapsed = true
 	}
 
@@ -586,11 +583,11 @@ public extension MainWindow {
 		serverListSplitItem.animator().isCollapsed = !serverListSplitItem.isCollapsed
 	}
 
-	@objc func expandMemberList() {
+	func expandMemberList() {
 		memberListSplitItem.animator().isCollapsed = false
 	}
 
-	@objc func collapseMemberList() {
+	func collapseMemberList() {
 		memberListSplitItem.animator().isCollapsed = true
 	}
 
@@ -635,11 +632,11 @@ public extension MainWindow {
 		serverListSplitItem?.isCollapsed == false
 	}
 
-	@objc func setLoadingScreenProgressViewReason(_ reason: String) {
+	func setLoadingScreenProgressViewReason(_ reason: String) {
 		loadingScreen.setProgressViewReason(reason)
 	}
 
-	@objc func reloadLoadingScreen() -> Bool {
+	func reloadLoadingScreen() -> Bool {
 		guard let world = AppController.shared.world else {
 			loadingScreen.showProgressView(withReason: MainWindowStrings.Loading.configuration)
 			return false
@@ -663,13 +660,13 @@ public extension MainWindow {
 // MARK: - Window title
 
 public extension MainWindow {
-	@objc func updateTitle(for item: IRCTreeItem) {
+	func updateTitle(for item: IRCTreeItem) {
 		if isItemSelected(item) {
 			updateTitle()
 		}
 	}
 
-	@objc func updateTitle() {
+	func updateTitle() {
 		guard let client = selectedClient else {
 			title = ApplicationInfo.applicationName()
 			subtitle = ""
@@ -821,16 +818,16 @@ public extension MainWindow {
 		menuController.populateNavigationChannelList()
 	}
 
-	@objc func selectedChannel(on client: IRCClient) -> IRCChannel? {
+	func selectedChannel(on client: IRCClient) -> IRCChannel? {
 		selectedClient === client ?
 			selectedChannel : nil
 	}
 
-	@objc func reloadTreeItem(_ item: IRCTreeItem) {
+	func reloadTreeItem(_ item: IRCTreeItem) {
 		serverList.refreshDrawing(forItem: item)
 	}
 
-	@objc func reloadTreeGroup(_ item: IRCTreeItem) {
+	func reloadTreeGroup(_ item: IRCTreeItem) {
 		guard item.isClient, let client = item.associatedClient else { return }
 		reloadTreeItem(client)
 		for channel in client.channelList {
@@ -838,15 +835,15 @@ public extension MainWindow {
 		}
 	}
 
-	@objc func reloadTree() {
+	func reloadTree() {
 		serverList.refreshAllDrawings()
 	}
 
-	@objc func expandClient(_ client: IRCClient) {
+	func expandClient(_ client: IRCClient) {
 		serverList.animator().expandItem(client)
 	}
 
-	@objc func adjustSelection() {
+	func adjustSelection() {
 		adjustSelection(with: selectedItems, selectedItem: selectedItem)
 	}
 
@@ -881,7 +878,7 @@ public extension MainWindow {
 		selectedClient?.lastSelectedChannel = selectedChannel
 	}
 
-	@objc func selectPreviousItem() {
+	func selectPreviousItem() {
 		guard let previous = previouslySelectedItem else { return }
 		let previousItems = previousSelectedItemsId.compactMap { world.findItem(withId: $0) }
 		adjustSelection(with: previousItems, selectedItem: previous)
@@ -897,17 +894,14 @@ public extension MainWindow {
 		selectionDidChangePostflight()
 	}
 
-	@objc(select:)
 	func select(_ item: IRCTreeItem?) {
 		shiftSelection(from: selectedItem, to: item, options: [.maintainGrouping, .performDeselect])
 	}
 
-	@objc(deselect:)
 	func deselect(_ item: IRCTreeItem) {
 		shiftSelection(from: item, to: nil, options: .performDeselect)
 	}
 
-	@objc(deselectGroup:)
 	func deselectGroup(_ item: IRCTreeItem) {
 		guard item.isClient else { return }
 		shiftSelection(from: item, to: nil, options: [.performDeselect, .performDeselectChildren])

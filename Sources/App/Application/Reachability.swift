@@ -46,11 +46,10 @@ enum ReachabilityPathEvent: Int {
 
 /** Reachability changes drive `IRCWorld`, which lives on the main actor, so the
  notifier does too: no lock, no queue hop, no opting out of the checker. */
-@objc(OELReachability)
 @MainActor
 public final class Reachability: NSObject {
-	@objc public var reachableBlock: ((Reachability) -> Void)?
-	@objc public var unreachableBlock: ((Reachability) -> Void)?
+	public var reachableBlock: ((Reachability) -> Void)?
+	public var unreachableBlock: ((Reachability) -> Void)?
 
 	private var monitorTask: Task<Void, Never>?
 	private var currentlyReachable = false
@@ -61,12 +60,10 @@ public final class Reachability: NSObject {
 	 never reported. */
 	private var receivedInitialPath = false
 
-	@objc(isReachable)
 	public var reachable: Bool {
 		currentlyReachable
 	}
 
-	@objc(reachabilityForInternetConnection)
 	public static func reachabilityForInternetConnection() -> Reachability {
 		Reachability()
 	}
@@ -78,7 +75,6 @@ public final class Reachability: NSObject {
 		unreachableBlock = nil
 	}
 
-	@objc
 	@discardableResult
 	public func startNotifier() -> Bool {
 		/* A path monitor is single use: once cancelled it never delivers
@@ -98,7 +94,6 @@ public final class Reachability: NSObject {
 		return true
 	}
 
-	@objc
 	public func stopNotifier() {
 		monitorTask?.cancel()
 		monitorTask = nil
@@ -121,7 +116,6 @@ public final class Reachability: NSObject {
 		}
 	}
 
-	@objc(evaluatePathChange:currentlyReachable:receivedInitialPath:)
 	public nonisolated static func evaluatePathChange( // nonisolated: pure
 		reachable: Bool,
 		currentlyReachable: UnsafeMutablePointer<ObjCBool>,

@@ -28,7 +28,6 @@ private struct WeakLogger {
 
 /// Transcript file logger. Main-actor isolated so that opening, writing and the
 /// idle sweep that closes a stale handle can never race with each other.
-@objc(TLOFileLogger)
 @MainActor
 public final class FileLogger: NSObject {
 	private static let logger = Logger(
@@ -54,21 +53,19 @@ public final class FileLogger: NSObject {
 	private var dateOpened: Date?
 	private var lastWriteTime: TimeInterval = 0
 
-	@objc public private(set) var filePath: String?
+	public private(set) var filePath: String?
 
 	@available(*, unavailable)
 	override public init() {
 		fatalError("Use init(client:) or init(channel:)")
 	}
 
-	@objc(initWithClient:)
 	public init(client: IRCClient) {
 		self.client = client
 
 		super.init()
 	}
 
-	@objc(initWithChannel:)
 	public init(channel: IRCChannel) {
 		client = channel.associatedClient
 		self.channel = channel
@@ -92,7 +89,6 @@ public final class FileLogger: NSObject {
 		writePlainText(stringToWrite)
 	}
 
-	@objc(writePlainText:)
 	public func writePlainText(_ string: String) {
 		reopenIfNeeded()
 
@@ -123,7 +119,7 @@ public final class FileLogger: NSObject {
 
 	// MARK: - File Handle Management
 
-	@objc public func close() {
+	public func close() {
 		closeHandle(removeObserver: true)
 	}
 
@@ -154,7 +150,7 @@ public final class FileLogger: NSObject {
 		}
 	}
 
-	@objc public func reopenIfNeeded() {
+	public func reopenIfNeeded() {
 		if fileHandle != nil, let dateOpened, Calendar.current.isDate(dateOpened, inSameDayAs: Date()) {
 			return
 		}
@@ -162,12 +158,12 @@ public final class FileLogger: NSObject {
 		reopen()
 	}
 
-	@objc public func reopen() {
+	public func reopen() {
 		close()
 		open()
 	}
 
-	@objc public func open() {
+	public func open() {
 		if fileHandle != nil {
 			Self.logger.error("Tried to open log file when a file handle already exists")
 
@@ -224,15 +220,14 @@ public final class FileLogger: NSObject {
 
 	// MARK: - Paths
 
-	@objc public var writePath: String? {
+	public var writePath: String? {
 		(filePath as NSString?)?.deletingLastPathComponent
 	}
 
-	@objc public var fileName: String? {
+	public var fileName: String? {
 		(filePath as NSString?)?.lastPathComponent
 	}
 
-	@objc(writePathForItem:)
 	public static func writePath(for item: IRCTreeItem) -> String? {
 		guard let sourcePath = PathInfo.transcriptFolder else {
 			return nil
@@ -241,7 +236,6 @@ public final class FileLogger: NSObject {
 		return writePath(for: item, relativeTo: sourcePath)
 	}
 
-	@objc(writePathForItem:relativeTo:)
 	public static func writePath(for item: IRCTreeItem, relativeTo sourcePath: String) -> String? {
 		guard let relativePath = relativeTranscriptPath(for: item) else {
 			return nil

@@ -13,7 +13,6 @@
 import AppKit
 import SwiftUI
 
-@objc(TDCProgressIndicatorSheet)
 @MainActor
 public final class ProgressIndicatorSheet: SheetBase {
 	private static let contentSize = NSSize(width: 406, height: 60)
@@ -21,7 +20,6 @@ public final class ProgressIndicatorSheet: SheetBase {
 	private let content = ProgressIndicatorContent.current
 	private let model = ProgressIndicatorModel()
 
-	@objc(initWithWindow:)
 	override public init(window: NSWindow?) {
 		precondition(window != nil)
 		super.init(window: window)
@@ -47,12 +45,12 @@ public final class ProgressIndicatorSheet: SheetBase {
 		sheet = hostedSheet
 	}
 
-	@objc public func start() {
+	public func start() {
 		model.start()
 		startSheet()
 	}
 
-	@objc public func stop() {
+	public func stop() {
 		model.stop()
 		close()
 	}

@@ -19,73 +19,49 @@ private let serverListLogger = Logger(
 	category: "ServerList"
 )
 
-@objc
 public protocol TVCServerListDelegate: NSObjectProtocol {
-	@objc(serverListKeyDown:)
 	func serverListKeyDown(_ event: NSEvent)
 }
 
 @objc(TVCServerList)
 public final class ServerList: NSOutlineView, AppearanceObserving {
-	@objc public weak var keyDelegate: TVCServerListDelegate?
+	public weak var keyDelegate: TVCServerListDelegate?
+
+	/** -viewDidMoveToWindow is not guaranteed to alternate between a window and
+	 nil, so the bag is emptied first: moving within the same window must not
+	 leave a second set of subscriptions behind. The bag holds only ours, which
+	 is what a blanket -removeObserver: could not promise — it would also drop
+	 the registrations AppKit keeps for the table itself. */
+	private let notifications = NotificationSubscriptions()
 
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
 
-		/* -viewDidMoveToWindow is not guaranteed to alternate between a window
-		 and nil. Remove any previous registration first so that moving within
-		 the same window does not leave duplicate observers behind. Only our
-		 own names are removed; a blanket -removeObserver: would also drop
-		 the registrations AppKit keeps for the table itself. */
-		NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: nil)
-		NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: nil)
-		NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeMainNotification, object: nil)
-		NotificationCenter.default.removeObserver(self, name: NSWindow.didResignMainNotification, object: nil)
-		NotificationCenter.default.removeObserver(
-			self,
-			name: .TVCMainWindowRedrawSubviews,
-			object: nil
-		)
+		notifications.cancelAll()
 
 		guard let mainWindow else {
 			return
 		}
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(windowDidBecomeKey(_:)),
-			name: NSWindow.didBecomeKeyNotification,
-			object: mainWindow
-		)
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(windowDidResignKey(_:)),
-			name: NSWindow.didResignKeyNotification,
-			object: mainWindow
-		)
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(windowMainStateChanged(_:)),
-			name: NSWindow.didBecomeMainNotification,
-			object: mainWindow
-		)
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(windowMainStateChanged(_:)),
-			name: NSWindow.didResignMainNotification,
-			object: mainWindow
-		)
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(mainWindowRequiresRedraw(_:)),
-			name: .TVCMainWindowRedrawSubviews,
-			object: mainWindow
-		)
+		notifications.observe(NSWindow.didBecomeKeyNotification, object: mainWindow) { [weak self] notification in
+			self?.windowDidBecomeKey(notification)
+		}
+		notifications.observe(NSWindow.didResignKeyNotification, object: mainWindow) { [weak self] notification in
+			self?.windowDidResignKey(notification)
+		}
+		notifications.observe(NSWindow.didBecomeMainNotification, object: mainWindow) { [weak self] notification in
+			self?.windowMainStateChanged(notification)
+		}
+		notifications.observe(NSWindow.didResignMainNotification, object: mainWindow) { [weak self] notification in
+			self?.windowMainStateChanged(notification)
+		}
+		notifications.observe(.TVCMainWindowRedrawSubviews, object: mainWindow) { [weak self] notification in
+			self?.mainWindowRequiresRedraw(notification)
+		}
 	}
 
 	// MARK: - Additions / Removal
 
-	@objc(addItemToList:inParent:)
 	public func addItem(toList rowIndex: UInt, inParent parent: Any?) {
 		insertItems(
 			at: IndexSet(integer: Int(rowIndex)),
@@ -98,7 +74,6 @@ public final class ServerList: NSOutlineView, AppearanceObserving {
 		}
 	}
 
-	@objc(removeItemFromList:)
 	public func removeItem(fromList object: Any) {
 		/* Indexes come from the model rather than the view: row(forItem:),
 		 parent(forItem:) and items(inContainingGroupOf:) only know about rows
@@ -142,36 +117,30 @@ public final class ServerList: NSOutlineView, AppearanceObserving {
 
 	// MARK: - Drawing Updates
 
-	@objc
 	public func refreshAllDrawings() {
 		refreshAllDrawings(false)
 	}
 
-	@objc(refreshAllDrawings:)
 	public func refreshAllDrawings(_ skipOcclusionCheck: Bool) {
 		for rowIndex in 0 ..< numberOfRows {
 			refreshDrawing(forRow: rowIndex, skipOcclusionCheck: skipOcclusionCheck)
 		}
 	}
 
-	@objc(refreshDrawingForRows:)
 	public func refreshDrawing(forRows rowIndexes: IndexSet) {
 		refreshDrawing(forRows: rowIndexes, skipOcclusionCheck: false)
 	}
 
-	@objc(refreshDrawingForRows:skipOcclusionCheck:)
 	public func refreshDrawing(forRows rowIndexes: IndexSet, skipOcclusionCheck: Bool) {
 		for index in rowIndexes {
 			refreshDrawing(forRow: index, skipOcclusionCheck: skipOcclusionCheck)
 		}
 	}
 
-	@objc(refreshDrawingForRow:)
 	public func refreshDrawing(forRow rowIndex: Int) {
 		refreshDrawing(forRow: rowIndex, skipOcclusionCheck: false)
 	}
 
-	@objc(refreshDrawingForRow:skipOcclusionCheck:)
 	public func refreshDrawing(forRow rowIndex: Int, skipOcclusionCheck: Bool) {
 		guard rowIndex >= 0 else {
 			return
@@ -190,58 +159,48 @@ public final class ServerList: NSOutlineView, AppearanceObserving {
 		rowView(atRow: rowIndex, makeIfNecessary: false)?.needsDisplay = true
 	}
 
-	@objc(refreshDrawingForItem:)
 	public func refreshDrawing(forItem cellItem: IRCTreeItem) {
 		refreshDrawing(forItem: cellItem, skipOcclusionCheck: false)
 	}
 
-	@objc(refreshDrawingForItem:skipOcclusionCheck:)
 	public func refreshDrawing(forItem cellItem: IRCTreeItem, skipOcclusionCheck: Bool) {
 		let rowIndex = row(forItem: cellItem)
 		refreshDrawing(forRow: rowIndex, skipOcclusionCheck: skipOcclusionCheck)
 	}
 
-	@objc(refreshMessageCountForItem:)
 	public func refreshMessageCount(forItem cellItem: IRCTreeItem) {
 		refreshMessageCount(forItem: cellItem, skipOcclusionCheck: false)
 	}
 
-	@objc(refreshMessageCountForItem:skipOcclusionCheck:)
 	public func refreshMessageCount(forItem cellItem: IRCTreeItem, skipOcclusionCheck: Bool) {
 		let rowIndex = row(forItem: cellItem)
 		refreshMessageCount(forRow: rowIndex, skipOcclusionCheck: skipOcclusionCheck)
 	}
 
-	@objc
 	public func refreshAllUnreadMessageCountBadges() {
 		refreshAllUnreadMessageCountBadges(false)
 	}
 
-	@objc(refreshAllUnreadMessageCountBadges:)
 	public func refreshAllUnreadMessageCountBadges(_ skipOcclusionCheck: Bool) {
 		for rowIndex in 0 ..< numberOfRows {
 			refreshMessageCount(forRow: rowIndex, skipOcclusionCheck: skipOcclusionCheck)
 		}
 	}
 
-	@objc(refreshMessageCountForRows:)
 	public func refreshMessageCount(forRows rowIndexes: IndexSet) {
 		refreshMessageCount(forRows: rowIndexes, skipOcclusionCheck: false)
 	}
 
-	@objc(refreshMessageCountForRows:skipOcclusionCheck:)
 	public func refreshMessageCount(forRows rowIndexes: IndexSet, skipOcclusionCheck: Bool) {
 		for index in rowIndexes {
 			refreshMessageCount(forRow: index, skipOcclusionCheck: skipOcclusionCheck)
 		}
 	}
 
-	@objc(refreshMessageCountForRow:)
 	public func refreshMessageCount(forRow rowIndex: Int) {
 		refreshMessageCount(forRow: rowIndex, skipOcclusionCheck: false)
 	}
 
-	@objc(refreshMessageCountForRow:skipOcclusionCheck:)
 	public func refreshMessageCount(forRow rowIndex: Int, skipOcclusionCheck: Bool) {
 		guard rowIndex >= 0 else {
 			return
@@ -276,12 +235,10 @@ public final class ServerList: NSOutlineView, AppearanceObserving {
 		needsDisplay = true
 	}
 
-	@objc
 	private func windowDidBecomeKey(_ notification: Notification) {
 		windowKeyStateChanged(notification)
 	}
 
-	@objc
 	private func windowDidResignKey(_ notification: Notification) {
 		windowKeyStateChanged(notification)
 	}
@@ -290,7 +247,6 @@ public final class ServerList: NSOutlineView, AppearanceObserving {
 		respondToRequiresRedraw()
 	}
 
-	@objc
 	private func windowMainStateChanged(_: Notification) {
 		/* Row emphasis follows main-window status (see TVCServerListRowCell),
 		 which AppKit does not re-evaluate on its own. */
@@ -303,7 +259,6 @@ public final class ServerList: NSOutlineView, AppearanceObserving {
 		respondToRequiresRedraw()
 	}
 
-	@objc
 	private func mainWindowRequiresRedraw(_: Notification) {
 		respondToRequiresRedraw()
 	}
@@ -326,7 +281,6 @@ public final class ServerList: NSOutlineView, AppearanceObserving {
 		return menu
 	}
 
-	@objc
 	public var leftMouseIsDownInView: Bool {
 		/* Used by the selection delegate to tell a click driven selection
 		 change apart from a programmatic one. Derived from the current

@@ -71,8 +71,6 @@ private struct LogControllerSharedState: Sendable {
 	var uniqueIdentifier = ""
 }
 
-@objc(TVCLogControllerPrintOperationContext)
-@objcMembers
 public final class LogControllerPrintOperationContext: NSObject {
 	public private(set) weak var client: IRCClient?
 	public private(set) weak var channel: IRCChannel?
@@ -90,8 +88,6 @@ public final class LogControllerPrintOperationContext: NSObject {
 	}
 }
 
-@objc(TVCLogController)
-@objcMembers
 @MainActor
 public final class LogController: NSObject {
 	public private(set) var backingView: LogView!
@@ -180,7 +176,6 @@ public final class LogController: NSObject {
 		fatalError("Use a designated log controller initializer")
 	}
 
-	@objc(initWithClient:inWindow:)
 	public init(client: IRCClient, in window: TVCMainWindow) {
 		sharedState.withLock {
 			$0.client = client
@@ -191,7 +186,6 @@ public final class LogController: NSObject {
 		setUp()
 	}
 
-	@objc(initWithChannel:inWindow:)
 	public init(channel: IRCChannel, in window: TVCMainWindow) {
 		sharedState.withLock {
 			$0.client = channel.associatedClient
@@ -381,7 +375,6 @@ public final class LogController: NSObject {
 		evaluateFunction(function, withArguments: arguments, onQueue: true)
 	}
 
-	@objc(evaluateFunction:withArguments:onQueue:)
 	public func evaluateFunction(_ function: String, withArguments arguments: [Any]?, onQueue: Bool) {
 		guard !terminating else {
 			return
@@ -457,7 +450,6 @@ public final class LogController: NSObject {
 		enqueueHistoryMark(function: "_Glasstual.historyIndicatorAdd", extraArguments: [])
 	}
 
-	@objc(markAtDate:)
 	public func mark(at date: Date) {
 		enqueueHistoryMark(
 			function: "_Glasstual.historyIndicatorAddAfterTimestamp",
@@ -631,12 +623,10 @@ public extension LogController {
 		jump(toLine: lineNumber)
 	}
 
-	@objc(jumpToLine:)
 	func jump(toLine lineNumber: String) {
 		jump(toLine: lineNumber, completionHandler: nil)
 	}
 
-	@objc(jumpToLine:completionHandler:)
 	func jump(toLine lineNumber: String, completionHandler: ((Bool) -> Void)?) {
 		if let completionHandler {
 			jumpToLineCallbacks[lineNumber] = completionHandler
@@ -915,7 +905,6 @@ public extension LogController {
 		})
 	}
 
-	@objc(renderLogLinesAfterLineNumber:beforeLineNumber:maximumNumberOfLines:completionBlock:)
 	func renderLogLines(
 		afterLineNumber lineNumberAfter: String,
 		beforeLineNumber lineNumberBefore: String,
@@ -938,7 +927,6 @@ public extension LogController {
 		)
 	}
 
-	@objc(renderLogLineAtLineNumber:numberOfLinesBefore:numberOfLinesAfter:completionBlock:)
 	func renderLogLine(
 		atLineNumber lineNumber: String,
 		numberOfLinesBefore: UInt,
@@ -1243,7 +1231,6 @@ public extension LogController {
 		attachedWindow?.redirectKeyDown(event)
 	}
 
-	@objc(logViewWebViewReceivedDropWithFile:)
 	func logViewWebViewReceivedDrop(withFile filename: String) {
 		AppController.shared.menuController?.memberSendDroppedFiles(toSelectedChannel: [filename])
 	}

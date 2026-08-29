@@ -21,7 +21,6 @@ public protocol CustomKeyboardEventResponder: AnyObject {
 
 @objc(TXApplication)
 public final class Application: NSApplication, CustomKeyboardEventResponder {
-	@objc(checkForOtherCopiesOfGlasstualRunning)
 	public static func shouldContinueLaunching() -> Bool {
 		let ourProcessIdentifier = ProcessInfo.processInfo.processIdentifier
 

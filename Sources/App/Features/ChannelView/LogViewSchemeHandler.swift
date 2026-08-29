@@ -56,7 +56,6 @@ private let schemeHandlerLogger = Logger(
  Rendered documents are held in memory and served from there, so nothing is
  written into the theme's temporary directory any more. */
 @MainActor
-@objc(TVCLogViewSchemeHandler)
 public final class LogViewThemeSchemeHandler: NSObject, WKURLSchemeHandler {
 	public static let shared = LogViewThemeSchemeHandler()
 

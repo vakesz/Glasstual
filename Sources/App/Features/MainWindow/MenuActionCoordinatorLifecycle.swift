@@ -48,7 +48,6 @@ enum MenuLifecyclePolicy {
 
 @MainActor
 public extension MenuActionCoordinator {
-	@objc(prepareInitialState)
 	func prepareInitialState() {
 		guard let menuController else {
 			return
@@ -66,38 +65,25 @@ public extension MenuActionCoordinator {
 		SharedApplication.sharedFileTransferDialog().startUsingDownloadDestinationURL()
 		applyMenuSymbols()
 
-		let notificationCenter = NotificationCenter.default
-		notificationCenter.addObserver(
-			self,
-			selector: #selector(menuItemWillPerformAction(_:)),
-			name: NSMenu.willSendActionNotification,
-			object: nil
-		)
-		notificationCenter.addObserver(
-			self,
-			selector: #selector(menuItemDidPerformAction(_:)),
-			name: NSMenu.didSendActionNotification,
-			object: nil
-		)
-		notificationCenter.addObserver(
-			self,
-			selector: #selector(mainWindowSelectionChanged(_:)),
-			name: .mainWindowSelectionChanged,
-			object: nil
-		)
+		notifications.observe(NSMenu.willSendActionNotification) { [weak self] notification in
+			self?.menuItemWillPerformAction(notification)
+		}
+		notifications.observe(NSMenu.didSendActionNotification) { [weak self] notification in
+			self?.menuItemDidPerformAction(notification)
+		}
+		notifications.observe(.mainWindowSelectionChanged) { [weak self] notification in
+			self?.mainWindowSelectionChanged(notification)
+		}
 	}
 
-	@objc(prepareForApplicationTermination)
 	func prepareForApplicationTermination() {
 		SharedApplication.sharedFileTransferDialog().prepareForApplicationTermination()
 	}
 
-	@objc(preferencesChanged)
 	func preferencesChanged() {
 		SharedApplication.sharedFileTransferDialog().clearIPAddress()
 	}
 
-	@objc(menuWillOpen:)
 	func menuWillOpen(_: NSMenu) {
 		menuIsOpen = true
 		pointedClient = mainWindow.selectedClient
@@ -105,7 +91,6 @@ public extension MenuActionCoordinator {
 		menuPerformedActionLastOpen = false
 	}
 
-	@objc(menuDidClose:)
 	func menuDidClose(_: NSMenu) {
 		menuIsOpen = false
 
@@ -123,28 +108,23 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	@objc(resetSelectedItems)
 	func resetSelectedItems() {
 		pointedClient = nil
 		pointedChannel = nil
 	}
 
-	@objc(selectedClient)
 	func objcSelectedClient() -> IRCClient? {
 		selectedClient
 	}
 
-	@objc(selectedChannel)
 	func objcSelectedChannel() -> IRCChannel? {
 		selectedChannel
 	}
 
-	@objc(selectedViewController)
 	func objcSelectedViewController() -> LogController? {
 		selectedChannel?.logController ?? selectedClient?.logController
 	}
 
-	@objc(selectedViewControllerBackingView)
 	func objcSelectedViewControllerBackingView() -> LogView? {
 		objcSelectedViewController()?.backingView
 	}
@@ -173,7 +153,7 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	@objc private func mainWindowSelectionChanged(_: Notification) {
+	private func mainWindowSelectionChanged(_: Notification) {
 		if menuIsOpen == false {
 			resetSelectedItems()
 		}
@@ -182,14 +162,14 @@ public extension MenuActionCoordinator {
 		menuController?.mainMenuQueryMenuItem?.submenu?.update()
 	}
 
-	@objc private func menuItemWillPerformAction(_ notification: Notification) {
+	private func menuItemWillPerformAction(_ notification: Notification) {
 		guard notificationMenuItem(notification)?.target === menuController else {
 			return
 		}
 		menuPerformedActionLastOpen = true
 	}
 
-	@objc private func menuItemDidPerformAction(_ notification: Notification) {
+	private func menuItemDidPerformAction(_ notification: Notification) {
 		guard notificationMenuItem(notification)?.target === menuController else {
 			return
 		}
