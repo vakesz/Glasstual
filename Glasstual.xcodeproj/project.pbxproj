@@ -199,6 +199,7 @@
 		3234502873CA8E20E23B571E /* PreferencesPaneModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1BA2B3FEFCDF28C9FE6264 /* PreferencesPaneModel.swift */; };
 		3281C19BCB114A3FC4D0C600 /* IRCMessageBatchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136482D53E7561D43C255DD1 /* IRCMessageBatchTests.swift */; };
 		32B09D1A890C792C7A1426AF /* IRCTypingTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3311A39C3604C7D6F5B7BBA2 /* IRCTypingTracker.swift */; };
+		32D44669F6EE45E63F7A43C0 /* TrustPanelCertificateChainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B002098710483DEBBC23CC /* TrustPanelCertificateChainTests.swift */; };
 		32E18F29943E1763F55690A1 /* ChannelSpotlightController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1810541075BBF842675C9C /* ChannelSpotlightController.swift */; };
 		32F82E05ECFED66FEF0B02EF /* IRCClientConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E09CEE134701D6CC28FDD1 /* IRCClientConfig.swift */; };
 		33172E6F07DC01468EAC1CE9 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D87202A4B450420150DA8C1 /* ImageIO.framework */; };
@@ -831,6 +832,7 @@
 		DFBBC1878AE9EF074E3269D1 /* IRCUserNicknameColorStyleGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBC8E57E6060621D8D5794F /* IRCUserNicknameColorStyleGenerator.swift */; };
 		DFD5F562876A32242945E395 /* TDCOnboardingWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F15F931066A064FFC1A812E2 /* TDCOnboardingWindow.xib */; };
 		E01457FC0C40BDCBA72D7FA4 /* IRCColorFormatMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8DAB6E1FB302763BD7B7A8 /* IRCColorFormatMigrationTests.swift */; };
+		E079BE05F02A9DE1552D6D98 /* CommandIndexTablesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02FB463925A31CBBBBAAD01C /* CommandIndexTablesTests.swift */; };
 		E097EADC54582CCACF7E5914 /* CocoaExtensions.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E0ACCA8F112447A8CA4E50FE /* IRCClientIdentityAndTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727667BEBCFB79BC2CC9B8F8 /* IRCClientIdentityAndTags.swift */; };
 		E0B955272E31A41A46744BB0 /* DataCompatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95A21C2256FE6899141C678F /* DataCompatibility.swift */; };
@@ -1290,6 +1292,7 @@
 		025A6C89C7E70D2BDC518D25 /* IRCClientUserDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientUserDirectory.swift; sourceTree = "<group>"; };
 		025D430DE3452192AF638EE5 /* ICMPornhub.mustache */ = {isa = PBXFileReference; path = ICMPornhub.mustache; sourceTree = "<group>"; };
 		02E622DA204DAD2BC39AE227 /* IRCChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannel.swift; sourceTree = "<group>"; };
+		02FB463925A31CBBBBAAD01C /* CommandIndexTablesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandIndexTablesTests.swift; sourceTree = "<group>"; };
 		03FA40565E5F5DF2E4A83FEA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCOnboardingWindow.xib; sourceTree = "<group>"; };
 		04009B82B1D3D0C33D214172 /* NicknameColorOverrideStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameColorOverrideStorageTests.swift; sourceTree = "<group>"; };
 		041440ACD4038F3B03597142 /* SCRAMClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCRAMClient.swift; sourceTree = "<group>"; };
@@ -1717,6 +1720,7 @@
 		74CFB3D322E3F1A1D66873AB /* IRCNetworkCatalogTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCNetworkCatalogTransportTests.swift; sourceTree = "<group>"; };
 		7526C404C923DEA6854E2C4A /* TPCPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TPCPreferences.swift; sourceTree = "<group>"; };
 		756AA1C3C262656B490EC259 /* AppearanceHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceHelper.swift; sourceTree = "<group>"; };
+		75B002098710483DEBBC23CC /* TrustPanelCertificateChainTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustPanelCertificateChainTests.swift; sourceTree = "<group>"; };
 		75BCD77DB54C17CD8BD7AFDD /* MenuActionCoordinatorIRC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuActionCoordinatorIRC.swift; sourceTree = "<group>"; };
 		75D9760D8BC1460E090E749B /* IRCClientHighlightsAndReachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientHighlightsAndReachability.swift; sourceTree = "<group>"; };
 		75E55F8E71C46596A0FE1679 /* CommandTokenizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandTokenizer.swift; sourceTree = "<group>"; };
@@ -3746,6 +3750,7 @@
 				4CDB150A4DBD45D2083DBB0E /* ClientEnvironmentTests.swift */,
 				EB2D5DAEDD80EADE26E44232 /* CocoaExtensionsUtilityMigrationTests.swift */,
 				1756699825E5A84359393403 /* ColorHexadecimalTests.swift */,
+				02FB463925A31CBBBBAAD01C /* CommandIndexTablesTests.swift */,
 				72A01D9C1204E2BD0F36B28E /* CommandTokenizerTests.swift */,
 				7FAE9C0DE503189535D5D474 /* CompatibilityHeaderMigrationTests.swift */,
 				8C23C67B94A180C472A07F41 /* DateValueFormattingTests.swift */,
@@ -3934,6 +3939,7 @@
 				F99F613CEC5C71FBD224E063 /* TLOSpeechSynthesizerTests.swift */,
 				1714C3F810870787E086006D /* TPCPreferencesLocalMigrationTests.swift */,
 				E7A38A37772A8126F5CD8945 /* TPCThemeMigrationTests.swift */,
+				75B002098710483DEBBC23CC /* TrustPanelCertificateChainTests.swift */,
 				67B54C8A705D06B00CD95933 /* TVCLogLineTests.swift */,
 				4B8B719B78CBE8F381D8C44F /* TVCMemberListSectionTests.swift */,
 				5FC7585C149C4943722F586E /* TXMenuActionCoordinatorTests.swift */,
@@ -5180,6 +5186,7 @@
 				A064E7FCFC24E303E0B47155 /* ClientEnvironmentTests.swift in Sources */,
 				F202E0E7F51D0FE1F23E5E13 /* CocoaExtensionsUtilityMigrationTests.swift in Sources */,
 				83C877F47BA8A27D8757B7D5 /* ColorHexadecimalTests.swift in Sources */,
+				E079BE05F02A9DE1552D6D98 /* CommandIndexTablesTests.swift in Sources */,
 				C7F759022DBF2D179238DD47 /* CommandTokenizerTests.swift in Sources */,
 				1A1CC75065ACCF5064EBC94F /* CommonInlineImagesModule.swift in Sources */,
 				9FDA51D1EDB38CF5752179A6 /* CommonInlineVideosModule.swift in Sources */,
@@ -5380,6 +5387,7 @@
 				4B20F93A8EFC747D202BFB62 /* TXMenuPresentationTests.swift in Sources */,
 				D820DB3662A4870F625EC79A /* ThemePresentationSchemaTests.swift in Sources */,
 				8D036A438BCB089C32F92E99 /* ThemeTemplateStoreTests.swift in Sources */,
+				32D44669F6EE45E63F7A43C0 /* TrustPanelCertificateChainTests.swift in Sources */,
 				039D706A8AABA203A0C6E0BC /* TweetModule.swift in Sources */,
 				102B5FD3CC067473A60D4298 /* TypedPreferenceStoreTests.swift in Sources */,
 				5D1A623EE603B3840C5C8925 /* UIShellLocalizationCatalogTests.swift in Sources */,

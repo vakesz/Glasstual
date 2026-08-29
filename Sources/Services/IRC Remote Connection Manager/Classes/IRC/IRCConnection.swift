@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -321,7 +322,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 		remoteObjectProxy?.ircConnectionDidSecureConnection(withProtocolType: `protocol`, cipherSuite: cipherSuite)
 	}
 
-	final func connection(_: ConnectionSocket, requiresTrust response: @escaping (Bool) -> Void) {
+	final func connection(_: ConnectionSocket, requiresTrust response: @escaping TrustDecisionHandler) {
 		/* If the client cannot be reached, answer "not trusted" so the
 		 handshake completes (with failure) instead of hanging forever. */
 		let proxy = serviceConnection.remoteObjectProxyWithErrorHandler { error in

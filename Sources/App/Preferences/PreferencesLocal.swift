@@ -41,10 +41,13 @@ import CocoaExtensions
 import Combine
 import Synchronization
 
-/* ISOLATION-EXCEPTION: `TextualUserDefaults` is an `NSUserDefaults` subclass and
- not yet `Sendable`. `UserDefaults` is documented as thread-safe, and this is a
- `let` bound once to the shared instance. */
-private nonisolated(unsafe) let preferences = TextualUserDefaults.shared()
+/** Computed, not stored: `TextualUserDefaults.shared()` is already the process's
+ one instance, and a second global reference to it would need a second isolation
+ exception for the very same object. This way the exception lives in exactly one
+ place, where the instance is made. */
+private nonisolated var preferences: TextualUserDefaults { // nonisolated: pure
+	TextualUserDefaults.shared()
+}
 
 /** Highlight keywords are rewritten by a defaults observation on whichever thread
  wrote the default and read by message rendering on the IRC threads, so the cache
