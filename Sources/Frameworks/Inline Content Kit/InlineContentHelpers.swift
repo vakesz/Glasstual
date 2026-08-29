@@ -125,24 +125,17 @@ public enum InlineContentHelpers {
 	/// The decoded reply, which never leaves this file: `[String: Any]` is not
 	/// `Sendable`, so the readers above pull `Sendable` values out of it here.
 	private static func jsonObject(from url: URL) async -> [String: Any]? {
-		let data: Data
-		let response: URLResponse
+		let data: Data?
 
 		do {
-			(data, response) = try await session.data(from: url)
+			data = try await body(from: url)
 		} catch {
 			logger.error("Request failed: \(error.localizedDescription, privacy: .public)")
 
 			return nil
 		}
 
-		guard (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
-
-		guard data.count <= InlineContentNetworkLimits.maximumJSONResponseSize else {
-			logger.error("Discarded a \(data.count, privacy: .public) byte response that exceeds the size limit")
-
-			return nil
-		}
+		guard let data else { return nil }
 
 		do {
 			return try JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -151,5 +144,55 @@ public enum InlineContentHelpers {
 
 			return nil
 		}
+	}
+
+	/** The reply body, read a byte at a time and abandoned the moment it passes
+	 the size limit.
+
+	 Buffering the whole reply and measuring it afterwards means a hostile
+	 endpoint decides how much memory the service spends: the cap only refuses
+	 the body once it has already been paid for. `MediaAssessor` reads its
+	 bodies the same way. */
+	private static func body(from url: URL) async throws -> Data? {
+		let (bytes, response) = try await session.bytes(from: url)
+
+		guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+			bytes.task.cancel()
+
+			return nil
+		}
+
+		let maximum = InlineContentNetworkLimits.maximumJSONResponseSize
+
+		/* A declared length over the cap is refused before a byte of body is
+		 read. A server that declares nothing, or lies, is caught by the count
+		 below. */
+		guard response.expectedContentLength <= Int64(maximum) else {
+			logger.error("Refused a reply declaring \(response.expectedContentLength, privacy: .public) bytes")
+			bytes.task.cancel()
+
+			return nil
+		}
+
+		var body = Data()
+
+		do {
+			for try await byte in bytes {
+				body.append(byte)
+
+				guard body.count <= maximum else {
+					logger.error("Discarded a response that exceeds the \(maximum, privacy: .public) byte limit")
+					bytes.task.cancel()
+
+					return nil
+				}
+			}
+		} catch {
+			bytes.task.cancel()
+
+			throw error
+		}
+
+		return body
 	}
 }
