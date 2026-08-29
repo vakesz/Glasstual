@@ -40,6 +40,26 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
   translator comments and attribution; merge two keys only when their meaning
   and formatting contract are identical.
 
+## Targets
+
+`project.yml` declares every target; the tree mirrors it.
+
+| Target | Sources | Kind | Default isolation |
+| --- | --- | --- | --- |
+| `Glasstual` | `Sources/App/**` | app | `MainActor` |
+| `Caffeine`, `ChatFilter`, `SmileyConverter`, `SystemProfiler`, `UserInsights`, `ZNCAdditions` | `Sources/Plugins/<Name>/**` | first-party plugin bundles | `MainActor` |
+| `CocoaExtensions` | `Sources/Frameworks/Cocoa Extensions/**` | framework (Foundation/AppKit helpers) | `nonisolated` |
+| `GlasstualPluginKit` | `Sources/Frameworks/Plugin Kit/**` | framework (plugin ABI: `Sendable` event payloads, `@MainActor` callbacks) | `nonisolated` |
+| `InlineContentKit` | `Sources/Frameworks/Inline Content Kit/**` | framework (inline-media payloads, `InlineContentModule` protocol, `MediaAssessor`) | `nonisolated` |
+| `HistoricLogStoreKit` | `Sources/Frameworks/Historic Log Store Kit/**` | framework (`actor HistoricLogStore`, `LogLineXPC`, the historic-log XPC protocols) shared by the service and the tests | `nonisolated` |
+| `Mustache` | `Sources/Frameworks/Static Libraries/GRMustache/**` | vendored static library (see `PROVENANCE.md`) | — |
+| `CoreMediaModules` | `Sources/Services/Inline Content Loader/Extensions/Core Media/**` | static library of the inline-media modules, linked by the loader service and the tests | `nonisolated` |
+| `HistoricLogFileManager`, `InlineContentLoader`, `IRCRemoteConnectionManager` | `Sources/Services/<Name>/**` | XPC services; each exported object is a nonisolated shim in front of an actor (`HistoricLogStore`, `InlineContentService`, `ConnectionHost`) that never holds the `NSXPCConnection` — it holds the `Sendable` client proxy | `nonisolated` |
+| `GlasstualTests` | `Tests/GlasstualTests/**`, corpora under `Tests/Corpora/**` | Swift Testing bundle hosted by the app | `MainActor` |
+
+Shared declarations that cross a process boundary live in `Sources/Shared/`
+(XPC protocols, connection envelopes, the preference keys the services read).
+
 ## Isolation rules
 
 Every piece of mutable state belongs to exactly one isolation domain — the main

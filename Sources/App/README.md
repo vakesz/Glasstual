@@ -417,3 +417,7 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/AppKitSupport/SheetContextProtocols.swift` | `Sources/App/UI/SheetContextProtocols.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCAlert.swift` | `Sources/App/UI/TDCAlert.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCWindowBase.swift` | `Sources/App/UI/WindowBase.swift` |
+
+Everything outside the app — frameworks, the vendored static libraries, the
+three XPC services, plugins and shared cross-process declarations — is listed
+with its target and isolation default in the "Targets" table of `AGENTS.md`.
