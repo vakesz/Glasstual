@@ -41,14 +41,18 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 	private var observingColorPanel = false
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-		MainActor.assumeIsolated {
-			generateColorList()
+	private var hasConfigured = false
+
+	/// Nib-time configuration, run by the main window once the nib's outlets
+	/// are connected. `awakeFromNib` is nonisolated and could only reach the
+	/// colour menus behind a runtime assumption.
+	public func configure() {
+		guard hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+		generateColorList()
 	}
 
 	private var textField: TextViewWithIRCFormatter? {

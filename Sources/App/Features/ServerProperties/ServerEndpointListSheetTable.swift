@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import Combine
 
 /** A reference box for one row of the server-endpoint table.
 
@@ -140,9 +141,11 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 		}
 	}
 
-	private var serverPortObservation: NSKeyValueObservation?
+	private var serverPortObservation: Task<Void, Never>?
 
-	override public nonisolated func validateValue(
+	/* `NSObject.validateValue(_:forKey:)` is declared nonisolated; the body
+	 reads the pointer it is handed and throws, and touches nothing else. */
+	override public nonisolated func validateValue( // nonisolated: pure
 		_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>,
 		forKey inKey: String
 	)
@@ -196,18 +199,30 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 			return
 		}
 
-		serverPortObservation = objectValue.observe(\.serverPort, options: .new) { [weak self] _, _ in
-			/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
-			 nonisolated. AppKit posts these changes on the main thread. */
-			MainActor.assumeIsolated {
-				self?.willChangeValue(forKey: #keyPath(serverPort))
-				self?.didChangeValue(forKey: #keyPath(serverPort))
+		/* `observe`'s change handler is nonisolated, and re-announcing the key
+		 path touches this cell; awaiting the entry's values does it from the
+		 main actor by declaration. */
+		serverPortObservation = Task { @MainActor [weak self] in
+			for await _ in objectValue.publisher(for: \.serverPort, options: .new).bufferedValues {
+				guard let self else {
+					return
+				}
+
+				announceServerPortChange()
 			}
 		}
 	}
 
+	/// Its own method because `willChangeValue`/`didChangeValue` are unavailable
+	/// from an asynchronous context: a change announced across a suspension is
+	/// undefined. Nothing suspends between these two calls.
+	private func announceServerPortChange() {
+		willChangeValue(forKey: #keyPath(serverPort))
+		didChangeValue(forKey: #keyPath(serverPort))
+	}
+
 	private func stopObservingObjectValue() {
-		serverPortObservation?.invalidate()
+		serverPortObservation?.cancel()
 		serverPortObservation = nil
 	}
 }

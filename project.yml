@@ -633,7 +633,6 @@ targets:
             LSHandlerRank: Alternate
             LSItemContentTypes:
               - com.apple.applescript.script
-            NSDocumentClass: TPCResourceManagerDocumentTypeImporter
           # com.apple.bundle claimed every .bundle, .app and .framework on the
           # system. The importer only ever accepts a `.bundle` directory, so
           # declare that narrower type and claim it instead.
@@ -642,7 +641,6 @@ targets:
             LSHandlerRank: Alternate
             LSItemContentTypes:
               - com.vakesz.glasstual.extension
-            NSDocumentClass: TPCResourceManagerDocumentTypeImporter
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIconName: AppIcon
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)

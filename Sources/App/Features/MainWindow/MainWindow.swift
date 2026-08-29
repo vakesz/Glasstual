@@ -128,7 +128,15 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	@IBOutlet var channelView: MainWindowChannelView!
 	@IBOutlet public var mainMenuProxy: TXMenuControllerMainWindowProxy!
 	@IBOutlet public var formattingMenu: TextViewIRCFormattingMenu!
-	@IBOutlet public var inputTextField: MainWindowTextView!
+	@IBOutlet private var inputContentView: MainWindowTextViewContentView!
+
+	/** The input field is built in code by its content view rather than decoded
+	 from the nib: `usesTextKit2` in a xib is ignored, so a decoded NSTextView is
+	 always TextKit 1. */
+	public var inputTextField: MainWindowTextView! {
+		inputContentView?.textView
+	}
+
 	@IBOutlet private var nibContentSplitView: NSSplitView!
 	@IBOutlet public var loadingScreen: MainWindowLoadingScreenView!
 	@IBOutlet public var memberList: MemberList!
@@ -185,28 +193,39 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		updateAppearance()
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-		MainActor.assumeIsolated {
-			guard hasAwakenedFromNib == false else { return }
-			hasAwakenedFromNib = true
-			finishAwakeningFromNib()
+	/// Brings the window up once its nib has finished decoding.
+	///
+	/// The application controller calls this immediately after `loadNibNamed`
+	/// returns. It used to be `awakeFromNib`, which AppKit declares nonisolated:
+	/// everything below touches main-actor state and so sat behind a runtime
+	/// assumption about the decoding thread. The owner is on the main actor
+	/// already, so the call is checked instead of assumed.
+	public func configure() {
+		guard hasAwakenedFromNib == false else {
+			return
 		}
+
+		hasAwakenedFromNib = true
+		finishAwakeningFromNib()
 	}
 
 	private func finishAwakeningFromNib() {
 		let controller: ApplicationController = AppController.shared
 		controller.applicationWakeStepOne()
 
+		/* Before `delegate = self`: building the input field puts controls in
+		 the window, and a control joining a window asks its delegate for a field
+		 editor, which is answered with the input field itself. */
+		inputContentView?.configure()
+
 		delegate = self
 		allowsConcurrentViewDrawing = false
 		autorecalculatesKeyViewLoop = true
 		isRestorable = true
 		restorationClass = Self.self
+		loadingScreen?.configure()
 		installWindowChrome()
+		formattingMenu?.configure()
 		installFormattingMenuDecorations()
 		updateAppearance()
 		_ = reloadLoadingScreen()

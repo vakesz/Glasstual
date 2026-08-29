@@ -12,6 +12,7 @@
 
 import AppKit
 import CocoaExtensions
+import Combine
 
 private let endpointEntryTableDragToken = NSPasteboard.PasteboardType(
 	"com.vakesz.glasstual.server-endpoint-list.table-row"
@@ -32,7 +33,7 @@ public final class ServerEndpointListSheet: SheetBase {
 	@IBOutlet private var entryTable: BasicTableView!
 	@IBOutlet private var entryActionsSegmentedControl: NSSegmentedControl!
 
-	private var canRemoveObservation: NSKeyValueObservation?
+	private var canRemoveObservation: Task<Void, Never>?
 
 	override public init(window: NSWindow?) {
 		super.init(window: window)
@@ -45,12 +46,18 @@ public final class ServerEndpointListSheet: SheetBase {
 		entryTable.registerForDraggedTypes([endpointEntryTableDragToken])
 		entryTable.draggingDestinationFeedbackStyle = .gap
 
-		canRemoveObservation = entryTableController.observe(\.canRemove, options: [
-			.initial,
-			.new,
-		]) { [weak self] _, _ in
-			Task { @MainActor [weak self] in
-				self?.updateEntryActionsSegmentedControlEnabledState()
+		/* `observe`'s change handler is nonisolated and had to hop to reach the
+		 segmented control anyway; awaiting the key path states the isolation
+		 once and gives the sheet something it can cancel on close. */
+		let controller: NSArrayController = entryTableController
+
+		canRemoveObservation = Task { @MainActor [weak self] in
+			for await _ in controller.publisher(for: \.canRemove, options: [.initial, .new]).bufferedValues {
+				guard let self else {
+					return
+				}
+
+				updateEntryActionsSegmentedControlEnabledState()
 			}
 		}
 	}
@@ -113,7 +120,7 @@ public final class ServerEndpointListSheet: SheetBase {
 	}
 
 	@objc public func windowWillClose(_: Notification) {
-		canRemoveObservation?.invalidate()
+		canRemoveObservation?.cancel()
 		canRemoveObservation = nil
 
 		endpointDelegate?.serverEndpointListSheetWillClose(self)

@@ -99,18 +99,23 @@ public final class ContentNavigationOutlineView: NSOutlineView {
 		return parent(forItem: lastSelection) as? ContentNavigationOutlineViewItem
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		MainActor.assumeIsolated {
-			super.awakeFromNib()
+	private var hasConfigured = false
 
-			dataSource = self
-			delegate = self
-			style = .sourceList
-			doubleAction = #selector(outlineViewDoubleClicked(_:))
+	/** `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and it runs
+	 with the outlets connected and before the first row is asked for. */
+	override public func viewDidMoveToWindow() {
+		super.viewDidMoveToWindow()
+
+		guard window != nil, hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+
+		dataSource = self
+		delegate = self
+		style = .sourceList
+		doubleAction = #selector(outlineViewDoubleClicked(_:))
 	}
 
 	@objc(navigateToItemWithIdentifier:)

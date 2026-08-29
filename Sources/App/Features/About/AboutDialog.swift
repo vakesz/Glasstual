@@ -48,7 +48,7 @@ public protocol AboutDialogDelegate: NSObjectProtocol {
 
 @MainActor
 @objc(TDCAboutDialog)
-public final class AboutDialog: WindowBase, NSWindowDelegate, @unchecked Sendable {
+public final class AboutDialog: WindowBase, NSWindowDelegate {
 	private static let contentSize = NSSize(width: 218, height: 244)
 
 	private func makeWindow() -> NSWindow {
@@ -99,12 +99,6 @@ public final class AboutDialog: WindowBase, NSWindowDelegate, @unchecked Sendabl
 	}
 
 	@objc override public func show() {
-		MainActor.assumeIsolated {
-			showOnMainActor()
-		}
-	}
-
-	private func showOnMainActor() {
 		let window = prepareWindow()
 		window.ce_restoreState(for: Self.self)
 		super.show()
