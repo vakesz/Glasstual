@@ -28,7 +28,7 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 
 	private var hasConfigured = false
 
-	/* `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and the
+	/** `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and the
 	 welcome view is not on screen before the screen is in a window. */
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
@@ -171,15 +171,21 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 			return
 		}
 
-		NSAnimationContext.runAnimationGroup { context in
-			context.duration = 1.0
-			self.animator().alphaValue = 0.0
-		} completionHandler: {
-			/* ISOLATION-EXCEPTION: `NSAnimationContext`'s completion handler is
-			 nonisolated. AppKit runs it on the main thread. */
-			MainActor.assumeIsolated {
-				phaseTwoBlock()
+		/* `NSAnimationContext`'s completion handler is nonisolated, so running
+		 phase two from inside it took a runtime assumption. Resuming a
+		 continuation is all the handler does now — the work after the `await`
+		 is back on the main actor by declaration. */
+		Task { @MainActor in
+			await withCheckedContinuation { continuation in
+				NSAnimationContext.runAnimationGroup { context in
+					context.duration = 1.0
+					self.animator().alphaValue = 0.0
+				} completionHandler: {
+					continuation.resume()
+				}
 			}
+
+			phaseTwoBlock()
 		}
 	}
 

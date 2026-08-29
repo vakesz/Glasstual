@@ -98,7 +98,7 @@ public final class ValidatedComboBox: NSComboBox {
 
 	private var hasConfigured = false
 
-	/* `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and none of
+	/** `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and none of
 	 these notifications can arrive before the box is in a window. */
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()

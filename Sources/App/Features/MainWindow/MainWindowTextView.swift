@@ -89,11 +89,11 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	private var accessoryHeightConstraint: NSLayoutConstraint?
 	private var accessoryHeight: CGFloat = 0
 	private var observingTyping = false
-	private var typingObservations: Set<AnyCancellable> = []
+	private var typingObservations: [Task<Void, Never>] = []
 	private weak var typingChannel: IRCChannel?
 	private var userInterfaceObjects: MainWindowTextViewAppearance?
 	private var observingUserDefaults = false
-	private var userDefaultsObservation: AnyCancellable?
+	private var userDefaultsObservation: Task<Void, Never>?
 
 	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
 	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
@@ -223,32 +223,41 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 		observingTyping = observed
 
-		if observed {
-			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.typingDidChange)
-				.receive(on: DispatchQueue.main)
-				.sink { [weak self] notification in
-					/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
-					 publisher above delivers on the main queue. */
-					MainActor.assumeIsolated {
-						self?.typingStateDidChange(notification)
-					}
-				}
-				.store(in: &typingObservations)
-
-			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.selectionDidChange)
-				.receive(on: DispatchQueue.main)
-				.sink { [weak self] notification in
-					/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
-					 publisher above delivers on the main queue. */
-					MainActor.assumeIsolated {
-						self?.selectionDidChange(notification)
-					}
-				}
-				.store(in: &typingObservations)
-		} else {
+		guard observed else {
 			typingObservations.forEach { $0.cancel() }
 			typingObservations.removeAll()
+			return
 		}
+
+		/* `sink` runs its closure nonisolated; awaiting the publisher's values
+		 inside a main-actor task delivers on the same later main-queue turn
+		 with the isolation checked instead of assumed. */
+		typingObservations = [
+			Task { @MainActor [weak self] in
+				let publisher = NotificationCenter.default
+					.publisher(for: MainWindowTextViewNotification.typingDidChange)
+
+				for await notification in publisher.values {
+					guard let self else {
+						return
+					}
+
+					typingStateDidChange(notification)
+				}
+			},
+			Task { @MainActor [weak self] in
+				let publisher = NotificationCenter.default
+					.publisher(for: MainWindowTextViewNotification.selectionDidChange)
+
+				for await notification in publisher.values {
+					guard let self else {
+						return
+					}
+
+					selectionDidChange(notification)
+				}
+			},
+		]
 	}
 
 	@objc private func typingStateDidChange(_ notification: Notification) {
@@ -318,19 +327,21 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		}
 
 		observedPreferenceKeys.forEach(applyObservedPreference)
-		userDefaultsObservation = NotificationCenter.default.publisher(
-			for: UserDefaults.didChangeNotification,
-			object: defaults
-		)
-		.receive(on: DispatchQueue.main)
-		.sink { [weak self] _ in
-			/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The publisher
-			 above delivers on the main queue. */
-			MainActor.assumeIsolated {
+
+		/* Same reason as the typing observations: `sink` cannot be isolated, and
+		 the body writes nine main-actor properties of this view. */
+		userDefaultsObservation = Task { @MainActor [weak self] in
+			let publisher = NotificationCenter.default.publisher(
+				for: UserDefaults.didChangeNotification,
+				object: defaults
+			)
+
+			for await _ in publisher.values {
 				guard let self else {
 					return
 				}
-				observedPreferenceKeys.forEach(self.applyObservedPreference)
+
+				observedPreferenceKeys.forEach(applyObservedPreference)
 			}
 		}
 	}

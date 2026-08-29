@@ -29,7 +29,9 @@ private let pluginsFinishedLoadingNotification = Notification.Name(
 private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage {
 	typealias Subject = NSWorkspace
 
-	static var name: Notification.Name { NSWorkspace.willPowerOffNotification }
+	static var name: Notification.Name {
+		NSWorkspace.willPowerOffNotification
+	}
 
 	static func makeMessage(_: Notification) -> Self? {
 		Self()

@@ -64,7 +64,7 @@ public final class ChannelSpotlightTextField: NSTextField {
 public final class ChannelSpotlightImageView: NSImageView {
 	private var hasConfigured = false
 
-	/* `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and the
+	/** `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and the
 	 symbol only has to be in place before the view is drawn. */
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
