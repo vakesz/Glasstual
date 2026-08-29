@@ -11,7 +11,7 @@ TSAN_RESULT_BUNDLE ?= build/Glasstual-tsan.xcresult
 GENERATED_XCODE_DIR := Generated/Xcode
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
 
-.PHONY: help generate validate-generated-metadata build release archive run test tsan smoke coverage lint isolation-gate format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate generate-preference-plists validate-generated-metadata build release archive run test tsan smoke coverage lint isolation-gate format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -23,6 +23,9 @@ generate: ensure-xcodegen ## Regenerate Glasstual.xcodeproj from project.yml
 	rm -rf "$(GENERATED_XCODE_DIR)"
 	xcodegen generate --spec project.yml
 	$(MAKE) validate-generated-metadata
+
+generate-preference-plists: ## Rewrite the preference plists from the PreferenceKey declarations
+	./scripts/generate-preference-plists.sh
 
 validate-generated-metadata: ## Validate XcodeGen-owned Info.plists and entitlements
 	@files=(); \
@@ -83,6 +86,7 @@ isolation-gate: ## Check that the isolation escape-hatch census is still zero
 	./scripts/isolation-gate.sh --ban
 
 lint: ensure-linters format-check isolation-gate ## Run whole-tree linters and format checks
+	./scripts/generate-preference-plists.sh --check
 	swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests
 	actionlint
 	shellcheck scripts/*.sh

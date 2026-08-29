@@ -29,7 +29,13 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 - Preferences are typed `PreferenceKey` declarations under
   `Sources/App/Preferences/Keys/`, with the handful the XPC services
   also read in `Sources/Shared/Preferences/`. Read and write through the key,
-  never through a raw defaults string.
+  never through a raw defaults string. The five plists under
+  `Sources/App/Resources/Property Lists/Preferences/` are generated from those
+  declarations by `scripts/generate-preference-plists.sh` — a build phase of
+  the app target, `make generate-preference-plists` by hand — and are never
+  edited directly. Adding a declaration file under `Keys/` means adding it to
+  that phase's `inputFiles` in `project.yml`; the build phase is sandboxed to
+  the files it names.
 - `@objc` marks a runtime boundary and nothing else: a class or action a nib
   binds, a KVO-observed property, an XPC protocol member, or a plugin
   principal class. A Swift-to-Swift call never needs one.

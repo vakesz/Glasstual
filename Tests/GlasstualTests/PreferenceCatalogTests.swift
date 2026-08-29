@@ -15,9 +15,14 @@ import Foundation
 import Testing
 
 /** The registration domain and the three catalogue plists are generated from the
- key declarations. These tests are what makes the checked-in copies safe to keep
- for the tools that read them: a declaration added, removed or re-typed without
- the plist following fails here rather than at launch. */
+ key declarations. `scripts/generate-preference-plists.sh` writes the five files
+ -- it runs as a build phase of the application and as `make
+ generate-preference-plists` -- by compiling the very declarations these tests
+ read, so what the bundle carries is that script's output and never a hand edit.
+
+ These tests are what makes the checked-in copies safe to keep for the tools
+ that read them: a declaration added, removed or re-typed without the generator
+ having been re-run fails here rather than at launch. */
 @Suite("Preference catalogue")
 struct PreferenceCatalogTests {
 	// MARK: - Declarations
@@ -148,6 +153,34 @@ struct PreferenceCatalogTests {
 
 			#expect(Self.valuesMatch(value, declared), "\(name).plist stores a different default for \(key)")
 		}
+	}
+
+	/** The generator writes five files and only those five. A sixth plist in
+	 the directory is one nothing derives, which is exactly the hand-maintained
+	 state the generator replaced -- and the drift tests above would not see it,
+	 because they only look at names they already know. */
+	@Test("The Preferences resource directory holds only generated plists")
+	func preferencesDirectoryHoldsOnlyGeneratedPlists() throws {
+		let generated = Set(
+			Catalogue.allCases.map(\.rawValue) + ["RegisteredUserDefaults", "RegisteredUserDefaultsInContainer"]
+		)
+
+		let directory = try #require(
+			Bundle.main.url(forResource: "PreferenceKeyMasterList", withExtension: "plist", subdirectory: "Preferences")
+		).deletingLastPathComponent()
+
+		let contents = try FileManager.default.contentsOfDirectory(
+			at: directory,
+			includingPropertiesForKeys: nil
+		)
+
+		let names = Set(contents.map { $0.deletingPathExtension().lastPathComponent })
+
+		#expect(
+			names.subtracting(generated).sorted() == [],
+			"the Preferences resource directory carries files the generator does not write"
+		)
+		#expect(generated.subtracting(names).sorted() == [], "a generated plist is missing from the bundle")
 	}
 
 	// MARK: - Catalogue membership

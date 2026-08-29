@@ -4649,6 +4649,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6E0F742A094F47BEBD760B41 /* Build configuration list for PBXNativeTarget "Glasstual" */;
 			buildPhases = (
+				6F5F61449354482F4D9AADBE /* Generate preference plists */,
 				EEC66F5D0B678D53AFC16B8F /* Sources */,
 				9E96922AC6A549F002DAC69D /* Resources */,
 				1DFB85849B97F57629D2DA8D /* CopyFiles */,
@@ -5277,6 +5278,50 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		6F5F61449354482F4D9AADBE /* Generate preference plists */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/generate-preference-plists.sh",
+				"$(SRCROOT)/scripts/PreferencePlistGenerator.swift",
+				"$(SRCROOT)/scripts/PreferenceGeneratorStandIns.swift",
+				"$(SRCROOT)/Sources/App/Features/Notifications/NotificationEvent.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/PreferenceCatalog.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/PreferenceColor.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Appearance.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Connection.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+FileTransfers.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Input.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Internal.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Messages.swift",
+				"$(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Notifications.swift",
+				"$(SRCROOT)/Sources/App/Preferences/PreferenceTypes.swift",
+				"$(SRCROOT)/Sources/Shared/Application/ApplicationGroup.swift",
+				"$(SRCROOT)/Sources/Shared/Preferences/PreferenceKey.swift",
+				"$(SRCROOT)/Sources/Shared/Preferences/TPCPreferences.swift",
+				"$(SRCROOT)/Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift",
+			);
+			name = "Generate preference plists";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/KeysExcludedFromContainer.plist",
+				"$(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/KeysExcludedFromExport.plist",
+				"$(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/PreferenceKeyMasterList.plist",
+				"$(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/RegisteredUserDefaults.plist",
+				"$(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/RegisteredUserDefaultsInContainer.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/scripts/generate-preference-plists.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		01D39F79B48716015C12E88E /* Sources */ = {
