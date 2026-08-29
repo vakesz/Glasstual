@@ -38,6 +38,7 @@
 
 import CocoaExtensions
 import Foundation
+import HistoricLogStoreKit
 
 private nonisolated enum LogLineArchiveKey {
 	static let command = "command"

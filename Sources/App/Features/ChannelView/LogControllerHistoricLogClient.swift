@@ -12,6 +12,7 @@
 
 import CocoaExtensions
 import Foundation
+import HistoricLogStoreKit
 import os
 
 private nonisolated let historicLogClientLogger = Logger( // nonisolated: let

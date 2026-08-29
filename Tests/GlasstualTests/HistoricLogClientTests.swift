@@ -12,6 +12,7 @@
 
 import Foundation
 @testable import Glasstual
+import HistoricLogStoreKit
 import Testing
 
 /// Holds every fetch at the door until the test lets them through, so the
