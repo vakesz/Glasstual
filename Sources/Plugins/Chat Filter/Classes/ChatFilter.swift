@@ -355,7 +355,7 @@ nonisolated class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 }
 
 @objc(TPI_ChatFilterMutable)
-final nonisolated class MutableChatFilter: ChatFilter { // nonisolated: value
+final nonisolated class MutableChatFilter: ChatFilter {
 	@objc override dynamic var filterIgnoreContent: Bool {
 		get { ignoreContentStorage }
 		set { ignoreContentStorage = newValue }
