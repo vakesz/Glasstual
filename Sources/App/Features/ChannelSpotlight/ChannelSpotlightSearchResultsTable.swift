@@ -22,7 +22,9 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 	@IBOutlet private var unreadCountDescriptionField: NSTextField!
 
 	private var observedChannel: IRCChannel?
-	private var channelObservations: [Task<Void, Never>] = []
+	/** Internal rather than private so the teardown on reuse can be tested;
+	 nothing else has a reason to look at them. */
+	private(set) var channelObservations: [Task<Void, Never>] = []
 
 	override public var wantsLayer: Bool {
 		get { true }
@@ -256,7 +258,7 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		 already covers the first draw, and it does so synchronously. */
 		channelObservations = [
 			Task { @MainActor [weak self] in
-				for await _ in channel.publisher(for: \.nicknameHighlightCount, options: [.new]).values {
+				for await _ in channel.publisher(for: \.nicknameHighlightCount, options: [.new]).bufferedValues {
 					guard let self else {
 						return
 					}
@@ -265,7 +267,7 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 				}
 			},
 			Task { @MainActor [weak self] in
-				for await _ in channel.publisher(for: \.treeUnreadCount, options: [.new]).values {
+				for await _ in channel.publisher(for: \.treeUnreadCount, options: [.new]).bufferedValues {
 					guard let self else {
 						return
 					}

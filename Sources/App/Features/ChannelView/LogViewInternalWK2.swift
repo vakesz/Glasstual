@@ -191,7 +191,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 				return
 			}
 
-			for await isLoading in publisher.values {
+			for await isLoading in publisher.bufferedValues {
 				guard let self else {
 					return
 				}

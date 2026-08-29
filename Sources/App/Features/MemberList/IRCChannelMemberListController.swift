@@ -19,8 +19,8 @@ import AppKit
 /// ever an array with change notifications attached. It cost something, though:
 /// `insert(_:atArrangedObjectIndex:)` and `remove(atArrangedObjectIndex:)` are
 /// declared nonisolated on `NSController`, so both overrides had to carry the
-/// controller and the inserted member across a main-actor assumption inside an
-/// `@unchecked Sendable` box. A plain main-actor model needs neither.
+/// controller and the inserted member across a main-actor assumption inside a
+/// box that opted out of concurrency checking. A main-actor model needs neither.
 @objc(IRCChannelMemberListController)
 @MainActor
 public final class IRCChannelMemberListController: NSObject {

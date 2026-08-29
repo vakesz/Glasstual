@@ -143,7 +143,9 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 
 	private var serverPortObservation: Task<Void, Never>?
 
-	override public nonisolated func validateValue(
+	/* `NSObject.validateValue(_:forKey:)` is declared nonisolated; the body
+	 reads the pointer it is handed and throws, and touches nothing else. */
+	override public nonisolated func validateValue( // nonisolated: pure
 		_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>,
 		forKey inKey: String
 	)
@@ -201,7 +203,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 		 path touches this cell; awaiting the entry's values does it from the
 		 main actor by declaration. */
 		serverPortObservation = Task { @MainActor [weak self] in
-			for await _ in objectValue.publisher(for: \.serverPort, options: .new).values {
+			for await _ in objectValue.publisher(for: \.serverPort, options: .new).bufferedValues {
 				guard let self else {
 					return
 				}

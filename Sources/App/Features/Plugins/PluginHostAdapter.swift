@@ -393,7 +393,7 @@ private final class PluginConnectionTracker {
 			 awaiting the key path inside the task is the same delivery with the
 			 isolation stated once. */
 			clientObservations[ObjectIdentifier(client)] = Task { @MainActor [weak self] in
-				for await _ in client.publisher(for: \.isLoggedIn, options: [.new]).values {
+				for await _ in client.publisher(for: \.isLoggedIn, options: [.new]).bufferedValues {
 					guard let self else {
 						return
 					}

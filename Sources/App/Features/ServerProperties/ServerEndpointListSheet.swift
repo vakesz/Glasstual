@@ -52,7 +52,7 @@ public final class ServerEndpointListSheet: SheetBase {
 		let controller: NSArrayController = entryTableController
 
 		canRemoveObservation = Task { @MainActor [weak self] in
-			for await _ in controller.publisher(for: \.canRemove, options: [.initial, .new]).values {
+			for await _ in controller.publisher(for: \.canRemove, options: [.initial, .new]).bufferedValues {
 				guard let self else {
 					return
 				}
