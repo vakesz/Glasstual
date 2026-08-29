@@ -72,7 +72,18 @@ private actor LoopbackJSONServer {
 		}
 	}
 
+	/// Answers, without ever waiting on the client.
+	///
+	/// The send is fire-and-forget: a client that refuses the body and closes
+	/// mid-transfer leaves the completion to report the error instead of
+	/// leaving the server parked on a send that will never drain.
 	private func respond(on connection: NWConnection) {
+		guard connection.state == .ready else {
+			connection.cancel()
+
+			return
+		}
+
 		connection.send(content: header + body, completion: .contentProcessed { _ in
 			connection.cancel()
 		})
@@ -128,5 +139,24 @@ struct InlineContentJSONCapTests {
 	@Test("A reply that is not JSON yields nothing")
 	func nonJSONYieldsNothing() async throws {
 		#expect(try await strings(from: "not json at all", declaredLength: 15) == nil)
+	}
+
+	/** The refusal costs about as long as the transfer, and no longer.
+
+	 The body used to be read a byte at a time with a `Data.append` per byte,
+	 which took nineteen seconds for this megabyte over loopback and took the
+	 test host with it about one run in three. Two seconds is far above what
+	 the chunked reader needs and far below what the byte-wise loop cost. */
+	@Test("A megabyte overrun is refused in seconds, not tens of seconds")
+	func megabyteOverrunIsRefusedQuickly() async throws {
+		let padding = String(repeating: "x", count: InlineContentNetworkLimits.maximumJSONResponseSize + 1)
+		let body = #"{"title":"# + "\"\(padding)\"" + "}"
+
+		let clock = ContinuousClock()
+		let started = clock.now
+
+		#expect(try await strings(from: body, declaredLength: nil) == nil)
+
+		#expect(clock.now - started < .seconds(2))
 	}
 }

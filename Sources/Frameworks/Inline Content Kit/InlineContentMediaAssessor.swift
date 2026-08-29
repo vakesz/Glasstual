@@ -61,49 +61,13 @@ private struct MediaAssessorLimits: Sendable {
 	let imageMaximumFilesize: UInt64
 }
 
-/// The redirect and authentication policy an assessment is fetched under.
-///
-/// It holds nothing, which is what lets it be the delegate: `URLSessionDelegate`
-/// is declared `NS_SWIFT_SENDABLE`, so a conformer with state would have to
-/// claim a `Sendable` conformance it could not honour.
-private final class MediaAssessorPolicy: NSObject, URLSessionTaskDelegate, Sendable {
-	func urlSession(
-		_: URLSession,
-		task: URLSessionTask,
-		willPerformHTTPRedirection _: HTTPURLResponse,
-		newRequest request: URLRequest,
-		completionHandler: @escaping @Sendable (URLRequest?) -> Void
-	) {
-		/* A redirect may keep the scheme or upgrade it, never downgrade it. */
-		let originalScheme = task.originalRequest?.url?.scheme?.lowercased()
-		let redirectedScheme = request.url?.scheme?.lowercased()
-		let allowed = redirectedScheme == "https" || redirectedScheme == "http" && originalScheme == "http"
-
-		completionHandler(allowed ? request : nil)
-	}
-
-	func urlSession(
-		_: URLSession,
-		didReceive challenge: URLAuthenticationChallenge,
-		completionHandler: @escaping @Sendable (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-	) {
-		let method = challenge.protectionSpace.authenticationMethod
-
-		if method == NSURLAuthenticationMethodHTTPBasic || method == NSURLAuthenticationMethodHTTPDigest {
-			completionHandler(.cancelAuthenticationChallenge, nil)
-		} else {
-			completionHandler(.performDefaultHandling, nil)
-		}
-	}
-}
-
 /// Decides whether a remote URL may be inlined, and as what.
 ///
-/// The whole assessment is one `async` call over `URLSession.bytes`: the headers
-/// decide the type, and the body — when one is needed at all — is counted as it
-/// arrives and abandoned the moment it passes the file-size cap. There is no
-/// delegate holding request state, no cancellation latch and no completion
-/// block, so there is nothing here to make `Sendable` by hand.
+/// The whole assessment is one `async` call over `InlineContentBodyReader`: the
+/// headers decide the type, and the body — when one is needed at all — is
+/// counted chunk by chunk and abandoned the moment it passes the file-size cap.
+/// There is no request state held here, no cancellation latch and no completion
+/// block, so there is nothing to make `Sendable` by hand.
 public enum MediaAssessor {
 	private static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
@@ -120,8 +84,6 @@ public enum MediaAssessor {
 	private static let validVideoContentTypes: Set<String> = [
 		"video/3gpp", "video/3gpp2", "video/mp4", "video/quicktime", "video/webm", "video/x-m4v",
 	]
-
-	private static let policy = MediaAssessorPolicy()
 
 	private static let session: URLSession = {
 		let configuration = URLSessionConfiguration.ephemeral
@@ -185,35 +147,50 @@ public enum MediaAssessor {
 		_ url: URL,
 		expecting expectedType: InlineContentMediaType
 	) async throws -> MediaAssessment {
-		let (bytes, response) = try await session.bytes(from: url, delegate: policy)
+		let limits = limits(for: expectedType)
 
-		guard let response = response as? HTTPURLResponse else {
-			bytes.task.cancel()
+		/* The declared length is not refused here: the cap only applies to
+		 images, and the type is not known until `readHeaders` has run. The
+		 running count is what holds a server that declares nothing, or lies,
+		 to the cap. */
+		let limit = InlineContentBodyLimit(
+			maximumByteCount: Int(clamping: limits?.imageMaximumFilesize ?? 0),
+			refusesDeclaredOverrun: false
+		)
 
+		let transfer: InlineContentBodyTransfer
+
+		do {
+			transfer = try await InlineContentBodyReader.begin(url, using: session, limit: limit)
+		} catch InlineContentBodyError.notHTTP {
 			throw failure("Invalid response type (not HTTP)", code: .unexpectedResponse)
 		}
-
-		let limits = limits(for: expectedType)
 
 		let assessment: MediaAssessment
 
 		do {
-			assessment = try readHeaders(from: response, url: url, expecting: expectedType)
+			assessment = try readHeaders(from: transfer.response, url: url, expecting: expectedType)
 		} catch {
-			bytes.task.cancel()
+			transfer.cancel()
 
 			throw error
 		}
 
-		guard shouldReadBody(for: assessment, response: response, limits: limits) else {
-			/* Cancelling the task is what stops the transfer; nothing in the
-			 body is wanted. */
-			bytes.task.cancel()
+		guard shouldReadBody(for: assessment, response: transfer.response, limits: limits) else {
+			/* Cancelling the transfer is what stops it; nothing in the body is
+			 wanted. */
+			transfer.cancel()
 
 			return assessment
 		}
 
-		let body = try await read(bytes, upTo: limits?.imageMaximumFilesize ?? 0)
+		let body: Data
+
+		do {
+			body = try await transfer.data()
+		} catch InlineContentBodyError.bodyTooLarge {
+			throw failure("Maximum response size exceeded", code: .contentLengthExceeded)
+		}
 
 		try validate(body, against: limits, for: assessment)
 
@@ -300,30 +277,6 @@ public enum MediaAssessor {
 		/* The height cap is optional; the width cap is not, and neither can be
 		 applied without the pixels. */
 		return limits.imageMaximumHeight > 0 || limits.imageMaximumWidth > 0
-	}
-
-	/// Reads the body, counting as it goes, and gives up the moment it passes
-	/// `maximum`. A cap of zero means the user asked for none.
-	private static func read(_ bytes: URLSession.AsyncBytes, upTo maximum: UInt64) async throws -> Data {
-		var body = Data()
-
-		do {
-			for try await byte in bytes {
-				body.append(byte)
-
-				if maximum > 0, UInt64(body.count) > maximum {
-					bytes.task.cancel()
-
-					throw failure("Maximum response size exceeded", code: .contentLengthExceeded)
-				}
-			}
-		} catch {
-			bytes.task.cancel()
-
-			throw error
-		}
-
-		return body
 	}
 
 	private static func validate(
