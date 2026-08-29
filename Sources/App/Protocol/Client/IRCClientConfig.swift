@@ -64,7 +64,7 @@ nonisolated enum ClientConfigDefaults { // nonisolated: value
  live in the keychain under `uniqueIdentifier` and are never encoded. The
  `pending…` properties hold one the user has just typed, or one read back out
  of the keychain so a duplicate can rewrite it under its own identifier. */
-public nonisolated struct ClientConfig: Codable, Equatable { // nonisolated: value
+public nonisolated struct ClientConfig: Codable, Equatable, Sendable { // nonisolated: value
 	// MARK: - Identity
 
 	public var uniqueIdentifier = UUID().uuidString

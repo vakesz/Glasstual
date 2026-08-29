@@ -60,7 +60,7 @@ nonisolated enum LogLineFormat { // nonisolated: value
  Archiving lives on ``LogLineArchive``. `NSKeyedArchiver` needs a class, and the
  archives on disk name `TVCLogLine` as their root object, so the envelope wears
  that name and this type stays free of Objective-C. */
-public nonisolated struct LogLine: Hashable, Sendable, CustomStringConvertible { // nonisolated: value
+public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConvertible { // nonisolated: value
 	public internal(set) var isEncrypted = false
 	public internal(set) var isFirstForDay = false
 	public internal(set) var receivedAt = Date()

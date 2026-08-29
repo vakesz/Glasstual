@@ -19,7 +19,7 @@ private nonisolated let addressBookMatcherLogger = Logger( // nonisolated: let
 )
 
 /// One element of a compiled hostmask glob.
-nonisolated enum IRCHostmaskGlobToken: Equatable { // nonisolated: value
+nonisolated enum IRCHostmaskGlobToken: Equatable, Sendable { // nonisolated: value
 	case literal(Unicode.Scalar)
 	/// `?`
 	case anyCharacter
@@ -167,7 +167,7 @@ nonisolated enum IRCHostmaskGlob { // nonisolated: value
 }
 
 @objc(IRCAddressBookEntryMatcher)
-public final nonisolated class AddressBookEntryMatcher: NSObject { // nonisolated: value
+public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // nonisolated: value
 	@objc public let regularExpressionPattern: String
 	@objc public let trackingNickname: String?
 

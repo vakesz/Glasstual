@@ -73,8 +73,11 @@ public extension NSColor {
 		)
 	}
 
-	private static func textualChannelByte(_ component: CGFloat) -> UInt {
-		UInt((min(max(component, 0), 1) * 0xFF).rounded())
+	/// A colour component as the byte it is written as. The clamp is what makes
+	/// `UInt8` safe: an extended-range colour can report a component outside
+	/// 0...1.
+	private static func textualChannelByte(_ component: CGFloat) -> UInt8 {
+		UInt8((min(max(component, 0), 1) * 0xFF).rounded())
 	}
 
 	@objc(colorWithHexadecimalValue:)
