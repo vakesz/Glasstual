@@ -178,10 +178,9 @@ public final nonisolated class LogRenderer: NSObject {
 	private var openAttributes: [NSAttributedString.Key: Any] = [:]
 	private var rendererAttributes = LogRendererConfiguration()
 	private var output = LogRendererResults()
-	private weak var viewController: LogController?
-	/** The channel's members as of when the printing operation was enqueued.
-	 The renderer runs off the main actor and must not read the live channel. */
-	private var members: [ChannelUser] = []
+	/** The channel's members as of when the render job was submitted. The
+	 renderer runs off the main actor and must not read the live channel. */
+	private var members: [RenderedMember] = []
 	private var lineType = TVCLogLineType.undefined
 	private var memberType = TVCLogLineMemberType.normal
 	private var escapeBody = true
@@ -423,8 +422,8 @@ public final nonisolated class LogRenderer: NSObject {
 	}
 
 	/// The member named `nickname` in the snapshot, compared the way IRC compares them.
-	private func member(named nickname: String) -> ChannelUser? {
-		members.first { $0.user.nickname.caseInsensitiveCompare(nickname) == .orderedSame }
+	private func member(named nickname: String) -> RenderedMember? {
+		members.first { $0.nickname.caseInsensitiveCompare(nickname) == .orderedSame }
 	}
 
 	private func scanBodyForChannelMembers() {
@@ -432,19 +431,21 @@ public final nonisolated class LogRenderer: NSObject {
 			return
 		}
 		guard body.isEmpty == false else {
-			output[.users] = Set<ChannelUser>()
+			output[.users] = [String]()
 			return
 		}
 		let users = members
 		guard users.isEmpty == false else {
-			output[.users] = Set<ChannelUser>()
+			output[.users] = [String]()
 			return
 		}
-		var foundUsers = Set<ChannelUser>()
+		/* Nicknames rather than members: the result crosses back to the main
+		 actor, where the live member list is what the caller wants anyway. */
+		var foundUsers: [String] = []
 		var nicknameCount = 0
 		var nicknameLength = 0
 		for user in users {
-			for range in ranges(of: user.user.nickname, options: .caseInsensitive) {
+			for range in ranges(of: user.nickname, options: .caseInsensitive) {
 				guard isSurroundedByNonAlphanumerics(range),
 				      bodyWithAttributes
 				      .attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
@@ -452,7 +453,9 @@ public final nonisolated class LogRenderer: NSObject {
 					continue
 				}
 				bodyWithAttributes.addAttribute(RendererFormatting.conversationTracking, value: true, range: range)
-				foundUsers.insert(user)
+				if foundUsers.contains(user.nickname) == false {
+					foundUsers.append(user.nickname)
+				}
 				if bodyWithAttributes.attribute(
 					RendererFormatting.keywordHighlight,
 					at: range.location,
@@ -625,7 +628,7 @@ public final nonisolated class LogRenderer: NSObject {
 			if TextualPreferences.disableNicknameColorHashing() {
 				tokens[.inlineNicknameMatchFound] = false
 			} else if let member = member(named: fragment) {
-				let nickname = member.user.nickname
+				let nickname = member.nickname
 				if nickname.count > 1 {
 					var modeSymbol = ""
 					if TextualPreferences.conversationTrackingIncludesUserModeSymbol() {
@@ -821,19 +824,24 @@ public final nonisolated class LogRenderer: NSObject {
 }
 
 public extension LogRenderer {
-	nonisolated static func renderBody(
+	/** Renders one message body to HTML.
+
+	 There is no view controller any more: the renderer never used it beyond
+	 handing it to the message-renderer plugin hook, and a `LogController` is
+	 main-actor state that cannot follow the body into the render pipeline. The
+	 caller applies `PluginDispatcher.willRenderMessage(…)` on the main actor
+	 before it submits the line. */
+	internal nonisolated static func renderBody(
 		_ body: String,
-		forViewController legacyViewController: TVCLogController,
 		withAttributes input: [String: Any],
-		members: [ChannelUser],
-		resultInfo: AutoreleasingUnsafeMutablePointer<NSDictionary?>?
+		members: [RenderedMember],
+		results: inout [String: Any]
 	) -> String {
 		guard body.isEmpty == false else {
 			return ""
 		}
 		let configuration = LogRendererConfiguration(rawValues: input)
 		let renderer = LogRenderer()
-		let controller = legacyViewController
 		renderer
 			.lineType = TVCLogLineType(
 				rawValue: configuration.value(for: .lineType, as: UInt.self) ?? 0
@@ -842,15 +850,9 @@ public extension LogRenderer {
 			.memberType = TVCLogLineMemberType(
 				rawValue: configuration.value(for: .memberType, as: UInt.self) ?? 0
 			) ?? .normal
-		renderer.body = PluginDispatcher.willRenderMessage(
-			body,
-			forViewController: controller,
-			lineType: renderer.lineType,
-			memberType: renderer.memberType
-		)
+		renderer.body = body
 		renderer.escapeBody = (configuration[.doNotEscapeBody] as? NSNumber)?.boolValue != true
 		renderer.rendererAttributes = configuration
-		renderer.viewController = controller
 		renderer.members = members
 		renderer.stripDangerousUnicodeCharacters()
 		renderer.buildEffectsDictionary()
@@ -858,8 +860,18 @@ public extension LogRenderer {
 		renderer.matchKeywords()
 		renderer.findAllChannelNames()
 		renderer.scanBodyForChannelMembers()
-		resultInfo?.pointee = renderer.output.rawValues as NSDictionary
+		results = renderer.output.rawValues
 		return renderer.renderHTML()
+	}
+
+	/// The same render for a caller that has no use for the result info.
+	internal nonisolated static func renderBody(
+		_ body: String,
+		withAttributes input: [String: Any],
+		members: [RenderedMember] = []
+	) -> String {
+		var results: [String: Any] = [:]
+		return renderBody(body, withAttributes: input, members: members, results: &results)
 	}
 
 	@objc(renderBodyAsAttributedString:withAttributes:)

@@ -50,7 +50,7 @@ private struct StubLogLineRenderer: LogLineRendering {
 	func renderBody(
 		_ body: String,
 		attributes: [String: Any],
-		members: [ChannelUser],
+		members: [RenderedMember],
 		results: inout [String: Any]
 	) -> String {
 		results[LogRendererResultKey.keywordMatchFound.rawValue] = NSNumber(value: keywordMatchFound)
@@ -90,6 +90,21 @@ private func makeLogLine(
 	logLine.messageIdentifier = messageIdentifier
 	logLine.reactions = reactions
 	return logLine
+}
+
+/// The snapshot the pipeline actually renders, taken the way the controller
+/// takes it but without the plugin hook a live controller would apply.
+private func makeSnapshot(
+	body: String = "hello",
+	lineType: TVCLogLineType = .privateMessage,
+	messageIdentifier: String? = nil,
+	reactions: [String: [String]]? = nil,
+	in context: LogLineRenderContext = LogLineRenderContext()
+) -> LogLineSnapshot {
+	LogLineSnapshot(
+		makeLogLine(body: body, lineType: lineType, messageIdentifier: messageIdentifier, reactions: reactions),
+		in: context
+	)
 }
 
 @Suite("Log line render request")
@@ -153,20 +168,20 @@ struct LogLineRenderRequestTests {
 
 	@Test("Rendering a batch keeps the lines that succeeded")
 	func batchRenderKeepsSuccessfulLines() {
-		let logLines = [makeLogLine(body: "one"), makeLogLine(body: "two")]
+		let lines = [makeSnapshot(body: "one"), makeSnapshot(body: "two")]
 
-		let results = LogController.render(logLines, context: LogLineRenderContext(), using: StubLogLineRenderer())
+		let results = LogController.render(lines, context: LogLineRenderContext(), using: StubLogLineRenderer())
 
-		#expect(results.map(\.lineNumber) == logLines.map(\.uniqueIdentifier))
+		#expect(results.map(\.lineNumber) == lines.map(\.uniqueIdentifier))
 		#expect(results.allSatisfy { $0.html.isEmpty == false })
 	}
 
 	@Test("Rendering a batch drops every line when no template resolves")
 	func batchRenderDropsUnrenderableLines() {
-		let logLines = [makeLogLine(body: "one"), makeLogLine(body: "two")]
+		let lines = [makeSnapshot(body: "one"), makeSnapshot(body: "two")]
 		let renderer = StubLogLineRenderer(templateIsMissing: true)
 
-		#expect(LogController.render(logLines, context: LogLineRenderContext(), using: renderer).isEmpty)
+		#expect(LogController.render(lines, context: LogLineRenderContext(), using: renderer).isEmpty)
 	}
 }
 
@@ -177,39 +192,76 @@ struct LogLineRenderContextReactionTests {
 	func noReactions() {
 		let context = LogLineRenderContext()
 
-		#expect(context.reactions(for: makeLogLine()) == nil)
+		#expect(context.reactions(for: makeSnapshot()) == nil)
 	}
 
 	@Test("Reactions archived with the line survive on their own")
 	func archivedReactionsOnly() {
-		let logLine = makeLogLine(messageIdentifier: "mid", reactions: ["👍": ["alice"]])
+		let line = makeSnapshot(messageIdentifier: "mid", reactions: ["👍": ["alice"]])
 
-		#expect(LogLineRenderContext().reactions(for: logLine) == ["👍": ["alice"]])
+		#expect(LogLineRenderContext().reactions(for: line) == ["👍": ["alice"]])
 	}
 
 	@Test("Reactions seen this session apply to a line that has none archived")
 	func sessionReactionsOnly() {
-		let logLine = makeLogLine(messageIdentifier: "mid")
+		let line = makeSnapshot(messageIdentifier: "mid")
 		let context = LogLineRenderContext(sessionReactions: ["mid": ["🎉": ["bob"]]])
 
-		#expect(context.reactions(for: logLine) == ["🎉": ["bob"]])
+		#expect(context.reactions(for: line) == ["🎉": ["bob"]])
 	}
 
 	@Test("Archived and session reactions merge without duplicating a nickname")
 	func mergedReactions() {
-		let logLine = makeLogLine(messageIdentifier: "mid", reactions: ["👍": ["alice"]])
+		let line = makeSnapshot(messageIdentifier: "mid", reactions: ["👍": ["alice"]])
 		let context = LogLineRenderContext(
 			sessionReactions: ["mid": ["👍": ["alice", "bob"], "🎉": ["carol"]]]
 		)
 
-		#expect(context.reactions(for: logLine) == ["👍": ["alice", "bob"], "🎉": ["carol"]])
+		#expect(context.reactions(for: line) == ["👍": ["alice", "bob"], "🎉": ["carol"]])
 	}
 
 	@Test("Session reactions for another message do not leak into this line")
 	func sessionReactionsAreKeyedByMessage() {
-		let logLine = makeLogLine(messageIdentifier: "mid")
+		let line = makeSnapshot(messageIdentifier: "mid")
 		let context = LogLineRenderContext(sessionReactions: ["other": ["🎉": ["bob"]]])
 
-		#expect(context.reactions(for: logLine) == nil)
+		#expect(context.reactions(for: line) == nil)
+	}
+}
+
+/// Deliverable of the render-pipeline step: the context carries a value
+/// snapshot of the members, so nothing reaches back into the live member list
+/// while a line renders off the main actor.
+@Suite("Log line render member snapshot")
+@MainActor
+struct LogLineRenderMemberSnapshotTests {
+	@Test("The sender's mode symbol comes from the snapshot rather than a live member")
+	func modeSymbolComesFromTheSnapshot() {
+		let context = LogLineRenderContext(
+			isChannel: true,
+			nicknameFormat: "<%@%n>",
+			members: [RenderedMember(nickname: "Alice", mark: "@")]
+		)
+
+		#expect(makeSnapshot(in: context).formattedNickname == "<@alice>")
+	}
+
+	@Test("Members are matched the way IRC compares nicknames")
+	func memberLookupIsCaseInsensitive() {
+		let context = LogLineRenderContext(members: [RenderedMember(nickname: "Alice", mark: "+")])
+
+		#expect(context.member(named: "ALICE")?.mark == "+")
+		#expect(context.member(named: "bob") == nil)
+	}
+
+	@Test("Outside a channel there is no mode symbol to draw")
+	func queryViewsHaveNoModeSymbol() {
+		let context = LogLineRenderContext(
+			isChannel: false,
+			nicknameFormat: "<%@%n>",
+			members: [RenderedMember(nickname: "alice", mark: "@")]
+		)
+
+		#expect(makeSnapshot(in: context).formattedNickname == "<alice>")
 	}
 }

@@ -144,6 +144,30 @@ struct ThemeTemplateStoreTests {
 		#expect(dataSource.loadCount == 2)
 	}
 
+	@Test("Concurrent lookups of one template share the instance that was compiled")
+	func concurrentLookupsShareOneCompiledTemplate() {
+		let repository = TemplateRepository(templates: ["message": "{{body}}"])
+		let store = ThemeTemplateStore(repositories: [repository])
+		let found = Mutex<[ObjectIdentifier]>([])
+		let failures = Mutex<[String]>([])
+
+		DispatchQueue.concurrentPerform(iterations: 32) { _ in
+			guard let template = store.template(named: "message", reportError: { error in
+				failures.withLock { $0.append(String(describing: error)) }
+			}) else {
+				failures.withLock { $0.append("Template lookup returned nil") }
+				return
+			}
+			found.withLock { $0.append(ObjectIdentifier(template)) }
+		}
+
+		let identifiers = found.withLock { $0 }
+
+		#expect(failures.withLock { $0 }.isEmpty)
+		#expect(identifiers.count == 32)
+		#expect(Set(identifiers).count == 1, "the store compiled the template more than once")
+	}
+
 	private static func renderTemplate(
 		from store: ThemeTemplateStore,
 		results: TemplateRenderResults
