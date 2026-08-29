@@ -30,6 +30,38 @@ enum FileTransferFailure: Equatable, Sendable {
 	case underlying(String)
 }
 
+extension FileTransferFailure {
+	/// How a stopped transfer reads to the user.
+	///
+	/// The three descriptions spelled out here are the ones the transport has
+	/// no localized string for; they replace the English `NSError` descriptions
+	/// the socket used to carry.
+	init(_ error: DCCTransferError) {
+		switch error {
+		case .badParameter, .rejectedPeerAddress:
+			self = .connectionUnavailable
+		case .closedByPeer:
+			self = .underlying("Socket closed by remote peer")
+		case .connectTimeout:
+			self = .underlying("Connection attempt timed out")
+		case .fileUnreadable:
+			self = .sourceFileUnreadable
+		case .fileUnwritable:
+			self = .fileHandlerFailed
+		case let .network(description):
+			self = .underlying(description)
+		case .noOpenPort:
+			self = .noListeningPort
+		case .oversizedTransfer:
+			self = .oversizedTransfer
+		case .storageFull:
+			self = .storageFull
+		case .writeTimeout:
+			self = .underlying("Write operation timed out")
+		}
+	}
+}
+
 nonisolated enum FileTransferStrings {
 	static var destinationPickerMessage: String {
 		String(localized: .TDCFileTransferDialog.selectTheFolderInWhich)

@@ -53,61 +53,14 @@ extension TDCFileTransferDialogTransferController {
 		}
 		currentRecord = 0
 		reloadStatusInformation()
-		sendPendingFileData()
 	}
 
-	func openFileHandle() -> Bool {
-		guard var filePath else {
-			close(with: .sourceFileUnreadable)
-			return false
-		}
-
-		if !isSender, !isResume {
-			setNonexistentFilename()
-			guard let updatedPath = self.filePath else {
-				close(with: .sourceFileUnreadable)
-				return false
-			}
-			filePath = updatedPath
-			_ = FileManager.default.createFile(atPath: filePath, contents: Data())
-		}
-
-		guard let handle = FileHandle(forUpdatingAtPath: filePath) else {
-			close(with: .sourceFileUnreadable)
-			return false
-		}
-
-		if isResume {
-			do {
-				try handle.seek(toOffset: processedFilesize)
-			} catch {
-				fileTransferLogger.error(
-					"Failed to seek transfer file: \(error.localizedDescription, privacy: .public)"
-				)
-				try? handle.close()
-				close(with: .sourceFileUnreadable)
-				return false
-			}
-		}
-
-		fileHandle = handle
-		return true
-	}
-
-	func closeFileHandle() {
-		guard let fileHandle else { return }
-
-		do {
-			try fileHandle.close()
-		} catch {
-			fileTransferLogger.error(
-				"Failed to close transfer file: \(error.localizedDescription, privacy: .public)"
-			)
-		}
-		self.fileHandle = nil
-	}
-
-	private func setNonexistentFilename() {
+	/// Moves `filename` on to the next free name in the download folder.
+	///
+	/// A transfer that lands on a name already in use would otherwise overwrite
+	/// somebody's file, so the receiver takes the next free one before the
+	/// transfer opens anything.
+	func setNonexistentFilename() {
 		guard let directoryPath = path,
 		      var candidatePath = filePath,
 		      FileManager.default.fileExists(atPath: candidatePath)
