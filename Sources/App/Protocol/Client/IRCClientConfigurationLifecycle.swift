@@ -247,8 +247,10 @@ public extension IRCClient {
 		}
 	}
 
-	func willDestroyChannel(_ notification: Notification) {
-		guard let channel = notification.object as? IRCChannel, channel.associatedClient === self else { return }
+	/// Called by `IRCWorld` before the channel is torn down, so what the client
+	/// holds for it is dropped while the channel is still whole.
+	func willDestroyChannel(_ channel: IRCChannel) {
+		guard channel.associatedClient === self else { return }
 		clearZNCPlayback(for: channel)
 		if hiddenCommandResponsesQuery === channel {
 			hiddenCommandResponsesQuery = nil

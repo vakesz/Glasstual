@@ -57,11 +57,13 @@ public extension PropertyListValue {
 		}
 	}
 
+	/// A property list is a file a user can hand-edit, so a `<real>` where an
+	/// integer belongs is a value to reject, never a reason to trap.
 	var integer: Int? {
 		switch self {
 		case let .integer(value): value
 		case let .boolean(value): value ? 1 : 0
-		case let .double(value): Int(value)
+		case let .double(value): Int(exactly: value.rounded(.towardZero))
 		default: nil
 		}
 	}
@@ -130,7 +132,7 @@ public extension PropertyListValue {
 	}
 
 	init(_ value: some BinaryInteger) {
-		self = .integer(Int(value))
+		self = .integer(Int(exactly: value) ?? (value < 0 ? .min : .max))
 	}
 
 	init(_ value: Double) {

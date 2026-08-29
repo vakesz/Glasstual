@@ -671,6 +671,11 @@ public final class World: NSObject {
 	}
 
 	public func destroyChannel(_ channel: IRCChannel, reload: Bool, part partChannel: Bool) {
+		/* The client drops what it holds for this channel before anything tears
+		 the channel down. It used to hear that through the notification below,
+		 which is delivered a turn later — after the channel had gone. */
+		channel.associatedClient?.willDestroyChannel(channel)
+
 		NotificationCenter.default.post(
 			name: .ircWorldWillDestroyChannel,
 			object: channel
