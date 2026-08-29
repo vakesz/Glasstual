@@ -109,7 +109,7 @@ struct IRCISupportCorpusTests {
 
 	/// `rfc7613` folds ASCII case only. It must not apply the rfc1459
 	/// bracket-to-brace mapping.
-	@Test(.disabled("Phase 1: rfc7613 is parsed as rfc1459, so [Alice] folds to {alice}"))
+	@Test
 	func rfc7613FoldsAsciiCaseOnly() {
 		let supportInfo = Self.supportInfo("CASEMAPPING=rfc7613")
 
