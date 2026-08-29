@@ -914,7 +914,7 @@ public extension LogRenderer {
 	nonisolated static func renderTemplateNamed(_ name: String, // nonisolated: pure
 	                                            attributes: [String: Any]?) -> String?
 	{
-		guard let template = ThemeController.activeSnapshot?.theme.template(withName: name) else {
+		guard let template = compileTemplate(named: name) else {
 			return nil
 		}
 		return renderTemplate(template, attributes: attributes)
@@ -924,10 +924,22 @@ public extension LogRenderer {
 		_ name: ThemeTemplateName,
 		attributes: ThemeTemplateAttributes = [:]
 	) -> String? {
-		guard let template = ThemeController.activeSnapshot?.theme.template(withName: name.rawValue) else {
+		guard let template = compileTemplate(named: name.rawValue) else {
 			return nil
 		}
 		return renderTemplate(template, attributes: attributes)
+	}
+
+	/** Compiles one template out of the active theme's sources.
+
+	 These are the one-off renders -- the base layout, the history divider, a
+	 script asking for a named template -- so the cache lives for the length of
+	 the call. The per-line renders share one across a whole job instead.
+	 A compiled template never outlives the caller, which is what keeps
+	 GRMustache's repository inside a single isolation domain. */
+	private nonisolated static func compileTemplate(named name: String) -> Template? { // nonisolated: pure
+		var cache = ThemeTemplateCache(sources: ThemeController.activeSnapshot?.templateSources)
+		return cache.template(named: name)
 	}
 
 	nonisolated static func renderTemplate(_ template: Template) -> String? { // nonisolated: pure

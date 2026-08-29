@@ -88,8 +88,21 @@ public final class Theme: NSObject {
 	fileprivate var globalVariety: ThemeVariety!
 	fileprivate var variety: ThemeVariety?
 	private var varieties: [ThemeVariety] = []
-	private nonisolated let templateStore = ThemeTemplateStore() // nonisolated: let
 	private var fileSystemMonitorTask: Task<Void, Never>?
+
+	/** Where this theme's templates are read from, as values a render job can
+	 build its own repositories out of. Replaced whenever the variety changes,
+	 with a fresh generation, so a job that cached templates from the previous
+	 one throws them away. */
+	public private(set) var templateSources = ThemeTemplateSources(
+		repositoryURLs: [],
+		fallbackURL: URL(filePath: "/"),
+		generation: 0
+	)
+
+	/// Source of `ThemeTemplateSources.generation`. Global rather than
+	/// per-theme so that switching themes also invalidates a job's cache.
+	private static var templateGeneration: UInt64 = 0
 
 	public private(set) var cssFiles: [URL] = []
 	public private(set) var jsFiles: [URL] = []
@@ -149,27 +162,6 @@ public final class Theme: NSObject {
 
 	public func updateAppearance() {
 		_ = chooseBestVariety()
-	}
-
-	public nonisolated func template(withLineType type: TVCLogLineType) -> Template? { // nonisolated: pure
-		guard let typeString = LogLine.string(for: type) else {
-			return nil
-		}
-
-		let lineTypeTemplateName = "\(ThemeResourcePath.lineTypes.rawValue)/\(typeString)"
-		if let template = loadTemplate(named: lineTypeTemplateName, logErrors: false) {
-			return template
-		}
-
-		guard let fallbackName = Self.templateLineTypes[typeString] else {
-			return nil
-		}
-
-		return loadTemplate(named: fallbackName, logErrors: true)
-	}
-
-	public nonisolated func template(withName name: String) -> Template? { // nonisolated: pure
-		loadTemplate(named: name, logErrors: true)
 	}
 
 	private func loadTheme() {
@@ -409,10 +401,14 @@ public final class Theme: NSObject {
 	private func changeVariety(to newVariety: ThemeVariety?) {
 		let previousVariety = variety
 		variety = newVariety
-		let repositories = combineFiles()
+		let repositoryURLs = combineFiles()
 		settingsStorage = ThemeSettings(theme: self)
-		let fallbackRepository = TemplateRepository(baseURL: applicationTemplateRepositoryURL)
-		templateStore.replaceRepositories(repositories, fallbackRepository: fallbackRepository)
+		Self.templateGeneration &+= 1
+		templateSources = ThemeTemplateSources(
+			repositoryURLs: repositoryURLs,
+			fallbackURL: applicationTemplateRepositoryURL,
+			generation: Self.templateGeneration
+		)
 
 		guard let previousVariety, let newVariety, usable else {
 			return
@@ -423,7 +419,7 @@ public final class Theme: NSObject {
 		NotificationCenter.default.post(name: notification, object: self)
 	}
 
-	private func combineFiles() -> [TemplateRepository] {
+	private func combineFiles() -> [URL] {
 		guard let variety else {
 			cssFiles = []
 			jsFiles = []
@@ -439,7 +435,7 @@ public final class Theme: NSObject {
 		temporaryJSFiles = jsFiles.map(remapToTemporaryURL)
 
 		let repositoryVarieties = variety.isGlobalVariety ? [globalVariety!] : [variety, globalVariety!]
-		return repositoryVarieties.compactMap(\.templateRepository)
+		return repositoryVarieties.map(\.templateRepositoryURL)
 	}
 
 	private func remapToTemporaryURL(_ url: URL) -> URL {
@@ -454,25 +450,10 @@ public final class Theme: NSObject {
 
 	// MARK: Templates
 
-	private nonisolated static let templateLineTypes: [String: String] = // nonisolated: let
-		ResourceManager
-		.dictionary(fromResources: ThemeResourcePath.templateLineTypes.rawValue) as? [String: String] ?? [:]
-
 	private var applicationTemplateRepositoryURL: URL {
 		PathInfo.applicationResourcesURL
 			.appending(path: ThemeResourcePath.defaultTemplates.rawValue, directoryHint: .isDirectory)
 			.appending(path: "Version \(settings.templateEngineVersion)", directoryHint: .isDirectory)
-	}
-
-	private nonisolated func loadTemplate(named name: String, logErrors: Bool) -> Template? { // nonisolated: pure
-		templateStore.template(named: name) { error in
-			guard logErrors else {
-				return
-			}
-			Self.logger.error(
-				"Failed to load template '\(name, privacy: .public)': \(error.localizedDescription, privacy: .public)"
-			)
-		}
 	}
 }
 
@@ -484,11 +465,13 @@ private final class ThemeVariety {
 	private(set) var cssFile: URL?
 	private(set) var jsFile: URL?
 	private(set) var settings = ThemeSettingValues()
-	private(set) var templateRepository: TemplateRepository?
+	private(set) var templateRepositoryURL: URL
 
 	init(url: URL, isGlobalVariety: Bool = false) {
-		self.url = url.standardizedFileURL
+		let standardizedURL = url.standardizedFileURL
+		self.url = standardizedURL
 		self.isGlobalVariety = isGlobalVariety
+		templateRepositoryURL = Self.templatesURL(for: standardizedURL)
 		load()
 	}
 
@@ -514,7 +497,7 @@ private final class ThemeVariety {
 			jsFile = jsURL
 		}
 
-		templateRepository = TemplateRepository(baseURL: Self.templatesURL(for: url))
+		templateRepositoryURL = Self.templatesURL(for: url)
 		settings = Self.loadSettings(from: Self.settingsURL(for: url))
 
 		switch settings.value(for: .appearance, as: String.self).flatMap(ThemeAppearanceToken.init(rawValue:)) {

@@ -115,10 +115,10 @@ nonisolated struct LogLineRenderContext: Sendable { // nonisolated: value
 
 /** A log line reduced to the values rendering reads.
 
- `LogLine` is a mutable reference type carrying an untyped `rendererAttributes`
- dictionary, so it cannot cross into the pipeline. The snapshot is taken on the
- main actor, which is also where the sender's formatted nickname is resolved:
- that needs the member's mode symbol, and the member list is main-actor state. */
+ The line itself would cross now that it is a value, but the derived text would
+ not: the sender's formatted nickname needs the member's mode symbol and the
+ theme's nickname format, and the timestamp needs the theme's format. Both are
+ resolved here, on the main actor, rather than reached for from a render job. */
 nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 	var uniqueIdentifier = ""
 	var messageBody = ""
@@ -141,9 +141,7 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 	var reactions: [String: [String]]?
 	var highlightKeywords: [String]?
 	var excludeKeywords: [String]?
-	/** The only key the app ever writes into `LogLine.rendererAttributes`
-	 (`IRCClientLinePresentation`), and the only one an archived line can carry
-	 that the render path does not overwrite from the line itself. */
+	/// Set by `IRCClientLinePresentation` for a body it has already marked up.
 	var doNotEscapeBody = false
 	var isEncrypted = false
 	var isFirstForDay = false
@@ -261,19 +259,27 @@ nonisolated struct LogLineRenderResult: Sendable { // nonisolated: value
 /// The two pieces of rendering that need a live theme and the renderer's view
 /// context. Injected so that the request-to-result round trip can be exercised
 /// without either of them.
-nonisolated protocol LogLineRendering: Sendable { // nonisolated: value
+nonisolated protocol LogLineRendering { // nonisolated: value
 	func renderBody(
 		_ body: String,
 		attributes: [String: Any],
 		members: [RenderedMember],
 		results: inout [String: Any]
 	) -> String
-	func renderTemplate(for lineType: TVCLogLineType, attributes: ThemeTemplateAttributes) -> String?
+	/** Mutating because a renderer caches the templates it compiles. The cache
+	 belongs to the render job that made the renderer and dies with it, which is
+	 what keeps a `TemplateRepository` inside one isolation domain. */
+	mutating func renderTemplate(for lineType: TVCLogLineType, attributes: ThemeTemplateAttributes) -> String?
 }
 
-/// Renders through `TVCLogRenderer` and the theme that is active right now.
-/// Stateless: everything a line needs travels in its request.
+/** Renders through `TVCLogRenderer` and the theme that is active right now.
+
+ Everything a line needs travels in its request; the only state the renderer
+ keeps is its own template cache, which is why one is made per render job and
+ never handed to another. */
 nonisolated struct ThemeLogLineRenderer: LogLineRendering { // nonisolated: value
+	private var templates = ThemeTemplateCache()
+
 	func renderBody(
 		_ body: String,
 		attributes: [String: Any],
@@ -288,14 +294,18 @@ nonisolated struct ThemeLogLineRenderer: LogLineRendering { // nonisolated: valu
 		)
 	}
 
-	func renderTemplate(for lineType: TVCLogLineType, attributes: ThemeTemplateAttributes) -> String? {
-		/* A theme reload nils the active theme out from under the pipeline.
-		 Skip the line instead of trapping on it. */
-		guard let theme = ThemeController.activeSnapshot?.theme,
-		      let template = theme.template(withLineType: lineType)
-		else {
+	mutating func renderTemplate(
+		for lineType: TVCLogLineType,
+		attributes: ThemeTemplateAttributes
+	) -> String? {
+		/* A theme reload publishes a new generation, and a reload part way
+		 through a job discards what the job compiled before it. */
+		templates.synchronize(with: ThemeController.activeSnapshot?.templateSources)
+
+		guard let template = templates.template(for: lineType) else {
 			return nil
 		}
+
 		return TVCLogRenderer.renderTemplate(template, attributes: attributes)
 	}
 }
@@ -325,28 +335,52 @@ extension LogController {
 		}
 	}
 
+	/** One render job over `lines`, with a renderer of its own.
+
+	 The renderer's template cache lives exactly as long as this call, which is
+	 what keeps compiled templates inside one isolation domain and lets a burst
+	 of lines share the compile the first of them paid for. */
+	nonisolated static func renderJob( // nonisolated: pure
+		_ lines: [LogLineSnapshot],
+		context: LogLineRenderContext
+	) -> [LogLineRenderResult] {
+		var renderer = ThemeLogLineRenderer()
+		return render(lines, context: context, using: &renderer)
+	}
+
+	/// One render job over a single line, with a renderer of its own.
+	nonisolated static func renderJob(_ request: LogLineRenderRequest) -> LogLineRenderResult? { // nonisolated: pure
+		var renderer = ThemeLogLineRenderer()
+		return render(request, using: &renderer)
+	}
+
 	/// Renders every line of `lines`, skipping the ones that fail.
 	nonisolated static func render( // nonisolated: pure
 		_ lines: [LogLineSnapshot],
 		context: LogLineRenderContext,
-		using renderer: some LogLineRendering
+		using renderer: inout some LogLineRendering
 	) -> [LogLineRenderResult] {
-		lines.compactMap { line in
-			guard let result = render(LogLineRenderRequest(line: line, context: context), using: renderer)
+		var results: [LogLineRenderResult] = []
+		results.reserveCapacity(lines.count)
+
+		for line in lines {
+			guard let result = render(LogLineRenderRequest(line: line, context: context), using: &renderer)
 			else {
 				logLineRenderingLogger
 					.error("Failed to render log line \(line.sourceDescription, privacy: .public)")
-				return nil
+				continue
 			}
-			return result
+			results.append(result)
 		}
+
+		return results
 	}
 
 	/// Turns a request into the HTML and the results the main actor acts on.
 	/// Runs off the main actor.
 	nonisolated static func render( // nonisolated: pure
 		_ request: LogLineRenderRequest,
-		using renderer: some LogLineRendering
+		using renderer: inout some LogLineRendering
 	) -> LogLineRenderResult? {
 		let line = request.line
 		let lineType = line.lineType

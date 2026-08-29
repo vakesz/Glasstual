@@ -121,7 +121,8 @@ struct LogLineRenderRequestTests {
 		)
 		let request = LogLineRenderRequest(logLine: logLine, context: context)
 
-		let result = try #require(LogController.render(request, using: StubLogLineRenderer()))
+		var stubRenderer = StubLogLineRenderer()
+		let result = try #require(LogController.render(request, using: &stubRenderer))
 
 		#expect(result.lineNumber == logLine.uniqueIdentifier)
 		#expect(result.timestamp == logLine.receivedAt.timeIntervalSince1970)
@@ -140,9 +141,9 @@ struct LogLineRenderRequestTests {
 	@Test("A keyword match is reported as a highlight")
 	func keywordMatchIsAHighlight() throws {
 		let request = LogLineRenderRequest(logLine: makeLogLine(), context: LogLineRenderContext())
-		let renderer = StubLogLineRenderer(keywordMatchFound: true)
+		var renderer = StubLogLineRenderer(keywordMatchFound: true)
 
-		let result = try #require(LogController.render(request, using: renderer))
+		let result = try #require(LogController.render(request, using: &renderer))
 
 		#expect(result.isHighlight)
 		#expect(result.html.contains("highlight=true"))
@@ -153,7 +154,8 @@ struct LogLineRenderRequestTests {
 		let context = LogLineRenderContext(inlineMediaEnabled: true)
 		let request = LogLineRenderRequest(logLine: makeLogLine(lineType: .topic), context: context)
 
-		let result = try #require(LogController.render(request, using: StubLogLineRenderer()))
+		var stubRenderer = StubLogLineRenderer()
+		let result = try #require(LogController.render(request, using: &stubRenderer))
 
 		#expect(result.processesInlineMedia == false)
 	}
@@ -161,16 +163,17 @@ struct LogLineRenderRequestTests {
 	@Test("A line the theme has no template for is skipped rather than rendered")
 	func missingTemplateSkipsTheLine() {
 		let request = LogLineRenderRequest(logLine: makeLogLine(), context: LogLineRenderContext())
-		let renderer = StubLogLineRenderer(templateIsMissing: true)
+		var renderer = StubLogLineRenderer(templateIsMissing: true)
 
-		#expect(LogController.render(request, using: renderer) == nil)
+		#expect(LogController.render(request, using: &renderer) == nil)
 	}
 
 	@Test("Rendering a batch keeps the lines that succeeded")
 	func batchRenderKeepsSuccessfulLines() {
 		let lines = [makeSnapshot(body: "one"), makeSnapshot(body: "two")]
 
-		let results = LogController.render(lines, context: LogLineRenderContext(), using: StubLogLineRenderer())
+		var stubRenderer = StubLogLineRenderer()
+		let results = LogController.render(lines, context: LogLineRenderContext(), using: &stubRenderer)
 
 		#expect(results.map(\.lineNumber) == lines.map(\.uniqueIdentifier))
 		#expect(results.allSatisfy { $0.html.isEmpty == false })
@@ -179,9 +182,9 @@ struct LogLineRenderRequestTests {
 	@Test("Rendering a batch drops every line when no template resolves")
 	func batchRenderDropsUnrenderableLines() {
 		let lines = [makeSnapshot(body: "one"), makeSnapshot(body: "two")]
-		let renderer = StubLogLineRenderer(templateIsMissing: true)
+		var renderer = StubLogLineRenderer(templateIsMissing: true)
 
-		#expect(LogController.render(lines, context: LogLineRenderContext(), using: renderer).isEmpty)
+		#expect(LogController.render(lines, context: LogLineRenderContext(), using: &renderer).isEmpty)
 	}
 }
 
