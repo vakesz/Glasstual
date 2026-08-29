@@ -46,7 +46,7 @@ import Foundation
 /// line carries its links from the render pipeline back to the main actor, and
 /// a checked conformance has to be declared beside the type it applies to.
 @objc(TLOLinkParserResult)
-public final nonisolated class LinkParserResult: NSObject, Sendable {
+public final nonisolated class LinkParserResult: NSObject, Sendable { // nonisolated: value
 	/// Random identifier that is unique to this result.
 	@objc public let uniqueIdentifier: String
 
@@ -72,7 +72,7 @@ public final nonisolated class LinkParserResult: NSObject, Sendable {
 }
 
 @objc(TLOLinkParser)
-public nonisolated class LinkParser: NSObject {
+public nonisolated class LinkParser: NSObject { // nonisolated: value
 	/// Locates hyperlinks in `string`.
 	///
 	/// Results are sorted by location and never overlap.
@@ -220,12 +220,12 @@ public nonisolated class LinkParser: NSObject {
 
 		/* The declarations keep the key names the AutoHyperlinks framework that
 		 preceded this parser used, so a user customization carries over. */
-		if Preferences.LinkSchemes.permitAny.value {
+		if Preferences.LinkSchemes.permitAny.detachedValue {
 			return true
 		}
 
-		return Preferences.LinkSchemes.permittedDefault.value.contains(scheme)
-			|| Preferences.LinkSchemes.permitted.value.contains(scheme)
+		return Preferences.LinkSchemes.permittedDefault.detachedValue.contains(scheme)
+			|| Preferences.LinkSchemes.permitted.detachedValue.contains(scheme)
 	}
 
 	private static let linkDetector: NSDataDetector = {

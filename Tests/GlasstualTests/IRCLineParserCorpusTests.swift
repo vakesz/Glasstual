@@ -46,7 +46,7 @@ import Testing
 /// narrows token splitting to `0x20`.
 @MainActor
 struct IRCLineParserCorpusTests {
-	struct LineCase: Sendable {
+	nonisolated struct LineCase: Sendable {
 		let line: String
 		let tagSection: String?
 		let sender: String?
@@ -71,7 +71,7 @@ struct IRCLineParserCorpusTests {
 		}
 	}
 
-	struct TagCase: Sendable {
+	nonisolated struct TagCase: Sendable {
 		let section: String
 		let name: String
 		let value: String?
@@ -316,7 +316,7 @@ struct IRCMessageTagCorpusTests {
 		#expect(message.isHistoric == false)
 	}
 
-	struct BatchCase: Sendable {
+	nonisolated struct BatchCase: Sendable {
 		let tagSection: String
 		let token: String?
 

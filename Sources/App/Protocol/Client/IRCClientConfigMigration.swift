@@ -41,7 +41,7 @@ import Foundation
 import GlasstualPluginKit
 import os
 
-private nonisolated let clientConfigMigrationLogger = Logger(
+private nonisolated let clientConfigMigrationLogger = Logger( // nonisolated: let
 	subsystem: "com.vakesz.glasstual",
 	category: "Migration"
 )
@@ -49,7 +49,7 @@ private nonisolated let clientConfigMigrationLogger = Logger(
 /// Reading a version 0 configuration: the one written before the settings were
 /// renamed, before flood control became two plain numbers, and before a
 /// connection had a list of endpoints instead of a single address.
-nonisolated extension ClientConfig {
+nonisolated extension ClientConfig { // nonisolated: value
 	private typealias Container = KeyedDecodingContainer<CodingKeys>
 
 	mutating func migrateVersionZero(from container: KeyedDecodingContainer<CodingKeys>) {
@@ -238,7 +238,7 @@ nonisolated extension ClientConfig {
 }
 
 /// The nested dictionary a version 0 configuration stored flood control in.
-private nonisolated struct LegacyFloodControl: Decodable {
+private nonisolated struct LegacyFloodControl: Decodable { // nonisolated: value
 	var serviceEnabled: Bool?
 	var delayTimerInterval: UInt?
 	var maximumMessageCount: UInt?

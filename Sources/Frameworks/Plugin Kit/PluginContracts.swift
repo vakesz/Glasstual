@@ -100,7 +100,7 @@ public protocol PluginServerMessageIntercepting: AnyObject {
 /// `Sendable` value and its result is a `String`, so an implementation only has
 /// to keep its own state safe.
 public protocol PluginMessageRendering: AnyObject, Sendable {
-	nonisolated func willRenderMessage(_ event: PluginRenderEvent) -> String?
+	nonisolated func willRenderMessage(_ event: PluginRenderEvent) -> String? // nonisolated: pure
 }
 
 @MainActor

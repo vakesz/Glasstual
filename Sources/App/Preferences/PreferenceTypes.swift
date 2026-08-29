@@ -39,12 +39,16 @@
 import Foundation
 
 /* The names come from the key declarations so the literals exist once. */
-nonisolated let TPCPreferencesThemeNameDefaultsKey = Preferences.Theme.name.name
-nonisolated let TPCPreferencesThemeFontNameDefaultsKey = Preferences.Theme.fontName.name
-nonisolated let TPCPreferencesThemeFontSizeDefaultsKey = Preferences.Theme.fontSize.name
-nonisolated let TPCPreferencesThemeNameMissingLocallyDefaultsKey = Preferences.Theme.nameMissingLocally.name
-nonisolated let TPCPreferencesThemeFontNameMissingLocallyDefaultsKey = Preferences.Theme.fontNameMissingLocally.name
-nonisolated let TPCPreferencesDictionaryVersion: UInt = 602
+nonisolated let TPCPreferencesThemeNameDefaultsKey = Preferences.Theme.name.name // nonisolated: let
+nonisolated let TPCPreferencesThemeFontNameDefaultsKey = Preferences.Theme.fontName.name // nonisolated: let
+nonisolated let TPCPreferencesThemeFontSizeDefaultsKey = Preferences.Theme.fontSize.name // nonisolated: let
+nonisolated let TPCPreferencesThemeNameMissingLocallyDefaultsKey = Preferences.Theme // nonisolated: let
+	.nameMissingLocally
+	.name
+nonisolated let TPCPreferencesThemeFontNameMissingLocallyDefaultsKey = Preferences.Theme // nonisolated: let
+	.fontNameMissingLocally
+	.name
+nonisolated let TPCPreferencesDictionaryVersion: UInt = 602 // nonisolated: let
 
 @objc public enum TXNicknameHighlightMatchType: UInt, Sendable {
 	case partial

@@ -43,7 +43,7 @@ import Foundation
  The password is not part of the value: it lives in the keychain under this
  endpoint's `uniqueIdentifier`, and `pendingServerPassword` only holds one that
  the user has just typed and that has not been flushed there yet. */
-public nonisolated struct Server: Codable, Sendable, Equatable, Hashable {
+public nonisolated struct Server: Codable, Sendable, Equatable, Hashable { // nonisolated: value
 	public var uniqueIdentifier: String
 	public var serverAddress: String
 	public var serverPort: UInt16
@@ -105,7 +105,7 @@ public nonisolated struct Server: Codable, Sendable, Equatable, Hashable {
 	}
 }
 
-public nonisolated extension Server {
+public nonisolated extension Server { // nonisolated: value
 	/// A copy under a fresh identity, carrying the password across so the
 	/// duplicate does not silently lose it.
 	func uniqueCopy() -> Server {

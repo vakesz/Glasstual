@@ -40,7 +40,7 @@ import CocoaExtensions
 import Foundation
 import HistoricLogStoreKit
 
-private nonisolated enum LogLineArchiveKey {
+private nonisolated enum LogLineArchiveKey { // nonisolated: value
 	static let command = "command"
 	static let deliveryState = "deliveryState"
 	static let excludeKeywords = "excludeKeywords"
@@ -60,7 +60,7 @@ private nonisolated enum LogLineArchiveKey {
 	static let uniqueIdentifier = "uniqueIdentifier"
 }
 
-private nonisolated enum LogLineFormat {
+private nonisolated enum LogLineFormat { // nonisolated: value
 	static let actionNickname = "%@ "
 	static let defaultCommand = "-100"
 	static let loggerActionNickname = "\u{2022} %n:"
@@ -513,7 +513,7 @@ public final nonisolated class LogLine: NSObject, NSSecureCoding {
 	}
 }
 
-private nonisolated extension TVCLogLineType {
+private nonisolated extension TVCLogLineType { // nonisolated: value
 	var hasNicknameColor: Bool {
 		switch self {
 		case .privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight:

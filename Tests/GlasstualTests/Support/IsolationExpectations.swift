@@ -56,7 +56,7 @@ func expectOffMainActor(
 	)
 }
 
-func isMainActor(_ isolation: (any Actor)?) -> Bool {
+nonisolated func isMainActor(_ isolation: (any Actor)?) -> Bool {
 	guard let isolation else {
 		return false
 	}
@@ -64,7 +64,7 @@ func isMainActor(_ isolation: (any Actor)?) -> Bool {
 	return isolation === (MainActor.shared as any Actor)
 }
 
-func describeIsolation(_ isolation: (any Actor)?) -> String {
+nonisolated func describeIsolation(_ isolation: (any Actor)?) -> String {
 	guard let isolation else {
 		return "no actor (a nonisolated context)"
 	}

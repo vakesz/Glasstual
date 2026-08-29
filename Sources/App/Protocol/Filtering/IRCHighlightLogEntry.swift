@@ -40,7 +40,7 @@ import AppKit
 import CocoaExtensions
 import os
 
-private nonisolated let highlightLogEntryLogger = Logger(
+private nonisolated let highlightLogEntryLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCHighlightLogEntry"
 )

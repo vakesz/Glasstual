@@ -26,7 +26,7 @@ struct InputHistoryScopeTests {
 	/// The tests run against the scheme's scratch defaults suite, so the
 	/// original value is restored rather than left behind.
 	private func withChannelSpecificHistory(_ enabled: Bool, _ body: () -> Void) {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		let original = defaults.persistentDomain(forName: ApplicationGroup.identifier)?[Self.channelSpecificKey]
 		defer {
 			if let original {

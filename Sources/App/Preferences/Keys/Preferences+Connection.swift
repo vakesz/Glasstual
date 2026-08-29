@@ -39,9 +39,9 @@ import Foundation
 
 // MARK: - Identity
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// The identity a new connection is seeded with.
-	nonisolated enum Identity {
+	enum Identity {
 		public static let nickname = PreferenceKey("DefaultIdentity -> Nickname", default: "Guest")
 		public static let awayNickname = PreferenceKey("DefaultIdentity -> AwayNickname", default: "")
 		public static let username = PreferenceKey("DefaultIdentity -> Username", default: "glasstual")
@@ -63,9 +63,9 @@ public nonisolated extension Preferences {
 
 // MARK: - Connection
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Connecting, joining, and the behaviour of the connection itself.
-	nonisolated enum Connection {
+	enum Connection {
 		public static let autojoinOnInvite = PreferenceKey("AutojoinChannelOnInvite", default: false)
 
 		public static let autojoinDelayAfterIdentification = PreferenceKey(
@@ -115,9 +115,9 @@ public nonisolated extension Preferences {
 
 // MARK: - Commands
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Command defaults and the "apply to all connections" switches.
-	nonisolated enum Commands {
+	enum Commands {
 		public static let amsgAllConnections = PreferenceKey(
 			"ApplyCommandToAllConnections -> amsg",
 			default: false

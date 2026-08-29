@@ -37,9 +37,9 @@
 
 import Foundation
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// DCC transfers: how a request is answered and how the listener is reached.
-	nonisolated enum FileTransfers {
+	enum FileTransfers {
 		private static let prefix = "File Transfers -> File Transfer "
 
 		public static let requestReplyAction = PreferenceKey(
@@ -88,10 +88,10 @@ public nonisolated extension Preferences {
 	}
 }
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Settings owned by the bundled extensions, declared here so they are
 	/// catalogued and travel with an exported configuration.
-	nonisolated enum Extensions {
+	enum Extensions {
 		public static let chatFilters = UntypedPreferenceKey("Glasstual Chat Filter Extension -> Filters")
 
 		public static let caffeinePreventSleep = PreferenceKey(

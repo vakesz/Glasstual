@@ -38,7 +38,7 @@
 
 import Foundation
 
-nonisolated enum IRCConnectionStrings {
+nonisolated enum IRCConnectionStrings { // nonisolated: value
 	static var noConfiguredServers: String {
 		String(localized: .IRC.thereAreNoServersConfigured)
 	}
@@ -135,7 +135,7 @@ nonisolated enum IRCConnectionStrings {
 	}
 }
 
-nonisolated enum IRCTransportSecurityStrings {
+nonisolated enum IRCTransportSecurityStrings { // nonisolated: value
 	static var policyWithdrawn: String {
 		String(localized: .IRC.serverWithdrewItsStrictTransportSecurity)
 	}
@@ -169,7 +169,7 @@ nonisolated enum IRCTransportSecurityStrings {
 	}
 }
 
-nonisolated enum IRCTransportStrings {
+nonisolated enum IRCTransportStrings { // nonisolated: value
 	static var notConnected: String {
 		String(localized: .IRC.failedToSendDataToServer)
 	}

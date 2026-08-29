@@ -41,7 +41,7 @@ import Foundation
 /** A single mode change: the symbol, whether it is being set or unset, and the
  optional parameter that came with it. The symbol identifies the mode, so it is
  fixed for the lifetime of a value; the other two fields vary. */
-public nonisolated struct ModeInfo: Hashable, Sendable {
+public nonisolated struct ModeInfo: Hashable, Sendable { // nonisolated: value
 	public let modeSymbol: String
 	public var modeIsSet: Bool
 	public var modeParameter: String?

@@ -38,7 +38,7 @@
 import Foundation
 
 /// The per-event settings each notification type carries.
-public nonisolated enum NotificationSetting: String, CaseIterable, Sendable {
+public nonisolated enum NotificationSetting: String, CaseIterable, Sendable { // nonisolated: value
 	case enabled = "Enabled"
 	case sound = "Sound"
 	case disabledWhileAway = "Disable While Away"
@@ -49,7 +49,7 @@ public nonisolated enum NotificationSetting: String, CaseIterable, Sendable {
 	case speakNickname = "Speak Nickname"
 }
 
-public nonisolated extension TXNotificationType {
+public nonisolated extension TXNotificationType { // nonisolated: value
 	/// The preference-key prefix this event's settings live under.
 	var preferenceKeyPrefix: String {
 		let name = switch self {
@@ -82,10 +82,10 @@ public nonisolated extension TXNotificationType {
 	}
 }
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Per-event notification settings, plus the switches that apply to all of
 	/// them.
-	nonisolated enum Notifications {
+	enum Notifications {
 		static let keyPrefix = "NotificationType -> "
 
 		/// The individual `NotificationType -> …` keys are matched by prefix in

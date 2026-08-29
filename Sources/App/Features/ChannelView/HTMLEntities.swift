@@ -18,7 +18,7 @@ import Foundation
 /// The entity to write for each scalar that must not appear literally in
 /// markup. Keyed lookup replaces a binary search over an array that had to stay
 /// sorted by an invariant nothing checked.
-private nonisolated let entitiesByScalarValue: [UInt32: String] = [
+private nonisolated let entitiesByScalarValue: [UInt32: String] = [ // nonisolated: let
 	34: "&quot;",
 	38: "&amp;",
 	39: "&apos;",
@@ -56,7 +56,7 @@ private nonisolated let entitiesByScalarValue: [UInt32: String] = [
 
 /// Every named entity the unescaper understands, keyed by the whole `&name;`
 /// spelling. This used to be scanned linearly, once per entity found.
-private nonisolated let scalarValuesByEntity: [String: UInt32] = [
+private nonisolated let scalarValuesByEntity: [String: UInt32] = [ // nonisolated: let
 	"&quot;": 34,
 	"&amp;": 38,
 	"&apos;": 39,
@@ -314,9 +314,9 @@ private nonisolated let scalarValuesByEntity: [String: UInt32] = [
 
 /// Longest named entity in the table above, so a `&`...`;` run longer than this
 /// can be rejected without a lookup.
-private nonisolated let maximumEntityLength = 10
+private nonisolated let maximumEntityLength = 10 // nonisolated: let
 
-public nonisolated extension String {
+public nonisolated extension String { // nonisolated: value
 	/// The receiver with every character that would otherwise be markup written
 	/// as an HTML entity.
 	///

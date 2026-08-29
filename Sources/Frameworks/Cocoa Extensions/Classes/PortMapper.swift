@@ -126,11 +126,11 @@ public final class XRPortMapper: NSObject {
 		error = 0
 	}
 
-	public nonisolated static var localAddress: String? {
+	public nonisolated static var localAddress: String? { // nonisolated: pure
 		string(from: rawLocalAddress)
 	}
 
-	public nonisolated static var localAddressIsPrivate: Bool {
+	public nonisolated static var localAddressIsPrivate: Bool { // nonisolated: pure
 		let address = UInt32(bigEndian: rawLocalAddress)
 		let ranges: [(UInt32, UInt32)] = [
 			(0xFF00_0000, 0x0000_0000), (0xFF00_0000, 0x0A00_0000),
@@ -161,7 +161,7 @@ public final class XRPortMapper: NSObject {
 		publicPort = 0
 	}
 
-	private nonisolated static var rawLocalAddress: UInt32 {
+	private nonisolated static var rawLocalAddress: UInt32 { // nonisolated: pure
 		var interfaces: UnsafeMutablePointer<ifaddrs>?
 		guard getifaddrs(&interfaces) == 0 else { return 0 }
 		defer { freeifaddrs(interfaces) }
@@ -178,7 +178,7 @@ public final class XRPortMapper: NSObject {
 		return 0
 	}
 
-	private nonisolated static func string(from address: UInt32) -> String? {
+	private nonisolated static func string(from address: UInt32) -> String? { // nonisolated: pure
 		guard address != 0 else { return nil }
 		var address = in_addr(s_addr: address)
 		var buffer = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))

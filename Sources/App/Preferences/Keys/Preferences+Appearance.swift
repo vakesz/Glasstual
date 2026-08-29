@@ -39,9 +39,9 @@ import Foundation
 
 // MARK: - Appearance
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Window chrome, the two sidebars, and the web view hosting the channel.
-	nonisolated enum Appearance {
+	enum Appearance {
 		public static let preferredAppearance = PreferenceKey(
 			"Appearance",
 			default: TXPreferredAppearance.inherited
@@ -118,9 +118,9 @@ public nonisolated extension Preferences {
 
 // MARK: - Theme
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// The active style and the font and format overrides layered on top of it.
-	nonisolated enum Theme {
+	enum Theme {
 		public static let name = PreferenceKey("Theme -> Name", default: "resource:Lines")
 		public static let fontName = PreferenceKey("Theme -> Font Name", default: ".AppleSystemUIFont")
 		public static let fontSize = PreferenceKey("Theme -> Font Size", default: 13.0)
@@ -189,7 +189,7 @@ public nonisolated extension Preferences {
  The symbol, the preference key, the shipped colour and the tag the colour well
  in the preferences nib carries used to be four separate literal lists in three
  files; they are one declaration here. */
-public nonisolated enum UserListModeBadge: String, CaseIterable, Sendable {
+public nonisolated enum UserListModeBadge: String, CaseIterable, Sendable { // nonisolated: value
 	case ircOperator = "+y"
 	case channelOwner = "+q"
 	case superOperator = "+a"
@@ -237,9 +237,9 @@ public nonisolated enum UserListModeBadge: String, CaseIterable, Sendable {
 	}
 }
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// The colour wells in the "User List" and "Server List" preference panes.
-	nonisolated enum Badges {
+	enum Badges {
 		public static let userListMode = UserListModeBadge.allCases.map(\.preferenceKey)
 
 		/** Unregistered on purpose: with nothing stored the server-list cell uses
@@ -258,10 +258,10 @@ public nonisolated extension Preferences {
 
 // MARK: - Main window state
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Where the main window last was and what it was showing. Restored state,
 	/// not settings, so the whole family stays out of an exported file.
-	nonisolated enum MainWindow {
+	enum MainWindow {
 		public static let serverListVisible = PreferenceKey(
 			"Window -> Main Window -> Server List is Visible",
 			default: true,

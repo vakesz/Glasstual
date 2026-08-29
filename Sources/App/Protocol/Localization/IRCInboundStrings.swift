@@ -38,8 +38,8 @@
 
 import Foundation
 
-nonisolated enum IRCInboundStrings {
-	nonisolated enum StandardReply {
+nonisolated enum IRCInboundStrings { // nonisolated: value
+	enum StandardReply {
 		static func failure(command: String, code: String, description: String) -> String {
 			String(localized: .IRC.standardRepliesFailWarn(command, code, description))
 		}
@@ -53,7 +53,7 @@ nonisolated enum IRCInboundStrings {
 		}
 	}
 
-	nonisolated enum ChannelEvent {
+	enum ChannelEvent {
 		static func modeChanged(sender: String, mode: String) -> String {
 			String(localized: .IRC.setsMode(sender, mode))
 		}
@@ -92,7 +92,7 @@ nonisolated enum IRCInboundStrings {
 		}
 	}
 
-	nonisolated enum Membership {
+	enum Membership {
 		static func joinedQuery(nickname: String) -> String {
 			String(localized: .IRC.joinedTheQueryByConnecting(nickname))
 		}
@@ -140,7 +140,7 @@ nonisolated enum IRCInboundStrings {
 }
 
 extension IRCInboundStrings {
-	nonisolated enum Numeric {
+	nonisolated enum Numeric { // nonisolated: value
 		static var saslAuthenticationFailedDisconnecting: String {
 			String(localized: .IRC.saslAuthenticationFailedDisconnecting)
 		}
@@ -190,7 +190,7 @@ extension IRCInboundStrings {
 		}
 	}
 
-	nonisolated enum Whois {
+	nonisolated enum Whois { // nonisolated: value
 		static func connection(
 			nickname: String,
 			address: String,
@@ -239,7 +239,7 @@ extension IRCInboundStrings {
 		}
 	}
 
-	nonisolated enum History {
+	nonisolated enum History { // nonisolated: value
 		static func netsplit(
 			firstServer: String,
 			secondServer: String,
@@ -280,7 +280,7 @@ enum IRCChannelAccessListKind: Sendable {
 	}
 }
 
-nonisolated enum IRCChannelAccessListStrings {
+nonisolated enum IRCChannelAccessListStrings { // nonisolated: value
 	static func entry(
 		kind: IRCChannelAccessListKind,
 		channelName: String,

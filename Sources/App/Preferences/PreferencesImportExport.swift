@@ -187,7 +187,7 @@ public final class PreferencesImportExport: NSObject {
 				importClientConfiguration(config)
 			}
 		} else {
-			TextualUserDefaults.shared().migrateObject(object, forKey: key)
+			TextualUserDefaults.container.migrateObject(object, forKey: key)
 		}
 	}
 
@@ -236,7 +236,7 @@ public final class PreferencesImportExport: NSObject {
 	 search list, which is where the arguments and global domains used to leak in
 	 and have to be subtracted again by name. */
 	private static func writtenValues() -> [String: Any] {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		var written = defaults.persistentDomain(forName: defaults.suiteName) ?? [:]
 
 		if let bundleIdentifier = Bundle.main.bundleIdentifier,

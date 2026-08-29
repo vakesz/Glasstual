@@ -41,28 +41,33 @@ import CocoaExtensions
 import Combine
 import Synchronization
 
-/** Computed, not stored: `TextualUserDefaults.shared()` is already the process's
- one instance, and a second global reference to it would need a second isolation
- exception for the very same object. This way the exception lives in exactly one
- place, where the instance is made. */
-private nonisolated var preferences: TextualUserDefaults { // nonisolated: pure
-	TextualUserDefaults.shared()
+/// Computed, not stored: `TextualUserDefaults.container` is already the handle
+/// the main actor keeps, and a second global reference to it would only be a
+/// second name for the same object.
+@MainActor
+private var preferences: TextualUserDefaults {
+	TextualUserDefaults.container
 }
 
-/** Highlight keywords are rewritten by a defaults observation on whichever thread
- wrote the default and read by message rendering on the IRC threads, so the cache
- is a value behind a lock rather than a pair of unguarded globals. */
+/** The keyword lists, cached so that a client snapshot does not re-read and
+ re-filter two preference arrays. Main-actor state: the defaults observation
+ that refreshes it, the preference panes that edit it and the snapshot that
+ reads it are all there. */
 private struct HighlightKeywords {
 	var match: [String]?
 	var exclude: [String]?
 }
 
-private nonisolated let highlightKeywords = Mutex(HighlightKeywords())
-private nonisolated let highlightKeywordObservation = Mutex<AnyCancellable?>(nil)
+@MainActor
+private var highlightKeywords = HighlightKeywords()
+
+@MainActor
+private var highlightKeywordObservation: Task<Void, Never>?
 
 // MARK: - Identity
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func defaultNicknamePrefix() -> String {
 		Preferences.Identity.nickname.defaultValue
 	}
@@ -72,24 +77,8 @@ public nonisolated extension TextualPreferences {
 		preferences.registerDefault(nickname, for: Preferences.Identity.nickname)
 	}
 
-	class func defaultNickname() -> String {
-		Preferences.Identity.nickname.value
-	}
-
 	class func setDefaultNickname(_ value: String) {
 		Preferences.Identity.nickname.value = value
-	}
-
-	class func defaultAwayNickname() -> String? {
-		Preferences.Identity.awayNickname.storedValue
-	}
-
-	class func defaultUsername() -> String {
-		Preferences.Identity.username.value
-	}
-
-	class func defaultRealName() -> String {
-		Preferences.Identity.realName.value
 	}
 
 	class func setDefaultRealName(_ value: String) {
@@ -111,7 +100,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - Connection
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func autojoinMaximumChannelJoins() -> UInt {
 		Preferences.Connection.autojoinMaximumChannelJoins.value
 	}
@@ -171,7 +161,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - Commands
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func defaultKickMessage() -> String {
 		Preferences.Commands.kickMessage.value
 	}
@@ -231,15 +222,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - Messages
 
-public nonisolated extension TextualPreferences {
-	class func showDateChanges() -> Bool {
-		Preferences.Messages.showDateChanges.value
-	}
-
-	class func showInlineMedia() -> Bool {
-		Preferences.Messages.showInlineMedia.value
-	}
-
+@MainActor
+public extension TextualPreferences {
 	class func setShowInlineMedia(_ value: Bool) {
 		Preferences.Messages.showInlineMedia.value = value
 	}
@@ -268,26 +252,15 @@ public nonisolated extension TextualPreferences {
 		Preferences.Messages.replyToCTCPRequests.value
 	}
 
-	class func automaticallyDetectHighlightSpam() -> Bool {
-		Preferences.Messages.detectHighlightSpam.value
-	}
-
-	class func automaticallyFilterUnicodeTextSpam() -> Bool {
-		Preferences.Messages.filterUnicodeTextSpam.value
-	}
-
 	class func openBrowserInBackground() -> Bool {
 		Preferences.Messages.openBrowserInBackground.value
-	}
-
-	class func disableNicknameColorHashing() -> Bool {
-		Preferences.Messages.disableNicknameColorHashing.value
 	}
 }
 
 // MARK: - Logging
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func logToDisk() -> Bool {
 		Preferences.Logging.logToDisk.value
 	}
@@ -312,10 +285,6 @@ public nonisolated extension TextualPreferences {
 		Preferences.Logging.loadHistoryLazily.value
 	}
 
-	class func scrollbackSaveLimit() -> UInt {
-		Preferences.Logging.scrollbackSaveLimit.value
-	}
-
 	class func setScrollbackSaveLimit(_ value: UInt) {
 		Preferences.Logging.scrollbackSaveLimit.value = value
 	}
@@ -331,7 +300,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - Appearance
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func setAppearance(_ value: TXPreferredAppearance) {
 		Preferences.Appearance.preferredAppearance.value = value
 	}
@@ -352,16 +322,8 @@ public nonisolated extension TextualPreferences {
 		Preferences.Appearance.memberListNoModeSymbol.value
 	}
 
-	class func memberListSortFavorsServerStaff() -> Bool {
-		Preferences.Appearance.memberListSortFavorsServerStaff.value
-	}
-
 	class func memberListUpdatesUserInfoPopoverOnScroll() -> Bool {
 		Preferences.Appearance.memberListUpdatesPopoverOnScroll.value
-	}
-
-	class func conversationTrackingIncludesUserModeSymbol() -> Bool {
-		Preferences.Appearance.conversationTrackingIncludesModeSymbol.value
 	}
 
 	class func trackUserAwayStatusMaximumChannelSize() -> UInt {
@@ -407,7 +369,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - Theme
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func themeNameDefault() -> String {
 		Preferences.Theme.name.defaultValue
 	}
@@ -490,14 +453,6 @@ public nonisolated extension TextualPreferences {
 		preferences.registerDefault(value, for: Preferences.Theme.nicknameFormatIsUserConfigurable)
 	}
 
-	class func themeTimestampFormatDefault() -> String {
-		Preferences.Theme.timestampFormat.defaultValue
-	}
-
-	class func themeTimestampFormat() -> String {
-		Preferences.Theme.timestampFormat.value
-	}
-
 	class func themeTimestampFormatPreferenceUserConfigurable() -> Bool {
 		Preferences.Theme.timestampFormatIsUserConfigurable.value
 	}
@@ -523,7 +478,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - Input
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func commandReturnSendsMessageAsAction() -> Bool {
 		Preferences.Input.commandReturnSendsAction.value
 	}
@@ -651,7 +607,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - File transfers
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func fileTransferRequestReplyAction() -> TXFileTransferRequestReply {
 		Preferences.FileTransfers.requestReplyAction.value
 	}
@@ -695,7 +652,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - Notifications
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func displayDockBadge() -> Bool {
 		Preferences.Notifications.displayDockBadge.value
 	}
@@ -714,14 +672,6 @@ public nonisolated extension TextualPreferences {
 
 	class func setSoundIsMuted(_ value: Bool) {
 		Preferences.Notifications.soundIsMuted.value = value
-	}
-
-	class func key(for event: TXNotificationType, category: String) -> String? {
-		guard let setting = NotificationSetting(rawValue: category) else {
-			return nil
-		}
-
-		return event.preferenceKeyName(for: setting)
 	}
 
 	class func sound(for event: TXNotificationType) -> String? {
@@ -799,7 +749,8 @@ public nonisolated extension TextualPreferences {
 
 // MARK: - Highlights
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func setHighlightCurrentNickname(_ value: Bool) {
 		Preferences.Highlights.trackLocalNickname.value = value
 	}
@@ -808,34 +759,21 @@ public nonisolated extension TextualPreferences {
 		Preferences.Highlights.trackLocalNickname.value
 	}
 
-	class func highlightMatchingMethod() -> TXNicknameHighlightMatchType {
-		Preferences.Highlights.matchingMethod.value
-	}
-
 	private class func loadKeywords(for key: PreferenceKey<[HighlightKeyword]>) -> [String] {
 		key.value.map(\.string).filter { $0.isEmpty == false }
 	}
 
 	private class func reloadHighlightKeywords() {
-		let match = loadKeywords(for: Preferences.Highlights.matchKeywords)
-		let exclude = loadKeywords(for: Preferences.Highlights.excludeKeywords)
-
-		highlightKeywords.withLock { keywords in
-			keywords.match = match
-			keywords.exclude = exclude
-		}
+		highlightKeywords.match = loadKeywords(for: Preferences.Highlights.matchKeywords)
+		highlightKeywords.exclude = loadKeywords(for: Preferences.Highlights.excludeKeywords)
 	}
 
 	class func loadExcludeKeywords() {
-		let exclude = loadKeywords(for: Preferences.Highlights.excludeKeywords)
-
-		highlightKeywords.withLock { $0.exclude = exclude }
+		highlightKeywords.exclude = loadKeywords(for: Preferences.Highlights.excludeKeywords)
 	}
 
 	class func loadMatchKeywords() {
-		let match = loadKeywords(for: Preferences.Highlights.matchKeywords)
-
-		highlightKeywords.withLock { $0.match = match }
+		highlightKeywords.match = loadKeywords(for: Preferences.Highlights.matchKeywords)
 	}
 
 	private class func cleanKeywords(for key: PreferenceKey<[HighlightKeyword]>) {
@@ -850,17 +788,18 @@ public nonisolated extension TextualPreferences {
 	}
 
 	class func highlightMatchKeywords() -> [String]? {
-		highlightKeywords.withLock { $0.match }
+		highlightKeywords.match
 	}
 
 	class func highlightExcludeKeywords() -> [String]? {
-		highlightKeywords.withLock { $0.exclude }
+		highlightKeywords.exclude
 	}
 }
 
 // MARK: - Application
 
-public nonisolated extension TextualPreferences {
+@MainActor
+public extension TextualPreferences {
 	class func appNapEnabled() -> Bool {
 		Preferences.Internals.appSleepDisabled.value == false
 	}
@@ -904,15 +843,98 @@ public nonisolated extension TextualPreferences {
 		ApplicationInfo.incrementApplicationRunCount()
 		registerDefaults()
 		PathInfo.startUsingTranscriptFolderURL()
-		highlightKeywordObservation.withLock { stored in
-			stored = NotificationCenter.default.publisher(
-				for: UserDefaults.didChangeNotification,
-				object: preferences
-			)
-			.sink { _ in
+		/* Awaited on the main actor rather than sunk: the post can come from any
+		 thread, and the handler writes main-actor state. No `object` filter --
+		 a suite can be open through more than one handle, and a write through
+		 any of them changes the keywords. */
+		highlightKeywordObservation?.cancel()
+		highlightKeywordObservation = Task { @MainActor in
+			for await _ in NotificationCenter.default
+				.publisher(for: UserDefaults.didChangeNotification)
+				.bufferedValues
+			{
 				reloadHighlightKeywords()
 			}
 		}
 		reloadHighlightKeywords()
+	}
+}
+
+// MARK: - Read outside the main actor
+
+/** The settings the value layer reads for itself.
+
+ A `Codable` initialiser, a sort comparator and a client snapshot run wherever
+ their caller does, so these take a private handle on the store instead of the
+ main actor's. Everything above is main-actor: it is the application's own
+ façade over its preferences. */
+public nonisolated extension TextualPreferences { // nonisolated: pure
+	class func defaultNickname() -> String {
+		Preferences.Identity.nickname.detachedValue
+	}
+
+	class func defaultAwayNickname() -> String? {
+		Preferences.Identity.awayNickname.detachedStoredValue
+	}
+
+	class func defaultUsername() -> String {
+		Preferences.Identity.username.detachedValue
+	}
+
+	class func defaultRealName() -> String {
+		Preferences.Identity.realName.detachedValue
+	}
+
+	class func showInlineMedia() -> Bool {
+		Preferences.Messages.showInlineMedia.detachedValue
+	}
+
+	class func memberListSortFavorsServerStaff() -> Bool {
+		Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue
+	}
+
+	class func showDateChanges() -> Bool {
+		Preferences.Messages.showDateChanges.detachedValue
+	}
+
+	class func automaticallyDetectHighlightSpam() -> Bool {
+		Preferences.Messages.detectHighlightSpam.detachedValue
+	}
+
+	class func automaticallyFilterUnicodeTextSpam() -> Bool {
+		Preferences.Messages.filterUnicodeTextSpam.detachedValue
+	}
+
+	class func disableNicknameColorHashing() -> Bool {
+		Preferences.Messages.disableNicknameColorHashing.detachedValue
+	}
+
+	class func scrollbackSaveLimit() -> UInt {
+		Preferences.Logging.scrollbackSaveLimit.detachedValue
+	}
+
+	class func conversationTrackingIncludesUserModeSymbol() -> Bool {
+		Preferences.Appearance.conversationTrackingIncludesModeSymbol.detachedValue
+	}
+
+	class func themeTimestampFormat() -> String {
+		Preferences.Theme.timestampFormat.detachedValue
+	}
+
+	class func highlightMatchingMethod() -> TXNicknameHighlightMatchType {
+		Preferences.Highlights.matchingMethod.detachedValue
+	}
+
+	class func themeTimestampFormatDefault() -> String {
+		Preferences.Theme.timestampFormat.defaultValue
+	}
+
+	/// Pure: the name of the key an event stores under, with nothing read.
+	class func key(for event: TXNotificationType, category: String) -> String? {
+		guard let setting = NotificationSetting(rawValue: category) else {
+			return nil
+		}
+
+		return event.preferenceKeyName(for: setting)
 	}
 }

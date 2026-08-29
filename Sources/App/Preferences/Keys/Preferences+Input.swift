@@ -43,7 +43,7 @@ import Foundation
  array controller in the preferences nib binds to — rather than an array of
  strings, so the record is spelled out here instead of being rebuilt from
  `["string": …]` literals at every use. */
-public nonisolated struct HighlightKeyword: Hashable, Sendable {
+public nonisolated struct HighlightKeyword: Hashable, Sendable { // nonisolated: value
 	public static let field = "string"
 
 	public var string: String
@@ -53,7 +53,7 @@ public nonisolated struct HighlightKeyword: Hashable, Sendable {
 	}
 }
 
-nonisolated extension HighlightKeyword: PreferenceValue {
+nonisolated extension HighlightKeyword: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> HighlightKeyword? {
 		guard let entry = object as? [String: Any], let string = entry[field] as? String else {
 			return nil
@@ -69,9 +69,9 @@ nonisolated extension HighlightKeyword: PreferenceValue {
 
 // MARK: - Input
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// The input text field, the keyboard, and tab completion.
-	nonisolated enum Input {
+	enum Input {
 		public static let automaticSpellCheck = PreferenceKey("TextFieldAutomaticSpellCheck", default: true)
 		public static let automaticGrammarCheck = PreferenceKey("TextFieldAutomaticGrammarCheck", default: true)
 		public static let automaticSpellCorrection = PreferenceKey(
@@ -155,9 +155,9 @@ public nonisolated extension Preferences {
 
 // MARK: - Highlights
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Which incoming text counts as a highlight.
-	nonisolated enum Highlights {
+	enum Highlights {
 		public static let matchingMethod = PreferenceKey(
 			"NicknameHighlightMatchingType",
 			default: TXNicknameHighlightMatchType.exact

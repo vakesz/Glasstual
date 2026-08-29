@@ -482,7 +482,7 @@ public actor DCCTransfer {
 		return chunk
 	}
 
-	private nonisolated static func pause(
+	private nonisolated static func pause( // nonisolated: pure
 		untilASecondHasPassedSince start: ContinuousClock.Instant
 	) async throws { // nonisolated: pure
 		let elapsed = ContinuousClock.now - start

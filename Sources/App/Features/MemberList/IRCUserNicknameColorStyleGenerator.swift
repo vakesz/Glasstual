@@ -18,7 +18,7 @@ import os
 
 /// A pinned nickname colour, as it is written to the defaults store: sRGB
 /// components a plist editor can read, rather than an `NSKeyedArchiver` blob.
-public nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable {
+public nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable { // nonisolated: value
 	public var red: Double
 	public var green: Double
 	public var blue: Double
@@ -84,13 +84,13 @@ public nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable 
 }
 
 /// The colour a nickname is drawn in, and whether the user pinned it.
-public nonisolated struct NicknameColorStyle: Equatable, Sendable {
+public nonisolated struct NicknameColorStyle: Equatable, Sendable { // nonisolated: value
 	/// A CSS `hsl(...)` string, or the hexadecimal value of a pinned colour.
 	public let style: String
 	public let isOverride: Bool
 }
 
-public nonisolated enum UserNicknameColorStyleGenerator {
+public nonisolated enum UserNicknameColorStyleGenerator { // nonisolated: value
 	private static let overridesDefaultsKey = "Nickname Color Style Overrides (v2)"
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -241,7 +241,9 @@ public nonisolated enum UserNicknameColorStyleGenerator {
 		}
 	}
 
+	/// A private handle, not the main actor's: a nickname colour is resolved
+	/// while a line renders, which happens off the main actor.
 	private static var userDefaults: TextualUserDefaults {
-		TextualUserDefaults.shared()
+		TextualUserDefaults.suite()
 	}
 }

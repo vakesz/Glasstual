@@ -59,7 +59,7 @@ import Foundation
 
  A rule loaded from disk carries only the settings its `entryType` uses, and the
  compiled hostmask matcher is rebuilt whenever the type or the mask changes. */
-public nonisolated struct AddressBookEntry: Codable, Equatable {
+public nonisolated struct AddressBookEntry: Codable, Equatable { // nonisolated: value
 	public var uniqueIdentifier: String
 
 	public var entryType: IRCAddressBookEntryType {
@@ -264,7 +264,7 @@ public nonisolated struct AddressBookEntry: Codable, Equatable {
 	}
 }
 
-public nonisolated extension AddressBookEntry {
+public nonisolated extension AddressBookEntry { // nonisolated: value
 	/// An entry that suppresses everything from `hostmask`.
 	static func newIgnoreEntry(forHostmask hostmask: String? = nil) -> AddressBookEntry {
 		var entry = AddressBookEntry(entryType: .ignore, hostmask: hostmask ?? "")

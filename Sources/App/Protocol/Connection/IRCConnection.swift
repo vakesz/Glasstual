@@ -42,7 +42,7 @@ import os
 import Security
 import SecurityInterface
 
-private nonisolated let connectionLogger = Logger(
+private nonisolated let connectionLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCConnection"
 )
@@ -175,8 +175,8 @@ public final class Connection: NSObject {
 	@objc public private(set) var uniqueIdentifier: String
 
 	/// The host's callbacks, in arrival order, on their way to the main actor.
-	private nonisolated let events: AsyncStream<ConnectionEvent>
-	private nonisolated let eventContinuation: AsyncStream<ConnectionEvent>.Continuation
+	private nonisolated let events: AsyncStream<ConnectionEvent> // nonisolated: let
+	private nonisolated let eventContinuation: AsyncStream<ConnectionEvent>.Continuation // nonisolated: let
 	private nonisolated let clientShim: ConnectionClientShim // nonisolated: let
 	private var eventTask: Task<Void, Never>?
 

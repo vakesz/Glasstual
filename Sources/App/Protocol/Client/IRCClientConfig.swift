@@ -40,7 +40,7 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 
-nonisolated enum ClientConfigDefaults {
+nonisolated enum ClientConfigDefaults { // nonisolated: value
 	/// Bumped whenever a stored dictionary needs migrating. A dictionary that
 	/// carries version 0 is run through the legacy migration on load.
 	static let dictionaryVersion: UInt = 710
@@ -64,7 +64,7 @@ nonisolated enum ClientConfigDefaults {
  live in the keychain under `uniqueIdentifier` and are never encoded. The
  `pending…` properties hold one the user has just typed, or one read back out
  of the keychain so a duplicate can rewrite it under its own identifier. */
-public nonisolated struct ClientConfig: Codable, Equatable {
+public nonisolated struct ClientConfig: Codable, Equatable { // nonisolated: value
 	// MARK: - Identity
 
 	public var uniqueIdentifier = UUID().uuidString
@@ -175,7 +175,7 @@ public nonisolated struct ClientConfig: Codable, Equatable {
 
 // MARK: - Derived values
 
-public nonisolated extension ClientConfig {
+public nonisolated extension ClientConfig { // nonisolated: value
 	/// The address the connection would use, preferring the server list and
 	/// falling back to what a pre-server-list configuration stored.
 	var serverAddress: String? {
@@ -204,7 +204,7 @@ public nonisolated extension ClientConfig {
 
 // MARK: - Keychain-backed secrets
 
-public nonisolated extension ClientConfig {
+public nonisolated extension ClientConfig { // nonisolated: value
 	var nicknamePasswordKeychainItem: KeychainItem {
 		.nicknamePassword(uniqueIdentifier)
 	}
@@ -275,7 +275,7 @@ public nonisolated extension ClientConfig {
 
 // MARK: - Copying and merging
 
-public nonisolated extension ClientConfig {
+public nonisolated extension ClientConfig { // nonisolated: value
 	/** A duplicate under fresh identities, all the way down.
 
 	 Every keychain item is keyed on the identifier being replaced, so each
@@ -316,7 +316,7 @@ public nonisolated extension ClientConfig {
 
 // MARK: - Flood control
 
-nonisolated extension ClientConfig {
+nonisolated extension ClientConfig { // nonisolated: value
 	/** Networks that rate-limit hard enough to need the reduced settings get
 	 them as their default, both when the configuration is read and when it is
 	 written back out. */

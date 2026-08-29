@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum PreferencesFileTransfersStrings {
+nonisolated enum PreferencesFileTransfersStrings { // nonisolated: value
 	static var destinationLabel: String {
 		String(localized: .TDCPreferencesController.fileTransfersDestinationLabel)
 	}
@@ -98,7 +98,7 @@ nonisolated enum PreferencesFileTransfersStrings {
 	}
 }
 
-nonisolated enum PreferencesInlineMediaStrings {
+nonisolated enum PreferencesInlineMediaStrings { // nonisolated: value
 	static var checkEverything: String {
 		String(localized: .TDCPreferencesController.inlineMediaCheckEverything)
 	}
@@ -196,7 +196,7 @@ nonisolated enum PreferencesInlineMediaStrings {
 	}
 }
 
-nonisolated enum PreferencesLogLocationStrings {
+nonisolated enum PreferencesLogLocationStrings { // nonisolated: value
 	static var clearDestination: String {
 		String(localized: .TDCPreferencesController.logLocationClearDestination)
 	}
@@ -210,7 +210,7 @@ nonisolated enum PreferencesLogLocationStrings {
 	}
 }
 
-nonisolated enum PreferencesHiddenStrings {
+nonisolated enum PreferencesHiddenStrings { // nonisolated: value
 	static var appNap: String {
 		String(localized: .TDCPreferencesController.hiddenAppNap)
 	}

@@ -24,8 +24,8 @@ enum PromptCipherStatus: Sendable {
 }
 
 /// Semantic access to the application-wide prompts retained in `Prompts.xcstrings`.
-nonisolated enum PromptStrings {
-	nonisolated enum Action {
+nonisolated enum PromptStrings { // nonisolated: value
+	enum Action {
 		static var accept: String {
 			String(localized: .Prompts.actionTitleForAcceptingAccept)
 		}
@@ -71,13 +71,13 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum Alert {
+	enum Alert {
 		static var doNotShowAgain: String {
 			String(localized: .Prompts.doNotShowThisMessageAgain)
 		}
 	}
 
-	nonisolated enum Application {
+	enum Application {
 		static var continueWithAnotherInstanceBody: String {
 			String(localized: .Prompts.areYouSureYouWantToContinue)
 		}
@@ -99,7 +99,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum ConfigurationTransfer {
+	enum ConfigurationTransfer {
 		static var exportBody: String {
 			String(localized: .Prompts.pleaseNoteThatTheFollowingItemsCannotBeExported)
 		}
@@ -121,7 +121,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum ConnectionLink {
+	enum ConnectionLink {
 		static var createNewConnectionButtonTitle: String {
 			String(localized: .Prompts.createNewConnection)
 		}
@@ -145,7 +145,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum DataMigration {
+	enum DataMigration {
 		static var copiedContentTitle: String {
 			String(localized: .Prompts.glasstualHasCopiedTheFollowingContent)
 		}
@@ -159,7 +159,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum Deletion {
+	enum Deletion {
 		static var confirmationTitle: String {
 			String(localized: .Prompts.doYouWantToDelete)
 		}
@@ -180,7 +180,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum DirectChat {
+	enum DirectChat {
 		static var acceptButtonTitle: String {
 			Action.accept
 		}
@@ -198,7 +198,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum DocumentImport {
+	enum DocumentImport {
 		static var documentOpenBody: String {
 			String(localized: .Prompts.intentionallyEmptyInformativeText)
 		}
@@ -236,7 +236,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum ExternalApplication {
+	enum ExternalApplication {
 		static func body(url: String) -> String {
 			String(localized: .Prompts.areYouSureYouWant(url))
 		}
@@ -246,7 +246,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum InlineMedia {
+	enum InlineMedia {
 		static var body: String {
 			String(localized: .Prompts.inlineMediaDoesNotUse)
 		}
@@ -264,7 +264,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum Logging {
+	enum Logging {
 		static var disabledForLowStorageTitle: String {
 			String(localized: .Prompts.loggingHasBeenDisabledBecauseThere)
 		}
@@ -298,7 +298,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum Plugin {
+	enum Plugin {
 		static var incompatibleReminderButtonTitle: String {
 			String(localized: .Prompts.remindMeNextLaunch)
 		}
@@ -324,7 +324,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum TextSearch {
+	enum TextSearch {
 		static var body: String {
 			String(localized: .Prompts.keyboardShortcutGCanBeUsed)
 		}
@@ -338,7 +338,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum Theme {
+	enum Theme {
 		static var chooseDifferentStyleButtonTitle: String {
 			String(localized: .Prompts.chooseDifferentStyle)
 		}
@@ -376,7 +376,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum TransportSecurity {
+	enum TransportSecurity {
 		static var invalidCertificateContinueButtonTitle: String {
 			Action.continueAction
 		}
@@ -422,7 +422,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum VirtualHost {
+	enum VirtualHost {
 		static var body: String {
 			String(localized: .Prompts.pleaseEnterDesiredVhostEG)
 		}
@@ -432,7 +432,7 @@ nonisolated enum PromptStrings {
 		}
 	}
 
-	nonisolated enum WebInspector {
+	enum WebInspector {
 		static var unavailableBody: String {
 			String(localized: .Prompts.disableWebkit2OrUpgrade)
 		}

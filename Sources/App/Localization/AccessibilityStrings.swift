@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum AccessibilityStrings {
+nonisolated enum AccessibilityStrings { // nonisolated: value
 	static func joinedChannel(_ channelName: String) -> String {
 		String(localized: .Accessibility.channelJoined(channelName))
 	}

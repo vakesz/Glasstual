@@ -32,7 +32,7 @@ struct InputHandlingMigrationTests {
 	/// The tests run against the scheme's scratch defaults suite, so whatever
 	/// the key held is put back rather than left behind.
 	private func withPreference(_ key: String, setTo value: Any, _ body: () throws -> Void) rethrows {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		let original = defaults.persistentDomain(forName: ApplicationGroup.identifier)?[key]
 		defer {
 			if let original {

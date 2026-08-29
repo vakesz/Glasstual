@@ -7,6 +7,11 @@
 #   lockqueue    hand-rolled synchronisation the actor model replaces
 #   nonisolated  plain `nonisolated` declaration sites without a marker comment
 #
+# One lock/queue site is documented rather than counted: FSEvents demands a
+# serial dispatch queue and orders teardown against its own callbacks, so
+# `XRFileSystemMonitor` keeps one and marks the line `// lock-queue: fsevents`.
+# The marker is the whole allowance -- any other spelling counts.
+#
 # A plain `nonisolated` is only allowed for a pure function of Sendable inputs,
 # a Sendable `let`, an @objc/XPC protocol requirement or its one-line
 # forwarding shim, or a genuine value type. Each site records which by ending
@@ -16,6 +21,7 @@
 # Usage
 #   scripts/isolation-gate.sh            check the tree against the ceilings
 #   scripts/isolation-gate.sh --ratchet  rewrite the ceilings to today's counts
+#   scripts/isolation-gate.sh --ban      require zero, ignoring the ceilings
 #
 # Ceilings live in scripts/isolation-ceilings.env and only ever go down: run
 # --ratchet at each merge that removes hatches, and commit the result.
@@ -27,15 +33,17 @@ repo_root="$(cd -- "$script_dir/.." && pwd)"
 ceilings_file="$script_dir/isolation-ceilings.env"
 
 ratchet=0
+ban=0
 case "${1-}" in
 	--ratchet) ratchet=1 ;;
+	--ban) ban=1 ;;
 	"") ;;
 	--help | -h)
-		sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+		sed -n '2,27p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 		exit 0
 		;;
 	*)
-		echo "isolation-gate: unknown argument '$1' (expected --ratchet)" >&2
+		echo "isolation-gate: unknown argument '$1' (expected --ratchet or --ban)" >&2
 		exit 2
 		;;
 esac
@@ -110,14 +118,22 @@ findings="$(awk '
 		if (index(code, "Thread.isMainThread")) record("hatch", "Thread.isMainThread")
 		if (index(code, "DispatchQueue.main.sync")) record("hatch", "DispatchQueue.main.sync")
 
-		# (b) hand-rolled synchronisation
-		if (index(code, "NSLock(")) record("lockqueue", "NSLock(")
-		if (index(code, "NSRecursiveLock(")) record("lockqueue", "NSRecursiveLock(")
-		if (index(code, "objc_sync_enter")) record("lockqueue", "objc_sync_enter")
-		if (index(code, "DispatchQueue(label")) record("lockqueue", "DispatchQueue(label")
-		if (index(code, "OperationQueue()")) record("lockqueue", "OperationQueue()")
-		if (index(code, "performSynchronouslyOnMainQueue")) record("lockqueue", "performSynchronouslyOnMainQueue")
-		if (index(code, "performAsynchronouslyOnMainQueue")) record("lockqueue", "performAsynchronouslyOnMainQueue")
+		# (b) hand-rolled synchronisation. A line ending in the documented
+		# `// lock-queue: fsevents` marker is the one allowance; the marker
+		# check reads the untouched line, like the nonisolated one below.
+		documented = (line ~ /\/\/[ \t]*lock-queue:[ \t]*fsevents[ \t]*$/)
+
+		if (!documented) {
+			if (index(code, "NSLock(")) record("lockqueue", "NSLock(")
+			if (index(code, "NSRecursiveLock(")) record("lockqueue", "NSRecursiveLock(")
+			if (index(code, "objc_sync_enter")) record("lockqueue", "objc_sync_enter")
+			if (index(code, "DispatchQueue(label")) record("lockqueue", "DispatchQueue(label")
+			if (index(code, "OperationQueue()")) record("lockqueue", "OperationQueue()")
+			if (index(code, "performSynchronouslyOnMainQueue")) record("lockqueue", "performSynchronouslyOnMainQueue")
+			if (index(code, "performAsynchronouslyOnMainQueue")) record("lockqueue", "performAsynchronouslyOnMainQueue")
+		} else if (index(code, "DispatchQueue(label") == 0) {
+			record("misplaced-marker", "// lock-queue: fsevents")
+		}
 
 		# (c) plain `nonisolated` declaration sites. `nonisolated(` in any
 		# form (unsafe, nonsending) is a different modifier and is either
@@ -145,6 +161,15 @@ list_of() {
 hatch_count="$(count_of hatch)"
 lockqueue_count="$(count_of lockqueue)"
 nonisolated_count="$(count_of nonisolated)"
+misplaced_count="$(count_of misplaced-marker)"
+
+# The documented marker exempts exactly one construct. On any other line it is
+# an exemption for nothing, so say so rather than let it sit there.
+if [ "$misplaced_count" -ne 0 ]; then
+	echo "isolation-gate: the fsevents lock/queue marker is on a line that does not create a queue" >&2
+	list_of misplaced-marker >&2
+	exit 1
+fi
 
 write_ceilings() {
 	cat > "$ceilings_file" <<EOF
@@ -165,13 +190,22 @@ if [ "$ratchet" -eq 1 ]; then
 	exit 0
 fi
 
-if [ ! -f "$ceilings_file" ]; then
-	echo "isolation-gate: $ceilings_file is missing; run scripts/isolation-gate.sh --ratchet to create it" >&2
-	exit 2
-fi
+# `--ban` is the end state: zero of each, with the ceilings file out of the
+# picture. Phase 8 flips the gate to it by adding the flag in the Makefile, and
+# the ceilings file is deleted in the same change.
+if [ "$ban" -eq 1 ]; then
+	ISOLATION_CEILING_HATCH=0
+	ISOLATION_CEILING_LOCKQUEUE=0
+	ISOLATION_CEILING_NONISOLATED_UNMARKED=0
+else
+	if [ ! -f "$ceilings_file" ]; then
+		echo "isolation-gate: $ceilings_file is missing; run scripts/isolation-gate.sh --ratchet to create it" >&2
+		exit 2
+	fi
 
-# shellcheck source=/dev/null
-. "$ceilings_file"
+	# shellcheck source=/dev/null
+	. "$ceilings_file"
+fi
 
 : "${ISOLATION_CEILING_HATCH:?isolation-gate: ISOLATION_CEILING_HATCH missing from the ceilings file}"
 : "${ISOLATION_CEILING_LOCKQUEUE:?isolation-gate: ISOLATION_CEILING_LOCKQUEUE missing from the ceilings file}"
@@ -198,7 +232,11 @@ report_over lockqueue "$lockqueue_count" "$ISOLATION_CEILING_LOCKQUEUE" "lock/qu
 report_over nonisolated "$nonisolated_count" "$ISOLATION_CEILING_NONISOLATED_UNMARKED" "unmarked nonisolated sites"
 
 if [ "$status" -ne 0 ]; then
-	echo "isolation-gate: remove the new sites, or run scripts/isolation-gate.sh --ratchet if the ceiling is genuinely lower now" >&2
+	if [ "$ban" -eq 1 ]; then
+		echo "isolation-gate: --ban allows none of these; there is no ceiling to raise" >&2
+	else
+		echo "isolation-gate: remove the new sites, or run scripts/isolation-gate.sh --ratchet if the ceiling is genuinely lower now" >&2
+	fi
 fi
 
 exit "$status"

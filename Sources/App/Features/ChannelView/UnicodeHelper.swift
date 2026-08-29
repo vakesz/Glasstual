@@ -13,7 +13,7 @@
 
 import Foundation
 
-public nonisolated enum UnicodeHelper {
+public nonisolated enum UnicodeHelper { // nonisolated: value
 	/// Whether `codePoint` is a letter, used to find the word boundaries
 	/// around a nickname or a link in a rendered message.
 	///

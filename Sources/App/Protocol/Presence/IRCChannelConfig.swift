@@ -46,7 +46,7 @@ import GlasstualPluginKit
 /// One notification override a channel carries: either a sound name or an
 /// on/off flag. A channel with no override for an event inherits the
 /// application-wide setting, which the sheets show as a mixed checkbox.
-public nonisolated enum ChannelNotificationSetting: Codable, Sendable, Equatable, Hashable {
+public nonisolated enum ChannelNotificationSetting: Codable, Sendable, Equatable, Hashable { // nonisolated: value
 	case sound(String)
 	case flag(Bool)
 
@@ -75,7 +75,7 @@ public nonisolated enum ChannelNotificationSetting: Codable, Sendable, Equatable
  A query keeps only its name, identifier and type; the channel settings below
  are read and written only for `.channel`, which is what earlier releases did
  and what keeps a stored configuration re-encoding unchanged. */
-public nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable {
+public nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable { // nonisolated: value
 	public var uniqueIdentifier: String
 	public var channelName: String
 	public var type: ChannelType
@@ -256,7 +256,7 @@ public nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable 
 	}
 }
 
-public nonisolated extension ChannelConfig {
+public nonisolated extension ChannelConfig { // nonisolated: value
 	var keychainItem: KeychainItem {
 		.channelSecretKey(uniqueIdentifier)
 	}

@@ -44,7 +44,7 @@ import Foundation
  The plists are still shipped for the sake of tools that read them, but they are
  generated from these declarations — `PreferenceCatalogTests` fails when a
  checked-in copy drifts from what the code declares. */
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	static let allKeys: [any AnyPreferenceKey] =
 		Identity.all
 			+ Connection.all
@@ -141,11 +141,11 @@ public nonisolated extension Preferences {
 
 // MARK: - Generated resources
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// The generated equivalents of the checked-in plists, in the shape those
 	/// files have: name to comparator for the catalogues, name to value for the
 	/// registration domains.
-	nonisolated enum GeneratedResources {
+	enum GeneratedResources {
 		public static var keyCatalog: [String: Any] {
 			catalogue { $0.isCatalogued } families: { $0.isCatalogued }
 		}

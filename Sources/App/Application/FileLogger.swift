@@ -37,7 +37,7 @@ public final class FileLogger: NSObject {
 	)
 
 	private static let noSpaceLeftOnDeviceAlertInterval: TimeInterval = 300
-	private nonisolated static let fileHandleIdleLimit: TimeInterval = 1200
+	private nonisolated static let fileHandleIdleLimit: TimeInterval = 1200 // nonisolated: let
 	private static let idleSweepInterval: Duration = .seconds(600)
 
 	/** Weak so a logger that is released without closing drops out of the sweep
@@ -320,7 +320,9 @@ public final class FileLogger: NSObject {
 
 	/// A handle that has never been written to is not idle; one that has is idle
 	/// once nothing has been written to it for `fileHandleIdleLimit` seconds.
-	nonisolated static func fileHandleIsIdle(lastWriteTime: TimeInterval, at now: TimeInterval) -> Bool {
+	nonisolated static func fileHandleIsIdle(lastWriteTime: TimeInterval, // nonisolated: pure
+	                                         at now: TimeInterval) -> Bool
+	{
 		guard lastWriteTime > 0 else {
 			return false
 		}

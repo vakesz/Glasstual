@@ -42,7 +42,7 @@ import Foundation
 import GlasstualPluginKit
 import os
 
-private nonisolated let logLineRenderingLogger = Logger(
+private nonisolated let logLineRenderingLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogLineRendering"
 )
@@ -303,7 +303,7 @@ extension LogController {
 	 Passing the view controller across domains is safe because the hook ignores
 	 it — it is a reference to a main-actor class, so it is `Sendable`, and
 	 nothing here touches its state. */
-	nonisolated static func applyingMessageRenderers(
+	nonisolated static func applyingMessageRenderers( // nonisolated: pure
 		to lines: [LogLineSnapshot],
 		for viewController: LogController
 	) -> [LogLineSnapshot] {
@@ -320,7 +320,7 @@ extension LogController {
 	}
 
 	/// Renders every line of `lines`, skipping the ones that fail.
-	nonisolated static func render(
+	nonisolated static func render( // nonisolated: pure
 		_ lines: [LogLineSnapshot],
 		context: LogLineRenderContext,
 		using renderer: some LogLineRendering
@@ -338,7 +338,7 @@ extension LogController {
 
 	/// Turns a request into the HTML and the results the main actor acts on.
 	/// Runs off the main actor.
-	nonisolated static func render(
+	nonisolated static func render( // nonisolated: pure
 		_ request: LogLineRenderRequest,
 		using renderer: some LogLineRendering
 	) -> LogLineRenderResult? {
@@ -401,7 +401,7 @@ extension LogController {
 		)
 	}
 
-	private nonisolated static func templateAttributes(
+	private nonisolated static func templateAttributes( // nonisolated: pure
 		for request: LogLineRenderRequest,
 		renderedBody: String,
 		highlighted: Bool,
@@ -469,7 +469,7 @@ extension LogController {
 		return attributes
 	}
 
-	private nonisolated static func nicknameAttributes(
+	private nonisolated static func nicknameAttributes( // nonisolated: pure
 		for line: LogLineSnapshot
 	) -> ThemeTemplateAttributes {
 		/* The sender was formatted on the main actor, when the snapshot was
@@ -488,7 +488,7 @@ extension LogController {
 		]
 	}
 
-	private nonisolated static func makePluginMessage(
+	private nonisolated static func makePluginMessage( // nonisolated: pure
 		for line: LogLineSnapshot,
 		results: LogRendererResults,
 		nicknames: [String],

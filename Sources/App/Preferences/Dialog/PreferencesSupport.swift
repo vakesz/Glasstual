@@ -340,7 +340,7 @@ enum PreferencesPaneCatalog {
 	}
 }
 
-nonisolated enum PreferencesValueValidation {
+nonisolated enum PreferencesValueValidation { // nonisolated: value
 	static let scrollbackSaveRange = 100 ... 50000
 	static let scrollbackVisibleRange = 100 ... 15000
 	static let inlineMediaWidthRange = 40 ... 2000

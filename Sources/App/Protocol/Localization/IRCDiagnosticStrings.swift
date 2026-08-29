@@ -6,7 +6,7 @@
 
 import Foundation
 
-nonisolated enum IRCDiagnosticStrings {
+nonisolated enum IRCDiagnosticStrings { // nonisolated: value
 	static var rawTrafficNotice: String {
 		String(localized: .IRC.serverTrafficWillBeOutput)
 	}
@@ -30,7 +30,7 @@ nonisolated enum IRCDiagnosticStrings {
 	}
 }
 
-nonisolated enum IRCLogStrings {
+nonisolated enum IRCLogStrings { // nonisolated: value
 	static func sessionMarker(startsSession: Bool) -> String {
 		startsSession ? String(localized: .IRC.beginSession) : String(localized: .IRC.endSession)
 	}

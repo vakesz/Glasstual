@@ -58,7 +58,7 @@ private typealias PluginMessagePrinter = (
 enum PluginHostAdapter {
 	static func makeContext() -> PluginHostContext {
 		PluginHostContext(
-			defaults: TextualUserDefaults.shared(),
+			defaults: TextualUserDefaults.container,
 			clients: {
 				guard let world = AppController.shared.world else { return [] }
 				return world.clientList.map(makeClient)
@@ -191,7 +191,7 @@ enum PluginHostAdapter {
 	}
 
 	/// A pure mapping, so the off-main message renderer can call it too.
-	nonisolated static func messageKind(for lineType: TVCLogLineType) -> PluginMessageKind {
+	nonisolated static func messageKind(for lineType: TVCLogLineType) -> PluginMessageKind { // nonisolated: pure
 		switch lineType {
 		case .privateMessage:
 			.privateMessage

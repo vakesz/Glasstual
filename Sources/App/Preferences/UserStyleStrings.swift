@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum UserStyleStrings {
+nonisolated enum UserStyleStrings { // nonisolated: value
 	static var defaultRules: String {
 		String(localized: .TDCPreferencesUserStyleSheet.warningThisIsDesignedForAdvanced)
 	}

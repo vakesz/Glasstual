@@ -26,7 +26,7 @@ private enum IRCExtendedBanKind: String {
 	case certificateFingerprint = "z"
 }
 
-nonisolated enum IRCISupportStrings {
+nonisolated enum IRCISupportStrings { // nonisolated: value
 	static func everyoneExcept(_ description: String) -> String {
 		String(localized: .IRC.everyoneExcept(description))
 	}

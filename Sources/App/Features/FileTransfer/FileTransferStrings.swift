@@ -62,7 +62,7 @@ extension FileTransferFailure {
 	}
 }
 
-nonisolated enum FileTransferStrings {
+nonisolated enum FileTransferStrings { // nonisolated: value
 	static var destinationPickerMessage: String {
 		String(localized: .TDCFileTransferDialog.selectTheFolderInWhich)
 	}

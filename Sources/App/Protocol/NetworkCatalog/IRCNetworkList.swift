@@ -44,7 +44,7 @@ import Foundation
 }
 
 @objc(IRCNetworkList)
-public final nonisolated class NetworkList: NSObject {
+public final nonisolated class NetworkList: NSObject { // nonisolated: value
 	private static let popularNetworkNames = [
 		"Libera.Chat",
 		"HybridIRC",
@@ -140,7 +140,7 @@ public final nonisolated class NetworkList: NSObject {
 }
 
 @objc(IRCNetwork)
-public final nonisolated class Network: NSObject {
+public final nonisolated class Network: NSObject { // nonisolated: value
 	@objc public let networkName: String
 	@objc public let networkDescription: String
 	@objc public let serverAddress: String

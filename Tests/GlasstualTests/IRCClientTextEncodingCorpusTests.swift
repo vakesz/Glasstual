@@ -158,7 +158,7 @@ struct IRCClientTextEncodingCorpusTests {
 
 	// MARK: - UTF8ONLY
 
-	struct EncodingPair: Sendable {
+	nonisolated struct EncodingPair: Sendable {
 		let primary: String.Encoding
 		let fallback: String.Encoding
 

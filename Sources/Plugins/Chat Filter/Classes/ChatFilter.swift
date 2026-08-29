@@ -50,7 +50,7 @@ enum ChatFilterAgeComparator: UInt {
 	case greaterThan
 }
 
-nonisolated struct ChatFilterEvent: OptionSet {
+nonisolated struct ChatFilterEvent: OptionSet { // nonisolated: value
 	let rawValue: UInt
 
 	static let numeric = Self(rawValue: 1 << 0)

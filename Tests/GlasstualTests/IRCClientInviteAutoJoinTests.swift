@@ -45,7 +45,7 @@ struct IRCClientInviteAutoJoinTests {
 	private static let autoJoinKey = "AutojoinChannelOnInvite"
 
 	private func withAutoJoinOnInvite(_ body: () throws -> Void) rethrows {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		let original = defaults.bool(forKey: Self.autoJoinKey)
 
 		defaults.set(true, forKey: Self.autoJoinKey)

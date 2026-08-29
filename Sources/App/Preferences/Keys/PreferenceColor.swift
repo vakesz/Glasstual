@@ -45,7 +45,7 @@ import CocoaExtensions
  default comparable: two archives of the same colour are not byte-identical
  across releases, so a drift check against the checked-in plist has to compare
  colours, not `Data`. */
-public nonisolated struct PreferenceColor: PreferenceValue {
+public nonisolated struct PreferenceColor: PreferenceValue { // nonisolated: value
 	public let red: Double
 	public let green: Double
 	public let blue: Double
@@ -91,7 +91,7 @@ public nonisolated struct PreferenceColor: PreferenceValue {
 	}
 }
 
-public nonisolated extension TextualUserDefaults {
+public nonisolated extension TextualUserDefaults { // nonisolated: pure
 	/// The stored colour, or the key's declared default when nothing is stored.
 	func color(for key: PreferenceKey<PreferenceColor>) -> NSColor {
 		self[key].color

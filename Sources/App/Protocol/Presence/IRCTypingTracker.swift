@@ -49,7 +49,7 @@ public extension Notification.Name {
 	static let IRCTypingTrackerDidChange = Self("IRCTypingTrackerDidChangeNotification")
 }
 
-public nonisolated let IRCTypingTrackerChannelKey = "channel"
+public nonisolated let IRCTypingTrackerChannelKey = "channel" // nonisolated: let
 
 private final class TypingEntry {
 	let nickname: String
