@@ -21,6 +21,21 @@ private let pluginsFinishedLoadingNotification = Notification.Name(
 	"THOPluginManagerFinishedLoadingPluginsNotification"
 )
 
+/// AppKit ships `NSWorkspace.WillSleepMessage` but no power-off equivalent, so
+/// the interop shape is spelled out here: the notification to bridge from, and
+/// how to make the message. Declaring it as a `MainActorMessage` is what makes
+/// Foundation deliver the power-off warning synchronously *on* the main actor
+/// instead of handing a nonisolated block to a caller who has to assume.
+private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage {
+	typealias Subject = NSWorkspace
+
+	static var name: Notification.Name { NSWorkspace.willPowerOffNotification }
+
+	static func makeMessage(_: Notification) -> Self? {
+		Self()
+	}
+}
+
 @objc(TXMasterController)
 @MainActor
 public final class ApplicationController: NSObject, NSApplicationDelegate {
@@ -173,11 +188,11 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		notifications.observe(NSWorkspace.didWakeNotification, center: workspaceCenter) { [weak self] notification in
 			self?.computerDidWakeUp(notification)
 		}
-		notifications.observeSynchronously(NSWorkspace.willSleepNotification, center: workspaceCenter) { [weak self] in
+		notifications.observeSynchronously(NSWorkspace.WillSleepMessage.self, center: workspaceCenter) { [weak self] in
 			self?.computerWillSleep()
 		}
 		notifications
-			.observeSynchronously(NSWorkspace.willPowerOffNotification, center: workspaceCenter) { [weak self] in
+			.observeSynchronously(WorkspaceWillPowerOffMessage.self, center: workspaceCenter) { [weak self] in
 				self?.computerWillPowerOff()
 			}
 		notifications

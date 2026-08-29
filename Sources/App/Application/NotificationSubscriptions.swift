@@ -22,8 +22,8 @@ import Foundation
 /// observer bookkeeping.
 @MainActor
 final class NotificationSubscriptions {
-	private var cancellables: Set<AnyCancellable> = []
-	private var observerTokens: [(NotificationCenter, NSObjectProtocol)] = []
+	private var tasks: [Task<Void, Never>] = []
+	private var observerTokens: [(NotificationCenter, NotificationCenter.ObservationToken)] = []
 
 	func observe(
 		_ name: Notification.Name,
@@ -31,41 +31,43 @@ final class NotificationSubscriptions {
 		center: NotificationCenter = .default,
 		using handler: @escaping @MainActor (Notification) -> Void
 	) {
-		/* Delivered on a later main-queue turn: a handler that ran inside the post
+		/* Delivered on a later main-actor turn: a handler that ran inside the post
 		 that triggered it (a UserDefaults write, for example) would re-enter the
-		 poster, and posts can come from any thread. */
-		center.publisher(for: name, object: object)
-			.receive(on: DispatchQueue.main)
-			.sink { notification in
+		 poster, and posts can come from any thread. Awaiting the publisher's
+		 values inside a main-actor task is what gives the handler isolation the
+		 compiler checks; a `sink` closure is nonisolated and cannot. */
+		let task = Task { @MainActor in
+			for await notification in center.publisher(for: name, object: object).values {
 				handler(notification)
 			}
-			.store(in: &cancellables)
+		}
+
+		tasks.append(task)
 	}
 
-	/// Runs `handler` inline on the posting thread, before the post returns.
+	/// Runs `handler` inline on the main actor, before the post returns.
 	///
-	/// Only for notifications that are synchronous contracts and are posted on the
-	/// main thread — NSWorkspace's sleep and power-off notifications — where the
-	/// system expects the work to be finished by the time the post returns.
-	func observeSynchronously(
-		_ name: Notification.Name,
+	/// Only for notifications that are synchronous contracts — NSWorkspace's
+	/// sleep and power-off notifications — where the system expects the work to
+	/// be finished by the time the post returns. `NotificationCenter.Message`
+	/// delivery is what carries the isolation here: Foundation calls a
+	/// `MainActorMessage` observer on the main actor and traps if the post came
+	/// from anywhere else, so nothing has to be assumed about the poster.
+	func observeSynchronously<Message: NotificationCenter.MainActorMessage>(
+		_ messageType: Message.Type,
 		center: NotificationCenter = .default,
 		using handler: @escaping @MainActor () -> Void
-	) {
-		let token = center.addObserver(forName: name, object: nil, queue: nil) { _ in
-			/* ISOLATION-EXCEPTION: the whole point of this overload is to run inline on
-			 the posting thread, which for these notifications is the main thread. */
-			MainActor.assumeIsolated {
-				handler()
-			}
+	) where Message.Subject: AnyObject {
+		let token = center.addObserver(for: messageType) { _ in
+			handler()
 		}
 
 		observerTokens.append((center, token))
 	}
 
 	func cancelAll() {
-		cancellables.forEach { $0.cancel() }
-		cancellables.removeAll()
+		tasks.forEach { $0.cancel() }
+		tasks.removeAll()
 
 		for (center, token) in observerTokens {
 			center.removeObserver(token)
