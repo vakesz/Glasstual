@@ -82,24 +82,13 @@ private actor LoopbackImageServer {
 	}
 }
 
-private func assess(
-	address: String,
-	expecting type: InlineContentMediaType
-) async -> (assessment: MediaAssessment?, error: NSError?) {
-	await withCheckedContinuation { continuation in
-		guard let url = URL(string: address),
-		      let assessor = MediaAssessor(url: url, expectedType: type, completion: { assessment, error in
-		      	continuation.resume(returning: (assessment, error))
-		      })
-		else {
-			return continuation.resume(returning: (nil, nil))
-		}
+private extension Result where Failure == NSError {
+	/// The error, when there was one. `Result` has no such accessor and every
+	/// expectation here is about the failure.
+	var failureValue: NSError? {
+		guard case let .failure(error) = self else { return nil }
 
-		assessor.resume()
-
-		/* URLSession keeps the assessor alive as its delegate until the session
-		 invalidates, which is what completes the continuation. */
-		withExtendedLifetime(assessor) {}
+		return error
 	}
 }
 
@@ -139,10 +128,10 @@ struct MediaAssessorByteCapTests {
 		defer { Task { await server.stop() } }
 
 		let result = await withImageFileSizeCap(8 * 1024) {
-			await assess(address: "http://127.0.0.1:\(port)/image.png", expecting: .image)
+			await MediaAssessor.assess(address: "http://127.0.0.1:\(port)/image.png", expecting: .image)
 		}
 
-		let error = try #require(result.error)
+		let error = try #require(result.failureValue)
 
 		#expect(error.domain == "ICLMediaAssessorErrorDomain")
 		#expect(error.code == 1006)
@@ -156,10 +145,10 @@ struct MediaAssessorByteCapTests {
 		defer { Task { await server.stop() } }
 
 		let result = await withImageFileSizeCap(16 * 1024) {
-			await assess(address: "http://127.0.0.1:\(port)/image.png", expecting: .image)
+			await MediaAssessor.assess(address: "http://127.0.0.1:\(port)/image.png", expecting: .image)
 		}
 
-		let error = try #require(result.error)
+		let error = try #require(result.failureValue)
 
 		#expect(error.domain == "ICLMediaAssessorErrorDomain")
 		#expect(error.code == 1006)
@@ -173,12 +162,11 @@ struct MediaAssessorByteCapTests {
 		defer { Task { await server.stop() } }
 
 		let result = await withImageFileSizeCap(64 * 1024) {
-			await assess(address: "http://127.0.0.1:\(port)/image.png", expecting: .image)
+			await MediaAssessor.assess(address: "http://127.0.0.1:\(port)/image.png", expecting: .image)
 		}
 
-		/* The bytes are not a real PNG, so the pixel check may still object;
-		 what must not happen is a size refusal. */
-		#expect(result.error?.code != 1006)
-		#expect(result.assessment?.type == .image)
+		/* The bytes are not a real PNG, so the pixel check still objects; what
+		 must not happen is a size refusal. */
+		#expect(result.failureValue?.code != 1006)
 	}
 }

@@ -37,29 +37,31 @@
 
 import Foundation
 import InlineContentKit
-import Mustache
 
-@objc(ICMVimeo)
-final class VimeoModule: InlineVideoFoundation {
-	private func performAction(forVideo identifier: String) {
-		let attributes: [String: Any] = [
-			"uniqueIdentifier": payload.uniqueIdentifier,
-			"videoIdentifier": identifier,
-		]
-		guard let template else { return cancel() }
-		do {
-			payload.html = try template.render(attributes)
-			finalize()
-		} catch {
-			finalizeWithError(error)
-		}
+/// Vimeo's own player, embedded through this module's template.
+struct VimeoModule: InlineContentModule {
+	static var domains: [String]? {
+		["vimeo.com", "www.vimeo.com"]
 	}
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var contentImageOrVideo: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let identifier: String
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		guard let identifier = videoIdentifier(for: url) else { return nil }
-		return { module in
-			(module as? VimeoModule)?.performAction(forVideo: identifier)
-		}
+
+		return VimeoModule(identifier: identifier)
 	}
 
 	private static func videoIdentifier(for url: URL) -> String? {
@@ -68,11 +70,14 @@ final class VimeoModule: InlineVideoFoundation {
 		return identifier
 	}
 
-	override static var domains: [String]? {
-		["vimeo.com", "www.vimeo.com"]
-	}
-
-	override var templateURL: URL? {
-		Bundle(for: VimeoModule.self).url(forResource: "ICMVimeo", withExtension: "mustache")
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		InlineVideoContent.embed(
+			payload,
+			templateURL: CoreMediaBundle.current.url(forResource: "ICMVimeo", withExtension: "mustache"),
+			attributes: [
+				"uniqueIdentifier": payload.uniqueIdentifier,
+				"videoIdentifier": identifier,
+			]
+		)
 	}
 }

@@ -37,7 +37,7 @@
 
 import Foundation
 
-@objc(ICLPluginProtocol)
-public protocol InlineContentPlugin: AnyObject {
-	@objc static var modules: [AnyClass] { get }
+/// A group of modules linked into the service.
+public protocol InlineContentPlugin {
+	static var modules: [any InlineContentModule.Type] { get }
 }
