@@ -297,11 +297,6 @@ public nonisolated extension AddressBookEntry { // nonisolated: value
 		matcher.trackingNickname
 	}
 
-	/// Always `false`; kept because callers still ask.
-	var ignoreMessagesContainingMatch: Bool {
-		false
-	}
-
 	func checkMatch(_ hostmask: String) -> Bool {
 		matcher.matches(hostmask: hostmask)
 	}
