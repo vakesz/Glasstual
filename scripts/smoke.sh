@@ -103,8 +103,22 @@ started_at="$(date '+%Y-%m-%d %H:%M:%S')"
 open -n "$APP" --env "GLASSTUAL_UI_REVIEW_SUITE=$SUITE" || fail "the app would not launch"
 
 /bin/sleep 5
-pid="$(pgrep -n -x Glasstual)" || fail "the app exited during launch"
+# Several builds may be running at once (sibling worktrees), so pick the
+# process whose executable is inside $APP rather than the newest "Glasstual".
+pid=""
+for _ in $(seq 1 10); do
+	for candidate in $(pgrep -x Glasstual); do
+		case "$(ps -o comm= -p "$candidate" 2> /dev/null)" in
+			"$APP"/Contents/MacOS/*) pid="$candidate" ;;
+		esac
+	done
+	[ -n "$pid" ] && break
+	/bin/sleep 1
+done
+[ -n "$pid" ] || fail "the app exited during launch"
 echo "smoke: pid=$pid"
+# System Events addresses the process by pid, so a same-named sibling is never touched.
+process_ref="(first process whose unix id is $pid)"
 
 status=0
 
@@ -120,7 +134,7 @@ for probe in $(seq 1 "$PROBES"); do
 	fi
 
 	before="$(date +%s)"
-	windows="$(timeout 8 osascript -e 'tell application "System Events" to tell process "Glasstual" to get name of windows' 2>&1)"
+	windows="$(timeout 8 osascript -e "tell application \"System Events\" to tell $process_ref to get name of windows" 2>&1)"
 	probe_status=$?
 	elapsed=$(($(date +%s) - before))
 	cpu="$(ps -o %cpu= -p "$pid" 2> /dev/null | tr -d ' ')"
@@ -137,7 +151,10 @@ done
 
 if kill -0 "$pid" 2> /dev/null; then
 	quit_started="$(date +%s)"
-	timeout 15 osascript -e 'tell application "Glasstual" to quit' > /dev/null 2>&1
+	timeout 15 osascript \
+		-e "tell application \"System Events\" to tell $process_ref to set frontmost to true" \
+		-e "tell application \"System Events\" to tell $process_ref to keystroke \"q\" using command down" \
+		> /dev/null 2>&1
 	for _ in $(seq 1 10); do
 		kill -0 "$pid" 2> /dev/null || break
 		/bin/sleep 1
