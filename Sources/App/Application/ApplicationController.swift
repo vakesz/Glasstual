@@ -49,7 +49,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		category: "Termination"
 	)
 
-	private static var awakeFromNibCalled = false
+	private var hasWokenFromMainNib = false
 
 	private var worldStorage: IRCWorld!
 	private var mainWindowStorage: TVCMainWindow!
@@ -126,30 +126,31 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		#endif
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
-
-		MainActor.assumeIsolated {
-			guard Self.awakeFromNibCalled == false else {
-				return
-			}
-
-			Self.awakeFromNibCalled = true
-			awakeFromNibInternal()
+	/// Loads the main window once the main menu nib has finished decoding.
+	///
+	/// This used to be `awakeFromNib`, which AppKit declares nonisolated, so
+	/// every line of it sat behind a runtime assumption about the decoding
+	/// thread. `applicationWillFinishLaunching(_:)` is main-actor isolated by
+	/// declaration and NSApplication posts it right after the main nib is
+	/// loaded — the same point in the launch, with the isolation checked.
+	private func wakeFromMainNib() {
+		guard hasWokenFromMainNib == false else {
+			return
 		}
-	}
 
-	private func awakeFromNibInternal() {
+		hasWokenFromMainNib = true
+
 		TextualPreferences.initPreferences()
 
 		_ = SharedApplication.sharedAppearance()
 
-		/* Wait until -awakeFromNib to wake the window so that the menu
-		 controller created by the main nib has time to load. */
+		/* Wait until the menu controller created by the main nib has loaded
+		 before waking the window. */
 		Bundle.main.loadNibNamed("TVCMainWindow", owner: self, topLevelObjects: nil)
+
+		/* The window's own nib-time setup: `awakeFromNib` cannot be isolated,
+		 and by here the outlet the nib connected is in place. */
+		mainWindowStorage?.configure()
 	}
 
 	@objc
@@ -256,6 +257,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	// MARK: - NSApplication Delegate
 
 	public func applicationWillFinishLaunching(_: Notification) {
+		wakeFromMainNib()
+
 		#if !DEBUG
 			/* Asking the user about another running copy needs an alert, and
 			 an alert needs NSApp — so this cannot run before

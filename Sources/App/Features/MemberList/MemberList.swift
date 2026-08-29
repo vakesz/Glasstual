@@ -99,22 +99,34 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		sections.count > 1
 	}
 
-	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
-	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
-	 only, which is what makes the assumption safe. */
-	override public nonisolated func awakeFromNib() {
-		super.awakeFromNib()
+	private var hasConfigured = false
 
-		MainActor.assumeIsolated {
-			dataSource = self
-			delegate = self
-			updateTrackingAreas()
-			registerForDraggedTypes([.fileURL])
+	/// Nib-time configuration, run the first time the list joins a window.
+	///
+	/// `awakeFromNib` is nonisolated, so every line below used to sit behind a
+	/// runtime assumption about the decoding thread. `viewDidMoveToWindow` is
+	/// main-actor isolated by declaration and runs after the outlets are
+	/// connected, which is all this work needed.
+	public func configure() {
+		guard hasConfigured == false else {
+			return
 		}
+
+		hasConfigured = true
+
+		dataSource = self
+		delegate = self
+		updateTrackingAreas()
+		registerForDraggedTypes([.fileURL])
+		memberListUserInfoPopover?.configure()
 	}
 
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
+
+		if window != nil {
+			configure()
+		}
 
 		let center = NotificationCenter.default
 		center.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: nil)
@@ -456,7 +468,13 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	public func tableView(_: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
 		let identifier = isGroupRow(row) ? sectionHeaderViewIdentifier : memberViewIdentifier
-		return makeView(withIdentifier: identifier, owner: self)
+		let view = makeView(withIdentifier: identifier, owner: self)
+
+		/* Cell views used to configure themselves in `awakeFromNib`, which is
+		 nonisolated; here the main actor is a fact rather than an assumption. */
+		(view as? MemberListCell)?.configure()
+
+		return view
 	}
 
 	public func tableView(_: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
