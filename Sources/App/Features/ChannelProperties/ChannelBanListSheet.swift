@@ -39,14 +39,14 @@ public enum ChannelBanListEntryType: UInt {
 	}
 }
 
-@objc(TDCChannelBanListSheetEntry)
-public final class ChannelBanListSheetEntry: NSObject {
-	@objc public var entryMask = ""
-	@objc public var entryMaskDescription: String?
-	@objc public var entryAuthor = ""
-	@objc public var entryCreationDate: Date?
+public nonisolated struct ChannelBanListSheetEntry: Identifiable, Hashable, Sendable { // nonisolated: value
+	public let id = UUID()
+	public var entryMask = ""
+	public var entryMaskDescription: String?
+	public var entryAuthor = ""
+	public var entryCreationDate: Date?
 
-	@objc public var entryCreationDateString: String {
+	public var entryCreationDateString: String {
 		guard let entryCreationDate else {
 			return ApplicationStrings.unknownValue
 		}
@@ -54,6 +54,21 @@ public final class ChannelBanListSheetEntry: NSObject {
 		return formatDateLongStyle(entryCreationDate, true) ?? ApplicationStrings.unknownValue
 	}
 }
+
+private nonisolated enum ChannelBanListSection: Hashable, Sendable { // nonisolated: value
+	case entries
+}
+
+/// The table's columns, named the way the nib identifies them. The sort keys
+/// the header sends back are these same names.
+private nonisolated enum ChannelBanListColumn: String { // nonisolated: value
+	case mask = "entryMask"
+	case author = "entryAuthor"
+	case creationDate = "entryCreationDate"
+}
+
+private typealias ChannelBanListDataSource =
+	NSTableViewDiffableDataSource<ChannelBanListSection, ChannelBanListSheetEntry.ID>
 
 @objc(TDCChannelBanListSheet)
 @MainActor
@@ -68,11 +83,11 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 
 	@IBOutlet private var headerTitleTextField: NSTextField!
 	@IBOutlet private var entryTable: BasicTableView!
-	@IBOutlet private var entryTableController: NSArrayController!
+	@IBOutlet private var entryCountTextField: NSTextField!
 
-	private var tableEntries: [Any] {
-		entryTableController.arrangedObjects as? [Any] ?? []
-	}
+	/// The entries the server has sent, in the order the table draws them.
+	private var tableEntries: [ChannelBanListSheetEntry] = []
+	private var entryDataSource: ChannelBanListDataSource?
 
 	@objc(initWithEntryType:inChannel:)
 	public init?(entryType: ChannelBanListEntryType, inChannel channel: IRCChannel) {
@@ -94,14 +109,98 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 	private func prepareInitialState() {
 		Bundle.main.loadNibNamed("TDCChannelBanListSheet", owner: self, topLevelObjects: nil)
 
+		entryDataSource = makeDataSource()
+		entryTable.dataSource = entryDataSource
+		entryTable.delegate = self
 		entryTable.sortDescriptors = [
-			NSSortDescriptor(key: "entryCreationDate", ascending: false, selector: #selector(NSDate.compare(_:))),
+			NSSortDescriptor(key: ChannelBanListColumn.creationDate.rawValue, ascending: false),
 		]
 
 		headerTitleTextField.stringValue = ChannelAccessListStrings.heading(
 			for: entryType,
 			channelName: channel.name
 		)
+
+		applyEntries()
+	}
+
+	private func makeDataSource() -> ChannelBanListDataSource {
+		ChannelBanListDataSource(tableView: entryTable) { [weak self] tableView, column, _, entryID in
+			let view = tableView.makeView(withIdentifier: column.identifier, owner: self)
+
+			guard let cell = view as? NSTableCellView, let field = cell.textField else {
+				return view ?? NSView()
+			}
+
+			guard let entry = self?.entry(withID: entryID) else {
+				field.stringValue = ""
+
+				return cell
+			}
+
+			switch ChannelBanListColumn(rawValue: column.identifier.rawValue) {
+			case .mask:
+				field.stringValue = entry.entryMask
+				field.toolTip = entry.entryMaskDescription
+			case .author:
+				field.stringValue = entry.entryAuthor
+			case .creationDate:
+				field.stringValue = entry.entryCreationDateString
+			case nil:
+				field.stringValue = ""
+			}
+
+			return cell
+		}
+	}
+
+	private func entry(withID id: ChannelBanListSheetEntry.ID) -> ChannelBanListSheetEntry? {
+		tableEntries.first { $0.id == id }
+	}
+
+	/// Sorts the entries the way the header asks and hands them to the table.
+	private func applyEntries() {
+		guard let entryDataSource else {
+			return
+		}
+
+		sortEntries()
+
+		var snapshot = NSDiffableDataSourceSnapshot<ChannelBanListSection, ChannelBanListSheetEntry.ID>()
+		snapshot.appendSections([.entries])
+		snapshot.appendItems(tableEntries.map(\.id), toSection: .entries)
+		entryDataSource.apply(snapshot, animatingDifferences: false)
+
+		entryCountTextField?.stringValue = entryCountDescription
+	}
+
+	private func sortEntries() {
+		guard let descriptor = entryTable.sortDescriptors.first,
+		      let column = descriptor.key.flatMap(ChannelBanListColumn.init(rawValue:))
+		else {
+			return
+		}
+
+		let ascending = descriptor.ascending
+
+		switch column {
+		case .mask:
+			tableEntries.sort { ordered($0.entryMask, $1.entryMask, ascending) }
+		case .author:
+			tableEntries.sort { ordered($0.entryAuthor, $1.entryAuthor, ascending) }
+		case .creationDate:
+			tableEntries.sort {
+				ordered(
+					$0.entryCreationDate ?? .distantPast,
+					$1.entryCreationDate ?? .distantPast,
+					ascending
+				)
+			}
+		}
+	}
+
+	private func ordered<Value: Comparable>(_ lhs: Value, _ rhs: Value, _ ascending: Bool) -> Bool {
+		ascending ? lhs < rhs : lhs > rhs
 	}
 
 	@objc public func start() {
@@ -109,13 +208,9 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 	}
 
 	@objc public func clear() {
-		willChangeValue(forKey: #keyPath(entryCount))
-		willChangeValue(forKey: #keyPath(entryCountDescription))
+		tableEntries.removeAll()
 
-		entryTableController.content = nil
-
-		didChangeValue(forKey: #keyPath(entryCountDescription))
-		didChangeValue(forKey: #keyPath(entryCount))
+		applyEntries()
 	}
 
 	@objc(addEntry:setBy:creationDate:)
@@ -124,32 +219,22 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 		setBy entryAuthor: String?,
 		creationDate entryCreationDate: Date?
 	) {
-		var author = entryAuthor
-
-		if author == nil {
-			author = ApplicationStrings.unknownValue
-		}
-
-		let newEntry = ChannelBanListSheetEntry()
+		var newEntry = ChannelBanListSheetEntry()
 		newEntry.entryMask = entryMask
 		newEntry.entryMaskDescription = client.supportInfo.descriptionForExtendedBanMask(entryMask)
-		newEntry.entryAuthor = author!
+		newEntry.entryAuthor = entryAuthor ?? ApplicationStrings.unknownValue
 		newEntry.entryCreationDate = entryCreationDate
 
-		willChangeValue(forKey: #keyPath(entryCount))
-		willChangeValue(forKey: #keyPath(entryCountDescription))
+		tableEntries.append(newEntry)
 
-		entryTableController.addObject(newEntry)
-
-		didChangeValue(forKey: #keyPath(entryCountDescription))
-		didChangeValue(forKey: #keyPath(entryCount))
+		applyEntries()
 	}
 
-	@objc public dynamic var entryCount: NSNumber {
-		NSNumber(value: tableEntries.count)
+	public var entryCount: Int {
+		tableEntries.count
 	}
 
-	@objc public dynamic var entryCountDescription: String {
+	public var entryCountDescription: String {
 		let entryCount = tableEntries.count
 		let maximumEntries = ChannelModeSymbol(modeSymbol)
 			.map { Int(client.supportInfo.maximumListEntries(forModeSymbol: $0)) } ?? 0
@@ -164,15 +249,8 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 	}
 
 	@IBAction private func onRemoveEntry(_: Any?) {
-		let selectedRows = entryTable.selectedRowIndexes
-		var selectedEntries: [String] = []
-
-		for index in selectedRows {
-			guard let entryItem = tableEntries[index] as? ChannelBanListSheetEntry else {
-				continue
-			}
-
-			selectedEntries.append(entryItem.entryMask)
+		let selectedEntries = entryTable.selectedRowIndexes.compactMap { row in
+			tableEntries.indices.contains(row) ? tableEntries[row].entryMask : nil
 		}
 
 		listOfChanges = client.compileListOfModeChanges(
@@ -206,5 +284,15 @@ public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
 
 	@objc public func windowWillClose(_: Notification) {
 		banListDelegate?.channelBanListSheetWillClose(self)
+	}
+}
+
+// MARK: - Table
+
+extension ChannelBanListSheet: NSTableViewDelegate {
+	/// Re-sorts and re-applies. The array controller used to do this through a
+	/// `sortDescriptors` binding.
+	public func tableView(_: NSTableView, sortDescriptorsDidChange _: [NSSortDescriptor]) {
+		applyEntries()
 	}
 }
