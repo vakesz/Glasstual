@@ -129,7 +129,7 @@ extension IRCClient {
 		isCapabilityEnabled(.awayNotify) || environment.preferences.trackUserAwayStatusMaximumChannelSize > 0
 	}
 
-	@objc public var lastLine: LogLine? {
+	public var lastLine: LogLine? {
 		presentation?.lastPrintedLine()
 	}
 

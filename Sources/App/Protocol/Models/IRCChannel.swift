@@ -297,7 +297,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		return URL(fileURLWithPath: writePath)
 	}
 
-	@objc public var lastLine: LogLine? {
+	public var lastLine: LogLine? {
 		presentation?.lastPrintedLine()
 	}
 
@@ -482,7 +482,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		logFileSessionIsOpen = false
 	}
 
-	@objc(writeToLogLineToLogFile:)
 	public func writeToLogFile(_ logLine: LogLine) {
 		guard isUtility == false, clientPreferences.logToDiskIsEnabled else {
 			return
@@ -498,13 +497,11 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	@MainActor
-	@objc(print:)
 	public func print(_ logLine: LogLine) {
 		print(logLine, completionBlock: nil)
 	}
 
 	@MainActor
-	@objc(print:completionBlock:)
 	public func print(
 		_ logLine: LogLine,
 		completionBlock: LogControllerPrintOperationCompletion?

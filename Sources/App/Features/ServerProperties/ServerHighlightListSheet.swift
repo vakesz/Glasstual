@@ -18,19 +18,30 @@ public protocol ServerHighlightListSheetDelegate: AnyObject {
 	func serverHighlightListSheetWillClose(_ sender: ServerHighlightListSheet)
 }
 
+/// How `ServerHighlightListSheet` orders its rows. The header cells still carry
+/// the old sort-descriptor keys, which is what maps a click onto one of these.
+private enum HighlightListSortKey: String {
+	case timeLogged
+	case channelName
+}
+
 @objc(TDCServerHighlightListSheet)
 @MainActor
-public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, TableViewPasteboardDelegate {
+public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, TableViewPasteboardDelegate,
+	NSTableViewDataSource, NSTableViewDelegate
+{
 	@objc public private(set) var client: IRCClient!
 	@objc public private(set) var clientId: String?
 
 	@IBOutlet private var headerTitleTextField: NSTextField!
 	@IBOutlet private var highlightListTable: BasicTableView!
-	@IBOutlet private var highlightListController: NSArrayController!
 
-	private var highlightEntries: [Any] {
-		highlightListController.arrangedObjects as? [Any] ?? []
-	}
+	/** The rows, in the order the table draws them.
+
+	 A highlight is a value, so there is no `NSArrayController` to hold it and no
+	 KVC key path to bind a column to: the sheet sorts the entries itself and
+	 fills the cells in `tableView(_:viewFor:row:)`. */
+	private var highlightEntries: [HighlightLogEntry] = []
 
 	@objc(initWithClient:)
 	public init(client: IRCClient) {
@@ -46,52 +57,69 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, Tabl
 		highlightListTable.doubleAction = #selector(highlightDoubleClicked(_:))
 		highlightListTable.pasteboardDelegate = self
 		highlightListTable.sortDescriptors = [
-			NSSortDescriptor(key: "timeLogged", ascending: false, selector: #selector(NSDate.compare(_:))),
-			NSSortDescriptor(
-				key: "channelName",
-				ascending: false,
-				selector: #selector(NSString.caseInsensitiveCompare(_:))
-			),
+			NSSortDescriptor(key: HighlightListSortKey.timeLogged.rawValue, ascending: false),
 		]
 
 		let headerTitle = String(format: headerTitleTextField.stringValue, client.networkNameAlt)
 		headerTitleTextField.stringValue = headerTitle
 
-		if client.cachedHighlights.isEmpty == false {
-			addEntry(client.cachedHighlights)
-		}
+		addEntries(client.cachedHighlights)
 	}
 
 	@objc public func start() {
 		startSheet()
 	}
 
-	@objc(addEntry:)
-	public func addEntry(_ newEntry: Any) {
-		if let entries = newEntry as? [Any] {
-			for entry in entries {
-				addEntry(entry)
-			}
-		} else if let entry = newEntry as? HighlightLogEntry {
-			highlightListController.addObject(entry)
+	public func addEntry(_ newEntry: HighlightLogEntry) {
+		addEntries([newEntry])
+	}
+
+	public func addEntries(_ newEntries: [HighlightLogEntry]) {
+		guard newEntries.isEmpty == false else {
+			return
 		}
+
+		highlightEntries.append(contentsOf: newEntries)
+		sortAndReloadEntries()
+	}
+
+	/// Applies the table's current sort descriptors. `NSArrayController` used to
+	/// do this; the comparisons are the ones its descriptors named.
+	private func sortAndReloadEntries() {
+		for descriptor in highlightListTable.sortDescriptors.reversed() {
+			guard let key = descriptor.key.flatMap(HighlightListSortKey.init(rawValue:)) else {
+				continue
+			}
+
+			highlightEntries.sort { first, second in
+				let ordered = switch key {
+				case .timeLogged:
+					first.timeLogged < second.timeLogged
+				case .channelName:
+					first.channelName.localizedCaseInsensitiveCompare(second.channelName) == .orderedAscending
+				}
+
+				return descriptor.ascending ? ordered : !ordered
+			}
+		}
+
+		highlightListTable.reloadData()
 	}
 
 	@IBAction private func onClearList(_: Any?) {
-		highlightListController.content = nil
+		highlightEntries = []
+		highlightListTable.reloadData()
 		client.clearCachedHighlights()
 	}
 
 	@objc private func highlightDoubleClicked(_: Any?) {
 		let row = highlightListTable.clickedRow
 
-		if row < 0 {
+		guard row >= 0, row < highlightEntries.count else {
 			return
 		}
 
-		guard let entryItem = highlightEntries[row] as? HighlightLogEntry else {
-			return
-		}
+		let entryItem = highlightEntries[row]
 
 		guard let channel = entryItem.channel else {
 			return
@@ -136,12 +164,8 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, Tabl
 
 		var stringToCopy = ""
 
-		for index in selectedRows {
-			guard let entryItem = highlightEntries[index] as? HighlightLogEntry else {
-				continue
-			}
-
-			stringToCopy.append(entryItem.description)
+		for index in selectedRows where index < highlightEntries.count {
+			stringToCopy.append(highlightEntries[index].description)
 
 			if index != selectedRows.last {
 				stringToCopy.append("\n")
@@ -152,15 +176,47 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, Tabl
 		NSPasteboard.general.setString(stringToCopy, forType: .string)
 	}
 
-	@objc(
-		tableView:viewForTableColumn:row:
-	)
+	public func numberOfRows(in _: NSTableView) -> Int {
+		highlightEntries.count
+	}
+
+	public func tableView(_ tableView: NSTableView, sortDescriptorsDidChange _: [NSSortDescriptor]) {
+		guard tableView === highlightListTable else {
+			return
+		}
+
+		sortAndReloadEntries()
+	}
+
 	public func tableView(
 		_ tableView: NSTableView,
 		viewFor tableColumn: NSTableColumn?,
-		row _: Int
+		row: Int
 	) -> NSView? {
-		tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self)
+		guard let tableColumn, row < highlightEntries.count else {
+			return nil
+		}
+
+		let view = tableView.makeView(withIdentifier: tableColumn.identifier, owner: self)
+
+		guard let cell = view as? NSTableCellView, let textField = cell.textField else {
+			return view
+		}
+
+		let entry = highlightEntries[row]
+
+		switch tableColumn.identifier.rawValue {
+		case "channelName":
+			textField.stringValue = entry.channelName
+		case "renderedMessage":
+			textField.attributedStringValue = entry.renderedMessage
+		case "timeLogged":
+			textField.stringValue = entry.timeLoggedFormatted
+		default:
+			break
+		}
+
+		return view
 	}
 
 	@objc public func windowWillClose(_: Notification) {

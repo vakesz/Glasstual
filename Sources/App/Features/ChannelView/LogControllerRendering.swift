@@ -173,9 +173,7 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 		reactions = logLine.reactions
 		highlightKeywords = logLine.highlightKeywords
 		excludeKeywords = logLine.excludeKeywords
-		doNotEscapeBody = (LogRendererConfiguration(rawValues: logLine.rendererAttributes ?? [:])[
-			.doNotEscapeBody
-		] as? NSNumber)?.boolValue == true
+		doNotEscapeBody = logLine.doNotEscapeBody
 		isEncrypted = logLine.isEncrypted
 		isFirstForDay = logLine.isFirstForDay
 		sourceDescription = logLine.description

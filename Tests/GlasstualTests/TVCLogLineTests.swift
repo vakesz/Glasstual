@@ -45,17 +45,17 @@ import Testing
 struct TVCLogLineTests {
 	@Test("The message identifier survives a copy and a secure-coding round trip")
 	func messageIdentifierSurvivesArchivingAndCopying() throws {
-		let line = LogLine()
+		var line = LogLine()
 		line.command = "privmsg"
 		line.lineType = .privateMessage
 		line.nickname = "alice"
 		line.messageBody = "hello"
 		line.messageIdentifier = "63E1033A0"
 
-		let copy = line.duplicate()
+		let copy = line
 		#expect(copy.messageIdentifier == "63E1033A0")
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: copy, requiringSecureCoding: true)
+		let data = try NSKeyedArchiver.archivedData(withRootObject: copy.archived, requiringSecureCoding: true)
 		let decoded = try #require(LogLine(data: data))
 
 		#expect(decoded.messageIdentifier == "63E1033A0")
@@ -65,19 +65,19 @@ struct TVCLogLineTests {
 
 	@Test("A line with no message identifier decodes without one")
 	func messageIdentifierIsOptional() throws {
-		let line = LogLine()
+		var line = LogLine()
 		line.messageBody = "hello"
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.duplicate(), requiringSecureCoding: true)
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
 		let decoded = try #require(LogLine(data: data))
 
 		#expect(decoded.messageIdentifier == nil)
 	}
 
-	@Test("A duplicate is a separate object carrying every value of the original")
-	func duplicatePreservesCompleteValueState() {
+	@Test("A copy carries every value of the original and is independent of it")
+	func copyPreservesCompleteValueState() {
 		let receivedAt = Date(timeIntervalSince1970: 1_725_000_000)
-		let line = LogLine()
+		var line = LogLine()
 		line.isEncrypted = true
 		line.isFirstForDay = true
 		line.receivedAt = receivedAt
@@ -92,16 +92,17 @@ struct TVCLogLineTests {
 		line.deliveryState = .delivered
 		line.highlightKeywords = ["hello"]
 		line.excludeKeywords = ["ignore"]
-		line.rendererAttributes = ["key": "value"]
+		line.doNotEscapeBody = true
 
-		let copy = line.duplicate()
+		var copy = line
+		copy.messageBody = "changed"
 
-		#expect(copy !== line)
+		#expect(line.messageBody == "hello")
 		#expect(copy.isEncrypted)
 		#expect(copy.isFirstForDay)
 		#expect(copy.receivedAt == receivedAt)
 		#expect(copy.nickname == "alice")
-		#expect(copy.messageBody == "hello")
+		#expect(copy.messageBody == "changed")
 		#expect(copy.command == "PRIVMSG")
 		#expect(copy.messageIdentifier == "message-id")
 		#expect(copy.replyToMessageIdentifier == "parent-id")
@@ -111,17 +112,17 @@ struct TVCLogLineTests {
 		#expect(copy.deliveryState == .delivered)
 		#expect(copy.highlightKeywords == ["hello"])
 		#expect(copy.excludeKeywords == ["ignore"])
-		#expect(copy.rendererAttributes?["key"] as? String == "value")
+		#expect(copy.doNotEscapeBody)
 		#expect(copy.uniqueIdentifier == line.uniqueIdentifier)
 		#expect(copy.sessionIdentifier == line.sessionIdentifier)
 	}
 
 	@Test("A pending delivery state is not carried out of the archive")
 	func pendingDeliveryStateIsNotRestoredFromArchive() throws {
-		let line = LogLine()
+		var line = LogLine()
 		line.deliveryState = .pending
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.duplicate(), requiringSecureCoding: true)
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
 		let decoded = try #require(LogLine(data: data))
 
 		#expect(decoded.deliveryState == TVCLogLineDeliveryState.none)
