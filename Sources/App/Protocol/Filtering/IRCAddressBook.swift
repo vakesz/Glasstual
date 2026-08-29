@@ -59,7 +59,7 @@ import Foundation
 
  A rule loaded from disk carries only the settings its `entryType` uses, and the
  compiled hostmask matcher is rebuilt whenever the type or the mask changes. */
-public nonisolated struct AddressBookEntry: Codable, Equatable { // nonisolated: value
+public nonisolated struct AddressBookEntry: Codable, Equatable, Sendable { // nonisolated: value
 	public var uniqueIdentifier: String
 
 	public var entryType: IRCAddressBookEntryType {
