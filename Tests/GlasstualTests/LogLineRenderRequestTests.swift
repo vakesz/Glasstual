@@ -49,13 +49,13 @@ private struct StubLogLineRenderer: LogLineRendering {
 
 	func renderBody(
 		_ body: String,
-		attributes: [String: Any],
+		attributes: LogRendererConfiguration,
 		members: [RenderedMember],
-		results: inout [String: Any]
+		results: inout LogRendererResults
 	) -> String {
-		results[LogRendererResultKey.keywordMatchFound.rawValue] = NSNumber(value: keywordMatchFound)
-		results[LogRendererResultKey.bodyWithoutEffects.rawValue] = body
-		let renderLinks = (attributes[LogRendererConfigurationKey.renderLinks.rawValue] as? Bool) ?? false
+		results[.keywordMatchFound] = NSNumber(value: keywordMatchFound)
+		results[.bodyWithoutEffects] = body
+		let renderLinks = attributes.value(for: .renderLinks, as: Bool.self) ?? false
 		return "body(\(body),links=\(renderLinks),members=\(members.count))"
 	}
 

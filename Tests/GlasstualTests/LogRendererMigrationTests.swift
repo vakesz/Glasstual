@@ -23,7 +23,7 @@ struct LogRendererMigrationTests {
 
 		let rendered = TVCLogRenderer.renderBody(
 			asAttributedString: source,
-			withAttributes: [.attributedStringPreferredFontAttribute: font]
+			withAttributes: [.preferredFont: font]
 		)
 
 		#expect(rendered.string == "plain bold plain")
