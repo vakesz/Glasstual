@@ -59,6 +59,15 @@ checks on every `make lint`.
   `perform{A,}synchronouslyOnMainQueue` hop. `Mutex<Value>` is the only
   permitted lock, and only around a value type — never around a reference, and
   never held across I/O or an `await`.
+- **One private queue survives, and it is documented.**
+  `FSEventStreamSetDispatchQueue` takes a queue and will not take anything else,
+  and the queue has to be serial because teardown runs on it so that
+  invalidating the stream cannot overlap a callback already in flight.
+  `XRFileSystemMonitor.events(for:)` creates it, never lets it escape, and feeds
+  what FSEvents reports into an `AsyncStream`; its line carries
+  `// lock-queue: fsevents`, which is what the gate accepts. That marker is for that one construct — on any other line the
+  gate reports it as an exemption for nothing. Nothing else earns a second one:
+  a new queue means the state it guards belongs in an actor.
 - **Where an Apple API forces a bridge, route around the API.** A nonisolated
   AppKit callback is answered from a `Sendable` snapshot the main actor keeps
   current; `sink` and KVO handlers become `for await` loops in a main-actor
@@ -88,7 +97,10 @@ make isolation-ratchet   # or: ./scripts/isolation-gate.sh --ratchet
 ```
 
 Phase 8 finishes when all three read `0`, at which point the ceilings go away
-and the gate becomes a flat ban.
+and the gate becomes a flat ban: `./scripts/isolation-gate.sh --ban` ignores the
+ceilings file and requires zero of each. The flip is adding that flag to the
+`isolation-gate` target in the Makefile and deleting
+`scripts/isolation-ceilings.env` in the same change.
 
 Two runtime checks back the static ones, both local-only because they are far
 too slow for CI: `make tsan` runs the suite under ThreadSanitizer, and
