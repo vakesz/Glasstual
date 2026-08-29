@@ -193,6 +193,14 @@ public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: v
 			return string
 		}
 
+		guard caseMapping != .rfc7613 else {
+			/* RFC 7613 §3.3 (UsernameCaseMapped): lowercase the whole string
+			 under Unicode's rules, then normalise to NFC, so two spellings of
+			 the same name compare equal. None of the RFC 1459 punctuation
+			 equivalences apply — "[Alice]" and "{alice}" are different people. */
+			return string.lowercased().precomposedStringWithCanonicalMapping
+		}
+
 		let scalars = string.unicodeScalars.map { scalar -> UnicodeScalar in
 			let value = scalar.value
 
