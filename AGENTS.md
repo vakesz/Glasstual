@@ -29,7 +29,26 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 - Preferences are typed `PreferenceKey` declarations under
   `Sources/App/Preferences/Keys/`, with the handful the XPC services
   also read in `Sources/Shared/Preferences/`. Read and write through the key,
-  never through a raw defaults string.
+  never through a raw defaults string. The five plists under
+  `Sources/App/Resources/Property Lists/Preferences/` are generated from those
+  declarations by `scripts/generate-preference-plists.sh` — a build phase of
+  the app target, `make generate-preference-plists` by hand — and are never
+  edited directly. Adding a declaration file under `Keys/` means adding it to
+  that phase's `inputFiles` in `project.yml`; the build phase is sandboxed to
+  the files it names.
+- The channel log has one origin and no file-system read access. It used to be
+  a `file:` document with `_setAllowFileAccessFromFileURLs:` and
+  `_setAllowUniversalAccessFromFileURLs:` turned on, which gave every script in
+  a theme cross-origin read of the whole disk. Both private switches are gone.
+  The document and every theme resource are now served by
+  `LogViewThemeSchemeHandler` over a custom scheme, from below the theme
+  directories `permittedRoots` names, and rendered documents are held in memory
+  instead of being written into the theme's temporary directory. **This is a
+  breaking change for third-party themes:** a theme's JavaScript can no longer
+  read `file:` URLs cross-origin, fetch arbitrary paths, or reach anything
+  outside its own theme directory and the app's resources. A theme that needs a
+  file must ship it and reference it relatively; one that needs data from the
+  app asks through the script bridge.
 - `@objc` marks a runtime boundary and nothing else: a class or action a nib
   binds, a KVO-observed property, an XPC protocol member, or a plugin
   principal class. A Swift-to-Swift call never needs one.
@@ -139,6 +158,13 @@ and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
   `Tests/GlasstualTests/`, named after their subject. Test what the code
   decides, not what the compiler already guarantees: a runtime-name pin earns
   its place only where a nib or a protocol constant depends on it.
+- A test that does not run is not a passing test. `make lint` runs
+  `scripts/test-hygiene.sh`, which bans `.disabled(…)` and `withKnownIssue`
+  under `Tests/` unless `scripts/test-hygiene-allowlist.txt` accounts for the
+  file, the construct and the exact number of sites, with a reason. Six
+  `.disabled("Phase 1: …")` traits once hid unmet exit criteria for weeks;
+  parking a failure there is not what the list is for. Fix the code or delete
+  the test.
 - Before handing off: `make generate`, `make build`, `make test` and
   `make lint`, all green. Report any runtime, signing, network or release
   boundary the change touched but the checks did not exercise.

@@ -8,15 +8,12 @@
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
-	<!-- This service compiles TPCPreferencesUserDefaults and reads the inline
-	     media limits the app registers into the shared app-group suite.
-
-	     That is the whole list. The app also declares file timestamps, free
-	     disk space and system boot time, but those are the app's own: this
-	     process fetches over URLSession and hands the app a payload, keeping
-	     nothing on disk. It calls no FileManager, no stat, no statfs and no
-	     systemUptime, so nothing else belongs here. -->
-
+	<!-- The only required-reason API this service reaches for. It registers
+	     NSAppSleepDisabled in its own defaults domain so App Nap cannot
+	     suspend the process while a connection is open, and it compiles
+	     TPCPreferencesUserDefaults for the connection settings it reads from
+	     the shared app-group suite. It stats no file, reads no free space and
+	     asks for no boot time, so nothing else belongs here. -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>
