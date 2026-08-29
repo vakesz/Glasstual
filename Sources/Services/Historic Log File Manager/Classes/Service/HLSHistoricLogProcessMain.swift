@@ -43,40 +43,19 @@ import Foundation
 /// state. Reply blocks are already `@Sendable` in the protocol, so a reply can
 /// be sent from inside the actor's task without leaving its isolation domain.
 ///
-/// The connection stays here rather than in the store: `NSXPCConnection` is not
-/// `Sendable`, and region isolation will not let the listener's connection be
-/// sent into another domain. So this object also owns the remote object proxy
-/// and delivers the store's queued deletion notices, which it flushes at the
-/// head of every incoming call.
+/// The connection is held here and passed nowhere: `NSXPCConnection` is not
+/// `Sendable`, so it cannot enter the store. The store does not need it — it
+/// pushes through the client proxy the listener delegate resolved for it.
 @objc(HLSHistoricLogProcessMain)
 final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 	private let store: HistoricLogStore
-	private let notices: HistoricLogNotices
-	private weak var serviceConnection: NSXPCConnection?
+	private let serviceConnection: NSXPCConnection
 
-	init(store: HistoricLogStore, notices: HistoricLogNotices, connection: NSXPCConnection) {
+	init(store: HistoricLogStore, connection: NSXPCConnection) {
 		self.store = store
-		self.notices = notices
 		serviceConnection = connection
 
 		super.init()
-	}
-
-	/// A proxy for the client half of the connection. Messages sent through it
-	/// are one way; nothing here waits on the client.
-	private func remoteObjectProxy() -> HistoricLogClientProtocol? {
-		serviceConnection?.remoteObjectProxy as? HistoricLogClientProtocol
-	}
-
-	/// Delivers whatever the store truncated since the last call.
-	private func flushNotices() {
-		let pending = notices.drain()
-
-		guard pending.isEmpty == false, let proxy = remoteObjectProxy() else { return }
-
-		for notice in pending {
-			proxy.willDeleteUniqueIdentifiers(notice.uniqueIdentifiers, inView: notice.viewIdentifier)
-		}
 	}
 
 	// MARK: - Database
@@ -85,8 +64,6 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		inDirectory databaseDirectory: String,
 		withCompletionBlock completionBlock: (@Sendable (Bool) -> Void)?
 	) {
-		flushNotices()
-
 		Task { [store] in
 			let opened = await store.openDatabase(inDirectory: databaseDirectory)
 
@@ -95,16 +72,12 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 	}
 
 	func setMaximumLineCount(_ maximumLineCount: UInt) {
-		flushNotices()
-
 		Task { [store] in
 			await store.setMaximumLineCount(maximumLineCount)
 		}
 	}
 
 	func saveData(completionBlock: (@Sendable () -> Void)?) {
-		flushNotices()
-
 		Task { [store] in
 			/* The reply block is an XPC reply; it has to be invoked on every path. */
 			defer { completionBlock?() }
@@ -114,24 +87,18 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 	}
 
 	func forgetView(_ viewIdentifier: String) {
-		flushNotices()
-
 		Task { [store] in
 			await store.forgetView(viewIdentifier)
 		}
 	}
 
 	func resetData(forView viewIdentifier: String) {
-		flushNotices()
-
 		Task { [store] in
 			await store.resetData(forView: viewIdentifier)
 		}
 	}
 
 	func writeLogLine(_ logLine: LogLineXPC) {
-		flushNotices()
-
 		Task { [store] in
 			await store.writeLogLine(logLine)
 		}
@@ -146,8 +113,6 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		limitTo limitToDate: Date?,
 		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
-		flushNotices()
-
 		Task { [store] in
 			await completionBlock(
 				store.fetchEntries(
@@ -168,8 +133,6 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		limitTo limitToDate: Date?,
 		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
-		flushNotices()
-
 		Task { [store] in
 			await completionBlock(
 				store.fetchEntries(
@@ -190,8 +153,6 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		limitTo limitToDate: Date?,
 		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
-		flushNotices()
-
 		Task { [store] in
 			await completionBlock(
 				store.fetchEntries(
@@ -212,8 +173,6 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		limitTo limitToDate: Date?,
 		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
-		flushNotices()
-
 		Task { [store] in
 			await completionBlock(
 				store.fetchEntries(
@@ -234,8 +193,6 @@ final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol {
 		fetchLimit: UInt,
 		withCompletionBlock completionBlock: @escaping @Sendable ([LogLineXPC]) -> Void
 	) {
-		flushNotices()
-
 		Task { [store] in
 			await completionBlock(
 				store.fetchEntries(

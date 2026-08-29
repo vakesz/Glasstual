@@ -38,15 +38,16 @@
 import CoreData
 import Foundation
 import os
-import Synchronization
 
 /// Owns the historic log Core Data stack and everything that used to be
 /// guarded by `contextLock` and `saveQueue`.
 ///
-/// One store exists per accepted XPC connection. It creates the exported
-/// object (`HistoricLogProcessMain`), which does nothing but forward each
-/// `@objc` call back in here, so the per-view contexts, line counts, resize
-/// timers and the save debounce all live in a single isolation domain.
+/// One store exists per accepted XPC connection. The exported object
+/// (`HistoricLogProcessMain`) does nothing but forward each `@objc` call back
+/// in here, so the per-view contexts, line counts, resize timers and the save
+/// debounce all live in a single isolation domain. The connection itself never
+/// enters the actor — only the client proxy, which is `Sendable` because
+/// `HistoricLogClientProtocol` refines it.
 actor HistoricLogStore {
 	/// Everything the store knows about one log view. The context is the only
 	/// thing Core Data owns; the counts are kept here so a write does not have
@@ -58,8 +59,9 @@ actor HistoricLogStore {
 		var resizeTask: Task<Void, Never>?
 	}
 
-	/// Where deletion notices wait for the exported object to deliver them.
-	private let notices: HistoricLogNotices
+	/// The client half of the connection. Unsolicited messages go straight
+	/// through it; it is dropped when the connection invalidates.
+	private var client: (any HistoricLogClientProtocol)?
 
 	private var rootContext: NSManagedObjectContext?
 	private var databaseURL: URL?
@@ -78,21 +80,27 @@ actor HistoricLogStore {
 	/// Spreading the work keeps a hundred views from resizing in lockstep.
 	private static let maximumResizeDelay: UInt32 = 1800
 
-	init(notices: HistoricLogNotices) {
-		self.notices = notices
-	}
-
 	// MARK: - Connection Lifecycle
 
-	func connectionInvalidated() async {
+	/// Takes ownership of the client proxy the listener delegate resolved.
+	func attach(client: any HistoricLogClientProtocol) {
+		self.client = client
+	}
+
+	/// The application owns the connection's lifetime; this runs from its
+	/// invalidation handler.
+	func detach() async {
 		HistoricLogDatabase.logger.debug("Connection invalidated")
 
+		client = nil
 		connectionIsInvalidated = true
 
 		cancelScheduledSave()
 
 		await saveAllContexts(cancellingResize: true)
 	}
+
+	// MARK: - Connection Lifecycle
 
 	// MARK: - Database
 
@@ -505,37 +513,9 @@ actor HistoricLogStore {
 	// MARK: - Client Notifications
 
 	private func reportDeletion(_ result: HistoricLogDatabase.DeletionResult, inView viewIdentifier: String) {
-		guard result.uniqueIdentifiers.isEmpty == false, connectionIsInvalidated == false else { return }
+		guard result.uniqueIdentifiers.isEmpty == false else { return }
 
-		notices.post(.init(uniqueIdentifiers: result.uniqueIdentifiers, viewIdentifier: viewIdentifier))
-	}
-}
-
-/// A truncation the client has to hear about.
-struct HistoricLogDeletionNotice: Sendable {
-	let uniqueIdentifiers: [String]
-	let viewIdentifier: String
-}
-
-/// The queue of deletion notices between the store and the exported object.
-///
-/// `NSXPCConnection` is not `Sendable` and region isolation will not let the
-/// listener's connection be sent into an actor, so the store cannot hold the
-/// remote object proxy. It leaves notices here instead and the exported object,
-/// which does hold the connection, delivers them on its next XPC call.
-final class HistoricLogNotices: Sendable {
-	private let pending = Mutex<[HistoricLogDeletionNotice]>([])
-
-	func post(_ notice: HistoricLogDeletionNotice) {
-		pending.withLock { $0.append(notice) }
-	}
-
-	func drain() -> [HistoricLogDeletionNotice] {
-		pending.withLock { queue in
-			defer { queue.removeAll() }
-
-			return queue
-		}
+		client?.willDeleteUniqueIdentifiers(result.uniqueIdentifiers, inView: viewIdentifier)
 	}
 }
 

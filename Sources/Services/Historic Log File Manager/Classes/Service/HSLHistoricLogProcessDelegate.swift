@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import Foundation
+import os
 
 @objc(HSLHistoricLogProcessDelegate)
 final class HistoricLogProcessDelegate: NSObject, NSXPCListenerDelegate {
@@ -49,23 +50,22 @@ final class HistoricLogProcessDelegate: NSObject, NSXPCListenerDelegate {
 		connection.exportedInterface = exportedInterface
 		connection.remoteObjectInterface = NSXPCInterface(with: HistoricLogClientProtocol.self)
 
-		/* The store owns every piece of mutable state; the exported object owns
-		 the connection, which cannot be sent into an actor, and carries the
-		 store's deletion notices back to the client. */
-		let notices = HistoricLogNotices()
-		let store = HistoricLogStore(notices: notices)
+		/* The store owns every piece of mutable state. The connection stays out
+		 here — it is not Sendable — and only the client proxy, which is,
+		 crosses into the actor. */
+		let store = HistoricLogStore()
 
-		connection.exportedObject = HistoricLogProcessMain(
-			store: store,
-			notices: notices,
-			connection: connection
-		)
-		connection.invalidationHandler = { [weak connection] in
-			Task { await store.connectionInvalidated() }
+		connection.exportedObject = HistoricLogProcessMain(store: store, connection: connection)
 
-			connection?.exportedObject = nil
-			connection?.invalidationHandler = nil
+		guard let client = connection.remoteObjectProxy as? any HistoricLogClientProtocol else {
+			HistoricLogDatabase.logger.error("Client does not conform to the historic log client protocol")
+
+			return false
 		}
+
+		connection.invalidationHandler = { Task { await store.detach() } }
+
+		Task { await store.attach(client: client) }
 
 		connection.resume()
 
