@@ -11,124 +11,48 @@
  *********************************************************************** */
 
 import AppKit
-import CocoaExtensions
 import InlineContentKit
 import os
-import UniformTypeIdentifiers
 
-private nonisolated let inlineMediaLogger = Logger(
+private nonisolated let inlineMediaLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "InlineMediaService"
 )
 
-/* ISOLATION-EXCEPTION: `InlineContentClientProtocol` is an XPC protocol whose
- callbacks arrive on the connection's queue, so this type cannot be isolated.
- Everything it touches on the way in hops to the main actor below. Owned by the
- XPC-service task. */
-@objc(TVCLogControllerInlineMediaService)
-public final nonisolated class LogControllerInlineMediaService: NSObject, InlineContentClientProtocol,
-	@unchecked Sendable
-{
-	private var serviceConnection: NSXPCConnection?
+/** The app's side of the inline-content loader.
 
-	@objc(sharedInstance)
+ Main-actor throughout: it normalises the address the renderer found, hands the
+ work to `InlineMediaClient`, and applies the loader's answer to the view that
+ asked for it. */
+@MainActor
+public final class LogControllerInlineMediaService {
+	public static let sharedInstance = LogControllerInlineMediaService()
+
 	public static func shared() -> LogControllerInlineMediaService {
-		enum Storage {
-			static let instance = LogControllerInlineMediaService()
-		}
-
-		return Storage.instance
+		sharedInstance
 	}
 
-	@objc public func warmProcessIfNeeded() {
-		guard serviceConnection == nil else {
-			return
-		}
+	// MARK: - Process life cycle
 
-		inlineMediaLogger.debug("Warming process...")
-		connectToService()
+	public func warmProcessIfNeeded() {
+		Task { await InlineMediaClient.shared.attach() }
 	}
 
-	@objc public func invalidateProcess() {
-		guard serviceConnection != nil else {
-			return
-		}
-
-		inlineMediaLogger.debug("Invalidating process...")
-		serviceConnection?.invalidate()
+	public func invalidateProcess() {
+		Task { await InlineMediaClient.shared.detach() }
 	}
 
-	private func connectToService() {
-		let serviceConnection = NSXPCConnection(serviceName: "com.vakesz.glasstual.InlineContentLoader")
-
-		let remoteObjectInterface = NSXPCInterface(with: InlineContentServerProtocol.self)
-
-		serviceConnection.remoteObjectInterface = remoteObjectInterface
-		serviceConnection.exportedInterface = NSXPCInterface(with: InlineContentClientProtocol.self)
-		serviceConnection.exportedObject = self
-
-		serviceConnection.interruptionHandler = { [weak self] in
-			DispatchQueue.main.async {
-				self?.interruptionHandler()
-			}
-
-			inlineMediaLogger.log("Interruption handler called")
-		}
-
-		serviceConnection.invalidationHandler = { [weak self] in
-			DispatchQueue.main.async {
-				self?.invalidationHandler()
-			}
-
-			inlineMediaLogger.log("Invalidation handler called")
-		}
-
-		serviceConnection.resume()
-
-		self.serviceConnection = serviceConnection
-
-		registerDefaults()
-		registerPlugins()
-	}
-
-	private func interruptionHandler() {
-		invalidateProcess()
-	}
-
-	private func invalidationHandler() {
-		serviceConnection = nil
-	}
-
-	@objc public func prepareForApplicationTermination() {
+	public func prepareForApplicationTermination() {
 		inlineMediaLogger.log("Invalidating media service process")
 		invalidateProcess()
 	}
 
-	private func registerDefaults() {
-		remoteObjectProxy?.warmService(with: .current())
+	public func reloadService() {
+		invalidateProcess()
 	}
 
-	private func registerPlugins() {
-		remoteObjectProxy?.warmServiceByLoadingPlugins()
-	}
+	// MARK: - Requests
 
-	private var remoteObjectProxy: InlineContentServerProtocol? {
-		remoteObjectProxyWithErrorHandler(nil)
-	}
-
-	private func remoteObjectProxyWithErrorHandler(
-		_ handler: ((NSError) -> Void)?
-	) -> InlineContentServerProtocol? {
-		serviceConnection?.remoteObjectProxyWithErrorHandler { error in
-			inlineMediaLogger.error(
-				"Error occurred while communicating with service: \(error.localizedDescription, privacy: .public)"
-			)
-			handler?(error as NSError)
-		} as? InlineContentServerProtocol
-	}
-
-	@objc(processAddress:withUniqueIdentifier:atLineNumber:index:forItem:)
-	@MainActor
 	public func processAddress(
 		_ address: String,
 		withUniqueIdentifier uniqueIdentifier: String,
@@ -156,8 +80,6 @@ public final nonisolated class LogControllerInlineMediaService: NSObject, Inline
 		)
 	}
 
-	@objc(processURL:withUniqueIdentifier:atLineNumber:index:forItem:)
-	@MainActor
 	public func processURL(
 		_ url: URL,
 		withUniqueIdentifier uniqueIdentifier: String,
@@ -165,75 +87,47 @@ public final nonisolated class LogControllerInlineMediaService: NSObject, Inline
 		index: UInt,
 		forItem item: IRCTreeItem
 	) {
-		warmProcessIfNeeded()
+		let viewIdentifier = item.uniqueIdentifier
 
-		remoteObjectProxy?.process(
-			url,
-			withUniqueIdentifier: uniqueIdentifier,
-			atLineNumber: lineNumber,
-			index: index,
-			inView: item.uniqueIdentifier
-		)
-	}
-
-	@objc public func reloadService() {
-		invalidateProcess()
-	}
-
-	@objc(processingPayloadSucceeded:)
-	public func processingPayloadSucceeded(_ payload: InlineContentPayload) {
-		performOnMain {
-			guard let item = AppController.shared.world.findItem(withId: payload.viewIdentifier) else {
-				return
-			}
-
-			self.processingPayloadSucceeded(payload, forItem: item)
+		Task {
+			await InlineMediaClient.shared.process(
+				url,
+				withUniqueIdentifier: uniqueIdentifier,
+				atLineNumber: lineNumber,
+				index: index,
+				inView: viewIdentifier
+			)
 		}
 	}
 
-	@objc(processingPayload:failedWithError:)
-	public func processingPayload(_ payload: InlineContentPayload, failedWithError error: Error) {
-		let error = error as NSError
-		performOnMain {
-			guard let item = AppController.shared.world.findItem(withId: payload.viewIdentifier) else {
-				return
-			}
+	// MARK: - Replies
 
-			self.processingPayload(payload, forItem: item, failedWithError: error)
+	/// The loader finished with a payload. Awaited by the client actor, so the
+	/// result lands on the main actor without a synchronous queue hop.
+	static func deliverPayloadSucceeded(_ payload: InlineContentPayload) {
+		guard let item = AppController.shared.world.findItem(withId: payload.viewIdentifier) else {
+			return
 		}
-	}
 
-	@MainActor
-	private func processingPayloadSucceeded(_ payload: InlineContentPayload, forItem item: IRCTreeItem) {
 		item.logController?.processingInlineMediaPayloadSucceeded(payload)
 	}
 
-	@MainActor
-	private func processingPayload(
-		_ payload: InlineContentPayload,
-		forItem item: IRCTreeItem,
-		failedWithError error: NSError
-	) {
-		item.logController?.processingInlineMediaPayload(
-			payload,
-			failedWithError: error
-		)
-	}
-
-	@objc(askPermissionToEnableInlineMediaWithCompletionBlock:)
-	public static func askPermissionToEnableInlineMedia(completionBlock: @escaping @Sendable (Bool) -> Void) {
-		/* ISOLATION-EXCEPTION: reached from the XPC callback queue; the alert has to
-		 be raised on the main thread and callers expect it to have been presented
-		 by the time this returns. */
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				askPermissionToEnableInlineMediaOnMain(completionBlock: completionBlock)
-			}
+	static func deliverPayload(_ payload: InlineContentPayload, failedWith error: NSError) {
+		guard let item = AppController.shared.world.findItem(withId: payload.viewIdentifier) else {
+			return
 		}
+
+		item.logController?.processingInlineMediaPayload(payload, failedWithError: error)
 	}
 
-	@MainActor
-	private static func askPermissionToEnableInlineMediaOnMain(
+	// MARK: - Permission
+
+	/** Asks whether inline media may be turned on while a proxy is configured.
+
+	 Nothing here talks to the service: it is a main-actor alert, and it always
+	 was — it used to be reached from the loader's callback queue and had to
+	 block its way back onto the main thread. */
+	public static func askPermissionToEnableInlineMedia(
 		completionBlock: @escaping @Sendable (Bool) -> Void
 	) {
 		let clientList = AppController.shared.world.clientList
@@ -259,7 +153,6 @@ public final nonisolated class LogControllerInlineMediaService: NSObject, Inline
 		presentInlineMediaPermissionAlert(for: window, completionBlock: completionBlock)
 	}
 
-	@MainActor
 	private static func presentInlineMediaPermissionAlert(
 		for window: NSWindow,
 		completionBlock: @escaping @Sendable (Bool) -> Void
@@ -276,7 +169,8 @@ public final nonisolated class LogControllerInlineMediaService: NSObject, Inline
 			if response == .alertThirdButtonReturn {
 				PreferencesController.openProxySettingsInSystemPreferences()
 
-				DispatchQueue.main.async {
+				/* The sheet has to be off screen before the next one goes up. */
+				Task { @MainActor in
 					presentInlineMediaPermissionAlert(for: window, completionBlock: completionBlock)
 				}
 
@@ -284,16 +178,6 @@ public final nonisolated class LogControllerInlineMediaService: NSObject, Inline
 			}
 
 			completionBlock(response == .alertFirstButtonReturn)
-		}
-	}
-
-	/* ISOLATION-EXCEPTION: the XPC callbacks below are nonisolated and their
-	 results must land before the service's reply returns. */
-	private func performOnMain(_ operation: @escaping @MainActor () -> Void) {
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				operation()
-			}
 		}
 	}
 }
