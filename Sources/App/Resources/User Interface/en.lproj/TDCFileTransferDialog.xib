@@ -9,7 +9,6 @@
             <connections>
                 <outlet property="clearButton" destination="117" id="KoN-Uc-Nhi"/>
                 <outlet property="fileTransferTable" destination="xso-Ti-Pvf" id="qiD-QC-Rrt"/>
-                <outlet property="fileTransfersController" destination="5qZ-cx-fmP" id="muB-vK-w9U"/>
                 <outlet property="navigationControl" destination="fj7-Wr-P1f" id="LNN-nZ-NGY"/>
                 <outlet property="window" destination="5" id="oY6-kl-EqU"/>
             </connections>
@@ -39,7 +38,7 @@
                                     <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
-                                        <tableColumn editable="NO" width="538" minWidth="40" maxWidth="1000" id="rMl-gp-lCO">
+                                        <tableColumn identifier="transfer" editable="NO" width="538" minWidth="40" maxWidth="1000" id="rMl-gp-lCO">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -126,9 +125,6 @@
                                         </tableColumn>
                                     </tableColumns>
                                     <connections>
-                                        <binding destination="5qZ-cx-fmP" name="content" keyPath="arrangedObjects" id="Twb-iu-nDP"/>
-                                        <binding destination="5qZ-cx-fmP" name="selectionIndexes" keyPath="selectionIndexes" previousBinding="Twb-iu-nDP" id="S8O-8l-LA3"/>
-                                        <outlet property="dataSource" destination="-2" id="l7d-fh-IVr"/>
                                         <outlet property="delegate" destination="-2" id="Lbq-dF-k8b"/>
                                         <outlet property="menu" destination="34" id="EY2-ub-icM"/>
                                     </connections>
@@ -219,9 +215,6 @@ Gw
             </connections>
             <point key="canvasLocation" x="236" y="289.5"/>
         </window>
-        <arrayController objectClassName="TDCFileTransferDialogTransferController" editable="NO" selectsInsertedObjects="NO" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" id="5qZ-cx-fmP">
-            <classReference key="objectClass" className="TDCFileTransferDialogTransferController"/>
-        </arrayController>
         <menu title="Menu" id="34" userLabel="TableMenu">
             <connections>
                 <outlet property="delegate" destination="-2" id="mdl-Qk-3Vb"/>

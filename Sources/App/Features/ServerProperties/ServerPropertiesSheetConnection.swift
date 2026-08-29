@@ -143,8 +143,7 @@ extension ServerPropertiesSheet: ServerEndpointListSheetDelegate, ValidatedContr
 	}
 
 	public func serverEndpointListSheet(_: ServerEndpointListSheet, onOk serverList: [Server]) {
-		serverListArrayController.textual_removeAllArrangedObjects()
-		serverListArrayController.add(contentsOf: serverList)
+		self.serverList = serverList
 		loadPrimaryServerEndpoint()
 	}
 
@@ -162,9 +161,9 @@ extension ServerPropertiesSheet: ServerEndpointListSheetDelegate, ValidatedContr
 		server.serverPassword = serverPasswordTextField.stringValue
 			.trimmingCharacters(in: .whitespacesAndNewlines)
 		if serverList.isEmpty {
-			serverListArrayController.addObject(server)
+			serverList.append(server)
 		} else {
-			serverListArrayController.textual_replaceObject(atArrangedObjectIndex: 0, with: server)
+			serverList[0] = server
 		}
 	}
 

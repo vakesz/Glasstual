@@ -116,10 +116,12 @@ extension ServerPropertiesSheet: AddressBookSheetDelegate {
 
 	public func addressBookSheet(_: AddressBookSheet, onOk config: AddressBookEntry) {
 		if let index = addressBookList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
-			addressBookArrayController.textual_replaceObject(atArrangedObjectIndex: UInt(index), with: config)
+			addressBookList[index] = config
 		} else {
-			addressBookArrayController.addObject(config)
+			addressBookList.append(config)
 		}
+
+		applyAddressBookList()
 	}
 
 	public func addressBookSheetWillClose(_: AddressBookSheet) {
@@ -127,10 +129,18 @@ extension ServerPropertiesSheet: AddressBookSheetDelegate {
 	}
 
 	@IBAction private func deleteAddressBookEntry(_: Any?) {
-		removeSelectedRow(
-			from: addressBookTable,
-			controller: addressBookArrayController,
-			remainingCount: { self.addressBookList.count }
+		let row = addressBookTable.selectedRow
+
+		guard addressBookList.indices.contains(row) else {
+			return
+		}
+
+		addressBookList.remove(at: row)
+		applyAddressBookList()
+		selectNearestRow(
+			in: addressBookTable,
+			previousRow: row,
+			remainingCount: addressBookList.count
 		)
 	}
 }

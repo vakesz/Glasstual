@@ -48,7 +48,34 @@ public enum FileTransferSelection: UInt, Sendable {
 	case all
 	case sending
 	case receiving
+
+	/// The transfers this toolbar selection shows.
+	///
+	/// The array controller did this with an `isSender ==` predicate. The
+	/// direction is taken as a projection rather than read off the transfer so
+	/// the rule can be exercised without one.
+	public func shownTransfers<Transfer>(
+		in transfers: [Transfer],
+		isSender: (Transfer) -> Bool
+	) -> [Transfer] {
+		switch self {
+		case .all:
+			transfers
+		case .sending:
+			transfers.filter(isSender)
+		case .receiving:
+			transfers.filter { isSender($0) == false }
+		}
+	}
 }
+
+nonisolated enum FileTransferSection: Hashable, Sendable { // nonisolated: value
+	case transfers
+}
+
+/// Rows are identified by the transfer's `uniqueIdentifier`.
+typealias FileTransferDataSource =
+	NSTableViewDiffableDataSource<FileTransferSection, String>
 
 enum FileTransferDialogConstants {
 	static let receiverHardLimit = 120
@@ -117,7 +144,16 @@ public final class FileTransferDialog: WindowBase,
 	@IBOutlet var clearButton: NSButton!
 	@IBOutlet var navigationControl: NSSegmentedControl!
 	@IBOutlet public var fileTransferTable: BasicTableView!
-	@IBOutlet var fileTransfersController: NSArrayController!
+
+	/// Every transfer the dialog knows about, newest first.
+	///
+	/// The array controller used to hold these, and `arrangedObjects` handed
+	/// back only the ones its filter predicate let through — which is why the
+	/// receiver limit, the Clear button and the maintenance timer all used to
+	/// stop seeing transfers the toolbar had filtered out. The whole set lives
+	/// here and `arrangedFileTransfers` is the part the table draws.
+	var storedFileTransfers: [TDCFileTransferDialogTransferController] = []
+	var transferDataSource: FileTransferDataSource?
 
 	var ipAddressRequest: InternetAddressLookup?
 	var maintenanceTask: Task<Void, Never>?
@@ -136,6 +172,11 @@ public final class FileTransferDialog: WindowBase,
 	private func prepareInitialState() {
 		Bundle.main.loadNibNamed("TDCFileTransferDialog", owner: self, topLevelObjects: nil)
 		fileTransferTable.style = .inset
+
+		let transferDataSource = makeTransferDataSource()
+		self.transferDataSource = transferDataSource
+		fileTransferTable.dataSource = transferDataSource
+
 		prepareTableMenu()
 		installKeyDownEventMonitor()
 		setPreviewsAccepted(true)

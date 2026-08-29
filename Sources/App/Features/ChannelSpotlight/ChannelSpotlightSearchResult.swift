@@ -39,9 +39,18 @@ import CocoaExtensions
 import Foundation
 
 @objc(TDCChannelSpotlightSearchResult)
-public final class ChannelSpotlightSearchResult: NSObject {
+public final class ChannelSpotlightSearchResult: NSObject, Identifiable {
+	/// The channel this row stands for, captured when the row was made.
+	///
+	/// A channel can close while the spotlight is open, so the reference is
+	/// weak — but the identity must not go with it, or the table would lose
+	/// the row it is still drawing.
+	public let id: String
+
 	@objc public private(set) weak var channel: IRCChannel?
-	@objc public private(set) var distance: NSNumber = 0
+	public private(set) var distance = 0.0
+	/// The server the channel belongs to, likewise captured up front.
+	public let clientId: String
 
 	@available(*, unavailable)
 	override public init() {
@@ -50,13 +59,10 @@ public final class ChannelSpotlightSearchResult: NSObject {
 
 	@objc(initWithChannel:)
 	public init(channel: IRCChannel) {
+		id = channel.uniqueIdentifier
+		clientId = channel.associatedClient?.uniqueIdentifier ?? ""
 		self.channel = channel
 		super.init()
-		distance = 0
-	}
-
-	@objc public var clientId: String {
-		channel?.associatedClient?.uniqueIdentifier ?? ""
 	}
 
 	@objc(recalculateDistanceWith:)
@@ -66,11 +72,61 @@ public final class ChannelSpotlightSearchResult: NSObject {
 			return
 		}
 
-		let distanceValue = channel.name.matchScore(
-			against: searchString,
-			lengthPenaltyWeight: 1.0
+		distance = Double(
+			channel.name.matchScore(
+				against: searchString,
+				lengthPenaltyWeight: 1.0
+			)
 		)
+	}
+}
 
-		distance = NSNumber(value: distanceValue)
+/// Which search results the spotlight draws, and in what order.
+///
+/// This was an `NSArrayController` filter predicate (`distance >= 0.5`, plus
+/// `clientId LIKE[c]` when channel navigation is per-server) and a sort
+/// descriptor on `distance`. It is written out here so it can be read and
+/// tested; the table only ever sees the answer.
+public nonisolated enum ChannelSpotlightSearchResults { // nonisolated: value
+	/// The lowest match score worth showing.
+	public static let minimumDistance = 0.5
+
+	/// The rows to draw, best match first.
+	///
+	/// - Parameter clientID: the only server to show channels from, or `nil`
+	///   for every server. An empty string matches only results with no server,
+	///   which is what the predicate did when no client was selected.
+	public static func displayed<Result>(
+		_ results: [Result],
+		restrictedToClient clientID: String?,
+		distance: (Result) -> Double,
+		clientID clientIDOf: (Result) -> String
+	) -> [Result] {
+		let matches = results.enumerated().filter { _, result in
+			guard distance(result) >= minimumDistance else {
+				return false
+			}
+
+			guard let clientID else {
+				return true
+			}
+
+			return clientIDOf(result).caseInsensitiveCompare(clientID) == .orderedSame
+		}
+
+		/* Ties keep the order they arrived in: the row a result lands on is
+		 also its ⌘-number shortcut, so it must not shuffle between redraws. */
+		return matches
+			.sorted { lhs, rhs in
+				let lhsDistance = distance(lhs.element)
+				let rhsDistance = distance(rhs.element)
+
+				if lhsDistance == rhsDistance {
+					return lhs.offset < rhs.offset
+				}
+
+				return lhsDistance > rhsDistance
+			}
+			.map(\.element)
 	}
 }
