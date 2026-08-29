@@ -62,6 +62,7 @@
 		0F7A701D9D2D3256A18728E9 /* IRCStringCatalogMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE35CB6EEB91C3BBF831E9C3 /* IRCStringCatalogMigrationTests.swift */; };
 		0FABA64F695DD34E3FAD3644 /* HistoricLogProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DA908CA829B8856C6C20EA /* HistoricLogProtocols.swift */; };
 		0FF67F1AF6E852D2359F02F9 /* RCMProcessMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A78D97EA705959A7C50703 /* RCMProcessMain.swift */; };
+		1003CD5C0FE07A98C618292A /* LogControllerHistoricLogClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEB7E3CB7FA778DCD4BBAEE /* LogControllerHistoricLogClient.swift */; };
 		102B5FD3CC067473A60D4298 /* TypedPreferenceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2464F20D634DC8B67F1F7EAE /* TypedPreferenceStoreTests.swift */; };
 		1031563286ACAFAAC6E1D66A /* PreferencesPaneInventoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2D011A0FB9F0E8C250F354 /* PreferencesPaneInventoryTests.swift */; };
 		1044C75A0DF523F9E666F2A1 /* IRCSTSPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF93E14C164E48D241E886B /* IRCSTSPolicy.swift */; };
@@ -508,6 +509,7 @@
 		887D78D40487177954D9BF93 /* IRCISupportCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6CCF1C44676320AE6EDF3 /* IRCISupportCorpusTests.swift */; };
 		8A029C878AF847D45BE0F096 /* UserStyleStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 500DF8D2CC86861F3B1062AC /* UserStyleStrings.swift */; };
 		8A0D3B3C24AB3F1AD1468B34 /* TXCMainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 111C2C13E27189FB0DABA108 /* TXCMainMenu.xib */; };
+		8A517ED8CC535A78EA00DA2A /* LogControllerInlineMediaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8E30A14FE902DF60BED4600 /* LogControllerInlineMediaClient.swift */; };
 		8B204A3489121F85ACE28670 /* CaffeinePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4672B5C3FC16EAC34748D686 /* CaffeinePlugin.swift */; };
 		8B274A5E3EA6629FC425DF31 /* ApplicationGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9071637D89EC4436DE9C5561 /* ApplicationGroup.swift */; };
 		8B28885C3AAA7BCE13FBD6A2 /* TPI_ChatFilterExtension.xib in Resources */ = {isa = PBXBuildFile; fileRef = AACED098261E45B24AE71C07 /* TPI_ChatFilterExtension.xib */; };
@@ -1547,6 +1549,7 @@
 		4BBC8E57E6060621D8D5794F /* IRCUserNicknameColorStyleGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUserNicknameColorStyleGenerator.swift; sourceTree = "<group>"; };
 		4BC223B216D31DF324294816 /* MenuCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuCommandTests.swift; sourceTree = "<group>"; };
 		4BE850A92B27DBB6A770546A /* ServerPropertiesSheetProxyAndTLS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerPropertiesSheetProxyAndTLS.swift; sourceTree = "<group>"; };
+		4BEB7E3CB7FA778DCD4BBAEE /* LogControllerHistoricLogClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogControllerHistoricLogClient.swift; sourceTree = "<group>"; };
 		4C102778721895BF3D59E7A2 /* PreferencesAlertPanes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesAlertPanes.swift; sourceTree = "<group>"; };
 		4C5A45481279C2AD898206F1 /* IRCMessageTagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCMessageTagsTests.swift; sourceTree = "<group>"; };
 		4C5D8E0714B630361511B218 /* IRCLinePresentationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCLinePresentationPolicyTests.swift; sourceTree = "<group>"; };
@@ -1867,6 +1870,7 @@
 		A7E8628F9CC9F162433AF8BB /* IRCClientUserTracking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientUserTracking.swift; sourceTree = "<group>"; };
 		A87EFEA668046E1594490F3A /* IRCCapabilityDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCCapabilityDefaults.swift; sourceTree = "<group>"; };
 		A88E517EC84E037633FD0FFD /* IRCClientScriptExecution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientScriptExecution.swift; sourceTree = "<group>"; };
+		A8E30A14FE902DF60BED4600 /* LogControllerInlineMediaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogControllerInlineMediaClient.swift; sourceTree = "<group>"; };
 		A93C76DB2F164192D1844241 /* IRCLineParserCorpusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCLineParserCorpusTests.swift; sourceTree = "<group>"; };
 		A952A700EDF8373931F88881 /* OpenLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenLink.swift; sourceTree = "<group>"; };
 		A96570BA25273316D37CB585 /* BasicTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicTableView.swift; sourceTree = "<group>"; };
@@ -3258,7 +3262,9 @@
 				83B85A24B4B6C254D47C60EE /* IRCFormattingTopicEditor.swift */,
 				88E4DE21DE3D377FB32C06D0 /* LinkParser.swift */,
 				A61B6BC21DF5295BED01D0FC /* LogController.swift */,
+				4BEB7E3CB7FA778DCD4BBAEE /* LogControllerHistoricLogClient.swift */,
 				FC45C726827FAD1E8F1D359F /* LogControllerHistoricLogFile.swift */,
+				A8E30A14FE902DF60BED4600 /* LogControllerInlineMediaClient.swift */,
 				4D71C2906A38F0DD3C0A7C66 /* LogControllerInlineMediaService.swift */,
 				0CC793349BB334068F85ECE6 /* LogControllerOperationQueue.swift */,
 				7BBCC638F12AB1B502EC2921 /* LogControllerRegistry.swift */,
@@ -5750,7 +5756,9 @@
 				8C276694B8A0F396CBFDB76C /* LinkParser.swift in Sources */,
 				E3D801368CA81F3C868EDE57 /* LocalizedByteCount.swift in Sources */,
 				1C0AB3508C528B0C9E5D3C27 /* LogController.swift in Sources */,
+				1003CD5C0FE07A98C618292A /* LogControllerHistoricLogClient.swift in Sources */,
 				A45B92C59415D108268335C8 /* LogControllerHistoricLogFile.swift in Sources */,
+				8A517ED8CC535A78EA00DA2A /* LogControllerInlineMediaClient.swift in Sources */,
 				0B2850FBC827C2950C93BE86 /* LogControllerInlineMediaService.swift in Sources */,
 				62B9D4EE69378DDED3CEDD33 /* LogControllerOperationQueue.swift in Sources */,
 				BAF98C068459363CE2B09C60 /* LogControllerRegistry.swift in Sources */,
