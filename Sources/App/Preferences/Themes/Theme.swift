@@ -519,11 +519,11 @@ private final class ThemeVariety {
 	private static func loadSettings(from url: URL) -> ThemeSettingValues {
 		guard let data = try? Data(contentsOf: url),
 		      let propertyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
-		      let settings = propertyList as? [String: Any]
+		      let settings = [String: PropertyListValue](propertyList: propertyList)
 		else {
 			return [:]
 		}
-		return ThemeSettingValues(rawValues: settings)
+		return ThemeSettingValues(propertyList: settings)
 	}
 
 	private static func settingsURL(for url: URL) -> URL {
@@ -664,9 +664,7 @@ public final class ThemeSettings: NSObject {
 			windowIsDark: underlyingWindowColorIsDark
 		)
 
-		let versions = ThemeTemplateVersionValues(
-			rawValues: values.value(for: .templateEngineVersions, as: [String: Any].self) ?? [:]
-		)
+		let versions: ThemeTemplateVersionValues = values.nested(for: .templateEngineVersions) ?? [:]
 		let applicationVersion = ApplicationInfo.applicationVersionShort()
 		// A theme may target any application version, so this key remains data-driven.
 		if let version = Self.compatibleTemplateVersion(versions.rawValues[applicationVersion]) ??
@@ -713,10 +711,9 @@ public final class ThemeSettings: NSObject {
 	}
 
 	private static func font(forKey key: ThemeSettingKey, in values: ThemeSettingValues) -> NSFont? {
-		guard let rawFontValues = values.value(for: key, as: [String: Any].self) else {
+		guard let fontValues: ThemeFontSettingValues = values.nested(for: key) else {
 			return nil
 		}
-		let fontValues = ThemeFontSettingValues(rawValues: rawFontValues)
 		guard let fontName = fontValues.value(for: .name, as: String.self),
 		      let fontSize = fontValues.value(for: .size, as: Double.self),
 		      fontSize >= 5

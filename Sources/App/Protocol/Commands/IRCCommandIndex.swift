@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 public final class CommandIndex: NSObject {
@@ -252,14 +253,14 @@ nonisolated struct CommandIndexTables: Sendable { // nonisolated: value
 			local: commandData(from: localValues).mapValues { data in
 				LocalEntry(
 					index: unsignedIntegerValue(data[Key.indexValue]),
-					isDeveloperModeOnly: boolValue(data[Key.developerModeOnly]),
-					arguments: data[Key.arguments] as? String
+					isDeveloperModeOnly: data[Key.developerModeOnly]?.boolean ?? false,
+					arguments: data[Key.arguments]?.string
 				)
 			},
 			remote: commandData(from: remoteValues).mapValues { data in
 				RemoteEntry(
 					index: unsignedIntegerValue(data[Key.indexValue]),
-					outgoingColonIndex: integerValue(data[Key.outgoingColonIndex])
+					outgoingColonIndex: data[Key.outgoingColonIndex]?.integer ?? 0
 				)
 			}
 		)
@@ -267,26 +268,20 @@ nonisolated struct CommandIndexTables: Sendable { // nonisolated: value
 
 	private static let reservedKey = "Reserved Information"
 
-	private static func commandData(from values: [String: Any]?) -> [String: [String: Any]] {
+	private static func commandData(
+		from values: [String: PropertyListValue]?
+	) -> [String: [String: PropertyListValue]] {
 		guard var values else {
 			return [:]
 		}
 
 		values.removeValue(forKey: reservedKey)
 
-		return values.compactMapValues { $0 as? [String: Any] }
+		return values.compactMapValues(\.dictionary)
 	}
 
-	private static func boolValue(_ value: Any?) -> Bool {
-		(value as? NSNumber)?.boolValue ?? false
-	}
-
-	private static func integerValue(_ value: Any?) -> Int {
-		(value as? NSNumber)?.intValue ?? 0
-	}
-
-	private static func unsignedIntegerValue(_ value: Any?) -> UInt {
-		(value as? NSNumber)?.uintValue ?? 0
+	private static func unsignedIntegerValue(_ value: PropertyListValue?) -> UInt {
+		value?.integer.map(UInt.init(clamping:)) ?? 0
 	}
 
 	private enum Key {

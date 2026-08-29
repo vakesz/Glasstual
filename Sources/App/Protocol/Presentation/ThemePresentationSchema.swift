@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 nonisolated struct StringSchemaValues<SchemaKey: Hashable & // nonisolated: value
@@ -55,6 +56,11 @@ nonisolated struct StringSchemaValues<SchemaKey: Hashable & // nonisolated: valu
 		self.rawValues = rawValues
 	}
 
+	/// The values a property list on disk carries, widened once on the way in.
+	init(propertyList values: [String: PropertyListValue]) {
+		rawValues = values.propertyListObject
+	}
+
 	init(dictionaryLiteral elements: (SchemaKey, Any)...) {
 		rawValues = Dictionary(uniqueKeysWithValues: elements.map { ($0.rawValue, $1) })
 	}
@@ -66,6 +72,19 @@ nonisolated struct StringSchemaValues<SchemaKey: Hashable & // nonisolated: valu
 
 	func value<Value>(for key: SchemaKey, as _: Value.Type = Value.self) -> Value? {
 		rawValues[key.rawValue] as? Value
+	}
+
+	/// A nested container under `key`, read through its own key enumeration
+	/// rather than as a dictionary the caller has to pick apart.
+	func nested<NestedKey>(
+		_: NestedKey.Type = NestedKey.self,
+		for key: SchemaKey
+	) -> StringSchemaValues<NestedKey>? {
+		guard let dictionary = rawValues[key.rawValue] as? [String: Any] else {
+			return nil
+		}
+
+		return StringSchemaValues<NestedKey>(rawValues: dictionary)
 	}
 
 	mutating func merge(_ other: Self) {

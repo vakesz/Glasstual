@@ -713,7 +713,7 @@ public extension ThemeController {
 		ResourceManager.dictionary(
 			fromResources: "StaticStore",
 			key: "TPCThemeController Remapped Themes"
-		)?[themeName] as? String
+		)?[themeName]?.string
 	}
 
 	static func buildFilename(

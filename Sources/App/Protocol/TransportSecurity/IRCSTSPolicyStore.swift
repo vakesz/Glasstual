@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 public typealias IRCSTSPolicyStore = STSPolicyStore
@@ -166,7 +167,7 @@ public final class STSPolicyStore: NSObject {
 
 		for (host, value) in stored {
 			guard
-				let dictionary = value as? [String: Any],
+				let dictionary = [String: PropertyListValue](propertyList: value),
 				let policy = STSPolicy(dictionary: dictionary),
 				policy.isExpired == false
 			else {
@@ -182,7 +183,7 @@ public final class STSPolicyStore: NSObject {
 			return
 		}
 
-		let stored = policies.mapValues(\.dictionaryValue)
+		let stored = policies.mapValues { $0.dictionaryValue.propertyListObject }
 
 		userDefaults.set(stored, forKey: IRCSTSPolicyStoreDefaultsKey)
 	}
