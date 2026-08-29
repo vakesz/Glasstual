@@ -21,7 +21,7 @@ import GlasstualPluginKit
  shared formatter matches that exactly, but servers that leave the fractional
  part out are common. Refusing their timestamp files a whole replayed
  scrollback at the moment it arrived instead of when it was said. */
-private nonisolated let serverTimeWholeSecondsFormatter: DateFormatter = {
+private nonisolated let serverTimeWholeSecondsFormatter: DateFormatter = { // nonisolated: let
 	let dateFormatter = DateFormatter()
 	dateFormatter.locale = Locale(identifier: "en_US_POSIX")
 	dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
@@ -31,7 +31,7 @@ private nonisolated let serverTimeWholeSecondsFormatter: DateFormatter = {
 
 /// A `time` (or bouncer `t`) tag read as a date, or `nil` when it carries no
 /// timestamp the client can act on.
-private nonisolated func serverTimeDate(from value: String) -> Date? {
+private nonisolated func serverTimeDate(from value: String) -> Date? { // nonisolated: pure
 	let numeric = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: "."))
 
 	guard value.unicodeScalars.allSatisfy(numeric.contains) == false else {
@@ -52,7 +52,7 @@ private nonisolated func serverTimeDate(from value: String) -> Date? {
  treat it as read-only; the two places that need a changed message start from
  `duplicate()`, which never touches the receiver. */
 @objc(IRCMessage)
-public final nonisolated class Message: NSObject {
+public final nonisolated class Message: NSObject { // nonisolated: value
 	public internal(set) var sender = Prefix()
 	public internal(set) var command = ""
 	public internal(set) var commandNumeric: UInt = 0

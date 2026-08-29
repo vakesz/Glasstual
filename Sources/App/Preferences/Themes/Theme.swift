@@ -74,7 +74,7 @@ private struct MonitoringResult: OptionSet {
 @objc(TPCTheme)
 @objcMembers
 public final class Theme: NSObject {
-	private nonisolated static let logger = Logger(
+	private nonisolated static let logger = Logger( // nonisolated: let
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "Theme"
 	)
@@ -88,7 +88,7 @@ public final class Theme: NSObject {
 	fileprivate var globalVariety: ThemeVariety!
 	fileprivate var variety: ThemeVariety?
 	private var varieties: [ThemeVariety] = []
-	private nonisolated let templateStore = ThemeTemplateStore()
+	private nonisolated let templateStore = ThemeTemplateStore() // nonisolated: let
 	private var fileSystemMonitorTask: Task<Void, Never>?
 
 	public private(set) var cssFiles: [URL] = []
@@ -151,7 +151,7 @@ public final class Theme: NSObject {
 		_ = chooseBestVariety()
 	}
 
-	public nonisolated func template(withLineType type: TVCLogLineType) -> Template? {
+	public nonisolated func template(withLineType type: TVCLogLineType) -> Template? { // nonisolated: pure
 		guard let typeString = LogLine.string(for: type) else {
 			return nil
 		}
@@ -168,7 +168,7 @@ public final class Theme: NSObject {
 		return loadTemplate(named: fallbackName, logErrors: true)
 	}
 
-	public nonisolated func template(withName name: String) -> Template? {
+	public nonisolated func template(withName name: String) -> Template? { // nonisolated: pure
 		loadTemplate(named: name, logErrors: true)
 	}
 
@@ -454,9 +454,9 @@ public final class Theme: NSObject {
 
 	// MARK: Templates
 
-	private nonisolated static let templateLineTypes: [String: String] =
+	private nonisolated static let templateLineTypes: [String: String] = // nonisolated: let
 		ResourceManager
-			.dictionary(fromResources: ThemeResourcePath.templateLineTypes.rawValue) as? [String: String] ?? [:]
+		.dictionary(fromResources: ThemeResourcePath.templateLineTypes.rawValue) as? [String: String] ?? [:]
 
 	private var applicationTemplateRepositoryURL: URL {
 		PathInfo.applicationResourcesURL
@@ -464,7 +464,7 @@ public final class Theme: NSObject {
 			.appending(path: "Version \(settings.templateEngineVersion)", directoryHint: .isDirectory)
 	}
 
-	private nonisolated func loadTemplate(named name: String, logErrors: Bool) -> Template? {
+	private nonisolated func loadTemplate(named name: String, logErrors: Bool) -> Template? { // nonisolated: pure
 		templateStore.template(named: name) { error in
 			guard logErrors else {
 				return

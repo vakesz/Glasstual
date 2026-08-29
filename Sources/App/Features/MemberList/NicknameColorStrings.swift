@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum NicknameColorStrings {
+nonisolated enum NicknameColorStrings { // nonisolated: value
 	static var colorPickerAccessibilityHint: String {
 		String(localized: .TDCNicknameColorSheet.colorPickerAccessibilityHint)
 	}

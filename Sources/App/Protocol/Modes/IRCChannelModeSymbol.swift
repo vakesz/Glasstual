@@ -42,7 +42,7 @@ import Foundation
 /// Which letters exist is the server's to decide, so this carries no cases of
 /// its own; it exists so that a mode is not passed around as a `String` that
 /// might hold none, one or several of them.
-public nonisolated struct ChannelModeSymbol: Hashable, Sendable, CustomStringConvertible {
+public nonisolated struct ChannelModeSymbol: Hashable, Sendable, CustomStringConvertible { // nonisolated: value
 	public let character: Character
 
 	public init(_ character: Character) {
@@ -70,7 +70,7 @@ public nonisolated struct ChannelModeSymbol: Hashable, Sendable, CustomStringCon
 /// the ordering was maintained by rebuilding the string at the one site that
 /// added a mode. The order comes from `PREFIX`, so it is the server's, and the
 /// type keeps it.
-public nonisolated struct ChannelModeSymbolSet: Hashable, Sendable {
+public nonisolated struct ChannelModeSymbolSet: Hashable, Sendable { // nonisolated: value
 	private var symbols: [ChannelModeSymbol]
 
 	public init() {
@@ -126,19 +126,19 @@ public nonisolated struct ChannelModeSymbolSet: Hashable, Sendable {
 	}
 }
 
-nonisolated extension ChannelModeSymbolSet: Sequence {
+nonisolated extension ChannelModeSymbolSet: Sequence { // nonisolated: value
 	public func makeIterator() -> IndexingIterator<[ChannelModeSymbol]> {
 		symbols.makeIterator()
 	}
 }
 
-nonisolated extension ChannelModeSymbolSet: ExpressibleByStringLiteral {
+nonisolated extension ChannelModeSymbolSet: ExpressibleByStringLiteral { // nonisolated: value
 	public init(stringLiteral value: String) {
 		self.init(letters: value)
 	}
 }
 
-nonisolated extension ChannelModeSymbolSet: CustomStringConvertible {
+nonisolated extension ChannelModeSymbolSet: CustomStringConvertible { // nonisolated: value
 	public var description: String {
 		letters
 	}

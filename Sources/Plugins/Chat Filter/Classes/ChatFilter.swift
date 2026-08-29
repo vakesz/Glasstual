@@ -50,7 +50,7 @@ enum ChatFilterAgeComparator: UInt {
 	case greaterThan
 }
 
-nonisolated struct ChatFilterEvent: OptionSet {
+nonisolated struct ChatFilterEvent: OptionSet { // nonisolated: value
 	let rawValue: UInt
 
 	static let numeric = Self(rawValue: 1 << 0)
@@ -355,7 +355,7 @@ nonisolated class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 }
 
 @objc(TPI_ChatFilterMutable)
-final nonisolated class MutableChatFilter: ChatFilter {
+final nonisolated class MutableChatFilter: ChatFilter { // nonisolated: value
 	@objc override dynamic var filterIgnoreContent: Bool {
 		get { ignoreContentStorage }
 		set { ignoreContentStorage = newValue }

@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum MessageMenuStrings {
+nonisolated enum MessageMenuStrings { // nonisolated: value
 	static var emojiPlaceholder: String {
 		String(localized: .TXMenuController.messageContextMenuRepliesEmoji)
 	}

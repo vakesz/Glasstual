@@ -15,7 +15,7 @@ import Foundation
 /// User-visible byte counts are formatted here rather than interpolated as
 /// raw integers, which keeps the String Catalog entries down to a plain
 /// `%@` placeholder that every locale can position freely.
-nonisolated enum LocalizedByteCount {
+nonisolated enum LocalizedByteCount { // nonisolated: value
 	static func formatted(_ byteCount: UInt64) -> String {
 		Int64(clamping: byteCount).formatted(.byteCount(style: .file))
 	}

@@ -13,13 +13,13 @@
 import Foundation
 import os
 
-private nonisolated let addressBookMatcherLogger = Logger(
+private nonisolated let addressBookMatcherLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCAddressBook"
 )
 
 /// One element of a compiled hostmask glob.
-nonisolated enum IRCHostmaskGlobToken: Equatable {
+nonisolated enum IRCHostmaskGlobToken: Equatable { // nonisolated: value
 	case literal(Unicode.Scalar)
 	/// `?`
 	case anyCharacter
@@ -33,7 +33,7 @@ nonisolated enum IRCHostmaskGlobToken: Equatable {
 /// exponentially backtrackable: six wildcards against a 70 character
 /// hostmask took seconds, nine took minutes, on the main thread, against a
 /// server-controlled subject. This matcher is linear in the worst case.
-nonisolated enum IRCHostmaskGlob {
+nonisolated enum IRCHostmaskGlob { // nonisolated: value
 	/// `\` escapes the character that follows it, so a mask can contain a
 	/// literal `*` or `?`; anywhere else it is an ordinary character.
 	static func compile(_ hostmask: String) -> [IRCHostmaskGlobToken] {
@@ -167,7 +167,7 @@ nonisolated enum IRCHostmaskGlob {
 }
 
 @objc(IRCAddressBookEntryMatcher)
-public final nonisolated class AddressBookEntryMatcher: NSObject {
+public final nonisolated class AddressBookEntryMatcher: NSObject { // nonisolated: value
 	@objc public let regularExpressionPattern: String
 	@objc public let trackingNickname: String?
 

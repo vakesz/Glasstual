@@ -38,7 +38,8 @@
 
 import Foundation
 
-nonisolated struct StringSchemaValues<SchemaKey: Hashable & RawRepresentable>: ExpressibleByDictionaryLiteral
+nonisolated struct StringSchemaValues<SchemaKey: Hashable & // nonisolated: value
+	RawRepresentable>: ExpressibleByDictionaryLiteral
 	where SchemaKey.RawValue == String
 {
 	private(set) var rawValues: [String: Any]

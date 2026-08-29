@@ -44,7 +44,9 @@ import Foundation
 /// crossing a process boundary with no class allowlist, so that the service
 /// could read eight values. This carries those eight and nothing else.
 @objc(ICLInlineContentServicePreferences)
-public final nonisolated class InlineContentServicePreferences: NSObject, NSSecureCoding, Sendable {
+public final nonisolated class InlineContentServicePreferences: NSObject, NSSecureCoding, // nonisolated: value
+	Sendable
+{
 	@objc public let maximumFilesize: UInt
 	@objc public let scalingWidth: UInt
 	@objc public let maximumHeight: UInt

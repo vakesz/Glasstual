@@ -42,7 +42,7 @@ import Foundation
 /// IRC has no handshake that names the software on the other end, so
 /// recognising one means matching a string it sends. Those strings are
 /// gathered here rather than repeated at each site that tests for one.
-nonisolated enum IRCServerQuirks {
+nonisolated enum IRCServerQuirks { // nonisolated: value
 	/// ZNC, the bouncer Glasstual has specific support for.
 	enum ZNC {
 		/// The server name ZNC introduces itself with.

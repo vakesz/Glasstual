@@ -69,7 +69,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	/** The ISUPPORT prefix and case-mapping values, republished by `supportInfo`
 	 whenever they change. Channel members rank, compare and mark themselves on
 	 the printing queue and must not read the live table for them. */
-	nonisolated let userPrefixes = Mutex(IRCUserPrefixTable())
+	nonisolated let userPrefixes = Mutex(IRCUserPrefixTable()) // nonisolated: let
 	@objc public dynamic var cachedHighlights: [HighlightLogEntry] = []
 	/// The endpoint this connection selected, while it lasts.
 	public var server: Server?
@@ -234,9 +234,9 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 
 	 Behind a lock because the preference values are read from the printing and
 	 connection queues while the main actor republishes them. */
-	private nonisolated let environmentStorage: Mutex<ClientEnvironment>
+	private nonisolated let environmentStorage: Mutex<ClientEnvironment> // nonisolated: let
 
-	nonisolated var environment: ClientEnvironment {
+	nonisolated var environment: ClientEnvironment { // nonisolated: pure
 		get { environmentStorage.withLock { $0 } }
 		set { environmentStorage.withLock { $0 = newValue } }
 	}
@@ -272,7 +272,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 here instead whenever one of the values it names changes. */
 	private let descriptionSnapshot = Mutex("<IRCClient>")
 
-	override public nonisolated var description: String {
+	override public nonisolated var description: String { // nonisolated: pure
 		descriptionSnapshot.withLock { $0 }
 	}
 

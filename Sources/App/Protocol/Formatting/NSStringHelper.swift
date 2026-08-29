@@ -15,11 +15,11 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 
-private nonisolated func isBase10Numeric(_ character: unichar) -> Bool {
+private nonisolated func isBase10Numeric(_ character: unichar) -> Bool { // nonisolated: pure
 	character >= 0x30 && character <= 0x39
 }
 
-private nonisolated let defaultHostmaskNicknameLength = 50
+private nonisolated let defaultHostmaskNicknameLength = 50 // nonisolated: let
 
 @MainActor
 private func maximumHostmaskNicknameLength(on client: IRCClient?) -> Int {
@@ -32,7 +32,7 @@ private func maximumHostmaskNicknameLength(on client: IRCClient?) -> Int {
 }
 
 /// A colour named by an IRC colour control code.
-public nonisolated enum IRCColor: Sendable {
+public nonisolated enum IRCColor: Sendable { // nonisolated: value
 	/// An mIRC palette index.
 	case palette(Int)
 	/// A literal colour from a hexadecimal control code.
@@ -48,14 +48,14 @@ public nonisolated enum IRCColor: Sendable {
 }
 
 /// What one colour control code says.
-public nonisolated struct IRCColorComponents: Sendable {
+public nonisolated struct IRCColorComponents: Sendable { // nonisolated: value
 	public let foreground: IRCColor?
 	public let background: IRCColor?
 	/// How many characters of the control code were read.
 	public let charactersConsumed: Int
 }
 
-public nonisolated extension NSString {
+public nonisolated extension NSString { // nonisolated: pure
 	var isValidInternetAddress: Bool {
 		guard length > 0 else {
 			return false

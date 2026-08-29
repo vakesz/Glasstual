@@ -14,7 +14,7 @@ import AppKit
 import os
 import UserNotifications
 
-private nonisolated let onboardingLogger = Logger(
+private nonisolated let onboardingLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "Onboarding"
 )

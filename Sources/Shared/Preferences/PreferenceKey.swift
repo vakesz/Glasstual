@@ -47,9 +47,9 @@ import Foundation
  when the object cannot represent the type at all. That `nil` is what lets an
  import reject a value instead of silently reading zero. */
 public protocol PreferenceValue: Equatable, Sendable {
-	nonisolated static func preferenceValue(from object: Any) -> Self?
+	nonisolated static func preferenceValue(from object: Any) -> Self? // nonisolated: pure
 
-	nonisolated var preferenceObject: Any { get }
+	nonisolated var preferenceObject: Any { get } // nonisolated: pure
 }
 
 /** Enumerations whose raw value is the integer stored in the preference.
@@ -58,7 +58,7 @@ public protocol PreferenceValue: Equatable, Sendable {
  key's declared default rather than trapping. */
 public protocol PreferenceEnum: PreferenceValue, RawRepresentable where RawValue == UInt {}
 
-public nonisolated extension PreferenceEnum {
+public nonisolated extension PreferenceEnum { // nonisolated: value
 	static func preferenceValue(from object: Any) -> Self? {
 		guard let raw = UInt.preferenceValue(from: object) else {
 			return nil
@@ -74,7 +74,7 @@ public nonisolated extension PreferenceEnum {
 
 /// A number written by `defaults write`, or carried in a hand-edited plist,
 /// arrives as a string; anything that is not a number at all is a reject.
-private nonisolated func preferenceNumber(from object: Any) -> NSNumber? {
+private nonisolated func preferenceNumber(from object: Any) -> NSNumber? { // nonisolated: pure
 	if let number = object as? NSNumber {
 		return number
 	}
@@ -90,7 +90,7 @@ private nonisolated func preferenceNumber(from object: Any) -> NSNumber? {
 	return Double(string).map(NSNumber.init(value:))
 }
 
-nonisolated extension Bool: PreferenceValue {
+nonisolated extension Bool: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> Bool? {
 		if let number = object as? NSNumber {
 			return number.boolValue
@@ -108,7 +108,7 @@ nonisolated extension Bool: PreferenceValue {
 	}
 }
 
-nonisolated extension Int: PreferenceValue {
+nonisolated extension Int: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> Int? {
 		preferenceNumber(from: object)?.intValue
 	}
@@ -118,7 +118,7 @@ nonisolated extension Int: PreferenceValue {
 	}
 }
 
-nonisolated extension UInt: PreferenceValue {
+nonisolated extension UInt: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> UInt? {
 		preferenceNumber(from: object)?.uintValue
 	}
@@ -128,7 +128,7 @@ nonisolated extension UInt: PreferenceValue {
 	}
 }
 
-nonisolated extension UInt16: PreferenceValue {
+nonisolated extension UInt16: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> UInt16? {
 		preferenceNumber(from: object)?.uint16Value
 	}
@@ -138,7 +138,7 @@ nonisolated extension UInt16: PreferenceValue {
 	}
 }
 
-nonisolated extension Double: PreferenceValue {
+nonisolated extension Double: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> Double? {
 		preferenceNumber(from: object)?.doubleValue
 	}
@@ -148,7 +148,7 @@ nonisolated extension Double: PreferenceValue {
 	}
 }
 
-nonisolated extension String: PreferenceValue {
+nonisolated extension String: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> String? {
 		object as? String
 	}
@@ -158,7 +158,7 @@ nonisolated extension String: PreferenceValue {
 	}
 }
 
-nonisolated extension Data: PreferenceValue {
+nonisolated extension Data: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> Data? {
 		object as? Data
 	}
@@ -168,7 +168,7 @@ nonisolated extension Data: PreferenceValue {
 	}
 }
 
-nonisolated extension Array: PreferenceValue where Element: PreferenceValue {
+nonisolated extension Array: PreferenceValue where Element: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> [Element]? {
 		guard let objects = object as? [Any] else {
 			return nil
@@ -198,7 +198,7 @@ nonisolated extension Array: PreferenceValue where Element: PreferenceValue {
 // MARK: - Keys
 
 /// Which defaults database a preference lives in.
-public nonisolated enum PreferenceStorage: Sendable {
+public nonisolated enum PreferenceStorage: Sendable { // nonisolated: value
 	/// The application-group container shared with the XPC services.
 	case container
 	/// `UserDefaults.standard`, for keys AppKit or a vendored library reads out
@@ -206,7 +206,7 @@ public nonisolated enum PreferenceStorage: Sendable {
 	case standard
 }
 
-public nonisolated struct PreferenceTraits: OptionSet, Sendable {
+public nonisolated struct PreferenceTraits: OptionSet, Sendable { // nonisolated: value
 	public let rawValue: UInt
 
 	public init(rawValue: UInt) {
@@ -223,18 +223,18 @@ public nonisolated struct PreferenceTraits: OptionSet, Sendable {
 
 /// The type-erased face of a declaration, for registration and cataloguing.
 public protocol AnyPreferenceKey: Sendable {
-	nonisolated var name: String { get }
-	nonisolated var storage: PreferenceStorage { get }
-	nonisolated var traits: PreferenceTraits { get }
+	nonisolated var name: String { get } // nonisolated: pure
+	nonisolated var storage: PreferenceStorage { get } // nonisolated: pure
+	nonisolated var traits: PreferenceTraits { get } // nonisolated: pure
 
 	/// The registration-domain entry, or `nil` for an unregistered key.
-	nonisolated var registeredDefault: Any? { get }
+	nonisolated var registeredDefault: Any? { get } // nonisolated: pure
 
 	/// Validates and coerces an imported object, or returns `nil` to reject it.
-	nonisolated func coerce(_ object: Any) -> Any?
+	nonisolated func coerce(_ object: Any) -> Any? // nonisolated: pure
 }
 
-public nonisolated extension AnyPreferenceKey {
+public nonisolated extension AnyPreferenceKey { // nonisolated: value
 	var isCatalogued: Bool {
 		traits.contains(.uncatalogued) == false
 	}
@@ -247,7 +247,7 @@ public nonisolated extension AnyPreferenceKey {
  declarations, so a key cannot exist in the code without existing in the
  registration domain — which is what removes the force-unwrapped reads that used
  to depend on a plist staying in sync by hand. */
-public nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKey {
+public nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKey { // nonisolated: value
 	public let name: String
 	public let defaultValue: Value
 	public let storage: PreferenceStorage
@@ -278,8 +278,8 @@ public nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKe
  writes it — a client list, a policy dictionary. It is declared here so the key
  is catalogued and registered like any other; decoding stays with that
  subsystem. */
-public nonisolated struct UntypedPreferenceKey: AnyPreferenceKey {
-	public nonisolated enum RegisteredDefault: Sendable {
+public nonisolated struct UntypedPreferenceKey: AnyPreferenceKey { // nonisolated: value
+	public enum RegisteredDefault: Sendable {
 		case none
 		case emptyDictionary
 		case emptyArray
@@ -322,8 +322,8 @@ public nonisolated struct UntypedPreferenceKey: AnyPreferenceKey {
 /** A family of keys sharing a prefix or suffix — per-notification settings,
  per-window frames, per-theme setting stores. The individual names are made at
  runtime, so the catalogue matches them by pattern. */
-public nonisolated struct PreferenceKeyFamily: Sendable {
-	public nonisolated enum Match: UInt, Sendable {
+public nonisolated struct PreferenceKeyFamily: Sendable { // nonisolated: value
+	public enum Match: UInt, Sendable {
 		case exact = 0
 		case prefix = 1
 		case suffix = 2
@@ -360,11 +360,11 @@ public nonisolated struct PreferenceKeyFamily: Sendable {
 }
 
 /// Namespace for the preference declarations, grouped by area.
-public nonisolated enum Preferences {}
+public nonisolated enum Preferences {} // nonisolated: value
 
 // MARK: - Typed access
 
-public nonisolated extension TextualUserDefaults {
+public nonisolated extension TextualUserDefaults { // nonisolated: pure
 	/// The defaults database a declaration is stored in.
 	func store(for storage: PreferenceStorage) -> UserDefaults {
 		switch storage {

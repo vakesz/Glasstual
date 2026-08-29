@@ -40,13 +40,13 @@ import Synchronization
 	case quiet = 3
 }
 
-@objc public nonisolated enum IRCISupportInfoCaseMapping: UInt, Sendable {
+@objc public nonisolated enum IRCISupportInfoCaseMapping: UInt, Sendable { // nonisolated: value
 	case rfc1459 = 0
 	case strictRFC1459 = 1
 	case ascii = 2
 }
 
-nonisolated enum IRCISupportUserModes {
+nonisolated enum IRCISupportUserModes { // nonisolated: value
 	static let highestPrefixRank: UInt = 100
 }
 
@@ -62,18 +62,18 @@ enum ISupportValue: Sendable, Equatable {
 
 /// The two prefix modes every server is assumed to have until it says
 /// otherwise.
-private nonisolated let defaultUserModePrefixPairs: [(modeSymbol: String, character: String)] = [
+private nonisolated let defaultUserModePrefixPairs: [(modeSymbol: String, character: String)] = [ // nonisolated: let
 	(modeSymbol: "o", character: "@"), (modeSymbol: "v", character: "+"),
 ]
 
-private nonisolated let defaultChannelModeKinds: [Character: ChannelModeKind] = [
+private nonisolated let defaultChannelModeKinds: [Character: ChannelModeKind] = [ // nonisolated: let
 	"o": .userPrefix, "v": .userPrefix,
 ]
 
 /** The ISUPPORT values a channel member needs in order to rank and mark itself.
  Members are ranked, compared and rendered off the main actor, so the client
  republishes these as a value rather than exposing the live table. */
-nonisolated struct IRCUserPrefixTable: Sendable {
+nonisolated struct IRCUserPrefixTable: Sendable { // nonisolated: value
 	/// Mode symbols in the order the server ranked them, highest first.
 	var modeSymbols = ["o", "v"]
 	/// The prefix character for the mode symbol at the same index.

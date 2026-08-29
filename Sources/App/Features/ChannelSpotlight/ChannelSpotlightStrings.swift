@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum ChannelSpotlightStrings {
+nonisolated enum ChannelSpotlightStrings { // nonisolated: value
 	static var noResults: String {
 		String(localized: .TDCChannelSpotlightController.noResults)
 	}

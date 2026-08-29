@@ -41,7 +41,7 @@ import GlasstualPluginKit
 
 /** Who sent a message: either a user (nickname!username@address) or the server
  itself. A plain value — callers that need to change a field copy and assign. */
-public nonisolated struct Prefix: Hashable, Sendable {
+public nonisolated struct Prefix: Hashable, Sendable { // nonisolated: value
 	public var isServer: Bool
 	public var hostmask: String
 	public var nickname: String

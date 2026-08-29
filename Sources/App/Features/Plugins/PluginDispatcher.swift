@@ -21,7 +21,7 @@ import GlasstualPluginKit
 /// to hand across it. Nothing is built until a plugin has actually subscribed
 /// to the event, because building a `PluginClient` walks the whole channel list.
 @objc(THOPluginDispatcher)
-public final nonisolated class PluginDispatcher: NSObject {
+public final nonisolated class PluginDispatcher: NSObject { // nonisolated: value
 	/// Holds a rendered message between the render pass and the JavaScript
 	/// callback that reports the line has appeared. Entries are evicted as they
 	/// are dequeued; a line that is never dequeued ages out with the cache.

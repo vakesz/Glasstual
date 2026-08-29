@@ -54,7 +54,7 @@ public extension Notification.Name {
 
 public typealias LogControllerPrintOperationCompletion = (LogControllerPrintOperationContext) -> Void
 
-private nonisolated let logControllerLogger = Logger(
+private nonisolated let logControllerLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogController"
 )
@@ -101,7 +101,7 @@ public final class LogController: NSObject {
 	public private(set) var oldestLineNumber: String?
 	public private(set) var newestLineNumber: String?
 
-	private nonisolated let sharedState = Mutex(LogControllerSharedState())
+	private nonisolated let sharedState = Mutex(LogControllerSharedState()) // nonisolated: let
 	private var terminating = false
 	private var historyLoadedForFirstTime = false
 	private var reloadingHistory = false
@@ -126,19 +126,19 @@ public final class LogController: NSObject {
 	 cancellation — the pipeline drops the rest asynchronously. */
 	private var renderGeneration = 0
 
-	public nonisolated var associatedClient: IRCClient! {
+	public nonisolated var associatedClient: IRCClient! { // nonisolated: pure
 		sharedState.withLock { $0.client }
 	}
 
-	public nonisolated var associatedChannel: IRCChannel? {
+	public nonisolated var associatedChannel: IRCChannel? { // nonisolated: pure
 		sharedState.withLock { $0.channel }
 	}
 
-	private nonisolated var associatedItem: IRCTreeItem? {
+	private nonisolated var associatedItem: IRCTreeItem? { // nonisolated: pure
 		sharedState.withLock { $0.channel ?? $0.client }
 	}
 
-	public nonisolated var uniqueIdentifier: String {
+	public nonisolated var uniqueIdentifier: String { // nonisolated: pure
 		sharedState.withLock { $0.uniqueIdentifier }
 	}
 
@@ -414,7 +414,7 @@ public final class LogController: NSObject {
 
 	/// `IRCChannel` publishes topic changes from a property observer that is not
 	/// isolated, so hop before touching any of the controller's state.
-	public nonisolated func setTopic(_ topic: String?) {
+	public nonisolated func setTopic(_ topic: String?) { // nonisolated: pure
 		Task { @MainActor in
 			self.setTopicNow(topic)
 		}
@@ -709,7 +709,7 @@ public extension LogController {
 		evaluateFunctionNow("_InlineMediaLoader.processPayload", arguments: [payload.javaScriptObject])
 	}
 
-	nonisolated func processingInlineMediaPayload(
+	nonisolated func processingInlineMediaPayload( // nonisolated: pure
 		_ payload: InlineContentPayload,
 		failedWithError error: Error
 	) {

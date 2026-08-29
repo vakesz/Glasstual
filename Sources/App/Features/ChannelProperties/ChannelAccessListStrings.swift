@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum ChannelAccessListStrings {
+nonisolated enum ChannelAccessListStrings { // nonisolated: value
 	static func heading(for entryType: ChannelBanListEntryType, channelName: String) -> String {
 		switch entryType {
 		case .ban:

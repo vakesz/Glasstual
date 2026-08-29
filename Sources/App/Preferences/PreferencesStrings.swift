@@ -18,7 +18,7 @@ enum PreferencesThemeOverride: Sendable {
 	case timestampFormat
 }
 
-nonisolated enum PreferencesStrings {
+nonisolated enum PreferencesStrings { // nonisolated: value
 	static var accessibilityTitle: String {
 		String(localized: .TDCPreferencesController.accessibilityLabelSettings)
 	}

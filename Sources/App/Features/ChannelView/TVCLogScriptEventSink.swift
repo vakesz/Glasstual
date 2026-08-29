@@ -424,38 +424,38 @@ extension TVCLogScriptEventSink {
 	]
 
 	/// The first `count` arguments must be strings; every later one a number.
-	private nonisolated static func leadingStrings(_ count: Int) -> (Int, Any) -> Bool {
+	private nonisolated static func leadingStrings(_ count: Int) -> (Int, Any) -> Bool { // nonisolated: pure
 		{ index, value in index < count ? value is String : value is NSNumber }
 	}
 
-	private nonisolated static func isString(_: Int, _ value: Any) -> Bool {
+	private nonisolated static func isString(_: Int, _ value: Any) -> Bool { // nonisolated: pure
 		value is String
 	}
 
-	private nonisolated static func nullOrString(_: Int, _ value: Any) -> Bool {
+	private nonisolated static func nullOrString(_: Int, _ value: Any) -> Bool { // nonisolated: pure
 		value is NSNull || value is String
 	}
 
-	private nonisolated static func stringOrArray(_: Int, _ value: Any) -> Bool {
+	private nonisolated static func stringOrArray(_: Int, _ value: Any) -> Bool { // nonisolated: pure
 		value is String || value is [Any]
 	}
 
-	private nonisolated static func templateArgument(_ index: Int, _ value: Any) -> Bool {
+	private nonisolated static func templateArgument(_ index: Int, _ value: Any) -> Bool { // nonisolated: pure
 		if index == 0 {
 			return value is String
 		}
 		return value is NSNull || value is [AnyHashable: Any]
 	}
 
-	private nonisolated static func lineContextArgument(_: Int, _ value: Any) -> Bool {
+	private nonisolated static func lineContextArgument(_: Int, _ value: Any) -> Bool { // nonisolated: pure
 		value is NSNull || value is [AnyHashable: Any]
 	}
 
-	private nonisolated static func pluginPayloadArgument(_ index: Int, _ value: Any) -> Bool {
+	private nonisolated static func pluginPayloadArgument(_ index: Int, _ value: Any) -> Bool { // nonisolated: pure
 		index != 0 || value is String
 	}
 
-	private nonisolated static func styleSettingArgument(_ index: Int, _ value: Any) -> Bool {
+	private nonisolated static func styleSettingArgument(_ index: Int, _ value: Any) -> Bool { // nonisolated: pure
 		if index == 0 {
 			return value is String
 		}

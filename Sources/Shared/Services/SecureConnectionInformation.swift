@@ -46,7 +46,7 @@ import Network
 /// the other four meant nothing. As one value the "nothing negotiated" case is
 /// a single `nil`, and the array no longer crosses the boundary loose.
 @objc(RCMSecureConnectionInformation)
-public final nonisolated class SecureConnectionInformation: NSObject, NSSecureCoding, Sendable {
+public final nonisolated class SecureConnectionInformation: NSObject, NSSecureCoding, Sendable { // nonisolated: value
 	/// The name the certificate chain was evaluated against.
 	@objc public let policyName: String?
 

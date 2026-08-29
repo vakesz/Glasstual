@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum PreferencesNotificationsStrings {
+nonisolated enum PreferencesNotificationsStrings { // nonisolated: value
 	static var dockBadgePrivate: String {
 		String(localized: .TDCPreferencesController.notificationsDockBadgePrivate)
 	}
@@ -50,7 +50,7 @@ nonisolated enum PreferencesNotificationsStrings {
 	}
 }
 
-nonisolated enum PreferencesHighlightsStrings {
+nonisolated enum PreferencesHighlightsStrings { // nonisolated: value
 	static var addExcluded: String {
 		String(localized: .TDCPreferencesController.highlightsAddExcluded)
 	}
@@ -104,7 +104,7 @@ nonisolated enum PreferencesHighlightsStrings {
 	}
 }
 
-nonisolated enum PreferencesIncomingDataStrings {
+nonisolated enum PreferencesIncomingDataStrings { // nonisolated: value
 	static var highlightSpam: String {
 		String(localized: .TDCPreferencesController.incomingDataHighlightSpam)
 	}
@@ -134,7 +134,7 @@ nonisolated enum PreferencesIncomingDataStrings {
 	}
 }
 
-nonisolated enum PreferencesFloodControlStrings {
+nonisolated enum PreferencesFloodControlStrings { // nonisolated: value
 	static func countValue(value: String) -> String {
 		String(localized: .TDCPreferencesController.floodControlCountValue(value))
 	}

@@ -43,7 +43,7 @@ typealias SecureConnectionInformationReceiver = @Sendable (SecureConnectionInfor
 
 /// Commands the application sends to the isolated connection host.
 @objc(RCMConnectionManagerServerProtocol)
-nonisolated protocol RemoteConnectionServerProtocol: AnyObject {
+nonisolated protocol RemoteConnectionServerProtocol: AnyObject { // nonisolated: xpc-shim
 	@objc(openWithConfig:)
 	func open(with config: ConnectionConfigEnvelope)
 
@@ -81,7 +81,7 @@ nonisolated protocol RemoteConnectionServerProtocol: AnyObject {
 
 /// Events the isolated connection host sends back to the application.
 @objc(RCMConnectionManagerClientProtocol)
-nonisolated protocol RemoteConnectionClientProtocol: AnyObject {
+nonisolated protocol RemoteConnectionClientProtocol: AnyObject { // nonisolated: xpc-shim
 	@objc(ircConnectionWillConnectToProxy:port:)
 	func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16)
 
