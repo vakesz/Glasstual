@@ -239,7 +239,7 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 	}
 
 	public func didReceiveServerInputConcreteObject() -> PluginServerInput {
-		let messageObject = PluginServerInput()
+		var messageObject = PluginServerInput()
 
 		messageObject.senderIsServer = senderIsServer
 		messageObject.senderNickname = senderNickname ?? ""

@@ -504,7 +504,7 @@ public final class LogController: NSObject {
 			}
 		}
 		appendHistoricMessageFragment(html, lineNumbers: lineNumbers, isReload: isReload)
-		for pluginObject in pluginObjects {
+		for var pluginObject in pluginObjects {
 			pluginObject.isProcessedInBulk = true
 			PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
 		}
@@ -901,7 +901,7 @@ public extension LogController {
 	) {
 		let channel = associatedChannel
 		for pluginMessage in results.compactMap(\.pluginMessage) {
-			let pluginObject = pluginMessage.makeObject(resolvingMembersIn: channel)
+			var pluginObject = pluginMessage.makeObject(resolvingMembersIn: channel)
 			pluginObject.isProcessedInBulk = true
 			PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
 		}

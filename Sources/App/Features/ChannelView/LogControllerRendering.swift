@@ -208,8 +208,7 @@ nonisolated struct LogLineRenderRequest: Sendable { // nonisolated: value
 
 /** What the plugins are told about a line that was posted.
 
- The concrete object the plugin API takes holds `ChannelUser` and
- `LinkParserResult` references and is built on the main actor, where the
+ The message the plugin API takes is finished on the main actor, where the
  nicknames the body mentioned can be resolved against the live member list. */
 nonisolated struct RenderedPluginMessage: Sendable { // nonisolated: value
 	var keywordMatchFound = false
@@ -224,7 +223,7 @@ nonisolated struct RenderedPluginMessage: Sendable { // nonisolated: value
 
 	@MainActor
 	func makeObject(resolvingMembersIn channel: IRCChannel?) -> THOPluginDidPostNewMessageConcreteObject {
-		let pluginObject = THOPluginDidPostNewMessageConcreteObject()
+		var pluginObject = THOPluginDidPostNewMessageConcreteObject()
 		pluginObject.keywordMatchFound = keywordMatchFound
 		pluginObject.lineTypeRawValue = lineTypeRawValue
 		pluginObject.memberTypeRawValue = memberTypeRawValue
@@ -232,8 +231,17 @@ nonisolated struct RenderedPluginMessage: Sendable { // nonisolated: value
 		pluginObject.receivedAt = receivedAt
 		pluginObject.lineNumber = lineNumber
 		pluginObject.messageContents = messageContents
-		pluginObject.hyperlinks = hyperlinks
-		pluginObject.users = nicknames.compactMap { channel?.findMember($0) }
+		pluginObject.hyperlinks = hyperlinks.map {
+			PluginHyperlink(
+				uniqueIdentifier: $0.uniqueIdentifier,
+				stringValue: $0.stringValue,
+				range: $0.range,
+				strictMatch: $0.strictMatch
+			)
+		}
+		pluginObject.users = nicknames
+			.compactMap { channel?.findMember($0) }
+			.map(PluginHostAdapter.makeMember)
 		return pluginObject
 	}
 }
