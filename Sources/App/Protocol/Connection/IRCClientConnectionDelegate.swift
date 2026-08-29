@@ -165,7 +165,7 @@ public extension IRCClient {
 		clearTrackedUsers()
 
 		if !terminating {
-			SharedApplication.sharedPrintingQueue().cancelOperations(for: self)
+			logController?.cancelRenderJobs()
 			presentDisconnect(disconnectError)
 		}
 

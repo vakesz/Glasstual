@@ -177,24 +177,3 @@ actor LogRenderPipeline {
 		}
 	}
 }
-
-/** Compatibility shim for the two files that still reach the printing queue as
- a process-wide singleton — `SharedApplication.sharedPrintingQueue()` and
- `IRCClientConnectionDelegate`. Rendering is owned per view by
- ``LogRenderPipeline`` now, so all this does is forward the one call they make.
- Delete it together with those call sites. */
-@objc(TVCLogControllerPrintingOperationQueue)
-@MainActor
-public final class LogControllerPrintingOperationQueue: NSObject {
-	public func cancelOperations(for viewController: LogController) {
-		viewController.cancelRenderJobs()
-	}
-
-	public func cancelOperations(for client: IRCClient) {
-		client.logController?.cancelRenderJobs()
-	}
-
-	public func cancelOperations(for channel: IRCChannel) {
-		channel.logController?.cancelRenderJobs()
-	}
-}
