@@ -564,7 +564,7 @@ public final class LogController: NSObject {
 				to: entries.map { LogLineSnapshot($0, in: context) },
 				for: viewController
 			)
-			let results = Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
+			let results = Self.renderJob(snapshots, context: context)
 			return (entries: entries, results: results)
 		} apply: { [weak self] (loaded: (entries: [LogLine], results: [LogLineRenderResult])) in
 			self?.applyReloadedHistory(
@@ -887,7 +887,7 @@ public extension LogController {
 				return nil
 			}
 			let snapshots = Self.applyingMessageRenderers(to: lines, for: viewController)
-			return Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
+			return Self.renderJob(snapshots, context: context)
 		} apply: { [weak self] (results: [LogLineRenderResult]) in
 			self?.applyFetchedRender(results, completionBlock: completionBlock)
 		}
@@ -998,7 +998,7 @@ public extension LogController {
 				return nil
 			}
 			let snapshots = Self.applyingMessageRenderers(to: lines, for: viewController)
-			let results = Self.render(snapshots, context: context, using: ThemeLogLineRenderer())
+			let results = Self.renderJob(snapshots, context: context)
 			guard results.isEmpty == false else {
 				return nil
 			}
@@ -1039,7 +1039,7 @@ public extension LogController {
 				line: Self.applyingMessageRenderers(to: [line], for: viewController)[0],
 				context: context
 			)
-			guard let result = Self.render(request, using: ThemeLogLineRenderer()) else {
+			guard let result = Self.renderJob(request) else {
 				logControllerLogger
 					.error("Failed to render log line \(request.line.sourceDescription, privacy: .public)")
 				return nil
