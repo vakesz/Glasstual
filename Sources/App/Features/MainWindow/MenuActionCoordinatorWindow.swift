@@ -170,7 +170,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func resetSuppressedWarnings() {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		for key in defaults.dictionaryRepresentation().keys
 			where key.hasPrefix(MenuWindowPolicy.alertSuppressionPrefix)
 		{

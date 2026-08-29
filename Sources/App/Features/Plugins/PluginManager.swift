@@ -20,7 +20,7 @@ import Synchronization
 
 /// The result of scanning the extension folders, expressed as file URLs so the
 /// scan can run off the main actor and hand its findings back.
-private nonisolated struct PluginDiscovery: Sendable {
+private nonisolated struct PluginDiscovery: Sendable { // nonisolated: value
 	var loadable: [URL] = []
 	var obsolete: [URL] = []
 	var rejected: [URL] = []
@@ -32,7 +32,7 @@ private nonisolated struct PluginDiscovery: Sendable {
 ///
 /// Message renderers are the exception: they run on the renderer's background
 /// queue, so `PluginMessageRendering` is `Sendable` and they are published here.
-private nonisolated struct PluginFacts: Sendable {
+private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 	var pluginsLoaded = false
 	var supportedFeatures: PluginSupportedFeature = []
 	var outputSuppressionRules: [PluginOutputSuppressionRule] = []
@@ -71,7 +71,7 @@ private nonisolated struct PluginFacts: Sendable {
 /// approval prompt — a bundle either satisfies the requirement or is refused
 /// and logged.
 @objc(THOPluginManager)
-public final nonisolated class PluginManager: NSObject, Sendable {
+public final nonisolated class PluginManager: NSObject, Sendable { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginManager"
@@ -100,7 +100,7 @@ public final nonisolated class PluginManager: NSObject, Sendable {
 	private let facts = Mutex(PluginFacts())
 	private let scheduling = Mutex(Scheduling())
 
-	private nonisolated struct Scheduling {
+	private struct Scheduling {
 		var didScheduleLoad = false
 		var didScheduleUnload = false
 	}
@@ -186,7 +186,7 @@ public final nonisolated class PluginManager: NSObject, Sendable {
 	}
 }
 
-nonisolated extension PluginManager {
+nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - Discovery
 
 	private static func discoverPluginBundles() -> PluginDiscovery {
@@ -270,7 +270,7 @@ nonisolated extension PluginManager {
 	}
 }
 
-nonisolated extension PluginManager {
+nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - Signature Validation
 
 	private static func isBundledExtension(_ bundle: Bundle) -> Bool {
@@ -466,7 +466,7 @@ extension PluginManager {
 	}
 }
 
-public nonisolated extension PluginManager {
+public nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - AppleScript Support
 
 	@objc var supportedAppleScriptCommands: [String] {
@@ -570,7 +570,7 @@ public nonisolated extension PluginManager {
 	}
 }
 
-public nonisolated extension PluginManager {
+public nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - Extension Information
 
 	func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {

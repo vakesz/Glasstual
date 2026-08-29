@@ -13,8 +13,8 @@
 import Foundation
 import GlasstualPluginKit
 
-nonisolated enum MainWindowStrings {
-	nonisolated enum MemberList {
+nonisolated enum MainWindowStrings { // nonisolated: value
+	enum MemberList {
 		static var userIsAway: String {
 			String(localized: .TVCMainWindow.userIsAway)
 		}
@@ -82,7 +82,7 @@ nonisolated enum MainWindowStrings {
 		}
 	}
 
-	nonisolated enum ConnectionStatus {
+	enum ConnectionStatus {
 		case disconnected
 		case waitingToReconnect
 		case connecting
@@ -108,7 +108,7 @@ nonisolated enum MainWindowStrings {
 		}
 	}
 
-	nonisolated enum Loading {
+	enum Loading {
 		static var configuration: String {
 			String(localized: .TVCMainWindow.loadingConfiguration)
 		}
@@ -118,7 +118,7 @@ nonisolated enum MainWindowStrings {
 		}
 	}
 
-	nonisolated enum Conversation {
+	enum Conversation {
 		static var directChat: String {
 			String(localized: .TVCMainWindow.directChat)
 		}
@@ -148,7 +148,7 @@ nonisolated enum MainWindowStrings {
 		}
 	}
 
-	nonisolated enum Toolbar {
+	enum Toolbar {
 		static var connectionSecurity: String {
 			String(localized: .TVCMainWindow.connectionSecurity)
 		}
@@ -162,7 +162,7 @@ nonisolated enum MainWindowStrings {
 		}
 	}
 
-	nonisolated enum InputBar {
+	enum InputBar {
 		static var addServerOrChannel: String {
 			String(localized: .TVCMainWindow.addServerOrChannel)
 		}
@@ -200,7 +200,7 @@ nonisolated enum MainWindowStrings {
 		}
 	}
 
-	nonisolated enum Menu {
+	enum Menu {
 		static func serverList(isVisible: Bool) -> String {
 			isVisible
 				? String(localized: .TVCMainWindow.hideServerList)
@@ -214,13 +214,13 @@ nonisolated enum MainWindowStrings {
 		}
 	}
 
-	nonisolated enum Dock {
+	enum Dock {
 		static func overflowBadge(maximum: String) -> String {
 			String(localized: .TVCMainWindow.dockIconBadgeShown(maximum))
 		}
 	}
 
-	nonisolated enum Reply {
+	enum Reply {
 		static var anonymousMessage: String {
 			String(localized: .TVCMainWindow.inputBarReplyBannerMessage)
 		}
@@ -235,7 +235,7 @@ nonisolated enum MainWindowStrings {
 		}
 	}
 
-	nonisolated enum Typing {
+	enum Typing {
 		static func caption(for nicknames: [String]) -> String {
 			precondition(nicknames.isEmpty == false, "Typing captions require at least one nickname")
 

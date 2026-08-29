@@ -225,7 +225,7 @@ extension IRCTreeItem {
  already existed on the class; the protocol is what lets the IRC layer hold one
  without naming `TVCLogController`. */
 extension LogController: TreeItemPresentation {
-	public nonisolated var presentationIdentifier: String {
+	public nonisolated var presentationIdentifier: String { // nonisolated: pure
 		uniqueIdentifier
 	}
 

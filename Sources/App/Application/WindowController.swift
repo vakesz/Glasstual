@@ -13,7 +13,7 @@
 import AppKit
 import os
 
-private nonisolated let windowControllerLogger = Logger(
+private nonisolated let windowControllerLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "WindowController"
 )
@@ -38,12 +38,14 @@ public final class WindowController: NSObject {
 	}
 
 	@objc(windowDescriptionForWindow:)
-	public nonisolated static func windowDescription(for window: Any) -> String {
+	public nonisolated static func windowDescription(for window: Any) -> String { // nonisolated: pure
 		windowDescription(for: window, inRelationTo: nil)
 	}
 
 	@objc(windowDescriptionForWindow:inRelationTo:)
-	public nonisolated static func windowDescription(for window: Any, inRelationTo relatedObject: Any?) -> String {
+	public nonisolated static func windowDescription(for window: Any, // nonisolated: pure
+	                                                 inRelationTo relatedObject: Any?) -> String
+	{
 		let windowClass = NSStringFromClass(type(of: window as AnyObject))
 
 		guard let relatedObject else {

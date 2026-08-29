@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum ServerChannelListStrings {
+nonisolated enum ServerChannelListStrings { // nonisolated: value
 	static var minimumUserCountLabel: String {
 		String(localized: .TDCServerChannelListDialog.minimumUsers)
 	}

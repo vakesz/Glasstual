@@ -62,7 +62,7 @@ struct IRCClientHistoryTests {
 		showingJoinsAndQuits showJoinLeave: Bool,
 		_ body: (GLTTestClient) throws -> Void
 	) rethrows {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		let original = defaults.object(forKey: Self.joinLeavePreferenceKey)
 		defer {
 			if let original {

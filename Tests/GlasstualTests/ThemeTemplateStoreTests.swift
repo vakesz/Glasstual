@@ -41,8 +41,11 @@ import Mustache
 import Synchronization
 import Testing
 
+/// Nonisolated: the store is, and two of these park a thread on a semaphore to
+/// catch a lookup that arrives mid-compilation. Blocking the main actor would
+/// deadlock the run rather than test anything.
 @Suite("Theme template store")
-struct ThemeTemplateStoreTests {
+nonisolated struct ThemeTemplateStoreTests {
 	@Test("Every default template the app bundles compiles")
 	func bundledDefaultTemplatesCompile() throws {
 		let templatesURL = PathInfo.applicationResourcesURL
@@ -188,12 +191,12 @@ struct ThemeTemplateStoreTests {
 	}
 }
 
-private final class TemplateRenderResults: Sendable {
+private final nonisolated class TemplateRenderResults: Sendable {
 	let renderedValues = Mutex<[String]>([])
 	let failures = Mutex<[String]>([])
 }
 
-private final class BlockingPartialDataSource: TemplateRepositoryDataSource, Sendable {
+private final nonisolated class BlockingPartialDataSource: TemplateRepositoryDataSource, Sendable {
 	let partialLoadStarted = DispatchSemaphore(value: 0)
 	let allowPartialLoad = DispatchSemaphore(value: 0)
 	private let loads = Mutex(0)

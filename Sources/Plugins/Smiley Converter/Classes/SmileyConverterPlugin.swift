@@ -40,7 +40,7 @@ import GlasstualPluginKit
 import os
 import Synchronization
 
-private nonisolated struct SmileyConversionSnapshot: Sendable {
+private nonisolated struct SmileyConversionSnapshot: Sendable { // nonisolated: value
 	static let empty = SmileyConversionSnapshot(conversionTable: [:])
 
 	let conversionTable: [String: String]
@@ -138,14 +138,14 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 	/** Called from the message renderer's background queue. The conversion table
 	 is the only state it reads, and that table is empty whenever the preference
 	 is off, so there is nothing to consult on the main actor. */
-	nonisolated func willRenderMessage(_ event: PluginRenderEvent) -> String? {
+	nonisolated func willRenderMessage(_ event: PluginRenderEvent) -> String? { // nonisolated: pure
 		guard event.kind == .action || event.kind == .privateMessage else {
 			return event.message
 		}
 		return convertToEmoji(event.message)
 	}
 
-	private nonisolated func convertToEmoji(_ string: String) -> String {
+	private nonisolated func convertToEmoji(_ string: String) -> String { // nonisolated: pure
 		let snapshot = conversionSnapshot.withLock { $0 }
 		let result = NSMutableString(string: string)
 		for smiley in snapshot.sortedSmileys {
@@ -154,7 +154,7 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		return result as String
 	}
 
-	private nonisolated func replace(
+	private nonisolated func replace( // nonisolated: pure
 		_ smiley: String,
 		in string: NSMutableString,
 		using snapshot: SmileyConversionSnapshot

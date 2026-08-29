@@ -64,10 +64,15 @@ public final class ObservablePreferences {
 		/* Two notifications, because the store posts one and the system posts
 		 the other: `TextualUserDefaults` announces its own writes, while
 		 `UserDefaults.didChangeNotification` covers a value another process — an
-		 XPC service, a plugin — wrote into the same suite. */
+		 XPC service, a plugin — wrote into the same suite.
+
+		 No `object` filter: a suite can be open through more than one
+		 `UserDefaults` handle — the bindings controller has its own, and so
+		 does anything writing off the main actor — and a write through any of
+		 them is a change this has to see. */
 		for name in [UserDefaults.didChangeNotification, .textualUserDefaultsDidChange] {
 			observations.append(
-				NotificationCenter.default.publisher(for: name, object: TextualUserDefaults.shared())
+				NotificationCenter.default.publisher(for: name)
 					.receive(on: DispatchQueue.main)
 					.sink { [weak self] _ in
 						self?.invalidate()

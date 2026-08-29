@@ -43,7 +43,7 @@ typealias SecureConnectionInformationReceiver = @Sendable (SecureConnectionInfor
 
 /// Commands the application sends to the isolated connection host.
 @objc(RCMConnectionManagerServerProtocol)
-nonisolated protocol RemoteConnectionServerProtocol: AnyObject {
+nonisolated protocol RemoteConnectionServerProtocol: AnyObject { // nonisolated: xpc-shim
 	@objc(openWithConfig:)
 	func open(with config: ConnectionConfigEnvelope)
 

@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum PreferencesInterfaceStrings {
+nonisolated enum PreferencesInterfaceStrings { // nonisolated: value
 	static var appearanceDark: String {
 		String(localized: .TDCPreferencesController.interfaceAppearanceDark)
 	}
@@ -114,7 +114,7 @@ nonisolated enum PreferencesInterfaceStrings {
 	}
 }
 
-nonisolated enum PreferencesStyleStrings {
+nonisolated enum PreferencesStyleStrings { // nonisolated: value
 	static var autoScrollbackMarker: String {
 		String(localized: .TDCPreferencesController.styleAutoScrollbackMarker)
 	}

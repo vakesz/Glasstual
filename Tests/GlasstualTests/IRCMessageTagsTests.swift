@@ -47,14 +47,14 @@ final class IRCMessageTagsTests {
 	private let originalTypingPreference: Bool?
 
 	init() {
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		originalTypingPreference = defaults
 			.persistentDomain(forName: ApplicationGroup.identifier)?[Self.typingPreferenceKey] as? Bool
 		defaults.set(true, forKey: Self.typingPreferenceKey)
 	}
 
-	deinit {
-		let defaults = TextualUserDefaults.shared()
+	isolated deinit {
+		let defaults = TextualUserDefaults.container
 		if let originalTypingPreference {
 			defaults.set(originalTypingPreference, forKey: Self.typingPreferenceKey)
 		} else {
@@ -162,7 +162,7 @@ final class IRCMessageTagsTests {
 
 	@Test("Nothing is sent while the typing notification preference is off")
 	func typingRespectsPreference() throws {
-		TextualUserDefaults.shared().set(false, forKey: Self.typingPreferenceKey)
+		TextualUserDefaults.container.set(false, forKey: Self.typingPreferenceKey)
 		let client = makeMessageTagsClient()
 		let channel = try addChannel(named: "#chat", to: client)
 

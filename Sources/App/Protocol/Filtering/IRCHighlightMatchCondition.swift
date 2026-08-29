@@ -43,7 +43,7 @@ import Foundation
  A condition with no keyword can never match. Persisted lists are filtered on
  load rather than rejected, so a hand-edited property list drops the broken
  entry instead of aborting the app. */
-public nonisolated struct HighlightMatchCondition: Codable, Sendable, Equatable, Hashable {
+public nonisolated struct HighlightMatchCondition: Codable, Sendable, Equatable, Hashable { // nonisolated: value
 	public var uniqueIdentifier: String
 	public var matchKeyword: String
 	public var matchChannelId: String?

@@ -16,7 +16,7 @@ import CocoaExtensions
 import os
 import UserNotifications
 
-nonisolated enum NotificationPayload {
+nonisolated enum NotificationPayload { // nonisolated: value
 	static let clientIdentifierKey = "clientId"
 	static let channelIdentifierKey = "channelId"
 }
@@ -26,7 +26,7 @@ private let fileTransferAcceptActionIdentifier = "TXNotificationActionIdentifier
 private let privateMessageCategoryIdentifier = "TXNotificationCategoryIdentifierPrivateMessage"
 private let privateMessageReplyActionIdentifier = "TXNotificationActionIdentifierPrivateMessageReply"
 
-private nonisolated let notificationControllerLogger = Logger(
+private nonisolated let notificationControllerLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "NotificationController"
 )
@@ -437,7 +437,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	}
 
 	@objc(userInfo:isInScopeOfClientIdentifier:channelIdentifier:)
-	public nonisolated static func isNotification(
+	public nonisolated static func isNotification( // nonisolated: pure
 		userInfo: [AnyHashable: Any],
 		inScopeOfClientIdentifier clientIdentifier: String,
 		channelIdentifier: String?

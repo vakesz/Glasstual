@@ -100,7 +100,7 @@ struct AppKitSupportMigrationTests {
 	func alertSuppressionDecisionFollowsTheStoredPreference() {
 		let baseKey = "AppKitSupportMigrationTests.\(UUID().uuidString)"
 		let defaultsKey = TDCAlert.suppressionKey(withBase: baseKey)
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		defer { defaults.removeObject(forKey: defaultsKey) }
 
 		#expect(TDCAlert.isSuppressed(baseKey: baseKey) == false)

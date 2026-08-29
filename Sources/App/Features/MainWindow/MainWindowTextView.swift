@@ -319,7 +319,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		}
 
 		observingUserDefaults = observed
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 
 		guard observed else {
 			userDefaultsObservation?.cancel()

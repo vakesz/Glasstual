@@ -27,7 +27,7 @@ struct MainWindowStateStoreSuiteTests {
 	/// the window state has to be written there rather than to `.standard`.
 	@Test("The store writes to the shared container suite by default")
 	func defaultSuiteIsTheSharedContainer() {
-		let container = TextualUserDefaults.shared()
+		let container = TextualUserDefaults.container
 		for key in Self.keys {
 			container.removeObject(forKey: key)
 			UserDefaults.standard.removeObject(forKey: key)

@@ -125,7 +125,7 @@ private func makeAvatarImage(initial: String, color: NSColor, size: CGFloat) -> 
 }
 
 private func userModeColor(_ badge: UserListModeBadge) -> NSColor? {
-	let color = TextualUserDefaults.shared().color(for: badge.preferenceKey)
+	let color = TextualUserDefaults.container.color(for: badge.preferenceKey)
 
 	return color.alphaComponent > 0 ? color : nil
 }

@@ -14,7 +14,7 @@ import AppKit
 @testable import Glasstual
 import Testing
 
-private let notificationEvents: [TXNotificationType] = [.highlight, .channelMessage, .kick]
+private nonisolated let notificationEvents: [TXNotificationType] = [.highlight, .channelMessage, .kick]
 
 @Suite("Notification configuration checkbox state")
 @MainActor

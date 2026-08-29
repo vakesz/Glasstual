@@ -69,7 +69,7 @@ struct ServerPropertiesSheetValueTests {
 	@Test("The advanced encodings preference is read from the shared container")
 	func advancedEncodingsKeyLivesInTheContainer() {
 		let key = Preferences.Internals.includeAdvancedEncodings.name
-		let container = TextualUserDefaults.shared()
+		let container = TextualUserDefaults.container
 		let original = container.object(forKey: key)
 		defer {
 			if let original {
@@ -81,8 +81,11 @@ struct ServerPropertiesSheetValueTests {
 
 		container.set(true, forKey: key)
 		#expect(container.bool(forKey: key))
-		// The sheet's checkbox binds through TPCPreferencesUserDefaultsController,
-		// which is this suite -- not UserDefaults.standard.
-		#expect(TextualUserDefaultsController().defaults === container)
+		// The sheet's checkbox binds through TPCPreferencesUserDefaultsController.
+		// It holds its own handle, so what matters is that the handle is on this
+		// suite -- not on UserDefaults.standard -- and reads the same value back.
+		let bound = TextualUserDefaultsController().defaults as? TextualUserDefaults
+		#expect(bound?.suiteName == container.suiteName)
+		#expect(bound?.bool(forKey: key) == true)
 	}
 }

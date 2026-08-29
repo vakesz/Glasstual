@@ -49,7 +49,7 @@ struct NicknameColorOverrideStorageTests {
 		let color = NSColor(srgbRed: 0.15, green: 0.35, blue: 0.75, alpha: 0.9)
 		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
 
-		let overrides = try #require(TextualUserDefaults.shared().dictionary(forKey: Self.defaultsKey))
+		let overrides = try #require(TextualUserDefaults.container.dictionary(forKey: Self.defaultsKey))
 		let stored = try #require(overrides[key] as? [String: Double])
 
 		#expect(stored["red"] == 0.15)
@@ -91,9 +91,9 @@ struct NicknameColorOverrideStorageTests {
 		let color = try #require(NSColor.textual_color(hexadecimalValue: "#2659BF"))
 		let archive = try NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)
 
-		var overrides = TextualUserDefaults.shared().dictionary(forKey: Self.defaultsKey) ?? [:]
+		var overrides = TextualUserDefaults.container.dictionary(forKey: Self.defaultsKey) ?? [:]
 		overrides[key] = archive
-		TextualUserDefaults.shared().set(overrides, forKey: Self.defaultsKey)
+		TextualUserDefaults.container.set(overrides, forKey: Self.defaultsKey)
 
 		let stored = try #require(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: key))
 		#expect(stored.textualHexadecimalValue == color.textualHexadecimalValue)

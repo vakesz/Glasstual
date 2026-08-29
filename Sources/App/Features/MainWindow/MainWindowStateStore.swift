@@ -29,7 +29,7 @@ struct MainWindowStateStore {
 	// All three keys are in PreferenceKeyMasterList.plist and not excluded from
 	// the container, so preference export/import reads them out of the group
 	// suite: they have to be written there too.
-	init(defaults: UserDefaults = TextualUserDefaults.shared()) {
+	init(defaults: UserDefaults = TextualUserDefaults.container) {
 		self.defaults = defaults
 	}
 

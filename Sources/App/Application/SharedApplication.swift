@@ -22,7 +22,6 @@ public final class SharedApplication: NSObject {
 	private static let appearance = Appearance()
 	private static let networkReachabilityNotifier = Reachability.reachabilityForInternetConnection()
 	private static let notificationController = NotificationController()
-	private static let printingQueue = LogControllerPrintingOperationQueue()
 	private static let themeController = TPCThemeController()
 	private static let windowController = WindowController()
 	private static let fileTransferDialog = TDCFileTransferDialog()
@@ -53,11 +52,6 @@ public final class SharedApplication: NSObject {
 	@objc
 	public nonisolated static func sharedPluginManager() -> PluginManager { // nonisolated: let
 		pluginManager
-	}
-
-	@objc
-	public static func sharedPrintingQueue() -> LogControllerPrintingOperationQueue {
-		printingQueue
 	}
 
 	@objc

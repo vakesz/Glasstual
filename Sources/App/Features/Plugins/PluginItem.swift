@@ -15,7 +15,7 @@ import CocoaExtensions
 import GlasstualPluginKit
 import os
 
-public nonisolated struct PluginSupportedFeature: OptionSet, Sendable {
+public nonisolated struct PluginSupportedFeature: OptionSet, Sendable { // nonisolated: value
 	public let rawValue: UInt
 
 	public init(rawValue: UInt) {
@@ -42,7 +42,7 @@ public nonisolated struct PluginSupportedFeature: OptionSet, Sendable {
 /// either returns a fully populated item or `nil`. Nothing observes a
 /// half-configured plugin.
 @objc(THOPluginItem)
-public final nonisolated class PluginItem: NSObject {
+public final nonisolated class PluginItem: NSObject { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginItem"

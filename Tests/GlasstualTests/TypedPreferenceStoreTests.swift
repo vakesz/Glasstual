@@ -73,7 +73,7 @@ struct TypedPreferenceStoreTests {
 		key.reset()
 		key.value = key.defaultValue
 
-		let defaults = TextualUserDefaults.shared()
+		let defaults = TextualUserDefaults.container
 		#expect(defaults.persistentDomain(forName: defaults.suiteName)?[key.name] != nil)
 	}
 
@@ -82,7 +82,7 @@ struct TypedPreferenceStoreTests {
 		withScratchKeys {
 			// The classic mistake this replaces is integer(forKey:) on a key
 			// that holds a boolean, which silently reads zero.
-			TextualUserDefaults.shared().set(["not": "a number"], forKey: Self.intKey.name)
+			TextualUserDefaults.container.set(["not": "a number"], forKey: Self.intKey.name)
 			#expect(Self.intKey.value == 7)
 		}
 	}
@@ -93,7 +93,7 @@ struct TypedPreferenceStoreTests {
 		let original = key.storedValue
 		defer { key.storedValue = original }
 
-		TextualUserDefaults.shared().set(9999, forKey: key.name)
+		TextualUserDefaults.container.set(9999, forKey: key.name)
 		#expect(key.value == key.defaultValue)
 	}
 
@@ -136,7 +136,7 @@ struct TypedPreferenceStoreTests {
 
 		key.value = [HighlightKeyword(string: "alpha"), HighlightKeyword(string: "beta")]
 
-		let stored = TextualUserDefaults.shared().object(forKey: key.name) as? [[String: Any]]
+		let stored = TextualUserDefaults.container.object(forKey: key.name) as? [[String: Any]]
 		#expect(stored?.compactMap { $0[HighlightKeyword.field] as? String } == ["alpha", "beta"])
 		#expect(key.value.map(\.string) == ["alpha", "beta"])
 	}
@@ -177,8 +177,8 @@ struct PreferenceExportContentsTests {
 		defer { excluded.storedValue = original }
 
 		excluded.value = 12345
-		TextualUserDefaults.shared().set(true, forKey: suppression)
-		defer { TextualUserDefaults.shared().removeObject(forKey: suppression) }
+		TextualUserDefaults.container.set(true, forKey: suppression)
+		defer { TextualUserDefaults.container.removeObject(forKey: suppression) }
 
 		let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
 
@@ -190,8 +190,8 @@ struct PreferenceExportContentsTests {
 	@Test("A key outside the catalogue is not exported")
 	func uncataloguedKeysAreNotExported() {
 		let name = "Tests -> Not In The Catalogue"
-		TextualUserDefaults.shared().set("value", forKey: name)
-		defer { TextualUserDefaults.shared().removeObject(forKey: name) }
+		TextualUserDefaults.container.set("value", forKey: name)
+		defer { TextualUserDefaults.container.removeObject(forKey: name) }
 
 		let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
 		#expect(exported[name] == nil)

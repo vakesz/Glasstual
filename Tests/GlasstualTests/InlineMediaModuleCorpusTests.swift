@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+@testable import CoreMediaModules
 import Foundation
 import InlineContentKit
 import Testing
@@ -45,7 +46,7 @@ import Testing
 /// the URL alone, whether it can render the address (`module(for:)`). Only the
 /// matching is exercised here — nothing is run and no request is made.
 struct InlineMediaModuleCorpusTests {
-	struct URLCase: Sendable {
+	nonisolated struct URLCase: Sendable {
 		let address: String
 		let matches: Bool
 

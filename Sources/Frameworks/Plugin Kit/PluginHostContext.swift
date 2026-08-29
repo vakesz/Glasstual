@@ -289,11 +289,11 @@ public final class PluginChannel: Hashable {
 		deactivation()
 	}
 
-	public nonisolated static func == (lhs: PluginChannel, rhs: PluginChannel) -> Bool {
+	public nonisolated static func == (lhs: PluginChannel, rhs: PluginChannel) -> Bool { // nonisolated: pure
 		lhs.identifier == rhs.identifier
 	}
 
-	public nonisolated func hash(into hasher: inout Hasher) {
+	public nonisolated func hash(into hasher: inout Hasher) { // nonisolated: pure
 		hasher.combine(identifier)
 	}
 }
@@ -484,11 +484,11 @@ public final class PluginClient: Hashable {
 		sidebarRefresher()
 	}
 
-	public nonisolated static func == (lhs: PluginClient, rhs: PluginClient) -> Bool {
+	public nonisolated static func == (lhs: PluginClient, rhs: PluginClient) -> Bool { // nonisolated: pure
 		lhs.identifier == rhs.identifier
 	}
 
-	public nonisolated func hash(into hasher: inout Hasher) {
+	public nonisolated func hash(into hasher: inout Hasher) { // nonisolated: pure
 		hasher.combine(identifier)
 	}
 }

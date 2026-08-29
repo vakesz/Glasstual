@@ -57,15 +57,19 @@ public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine,
 		_ = speechSynthesizer.stopSpeaking(at: .immediate)
 	}
 
-	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
+	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, // nonisolated: pure
+	                                          didFinish _: AVSpeechUtterance)
+	{
 		notifyCompletion()
 	}
 
-	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
+	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, // nonisolated: pure
+	                                          didCancel _: AVSpeechUtterance)
+	{
 		notifyCompletion()
 	}
 
-	private nonisolated func notifyCompletion() {
+	private nonisolated func notifyCompletion() { // nonisolated: pure
 		Task { @MainActor [weak self] in
 			self?.delegate?.speechSynthesizerEngineDidCompleteUtterance()
 		}

@@ -42,7 +42,7 @@ import Testing
 /// Behaviour corpus for hyperlink detection in message bodies.
 @MainActor
 struct TLOLinkParserCorpusTests {
-	struct LinkCase: Sendable {
+	nonisolated struct LinkCase: Sendable {
 		let text: String
 		let links: [String]
 

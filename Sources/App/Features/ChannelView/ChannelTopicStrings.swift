@@ -37,7 +37,7 @@
 
 import Foundation
 
-nonisolated enum ChannelTopicStrings {
+nonisolated enum ChannelTopicStrings { // nonisolated: value
 	static var cancelButtonTitle: String {
 		String(localized: .TDCChannelModifyTopicSheet.cancelButton)
 	}

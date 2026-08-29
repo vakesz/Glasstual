@@ -12,8 +12,8 @@
 
 import Foundation
 
-nonisolated enum ServerPropertiesStrings {
-	nonisolated enum AddressBook {
+nonisolated enum ServerPropertiesStrings { // nonisolated: value
+	enum AddressBook {
 		static func entryType(_ entryType: IRCAddressBookEntryType) -> String {
 			switch entryType {
 			case .ignore, .mixed:
@@ -26,7 +26,7 @@ nonisolated enum ServerPropertiesStrings {
 		}
 	}
 
-	nonisolated enum Highlight {
+	enum Highlight {
 		static var allChannels: String {
 			String(localized: .TDCServerPropertiesSheet.allChannels)
 		}
@@ -38,7 +38,7 @@ nonisolated enum ServerPropertiesStrings {
 		}
 	}
 
-	nonisolated enum Navigation {
+	enum Navigation {
 		static var serverProperties: String {
 			String(localized: .TDCServerPropertiesSheet.serverProperties)
 		}
@@ -108,7 +108,7 @@ nonisolated enum ServerPropertiesStrings {
 		}
 	}
 
-	nonisolated enum Validation {
+	enum Validation {
 		static var invalidUsername: String {
 			String(localized: .TDCServerPropertiesSheet.pleaseEnterAProperlyFormattedUsername)
 		}
@@ -126,7 +126,7 @@ nonisolated enum ServerPropertiesStrings {
 		}
 	}
 
-	nonisolated enum Certificate {
+	enum Certificate {
 		static var noneSelected: String {
 			String(localized: .TDCServerPropertiesSheet.noCertificateSelected)
 		}
@@ -148,7 +148,7 @@ nonisolated enum ServerPropertiesStrings {
 		}
 	}
 
-	nonisolated enum CipherSuites {
+	enum CipherSuites {
 		static func title(collectionName: String) -> String {
 			String(localized: .TDCServerPropertiesSheet.includesTheFollowingCipherSuites(collectionName))
 		}
@@ -158,7 +158,7 @@ nonisolated enum ServerPropertiesStrings {
 		}
 	}
 
-	nonisolated enum NickServ {
+	enum NickServ {
 		static var missingPasswordTitle: String {
 			String(localized: .TDCServerPropertiesSheet.preferenceYouHaveEnabledWillNot)
 		}
@@ -168,7 +168,7 @@ nonisolated enum ServerPropertiesStrings {
 		}
 	}
 
-	nonisolated enum ExternalChange {
+	enum ExternalChange {
 		static var reloadTitle: String {
 			String(localized: .TDCServerPropertiesSheet.thisConnectionsConfigurationHasChangedDo)
 		}

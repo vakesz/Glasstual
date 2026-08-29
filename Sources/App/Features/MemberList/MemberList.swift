@@ -50,7 +50,7 @@ public protocol MemberListKeyEventDelegate: AnyObject {
 }
 
 @objc(TVCMemberListSection)
-public final nonisolated class MemberListSection: NSObject {
+public final nonisolated class MemberListSection: NSObject { // nonisolated: value
 	public fileprivate(set) var rank: UserRank = .none
 	@objc public fileprivate(set) var title = ""
 	@objc public fileprivate(set) var memberRange = NSRange(location: 0, length: 0)

@@ -45,7 +45,7 @@ import GlasstualPluginKit
  The key strings are what earlier releases wrote, down to the ones that no
  longer match the property they set. Anything under "Legacy spellings" is only
  read, and only from a version 0 dictionary. */
-nonisolated extension ClientConfig {
+nonisolated extension ClientConfig { // nonisolated: value
 	enum CodingKeys: String, CodingKey {
 		case dictionaryVersion
 		case uniqueIdentifier

@@ -49,14 +49,14 @@ import AppKit
  express. */
 @MainActor
 protocol TreeItemPresentation: AnyObject {
-	nonisolated var presentationIdentifier: String { get }
+	nonisolated var presentationIdentifier: String { get } // nonisolated: pure
 
 	func print(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?)
 	/* Main actor: the newest printed line is the controller's own state, and
 	 both callers (`IRCChannel.lastLine`, `IRCClient.lastLine`) are already
 	 there. */
 	func lastPrintedLine() -> LogLine?
-	nonisolated func setTopic(_ topic: String?)
+	nonisolated func setTopic(_ topic: String?) // nonisolated: pure
 
 	func mark()
 	func mark(at date: Date)

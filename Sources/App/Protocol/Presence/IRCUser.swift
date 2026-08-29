@@ -40,8 +40,8 @@ import CocoaExtensions
 import Foundation
 import os
 
-private nonisolated let removeUserTimerInterval: TimeInterval = 60 * 5
-private nonisolated let presentAwayMessageFor301Threshold: CFAbsoluteTime = 300.0
+private nonisolated let removeUserTimerInterval: TimeInterval = 60 * 5 // nonisolated: let
+private nonisolated let presentAwayMessageFor301Threshold: CFAbsoluteTime = 300.0 // nonisolated: let
 
 private let userLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",

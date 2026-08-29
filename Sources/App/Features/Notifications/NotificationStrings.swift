@@ -38,7 +38,7 @@
 
 import Foundation
 
-nonisolated enum NotificationStrings {
+nonisolated enum NotificationStrings { // nonisolated: value
 	static var replyActionTitle: String {
 		String(localized: .Notifications.replyActionTitle)
 	}
@@ -156,7 +156,7 @@ nonisolated enum NotificationStrings {
 		}
 	}
 
-	nonisolated enum Spoken {
+	enum Spoken {
 		static var channelMessage: String {
 			String(localized: .Notifications.spokenChannelMessage)
 		}
@@ -259,7 +259,7 @@ nonisolated enum NotificationStrings {
 		}
 	}
 
-	nonisolated enum Membership {
+	enum Membership {
 		static func kicked(by nickname: String, from channelName: String, reason: String) -> String {
 			String(localized: .Notifications.bodyKicked(nickname, channelName, reason))
 		}
@@ -289,7 +289,7 @@ nonisolated enum NotificationStrings {
 		}
 	}
 
-	nonisolated enum Availability {
+	enum Availability {
 		static func message(
 			for status: IRCAddressBookUserTrackingStatus,
 			nickname: String
@@ -307,7 +307,7 @@ nonisolated enum NotificationStrings {
 		}
 	}
 
-	nonisolated enum FileTransfer {
+	enum FileTransfer {
 		static func description(
 			for event: TXNotificationType,
 			filename: String,
@@ -346,7 +346,7 @@ nonisolated enum NotificationStrings {
 	}
 }
 
-nonisolated enum NotificationSoundStrings {
+nonisolated enum NotificationSoundStrings { // nonisolated: value
 	static var defaultSound: String {
 		String(localized: .TVCNotificationConfigurationView.defaultSound)
 	}

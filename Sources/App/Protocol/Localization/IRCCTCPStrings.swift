@@ -30,7 +30,7 @@ enum IRCCTCPLagRating: Sendable {
 	}
 }
 
-nonisolated enum IRCCTCPStrings {
+nonisolated enum IRCCTCPStrings { // nonisolated: value
 	static var clientInfoReply: String {
 		String(localized: .IRC.clientinfoDccFingerPingTimeUserinfo)
 	}

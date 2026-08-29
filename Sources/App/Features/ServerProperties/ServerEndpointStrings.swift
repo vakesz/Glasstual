@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum ServerEndpointStrings {
+nonisolated enum ServerEndpointStrings { // nonisolated: value
 	static var invalidAddressDescription: String {
 		String(localized: .TDCServerEndpointListSheet.valueYouEnteredIsNot)
 	}

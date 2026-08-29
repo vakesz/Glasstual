@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum HighlightEntryStrings {
+nonisolated enum HighlightEntryStrings { // nonisolated: value
 	static var channelAccessibilityHint: String {
 		String(localized: .TDCHighlightEntrySheet.channelAccessibilityHint)
 	}

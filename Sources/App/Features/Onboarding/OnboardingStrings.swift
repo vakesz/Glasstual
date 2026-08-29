@@ -17,7 +17,7 @@ struct OnboardingAppearancePreviewMessage: Equatable {
 	let message: String
 }
 
-nonisolated enum OnboardingTextSize: CaseIterable {
+nonisolated enum OnboardingTextSize: CaseIterable { // nonisolated: value
 	case small
 	case medium
 	case large
@@ -34,7 +34,7 @@ nonisolated enum OnboardingTextSize: CaseIterable {
 	}
 }
 
-nonisolated enum OnboardingInterfaceStyle: CaseIterable {
+nonisolated enum OnboardingInterfaceStyle: CaseIterable { // nonisolated: value
 	case system
 	case light
 	case dark
@@ -51,8 +51,8 @@ nonisolated enum OnboardingInterfaceStyle: CaseIterable {
 	}
 }
 
-nonisolated enum OnboardingStrings {
-	nonisolated enum Window {
+nonisolated enum OnboardingStrings { // nonisolated: value
+	enum Window {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.windowChromeWelcomeToGlasstual)
 		}
@@ -78,7 +78,7 @@ nonisolated enum OnboardingStrings {
 		}
 	}
 
-	nonisolated enum Identity {
+	enum Identity {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.welcomeToGlasstual)
 		}
@@ -116,7 +116,7 @@ nonisolated enum OnboardingStrings {
 		}
 	}
 
-	nonisolated enum Appearance {
+	enum Appearance {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.lookAndFeel)
 		}
@@ -183,7 +183,7 @@ nonisolated enum OnboardingStrings {
 		}
 	}
 
-	nonisolated enum Notifications {
+	enum Notifications {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.stepNotifications)
 		}
@@ -217,7 +217,7 @@ nonisolated enum OnboardingStrings {
 		}
 	}
 
-	nonisolated enum FirstNetwork {
+	enum FirstNetwork {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.yourFirstNetwork)
 		}
@@ -243,7 +243,7 @@ nonisolated enum OnboardingStrings {
 		}
 	}
 
-	nonisolated enum NetworkPicker {
+	enum NetworkPicker {
 		static var searchPlaceholder: String {
 			String(localized: .TDCOnboardingWindow.searchNetworks)
 		}

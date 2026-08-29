@@ -38,7 +38,7 @@
 
 import Foundation
 
-nonisolated enum IRCCommandStrings {
+nonisolated enum IRCCommandStrings { // nonisolated: value
 	static var channelRequired: String {
 		String(localized: .IRC.thisCommandCanOnlyBeUsed)
 	}
@@ -194,7 +194,7 @@ nonisolated enum IRCCommandStrings {
 }
 
 extension IRCCommandStrings {
-	nonisolated enum Defaults {
+	nonisolated enum Defaults { // nonisolated: value
 		static var invalidSyntax: String {
 			String(localized: .IRC.invalidSyntaxTypeDefaultsHelp)
 		}
@@ -220,7 +220,7 @@ extension IRCCommandStrings {
 		}
 	}
 
-	nonisolated enum Ignore {
+	nonisolated enum Ignore { // nonisolated: value
 		static func alreadyExists(nickname: String) -> String {
 			String(localized: .IRC.ignoreAlreadyExistsThatMatches(nickname))
 		}
@@ -251,7 +251,7 @@ enum IRCTimerHelpTopic: String {
 	case restart
 }
 
-nonisolated enum IRCTimerStrings {
+nonisolated enum IRCTimerStrings { // nonisolated: value
 	static var invalidSyntax: String {
 		String(localized: .IRC.invalidSyntaxTypeTimerHelp)
 	}

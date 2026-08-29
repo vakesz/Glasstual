@@ -187,7 +187,7 @@ extension DCCTransfer {
 	}
 
 	/// Runs `operation`, failing with `error` if it outlasts `duration`.
-	nonisolated static func withTimeout(
+	nonisolated static func withTimeout( // nonisolated: pure
 		_ duration: Duration?,
 		failingWith error: DCCTransferError,
 		operation: @escaping @Sendable () async throws -> Void

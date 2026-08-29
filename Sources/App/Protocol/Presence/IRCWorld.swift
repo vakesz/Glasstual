@@ -42,7 +42,7 @@ import GlasstualPluginKit
 import os
 
 public typealias IRCWorld = World
-public nonisolated let IRCWorldClientListDefaultsKey = "World Controller Client Configurations"
+public nonisolated let IRCWorldClientListDefaultsKey = "World Controller Client Configurations" // nonisolated: let
 
 extension World {
 	func destroy(_ client: IRCClient) {

@@ -43,7 +43,7 @@ public final class LogPolicyTarget: NSObject {
 @objc(TVCLogPolicy)
 @MainActor
 public final class LogPolicy: NSObject {
-	private nonisolated static let logger = Logger(
+	private nonisolated static let logger = Logger( // nonisolated: let
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "LogPolicy"
 	)

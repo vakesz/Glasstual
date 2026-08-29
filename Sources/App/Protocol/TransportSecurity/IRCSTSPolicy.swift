@@ -45,7 +45,7 @@ public typealias IRCSTSPolicy = STSPolicy
 /// The port used to leave through an out-parameter the caller had to know to
 /// read, and only for one of the four outcomes; it rides on the case that
 /// carries it instead.
-public nonisolated enum IRCSTSPolicyAction: Sendable, Equatable {
+public nonisolated enum IRCSTSPolicyAction: Sendable, Equatable { // nonisolated: value
 	/// Nothing to do: no offer, or one that has to be ignored.
 	case none
 
@@ -60,7 +60,7 @@ public nonisolated enum IRCSTSPolicyAction: Sendable, Equatable {
 }
 
 /// The endpoint a stored STS policy pins a host to.
-public nonisolated struct STSPolicyEndpoint: Sendable, Equatable {
+public nonisolated struct STSPolicyEndpoint: Sendable, Equatable { // nonisolated: value
 	public let port: UInt16
 
 	public init(port: UInt16) {
@@ -69,7 +69,7 @@ public nonisolated struct STSPolicyEndpoint: Sendable, Equatable {
 }
 
 @objc(IRCSTSPolicy)
-public final nonisolated class STSPolicy: NSObject {
+public final nonisolated class STSPolicy: NSObject { // nonisolated: value
 	@objc public let port: UInt16
 	@objc public let expiresAt: Date
 	@objc public let preload: Bool

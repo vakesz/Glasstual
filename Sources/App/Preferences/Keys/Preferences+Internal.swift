@@ -37,10 +37,10 @@
 
 import Foundation
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Bookkeeping the application keeps about itself, and the handful of keys
 	/// AppKit or a vendored library reads out of `UserDefaults.standard`.
-	nonisolated enum Internals {
+	enum Internals {
 		public static let dictionaryVersion = PreferenceKey(
 			"TPCPreferencesDictionaryVersion",
 			default: UInt(0),
@@ -104,10 +104,10 @@ public nonisolated extension Preferences {
 	}
 }
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// The scheme allowlist the vendored AutoHyperlinks parser consults. It
 	/// reads `UserDefaults.standard` directly, so the keys live there.
-	nonisolated enum LinkSchemes {
+	enum LinkSchemes {
 		public static let permittedDefault = PreferenceKey(
 			"com.adiumX.AutoHyperlinks.permittedSchemesDefault",
 			default: [
@@ -135,9 +135,9 @@ public nonisolated extension Preferences {
 	}
 }
 
-public nonisolated extension Preferences {
+public nonisolated extension Preferences { // nonisolated: value
 	/// Key families whose individual names are made at runtime.
-	nonisolated enum Families {
+	enum Families {
 		/// Per-window saved frames, written by AppKit into the standard domain.
 		public static let windowFrames = PreferenceKeyFamily(
 			"NSWindow Frame -> Internal (v3) -> ",

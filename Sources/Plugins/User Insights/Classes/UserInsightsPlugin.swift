@@ -235,7 +235,7 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 	}
 }
 
-private nonisolated enum BragMetric {
+private nonisolated enum BragMetric { // nonisolated: value
 	case channelHalfOperators
 	case channelOperators
 	case channelVoices
