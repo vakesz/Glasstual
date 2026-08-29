@@ -119,6 +119,19 @@ enum PreferencesSectionIdentifier: String, CaseIterable, Sendable {
 	}
 }
 
+/// One valid Settings destination. Keeping the toolbar section and its
+/// sub-page in one value prevents SwiftUI from observing an impossible pair
+/// while the AppKit shell switches sections.
+struct PreferencesSelection: Equatable, Sendable {
+	let sectionIdentifier: PreferencesSectionIdentifier
+	let subPageIdentifier: String
+
+	static let general = PreferencesSelection(
+		sectionIdentifier: .general,
+		subPageIdentifier: PreferencesPaneIdentifier.general.rawValue
+	)
+}
+
 /** One segment of a section's picker.
 
  A sub-page usually shows one pane; the Advanced section gathers eleven panes

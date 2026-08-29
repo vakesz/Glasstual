@@ -214,16 +214,19 @@ struct PreferencesAddOnsPane: View {
 			}
 
 			Section {
-				HStack {
-					Text(verbatim: PreferencesAddOnsStrings.locationLabel)
-						.bold()
-					Spacer()
-					Button {
-						model.actions?.openCustomAddOnsFolder()
-					} label: {
-						Text(verbatim: PreferencesAddOnsStrings.openInFinder)
+				VStack(alignment: .leading, spacing: 6) {
+					HStack {
+						Text(verbatim: PreferencesAddOnsStrings.locationLabel)
+							.bold()
+						Spacer()
+						Button {
+							model.actions?.openCustomAddOnsFolder()
+						} label: {
+							Text(verbatim: PreferencesAddOnsStrings.openInFinder)
+						}
+						.accessibilityLabel(Text(verbatim: PreferencesAddOnsStrings.openInFinderHelp))
 					}
-					.accessibilityLabel(Text(verbatim: PreferencesAddOnsStrings.openInFinderHelp))
+					PreferencesNote(model.scriptInstallationInstructions)
 				}
 			}
 		}

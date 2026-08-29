@@ -319,11 +319,6 @@ public final class LogView: NSObject {
 	}
 
 	@objc public func stopLoading() {
-		NSObject.cancelPreviousPerformRequests(
-			withTarget: self,
-			selector: #selector(informDelegateWebViewFinishedLoading),
-			object: nil
-		)
 		backingView.stopLoading()
 	}
 

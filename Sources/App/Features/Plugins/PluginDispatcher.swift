@@ -329,6 +329,17 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		}
 	}
 
+	/** Delivers a line that has no WebKit projection. Its native side effects
+	 must not wait for a DOM callback that cannot arrive. */
+	@MainActor
+	public static func dispatchDidPostNewMessage(_ messageObject: THOPluginDidPostNewMessageConcreteObject) {
+		let handlers: [any PluginPostedMessageHandling] = handlers(for: .newMessagePostedEvent)
+
+		for handler in handlers {
+			handler.didPostNewMessage(messageObject)
+		}
+	}
+
 	@objc(dequeueDidPostNewMessageWithLineNumber:forViewController:)
 	@MainActor
 	public static func dequeueDidPostNewMessage(
@@ -341,10 +352,6 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 
 		pendingPostedMessageOrder.removeAll { $0 == messageLineNumber }
 
-		let handlers: [any PluginPostedMessageHandling] = handlers(for: .newMessagePostedEvent)
-
-		for handler in handlers {
-			handler.didPostNewMessage(messageObject)
-		}
+		dispatchDidPostNewMessage(messageObject)
 	}
 }

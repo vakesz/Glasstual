@@ -106,7 +106,9 @@ enum RenderedLogEntryKey: String, CaseIterable, Sendable {
 
 enum LogViewStateKey: String, CaseIterable, Sendable {
 	case reloadingTheme
+	case scrollbackHardLimit
 	case scrollbackLimit
+	case scrollbackSoftLimit
 	case selected
 	case textSizeMultiplier
 	case visible

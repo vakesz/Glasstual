@@ -45,6 +45,73 @@ private let logViewWebKitLogger = Logger(
 	category: "LogViewWebKit"
 )
 
+/// Coalesces WebKit's KVO and navigation-delegate completion signals. Both
+/// describe the same load, and either can arrive first.
+nonisolated struct LogViewLoadCompletionState: Sendable { // nonisolated: value
+	enum Event: Sendable {
+		case loadStarted
+		case loadingChanged(Bool)
+		case navigationStarted
+		case navigationFinished
+		case delayElapsed
+		case cancel
+	}
+
+	enum Action: Equatable, Sendable {
+		case none
+		case schedule
+		case cancel
+		case notify
+	}
+
+	private var isLoading = false
+	private var isNavigating = false
+	private var completionIsScheduled = false
+
+	mutating func handle(_ event: Event) -> Action {
+		switch event {
+		case .loadStarted, .navigationStarted:
+			isNavigating = true
+			return cancelScheduledCompletion()
+		case let .loadingChanged(value):
+			isLoading = value
+			if value {
+				return cancelScheduledCompletion()
+			}
+			return scheduleIfReady()
+		case .navigationFinished:
+			isNavigating = false
+			return scheduleIfReady()
+		case .delayElapsed:
+			guard completionIsScheduled, isLoading == false, isNavigating == false else {
+				return .none
+			}
+			completionIsScheduled = false
+			return .notify
+		case .cancel:
+			isLoading = false
+			isNavigating = false
+			return cancelScheduledCompletion()
+		}
+	}
+
+	private mutating func scheduleIfReady() -> Action {
+		guard isLoading == false, isNavigating == false, completionIsScheduled == false else {
+			return .none
+		}
+		completionIsScheduled = true
+		return .schedule
+	}
+
+	private mutating func cancelScheduledCompletion() -> Action {
+		guard completionIsScheduled else {
+			return .none
+		}
+		completionIsScheduled = false
+		return .cancel
+	}
+}
+
 @objc(TVCLogViewInternalWK2)
 @MainActor
 final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
@@ -88,6 +155,8 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	@objc(t_viewIsNavigating) var viewIsNavigating = false
 
 	private var loadingObservation: Task<Void, Never>?
+	private var loadCompletionTask: Task<Void, Never>?
+	private var loadCompletionState = LogViewLoadCompletionState()
 
 	init() {
 		super.init(frame: .zero, configuration: SharedResources.configuration)
@@ -123,6 +192,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 
 	deinit {
 		loadingObservation?.cancel()
+		loadCompletionTask?.cancel()
 	}
 
 	@objc var webViewPolicy: LogPolicy {
@@ -131,11 +201,13 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 
 	@discardableResult
 	override func load(_ request: URLRequest) -> WKNavigation? {
+		handleLoadCompletionEvent(.loadStarted)
 		startObservingLoading()
 		return super.load(request)
 	}
 
 	override func stopLoading() {
+		handleLoadCompletionEvent(.cancel)
 		stopObservingLoading()
 		super.stopLoading()
 	}
@@ -197,7 +269,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 				}
 
 				viewIsLoading = isLoading
-				maybeInformDelegateWebViewFinishedLoading()
+				handleLoadCompletionEvent(.loadingChanged(isLoading))
 			}
 		}
 	}
@@ -207,17 +279,24 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		loadingObservation = nil
 	}
 
-	private func maybeInformDelegateWebViewFinishedLoading() {
-		guard viewIsLoading == false, viewIsNavigating == false else {
-			return
+	private func handleLoadCompletionEvent(_ event: LogViewLoadCompletionState.Event) {
+		switch loadCompletionState.handle(event) {
+		case .none:
+			break
+		case .cancel:
+			loadCompletionTask?.cancel()
+			loadCompletionTask = nil
+		case .schedule:
+			loadCompletionTask = Task { @MainActor [weak self] in
+				try? await Task.sleep(for: .seconds(1.2))
+				guard Task.isCancelled == false else { return }
+				self?.handleLoadCompletionEvent(.delayElapsed)
+			}
+		case .notify:
+			loadCompletionTask = nil
+			stopObservingLoading()
+			parentView?.informDelegateWebViewFinishedLoading()
 		}
-		stopObservingLoading()
-		parentView?.perform(
-			#selector(LogView.informDelegateWebViewFinishedLoading),
-			with: nil,
-			afterDelay: 1.2,
-			inModes: [.common]
-		)
 	}
 
 	@objc(_t_evaluateJavaScript:completionHandler:)
@@ -272,6 +351,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		logViewWebKitLogger.error("WebView content process terminated. Reloading \(viewDescription, privacy: .public)")
 		viewIsLoading = false
 		viewIsNavigating = false
+		handleLoadCompletionEvent(.cancel)
 		stopObservingLoading()
 		parentView?.informDelegateWebViewClosedUnexpectedly()
 	}
@@ -317,12 +397,13 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	func webView(_ webView: WKWebView, didStartProvisionalNavigation _: WKNavigation!) {
 		precondition(webView === self)
 		viewIsNavigating = true
+		handleLoadCompletionEvent(.navigationStarted)
 	}
 
 	func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
 		precondition(webView === self)
 		viewIsNavigating = false
-		maybeInformDelegateWebViewFinishedLoading()
+		handleLoadCompletionEvent(.navigationFinished)
 	}
 
 	/** WKWebView has no public hook that replaces the context menu while

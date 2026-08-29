@@ -64,26 +64,14 @@ final class PreferencesPaneModel {
 	/// The toolbar's sections, with the panes each one shows.
 	var sections: [PreferencesSection] = []
 
-	/// Which toolbar item is selected. The shell writes it; the view reads it.
-	var selectedSection: PreferencesSectionIdentifier = .general
-
-	/** Which pane of the selected section is shown.
-
-	 A section with one pane sets it along with the section; a section with
-	 several has a segmented picker bound to it. The shell answers a change by
-	 remembering the choice and resizing the window to the new pane. */
-	var selectedPane: String = PreferencesPaneIdentifier.general.rawValue {
-		didSet {
-			guard selectedPane != oldValue else { return }
-			onPaneChange?(selectedPane)
-		}
-	}
+	/// The toolbar item and the sub-page it contains change as one value.
+	private(set) var selection = PreferencesSelection.general
 
 	@ObservationIgnored
-	var onPaneChange: ((String) -> Void)?
+	var onSelectionChange: ((PreferencesSelection) -> Void)?
 
 	var currentSection: PreferencesSection? {
-		sections.first { $0.identifier == selectedSection }
+		sections.first { $0.identifier == selection.sectionIdentifier }
 	}
 
 	var themes: [PreferencesThemeChoice] = []
@@ -97,6 +85,7 @@ final class PreferencesPaneModel {
 	var downloadFolder: URL?
 
 	var addOnCommands: [String] = []
+	var scriptInstallationInstructions = ""
 
 	/** The AppKit alert table the Notifications pane hosts.
 
@@ -111,6 +100,32 @@ final class PreferencesPaneModel {
 	init() {
 		notificationConfiguration.notifications = Self.notificationItems
 		notificationConfiguration.attachToView(notificationHostView)
+	}
+
+	/// Applies a complete destination only when the sub-page belongs to the
+	/// section. Callers never have to repair a partially updated selection.
+	@discardableResult
+	func select(_ destination: PreferencesSelection) -> Bool {
+		guard let section = sections.first(where: { $0.identifier == destination.sectionIdentifier }),
+		      section.subPages.contains(where: { $0.identifier == destination.subPageIdentifier })
+		else {
+			return false
+		}
+		guard selection != destination else {
+			return false
+		}
+		selection = destination
+		onSelectionChange?(destination)
+		return true
+	}
+
+	/// Changes the picker within the current toolbar section.
+	@discardableResult
+	func selectSubPage(_ identifier: String) -> Bool {
+		select(PreferencesSelection(
+			sectionIdentifier: selection.sectionIdentifier,
+			subPageIdentifier: identifier
+		))
 	}
 
 	/** The nil entries are the separators the alert list draws between groups of
@@ -165,6 +180,11 @@ final class PreferencesPaneModel {
 		let manager = SharedApplication.sharedPluginManager()
 		let commands = manager.supportedAppleScriptCommands + manager.supportedUserInputCommands
 		addOnCommands = commands.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+		let folderName = PathInfo.customScriptsURL?.lastPathComponent
+			?? ApplicationInfo.applicationBundleIdentifier()
+		scriptInstallationInstructions = PromptStrings.DocumentImport.scriptSavePanelBody(
+			bundleIdentifier: folderName
+		)
 	}
 
 	func refreshAll() {

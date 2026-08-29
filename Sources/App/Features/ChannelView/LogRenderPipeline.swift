@@ -57,9 +57,7 @@ actor LogRenderPipeline {
 	nonisolated let submissions: AsyncStream<LogRenderSubmission>.Continuation // nonisolated: let
 
 	private let stream: AsyncStream<LogRenderSubmission>
-	private var isViewLoaded = false
 	private var isStopped = false
-	private var readinessWaiters: [CheckedContinuation<Void, Never>] = []
 
 	init() {
 		/* Unbounded on purpose. A dropping policy would silently lose lines
@@ -81,8 +79,6 @@ actor LogRenderPipeline {
 			var inFlight = 0
 
 			for await submission in stream {
-				await waitUntilViewIsLoaded()
-
 				if isStopped {
 					break
 				}
@@ -126,23 +122,10 @@ actor LogRenderPipeline {
 		}
 	}
 
-	/// Releases the jobs that were waiting for the view's web view to load.
-	func markViewLoaded() {
-		isViewLoaded = true
-		resumeReadinessWaiters()
-	}
-
-	/// A view that has been cleared holds its jobs again until it reloads.
-	func markViewUnloaded() {
-		isViewLoaded = false
-	}
-
-	/** Ends the pipeline: no further submission is consumed, and a job parked
-	 waiting for the view to load gives up rather than holding the loop open. */
+	/// Ends the pipeline and stops accepting submissions.
 	func stop() {
 		isStopped = true
 		submissions.finish()
-		resumeReadinessWaiters()
 	}
 
 	/** Waits until every job submitted so far has been applied. Tests use this
@@ -152,28 +135,6 @@ actor LogRenderPipeline {
 			submissions.yield(LogRenderSubmission(isStandalone: false) {
 				{ continuation.resume() }
 			})
-		}
-	}
-
-	/** The queueing behaviour the printing operations had: a job submitted
-	 before the view finished loading waits rather than rendering into a
-	 document that is not there yet. */
-	private func waitUntilViewIsLoaded() async {
-		guard isViewLoaded == false, isStopped == false else {
-			return
-		}
-
-		await withCheckedContinuation { continuation in
-			readinessWaiters.append(continuation)
-		}
-	}
-
-	private func resumeReadinessWaiters() {
-		let parked = readinessWaiters
-		readinessWaiters.removeAll()
-
-		for waiter in parked {
-			waiter.resume()
 		}
 	}
 }

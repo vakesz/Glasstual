@@ -83,10 +83,6 @@ struct LogRenderPipelineTests {
 		let logs = (0 ..< viewCount).map { _ in DeliveryLog() }
 		let runners = pipelines.map { pipeline in Task { await pipeline.run() } }
 
-		for pipeline in pipelines {
-			await pipeline.markViewLoaded()
-		}
-
 		/* Interleaved on purpose: the views share the cooperative pool, and each
 		 render takes a different number of hops, so a pipeline that delivered in
 		 completion order rather than submission order would shuffle here. */
@@ -122,7 +118,6 @@ struct LogRenderPipelineTests {
 	func renderLeavesTheMainActorAndDeliveryReturnsToIt() async {
 		let pipeline = LogRenderPipeline()
 		let runner = Task { await pipeline.run() }
-		await pipeline.markViewLoaded()
 		let delivered = DeliverySignal()
 
 		pipeline.submissions.yield(LogRenderSubmission(isStandalone: false) {
@@ -141,7 +136,6 @@ struct LogRenderPipelineTests {
 	func batchedJobsDeliverInSubmissionOrder() async {
 		let pipeline = LogRenderPipeline()
 		let runner = Task { await pipeline.run() }
-		await pipeline.markViewLoaded()
 		let log = DeliveryLog()
 		let gate = RenderGate()
 		let secondRendered = DeliverySignal()
@@ -174,7 +168,6 @@ struct LogRenderPipelineTests {
 	func standaloneJobBypassesTheBatch() async {
 		let pipeline = LogRenderPipeline()
 		let runner = Task { await pipeline.run() }
-		await pipeline.markViewLoaded()
 		let log = DeliveryLog()
 		let gate = RenderGate()
 		let standaloneDelivered = DeliverySignal()
@@ -206,29 +199,8 @@ struct LogRenderPipelineTests {
 		await runner.value
 	}
 
-	@Test("Work queued before the view loaded is dropped, not delivered, when the pipeline stops")
-	func stoppingDropsWorkThatWasStillWaiting() async {
-		let pipeline = LogRenderPipeline()
-		let log = DeliveryLog()
-		let runner = Task { await pipeline.run() }
-
-		/* The view never reports itself loaded, so nothing may be applied: this
-		 is the state a controller is in between `clear()` and the reload. */
-		for line in 0 ..< 20 {
-			let label = String(line)
-			pipeline.submissions.yield(LogRenderSubmission(isStandalone: false) {
-				{ log.append(label) }
-			})
-		}
-
-		await pipeline.stop()
-		await runner.value
-
-		#expect(log.labels.isEmpty)
-	}
-
-	@Test("Work queued before the view loaded is delivered once it does")
-	func workQueuedBeforeTheViewLoadedIsHeldUntilItDoes() async {
+	@Test("Work is delivered without a web view readiness signal")
+	func workDoesNotWaitForAWebView() async {
 		let pipeline = LogRenderPipeline()
 		let log = DeliveryLog()
 		let runner = Task { await pipeline.run() }
@@ -240,9 +212,6 @@ struct LogRenderPipelineTests {
 			})
 		}
 
-		#expect(log.labels.isEmpty)
-
-		await pipeline.markViewLoaded()
 		await pipeline.drain()
 
 		#expect(log.labels == ["0", "1", "2", "3", "4"])

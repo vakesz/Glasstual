@@ -335,6 +335,24 @@ _MessageTags.addReaction = function(msgid, emoji, nickname) /* PRIVATE */
 	return reactions;
 };
 
+/* Restores reactions that arrived while a transcript had no DOM or while its
+   theme was rebuilding. The native map is authoritative for this session. */
+_MessageTags.applySessionReactions = function(reactionsByMessageIdentifier) /* PRIVATE */
+{
+	var identifiers = Object.keys(reactionsByMessageIdentifier || {});
+
+	for (var i = 0; i < identifiers.length; i++) {
+		var line = _MessageTags.lineWithMessageIdentifier(identifiers[i]);
+
+		if (!line) {
+			continue;
+		}
+
+		_MessageTags.setReactionsOfLine(line, reactionsByMessageIdentifier[identifiers[i]]);
+		_MessageTags.renderReactionsOfLine(line);
+	}
+};
+
 /* Entry points */
 
 /* Called for every line added to the view, before the style hears of it. */

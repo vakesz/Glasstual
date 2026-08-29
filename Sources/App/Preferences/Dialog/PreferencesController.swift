@@ -89,8 +89,8 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 	private func prepareInitialState() {
 		model.actions = self
 		model.sections = Self.sections()
-		model.onPaneChange = { [weak self] identifier in
-			self?.paneChanged(to: identifier, animate: true)
+		model.onSelectionChange = { [weak self] selection in
+			self?.paneChanged(to: selection, animate: true)
 		}
 		model.refreshAll()
 		installWindow()
@@ -309,19 +309,22 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 		}),
 			let subPage = section.subPages.first(where: { $0.contains(identifier) })
 		else { return }
-		model.selectedSection = section.identifier
+		let selection = PreferencesSelection(
+			sectionIdentifier: section.identifier,
+			subPageIdentifier: subPage.identifier
+		)
+		let changed = model.select(selection)
 		window?.toolbar?.selectedItemIdentifier = Self.toolbarIdentifier(for: section.identifier)
 		window?.title = section.title
-		if model.selectedPane == subPage.identifier {
-			// The model's observer will not fire, so finish the switch here.
-			paneChanged(to: subPage.identifier, animate: animate)
-		} else {
-			model.selectedPane = subPage.identifier
+		if changed == false {
+			// The model publishes only changes, so finish an idempotent request here.
+			paneChanged(to: selection, animate: animate)
 		}
 	}
 
-	private func paneChanged(to identifier: String, animate: Bool) {
-		lastPaneBySection[model.selectedSection] = identifier
+	private func paneChanged(to selection: PreferencesSelection, animate: Bool) {
+		let identifier = selection.subPageIdentifier
+		lastPaneBySection[selection.sectionIdentifier] = identifier
 		Preferences.Internals.selectedPreferencePane.value = identifier
 		// The two panes whose content is read from outside the key store are
 		// refreshed as they are opened rather than polled.

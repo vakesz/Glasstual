@@ -275,7 +275,7 @@ extension MainWindow {
 	}
 
 	func focusWebview(_: NSEvent) {
-		guard attachedSheet == nil, let view = selectedViewController?.backingView.webView else { return }
+		guard attachedSheet == nil, let view = selectedViewController?.backingView?.webView else { return }
 		makeFirstResponder(view)
 	}
 

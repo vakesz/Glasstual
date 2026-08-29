@@ -10,6 +10,28 @@ import Testing
 @MainActor
 @Suite("Log view lifecycle")
 struct LogViewLifecycleTests {
+	@Test("Loading and navigation completion schedule one delegate callback")
+	func duplicateCompletionSignalsAreCoalesced() {
+		var state = LogViewLoadCompletionState()
+
+		#expect(state.handle(.loadStarted) == .none)
+		#expect(state.handle(.loadingChanged(false)) == .none)
+		#expect(state.handle(.navigationFinished) == .schedule)
+		#expect(state.handle(.loadingChanged(false)) == .none)
+		#expect(state.handle(.delayElapsed) == .notify)
+		#expect(state.handle(.delayElapsed) == .none)
+	}
+
+	@Test("A new navigation cancels a pending completion")
+	func navigationCancelsPendingCompletion() {
+		var state = LogViewLoadCompletionState()
+
+		#expect(state.handle(.loadStarted) == .none)
+		#expect(state.handle(.navigationFinished) == .schedule)
+		#expect(state.handle(.navigationStarted) == .cancel)
+		#expect(state.handle(.delayElapsed) == .none)
+	}
+
 	@Test("A web view that finishes loading after its client has gone is ignored")
 	func lateWebViewFinishedLoadingIsIgnoredAfterWeakClientDeallocation() throws {
 		var client: IRCClient? = IRCClient(config: ClientConfig())
@@ -23,7 +45,7 @@ struct LogViewLifecycleTests {
 			client: #require(client),
 			in: window
 		)
-		let logView = try #require(controller.backingView)
+		let logView = controller.ensureBackingView()
 		weak let weakClient = client
 
 		client = nil
@@ -46,7 +68,7 @@ struct LogViewLifecycleTests {
 			defer: false
 		)
 		var controller: LogController? = LogController(client: client, in: window)
-		let logView = try #require(controller?.backingView)
+		let logView = try #require(controller?.ensureBackingView())
 		weak let weakController = controller
 
 		controller = nil

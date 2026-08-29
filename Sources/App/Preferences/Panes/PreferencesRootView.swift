@@ -25,7 +25,14 @@ struct PreferencesRootView: View {
 	}
 
 	private var currentSubPage: PreferencesSubPage? {
-		subPages.first { $0.identifier == model.selectedPane }
+		subPages.first { $0.identifier == model.selection.subPageIdentifier }
+	}
+
+	private var selectedSubPage: Binding<String> {
+		Binding(
+			get: { model.selection.subPageIdentifier },
+			set: { _ = model.selectSubPage($0) }
+		)
 	}
 
 	var body: some View {
@@ -65,7 +72,7 @@ struct PreferencesRootView: View {
 	}
 
 	private var picker: some View {
-		Picker(selection: $model.selectedPane) {
+		Picker(selection: selectedSubPage) {
 			ForEach(subPages) { subPage in
 				Text(verbatim: subPage.title).tag(subPage.identifier)
 			}
