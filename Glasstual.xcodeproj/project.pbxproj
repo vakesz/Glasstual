@@ -116,6 +116,7 @@
 		1A6F1F1516DFB6EECE2C13BF /* IRCChannelMemberList.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AA4A78BF144FAFEF982928 /* IRCChannelMemberList.swift */; };
 		1AC400A0B0474CB6593CC478 /* PreferencesReloadActionMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BC56086EAFF5B63F218274 /* PreferencesReloadActionMappingTests.swift */; };
 		1ACB28881B6364967974EFAD /* IRCLinePresentationPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5D8E0714B630361511B218 /* IRCLinePresentationPolicyTests.swift */; };
+		1ACDAE3B6E429AD5828021BB /* IRCMessageHistoricRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ABB59D5F2130A0544FC88C3 /* IRCMessageHistoricRuleTests.swift */; };
 		1AD5F000888164386007A304 /* IRCCTCPFormDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07C23EFBD32BDA7C1320D0DE /* IRCCTCPFormDataTests.swift */; };
 		1B20F592FC358C8BE7011D2A /* IRCConnectionSocketNWF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1918C5344C30AA02CD98ED27 /* IRCConnectionSocketNWF.swift */; };
 		1B38646AA92EDBB82CDE8C1F /* GlasstualPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26CEBB2889F146B2FFA4C8B0 /* GlasstualPluginKit.framework */; };
@@ -1624,6 +1625,7 @@
 		4A589D8F546E5467ABC23AC0 /* LogLineArchiveCompatibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLineArchiveCompatibilityTests.swift; sourceTree = "<group>"; };
 		4A64102765664EA8071E59D3 /* LogLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLine.swift; sourceTree = "<group>"; };
 		4A7F44C1DBC8D008E111DF37 /* PreferencesInputStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesInputStrings.swift; sourceTree = "<group>"; };
+		4ABB59D5F2130A0544FC88C3 /* IRCMessageHistoricRuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCMessageHistoricRuleTests.swift; sourceTree = "<group>"; };
 		4AE8CE23DE50FD86A8C4C265 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4B1A9E14D41205C71BEF57BA /* IRCChannelMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannelMemberListController.swift; sourceTree = "<group>"; };
 		4B33474F6FC474BCDEB5BABB /* ChannelTopicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelTopicView.swift; sourceTree = "<group>"; };
@@ -3938,6 +3940,7 @@
 				4C5D8E0714B630361511B218 /* IRCLinePresentationPolicyTests.swift */,
 				136482D53E7561D43C255DD1 /* IRCMessageBatchTests.swift */,
 				FC41D9A2226124E54CBDA2E8 /* IRCMessageDuplicateTests.swift */,
+				4ABB59D5F2130A0544FC88C3 /* IRCMessageHistoricRuleTests.swift */,
 				CE68DC1E8BCAC994C20454C3 /* IRCMessageParsingTests.swift */,
 				4C5A45481279C2AD898206F1 /* IRCMessageTagsTests.swift */,
 				061B053A8B68AEB5BD5740AB /* IRCMessageTests.swift */,
@@ -5419,6 +5422,7 @@
 				1ACB28881B6364967974EFAD /* IRCLinePresentationPolicyTests.swift in Sources */,
 				3281C19BCB114A3FC4D0C600 /* IRCMessageBatchTests.swift in Sources */,
 				7CE3B49773438E20AF72EAE8 /* IRCMessageDuplicateTests.swift in Sources */,
+				1ACDAE3B6E429AD5828021BB /* IRCMessageHistoricRuleTests.swift in Sources */,
 				315A12956E37D8752B9B9F82 /* IRCMessageParsingTests.swift in Sources */,
 				CE0DC905BAC98C3699590D9D /* IRCMessageTagsTests.swift in Sources */,
 				4124464FCCA28F16C2775FD4 /* IRCMessageTests.swift in Sources */,
