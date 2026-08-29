@@ -105,15 +105,15 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 			return
 		}
 
-		let payload = InlineContentPayloadMutable(
-			url: url,
-			withUniqueIdentifier: uniqueIdentifier,
-			atLineNumber: lineNumber,
-			index: index,
-			inView: viewIdentifier
+		process(
+			InlineContentPayload(
+				url: url,
+				withUniqueIdentifier: uniqueIdentifier,
+				atLineNumber: lineNumber,
+				index: index,
+				inView: viewIdentifier
+			)
 		)
-
-		process(payload)
 	}
 
 	@objc(processPayload:)
@@ -122,12 +122,7 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 			return
 		}
 
-		guard let mutablePayload = (payload as? InlineContentPayloadMutable)
-			?? payload.mutableCopy() as? InlineContentPayloadMutable
-		else {
-			assertionFailure("Inline content payload did not produce its declared mutable copy type")
-			return
-		}
+		let mutablePayload = InlineContentPayloadMutable(values: payload.values)
 		let host = mutablePayload.url.host?.lowercased() ?? ""
 
 		if process(mutablePayload, withModulesFor: host) {
@@ -177,11 +172,8 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 	}
 
 	func finalize(module: InlineContentModule, error originalError: NSError?) {
-		guard let payload = module.payload.copy() as? InlineContentPayload else {
-			assertionFailure("Inline content payload did not produce its declared immutable copy type")
-			release(module)
-			return
-		}
+		let payload = module.payload.snapshot()
+
 		release(module)
 
 		let error: NSError? = if payload.html.isEmpty, payload.scriptResources.isEmpty {

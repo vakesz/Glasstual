@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2020 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,258 +42,325 @@ import os
 
 public let inlineContentErrorDomain = "ICLInlineContentErrorDomain"
 
+/// Everything a finished inline-content payload says about one link.
+///
+/// This is the value the two processes agree on. `InlineContentPayload` is the
+/// `NSSecureCoding` envelope built around it at the XPC boundary and
+/// `InlineContentPayloadMutable` is the scratch copy a module edits while it
+/// runs; neither adds state of its own.
+public struct InlineContentPayloadValues: Sendable, Equatable {
+	public var url: URL
+	public var urlToInline: URL
+	public var uniqueIdentifier: String
+	public var viewIdentifier: String
+	public var lineNumber: String
+	public var index: UInt
+	public var contentLength: UInt64
+	public var contentSize: CGSize
+	public var styleResources: [URL]
+	public var scriptResources: [URL]
+	public var html: String
+	public var entrypoint: String?
+	public var classAttribute: String
+
+	public init(
+		url: URL,
+		uniqueIdentifier: String,
+		lineNumber: String,
+		index: UInt,
+		viewIdentifier: String
+	) {
+		self.url = url
+		urlToInline = url
+		self.uniqueIdentifier = uniqueIdentifier
+		self.viewIdentifier = viewIdentifier
+		self.lineNumber = lineNumber
+		self.index = index
+		contentLength = 0
+		contentSize = .zero
+		styleResources = []
+		scriptResources = []
+		html = ""
+		entrypoint = nil
+		classAttribute = ""
+	}
+
+	/// The values a deferred module inherits: what identifies the link, not
+	/// what the module it was deferred from had produced.
+	public var deferredCopy: InlineContentPayloadValues {
+		var copy = InlineContentPayloadValues(
+			url: url,
+			uniqueIdentifier: uniqueIdentifier,
+			lineNumber: lineNumber,
+			index: index,
+			viewIdentifier: viewIdentifier
+		)
+
+		copy.urlToInline = urlToInline
+		copy.classAttribute = classAttribute
+
+		return copy
+	}
+}
+
+private let payloadLogger = Logger(
+	subsystem: "com.vakesz.glasstual.InlineContentLoader",
+	category: "Payload"
+)
+
+/// The immutable payload that crosses the XPC boundary.
+///
+/// Every stored property is a `let` of a `Sendable` type, so the class needs no
+/// annotation to be sent between the application and the inline-content
+/// service. The mutable half is a separate type rather than a subclass: a class
+/// with subclasses cannot be `Sendable`, and nothing outside the service ever
+/// needed to write to a payload.
 @objc(ICLPayload)
-/* ISOLATION-EXCEPTION: an NSSecureCoding transport object. It crosses the XPC
- boundary between the app and the inline-content service, where NSXPCConnection
- owns the copy on each side, and the mutable subclass is only ever edited by the
- module that created it.
+public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
+	public let values: InlineContentPayloadValues
 
- It stays a class pair rather than becoming a value: `InlineContentModule` is an
- open class whose subclasses edit `payload` in place while they run, and the
- `@objc` inline-content protocol names this type. */
-open class InlineContentPayload: NSObject, NSSecureCoding, @unchecked Sendable {
-	fileprivate static let logger = Logger(
-		subsystem: "com.vakesz.glasstual.InlineContentLoader",
-		category: "Payload"
-	)
+	public init(values: InlineContentPayloadValues) {
+		precondition(!values.url.isFileURL)
 
-	fileprivate var urlStorage = URL(string: "about:blank")!
-	fileprivate var urlToInlineStorage = URL(string: "about:blank")!
-	fileprivate var lineNumberStorage = ""
-	fileprivate var uniqueIdentifierStorage = ""
-	fileprivate var viewIdentifierStorage = ""
-	fileprivate var indexStorage: UInt = 0
-	fileprivate var contentLengthStorage: UInt64 = 0
-	fileprivate var contentSizeStorage = NSSize.zero
-	fileprivate var styleResourcesStorage: [URL] = []
-	fileprivate var scriptResourcesStorage: [URL] = []
-	fileprivate var htmlStorage = ""
-	fileprivate var entrypointStorage: String?
-	fileprivate var entrypointPayloadStorage: [String: Any]?
-	fileprivate var classAttributeStorage = ""
+		self.values = values
 
-	@objc public var url: URL {
-		urlStorage
-	}
-
-	@objc public var address: String {
-		urlStorage.absoluteString
-	}
-
-	@objc open var urlToInline: URL {
-		urlToInlineStorage
-	}
-
-	@objc public var addressToInline: String {
-		urlToInlineStorage.absoluteString
-	}
-
-	@objc public var uniqueIdentifier: String {
-		uniqueIdentifierStorage
-	}
-
-	@objc public var viewIdentifier: String {
-		viewIdentifierStorage
-	}
-
-	@objc public var lineNumber: String {
-		lineNumberStorage
-	}
-
-	@objc public var index: UInt {
-		indexStorage
-	}
-
-	@objc open var contentLength: UInt64 {
-		contentLengthStorage
-	}
-
-	@objc open var contentSize: NSSize {
-		contentSizeStorage
-	}
-
-	@objc open var styleResources: [URL] {
-		styleResourcesStorage
-	}
-
-	@objc open var scriptResources: [URL] {
-		scriptResourcesStorage
-	}
-
-	@objc open var html: String {
-		htmlStorage
-	}
-
-	@objc open var entrypoint: String? {
-		entrypointStorage
-	}
-
-	@objc open var classAttribute: String {
-		classAttributeStorage
-	}
-
-	@objc open var entrypointPayload: [String: Any] {
-		entrypointPayloadStorage ?? defaultEntrypointContext
-	}
-
-	override public required init() {
 		super.init()
 	}
 
 	@objc(initWithURL:withUniqueIdentifier:atLineNumber:index:inView:)
-	public init(
+	public convenience init(
 		url: URL,
 		withUniqueIdentifier uniqueIdentifier: String,
 		atLineNumber lineNumber: String,
 		index: UInt,
 		inView viewIdentifier: String
 	) {
-		precondition(!url.isFileURL)
-		urlStorage = url
-		urlToInlineStorage = url
-		uniqueIdentifierStorage = uniqueIdentifier
-		lineNumberStorage = lineNumber
-		indexStorage = index
-		viewIdentifierStorage = viewIdentifier
-		super.init()
+		self.init(
+			values: InlineContentPayloadValues(
+				url: url,
+				uniqueIdentifier: uniqueIdentifier,
+				lineNumber: lineNumber,
+				index: index,
+				viewIdentifier: viewIdentifier
+			)
+		)
 	}
 
-	@objc(initWithDeferredPayload:)
-	public init(deferredPayload payload: InlineContentPayload) {
-		urlStorage = payload.urlStorage
-		urlToInlineStorage = payload.urlToInlineStorage
-		lineNumberStorage = payload.lineNumberStorage
-		indexStorage = payload.indexStorage
-		uniqueIdentifierStorage = payload.uniqueIdentifierStorage
-		viewIdentifierStorage = payload.viewIdentifierStorage
-		classAttributeStorage = payload.classAttributeStorage
-		super.init()
+	// MARK: - Accessors
+
+	@objc public var url: URL {
+		values.url
 	}
 
-	public required init?(coder: NSCoder) {
-		super.init()
-
-		guard populate(with: coder) else {
-			return nil
-		}
+	@objc public var address: String {
+		values.url.absoluteString
 	}
 
-	public class var supportsSecureCoding: Bool {
+	@objc public var urlToInline: URL {
+		values.urlToInline
+	}
+
+	@objc public var addressToInline: String {
+		values.urlToInline.absoluteString
+	}
+
+	@objc public var uniqueIdentifier: String {
+		values.uniqueIdentifier
+	}
+
+	@objc public var viewIdentifier: String {
+		values.viewIdentifier
+	}
+
+	@objc public var lineNumber: String {
+		values.lineNumber
+	}
+
+	@objc public var index: UInt {
+		values.index
+	}
+
+	@objc public var contentLength: UInt64 {
+		values.contentLength
+	}
+
+	@objc public var contentSize: CGSize {
+		values.contentSize
+	}
+
+	@objc public var styleResources: [URL] {
+		values.styleResources
+	}
+
+	@objc public var scriptResources: [URL] {
+		values.scriptResources
+	}
+
+	@objc public var html: String {
+		values.html
+	}
+
+	@objc public var entrypoint: String? {
+		values.entrypoint
+	}
+
+	@objc public var classAttribute: String {
+		values.classAttribute
+	}
+
+	/// The context the entrypoint script is called with. Every module has been
+	/// content with the defaults, so it is derived rather than stored.
+	@objc public var entrypointPayload: [String: Any] {
+		[
+			"class": values.classAttribute,
+			"html": values.html,
+			"url": values.url,
+			"urlToInline": values.urlToInline,
+			"lineNumber": values.lineNumber,
+			"uniqueIdentifier": values.uniqueIdentifier,
+		]
+	}
+
+	// MARK: - Secure Coding
+
+	public static var supportsSecureCoding: Bool {
 		true
 	}
 
-	private func populate(with decoder: NSCoder) -> Bool {
+	public required init?(coder decoder: NSCoder) {
 		guard
 			let url = decoder.decodeObject(of: NSURL.self, forKey: "url") as URL?,
 			let lineNumber = decoder.decodeObject(of: NSString.self, forKey: "lineNumber") as String?,
 			let uniqueIdentifier = decoder.decodeObject(of: NSString.self, forKey: "uniqueIdentifier") as String?,
 			let viewIdentifier = decoder.decodeObject(of: NSString.self, forKey: "viewIdentifier") as String?
 		else {
-			return false
+			return nil
 		}
 
-		urlStorage = url
-		urlToInlineStorage = decoder.decodeObject(of: NSURL.self, forKey: "urlToInline") as URL? ?? url
-		lineNumberStorage = lineNumber
-		uniqueIdentifierStorage = uniqueIdentifier
-		viewIdentifierStorage = viewIdentifier
-		indexStorage = UInt(decoder.decodeInteger(forKey: "index"))
-		contentLengthStorage = decoder.decodeObject(of: NSNumber.self, forKey: "contentLength")?.uint64Value ?? 0
-		contentSizeStorage = decoder.decodeSize(forKey: "contentSize")
-		styleResourcesStorage = Self.decodeURLs(decoder, key: "styleResources")
-		scriptResourcesStorage = Self.decodeURLs(decoder, key: "scriptResources")
-		htmlStorage = decoder.decodeObject(of: NSString.self, forKey: "html") as String? ?? ""
-		entrypointStorage = decoder.decodeObject(of: NSString.self, forKey: "entrypoint") as String?
-		entrypointPayloadStorage = Self.decodeDictionary(decoder, key: "entrypointPayload")
-		classAttributeStorage = decoder.decodeObject(of: NSString.self, forKey: "classAttribute") as String? ?? ""
-		return true
+		var values = InlineContentPayloadValues(
+			url: url,
+			uniqueIdentifier: uniqueIdentifier,
+			lineNumber: lineNumber,
+			index: UInt(decoder.decodeInteger(forKey: "index")),
+			viewIdentifier: viewIdentifier
+		)
+
+		values.urlToInline = decoder.decodeObject(of: NSURL.self, forKey: "urlToInline") as URL? ?? url
+		values.contentLength = decoder.decodeObject(of: NSNumber.self, forKey: "contentLength")?.uint64Value ?? 0
+		values.contentSize = decoder.decodeSize(forKey: "contentSize")
+		values.styleResources = Self.decodeURLs(decoder, key: "styleResources")
+		values.scriptResources = Self.decodeURLs(decoder, key: "scriptResources")
+		values.html = decoder.decodeObject(of: NSString.self, forKey: "html") as String? ?? ""
+		values.entrypoint = decoder.decodeObject(of: NSString.self, forKey: "entrypoint") as String?
+		values.classAttribute = decoder.decodeObject(of: NSString.self, forKey: "classAttribute") as String? ?? ""
+
+		self.values = values
+
+		super.init()
 	}
 
 	public func encode(with coder: NSCoder) {
-		coder.encode(NSNumber(value: contentLengthStorage), forKey: "contentLength")
-		coder.encode(contentSizeStorage, forKey: "contentSize")
-		coder.encode(styleResourcesStorage, forKey: "styleResources")
-		coder.encode(scriptResourcesStorage, forKey: "scriptResources")
-		coder.encode(htmlStorage, forKey: "html")
-		coder.encode(entrypointStorage, forKey: "entrypoint")
-		coder.encode(entrypointPayloadStorage, forKey: "entrypointPayload")
-		coder.encode(urlStorage, forKey: "url")
-		coder.encode(urlToInlineStorage, forKey: "urlToInline")
-		coder.encode(lineNumberStorage, forKey: "lineNumber")
-		coder.encode(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-		coder.encode(viewIdentifierStorage, forKey: "viewIdentifier")
-		coder.encode(indexStorage, forKey: "index")
-		coder.encode(classAttributeStorage, forKey: "classAttribute")
-	}
-
-	override public func copy() -> Any {
-		let copy = InlineContentPayload()
-		copy.copyValues(from: self)
-
-		return copy
-	}
-
-	override public func mutableCopy() -> Any {
-		let copy = InlineContentPayloadMutable()
-		copy.copyValues(from: self)
-
-		return copy
-	}
-
-	private var defaultEntrypointContext: [String: Any] {
-		[
-			"class": classAttributeStorage,
-			"html": htmlStorage,
-			"url": urlStorage,
-			"urlToInline": urlToInlineStorage,
-			"lineNumber": lineNumberStorage,
-			"uniqueIdentifier": uniqueIdentifierStorage,
-		]
-	}
-
-	fileprivate func setEntrypointPayload(_ payload: [String: Any]?) {
-		guard let payload else {
-			entrypointPayloadStorage = nil
-			return
-		}
-		entrypointPayloadStorage = payload.merging(defaultEntrypointContext) { _, requiredValue in requiredValue }
-	}
-
-	private func copyValues(from payload: InlineContentPayload) {
-		urlStorage = payload.urlStorage
-		urlToInlineStorage = payload.urlToInlineStorage
-		lineNumberStorage = payload.lineNumberStorage
-		uniqueIdentifierStorage = payload.uniqueIdentifierStorage
-		viewIdentifierStorage = payload.viewIdentifierStorage
-		indexStorage = payload.indexStorage
-		contentLengthStorage = payload.contentLengthStorage
-		contentSizeStorage = payload.contentSizeStorage
-		styleResourcesStorage = payload.styleResourcesStorage
-		scriptResourcesStorage = payload.scriptResourcesStorage
-		htmlStorage = payload.htmlStorage
-		entrypointStorage = payload.entrypointStorage
-		entrypointPayloadStorage = payload.entrypointPayloadStorage
-		classAttributeStorage = payload.classAttributeStorage
+		coder.encode(NSNumber(value: values.contentLength), forKey: "contentLength")
+		coder.encode(values.contentSize, forKey: "contentSize")
+		coder.encode(values.styleResources, forKey: "styleResources")
+		coder.encode(values.scriptResources, forKey: "scriptResources")
+		coder.encode(values.html, forKey: "html")
+		coder.encode(values.entrypoint, forKey: "entrypoint")
+		coder.encode(values.url, forKey: "url")
+		coder.encode(values.urlToInline, forKey: "urlToInline")
+		coder.encode(values.lineNumber, forKey: "lineNumber")
+		coder.encode(values.uniqueIdentifier, forKey: "uniqueIdentifier")
+		coder.encode(values.viewIdentifier, forKey: "viewIdentifier")
+		coder.encode(values.index, forKey: "index")
+		coder.encode(values.classAttribute, forKey: "classAttribute")
 	}
 
 	private static func decodeURLs(_ decoder: NSCoder, key: String) -> [URL] {
 		let classes: [AnyClass] = [NSArray.self, NSURL.self]
-		return decoder.decodeObject(of: classes, forKey: key) as? [URL] ?? []
-	}
 
-	private static func decodeDictionary(_ decoder: NSCoder, key: String) -> [String: Any]? {
-		let classes: [AnyClass] = [
-			NSDictionary.self, NSArray.self, NSString.self, NSNumber.self, NSURL.self, NSNull.self,
-		]
-		return decoder.decodeObject(of: classes, forKey: key) as? [String: Any]
+		return decoder.decodeObject(of: classes, forKey: key) as? [URL] ?? []
 	}
 }
 
+/// The scratch payload a module fills in while it runs.
+///
+/// It never crosses a process or an isolation boundary: the service creates one
+/// per module and takes a `snapshot()` of it when the module finishes.
 @objc(ICLPayloadMutable)
-/* ISOLATION-EXCEPTION: see `InlineContentPayload`. */
-public final class InlineContentPayloadMutable: InlineContentPayload, @unchecked Sendable {
-	@objc override public var urlToInline: URL {
-		get { urlToInlineStorage }
+public final class InlineContentPayloadMutable: NSObject {
+	public private(set) var values: InlineContentPayloadValues
+
+	public init(values: InlineContentPayloadValues) {
+		precondition(!values.url.isFileURL)
+
+		self.values = values
+
+		super.init()
+	}
+
+	@objc(initWithURL:withUniqueIdentifier:atLineNumber:index:inView:)
+	public convenience init(
+		url: URL,
+		withUniqueIdentifier uniqueIdentifier: String,
+		atLineNumber lineNumber: String,
+		index: UInt,
+		inView viewIdentifier: String
+	) {
+		self.init(
+			values: InlineContentPayloadValues(
+				url: url,
+				uniqueIdentifier: uniqueIdentifier,
+				lineNumber: lineNumber,
+				index: index,
+				viewIdentifier: viewIdentifier
+			)
+		)
+	}
+
+	/// A payload for a module that deferred to another one: the link and its
+	/// class attribute carry over, the produced content does not.
+	@objc(initWithDeferredPayload:)
+	public convenience init(deferredPayload payload: InlineContentPayloadMutable) {
+		self.init(values: payload.values.deferredCopy)
+	}
+
+	/// The payload as the client will see it.
+	public func snapshot() -> InlineContentPayload {
+		InlineContentPayload(values: values)
+	}
+
+	// MARK: - Accessors
+
+	@objc public var url: URL {
+		values.url
+	}
+
+	@objc public var address: String {
+		values.url.absoluteString
+	}
+
+	@objc public var addressToInline: String {
+		values.urlToInline.absoluteString
+	}
+
+	@objc public var uniqueIdentifier: String {
+		values.uniqueIdentifier
+	}
+
+	@objc public var viewIdentifier: String {
+		values.viewIdentifier
+	}
+
+	@objc public var lineNumber: String {
+		values.lineNumber
+	}
+
+	@objc public var index: UInt {
+		values.index
+	}
+
+	@objc public var urlToInline: URL {
+		get { values.urlToInline }
 		set {
 			/* This value is rendered into a `src` attribute in the log view.
 			 Modules build it from strings a remote server supplied, so it is
@@ -302,54 +369,49 @@ public final class InlineContentPayloadMutable: InlineContentPayload, @unchecked
 			guard let scheme = newValue.scheme?.lowercased(),
 			      InlineContentHelpers.permittedSchemes.contains(scheme)
 			else {
-				InlineContentPayload.logger.error(
+				payloadLogger.error(
 					"Refused inline URL with scheme '\(newValue.scheme ?? "(none)", privacy: .public)'"
 				)
 
 				return
 			}
 
-			urlToInlineStorage = newValue
+			values.urlToInline = newValue
 		}
 	}
 
-	@objc override public var contentLength: UInt64 {
-		get { contentLengthStorage }
-		set { contentLengthStorage = newValue }
+	@objc public var contentLength: UInt64 {
+		get { values.contentLength }
+		set { values.contentLength = newValue }
 	}
 
-	@objc override public var contentSize: NSSize {
-		get { contentSizeStorage }
-		set { contentSizeStorage = newValue }
+	@objc public var contentSize: CGSize {
+		get { values.contentSize }
+		set { values.contentSize = newValue }
 	}
 
-	@objc override public var styleResources: [URL] {
-		get { styleResourcesStorage }
-		set { styleResourcesStorage = newValue }
+	@objc public var styleResources: [URL] {
+		get { values.styleResources }
+		set { values.styleResources = newValue }
 	}
 
-	@objc override public var scriptResources: [URL] {
-		get { scriptResourcesStorage }
-		set { scriptResourcesStorage = newValue }
+	@objc public var scriptResources: [URL] {
+		get { values.scriptResources }
+		set { values.scriptResources = newValue }
 	}
 
-	@objc override public var html: String {
-		get { htmlStorage }
-		set { htmlStorage = newValue }
+	@objc public var html: String {
+		get { values.html }
+		set { values.html = newValue }
 	}
 
-	@objc override public var entrypoint: String? {
-		get { entrypointStorage }
-		set { entrypointStorage = newValue }
+	@objc public var entrypoint: String? {
+		get { values.entrypoint }
+		set { values.entrypoint = newValue }
 	}
 
-	@objc override public var entrypointPayload: [String: Any] {
-		get { super.entrypointPayload }
-		set { setEntrypointPayload(newValue) }
-	}
-
-	@objc override public var classAttribute: String {
-		get { classAttributeStorage }
-		set { classAttributeStorage = newValue }
+	@objc public var classAttribute: String {
+		get { values.classAttribute }
+		set { values.classAttribute = newValue }
 	}
 }
