@@ -231,6 +231,7 @@
 		39D0A5C2AEF5B70E987ACB87 /* Preferences+FileTransfers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99CA1A5ED9B1D14B9BCA33A7 /* Preferences+FileTransfers.swift */; };
 		39F3BA7C79E0FFD69E35F3F5 /* InlineContentPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853B5D2AAFEE2AC7AC162318 /* InlineContentPlugin.swift */; };
 		3A17DAE9F9F4181855A5AD14 /* Preferences+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A01B91D4C3E92154CAFF5A /* Preferences+Notifications.swift */; };
+		3AA4A62A8D16629C2A42A02E /* ResourceFileImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 031981814877D8B11EE7D12D /* ResourceFileImporter.swift */; };
 		3ADDB643D591C264D061003B /* IRCSpecISupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AED35C3431DBBB5D7422FB73 /* IRCSpecISupportTests.swift */; };
 		3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 215C3A04759171741632CD9C /* IRC Connection Host.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3B52AAFD736039328CE08280 /* MenuActionCoordinatorEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4C4DEC71DCB7EB01246BFC /* MenuActionCoordinatorEditing.swift */; };
@@ -940,7 +941,6 @@
 		FD418F55F65D8FD536FBBEDF /* ApplicationInfrastructureMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C60986D7A4E9E0C432E1DD /* ApplicationInfrastructureMigrationTests.swift */; };
 		FD5FC3F747DBC55CABD141DB /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		FD6EA022DC280CF770706180 /* FileTransferDialogTableCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23864ECB19EC607F4EE0B7F5 /* FileTransferDialogTableCell.swift */; };
-		FD714ED5A50E2B0B1B4423B6 /* ResourceManagerDocumentTypeImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F1F6778C7AAEBFD4DD1A6 /* ResourceManagerDocumentTypeImporter.swift */; };
 		FE4B30253EDDAE6727EECE6C /* IRCClientEncodingFilteringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C730B42BACE7617C97E28C /* IRCClientEncodingFilteringTests.swift */; };
 		FE78BC433420D51FF72B06A9 /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		FEF9B321CCB66FBE598DC01E /* ChannelTopicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C6C41F1006971FD7C36F00 /* ChannelTopicModel.swift */; };
@@ -1287,6 +1287,7 @@
 		025A6C89C7E70D2BDC518D25 /* IRCClientUserDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientUserDirectory.swift; sourceTree = "<group>"; };
 		025D430DE3452192AF638EE5 /* ICMPornhub.mustache */ = {isa = PBXFileReference; path = ICMPornhub.mustache; sourceTree = "<group>"; };
 		02E622DA204DAD2BC39AE227 /* IRCChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannel.swift; sourceTree = "<group>"; };
+		031981814877D8B11EE7D12D /* ResourceFileImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceFileImporter.swift; sourceTree = "<group>"; };
 		03FA40565E5F5DF2E4A83FEA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCOnboardingWindow.xib; sourceTree = "<group>"; };
 		04009B82B1D3D0C33D214172 /* NicknameColorOverrideStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameColorOverrideStorageTests.swift; sourceTree = "<group>"; };
 		041440ACD4038F3B03597142 /* SCRAMClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCRAMClient.swift; sourceTree = "<group>"; };
@@ -1897,7 +1898,6 @@
 		B1EA4834B48D496ADCD3FADD /* IRCTypingTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCTypingTrackerTests.swift; sourceTree = "<group>"; };
 		B2002C8EB510F5317F171362 /* IRCClientDirectoryMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientDirectoryMigrationTests.swift; sourceTree = "<group>"; };
 		B23DF8ECD01E402B3AECF87E /* FileTransferController+FileIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferController+FileIO.swift"; sourceTree = "<group>"; };
-		B23F1F6778C7AAEBFD4DD1A6 /* ResourceManagerDocumentTypeImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceManagerDocumentTypeImporter.swift; sourceTree = "<group>"; };
 		B24047040DF003A03F68CFFC /* ChannelInviteFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelInviteFeatureTests.swift; sourceTree = "<group>"; };
 		B24153EC3BFD24424F219A7C /* SwiftStandardLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftStandardLibrary.swift; sourceTree = "<group>"; };
 		B25CD2C6624C915AC8C03691 /* MainWindowAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowAppearance.swift; sourceTree = "<group>"; };
@@ -2447,8 +2447,8 @@
 				12F7FD6DCD2C41E5E5C93E75 /* NotificationSubscriptions.swift */,
 				CD5D15D63FDB93AFE31F21CA /* PathInfo.swift */,
 				8618C251F40EC8876FB72810 /* Reachability.swift */,
+				031981814877D8B11EE7D12D /* ResourceFileImporter.swift */,
 				8A8A51EFD7395F8EFD506AEB /* ResourceManager.swift */,
-				B23F1F6778C7AAEBFD4DD1A6 /* ResourceManagerDocumentTypeImporter.swift */,
 				EBA0B949F158C9B911C21890 /* SharedApplication.swift */,
 				298B34E6C9F0BF94A0D24326 /* WindowController.swift */,
 			);
@@ -5872,8 +5872,8 @@
 				01B2B0033947F9825AECB73F /* Reachability.swift in Sources */,
 				AB48508D0B9A95CF216C6C0F /* ReactionPopoverController.swift in Sources */,
 				263C0F71529849FC5B31DCDB /* RemoteConnectionProtocols.swift in Sources */,
+				3AA4A62A8D16629C2A42A02E /* ResourceFileImporter.swift in Sources */,
 				D784614D2FE56AD6EBECEA49 /* ResourceManager.swift in Sources */,
-				FD714ED5A50E2B0B1B4423B6 /* ResourceManagerDocumentTypeImporter.swift in Sources */,
 				7EAE404F5FEBEB6CA3BB8A5F /* SCRAMClient.swift in Sources */,
 				78523B000344828A0D35EFB5 /* SecureConnectionInformation.swift in Sources */,
 				FFC2BDA2ACBF42D524A426A6 /* ServerChangeNicknameSheet.swift in Sources */,

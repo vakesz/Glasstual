@@ -69,6 +69,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private var terminateHistoricLogSaveStarted = false
 	private var terminateStepThreePerformed = false
 	private let notifications = NotificationSubscriptions()
+	private lazy var resourceFileImporter = ResourceFileImporter()
 
 	/** Nib connects these via KVC (`setValue:forKey:`). IUO matches the
 	 ObjC nonnull headers while still allowing nil before wake / in tests. */
@@ -326,13 +327,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		return true
 	}
 
-	public func applicationShouldOpenUntitledFile(_: NSApplication) -> Bool {
-		/* Glasstual has one window and no document controller, but it does
-		 declare an NSDocumentClass for importing scripts and extensions.
-		 Saying yes here invites AppKit to make an untitled document out of
-		 that importer; `applicationShouldHandleReopen` already brings the main
-		 window forward, which is what a reopen is actually asking for. */
-		false
+	/** Scripts and extensions the user opened from the Finder. The declared
+	 document types used to name an `NSDocument` subclass, whose nonisolated
+	 `read(from:ofType:)` had to assume the main actor before it could put an
+	 alert on screen; this delegate method is isolated by declaration. */
+	public func application(_: NSApplication, open urls: [URL]) {
+		resourceFileImporter.open(urls)
 	}
 
 	public func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {
