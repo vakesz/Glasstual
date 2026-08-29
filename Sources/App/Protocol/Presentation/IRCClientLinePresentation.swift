@@ -470,7 +470,7 @@ private extension IRCClient {
 		}
 		if IRCLinePresentationPolicy.needsScrollbackMark(
 			autoMark: environment.preferences.autoAddScrollbackMark,
-			itemIsVisible: output.isItemVisible(legacyTreeItem(channel)),
+			itemIsVisible: output.isItemVisible(channel),
 			windowIsMain: output.windowIsMain,
 			channelIsUnread: channel.isUnread,
 			lineType: lineType
@@ -478,7 +478,7 @@ private extension IRCClient {
 			channel.presentation?.mark()
 		}
 		channel.print(logLine, completionBlock: request.completionBlock)
-		if output.windowIsKey, output.isItemVisible(legacyTreeItem(channel)) {
+		if output.windowIsKey, output.isItemVisible(channel) {
 			scheduleReadMarker(for: channel, date: request.receivedAt)
 		}
 	}
@@ -525,9 +525,5 @@ private extension IRCClient {
 		if !values.contains(value) {
 			values.append(value)
 		}
-	}
-
-	func legacyTreeItem(_ channel: IRCChannel) -> IRCTreeItem {
-		channel
 	}
 }

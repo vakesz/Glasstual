@@ -124,9 +124,7 @@ public extension IRCClient {
 	@objc(newestKnownLineDateForChannel:)
 	func newestKnownLineDate(for channel: IRCChannel) -> Date? {
 		let viewDate = channel.lastLine?.receivedAt
-		let storeDate = legacyTreeItem(channel).flatMap {
-			LogControllerHistoricLogFile.shared().newestLineDate(forView: $0.uniqueIdentifier)
-		}
+		let storeDate = LogControllerHistoricLogFile.shared().newestLineDate(forView: channel.uniqueIdentifier)
 		return [viewDate, storeDate].compactMap(\.self).max()
 	}
 
@@ -154,18 +152,17 @@ public extension IRCClient {
 
 	@objc(chatHistoryMessageIsDuplicate:)
 	func chatHistoryMessageIsDuplicate(_ message: Message) -> Bool {
-		guard let channel = channel(forTargetedMessage: message),
-		      let item = legacyTreeItem(channel) else { return false }
+		guard let channel = channel(forTargetedMessage: message) else { return false }
 		let historicLog = LogControllerHistoricLogFile.shared()
 		if let identifier = message.messageIdentifier, !identifier.isEmpty {
-			return historicLog.containsMessageIdentifier(identifier, forView: item.uniqueIdentifier)
+			return historicLog.containsMessageIdentifier(identifier, forView: channel.uniqueIdentifier)
 		}
 		guard message.isHistoric, let text = message.params.last else { return false }
 		return historicLog.containsLine(
 			receivedAt: message.receivedAt,
 			nickname: message.senderNickname,
 			messageBody: text,
-			forView: item.uniqueIdentifier
+			forView: channel.uniqueIdentifier
 		)
 	}
 
@@ -301,21 +298,15 @@ private extension IRCClient {
 		if newestDate.map({ $0 > date }) != true {
 			if channel.isUnread || channel.nicknameHighlightCount > 0 {
 				channel.resetState()
-				if let item = legacyTreeItem(channel) {
-					output?.refreshMessageCount(for: item)
-				}
+				output?.refreshMessageCount(for: channel)
 				DockIcon.updateDockIcon()
 			}
 			return
 		}
 
-		guard let item = legacyTreeItem(channel), let output,
-		      !output.isItemVisible(item) || !output.windowIsKey
+		guard let output,
+		      !output.isItemVisible(channel) || !output.windowIsKey
 		else { return }
 		channel.presentation?.mark(at: date)
-	}
-
-	func legacyTreeItem(_ channel: IRCChannel) -> IRCTreeItem? {
-		(channel as AnyObject) as? IRCTreeItem
 	}
 }

@@ -109,11 +109,6 @@ func nativeLogController(_ controller: TVCLogController) -> LogController {
 }
 
 @inline(__always)
-func legacyTreeItem(_ item: TreeItem) -> IRCTreeItem {
-	item
-}
-
-@inline(__always)
 func nativeChannel(_ item: IRCTreeItem?) -> IRCChannel? {
 	item as? IRCChannel
 }
