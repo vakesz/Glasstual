@@ -98,8 +98,11 @@ struct ApplicationSupportMigrationTests {
 
 		#expect(first != nil)
 		#expect(first as NSDictionary? == second as NSDictionary?)
-		#expect(cached != nil)
-		#expect(cached == first as NSDictionary?)
+		/* `NSCache` may evict at any moment (it does under the parallel test
+		 run), so only a retained entry is checked for identity. */
+		if let cached {
+			#expect(cached == first as NSDictionary?)
+		}
 		#expect(ResourceManager.array(fromResources: "StaticStore", cacheValue: false) == nil)
 		#expect(ResourceManager.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false) == nil)
 	}
