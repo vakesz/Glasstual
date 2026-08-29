@@ -81,7 +81,16 @@ private struct MediaAssessorState {
 }
 
 @objc(ICLMediaAssessor)
-public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDownloadDelegate {
+/* ISOLATION-EXCEPTION: `URLSessionDelegate` is declared `NS_SWIFT_SENDABLE`, so
+ every conformer has to be `Sendable`, and this one holds the caller's
+ completion block and the in-flight request. The completion comes from an
+ `InlineContentModule`, which is a reference type the module mutates while it
+ runs, so it cannot be `@Sendable` until the modules become value producers.
+ The three request-state types the assessor owns no longer need annotations of
+ their own; this is the only one left. */
+public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDownloadDelegate,
+	@unchecked Sendable
+{
 	private static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "MediaAssessor"
