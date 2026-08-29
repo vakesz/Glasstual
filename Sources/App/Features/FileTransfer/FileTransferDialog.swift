@@ -39,6 +39,7 @@
 import AppKit
 import os
 import QuickLookUI
+import Synchronization
 
 public typealias TDCFileTransferDialog = FileTransferDialog
 
@@ -63,31 +64,40 @@ let fileTransferDialogLogger = Logger(
 	category: "FileTransferDialog"
 )
 
+/// What the window's Quick Look overrides are allowed to answer.
+///
+/// QuickLookUI declares `QLPreviewPanelController` on `NSObject` without
+/// isolation, so the overrides below cannot be main-actor. Rather than reach
+/// across isolation for the answer, they read this snapshot, which the dialog
+/// writes on the main actor.
+nonisolated struct FileTransferPreviewState: Sendable { // nonisolated: value
+	var acceptsPreviews = false
+}
+
 @objc(TDCFileTransferDialogWindow)
 public final class FileTransferDialogWindow: NSWindow {
-	/* ISOLATION-EXCEPTION: QuickLookUI declares the `QLPreviewPanelController`
-	 methods on `NSObject` as nonisolated, so these overrides cannot be isolated.
-	 QuickLook drives the panel from the main thread. */
+	nonisolated let previewState = Mutex(FileTransferPreviewState()) // nonisolated: let
+
 	override public nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel!) -> Bool {
-		MainActor.assumeIsolated {
-			delegate is FileTransferDialog
-		}
+		previewState.withLock { $0.acceptsPreviews }
 	}
 
-	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
-	override public nonisolated func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {
-		guard let panel else { return }
+	/** The dialog points the shared panel at itself before the panel appears,
+	 in `toggleQuickLookPanel()`, so these two only have to confirm it and can
+	 wait for a main-actor turn. Nothing crosses isolation: the panel is a
+	 singleton the main actor fetches for itself. */
+	override public nonisolated func beginPreviewPanelControl(_: QLPreviewPanel!) {
+		Task { @MainActor in
+			guard let panel = QLPreviewPanel.shared() else { return }
 
-		MainActor.assumeIsolated {
 			(delegate as? FileTransferDialog)?.beginPreviewPanelControlOnMainActor(panel)
 		}
 	}
 
-	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
-	override public nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
-		guard let panel else { return }
+	override public nonisolated func endPreviewPanelControl(_: QLPreviewPanel!) {
+		Task { @MainActor in
+			guard let panel = QLPreviewPanel.shared() else { return }
 
-		MainActor.assumeIsolated {
 			(delegate as? FileTransferDialog)?.endPreviewPanelControlOnMainActor(panel)
 		}
 	}
@@ -128,13 +138,23 @@ public final class FileTransferDialog: WindowBase,
 		fileTransferTable.style = .inset
 		prepareTableMenu()
 		installKeyDownEventMonitor()
+		setPreviewsAccepted(true)
 
 		notifications.observe(.ircWorldWillDestroyClient) { [weak self] notification in
 			self?.clientWillBeDestroyed(notification)
 		}
 	}
 
+	/// Tells the window's nonisolated Quick Look overrides whether this dialog
+	/// is still there to answer for them.
+	private func setPreviewsAccepted(_ accepted: Bool) {
+		(window as? FileTransferDialogWindow)?.previewState.withLock {
+			$0.acceptsPreviews = accepted
+		}
+	}
+
 	isolated deinit {
+		setPreviewsAccepted(false)
 		notifications.cancelAll()
 		maintenanceTask?.cancel()
 		removeKeyDownEventMonitor()

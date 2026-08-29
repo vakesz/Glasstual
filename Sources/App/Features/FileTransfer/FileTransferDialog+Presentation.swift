@@ -133,6 +133,11 @@ extension FileTransferDialog {
 	}
 
 	func endPreviewPanelControlOnMainActor(_ panel: QLPreviewPanel) {
+		/* Control comes back on a later main-actor turn than the one that gave
+		 it up, so a quick reopen can get there first. Only tear down if the
+		 panel really has gone. */
+		guard !panel.isVisible else { return }
+
 		panel.dataSource = nil
 		panel.delegate = nil
 		previewItems = []
@@ -280,6 +285,10 @@ extension FileTransferDialog {
 			panel.orderOut(nil)
 			return
 		}
+
+		/* Point the panel at this dialog before it appears: the responder-chain
+		 callback that would otherwise do it cannot answer synchronously. */
+		beginPreviewPanelControlOnMainActor(panel)
 
 		window.makeFirstResponder(fileTransferTable)
 		panel.makeKeyAndOrderFront(nil)
