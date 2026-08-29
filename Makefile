@@ -7,10 +7,11 @@ CONFIG       ?= Debug
 DESTINATION  := platform=macOS,arch=arm64
 DERIVED_DATA ?= DerivedData
 RESULT_BUNDLE ?= build/Glasstual.xcresult
+TSAN_RESULT_BUNDLE ?= build/Glasstual-tsan.xcresult
 GENERATED_XCODE_DIR := Generated/Xcode
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
 
-.PHONY: help generate validate-generated-metadata build release archive run test coverage lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate validate-generated-metadata build release archive run test tsan smoke coverage lint isolation-gate isolation-ratchet format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -55,6 +56,18 @@ test: generate ## Run the unit tests (GlasstualTests) inside the Debug app
 	rm -rf "$(RESULT_BUNDLE)"
 	$(XCODEBUILD) -configuration Debug -resultBundlePath "$(RESULT_BUNDLE)" test
 
+# ThreadSanitizer instruments every memory access, so the suite runs roughly
+# ten times slower and needs its own result bundle. It stays out of CI: the
+# runtime cost is too high for every push, and a TSan report is a diagnosis to
+# read rather than a pass/fail signal. Run it before merging isolation work.
+tsan: generate ## Run the test suite under ThreadSanitizer (local only, not in CI)
+	rm -rf "$(TSAN_RESULT_BUNDLE)"
+	$(XCODEBUILD) -configuration Debug -enableThreadSanitizer YES \
+		-resultBundlePath "$(TSAN_RESULT_BUNDLE)" test
+
+smoke: ## Seeded 40s launch with an accessibility probe (see scripts/smoke.sh)
+	./scripts/smoke.sh
+
 coverage: ## Print the line coverage of the last `make test` run
 	xcrun xccov view --report --only-targets "$(RESULT_BUNDLE)"
 
@@ -64,10 +77,18 @@ ensure-formatters:
 ensure-linters: ensure-formatters
 	@command -v swiftlint >/dev/null 2>&1 || brew install swiftlint
 	@command -v actionlint >/dev/null 2>&1 || brew install actionlint
+	@command -v shellcheck >/dev/null 2>&1 || brew install shellcheck
 
-lint: ensure-linters format-check ## Run whole-tree linters and format checks
+isolation-gate: ## Check the isolation escape-hatch census against its ceilings
+	./scripts/isolation-gate.sh
+
+isolation-ratchet: ## Lower the isolation ceilings to today's counts, then commit them
+	./scripts/isolation-gate.sh --ratchet
+
+lint: ensure-linters format-check isolation-gate ## Run whole-tree linters and format checks
 	swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests
 	actionlint
+	shellcheck scripts/*.sh
 	@git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' '*.xcprivacy' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then plutil -lint "$$file" >/dev/null; fi; done
 	@git ls-files --cached --others --exclude-standard -z -- '*.xib' '*.xcscheme' '*.xcworkspacedata' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then xmllint --noout "$$file"; fi; done
 	git diff --check
