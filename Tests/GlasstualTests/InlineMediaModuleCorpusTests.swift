@@ -129,15 +129,12 @@ struct InlineMediaModuleCorpusTests {
 		try Self.expectMatch(testCase, YouTubeModule.self)
 	}
 
-	/// The host check is a suffix test, so any domain ending in the string
-	/// `youtube.com` is accepted by the module itself.
-	@Test(
-		.disabled("Phase 1: YouTubeModule matches hosts by hasSuffix(\"youtube.com\"), not against its allowlist"),
-		arguments: [
-			URLCase("https://notyoutube.com/watch?v=dQw4w9WgXcQ", false),
-			URLCase("https://evilyoutube.com/watch?v=dQw4w9WgXcQ", false),
-		]
-	)
+	/// The host has to be `youtube.com` itself or one of its subdomains: a
+	/// bare suffix test also claims any domain ending in the string.
+	@Test(arguments: [
+		URLCase("https://notyoutube.com/watch?v=dQw4w9WgXcQ", false),
+		URLCase("https://evilyoutube.com/watch?v=dQw4w9WgXcQ", false),
+	])
 	func rejectsLookalikeYouTubeHosts(testCase: URLCase) throws {
 		try Self.expectMatch(testCase, YouTubeModule.self)
 	}
@@ -194,7 +191,7 @@ struct InlineMediaModuleCorpusTests {
 	}
 
 	/// An empty identifier is not an identifier.
-	@Test(.disabled("Phase 1: DailymotionModule accepts /video/ with an empty identifier"))
+	@Test
 	func rejectsDailymotionAddressesWithoutAnIdentifier() throws {
 		try Self.expectMatch(URLCase("https://www.dailymotion.com/video/", false), DailymotionModule.self)
 	}
@@ -312,15 +309,12 @@ struct InlineMediaModuleCorpusTests {
 		try Self.expectMatch(testCase, CommonInlineImagesModule.self)
 	}
 
-	/// A slug whose body is not a number is not a Nico Video identifier. It
-	/// currently parses as zero and resolves to a thumbnail for video 0.
-	@Test(
-		.disabled("Phase 1: a non-numeric Nico Video slug falls back to identifier 0 instead of being rejected"),
-		arguments: [
-			URLCase("https://www.nicovideo.jp/watch/smABCDEF", false),
-			URLCase("https://nico.ms/nmXYZ", false),
-		]
-	)
+	/// A slug whose body is not a number is not a Nico Video identifier: it
+	/// used to parse as zero and resolve to a thumbnail for video 0.
+	@Test(arguments: [
+		URLCase("https://www.nicovideo.jp/watch/smABCDEF", false),
+		URLCase("https://nico.ms/nmXYZ", false),
+	])
 	func rejectsNonNumericNicoVideoSlugs(testCase: URLCase) throws {
 		try Self.expectMatch(testCase, CommonInlineImagesModule.self)
 	}
