@@ -29,12 +29,12 @@ private typealias ServerEndpointListSnapshot =
  `NSTableViewDiffableDataSource` implements only the row-count half of
  `NSTableViewDataSource`, and a table asks its *data source* — not its delegate
  — where a drag may land, so both answers have to come from the one object. The
- three methods are `` because they satisfy optional requirements of a
+ three methods are `@objc` because they satisfy optional requirements of a
  protocol the superclass, not this class, declares, and Swift will not expose
  them to the runtime on its own.
 
  The class is `nonisolated` because the initializer it inherits is: a main-actor
- subclass cannot re-declare it. It holds no state, and each `` entry point
+ subclass cannot re-declare it. It holds no state, and each `@objc` entry point
  — every one of them called by AppKit on the main thread — hops back onto the
  main actor by declaration. The sheet is reached through the table's delegate
  rather than a stored reference, so there is nothing here for the two isolations
@@ -42,6 +42,7 @@ private typealias ServerEndpointListSnapshot =
 private final nonisolated class ServerEndpointListDataSource: // nonisolated: xpc-shim
 	NSTableViewDiffableDataSource<ServerEndpointListSection, String>
 {
+	@objc
 	@MainActor
 	func tableView(_: NSTableView, pasteboardWriterForRow row: Int) -> (any NSPasteboardWriting)? {
 		let item = NSPasteboardItem()
@@ -50,6 +51,7 @@ private final nonisolated class ServerEndpointListDataSource: // nonisolated: xp
 		return item
 	}
 
+	@objc
 	@MainActor
 	func tableView(
 		_ tableView: NSTableView,
@@ -62,6 +64,7 @@ private final nonisolated class ServerEndpointListDataSource: // nonisolated: xp
 		return .move
 	}
 
+	@objc
 	@MainActor
 	func tableView(
 		_ tableView: NSTableView,
@@ -87,7 +90,7 @@ public protocol ServerEndpointListSheetDelegate: AnyObject {
 
 @objc(TDCServerEndpointListSheet)
 @MainActor
-public final class ServerEndpointListSheet: SheetBase {
+public final class ServerEndpointListSheet: SheetBase, NSWindowDelegate {
 	@IBOutlet private var entryTable: BasicTableView!
 	@IBOutlet private var entryActionsSegmentedControl: NSSegmentedControl!
 

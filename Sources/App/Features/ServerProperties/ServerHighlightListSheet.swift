@@ -27,8 +27,8 @@ private enum HighlightListSortKey: String {
 
 @objc(TDCServerHighlightListSheet)
 @MainActor
-public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, TableViewPasteboardDelegate,
-	NSTableViewDataSource, NSTableViewDelegate
+public final class ServerHighlightListSheet: SheetBase, NSWindowDelegate, TDCClientPrototype,
+	TableViewPasteboardDelegate, NSTableViewDataSource, NSTableViewDelegate
 {
 	public private(set) var client: IRCClient!
 	public private(set) var clientId: String?

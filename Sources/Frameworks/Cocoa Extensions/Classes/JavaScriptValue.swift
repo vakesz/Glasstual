@@ -121,12 +121,16 @@ extension JavaScriptValue: ExpressibleByDictionaryLiteral {
 public nonisolated extension JavaScriptValue { // nonisolated: value
 	/** Reduces a value a caller passed to what the bridge converts.
 
-	 A URL travels as its absolute string, because that is what a page can use
-	 and what every caller here means by one. A dictionary key that is not a
-	 string has no JavaScript equivalent at all, so the entry is dropped rather
-	 than the object being refused. */
+	 A value that is already one of these passes through: callers build payloads
+	 as `[String: JavaScriptValue]` and hand them to an `[Any]` bridge, so every
+	 one of them meets this twice. A URL travels as its absolute string, because
+	 that is what a page can use and what every caller here means by one. A
+	 dictionary key that is not a string has no JavaScript equivalent at all, so
+	 the entry is dropped rather than the object being refused. */
 	init(bridging value: Any) {
 		switch value {
+		case let value as JavaScriptValue:
+			self = value
 		case let url as URL:
 			self = .string(url.absoluteString)
 		case let string as String:

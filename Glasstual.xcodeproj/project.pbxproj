@@ -964,6 +964,7 @@
 		F586F6D5C8415AA07332D064 /* ChannelModesStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C9B4B9BDCCD74F32749D097 /* ChannelModesStrings.swift */; };
 		F59D4CC07B9B841E2D67B268 /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		F610441CC6E8CE3B61EC3F7F /* Mustache.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9434510058F918F7B0BF1724 /* Mustache.framework */; };
+		F6EBD8AF9E2E5AFC6C417906 /* ObjCRuntimeEntryPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2657472C52186B62AE2B310F /* ObjCRuntimeEntryPointTests.swift */; };
 		F73D044E94BC85FB7FE22C1D /* PreferencesLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103FE23EF3DD4CB288FBC367 /* PreferencesLocal.swift */; };
 		F788C8F6EB667ACC1310C1C2 /* IRCClientComputedProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4830006ED489598A4F1FEADA /* IRCClientComputedProperties.swift */; };
 		F86F10BF0087C1CC8705F56A /* AppKitSupportMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1771146410DA6A76C6B9B6E7 /* AppKitSupportMigrationTests.swift */; };
@@ -1521,6 +1522,7 @@
 		25C22DF8934AB6CD97BC7D6D /* IRCHostmask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCHostmask.swift; sourceTree = "<group>"; };
 		25CA535280BCE2CCFEA0B59B /* TemplateToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateToken.swift; sourceTree = "<group>"; };
 		2637AA0543494D372C2CB516 /* ServerEndpointListSheetTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerEndpointListSheetTable.swift; sourceTree = "<group>"; };
+		2657472C52186B62AE2B310F /* ObjCRuntimeEntryPointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjCRuntimeEntryPointTests.swift; sourceTree = "<group>"; };
 		2686AA1D32DB8EF27E4E4F5F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2699E092BDD1EB23347D5A18 /* ACKNOWLEDGEMENT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ACKNOWLEDGEMENT.txt; sourceTree = "<group>"; };
 		26A7864102BBC2896DAD7251 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -4078,6 +4080,7 @@
 				1FFCB2697318AFDBCA45A0A0 /* NicknameColorFeatureTests.swift */,
 				04009B82B1D3D0C33D214172 /* NicknameColorOverrideStorageTests.swift */,
 				DF7ACA2436BBE4380B54CD67 /* NotificationConfigurationStateTests.swift */,
+				2657472C52186B62AE2B310F /* ObjCRuntimeEntryPointTests.swift */,
 				1979AF31A13910121E2EEA00 /* ObjCRuntimeNameTests.swift */,
 				3BD132868A53BF863A07E2FB /* OELReachabilityMigrationTests.swift */,
 				500B3EAF41EA6D76BCCABADF /* PluginContractIsolationTests.swift */,
@@ -5645,6 +5648,7 @@
 				F0C39BD1BF4A6D44C49EF3C8 /* NicknameColorOverrideStorageTests.swift in Sources */,
 				B841EE7D0E3271892043042C /* NotificationConfigurationStateTests.swift in Sources */,
 				1C3EFF5876E8AB44E6B9CAC1 /* OELReachabilityMigrationTests.swift in Sources */,
+				F6EBD8AF9E2E5AFC6C417906 /* ObjCRuntimeEntryPointTests.swift in Sources */,
 				B211900FEA22404216981FB5 /* ObjCRuntimeNameTests.swift in Sources */,
 				2352D0265976D0D94340096A /* PluginContractIsolationTests.swift in Sources */,
 				5BEAF6DFABAB17B072FAB157 /* PluginKitMigrationTests.swift in Sources */,
