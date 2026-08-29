@@ -155,6 +155,7 @@
 		23E3BFD9E6BC0385F3282D4C /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		241B3E5308EE8B3C3906BE66 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5087CE1F4DF632D9C0A19F48 /* Application.swift */; };
 		248B9B4CE5690A2B6D9B5959 /* InlineImageLiveResize.js in Resources */ = {isa = PBXBuildFile; fileRef = BAE4BD447D7BCF1BDAE6EF7D /* InlineImageLiveResize.js */; };
+		24B34BF3D3ED9F098B746900 /* LogRenderPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B77E835A00C07F82583BDB /* LogRenderPipeline.swift */; };
 		24C9CAC5F061180BF5BFE008 /* GlasstualPluginKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 26CEBB2889F146B2FFA4C8B0 /* GlasstualPluginKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		25067005DF685E93D8C7DBEE /* PreferencesAppearanceStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BB089191DA1FBF5FFFFB18 /* PreferencesAppearanceStrings.swift */; };
 		25659A2ACDE4F03A0F7351D5 /* URLEscapeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF1614B776C5992DEFDC126 /* URLEscapeHelper.swift */; };
@@ -241,7 +242,6 @@
 		3B52AAFD736039328CE08280 /* MenuActionCoordinatorEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4C4DEC71DCB7EB01246BFC /* MenuActionCoordinatorEditing.swift */; };
 		3BCC700EE0E7B6105A5EB3AE /* PreferencesExportFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3CDBF47F23D32AC1A9F109 /* PreferencesExportFilterTests.swift */; };
 		3BEB819185CABD1560DD5032 /* Chat Filters.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 36917695947EA4E753801EF5 /* Chat Filters.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		3C1E010CF2EC0E14E67C40B0 /* LogControllerPrintingOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */; };
 		3C3EB691E4208EBAB07FE09E /* NotificationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C80BB7F9049165DCC714D74 /* NotificationConfiguration.swift */; };
 		3C75865333A47405838FD3DB /* MenuActionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2AB97EBC9D8146688E2827C /* MenuActionCoordinator.swift */; };
 		3C807AA33362166422F986E7 /* IRCNetworkListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968458F41F39FFCE9F784AE7 /* IRCNetworkListTests.swift */; };
@@ -319,6 +319,7 @@
 		5014A3B602E6D0DA63A756EB /* TVCLogLineXPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D1B1025D6CCF710E0C520F /* TVCLogLineXPC.swift */; };
 		505D60B74BA4E662F0D8AF80 /* IRCBridgeContractMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6E2E12EF7FE34C60E3FE9E /* IRCBridgeContractMigrationTests.swift */; };
 		50865B3AA79F02D994852764 /* IRCNumericReplyCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31AFB9D0E735935FF32A76DE /* IRCNumericReplyCorpusTests.swift */; };
+		518C569244E685DF38BE71E6 /* LogRenderPipelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B50B65ECCE5DD899A702E0E /* LogRenderPipelineTests.swift */; };
 		51999B32A2354482D4B546B9 /* TVCMainWindowAppearance.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61A3F5E6307AFC43CEB9BBD8 /* TVCMainWindowAppearance.plist */; };
 		5268BE9E9AE9C662A9BA1E3A /* IRCChannelModeKindTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58E2128111647865D1F33D7 /* IRCChannelModeKindTests.swift */; };
 		5279FA27A0A15E84E9D76C16 /* System Info.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 0001CA74F07AAD0D95E12E46 /* System Info.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -378,7 +379,6 @@
 		61A119AC208C9611B9D0DED8 /* IRCClientNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E854474D4F7A52504C4A834 /* IRCClientNotifications.swift */; };
 		6217F103C24F31D68520AD59 /* PluginEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1DAC31E806E7ED675BF45D /* PluginEvents.swift */; };
 		62354DD74841E96B0A80B170 /* LogRendererMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54DD3222626EA1DF4F40363 /* LogRendererMigrationTests.swift */; };
-		62B9D4EE69378DDED3CEDD33 /* LogControllerOperationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC793349BB334068F85ECE6 /* LogControllerOperationQueue.swift */; };
 		62EAE6D0068FA3867D686F9C /* IRCClientScriptExecution.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88E517EC84E037633FD0FFD /* IRCClientScriptExecution.swift */; };
 		63363252C9A7F4467AD16D22 /* PreferencesTransferStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5135FA9A6D02E7B8C4BCBA5 /* PreferencesTransferStrings.swift */; };
 		634E629C61B819D38860AA5D /* AccessibilityStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E441CF65D081C5F1DBB1CF90 /* AccessibilityStrings.swift */; };
@@ -1314,6 +1314,7 @@
 		04CED68EDDEFB4C9BBF12FC2 /* ExpressionInvocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressionInvocation.swift; sourceTree = "<group>"; };
 		05379A6D98A350FBF31C6814 /* ServerNicknameChangeFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerNicknameChangeFeatureTests.swift; sourceTree = "<group>"; };
 		0541086A5E9E1BDF467C780D /* MainWindowChannelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowChannelView.swift; sourceTree = "<group>"; };
+		05B77E835A00C07F82583BDB /* LogRenderPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogRenderPipeline.swift; sourceTree = "<group>"; };
 		05DDA61743BCE9A598A7D55C /* BasicLanguage.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = BasicLanguage.xcstrings; sourceTree = "<group>"; };
 		06149AD9F2BC7F085EDACF82 /* PreferencesControllerActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesControllerActions.swift; sourceTree = "<group>"; };
 		061B053A8B68AEB5BD5740AB /* IRCMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCMessageTests.swift; sourceTree = "<group>"; };
@@ -1346,7 +1347,6 @@
 		0C1BE238EF18988445B22978 /* InlineMediaModuleCorpusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineMediaModuleCorpusTests.swift; sourceTree = "<group>"; };
 		0C49C4D8C18ACF63E4923BBC /* Accessibility.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Accessibility.xcstrings; sourceTree = "<group>"; };
 		0C7AAA468B1B402EADB8C6A9 /* IRCLineBudgetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCLineBudgetTests.swift; sourceTree = "<group>"; };
-		0CC793349BB334068F85ECE6 /* LogControllerOperationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogControllerOperationQueue.swift; sourceTree = "<group>"; };
 		0CD906AC3792722E428BAF75 /* ChannelPropertiesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelPropertiesSheet.swift; sourceTree = "<group>"; };
 		0D344CEBA9DEB6776D25F12D /* Preferences+Internal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Preferences+Internal.swift"; sourceTree = "<group>"; };
 		0D4D07FD5558BED6D1D09099 /* SystemProfileReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemProfileReport.swift; sourceTree = "<group>"; };
@@ -1853,6 +1853,7 @@
 		9A1EB2F01E66E09C18674D8D /* IRCExtrasMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCExtrasMigrationTests.swift; sourceTree = "<group>"; };
 		9AB3CF7D3B60370A393C9157 /* GlasstualTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlasstualTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B3DFBE5771D85B87EB9EA81 /* NotificationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationEvent.swift; sourceTree = "<group>"; };
+		9B50B65ECCE5DD899A702E0E /* LogRenderPipelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogRenderPipelineTests.swift; sourceTree = "<group>"; };
 		9B562D6F1BBEFFBE09214007 /* LogLineTypeRawValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLineTypeRawValueTests.swift; sourceTree = "<group>"; };
 		9BE2BF9D852E77AFB598C13B /* ChannelPropertiesStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelPropertiesStrings.swift; sourceTree = "<group>"; };
 		9C5315E176DE7F0C909CE4FE /* OnboardingStepViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStepViewController.swift; sourceTree = "<group>"; };
@@ -1948,7 +1949,6 @@
 		B7BA89368072237E649007DB /* TrustPanelPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustPanelPresenter.swift; sourceTree = "<group>"; };
 		B7EE3C73A97F0CCF50B4B4D2 /* PluginServerInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginServerInput.swift; sourceTree = "<group>"; };
 		B87295106D6591B8903E1B48 /* ExpressionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressionParser.swift; sourceTree = "<group>"; };
-		B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogControllerPrintingOperationTests.swift; sourceTree = "<group>"; };
 		B8E4793F5D5FF60C4F2FB2DB /* FileTransferDialog+DownloadDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferDialog+DownloadDestination.swift"; sourceTree = "<group>"; };
 		B91567446AE5E2C9F14944EC /* PreferencesSharedStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesSharedStrings.swift; sourceTree = "<group>"; };
 		B977E1F944514004739E1295 /* IRCHostmaskSeparatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCHostmaskSeparatorTests.swift; sourceTree = "<group>"; };
@@ -3299,13 +3299,13 @@
 				FC45C726827FAD1E8F1D359F /* LogControllerHistoricLogFile.swift */,
 				A8E30A14FE902DF60BED4600 /* LogControllerInlineMediaClient.swift */,
 				4D71C2906A38F0DD3C0A7C66 /* LogControllerInlineMediaService.swift */,
-				0CC793349BB334068F85ECE6 /* LogControllerOperationQueue.swift */,
 				7BBCC638F12AB1B502EC2921 /* LogControllerRegistry.swift */,
 				3159BDE04D15184FD77F84B9 /* LogControllerRendering.swift */,
 				4A64102765664EA8071E59D3 /* LogLine.swift */,
 				54E04407DFB08095AB1EF721 /* LogLineTypes.swift */,
 				A2B14D5497421997C3A513D7 /* LogPolicy.swift */,
 				0731F6B8A965AF024340198C /* LogRenderer.swift */,
+				05B77E835A00C07F82583BDB /* LogRenderPipeline.swift */,
 				A5E7D99137E0959FD439C51F /* LogView.swift */,
 				FD36DC082C3231CDD316180A /* LogViewContentPolicy.swift */,
 				8856E0CAF42C75D7CEC2C35C /* LogViewInternalWK2.swift */,
@@ -3911,7 +3911,6 @@
 				A3D6AA792436C90B0E71853F /* LinkSchemePolicyTests.swift */,
 				8CEE2370CEBE0BE8155FAC70 /* LocalizationCatalogBoundaryTests.swift */,
 				BAD735D56C4EB0680D6FBEA7 /* LocalizationCatalogMigrationTests.swift */,
-				B88A9404DC5B2A6243455863 /* LogControllerPrintingOperationTests.swift */,
 				D0EA16B6499A131113B4B7DF /* LogControllerRegistryTests.swift */,
 				4A589D8F546E5467ABC23AC0 /* LogLineArchiveCompatibilityTests.swift */,
 				8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */,
@@ -3919,6 +3918,7 @@
 				1CB87F592817BD468FEC14CB /* LogLineXPCTests.swift */,
 				B54DD3222626EA1DF4F40363 /* LogRendererMigrationTests.swift */,
 				BFB501D3F16D7355583620ED /* LogRendererSafetyTests.swift */,
+				9B50B65ECCE5DD899A702E0E /* LogRenderPipelineTests.swift */,
 				35EB251897AACA96E9AED04A /* LogScriptBridgeTests.swift */,
 				61E6A9175F1544213D44EC35 /* LogScriptEventSinkMigrationTests.swift */,
 				2B55F746BBD353691A2D826B /* LogViewContentPolicyTests.swift */,
@@ -5361,12 +5361,12 @@
 				A26FF3A272F12600C88ECD5A /* LinkSchemePolicyTests.swift in Sources */,
 				CF4179E62954717E022D14C7 /* LocalizationCatalogBoundaryTests.swift in Sources */,
 				216B4CD2C2ABC1C6C76A8CE2 /* LocalizationCatalogMigrationTests.swift in Sources */,
-				3C1E010CF2EC0E14E67C40B0 /* LogControllerPrintingOperationTests.swift in Sources */,
 				468177E4E5638386AC747D0E /* LogControllerRegistryTests.swift in Sources */,
 				1886C735418D7480FDAA4F56 /* LogLineArchiveCompatibilityTests.swift in Sources */,
 				53537C46936246C47434AA20 /* LogLineRenderRequestTests.swift in Sources */,
 				E5EFD2984C33C9A7908A9FCD /* LogLineTypeRawValueTests.swift in Sources */,
 				F3088A37444E303333E19072 /* LogLineXPCTests.swift in Sources */,
+				518C569244E685DF38BE71E6 /* LogRenderPipelineTests.swift in Sources */,
 				62354DD74841E96B0A80B170 /* LogRendererMigrationTests.swift in Sources */,
 				80743127EE90051A2EB8D3A8 /* LogRendererSafetyTests.swift in Sources */,
 				4159CE0503F6E5781DC515E3 /* LogScriptBridgeTests.swift in Sources */,
@@ -5816,12 +5816,12 @@
 				A45B92C59415D108268335C8 /* LogControllerHistoricLogFile.swift in Sources */,
 				8A517ED8CC535A78EA00DA2A /* LogControllerInlineMediaClient.swift in Sources */,
 				0B2850FBC827C2950C93BE86 /* LogControllerInlineMediaService.swift in Sources */,
-				62B9D4EE69378DDED3CEDD33 /* LogControllerOperationQueue.swift in Sources */,
 				BAF98C068459363CE2B09C60 /* LogControllerRegistry.swift in Sources */,
 				4C286DA87C5FDA41BF91CD9D /* LogControllerRendering.swift in Sources */,
 				A7F3549A1836579F5BEF0FD9 /* LogLine.swift in Sources */,
 				63F6766390699C44919D572C /* LogLineTypes.swift in Sources */,
 				EC4F36CB1D9C330A54B66064 /* LogPolicy.swift in Sources */,
+				24B34BF3D3ED9F098B746900 /* LogRenderPipeline.swift in Sources */,
 				BA7C5E339F9C62E81FB00886 /* LogRenderer.swift in Sources */,
 				E487B4E70CAD8360F50A0E63 /* LogView.swift in Sources */,
 				AB9E47898DDD58835B259CF1 /* LogViewContentPolicy.swift in Sources */,
