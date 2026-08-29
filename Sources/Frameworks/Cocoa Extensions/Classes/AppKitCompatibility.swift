@@ -34,7 +34,16 @@ import AppKit
 import CoreGraphics
 import ObjectiveC
 
-private nonisolated(unsafe) var menuItemUserInfoKey: UInt8 = 0
+/** The address an associated object is keyed on. It was a mutable global
+ `UInt8` whose address was taken, which needed an escape hatch to be a global at
+ all. A static string literal lives in the binary's constant data, so its bytes
+ have exactly the property a key needs — a unique, stable address — and the
+ literal itself is a value. */
+private let menuItemUserInfoKeyToken: StaticString = "com.vakesz.glasstual.menuItemUserInfo"
+
+private var menuItemUserInfoKey: UnsafeRawPointer {
+	UnsafeRawPointer(menuItemUserInfoKeyToken.utf8Start)
+}
 
 public extension NSFont {
 	@objc(fontTraitSet:)
@@ -91,11 +100,11 @@ public extension NSScreen {
 public extension NSMenuItem {
 	@objc(userInfo)
 	var textualUserInfo: String? {
-		get { objc_getAssociatedObject(self, &menuItemUserInfoKey) as? String }
+		get { objc_getAssociatedObject(self, menuItemUserInfoKey) as? String }
 		set {
 			objc_setAssociatedObject(
 				self,
-				&menuItemUserInfoKey,
+				menuItemUserInfoKey,
 				newValue,
 				.OBJC_ASSOCIATION_COPY_NONATOMIC
 			)

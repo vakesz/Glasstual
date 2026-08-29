@@ -13,6 +13,7 @@
 import CocoaExtensions
 import Foundation
 import os
+import Synchronization
 
 public nonisolated enum ResourceDocumentType {
 	public static let bundleFileExtension = ".bundle"
@@ -28,12 +29,28 @@ public final nonisolated class ResourceManager: NSObject {
 		category: "ResourceManager"
 	)
 
-	/* ISOLATION-EXCEPTION: `NSCache` is documented as thread-safe but is not
-	 `Sendable`, and this is a `let` bound once. */
-	private nonisolated(unsafe) static let resourcesCache = NSCache<NSString, AnyObject>()
+	/// The bundled property lists this process has already read, as the bytes
+	/// they were read from.
+	///
+	/// It was an `NSCache` of parsed objects, which is thread-safe but not
+	/// `Sendable` and so needed an escape hatch to be a global. Caching the file
+	/// contents instead keeps the point of the cache — none of these files is
+	/// read from disk twice — around a value the compiler can check.
+	private static let resourceFileContents = Mutex<[String: Data]>([:])
 
-	public static var sharedResourcesCache: NSCache<NSString, AnyObject> {
-		resourcesCache
+	/// Empties the cache. Tests plant entries in it, and it is process-wide.
+	public static func removeAllCachedResources() {
+		resourceFileContents.withLock { contents in
+			contents.removeAll()
+		}
+	}
+
+	/// Whether `name`'s contents have been read already. For tests: the cache is
+	/// an optimisation, so nothing else has a reason to ask.
+	public static func hasCachedResource(named name: String, inDirectory subpath: String? = nil) -> Bool {
+		resourceFileContents.withLock { contents in
+			contents[cacheKey(name: name, subpath: subpath)] != nil
+		}
 	}
 
 	@objc public static func copyResourcesToApplicationSupportFolder() {
@@ -69,23 +86,7 @@ public final nonisolated class ResourceManager: NSObject {
 		key: String? = nil,
 		cacheValue: Bool = true
 	) -> Value? {
-		guard cacheValue else {
-			return loadObject(fromResources: name, inDirectory: subpath, key: key)
-		}
-
-		let cacheKey = cacheKey(name: name, subpath: subpath, key: key) as NSString
-
-		if let cachedValue = resourcesCache.object(forKey: cacheKey) {
-			return cachedValue as? Value
-		}
-
-		guard let loadedValue: Value = loadObject(fromResources: name, inDirectory: subpath, key: key) else {
-			return nil
-		}
-
-		resourcesCache.setObject(loadedValue as AnyObject, forKey: cacheKey)
-
-		return loadedValue
+		loadObject(fromResources: name, inDirectory: subpath, key: key, cacheContents: cacheValue)
 	}
 
 	public static func dictionary(
@@ -109,7 +110,8 @@ public final nonisolated class ResourceManager: NSObject {
 	private static func loadObject<Value>(
 		fromResources name: String,
 		inDirectory subpath: String?,
-		key: String?
+		key: String?,
+		cacheContents: Bool
 	) -> Value? {
 		guard let resourceURL = Bundle.main.url(forResource: name, withExtension: "plist", subdirectory: subpath) else {
 			logger.error(
@@ -119,15 +121,7 @@ public final nonisolated class ResourceManager: NSObject {
 			return nil
 		}
 
-		let fileContents: Data
-
-		do {
-			fileContents = try Data(contentsOf: resourceURL)
-		} catch {
-			logger.error(
-				"Resource '\(Self.displayPath(for: resourceURL), privacy: .public)' could not be read with error: \(error.localizedDescription, privacy: .public)"
-			)
-
+		guard let fileContents = fileContents(of: resourceURL, name: name, subpath: subpath, cache: cacheContents) else {
 			return nil
 		}
 
@@ -170,8 +164,41 @@ public final nonisolated class ResourceManager: NSObject {
 		return typedValue
 	}
 
-	private static func cacheKey(name: String, subpath: String?, key: String?) -> String {
-		"\(name).plist / \(subpath ?? "Root Folder") / \(key ?? "Root Object")"
+	private static func fileContents(
+		of resourceURL: URL,
+		name: String,
+		subpath: String?,
+		cache: Bool
+	) -> Data? {
+		let cacheKey = cacheKey(name: name, subpath: subpath)
+
+		if cache, let cached = resourceFileContents.withLock({ $0[cacheKey] }) {
+			return cached
+		}
+
+		let fileContents: Data
+
+		do {
+			fileContents = try Data(contentsOf: resourceURL)
+		} catch {
+			logger.error(
+				"Resource '\(Self.displayPath(for: resourceURL), privacy: .public)' could not be read with error: \(error.localizedDescription, privacy: .public)"
+			)
+
+			return nil
+		}
+
+		if cache {
+			resourceFileContents.withLock { contents in
+				contents[cacheKey] = fileContents
+			}
+		}
+
+		return fileContents
+	}
+
+	private static func cacheKey(name: String, subpath: String?) -> String {
+		"\(name).plist / \(subpath ?? "Root Folder")"
 	}
 
 	private static func displayPath(for url: URL) -> String {
