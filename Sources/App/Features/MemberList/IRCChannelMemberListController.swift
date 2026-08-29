@@ -62,7 +62,6 @@ public final class IRCChannelMemberListController: NSObject {
 		)
 	}
 
-	@objc(assignToChannel:)
 	public func assign(to channel: IRCChannel?) {
 		if let memberList {
 			memberList.assign(nil)

@@ -280,12 +280,12 @@ struct TVCMemberListSectionTests {
 		cell.setValue(statusImageView, forKey: "statusImageView")
 		cell.setValue(statusWidthConstraint, forKey: "statusImageWidthConstraint")
 
-		cell.setValue(false, forKey: "statusImageVisible")
+		cell.setStatusImageVisible(false)
 
 		#expect(statusImageView.isHidden)
 		#expect(statusWidthConstraint.constant == 0)
 
-		cell.setValue(true, forKey: "statusImageVisible")
+		cell.setStatusImageVisible(true)
 
 		#expect(statusImageView.isHidden == false)
 		#expect(statusWidthConstraint.constant == 16)

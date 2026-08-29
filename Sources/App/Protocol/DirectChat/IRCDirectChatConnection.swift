@@ -27,7 +27,6 @@ private let directChatLogger = Logger(
 	category: "DirectChat"
 )
 
-@objc
 public enum IRCDirectChatConnectionState: UInt {
 	case idle = 0
 	case listening
@@ -36,22 +35,17 @@ public enum IRCDirectChatConnectionState: UInt {
 	case closed
 }
 
-@objc
 public protocol IRCDirectChatConnectionDelegate: NSObjectProtocol {
-	@objc(directChatConnection:didStartListeningOnPort:)
 	func directChatConnection(_ connection: DirectChatConnection, didStartListeningOnPort port: UInt16)
 
-	@objc(directChatConnectionDidConnect:)
 	func directChatConnectionDidConnect(_ connection: DirectChatConnection)
 
-	@objc(directChatConnection:didReceiveMessage:isAction:)
 	func directChatConnection(
 		_ connection: DirectChatConnection,
 		didReceiveMessage message: String,
 		isAction: Bool
 	)
 
-	@objc(directChatConnection:didCloseWithError:)
 	func directChatConnection(_ connection: DirectChatConnection, didCloseWithError error: Error?)
 }
 
@@ -61,11 +55,10 @@ public protocol IRCDirectChatConnectionDelegate: NSObjectProtocol {
  framing and hands whole lines back through its event stream. Everything here —
  the state machine, the port mapping, the encoding, the delegate — belongs to
  the main actor, and the event loop below is the one seam between the two. */
-@objc(IRCDirectChatConnection)
 public final class DirectChatConnection: NSObject {
-	@objc public private(set) weak var client: IRCClient?
-	@objc public private(set) weak var delegate: IRCDirectChatConnectionDelegate?
-	@objc public private(set) var peerNickname: String
+	public private(set) weak var client: IRCClient?
+	public private(set) weak var delegate: IRCDirectChatConnectionDelegate?
+	public private(set) var peerNickname: String
 	/** Only the connecting variant has an address; the listening variant learns its
 	 port from the socket. Modelling it this way removes the unreachable dead-end
 	 `openConnection()` used to hit when the address was nil. */
@@ -74,14 +67,14 @@ public final class DirectChatConnection: NSObject {
 		case connecting(address: String)
 	}
 
-	@objc public var hostAddress: String? {
+	public var hostAddress: String? {
 		guard case let .connecting(address) = role else { return nil }
 		return address
 	}
 
-	@objc public private(set) var hostPort: UInt16 = 0
-	@objc public private(set) var transferToken: String?
-	@objc public private(set) var state: IRCDirectChatConnectionState = .idle
+	public private(set) var hostPort: UInt16 = 0
+	public private(set) var transferToken: String?
+	public private(set) var state: IRCDirectChatConnectionState = .idle
 
 	private let role: Role
 	private var chat: DCCChatConnection?
@@ -92,8 +85,9 @@ public final class DirectChatConnection: NSObject {
 	 picks, and a chat that reorders the user's lines is a bug. */
 	private var outboundTask: Task<Void, Never>?
 	private var portMapping: XRPortMapper?
+	private let portMappingNotifications = NotificationSubscriptions()
 
-	@objc public var isConnected: Bool {
+	public var isConnected: Bool {
 		state == .connected
 	}
 
@@ -125,7 +119,6 @@ public final class DirectChatConnection: NSObject {
 		tearDown()
 	}
 
-	@objc(connectionToPeer:address:port:onClient:delegate:)
 	public static func connection(
 		toPeer nickname: String,
 		address hostAddress: String,
@@ -145,7 +138,6 @@ public final class DirectChatConnection: NSObject {
 		return object
 	}
 
-	@objc(listeningConnectionForPeer:token:onClient:delegate:)
 	public static func listeningConnection(
 		forPeer nickname: String,
 		token transferToken: String?,
@@ -166,7 +158,6 @@ public final class DirectChatConnection: NSObject {
 		return object
 	}
 
-	@objc
 	public func open() {
 		guard state == .idle else {
 			return
@@ -242,7 +233,6 @@ public final class DirectChatConnection: NSObject {
 		listenTimeoutTask = nil
 	}
 
-	@objc
 	public func close() {
 		guard state != .closed else {
 			return
@@ -271,11 +261,7 @@ public final class DirectChatConnection: NSObject {
 		outboundTask = nil
 
 		if let portMapping {
-			NotificationCenter.default.removeObserver(
-				self,
-				name: .XRPortMapperDidChanged,
-				object: portMapping
-			)
+			portMappingNotifications.cancelAll()
 			self.portMapping = nil
 			portMapping.close()
 		}
@@ -296,29 +282,21 @@ public final class DirectChatConnection: NSObject {
 		portMapping.desiredPublicPort = port
 		self.portMapping = portMapping
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(portMapperDidFinishWork(_:)),
-			name: .XRPortMapperDidChanged,
-			object: portMapping
-		)
+		portMappingNotifications.observe(.XRPortMapperDidChanged, object: portMapping) { [weak self] _ in
+			self?.portMapperDidFinishWork()
+		}
 
 		if portMapping.open() == false {
-			portMapperDidFinishWork(nil)
+			portMapperDidFinishWork()
 		}
 	}
 
-	@objc
-	private func portMapperDidFinishWork(_: Notification?) {
+	private func portMapperDidFinishWork() {
 		guard state == .listening, let portMapping else {
 			return
 		}
 
-		NotificationCenter.default.removeObserver(
-			self,
-			name: .XRPortMapperDidChanged,
-			object: portMapping
-		)
+		portMappingNotifications.cancelAll()
 
 		if portMapping.isMapped {
 			let port = hostPort
@@ -334,12 +312,10 @@ public final class DirectChatConnection: NSObject {
 
 	// MARK: - Sending
 
-	@objc(sendMessage:)
 	public func sendMessage(_ message: String) {
 		sendLine(message)
 	}
 
-	@objc(sendAction:)
 	public func sendAction(_ message: String) {
 		sendLine(CTCPPayload.action(message))
 	}

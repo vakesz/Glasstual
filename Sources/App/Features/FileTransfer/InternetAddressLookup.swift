@@ -14,14 +14,12 @@ import CocoaExtensions
 import Foundation
 import os
 
-@objc(TLOInternetAddressLookupDelegate)
 @MainActor
 public protocol InternetAddressLookupDelegate: AnyObject {
 	func internetAddressLookupReturnedAddress(_ address: String)
 	func internetAddressLookupFailed()
 }
 
-@objc(TLOInternetAddressLookup)
 @MainActor
 public final class InternetAddressLookup: NSObject {
 	private static let requestTimeout: TimeInterval = 30
@@ -36,8 +34,8 @@ public final class InternetAddressLookup: NSObject {
 		category: "InternetAddressLookup"
 	)
 
-	@objc(IPv4AddressIsValid) public var ipv4AddressIsValid = true
-	@objc(IPv6AddressIsValid) public var ipv6AddressIsValid = true
+	public var ipv4AddressIsValid = true
+	public var ipv6AddressIsValid = true
 
 	private weak var requestDelegate: InternetAddressLookupDelegate?
 	private var session: URLSession?
@@ -52,14 +50,13 @@ public final class InternetAddressLookup: NSObject {
 		fatalError("Use init(delegate:)")
 	}
 
-	@objc(initWithDelegate:)
 	public init(delegate: InternetAddressLookupDelegate) {
 		requestDelegate = delegate
 
 		super.init()
 	}
 
-	@objc public func performLookup() {
+	public func performLookup() {
 		/* A second request while one is in flight restarts rather than aborting the app;
 		 two concurrent DCC offers can reach this. */
 		cancelLookup()
@@ -87,14 +84,13 @@ public final class InternetAddressLookup: NSObject {
 		}
 	}
 
-	@objc public func cancelLookup() {
+	public func cancelLookup() {
 		/* Retiring the generation stops the in-flight completion from reporting a
 		 cancellation to the delegate as a lookup failure. */
 		lookupGeneration &+= 1
 		teardownConnection()
 	}
 
-	@objc(addressFromData:response:allowIPv4:allowIPv6:)
 	public nonisolated static func address( // nonisolated: pure
 		from data: Data?,
 		response: URLResponse?,

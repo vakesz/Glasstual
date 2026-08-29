@@ -42,7 +42,6 @@ public nonisolated extension Notification.Name { // nonisolated: value
 	static let textualUserDefaultsDidChange = Self("TPCPreferencesUserDefaultsDidChangeNotification")
 }
 
-@objc(TPCPreferencesUserDefaults)
 public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolated: value
 	private static let storageSuiteName: String = {
 		#if DEBUG
@@ -90,7 +89,6 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 		TextualUserDefaults(storageSuiteName: storageSuiteName)
 	}
 
-	@objc(_setObject:forKey:)
 	public func setObjectWithoutNotification(_ value: Any?, forKey defaultName: String) {
 		super.set(value, forKey: defaultName)
 	}
@@ -99,7 +97,6 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 		set(value, forKey: defaultName, postNotification: true)
 	}
 
-	@objc(setObject:forKey:postNotification:)
 	public func set(_ value: Any?, forKey defaultName: String, postNotification: Bool) {
 		/* Compared against the persistent domain, not `object(forKey:)`: the
 		 latter falls through to the registration domain, so writing a value that
@@ -149,13 +146,16 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 		set(nil, forKey: defaultName)
 	}
 
-	@objc(registerDefault:forKey:)
 	public func registerDefault(_ value: NSCopying, forKey defaultName: String) {
 		register(defaults: [defaultName: value])
 	}
 
-	@objc public var registeredDefaults: [String: Any] {
-		volatileDomain(forName: UserDefaults.registrationDomain)
+	/// The registration domain, narrowed out of the `Any` the volatile domain
+	/// hands back.
+	public var registeredDefaults: [String: PropertyListValue] {
+		[String: PropertyListValue](
+			propertyList: volatileDomain(forName: UserDefaults.registrationDomain)
+		) ?? [:]
 	}
 }
 
@@ -174,6 +174,8 @@ public final nonisolated class TextualUserDefaultsController: NSUserDefaultsCont
 		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}
 
+	/* `[String: Any]` is NSUserDefaultsController's own signature; the override
+	 exists to ignore both arguments, so nothing reads them. */
 	override public init(defaults _: UserDefaults?, initialValues _: [String: Any]?) {
 		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}

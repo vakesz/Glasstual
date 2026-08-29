@@ -37,13 +37,12 @@
 
 import Foundation
 
-@objc(IRCParsedLine)
 public final nonisolated class ParsedLine: NSObject { // nonisolated: value
-	@objc public let messageTagSection: String?
-	@objc public let senderSection: String?
-	@objc public let command: String
-	@objc public let commandNumeric: UInt
-	@objc public let parameters: [String]
+	public let messageTagSection: String?
+	public let senderSection: String?
+	public let command: String
+	public let commandNumeric: UInt
+	public let parameters: [String]
 
 	init(messageTagSection: String?, senderSection: String?, command: String, parameters: [String]) {
 		self.messageTagSection = messageTagSection
@@ -71,19 +70,16 @@ public final nonisolated class ParsedLine: NSObject { // nonisolated: value
 	}
 }
 
-@objc(IRCLineParser)
 public final nonisolated class LineParser: NSObject { // nonisolated: value
 	/// RFC 1459/2812 and IRCv3 separate tokens on SPACE (0x20) only, never on
 	/// the wider Unicode whitespace set.
 	private static let space: Unicode.Scalar = " "
 
 	/// Splits a wire string into tokens on SPACE (0x20), dropping empty runs.
-	@objc(wireTokensInString:)
 	public static func wireTokens(in string: String) -> [String] {
 		string.unicodeScalars.split(separator: space).map(String.init)
 	}
 
-	@objc(parsedLineFromLine:)
 	public static func parsedLine(fromLine line: String) -> ParsedLine? {
 		var remainder = line.unicodeScalars[...]
 		var messageTagSection: String?

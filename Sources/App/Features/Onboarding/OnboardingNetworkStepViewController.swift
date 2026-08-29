@@ -12,7 +12,6 @@
 
 import AppKit
 
-@objc(TDCOnboardingNetworkStepViewController)
 @MainActor
 public final class OnboardingNetworkStepViewController: OnboardingStepViewController,
 	NetworkPickerViewControllerDelegate

@@ -113,19 +113,16 @@ public extension IRCClient {
 		NotificationCenter.default.post(name: .IRCClientConfigurationWasUpdated, object: self)
 	}
 
-	@objc(reloadServerListItems)
 	func reloadServerListItems() {
 		output?.reloadServerListItems(for: self)
 	}
 
-	@objc(writePasswordsToKeychain)
 	func writePasswordsToKeychain() {
 		config.writeNicknamePasswordToKeychain()
 		config.writeProxyPasswordToKeychain()
 	}
 
 	/// Flushes every endpoint's password to the keychain.
-	@objc(writeServerPasswordsToKeychain)
 	func writeServerPasswordsToKeychain() {
 		config.serverList = config.serverList.map { server in
 			var server = server
@@ -134,7 +131,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(updateStoredConfiguration)
 	func updateStoredConfiguration() {
 		guard configurationIsStale else { return }
 
@@ -142,7 +138,6 @@ public extension IRCClient {
 		config.sidebarItemExpanded = sidebarItemIsExpanded
 	}
 
-	@objc(updateStoredChannelList)
 	func updateStoredChannelList() {
 		rebuildChannelIndex()
 		config.channelList = IRCClientConfigurationPolicy.storedChannelConfigurations(
@@ -152,12 +147,11 @@ public extension IRCClient {
 		NotificationCenter.default.post(name: .IRCClientChannelListWasModified, object: self)
 	}
 
-	func configurationDictionary() -> [String: Any] {
+	func configurationDictionary() -> [String: PropertyListValue] {
 		updateStoredConfiguration()
 		return config.dictionaryValue
 	}
 
-	@objc(prepareForApplicationTermination)
 	func prepareForApplicationTermination() {
 		isTerminating = true
 		let clientIdentifier = uniqueIdentifier
@@ -180,7 +174,6 @@ public extension IRCClient {
 		quit()
 	}
 
-	@objc(prepareForApplicationTerminationPostflight)
 	func prepareForApplicationTerminationPostflight() {
 		let clientIdentifier = uniqueIdentifier
 		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Closing log file")
@@ -207,7 +200,6 @@ public extension IRCClient {
 		environment.services.applicationState?.noteClientDidFinishTerminating()
 	}
 
-	@objc(prepareForPermanentDestruction)
 	func prepareForPermanentDestruction() {
 		isTerminating = true
 		stopAllTimers()
@@ -224,7 +216,6 @@ public extension IRCClient {
 		presentation?.prepareForPermanentDestruction()
 	}
 
-	@objc(closeDialogs)
 	func closeDialogs() {
 		let channelListDialogKey = "TDCServerChannelListDialog -> \(uniqueIdentifier)"
 		let channelListDialog = SharedApplication.sharedWindowController()
@@ -246,7 +237,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(preferencesChanged)
 	func preferencesChanged() {
 		channelList.forEach { $0.preferencesChanged() }
 		if monitorAwayStatus == false {
@@ -254,7 +244,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(willDestroyChannel:)
 	func willDestroyChannel(_ notification: Notification) {
 		guard let channel = notification.object as? IRCChannel, channel.associatedClient === self else { return }
 		clearZNCPlayback(for: channel)
@@ -266,7 +255,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(destroyServerPasswordsKeychainItems)
 	func destroyServerPasswordsKeychainItems() {
 		config.serverList.forEach { $0.keychainItem.delete() }
 	}

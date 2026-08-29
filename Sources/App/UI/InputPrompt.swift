@@ -12,7 +12,6 @@
 
 import AppKit
 
-@objc(TDCInputPrompt)
 @MainActor
 public final class InputPrompt: NSObject {
 	/// The alert and the text field inside it. The field used to be handed
@@ -75,7 +74,6 @@ public final class InputPrompt: NSObject {
 		return (alert, textField)
 	}
 
-	@objc(promptWithMessage:title:defaultButton:alternateButton:prefillString:completionBlock:)
 	public static func prompt(
 		withMessage bodyText: String,
 		title titleText: String,

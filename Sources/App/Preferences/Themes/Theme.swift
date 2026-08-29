@@ -71,8 +71,6 @@ private struct MonitoringResult: OptionSet {
 }
 
 @MainActor
-@objc(TPCTheme)
-@objcMembers
 public final class Theme: NSObject {
 	private nonisolated static let logger = Logger( // nonisolated: let
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -118,7 +116,6 @@ public final class Theme: NSObject {
 		fatalError("Use init(url:inStorageLocation:)")
 	}
 
-	@objc(initWithURL:inStorageLocation:)
 	public init(url: URL, inStorageLocation storageLocation: TPCThemeStorageLocation) {
 		precondition(url.isFileURL)
 		precondition(storageLocation != .unknown)
@@ -522,11 +519,11 @@ private final class ThemeVariety {
 	private static func loadSettings(from url: URL) -> ThemeSettingValues {
 		guard let data = try? Data(contentsOf: url),
 		      let propertyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
-		      let settings = propertyList as? [String: Any]
+		      let settings = [String: PropertyListValue](propertyList: propertyList)
 		else {
 			return [:]
 		}
-		return ThemeSettingValues(rawValues: settings)
+		return ThemeSettingValues(propertyList: settings)
 	}
 
 	private static func settingsURL(for url: URL) -> URL {
@@ -545,8 +542,6 @@ private final class ThemeVariety {
 }
 
 @MainActor
-@objc(TPCThemeSettings)
-@objcMembers
 public final class ThemeSettings: NSObject {
 	/** Only the newest engine version is supported. This was written as a range
 	 whose bounds were the same constant; equality says the same thing plainly. */
@@ -558,11 +553,8 @@ public final class ThemeSettings: NSObject {
 	"""
 
 	public private(set) var invertSidebarColors = false
-	@objc(js_postHandleEventNotifications)
 	public private(set) var postsHandleEventNotifications = false
-	@objc(js_postAppearanceChangesNotification)
 	public private(set) var postsAppearanceChangeNotifications = false
-	@objc(js_postPreferencesDidChangesNotifications)
 	public private(set) var postsPreferenceChangeNotifications = false
 	public private(set) var usesIncompatibleTemplateEngineVersion = true
 	public private(set) var appearance: TPCThemeAppearanceType = .default
@@ -593,7 +585,6 @@ public final class ThemeSettings: NSObject {
 		return convertedColor.brightnessComponent < 0.5
 	}
 
-	@objc(styleSettingsRetrieveValueForKey:error:)
 	public func styleSettingsRetrieveValue(
 		forKey key: String,
 		error resultError: AutoreleasingUnsafeMutablePointer<NSString?>?
@@ -609,7 +600,6 @@ public final class ThemeSettings: NSObject {
 		return TextualUserDefaults.container.dictionary(forKey: storeKey)?[key]
 	}
 
-	@objc(styleSettingsSetValue:forKey:error:)
 	public func styleSettingsSetValue(
 		_ value: Any?,
 		forKey key: String,
@@ -674,9 +664,7 @@ public final class ThemeSettings: NSObject {
 			windowIsDark: underlyingWindowColorIsDark
 		)
 
-		let versions = ThemeTemplateVersionValues(
-			rawValues: values.value(for: .templateEngineVersions, as: [String: Any].self) ?? [:]
-		)
+		let versions: ThemeTemplateVersionValues = values.nested(for: .templateEngineVersions) ?? [:]
 		let applicationVersion = ApplicationInfo.applicationVersionShort()
 		// A theme may target any application version, so this key remains data-driven.
 		if let version = Self.compatibleTemplateVersion(versions.rawValues[applicationVersion]) ??
@@ -723,10 +711,9 @@ public final class ThemeSettings: NSObject {
 	}
 
 	private static func font(forKey key: ThemeSettingKey, in values: ThemeSettingValues) -> NSFont? {
-		guard let rawFontValues = values.value(for: key, as: [String: Any].self) else {
+		guard let fontValues: ThemeFontSettingValues = values.nested(for: key) else {
 			return nil
 		}
-		let fontValues = ThemeFontSettingValues(rawValues: rawFontValues)
 		guard let fontName = fontValues.value(for: .name, as: String.self),
 		      let fontSize = fontValues.value(for: .size, as: Double.self),
 		      fontSize >= 5

@@ -46,7 +46,6 @@ enum IRCClientChannelStoragePolicy {
 }
 
 public extension IRCClient {
-	@objc(selectFirstChannelInChannelList)
 	@MainActor
 	func selectFirstChannelInChannelList() {
 		guard let firstChannel = channelList.first,
@@ -55,7 +54,6 @@ public extension IRCClient {
 		output?.selectItem(treeItem)
 	}
 
-	@objc(addChannel:)
 	func add(_ channel: IRCChannel) {
 		guard channelListPrivate.contains(channel) == false else { return }
 		let index = IRCClientChannelStoragePolicy.insertionIndex(
@@ -66,20 +64,17 @@ public extension IRCClient {
 		updateStoredChannelList()
 	}
 
-	@objc(addChannel:atPosition:)
 	func add(_ channel: IRCChannel, atPosition position: UInt) {
 		guard channelListPrivate.contains(channel) == false else { return }
 		channelListPrivate.insert(channel, at: Int(position))
 		updateStoredChannelList()
 	}
 
-	@objc(removeChannel:)
 	func remove(_ channel: IRCChannel) {
 		channelListPrivate.removeAll { $0 === channel }
 		updateStoredChannelList()
 	}
 
-	@objc(indexOfChannel:)
 	func index(of channel: IRCChannel) -> UInt {
 		guard let index = channelListPrivate.firstIndex(of: channel) else {
 			return UInt(NSNotFound)
@@ -87,11 +82,11 @@ public extension IRCClient {
 		return UInt(index)
 	}
 
-	@objc var channelCount: UInt {
+	var channelCount: UInt {
 		UInt(channelListPrivate.count)
 	}
 
-	@objc var channelList: [IRCChannel] {
+	var channelList: [IRCChannel] {
 		get { channelListPrivate }
 		set {
 			channelListPrivate = newValue
@@ -99,7 +94,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(channelAtIndex:)
 	func channel(at index: UInt) -> IRCChannel? {
 		guard index < channelListPrivate.count else { return nil }
 		return channelListPrivate[Int(index)]

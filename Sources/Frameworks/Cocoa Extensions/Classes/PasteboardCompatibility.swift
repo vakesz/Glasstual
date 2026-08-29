@@ -64,7 +64,6 @@
 import AppKit
 
 public extension NSPasteboard {
-	@objc(stringContent)
 	var textualStringContent: String? {
 		get { string(forType: .string) }
 		set {

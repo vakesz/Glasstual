@@ -31,7 +31,6 @@ private final class ServerListCellDrawingContext: NSObject {
 	var isWindowActive = false
 }
 
-@objc(TVCServerListCell)
 public class ServerListCell: NSTableCellView {
 	@IBOutlet private var cellTextField: NSTextField!
 	@IBOutlet private var messageCountBadgeImageView: NSImageView!
@@ -40,7 +39,6 @@ public class ServerListCell: NSTableCellView {
 	@IBOutlet private var messageCountBadgeLeadingConstraint: NSLayoutConstraint!
 	@IBOutlet private var messageCountBadgeTrailingConstraint: NSLayoutConstraint!
 
-	@objc
 	public func defineConstraints() {}
 
 	override public var wantsUpdateLayer: Bool {
@@ -264,7 +262,6 @@ public class ServerListCell: NSTableCellView {
 
 	// MARK: - Badge Drawing
 
-	@objc
 	public func populateMessageCountBadge() {
 		populateMessageCountBadge(in: drawingContext)
 	}
@@ -460,12 +457,10 @@ public final class ServerListCellChildItem: ServerListCell {
 
 // MARK: - Row Cell
 
-@objc(TVCServerListRowCell)
 public class ServerListRowCell: NSTableRowView {
 	@objc public private(set) weak var serverList: ServerList?
 	private weak var cachedChildCell: ServerListCell?
 
-	@objc(initWithServerList:)
 	public init(serverList: ServerList) {
 		self.serverList = serverList
 		super.init(frame: .zero)
@@ -514,7 +509,6 @@ public class ServerListRowCell: NSTableRowView {
 		}
 	}
 
-	@objc
 	public func refreshEmphasis() {
 		isEmphasized = isEmphasized
 	}
@@ -553,8 +547,6 @@ public class ServerListRowCell: NSTableRowView {
 	}
 }
 
-@objc(TVCServerListGroupRowCell)
 public final class ServerListGroupRowCell: ServerListRowCell {}
 
-@objc(TVCServerListChildRowCell)
 public final class ServerListChildRowCell: ServerListRowCell {}

@@ -19,10 +19,10 @@ struct IRCChannelConfigCodableTests {
 	@Test("A stored channel re-encodes unchanged")
 	func roundTripsAStoredChannel() throws {
 		// Captured from the class-based `ChannelConfig.dictionaryValue`.
-		let fixture: [String: Any] = [
+		let fixture: [String: PropertyListValue] = [
 			"channelName": "#swift",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-000000000006",
-			"notifications": [String: Any](),
+			"notifications": .dictionary([:]),
 			"autoJoin": false,
 			"ignoreHighlights": true,
 			"defaultTopic": "Swift talk",
@@ -34,12 +34,12 @@ struct IRCChannelConfigCodableTests {
 		#expect(config.autoJoin == false)
 		#expect(config.ignoreHighlights)
 		#expect(config.defaultTopic == "Swift talk")
-		#expect(NSDictionary(dictionary: PropertyListModel.encode(config)) == NSDictionary(dictionary: fixture))
+		#expect(PropertyListModel.encode(config) == fixture)
 	}
 
 	@Test("A stored query keeps only its name, identifier and type")
 	func roundTripsAStoredQuery() throws {
-		let fixture: [String: Any] = [
+		let fixture: [String: PropertyListValue] = [
 			"channelName": "alice",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-000000000007",
 			"channelType": 1,
@@ -48,7 +48,7 @@ struct IRCChannelConfigCodableTests {
 		let config = try #require(PropertyListModel.decode(ChannelConfig.self, from: fixture))
 
 		#expect(config.type == .privateMessage)
-		#expect(NSDictionary(dictionary: PropertyListModel.encode(config)) == NSDictionary(dictionary: fixture))
+		#expect(PropertyListModel.encode(config) == fixture)
 	}
 
 	@Test(
@@ -64,10 +64,10 @@ struct IRCChannelConfigCodableTests {
 		let onValue = legacyKey == "ignoreJPQActivity"
 		let config = try #require(PropertyListModel.decode(ChannelConfig.self, from: [
 			"channelName": "#swift",
-			legacyKey: onValue,
+			legacyKey: .boolean(onValue),
 		]))
 
-		#expect(PropertyListModel.encode(config)[canonicalKey] as? Bool == onValue)
+		#expect(PropertyListModel.encode(config)[canonicalKey]?.boolean == onValue)
 	}
 
 	@Test("An absent optional stays nil rather than becoming an empty string")
@@ -93,7 +93,7 @@ struct IRCChannelConfigCodableTests {
 
 		#expect(restored.sound(forEvent: .highlight) == "Glass")
 		#expect(restored.notificationEnabled(forEvent: .highlight) == .off)
-		#expect(restored.notificationEnabled(forEvent: .channelMessage) == .mixed)
+		#expect(restored.notificationEnabled(forEvent: .channelMessage) == .inherited)
 	}
 
 	@Test("The channel key is not part of the encoded value")

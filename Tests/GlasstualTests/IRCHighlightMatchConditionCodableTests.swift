@@ -15,7 +15,7 @@ struct IRCHighlightMatchConditionCodableTests {
 	@Test("A dictionary written by the previous release re-encodes unchanged")
 	func roundTripsAStoredDictionary() throws {
 		// Captured from the class-based `HighlightMatchCondition.dictionaryValue`.
-		let fixture: [String: Any] = [
+		let fixture: [String: PropertyListValue] = [
 			"matchChannelID": "8B2F4C1A-0000-4000-8000-000000000002",
 			"matchKeyword": "release",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-000000000003",
@@ -24,7 +24,7 @@ struct IRCHighlightMatchConditionCodableTests {
 
 		let condition = try #require(PropertyListModel.decode(HighlightMatchCondition.self, from: fixture))
 
-		#expect(NSDictionary(dictionary: PropertyListModel.encode(condition)) == NSDictionary(dictionary: fixture))
+		#expect(PropertyListModel.encode(condition) == fixture)
 	}
 
 	@Test("An absent channel stays absent rather than becoming an empty string")

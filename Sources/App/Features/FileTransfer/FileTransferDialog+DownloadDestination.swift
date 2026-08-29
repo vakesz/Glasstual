@@ -40,11 +40,11 @@ import Foundation
 import os
 
 public extension FileTransferDialog {
-	@objc var downloadDestinationURL: URL? {
+	var downloadDestinationURL: URL? {
 		downloadDestinationURLPrivate
 	}
 
-	@objc func startUsingDownloadDestinationURL() {
+	func startUsingDownloadDestinationURL() {
 		guard let bookmark = TextualUserDefaults.container.data(
 			forKey: FileTransferDialogConstants.bookmarkKey
 		) else {
@@ -80,7 +80,6 @@ public extension FileTransferDialog {
 		downloadDestinationURLPrivate = resolvedURL
 	}
 
-	@objc(setDownloadDestinationURL:)
 	func setDownloadDestinationURL(_ bookmark: Data?) {
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 		downloadDestinationURLPrivate = nil

@@ -52,7 +52,6 @@ public extension MenuActionCoordinator {
 		world.save()
 	}
 
-	@objc(channelInviteDidSelect:channelName:)
 	func channelInviteDidSelect(_ sender: ChannelInviteSheet, channelName: String) {
 		guard let client = sender.client, client.isLoggedIn else { return }
 		for nickname in sender.nicknames {
@@ -77,12 +76,10 @@ public extension MenuActionCoordinator {
 		world.save()
 	}
 
-	@objc(nicknameColorDidAccept:)
 	func nicknameColorDidAccept(_: NicknameColorSheet) {
 		mainWindow.reloadTheme()
 	}
 
-	@objc(channelTopicDidAccept:topic:)
 	func channelTopicDidAccept(_ sender: ChannelModifyTopicSheet, topic: String) {
 		guard let client = sender.client, let channel = sender.channel,
 		      client.isLoggedIn, channel.isChannel
@@ -90,7 +87,6 @@ public extension MenuActionCoordinator {
 		client.sendTopic(to: topic, in: channel)
 	}
 
-	@objc(channelModesDidAccept:modes:)
 	func channelModesDidAccept(_ sender: ChannelModifyModesSheet, modes: ChannelModeContainer) {
 		guard let client = sender.client, let channel = sender.channel,
 		      client.isLoggedIn, channel.isChannel,
@@ -100,23 +96,19 @@ public extension MenuActionCoordinator {
 		client.sendModes(changeString, withParametersString: nil, in: channel)
 	}
 
-	@objc(channelSpotlightDidSelect:channel:)
 	func channelSpotlightDidSelect(_: ChannelSpotlightController, channel: IRCChannel) {
 		mainWindow.select(channel)
 	}
 
-	@objc(serverNicknameDidAccept:nickname:)
 	func serverNicknameDidAccept(_ sender: ServerChangeNicknameSheet, nickname: String) {
 		guard let client = sender.client, client.isConnected else { return }
 		client.changeNickname(nickname)
 	}
 
-	@objc(dialogDidClose:)
 	func dialogDidClose(_ sender: Any) {
 		SharedApplication.sharedWindowController().removeWindow(fromWindowList: sender)
 	}
 
-	@objc(preferencesDialogDidClose:)
 	func preferencesDialogDidClose(_ sender: PreferencesController) {
 		TextualPreferences.performReloadAction([.highlightKeywords, .preferencesChanged])
 		dialogDidClose(sender)

@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -278,10 +279,10 @@ final class IRCMessageTagsTests {
 			messageIdentifier: "tag1",
 			account: "mara"
 		)
-		let expected: NSDictionary = [
+		let expected: [String: JavaScriptValue] = [
 			"sender": "mara",
 			"target": "#chat",
-			"tags": tags,
+			"tags": .object(tags.mapValues(JavaScriptValue.string)),
 			"timestamp": 1_700_000_000.0,
 			"fromLocalUser": false,
 			"localUserNickname": "me",
@@ -289,7 +290,7 @@ final class IRCMessageTagsTests {
 			"account": "mara",
 		]
 
-		#expect(event as NSDictionary == expected)
+		#expect(event == expected)
 
 		let own = client.tagMessageEvent(
 			withClientTags: tags,
@@ -300,7 +301,7 @@ final class IRCMessageTagsTests {
 			account: nil
 		)
 
-		#expect(own["fromLocalUser"] as? Bool == true)
+		#expect(own["fromLocalUser"]?.boolean == true)
 		#expect(own["msgid"] == nil)
 		#expect(own["account"] == nil)
 	}

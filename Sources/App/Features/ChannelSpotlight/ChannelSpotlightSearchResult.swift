@@ -38,7 +38,6 @@
 import CocoaExtensions
 import Foundation
 
-@objc(TDCChannelSpotlightSearchResult)
 public final class ChannelSpotlightSearchResult: NSObject, Identifiable {
 	/// The channel this row stands for, captured when the row was made.
 	///
@@ -47,7 +46,7 @@ public final class ChannelSpotlightSearchResult: NSObject, Identifiable {
 	/// the row it is still drawing.
 	public let id: String
 
-	@objc public private(set) weak var channel: IRCChannel?
+	public private(set) weak var channel: IRCChannel?
 	public private(set) var distance = 0.0
 	/// The server the channel belongs to, likewise captured up front.
 	public let clientId: String
@@ -57,7 +56,6 @@ public final class ChannelSpotlightSearchResult: NSObject, Identifiable {
 		fatalError("init() is unavailable; use init(channel:)")
 	}
 
-	@objc(initWithChannel:)
 	public init(channel: IRCChannel) {
 		id = channel.uniqueIdentifier
 		clientId = channel.associatedClient?.uniqueIdentifier ?? ""
@@ -65,7 +63,6 @@ public final class ChannelSpotlightSearchResult: NSObject, Identifiable {
 		super.init()
 	}
 
-	@objc(recalculateDistanceWith:)
 	public func recalculateDistance(with searchString: String) {
 		guard searchString.isEmpty == false, let channel else {
 			distance = 0

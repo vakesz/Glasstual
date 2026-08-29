@@ -40,13 +40,11 @@ import Foundation
 import GlasstualPluginKit
 
 public extension IRCClient {
-	@objc(findChannel:inList:)
 	internal func findChannel(_ name: String, in channelList: [IRCChannel]) -> IRCChannel? {
 		let foldedName = casefoldNickname(name)
 		return channelList.first { casefoldNickname($0.name) == foldedName }
 	}
 
-	@objc(findChannel:)
 	func findChannel(_ name: String) -> IRCChannel? {
 		let foldedName = casefoldNickname(name)
 
@@ -76,17 +74,14 @@ public extension IRCClient {
 		channelsByFoldedName = index
 	}
 
-	@objc(findChannelOrCreate:)
 	func findChannelOrCreate(_ name: String) -> IRCChannel? {
 		findChannelOrCreate(name, isPrivateMessage: false)
 	}
 
-	@objc(findChannelOrCreate:isPrivateMessage:)
 	func findChannelOrCreate(_ name: String, isPrivateMessage: Bool) -> IRCChannel? {
 		findChannelOrCreate(name, as: isPrivateMessage ? .privateMessage : .channel)
 	}
 
-	@objc(findChannelOrCreate:isUtility:)
 	internal func findChannelOrCreate(_ name: String, isUtility: Bool) -> IRCChannel? {
 		findChannelOrCreate(name, as: isUtility ? .utility : .channel)
 	}
@@ -113,7 +108,6 @@ public extension IRCClient {
 		return world.createPrivateMessage(name, on: self, as: type)
 	}
 
-	@objc(findChannelOrCreate:asType:)
 	internal func findChannelOrCreateFromObjectiveC(_ name: String, asType rawValue: UInt) -> IRCChannel? {
 		guard let type = ChannelType(rawValue: rawValue) else { return nil }
 		return findChannelOrCreate(name, as: type)

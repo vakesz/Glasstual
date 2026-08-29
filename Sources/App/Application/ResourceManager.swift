@@ -22,7 +22,6 @@ public nonisolated enum ResourceDocumentType { // nonisolated: value
 	public static let scriptFilenameExtension = "scpt"
 }
 
-@objc(TPCResourceManager)
 public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -53,7 +52,7 @@ public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 		}
 	}
 
-	@objc public static func copyResourcesToApplicationSupportFolder() {
+	public static func copyResourcesToApplicationSupportFolder() {
 		guard let sourcePath = PathInfo.customScripts,
 		      let destinationRoot = PathInfo.groupContainerApplicationSupport
 		else {
@@ -94,8 +93,9 @@ public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 		inDirectory subpath: String? = nil,
 		key: String? = nil,
 		cacheValue: Bool = true
-	) -> [String: Any]? {
-		load(fromResources: name, inDirectory: subpath, key: key, cacheValue: cacheValue)
+	) -> [String: PropertyListValue]? {
+		load(Any.self, fromResources: name, inDirectory: subpath, key: key, cacheValue: cacheValue)
+			.flatMap { [String: PropertyListValue](propertyList: $0) }
 	}
 
 	public static func array(
@@ -103,8 +103,9 @@ public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 		inDirectory subpath: String? = nil,
 		key: String? = nil,
 		cacheValue: Bool = true
-	) -> [Any]? {
-		load(fromResources: name, inDirectory: subpath, key: key, cacheValue: cacheValue)
+	) -> [PropertyListValue]? {
+		load(Any.self, fromResources: name, inDirectory: subpath, key: key, cacheValue: cacheValue)
+			.flatMap { [PropertyListValue](propertyList: $0) }
 	}
 
 	private static func loadObject<Value>(
@@ -141,7 +142,7 @@ public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 		let objectValue: Any?
 
 		if let key {
-			guard let dictionary = propertyList as? [String: Any] else {
+			guard let dictionary = [String: PropertyListValue](propertyList: propertyList) else {
 				logger.error(
 					"Contents of resource '\(Self.displayPath(for: resourceURL), privacy: .public)' is not a dictionary. Cannot locate value of 'key' in other formats."
 				)
@@ -149,7 +150,7 @@ public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 				return nil
 			}
 
-			objectValue = dictionary[key]
+			objectValue = dictionary[key]?.propertyListObject
 		} else {
 			objectValue = propertyList
 		}

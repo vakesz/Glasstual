@@ -51,7 +51,7 @@ struct IRCClientHistoryTests {
 		client.enableCapability(.serverTime)
 		client.enableCapability(.messageTags)
 		client.enableCapability(.chatHistory)
-		client.setValue(true, forKey: "isLoggedIn")
+		client.isLoggedIn = true
 
 		return client
 	}
@@ -231,7 +231,7 @@ struct IRCClientHistoryTests {
 	@Test("Nothing is requested without the chat history capability")
 	func latestRequestNeedsTheCapability() throws {
 		let client = GLTTestClient()
-		client.setValue(true, forKey: "isLoggedIn")
+		client.isLoggedIn = true
 
 		try withChannel(named: "#chat", on: client) { channel in
 			client.requestChatHistory(for: channel)

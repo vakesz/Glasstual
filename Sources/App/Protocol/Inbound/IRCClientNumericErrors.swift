@@ -62,7 +62,6 @@ private enum IRCNumericErrorGroup {
 
 @MainActor
 public extension IRCClient {
-	@objc(receiveErrorNumericReply:)
 	func receiveErrorNumericReply(_ message: Message) {
 		let numeric = message.commandNumeric
 		let shouldPrint = postReceivedMessage(message)

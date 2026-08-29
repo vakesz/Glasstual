@@ -7,7 +7,13 @@ import Testing
 @MainActor
 @Suite("Client configuration persistence")
 struct IRCClientConfigMigrationTests {
+	/// The fixtures below are written the way a stored plist reads, so they are
+	/// narrowed here rather than spelled as typed values one entry at a time.
 	private func decode(_ dictionary: [String: Any]) throws -> ClientConfig {
+		try decode(#require([String: PropertyListValue](propertyList: dictionary)))
+	}
+
+	private func decode(_ dictionary: [String: PropertyListValue]) throws -> ClientConfig {
 		try #require(PropertyListModel.decode(ClientConfig.self, from: dictionary))
 	}
 
@@ -129,6 +135,6 @@ struct IRCClientConfigMigrationTests {
 		#expect(config.nickname == "legacy-nick")
 		#expect(config.username == "legacy-user")
 		#expect(config.cipherSuites == .none)
-		#expect((config.dictionaryValue["dictionaryVersion"] as? NSNumber)?.uintValue == 710)
+		#expect(config.dictionaryValue["dictionaryVersion"]?.integer == 710)
 	}
 }

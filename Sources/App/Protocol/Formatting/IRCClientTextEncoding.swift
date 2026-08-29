@@ -92,7 +92,6 @@ public extension IRCClient {
 		textEncodingPolicy.fallback
 	}
 
-	@objc(convertToCommonEncoding:)
 	func convert(toCommonEncoding string: String) -> Data? {
 		let data = textEncodingPolicy.encode(string)
 		if data == nil {
@@ -102,7 +101,6 @@ public extension IRCClient {
 		return data
 	}
 
-	@objc(convertFromCommonEncoding:)
 	func convert(fromCommonEncoding data: Data) -> String? {
 		let string = textEncodingPolicy.decode(data)
 		if string == nil {

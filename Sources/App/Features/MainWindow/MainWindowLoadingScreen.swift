@@ -22,7 +22,7 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 	@IBOutlet private var progressViewDescriptionTextField: NSTextField!
 	@IBOutlet private var progressViewIndicator: NSProgressIndicator!
 
-	@objc public var viewIsVisible: Bool {
+	public var viewIsVisible: Bool {
 		isHidden == false
 	}
 
@@ -60,31 +60,28 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 		}
 	}
 
-	@objc public func showWelcomeAddServerView() {
+	public func showWelcomeAddServerView() {
 		displayView(welcomeAddServerView)
 	}
 
-	@objc(showProgressViewWithReason:)
 	public func showProgressView(withReason progressReason: String) {
 		displayView(progressView)
 		setProgressViewReason(progressReason)
 		progressViewIndicator.startAnimation(nil)
 	}
 
-	@objc(setProgressViewReason:)
 	public func setProgressViewReason(_ progressReason: String) {
 		progressViewDescriptionTextField.stringValue = progressReason
 	}
 
-	@objc public func hide() {
+	public func hide() {
 		hideAnimated(false)
 	}
 
-	@objc public func hideAnimated() {
+	public func hideAnimated() {
 		hideAnimated(true)
 	}
 
-	@objc(hideAnimated:)
 	public func hideAnimated(_ animated: Bool) {
 		guard let visibleView else {
 			return

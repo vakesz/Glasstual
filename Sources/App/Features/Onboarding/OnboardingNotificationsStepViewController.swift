@@ -19,7 +19,6 @@ private nonisolated let onboardingLogger = Logger( // nonisolated: let
 	category: "Onboarding"
 )
 
-@objc(TDCOnboardingNotificationsStepViewController)
 @MainActor
 public final class OnboardingNotificationsStepViewController: OnboardingStepViewController {
 	private var highlightCheck: NSButton!

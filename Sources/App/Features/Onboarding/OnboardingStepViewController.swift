@@ -77,24 +77,23 @@ public final class OnboardingSettings {
 
 // MARK: -
 
-@objc(TDCOnboardingStepViewController)
 @MainActor
 open class OnboardingStepViewController: NSViewController {
 	public var settings: OnboardingSettings
 
-	@objc open var stepTitle: String {
+	open var stepTitle: String {
 		""
 	}
 
-	@objc open var stepSubtitle: String {
+	open var stepSubtitle: String {
 		""
 	}
 
-	@objc open var skippable: Bool {
+	open var skippable: Bool {
 		true
 	}
 
-	@objc open var preferredFirstResponder: NSView? {
+	open var preferredFirstResponder: NSView? {
 		nil
 	}
 
@@ -108,14 +107,14 @@ open class OnboardingStepViewController: NSViewController {
 		fatalError("init(coder:) has not been implemented")
 	}
 
-	@objc open func stepWillAppear() {}
+	open func stepWillAppear() {}
 
 	/// Writes the step's answers into `settings`. Throwing rejects the step and
 	/// shows the thrown message; it used to be a `Bool` plus an `NSString`
 	/// out-parameter.
 	open func commit() throws {}
 
-	@objc open func makeContentView() -> NSView {
+	open func makeContentView() -> NSView {
 		let view = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 380))
 		view.translatesAutoresizingMaskIntoConstraints = false
 		return view

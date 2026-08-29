@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -44,7 +45,7 @@ struct RemovedPreferenceKeyTests {
 		}
 		let contents = try Data(contentsOf: url)
 		let plist = try PropertyListSerialization.propertyList(from: contents, format: nil)
-		let keys = (plist as? [String: Any])?.keys.sorted() ?? []
+		let keys = [String: PropertyListValue](propertyList: plist)?.keys.sorted() ?? []
 		for removed in Self.removedKeys {
 			#expect(keys.contains(removed) == false)
 		}

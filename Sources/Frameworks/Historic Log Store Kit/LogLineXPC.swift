@@ -38,7 +38,6 @@
 import CoreData
 import Foundation
 
-@objc(TVCLogLineXPC)
 public final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable { // nonisolated: value
 	private enum CodingKey {
 		static let data = "data"
@@ -48,13 +47,12 @@ public final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable { 
 		static let creationDate = "entryCreationDate"
 	}
 
-	@objc public let data: Data
-	@objc public let uniqueIdentifier: String
-	@objc public let viewIdentifier: String
-	@objc public let sessionIdentifier: UInt
-	@objc public let creationDate: TimeInterval
+	public let data: Data
+	public let uniqueIdentifier: String
+	public let viewIdentifier: String
+	public let sessionIdentifier: UInt
+	public let creationDate: TimeInterval
 
-	@objc(initWithLogLineData:uniqueIdentifier:viewIdentifier:sessionIdentifier:creationDate:)
 	public init(
 		logLineData data: Data,
 		uniqueIdentifier: String,
@@ -71,7 +69,6 @@ public final nonisolated class LogLineXPC: NSObject, NSSecureCoding, Sendable { 
 	}
 
 	/** Fails rather than traps: one malformed row must not abort the shared service. */
-	@objc(initWithManagedObject:)
 	public init?(managedObject: NSManagedObject) {
 		guard
 			let data = managedObject.value(forKey: "logLineData") as? Data,

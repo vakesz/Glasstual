@@ -203,20 +203,17 @@ public extension IRCClient {
 		return true
 	}
 
-	@objc(inputText:destination:)
 	@MainActor
 	func inputText(_ input: Any, destination: IRCTreeItem) {
 		inputText(input, as: .privmsg, destination: destination)
 	}
 
-	@objc(inputText:asCommand:)
 	@MainActor
 	func inputText(_ input: Any, as command: IRCRemoteCommand) {
 		guard let destination = output?.selectedItem else { return }
 		inputText(input, as: command, destination: destination)
 	}
 
-	@objc(inputText:asCommand:destination:)
 	@MainActor
 	func inputText(_ input: Any, as command: IRCRemoteCommand, destination: IRCTreeItem) {
 		guard isTerminating == false, let text = attributedInput(input), text.length > 0 else { return }
@@ -260,7 +257,6 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(sendText:asCommand:toChannel:)
 	@MainActor
 	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, to channel: IRCChannel) {
 		guard text.length > 0 else { return }
@@ -282,18 +278,12 @@ public extension IRCClient {
 		}
 
 		for line in text.splitIntoLines {
-			let mutableLine = NSMutableAttributedString(attributedString: line)
-			while mutableLine.length > 0 {
-				let lengthBeforeFormatting = mutableLine.length
-				let message = mutableLine.stringFormatted(
-					forChannel: channel.name,
-					on: self,
-					with: outbound.lineType
-				)
-
-				// Defensive: `stringFormatted` guarantees progress, but this
-				// loop must never spin if that ever stops being true.
-				guard mutableLine.length < lengthBeforeFormatting else { break }
+			var cursor = IRCLineCursor(line)
+			while let message = cursor.nextLine(
+				forChannel: channel.name,
+				on: self,
+				with: outbound.lineType
+			) {
 				let lineReplyIdentifier = replyIdentifier
 				replyIdentifier = nil
 				nextLineReplyToMessageIdentifier = lineReplyIdentifier
@@ -327,7 +317,6 @@ public extension IRCClient {
 		processBundlesUserMessage(text.string, command: outbound.wireCommand)
 	}
 
-	@objc(sendText:asCommand:toChannels:)
 	@MainActor
 	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, toChannels channels: [IRCChannel]) {
 		guard text.length > 0, channels.isEmpty == false, let outbound = OutboundTextCommand(command) else { return }
@@ -348,16 +337,12 @@ public extension IRCClient {
 			groupOffset += targetGroup.count
 			let targetList = targetGroup.joined(separator: ",")
 			for line in text.splitIntoLines {
-				let mutableLine = NSMutableAttributedString(attributedString: line)
-				while mutableLine.length > 0 {
-					let lengthBeforeFormatting = mutableLine.length
-					let message = mutableLine.stringFormatted(
-						forChannel: targetList,
-						on: self,
-						with: outbound.lineType
-					)
-
-					guard mutableLine.length < lengthBeforeFormatting else { break }
+				var cursor = IRCLineCursor(line)
+				while let message = cursor.nextLine(
+					forChannel: targetList,
+					on: self,
+					with: outbound.lineType
+				) {
 					/* One command carries one label, so only the first channel in
 					 the group registers a delivery; the rest print untracked. The
 					 label used to be discarded here, which left every grouped
@@ -477,16 +462,12 @@ public extension IRCClient {
 			(channel == nil && stringIsChannelName(destinationName))
 		let wireTarget = prefix.flatMap { destinationIsChannel ? "\($0)\(destinationName)" : nil }
 			?? destinationName
-		let remainingText = NSMutableAttributedString(attributedString: text)
-		while remainingText.length > 0 {
-			let lengthBeforeFormatting = remainingText.length
-			let message = remainingText.stringFormatted(
-				forChannel: wireTarget,
-				on: self,
-				with: invocation.outbound.lineType
-			)
-
-			guard remainingText.length < lengthBeforeFormatting else { break }
+		var cursor = IRCLineCursor(text)
+		while let message = cursor.nextLine(
+			forChannel: wireTarget,
+			on: self,
+			with: invocation.outbound.lineType
+		) {
 			let redactedMessage = Self.redactedServiceMessage(message, sentTo: wireTarget)
 			let deliveryLabel: String?
 			if silentlyConnecting {

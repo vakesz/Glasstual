@@ -102,7 +102,7 @@ struct ChannelTopicFeatureTests {
 	func adapterPreservesIdentityFormattedTopicAndTypedDelegateCallbacks() {
 		let client = GLTTestClient()
 		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
-		channel.setValue(client, forKey: "associatedClient")
+		channel.associatedClient = client
 		channel.topic = "first\n\u{02}bold"
 
 		let adapter = ChannelModifyTopicSheet(channel: channel)

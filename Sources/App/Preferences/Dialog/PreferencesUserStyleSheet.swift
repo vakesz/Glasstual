@@ -25,7 +25,6 @@ public final class PreferencesUserStyleSheet: SheetBase {
 	@IBOutlet private var rulesTextView: NSTextView!
 	private var rulesChanged = false
 
-	@objc(initWithWindow:)
 	override public init(window: NSWindow?) {
 		super.init(window: window)
 		prepareInitialState()
@@ -40,11 +39,11 @@ public final class PreferencesUserStyleSheet: SheetBase {
 		loadRules()
 	}
 
-	@objc public func start() {
+	public func start() {
 		startSheet()
 	}
 
-	@objc public func textDidChange(_ notification: Notification) {
+	public func textDidChange(_ notification: Notification) {
 		if notification.object as AnyObject? === rulesTextView {
 			rulesChanged = true
 		}
@@ -89,7 +88,7 @@ public final class PreferencesUserStyleSheet: SheetBase {
 		UserStyleStrings.defaultRules
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		styleSheetDelegate?.userStyleSheetWillClose(self)
 	}
 }

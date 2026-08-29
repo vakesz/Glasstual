@@ -6,13 +6,11 @@
 import AVFoundation
 import Foundation
 
-@objc(TLOSpeechSynthesizerEngineDelegate)
 @MainActor
 public protocol SpeechSynthesizerEngineDelegate: AnyObject {
 	func speechSynthesizerEngineDidCompleteUtterance()
 }
 
-@objc(TLOSpeechSynthesizerEngine)
 @MainActor
 public protocol SpeechSynthesizerEngine: AnyObject {
 	var delegate: SpeechSynthesizerEngineDelegate? { get set }
@@ -24,7 +22,6 @@ public protocol SpeechSynthesizerEngine: AnyObject {
 
 /** `AVSpeechSynthesizer` is main-thread affine, so the engine is too: that is
  what replaces the recursive lock the translation wrapped every call in. */
-@objc(TLOAVSpeechSynthesizerEngine)
 @MainActor
 public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine, AVSpeechSynthesizerDelegate {
 	public weak var delegate: SpeechSynthesizerEngineDelegate?
@@ -41,11 +38,10 @@ public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine,
 		speechSynthesizer.delegate = nil
 	}
 
-	@objc public var isSpeaking: Bool {
+	public var isSpeaking: Bool {
 		speechSynthesizer.isSpeaking
 	}
 
-	@objc(speakText:)
 	public func speakText(_ text: String) {
 		let utterance = AVSpeechUtterance(string: text)
 		utterance.rate = AVSpeechUtteranceDefaultSpeechRate
@@ -53,7 +49,7 @@ public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine,
 		speechSynthesizer.speak(utterance)
 	}
 
-	@objc public func stopSpeakingImmediately() {
+	public func stopSpeakingImmediately() {
 		_ = speechSynthesizer.stopSpeaking(at: .immediate)
 	}
 

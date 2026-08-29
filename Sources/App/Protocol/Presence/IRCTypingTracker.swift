@@ -39,7 +39,7 @@ import Foundation
 
 public typealias IRCTypingTracker = TypingTracker
 
-@objc public enum IRCTypingState: UInt {
+public enum IRCTypingState: UInt {
 	case done
 	case active
 	case paused
@@ -71,34 +71,19 @@ private final class TypingEntry {
 	}
 }
 
-private final class TypingTimerTarget: NSObject {
-	weak var tracker: TypingTracker?
-
-	init(tracker: TypingTracker) {
-		self.tracker = tracker
-	}
-
-	@objc func timerFired(_: Timer) {
-		tracker?.expireEntries(at: Date())
-	}
-}
-
-@objc(IRCTypingTracker)
 public final class TypingTracker: NSObject {
 	private weak var client: IRCClient?
 
 	private var entries: [String: [String: TypingEntry]] = [:]
 	private let channels = NSMapTable<NSString, IRCChannel>.strongToWeakObjects()
-	private var expiryTimer: Timer?
+	private var expiryTimer: ClientTimer?
 	private var sequence: UInt = 0
-	private lazy var timerTarget = TypingTimerTarget(tracker: self)
 
 	@available(*, unavailable)
 	override public init() {
 		fatalError("Use init(client:)")
 	}
 
-	@objc(initWithClient:)
 	public init(client: IRCClient) {
 		self.client = client
 
@@ -106,10 +91,9 @@ public final class TypingTracker: NSObject {
 	}
 
 	isolated deinit {
-		expiryTimer?.invalidate()
+		expiryTimer?.stop()
 	}
 
-	@objc(stateForTagValue:)
 	public static func state(forTagValue value: String?) -> IRCTypingState {
 		switch value {
 		case "active":
@@ -121,7 +105,6 @@ public final class TypingTracker: NSObject {
 		}
 	}
 
-	@objc(noteTypingState:fromNickname:inChannel:)
 	public func noteTypingState(
 		_ state: IRCTypingState,
 		fromNickname nickname: String,
@@ -130,7 +113,6 @@ public final class TypingTracker: NSObject {
 		noteTypingState(state, fromNickname: nickname, in: channel, at: Date())
 	}
 
-	@objc(noteTypingState:fromNickname:inChannel:atDate:)
 	public func noteTypingState(
 		_ state: IRCTypingState,
 		fromNickname nickname: String,
@@ -182,7 +164,6 @@ public final class TypingTracker: NSObject {
 		}
 	}
 
-	@objc(removeNickname:)
 	public func removeNickname(_ nickname: String) {
 		let nicknameKey = nickname.lowercased()
 
@@ -207,7 +188,6 @@ public final class TypingTracker: NSObject {
 		}
 	}
 
-	@objc(removeAllInChannel:)
 	public func removeAll(in channel: IRCChannel) {
 		let channelKey = channel.uniqueIdentifier
 
@@ -219,7 +199,7 @@ public final class TypingTracker: NSObject {
 		postChange(for: channel)
 	}
 
-	@objc public func removeAll() {
+	public func removeAll() {
 		let channelKeys = Array(entries.keys)
 
 		entries.removeAll()
@@ -231,16 +211,14 @@ public final class TypingTracker: NSObject {
 		}
 
 		channels.removeAllObjects()
-		expiryTimer?.invalidate()
+		expiryTimer?.stop()
 		expiryTimer = nil
 	}
 
-	@objc(typingNicknamesInChannel:)
 	public func typingNicknames(in channel: IRCChannel) -> [String] {
 		typingNicknames(in: channel, at: Date())
 	}
 
-	@objc(typingNicknamesInChannel:atDate:)
 	public func typingNicknames(in channel: IRCChannel, at date: Date) -> [String] {
 		guard let channelEntries = entries[channel.uniqueIdentifier] else {
 			return []
@@ -252,7 +230,6 @@ public final class TypingTracker: NSObject {
 			.map(\.nickname)
 	}
 
-	@objc(expireEntriesAtDate:)
 	public func expireEntries(at date: Date) {
 		for channelKey in Array(entries.keys) {
 			guard var channelEntries = entries[channelKey] else {
@@ -281,7 +258,7 @@ public final class TypingTracker: NSObject {
 
 	private func scheduleExpiry() {
 		guard entries.isEmpty == false else {
-			expiryTimer?.invalidate()
+			expiryTimer?.stop()
 			expiryTimer = nil
 			return
 		}
@@ -290,14 +267,11 @@ public final class TypingTracker: NSObject {
 			return
 		}
 
-		expiryTimer = Timer.scheduledTimer(
-			timeInterval: 1.0,
-			target: timerTarget,
-			selector: #selector(TypingTimerTarget.timerFired(_:)),
-			userInfo: nil,
-			repeats: true
-		)
-		expiryTimer?.tolerance = 0.2
+		let timer = ClientTimer { [weak self] _ in
+			self?.expireEntries(at: Date())
+		}
+		timer.start(1.0, repeats: true)
+		expiryTimer = timer
 	}
 
 	private func postChange(for channel: IRCChannel) {

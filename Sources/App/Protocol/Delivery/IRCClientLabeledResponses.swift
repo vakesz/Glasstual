@@ -68,13 +68,12 @@ enum IRCLabeledResponsePolicy {
 	}
 }
 
-@objc(IRCLabeledDelivery)
 final class LabeledDelivery: NSObject {
-	@objc var label = ""
-	@objc weak var channel: IRCChannel?
-	@objc var lineNumber: String?
-	@objc var resolved = false
-	@objc var state: TVCLogLineDeliveryState = .none
+	var label = ""
+	weak var channel: IRCChannel?
+	var lineNumber: String?
+	var resolved = false
+	var state: TVCLogLineDeliveryState = .none
 	var timeoutWorkItem: DispatchWorkItem?
 }
 
@@ -86,18 +85,15 @@ public extension IRCClient {
 	/// which resolves the delivery on its own. Requiring `echo-message` as
 	/// well meant a server offering labelled responses without echo had every
 	/// message go out untracked.
-	@objc(labeledResponseTrackingEnabled)
 	func labeledResponseTrackingEnabled() -> Bool {
 		isCapabilityEnabled(.labeledResponse) && isCapabilityEnabled(.messageTags)
 	}
 
-	@objc(nextMessageLabel)
 	func nextMessageLabel() -> String {
 		labelCounter += 1
 		return "g\(labelCounter)"
 	}
 
-	@objc(registerPendingDeliveryForChannel:)
 	func registerPendingDelivery(for channel: IRCChannel?) -> String? {
 		guard labeledResponseTrackingEnabled() else { return nil }
 		let label = nextMessageLabel()
@@ -115,12 +111,10 @@ public extension IRCClient {
 		return label
 	}
 
-	@objc(attachLineNumber:toDeliveryWithLabel:)
 	func attachLineNumber(_ lineNumber: String, toDeliveryWithLabel label: String) {
 		pendingDeliveries[label]?.lineNumber = lineNumber
 	}
 
-	@objc(timeoutDeliveryWithLabel:)
 	func timeoutDelivery(withLabel label: String) {
 		guard let delivery = pendingDeliveries[label], !delivery.resolved else { return }
 		resolveDelivery(
@@ -131,7 +125,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(resolveDeliveryWithLabel:state:messageIdentifier:reason:)
 	func resolveDelivery(
 		withLabel label: String,
 		state: TVCLogLineDeliveryState,
@@ -156,14 +149,12 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(resolveLabeledResponseForMessage:)
 	func resolveLabeledResponse(for message: Message) -> Bool {
 		resolveLabeledResponseOnMainActor(message)
 	}
 
 	/// The state of a delivery still awaiting a response. Resolved deliveries are
 	/// removed, so a resolved or unknown label reports `.none`.
-	@objc(deliveryStateForLabel:)
 	func deliveryState(forLabel label: String) -> TVCLogLineDeliveryState {
 		pendingDeliveries[label]?.state ?? .none
 	}

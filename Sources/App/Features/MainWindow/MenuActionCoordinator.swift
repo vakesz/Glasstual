@@ -103,7 +103,6 @@ enum MenuNavigationTag {
 }
 
 @MainActor
-@objc(TXMenuActionCoordinator)
 public final class MenuActionCoordinator: NSObject {
 	weak var menuController: TXMenuController?
 	var menuIsOpen = false
@@ -112,8 +111,9 @@ public final class MenuActionCoordinator: NSObject {
 	weak var pointedChannel: IRCChannel?
 	var currentSearchPhrase = ""
 	var reactionPopover: ReactionPopoverController?
+	/// Menu-action and selection notifications, dropped with the coordinator.
+	let notifications = NotificationSubscriptions()
 
-	@objc(initWithMenuController:)
 	public init(menuController: TXMenuController) {
 		self.menuController = menuController
 		super.init()
@@ -218,7 +218,6 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
-	@objc(deselectMembersForSender:)
 	public func deselectMembers(for sender: Any) {
 		if let menuItem = sender as? NSMenuItem,
 		   menuItem.textualUserInfo?.isEmpty == false
@@ -232,7 +231,6 @@ public final class MenuActionCoordinator: NSObject {
 		mainWindow.memberList.deselectAll(sender)
 	}
 
-	@objc(performMemberAction:sender:)
 	public func performMemberAction(_ action: TXMenuMemberAction, sender: Any?) {
 		let sender = sender ?? NSNull()
 		switch action {
@@ -535,7 +533,6 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
-	@objc(sendDroppedFilesToSelectedChannel:)
 	public func sendDroppedFilesToSelectedChannel(_ files: [String]) {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      client.isLoggedIn, channel.isPrivateMessage
@@ -543,7 +540,6 @@ public final class MenuActionCoordinator: NSObject {
 		sendDroppedFiles(files, nickname: channel.name)
 	}
 
-	@objc(sendDroppedFiles:row:)
 	public func sendDroppedFiles(_ files: [String], row: UInt) {
 		// The member list is only ever populated for channels, so no
 		// isPrivateMessage check here: the file goes to the row's nickname.
@@ -553,7 +549,6 @@ public final class MenuActionCoordinator: NSObject {
 		sendDroppedFiles(files, nickname: member.user.nickname)
 	}
 
-	@objc(sendDroppedFiles:nickname:)
 	public func sendDroppedFiles(_ files: [String], nickname: String) {
 		guard let client = selectedClient, client.isLoggedIn else { return }
 		fileTransferController.fileTransferTable.beginUpdates()
@@ -567,14 +562,12 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
-	@objc(navigateToTreeItemAtURL:)
 	public func navigateToTreeItem(at url: URL) {
 		let identifier = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 		guard identifier.isEmpty == false else { return }
 		navigateToTreeItem(withIdentifier: identifier)
 	}
 
-	@objc(navigateToTreeItemWithIdentifier:)
 	public func navigateToTreeItem(withIdentifier identifier: String) {
 		guard identifier.count == 36,
 		      let item = AppController.shared.world.findItem(withId: identifier)
@@ -582,12 +575,10 @@ public final class MenuActionCoordinator: NSObject {
 		navigateToTreeItem(item)
 	}
 
-	@objc(navigateToTreeItem:)
 	public func navigateToTreeItem(_ item: IRCTreeItem) {
 		mainWindow.select(item)
 	}
 
-	@objc
 	public func populateNavigationChannelList() {
 		guard let menu = menuController?.mainMenuNavigationChannelListMenu else { return }
 		menu.removeAllItems()
@@ -615,15 +606,13 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
-	@objc(navigateToChannelInNavigationList:)
-	public func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
+	@objc public func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
 		guard let pasteboardString = sender.textualUserInfo,
 		      let item = AppController.shared.world.findItem(withPasteboardString: pasteboardString)
 		else { return }
 		mainWindow.select(item)
 	}
 
-	@objc(performNavigationAction:)
 	public func performNavigationAction(_ sender: Any?) {
 		guard selectedClient != nil,
 		      let menuItem = sender as? NSMenuItem,
@@ -672,7 +661,6 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
-	@objc(moveHighlightOrScrollbackForTag:)
 	public func moveHighlightOrScrollback(forTag tag: Int) {
 		guard let controller = selectedChannel?.logController ?? selectedClient?.logController else { return }
 		switch tag {

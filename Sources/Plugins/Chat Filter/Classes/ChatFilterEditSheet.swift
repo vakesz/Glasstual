@@ -50,7 +50,6 @@ protocol ChatFilterEditSheetDelegate: AnyObject {
 }
 
 @objc(TPI_ChatFilterEditFilterSheet)
-@objcMembers
 @MainActor
 final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	private var filter: MutableChatFilter
@@ -105,13 +104,15 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	@IBOutlet private var filterLimitedToMyselfCheck: NSButton!
 	@IBOutlet private var filterLimitToSelectionOutlineView: NSObject!
 
-	dynamic var filterIgnoreOperatorsCheckEnabled = true
-	dynamic var filterIgnoreOperatorsCheckValue: Bool {
+	/* TPI_ChatFilterEditFilterSheet.xib binds a checkbox's `enabled` and
+	 `value` to these two through `self.`-rooted key paths, so both have to
+	 stay key-value coding compliant on the sheet. */
+	@objc dynamic var filterIgnoreOperatorsCheckEnabled = true
+	@objc dynamic var filterIgnoreOperatorsCheckValue: Bool {
 		get { filterIgnoreOperatorsCheckEnabled && filter.filterIgnoreOperators }
 		set { filter.filterIgnoreOperators = newValue }
 	}
 
-	@objc(initWithFilter:)
 	init(filter: ChatFilter?) {
 		self.filter = filter?.mutableCopy() as? MutableChatFilter ?? MutableChatFilter()
 		super.init()
@@ -520,7 +521,6 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 }
 
 /// An immutable token value handed to `NSTokenField`; no actor isolation needed.
-@objc(TPI_ChatFilterFilterActionToken)
 private final nonisolated class ChatFilterActionToken: NSObject { // nonisolated: value
 	let token: String
 	init(token: String) {

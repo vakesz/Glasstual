@@ -13,11 +13,10 @@
 
 import AppKit
 
-@objc(TDCSheetBase)
 @MainActor
 open class SheetBase: NSObject {
-	@objc public weak var delegate: AnyObject?
-	@objc public weak var window: NSWindow?
+	public weak var delegate: AnyObject?
+	public weak var window: NSWindow?
 	@IBOutlet public var sheet: NSWindow!
 	@IBOutlet public var okButton: NSButton!
 	@IBOutlet public var cancelButton: NSButton!
@@ -27,13 +26,12 @@ open class SheetBase: NSObject {
 		fatalError("init() is unavailable; use init(window:)")
 	}
 
-	@objc(initWithWindow:)
 	public init(window: NSWindow?) {
 		self.window = window
 		super.init()
 	}
 
-	@objc public func startSheet() {
+	public func startSheet() {
 		guard let window else {
 			return
 		}
@@ -41,19 +39,17 @@ open class SheetBase: NSObject {
 		startSheet(with: window)
 	}
 
-	@objc(startSheetWithWindow:)
 	public func startSheet(with window: NSWindow) {
 		window.beginSheet(sheet) { [weak self] returnCode in
 			self?.sheetDidEnd(withReturnCode: returnCode.rawValue)
 		}
 	}
 
-	@objc public func endSheet() {
+	public func endSheet() {
 		let parentWindow = sheet.sheetParent ?? window
 		parentWindow?.endSheet(sheet)
 	}
 
-	@objc(sheetDidEndWithReturnCode:)
 	open func sheetDidEnd(withReturnCode _: Int) {
 		sheet.close()
 	}
@@ -62,12 +58,10 @@ open class SheetBase: NSObject {
 		endSheet()
 	}
 
-	@objc(okOrErrorForTextField:)
 	public func okOrError(for textField: ValidatedTextField) -> Bool {
 		textField.showValidationErrorPopover() == false
 	}
 
-	@objc(okOrErrorForComboBox:)
 	public func okOrError(for comboBox: ValidatedComboBox) -> Bool {
 		comboBox.showValidationErrorPopover() == false
 	}
@@ -76,7 +70,7 @@ open class SheetBase: NSObject {
 		endSheet()
 	}
 
-	@objc open func close() {
+	open func close() {
 		cancel(nil)
 	}
 }

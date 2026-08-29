@@ -38,16 +38,15 @@
 import AppKit
 import CocoaExtensions
 
-@objc(TPCApplicationInfo)
 public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
 	private static let runtimeDefaultsKey = "TXRunTime"
 	private static let runCountDefaultsKey = "TXRunCount"
 
-	@objc public static func applicationName() -> String {
+	public static func applicationName() -> String {
 		bundleValue(for: "CFBundleName")
 	}
 
-	@objc public static func applicationNameWithoutVersion() -> String {
+	public static func applicationNameWithoutVersion() -> String {
 		let name = applicationName()
 
 		guard let separator = name.firstIndex(of: " "), separator != name.startIndex else {
@@ -57,19 +56,19 @@ public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
 		return String(name[..<separator])
 	}
 
-	@objc public static func applicationVersion() -> String {
+	public static func applicationVersion() -> String {
 		bundleValue(for: "CFBundleVersion")
 	}
 
-	@objc public static func applicationVersionShort() -> String {
+	public static func applicationVersionShort() -> String {
 		bundleValue(for: "CFBundleShortVersionString")
 	}
 
-	@objc public static func applicationProcessID() -> Int32 {
+	public static func applicationProcessID() -> Int32 {
 		ProcessInfo.processInfo.processIdentifier
 	}
 
-	@objc public static func applicationBundleIdentifier() -> String {
+	public static func applicationBundleIdentifier() -> String {
 		guard let identifier = Bundle.main.bundleIdentifier, !identifier.isEmpty else {
 			preconditionFailure("The generated Info.plist is missing CFBundleIdentifier")
 		}
@@ -77,15 +76,15 @@ public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
 		return identifier
 	}
 
-	@objc public static func applicationInfoPlist() -> [String: Any] {
-		Bundle.main.infoDictionary ?? [:]
+	public static func applicationInfoPlist() -> [String: PropertyListValue] {
+		Bundle.main.infoDictionary.flatMap { [String: PropertyListValue](propertyList: $0) } ?? [:]
 	}
 
-	@objc public static func applicationLaunchDate() -> Date? {
+	public static func applicationLaunchDate() -> Date? {
 		NSRunningApplication.current.launchDate
 	}
 
-	@objc public static func timeIntervalSinceApplicationLaunch() -> TimeInterval {
+	public static func timeIntervalSinceApplicationLaunch() -> TimeInterval {
 		guard let launchDate = applicationLaunchDate() else {
 			return 0
 		}
@@ -93,23 +92,23 @@ public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
 		return -launchDate.timeIntervalSinceNow
 	}
 
-	@objc @MainActor public static func timeIntervalSinceApplicationInstall() -> TimeInterval {
+	@MainActor public static func timeIntervalSinceApplicationInstall() -> TimeInterval {
 		userDefaults.double(forKey: runtimeDefaultsKey) + timeIntervalSinceApplicationLaunch()
 	}
 
-	@objc @MainActor public static func saveTimeIntervalSinceApplicationInstall() {
+	@MainActor public static func saveTimeIntervalSinceApplicationInstall() {
 		userDefaults.set(timeIntervalSinceApplicationInstall(), forKey: runtimeDefaultsKey)
 	}
 
-	@objc @MainActor public static func applicationRunCount() -> UInt {
+	@MainActor public static func applicationRunCount() -> UInt {
 		userDefaults.unsignedInteger(forKey: runCountDefaultsKey)
 	}
 
-	@objc @MainActor public static func incrementApplicationRunCount() {
+	@MainActor public static func incrementApplicationRunCount() {
 		userDefaults.setUnsignedInteger(applicationRunCount() + 1, forKey: runCountDefaultsKey)
 	}
 
-	@objc public static func applicationBirthday() -> TimeInterval {
+	public static func applicationBirthday() -> TimeInterval {
 		1_279_871_580
 	}
 

@@ -62,16 +62,14 @@ extension IRCClient {
 		return container
 	}
 
-	@objc func clearTrackedUsers() {
+	func clearTrackedUsers() {
 		userTracking.clearTrackedUsers()
 	}
 
-	@objc(statusOfTrackedNickname:changedTo:)
 	func setTrackedNickname(_ nickname: String, status: IRCAddressBookUserTrackingStatus) {
 		setTrackedNickname(nickname, status: status, notify: false)
 	}
 
-	@objc(statusOfTrackedNickname:changedTo:notify:)
 	func setTrackedNickname(
 		_ nickname: String,
 		status: IRCAddressBookUserTrackingStatus,
@@ -98,7 +96,7 @@ extension IRCClient {
 		)
 	}
 
-	@MainActor @objc func populateISONTrackedUsersList() {
+	@MainActor func populateISONTrackedUsersList() {
 		guard isLoggedIn else { return }
 
 		var additions: [String] = []
@@ -130,19 +128,19 @@ extension IRCClient {
 		startISONTimer()
 	}
 
-	@objc func startISONTimer() {
+	func startISONTimer() {
 		guard isonTimer.isActive == false else { return }
 		isonTimer.start(30, repeats: true)
 		startWhoTimer()
 	}
 
-	@objc func stopISONTimer() {
+	func stopISONTimer() {
 		guard isonTimer.isActive else { return }
 		isonTimer.stop()
 		stopWhoTimer()
 	}
 
-	@MainActor @objc func onISONTimer() {
+	@MainActor func onISONTimer() {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false else { return }
 
 		var nicknames = supportsAdvancedTracking ? [] : Array(userTracking.trackedUsers.keys)
@@ -150,22 +148,22 @@ extension IRCClient {
 		sendIson(forNicknames: nicknames, hideResponse: true)
 	}
 
-	@objc func startWhoTimer() {
+	func startWhoTimer() {
 		guard whoTimer.isActive == false else { return }
 		whoTimer.start(120, repeats: true)
 	}
 
-	@objc func stopWhoTimer() {
+	func stopWhoTimer() {
 		guard whoTimer.isActive else { return }
 		whoTimer.stop()
 	}
 
-	@MainActor @objc func onWhoTimer() {
+	@MainActor func onWhoTimer() {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false else { return }
 		sendTimedWhoRequests(to: channelList)
 	}
 
-	@MainActor @objc(sendTimedWhoRequestsToChannels:)
+	@MainActor
 	func sendTimedWhoRequests(to channels: [IRCChannel]) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
 		      let range = UserTrackingWhoBatchPolicy.indexRange(

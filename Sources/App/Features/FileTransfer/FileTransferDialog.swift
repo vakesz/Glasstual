@@ -43,7 +43,6 @@ import Synchronization
 
 public typealias TDCFileTransferDialog = FileTransferDialog
 
-@objc(TDCFileTransferDialogSelection)
 public enum FileTransferSelection: UInt, Sendable {
 	case all
 	case sending

@@ -39,7 +39,7 @@
 import Foundation
 
 extension TDCFileTransferDialogTransferController {
-	@objc public func prepareForPermanentDestruction() {
+	public func prepareForPermanentDestruction() {
 		dispatchPrecondition(condition: .onQueue(.main))
 		transferTableCell = nil
 		closeAndPostNotification(false)
@@ -47,11 +47,10 @@ extension TDCFileTransferDialogTransferController {
 		portMapperNotifications.cancelAll()
 	}
 
-	@objc public func close() {
+	public func close() {
 		closeAndPostNotification(true)
 	}
 
-	@objc(closeAndPostNotification:)
 	public func closeAndPostNotification(_ postNotification: Bool) {
 		dispatchPrecondition(condition: .onQueue(.main))
 		NSObject.cancelPreviousPerformRequests(withTarget: self)
@@ -84,7 +83,7 @@ extension TDCFileTransferDialogTransferController {
 		close()
 	}
 
-	@objc func peerNicknameChanged(_ notification: Notification) {
+	func peerNicknameChanged(_ notification: Notification) {
 		guard let oldNickname = notification.userInfo?["oldNickname"] as? String,
 		      peerNickname == oldNickname,
 		      let newNickname = notification.userInfo?["newNickname"] as? String
@@ -94,7 +93,7 @@ extension TDCFileTransferDialogTransferController {
 		peerNickname = newNickname
 	}
 
-	@objc func clientDisconnected(_: Notification) {
+	func clientDisconnected(_: Notification) {
 		closeWithClientDisconnectedError()
 	}
 

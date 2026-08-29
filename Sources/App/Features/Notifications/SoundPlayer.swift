@@ -16,7 +16,6 @@ import os
 import Synchronization
 import UniformTypeIdentifiers
 
-@objc(TLOSoundPlayer)
 public final class SoundPlayer: NSObject {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -27,7 +26,6 @@ public final class SoundPlayer: NSObject {
 	 rescanned three sound directories on the notification-delivery path. */
 	private static let soundCache = Mutex<[String: SystemSoundID]>([:])
 
-	@objc(soundFilesAtPath:)
 	public static func soundFiles(atPath path: String) -> [String: String] {
 		let files = (try? FileManager.default.contentsOfDirectory(atPath: path)) ?? []
 		var sounds: [String: String] = [:]
@@ -42,7 +40,6 @@ public final class SoundPlayer: NSObject {
 		return sounds
 	}
 
-	@objc(playAlertSound:)
 	public static func playAlertSound(_ name: String) {
 		if name == NotificationAlertSound.noSoundPreferenceValue {
 			return
@@ -65,7 +62,7 @@ public final class SoundPlayer: NSObject {
 		AudioServicesPlayAlertSound(soundID)
 	}
 
-	@objc public static func uniqueListOfSounds() -> [String] {
+	public static func uniqueListOfSounds() -> [String] {
 		var sounds = ["Beep"]
 
 		for catalog in [systemAlertSoundFiles, systemLibrarySoundFiles, userLibrarySoundFiles] {
@@ -100,7 +97,7 @@ public final class SoundPlayer: NSObject {
 	}
 
 	/// Disposes every cached sound. Call once, during application termination.
-	@objc public static func prepareForApplicationTermination() {
+	public static func prepareForApplicationTermination() {
 		soundCache.withLock { cache in
 			for soundID in cache.values {
 				AudioServicesDisposeSystemSoundID(soundID)

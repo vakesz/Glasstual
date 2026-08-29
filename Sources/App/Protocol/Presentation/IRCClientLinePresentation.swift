@@ -97,12 +97,10 @@ struct IRCLinePrintRequest {
 }
 
 public extension IRCClient {
-	@objc(formatNickname:inChannel:)
 	func formatNickname(_ nickname: String, in channel: IRCChannel?) -> String {
 		formatNickname(nickname, in: channel, withFormat: nil)
 	}
 
-	@objc(formatNickname:inChannel:withFormat:)
 	func formatNickname(_ nickname: String, in channel: IRCChannel?, withFormat format: String?) -> String {
 		formatNicknameOnMainActor(nickname, in: channel, format: format)
 	}
@@ -112,7 +110,6 @@ public extension IRCClient {
 		writeToLogFile(logLine)
 	}
 
-	@objc(print:by:inChannel:asType:command:)
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
@@ -124,7 +121,6 @@ public extension IRCClient {
 		      isEncrypted: false, escapeMessage: true, referenceMessage: nil, completionBlock: nil)
 	}
 
-	@objc(print:by:inChannel:asType:command:escapeMessage:)
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
@@ -137,7 +133,6 @@ public extension IRCClient {
 		      isEncrypted: false, escapeMessage: escapeMessage, referenceMessage: nil, completionBlock: nil)
 	}
 
-	@objc(print:by:inChannel:asType:command:receivedAt:)
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
@@ -150,7 +145,6 @@ public extension IRCClient {
 		      isEncrypted: false, escapeMessage: true, referenceMessage: nil, completionBlock: nil)
 	}
 
-	@objc(print:by:inChannel:asType:command:receivedAt:isEncrypted:)
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
@@ -164,7 +158,6 @@ public extension IRCClient {
 		      isEncrypted: isEncrypted, escapeMessage: true, referenceMessage: nil, completionBlock: nil)
 	}
 
-	@objc(print:by:inChannel:asType:command:receivedAt:isEncrypted:referenceMessage:)
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
@@ -180,7 +173,6 @@ public extension IRCClient {
 		      completionBlock: nil)
 	}
 
-	@objc(print:by:inChannel:asType:command:receivedAt:isEncrypted:referenceMessage:completionBlock:)
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
@@ -197,7 +189,6 @@ public extension IRCClient {
 		      completionBlock: completionBlock)
 	}
 
-	@objc(print:by:inChannel:asType:command:receivedAt:isEncrypted:escapeMessage:referenceMessage:completionBlock:)
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
@@ -233,33 +224,27 @@ public extension IRCClient {
 }
 
 public extension IRCClient {
-	@objc(printReply:)
 	func printReply(_ message: Message) {
 		printReply(message, in: nil)
 	}
 
-	@objc(printReply:inChannel:)
 	func printReply(_ message: Message, in channel: IRCChannel?) {
 		printReply(message, in: channel, withSequence: 1)
 	}
 
-	@objc(printReply:inChannel:withSequence:)
 	func printReply(_ message: Message, in channel: IRCChannel?, withSequence sequence: UInt) {
 		print(message.sequence(sequence), by: nil, in: channel, as: .debug, command: message.command,
 		      receivedAt: message.receivedAt)
 	}
 
-	@objc(printErrorReply:)
 	func printErrorReply(_ message: Message) {
 		printErrorReply(message, in: nil)
 	}
 
-	@objc(printErrorReply:inChannel:)
 	func printErrorReply(_ message: Message, in channel: IRCChannel?) {
 		printErrorReply(message, in: channel, withSequence: UInt(NSNotFound))
 	}
 
-	@objc(printErrorReply:inChannel:withSequence:)
 	func printErrorReply(_ message: Message, in channel: IRCChannel?, withSequence sequence: UInt) {
 		let sequenceMessage = sequence == UInt(NSNotFound) ? message.sequence : message.sequence(sequence)
 		let errorMessage = IRCDiagnosticStrings.malformedMessage(
@@ -269,22 +254,18 @@ public extension IRCClient {
 		print(errorMessage, by: nil, in: channel, as: .debug, command: message.command)
 	}
 
-	@objc(printError:asCommand:)
 	func printError(_ errorMessage: String, asCommand command: String) {
 		print(errorMessage, by: nil, in: nil, as: .debug, command: command)
 	}
 
-	@objc(printDebugInformationToConsole:)
 	func printDebugInformation(toConsole message: String) {
 		printDebugInformation(toConsole: message, asCommand: TVCLogLineDefaultCommandValue, escapeMessage: true)
 	}
 
-	@objc(printDebugInformationToConsole:asCommand:)
 	func printDebugInformation(toConsole message: String, asCommand command: String) {
 		printDebugInformation(toConsole: message, asCommand: command, escapeMessage: true)
 	}
 
-	@objc(printDebugInformationToConsole:escapeMessage:)
 	func printDebugInformation(toConsole message: String, escapeMessage: Bool) {
 		printDebugInformation(
 			toConsole: message,
@@ -293,34 +274,28 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(printDebugInformationToConsole:asCommand:escapeMessage:)
 	func printDebugInformation(toConsole message: String, asCommand command: String, escapeMessage: Bool) {
 		print(message, by: nil, in: nil, as: .debug, command: command, escapeMessage: escapeMessage)
 	}
 
-	@objc(printDebugInformation:)
 	func printDebugInformation(_ message: String) {
 		printDebugInformation(message, asCommand: TVCLogLineDefaultCommandValue, escapeMessage: true)
 	}
 
-	@objc(printDebugInformationMultiline:)
 	func printDebugInformation(multiline message: String) {
 		message.enumerateLines { line, _ in
 			self.printDebugInformation(line)
 		}
 	}
 
-	@objc(printDebugInformation:asCommand:)
 	func printDebugInformation(_ message: String, asCommand command: String) {
 		printDebugInformation(message, asCommand: command, escapeMessage: true)
 	}
 
-	@objc(printDebugInformation:escapeMessage:)
 	func printDebugInformation(_ message: String, escapeMessage: Bool) {
 		printDebugInformation(message, asCommand: TVCLogLineDefaultCommandValue, escapeMessage: escapeMessage)
 	}
 
-	@objc(printDebugInformation:asCommand:escapeMessage:)
 	func printDebugInformation(_ message: String, asCommand command: String, escapeMessage: Bool) {
 		let channel = output?.selectedChannel(on: self)
 
@@ -332,17 +307,14 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(printDebugInformation:inChannel:)
 	func printDebugInformation(_ message: String, in channel: IRCChannel?) {
 		printDebugInformation(message, in: channel, asCommand: TVCLogLineDefaultCommandValue, escapeMessage: true)
 	}
 
-	@objc(printDebugInformation:inChannel:asCommand:)
 	func printDebugInformation(_ message: String, in channel: IRCChannel?, asCommand command: String) {
 		print(message, by: nil, in: channel, as: .debug, command: command, escapeMessage: true)
 	}
 
-	@objc(printDebugInformation:inChannel:escapeMessage:)
 	func printDebugInformation(_ message: String, in channel: IRCChannel?, escapeMessage: Bool) {
 		printDebugInformation(
 			message,
@@ -352,7 +324,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(printDebugInformation:inChannel:asCommand:escapeMessage:)
 	func printDebugInformation(
 		_ message: String,
 		in channel: IRCChannel?,
@@ -362,7 +333,6 @@ public extension IRCClient {
 		print(message, by: nil, in: channel, as: .debug, command: command, escapeMessage: escapeMessage)
 	}
 
-	@objc(printDebugInformationInAllViews:)
 	func printDebugInformation(inAllViews message: String) {
 		printDebugInformation(
 			inAllViews: message,
@@ -371,12 +341,10 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(printDebugInformationInAllViews:asCommand:)
 	func printDebugInformation(inAllViews message: String, asCommand command: String) {
 		printDebugInformation(inAllViews: message, asCommand: command, escapeMessage: true)
 	}
 
-	@objc(printDebugInformationInAllViews:escapeMessage:)
 	func printDebugInformation(inAllViews message: String, escapeMessage: Bool) {
 		printDebugInformation(
 			inAllViews: message,
@@ -385,7 +353,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(printDebugInformationInAllViews:asCommand:escapeMessage:)
 	func printDebugInformation(inAllViews message: String, asCommand command: String, escapeMessage: Bool) {
 		for channel in channelList {
 			printDebugInformation(message, in: channel, asCommand: command, escapeMessage: escapeMessage)

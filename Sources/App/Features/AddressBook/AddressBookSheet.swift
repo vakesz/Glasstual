@@ -115,7 +115,7 @@ public final class AddressBookSheet: SheetBase {
 		}
 	}
 
-	@objc public func start() {
+	public func start() {
 		if entryType == .ignore {
 			sheet = ignoreEntryView
 			sheet.makeFirstResponder(ignoreEntryHostmaskTextField)
@@ -154,7 +154,7 @@ public final class AddressBookSheet: SheetBase {
 		super.ok(nil)
 	}
 
-	@objc public func okOrError() -> Bool {
+	public func okOrError() -> Bool {
 		if entryType == .ignore {
 			return okOrError(for: ignoreEntryHostmaskTextField)
 		}
@@ -166,7 +166,7 @@ public final class AddressBookSheet: SheetBase {
 		return false
 	}
 
-	@objc public func windowWillClose(_: Notification) {
+	public func windowWillClose(_: Notification) {
 		entryDelegate?.addressBookSheetWillClose(self)
 	}
 }

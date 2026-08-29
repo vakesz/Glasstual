@@ -38,8 +38,8 @@ private let propertyListModelLogger = Logger(
 	category: "PropertyListModel"
 )
 
-/** Moves `Codable` value models between Swift and the untyped `[String: Any]`
- property lists Glasstual keeps in `UserDefaults`.
+/** Moves `Codable` value models between Swift and the property-list
+ dictionaries Glasstual keeps in `UserDefaults`.
 
  Everything on disk was written by `NSDictionary`, so the round trip goes
  through `PropertyListSerialization`: the same numbers, booleans, strings, data
@@ -50,11 +50,11 @@ public enum PropertyListModel {
 	/// a `Model`. Callers skip the malformed entry rather than aborting.
 	public static func decode<Model: Decodable>(
 		_ type: Model.Type,
-		from dictionary: [String: Any]
+		from dictionary: [String: PropertyListValue]
 	) -> Model? {
 		do {
 			let data = try PropertyListSerialization.data(
-				fromPropertyList: dictionary,
+				fromPropertyList: dictionary.propertyListObject,
 				format: .binary,
 				options: 0
 			)
@@ -71,7 +71,7 @@ public enum PropertyListModel {
 
 	/// Encodes `value` into the dictionary shape the preferences file stores.
 	/// Returns an empty dictionary and logs if the model is not representable.
-	public static func encode(_ value: some Encodable) -> [String: Any] {
+	public static func encode(_ value: some Encodable) -> [String: PropertyListValue] {
 		let encoder = PropertyListEncoder()
 		encoder.outputFormat = .binary
 
@@ -83,7 +83,9 @@ public enum PropertyListModel {
 				format: nil
 			)
 
-			guard let dictionary = plist as? [String: Any] else {
+			/* `Any` is what the serializer returns and where it stops: the
+			 dictionary is narrowed here so no caller sees an untyped value. */
+			guard let dictionary = [String: PropertyListValue](propertyList: plist) else {
 				propertyListModelLogger.error("A model encoded to something other than a dictionary")
 
 				return [:]

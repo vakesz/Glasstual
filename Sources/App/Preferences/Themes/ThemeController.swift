@@ -86,8 +86,6 @@ private struct PublishedTheme {
 }
 
 @MainActor
-@objc(TPCThemeController)
-@objcMembers
 public final class ThemeController: NSObject {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -105,15 +103,17 @@ public final class ThemeController: NSObject {
 	private var bundledThemes: [String: Theme] = [:]
 	private var customThemes: [String: Theme] = [:]
 	private var themeMonitorTask: Task<Void, Never>?
+	/// The theme-integrity and theme-change notifications this controller answers.
+	private let notifications = NotificationSubscriptions()
 
 	override public init() {
 		super.init()
 		prepareInitialState()
 	}
 
-	deinit {
+	isolated deinit {
 		themeMonitorTask?.cancel()
-		NotificationCenter.default.removeObserver(self)
+		notifications.cancelAll()
 	}
 
 	/** The active theme's off-main-actor readable values. Nil until `reload()`. */
@@ -153,7 +153,6 @@ public final class ThemeController: NSObject {
 		publishedTheme?.temporaryURL.path ?? ""
 	}
 
-	@objc(isBundledTheme)
 	public var isBundledTheme: Bool {
 		storageLocation == .bundle
 	}
@@ -162,43 +161,25 @@ public final class ThemeController: NSObject {
 		populateThemes()
 		startMonitoringThemes()
 
-		let center = NotificationCenter.default
-		center.addObserver(
-			self,
-			selector: #selector(applicationAppearanceChanged(_:)),
-			name: Notification.Name("TXApplicationAppearanceChangedNotification"),
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeIntegrityCompromised(_:)),
-			name: .themeIntegrityCompromised,
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeWasDeleted(_:)),
-			name: .themeWasDeleted,
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeWasModified(_:)),
-			name: .themeWasModified,
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeVarietyChanged(_:)),
-			name: .themeAppearanceChanged,
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(themeVarietyChanged(_:)),
-			name: .themeVarietyChanged,
-			object: nil
-		)
+		notifications
+			.observe(Notification.Name("TXApplicationAppearanceChangedNotification")) { [weak self] notification in
+				self?.applicationAppearanceChanged(notification)
+			}
+		notifications.observe(.themeIntegrityCompromised) { [weak self] notification in
+			self?.themeIntegrityCompromised(notification)
+		}
+		notifications.observe(.themeWasDeleted) { [weak self] notification in
+			self?.themeWasDeleted(notification)
+		}
+		notifications.observe(.themeWasModified) { [weak self] notification in
+			self?.themeWasModified(notification)
+		}
+		notifications.observe(.themeAppearanceChanged) { [weak self] notification in
+			self?.themeVarietyChanged(notification)
+		}
+		notifications.observe(.themeVarietyChanged) { [weak self] notification in
+			self?.themeVarietyChanged(notification)
+		}
 	}
 
 	public func prepareForApplicationTermination() {
@@ -211,12 +192,10 @@ public final class ThemeController: NSObject {
 		theme(named: themeName, createIfNecessary: true)?.usable == true
 	}
 
-	@objc(themeNamed:)
 	public func theme(named themeName: String) -> Theme? {
 		theme(named: themeName, createIfNecessary: false)
 	}
 
-	@objc(themeNamed:createIfNecessary:)
 	public func theme(named themeName: String, createIfNecessary: Bool) -> Theme? {
 		guard let fileName = Self.extractThemeName(themeName) else {
 			return nil
@@ -286,12 +265,10 @@ public final class ThemeController: NSObject {
 		}
 	}
 
-	@objc(pathOfThemeWithName:)
 	public static func pathOfTheme(withName themeName: String) -> String? {
 		pathOfTheme(withName: themeName, storageLocation: nil)
 	}
 
-	@objc(pathOfThemeWithName:storageLocation:)
 	public static func pathOfTheme(
 		withName themeName: String,
 		storageLocation locationOut: UnsafeMutablePointer<TPCThemeStorageLocation>?
@@ -439,7 +416,6 @@ public final class ThemeController: NSObject {
 		}
 	}
 
-	@objc(enumerateAvailableThemesWithBlock:)
 	public func enumerateAvailableThemes(
 		_ enumerationBlock: (String, TPCThemeStorageLocation, Bool, UnsafeMutablePointer<ObjCBool>) -> Void
 	) {
@@ -463,15 +439,15 @@ public final class ThemeController: NSObject {
 		}
 	}
 
-	@objc private func applicationAppearanceChanged(_: Notification) {
+	private func applicationAppearanceChanged(_: Notification) {
 		theme?.updateAppearance()
 	}
 
-	@objc private func themeVarietyChanged(_: Notification) {
+	private func themeVarietyChanged(_: Notification) {
 		updatePreferences()
 	}
 
-	@objc private func themeIntegrityCompromised(_ notification: Notification) {
+	private func themeIntegrityCompromised(_ notification: Notification) {
 		guard let affectedTheme = notification.object as? Theme, affectedTheme === theme else {
 			return
 		}
@@ -486,7 +462,7 @@ public final class ThemeController: NSObject {
 		presentIntegrityCompromisedAlert()
 	}
 
-	@objc private func themeWasDeleted(_ notification: Notification) {
+	private func themeWasDeleted(_ notification: Notification) {
 		guard let deletedTheme = notification.object as? Theme else {
 			return
 		}
@@ -508,7 +484,7 @@ public final class ThemeController: NSObject {
 		NotificationCenter.default.post(name: .themeListDidChange, object: self)
 	}
 
-	@objc private func themeWasModified(_ notification: Notification) {
+	private func themeWasModified(_ notification: Notification) {
 		guard let modifiedTheme = notification.object as? Theme,
 		      modifiedTheme === theme,
 		      TextualPreferences.automaticallyReloadCustomThemesWhenTheyChange()
@@ -737,10 +713,9 @@ public extension ThemeController {
 		ResourceManager.dictionary(
 			fromResources: "StaticStore",
 			key: "TPCThemeController Remapped Themes"
-		)?[themeName] as? String
+		)?[themeName]?.string
 	}
 
-	@objc(buildFilename:forStorageLocation:)
 	static func buildFilename(
 		_ name: String,
 		for storageLocation: TPCThemeStorageLocation
@@ -761,7 +736,6 @@ public extension ThemeController {
 		}
 	}
 
-	@objc(descriptionForStorageLocation:)
 	static func description(for storageLocation: TPCThemeStorageLocation) -> String? {
 		switch storageLocation {
 		case .bundle:
@@ -775,7 +749,6 @@ public extension ThemeController {
 		}
 	}
 
-	@objc(extractThemeSource:)
 	static func extractThemeSource(_ source: String) -> String? {
 		guard source.hasPrefix(ThemeNamePrefix.customComplete) ||
 			source.hasPrefix(ThemeNamePrefix.bundledComplete)
@@ -785,7 +758,6 @@ public extension ThemeController {
 		return source.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init)
 	}
 
-	@objc(extractThemeName:)
 	static func extractThemeName(_ source: String) -> String? {
 		guard source.hasPrefix(ThemeNamePrefix.customComplete) ||
 			source.hasPrefix(ThemeNamePrefix.bundledComplete),
@@ -798,7 +770,6 @@ public extension ThemeController {
 		return name.isEmpty ? nil : name
 	}
 
-	@objc(storageLocationOfThemeWithName:)
 	static func storageLocation(ofThemeWithName themeName: String) -> TPCThemeStorageLocation {
 		if themeName.hasPrefix(ThemeNamePrefix.customComplete) {
 			return .custom
@@ -809,7 +780,6 @@ public extension ThemeController {
 		return .unknown
 	}
 
-	@objc(copyActiveThemeToDestinationLocation:reloadOnCopy:openOnCopy:)
 	func copyActiveTheme(
 		to destinationLocation: TPCThemeStorageLocation,
 		reloadOnCopy: Bool,

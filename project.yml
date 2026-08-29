@@ -740,6 +740,7 @@ targets:
           - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Messages.swift
           - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Notifications.swift
           - $(SRCROOT)/Sources/App/Preferences/PreferenceTypes.swift
+          - $(SRCROOT)/Sources/Frameworks/Cocoa Extensions/Classes/PropertyListValue.swift
           - $(SRCROOT)/Sources/Shared/Application/ApplicationGroup.swift
           - $(SRCROOT)/Sources/Shared/Preferences/PreferenceKey.swift
           - $(SRCROOT)/Sources/Shared/Preferences/TPCPreferences.swift

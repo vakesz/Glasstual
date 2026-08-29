@@ -52,7 +52,6 @@ enum IRCNetsplitSummaryPolicy {
 }
 
 public extension IRCClient {
-	@objc(replayNetsplitBatch:)
 	func replayNetsplitBatch(_ batchMessage: MessageBatch) {
 		collapsedNetsplitBatch = batchMessage
 		collapsedNetsplitNicknames = [:]
@@ -101,7 +100,6 @@ public extension IRCClient {
 		ClientWireUtilities.netsplitNicknameList(nicknames, limit: IRCNetsplitSummaryPolicy.nicknameLimit)
 	}
 
-	@objc(collapseNetsplitMessage:inChannel:)
 	func collapseNetsplitMessage(_ message: Message, in channel: IRCChannel) -> Bool {
 		guard let collapsedBatch = collapsedNetsplitBatch as? MessageBatch,
 		      IRCNetsplitSummaryPolicy.accepts(command: message.command),

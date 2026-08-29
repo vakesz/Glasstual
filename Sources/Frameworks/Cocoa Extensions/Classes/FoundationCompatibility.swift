@@ -64,12 +64,10 @@ public extension CharacterSet {
 }
 
 public extension NSCoder {
-	@objc(decodeDictionaryForKey:)
 	func textual_decodeDictionary(forKey key: String) -> NSDictionary? {
 		decodeObject(of: NSDictionary.self, forKey: key)
 	}
 
-	@objc(decodeStringForKey:)
 	func textual_decodeString(forKey key: String) -> NSString? {
 		decodeObject(of: NSString.self, forKey: key)
 	}
@@ -83,14 +81,12 @@ public extension Int64 {
 }
 
 public extension NSNumber {
-	@objc(integerStringValueWithLeadingZero)
 	var textualIntegerStringValueWithLeadingZero: String {
 		int64Value.formatted(.number.precision(.integerLength(2...)).grouping(.never))
 	}
 }
 
 public extension NSWorkspace {
-	@objc(nameOfApplicationToOpenURL:)
 	func textual_nameOfApplication(toOpen url: URL) -> String? {
 		guard
 			let applicationURL = urlForApplication(toOpen: url),
@@ -105,18 +101,15 @@ public extension NSWorkspace {
 }
 
 public extension Bundle {
-	@objc(displayName)
 	var textualDisplayName: String? {
 		object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
 			?? object(forInfoDictionaryKey: kCFBundleNameKey as String) as? String
 	}
 
-	@objc(formattedDisplayNamesForBundles:)
 	class func textual_formattedDisplayNames(for bundles: [Bundle]) -> String {
 		bundles.compactMap(\.textualDisplayName).joined(separator: ", ")
 	}
 
-	@objc(openInstallationLocationsForBundles:)
 	class func textual_openInstallationLocations(for bundles: [Bundle]) {
 		let locations = Set(bundles.map { $0.bundleURL.deletingLastPathComponent() })
 
@@ -131,7 +124,6 @@ public extension NSLayoutConstraint {
 		objc_getAssociatedObject(self, archivedConstraintConstantKey) as? NSNumber
 	}
 
-	@objc(archivedConstant)
 	var textualArchivedConstant: CGFloat {
 		get { textualArchivedConstantNumber.map { CGFloat(truncating: $0) } ?? 0 }
 		set {
@@ -144,12 +136,10 @@ public extension NSLayoutConstraint {
 		}
 	}
 
-	@objc(archiveConstant)
 	func textual_archiveConstant() {
 		textualArchivedConstant = constant
 	}
 
-	@objc(restoreArchivedConstant)
 	func textual_restoreArchivedConstant() {
 		guard let archivedConstant = textualArchivedConstantNumber else {
 			return
@@ -158,7 +148,6 @@ public extension NSLayoutConstraint {
 		constant = CGFloat(truncating: archivedConstant)
 	}
 
-	@objc(zeroOutConstant)
 	func textual_zeroOutConstant() {
 		constant = 0
 	}

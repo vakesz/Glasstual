@@ -41,7 +41,6 @@ import CocoaExtensions
 
 @MainActor
 public extension MenuActionCoordinator {
-	@objc(performChannelViewAction:sender:)
 	func performChannelViewAction(_ action: TXMenuChannelViewAction, sender: Any?) {
 		switch action {
 		case .reply: reply(to: sender)
@@ -61,7 +60,6 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	@objc(messageReplyItemsForMessageIdentifier:nickname:excerpt:)
 	func messageReplyItems(messageIdentifier: String, nickname: String?, excerpt: String?) -> [NSMenuItem] {
 		guard let menuController else { return [] }
 		return MenuPresentation.messageReplyItems(
@@ -72,7 +70,6 @@ public extension MenuActionCoordinator {
 		)
 	}
 
-	@objc(shareMenuItemForItems:)
 	func shareMenuItem(for items: [Any]) -> NSMenuItem {
 		MenuPresentation.shareMenuItem(for: items)
 	}

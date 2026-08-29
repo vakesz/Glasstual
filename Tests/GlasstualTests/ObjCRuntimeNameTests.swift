@@ -13,13 +13,15 @@
 import AppKit
 import CocoaExtensions
 @testable import Glasstual
+import Synchronization
 import Testing
 
-/// The few Objective-C names and protocol constants that something outside the
-/// compiler depends on. `NibRuntimeNameTests` checks the other direction — that
-/// every name a nib mentions resolves — so this suite only pins the Swift types
-/// whose `@objc` name a nib binds, and the mIRC palette, whose indices are wire
-/// format rather than a design choice.
+/// The Objective-C names something outside the compiler depends on and no nib
+/// mentions. `NibRuntimeNameTests` sweeps the nibs and checks every class,
+/// outlet, action and binding they name, so the only entries left here are the
+/// ones that survive for a reason a nib cannot express: an archive on disk, a
+/// saved window frame, and the mIRC palette, whose indices are wire format
+/// rather than a design choice.
 ///
 /// Nothing else belongs here. A test that asserts a type conforms to a protocol,
 /// responds to a selector it declares, or has the raw value written next to its
@@ -27,49 +29,61 @@ import Testing
 @Suite("Objective-C runtime names")
 @MainActor
 struct ObjCRuntimeNameTests {
-	@Test(
-		"A nib-bound class keeps the runtime name the nib holds",
-		arguments: [
-			(FileTransferDialog.self as AnyClass, "TDCFileTransferDialog"),
-			(FileTransferDialogWindow.self as AnyClass, "TDCFileTransferDialogWindow"),
-			(PreferencesController.self as AnyClass, "TDCPreferencesController"),
-			(BasicTableView.self as AnyClass, "TVCBasicTableView"),
-			(ValidatedTextField.self as AnyClass, "TVCValidatedTextField"),
-			(ValidatedComboBox.self as AnyClass, "TVCValidatedComboBox"),
-			(TextViewWithIRCFormatter.self as AnyClass, "TVCTextViewWithIRCFormatter"),
-			(Application.self as AnyClass, "TXApplication"),
-			(ApplicationController.self as AnyClass, "TXMasterController"),
-			(TXMenuController.self as AnyClass, "TXMenuController"),
-			(TXMenuControllerMainWindowProxy.self as AnyClass, "TXMenuControllerMainWindowProxy"),
-			(MainWindow.self as AnyClass, "TVCMainWindow"),
-			(MainWindowTextView.self as AnyClass, "TVCMainWindowTextView"),
-			(MainWindowTextViewContentView.self as AnyClass, "TVCMainWindowTextViewContentView"),
-			(MemberList.self as AnyClass, "TVCMemberList"),
-			(MemberListCell.self as AnyClass, "TVCMemberListCell"),
-			(MemberListHeaderCell.self as AnyClass, "TVCMemberListHeaderCell"),
-			(MemberListUserInfoPopover.self as AnyClass, "TVCMemberListUserInfoPopover"),
-			(AutoExpandingTokenField.self as AnyClass, "TVCAutoExpandingTokenField"),
-			(ServerPropertiesSheet.self as AnyClass, "TDCServerPropertiesSheet"),
+	/// `NSKeyedArchiver` writes the class name into every blob in the historic
+	/// log store, so an installation that upgrades has to keep reading the name
+	/// its existing rows were written with.
+	@Test("The archived log line keeps the runtime name its blobs were written with")
+	func archivedLogLineKeepsItsRuntimeName() {
+		#expect(NSStringFromClass(LogLineArchive.self) == "TVCLogLine")
+	}
+
+	/// A window's saved frame is keyed by these strings in the user's defaults.
+	/// They used to come from `NSStringFromClass`; they are written down now, and
+	/// this is what stops one being edited without meaning to.
+	@Test("A window's saved-frame key keeps the string already on disk")
+	func windowStateKeysArePinned() {
+		#expect(WindowStateKey.preferences.rawValue == "TDCPreferencesController")
+		#expect(WindowStateKey.serverChannelList.rawValue == "TDCServerChannelListDialog")
+		#expect(WindowStateKey.about.rawValue == "TDCAboutDialog")
+		#expect(WindowStateKey.channelSpotlight.rawValue == "TDCChannelSpotlightController")
+		#expect(WindowStateKey.fileTransfers.rawValue == "TDCFileTransferDialog")
+	}
+
+	/// `publisher(for:)` resolves a key path through key-value observing, which
+	/// needs the property visible to the Objective-C runtime: a key path to a
+	/// property without `@objc` has no KVC string and the observation traps the
+	/// first time the view sets it up. Nothing in the compiler checks that, so
+	/// the four key paths the application observes are pinned here.
+	@Test("The key paths the application observes resolve through key-value coding")
+	func observedKeyPathsResolve() {
+		let observed: [(String, AnyKeyPath)] = [
+			("LogView.isLayingOutView", \LogView.isLayingOutView),
+			("IRCClient.isLoggedIn", \IRCClient.isLoggedIn),
+			("IRCTreeItem.nicknameHighlightCount", \IRCTreeItem.nicknameHighlightCount),
+			("IRCTreeItem.treeUnreadCount", \IRCTreeItem.treeUnreadCount),
 		]
-	)
-	func classKeepsItsRuntimeName(_ type: AnyClass, _ name: String) {
-		#expect(NSStringFromClass(type) == name)
+
+		for (name, keyPath) in observed {
+			#expect(keyPath._kvcKeyPathString != nil, "\(name) is no longer observable")
+		}
 	}
 
-	/// The file transfer dialog's array controller names its element class with
-	/// `objectClassName` rather than `customClass`, which is the attribute
-	/// `NibRuntimeNameTests` sweeps, so this one is pinned by hand.
-	@Test("The file transfer array controller's element class keeps its runtime name")
-	func arrayControllerElementKeepsItsRuntimeName() {
-		#expect(NSStringFromClass(TDCFileTransferDialogTransferController.self)
-			== "TDCFileTransferDialogTransferController")
-	}
+	/// Visible to the runtime is only half of it: an observed property also has
+	/// to be dynamically dispatched, or the setter never posts a change and the
+	/// observation goes quiet without failing anywhere.
+	@Test("An observed property still posts its changes")
+	func observedPropertyPostsChanges() {
+		let item = IRCTreeItem()
 
-	/// `TVCValidatedComboBox` sets this as its cell class from the nib; no Swift
-	/// declaration references it by type.
-	@Test("The validated combo box cell is reachable by name")
-	func comboBoxCellResolves() {
-		#expect(NSClassFromString("TVCValidatedComboBoxCell") != nil)
+		let received = Mutex<[Int]>([])
+		let observation = item.observe(\.treeUnreadCount, options: [.new]) { _, change in
+			received.withLock { $0.append(change.newValue ?? -1) }
+		}
+		defer { observation.invalidate() }
+
+		item.treeUnreadCount = 7
+
+		#expect(received.withLock { $0 } == [7])
 	}
 
 	/// mIRC colour codes index this table, so the order is protocol, not

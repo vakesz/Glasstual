@@ -16,7 +16,7 @@ struct IRCAddressBookCodableTests {
 	func roundTripsAStoredIgnoreEntry() throws {
 		// Captured from the class-based `AddressBookEntry.dictionaryValue`,
 		// which already dropped the settings left at their default.
-		let fixture: [String: Any] = [
+		let fixture: [String: PropertyListValue] = [
 			"hostmask": "spammer!*@example.test",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-000000000004",
 			"ignoreClientToClientProtocol": true,
@@ -26,12 +26,12 @@ struct IRCAddressBookCodableTests {
 		let entry = try #require(PropertyListModel.decode(AddressBookEntry.self, from: fixture))
 
 		#expect(entry.entryType == .ignore)
-		#expect(NSDictionary(dictionary: PropertyListModel.encode(entry)) == NSDictionary(dictionary: fixture))
+		#expect(PropertyListModel.encode(entry) == fixture)
 	}
 
 	@Test("A user-tracking entry writes its type and only its own setting")
 	func roundTripsAStoredTrackingEntry() throws {
-		let fixture: [String: Any] = [
+		let fixture: [String: PropertyListValue] = [
 			"hostmask": "alice",
 			"uniqueIdentifier": "8B2F4C1A-0000-4000-8000-000000000005",
 			"trackUserActivity": true,
@@ -42,7 +42,7 @@ struct IRCAddressBookCodableTests {
 
 		#expect(entry.entryType == .userTracking)
 		#expect(entry.trackUserActivity)
-		#expect(NSDictionary(dictionary: PropertyListModel.encode(entry)) == NSDictionary(dictionary: fixture))
+		#expect(PropertyListModel.encode(entry) == fixture)
 	}
 
 	@Test(
@@ -64,7 +64,7 @@ struct IRCAddressBookCodableTests {
 		]))
 
 		// The alias landed on the same setting the canonical key writes.
-		#expect(PropertyListModel.encode(entry)[canonicalKey] as? Bool == true)
+		#expect(PropertyListModel.encode(entry)[canonicalKey]?.boolean == true)
 	}
 
 	@Test("notifyJoins still turns on user tracking")

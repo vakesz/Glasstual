@@ -16,7 +16,6 @@ import Foundation
  whole store is main-actor isolated: `static let` gives lazy, once-only creation
  without a lock, and the isolation removes the main-queue hops the Objective-C
  translation needed to reach it from background threads. */
-@objc(TXSharedApplication)
 @MainActor
 public final class SharedApplication: NSObject {
 	private static let appearance = Appearance()
@@ -30,17 +29,14 @@ public final class SharedApplication: NSObject {
 	 was ever used (to stop it) without wanting to start the engine. */
 	private static var speechSynthesizerStorage: SpeechSynthesizer?
 
-	@objc
 	public static func sharedAppearance() -> Appearance {
 		appearance
 	}
 
-	@objc
 	public static func sharedNetworkReachabilityNotifier() -> Reachability {
 		networkReachabilityNotifier
 	}
 
-	@objc
 	public static func sharedNotificationController() -> NotificationController {
 		notificationController
 	}
@@ -49,12 +45,10 @@ public final class SharedApplication: NSObject {
 	/// reachable without the main actor; `PluginManager` is `Sendable`.
 	private nonisolated static let pluginManager = PluginManager() // nonisolated: let
 
-	@objc
 	public nonisolated static func sharedPluginManager() -> PluginManager { // nonisolated: let
 		pluginManager
 	}
 
-	@objc
 	public static func sharedSpeechSynthesizer() -> SpeechSynthesizer {
 		if let existing = speechSynthesizerStorage {
 			return existing
@@ -69,17 +63,14 @@ public final class SharedApplication: NSObject {
 		speechSynthesizerStorage
 	}
 
-	@objc
 	public static func sharedThemeController() -> TPCThemeController {
 		themeController
 	}
 
-	@objc
 	public static func sharedWindowController() -> WindowController {
 		windowController
 	}
 
-	@objc
 	public static func sharedFileTransferDialog() -> TDCFileTransferDialog {
 		fileTransferDialog
 	}

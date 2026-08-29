@@ -117,15 +117,15 @@ enum ClientNegotiationUtilities {
 }
 
 extension IRCClient {
-	@objc(isBrokenIRCd_aka_Twitch) var isBrokenIRCdKnownAsTwitch: Bool {
+	var isBrokenIRCdKnownAsTwitch: Bool {
 		serverAddress?.hasSuffix(IRCServerQuirks.twitchAddressSuffix) ?? false
 	}
 
-	@objc var supportsAdvancedTracking: Bool {
+	var supportsAdvancedTracking: Bool {
 		isCapabilityEnabled(.monitorCommand) || isCapabilityEnabled(.watchCommand)
 	}
 
-	@objc var monitorAwayStatus: Bool {
+	var monitorAwayStatus: Bool {
 		isCapabilityEnabled(.awayNotify) || environment.preferences.trackUserAwayStatusMaximumChannelSize > 0
 	}
 
@@ -133,42 +133,34 @@ extension IRCClient {
 		presentation?.lastPrintedLine()
 	}
 
-	@objc(messageIsFromMyself:)
 	func messageIsFromMyself(_ message: Message) -> Bool {
 		nicknameIsMyself(message.senderNickname ?? "")
 	}
 
-	@objc(nicknameIsMyself:)
 	public func nicknameIsMyself(_ nickname: String) -> Bool {
 		casefoldNickname(userNickname) == casefoldNickname(nickname)
 	}
 
-	@objc(casefoldNickname:)
 	public func casefoldNickname(_ nickname: String) -> String {
 		supportInfo.casefoldString(nickname)
 	}
 
-	@objc(stringIsNickname:)
 	public func stringIsNickname(_ string: String) -> Bool {
 		string.isHostmaskNickname(on: self) && string.isChannelName(on: self) == false
 	}
 
-	@objc(stringIsChannelName:)
 	public func stringIsChannelName(_ string: String) -> Bool {
 		string.isChannelName(on: self)
 	}
 
-	@objc(stringIsChannelNameOrZero:)
 	func stringIsChannelNameOrZero(_ string: String) -> Bool {
 		stringIsChannelName(string) || string == "0"
 	}
 
-	@objc(redactedServiceMessage:sentTo:)
 	class func redactedServiceMessage(_ message: String, sentTo target: String?) -> String {
 		ClientWireUtilities.redactedServiceMessage(message, sentTo: target)
 	}
 
-	@objc(targetLooksLikeService:)
 	class func targetLooksLikeService(_ target: String?) -> Bool {
 		ClientWireUtilities.targetLooksLikeService(target)
 	}
@@ -189,12 +181,11 @@ extension IRCClient {
 		.defaultRegistry
 	}
 
-	@objc(isCapabilitySupported:)
 	public func isCapabilitySupported(_ capability: String) -> Bool {
 		capabilityRegistry.isCapabilitySupported(capability)
 	}
 
-	@objc public var enabledCapabilitiesStringValue: String {
+	public var enabledCapabilitiesStringValue: String {
 		var enabled = enabledCapabilityNames
 
 		if isCapabilityEnabled(.isIdentifiedWithSASL), enabled.contains("sasl") == false {
@@ -318,7 +309,7 @@ extension IRCClient {
 		capabilityNegotiationIsPaused = true
 	}
 
-	@MainActor @objc(resumeCapabilityNegotiation) func resumeQueuedCapabilityNegotiation() {
+	@MainActor func resumeQueuedCapabilityNegotiation() {
 		capabilityNegotiationIsPaused = false
 		sendNextQueuedCapability()
 	}
@@ -353,7 +344,7 @@ extension IRCClient {
 		}
 	}
 
-	@MainActor @objc(receiveCapabilityOrAuthenticationRequest:)
+	@MainActor
 	func handleCapabilityOrAuthenticationRequest(_ message: Message) {
 		guard message.paramsCount > 0 else {
 			return
@@ -584,7 +575,7 @@ extension IRCClient {
 		return true
 	}
 
-	@objc func resetSASLNegotiation() {
+	func resetSASLNegotiation() {
 		disableCapability(.isInSASLNegotiation)
 		disableCapability(.isIdentifiedWithSASL)
 		saslScramClient = nil

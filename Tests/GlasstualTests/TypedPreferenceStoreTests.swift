@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -105,12 +106,10 @@ struct TypedPreferenceStoreTests {
 	@Test("Import coerces a number written as a string")
 	func importCoercesStringsToNumbers() {
 		#expect(
-			PreferencesImportExport.validatedValue("1", forKey: Self.declaredInt.name) as? NSNumber
-				== NSNumber(value: 1)
+			PreferencesImportExport.validatedValue("1", forKey: Self.declaredInt.name) == .integer(1)
 		)
 		#expect(
-			PreferencesImportExport.validatedValue("yes", forKey: Self.declaredBool.name) as? NSNumber
-				== NSNumber(value: true)
+			PreferencesImportExport.validatedValue("yes", forKey: Self.declaredBool.name) == .boolean(true)
 		)
 	}
 
@@ -122,10 +121,10 @@ struct TypedPreferenceStoreTests {
 
 	@Test("A key the catalogue does not know keeps whatever shape it was written with")
 	func importPassesThroughUnknownKeys() {
-		let payload: [String: Any] = ["anything": 1]
+		let payload: PropertyListValue = ["anything": 1]
 		let validated = PreferencesImportExport.validatedValue(payload, forKey: "Some Plugin -> Its Own Key")
 
-		#expect((validated as? [String: Any])?["anything"] as? Int == 1)
+		#expect(validated?.dictionary?["anything"]?.integer == 1)
 	}
 
 	@Test("Highlight keywords keep their stored record shape")
@@ -136,8 +135,12 @@ struct TypedPreferenceStoreTests {
 
 		key.value = [HighlightKeyword(string: "alpha"), HighlightKeyword(string: "beta")]
 
-		let stored = TextualUserDefaults.container.object(forKey: key.name) as? [[String: Any]]
-		#expect(stored?.compactMap { $0[HighlightKeyword.field] as? String } == ["alpha", "beta"])
+		let stored = PropertyListValue(
+			propertyList: TextualUserDefaults.container.object(forKey: key.name) ?? []
+		)?.array
+		#expect(
+			stored?.compactMap { $0.dictionary?[HighlightKeyword.field]?.string } == ["alpha", "beta"]
+		)
 		#expect(key.value.map(\.string) == ["alpha", "beta"])
 	}
 }
@@ -160,7 +163,7 @@ struct PreferenceExportContentsTests {
 		withRestored(key) {
 			key.value = key.defaultValue + 11
 			var exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
-			#expect(exported[key.name] as? Int == Int(key.defaultValue) + 11)
+			#expect(exported[key.name]?.integer == Int(key.defaultValue) + 11)
 
 			key.value = key.defaultValue
 			exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)

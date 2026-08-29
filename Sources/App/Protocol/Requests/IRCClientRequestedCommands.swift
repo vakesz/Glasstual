@@ -37,7 +37,6 @@
 
 import Foundation
 
-@objc(IRCClientRequestedCommands)
 public final class ClientRequestedCommands: NSObject {
 	private enum Command {
 		case ison
@@ -51,41 +50,39 @@ public final class ClientRequestedCommands: NSObject {
 
 	private var requests: [Request] = []
 
-	@objc public func removeCommands() {
+	public func removeCommands() {
 		requests.removeAll()
 	}
 
-	@objc(inVisibleIsonRequest)
 	public var visibleIsonRequest: Bool {
 		responseIsVisible(for: .ison)
 	}
 
-	@objc public func recordIsonRequestOpened() {
+	public func recordIsonRequestOpened() {
 		addRequest(for: .ison, responseIsHidden: true)
 	}
 
-	@objc public func recordIsonRequestOpenedAsVisible() {
+	public func recordIsonRequestOpenedAsVisible() {
 		addRequest(for: .ison, responseIsHidden: false)
 	}
 
-	@objc public func recordIsonRequestClosed() {
+	public func recordIsonRequestClosed() {
 		removeFirstRequest(for: .ison)
 	}
 
-	@objc(inVisibleWhoRequest)
 	public var visibleWhoRequest: Bool {
 		responseIsVisible(for: .who)
 	}
 
-	@objc public func recordWhoRequestOpened() {
+	public func recordWhoRequestOpened() {
 		addRequest(for: .who, responseIsHidden: true)
 	}
 
-	@objc public func recordWhoRequestOpenedAsVisible() {
+	public func recordWhoRequestOpenedAsVisible() {
 		addRequest(for: .who, responseIsHidden: false)
 	}
 
-	@objc public func recordWhoRequestClosed() {
+	public func recordWhoRequestClosed() {
 		removeFirstRequest(for: .who)
 	}
 

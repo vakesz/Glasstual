@@ -12,13 +12,22 @@
 
 import AppKit
 
-@objc(TVCErrorMessagePopoverDelegate)
+/// Every callback is optional, which used to be spelled `@objc optional` and is
+/// spelled as an empty default here: the protocol is Swift-only, and a
+/// conformer only writes the ones it cares about.
 @MainActor
 public protocol ErrorMessagePopoverDelegate: AnyObject {
-	@objc optional func errorMessagePopoverWillShow(_ popover: ErrorMessagePopover)
-	@objc optional func errorMessagePopoverDidShow(_ popover: ErrorMessagePopover)
-	@objc optional func errorMessagePopoverWillClose(_ popover: ErrorMessagePopover)
-	@objc optional func errorMessagePopoverDidClose(_ popover: ErrorMessagePopover)
+	func errorMessagePopoverWillShow(_ popover: ErrorMessagePopover)
+	func errorMessagePopoverDidShow(_ popover: ErrorMessagePopover)
+	func errorMessagePopoverWillClose(_ popover: ErrorMessagePopover)
+	func errorMessagePopoverDidClose(_ popover: ErrorMessagePopover)
+}
+
+public extension ErrorMessagePopoverDelegate {
+	func errorMessagePopoverWillShow(_: ErrorMessagePopover) {}
+	func errorMessagePopoverDidShow(_: ErrorMessagePopover) {}
+	func errorMessagePopoverWillClose(_: ErrorMessagePopover) {}
+	func errorMessagePopoverDidClose(_: ErrorMessagePopover) {}
 }
 
 private enum Layout {
@@ -31,20 +40,18 @@ private enum Layout {
 	static let errorIconVerticalPadding = 6.0
 }
 
-@objc(TVCErrorMessagePopoverView)
 private final class ErrorMessagePopoverView: NSPopover {
 	override func mouseDown(with _: NSEvent) {
 		close()
 	}
 }
 
-@objc(TVCErrorMessagePopover)
 @MainActor
 public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
-	@objc public weak var delegate: ErrorMessagePopoverDelegate?
+	public weak var delegate: ErrorMessagePopoverDelegate?
 
-	@objc public private(set) var message: String
-	@objc public private(set) weak var view: NSView?
+	public private(set) var message: String
+	public private(set) weak var view: NSView?
 
 	private var popover: NSPopover?
 
@@ -53,7 +60,6 @@ public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
 		fatalError("init() is unavailable; use init(message:relativeTo:)")
 	}
 
-	@objc(initWithMessage:relativeToView:)
 	public init(message: String, relativeTo view: NSView) {
 		self.message = message
 		self.view = view
@@ -139,12 +145,10 @@ public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
 		self.popover = popover
 	}
 
-	@objc(showRelativeToRect:)
 	public func showRelative(to rect: NSRect) {
 		showRelative(to: rect, preferredEdge: .maxY)
 	}
 
-	@objc(showRelativeToRect:preferredEdge:)
 	public func showRelative(to rect: NSRect, preferredEdge: NSRectEdge) {
 		if popover == nil {
 			createPopover()
@@ -166,7 +170,7 @@ public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
 		)
 	}
 
-	@objc public func close() {
+	public func close() {
 		guard let popover else {
 			return
 		}
@@ -176,18 +180,18 @@ public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
 	}
 
 	public func popoverWillShow(_: Notification) {
-		delegate?.errorMessagePopoverWillShow?(self)
+		delegate?.errorMessagePopoverWillShow(self)
 	}
 
 	public func popoverDidShow(_: Notification) {
-		delegate?.errorMessagePopoverDidShow?(self)
+		delegate?.errorMessagePopoverDidShow(self)
 	}
 
 	public func popoverWillClose(_: Notification) {
-		delegate?.errorMessagePopoverWillClose?(self)
+		delegate?.errorMessagePopoverWillClose(self)
 	}
 
 	public func popoverDidClose(_: Notification) {
-		delegate?.errorMessagePopoverDidClose?(self)
+		delegate?.errorMessagePopoverDidClose(self)
 	}
 }

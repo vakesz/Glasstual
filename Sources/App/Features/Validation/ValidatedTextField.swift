@@ -22,19 +22,19 @@ public protocol ValidatedControlChangeObserver: AnyObject {
 
 @objc(TVCValidatedTextField)
 public final class ValidatedTextField: NSTextField {
-	@objc public var validationBlock: ((String) -> String?)?
-	@objc public var stringValueUsesOnlyFirstToken = false
-	@objc public var stringValueIsTrimmed = false
-	@objc public var stringValueIsInvalidOnEmpty = false
-	@objc public var performValidationWhenEmpty = false
+	public var validationBlock: ((String) -> String?)?
+	public var stringValueUsesOnlyFirstToken = false
+	public var stringValueIsTrimmed = false
+	public var stringValueIsInvalidOnEmpty = false
+	public var performValidationWhenEmpty = false
 	public weak var textDidChangeCallback: (any ValidatedControlChangeObserver)?
-	@objc public var defaultValue: String?
+	public var defaultValue: String?
 
 	private var cachedValidValue = false
 	private var validationPerformed = false
-	@objc public private(set) var lastValidationErrorDescription: String?
+	public private(set) var lastValidationErrorDescription: String?
 
-	@objc public var value: String {
+	public var value: String {
 		var processedValue = super.stringValue
 
 		if stringValueUsesOnlyFirstToken {
@@ -52,19 +52,19 @@ public final class ValidatedTextField: NSTextField {
 		return processedValue
 	}
 
-	@objc public var lowercaseValue: String {
+	public var lowercaseValue: String {
 		value.lowercased()
 	}
 
-	@objc public var uppercaseValue: String {
+	public var uppercaseValue: String {
 		value.uppercased()
 	}
 
-	@objc public var valueIsEmpty: Bool {
+	public var valueIsEmpty: Bool {
 		stringValue.isEmpty
 	}
 
-	@objc public var valueIsValid: Bool {
+	public var valueIsValid: Bool {
 		cachedValidValue
 	}
 
@@ -106,7 +106,7 @@ public final class ValidatedTextField: NSTextField {
 		}
 	}
 
-	@objc public func performValidation() {
+	public func performValidation() {
 		let stringToValidate = stringValue
 		var errorDescription: String?
 
@@ -124,7 +124,7 @@ public final class ValidatedTextField: NSTextField {
 		updateBackgroundForValidity()
 	}
 
-	@objc @discardableResult
+	@discardableResult
 	public func showValidationErrorPopover() -> Bool {
 		if validationPerformed == false {
 			performValidation()
@@ -142,7 +142,7 @@ public final class ValidatedTextField: NSTextField {
 		return true
 	}
 
-	@objc public func closeValidationErrorPopover() {
+	public func closeValidationErrorPopover() {
 		ErrorMessagePopoverController.sharedController().closeMessage(for: self)
 	}
 

@@ -20,7 +20,6 @@ private nonisolated let windowControllerLogger = Logger( // nonisolated: let
 
 /** The registry holds AppKit window controllers, so it lives on the main actor:
  that is what makes `removeAll()` safe to run during termination. */
-@objc(TXWindowController)
 @MainActor
 public final class WindowController: NSObject {
 	private var windows: [String: AnyObject] = [:]
@@ -30,19 +29,17 @@ public final class WindowController: NSObject {
 		super.init()
 	}
 
-	@objc public func prepareForApplicationTermination() {
+	public func prepareForApplicationTermination() {
 		windowControllerLogger.debug("Preparing window controller")
 
 		windows.removeAll()
 		isTerminated = true
 	}
 
-	@objc(windowDescriptionForWindow:)
 	public nonisolated static func windowDescription(for window: Any) -> String { // nonisolated: pure
 		windowDescription(for: window, inRelationTo: nil)
 	}
 
-	@objc(windowDescriptionForWindow:inRelationTo:)
 	public nonisolated static func windowDescription(for window: Any, // nonisolated: pure
 	                                                 inRelationTo relatedObject: Any?) -> String
 	{
@@ -55,18 +52,15 @@ public final class WindowController: NSObject {
 		return "\(windowClass) -> \(String(describing: relatedObject))"
 	}
 
-	@objc(addWindowToWindowList:)
 	public func addWindow(toWindowList window: Any) {
 		addWindow(toWindowList: window, inRelationTo: nil)
 	}
 
-	@objc(addWindowToWindowList:inRelationTo:)
 	public func addWindow(toWindowList window: Any, inRelationTo relatedObject: Any?) {
 		let description = Self.windowDescription(for: window, inRelationTo: relatedObject)
 		addWindow(toWindowList: window, withDescription: description)
 	}
 
-	@objc(addWindowToWindowList:withDescription:)
 	public func addWindow(toWindowList window: Any, withDescription windowDescription: String) {
 		let windowObject = window as AnyObject
 		precondition(
@@ -80,12 +74,10 @@ public final class WindowController: NSObject {
 		windows[windowDescription] = windowObject
 	}
 
-	@objc(removeWindowFromWindowList:)
 	public func removeWindow(fromWindowList window: Any) {
 		removeWindow(fromWindowList: window, inRelationTo: nil)
 	}
 
-	@objc(removeWindowFromWindowList:inRelationTo:)
 	public func removeWindow(fromWindowList window: Any, inRelationTo relatedObject: Any?) {
 		if let windows = window as? [Any] {
 			for object in windows {
@@ -118,17 +110,14 @@ public final class WindowController: NSObject {
 		windows.removeValue(forKey: windowDescription)
 	}
 
-	@objc(windowFromWindowList:)
 	public func window(fromWindowList windowDescription: String) -> Any? {
 		windows[windowDescription]
 	}
 
-	@objc(windowsFromWindowList:)
 	public func windows(fromWindowList windowDescriptions: [String]) -> [Any] {
 		windowDescriptions.compactMap { windows[$0] }
 	}
 
-	@objc(maybeBringWindowForward:)
 	public func maybeBringWindowForward(_ windowDescription: String) -> Bool {
 		guard let windowObject = window(fromWindowList: windowDescription) as AnyObject?,
 		      let window = Self.window(for: windowObject)
@@ -153,7 +142,7 @@ public final class WindowController: NSObject {
 		}
 	}
 
-	@objc public func popMainWindowSheetIfExists() {
+	public func popMainWindowSheetIfExists() {
 		guard let attachedSheet = AppController.shared.mainWindow.attachedSheet else {
 			return
 		}

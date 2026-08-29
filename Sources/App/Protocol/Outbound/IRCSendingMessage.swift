@@ -38,9 +38,7 @@
 
 import Foundation
 
-@objc(IRCSendingMessage)
 public final class SendingMessage: NSObject {
-	@objc(stringWithCommand:arguments:)
 	public static func string(command: String, arguments: [String]?) -> String {
 		let uppercaseCommand = command.uppercased()
 
@@ -85,7 +83,6 @@ public final class SendingMessage: NSObject {
 		return line
 	}
 
-	@objc(stringWithCommand:arguments:tags:)
 	public static func string(command: String, arguments: [String]?, tags: [String: String]?) -> String {
 		let line = string(command: command, arguments: arguments)
 
@@ -96,7 +93,6 @@ public final class SendingMessage: NSObject {
 		return "@\(string(messageTags: tags)) \(line)"
 	}
 
-	@objc(stringWithMessageTags:)
 	public static func string(messageTags tags: [String: String]) -> String {
 		tags.keys.sorted().map { key in
 			guard let value = tags[key], value.isEmpty == false else {

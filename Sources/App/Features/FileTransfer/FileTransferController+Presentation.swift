@@ -39,33 +39,33 @@
 import Foundation
 
 public extension TDCFileTransferDialogTransferController {
-	@objc func updateClearButton() {
+	func updateClearButton() {
 		transferDialog.updateClearButton()
 	}
 
-	@objc func reloadStatusInformation() {
+	func reloadStatusInformation() {
 		transferTableCell?.reloadStatusInformation()
 	}
 
-	@objc var isActingAsServer: Bool {
+	var isActingAsServer: Bool {
 		isSender != isReversed
 	}
 
-	@objc var isActingAsClient: Bool {
+	var isActingAsClient: Bool {
 		isSender == isReversed
 	}
 
-	@objc var speedRecords: [NSNumber] {
+	var speedRecords: [NSNumber] {
 		dispatchPrecondition(condition: .onQueue(.main))
 		return speedRecordsPrivate
 	}
 
-	@objc var filePath: String? {
+	var filePath: String? {
 		guard let path else { return nil }
 		return (path as NSString).appendingPathComponent(filename)
 	}
 
-	@objc var fileURL: URL? {
+	var fileURL: URL? {
 		filePath.map { URL(fileURLWithPath: $0) }
 	}
 

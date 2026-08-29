@@ -446,13 +446,16 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	}
 
 	public func pasteboardData(for members: [ChannelUser]) -> Data {
-		let payload: [String: Any] = [
-			"channelId": channel?.uniqueIdentifier ?? "",
-			"nicknames": members.map(\.user.nickname),
+		let payload: [String: PropertyListValue] = [
+			"channelId": .string(channel?.uniqueIdentifier ?? ""),
+			"nicknames": PropertyListValue(members.map(\.user.nickname)),
 		]
 
 		do {
-			return try NSKeyedArchiver.archivedData(withRootObject: payload, requiringSecureCoding: true)
+			return try NSKeyedArchiver.archivedData(
+				withRootObject: payload.propertyListObject,
+				requiringSecureCoding: true
+			)
 		} catch {
 			assertionFailure("Failed to archive channel member pasteboard data: \(error)")
 			return Data()
@@ -464,12 +467,13 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		with callback: (IRCChannel, [String]) -> Void
 	) -> Bool {
 		let allowedClasses: [AnyClass] = [NSDictionary.self, NSString.self, NSArray.self]
-		guard let payload = try? NSKeyedUnarchiver.unarchivedObject(
+		guard let unarchived = try? NSKeyedUnarchiver.unarchivedObject(
 			ofClasses: allowedClasses,
 			from: pasteboardData
-		) as? [String: Any],
-			let channelID = payload["channelId"] as? String,
-			let nicknames = payload["nicknames"] as? [String]
+		),
+			let payload = [String: PropertyListValue](propertyList: unarchived),
+			let channelID = payload["channelId"]?.string,
+			let nicknames = payload["nicknames"]?.stringArray
 		else {
 			return false
 		}

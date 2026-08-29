@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -38,11 +39,11 @@ struct PreferencesExportFilterTests {
 	@Test("A value the user changed is exported")
 	func changedValueIsExported() {
 		withRestoredValue {
-			let registered = TextualPreferences.defaultPreferences()[Self.key] as? Int ?? 0
+			let registered = TextualPreferences.defaultPreferences()[Self.key]?.integer ?? 0
 			TextualUserDefaults.container.set(registered + 1234, forKey: Self.key)
 
 			let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
-			#expect(exported[Self.key] as? Int == registered + 1234)
+			#expect(exported[Self.key]?.integer == registered + 1234)
 		}
 	}
 
@@ -53,7 +54,7 @@ struct PreferencesExportFilterTests {
 				Issue.record("\(Self.key) has no registered default")
 				return
 			}
-			TextualUserDefaults.container.set(registered, forKey: Self.key)
+			TextualUserDefaults.container.set(registered.propertyListObject, forKey: Self.key)
 
 			let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
 			#expect(exported[Self.key] == nil)
@@ -67,7 +68,7 @@ struct PreferencesExportFilterTests {
 				Issue.record("\(Self.key) has no registered default")
 				return
 			}
-			TextualUserDefaults.container.set(registered, forKey: Self.key)
+			TextualUserDefaults.container.set(registered.propertyListObject, forKey: Self.key)
 
 			let exported = PreferencesImportExport.exportedPreferencesDictionary(false, filterDefaults: false)
 			#expect(exported[Self.key] != nil)

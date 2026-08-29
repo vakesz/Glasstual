@@ -44,23 +44,22 @@ extension IRCClient: ChannelBanListSheetDelegate, ServerChannelListDialogDelegat
 		"TDCServerChannelListDialog -> \(uniqueIdentifier)"
 	}
 
-	@objc func createChannelInviteExceptionListSheet() {
+	func createChannelInviteExceptionListSheet() {
 		createChannelBanListSheet(entryType: .inviteException)
 	}
 
-	@objc func createChannelBanExceptionListSheet() {
+	func createChannelBanExceptionListSheet() {
 		createChannelBanListSheet(entryType: .banException)
 	}
 
-	@objc func createChannelBanListSheet() {
+	func createChannelBanListSheet() {
 		createChannelBanListSheet(entryType: .ban)
 	}
 
-	@objc func createChannelQuietListSheet() {
+	func createChannelQuietListSheet() {
 		createChannelBanListSheet(entryType: .quiet)
 	}
 
-	@objc(createChannelBanListSheet:)
 	func createChannelBanListSheet(entryType: ChannelBanListEntryType) {
 		let windowController = SharedApplication.sharedWindowController()
 		windowController.popMainWindowSheetIfExists()
@@ -91,16 +90,16 @@ extension IRCClient: ChannelBanListSheetDelegate, ServerChannelListDialogDelegat
 		SharedApplication.sharedWindowController().removeWindow(fromWindowList: sender)
 	}
 
-	@objc func channelListDialogWindowKey() -> String {
+	func channelListDialogWindowKey() -> String {
 		clientDialogWindowKey
 	}
 
-	@objc func channelListDialog() -> ServerChannelListDialog? {
+	func channelListDialog() -> ServerChannelListDialog? {
 		SharedApplication.sharedWindowController().window(fromWindowList: clientDialogWindowKey)
 			as? ServerChannelListDialog
 	}
 
-	@objc func createChannelListDialog() {
+	func createChannelListDialog() {
 		let windowController = SharedApplication.sharedWindowController()
 		guard windowController.maybeBringWindowForward(clientDialogWindowKey) == false else { return }
 
