@@ -171,8 +171,7 @@ private nonisolated enum RendererFormatting { // nonisolated: value
 	)
 }
 
-@objc(TVCLogRenderer)
-public final nonisolated class LogRenderer: NSObject {
+public nonisolated struct LogRenderer { // nonisolated: value
 	private var body = ""
 	private var bodyWithAttributes = NSMutableAttributedString()
 	private var openAttributes: [NSAttributedString.Key: Any] = [:]
@@ -193,7 +192,7 @@ public final nonisolated class LogRenderer: NSObject {
 		isRenderingPrivateMessage || lineType == .notice
 	}
 
-	private func buildEffectsDictionary() {
+	private mutating func buildEffectsDictionary() {
 		let original = body as NSString
 		let inputLength = original.length
 		var characters = [UniChar](repeating: 0, count: inputLength)
@@ -317,7 +316,7 @@ public final nonisolated class LogRenderer: NSObject {
 		)
 	}
 
-	private func stripDangerousUnicodeCharacters() {
+	private mutating func stripDangerousUnicodeCharacters() {
 		guard TextualPreferences.automaticallyFilterUnicodeTextSpam() else {
 			return
 		}
@@ -347,7 +346,7 @@ public final nonisolated class LogRenderer: NSObject {
 		)
 	}
 
-	private func buildListOfLinks() {
+	private mutating func buildListOfLinks() {
 		guard boolAttribute(.renderLinks) else {
 			return
 		}
@@ -365,7 +364,7 @@ public final nonisolated class LogRenderer: NSObject {
 		output[.mappedLinks] = mapped
 	}
 
-	private func matchKeywords() {
+	private mutating func matchKeywords() {
 		guard isRenderingPrivateMessage, memberType == .normal else {
 			return
 		}
@@ -404,7 +403,7 @@ public final nonisolated class LogRenderer: NSObject {
 		output[.keywordMatchFound] = found
 	}
 
-	private func findAllChannelNames() {
+	private mutating func findAllChannelNames() {
 		guard isRenderingPrivateMessageOrNotice else {
 			return
 		}
@@ -426,7 +425,7 @@ public final nonisolated class LogRenderer: NSObject {
 		members.first { $0.nickname.caseInsensitiveCompare(nickname) == .orderedSame }
 	}
 
-	private func scanBodyForChannelMembers() {
+	private mutating func scanBodyForChannelMembers() {
 		guard isRenderingPrivateMessage else {
 			return
 		}
@@ -575,20 +574,29 @@ public final nonisolated class LogRenderer: NSObject {
 		return true
 	}
 
-	private func renderHTML() -> String {
-		var result = ""
+	private mutating func renderHTML() -> String {
 		let source = bodyWithAttributes.string
 		let length = bodyWithAttributes.length
+
+		/* The runs are collected before any of them is rendered: rendering a
+		 fragment records what it found (links, members) on the renderer, and
+		 `enumerateAttributes` captures `self` immutably. */
+		var runs: [(attributes: [NSAttributedString.Key: Any], range: NSRange)] = []
 		bodyWithAttributes.enumerateAttributes(
 			in: NSRange(location: 0, length: length),
 			options: []
-		) { [self] attributes, range, _ in
+		) { attributes, range, _ in
+			runs.append((attributes, range))
+		}
+
+		var result = ""
+		for run in runs {
 			if let fragment = renderHTMLFragment(
 				source,
-				attributes: attributes,
-				range: range,
-				isFirst: range.location == 0,
-				isLast: NSMaxRange(range) == length
+				attributes: run.attributes,
+				range: run.range,
+				isFirst: run.range.location == 0,
+				isLast: NSMaxRange(run.range) == length
 			) {
 				result += fragment
 			}
@@ -596,7 +604,7 @@ public final nonisolated class LogRenderer: NSObject {
 		return result
 	}
 
-	private func renderHTMLFragment(
+	private mutating func renderHTMLFragment(
 		_ source: String,
 		attributes: [NSAttributedString.Key: Any],
 		range: NSRange,
@@ -684,7 +692,7 @@ public final nonisolated class LogRenderer: NSObject {
 		return Self.renderTemplateNamed(.formattedMessageFragment, attributes: tokens)
 	}
 
-	private func applyHTMLColors(
+	private mutating func applyHTMLColors(
 		_ attributes: [NSAttributedString.Key: Any],
 		tokens: inout ThemeTemplateAttributes,
 		isFirst: Bool,
@@ -756,7 +764,7 @@ public final nonisolated class LogRenderer: NSObject {
 		}
 	}
 
-	private func renderAttributedBody() -> NSAttributedString {
+	private mutating func renderAttributedBody() -> NSAttributedString {
 		let result = NSMutableAttributedString(attributedString: bodyWithAttributes)
 		bodyWithAttributes.enumerateAttributes(
 			in: NSRange(location: 0, length: bodyWithAttributes.length),
@@ -841,7 +849,7 @@ public extension LogRenderer {
 			return ""
 		}
 		let configuration = LogRendererConfiguration(rawValues: input)
-		let renderer = LogRenderer()
+		var renderer = LogRenderer()
 		renderer
 			.lineType = TVCLogLineType(
 				rawValue: configuration.value(for: .lineType, as: UInt.self) ?? 0
@@ -874,7 +882,6 @@ public extension LogRenderer {
 		return renderBody(body, withAttributes: input, members: members, results: &results)
 	}
 
-	@objc(renderBodyAsAttributedString:withAttributes:)
 	nonisolated static func renderBody( // nonisolated: pure
 		asAttributedString body: String,
 		withAttributes input: [String: Any]
@@ -884,7 +891,7 @@ public extension LogRenderer {
 		}
 		let configuration = LogRendererConfiguration(rawValues: input)
 		precondition(configuration[.preferredFont] != nil)
-		let renderer = LogRenderer()
+		var renderer = LogRenderer()
 		renderer.body = body
 		renderer
 			.lineType = TVCLogLineType(
@@ -900,12 +907,10 @@ public extension LogRenderer {
 		return renderer.renderAttributedBody()
 	}
 
-	@objc(renderTemplateNamed:)
 	nonisolated static func renderTemplateNamed(_ name: String) -> String? { // nonisolated: pure
 		renderTemplateNamed(name, attributes: nil)
 	}
 
-	@objc(renderTemplateNamed:attributes:)
 	nonisolated static func renderTemplateNamed(_ name: String, // nonisolated: pure
 	                                            attributes: [String: Any]?) -> String?
 	{
@@ -944,7 +949,6 @@ public extension LogRenderer {
 		renderTemplate(template, attributes: attributes.rawValues)
 	}
 
-	@objc(escapeHTML:)
 	nonisolated static func escapeHTML(_ html: String) -> String { // nonisolated: pure
 		html.escapingForHTML
 	}
@@ -967,7 +971,6 @@ public extension LogRenderer {
 		return nil
 	}
 
-	@objc(mapColor:)
 	nonisolated static func mapColor(_ color: Any) -> NSColor? { // nonisolated: pure
 		if let color = color as? NSColor {
 			return color
@@ -978,7 +981,6 @@ public extension LogRenderer {
 		return nil
 	}
 
-	@objc(mapColorCode:)
 	nonisolated static func mapColorCode(_ colorCode: UInt) -> NSColor { // nonisolated: pure
 		precondition(colorCode <= IRCTextFormatterColor.maximumPaletteIndex)
 		return NSColor.formatterColors[Int(colorCode)]
