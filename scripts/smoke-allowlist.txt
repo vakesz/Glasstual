@@ -3,10 +3,3 @@
 # removal date, never a way to quiet a message nobody understood: an entry that
 # outlives its fix is worse than no allowlist, because the next regression
 # hides behind it.
-#
-# Phase 8b, MainWindowTextView.swift:108. The main-window input view is
-# instantiated from a nib, and `usesTextKit2` set there is accepted by ibtool
-# but ignored -- TextKit 2 only comes from NSTextView(usingTextLayoutManager:).
-# 8b builds the view and its scroll view in code and drops the runtime check,
-# which removes this line. Delete this entry with it.
-Input text view is not using TextKit 2
