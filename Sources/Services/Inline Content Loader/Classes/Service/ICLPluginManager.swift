@@ -37,39 +37,33 @@
 
 import Foundation
 import InlineContentKit
-import os
 
-/// The registry of inline-content modules the service can run.
+/// The modules the service can run, fixed at build time.
 ///
 /// Modules used to arrive from `.mediaPlugin` bundles discovered under the
 /// service's `Extensions` directory. Nothing outside this repository could
 /// supply one, and the indirection required the service binary to export every
-/// symbol so that a loaded bundle could resolve them, so the only plugin —
-/// Core Media — is now linked into the service and registered here directly.
-@objc(ICLPluginManager)
-final class InlineContentPluginManager: NSObject, @unchecked Sendable {
-	@objc(sharedPluginManager)
-	static let shared = InlineContentPluginManager()
+/// symbol so a loaded bundle could resolve them, so the only plugin — Core
+/// Media — is linked into the service and listed here. Being a `let`, the table
+/// needs neither a load step nor a lock: it is built once, on first use.
+enum InlineContentModuleRegistry {
+	static let modules: [InlineContentModule.Type] = CoreMediaPlugin.modules
+		.compactMap { $0 as? InlineContentModule.Type } + [AssessedMediaModule.self]
 
-	private static let logger = Logger(
-		subsystem: "com.vakesz.glasstual.InlineContentLoader",
-		category: "Plugins"
-	)
+	/// The modules a host can be served by. Lookups use a lowercased host, so
+	/// the keys are lowercased too; `*` collects the modules that claim no
+	/// domain of their own.
+	static let modulesByDomain: [String: [InlineContentModule.Type]] = {
+		var mapped: [String: [InlineContentModule.Type]] = [:]
 
-	private var pluginsLoaded = false
-	private var loadedModules: [AnyClass] = []
+		for module in modules {
+			let domains = module.domains
 
-	@objc func loadBundledPlugins() {
-		guard !pluginsLoaded else {
-			Self.logger.error("Plugins are already loaded")
-			return
+			for domain in domains?.isEmpty == false ? domains! : ["*"] {
+				mapped[domain.lowercased(), default: []].append(module)
+			}
 		}
-		pluginsLoaded = true
 
-		loadedModules = CoreMediaPlugin.modules
-	}
-
-	@objc var modules: [AnyClass] {
-		loadedModules
-	}
+		return mapped
+	}()
 }

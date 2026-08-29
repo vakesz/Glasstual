@@ -54,7 +54,7 @@ private enum MediaAssessorErrorCode: Int {
 	case maximumHeightExceeded = 1008
 }
 
-private struct MediaAssessorConfiguration: @unchecked Sendable {
+private struct MediaAssessorConfiguration {
 	let completion: (MediaAssessment?, NSError?) -> Void
 	let expectedType: InlineContentMediaType
 	let url: URL
@@ -66,14 +66,14 @@ private struct MediaAssessorLimits: Sendable {
 	let imageMaximumFilesize: UInt64
 }
 
-private final class MediaAssessorRequest: @unchecked Sendable {
+private final class MediaAssessorRequest {
 	var session: URLSession?
 	var task: URLSessionTask?
 	var alternateError: NSError?
 	var doNotFinalize = false
 }
 
-private struct MediaAssessorState: @unchecked Sendable {
+private struct MediaAssessorState {
 	let assessment: MediaAssessment
 	/// Whether the body has to be fetched, either to measure the image or to
 	/// count bytes the server declined to declare.
@@ -81,7 +81,16 @@ private struct MediaAssessorState: @unchecked Sendable {
 }
 
 @objc(ICLMediaAssessor)
-public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDownloadDelegate, @unchecked Sendable {
+/* ISOLATION-EXCEPTION: `URLSessionDelegate` is declared `NS_SWIFT_SENDABLE`, so
+ every conformer has to be `Sendable`, and this one holds the caller's
+ completion block and the in-flight request. The completion comes from an
+ `InlineContentModule`, which is a reference type the module mutates while it
+ runs, so it cannot be `@Sendable` until the modules become value producers.
+ The three request-state types the assessor owns no longer need annotations of
+ their own; this is the only one left. */
+public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDownloadDelegate,
+	@unchecked Sendable
+{
 	private static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "MediaAssessor"
@@ -180,10 +189,6 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 			return
 		}
 
-		let delegateQueue = OperationQueue()
-		delegateQueue.name = "com.vakesz.glasstual.media-assessor"
-		delegateQueue.maxConcurrentOperationCount = 1
-
 		let sessionConfiguration = URLSessionConfiguration.ephemeral
 		sessionConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
 		sessionConfiguration.httpShouldSetCookies = false
@@ -192,10 +197,13 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		sessionConfiguration.timeoutIntervalForResource = InlineContentNetworkLimits.resourceTimeout
 
 		let request = MediaAssessorRequest()
+		/* A nil delegate queue makes URLSession create a serial queue of its
+		 own, which is all this assessor ever wanted from the queue it used to
+		 build by hand: one delegate callback at a time. */
 		let session = URLSession(
 			configuration: sessionConfiguration,
 			delegate: self,
-			delegateQueue: delegateQueue
+			delegateQueue: nil
 		)
 		let task = session.dataTask(with: configuration.url)
 		request.session = session

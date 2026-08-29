@@ -38,58 +38,38 @@
 import Foundation
 import InlineContentKit
 import os
+import Synchronization
 
+/// The object NSXPC exports for an inline-content connection.
+///
+/// Modules are reference types that run network callbacks of their own, so this
+/// stays a plain (non-`Sendable`) class rather than becoming an actor: the
+/// modules could not be held by one. What used to be three locks and two
+/// process-wide mutable statics is now one lock over the connection and the
+/// in-flight modules, plus a `Mutex` over the two warm-up flags.
 @objc(ICLProcessMain)
-final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineContentProcessHandling,
-	@unchecked Sendable
-{
+final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineContentProcessHandling {
+	/// Whether the process-wide warm-up has run. One `Mutex` over a value
+	/// replaces the lock and two `nonisolated(unsafe)` flags it used to take to
+	/// say the same thing.
+	private struct WarmState {
+		var registeredDefaults = false
+	}
+
 	private static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "Process"
 	)
-	private static let warmLock = NSLock()
-	private nonisolated(unsafe) static var loadedPlugins = false
-	private nonisolated(unsafe) static var registeredDefaults = false
+	private static let warmState = Mutex(WarmState())
 
+	/** Read by module callbacks while the invalidation handler clears them. */
 	private let stateLock = NSLock()
 	private var serviceConnectionStorage: NSXPCConnection?
-	private let moduleReferencesLock = NSLock()
 	private var moduleReferences = Set<InlineContentModule>()
-	private var modulesByDomainStorage: [String: [InlineContentModule.Type]]?
 
-	/** Cleared from the invalidation handler while module callbacks still read it. */
 	private var serviceConnection: NSXPCConnection? {
 		get { stateLock.withLock { serviceConnectionStorage } }
 		set { stateLock.withLock { serviceConnectionStorage = newValue } }
-	}
-
-	/** `process(_:)` is a concurrent XPC entry point and Swift's `lazy` is not thread
-	 safe, so the table is memoised behind a lock instead. Bundled modules are only
-	 registered once the service has been warmed, so this cannot be built in `init`. */
-	private var modulesByDomain: [String: [InlineContentModule.Type]] {
-		stateLock.withLock {
-			if let modulesByDomainStorage {
-				return modulesByDomainStorage
-			}
-
-			var mappedModules: [String: [InlineContentModule.Type]] = [:]
-
-			for module in moduleClasses {
-				let domains = module.domains
-				for domain in domains?.isEmpty == false ? domains! : ["*"] {
-					/* Lookups use a lowercased host, so the keys must match. */
-					mappedModules[domain.lowercased(), default: []].append(module)
-				}
-			}
-
-			modulesByDomainStorage = mappedModules
-			return mappedModules
-		}
-	}
-
-	private var moduleClasses: [InlineContentModule.Type] {
-		let pluginModules = InlineContentPluginManager.shared.modules.compactMap { $0 as? InlineContentModule.Type }
-		return pluginModules + [AssessedMediaModule.self]
 	}
 
 	@available(*, unavailable, message: "Use init(xpcConnection:)")
@@ -125,15 +105,15 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 			return
 		}
 
-		let payload = InlineContentPayloadMutable(
-			url: url,
-			withUniqueIdentifier: uniqueIdentifier,
-			atLineNumber: lineNumber,
-			index: index,
-			inView: viewIdentifier
+		process(
+			InlineContentPayload(
+				url: url,
+				withUniqueIdentifier: uniqueIdentifier,
+				atLineNumber: lineNumber,
+				index: index,
+				inView: viewIdentifier
+			)
 		)
-
-		process(payload)
 	}
 
 	@objc(processPayload:)
@@ -142,12 +122,7 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 			return
 		}
 
-		guard let mutablePayload = (payload as? InlineContentPayloadMutable)
-			?? payload.mutableCopy() as? InlineContentPayloadMutable
-		else {
-			assertionFailure("Inline content payload did not produce its declared mutable copy type")
-			return
-		}
+		let mutablePayload = InlineContentPayloadMutable(values: payload.values)
 		let host = mutablePayload.url.host?.lowercased() ?? ""
 
 		if process(mutablePayload, withModulesFor: host) {
@@ -157,7 +132,7 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 	}
 
 	private func process(_ payload: InlineContentPayloadMutable, withModulesFor domain: String) -> Bool {
-		for module in modulesByDomain[domain] ?? [] where process(payload, using: module) {
+		for module in InlineContentModuleRegistry.modulesByDomain[domain] ?? [] where process(payload, using: module) {
 			return true
 		}
 		return false
@@ -197,11 +172,8 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 	}
 
 	func finalize(module: InlineContentModule, error originalError: NSError?) {
-		guard let payload = module.payload.copy() as? InlineContentPayload else {
-			assertionFailure("Inline content payload did not produce its declared immutable copy type")
-			release(module)
-			return
-		}
+		let payload = module.payload.snapshot()
+
 		release(module)
 
 		let error: NSError? = if payload.html.isEmpty, payload.scriptResources.isEmpty {
@@ -257,13 +229,13 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 	}
 
 	private func retain(_ module: InlineContentModule) {
-		_ = moduleReferencesLock.withLock {
+		_ = stateLock.withLock {
 			moduleReferences.insert(module)
 		}
 	}
 
 	private func release(_ module: InlineContentModule) {
-		_ = moduleReferencesLock.withLock {
+		_ = stateLock.withLock {
 			moduleReferences.remove(module)
 		}
 	}
@@ -271,29 +243,30 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 	@objc
 	func connectionInvalidated() {
 		Self.logger.debug("Connection invalidated")
-		moduleReferencesLock.withLock {
+		stateLock.withLock {
 			moduleReferences.removeAll()
+			serviceConnectionStorage = nil
 		}
-		serviceConnection = nil
 	}
 
 	@objc(warmServiceByLoadingPlugins)
 	func warmServiceByLoadingPlugins() {
-		Self.warmLock.withLock {
-			guard !Self.loadedPlugins else { return }
-			Self.loadedPlugins = true
-
-			InlineContentPluginManager.shared.loadBundledPlugins()
-		}
+		/* The modules are linked into the service and listed in
+		 InlineContentModuleRegistry, so there is nothing left to load. The call
+		 stays because it is part of the XPC protocol the application speaks. */
 	}
 
 	@objc(warmServiceWithPreferences:)
 	func warmService(with preferences: InlineContentServicePreferences) {
-		Self.warmLock.withLock {
-			guard !Self.registeredDefaults else { return }
-			Self.registeredDefaults = true
-			TextualUserDefaults.shared().register(defaults: preferences.registrationDomain)
+		let alreadyRegistered = Self.warmState.withLock { state in
+			defer { state.registeredDefaults = true }
+
+			return state.registeredDefaults
 		}
+
+		guard alreadyRegistered == false else { return }
+
+		TextualUserDefaults.shared().register(defaults: preferences.registrationDomain)
 	}
 
 	private var remoteObjectProxy: (any InlineContentClientProtocol)? {
