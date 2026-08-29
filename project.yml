@@ -489,6 +489,7 @@ targets:
           - LocalizationCatalogNotices.md
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
+      - path: Sources/Shared/Services/ConnectionTrustGate.swift
       - path: Sources/Shared/Services/RemoteConnectionProtocols.swift
       - path: Sources/Shared/Services/SecureConnectionInformation.swift
     dependencies:
