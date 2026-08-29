@@ -41,19 +41,19 @@ import Foundation
 let TPCThemeSettingsDisabledIndentationOffset = -99
 nonisolated let TPCThemeSettingsNewestTemplateEngineVersion = 4 // nonisolated: let
 
-@objc public enum TPCThemeAppearanceType: UInt, Sendable {
+public enum TPCThemeAppearanceType: UInt, Sendable {
 	case `default`
 	case dark
 	case light
 }
 
-@objc public enum TPCThemeStorageLocation: UInt, Sendable {
+public enum TPCThemeStorageLocation: UInt, Sendable {
 	case unknown
 	case bundle
 	case custom
 }
 
-@objc public enum TPCThemeSettingsNicknameColorStyle: UInt, Sendable {
+public enum TPCThemeSettingsNicknameColorStyle: UInt, Sendable {
 	case `default`
 	case dark
 	case light

@@ -65,17 +65,14 @@ private enum WindowStateStorage {
 }
 
 public extension NSWindow {
-	@objc(isOccluded)
 	var ceIsOccluded: Bool {
 		!occlusionState.contains(.visible)
 	}
 
-	@objc(isInactive)
 	var ceIsInactive: Bool {
 		!isKeyWindow && !isMainWindow
 	}
 
-	@objc(isActiveForDrawing)
 	var ceIsActiveForDrawing: Bool {
 		if styleMask.contains(.fullScreen) {
 			return true
@@ -88,7 +85,6 @@ public extension NSWindow {
 			&& NSApp.modalWindow == nil
 	}
 
-	@objc(exactlyCenterWindow)
 	func ce_exactlyCenter() {
 		guard let screen = NSScreen.main else {
 			return
@@ -102,22 +98,18 @@ public extension NSWindow {
 		setFrame(NSRect(origin: centeredOrigin, size: frame.size), display: true, animate: true)
 	}
 
-	@objc(isBeneathMouse)
 	var ceIsBeneathMouse: Bool {
 		Self.ceWindowBeneathMouse === self
 	}
 
-	@objc(runningInHighResolutionMode)
 	var ceRunningInHighResolutionMode: Bool {
 		(screen?.backingScaleFactor ?? 1) > 1
 	}
 
-	@objc(isInFullscreenMode)
 	var ceIsInFullscreenMode: Bool {
 		styleMask.contains(.fullScreen)
 	}
 
-	@objc(deepestWindow)
 	var ceDeepestWindow: NSWindow {
 		var deepestWindow = self
 		while let attachedSheet = deepestWindow.attachedSheet {
@@ -126,7 +118,6 @@ public extension NSWindow {
 		return deepestWindow
 	}
 
-	@objc(titlebarFrame)
 	var ceTitlebarFrame: NSRect {
 		guard let contentView else {
 			return .zero
@@ -151,12 +142,10 @@ public extension NSWindow {
 		ce_restoreState(keyword: key.rawValue)
 	}
 
-	@objc(saveSizeAsDefault)
 	func ce_saveSizeAsDefault() {
 		ceDefaultSize = frame.size
 	}
 
-	@objc(defaultSize)
 	var ceDefaultSize: NSSize {
 		get {
 			guard let value = objc_getAssociatedObject(
@@ -177,7 +166,6 @@ public extension NSWindow {
 		}
 	}
 
-	@objc(restoreDefaultSizeAndDisplay:)
 	func ce_restoreDefaultSize(display: Bool) {
 		let defaultSize = ceDefaultSize
 		guard defaultSize != .zero else {

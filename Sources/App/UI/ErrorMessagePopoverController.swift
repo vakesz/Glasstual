@@ -12,18 +12,16 @@
 
 import AppKit
 
-@objc(TVCErrorMessagePopoverController)
 @MainActor
 public final class ErrorMessagePopoverController: NSObject {
 	private var visiblePopover: ErrorMessagePopover?
 
 	private static let sharedInstance = ErrorMessagePopoverController()
 
-	@objc public static func sharedController() -> ErrorMessagePopoverController {
+	public static func sharedController() -> ErrorMessagePopoverController {
 		sharedInstance
 	}
 
-	@objc(showMessage:forView:)
 	public func showMessage(_ message: String, for view: NSView) {
 		var popover = visiblePopover
 		let popoverIsSame =
@@ -46,11 +44,10 @@ public final class ErrorMessagePopoverController: NSObject {
 		}
 	}
 
-	@objc public func closeMessage() {
+	public func closeMessage() {
 		closePopover(for: nil)
 	}
 
-	@objc(closeMessageForView:)
 	public func closeMessage(for view: NSView) {
 		closePopover(for: view)
 	}

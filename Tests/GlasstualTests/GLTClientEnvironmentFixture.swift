@@ -48,15 +48,21 @@ final class GLTRecordingClientOutput: ClientOutput {
 	private(set) var titleUpdates: [IRCTreeItem?] = []
 	private(set) var clearedItems: [IRCTreeItem] = []
 	private(set) var evaluatedFunctions: [String] = []
+	/// Every sheet the protocol layer asked for, in order. No window is
+	/// involved, which is the point of the seam.
+	private(set) var presentedAlerts: [AlertRequest] = []
 
 	var selectedItem: IRCTreeItem?
 	var selectedClient: IRCClient?
 	var selectedChannel: IRCChannel?
 	var windowIsKey = false
 	var windowIsMain = false
-	var alertPresentationWindow: NSWindow?
 	var visibleItems: [IRCTreeItem] = []
 	var memberListIsAvailable = false
+
+	func presentAlertSheet(_ request: AlertRequest, completion _: @escaping TDCAlertCompletionBlock) {
+		presentedAlerts.append(request)
+	}
 
 	func selectedChannel(on client: IRCClient) -> IRCChannel? {
 		selectedClient === client ? selectedChannel : nil
@@ -134,6 +140,7 @@ final class GLTRecordingMenuPresenter: ClientMenuPresenting {
 	private(set) var soundsMuted: Bool?
 	private(set) var serverPropertiesSelections: [UInt] = []
 	private(set) var nicknameColorSheets: [String] = []
+	private(set) var revealedFolders: [URL] = []
 
 	func toggleMuteOnNotificationSoundsShortcut(on muted: Bool) {
 		soundsMuted = muted
@@ -154,6 +161,10 @@ final class GLTRecordingMenuPresenter: ClientMenuPresenting {
 	func connectToGlasstualHelpChannel(_: Any?) {}
 
 	func connectToGlasstualTestingChannel(_: Any?) {}
+
+	func revealInFinder(_ url: URL) {
+		revealedFolders.append(url)
+	}
 }
 
 /// An application that is never terminating and never in ghost mode.

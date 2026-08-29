@@ -39,7 +39,6 @@ private let colorLogger = Logger(
 )
 
 public extension NSColor {
-	@objc(calibratedColorWithRed:green:blue:alpha:)
 	class func textual_calibratedColor(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> NSColor {
 		NSColor(
 			calibratedRed: normalized(red),
@@ -49,12 +48,10 @@ public extension NSColor {
 		)
 	}
 
-	@objc(calibratedDeviceColorWithRed:green:blue:alpha:)
 	class func textual_calibratedDeviceColor(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> NSColor {
 		NSColor(deviceRed: normalized(red), green: normalized(green), blue: normalized(blue), alpha: normalized(alpha))
 	}
 
-	@objc(hexadecimalValue)
 	var textualHexadecimalValue: String {
 		/* Asking a catalog or pattern colour for its components raises an
 		 uncatchable exception, and an extended-range colour can report a
@@ -80,7 +77,6 @@ public extension NSColor {
 		UInt8((min(max(component, 0), 1) * 0xFF).rounded())
 	}
 
-	@objc(colorWithHexadecimalValue:)
 	class func textual_color(hexadecimalValue value: String) -> NSColor? {
 		var value = value.hasPrefix("#") ? String(value.dropFirst()) : value
 

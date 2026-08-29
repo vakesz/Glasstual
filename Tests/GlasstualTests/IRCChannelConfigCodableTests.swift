@@ -93,7 +93,7 @@ struct IRCChannelConfigCodableTests {
 
 		#expect(restored.sound(forEvent: .highlight) == "Glass")
 		#expect(restored.notificationEnabled(forEvent: .highlight) == .off)
-		#expect(restored.notificationEnabled(forEvent: .channelMessage) == .mixed)
+		#expect(restored.notificationEnabled(forEvent: .channelMessage) == .inherited)
 	}
 
 	@Test("The channel key is not part of the encoded value")

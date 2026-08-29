@@ -407,6 +407,16 @@ public extension TDCAlert {
 			suppressionText: suppressText
 		)
 
+		alertSheet(with: window, request: request, completionBlock: completionBlock)
+	}
+
+	/// The same sheet, taking the request whole. What a caller that already has
+	/// an `AlertRequest` — the protocol layer, through `ClientOutput` — needs.
+	static func alertSheet(
+		with window: NSWindow,
+		request: AlertRequest,
+		completionBlock: TDCAlertCompletionBlock? = nil
+	) {
 		Task { @MainActor in
 			let outcome = await run(request, on: .sheet(window))
 			completionBlock?(outcome)

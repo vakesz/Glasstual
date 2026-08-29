@@ -20,10 +20,8 @@ private let importExportLogger = Logger(
 	category: "PreferencesImportExport"
 )
 
-@objc(TPCPreferencesImportExport)
 @MainActor
 public final class PreferencesImportExport: NSObject {
-	@objc(importInWindow:)
 	public static func `import`(in window: NSWindow) {
 		TDCAlert.alertSheet(
 			with: window,
@@ -60,7 +58,6 @@ public final class PreferencesImportExport: NSObject {
 		}
 	}
 
-	@objc(importPostflightBackupPreferences)
 	public static func importPostflightBackupPreferences() -> Bool {
 		let backupPath = NSHomeDirectory().appending(
 			"/Glasstual-importBackup-\(UUID().uuidString).plist"
@@ -69,7 +66,6 @@ public final class PreferencesImportExport: NSObject {
 		return exportPostflight(forPath: backupPath, filterJunk: false)
 	}
 
-	@objc(importPostflight:)
 	public static func importPostflight(_ pathURL: URL) {
 		DispatchQueue.main.async {
 			importPostflightOnMain(pathURL)
@@ -117,12 +113,10 @@ public final class PreferencesImportExport: NSObject {
 		importPostflightCleanup(Array(dictionary.keys))
 	}
 
-	@objc(importContentsOfDictionary:)
 	public static func importContentsOfDictionary(_ dictionary: [String: Any]) {
 		importContentsOfDictionary(dictionary, reloadPreferences: true)
 	}
 
-	@objc(importContentsOfDictionary:reloadPreferences:)
 	public static func importContentsOfDictionary(_ dictionary: [String: Any], reloadPreferences: Bool) {
 		for (key, object) in dictionary {
 			guard isKeyNameSupposedToBeIgnored(key) == false else {
@@ -156,7 +150,6 @@ public final class PreferencesImportExport: NSObject {
 		return coerced
 	}
 
-	@objc(import:withKey:)
 	public static func importValue(_ object: Any, withKey key: String) {
 		guard let object = validatedValue(object, forKey: key) else {
 			return
@@ -191,7 +184,6 @@ public final class PreferencesImportExport: NSObject {
 		}
 	}
 
-	@objc(importClientConfiguration:)
 	public static func importClientConfiguration(_ config: [String: Any]) {
 		guard let clientConfig = PropertyListModel.decode(ClientConfig.self, from: config) else {
 			return
@@ -206,7 +198,6 @@ public final class PreferencesImportExport: NSObject {
 		}
 	}
 
-	@objc(importPostflightCleanup:)
 	public static func importPostflightCleanup(_ changedKeys: [String]) {
 		TextualPreferences.performReloadAction(forKeys: changedKeys)
 
@@ -216,17 +207,14 @@ public final class PreferencesImportExport: NSObject {
 		_ = mainWindow.reloadLoadingScreen()
 	}
 
-	@objc(isKeyNameSupposedToBeIgnored:)
 	public static func isKeyNameSupposedToBeIgnored(_ key: String) -> Bool {
 		TextualUserDefaults.keyIsExcludedFromExportImport(key)
 	}
 
-	@objc(exportedPreferencesDictionary)
 	public static func exportedPreferencesDictionary() -> [String: Any] {
 		exportedPreferencesDictionary(true, filterDefaults: true)
 	}
 
-	@objc(exportedPreferencesDictionary:)
 	public static func exportedPreferencesDictionary(_ filterJunk: Bool) -> [String: Any] {
 		exportedPreferencesDictionary(filterJunk, filterDefaults: filterJunk)
 	}
@@ -252,7 +240,6 @@ public final class PreferencesImportExport: NSObject {
 		return written
 	}
 
-	@objc(exportedPreferencesDictionary:filterDefaults:)
 	public static func exportedPreferencesDictionary(_ filterJunk: Bool, filterDefaults: Bool) -> [String: Any] {
 		let registeredDefaults = TextualPreferences.defaultPreferences()
 			.merging(UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)) { current, _ in
@@ -289,7 +276,6 @@ public final class PreferencesImportExport: NSObject {
 		return (value as AnyObject).isEqual(registeredDefault)
 	}
 
-	@objc(exportInWindow:)
 	public static func export(in window: NSWindow) {
 		TDCAlert.alertSheet(
 			with: window,
@@ -323,22 +309,18 @@ public final class PreferencesImportExport: NSObject {
 		}
 	}
 
-	@objc(exportPostflightForPath:)
 	public static func exportPostflight(forPath path: String) -> Bool {
 		exportPostflight(forPath: path, filterJunk: true)
 	}
 
-	@objc(exportPostflightForURL:)
 	public static func exportPostflight(for url: URL) -> Bool {
 		exportPostflight(for: url, filterJunk: true)
 	}
 
-	@objc(exportPostflightForPath:filterJunk:)
 	public static func exportPostflight(forPath path: String, filterJunk: Bool) -> Bool {
 		exportPostflight(for: URL(fileURLWithPath: path), filterJunk: filterJunk)
 	}
 
-	@objc(exportPostflightForURL:filterJunk:)
 	public static func exportPostflight(for url: URL, filterJunk: Bool) -> Bool {
 		let exportedPreferences = exportedPreferencesDictionary(filterJunk)
 

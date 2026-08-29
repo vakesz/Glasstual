@@ -43,7 +43,6 @@ private let processDelegateLogger = Logger(
 	category: "Process"
 )
 
-@objc(ICLProcessDelegate)
 final class InlineContentProcessDelegate: NSObject, NSXPCListenerDelegate {
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
 		connection.exportedInterface = NSXPCInterface(with: InlineContentServerProtocol.self)

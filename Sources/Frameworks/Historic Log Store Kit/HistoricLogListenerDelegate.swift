@@ -48,7 +48,6 @@ private let listenerDelegateLogger = Logger(
 /// The service points its listener at one of these; the test bundle points an
 /// anonymous listener at another, so what a test drives is the same store, the
 /// same exported object and the same ownership rules the service uses.
-@objc(HSLHistoricLogProcessDelegate)
 public final class HistoricLogProcessDelegate: NSObject, NSXPCListenerDelegate {
 	private let filenameStore: any HistoricLogFilenameStoring
 

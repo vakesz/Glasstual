@@ -104,32 +104,32 @@ struct IRCTextWrapBoundsTests {
 	/// NSRange location and raised an uncatchable NSRangeException.
 	@Test(arguments: [0, 1, 5, 25, 26, 40])
 	func wrappingAShortResultDoesNotRaise(_ length: Int) {
-		let string = NSMutableString(string: String(repeating: "a", count: length))
+		var string = String(repeating: "a", count: length)
 
 		#expect(string.wrapIRCTextFormatterResult(with: 0, maxDistance: 26) == UInt(bitPattern: NSNotFound))
 	}
 
 	@Test
 	func aZeroDistanceIsRefusedRatherThanTrapping() {
-		let string = NSMutableString(string: "hello world")
+		var string = "hello world"
 
 		#expect(string.wrapIRCTextFormatterResult(with: 0, maxDistance: 0) == UInt(bitPattern: NSNotFound))
 	}
 
 	@Test
 	func wrappingTrimsBackToTheLastSpace() {
-		let string = NSMutableString(string: "hello there world")
+		var string = "hello there world"
 
 		#expect(string.wrapIRCTextFormatterResult(with: 0, maxDistance: 26) == 6)
-		#expect(string as String == "hello there")
+		#expect(string == "hello there")
 	}
 
 	@Test
 	func aSpaceBeforeTheMinimumIndexIsNotUsed() {
-		let string = NSMutableString(string: "hello world")
+		var string = "hello world"
 
 		#expect(string.wrapIRCTextFormatterResult(with: 8, maxDistance: 26) == UInt(bitPattern: NSNotFound))
-		#expect(string as String == "hello world")
+		#expect(string == "hello world")
 	}
 }
 
@@ -144,16 +144,16 @@ struct IRCLineSplittingProgressTests {
 		client.userHostmask = String(repeating: "h", count: 400)
 
 		let channelName = "#" + String(repeating: "c", count: 300)
-		let line = NSMutableAttributedString(string: "hello world")
+		var cursor = IRCLineCursor(NSAttributedString(string: "hello world"))
 
 		var iterations = 0
 
-		while line.length > 0, iterations < 100 {
-			_ = line.stringFormatted(forChannel: channelName, on: client, with: .privateMessage)
+		while cursor.isEmpty == false, iterations < 100 {
+			_ = cursor.nextLine(forChannel: channelName, on: client, with: .privateMessage)
 			iterations += 1
 		}
 
-		#expect(line.length == 0)
+		#expect(cursor.isEmpty)
 		#expect(iterations == 11)
 	}
 
@@ -162,11 +162,11 @@ struct IRCLineSplittingProgressTests {
 		let client = GLTTestClient()
 		client.userHostmask = "nick!user@host"
 
-		let line = NSMutableAttributedString(string: "hello world")
-		let message = line.stringFormatted(forChannel: "#channel", on: client, with: .privateMessage)
+		var cursor = IRCLineCursor(NSAttributedString(string: "hello world"))
+		let message = cursor.nextLine(forChannel: "#channel", on: client, with: .privateMessage)
 
 		#expect(message == "hello world")
-		#expect(line.length == 0)
+		#expect(cursor.isEmpty)
 	}
 }
 

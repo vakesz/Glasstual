@@ -67,22 +67,26 @@ private let truncationACTIONCommandConstant = 17
 private let truncationNOTICECommandConstant = 8
 private let truncationHostmaskConstant = 60
 private let truncationWrapMaxDistance = 25
-private let colorHighestDigit = 98
+let colorHighestDigit = 98
 
 private let colorFormatLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCColorFormat"
 )
 
-private func appendControlCharacter(_ character: unichar, to string: NSMutableString) {
-	string.appendFormat("%C", character)
+private func appendControlCharacter(_ character: unichar, to string: inout String) {
+	guard let scalar = Unicode.Scalar(character) else {
+		return
+	}
+
+	string.unicodeScalars.append(scalar)
 }
 
 private func stringKeyedAttributes(_ attributes: [NSAttributedString.Key: Any]) -> [String: Any] {
 	Dictionary(uniqueKeysWithValues: attributes.map { ($0.key.rawValue, $0.value) })
 }
 
-private func formatterKey(_ name: IRCTextFormatterAttributeName) -> NSAttributedString.Key {
+func formatterKey(_ name: IRCTextFormatterAttributeName) -> NSAttributedString.Key {
 	NSAttributedString.Key(name.rawValue)
 }
 
@@ -123,7 +127,7 @@ private func formatterEffectIsSet(
 	}
 }
 
-private func monospaceFontMatching(_ baseFont: NSFont?) -> NSFont {
+func monospaceFontMatching(_ baseFont: NSFont?) -> NSFont {
 	let pointSize = baseFont?.pointSize ?? 0
 	let monospaceFont = NSFont.monospacedSystemFont(ofSize: pointSize, weight: .regular)
 	let traits = (baseFont?.fontDescriptor.symbolicTraits ?? [])
@@ -221,27 +225,26 @@ public final class TextFormatterEffect: NSObject {
 		return true
 	}
 
-	public func appendToStart(of string: NSMutableString) {
+	public func appendToStart(of string: inout String) {
 		if type == .backgroundColor {
-			string.appendFormat(",%@", value ?? "")
+			string += ",\(value ?? "")"
 
 			return
 		}
 
+		appendControlCharacter(controlCharacter, to: &string)
+
 		if let value {
-			appendControlCharacter(controlCharacter, to: string)
-			string.append(value)
-		} else {
-			appendControlCharacter(controlCharacter, to: string)
+			string += value
 		}
 	}
 
-	public func appendToEnd(of string: NSMutableString) {
+	public func appendToEnd(of string: inout String) {
 		if type == .backgroundColor {
 			return
 		}
 
-		appendControlCharacter(controlCharacter, to: string)
+		appendControlCharacter(controlCharacter, to: &string)
 	}
 }
 
@@ -310,15 +313,15 @@ public final class TextFormatterEffects: NSObject {
 		self.maximumLength = maximumLength
 	}
 
-	public func appendToStart(of string: NSMutableString) {
+	public func appendToStart(of string: inout String) {
 		for effect in effects {
-			effect.appendToStart(of: string)
+			effect.appendToStart(of: &string)
 		}
 	}
 
-	public func appendToEnd(of string: NSMutableString) {
+	public func appendToEnd(of string: inout String) {
 		for effect in effects.reversed() {
-			effect.appendToEnd(of: string)
+			effect.appendToEnd(of: &string)
 		}
 	}
 }
@@ -379,6 +382,61 @@ extension IRCLineBudget {
 	}
 }
 
+/** One message's text, consumed one wire line at a time.
+
+ A message longer than the line budget goes out as several lines, and each of
+ them is cut from the front of what is left. That used to be one shared mutable
+ attributed string the caller deleted from as it went, which put a mutable
+ AppKit object in the middle of the send path; the cursor is a value that hands
+ back the remainder instead. */
+@MainActor
+public struct IRCLineCursor {
+	private var remaining: NSAttributedString
+
+	public init(_ text: NSAttributedString) {
+		remaining = text
+	}
+
+	public var isEmpty: Bool {
+		remaining.length == 0
+	}
+
+	/** The next wire line, or `nil` once there is nothing left to send.
+
+	 `nil` also answers the case the callers used to guard by hand: formatting
+	 that consumed nothing would loop forever, so a pass that fails to make
+	 progress ends the message rather than spinning. */
+	public mutating func nextLine(
+		forChannel channelName: String,
+		on client: IRCClient,
+		with lineType: TVCLogLineType
+	) -> String? {
+		guard remaining.length > 0 else {
+			return nil
+		}
+
+		var consumed = NSRange()
+		let line = remaining.stringFormatted(
+			forChannel: channelName,
+			on: client,
+			with: lineType,
+			effectiveRange: &consumed
+		)
+
+		let end = consumed.location + consumed.length
+
+		guard consumed.location == 0, end > 0, end <= remaining.length else {
+			return nil
+		}
+
+		remaining = remaining.attributedSubstring(
+			from: NSRange(location: end, length: remaining.length - end)
+		)
+
+		return line
+	}
+}
+
 public extension NSAttributedString {
 	func stringFormatted(
 		forChannel channelName: String,
@@ -395,7 +453,7 @@ public extension NSAttributedString {
 		)
 
 		let string = string as NSString
-		let result = NSMutableString()
+		var result = ""
 
 		var deletionLength: UInt = 0
 		var consumedAnyCharacter = false
@@ -416,7 +474,7 @@ public extension NSAttributedString {
 			}
 
 			budget.charge(Int(formattersLength))
-			formatters.appendToStart(of: result)
+			formatters.appendToStart(of: &result)
 
 			var i = 0
 
@@ -462,7 +520,7 @@ public extension NSAttributedString {
 				result.append(character)
 			}
 
-			formatters.appendToEnd(of: result)
+			formatters.appendToEnd(of: &result)
 
 			if breakLoopAfterAppend {
 				break
@@ -489,23 +547,23 @@ public extension NSAttributedString {
 			"""
 		)
 
-		return result as String
+		return result
 	}
 
 	var stringFormattedForIRC: String {
 		let string = string as NSString
-		let result = NSMutableString()
+		var result = ""
 		let fullRange = NSRange(location: 0, length: length)
 
 		enumerateAttributes(in: fullRange, options: []) { attributes, effectiveRange, _ in
 			let formatters = TextFormatterEffects.effects(in: stringKeyedAttributes(attributes))
 
-			formatters.appendToStart(of: result)
+			formatters.appendToStart(of: &result)
 			result.append(string.substring(with: effectiveRange))
-			formatters.appendToEnd(of: result)
+			formatters.appendToEnd(of: &result)
 		}
 
-		return result as String
+		return result
 	}
 
 	func ircFormatterAttributeSet(inRange effect: IRCTextFormatterEffectType, range limitRange: NSRange) -> Bool {
@@ -523,195 +581,17 @@ public extension NSAttributedString {
 	}
 }
 
-public extension NSMutableAttributedString {
-	private func addIRCFontTrait(
-		_ trait: NSFontTraitMask,
-		formatterAttribute: IRCTextFormatterAttributeName,
-		baseFont: NSFont?,
-		range: NSRange
-	) {
-		guard let baseFont else {
-			return
-		}
+public nonisolated extension String { // nonisolated: pure
+	/** Breaks the tail of a formatted line at a space rather than mid-word.
 
-		let font = if baseFont.textual_fontTraitIsSet(trait) {
-			baseFont
-		} else {
-			NSFontManager.shared.convert(baseFont, toHaveTrait: trait)
-		}
-
-		addAttribute(formatterKey(formatterAttribute), value: true, range: range)
-		addAttribute(.font, value: font, range: range)
-	}
-
-	private func addIRCColor(
-		_ value: Any?,
-		formatterAttribute: IRCTextFormatterAttributeName,
-		appKitAttribute: NSAttributedString.Key,
-		range: NSRange
-	) {
-		if let colorCode = (value as? NSNumber)?.intValue,
-		   (0 ... colorHighestDigit).contains(colorCode)
-		{
-			addAttribute(formatterKey(formatterAttribute), value: colorCode, range: range)
-			addAttribute(appKitAttribute, value: TVCLogRenderer.mapColorCode(UInt(colorCode)), range: range)
-		} else if let color = value as? NSColor {
-			addAttribute(formatterKey(formatterAttribute), value: color, range: range)
-			addAttribute(appKitAttribute, value: color, range: range)
-		}
-	}
-
-	private func applyIRCFormatterAttribute(
-		_ effect: IRCTextFormatterEffectType,
-		value: Any?,
-		attributes: [NSAttributedString.Key: Any],
-		range: NSRange
-	) {
-		let baseFont = attributes[.font] as? NSFont
-
-		switch effect {
-		case .none:
-			break
-		case .bold:
-			addIRCFontTrait(
-				.boldFontMask,
-				formatterAttribute: .boldAttributeName,
-				baseFont: baseFont,
-				range: range
-			)
-		case .italic:
-			addIRCFontTrait(
-				.italicFontMask,
-				formatterAttribute: .italicAttributeName,
-				baseFont: baseFont,
-				range: range
-			)
-		case .monospace:
-			addAttribute(formatterKey(.monospaceAttributeName), value: true, range: range)
-			addAttribute(.font, value: monospaceFontMatching(baseFont), range: range)
-		case .underline:
-			addAttribute(formatterKey(.underlineAttributeName), value: true, range: range)
-			addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
-		case .strikethrough:
-			addAttribute(formatterKey(.strikethroughAttributeName), value: true, range: range)
-			addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
-		case .foregroundColor:
-			addIRCColor(
-				value,
-				formatterAttribute: .foregroundColorAttributeName,
-				appKitAttribute: .foregroundColor,
-				range: range
-			)
-		case .backgroundColor:
-			addIRCColor(
-				value,
-				formatterAttribute: .backgroundColorAttributeName,
-				appKitAttribute: .backgroundColor,
-				range: range
-			)
-		case .spoiler:
-			if let value {
-				addAttribute(formatterKey(.spoilerAttributeName), value: value, range: range)
-			}
-		@unknown default:
-			break
-		}
-	}
-
-	func stringFormatted(
-		forChannel channelName: String,
-		on client: IRCClient,
-		with lineType: TVCLogLineType
-	) -> String {
-		var effectiveRange = NSRange()
-		let result = stringFormatted(
-			forChannel: channelName,
-			on: client,
-			with: lineType,
-			effectiveRange: &effectiveRange
-		)
-
-		deleteCharacters(in: effectiveRange)
-
-		return result
-	}
-
-	func setIRCFormatterAttribute(
-		_ effect: IRCTextFormatterEffectType,
-		value: Any?,
-		range limitRange: NSRange
-	) {
-		enumerateAttributes(in: limitRange, options: .reverse) { attributes, effectiveRange, _ in
-			applyIRCFormatterAttribute(effect, value: value, attributes: attributes, range: effectiveRange)
-		}
-	}
-
-	func removeIRCFormatterAttribute(_ effect: IRCTextFormatterEffectType, range limitRange: NSRange) {
-		enumerateAttributes(in: limitRange, options: .reverse) { attributes, effectiveRange, _ in
-			guard var baseFont = attributes[.font] as? NSFont else {
-				return
-			}
-
-			switch effect {
-			case .none:
-				break
-			case .bold:
-				if baseFont.textual_fontTraitIsSet(.boldFontMask) {
-					baseFont = NSFontManager.shared.convert(baseFont, toNotHaveTrait: .boldFontMask)
-
-					addAttribute(.font, value: baseFont, range: effectiveRange)
-					removeAttribute(
-						formatterKey(IRCTextFormatterAttributeName.boldAttributeName), range: effectiveRange
-					)
-				}
-			case .italic:
-				if baseFont.textual_fontTraitIsSet(.italicFontMask) {
-					baseFont = NSFontManager.shared.convert(baseFont, toNotHaveTrait: .italicFontMask)
-
-					addAttribute(.font, value: baseFont, range: effectiveRange)
-					removeAttribute(
-						formatterKey(IRCTextFormatterAttributeName.italicAttributeName), range: effectiveRange
-					)
-				}
-			case .monospace:
-				removeAttribute(.font, range: effectiveRange)
-				removeAttribute(
-					formatterKey(IRCTextFormatterAttributeName.monospaceAttributeName), range: effectiveRange
-				)
-			case .underline:
-				removeAttribute(.underlineStyle, range: effectiveRange)
-				removeAttribute(
-					formatterKey(IRCTextFormatterAttributeName.underlineAttributeName), range: effectiveRange
-				)
-			case .strikethrough:
-				removeAttribute(.strikethroughStyle, range: effectiveRange)
-				removeAttribute(
-					formatterKey(IRCTextFormatterAttributeName.strikethroughAttributeName), range: effectiveRange
-				)
-			case .foregroundColor:
-				/* Matches the original implementation, which removes the AppKit
-				 background color when clearing the IRC foreground formatter. */
-				removeAttribute(.backgroundColor, range: effectiveRange)
-				removeAttribute(
-					formatterKey(IRCTextFormatterAttributeName.foregroundColorAttributeName), range: effectiveRange
-				)
-			case .backgroundColor:
-				removeAttribute(.backgroundColor, range: effectiveRange)
-				removeAttribute(
-					formatterKey(IRCTextFormatterAttributeName.backgroundColorAttributeName), range: effectiveRange
-				)
-			case .spoiler:
-				removeAttribute(formatterKey(IRCTextFormatterAttributeName.spoilerAttributeName), range: effectiveRange)
-			@unknown default:
-				break
-			}
-		}
-	}
-}
-
-public nonisolated extension NSMutableString { // nonisolated: pure
-	func wrapIRCTextFormatterResult(with minimumIndex: UInt, maxDistance: UInt) -> UInt {
-		let selfLength = length
+	 Truncates this string back to the last space within `maxDistance` UTF-16
+	 units of its end and answers how many units went; `NSNotFound` when there is
+	 no space to break at, in which case the string is left alone. It used to be
+	 a method on Foundation's mutable string, which is the only reason a
+	 protocol-layer accumulator had to be one. */
+	mutating func wrapIRCTextFormatterResult(with minimumIndex: UInt, maxDistance: UInt) -> UInt {
+		let text = self as NSString
+		let selfLength = text.length
 		let distance = Int(clamping: maxDistance)
 
 		// The window is the tail of the string. Computing its start in
@@ -730,7 +610,7 @@ public nonisolated extension NSMutableString { // nonisolated: pure
 		}
 
 		let searchRange = NSRange(location: searchStart, length: searchLength)
-		let spaceRange = rangeOfCharacter(
+		let spaceRange = text.rangeOfCharacter(
 			from: .whitespaces,
 			options: .backwards,
 			range: searchRange
@@ -742,7 +622,7 @@ public nonisolated extension NSMutableString { // nonisolated: pure
 
 		let indexDifference = selfLength - spaceRange.location
 
-		deleteCharacters(in: NSRange(location: spaceRange.location, length: indexDifference))
+		self = text.substring(to: spaceRange.location)
 
 		return UInt(indexDifference)
 	}

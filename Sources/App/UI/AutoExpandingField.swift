@@ -31,7 +31,6 @@ func updatePreferredMaxLayoutWidth(of field: NSTextField) -> Bool {
 	return true
 }
 
-@objc(TVCAutoExpandingTextField)
 public final class AutoExpandingTextField: NSTextField {
 	override public func layout() {
 		super.layout()

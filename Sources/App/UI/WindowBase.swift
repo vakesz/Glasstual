@@ -12,8 +12,6 @@
 
 import AppKit
 
-@objc(TDCWindowBase)
-@objcMembers
 open class WindowBase: NSObject {
 	public weak var delegate: AnyObject?
 
@@ -29,12 +27,10 @@ open class WindowBase: NSObject {
 		window?.close()
 	}
 
-	@objc(ok:)
 	@MainActor open func ok(_: Any?) {
 		close()
 	}
 
-	@objc(cancel:)
 	@MainActor open func cancel(_: Any?) {
 		close()
 	}

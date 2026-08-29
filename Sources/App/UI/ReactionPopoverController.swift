@@ -12,17 +12,15 @@
 
 import AppKit
 
-@objc(TDCReactionPopoverController)
 @MainActor
 public final class ReactionPopoverController: NSViewController, NSPopoverDelegate, NSTextFieldDelegate {
-	@objc public private(set) var messageIdentifier: String
-	@objc public var completionBlock: ((String, String) -> Void)?
+	public private(set) var messageIdentifier: String
+	public var completionBlock: ((String, String) -> Void)?
 
 	private var popover: NSPopover?
 	private var emojiField: NSTextField!
 	private var sendButton: NSButton!
 
-	@objc(initWithMessageIdentifier:)
 	public init(messageIdentifier: String) {
 		self.messageIdentifier = messageIdentifier
 		super.init(nibName: nil, bundle: nil)
@@ -75,7 +73,6 @@ public final class ReactionPopoverController: NSViewController, NSPopoverDelegat
 		self.view = view
 	}
 
-	@objc(presentRelativeToRect:ofView:)
 	public func present(relativeTo rect: NSRect, of view: NSView) {
 		let popover = NSPopover()
 		popover.behavior = .transient
@@ -88,7 +85,7 @@ public final class ReactionPopoverController: NSViewController, NSPopoverDelegat
 		self.view.window?.makeFirstResponder(emojiField)
 	}
 
-	@objc public func close() {
+	public func close() {
 		popover?.close()
 	}
 

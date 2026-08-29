@@ -37,11 +37,21 @@
  *********************************************************************** */
 
 import CocoaExtensions
-
-// AppKit: a per-event override is shown as an NSControl mixed-state value.
-import AppKit
 import Foundation
 import GlasstualPluginKit
+
+/** A channel's answer to one notification setting.
+
+ A channel either turns the setting on, turns it off, or says nothing and lets
+ the application-wide preference answer. This used to be an
+ `NSControl.StateValue`, which is the only reason AppKit reached into the
+ protocol layer at all; the checkbox that shows it maps at the sheet. */
+public nonisolated enum ChannelEventOverride: Sendable { // nonisolated: value
+	case on
+	case off
+	/// No override: whatever the application-wide preference says.
+	case inherited
+}
 
 /// One notification override a channel carries: either a sound name or an
 /// on/off flag. A channel with no override for an event inherits the
@@ -306,23 +316,23 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 		return name
 	}
 
-	func notificationEnabled(forEvent event: TXNotificationType) -> NSControl.StateValue {
+	func notificationEnabled(forEvent event: TXNotificationType) -> ChannelEventOverride {
 		state(for: event, category: "Enabled")
 	}
 
-	func disabledWhileAway(forEvent event: TXNotificationType) -> NSControl.StateValue {
+	func disabledWhileAway(forEvent event: TXNotificationType) -> ChannelEventOverride {
 		state(for: event, category: "Disable While Away")
 	}
 
-	func bounceDockIcon(forEvent event: TXNotificationType) -> NSControl.StateValue {
+	func bounceDockIcon(forEvent event: TXNotificationType) -> ChannelEventOverride {
 		state(for: event, category: "Bounce Dock Icon")
 	}
 
-	func bounceDockIconRepeatedly(forEvent event: TXNotificationType) -> NSControl.StateValue {
+	func bounceDockIconRepeatedly(forEvent event: TXNotificationType) -> ChannelEventOverride {
 		state(for: event, category: "Bounce Dock Icon Repeatedly")
 	}
 
-	func speakEvent(_ event: TXNotificationType) -> NSControl.StateValue {
+	func speakEvent(_ event: TXNotificationType) -> ChannelEventOverride {
 		state(for: event, category: "Speak")
 	}
 
@@ -334,28 +344,28 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 		notifications[key] = value.map { ChannelNotificationSetting.sound($0) }
 	}
 
-	mutating func setNotificationEnabled(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setNotificationEnabled(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Enabled")
 	}
 
-	mutating func setDisabledWhileAway(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setDisabledWhileAway(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Disable While Away")
 	}
 
-	mutating func setBounceDockIcon(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setBounceDockIcon(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Bounce Dock Icon")
 	}
 
-	mutating func setBounceDockIconRepeatedly(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setBounceDockIconRepeatedly(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Bounce Dock Icon Repeatedly")
 	}
 
-	mutating func setEventIsSpoken(_ value: NSControl.StateValue, forEvent event: TXNotificationType) {
+	mutating func setEventIsSpoken(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
 		setState(value, forEvent: event, category: "Speak")
 	}
 
 	private mutating func setState(
-		_ value: NSControl.StateValue,
+		_ value: ChannelEventOverride,
 		forEvent event: TXNotificationType,
 		category: String
 	) {
@@ -368,18 +378,16 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 			notifications[key] = .flag(true)
 		case .off:
 			notifications[key] = .flag(false)
-		case .mixed:
+		case .inherited:
 			notifications.removeValue(forKey: key)
-		default:
-			assertionFailure("Bad notification state")
 		}
 	}
 
-	private func state(for event: TXNotificationType, category: String) -> NSControl.StateValue {
+	private func state(for event: TXNotificationType, category: String) -> ChannelEventOverride {
 		guard let key = TextualPreferences.key(for: event, category: category),
 		      case let .flag(value) = notifications[key]
 		else {
-			return .mixed
+			return .inherited
 		}
 
 		return value ? .on : .off

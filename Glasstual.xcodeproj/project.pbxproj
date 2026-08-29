@@ -683,6 +683,7 @@
 		AF5632DB6C74C49DE3DA937F /* ServerEndpointListSheetTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2637AA0543494D372C2CB516 /* ServerEndpointListSheetTable.swift */; };
 		AF74917954FB5AF259B61410 /* FileTransferDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B29469667C390916B148C856 /* FileTransferDialog.swift */; };
 		AFAD053F7E322141BAC5C04A /* PreferenceCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04790B0A34DFC407C43E65E /* PreferenceCatalogTests.swift */; };
+		AFF4E27AED64AE6DC7D4CD8D /* AttributedStringIRCFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2943C988D82D1F65A522A306 /* AttributedStringIRCFormatting.swift */; };
 		B0004E3E2592A30E25A4D7C7 /* IRCChannelModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58D05576E90E57FBB8AE0136 /* IRCChannelModeTests.swift */; };
 		B0626787C550A44E65276B80 /* TPI_ChatFilterLogic.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1E92B1C2B4ADDD4EF7CCF2F9 /* TPI_ChatFilterLogic.xcstrings */; };
 		B0C2E7633A8016364F518884 /* ICMDailymotion.mustache in Resources */ = {isa = PBXBuildFile; fileRef = EB2971A07CD39FFCE2A0EB08 /* ICMDailymotion.mustache */; };
@@ -1530,6 +1531,7 @@
 		28CCFDC87B42BBD96BEBFCED /* IRCClientLinePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientLinePresentation.swift; sourceTree = "<group>"; };
 		28D82C6CC241A1894344B8B9 /* IRCClientOutboundTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientOutboundTransport.swift; sourceTree = "<group>"; };
 		29389313B5C56E632B4D9F39 /* OnboardingNotificationsStepViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNotificationsStepViewController.swift; sourceTree = "<group>"; };
+		2943C988D82D1F65A522A306 /* AttributedStringIRCFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedStringIRCFormatting.swift; sourceTree = "<group>"; };
 		2962DBE8E0324ADA1DEAD8B7 /* ChannelSelectionOutlineCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelSelectionOutlineCellView.swift; sourceTree = "<group>"; };
 		296D964BB711DC1331225D86 /* SmileyConverterPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmileyConverterPlugin.swift; sourceTree = "<group>"; };
 		2978AA08DBF024820205D918 /* LegacyStandardLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyStandardLibrary.swift; sourceTree = "<group>"; };
@@ -2786,6 +2788,7 @@
 			children = (
 				756AA1C3C262656B490EC259 /* AppearanceHelper.swift */,
 				FFB2448CEA86C931C366B0E1 /* AppearanceSchema.swift */,
+				2943C988D82D1F65A522A306 /* AttributedStringIRCFormatting.swift */,
 				C32159662C4255B291EE90E3 /* AutoExpandingField.swift */,
 				A96570BA25273316D37CB585 /* BasicTableView.swift */,
 				6451FE9460179D3D8620685C /* ErrorMessagePopover.swift */,
@@ -5879,6 +5882,7 @@
 				8B274A5E3EA6629FC425DF31 /* ApplicationGroup.swift in Sources */,
 				143BA230FF7EF1C11506E338 /* ApplicationInfo.swift in Sources */,
 				0740D0DF6CF64C171F90E070 /* ApplicationStrings.swift in Sources */,
+				AFF4E27AED64AE6DC7D4CD8D /* AttributedStringIRCFormatting.swift in Sources */,
 				A93BA4BB1891D65399A222F9 /* AutoExpandingField.swift in Sources */,
 				AEE8653CCAAD5454D3F07FA3 /* BasicTableView.swift in Sources */,
 				C90E3566A4C2E2415F3DA665 /* ChannelAccessListStrings.swift in Sources */,

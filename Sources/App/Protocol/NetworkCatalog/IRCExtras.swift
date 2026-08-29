@@ -11,9 +11,6 @@
  *********************************************************************** */
 
 import CocoaExtensions
-
-// AppKit: the Glasstual URL scheme opens folders through NSWorkspace.
-import AppKit
 import Foundation
 import os
 
@@ -63,14 +60,14 @@ public final class Extras: NSObject {
 		case .acknowledgements, .contributors:
 			menuController?.openAcknowledgements(nil)
 		case .applicationSupportFolder:
-			open(PathInfo.groupContainerApplicationSupportURL)
+			reveal(PathInfo.groupContainerApplicationSupportURL, with: menuController)
 		case .customScriptsFolder, .unsupervisedScriptFolder, .unsupervisedScriptsFolder:
-			open(PathInfo.customScriptsURL)
+			reveal(PathInfo.customScriptsURL, with: menuController)
 		case .customStyleFolder, .customStylesFolder:
-			open(PathInfo.customThemesURL)
+			reveal(PathInfo.customThemesURL, with: menuController)
 		case .diagnosticReportsFolder:
-			open(PathInfo.userDiagnosticReportsURL)
-			open(PathInfo.systemDiagnosticReportsURL)
+			reveal(PathInfo.userDiagnosticReportsURL, with: menuController)
+			reveal(PathInfo.systemDiagnosticReportsURL, with: menuController)
 		case .goto:
 			guard let url = URL(string: sourceLocation) else { return }
 			menuController?.navigateToTreeItem(at: url)
@@ -81,9 +78,10 @@ public final class Extras: NSObject {
 		}
 	}
 
-	private static func open(_ url: URL?) {
+	private static func reveal(_ url: URL?, with menuController: (any ClientMenuPresenting)?) {
 		guard let url else { return }
-		NSWorkspace.shared.open(url)
+
+		menuController?.revealInFinder(url)
 	}
 
 	// MARK: - IRC Protocol URI Parsing
@@ -161,7 +159,7 @@ public final class Extras: NSObject {
 		 care with the channel information. Just a basic parse to establish if
 		 the "needssl" token is present as well as the channel name having a
 		 pound (#) sign in front of it. */
-		let channelList = NSMutableString()
+		var channelList = ""
 
 		if let channelInfo {
 			var dataSections = channelInfo.components(separatedBy: ",").filter { $0.isEmpty == false }
@@ -189,8 +187,8 @@ public final class Extras: NSObject {
 			}
 
 			/* Erase end commas */
-			if channelList.length > 1 {
-				channelList.deleteCharacters(in: NSRange(location: channelList.length - 1, length: 1))
+			if channelList.count > 1 {
+				channelList.removeLast()
 			}
 		}
 
@@ -213,7 +211,7 @@ public final class Extras: NSObject {
 		/* A URL is consider untrusted and will not auto connect */
 		return .connect(URIConnectionIntent(
 			serverInfo: resultValue,
-			channelList: channelList.length > 0 ? channelList as String : nil
+			channelList: channelList.isEmpty ? nil : channelList
 		))
 	}
 

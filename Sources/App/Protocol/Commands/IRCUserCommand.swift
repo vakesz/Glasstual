@@ -43,7 +43,7 @@ import Foundation
 /// Commands are typed into a rich-text field and a few of them (ME, TOPIC,
 /// MSG) have to put the formatting back on the wire, so the arguments arrive
 /// as an `NSAttributedString`. This walks a cursor over that string rather
-/// than deleting characters from a shared `NSMutableAttributedString`: it is a
+/// than deleting characters from one shared mutable attributed string: it is a
 /// value, so one dispatcher pulling a token can no longer disturb the next one
 /// that is handed the same line.
 public struct CommandArguments {
