@@ -38,7 +38,9 @@ public protocol ChannelPropertiesSheetDelegate: AnyObject {
 
 @objc(TDCChannelPropertiesSheet)
 @MainActor
-public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelegate, TDCChannelPrototype {
+public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelegate, NSWindowDelegate,
+	TDCChannelPrototype
+{
 	public private(set) var client: IRCClient?
 	public private(set) var channel: IRCChannel?
 	public private(set) var clientId: String?

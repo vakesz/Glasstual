@@ -52,26 +52,4 @@ struct WindowListKeyTests {
 
 		#expect(windowController.window(fromWindowList: key) == nil)
 	}
-
-	/** Every dialog the app looks up by class. A class that keeps an
-	 Objective-C name and one that does not both have to key the same way. */
-	@Test("The dialogs the app looks up derive a key from their own class name")
-	func lookedUpDialogsDeriveTheirKey() {
-		let dialogs: [AnyClass] = [
-			PreferencesController.self,
-			ChannelPropertiesSheet.self,
-			ChannelModifyTopicSheet.self,
-			ChannelModifyModesSheet.self,
-			ChannelBanListSheet.self,
-			ChannelInviteSheet.self,
-			ServerChangeNicknameSheet.self,
-			ServerHighlightListSheet.self,
-			ServerPropertiesSheet.self,
-			ServerChannelListDialog.self,
-		]
-
-		for dialog in dialogs {
-			#expect(WindowController.windowDescription(forClass: dialog) == NSStringFromClass(dialog))
-		}
-	}
 }

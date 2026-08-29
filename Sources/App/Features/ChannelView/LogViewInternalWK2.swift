@@ -407,6 +407,9 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	 retaining WebKit's Inspect Element, Look Up, and Search items. If
 	 WebKit stops invoking this private delegate method, its default menu
 	 remains available. */
+	/// `_WKUIDelegatePrivate`. The selector is underscored, so it has to be
+	/// spelled out: Swift infers nothing for a protocol WebKit does not ship.
+	@objc(_webView:contextMenu:forElement:)
 	func webView(_ webView: WKWebView, contextMenu menu: NSMenu, forElement _: Any) -> NSMenu {
 		precondition(webView === self)
 		guard let parentView else {

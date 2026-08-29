@@ -81,7 +81,9 @@ public protocol ServerPropertiesSheetDelegate: AnyObject {
 
 @objc(TDCServerPropertiesSheet)
 @MainActor
-public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegate, TDCClientPrototype {
+public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegate, NSWindowDelegate,
+	TDCClientPrototype
+{
 	public private(set) var client: IRCClient?
 	public private(set) var clientId: String?
 

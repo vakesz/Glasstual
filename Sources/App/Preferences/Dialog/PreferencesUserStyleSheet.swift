@@ -21,7 +21,7 @@ public protocol PreferencesUserStyleSheetDelegate: AnyObject {
 
 @objc(TDCPreferencesUserStyleSheet)
 @MainActor
-public final class PreferencesUserStyleSheet: SheetBase {
+public final class PreferencesUserStyleSheet: SheetBase, NSWindowDelegate {
 	@IBOutlet private var rulesTextView: NSTextView!
 	private var rulesChanged = false
 

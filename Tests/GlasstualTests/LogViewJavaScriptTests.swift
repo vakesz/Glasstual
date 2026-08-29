@@ -55,6 +55,30 @@ struct LogViewJavaScriptTests {
 		#expect(named["a4"] == .null)
 	}
 
+	/** Callers build their payloads as `JavaScriptValue` and hand them to an
+	 `[Any]` bridge, so every one of them is bridged a second time on the way
+	 through. A value that is already bridged has to survive that. */
+	@Test("A payload that is already bridged survives a second pass")
+	func alreadyBridgedValuesSurviveASecondPass() {
+		let payload: [String: JavaScriptValue] = [
+			"html": .string("<span>hi</span>"),
+			"lineNumber": .string("1234"),
+			"contentSize": .object(["width": .double(64), "height": .double(48)]),
+			"tags": .array([.string("a"), .integer(2)]),
+		]
+
+		let named = LogViewJavaScript.namedArguments([payload])
+		let bridged = named["a0"]?.object
+
+		#expect(bridged?["html"]?.string == "<span>hi</span>")
+		#expect(bridged?["lineNumber"]?.string == "1234")
+		#expect(bridged?["contentSize"]?.object?["width"]?.integer == 64)
+		#expect(bridged?["tags"]?.array?.count == 2)
+		#expect(bridged?.values.contains(.null) == false)
+
+		#expect(LogViewJavaScript.namedArguments([JavaScriptValue.integer(7)])["a0"] == .integer(7))
+	}
+
 	@Test("A nested dictionary key that is not a string is dropped")
 	func nestedDictionaryKeysThatAreNotStringsAreDropped() {
 		let dictionary = JavaScriptValue.object(bridging: ["key": ["nested": 1], 2: "dropped"])

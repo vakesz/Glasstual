@@ -71,7 +71,7 @@ private typealias ChannelBanListDataSource =
 
 @objc(TDCChannelBanListSheet)
 @MainActor
-public final class ChannelBanListSheet: SheetBase, TDCChannelPrototype {
+public final class ChannelBanListSheet: SheetBase, NSWindowDelegate, TDCChannelPrototype {
 	public private(set) var client: IRCClient!
 	public private(set) var channel: IRCChannel!
 	public private(set) var clientId: String?

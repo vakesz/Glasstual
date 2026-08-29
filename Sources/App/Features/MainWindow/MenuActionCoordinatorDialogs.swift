@@ -102,14 +102,16 @@ public extension MenuActionCoordinator {
 	}
 
 	private func showOnboarding() {
-		guard windowController.maybeBringWindowForward("TDCOnboardingWindowController") == false else { return }
+		let onboardingKey = WindowController.windowDescription(forClass: OnboardingWindowController.self)
+		guard windowController.maybeBringWindowForward(onboardingKey) == false else { return }
 		windowController.popMainWindowSheetIfExists()
 		let controller = OnboardingWindowController()
 		present(controller) { $0.show() }
 	}
 
 	private func showAbout() {
-		guard windowController.maybeBringWindowForward("TDCAboutDialog") == false else { return }
+		let aboutKey = WindowController.windowDescription(forClass: AboutDialog.self)
+		guard windowController.maybeBringWindowForward(aboutKey) == false else { return }
 		let dialog = AboutDialog()
 		present(dialog) { $0.show() }
 	}
@@ -147,7 +149,8 @@ public extension MenuActionCoordinator {
 	}
 
 	private func showChannelSpotlight() {
-		guard windowController.maybeBringWindowForward("TDCChannelSpotlightController") == false else { return }
+		let spotlightKey = WindowController.windowDescription(forClass: ChannelSpotlightController.self)
+		guard windowController.maybeBringWindowForward(spotlightKey) == false else { return }
 		let dialog = ChannelSpotlightController()
 		present(dialog) { $0.show() }
 	}

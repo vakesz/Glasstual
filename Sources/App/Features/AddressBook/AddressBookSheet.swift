@@ -23,7 +23,7 @@ public protocol AddressBookSheetDelegate: AnyObject {
 
 @objc(TDCAddressBookSheet)
 @MainActor
-public final class AddressBookSheet: SheetBase {
+public final class AddressBookSheet: SheetBase, NSWindowDelegate {
 	private var config: AddressBookEntry
 	private var entryType: IRCAddressBookEntryType
 

@@ -16,7 +16,7 @@ import AppKit
 /// changing. Views that do not conform are still walked through so that their
 /// subviews are reached.
 ///
-/// This used to be eight `` members on an extension of `NSView`, which
+/// This used to be eight `@objc` members on an extension of `NSView`, which
 /// every view in the application advertised and subclasses overrode through
 /// the runtime.
 @MainActor

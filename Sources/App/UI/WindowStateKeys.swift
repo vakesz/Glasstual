@@ -18,7 +18,7 @@ import CocoaExtensions
  `NSWindow Frame -> Internal (v3) -> ` prefix, so they are the Objective-C class
  names the port inherited and must stay spelled that way. They used to be
  produced by `NSStringFromClass`, which tied a user's window position to an
- `` name that had no other reason to exist. */
+ `@objc` name that had no other reason to exist. */
 public extension WindowStateKey {
 	static let preferences = Self(rawValue: "TDCPreferencesController")
 	static let serverChannelList = Self(rawValue: "TDCServerChannelListDialog")
