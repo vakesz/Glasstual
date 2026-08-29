@@ -182,7 +182,10 @@ private final nonisolated class HistoricLogClientShim: NSObject, // nonisolated:
 actor HistoricLogClient {
 	static let shared = HistoricLogClient()
 
+	private let serviceName: String
+	private let databaseDirectory: String?
 	private var connection: NSXPCConnection?
+	private var connectionCount = 0
 	private var shim: HistoricLogClientShim?
 	private var isLoading = false
 	private var isLoaded = false
@@ -198,9 +201,22 @@ actor HistoricLogClient {
 		await self?.performFetch(request) ?? []
 	}
 
+	init(
+		serviceName: String = "com.vakesz.glasstual.ScrollbackHistoryManager",
+		databaseDirectory: String? = PathInfo.groupContainerApplicationCaches
+	) {
+		self.serviceName = serviceName
+		self.databaseDirectory = databaseDirectory
+	}
+
 	/// Whether a connection is currently attached. Test seam.
 	var isAttached: Bool {
 		connection != nil
+	}
+
+	/// How many connections this client has opened over its lifetime. Test seam.
+	var connectionsOpened: Int {
+		connectionCount
 	}
 
 	// MARK: - Decoding
@@ -221,39 +237,40 @@ actor HistoricLogClient {
 
 	// MARK: - Connection
 
-	/// Connects and opens the database, once. Idempotent: a second call while
-	/// the first is still opening, or after it opened, does nothing.
+	/// Connects and opens the database. Idempotent: while a connection is up
+	/// and its database is open — or still opening — a second call does nothing.
+	/// A failed open is retried on the next call, as it always was.
 	func attach() {
-		guard isLoading == false, isLoaded == false else {
+		if connection == nil {
+			historicLogClientLogger.debug("Warming process...")
+			connect()
+		}
+
+		guard isLoading == false, isLoaded == false, let databaseDirectory else {
 			return
 		}
 
-		historicLogClientLogger.debug("Warming process...")
 		isLoading = true
-		connect()
-		openDatabase()
+		openDatabase(in: databaseDirectory)
 		applyMaximumLineCount()
 	}
 
 	/// Tears the connection down. Idempotent: detaching twice is one invalidation.
 	func detach() {
-		guard isLoading || isLoaded else {
+		guard let connection else {
 			return
 		}
 
 		historicLogClientLogger.debug("Invalidating process...")
 		invalidatedVoluntarily = true
-		connection?.invalidate()
+		connection.invalidate()
 	}
 
 	private func connect() {
-		let connection = NSXPCConnection(
-			serviceName: "com.vakesz.glasstual.ScrollbackHistoryManager"
-		)
+		let connection = NSXPCConnection(serviceName: serviceName)
 
 		let remoteObjectInterface = NSXPCInterface(with: HistoricLogServerProtocol.self)
 		guard HistoricLogInterface.configure(remoteObjectInterface) else {
-			isLoading = false
 			return
 		}
 
@@ -276,6 +293,7 @@ actor HistoricLogClient {
 
 		self.connection = connection
 		self.shim = shim
+		connectionCount += 1
 	}
 
 	private func handleInterruption() {
@@ -332,17 +350,11 @@ actor HistoricLogClient {
 
 	// MARK: - Database
 
-	private func openDatabase() {
-		guard let databaseSavePath = PathInfo.groupContainerApplicationCaches else {
-			isLoading = false
-			isLoaded = false
-			return
-		}
-
+	private func openDatabase(in databaseDirectory: String) {
 		proxy(onError: { [weak self] _ in
 			historicLogClientLogger.error("Failed to communicate with process to open database")
 			Task { await self?.noteLoadState(loading: false, loaded: false) }
-		})?.openDatabase(inDirectory: databaseSavePath, withCompletionBlock: { [weak self] success in
+		})?.openDatabase(inDirectory: databaseDirectory, withCompletionBlock: { [weak self] success in
 			if success {
 				historicLogClientLogger.debug("Successfully opened database")
 			} else {
