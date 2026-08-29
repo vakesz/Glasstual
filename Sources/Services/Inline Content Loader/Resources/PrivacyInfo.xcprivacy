@@ -9,7 +9,14 @@
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
 	<!-- This service compiles TPCPreferencesUserDefaults and reads the inline
-	     media limits the app registers into the shared app-group suite. -->
+	     media limits the app registers into the shared app-group suite.
+
+	     That is the whole list. The app also declares file timestamps, free
+	     disk space and system boot time, but those are the app's own: this
+	     process fetches over URLSession and hands the app a payload, keeping
+	     nothing on disk. It calls no FileManager, no stat, no statfs and no
+	     systemUptime, so nothing else belongs here. -->
+
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>

@@ -24,6 +24,7 @@
 		0455743A0A63A8E96E26C3C4 /* IRCClientCommandDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AB82C14FD60A9840ECCF5C /* IRCClientCommandDispatch.swift */; };
 		046C6351346CB016649FE6EC /* IRCClientConfigMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0F2E447912E0FF88A7E746 /* IRCClientConfigMigration.swift */; };
 		04F203DA6AD58D6922AEAB45 /* IRCJoinBatchingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFF5360ED3FE287ECBEAE95 /* IRCJoinBatchingTests.swift */; };
+		057F567775B1EB2FDEA6BB4D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7D9CB5337974D984303767E7 /* PrivacyInfo.xcprivacy */; };
 		057FBB13CD3F2878203562EC /* TDCFileTransferDialog.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 70B8C3021575D883A099E2FB /* TDCFileTransferDialog.xcstrings */; };
 		05F8345CBA815DCD92BC6A3B /* ServerPropertiesSheetValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F5544374CDD9C77C47422DF /* ServerPropertiesSheetValidation.swift */; };
 		06395875D8D1BCE17F781496 /* IRCWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7ECC40E6E09AAF86073E007 /* IRCWorld.swift */; };
@@ -489,6 +490,7 @@
 		7E6DF22708565EB706BA0C9D /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AC2AF19BEC6D45667D46942 /* MainWindow.swift */; };
 		7EAE404F5FEBEB6CA3BB8A5F /* SCRAMClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 041440ACD4038F3B03597142 /* SCRAMClient.swift */; };
 		7ECEFE9DFD6D49FB6145B85A /* SecurityInterface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09337EC215A29A9E3EF5FF5E /* SecurityInterface.framework */; };
+		7EED83C9CAB546E52420FCC7 /* PrivacyManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D895894D6935807916D0B4DD /* PrivacyManifestTests.swift */; };
 		7F16EB21B599756EE8C78903 /* IRCSpecBatchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A67E47CF5AC5073B719163C1 /* IRCSpecBatchTests.swift */; };
 		8006A8C01C7A974590E1DBE1 /* PluginDispatcherSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EFD2259E060B222437E98E /* PluginDispatcherSupport.swift */; };
 		801044E8AB43FB5D6A76415E /* TDCPreferencesUserStyleSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 00EC93E7EEE486D74D1A5E3A /* TDCPreferencesUserStyleSheet.xcstrings */; };
@@ -1821,6 +1823,7 @@
 		7D40702F999E851604FAD63D /* TDCChannelModifyTopicSheet.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TDCChannelModifyTopicSheet.xcstrings; sourceTree = "<group>"; };
 		7D53D5B59F4F80767B1E6DF4 /* ServerEndpointStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerEndpointStrings.swift; sourceTree = "<group>"; };
 		7D7ABC3762AB276A169D6B9E /* IRCClientNegotiationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientNegotiationTests.swift; sourceTree = "<group>"; };
+		7D9CB5337974D984303767E7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7F5544374CDD9C77C47422DF /* ServerPropertiesSheetValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerPropertiesSheetValidation.swift; sourceTree = "<group>"; };
 		7FAE9C0DE503189535D5D474 /* CompatibilityHeaderMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityHeaderMigrationTests.swift; sourceTree = "<group>"; };
 		802D43730A249701A1FE2627 /* IRCClientChannelState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientChannelState.swift; sourceTree = "<group>"; };
@@ -2100,6 +2103,7 @@
 		D7F562EFD60437947A2AEDDB /* PreferencesUserStyleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesUserStyleSheet.swift; sourceTree = "<group>"; };
 		D84F05A1B6E895D50564FB95 /* ApplicationStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationStrings.swift; sourceTree = "<group>"; };
 		D87382EF55DFBEC07B1C1042 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TVCChannelSelectionView.xib; sourceTree = "<group>"; };
+		D895894D6935807916D0B4DD /* PrivacyManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyManifestTests.swift; sourceTree = "<group>"; };
 		D8D35889B2D1ABD6F0FCD8AE /* SystemInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemInformation.swift; sourceTree = "<group>"; };
 		D8D651F712EB34342D2C1EA7 /* FeatureLocalizationMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureLocalizationMigrationTests.swift; sourceTree = "<group>"; };
 		D9193CDDE5F6B8255781103E /* TXMenuController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TXMenuController.swift; sourceTree = "<group>"; };
@@ -4021,6 +4025,7 @@
 				FF3CDBF47F23D32AC1A9F109 /* PreferencesExportFilterTests.swift */,
 				EA2D011A0FB9F0E8C250F354 /* PreferencesPaneInventoryTests.swift */,
 				D9BC56086EAFF5B63F218274 /* PreferencesReloadActionMappingTests.swift */,
+				D895894D6935807916D0B4DD /* PrivacyManifestTests.swift */,
 				80727B8405CA8A203D5BD95E /* ProgressIndicatorFeatureTests.swift */,
 				4CD033E9ACDF65635A372558 /* PromptLocalizationMigrationTests.swift */,
 				E6BDFD87F97AA87B49FCC888 /* RCMSecureTransportTests.swift */,
@@ -4386,6 +4391,7 @@
 			isa = PBXGroup;
 			children = (
 				93BE5B10DE897F8A9FE7366F /* Language Files */,
+				7D9CB5337974D984303767E7 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -5105,6 +5111,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F1561E007DF7796F7922F1BD /* ConnectionErrors.xcstrings in Resources */,
+				057F567775B1EB2FDEA6BB4D /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5557,6 +5564,7 @@
 				3BCC700EE0E7B6105A5EB3AE /* PreferencesExportFilterTests.swift in Sources */,
 				1031563286ACAFAAC6E1D66A /* PreferencesPaneInventoryTests.swift in Sources */,
 				1AC400A0B0474CB6593CC478 /* PreferencesReloadActionMappingTests.swift in Sources */,
+				7EED83C9CAB546E52420FCC7 /* PrivacyManifestTests.swift in Sources */,
 				90DDD3AEBC5E1CE29061913F /* ProgressIndicatorFeatureTests.swift in Sources */,
 				D9A7B473C5CB303F6B875CB4 /* PromptLocalizationMigrationTests.swift in Sources */,
 				A506690F49EEE1B9DAF2721E /* RCMSecureTransportTests.swift in Sources */,
