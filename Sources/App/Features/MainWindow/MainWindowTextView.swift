@@ -453,30 +453,55 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	// MARK: - Drawing and sizing
 
-	override public func draw(_ dirtyRect: NSRect) {
-		guard needsToDraw(dirtyRect) else {
-			return
-		}
+	/// TextKit 2 paints the text through its layout fragments and does not
+	/// redraw the view for every edit, so a placeholder painted in `draw(_:)`
+	/// lingers under typed text. It is a click-transparent label instead, shown
+	/// only while the string is empty.
+	private let placeholderLabel: PlaceholderLabel = {
+		let label = PlaceholderLabel(labelWithString: "")
+		label.lineBreakMode = .byTruncatingTail
+		label.maximumNumberOfLines = 1
+		label.isHidden = true
+		return label
+	}()
 
-		super.draw(dirtyRect)
+	private func installPlaceholderLabelIfNeeded() {
+		guard placeholderLabel.superview == nil else { return }
+		addSubview(placeholderLabel)
+	}
 
-		guard stringLength == 0,
-		      let placeholder = inputPlaceholderAttributedString,
-		      let textContainer
-		else {
-			return
-		}
+	private func updatePlaceholderVisibility() {
+		placeholderLabel.isHidden = stringLength != 0 || inputPlaceholderAttributedString == nil
+	}
 
+	override public func layout() {
+		super.layout()
+
+		guard let textContainer else { return }
 		let padding = textContainer.lineFragmentPadding
 		let origin = textContainerOrigin
-		let placeholderRect = NSRect(
+		placeholderLabel.frame = NSRect(
 			x: origin.x + padding,
 			y: origin.y,
-			width: textContainer.size.width - (padding * 2),
+			width: max(0, textContainer.size.width - (padding * 2)),
 			height: defaultLineHeight
 		)
+		updatePlaceholderVisibility()
+	}
 
-		placeholder.draw(in: placeholderRect)
+	override public func didChangeText() {
+		super.didChangeText()
+		updatePlaceholderVisibility()
+	}
+
+	override public var string: String {
+		get {
+			super.string
+		}
+		set {
+			super.string = newValue
+			updatePlaceholderVisibility()
+		}
 	}
 
 	private func updateTextBoxCachedPreferredFontSize() {
@@ -503,7 +528,10 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 				.paragraphStyle: paragraphStyle,
 			]
 		)
-		needsDisplay = true
+		installPlaceholderLabelIfNeeded()
+		placeholderLabel.attributedStringValue = inputPlaceholderAttributedString ?? NSAttributedString()
+		needsLayout = true
+		updatePlaceholderVisibility()
 	}
 
 	@objc public func updateTextBasedOnPreferredFontSize() {
@@ -731,5 +759,12 @@ public final class MainWindowTextViewContentView: NSView {
 
 	override public var isOpaque: Bool {
 		false
+	}
+}
+
+/// A label that never takes the click, so the caret still lands in the text view.
+private final class PlaceholderLabel: NSTextField {
+	override func hitTest(_: NSPoint) -> NSView? {
+		nil
 	}
 }
