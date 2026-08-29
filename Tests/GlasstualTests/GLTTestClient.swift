@@ -91,7 +91,7 @@ final class GLTTestClient: IRCClient {
 	}
 
 	static func testChannelUser(nickname: String, on client: IRCClient) -> ChannelUser {
-		ChannelUser(user: User(nickname: nickname, on: client))
+		ChannelUser(user: User(nickname: nickname), prefixes: client.currentUserPrefixes)
 	}
 
 	func markAsLoggedIn() {

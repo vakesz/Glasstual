@@ -758,8 +758,8 @@ public extension MainWindow {
 		setAccessibilityTitle(AccessibilityStrings.mainWindow)
 	}
 
-	@objc func updateDrawingForUserInUserList(_ user: User) {
-		guard let selectedChannel, let channelUser = user.userAssociated(with: selectedChannel) else { return }
+	func updateDrawingForUserInUserList(_ user: User) {
+		guard let channelUser = selectedChannel?.findMember(user.nickname) else { return }
 		memberList.refreshDrawing(for: channelUser)
 	}
 }

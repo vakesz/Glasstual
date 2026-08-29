@@ -12,69 +12,38 @@
 
 import Foundation
 
-@objc(IRCUserRelations)
+/** Which channels one person is in.
+
+ It used to map each channel to the person's `ChannelUser` as well, so the same
+ member object lived in two places. A member is a value now and the channel's
+ member list owns it, so this records only where to look: ask the channel. */
 @MainActor
-public final class UserRelations: NSObject {
-	private var storage: [IRCChannel: ChannelUser] = [:]
+public final class UserRelations {
+	private var storage: [IRCChannel: Void] = [:]
 
-	@objc public var relations: [IRCChannel: ChannelUser] {
-		storage
-	}
+	public init() {}
 
-	@objc public var relatedChannels: [IRCChannel] {
+	public var relatedChannels: [IRCChannel] {
 		Array(storage.keys)
 	}
 
-	@objc public var relatedUsers: [ChannelUser] {
-		Array(storage.values)
+	public var numberOfRelations: Int {
+		storage.count
 	}
 
-	@objc public var numberOfRelations: UInt {
-		UInt(storage.count)
-	}
-
-	@objc(associateUser:withChannel:)
-	public func associate(_ user: ChannelUser, with channel: IRCChannel) {
+	public func associate(with channel: IRCChannel) {
 		guard channel.isChannel else {
 			return
 		}
 
-		storage[channel] = user
+		storage[channel] = ()
 	}
 
-	@objc(disassociateUserWithChannel:)
-	public func disassociateUser(with channel: IRCChannel) {
-		guard channel.isChannel else {
-			return
-		}
-
+	public func disassociate(from channel: IRCChannel) {
 		storage.removeValue(forKey: channel)
 	}
 
-	@objc(userAssociatedWithChannel:)
-	public func userAssociated(with channel: IRCChannel) -> ChannelUser? {
-		guard channel.isChannel else {
-			return nil
-		}
-
-		return storage[channel]
-	}
-
-	@objc(enumerateRelations:)
-	public func enumerateRelations(
-		_ block: (IRCChannel, ChannelUser, UnsafeMutablePointer<ObjCBool>) -> Void
-	) {
-		let snapshot = relations
-		var stop = ObjCBool(false)
-
-		withUnsafeMutablePointer(to: &stop) { stopPointer in
-			for (channel, member) in snapshot {
-				block(channel, member, stopPointer)
-
-				if stopPointer.pointee.boolValue {
-					break
-				}
-			}
-		}
+	public func isAssociated(with channel: IRCChannel) -> Bool {
+		storage[channel] != nil
 	}
 }

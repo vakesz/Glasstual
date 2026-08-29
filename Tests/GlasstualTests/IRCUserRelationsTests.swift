@@ -20,78 +20,57 @@ struct IRCUserRelationsTests {
 		relations = UserRelations()
 	}
 
-	@Test("A member is associated with a channel and dropped again by channel")
-	func associatingAndDisassociatingChannelMember() {
+	@Test("A channel is recorded and dropped again")
+	func associatingAndDisassociatingChannel() {
 		let channel = makeChannel(named: "#chat")
-		let member = makeMember(named: "alice")
 
-		relations.associate(member, with: channel)
+		relations.associate(with: channel)
 
 		#expect(relations.numberOfRelations == 1)
 		#expect(relations.relatedChannels == [channel])
-		#expect(relations.relatedUsers == [member])
-		#expect(relations.userAssociated(with: channel) === member)
+		#expect(relations.isAssociated(with: channel))
 
-		relations.disassociateUser(with: channel)
+		relations.disassociate(from: channel)
 
 		#expect(relations.numberOfRelations == 0)
-		#expect(relations.userAssociated(with: channel) == nil)
+		#expect(relations.isAssociated(with: channel) == false)
 	}
 
-	@Test("A second association for the same channel replaces the first")
-	func replacingRelationForSameChannel() {
+	@Test("A second association for the same channel records it once")
+	func repeatedAssociationIsRecordedOnce() {
 		let channel = makeChannel(named: "#chat")
-		let first = makeMember(named: "alice")
-		let second = makeMember(named: "bob")
 
-		relations.associate(first, with: channel)
-		relations.associate(second, with: channel)
+		relations.associate(with: channel)
+		relations.associate(with: channel)
 
 		#expect(relations.numberOfRelations == 1)
-		#expect(relations.userAssociated(with: channel) === second)
-	}
-
-	@Test("Enumeration walks a snapshot and stops when the visitor asks it to")
-	func enumerationUsesSnapshotAndHonorsStop() {
-		relations.associate(makeMember(named: "alice"), with: makeChannel(named: "#one"))
-		relations.associate(makeMember(named: "bob"), with: makeChannel(named: "#two"))
-
-		var visitedCount = 0
-
-		relations.enumerateRelations { _, _, stop in
-			visitedCount += 1
-			stop.pointee = true
-		}
-
-		#expect(visitedCount == 1)
 	}
 
 	@Test("A private message is not a channel, so nothing is stored for it")
 	func privateMessageChannelsAreNotStored() {
 		let privateMessage = makeChannel(named: "alice", type: .privateMessage)
-		let member = makeMember(named: "alice")
 
-		relations.associate(member, with: privateMessage)
+		relations.associate(with: privateMessage)
 
 		#expect(relations.numberOfRelations == 0)
-		#expect(relations.userAssociated(with: privateMessage) == nil)
+		#expect(relations.isAssociated(with: privateMessage) == false)
 	}
 
-	@Test("A copied member shares its user but carries its own modes and weights")
+	@Test("A copied member is the same person and carries its own modes and weights")
 	func channelUserCopiesPreserveIdentityModesAndConversationWeights() {
-		let user = User(nickname: "alice", on: client)
-		let member = ChannelUser(user: user)
+		let user = User(nickname: "alice")
+		var member = ChannelUser(user: user, prefixes: client.currentUserPrefixes)
 
 		member.modes = "ov"
 		member.incomingConversation()
 		member.outgoingConversation()
 
-		let copy = member.duplicate()
+		var copy = member
 
-		#expect(copy !== member)
-		#expect(copy.user === user)
+		#expect(copy.id == member.id)
+		#expect(copy.user == user)
 		#expect(copy.modes == "ov")
-		#expect(copy.ranks == [.normalOperator, .voiced])
+		#expect(copy.ranks == [UserRank.normalOperator, UserRank.voiced])
 		#expect(copy.incomingWeight == 100)
 		#expect(copy.outgoingWeight == 20)
 		#expect(copy.creationTime == member.creationTime)
@@ -102,9 +81,10 @@ struct IRCUserRelationsTests {
 	}
 
 	@Test("A member list keeps itself sorted and clears the relation on removal")
-	func channelMemberListAddsSortsAndRemovesMembers() {
+	func channelMemberListAddsSortsAndRemovesMembers() throws {
 		let channel = makeChannel(named: "#chat")
-		let memberList = ChannelMemberList(channel: channel)
+		channel.activate()
+		let memberList = try #require(channel.memberInfo)
 		let bob = makeMember(named: "bob")
 		let alice = makeMember(named: "alice")
 
@@ -118,23 +98,41 @@ struct IRCUserRelationsTests {
 
 		#expect(memberList.numberOfMembers == 1)
 		#expect(memberList.memberList == [bob])
-		#expect(alice.user.userAssociated(with: channel) == nil)
+		#expect(client.userAssociated(alice.user, with: channel) == nil)
 	}
 
-	@Test("Adding a duplicate member replaces the relation the first one held")
-	func channelMemberListDuplicateCheckReplacesExistingRelation() {
+	@Test("Adding a duplicate member replaces the one the list already held")
+	func channelMemberListDuplicateCheckReplacesExistingMember() throws {
 		let channel = makeChannel(named: "#chat")
-		let memberList = ChannelMemberList(channel: channel)
-		let user = User(nickname: "alice", on: client)
-		let original = ChannelUser(user: user)
-		let replacement = ChannelUser(user: user)
+		channel.activate()
+		let memberList = try #require(channel.memberInfo)
+		let user = client.findUserOrCreate("alice")
+		var original = ChannelUser(user: user, prefixes: client.currentUserPrefixes)
+		var replacement = ChannelUser(user: user, prefixes: client.currentUserPrefixes)
+		original.modes = "v"
+		replacement.modes = "o"
 
 		memberList.addMember(original)
 		memberList.addMember(replacement, checkForDuplicates: true)
 
 		#expect(memberList.numberOfMembers == 1)
-		#expect(memberList.memberList.first === replacement)
-		#expect(user.userAssociated(with: channel) === replacement)
+		#expect(memberList.memberList.first?.modes == "o")
+		#expect(client.userAssociated(user, with: channel)?.modes == "o")
+	}
+
+	@Test("An edit to a member is written back through the list")
+	func editingAMemberLandsInTheList() throws {
+		let channel = makeChannel(named: "#chat")
+		channel.activate()
+		let memberList = try #require(channel.memberInfo)
+		let member = makeMember(named: "alice")
+
+		memberList.addMember(member)
+		memberList.updateMember(withUserID: member.id) { $0.incomingConversation() }
+
+		#expect(memberList.findMember(withUserID: member.id)?.incomingWeight == 100)
+		// The caller's copy is untouched, which is what a value means.
+		#expect(member.incomingWeight == 0)
 	}
 
 	private func makeChannel(named name: String, type: ChannelType = .channel) -> Channel {
@@ -146,6 +144,6 @@ struct IRCUserRelationsTests {
 	}
 
 	private func makeMember(named nickname: String) -> ChannelUser {
-		ChannelUser(user: User(nickname: nickname, on: client))
+		ChannelUser(user: client.findUserOrCreate(nickname), prefixes: client.currentUserPrefixes)
 	}
 }

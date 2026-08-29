@@ -215,6 +215,11 @@ public final class NicknameCompletionStatus: NSObject {
 			return []
 		}
 
+		/* Decay once, here: doing it inside the comparator mutated the values the
+		 sort was ordering by. A member is a value, so the decay is written back
+		 through the channel rather than seen through a shared reference. */
+		channel.decayMemberConversations()
+
 		return nicknameCandidates(
 			from: channel.channelMembers,
 			client: client,
@@ -255,12 +260,6 @@ public final class NicknameCompletionStatus: NSObject {
 	) -> [Candidate] {
 		let sortedMembers: [ChannelUser]
 		let priorityMember: ChannelUser?
-
-		/* Decay once, up front: doing it inside the comparator mutated the values the
-		 sort was ordering by. */
-		for member in members {
-			member.decayConversation()
-		}
 
 		if searchPatternIsEmpty {
 			/* With no search pattern the list reads alphabetically and only
@@ -303,7 +302,7 @@ public final class NicknameCompletionStatus: NSObject {
 			addNickname(priorityMember.user.nickname, includeTrimmedVariant: includeTrimmedNicknames)
 		}
 
-		for member in sortedMembers where member !== priorityMember {
+		for member in sortedMembers where member.id != priorityMember?.id {
 			addNickname(member.user.nickname, includeTrimmedVariant: includeTrimmedNicknames)
 		}
 
