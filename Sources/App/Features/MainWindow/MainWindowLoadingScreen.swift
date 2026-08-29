@@ -28,12 +28,14 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 
 	private var hasConfigured = false
 
-	/** `awakeFromNib` is nonisolated; `viewDidMoveToWindow` is not, and the
-	 welcome view is not on screen before the screen is in a window. */
-	override public func viewDidMoveToWindow() {
-		super.viewDidMoveToWindow()
-
-		guard window != nil, hasConfigured == false else {
+	/// Nib-time configuration, run by the main window once its nib has finished
+	/// decoding.
+	///
+	/// It was `awakeFromNib`, which is nonisolated. `viewDidMoveToWindow` is
+	/// isolated but too early: AppKit installs the content view before it
+	/// connects the outlets, so the welcome view below would still be nil.
+	public func configure() {
+		guard hasConfigured == false else {
 			return
 		}
 
