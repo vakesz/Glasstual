@@ -206,11 +206,11 @@ public final class LogViewThemeSchemeHandler: NSObject, WKURLSchemeHandler {
 	}
 
 	private func fail(_ task: any WKURLSchemeTask, url: URL?, code: URLError.Code) {
-		var userInfo: [String: Any] = [:]
-		if let url {
-			userInfo[NSURLErrorFailingURLErrorKey] = url
-		}
-		task.didFailWithError(NSError(domain: NSURLErrorDomain, code: code.rawValue, userInfo: userInfo))
+		task.didFailWithError(NSError(
+			domain: NSURLErrorDomain,
+			code: code.rawValue,
+			userInfo: url.map { [NSURLErrorFailingURLErrorKey: $0] }
+		))
 	}
 
 	// MARK: Policy

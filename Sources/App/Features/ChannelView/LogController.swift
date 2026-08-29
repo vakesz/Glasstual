@@ -432,7 +432,7 @@ public final class LogController: NSObject {
 				.renderLinks: true,
 				.lineType: TVCLogLineType.topic.rawValue,
 			]
-			return TVCLogRenderer.renderBody(body, withAttributes: attributes.rawValues)
+			return TVCLogRenderer.renderBody(body, withAttributes: attributes)
 		} apply: { [weak self] (rendered: String) in
 			self?.evaluateFunctionNow("Glasstual.setTopicBarValue", arguments: [topicString, rendered])
 		}

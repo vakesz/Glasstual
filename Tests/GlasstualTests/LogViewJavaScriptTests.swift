@@ -47,18 +47,18 @@ struct LogViewJavaScriptTests {
 		let url = try #require(URL(string: "https://example.com/a"))
 		let named = LogViewJavaScript.namedArguments(["quote\"", true, [1, NSNull()], url, Date()])
 
-		#expect(named["a0"] as? String == "quote\"")
-		#expect(named["a1"] as? Bool == true)
-		#expect((named["a2"] as? [Any])?.count == 2)
-		#expect(named["a3"] as? String == "https://example.com/a")
-		#expect(named["a4"] is NSNull)
+		#expect(named["a0"]?.string == "quote\"")
+		#expect(named["a1"]?.boolean == true)
+		#expect(named["a2"]?.array?.count == 2)
+		#expect(named["a3"]?.string == "https://example.com/a")
+		#expect(named["a4"] == .null)
 	}
 
 	@Test("A nested dictionary key that is not a string is dropped")
 	func nestedDictionaryKeysThatAreNotStringsAreDropped() {
-		let dictionary = LogViewJavaScript.sanitize(["key": ["nested": 1], 2: "dropped"] as [AnyHashable: Any])
+		let dictionary = JavaScriptValue.object(bridging: ["key": ["nested": 1], 2: "dropped"])
 
 		#expect(dictionary.count == 1)
-		#expect((dictionary["key"] as? [String: Any])?["nested"] as? Int == 1)
+		#expect(dictionary["key"]?.object?["nested"]?.integer == 1)
 	}
 }

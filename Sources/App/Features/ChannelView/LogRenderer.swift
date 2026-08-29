@@ -841,14 +841,13 @@ public extension LogRenderer {
 	 before it submits the line. */
 	internal nonisolated static func renderBody( // nonisolated: pure
 		_ body: String,
-		withAttributes input: [String: Any],
+		withAttributes configuration: LogRendererConfiguration,
 		members: [RenderedMember],
-		results: inout [String: Any]
+		results: inout LogRendererResults
 	) -> String {
 		guard body.isEmpty == false else {
 			return ""
 		}
-		let configuration = LogRendererConfiguration(rawValues: input)
 		var renderer = LogRenderer()
 		renderer
 			.lineType = TVCLogLineType(
@@ -868,28 +867,28 @@ public extension LogRenderer {
 		renderer.matchKeywords()
 		renderer.findAllChannelNames()
 		renderer.scanBodyForChannelMembers()
-		results = renderer.output.rawValues
+		results = renderer.output
 		return renderer.renderHTML()
 	}
 
 	/// The same render for a caller that has no use for the result info.
 	internal nonisolated static func renderBody( // nonisolated: pure
 		_ body: String,
-		withAttributes input: [String: Any],
+		withAttributes configuration: LogRendererConfiguration,
 		members: [RenderedMember] = []
 	) -> String {
-		var results: [String: Any] = [:]
-		return renderBody(body, withAttributes: input, members: members, results: &results)
+		var results = LogRendererResults()
+
+		return renderBody(body, withAttributes: configuration, members: members, results: &results)
 	}
 
-	nonisolated static func renderBody( // nonisolated: pure
+	internal nonisolated static func renderBody( // nonisolated: pure
 		asAttributedString body: String,
-		withAttributes input: [String: Any]
+		withAttributes configuration: LogRendererConfiguration
 	) -> NSAttributedString {
 		guard body.isEmpty == false else {
 			return NSAttributedString(string: "")
 		}
-		let configuration = LogRendererConfiguration(rawValues: input)
 		precondition(configuration[.preferredFont] != nil)
 		var renderer = LogRenderer()
 		renderer.body = body
@@ -908,16 +907,24 @@ public extension LogRenderer {
 	}
 
 	nonisolated static func renderTemplateNamed(_ name: String) -> String? { // nonisolated: pure
-		renderTemplateNamed(name, attributes: nil)
-	}
-
-	nonisolated static func renderTemplateNamed(_ name: String, // nonisolated: pure
-	                                            attributes: [String: Any]?) -> String?
-	{
 		guard let template = compileTemplate(named: name) else {
 			return nil
 		}
-		return renderTemplate(template, attributes: attributes)
+
+		return renderTemplate(template, object: nil)
+	}
+
+	/** The render a style asks for through the script bridge, whose attributes
+	 came out of JavaScript and are handed to Mustache as it converts them. */
+	internal nonisolated static func renderTemplateNamed( // nonisolated: pure
+		_ name: String,
+		attributes: [String: JavaScriptValue]?
+	) -> String? {
+		guard let template = compileTemplate(named: name) else {
+			return nil
+		}
+
+		return renderTemplate(template, object: attributes?.mapValues(\.bridgedObject))
 	}
 
 	internal nonisolated static func renderTemplateNamed( // nonisolated: pure
@@ -943,22 +950,27 @@ public extension LogRenderer {
 	}
 
 	nonisolated static func renderTemplate(_ template: Template) -> String? { // nonisolated: pure
-		renderTemplate(template, attributes: nil)
+		renderTemplate(template, object: nil)
 	}
 
-	nonisolated static func renderTemplate(_ template: Template, // nonisolated: pure
-	                                       attributes: [String: Any]?) -> String?
-	{
-		guard let rendered = try? template.render(attributes) else {
+	/** Mustache's own boundary: a template renders whatever object it is given,
+	 so this is where a typed attribute set stops being one. Callers reach it
+	 through the two typed entry points above rather than directly. */
+	private nonisolated static func renderTemplate( // nonisolated: pure
+		_ template: Template,
+		object: Any?
+	) -> String? {
+		guard let rendered = try? template.render(object) else {
 			return nil
 		}
+
 		return rendered.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
 	}
 
 	internal nonisolated static func renderTemplate(_ template: Template, // nonisolated: pure
 	                                                attributes: ThemeTemplateAttributes) -> String?
 	{
-		renderTemplate(template, attributes: attributes.rawValues)
+		renderTemplate(template, object: attributes.rawValues)
 	}
 
 	nonisolated static func escapeHTML(_ html: String) -> String { // nonisolated: pure

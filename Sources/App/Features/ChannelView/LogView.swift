@@ -81,46 +81,12 @@ enum LogViewJavaScript {
 		return "return \(function)(\(names.joined(separator: ",")));"
 	}
 
-	/** Reduces a bridged argument to the types `callAsyncJavaScript` converts.
-	 Anything else becomes `null` rather than being passed through, because an
-	 unsupported value makes the whole call throw. */
-	static func sanitize(_ value: Any) -> Any {
-		switch value {
-		case let url as URL:
-			url.absoluteString
-		case let string as String:
-			string
-		case let number as NSNumber:
-			number
-		case let array as [Any]:
-			array.map(sanitize)
-		case let dictionary as [AnyHashable: Any]:
-			sanitize(dictionary)
-		default:
-			NSNull()
-		}
-	}
-
-	static func sanitize(_ dictionary: [AnyHashable: Any]) -> [String: Any] {
-		var result: [String: Any] = [:]
-		for (key, value) in dictionary {
-			guard let key = key as? String else {
-				logViewLogger
-					.debug(
-						"Ignoring non-string JavaScript dictionary key: \(String(describing: type(of: key)), privacy: .public)"
-					)
-				continue
-			}
-			result[key] = sanitize(value)
-		}
-		return result
-	}
-
-	/** Binds `arguments` to the names `functionBody` generates. */
-	static func namedArguments(_ arguments: [Any]?) -> [String: Any] {
-		var result: [String: Any] = [:]
+	/** Binds `arguments` to the names `functionBody` generates, each one
+	 reduced to a value the bridge converts. */
+	static func namedArguments(_ arguments: [Any]?) -> [String: JavaScriptValue] {
+		var result: [String: JavaScriptValue] = [:]
 		for (index, value) in (arguments ?? []).enumerated() {
-			result[argumentName(at: index)] = sanitize(value)
+			result[argumentName(at: index)] = JavaScriptValue(bridging: value)
 		}
 		return result
 	}
@@ -435,7 +401,7 @@ public final class LogView: NSObject {
 
 	public func dictionaryByEvaluatingFunction(
 		_ function: String,
-		completionHandler: (([String: Any]?) -> Void)?
+		completionHandler: (([String: JavaScriptValue]?) -> Void)?
 	) {
 		dictionaryByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
 	}
@@ -443,10 +409,10 @@ public final class LogView: NSObject {
 	public func dictionaryByEvaluatingFunction(
 		_ function: String,
 		withArguments arguments: [Any]?,
-		completionHandler: (([String: Any]?) -> Void)?
+		completionHandler: (([String: JavaScriptValue]?) -> Void)?
 	) {
 		evaluateFunction(function, withArguments: arguments) { result in
-			completionHandler?(result as? [String: Any])
+			completionHandler?((result as? [AnyHashable: Any]).map(JavaScriptValue.object(bridging:)))
 		}
 	}
 

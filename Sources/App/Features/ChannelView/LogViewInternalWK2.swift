@@ -223,11 +223,11 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 
 	/** Runs `body` with `arguments` bound by name. WebKit converts the values,
 	 which removes every hand-written escape from the bridge. */
-	func call(_ body: String, arguments: [String: Any]) async throws -> Any? {
+	func call(_ body: String, arguments: [String: JavaScriptValue]) async throws -> Any? {
 		do {
 			let result = try await callAsyncJavaScript(
 				body,
-				arguments: arguments,
+				arguments: arguments.mapValues(\.bridgedObject),
 				in: nil,
 				contentWorld: .page
 			)
