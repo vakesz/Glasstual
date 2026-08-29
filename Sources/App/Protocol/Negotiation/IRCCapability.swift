@@ -79,7 +79,10 @@ public final nonisolated class Capability: NSObject { // nonisolated: value
 	) {
 		precondition(name.isEmpty == false)
 
-		self.name = name.lowercased()
+		/* IRCv3 capability names are case-sensitive, so the name is kept as
+		 declared. Every name the registry declares is lower case, which is
+		 what every network advertises. */
+		self.name = name
 		self.identifier = identifier
 		self.requestedByDefault = requestedByDefault
 		self.preferenceGate = preferenceGate
@@ -116,7 +119,7 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 
 	@objc(capabilityNamed:)
 	public func capability(named name: String) -> Capability? {
-		capabilitiesByName[name.lowercased()]
+		capabilitiesByName[name]
 	}
 
 	public func capability(for identifier: ClientIRCv3SupportedCapability) -> Capability? {
@@ -134,32 +137,21 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 		capability(named: name)?.isEnabledByPreferences ?? false
 	}
 
+	/** The capabilities a `CAP LS`/`NEW` line offers, keyed by name.
+
+	 IRCv3 says capability names are case-sensitive, so the name is the key
+	 exactly as the server wrote it. Folding case here made `SASL` and `sasl`
+	 one entry and forced a second table to remember which spelling to echo
+	 back in `CAP REQ`; a name that matches is now already the right spelling. */
 	@objc(parseCapabilityList:)
 	public static func parseCapabilityList(_ list: String) -> [String: [String]] {
 		var offered: [String: [String]] = [:]
 
 		for token in capabilityTokens(in: list) {
-			offered[token.name.lowercased()] = token.values
+			offered[token.name] = token.values
 		}
 
 		return offered
-	}
-
-	/// Maps each offered capability's lowercased name to the exact spelling the
-	/// server used.
-	///
-	/// IRCv3 capability names are case-sensitive, so a strict server can `NAK` a
-	/// `CAP REQ` whose spelling differs from what it advertised. Matching stays
-	/// case-insensitive; only what is echoed back changes.
-	@objc(offeredNamesFromCapabilityList:)
-	public static func offeredNames(fromCapabilityList list: String) -> [String: String] {
-		var names: [String: String] = [:]
-
-		for token in capabilityTokens(in: list) {
-			names[token.name.lowercased()] = token.name
-		}
-
-		return names
 	}
 
 	private static func capabilityTokens(in list: String) -> [(name: String, values: [String])] {

@@ -1,46 +1,39 @@
 @testable import Glasstual
 import Testing
 
-/// IRCv3 capability names are case-sensitive on the wire, so what the client
-/// echoes back in `CAP REQ` has to be what the server advertised.
+/// IRCv3 capability names are case-sensitive, so a name is matched — and echoed
+/// back in `CAP REQ` — exactly as the server advertised it.
 @Suite("Capability spelling")
 @MainActor
 struct IRCCapabilitySpellingTests {
-	@Test("Matching stays case-insensitive")
-	func matchingIsCaseInsensitive() {
-		let offered = CapabilityRegistry.parseCapabilityList("SASL=PLAIN Multi-Prefix")
+	@Test("A name keeps the spelling the server used")
+	func namesKeepTheirSpelling() {
+		let offered = CapabilityRegistry.parseCapabilityList("sasl=PLAIN Multi-Prefix")
 
 		#expect(offered["sasl"] == ["PLAIN"])
-		#expect(offered["multi-prefix"] != nil)
+		#expect(offered["Multi-Prefix"] != nil)
+		/* Folding the case here would have made these one capability, and the
+		 client would then request a spelling the server never offered. */
+		#expect(offered["multi-prefix"] == nil)
+		#expect(offered["SASL"] == nil)
 	}
 
-	@Test("The advertised spelling is recorded against the lowercased name")
-	func offeredSpellingIsRecorded() {
-		let names = CapabilityRegistry.offeredNames(fromCapabilityList: "SASL=PLAIN Multi-Prefix draft/chathistory")
+	@Test("A capability offered under a different case is not the one we know")
+	func differentCaseIsADifferentCapability() {
+		let registry = CapabilityRegistry.defaultRegistry
 
-		#expect(names["sasl"] == "SASL")
-		#expect(names["multi-prefix"] == "Multi-Prefix")
-		#expect(names["draft/chathistory"] == "draft/chathistory")
+		#expect(registry.capability(named: "multi-prefix") != nil)
+		#expect(registry.capability(named: "Multi-Prefix") == nil)
+		#expect(registry.isCapabilitySupported("SASL") == false)
 	}
 
 	@Test("An empty list yields no names")
 	func emptyListYieldsNoNames() {
-		#expect(CapabilityRegistry.offeredNames(fromCapabilityList: "").isEmpty)
+		#expect(CapabilityRegistry.parseCapabilityList("").isEmpty)
 	}
 
 	@Test("A token with no name is ignored")
 	func namelessTokenIsIgnored() {
-		let names = CapabilityRegistry.offeredNames(fromCapabilityList: "=bad sasl")
-
-		#expect(names == ["sasl": "sasl"])
-	}
-
-	@Test("The names and the values describe the same set")
-	func namesAndValuesAgree() {
-		let list = "sasl=PLAIN,EXTERNAL Away-Notify batch"
-		let offered = CapabilityRegistry.parseCapabilityList(list)
-		let names = CapabilityRegistry.offeredNames(fromCapabilityList: list)
-
-		#expect(Set(offered.keys) == Set(names.keys))
+		#expect(CapabilityRegistry.parseCapabilityList("=bad sasl") == ["sasl": []])
 	}
 }
