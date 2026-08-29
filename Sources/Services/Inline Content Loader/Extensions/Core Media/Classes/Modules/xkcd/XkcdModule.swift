@@ -38,41 +38,47 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICMXkcd)
-final class XkcdModule: InlineImageModule {
-	private func performAction(forComic identifier: String) {
-		let address = "https://xkcd.com/\(identifier)/info.0.json"
-		_ = InlineContentHelpers.requestJSONObject(
-			"img",
-			ofType: NSString.self,
-			inHierarchy: nil,
-			fromAddress: address
-		) { [weak self] object in
-			guard let self, let address = object as? String else {
-				self?.notifyUnsafeToLoadImage()
-				return
-			}
-			performAction(forAddress: address)
-		}
-	}
-
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
-		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-		guard !identifier.isEmpty, identifier.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
-		return { module in
-			(module as? XkcdModule)?.performAction(forComic: identifier)
-		}
-	}
-
-	override static var domains: [String]? {
+/// An xkcd comic page, resolved to its image through the site's JSON.
+struct XkcdModule: InlineContentModule {
+	static var domains: [String]? {
 		["xkcd.com", "www.xkcd.com"]
 	}
 
-	override static var contentIsFile: Bool {
+	static var contentImageOrVideo: Bool {
 		true
 	}
 
-	override func finalizePreflight() {
-		payload.classAttribute = "inlineXkcd"
+	static var contentIsFile: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let identifier: String
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
+		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+		guard !identifier.isEmpty, identifier.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+
+		return XkcdModule(identifier: identifier)
+	}
+
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		guard let metadata = InlineContentHelpers.url(with: "https://xkcd.com/\(identifier)/info.0.json"),
+		      let address = await InlineContentHelpers.jsonString("img", from: metadata)
+		else {
+			return .cancelled
+		}
+
+		var values = payload
+		values.classAttribute = "inlineXkcd"
+
+		return await InlineImageContent.produce(values, address: address)
 	}
 }

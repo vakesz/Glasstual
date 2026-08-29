@@ -941,6 +941,7 @@
 		FB03695B49DB11F5D8AF35D7 /* AppKitBridgeIsolationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E4E7E409A9D7E8D1990C83 /* AppKitBridgeIsolationTests.swift */; };
 		FB4D974905045D3A27288190 /* PromptStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECBAC7DA0FE75617C8D7555D /* PromptStrings.swift */; };
 		FB6FFDAA49A64CF97FF1BE34 /* ImgurGifvModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54D94F808879BB7077B8963 /* ImgurGifvModule.swift */; };
+		FB74E9A61D99F6678CF0085F /* ICLInlineContentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F7817A167071BCB4C20BF2 /* ICLInlineContentService.swift */; };
 		FB7A5419E0E1B0055A839C3E /* TDCChannelPropertiesSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C617A65A3BBB6D53EC32C8C8 /* TDCChannelPropertiesSheet.xcstrings */; };
 		FB8D0089BBE669CFBCC71C0F /* IRCClientConfigMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09AC444D38772880D816687F /* IRCClientConfigMigrationTests.swift */; };
 		FC018918D182D90A8C05FE19 /* PreferencesPaneBindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF9454E20C2FF48091BB6DD5 /* PreferencesPaneBindings.swift */; };
@@ -1618,6 +1619,7 @@
 		5729085B7DA1DB17688EA18E /* StaticStore.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = StaticStore.plist; sourceTree = "<group>"; };
 		579EB1F7B886C5F50DE0A2F8 /* TemplateASTNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateASTNode.swift; sourceTree = "<group>"; };
 		57E4E9DB1DDB13142F62CE9C /* IRCClientConfigCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientConfigCoding.swift; sourceTree = "<group>"; };
+		57F7817A167071BCB4C20BF2 /* ICLInlineContentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICLInlineContentService.swift; sourceTree = "<group>"; };
 		57FDE1391457FF9FE727D0A5 /* IRCAddressBookMatchCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCAddressBookMatchCacheTests.swift; sourceTree = "<group>"; };
 		5813C2720D30898A298CCF78 /* IRCUserRelationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUserRelationsTests.swift; sourceTree = "<group>"; };
 		5841087CAA8C7AF01918B5DF /* IRCCommandIndexRemoteData.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = IRCCommandIndexRemoteData.plist; sourceTree = "<group>"; };
@@ -4405,6 +4407,7 @@
 		EA0D2D402D57BDFFFE957F5E /* Service */ = {
 			isa = PBXGroup;
 			children = (
+				57F7817A167071BCB4C20BF2 /* ICLInlineContentService.swift */,
 				3BCBF2F7D4BCA6E76842E17F /* ICLPluginManager.swift */,
 				06B50F0E488D0085F13A1BE6 /* ICLProcessDelegate.swift */,
 				987D8F51911E10484BF9E485 /* ICLProcessMain.swift */,
@@ -5181,6 +5184,7 @@
 				BA02E4E457AD21B3335288E8 /* CoreMediaPlugin.swift in Sources */,
 				FC91668A3F4267CB7E82E34B /* DailymotionModule.swift in Sources */,
 				53D87101A80996337AF93530 /* GyazoModule.swift in Sources */,
+				FB74E9A61D99F6678CF0085F /* ICLInlineContentService.swift in Sources */,
 				791AC8FBB9EAFC69BD08E62C /* ICLPluginManager.swift in Sources */,
 				7B8B85F48049E06D80FC7058 /* ICLProcessDelegate.swift in Sources */,
 				B862215EFF5C80FCB974435A /* ICLProcessMain.swift in Sources */,

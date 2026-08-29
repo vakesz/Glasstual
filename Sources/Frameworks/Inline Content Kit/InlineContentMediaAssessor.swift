@@ -39,7 +39,8 @@ import Foundation
 import ImageIO
 import os
 
-private let mediaAssessorErrorDomain = "ICLMediaAssessorErrorDomain"
+let mediaAssessorErrorDomain = "ICLMediaAssessorErrorDomain"
+
 private let maximumImageWidth = 7200
 
 private enum MediaAssessorErrorCode: Int {
@@ -54,47 +55,61 @@ private enum MediaAssessorErrorCode: Int {
 	case maximumHeightExceeded = 1008
 }
 
-private struct MediaAssessorConfiguration {
-	let completion: (MediaAssessment?, NSError?) -> Void
-	let expectedType: InlineContentMediaType
-	let url: URL
-}
-
 private struct MediaAssessorLimits: Sendable {
 	let imageMaximumWidth: Int
 	let imageMaximumHeight: Int
 	let imageMaximumFilesize: UInt64
 }
 
-private final class MediaAssessorRequest {
-	var session: URLSession?
-	var task: URLSessionTask?
-	var alternateError: NSError?
-	var doNotFinalize = false
+/// The redirect and authentication policy an assessment is fetched under.
+///
+/// It holds nothing, which is what lets it be the delegate: `URLSessionDelegate`
+/// is declared `NS_SWIFT_SENDABLE`, so a conformer with state would have to
+/// claim a `Sendable` conformance it could not honour.
+private final class MediaAssessorPolicy: NSObject, URLSessionTaskDelegate, Sendable {
+	func urlSession(
+		_: URLSession,
+		task: URLSessionTask,
+		willPerformHTTPRedirection _: HTTPURLResponse,
+		newRequest request: URLRequest,
+		completionHandler: @escaping @Sendable (URLRequest?) -> Void
+	) {
+		/* A redirect may keep the scheme or upgrade it, never downgrade it. */
+		let originalScheme = task.originalRequest?.url?.scheme?.lowercased()
+		let redirectedScheme = request.url?.scheme?.lowercased()
+		let allowed = redirectedScheme == "https" || redirectedScheme == "http" && originalScheme == "http"
+
+		completionHandler(allowed ? request : nil)
+	}
+
+	func urlSession(
+		_: URLSession,
+		didReceive challenge: URLAuthenticationChallenge,
+		completionHandler: @escaping @Sendable (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+	) {
+		let method = challenge.protectionSpace.authenticationMethod
+
+		if method == NSURLAuthenticationMethodHTTPBasic || method == NSURLAuthenticationMethodHTTPDigest {
+			completionHandler(.cancelAuthenticationChallenge, nil)
+		} else {
+			completionHandler(.performDefaultHandling, nil)
+		}
+	}
 }
 
-private struct MediaAssessorState {
-	let assessment: MediaAssessment
-	/// Whether the body has to be fetched, either to measure the image or to
-	/// count bytes the server declined to declare.
-	let shouldDownloadBody: Bool
-}
-
-@objc(ICLMediaAssessor)
-/* ISOLATION-EXCEPTION: `URLSessionDelegate` is declared `NS_SWIFT_SENDABLE`, so
- every conformer has to be `Sendable`, and this one holds the caller's
- completion block and the in-flight request. The completion comes from an
- `InlineContentModule`, which is a reference type the module mutates while it
- runs, so it cannot be `@Sendable` until the modules become value producers.
- The three request-state types the assessor owns no longer need annotations of
- their own; this is the only one left. */
-public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDownloadDelegate,
-	@unchecked Sendable
-{
+/// Decides whether a remote URL may be inlined, and as what.
+///
+/// The whole assessment is one `async` call over `URLSession.bytes`: the headers
+/// decide the type, and the body — when one is needed at all — is counted as it
+/// arrives and abandoned the moment it passes the file-size cap. There is no
+/// delegate holding request state, no cancellation latch and no completion
+/// block, so there is nothing here to make `Sendable` by hand.
+public enum MediaAssessor {
 	private static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "MediaAssessor"
 	)
+
 	/** SVG is deliberately absent: it is an active content type, and the only
 	 thing keeping it inert today is that the template happens to render
 	 through `<img src>`. */
@@ -106,340 +121,224 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		"video/3gpp", "video/3gpp2", "video/mp4", "video/quicktime", "video/webm", "video/x-m4v",
 	]
 
-	private var configuration: MediaAssessorConfiguration?
-	private var limits: MediaAssessorLimits?
-	private var request: MediaAssessorRequest?
-	private var state: MediaAssessorState?
+	private static let policy = MediaAssessorPolicy()
 
-	@available(*, unavailable, message: "Use a factory method")
-	override init() {
-		fatalError("Use a factory method")
-	}
+	private static let session: URLSession = {
+		let configuration = URLSessionConfiguration.ephemeral
+		configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+		configuration.httpShouldSetCookies = false
+		configuration.httpCookieAcceptPolicy = .never
+		configuration.timeoutIntervalForRequest = InlineContentNetworkLimits.requestTimeout
+		configuration.timeoutIntervalForResource = InlineContentNetworkLimits.resourceTimeout
+		return URLSession(configuration: configuration)
+	}()
 
-	/** Fails rather than traps: addresses derive from IRC messages and from remote
-	 responses, and this process is shared by every inline load. */
-	public init?(
-		url: URL,
-		expectedType: InlineContentMediaType,
-		completion: @escaping (MediaAssessment?, NSError?) -> Void
-	) {
+	/// Assesses `url`, expecting `expectedType` (`.unknown` accepts anything).
+	///
+	/// Fails rather than traps: addresses derive from IRC messages and from
+	/// remote responses, and this process is shared by every inline load.
+	public static func assess(
+		_ url: URL,
+		expecting expectedType: InlineContentMediaType
+	) async -> Result<MediaAssessment, NSError> {
 		guard !url.isFileURL else {
-			Self.logger.error("Refusing to assess a file URL")
-			return nil
+			logger.error("Refusing to assess a file URL")
+
+			return .failure(failure("Refusing to assess a file URL", code: .assessmentFailed))
 		}
 
-		configuration = MediaAssessorConfiguration(
-			completion: completion,
-			expectedType: expectedType,
-			url: url
-		)
-		super.init()
+		do {
+			return try await .success(fetch(url, expecting: expectedType))
+		} catch let assessmentError as NSError where assessmentError.domain == mediaAssessorErrorDomain {
+			return .failure(assessmentError)
+		} catch {
+			return .failure(failure(error.localizedDescription, code: .assessmentFailed))
+		}
 	}
 
-	deinit {
-		/* URLSession retains its delegate until it is invalidated. Without this, an
-		 assessor torn down mid-flight leaks the session, the queue and the completion. */
-		request?.session?.invalidateAndCancel()
-	}
-
-	public static func assessor(
-		for url: URL,
-		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
-	) -> MediaAssessor? {
-		MediaAssessor(url: url, expectedType: .unknown, completion: completionBlock)
-	}
-
-	public static func assessor(
-		forAddress address: String,
-		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
-	) -> MediaAssessor? {
-		assessor(forAddress: address, with: .unknown, completionBlock: completionBlock)
-	}
-
-	public static func assessor(
-		for url: URL,
-		with type: InlineContentMediaType,
-		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
-	) -> MediaAssessor? {
-		MediaAssessor(url: url, expectedType: type, completion: completionBlock)
-	}
-
-	public static func assessor(
-		forAddress address: String,
-		with type: InlineContentMediaType,
-		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
-	) -> MediaAssessor? {
+	/// Assesses an address, which is what the modules have.
+	public static func assess(
+		address: String,
+		expecting expectedType: InlineContentMediaType = .unknown
+	) async -> Result<MediaAssessment, NSError> {
 		guard let url = URL(string: address) else {
 			logger.error("Refusing to assess an unparseable media address")
-			return nil
+
+			return .failure(failure("Refusing to assess an unparseable media address", code: .assessmentFailed))
 		}
 
-		return MediaAssessor(url: url, expectedType: type, completion: completionBlock)
+		return await assess(url, expecting: expectedType)
 	}
 
-	@objc
-	public func resume() {
-		guard request == nil else {
-			Self.logger.error("An assessment is already in progress")
-			return
-		}
+	public static func logError(_ error: NSError) {
+		guard error.domain == mediaAssessorErrorDomain else { return }
 
-		guard let configuration else {
-			Self.logger.error("resume() called after the assessment finalized")
-			return
-		}
+		let fatalCodes: Set = [0, 1001, 1002, 1003, 1005]
+		let category = fatalCodes.contains(error.code) ? "fatal" : "validation"
 
-		let sessionConfiguration = URLSessionConfiguration.ephemeral
-		sessionConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
-		sessionConfiguration.httpShouldSetCookies = false
-		sessionConfiguration.httpCookieAcceptPolicy = .never
-		sessionConfiguration.timeoutIntervalForRequest = InlineContentNetworkLimits.requestTimeout
-		sessionConfiguration.timeoutIntervalForResource = InlineContentNetworkLimits.resourceTimeout
-
-		let request = MediaAssessorRequest()
-		/* A nil delegate queue makes URLSession create a serial queue of its
-		 own, which is all this assessor ever wanted from the queue it used to
-		 build by hand: one delegate callback at a time. */
-		let session = URLSession(
-			configuration: sessionConfiguration,
-			delegate: self,
-			delegateQueue: nil
-		)
-		let task = session.dataTask(with: configuration.url)
-		request.session = session
-		request.task = task
-		self.request = request
-
-		if configuration.expectedType == .unknown || configuration.expectedType == .image {
-			limits = MediaAssessorLimits(
-				imageMaximumWidth: maximumImageWidth,
-				imageMaximumHeight: Int(InlineContentPreferences.current.maximumHeight),
-				imageMaximumFilesize: InlineContentPreferences.current.maximumImageFileSize
-			)
-		}
-
-		task.resume()
+		logger.debug("Assessor \(category, privacy: .public) error: \(error.localizedDescription, privacy: .public)")
 	}
 
-	@objc
-	public func suspend() {
-		guard let request else { return }
-		request.doNotFinalize = true
-		request.session?.invalidateAndCancel()
-	}
+	// MARK: - Request
 
-	private func finish(with error: Error?) {
-		var finalError = error as NSError?
-		if finalError?.domain == NSURLErrorDomain, finalError?.code == NSURLErrorCancelled {
-			finalError = request?.alternateError
+	private static func fetch(
+		_ url: URL,
+		expecting expectedType: InlineContentMediaType
+	) async throws -> MediaAssessment {
+		let (bytes, response) = try await session.bytes(from: url, delegate: policy)
+
+		guard let response = response as? HTTPURLResponse else {
+			bytes.task.cancel()
+
+			throw failure("Invalid response type (not HTTP)", code: .unexpectedResponse)
 		}
 
-		if finalError == nil, state?.assessment == nil {
-			finalError = makeError("Assessment failed", code: .assessmentFailed)
+		let limits = limits(for: expectedType)
+
+		let assessment: MediaAssessment
+
+		do {
+			assessment = try readHeaders(from: response, url: url, expecting: expectedType)
+		} catch {
+			bytes.task.cancel()
+
+			throw error
 		}
 
-		configuration?.completion(state?.assessment, finalError)
-		flushRequestState()
-		configuration = nil
+		guard shouldReadBody(for: assessment, response: response, limits: limits) else {
+			/* Cancelling the task is what stops the transfer; nothing in the
+			 body is wanted. */
+			bytes.task.cancel()
+
+			return assessment
+		}
+
+		let body = try await read(bytes, upTo: limits?.imageMaximumFilesize ?? 0)
+
+		try validate(body, against: limits, for: assessment)
+
+		return assessment
 	}
 
-	private func flushRequestState() {
-		limits = nil
-		state = nil
-		request = nil
-	}
+	private static func limits(for expectedType: InlineContentMediaType) -> MediaAssessorLimits? {
+		guard expectedType == .unknown || expectedType == .image else { return nil }
 
-	private func makeError(_ description: String, code: MediaAssessorErrorCode) -> NSError {
-		NSError(
-			domain: mediaAssessorErrorDomain,
-			code: code.rawValue,
-			userInfo: [NSLocalizedDescriptionKey: description]
+		return MediaAssessorLimits(
+			imageMaximumWidth: maximumImageWidth,
+			imageMaximumHeight: Int(InlineContentPreferences.current.maximumHeight),
+			imageMaximumFilesize: InlineContentPreferences.current.maximumImageFileSize
 		)
 	}
 
-	private func readHeaders(from response: HTTPURLResponse) throws -> MediaAssessorState {
+	private static func readHeaders(
+		from response: HTTPURLResponse,
+		url: URL,
+		expecting expectedType: InlineContentMediaType
+	) throws -> MediaAssessment {
 		guard response.statusCode == 200 else {
-			throw makeError("Endpoint did not respond with OK (200)", code: .unexpectedStatusCode)
+			throw failure("Endpoint did not respond with OK (200)", code: .unexpectedStatusCode)
 		}
 
 		let contentType = response.mimeType ?? "application/binary"
+
 		guard contentType.count <= 128 else {
-			throw makeError("Content-Type header is improperly formatted", code: .malformedContentType)
+			throw failure("Content-Type header is improperly formatted", code: .malformedContentType)
 		}
 
 		let responseLength = response.expectedContentLength
-		guard responseLength == NSURLSessionTransferSizeUnknown || responseLength >= 0 else {
-			throw makeError("Content-Length header is improperly formatted", code: .malformedContentLength)
-		}
-		let contentLength = responseLength == NSURLSessionTransferSizeUnknown ? UInt64(0) : UInt64(responseLength)
 
-		let mediaType: InlineContentMediaType = if Self.validImageContentTypes.contains(contentType) {
+		guard responseLength == NSURLSessionTransferSizeUnknown || responseLength >= 0 else {
+			throw failure("Content-Length header is improperly formatted", code: .malformedContentLength)
+		}
+
+		let mediaType: InlineContentMediaType = if validImageContentTypes.contains(contentType) {
 			.image
-		} else if Self.validVideoContentTypes.contains(contentType) {
+		} else if validVideoContentTypes.contains(contentType) {
 			.video
 		} else {
 			.other
 		}
 
-		if let expectedType = configuration?.expectedType,
-		   expectedType != .unknown,
-		   expectedType != mediaType
+		if expectedType != .unknown, expectedType != mediaType {
+			throw failure("Unexpected media type", code: .unexpectedType)
+		}
+
+		let contentLength = responseLength == NSURLSessionTransferSizeUnknown ? UInt64(0) : UInt64(responseLength)
+
+		if mediaType == .image,
+		   responseLength != NSURLSessionTransferSizeUnknown,
+		   let maximum = limits(for: expectedType)?.imageMaximumFilesize,
+		   maximum > 0,
+		   contentLength > maximum
 		{
-			throw makeError("Unexpected media type", code: .unexpectedType)
+			throw failure("Content-Length exceeds maximum allowed", code: .contentLengthExceeded)
 		}
 
-		var shouldDownloadBody = false
-		if mediaType == .image, let limits {
-			if responseLength == NSURLSessionTransferSizeUnknown {
-				/* Without a Content-Length the only way to hold the server to
-				 the file-size cap is to stream the body and count. */
-				shouldDownloadBody = limits.imageMaximumFilesize > 0
-			} else {
-				guard contentLength <= limits.imageMaximumFilesize else {
-					throw makeError("Content-Length exceeds maximum allowed", code: .contentLengthExceeded)
-				}
-			}
-
-			/* The height cap is optional; the width cap is not, and neither can
-			 be applied without the pixels. */
-			shouldDownloadBody = shouldDownloadBody || limits.imageMaximumHeight > 0
-		}
-
-		let assessment = MediaAssessment(
-			url: response.url ?? configuration?.url ?? URL(string: "about:blank")!,
+		return MediaAssessment(
+			url: response.url ?? url,
 			type: mediaType,
 			contentType: contentType,
 			contentLength: contentLength
 		)
-
-		return MediaAssessorState(
-			assessment: assessment,
-			shouldDownloadBody: shouldDownloadBody
-		)
 	}
 
-	public func urlSession(
-		_: URLSession,
-		dataTask _: URLSessionDataTask,
-		didReceive response: URLResponse,
-		completionHandler: @escaping @Sendable (URLSession.ResponseDisposition) -> Void
-	) {
-		guard let response = response as? HTTPURLResponse else {
-			request?.alternateError = makeError("Invalid response type (not HTTP)", code: .unexpectedResponse)
-			return completionHandler(.cancel)
+	/// Whether the body has to be read at all: to measure the image, or to
+	/// count bytes the server declined to declare.
+	private static func shouldReadBody(
+		for assessment: MediaAssessment,
+		response: HTTPURLResponse,
+		limits: MediaAssessorLimits?
+	) -> Bool {
+		guard assessment.type == .image, let limits else { return false }
+
+		if response.expectedContentLength == NSURLSessionTransferSizeUnknown {
+			/* Without a Content-Length the only way to hold the server to the
+			 file-size cap is to read the body and count. */
+			return limits.imageMaximumFilesize > 0 || limits.imageMaximumHeight > 0
 		}
+
+		/* The height cap is optional; the width cap is not, and neither can be
+		 applied without the pixels. */
+		return limits.imageMaximumHeight > 0 || limits.imageMaximumWidth > 0
+	}
+
+	/// Reads the body, counting as it goes, and gives up the moment it passes
+	/// `maximum`. A cap of zero means the user asked for none.
+	private static func read(_ bytes: URLSession.AsyncBytes, upTo maximum: UInt64) async throws -> Data {
+		var body = Data()
 
 		do {
-			let state = try readHeaders(from: response)
-			self.state = state
-			completionHandler(state.shouldDownloadBody ? .becomeDownload : .cancel)
+			for try await byte in bytes {
+				body.append(byte)
+
+				if maximum > 0, UInt64(body.count) > maximum {
+					bytes.task.cancel()
+
+					throw failure("Maximum response size exceeded", code: .contentLengthExceeded)
+				}
+			}
 		} catch {
-			request?.alternateError = error as NSError
-			completionHandler(.cancel)
+			bytes.task.cancel()
+
+			throw error
 		}
+
+		return body
 	}
 
-	public func urlSession(
-		_: URLSession,
-		dataTask _: URLSessionDataTask,
-		willCacheResponse _: CachedURLResponse,
-		completionHandler: @escaping @Sendable (CachedURLResponse?) -> Void
-	) {
-		completionHandler(nil)
-	}
+	private static func validate(
+		_ body: Data,
+		against limits: MediaAssessorLimits?,
+		for assessment: MediaAssessment
+	) throws {
+		guard assessment.type == .image, let limits else { return }
 
-	public func urlSession(
-		_: URLSession,
-		task: URLSessionTask,
-		willPerformHTTPRedirection _: HTTPURLResponse,
-		newRequest request: URLRequest,
-		completionHandler: @escaping @Sendable (URLRequest?) -> Void
-	) {
-		let originalScheme = task.originalRequest?.url?.scheme?.lowercased()
-		let redirectedScheme = request.url?.scheme?.lowercased()
-		let allowed = redirectedScheme == "https" || redirectedScheme == "http" && originalScheme == "http"
-		completionHandler(allowed ? request : nil)
-	}
-
-	public func urlSession(
-		_: URLSession,
-		didReceive challenge: URLAuthenticationChallenge,
-		completionHandler: @escaping @Sendable (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-	) {
-		let method = challenge.protectionSpace.authenticationMethod
-		if method == NSURLAuthenticationMethodHTTPBasic || method == NSURLAuthenticationMethodHTTPDigest {
-			completionHandler(.cancelAuthenticationChallenge, nil)
-		} else {
-			completionHandler(.performDefaultHandling, nil)
+		guard let imageSource = CGImageSourceCreateWithData(body as CFData, nil) else {
+			throw failure("Image validation: CGImageSourceCreateWithData() returned NULL", code: .assessmentFailed)
 		}
-	}
 
-	public func urlSession(
-		_: URLSession,
-		dataTask _: URLSessionDataTask,
-		didBecome downloadTask: URLSessionDownloadTask
-	) {
-		request?.task = downloadTask
-	}
-
-	public func urlSession(
-		_ session: URLSession,
-		downloadTask _: URLSessionDownloadTask,
-		didFinishDownloadingTo location: URL
-	) {
-		do {
-			try performExtendedValidation(at: location)
-		} catch {
-			request?.alternateError = error as NSError
-			session.invalidateAndCancel()
-		}
-	}
-
-	public func urlSession(
-		_ session: URLSession,
-		downloadTask _: URLSessionDownloadTask,
-		didWriteData _: Int64,
-		totalBytesWritten: Int64,
-		totalBytesExpectedToWrite _: Int64
-	) {
-		guard downloadExceededMaximumFileSize(UInt64(max(0, totalBytesWritten))) else { return }
-		request?.alternateError = makeError("Maximum response size exceeded", code: .contentLengthExceeded)
-		session.invalidateAndCancel()
-	}
-
-	public func urlSession(_ session: URLSession, task _: URLSessionTask, didCompleteWithError error: Error?) {
-		let shouldFinalize = request?.doNotFinalize != true
-		if shouldFinalize {
-			finish(with: error)
-		} else {
-			flushRequestState()
-		}
-		session.finishTasksAndInvalidate()
-	}
-
-	public func urlSession(_ session: URLSession, didBecomeInvalidWithError _: Error?) {
-		if request?.session === session {
-			request?.session = nil
-		}
-	}
-
-	private func downloadExceededMaximumFileSize(_ progress: UInt64) -> Bool {
-		guard state?.assessment.type == .image, let maximum = limits?.imageMaximumFilesize, maximum > 0 else {
-			return false
-		}
-		return progress > maximum
-	}
-
-	private func performExtendedValidation(at url: URL) throws {
-		guard state?.assessment.type == .image else { return }
-		guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else {
-			throw makeError(
-				"Image validation: CGImageSourceCreateWithURL() returned NULL",
-				code: .assessmentFailed
-			)
-		}
 		guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any] else {
-			throw makeError(
+			throw failure(
 				"Image validation: CGImageSourceCopyPropertiesAtIndex() returned NULL",
 				code: .assessmentFailed
 			)
@@ -447,23 +346,22 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 
 		let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? 0
 		let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? 0
-		guard let limits else { return }
 
 		if width > limits.imageMaximumWidth {
-			throw makeError("Image validation: Maximum width exceeded", code: .maximumWidthExceeded)
+			throw failure("Image validation: Maximum width exceeded", code: .maximumWidthExceeded)
 		}
 
 		/* A height cap of zero means the user did not ask for one. */
 		if limits.imageMaximumHeight > 0, height > limits.imageMaximumHeight {
-			throw makeError("Image validation: Maximum height exceeded", code: .maximumHeightExceeded)
+			throw failure("Image validation: Maximum height exceeded", code: .maximumHeightExceeded)
 		}
 	}
 
-	@objc(logError:)
-	public static func logError(_ error: NSError) {
-		guard error.domain == mediaAssessorErrorDomain else { return }
-		let fatalCodes: Set = [0, 1001, 1002, 1003, 1005]
-		let category = fatalCodes.contains(error.code) ? "fatal" : "validation"
-		logger.debug("Assessor \(category, privacy: .public) error: \(error.localizedDescription, privacy: .public)")
+	private static func failure(_ description: String, code: MediaAssessorErrorCode) -> NSError {
+		NSError(
+			domain: mediaAssessorErrorDomain,
+			code: code.rawValue,
+			userInfo: [NSLocalizedDescriptionKey: description]
+		)
 	}
 }

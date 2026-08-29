@@ -37,32 +37,32 @@
 
 import Foundation
 import InlineContentKit
-import Mustache
 
-@objc(ICMYouTube)
-final class YouTubeModule: InlineVideoFoundation {
-	private func performAction(forVideo identifier: String) {
-		let attributes: [String: Any] = [
-			"uniqueIdentifier": payload.uniqueIdentifier,
-			"videoIdentifier": identifier,
-			"videoStartTime": videoStartTime,
-		]
-		guard let template else { return cancel() }
-		do {
-			payload.html = try template.render(attributes)
-			finalize()
-		} catch {
-			finalizeWithError(error)
-		}
+/// YouTube's own player, embedded through this module's template.
+struct YouTubeModule: InlineContentModule {
+	static var domains: [String]? {
+		["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"]
 	}
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var contentImageOrVideo: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let identifier: String
+	private let startTime: TimeInterval
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		guard let video = video(for: url) else { return nil }
-		return { module in
-			guard let module = module as? YouTubeModule else { return }
-			module.videoStartTime = video.startTime
-			module.performAction(forVideo: video.identifier)
-		}
+
+		return YouTubeModule(identifier: video.identifier, startTime: video.startTime)
 	}
 
 	private static func video(for url: URL) -> (identifier: String, startTime: TimeInterval)? {
@@ -80,15 +80,19 @@ final class YouTubeModule: InlineVideoFoundation {
 		guard var identifier, identifier.count >= 11 else { return nil }
 		identifier = String(identifier.prefix(11))
 		let timestamp = queryItems.first(where: { $0.name == "t" })?.value
-		let startTime = timestamp.map(parseYouTubeEsqueTimestamp) ?? 0
+		let startTime = timestamp.map(InlineVideoContent.parseTimestamp) ?? 0
 		return (identifier, startTime)
 	}
 
-	override static var domains: [String]? {
-		["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"]
-	}
-
-	override var templateURL: URL? {
-		Bundle(for: YouTubeModule.self).url(forResource: "ICMYouTube", withExtension: "mustache")
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		InlineVideoContent.embed(
+			payload,
+			templateURL: CoreMediaBundle.current.url(forResource: "ICMYouTube", withExtension: "mustache"),
+			attributes: [
+				"uniqueIdentifier": payload.uniqueIdentifier,
+				"videoIdentifier": identifier,
+				"videoStartTime": startTime,
+			]
+		)
 	}
 }

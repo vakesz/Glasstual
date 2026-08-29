@@ -44,10 +44,9 @@ public let inlineContentErrorDomain = "ICLInlineContentErrorDomain"
 
 /// Everything a finished inline-content payload says about one link.
 ///
-/// This is the value the two processes agree on. `InlineContentPayload` is the
-/// `NSSecureCoding` envelope built around it at the XPC boundary and
-/// `InlineContentPayloadMutable` is the scratch copy a module edits while it
-/// runs; neither adds state of its own.
+/// This is the value the two processes agree on, and the value modules produce.
+/// `InlineContentPayload` is the `NSSecureCoding` envelope built around it at
+/// the XPC boundary and adds no state of its own.
 public struct InlineContentPayloadValues: Sendable, Equatable {
 	public var url: URL
 	public var urlToInline: URL
@@ -85,6 +84,27 @@ public struct InlineContentPayloadValues: Sendable, Equatable {
 		classAttribute = ""
 	}
 
+	/// Sets the URL that will be rendered into a `src` attribute in the log
+	/// view. Modules build it from strings a remote server supplied, so it is
+	/// filtered here rather than trusted; an out-of-policy value is dropped
+	/// and reported instead of aborting the service.
+	@discardableResult
+	public mutating func setURLToInline(_ url: URL) -> Bool {
+		guard let scheme = url.scheme?.lowercased(),
+		      InlineContentHelpers.permittedSchemes.contains(scheme)
+		else {
+			payloadLogger.error(
+				"Refused inline URL with scheme '\(url.scheme ?? "(none)", privacy: .public)'"
+			)
+
+			return false
+		}
+
+		urlToInline = url
+
+		return true
+	}
+
 	/// The values a deferred module inherits: what identifies the link, not
 	/// what the module it was deferred from had produced.
 	public var deferredCopy: InlineContentPayloadValues {
@@ -112,9 +132,8 @@ private let payloadLogger = Logger(
 ///
 /// Every stored property is a `let` of a `Sendable` type, so the class needs no
 /// annotation to be sent between the application and the inline-content
-/// service. The mutable half is a separate type rather than a subclass: a class
-/// with subclasses cannot be `Sendable`, and nothing outside the service ever
-/// needed to write to a payload.
+/// service. It is `final` because a class with subclasses cannot be `Sendable`;
+/// modules work on `InlineContentPayloadValues` and never see this at all.
 @objc(ICLPayload)
 public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
 	public let values: InlineContentPayloadValues
@@ -284,136 +303,7 @@ public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
 	}
 }
 
-/// The scratch payload a module fills in while it runs.
-///
-/// It never crosses a process or an isolation boundary: the service creates one
-/// per module and takes a `snapshot()` of it when the module finishes.
-@objc(ICLPayloadMutable)
-public final class InlineContentPayloadMutable: NSObject {
-	public private(set) var values: InlineContentPayloadValues
-
-	public init(values: InlineContentPayloadValues) {
-		precondition(!values.url.isFileURL)
-
-		self.values = values
-
-		super.init()
-	}
-
-	@objc(initWithURL:withUniqueIdentifier:atLineNumber:index:inView:)
-	public convenience init(
-		url: URL,
-		withUniqueIdentifier uniqueIdentifier: String,
-		atLineNumber lineNumber: String,
-		index: UInt,
-		inView viewIdentifier: String
-	) {
-		self.init(
-			values: InlineContentPayloadValues(
-				url: url,
-				uniqueIdentifier: uniqueIdentifier,
-				lineNumber: lineNumber,
-				index: index,
-				viewIdentifier: viewIdentifier
-			)
-		)
-	}
-
-	/// A payload for a module that deferred to another one: the link and its
-	/// class attribute carry over, the produced content does not.
-	@objc(initWithDeferredPayload:)
-	public convenience init(deferredPayload payload: InlineContentPayloadMutable) {
-		self.init(values: payload.values.deferredCopy)
-	}
-
-	/// The payload as the client will see it.
-	public func snapshot() -> InlineContentPayload {
-		InlineContentPayload(values: values)
-	}
-
-	// MARK: - Accessors
-
-	@objc public var url: URL {
-		values.url
-	}
-
-	@objc public var address: String {
-		values.url.absoluteString
-	}
-
-	@objc public var addressToInline: String {
-		values.urlToInline.absoluteString
-	}
-
-	@objc public var uniqueIdentifier: String {
-		values.uniqueIdentifier
-	}
-
-	@objc public var viewIdentifier: String {
-		values.viewIdentifier
-	}
-
-	@objc public var lineNumber: String {
-		values.lineNumber
-	}
-
-	@objc public var index: UInt {
-		values.index
-	}
-
-	@objc public var urlToInline: URL {
-		get { values.urlToInline }
-		set {
-			/* This value is rendered into a `src` attribute in the log view.
-			 Modules build it from strings a remote server supplied, so it is
-			 filtered here rather than trusted — and an out-of-policy value is
-			 dropped instead of aborting the service process. */
-			guard let scheme = newValue.scheme?.lowercased(),
-			      InlineContentHelpers.permittedSchemes.contains(scheme)
-			else {
-				payloadLogger.error(
-					"Refused inline URL with scheme '\(newValue.scheme ?? "(none)", privacy: .public)'"
-				)
-
-				return
-			}
-
-			values.urlToInline = newValue
-		}
-	}
-
-	@objc public var contentLength: UInt64 {
-		get { values.contentLength }
-		set { values.contentLength = newValue }
-	}
-
-	@objc public var contentSize: CGSize {
-		get { values.contentSize }
-		set { values.contentSize = newValue }
-	}
-
-	@objc public var styleResources: [URL] {
-		get { values.styleResources }
-		set { values.styleResources = newValue }
-	}
-
-	@objc public var scriptResources: [URL] {
-		get { values.scriptResources }
-		set { values.scriptResources = newValue }
-	}
-
-	@objc public var html: String {
-		get { values.html }
-		set { values.html = newValue }
-	}
-
-	@objc public var entrypoint: String? {
-		get { values.entrypoint }
-		set { values.entrypoint = newValue }
-	}
-
-	@objc public var classAttribute: String {
-		get { values.classAttribute }
-		set { values.classAttribute = newValue }
-	}
-}
+// The scratch payload a module fills in while it runs.
+//
+// It never crosses a process or an isolation boundary: the service creates one
+// per module and takes a `snapshot()` of it when the module finishes.
