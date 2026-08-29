@@ -16,11 +16,14 @@ import Foundation
 import GlasstualPluginKit
 import Synchronization
 
+/** A member of a channel.
+
+ Not `Sendable`, and it no longer needs to be: rendering used to collect members
+ off the main actor, and now the render context carries a ``RenderedMember``
+ value snapshot instead, so a member is only ever read where the member list
+ lives. That is what retired the lock this type used to hold around `user`. */
 @objc(IRCChannelUser)
-/* ISOLATION-EXCEPTION: the renderer collects members off the main actor while it
- marks up nicknames. The field that changes under it is behind `userLock`. */
-public final nonisolated class ChannelUser: NSObject, @unchecked Sendable {
-	private let userLock = NSLock()
+public final nonisolated class ChannelUser: NSObject {
 	private var userStorage: User
 
 	/// Editable through `duplicate()`; the member list replaces stored members
@@ -32,7 +35,7 @@ public final nonisolated class ChannelUser: NSObject, @unchecked Sendable {
 	private var creationTimeStorage = Date().timeIntervalSince1970
 
 	@objc public var user: User {
-		userLock.withLock { userStorage }
+		userStorage
 	}
 
 	private var client: IRCClient? {
@@ -137,9 +140,7 @@ public final nonisolated class ChannelUser: NSObject, @unchecked Sendable {
 	}
 
 	public func changeUser(to user: User) {
-		userLock.withLock {
-			userStorage = user
-		}
+		userStorage = user
 	}
 
 	public func userModesContains(_ mode: ChannelModeSymbol) -> Bool {

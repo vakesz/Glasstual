@@ -52,7 +52,10 @@ protocol TreeItemPresentation: AnyObject {
 	nonisolated var presentationIdentifier: String { get }
 
 	func print(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?)
-	nonisolated func lastPrintedLine() -> LogLine?
+	/* Main actor: the newest printed line is the controller's own state, and
+	 both callers (`IRCChannel.lastLine`, `IRCClient.lastLine`) are already
+	 there. */
+	func lastPrintedLine() -> LogLine?
 	nonisolated func setTopic(_ topic: String?)
 
 	func mark()

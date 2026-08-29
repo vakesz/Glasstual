@@ -229,7 +229,7 @@ extension LogController: TreeItemPresentation {
 		uniqueIdentifier
 	}
 
-	public nonisolated func lastPrintedLine() -> LogLine? {
+	public func lastPrintedLine() -> LogLine? {
 		lastLine()
 	}
 }
