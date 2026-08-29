@@ -40,20 +40,33 @@ import CocoaExtensions
 import Foundation
 
 enum IRCClientHistoricMessagePolicy {
+	/** How far behind arrival a `server-time` may fall and still describe a
+	 live line.
+
+	 Every message on a modern network carries `server-time`, so the tag on its
+	 own says nothing about replay: what separates a replayed line from a live
+	 one is that the replayed line was said minutes or hours ago. The tolerance
+	 absorbs network delay and the clock skew between the server and this Mac
+	 without swallowing a real scrollback, whose oldest entries are far older
+	 than half a minute. */
+	static let liveServerTimeTolerance: TimeInterval = 30
+
+	/** Whether a `server-time` stamp describes something already said.
+
+	 Replay arrives either inside a `chathistory`/`playback` batch — which says
+	 so outright — or, from a bouncer that replays plain lines, with a stamp
+	 well behind the clock. */
+	static func isHistoric(serverTime: Date, arrivedAt: Date, inReplayBatch: Bool) -> Bool {
+		inReplayBatch || arrivedAt.timeIntervalSince(serverTime) > liveServerTimeTolerance
+	}
+
 	static func shouldAdvanceServerTime(
 		isLoggedIn: Bool,
-		isHistoric: Bool,
+		hasServerTime: Bool,
 		receivedTime: TimeInterval,
 		lastServerTime: TimeInterval
 	) -> Bool {
-		isLoggedIn && isHistoric && receivedTime > lastServerTime
-	}
-
-	static func shouldMarkCurrent(
-		playbackCapabilityEnabled: Bool,
-		isContainedInChatHistoryBatch: Bool
-	) -> Bool {
-		playbackCapabilityEnabled && !isContainedInChatHistoryBatch
+		isLoggedIn && hasServerTime && receivedTime > lastServerTime
 	}
 }
 
@@ -89,23 +102,19 @@ private extension IRCClient {
 		processIncomingMessageOnMainActor(message)
 	}
 
+	/** The stored server time is the point a bouncer replays from, so it tracks
+	 the newest stamp seen, live or replayed. Whether the line itself is replay
+	 was decided when it was parsed. */
 	func processIncomingMessageAttributes(_ message: Message) {
 		let receivedTime = message.receivedAt.timeIntervalSince1970
 		guard IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
 			isLoggedIn: isLoggedIn,
-			isHistoric: message.isHistoric,
+			hasServerTime: message.hasServerTime,
 			receivedTime: receivedTime,
 			lastServerTime: lastMessageServerTime
 		) else { return }
 
 		lastMessageServerTime = receivedTime
-		let containedInChatHistory = batchMessage(ofType: "chathistory", containing: message) != nil
-		if IRCClientHistoricMessagePolicy.shouldMarkCurrent(
-			playbackCapabilityEnabled: isCapabilityEnabled(.playback),
-			isContainedInChatHistoryBatch: containedInChatHistory
-		) {
-			message.markAsNotHistoric()
-		}
 	}
 
 	func processIncomingMessageOnMainActor(_ message: Message) {
