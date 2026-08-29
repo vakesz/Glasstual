@@ -53,7 +53,7 @@ private actor RenderGate {
 
 /// A one-shot signal that a synchronous main-actor apply can fire and an async
 /// test can wait for. `AsyncStream` buffers, so firing first is safe.
-private final class DeliverySignal: Sendable {
+private final nonisolated class DeliverySignal: Sendable {
 	private let stream: AsyncStream<Void>
 	private let continuation: AsyncStream<Void>.Continuation
 

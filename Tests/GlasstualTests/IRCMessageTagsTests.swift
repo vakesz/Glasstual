@@ -53,7 +53,7 @@ final class IRCMessageTagsTests {
 		defaults.set(true, forKey: Self.typingPreferenceKey)
 	}
 
-	deinit {
+	isolated deinit {
 		let defaults = TextualUserDefaults.container
 		if let originalTypingPreference {
 			defaults.set(originalTypingPreference, forKey: Self.typingPreferenceKey)

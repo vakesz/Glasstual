@@ -803,12 +803,40 @@ targets:
 
   # Unit tests run inside Glasstual.app so that they can use the app's
   # classes directly. Tests never touch the network.
+  # The Core Media modules on their own, so the test bundle can cover their URL
+  # matching without handing them its isolation. The inline-content service
+  # compiles the same sources into itself; a unit-test bundle cannot, because
+  # they subclass a nonisolated type in Inline Content Kit and the bundle is
+  # main-actor by default. A static library keeps them out of the app's product
+  # and out of its link line.
+  CoreMediaModules:
+    platform: macOS
+    type: library.static
+    productName: CoreMediaModules
+    settings:
+      base:
+        PRODUCT_NAME: CoreMediaModules
+        PRODUCT_MODULE_NAME: CoreMediaModules
+        SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
+        SKIP_INSTALL: YES
+    sources:
+      - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes
+    dependencies:
+      - target: InlineContentKit
+        embed: false
+      - target: Mustache
+        embed: false
+
   GlasstualTests:
     templates: [GlasstualBundle]
     type: bundle.unit-test
     productName: GlasstualTests
     settings:
       base:
+        # Matches the app: the bundle is loaded into the host process and most
+        # of what it exercises is main-actor. A suite that tests a nonisolated
+        # type says so, the same way the app's own value types do.
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         PRODUCT_NAME: GlasstualTests
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.tests
     info:
@@ -819,10 +847,6 @@ targets:
     # signature is never consulted.
     sources:
       - path: Tests/GlasstualTests
-      # The Core Media modules are linked into the inline-content service, a
-      # separate process the test host never starts. Compiling them into the
-      # test bundle is the only way to cover their URL matching.
-      - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes
       # Specification corpora the IRCSpec suites read back at runtime. Only
       # the converted JSON ships; the YAML originals and the conversion
       # script stay out of the bundle.
@@ -833,6 +857,8 @@ targets:
     dependencies:
       - target: Glasstual
       - target: CocoaExtensions
+        embed: false
+      - target: CoreMediaModules
         embed: false
       - target: InlineContentKit
         embed: false

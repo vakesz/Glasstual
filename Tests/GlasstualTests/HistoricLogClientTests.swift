@@ -61,7 +61,7 @@ struct HistoricLogClientTests {
 		)
 	}
 
-	private static func label(of request: HistoricLogFetchRequest) -> String {
+	private nonisolated static func label(of request: HistoricLogFetchRequest) -> String {
 		guard case let .before(uniqueIdentifier, _, _) = request.kind else {
 			return ""
 		}

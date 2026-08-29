@@ -45,12 +45,12 @@ import Testing
 /// The corpus is the community's reading of RFC 1459 §2.3.1 and the IRCv3
 /// message-tags grammar, so it is the closest thing to an executable
 /// specification for the wire format.
-enum IRCSpecCorpus {
+nonisolated enum IRCSpecCorpus {
 	/// A bundle-resident anchor: Swift Testing suites are structs, so there is
 	/// no test class to hand to `Bundle(for:)`.
 	private final class Anchor {}
 
-	struct MissingResource: Error, CustomStringConvertible {
+	nonisolated struct MissingResource: Error, CustomStringConvertible {
 		let name: String
 
 		var description: String {
@@ -77,8 +77,8 @@ enum IRCSpecCorpus {
 
 /// `ircdocs/parser-tests` msg-split: splitting a line into tags, source, verb
 /// and parameters. RFC 1459 §2.3.1 with the IRCv3 message-tags prelude.
-struct IRCSpecMessageSplitCase: Decodable, CustomTestStringConvertible {
-	struct Atoms: Decodable {
+nonisolated struct IRCSpecMessageSplitCase: Decodable, CustomTestStringConvertible {
+	nonisolated struct Atoms: Decodable {
 		let tags: [String: String]?
 		let source: String?
 		let verb: String?
@@ -94,8 +94,8 @@ struct IRCSpecMessageSplitCase: Decodable, CustomTestStringConvertible {
 }
 
 /// `ircdocs/parser-tests` msg-join: assembling atoms back into a line.
-struct IRCSpecMessageJoinCase: Decodable, CustomTestStringConvertible {
-	struct Atoms: Decodable {
+nonisolated struct IRCSpecMessageJoinCase: Decodable, CustomTestStringConvertible {
+	nonisolated struct Atoms: Decodable {
 		let tags: [String: String]?
 		let source: String?
 		let verb: String?
@@ -113,8 +113,8 @@ struct IRCSpecMessageJoinCase: Decodable, CustomTestStringConvertible {
 
 /// `ircdocs/parser-tests` userhost-split: splitting a prefix into
 /// nick/user/host, per RFC 2812 §2.3.1.
-struct IRCSpecUserhostSplitCase: Decodable, CustomTestStringConvertible {
-	struct Atoms: Decodable {
+nonisolated struct IRCSpecUserhostSplitCase: Decodable, CustomTestStringConvertible {
+	nonisolated struct Atoms: Decodable {
 		let nick: String?
 		let user: String?
 		let host: String?
@@ -129,7 +129,7 @@ struct IRCSpecUserhostSplitCase: Decodable, CustomTestStringConvertible {
 }
 
 /// `ircdocs/parser-tests` mask-match: glob matching of `nick!user@host` masks.
-struct IRCSpecMaskMatchCase: Decodable, CustomTestStringConvertible {
+nonisolated struct IRCSpecMaskMatchCase: Decodable, CustomTestStringConvertible {
 	let mask: String
 	let matches: [String]?
 	let fails: [String]?
@@ -140,7 +140,7 @@ struct IRCSpecMaskMatchCase: Decodable, CustomTestStringConvertible {
 }
 
 /// `ircdocs/parser-tests` validate-hostname.
-struct IRCSpecHostnameCase: Decodable, CustomTestStringConvertible {
+nonisolated struct IRCSpecHostnameCase: Decodable, CustomTestStringConvertible {
 	let host: String
 	let valid: Bool
 

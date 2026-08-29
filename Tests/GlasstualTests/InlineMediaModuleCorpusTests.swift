@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+@testable import CoreMediaModules
 import Foundation
 import InlineContentKit
 import Testing
@@ -47,7 +48,7 @@ import Testing
 /// no network request is made.
 @MainActor
 struct InlineMediaModuleCorpusTests {
-	struct URLCase: Sendable {
+	nonisolated struct URLCase: Sendable {
 		let address: String
 		let matches: Bool
 
