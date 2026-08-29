@@ -487,6 +487,8 @@ targets:
         excludes:
           # Notes for whoever edits the catalogues; not a shipped resource.
           - LocalizationCatalogNotices.md
+      - path: Sources/Services/IRC Remote Connection Manager/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
       - path: Sources/Shared/Services/ConnectionTrustGate.swift
