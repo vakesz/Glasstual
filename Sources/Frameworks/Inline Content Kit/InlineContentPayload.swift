@@ -258,7 +258,7 @@ public final class InlineContentPayload: NSObject, NSSecureCoding, Sendable {
 			url: url,
 			uniqueIdentifier: uniqueIdentifier,
 			lineNumber: lineNumber,
-			index: UInt(decoder.decodeInteger(forKey: "index")),
+			index: UInt(exactly: decoder.decodeInteger(forKey: "index")) ?? 0,
 			viewIdentifier: viewIdentifier
 		)
 

@@ -393,10 +393,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		pongTimer = makeTimer { $0.onPongTimer() }
 		whoTimer = makeTimer { $0.onWhoTimer() }
 		readMarkerTimer = makeTimer { $0.onReadMarkerTimer() }
-
-		notifications.observe(.ircWorldWillDestroyChannel) { [weak self] notification in
-			self?.willDestroyChannel(notification)
-		}
 	}
 
 	private func makeTimer(_ action: @MainActor @escaping (IRCClient) -> Void) -> ClientTimer {

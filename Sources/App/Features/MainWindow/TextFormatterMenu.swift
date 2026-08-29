@@ -39,7 +39,10 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	@IBOutlet public var foregroundColorMenu: NSMenu!
 	@IBOutlet public var backgroundColorMenu: NSMenu!
 
-	private var observingColorPanel = false
+	/// Which presentation of the shared colour panel is current. The close
+	/// notification arrives a turn late, so a teardown has to be able to tell
+	/// whether the panel it is tearing down is still the one it presented.
+	private var colorPanelPresentation = 0
 	/// The shared colour panel's close notification, held while the panel is up.
 	private let notifications = NotificationSubscriptions()
 
@@ -448,23 +451,27 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		colorPanel.mode = .colorList
 		colorPanel.color = initialColor
 
-		if observingColorPanel == false {
-			observingColorPanel = true
+		colorPanelPresentation += 1
+		let presentation = colorPanelPresentation
 
-			notifications.observe(NSWindow.willCloseNotification, object: colorPanel) { [weak self] notification in
-				self?.colorPanelWillClose(notification)
-			}
+		notifications.cancelAll()
+		notifications.observe(NSWindow.willCloseNotification, object: colorPanel) { [weak self] notification in
+			self?.colorPanelWillClose(notification, from: presentation)
 		}
 
 		colorPanel.orderFront(nil)
 	}
 
-	private func colorPanelWillClose(_ notification: Notification) {
-		guard let colorPanel = notification.object as? NSColorPanel else {
+	/** The notification lands a turn after the panel closed, by which time this
+	 menu may have presented the shared panel again. Clearing the target off
+	 that new presentation would leave the picker up and every colour it reports
+	 going nowhere, so a teardown only runs for the presentation it belongs to. */
+	private func colorPanelWillClose(_ notification: Notification, from presentation: Int) {
+		guard let colorPanel = notification.object as? NSColorPanel,
+		      presentation == colorPanelPresentation
+		else {
 			return
 		}
-
-		observingColorPanel = false
 
 		notifications.cancelAll()
 

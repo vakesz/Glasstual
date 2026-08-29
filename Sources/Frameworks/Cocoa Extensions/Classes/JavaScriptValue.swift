@@ -56,7 +56,7 @@ public nonisolated extension JavaScriptValue { // nonisolated: value
 	var integer: Int? {
 		switch self {
 		case let .integer(value): value
-		case let .double(value): Int(value)
+		case let .double(value): Int(exactly: value.rounded(.towardZero))
 		default: nil
 		}
 	}
