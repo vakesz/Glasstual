@@ -12,281 +12,73 @@
 
 import CocoaExtensions
 import Foundation
-import os
 
-private nonisolated let historicLogLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "HistoricLog"
-)
+/** What the app knows about the lines of one view, kept in memory so that chat
+ history replayed by the server can be checked against the local scrollback
+ without a round trip to the XPC service. The index is filled from every line
+ written and every line fetched.
 
-/** What the client knows about the lines of one view, kept in memory so
- that chat history replayed by the server can be checked against the
- local scrollback without a round trip to the XPC service. The index is
- filled from every line written and every line fetched. */
-private final nonisolated class LogControllerHistoricLogViewIndex: NSObject {
-	let messageIdentifiers = NSMutableSet()
-	let fallbackKeys = NSMutableSet()
+ A value: it used to be a lock-guarded object because the XPC reply queue
+ indexed fetched lines. Decoding now happens on the main actor, so the index
+ belongs to the main actor and needs no synchronisation at all. */
+private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: value
+	var messageIdentifiers: Set<String> = []
+	var fallbackKeys: Set<String> = []
 	var newestDate: Date?
 	var oldestDate: Date?
 }
 
-/* ISOLATION-EXCEPTION: `HistoricLogClientProtocol` is an XPC protocol whose
- callbacks arrive on the connection's queue, so this type cannot be isolated. Its
- mutable state is guarded by `processStateLock`. Owned by the XPC-service task. */
-@objc(TVCLogControllerHistoricLogFile)
-public final nonisolated class LogControllerHistoricLogFile: NSObject, HistoricLogClientProtocol, @unchecked Sendable {
-	private let viewIndexes = NSMutableDictionary()
-	private let processStateLock = NSLock()
-	@objc public private(set) var isSaving = false
-	private var isTerminating = false
-	private var processLoaded = false
-	private var processLoading = false
-	private var serviceConnection: NSXPCConnection?
-	private var connectionInvalidatedVoluntarily = false
-	private var didShowConnectionError = false
-	private var lastServiceConnectionError: Error?
-	private var terminationCompletionBlock: (() -> Void)?
+/** The app's side of the scrollback history service.
 
-	@objc(sharedInstance)
+ It owns the duplicate index — main-actor state, read synchronously by the IRC
+ layer when it decides whether a replayed history line is one it already has —
+ and forwards everything else to `HistoricLogClient`, which owns the connection. */
+@MainActor
+public final class LogControllerHistoricLogFile {
+	public static let sharedInstance = LogControllerHistoricLogFile()
+
+	private var viewIndexes: [String: HistoricLogViewIndex] = [:]
+
 	public static func shared() -> LogControllerHistoricLogFile {
-		enum Storage {
-			static let instance = LogControllerHistoricLogFile()
-		}
-		return Storage.instance
+		sharedInstance
 	}
 
-	override public init() {
-		super.init()
-	}
+	// MARK: - Process life cycle
 
-	private var databaseSavePath: String? {
-		PathInfo.groupContainerApplicationCaches
-	}
-
-	private func warmProcessIfNeeded() {
-		processStateLock.lock()
-		defer { processStateLock.unlock() }
-
-		if processLoading || processLoaded {
-			return
-		}
-
-		historicLogLogger.debug("Warming process...")
-		processLoading = true
-		connectToService()
-		openDatabase()
-		resetMaximumLineCount()
-	}
-
-	private func invalidateProcess() {
-		processStateLock.lock()
-		defer { processStateLock.unlock() }
-
-		if processLoading == false, processLoaded == false {
-			return
-		}
-
-		historicLogLogger.debug("Invalidating process...")
-		connectionInvalidatedVoluntarily = true
-		serviceConnection?.invalidate()
-	}
-
-	private func openDatabase() {
-		guard let databaseSavePath else {
-			processLoading = false
-			processLoaded = false
-			return
-		}
-
-		remoteObjectProxy(withErrorHandler: { [weak self] _ in
-			self?.setProcessLoadState(loading: false, loaded: false)
-			historicLogLogger.error("Failed to communicate with process to open database")
-		})?.openDatabase(
-			inDirectory: databaseSavePath,
-			withCompletionBlock: { [weak self] success in
-				if success {
-					historicLogLogger.debug("Successfully opened database")
-				} else {
-					historicLogLogger.error("Failed to open database")
-				}
-
-				self?.setProcessLoadState(loading: false, loaded: success)
-			}
-		)
-	}
-
-	private func connectToService() {
-		let serviceConnection = NSXPCConnection(
-			serviceName: "com.vakesz.glasstual.ScrollbackHistoryManager"
-		)
-
-		let remoteObjectInterface = NSXPCInterface(with: HistoricLogServerProtocol.self)
-		guard HistoricLogInterface.configure(remoteObjectInterface) else {
-			return
-		}
-
-		serviceConnection.remoteObjectInterface = remoteObjectInterface
-		serviceConnection.exportedInterface = NSXPCInterface(with: HistoricLogClientProtocol.self)
-		serviceConnection.exportedObject = self
-
-		serviceConnection.interruptionHandler = { [weak self] in
-			performSynchronouslyOnMainQueue {
-				self?.interruptionHandler()
-			}
-			historicLogLogger.log("Interruption handler called")
-		}
-
-		serviceConnection.invalidationHandler = { [weak self] in
-			performSynchronouslyOnMainQueue {
-				self?.invalidationHandler()
-			}
-			historicLogLogger.log("Invalidation handler called")
-		}
-
-		serviceConnection.resume()
-		self.serviceConnection = serviceConnection
-	}
-
-	private func interruptionHandler() {
-		invalidateProcess()
-	}
-
-	private func invalidationHandler() {
-		serviceConnection = nil
-		resetContext()
-
-		if isTerminating {
-			invokeTerminationCompletionBlock()
-		}
-
-		if connectionInvalidatedVoluntarily {
-			connectionInvalidatedVoluntarily = false
-			return
-		}
-
-		if didShowConnectionError == false {
-			didShowConnectionError = true
-		} else {
-			return
-		}
-
-		var lastErrorMessage = lastServiceConnectionError?.localizedDescription ?? ""
-		if lastErrorMessage.isEmpty == false {
-			lastErrorMessage = PromptStrings.Logging.lastError(lastErrorMessage)
-		}
-
-		Task { @MainActor in
-			TDCAlert.alert(
-				withMessage: lastErrorMessage,
-				title: PromptStrings.Logging.scrollbackFailureTitle,
-				defaultButton: PromptStrings.Action.confirmation,
-				alternateButton: nil
-			)
-		}
-	}
-
-	private func resetContext() {
-		processStateLock.lock()
-		defer { processStateLock.unlock() }
-
-		isSaving = false
-		processLoading = false
-		processLoaded = false
-	}
-
-	private func setProcessLoadState(loading: Bool, loaded: Bool) {
-		processStateLock.lock()
-		defer { processStateLock.unlock() }
-
-		processLoading = loading
-		processLoaded = loaded
-	}
-
-	@objc
 	public func resetMaximumLineCount() {
-		let maximumLineCount = TextualPreferences.scrollbackSaveLimit()
-		remoteObjectProxy()?.setMaximumLineCount(maximumLineCount)
+		Task { await HistoricLogClient.shared.applyMaximumLineCount() }
 	}
 
-	@objc
-	public func prepareForApplicationTermination() {
-		prepareForApplicationTermination(completionBlock: nil)
-	}
-
-	@objc(prepareForApplicationTerminationWithCompletionBlock:)
-	public func prepareForApplicationTermination(completionBlock: (() -> Void)?) {
-		isTerminating = true
-		terminationCompletionBlock = completionBlock
-
-		if saveData() == false {
-			invokeTerminationCompletionBlock()
+	public func prepareForApplicationTermination(
+		completionBlock: (@MainActor @Sendable () -> Void)? = nil
+	) {
+		Task { @MainActor in
+			await HistoricLogClient.shared.prepareForTermination()
+			completionBlock?()
 		}
 	}
 
-	private func invokeTerminationCompletionBlock() {
-		guard let completionBlock = terminationCompletionBlock else {
+	/// Raised when the connection dies for a reason the user should know about.
+	/// The client awaits this instead of hopping through a detached task.
+	static func reportConnectionFailure(_ message: String) {
+		TDCAlert.alert(
+			withMessage: message,
+			title: PromptStrings.Logging.scrollbackFailureTitle,
+			defaultButton: PromptStrings.Action.confirmation,
+			alternateButton: nil
+		)
+	}
+
+	/// The service is about to drop these lines from its store.
+	static func noteWillDeleteLines(_ uniqueIdentifiers: [String], inView viewIdentifier: String) {
+		guard let item = AppController.shared.world?.findItem(withId: viewIdentifier) else {
 			return
 		}
 
-		terminationCompletionBlock = nil
-		performAsynchronouslyOnMainQueue(completionBlock)
+		item.logController?.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
 	}
 
-	private func remoteObjectProxy() -> HistoricLogServerProtocol? {
-		remoteObjectProxy(withErrorHandler: nil)
-	}
-
-	private func remoteObjectProxy(
-		withErrorHandler handler: ((Error) -> Void)?
-	) -> HistoricLogServerProtocol? {
-		serviceConnection?.remoteObjectProxyWithErrorHandler { [weak self] error in
-			self?.lastServiceConnectionError = error
-			historicLogLogger.error(
-				"Error occurred while communicating with service: \(error.localizedDescription, privacy: .public)"
-			)
-			handler?(error)
-		} as? HistoricLogServerProtocol
-	}
-
-	private func logLines(from xpcObjects: [LogLineXPC], forView viewIdentifier: String) -> [LogLine] {
-		var logLines: [LogLine] = []
-		logLines.reserveCapacity(xpcObjects.count)
-
-		for xpcObject in xpcObjects {
-			guard let logLine = LogLine.logLine(from: xpcObject) else {
-				historicLogLogger.error(
-					"Failed to initialize object \(String(describing: xpcObject), privacy: .public). Corrupt data?"
-				)
-				continue
-			}
-
-			indexLogLine(logLine, forView: viewIdentifier)
-			logLines.append(logLine)
-		}
-
-		return logLines
-	}
-
-	private func viewIndex(forView viewIdentifier: String, create: Bool) -> LogControllerHistoricLogViewIndex? {
-		guard let viewId = viewIdentifier as String? else {
-			return nil
-		}
-
-		objc_sync_enter(viewIndexes)
-		defer { objc_sync_exit(viewIndexes) }
-
-		if let index = viewIndexes[viewId] as? LogControllerHistoricLogViewIndex {
-			return index
-		}
-
-		guard create else {
-			return nil
-		}
-
-		let index = LogControllerHistoricLogViewIndex()
-		viewIndexes[viewId] = index
-		return index
-	}
+	// MARK: - Duplicate index
 
 	private static func fallbackKey(
 		for date: Date?,
@@ -303,59 +95,55 @@ public final nonisolated class LogControllerHistoricLogFile: NSObject, HistoricL
 		return String(format: "%lld\u{001f}%@\u{001f}%@", milliseconds, nickname ?? "", messageBody)
 	}
 
-	@objc(indexLogLine:forItem:)
 	public func indexLogLine(_ logLine: LogLine, forView viewIdentifier: String) {
-		guard let index = viewIndex(forView: viewIdentifier, create: true) else {
-			return
+		var index = viewIndexes[viewIdentifier] ?? HistoricLogViewIndex()
+
+		if let messageIdentifier = logLine.messageIdentifier, messageIdentifier.isEmpty == false {
+			index.messageIdentifiers.insert(messageIdentifier)
 		}
 
-		let messageIdentifier = logLine.messageIdentifier
-		let fallbackKey = Self.fallbackKey(
+		if let fallbackKey = Self.fallbackKey(
 			for: logLine.receivedAt,
 			nickname: logLine.nickname,
 			messageBody: logLine.messageBody
-		)
+		) {
+			index.fallbackKeys.insert(fallbackKey)
+		}
+
 		let receivedAt = logLine.receivedAt
 
-		objc_sync_enter(index)
-		defer { objc_sync_exit(index) }
-
-		if let messageIdentifier, messageIdentifier.isEmpty == false {
-			index.messageIdentifiers.add(messageIdentifier)
-		}
-
-		if let fallbackKey {
-			index.fallbackKeys.add(fallbackKey)
-		}
-
-		if index.newestDate == nil || receivedAt.compare(index.newestDate!) == .orderedDescending {
+		if let newestDate = index.newestDate {
+			index.newestDate = max(newestDate, receivedAt)
+		} else {
 			index.newestDate = receivedAt
 		}
 
-		if index.oldestDate == nil || receivedAt.compare(index.oldestDate!) == .orderedAscending {
+		if let oldestDate = index.oldestDate {
+			index.oldestDate = min(oldestDate, receivedAt)
+		} else {
 			index.oldestDate = receivedAt
 		}
+
+		viewIndexes[viewIdentifier] = index
 	}
 
-	@objc(containsMessageIdentifier:forItem:)
-	public func containsMessageIdentifier(_ messageIdentifier: String, forView viewIdentifier: String) -> Bool {
-		guard let index = viewIndex(forView: viewIdentifier, create: false) else {
-			return false
+	public func indexLogLines(_ logLines: [LogLine], forView viewIdentifier: String) {
+		for logLine in logLines {
+			indexLogLine(logLine, forView: viewIdentifier)
 		}
-
-		objc_sync_enter(index)
-		defer { objc_sync_exit(index) }
-		return index.messageIdentifiers.contains(messageIdentifier)
 	}
 
-	@objc(containsLineReceivedAt:nickname:messageBody:forItem:)
+	public func containsMessageIdentifier(_ messageIdentifier: String, forView viewIdentifier: String) -> Bool {
+		viewIndexes[viewIdentifier]?.messageIdentifiers.contains(messageIdentifier) ?? false
+	}
+
 	public func containsLine(
 		receivedAt: Date,
 		nickname: String?,
 		messageBody: String,
 		forView viewIdentifier: String
 	) -> Bool {
-		guard let index = viewIndex(forView: viewIdentifier, create: false),
+		guard let index = viewIndexes[viewIdentifier],
 		      let fallbackKey = Self.fallbackKey(
 		      	for: receivedAt,
 		      	nickname: nickname,
@@ -365,238 +153,43 @@ public final nonisolated class LogControllerHistoricLogFile: NSObject, HistoricL
 			return false
 		}
 
-		objc_sync_enter(index)
-		defer { objc_sync_exit(index) }
 		return index.fallbackKeys.contains(fallbackKey)
 	}
 
-	@objc(newestLineDateForItem:)
 	public func newestLineDate(forView viewIdentifier: String) -> Date? {
-		guard let index = viewIndex(forView: viewIdentifier, create: false) else {
-			return nil
-		}
-
-		objc_sync_enter(index)
-		defer { objc_sync_exit(index) }
-		return index.newestDate
+		viewIndexes[viewIdentifier]?.newestDate
 	}
 
-	@objc(oldestLineDateForItem:)
 	public func oldestLineDate(forView viewIdentifier: String) -> Date? {
-		guard let index = viewIndex(forView: viewIdentifier, create: false) else {
-			return nil
-		}
-
-		objc_sync_enter(index)
-		defer { objc_sync_exit(index) }
-		return index.oldestDate
+		viewIndexes[viewIdentifier]?.oldestDate
 	}
 
-	private func forgetIndex(forView viewIdentifier: String) {
-		guard let viewId = viewIdentifier as String? else {
-			return
-		}
+	// MARK: - Fetching
 
-		objc_sync_enter(viewIndexes)
-		defer { objc_sync_exit(viewIndexes) }
-		viewIndexes.removeObject(forKey: viewId)
+	/// Decodes fetched rows and records them in the index. The rows cross the
+	/// XPC boundary as values; the log lines they decode into are main-actor.
+	func decodeAndIndex(_ xpcObjects: [LogLineXPC], forView viewIdentifier: String) -> [LogLine] {
+		let logLines = HistoricLogClient.logLines(from: xpcObjects)
+		indexLogLines(logLines, forView: viewIdentifier)
+		return logLines
 	}
 
-	@objc(fetchEntriesForItem:ascending:fetchLimit:limitToDate:withCompletionBlock:)
-	public func fetchEntries(
-		forView viewIdentifier: String,
-		ascending: Bool,
-		fetchLimit: UInt,
-		limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
-	) {
-		warmProcessIfNeeded()
+	// MARK: - Writing
 
-		remoteObjectProxy(withErrorHandler: { _ in
-			completionBlock([])
-		})?.fetchEntries(
-			forView: viewIdentifier,
-			ascending: ascending,
-			fetchLimit: fetchLimit,
-			limitTo: limitToDate,
-			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
-				completionBlock(logLines)
-			}
-		)
-	}
-
-	@objc(fetchEntriesForItem:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:)
-	public func fetchEntries(
-		forView viewIdentifier: String,
-		withUniqueIdentifier uniqueId: String,
-		beforeFetchLimit fetchLimitBefore: UInt,
-		afterFetchLimit fetchLimitAfter: UInt,
-		limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
-	) {
-		warmProcessIfNeeded()
-
-		remoteObjectProxy(withErrorHandler: { _ in
-			completionBlock([])
-		})?.fetchEntries(
-			forView: viewIdentifier,
-			withUniqueIdentifier: uniqueId,
-			beforeFetchLimit: fetchLimitBefore,
-			afterFetchLimit: fetchLimitAfter,
-			limitTo: limitToDate,
-			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
-				completionBlock(logLines)
-			}
-		)
-	}
-
-	@objc(fetchEntriesForItem:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
-	public func fetchEntries(
-		forView viewIdentifier: String,
-		beforeUniqueIdentifier uniqueId: String,
-		fetchLimit: UInt,
-		limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
-	) {
-		warmProcessIfNeeded()
-
-		remoteObjectProxy(withErrorHandler: { _ in
-			completionBlock([])
-		})?.fetchEntries(
-			forView: viewIdentifier,
-			beforeUniqueIdentifier: uniqueId,
-			fetchLimit: fetchLimit,
-			limitTo: limitToDate,
-			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
-				completionBlock(logLines)
-			}
-		)
-	}
-
-	@objc(fetchEntriesForItem:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
-	public func fetchEntries(
-		forView viewIdentifier: String,
-		afterUniqueIdentifier uniqueId: String,
-		fetchLimit: UInt,
-		limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
-	) {
-		warmProcessIfNeeded()
-
-		remoteObjectProxy(withErrorHandler: { _ in
-			completionBlock([])
-		})?.fetchEntries(
-			forView: viewIdentifier,
-			afterUniqueIdentifier: uniqueId,
-			fetchLimit: fetchLimit,
-			limitTo: limitToDate,
-			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
-				completionBlock(logLines)
-			}
-		)
-	}
-
-	@objc(fetchEntriesForItem:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:)
-	public func fetchEntries(
-		forView viewIdentifier: String,
-		afterUniqueIdentifier uniqueIdAfter: String,
-		beforeUniqueIdentifier uniqueIdBefore: String,
-		fetchLimit: UInt,
-		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
-	) {
-		warmProcessIfNeeded()
-
-		remoteObjectProxy(withErrorHandler: { _ in
-			completionBlock([])
-		})?.fetchEntries(
-			forView: viewIdentifier,
-			afterUniqueIdentifier: uniqueIdAfter,
-			beforeUniqueIdentifier: uniqueIdBefore,
-			fetchLimit: fetchLimit,
-			withCompletionBlock: { [weak self] entries in
-				let logLines = self?.logLines(from: entries, forView: viewIdentifier) ?? []
-				completionBlock(logLines)
-			}
-		)
-	}
-
-	@objc
-	@discardableResult
-	public func saveData() -> Bool {
-		if isTerminating, processLoaded == false, processLoading == false {
-			return false
-		}
-
-		if isSaving == false {
-			isSaving = true
-		} else {
-			historicLogLogger.debug("Cancelled save because a save is already saving")
-			return true
-		}
-
-		warmProcessIfNeeded()
-
-		let saveCompleted: () -> Void = { [weak self] in
-			guard let self else {
-				return
-			}
-
-			isSaving = false
-
-			if isTerminating {
-				invalidateProcess()
-				invokeTerminationCompletionBlock()
-			}
-		}
-
-		/* If the service fails while saving, the error handler is the only
-		 callback we get. Treat that as the save having ended so that
-		 termination is not held up waiting on a reply that never comes. */
-		remoteObjectProxy(withErrorHandler: { _ in
-			saveCompleted()
-		})?.saveData(completionBlock: saveCompleted)
-
-		return true
-	}
-
-	@objc(forgetItem:)
-	public func forgetView(_ viewIdentifier: String) {
-		forgetIndex(forView: viewIdentifier)
-		warmProcessIfNeeded()
-		remoteObjectProxy()?.forgetView(viewIdentifier)
-	}
-
-	@objc(resetDataForItem:)
-	public func resetData(forView viewIdentifier: String) {
-		forgetIndex(forView: viewIdentifier)
-		warmProcessIfNeeded()
-		remoteObjectProxy()?.resetData(forView: viewIdentifier)
-	}
-
-	@objc(writeNewEntryWithLogLine:forItem:)
 	public func writeNewEntry(with logLine: LogLine, forView viewIdentifier: String) {
 		indexLogLine(logLine, forView: viewIdentifier)
-		warmProcessIfNeeded()
 
-		let newEntry = logLine.xpcObject(forView: viewIdentifier)
-		remoteObjectProxy()?.writeLogLine(newEntry)
+		let entry = logLine.xpcObject(forView: viewIdentifier)
+		Task { await HistoricLogClient.shared.writeEntry(entry) }
 	}
 
-	@objc(willDeleteUniqueIdentifiers:inView:)
-	public func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewId: String) {
-		/* The XPC service does not wait on this, so hop asynchronously rather than
-		 blocking its queue on the main thread. */
-		Task { @MainActor in
-			guard let item = AppController.shared.world?.findItem(withId: viewId) else {
-				return
-			}
+	public func forgetView(_ viewIdentifier: String) {
+		viewIndexes.removeValue(forKey: viewIdentifier)
+		Task { await HistoricLogClient.shared.forgetView(viewIdentifier) }
+	}
 
-			item.logController?
-				.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
-		}
+	public func resetData(forView viewIdentifier: String) {
+		viewIndexes.removeValue(forKey: viewIdentifier)
+		Task { await HistoricLogClient.shared.resetData(forView: viewIdentifier) }
 	}
 }
