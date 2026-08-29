@@ -123,7 +123,6 @@
 		1C0AB3508C528B0C9E5D3C27 /* LogController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61B6BC21DF5295BED01D0FC /* LogController.swift */; };
 		1C3EFF5876E8AB44E6B9CAC1 /* OELReachabilityMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD132868A53BF863A07E2FB /* OELReachabilityMigrationTests.swift */; };
 		1C6E358653F2E30AA7C8A50E /* InlineMediaCleartextPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56B34CB5C2CCE79B37CBDCF /* InlineMediaCleartextPolicyTests.swift */; };
-		1CE910C0E580F9A68B2B2EBD /* FileTransferDialogSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73BE3966E3D44FED6140C413 /* FileTransferDialogSocket.swift */; };
 		1CEBE9F17BDF7D93DDC01AF7 /* IRCClientJoining.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322FE7E6A0BB4328FFFE1252 /* IRCClientJoining.swift */; };
 		1CF16D0B3D829D3B45E5CED9 /* TextFormatterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5D479675E57AD6785F4E8D /* TextFormatterMenu.swift */; };
 		1D10EF5920C7AEC397083744 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C5D8A7EF4EA75277F8B2399 /* Cocoa.framework */; };
@@ -384,6 +383,7 @@
 		657B0769BD78F87B83F592A3 /* PreferencesRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799861E982D7382DCB59AA4F /* PreferencesRootView.swift */; };
 		66852027091D4A38DA729324 /* Preferences+Internal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D344CEBA9DEB6776D25F12D /* Preferences+Internal.swift */; };
 		66E7B12F8E1852168627CF52 /* IRCISupportPrefixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F361C4DD4D59D989F75A8860 /* IRCISupportPrefixTests.swift */; };
+		675AE65AC3E98E580C8F061A /* FileTransferDialogSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B0A80D091D38AC11ABDE3F3 /* FileTransferDialogSocket.swift */; };
 		67B13235224BFD5492280EE8 /* ServerPropertiesSheetProxyAndTLS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE850A92B27DBB6A770546A /* ServerPropertiesSheetProxyAndTLS.swift */; };
 		67B5D14BAB01F75D30979CB3 /* PreferencesUserDefaultsLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 463B8BD0746AD7C29A77D5F9 /* PreferencesUserDefaultsLocal.swift */; };
 		6801DBA04A06DE256DA9CF20 /* TPCPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7526C404C923DEA6854E2C4A /* TPCPreferences.swift */; };
@@ -568,6 +568,7 @@
 		99103C4764161C38337399C0 /* ExpressionParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87295106D6591B8903E1B48 /* ExpressionParser.swift */; };
 		99A65FA0BB1A5B9DC04BBB86 /* TDCServerEndpointListSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = FB05F73989CBA79730544A9A /* TDCServerEndpointListSheet.xib */; };
 		99ECE78CADEFFE80868BDCDA /* IRCConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 741BBEA9AF687E16BCC448F1 /* IRCConnection.swift */; };
+		99FD9C38DECAE2563759ED03 /* FileTransferController+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73BA3D8F25BE441891C44D /* FileTransferController+Events.swift */; };
 		99FDC1C1FB7F7A22817A70BE /* ApplicationSupportMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E65686A5B0E5373D15A3C40 /* ApplicationSupportMigrationTests.swift */; };
 		9A0B6A26158DEE7067906941 /* IRCClientBouncerSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28A587A1CD90B62A1FC24CD1 /* IRCClientBouncerSupport.swift */; };
 		9A4B17D6E3CC01FDA21C0A2A /* IRCClientRequestedCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 078E49BB37532492D38598C6 /* IRCClientRequestedCommands.swift */; };
@@ -664,7 +665,6 @@
 		B293CBFC39B39ACBD5588DD6 /* TrustPanelPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BA89368072237E649007DB /* TrustPanelPresenter.swift */; };
 		B361654494BDF910CC8A63BE /* ServerNicknameChangeFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05379A6D98A350FBF31C6814 /* ServerNicknameChangeFeatureTests.swift */; };
 		B41BAFFB7310950F0D100079 /* ChannelTopicFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCECDF18AF2200FC24EBCB8 /* ChannelTopicFeatureTests.swift */; };
-		B47635970412B55F99516C33 /* FileTransferController+Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898193E38B174877772493AF /* FileTransferController+Socket.swift */; };
 		B47DB07F2ADBC206225A56DD /* IRCAddressBookMatchCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FDE1391457FF9FE727D0A5 /* IRCAddressBookMatchCacheTests.swift */; };
 		B4D8862205CC1895739942F2 /* Notifications.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 479E2A4917FDC72A5842EC85 /* Notifications.xcstrings */; };
 		B4FC52C4907F484739C26D6A /* ICLPayloadLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E98AD0DB1CC82301B116F55 /* ICLPayloadLocal.swift */; };
@@ -1392,6 +1392,7 @@
 		1EB9BC4922B00AEADEA618C6 /* MenuActionCoordinatorDialogCallbacks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuActionCoordinatorDialogCallbacks.swift; sourceTree = "<group>"; };
 		1EFCEE23696C88E38FE0200C /* SystemProfilerPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemProfilerPlugin.swift; sourceTree = "<group>"; };
 		1F2C0003DB92AA05686D2C50 /* SecureTransportErrorCodes.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = SecureTransportErrorCodes.xcstrings; sourceTree = "<group>"; };
+		1F73BA3D8F25BE441891C44D /* FileTransferController+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferController+Events.swift"; sourceTree = "<group>"; };
 		1FFCB2697318AFDBCA45A0A0 /* NicknameColorFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NicknameColorFeatureTests.swift; sourceTree = "<group>"; };
 		200F2426B56BF1D746237D48 /* Caffeine.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Caffeine.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		201224AC35765D2C338EB797 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
@@ -1501,6 +1502,7 @@
 		39AB82C14FD60A9840ECCF5C /* IRCClientCommandDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientCommandDispatch.swift; sourceTree = "<group>"; };
 		3A0BF705AB0BD5D6374DA9A8 /* IRCAddressBookEntryMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCAddressBookEntryMatcher.swift; sourceTree = "<group>"; };
 		3A44DE3542E30E0C0F094AFB /* FoundationCompatibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationCompatibility.swift; sourceTree = "<group>"; };
+		3B0A80D091D38AC11ABDE3F3 /* FileTransferDialogSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTransferDialogSocket.swift; sourceTree = "<group>"; };
 		3B29241B8FBB12ED2250DD59 /* ChannelAccessListStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelAccessListStrings.swift; sourceTree = "<group>"; };
 		3B50613D3731F7F0B3482154 /* IRCClientInboundHandlerPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientInboundHandlerPolicyTests.swift; sourceTree = "<group>"; };
 		3BCBF2F7D4BCA6E76842E17F /* ICLPluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICLPluginManager.swift; sourceTree = "<group>"; };
@@ -1708,7 +1710,6 @@
 		72A01D9C1204E2BD0F36B28E /* CommandTokenizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandTokenizerTests.swift; sourceTree = "<group>"; };
 		72C50DEF589EF7357CC25F70 /* IRCUserNicknameColorStyleGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUserNicknameColorStyleGeneratorTests.swift; sourceTree = "<group>"; };
 		72D392D8C9B18DB232DF54F6 /* ChannelInviteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelInviteSheet.swift; sourceTree = "<group>"; };
-		73BE3966E3D44FED6140C413 /* FileTransferDialogSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTransferDialogSocket.swift; sourceTree = "<group>"; };
 		73C0722D36BEED2E6CEFD719 /* IRCUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUser.swift; sourceTree = "<group>"; };
 		73DF7CB7BA6CC33C47A46002 /* IRCClientTimerCommandDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientTimerCommandDispatch.swift; sourceTree = "<group>"; };
 		741BBEA9AF687E16BCC448F1 /* IRCConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCConnection.swift; sourceTree = "<group>"; };
@@ -1770,7 +1771,6 @@
 		88945C68521BC34E37E012E3 /* CoreFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreFunctions.swift; sourceTree = "<group>"; };
 		88E4DE21DE3D377FB32C06D0 /* LinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkParser.swift; sourceTree = "<group>"; };
 		89315F55E81CD2A342B63A1E /* TVCMainWindow.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TVCMainWindow.xcstrings; sourceTree = "<group>"; };
-		898193E38B174877772493AF /* FileTransferController+Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferController+Socket.swift"; sourceTree = "<group>"; };
 		89C822E81CF0BF5F6BE7F34D /* MainWindowStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowStrings.swift; sourceTree = "<group>"; };
 		8A20D5EE0BFD0C6720995669 /* IRCChannelModeKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannelModeKind.swift; sourceTree = "<group>"; };
 		8A791780CCE6274542D33126 /* msg-split.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "msg-split.json"; sourceTree = "<group>"; };
@@ -2420,17 +2420,16 @@
 				099E33E1B4AA5A57B4F510CE /* DCCTransfer.swift */,
 				23C3A3FD16C01312BBA8BE65 /* DCCTransfer+Network.swift */,
 				AA894490736FCE58AC14A467 /* FileTransferController+Connection.swift */,
+				1F73BA3D8F25BE441891C44D /* FileTransferController+Events.swift */,
 				B23DF8ECD01E402B3AECF87E /* FileTransferController+FileIO.swift */,
 				274665DDA99F72D8973099D2 /* FileTransferController+Lifecycle.swift */,
 				BE132C3325458FC49BEE75D9 /* FileTransferController+Presentation.swift */,
-				898193E38B174877772493AF /* FileTransferController+Socket.swift */,
 				B29469667C390916B148C856 /* FileTransferDialog.swift */,
 				B8E4793F5D5FF60C4F2FB2DB /* FileTransferDialog+DownloadDestination.swift */,
 				B25DC4ABE8CDAB693CF2030E /* FileTransferDialog+NetworkAddress.swift */,
 				52505F4D124BAD9298C9A576 /* FileTransferDialog+Presentation.swift */,
 				DA84D9E9227B9CF9D7D3BA99 /* FileTransferDialog+Table.swift */,
 				14768C82EB9519DC50C991B4 /* FileTransferDialog+Transfers.swift */,
-				73BE3966E3D44FED6140C413 /* FileTransferDialogSocket.swift */,
 				23864ECB19EC607F4EE0B7F5 /* FileTransferDialogTableCell.swift */,
 				069D625B408DDABCF339B76D /* FileTransferStrings.swift */,
 				F95389C50EBA365FC8DDE295 /* InternetAddressLookup.swift */,
@@ -2610,6 +2609,7 @@
 		36CF340E60F307E69A051B55 /* DirectChat */ = {
 			isa = PBXGroup;
 			children = (
+				3B0A80D091D38AC11ABDE3F3 /* FileTransferDialogSocket.swift */,
 				8FF37875339314B798AC63F8 /* IRCClientDirectChat.swift */,
 				665CFED800ED22FAA780D477 /* IRCClientDirectChatDelegate.swift */,
 				E58422516A66D76604119AC4 /* IRCDirectChatConnection.swift */,
@@ -5596,17 +5596,17 @@
 				21A4F95E4A0EF4D145152981 /* ErrorMessagePopoverController.swift in Sources */,
 				44B68D0982BD2D905BBF24BB /* FileLogger.swift in Sources */,
 				1E8BA683E887CCF34216462E /* FileTransferController+Connection.swift in Sources */,
+				99FD9C38DECAE2563759ED03 /* FileTransferController+Events.swift in Sources */,
 				06FDE7B2333901026FC6AF33 /* FileTransferController+FileIO.swift in Sources */,
 				1EEC9486219062D910836F95 /* FileTransferController+Lifecycle.swift in Sources */,
 				9C4BE5A482D5F4FB750E1C80 /* FileTransferController+Presentation.swift in Sources */,
-				B47635970412B55F99516C33 /* FileTransferController+Socket.swift in Sources */,
 				A891D00F38A16B6776AC7871 /* FileTransferDialog+DownloadDestination.swift in Sources */,
 				902855B5D5EDF9ABC59824BA /* FileTransferDialog+NetworkAddress.swift in Sources */,
 				B13986BA4217ED8321116DB4 /* FileTransferDialog+Presentation.swift in Sources */,
 				5CE834D2784A8529BD73CA9D /* FileTransferDialog+Table.swift in Sources */,
 				1EE158B71F4F34EA4E922BB6 /* FileTransferDialog+Transfers.swift in Sources */,
 				AF74917954FB5AF259B61410 /* FileTransferDialog.swift in Sources */,
-				1CE910C0E580F9A68B2B2EBD /* FileTransferDialogSocket.swift in Sources */,
+				675AE65AC3E98E580C8F061A /* FileTransferDialogSocket.swift in Sources */,
 				FD6EA022DC280CF770706180 /* FileTransferDialogTableCell.swift in Sources */,
 				7B00DDFA9F144D40416C4563 /* FileTransferStrings.swift in Sources */,
 				206818556D84A080A8AD34C2 /* GlobalModels.swift in Sources */,

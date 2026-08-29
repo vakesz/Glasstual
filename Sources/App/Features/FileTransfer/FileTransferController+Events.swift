@@ -6,7 +6,7 @@
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,45 +40,75 @@ import Foundation
 import os
 
 extension TDCFileTransferDialogTransferController {
-	@objc public func onMaintenanceTimer() {
-		dispatchPrecondition(condition: .onQueue(.main))
-		guard transferStatus == .receiving || transferStatus == .sending else {
-			assertionFailure("Maintenance timer fired for an inactive transfer")
-			return
-		}
+	/// Hands the transfer to a ``DCCTransfer`` actor and follows it.
+	///
+	/// Every event arrives back here on the main actor, which is where the
+	/// status, the progress and the dialog all live, so nothing the actor
+	/// reports has to cross isolation a second time.
+	func startTransfer(with configuration: DCCTransfer.Configuration) {
+		let transfer = DCCTransfer(configuration: configuration)
+		self.transfer = transfer
 
-		speedRecordsPrivate.append(NSNumber(value: currentRecord))
-		if speedRecordsPrivate.count > FileTransferLimits.speedRecordCount {
-			speedRecordsPrivate.removeFirst()
+		transferEvents = Task { [weak self] in
+			await transfer.start()
+
+			for await event in transfer.events {
+				self?.transferDidReport(event)
+			}
 		}
-		currentRecord = 0
-		reloadStatusInformation()
 	}
 
-	/// Moves `filename` on to the next free name in the download folder.
-	///
-	/// A transfer that lands on a name already in use would otherwise overwrite
-	/// somebody's file, so the receiver takes the next free one before the
-	/// transfer opens anything.
-	func setNonexistentFilename() {
-		guard let directoryPath = path,
-		      var candidatePath = filePath,
-		      FileManager.default.fileExists(atPath: candidatePath)
-		else {
+	/// Stops the running transfer, if there is one.
+	func stopTransfer() {
+		transferEvents?.cancel()
+		transferEvents = nil
+
+		guard let transfer else {
 			return
 		}
 
-		let filenameExtension = (filename as NSString).pathExtension
-		let stem = (filename as NSString).deletingPathExtension
-		var suffix = 1
-		repeat {
-			let candidateName = filenameExtension.isEmpty
-				? "\(stem)_\(suffix)"
-				: "\(stem)_\(suffix).\(filenameExtension)"
-			candidatePath = (directoryPath as NSString).appendingPathComponent(candidateName)
-			suffix += 1
-		} while FileManager.default.fileExists(atPath: candidatePath)
+		self.transfer = nil
 
-		filename = (candidatePath as NSString).lastPathComponent
+		Task { await transfer.cancel() }
+	}
+
+	private func transferDidReport(_ event: DCCTransferEvent) {
+		switch event {
+		case let .listening(port):
+			listeningServerDidStart(on: port)
+		case .connected:
+			transferDidConnect()
+		case let .progress(processedBytes):
+			transferDidProgress(to: processedBytes)
+		case .finished:
+			transferStatus = .complete
+			close()
+		case let .failed(error):
+			transferDidFail(with: error)
+		}
+	}
+
+	private func transferDidConnect() {
+		transferStatus = isSender ? .sending : .receiving
+		transferDialog.updateMaintenanceTimer()
+	}
+
+	private func transferDidProgress(to processedBytes: UInt64) {
+		/* `currentRecord` is the byte count the maintenance timer turns into a
+		 transfer rate once a second, so it takes the delta, not the total. */
+		if processedBytes > processedFilesize {
+			currentRecord += processedBytes - processedFilesize
+		}
+
+		processedFilesize = processedBytes
+	}
+
+	private func transferDidFail(with error: DCCTransferError) {
+		guard ![.complete, .fatalError, .recoverableError].contains(transferStatus) else {
+			return
+		}
+
+		fileTransferLogger.error("DCC transfer failed: \(String(describing: error), privacy: .public)")
+		close(with: FileTransferFailure(error))
 	}
 }

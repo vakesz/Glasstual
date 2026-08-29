@@ -74,17 +74,16 @@ public enum FileTransferStatus: UInt, Sendable {
 	case waitingForResumeAccept
 }
 
-/// Owns one DCC file transfer.
+/// Owns one DCC file transfer: what the user sees of it, and the negotiation
+/// that surrounds it.
 ///
-/// The controller and its mutable state are confined to the main queue. The
-/// Network.framework socket wrapper delivers delegate callbacks on that queue,
-/// and IRCClient, the dialog, the maintenance timer, and AppKit all call from it.
+/// The bytes themselves belong to a ``DCCTransfer`` actor. The controller
+/// starts one, follows its `AsyncStream` of events on the main actor, and
+/// turns them into the status the dialog, IRCClient and the maintenance timer
+/// read -- all of which are main-actor too.
 @objc(TDCFileTransferDialogTransferController)
 @MainActor
-public final class TDCFileTransferDialogTransferController: NSObject,
-	TDCClientPrototype,
-	TDCFileTransferDialogSocketDelegate
-{
+public final class TDCFileTransferDialogTransferController: NSObject, TDCClientPrototype {
 	@objc public internal(set) var client: IRCClient?
 	@objc public internal(set) var clientId: String?
 	@objc public weak var transferTableCell: FileTransferDialogTableCell?
@@ -105,12 +104,9 @@ public final class TDCFileTransferDialogTransferController: NSObject,
 	@objc public internal(set) var hostPort: UInt16 = 0
 
 	var speedRecordsPrivate: [NSNumber] = []
-	var fileHandle: FileHandle?
 	var portMapping: XRPortMapper?
-	var sendQueueSize = 0
-	var listeningServer: TDCFileTransferDialogSocket?
-	var listeningServerConnectedClient: TDCFileTransferDialogSocket?
-	var connectionToRemoteServer: TDCFileTransferDialogSocket?
+	var transfer: DCCTransfer?
+	var transferEvents: Task<Void, Never>?
 	var transferProgressHandler: NSObjectProtocol?
 	var lifecycleNotifications = NotificationSubscriptions()
 	var portMapperNotifications = NotificationSubscriptions()
