@@ -39,162 +39,61 @@ import Foundation
 import Mustache
 import os
 
-public typealias InlineContentModuleActionBlock = @convention(block) (InlineContentModule) -> Void
-
-@objc(ICLInlineContentModule)
-open class InlineContentModule: NSObject {
+/// Loading and rendering the Mustache templates modules present through.
+///
+/// `Template` is a reference type from GRMustache, so it is created and used
+/// inside one call and never stored: a module is a value and holds none.
+public enum InlineContentTemplate {
 	private static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "Modules"
 	)
 
-	@objc public let payload: InlineContentPayloadMutable
-	private weak var process: (any InlineContentProcessHandling)?
-	private var moduleFinalized = false
-
-	@available(*, unavailable, message: "Modules are created by Inline Content Loader")
-	override init() {
-		fatalError("Modules are created by Inline Content Loader")
+	/// A component that ships beside the executable, under `Components`.
+	public static func componentURL(named name: String, extension pathExtension: String) -> URL? {
+		Bundle.main.url(forResource: name, withExtension: pathExtension, subdirectory: "Components")
 	}
 
-	@objc(initWithPayload:inProcess:)
-	public required init(payload: InlineContentPayloadMutable, inProcess process: any InlineContentProcessHandling) {
-		self.payload = payload
-		self.process = process
-		super.init()
-		mergePropertiesIntoPayload()
-	}
-
-	@objc(initWithDeferredModule:)
-	public init(deferredModule module: InlineContentModule) {
-		payload = InlineContentPayloadMutable(deferredPayload: module.payload)
-		process = module.process
-		super.init()
-		mergePropertiesIntoPayload()
-	}
-
-	private func mergePropertiesIntoPayload() {
-		if let scriptResources {
-			payload.scriptResources = scriptResources
-		}
-		if let styleResources {
-			payload.styleResources = styleResources
-		}
-		if let entrypoint {
-			payload.entrypoint = entrypoint
-		}
-	}
-
-	@objc open class var domains: [String]? {
-		nil
-	}
-
-	@objc(actionBlockForURL:)
-	open class func actionBlock(for _: URL) -> InlineContentModuleActionBlock? {
-		nil
-	}
-
-	@objc(actionForURL:)
-	open class func action(for _: URL) -> Selector? {
-		nil
-	}
-
-	@objc open class var contentImageOrVideo: Bool {
-		false
-	}
-
-	@objc open class var contentIsFile: Bool {
-		false
-	}
-
-	/// Whether the module puts markup it did not build itself into the log view.
+	/// Renders `attributes` through the template at `url`.
 	///
-	/// Defaults to the cautious answer: a module that never says otherwise is
-	/// treated as untrusted, so forgetting to declare it costs a gated module
-	/// rather than an ungated injection point.
-	@objc open class var contentUntrusted: Bool {
-		true
-	}
+	/// Returns nil when the template is missing or unreadable, which the
+	/// caller reports as "nothing to show" rather than as a failure: a missing
+	/// component is a packaging problem, not something the server did.
+	public static func render(_ url: URL?, _ attributes: [String: Any]) throws -> String? {
+		guard let url, url.isFileURL else { return nil }
 
-	/// Whether the module's content should be withheld when the user has asked
-	/// for adult content to be limited. Defaults to the cautious answer.
-	@objc open class var contentNotSafeForWork: Bool {
-		true
-	}
-
-	@objc open var styleResources: [URL]? {
-		nil
-	}
-
-	@objc open var scriptResources: [URL]? {
-		nil
-	}
-
-	@objc open var entrypoint: String? {
-		nil
-	}
-
-	@objc open var templateURL: URL? {
-		nil
-	}
-
-	open var template: Template? {
-		guard let templateURL, templateURL.isFileURL else { return nil }
+		let template: Template
 
 		do {
-			return try Template(URL: templateURL)
+			template = try Template(URL: url)
 		} catch {
-			Self.logger.error(
-				"Failed to load template '\(templateURL.standardizedFileURL.path, privacy: .public)': \(error.localizedDescription, privacy: .public)"
+			logger.error(
+				"Failed to load template '\(url.standardizedFileURL.path, privacy: .public)': \(error.localizedDescription, privacy: .public)"
 			)
+
 			return nil
 		}
+
+		return try template.render(attributes)
 	}
 
-	override open func finalize() {
-		finalizeWithError(nil)
-	}
+	/// Renders and folds the two failure shapes into one outcome, which is what
+	/// every module wants: a missing template cancels, a render error fails.
+	public static func outcome(
+		_ url: URL?,
+		_ attributes: [String: Any],
+		into values: InlineContentPayloadValues
+	) -> InlineContentOutcome {
+		var values = values
 
-	@objc(finalizeWithError:)
-	public func finalizeWithError(_ error: Error?) {
-		precondition(!moduleFinalized, "Module already finalized")
-		finalizePreflight()
-		process?.finalize(module: self, error: error as NSError?)
-		finishLifecycle()
-	}
+		do {
+			guard let html = try render(url, attributes) else { return .cancelled }
 
-	@objc
-	public func cancel() {
-		precondition(!moduleFinalized, "Module already cancelled")
-		finalizePreflight()
-		process?.cancel(module: self)
-		finishLifecycle()
-	}
+			values.html = html
 
-	@objc(isTypeDeferrable:)
-	public class func isTypeDeferrable(_ type: InlineContentMediaType) -> Bool {
-		type == .image || type == .video || type == .videoGif
-	}
-
-	@objc(deferAsType:)
-	public func deferContent(as type: InlineContentMediaType) {
-		deferContent(as: type, performCheck: true)
-	}
-
-	@objc(deferAsType:performCheck:)
-	public func deferContent(as type: InlineContentMediaType, performCheck: Bool) {
-		precondition(!moduleFinalized, "Module already deferred")
-		precondition(Self.isTypeDeferrable(type), "Unsupported deferred media type")
-		finalizePreflight()
-		process?.deferModule(self, as: type, performCheck: performCheck)
-		finishLifecycle()
-	}
-
-	@objc
-	open func finalizePreflight() {}
-
-	private func finishLifecycle() {
-		moduleFinalized = true
-		process = nil
+			return .finished(values)
+		} catch {
+			return .failed(values, error as NSError)
+		}
 	}
 }

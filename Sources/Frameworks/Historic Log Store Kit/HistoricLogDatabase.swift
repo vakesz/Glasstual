@@ -46,8 +46,16 @@ import os
 /// passes in the values a query needs and gets a `Sendable` result back.
 /// `NSManagedObjectContext` is itself `Sendable`; fetch requests and the
 /// model are not, so both are built from the context inside the block.
+/// Locates this framework's bundle. `Bundle(for:)` needs a class to point at;
+/// this one exists for no other reason.
+private final class HistoricLogStoreKitBundleToken {}
+
+/// Where the name of the database file is kept between launches.
+public protocol HistoricLogFilenameStoring: Sendable {
+	var databaseFilename: String? { get nonmutating set }
+}
+
 enum HistoricLogDatabase {
-	static let filenameKey = "TVCLogControllerHistoricLogFileSavePath_v3"
 	static let modelName = "HistoricLogFileStorageModel"
 	static let entityName = "LogLine2"
 
@@ -111,10 +119,11 @@ enum HistoricLogDatabase {
 		return context
 	}
 
-	/// The bundle the compiled model ships in: the service bundle in the
-	/// service, the test bundle under test. `Bundle.main` is neither.
+	/// The bundle the compiled model ships in. It travels with this framework,
+	/// so it is found through a type of this framework's rather than through
+	/// `Bundle.main`, which is the host application under test.
 	private static var modelBundle: Bundle {
-		Bundle(for: HistoricLogProcessMain.self)
+		Bundle(for: HistoricLogStoreKitBundleToken.self)
 	}
 
 	static func makeViewContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
@@ -379,6 +388,10 @@ enum HistoricLogDatabase {
 
 		identifierRequest.resultType = .dictionaryResultType
 		identifierRequest.propertiesToFetch = ["logLineUniqueIdentifier"]
+		/* A dictionary result with a batch size has to fetch the object ID too,
+		 and Core Data logs a complaint and drops the batching when it does not.
+		 Nothing here wants batching: the identifiers are read once. */
+		identifierRequest.fetchBatchSize = 0
 		identifierRequest.includesPendingChanges = false
 		identifierRequest.returnsObjectsAsFaults = false
 		identifierRequest.sortDescriptors = nil

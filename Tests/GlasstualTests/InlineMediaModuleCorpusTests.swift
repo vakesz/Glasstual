@@ -41,11 +41,9 @@ import Testing
 
 /// Behaviour corpus for the URL matching performed by the Core Media modules.
 ///
-/// Each module declares the hosts it claims (`domains`) and then decides,
-/// from the URL alone, whether it can render the address (`actionBlock(for:)`).
-/// Only the static matching is exercised here — no module is instantiated and
-/// no network request is made.
-@MainActor
+/// Each module declares the hosts it claims (`domains`) and then decides, from
+/// the URL alone, whether it can render the address (`module(for:)`). Only the
+/// matching is exercised here — nothing is run and no request is made.
 struct InlineMediaModuleCorpusTests {
 	struct URLCase: Sendable {
 		let address: String
@@ -59,13 +57,13 @@ struct InlineMediaModuleCorpusTests {
 
 	private static func expectMatch(
 		_ testCase: URLCase,
-		_ module: InlineContentModule.Type,
+		_ module: any InlineContentModule.Type,
 		sourceLocation: SourceLocation = #_sourceLocation
 	) throws {
 		let url = try #require(URL(string: testCase.address), sourceLocation: sourceLocation)
 
 		#expect(
-			(module.actionBlock(for: url) != nil) == testCase.matches,
+			(module.module(for: url) != nil) == testCase.matches,
 			"\(module) and \(testCase.address)",
 			sourceLocation: sourceLocation
 		)
@@ -95,7 +93,7 @@ struct InlineMediaModuleCorpusTests {
 		}
 	}
 
-	private static let hostScopedModules: [InlineContentModule.Type] = [
+	private static let hostScopedModules: [any InlineContentModule.Type] = [
 		DailymotionModule.self, GyazoModule.self, ImgurGifvModule.self, PornhubModule.self,
 		StreamableModule.self, TweetModule.self, VimeoModule.self, XkcdModule.self, YouTubeModule.self,
 	]

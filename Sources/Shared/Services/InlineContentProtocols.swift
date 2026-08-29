@@ -62,7 +62,7 @@ nonisolated protocol InlineContentServerProtocol: AnyObject {
 }
 
 @objc(ICLInlineContentClientProtocol)
-nonisolated protocol InlineContentClientProtocol: AnyObject {
+nonisolated protocol InlineContentClientProtocol: AnyObject, Sendable {
 	@objc(processingPayloadSucceeded:)
 	func processingPayloadSucceeded(_ payload: InlineContentPayload)
 

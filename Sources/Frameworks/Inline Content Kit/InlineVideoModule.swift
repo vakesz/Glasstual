@@ -36,49 +36,128 @@
  *********************************************************************** */
 
 import Foundation
-import Mustache
 
-@objc(ICMInlineVideoFoundation)
-open class InlineVideoFoundation: InlineContentModule {
-	/** Renders through the framework's own template into an escaped attribute,
-	 and carries no adult content of its own. */
-	override open class var contentUntrusted: Bool {
-		false
+/// How the inline player is configured for one video.
+public struct InlineVideoOptions: Sendable {
+	public var autoplayEnabled = false
+	public var controlsEnabled = true
+	public var loopEnabled = false
+	public var muteEnabled = false
+	public var startTime: TimeInterval = 0
+	public var playbackSpeed = 1.0
+
+	public init() {}
+
+	/// A silent, looping, chromeless player: what an animated image wants.
+	public static var gif: InlineVideoOptions {
+		var options = InlineVideoOptions()
+
+		options.autoplayEnabled = true
+		options.controlsEnabled = false
+		options.loopEnabled = true
+		options.muteEnabled = true
+
+		return options
+	}
+}
+
+/// Presents a URL as an inline video.
+///
+/// The framework's own template escapes everything it renders, so content that
+/// reaches the log view through here is trusted and carries no adult content of
+/// its own; a module that wraps this inherits both answers.
+public enum InlineVideoContent {
+	public static let entrypoint = "_ICMInlineVideo"
+
+	public static var styleResources: [URL] {
+		[InlineContentTemplate.componentURL(named: "ICMInlineVideo", extension: "css")].compactMap(\.self)
 	}
 
-	override open class var contentNotSafeForWork: Bool {
-		false
+	public static var scriptResources: [URL] {
+		[InlineContentTemplate.componentURL(named: "ICMInlineVideo", extension: "js")].compactMap(\.self)
 	}
 
-	@objc public var videoAutoplayEnabled = false
-	@objc public var videoControlsEnabled = true
-	@objc public var videoLoopEnabled = false
-	@objc public var videoMuteEnabled = false
-	@objc public var videoStartTime: TimeInterval = 0
-	@objc public var videoPlaybackSpeed = 1.0
-
-	override open class var contentImageOrVideo: Bool {
-		true
+	private static var templateURL: URL? {
+		InlineContentTemplate.componentURL(named: "ICMInlineVideo", extension: "mustache")
 	}
 
-	override open var templateURL: URL? {
-		Self.componentURL(named: "ICMInlineVideo", extension: "mustache")
+	/// Renders `values.urlToInline` as a video.
+	public static func produce(
+		_ values: InlineContentPayloadValues,
+		options: InlineVideoOptions = InlineVideoOptions(),
+		checkVideo: Bool = true
+	) async -> InlineContentOutcome {
+		var values = values
+
+		if checkVideo {
+			let assessment = await MediaAssessor.assess(values.urlToInline, expecting: .video)
+
+			if case let .failure(error) = assessment {
+				MediaAssessor.logError(error)
+
+				return .cancelled
+			}
+		}
+
+		values.styleResources = styleResources
+		values.scriptResources = scriptResources
+		values.entrypoint = entrypoint
+
+		let playbackSpeed = (0.125 ... 6.0).contains(options.playbackSpeed) ? options.playbackSpeed : 1.0
+
+		let attributes: [String: Any] = [
+			"anchorLink": values.url.absoluteString,
+			"classAttribute": values.classAttribute,
+			"preferredMaximumWidth": InlineContentPreferences.current.maximumWidth,
+			"uniqueIdentifier": values.uniqueIdentifier,
+			"videoAutoplayEnabled": options.autoplayEnabled,
+			"videoControlsEnabled": options.controlsEnabled,
+			"videoLoopEnabled": options.loopEnabled,
+			"videoMuteEnabled": options.muteEnabled,
+			"videoPlaybackSpeed": playbackSpeed,
+			"videoStartTime": options.startTime,
+			"videoURL": values.urlToInline.absoluteString,
+		]
+
+		return InlineContentTemplate.outcome(templateURL, attributes, into: values)
 	}
 
-	override open var styleResources: [URL]? {
-		[Self.componentURL(named: "ICMInlineVideo", extension: "css")].compactMap(\.self)
+	/// Points the payload at `address` and renders it. Refuses an address that
+	/// is outside the inline URL policy rather than trusting a remote string.
+	public static func produce(
+		_ values: InlineContentPayloadValues,
+		address: String,
+		options: InlineVideoOptions = InlineVideoOptions(),
+		checkVideo: Bool = true
+	) async -> InlineContentOutcome {
+		var values = values
+
+		guard let url = InlineContentHelpers.url(with: address), values.setURLToInline(url) else {
+			return .cancelled
+		}
+
+		return await produce(values, options: options, checkVideo: checkVideo)
 	}
 
-	override open var scriptResources: [URL]? {
-		[Self.componentURL(named: "ICMInlineVideo", extension: "js")].compactMap(\.self)
+	/// Renders a module's own template into the shared video container: the
+	/// container's stylesheet, script and entrypoint, the module's markup.
+	public static func embed(
+		_ values: InlineContentPayloadValues,
+		templateURL: URL?,
+		attributes: [String: Any]
+	) -> InlineContentOutcome {
+		var values = values
+
+		values.styleResources = styleResources
+		values.scriptResources = scriptResources
+		values.entrypoint = entrypoint
+
+		return InlineContentTemplate.outcome(templateURL, attributes, into: values)
 	}
 
-	override open var entrypoint: String? {
-		"_ICMInlineVideo"
-	}
-
-	@objc(parseYouTubeEsqueTimestamp:)
-	public class func parseYouTubeEsqueTimestamp(_ timestamp: String) -> TimeInterval {
+	/// The seconds a `?t=` timestamp names, in either the bare-seconds form or
+	/// the `1h2m3s` form YouTube and its imitators use.
+	public static func parseTimestamp(_ timestamp: String) -> TimeInterval {
 		if !timestamp.isEmpty, timestamp.allSatisfy(\.isNumber) {
 			return TimeInterval(timestamp) ?? 0
 		}
@@ -116,155 +195,37 @@ open class InlineVideoFoundation: InlineContentModule {
 
 		return value
 	}
-
-	private static func componentURL(named name: String, extension pathExtension: String) -> URL? {
-		Bundle.main.url(forResource: name, withExtension: pathExtension, subdirectory: "Components")
-	}
 }
 
-@objc(ICMInlineVideo)
-open class InlineVideoModule: InlineVideoFoundation {
-	private var videoCheck: MediaAssessor?
-
-	@objc
-	public func performAction() {
-		performAction(withVideoCheck: true)
+/// The module that inlines any URL the caller has already decided is a video.
+public struct InlineVideoModule: InlineContentModule {
+	public static var contentImageOrVideo: Bool {
+		true
 	}
 
-	@objc(performActionWithVideoCheck:)
-	public func performAction(withVideoCheck checkVideo: Bool) {
-		if checkVideo {
-			performVideoCheck()
-		} else {
-			completeVideoLoad()
-		}
+	public static var contentUntrusted: Bool {
+		false
 	}
 
-	@objc(performActionForURL:)
-	public func performAction(for url: URL) {
-		performAction(for: url, bypassVideoCheck: false)
+	public static var contentNotSafeForWork: Bool {
+		false
 	}
 
-	@objc(performActionForURL:bypassVideoCheck:)
-	public func performAction(for url: URL, bypassVideoCheck: Bool) {
-		precondition(videoCheck == nil, "Module already initialized")
-		guard !url.isFileURL else { return cancel() }
-		payload.urlToInline = url
-		performAction(withVideoCheck: !bypassVideoCheck)
+	private let address: String
+	private let options: InlineVideoOptions
+	private let checkVideo: Bool
+
+	public init(address: String, options: InlineVideoOptions = InlineVideoOptions(), checkVideo: Bool = true) {
+		self.address = address
+		self.options = options
+		self.checkVideo = checkVideo
 	}
 
-	@objc(performActionForAddress:)
-	public func performAction(forAddress address: String) {
-		performAction(forAddress: address, bypassVideoCheck: false)
+	public static func module(for url: URL) -> (any InlineContentModule)? {
+		InlineVideoModule(address: url.absoluteString)
 	}
 
-	@objc(performActionForAddress:bypassVideoCheck:)
-	public func performAction(forAddress address: String, bypassVideoCheck: Bool) {
-		guard let url = InlineContentHelpers.url(with: address) else { return cancel() }
-		performAction(for: url, bypassVideoCheck: bypassVideoCheck)
-	}
-
-	private func performVideoCheck() {
-		let completion: (MediaAssessment?, NSError?) -> Void = { [weak self] _, error in
-			guard let self else { return }
-
-			if let error {
-				notifyUnsafeToLoadVideo()
-				MediaAssessor.logError(error)
-			} else {
-				completeVideoLoad()
-			}
-
-			videoCheck = nil
-		}
-
-		guard let assessor = MediaAssessor(
-			url: payload.urlToInline,
-			expectedType: .video,
-			completion: completion
-		) else {
-			return cancel()
-		}
-
-		videoCheck = assessor
-		assessor.resume()
-	}
-
-	private func completeVideoLoad() {
-		guard let template else { return cancel() }
-		let playbackSpeed = (0.125 ... 6.0).contains(videoPlaybackSpeed) ? videoPlaybackSpeed : 1.0
-
-		let attributes: [String: Any] = [
-			"anchorLink": payload.address,
-			"classAttribute": payload.classAttribute,
-			"preferredMaximumWidth": InlineContentPreferences.current.maximumWidth,
-			"uniqueIdentifier": payload.uniqueIdentifier,
-			"videoAutoplayEnabled": videoAutoplayEnabled,
-			"videoControlsEnabled": videoControlsEnabled,
-			"videoLoopEnabled": videoLoopEnabled,
-			"videoMuteEnabled": videoMuteEnabled,
-			"videoPlaybackSpeed": playbackSpeed,
-			"videoStartTime": videoStartTime,
-			"videoURL": payload.addressToInline,
-		]
-
-		do {
-			payload.html = try template.render(attributes)
-			finalize()
-		} catch {
-			finalizeWithError(error)
-		}
-	}
-
-	@objc
-	public func notifyUnsafeToLoadVideo() {
-		cancel()
-	}
-
-	@objc(actionBlockForForURL:)
-	public class func actionBlock(forFor url: URL) -> InlineContentModuleActionBlock {
-		actionBlock(forFor: url, bypassVideoCheck: false)
-	}
-
-	@objc(actionBlockForForURL:bypassVideoCheck:)
-	public class func actionBlock(forFor url: URL, bypassVideoCheck: Bool) -> InlineContentModuleActionBlock {
-		actionBlock(forAddress: url.absoluteString, bypassVideoCheck: bypassVideoCheck)
-	}
-
-	@objc(actionBlockForAddress:)
-	public class func actionBlock(forAddress address: String) -> InlineContentModuleActionBlock {
-		actionBlock(forAddress: address, bypassVideoCheck: false)
-	}
-
-	@objc(actionBlockForAddress:bypassVideoCheck:)
-	public class func actionBlock(forAddress address: String,
-	                              bypassVideoCheck: Bool) -> InlineContentModuleActionBlock
-	{
-		{ module in
-			(module as? InlineVideoModule)?.performAction(
-				forAddress: address,
-				bypassVideoCheck: bypassVideoCheck
-			)
-		}
-	}
-}
-
-@objc(ICMInlineGifVideo)
-open class InlineGifVideoModule: InlineVideoModule {
-	public required init(payload: InlineContentPayloadMutable, inProcess process: any InlineContentProcessHandling) {
-		super.init(payload: payload, inProcess: process)
-		configurePlayback()
-	}
-
-	override public init(deferredModule module: InlineContentModule) {
-		super.init(deferredModule: module)
-		configurePlayback()
-	}
-
-	private func configurePlayback() {
-		videoAutoplayEnabled = true
-		videoControlsEnabled = false
-		videoLoopEnabled = true
-		videoMuteEnabled = true
+	public func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		await InlineVideoContent.produce(payload, address: address, options: options, checkVideo: checkVideo)
 	}
 }

@@ -37,29 +37,31 @@
 
 import Foundation
 import InlineContentKit
-import Mustache
 
-@objc(ICMDailymotion)
-final class DailymotionModule: InlineVideoFoundation {
-	private func performAction(forVideo identifier: String) {
-		let attributes: [String: Any] = [
-			"uniqueIdentifier": payload.uniqueIdentifier,
-			"videoIdentifier": identifier,
-		]
-		guard let template else { return cancel() }
-		do {
-			payload.html = try template.render(attributes)
-			finalize()
-		} catch {
-			finalizeWithError(error)
-		}
+/// Dailymotion's own player, embedded through this module's template.
+struct DailymotionModule: InlineContentModule {
+	static var domains: [String]? {
+		["dailymotion.com", "www.dailymotion.com", "mobile.dailymotion.com"]
 	}
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var contentImageOrVideo: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let identifier: String
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		guard let identifier = videoIdentifier(for: url) else { return nil }
-		return { module in
-			(module as? DailymotionModule)?.performAction(forVideo: identifier)
-		}
+
+		return DailymotionModule(identifier: identifier)
 	}
 
 	private static func videoIdentifier(for url: URL) -> String? {
@@ -70,11 +72,14 @@ final class DailymotionModule: InlineVideoFoundation {
 		return identifier
 	}
 
-	override static var domains: [String]? {
-		["dailymotion.com", "www.dailymotion.com", "mobile.dailymotion.com"]
-	}
-
-	override var templateURL: URL? {
-		Bundle(for: DailymotionModule.self).url(forResource: "ICMDailymotion", withExtension: "mustache")
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		InlineVideoContent.embed(
+			payload,
+			templateURL: CoreMediaBundle.current.url(forResource: "ICMDailymotion", withExtension: "mustache"),
+			attributes: [
+				"uniqueIdentifier": payload.uniqueIdentifier,
+				"videoIdentifier": identifier,
+			]
+		)
 	}
 }

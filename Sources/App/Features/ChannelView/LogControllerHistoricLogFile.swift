@@ -12,6 +12,7 @@
 
 import CocoaExtensions
 import Foundation
+import HistoricLogStoreKit
 
 /** What the app knows about the lines of one view, kept in memory so that chat
  history replayed by the server can be checked against the local scrollback

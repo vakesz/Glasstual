@@ -84,11 +84,70 @@ public protocol ConnectionDelegate: AnyObject {
 	func ircConnection(_ sender: Connection, willSendData data: String)
 }
 
-/** Owned by `IRCClient` on the main actor. The connection host's callbacks
+/*  Owned by `IRCClient` on the main actor. The connection host's callbacks
  arrive on an NSXPC queue and are forwarded through `events`, which the main
  actor drains in order; nothing else on this type is touched off-main. */
+/** The object NSXPC exports for the host's callbacks.
+
+ `RemoteConnectionClientProtocol` refines `Sendable` so the connection host can
+ push through the proxy from inside its actor. That makes every conformer
+ `Sendable`, which `Connection` — main-actor state, and plenty of it — cannot
+ be, so the conformance lives on this instead. It holds nothing but the event
+ continuation and hands every callback straight to it. */
+private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtocol {
+	private let events: AsyncStream<ConnectionEvent>.Continuation
+
+	init(events: AsyncStream<ConnectionEvent>.Continuation) {
+		self.events = events
+
+		super.init()
+	}
+
+	/* Every callback below arrives on the NSXPC queue. They only hand the value
+	 to `events`; the main actor does the work, in the order the host sent it. */
+
+	func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16) {
+		events.yield(.willConnectToProxy(host: proxyHost, port: proxyPort))
+	}
+
+	func ircConnectionDidConnect(toHost host: String?) {
+		events.yield(.didConnect(host: host))
+	}
+
+	func ircConnectionDidSecureConnection(
+		withProtocolType protocolType: tls_protocol_version_t,
+		cipherSuite: tls_ciphersuite_t
+	) {
+		events.yield(.didSecure(protocolType: protocolType, cipherSuite: cipherSuite))
+	}
+
+	func ircConnectionDidCloseReadStream() {
+		events.yield(.didCloseReadStream)
+	}
+
+	func ircConnectionDidDisconnectWithError(_ disconnectError: Error?) {
+		events.yield(.didDisconnect(error: disconnectError))
+	}
+
+	func ircConnectionDidReceive(_ data: Data) {
+		events.yield(.didReceive(data))
+	}
+
+	func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping TrustDecisionHandler) {
+		events.yield(.requestInsecureCertificateTrust(trustBlock))
+	}
+
+	func ircConnectionWillSend(_ data: Data) {
+		events.yield(.willSend(data))
+	}
+
+	func ircConnectionDidSendData() {
+		events.yield(.didSendData)
+	}
+}
+
 @objc(IRCConnection)
-public final class Connection: NSObject, RemoteConnectionClientProtocol {
+public final class Connection: NSObject {
 	@objc public private(set) weak var client: IRCClient!
 	public private(set) var config: IRCConnectionConfig
 	@objc public private(set) var isConnected = false
@@ -118,6 +177,7 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 	/// The host's callbacks, in arrival order, on their way to the main actor.
 	private nonisolated let events: AsyncStream<ConnectionEvent>
 	private nonisolated let eventContinuation: AsyncStream<ConnectionEvent>.Continuation
+	private nonisolated let clientShim: ConnectionClientShim // nonisolated: let
 	private var eventTask: Task<Void, Never>?
 
 	private var serviceConnection: NSXPCConnection?
@@ -138,6 +198,7 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 		self.config = config
 		uniqueIdentifier = UUID().uuidString
 		(events, eventContinuation) = AsyncStream.makeStream()
+		clientShim = ConnectionClientShim(events: eventContinuation)
 		super.init()
 		startDeliveringEvents()
 	}
@@ -242,7 +303,7 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 		let connection = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
 		connection.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
 		connection.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
-		connection.exportedObject = self
+		connection.exportedObject = clientShim
 		connection.interruptionHandler = { [weak self] in
 			self?.eventContinuation.yield(.serviceInterrupted)
 			connectionLogger.info("IRC connection service interrupted")
@@ -474,52 +535,8 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol {
 		remoteObjectProxy()?.clearSendQueue()
 	}
 
-	/* Every callback below arrives on the NSXPC queue. They only hand the value
-	 to `events`; the main actor does the work, in the order the host sent it. */
-
-	public nonisolated func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16) {
-		eventContinuation.yield(.willConnectToProxy(host: proxyHost, port: proxyPort))
-	}
-
-	public nonisolated func ircConnectionDidConnect(toHost host: String?) {
-		eventContinuation.yield(.didConnect(host: host))
-	}
-
-	public nonisolated func ircConnectionDidSecureConnection(
-		withProtocolType protocolType: tls_protocol_version_t,
-		cipherSuite: tls_ciphersuite_t
-	) {
-		eventContinuation.yield(.didSecure(protocolType: protocolType, cipherSuite: cipherSuite))
-	}
-
-	public nonisolated func ircConnectionDidCloseReadStream() {
-		eventContinuation.yield(.didCloseReadStream)
-	}
-
-	public nonisolated func ircConnectionDidDisconnectWithError(_ disconnectError: Error?) {
-		eventContinuation.yield(.didDisconnect(error: disconnectError))
-	}
-
 	private func didDisconnect(with error: Error?) {
 		closeInsecureCertificateTrustPanel()
 		client?.ircConnection(self, didDisconnectWithError: error)
-	}
-
-	public nonisolated func ircConnectionDidReceive(_ data: Data) {
-		eventContinuation.yield(.didReceive(data))
-	}
-
-	public nonisolated func ircConnectionRequestInsecureCertificateTrust(
-		_ trustBlock: @escaping TrustDecisionHandler
-	) {
-		eventContinuation.yield(.requestInsecureCertificateTrust(trustBlock))
-	}
-
-	public nonisolated func ircConnectionWillSend(_ data: Data) {
-		eventContinuation.yield(.willSend(data))
-	}
-
-	public nonisolated func ircConnectionDidSendData() {
-		eventContinuation.yield(.didSendData)
 	}
 }

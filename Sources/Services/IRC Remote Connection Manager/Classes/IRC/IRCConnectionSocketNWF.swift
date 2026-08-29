@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2018, 2019 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,29 +39,433 @@ import CocoaExtensions
 import Foundation
 import Network
 import Security
+import Synchronization
 
-/** ConnectionSocketNWF is the Network.framework transport.
- See ConnectionSocket for the queue confinement rules; every method
- here runs on `queue`, including the NWConnection callbacks. */
-final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @unchecked Sendable {
-	fileprivate var readInBuffer = Data()
+/// The Network.framework transport, as an actor.
+///
+/// Every `NWConnection` callback is `@Sendable` in the SDK, so each one does
+/// nothing but hand its value to this actor, which owns the connection, the
+/// read buffer and the state flags. What the host needs to know comes back out
+/// through `events`, in the order it happened.
+actor ConnectionSocket {
+	/// Maximum bytes requested from the transport in a single read.
+	private static let maximumDataLength = 1000 * 1000 * 100 // 100 megabytes
 
-	fileprivate var connection: NWConnection?
+	/// Maximum bytes buffered while waiting for a newline. A peer that never
+	/// sends one is disconnected instead of growing memory forever.
+	private static let maximumBufferedLineLength = 1024 * 1024 // 1 MiB
 
-	fileprivate var connectTimeoutTask: Task<Void, Never>?
+	/// Seconds allowed for the transport to reach the ready state.
+	private static let connectTimeout: TimeInterval = 30
 
-	fileprivate var trustRef: SecTrust?
-	/** Security.framework's completion is a C block, so it is not `Sendable`.
-	 It stays here, on the queue-confined socket, and the sendable callback the
-	 trust decision travels through refers to this socket instead: the block
-	 itself never crosses an isolation boundary. */
-	private var pendingTLSVerifyCompletion: sec_protocol_verify_complete_t?
+	private static let torProxyAddress = "127.0.0.1"
+	private static let torProxyPort: UInt16 = 9150
 
-	// MARK: - Open/Close Socket
+	nonisolated let config: IRCConnectionConfig // nonisolated: let
+	nonisolated let uniqueIdentifier: String // nonisolated: let
 
-	fileprivate func constructedParameters() throws -> NWParameters {
+	/// The application, for the one question the transport has to ask mid
+	/// handshake. `RemoteConnectionClientProtocol` refines `Sendable`, so the
+	/// proxy is as usable from the TLS verify block as it is from the actor.
+	private nonisolated let client: any RemoteConnectionClientProtocol // nonisolated: let
+
+	/// What the verify block learned about the peer's chain. The block runs
+	/// outside the actor, so this is the one piece of state the two share.
+	private nonisolated let trustExport = Locked(TLSTrustExport()) // nonisolated: let
+
+	private let events: AsyncStream<SocketEvent>.Continuation
+
+	private var connection: NWConnection?
+	private var readInBuffer = Data()
+	private var connectTimeoutTask: Task<Void, Never>?
+
+	private var connecting = false
+	private var connected = false
+	private var disconnecting = false
+	private var secured = false
+	private(set) var sending = false
+
+	private var alternateDisconnectError: ConnectionError?
+
+	var disconnected: Bool {
+		connecting == false && connected == false
+	}
+
+	init(
+		config: IRCConnectionConfig,
+		client: any RemoteConnectionClientProtocol,
+		events: AsyncStream<SocketEvent>.Continuation
+	) {
+		self.config = config
+		self.client = client
+		self.events = events
+
+		uniqueIdentifier = UUID().uuidString
+	}
+
+	// MARK: - Open/Close
+
+	func open() {
+		guard disconnected, disconnecting == false else { return }
+
+		let parameters: NWParameters
+
+		do {
+			parameters = try constructedParameters()
+		} catch let error as ConnectionError {
+			return finish(with: error)
+		} catch {
+			return finish(with: ConnectionError(socketError: error))
+		}
+
+		let connection = NWConnection(
+			host: NWEndpoint.Host(config.serverAddress),
+			port: NWEndpoint.Port(integerLiteral: config.serverPort),
+			using: parameters
+		)
+
+		connection.stateUpdateHandler = { [weak self] state in
+			Task { await self?.handle(state) }
+		}
+
+		self.connection = connection
+
+		if let proxyEndpoint {
+			events.yield(.willConnectToProxy(host: proxyEndpoint.host, port: proxyEndpoint.port))
+		}
+
+		connecting = true
+
+		scheduleConnectTimeout()
+
+		connection.start(queue: .global(qos: .userInitiated))
+	}
+
+	func close() {
+		guard disconnected == false, disconnecting == false else { return }
+
+		disconnecting = true
+
+		cancelConnectTimeout()
+
+		connection?.cancel()
+	}
+
+	func close(with error: ConnectionError) {
+		guard disconnected == false, disconnecting == false else { return }
+
+		alternateDisconnectError = error
+
+		close()
+	}
+
+	func close(with message: String) {
+		close(with: ConnectionError.other(message: message))
+	}
+
+	private func resetState() {
+		connecting = false
+		connected = false
+		disconnecting = false
+		secured = false
+		sending = false
+
+		alternateDisconnectError = nil
+
+		cancelConnectTimeout()
+
+		connection = nil
+
+		readInBuffer.removeAll()
+	}
+
+	// MARK: - Connect Timeout
+
+	private func scheduleConnectTimeout() {
+		cancelConnectTimeout()
+
+		connectTimeoutTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(Self.connectTimeout), clock: .continuous)
+
+			guard Task.isCancelled == false, let self else { return }
+
+			await onConnectTimeout()
+		}
+	}
+
+	private func cancelConnectTimeout() {
+		connectTimeoutTask?.cancel()
+		connectTimeoutTask = nil
+	}
+
+	private func onConnectTimeout() {
+		connectTimeoutTask = nil
+
+		guard connecting, connected == false else { return }
+
+		let identifier = uniqueIdentifier
+		let timeout = Self.connectTimeout
+
+		RCMLog.connection.error(
+			"Connection \(identifier, privacy: .public) timed out after \(timeout, privacy: .public) seconds"
+		)
+
+		close(with: String(localized: .ConnectionErrors.connectionTimedOut))
+	}
+
+	// MARK: - State
+
+	private func handle(_ state: NWConnection.State) {
+		switch state {
+		case .setup, .preparing:
+			break
+		case let .waiting(error):
+			/* Waiting is not fatal. The path may become viable (network comes
+			 back, proxy starts answering); the connect timeout bounds how long
+			 we are willing to wait. */
+			let identifier = uniqueIdentifier
+			let reason = error.localizedDescription
+
+			RCMLog.connection.notice(
+				"Connection \(identifier, privacy: .public) waiting: \(reason, privacy: .public)"
+			)
+		case .ready:
+			onConnect()
+		case .cancelled:
+			onDisconnect(with: nil)
+		case let .failed(error):
+			onDisconnect(with: error)
+		@unknown default:
+			break
+		}
+	}
+
+	private func onConnect() {
+		cancelConnectTimeout()
+
+		connecting = false
+		connected = true
+
+		read()
+
+		/* When a proxy is in use the remote endpoint is the proxy, not the
+		 server, so report nil as the host contract asks. */
+		events.yield(.connected(host: proxyEndpoint == nil ? connectedHost : nil))
+
+		onSecured()
+	}
+
+	private func onSecured() {
+		/* Only mark ourselves secured once there is protocol information. */
+		guard let protocolVersion = tlsNegotiatedProtocol, let cipherSuite = tlsNegotiatedCipherSuite else {
+			return
+		}
+
+		secured = true
+
+		events.yield(.secured(protocolVersion: protocolVersion, cipherSuite: cipherSuite))
+	}
+
+	private func onDisconnect(with error: Error?) {
+		var payload: ConnectionError?
+
+		if let alternateDisconnectError {
+			payload = alternateDisconnectError
+		} else if let nwError = error as? NWError {
+			payload = translateError(nwError)
+		} else if let error {
+			payload = ConnectionError(socketError: error)
+		}
+
+		resetState()
+
+		events.yield(.disconnected(payload))
+	}
+
+	/// The failure paths that never reached a connection at all.
+	private func finish(with error: ConnectionError) {
+		resetState()
+
+		events.yield(.disconnected(error))
+	}
+
+	// MARK: - Read & Write
+
+	private func read() {
+		guard connected, disconnecting == false else { return }
+
+		/* A minimum of one lets the receive complete with neither content nor
+		 error, which the handler treats as a fatal condition. */
+		connection?.receive(
+			minimumIncompleteLength: 1,
+			maximumLength: Self.maximumDataLength,
+			completion: { [weak self] content, context, isComplete, error in
+				Task { await self?.didRead(content, context?.isFinal == true, isComplete, error) }
+			}
+		)
+	}
+
+	private func didRead(_ content: Data?, _ isFinalContext: Bool, _ isComplete: Bool, _ error: NWError?) {
+		guard disconnecting == false else { return }
+
+		if let error {
+			return close(with: translateError(error))
+		}
+
+		if isFinalContext, isComplete {
+			/* The final bytes (typically an ERROR line with the reason for the
+			 disconnect) can arrive together with the EOF. */
+			if let content, content.isEmpty == false {
+				readIn(content)
+			}
+
+			events.yield(.closedReadStream)
+
+			return
+		}
+
+		guard let content else {
+			return close(with: "Unexpected condition: There is no data when there is no error")
+		}
+
+		readIn(content)
+
+		read()
+	}
+
+	private func readIn(_ data: Data) {
+		guard disconnected == false, disconnecting == false else { return }
+
+		readInBuffer.append(data)
+
+		guard let (lines, remainingData) = readInBuffer.splitNetworkLines() else {
+			return
+		}
+
+		for line in lines {
+			events.yield(.received(line))
+		}
+
+		if let remainder = remainingData {
+			/* The remainder is a slice of the old buffer. Copying it into a
+			 fresh Data rebases indices to zero and releases the storage holding
+			 the lines already delivered. */
+			readInBuffer = Data(remainder)
+		} else {
+			readInBuffer.removeAll(keepingCapacity: true)
+		}
+
+		if readInBuffer.count > Self.maximumBufferedLineLength {
+			let identifier = uniqueIdentifier
+			let bufferedByteCount = readInBuffer.count
+
+			RCMLog.connection.error(
+				"Connection \(identifier, privacy: .public) buffered \(bufferedByteCount, privacy: .public) bytes without a newline"
+			)
+
+			close(with: String(localized: .ConnectionErrors.peerLineTooLong))
+		}
+	}
+
+	func write(_ data: Data) {
+		guard connected, disconnecting == false else { return }
+
+		/* We only allow one write at a time. */
+		guard sending == false else { return }
+
+		sending = true
+
+		events.yield(.willSend(data))
+
+		connection?.send(content: data, completion: .contentProcessed { [weak self] error in
+			Task { await self?.didWrite(error) }
+		})
+	}
+
+	private func didWrite(_ error: NWError?) {
+		guard disconnecting == false else { return }
+
+		sending = false
+
+		if let error {
+			return close(with: translateError(error))
+		}
+
+		events.yield(.didSend)
+	}
+
+	// MARK: - Secure Connection Information
+
+	/// What the application shows in its certificate panels. The `SecTrust` the
+	/// chain came from stayed in the verify block; this is all values.
+	func secureConnectionInformation() -> SecureConnectionInformation {
+		let export = trustExport.value
+
+		return SecureConnectionInformation(
+			policyName: export.policyName ?? (config.serverAddress.isIPAddress ? config.serverAddress : nil),
+			protocolVersion: tlsNegotiatedProtocol ?? tlsProtocolVersionUnknown,
+			cipherSuite: tlsNegotiatedCipherSuite ?? tlsCipherSuiteUnknown,
+			certificateChain: export.certificateChain,
+			trustFailureDescription: export.failureDescription
+		)
+	}
+
+	private var tlsNegotiatedProtocol: tls_protocol_version_t? {
+		tlsMetadata.map(sec_protocol_metadata_get_negotiated_tls_protocol_version)
+	}
+
+	private var tlsNegotiatedCipherSuite: tls_ciphersuite_t? {
+		tlsMetadata.map(sec_protocol_metadata_get_negotiated_tls_ciphersuite)
+	}
+
+	private var tlsMetadata: sec_protocol_metadata_t? {
+		guard let metadata = connection?.metadata(definition: NWProtocolTLS.definition) as? NWProtocolTLS.Metadata
+		else {
+			return nil
+		}
+
+		return metadata.securityProtocolMetadata
+	}
+
+	private var connectedHost: String? {
+		guard case let .hostPort(host, _)? = connection?.currentPath?.remoteEndpoint else { return nil }
+
+		switch host {
+		case let .name(address, _):
+			return address
+		case let .ipv4(address):
+			return address.rawValue.IPv4Address
+		case let .ipv6(address):
+			return address.rawValue.IPv6Address
+		@unknown default:
+			return nil
+		}
+	}
+}
+
+// MARK: - Parameters
+
+extension ConnectionSocket {
+	private var proxyEndpoint: (host: String, port: UInt16)? {
+		switch config.proxyType {
+		case .socks5, .HTTP:
+			guard let host = config.proxyAddress, host.isEmpty == false else {
+				return nil
+			}
+
+			return (host: host, port: config.proxyPort)
+		case .tor:
+			return (host: Self.torProxyAddress, port: Self.torProxyPort)
+		case .none, .automatic:
+			return nil
+		@unknown default:
+			return nil
+		}
+	}
+
+	private func constructedParameters() throws -> NWParameters {
 		let parameters: NWParameters = if config.connectionPrefersSecuredConnection {
-			NWParameters(tls: constructedTLSOptions)
+			NWParameters(tls: constructedTLSOptions())
 		} else {
 			.tcp
 		}
@@ -82,13 +486,19 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		return parameters
 	}
 
-	fileprivate var constructedTLSOptions: NWProtocolTLS.Options {
+	private func constructedTLSOptions() -> NWProtocolTLS.Options {
 		let tlsOptions = NWProtocolTLS.Options()
-
 		let secOptions = tlsOptions.securityProtocolOptions
 
-		if let localIdentity = tlsLocalIdentity {
-			sec_protocol_options_set_local_identity(secOptions, localIdentity)
+		if let clientCertificate = ClientSideCertificate.load(from: config) {
+			let identity = sec_identity_create_with_certificates(
+				clientCertificate.identity,
+				[clientCertificate.certificate] as CFArray
+			)
+
+			if let identity {
+				sec_protocol_options_set_local_identity(secOptions, identity)
+			}
 		}
 
 		if config.cipherSuites == .none {
@@ -103,176 +513,22 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 		sec_protocol_options_set_min_tls_protocol_version(secOptions, SecureTransportSupport.minimumProtocolType)
 
-		sec_protocol_options_set_verify_block(
-			secOptions,
-			{ [weak self] _, trust, completionBlock in
-				self?.tlsVerifySecProtocol(trust, response: completionBlock)
-			}, queue
-		)
+		installVerifyBlock(on: secOptions)
 
 		return tlsOptions
 	}
 
-	func open() {
-		if disconnected == false || disconnecting {
-			return
-		}
-
-		let serverAddress = config.serverAddress
-		let serverPort = config.serverPort
-
-		let parameters: NWParameters
-
-		do {
-			parameters = try constructedParameters()
-		} catch let error as ConnectionError {
-			delegate?.connection(self, disconnectedWith: error)
-
-			return
-		} catch {
-			delegate?.connection(self, disconnectedWith: ConnectionError(socketError: error))
-
-			return
-		}
-
-		let connection = NWConnection(
-			host: NWEndpoint.Host(serverAddress),
-			port: NWEndpoint.Port(integerLiteral: serverPort),
-			using: parameters
-		)
-
-		connection.stateUpdateHandler = { [weak self] state in
-			self?.statusUpdateHandler(state)
-		}
-
-		self.connection = connection
-
-		if let proxyEndpoint {
-			delegate?.connection(self, willConnectToProxy: proxyEndpoint.host, on: proxyEndpoint.port)
-		} else {
-			delegate?.connection(self, willConnectTo: serverAddress, on: serverPort)
-		}
-
-		connect()
-	}
-
-	fileprivate func connect() {
-		connecting = true
-
-		scheduleConnectTimeout()
-
-		connection?.start(queue: queue)
-	}
-
-	func close() {
-		if disconnected || disconnecting {
-			return
-		}
-
-		disconnecting = true
-
-		cancelConnectTimeout()
-
-		connection?.cancel()
-	}
-
-	fileprivate func close(with error: NWError) {
-		close(with: translateError(error))
-	}
-
-	override func resetState() {
-		super.resetState()
-
-		cancelConnectTimeout()
-
-		connection = nil
-
-		readInBuffer.removeAll()
-
-		trustRef = nil
-	}
-
-	// MARK: - Connect Timeout
-
-	fileprivate func scheduleConnectTimeout() {
-		cancelConnectTimeout()
-
-		let timeout = Duration.seconds(connectTimeout)
-		let queue = queue
-
-		connectTimeoutTask = Task { [weak self] in
-			try? await Task.sleep(for: timeout, clock: .continuous)
-
-			guard Task.isCancelled == false, let self else {
-				return
-			}
-
-			/* Back onto the socket's queue: everything the timeout inspects and
-			 closes is confined to it. */
-			queue.async {
-				self.onConnectTimeout()
-			}
-		}
-	}
-
-	fileprivate func cancelConnectTimeout() {
-		connectTimeoutTask?.cancel()
-
-		connectTimeoutTask = nil
-	}
-
-	fileprivate func onConnectTimeout() {
-		connectTimeoutTask = nil
-		let connectionIdentifier = uniqueIdentifier
-		let timeout = connectTimeout
-
-		if connecting == false || connected {
-			return
-		}
-
-		RCMLog.connection.error(
-			"Connection \(connectionIdentifier, privacy: .public) timed out after \(timeout, privacy: .public) seconds"
-		)
-
-		let errorMessage = String(localized: .ConnectionErrors.connectionTimedOut)
-
-		close(with: errorMessage)
-	}
-
-	// MARK: - Proxy
-
-	/// The proxy the transport will connect through, after resolving
-	/// the Tor shortcut. nil when no explicit proxy is configured.
-	fileprivate var proxyEndpoint: (host: String, port: UInt16)? {
-		switch config.proxyType {
-		case .socks5, .HTTP:
-			guard let host = config.proxyAddress, host.isEmpty == false else {
-				return nil
-			}
-
-			return (host: host, port: config.proxyPort)
-		case .tor:
-			return (host: torProxyTypeAddress, port: torProxyTypePort)
-		case .none, .automatic:
-			return nil
-		@unknown default:
-			return nil
-		}
-	}
-
-	fileprivate func applyProxy(to parameters: NWParameters) throws {
+	private func applyProxy(to parameters: NWParameters) throws {
 		switch config.proxyType {
 		case .none:
 			parameters.preferNoProxies = true
 		case .automatic:
-			/* The default privacy context consults the system proxy
-			 settings (including PAC) so there is nothing to configure. */
+			/* The default privacy context consults the system proxy settings
+			 (including PAC) so there is nothing to configure. */
 			parameters.preferNoProxies = false
 		case .socks5, .HTTP, .tor:
 			guard let endpoint = proxyEndpoint else {
-				throw ConnectionError.other(
-					message: String(localized: .ConnectionErrors.proxyAddressMissing)
-				)
+				throw ConnectionError.other(message: String(localized: .ConnectionErrors.proxyAddressMissing))
 			}
 
 			let nwEndpoint = NWEndpoint.hostPort(
@@ -286,7 +542,8 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 				ProxyConfiguration(socksv5Proxy: nwEndpoint)
 			}
 
-			/* A proxy the user asked for must be used; never fall back to a direct connection. */
+			/* A proxy the user asked for must be used; never fall back to a
+			 direct connection. */
 			proxyConfiguration.allowFailover = false
 
 			if config.proxyType != .tor,
@@ -304,376 +561,121 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 			parameters.preferNoProxies = false
 		@unknown default:
-			throw ConnectionError.other(
-				message: String(localized: .ConnectionErrors.unsupportedProxyType)
-			)
+			throw ConnectionError.other(message: String(localized: .ConnectionErrors.unsupportedProxyType))
 		}
 	}
 
-	// MARK: - Socket Read & Write
-
-	func read() {
-		if connected == false || disconnecting {
-			return
-		}
-
-		/* A minimum of zero lets the receive complete with neither content nor error,
-		 which the completion handler treats as a fatal condition. */
-		connection?.receive(
-			minimumIncompleteLength: 1,
-			maximumLength: maximumDataLength,
-			completion: { [weak self] content, contentContext, isComplete, error in
-				self?.readCompletionHandler(content, contentContext, isComplete, error)
-			}
-		)
-	}
-
-	func readIn(_ data: Data) {
-		if disconnected || disconnecting {
-			return
-		}
-
-		readInBuffer.append(data)
-
-		guard let (lines, remainingData) = readInBuffer.splitNetworkLines() else {
-			return
-		}
-
-		for line in lines {
-			delegate?.connection(self, received: line)
-		}
-
-		if let remainder = remainingData {
-			/* The remainder is a slice of the old buffer. Copying it into
-			 a fresh Data rebases indices to zero and releases the storage
-			 holding the lines already delivered. */
-			readInBuffer = Data(remainder)
-		} else {
-			readInBuffer.removeAll(keepingCapacity: true)
-		}
-
-		if readInBuffer.count > maximumBufferedLineLength {
-			let connectionIdentifier = uniqueIdentifier
-			let bufferedByteCount = readInBuffer.count
-
-			RCMLog.connection.error(
-				"Connection \(connectionIdentifier, privacy: .public) buffered \(bufferedByteCount, privacy: .public) bytes without a newline"
-			)
-
-			let errorMessage = String(localized: .ConnectionErrors.peerLineTooLong)
-
-			close(with: errorMessage)
-		}
-	}
-
-	func write(_ data: Data) {
-		if connected == false || disconnecting {
-			return
-		}
-
-		/* We only allow one write a time */
-		if sending {
-			return
-		}
-
-		sending = true
-
-		delegate?.connection(self, willSend: data)
-
-		connection?.send(
-			content: data,
-			completion: .contentProcessed { [weak self] error in
-				self?.writeCompletionHandler(error)
-			}
-		)
-	}
-
-	// MARK: - Properties
-
-	fileprivate var connectedHost: String? {
-		guard let endpoint = connection?.currentPath?.remoteEndpoint else {
-			return nil
-		}
-
-		if case let .hostPort(host, _) = endpoint {
-			switch host {
-			case let .name(address, _):
-				return address
-			case let .ipv4(address):
-				return address.rawValue.IPv4Address
-			case let .ipv6(address):
-				return address.rawValue.IPv6Address
-			@unknown default:
-				return nil
-			}
-		}
-
-		return nil
-	}
-
-	fileprivate func onConnect() {
-		cancelConnectTimeout()
-
-		connecting = false
-		connected = true
-
-		read()
-
-		/* When a proxy is in use the remote endpoint is the proxy,
-		 not the server, so report nil as the delegate contract asks. */
-		let host = (proxyEndpoint == nil) ? connectedHost : nil
-
-		delegate?.connection(self, didConnectTo: host)
-
-		onSecured()
-	}
-
-	fileprivate func onSecured() {
-		/* We call onSecured() regardless of other preconditions then
-		 only mark ourselves as secured if we have protocol information. */
-		guard let protocolType = tlsNegotiatedProtocol,
-		      let cipherSuite = tlsNegotiatedCipherSuite
-		else {
-			return
-		}
-
-		secured = true
-
-		delegate?.connection(self, securedWith: protocolType, cipherSuite: cipherSuite)
-	}
-
-	fileprivate func onDisconnect(with error: Error?) {
-		defer {
-			resetState()
-		}
-
-		var errorPayload: ConnectionError?
-
-		if let alternateError = alternateDisconnectError {
-			errorPayload = alternateError
-		} else if let nwError = error as? NWError {
-			errorPayload = translateError(nwError)
-		} else if let error {
-			errorPayload = ConnectionError(socketError: error)
-		}
-
-		if let errorPayload {
-			delegate?.connection(self, disconnectedWith: errorPayload)
-		} else {
-			delegate?.connectionDisconnected(self)
-		}
-	}
-
-	// NWConnection Delegate
-
-	final func readCompletionHandler(
-		_ content: Data?, _ contentContext: NWConnection.ContentContext?, _ isComplete: Bool, _ error: NWError?
-	) {
-		if disconnecting {
-			return
-		}
-
-		if let error {
-			close(with: error)
-
-			return
-		}
-
-		if contentContext?.isFinal == true, isComplete {
-			/* The final bytes (typically an ERROR line with the reason
-			 for the disconnect) can arrive together with the EOF. */
-			if let content, content.isEmpty == false {
-				readIn(content)
-			}
-
-			delegate?.connectionClosedReadStream(self)
-
-			return
-		}
-
-		guard let content else {
-			close(with: "Unexpected condition: There is no data when there is no error")
-
-			return
-		}
-
-		readIn(content)
-
-		read()
-	}
-
-	final func writeCompletionHandler(_ error: NWError?) {
-		if disconnecting {
-			return
-		}
-
-		sending = false
-
-		if let error {
-			close(with: error)
-
-			return
-		}
-
-		delegate?.connectionDidSend(self)
-	}
-
-	final func statusUpdateHandler(_ status: NWConnection.State) {
-		switch status {
-		case .setup, .preparing:
-			break
-		case let .waiting(error):
-			/* Waiting is not fatal. The path may become viable (network
-			 comes back, proxy starts answering); the connect timeout
-			 bounds how long we are willing to wait. */
-			let connectionIdentifier = uniqueIdentifier
-			let errorDescription = error.localizedDescription
-
-			RCMLog.connection
-				.notice(
-					"Connection \(connectionIdentifier, privacy: .public) waiting: \(errorDescription, privacy: .public)"
-				)
-		case .ready:
-			onConnect()
-		case .cancelled:
-			onDisconnect(with: nil)
-		case let .failed(error):
-			onDisconnect(with: error)
-		@unknown default:
-			break
-		}
-	}
-
-	// MARK: - Security
-
-	final func tlsVerifySecProtocol(_ trust: sec_trust_t, response: @escaping sec_protocol_verify_complete_t) {
-		/* sec_trust_copy_ref() follows the Create Rule; the result is +1. */
-		let trustRef = sec_trust_copy_ref(trust).takeRetainedValue()
-
-		self.trustRef = trustRef
-
-		pendingTLSVerifyCompletion = response
-
-		tlsVerify(trustRef) { [self] underlyingResponse in
-			completePendingTLSVerify(with: underlyingResponse)
-		}
-	}
-
-	private func completePendingTLSVerify(with trusted: Bool) {
-		guard let completion = pendingTLSVerifyCompletion else {
-			return
-		}
-
-		pendingTLSVerifyCompletion = nil
-		completion(trusted)
-	}
-
-	var tlsNegotiatedProtocol: tls_protocol_version_t? {
-		var protocolType: tls_protocol_version_t?
-
-		accessTLSMetadata { metadata in
-			protocolType = sec_protocol_metadata_get_negotiated_tls_protocol_version(metadata)
-		}
-
-		return protocolType
-	}
-
-	var tlsNegotiatedCipherSuite: tls_ciphersuite_t? {
-		var cipherSuite: tls_ciphersuite_t?
-
-		accessTLSMetadata { metadata in
-			cipherSuite = sec_protocol_metadata_get_negotiated_tls_ciphersuite(metadata)
-		}
-
-		return cipherSuite
-	}
-
-	var tlsCertificateChainData: [Data]? {
-		var certificateChain: [Data]?
-
-		accessTLSTrustRef { trustRef in
-			certificateChain = SecureTransportSupport.certificates(in: trustRef)
-		}
-
-		return certificateChain
-	}
-
-	var tlsPolicyName: String? {
-		var policyName: String?
-
-		accessTLSTrustRef { trustRef in
-			policyName = SecureTransportSupport.policyName(in: trustRef)
-
-			if policyName == nil {
-				/*
-				 June 09, 2019 with 10.15 Beta (19A471t):
-
-				 Despite us having a trustRef, we do not have a policy name
-				 when connecting with modern sockets to an IP address.
-				 The IP address itself is what is being matched against the
-				 certificate name anyways so let's just return it from config.
-
-				 This can be revisited after the next stable release.
-				 */
-
-				let serverAddress = config.serverAddress
-
-				if serverAddress.isIPAddress {
-					policyName = serverAddress
-				}
-			} // policyName
-		}
-
-		return policyName
-	}
-
-	fileprivate func accessTLSMetadata(with closure: (sec_protocol_metadata_t) -> Void) {
-		guard let genericMetadata = connection?.metadata(definition: NWProtocolTLS.definition) else {
-			return
-		}
-
-		guard let tlsMetadata = genericMetadata as? NWProtocolTLS.Metadata else {
-			return
-		}
-
-		closure(tlsMetadata.securityProtocolMetadata)
-	}
-
-	fileprivate func accessTLSTrustRef(with closure: (SecTrust) -> Void) {
-		if let trustRef {
-			closure(trustRef)
-		}
-	}
-
-	var tlsLocalIdentity: sec_identity_t? {
-		guard let clientCertificate = clientSideCertificate else {
-			return nil
-		}
-
-		/* And I thought I wrote verbose names... */
-		return sec_identity_create_with_certificates(
-			clientCertificate.identity,
-			[clientCertificate.certificate] as CFArray
-		)
-	}
-
-	// MARK: - Error Handling
-
-	fileprivate func translateError(_ error: NWError) -> ConnectionError {
+	private func translateError(_ error: NWError) -> ConnectionError {
 		switch error {
 		case let .dns(errorCode):
-			return ConnectionError(nwDNSError: errorCode)
+			ConnectionError(nwDNSError: errorCode)
 		case let .posix(errorCode):
-			return ConnectionError(nwPOSIXError: errorCode.rawValue)
+			ConnectionError(nwPOSIXError: errorCode.rawValue)
 		case let .tls(errorCode):
-			return ConnectionError(nwTLSError: errorCode)
+			ConnectionError(nwTLSError: errorCode)
 		case .wifiAware:
-			return ConnectionError(otherError: "Wi-Fi Aware error")
+			ConnectionError(otherError: "Wi-Fi Aware error")
 		@unknown default:
-			return ConnectionError(otherError: error.localizedDescription)
+			ConnectionError(otherError: error.localizedDescription)
 		}
 	}
 }
+
+// MARK: - Trust
+
+private extension ConnectionSocket {
+	/// Installs the block Network.framework calls with the peer's chain.
+	///
+	/// The block runs outside the actor, on a queue of its own, and everything
+	/// it touches is `Sendable`: the configuration, the client proxy, and the
+	/// `Mutex` it records the exported chain in. The `SecTrust` is created,
+	/// evaluated and released inside one call and reaches nothing else.
+	nonisolated func installVerifyBlock(on options: sec_protocol_options_t) { // nonisolated: pure
+		let config = config
+		let client = client
+		let trustExport = trustExport
+
+		sec_protocol_options_set_verify_block(
+			options,
+			{ _, trust, complete in
+				/* sec_trust_copy_ref() follows the Create Rule; the result is +1. */
+				let trustRef = sec_trust_copy_ref(trust).takeRetainedValue()
+
+				var evaluationError: CFError?
+				let trusted = SecTrustEvaluateWithError(trustRef, &evaluationError)
+				let failureDescription = trusted
+					? nil
+					: ((evaluationError as Error?)?.localizedDescription ?? "Unknown error")
+
+				/* Export what the application will need before answering, so
+				 that a trust panel asking for it is never told "nothing yet". */
+				trustExport.set(
+					TLSTrustExport(
+						policyName: SecureTransportSupport.policyName(in: trustRef),
+						certificateChain: SecureTransportSupport.certificates(in: trustRef) ?? [],
+						failureDescription: failureDescription
+					)
+				)
+
+				guard let failureDescription else {
+					return complete(true)
+				}
+
+				let serverAddress = config.serverAddress
+
+				guard config.connectionShouldValidateCertificateChain else {
+					RCMLog.connection.error(
+						"Certificate chain for '\(serverAddress, privacy: .public)' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .public)"
+					)
+
+					return complete(true)
+				}
+
+				RCMLog.connection.error(
+					"Certificate chain for '\(serverAddress, privacy: .public)' failed validation: \(failureDescription, privacy: .public)"
+				)
+
+				var evaluationResult: SecTrustResultType = .invalid
+				SecTrustGetTrustResult(trustRef, &evaluationResult)
+
+				guard evaluationResult == .recoverableTrustFailure else {
+					return complete(false)
+				}
+
+				complete(Self.askClientAboutTrust(client))
+			},
+			DispatchQueue.global(qos: .userInitiated)
+		)
+	}
+
+	/// Asks the application whether to trust a chain the system would not, and
+	/// waits for the answer.
+	///
+	/// Network.framework's verify block is synchronous and its completion is
+	/// not `Sendable`, so the answer cannot be carried into a task and handed
+	/// back later: the block has to still be on the stack when it arrives. The
+	/// wait happens on the verify block's own global-queue thread, never on the
+	/// socket's actor or on the connection's own queue, and it only ever
+	/// happens while a certificate panel is in front of the user.
+	nonisolated static func askClientAboutTrust( // nonisolated: pure
+		_ client: any RemoteConnectionClientProtocol
+	) -> Bool {
+		let answer = Locked(false)
+		let arrived = DispatchSemaphore(value: 0)
+
+		client.ircConnectionRequestInsecureCertificateTrust { trusted in
+			answer.set(trusted)
+
+			arrived.signal()
+		}
+
+		arrived.wait()
+
+		return answer.value
+	}
+}
+
+// MARK: - Error Translation
 
 private extension ConnectionError {
 	static let dnsErrorReasons: [Int: String] = [
@@ -754,9 +756,7 @@ private extension ConnectionError {
 	}
 
 	init(nwTLSError: OSStatus) {
-		let errorCode = Int(nwTLSError)
-
-		self.init(tlsError: errorCode)
+		self.init(tlsError: Int(nwTLSError))
 	}
 }
 

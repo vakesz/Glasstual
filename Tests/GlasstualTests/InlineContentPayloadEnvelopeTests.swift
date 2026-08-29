@@ -4,8 +4,8 @@ import InlineContentKit
 import Testing
 
 /// The payload the inline-content service hands back is an immutable envelope
-/// around a `Sendable` value; the mutable half never leaves the service. These
-/// cover the seam between the two.
+/// around a `Sendable` value; the value is what modules produce. These cover the
+/// seam between the two.
 @Suite("Inline content payload envelope")
 struct InlineContentPayloadEnvelopeTests {
 	private static func values(
@@ -31,63 +31,65 @@ struct InlineContentPayloadEnvelopeTests {
 		#expect(values.contentSize == .zero)
 	}
 
-	@Test("A snapshot carries the module's edits and nothing else")
-	func snapshotCarriesEdits() throws {
-		let payload = try InlineContentPayloadMutable(values: Self.values())
+	@Test("The envelope reads through to the value it was built from")
+	func envelopeReadsThroughToItsValue() throws {
+		var values = try Self.values()
 
-		payload.html = "<img>"
-		payload.entrypoint = "InlineImageLiveResize"
-		payload.classAttribute = "inlineImageCell"
-		payload.contentLength = 4096
-		payload.contentSize = CGSize(width: 320, height: 240)
-		payload.urlToInline = try #require(URL(string: "https://example.com/image.png"))
+		values.html = "<img>"
+		values.entrypoint = "InlineImageLiveResize"
+		values.classAttribute = "inlineImageCell"
+		values.contentLength = 4096
+		values.contentSize = CGSize(width: 320, height: 240)
 
-		let snapshot = payload.snapshot()
+		#expect(try values.setURLToInline(#require(URL(string: "https://example.com/image.png"))))
 
-		#expect(snapshot.html == "<img>")
-		#expect(snapshot.entrypoint == "InlineImageLiveResize")
-		#expect(snapshot.classAttribute == "inlineImageCell")
-		#expect(snapshot.contentLength == 4096)
-		#expect(snapshot.contentSize == CGSize(width: 320, height: 240))
-		#expect(snapshot.addressToInline == "https://example.com/image.png")
-		#expect(snapshot.uniqueIdentifier == "unique-1")
-		#expect(snapshot.viewIdentifier == "view-1")
-		#expect(snapshot.lineNumber == "42")
-		#expect(snapshot.index == 3)
+		let payload = InlineContentPayload(values: values)
+
+		#expect(payload.html == "<img>")
+		#expect(payload.entrypoint == "InlineImageLiveResize")
+		#expect(payload.classAttribute == "inlineImageCell")
+		#expect(payload.contentLength == 4096)
+		#expect(payload.contentSize == CGSize(width: 320, height: 240))
+		#expect(payload.addressToInline == "https://example.com/image.png")
+		#expect(payload.uniqueIdentifier == "unique-1")
+		#expect(payload.viewIdentifier == "view-1")
+		#expect(payload.lineNumber == "42")
+		#expect(payload.index == 3)
 	}
 
-	@Test("A snapshot does not move with the payload it was taken from")
-	func snapshotDoesNotFollowLaterEdits() throws {
-		let payload = try InlineContentPayloadMutable(values: Self.values())
+	@Test("An envelope does not move with the value it was built from")
+	func envelopeDoesNotFollowLaterEdits() throws {
+		var values = try Self.values()
 
-		payload.html = "first"
+		values.html = "first"
 
-		let snapshot = payload.snapshot()
+		let payload = InlineContentPayload(values: values)
 
-		payload.html = "second"
+		values.html = "second"
 
-		#expect(snapshot.html == "first")
-		#expect(payload.html == "second")
+		#expect(payload.html == "first")
+		#expect(values.html == "second")
 	}
 
 	@Test("A deferred payload keeps the link and drops the produced content")
 	func deferredPayloadKeepsOnlyTheLink() throws {
-		let payload = try InlineContentPayloadMutable(values: Self.values())
+		var values = try Self.values()
 
-		payload.classAttribute = "inlineVideoCell"
-		payload.html = "<video>"
-		payload.entrypoint = "entry"
-		payload.scriptResources = try [#require(URL(string: "https://example.com/a.js"))]
-		payload.urlToInline = try #require(URL(string: "https://example.com/clip.mp4"))
+		values.classAttribute = "inlineVideoCell"
+		values.html = "<video>"
+		values.entrypoint = "entry"
+		values.scriptResources = try [#require(URL(string: "https://example.com/a.js"))]
 
-		let deferred = InlineContentPayloadMutable(deferredPayload: payload)
+		#expect(try values.setURLToInline(#require(URL(string: "https://example.com/clip.mp4"))))
 
-		#expect(deferred.uniqueIdentifier == payload.uniqueIdentifier)
-		#expect(deferred.viewIdentifier == payload.viewIdentifier)
-		#expect(deferred.lineNumber == payload.lineNumber)
-		#expect(deferred.index == payload.index)
+		let deferred = values.deferredCopy
+
+		#expect(deferred.uniqueIdentifier == values.uniqueIdentifier)
+		#expect(deferred.viewIdentifier == values.viewIdentifier)
+		#expect(deferred.lineNumber == values.lineNumber)
+		#expect(deferred.index == values.index)
 		#expect(deferred.classAttribute == "inlineVideoCell")
-		#expect(deferred.addressToInline == "https://example.com/clip.mp4")
+		#expect(deferred.urlToInline.absoluteString == "https://example.com/clip.mp4")
 
 		#expect(deferred.html.isEmpty)
 		#expect(deferred.entrypoint == nil)
@@ -96,19 +98,20 @@ struct InlineContentPayloadEnvelopeTests {
 
 	@Test("The envelope survives secure coding, which is how it crosses XPC")
 	func envelopeSurvivesSecureCoding() throws {
-		let payload = try InlineContentPayloadMutable(values: Self.values())
+		var values = try Self.values()
 
-		payload.html = "<img src=\"x\">"
-		payload.entrypoint = "InlineImageLiveResize"
-		payload.classAttribute = "inlineImageCell"
-		payload.contentLength = 9001
-		payload.contentSize = CGSize(width: 16, height: 9)
-		payload.styleResources = try [#require(URL(string: "https://example.com/a.css"))]
-		payload.scriptResources = try [#require(URL(string: "https://example.com/a.js"))]
-		payload.urlToInline = try #require(URL(string: "https://example.com/image.png"))
+		values.html = "<img src=\"x\">"
+		values.entrypoint = "InlineImageLiveResize"
+		values.classAttribute = "inlineImageCell"
+		values.contentLength = 9001
+		values.contentSize = CGSize(width: 16, height: 9)
+		values.styleResources = try [#require(URL(string: "https://example.com/a.css"))]
+		values.scriptResources = try [#require(URL(string: "https://example.com/a.js"))]
+
+		#expect(try values.setURLToInline(#require(URL(string: "https://example.com/image.png"))))
 
 		let encoded = try NSKeyedArchiver.archivedData(
-			withRootObject: payload.snapshot(),
+			withRootObject: InlineContentPayload(values: values),
 			requiringSecureCoding: true
 		)
 		let unarchived = try NSKeyedUnarchiver.unarchivedObject(
@@ -117,23 +120,23 @@ struct InlineContentPayloadEnvelopeTests {
 		)
 		let decoded = try #require(unarchived)
 
-		#expect(decoded.values == payload.values)
+		#expect(decoded.values == values)
 	}
 
 	@Test("The entrypoint context is derived from the values")
 	func entrypointContextIsDerived() throws {
-		let payload = try InlineContentPayloadMutable(values: Self.values())
+		var values = try Self.values()
 
-		payload.html = "<img>"
-		payload.classAttribute = "inlineImageCell"
+		values.html = "<img>"
+		values.classAttribute = "inlineImageCell"
 
-		let context = payload.snapshot().entrypointPayload
+		let context = InlineContentPayload(values: values).entrypointPayload
 
 		#expect(context["class"] as? String == "inlineImageCell")
 		#expect(context["html"] as? String == "<img>")
 		#expect(context["uniqueIdentifier"] as? String == "unique-1")
 		#expect(context["lineNumber"] as? String == "42")
-		#expect(context["url"] as? URL == payload.url)
-		#expect(context["urlToInline"] as? URL == payload.urlToInline)
+		#expect(context["url"] as? URL == values.url)
+		#expect(context["urlToInline"] as? URL == values.urlToInline)
 	}
 }
