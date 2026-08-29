@@ -182,10 +182,12 @@ fi
 #
 # Only the app's own subsystems: framework noise from AppKit and WebKit is not
 # this gate's business, and filtering by process would pull all of it in.
+# The app itself is matched by pid so a sibling build's instance is ignored;
+# the XPC services are separate processes and stay matched by subsystem.
 
 /usr/bin/log show \
 	--start "$started_at" \
-	--predicate '(messageType == error OR messageType == fault) AND subsystem BEGINSWITH "com.vakesz"' \
+	--predicate "(messageType == error OR messageType == fault) AND subsystem BEGINSWITH \"com.vakesz\" AND (processIdentifier == $pid OR process != \"Glasstual\")" \
 	--style compact 2> /dev/null | grep -v '^Timestamp' > "$log_output"
 
 allowed_pattern=''
