@@ -54,12 +54,12 @@ public extension Notification.Name {
 /// runs there, and the mDNSResponder callback is delivered on the main queue.
 @MainActor
 public final class XRPortMapper: NSObject {
-	public dynamic var mapTCP = true
-	public dynamic var mapUDP = false
-	public dynamic var desiredPublicPort: UInt16 = 0
-	public private(set) dynamic var error: Int32 = 0
-	public private(set) dynamic var publicAddress: String?
-	public private(set) dynamic var publicPort: UInt16 = 0
+	public var mapTCP = true
+	public var mapUDP = false
+	public var desiredPublicPort: UInt16 = 0
+	public private(set) var error: Int32 = 0
+	public private(set) var publicAddress: String?
+	public private(set) var publicPort: UInt16 = 0
 
 	private let port: UInt16
 	private var rawPublicAddress: UInt32 = 0
@@ -80,7 +80,7 @@ public final class XRPortMapper: NSObject {
 		disconnect()
 	}
 
-	public dynamic var isMapped: Bool {
+	public var isMapped: Bool {
 		rawPublicAddress != 0 && rawPublicAddress != Self.rawLocalAddress
 	}
 

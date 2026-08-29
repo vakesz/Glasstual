@@ -153,7 +153,11 @@ public final class LogView: NSObject {
 	public weak var viewController: LogController?
 	public var contextMenuTarget = LogPolicyTarget()
 	public var selection: String?
-	public private(set) dynamic var isLayingOutView = false
+	/** Observed with `publisher(for:)` by the channel view's loading overlay,
+	 which is key-value observation: the property has to stay visible to the
+	 Objective-C runtime and dynamically dispatched or the key path resolves
+	 to nothing. */
+	@objc public private(set) dynamic var isLayingOutView = false
 
 	private let backingView: LogViewWebView
 
