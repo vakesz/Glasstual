@@ -1017,7 +1017,6 @@ public extension LogController {
 		print(logLine, completionBlock: nil)
 	}
 
-	@objc(print:completionBlock:)
 	func print(
 		_ inputLogLine: LogLine,
 		completionBlock postPrintBlock: LogControllerPrintOperationCompletion?
@@ -1027,7 +1026,7 @@ public extension LogController {
 		}
 		/* A snapshot: the caller still holds the line it handed over, and rendering
 		 continues off the main actor after this returns. */
-		let logLine = inputLogLine.duplicate()
+		let logLine = inputLogLine
 		lastLineStorage = logLine
 		noteOldestLineCandidate(logLine)
 		let context = makeRenderContext()

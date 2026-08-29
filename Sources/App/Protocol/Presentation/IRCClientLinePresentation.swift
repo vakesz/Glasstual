@@ -107,7 +107,6 @@ public extension IRCClient {
 		formatNicknameOnMainActor(nickname, in: channel, format: format)
 	}
 
-	@objc(printAndLog:completionBlock:)
 	func printAndLog(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?) {
 		presentation?.print(logLine, completionBlock: completionBlock)
 		writeToLogFile(logLine)
@@ -426,7 +425,7 @@ private extension IRCClient {
 			memberType: memberType
 		)
 		let lineType = IRCLinePresentationPolicy.normalized(request.lineType)
-		let logLine = LogLine()
+		var logLine = LogLine()
 		logLine.command = command.lowercased()
 		logLine.messageIdentifier = request.referenceMessage?.messageIdentifier
 		logLine.deliveryState = nextLineDeliveryState
@@ -446,7 +445,7 @@ private extension IRCClient {
 		logLine.isEncrypted = request.isEncrypted
 		logLine.excludeKeywords = keywordLists.exclude
 		logLine.highlightKeywords = keywordLists.match
-		logLine.rendererAttributes = request.escapeMessage ? nil : [.doNotEscapeBodyAttribute: true]
+		logLine.doNotEscapeBody = request.escapeMessage == false
 		logLine.nickname = request.nickname
 		logLine.messageBody = request.messageBody
 		let previousLine = channel?.lastLine ?? lastLine
@@ -461,7 +460,7 @@ private extension IRCClient {
 			return
 		}
 		if chatHistoryPrependChannel === channel {
-			chatHistoryPrependedLines?.append(logLine.duplicate())
+			chatHistoryPrependedLines?.append(logLine)
 			return
 		}
 

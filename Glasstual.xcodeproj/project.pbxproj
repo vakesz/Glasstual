@@ -234,6 +234,7 @@
 		391F0C4B65D3220962DDB956 /* PreferencesTransferPanes.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA3DB547ED9F32D3D436817 /* PreferencesTransferPanes.swift */; };
 		3953C10F34F62C8B1DDAA57C /* ThemePresentationSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68072D04C201D87F7E5C314D /* ThemePresentationSchema.swift */; };
 		39D0A5C2AEF5B70E987ACB87 /* Preferences+FileTransfers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99CA1A5ED9B1D14B9BCA33A7 /* Preferences+FileTransfers.swift */; };
+		39EFD9D1E14C60E4FED0BC59 /* LogLineArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86EA73A7FFCC661DCA4192F3 /* LogLineArchive.swift */; };
 		39F3BA7C79E0FFD69E35F3F5 /* InlineContentPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853B5D2AAFEE2AC7AC162318 /* InlineContentPlugin.swift */; };
 		3A17DAE9F9F4181855A5AD14 /* Preferences+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A01B91D4C3E92154CAFF5A /* Preferences+Notifications.swift */; };
 		3AA4A62A8D16629C2A42A02E /* ResourceFileImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 031981814877D8B11EE7D12D /* ResourceFileImporter.swift */; };
@@ -1839,6 +1840,7 @@
 		8618C251F40EC8876FB72810 /* Reachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		8633299C3890216A037C0E53 /* MenuActionCoordinatorLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuActionCoordinatorLifecycle.swift; sourceTree = "<group>"; };
 		86CF4EC4225036544AAF8F1E /* ChannelBanListSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBanListSheet.swift; sourceTree = "<group>"; };
+		86EA73A7FFCC661DCA4192F3 /* LogLineArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLineArchive.swift; sourceTree = "<group>"; };
 		8760B9B14E1D6D5CA30C1837 /* IRCClientBouncerPlaybackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientBouncerPlaybackTests.swift; sourceTree = "<group>"; };
 		8769E7AD6A0AF58DAD8EF72A /* AddressBookSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookSheet.swift; sourceTree = "<group>"; };
 		8856E0CAF42C75D7CEC2C35C /* LogViewInternalWK2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewInternalWK2.swift; sourceTree = "<group>"; };
@@ -3378,6 +3380,7 @@
 				7BBCC638F12AB1B502EC2921 /* LogControllerRegistry.swift */,
 				3159BDE04D15184FD77F84B9 /* LogControllerRendering.swift */,
 				4A64102765664EA8071E59D3 /* LogLine.swift */,
+				86EA73A7FFCC661DCA4192F3 /* LogLineArchive.swift */,
 				54E04407DFB08095AB1EF721 /* LogLineTypes.swift */,
 				A2B14D5497421997C3A513D7 /* LogPolicy.swift */,
 				0731F6B8A965AF024340198C /* LogRenderer.swift */,
@@ -5950,6 +5953,7 @@
 				BAF98C068459363CE2B09C60 /* LogControllerRegistry.swift in Sources */,
 				4C286DA87C5FDA41BF91CD9D /* LogControllerRendering.swift in Sources */,
 				A7F3549A1836579F5BEF0FD9 /* LogLine.swift in Sources */,
+				39EFD9D1E14C60E4FED0BC59 /* LogLineArchive.swift in Sources */,
 				63F6766390699C44919D572C /* LogLineTypes.swift in Sources */,
 				EC4F36CB1D9C330A54B66064 /* LogPolicy.swift in Sources */,
 				24B34BF3D3ED9F098B746900 /* LogRenderPipeline.swift in Sources */,

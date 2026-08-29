@@ -101,7 +101,7 @@ struct IRCClientHistoryTests {
 		text: String,
 		date: Date
 	) -> LogLine {
-		let line = LogLine()
+		var line = LogLine()
 		line.command = "privmsg"
 		line.lineType = .privateMessage
 		line.messageIdentifier = messageIdentifier
@@ -109,7 +109,7 @@ struct IRCClientHistoryTests {
 		line.messageBody = text
 		line.receivedAt = date
 
-		return line.duplicate()
+		return line
 	}
 
 	private func index(_ line: LogLine, for channel: Channel) {

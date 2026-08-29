@@ -83,7 +83,7 @@ private func makeLogLine(
 	messageIdentifier: String? = nil,
 	reactions: [String: [String]]? = nil
 ) -> LogLine {
-	let logLine = LogLine()
+	var logLine = LogLine()
 	logLine.messageBody = body
 	logLine.lineType = lineType
 	logLine.nickname = "alice"

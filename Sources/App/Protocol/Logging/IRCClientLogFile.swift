@@ -53,7 +53,6 @@ public extension IRCClient {
 		closeClientLogFile()
 	}
 
-	@objc(writeToLogLineToLogFile:)
 	func writeToLogFile(_ logLine: LogLine) {
 		writeClientLogLine(logLine)
 	}
@@ -107,7 +106,7 @@ public extension IRCClient {
 		let message = IRCLogStrings.sessionMarker(startsSession: startsSession)
 
 		for body in [" ", message, " "] {
-			let line = LogLine()
+			var line = LogLine()
 			line.messageBody = body
 			if let channel {
 				channel.writeToLogFile(line)

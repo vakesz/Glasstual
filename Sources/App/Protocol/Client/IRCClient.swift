@@ -70,7 +70,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 whenever they change. Channel members rank, compare and mark themselves on
 	 the printing queue and must not read the live table for them. */
 	nonisolated let userPrefixes = Mutex(IRCUserPrefixTable()) // nonisolated: let
-	@objc public dynamic var cachedHighlights: [HighlightLogEntry] = []
+	public var cachedHighlights: [HighlightLogEntry] = []
 	/// The endpoint this connection selected, while it lasts.
 	public var server: Server?
 	/** Keychain items belonging to endpoints the user deleted while the client
