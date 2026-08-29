@@ -4,7 +4,7 @@ import Synchronization
 import Testing
 
 /// One value, shared by the store's isolation domain and the test's.
-private final class Locked<Value: Sendable>: Sendable {
+private final nonisolated class Locked<Value: Sendable>: Sendable {
 	private let storage: Mutex<Value>
 
 	init(_ value: Value) {
@@ -22,7 +22,7 @@ private final class Locked<Value: Sendable>: Sendable {
 
 /// A filename store of the test's own, so a run neither reads nor writes the
 /// preference the service keeps the real database's name in.
-private struct ScratchFilenameStore: HistoricLogFilenameStoring {
+private nonisolated struct ScratchFilenameStore: HistoricLogFilenameStoring {
 	private let storage = Locked<String?>(nil)
 
 	var databaseFilename: String? {
@@ -32,7 +32,7 @@ private struct ScratchFilenameStore: HistoricLogFilenameStoring {
 }
 
 /// The client half. Records what the store said it truncated.
-private final class ClientRecorder: NSObject, HistoricLogClientProtocol {
+private final nonisolated class ClientRecorder: NSObject, HistoricLogClientProtocol {
 	private let storage = Locked<[String]>([])
 
 	var deletedIdentifiers: [String] {
