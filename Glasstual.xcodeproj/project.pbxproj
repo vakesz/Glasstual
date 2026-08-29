@@ -682,6 +682,7 @@
 		B0C2E7633A8016364F518884 /* ICMDailymotion.mustache in Resources */ = {isa = PBXBuildFile; fileRef = EB2971A07CD39FFCE2A0EB08 /* ICMDailymotion.mustache */; };
 		B0ECC54CA72584E693597B8D /* MustacheBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F07D8846E83AB27F1069D6 /* MustacheBox.swift */; };
 		B128DC50C9954CA8178C1A49 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298B34E6C9F0BF94A0D24326 /* WindowController.swift */; };
+		B12F6D97381E7B78EA3CAD4E /* InlineContentBodyReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015670F46A6683584E173B6F /* InlineContentBodyReaderTests.swift */; };
 		B13986BA4217ED8321116DB4 /* FileTransferDialog+Presentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52505F4D124BAD9298C9A576 /* FileTransferDialog+Presentation.swift */; };
 		B1B87BBD60493F2292344A27 /* IRCModelMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0E38D92316242FF7A724AC /* IRCModelMigrationTests.swift */; };
 		B1BD8D10CA893FBD9E46D68D /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97672AC0F47CAA85F8D59112 /* Accessibility.swift */; };
@@ -1362,6 +1363,7 @@
 		009514E9A4173B1B58967F13 /* TDCChannelSpotlightController.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TDCChannelSpotlightController.xcstrings; sourceTree = "<group>"; };
 		00CE33E6BABA22FA5660A38D /* IRCPrefix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCPrefix.swift; sourceTree = "<group>"; };
 		00EC93E7EEE486D74D1A5E3A /* TDCPreferencesUserStyleSheet.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TDCPreferencesUserStyleSheet.xcstrings; sourceTree = "<group>"; };
+		015670F46A6683584E173B6F /* InlineContentBodyReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineContentBodyReaderTests.swift; sourceTree = "<group>"; };
 		01818070693B3539B7E04420 /* LICENSE-libmustache.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-libmustache.txt"; sourceTree = "<group>"; };
 		02353D913579073394EBBB3A /* ValidatedTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidatedTextField.swift; sourceTree = "<group>"; };
 		023702D585CDBB059A1516F9 /* IRCClientConnectionLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientConnectionLifecycle.swift; sourceTree = "<group>"; };
@@ -3903,6 +3905,7 @@
 				85B3835AD6CDDFED50F27244 /* HistoricLogClientTests.swift */,
 				4321B993AFAFF4C878816293 /* HistoricLogStoreConcurrencyTests.swift */,
 				E28E902D44CBF3530FF46A92 /* HTMLEntityTests.swift */,
+				015670F46A6683584E173B6F /* InlineContentBodyReaderTests.swift */,
 				550FE9A28FC41B431F5FD534 /* InlineContentJSONCapTests.swift */,
 				8602952DE02223FB3FA7F718 /* InlineContentModuleTrustTests.swift */,
 				C0F2352F3F3DB67C480C36F9 /* InlineContentPayloadEnvelopeTests.swift */,
@@ -5559,6 +5562,7 @@
 				582317476C09528768BF2672 /* IRCUserRelationsTests.swift in Sources */,
 				9FD0555E23FDC62B3F53B34C /* IRCWireTokenisationTests.swift in Sources */,
 				5B4DF8617E9A7EB615417F93 /* IRCWorldMigrationTests.swift in Sources */,
+				B12F6D97381E7B78EA3CAD4E /* InlineContentBodyReaderTests.swift in Sources */,
 				94469D63CEE64C2E37DD1BC3 /* InlineContentJSONCapTests.swift in Sources */,
 				B5D4A6A78A14B63C0D18BA5F /* InlineContentModuleTrustTests.swift in Sources */,
 				10D9A28FDCF11957270AE0F6 /* InlineContentPayloadEnvelopeTests.swift in Sources */,

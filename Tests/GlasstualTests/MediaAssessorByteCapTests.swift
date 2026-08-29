@@ -75,7 +75,18 @@ private actor LoopbackImageServer {
 		}
 	}
 
+	/// Answers, without ever waiting on the client.
+	///
+	/// The send is fire-and-forget: a client that refuses the body and closes
+	/// mid-transfer leaves the completion to report the error instead of
+	/// leaving the server parked on a send that will never drain.
 	private func respond(on connection: NWConnection) {
+		guard connection.state == .ready else {
+			connection.cancel()
+
+			return
+		}
+
 		connection.send(content: header + body, completion: .contentProcessed { _ in
 			connection.cancel()
 		})
@@ -145,6 +156,25 @@ struct MediaAssessorByteCapTests {
 		defer { Task { await server.stop() } }
 
 		let result = await withImageFileSizeCap(16 * 1024) {
+			await MediaAssessor.assess(address: "http://127.0.0.1:\(port)/image.png", expecting: .image)
+		}
+
+		let error = try #require(result.failureValue)
+
+		#expect(error.domain == "ICLMediaAssessorErrorDomain")
+		#expect(error.code == 1006)
+	}
+
+	/// The body arrives in chunks now, so a cap that is not a multiple of
+	/// anything the network delivers has to be refused part-way through one.
+	@Test("A cap that falls inside a chunk still refuses the body")
+	func capInsideAChunkIsStillRefused() async throws {
+		let server = try LoopbackImageServer(bodyByteCount: 512 * 1024, declareLength: false)
+		let port = try await server.start()
+
+		defer { Task { await server.stop() } }
+
+		let result = await withImageFileSizeCap(100_003) {
 			await MediaAssessor.assess(address: "http://127.0.0.1:\(port)/image.png", expecting: .image)
 		}
 
