@@ -10,6 +10,26 @@ import Testing
 @MainActor
 @Suite("Log view lifecycle")
 struct LogViewLifecycleTests {
+	@Test("A loading transcript remains renderable while the host covers it")
+	func loadingTranscriptIsNotHidden() {
+		let client = IRCClient(config: ClientConfig())
+		let window = TVCMainWindow(
+			contentRect: .zero,
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = LogController(client: client, in: window)
+		let logView = controller.ensureBackingView()
+		let host = MainWindowChannelView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+
+		#expect(logView.isLayingOutView)
+
+		host.show(logView)
+
+		#expect(logView.webView.isHidden == false)
+	}
+
 	@Test("Loading and navigation completion notify on the next actor turn")
 	func duplicateCompletionSignalsAreCoalesced() {
 		var state = LogViewLoadCompletionState()
