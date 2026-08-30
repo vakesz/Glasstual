@@ -90,6 +90,15 @@ struct TXMenuPresentationTests {
 		let paddingImage = try #require(plainItem.image)
 
 		#expect(paddingImage.isTemplate == false)
+
+		#if compiler(>=6.4)
+			if #available(macOS 27.0, *) {
+				#expect(symbolItem.preferredImageVisibility == .visible)
+				#expect(plainItem.preferredImageVisibility == .visible)
+				#expect(nestedSymbol.preferredImageVisibility == .visible)
+				#expect(nestedPlain.preferredImageVisibility == .visible)
+			}
+		#endif
 	}
 
 	@Test("A reply menu carries the responder selectors and the message it was built for")
