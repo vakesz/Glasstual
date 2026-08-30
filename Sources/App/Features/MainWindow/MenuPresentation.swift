@@ -188,8 +188,8 @@ public enum MenuPresentation {
 			/* Every item that ends up carrying an image wants this, not just
 			 the spacers added below; otherwise real symbols stay hidden while
 			 the blank spacers next to them are shown. */
-			if #available(macOS 27.0, *), item.image != nil {
-				item.preferredImageVisibility = .visible
+			if item.image != nil {
+				preferVisibleImage(for: item)
 			}
 
 			if item.hasSubmenu {
@@ -208,10 +208,18 @@ public enum MenuPresentation {
 		for item in menu.items where item.isSeparatorItem == false && item.image == nil {
 			item.image = symbolSpacer
 
+			preferVisibleImage(for: item)
+		}
+	}
+
+	private static func preferVisibleImage(for item: NSMenuItem) {
+		/* Xcode 26 does not declare this macOS 27 API, so runtime availability
+		 alone is insufficient when the release runner uses its older compiler. */
+		#if compiler(>=6.4)
 			if #available(macOS 27.0, *) {
 				item.preferredImageVisibility = .visible
 			}
-		}
+		#endif
 	}
 }
 
