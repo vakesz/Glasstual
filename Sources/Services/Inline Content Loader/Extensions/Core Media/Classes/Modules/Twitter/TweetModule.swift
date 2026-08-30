@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -38,37 +38,26 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICMTweet)
-final class TweetModule: InlineHTMLModule {
-	private func loadTweetContents() {
-		var components = URLComponents(string: "https://publish.twitter.com/oembed")
-		components?.queryItems = [
-			URLQueryItem(name: "dnt", value: "true"),
-			URLQueryItem(name: "maxwidth", value: "500"),
-			URLQueryItem(name: "omit_script", value: "true"),
-			URLQueryItem(name: "url", value: payload.address),
+/// A tweet, embedded as the markup Twitter's oEmbed endpoint hands back.
+///
+/// The markup is theirs, not ours, so the module stays untrusted: the user's
+/// "limit unsafe content" preference gates it.
+struct TweetModule: InlineContentModule {
+	static var domains: [String]? {
+		[
+			"twitter.com", "www.twitter.com", "mobile.twitter.com",
+			"x.com", "www.x.com", "mobile.x.com",
 		]
-		guard let url = components?.url else { return notifyUnableToPresentHTML() }
-
-		_ = InlineContentHelpers.requestJSONObject(
-			"html",
-			ofType: NSString.self,
-			inHierarchy: nil,
-			from: url
-		) { [weak self] object in
-			guard let self, let html = object as? String else {
-				self?.notifyUnableToPresentHTML()
-				return
-			}
-			performAction(forHTML: html)
-		}
 	}
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		guard isTweet(url) else { return nil }
-		return { module in
-			(module as? TweetModule)?.loadTweetContents()
-		}
+
+		return TweetModule()
 	}
 
 	private static func isTweet(_ url: URL) -> Bool {
@@ -77,26 +66,34 @@ final class TweetModule: InlineHTMLModule {
 		return components[2].allSatisfy { $0.isASCII && $0.isNumber }
 	}
 
-	override static var domains: [String]? {
-		[
-			"twitter.com", "www.twitter.com", "mobile.twitter.com",
-			"x.com", "www.x.com", "mobile.x.com",
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		var components = URLComponents(string: "https://publish.twitter.com/oembed")
+		components?.queryItems = [
+			URLQueryItem(name: "dnt", value: "true"),
+			URLQueryItem(name: "maxwidth", value: "500"),
+			URLQueryItem(name: "omit_script", value: "true"),
+			URLQueryItem(name: "url", value: payload.url.absoluteString),
 		]
-	}
 
-	override var scriptResources: [URL]? {
-		let resources = [
+		guard let endpoint = components?.url,
+		      let html = await InlineContentHelpers.jsonString("html", from: endpoint)
+		else {
+			return .cancelled
+		}
+
+		var values = payload
+		values.classAttribute = "inlineTweet"
+
+		let scripts = [
 			URL(string: "https://platform.twitter.com/widgets.js"),
-			Bundle(for: TweetModule.self).url(forResource: "ICMTweet", withExtension: "js"),
+			CoreMediaBundle.current.url(forResource: "ICMTweet", withExtension: "js"),
 		].compactMap(\.self)
-		return (super.scriptResources ?? []) + resources
-	}
 
-	override var entrypoint: String? {
-		"_ICMTweet"
-	}
-
-	override func finalizePreflight() {
-		payload.classAttribute = "inlineTweet"
+		return InlineHTMLContent.produce(
+			values,
+			unescapedHTML: html,
+			extraScriptResources: scripts,
+			overrideEntrypoint: "_ICMTweet"
+		)
 	}
 }

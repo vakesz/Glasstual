@@ -34,12 +34,18 @@ import AppKit
 import Security
 import SecurityInterface
 
-public typealias TrustDecisionHandler = (Bool) -> Void
+/* `@Sendable` because the connection host calls this from its own XPC queue
+ while the answer is decided on the main actor, and the closure is what carries
+ the decision back across. */
+public typealias TrustDecisionHandler = @Sendable (Bool) -> Void
 public typealias TrustPanelCompletion = (SecTrust, Bool, Any?) -> Void
 
-@objc(RCMTrustPanel)
-public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
-	@objc(presentTrustPanelInWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:)
+/// Presents the system's certificate trust sheet.
+///
+/// Main actor throughout: it drives an AppKit sheet, and every caller is
+/// already there.
+@MainActor
+public final class TrustPanelPresenter: NSObject {
 	public static func present(
 		in window: NSWindow?,
 		body: String,
@@ -61,7 +67,6 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 		)
 	}
 
-	@objc(presentTrustPanelInWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:contextInfo:)
 	public static func present(
 		in window: NSWindow?,
 		body: String,
@@ -72,38 +77,25 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 		completion: @escaping TrustPanelCompletion,
 		context: Any?
 	) -> SFCertificateTrustPanel {
-		let input = UnsafeTransfer(value: (
-			window,
-			body,
-			title,
-			defaultButton,
-			alternateButton,
-			trust,
-			completion,
-			context
-		))
-		return performSynchronouslyOnMain {
-			let (window, body, title, defaultButton, alternateButton, trust, completion, context) = input.value
-			let callback = TrustPanelContext(
-				trust: Unmanaged.passUnretained(trust),
-				completion: completion,
-				context: context
-			)
-			let callbackPointer = Unmanaged.passRetained(callback).toOpaque()
-			let panel = SFCertificateTrustPanel()
-			panel.setDefaultButtonTitle(defaultButton)
-			panel.setAlternateButtonTitle(alternateButton)
-			panel.setInformativeText(body)
-			panel.beginSheet(
-				for: window,
-				modalDelegate: self,
-				didEnd: #selector(trustPanelDidEnd(_:returnCode:contextInfo:)),
-				contextInfo: callbackPointer,
-				trust: trust,
-				message: title
-			)
-			return panel
-		}
+		let callback = TrustPanelContext(
+			trust: trust,
+			completion: completion,
+			context: context
+		)
+		let callbackPointer = Unmanaged.passRetained(callback).toOpaque()
+		let panel = SFCertificateTrustPanel()
+		panel.setDefaultButtonTitle(defaultButton)
+		panel.setAlternateButtonTitle(alternateButton)
+		panel.setInformativeText(body)
+		panel.beginSheet(
+			for: window,
+			modalDelegate: self,
+			didEnd: #selector(trustPanelDidEnd(_:returnCode:contextInfo:)),
+			contextInfo: callbackPointer,
+			trust: trust,
+			message: title
+		)
+		return panel
 	}
 
 	@objc private static func trustPanelDidEnd(
@@ -112,40 +104,20 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 		contextInfo: UnsafeMutableRawPointer
 	) {
 		let context = Unmanaged<TrustPanelContext>.fromOpaque(contextInfo).takeRetainedValue()
-		let trust = context.trust.takeUnretainedValue()
-		context.completion(trust, returnCode == NSApplication.ModalResponse.OK.rawValue, context.context)
-		context.trust.release()
+		context.completion(context.trust, returnCode == NSApplication.ModalResponse.OK.rawValue, context.context)
 	}
 }
 
+@MainActor
 private final class TrustPanelContext: NSObject {
-	let trust: Unmanaged<SecTrust>
+	/* SecTrust is ARC-managed in Swift; holding it strongly keeps the retain balanced. */
+	let trust: SecTrust
 	let completion: TrustPanelCompletion
 	let context: Any?
 
-	init(trust: Unmanaged<SecTrust>, completion: @escaping TrustPanelCompletion, context: Any?) {
+	init(trust: SecTrust, completion: @escaping TrustPanelCompletion, context: Any?) {
 		self.trust = trust
 		self.completion = completion
 		self.context = context
-	}
-}
-
-private func performSynchronouslyOnMain<Result>(_ work: @escaping @MainActor () -> Result) -> Result {
-	let workBox = UnsafeTransfer(value: work)
-	let resultBox = UnsafeTransfer<Result?>(value: nil)
-	if Thread.isMainThread {
-		MainActor.assumeIsolated { resultBox.value = workBox.value() }
-	} else {
-		DispatchQueue.main.sync {
-			MainActor.assumeIsolated { resultBox.value = workBox.value() }
-		}
-	}
-	return resultBox.value!
-}
-
-private final class UnsafeTransfer<Value>: @unchecked Sendable {
-	var value: Value
-	init(value: Value) {
-		self.value = value
 	}
 }

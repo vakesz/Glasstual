@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
@@ -36,277 +36,291 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 /// IRCv3 identity extensions, WHOX, and pre-away negotiation.
 @MainActor
-final class IRCClientUserIdentityTests: XCTestCase {
-	func testAccountNotifyUpdatesAccount() {
+@Suite("IRC user identity")
+struct IRCClientUserIdentityTests {
+	@Test("ACCOUNT names, then unnames, a user we already know about")
+	func accountNotifyUpdatesAccount() throws {
 		let client = makeClient(named: "me")
-		let channel = joinChannel("#chat", on: client)
+		client.enableCapability(.accountNotify)
+		let channel = try joinChannel("#chat", on: client)
 		addUser(named: "alice", to: channel, on: client)
 
-		client.receiveAccountNotify(message(":alice!a@example.org ACCOUNT alice_acct", on: client))
-		XCTAssertEqual(client.findUser("alice")?.account, "alice_acct")
+		try client.receiveAccountNotify(message(":alice!a@example.org ACCOUNT alice_acct", on: client))
+		#expect(client.findUser("alice")?.account == "alice_acct")
 
-		client.receiveAccountNotify(message(":alice!a@example.org ACCOUNT *", on: client))
-		XCTAssertNil(client.findUser("alice")?.account)
+		try client.receiveAccountNotify(message(":alice!a@example.org ACCOUNT *", on: client))
+		#expect(client.findUser("alice")?.account == nil)
 
-		client.receiveAccountNotify(message(":stranger!s@example.org ACCOUNT acct", on: client))
-		XCTAssertNil(client.findUser("stranger"))
+		try client.receiveAccountNotify(message(":stranger!s@example.org ACCOUNT acct", on: client))
+		#expect(client.findUser("stranger") == nil)
 	}
 
-	func testExtendedJoinReadsAccountAndRealName() {
+	@Test("An extended JOIN carries the account and the real name")
+	func extendedJoinReadsAccountAndRealName() throws {
 		let client = makeClient(named: "me")
-		joinChannel("#chat", on: client)
+		try joinChannel("#chat", on: client)
 		client.enableCapability(.extendedJoin)
 
-		client.receiveJoin(message(
+		try client.receiveJoin(message(
 			":alice!a@example.org JOIN #chat alice_acct :Alice Liddell",
 			on: client
 		))
 
-		XCTAssertEqual(client.findUser("alice")?.account, "alice_acct")
-		XCTAssertEqual(client.findUser("alice")?.realName, "Alice Liddell")
+		#expect(client.findUser("alice")?.account == "alice_acct")
+		#expect(client.findUser("alice")?.realName == "Alice Liddell")
 
-		client.receiveJoin(message(":bob!b@example.org JOIN #chat * :Bob", on: client))
+		try client.receiveJoin(message(":bob!b@example.org JOIN #chat * :Bob", on: client))
 
-		XCTAssertNil(client.findUser("bob")?.account)
-		XCTAssertEqual(client.findUser("bob")?.realName, "Bob")
+		#expect(client.findUser("bob")?.account == nil)
+		#expect(client.findUser("bob")?.realName == "Bob")
 	}
 
-	func testJoinParametersAreIgnoredWithoutExtendedJoin() {
+	@Test("Without the capability, the extra JOIN parameters are not read as identity")
+	func joinParametersAreIgnoredWithoutExtendedJoin() throws {
 		let client = makeClient(named: "me")
-		joinChannel("#chat", on: client)
+		try joinChannel("#chat", on: client)
 
-		client.receiveJoin(message(
+		try client.receiveJoin(message(
 			":alice!a@example.org JOIN #chat alice_acct :Alice Liddell",
 			on: client
 		))
 
 		let alice = client.findUser("alice")
-		XCTAssertNotNil(alice)
-		XCTAssertNil(alice?.account)
-		XCTAssertNil(alice?.realName)
+		#expect(alice != nil)
+		#expect(alice?.account == nil)
+		#expect(alice?.realName == nil)
 	}
 
-	func testAccountTagAndBotTagUpdateSender() {
+	@Test("The account and bot tags on any message update the sender")
+	func accountTagAndBotTagUpdateSender() throws {
 		let client = makeClient(named: "me")
-		let channel = joinChannel("#chat", on: client)
+		let channel = try joinChannel("#chat", on: client)
 		addUser(named: "alice", to: channel, on: client)
 
-		client.receivePrivmsgAndNotice(message(
+		try client.receivePrivmsgAndNotice(message(
 			"@account=alice_acct :alice!a@example.org PRIVMSG #chat :hi",
 			on: client
 		))
 
-		XCTAssertEqual(client.findUser("alice")?.account, "alice_acct")
-		XCTAssertFalse(client.findUser("alice")?.isBot ?? true)
+		#expect(client.findUser("alice")?.account == "alice_acct")
+		#expect(client.findUser("alice")?.isBot == false)
 
-		client.receivePrivmsgAndNotice(message(
+		try client.receivePrivmsgAndNotice(message(
 			"@bot :alice!a@example.org NOTICE #chat :beep",
 			on: client
 		))
 
-		XCTAssertTrue(client.findUser("alice")?.isBot ?? false)
-		XCTAssertEqual(client.findUser("alice")?.account, "alice_acct")
+		#expect(client.findUser("alice")?.isBot == true)
+		#expect(client.findUser("alice")?.account == "alice_acct")
 
-		client.receiveTagMessage(message(
+		try client.receiveTagMessage(message(
 			"@account=other;+typing=active :alice!a@example.org TAGMSG #chat",
 			on: client
 		))
 
-		XCTAssertEqual(client.findUser("alice")?.account, "other")
+		#expect(client.findUser("alice")?.account == "other")
 	}
 
-	func testSetNameUpdatesRealName() {
+	@Test("SETNAME renames the user it came from")
+	func setNameUpdatesRealName() throws {
 		let client = makeClient(named: "me")
-		let channel = joinChannel("#chat", on: client)
+		client.enableCapability(.setName)
+		let channel = try joinChannel("#chat", on: client)
 		addUser(named: "alice", to: channel, on: client)
 
-		client.receiveSetName(message(":alice!a@example.org SETNAME :Alice P. Liddell", on: client))
+		try client.receiveSetName(message(":alice!a@example.org SETNAME :Alice P. Liddell", on: client))
 
-		XCTAssertEqual(client.findUser("alice")?.realName, "Alice P. Liddell")
+		#expect(client.findUser("alice")?.realName == "Alice P. Liddell")
 	}
 
-	func testSetNameCommandRequiresCapability() {
+	@Test("/setname is refused with an explanation until the server offers the capability")
+	func setNameCommandRequiresCapability() {
 		let client = makeClient(named: "me")
 		client.markAsLoggedIn()
 
 		client.sendCommand("SETNAME New Name", completeTarget: false, target: nil)
 
-		XCTAssertEqual(client.sentLines.count, 0)
-		XCTAssertEqual(client.printedLines.count, 1)
+		#expect(client.sentLines.count == 0)
+		#expect(client.printedLines.count == 1)
 
 		client.enableCapability(.setName)
 		client.sendCommand("SETNAME New Name", completeTarget: false, target: nil)
 
-		XCTAssertEqual(sentLines(of: client), ["SETNAME :New Name"])
+		#expect(sentLines(of: client) == ["SETNAME :New Name"])
 	}
 
-	func testInviteForSomebodyElseIsPrintedInChannel() {
+	@Test("An invite for somebody else is printed in the channel it names, and nowhere else")
+	func inviteForSomebodyElseIsPrintedInChannel() throws {
 		let client = makeClient(named: "me")
-		let channel = joinChannel("#chat", on: client)
+		let channel = try joinChannel("#chat", on: client)
 
-		client.receiveInvite(message(":alice!a@example.org INVITE bob #chat", on: client))
+		try client.receiveInvite(message(":alice!a@example.org INVITE bob #chat", on: client))
 
-		XCTAssertEqual(client.printedLines.count, 1)
-		let printed = printedLine(at: 0, on: client)
-		XCTAssertTrue(printed?["channel"] as? Channel === channel)
-		XCTAssertEqual((printed?["lineType"] as? NSNumber)?.uintValue, TVCLogLineType.invite.rawValue)
+		#expect(client.printedLines.count == 1)
+		let printed = try #require(printedLine(at: 0, on: client))
+		#expect(printed["channel"] as? Channel === channel)
+		#expect((printed["lineType"] as? NSNumber)?.uintValue == TVCLogLineType.invite.rawValue)
 
-		let body = printed?["messageBody"] as? String
-		XCTAssertTrue(body?.contains("alice") ?? false)
-		XCTAssertTrue(body?.contains("bob") ?? false)
-		XCTAssertTrue(body?.contains("#chat") ?? false)
+		let body = printed["messageBody"] as? String
+		#expect(body?.contains("alice") == true)
+		#expect(body?.contains("bob") == true)
+		#expect(body?.contains("#chat") == true)
 
-		client.receiveInvite(message(":alice!a@example.org INVITE bob #other", on: client))
-		XCTAssertEqual(client.printedLines.count, 1)
+		try client.receiveInvite(message(":alice!a@example.org INVITE bob #other", on: client))
+		#expect(client.printedLines.count == 1)
 	}
 
-	func testInviteForMyselfStillUsesInvitePrompt() {
+	@Test("An invite for me is a prompt on the server console, not a channel line")
+	func inviteForMyselfStillUsesInvitePrompt() throws {
 		let client = makeClient(named: "me")
 
-		client.receiveInvite(message(":alice!a@example.org INVITE me #chat", on: client))
+		try client.receiveInvite(message(":alice!a@example.org INVITE me #chat", on: client))
 
-		XCTAssertEqual(client.printedLines.count, 1)
-		let printed = printedLine(at: 0, on: client)
-		XCTAssertNil(printed?["channel"])
-		XCTAssertTrue((printed?["messageBody"] as? String)?.contains("invited you") ?? false)
+		#expect(client.printedLines.count == 1)
+		let printed = try #require(printedLine(at: 0, on: client))
+		#expect(printed["channel"] == nil)
+		#expect((printed["messageBody"] as? String)?.contains("invited you") == true)
 	}
 
-	func testWhoUsesWhoxWhenSupported() {
+	@Test("WHO asks for the WHOX fields only once the server has advertised WHOX")
+	func whoUsesWhoxWhenSupported() {
 		let client = makeClient(named: "me")
 		client.markAsLoggedIn()
 
 		client.sendWho(toChannelNamed: "#chat")
-		XCTAssertEqual(sentLines(of: client).last, "WHO #chat")
+		#expect(sentLines(of: client).last == "WHO #chat")
 
 		client.supportInfo.processConfigurationData("WHOX")
 		client.sendWho(toChannelNamed: "#chat")
 
-		XCTAssertEqual(sentLines(of: client).last, "WHO #chat %tcuhnfar,152")
+		#expect(sentLines(of: client).last == "WHO #chat %tcuhnfar,152")
 	}
 
-	func testWhoxReplyIsParsed() {
+	@Test("A WHOX reply fills in the identity, the flags and the channel modes")
+	func whoxReplyIsParsed() throws {
 		let client = makeClient(named: "me")
 		client.supportInfo.processConfigurationData("WHOX BOT=B PREFIX=(ov)@+")
-		let channel = joinChannel("#chat", on: client)
+		let channel = try joinChannel("#chat", on: client)
 
-		client.receiveNumericReply(message(
+		try client.receiveNumericReply(message(
 			":irc.example.net 354 me 152 #chat ~alice host.example.org alice H*@B alice_acct :Alice",
 			on: client
 		))
 
 		let alice = client.findUser("alice")
-		XCTAssertEqual(alice?.username, "~alice")
-		XCTAssertEqual(alice?.address, "host.example.org")
-		XCTAssertEqual(alice?.realName, "Alice")
-		XCTAssertEqual(alice?.account, "alice_acct")
-		XCTAssertTrue(alice?.isIRCop ?? false)
-		XCTAssertTrue(alice?.isBot ?? false)
-		XCTAssertFalse(alice?.isAway ?? true)
-		XCTAssertEqual(channel.findMember("alice")?.modes, "o")
+		#expect(alice?.username == "~alice")
+		#expect(alice?.address == "host.example.org")
+		#expect(alice?.realName == "Alice")
+		#expect(alice?.account == "alice_acct")
+		#expect(alice?.isIRCop == true)
+		#expect(alice?.isBot == true)
+		#expect(alice?.isAway == false)
+		#expect(channel.findMember("alice")?.modes == "o")
 
-		client.receiveNumericReply(message(
+		try client.receiveNumericReply(message(
 			":irc.example.net 354 me 152 #chat ~bob host.example.org bob G 0 :Bob",
 			on: client
 		))
 
 		let bob = client.findUser("bob")
-		XCTAssertNotNil(bob)
-		XCTAssertNil(bob?.account)
-		XCTAssertFalse(bob?.isIRCop ?? true)
-		XCTAssertFalse(bob?.isBot ?? true)
+		#expect(bob != nil)
+		#expect(bob?.account == nil)
+		#expect(bob?.isIRCop == false)
+		#expect(bob?.isBot == false)
 
-		client.receiveNumericReply(message(
+		try client.receiveNumericReply(message(
 			":irc.example.net 354 me 999 #chat ~eve host eve H 0 :Eve",
 			on: client
 		))
-		XCTAssertNil(client.findUser("eve"))
+		#expect(client.findUser("eve") == nil)
 	}
 
-	func testWhoReplyStillParsesWithoutWhox() {
+	@Test("A plain WHO reply updates the identity but leaves the account it did not carry")
+	func whoReplyStillParsesWithoutWhox() throws {
 		let client = makeClient(named: "me")
 		client.supportInfo.processConfigurationData("PREFIX=(ov)@+")
-		let channel = joinChannel("#chat", on: client)
+		let channel = try joinChannel("#chat", on: client)
 		let existing = addUser(named: "alice", to: channel, on: client)
 
 		client.modify(existing) { mutableUser in
 			mutableUser.account = "kept"
 		}
 
-		client.receiveNumericReply(message(
+		try client.receiveNumericReply(message(
 			":irc.example.net 352 me #chat ~alice host.example.org irc.example.net alice H+ :0 Alice",
 			on: client
 		))
 
 		let alice = client.findUser("alice")
-		XCTAssertEqual(alice?.username, "~alice")
-		XCTAssertEqual(alice?.realName, "Alice")
-		XCTAssertEqual(alice?.account, "kept")
+		#expect(alice?.username == "~alice")
+		#expect(alice?.realName == "Alice")
+		#expect(alice?.account == "kept")
 	}
 
-	func testPreAwayIsRequestedAndRestoresAwayOnReconnect() {
+	@Test("pre-away is requested when offered, and acknowledging it sends nothing yet")
+	func preAwayIsRequestedAndRestoresAwayOnReconnect() throws {
 		let client = makeClient(named: "me")
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :pre-away",
 			on: client
 		))
-		XCTAssertEqual(capabilityCommands(of: client), ["REQ pre-away"])
+		#expect(capabilityCommands(of: client) == ["REQ pre-away"])
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :pre-away",
 			on: client
 		))
 
-		XCTAssertTrue(client.isCapabilityEnabled(.preAway))
-		XCTAssertEqual(capabilityCommands(of: client).last, "END")
-		XCTAssertEqual(client.sentLines.count, 0)
+		#expect(client.isCapabilityEnabled(.preAway))
+		#expect(capabilityCommands(of: client).last == "END")
+		#expect(client.sentLines.count == 0)
 	}
 
-	func testPreAwaySendsAwayBeforeCapEndWhenReconnecting() {
+	@Test("Reconnecting with pre-away restores the away message before CAP END")
+	func preAwaySendsAwayBeforeCapEndWhenReconnecting() {
 		let client = makeClient(named: "me")
 		client.markAsLoggedIn()
 		client.toggleAwayStatus(true, withComment: "brb")
-		XCTAssertEqual(sentLines(of: client), ["AWAY :brb"])
+		#expect(sentLines(of: client) == ["AWAY :brb"])
 
 		client.sentLines.removeAllObjects()
-		client.setValue(false, forKey: "isLoggedIn")
+		client.isLoggedIn = false
 		client.connectType = .reconnect
 		client.enableCapability(.preAway)
-		client.sendNextCapability()
+		client.sendNextQueuedCapability()
 
-		XCTAssertEqual(sentLines(of: client), ["AWAY :brb"])
-		XCTAssertEqual(capabilityCommands(of: client), ["END"])
+		#expect(sentLines(of: client) == ["AWAY :brb"])
+		#expect(capabilityCommands(of: client) == ["END"])
 	}
 
-	func testPreAwayDoesNothingWithoutCapability() {
+	@Test("Reconnecting without pre-away sends no early AWAY")
+	func preAwayDoesNothingWithoutCapability() {
 		let client = makeClient(named: "me")
 		client.markAsLoggedIn()
 		client.toggleAwayStatus(true, withComment: "brb")
 		client.sentLines.removeAllObjects()
-		client.setValue(false, forKey: "isLoggedIn")
+		client.isLoggedIn = false
 		client.connectType = .reconnect
-		client.sendNextCapability()
+		client.sendNextQueuedCapability()
 
-		XCTAssertEqual(client.sentLines.count, 0)
-		XCTAssertEqual(capabilityCommands(of: client), ["END"])
+		#expect(client.sentLines.count == 0)
+		#expect(capabilityCommands(of: client) == ["END"])
 	}
 
 	private func makeClient(named nickname: String) -> GLTTestClient {
-		let configuration: NSDictionary = ["nickname": nickname, "username": nickname]
-		guard let configuration = configuration as? [String: Any] else {
-			preconditionFailure("Test configuration must bridge to a Swift dictionary")
-		}
-		return GLTTestClient(configDictionary: configuration)
+		GLTTestClient(configDictionary: ["nickname": nickname, "username": nickname])
 	}
 
 	@discardableResult
-	private func joinChannel(_ name: String, on client: GLTTestClient) -> Channel {
-		let channel = client.findChannelOrCreate(name)!
+	private func joinChannel(_ name: String, on client: GLTTestClient) throws -> Channel {
+		let channel = try #require(client.findChannelOrCreate(name))
 		channel.activate()
 
 		return channel
@@ -320,8 +334,8 @@ final class IRCClientUserIdentityTests: XCTestCase {
 		return user
 	}
 
-	private func message(_ line: String, on client: IRCClient) -> Message {
-		Message(line: line, on: client)!
+	private func message(_ line: String, on client: IRCClient) throws -> Message {
+		try #require(Message(line: line, on: client))
 	}
 
 	private func sentLines(of client: GLTTestClient) -> [String] {

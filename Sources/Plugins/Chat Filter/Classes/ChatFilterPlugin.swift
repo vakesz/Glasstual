@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2015 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -36,17 +36,24 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import GlasstualPluginKit
+import os
 
 @objc(TPI_ChatFilterExtension)
-final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling, PluginPreferencesProviding,
-	PluginTextEventHandling, ChatFilterEditSheetDelegate, NSTableViewDataSource, NSTableViewDelegate,
-	@unchecked Sendable
+final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling,
+	PluginPreferencesProviding,
+	PluginTextEventHandling, ChatFilterEditSheetDelegate, NSTableViewDataSource, NSTableViewDelegate
 {
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['Chat Filter']"
+	)
+
 	private static let defaultsKey = "Glasstual Chat Filter Extension -> Filters"
 	private static let dragType = NSPasteboard.PasteboardType("filterTableDragToken")
 
-	@IBOutlet private var preferencesPaneView: NSView!
+	@IBOutlet private var preferencesPaneView: NSView?
 	@IBOutlet private var filterAddMenu: NSMenu!
 	@IBOutlet private var filterAddButton: NSButton!
 	@IBOutlet private var filterRemoveButton: NSButton!
@@ -54,7 +61,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 	@IBOutlet private var filterTable: NSTableView!
 	@IBOutlet var filterArrayController: NSArrayController!
 
-	@objc private dynamic var atleastOneFilterExists = false
+	private var atleastOneFilterExists = false
 	private var activeChatFilterIndex = -1
 	private var activeEditSheet: ChatFilterEditSheet?
 	private var engine: ChatFilterEngine?
@@ -73,7 +80,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		return host.defaults
 	}
 
-	@objc override init() {
+	override init() {
 		super.init()
 	}
 
@@ -87,8 +94,12 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		DispatchQueue.main.syncIfNeeded {
-			self.bundle.loadNibNamed("TPI_ChatFilterExtension", owner: self, topLevelObjects: nil)
+		if bundle.loadNibNamed("TPI_ChatFilterExtension", owner: self, topLevelObjects: nil) {
+			/* Registered here rather than in `awakeFromNib`, which AppKit calls
+			 without actor isolation. */
+			filterTable?.registerForDraggedTypes([Self.dragType])
+		} else {
+			Self.logger.error("Failed to load TPI_ChatFilterExtension.xib; the preferences pane is unavailable")
 		}
 		activeChatFilterIndex = -1
 		engine = ChatFilterEngine(parentObject: self, host: host)
@@ -98,6 +109,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 			object: defaults,
 			queue: .main
 		) { [weak self] _ in
+			// The queue is `.main`, but the callback signature is not isolated.
 			Task { @MainActor in self?.defaultsChanged() }
 		}
 	}
@@ -111,19 +123,12 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		host = nil
 	}
 
-	var pluginPreferencesPaneView: NSView {
+	var pluginPreferencesPaneView: NSView? {
 		preferencesPaneView
 	}
 
 	var pluginPreferencesPaneMenuItemName: String {
 		String(localized: .TPIChatFilterExtension.preferencesPaneTitle)
-	}
-
-	override nonisolated func awakeFromNib() {
-		MainActor.assumeIsolated {
-			super.awakeFromNib()
-			filterTable.registerForDraggedTypes([Self.dragType])
-		}
 	}
 
 	private var filters: [ChatFilter] {
@@ -132,8 +137,10 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 
 	private func loadFilters() {
 		filterArrayController.remove(contentsOf: filterArrayController.arrangedObjects as? [Any] ?? [])
-		let configurations = defaults.array(forKey: Self.defaultsKey) as? [[String: Any]] ?? []
-		for configuration in configurations {
+		let configurations = [PropertyListValue](
+			propertyList: defaults.array(forKey: Self.defaultsKey) ?? []
+		) ?? []
+		for configuration in configurations.compactMap(\.dictionary) {
 			filterArrayController.addObject(ChatFilter(dictionary: configuration))
 		}
 		reloadFilterCount()
@@ -141,7 +148,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 
 	private func saveFilters() {
 		isSaving = true
-		defaults.set(filters.map(\.dictionaryValue), forKey: Self.defaultsKey)
+		defaults.set(filters.map(\.dictionaryValue.propertyListObject), forKey: Self.defaultsKey)
 		reloadFilterCount()
 	}
 
@@ -157,14 +164,17 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		atleastOneFilterExists = !filters.isEmpty
 	}
 
+	@MainActor
 	@IBAction private func filterTableDoubleClicked(_ sender: Any?) {
 		filterEdit(sender)
 	}
 
+	@MainActor
 	@IBAction private func filterAdd(_: Any?) {
 		editFilter(nil, at: -1)
 	}
 
+	@MainActor
 	@IBAction private func filterRemove(_: Any?) {
 		guard ChatFilterAlert.confirm(
 			message: String(localized: .TPIChatFilterExtension.deleteFilterMessage),
@@ -176,6 +186,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		saveFilters()
 	}
 
+	@MainActor
 	@IBAction private func filterEdit(_: Any?) {
 		let row = filterTable.selectedRow
 		guard filters.indices.contains(row) else { return }
@@ -215,6 +226,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		activeEditSheet = nil
 	}
 
+	@MainActor
 	@IBAction private func filterDuplicate(_: Any?) {
 		let row = filterTable.selectedRow
 		guard filters.indices.contains(row), let copy = filters[row].mutableCopy() as? MutableChatFilter else { return }
@@ -222,6 +234,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		editFilter(copy.copy() as? ChatFilter, at: -1)
 	}
 
+	@MainActor
 	@IBAction private func filterExport(_: Any?) {
 		let row = filterTable.selectedRow
 		guard filters.indices.contains(row), let window = NSApp.keyWindow else { return }
@@ -236,6 +249,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		}
 	}
 
+	@MainActor
 	@IBAction private func filterImport(_: Any?) {
 		guard let window = NSApp.keyWindow else { return }
 		let panel = NSOpenPanel()
@@ -260,6 +274,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		}
 	}
 
+	@MainActor
 	@IBAction private func presentFilterAddMenu(_ sender: Any?) {
 		guard let view = sender as? NSView else { return }
 		filterAddMenu.popUp(positioning: nil, at: .zero, in: view)
@@ -295,15 +310,5 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		filterArrayController.insert(filter, atArrangedObjectIndex: destination)
 		saveFilters()
 		return true
-	}
-}
-
-private extension DispatchQueue {
-	func syncIfNeeded(_ work: () -> Void) {
-		if Thread.isMainThread {
-			work()
-		} else {
-			sync(execute: work)
-		}
 	}
 }

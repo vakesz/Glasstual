@@ -4,75 +4,83 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class IRCClientLifecyclePolicyTests: XCTestCase {
-	func testAutojoinBatchHonorsConfiguredMaximum() {
-		XCTAssertEqual(IRCClientAutojoinPolicy.nextBatchCount(remaining: 9, configuredMaximum: 3), 3)
-		XCTAssertEqual(IRCClientAutojoinPolicy.nextBatchCount(remaining: 2, configuredMaximum: 3), 2)
+@MainActor
+@Suite("Client lifecycle policies")
+struct IRCClientLifecyclePolicyTests {
+	@Test("An autojoin batch never exceeds the configured maximum")
+	func autojoinBatchHonorsConfiguredMaximum() {
+		#expect(IRCClientAutojoinPolicy.nextBatchCount(remaining: 9, configuredMaximum: 3) == 3)
+		#expect(IRCClientAutojoinPolicy.nextBatchCount(remaining: 2, configuredMaximum: 3) == 2)
 	}
 
-	func testAutojoinBatchAlwaysMakesProgress() {
-		XCTAssertEqual(IRCClientAutojoinPolicy.nextBatchCount(remaining: 4, configuredMaximum: 0), 1)
-		XCTAssertEqual(IRCClientAutojoinPolicy.nextBatchCount(remaining: 0, configuredMaximum: 4), 0)
+	@Test("A maximum of zero still joins one channel, and nothing remaining joins none")
+	func autojoinBatchAlwaysMakesProgress() {
+		#expect(IRCClientAutojoinPolicy.nextBatchCount(remaining: 4, configuredMaximum: 0) == 1)
+		#expect(IRCClientAutojoinPolicy.nextBatchCount(remaining: 0, configuredMaximum: 4) == 0)
 	}
 
-	func testAutojoinWaitsOnlyForUnidentifiedNickServSession() {
-		XCTAssertTrue(IRCClientAutojoinPolicy.shouldWaitForIdentification(
+	@Test("Autojoin waits only for a NickServ session that has not identified")
+	func autojoinWaitsOnlyForUnidentifiedNickServSession() {
+		#expect(IRCClientAutojoinPolicy.shouldWaitForIdentification(
 			isIdentifiedWithSASL: false,
 			waitsForNickServ: true,
 			serverHasNickServ: true,
 			isIdentifiedWithNickServ: false
 		))
-		XCTAssertFalse(IRCClientAutojoinPolicy.shouldWaitForIdentification(
+		#expect(IRCClientAutojoinPolicy.shouldWaitForIdentification(
 			isIdentifiedWithSASL: true,
 			waitsForNickServ: true,
 			serverHasNickServ: true,
 			isIdentifiedWithNickServ: false
-		))
+		) == false)
 	}
 
-	func testPongPolicyDisconnectsAtTimeoutWhenConfigured() {
-		XCTAssertEqual(IRCClientConnectionTimerPolicy.pongAction(
+	@Test("A missed pong disconnects at the timeout when the preference asks for it")
+	func pongPolicyDisconnectsAtTimeoutWhenConfigured() {
+		#expect(IRCClientConnectionTimerPolicy.pongAction(
 			elapsed: IRCClientConnectionTimerPolicy.timeoutInterval,
 			eofReceived: false,
 			disconnectOnTimeout: true,
 			pingEnabled: true,
 			warningAlreadyShown: false
-		), .disconnect)
+		) == .disconnect)
 	}
 
-	func testPongPolicyWarnsOnlyOnceWhenDisconnectIsDisabled() {
-		XCTAssertEqual(IRCClientConnectionTimerPolicy.pongAction(
+	@Test("Without the disconnect preference the timeout warns once and then stays quiet")
+	func pongPolicyWarnsOnlyOnceWhenDisconnectIsDisabled() {
+		#expect(IRCClientConnectionTimerPolicy.pongAction(
 			elapsed: IRCClientConnectionTimerPolicy.timeoutInterval,
 			eofReceived: false,
 			disconnectOnTimeout: false,
 			pingEnabled: true,
 			warningAlreadyShown: false
-		), .warnTimeout)
-		XCTAssertEqual(IRCClientConnectionTimerPolicy.pongAction(
+		) == .warnTimeout)
+		#expect(IRCClientConnectionTimerPolicy.pongAction(
 			elapsed: IRCClientConnectionTimerPolicy.timeoutInterval,
 			eofReceived: false,
 			disconnectOnTimeout: false,
 			pingEnabled: true,
 			warningAlreadyShown: true
-		), .none)
+		) == .none)
 	}
 
-	func testPongPolicyPingsOnlyWhenEnabled() {
-		XCTAssertEqual(IRCClientConnectionTimerPolicy.pongAction(
+	@Test("The ping interval only pings while pinging is enabled")
+	func pongPolicyPingsOnlyWhenEnabled() {
+		#expect(IRCClientConnectionTimerPolicy.pongAction(
 			elapsed: IRCClientConnectionTimerPolicy.pingInterval,
 			eofReceived: false,
 			disconnectOnTimeout: false,
 			pingEnabled: true,
 			warningAlreadyShown: false
-		), .ping)
-		XCTAssertEqual(IRCClientConnectionTimerPolicy.pongAction(
+		) == .ping)
+		#expect(IRCClientConnectionTimerPolicy.pongAction(
 			elapsed: IRCClientConnectionTimerPolicy.pingInterval,
 			eofReceived: false,
 			disconnectOnTimeout: false,
 			pingEnabled: false,
 			warningAlreadyShown: false
-		), .none)
+		) == .none)
 	}
 }

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -61,8 +61,10 @@ public struct UserRank: OptionSet, Hashable, Sendable {
 		self.rawValue = rawValue
 	}
 
-	/// The historic wire and plug-in contract represents no rank with bit zero.
-	public static let none = UserRank(rawValue: 1 << 0)
+	/// No rank at all. An option set already spells that as the empty set, so
+	/// `.none` no longer occupies a bit of its own and never has to be masked
+	/// out of a union.
+	public static let none = UserRank([])
 	public static let irCopByMode = UserRank(rawValue: 1 << 1)
 	public static let channelOwner = UserRank(rawValue: 1 << 2)
 	public static let superOperator = UserRank(rawValue: 1 << 3)

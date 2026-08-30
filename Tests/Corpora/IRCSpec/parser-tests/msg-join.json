@@ -1,0 +1,272 @@
+{
+  "tests": [
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "asdf"
+        ],
+        "verb": "foo"
+      },
+      "desc": "Simple test with verb and params.",
+      "matches": [
+        "foo bar baz asdf",
+        "foo bar baz :asdf"
+      ]
+    },
+    {
+      "atoms": {
+        "source": "src",
+        "verb": "AWAY"
+      },
+      "desc": "Simple test with source and no params.",
+      "matches": [
+        ":src AWAY"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          ""
+        ],
+        "source": "src",
+        "verb": "AWAY"
+      },
+      "desc": "Simple test with source and empty trailing param.",
+      "matches": [
+        ":src AWAY :"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "asdf"
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "desc": "Simple test with source.",
+      "matches": [
+        ":coolguy foo bar baz asdf",
+        ":coolguy foo bar baz :asdf"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "asdf quux"
+        ],
+        "verb": "foo"
+      },
+      "desc": "Simple test with trailing param.",
+      "matches": [
+        "foo bar baz :asdf quux"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          ""
+        ],
+        "verb": "foo"
+      },
+      "desc": "Simple test with empty trailing param.",
+      "matches": [
+        "foo bar baz :"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          ":asdf"
+        ],
+        "verb": "foo"
+      },
+      "desc": "Simple test with trailing param containing colon.",
+      "matches": [
+        "foo bar baz ::asdf"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "asdf quux"
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "desc": "Test with source and trailing param.",
+      "matches": [
+        ":coolguy foo bar baz :asdf quux"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "  asdf quux "
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "desc": "Test with trailing containing beginning+end whitespace.",
+      "matches": [
+        ":coolguy foo bar baz :  asdf quux "
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "lol :) "
+        ],
+        "source": "coolguy",
+        "verb": "PRIVMSG"
+      },
+      "desc": "Test with trailing containing what looks like another trailing param.",
+      "matches": [
+        ":coolguy PRIVMSG bar :lol :) "
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          ""
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "desc": "Simple test with source and empty trailing.",
+      "matches": [
+        ":coolguy foo bar baz :"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "  "
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "desc": "Trailing contains only spaces.",
+      "matches": [
+        ":coolguy foo bar baz :  "
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "b\tar",
+          "baz"
+        ],
+        "source": "coolguy",
+        "verb": "foo"
+      },
+      "desc": "Param containing tab (tab is not considered SPACE for message splitting).",
+      "matches": [
+        ":coolguy foo b\tar baz",
+        ":coolguy foo b\tar :baz"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "  "
+        ],
+        "source": "coolguy",
+        "tags": {
+          "asd": ""
+        },
+        "verb": "foo"
+      },
+      "desc": "Tag with empty value and space-filled trailing.",
+      "matches": [
+        "@asd :coolguy foo bar baz :  ",
+        "@asd= :coolguy foo bar baz :  "
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "bar",
+          "baz",
+          "  "
+        ],
+        "source": "coolguy",
+        "tags": {
+          "asd": ""
+        },
+        "verb": "foo"
+      },
+      "desc": "Tag with no value and space-filled trailing.",
+      "matches": [
+        "@asd :coolguy foo bar baz :  "
+      ]
+    },
+    {
+      "atoms": {
+        "tags": {
+          "a": "b\\and\nk",
+          "d": "gh;764"
+        },
+        "verb": "foo"
+      },
+      "desc": "Tags with escaped values.",
+      "matches": [
+        "@a=b\\\\and\\nk;d=gh\\:764 foo",
+        "@d=gh\\:764;a=b\\\\and\\nk foo"
+      ]
+    },
+    {
+      "atoms": {
+        "params": [
+          "par1",
+          "par2"
+        ],
+        "tags": {
+          "a": "b\\and\nk",
+          "d": "gh;764"
+        },
+        "verb": "foo"
+      },
+      "desc": "Tags with escaped values and params.",
+      "matches": [
+        "@a=b\\\\and\\nk;d=gh\\:764 foo par1 par2",
+        "@a=b\\\\and\\nk;d=gh\\:764 foo par1 :par2",
+        "@d=gh\\:764;a=b\\\\and\\nk foo par1 par2",
+        "@d=gh\\:764;a=b\\\\and\\nk foo par1 :par2"
+      ]
+    },
+    {
+      "atoms": {
+        "tags": {
+          "foo": "\\\\;\\s \r\n"
+        },
+        "verb": "COMMAND"
+      },
+      "desc": "Tag with long, strange values (including LF and newline).",
+      "matches": [
+        "@foo=\\\\\\\\\\:\\\\s\\s\\r\\n COMMAND"
+      ]
+    }
+  ]
+}

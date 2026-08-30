@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -36,67 +36,69 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class IRCClientShellPolicyTests: XCTestCase {
-	@MainActor
-	func testNativeClassPreservesRuntimeIdentityAndInitialState() {
-		let client = IRCClient(configDictionary: [:])
+@MainActor
+@Suite("Client shell policies")
+struct IRCClientShellPolicyTests {
+	@Test("A freshly configured client is disconnected, logged out and holds no channels")
+	func newClientStartsDisconnectedAndEmpty() {
+		let client = IRCClient(config: ClientConfig())
 
-		XCTAssertEqual(NSStringFromClass(type(of: client)), "IRCClient")
-		XCTAssertTrue(client.isClient)
-		XCTAssertFalse(client.isConnected)
-		XCTAssertFalse(client.isLoggedIn)
-		XCTAssertEqual(client.channelCount, 0)
-		XCTAssertTrue(client.associatedClient === client)
+		#expect(client.isClient)
+		#expect(client.isConnected == false)
+		#expect(client.isLoggedIn == false)
+		#expect(client.channelCount == 0)
+		#expect(client.associatedClient === client)
 	}
 
-	func testChannelStoragePlacesChannelsBeforeQueries() {
-		XCTAssertEqual(
+	@Test("Channels are stored ahead of queries")
+	func channelStoragePlacesChannelsBeforeQueries() {
+		#expect(
 			IRCClientChannelStoragePolicy.insertionIndex(
 				isChannel: true,
 				existingKinds: [true, true, false, false]
-			),
-			2
+			) == 2
 		)
-		XCTAssertEqual(
+		#expect(
 			IRCClientChannelStoragePolicy.insertionIndex(
 				isChannel: false,
 				existingKinds: [true, false]
-			),
-			2
+			) == 2
 		)
 	}
 
-	func testStoredConfigurationExcludesTransientChannels() {
-		XCTAssertFalse(
+	@Test("A utility window or a direct chat is never written to the stored configuration")
+	func storedConfigurationExcludesTransientChannels() {
+		#expect(
 			IRCClientConfigurationPolicy.shouldStoreChannel(
 				isUtility: true,
 				isDirectChat: false,
 				isChannel: true,
 				rememberQueries: true
-			)
+			) == false
 		)
-		XCTAssertFalse(
+		#expect(
 			IRCClientConfigurationPolicy.shouldStoreChannel(
 				isUtility: false,
 				isDirectChat: true,
 				isChannel: false,
 				rememberQueries: true
-			)
+			) == false
 		)
 	}
 
-	func testStoredConfigurationHonorsQueryPreference() {
-		XCTAssertFalse(
+	@Test("A query is stored only while the remember-queries preference is on")
+	func storedConfigurationHonorsQueryPreference() {
+		#expect(
 			IRCClientConfigurationPolicy.shouldStoreChannel(
 				isUtility: false,
 				isDirectChat: false,
 				isChannel: false,
 				rememberQueries: false
-			)
+			) == false
 		)
-		XCTAssertTrue(
+		#expect(
 			IRCClientConfigurationPolicy.shouldStoreChannel(
 				isUtility: false,
 				isDirectChat: false,
@@ -106,33 +108,32 @@ final class IRCClientShellPolicyTests: XCTestCase {
 		)
 	}
 
-	func testReachabilityDisconnectRequiresAllConditions() {
-		XCTAssertTrue(
+	@Test("An unreachable network disconnects a logged-in client only when asked to")
+	func reachabilityDisconnectRequiresAllConditions() {
+		#expect(
 			IRCClientReachabilityPolicy.shouldDisconnect(
-				isReachable: false,
 				isLoggedIn: true,
 				disconnectWhenUnreachable: true
 			)
 		)
-		XCTAssertFalse(
+		#expect(
 			IRCClientReachabilityPolicy.shouldDisconnect(
-				isReachable: true,
 				isLoggedIn: true,
-				disconnectWhenUnreachable: true
-			)
+				disconnectWhenUnreachable: false
+			) == false
 		)
-		XCTAssertFalse(
+		#expect(
 			IRCClientReachabilityPolicy.shouldDisconnect(
-				isReachable: false,
 				isLoggedIn: false,
 				disconnectWhenUnreachable: true
-			)
+			) == false
 		)
 	}
 
-	func testTerminationDisconnectsConnectingOrConnectedClients() {
-		XCTAssertTrue(IRCClientLifecyclePolicy.requiresDisconnect(isConnecting: true, isConnected: false))
-		XCTAssertTrue(IRCClientLifecyclePolicy.requiresDisconnect(isConnecting: false, isConnected: true))
-		XCTAssertFalse(IRCClientLifecyclePolicy.requiresDisconnect(isConnecting: false, isConnected: false))
+	@Test("Termination disconnects a client that is connecting or connected")
+	func terminationDisconnectsConnectingOrConnectedClients() {
+		#expect(IRCClientLifecyclePolicy.requiresDisconnect(isConnecting: true, isConnected: false))
+		#expect(IRCClientLifecyclePolicy.requiresDisconnect(isConnecting: false, isConnected: true))
+		#expect(IRCClientLifecyclePolicy.requiresDisconnect(isConnecting: false, isConnected: false) == false)
 	}
 }

@@ -1,4 +1,4 @@
-
-This repository contains a collection of already assembled open source libraries.
+This directory contains vendored open source source code, not assembled
+libraries. See README.md for its provenance.
 
 See the Documentation directory for license information.

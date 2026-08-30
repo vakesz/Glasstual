@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2015 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -39,8 +39,7 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 
-@objc(TPI_ChatFilterLogic)
-final class ChatFilterEngine: NSObject, @unchecked Sendable {
+final class ChatFilterEngine: NSObject {
 	private weak var parentObject: NSObject?
 	private let host: PluginHostContext
 	private var lastActionDates: [String: TimeInterval] = [:]
@@ -335,7 +334,7 @@ final class ChatFilterEngine: NSObject, @unchecked Sendable {
 		return true
 	}
 
-	@objc func reloadFilterActionPerforms() {
+	func reloadFilterActionPerforms() {
 		let validIdentifiers = Set(filters.lazy.filter { $0.filterActionFloodControlInterval > 0 }
 			.map(\.uniqueIdentifier))
 		lastActionDates = lastActionDates.filter { validIdentifiers.contains($0.key) }

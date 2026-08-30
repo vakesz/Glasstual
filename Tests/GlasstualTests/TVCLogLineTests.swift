@@ -1,16 +1,9 @@
-import Foundation
-@testable import Glasstual
-import XCTest
-
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "TVCLogLine.h"
-/** *********************************************************************
+/*  *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
@@ -42,39 +35,49 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-class TVCLogLineTests: XCTestCase {
-	func testMessageIdentifierSurvivesArchivingAndCopying() throws {
-		let line = MutableLogLine()
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+@MainActor
+@Suite("Log line")
+struct TVCLogLineTests {
+	@Test("The message identifier survives a copy and a secure-coding round trip")
+	func messageIdentifierSurvivesArchivingAndCopying() throws {
+		var line = LogLine()
 		line.command = "privmsg"
 		line.lineType = .privateMessage
 		line.nickname = "alice"
 		line.messageBody = "hello"
 		line.messageIdentifier = "63E1033A0"
 
-		let copy = try XCTUnwrap(line.copy() as? LogLine)
-		XCTAssertEqual(copy.messageIdentifier, "63E1033A0")
+		let copy = line
+		#expect(copy.messageIdentifier == "63E1033A0")
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: copy, requiringSecureCoding: true)
-		let decoded = try XCTUnwrap(LogLine(data: data))
+		let data = try NSKeyedArchiver.archivedData(withRootObject: copy.archived, requiringSecureCoding: true)
+		let decoded = try #require(LogLine(data: data))
 
-		XCTAssertEqual(decoded.messageIdentifier, "63E1033A0")
-		XCTAssertEqual(decoded.uniqueIdentifier, copy.uniqueIdentifier)
-		XCTAssertEqual(decoded.messageBody, "hello")
+		#expect(decoded.messageIdentifier == "63E1033A0")
+		#expect(decoded.uniqueIdentifier == copy.uniqueIdentifier)
+		#expect(decoded.messageBody == "hello")
 	}
 
-	func testMessageIdentifierIsOptional() throws {
-		let line = MutableLogLine()
+	@Test("A line with no message identifier decodes without one")
+	func messageIdentifierIsOptional() throws {
+		var line = LogLine()
 		line.messageBody = "hello"
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.copy(), requiringSecureCoding: true)
-		let decoded = try XCTUnwrap(LogLine(data: data))
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
+		let decoded = try #require(LogLine(data: data))
 
-		XCTAssertNil(decoded.messageIdentifier)
+		#expect(decoded.messageIdentifier == nil)
 	}
 
-	func testMutableCopyPreservesCompleteValueState() throws {
+	@Test("A copy carries every value of the original and is independent of it")
+	func copyPreservesCompleteValueState() {
 		let receivedAt = Date(timeIntervalSince1970: 1_725_000_000)
-		let line = MutableLogLine()
+		var line = LogLine()
 		line.isEncrypted = true
 		line.isFirstForDay = true
 		line.receivedAt = receivedAt
@@ -89,49 +92,52 @@ class TVCLogLineTests: XCTestCase {
 		line.deliveryState = .delivered
 		line.highlightKeywords = ["hello"]
 		line.excludeKeywords = ["ignore"]
-		line.rendererAttributes = ["key": "value"]
+		line.doNotEscapeBody = true
 
-		let copy = try XCTUnwrap(line.copy() as? LogLine)
+		var copy = line
+		copy.messageBody = "changed"
 
-		XCTAssertFalse(copy is MutableLogLine)
-		XCTAssertTrue(copy.isEncrypted)
-		XCTAssertTrue(copy.isFirstForDay)
-		XCTAssertEqual(copy.receivedAt, receivedAt)
-		XCTAssertEqual(copy.nickname, "alice")
-		XCTAssertEqual(copy.messageBody, "hello")
-		XCTAssertEqual(copy.command, "PRIVMSG")
-		XCTAssertEqual(copy.messageIdentifier, "message-id")
-		XCTAssertEqual(copy.replyToMessageIdentifier, "parent-id")
-		XCTAssertEqual(copy.reactions, ["👍": ["bob", "carol"]])
-		XCTAssertEqual(copy.lineType, .privateMessage)
-		XCTAssertEqual(copy.memberType, .localUser)
-		XCTAssertEqual(copy.deliveryState, .delivered)
-		XCTAssertEqual(copy.highlightKeywords, ["hello"])
-		XCTAssertEqual(copy.excludeKeywords, ["ignore"])
-		XCTAssertEqual(copy.rendererAttributes?["key"] as? String, "value")
-		XCTAssertEqual(copy.uniqueIdentifier, line.uniqueIdentifier)
-		XCTAssertEqual(copy.sessionIdentifier, line.sessionIdentifier)
+		#expect(line.messageBody == "hello")
+		#expect(copy.isEncrypted)
+		#expect(copy.isFirstForDay)
+		#expect(copy.receivedAt == receivedAt)
+		#expect(copy.nickname == "alice")
+		#expect(copy.messageBody == "changed")
+		#expect(copy.command == "PRIVMSG")
+		#expect(copy.messageIdentifier == "message-id")
+		#expect(copy.replyToMessageIdentifier == "parent-id")
+		#expect(copy.reactions == ["👍": ["bob", "carol"]])
+		#expect(copy.lineType == .privateMessage)
+		#expect(copy.memberType == .localUser)
+		#expect(copy.deliveryState == .delivered)
+		#expect(copy.highlightKeywords == ["hello"])
+		#expect(copy.excludeKeywords == ["ignore"])
+		#expect(copy.doNotEscapeBody)
+		#expect(copy.uniqueIdentifier == line.uniqueIdentifier)
+		#expect(copy.sessionIdentifier == line.sessionIdentifier)
 	}
 
-	func testPendingDeliveryStateIsNotRestoredFromArchive() throws {
-		let line = MutableLogLine()
+	@Test("A pending delivery state is not carried out of the archive")
+	func pendingDeliveryStateIsNotRestoredFromArchive() throws {
+		var line = LogLine()
 		line.deliveryState = .pending
 
-		let data = try NSKeyedArchiver.archivedData(withRootObject: line.copy(), requiringSecureCoding: true)
-		let decoded = try XCTUnwrap(LogLine(data: data))
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
+		let decoded = try #require(LogLine(data: data))
 
-		XCTAssertEqual(decoded.deliveryState, .none)
-		XCTAssertNil(decoded.deliveryStateString)
+		#expect(decoded.deliveryState == TVCLogLineDeliveryState.none)
+		#expect(decoded.deliveryStateString == nil)
 	}
 
-	func testLineTypeAndMemberTypeStringsRetainRendererValues() {
-		XCTAssertEqual(LogLine.string(for: .actionNoHighlight), "action")
-		XCTAssertEqual(LogLine.string(for: .ctcpReply), "ctcp")
-		XCTAssertEqual(LogLine.string(for: .dccFileTransfer), "dcc-file-transfer")
-		XCTAssertEqual(LogLine.string(for: .offTheRecordEncryptionStatus), "off-the-record-encryption-status")
-		XCTAssertEqual(LogLine.string(for: .privateMessageNoHighlight), "privmsg")
-		XCTAssertNil(LogLine.string(for: .undefined))
-		XCTAssertEqual(LogLine.string(for: .localUser), "myself")
-		XCTAssertEqual(LogLine.string(for: .normal), "normal")
+	@Test("The renderer's names for the line and member types are the ones the templates read")
+	func lineTypeAndMemberTypeStringsRetainRendererValues() {
+		#expect(LogLine.string(for: .actionNoHighlight) == "action")
+		#expect(LogLine.string(for: .ctcpReply) == "ctcp")
+		#expect(LogLine.string(for: .dccFileTransfer) == "dcc-file-transfer")
+		#expect(LogLine.string(for: .offTheRecordEncryptionStatus) == "off-the-record-encryption-status")
+		#expect(LogLine.string(for: .privateMessageNoHighlight) == "privmsg")
+		#expect(LogLine.string(for: .undefined) == nil)
+		#expect(LogLine.string(for: .localUser) == "myself")
+		#expect(LogLine.string(for: .normal) == "normal")
 	}
 }

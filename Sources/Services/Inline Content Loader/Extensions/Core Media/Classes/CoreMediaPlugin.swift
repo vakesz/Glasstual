@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -38,9 +38,25 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, InlineContentPlugin {
-	@objc static var modules: [AnyClass] {
+/// Locates the resources the Core Media modules ship with.
+///
+/// `Bundle(for:)` needs a class to point at; this one exists for no other
+/// reason. In the service that resolves to the service bundle, and in the test
+/// bundle to the test bundle, which is why it is not `Bundle.main`.
+private final class CoreMediaBundleToken {}
+
+enum CoreMediaBundle {
+	static var current: Bundle {
+		Bundle(for: CoreMediaBundleToken.self)
+	}
+}
+
+/// The modules linked into the inline-content service.
+///
+/// Order matters: the first module that claims a URL handles it, so the
+/// host-specific ones come before the two that match any file.
+enum CoreMediaPlugin: InlineContentPlugin {
+	static var modules: [any InlineContentModule.Type] {
 		[
 			DailymotionModule.self,
 			GyazoModule.self,

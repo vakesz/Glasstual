@@ -4,40 +4,44 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCWorldMigrationTests: XCTestCase {
-	func testInitialWorldIsEmpty() {
+@Suite("World bookkeeping")
+struct IRCWorldMigrationTests {
+	@Test("A world starts with no clients and no traffic recorded")
+	func initialWorldIsEmpty() {
 		let world = IRCWorld()
 
-		XCTAssertEqual(world.clientCount, 0)
-		XCTAssertTrue(world.clientList.isEmpty)
-		XCTAssertEqual(world.messagesSent, 0)
-		XCTAssertEqual(world.messagesReceived, 0)
-		XCTAssertEqual(world.bandwidthIn, 0)
-		XCTAssertEqual(world.bandwidthOut, 0)
+		#expect(world.clientCount == 0)
+		#expect(world.clientList.isEmpty)
+		#expect(world.messagesSent == 0)
+		#expect(world.messagesReceived == 0)
+		#expect(world.bandwidthIn == 0)
+		#expect(world.bandwidthOut == 0)
 	}
 
-	func testTrafficCountersAccumulateLengths() {
+	@Test("Traffic counters accumulate the lengths they are told about")
+	func trafficCountersAccumulateLengths() {
 		let world = IRCWorld()
 
 		world.noteMessageSent(length: 12)
 		world.noteMessageSent(length: 7)
 		world.noteMessageReceived(length: 31)
 
-		XCTAssertEqual(world.messagesSent, 2)
-		XCTAssertEqual(world.messagesReceived, 1)
-		XCTAssertEqual(world.bandwidthOut, 19)
-		XCTAssertEqual(world.bandwidthIn, 31)
+		#expect(world.messagesSent == 2)
+		#expect(world.messagesReceived == 1)
+		#expect(world.bandwidthOut == 19)
+		#expect(world.bandwidthIn == 31)
 	}
 
-	func testUnknownTreeItemsAreNotFound() {
+	@Test("Looking up an identifier the world does not hold finds nothing")
+	func unknownTreeItemsAreNotFound() {
 		let world = IRCWorld()
 
-		XCTAssertNil(world.findItem(withId: "missing"))
-		XCTAssertNil(world.findClient(withId: "missing"))
-		XCTAssertNil(world.findChannel(withId: "missing", onClientWithId: "missing-client"))
-		XCTAssertTrue(world.findItems(withIds: ["missing"]).isEmpty)
+		#expect(world.findItem(withId: "missing") == nil)
+		#expect(world.findClient(withId: "missing") == nil)
+		#expect(world.findChannel(withId: "missing", onClientWithId: "missing-client") == nil)
+		#expect(world.findItems(withIds: ["missing"]).isEmpty)
 	}
 }

@@ -1,61 +1,74 @@
-@testable import Glasstual
-import XCTest
-
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "TPCPreferencesLocal.h"
-/** *********************************************************************
+/*  *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
-@objc
+
+import AppKit
+@testable import Glasstual
+import Testing
+
 @MainActor
-class TLONotificationConfigurationTests: XCTestCase {
-	@objc
-	func testBaseConfigurationPreservesEventAndDisplayName() {
-		let configuration = NotificationConfiguration.configuration(withEventType: .highlight)
-		let displayName = configuration.displayName
+@Suite("Notification configuration")
+struct TLONotificationConfigurationTests {
+	@Test("A configuration remembers the event it was made for and names it")
+	func configurationsPreserveEventAndDisplayName() {
+		let configuration: any NotificationConfiguration =
+			PreferencesNotificationConfiguration(eventType: .highlight)
 
-		XCTAssertEqual(configuration.eventType, .highlight)
-		XCTAssertFalse(displayName.isEmpty)
+		#expect(configuration.eventType == .highlight)
+		#expect(configuration.displayName.isEmpty == false)
 	}
 
-	@objc
-	func testLocalizedSoundTitlesAndConstantsRemainAvailable() {
-		XCTAssertFalse(NotificationConfiguration.localizedAlertDefaultSoundTitle().isEmpty)
-		XCTAssertFalse(NotificationConfiguration.localizedAlertNoSoundTitle().isEmpty)
+	@Test("The sound menu titles are localized and the stored values are not")
+	func localizedSoundTitlesAndConstantsRemainAvailable() {
+		#expect(NotificationAlertSound.localizedDefaultTitle.isEmpty == false)
+		#expect(NotificationAlertSound.localizedNoSoundTitle.isEmpty == false)
 
-		XCTAssertEqual(NotificationAlertSound.defaultPreferenceValue, "Default")
-		XCTAssertEqual(NotificationAlertSound.noSoundPreferenceValue, "None")
+		#expect(NotificationAlertSound.defaultPreferenceValue == "Default")
+		#expect(NotificationAlertSound.noSoundPreferenceValue == "None")
 	}
 
-	@objc
-	func testPreferencesConfigurationReadsExistingGlobalValues() {
+	@Test("The global configuration reads the values already in preferences")
+	func preferencesConfigurationReadsExistingGlobalValues() {
 		let eventType = TXNotificationType.highlight
-		let configuration = PreferencesNotificationConfiguration.object(withEventType: eventType)
+		let configuration = PreferencesNotificationConfiguration(eventType: eventType)
 		let expectedSound = TextualPreferences.sound(for: eventType)
 			?? NotificationAlertSound.noSoundPreferenceValue
 
-		XCTAssertEqual(configuration.eventType, eventType)
+		#expect(configuration.eventType == eventType)
 
-		XCTAssertEqual(configuration.alertSound, expectedSound)
+		#expect(configuration.alertSound == expectedSound)
 
-		XCTAssertEqual(configuration.pushNotification != 0, TextualPreferences.notificationEnabled(for: eventType))
-		XCTAssertEqual(configuration.speakEvent != 0, TextualPreferences.speak(eventType))
-		XCTAssertEqual(configuration.disabledWhileAway != 0, TextualPreferences.disabledWhileAway(for: eventType))
-		XCTAssertEqual(configuration.bounceDockIcon != 0, TextualPreferences.bounceDockIcon(for: eventType))
-		XCTAssertEqual(
-			configuration.bounceDockIconRepeatedly != 0,
-			TextualPreferences.bounceDockIconRepeatedly(for: eventType)
+		#expect(
+			(configuration.pushNotification != NSControl.StateValue.off)
+				== TextualPreferences.notificationEnabled(for: eventType)
+		)
+		#expect((configuration.speakEvent != NSControl.StateValue.off) == TextualPreferences.speak(eventType))
+		#expect(
+			(configuration.disabledWhileAway != NSControl.StateValue.off)
+				== TextualPreferences.disabledWhileAway(for: eventType)
+		)
+		#expect(
+			(configuration.bounceDockIcon != NSControl.StateValue.off)
+				== TextualPreferences.bounceDockIcon(for: eventType)
+		)
+		#expect(
+			(configuration.bounceDockIconRepeatedly != NSControl.StateValue.off)
+				== TextualPreferences.bounceDockIconRepeatedly(for: eventType)
 		)
 	}
 
-	@objc
-	func testBaseFactoryRemainsPolymorphicForSubclasses() {
-		let configuration: NotificationConfiguration = PreferencesNotificationConfiguration
-			.configuration(withEventType: .invite)
+	/// The pane holds whichever implementation it was handed, without knowing
+	/// which one it is.
+	@Test("Both implementations satisfy the protocol the pane talks to")
+	func bothImplementationsSatisfyTheProtocol() {
+		let configurations: [any NotificationConfiguration] = [
+			PreferencesNotificationConfiguration(eventType: .invite),
+			ChannelNotificationConfiguration(eventType: .invite),
+		]
 
-		XCTAssertTrue(configuration is PreferencesNotificationConfiguration)
-		XCTAssertEqual(configuration.eventType, .invite)
+		for configuration in configurations {
+			#expect(configuration.eventType == .invite)
+		}
 	}
 }

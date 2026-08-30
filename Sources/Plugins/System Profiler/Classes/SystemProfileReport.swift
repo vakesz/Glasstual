@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2012 - 2020 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -43,28 +43,28 @@ import Metal
 
 @MainActor
 enum SystemProfileReport {
-	static func applicationActiveStyle(metrics: PluginApplicationMetrics) -> String {
-		guard let snapshot = PluginHost.themeSnapshot() else {
+	static func applicationActiveStyle(metrics: PluginApplicationMetrics, host: PluginHostContext) -> String {
+		guard let snapshot = host.themeSnapshot else {
 			return ""
 		}
 
 		let storage = switch snapshot.storageLocation {
 		case .bundled:
-			SystemProfilerHostApplicationStrings.string(.bundledTheme)
+			String(localized: .BasicLanguage.bundledTheme)
 		case .custom:
-			SystemProfilerHostApplicationStrings.string(.customTheme)
+			String(localized: .BasicLanguage.customTheme)
 		case .unknown:
 			""
 		}
 		let sidebar = SystemProfileInformation.sidebarAppearance(usesDarkAppearance: metrics.usesDarkSidebar)
-		let theme = SystemProfileInformation.themeAppearance()
+		let theme = SystemProfileInformation.themeAppearance(host: host)
 		let appearance = sidebar == theme
 			? SystemProfilerLocalization.string(.BasicLanguage.appearance(sidebar))
 			: SystemProfilerLocalization.string(.BasicLanguage.separateAppearances(theme, sidebar))
 		return SystemProfilerLocalization.string(.BasicLanguage.currentStyle(snapshot.name, storage, appearance))
 	}
 
-	static func applicationAndSystemUptime() -> String {
+	static func applicationAndSystemUptime(host: PluginHostContext) -> String {
 		let units: NSCalendar.Unit = [.day, .hour, .minute, .second]
 		let system = PluginHost.humanReadableTimeInterval(
 			ProcessInfo.processInfo.systemUptime,
@@ -72,7 +72,7 @@ enum SystemProfileReport {
 			units: units
 		)
 		let application = PluginHost.humanReadableTimeInterval(
-			PluginHost.applicationSnapshot()?.timeIntervalSinceLaunch ?? 0,
+			host.applicationSnapshot?.timeIntervalSinceLaunch ?? 0,
 			shortValue: false,
 			units: units
 		)
@@ -100,8 +100,8 @@ enum SystemProfileReport {
 		)
 	}
 
-	static func applicationRuntimeStatistics() -> String {
-		guard let snapshot = PluginHost.applicationSnapshot() else {
+	static func applicationRuntimeStatistics(host: PluginHostContext) -> String {
+		guard let snapshot = host.applicationSnapshot else {
 			return ""
 		}
 
@@ -348,8 +348,8 @@ enum SystemProfileInformation {
 		)
 	}
 
-	@MainActor static func themeAppearance() -> String {
-		let appearance = PluginHost.themeSnapshot()?.resolvedAppearance
+	@MainActor static func themeAppearance(host: PluginHostContext) -> String {
+		let appearance = host.themeSnapshot?.resolvedAppearance
 		return SystemProfilerLocalization.string(
 			appearance == .dark ? .BasicLanguage.darkAppearance : .BasicLanguage.lightAppearance
 		)
@@ -379,7 +379,10 @@ enum SystemProfileInformation {
 		) >
 			0
 		{
-			address = region.pri_address + region.pri_size
+			let nextAddress = region.pri_address + region.pri_size
+			/* A zero-sized region would otherwise leave the address unchanged forever. */
+			guard nextAddress > address else { break }
+			address = nextAddress
 			if region.pri_share_mode == SM_PRIVATE {
 				usage += UInt64(region.pri_private_pages_resident) * UInt64(getpagesize())
 			}
@@ -388,13 +391,17 @@ enum SystemProfileInformation {
 	}
 
 	static func freeMemory() -> UInt64 {
+		/* mach_host_self() returns a send right that the caller owns. */
+		let host = mach_host_self()
+		defer { mach_port_deallocate(mach_task_self_, host) }
+
 		var pageSize: vm_size_t = 0
-		guard host_page_size(mach_host_self(), &pageSize) == KERN_SUCCESS else { return 0 }
+		guard host_page_size(host, &pageSize) == KERN_SUCCESS else { return 0 }
 		var statistics = vm_statistics64()
 		var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64_data_t>.size / MemoryLayout<integer_t>.size)
 		let status = withUnsafeMutablePointer(to: &statistics) { pointer in
 			pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { rebound in
-				host_statistics64(mach_host_self(), HOST_VM_INFO64, rebound, &count)
+				host_statistics64(host, HOST_VM_INFO64, rebound, &count)
 			}
 		}
 		guard status == KERN_SUCCESS else { return 0 }
@@ -445,16 +452,5 @@ enum SystemProfileInformation {
 enum SystemProfilerLocalization {
 	static func string(_ resource: LocalizedStringResource) -> String {
 		String(localized: resource)
-	}
-}
-
-private enum SystemProfilerHostApplicationStrings {
-	enum Key: String {
-		case bundledTheme = "7lm-bq"
-		case customTheme = "bm2-4p"
-	}
-
-	static func string(_ key: Key) -> String {
-		Bundle.main.localizedString(forKey: key.rawValue, value: nil, table: "BasicLanguage")
 	}
 }

@@ -1,12 +1,9 @@
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,44 +34,34 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
-class IRCMessageParsingTests: XCTestCase {
-	@objc
-	func testMessageTagsDecodeEscapesAndMetadata() {
-		let parsed: ParsedMessageTags! = MessageTagParser
+
+@testable import Glasstual
+import Testing
+
+@MainActor
+@Suite("Message tag parsing")
+struct IRCMessageParsingTests {
+	@Test("Escapes are resolved and the known tags are lifted out")
+	func messageTagsDecodeEscapesAndMetadata() {
+		let parsed = MessageTagParser
 			.parsedTags(fromSection: "msgid=abc;account=alice;a=b\\:c\\sd\\\\e\\r\\n;flag")
 
-		XCTAssertEqual(parsed.tags["a"], "b;c d\\e\r\n")
-		XCTAssertEqual(parsed.tags["flag"], "")
-		XCTAssertEqual(parsed.messageIdentifier, "abc")
-		XCTAssertEqual(parsed.senderAccount, "alice")
+		#expect(parsed.tags["a"] == "b;c d\\e\r\n")
+		#expect(parsed.tags["flag"] == "")
+		#expect(parsed.messageIdentifier == "abc")
+		#expect(parsed.senderAccount == "alice")
 	}
 
-	@objc
-	func testMessageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
-		let parsed: ParsedMessageTags! = MessageTagParser
+	@Test("The last spelling of a duplicated tag wins and an unknown escape drops its backslash")
+	func messageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
+		let parsed = MessageTagParser
 			.parsedTags(fromSection: "a=first;;a=second;b=x\\qy;c=end\\")
 
-		XCTAssertEqual(parsed.tags["a"], "second")
-		XCTAssertEqual(parsed.tags["b"], "xqy")
-		XCTAssertEqual(parsed.tags["c"], "end")
+		#expect(parsed.tags["a"] == "second")
+		#expect(parsed.tags["b"] == "xqy")
+		#expect(parsed.tags["c"] == "end")
 
-		XCTAssertNil(parsed.messageIdentifier)
-		XCTAssertNil(parsed.senderAccount)
-	}
-
-	@objc
-	func testSenderPrefixUsesFirstBangAndLastAtSign() {
-		let parsed: ParsedSenderPrefix! = SenderPrefixParser.parsedPrefix(from: "nick!user!name@cloak@host")
-
-		XCTAssertEqual(parsed.nickname, "nick")
-		XCTAssertEqual(parsed.username, "user!name@cloak")
-		XCTAssertEqual(parsed.address, "host")
-	}
-
-	@objc
-	func testSenderPrefixRejectsMissingOrReversedSeparators() {
-		XCTAssertNil(SenderPrefixParser.parsedPrefix(from: "irc.example.net"))
-		XCTAssertNil(SenderPrefixParser.parsedPrefix(from: "nick@host!user"))
+		#expect(parsed.messageIdentifier == nil)
+		#expect(parsed.senderAccount == nil)
 	}
 }

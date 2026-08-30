@@ -30,30 +30,110 @@
  *
  *********************************************************************** */
 
-import Darwin
 import Foundation
 import Security
 
-@objc(XRKeychain)
-public final class KeychainStore: NSObject {
-	@objc(deleteKeychainItem:withItemKind:forUsername:serviceName:)
+/// The keychain class an item lives in. `descriptionAttribute` is written to
+/// `kSecAttrDescription` and so forms part of an item's identity: the strings
+/// below must keep matching what earlier releases wrote.
+public enum KeychainItemClass: Sendable {
+	case applicationPassword
+	case internetPassword
+
+	public var descriptionAttribute: String {
+		switch self {
+		case .applicationPassword: "application password"
+		case .internetPassword: "internet password"
+		}
+	}
+
+	var secClass: CFString {
+		switch self {
+		case .applicationPassword: kSecClassGenericPassword
+		case .internetPassword: kSecClassInternetPassword
+		}
+	}
+}
+
+/// One of the four secrets Glasstual keeps out of its property lists, named by
+/// the model that owns it rather than by the label and service-name strings it
+/// expands to. Every secret is scoped to the owning model's `uniqueIdentifier`,
+/// which is what the associated value carries.
+public enum KeychainItem: Sendable, Equatable, Hashable {
+	case nicknamePassword(String)
+	case proxyPassword(String)
+	case serverPassword(String)
+	case channelSecretKey(String)
+
+	/// `kSecAttrLabel`. This is what Keychain Access shows the user.
+	public var label: String {
+		switch self {
+		case .nicknamePassword: "Glasstual (NickServ)"
+		case .proxyPassword: "Glasstual (Proxy Server Password)"
+		case .serverPassword: "Glasstual (Server Password)"
+		case .channelSecretKey: "Glasstual (Channel JOIN Key)"
+		}
+	}
+
+	/// `kSecAttrService`. The prefix names the kind of secret; the suffix is the
+	/// owning model's unique identifier.
+	public var service: String {
+		switch self {
+		case let .nicknamePassword(identifier): "glasstual.nickserv.\(identifier)"
+		case let .proxyPassword(identifier): "glasstual.proxy-server.\(identifier)"
+		case let .serverPassword(identifier): "glasstual.server.\(identifier)"
+		case let .channelSecretKey(identifier): "glasstual.cjoinkey.\(identifier)"
+		}
+	}
+
+	public var itemClass: KeychainItemClass {
+		.applicationPassword
+	}
+
+	/// The stored secret, or `nil` when the item is absent or unreadable.
+	public var password: String? {
+		KeychainStore.password(forItem: label, kind: itemClass, username: nil, service: service)
+	}
+
+	/// Writes `password`, creating the item when it does not exist yet.
 	@discardableResult
-	public static func deleteItem(_ name: String, kind: String, username: String?, service: String) -> Bool {
+	public func write(_ password: String) -> Bool {
+		KeychainStore.modifyOrAddItem(
+			label,
+			kind: itemClass,
+			username: nil,
+			newPassword: password,
+			service: service
+		)
+	}
+
+	@discardableResult
+	public func delete() -> Bool {
+		KeychainStore.deleteItem(label, kind: itemClass, username: nil, service: service)
+	}
+}
+
+public enum KeychainStore {
+	@discardableResult
+	public static func deleteItem(
+		_ name: String,
+		kind: KeychainItemClass,
+		username: String?,
+		service: String
+	) -> Bool {
 		let status = SecItemDelete(protectedQuery(
 			name: name,
 			kind: kind,
 			username: username,
 			service: service
 		) as CFDictionary)
-		_ = deleteLegacyItem(name: name, kind: kind, username: username, service: service)
 		return status == errSecSuccess
 	}
 
-	@objc(modifyOrAddKeychainItem:withItemKind:forUsername:withNewPassword:serviceName:)
 	@discardableResult
 	public static func modifyOrAddItem(
 		_ name: String,
-		kind: String,
+		kind: KeychainItemClass,
 		username: String?,
 		newPassword: String?,
 		service: String
@@ -74,11 +154,10 @@ public final class KeychainStore: NSObject {
 		return status == errSecSuccess
 	}
 
-	@objc(addKeychainItem:withItemKind:forUsername:withPassword:serviceName:)
 	@discardableResult
 	public static func addItem(
 		_ name: String,
-		kind: String,
+		kind: KeychainItemClass,
 		username: String?,
 		password: String,
 		service: String
@@ -86,74 +165,49 @@ public final class KeychainStore: NSObject {
 		var query = protectedQuery(name: name, kind: kind, username: username, service: service)
 		query[kSecAttrAccessible] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
 		query[kSecValueData] = Data(password.utf8)
-		let status = SecItemAdd(query as CFDictionary, nil)
-		if status == errSecSuccess {
-			_ = deleteLegacyItem(name: name, kind: kind, username: username, service: service)
-		}
-		return status == errSecSuccess
+		return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
 	}
 
-	@objc(getPasswordFromKeychainItem:withItemKind:forUsername:serviceName:)
-	public static func password(forItem name: String, kind: String, username: String?, service: String) -> String? {
+	public static func password(
+		forItem name: String,
+		kind: KeychainItemClass,
+		username: String?,
+		service: String
+	) -> String? {
 		password(forItem: name, kind: kind, username: username, service: service, status: nil)
 	}
 
-	@objc(getPasswordFromKeychainItem:withItemKind:forUsername:serviceName:returnedStatusCode:)
 	public static func password(
 		forItem name: String,
-		kind: String,
+		kind: KeychainItemClass,
 		username: String?,
 		service: String,
 		status statusPointer: UnsafeMutablePointer<OSStatus>?
 	) -> String? {
 		var status = errSecSuccess
 		var query = protectedQuery(name: name, kind: kind, username: username, service: service)
-		var password = password(matching: &query, status: &status)
-		if status == errSecItemNotFound {
-			password = migrateLegacyItem(name: name, kind: kind, username: username, service: service, status: &status)
-		}
+		let password = password(matching: &query, status: &status)
 		statusPointer?.pointee = status
 		return password
 	}
 
-	private static func baseQuery(name: String, kind: String, username: String?, service: String) -> [CFString: Any] {
+	private static func protectedQuery(
+		name: String,
+		kind: KeychainItemClass,
+		username: String?,
+		service: String
+	) -> [CFString: Any] {
 		var query: [CFString: Any] = [
-			kSecClass: kind == "internet password" ? kSecClassInternetPassword : kSecClassGenericPassword,
+			kSecClass: kind.secClass,
 			kSecAttrLabel: name,
-			kSecAttrDescription: kind,
+			kSecAttrDescription: kind.descriptionAttribute,
 			kSecAttrService: service,
+			kSecUseDataProtectionKeychain: true,
 		]
 		if let username, username.isEmpty == false {
 			query[kSecAttrAccount] = username
 		}
 		return query
-	}
-
-	private static func protectedQuery(name: String, kind: String, username: String?,
-	                                   service: String) -> [CFString: Any]
-	{
-		var query = baseQuery(name: name, kind: kind, username: username, service: service)
-		query[kSecUseDataProtectionKeychain] = true
-		return query
-	}
-
-	private static func legacyQuery(name: String, kind: String, username: String?,
-	                                service: String) -> [CFString: Any]?
-	{
-		var keychain: SecKeychain?
-		typealias CopyDefaultKeychain = @convention(c) (UnsafeMutablePointer<SecKeychain?>?) -> OSStatus
-		guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "SecKeychainCopyDefault") else { return nil }
-		let copyDefault = unsafeBitCast(symbol, to: CopyDefaultKeychain.self)
-		guard copyDefault(&keychain) == errSecSuccess, let keychain else { return nil }
-		var query = baseQuery(name: name, kind: kind, username: username, service: service)
-		query[kSecMatchSearchList] = [keychain]
-		return query
-	}
-
-	private static func deleteLegacyItem(name: String, kind: String, username: String?, service: String) -> Bool {
-		guard let query = legacyQuery(name: name, kind: kind, username: username, service: service)
-		else { return false }
-		return SecItemDelete(query as CFDictionary) == errSecSuccess
 	}
 
 	private static func password(matching query: inout [CFString: Any], status: inout OSStatus) -> String? {
@@ -163,19 +217,5 @@ public final class KeychainStore: NSObject {
 		status = SecItemCopyMatching(query as CFDictionary, &result)
 		guard status == errSecSuccess, let data = result as? Data else { return nil }
 		return String(data: data, encoding: .utf8)
-	}
-
-	private static func migrateLegacyItem(
-		name: String,
-		kind: String,
-		username: String?,
-		service: String,
-		status: inout OSStatus
-	) -> String? {
-		guard var query = legacyQuery(name: name, kind: kind, username: username, service: service),
-		      let password = password(matching: &query, status: &status)
-		else { return nil }
-		_ = addItem(name, kind: kind, username: username, password: password, service: service)
-		return password
 	}
 }

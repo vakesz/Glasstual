@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -35,149 +35,112 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
-import Mustache
 
-@objc(ICMInlineImageFoundation)
-open class InlineImageFoundation: InlineContentModule {
-	override open class var contentImageOrVideo: Bool {
-		true
+/// Presents a URL as an inline image.
+///
+/// The framework's own template escapes everything it renders, so content that
+/// reaches the log view through here is trusted and carries no adult content of
+/// its own; a module that wraps this inherits both answers.
+public enum InlineImageContent {
+	public static let entrypoint = "_ICMInlineImage"
+
+	public static var styleResources: [URL] {
+		[InlineContentTemplate.componentURL(named: "ICMInlineImage", extension: "css")].compactMap(\.self)
 	}
 
-	override open var templateURL: URL? {
-		Self.componentURL(named: "ICMInlineImage", extension: "mustache")
-	}
-
-	override open var styleResources: [URL]? {
-		[Self.componentURL(named: "ICMInlineImage", extension: "css")].compactMap(\.self)
-	}
-
-	override open var scriptResources: [URL]? {
+	public static var scriptResources: [URL] {
 		[
 			Bundle.main.url(forResource: "InlineImageLiveResize", withExtension: "js"),
-			Self.componentURL(named: "ICMInlineImage", extension: "js"),
+			InlineContentTemplate.componentURL(named: "ICMInlineImage", extension: "js"),
 		].compactMap(\.self)
 	}
 
-	override open var entrypoint: String? {
-		"_ICMInlineImage"
+	private static var templateURL: URL? {
+		InlineContentTemplate.componentURL(named: "ICMInlineImage", extension: "mustache")
 	}
 
-	private static func componentURL(named name: String, extension pathExtension: String) -> URL? {
-		Bundle.main.url(forResource: name, withExtension: pathExtension, subdirectory: "Components")
+	/// Renders `values.urlToInline` as an image.
+	///
+	/// `checkImage` asks for the assessment first; a caller that has already
+	/// assessed the URL — the assessed-media module, or anything that deferred
+	/// after its own check — passes `false`.
+	public static func produce(
+		_ values: InlineContentPayloadValues,
+		checkImage: Bool = true
+	) async -> InlineContentOutcome {
+		var values = values
+
+		if checkImage {
+			let assessment = await MediaAssessor.assess(values.urlToInline, expecting: .image)
+
+			if case let .failure(error) = assessment {
+				MediaAssessor.logError(error)
+
+				return .cancelled
+			}
+		}
+
+		values.styleResources = styleResources
+		values.scriptResources = scriptResources
+		values.entrypoint = entrypoint
+
+		let attributes: [String: JavaScriptValue] = [
+			"anchorLink": .string(values.url.absoluteString),
+			"classAttribute": .string(values.classAttribute),
+			"imageURL": .string(values.urlToInline.absoluteString),
+			"preferredMaximumWidth": .integer(Int(InlineContentPreferences.current.maximumWidth)),
+			"uniqueIdentifier": .string(values.uniqueIdentifier),
+		]
+
+		return InlineContentTemplate.outcome(templateURL, attributes, into: values)
+	}
+
+	/// Points the payload at `address` and renders it. Refuses an address that
+	/// is outside the inline URL policy rather than trusting a remote string.
+	public static func produce(
+		_ values: InlineContentPayloadValues,
+		address: String,
+		checkImage: Bool = true
+	) async -> InlineContentOutcome {
+		var values = values
+
+		guard let url = InlineContentHelpers.url(with: address), values.setURLToInline(url) else {
+			return .cancelled
+		}
+
+		return await produce(values, checkImage: checkImage)
 	}
 }
 
-@objc(ICMInlineImage)
-open class InlineImageModule: InlineImageFoundation {
-	private var imageCheck: MediaAssessor?
-
-	@objc
-	public func performAction() {
-		performAction(withImageCheck: true)
+/// The module that inlines any URL the caller has already decided is an image.
+public struct InlineImageModule: InlineContentModule {
+	public static var contentImageOrVideo: Bool {
+		true
 	}
 
-	@objc(performActionWithImageCheck:)
-	public func performAction(withImageCheck checkImage: Bool) {
-		if checkImage {
-			performImageCheck()
-		} else {
-			completeImageLoad()
-		}
+	public static var contentUntrusted: Bool {
+		false
 	}
 
-	@objc(performActionForURL:)
-	public func performAction(for url: URL) {
-		performAction(for: url, bypassImageCheck: false)
+	public static var contentNotSafeForWork: Bool {
+		false
 	}
 
-	@objc(performActionForURL:bypassImageCheck:)
-	public func performAction(for url: URL, bypassImageCheck: Bool) {
-		precondition(imageCheck == nil, "Module already initialized")
-		payload.urlToInline = url
-		performAction(withImageCheck: !bypassImageCheck)
+	private let address: String
+	private let checkImage: Bool
+
+	public init(address: String, checkImage: Bool = true) {
+		self.address = address
+		self.checkImage = checkImage
 	}
 
-	@objc(performActionForAddress:)
-	public func performAction(forAddress address: String) {
-		performAction(forAddress: address, bypassImageCheck: false)
+	public static func module(for url: URL) -> (any InlineContentModule)? {
+		InlineImageModule(address: url.absoluteString)
 	}
 
-	@objc(performActionForAddress:bypassImageCheck:)
-	public func performAction(forAddress address: String, bypassImageCheck: Bool) {
-		guard let url = InlineContentHelpers.url(with: address) else { return cancel() }
-		performAction(for: url, bypassImageCheck: bypassImageCheck)
-	}
-
-	private func performImageCheck() {
-		let assessor = MediaAssessor(
-			url: payload.urlToInline,
-			expectedType: .image
-		) { [weak self] _, error in
-			guard let self else { return }
-
-			if let error {
-				notifyUnsafeToLoadImage()
-				MediaAssessor.logError(error)
-			} else {
-				completeImageLoad()
-			}
-
-			imageCheck = nil
-		}
-
-		imageCheck = assessor
-		assessor.resume()
-	}
-
-	private func completeImageLoad() {
-		guard let template else { return cancel() }
-
-		let attributes: [String: Any] = [
-			"anchorLink": payload.address,
-			"classAttribute": payload.classAttribute,
-			"imageURL": payload.addressToInline,
-			"preferredMaximumWidth": InlineContentPreferences.current.maximumWidth,
-			"uniqueIdentifier": payload.uniqueIdentifier,
-		]
-
-		do {
-			payload.html = try template.render(attributes)
-			finalize()
-		} catch {
-			finalizeWithError(error)
-		}
-	}
-
-	@objc
-	public func notifyUnsafeToLoadImage() {
-		cancel()
-	}
-
-	@objc(actionBlockURL:)
-	public class func actionBlock(url: URL) -> InlineContentModuleActionBlock {
-		actionBlock(url: url, bypassImageCheck: false)
-	}
-
-	@objc(actionBlockURL:bypassImageCheck:)
-	public class func actionBlock(url: URL, bypassImageCheck: Bool) -> InlineContentModuleActionBlock {
-		actionBlock(forAddress: url.absoluteString, bypassImageCheck: bypassImageCheck)
-	}
-
-	@objc(actionBlockForAddress:)
-	public class func actionBlock(forAddress address: String) -> InlineContentModuleActionBlock {
-		actionBlock(forAddress: address, bypassImageCheck: false)
-	}
-
-	@objc(actionBlockForAddress:bypassImageCheck:)
-	public class func actionBlock(forAddress address: String,
-	                              bypassImageCheck: Bool) -> InlineContentModuleActionBlock
-	{
-		{ module in
-			(module as? InlineImageModule)?.performAction(
-				forAddress: address,
-				bypassImageCheck: bypassImageCheck
-			)
-		}
+	public func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		await InlineImageContent.produce(payload, address: address, checkImage: checkImage)
 	}
 }

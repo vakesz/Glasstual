@@ -1,281 +1,118 @@
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class TXMenuActionCoordinatorTests: XCTestCase {
-	func testMemberCommandsPreserveLegacyWireFormat() {
-		XCTAssertEqual(MenuMemberCommand.ignore("Alice"), "ignore Alice")
-		XCTAssertEqual(MenuMemberCommand.unignore("Alice"), "unignore Alice")
-		XCTAssertEqual(
-			MenuMemberCommand.mode("HALFOP", nicknames: ["Alice", "Bob"]),
-			"HALFOP Alice Bob"
+@Suite("Menu action coordinator")
+struct TXMenuActionCoordinatorTests {
+	@Test("A member menu item still sends the command the network expects")
+	func memberCommandsPreserveLegacyWireFormat() {
+		#expect(MenuMemberCommand.ignore("Alice") == "ignore Alice")
+		#expect(MenuMemberCommand.unignore("Alice") == "unignore Alice")
+		#expect(MenuMemberCommand.mode("HALFOP", nicknames: ["Alice", "Bob"]) == "HALFOP Alice Bob")
+		#expect(MenuMemberCommand.kickban("Alice", reason: "Requested") == "KICKBAN Alice Requested")
+		#expect(
+			MenuMemberCommand.operatorCommand("GLINE", nickname: "Alice", reason: "Abuse")
+				== "GLINE Alice Abuse"
 		)
-		XCTAssertEqual(
-			MenuMemberCommand.kickban("Alice", reason: "Requested"),
-			"KICKBAN Alice Requested"
-		)
-		XCTAssertEqual(
-			MenuMemberCommand.operatorCommand("GLINE", nickname: "Alice", reason: "Abuse"),
-			"GLINE Alice Abuse"
-		)
-		XCTAssertEqual(
-			MenuMemberCommand.setVhost("staff.example", nickname: "Alice"),
-			"hs setall Alice staff.example"
-		)
+		#expect(MenuMemberCommand.setVhost("staff.example", nickname: "Alice") == "hs setall Alice staff.example")
 	}
 
-	func testNavigationTagsMapToExistingResponderSelectors() {
-		let mappings: [(Int, String)] = [
-			(MenuNavigationTag.nextServer, "selectNextServer:"),
-			(MenuNavigationTag.previousServer, "selectPreviousServer:"),
-			(MenuNavigationTag.nextActiveServer, "selectNextActiveServer:"),
-			(MenuNavigationTag.previousActiveServer, "selectPreviousActiveServer:"),
-			(MenuNavigationTag.nextChannel, "selectNextChannel:"),
-			(MenuNavigationTag.previousChannel, "selectPreviousChannel:"),
-			(MenuNavigationTag.nextActiveChannel, "selectNextActiveChannel:"),
-			(MenuNavigationTag.previousActiveChannel, "selectPreviousActiveChannel:"),
-			(MenuNavigationTag.nextUnreadChannel, "selectNextUnreadChannel:"),
-			(MenuNavigationTag.previousUnreadChannel, "selectPreviousUnreadChannel:"),
-			(MenuNavigationTag.moveBackward, "selectPreviousWindow:"),
-			(MenuNavigationTag.moveForward, "selectNextWindow:"),
-			(MenuNavigationTag.previousSelection, "selectPreviousSelection:"),
+	@Test("Every navigation action is reachable from the tag its menu item carries")
+	func navigationTagsMapToNavigationActions() {
+		let mappings: [(Int, MenuNavigationAction)] = [
+			(MenuNavigationTag.nextServer, .nextServer),
+			(MenuNavigationTag.previousServer, .previousServer),
+			(MenuNavigationTag.nextActiveServer, .nextActiveServer),
+			(MenuNavigationTag.previousActiveServer, .previousActiveServer),
+			(MenuNavigationTag.nextChannel, .nextChannel),
+			(MenuNavigationTag.previousChannel, .previousChannel),
+			(MenuNavigationTag.nextActiveChannel, .nextActiveChannel),
+			(MenuNavigationTag.previousActiveChannel, .previousActiveChannel),
+			(MenuNavigationTag.nextUnreadChannel, .nextUnreadChannel),
+			(MenuNavigationTag.previousUnreadChannel, .previousUnreadChannel),
+			(MenuNavigationTag.moveBackward, .moveBackward),
+			(MenuNavigationTag.moveForward, .moveForward),
+			(MenuNavigationTag.previousSelection, .previousSelection),
 		]
 
-		for (tag, selectorName) in mappings {
-			XCTAssertEqual(
-				MenuActionCoordinator.navigationSelector(for: tag),
-				NSSelectorFromString(selectorName)
-			)
+		for (tag, action) in mappings {
+			#expect(MenuActionCoordinator.navigationAction(for: tag) == action)
 		}
-	}
 
-	func testNavigationIgnoresUnrelatedTags() {
-		XCTAssertNil(MenuActionCoordinator.navigationSelector(for: 100))
-	}
-
-	func testMenuClosePolicyPreservesClickTimeSelectionUntilActionRuns() {
-		XCTAssertTrue(
-			MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(performedAction: false)
-		)
-		XCTAssertFalse(
-			MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(performedAction: true)
+		/* Every action has to be reachable from a tag, or a menu item exists
+		 that nothing can invoke. */
+		#expect(
+			Set(mappings.map(\.1).map(String.init(describing:))).count == MenuNavigationAction.allCases.count
 		)
 	}
 
-	func testLifecycleCoordinatorKeepsObjectiveCRuntimeSurface() {
-		let selectors = [
-			"prepareInitialState",
-			"prepareForApplicationTermination",
-			"preferencesChanged",
-			"menuWillOpen:",
-			"menuDidClose:",
-			"resetSelectedItems",
-			"selectedClient",
-			"selectedChannel",
-			"selectedViewController",
-			"selectedViewControllerBackingView",
-		]
-
-		for selectorName in selectors {
-			XCTAssertTrue(MenuActionCoordinator.instancesRespond(to: NSSelectorFromString(selectorName)))
-		}
+	@Test("A tag that belongs to no navigation item is not treated as navigation")
+	func navigationIgnoresUnrelatedTags() {
+		#expect(MenuActionCoordinator.navigationAction(for: 100) == nil)
 	}
 
-	func testServerConnectionActionsPreserveLegacyStateGuards() {
-		XCTAssertTrue(MenuServerActionPolicy.canConnect(
+	@Test("The click-time selection is kept until the action it was captured for has run")
+	func menuClosePolicyPreservesClickTimeSelectionUntilActionRuns() {
+		#expect(MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(performedAction: false))
+		#expect(MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(performedAction: true) == false)
+	}
+
+	@Test("Connect and disconnect stay guarded by the connection state they were guarded by")
+	func serverConnectionActionsPreserveLegacyStateGuards() {
+		#expect(MenuServerActionPolicy.canConnect(
 			isConnecting: false,
 			isConnected: false,
 			isQuitting: false
 		))
-		XCTAssertFalse(MenuServerActionPolicy.canConnect(
+		#expect(MenuServerActionPolicy.canConnect(
 			isConnecting: true,
 			isConnected: false,
 			isQuitting: false
-		))
-		XCTAssertTrue(MenuServerActionPolicy.canDisconnect(
+		) == false)
+		#expect(MenuServerActionPolicy.canDisconnect(
 			isConnecting: false,
 			isConnected: true,
 			isQuitting: false
 		))
-		XCTAssertFalse(MenuServerActionPolicy.canDisconnect(
+		#expect(MenuServerActionPolicy.canDisconnect(
 			isConnecting: false,
 			isConnected: true,
 			isQuitting: true
-		))
+		) == false)
 	}
 
-	func testFindTagsPreserveMenuContracts() {
-		XCTAssertEqual(MenuFindTag.open, 3_090_000)
-		XCTAssertEqual(MenuFindTag.next, 3_090_001)
+	/// The nib writes these tags on its Find menu items, so the numbers are the
+	/// contract between the menu and the coordinator.
+	@Test("The Find menu items keep the tags the nib writes on them")
+	func findTagsPreserveMenuContracts() {
+		#expect(MenuFindTag.open == 3_090_000)
+		#expect(MenuFindTag.next == 3_090_001)
 	}
 
-	func testActionConcernCoordinatorKeepsObjectiveCRuntimeSurface() {
-		let selectors = [
-			"performEditingAction:sender:",
-			"performChannelViewAction:sender:",
-			"performServerChannelAction:sender:",
-			"performSupportAction:sender:",
-			"performIRCAction:sender:",
-			"performWindowAction:sender:",
-			"setNotificationsMuted:",
-			"setNotificationSoundsMuted:",
-			"performDialogAction:sender:",
-			"showServerPropertiesForClient:selection:context:",
-			"showNicknameColorSheetForNickname:",
-			"channelPropertiesDidAccept:config:",
-			"channelInviteDidSelect:channelName:",
-			"serverPropertiesDidAccept:config:",
-			"nicknameColorDidAccept:",
-			"channelTopicDidAccept:topic:",
-			"channelModesDidAccept:modes:",
-			"channelSpotlightDidSelect:channel:",
-			"serverNicknameDidAccept:nickname:",
-			"dialogDidClose:",
-			"preferencesDialogDidClose:",
-			"messageReplyItemsForMessageIdentifier:nickname:excerpt:",
-			"shareMenuItemForItems:",
-			"selectedMembersForSender:returnNicknames:",
-			"deselectMembersForSender:",
-			"performMemberAction:sender:",
-			"sendDroppedFilesToSelectedChannel:",
-			"sendDroppedFiles:row:",
-			"sendDroppedFiles:nickname:",
-			"navigateToTreeItemAtURL:",
-			"navigateToTreeItemWithIdentifier:",
-			"navigateToTreeItem:",
-			"populateNavigationChannelList",
-			"navigateToChannelInNavigationList:",
-			"performNavigationAction:",
-			"moveHighlightOrScrollbackForTag:",
-			"validateMenuItem:",
-		]
-
-		for selectorName in selectors {
-			XCTAssertTrue(MenuActionCoordinator.instancesRespond(to: NSSelectorFromString(selectorName)))
-		}
+	/// Likewise the mode menu: the nib carries the tag, and the tag is what
+	/// decides whether the mode is set or removed.
+	@Test("A channel mode item's tag decides whether the mode is set or removed")
+	func channelModeTagsPreserveLegacyModeCommands() {
+		#expect(MenuChannelModePolicy.removeModeratedTag == 6_090_001)
+		#expect(MenuChannelModePolicy.removeInviteOnlyTag == 6_090_003)
+		#expect(MenuChannelModePolicy.moderationMode(for: 0) == "+m")
+		#expect(MenuChannelModePolicy.moderationMode(for: 6_090_001) == "-m")
+		#expect(MenuChannelModePolicy.inviteMode(for: 0) == "+i")
+		#expect(MenuChannelModePolicy.inviteMode(for: 6_090_003) == "-i")
 	}
 
-	func testActionRawValuesPreserveObjectiveCContracts() {
-		XCTAssertEqual(TXMenuMemberAction.allCases.map(\.rawValue), Array(0 ... 27))
-		XCTAssertEqual(TXMenuEditingAction.allCases.map(\.rawValue), Array(0 ... 3))
-		XCTAssertEqual(TXMenuChannelViewAction.allCases.map(\.rawValue), Array(0 ... 12))
-		XCTAssertEqual(TXMenuServerChannelAction.allCases.map(\.rawValue), Array(0 ... 14))
-		XCTAssertEqual(TXMenuSupportAction.allCases.map(\.rawValue), Array(0 ... 5))
-		XCTAssertEqual(TXMenuIRCAction.allCases.map(\.rawValue), Array(0 ... 5))
-		XCTAssertEqual(TXMenuWindowAction.allCases.map(\.rawValue), Array(0 ... 16))
-		XCTAssertEqual(TXMenuDialogAction.allCases.map(\.rawValue), Array(0 ... 14))
+	@Test("The appearance toggle cycles away from whatever the system is showing")
+	func appearanceTogglePolicyPreservesLegacyCycle() {
+		#expect(MenuWindowPolicy.nextAppearance(current: .inherited, systemIsDark: false) == .dark)
+		#expect(MenuWindowPolicy.nextAppearance(current: .inherited, systemIsDark: true) == .light)
+		#expect(MenuWindowPolicy.nextAppearance(current: .light, systemIsDark: false) == .dark)
+		#expect(MenuWindowPolicy.nextAppearance(current: .dark, systemIsDark: false) == .light)
 	}
 
-	func testChannelModeTagsPreserveLegacyModeCommands() {
-		XCTAssertEqual(MenuChannelModePolicy.removeModeratedTag, 6_090_001)
-		XCTAssertEqual(MenuChannelModePolicy.removeInviteOnlyTag, 6_090_003)
-		XCTAssertEqual(MenuChannelModePolicy.moderationMode(for: 0), "+m")
-		XCTAssertEqual(MenuChannelModePolicy.moderationMode(for: 6_090_001), "-m")
-		XCTAssertEqual(MenuChannelModePolicy.inviteMode(for: 0), "+i")
-		XCTAssertEqual(MenuChannelModePolicy.inviteMode(for: 6_090_003), "-i")
-	}
-
-	func testAppearanceTogglePolicyPreservesLegacyCycle() {
-		XCTAssertEqual(MenuWindowPolicy.nextAppearance(current: .inherited, systemIsDark: false), .dark)
-		XCTAssertEqual(MenuWindowPolicy.nextAppearance(current: .inherited, systemIsDark: true), .light)
-		XCTAssertEqual(MenuWindowPolicy.nextAppearance(current: .light, systemIsDark: false), .dark)
-		XCTAssertEqual(MenuWindowPolicy.nextAppearance(current: .dark, systemIsDark: false), .light)
-	}
-
-	func testSuppressedWarningPolicyPreservesLegacyDefaultsPrefix() {
-		XCTAssertEqual(MenuWindowPolicy.alertSuppressionPrefix, "Text Input Prompt Suppression -> ")
-	}
-
-	func testNativeMenuControllerKeepsLegacyRuntimeClassAndCoreSelectors() {
-		XCTAssertTrue(NSClassFromString("TXMenuController") === TXMenuController.self)
-
-		let selectors = [
-			"prepareInitialState",
-			"applySymbolsToMenu:",
-			"prepareForApplicationTermination",
-			"preferencesChanged",
-			"validateMenuItem:",
-			"menuWillOpen:",
-			"menuDidClose:",
-			"resetSelectedItems",
-			"selectedClient",
-			"selectedChannel",
-			"selectedViewController",
-			"selectedViewControllerBackingView",
-			"checkSelectedMembers:",
-			"selectedMembers:",
-			"selectedMembersNicknames:",
-			"deselectMembers:",
-			"populateNavigationChannelList",
-			"toggleMuteOnNotificationsShortcutOn:",
-			"toggleMuteOnNotificationSoundsShortcutOn:",
-			"memberChangeColor:",
-			"memberSendDroppedFilesToSelectedChannel:",
-			"navigateToTreeItemAtURL:",
-			"navigateToTreeItemWithIdentifier:",
-			"navigateToTreeItem:",
-		]
-
-		for selectorName in selectors {
-			XCTAssertTrue(
-				TXMenuController.instancesRespond(to: NSSelectorFromString(selectorName)),
-				"Missing legacy selector: \(selectorName)"
-			)
-		}
-	}
-
-	func testNativeMenuControllerKeepsNibActionsOutletsAndDialogCallbacks() {
-		let selectors = [
-			"setChannelViewChannelNameMenu:",
-			"setChannelViewGeneralMenu:",
-			"setChannelViewURLMenu:",
-			"setDockMenu:",
-			"setMainMenuNavigationChannelListMenu:",
-			"setMainMenuChannelMenu:",
-			"setMainMenuQueryMenu:",
-			"setMainMenuChannelMenuItem:",
-			"setMainMenuQueryMenuItem:",
-			"setMainMenuServerMenuItem:",
-			"setMainWindowSegmentedControllerCellMenu:",
-			"setServerListNoSelectionMenu:",
-			"setUserControlMenu:",
-			"showFindPrompt:",
-			"copy:",
-			"paste:",
-			"print:",
-			"connect:",
-			"joinChannel:",
-			"memberSendWhois:",
-			"openLogLocation:",
-			"showMainWindow:",
-			"performNavigationAction:",
-			"showChannelPropertiesSheet:",
-			"showServerPropertiesSheet:",
-			"showPreferencesWindow:",
-			"showOnboardingWindow:",
-			"channelPropertiesSheet:onOk:",
-			"channelInviteSheet:onSelectChannel:",
-			"serverPropertiesSheet:onOk:",
-			"channelModifyTopicSheet:onOk:",
-			"channelModifyModesSheet:onOk:",
-			"channelSpotlightController:selectChannel:",
-			"serverChangeNicknameSheet:didInputNickname:",
-			"preferencesDialogWillClose:",
-		]
-
-		for selectorName in selectors {
-			XCTAssertTrue(
-				TXMenuController.instancesRespond(to: NSSelectorFromString(selectorName)),
-				"Missing nib or delegate selector: \(selectorName)"
-			)
-		}
-
-		XCTAssertTrue(
-			NSClassFromString("TXMenuControllerMainWindowProxy") === TXMenuControllerMainWindowProxy.self
-		)
-		XCTAssertTrue(
-			TXMenuControllerMainWindowProxy
-				.instancesRespond(to: #selector(TXMenuControllerMainWindowProxy.showOnboardingWindow(_:)))
-		)
+	/// The prefix names the defaults keys already on disk; changing it forgets
+	/// every warning the user has suppressed.
+	@Test("Suppressed warnings keep the defaults key prefix already written to disk")
+	func suppressedWarningPolicyPreservesLegacyDefaultsPrefix() {
+		#expect(MenuWindowPolicy.alertSuppressionPrefix == "Text Input Prompt Suppression -> ")
 	}
 }

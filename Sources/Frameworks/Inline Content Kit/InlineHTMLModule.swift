@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -35,65 +35,51 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
-import Mustache
 
-@objc(ICMInlineHTMLFoundation)
-open class InlineHTMLFoundation: InlineContentModule {
-	override open class var contentUntrusted: Bool {
-		true
+/// Presents markup a remote endpoint supplied.
+///
+/// The markup is not the framework's own, so anything rendered through here is
+/// untrusted by default; a module that wraps it says so for itself.
+public enum InlineHTMLContent {
+	public static let entrypoint = "_ICMInlineHTML"
+
+	public static var styleResources: [URL] {
+		[InlineContentTemplate.componentURL(named: "ICMInlineHTML", extension: "css")].compactMap(\.self)
 	}
 
-	override open var styleResources: [URL]? {
-		[Self.componentURL(named: "ICMInlineHTML", extension: "css")].compactMap(\.self)
+	public static var scriptResources: [URL] {
+		[InlineContentTemplate.componentURL(named: "ICMInlineHTML", extension: "js")].compactMap(\.self)
 	}
 
-	override open var scriptResources: [URL]? {
-		[Self.componentURL(named: "ICMInlineHTML", extension: "js")].compactMap(\.self)
+	private static var templateURL: URL? {
+		InlineContentTemplate.componentURL(named: "ICMInlineHTML", extension: "mustache")
 	}
 
-	override open var templateURL: URL? {
-		Self.componentURL(named: "ICMInlineHTML", extension: "mustache")
-	}
+	/// Wraps `unescapedHTML` in the framework's container.
+	///
+	/// `extraScriptResources` and `overrideEntrypoint` let a module add the
+	/// script its embed needs — a tweet needs Twitter's widget loader — without
+	/// having to restate the container's own resources.
+	public static func produce(
+		_ values: InlineContentPayloadValues,
+		unescapedHTML: String,
+		extraScriptResources: [URL] = [],
+		overrideEntrypoint: String? = nil
+	) -> InlineContentOutcome {
+		var values = values
 
-	override open var entrypoint: String? {
-		"_ICMInlineHTML"
-	}
+		values.styleResources = styleResources
+		values.scriptResources = scriptResources + extraScriptResources
+		values.entrypoint = overrideEntrypoint ?? entrypoint
 
-	private static func componentURL(named name: String, extension pathExtension: String) -> URL? {
-		Bundle.main.url(forResource: name, withExtension: pathExtension, subdirectory: "Components")
-	}
-}
-
-@objc(ICMInlineHTML)
-open class InlineHTMLModule: InlineHTMLFoundation {
-	@objc(performActionForHTML:)
-	public func performAction(forHTML unescapedHTML: String) {
-		guard let template else { return cancel() }
-
-		let attributes: [String: Any] = [
-			"classAttribute": payload.classAttribute,
-			"unescapedHTML": unescapedHTML,
-			"uniqueIdentifier": payload.uniqueIdentifier,
+		let attributes: [String: JavaScriptValue] = [
+			"classAttribute": .string(values.classAttribute),
+			"unescapedHTML": .string(unescapedHTML),
+			"uniqueIdentifier": .string(values.uniqueIdentifier),
 		]
 
-		do {
-			payload.html = try template.render(attributes)
-			finalize()
-		} catch {
-			finalizeWithError(error)
-		}
-	}
-
-	@objc
-	public func notifyUnableToPresentHTML() {
-		cancel()
-	}
-
-	@objc(actionBlockForHTML:)
-	public static func actionBlock(forHTML html: String) -> InlineContentModuleActionBlock {
-		{ module in
-			(module as? InlineHTMLModule)?.performAction(forHTML: html)
-		}
+		return InlineContentTemplate.outcome(templateURL, attributes, into: values)
 	}
 }

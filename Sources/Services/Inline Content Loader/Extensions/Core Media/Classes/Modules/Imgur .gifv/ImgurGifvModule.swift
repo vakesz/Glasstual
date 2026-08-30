@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -38,13 +38,36 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICMImgurGifv)
-final class ImgurGifvModule: InlineGifVideoModule {
+/// Imgur's `.gifv` pages, which are really MP4s, played as animated images.
+struct ImgurGifvModule: InlineContentModule {
 	private static let validFileExtensions = ["mp4", "gif", "gifv", "webp"]
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var domains: [String]? {
+		["i.imgur.com"]
+	}
+
+	static var contentImageOrVideo: Bool {
+		true
+	}
+
+	static var contentIsFile: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let address: String
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		guard let address = finalAddress(for: url) else { return nil }
-		return super.actionBlock(forAddress: address)
+
+		return ImgurGifvModule(address: address)
 	}
 
 	private static func finalAddress(for url: URL) -> String? {
@@ -59,15 +82,10 @@ final class ImgurGifvModule: InlineGifVideoModule {
 		return "https://i.imgur.com/\(identifier).mp4"
 	}
 
-	override static var domains: [String]? {
-		["i.imgur.com"]
-	}
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		var values = payload
+		values.classAttribute = "inlineImgurGifv"
 
-	override static var contentIsFile: Bool {
-		true
-	}
-
-	override func finalizePreflight() {
-		payload.classAttribute = "inlineImgurGifv"
+		return await InlineVideoContent.produce(values, address: address, options: .gif)
 	}
 }

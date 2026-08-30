@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -41,21 +41,29 @@ import Foundation
 ///
 /// The host supplies adapters for its private models. Plugins receive stable,
 /// domain-named values and operations instead of importing the app target.
-public final class PluginHostContext: @unchecked Sendable {
+///
+/// Every accessor reads live application state, so the whole surface is
+/// main-actor isolated; the host builds it on the main actor and calls plugins
+/// there too.
+@MainActor
+public final class PluginHostContext {
 	public let defaults: UserDefaults
 
 	private let clientsProvider: () -> [PluginClient]
 	private let selectedChannelProvider: () -> PluginChannel?
 	private let metricsProvider: () -> PluginApplicationMetrics
+	private let applicationSnapshotProvider: () -> PluginApplicationSnapshot?
+	private let themeSnapshotProvider: () -> PluginThemeSnapshot?
 	private let connectionObserver: (@escaping (Bool) -> Void) -> PluginObservation
 	private let removesFormattingProvider: () -> Bool
 
-	@_spi(Host)
 	public init(
 		defaults: UserDefaults,
 		clients: @escaping () -> [PluginClient],
 		selectedChannel: @escaping () -> PluginChannel?,
 		metrics: @escaping () -> PluginApplicationMetrics,
+		applicationSnapshot: @escaping () -> PluginApplicationSnapshot?,
+		themeSnapshot: @escaping () -> PluginThemeSnapshot?,
 		observeConnectionState: @escaping (@escaping (Bool) -> Void) -> PluginObservation,
 		removesFormatting: @escaping () -> Bool
 	) {
@@ -63,6 +71,8 @@ public final class PluginHostContext: @unchecked Sendable {
 		clientsProvider = clients
 		selectedChannelProvider = selectedChannel
 		metricsProvider = metrics
+		applicationSnapshotProvider = applicationSnapshot
+		themeSnapshotProvider = themeSnapshot
 		connectionObserver = observeConnectionState
 		removesFormattingProvider = removesFormatting
 	}
@@ -79,6 +89,18 @@ public final class PluginHostContext: @unchecked Sendable {
 		metricsProvider()
 	}
 
+	/// Launch, install and run-count figures, or `nil` when the host cannot
+	/// supply them.
+	public var applicationSnapshot: PluginApplicationSnapshot? {
+		applicationSnapshotProvider()
+	}
+
+	/// The active message style and its resolved appearance, or `nil` when the
+	/// host has not finished loading a theme.
+	public var themeSnapshot: PluginThemeSnapshot? {
+		themeSnapshotProvider()
+	}
+
 	public var removesIRCFormatting: Bool {
 		removesFormattingProvider()
 	}
@@ -90,28 +112,26 @@ public final class PluginHostContext: @unchecked Sendable {
 	}
 }
 
-public final class PluginObservation: @unchecked Sendable {
+@MainActor
+public final class PluginObservation {
 	private let cancellation: () -> Void
-	private let lock = NSLock()
 	private var isCancelled = false
 
-	@_spi(Host)
 	public init(cancellation: @escaping () -> Void) {
 		self.cancellation = cancellation
 	}
 
-	deinit {
+	/// Cancelling on release spares plugins from unregistering by hand. The
+	/// deinit is isolated so it can reach the host's main-actor observers.
+	isolated deinit {
 		cancel()
 	}
 
 	public func cancel() {
-		lock.lock()
 		guard isCancelled == false else {
-			lock.unlock()
 			return
 		}
 		isCancelled = true
-		lock.unlock()
 		cancellation()
 	}
 }
@@ -209,22 +229,22 @@ public struct PluginChannelMember: Equatable, Sendable {
 	}
 }
 
-public final class PluginChannel: @unchecked Sendable, Hashable {
+/// A snapshot of one IRC conversation, plus the operations a plugin may run
+/// against it. The operations reach live app models, so the type is bound to
+/// the main actor.
+@MainActor
+public final class PluginChannel: Hashable {
 	public let identifier: String
 	public let name: String
 	public let type: ChannelType
 	public let isActive: Bool
 	public let members: [PluginChannelMember]
 
-	@_spi(Host) public let hostObject: AnyObject
-
 	private let autoJoinReader: () -> Bool
 	private let autoJoinWriter: (Bool) -> Void
 	private let deactivation: () -> Void
 
-	@_spi(Host)
 	public init(
-		hostObject: AnyObject,
 		identifier: String,
 		name: String,
 		type: ChannelType,
@@ -234,7 +254,6 @@ public final class PluginChannel: @unchecked Sendable, Hashable {
 		setAutoJoin: @escaping (Bool) -> Void,
 		deactivate: @escaping () -> Void
 	) {
-		self.hostObject = hostObject
 		self.identifier = identifier
 		self.name = name
 		self.type = type
@@ -270,11 +289,11 @@ public final class PluginChannel: @unchecked Sendable, Hashable {
 		deactivation()
 	}
 
-	public static func == (lhs: PluginChannel, rhs: PluginChannel) -> Bool {
+	public nonisolated static func == (lhs: PluginChannel, rhs: PluginChannel) -> Bool { // nonisolated: pure
 		lhs.identifier == rhs.identifier
 	}
 
-	public func hash(into hasher: inout Hasher) {
+	public nonisolated func hash(into hasher: inout Hasher) { // nonisolated: pure
 		hasher.combine(identifier)
 	}
 }
@@ -287,7 +306,10 @@ public struct PluginPrintResult: Equatable, Sendable {
 	}
 }
 
-public final class PluginClient: @unchecked Sendable, Hashable {
+/// A snapshot of one IRC connection, plus the operations a plugin may run
+/// against it. Bound to the main actor for the same reason as `PluginChannel`.
+@MainActor
+public final class PluginClient: Hashable {
 	public let identifier: String
 	public let userNickname: String
 	public let networkName: String?
@@ -300,8 +322,6 @@ public final class PluginClient: @unchecked Sendable, Hashable {
 	public let isConnectedToZNC: Bool
 	public let zncCertificateChainData: Data?
 	public let maximumNicknameLength: UInt
-
-	@_spi(Host) public let hostObject: AnyObject
 
 	private let nicknameMatcher: (String, String) -> Bool
 	private let channelNameValidator: (String) -> Bool
@@ -328,9 +348,7 @@ public final class PluginClient: @unchecked Sendable, Hashable {
 	private let highlightMarker: (PluginChannel) -> Void
 	private let sidebarRefresher: () -> Void
 
-	@_spi(Host)
 	public init(
-		hostObject: AnyObject,
 		identifier: String,
 		userNickname: String,
 		networkName: String?,
@@ -368,7 +386,6 @@ public final class PluginClient: @unchecked Sendable, Hashable {
 		markHighlight: @escaping (PluginChannel) -> Void,
 		refreshSidebar: @escaping () -> Void
 	) {
-		self.hostObject = hostObject
 		self.identifier = identifier
 		self.userNickname = userNickname
 		self.networkName = networkName
@@ -467,16 +484,20 @@ public final class PluginClient: @unchecked Sendable, Hashable {
 		sidebarRefresher()
 	}
 
-	public static func == (lhs: PluginClient, rhs: PluginClient) -> Bool {
+	public nonisolated static func == (lhs: PluginClient, rhs: PluginClient) -> Bool { // nonisolated: pure
 		lhs.identifier == rhs.identifier
 	}
 
-	public func hash(into hasher: inout Hasher) {
+	public nonisolated func hash(into hasher: inout Hasher) { // nonisolated: pure
 		hasher.combine(identifier)
 	}
 }
 
-public final class PluginServerMessage: @unchecked Sendable {
+/// One parsed line of server input handed to interceptors.
+///
+/// A value: an interceptor edits its own copy and returns it, so no plugin can
+/// mutate a message another plugin is still reading.
+public struct PluginServerMessage: Equatable, Sendable {
 	public var sender: PluginSender
 	public var command: String
 	public var parameters: [String]
@@ -492,14 +513,5 @@ public final class PluginServerMessage: @unchecked Sendable {
 		self.command = command
 		self.parameters = parameters
 		self.isPrintOnlyMessage = isPrintOnlyMessage
-	}
-
-	public func copy() -> PluginServerMessage {
-		PluginServerMessage(
-			sender: sender,
-			command: command,
-			parameters: parameters,
-			isPrintOnlyMessage: isPrintOnlyMessage
-		)
 	}
 }

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -39,9 +39,13 @@ import CocoaExtensions
 import Foundation
 import os
 
+private nonisolated let connectionConfigLogger = Logger( // nonisolated: let
+	subsystem: "com.vakesz.glasstual",
+	category: "Connection"
+)
+
 /// Raw values are persisted. Values 4 and 7 are retired and must not be reused.
-@objc
-public enum IRCConnectionProxyType: UInt {
+public nonisolated enum IRCConnectionProxyType: UInt, Codable, Sendable { // nonisolated: value
 	case none = 0
 	case automatic = 1
 	case socks5 = 5
@@ -50,14 +54,13 @@ public enum IRCConnectionProxyType: UInt {
 }
 
 /// Controls which IP address families Network.framework may use.
-@objc
-public enum IRCConnectionAddressType: UInt {
+public nonisolated enum IRCConnectionAddressType: UInt, Codable, Sendable { // nonisolated: value
 	case `default` = 0
 	case v4 = 1
 	case v6 = 2
 }
 
-public enum IRCConnectionDefaults {
+public nonisolated enum IRCConnectionDefaults { // nonisolated: value
 	public static let serverPort: UInt16 = 6667
 	public static let proxyPort: UInt16 = 1080
 	public static let floodControlDelayInterval: UInt = 2
@@ -68,305 +71,257 @@ public enum IRCConnectionDefaults {
 	public static let maximumFloodControlMaximumMessages: UInt = 60
 }
 
-@objc(IRCConnectionConfig)
-@objcMembers
-open class IRCConnectionConfig: PortablePropertyObject {
-	fileprivate var addressTypeStorage = IRCConnectionAddressType.default
-	fileprivate var prefersModernCiphersStorage = false
-	fileprivate var prefersSecureConnectionStorage = false
-	fileprivate var validatesCertificateChainStorage = false
-	fileprivate var floodDelayStorage = IRCConnectionDefaults.floodControlDelayInterval
-	fileprivate var floodMaximumStorage = IRCConnectionDefaults.floodControlMaximumMessages
-	fileprivate var identityCertificateStorage: Data?
-	fileprivate var proxyAddressStorage: String?
-	fileprivate var proxyPasswordStorage: String?
-	fileprivate var proxyPortStorage = IRCConnectionDefaults.proxyPort
-	fileprivate var proxyTypeStorage = IRCConnectionProxyType.none
-	fileprivate var proxyUsernameStorage: String?
-	fileprivate var serverAddressStorage = ""
-	fileprivate var serverPortStorage = IRCConnectionDefaults.serverPort
-	fileprivate var primaryEncodingStorage: UInt = 0
-	fileprivate var fallbackEncodingStorage: UInt = 0
-	fileprivate var cipherSuitesStorage = CipherSuiteCollection.default
+/** What one socket needs to reach one endpoint.
 
-	open var addressType: IRCConnectionAddressType {
-		addressTypeStorage
+ This is what the application hands the isolated connection host, so it is a
+ value: the host cannot reach back into the application's copy. The proxy
+ password travels with it by design — the host is the process that has to
+ present it — and it goes no further than that XPC connection. */
+public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { // nonisolated: value
+	public var serverAddress = ""
+	public var serverPort = IRCConnectionDefaults.serverPort
+	public var addressType = IRCConnectionAddressType.default
+
+	public var connectionPrefersSecuredConnection = false
+	public var connectionPrefersModernCiphersOnly = false
+	public var connectionShouldValidateCertificateChain = false
+	public var cipherSuites = CipherSuiteCollection.default
+	public var identityClientSideCertificate: Data?
+
+	public var proxyType = IRCConnectionProxyType.none
+	public var proxyAddress: String?
+	public var proxyPort = IRCConnectionDefaults.proxyPort
+	public var proxyUsername: String?
+	/// Sent to the connection host so it can authenticate to the proxy.
+	public var proxyPassword: String?
+
+	public var floodControlDelayInterval = IRCConnectionDefaults.floodControlDelayInterval {
+		didSet { floodControlDelayInterval = Self.clampedFloodValue(floodControlDelayInterval, oldValue) }
 	}
 
-	open var connectionPrefersModernCiphersOnly: Bool {
-		prefersModernCiphersStorage
+	public var floodControlMaximumMessages = IRCConnectionDefaults.floodControlMaximumMessages {
+		didSet { floodControlMaximumMessages = Self.clampedFloodValue(floodControlMaximumMessages, oldValue) }
 	}
 
-	open var connectionPrefersSecuredConnection: Bool {
-		prefersSecureConnectionStorage
+	public var primaryEncoding: UInt = 0
+	public var fallbackEncoding: UInt = 0
+
+	public init() {}
+
+	private enum CodingKeys: String, CodingKey {
+		case serverAddress
+		case serverPort
+		case addressType
+		case connectionPrefersSecuredConnection
+		case connectionPrefersModernCiphersOnly
+		case connectionShouldValidateCertificateChain
+		case cipherSuites
+		case identityClientSideCertificate
+		case proxyType
+		case proxyAddress
+		case proxyPort
+		case proxyUsername
+		case proxyPassword
+		case floodControlDelayInterval
+		case floodControlMaximumMessages
+		case primaryEncoding
+		case fallbackEncoding
 	}
 
-	open var connectionShouldValidateCertificateChain: Bool {
-		validatesCertificateChainStorage
-	}
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
 
-	open var floodControlDelayInterval: UInt {
-		floodDelayStorage
-	}
+		self.init()
 
-	open var floodControlMaximumMessages: UInt {
-		floodMaximumStorage
-	}
-
-	open var identityClientSideCertificate: Data? {
-		identityCertificateStorage
-	}
-
-	open var proxyAddress: String? {
-		proxyAddressStorage
-	}
-
-	open var proxyPassword: String? {
-		proxyPasswordStorage
-	}
-
-	open var proxyPort: UInt16 {
-		proxyPortStorage
-	}
-
-	open var proxyType: IRCConnectionProxyType {
-		proxyTypeStorage
-	}
-
-	open var proxyUsername: String? {
-		proxyUsernameStorage
-	}
-
-	open var serverAddress: String {
-		serverAddressStorage
-	}
-
-	open var serverPort: UInt16 {
-		serverPortStorage
-	}
-
-	open var primaryEncoding: UInt {
-		primaryEncodingStorage
-	}
-
-	open var fallbackEncoding: UInt {
-		fallbackEncodingStorage
-	}
-
-	open var cipherSuites: CipherSuiteCollection {
-		cipherSuitesStorage
-	}
-
-	override public required init() {
-		super.init()
-	}
-
-	public required init?(coder: NSCoder) {
-		super.init(coder: coder)
-	}
-
-	override open class var supportsSecureCoding: Bool {
-		true
-	}
-
-	override open func populate(with decoder: NSCoder) -> Bool {
-		addressTypeStorage = IRCConnectionAddressType(rawValue: decoder.decodeUInt(forKey: "addressType")) ?? .default
-		prefersModernCiphersStorage = decoder.decodeBool(forKey: "connectionPrefersModernCiphersOnly")
-		prefersSecureConnectionStorage = decoder.decodeBool(forKey: "connectionPrefersSecuredConnection")
-		validatesCertificateChainStorage = decoder.decodeBool(forKey: "connectionShouldValidateCertificateChain")
-		floodDelayStorage = decoder.decodeUInt(forKey: "floodControlDelayInterval")
-		floodMaximumStorage = decoder.decodeUInt(forKey: "floodControlMaximumMessages")
-		identityCertificateStorage = decoder.decodeObject(
-			of: NSData.self,
-			forKey: "identityClientSideCertificate"
-		) as Data?
-		proxyAddressStorage = decoder.decodeObject(of: NSString.self, forKey: "proxyAddress") as String?
-		proxyPasswordStorage = decoder.decodeObject(of: NSString.self, forKey: "proxyPassword") as String?
-		proxyPortStorage = UInt16(truncatingIfNeeded: decoder.decodeUInt(forKey: "proxyPort"))
-		proxyTypeStorage = Self.sanitizedProxyType(decoder.decodeUInt(forKey: "proxyType"))
-		proxyUsernameStorage = decoder.decodeObject(of: NSString.self, forKey: "proxyUsername") as String?
-		serverAddressStorage = decoder.decodeObject(of: NSString.self, forKey: "serverAddress") as String? ?? ""
-		serverPortStorage = UInt16(truncatingIfNeeded: decoder.decodeUInt(forKey: "serverPort"))
-		primaryEncodingStorage = decoder.decodeUInt(forKey: "primaryEncoding")
-		fallbackEncodingStorage = decoder.decodeUInt(forKey: "fallbackEncoding")
-		cipherSuitesStorage = CipherSuiteCollection(rawValue: decoder.decodeUInt(forKey: "cipherSuites")) ?? .default
-		applyMissingDefaults()
-		return true
-	}
-
-	override open func encode(with coder: NSCoder) {
-		coder.encode(NSNumber(value: addressType.rawValue), forKey: "addressType")
-		coder.encode(connectionPrefersModernCiphersOnly, forKey: "connectionPrefersModernCiphersOnly")
-		coder.encode(connectionPrefersSecuredConnection, forKey: "connectionPrefersSecuredConnection")
-		coder.encode(connectionShouldValidateCertificateChain, forKey: "connectionShouldValidateCertificateChain")
-		coder.encode(NSNumber(value: floodControlDelayInterval), forKey: "floodControlDelayInterval")
-		coder.encode(NSNumber(value: floodControlMaximumMessages), forKey: "floodControlMaximumMessages")
-		if let identityClientSideCertificate {
-			coder.encode(
-				identityClientSideCertificate,
-				forKey: "identityClientSideCertificate"
-			)
-		}
-		if let proxyAddress {
-			coder.encode(proxyAddress, forKey: "proxyAddress")
-		}
-		if let proxyPassword {
-			coder.encode(proxyPassword, forKey: "proxyPassword")
-		}
-		coder.encode(NSNumber(value: proxyPort), forKey: "proxyPort")
-		coder.encode(NSNumber(value: proxyType.rawValue), forKey: "proxyType")
-		if let proxyUsername {
-			coder.encode(proxyUsername, forKey: "proxyUsername")
-		}
-		coder.encode(serverAddress, forKey: "serverAddress")
-		coder.encode(NSNumber(value: serverPort), forKey: "serverPort")
-		coder.encode(NSNumber(value: primaryEncoding), forKey: "primaryEncoding")
-		coder.encode(NSNumber(value: fallbackEncoding), forKey: "fallbackEncoding")
-		coder.encode(NSNumber(value: cipherSuites.rawValue), forKey: "cipherSuites")
-	}
-
-	override open func copy(asMutable mutableCopy: Bool, uniquing _: Bool) -> Any {
-		let object = mutableCopy ? IRCConnectionConfigMutable() : IRCConnectionConfig()
-		object.addressTypeStorage = addressTypeStorage
-		object.prefersModernCiphersStorage = prefersModernCiphersStorage
-		object.prefersSecureConnectionStorage = prefersSecureConnectionStorage
-		object.validatesCertificateChainStorage = validatesCertificateChainStorage
-		object.floodDelayStorage = floodDelayStorage
-		object.floodMaximumStorage = floodMaximumStorage
-		object.identityCertificateStorage = identityCertificateStorage
-		object.proxyAddressStorage = proxyAddressStorage
-		object.proxyPasswordStorage = proxyPasswordStorage
-		object.proxyPortStorage = proxyPortStorage
-		object.proxyTypeStorage = proxyTypeStorage
-		object.proxyUsernameStorage = proxyUsernameStorage
-		object.serverAddressStorage = serverAddressStorage
-		object.serverPortStorage = serverPortStorage
-		object.primaryEncodingStorage = primaryEncodingStorage
-		object.fallbackEncodingStorage = fallbackEncodingStorage
-		object.cipherSuitesStorage = cipherSuitesStorage
-		return object
-	}
-
-	override open var mutableClass: PortablePropertyObject {
-		IRCConnectionConfigMutable()
-	}
-
-	private func applyMissingDefaults() {
-		if proxyPortStorage == 0 {
-			proxyPortStorage = IRCConnectionDefaults.proxyPort
-		}
-		if serverPortStorage == 0 {
-			serverPortStorage = IRCConnectionDefaults.serverPort
-		}
-		if floodDelayStorage == 0 {
-			floodDelayStorage = IRCConnectionDefaults.floodControlDelayInterval
-		}
-		if floodMaximumStorage == 0 {
-			floodMaximumStorage = IRCConnectionDefaults.floodControlMaximumMessages
-		}
-	}
-
-	private class func sanitizedProxyType(_ rawValue: UInt) -> IRCConnectionProxyType {
-		if [0, 1, 5, 6, 8].contains(rawValue), let value = IRCConnectionProxyType(rawValue: rawValue) {
-			return value
-		}
-		Logger(subsystem: "com.vakesz.glasstual", category: "Connection").error(
-			"Unsupported proxy type \(rawValue, privacy: .public) in stored configuration; using no proxy"
+		serverAddress = container.decode(String.self, forKey: .serverAddress, aliases: [], default: "")
+		serverPort = container.decode(
+			UInt16.self,
+			forKey: .serverPort,
+			aliases: [],
+			default: IRCConnectionDefaults.serverPort
 		)
-		return .none
+		addressType = IRCConnectionAddressType(
+			rawValue: container.decode(UInt.self, forKey: .addressType, aliases: [], default: 0)
+		) ?? .default
+
+		decodeSecurity(from: container)
+		decodeProxy(from: container)
+
+		floodControlDelayInterval = container.decode(
+			UInt.self,
+			forKey: .floodControlDelayInterval,
+			aliases: [],
+			default: IRCConnectionDefaults.floodControlDelayInterval
+		)
+		floodControlMaximumMessages = container.decode(
+			UInt.self,
+			forKey: .floodControlMaximumMessages,
+			aliases: [],
+			default: IRCConnectionDefaults.floodControlMaximumMessages
+		)
+		primaryEncoding = container.decode(UInt.self, forKey: .primaryEncoding, aliases: [], default: 0)
+		fallbackEncoding = container.decode(UInt.self, forKey: .fallbackEncoding, aliases: [], default: 0)
+
+		applyMissingDefaults()
+	}
+
+	private mutating func decodeSecurity(from container: KeyedDecodingContainer<CodingKeys>) {
+		connectionPrefersSecuredConnection = container.decode(
+			Bool.self,
+			forKey: .connectionPrefersSecuredConnection,
+			aliases: [],
+			default: false
+		)
+		connectionPrefersModernCiphersOnly = container.decode(
+			Bool.self,
+			forKey: .connectionPrefersModernCiphersOnly,
+			aliases: [],
+			default: false
+		)
+		connectionShouldValidateCertificateChain = container.decode(
+			Bool.self,
+			forKey: .connectionShouldValidateCertificateChain,
+			aliases: [],
+			default: false
+		)
+		cipherSuites = CipherSuiteCollection(
+			rawValue: container.decode(
+				UInt.self,
+				forKey: .cipherSuites,
+				aliases: [],
+				default: CipherSuiteCollection.default.rawValue
+			)
+		) ?? .default
+		identityClientSideCertificate = container.decodeOptional(
+			Data.self,
+			forKey: .identityClientSideCertificate
+		)
+	}
+
+	private mutating func decodeProxy(from container: KeyedDecodingContainer<CodingKeys>) {
+		let rawProxyType = container.decode(UInt.self, forKey: .proxyType, aliases: [], default: 0)
+		proxyType = Self.sanitizedProxyType(rawProxyType)
+		proxyAddress = container.decodeOptional(String.self, forKey: .proxyAddress)
+		proxyPort = container.decode(
+			UInt16.self,
+			forKey: .proxyPort,
+			aliases: [],
+			default: IRCConnectionDefaults.proxyPort
+		)
+		proxyUsername = container.decodeOptional(String.self, forKey: .proxyUsername)
+		proxyPassword = container.decodeOptional(String.self, forKey: .proxyPassword)
+	}
+
+	public func encode(to encoder: any Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+
+		try container.encode(serverAddress, forKey: .serverAddress)
+		try container.encode(serverPort, forKey: .serverPort)
+		try container.encode(addressType.rawValue, forKey: .addressType)
+		try container.encode(connectionPrefersSecuredConnection, forKey: .connectionPrefersSecuredConnection)
+		try container.encode(connectionPrefersModernCiphersOnly, forKey: .connectionPrefersModernCiphersOnly)
+		try container.encode(
+			connectionShouldValidateCertificateChain,
+			forKey: .connectionShouldValidateCertificateChain
+		)
+		try container.encode(cipherSuites.rawValue, forKey: .cipherSuites)
+		try container.encodeIfPresent(identityClientSideCertificate, forKey: .identityClientSideCertificate)
+		try container.encode(proxyType.rawValue, forKey: .proxyType)
+		try container.encodeIfPresent(proxyAddress, forKey: .proxyAddress)
+		try container.encode(proxyPort, forKey: .proxyPort)
+		try container.encodeIfPresent(proxyUsername, forKey: .proxyUsername)
+		try container.encodeIfPresent(proxyPassword, forKey: .proxyPassword)
+		try container.encode(floodControlDelayInterval, forKey: .floodControlDelayInterval)
+		try container.encode(floodControlMaximumMessages, forKey: .floodControlMaximumMessages)
+		try container.encode(primaryEncoding, forKey: .primaryEncoding)
+		try container.encode(fallbackEncoding, forKey: .fallbackEncoding)
+	}
+
+	/// A zero for any of these means the sender left it out, not that it wanted
+	/// a port of zero or a flood window of nothing.
+	private mutating func applyMissingDefaults() {
+		if proxyPort == 0 {
+			proxyPort = IRCConnectionDefaults.proxyPort
+		}
+
+		if serverPort == 0 {
+			serverPort = IRCConnectionDefaults.serverPort
+		}
+
+		if floodControlDelayInterval == 0 {
+			floodControlDelayInterval = IRCConnectionDefaults.floodControlDelayInterval
+		}
+
+		if floodControlMaximumMessages == 0 {
+			floodControlMaximumMessages = IRCConnectionDefaults.floodControlMaximumMessages
+		}
+	}
+
+	/** A value outside the supported set means a configuration written by a
+	 build that offered a proxy this one does not; refusing the proxy is safer
+	 than guessing at one. */
+	private static func sanitizedProxyType(_ rawValue: UInt) -> IRCConnectionProxyType {
+		guard let value = IRCConnectionProxyType(rawValue: rawValue) else {
+			connectionConfigLogger.error(
+				"Unsupported proxy type \(rawValue, privacy: .public) in stored configuration; using no proxy"
+			)
+
+			return .none
+		}
+
+		return value
+	}
+
+	/// Flood-control values outside 1...60 used to trip a `precondition`; an
+	/// out-of-range value is now clamped back to the last good one.
+	private static func clampedFloodValue(_ value: UInt, _ previous: UInt) -> UInt {
+		(1 ... 60).contains(value) ? value : previous
 	}
 }
 
-private extension NSCoder {
-	func decodeUInt(forKey key: String) -> UInt {
-		decodeObject(of: NSNumber.self, forKey: key)?.uintValue ?? 0
-	}
-}
+/** Carries an `IRCConnectionConfig` across the XPC boundary.
 
-@objc(IRCConnectionConfigMutable)
-@objcMembers
-public final class IRCConnectionConfigMutable: IRCConnectionConfig {
-	public required init() {
+ `NSXPCConnection` speaks `NSSecureCoding`, which a value type cannot conform
+ to, so the encoded configuration travels as one `Data` blob inside this
+ envelope rather than as a class with a property per setting. */
+@objc(RCMConnectionConfigEnvelope)
+public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // nonisolated: value
+	public let config: IRCConnectionConfig
+
+	public init(config: IRCConnectionConfig) {
+		self.config = config
+
 		super.init()
 	}
 
-	public required init?(coder: NSCoder) {
-		super.init(coder: coder)
-	}
-
-	override public var addressType: IRCConnectionAddressType {
-		get { addressTypeStorage } set { addressTypeStorage = newValue }
-	}
-
-	override public var connectionPrefersModernCiphersOnly: Bool {
-		get { prefersModernCiphersStorage } set { prefersModernCiphersStorage = newValue }
-	}
-
-	override public var connectionPrefersSecuredConnection: Bool {
-		get { prefersSecureConnectionStorage } set { prefersSecureConnectionStorage = newValue }
-	}
-
-	override public var connectionShouldValidateCertificateChain: Bool {
-		get { validatesCertificateChainStorage } set { validatesCertificateChainStorage = newValue }
-	}
-
-	override public var floodControlDelayInterval: UInt {
-		get { floodDelayStorage } set { precondition((1 ... 60).contains(newValue)); floodDelayStorage = newValue }
-	}
-
-	override public var floodControlMaximumMessages: UInt {
-		get { floodMaximumStorage } set { precondition((1 ... 60).contains(newValue)); floodMaximumStorage = newValue }
-	}
-
-	override public var identityClientSideCertificate: Data? {
-		get { identityCertificateStorage } set { identityCertificateStorage = newValue }
-	}
-
-	override public var proxyAddress: String? {
-		get { proxyAddressStorage } set { proxyAddressStorage = newValue }
-	}
-
-	override public var proxyPassword: String? {
-		get { proxyPasswordStorage } set { proxyPasswordStorage = newValue }
-	}
-
-	override public var proxyPort: UInt16 {
-		get { proxyPortStorage } set { proxyPortStorage = newValue }
-	}
-
-	override public var proxyType: IRCConnectionProxyType {
-		get { proxyTypeStorage } set { proxyTypeStorage = newValue }
-	}
-
-	override public var proxyUsername: String? {
-		get { proxyUsernameStorage } set { proxyUsernameStorage = newValue }
-	}
-
-	override public var serverAddress: String {
-		get { serverAddressStorage } set { serverAddressStorage = newValue }
-	}
-
-	override public var serverPort: UInt16 {
-		get { serverPortStorage } set { serverPortStorage = newValue }
-	}
-
-	override public var primaryEncoding: UInt {
-		get { primaryEncodingStorage } set { primaryEncodingStorage = newValue }
-	}
-
-	override public var fallbackEncoding: UInt {
-		get { fallbackEncodingStorage } set { fallbackEncodingStorage = newValue }
-	}
-
-	override public var cipherSuites: CipherSuiteCollection {
-		get { cipherSuitesStorage } set { cipherSuitesStorage = newValue }
-	}
-
-	override public static var isMutable: Bool {
+	public static var supportsSecureCoding: Bool {
 		true
 	}
 
-	override public var immutableClass: PortablePropertyObject {
-		IRCConnectionConfig()
+	public init?(coder: NSCoder) {
+		guard let data = coder.decodeObject(of: NSData.self, forKey: "config") as Data?,
+		      let config = try? PropertyListDecoder().decode(IRCConnectionConfig.self, from: data)
+		else {
+			connectionConfigLogger.error("Received a connection configuration that could not be read")
+
+			return nil
+		}
+
+		self.config = config
+
+		super.init()
+	}
+
+	public func encode(with coder: NSCoder) {
+		let encoder = PropertyListEncoder()
+		encoder.outputFormat = .binary
+
+		guard let data = try? encoder.encode(config) else {
+			connectionConfigLogger.error("Could not write a connection configuration for the connection host")
+
+			return
+		}
+
+		coder.encode(data, forKey: "config")
 	}
 }

@@ -1,20 +1,8 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "rct-ot" : {
-      "comment" : "Message context menu: replies and reactions.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other…"
-          }
-        }
-      }
-    },
-    "rct-ph" : {
-      "comment" : "Message context menu: replies and reactions.",
+    "message-context-menu-replies-emoji" : {
+      "comment" : "Message context menu: replies and reactions. Legacy key: rct-ph.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -25,20 +13,20 @@
         }
       }
     },
-    "rct-sd" : {
-      "comment" : "Message context menu: replies and reactions.",
+    "message-context-menu-replies-other" : {
+      "comment" : "Message context menu: replies and reactions. Legacy key: rct-ot.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Send"
+            "value" : "Other…"
           }
         }
       }
     },
-    "rct-to" : {
-      "comment" : "Message context menu: replies and reactions.",
+    "message-context-menu-replies-react" : {
+      "comment" : "Message context menu: replies and reactions. Legacy key: rct-to.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -49,8 +37,8 @@
         }
       }
     },
-    "rpl-to" : {
-      "comment" : "Message context menu: replies and reactions.",
+    "message-context-menu-replies-reply" : {
+      "comment" : "Message context menu: replies and reactions. Legacy key: rpl-to.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -61,8 +49,20 @@
         }
       }
     },
-    "shr-m1" : {
-      "comment" : "Title of the standard Share menu item.",
+    "message-context-menu-replies-send" : {
+      "comment" : "Message context menu: replies and reactions. Legacy key: rct-sd.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        }
+      }
+    },
+    "title-of-the-standard-share" : {
+      "comment" : "Title of the standard Share menu item. Legacy key: shr-m1.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

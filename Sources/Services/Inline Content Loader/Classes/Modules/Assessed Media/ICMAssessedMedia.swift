@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -38,42 +38,46 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICMAssessedMedia)
-final class AssessedMediaModule: InlineContentModule {
-	private var mediaAssessor: MediaAssessor?
+/// The last resort: ask the endpoint itself what it is serving.
+///
+/// Only consulted when the user has asked for every link to be checked, and it
+/// hands off to whichever built-in renderer the content type turned out to
+/// want. Renders through those templates, so it is neither untrusted nor a
+/// source of adult content on its own.
+struct AssessedMediaModule: InlineContentModule {
+	static var contentImageOrVideo: Bool {
+		true
+	}
 
-	@objc(_assessMedia)
-	private func assessMedia() {
-		let assessor = MediaAssessor(url: payload.url, expectedType: .unknown) { [weak self] assessment, error in
-			guard let self else { return }
+	static var contentIsFile: Bool {
+		true
+	}
 
-			if
-				let assessment,
-				error == nil,
-				InlineContentModule.isTypeDeferrable(assessment.type)
-			{
-				payload.urlToInline = assessment.url
-				deferContent(as: assessment.type, performCheck: false)
-			} else {
-				cancel()
-			}
+	static var contentUntrusted: Bool {
+		false
+	}
 
-			mediaAssessor = nil
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	static func module(for _: URL) -> (any InlineContentModule)? {
+		TextualPreferences.inlineMediaCheckEverything() ? AssessedMediaModule() : nil
+	}
+
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		guard case let .success(assessment) = await MediaAssessor.assess(payload.url, expecting: .unknown),
+		      !assessment.url.isFileURL,
+		      assessment.type == .image || assessment.type == .video || assessment.type == .videoGif
+		else {
+			return .cancelled
 		}
 
-		mediaAssessor = assessor
-		assessor.resume()
-	}
+		var values = payload
 
-	override static func action(for _: URL) -> Selector? {
-		TextualPreferences.inlineMediaCheckEverything() ? #selector(assessMedia) : nil
-	}
+		guard values.setURLToInline(assessment.url) else { return .cancelled }
 
-	override static var contentImageOrVideo: Bool {
-		true
-	}
-
-	override static var contentIsFile: Bool {
-		true
+		/* The assessment is the check, so the renderer does not repeat it. */
+		return .deferred(values, as: assessment.type, performCheck: false)
 	}
 }

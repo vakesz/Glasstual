@@ -5,22 +5,67 @@
 
 import Foundation
 @testable import Glasstual
-@_spi(Host) import GlasstualPluginKit
-import XCTest
+import GlasstualPluginKit
+import Testing
 
-final class PluginKitMigrationTests: XCTestCase {
-	func testServerInputIsAPlainSwiftValueContainer() {
-		let input = PluginServerInput()
+@MainActor
+@Suite("Plugin Kit contracts")
+struct PluginKitMigrationTests {
+	@Test("Server input is a plain container the host fills in")
+	func serverInputIsAPlainSwiftValueContainer() {
+		var input = PluginServerInput()
 		input.senderNickname = "alice"
 		input.messageCommand = "PRIVMSG"
 		input.messageParameters = ["#glasstual", "hello"]
 
-		XCTAssertEqual(input.senderNickname, "alice")
-		XCTAssertEqual(input.messageCommand, "PRIVMSG")
-		XCTAssertEqual(input.messageParameters, ["#glasstual", "hello"])
+		#expect(input.senderNickname == "alice")
+		#expect(input.messageCommand == "PRIVMSG")
+		#expect(input.messageParameters == ["#glasstual", "hello"])
 	}
 
-	func testHostContextExposesOnlyTypedPluginModels() {
+	@Test("Server input is a value: a handler's edits do not reach the next handler")
+	func serverInputCopiesRatherThanShares() {
+		var input = PluginServerInput()
+		input.senderNickname = "alice"
+
+		var handed = input
+		handed.senderNickname = "mallory"
+
+		#expect(input.senderNickname == "alice")
+	}
+
+	@Test("A posted message is a value the host finishes on the main actor")
+	func postedMessageCarriesTypedSendableParts() {
+		var message = PluginPostedMessage()
+		message.lineNumber = "1234"
+		message.messageContents = "see https://example.com"
+		message.hyperlinks = [
+			PluginHyperlink(
+				uniqueIdentifier: "link-1",
+				stringValue: "https://example.com",
+				range: NSRange(location: 4, length: 19),
+				strictMatch: true
+			),
+		]
+		message.users = [
+			PluginChannelMember(
+				user: PluginUser(nickname: "alice", hostmask: nil, address: nil, isIRCop: false),
+				mark: "@",
+				ranks: [.normalOperator],
+				creationTime: 0
+			),
+		]
+
+		var copied = message
+		copied.isProcessedInBulk = true
+
+		#expect(message.isProcessedInBulk == false)
+		#expect(copied.hyperlinks.first?.stringValue == "https://example.com")
+		#expect(copied.users.first?.user.nickname == "alice")
+	}
+
+	@Test("The host context hands a plugin typed models and a cancellable observation")
+	func hostContextExposesOnlyTypedPluginModels() {
 		let channel = makePluginChannel()
 		let client = makePluginClient(channel: channel)
 		let metrics = PluginApplicationMetrics(
@@ -38,6 +83,8 @@ final class PluginKitMigrationTests: XCTestCase {
 			clients: { [client] },
 			selectedChannel: { channel },
 			metrics: { metrics },
+			applicationSnapshot: { nil },
+			themeSnapshot: { nil },
 			observeConnectionState: { handler in
 				handler(true)
 				return PluginObservation(cancellation: {})
@@ -47,21 +94,26 @@ final class PluginKitMigrationTests: XCTestCase {
 
 		let observation = host.observeConnectionState { observedConnection = $0 }
 
-		XCTAssertEqual(host.clients, [client])
-		XCTAssertEqual(host.selectedChannel, channel)
-		XCTAssertEqual(host.applicationMetrics, metrics)
-		XCTAssertTrue(host.removesIRCFormatting)
-		XCTAssertTrue(observedConnection)
+		#expect(host.clients == [client])
+		#expect(host.selectedChannel == channel)
+		#expect(host.applicationMetrics == metrics)
+		#expect(host.removesIRCFormatting)
+		#expect(observedConnection)
 		observation.cancel()
 	}
 
-	func testChannelSelectionUsesTypedPluginBoundary() {
-		let selectionControllerType: any PluginChannelSelection.Type = ChannelSelectionViewController.self
+	/// The Chat Filter sheet reaches its channel picker by casting the object the
+	/// host handed it (`ChatFilterEditSheet.swift`), and stops the process when
+	/// the cast fails, so the cast itself is the contract.
+	@Test("Channel selection is offered to plugins through the typed boundary")
+	func channelSelectionUsesTypedPluginBoundary() {
+		let host: NSObject = ChannelSelectionViewController()
 
-		XCTAssertTrue(selectionControllerType == ChannelSelectionViewController.self)
+		#expect(host is any PluginChannelSelection)
 	}
 
-	func testNativeCommandContractCarriesTypedContext() {
+	@Test("A command invocation carries the client, text and selected channel to its handler")
+	func nativeCommandContractCarriesTypedContext() {
 		let channel = makePluginChannel()
 		let client = makePluginClient(channel: channel)
 		let invocation = PluginCommandInvocation(
@@ -75,14 +127,14 @@ final class PluginKitMigrationTests: XCTestCase {
 
 		handler.userInputCommandInvoked(invocation)
 
-		XCTAssertEqual(handler.client, client)
-		XCTAssertEqual(handler.command, "BRAG")
-		XCTAssertEqual(handler.message, "now")
-		XCTAssertEqual(handler.selectedChannel, channel)
+		#expect(handler.client == client)
+		#expect(handler.command == "BRAG")
+		#expect(handler.message == "now")
+		#expect(handler.selectedChannel == channel)
 	}
 
-	@MainActor
-	func testNativeTextContractPreservesDomainValues() {
+	@Test("A text event carries its destination, kind and author to its handler")
+	func nativeTextContractPreservesDomainValues() {
 		let channel = makePluginChannel()
 		let client = makePluginClient(channel: channel)
 		let handler = TextHandlerFixture()
@@ -102,37 +154,21 @@ final class PluginKitMigrationTests: XCTestCase {
 			wasEncrypted: true
 		)
 
-		XCTAssertTrue(handler.receivedText(event))
-		XCTAssertEqual(handler.destination, channel)
-		XCTAssertEqual(handler.kind, .privateMessage)
-		XCTAssertEqual(handler.authorNickname, "alice")
+		#expect(handler.receivedText(event))
+		#expect(handler.destination == channel)
+		#expect(handler.kind == .privateMessage)
+		#expect(handler.authorNickname == "alice")
 	}
 
-	func testServerMessageCopyCanBeInterceptedWithoutMutatingOriginal() {
-		let original = PluginServerMessage(
-			sender: PluginSender(
-				nickname: "server",
-				username: nil,
-				address: nil,
-				hostmask: "server",
-				isServer: true
-			),
-			command: "NOTICE",
-			parameters: ["hello"],
-			isPrintOnlyMessage: false
-		)
-		let intercepted = original.copy()
-		intercepted.command = "PRIVMSG"
-
-		XCTAssertEqual(original.command, "NOTICE")
-		XCTAssertEqual(intercepted.command, "PRIVMSG")
+	/// A bundle declaring an older minimum is refused, so the floor is part of
+	/// the contract a third-party plugin is built against.
+	@Test("The compatibility floor for a plugin bundle is version eight")
+	func swiftNativeCompatibilityFloorIsVersionEight() {
+		#expect(PluginCompatibility.minimumHostVersion == "8.0.0")
 	}
 
-	func testSwiftNativeCompatibilityFloorIsVersionEight() {
-		XCTAssertEqual(PluginCompatibility.minimumHostVersion, "8.0.0")
-	}
-
-	func testHumanReadableTimeIntervalUsesNativeLocalizedComponents() {
+	@Test("A spelled-out interval matches the platform's own components format")
+	func humanReadableTimeIntervalUsesNativeLocalizedComponents() {
 		let startDate = Date()
 		let endDate = startDate.addingTimeInterval(61)
 		let expected = Date.ComponentsFormatStyle(
@@ -141,22 +177,18 @@ final class PluginKitMigrationTests: XCTestCase {
 			fields: [.minute, .second]
 		).format(startDate ..< endDate)
 
-		XCTAssertEqual(
-			PluginHost.humanReadableTimeInterval(61, shortValue: false, units: [.minute, .second]),
-			expected
-		)
+		#expect(PluginHost.humanReadableTimeInterval(61, shortValue: false, units: [.minute, .second]) == expected)
 	}
 
-	func testFormattedNumberUsesTheCurrentLocale() {
+	@Test("A formatted number follows the current locale")
+	func formattedNumberUsesTheCurrentLocale() {
 		let value = 1_234_567
 
-		XCTAssertEqual(
-			PluginHost.formattedNumber(value),
-			value.formatted(.number.locale(.autoupdatingCurrent))
-		)
+		#expect(PluginHost.formattedNumber(value) == value.formatted(.number.locale(.autoupdatingCurrent)))
 	}
 
-	func testShortHumanReadableTimeIntervalUsesLargestNonzeroComponent() {
+	@Test("A short interval is spelled with its largest non-zero component alone")
+	func shortHumanReadableTimeIntervalUsesLargestNonzeroComponent() {
 		let startDate = Date()
 		let endDate = startDate.addingTimeInterval(3661)
 		let expected = Date.ComponentsFormatStyle(
@@ -165,13 +197,11 @@ final class PluginKitMigrationTests: XCTestCase {
 			fields: [.hour]
 		).format(startDate ..< endDate)
 
-		XCTAssertEqual(
-			PluginHost.humanReadableTimeInterval(3661, shortValue: true),
-			expected
-		)
+		#expect(PluginHost.humanReadableTimeInterval(3661, shortValue: true) == expected)
 	}
 }
 
+@MainActor
 private final class CommandHandlerFixture: PluginCommandHandling {
 	private(set) var client: PluginClient?
 	private(set) var command: String?
@@ -190,6 +220,7 @@ private final class CommandHandlerFixture: PluginCommandHandling {
 	}
 }
 
+@MainActor
 private final class TextHandlerFixture: PluginTextEventHandling {
 	private(set) var destination: PluginChannel?
 	private(set) var kind: PluginMessageKind?
@@ -203,9 +234,9 @@ private final class TextHandlerFixture: PluginTextEventHandling {
 	}
 }
 
+@MainActor
 private func makePluginChannel() -> PluginChannel {
 	PluginChannel(
-		hostObject: NSObject(),
 		identifier: "channel-id",
 		name: "#glasstual",
 		type: .channel,
@@ -217,9 +248,9 @@ private func makePluginChannel() -> PluginChannel {
 	)
 }
 
+@MainActor
 private func makePluginClient(channel: PluginChannel) -> PluginClient {
 	PluginClient(
-		hostObject: NSObject(),
 		identifier: "client-id",
 		userNickname: "tester",
 		networkName: "Test Network",

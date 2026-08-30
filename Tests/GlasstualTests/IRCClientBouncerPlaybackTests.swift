@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -37,112 +37,119 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class IRCClientBouncerPlaybackTests: XCTestCase {
-	func testPlaybackStartsFromBeginningWithoutAnEligibleTimestamp() {
-		XCTAssertEqual(
+@MainActor
+@Suite("Bouncer playback and notification policy")
+struct IRCClientBouncerPlaybackTests {
+	@Test("Playback starts from the beginning when no timestamp is eligible")
+	func playbackStartsFromBeginningWithoutAnEligibleTimestamp() {
+		#expect(
 			PlaybackRequestPolicy.command(
 				successfulConnects: 1,
 				onlyLatestOnFirstConnect: false,
 				lastMessageServerTime: 1_700_000_000
-			),
-			"play * 0"
+			) == "play * 0"
 		)
-		XCTAssertEqual(
+		#expect(
 			PlaybackRequestPolicy.command(
 				successfulConnects: 2,
 				onlyLatestOnFirstConnect: true,
 				lastMessageServerTime: 0
-			),
-			"play * 0"
+			) == "play * 0"
 		)
 	}
 
-	func testPlaybackUsesRoundedServerTimestampAfterReconnect() {
-		XCTAssertEqual(
+	@Test("A reconnect resumes from the last server timestamp, rounded up to a second")
+	func playbackUsesRoundedServerTimestampAfterReconnect() {
+		#expect(
 			PlaybackRequestPolicy.command(
 				successfulConnects: 2,
 				onlyLatestOnFirstConnect: false,
 				lastMessageServerTime: 1_700_000_000.6
-			),
-			"play * 1700000001"
+			) == "play * 1700000001"
 		)
 	}
 
-	func testPlaybackCanUseTimestampOnConfiguredFirstConnect() {
-		XCTAssertEqual(
+	@Test("A first connect may resume from the timestamp when the client is configured to")
+	func playbackCanUseTimestampOnConfiguredFirstConnect() {
+		#expect(
 			PlaybackRequestPolicy.command(
 				successfulConnects: 1,
 				onlyLatestOnFirstConnect: true,
 				lastMessageServerTime: 42
-			),
-			"play * 42"
+			) == "play * 42"
 		)
 	}
 
-	func testRequestedChatHistoryNeverPostsNotifications() {
-		XCTAssertFalse(notificationDecision(isRequestedChatHistory: true))
+	@Test("Chat history the client asked for never posts a notification")
+	func requestedChatHistoryNeverPostsNotifications() {
+		#expect(notificationDecision(isRequestedChatHistory: true) == false)
 	}
 
-	func testOrdinaryServerMessagesPostWithoutABouncer() {
-		XCTAssertTrue(notificationDecision(isConnectedToBouncer: false))
+	@Test("Ordinary server messages post when no bouncer is involved")
+	func ordinaryServerMessagesPostWithoutABouncer() {
+		#expect(notificationDecision(isConnectedToBouncer: false))
 	}
 
-	func testConfiguredBouncerUsersDoNotPostNotifications() {
-		XCTAssertFalse(notificationDecision(
+	@Test("A user the config marks as the bouncer does not post notifications")
+	func configuredBouncerUsersDoNotPostNotifications() {
+		#expect(notificationDecision(
 			ignoresBouncerUsers: true,
 			channelIsBouncerUser: true
-		))
+		) == false)
 	}
 
-	func testPlaybackBatchDoesNotPostWhenPlaybackIsIgnored() {
-		XCTAssertFalse(notificationDecision(
+	@Test("Only the playback batch is silenced when playback is ignored")
+	func playbackBatchDoesNotPostWhenPlaybackIsIgnored() {
+		#expect(notificationDecision(
 			ignoresPlayback: true,
 			supportsBatch: true,
 			batchType: "znc.in/playback"
-		))
-		XCTAssertTrue(notificationDecision(
+		) == false)
+		#expect(notificationDecision(
 			ignoresPlayback: true,
 			supportsBatch: true,
 			batchType: "other"
 		))
 	}
 
-	func testHistoricFallbackDoesNotPostWithoutBatchSupport() {
-		XCTAssertFalse(notificationDecision(
+	@Test("Without batch support the historic flag stands in for the playback batch")
+	func historicFallbackDoesNotPostWithoutBatchSupport() {
+		#expect(notificationDecision(
 			ignoresPlayback: true,
 			supportsBatch: false,
 			isHistoric: true
-		))
-		XCTAssertTrue(notificationDecision(
+		) == false)
+		#expect(notificationDecision(
 			ignoresPlayback: true,
 			supportsBatch: false,
 			isHistoric: false
 		))
 	}
 
-	func testChannelUnreadPolicyMatchesDockAndTreePreferences() {
-		XCTAssertTrue(ChannelUnreadPolicy.incrementsDockUnreadCount(
+	@Test("The unread counters follow the dock and tree badge preferences")
+	func channelUnreadPolicyMatchesDockAndTreePreferences() {
+		#expect(ChannelUnreadPolicy.incrementsDockUnreadCount(
 			isChannel: false,
 			displaysPublicMessageCount: false
 		))
-		XCTAssertFalse(ChannelUnreadPolicy.incrementsDockUnreadCount(
+		#expect(ChannelUnreadPolicy.incrementsDockUnreadCount(
 			isChannel: true,
 			displaysPublicMessageCount: false
-		))
-		XCTAssertTrue(ChannelUnreadPolicy.incrementsDockUnreadCount(
+		) == false)
+		#expect(ChannelUnreadPolicy.incrementsDockUnreadCount(
 			isChannel: true,
 			displaysPublicMessageCount: true
 		))
-		XCTAssertTrue(ChannelUnreadPolicy.refreshesTreeBadge(
+		#expect(ChannelUnreadPolicy.refreshesTreeBadge(
 			isHighlight: true,
 			showsTreeBadgeCount: false
 		))
-		XCTAssertFalse(ChannelUnreadPolicy.refreshesTreeBadge(
+		#expect(ChannelUnreadPolicy.refreshesTreeBadge(
 			isHighlight: false,
 			showsTreeBadgeCount: false
-		))
+		) == false)
 	}
 
 	private func notificationDecision(

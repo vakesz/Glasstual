@@ -1,13 +1,9 @@
-import CocoaExtensions
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/*  *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -38,93 +34,63 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-class IRCPrefixTests: XCTestCase {
-	func testDefaultsAreNonnullableEmptyStrings() {
+
+@testable import Glasstual
+import Testing
+
+@MainActor
+@Suite("IRC prefix")
+struct IRCPrefixTests {
+	@Test("A default prefix is empty rather than nil")
+	func defaultsAreNonnullableEmptyStrings() {
 		let prefix = Prefix()
 
-		XCTAssertFalse(prefix.isServer)
+		#expect(prefix.isServer == false)
 
-		XCTAssertEqual(prefix.nickname, "")
-		XCTAssertEqual(prefix.hostmask, "")
+		#expect(prefix.nickname == "")
+		#expect(prefix.hostmask == "")
 
-		XCTAssertNil(prefix.username)
-		XCTAssertNil(prefix.address)
+		#expect(prefix.username == nil)
+		#expect(prefix.address == nil)
 	}
 
-	func testMutableCopyCanChangeWithoutChangingOriginal() throws {
-		let source = MutablePrefix()
+	@Test("Copying a prefix and changing the copy leaves the original alone")
+	func copyingAValueDoesNotChangeTheOriginal() {
+		let source = Prefix(
+			nickname: "nick",
+			username: "user",
+			address: "host",
+			hostmask: "nick!user@host",
+			isServer: true
+		)
 
-		source.isServer = true
-		source.nickname = "nick"
-		source.username = "user"
-		source.address = "host"
-		source.hostmask = "nick!user@host"
-
-		let immutable = try XCTUnwrap(source.copy() as? Prefix)
-		let changed = try XCTUnwrap(immutable.mutableCopy() as? MutablePrefix)
-
+		var changed = source
 		changed.nickname = "other"
 
-		XCTAssertTrue(source.isMutable)
-
-		XCTAssertFalse(immutable.isMutable)
-
-		XCTAssertTrue(changed.isMutable)
-
-		XCTAssertEqual(immutable.nickname, "nick")
-		XCTAssertEqual(changed.nickname, "other")
-		XCTAssertEqual(changed.username, "user")
-		XCTAssertEqual(changed.address, "host")
-		XCTAssertEqual(changed.hostmask, "nick!user@host")
+		#expect(source.nickname == "nick")
+		#expect(changed.nickname == "other")
+		#expect(changed.username == "user")
+		#expect(changed.address == "host")
+		#expect(changed.hostmask == "nick!user@host")
+		#expect(changed.isServer)
 	}
 
-	func testUniqueCopyEntryPointsPreserveValuesAndRequestedMutability() throws {
-		let source = MutablePrefix()
+	@Test("Equality and hashing take every field into account")
+	func equalityAndHashUseAllFields() {
+		let first = Prefix(
+			nickname: "nick",
+			username: "user",
+			address: "host",
+			hostmask: "nick!user@host"
+		)
 
-		source.nickname = "nick"
-		source.hostmask = "nick!user@host"
+		var second = first
 
-		let immutable = try XCTUnwrap(source.copy() as? Prefix)
-		let unique = try XCTUnwrap(immutable.uniqueCopy() as? Prefix)
-		let uniqueMutable = try XCTUnwrap(immutable.uniqueCopyMutable() as? MutablePrefix)
-
-		XCTAssertFalse(unique === immutable)
-
-		XCTAssertEqual(unique, immutable)
-
-		XCTAssertFalse(unique.isMutable)
-
-		XCTAssertTrue(uniqueMutable.isMutable)
-
-		XCTAssertEqual(uniqueMutable, immutable)
-	}
-
-	func testImmutableCopyReturnsSameObject() throws {
-		let mutable = MutablePrefix()
-
-		mutable.nickname = "nick"
-
-		let immutable = try XCTUnwrap(mutable.copy() as? Prefix)
-
-		XCTAssertEqual(immutable.copy() as? Prefix, immutable)
-	}
-
-	func testEqualityAndHashUseAllFields() throws {
-		let first = MutablePrefix()
-
-		first.nickname = "nick"
-		first.username = "user"
-		first.address = "host"
-		first.hostmask = "nick!user@host"
-
-		let second = try XCTUnwrap(first.mutableCopy() as? MutablePrefix)
-
-		XCTAssertEqual(first, second)
-
-		XCTAssertEqual(first.hash, second.hash)
+		#expect(first == second)
+		#expect(first.hashValue == second.hashValue)
 
 		second.isServer = true
 
-		XCTAssertNotEqual(first, second)
+		#expect(first != second)
 	}
 }

@@ -16,17 +16,17 @@
 	<integer>0</integer>
 	<key>AutojoinChannelOnInvite</key>
 	<integer>0</integer>
-	<key>AutojoinDelayBetweenChannelJoins</key>
-	<integer>0</integer>
 	<key>AutojoinDelayAfterIdentification</key>
+	<integer>0</integer>
+	<key>AutojoinDelayBetweenChannelJoins</key>
 	<integer>0</integer>
 	<key>AutojoinMaximumChannelJoinCount</key>
 	<integer>0</integer>
 	<key>AutomaticallyAddScrollbackMarker</key>
 	<integer>0</integer>
-	<key>AutomaticallyDisconnectForSleepMode</key>
-	<integer>0</integer>
 	<key>AutomaticallyDetectHighlightSpam</key>
+	<integer>0</integer>
+	<key>AutomaticallyDisconnectForSleepMode</key>
 	<integer>0</integer>
 	<key>AutomaticallyFilterUnicodeTextSpam</key>
 	<integer>0</integer>
@@ -47,12 +47,6 @@
 	<key>ConversationTrackingIncludesUserModeSymbol</key>
 	<integer>0</integer>
 	<key>CopyTextSelectionOnMouseUp</key>
-	<integer>0</integer>
-	<key>com.adiumX.AutoHyperlinks.permittedSchemesAny</key>
-	<integer>0</integer>
-	<key>com.adiumX.AutoHyperlinks.permittedSchemesDefault</key>
-	<integer>0</integer>
-	<key>com.adiumX.AutoHyperlinks.permittedSchemes</key>
 	<integer>0</integer>
 	<key>DefaultBanCommandHostmaskFormat</key>
 	<integer>0</integer>
@@ -104,9 +98,17 @@
 	<integer>0</integer>
 	<key>FocusSelectionOnMessageCommandExecution</key>
 	<integer>0</integer>
+	<key>Glasstual Chat Filter Extension -&gt; Filters</key>
+	<integer>0</integer>
+	<key>GlasstualDeveloperEnvironment</key>
+	<integer>0</integer>
 	<key>Highlight List -&gt; Excluded Matches</key>
 	<integer>0</integer>
 	<key>Highlight List -&gt; Primary Matches</key>
+	<integer>0</integer>
+	<key>IRC -&gt; Enable echo-message Capability</key>
+	<integer>0</integer>
+	<key>IRC -&gt; STS Policies</key>
 	<integer>0</integer>
 	<key>IRCopDefaultLocalizaiton -&gt; G:Line Reason</key>
 	<integer>0</integer>
@@ -114,15 +116,15 @@
 	<integer>0</integer>
 	<key>IRCopDefaultLocalizaiton -&gt; Shun Reason</key>
 	<integer>0</integer>
-	<key>InlineMediaCheckEverything</key>
+	<key>InlineMediaAllowsCleartextHTTP</key>
 	<integer>0</integer>
-	<key>InlineMediaLimitToBasics</key>
+	<key>InlineMediaCheckEverything</key>
 	<integer>0</integer>
 	<key>InlineMediaLimitBasicsToFiles</key>
 	<integer>0</integer>
-	<key>InlineMediaLimitInsecureContent</key>
-	<integer>0</integer>
 	<key>InlineMediaLimitNaughtyContent</key>
+	<integer>0</integer>
+	<key>InlineMediaLimitToBasics</key>
 	<integer>0</integer>
 	<key>InlineMediaLimitUnsafeContent</key>
 	<integer>0</integer>
@@ -134,8 +136,6 @@
 	<integer>0</integer>
 	<key>Internal Theme Settings Key-value Store -&gt; </key>
 	<integer>1</integer>
-	<key>IRC -&gt; Enable echo-message Capability</key>
-	<integer>0</integer>
 	<key>Keyboard -&gt; Command+W Key Action</key>
 	<integer>0</integer>
 	<key>Keyboard -&gt; Tab Key Action</key>
@@ -148,35 +148,25 @@
 	<integer>0</integer>
 	<key>LogTranscriptDestinationSecurityBookmark_5</key>
 	<integer>0</integer>
+	<key>Main Input Text Field -&gt; Focus When Changing Views</key>
+	<integer>0</integer>
+	<key>Main Input Text Field -&gt; Font Size</key>
+	<integer>0</integer>
 	<key>MemberListSortFavorsServerStaff</key>
 	<integer>0</integer>
 	<key>MemberListUpdatesUserInfoPopoverOnScroll</key>
 	<integer>0</integer>
-	<key>Main Input Text Field -&gt; Font Size</key>
-	<integer>0</integer>
-	<key>Main Input Text Field -&gt; Focus When Changing Views</key>
+	<key>NSWindow Frame -&gt; Internal (v3) -&gt; </key>
+	<integer>1</integer>
+	<key>Nickname Color Style Overrides (v2)</key>
 	<integer>0</integer>
 	<key>NicknameHighlightMatchingType</key>
 	<integer>0</integer>
-	<key>Nickname Color Style Overrides (v2)</key>
-	<integer>0</integer>
-	<key>New item</key>
+	<key>Notification Sound Is Muted</key>
 	<integer>0</integer>
 	<key>NotificationType -&gt; </key>
 	<integer>1</integer>
-	<key>Notification Sound Is Muted</key>
-	<integer>0</integer>
-	<key>NSWindow Frame -&gt; Internal (v3) -&gt; </key>
-	<integer>1</integer>
-	<key>PostNotificationsWhileInFocus</key>
-	<integer>0</integer>
-	<key>PreferModernCiphers</key>
-	<integer>0</integer>
-	<key>Plugin Approvals</key>
-	<integer>0</integer>
-	<key>IRC -&gt; STS Policies</key>
-	<integer>0</integer>
-	<key>Private Extension Store -&gt; Caffeine Extension -&gt; Prevent Sleep</key>
+	<key>Onboarding -&gt; Completed</key>
 	<integer>0</integer>
 	<key>OnlySpeakNotificationsForSelection</key>
 	<integer>0</integer>
@@ -184,17 +174,35 @@
 	<integer>0</integer>
 	<key>Optimizations -&gt; Load History Lazily</key>
 	<integer>0</integer>
+	<key>Plugin Approvals</key>
+	<integer>0</integer>
+	<key>PostNotificationsWhileInFocus</key>
+	<integer>0</integer>
+	<key>PreferModernCiphers</key>
+	<integer>0</integer>
+	<key>Private Extension Store -&gt; Caffeine Extension -&gt; Prevent Sleep</key>
+	<integer>0</integer>
 	<key>RejoinChannelOnLocalKick</key>
 	<integer>0</integer>
 	<key>ReloadScrollbackOnLaunch</key>
-	<integer>0</integer>
-	<key>RightToLeftTextFormatting</key>
 	<integer>0</integer>
 	<key>RemoveIRCTextFormatting</key>
 	<integer>0</integer>
 	<key>ReplyUnignoredExternalCTCPRequests</key>
 	<integer>0</integer>
+	<key>RightToLeftTextFormatting</key>
+	<integer>0</integer>
 	<key>SaveInputHistoryPerSelection</key>
+	<integer>0</integer>
+	<key>ScrollbackMaximumSavedLineCount</key>
+	<integer>0</integer>
+	<key>ScrollbackMaximumVisibleLineCount</key>
+	<integer>0</integer>
+	<key>SendTypingNotifications</key>
+	<integer>0</integer>
+	<key>Server List Unread Message Count Badge Colors -&gt; Highlight</key>
+	<integer>0</integer>
+	<key>Server Properties Window Sheet -&gt; Include Advanced Encodings</key>
 	<integer>0</integer>
 	<key>ServerListDoubleClickConnectServer</key>
 	<integer>0</integer>
@@ -206,27 +214,19 @@
 	<integer>0</integer>
 	<key>ServerListRetainsQueriesBetweenRestarts</key>
 	<integer>0</integer>
-	<key>Server List Unread Message Count Badge Colors -&gt; Highlight</key>
-	<integer>0</integer>
-	<key>Server Properties Window Sheet -&gt; Include Advanced Encodings</key>
-	<integer>0</integer>
 	<key>SetAwayOnScreenSleep</key>
-	<integer>0</integer>
-	<key>ScrollbackMaximumSavedLineCount</key>
-	<integer>0</integer>
-	<key>ScrollbackMaximumVisibleLineCount</key>
-	<integer>0</integer>
-	<key>SwipeMinimumLength</key>
-	<integer>0</integer>
-	<key>Smiley Converter Extension -&gt; Enable Service</key>
 	<integer>0</integer>
 	<key>Smiley Converter Extension -&gt; Enable Extra Emoticons</key>
 	<integer>0</integer>
+	<key>Smiley Converter Extension -&gt; Enable Service</key>
+	<integer>0</integer>
+	<key>SwipeMinimumLength</key>
+	<integer>0</integer>
 	<key>System Profiler Extension -&gt; Feature Disabled -&gt; CPU Model</key>
 	<integer>0</integer>
-	<key>System Profiler Extension -&gt; Feature Disabled -&gt; GPU Model</key>
-	<integer>0</integer>
 	<key>System Profiler Extension -&gt; Feature Disabled -&gt; Disk Information</key>
+	<integer>0</integer>
+	<key>System Profiler Extension -&gt; Feature Disabled -&gt; GPU Model</key>
 	<integer>0</integer>
 	<key>System Profiler Extension -&gt; Feature Disabled -&gt; Memory Information</key>
 	<integer>0</integer>
@@ -235,6 +235,14 @@
 	<key>System Profiler Extension -&gt; Feature Disabled -&gt; Screen Resolution</key>
 	<integer>0</integer>
 	<key>System Profiler Extension -&gt; Feature Disabled -&gt; System Uptime</key>
+	<integer>0</integer>
+	<key>TPCPreferencesDictionaryVersion</key>
+	<integer>0</integer>
+	<key>TVCLogControllerHistoricLogFileSavePath_v3</key>
+	<integer>0</integer>
+	<key>TXRunCount</key>
+	<integer>0</integer>
+	<key>TXRunTime</key>
 	<integer>0</integer>
 	<key>Tab Completion -&gt; Completion Suffix Cut Forward Until Space</key>
 	<integer>0</integer>
@@ -248,23 +256,17 @@
 	<integer>0</integer>
 	<key>TextFieldAutomaticSpellCorrection</key>
 	<integer>0</integer>
+	<key>TextFieldDataDetectors</key>
+	<integer>0</integer>
 	<key>TextFieldSmartCopyPaste</key>
 	<integer>0</integer>
 	<key>TextFieldSmartDashes</key>
-	<integer>0</integer>
-	<key>TextFieldDataDetectors</key>
 	<integer>0</integer>
 	<key>TextFieldSmartLinks</key>
 	<integer>0</integer>
 	<key>TextFieldSmartQuotes</key>
 	<integer>0</integer>
 	<key>TextFieldTextReplacement</key>
-	<integer>0</integer>
-	<key>GlasstualDeveloperEnvironment</key>
-	<integer>0</integer>
-	<key>Onboarding -&gt; Completed</key>
-	<integer>0</integer>
-	<key>Glasstual Chat Filter Extension -&gt; Filters</key>
 	<integer>0</integer>
 	<key>Theme -&gt; Channel Font Preference Enabled</key>
 	<integer>0</integer>
@@ -292,14 +294,6 @@
 	<integer>0</integer>
 	<key>TrackUserAwayStatusMaximumChannelSize</key>
 	<integer>0</integer>
-	<key>TPCPreferencesDictionaryVersion</key>
-	<integer>0</integer>
-	<key>TVCLogControllerHistoricLogFileSavePath_v3</key>
-	<integer>0</integer>
-	<key>TXRunCount</key>
-	<integer>0</integer>
-	<key>TXRunTime</key>
-	<integer>0</integer>
 	<key>User List Mode Badge Colors -&gt; +a</key>
 	<integer>0</integer>
 	<key>User List Mode Badge Colors -&gt; +h</key>
@@ -312,8 +306,6 @@
 	<integer>0</integer>
 	<key>User List Mode Badge Colors -&gt; +y</key>
 	<integer>0</integer>
-	<key>User List Mode Badge Colors -&gt; no mode</key>
-	<integer>0</integer>
 	<key>UserListDoubleClickAction</key>
 	<integer>0</integer>
 	<key>WebViewDoNotUsesCustomScrollers</key>
@@ -322,19 +314,25 @@
 	<integer>0</integer>
 	<key>WebViewProcessPoolSizeIsLimited</key>
 	<integer>0</integer>
-	<key>Wiki-style Link Parser Extension -&gt; Service Enabled</key>
-	<integer>0</integer>
 	<key>Wiki-style Link Parser Extension -&gt; Link Prefixes</key>
+	<integer>0</integer>
+	<key>Wiki-style Link Parser Extension -&gt; Service Enabled</key>
 	<integer>0</integer>
 	<key>Window -&gt; Main Window -&gt; Member List is Visible</key>
 	<integer>0</integer>
-	<key>Window -&gt; Main Window -&gt; Server List is Visible</key>
-	<integer>0</integer>
 	<key>Window -&gt; Main Window -&gt; Server List Selection</key>
+	<integer>0</integer>
+	<key>Window -&gt; Main Window -&gt; Server List is Visible</key>
 	<integer>0</integer>
 	<key>Window -&gt; Main Window -&gt; Split Channel View Saved Frames</key>
 	<integer>0</integer>
 	<key>World Controller Client Configurations</key>
+	<integer>0</integer>
+	<key>com.adiumX.AutoHyperlinks.permittedSchemes</key>
+	<integer>0</integer>
+	<key>com.adiumX.AutoHyperlinks.permittedSchemesAny</key>
+	<integer>0</integer>
+	<key>com.adiumX.AutoHyperlinks.permittedSchemesDefault</key>
 	<integer>0</integer>
 </dict>
 </plist>

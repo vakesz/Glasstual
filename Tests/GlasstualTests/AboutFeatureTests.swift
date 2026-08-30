@@ -6,7 +6,7 @@
 import AppKit
 @testable import Glasstual
 import SwiftUI
-import XCTest
+import Testing
 
 @MainActor
 private final class AboutDialogDelegateSpy: NSObject, AboutDialogDelegate {
@@ -18,46 +18,48 @@ private final class AboutDialogDelegateSpy: NSObject, AboutDialogDelegate {
 }
 
 @MainActor
-final class AboutFeatureTests: XCTestCase {
-	func testContentUsesGeneratedApplicationMetadataAndLocalizedCopy() {
+@Suite("About dialog")
+struct AboutFeatureTests {
+	@Test("The about panel's copy is built from the generated application metadata")
+	func contentUsesGeneratedApplicationMetadataAndLocalizedCopy() {
 		let content = AboutContent.current
 
-		XCTAssertEqual(content.applicationName, ApplicationInfo.applicationNameWithoutVersion())
-		XCTAssertTrue(content.versionDescription.contains(ApplicationInfo.applicationVersionShort()))
-		XCTAssertFalse(content.upstreamAttribution.isEmpty)
-		XCTAssertFalse(content.acknowledgementsButtonTitle.isEmpty)
-		XCTAssertTrue(content.applicationIconAccessibilityLabel.contains(content.applicationName))
+		#expect(content.applicationName == ApplicationInfo.applicationNameWithoutVersion())
+		#expect(content.versionDescription.contains(ApplicationInfo.applicationVersionShort()))
+		#expect(content.upstreamAttribution.isEmpty == false)
+		#expect(content.acknowledgementsButtonTitle.isEmpty == false)
+		#expect(content.applicationIconAccessibilityLabel.contains(content.applicationName))
 	}
 
-	func testDialogPreservesRuntimeAndWindowContracts() {
-		XCTAssertEqual(NSStringFromClass(AboutDialog.self), "TDCAboutDialog")
-		XCTAssertNotNil(NSProtocolFromString("TDCAboutDialogDelegate"))
-		XCTAssertTrue(AboutDialog.instancesRespond(to: NSSelectorFromString("show")))
-		XCTAssertTrue(AboutDialog.instancesRespond(to: NSSelectorFromString("close")))
-		XCTAssertTrue(AboutDialog.instancesRespond(to: NSSelectorFromString("ok:")))
-		XCTAssertTrue(AboutDialog.instancesRespond(to: NSSelectorFromString("cancel:")))
-		XCTAssertTrue(AboutDialog.instancesRespond(to: NSSelectorFromString("displayAcknowledgements:")))
-		XCTAssertTrue(AboutDialog.instancesRespond(to: NSSelectorFromString("windowWillClose:")))
+	@Test("The prepared window is a fixed size, non-restorable host for the about view")
+	func dialogPreparesAFixedSizeWindow() {
+		let dialog = AboutDialog()
 
+		let window = dialog.prepareWindow()
+
+		#expect(dialog.window === window)
+		#expect(window.delegate === dialog)
+		#expect(window.contentViewController is NSHostingController<AboutView>)
+		#expect(window.styleMask.contains(.closable))
+		#expect(window.styleMask.contains(.fullSizeContentView))
+		#expect(window.styleMask.contains(.resizable) == false)
+		#expect(window.styleMask.contains(.miniaturizable) == false)
+		#expect(window.isReleasedWhenClosed == false)
+		#expect(window.isRestorable == false)
+		#expect(window.tabbingMode == .disallowed)
+		#expect(window.contentMinSize == NSSize(width: 218, height: 244))
+		#expect(window.contentMaxSize == NSSize(width: 218, height: 244))
+	}
+
+	@Test("Closing the window tells the dialog's delegate")
+	func closingTheWindowNotifiesTheDelegate() {
 		let dialog = AboutDialog()
 		let delegate = AboutDialogDelegateSpy()
 		dialog.delegate = delegate
-		let window = dialog.prepareWindow()
-		XCTAssertIdentical(dialog.window, window)
-
-		XCTAssertTrue(window.delegate === dialog)
-		XCTAssertTrue(window.contentViewController is NSHostingController<AboutView>)
-		XCTAssertTrue(window.styleMask.contains(.closable))
-		XCTAssertTrue(window.styleMask.contains(.fullSizeContentView))
-		XCTAssertFalse(window.styleMask.contains(.resizable))
-		XCTAssertFalse(window.styleMask.contains(.miniaturizable))
-		XCTAssertFalse(window.isReleasedWhenClosed)
-		XCTAssertFalse(window.isRestorable)
-		XCTAssertEqual(window.tabbingMode, .disallowed)
-		XCTAssertEqual(window.contentMinSize, NSSize(width: 218, height: 244))
-		XCTAssertEqual(window.contentMaxSize, NSSize(width: 218, height: 244))
+		_ = dialog.prepareWindow()
 
 		dialog.windowWillClose(Notification(name: NSWindow.willCloseNotification))
-		XCTAssertTrue(delegate.didClose)
+
+		#expect(delegate.didClose)
 	}
 }

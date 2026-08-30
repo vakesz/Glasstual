@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2013 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -39,18 +39,15 @@ import Foundation
 import GlasstualPluginKit
 
 @objc(TPIUserInsights)
-final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, @unchecked Sendable {
+final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling {
 	var subscribedUserInputCommands: [String] {
 		["clones", "namel", "finduser", "brag"]
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
-		Task { @MainActor [weak self] in
-			self?.handleCommand(invocation)
-		}
+		handleCommand(invocation)
 	}
 
-	@MainActor
 	private func handleCommand(_ invocation: PluginCommandInvocation) {
 		guard let channel = invocation.selectedChannel else { return }
 		let command = invocation.command
@@ -238,7 +235,7 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 	}
 }
 
-private enum BragMetric {
+private nonisolated enum BragMetric { // nonisolated: value
 	case channelHalfOperators
 	case channelOperators
 	case channelVoices

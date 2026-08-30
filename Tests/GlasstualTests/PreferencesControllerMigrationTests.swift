@@ -4,78 +4,41 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import ObjectiveC.runtime
-import XCTest
+import Testing
 
 @MainActor
-final class PreferencesControllerMigrationTests: XCTestCase {
-	func testObjectiveCRuntimeNamesRemainStable() {
-		XCTAssertEqual(NSStringFromClass(PreferencesController.self), "TDCPreferencesController")
-		XCTAssertEqual(NSStringFromProtocol(PreferencesControllerDelegate.self), "TDCPreferencesControllerDelegate")
+@Suite("Preferences pane catalog and validation")
+struct PreferencesControllerMigrationTests {
+	/// A pane the sidebar cannot reach is a pane nobody can open.
+	@Test("The catalog covers every declared pane")
+	func paneCatalogCoversEveryDeclaredPane() {
+		#expect(Set(PreferencesPaneCatalog.panes.map(\.identifier)) == Set(PreferencesPaneIdentifier.allCases))
 	}
 
-	func testCallerAndNibSelectorsRemainAvailable() {
-		let selectors = [
-			"show:", "settingsSidebarCatalog", "viewForSettingsPaneIdentifier:", "windowWillClose:",
-			"onAddExcludeKeyword:", "onAddHighlightKeyword:", "onChangedAppearance:",
-			"onChangedChannelViewArrangement:", "onChangedDisableNicknameColorHashing:",
-			"onChangedForwardNoticeTo:", "onChangedHighlightLogging:", "onChangedHighlightType:",
-			"onChangedInlineMediaOption:", "onChangedInputHistoryScheme:",
-			"onChangedMainInputTextViewFontSize:", "onChangedScrollbackSaveLimit:",
-			"onChangedScrollbackVisibleLimit:", "onChangedServerListUnreadBadgeColor:",
-			"onChangedTheme:", "onChangedThemeSelection:", "onChangedTranscriptFolder:",
-			"onChangedUserListModeColor:", "onChangedUserListModeSortOrder:",
-			"onFileTransferDownloadDestinationFolderChanged:",
-			"onFileTransferIPAddressDetectionMethodChanged:", "onModifyUserStyleSheetRules:",
-			"onOpenPathToScripts:", "onOpenPathToTheme:", "onResetPluginApprovals:",
-			"onResetServerListUnreadBadgeColorsToDefault:",
-			"onResetUserListModeColorsToDefaults:", "onSelectNewFont:",
-		]
-		for selector in selectors {
-			XCTAssertTrue(PreferencesController.instancesRespond(to: NSSelectorFromString(selector)), selector)
-		}
-
-		let metaClass: AnyClass? = try? XCTUnwrap(object_getClass(PreferencesController.self))
-		XCTAssertTrue(metaClass.map { class_respondsToSelector(
-			$0,
-			NSSelectorFromString("openProxySettingsInSystemPreferences")
-		) } ?? false)
+	@Test("A plugin identifier round trips, and a malformed one is rejected")
+	func pluginIdentifiersRoundTripAndRejectMalformedValues() {
+		#expect(PreferencesPaneCatalog.pluginIdentifier(at: 7) == "plugin-7")
+		#expect(PreferencesPaneCatalog.pluginIndex(from: "plugin-7") == 7)
+		#expect(PreferencesPaneCatalog.pluginIndex(from: "plugin-seven") == nil)
+		#expect(PreferencesPaneCatalog.pluginIndex(from: "general") == nil)
 	}
 
-	func testPaneCatalogKeepsEveryBuiltInPaneAndCompatibilityEntry() {
-		XCTAssertEqual(PreferencesPaneCatalog.panes.count, 19)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "general")?.group, .main)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "addons")?.group, .addOns)
-		XCTAssertEqual(
-			PreferencesPaneCatalog.descriptor(for: "compatibility")?.contentViewKey,
-			"contentViewCompatibility"
+	@Test("Numeric preferences are clamped to their established bounds")
+	func numericValidationKeepsEstablishedBounds() {
+		#expect(PreferencesValueValidation.clamped(1, to: PreferencesValueValidation.scrollbackSaveRange) == 100)
+		#expect(
+			PreferencesValueValidation.clamped(80000, to: PreferencesValueValidation.scrollbackSaveRange)
+				== 50000
 		)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "hidden")?.group, .advanced)
-		XCTAssertEqual(Set(PreferencesPaneCatalog.panes.map(\.identifier)), Set(PreferencesPaneIdentifier.allCases))
-	}
-
-	func testPluginIdentifiersRoundTripAndRejectMalformedValues() {
-		XCTAssertEqual(PreferencesPaneCatalog.pluginIdentifier(at: 7), "plugin-7")
-		XCTAssertEqual(PreferencesPaneCatalog.pluginIndex(from: "plugin-7"), 7)
-		XCTAssertNil(PreferencesPaneCatalog.pluginIndex(from: "plugin-seven"))
-		XCTAssertNil(PreferencesPaneCatalog.pluginIndex(from: "general"))
-	}
-
-	func testNumericValidationKeepsEstablishedBounds() {
-		XCTAssertEqual(PreferencesValueValidation.clamped(1, to: PreferencesValueValidation.scrollbackSaveRange), 100)
-		XCTAssertEqual(
-			PreferencesValueValidation.clamped(80000, to: PreferencesValueValidation.scrollbackSaveRange),
-			50000
-		)
-		XCTAssertEqual(
+		#expect(
 			PreferencesValueValidation
-				.clamped(0, to: PreferencesValueValidation.scrollbackVisibleRange, allowingZero: true),
-			0
+				.clamped(0, to: PreferencesValueValidation.scrollbackVisibleRange, allowingZero: true)
+				== 0
 		)
-		XCTAssertEqual(PreferencesValueValidation.clamped(1, to: PreferencesValueValidation.inlineMediaWidthRange), 40)
-		XCTAssertEqual(
-			PreferencesValueValidation.clamped(70000, to: PreferencesValueValidation.fileTransferPortRange),
-			65535
+		#expect(PreferencesValueValidation.clamped(1, to: PreferencesValueValidation.inlineMediaWidthRange) == 40)
+		#expect(
+			PreferencesValueValidation.clamped(70000, to: PreferencesValueValidation.fileTransferPortRange)
+				== 65535
 		)
 	}
 }

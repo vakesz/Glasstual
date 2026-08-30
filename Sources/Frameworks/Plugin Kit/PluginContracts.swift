@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -43,72 +43,82 @@ public enum PluginCompatibility {
 }
 
 /// Marker protocol for every Swift plugin loaded by Glasstual.
+///
+/// Every callback in this file is main-actor isolated: plugins are loaded into
+/// the application process and talk to live UI and IRC models, so the host has
+/// no other place to call them from.
+@MainActor
 public protocol GlasstualPlugin: AnyObject {
-	@MainActor
 	func pluginLoaded(using host: PluginHostContext)
 
-	@MainActor
 	func pluginWillUnload()
 }
 
 public extension GlasstualPlugin {
-	@MainActor
 	func pluginLoaded(using _: PluginHostContext) {}
 
-	@MainActor
 	func pluginWillUnload() {}
 }
 
+@MainActor
 public protocol PluginPreferencesProviding: AnyObject {
-	@MainActor
 	var pluginPreferencesPaneMenuItemName: String { get }
 
-	@MainActor
-	var pluginPreferencesPaneView: NSView { get }
+	/// `nil` when the plugin's interface file failed to load.
+	var pluginPreferencesPaneView: NSView? { get }
 }
 
+@MainActor
 public protocol PluginTextEventHandling: AnyObject {
-	@MainActor
 	func receivedText(_ event: PluginTextEvent) -> Bool
 }
 
+@MainActor
 public protocol PluginCommandHandling: AnyObject {
 	var subscribedUserInputCommands: [String] { get }
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation)
 }
 
+@MainActor
 public protocol PluginIncomingCommandHandling: AnyObject {
-	@MainActor
 	func receivedCommand(_ event: PluginIncomingCommandEvent) -> Bool
 }
 
+@MainActor
 public protocol PluginServerInputHandling: AnyObject {
 	var subscribedServerInputCommands: [String] { get }
 	func didReceiveServerInput(_ input: PluginServerInput, client: PluginClient)
 }
 
+@MainActor
 public protocol PluginServerMessageIntercepting: AnyObject {
-	@MainActor
 	func interceptServerInput(_ message: PluginServerMessage, client: PluginClient) -> PluginServerMessage?
 }
 
-public protocol PluginMessageRendering: AnyObject {
-	func willRenderMessage(_ event: PluginRenderEvent) -> String?
+/// The one callback the host cannot make on the main actor: message bodies are
+/// rendered on a background queue by a synchronous renderer. Its event is a
+/// `Sendable` value and its result is a `String`, so an implementation only has
+/// to keep its own state safe.
+public protocol PluginMessageRendering: AnyObject, Sendable {
+	nonisolated func willRenderMessage(_ event: PluginRenderEvent) -> String? // nonisolated: pure
 }
 
+@MainActor
 public protocol PluginUserInputIntercepting: AnyObject {
-	@MainActor
 	func interceptUserInput(_ input: PluginUserInput) -> Any?
 }
 
+@MainActor
 public protocol PluginPostedMessageHandling: AnyObject {
 	func didPostNewMessage(_ message: PluginPostedMessage)
 }
 
+@MainActor
 public protocol PluginJavaScriptPayloadHandling: AnyObject {
 	func didReceiveJavaScriptPayload(_ payload: PluginJavaScriptPayload)
 }
 
+@MainActor
 public protocol PluginOutputSuppressionProviding: AnyObject {
 	var pluginOutputSuppressionRules: [PluginOutputSuppressionRule] { get }
 }

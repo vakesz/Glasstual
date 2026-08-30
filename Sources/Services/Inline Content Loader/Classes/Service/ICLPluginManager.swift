@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,87 +37,32 @@
 
 import Foundation
 import InlineContentKit
-import os
 
-@objc(ICLPluginManager)
-final class InlineContentPluginManager: NSObject, @unchecked Sendable {
-	@objc(sharedPluginManager)
-	static let shared = InlineContentPluginManager()
+/// The modules the service can run, fixed at build time.
+///
+/// Modules used to arrive from `.mediaPlugin` bundles discovered under the
+/// service's `Extensions` directory. Nothing outside this repository could
+/// supply one, and the indirection required the service binary to export every
+/// symbol so a loaded bundle could resolve them, so the only plugin — Core
+/// Media — is linked into the service and listed here. Being a `let`, the table
+/// needs neither a load step nor a lock: it is built once, on first use.
+enum InlineContentModuleRegistry {
+	static let modules: [any InlineContentModule.Type] = CoreMediaPlugin.modules + [AssessedMediaModule.self]
 
-	private static let logger = Logger(
-		subsystem: "com.vakesz.glasstual.InlineContentLoader",
-		category: "Plugins"
-	)
+	/// The modules a host can be served by. Lookups use a lowercased host, so
+	/// the keys are lowercased too; `*` collects the modules that claim no
+	/// domain of their own.
+	static let modulesByDomain: [String: [any InlineContentModule.Type]] = {
+		var mapped: [String: [any InlineContentModule.Type]] = [:]
 
-	private var pluginsLoaded = false
-	private var loadedPlugins: [Bundle] = []
-	private var loadedModules: [AnyClass] = []
+		for module in modules {
+			let domains = module.domains
 
-	@objc func loadBundledPlugins() {
-		precondition(!pluginsLoaded, "Plugins already loaded")
-		defer { pluginsLoaded = true }
-
-		guard let pluginsURL = Bundle.main.url(forResource: "Extensions", withExtension: nil) else {
-			Self.logger.error("The bundled Extensions directory is missing")
-			return
+			for domain in domains?.isEmpty == false ? domains! : ["*"] {
+				mapped[domain.lowercased(), default: []].append(module)
+			}
 		}
 
-		loadedPlugins = loadPlugins(at: pluginsURL)
-		populateModules()
-	}
-
-	@objc var modules: [AnyClass] {
-		loadedModules
-	}
-
-	private func loadPlugins(at directoryURL: URL) -> [Bundle] {
-		let contents: [URL]
-		do {
-			contents = try FileManager.default.contentsOfDirectory(
-				at: directoryURL,
-				includingPropertiesForKeys: nil,
-				options: [.skipsHiddenFiles]
-			)
-		} catch {
-			Self.logger.error("Failed to list plugins: \(error.localizedDescription, privacy: .public)")
-			return []
-		}
-
-		return contents
-			.filter { $0.pathExtension == "mediaPlugin" }
-			.compactMap(loadPlugin)
-	}
-
-	private func loadPlugin(at pluginURL: URL) -> Bundle? {
-		guard let bundle = Bundle(url: pluginURL) else { return nil }
-		guard let principalClass = bundle.principalClass else {
-			Self.logger.error(
-				"Failed to load bundle '\(pluginURL.standardizedFileURL.path, privacy: .public)' because its principal class is missing"
-			)
-			return nil
-		}
-		guard principalClass.conforms(to: InlineContentPlugin.self) else {
-			Self.logger.error(
-				"Failed to load bundle '\(pluginURL.standardizedFileURL.path, privacy: .public)' because its principal class does not conform to ICLPluginProtocol"
-			)
-			return nil
-		}
-
-		return bundle
-	}
-
-	private func populateModules() {
-		if loadedPlugins.isEmpty {
-			Self.logger.info("No plugins to load modules from")
-			loadedModules = []
-			return
-		}
-
-		var modules: [AnyClass] = []
-		for plugin in loadedPlugins {
-			guard let principalClass = plugin.principalClass as? InlineContentPlugin.Type else { continue }
-			modules.append(contentsOf: principalClass.modules)
-		}
-		loadedModules = modules
-	}
+		return mapped
+	}()
 }

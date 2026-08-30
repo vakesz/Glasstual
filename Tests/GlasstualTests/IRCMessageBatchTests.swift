@@ -1,15 +1,9 @@
-@testable import Glasstual
-import XCTest
-
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "IRCMessage.h"
-/** *********************************************************************
+/*  *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -40,93 +34,85 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
-class IRCMessageBatchTests: XCTestCase {
-	@objc
-	func batchWithToken(_ token: String) -> MessageBatch {
-		let batch = MessageBatch()
 
-		batch.batchToken = token
+import Foundation
+@testable import Glasstual
+import Testing
 
-		return batch
-	}
-
-	@objc
-	func testContainerQueuesAndDequeuesBatchesByToken() {
+@MainActor
+@Suite("IRC message batches")
+struct IRCMessageBatchTests {
+	@Test("A batch is found by its token until it is dequeued")
+	func containerQueuesAndDequeuesBatchesByToken() throws {
 		let container = MessageBatchContainer()
 		let batch = batchWithToken("history-1")
-		guard let message = Message(line: ":nick!user@host PRIVMSG #channel :hello") else {
-			XCTFail("Expected a valid IRC message")
-			return
-		}
+		let message = try #require(Message(line: ":nick!user@host PRIVMSG #channel :hello"))
 
 		batch.queueEntry(message)
 
 		container.queueEntry(batch)
 
-		XCTAssertTrue(container.queuedEntry(withBatchToken: "history-1") === batch)
+		#expect(container.queuedEntry(withBatchToken: "history-1") === batch)
 
-		XCTAssertTrue(container.queuedEntries["history-1"] === batch)
-		XCTAssertTrue(batch.queuedEntries.first as? Message === message)
+		#expect(container.queuedEntries["history-1"] === batch)
+		#expect(batch.queuedEntries.first?.object as? Message === message)
 
-		container.dequeueEntry("history-1")
+		container.dequeueEntry(withBatchToken: "history-1")
 
-		XCTAssertNil(container.queuedEntry(withBatchToken: "history-1"))
+		#expect(container.queuedEntry(withBatchToken: "history-1") == nil)
 
-		XCTAssertEqual(batch.queuedEntries.count, 0)
+		#expect(batch.queuedEntries.count == 0)
 	}
 
-	@objc
-	func testBatchAcceptsMessagesAndNestedBatchesOnly() {
+	@Test("A batch keeps its messages and its nested batches in the order they arrived")
+	func batchKeepsMessagesAndNestedBatchesInOrder() throws {
 		let parent = batchWithToken("parent")
 		let child = batchWithToken("child")
-		guard
-			let first = Message(line: "PING :first"),
-			let second = Message(line: "PING :second")
-		else {
-			XCTFail("Expected valid IRC messages")
-			return
-		}
+		let first = try #require(Message(line: "PING :first"))
+		let second = try #require(Message(line: "PING :second"))
 
 		child.parentBatchMessage = parent
 
 		parent.queueEntry(first)
 		parent.queueEntry(first)
-		parent.queueEntry("invalid")
 		parent.queueEntry(child)
 		parent.queueEntry(second)
 
-		XCTAssertEqual(parent.queuedEntries.count, 4)
-		XCTAssertTrue(parent.queuedEntries[0] as? Message === first)
-		XCTAssertTrue(parent.queuedEntries[1] as? Message === first)
-		XCTAssertTrue(parent.queuedEntries[2] as? MessageBatch === child)
-		XCTAssertTrue(parent.queuedEntries[3] as? Message === second)
+		#expect(parent.queuedEntries.count == 4)
+		#expect(parent.queuedEntries[0].object as? Message === first)
+		#expect(parent.queuedEntries[1].object as? Message === first)
+		#expect(parent.queuedEntries[2].object as? MessageBatch === child)
+		#expect(parent.queuedEntries[3].object as? Message === second)
 
-		XCTAssertTrue(child.parentBatchMessage === parent)
+		#expect(child.parentBatchMessage === parent)
 
 		parent.dequeueEntry(first)
 		parent.dequeueEntry(child)
 
-		XCTAssertTrue(parent.queuedEntries.first as? Message === second)
+		#expect(parent.queuedEntries.first?.object as? Message === second)
 	}
 
-	@objc
-	func testContainerIgnoresNonBatchEntriesAndDequeueAllKeepsBatchContents() {
+	@Test("Emptying the container leaves the batches it held with their contents")
+	func dequeuingEveryBatchKeepsTheirContents() throws {
 		let container = MessageBatchContainer()
 		let batch = batchWithToken("batch")
-		guard let message = Message(line: "PING :token") else {
-			XCTFail("Expected a valid IRC message")
-			return
-		}
+		let message = try #require(Message(line: "PING :token"))
 
 		batch.queueEntry(message)
 
-		container.queueEntry("invalid")
 		container.queueEntry(batch)
 		container.dequeueEntries()
 
-		XCTAssertEqual(container.queuedEntries.count, 0)
+		#expect(container.queuedEntries.count == 0)
 
-		XCTAssertTrue(batch.queuedEntries.first as? Message === message)
+		#expect(batch.queuedEntries.first?.object as? Message === message)
+	}
+
+	private func batchWithToken(_ token: String) -> MessageBatch {
+		let batch = MessageBatch()
+
+		batch.batchToken = token
+
+		return batch
 	}
 }

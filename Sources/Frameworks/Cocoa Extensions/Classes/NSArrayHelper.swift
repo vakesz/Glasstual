@@ -32,33 +32,22 @@
 
 import Foundation
 
-private let mutableArrayMutationLock = NSRecursiveLock()
-
 private func arraySnapshot(_ array: NSArray) -> [Any] {
-	let snapshot = {
-		guard let snapshot = array.copy() as? NSArray else {
-			return array.map(\.self)
-		}
-		return snapshot.map(\.self)
+	/* A caller may hand this an array another thread is mutating, so the values
+	 are read out of a snapshot rather than the array itself. */
+	guard let snapshot = array.copy() as? NSArray else {
+		return array.map(\.self)
 	}
-	if array is NSMutableArray {
-		return mutableArrayMutationLock.withLock(snapshot)
-	}
-	return snapshot()
+
+	return snapshot.map(\.self)
 }
 
 private func arrayObject(at index: Int, in array: NSArray) -> Any {
-	if array is NSMutableArray {
-		return mutableArrayMutationLock.withLock { array.object(at: index) }
-	}
-	return array.object(at: index)
+	array.object(at: index)
 }
 
 private func arrayCount(_ array: NSArray) -> Int {
-	if array is NSMutableArray {
-		return mutableArrayMutationLock.withLock { array.count }
-	}
-	return array.count
+	array.count
 }
 
 private func indices(count: Int, options: NSEnumerationOptions) -> AnySequence<Int> {
@@ -69,12 +58,10 @@ private func indices(count: Int, options: NSEnumerationOptions) -> AnySequence<I
 }
 
 public extension NSArray {
-	@objc(unsignedIntegerAtIndex:)
 	func ce_unsignedInteger(at index: UInt) -> UInt {
 		(arrayObject(at: Int(index), in: self) as? NSNumber)?.uintValue ?? 0
 	}
 
-	@objc(doubleAtIndex:)
 	func ce_double(at index: UInt) -> Double {
 		switch arrayObject(at: Int(index), in: self) {
 		case let number as NSNumber:
@@ -86,7 +73,6 @@ public extension NSArray {
 		}
 	}
 
-	@objc(containsObjectIgnoringCase:)
 	func ce_containsObjectIgnoringCase(_ candidate: AnyObject) -> Bool {
 		arraySnapshot(self).contains { value in
 			guard let object = value as? NSObject else { return false }
@@ -94,28 +80,25 @@ public extension NSArray {
 		}
 	}
 
-	@objc var range: NSRange {
+	var range: NSRange {
 		NSRange(location: 0, length: arrayCount(self))
 	}
 
-	@objc var stringArrayControllerObjects: [NSDictionary] {
+	var stringArrayControllerObjects: [NSDictionary] {
 		arraySnapshot(self).compactMap { object in
 			guard let string = object as? String else { return nil }
 			return ["string": string] as NSDictionary
 		}
 	}
 
-	@objc(arrayByRemovingEmptyValues)
 	func ce_arrayByRemovingEmptyValues() -> [Any] {
 		ce_arrayByRemovingEmptyValues(true, trimming: false, uniquing: false)
 	}
 
-	@objc(arrayByRemovingEmptyValuesAndUniquing)
 	func ce_arrayByRemovingEmptyValuesAndUniquing() -> [Any] {
 		ce_arrayByRemovingEmptyValues(true, trimming: false, uniquing: true)
 	}
 
-	@objc(arrayByRemovingEmptyValues:trimming:uniquing:)
 	func ce_arrayByRemovingEmptyValues(
 		_ removeEmptyValues: Bool,
 		trimming trimValues: Bool,
@@ -129,7 +112,7 @@ public extension NSArray {
 		for sourceValue in values {
 			let value = trimValues ? Self.ce_trimmedValue(sourceValue) : sourceValue
 
-			if removeEmptyValues, Self.ce_isEmpty(value) {
+			if removeEmptyValues, isEmptyValue(value) {
 				continue
 			}
 			if uniqueValues, result.contains(where: { ($0 as AnyObject).isEqual(value) }) {
@@ -140,14 +123,12 @@ public extension NSArray {
 		return result
 	}
 
-	@objc(objectPassingTest:)
 	func ce_objectPassingTest(
 		_ predicate: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Bool
 	) -> Any? {
 		ce_objectPassingTest(predicate, withOptions: [])
 	}
 
-	@objc(objectPassingTest:withOptions:)
 	func ce_objectPassingTest(
 		_ predicate: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Bool,
 		withOptions options: NSEnumerationOptions
@@ -168,7 +149,6 @@ public extension NSArray {
 		return nil
 	}
 
-	@objc(enumerateSubarraysOfSize:usingBlock:)
 	func ce_enumerateSubarrays(
 		ofSize subarraySize: UInt,
 		using block: (NSArray, UnsafeMutablePointer<ObjCBool>) -> Void
@@ -176,7 +156,6 @@ public extension NSArray {
 		ce_enumerateSubarrays(ofSize: subarraySize, using: block, withOptions: [])
 	}
 
-	@objc(enumerateSubarraysOfSize:usingBlock:withOptions:)
 	func ce_enumerateSubarrays(
 		ofSize subarraySize: UInt,
 		using block: (NSArray, UnsafeMutablePointer<ObjCBool>) -> Void,
@@ -204,14 +183,12 @@ public extension NSArray {
 		}
 	}
 
-	@objc(arrayByApplyingBlock:)
 	func ce_arrayByApplying(
 		_ block: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Any
 	) -> [Any] {
 		ce_arrayByApplying(block, withOptions: [])
 	}
 
-	@objc(arrayByApplyingBlock:withOptions:)
 	func ce_arrayByApplying(
 		_ block: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Any,
 		withOptions options: NSEnumerationOptions
@@ -231,97 +208,8 @@ public extension NSArray {
 		return result
 	}
 
-	private static func ce_isEmpty(_ value: Any) -> Bool {
-		if value is NSNull {
-			return true
-		}
-		if let string = value as? String {
-			return string.isEmpty
-		}
-		if let data = value as? Data {
-			return data.isEmpty
-		}
-		if let array = value as? NSArray {
-			return array.count == 0
-		}
-		if let dictionary = value as? NSDictionary {
-			return dictionary.count == 0
-		}
-		if let set = value as? NSSet {
-			return set.count == 0
-		}
-		if let orderedSet = value as? NSOrderedSet {
-			return orderedSet.count == 0
-		}
-		if let indexSet = value as? NSIndexSet {
-			return indexSet.count == 0
-		}
-		if let attributedString = value as? NSAttributedString {
-			return attributedString.length == 0
-		}
-		if let hashTable = value as? NSHashTable<AnyObject> {
-			return hashTable.count == 0
-		}
-		if let mapTable = value as? NSMapTable<AnyObject, AnyObject> {
-			return mapTable.count == 0
-		}
-		if let pointerArray = value as? NSPointerArray {
-			return pointerArray.count == 0
-		}
-		if let collection = value as? any Collection {
-			return collection.isEmpty
-		}
-		return false
-	}
-
 	private static func ce_trimmedValue(_ value: Any) -> Any {
 		guard let string = value as? NSString else { return value }
-		return string.ceTrim
-	}
-}
-
-public extension NSMutableArray {
-	@objc(addObjectWithoutDuplication:)
-	func ce_addObjectWithoutDuplication(_ object: Any) {
-		mutableArrayMutationLock.withLock {
-			if !contains(object) {
-				add(object)
-			}
-		}
-	}
-
-	@objc(performSelectorOnObjectValueAndReplace:)
-	func ce_performSelectorOnObjectValueAndReplace(_ selector: Selector) {
-		mutableArrayMutationLock.withLock {
-			guard count > 0 else { return }
-			let values = map(\.self)
-			for (index, value) in values.enumerated() {
-				guard let receiver = value as? NSObject, receiver.responds(to: selector) else {
-					preconditionFailure("Object does not respond to \(NSStringFromSelector(selector))")
-				}
-				guard let replacement = receiver.perform(selector)?.takeUnretainedValue() else {
-					preconditionFailure("Selector \(NSStringFromSelector(selector)) returned nil")
-				}
-				replaceObject(at: index, with: replacement)
-			}
-		}
-	}
-
-	@objc func shuffle() {
-		mutableArrayMutationLock.withLock {
-			guard count > 1 else { return }
-			for index in stride(from: count - 1, through: 1, by: -1) {
-				exchangeObject(at: index, withObjectAt: Int.random(in: 0 ... index))
-			}
-		}
-	}
-
-	@objc(moveObjectAtIndex:toIndex:)
-	func ce_moveObject(at fromIndex: UInt, to toIndex: UInt) {
-		mutableArrayMutationLock.withLock {
-			let object = object(at: Int(fromIndex))
-			removeObject(at: Int(fromIndex))
-			insert(object, at: Int(fromIndex < toIndex ? toIndex - 1 : toIndex))
-		}
+		return string.trimmingCharacters(in: .whitespacesAndNewlines) as NSString
 	}
 }

@@ -6,7 +6,7 @@
 import AppKit
 @testable import Glasstual
 import SwiftUI
-import XCTest
+import Testing
 
 @MainActor
 private final class ChannelTopicDelegateSpy: NSObject, ChannelModifyTopicSheetDelegate {
@@ -23,50 +23,56 @@ private final class ChannelTopicDelegateSpy: NSObject, ChannelModifyTopicSheetDe
 }
 
 @MainActor
-final class ChannelTopicFeatureTests: XCTestCase {
-	func testContentUsesNamespacedLocalizedCopy() {
+@Suite("Channel topic sheet")
+struct ChannelTopicFeatureTests {
+	@Test("The sheet's copy is read from the namespaced catalogue, placeholders included")
+	func contentUsesNamespacedLocalizedCopy() {
 		let content = ChannelTopicContent.current(channelName: "#swift")
 
-		XCTAssertEqual(content.headerTitle, "Topic for #swift:")
-		XCTAssertEqual(content.editorAccessibilityHint, "Edit the topic. IRC text formatting is preserved.")
-		XCTAssertEqual(content.changeButtonTitle, "Change Topic")
-		XCTAssertEqual(content.cancelButtonTitle, "Cancel")
-		XCTAssertEqual(content.windowTitle, "Change Topic")
-		XCTAssertEqual(
-			ChannelTopicStrings.maximumLengthMessage,
-			"If you continue typing, the end of your topic may be cut off."
+		#expect(content.headerTitle == "Topic for #swift:")
+		#expect(content.editorAccessibilityHint == "Edit the topic. IRC text formatting is preserved.")
+		#expect(content.changeButtonTitle == "Change Topic")
+		#expect(content.cancelButtonTitle == "Cancel")
+		#expect(content.windowTitle == "Change Topic")
+		#expect(
+			ChannelTopicStrings.maximumLengthMessage
+				== "If you continue typing, the end of your topic may be cut off."
 		)
-		XCTAssertEqual(
-			ChannelTopicStrings.maximumLengthTitle(networkName: "ExampleNet", maximumLength: 120),
-			"You have exceeded the maximum topic length defined by ExampleNet which is 120 characters"
+		#expect(
+			ChannelTopicStrings.maximumLengthTitle(networkName: "ExampleNet", maximumLength: 120)
+				== "You have exceeded the maximum topic length defined by ExampleNet which is 120 characters"
 		)
 	}
 
-	func testModelWarnsOnlyOnceAfterCrossingNonzeroUTF16Limit() {
+	@Test("The length warning is raised once, on the first crossing of a non-zero limit")
+	func modelWarnsOnlyOnceAfterCrossingNonzeroOctetLimit() {
 		let model = ChannelTopicModel(formattedTopic: "1234", maximumLength: 5)
 
-		XCTAssertEqual(model.formattedTopicLength, 4)
-		XCTAssertFalse(model.updateFormattedTopic("12345"))
-		XCTAssertTrue(model.updateFormattedTopic("123456"))
-		XCTAssertTrue(model.hasPresentedMaximumLengthWarning)
-		XCTAssertFalse(model.updateFormattedTopic("1234567"))
+		#expect(model.formattedTopicLength == 4)
+		#expect(model.updateFormattedTopic("12345") == false)
+		#expect(model.updateFormattedTopic("123456"))
+		#expect(model.hasPresentedMaximumLengthWarning)
+		#expect(model.updateFormattedTopic("1234567") == false)
 
 		let emojiModel = ChannelTopicModel(formattedTopic: "", maximumLength: 1)
-		XCTAssertTrue(emojiModel.updateFormattedTopic("💬"))
-		XCTAssertEqual(emojiModel.formattedTopicLength, 2)
+		#expect(emojiModel.updateFormattedTopic("💬"))
+		// TOPICLEN is an octet count, so an emoji is four, not two.
+		#expect(emojiModel.formattedTopicLength == 4)
 
 		let unlimitedModel = ChannelTopicModel(formattedTopic: "", maximumLength: 0)
-		XCTAssertFalse(unlimitedModel.updateFormattedTopic(String(repeating: "x", count: 1000)))
+		#expect(unlimitedModel.updateFormattedTopic(String(repeating: "x", count: 1000)) == false)
 	}
 
-	func testSubmissionFlattensNewlinesWithoutDiscardingIRCFormatting() {
+	@Test("Submission flattens newlines to spaces without discarding IRC formatting")
+	func submissionFlattensNewlinesWithoutDiscardingIRCFormatting() {
 		let formattedTopic = "first\n\u{02}bold\nlast"
 		let model = ChannelTopicModel(formattedTopic: formattedTopic, maximumLength: 0)
 
-		XCTAssertEqual(model.topicForSubmission, "first \u{02}bold last")
+		#expect(model.topicForSubmission == "first \u{02}bold last")
 	}
 
-	func testEditorCoordinatorSubmitsOnReturnAndConsumesAlternateNewlineCommand() {
+	@Test("Return submits the topic and the alternate newline command is swallowed")
+	func editorCoordinatorSubmitsOnReturnAndConsumesAlternateNewlineCommand() {
 		var formattedText = "topic"
 		var submissionCount = 0
 		let editor = IRCFormattingTopicEditor(
@@ -80,45 +86,23 @@ final class ChannelTopicFeatureTests: XCTestCase {
 		let coordinator = editor.makeCoordinator()
 		let textView = NSTextView()
 
-		XCTAssertTrue(
-			coordinator.textView(textView, doCommandBy: #selector(NSResponder.insertNewline(_:)))
-		)
-		XCTAssertEqual(submissionCount, 1)
-		XCTAssertTrue(
+		#expect(coordinator.textView(textView, doCommandBy: #selector(NSResponder.insertNewline(_:))))
+		#expect(submissionCount == 1)
+		#expect(
 			coordinator.textView(
 				textView,
 				doCommandBy: #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:))
 			)
 		)
-		XCTAssertEqual(submissionCount, 1)
-		XCTAssertFalse(
-			coordinator.textView(textView, doCommandBy: #selector(NSResponder.insertTab(_:)))
-		)
+		#expect(submissionCount == 1)
+		#expect(coordinator.textView(textView, doCommandBy: #selector(NSResponder.insertTab(_:))) == false)
 	}
 
-	func testRuntimeSheetContractSurvivesWithoutANib() {
-		XCTAssertEqual(NSStringFromClass(ChannelModifyTopicSheet.self), "TDCChannelModifyTopicSheet")
-		XCTAssertNotNil(NSProtocolFromString("TDCChannelModifyTopicSheetDelegate"))
-		XCTAssertNil(Bundle.main.path(forResource: "TDCChannelModifyTopicSheet", ofType: "nib"))
-
-		for selectorName in [
-			"initWithChannel:",
-			"start",
-			"ok:",
-			"cancel:",
-			"windowWillClose:",
-		] {
-			XCTAssertTrue(
-				ChannelModifyTopicSheet.instancesRespond(to: NSSelectorFromString(selectorName)),
-				selectorName
-			)
-		}
-	}
-
-	func testAdapterPreservesIdentityFormattedTopicAndTypedDelegateCallbacks() {
+	@Test("The adapter keeps identity, the formatted topic, and the typed delegate callbacks")
+	func adapterPreservesIdentityFormattedTopicAndTypedDelegateCallbacks() {
 		let client = GLTTestClient()
-		let channel = Channel(configDictionary: ["channelName": "#swift"])
-		channel.setValue(client, forKey: "associatedClient")
+		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
+		channel.associatedClient = client
 		channel.topic = "first\n\u{02}bold"
 
 		let adapter = ChannelModifyTopicSheet(channel: channel)
@@ -126,24 +110,24 @@ final class ChannelTopicFeatureTests: XCTestCase {
 		let delegate = ChannelTopicDelegateSpy()
 		adapter.delegate = delegate
 
-		XCTAssertIdentical(adapter.client, client)
-		XCTAssertIdentical(adapter.channel, channel)
-		XCTAssertEqual(channelPrototype.clientId, client.uniqueIdentifier)
-		XCTAssertEqual(channelPrototype.channelId, channel.uniqueIdentifier)
-		XCTAssertEqual(adapter.model.formattedTopic, "first\n\u{02}bold")
-		XCTAssertTrue(adapter.sheet.delegate === adapter)
-		XCTAssertTrue(adapter.sheet.contentViewController is NSHostingController<ChannelTopicView>)
-		XCTAssertFalse(adapter.sheet.styleMask.contains(.resizable))
-		XCTAssertFalse(adapter.sheet.isReleasedWhenClosed)
-		XCTAssertFalse(adapter.sheet.isRestorable)
-		XCTAssertEqual(adapter.sheet.tabbingMode, .disallowed)
-		XCTAssertEqual(adapter.sheet.contentMinSize, NSSize(width: 600, height: 201))
-		XCTAssertEqual(adapter.sheet.contentMaxSize, NSSize(width: 600, height: 201))
+		#expect(adapter.client === client)
+		#expect(adapter.channel === channel)
+		#expect(channelPrototype.clientId == client.uniqueIdentifier)
+		#expect(channelPrototype.channelId == channel.uniqueIdentifier)
+		#expect(adapter.model.formattedTopic == "first\n\u{02}bold")
+		#expect(adapter.sheet.delegate === adapter)
+		#expect(adapter.sheet.contentViewController is NSHostingController<ChannelTopicView>)
+		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
+		#expect(adapter.sheet.isReleasedWhenClosed == false)
+		#expect(adapter.sheet.isRestorable == false)
+		#expect(adapter.sheet.tabbingMode == .disallowed)
+		#expect(adapter.sheet.contentMinSize == NSSize(width: 600, height: 201))
+		#expect(adapter.sheet.contentMaxSize == NSSize(width: 600, height: 201))
 
 		adapter.ok(nil)
-		XCTAssertEqual(delegate.acceptedTopic, "first \u{02}bold")
+		#expect(delegate.acceptedTopic == "first \u{02}bold")
 
 		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
-		XCTAssertTrue(delegate.didClose)
+		#expect(delegate.didClose)
 	}
 }

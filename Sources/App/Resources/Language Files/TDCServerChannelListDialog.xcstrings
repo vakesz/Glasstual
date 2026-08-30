@@ -1,8 +1,8 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "7qf-r0" : {
-      "comment" : "Heading for a server channel list. The argument is the network name.",
+    "channel-list" : {
+      "comment" : "Heading for a server channel list. The argument is the network name. Legacy key: 7qf-r0.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -13,20 +13,8 @@
         }
       }
     },
-    "ct4-wh" : {
-      "comment" : "%@ = channel count.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Channel List — %@ Public Channels"
-          }
-        }
-      }
-    },
-    "u7e-1s" : {
-      "comment" : "Label for the minimum channel member count filter.",
+    "minimum-users" : {
+      "comment" : "Label for the minimum channel member count filter. Legacy key: u7e-1s.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -37,14 +25,28 @@
         }
       }
     },
-    "u7e-2s" : {
-      "comment" : "Help text for the server-side minimum channel member count filter.",
+    "only-list-channels-with-at-least" : {
+      "comment" : "Help text for the server-side minimum channel member count filter. Legacy key: u7e-2s.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Only list channels with at least this many members. The server applies this filter (ELIST)."
+          }
+        }
+      }
+    },
+    "public-channel-count" : {
+      "comment" : "Channel list window title. The argument is the number of public channels. Legacy key: ct4-wh.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "Channel List \u2014 %ld Public Channel" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "Channel List \u2014 %ld Public Channels" } }
+            }
           }
         }
       }

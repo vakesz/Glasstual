@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -36,35 +36,40 @@
  *********************************************************************** */
 
 import Foundation
+import os
 
-@objc(ICLProcessDelegate)
+private let processDelegateLogger = Logger(
+	subsystem: "com.vakesz.glasstual.InlineContentLoader",
+	category: "Process"
+)
+
 final class InlineContentProcessDelegate: NSObject, NSXPCListenerDelegate {
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-		let exportedInterface = NSXPCInterface(with: InlineContentServerProtocol.self)
-		guard let allowedPluginLocationClasses = NSSet(objects: NSArray.self, NSURL.self) as? Set<AnyHashable>
-		else {
-			assertionFailure("Could not construct the XPC plugin-location class set")
-			return false
-		}
-		exportedInterface.setClasses(
-			allowedPluginLocationClasses,
-			for: #selector((any InlineContentServerProtocol).warmServiceByLoadingPlugins(atLocations:)),
-			argumentIndex: 0,
-			ofReply: false
-		)
-
-		connection.exportedInterface = exportedInterface
+		connection.exportedInterface = NSXPCInterface(with: InlineContentServerProtocol.self)
 		connection.remoteObjectInterface = NSXPCInterface(with: InlineContentClientProtocol.self)
 
-		let exportedObject = InlineContentProcess(xpcConnection: connection)
-		connection.exportedObject = exportedObject
-		connection.invalidationHandler = { [weak connection] in
-			exportedObject.connectionInvalidated()
-			connection?.exportedObject = nil
-			connection?.invalidationHandler = nil
+		/* The service owns every piece of mutable state. The connection stays out
+		 here — it is not Sendable — and only the client proxy, which is, crosses
+		 into the actor. */
+		let service = InlineContentService()
+
+		connection.exportedObject = InlineContentProcess(service: service, connection: connection)
+
+		guard let client = connection.remoteObjectProxy as? any InlineContentClientProtocol else {
+			processDelegateLogger.error("Client does not conform to the inline content client protocol")
+
+			return false
 		}
 
+		/* An interrupted (rather than invalidated) client leaves in-flight
+		 modules running against a dead proxy, so both paths detach. */
+		connection.interruptionHandler = { Task { await service.detach() } }
+		connection.invalidationHandler = { Task { await service.detach() } }
+
+		Task { await service.attach(client: client) }
+
 		connection.resume()
+
 		return true
 	}
 }

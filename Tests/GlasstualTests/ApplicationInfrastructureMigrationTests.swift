@@ -5,7 +5,7 @@
 
 import AppKit
 @testable import Glasstual
-import XCTest
+import Testing
 
 private final class RegisteredWindowSpy: NSWindow {
 	private(set) var orderFrontCount = 0
@@ -16,72 +16,47 @@ private final class RegisteredWindowSpy: NSWindow {
 }
 
 @MainActor
-final class ApplicationInfrastructureMigrationTests: XCTestCase {
-	func testObjectiveCRuntimeNamesRemainAvailable() {
-		XCTAssertNotNil(NSClassFromString("TXApplication"))
-		XCTAssertNotNil(NSClassFromString("TXAppearance"))
-		XCTAssertEqual(NSStringFromClass(ApplicationController.self), "TXMasterController")
-		XCTAssertNotNil(NSClassFromString("TXWindowController"))
+@Suite("Application infrastructure")
+struct ApplicationInfrastructureMigrationTests {
+	/** Custom key-down handling used to be looked up by selector and called
+	 through a bit-cast IMP. It is a Swift protocol now, so the contract is that
+	 the classes offered the event conform to it. */
+	@Test("Every class offered a key-down event conforms to the responder protocol")
+	func customKeyboardEventRespondersConformToTheProtocol() {
+		#expect((Application.self as Any.Type) is any CustomKeyboardEventResponder.Type)
+		#expect((MainWindow.self as Any.Type) is any CustomKeyboardEventResponder.Type)
+		#expect((TextViewWithIRCFormatter.self as Any.Type) is any CustomKeyboardEventResponder.Type)
 	}
 
-	func testApplicationControllerKeepsLegacyObjectiveCSelectors() {
-		let selector = NSSelectorFromString("masterController")
-
-		XCTAssertTrue(NSObject.instancesRespond(to: selector))
-		XCTAssertTrue(NSObject.responds(to: selector))
-		XCTAssertTrue(
-			NSObject.responds(to: NSSelectorFromString("setGlobalMasterControllerClassReference:"))
-		)
-	}
-
-	func testApplicationResponderSelectorsRemainAvailable() {
-		XCTAssertTrue(Application.responds(to: NSSelectorFromString("checkForOtherCopiesOfGlasstualRunning")))
-		XCTAssertTrue(Application.instancesRespond(to: NSSelectorFromString("performedCustomKeyboardEvent:")))
-		XCTAssertTrue(Application.instancesRespond(to: NSSelectorFromString("sendCustomKeyboardEvent:toObject:")))
-	}
-
-	func testWindowControllerSelectorsRemainAvailable() {
-		let selectors = [
-			"addWindowToWindowList:",
-			"addWindowToWindowList:inRelationTo:",
-			"addWindowToWindowList:withDescription:",
-			"removeWindowFromWindowList:",
-			"removeWindowFromWindowList:inRelationTo:",
-			"windowFromWindowList:",
-			"windowsFromWindowList:",
-			"maybeBringWindowForward:",
-			"popMainWindowSheetIfExists",
-		]
-
-		for selector in selectors {
-			XCTAssertTrue(WindowController.instancesRespond(to: NSSelectorFromString(selector)), selector)
-		}
-	}
-
-	func testWindowControllerStoresAndRemovesWindowsByIdentity() {
+	@Test("A window is looked up by its description and removed by identity")
+	func windowControllerStoresAndRemovesWindowsByIdentity() {
 		let registry = WindowController()
 		let controller = WindowBase()
 		controller.window = RegisteredWindowSpy()
 
 		registry.addWindow(toWindowList: controller, withDescription: "custom-window")
 
-		XCTAssertTrue(registry.window(fromWindowList: "custom-window") as? WindowBase === controller)
+		#expect(registry.window(fromWindowList: "custom-window") as? WindowBase === controller)
+
 		registry.removeWindow(fromWindowList: controller)
-		XCTAssertNil(registry.window(fromWindowList: "custom-window"))
+
+		#expect(registry.window(fromWindowList: "custom-window") == nil)
 	}
 
-	func testWindowControllerBringsForwardTypedWindowWithoutKVC() {
+	@Test("Bringing a registered window forward orders its typed window front")
+	func windowControllerBringsForwardTypedWindowWithoutKVC() {
 		let registry = WindowController()
 		let controller = WindowBase()
 		let window = RegisteredWindowSpy()
 		controller.window = window
 		registry.addWindow(toWindowList: controller, withDescription: "typed-window")
 
-		XCTAssertTrue(registry.maybeBringWindowForward("typed-window"))
-		XCTAssertEqual(window.orderFrontCount, 1)
+		#expect(registry.maybeBringWindowForward("typed-window"))
+		#expect(window.orderFrontCount == 1)
 	}
 
-	func testTerminatedWindowControllerRejectsNewRegistrations() {
+	@Test("A registry that has prepared for termination accepts no more windows")
+	func terminatedWindowControllerRejectsNewRegistrations() {
 		let registry = WindowController()
 		let controller = WindowBase()
 		controller.window = RegisteredWindowSpy()
@@ -90,18 +65,20 @@ final class ApplicationInfrastructureMigrationTests: XCTestCase {
 		registry.prepareForApplicationTermination()
 		registry.addWindow(toWindowList: controller, withDescription: "window")
 
-		XCTAssertNil(registry.window(fromWindowList: "window"))
+		#expect(registry.window(fromWindowList: "window") == nil)
 	}
 
-	func testAppearanceContractRemainsStable() {
-		XCTAssertTrue(Appearance.instancesRespond(to: NSSelectorFromString("updateAppearance")))
-		XCTAssertEqual(
-			Notification.Name.applicationAppearanceChanged.rawValue,
-			"TXApplicationAppearanceChangedNotification"
+	/// Three call sites observe these by literal name rather than through the
+	/// declared constants, so the raw values are part of the contract.
+	@Test("The appearance notification names match the literals observers register")
+	func appearanceNotificationNamesMatchTheirObservers() {
+		#expect(
+			Notification.Name.applicationAppearanceChanged.rawValue
+				== "TXApplicationAppearanceChangedNotification"
 		)
-		XCTAssertEqual(
-			Notification.Name.systemAppearanceChanged.rawValue,
-			"TXSystemAppearanceChangedNotification"
+		#expect(
+			Notification.Name.systemAppearanceChanged.rawValue
+				== "TXSystemAppearanceChangedNotification"
 		)
 	}
 }

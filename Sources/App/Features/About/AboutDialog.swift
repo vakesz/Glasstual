@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -36,18 +36,16 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import SwiftUI
 
-@objc(TDCAboutDialogDelegate)
 @MainActor
 public protocol AboutDialogDelegate: NSObjectProtocol {
-	@objc(aboutDialogWillClose:)
 	func aboutDialogWillClose(_ sender: AboutDialog)
 }
 
 @MainActor
-@objc(TDCAboutDialog)
-public final class AboutDialog: WindowBase, NSWindowDelegate, @unchecked Sendable {
+public final class AboutDialog: WindowBase, NSWindowDelegate {
 	private static let contentSize = NSSize(width: 218, height: 244)
 
 	private func makeWindow() -> NSWindow {
@@ -97,24 +95,18 @@ public final class AboutDialog: WindowBase, NSWindowDelegate, @unchecked Sendabl
 		return hostedWindow
 	}
 
-	@objc override public func show() {
-		MainActor.assumeIsolated {
-			showOnMainActor()
-		}
-	}
-
-	private func showOnMainActor() {
+	override public func show() {
 		let window = prepareWindow()
-		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
+		window.ce_restoreState(for: .about)
 		super.show()
 	}
 
 	@IBAction public func displayAcknowledgements(_ sender: Any?) {
-		NSObject.applicationController().menuController?.openAcknowledgements(sender)
+		AppController.shared.menuController?.openAcknowledgements(sender)
 	}
 
-	@objc public func windowWillClose(_: Notification) {
-		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
+	public func windowWillClose(_: Notification) {
+		window.ce_saveState(for: .about)
 		(delegate as? AboutDialogDelegate)?.aboutDialogWillClose(self)
 	}
 }

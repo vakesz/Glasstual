@@ -3,81 +3,92 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class IRCClientOutboundPolicyTests: XCTestCase {
-	func testTypingFinishesForEmptyCommandsAndDisabledNotifications() {
-		XCTAssertTrue(OutboundTypingPolicy.shouldFinish(text: "", notificationsEnabled: true))
-		XCTAssertTrue(OutboundTypingPolicy.shouldFinish(text: "/join #glasstual", notificationsEnabled: true))
-		XCTAssertTrue(OutboundTypingPolicy.shouldFinish(text: "hello", notificationsEnabled: false))
-		XCTAssertFalse(OutboundTypingPolicy.shouldFinish(text: "hello", notificationsEnabled: true))
+@MainActor
+@Suite("Outbound client policies")
+struct IRCClientOutboundPolicyTests {
+	@Test("Typing finishes for an empty line, a command, and a network that does not want notifications")
+	func typingFinishesForEmptyCommandsAndDisabledNotifications() {
+		#expect(OutboundTypingPolicy.shouldFinish(text: "", notificationsEnabled: true))
+		#expect(OutboundTypingPolicy.shouldFinish(text: "/join #glasstual", notificationsEnabled: true))
+		#expect(OutboundTypingPolicy.shouldFinish(text: "hello", notificationsEnabled: false))
+		#expect(OutboundTypingPolicy.shouldFinish(text: "hello", notificationsEnabled: true) == false)
 	}
 
-	func testTypingActiveNotificationIsRateLimitedAtBoundary() {
+	@Test("The active notification is resent only once the interval has fully elapsed")
+	func typingActiveNotificationIsRateLimitedAtBoundary() {
 		let now = Date(timeIntervalSince1970: 100)
-		XCTAssertTrue(OutboundTypingPolicy.shouldSendActive(previousState: nil, lastSentAt: nil, now: now))
-		XCTAssertFalse(OutboundTypingPolicy.shouldSendActive(
-			previousState: "active",
+
+		#expect(OutboundTypingPolicy.shouldSendActive(previousState: nil, lastSentAt: nil, now: now))
+		#expect(OutboundTypingPolicy.shouldSendActive(
+			previousState: .active,
 			lastSentAt: now.addingTimeInterval(-(OutboundTypingPolicy.activeInterval - 0.01)),
 			now: now
-		))
-		XCTAssertTrue(OutboundTypingPolicy.shouldSendActive(
-			previousState: "active",
+		) == false)
+		#expect(OutboundTypingPolicy.shouldSendActive(
+			previousState: .active,
 			lastSentAt: now.addingTimeInterval(-OutboundTypingPolicy.activeInterval),
 			now: now
 		))
 	}
 
-	func testCTCPPayloadFramesAndSanitizesUserText() {
-		XCTAssertEqual(
-			CTCPPayload.framed(command: "VERSION", text: nil, sanitizingLineBreaks: true),
-			"\u{01}VERSION\u{01}"
+	@Test("A CTCP payload is framed and its line breaks flattened")
+	func ctcpPayloadFramesAndSanitizesUserText() {
+		#expect(
+			CTCPPayload.framed(command: "VERSION", text: nil, sanitizingLineBreaks: true) ==
+				"\u{01}VERSION\u{01}"
 		)
-		XCTAssertEqual(
-			CTCPPayload.framed(command: "ACTION", text: "first\r\nsecond", sanitizingLineBreaks: true),
-			"\u{01}ACTION first  second\u{01}"
+		#expect(
+			CTCPPayload.framed(command: "ACTION", text: "first\r\nsecond", sanitizingLineBreaks: true) ==
+				"\u{01}ACTION first  second\u{01}"
 		)
 	}
 
-	func testCommandParserPreservesAttributedArgumentsAfterRemovingCommand() throws {
+	@Test("Removing the command from a typed line leaves the attributed arguments intact")
+	func commandParserPreservesAttributedArgumentsAfterRemovingCommand() throws {
 		let input = NSMutableAttributedString(string: "/MSG nickname hello")
 		input.addAttribute(.init("OutboundPolicyTest"), value: true, range: NSRange(location: 14, length: 5))
 
-		let parsed = try XCTUnwrap(ParsedUserCommand(input))
+		let parsed = try #require(ParsedUserCommand(input))
 
-		XCTAssertEqual(parsed.command, "MSG")
-		XCTAssertEqual(parsed.arguments.string, "nickname hello")
-		XCTAssertEqual(
-			parsed.arguments.attribute(.init("OutboundPolicyTest"), at: 9, effectiveRange: nil) as? Bool,
-			true
+		#expect(parsed.command == "MSG")
+		#expect(parsed.arguments.rest == "nickname hello")
+		#expect(
+			parsed.arguments.attributedRest
+				.attribute(.init("OutboundPolicyTest"), at: 9, effectiveRange: nil) as? Bool == true
 		)
 	}
 
-	func testMessageCommandPolicyPreservesSecretAndOperatorAliases() throws {
-		let secretMessage = try XCTUnwrap(
-			OutboundMessageCommandPolicy(command: "smsg", silentlyConnecting: false)
+	@Test("The secret and operator aliases keep the remote command they stand for")
+	func messageCommandPolicyPreservesSecretAndOperatorAliases() throws {
+		let secretMessage = try #require(
+			OutboundMessageCommandPolicy(command: .smsg, silentlyConnecting: false)
 		)
-		XCTAssertEqual(secretMessage.remoteCommand, .privmsg)
-		XCTAssertTrue(secretMessage.isSecretMessage)
-		XCTAssertFalse(secretMessage.isOperatorMessage)
+		#expect(secretMessage.remoteCommand == .privmsg)
+		#expect(secretMessage.isSecretMessage)
+		#expect(secretMessage.isOperatorMessage == false)
 
-		let operatorNotice = try XCTUnwrap(
-			OutboundMessageCommandPolicy(command: "onotice", silentlyConnecting: false)
+		let operatorNotice = try #require(
+			OutboundMessageCommandPolicy(command: .onotice, silentlyConnecting: false)
 		)
-		XCTAssertEqual(operatorNotice.remoteCommand, .notice)
-		XCTAssertFalse(operatorNotice.isSecretMessage)
-		XCTAssertTrue(operatorNotice.isOperatorMessage)
+		#expect(operatorNotice.remoteCommand == .notice)
+		#expect(operatorNotice.isSecretMessage == false)
+		#expect(operatorNotice.isOperatorMessage)
 	}
 
-	func testSilentConnectOnlyMakesMessageAliasesSecret() throws {
-		let message = try XCTUnwrap(
-			OutboundMessageCommandPolicy(command: "msg", silentlyConnecting: true)
+	@Test("Connecting silently makes a message secret but leaves an action alone")
+	func silentConnectOnlyMakesMessageAliasesSecret() throws {
+		let message = try #require(
+			OutboundMessageCommandPolicy(command: .msg, silentlyConnecting: true)
 		)
-		let action = try XCTUnwrap(
-			OutboundMessageCommandPolicy(command: "me", silentlyConnecting: true)
+		let action = try #require(
+			OutboundMessageCommandPolicy(command: .me, silentlyConnecting: true)
 		)
-		XCTAssertTrue(message.isSecretMessage)
-		XCTAssertFalse(action.isSecretMessage)
+
+		#expect(message.isSecretMessage)
+		#expect(action.isSecretMessage == false)
 	}
 }

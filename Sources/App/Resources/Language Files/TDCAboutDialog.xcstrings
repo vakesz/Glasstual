@@ -13,6 +13,18 @@
         }
       }
     },
+    "application-name-followed" : {
+      "comment" : "Application name followed by its short version. The arguments are the application name and version. Legacy key: zjd-al.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@"
+          }
+        }
+      }
+    },
     "icon-accessibility" : {
       "comment" : "Accessibility label for the application icon. The argument is the application name.",
       "extractionState" : "manual",
@@ -33,18 +45,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fork of Textual for macOS 26+"
-          }
-        }
-      }
-    },
-    "zjd-al" : {
-      "comment" : "Application name followed by its short version. The arguments are the application name and version.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ %@"
           }
         }
       }

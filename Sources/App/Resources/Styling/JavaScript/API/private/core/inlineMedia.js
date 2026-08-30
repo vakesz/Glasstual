@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -86,6 +86,21 @@ InlineMediaPrototype.prototype.hideOnClick = function(mediaId) /* PUBLIC */
 	this.hide(mediaId);
 
 	return false; // Do not perform navigation
+};
+
+/* The identifier is read off the element rather than interpolated into the
+   onclick attribute. HTML escaping does not protect a JavaScript string
+   literal: the HTML parser decodes entities before the JavaScript parser
+   ever sees the attribute. */
+InlineMediaPrototype.prototype.hideOnClickEvent = function(event) /* PUBLIC */
+{
+	var element = (event ? event.currentTarget : null);
+
+	if (!element) {
+		return false; // Do not perform navigation
+	}
+
+	return this.hideOnClick(element.dataset.mediaId);
 };
 
 InlineMediaPrototype.prototype.toggleOnClick = function(mediaId) /* PUBLIC */
@@ -349,6 +364,10 @@ _InlineMediaLoader.processPayload = function(payload) /* PRIVATE */
 		for (var i = 0; i < styleResources.length; i++) {
 			var file = styleResources[i];
 
+			if (Glasstual.resourceFileIsPermitted(file) === false) {
+				continue;
+			}
+
 			if (_InlineMediaLoader._loadedStyleResources.indexOf(file) < 0) {
 				_InlineMediaLoader._loadedStyleResources.push(file);
 
@@ -363,6 +382,10 @@ _InlineMediaLoader.processPayload = function(payload) /* PRIVATE */
 	if (Array.isArray(scriptResources)) {
 		for (var i = 0; i < scriptResources.length; i++) {
 			var file = scriptResources[i];
+
+			if (Glasstual.resourceFileIsPermitted(file) === false) {
+				continue;
+			}
 
 			if (_InlineMediaLoader._loadedScriptResources.indexOf(file) < 0) {
 				_InlineMediaLoader._loadedScriptResources.push(file);

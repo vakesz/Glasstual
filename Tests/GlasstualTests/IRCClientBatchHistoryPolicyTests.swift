@@ -3,34 +3,41 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class IRCClientBatchHistoryPolicyTests: XCTestCase {
-	func testBatchTokenValidationPreservesOpeningAndClosingDirection() {
-		XCTAssertEqual(IRCBatchPolicy.normalizedToken("+history")?.token, "history")
-		XCTAssertEqual(IRCBatchPolicy.normalizedToken("+history")?.opens, true)
-		XCTAssertEqual(IRCBatchPolicy.normalizedToken("-history")?.opens, false)
-		XCTAssertNil(IRCBatchPolicy.normalizedToken("history"))
-		XCTAssertNil(IRCBatchPolicy.normalizedToken("+bad token"))
+@MainActor
+@Suite("Batch and chat history policy")
+struct IRCClientBatchHistoryPolicyTests {
+	@Test("A batch token carries its direction, and an unsigned or spaced token is rejected")
+	func batchTokenValidationPreservesOpeningAndClosingDirection() {
+		#expect(IRCBatchPolicy.normalizedToken("+history")?.token == "history")
+		#expect(IRCBatchPolicy.normalizedToken("+history")?.opens == true)
+		#expect(IRCBatchPolicy.normalizedToken("-history")?.opens == false)
+		#expect(IRCBatchPolicy.normalizedToken("history") == nil)
+		#expect(IRCBatchPolicy.normalizedToken("+bad token") == nil)
 	}
 
-	func testBatchTypeAliasesAreRecognized() {
-		XCTAssertTrue(IRCBatchPolicy.isChatHistory("chathistory"))
-		XCTAssertTrue(IRCBatchPolicy.isChatHistory("draft/chathistory"))
-		XCTAssertTrue(IRCBatchPolicy.isNetsplit("netsplit"))
-		XCTAssertTrue(IRCBatchPolicy.isNetsplit("netjoin"))
-		XCTAssertFalse(IRCBatchPolicy.isNetsplit("znc.in/playback"))
+	@Test("The draft spellings of a batch type are recognized alongside the ratified ones")
+	func batchTypeAliasesAreRecognized() {
+		#expect(IRCBatchPolicy.isChatHistory("chathistory"))
+		#expect(IRCBatchPolicy.isChatHistory("draft/chathistory"))
+		#expect(IRCBatchPolicy.isNetsplit("netsplit"))
+		#expect(IRCBatchPolicy.isNetsplit("netjoin"))
+		#expect(IRCBatchPolicy.isNetsplit("znc.in/playback") == false)
 	}
 
-	func testHistoryLimitUsesServerMaximumOnlyWhenItIsStricter() {
-		XCTAssertEqual(IRCChatHistoryPolicy.requestLimit(serverMaximum: 0), 100)
-		XCTAssertEqual(IRCChatHistoryPolicy.requestLimit(serverMaximum: 25), 25)
-		XCTAssertEqual(IRCChatHistoryPolicy.requestLimit(serverMaximum: 250), 100)
+	@Test("The server maximum caps the request only when it is stricter than the local one")
+	func historyLimitUsesServerMaximumOnlyWhenItIsStricter() {
+		#expect(IRCChatHistoryPolicy.requestLimit(serverMaximum: 0) == 100)
+		#expect(IRCChatHistoryPolicy.requestLimit(serverMaximum: 25) == 25)
+		#expect(IRCChatHistoryPolicy.requestLimit(serverMaximum: 250) == 100)
 	}
 
-	func testHistoryAvailabilityRejectsUnsupportedTargetsAndFailures() {
-		XCTAssertTrue(IRCChatHistoryPolicy.canUseServerHistory(
+	@Test("A target that already failed is not asked for history again")
+	func historyAvailabilityRejectsUnsupportedTargetsAndFailures() {
+		#expect(IRCChatHistoryPolicy.canUseServerHistory(
 			isLoggedIn: true,
 			capabilityEnabled: true,
 			isUtility: false,
@@ -38,43 +45,45 @@ final class IRCClientBatchHistoryPolicyTests: XCTestCase {
 			isZNCQuery: false,
 			targetFailed: false
 		))
-		XCTAssertFalse(IRCChatHistoryPolicy.canUseServerHistory(
+		#expect(IRCChatHistoryPolicy.canUseServerHistory(
 			isLoggedIn: true,
 			capabilityEnabled: true,
 			isUtility: false,
 			isDirectChat: false,
 			isZNCQuery: false,
 			targetFailed: true
-		))
+		) == false)
 	}
 
-	func testReadMarkerAdvancesOnlyToANewerDate() {
+	@Test("The read marker only moves forward in time")
+	func readMarkerAdvancesOnlyToANewerDate() {
 		let previous = Date(timeIntervalSince1970: 100)
-		XCTAssertTrue(IRCChatHistoryPolicy.shouldAdvanceMarker(
+		#expect(IRCChatHistoryPolicy.shouldAdvanceMarker(
 			candidate: Date(timeIntervalSince1970: 101),
 			previous: previous
 		))
-		XCTAssertFalse(IRCChatHistoryPolicy.shouldAdvanceMarker(candidate: previous, previous: previous))
+		#expect(IRCChatHistoryPolicy.shouldAdvanceMarker(candidate: previous, previous: previous) == false)
 	}
 
-	func testLabeledResponseClassification() {
-		XCTAssertEqual(IRCLabeledResponsePolicy.responseKind(command: "FAIL", commandNumeric: 0), .failure)
-		XCTAssertEqual(IRCLabeledResponsePolicy.responseKind(command: "ack", commandNumeric: 0), .acknowledgement)
-		XCTAssertEqual(
+	@Test("A labeled response is classified by its command and numeric")
+	func labeledResponseClassification() {
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "FAIL", commandNumeric: 0) == .failure)
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "ack", commandNumeric: 0) == .acknowledgement)
+		#expect(
 			IRCLabeledResponsePolicy.responseKind(
 				command: "PRIVMSG",
 				commandNumeric: IRCRemoteCommand.privmsg.rawValue
-			),
-			.echo
+			) == .echo
 		)
-		XCTAssertEqual(IRCLabeledResponsePolicy.responseKind(command: "NOTE", commandNumeric: 0), .unrelated)
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "NOTE", commandNumeric: 0) == .unrelated)
 	}
 
-	func testNetsplitPolicyProvidesFallbackServersAndCommandFilter() {
+	@Test("A netsplit summary names a second server even when the batch gave only one")
+	func netsplitPolicyProvidesFallbackServersAndCommandFilter() {
 		let servers = IRCNetsplitSummaryPolicy.servers(from: ["irc-a"])
-		XCTAssertEqual(servers.0, "irc-a")
-		XCTAssertEqual(servers.1, "?")
-		XCTAssertTrue(IRCNetsplitSummaryPolicy.accepts(command: "quit"))
-		XCTAssertFalse(IRCNetsplitSummaryPolicy.accepts(command: "PRIVMSG"))
+		#expect(servers.0 == "irc-a")
+		#expect(servers.1 == "?")
+		#expect(IRCNetsplitSummaryPolicy.accepts(command: "quit"))
+		#expect(IRCNetsplitSummaryPolicy.accepts(command: "PRIVMSG") == false)
 	}
 }

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -38,70 +38,73 @@
 import Foundation
 import InlineContentKit
 
-@objc(ICMGyazo)
-final class GyazoModule: InlineContentModule {
-	private var contentIdentifier = ""
-
-	private func loadContent() {
-		var components = URLComponents(string: "https://api.gyazo.com/api/oembed")
-		components?.queryItems = [URLQueryItem(name: "url", value: payload.address)]
-		guard let url = components?.url else { return cancel() }
-
-		_ = InlineContentHelpers.requestJSONData(from: url) { [weak self] success, data in
-			guard let self, success, let data else {
-				self?.cancel()
-				return
-			}
-			process(data)
-		}
+/// A Gyazo capture, which its oEmbed reply says is either a photo or a clip.
+struct GyazoModule: InlineContentModule {
+	static var domains: [String]? {
+		["gyazo.com", "www.gyazo.com"]
 	}
 
-	private func process(_ data: [String: Any]) {
-		guard let type = data["type"] as? String else { return cancel() }
-
-		switch type {
-		case "photo":
-			guard let address = data["url"] as? String, let url = InlineContentHelpers.url(with: address) else {
-				return cancel()
-			}
-			payload.urlToInline = url
-			deferContent(as: .image)
-		case "video":
-			guard let url = InlineContentHelpers.url(with: "https://i.gyazo.com/\(contentIdentifier).mp4") else {
-				return cancel()
-			}
-			payload.urlToInline = url
-			deferContent(as: .videoGif)
-		default:
-			cancel()
-		}
+	static var contentImageOrVideo: Bool {
+		true
 	}
 
-	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
+	static var contentIsFile: Bool {
+		true
+	}
+
+	static var contentUntrusted: Bool {
+		false
+	}
+
+	static var contentNotSafeForWork: Bool {
+		false
+	}
+
+	private let identifier: String
+
+	static func module(for url: URL) -> (any InlineContentModule)? {
 		let path = url.path(percentEncoded: true)
 		guard path.count == 33 else { return nil }
 		let identifier = String(path.dropFirst())
 		guard identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else { return nil }
-		return { module in
-			guard let module = module as? GyazoModule else { return }
-			module.contentIdentifier = identifier
-			module.loadContent()
+
+		return GyazoModule(identifier: identifier)
+	}
+
+	func run(payload: InlineContentPayloadValues) async -> InlineContentOutcome {
+		var components = URLComponents(string: "https://api.gyazo.com/api/oembed")
+		components?.queryItems = [URLQueryItem(name: "url", value: payload.url.absoluteString)]
+
+		guard let endpoint = components?.url,
+		      let reply = await InlineContentHelpers.jsonStrings(from: endpoint),
+		      let type = reply["type"]
+		else {
+			return .cancelled
 		}
-	}
 
-	override static var domains: [String]? {
-		["gyazo.com", "www.gyazo.com"]
-	}
+		var values = payload
+		values.classAttribute = "inlineGyazo"
 
-	override static var contentImageOrVideo: Bool {
-		true
-	}
+		switch type {
+		case "photo":
+			guard let address = reply["url"],
+			      let url = InlineContentHelpers.url(with: address),
+			      values.setURLToInline(url)
+			else {
+				return .cancelled
+			}
 
-	override static var contentIsFile: Bool {
-		true
-	}
+			return .deferred(values, as: .image, performCheck: true)
+		case "video":
+			guard let url = InlineContentHelpers.url(with: "https://i.gyazo.com/\(identifier).mp4"),
+			      values.setURLToInline(url)
+			else {
+				return .cancelled
+			}
 
-	override func finalizePreflight() {
-		payload.classAttribute = "inlineGyazo"
+			return .deferred(values, as: .videoGif, performCheck: true)
+		default:
+			return .cancelled
+		}
 	}
 }

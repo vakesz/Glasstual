@@ -1,152 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "70s-c6": {
-      "comment": "Placeholder when no transcript log folder is selected.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No Log Location Selected"
-          }
-        }
-      }
-    },
-    "721-ie": {
-      "comment": "Placeholder when no file-transfer download folder is selected.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No Location Selected"
-          }
-        }
-      }
-    },
-    "5jv-aw": {
-      "comment": "Title of the alert shown before opening a bundled style's source files.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you opening this style because you are interested in modifying it?"
-          }
-        }
-      }
-    },
-    "ojj-ap": {
-      "comment": "Body of the alert explaining how to customize a bundled style without editing its source files.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "It’s possible to modify the appearance of this style without editing its source files.\n\nClick “Edit Style” to add your own style sheet rules. This feature can also be found in the Developers section of Preferences."
-          }
-        }
-      }
-    },
-    "aib-iy": {
-      "comment": "Button that opens the user's style override for editing.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edit Style"
-          }
-        }
-      }
-    },
-    "dj8-1t": {
-      "comment": "Button that creates an editable copy of a bundled style.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create Copy"
-          }
-        }
-      }
-    },
-    "6ws-av": {
-      "comment": "Button that opens a bundled style's source files.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "View Files"
-          }
-        }
-      }
-    },
-    "uc0-z7": {
-      "comment": "Title of the alert describing preferences overridden by the selected style.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preferred Selection"
-          }
-        }
-      }
-    },
-    "q4o-2f": {
-      "comment": "Alert body describing preferences overridden by a style. Arguments are the style name and a newline-separated preference list.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The style named “%1$@” has chosen to override the following preferences with ones that it prefers for the best viewing experience:\n\n%2$@"
-          }
-        }
-      }
-    },
-    "77t-de": {
-      "comment": "List item naming the nickname format preference overridden by a style.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "• Nickname Format"
-          }
-        }
-      }
-    },
-    "ddh-hr": {
-      "comment": "List item naming the timestamp format preference overridden by a style.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "• Timestamp Format"
-          }
-        }
-      }
-    },
-    "we8-i8": {
-      "comment": "List item naming the channel-view font preference overridden by a style.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "• Channel View Font"
-          }
-        }
-      }
-    },
-    "sb-tt": {
-      "comment": "Accessibility label for the Settings sidebar.",
+    "accessibility-label-settings": {
+      "comment": "Accessibility label for the Settings sidebar. Legacy key: sb-tt.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -157,8 +13,20 @@
         }
       }
     },
-    "sb-gr-ad": {
-      "comment": "Title of the Add-ons group in the Settings sidebar.",
+    "accessibility-label-style": {
+      "comment": "Accessibility label for the style selection control. Legacy key: ax-theme.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style"
+          }
+        }
+      }
+    },
+    "add-ons": {
+      "comment": "Title of the Add-ons group in the Settings sidebar. Legacy key: sb-gr-ad.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -169,116 +37,248 @@
         }
       }
     },
-    "sb-gr-av": {
-      "comment": "Title of the Advanced group in the Settings sidebar.",
+    "addons-commands-label": {
+      "comment": "Label above the list of commands installed add-ons provide.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Advanced"
+            "value": "The following custom commands are available:"
           }
         }
       }
     },
-    "sb-general": {
-      "comment": "Title of the General pane in the Settings sidebar.",
+    "addons-commands-list": {
+      "comment": "Accessibility label for the list of commands installed add-ons provide.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "General"
+            "value": "Installed Addons"
           }
         }
       }
     },
-    "sb-behavior": {
-      "comment": "Title of the Behavior pane in the Settings sidebar.",
+    "addons-commands-note": {
+      "comment": "Explanation below the list of add-on commands.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Behavior"
+            "value": "The commands listed above are performed like any other: write a forward slash (/) followed by the name of the command plus any required arguments. Glasstual will perform the command and output the results accordingly."
           }
         }
       }
     },
-    "sb-notifications": {
-      "comment": "Title of the Notifications pane in the Settings sidebar.",
+    "addons-location-label": {
+      "comment": "Label before the button that reveals the custom add-ons folder.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notifications"
+            "value": "Custom Addons Location:"
           }
         }
       }
     },
-    "sb-highlights": {
-      "comment": "Title of the Highlights pane in the Settings sidebar.",
+    "addons-open-in-finder": {
+      "comment": "Button that reveals the custom add-ons folder.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Highlights"
+            "value": "Open In Finder"
           }
         }
       }
     },
-    "sb-interface": {
-      "comment": "Title of the Interface pane in the Settings sidebar.",
+    "addons-open-in-finder-help": {
+      "comment": "Accessibility label for the button revealing the custom add-ons folder.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Interface"
+            "value": "Open Custom Addons Location in Finder"
           }
         }
       }
     },
-    "sb-style": {
-      "comment": "Title of the Style pane in the Settings sidebar.",
+    "advanced-channels": {
+      "comment": "Title of the Advanced sub-page holding the channel-related panes.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Style"
+            "value": "Channels"
           }
         }
       }
     },
-    "sb-controls": {
-      "comment": "Title of the Controls pane in the Settings sidebar.",
+    "advanced-connection": {
+      "comment": "Title of the Advanced sub-page holding the connection-related panes.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Controls"
+            "value": "Connection"
           }
         }
       }
     },
-    "sb-addons": {
-      "comment": "Title of the installed Add-ons pane in the Settings sidebar.",
+    "advanced-identity": {
+      "comment": "Title of the Advanced sub-page holding the default identity panes.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Installed Add-ons"
+            "value": "Identity"
           }
         }
       }
     },
-    "sb-channelManagement": {
-      "comment": "Title of the Channel Management pane in the Settings sidebar.",
+    "advanced-media": {
+      "comment": "Title of the Advanced sub-page holding the file transfer and inline media panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media"
+          }
+        }
+      }
+    },
+    "advanced-system": {
+      "comment": "Title of the Advanced sub-page holding the log location and hidden panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "are-you-opening-this-style-because": {
+      "comment": "Title of the alert shown before opening a bundled style's source files. Legacy key: 5jv-aw.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you opening this style because you are interested in modifying it?"
+          }
+        }
+      }
+    },
+    "behavior-autojoin-on-invite": {
+      "comment": "Checkbox in the Behavior pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically join a channel when invited"
+          }
+        }
+      }
+    },
+    "behavior-away-on-screen-sleep": {
+      "comment": "Checkbox in the Behavior pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toggle away status when your display goes to sleep"
+          }
+        }
+      }
+    },
+    "behavior-open-links-in-background": {
+      "comment": "Checkbox in the Behavior pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open browser links in the background"
+          }
+        }
+      }
+    },
+    "behavior-rejoin-on-kick": {
+      "comment": "Checkbox in the Behavior pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically rejoin a channel when kicked"
+          }
+        }
+      }
+    },
+    "behavior-reload-scrollback": {
+      "comment": "Checkbox in the Behavior pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore scrollback from previous session"
+          }
+        }
+      }
+    },
+    "behavior-remember-queries": {
+      "comment": "Checkbox in the Behavior pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the state of queries from previous session"
+          }
+        }
+      }
+    },
+    "behavior-send-typing-notifications": {
+      "comment": "Checkbox in the Behavior pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send typing notifications"
+          }
+        }
+      }
+    },
+    "behavior-typing-notifications-note": {
+      "comment": "Explanation below the typing notifications checkbox in the Behavior pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lets other people in a channel or query see when you are writing a message."
+          }
+        }
+      }
+    },
+    "channel-management": {
+      "comment": "Title of the Channel Management pane in the Settings sidebar. Legacy key: sb-channelManagement.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -289,8 +289,104 @@
         }
       }
     },
-    "sb-commandScope": {
-      "comment": "Title of the Command Scope pane in the Settings sidebar.",
+    "channel-management-ban-format-exact": {
+      "comment": "Ban format matching the exact hostmask.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nickname!username@address"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-label": {
+      "comment": "Label of the popup choosing the default hostmask ban format.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hostmask Ban Format:"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-note": {
+      "comment": "Explanation below the hostmask ban format popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When used in the context of a hostmask, an asterisk (*) represents a wildcard character that is matched by any possible value."
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-whainn": {
+      "comment": "Ban format matching every nickname for one user name at one address.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "*!ident@address"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-whanni": {
+      "comment": "Ban format matching one nickname at one address.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nickname!*@address"
+          }
+        }
+      }
+    },
+    "channel-management-ban-format-whnin": {
+      "comment": "Ban format matching every nickname and user name at one address.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "*!*@address"
+          }
+        }
+      }
+    },
+    "channel-management-kick-reason-label": {
+      "comment": "Label of the default kick reason field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Kick Reason:"
+          }
+        }
+      }
+    },
+    "channel-view-font": {
+      "comment": "List item naming the channel-view font preference overridden by a style. Legacy key: we8-i8.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Channel View Font"
+          }
+        }
+      }
+    },
+    "command-scope": {
+      "comment": "Title of the Command Scope pane in the Settings sidebar. Legacy key: sb-commandScope.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -301,80 +397,584 @@
         }
       }
     },
-    "sb-compatibility": {
-      "comment": "Title of the Compatibility pane in the Settings sidebar.",
+    "command-scope-amsg": {
+      "comment": "Checkbox in the Command Scope pane.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compatibility"
+            "value": "/amsg and /ame apply to all connections"
           }
         }
       }
     },
-    "sb-floodControl": {
-      "comment": "Title of the Flood Control pane in the Settings sidebar.",
+    "command-scope-away": {
+      "comment": "Checkbox in the Command Scope pane.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Flood Control"
+            "value": "/away applies to all connections"
           }
         }
       }
     },
-    "sb-incomingData": {
-      "comment": "Title of the Incoming Data pane in the Settings sidebar.",
+    "command-scope-clearall": {
+      "comment": "Checkbox in the Command Scope pane.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incoming Data"
+            "value": "/clearall applies to all connections"
           }
         }
       }
     },
-    "sb-fileTransfers": {
-      "comment": "Title of the File Transfers pane in the Settings sidebar.",
+    "command-scope-focus-on-message": {
+      "comment": "Checkbox in the Command Scope pane.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "File Transfers"
+            "value": "Give focus to the destination of the /msg command"
           }
         }
       }
     },
-    "sb-inlineMedia": {
-      "comment": "Title of the Inline Media pane in the Settings sidebar.",
+    "command-scope-nick": {
+      "comment": "Checkbox in the Command Scope pane.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inline Media"
+            "value": "/nick applies to all connections"
           }
         }
       }
     },
-    "sb-logLocation": {
-      "comment": "Title of the Log Location pane in the Settings sidebar.",
+    "command-scope-notice-label": {
+      "comment": "Label of the radio buttons choosing where notices are shown.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Log Location"
+            "value": "Forward notices to:"
           }
         }
       }
     },
-    "sb-defaultIdentity": {
-      "comment": "Title of the Default Identity pane in the Settings sidebar.",
+    "command-scope-notice-query": {
+      "comment": "Notices are shown in a private message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Message"
+          }
+        }
+      }
+    },
+    "command-scope-notice-selected-channel": {
+      "comment": "Notices are shown in the selected channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected Channel"
+          }
+        }
+      }
+    },
+    "command-scope-notice-server-console": {
+      "comment": "Notices are shown in the server console.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Console"
+          }
+        }
+      }
+    },
+    "compatibility-echo-message": {
+      "comment": "Checkbox in the Compatibility pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable echo-message capability"
+          }
+        }
+      }
+    },
+    "controls-command-return-action": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command Return (⌘⏎) sends message as an action"
+          }
+        }
+      }
+    },
+    "controls-command-w-close-window": {
+      "comment": "Command-W closes the main window.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Main Window"
+          }
+        }
+      }
+    },
+    "controls-command-w-disconnect": {
+      "comment": "Command-W disconnects from the selected server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect from Selected Server"
+          }
+        }
+      }
+    },
+    "controls-command-w-label": {
+      "comment": "Label of the popup choosing what Command-W does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command + W key action:"
+          }
+        }
+      }
+    },
+    "controls-command-w-part-channel": {
+      "comment": "Command-W leaves the selected channel or closes the selected query.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Selected Query or Part Selected Channel"
+          }
+        }
+      }
+    },
+    "controls-command-w-terminate": {
+      "comment": "Command-W quits the application.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect and Quit Application"
+          }
+        }
+      }
+    },
+    "controls-completion-preview": {
+      "comment": "Preview of tab completion: a sample nickname followed by the chosen suffix.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JohnDoe%@…"
+          }
+        }
+      }
+    },
+    "controls-completion-preview-label": {
+      "comment": "Label before the tab completion suffix preview.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview:"
+          }
+        }
+      }
+    },
+    "controls-completion-suffix-accessibility": {
+      "comment": "Accessibility label for the tab completion suffix field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab Key Autocompletion Suffix"
+          }
+        }
+      }
+    },
+    "controls-completion-suffix-label": {
+      "comment": "Label of the tab completion suffix field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autocomplete Suffix:"
+          }
+        }
+      }
+    },
+    "controls-connect-on-double-click": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to server on double click"
+          }
+        }
+      }
+    },
+    "controls-control-enter-sends": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Control Enter (⌃⎆) sends message instead of inserting new line"
+          }
+        }
+      }
+    },
+    "controls-copy-on-select": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically copy selected text"
+          }
+        }
+      }
+    },
+    "controls-copy-on-select-note": {
+      "comment": "Explanation below the automatic copy checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold the Option key (⌥) while selecting text to temporarily disable this feature."
+          }
+        }
+      }
+    },
+    "controls-disconnect-on-double-click": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect from server on double click"
+          }
+        }
+      }
+    },
+    "controls-grammar-check": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check grammar while typing"
+          }
+        }
+      }
+    },
+    "controls-heading-keyboard-mouse": {
+      "comment": "Section heading in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard & Mouse"
+          }
+        }
+      }
+    },
+    "controls-heading-text-field": {
+      "comment": "Section heading in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main Text Field"
+          }
+        }
+      }
+    },
+    "controls-history-per-selection": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save input history for each channel rather than globally"
+          }
+        }
+      }
+    },
+    "controls-join-on-double-click": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join channel on double click"
+          }
+        }
+      }
+    },
+    "controls-leave-on-double-click": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave channel on double click"
+          }
+        }
+      }
+    },
+    "controls-navigation-server-specific": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel navigation is limited to the selected server"
+          }
+        }
+      }
+    },
+    "controls-spell-check": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check spelling while typing"
+          }
+        }
+      }
+    },
+    "controls-spell-correction": {
+      "comment": "Checkbox in the Controls pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct spelling automatically"
+          }
+        }
+      }
+    },
+    "controls-tab-key-complete": {
+      "comment": "The Tab key completes the word being typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete nicknames, channels, and commands"
+          }
+        }
+      }
+    },
+    "controls-tab-key-label": {
+      "comment": "Label of the popup choosing what the Tab key does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab key Action:"
+          }
+        }
+      }
+    },
+    "controls-tab-key-none": {
+      "comment": "The Tab key does nothing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perform no action"
+          }
+        }
+      }
+    },
+    "controls-tab-key-unread": {
+      "comment": "The Tab key moves to the next unread channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to next unread channel"
+          }
+        }
+      }
+    },
+    "controls-text-size-extra-large": {
+      "comment": "Input text field size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra Large"
+          }
+        }
+      }
+    },
+    "controls-text-size-humongous": {
+      "comment": "Input text field size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Humongous"
+          }
+        }
+      }
+    },
+    "controls-text-size-label": {
+      "comment": "Label of the input text field size popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text size of the input text field:"
+          }
+        }
+      }
+    },
+    "controls-text-size-large": {
+      "comment": "Input text field size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large"
+          }
+        }
+      }
+    },
+    "controls-text-size-normal": {
+      "comment": "Input text field size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        }
+      }
+    },
+    "controls-user-double-click-insert": {
+      "comment": "Double clicking a user writes the nickname into the text field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert Name Into Text Field"
+          }
+        }
+      }
+    },
+    "controls-user-double-click-label": {
+      "comment": "Label of the popup choosing what a double click on a user does.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double clicking a user:"
+          }
+        }
+      }
+    },
+    "controls-user-double-click-query": {
+      "comment": "Double clicking a user opens a private message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Query"
+          }
+        }
+      }
+    },
+    "controls-user-double-click-whois": {
+      "comment": "Double clicking a user runs a WHOIS.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whois User"
+          }
+        }
+      }
+    },
+    "create-copy": {
+      "comment": "Button that creates an editable copy of a bundled style. Legacy key: dj8-1t.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Copy"
+          }
+        }
+      }
+    },
+    "default-identity": {
+      "comment": "Title of the Default Identity pane in the Settings sidebar. Legacy key: sb-defaultIdentity.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -385,32 +985,116 @@
         }
       }
     },
-    "sb-defaultIRCopMessages": {
-      "comment": "Title of the IRC operator messages pane in the Settings sidebar.",
+    "default-identity-all-optional": {
+      "comment": "Explanation at the bottom of the Default Identity pane.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "IRCop Messages"
+            "value": "All fields are optional"
           }
         }
       }
     },
-    "sb-hidden": {
-      "comment": "Title of the Hidden pane in the Settings sidebar.",
+    "default-identity-away-nickname": {
+      "comment": "Label of the default away nickname field.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hidden"
+            "value": "Away Nickname:"
           }
         }
       }
     },
-    "sb-plugin": {
-      "comment": "Fallback title for an add-on supplied Settings pane.",
+    "default-identity-nickname": {
+      "comment": "Label of the default nickname field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname:"
+          }
+        }
+      }
+    },
+    "default-identity-note": {
+      "comment": "Explanation at the top of the Default Identity pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The following information will be filled in when creating a NEW connection."
+          }
+        }
+      }
+    },
+    "default-identity-optional": {
+      "comment": "Placeholder of an optional default identity field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        }
+      }
+    },
+    "default-identity-realname": {
+      "comment": "Label of the default real name field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real name:"
+          }
+        }
+      }
+    },
+    "default-identity-username": {
+      "comment": "Label of the default user name field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username:"
+          }
+        }
+      }
+    },
+    "download-destination": {
+      "comment": "Accessibility label for the file-transfer download destination control. Legacy key: ax-download-folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download Destination"
+          }
+        }
+      }
+    },
+    "edit-style": {
+      "comment": "Button that opens the user's style override for editing. Legacy key: aib-iy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Style"
+          }
+        }
+      }
+    },
+    "fallback-title-add": {
+      "comment": "Fallback title for an add-on supplied Settings pane. Legacy key: sb-plugin.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -421,20 +1105,1508 @@
         }
       }
     },
-    "sb-vers": {
-      "comment": "Settings sidebar footer. Arguments are the marketing version and build number.",
+    "file-transfers": {
+      "comment": "Title of the File Transfers pane in the Settings sidebar. Legacy key: sb-fileTransfers.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %1$@ (%2$@)"
+            "value": "File Transfers"
           }
         }
       }
     },
-    "tb-back": {
-      "comment": "Label for the Settings toolbar back item.",
+    "file-transfers-destination-label": {
+      "comment": "Label of the popup choosing the download folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download files to the folder:"
+          }
+        }
+      }
+    },
+    "file-transfers-destination-note": {
+      "comment": "Explanation below the download folder popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will be asked where to save downloaded files each time you start a file transfer if a destination is not configured."
+          }
+        }
+      }
+    },
+    "file-transfers-detection-accessibility": {
+      "comment": "Accessibility label for the address detection popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP Address Detection Method"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-label": {
+      "comment": "Label of the popup choosing how the public address is discovered.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP Address detection method:"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-manual": {
+      "comment": "Address detection using an address the user types.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manually Enter Address"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-router-first-party": {
+      "comment": "Address detection falling back to api.ipify.org.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask router with api.ipify.org as fallback"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-router-only": {
+      "comment": "Address detection asking only the router.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask router with no fallback"
+          }
+        }
+      }
+    },
+    "file-transfers-detection-router-third-party": {
+      "comment": "Address detection falling back to a third-party website.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask router with 3rd-party website as fallback"
+          }
+        }
+      }
+    },
+    "file-transfers-manual-address-accessibility": {
+      "comment": "Accessibility label for the manually entered address field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manually Specified IP Address"
+          }
+        }
+      }
+    },
+    "file-transfers-manual-address-label": {
+      "comment": "Label of the manually entered address field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manually entered IP address:"
+          }
+        }
+      }
+    },
+    "file-transfers-port-range-first": {
+      "comment": "Accessibility label for the first port of the range.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfer Port Range First Port"
+          }
+        }
+      }
+    },
+    "file-transfers-port-range-label": {
+      "comment": "Label of the two fields bounding the listening port range.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File transfer port range:"
+          }
+        }
+      }
+    },
+    "file-transfers-port-range-last": {
+      "comment": "Accessibility label for the last port of the range.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfer Port Range Last Port"
+          }
+        }
+      }
+    },
+    "file-transfers-port-range-separator": {
+      "comment": "Word between the first and last port of the file transfer port range.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "to"
+          }
+        }
+      }
+    },
+    "file-transfers-prevent-sleep": {
+      "comment": "Checkbox in the File Transfers pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not allow Mac to go to sleep while transferring a file"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-action-accessibility": {
+      "comment": "Accessibility label for the file transfer reply action popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action to Perform when File Transfer Request is Received"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-action-label": {
+      "comment": "Label of the popup choosing how an incoming file transfer is answered.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When file transfer request is received:"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-download": {
+      "comment": "Incoming file transfers are downloaded without asking.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically Download"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-ignore": {
+      "comment": "Incoming file transfers are ignored.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignore"
+          }
+        }
+      }
+    },
+    "file-transfers-reply-open-dialog": {
+      "comment": "Incoming file transfers open the transfer dialog.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Dialog"
+          }
+        }
+      }
+    },
+    "file-transfers-reverse-dcc": {
+      "comment": "Checkbox in the File Transfers pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send passive file transfer requests"
+          }
+        }
+      }
+    },
+    "flood-control": {
+      "comment": "Title of the Flood Control pane in the Settings sidebar. Legacy key: sb-floodControl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flood Control"
+          }
+        }
+      }
+    },
+    "flood-control-count-value": {
+      "comment": "Current value of the WHO command channel size slider.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current Value: %@"
+          }
+        }
+      }
+    },
+    "flood-control-disabled-marker": {
+      "comment": "Lower end of the WHO command channel size slider, where polling is off.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 (disable)"
+          }
+        }
+      }
+    },
+    "flood-control-identify-delay-label": {
+      "comment": "Label of the slider setting the delay before joining after identifying.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delay Before Channel Joins:"
+          }
+        }
+      }
+    },
+    "flood-control-identify-delay-note": {
+      "comment": "Explanation below the delay before channel joins slider.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How long, in seconds, to wait before joining channels after identifying."
+          }
+        }
+      }
+    },
+    "flood-control-join-delay-label": {
+      "comment": "Label of the slider setting the delay between channel joins.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delay Between Channel Joins:"
+          }
+        }
+      }
+    },
+    "flood-control-join-delay-note": {
+      "comment": "Explanation below the delay between channel joins slider.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How long, in seconds, to wait in-between each join."
+          }
+        }
+      }
+    },
+    "flood-control-note": {
+      "comment": "Flood-control explanation below the channel join delay sliders.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joining too many channels at once may be detected as an attack by some IRC networks. You could be disconnected or banned as a result. It is recommended to use a moderate delay (~2.5 seconds) for both timers when joining a large number of channels."
+          }
+        }
+      }
+    },
+    "flood-control-seconds-value": {
+      "comment": "Current value of a delay slider, in seconds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current Value: %@ seconds"
+          }
+        }
+      }
+    },
+    "flood-control-who-limit-label": {
+      "comment": "Label of the slider limiting which channels are polled for away status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WHO Command Maximum Channel Size:"
+          }
+        }
+      }
+    },
+    "flood-control-who-limit-note": {
+      "comment": "Explanation below the WHO command channel size slider.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual must periodically poll the channels that you are in to find out when the away status of each user changes. This preference defines the maximum number of users a channel can contain before the channel is skipped over.\n\nA lower value is always better especially when in a large number of channels."
+          }
+        }
+      }
+    },
+    "general-confirm-quit": {
+      "comment": "Checkbox in the General pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request confirmation before quitting Glasstual"
+          }
+        }
+      }
+    },
+    "heading-advanced": {
+      "comment": "Section heading used by several Settings panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        }
+      }
+    },
+    "heading-general": {
+      "comment": "Section heading used by several Settings panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        }
+      }
+    },
+    "hidden-app-nap": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable App Nap"
+          }
+        }
+      }
+    },
+    "hidden-custom-scrollbars": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable custom scrollbars"
+          }
+        }
+      }
+    },
+    "hidden-load-history-lazily": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load history lazily"
+          }
+        }
+      }
+    },
+    "hidden-restart-note": {
+      "comment": "Explanation at the bottom of the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some preferences may require a restart of Glasstual to take effect."
+          }
+        }
+      }
+    },
+    "hidden-scrollback-visible-limit": {
+      "comment": "Label of the visible scrollback limit field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrollback Visible Limit:"
+          }
+        }
+      }
+    },
+    "hidden-scrollback-visible-limit-note": {
+      "comment": "Explanation beside the visible scrollback limit field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 = use default limit"
+          }
+        }
+      }
+    },
+    "hidden-sidebar-translucency": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server list and user list appear transparent"
+          }
+        }
+      }
+    },
+    "hidden-warning": {
+      "comment": "Warning at the top of the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not modify these preferences unless you know why you are doing so."
+          }
+        }
+      }
+    },
+    "hidden-warning-label": {
+      "comment": "Leading word of the warning at the top of the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warning:"
+          }
+        }
+      }
+    },
+    "hidden-webkit-preview-links": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable link previews in WebKit2"
+          }
+        }
+      }
+    },
+    "hidden-webkit-process-pool": {
+      "comment": "Checkbox in the Hidden pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit number of processes spawned by WebKit2"
+          }
+        }
+      }
+    },
+    "highlights-add-excluded": {
+      "comment": "Accessibility label for the button that adds an excluded keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Excluded Keyword"
+          }
+        }
+      }
+    },
+    "highlights-add-keyword": {
+      "comment": "Accessibility label for the button that adds a highlight keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Highlight Keyword"
+          }
+        }
+      }
+    },
+    "highlights-exclude-words-label": {
+      "comment": "Label above the excluded keyword list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclude words:"
+          }
+        }
+      }
+    },
+    "highlights-log-to-window": {
+      "comment": "Checkbox in the Highlights pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log highlights to separate window"
+          }
+        }
+      }
+    },
+    "highlights-match-type-exact": {
+      "comment": "Highlight matching method: whole words only.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Word Matches"
+          }
+        }
+      }
+    },
+    "highlights-match-type-label": {
+      "comment": "Accessibility label for the highlight matching method popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight Match Type"
+          }
+        }
+      }
+    },
+    "highlights-match-type-partial": {
+      "comment": "Highlight matching method: any occurrence of the word.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial Matches"
+          }
+        }
+      }
+    },
+    "highlights-match-type-regex": {
+      "comment": "Highlight matching method: an ICU regular expression.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regular Expression (ICU)"
+          }
+        }
+      }
+    },
+    "highlights-new-keyword": {
+      "comment": "Placeholder text of a freshly added highlight or excluded keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Keyword"
+          }
+        }
+      }
+    },
+    "highlights-remove-excluded": {
+      "comment": "Accessibility label for the button that removes the selected excluded keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Selected Excluded Keyword"
+          }
+        }
+      }
+    },
+    "highlights-remove-keyword": {
+      "comment": "Accessibility label for the button that removes the selected highlight keyword.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Selected Highlight Keyword"
+          }
+        }
+      }
+    },
+    "highlights-track-local-nickname": {
+      "comment": "Checkbox in the Highlights pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight current nickname"
+          }
+        }
+      }
+    },
+    "highlights-words-label": {
+      "comment": "Label above the highlight keyword list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight words:"
+          }
+        }
+      }
+    },
+    "incoming-data": {
+      "comment": "Title of the Incoming Data pane in the Settings sidebar. Legacy key: sb-incomingData.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incoming Data"
+          }
+        }
+      }
+    },
+    "incoming-data-highlight-spam": {
+      "comment": "Checkbox in the Incoming Data pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically ignore highlight spam"
+          }
+        }
+      }
+    },
+    "incoming-data-highlight-spam-note": {
+      "comment": "Explanation below the highlight spam checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not notify you of a highlight if 75% of a message consists of ten or more nicknames."
+          }
+        }
+      }
+    },
+    "incoming-data-remove-formatting": {
+      "comment": "Checkbox in the Incoming Data pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove formatting from incoming messages"
+          }
+        }
+      }
+    },
+    "incoming-data-remove-formatting-note": {
+      "comment": "Explanation below the remove formatting checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removes formatting such as bold, colors, underline, etc."
+          }
+        }
+      }
+    },
+    "incoming-data-reply-ctcp": {
+      "comment": "Checkbox in the Incoming Data pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically reply to Client-to-Client (CTCP) requests"
+          }
+        }
+      }
+    },
+    "incoming-data-unicode-spam": {
+      "comment": "Checkbox in the Incoming Data pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace Combining Diacritical Marks with �"
+          }
+        }
+      }
+    },
+    "incoming-data-unicode-spam-note": {
+      "comment": "Explanation below the combining diacritical marks checkbox, which filters unicode spam.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These characters are often combined to form “Zalgo text”, which is used by some users to disrupt chatrooms."
+          }
+        }
+      }
+    },
+    "inline-media": {
+      "comment": "Title of the Inline Media pane in the Settings sidebar. Legacy key: sb-inlineMedia.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inline Media"
+          }
+        }
+      }
+    },
+    "inline-media-check-everything": {
+      "comment": "Checkbox in the Inline Media pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load everything"
+          }
+        }
+      }
+    },
+    "inline-media-check-everything-accessibility": {
+      "comment": "Accessibility label for the load everything checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check every link to learn if it is a video or image"
+          }
+        }
+      }
+    },
+    "inline-media-check-everything-note": {
+      "comment": "Explanation below the load everything checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load the contents of every URL posted in a channel to determine which are images or videos."
+          }
+        }
+      }
+    },
+    "inline-media-filesize-accessibility": {
+      "comment": "Accessibility label for the maximum file size popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum File Size for Inline Images"
+          }
+        }
+      }
+    },
+    "inline-media-filesize-label": {
+      "comment": "Label of the popup limiting the size of an inlined image.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not display images with a file size greater than"
+          }
+        }
+      }
+    },
+    "inline-media-heading-images": {
+      "comment": "Section heading in the Inline Media pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images & Video"
+          }
+        }
+      }
+    },
+    "inline-media-heading-limitations": {
+      "comment": "Section heading in the Inline Media pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limitations"
+          }
+        }
+      }
+    },
+    "inline-media-height-accessibility": {
+      "comment": "Accessibility label for the maximum inline image height field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum Inline Image Height"
+          }
+        }
+      }
+    },
+    "inline-media-height-label": {
+      "comment": "Label before the maximum inline image height field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not display images with a height greater than"
+          }
+        }
+      }
+    },
+    "inline-media-height-note": {
+      "comment": "Explanation below the maximum inline image height field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the value of this preference to zero (0) to disable height checks."
+          }
+        }
+      }
+    },
+    "inline-media-limit-basics-to-files": {
+      "comment": "Checkbox in the Inline Media pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Including video services such as YouTube and others"
+          }
+        }
+      }
+    },
+    "inline-media-limit-naughty": {
+      "comment": "Checkbox in the Inline Media pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only inline media that is safe to view in public"
+          }
+        }
+      }
+    },
+    "inline-media-limit-naughty-note": {
+      "comment": "Explanation below the safe-for-public inline media checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This preference works by disabling certain services.\nIt doesn't know whether a specific image or video is safe.\nYou should therefore not rely solely on this preference."
+          }
+        }
+      }
+    },
+    "inline-media-limit-to-basics": {
+      "comment": "Checkbox in the Inline Media pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only inline images and videos"
+          }
+        }
+      }
+    },
+    "inline-media-limit-unsafe": {
+      "comment": "Checkbox in the Inline Media pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only inline media from safe sources"
+          }
+        }
+      }
+    },
+    "inline-media-limit-unsafe-note": {
+      "comment": "Explanation below the safe sources checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safe sources are services that don't inject HTML nor load external JavaScript resources to appear inline."
+          }
+        }
+      }
+    },
+    "inline-media-megabytes": {
+      "comment": "A file size limit measured in megabytes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Megabytes"
+          }
+        }
+      }
+    },
+    "inline-media-one-megabyte": {
+      "comment": "A file size limit of one megabyte.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Megabyte"
+          }
+        }
+      }
+    },
+    "inline-media-pixels": {
+      "comment": "Unit after the maximum inline image height field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pixels"
+          }
+        }
+      }
+    },
+    "inline-media-pixels-wide": {
+      "comment": "Unit after the inline image width field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pixels wide"
+          }
+        }
+      }
+    },
+    "inline-media-show": {
+      "comment": "Checkbox in the Inline Media pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show images, videos, and other media inline with chat"
+          }
+        }
+      }
+    },
+    "inline-media-show-note": {
+      "comment": "Explanation below the inline media checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This preference can be enabled or disabled for individual channels in Channel Properties."
+          }
+        }
+      }
+    },
+    "inline-media-width-accessibility": {
+      "comment": "Accessibility label for the inline image width field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inline Image Scaled by Width"
+          }
+        }
+      }
+    },
+    "inline-media-width-label": {
+      "comment": "Label before the inline image width field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scale to a maximum of"
+          }
+        }
+      }
+    },
+    "installed-add-ons": {
+      "comment": "Title of the installed Add-ons pane in the Settings sidebar. Legacy key: sb-addons.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed Add-ons"
+          }
+        }
+      }
+    },
+    "interface-appearance-dark": {
+      "comment": "Dark appearance choice.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        }
+      }
+    },
+    "interface-appearance-label": {
+      "comment": "Label of the appearance popup in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main window appearance:"
+          }
+        }
+      }
+    },
+    "interface-appearance-light": {
+      "comment": "Light appearance choice.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        }
+      }
+    },
+    "interface-appearance-system": {
+      "comment": "Appearance choice following the system setting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "interface-arrangement-label": {
+      "comment": "Label of the channel view arrangement popup in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrange multiple channels:"
+          }
+        }
+      }
+    },
+    "interface-arrangement-left-to-right": {
+      "comment": "Channel view arrangement placing views side by side.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left to right"
+          }
+        }
+      }
+    },
+    "interface-arrangement-top-to-bottom": {
+      "comment": "Channel view arrangement stacking views vertically.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top to bottom"
+          }
+        }
+      }
+    },
+    "interface-heading-server-list-colors": {
+      "comment": "Section heading in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server List Colors"
+          }
+        }
+      }
+    },
+    "interface-heading-user-list-colors": {
+      "comment": "Section heading in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User List Colors"
+          }
+        }
+      }
+    },
+    "interface-mode-channel-administrator": {
+      "comment": "Label of the colour well for channel administrators.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Administrator (+a):"
+          }
+        }
+      }
+    },
+    "interface-mode-channel-half-operator": {
+      "comment": "Label of the colour well for channel half-operators.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Half-Operator (+h):"
+          }
+        }
+      }
+    },
+    "interface-mode-channel-operator": {
+      "comment": "Label of the colour well for channel operators.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Operator (+o):"
+          }
+        }
+      }
+    },
+    "interface-mode-channel-owner": {
+      "comment": "Label of the colour well for channel owners.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Owner (+q):"
+          }
+        }
+      }
+    },
+    "interface-mode-server-staff": {
+      "comment": "Label of the colour well for server staff members (+y).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Staff Member:"
+          }
+        }
+      }
+    },
+    "interface-mode-voiced-user": {
+      "comment": "Label of the colour well for voiced users.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voiced User (+v):"
+          }
+        }
+      }
+    },
+    "interface-no-mode-symbol": {
+      "comment": "Checkbox in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use “x” to indicate user with no mode set in user list"
+          }
+        }
+      }
+    },
+    "interface-popover-updates-on-scroll": {
+      "comment": "Checkbox in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User list info popover updates while scrolling"
+          }
+        }
+      }
+    },
+    "interface-reset": {
+      "comment": "Button that restores one colour to its default.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        }
+      }
+    },
+    "interface-reset-to-defaults": {
+      "comment": "Button that restores every user list colour to its default.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset to Defaults"
+          }
+        }
+      }
+    },
+    "interface-reset-unread-highlight-color": {
+      "comment": "Accessibility label for the button resetting the unread badge colour.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Background Color for Unread Badge with Highlight"
+          }
+        }
+      }
+    },
+    "interface-reset-user-list-colors": {
+      "comment": "Accessibility label for the button resetting every user list colour.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset User List Colors to Default Values"
+          }
+        }
+      }
+    },
+    "interface-right-to-left-text": {
+      "comment": "Checkbox in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right to left text"
+          }
+        }
+      }
+    },
+    "interface-staff-at-top": {
+      "comment": "Checkbox in the Interface pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place known server staff members at top of user list"
+          }
+        }
+      }
+    },
+    "interface-unread-highlight-color-label": {
+      "comment": "Label of the colour well for the highlighted unread badge.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background color for unread badge with highlight:"
+          }
+        }
+      }
+    },
+    "interface-user-list-colors-note": {
+      "comment": "Explanation above the user list mode colour wells.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These colors represent the various user modes shown on the user list for each channel."
+          }
+        }
+      }
+    },
+    "ircop-gline-label": {
+      "comment": "Label of the default G:Line reason field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default G:Line Reason:"
+          }
+        }
+      }
+    },
+    "ircop-includes-ban-length": {
+      "comment": "Note that the reason begins with the length of the ban.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Includes Ban Length)"
+          }
+        }
+      }
+    },
+    "ircop-kill-label": {
+      "comment": "Label of the default kill reason field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Kill Reason:"
+          }
+        }
+      }
+    },
+    "ircop-messages": {
+      "comment": "Title of the IRC operator messages pane in the Settings sidebar. Legacy key: sb-defaultIRCopMessages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRCop Messages"
+          }
+        }
+      }
+    },
+    "ircop-shun-label": {
+      "comment": "Label of the default shun reason field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Shun Reason:"
+          }
+        }
+      }
+    },
+    "its-possible-to-modify-the-appearance": {
+      "comment": "Body of the alert explaining how to customize a bundled style without editing its source files. Legacy key: ojj-ap.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It’s possible to modify the appearance of this style without editing its source files.\n\nClick “Edit Style” to add your own style sheet rules. This feature can also be found in the Developers section of Preferences."
+          }
+        }
+      }
+    },
+    "label-for-the-settings-back": {
+      "comment": "Label for the Settings toolbar back item. Legacy key: tb-back.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -445,8 +2617,8 @@
         }
       }
     },
-    "tb-forward": {
-      "comment": "Label for the Settings toolbar forward item.",
+    "label-for-the-settings-forward": {
+      "comment": "Label for the Settings toolbar forward item. Legacy key: tb-forward.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -457,8 +2629,692 @@
         }
       }
     },
-    "ax-theme": {
-      "comment": "Accessibility label for the style selection control.",
+    "log-location": {
+      "comment": "Title of the Log Location pane in the Settings sidebar. Legacy key: sb-logLocation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log Location"
+          }
+        }
+      }
+    },
+    "log-location-clear-destination": {
+      "comment": "Menu item that forgets the chosen folder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Destination"
+          }
+        }
+      }
+    },
+    "log-location-label": {
+      "comment": "Checkbox enabling transcript logging, followed by the folder popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log transcripts to folder:"
+          }
+        }
+      }
+    },
+    "log-location-select-destination": {
+      "comment": "Menu item that opens a folder chooser.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select Destination…"
+          }
+        }
+      }
+    },
+    "nickname-format": {
+      "comment": "List item naming the nickname format preference overridden by a style. Legacy key: 77t-de.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Nickname Format"
+          }
+        }
+      }
+    },
+    "no-location-selected": {
+      "comment": "Placeholder when no file-transfer download folder is selected. Legacy key: 721-ie.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Location Selected"
+          }
+        }
+      }
+    },
+    "no-log-location-selected": {
+      "comment": "Placeholder when no transcript log folder is selected. Legacy key: 70s-c6.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Log Location Selected"
+          }
+        }
+      }
+    },
+    "notifications-dock-badge-private": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show number of unread private messages on Glasstual's Dock icon"
+          }
+        }
+      }
+    },
+    "notifications-dock-badge-public": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show number of unread channel messages on Glasstual's Dock icon"
+          }
+        }
+      }
+    },
+    "notifications-heading-alerts": {
+      "comment": "Section heading in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts"
+          }
+        }
+      }
+    },
+    "notifications-heading-speech": {
+      "comment": "Section heading in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech"
+          }
+        }
+      }
+    },
+    "notifications-only-speak-selection": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only speak Channel Messages for the selected channel"
+          }
+        }
+      }
+    },
+    "notifications-post-while-in-focus": {
+      "comment": "Checkbox in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show notifications when Glasstual is focused"
+          }
+        }
+      }
+    },
+    "notifications-speak-channel-name": {
+      "comment": "Checkbox choosing whether the channel name is spoken.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel name"
+          }
+        }
+      }
+    },
+    "notifications-speak-nickname": {
+      "comment": "Checkbox choosing whether the sender nickname is spoken.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        }
+      }
+    },
+    "notifications-speech-include-label": {
+      "comment": "Label above the speech content checkboxes in the Notifications pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include when speaking a Channel Message:"
+          }
+        }
+      }
+    },
+    "preferred-selection": {
+      "comment": "Title of the alert describing preferences overridden by the selected style. Legacy key: uc0-z7.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferred Selection"
+          }
+        }
+      }
+    },
+    "settings-sidebar-footer-arguments-version": {
+      "comment": "Settings sidebar footer. Arguments are the marketing version and build number. Legacy key: sb-vers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "style-auto-scrollback-marker": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically add scrollback markers"
+          }
+        }
+      }
+    },
+    "style-browse-files": {
+      "comment": "Button that opens the folder holding the current style.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse Style Files"
+          }
+        }
+      }
+    },
+    "style-browse-files-help": {
+      "comment": "Accessibility label for the browse style files button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View files associated with the current style"
+          }
+        }
+      }
+    },
+    "style-disable-nickname-colors": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable nickname colors"
+          }
+        }
+      }
+    },
+    "style-font-change": {
+      "comment": "Button that opens the font panel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change"
+          }
+        }
+      }
+    },
+    "style-font-change-help": {
+      "comment": "Accessibility label for the button that opens the font panel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Content Font"
+          }
+        }
+      }
+    },
+    "style-font-current": {
+      "comment": "Accessibility label for the field showing the channel view font.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current Content Font"
+          }
+        }
+      }
+    },
+    "style-font-description": {
+      "comment": "Channel view font shown as its name followed by its point size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@pt"
+          }
+        }
+      }
+    },
+    "style-font-label": {
+      "comment": "Label of the channel view font.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font:"
+          }
+        }
+      }
+    },
+    "style-format-symbols-label": {
+      "comment": "Leading word of the list of placeholders a format string accepts.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbols:"
+          }
+        }
+      }
+    },
+    "style-heading-developers": {
+      "comment": "Section heading in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developers"
+          }
+        }
+      }
+    },
+    "style-heading-scrollback": {
+      "comment": "Section heading in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrollback"
+          }
+        }
+      }
+    },
+    "style-inline-nickname-mode-symbol": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show mode symbol in front of inline nicknames"
+          }
+        }
+      }
+    },
+    "style-label": {
+      "comment": "Label of the style selection popup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style:"
+          }
+        }
+      }
+    },
+    "style-modify-style-sheet": {
+      "comment": "Button that opens the user style sheet editor.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modify Custom Style Sheet Rules"
+          }
+        }
+      }
+    },
+    "style-named-has-chosen-to-override": {
+      "comment": "Alert body describing preferences overridden by a style. Arguments are the style name and a newline-separated preference list. Legacy key: q4o-2f.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The style named “%1$@” has chosen to override the following preferences with ones that it prefers for the best viewing experience:\n\n%2$@"
+          }
+        }
+      }
+    },
+    "style-nickname-format-label": {
+      "comment": "Label of the nickname format field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname Format:"
+          }
+        }
+      }
+    },
+    "style-nickname-format-symbol-mode": {
+      "comment": "What the user mode placeholder of the nickname format stands for.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User mode"
+          }
+        }
+      }
+    },
+    "style-nickname-format-symbol-nickname": {
+      "comment": "What the nickname placeholder of the nickname format stands for.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User nickname"
+          }
+        }
+      }
+    },
+    "style-reload-custom-styles": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically reload custom styles when they change"
+          }
+        }
+      }
+    },
+    "style-reload-custom-styles-note": {
+      "comment": "Explanation below the automatic style reload checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reload will occur if any file with the extension .css or .js is modified within the root directory of the active style."
+          }
+        }
+      }
+    },
+    "style-scrollback-save-limit": {
+      "comment": "Label of the scrollback save limit field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrollback Save Limit:"
+          }
+        }
+      }
+    },
+    "style-scrollback-save-limit-note": {
+      "comment": "Explanation below the scrollback save limit field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The maximum number of messages, per-channel, that are accessible through the scrollback.\n\nMessages are not saved between app launches unless “Restore scrollback from previous session” in the Behavior section of Preferences is enabled."
+          }
+        }
+      }
+    },
+    "style-show-date-changes": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show date changes"
+          }
+        }
+      }
+    },
+    "style-show-join-leave": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show general event messages"
+          }
+        }
+      }
+    },
+    "style-show-join-leave-note": {
+      "comment": "Explanation below the general event messages checkbox.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These include join, part, and quit messages."
+          }
+        }
+      }
+    },
+    "style-show-motd": {
+      "comment": "Checkbox in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show server Message of the Day (MOTD)"
+          }
+        }
+      }
+    },
+    "style-timestamp-format-label": {
+      "comment": "Label of the timestamp format field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timestamp Format:"
+          }
+        }
+      }
+    },
+    "style-timestamp-format-note": {
+      "comment": "Explanation of the placeholders accepted by the timestamp format.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A list of formatting symbols can be found at OpenGroup.org"
+          }
+        }
+      }
+    },
+    "timestamp-format": {
+      "comment": "List item naming the timestamp format preference overridden by a style. Legacy key: ddh-hr.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Timestamp Format"
+          }
+        }
+      }
+    },
+    "title-of-the-advanced": {
+      "comment": "Title of the Advanced group in the Settings sidebar. Legacy key: sb-gr-av.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        }
+      }
+    },
+    "title-of-the-behavior": {
+      "comment": "Title of the Behavior pane in the Settings sidebar. Legacy key: sb-behavior.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behavior"
+          }
+        }
+      }
+    },
+    "title-of-the-compatibility": {
+      "comment": "Title of the Compatibility pane in the Settings sidebar. Legacy key: sb-compatibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibility"
+          }
+        }
+      }
+    },
+    "title-of-the-controls": {
+      "comment": "Title of the Controls pane in the Settings sidebar. Legacy key: sb-controls.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controls"
+          }
+        }
+      }
+    },
+    "title-of-the-general": {
+      "comment": "Title of the General pane in the Settings sidebar. Legacy key: sb-general.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        }
+      }
+    },
+    "title-of-the-hidden": {
+      "comment": "Title of the Hidden pane in the Settings sidebar. Legacy key: sb-hidden.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden"
+          }
+        }
+      }
+    },
+    "title-of-the-highlights": {
+      "comment": "Title of the Highlights pane in the Settings sidebar. Legacy key: sb-highlights.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlights"
+          }
+        }
+      }
+    },
+    "title-of-the-interface": {
+      "comment": "Title of the Interface pane in the Settings sidebar. Legacy key: sb-interface.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interface"
+          }
+        }
+      }
+    },
+    "title-of-the-notifications": {
+      "comment": "Title of the Notifications pane in the Settings sidebar. Legacy key: sb-notifications.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        }
+      }
+    },
+    "title-of-the-style": {
+      "comment": "Title of the Style pane in the Settings sidebar. Legacy key: sb-style.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -469,8 +3325,8 @@
         }
       }
     },
-    "ax-transcript-folder": {
-      "comment": "Accessibility label for the transcript folder selection control.",
+    "transcript-folder": {
+      "comment": "Accessibility label for the transcript folder selection control. Legacy key: ax-transcript-folder.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -481,14 +3337,14 @@
         }
       }
     },
-    "ax-download-folder": {
-      "comment": "Accessibility label for the file-transfer download destination control.",
+    "view-files": {
+      "comment": "Button that opens a bundled style's source files. Legacy key: 6ws-av.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download Destination"
+            "value": "View Files"
           }
         }
       }

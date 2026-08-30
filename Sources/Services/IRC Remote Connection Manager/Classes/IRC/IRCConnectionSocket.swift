@@ -3,9 +3,9 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- *    Copyright (c) 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,192 +37,90 @@
 
 import CocoaExtensions
 import Foundation
-import Network
 import os
 import Security
+import Synchronization
 
-/** Logging for the connection classes. `Logger` is Sendable which keeps
- these usable from queue-confined code under strict concurrency. */
+/// One value, shared by two isolation domains.
+///
+/// `Mutex` is non-copyable, so it cannot be captured by the escaping closures
+/// Network.framework hands its callbacks to; a reference that holds one can be.
+/// `Value` is always a value type here — the point is to share a fact, never an
+/// object.
+final class Locked<Value: Sendable>: Sendable {
+	private let storage: Mutex<Value>
+
+	init(_ value: Value) {
+		storage = Mutex(value)
+	}
+
+	var value: Value {
+		storage.withLock { $0 }
+	}
+
+	func set(_ value: Value) {
+		storage.withLock { $0 = value }
+	}
+}
+
+/** Logging for the connection classes. */
 enum RCMLog {
 	static let connection = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual.IRCConnectionHost", category: "Connection"
 	)
 }
 
-/** ConnectionSocket holds the state and helpers shared by the transport
- layer. ConnectionSocketNWF is the only transport; it subclasses this to
- talk to Network.framework.
+/// Everything the transport reports, in the order it happened.
+///
+/// The socket turns Network.framework's callbacks into these and the host reads
+/// them off one `AsyncStream`. Every case is `Sendable`, which is what lets the
+/// callbacks — all of them `@Sendable` in the SDK — hand work to the actor.
+enum SocketEvent: Sendable {
+	case willConnectToProxy(host: String, port: UInt16)
+	case connected(host: String?)
+	case secured(protocolVersion: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
+	case received(Data)
+	case willSend(Data)
+	case didSend
+	case closedReadStream
+	case disconnected(ConnectionError?)
+}
 
- Concurrency model:
- Every stored property below, and in the subclass, is confined to `queue`.
- The owner (Connection) creates the queue, hands it in, and hops onto it
- before calling any method. Network.framework delivers all callbacks on
- that same queue because it is the queue passed to NWConnection.start(queue:).
- Because of this confinement the class is `@unchecked Sendable`; the
- compiler cannot verify queue confinement but the invariant is simple:
- do not touch state off `queue`. */
-class ConnectionSocket: @unchecked Sendable {
-	weak var delegate: ConnectionSocketDelegate?
+/// What the service learned about the peer's certificate chain.
+///
+/// Written by the TLS verify block, which runs outside the socket's actor, and
+/// read by the actor when the application asks for it. A value, so it can live
+/// in a `Mutex` rather than in one domain or the other — and so the `SecTrust`
+/// it came from never leaves the verify block.
+struct TLSTrustExport: Sendable {
+	var policyName: String?
+	var certificateChain: [Data] = []
 
-	final let config: IRCConnectionConfig
+	/// Why the system did not trust the chain. nil when it did, or when the
+	/// chain has not been evaluated yet.
+	var failureDescription: String?
+}
 
-	final let uniqueIdentifier: String
+/// Why a connection ended.
+enum ConnectionError: Error, Sendable {
+	/// Errors returned by the connection library. For example: Network.framework.
+	case socket(error: NSError)
 
-	/// The serial queue all state is confined to.
-	final let queue: DispatchQueue
+	/// Errors the transport itself raised.
+	case other(message: String)
 
-	var connecting = false
-	var connected = false
-	var disconnecting = false
-	var disconnected: Bool {
-		connecting == false && connected == false
-	}
+	/// The connection could not be secured because of a problem with the
+	/// server's certificate.
+	case badCertificate(failureReason: String)
 
-	var secured = false
-	var sending = false
-
-	var alternateDisconnectError: ConnectionError?
-
-	/// Why the system did not trust the server's certificate chain.
-	/// nil when the chain was trusted or has not been evaluated yet.
-	var tlsTrustFailureDescription: String?
-
-	final let torProxyTypeAddress = "127.0.0.1"
-	final let torProxyTypePort: UInt16 = 9150
-
-	/// Maximum bytes requested from the transport in a single read.
-	final let maximumDataLength = (1000 * 1000 * 100) // 100 megabytes
-
-	/// Maximum bytes buffered while waiting for a newline. A peer that
-	/// never sends one is disconnected instead of growing memory forever.
-	final let maximumBufferedLineLength = (1024 * 1024) // 1 MiB
-
-	/// Seconds allowed for the transport to reach the ready state.
-	final let connectTimeout: TimeInterval = 30
-
-	init(with config: IRCConnectionConfig, on queue: DispatchQueue) {
-		self.config = config
-
-		self.queue = queue
-
-		uniqueIdentifier = UUID().uuidString
-	}
-
-	func resetState() {
-		connecting = false
-		connected = false
-		disconnecting = false
-		secured = false
-
-		sending = false
-
-		alternateDisconnectError = nil
-	}
-
-	func tlsVerify(_ trust: SecTrust, response: @escaping TrustDecisionHandler) {
-		var error: CFError?
-
-		/* The evaluation always runs, even when the connection is configured
-		 to ignore certificate errors, so that the failure reason can be
-		 logged and reported to the client. */
-		if SecTrustEvaluateWithError(trust, &error) {
-			tlsTrustFailureDescription = nil
-
-			response(true)
-
-			return
-		}
-
-		let failureDescription = (error as Error?)?.localizedDescription ?? "Unknown error"
-		let serverAddress = config.serverAddress
-
-		tlsTrustFailureDescription = failureDescription
-
-		if config.connectionShouldValidateCertificateChain == false {
-			RCMLog.connection.error(
-				"Certificate chain for '\(serverAddress, privacy: .public)' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .public)"
-			)
-
-			response(true)
-
-			return
-		}
-
-		RCMLog.connection.error(
-			"Certificate chain for '\(serverAddress, privacy: .public)' failed validation: \(failureDescription, privacy: .public)"
-		)
-
-		var evaluationResult: SecTrustResultType = .invalid
-
-		SecTrustGetTrustResult(trust, &evaluationResult)
-
-		if evaluationResult == .recoverableTrustFailure {
-			delegate?.connection(self, requiresTrust: response)
-
-			return
-		}
-
-		response(false)
-	}
-
-	/// The client side identity, if one is configured.
-	/// The keychain is consulted once; the result is cached for the
-	/// life of the socket because a handshake asks for it more than once.
-	private(set) final lazy var clientSideCertificate: (identity: SecIdentity, certificate: SecCertificate)? =
-		loadClientSideCertificate()
-
-	private func loadClientSideCertificate() -> (identity: SecIdentity, certificate: SecCertificate)? {
-		guard let certificateDataIn = config.identityClientSideCertificate else {
-			return nil
-		}
-
-		/* ====================================== */
-
-		var certificateObject: CFTypeRef?
-
-		var status = SecItemCopyMatching(
-			[
-				kSecClass: kSecClassCertificate,
-				kSecValuePersistentRef: certificateDataIn,
-				kSecReturnRef: true,
-			] as CFDictionary, &certificateObject
-		)
-
-		if status != errSecSuccess {
-			RCMLog.connection.error("Client certificate lookup failed: \(status, privacy: .public)")
-
-			return nil
-		}
-
-		guard let certificateObject,
-		      CFGetTypeID(certificateObject) == SecCertificateGetTypeID()
-		else {
-			return nil
-		}
-		// Security exposes the typed certificate through a CFTypeRef result.
-		let certificateRef = unsafeDowncast(certificateObject, to: SecCertificate.self)
-
-		/* ====================================== */
-
-		var identityRef: SecIdentity?
-
-		status = SecIdentityCreateWithCertificate(nil, certificateRef, &identityRef)
-
-		guard status == noErr, let identityRef else {
-			RCMLog.connection.error("Client identity lookup failed: \(status, privacy: .public)")
-
-			return nil
-		}
-
-		/* ====================================== */
-
-		return (identity: identityRef, certificate: certificateRef)
-	}
+	/// The connection could not be secured for some other reason, such as a
+	/// handshake failure.
+	case unableToSecure(failureReason: String)
 }
 
 extension ConnectionError {
 	init(socketError: Error) {
-		self = .socket(error: socketError)
+		self = .socket(error: socketError as NSError)
 	}
 
 	init(otherError message: String) {
@@ -252,80 +150,108 @@ extension ConnectionError {
 	}
 }
 
-/** All delegate methods are invoked on the socket's queue. */
-protocol ConnectionSocketDelegate: AnyObject {
-	func connection(_ connection: ConnectionSocket, willConnectToProxy address: String, on port: UInt16)
-	func connection(_ connection: ConnectionSocket, willConnectTo address: String, on port: UInt16)
-	// The address is nil when connecting to a proxy.
-	func connection(_ connection: ConnectionSocket, didConnectTo address: String?)
-	func connection(
-		_ connection: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t
-	)
-	func connection(_ connection: ConnectionSocket, requiresTrust response: @escaping (Bool) -> Void)
-	func connectionClosedReadStream(_ connection: ConnectionSocket)
-	func connectionDisconnected(_ connection: ConnectionSocket)
-	func connection(_ connection: ConnectionSocket, disconnectedWith error: ConnectionError)
-	func connection(_ connection: ConnectionSocket, received data: Data)
-	func connection(_ connection: ConnectionSocket, willSend data: Data)
-	func connectionDidSend(_ connection: ConnectionSocket)
-}
+extension ConnectionError: CustomNSError {
+	/** Error domain and codes are shared with the app across the XPC boundary. */
+	static let errorDomain = connectionErrorDomain
 
-protocol ConnectionSocketProtocol {
-	/// Logic for opening socket
-	func open()
-
-	/// Logic for closing socket
-	func close()
-	func close(with error: String)
-	func close(with error: ConnectionError)
-
-	/// Logic for writing data (sending)
-	func write(_ data: Data)
-
-	/// Logic for waiting for data (receiving)
-	func read()
-
-	/// Logic for reading data from socket (receiving)
-	func readIn(_ data: Data)
-
-	/// Logic for providing upstream with information
-	/// about the secured connection including policy name,
-	/// protocol version, cipher suite, and certificates.
-	func exportSecureConnectionInformation(to receiver: SecureConnectionInformationReceiver) throws
-
-	/// TLS Information
-	var tlsNegotiatedProtocol: tls_protocol_version_t? { get }
-	var tlsNegotiatedCipherSuite: tls_ciphersuite_t? { get }
-	var tlsCertificateChainData: [Data]? { get }
-	var tlsPolicyName: String? { get }
-}
-
-extension ConnectionSocketProtocol where Self: ConnectionSocket {
-	func close(with error: String) {
-		let errorEnum = ConnectionError.other(message: error)
-
-		close(with: errorEnum)
-	}
-
-	func close(with error: ConnectionError) {
-		if disconnected || disconnecting {
-			return
+	var errorCode: Int {
+		let errorCode: ConnectionErrorCode = switch self {
+		case .socket:
+			.socket
+		case .other:
+			.other
+		case .badCertificate:
+			.badCertificate
+		case .unableToSecure:
+			.unableToSecure
 		}
 
-		alternateDisconnectError = error
-
-		close()
+		return Int(errorCode.rawValue)
 	}
 
-	func exportSecureConnectionInformation(to receiver: SecureConnectionInformationReceiver) throws {
-		let policyName = tlsPolicyName
+	var errorUserInfo: [String: Any] {
+		var userInfo: [String: Any] = [:]
 
-		let protocolType = tlsNegotiatedProtocol ?? tlsProtocolVersionUnknown
+		if let errorDescription {
+			userInfo[NSLocalizedDescriptionKey] = errorDescription
+		}
 
-		let cipherSuite = tlsNegotiatedCipherSuite ?? tlsCipherSuiteUnknown
+		// While we don't make use of it right now, pass the original
+		// error inside the user info dictionary because at a later
+		// time, we may be interested in its contents. Only the
+		// domain, code, and description are kept so that the error
+		// is guaranteed to survive secure coding across XPC.
+		if case let .socket(error) = self {
+			userInfo["UnderlyingSocketError"] = NSError(
+				domain: error.domain,
+				code: error.code,
+				userInfo: [NSLocalizedDescriptionKey: error.localizedDescription]
+			)
+		}
 
-		let certificateChain = tlsCertificateChainData ?? []
+		return userInfo
+	}
+}
 
-		receiver(policyName, protocolType, cipherSuite, certificateChain, tlsTrustFailureDescription)
+extension ConnectionError: LocalizedError {
+	var errorDescription: String? {
+		switch self {
+		case let .socket(error):
+			/* The underlying socket error is almost always an NSError
+			 which means we can just ask for its localized description. */
+			error.localizedDescription
+		case let .other(message),
+		     let .badCertificate(message),
+		     let .unableToSecure(message):
+			message
+		}
+	}
+}
+
+/// The client side identity a connection presents, when one is configured.
+///
+/// A pure function of the configuration: the keychain lookup depends on nothing
+/// else, so it is done where it is needed rather than cached on an object.
+enum ClientSideCertificate {
+	static func load(from config: IRCConnectionConfig) -> (identity: SecIdentity, certificate: SecCertificate)? {
+		guard let certificateDataIn = config.identityClientSideCertificate else {
+			return nil
+		}
+
+		var certificateObject: CFTypeRef?
+
+		var status = SecItemCopyMatching(
+			[
+				kSecClass: kSecClassCertificate,
+				kSecValuePersistentRef: certificateDataIn,
+				kSecReturnRef: true,
+			] as CFDictionary, &certificateObject
+		)
+
+		if status != errSecSuccess {
+			RCMLog.connection.error("Client certificate lookup failed: \(status, privacy: .public)")
+
+			return nil
+		}
+
+		guard let certificateObject,
+		      CFGetTypeID(certificateObject) == SecCertificateGetTypeID()
+		else {
+			return nil
+		}
+		// Security exposes the typed certificate through a CFTypeRef result.
+		let certificateRef = unsafeDowncast(certificateObject, to: SecCertificate.self)
+
+		var identityRef: SecIdentity?
+
+		status = SecIdentityCreateWithCertificate(nil, certificateRef, &identityRef)
+
+		guard status == noErr, let identityRef else {
+			RCMLog.connection.error("Client identity lookup failed: \(status, privacy: .public)")
+
+			return nil
+		}
+
+		return (identity: identityRef, certificate: certificateRef)
 	}
 }
