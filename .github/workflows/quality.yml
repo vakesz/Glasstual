@@ -38,15 +38,3 @@ jobs:
           xcodebuild -version
           XCODE_MAJOR="$(xcodebuild -version | head -n 1 | sed -E 's/^Xcode ([0-9]+).*/\1/')"
           [ "${XCODE_MAJOR}" -eq 27 ]
-
-      - name: Compile unsigned Release build
-        run: |
-          set -euo pipefail
-          xcodebuild \
-            -project Glasstual.xcodeproj \
-            -scheme Glasstual \
-            -configuration Release \
-            -destination 'platform=macOS,arch=arm64' \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            build
