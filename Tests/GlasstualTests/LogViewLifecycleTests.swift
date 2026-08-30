@@ -10,7 +10,7 @@ import Testing
 @MainActor
 @Suite("Log view lifecycle")
 struct LogViewLifecycleTests {
-	@Test("Loading and navigation completion schedule one delegate callback")
+	@Test("Loading and navigation completion notify on the next actor turn")
 	func duplicateCompletionSignalsAreCoalesced() {
 		var state = LogViewLoadCompletionState()
 
@@ -18,8 +18,8 @@ struct LogViewLifecycleTests {
 		#expect(state.handle(.loadingChanged(false)) == .none)
 		#expect(state.handle(.navigationFinished) == .schedule)
 		#expect(state.handle(.loadingChanged(false)) == .none)
-		#expect(state.handle(.delayElapsed) == .notify)
-		#expect(state.handle(.delayElapsed) == .none)
+		#expect(state.handle(.scheduledCompletion) == .notify)
+		#expect(state.handle(.scheduledCompletion) == .none)
 	}
 
 	@Test("A new navigation cancels a pending completion")
@@ -29,7 +29,7 @@ struct LogViewLifecycleTests {
 		#expect(state.handle(.loadStarted) == .none)
 		#expect(state.handle(.navigationFinished) == .schedule)
 		#expect(state.handle(.navigationStarted) == .cancel)
-		#expect(state.handle(.delayElapsed) == .none)
+		#expect(state.handle(.scheduledCompletion) == .none)
 	}
 
 	@Test("A web view that finishes loading after its client has gone is ignored")

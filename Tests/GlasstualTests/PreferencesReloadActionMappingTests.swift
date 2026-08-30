@@ -23,7 +23,7 @@ struct PreferencesReloadActionMappingTests {
 	@Test("Every action a key can request has a bit of its own")
 	func actionsAreDistinct() {
 		let actions: [PreferencesReloadAction] = [
-			.appearance, .channelViewArrangement, .dockIconBadges, .highlightKeywords,
+			.appearance, .dockIconBadges, .highlightKeywords,
 			.highlightLogging, .ircCommandCache, .inputHistoryScope, .logTranscripts,
 			.memberList, .memberListSortOrder, .memberListUserBadges, .preferencesChanged,
 			.scrollbackSaveLimit, .scrollbackVisibleLimit, .serverList, .serverListUnreadBadges,

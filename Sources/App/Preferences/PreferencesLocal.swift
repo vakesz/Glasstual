@@ -312,10 +312,6 @@ public extension TextualPreferences {
 		Preferences.Appearance.preferredAppearance.value
 	}
 
-	class func channelViewArrangement() -> TXChannelViewArrangement {
-		Preferences.Appearance.channelViewArrangement.value
-	}
-
 	class func disableSidebarTranslucency() -> Bool {
 		Preferences.Appearance.disableSidebarTranslucency.value
 	}

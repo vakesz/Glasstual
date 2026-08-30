@@ -54,7 +54,7 @@ nonisolated struct LogViewLoadCompletionState: Sendable { // nonisolated: value
 		case loadingChanged(Bool)
 		case navigationStarted
 		case navigationFinished
-		case delayElapsed
+		case scheduledCompletion
 		case cancel
 	}
 
@@ -83,7 +83,7 @@ nonisolated struct LogViewLoadCompletionState: Sendable { // nonisolated: value
 		case .navigationFinished:
 			isNavigating = false
 			return scheduleIfReady()
-		case .delayElapsed:
+		case .scheduledCompletion:
 			guard completionIsScheduled, isLoading == false, isNavigating == false else {
 				return .none
 			}
@@ -286,9 +286,9 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 			loadCompletionTask = nil
 		case .schedule:
 			loadCompletionTask = Task { @MainActor [weak self] in
-				try? await Task.sleep(for: .seconds(1.2))
+				await Task.yield()
 				guard Task.isCancelled == false else { return }
-				self?.handleLoadCompletionEvent(.delayElapsed)
+				self?.handleLoadCompletionEvent(.scheduledCompletion)
 			}
 		case .notify:
 			loadCompletionTask = nil

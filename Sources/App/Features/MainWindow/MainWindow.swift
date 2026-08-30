@@ -65,14 +65,6 @@ private enum ServerListNavigationSelection {
 	case server
 }
 
-struct MainWindowShiftSelectionOptions: OptionSet {
-	let rawValue: UInt
-
-	static let maintainGrouping = Self(rawValue: 1 << 0)
-	static let performDeselect = Self(rawValue: 1 << 1)
-	static let performDeselectChildren = Self(rawValue: 1 << 2)
-}
-
 struct MainWindowMouseLocation: OptionSet {
 	let rawValue: UInt
 
@@ -86,9 +78,9 @@ enum MainWindowConstants {
 	static let toggleServerListToolbarItem = NSToolbarItem.Identifier("TVCMainWindowToggleServerList")
 	static let toggleMemberListToolbarItem = NSToolbarItem.Identifier("TVCMainWindowToggleMemberList")
 	static let treeItemPasteboardType = NSPasteboard.PasteboardType("com.vakesz.glasstual.tree-item")
-	static let restorableSelectionKey = "TVCMainWindowSelectedItems"
+	static let restorableSelectionKey = "TVCMainWindowSelectedItem"
+	static let legacyRestorableSelectionKey = "TVCMainWindowSelectedItems"
 	static let sidebarFooterHeight: CGFloat = 32
-	static let maximumSelectedRows = 6
 }
 
 enum MainWindowMemberListVisibilityPolicy {
@@ -151,9 +143,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		return appearanceStorage
 	}
 
-	public internal(set) var selectedItems: [IRCTreeItem] = []
 	public internal(set) var selectedItem: IRCTreeItem?
-	var previousSelectedItemsId: [String] = []
 	var previousSelectedItemId: String?
 	private var lastKeyWindowStateChange: TimeInterval = 0
 	private var lastKeyWindowRedrawFailedBecauseOfOcclusion = false
@@ -224,8 +214,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		makeMain()
 		makeKeyAndOrderFront(nil)
 		loadWindowState()
-		updateChannelViewArrangement()
-
 		SharedApplication.sharedThemeController().load()
 		controller.menuController?.prepareInitialState()
 		registerKeyHandlers()
@@ -657,7 +645,6 @@ extension MainWindow {
 		memberList.keyDelegate = nil
 		memberList.assign(to: nil)
 		delegate = nil
-		selectedItems = []
 		selectedItem = nil
 		close()
 	}
@@ -672,20 +659,21 @@ extension MainWindow {
 
 	override public func encodeRestorableState(with coder: NSCoder) {
 		super.encodeRestorableState(with: coder)
-		coder.encode(selectedItems.map(\.uniqueIdentifier), forKey: MainWindowConstants.restorableSelectionKey)
+		coder.encode(selectedItem?.uniqueIdentifier, forKey: MainWindowConstants.restorableSelectionKey)
 	}
 
 	override public func restoreState(with coder: NSCoder) {
 		super.restoreState(with: coder)
 		guard let world = AppController.shared.world else { return }
-		let classes: [AnyClass] = [NSArray.self, NSString.self]
-		guard let identifiers = coder
-			.decodeObject(of: classes, forKey: MainWindowConstants.restorableSelectionKey) as? [String],
-			identifiers.isEmpty == false
-		else { return }
-		let selection = world.findItems(withIds: identifiers)
-		guard selection.isEmpty == false else { return }
-		adjustSelection(with: selection, selectedItem: nil)
+		let identifier = coder.decodeObject(
+			of: NSString.self,
+			forKey: MainWindowConstants.restorableSelectionKey
+		) as? String ?? (coder.decodeObject(
+			of: [NSArray.self, NSString.self],
+			forKey: MainWindowConstants.legacyRestorableSelectionKey
+		) as? [String])?.last
+		guard let identifier, let item = world.findItem(withId: identifier) else { return }
+		select(item)
 	}
 }
 

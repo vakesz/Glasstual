@@ -45,12 +45,25 @@ struct MainWindowStateStore {
 		)
 	}
 
-	func saveSelection(itemIdentifiers: [String]) {
-		defaults.set(itemIdentifiers, forKey: Key.serverListSelection.rawValue)
+	func saveSelection(itemIdentifier: String?) {
+		guard let itemIdentifier, itemIdentifier.isEmpty == false else {
+			defaults.removeObject(forKey: Key.serverListSelection.rawValue)
+			return
+		}
+		defaults.set(itemIdentifier, forKey: Key.serverListSelection.rawValue)
 	}
 
-	func loadSelectionItemIdentifiers() -> [String] {
-		defaults.stringArray(forKey: Key.serverListSelection.rawValue) ?? []
+	func loadSelectionItemIdentifier() -> String? {
+		if let identifier = defaults.string(forKey: Key.serverListSelection.rawValue), !identifier.isEmpty {
+			return identifier
+		}
+		guard let identifier = defaults.stringArray(forKey: Key.serverListSelection.rawValue)?.last,
+		      !identifier.isEmpty
+		else {
+			return nil
+		}
+		defaults.set(identifier, forKey: Key.serverListSelection.rawValue)
+		return identifier
 	}
 
 	private func storedBoolean(for key: Key) -> Bool? {

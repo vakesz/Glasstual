@@ -51,7 +51,6 @@ public struct PreferencesReloadAction: OptionSet, Sendable {
 	}
 
 	public static let appearance = Self(rawValue: 1 << 0)
-	public static let channelViewArrangement = Self(rawValue: 1 << 1)
 	public static let dockIconBadges = Self(rawValue: 1 << 2)
 	public static let highlightKeywords = Self(rawValue: 1 << 3)
 	public static let highlightLogging = Self(rawValue: 1 << 4)
@@ -139,10 +138,6 @@ public extension TextualPreferences {
 
 		if keys.contains("ScrollbackMaximumVisibleLineCount") {
 			reloadAction.insert(.scrollbackVisibleLimit)
-		}
-
-		if keys.contains("ChannelViewArrangement") {
-			reloadAction.insert(.channelViewArrangement)
 		}
 
 		if keys.contains("LogTranscript") {
@@ -315,10 +310,6 @@ public extension TextualPreferences {
 					channel.logController?.changeScrollbackLimit()
 				}
 			}
-		}
-
-		if reloadAction.contains(.channelViewArrangement) {
-			mainWindow.updateChannelViewArrangement()
 		}
 	}
 

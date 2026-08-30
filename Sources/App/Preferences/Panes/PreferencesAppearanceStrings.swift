@@ -29,18 +29,6 @@ nonisolated enum PreferencesInterfaceStrings { // nonisolated: value
 		String(localized: .TDCPreferencesController.interfaceAppearanceSystem)
 	}
 
-	static var arrangementLabel: String {
-		String(localized: .TDCPreferencesController.interfaceArrangementLabel)
-	}
-
-	static var arrangementLeftToRight: String {
-		String(localized: .TDCPreferencesController.interfaceArrangementLeftToRight)
-	}
-
-	static var arrangementTopToBottom: String {
-		String(localized: .TDCPreferencesController.interfaceArrangementTopToBottom)
-	}
-
 	static var headingServerListColors: String {
 		String(localized: .TDCPreferencesController.interfaceHeadingServerListColors)
 	}

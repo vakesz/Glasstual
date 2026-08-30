@@ -36,8 +36,6 @@
 	<integer>0</integer>
 	<key>ChannelOperatorDefaultLocalization -&gt; Kick Reason</key>
 	<integer>0</integer>
-	<key>ChannelViewArrangement</key>
-	<integer>0</integer>
 	<key>CommandReturnSendsMessageAsAction</key>
 	<integer>0</integer>
 	<key>ConfirmApplicationQuit</key>
@@ -323,8 +321,6 @@
 	<key>Window -&gt; Main Window -&gt; Server List Selection</key>
 	<integer>0</integer>
 	<key>Window -&gt; Main Window -&gt; Server List is Visible</key>
-	<integer>0</integer>
-	<key>Window -&gt; Main Window -&gt; Split Channel View Saved Frames</key>
 	<integer>0</integer>
 	<key>World Controller Client Configurations</key>
 	<integer>0</integer>

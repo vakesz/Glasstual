@@ -170,12 +170,12 @@
                                     <constraint firstAttribute="width" relation="lessThanOrEqual" constant="300" id="uvA-9N-e8z"/>
                                 </constraints>
                             </view>
-                            <splitView dividerStyle="thin" translatesAutoresizingMaskIntoConstraints="NO" id="dCp-Wp-aIX" customClass="TVCMainWindowChannelView">
+                            <view translatesAutoresizingMaskIntoConstraints="NO" id="dCp-Wp-aIX" customClass="TVCMainWindowChannelView">
                                 <rect key="frame" x="151" y="0.0" width="498" height="439"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="100" id="mtt-4n-lrH"/>
                                 </constraints>
-                            </splitView>
+                            </view>
                             <view translatesAutoresizingMaskIntoConstraints="NO" id="2k7-ax-6YE">
                                 <rect key="frame" x="650" y="0.0" width="150" height="439"/>
                                 <subviews>

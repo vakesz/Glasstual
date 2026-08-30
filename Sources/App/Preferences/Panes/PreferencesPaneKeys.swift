@@ -48,7 +48,6 @@ nonisolated enum PreferencesPaneKeys { // nonisolated: value
 		.interface: [
 			Preferences.Messages.rightToLeftFormatting,
 			Preferences.Appearance.preferredAppearance,
-			Preferences.Appearance.channelViewArrangement,
 			Preferences.Appearance.memberListNoModeSymbol,
 			Preferences.Appearance.memberListSortFavorsServerStaff,
 			Preferences.Appearance.memberListUpdatesPopoverOnScroll,

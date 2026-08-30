@@ -109,11 +109,6 @@ public enum TXFileTransferIPAddressMethodDetection: UInt, Sendable {
 	case manual = 2
 }
 
-public enum TXChannelViewArrangement: UInt, Sendable {
-	case horizontal
-	case vertical
-}
-
 public enum TXPreferredAppearance: UInt, Sendable {
 	case inherited
 	case light
@@ -133,5 +128,4 @@ extension TXHostmaskBanFormat: PreferenceEnum {}
 extension TVCMainWindowTextViewFontSize: PreferenceEnum {}
 extension TXFileTransferRequestReply: PreferenceEnum {}
 extension TXFileTransferIPAddressMethodDetection: PreferenceEnum {}
-extension TXChannelViewArrangement: PreferenceEnum {}
 extension TXPreferredAppearance: PreferenceEnum {}

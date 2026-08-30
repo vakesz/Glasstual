@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import AppKit
 import Foundation
 @testable import Glasstual
 import Testing
@@ -95,6 +96,34 @@ struct IRCClientConnectionDelegatePolicyTests {
 			IRCConnectionStrings.disconnectReason(for: .reachabilityChange)
 				== "Disconnected from server because the Internet is not reachable"
 		)
+	}
+
+	@Test("Disconnecting preserves server lines already queued for rendering")
+	func disconnectPreservesQueuedServerLines() async {
+		let client = IRCClient(config: ClientConfig())
+		let window = TVCMainWindow(
+			contentRect: .zero,
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = window.logControllers.controller(for: client)
+		var renderedLineCount = 0
+
+		for index in 0 ..< 16 {
+			var line = LogLine()
+			line.messageBody = "server line \(index)"
+			line.lineType = .debug
+			controller.print(line) { _ in
+				renderedLineCount += 1
+			}
+		}
+
+		client.isConnecting = true
+		client.changeStateOff()
+		await controller.drainRenderJobs()
+
+		#expect(renderedLineCount == 16)
 	}
 
 	@Test("An empty username and real name fall back to the nickname, and invisible mode is selected")
