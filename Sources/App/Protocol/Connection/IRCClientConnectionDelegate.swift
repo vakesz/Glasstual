@@ -162,7 +162,6 @@ public extension IRCClient {
 		clearTrackedUsers()
 
 		if !terminating {
-			logController?.cancelRenderJobs()
 			presentDisconnect(disconnectError)
 		}
 

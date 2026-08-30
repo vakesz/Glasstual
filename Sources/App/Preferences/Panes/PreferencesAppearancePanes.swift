@@ -27,7 +27,6 @@ struct PreferencesInterfacePane: View {
 				.disabled(model.isReloadingTheme)
 
 				appearancePicker
-				arrangementPicker
 
 				PreferencesToggle(
 					title: PreferencesInterfaceStrings.noModeSymbol,
@@ -98,19 +97,6 @@ struct PreferencesInterfacePane: View {
 				.tag(TXPreferredAppearance.dark)
 		} label: {
 			Text(verbatim: PreferencesInterfaceStrings.appearanceLabel)
-		}
-	}
-
-	private var arrangementPicker: some View {
-		Picker(selection: model.preferences.binding(for: Preferences.Appearance.channelViewArrangement) { _ in
-			TextualPreferences.performReloadAction(.channelViewArrangement)
-		}) {
-			Text(verbatim: PreferencesInterfaceStrings.arrangementTopToBottom)
-				.tag(TXChannelViewArrangement.horizontal)
-			Text(verbatim: PreferencesInterfaceStrings.arrangementLeftToRight)
-				.tag(TXChannelViewArrangement.vertical)
-		} label: {
-			Text(verbatim: PreferencesInterfaceStrings.arrangementLabel)
 		}
 	}
 

@@ -252,7 +252,7 @@ public final class LogController: NSObject {
 	 immediately: a job that is already rendering finds its generation stale and
 	 applies nothing. Retiring the whole pipeline is what drops the jobs that had
 	 not started; nothing waits for it. */
-	func cancelRenderJobs() {
+	private func cancelRenderJobs() {
 		guard terminating == false else {
 			return
 		}
@@ -260,6 +260,10 @@ public final class LogController: NSObject {
 		stopPipeline()
 		pipeline = LogRenderPipeline()
 		startPipeline()
+	}
+
+	func drainRenderJobs() async {
+		await pipeline.drain()
 	}
 
 	private func loadInitialDocument() {

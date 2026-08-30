@@ -259,45 +259,6 @@ struct AppKitBridgeIsolationTests {
 		}
 	}
 
-	// MARK: - Subview ordering
-
-	@Test("Reordering the channel view's subviews keeps them in item order")
-	func channelViewOrdersSubviewsByItemIndex() {
-		let channelView = MainWindowChannelView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
-		let indexes = [3, 0, 2, 1]
-
-		for index in indexes {
-			let subview = MainWindowChannelViewSubview(frame: .zero)
-			subview.itemIndex = index
-			subview.uniqueIdentifier = "item-\(index)"
-			channelView.addSubview(subview)
-		}
-
-		channelView.orderSubviewsByItemIndex()
-
-		let ordered = channelView.subviews.compactMap { ($0 as? MainWindowChannelViewSubview)?.itemIndex }
-
-		#expect(ordered == [0, 1, 2, 3])
-	}
-
-	@Test("Subviews that share an item index keep the order they arrived in")
-	func channelViewOrderingIsStableForEqualIndexes() {
-		let channelView = MainWindowChannelView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
-
-		for identifier in ["first", "second", "third"] {
-			let subview = MainWindowChannelViewSubview(frame: .zero)
-			subview.itemIndex = 0
-			subview.uniqueIdentifier = identifier
-			channelView.addSubview(subview)
-		}
-
-		channelView.orderSubviewsByItemIndex()
-
-		let ordered = channelView.subviews.compactMap { ($0 as? MainWindowChannelViewSubview)?.uniqueIdentifier }
-
-		#expect(ordered == ["first", "second", "third"])
-	}
-
 	// MARK: - Opened files
 
 	@Test("An opened file is recognised by kind")

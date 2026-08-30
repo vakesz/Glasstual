@@ -47,11 +47,6 @@ public nonisolated extension Preferences { // nonisolated: value
 			default: TXPreferredAppearance.inherited
 		)
 
-		public static let channelViewArrangement = PreferenceKey(
-			"ChannelViewArrangement",
-			default: TXChannelViewArrangement.horizontal
-		)
-
 		public static let disableSidebarTranslucency = PreferenceKey("DisableSidebarTranslucency", default: false)
 		public static let memberListNoModeSymbol = PreferenceKey("DisplayUserListNoModeSymbol", default: true)
 		public static let memberListSortFavorsServerStaff = PreferenceKey(
@@ -106,7 +101,7 @@ public nonisolated extension Preferences { // nonisolated: value
 		public static let webViewProcessPoolLimited = PreferenceKey("WebViewProcessPoolSizeIsLimited", default: true)
 
 		static let all: [any AnyPreferenceKey] = [
-			preferredAppearance, channelViewArrangement, disableSidebarTranslucency, memberListNoModeSymbol,
+			preferredAppearance, disableSidebarTranslucency, memberListNoModeSymbol,
 			memberListSortFavorsServerStaff, memberListUpdatesPopoverOnScroll,
 			conversationTrackingIncludesModeSymbol, trackUserAwayStatusMaximumChannelSize,
 			channelNavigationIsServerSpecific, connectOnDoubleClick, disconnectOnDoubleClick,
@@ -276,16 +271,12 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		public static let serverListSelection = PreferenceKey(
 			"Window -> Main Window -> Server List Selection",
-			default: [String](),
+			default: "",
 			traits: .unregistered
 		)
 
-		public static let splitViewFrames = UntypedPreferenceKey(
-			"Window -> Main Window -> Split Channel View Saved Frames"
-		)
-
 		static let all: [any AnyPreferenceKey] = [
-			serverListVisible, memberListVisible, serverListSelection, splitViewFrames,
+			serverListVisible, memberListVisible, serverListSelection,
 		]
 	}
 }

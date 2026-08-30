@@ -419,13 +419,9 @@ public extension MainWindow {
 	}
 }
 
-// MARK: - Selection and split view
+// MARK: - Selection and transcript view
 
 public extension MainWindow {
-	var multipleItemsSelected: Bool {
-		selectedItems.count > 1
-	}
-
 	var previouslySelectedItem: IRCTreeItem? {
 		guard let previousSelectedItemId else { return nil }
 		return world.findItem(withId: previousSelectedItemId)
@@ -447,63 +443,25 @@ public extension MainWindow {
 		return selectedClient?.logController
 	}
 
-	func channelViewSelectionChange(to item: IRCTreeItem) {
-		selectItemInSelectedItems(
-			item,
-			refreshChannelView: false
-		)
-	}
-
-	func updateChannelViewArrangement() {
-		channelView.updateArrangement()
-	}
-
-	func updateChannelViewBoxContentViewSelection() {
-		channelView.populateSubviews()
-	}
-
 	func isItemVisible(_ item: IRCTreeItem) -> Bool {
-		isItemSelected(item) || isItemInSelectedGroup(item)
+		isItemSelected(item)
 	}
 
 	func isItemSelected(_ item: IRCTreeItem?) -> Bool {
 		item != nil && selectedItem === item
 	}
 
-	func isItemInSelectedGroup(_ item: IRCTreeItem) -> Bool {
-		selectedItems.contains(where: { $0 === item })
-	}
-
-	private func selectionDidChange(toRows _: IndexSet, selectedItem requestedItem: IRCTreeItem? = nil) {
-		let newItems = serverList.selectedItems as? [IRCTreeItem] ?? []
-		if selectedItems.elementsEqual(newItems, by: { $0 === $1 }) {
-			if let requestedItem {
-				selectItemInSelectedItems(requestedItem)
-			}
-			return
-		}
-
+	private func selectionDidChange() {
+		let newItem = serverList.selectedRow >= 0
+			? serverList.item(atRow: serverList.selectedRow) as? IRCTreeItem
+			: nil
+		guard selectedItem !== newItem else { return }
 		storePreviousSelection()
-		let previousItems = selectedItems
-		if newItems.isEmpty {
-			selectedItems = []
-			selectedItem = nil
-		} else {
-			selectedItems = newItems
-			let candidate = requestedItem ?? selectedItem
-			selectedItem = candidate.map(isItemInSelectedGroup) == true ? candidate : newItems.last
-		}
-
-		updateChannelViewBoxContentViewSelection()
-		for item in previousItems where newItems.contains(where: { $0 === item }) == false {
-			item.logController?.notifyDidBecomeHidden()
-		}
-		for item in newItems where previousItems.contains(where: { $0 === item }) == false {
-			item.logController?.notifyDidBecomeVisible()
-			if item !== selectedItem {
-				item.logController?.notifySelectionChanged()
-			}
-		}
+		let previousItem = selectedItem
+		selectedItem = newItem
+		channelView.show(newItem?.logController?.ensureBackingView())
+		previousItem?.logController?.notifyDidBecomeHidden()
+		newItem?.logController?.notifyDidBecomeVisible()
 		selectionDidChangePostflight()
 	}
 
@@ -514,9 +472,6 @@ public extension MainWindow {
 		guard changedTo !== changedFrom else { return }
 		changedFrom?.resetState()
 		if let changedTo {
-			if multipleItemsSelected {
-				serverList.refreshMessageCount(forItem: changedTo)
-			}
 			changedTo.resetState()
 			noteItemWasViewed(changedTo)
 		}
@@ -764,7 +719,7 @@ public extension MainWindow {
 
 public extension MainWindow {
 	func saveSelection() {
-		MainWindowStateStore().saveSelection(itemIdentifiers: selectedItems.map(\.uniqueIdentifier))
+		MainWindowStateStore().saveSelection(itemIdentifier: selectedItem?.uniqueIdentifier)
 	}
 
 	private func restoreExpandedClients() {
@@ -776,17 +731,13 @@ public extension MainWindow {
 	}
 
 	private func restoreSelectionDuringSetup() {
-		let identifiers = MainWindowStateStore().loadSelectionItemIdentifiers()
-		guard identifiers.isEmpty == false else {
+		guard let identifier = MainWindowStateStore().loadSelectionItemIdentifier(),
+		      let item = world.findItem(withId: identifier)
+		else {
 			selectBestChoiceDuringSetup()
 			return
 		}
-		let selection = world.findItems(withIds: identifiers)
-		guard selection.isEmpty == false else {
-			selectBestChoiceDuringSetup()
-			return
-		}
-		adjustSelection(with: selection, selectedItem: nil)
+		select(item)
 	}
 
 	private func selectBestChoiceDuringSetup() {
@@ -809,12 +760,14 @@ public extension MainWindow {
 		serverList.keyDelegate = self
 		serverList.delegate = self
 		serverList.dataSource = self
+		serverList.allowsEmptySelection = false
+		serverList.allowsMultipleSelection = false
 		serverList.target = self
 		serverList.doubleAction = #selector(outlineViewDoubleClicked(_:))
 		serverList.registerForDraggedTypes([MainWindowConstants.treeItemPasteboardType])
 		restoreExpandedClients()
 		restoreSelectionDuringSetup()
-		serverListSelectionDidChange(for: nil)
+		serverListSelectionDidChange()
 		menuController.populateNavigationChannelList()
 	}
 
@@ -844,34 +797,15 @@ public extension MainWindow {
 	}
 
 	func adjustSelection() {
-		adjustSelection(with: selectedItems, selectedItem: selectedItem)
-	}
-
-	func adjustSelection(with items: [IRCTreeItem], selectedItem: IRCTreeItem?) {
-		let rows = NSMutableIndexSet()
-		for item in items {
-			if item.isClient == false {
-				serverList.expandItem(item.associatedClient)
-			}
-			let row = serverList.row(forItem: item)
-			if row >= 0 {
-				rows.add(row)
-			}
+		guard let selectedItem, serverList.row(forItem: selectedItem) >= 0 else {
+			selectReplacement(excluding: nil)
+			return
 		}
-		if serverList.selectedRowIndexes != rows as IndexSet {
-			ignoreNextOutlineViewSelectionChange = true
-			serverList.selectRowIndexes(rows as IndexSet, byExtendingSelection: false, scrollingToSelection: true)
-		}
-		selectionDidChange(toRows: rows as IndexSet, selectedItem: selectedItem)
+		select(selectedItem)
 	}
 
 	private func storePreviousSelection() {
 		previousSelectedItemId = selectedItem?.uniqueIdentifier
-		storePreviousSelections()
-	}
-
-	private func storePreviousSelections() {
-		previousSelectedItemsId = selectedItems.map(\.uniqueIdentifier)
 	}
 
 	private func storeLastSelectedChannel() {
@@ -880,97 +814,52 @@ public extension MainWindow {
 
 	func selectPreviousItem() {
 		guard let previous = previouslySelectedItem else { return }
-		let previousItems = previousSelectedItemsId.compactMap { world.findItem(withId: $0) }
-		adjustSelection(with: previousItems, selectedItem: previous)
-	}
-
-	private func selectItemInSelectedItems(_ item: IRCTreeItem, refreshChannelView: Bool = true) {
-		guard isItemSelected(item) == false, isItemInSelectedGroup(item) else { return }
-		storePreviousSelection()
-		selectedItem = item
-		if refreshChannelView {
-			updateChannelViewBoxContentViewSelection()
-		}
-		selectionDidChangePostflight()
+		select(previous)
 	}
 
 	func select(_ item: IRCTreeItem?) {
-		shiftSelection(from: selectedItem, to: item, options: [.maintainGrouping, .performDeselect])
+		guard let item else {
+			selectReplacement(excluding: nil)
+			return
+		}
+		if item.isClient == false {
+			serverList.expandItem(item.associatedClient)
+		}
+		let row = serverList.row(forItem: item)
+		guard row >= 0 else { return }
+		serverList.selectItem(at: row)
+		selectionDidChange()
 	}
 
 	func deselect(_ item: IRCTreeItem) {
-		shiftSelection(from: item, to: nil, options: .performDeselect)
+		guard selectedItem === item else { return }
+		let row = serverList.row(forItem: item)
+		selectReplacement(excluding: row >= 0 ? IndexSet(integer: row) : nil)
 	}
 
 	func deselectGroup(_ item: IRCTreeItem) {
-		guard item.isClient else { return }
-		shiftSelection(from: item, to: nil, options: [.performDeselect, .performDeselectChildren])
+		guard item.isClient, selectedItem?.associatedClient === item.associatedClient else { return }
+		var excluded = serverList.indexesOfItems(inGroup: item) ?? []
+		let row = serverList.row(forItem: item)
+		if row >= 0 {
+			excluded.insert(row)
+		}
+		selectReplacement(excluding: excluded)
 	}
 
-	private func shiftSelection(
-		from oldItem: IRCTreeItem?,
-		to newItem: IRCTreeItem?,
-		options: MainWindowShiftSelectionOptions
-	) {
-		guard oldItem !== newItem else { return }
-		if let newItem, newItem.isClient == false, let client = newItem.associatedClient {
-			expandClient(client)
-		}
-		let maintainGrouping = options.contains(.maintainGrouping)
-		let deselectOld = options.contains(.performDeselect)
-		let deselectChildren = options.contains(.performDeselectChildren)
-		let performDeselect = deselectOld || deselectChildren
-		let oldIndex = serverList.row(forItem: oldItem)
-		let newIndex = serverList.row(forItem: newItem)
-		let selectedRows = serverList.selectedRowIndexes
-		if performDeselect, oldIndex >= 0, selectedRows.contains(oldIndex) == false {
-			return
-		}
-		if maintainGrouping, oldIndex >= 0, selectedRows.contains(oldIndex), newIndex >= 0,
-		   selectedRows.contains(newIndex), let newItem
-		{
-			selectItemInSelectedItems(newItem)
-			return
-		}
-
-		var nextRows = selectedRows
-		var forbiddenRows: IndexSet?
-		if deselectOld {
-			nextRows.removeAll()
-		}
-		if deselectChildren, let oldItem,
-		   let children = serverList.indexesOfItems(inGroup: oldItem) as IndexSet?
-		{
-			nextRows.subtract(children)
-			forbiddenRows = children
-		}
-		if newItem != nil {
-			guard newIndex >= 0 else { return }
-			nextRows.insert(newIndex)
-		} else if nextRows.isEmpty {
-			var next = oldIndex + 1
-			if forbiddenRows?.contains(next) == true, let last = forbiddenRows?.last {
-				next = last + 1
-			}
-			if next >= serverList.numberOfRows {
-				next = oldIndex - 1
-			}
-			if forbiddenRows?.contains(next) == true, let first = forbiddenRows?.first {
-				next = first - 1
-			}
-			if next >= 0 {
-				nextRows.insert(next)
-			}
-		}
-
-		if nextRows.isEmpty {
+	private func selectReplacement(excluding excludedRows: IndexSet?) {
+		let currentRow = max(serverList.selectedRow, 0)
+		let candidates = (0 ..< serverList.numberOfRows).filter { excludedRows?.contains($0) != true }
+		guard let row = candidates.first(where: { $0 >= currentRow }) ?? candidates.last else {
 			storePreviousSelection()
+			selectedItem?.logController?.notifyDidBecomeHidden()
 			selectedItem = nil
-			selectedItems = []
+			channelView.show(nil)
 			selectionDidChangePostflight()
 			return
 		}
-		serverList.selectRowIndexes(nextRows, byExtendingSelection: false, scrollingToSelection: true)
+		serverList.selectItem(at: row)
+		selectionDidChange()
 	}
 }
 
@@ -1068,52 +957,23 @@ public extension MainWindow {
 
 	func outlineViewItemWillCollapse(_: Notification) {}
 
-	func selectionShouldChange(in outlineView: NSOutlineView) -> Bool {
-		guard let serverList = outlineView as? ServerList else { return true }
-		if isKeyWindow == false {
-			return false
-		}
-		if serverList.leftMouseIsDownInView == false {
-			return true
-		}
-		let modifiers = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
-		if modifiers.contains(.command) || modifiers.contains(.shift) {
-			return true
-		}
-		guard let row = outlineView.rowBeneathMouse, outlineView.isRowSelected(row),
-		      let item = outlineView.item(atRow: row) as? IRCTreeItem else { return true }
-		selectItemInSelectedItems(item)
-		return false
-	}
-
-	func outlineView(
-		_ outlineView: NSOutlineView,
-		selectionIndexesForProposedSelection proposedSelectionIndexes: IndexSet
-	) -> IndexSet {
-		outlineView.selectionIndexes(
-			forProposedSelection: proposedSelectionIndexes,
-			maximumCount: MainWindowConstants.maximumSelectedRows
-		)
+	func selectionShouldChange(in _: NSOutlineView) -> Bool {
+		isKeyWindow
 	}
 
 	func outlineViewSelectionDidChange(_ notification: Notification) {
-		serverListSelectionDidChange(for: notification.object as? ServerList)
+		guard notification.object as? ServerList === serverList else {
+			return
+		}
+		serverListSelectionDidChange()
 	}
 
-	private func serverListSelectionDidChange(for changedList: ServerList?) {
-		let list = changedList ?? serverList!
+	private func serverListSelectionDidChange() {
 		if ignoreNextOutlineViewSelectionChange {
 			ignoreNextOutlineViewSelectionChange = false; return
 		}
 		guard ignoreOutlineViewSelectionChanges == false else { return }
-		let rows = list.selectedRowIndexes
-		var focusedItem: IRCTreeItem?
-		if NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command {
-			if let row = list.rowBeneathMouse, rows.contains(row) {
-				focusedItem = list.item(atRow: row) as? IRCTreeItem
-			}
-		}
-		selectionDidChange(toRows: rows, selectedItem: focusedItem)
+		selectionDidChange()
 	}
 
 	func outlineView(_: NSOutlineView, pasteboardWriterForItem item: Any) -> (any NSPasteboardWriting)? {

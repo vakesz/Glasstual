@@ -120,7 +120,7 @@ public final class LogView: NSObject {
 	public weak var viewController: LogController?
 	public var contextMenuTarget = LogPolicyTarget()
 	public var selection: String?
-	/** Observed with `publisher(for:)` by the channel view's loading overlay,
+	/** Observed with `publisher(for:)` by the channel view host,
 	 which is key-value observation: the property has to stay visible to the
 	 Objective-C runtime and dynamically dispatched or the key path resolves
 	 to nothing. */
@@ -230,12 +230,6 @@ public final class LogView: NSObject {
 
 		let viewDescription = description
 		logViewLogger.debug("View finished loading: \(viewDescription, privacy: .public)")
-		evaluateJavaScript(
-			"if (_Glasstual._viewBodyDidLoadAnimationFrame) { " +
-				"window.cancelAnimationFrame(_Glasstual._viewBodyDidLoadAnimationFrame); " +
-				"_Glasstual._viewBodyDidLoad(); }"
-		)
-		setViewFinishedLayout()
 		viewController.logViewWebViewFinishedLoading()
 	}
 

@@ -94,12 +94,6 @@ _Glasstual.viewBodyDidLoad = function() /* PRIVATE */
 	/* Wait until element is available before binding to it. */
 	_GlasstualScroller.bindToBestElement();
 
-	/* On styles with a dark background, a white flash occurs because there is a very
-	 small delay between the view being created and the background process laying out
-	 its contents. To work around this, Glasstual presents an overlay view that matches
-	 the background color of the style. We then request an animation frame that calls
-	 app.finishedLayingOutView, instructing Glasstual that it can destroy the overlay view. */
-
 	_Glasstual._viewBodyDidLoadAnimationFrame =
 	window.requestAnimationFrame(function() {
 		_Glasstual._viewBodyDidLoad();
@@ -109,8 +103,6 @@ _Glasstual.viewBodyDidLoad = function() /* PRIVATE */
 _Glasstual._viewBodyDidLoad = function() /* PRIVATE */
 {
 	_Glasstual._viewBodyDidLoadAnimationFrame = null;
-
-	appPrivate.finishedLayingOutView();
 
 	Glasstual.viewBodyDidLoad();
 };
@@ -159,7 +151,13 @@ _Glasstual.viewFinishedLoadingHistory = function() /* PRIVATE */
 {
 	Glasstual.finishedLoadingHistory = true;
 
-	Glasstual.viewFinishedLoadingHistory();
+	try {
+		Glasstual.viewFinishedLoadingHistory();
+	} finally {
+		window.requestAnimationFrame(function() {
+			appPrivate.finishedLayingOutView();
+		});
+	}
 };
 
 _Glasstual.messageAddedToView = function(lineNumber, fromBuffer) /* PRIVATE */

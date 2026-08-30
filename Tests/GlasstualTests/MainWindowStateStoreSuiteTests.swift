@@ -40,16 +40,16 @@ struct MainWindowStateStoreSuiteTests {
 
 		let store = MainWindowStateStore()
 		store.saveLayout(MainWindowLayoutState(isServerListVisible: false, isMemberListVisible: false))
-		store.saveSelection(itemIdentifiers: ["an-identifier"])
+		store.saveSelection(itemIdentifier: "an-identifier")
 
 		#expect(container.object(forKey: Self.keys[0]) != nil)
 		#expect(container.object(forKey: Self.keys[1]) != nil)
-		#expect(container.stringArray(forKey: Self.keys[2]) == ["an-identifier"])
+		#expect(container.string(forKey: Self.keys[2]) == "an-identifier")
 
 		let reloaded = store.loadLayout()
 		#expect(reloaded.isServerListVisible == false)
 		#expect(reloaded.isMemberListVisible == false)
-		#expect(store.loadSelectionItemIdentifiers() == ["an-identifier"])
+		#expect(store.loadSelectionItemIdentifier() == "an-identifier")
 	}
 
 	@Test("All three keys are listed in the exportable master list")

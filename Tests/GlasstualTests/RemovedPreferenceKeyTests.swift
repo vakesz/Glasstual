@@ -25,6 +25,8 @@ struct RemovedPreferenceKeyTests {
 	private static let removedKeys = [
 		"InlineMediaLimitInsecureContent",
 		"User List Mode Badge Colors -> no mode",
+		"ChannelViewArrangement",
+		"Window -> Main Window -> Split Channel View Saved Frames",
 	]
 
 	private nonisolated static let preferencePlists = [
