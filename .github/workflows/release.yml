@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   release:
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 90
 
     env:
@@ -48,15 +48,13 @@ jobs:
             exit 1
           fi
 
-      - name: Select Xcode
+      - name: Verify Xcode 27 runner
         run: |
           set -euo pipefail
-          # Newest installed Xcode with the macOS 26 SDK (Xcode 26 or later).
-          XCODE_APP="$(find /Applications -maxdepth 1 -name 'Xcode_*.app' | sort -V | tail -n 1)"
-          sudo xcode-select -s "${XCODE_APP:-/Applications/Xcode.app}"
+          sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
           XCODE_MAJOR="$(xcodebuild -version | head -n 1 | sed -E 's/^Xcode ([0-9]+).*/\1/')"
-          [ "${XCODE_MAJOR}" -ge 26 ]
+          [ "${XCODE_MAJOR}" -eq 27 ]
 
       - name: Resolve release version
         id: version
