@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -26,7 +26,10 @@ struct MainWindowStateStore {
 
 	private let defaults: UserDefaults
 
-	init(defaults: UserDefaults = .standard) {
+	// All three keys are in PreferenceKeyMasterList.plist and not excluded from
+	// the container, so preference export/import reads them out of the group
+	// suite: they have to be written there too.
+	init(defaults: UserDefaults = TextualUserDefaults.container) {
 		self.defaults = defaults
 	}
 

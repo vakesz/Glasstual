@@ -1,30 +1,33 @@
 import CocoaExtensions
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
-@objc
-class RCMSecureTransportTests: XCTestCase {
-	@objc
-	func testCompatibilityCipherListIncludesDeprecatedSuites() {
+@MainActor
+@Suite("Secure transport cipher suites")
+struct RCMSecureTransportTests {
+	@Test("The compatibility list keeps the deprecated suites, ranked below their modern replacements")
+	func compatibilityCipherListIncludesDeprecatedSuites() throws {
+		let modernSuite = NSNumber(value: TLS_DHE_RSA_WITH_AES_256_GCM_SHA384)
+		let deprecatedSuite = NSNumber(value: TLS_RSA_WITH_AES_256_GCM_SHA384)
 		let cipherSuites = SecureTransportSupport.cipherSuites(
 			inCollection: .default,
 			includeDeprecated: true
 		)
-		let dheIndex = cipherSuites.firstIndex(of: NSNumber(value: TLS_DHE_RSA_WITH_AES_256_GCM_SHA384))
-		let rsaIndex = cipherSuites.firstIndex(of: NSNumber(value: TLS_RSA_WITH_AES_256_GCM_SHA384))
 
-		XCTAssertNotNil(dheIndex)
-		XCTAssertTrue(cipherSuites.contains(NSNumber(value: TLS_RSA_WITH_AES_256_GCM_SHA384)))
-		XCTAssertLessThan(try XCTUnwrap(dheIndex), try XCTUnwrap(rsaIndex))
+		let modernIndex = try #require(cipherSuites.firstIndex(of: modernSuite))
+		let deprecatedIndex = try #require(cipherSuites.firstIndex(of: deprecatedSuite))
+
+		#expect(modernIndex < deprecatedIndex)
 	}
 
-	@objc
-	func testModernCipherListExcludesDeprecatedSuites() {
+	@Test("The modern list drops the deprecated suites entirely")
+	func modernCipherListExcludesDeprecatedSuites() {
 		let cipherSuites = SecureTransportSupport.cipherSuites(
 			inCollection: .default,
 			includeDeprecated: false
 		)
 
-		XCTAssertFalse(cipherSuites.contains(NSNumber(value: TLS_RSA_WITH_AES_256_GCM_SHA384)))
+		#expect(cipherSuites.contains(NSNumber(value: TLS_RSA_WITH_AES_256_GCM_SHA384)) == false)
 	}
 }

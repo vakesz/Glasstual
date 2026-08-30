@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,7 +37,10 @@
 
 import Foundation
 
-public final class PluginTextEvent: Sendable {
+/// Holds live `PluginClient`/`PluginChannel` references, so it lives on the
+/// main actor with them.
+@MainActor
+public final class PluginTextEvent {
 	public let text: String
 	public let author: PluginSender
 	public let destination: PluginChannel?
@@ -65,7 +68,8 @@ public final class PluginTextEvent: Sendable {
 	}
 }
 
-public final class PluginCommandInvocation: Sendable {
+@MainActor
+public final class PluginCommandInvocation {
 	public let client: PluginClient
 	public let command: String
 	public let message: String
@@ -87,7 +91,8 @@ public final class PluginCommandInvocation: Sendable {
 	}
 }
 
-public final class PluginIncomingCommandEvent: Sendable {
+@MainActor
+public final class PluginIncomingCommandEvent {
 	public let command: String
 	public let text: String?
 	public let author: PluginSender
@@ -125,6 +130,9 @@ public struct PluginRenderEvent: Sendable {
 	}
 }
 
+/// Wraps an untyped host value, so it is neither sendable nor usable off the
+/// main actor.
+@MainActor
 public struct PluginUserInput {
 	public let value: Any
 	public let commandRawValue: UInt
@@ -135,7 +143,32 @@ public struct PluginUserInput {
 	}
 }
 
-public final class PluginPostedMessage: @unchecked Sendable {
+/// One hyperlink the renderer found in a message body.
+public struct PluginHyperlink: Equatable, Sendable {
+	/// Identifier unique to this occurrence of the link.
+	public let uniqueIdentifier: String
+	/// The address including its scheme; bare domains are prefixed `http://`.
+	public let stringValue: String
+	/// The range of the match in the body that was scanned.
+	public let range: NSRange
+	/// `true` when the match carried an explicit scheme.
+	public let strictMatch: Bool
+
+	public init(uniqueIdentifier: String, stringValue: String, range: NSRange, strictMatch: Bool) {
+		self.uniqueIdentifier = uniqueIdentifier
+		self.stringValue = stringValue
+		self.range = range
+		self.strictMatch = strictMatch
+	}
+}
+
+/** One rendered message, handed to plugins after it appears in the view.
+
+ A value. The renderer runs off the main actor and produces the parts; the host
+ finishes the message on the main actor, where the nicknames the body mentioned
+ can be resolved against the live member list, and hands it to the plugins
+ there. Nothing holds it afterwards. */
+public struct PluginPostedMessage: Sendable {
 	public var isProcessedInBulk = false
 	public var messageContents = ""
 	public var lineNumber = ""
@@ -143,25 +176,40 @@ public final class PluginPostedMessage: @unchecked Sendable {
 	public var lineTypeRawValue: UInt = 0
 	public var memberTypeRawValue: UInt = 0
 	public var receivedAt = Date()
-	public var hyperlinks: [AnyObject] = []
-	public var users: [AnyObject] = []
+	public var hyperlinks: [PluginHyperlink] = []
+	public var users: [PluginChannelMember] = []
 	public var keywordMatchFound = false
 
 	public init() {}
 }
 
-public final class PluginJavaScriptPayload: @unchecked Sendable {
+@MainActor
+public final class PluginJavaScriptPayload {
 	public var payloadLabel = ""
 	public var payloadContents: Any?
 
 	public init() {}
 }
 
-public final class PluginOutputSuppressionRule: @unchecked Sendable {
+/// A value: the plugin manager publishes these rules to the IRC layer, which
+/// reads them off the main actor.
+public struct PluginOutputSuppressionRule: Equatable, Sendable {
 	public var match = ""
 	public var restrictConsole = false
 	public var restrictChannel = false
 	public var restrictPrivateMessage = false
 
 	public init() {}
+
+	public init(
+		match: String,
+		restrictConsole: Bool = false,
+		restrictChannel: Bool = false,
+		restrictPrivateMessage: Bool = false
+	) {
+		self.match = match
+		self.restrictConsole = restrictConsole
+		self.restrictChannel = restrictChannel
+		self.restrictPrivateMessage = restrictPrivateMessage
+	}
 }

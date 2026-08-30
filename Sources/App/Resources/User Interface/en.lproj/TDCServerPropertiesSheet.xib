@@ -12,17 +12,16 @@
                 <outlet property="addAddressBookEntryMenu" destination="yYJ-qd-Dm2" id="cVa-bu-jqf"/>
                 <outlet property="addChannelButton" destination="1794" id="1947"/>
                 <outlet property="addHighlightButton" destination="2449" id="2478"/>
-                <outlet property="addressBookArrayController" destination="aez-lt-zBV" id="BOQ-aO-HOI"/>
                 <outlet property="addressBookTable" destination="1851" id="wZ4-il-0gh"/>
                 <outlet property="alternateNicknamesTextField" destination="1602" id="vN7-KA-LFN"/>
                 <outlet property="autoConnectCheck" destination="1531" id="1935"/>
                 <outlet property="autoDisconnectOnSleepCheck" destination="2250" id="2253"/>
                 <outlet property="autoReconnectCheck" destination="1532" id="1936"/>
                 <outlet property="autojoinWaitsForNickServCheck" destination="B1u-e0-30u" id="44s-dS-Pu5"/>
+                <outlet property="disconnectOnSASLFailureCheck" destination="sfc-01-btn" id="sfc-01-out"/>
                 <outlet property="awayNicknameTextField" destination="2335" id="eE8-0s-KKE"/>
                 <outlet property="ctcpVersionReplyTextField" destination="cV1-rs-N0f" id="cV1-rs-N0j"/>
                 <outlet property="cancelButton" destination="1456" id="1463"/>
-                <outlet property="channelListArrayController" destination="XlX-J4-ZJt" id="EMw-nK-7vi"/>
                 <outlet property="channelListTable" destination="1805" id="ex0-5N-btj"/>
                 <outlet property="clientCertificateChangeCertificateButton" destination="l36-PJ-JBU" id="vUq-tL-9aS"/>
                 <outlet property="clientCertificateCommonNameField" destination="nly-3d-FIq" id="OGc-7I-cMH"/>
@@ -66,7 +65,6 @@
                 <outlet property="floodControlDelayTimerSlider" destination="O6l-eN-3Uc" id="l2j-Kb-PsN"/>
                 <outlet property="floodControlMessageCountSlider" destination="RXW-HB-aEa" id="whf-jb-XgS"/>
                 <outlet property="hideAutojoinDelayedWarningsCheck" destination="ptP-ZP-JAf" id="LXI-a8-mzH"/>
-                <outlet property="highlightListArrayController" destination="XVW-tl-Aro" id="yo0-76-qlh"/>
                 <outlet property="highlightsTable" destination="2454" id="2474"/>
                 <outlet property="navigationOutlineView" destination="Uj0-Wm-eox" id="9jc-dy-sjg"/>
                 <outlet property="nicknamePasswordTextField" destination="1601" id="i9R-Eg-aTO"/>
@@ -85,7 +83,6 @@
                 <outlet property="proxyUsernameTextField" destination="1904" id="2Og-K9-Fm0"/>
                 <outlet property="realNameTextField" destination="1599" id="rND-lL-Vwa"/>
                 <outlet property="serverAddressComboBox" destination="1548" id="KiZ-Pe-JGR"/>
-                <outlet property="serverListArrayController" destination="Wea-hF-mxO" id="7g1-J3-n15"/>
                 <outlet property="serverPasswordTextField" destination="1543" id="QPw-Zo-tGM"/>
                 <outlet property="serverPortTextField" destination="1541" id="gpo-Oq-ZnG"/>
                 <outlet property="setInvisibleModeOnConnectCheck" destination="1879" id="avU-NB-X0a"/>
@@ -587,6 +584,13 @@ Gw
                         <font key="font" metaFont="system"/>
                     </buttonCell>
                 </button>
+                <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="sfc-01-btn">
+                    <rect key="frame" x="109" y="10" width="300" height="18"/>
+                    <buttonCell key="cell" type="check" title="Disconnect if SASL authentication fails" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="sfc-01-cel">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                </button>
                 <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="A3c-XH-Q30">
                     <rect key="frame" x="100" y="234" width="320" height="5"/>
                 </box>
@@ -712,7 +716,10 @@ Gw
                 <constraint firstItem="B1u-e0-30u" firstAttribute="centerX" secondItem="1563" secondAttribute="centerX" id="MVh-Xm-az8"/>
                 <constraint firstItem="1623" firstAttribute="firstBaseline" secondItem="1601" secondAttribute="firstBaseline" id="Znp-dw-sXj"/>
                 <constraint firstItem="tzn-BP-yin" firstAttribute="leading" secondItem="1563" secondAttribute="leading" constant="80" id="ama-2t-vUE"/>
-                <constraint firstAttribute="bottom" secondItem="ptP-ZP-JAf" secondAttribute="bottom" constant="35" id="bD4-Wl-er4"/>
+                <constraint firstAttribute="bottom" secondItem="sfc-01-btn" secondAttribute="bottom" constant="10" id="bD4-Wl-er4"/>
+                <constraint firstItem="sfc-01-btn" firstAttribute="top" secondItem="ptP-ZP-JAf" secondAttribute="bottom" constant="6" symbolic="YES" id="sfc-01-ct1"/>
+                <constraint firstItem="sfc-01-btn" firstAttribute="leading" secondItem="B1u-e0-30u" secondAttribute="leading" id="sfc-01-ct2"/>
+                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="sfc-01-btn" secondAttribute="trailing" constant="20" id="sfc-01-ct3"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="1604" secondAttribute="trailing" constant="20" id="eXk-Wd-Lgf"/>
                 <constraint firstItem="7sG-7N-mzK" firstAttribute="top" secondItem="A3c-XH-Q30" secondAttribute="bottom" constant="18" id="f6k-va-7Hj"/>
                 <constraint firstItem="2Zg-jJ-evU" firstAttribute="trailing" secondItem="A3c-XH-Q30" secondAttribute="trailing" id="hrg-nn-IWs"/>
@@ -1145,8 +1152,6 @@ Gw
                                     </tableColumn>
                                 </tableColumns>
                                 <connections>
-                                    <binding destination="XlX-J4-ZJt" name="content" keyPath="arrangedObjects" id="eN6-1G-Wto"/>
-                                    <outlet property="dataSource" destination="-2" id="1812"/>
                                     <outlet property="delegate" destination="-2" id="1813"/>
                                 </connections>
                             </tableView>
@@ -1369,8 +1374,6 @@ Gw
                                     </tableColumn>
                                 </tableColumns>
                                 <connections>
-                                    <binding destination="XVW-tl-Aro" name="content" keyPath="arrangedObjects" id="Qdv-Df-SW6"/>
-                                    <outlet property="dataSource" destination="-2" id="2469"/>
                                     <outlet property="delegate" destination="-2" id="2468"/>
                                 </connections>
                             </tableView>
@@ -1549,8 +1552,6 @@ Gw
                                     </tableColumn>
                                 </tableColumns>
                                 <connections>
-                                    <binding destination="aez-lt-zBV" name="content" keyPath="arrangedObjects" id="Fiz-Rr-whz"/>
-                                    <outlet property="dataSource" destination="-2" id="1858"/>
                                     <outlet property="delegate" destination="-2" id="1859"/>
                                 </connections>
                             </tableView>
@@ -2648,18 +2649,6 @@ Gw
             </constraints>
             <point key="canvasLocation" x="582" y="6373"/>
         </customView>
-        <arrayController objectClassName="IRCAddressBookEntry" selectsInsertedObjects="NO" avoidsEmptySelection="NO" automaticallyRearrangesObjects="YES" id="aez-lt-zBV">
-            <classReference key="objectClass" className="IRCAddressBookEntry"/>
-        </arrayController>
-        <arrayController objectClassName="IRCChannelConfig" selectsInsertedObjects="NO" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" automaticallyRearrangesObjects="YES" id="XlX-J4-ZJt">
-            <classReference key="objectClass" className="IRCChannelConfig"/>
-        </arrayController>
-        <arrayController objectClassName="IRCHighlightMatchCondition" selectsInsertedObjects="NO" avoidsEmptySelection="NO" automaticallyRearrangesObjects="YES" id="XVW-tl-Aro">
-            <classReference key="objectClass" className="IRCHighlightMatchCondition"/>
-        </arrayController>
-        <arrayController objectClassName="IRCServer" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" automaticallyRearrangesObjects="YES" id="Wea-hF-mxO">
-            <classReference key="objectClass" className="IRCServer"/>
-        </arrayController>
     </objects>
     <resources>
         <image name="NSAddTemplate" width="18" height="17"/>

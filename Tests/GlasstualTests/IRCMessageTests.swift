@@ -1,17 +1,9 @@
-@testable import Glasstual
-import XCTest
-
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "GLTTestClient.h"
-/// #import "IRCMessage.h"
-/// #import "IRCPrefix.h"
-/** *********************************************************************
+/* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
@@ -43,90 +35,105 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
+
+import Foundation
+@testable import Glasstual
+import Testing
+
 @MainActor
-final class IRCMessageTests: XCTestCase {
-	func testParsesPrefixCommandAndTrailingParameter() throws {
-		let message = try XCTUnwrap(Message(line: ":nick!user@host PRIVMSG #channel :hello  world"))
-		XCTAssertEqual(message.command, "PRIVMSG")
-		XCTAssertEqual(message.commandNumeric, 0)
-		XCTAssertEqual(message.senderNickname, "nick")
-		XCTAssertEqual(message.senderUsername, "user")
-		XCTAssertEqual(message.senderAddress, "host")
-		XCTAssertFalse(message.senderIsServer)
-		XCTAssertEqual(message.paramsCount, 2)
-		XCTAssertEqual(message.param(at: 0), "#channel")
-		XCTAssertEqual(message.param(at: 1), "hello  world")
-		XCTAssertEqual(message.messageTags, [:])
+@Suite("Incoming message")
+struct IRCMessageTests {
+	@Test("A prefix, a command and a trailing parameter are pulled apart")
+	func parsesPrefixCommandAndTrailingParameter() throws {
+		let message = try #require(Message(line: ":nick!user@host PRIVMSG #channel :hello  world"))
+
+		#expect(message.command == "PRIVMSG")
+		#expect(message.commandNumeric == 0)
+		#expect(message.senderNickname == "nick")
+		#expect(message.senderUsername == "user")
+		#expect(message.senderAddress == "host")
+		#expect(message.senderIsServer == false)
+		#expect(message.paramsCount == 2)
+		#expect(message.param(at: 0) == "#channel")
+		#expect(message.param(at: 1) == "hello  world")
+		#expect(message.messageTags == [:])
 	}
 
-	func testParsesServerPrefixAndNumeric() throws {
-		let message = try XCTUnwrap(Message(line: ":irc.example.net 001 me :Welcome"))
-		XCTAssertEqual(message.commandNumeric, 1)
-		XCTAssertTrue(message.senderIsServer)
-		XCTAssertEqual(message.senderNickname, "irc.example.net")
-		XCTAssertEqual(message.param(at: 1), "Welcome")
+	@Test("A server prefix marks the sender as a server and the command as a numeric")
+	func parsesServerPrefixAndNumeric() throws {
+		let message = try #require(Message(line: ":irc.example.net 001 me :Welcome"))
+
+		#expect(message.commandNumeric == 1)
+		#expect(message.senderIsServer)
+		#expect(message.senderNickname == "irc.example.net")
+		#expect(message.param(at: 1) == "Welcome")
 	}
 
-	func testLowercaseCommandIsUppercased() throws {
-		let message = try XCTUnwrap(Message(line: "ping :token"))
-		XCTAssertEqual(message.command, "PING")
-		XCTAssertEqual(message.param(at: 0), "token")
+	@Test("A lowercase command is uppercased")
+	func lowercaseCommandIsUppercased() throws {
+		let message = try #require(Message(line: "ping :token"))
+
+		#expect(message.command == "PING")
+		#expect(message.param(at: 0) == "token")
 	}
 
-	func testParserConsumesWhitespaceBetweenProtocolSections() throws {
-		let message = try XCTUnwrap(Message(line: "@flag\t:nick!user@host   privmsg\t#channel :hello  world"))
-		XCTAssertEqual(message.messageTags?["flag"], "")
-		XCTAssertEqual(message.senderNickname, "nick")
-		XCTAssertEqual(message.command, "PRIVMSG")
-		XCTAssertEqual(message.params, ["#channel", "hello  world"])
+	@Test("Tag values have their escapes resolved")
+	func parsesTagsWithEscapes() throws {
+		let message = try #require(Message(line: "@a=b\\:c\\sd\\\\e;flag;+draft/reply=x\\ny :nick!u@h TAGMSG #c"))
+
+		#expect(message.command == "TAGMSG")
+		#expect(message.messageTags?["a"] == "b;c d\\e")
+		#expect(message.messageTags?["flag"] == "")
+		#expect(message.messageTags?["+draft/reply"] == "x\ny")
+		#expect(message.param(at: 0) == "#c")
 	}
 
-	func testParsesTagsWithEscapes() throws {
-		let message = try XCTUnwrap(Message(line: "@a=b\\:c\\sd\\\\e;flag;+draft/reply=x\\ny :nick!u@h TAGMSG #c"))
-		XCTAssertEqual(message.command, "TAGMSG")
-		XCTAssertEqual(message.messageTags?["a"], "b;c d\\e")
-		XCTAssertEqual(message.messageTags?["flag"], "")
-		XCTAssertEqual(message.messageTags?["+draft/reply"], "x\ny")
-		XCTAssertEqual(message.param(at: 0), "#c")
+	@Test("An escaped backslash ends the escape, so the letter after it is literal")
+	func escapedBackslashFollowedByLetterIsNotAnEscape() throws {
+		let message = try #require(Message(line: "@k=a\\\\sb PING :x"))
+
+		#expect(message.messageTags?["k"] == "a\\sb")
 	}
 
-	func testEscapedBackslashFollowedByLetterIsNotAnEscape() throws {
-		let message = try XCTUnwrap(Message(line: "@k=a\\\\sb PING :x"))
-		XCTAssertEqual(message.messageTags?["k"], "a\\sb")
+	@Test("The message identifier and account are lifted out of the tags")
+	func parsesMessageIdentifierAndAccount() throws {
+		let message = try #require(Message(line: "@msgid=63E1033A0;account=alice :alice!a@h PRIVMSG #c :hi"))
+
+		#expect(message.messageIdentifier == "63E1033A0")
+		#expect(message.senderAccount == "alice")
+
+		let plain = try #require(Message(line: ":alice!a@h PRIVMSG #c :hi"))
+
+		#expect(plain.messageIdentifier == nil)
+		#expect(plain.senderAccount == nil)
 	}
 
-	func testParsesMessageIdentifierAndAccount() throws {
-		let message = try XCTUnwrap(Message(line: "@msgid=63E1033A0;account=alice :alice!a@h PRIVMSG #c :hi"))
-		XCTAssertEqual(message.messageIdentifier, "63E1033A0")
-		XCTAssertEqual(message.senderAccount, "alice")
+	@Test("A copy carries the identifier, and editing the copy leaves the original alone")
+	func messageIdentifierSurvivesCopy() throws {
+		let message = try #require(Message(line: "@msgid=abc;account=bob :bob!b@h PRIVMSG #c :hi"))
+		let copy = message.duplicate()
 
-		let plain = try XCTUnwrap(Message(line: ":alice!a@h PRIVMSG #c :hi"))
-		XCTAssertNil(plain.messageIdentifier)
-		XCTAssertNil(plain.senderAccount)
+		#expect(copy.messageIdentifier == "abc")
+		#expect(copy.senderAccount == "bob")
+
+		copy.messageIdentifier = "def"
+
+		#expect(copy.messageIdentifier == "def")
+		#expect(message.messageIdentifier == "abc")
 	}
 
-	func testMessageIdentifierSurvivesCopy() throws {
-		let message = try XCTUnwrap(Message(line: "@msgid=abc;account=bob :bob!b@h PRIVMSG #c :hi"))
-		let mutableCopy = try XCTUnwrap(message.mutableCopy() as? MessageMutable)
-		XCTAssertEqual(mutableCopy.messageIdentifier, "abc")
-		XCTAssertEqual(mutableCopy.senderAccount, "bob")
-		mutableCopy.messageIdentifier = "def"
-
-		let copy = try XCTUnwrap(mutableCopy.copy() as? Message)
-		XCTAssertEqual(copy.messageIdentifier, "def")
-		XCTAssertEqual(message.messageIdentifier, "abc")
-	}
-
-	func testServerTimeIsAppliedWhenCapabilityIsEnabled() throws {
+	@Test("A server time is only honored once the capability is negotiated")
+	func serverTimeIsAppliedWhenCapabilityIsEnabled() throws {
 		let client = GLTTestClient()
 		let line = "@time=2024-01-02T03:04:05.000Z :n!u@h PRIVMSG #c :hi"
-		let ignored = try XCTUnwrap(Message(line: line, on: client))
-		XCTAssertFalse(ignored.isHistoric)
+		let ignored = try #require(Message(line: line, on: client))
+
+		#expect(ignored.isHistoric == false)
 
 		client.enableCapability(.serverTime)
-		let message = try XCTUnwrap(Message(line: line, on: client))
-		XCTAssertTrue(message.isHistoric)
+		let message = try #require(Message(line: line, on: client))
+
+		#expect(message.isHistoric)
 
 		var components = DateComponents()
 		components.year = 2024
@@ -136,21 +143,24 @@ final class IRCMessageTests: XCTestCase {
 		components.minute = 4
 		components.second = 5
 		components.timeZone = TimeZone(abbreviation: "UTC")
-		let expected = try XCTUnwrap(Calendar(identifier: .gregorian).date(from: components))
+		let expected = try #require(Calendar(identifier: .gregorian).date(from: components))
 
-		XCTAssertEqual(message.receivedAt.timeIntervalSince1970, expected.timeIntervalSince1970, accuracy: 0.001)
+		#expect(abs(message.receivedAt.timeIntervalSince1970 - expected.timeIntervalSince1970) < 0.001)
 	}
 
-	func testMissingSenderFallsBackToServerAddress() throws {
-		let message = try XCTUnwrap(Message(line: "NOTICE * :*** Looking up your hostname"))
-		XCTAssertTrue(message.senderIsServer)
-		XCTAssertEqual(message.senderNickname, "")
-		XCTAssertEqual(message.param(at: 1), "*** Looking up your hostname")
+	@Test("A line with no prefix is treated as coming from the server")
+	func missingSenderFallsBackToServerAddress() throws {
+		let message = try #require(Message(line: "NOTICE * :*** Looking up your hostname"))
+
+		#expect(message.senderIsServer)
+		#expect(message.senderNickname == "")
+		#expect(message.param(at: 1) == "*** Looking up your hostname")
 	}
 
-	func testEmptyTagSectionFailsToParse() {
-		XCTAssertNil(Message(line: "@ PING :x"))
-		XCTAssertNil(Message(line: ": PING :x"))
-		XCTAssertNil(Message(line: ""))
+	@Test("An empty tag section, an empty prefix, or an empty line does not parse")
+	func emptyTagSectionFailsToParse() {
+		#expect(Message(line: "@ PING :x") == nil)
+		#expect(Message(line: ": PING :x") == nil)
+		#expect(Message(line: "") == nil)
 	}
 }

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2016 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -36,8 +36,19 @@
  *********************************************************************** */
 
 import Foundation
+import HistoricLogStoreKit
 
-let delegate = HistoricLogProcessDelegate()
+/// The shared defaults the service keeps the database filename in.
+private struct HistoricLogDefaultsFilenameStore: HistoricLogFilenameStoring {
+	private static let key = "TVCLogControllerHistoricLogFileSavePath_v3"
+
+	var databaseFilename: String? {
+		get { TextualUserDefaults.suite().string(forKey: Self.key) }
+		nonmutating set { TextualUserDefaults.suite().set(newValue, forKey: Self.key) }
+	}
+}
+
+let delegate = HistoricLogProcessDelegate(filenameStore: HistoricLogDefaultsFilenameStore())
 let listener = NSXPCListener.service()
 listener.delegate = delegate
 listener.resume()

@@ -1,17 +1,9 @@
-@testable import Glasstual
-import XCTest
-
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "GLTTestClient.h"
-/// #import "IRCMessage.h"
-/// #import "TVCLogLine.h"
-/** *********************************************************************
+/*  *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -42,11 +34,79 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
+
+@testable import Glasstual
+import Testing
+
 @MainActor
-final class IRCLabeledResponseTests: XCTestCase {
-	private func message(_ line: String, on client: IRCClient) -> Message {
-		Message(line: line, on: client)!
+@Suite("Labeled response tracking")
+struct IRCLabeledResponseTests {
+	/// A label rides on a `label` tag, so labeled-response needs message-tags
+	/// and nothing else: with no other response the server sends ACK, which
+	/// resolves the delivery without echo-message.
+	@Test("Tracking needs message-tags and labeled-response")
+	func trackingRequiresBothCapabilities() {
+		let client = GLTTestClient()
+		client.enableCapability(.labeledResponse)
+
+		#expect(client.labeledResponseTrackingEnabled() == false)
+		#expect(client.registerPendingDelivery(for: nil) == nil)
+
+		client.enableCapability(.messageTags)
+
+		#expect(client.labeledResponseTrackingEnabled())
+	}
+
+	@Test("Registering a delivery hands back a label that is still pending")
+	func registerCreatesPendingDeliveryWithLabel() throws {
+		let client = clientWithLabeledResponse()
+		let channel = try makeChannel(named: "#chat", on: client)
+		let label = try #require(client.registerPendingDelivery(for: channel))
+
+		#expect(label == "g1")
+		#expect(client.deliveryState(forLabel: label) == .pending)
+	}
+
+	/// A resolved delivery is retired, so the label no longer matches anything.
+	@Test(
+		"An echo, a FAIL or an ACK carrying the label is consumed",
+		arguments: [
+			"@label=g1;msgid=abc123 :me!u@h PRIVMSG #chat :hello",
+			"@label=g1 FAIL PRIVMSG ACCOUNT_REQUIRED_TO_MESSAGE :You must be registered",
+			"@label=g1 ACK",
+		]
+	)
+	func labeledResponseIsConsumed(_ line: String) throws {
+		let client = clientWithLabeledResponse()
+		let channel = try makeChannel(named: "#chat", on: client)
+		let label = try #require(client.registerPendingDelivery(for: channel))
+		let response = try message(line, on: client)
+
+		#expect(client.resolveLabeledResponse(for: response))
+		#expect(client.deliveryState(forLabel: label) == .none)
+	}
+
+	@Test("A delivery that times out is retired")
+	func timeoutRetiresDelivery() throws {
+		let client = clientWithLabeledResponse()
+		let channel = try makeChannel(named: "#chat", on: client)
+		let label = try #require(client.registerPendingDelivery(for: channel))
+
+		client.timeoutDelivery(withLabel: label)
+
+		#expect(client.deliveryState(forLabel: label) == .none)
+	}
+
+	@Test("A response carrying an unknown label is left to the ordinary handlers")
+	func unknownLabelIsNotConsumed() throws {
+		let client = clientWithLabeledResponse()
+		let echo = try message("@label=unknown :me!u@h PRIVMSG #chat :hello", on: client)
+
+		#expect(client.resolveLabeledResponse(for: echo) == false)
+	}
+
+	private func message(_ line: String, on client: IRCClient) throws -> Message {
+		try #require(Message(line: line, on: client))
 	}
 
 	private func clientWithLabeledResponse() -> GLTTestClient {
@@ -57,69 +117,7 @@ final class IRCLabeledResponseTests: XCTestCase {
 		return client
 	}
 
-	private func addChannel(named name: String, to client: GLTTestClient) -> Channel {
-		client.findChannelOrCreate(name)!
-	}
-
-	func testTrackingRequiresBothCapabilities() {
-		let client = GLTTestClient()
-		client.enableCapability(.labeledResponse)
-
-		XCTAssertFalse(client.labeledResponseTrackingEnabled())
-		XCTAssertNil(client.registerPendingDelivery(for: nil))
-
-		client.enableCapability(.echoMessage)
-		XCTAssertTrue(client.labeledResponseTrackingEnabled())
-	}
-
-	func testRegisterCreatesPendingDeliveryWithLabel() throws {
-		let client = clientWithLabeledResponse()
-		let label = client.registerPendingDelivery(for: addChannel(named: "#chat", to: client))
-
-		XCTAssertEqual(label, "g1")
-		XCTAssertEqual(try client.deliveryState(forLabel: XCTUnwrap(label)), .pending)
-	}
-
-	func testEchoWithLabelMarksDelivered() {
-		assertResolution(
-			line: "@label=g1;msgid=abc123 :me!u@h PRIVMSG #chat :hello",
-			expectedState: .delivered
-		)
-	}
-
-	func testFailWithLabelMarksFailed() {
-		assertResolution(
-			line: "@label=g1 FAIL PRIVMSG ACCOUNT_REQUIRED_TO_MESSAGE :You must be registered",
-			expectedState: .failed
-		)
-	}
-
-	func testAckWithLabelMarksDelivered() {
-		assertResolution(line: "@label=g1 ACK", expectedState: .delivered)
-	}
-
-	func testTimeoutMarksFailed() throws {
-		let client = clientWithLabeledResponse()
-		let label = try XCTUnwrap(client.registerPendingDelivery(for: addChannel(named: "#chat", to: client)))
-
-		client.timeoutDelivery(withLabel: label)
-
-		XCTAssertEqual(client.deliveryState(forLabel: label), .failed)
-	}
-
-	func testUnknownLabelIsNotConsumed() {
-		let client = clientWithLabeledResponse()
-		let echo = message("@label=unknown :me!u@h PRIVMSG #chat :hello", on: client)
-
-		XCTAssertFalse(client.resolveLabeledResponse(for: echo))
-	}
-
-	private func assertResolution(line: String, expectedState: TVCLogLineDeliveryState) {
-		let client = clientWithLabeledResponse()
-		let label = client.registerPendingDelivery(for: addChannel(named: "#chat", to: client))!
-		let response = message(line, on: client)
-
-		XCTAssertTrue(client.resolveLabeledResponse(for: response))
-		XCTAssertEqual(client.deliveryState(forLabel: label), expectedState)
+	private func makeChannel(named name: String, on client: GLTTestClient) throws -> Channel {
+		try #require(client.findChannelOrCreate(name))
 	}
 }

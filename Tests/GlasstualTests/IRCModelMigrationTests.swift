@@ -7,203 +7,208 @@ import AppKit
 import CocoaExtensions
 @testable import Glasstual
 import GlasstualPluginKit
-import XCTest
+import Testing
 
 @MainActor
-final class IRCModelMigrationTests: XCTestCase {
-	func testConnectionInitialStateAndConfigIsolation() {
+@Suite("IRC model migration")
+struct IRCModelMigrationTests {
+	@Test("A connection copies the config it was made with and starts idle")
+	func connectionInitialStateAndConfigIsolation() {
 		let client = GLTTestClient()
-		let sourceConfig = Glasstual.IRCConnectionConfigMutable()
+		var sourceConfig = Glasstual.IRCConnectionConfig()
 		sourceConfig.serverAddress = "irc.example.test"
 
 		let connection = Connection(config: sourceConfig, onClient: client)
 		sourceConfig.serverAddress = "changed.example.test"
 
-		XCTAssertTrue(connection.client === client)
-		XCTAssertEqual(connection.config.serverAddress, "irc.example.test")
-		XCTAssertFalse(connection.uniqueIdentifier.isEmpty)
-		XCTAssertFalse(connection.isConnecting)
-		XCTAssertFalse(connection.isConnected)
-		XCTAssertFalse(connection.isDisconnecting)
-		XCTAssertFalse(connection.isSecured)
-		XCTAssertFalse(connection.isSending)
-		XCTAssertFalse(connection.EOFReceived)
+		#expect(connection.client === client)
+		#expect(connection.config.serverAddress == "irc.example.test")
+		#expect(connection.uniqueIdentifier.isEmpty == false)
+		#expect(connection.isConnecting == false)
+		#expect(connection.isConnected == false)
+		#expect(connection.isDisconnecting == false)
+		#expect(connection.isSecured == false)
+		#expect(connection.isSending == false)
+		#expect(connection.EOFReceived == false)
 	}
 
-	func testConnectionResetClearsTransientState() {
+	@Test("Resetting a connection clears every transient flag and the connected address")
+	func connectionResetClearsTransientState() {
 		let connection = Connection(config: Glasstual.IRCConnectionConfig(), onClient: GLTTestClient())
 
 		connection.resetState()
 
-		XCTAssertFalse(connection.isConnecting)
-		XCTAssertFalse(connection.isConnected)
-		XCTAssertFalse(connection.isConnectedWithClientSideCertificate)
-		XCTAssertFalse(connection.isDisconnecting)
-		XCTAssertFalse(connection.isSecured)
-		XCTAssertFalse(connection.isSending)
-		XCTAssertFalse(connection.EOFReceived)
-		XCTAssertNil(connection.connectedAddress)
+		#expect(connection.isConnecting == false)
+		#expect(connection.isConnected == false)
+		#expect(connection.isConnectedWithClientSideCertificate == false)
+		#expect(connection.isDisconnecting == false)
+		#expect(connection.isSecured == false)
+		#expect(connection.isSending == false)
+		#expect(connection.EOFReceived == false)
+		#expect(connection.connectedAddress == nil)
 	}
 
-	func testChannelConfigDefaultsAndLegacyKeys() {
+	@Test("A seeded channel config takes the declared defaults, and the legacy keys still decode")
+	func channelConfigDefaultsAndLegacyKeys() throws {
 		let defaults = ChannelConfig.seed(withName: "#general")
 
-		XCTAssertTrue(defaults.autoJoin)
-		XCTAssertTrue(defaults.pushNotifications)
-		XCTAssertTrue(defaults.showTreeBadgeCount)
-		XCTAssertEqual(defaults.type, .channel)
-		XCTAssertEqual(defaults.channelName, "#general")
-		XCTAssertFalse(defaults.uniqueIdentifier.isEmpty)
+		#expect(defaults.autoJoin)
+		#expect(defaults.pushNotifications)
+		#expect(defaults.showTreeBadgeCount)
+		#expect(defaults.type == .channel)
+		#expect(defaults.channelName == "#general")
+		#expect(defaults.uniqueIdentifier.isEmpty == false)
 
-		let legacy = ChannelConfig(dictionary: [
+		let legacy = try #require(PropertyListModel.decode(ChannelConfig.self, from: [
 			"channelName": "#legacy",
 			"joinOnConnect": false,
 			"ignoreJPQActivity": true,
 			"enableNotifications": false,
 			"enableTreeBadgeCountDrawing": false,
-		])
+		]))
 
-		XCTAssertFalse(legacy.autoJoin)
-		XCTAssertTrue(legacy.ignoreGeneralEventMessages)
-		XCTAssertFalse(legacy.pushNotifications)
-		XCTAssertFalse(legacy.showTreeBadgeCount)
+		#expect(legacy.autoJoin == false)
+		#expect(legacy.ignoreGeneralEventMessages)
+		#expect(legacy.pushNotifications == false)
+		#expect(legacy.showTreeBadgeCount == false)
 	}
 
-	func testChannelConfigMutableAndUniqueCopiesPreserveValues() throws {
-		let mutable = MutableChannelConfig()
-		mutable.channelName = "#swift"
-		mutable.label = "Swift migration"
-		mutable.defaultModes = "+nt"
-		mutable.secretKey = "join-key"
+	@Test("A plain copy keeps the identifier while a unique copy takes a new one")
+	func channelConfigCopiesAndUniqueCopiesPreserveValues() {
+		var config = ChannelConfig(channelName: "#swift")
+		config.label = "Swift migration"
+		config.defaultModes = "+nt"
+		config.secretKey = "join-key"
 
-		let copy = try XCTUnwrap(mutable.copy() as? ChannelConfig)
-		let unique = try XCTUnwrap(mutable.uniqueCopyMutable() as? MutableChannelConfig)
+		let copy = config
+		let unique = config.uniqueCopy()
 
-		XCTAssertEqual(copy.channelName, "#swift")
-		XCTAssertEqual(copy.label, "Swift migration")
-		XCTAssertEqual(copy.defaultModes, "+nt")
-		XCTAssertEqual(copy.secretKey, "join-key")
-		XCTAssertEqual(copy.uniqueIdentifier, mutable.uniqueIdentifier)
-		XCTAssertEqual(unique.channelName, "#swift")
-		XCTAssertEqual(unique.secretKey, "join-key")
-		XCTAssertNotEqual(unique.uniqueIdentifier, mutable.uniqueIdentifier)
+		#expect(copy.channelName == "#swift")
+		#expect(copy.label == "Swift migration")
+		#expect(copy.defaultModes == "+nt")
+		#expect(copy.secretKey == "join-key")
+		#expect(copy.uniqueIdentifier == config.uniqueIdentifier)
+		#expect(unique.channelName == "#swift")
+		#expect(unique.secretKey == "join-key")
+		#expect(unique.uniqueIdentifier != config.uniqueIdentifier)
 	}
 
-	func testChannelConfigNotificationOverridesUseThreeStateSemantics() {
-		let config = MutableChannelConfig()
+	@Test("A per-channel notification override is three-state, not a boolean")
+	func channelConfigNotificationOverridesUseThreeStateSemantics() {
+		var config = ChannelConfig()
 		let event = TXNotificationType.highlight
 
-		XCTAssertEqual(config.notificationEnabled(forEvent: event), .mixed)
+		#expect(config.notificationEnabled(forEvent: event) == .inherited)
 
 		config.setNotificationEnabled(.on, forEvent: event)
-		XCTAssertEqual(config.notificationEnabled(forEvent: event), .on)
+		#expect(config.notificationEnabled(forEvent: event) == .on)
 
 		config.setNotificationEnabled(.off, forEvent: event)
-		XCTAssertEqual(config.notificationEnabled(forEvent: event), .off)
+		#expect(config.notificationEnabled(forEvent: event) == .off)
 
-		config.setNotificationEnabled(.mixed, forEvent: event)
-		XCTAssertEqual(config.notificationEnabled(forEvent: event), .mixed)
+		config.setNotificationEnabled(.inherited, forEvent: event)
+		#expect(config.notificationEnabled(forEvent: event) == .inherited)
 	}
 
-	func testHighlightMatchConditionRoundTripsDictionaryAndDefaults() {
-		let condition = HighlightMatchCondition(dictionary: [
+	@Test("A highlight condition decodes the legacy channel key and encodes it back")
+	func highlightMatchConditionRoundTripsDictionaryAndDefaults() throws {
+		let condition = try #require(PropertyListModel.decode(HighlightMatchCondition.self, from: [
 			"matchKeyword": "alert",
 			"matchChannelID": "chan-1",
 			"matchIsExcluded": true,
-		])
+		]))
 
-		XCTAssertEqual(condition.matchKeyword, "alert")
-		XCTAssertEqual(condition.matchChannelId, "chan-1")
-		XCTAssertTrue(condition.matchIsExcluded)
-		XCTAssertFalse(condition.uniqueIdentifier.isEmpty)
+		#expect(condition.matchKeyword == "alert")
+		#expect(condition.matchChannelId == "chan-1")
+		#expect(condition.matchIsExcluded)
+		#expect(condition.uniqueIdentifier.isEmpty == false)
 
-		let dictionary = condition.dictionaryValue
+		let dictionary = PropertyListModel.encode(condition)
 
-		XCTAssertEqual(dictionary["matchKeyword"] as? String, "alert")
-		XCTAssertEqual(dictionary["matchChannelID"] as? String, "chan-1")
-		XCTAssertEqual(dictionary["matchIsExcluded"] as? Bool, true)
-		XCTAssertEqual(dictionary["uniqueIdentifier"] as? String, condition.uniqueIdentifier)
+		#expect(dictionary["matchKeyword"]?.string == "alert")
+		#expect(dictionary["matchChannelID"]?.string == "chan-1")
+		#expect(dictionary["matchIsExcluded"]?.boolean == true)
+		#expect(dictionary["uniqueIdentifier"]?.string == condition.uniqueIdentifier)
 	}
 
-	func testHighlightMatchConditionMutableCopyAndUniqueCopy() throws {
-		let original = HighlightMatchCondition(dictionary: ["matchKeyword": "ping"])
-		let mutableCopy = try XCTUnwrap(original.mutableCopy() as? MutableHighlightMatchCondition)
-		mutableCopy.matchKeyword = "pong"
-		mutableCopy.matchIsExcluded = true
+	@Test("Editing a highlight condition leaves the value it was copied from alone")
+	func highlightMatchConditionEditsAndUniqueCopyAreIndependent() {
+		let original = HighlightMatchCondition(matchKeyword: "ping")
+		var edited = original
+		edited.matchKeyword = "pong"
+		edited.matchIsExcluded = true
 
-		XCTAssertEqual(original.matchKeyword, "ping")
-		XCTAssertFalse(original.matchIsExcluded)
-		XCTAssertEqual(mutableCopy.matchKeyword, "pong")
-		XCTAssertTrue(mutableCopy.matchIsExcluded)
+		#expect(original.matchKeyword == "ping")
+		#expect(original.matchIsExcluded == false)
+		#expect(edited.matchKeyword == "pong")
+		#expect(edited.matchIsExcluded)
 
-		let unique = try XCTUnwrap(original.uniqueCopy() as? HighlightMatchCondition)
+		let unique = original.uniqueCopy()
 
-		XCTAssertEqual(unique.matchKeyword, "ping")
-		XCTAssertNotEqual(unique.uniqueIdentifier, original.uniqueIdentifier)
+		#expect(unique.matchKeyword == "ping")
+		#expect(unique.uniqueIdentifier != original.uniqueIdentifier)
 	}
 
-	func testServerDefaultsAndDictionaryRoundTrip() {
-		let server = Server(dictionary: [
+	@Test("A server decodes the keys it was given and defaults the rest")
+	func serverDefaultsAndDictionaryRoundTrip() throws {
+		let server = try #require(PropertyListModel.decode(Server.self, from: [
 			"serverAddress": "irc.example.test",
 			"serverPort": 6697,
 			"prefersSecuredConnection": true,
-		])
+		]))
 
-		XCTAssertEqual(server.serverAddress, "irc.example.test")
-		XCTAssertEqual(server.serverPort, 6697)
-		XCTAssertTrue(server.prefersSecuredConnection)
-		XCTAssertFalse(server.uniqueIdentifier.isEmpty)
+		#expect(server.serverAddress == "irc.example.test")
+		#expect(server.serverPort == 6697)
+		#expect(server.prefersSecuredConnection)
+		#expect(server.uniqueIdentifier.isEmpty == false)
 
 		let empty = Server()
 
-		XCTAssertEqual(empty.serverPort, 6667)
-		XCTAssertEqual(empty.serverAddress, "")
+		#expect(empty.serverPort == 6667)
+		#expect(empty.serverAddress == "")
 	}
 
-	func testServerMutablePasswordAndUniqueCopy() throws {
-		let mutable = MutableServer()
-		mutable.serverAddress = "chat.example.test"
-		mutable.serverPort = 6667
-		mutable.serverPassword = "s3cret"
-		mutable.prefersSecuredConnection = false
+	@Test("A unique copy of a server carries the password over under a new identifier")
+	func serverPasswordAndUniqueCopy() {
+		var server = Server(serverAddress: "chat.example.test", serverPort: 6667)
+		server.serverPassword = "s3cret"
 
-		XCTAssertEqual(mutable.serverPassword, "s3cret")
+		#expect(server.serverPassword == "s3cret")
 
-		let unique = try XCTUnwrap(mutable.uniqueCopy() as? Server)
+		let unique = server.uniqueCopy()
 
-		XCTAssertEqual(unique.serverAddress, "chat.example.test")
-		XCTAssertNotEqual(unique.uniqueIdentifier, mutable.uniqueIdentifier)
-		XCTAssertEqual(unique.serverPassword, "s3cret")
+		#expect(unique.serverAddress == "chat.example.test")
+		#expect(unique.uniqueIdentifier != server.uniqueIdentifier)
+		#expect(unique.serverPassword == "s3cret")
 	}
 
-	func testHighlightLogEntryMutableStoresLineClientAndChannel() {
-		let line = MutableLogLine()
+	@Test("A highlight log entry records the line it was made from and where it came from")
+	func highlightLogEntryStoresLineClientAndChannel() {
+		var line = LogLine()
 		line.messageBody = "hello world"
 		line.nickname = "alice"
 		line.lineType = .privateMessage
 		line.receivedAt = Date(timeIntervalSince1970: 1_700_000_000)
 
-		let entry = MutableHighlightLogEntry()
-		entry.lineLogged = line
-		entry.clientId = "client-a"
-		entry.channelId = "channel-b"
+		let entry = HighlightLogEntry(lineLogged: line, clientId: "client-a", channelId: "channel-b")
 
-		XCTAssertEqual(entry.clientId, "client-a")
-		XCTAssertEqual(entry.channelId, "channel-b")
-		XCTAssertEqual(entry.lineNumber, line.uniqueIdentifier)
-		XCTAssertEqual(entry.timeLogged, line.receivedAt)
-		XCTAssertGreaterThan(entry.renderedMessage.length, 0)
-		XCTAssertFalse(entry.timeLoggedFormatted.isEmpty)
+		#expect(entry.clientId == "client-a")
+		#expect(entry.channelId == "channel-b")
+		#expect(entry.lineNumber == line.uniqueIdentifier)
+		#expect(entry.timeLogged == line.receivedAt)
+		#expect(entry.renderedMessage.length > 0)
+		#expect(entry.timeLoggedFormatted.isEmpty == false)
 	}
 
-	func testUserPersistentStoreHoldsRelationsAndTimerSlot() {
+	@Test("A user's persistent store keeps its relations and leaves the timer slot empty")
+	func userPersistentStoreHoldsRelationsAndTimerSlot() {
 		let store = UserPersistentStore()
 		let relations = UserRelations()
 		store.relations = relations
 		store.presentAwayMessageFor301LastEvent = 12.5
 
-		XCTAssertTrue(store.relations === relations)
-		XCTAssertEqual(store.presentAwayMessageFor301LastEvent, 12.5)
-		XCTAssertNil(store.removeUserTimer)
+		#expect(store.relations === relations)
+		#expect(store.presentAwayMessageFor301LastEvent == 12.5)
+		#expect(store.removeUserTimer == nil)
 	}
 }

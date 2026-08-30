@@ -14,17 +14,17 @@
 	<false/>
 	<key>AutojoinChannelOnInvite</key>
 	<false/>
-	<key>AutojoinDelayBetweenChannelJoins</key>
-	<real>2.2</real>
 	<key>AutojoinDelayAfterIdentification</key>
-	<real>0</real>
+	<real>0.0</real>
+	<key>AutojoinDelayBetweenChannelJoins</key>
+	<real>2.2000000000000002</real>
 	<key>AutojoinMaximumChannelJoinCount</key>
 	<integer>2</integer>
 	<key>AutomaticallyAddScrollbackMarker</key>
 	<true/>
-	<key>AutomaticallyDisconnectForSleepMode</key>
-	<true/>
 	<key>AutomaticallyDetectHighlightSpam</key>
+	<true/>
+	<key>AutomaticallyDisconnectForSleepMode</key>
 	<true/>
 	<key>AutomaticallyFilterUnicodeTextSpam</key>
 	<false/>
@@ -90,22 +90,28 @@
 	<true/>
 	<key>FocusSelectionOnMessageCommandExecution</key>
 	<true/>
+	<key>GlasstualDeveloperEnvironment</key>
+	<false/>
+	<key>IRC -&gt; Enable echo-message Capability</key>
+	<false/>
+	<key>IRC -&gt; STS Policies</key>
+	<dict/>
 	<key>IRCopDefaultLocalizaiton -&gt; G:Line Reason</key>
 	<string>35d Your behavior is not conducive to the desired environment.</string>
 	<key>IRCopDefaultLocalizaiton -&gt; Kill Reason</key>
 	<string>Your behavior is not conducive to the desired environment.</string>
 	<key>IRCopDefaultLocalizaiton -&gt; Shun Reason</key>
 	<string>1d Shunned.</string>
+	<key>InlineMediaAllowsCleartextHTTP</key>
+	<true/>
 	<key>InlineMediaCheckEverything</key>
-	<false/>
-	<key>InlineMediaLimitToBasics</key>
 	<false/>
 	<key>InlineMediaLimitBasicsToFiles</key>
 	<false/>
-	<key>InlineMediaLimitInsecureContent</key>
-	<false/>
 	<key>InlineMediaLimitNaughtyContent</key>
 	<true/>
+	<key>InlineMediaLimitToBasics</key>
+	<false/>
 	<key>InlineMediaLimitUnsafeContent</key>
 	<true/>
 	<key>InlineMediaMaximumFilesize</key>
@@ -114,8 +120,6 @@
 	<integer>0</integer>
 	<key>InlineMediaScalingWidth</key>
 	<integer>300</integer>
-	<key>IRC -&gt; Enable echo-message Capability</key>
-	<false/>
 	<key>Keyboard -&gt; Command+W Key Action</key>
 	<integer>0</integer>
 	<key>Keyboard -&gt; Tab Key Action</key>
@@ -124,13 +128,13 @@
 	<true/>
 	<key>LogTranscript</key>
 	<false/>
-	<key>MemberListSortFavorsServerStaff</key>
-	<false/>
-	<key>MemberListUpdatesUserInfoPopoverOnScroll</key>
+	<key>Main Input Text Field -&gt; Focus When Changing Views</key>
 	<true/>
 	<key>Main Input Text Field -&gt; Font Size</key>
 	<integer>1</integer>
-	<key>Main Input Text Field -&gt; Focus When Changing Views</key>
+	<key>MemberListSortFavorsServerStaff</key>
+	<false/>
+	<key>MemberListUpdatesUserInfoPopoverOnScroll</key>
 	<true/>
 	<key>NicknameHighlightMatchingType</key>
 	<integer>1</integer>
@@ -180,9 +184,7 @@
 	<true/>
 	<key>NotificationType -&gt; Successful File Transfer (Sending) -&gt; Enabled</key>
 	<true/>
-	<key>PostNotificationsWhileInFocus</key>
-	<true/>
-	<key>PreferModernCiphers</key>
+	<key>Onboarding -&gt; Completed</key>
 	<false/>
 	<key>OnlySpeakNotificationsForSelection</key>
 	<true/>
@@ -190,20 +192,30 @@
 	<false/>
 	<key>Optimizations -&gt; Load History Lazily</key>
 	<true/>
+	<key>Plugin Approvals</key>
+	<dict/>
+	<key>PostNotificationsWhileInFocus</key>
+	<true/>
+	<key>PreferModernCiphers</key>
+	<false/>
 	<key>RejoinChannelOnLocalKick</key>
 	<false/>
-	<key>SendTypingNotifications</key>
-	<true/>
 	<key>ReloadScrollbackOnLaunch</key>
 	<true/>
-	<key>RightToLeftTextFormatting</key>
-	<false/>
 	<key>RemoveIRCTextFormatting</key>
 	<false/>
 	<key>ReplyUnignoredExternalCTCPRequests</key>
 	<true/>
+	<key>RightToLeftTextFormatting</key>
+	<false/>
 	<key>SaveInputHistoryPerSelection</key>
 	<false/>
+	<key>ScrollbackMaximumSavedLineCount</key>
+	<integer>15000</integer>
+	<key>ScrollbackMaximumVisibleLineCount</key>
+	<integer>0</integer>
+	<key>SendTypingNotifications</key>
+	<true/>
 	<key>ServerListDoubleClickConnectServer</key>
 	<false/>
 	<key>ServerListDoubleClickDisconnectServer</key>
@@ -216,12 +228,8 @@
 	<false/>
 	<key>SetAwayOnScreenSleep</key>
 	<false/>
-	<key>ScrollbackMaximumSavedLineCount</key>
-	<real>15000</real>
-	<key>ScrollbackMaximumVisibleLineCount</key>
-	<integer>0</integer>
 	<key>SwipeMinimumLength</key>
-	<integer>30</integer>
+	<real>30</real>
 	<key>Tab Completion -&gt; Completion Suffix Cut Forward Until Space</key>
 	<false/>
 	<key>Tab Completion -&gt; Do Not Use Whitespace for Missing Completion Suffix</key>
@@ -232,11 +240,11 @@
 	<true/>
 	<key>TextFieldAutomaticSpellCorrection</key>
 	<false/>
+	<key>TextFieldDataDetectors</key>
+	<false/>
 	<key>TextFieldSmartCopyPaste</key>
 	<true/>
 	<key>TextFieldSmartDashes</key>
-	<false/>
-	<key>TextFieldDataDetectors</key>
 	<false/>
 	<key>TextFieldSmartLinks</key>
 	<false/>
@@ -244,10 +252,6 @@
 	<false/>
 	<key>TextFieldTextReplacement</key>
 	<true/>
-	<key>GlasstualDeveloperEnvironment</key>
-	<false/>
-	<key>Onboarding -&gt; Completed</key>
-	<false/>
 	<key>Theme -&gt; Font Name</key>
 	<string>.AppleSystemUIFont</string>
 	<key>Theme -&gt; Font Size</key>
@@ -263,17 +267,53 @@
 	<key>TrackUserAwayStatusMaximumChannelSize</key>
 	<integer>300</integer>
 	<key>User List Mode Badge Colors -&gt; +a</key>
-	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAcMC42MTI5OTk5NzU3IDAgMC4zNDcwMDAwMDI5ABABgALSFBUWF1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiFhhYTlNPYmplY3QIERokKTI3SUxRU1ddZGp3fp2foaaxusLFAAAAAAAAAQEAAAAAAAAAGQAAAAAAAAAAAAAAAAAAAM4=</data>
+	<data>
+	YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMS
+	AAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVO
+	U1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTjAuNjEzIDAgMC4zNDcAEAGAAtIUFRYXWiRj
+	bGFzc25hbWVYJGNsYXNzZXNXTlNDb2xvcqIWGFhOU09iamVjdAgRGiQpMjdJTFFTV11k
+	and+jY+RlqGqsrUAAAAAAAABAQAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAvg==
+	</data>
 	<key>User List Mode Badge Colors -&gt; +h</key>
-	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxApMC4wNjU5OTk5OTk2NCAwLjQ4ODAwMDAwNTUgMC4wNzQwMDAwMDA5NQAQAYAC0hQVFhdaJGNsYXNzbmFtZVgkY2xhc3Nlc1dOU0NvbG9yohYYWE5TT2JqZWN0CBEaJCkyN0lMUVNXXWRqd36qrK6zvsfP0gAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAADb</data>
+	<data>
+	YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMS
+	AAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVO
+	U1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxASMC4wNjYgMC40ODggMC4wNzQAEAGAAtIU
+	FRYXWiRjbGFzc25hbWVYJGNsYXNzZXNXTlNDb2xvcqIWGFhOU09iamVjdAgRGiQpMjdJ
+	TFFTV11kand+k5WXnKewuLsAAAAAAAABAQAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAxA==
+	</data>
 	<key>User List Mode Badge Colors -&gt; +o</key>
-	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAlMC4zNTEwMDAwMTEgMC4xOTkwMDAwMDEgMC42MDkwMDAwMjcyABABgALSFBUWF1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiFhhYTlNPYmplY3QIERokKTI3SUxRU1ddZGp3fqaoqq+6w8vOAAAAAAAAAQEAAAAAAAAAGQAAAAAAAAAAAAAAAAAAANc=</data>
+	<data>
+	YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMS
+	AAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVO
+	U1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxASMC4zNTEgMC4xOTkgMC42MDkAEAGAAtIU
+	FRYXWiRjbGFzc25hbWVYJGNsYXNzZXNXTlNDb2xvcqIWGFhOU09iamVjdAgRGiQpMjdJ
+	TFFTV11kand+k5WXnKewuLsAAAAAAAABAQAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAxA==
+	</data>
 	<key>User List Mode Badge Colors -&gt; +q</key>
-	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAQMC43MjYwMDAwMTEgMCAwABABgALSFBUWF1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiFhhYTlNPYmplY3QIERokKTI3SUxRU1ddZGp3fpGTlZqlrra5AAAAAAAAAQEAAAAAAAAAGQAAAAAAAAAAAAAAAAAAAMI=</data>
+	<data>
+	YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMS
+	AAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVO
+	U1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzSjAuNzI2IDAgMAAQAYAC0hQVFhdaJGNsYXNz
+	bmFtZVgkY2xhc3Nlc1dOU0NvbG9yohYYWE5TT2JqZWN0CBEaJCkyN0lMUVNXXWRqd36J
+	i42SnaausQAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAAC6
+	</data>
 	<key>User List Mode Badge Colors -&gt; +v</key>
-	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAmMC4xOTkwMDAwMDEgMC40Nzk5OTk5ODkzIDAuNjA5MDAwMDI3MgAQAYAC0hQVFhdaJGNsYXNzbmFtZVgkY2xhc3Nlc1dOU0NvbG9yohYYWE5TT2JqZWN0CBEaJCkyN0lMUVNXXWRqd36nqauwu8TMzwAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAADY</data>
+	<data>
+	YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMS
+	AAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVO
+	U1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxARMC4xOTkgMC40OCAwLjYwOQAQAYAC0hQV
+	FhdaJGNsYXNzbmFtZVgkY2xhc3Nlc1dOU0NvbG9yohYYWE5TT2JqZWN0CBEaJCkyN0lM
+	UVNXXWRqd36SlJabpq+3ugAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAADD
+	</data>
 	<key>User List Mode Badge Colors -&gt; +y</key>
-	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAnMC42MzIwMDAwMjkxIDAuMzM1MDAwMDA4MyAwLjIyNTk5OTk5NjEAEAGAAtIUFRYXWiRjbGFzc25hbWVYJGNsYXNzZXNXTlNDb2xvcqIWGFhOU09iamVjdAgRGiQpMjdJTFFTV11kand+qKqssbzFzdAAAAAAAAABAQAAAAAAAAAZAAAAAAAAAAAAAAAAAAAA2Q==</data>
+	<data>
+	YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMS
+	AAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVO
+	U1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxASMC42MzIgMC4zMzUgMC4yMjYAEAGAAtIU
+	FRYXWiRjbGFzc25hbWVYJGNsYXNzZXNXTlNDb2xvcqIWGFhOU09iamVjdAgRGiQpMjdJ
+	TFFTV11kand+k5WXnKewuLsAAAAAAAABAQAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAxA==
+	</data>
 	<key>UserListDoubleClickAction</key>
 	<integer>200</integer>
 	<key>WebViewDoNotUsesCustomScrollers</key>
@@ -282,9 +322,5 @@
 	<false/>
 	<key>WebViewProcessPoolSizeIsLimited</key>
 	<true/>
-	<key>Plugin Approvals</key>
-	<dict/>
-	<key>IRC -&gt; STS Policies</key>
-	<dict/>
 </dict>
 </plist>

@@ -33,24 +33,46 @@
 import AppKit
 import ObjectiveC
 
+/** The saved-frame key of one window.
+
+ The raw values are what is already written under
+ `NSWindow Frame -> Internal (v3) -> …` in the user's defaults, so they are the
+ former Objective-C class names and have to stay spelled that way. A new window
+ picks any new string it likes. */
+public nonisolated struct WindowStateKey: RawRepresentable, Hashable, Sendable { // nonisolated: value
+	public let rawValue: String
+
+	public init(rawValue: String) {
+		self.rawValue = rawValue
+	}
+}
+
 @MainActor
 private enum WindowStateStorage {
 	static let frameKeyPrefix = "NSWindow Frame -> Internal (v3) -> "
-	nonisolated(unsafe) static var defaultSizeAssociationKey: UInt8 = 0
+
+	/** The address the default size is keyed on. It was a mutable `UInt8` whose
+	 address was taken, which needed an escape hatch to be a global at all. A
+	 static string literal lives in the binary's constant data, so its bytes have
+	 exactly the property a key needs — a unique, stable address — and the
+	 literal itself is a value. */
+	nonisolated static let defaultSizeKeyToken: StaticString = // nonisolated: let
+		"com.vakesz.glasstual.windowDefaultSize" // nonisolated: let
+
+	nonisolated static var defaultSizeAssociationKey: UnsafeRawPointer { // nonisolated: pure
+		UnsafeRawPointer(defaultSizeKeyToken.utf8Start)
+	}
 }
 
 public extension NSWindow {
-	@objc(isOccluded)
 	var ceIsOccluded: Bool {
 		!occlusionState.contains(.visible)
 	}
 
-	@objc(isInactive)
 	var ceIsInactive: Bool {
 		!isKeyWindow && !isMainWindow
 	}
 
-	@objc(isActiveForDrawing)
 	var ceIsActiveForDrawing: Bool {
 		if styleMask.contains(.fullScreen) {
 			return true
@@ -63,7 +85,6 @@ public extension NSWindow {
 			&& NSApp.modalWindow == nil
 	}
 
-	@objc(exactlyCenterWindow)
 	func ce_exactlyCenter() {
 		guard let screen = NSScreen.main else {
 			return
@@ -77,22 +98,18 @@ public extension NSWindow {
 		setFrame(NSRect(origin: centeredOrigin, size: frame.size), display: true, animate: true)
 	}
 
-	@objc(isBeneathMouse)
 	var ceIsBeneathMouse: Bool {
 		Self.ceWindowBeneathMouse === self
 	}
 
-	@objc(runningInHighResolutionMode)
 	var ceRunningInHighResolutionMode: Bool {
 		(screen?.backingScaleFactor ?? 1) > 1
 	}
 
-	@objc(isInFullscreenMode)
 	var ceIsInFullscreenMode: Bool {
 		styleMask.contains(.fullScreen)
 	}
 
-	@objc(deepestWindow)
 	var ceDeepestWindow: NSWindow {
 		var deepestWindow = self
 		while let attachedSheet = deepestWindow.attachedSheet {
@@ -101,7 +118,6 @@ public extension NSWindow {
 		return deepestWindow
 	}
 
-	@objc(titlebarFrame)
 	var ceTitlebarFrame: NSRect {
 		guard let contentView else {
 			return .zero
@@ -113,27 +129,28 @@ public extension NSWindow {
 		return titlebarFrame
 	}
 
-	@objc(saveWindowStateForClass:)
-	func ce_saveState(for owner: AnyClass) {
-		ce_saveState(keyword: NSStringFromClass(owner))
+	/** The key used to be `NSStringFromClass`, which made every saved window
+	 frame hostage to a class's Objective-C name: renaming the class, or letting
+	 it fall back to the mangled Swift name, silently lost the frame. Each window
+	 names its own key now, and `WindowStateKey` is where the strings that are
+	 already on disk are written down. */
+	func ce_saveState(for key: WindowStateKey) {
+		ce_saveState(keyword: key.rawValue)
 	}
 
-	@objc(restoreWindowStateForClass:)
-	func ce_restoreState(for owner: AnyClass) {
-		ce_restoreState(keyword: NSStringFromClass(owner))
+	func ce_restoreState(for key: WindowStateKey) {
+		ce_restoreState(keyword: key.rawValue)
 	}
 
-	@objc(saveSizeAsDefault)
 	func ce_saveSizeAsDefault() {
 		ceDefaultSize = frame.size
 	}
 
-	@objc(defaultSize)
 	var ceDefaultSize: NSSize {
 		get {
 			guard let value = objc_getAssociatedObject(
 				self,
-				&WindowStateStorage.defaultSizeAssociationKey
+				WindowStateStorage.defaultSizeAssociationKey
 			) as? NSValue else {
 				return .zero
 			}
@@ -142,14 +159,13 @@ public extension NSWindow {
 		set {
 			objc_setAssociatedObject(
 				self,
-				&WindowStateStorage.defaultSizeAssociationKey,
+				WindowStateStorage.defaultSizeAssociationKey,
 				NSValue(size: newValue),
 				.OBJC_ASSOCIATION_RETAIN_NONATOMIC
 			)
 		}
 	}
 
-	@objc(restoreDefaultSizeAndDisplay:)
 	func ce_restoreDefaultSize(display: Bool) {
 		let defaultSize = ceDefaultSize
 		guard defaultSize != .zero else {

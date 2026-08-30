@@ -1,13 +1,10 @@
 @testable import Glasstual
-import XCTest
+import Testing
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "GLTTestClient.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_
  *
@@ -40,54 +37,50 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 @MainActor
-final class IRCTimedCommandTests: XCTestCase {
-	@objc
-	func testInitializationCapturesCommandContextAndUniqueIdentifiers() {
+@Suite("Timed commands")
+struct IRCTimedCommandTests {
+	@Test("A timed command records the client and channel it was made for")
+	func initializationCapturesCommandContextAndUniqueIdentifiers() {
 		let client = GLTTestClient()
-		let channel = Channel(configDictionary: ["channelName": "#chat"])
+		let channel = Channel(config: ChannelConfig(channelName: "#chat"))
 
 		let first = TimedCommand(command: "WHO #chat", onClient: client, inChannel: channel)
 		let second = TimedCommand(command: "PING", onClient: client)
 
-		XCTAssertEqual(first.command, "WHO #chat")
-		XCTAssertEqual(first.clientId, client.uniqueIdentifier)
-		XCTAssertEqual(first.channelId, channel.uniqueIdentifier)
-
-		XCTAssertNil(second.channelId)
-
-		XCTAssertNotEqual(first.identifier, second.identifier)
+		#expect(first.command == "WHO #chat")
+		#expect(first.clientId == client.uniqueIdentifier)
+		#expect(first.channelId == channel.uniqueIdentifier)
+		#expect(second.channelId == nil)
+		#expect(first.identifier != second.identifier)
 	}
 
-	@objc
-	func testRestartRequiresPreviousStartAndPreservesTimerConfiguration() {
+	@Test("Restarting needs a previous start and reuses that timer's configuration")
+	func restartRequiresPreviousStartAndPreservesTimerConfiguration() {
 		let client = GLTTestClient()
 		let command = TimedCommand(command: "PING", onClient: client)
 
-		XCTAssertFalse(command.restart())
+		#expect(command.restart() == false)
 
 		command.start(30, onRepeat: true, iterations: 3)
 
-		XCTAssertTrue(command.timerIsActive)
-
-		XCTAssertEqual(command.timerInterval, 30)
-
-		XCTAssertTrue(command.repeatTimer)
-
-		XCTAssertEqual(command.iterations, 3)
+		#expect(command.timerIsActive)
+		#expect(command.timerInterval == 30)
+		#expect(command.repeatTimer)
+		#expect(command.iterations == 3)
 
 		command.stop()
 
-		XCTAssertFalse(command.timerIsActive)
+		#expect(command.timerIsActive == false)
 
-		XCTAssertTrue(command.restart())
-		XCTAssertTrue(command.timerIsActive)
+		#expect(command.restart())
+		#expect(command.timerIsActive)
 
 		command.stop()
 	}
 
-	func testClientOwnsTimedCommandsThroughTheSwiftStore() {
+	@Test("The client owns its timed commands and hands them back by identifier")
+	func clientOwnsTimedCommandsThroughTheSwiftStore() {
 		let client = GLTTestClient()
 		let first = TimedCommand(command: "PING", onClient: client)
 		let second = TimedCommand(command: "WHO #chat", onClient: client)
@@ -95,14 +88,14 @@ final class IRCTimedCommandTests: XCTestCase {
 		client.addTimedCommand(first)
 		client.addTimedCommand(second)
 
-		XCTAssertIdentical(client.timedCommand(withIdentifier: first.identifier), first)
-		XCTAssertEqual(Set(client.listOfTimedCommands().map(\.identifier)), [first.identifier, second.identifier])
+		#expect(client.timedCommand(withIdentifier: first.identifier) === first)
+		#expect(Set(client.listOfTimedCommands().map(\.identifier)) == [first.identifier, second.identifier])
 
 		client.removeTimedCommand(first)
-		XCTAssertNil(client.timedCommand(withIdentifier: first.identifier))
-		XCTAssertEqual(client.listOfTimedCommands().map(\.identifier), [second.identifier])
+		#expect(client.timedCommand(withIdentifier: first.identifier) == nil)
+		#expect(client.listOfTimedCommands().map(\.identifier) == [second.identifier])
 
 		client.removeTimedCommands()
-		XCTAssertTrue(client.listOfTimedCommands().isEmpty)
+		#expect(client.listOfTimedCommands().isEmpty)
 	}
 }

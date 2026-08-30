@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
@@ -37,29 +37,25 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
-
-final class GLTTestClientConfig: IRCClientConfig, @unchecked Sendable {
-	var testNicknamePassword: String?
-
-	override var nicknamePassword: String? {
-		testNicknamePassword
-	}
-
-	override func writeNicknamePasswordToKeychain() {}
-	override func writeProxyPasswordToKeychain() {}
-}
 
 /// An IRC client double that records network and presentation output without
 /// opening a socket. Tests opt into real incoming-message handling when they
 /// need to exercise the production state machine.
-final class GLTTestClient: IRCClient, @unchecked Sendable {
+@MainActor
+final class GLTTestClient: IRCClient {
 	let sentCapabilityCommands = NSMutableArray()
 	let sentLines = NSMutableArray()
 	let processedMessages = NSMutableArray()
 	let printedLines = NSMutableArray()
 	var forwardsProcessedMessages = false
+
+	/** The window, menus and application this client talks to. Held here rather
+	 than reached for through the application's singletons, so a test client
+	 works with no running user interface. */
+	private(set) var fixture: GLTClientEnvironmentFixture!
 
 	@MainActor convenience init() {
 		self.init(configDictionary: [:])
@@ -69,28 +65,40 @@ final class GLTTestClient: IRCClient, @unchecked Sendable {
 		self.init(configDictionary: dictionary, nicknamePassword: nil)
 	}
 
+	/** The password is applied after construction so that
+	 `IRCClient.init(config:)` finds nothing pending and writes nothing: reads
+	 come back from the pending value and never reach the real keychain. */
 	@MainActor convenience init(
 		configDictionary dictionary: [String: Any],
-		nicknamePassword: String?
+		nicknamePassword: String?,
+		fixture: GLTClientEnvironmentFixture = GLTClientEnvironmentFixture()
 	) {
-		let config = GLTTestClientConfig(
-			dictionary: dictionary,
-			ignorePrivateMessages: false
+		self.init(
+			config: PropertyListModel.decode(
+				ClientConfig.self,
+				from: [String: PropertyListValue](propertyList: dictionary) ?? [:]
+			) ?? ClientConfig(),
+			environment: fixture.environment
 		)
-		config.testNicknamePassword = nicknamePassword
 
-		self.init(config: config)
+		self.fixture = fixture
+		config.pendingNicknamePassword = nicknamePassword
 		linePrintObserver = { [weak self] request in
 			self?.recordPrintedLine(request)
 		}
 	}
 
+	/// The window double this client draws into.
+	var recordedOutput: GLTRecordingClientOutput {
+		fixture.output
+	}
+
 	static func testChannelUser(nickname: String, on client: IRCClient) -> ChannelUser {
-		ChannelUser(user: User(nickname: nickname, on: client))
+		ChannelUser(user: User(nickname: nickname), prefixes: client.currentUserPrefixes)
 	}
 
 	func markAsLoggedIn() {
-		setValue(true, forKey: "isLoggedIn")
+		isLoggedIn = true
 	}
 
 	override func sendCapability(_ subcommand: String, data: String?) {

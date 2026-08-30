@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2013 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,9 +37,10 @@
 
 import AppKit
 import GlasstualPluginKit
+import os
 import Synchronization
 
-private struct SmileyConversionSnapshot: Sendable {
+private nonisolated struct SmileyConversionSnapshot: Sendable { // nonisolated: value
 	static let empty = SmileyConversionSnapshot(conversionTable: [:])
 
 	let conversionTable: [String: String]
@@ -52,13 +53,18 @@ private struct SmileyConversionSnapshot: Sendable {
 }
 
 @objc(TPISmileyConverter)
-final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRendering, PluginPreferencesProviding,
-	@unchecked Sendable
+final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRendering,
+	PluginPreferencesProviding
 {
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['Smiley Converter']"
+	)
+
 	private static let enabledPreference = "Smiley Converter Extension -> Enable Service"
 	private static let extraEmoticonsPreference = "Smiley Converter Extension -> Enable Extra Emoticons"
 
-	@IBOutlet private var preferencesPane: NSView!
+	@IBOutlet private var preferencesPane: NSView?
 
 	private let conversionSnapshot = Mutex(SmileyConversionSnapshot.empty)
 	private var host: PluginHostContext?
@@ -76,8 +82,8 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		DispatchQueue.main.syncIfNeeded {
-			self.bundle.loadNibNamed("TPISmileyConverter", owner: self, topLevelObjects: nil)
+		if bundle.loadNibNamed("TPISmileyConverter", owner: self, topLevelObjects: nil) == false {
+			Self.logger.error("Failed to load TPISmileyConverter.xib; the preferences pane is unavailable")
 		}
 		rebuildConversionSnapshot()
 	}
@@ -121,7 +127,7 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		rebuildConversionSnapshot()
 	}
 
-	var pluginPreferencesPaneView: NSView {
+	var pluginPreferencesPaneView: NSView? {
 		preferencesPane
 	}
 
@@ -129,14 +135,17 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		String(localized: .BasicLanguage.preferencesPaneTitle)
 	}
 
-	func willRenderMessage(_ event: PluginRenderEvent) -> String? {
-		guard defaults.bool(forKey: Self.enabledPreference),
-		      event.kind == .action || event.kind == .privateMessage
-		else { return event.message }
+	/** Called from the message renderer's background queue. The conversion table
+	 is the only state it reads, and that table is empty whenever the preference
+	 is off, so there is nothing to consult on the main actor. */
+	nonisolated func willRenderMessage(_ event: PluginRenderEvent) -> String? { // nonisolated: pure
+		guard event.kind == .action || event.kind == .privateMessage else {
+			return event.message
+		}
 		return convertToEmoji(event.message)
 	}
 
-	private func convertToEmoji(_ string: String) -> String {
+	private nonisolated func convertToEmoji(_ string: String) -> String { // nonisolated: pure
 		let snapshot = conversionSnapshot.withLock { $0 }
 		let result = NSMutableString(string: string)
 		for smiley in snapshot.sortedSmileys {
@@ -145,7 +154,11 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		return result as String
 	}
 
-	private func replace(_ smiley: String, in string: NSMutableString, using snapshot: SmileyConversionSnapshot) {
+	private nonisolated func replace( // nonisolated: pure
+		_ smiley: String,
+		in string: NSMutableString,
+		using snapshot: SmileyConversionSnapshot
+	) {
 		var searchLocation = 0
 		while searchLocation < string.length {
 			let searchRange = NSRange(location: searchLocation, length: string.length - searchLocation)
@@ -162,16 +175,6 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 			} else {
 				searchLocation = rightLocation + 1
 			}
-		}
-	}
-}
-
-private extension DispatchQueue {
-	func syncIfNeeded(_ work: () -> Void) {
-		if Thread.isMainThread {
-			work()
-		} else {
-			sync(execute: work)
 		}
 	}
 }

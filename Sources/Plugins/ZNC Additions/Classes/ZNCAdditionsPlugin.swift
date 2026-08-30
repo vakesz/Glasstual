@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2011 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -43,7 +43,7 @@ import SecurityInterface
 
 @objc(TPI_ZNCAdditions)
 final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginServerInputHandling,
-	PluginServerMessageIntercepting, @unchecked Sendable
+	PluginServerMessageIntercepting
 {
 	var subscribedUserInputCommands: [String] {
 		["detach", "attach", "znccert"]
@@ -59,18 +59,13 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		      input.messageSequence.hasPrefix("Disconnected from IRC")
 		else { return }
 
-		performSynchronouslyOnMainActor {
-			self.handleIRCSideDisconnect(client)
-		}
+		handleIRCSideDisconnect(client)
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
-		Task { @MainActor [weak self] in
-			self?.handleUserCommand(invocation)
-		}
+		handleUserCommand(invocation)
 	}
 
-	@MainActor
 	private func handleUserCommand(_ invocation: PluginCommandInvocation) {
 		let client = invocation.client
 		guard client.isConnectedToZNC else {
@@ -93,7 +88,6 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		}
 	}
 
-	@MainActor
 	private func showCertificateChain(for client: PluginClient) {
 		guard let certificateData = client.zncCertificateChainData else {
 			client.printDebug(String(localized: .BasicLanguage.noInformationAvailable))
@@ -135,7 +129,6 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		)
 	}
 
-	@MainActor
 	private func updateAttachment(
 		command: String,
 		message: String,
@@ -182,8 +175,8 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 
 	private func interceptBufferExtras(_ input: PluginServerMessage, client: PluginClient) -> PluginServerMessage? {
 		var parameters = input.parameters
-		let message = NSMutableString(string: (parameters[1] as NSString).ceNormalizeSpaces)
-		let hostmask = message.ceToken
+		var message = CommandTokenizer(parameters[1].normalizingSpaces)
+		let hostmask = message.nextToken()
 		guard hostmask.isEmpty == false else { return input }
 
 		var sender = input.sender
@@ -202,8 +195,8 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		}
 		sender.hostmask = hostmask
 
-		let mutableInput = input.copy()
-		let body = message as String
+		var mutableInput = input
+		let body = String(message.remainder)
 		if body == "joined" {
 			mutableInput.command = "JOIN"
 			parameters.remove(at: 1)
@@ -230,7 +223,14 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		} else if let captures = captures(in: body, pattern: #"^set mode: ([^\s]+)( .*)?$"#) {
 			mutableInput.command = "MODE"
 			parameters.remove(at: 1)
-			parameters.append(captures.joined())
+			/* The mode string and each of its arguments are separate IRC
+			 parameters. Joining them made "+ov nick1 nick2" one parameter,
+			 which the MODE handler cannot read. */
+			parameters.append(captures[0])
+			parameters.append(contentsOf: captures[1]
+				.trimmingCharacters(in: .whitespaces)
+				.components(separatedBy: " ")
+				.filter { $0.isEmpty == false })
 		} else if body.hasPrefix("changed the topic to: ") {
 			return nil
 		}
@@ -252,25 +252,10 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		}
 	}
 
-	@MainActor
 	private func handleIRCSideDisconnect(_ client: PluginClient) {
 		for channel in client.channels where channel.isActive && channel.name.hasPrefix("~#") == false {
 			channel.deactivate()
 		}
 		client.refreshSidebar()
-	}
-}
-
-private func performSynchronouslyOnMainActor(_ work: @MainActor @Sendable () -> Void) {
-	if Thread.isMainThread {
-		MainActor.assumeIsolated {
-			work()
-		}
-	} else {
-		DispatchQueue.main.sync {
-			MainActor.assumeIsolated {
-				work()
-			}
-		}
 	}
 }

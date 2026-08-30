@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -38,12 +38,11 @@
 import AppKit
 import CocoaExtensions
 
-public extension Notification.Name {
+public nonisolated extension Notification.Name { // nonisolated: value
 	static let textualUserDefaultsDidChange = Self("TPCPreferencesUserDefaultsDidChangeNotification")
 }
 
-@objc(TPCPreferencesUserDefaults)
-public final class TextualUserDefaults: UserDefaults {
+public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolated: value
 	private static let storageSuiteName: String = {
 		#if DEBUG
 			if let reviewSuite = ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_SUITE"],
@@ -56,10 +55,22 @@ public final class TextualUserDefaults: UserDefaults {
 		return ApplicationGroup.identifier
 	}()
 
-	private nonisolated(unsafe) static let sharedInstance =
-		TextualUserDefaults(storageSuiteName: storageSuiteName)
+	/** The handle the main actor keeps for the lifetime of the process, so the
+	 preference reads on every render path do not build one per access.
+
+	 Foundation marks `UserDefaults` non-Sendable, which is why this is not a
+	 process-wide global. It does not need to be one: a suite is a file, and a
+	 second `UserDefaults` over the same suite reads and writes the same values.
+	 Code outside the main actor takes its own handle from ``suite()``. */
+	@MainActor
+	public static let container = TextualUserDefaults(storageSuiteName: storageSuiteName)
+
+	/// The suite this instance is bound to, kept because `UserDefaults` does not
+	/// expose it and `persistentDomain(forName:)` needs it.
+	public let suiteName: String
 
 	private init(storageSuiteName: String) {
+		suiteName = storageSuiteName
 		super.init(suiteName: storageSuiteName)!
 	}
 
@@ -67,12 +78,17 @@ public final class TextualUserDefaults: UserDefaults {
 		self.init(storageSuiteName: Self.storageSuiteName)
 	}
 
-	@objc(sharedUserDefaults)
-	public static func shared() -> TextualUserDefaults {
-		sharedInstance
+	/** A private handle on the store, for code that is not on the main actor.
+
+	 One suite is one file, so this reads and writes exactly what ``container``
+	 does. Only object identity differs, and identity matters to nothing but KVO
+	 and the `object` a notification is posted with -- neither of which anything
+	 outside the main actor looks at. A caller that reads in a loop should hold
+	 the handle rather than ask for one per read. */
+	public static func suite() -> TextualUserDefaults {
+		TextualUserDefaults(storageSuiteName: storageSuiteName)
 	}
 
-	@objc(_setObject:forKey:)
 	public func setObjectWithoutNotification(_ value: Any?, forKey defaultName: String) {
 		super.set(value, forKey: defaultName)
 	}
@@ -81,9 +97,13 @@ public final class TextualUserDefaults: UserDefaults {
 		set(value, forKey: defaultName, postNotification: true)
 	}
 
-	@objc(setObject:forKey:postNotification:)
 	public func set(_ value: Any?, forKey defaultName: String, postNotification: Bool) {
-		let oldValue = object(forKey: defaultName)
+		/* Compared against the persistent domain, not `object(forKey:)`: the
+		 latter falls through to the registration domain, so writing a value that
+		 happened to equal the shipped default returned early and nothing was
+		 persisted. The user's explicit choice then looked like "never touched"
+		 and would silently follow a change to the default in a later release. */
+		let oldValue = persistentDomain(forName: suiteName)?[defaultName]
 		if let oldValue = oldValue as? NSObject, oldValue.isEqual(value) {
 			return
 		}
@@ -126,23 +146,37 @@ public final class TextualUserDefaults: UserDefaults {
 		set(nil, forKey: defaultName)
 	}
 
-	@objc(registerDefault:forKey:)
 	public func registerDefault(_ value: NSCopying, forKey defaultName: String) {
 		register(defaults: [defaultName: value])
 	}
 
-	@objc public var registeredDefaults: [String: Any] {
-		volatileDomain(forName: UserDefaults.registrationDomain)
+	/// The registration domain, narrowed out of the `Any` the volatile domain
+	/// hands back.
+	public var registeredDefaults: [String: PropertyListValue] {
+		[String: PropertyListValue](
+			propertyList: volatileDomain(forName: UserDefaults.registrationDomain)
+		) ?? [:]
 	}
 }
 
+/** The bindings controller the nibs instantiate, pointed at the application
+ container rather than `UserDefaults.standard`.
+
+ It takes its own handle on the suite: `NSUserDefaultsController`'s initialisers
+ are nonisolated, so they cannot reach the main actor's instance, and they do
+ not need to -- the controller is the only observer of the object it holds, and
+ the values behind it are the same file. Writes made elsewhere reach bound
+ controls through `UserDefaults.didChangeNotification`, which the controller
+ already watches. */
 @objc(TPCPreferencesUserDefaultsController)
-public final class TextualUserDefaultsController: NSUserDefaultsController {
+public final nonisolated class TextualUserDefaultsController: NSUserDefaultsController { // nonisolated: value
 	required init?(coder _: NSCoder) {
-		super.init(defaults: TextualUserDefaults.shared(), initialValues: nil)
+		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}
 
+	/* `[String: Any]` is NSUserDefaultsController's own signature; the override
+	 exists to ignore both arguments, so nothing reads them. */
 	override public init(defaults _: UserDefaults?, initialValues _: [String: Any]?) {
-		super.init(defaults: TextualUserDefaults.shared(), initialValues: nil)
+		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}
 }

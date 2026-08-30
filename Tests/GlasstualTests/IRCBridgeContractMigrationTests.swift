@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -35,65 +35,67 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
-import XCTest
+import Testing
 
-final class IRCBridgeContractMigrationTests: XCTestCase {
-	func testChannelTypeAndStatusRawValuesRemainStable() {
-		XCTAssertEqual(ChannelType.channel.rawValue, 0)
-		XCTAssertEqual(ChannelType.privateMessage.rawValue, 1)
-		XCTAssertEqual(ChannelType.utility.rawValue, 2)
-		XCTAssertEqual(ChannelType.directChat.rawValue, 3)
+@MainActor
+@Suite("IRC bridge contract")
+struct IRCBridgeContractMigrationTests {
+	@Test("Channel type and status raw values are the ones stored configs carry")
+	func channelTypeAndStatusRawValuesRemainStable() {
+		#expect(ChannelType.channel.rawValue == 0)
+		#expect(ChannelType.privateMessage.rawValue == 1)
+		#expect(ChannelType.utility.rawValue == 2)
+		#expect(ChannelType.directChat.rawValue == 3)
 
-		XCTAssertEqual(ChannelStatus.parted.rawValue, 0)
-		XCTAssertEqual(ChannelStatus.joining.rawValue, 1)
-		XCTAssertEqual(ChannelStatus.joined.rawValue, 2)
-		XCTAssertEqual(ChannelStatus.terminated.rawValue, 3)
+		#expect(ChannelStatus.parted.rawValue == 0)
+		#expect(ChannelStatus.joining.rawValue == 1)
+		#expect(ChannelStatus.joined.rawValue == 2)
+		#expect(ChannelStatus.terminated.rawValue == 3)
 	}
 
-	func testUserRankBitsAndSetAlgebraRemainStable() {
-		XCTAssertEqual(UserRank.none.rawValue, 1 << 0)
-		XCTAssertEqual(UserRank.irCopByMode.rawValue, 1 << 1)
-		XCTAssertEqual(UserRank.channelOwner.rawValue, 1 << 2)
-		XCTAssertEqual(UserRank.superOperator.rawValue, 1 << 3)
-		XCTAssertEqual(UserRank.normalOperator.rawValue, 1 << 4)
-		XCTAssertEqual(UserRank.halfOperator.rawValue, 1 << 5)
-		XCTAssertEqual(UserRank.voiced.rawValue, 1 << 6)
+	@Test("Ranks combine as a set, and no rank at all is the empty set")
+	func userRankSetAlgebraRemainsStable() {
+		#expect(UserRank.none.isEmpty)
 
 		let operatorRanks: UserRank = [.channelOwner, .normalOperator, .voiced]
-		XCTAssertEqual(operatorRanks.rawValue, (1 << 2) | (1 << 4) | (1 << 6))
-		XCTAssertTrue(operatorRanks.contains(.normalOperator))
-		XCTAssertTrue(operatorRanks.isDisjoint(with: [.halfOperator, .irCopByMode]))
+
+		#expect(operatorRanks.contains(.normalOperator))
+		#expect(operatorRanks.contains(.halfOperator) == false)
+		#expect(operatorRanks.isDisjoint(with: [.halfOperator, .irCopByMode]))
 	}
 
-	@MainActor
-	func testRankAdaptersAndComparisonPreserveNativeBehavior() {
+	@Test("A member's rank comes from its modes, and the higher rank sorts first")
+	func rankAdaptersAndComparisonPreserveNativeBehavior() {
 		let client = GLTTestClient()
 		client.supportInfo.processConfigurationData("PREFIX=(ov)@+")
 		let operatorMember = mutableMember(named: "zeta", modes: "o", on: client)
 		let voicedMember = mutableMember(named: "alpha", modes: "v", on: client)
 
-		XCTAssertEqual(operatorMember.rank, .normalOperator)
-		XCTAssertEqual(operatorMember.ranks, .normalOperator)
-		XCTAssertEqual(operatorMember.compareRank(to: voicedMember), .orderedAscending)
-		XCTAssertEqual(voicedMember.compareRank(to: operatorMember), .orderedDescending)
+		#expect(operatorMember.rank == .normalOperator)
+		#expect(operatorMember.ranks == .normalOperator)
+		#expect(operatorMember.compareRank(to: voicedMember) == .orderedAscending)
+		#expect(voicedMember.compareRank(to: operatorMember) == .orderedDescending)
 	}
 
-	func testInactiveChannelKeepsMemberListNil() {
-		let channel = Channel(configDictionary: [
-			"channelName": "#inactive",
-			"channelType": ChannelType.channel.rawValue,
-		])
+	@Test("A channel that was never joined has no members")
+	func inactiveChannelHasNoMembers() {
+		let channel = Channel(config: ChannelConfig(channelName: "#inactive"))
 
-		XCTAssertNil(channel.memberInfo)
-		XCTAssertNil(channel.memberList)
-		XCTAssertNil(channel.findMember("nobody"))
-		XCTAssertEqual(channel.numberOfMembers, 0)
+		#expect(channel.memberInfo == nil)
+		#expect(channel.memberList.isEmpty)
+		#expect(channel.findMember("nobody") == nil)
+		#expect(channel.numberOfMembers == 0)
 	}
 
-	private func mutableMember(named nickname: String, modes: String, on client: IRCClient) -> ChannelUserMutable {
-		let member = ChannelUserMutable(user: User(nickname: nickname, on: client))
+	private func mutableMember(
+		named nickname: String,
+		modes: ChannelModeSymbolSet,
+		on client: IRCClient
+	) -> ChannelUser {
+		var member = ChannelUser(user: User(nickname: nickname), prefixes: client.currentUserPrefixes)
 		member.modes = modes
 		return member
 	}

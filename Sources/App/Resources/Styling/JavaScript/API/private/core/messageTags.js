@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -333,6 +333,24 @@ _MessageTags.addReaction = function(msgid, emoji, nickname) /* PRIVATE */
 	_MessageTags.renderReactionsOfLine(line);
 
 	return reactions;
+};
+
+/* Restores reactions that arrived while a transcript had no DOM or while its
+   theme was rebuilding. The native map is authoritative for this session. */
+_MessageTags.applySessionReactions = function(reactionsByMessageIdentifier) /* PRIVATE */
+{
+	var identifiers = Object.keys(reactionsByMessageIdentifier || {});
+
+	for (var i = 0; i < identifiers.length; i++) {
+		var line = _MessageTags.lineWithMessageIdentifier(identifiers[i]);
+
+		if (!line) {
+			continue;
+		}
+
+		_MessageTags.setReactionsOfLine(line, reactionsByMessageIdentifier[identifiers[i]]);
+		_MessageTags.renderReactionsOfLine(line);
+	}
 };
 
 /* Entry points */

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2012 - 2020 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,11 +37,17 @@
 
 import AppKit
 import GlasstualPluginKit
+import os
 
 @objc(TPISystemProfiler)
-final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginPreferencesProviding,
-	@unchecked Sendable
+final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandling,
+	PluginPreferencesProviding
 {
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['System Profiler']"
+	)
+
 	private static let defaultPreferences = [
 		"System Profiler Extension -> Feature Disabled -> GPU Model": true,
 		"System Profiler Extension -> Feature Disabled -> Disk Information": true,
@@ -50,10 +56,10 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 		"System Profiler Extension -> Feature Disabled -> Screen Resolution": true,
 	]
 
-	@IBOutlet private var preferencePaneView: NSView!
+	@IBOutlet private var preferencePaneView: NSView?
 	private var host: PluginHostContext?
 
-	var pluginPreferencesPaneView: NSView {
+	var pluginPreferencesPaneView: NSView? {
 		preferencePaneView
 	}
 
@@ -68,18 +74,16 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
 		host.defaults.register(defaults: Self.defaultPreferences)
-		DispatchQueue.main.syncIfNeeded {
-			Bundle(for: SystemProfilerPlugin.self).loadNibNamed("TPISystemProfiler", owner: self, topLevelObjects: nil)
+		let bundle = Bundle(for: SystemProfilerPlugin.self)
+		if bundle.loadNibNamed("TPISystemProfiler", owner: self, topLevelObjects: nil) == false {
+			Self.logger.error("Failed to load TPISystemProfiler.xib; the preferences pane is unavailable")
 		}
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
-		Task { @MainActor [weak self] in
-			self?.handleCommand(invocation)
-		}
+		handleCommand(invocation)
 	}
 
-	@MainActor
 	private func handleCommand(_ invocation: PluginCommandInvocation) {
 		guard let channel = invocation.selectedChannel, let host else { return }
 		let command = invocation.command
@@ -98,13 +102,13 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 
 		let report: String? = switch command {
 		case "SYSINFO": SystemProfileReport.systemInformation(defaults: host.defaults)
-		case "UPTIME": SystemProfileReport.applicationAndSystemUptime()
+		case "UPTIME": SystemProfileReport.applicationAndSystemUptime(host: host)
 		case "NETSTATS": SystemProfileReport.systemNetworkInformation()
 		case "MSGCOUNT": SystemProfileReport.applicationBandwidthStatistics(metrics: metrics)
 		case "DISKSPACE": SystemProfileReport.systemDiskSpaceInformation()
-		case "STYLE": SystemProfileReport.applicationActiveStyle(metrics: metrics)
+		case "STYLE": SystemProfileReport.applicationActiveStyle(metrics: metrics, host: host)
 		case "SCREENS": SystemProfileReport.systemDisplayInformation()
-		case "RUNCOUNT": SystemProfileReport.applicationRuntimeStatistics()
+		case "RUNCOUNT": SystemProfileReport.applicationRuntimeStatistics(host: host)
 		case "SYSMEM": SystemProfileReport.systemMemoryInformation()
 		default: nil
 		}
@@ -120,16 +124,6 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 			} else {
 				client.sendPrivateMessage(line, to: channel)
 			}
-		}
-	}
-}
-
-private extension DispatchQueue {
-	func syncIfNeeded(_ work: () -> Void) {
-		if Thread.isMainThread {
-			work()
-		} else {
-			sync(execute: work)
 		}
 	}
 }

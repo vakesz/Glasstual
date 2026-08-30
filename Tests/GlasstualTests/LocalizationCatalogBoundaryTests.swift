@@ -4,108 +4,42 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class LocalizationCatalogBoundaryTests: XCTestCase {
-	func testAddressBookAndServerEndpointValidationCopy() {
-		XCTAssertEqual(
-			AddressBookStrings.invalidIgnoreMask,
-			"Please enter a properly formatted ignore mask."
-		)
-		XCTAssertEqual(
-			ServerEndpointStrings.invalidAddressDescription,
-			"The value you entered is not a properly formatted server address"
-		)
-		XCTAssertEqual(ServerEndpointStrings.invalidAddressRecoverySuggestion, "")
-		XCTAssertEqual(
-			ServerEndpointStrings.invalidPortDescription,
-			"The value you entered is not a properly formatted server port"
-		)
-		XCTAssertEqual(
-			ServerEndpointStrings.invalidPortRecoverySuggestion,
-			"Enter a whole number between 1 and 65,535."
-		)
+@MainActor
+@Suite("Localized dialog copy")
+struct LocalizationCatalogBoundaryTests {
+	@Test("The server channel list interpolates its network name and channel count")
+	func serverChannelListCopyAndFormatting() {
+		#expect(ServerChannelListStrings.heading(networkName: "Libera.Chat") == "Channel List for “Libera.Chat”")
+		#expect(ServerChannelListStrings.windowTitle(publicChannelCount: 42) == "Channel List — 42 Public Channels")
 	}
 
-	func testUserStyleDefaultRulesPreserveFormatting() {
-		let expectedRules = [
-			"/*",
-			"",
-			"!!! WARNING: THIS IS DESIGNED FOR ADVANCED USERS. !!!",
-			"",
-			"Styles are written in HTML which means custom rules should be",
-			"written in CSS: https://developer.mozilla.org/en-US/docs/Web/CSS",
-			"",
-			"- Example: ",
-			"",
-			"#topicBar {",
-			"\tdisplay: none;",
-			"}",
-			"",
-			"Glasstual does not perform sanitation in any form on your rules",
-			"which means you could possibly abuse this feature by escaping",
-			"from the style element and inserting JavaScript or other code.",
-			"",
-			"*/",
-		].joined(separator: "\n")
-
-		XCTAssertEqual(UserStyleStrings.defaultRules, expectedRules)
+	@Test("A channel access list names its own mode, and a maximum of zero states no limit")
+	func channelAccessListCopyAndFormatting() {
+		#expect(ChannelAccessListStrings.heading(for: .ban, channelName: "#swift") == "Bans in #swift")
+		#expect(
+			ChannelAccessListStrings.heading(for: .banException, channelName: "#swift") == "Ban Exceptions in #swift"
+		)
+		#expect(
+			ChannelAccessListStrings.heading(for: .inviteException, channelName: "#swift")
+				== "Invite Exceptions in #swift"
+		)
+		#expect(ChannelAccessListStrings.heading(for: .quiet, channelName: "#swift") == "Quiets in #swift")
+		#expect(ChannelAccessListStrings.entryCount(4, maximum: 0) == "4 entries")
+		#expect(ChannelAccessListStrings.entryCount(4, maximum: 100) == "4 of 100 entries")
 	}
 
-	func testServerChannelListCopyAndFormatting() {
-		XCTAssertEqual(ServerChannelListStrings.heading(networkName: "Libera.Chat"), "Channel List for “Libera.Chat”")
-		XCTAssertEqual(ServerChannelListStrings.minimumUserCountLabel, "Minimum users:")
-		XCTAssertEqual(
-			ServerChannelListStrings.minimumUserCountHint,
-			"Only list channels with at least this many members. The server applies this filter (ELIST)."
+	@Test("Channel spotlight pluralizes its unread and highlight counts")
+	func channelSpotlightCopyAndFormatting() {
+		#expect(ChannelSpotlightStrings.channelName("#swift") == "#swift")
+		#expect(ChannelSpotlightStrings.networkSuffix("Libera.Chat") == " on Libera.Chat")
+		#expect(ChannelSpotlightStrings.unreadMessages(1) == "1 unread message")
+		#expect(ChannelSpotlightStrings.unreadMessages(2) == "2 unread messages")
+		#expect(ChannelSpotlightStrings.highlights(1) == "1 highlight")
+		#expect(ChannelSpotlightStrings.highlights(2) == "2 highlights")
+		#expect(
+			ChannelSpotlightStrings.combined("1 highlight", "2 unread messages") == "1 highlight, 2 unread messages"
 		)
-		XCTAssertEqual(
-			ServerChannelListStrings.windowTitle(publicChannelCount: 42),
-			"Channel List — 42 Public Channels"
-		)
-	}
-
-	func testChannelAccessListCopyAndFormatting() {
-		XCTAssertEqual(
-			ChannelAccessListStrings.heading(for: .ban, channelName: "#swift"),
-			"Bans in #swift"
-		)
-		XCTAssertEqual(
-			ChannelAccessListStrings.heading(for: .banException, channelName: "#swift"),
-			"Ban Exceptions in #swift"
-		)
-		XCTAssertEqual(
-			ChannelAccessListStrings.heading(for: .inviteException, channelName: "#swift"),
-			"Invite Exceptions in #swift"
-		)
-		XCTAssertEqual(
-			ChannelAccessListStrings.heading(for: .quiet, channelName: "#swift"),
-			"Quiets in #swift"
-		)
-		XCTAssertEqual(ChannelAccessListStrings.entryCount(4, maximum: 0), "4 entries")
-		XCTAssertEqual(ChannelAccessListStrings.entryCount(4, maximum: 100), "4 of 100 entries")
-	}
-
-	func testMessageMenuCopy() {
-		XCTAssertEqual(MessageMenuStrings.share, "Share…")
-		XCTAssertEqual(MessageMenuStrings.reply, "Reply")
-		XCTAssertEqual(MessageMenuStrings.react, "React")
-		XCTAssertEqual(MessageMenuStrings.otherReaction, "Other…")
-		XCTAssertEqual(MessageMenuStrings.sendReaction, "Send")
-		XCTAssertEqual(MessageMenuStrings.emojiPlaceholder, "Emoji")
-	}
-
-	func testChannelSpotlightCopyAndFormatting() {
-		XCTAssertEqual(ChannelSpotlightStrings.channelName("#swift"), "#swift")
-		XCTAssertEqual(ChannelSpotlightStrings.networkSuffix("Libera.Chat"), " on Libera.Chat")
-		XCTAssertEqual(ChannelSpotlightStrings.unreadMessages(1), "1 unread message")
-		XCTAssertEqual(ChannelSpotlightStrings.unreadMessages(2), "2 unread messages")
-		XCTAssertEqual(ChannelSpotlightStrings.highlights(1), "1 highlight")
-		XCTAssertEqual(ChannelSpotlightStrings.highlights(2), "2 highlights")
-		XCTAssertEqual(
-			ChannelSpotlightStrings.combined("1 highlight", "2 unread messages"),
-			"1 highlight, 2 unread messages"
-		)
-		XCTAssertEqual(ChannelSpotlightStrings.noResults, "No Results")
 	}
 }

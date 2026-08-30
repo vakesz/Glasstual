@@ -48,15 +48,18 @@ public extension Notification.Name {
 	static let XRPortMapperDidChanged = Notification.Name("XRPortMapperDidChangedNotification")
 }
 
-@objc(XRPortMapper)
-@objcMembers
-public final class XRPortMapper: NSObject, @unchecked Sendable {
-	public dynamic var mapTCP = true
-	public dynamic var mapUDP = false
-	public dynamic var desiredPublicPort: UInt16 = 0
-	public private(set) dynamic var error: Int32 = 0
-	public private(set) dynamic var publicAddress: String?
-	public private(set) dynamic var publicPort: UInt16 = 0
+/// A NAT-PMP port mapping for one local port.
+///
+/// Main actor throughout: every caller is a DCC transfer or dialog that already
+/// runs there, and the mDNSResponder callback is delivered on the main queue.
+@MainActor
+public final class XRPortMapper: NSObject {
+	public var mapTCP = true
+	public var mapUDP = false
+	public var desiredPublicPort: UInt16 = 0
+	public private(set) var error: Int32 = 0
+	public private(set) var publicAddress: String?
+	public private(set) var publicPort: UInt16 = 0
 
 	private let port: UInt16
 	private var rawPublicAddress: UInt32 = 0
@@ -66,17 +69,18 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 		self.init(port: 0)
 	}
 
-	@objc(initWithPort:)
 	public init(port: UInt16) {
 		self.port = port
 		super.init()
 	}
 
-	deinit {
+	/// Isolated so it can release the mDNSResponder handle, which is only ever
+	/// touched on the main actor.
+	isolated deinit {
 		disconnect()
 	}
 
-	public dynamic var isMapped: Bool {
+	public var isMapped: Bool {
 		rawPublicAddress != 0 && rawPublicAddress != Self.rawLocalAddress
 	}
 
@@ -119,23 +123,11 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 		error = 0
 	}
 
-	public static func findPublicAddress() -> String? {
-		let mapper = XRPortMapper(port: 0)
-		mapper.mapTCP = false
-		guard mapper.open() else { return nil }
-		while mapper.error == 0, mapper.publicAddress == nil {
-			guard RunLoop.current.run(mode: .default, before: .distantFuture) else { break }
-		}
-		let address = mapper.publicAddress
-		mapper.close()
-		return address
-	}
-
-	public static var localAddress: String? {
+	public nonisolated static var localAddress: String? { // nonisolated: pure
 		string(from: rawLocalAddress)
 	}
 
-	public static var localAddressIsPrivate: Bool {
+	public nonisolated static var localAddressIsPrivate: Bool { // nonisolated: pure
 		let address = UInt32(bigEndian: rawLocalAddress)
 		let ranges: [(UInt32, UInt32)] = [
 			(0xFF00_0000, 0x0000_0000), (0xFF00_0000, 0x0A00_0000),
@@ -166,7 +158,7 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 		publicPort = 0
 	}
 
-	private static var rawLocalAddress: UInt32 {
+	private nonisolated static var rawLocalAddress: UInt32 { // nonisolated: pure
 		var interfaces: UnsafeMutablePointer<ifaddrs>?
 		guard getifaddrs(&interfaces) == 0 else { return 0 }
 		defer { freeifaddrs(interfaces) }
@@ -183,7 +175,7 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 		return 0
 	}
 
-	private static func string(from address: UInt32) -> String? {
+	private nonisolated static func string(from address: UInt32) -> String? { // nonisolated: pure
 		guard address != 0 else { return nil }
 		var address = in_addr(s_addr: address)
 		var buffer = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
@@ -196,9 +188,10 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 private let portMapperCallback: DNSServiceNATPortMappingReply =
 	{ _, _, _, errorCode, publicAddress, _, _, publicPort, _, context in
 		guard let context else { return }
-		Unmanaged<XRPortMapper>.fromOpaque(context).takeUnretainedValue().update(
-			error: errorCode,
-			address: publicAddress,
-			port: publicPort
-		)
+		let mapper = Unmanaged<XRPortMapper>.fromOpaque(context).takeUnretainedValue()
+		/* mDNSResponder delivers on the main queue, but the callback signature
+		 carries no isolation, so hop rather than assume. */
+		Task { @MainActor in
+			mapper.update(error: errorCode, address: publicAddress, port: publicPort)
+		}
 	}

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -121,7 +121,8 @@ _Glasstual.viewFinishedLoading = function(configuration) /* PRIVATE */
 	var isVisible = configuration.visible;
 	var isReloadingTheme = configuration.reloadingTheme;
 	var textSizeMultiplier = configuration.textSizeMultiplier;
-	var scrollbackLimit = configuration.scrollbackLimit;
+	var scrollbackSoftLimit = configuration.scrollbackSoftLimit;
+	var scrollbackHardLimit = configuration.scrollbackHardLimit;
 
 	_GlasstualScroller.createMutationObserver();
 
@@ -151,9 +152,7 @@ _Glasstual.viewFinishedLoading = function(configuration) /* PRIVATE */
 
 	Glasstual.changeTextSizeMultiplier(textSizeMultiplier);
 
-	if (scrollbackLimit !== 0) { // 0 = use default
-		_MessageBuffer.setBufferLimit(scrollbackLimit);
-	}
+	_MessageBuffer.setBufferLimits(scrollbackSoftLimit, scrollbackHardLimit);
 };
 
 _Glasstual.viewFinishedLoadingHistory = function() /* PRIVATE */

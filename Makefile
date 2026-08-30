@@ -6,10 +6,12 @@ SCHEME       := Glasstual
 CONFIG       ?= Debug
 DESTINATION  := platform=macOS,arch=arm64
 DERIVED_DATA ?= DerivedData
+RESULT_BUNDLE ?= build/Glasstual.xcresult
+TSAN_RESULT_BUNDLE ?= build/Glasstual-tsan.xcresult
 GENERATED_XCODE_DIR := Generated/Xcode
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
 
-.PHONY: help generate validate-generated-metadata build release archive run test lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate generate-preference-plists validate-generated-metadata build release archive run test tsan smoke coverage lint isolation-gate test-hygiene window-key-gate format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -21,6 +23,9 @@ generate: ensure-xcodegen ## Regenerate Glasstual.xcodeproj from project.yml
 	rm -rf "$(GENERATED_XCODE_DIR)"
 	xcodegen generate --spec project.yml
 	$(MAKE) validate-generated-metadata
+
+generate-preference-plists: ## Rewrite the preference plists from the PreferenceKey declarations
+	./scripts/generate-preference-plists.sh
 
 validate-generated-metadata: ## Validate XcodeGen-owned Info.plists and entitlements
 	@files=(); \
@@ -47,33 +52,59 @@ archive: generate ## Create a Release archive in build/
 run: build ## Build and launch the Debug app
 	open "$(DERIVED_DATA)/Build/Products/$(CONFIG)/Glasstual.app"
 
+# The scheme's test action sets gatherCoverageData, so the run always measures
+# coverage; -resultBundlePath is what keeps the measurement afterwards. Read it
+# with `make coverage`, or open the bundle in Xcode.
 test: generate ## Run the unit tests (GlasstualTests) inside the Debug app
-	$(XCODEBUILD) -configuration Debug test
+	rm -rf "$(RESULT_BUNDLE)"
+	$(XCODEBUILD) -configuration Debug -resultBundlePath "$(RESULT_BUNDLE)" test
+
+# ThreadSanitizer instruments every memory access, so the suite runs roughly
+# ten times slower and needs its own result bundle. It stays out of CI: the
+# runtime cost is too high for every push, and a TSan report is a diagnosis to
+# read rather than a pass/fail signal. Run it before merging isolation work.
+tsan: generate ## Run the test suite under ThreadSanitizer (local only, not in CI)
+	rm -rf "$(TSAN_RESULT_BUNDLE)"
+	$(XCODEBUILD) -configuration Debug -enableThreadSanitizer YES \
+		-resultBundlePath "$(TSAN_RESULT_BUNDLE)" test
+
+smoke: ## Seeded 40s launch with an accessibility probe (see scripts/smoke.sh)
+	./scripts/smoke.sh
+
+coverage: ## Print the line coverage of the last `make test` run
+	xcrun xccov view --report --only-targets "$(RESULT_BUNDLE)"
 
 ensure-formatters:
 	@command -v swiftformat >/dev/null 2>&1 || brew install swiftformat
-	@command -v shfmt >/dev/null 2>&1 || brew install shfmt
 
 ensure-linters: ensure-formatters
 	@command -v swiftlint >/dev/null 2>&1 || brew install swiftlint
-	@command -v shellcheck >/dev/null 2>&1 || brew install shellcheck
 	@command -v actionlint >/dev/null 2>&1 || brew install actionlint
+	@command -v shellcheck >/dev/null 2>&1 || brew install shellcheck
 
-lint: ensure-linters format-check ## Run whole-tree linters and format checks
+isolation-gate: ## Check that the isolation escape-hatch census is still zero
+	./scripts/isolation-gate.sh --ban
+
+test-hygiene: ## Check that no test is disabled or expected to fail without a recorded reason
+	./scripts/test-hygiene.sh
+
+window-key-gate: ## Check that windows are looked up by class, not by a spelled-out name
+	./scripts/window-key-gate.sh
+
+lint: ensure-linters format-check isolation-gate test-hygiene window-key-gate ## Run whole-tree linters and format checks
+	./scripts/generate-preference-plists.sh --check
 	swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests
-	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shellcheck "$${files[@]}"; fi
 	actionlint
-	@git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ] && [ "$${file##*/}" != distribution.plist ]; then plutil -lint "$$file" >/dev/null; fi; done
-	@git ls-files --cached --others --exclude-standard -z -- '*.xib' '*.xcscheme' '*.xcworkspacedata' 'distribution.plist' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then xmllint --noout "$$file"; fi; done
+	shellcheck scripts/*.sh
+	@git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' '*.xcprivacy' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then plutil -lint "$$file" >/dev/null; fi; done
+	@git ls-files --cached --others --exclude-standard -z -- '*.xib' '*.xcscheme' '*.xcworkspacedata' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then xmllint --noout "$$file"; fi; done
 	git diff --check
 
-format: ensure-formatters ## Format Swift and shell sources in place
+format: ensure-formatters ## Format Swift sources in place
 	swiftformat --cache ignore Sources Tests
-	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -w -i 0 -ci -sr "$${files[@]}"; fi
 
 format-check: ensure-formatters ## Verify formatting without changing files
 	swiftformat --lint --cache ignore Sources Tests
-	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -d -i 0 -ci -sr "$${files[@]}"; fi
 
 clean: ## Remove build products and ignored generated metadata
 	rm -rf "$(DERIVED_DATA)" build "Build Results" .tmp "$(GENERATED_XCODE_DIR)"

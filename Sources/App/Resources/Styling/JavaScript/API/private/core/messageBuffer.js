@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -200,15 +200,28 @@ _MessageBuffer._adjustCurrentBufferSize = function(byHowMuch)
 	console.log("Buffer adjusted to: " + newSize);
 };
 
-/* Allow user to set a custom buffer limit */
-_MessageBuffer.setBufferLimit = function(limit) /* PRIVATE */
+/* Keep the native replay tail and the DOM buffer on the same policy. */
+_MessageBuffer.setBufferLimits = function(softLimit, hardLimit) /* PRIVATE */
 {
-	if (limit < 100 || limit > 50000) {
+	if (softLimit < 1 || hardLimit < softLimit) {
 		_MessageBuffer._bufferSizeSoftLimit = _MessageBuffer._bufferSizeSoftLimitDefault;
 		_MessageBuffer._bufferSizeHardLimit = _MessageBuffer._bufferSizeHardLimitDefault;
 	} else {
-		_MessageBuffer._bufferSizeSoftLimit = limit;
-		_MessageBuffer._bufferSizeHardLimit = limit;
+		_MessageBuffer._bufferSizeSoftLimit = softLimit;
+		_MessageBuffer._bufferSizeHardLimit = hardLimit;
+	}
+};
+
+/* Compatibility entry point for themes that use the older private helper. */
+_MessageBuffer.setBufferLimit = function(limit) /* PRIVATE */
+{
+	if (limit < 100 || limit > 50000) {
+		_MessageBuffer.setBufferLimits(
+			_MessageBuffer._bufferSizeSoftLimitDefault,
+			_MessageBuffer._bufferSizeHardLimitDefault
+		);
+	} else {
+		_MessageBuffer.setBufferLimits(limit, limit);
 	}
 };
 

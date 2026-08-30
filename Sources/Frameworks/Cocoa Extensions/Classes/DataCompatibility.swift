@@ -64,31 +64,35 @@
 import CryptoKit
 import Foundation
 
+private let hexadecimalDigits = Array("0123456789abcdef")
+
+/// Lowercase hex for a digest, in two allocations rather than one `String` per
+/// byte, on a path that runs for every certificate fingerprint.
+private func textual_hexadecimalString(for digest: some Sequence<UInt8>) -> String {
+	var characters: [Character] = []
+	characters.reserveCapacity(64)
+
+	for byte in digest {
+		characters.append(hexadecimalDigits[Int(byte >> 4)])
+		characters.append(hexadecimalDigits[Int(byte & 0x0F)])
+	}
+
+	return String(characters)
+}
+
 public extension NSData {
 	private var textualData: Data {
 		self as Data
 	}
 
-	private func textual_hexadecimalString(for digest: some Sequence<UInt8>) -> String {
-		digest.map { String(format: "%02x", $0) }.joined()
-	}
-
-	@objc(range)
-	var textualRange: NSRange {
-		NSRange(location: 0, length: length)
-	}
-
-	@objc(sha1)
 	var textualSha1: String {
 		textual_hexadecimalString(for: Insecure.SHA1.hash(data: textualData))
 	}
 
-	@objc(sha256)
 	var textualSha256: String {
 		textual_hexadecimalString(for: SHA256.hash(data: textualData))
 	}
 
-	@objc(sha512)
 	var textualSha512: String {
 		textual_hexadecimalString(for: SHA512.hash(data: textualData))
 	}

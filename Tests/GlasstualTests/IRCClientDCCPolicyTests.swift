@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -37,57 +37,60 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class IRCClientDCCPolicyTests: XCTestCase {
-	func testParsesQuotedSendAndNormalizesToken() {
+@MainActor
+@Suite("DCC request policy")
+struct IRCClientDCCPolicyTests {
+	@Test("A quoted SEND keeps its spaces and the token loses its T prefix")
+	func parsesQuotedSendAndNormalizesToken() {
 		let request = DCCFileTransferRequestParser.parse("SEND \"hello world.txt\" 3232235777 0 42 T123")
-		XCTAssertEqual(
-			request,
-			.send(filename: "hello world.txt", address: "192.168.1.1", port: 0, filesize: 42, token: "123")
+
+		#expect(
+			request
+				== .send(filename: "hello world.txt", address: "192.168.1.1", port: 0, filesize: 42, token: "123")
 		)
 	}
 
-	func testRejectsInvalidFileTransferRanges() {
-		XCTAssertNil(DCCFileTransferRequestParser.parse("SEND file 3232235777 0 42"))
-		XCTAssertNil(DCCFileTransferRequestParser.parse("SEND file 3232235777 65536 42"))
-		XCTAssertNil(DCCFileTransferRequestParser.parse("SEND file 3232235777 5000 0"))
-		XCTAssertNil(DCCFileTransferRequestParser.parse("RESUME file 5000 12 token"))
+	@Test("A transfer outside the legal port or size range is refused")
+	func rejectsInvalidFileTransferRanges() {
+		#expect(DCCFileTransferRequestParser.parse("SEND file 3232235777 0 42") == nil)
+		#expect(DCCFileTransferRequestParser.parse("SEND file 3232235777 65536 42") == nil)
+		#expect(DCCFileTransferRequestParser.parse("SEND file 3232235777 5000 0") == nil)
+		#expect(DCCFileTransferRequestParser.parse("RESUME file 5000 12 token") == nil)
 	}
 
-	func testFormatsResumeAndSendArguments() {
-		XCTAssertEqual(
+	@Test("Outgoing RESUME and SEND arguments quote only the filenames that need it")
+	func formatsResumeAndSendArguments() {
+		#expect(
 			DCCFileTransferRequestParser.transferArguments(
 				filename: "hello world.txt", port: 5000, position: 12, token: "7"
-			),
-			"\"hello world.txt\" 5000 12 7"
+			) == "\"hello world.txt\" 5000 12 7"
 		)
-		XCTAssertEqual(
+		#expect(
 			DCCFileTransferRequestParser.sendArguments(
 				filename: "file.txt", address: "42", port: 5000, filesize: 99, token: nil
-			),
-			"file.txt 42 5000 99"
+			) == "file.txt 42 5000 99"
 		)
 	}
 
-	func testParsesActiveAndPassiveChatOffers() {
-		XCTAssertEqual(
-			DCCChatPolicy.parseOffer("CHAT chat 3232235777 5000"),
-			DCCChatOffer(address: "192.168.1.1", port: 5000, token: nil)
+	@Test("Both an active and a passive chat offer are understood")
+	func parsesActiveAndPassiveChatOffers() {
+		#expect(
+			DCCChatPolicy.parseOffer("CHAT chat 3232235777 5000")
+				== DCCChatOffer(address: "192.168.1.1", port: 5000, token: nil)
 		)
-		XCTAssertEqual(
-			DCCChatPolicy.parseOffer("CHAT chat 0 0 T99"),
-			DCCChatOffer(address: "0.0.0.0", port: 0, token: "99")
+		#expect(
+			DCCChatPolicy.parseOffer("CHAT chat 0 0 T99")
+				== DCCChatOffer(address: "0.0.0.0", port: 0, token: "99")
 		)
-		XCTAssertNil(DCCChatPolicy.parseOffer("CHAT chat invalid 5000"))
-		XCTAssertNil(DCCChatPolicy.parseOffer("CHAT chat 3232235777 0"))
+		#expect(DCCChatPolicy.parseOffer("CHAT chat invalid 5000") == nil)
+		#expect(DCCChatPolicy.parseOffer("CHAT chat 3232235777 0") == nil)
 	}
 
-	func testDirectChatWireNames() {
-		XCTAssertEqual(DCCChatPolicy.channelName(for: "alice"), "=alice")
-		XCTAssertEqual(
-			DCCChatPolicy.listeningArguments(address: "42", port: 5000, token: "9"),
-			"chat 42 5000 9"
-		)
+	@Test("A direct chat is named and offered in the legacy wire format")
+	func directChatWireNames() {
+		#expect(DCCChatPolicy.channelName(for: "alice") == "=alice")
+		#expect(DCCChatPolicy.listeningArguments(address: "42", port: 5000, token: "9") == "chat 42 5000 9")
 	}
 }

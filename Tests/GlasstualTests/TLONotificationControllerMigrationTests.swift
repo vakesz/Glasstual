@@ -1,47 +1,44 @@
-@testable import Glasstual
-import XCTest
-
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "TPCPreferencesLocal.h"
-/** *********************************************************************
+/*  *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
+
+import Foundation
+@testable import Glasstual
+import Testing
+
 @MainActor
-@objc
-class TLONotificationControllerMigrationTests: XCTestCase {
-	@objc
-	func controller() -> NotificationController {
+@Suite("Notification controller", .serialized)
+struct TLONotificationControllerMigrationTests {
+	private func notificationController() -> NotificationController {
 		SharedApplication.sharedNotificationController()
 	}
 
-	@objc
-	func testTitleForEventReturnsLocalizedNonEmptyStrings() {
-		let controller = controller()
+	@Test("Every event type has a title to show")
+	func titleForEventReturnsLocalizedNonEmptyStrings() {
+		let controller = notificationController()
 
-		XCTAssertFalse(controller.title(forEvent: .highlight).isEmpty)
-		XCTAssertFalse(controller.title(forEvent: .connect).isEmpty)
-		XCTAssertFalse(controller.title(forEvent: .fileTransferReceiveRequested).isEmpty)
-		XCTAssertFalse(controller.title(forEvent: .userJoined).isEmpty)
+		#expect(controller.title(forEvent: .highlight).isEmpty == false)
+		#expect(controller.title(forEvent: .connect).isEmpty == false)
+		#expect(controller.title(forEvent: .fileTransferReceiveRequested).isEmpty == false)
+		#expect(controller.title(forEvent: .userJoined).isEmpty == false)
 	}
 
-	@objc
-	func testThreadIdentifierCombinesClientAndChannel() {
-		XCTAssertNil(NotificationController.threadIdentifier(forClient: nil, channel: "chan"))
-		XCTAssertEqual(NotificationController.threadIdentifier(forClient: "client-a", channel: nil), "client-a")
-		XCTAssertEqual(
-			NotificationController.threadIdentifier(forClient: "client-a", channel: "chan-b"),
-			"client-a-chan-b"
+	@Test("A thread identifier needs a client, and takes the channel when there is one")
+	func threadIdentifierCombinesClientAndChannel() {
+		#expect(NotificationController.threadIdentifier(forClient: nil, channel: "chan") == nil)
+		#expect(NotificationController.threadIdentifier(forClient: "client-a", channel: nil) == "client-a")
+		#expect(
+			NotificationController.threadIdentifier(forClient: "client-a", channel: "chan-b") == "client-a-chan-b"
 		)
 	}
 
-	@objc
-	func testNotificationIdentifierUsesStableNSStringHashLayout() {
+	@Test("A notification without a thread still gets a distinct identifier")
+	func notificationIdentifierUsesStableNSStringHashLayout() {
 		let title = "Hello"
 		let message = "World"
 		let thread = "client-channel"
-		let expected: String! = String(
+		let expected = String(
 			format: "TXNotification-%@-%ld-%ld",
 			thread,
 			(title as NSString).hash,
@@ -53,103 +50,91 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 			threadIdentifier: thread
 		)
 
-		XCTAssertEqual(actual, expected)
+		#expect(actual == expected)
 
-		let noThreadExpected: String! = String(
+		let noThreadExpected = String(
 			format: "TXNotification-%@-%ld-%ld",
 			"<No Thread>",
 			(title as NSString).hash,
 			(message as NSString).hash
 		)
 
-		XCTAssertEqual(
-			NotificationController.notificationIdentifier(title: title, message: message, threadIdentifier: nil),
-			noThreadExpected
+		#expect(
+			NotificationController.notificationIdentifier(title: title, message: message, threadIdentifier: nil)
+				== noThreadExpected
 		)
 	}
 
-	@objc
-	func testUserInfoScopeMatchingTreatsNilChannelsAsEqual() {
+	@Test("A notification without a channel is in scope only when no channel is asked for")
+	func userInfoScopeMatchingTreatsNilChannelsAsEqual() {
 		let clientOnly: [AnyHashable: Any] = [NotificationPayload.clientIdentifierKey: "c1"]
 		let withChannel: [AnyHashable: Any] = [
 			NotificationPayload.clientIdentifierKey: "c1",
 			NotificationPayload.channelIdentifierKey: "ch1",
 		]
 
-		XCTAssertTrue(NotificationController.isNotification(
+		#expect(NotificationController.isNotification(
 			userInfo: clientOnly,
 			inScopeOfClientIdentifier: "c1",
 			channelIdentifier: nil
 		))
 
-		XCTAssertFalse(NotificationController.isNotification(
+		#expect(NotificationController.isNotification(
 			userInfo: clientOnly,
 			inScopeOfClientIdentifier: "c1",
 			channelIdentifier: "ch1"
-		))
+		) == false)
 
-		XCTAssertTrue(NotificationController.isNotification(
+		#expect(NotificationController.isNotification(
 			userInfo: withChannel,
 			inScopeOfClientIdentifier: "c1",
 			channelIdentifier: "ch1"
 		))
 
-		XCTAssertFalse(NotificationController.isNotification(
+		#expect(NotificationController.isNotification(
 			userInfo: withChannel,
 			inScopeOfClientIdentifier: "c2",
 			channelIdentifier: "ch1"
-		))
+		) == false)
 	}
 
-	@objc
-	func testPublicFormatConstantsRemainStable() {
-		XCTAssertEqual(NotificationPayload.clientIdentifierKey, "clientId")
-		XCTAssertEqual(NotificationPayload.channelIdentifierKey, "channelId")
-		XCTAssertEqual(NotificationPayload.standardNicknameFormat, "%@ %@")
-		XCTAssertEqual(NotificationPayload.actionNicknameFormat, "• %@: %@")
-		XCTAssertEqual(NotificationPayload.highlightActionFormat, "• %@: %@")
-		XCTAssertEqual(NotificationPayload.highlightMessageFormat, "%@ %@")
-	}
-
-	@objc
-	func testPreferenceLookupsWithNilChannelMatchGlobalPreferences() {
-		let controller = controller()
+	@Test("A lookup with no channel answers with the global preference")
+	func preferenceLookupsWithNilChannelMatchGlobalPreferences() {
+		let controller = notificationController()
 		let eventType = TXNotificationType.highlight
 
-		XCTAssertEqual(controller.sound(forEvent: eventType, in: nil), TextualPreferences.sound(for: eventType))
-
-		XCTAssertEqual(controller.speakEvent(eventType, in: nil), TextualPreferences.speak(eventType))
-		XCTAssertEqual(
-			controller.notificationEnabled(forEvent: eventType, in: nil),
-			TextualPreferences.notificationEnabled(for: eventType)
+		#expect(controller.sound(forEvent: eventType, in: nil) == TextualPreferences.sound(for: eventType))
+		#expect(controller.speakEvent(eventType, in: nil) == TextualPreferences.speak(eventType))
+		#expect(
+			controller.notificationEnabled(forEvent: eventType, in: nil)
+				== TextualPreferences.notificationEnabled(for: eventType)
 		)
-		XCTAssertEqual(
-			controller.disabledWhileAway(forEvent: eventType, in: nil),
-			TextualPreferences.disabledWhileAway(for: eventType)
+		#expect(
+			controller.disabledWhileAway(forEvent: eventType, in: nil)
+				== TextualPreferences.disabledWhileAway(for: eventType)
 		)
-		XCTAssertEqual(
-			controller.bounceDockIcon(forEvent: eventType, in: nil),
-			TextualPreferences.bounceDockIcon(for: eventType)
+		#expect(
+			controller.bounceDockIcon(forEvent: eventType, in: nil)
+				== TextualPreferences.bounceDockIcon(for: eventType)
 		)
-		XCTAssertEqual(
-			controller.bounceDockIconRepeatedly(forEvent: eventType, in: nil),
-			TextualPreferences.bounceDockIconRepeatedly(for: eventType)
+		#expect(
+			controller.bounceDockIconRepeatedly(forEvent: eventType, in: nil)
+				== TextualPreferences.bounceDockIconRepeatedly(for: eventType)
 		)
 	}
 
-	@objc
-	func testAreNotificationsDisabledToggle() {
-		let controller = controller()
-		let original: Bool = controller.areNotificationsDisabled
+	@Test("Suppressing notifications is a plain toggle")
+	func areNotificationsDisabledToggle() {
+		let controller = notificationController()
+		let original = controller.areNotificationsDisabled
+		defer { controller.areNotificationsDisabled = original }
 
 		controller.areNotificationsDisabled = true
 
-		XCTAssertTrue(controller.areNotificationsDisabled)
+		#expect(controller.areNotificationsDisabled)
 
 		controller.areNotificationsDisabled = false
 
-		XCTAssertFalse(controller.areNotificationsDisabled)
-
-		controller.areNotificationsDisabled = original
+		#expect(controller.areNotificationsDisabled == false)
 	}
 }

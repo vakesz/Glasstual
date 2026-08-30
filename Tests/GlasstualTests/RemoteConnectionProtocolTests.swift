@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,10 +37,15 @@
 
 import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class RemoteConnectionProtocolTests: XCTestCase {
-	func testOpenAllowsIRCConnectionConfigPayload() {
+@MainActor
+@Suite("Remote connection protocol")
+struct RemoteConnectionProtocolTests {
+	/// The configuration is a value type now, so it crosses the connection
+	/// inside an `NSSecureCoding` envelope.
+	@Test("Opening a connection allows the configuration envelope across XPC")
+	func openAllowsTheConnectionConfigurationEnvelope() {
 		let interface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
 		let allowedClasses = interface.classes(
 			for: #selector((any RemoteConnectionServerProtocol).open(with:)),
@@ -48,6 +53,6 @@ final class RemoteConnectionProtocolTests: XCTestCase {
 			ofReply: false
 		)
 
-		XCTAssertTrue((allowedClasses as NSSet).contains(IRCConnectionConfig.self))
+		#expect((allowedClasses as NSSet).contains(ConnectionConfigEnvelope.self))
 	}
 }

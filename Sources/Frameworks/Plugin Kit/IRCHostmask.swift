@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -47,12 +47,22 @@ public struct IRCHostmask: Equatable, Sendable {
 	public init?(parsing value: String, maximumNicknameLength: Int = 50) {
 		let source = value as NSString
 		let nicknameSeparator = source.range(of: "!", options: .literal)
-		let addressSeparator = source.range(of: "@", options: [.literal, .backwards])
 
-		guard nicknameSeparator.location != NSNotFound,
-		      addressSeparator.location != NSNotFound,
-		      addressSeparator.location > nicknameSeparator.location
-		else {
+		guard nicknameSeparator.location != NSNotFound else {
+			return nil
+		}
+
+		// An IRC hostmask delimits on the first "@" after the "!". Searching
+		// backwards let "nick!user@host@evil" parse as address "evil", which
+		// matches a different address book rule than the operator wrote.
+		let searchStart = nicknameSeparator.location + nicknameSeparator.length
+		let addressSeparator = source.range(
+			of: "@",
+			options: .literal,
+			range: NSRange(location: searchStart, length: source.length - searchStart)
+		)
+
+		guard addressSeparator.location != NSNotFound else {
 			return nil
 		}
 

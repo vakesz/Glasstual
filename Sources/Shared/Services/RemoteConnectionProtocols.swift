@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2020 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -39,19 +39,13 @@ import CocoaExtensions
 import Foundation
 import Security
 
-typealias SecureConnectionInformationReceiver = @Sendable (
-	String?,
-	tls_protocol_version_t,
-	tls_ciphersuite_t,
-	[Data],
-	String?
-) -> Void
+typealias SecureConnectionInformationReceiver = @Sendable (SecureConnectionInformation) -> Void
 
 /// Commands the application sends to the isolated connection host.
 @objc(RCMConnectionManagerServerProtocol)
-protocol RemoteConnectionServerProtocol: AnyObject {
+nonisolated protocol RemoteConnectionServerProtocol: AnyObject { // nonisolated: xpc-shim
 	@objc(openWithConfig:)
-	func open(with config: IRCConnectionConfig)
+	func open(with config: ConnectionConfigEnvelope)
 
 	@objc(close)
 	func close()
@@ -63,8 +57,10 @@ protocol RemoteConnectionServerProtocol: AnyObject {
 	@objc(sendData:bypassQueue:)
 	func send(_ data: Data, bypassQueue: Bool)
 
+	/// The receiver is an XPC reply block: the service answers it once, and it
+	/// may answer after this call has returned.
 	@objc(exportSecureConnectionInformation:)
-	func exportSecureConnectionInformation(_ receiver: SecureConnectionInformationReceiver)
+	func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver)
 
 	@objc(enforceFloodControl)
 	func enforceFloodControl()
@@ -87,7 +83,7 @@ protocol RemoteConnectionServerProtocol: AnyObject {
 
 /// Events the isolated connection host sends back to the application.
 @objc(RCMConnectionManagerClientProtocol)
-protocol RemoteConnectionClientProtocol: AnyObject {
+nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable { // nonisolated: xpc-shim
 	@objc(ircConnectionWillConnectToProxy:port:)
 	func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16)
 

@@ -107,12 +107,12 @@ Gw
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="TYu-Qh-WKq">
+                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="TYu-Qh-WKq" customClass="TPI_ChatFilterValidatedTextField">
                                             <rect key="frame" x="30" y="295" width="479" height="107"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="107" id="azT-zN-ABr"/>
                                             </constraints>
-                                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="0BP-Zx-Fdt">
+                                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="0BP-Zx-Fdt" customClass="TPI_ChatFilterValidatedTextFieldCell">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -737,12 +737,12 @@ Gw
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ovl-ei-0Qj">
+                                        <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ovl-ei-0Qj" customClass="TPI_ChatFilterValidatedTextField">
                                             <rect key="frame" x="155" y="310" width="302" height="22"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="22" id="P2o-Td-oSZ"/>
                                             </constraints>
-                                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="3UV-cQ-6XT">
+                                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="3UV-cQ-6XT" customClass="TPI_ChatFilterValidatedTextFieldCell">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1017,6 +1017,7 @@ This information is for your records and does not alter the behavior of the filt
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
                                                     <connections>
+                                                        <outlet property="delegate" destination="-2" id="aGe-Dl-gT1"/>
                                                         <outlet property="formatter" destination="vGQ-Aw-wDg" id="fgR-HD-NFG"/>
                                                     </connections>
                                                 </textField>
@@ -1100,7 +1101,7 @@ This information is for your records and does not alter the behavior of the filt
             <point key="canvasLocation" x="-485.5" y="182"/>
         </window>
         <customObject id="TdM-lk-raw" customClass="TVCChannelSelectionViewController"/>
-        <numberFormatter formatterBehavior="default10_4" localizesFormat="NO" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="0" maximumIntegerDigits="42" id="vGQ-Aw-wDg" customClass="TPI_NumberOnlyTextFieldFormatter">
+        <numberFormatter formatterBehavior="default10_4" localizesFormat="NO" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="0" maximumIntegerDigits="42" id="vGQ-Aw-wDg">
             <real key="minimum" value="0.0"/>
             <real key="maximum" value="1296000"/>
         </numberFormatter>

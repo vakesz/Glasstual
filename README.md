@@ -75,7 +75,7 @@ Glasstual requires Xcode 26 or later on macOS 26 (Tahoe) or later, an Apple Sili
 
 This tree has **no paid-license or trial checks**. Precompiled store builds of Textual from codeux.com are a separate product.
 
-1. Install the development tools: `actionlint`, `shellcheck`, `shfmt`, `swiftformat`, `swiftlint` and `xcodegen`.
+1. Install the development tools: `actionlint`, `swiftformat`, `swiftlint` and `xcodegen`.
 2. Set your Apple Developer **Team ID** as `DEVELOPMENT_TEAM` in [`project.yml`](project.yml) and, if you are not building the official fork, `GLASSTUAL_BUNDLE_IDENTIFIER` there too. The defaults are:
    - Bundle ID: `com.vakesz.glasstual`
    - Team ID: `H8W5DK3FN2`
@@ -101,11 +101,16 @@ Install the development tools and run the repository-wide checks with:
 
 ```sh
 make test     # unit tests (GlasstualTests, run inside the Debug app)
-make lint     # SwiftLint, SwiftFormat, shellcheck, actionlint and resource validation
-make format   # SwiftFormat and shfmt
+make coverage # coverage report from the last test run
+make lint     # SwiftLint, SwiftFormat, actionlint and resource validation
+make format   # SwiftFormat
 ```
 
-The unit tests live in `Tests/GlasstualTests` and do not use the network.
+The unit tests live in `Tests/GlasstualTests` and do not use the network. The
+scheme points the shared defaults suite at a scratch domain, so a test run never
+touches real preferences. The test action gathers coverage; `make test` writes
+the result bundle to `build/Glasstual.xcresult` and `make coverage` prints the
+per-target line coverage from it.
 
 SwiftFormat and SwiftLint check every Swift file under `Sources/` and `Tests/`,
 including vendored framework sources. The repository does not use lint path
@@ -181,7 +186,7 @@ IRCv3 capabilities Glasstual negotiates when the server offers them:
 - `userhost-in-names`
 - ZNC: `znc.in/playback`, `znc.in/self-message`, `znc.in/server-time`, `znc.in/server-time-iso`, `znc.in/tlsinfo`
 
-When the server advertises `WHOX`, channel `WHO` requests use `WHO <channel> %tcuhnfar,152` so the initial member list carries accounts, real names and bot flags. `netsplit` and `netjoin` batches are collapsed into one summary line per channel instead of a QUIT or JOIN per user (hidden along with joins and quits when those are switched off). The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Modules/IRCProtocol/Negotiation/IRCCapability.swift`.
+When the server advertises `WHOX`, channel `WHO` requests use `WHO <channel> %tcuhnfar,152` so the initial member list carries accounts, real names and bot flags. `netsplit` and `netjoin` batches are collapsed into one summary line per channel instead of a QUIT or JOIN per user (hidden along with joins and quits when those are switched off). The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Protocol/Negotiation/IRCCapability.swift`.
 
 ## Licenses
 

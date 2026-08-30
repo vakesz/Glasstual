@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -38,92 +38,89 @@
 import CocoaExtensions
 import Foundation
 
-@objc(RCMProcessMain)
+/// The object NSXPC exports for a connection host.
+///
+/// It holds the connection — which is not `Sendable` and so passes nowhere —
+/// and the host actor, which owns every piece of state. Each `` call is a
+/// one-line hop into the actor.
 final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
-	private var connection: Connection?
-	private var serviceConnection: NSXPCConnection?
+	private let host: ConnectionHost
+	private let serviceConnection: NSXPCConnection
 
-	@available(*, unavailable)
-	override init() {
-		fatalError("init() is unavailable; use init(xpcConnection:)")
-	}
+	init(host: ConnectionHost, connection: NSXPCConnection) {
+		self.host = host
+		serviceConnection = connection
 
-	@objc(initWithXPCConnection:)
-	init(xpcConnection: NSXPCConnection) {
-		serviceConnection = xpcConnection
 		super.init()
-		_LogToConsoleSetDefaultSubsystemToMainBundle("General")
+
+		Logging.setDefaultSubsystem(toMainBundleCategory: "General")
 	}
 
-	func clientConnectionEnded() {
-		let activeConnection = connection
-		connection = nil
-		activeConnection?.close()
-		serviceConnection = nil
-	}
+	func open(with config: ConnectionConfigEnvelope) {
+		let config = config.config
 
-	func open(with config: IRCConnectionConfig) {
-		precondition(connection == nil, "Method invoked with connection already open")
-
-		guard let serviceConnection else {
-			RCMLog.connection.error("Cannot open a connection after the client connection ended")
-			return
+		Task { [host] in
+			await host.open(with: config)
 		}
-
-		let activeConnection = Connection(with: config, on: serviceConnection)
-		activeConnection.open()
-		connection = activeConnection
 	}
 
 	func close() {
-		requireConnection().close()
+		Task { [host] in
+			await host.close()
+		}
 	}
 
 	func send(_ data: Data) {
-		requireConnection().send(data)
+		send(data, bypassQueue: false)
 	}
 
 	func send(_ data: Data, bypassQueue: Bool) {
-		requireConnection().send(data, bypassQueue: bypassQueue)
+		Task { [host] in
+			await host.send(data, bypassQueue: bypassQueue)
+		}
 	}
 
-	func exportSecureConnectionInformation(_ completionBlock: SecureConnectionInformationReceiver) {
-		do {
-			try requireConnection().exportSecureConnectionInformation(to: completionBlock)
-		} catch {
-			RCMLog.connection.error("Unable to export secure connection information: \(error.localizedDescription)")
+	func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver) {
+		/* The caller treats this as a reply block, so it has to be invoked on
+		 every path. */
+		Task { [host] in
+			await receiver(host.secureConnectionInformation())
 		}
 	}
 
 	func enforceFloodControl() {
-		requireConnection().enforceFloodControl()
+		Task { [host] in
+			await host.enforceFloodControl()
+		}
 	}
 
 	func clearSendQueue() {
-		requireConnection().clearSendQueue()
+		Task { [host] in
+			await host.clearSendQueue()
+		}
 	}
 
 	func enableAppNap() {
-		UserDefaults.standard.register(defaults: ["NSAppSleepDisabled": false])
+		Task { [host] in
+			await host.enableAppNap()
+		}
 	}
 
 	func disableAppNap() {
-		UserDefaults.standard.register(defaults: ["NSAppSleepDisabled": true])
+		Task { [host] in
+			await host.disableAppNap()
+		}
 	}
 
 	func enableSuddenTermination() {
-		ProcessInfo.processInfo.enableSuddenTermination()
+		Task { [host] in
+			await host.enableSuddenTermination()
+		}
 	}
 
 	func disableSuddenTermination() {
-		ProcessInfo.processInfo.disableSuddenTermination()
-	}
-
-	private func requireConnection() -> Connection {
-		guard let connection else {
-			preconditionFailure("Method invoked without performing setup first")
+		Task { [host] in
+			await host.disableSuddenTermination()
 		}
-
-		return connection
 	}
 }

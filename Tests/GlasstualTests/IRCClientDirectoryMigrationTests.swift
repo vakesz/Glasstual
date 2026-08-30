@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -37,74 +37,78 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCClientDirectoryMigrationTests: XCTestCase {
-	func testUserDirectoryUsesServerCasefolding() {
+@Suite("Client user and channel directory")
+struct IRCClientDirectoryMigrationTests {
+	@Test("A user is found under any casing the server considers the same")
+	func userDirectoryUsesServerCasefolding() {
 		let client = GLTTestClient()
 		let user = client.findUserOrCreate("Alice")
 
-		XCTAssertTrue(client.findUser("ALICE") === user)
-		XCTAssertTrue(client.findUserOrCreate("alice") === user)
-		XCTAssertEqual(client.numberOfUsers, 1)
+		#expect(client.findUser("ALICE") == user)
+		#expect(client.findUserOrCreate("alice") == user)
+		#expect(client.numberOfUsers == 1)
 	}
 
-	func testAddingMutableUserStoresImmutableSnapshot() {
+	@Test("Adding a draft user stores that very instance")
+	func addingADraftUserStoresThatInstance() {
 		let client = GLTTestClient()
-		let mutableUser = UserMutable(nickname: "Alice", on: client)
-		let storedUser = client.addAndReturn(mutableUser)
+		let draftUser = client.draftUser(withNickname: "Alice")
+		let storedUser = client.addAndReturn(draftUser)
 
-		mutableUser.nickname = "Changed"
-
-		XCTAssertFalse(storedUser is UserMutable)
-		XCTAssertEqual(storedUser.nickname, "Alice")
-		XCTAssertTrue(client.findUser("Alice") === storedUser)
-		XCTAssertNil(client.findUser("Changed"))
+		#expect(storedUser == draftUser)
+		#expect(storedUser.nickname == "Alice")
+		#expect(client.findUser("Alice") == storedUser)
+		#expect(client.findUser("Changed") == nil)
 	}
 
-	func testRenamingRekeysTheDirectory() {
+	@Test("Renaming a user rekeys the directory")
+	func renamingRekeysTheDirectory() {
 		let client = GLTTestClient()
 		let originalUser = client.findUserOrCreate("Alice")
 
 		client.rename(originalUser, to: "Bob")
 
-		XCTAssertNil(client.findUser("Alice"))
-		XCTAssertEqual(client.findUser("Bob")?.nickname, "Bob")
-		XCTAssertEqual(client.numberOfUsers, 1)
+		#expect(client.findUser("Alice") == nil)
+		#expect(client.findUser("Bob")?.nickname == "Bob")
+		#expect(client.numberOfUsers == 1)
 	}
 
-	func testRemovingUserUpdatesSnapshotsAndCount() {
+	@Test("Removing a user updates the published list and the count")
+	func removingUserUpdatesSnapshotsAndCount() {
 		let client = GLTTestClient()
 		let alice = client.findUserOrCreate("Alice")
 		_ = client.findUserOrCreate("Bob")
 
 		client.remove(alice)
 
-		XCTAssertNil(client.findUser("Alice"))
-		XCTAssertEqual(client.userList.map(\.nickname), ["Bob"])
-		XCTAssertEqual(client.numberOfUsers, 1)
+		#expect(client.findUser("Alice") == nil)
+		#expect(client.userList.map(\.nickname) == ["Bob"])
+		#expect(client.numberOfUsers == 1)
 	}
 
-	func testRemoveAllUsersClearsDirectory() {
+	@Test("Removing every user empties the directory")
+	func removeAllUsersClearsDirectory() {
 		let client = GLTTestClient()
 		_ = client.findUserOrCreate("Alice")
 		_ = client.findUserOrCreate("Bob")
 
 		client.removeAllUsers()
 
-		XCTAssertTrue(client.userList.isEmpty)
-		XCTAssertEqual(client.numberOfUsers, 0)
+		#expect(client.userList.isEmpty)
+		#expect(client.numberOfUsers == 0)
 	}
 
-	@MainActor
-	func testChannelDirectoryUsesServerCasefoldingAndDoesNotDuplicate() {
+	@Test("A channel is found under any casing the server considers the same, and is never duplicated")
+	func channelDirectoryUsesServerCasefoldingAndDoesNotDuplicate() {
 		let client = GLTTestClient()
 		let channel = client.findChannelOrCreate("#Chat")
 
-		XCTAssertNotNil(channel)
-		XCTAssertTrue(client.findChannel("#CHAT") === channel)
-		XCTAssertTrue(client.findChannelOrCreate("#chat") === channel)
-		XCTAssertEqual(client.channelList.count, 1)
+		#expect(channel != nil)
+		#expect(client.findChannel("#CHAT") === channel)
+		#expect(client.findChannelOrCreate("#chat") === channel)
+		#expect(client.channelList.count == 1)
 	}
 }

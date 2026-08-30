@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -36,75 +36,87 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
-final class IRCClientEncodingFilteringTests: XCTestCase {
-	func testUTF8OnlyOverridesConfiguredEncodings() {
+@MainActor
+@Suite("Client encoding and filtering policies")
+struct IRCClientEncodingFilteringTests {
+	@Test("A UTF-8 only network overrides both configured encodings")
+	func utf8OnlyOverridesConfiguredEncodings() {
 		let policy = IRCTextEncodingPolicy(
-			primary: String.Encoding.ascii.rawValue,
-			fallback: String.Encoding.isoLatin1.rawValue,
+			primary: .ascii,
+			fallback: .isoLatin1,
 			requiresUTF8: true
 		)
 
-		XCTAssertEqual(policy.primary, .utf8)
-		XCTAssertEqual(policy.fallback, .utf8)
+		#expect(policy.primary == .utf8)
+		#expect(policy.fallback == .utf8)
 	}
 
-	func testEncodingFallsBackWithoutLossBeforeASCII() {
+	@Test("Encoding falls back to the lossless encoding rather than mangling the text")
+	func encodingFallsBackWithoutLossBeforeASCII() {
 		let policy = IRCTextEncodingPolicy(
-			primary: String.Encoding.ascii.rawValue,
-			fallback: String.Encoding.utf8.rawValue,
+			primary: .ascii,
+			fallback: .utf8,
 			requiresUTF8: false
 		)
 
-		XCTAssertEqual(policy.encode("árvíz"), Data("árvíz".utf8))
+		#expect(policy.encode("árvíz") == Data("árvíz".utf8))
 	}
 
-	func testDecodingFallsBackToLatin1ForArbitraryBytes() {
+	@Test("Arbitrary bytes decode through Latin-1 rather than failing")
+	func decodingFallsBackToLatin1ForArbitraryBytes() {
 		let policy = IRCTextEncodingPolicy(
-			primary: String.Encoding.utf8.rawValue,
-			fallback: String.Encoding.ascii.rawValue,
+			primary: .utf8,
+			fallback: .ascii,
 			requiresUTF8: false
 		)
 
-		XCTAssertEqual(policy.decode(Data([0xFF])), "ÿ")
+		#expect(policy.decode(Data([0xFF])) == "ÿ")
 	}
 
-	func testAddressBookLookupDerivesTrackingHostmaskAndCacheKeys() {
-		XCTAssertEqual(
-			IRCAddressBookLookupPolicy.trackingHostmask(forNickname: "Alice"),
-			"Alice!*@*"
-		)
-		XCTAssertEqual(
-			IRCAddressBookLookupPolicy.cacheKeys(forHostmask: "Alice!user@example.com"),
-			["Alice!user@example.com", "Alice!*@*"]
+	@Test("A lookup derives the tracking hostmask and both cache keys")
+	func addressBookLookupDerivesTrackingHostmaskAndCacheKeys() {
+		#expect(IRCAddressBookLookupPolicy.trackingHostmask(forNickname: "Alice") == "Alice!*@*")
+		#expect(
+			IRCAddressBookLookupPolicy.cacheKeys(forHostmask: "Alice!user@example.com") ==
+				["Alice!user@example.com", "Alice!*@*"]
 		)
 	}
 
-	func testOutputSuppressionHonorsDestinationRestrictions() {
+	@Test("A suppression rule only fires for the destinations it names")
+	func outputSuppressionHonorsDestinationRestrictions() {
 		let rule = IRCOutputSuppressionRule(pattern: "^secret$", channel: true)
 
-		XCTAssertTrue(
-			IRCOutputSuppressionPolicy.matches(message: "secret", destination: .channel, rules: [rule])
+		#expect(IRCOutputSuppressionPolicy.matches(message: "secret", destination: .channel, rules: [rule]))
+		#expect(
+			IRCOutputSuppressionPolicy.matches(message: "secret", destination: .console, rules: [rule]) == false
 		)
-		XCTAssertFalse(
-			IRCOutputSuppressionPolicy.matches(message: "secret", destination: .console, rules: [rule])
-		)
-		XCTAssertFalse(
-			IRCOutputSuppressionPolicy.matches(message: "public", destination: .channel, rules: [rule])
+		#expect(
+			IRCOutputSuppressionPolicy.matches(message: "public", destination: .channel, rules: [rule]) == false
 		)
 	}
 
-	func testOutputSuppressionRejectsInvalidPatternsAndOtherDestinations() {
+	@Test("An unparsable pattern suppresses nothing, and neither does an unnamed destination")
+	func outputSuppressionRejectsInvalidPatternsAndOtherDestinations() {
 		let invalidRule = IRCOutputSuppressionRule(pattern: "(", console: true)
 		let utilityRule = IRCOutputSuppressionRule(pattern: ".*", channel: true, privateMessage: true)
 
-		XCTAssertFalse(
-			IRCOutputSuppressionPolicy.matches(message: "anything", destination: .console, rules: [invalidRule])
+		#expect(
+			IRCOutputSuppressionPolicy.matches(
+				message: "anything",
+				destination: .console,
+				rules: [invalidRule]
+			) == false
 		)
-		XCTAssertFalse(
-			IRCOutputSuppressionPolicy.matches(message: "anything", destination: .other, rules: [utilityRule])
+		#expect(
+			IRCOutputSuppressionPolicy.matches(
+				message: "anything",
+				destination: .other,
+				rules: [utilityRule]
+			) == false
 		)
 	}
 }

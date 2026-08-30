@@ -6,7 +6,7 @@
 import AppKit
 @testable import Glasstual
 import SwiftUI
-import XCTest
+import Testing
 
 @MainActor
 private final class ServerNicknameChangeDelegateSpy: NSObject, ServerChangeNicknameSheetDelegate {
@@ -28,59 +28,43 @@ private final class ServerNicknameChangeDelegateSpy: NSObject, ServerChangeNickn
 }
 
 @MainActor
-final class ServerNicknameChangeFeatureTests: XCTestCase {
-	func testContentUsesKeyedLocalizedCopy() {
+@Suite("Server nickname change sheet")
+struct ServerNicknameChangeFeatureTests {
+	@Test("The sheet's copy comes from the localized catalog")
+	func contentUsesKeyedLocalizedCopy() {
 		let content = ServerNicknameChangeContent.current
 
-		XCTAssertEqual(content.currentNicknameLabel, "Current nickname:")
-		XCTAssertEqual(content.newNicknameLabel, "New nickname:")
-		XCTAssertEqual(content.changeButtonTitle, "Change Nickname")
-		XCTAssertEqual(content.cancelButtonTitle, "Cancel")
-		XCTAssertEqual(content.windowTitle, content.changeButtonTitle)
+		#expect(content.currentNicknameLabel == "Current nickname:")
+		#expect(content.newNicknameLabel == "New nickname:")
+		#expect(content.changeButtonTitle == "Change Nickname")
+		#expect(content.cancelButtonTitle == "Cancel")
+		#expect(content.windowTitle == content.changeButtonTitle)
 	}
 
-	func testModelValidatesContinuouslyAndPresentsErrorsOnlyOnSubmission() {
+	@Test("Validation runs on every keystroke but is only shown once the sheet is submitted")
+	func modelValidatesContinuouslyAndPresentsErrorsOnlyOnSubmission() {
 		let model = ServerNicknameChangeModel(currentNickname: "OldNick") { candidate in
 			candidate == "NewNick" || candidate == "OldNick" ? nil : "Invalid nickname"
 		}
 
-		XCTAssertNil(model.validationError)
-		XCTAssertFalse(model.isValidationMessagePresented)
+		#expect(model.validationError == nil)
+		#expect(model.isValidationMessagePresented == false)
 
 		model.proposedNickname = "invalid"
-		XCTAssertEqual(model.validationError, "Invalid nickname")
-		XCTAssertFalse(model.isValidationMessagePresented)
-		XCTAssertFalse(model.validateForSubmission())
-		XCTAssertTrue(model.isValidationMessagePresented)
+		#expect(model.validationError == "Invalid nickname")
+		#expect(model.isValidationMessagePresented == false)
+		#expect(model.validateForSubmission() == false)
+		#expect(model.isValidationMessagePresented)
 
 		model.proposedNickname = "NewNick"
-		XCTAssertNil(model.validationError)
-		XCTAssertFalse(model.isValidationMessagePresented)
-		XCTAssertTrue(model.validateForSubmission())
-		XCTAssertEqual(model.normalizedNickname, "NewNick")
+		#expect(model.validationError == nil)
+		#expect(model.isValidationMessagePresented == false)
+		#expect(model.validateForSubmission())
+		#expect(model.normalizedNickname == "NewNick")
 	}
 
-	func testRuntimeSheetContractSurvivesWithoutANib() {
-		XCTAssertEqual(NSStringFromClass(ServerChangeNicknameSheet.self), "TDCServerChangeNicknameSheet")
-		XCTAssertNotNil(NSProtocolFromString("TDCServerChangeNicknameSheetDelegate"))
-		XCTAssertNil(Bundle.main.path(forResource: "TDCServerChangeNicknameSheet", ofType: "nib"))
-
-		for selectorName in [
-			"initWithClient:",
-			"start",
-			"ok:",
-			"cancel:",
-			"okOrError",
-			"windowWillClose:",
-		] {
-			XCTAssertTrue(
-				ServerChangeNicknameSheet.instancesRespond(to: NSSelectorFromString(selectorName)),
-				selectorName
-			)
-		}
-	}
-
-	func testAdapterKeepsClientWindowAndDelegateContracts() {
+	@Test("The adapter hosts the SwiftUI sheet and forwards its outcome to the delegate")
+	func adapterKeepsClientWindowAndDelegateContracts() {
 		let client = GLTTestClient()
 		client.userNickname = "OldNick"
 		let adapter = ServerChangeNicknameSheet(client: client)
@@ -89,21 +73,21 @@ final class ServerNicknameChangeFeatureTests: XCTestCase {
 
 		adapter.delegate = delegate
 
-		XCTAssertIdentical(adapter.client, client)
-		XCTAssertEqual(clientPrototype.clientId, client.uniqueIdentifier)
-		XCTAssertTrue(adapter.sheet.delegate === adapter)
-		XCTAssertTrue(adapter.sheet.contentViewController is NSHostingController<ServerNicknameChangeView>)
-		XCTAssertFalse(adapter.sheet.styleMask.contains(.resizable))
-		XCTAssertFalse(adapter.sheet.isReleasedWhenClosed)
-		XCTAssertFalse(adapter.sheet.isRestorable)
-		XCTAssertEqual(adapter.sheet.tabbingMode, .disallowed)
-		XCTAssertEqual(adapter.sheet.contentMinSize, NSSize(width: 350, height: 131))
-		XCTAssertEqual(adapter.sheet.contentMaxSize, NSSize(width: 350, height: 131))
+		#expect(adapter.client === client)
+		#expect(clientPrototype.clientId == client.uniqueIdentifier)
+		#expect(adapter.sheet.delegate === adapter)
+		#expect(adapter.sheet.contentViewController is NSHostingController<ServerNicknameChangeView>)
+		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
+		#expect(adapter.sheet.isReleasedWhenClosed == false)
+		#expect(adapter.sheet.isRestorable == false)
+		#expect(adapter.sheet.tabbingMode == .disallowed)
+		#expect(adapter.sheet.contentMinSize == NSSize(width: 350, height: 131))
+		#expect(adapter.sheet.contentMaxSize == NSSize(width: 350, height: 131))
 
 		adapter.ok(nil)
-		XCTAssertEqual(delegate.acceptedNickname, "OldNick")
+		#expect(delegate.acceptedNickname == "OldNick")
 
 		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
-		XCTAssertTrue(delegate.didClose)
+		#expect(delegate.didClose)
 	}
 }

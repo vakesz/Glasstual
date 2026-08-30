@@ -1,8 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "1nd-7x": {
-      "comment": "Validation error shown when the channel name is not properly formatted.",
+    "please-enter-a-properly-formatted-channel": {
+      "comment": "Validation error shown when the channel name is not properly formatted. Legacy key: 1nd-7x.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -13,8 +13,8 @@
         }
       }
     },
-    "mvl-r5": {
-      "comment": "Title of the alert shown when the edited channel configuration changed outside the sheet.",
+    "this-channels-configuration-has-changed-do": {
+      "comment": "Title of the alert shown when the edited channel configuration changed outside the sheet. Legacy key: mvl-r5.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -25,8 +25,8 @@
         }
       }
     },
-    "qby-hi": {
-      "comment": "Alert body warning that reloading the externally changed channel configuration discards unsaved edits. The original wording is preserved for translation parity.",
+    "you-will-loose-unsaved-changes-if": {
+      "comment": "Alert body warning that reloading the externally changed channel configuration discards unsaved edits. The original wording is preserved for translation parity. Legacy key: qby-hi.",
       "extractionState": "manual",
       "localizations": {
         "en": {

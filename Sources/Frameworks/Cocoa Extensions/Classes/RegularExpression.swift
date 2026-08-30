@@ -31,31 +31,48 @@
  *********************************************************************** */
 
 import Foundation
+import os
+import Synchronization
 
-@objc(XRRegularExpression)
-public final class RegularExpression: NSObject {
-	@objc(string:isMatchedByRegex:)
+public enum RegularExpression {
+	private struct CacheKey: Hashable {
+		let pattern: String
+		let caseless: Bool
+	}
+
+	private static let logger = Logger(
+		subsystem: "com.codeux.frameworks.CocoaExtensions",
+		category: "RegularExpression"
+	)
+
+	/** Patterns here come from chat filters, plugin rules and address book
+	 entries, and are evaluated once per incoming message. Compiling is the
+	 expensive part, so hold on to the result; `NSRegularExpression` is
+	 immutable and safe to match on from several threads. */
+	private static let expressionCache = Mutex<[CacheKey: NSRegularExpression]>([:])
+
+	/// Beyond this the cache is emptied rather than grown. Real use has a few
+	/// dozen distinct patterns; a much larger number means something is
+	/// generating them, not reusing them.
+	private static let expressionCacheLimit = 512
+
 	public static func string(_ haystack: String, isMatchedByRegex needle: String) -> Bool {
 		string(haystack, isMatchedByRegex: needle, withoutCase: false)
 	}
 
-	@objc(string:isMatchedByRegex:withoutCase:)
 	public static func string(_ haystack: String, isMatchedByRegex needle: String, withoutCase caseless: Bool) -> Bool {
 		makeExpression(needle, caseless: caseless)?.firstMatch(in: haystack, range: haystack.fullRange) != nil
 	}
 
-	@objc(string:rangeOfRegex:)
 	public static func string(_ haystack: String, rangeOfRegex needle: String) -> NSRange {
 		string(haystack, rangeOfRegex: needle, withoutCase: false)
 	}
 
-	@objc(string:rangeOfRegex:withoutCase:)
 	public static func string(_ haystack: String, rangeOfRegex needle: String, withoutCase caseless: Bool) -> NSRange {
 		makeExpression(needle, caseless: caseless)?.rangeOfFirstMatch(in: haystack, range: haystack.fullRange)
 			?? NSRange(location: NSNotFound, length: 0)
 	}
 
-	@objc(string:replacedByRegex:withString:)
 	public static func string(_ haystack: String, replacedByRegex needle: String, with replacement: String) -> String {
 		makeExpression(needle)?.stringByReplacingMatches(
 			in: haystack,
@@ -65,7 +82,6 @@ public final class RegularExpression: NSObject {
 			?? haystack
 	}
 
-	@objc(matchesInString:withRegex:withoutCase:substringGroups:)
 	public static func matches(
 		in haystack: String,
 		withRegex needle: String,
@@ -84,45 +100,37 @@ public final class RegularExpression: NSObject {
 		}
 	}
 
-	@objc(matches:inString:withRegex:)
-	public static func matchCount(
-		_ matches: AutoreleasingUnsafeMutablePointer<NSArray?>?,
-		in haystack: String,
-		withRegex needle: String
-	) -> UInt {
-		matchCount(matches, in: haystack, withRegex: needle, withoutCase: false, substringGroups: false)
-	}
-
-	@objc(matches:inString:withRegex:withoutCase:)
-	public static func matchCount(
-		_ matches: AutoreleasingUnsafeMutablePointer<NSArray?>?,
-		in haystack: String,
-		withRegex needle: String,
-		withoutCase caseless: Bool
-	) -> UInt {
-		matchCount(matches, in: haystack, withRegex: needle, withoutCase: caseless, substringGroups: false)
-	}
-
-	@objc(matches:inString:withRegex:withoutCase:substringGroups:)
-	public static func matchCount(
-		_ matches: AutoreleasingUnsafeMutablePointer<NSArray?>?,
-		in haystack: String,
-		withRegex needle: String,
-		withoutCase caseless: Bool,
-		substringGroups: Bool
-	) -> UInt {
-		let result = self.matches(
-			in: haystack,
-			withRegex: needle,
-			withoutCase: caseless,
-			substringGroups: substringGroups
-		)
-		matches?.pointee = result as NSArray
-		return UInt(result.count)
-	}
-
 	private static func makeExpression(_ pattern: String, caseless: Bool = false) -> NSRegularExpression? {
-		try? NSRegularExpression(pattern: pattern, options: caseless ? .caseInsensitive : [])
+		let key = CacheKey(pattern: pattern, caseless: caseless)
+
+		if let cached = expressionCache.withLock({ $0[key] }) {
+			return cached
+		}
+
+		let expression: NSRegularExpression
+
+		do {
+			expression = try NSRegularExpression(
+				pattern: pattern,
+				options: caseless ? .caseInsensitive : []
+			)
+		} catch {
+			logger.error(
+				"Could not compile regular expression: \(error.localizedDescription, privacy: .public)"
+			)
+
+			return nil
+		}
+
+		expressionCache.withLock { cache in
+			if cache.count >= expressionCacheLimit {
+				cache.removeAll(keepingCapacity: true)
+			}
+
+			cache[key] = expression
+		}
+
+		return expression
 	}
 }
 

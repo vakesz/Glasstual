@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2015 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 enum ChatFilterDestination: UInt {
@@ -50,7 +51,7 @@ enum ChatFilterAgeComparator: UInt {
 	case greaterThan
 }
 
-struct ChatFilterEvent: OptionSet {
+nonisolated struct ChatFilterEvent: OptionSet { // nonisolated: value
 	let rawValue: UInt
 
 	static let numeric = Self(rawValue: 1 << 0)
@@ -70,7 +71,13 @@ struct ChatFilterEvent: OptionSet {
 	static let defaultMessages: Self = [.plainTextMessage, .actionMessage]
 }
 
+/** One filter rule.
+
+ A main-actor model: the plugin holds its filters in an `NSArrayController` and
+ the edit sheet binds to them by KVC key path, both of which are main-actor
+ AppKit, and the engine reads them from main-actor plugin callbacks. */
 @objc(TPI_ChatFilter)
+@MainActor
 class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 	fileprivate var ignoreContentStorage = false
 	fileprivate var ignoreOperatorsStorage = true
@@ -93,79 +100,79 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 	fileprivate var identifierStorage = ""
 	fileprivate let commandCache = NSCache<NSString, NSNumber>()
 
-	@objc dynamic var filterIgnoreContent: Bool {
+	var filterIgnoreContent: Bool {
 		ignoreContentStorage
 	}
 
-	@objc dynamic var filterIgnoreOperators: Bool {
+	var filterIgnoreOperators: Bool {
 		ignoreOperatorsStorage
 	}
 
-	@objc dynamic var filterLogMatch: Bool {
+	var filterLogMatch: Bool {
 		logMatchStorage
 	}
 
-	@objc dynamic var filterLimitedToMyself: Bool {
+	var filterLimitedToMyself: Bool {
 		limitedToMyselfStorage
 	}
 
-	@objc dynamic var filterEvents: UInt {
+	var filterEvents: UInt {
 		eventsStorage.rawValue
 	}
 
-	@objc dynamic var filterLimitedToValue: UInt {
+	var filterLimitedToValue: UInt {
 		destinationStorage.rawValue
 	}
 
-	@objc dynamic var filterAgeComparator: UInt {
+	var filterAgeComparator: UInt {
 		ageComparatorStorage.rawValue
 	}
 
-	@objc dynamic var filterAgeLimit: UInt {
+	var filterAgeLimit: UInt {
 		ageLimitStorage
 	}
 
-	@objc dynamic var filterActionFloodControlInterval: UInt {
+	var filterActionFloodControlInterval: UInt {
 		actionFloodControlIntervalStorage
 	}
 
-	@objc dynamic var filterLimitedToChannelsIDs: [String] {
+	var filterLimitedToChannelsIDs: [String] {
 		limitedToChannelIDsStorage
 	}
 
-	@objc dynamic var filterLimitedToClientsIDs: [String] {
+	var filterLimitedToClientsIDs: [String] {
 		limitedToClientIDsStorage
 	}
 
-	@objc dynamic var filterEventsNumerics: [String] {
+	var filterEventsNumerics: [String] {
 		eventNumericsStorage
 	}
 
-	@objc dynamic var filterAction: String {
+	var filterAction: String {
 		actionStorage
 	}
 
-	@objc dynamic var filterForwardToDestination: String {
+	var filterForwardToDestination: String {
 		forwardDestinationStorage
 	}
 
-	@objc dynamic var filterMatch: String {
+	var filterMatch: String {
 		matchStorage
 	}
 
-	@objc dynamic var filterNotes: String {
+	var filterNotes: String {
 		notesStorage
 	}
 
-	@objc dynamic var filterSenderMatch: String {
+	var filterSenderMatch: String {
 		senderMatchStorage
 	}
 
-	@objc dynamic var filterTitle: String {
+	var filterTitle: String {
 		titleStorage
 	}
 
-	@objc dynamic var uniqueIdentifier: String {
+	var uniqueIdentifier: String {
 		identifierStorage
 	}
 
@@ -178,36 +185,33 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 		populate(from: [:])
 	}
 
-	@objc(initWithDictionary:)
-	init(dictionary: [String: Any]) {
+	init(dictionary: [String: PropertyListValue]) {
 		super.init()
 		populate(from: dictionary)
 	}
 
-	@objc(initWithContentsOfPath:)
 	convenience init?(contentsOfPath path: String) {
 		self.init(contentsOf: URL(fileURLWithPath: path))
 	}
 
-	@objc(initWithContentsOfURL:)
 	convenience init?(contentsOf url: URL) {
 		guard let data = try? Data(contentsOf: url),
 		      let propertyList = try? PropertyListSerialization.propertyList(from: data, format: nil),
-		      let dictionary = propertyList as? [String: Any]
+		      let dictionary = [String: PropertyListValue](propertyList: propertyList)
 		else {
 			return nil
 		}
 		self.init(dictionary: dictionary)
 	}
 
-	private func populate(from dictionary: [String: Any]) {
+	private func populate(from dictionary: [String: PropertyListValue]) {
 		ignoreContentStorage = bool(dictionary["filterIgnoreContent"])
 		ignoreOperatorsStorage = optionalBool(dictionary["filterIgnoresOperators"]) ?? true
 		limitedToMyselfStorage = bool(dictionary["filterLimitedToMyself"])
 		logMatchStorage = bool(dictionary["filterLogMatch"])
-		limitedToChannelIDsStorage = dictionary["filterLimitedToChannelsIDs"] as? [String] ?? []
-		limitedToClientIDsStorage = dictionary["filterLimitedToClientsIDs"] as? [String] ?? []
-		eventNumericsStorage = dictionary["filterEventsNumerics"] as? [String] ?? []
+		limitedToChannelIDsStorage = dictionary["filterLimitedToChannelsIDs"]?.stringArray ?? []
+		limitedToClientIDsStorage = dictionary["filterLimitedToClientsIDs"]?.stringArray ?? []
+		eventNumericsStorage = dictionary["filterEventsNumerics"]?.stringArray ?? []
 		actionStorage = string(dictionary["filterAction"])
 		forwardDestinationStorage = string(dictionary["filterForwardToDestination"])
 		matchStorage = string(dictionary["filterMatch"])
@@ -221,8 +225,8 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 			.greaterThan
 		ageLimitStorage = uint(dictionary["filterAgeLimit"])
 
-		if let rawEvents = dictionary["filterEvents"] as? NSNumber {
-			eventsStorage = ChatFilterEvent(rawValue: rawEvents.uintValue)
+		if let rawEvents = dictionary["filterEvents"]?.integer {
+			eventsStorage = ChatFilterEvent(rawValue: UInt(clamping: rawEvents))
 		} else {
 			var events = ChatFilterEvent.defaultMessages
 			if optionalBool(dictionary["filterCommandPRIVMSG"]) == false {
@@ -242,43 +246,42 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 		}
 	}
 
-	var dictionaryValue: [String: Any] {
-		let values: [String: Any] = [
-			"filterCommandPRIVMSG": isEventTypeEnabled(.plainTextMessage),
-			"filterCommandPRIVMSG_ACTION": isEventTypeEnabled(.actionMessage),
-			"filterCommandNOTICE": isEventTypeEnabled(.noticeMessage),
-			"filterLimitedToChannelsIDs": limitedToChannelIDsStorage,
-			"filterLimitedToClientsIDs": limitedToClientIDsStorage,
-			"filterEventsNumerics": eventNumericsStorage,
-			"filterAction": actionStorage,
-			"filterForwardToDestination": forwardDestinationStorage,
-			"filterMatch": matchStorage,
-			"filterNotes": notesStorage,
-			"filterSenderMatch": senderMatchStorage,
-			"filterTitle": titleStorage,
-			"uniqueIdentifier": identifierStorage,
-			"filterIgnoreContent": ignoreContentStorage,
-			"filterIgnoresOperators": ignoreOperatorsStorage,
-			"filterLimitedToMyself": limitedToMyselfStorage,
-			"filterLogMatch": logMatchStorage,
-			"filterActionFloodControlInterval": actionFloodControlIntervalStorage,
-			"filterEvents": eventsStorage.rawValue,
-			"filterLimitedToValue": destinationStorage.rawValue,
-			"filterAgeComparator": ageComparatorStorage.rawValue,
-			"filterAgeLimit": ageLimitStorage,
+	var dictionaryValue: [String: PropertyListValue] {
+		let values: [String: PropertyListValue] = [
+			"filterCommandPRIVMSG": .boolean(isEventTypeEnabled(.plainTextMessage)),
+			"filterCommandPRIVMSG_ACTION": .boolean(isEventTypeEnabled(.actionMessage)),
+			"filterCommandNOTICE": .boolean(isEventTypeEnabled(.noticeMessage)),
+			"filterLimitedToChannelsIDs": PropertyListValue(limitedToChannelIDsStorage),
+			"filterLimitedToClientsIDs": PropertyListValue(limitedToClientIDsStorage),
+			"filterEventsNumerics": PropertyListValue(eventNumericsStorage),
+			"filterAction": .string(actionStorage),
+			"filterForwardToDestination": .string(forwardDestinationStorage),
+			"filterMatch": .string(matchStorage),
+			"filterNotes": .string(notesStorage),
+			"filterSenderMatch": .string(senderMatchStorage),
+			"filterTitle": .string(titleStorage),
+			"uniqueIdentifier": .string(identifierStorage),
+			"filterIgnoreContent": .boolean(ignoreContentStorage),
+			"filterIgnoresOperators": .boolean(ignoreOperatorsStorage),
+			"filterLimitedToMyself": .boolean(limitedToMyselfStorage),
+			"filterLogMatch": .boolean(logMatchStorage),
+			"filterActionFloodControlInterval": .integer(Int(actionFloodControlIntervalStorage)),
+			"filterEvents": .integer(Int(eventsStorage.rawValue)),
+			"filterLimitedToValue": .integer(Int(destinationStorage.rawValue)),
+			"filterAgeComparator": .integer(Int(ageComparatorStorage.rawValue)),
+			"filterAgeLimit": .integer(Int(ageLimitStorage)),
 		]
-		let defaults: [String: Any] = [
-			"filterEvents": ChatFilterEvent.defaultMessages.rawValue,
+		let defaults: [String: PropertyListValue] = [
+			"filterEvents": .integer(Int(ChatFilterEvent.defaultMessages.rawValue)),
 			"filterIgnoreContent": false,
 			"filterIgnoresOperators": true,
 			"filterLimitedToMyself": false,
 			"filterLogMatch": false,
-			"filterLimitedToValue": ChatFilterDestination.unrestricted.rawValue,
-			"filterAgeComparator": ChatFilterAgeComparator.greaterThan.rawValue,
+			"filterLimitedToValue": .integer(Int(ChatFilterDestination.unrestricted.rawValue)),
+			"filterAgeComparator": .integer(Int(ChatFilterAgeComparator.greaterThan.rawValue)),
 		]
 		return values.filter { key, value in
-			guard let defaultValue = defaults[key] else { return true }
-			return (value as? NSObject)?.isEqual(defaultValue) == false
+			defaults[key] != value
 		}
 	}
 
@@ -294,12 +297,11 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 		eventsStorage.contains(event)
 	}
 
-	@objc(isEventTypeEnabled:)
 	func isEventTypeEnabled(rawValue: UInt) -> Bool {
 		isEventTypeEnabled(ChatFilterEvent(rawValue: rawValue))
 	}
 
-	@objc func isCommandEnabled(_ command: String) -> Bool {
+	func isCommandEnabled(_ command: String) -> Bool {
 		if let cached = commandCache.object(forKey: command as NSString) {
 			return cached.boolValue
 		}
@@ -314,7 +316,6 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 		return enabled
 	}
 
-	@objc(writeToURL:)
 	func write(to url: URL) -> Bool {
 		do {
 			let data = try PropertyListSerialization.data(
@@ -334,114 +335,110 @@ class ChatFilter: NSObject, NSCopying, NSMutableCopying {
 		commandCache.removeAllObjects()
 	}
 
-	private func string(_ value: Any?) -> String {
-		value as? String ?? ""
+	private func string(_ value: PropertyListValue?) -> String {
+		value?.string ?? ""
 	}
 
-	private func bool(_ value: Any?) -> Bool {
-		optionalBool(value) ?? false
+	private func bool(_ value: PropertyListValue?) -> Bool {
+		value?.boolean ?? false
 	}
 
-	private func optionalBool(_ value: Any?) -> Bool? {
-		if let number = value as? NSNumber {
-			return number.boolValue
-		}
-		return value as? Bool
+	private func optionalBool(_ value: PropertyListValue?) -> Bool? {
+		value?.boolean
 	}
 
-	private func uint(_ value: Any?) -> UInt {
-		(value as? NSNumber)?.uintValue ?? value as? UInt ?? 0
+	private func uint(_ value: PropertyListValue?) -> UInt {
+		value?.integer.map(UInt.init(clamping:)) ?? 0
 	}
 }
 
-@objc(TPI_ChatFilterMutable)
 final class MutableChatFilter: ChatFilter {
-	@objc override dynamic var filterIgnoreContent: Bool {
+	override var filterIgnoreContent: Bool {
 		get { ignoreContentStorage }
 		set { ignoreContentStorage = newValue }
 	}
 
-	@objc override dynamic var filterIgnoreOperators: Bool {
+	override var filterIgnoreOperators: Bool {
 		get { ignoreOperatorsStorage }
 		set { ignoreOperatorsStorage = newValue }
 	}
 
-	@objc override dynamic var filterLogMatch: Bool {
+	override var filterLogMatch: Bool {
 		get { logMatchStorage }
 		set { logMatchStorage = newValue }
 	}
 
-	@objc override dynamic var filterLimitedToMyself: Bool {
+	override var filterLimitedToMyself: Bool {
 		get { limitedToMyselfStorage }
 		set { limitedToMyselfStorage = newValue }
 	}
 
-	@objc override dynamic var filterEvents: UInt {
+	override var filterEvents: UInt {
 		get { eventsStorage.rawValue }
 		set { eventsStorage = ChatFilterEvent(rawValue: newValue); purgeCommandCache() }
 	}
 
-	@objc override dynamic var filterLimitedToValue: UInt {
+	override var filterLimitedToValue: UInt {
 		get { destinationStorage.rawValue }
 		set { destinationStorage = ChatFilterDestination(rawValue: newValue) ?? .unrestricted }
 	}
 
-	@objc override dynamic var filterAgeComparator: UInt {
+	override var filterAgeComparator: UInt {
 		get { ageComparatorStorage.rawValue }
 		set { ageComparatorStorage = ChatFilterAgeComparator(rawValue: newValue) ?? .none }
 	}
 
-	@objc override dynamic var filterAgeLimit: UInt {
+	override var filterAgeLimit: UInt {
 		get { ageLimitStorage }
 		set { ageLimitStorage = newValue }
 	}
 
-	@objc override dynamic var filterActionFloodControlInterval: UInt {
+	override var filterActionFloodControlInterval: UInt {
 		get { actionFloodControlIntervalStorage }
 		set { actionFloodControlIntervalStorage = newValue }
 	}
 
-	@objc override dynamic var filterLimitedToChannelsIDs: [String] {
+	override var filterLimitedToChannelsIDs: [String] {
 		get { limitedToChannelIDsStorage }
 		set { limitedToChannelIDsStorage = newValue }
 	}
 
-	@objc override dynamic var filterLimitedToClientsIDs: [String] {
+	override var filterLimitedToClientsIDs: [String] {
 		get { limitedToClientIDsStorage }
 		set { limitedToClientIDsStorage = newValue }
 	}
 
-	@objc override dynamic var filterEventsNumerics: [String] {
+	override var filterEventsNumerics: [String] {
 		get { eventNumericsStorage }
 		set { eventNumericsStorage = newValue; purgeCommandCache() }
 	}
 
-	@objc override dynamic var filterAction: String {
+	override var filterAction: String {
 		get { actionStorage }
 		set { actionStorage = newValue }
 	}
 
-	@objc override dynamic var filterForwardToDestination: String {
+	override var filterForwardToDestination: String {
 		get { forwardDestinationStorage }
 		set { forwardDestinationStorage = newValue }
 	}
 
-	@objc override dynamic var filterMatch: String {
+	override var filterMatch: String {
 		get { matchStorage }
 		set { matchStorage = newValue }
 	}
 
-	@objc override dynamic var filterNotes: String {
+	override var filterNotes: String {
 		get { notesStorage }
 		set { notesStorage = newValue }
 	}
 
-	@objc override dynamic var filterSenderMatch: String {
+	override var filterSenderMatch: String {
 		get { senderMatchStorage }
 		set { senderMatchStorage = newValue }
 	}
 
-	@objc override dynamic var filterTitle: String {
+	override var filterTitle: String {
 		get { titleStorage }
 		set { titleStorage = newValue }
 	}

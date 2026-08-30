@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,7 +37,12 @@
 
 import Foundation
 
-public final class PluginServerInput: @unchecked Sendable {
+/** One parsed server line, handed to the plugins that subscribed to its command.
+
+ A value: the host fills it in from the parsed message and passes a copy to each
+ subscriber, so a plugin that edits its own copy cannot change what the next one
+ sees. */
+public struct PluginServerInput: Sendable {
 	public var senderIsServer = false
 	public var senderNickname = ""
 	public var senderUsername: String?

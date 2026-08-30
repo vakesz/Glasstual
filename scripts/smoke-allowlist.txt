@@ -1,0 +1,5 @@
+# Error and fault lines scripts/smoke.sh tolerates, one extended regular
+# expression per line. Every entry is a known defect with an owner and a
+# removal date, never a way to quiet a message nobody understood: an entry that
+# outlives its fix is worse than no allowlist, because the next regression
+# hides behind it.

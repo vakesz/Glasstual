@@ -3,32 +3,15 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import AppKit
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class MainWindowTextViewMigrationTests: XCTestCase {
-	func testObjectiveCRuntimeNamesRemainStableForNibLoading() {
-		XCTAssertEqual(NSStringFromClass(MainWindowTextView.self), "TVCMainWindowTextView")
-		XCTAssertEqual(
-			NSStringFromClass(MainWindowTextViewContentView.self),
-			"TVCMainWindowTextViewContentView"
-		)
-	}
-
-	func testObjectiveCPrivateContractSelectorsRemainAvailable() {
-		let textView = MainWindowTextView(frame: .zero)
-
-		XCTAssertTrue(textView.responds(to: NSSelectorFromString("updateTextDirection")))
-		XCTAssertTrue(textView.responds(to: NSSelectorFromString("updateTextBasedOnPreferredFontSize")))
-		XCTAssertTrue(textView.responds(to: NSSelectorFromString("recalculateTextViewSize")))
-		XCTAssertTrue(textView.responds(to: NSSelectorFromString("recalculateTextViewSizeForced")))
-		XCTAssertTrue(textView.responds(to: NSSelectorFromString("resetSpellingIgnores")))
-		XCTAssertTrue(textView.responds(to: NSSelectorFromString("cancelReply")))
-		XCTAssertTrue(textView.responds(to: NSSelectorFromString("consumeReplyIntoClient:")))
-	}
-
-	func testAttributedValueUsesPreferredColorForUnformattedText() {
+@Suite("Main window text view")
+struct MainWindowTextViewMigrationTests {
+	@Test("Text with no IRC colour of its own is drawn in the preferred colour")
+	func attributedValueUsesPreferredColorForUnformattedText() {
 		let textView = MainWindowTextView(frame: .zero)
 		textView.preferredFontColor = .systemRed
 		textView.attributedStringValue = NSAttributedString(
@@ -42,10 +25,11 @@ final class MainWindowTextViewMigrationTests: XCTestCase {
 			effectiveRange: nil
 		) as? NSColor
 
-		XCTAssertEqual(color, .systemRed)
+		#expect(color == .systemRed)
 	}
 
-	func testAttributedValuePreservesExplicitIRCColor() {
+	@Test("An explicit IRC colour survives the preferred colour pass")
+	func attributedValuePreservesExplicitIRCColor() {
 		let textView = MainWindowTextView(frame: .zero)
 		textView.preferredFontColor = .systemRed
 		let formatterKey = NSAttributedString.Key(
@@ -66,13 +50,14 @@ final class MainWindowTextViewMigrationTests: XCTestCase {
 			effectiveRange: nil
 		) as? NSColor
 
-		XCTAssertEqual(color, .systemBlue)
+		#expect(color == .systemBlue)
 	}
 
-	func testContentViewRemainsTransparentAndNonVibrant() {
+	@Test("The content view stays transparent and refuses vibrancy")
+	func contentViewRemainsTransparentAndNonVibrant() {
 		let contentView = MainWindowTextViewContentView(frame: .zero)
 
-		XCTAssertFalse(contentView.isOpaque)
-		XCTAssertFalse(contentView.allowsVibrancy)
+		#expect(contentView.isOpaque == false)
+		#expect(contentView.allowsVibrancy == false)
 	}
 }

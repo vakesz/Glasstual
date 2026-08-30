@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -43,27 +43,39 @@ private let processDelegateLogger = Logger(
 	category: "RCMProcessDelegate"
 )
 
-@objc(RCMProcessDelegate)
 final class RemoteConnectionProcessDelegate: NSObject, NSXPCListenerDelegate {
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
 		connection.exportedInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
 		connection.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
 
-		let exportedObject = RemoteConnectionProcess(xpcConnection: connection)
-		connection.exportedObject = exportedObject
-		connection.interruptionHandler = {
-			processDelegateLogger.debug("Client connection interrupted")
-			exportedObject.clientConnectionEnded()
-		}
-		connection.invalidationHandler = { [weak connection] in
-			processDelegateLogger.debug("Client connection invalidated")
-			exportedObject.clientConnectionEnded()
-			connection?.exportedObject = nil
-			connection?.interruptionHandler = nil
-			connection?.invalidationHandler = nil
+		/* The host owns every piece of mutable state. The connection stays out
+		 here — it is not Sendable — and only the client proxy, which is, crosses
+		 into the actor. */
+		let host = ConnectionHost()
+
+		connection.exportedObject = RemoteConnectionProcess(host: host, connection: connection)
+
+		guard let client = connection.remoteObjectProxy as? any RemoteConnectionClientProtocol else {
+			processDelegateLogger.error("Client does not conform to the remote connection client protocol")
+
+			return false
 		}
 
+		connection.interruptionHandler = {
+			processDelegateLogger.debug("Client connection interrupted")
+
+			Task { await host.detach() }
+		}
+		connection.invalidationHandler = {
+			processDelegateLogger.debug("Client connection invalidated")
+
+			Task { await host.detach() }
+		}
+
+		Task { await host.attach(client: client) }
+
 		connection.resume()
+
 		return true
 	}
 }

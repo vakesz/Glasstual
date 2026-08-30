@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2020 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -39,12 +39,14 @@ import Foundation
 import InlineContentKit
 
 @objc(ICLInlineContentServerProtocol)
-protocol InlineContentServerProtocol: AnyObject {
-	@objc(warmServiceByLoadingPluginsAtLocations:)
-	func warmServiceByLoadingPlugins(atLocations pluginLocations: [URL])
+nonisolated protocol InlineContentServerProtocol: AnyObject { // nonisolated: xpc-shim
+	/// Loads the bundled modules. The service has never loaded modules from
+	/// anywhere else, so there is nothing to point it at.
+	@objc(warmServiceByLoadingPlugins)
+	func warmServiceByLoadingPlugins()
 
-	@objc(warmServiceByRegisteringDefaults:)
-	func warmServiceByRegistering(defaults: [String: Any])
+	@objc(warmServiceWithPreferences:)
+	func warmService(with preferences: InlineContentServicePreferences)
 
 	@objc(processURL:withUniqueIdentifier:atLineNumber:index:inView:)
 	func process(
@@ -60,7 +62,7 @@ protocol InlineContentServerProtocol: AnyObject {
 }
 
 @objc(ICLInlineContentClientProtocol)
-protocol InlineContentClientProtocol: AnyObject {
+nonisolated protocol InlineContentClientProtocol: AnyObject, Sendable { // nonisolated: xpc-shim
 	@objc(processingPayloadSucceeded:)
 	func processingPayloadSucceeded(_ payload: InlineContentPayload)
 

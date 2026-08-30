@@ -1,50 +1,52 @@
 @testable import Glasstual
-import XCTest
+import Testing
 
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
-class IRCAddressBookTests: XCTestCase {
-	func testIgnoreEntryTreatsRegularExpressionCharactersLiterally() {
+@MainActor
+@Suite("Address book matching")
+struct IRCAddressBookTests {
+	@Test("A regular expression character in a hostmask matches itself")
+	func ignoreEntryTreatsRegularExpressionCharactersLiterally() {
 		let entry = AddressBookEntry
 			.newIgnoreEntry(forHostmask: "nick[1]!*@example.com")
 
-		XCTAssertTrue(entry.checkMatch("NICK[1]!user@example.com"))
-		XCTAssertFalse(entry.checkMatch("nick1!user@example.com"))
-		XCTAssertEqual(entry.hostmaskRegularExpression, #"^nick\[1]!.*?@example\.com$"#)
+		#expect(entry.checkMatch("NICK[1]!user@example.com"))
+		#expect(entry.checkMatch("nick1!user@example.com") == false)
+		#expect(entry.hostmaskRegularExpression == #"^nick\[1]!.*?@example\.com$"#)
 	}
 
-	func testIgnoreEntrySupportsIRCWildcardsAndAnchorsTheMatch() {
+	@Test("IRC wildcards are honoured and the match is anchored at both ends")
+	func ignoreEntrySupportsIRCWildcardsAndAnchorsTheMatch() {
 		let entry = AddressBookEntry
 			.newIgnoreEntry(forHostmask: "n?ck!*@*.example")
 
-		XCTAssertTrue(entry.checkMatch("nick!user@irc.example"))
-		XCTAssertFalse(entry.checkMatch("prefix-nick!user@irc.example"))
-		XCTAssertFalse(entry.checkMatch("noock!user@irc.example"))
+		#expect(entry.checkMatch("nick!user@irc.example"))
+		#expect(entry.checkMatch("prefix-nick!user@irc.example") == false)
+		#expect(entry.checkMatch("noock!user@irc.example") == false)
 	}
 
-	func testUserTrackingEntryDerivesNicknameAndMatchesFullHostmask() {
-		let entry = MutableAddressBookEntry.newUserTrackingEntry()
+	@Test("A tracking entry takes its nickname from the hostmask and matches the whole mask")
+	func userTrackingEntryDerivesNicknameAndMatchesFullHostmask() {
+		var entry = AddressBookEntry.newUserTrackingEntry()
 
 		entry.hostmask = "Alice"
 
-		XCTAssertEqual(entry.trackingNickname, "Alice")
-
-		XCTAssertTrue(entry.checkMatch("alice!user@example.com"))
-
-		XCTAssertFalse(entry.checkMatch("alice"))
+		#expect(entry.trackingNickname == "Alice")
+		#expect(entry.checkMatch("alice!user@example.com"))
+		#expect(entry.checkMatch("alice") == false)
 	}
 
-	func testMixedEntryHasNoMatcherState() {
-		let entry = MutableAddressBookEntry.newIgnoreEntry()
+	@Test("A mixed entry carries no matcher state at all")
+	func mixedEntryHasNoMatcherState() {
+		var entry = AddressBookEntry.newIgnoreEntry()
 
 		entry.entryType = .mixed
 
-		XCTAssertEqual(entry.hostmaskRegularExpression, "")
-
-		XCTAssertNil(entry.trackingNickname)
-
-		XCTAssertFalse(entry.checkMatch(""))
+		#expect(entry.hostmaskRegularExpression == "")
+		#expect(entry.trackingNickname == nil)
+		#expect(entry.checkMatch("") == false)
 	}
 }

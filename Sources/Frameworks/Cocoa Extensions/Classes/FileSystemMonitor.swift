@@ -32,78 +32,94 @@
 
 import CoreServices
 import Foundation
+import Synchronization
 
-public typealias FileSystemMonitorCallback = ([XRFileSystemEvent]) -> Void
-
-@objc(XRFileSystemEvent)
-@objcMembers
-public final class XRFileSystemEvent: NSObject, @unchecked Sendable {
+/// One file-system change reported by FSEvents.
+public struct XRFileSystemEvent: Sendable, Hashable {
 	public let url: URL
 	public let flags: FSEventStreamEventFlags
 	public let identifier: FSEventStreamEventId
-	public let context: Any?
 
-	init(url: URL, flags: FSEventStreamEventFlags, identifier: FSEventStreamEventId, context: Any?) {
+	public init(url: URL, flags: FSEventStreamEventFlags, identifier: FSEventStreamEventId) {
 		self.url = url
 		self.flags = flags
 		self.identifier = identifier
-		self.context = context
-		super.init()
 	}
 }
 
-@objc(XRFileSystemMonitor)
-@objcMembers
-public final class XRFileSystemMonitor: NSObject, @unchecked Sendable {
-	private let urls: [URL]
-	private let callback: FileSystemMonitorCallback
-	private let contexts: [String: Any]
-	private let lock = NSLock()
-	private var eventStream: FSEventStreamRef?
-
-	@objc(initWithFileURL:callbackBlock:)
-	public convenience init(fileURL: URL, callback: @escaping FileSystemMonitorCallback) {
-		self.init(fileURLs: [fileURL], contexts: nil, callback: callback)
-	}
-
-	@objc(initWithFileURL:context:callbackBlock:)
-	public convenience init(fileURL: URL, context: Any?, callback: @escaping FileSystemMonitorCallback) {
-		self.init(fileURLs: [fileURL], contexts: context.map { [fileURL: $0] }, callback: callback)
-	}
-
-	@objc(initWithFileURLs:callbackBlock:)
-	public convenience init(fileURLs: [URL], callback: @escaping FileSystemMonitorCallback) {
-		self.init(fileURLs: fileURLs, contexts: nil, callback: callback)
-	}
-
-	@objc(initWithFileURLs:context:callbackBlock:)
-	public init(fileURLs: [URL], contexts: [URL: Any]?, callback: @escaping FileSystemMonitorCallback) {
-		precondition(fileURLs.isEmpty == false)
-		urls = fileURLs.map(\.standardizedFileURL)
-		self.callback = callback
-		self.contexts = Dictionary(uniqueKeysWithValues: (contexts ?? [:]).map {
-			($0.key.standardizedFileURL.path, $0.value)
-		})
-		super.init()
-	}
-
-	deinit {
-		stopMonitoring()
-	}
-
-	public var isMonitoring: Bool {
-		lock.withLock { eventStream != nil }
-	}
-
-	public func startMonitoring() {
-		startMonitoring(withLatency: 0)
-	}
-
-	@objc(startMonitoringWithLatency:)
-	public func startMonitoring(withLatency latency: TimeInterval) {
+/// Watches paths for file-system changes.
+public enum XRFileSystemMonitor {
+	/// Yields a batch of events every time FSEvents reports one, until the
+	/// consuming task is cancelled or the stream is dropped.
+	///
+	/// `latency` is the coalescing window FSEvents applies before delivering.
+	public static func events(
+		for urls: [URL],
+		latency: TimeInterval = 0
+	) -> AsyncStream<[XRFileSystemEvent]> {
+		precondition(urls.isEmpty == false)
 		precondition(latency >= 0)
-		stopMonitoring()
-		let paths = urls.map(\.path) as CFArray
+
+		let paths = urls.map(\.standardizedFileURL.path) as CFArray
+
+		return AsyncStream { continuation in
+			/* The one private dispatch queue left in the tree, and the isolation
+			 gate knows it by the marker on the line below.
+
+			 `FSEventStreamSetDispatchQueue` demands a queue, and it has to be
+			 serial: teardown runs on it so that invalidating the stream cannot
+			 overlap a callback already executing, which would leave that
+			 callback reading a session the teardown has released. A concurrent
+			 queue also gives up batch ordering, which a file monitor needs.
+			 Nothing here is a synchronisation domain for mutable state -- the
+			 session's state is already in a `Mutex` -- so an actor cannot
+			 replace it, and the queue never escapes this function. */
+			let queue = DispatchQueue(label: "com.vakesz.glasstual.file-system-monitor") // lock-queue: fsevents
+			let session = FileSystemEventSession(continuation: continuation)
+
+			guard session.start(paths: paths, latency: latency, queue: queue) else {
+				continuation.finish()
+				return
+			}
+
+			continuation.onTermination = { _ in
+				/* Torn down on the stream's own queue. FSEvents may be running
+				 the callback there right now, and stopping from anywhere else
+				 would race the delivery already in flight. The session is held
+				 by this closure, so it outlives the stream it owns. */
+				queue.async {
+					session.stop()
+				}
+			}
+		}
+	}
+
+	/// Convenience for the common single-URL case.
+	public static func events(
+		for url: URL,
+		latency: TimeInterval = 0
+	) -> AsyncStream<[XRFileSystemEvent]> {
+		events(for: [url], latency: latency)
+	}
+}
+
+/// Owns one FSEvents stream and the continuation it feeds.
+///
+/// FSEvents hands the callback an untyped `info` pointer, which is this object;
+/// the stream itself lives behind a lock so teardown can happen from the
+/// termination handler.
+private final class FileSystemEventSession: Sendable {
+	private let continuation: AsyncStream<[XRFileSystemEvent]>.Continuation
+	/** Stored as an address rather than an `FSEventStreamRef`, which is an opaque
+	 pointer and so is not sendable. The stream is created once, used only on the
+	 dispatch queue it was given, and destroyed once. */
+	private let streamAddress = Mutex<UInt>(0)
+
+	init(continuation: AsyncStream<[XRFileSystemEvent]>.Continuation) {
+		self.continuation = continuation
+	}
+
+	func start(paths: CFArray, latency: TimeInterval, queue: DispatchQueue) -> Bool {
 		var context = FSEventStreamContext(
 			version: 0,
 			info: Unmanaged.passUnretained(self).toOpaque(),
@@ -112,9 +128,12 @@ public final class XRFileSystemMonitor: NSObject, @unchecked Sendable {
 			copyDescription: nil
 		)
 		let flags = FSEventStreamCreateFlags(
-			kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagNoDefer | kFSEventStreamCreateFlagUseCFTypes
+			kFSEventStreamCreateFlagFileEvents
+				| kFSEventStreamCreateFlagNoDefer
+				| kFSEventStreamCreateFlagUseCFTypes
 		)
-		guard let stream = FSEventStreamCreate(
+
+		guard let created = FSEventStreamCreate(
 			nil,
 			fileSystemMonitorCallback,
 			&context,
@@ -122,33 +141,47 @@ public final class XRFileSystemMonitor: NSObject, @unchecked Sendable {
 			FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
 			latency,
 			flags
-		) else { return }
-		FSEventStreamSetDispatchQueue(stream, .main)
-		guard FSEventStreamStart(stream) else {
-			FSEventStreamInvalidate(stream)
-			FSEventStreamRelease(stream)
-			return
+		) else {
+			return false
 		}
-		lock.withLock { eventStream = stream }
+
+		FSEventStreamSetDispatchQueue(created, queue)
+
+		guard FSEventStreamStart(created) else {
+			FSEventStreamInvalidate(created)
+			FSEventStreamRelease(created)
+			return false
+		}
+
+		adopt(created)
+		return true
 	}
 
-	public func stopMonitoring() {
-		let stream = lock.withLock { () -> FSEventStreamRef? in
-			defer { eventStream = nil }
-			return eventStream
+	private func adopt(_ created: FSEventStreamRef) {
+		let address = UInt(bitPattern: UnsafeRawPointer(created))
+		streamAddress.withLock { $0 = address }
+	}
+
+	/// Stops and destroys the stream, once. Callers run this on the stream's own
+	/// dispatch queue so it cannot race a delivery in flight.
+	func stop() {
+		let address = streamAddress.withLock { current -> UInt in
+			let address = current
+			current = 0
+			return address
 		}
-		guard let stream else { return }
+
+		guard let pointer = UnsafeRawPointer(bitPattern: address) else {
+			return
+		}
+
+		let stream = OpaquePointer(pointer)
 		FSEventStreamStop(stream)
 		FSEventStreamInvalidate(stream)
 		FSEventStreamRelease(stream)
 	}
 
-	@objc(contextObjectForURL:)
-	public func contextObject(for url: URL) -> Any? {
-		contexts[url.standardizedFileURL.path]
-	}
-
-	fileprivate func receive(
+	func receive(
 		paths: NSArray,
 		flags: UnsafePointer<FSEventStreamEventFlags>,
 		identifiers: UnsafePointer<FSEventStreamEventId>,
@@ -156,24 +189,26 @@ public final class XRFileSystemMonitor: NSObject, @unchecked Sendable {
 	) {
 		var events: [XRFileSystemEvent] = []
 		events.reserveCapacity(count)
+
 		for index in 0 ..< count {
 			guard let path = paths[index] as? String else { continue }
-			let url = URL(fileURLWithPath: path)
 			events.append(XRFileSystemEvent(
-				url: url,
+				url: URL(fileURLWithPath: path),
 				flags: flags[index],
-				identifier: identifiers[index],
-				context: contextObject(for: url)
+				identifier: identifiers[index]
 			))
 		}
-		callback(events)
+
+		continuation.yield(events)
 	}
 }
 
 private let fileSystemMonitorCallback: FSEventStreamCallback =
 	{ _, info, eventCount, eventPaths, eventFlags, eventIdentifiers in
 		guard let info else { return }
-		let monitor = Unmanaged<XRFileSystemMonitor>.fromOpaque(info).takeUnretainedValue()
-		let paths = unsafeBitCast(eventPaths, to: NSArray.self)
-		monitor.receive(paths: paths, flags: eventFlags, identifiers: eventIdentifiers, count: eventCount)
+		let session = Unmanaged<FileSystemEventSession>.fromOpaque(info).takeUnretainedValue()
+		/* eventPaths is a borrowed CFArray; bit-casting it would hand ARC an
+		 unbalanced release at the end of scope. */
+		let paths = Unmanaged<NSArray>.fromOpaque(eventPaths).takeUnretainedValue()
+		session.receive(paths: paths, flags: eventFlags, identifiers: eventIdentifiers, count: eventCount)
 	}

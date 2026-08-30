@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2015 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,6 +37,7 @@
 
 import AppKit
 import GlasstualPluginKit
+import os
 
 private enum ChatFilterEditSection: Int {
 	case general, channels, events, sender, notes, advanced
@@ -49,7 +50,6 @@ protocol ChatFilterEditSheetDelegate: AnyObject {
 }
 
 @objc(TPI_ChatFilterEditFilterSheet)
-@objcMembers
 @MainActor
 final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	private var filter: MutableChatFilter
@@ -62,8 +62,8 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	@IBOutlet private var cancelButton: NSButton!
 	@IBOutlet private var contentViewTabView: NSTabView!
 	@IBOutlet private var filterAgeLimitTextField: NSTextField!
-	@IBOutlet private var filterMatchTextField: NSTextField!
-	@IBOutlet private var filterSenderMatchTextField: NSTextField!
+	@IBOutlet private var filterMatchTextField: ChatFilterValidatedTextField!
+	@IBOutlet private var filterSenderMatchTextField: ChatFilterValidatedTextField!
 	@IBOutlet private var filterTitleTextField: NSTextField!
 	@IBOutlet private var filterNotesTextField: NSTextField!
 	@IBOutlet private var actionFloodIntervalField: NSTextField!
@@ -104,13 +104,15 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	@IBOutlet private var filterLimitedToMyselfCheck: NSButton!
 	@IBOutlet private var filterLimitToSelectionOutlineView: NSObject!
 
-	dynamic var filterIgnoreOperatorsCheckEnabled = true
-	dynamic var filterIgnoreOperatorsCheckValue: Bool {
+	/* TPI_ChatFilterEditFilterSheet.xib binds a checkbox's `enabled` and
+	 `value` to these two through `self.`-rooted key paths, so both have to
+	 stay key-value coding compliant on the sheet. */
+	@objc dynamic var filterIgnoreOperatorsCheckEnabled = true
+	@objc dynamic var filterIgnoreOperatorsCheckValue: Bool {
 		get { filterIgnoreOperatorsCheckEnabled && filter.filterIgnoreOperators }
 		set { filter.filterIgnoreOperators = newValue }
 	}
 
-	@objc(initWithFilter:)
 	init(filter: ChatFilter?) {
 		self.filter = filter?.mutableCopy() as? MutableChatFilter ?? MutableChatFilter()
 		super.init()
@@ -122,8 +124,25 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		fatalError("init(coder:) is unavailable")
 	}
 
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['Chat Filter']"
+	)
+
 	private func prepareInitialState() {
-		Bundle(for: Self.self).loadNibNamed("TPI_ChatFilterEditFilterSheet", owner: self, topLevelObjects: nil)
+		/* Every step below reads an outlet the nib connects, so a failed load
+		 has to stop here rather than crash on the first implicitly unwrapped
+		 one. `start()` refuses to present a sheet that was never built. */
+		guard Bundle(for: Self.self).loadNibNamed(
+			"TPI_ChatFilterEditFilterSheet",
+			owner: self,
+			topLevelObjects: nil
+		) else {
+			Self.logger.error("Could not load TPI_ChatFilterEditFilterSheet")
+
+			return
+		}
+
 		populateTokenFields()
 		setupTextFieldRules()
 		loadFilter()
@@ -133,7 +152,8 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 
 	func start() {
-		guard let window else { return }
+		guard let window, let sheet else { return }
+
 		window.beginSheet(sheet)
 	}
 
@@ -245,7 +265,9 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 
 	private func validate() -> Bool {
-		validate(filterEventNumericTextField, section: .events) &&
+		validate(filterMatchTextField, section: .general) &&
+			validate(filterEventNumericTextField, section: .events) &&
+			validate(filterSenderMatchTextField, section: .sender) &&
 			validate(filterForwardToDestinationTextField, section: .advanced)
 	}
 
@@ -335,14 +357,18 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		field.objectValue = tokens(from: string)
 	}
 
+	/// A `%_name_%` placeholder in a filter action. Computed rather than
+	/// stored: `Regex` is not `Sendable`.
+	private static var actionToken: Regex<Substring> {
+		/%_[a-zA-Z0-9_]+_%/
+	}
+
 	private func tokens(from value: String?) -> [Any] {
 		guard let value, !value.isEmpty else { return value.map { [$0] } ?? [] }
-		let expression = try? NSRegularExpression(pattern: "%_([a-zA-Z0-9_]+)_%")
-		let range = NSRange(value.startIndex..., in: value)
 		var result: [Any] = []
 		var cursor = value.startIndex
-		for match in expression?.matches(in: value, range: range) ?? [] {
-			guard let tokenRange = Range(match.range, in: value) else { continue }
+		for match in value.matches(of: Self.actionToken) {
+			let tokenRange = match.range
 			if cursor < tokenRange.lowerBound {
 				result.append(String(value[cursor ..< tokenRange.lowerBound]))
 			}
@@ -364,8 +390,21 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		return true
 	}
 
-	func controlTextDidChange(_: Notification) {
+	func controlTextDidChange(_ notification: Notification) {
+		if let field = notification.object as? NSTextField, field === actionFloodIntervalField {
+			restrictToDigits(field)
+		}
 		toggleOkButton()
+	}
+
+	/// The flood-control interval is a plain number field: anything but ASCII
+	/// digits is dropped as it is typed, replacing the formatter subclass
+	/// Textual used to install for the same purpose.
+	private func restrictToDigits(_ field: NSTextField) {
+		let digits = field.stringValue.filter { $0.isASCII && $0.isNumber }
+		guard digits != field.stringValue else { return }
+		NSSound.beep()
+		field.stringValue = digits
 	}
 
 	private func toggleOkButton() {
@@ -375,6 +414,8 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 
 	private func setupTextFieldRules() {
+		setupRegularExpressionFieldRules()
+
 		for field in [filterForwardToDestinationTextField, filterEventNumericTextField] {
 			field?.valueDidChange = { [weak self] _ in
 				self?.toggleOkButton()
@@ -394,6 +435,32 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 		filterEventNumericTextField.validationBlock = { [weak self] _ in
 			guard let self else { return nil }
 			return compileNumerics() == nil ? String(localized: .TPIChatFilterEditFilterSheet.commandsInvalid) : nil
+		}
+	}
+
+	/// Both match fields are compiled as regular expressions on every incoming
+	/// message. A pattern that does not compile would otherwise just never
+	/// match, with nothing to tell the user why.
+	private func setupRegularExpressionFieldRules() {
+		for field in [filterMatchTextField, filterSenderMatchTextField] {
+			field?.valueDidChange = { [weak self] _ in
+				self?.toggleOkButton()
+			}
+			field?.performValidationWhenEmpty = false
+			field?.stringValueIsInvalidOnEmpty = false
+			field?.stringValueUsesOnlyFirstToken = false
+			field?.validationBlock = { value in
+				do {
+					_ = try NSRegularExpression(pattern: value)
+
+					return nil
+				} catch {
+					return String(
+						localized: .TPIChatFilterEditFilterSheet
+							.regularExpressionInvalid(error.localizedDescription)
+					)
+				}
+			}
 		}
 	}
 
@@ -453,8 +520,8 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 }
 
-@objc(TPI_ChatFilterFilterActionToken)
-private final class ChatFilterActionToken: NSObject {
+/// An immutable token value handed to `NSTokenField`; no actor isolation needed.
+private final nonisolated class ChatFilterActionToken: NSObject { // nonisolated: value
 	let token: String
 	init(token: String) {
 		self.token = token
