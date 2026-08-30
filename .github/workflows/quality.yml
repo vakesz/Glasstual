@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 15
 
     steps:
@@ -31,18 +31,13 @@ jobs:
           make generate
           git diff --exit-code -- Glasstual.xcodeproj
 
-      - name: Select minimum supported Xcode
+      - name: Verify Xcode 27 runner
         run: |
           set -euo pipefail
-          XCODE_APP="$(find /Applications -maxdepth 1 -name 'Xcode_26*.app' | sort -V | tail -n 1)"
-          if [ -z "${XCODE_APP}" ]; then
-            echo "::error::The runner does not provide Xcode 26."
-            exit 1
-          fi
-          sudo xcode-select -s "${XCODE_APP}"
+          sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
           XCODE_MAJOR="$(xcodebuild -version | head -n 1 | sed -E 's/^Xcode ([0-9]+).*/\1/')"
-          [ "${XCODE_MAJOR}" -eq 26 ]
+          [ "${XCODE_MAJOR}" -eq 27 ]
 
       - name: Compile unsigned Release build
         run: |
