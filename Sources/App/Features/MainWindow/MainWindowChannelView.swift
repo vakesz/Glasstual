@@ -14,9 +14,22 @@ import AppKit
 import CocoaExtensions
 import Combine
 
+private func channelViewBackgroundColor() -> NSColor {
+	SharedApplication.sharedThemeController().settings.underlyingWindowColor
+		?? .textBackgroundColor
+}
+
+private final class MainWindowChannelViewLoadingCover: NSView {
+	override func draw(_ dirtyRect: NSRect) {
+		channelViewBackgroundColor().setFill()
+		dirtyRect.fill()
+	}
+}
+
 @objc(TVCMainWindowChannelView)
 public final class MainWindowChannelView: NSView, AppearanceObserving {
 	private weak var backingView: LogView?
+	private var loadingCoverView: MainWindowChannelViewLoadingCover?
 	private var layoutObservation: Task<Void, Never>?
 	private let notificationSubscriptions = NotificationSubscriptions()
 
@@ -36,14 +49,12 @@ public final class MainWindowChannelView: NSView, AppearanceObserving {
 		notificationSubscriptions.observe(.themeAppearanceChanged) { [weak self] _ in
 			self?.appearance = nil
 			self?.needsDisplay = true
+			self?.loadingCoverView?.needsDisplay = true
 		}
 	}
 
 	override public func draw(_ dirtyRect: NSRect) {
-		let backgroundColor = SharedApplication.sharedThemeController().settings.underlyingWindowColor
-			?? .textBackgroundColor
-
-		backgroundColor.setFill()
+		channelViewBackgroundColor().setFill()
 		dirtyRect.fill()
 	}
 
@@ -63,7 +74,10 @@ public final class MainWindowChannelView: NSView, AppearanceObserving {
 		backingView = newBackingView
 
 		webView.translatesAutoresizingMaskIntoConstraints = false
-		webView.isHidden = newBackingView.isLayingOutView
+		/* A hidden WKWebView does not receive the animation frame that its page
+		 uses to report finished layout. Keep it renderable and cover partial
+		 content with a native view until that report arrives. */
+		webView.isHidden = false
 
 		addSubview(webView)
 
@@ -78,6 +92,8 @@ public final class MainWindowChannelView: NSView, AppearanceObserving {
 			minimumHeight,
 		])
 
+		setLoadingCoverVisible(newBackingView.isLayingOutView)
+
 		layoutObservation = Task { @MainActor [weak self, weak newBackingView, weak webView] in
 			guard let newBackingView else {
 				return
@@ -91,14 +107,38 @@ public final class MainWindowChannelView: NSView, AppearanceObserving {
 					return
 				}
 
-				webView.isHidden = isLayingOutView
+				webView.isHidden = false
+				setLoadingCoverVisible(isLayingOutView)
 			}
+		}
+	}
+
+	private func setLoadingCoverVisible(_ visible: Bool) {
+		if visible {
+			guard loadingCoverView == nil else {
+				return
+			}
+
+			let coverView = MainWindowChannelViewLoadingCover()
+			coverView.translatesAutoresizingMaskIntoConstraints = false
+			addSubview(coverView)
+			NSLayoutConstraint.activate([
+				coverView.topAnchor.constraint(equalTo: topAnchor),
+				coverView.leadingAnchor.constraint(equalTo: leadingAnchor),
+				coverView.trailingAnchor.constraint(equalTo: trailingAnchor),
+				coverView.bottomAnchor.constraint(equalTo: bottomAnchor),
+			])
+			loadingCoverView = coverView
+		} else {
+			loadingCoverView?.removeFromSuperview()
+			loadingCoverView = nil
 		}
 	}
 
 	private func detachBackingView() {
 		layoutObservation?.cancel()
 		layoutObservation = nil
+		setLoadingCoverVisible(false)
 
 		backingView?.webView.removeFromSuperview()
 		backingView = nil
