@@ -5,6 +5,7 @@
 
 import Foundation
 @testable import Glasstual
+import SwiftUI
 import Testing
 
 @MainActor
@@ -22,41 +23,23 @@ struct ServerPropertiesSheetMigrationTests {
 		#expect((TXMenuController.self as Any.Type) is (any ServerPropertiesSheetDelegate.Type))
 	}
 
-	/// The sheet's nib wires every one of these up by name, so a rename here is
-	/// only found at runtime.
-	@Test(
-		"Every action the nib is wired to is still there",
-		arguments: [
-			"addAddressBookEntry:",
-			"addChannel:",
-			"addHighlight:",
-			"autojoinWaitsForNickServChanged:",
-			"cancel:",
-			"deleteAddressBookEntry:",
-			"deleteChannel:",
-			"deleteHighlight:",
-			"editAddressBookEntry:",
-			"editChannel:",
-			"editHighlight:",
-			"editSeverEndpoints:",
-			"ok:",
-			"onClientCertificateChangeRequested:",
-			"onClientCertificateFingerprintSHA1CopyRequested:",
-			"onClientCertificateFingerprintSHA2CopyRequested:",
-			"onClientCertificateFingerprintSHA512CopyRequested:",
-			"onClientCertificateResetRequested:",
-			"openProxySettingsInSystemPreferences:",
-			"preferredCipherSuitesChanged:",
-			"preferredCipherSuitesViewList:",
-			"preferredInternetProtocolChanged:",
-			"proxyTypeChanged:",
-			"showAddAddressBookEntryMenu:",
-			"toggleAdvancedEncodings:",
-			"useSSLCheckChanged:",
-		]
-	)
-	func nibActionSelectorsRemainAvailable(_ selector: String) {
-		#expect(ServerPropertiesSheet.instancesRespond(to: NSSelectorFromString(selector)))
+	@Test("The form is a hosted native view, not a nib-backed outlet graph")
+	func formIsHosted() {
+		let sheet = ServerPropertiesSheet(client: nil)
+		#expect(sheet.sheet.contentViewController is NSHostingController<ServerPropertiesView>)
+		#expect(Bundle.main.path(forResource: "TDCServerPropertiesSheet", ofType: "nib") == nil)
+	}
+
+	@Test("The draft validates all persisted fields before submission")
+	func draftValidation() throws {
+		var config = ClientConfig(connectionName: "Libera")
+		config.serverList = [Server(serverAddress: "irc.libera.chat", serverPort: 6697)]
+		let model = ServerPropertiesModel(config: config)
+		let submitted = try #require(model.submittedConfig())
+		#expect(submitted.serverList.first?.serverAddress == "irc.libera.chat")
+		model.serverPort = "70000"
+		#expect(model.submittedConfig() == nil)
+		#expect(model.selection == .general)
 	}
 
 	@Test("Identity fields accept what IRC accepts and nothing else")
@@ -65,6 +48,8 @@ struct ServerPropertiesSheetMigrationTests {
 		#expect(ServerPropertiesValidation.isNickname("invalid nickname") == false)
 		#expect(ServerPropertiesValidation.isUsername("valid-user"))
 		#expect(ServerPropertiesValidation.isUsername("invalid user") == false)
+		#expect(ServerPropertiesValidation.areAlternateNicknamesValid(""))
+		#expect(ServerPropertiesValidation.areAlternateNicknamesValid("   "))
 		#expect(ServerPropertiesValidation.areAlternateNicknamesValid("first second"))
 		#expect(ServerPropertiesValidation.areAlternateNicknamesValid("first invalid!nick") == false)
 	}

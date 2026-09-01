@@ -39,29 +39,6 @@ import CocoaExtensions
 import Foundation
 import os
 import Security
-import Synchronization
-
-/// One value, shared by two isolation domains.
-///
-/// `Mutex` is non-copyable, so it cannot be captured by the escaping closures
-/// Network.framework hands its callbacks to; a reference that holds one can be.
-/// `Value` is always a value type here — the point is to share a fact, never an
-/// object.
-final class Locked<Value: Sendable>: Sendable {
-	private let storage: Mutex<Value>
-
-	init(_ value: Value) {
-		storage = Mutex(value)
-	}
-
-	var value: Value {
-		storage.withLock { $0 }
-	}
-
-	func set(_ value: Value) {
-		storage.withLock { $0 = value }
-	}
-}
 
 /** Logging for the connection classes. */
 enum RCMLog {
@@ -72,9 +49,8 @@ enum RCMLog {
 
 /// Everything the transport reports, in the order it happened.
 ///
-/// The socket turns Network.framework's callbacks into these and the host reads
-/// them off one `AsyncStream`. Every case is `Sendable`, which is what lets the
-/// callbacks — all of them `@Sendable` in the SDK — hand work to the actor.
+/// The socket publishes the results of its async Network.framework operations
+/// here, and the host reads them from one `AsyncStream` in wire order.
 enum SocketEvent: Sendable {
 	case willConnectToProxy(host: String, port: UInt16)
 	case connected(host: String?)
@@ -88,10 +64,8 @@ enum SocketEvent: Sendable {
 
 /// What the service learned about the peer's certificate chain.
 ///
-/// Written by the TLS verify block, which runs outside the socket's actor, and
-/// read by the actor when the application asks for it. A value, so it can live
-/// in a `Mutex` rather than in one domain or the other — and so the `SecTrust`
-/// it came from never leaves the verify block.
+/// Produced and consumed by the socket actor's async TLS validation path. The
+/// `SecTrust` it came from never escapes the validator.
 struct TLSTrustExport: Sendable {
 	var policyName: String?
 	var certificateChain: [Data] = []
@@ -99,6 +73,11 @@ struct TLSTrustExport: Sendable {
 	/// Why the system did not trust the chain. nil when it did, or when the
 	/// chain has not been evaluated yet.
 	var failureDescription: String?
+}
+
+struct TLSTrustEvaluation: Sendable {
+	var export: TLSTrustExport
+	var isRecoverableFailure: Bool
 }
 
 /// Why a connection ended.

@@ -3,7 +3,6 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import AppKit
 @testable import Glasstual
 import Testing
 
@@ -32,7 +31,7 @@ struct TLONotificationConfigurationTests {
 	func preferencesConfigurationReadsExistingGlobalValues() {
 		let eventType = TXNotificationType.highlight
 		let configuration = PreferencesNotificationConfiguration(eventType: eventType)
-		let expectedSound = TextualPreferences.sound(for: eventType)
+		let expectedSound = Preferences.Notifications.sound(eventType).storedValue
 			?? NotificationAlertSound.noSoundPreferenceValue
 
 		#expect(configuration.eventType == eventType)
@@ -40,21 +39,24 @@ struct TLONotificationConfigurationTests {
 		#expect(configuration.alertSound == expectedSound)
 
 		#expect(
-			(configuration.pushNotification != NSControl.StateValue.off)
-				== TextualPreferences.notificationEnabled(for: eventType)
-		)
-		#expect((configuration.speakEvent != NSControl.StateValue.off) == TextualPreferences.speak(eventType))
-		#expect(
-			(configuration.disabledWhileAway != NSControl.StateValue.off)
-				== TextualPreferences.disabledWhileAway(for: eventType)
+			(configuration.pushNotification == .on)
+				== Preferences.Notifications.flag(eventType, .enabled).value
 		)
 		#expect(
-			(configuration.bounceDockIcon != NSControl.StateValue.off)
-				== TextualPreferences.bounceDockIcon(for: eventType)
+			(configuration.speakEvent == .on)
+				== Preferences.Notifications.flag(eventType, .speak).value
 		)
 		#expect(
-			(configuration.bounceDockIconRepeatedly != NSControl.StateValue.off)
-				== TextualPreferences.bounceDockIconRepeatedly(for: eventType)
+			(configuration.disabledWhileAway == .on)
+				== Preferences.Notifications.flag(eventType, .disabledWhileAway).value
+		)
+		#expect(
+			(configuration.bounceDockIcon == .on)
+				== Preferences.Notifications.flag(eventType, .bounceDockIcon).value
+		)
+		#expect(
+			(configuration.bounceDockIconRepeatedly == .on)
+				== Preferences.Notifications.flag(eventType, .bounceDockIconRepeatedly).value
 		)
 	}
 

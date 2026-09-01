@@ -17,11 +17,7 @@ struct OnboardingAppearancePreviewMessage: Equatable {
 	let message: String
 }
 
-nonisolated enum OnboardingTextSize: CaseIterable { // nonisolated: value
-	case small
-	case medium
-	case large
-
+extension OnboardingTextSize {
 	var title: String {
 		switch self {
 		case .small:
@@ -34,24 +30,7 @@ nonisolated enum OnboardingTextSize: CaseIterable { // nonisolated: value
 	}
 }
 
-nonisolated enum OnboardingInterfaceStyle: CaseIterable { // nonisolated: value
-	case system
-	case light
-	case dark
-
-	var title: String {
-		switch self {
-		case .system:
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelSystem)
-		case .light:
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelLight)
-		case .dark:
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelDark)
-		}
-	}
-}
-
-nonisolated enum OnboardingStrings { // nonisolated: value
+enum OnboardingStrings {
 	enum Window {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.windowChromeWelcomeToGlasstual)
@@ -162,7 +141,11 @@ nonisolated enum OnboardingStrings { // nonisolated: value
 		}
 
 		static var interfaceStyleTitles: [String] {
-			OnboardingInterfaceStyle.allCases.map(\.title)
+			[
+				String(localized: .TDCOnboardingWindow.stepLookAndFeelSystem),
+				String(localized: .TDCOnboardingWindow.stepLookAndFeelLight),
+				String(localized: .TDCOnboardingWindow.stepLookAndFeelDark),
+			]
 		}
 
 		static var previewMessages: [OnboardingAppearancePreviewMessage] {

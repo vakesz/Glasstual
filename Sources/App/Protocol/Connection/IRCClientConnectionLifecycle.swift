@@ -129,7 +129,6 @@ public extension IRCClient {
 		let connection = Connection(config: socketConfig, onClient: self)
 		socket = connection
 		connection.open()
-		postEvent(toViewController: "serverConnecting")
 	}
 
 	func autoConnect(withDelay delay: UInt, afterWakeUp: Bool) {
@@ -182,9 +181,7 @@ public extension IRCClient {
 		guard isConnecting || isConnected, isQuitting == false, isDisconnecting == false else { return }
 		isQuitting = true
 		cancelReconnect()
-		if isTerminating == false {
-			postEvent(toViewController: "serverDisconnecting")
-		}
+		if isTerminating == false {}
 		NotificationCenter.default.post(name: .IRCClientWillSendQuit, object: self)
 		socket?.clearSendQueue()
 		guard isLoggedIn else {

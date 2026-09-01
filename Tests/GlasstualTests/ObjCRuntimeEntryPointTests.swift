@@ -9,7 +9,7 @@ import Testing
 
 /// The Objective-C entry points the compiler cannot check for us.
 ///
-/// Each selector here is one AppKit or WebKit looks up by name and Swift does
+/// Each selector here is one AppKit looks up by name and Swift does
 /// not expose on its own: an optional requirement of a protocol the superclass
 /// declares, or private SPI whose selector has no Swift spelling. Nothing about
 /// the declaration says it has to reach the runtime, so removing the annotation
@@ -19,10 +19,10 @@ import Testing
 @MainActor
 @Suite("Objective-C entry points")
 struct ObjCRuntimeEntryPointTests {
-	/** The nib wires each sheet as its window's delegate through an untyped
-	 outlet, so nothing in the nib names this selector for `NibRuntimeNameTests`
-	 to find. Without it the sheet never hears that it closed, and never leaves
-	 the window list. */
+	/** Each sheet assigns itself as the window delegate programmatically. AppKit
+	 invokes this optional protocol requirement through the Objective-C runtime;
+	 without it the sheet never hears that it closed and never leaves the window
+	 list. */
 	@Test("Every sheet that closes itself hears windowWillClose")
 	func sheetsRespondToWindowWillClose() {
 		let delegates: [NSObject.Type] = [
@@ -35,7 +35,6 @@ struct ObjCRuntimeEntryPointTests {
 			ServerHighlightListSheet.self,
 			ServerChangeNicknameSheet.self,
 			HighlightEntrySheet.self,
-			PreferencesUserStyleSheet.self,
 			PreferencesController.self,
 			ServerChannelListDialog.self,
 			ChannelSpotlightController.self,
@@ -45,35 +44,6 @@ struct ObjCRuntimeEntryPointTests {
 			#expect(
 				delegate.instancesRespond(to: #selector(NSWindowDelegate.windowWillClose(_:))),
 				"\(delegate) never hears that its window closed"
-			)
-		}
-	}
-
-	/** `_WKUIDelegatePrivate`. WebKit asks for the underscored selector and
-	 there is no protocol to conform to, so the name has to be written out. */
-	@Test("The channel view answers WebKit's private context-menu selector")
-	func channelViewAnswersContextMenuSPI() {
-		#expect(
-			LogViewWebView.instancesRespond(to: NSSelectorFromString("_webView:contextMenu:forElement:"))
-		)
-	}
-
-	/** A table asks its data source — not its delegate — where a drag may land.
-	 The three methods satisfy optional requirements of `NSTableViewDataSource`,
-	 which the diffable superclass declares rather than the subclass, so Swift
-	 exposes none of them by itself. */
-	@Test("The diffable data source answers the drag-and-drop selectors")
-	func diffableDataSourceAnswersDragSelectors() {
-		let selectors = [
-			"tableView:pasteboardWriterForRow:",
-			"tableView:validateDrop:proposedRow:proposedDropOperation:",
-			"tableView:acceptDrop:row:dropOperation:",
-		].map(NSSelectorFromString)
-
-		for selector in selectors {
-			#expect(
-				ServerPropertiesTableDataSource.instancesRespond(to: selector),
-				"the table cannot answer \(selector)"
 			)
 		}
 	}

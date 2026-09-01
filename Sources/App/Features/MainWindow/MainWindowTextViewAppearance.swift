@@ -59,13 +59,13 @@ public final class MainWindowTextViewAppearance: ApplicationAppearance {
 	}
 
 	public func preferredTextViewFontChanged() -> Bool {
-		textViewPreferredFontSize != TextualPreferences.mainTextViewFontSize()
+		textViewPreferredFontSize != Preferences.Input.textViewFontSize.value
 	}
 
 	/// Records the size it resolved, so `preferredTextViewFontChanged()` can
 	/// tell whether the preference moved since the font was last handed out.
 	public func makeTextViewPreferredFont() -> NSFont {
-		let preferredFontSize = TextualPreferences.mainTextViewFontSize()
+		let preferredFontSize = Preferences.Input.textViewFontSize.value
 		textViewPreferredFontSize = preferredFontSize
 
 		/* Sizes track the system text styles so they follow the

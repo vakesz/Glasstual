@@ -39,8 +39,6 @@
 import AppKit
 
 enum MenuLifecyclePolicy {
-	static let generalChannelMenuTag = 1209
-
 	static func shouldResetSelectionAfterMenuCloses(performedAction: Bool) -> Bool {
 		performedAction == false
 	}
@@ -53,14 +51,13 @@ public extension MenuActionCoordinator {
 			return
 		}
 
-		if TextualPreferences.soundIsMuted() {
+		if Preferences.Notifications.soundIsMuted.value {
 			menuController.muteNotificationsSoundsDockMenuItem?.state = .on
 			menuController.muteNotificationsSoundsFileMenuItem?.state = .on
 		}
 
-		menuController.channelViewGeneralMenu.item(
-			withTag: MenuLifecyclePolicy.generalChannelMenuTag
-		)?.submenu = menuController.mainMenuChannelMenu?.copy() as? NSMenu
+		menuController.channelViewGeneralMenu.item(for: .webChannelMenu)?.submenu =
+			menuController.mainMenuChannelMenu.copy() as? NSMenu
 
 		SharedApplication.sharedFileTransferDialog().startUsingDownloadDestinationURL()
 		applyMenuSymbols()

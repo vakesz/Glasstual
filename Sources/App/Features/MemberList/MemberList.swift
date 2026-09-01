@@ -90,7 +90,6 @@ private typealias MemberListDataSource =
 private typealias MemberListSnapshot =
 	NSDiffableDataSourceSnapshot<MemberListSectionIdentifier, User.ID>
 
-@objc(TVCMemberList)
 public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObserving {
 	public var isHiddenByUser = false
 	public weak var keyDelegate: (any MemberListKeyEventDelegate)?
@@ -99,8 +98,8 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 	/// window and dropped with the table.
 	private let notifications = NotificationSubscriptions()
 
-	@IBOutlet public private(set) var memberListUserInfoPopover: MemberListUserInfoPopover!
-	@IBOutlet public private(set) var contentController: IRCChannelMemberListController!
+	public private(set) var memberListUserInfoPopover: MemberListUserInfoPopover!
+	public private(set) var contentController: IRCChannelMemberListController!
 
 	private var memberDataSource: MemberListDataSource?
 	private var sectionHeadersAreShown = false
@@ -116,12 +115,19 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 
 	private var hasConfigured = false
 
-	/// Nib-time configuration, run the first time the list joins a window.
-	///
-	/// `awakeFromNib` is nonisolated, so every line below used to sit behind a
-	/// runtime assumption about the decoding thread. `viewDidMoveToWindow` is
-	/// main-actor isolated by declaration and runs after the outlets are
-	/// connected, which is all this work needed.
+	override public init(frame frameRect: NSRect) {
+		super.init(frame: frameRect)
+		memberListUserInfoPopover = MemberListUserInfoPopover()
+		contentController = IRCChannelMemberListController()
+		contentController.attach(to: self)
+	}
+
+	@available(*, unavailable)
+	required init?(coder _: NSCoder) {
+		fatalError("MemberList is programmatic")
+	}
+
+	/// Installs the diffable data source and interaction behavior once.
 	public func configure() {
 		guard hasConfigured == false else {
 			return
@@ -142,14 +148,11 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 
 	private func makeDataSource() -> MemberListDataSource {
 		let dataSource = MemberListDataSource(tableView: self) { [weak self] tableView, _, _, userID in
-			let view = tableView.makeView(withIdentifier: memberViewIdentifier, owner: self)
+			let cell = (tableView.makeView(withIdentifier: memberViewIdentifier, owner: self) as? MemberListCell)
+				?? MemberListCell(frame: .zero)
+			cell.identifier = memberViewIdentifier
 
-			guard let cell = view as? MemberListCell else {
-				return view ?? NSView()
-			}
-
-			/* Cell views used to configure themselves in `awakeFromNib`, which is
-			 nonisolated; here the main actor is a fact rather than an assumption. */
+			// Programmatic cells are configured where the data source vends them.
 			cell.configure()
 			cell.objectValue = self?.member(withID: userID)
 
@@ -174,11 +177,9 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 		-> (NSTableView, Int, MemberListSectionIdentifier) -> NSView
 	{
 		{ [weak self] tableView, _, identifier in
-			let view = tableView.makeView(withIdentifier: sectionHeaderViewIdentifier, owner: self)
-
-			guard let cell = view as? MemberListHeaderCell else {
-				return view ?? NSView()
-			}
+			let cell = (tableView.makeView(withIdentifier: sectionHeaderViewIdentifier, owner: self)
+				as? MemberListHeaderCell) ?? MemberListHeaderCell(frame: .zero)
+			cell.identifier = sectionHeaderViewIdentifier
 
 			cell.objectValue = MemberList.makeSection(identifier: identifier)
 
@@ -377,7 +378,7 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 	// MARK: - Sections and row geometry
 
 	private static func sectionRank(for member: ChannelUser) -> UserRank {
-		if member.user.isIRCop, TextualPreferences.memberListSortFavorsServerStaff() {
+		if member.user.isIRCop, Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue {
 			return .irCopByMode
 		}
 
@@ -539,7 +540,7 @@ public final class MemberList: NSTableView, NSTableViewDelegate, AppearanceObser
 	}
 
 	private func scrollViewBoundsDidChange(_ notification: Notification) {
-		guard TextualPreferences.memberListUpdatesUserInfoPopoverOnScroll() else {
+		guard Preferences.Appearance.memberListUpdatesPopoverOnScroll.value else {
 			return
 		}
 		guard notification.object as AnyObject? === scrollViewContentView else {

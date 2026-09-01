@@ -70,24 +70,11 @@ struct PreferencesPaneInventoryTests {
 		}
 	}
 
-	/** The picker sits in a window of fixed width, so a section that would need
-	 more segments than fit has to fall back to a pop-up rather than truncate. */
-	@Test("A segmented picker is only used where its labels fit")
-	func segmentedPickersFit() {
-		for section in PreferencesController.sections() where section.usesSegmentedPicker {
-			#expect(
-				section.subPages.count <= PreferencesSection.maximumSegments,
-				"\(section.identifier.rawValue) asks for \(section.subPages.count) segments"
-			)
-		}
-	}
-
 	@Test("The Advanced section keeps to five sub-pages")
 	func advancedSectionIsGrouped() {
 		let advanced = PreferencesController.sections().first { $0.identifier == .advanced }
 		let subPages = try? #require(advanced?.subPages)
 		#expect(subPages?.count == PreferencesAdvancedGroup.allCases.count)
-		#expect(advanced?.usesSegmentedPicker == true)
 	}
 
 	@Test("A pane identifier stored before the grouping still finds its sub-page")
@@ -103,7 +90,7 @@ struct PreferencesPaneInventoryTests {
 		#expect(PreferencesController.paneExists("plugin-9999") == false)
 	}
 
-	@Test("The seven main sections show one pane each")
+	@Test("The main sections show one pane each")
 	func mainSectionsHoldOnePane() {
 		for section in PreferencesController.sections() where section.identifier.pane != nil {
 			#expect(section.subPages.count == 1, "\(section.identifier.rawValue) is not a single pane")
@@ -190,7 +177,7 @@ struct PreferencesFacadeBindingTests {
 
 	@Test("A gated binding reads as off while its gate is closed")
 	func gatedBinding() {
-		let key = Preferences.InlineMedia.limitBasicsToFiles
+		let key = Preferences.Messages.showInlineMedia
 		defer { key.reset() }
 
 		key.value = true

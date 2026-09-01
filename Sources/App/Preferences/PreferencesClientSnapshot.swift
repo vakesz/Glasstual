@@ -49,59 +49,62 @@ extension ClientPreferences {
 	static func current() -> ClientPreferences {
 		var snapshot = ClientPreferences()
 
-		snapshot.autojoinDelayAfterIdentification = TextualPreferences.autojoinDelayAfterIdentification()
-		snapshot.autojoinDelayBetweenChannelJoins = TextualPreferences.autojoinDelayBetweenChannelJoins()
-		snapshot.autojoinMaximumChannelJoins = TextualPreferences.autojoinMaximumChannelJoins()
-		snapshot.autojoinOnInvite = TextualPreferences.autoJoinOnInvite()
-		snapshot.rejoinOnKick = TextualPreferences.rejoinOnKick()
+		snapshot.autojoinDelayAfterIdentification = Preferences.Connection.autojoinDelayAfterIdentification.value
+		snapshot.autojoinDelayBetweenChannelJoins = Preferences.Connection.autojoinDelayBetweenChannelJoins.value
+		snapshot.autojoinMaximumChannelJoins = Preferences.Connection.autojoinMaximumChannelJoins.value
+		snapshot.autojoinOnInvite = Preferences.Connection.autojoinOnInvite.value
+		snapshot.rejoinOnKick = Preferences.Connection.rejoinOnKick.value
 		snapshot.appNapEnabled = TextualPreferences.appNapEnabled()
-		snapshot.preferModernCiphers = TextualPreferences.preferModernCiphers()
-		snapshot.disconnectOnSleep = TextualPreferences.disconnectOnSleep()
-		snapshot.awayOnScreenSleep = TextualPreferences.setAwayOnScreenSleep()
+		snapshot.preferModernCiphers = Preferences.Connection.preferModernCiphers.value
+		snapshot.disconnectOnSleep = Preferences.Connection.disconnectOnSleep.value
+		snapshot.awayOnScreenSleep = Preferences.Connection.awayOnScreenSleep.value
 		snapshot.enableEchoMessageCapability = TextualPreferences.enableEchoMessageCapability()
-		snapshot.rememberServerListQueryStates = TextualPreferences.rememberServerListQueryStates()
-		snapshot.trackUserAwayStatusMaximumChannelSize = TextualPreferences
-			.trackUserAwayStatusMaximumChannelSize()
+		snapshot.requestChatHistory = Preferences.Connection.requestChatHistory.value
+		snapshot.synchronizeReadMarkers = Preferences.Connection.synchronizeReadMarkers.value
+		snapshot.rememberServerListQueryStates = Preferences.Appearance.rememberQueryStates.value
+		snapshot.trackUserAwayStatusMaximumChannelSize = Preferences.Appearance
+			.trackUserAwayStatusMaximumChannelSize
+			.value
 
-		snapshot.removeAllFormatting = TextualPreferences.removeAllFormatting()
-		snapshot.showJoinLeave = TextualPreferences.showJoinLeave()
-		snapshot.displayServerMOTD = TextualPreferences.displayServerMOTD()
-		snapshot.replyToCTCPRequests = TextualPreferences.replyToCTCPRequests()
-		snapshot.masqueradeCTCPVersion = TextualPreferences.masqueradeCTCPVersion()
-		snapshot.locationToSendNotices = TextualPreferences.locationToSendNotices()
-		snapshot.sendTypingNotifications = TextualPreferences.sendTypingNotifications()
-		snapshot.giveFocusOnMessageCommand = TextualPreferences.giveFocusOnMessageCommand()
-		snapshot.autoAddScrollbackMark = TextualPreferences.autoAddScrollbackMark()
-		snapshot.defaultKickMessage = TextualPreferences.defaultKickMessage()
-		snapshot.irCopDefaultKillMessage = TextualPreferences.irCopDefaultKillMessage()
-		snapshot.banFormat = TextualPreferences.banFormat()
+		snapshot.removeAllFormatting = Preferences.Messages.removeAllFormatting.value
+		snapshot.showJoinLeave = Preferences.Messages.showJoinLeave.value
+		snapshot.displayServerMOTD = Preferences.Connection.displayServerMOTD.value
+		snapshot.replyToCTCPRequests = Preferences.Messages.replyToCTCPRequests.value
+		snapshot.masqueradeCTCPVersion = Preferences.Identity.ctcpVersionMasquerade.storedValue
+		snapshot.locationToSendNotices = Preferences.Commands.noticeDestination.value
+		snapshot.sendTypingNotifications = Preferences.Connection.sendTypingNotifications.value
+		snapshot.displayTypingNotifications = Preferences.Connection.displayTypingNotifications.value
+		snapshot.giveFocusOnMessageCommand = Preferences.Commands.giveFocusOnMessageCommand.value
+		snapshot.autoAddScrollbackMark = Preferences.Messages.autoAddScrollbackMark.value
+		snapshot.defaultKickMessage = Preferences.Commands.kickMessage.value
+		snapshot.irCopDefaultKillMessage = Preferences.Commands.irCopKillMessage.value
+		snapshot.banFormat = Preferences.Commands.banFormat.value
 
-		snapshot.amsgAllConnections = TextualPreferences.amsgAllConnections()
-		snapshot.awayAllConnections = TextualPreferences.awayAllConnections()
-		snapshot.nickAllConnections = TextualPreferences.nickAllConnections()
-		snapshot.clearAllConnections = TextualPreferences.clearAllConnections()
+		snapshot.amsgAllConnections = Preferences.Commands.amsgAllConnections.value
+		snapshot.awayAllConnections = Preferences.Commands.awayAllConnections.value
+		snapshot.nickAllConnections = Preferences.Commands.nickAllConnections.value
+		snapshot.clearAllConnections = Preferences.Commands.clearAllConnections.value
 
-		snapshot.displayPublicMessageCountOnDockBadge = TextualPreferences
-			.displayPublicMessageCountOnDockBadge()
-		snapshot.memberListSortFavorsServerStaff = TextualPreferences.memberListSortFavorsServerStaff()
-		snapshot.disableNicknameColorHashing = TextualPreferences.disableNicknameColorHashing()
-		snapshot.showInlineMedia = TextualPreferences.showInlineMedia()
-		snapshot.themeNicknameFormat = TextualPreferences.themeNicknameFormat()
-		snapshot.themeNicknameFormatDefault = TextualPreferences.themeNicknameFormatDefault()
-		snapshot.soundIsMuted = TextualPreferences.soundIsMuted()
+		snapshot.displayPublicMessageCountOnDockBadge = Preferences.Notifications
+			.publicMessageCountOnDockBadge
+			.value
+		snapshot.memberListSortFavorsServerStaff = Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue
+		snapshot.disableNicknameColorHashing = Preferences.Messages.disableNicknameColorHashing.detachedValue
+		snapshot.showInlineMedia = Preferences.Messages.showInlineMedia.detachedValue
+		snapshot.soundIsMuted = Preferences.Notifications.soundIsMuted.value
 
-		snapshot.highlightCurrentNickname = TextualPreferences.highlightCurrentNickname()
-		snapshot.highlightMatchingMethod = TextualPreferences.highlightMatchingMethod()
+		snapshot.highlightCurrentNickname = Preferences.Highlights.trackLocalNickname.value
+		snapshot.highlightMatchingMethod = Preferences.Highlights.matchingMethod.detachedValue
 		snapshot.highlightMatchKeywords = TextualPreferences.highlightMatchKeywords() ?? []
 		snapshot.highlightExcludeKeywords = TextualPreferences.highlightExcludeKeywords() ?? []
-		snapshot.logHighlights = TextualPreferences.logHighlights()
+		snapshot.logHighlights = Preferences.Logging.logHighlights.value
 
 		snapshot.logToDiskIsEnabled = TextualPreferences.logToDiskIsEnabled()
-		snapshot.developerModeEnabled = TextualPreferences.developerModeEnabled()
-		snapshot.fileTransferRequestReplyAction = TextualPreferences.fileTransferRequestReplyAction()
-		snapshot.fileTransferPortRangeStart = TextualPreferences.fileTransferPortRangeStart()
-		snapshot.fileTransferPortRangeEnd = TextualPreferences.fileTransferPortRangeEnd()
-		snapshot.fileTransferIPAddressInterfaceName = TextualPreferences.fileTransferIPAddressInterfaceName()
+		snapshot.developerModeEnabled = Preferences.Commands.developerMode.value
+		snapshot.fileTransferRequestReplyAction = Preferences.FileTransfers.requestReplyAction.value
+		snapshot.fileTransferPortRangeStart = Preferences.FileTransfers.portRangeStart.value
+		snapshot.fileTransferPortRangeEnd = Preferences.FileTransfers.portRangeEnd.value
+		snapshot.fileTransferIPAddressInterfaceName = Preferences.FileTransfers.ipAddressInterfaceName.storedValue
 
 		return snapshot
 	}

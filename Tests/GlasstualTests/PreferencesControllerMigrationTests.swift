@@ -35,7 +35,6 @@ struct PreferencesControllerMigrationTests {
 				.clamped(0, to: PreferencesValueValidation.scrollbackVisibleRange, allowingZero: true)
 				== 0
 		)
-		#expect(PreferencesValueValidation.clamped(1, to: PreferencesValueValidation.inlineMediaWidthRange) == 40)
 		#expect(
 			PreferencesValueValidation.clamped(70000, to: PreferencesValueValidation.fileTransferPortRange)
 				== 65535

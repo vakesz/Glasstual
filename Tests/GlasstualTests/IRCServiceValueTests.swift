@@ -60,61 +60,6 @@ struct SecureConnectionInformationTests {
 	}
 }
 
-struct InlineContentServicePreferencesTests {
-	private let sample = InlineContentServicePreferences(
-		maximumFilesize: 7,
-		scalingWidth: 640,
-		maximumHeight: 480,
-		limitToBasics: true,
-		limitBasicsToFiles: false,
-		limitNaughtyContent: true,
-		limitUnsafeContent: false,
-		checkEverything: true,
-		allowsCleartextHTTP: false
-	)
-
-	@Test
-	func survivesSecureCoding() throws {
-		let data = try NSKeyedArchiver.archivedData(withRootObject: sample, requiringSecureCoding: true)
-		let unarchived = try NSKeyedUnarchiver.unarchivedObject(
-			ofClass: InlineContentServicePreferences.self,
-			from: data
-		)
-		let decoded = try #require(unarchived)
-
-		#expect(decoded.maximumFilesize == 7)
-		#expect(decoded.scalingWidth == 640)
-		#expect(decoded.maximumHeight == 480)
-		#expect(decoded.limitToBasics)
-		#expect(decoded.limitBasicsToFiles == false)
-		#expect(decoded.limitNaughtyContent)
-		#expect(decoded.limitUnsafeContent == false)
-		#expect(decoded.checkEverything)
-		#expect(decoded.allowsCleartextHTTP == false)
-	}
-
-	/// The service reads these through `TextualPreferences`, so the domain has
-	/// to be keyed by the same names the app writes.
-	@Test
-	func producesARegistrationDomainKeyedByThePreferenceNames() {
-		let domain = sample.registrationDomain
-
-		#expect(domain.count == 9)
-		#expect(domain[Preferences.InlineMedia.maximumFilesize.name]?.integer == 7)
-		#expect(domain[Preferences.InlineMedia.scalingWidth.name]?.integer == 640)
-		#expect(domain[Preferences.InlineMedia.checkEverything.name]?.boolean == true)
-	}
-
-	/// The whole point of the type: it carries exactly the keys the service
-	/// needs, not the app's entire registration domain.
-	@Test
-	func coversEveryInlineMediaPreferenceAndNothingElse() {
-		let declared = Set(Preferences.InlineMedia.all.map(\.name))
-
-		#expect(Set(sample.registrationDomain.keys) == declared)
-	}
-}
-
 /// One notification name per event: a duplicate raw string means two
 /// declarations that can drift, and an inline literal means a name nobody can
 /// find by searching for the constant.

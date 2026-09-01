@@ -252,14 +252,6 @@ public nonisolated enum PathInfo { // nonisolated: value
 		applicationResourcesURL.appendingPathComponent("/Bundled Scripts/")
 	}
 
-	public static var bundledThemes: String {
-		bundledThemesURL.path
-	}
-
-	public static var bundledThemesURL: URL {
-		applicationResourcesURL.appendingPathComponent("/Bundled Styles/")
-	}
-
 	public static var customExtensions: String? {
 		customExtensionsURL?.path
 	}
@@ -292,21 +284,6 @@ public nonisolated enum PathInfo { // nonisolated: value
 
 	public static var customScriptsURL: URL? {
 		fileURL(forPath: customScripts)
-	}
-
-	public static var customThemes: String? {
-		customThemesURL?.path
-	}
-
-	public static var customThemesURL: URL? {
-		guard let sourceURL = groupContainerApplicationSupportURL else {
-			return nil
-		}
-
-		let baseURL = sourceURL.appendingPathComponent("/Styles/")
-		createDirectory(at: baseURL)
-
-		return baseURL
 	}
 
 	// MARK: - System Specific
@@ -474,7 +451,7 @@ public nonisolated enum PathInfo { // nonisolated: value
 
 	@MainActor
 	private static func warnUserAboutStaleTranscriptFolderURL() {
-		guard TextualPreferences.logToDisk() else {
+		guard Preferences.Logging.logToDisk.value else {
 			return
 		}
 

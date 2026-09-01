@@ -53,9 +53,7 @@ struct TVCMemberListSectionTests {
 		memberList.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("member")))
 		memberList.configure()
 
-		let controller = IRCChannelMemberListController()
-		controller.setValue(memberList, forKey: "tableView")
-		memberList.setValue(controller, forKey: "contentController")
+		let controller = memberList.contentController!
 		controller.replaceContents([])
 
 		self.client = client
@@ -261,10 +259,9 @@ struct TVCMemberListSectionTests {
 	}
 
 	@Test("A nickname is drawn on one line and truncated at the tail")
-	func memberCellUsesSingleLineTailTruncation() {
+	func memberCellUsesSingleLineTailTruncation() throws {
 		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
-		let nicknameField = NSTextField(labelWithString: "")
-		cell.setValue(nicknameField, forKey: "cellTextField")
+		let nicknameField = try #require(cell.textField)
 		cell.configure()
 
 		#expect(nicknameField.usesSingleLineMode)
@@ -273,12 +270,12 @@ struct TVCMemberListSectionTests {
 	}
 
 	@Test("An unused status image collapses to no width at all")
-	func memberCellCollapsesUnusedStatusImage() {
+	func memberCellCollapsesUnusedStatusImage() throws {
 		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
-		let statusImageView = NSImageView()
-		let statusWidthConstraint = statusImageView.widthAnchor.constraint(equalToConstant: 16)
-		cell.setValue(statusImageView, forKey: "statusImageView")
-		cell.setValue(statusWidthConstraint, forKey: "statusImageWidthConstraint")
+		let statusImageView = try #require(cell.subviews.compactMap { $0 as? NSImageView }.last)
+		let statusWidthConstraint = try #require(
+			statusImageView.constraints.first { $0.firstAttribute == .width }
+		)
 
 		cell.setStatusImageVisible(false)
 

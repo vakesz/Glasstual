@@ -120,7 +120,7 @@ public final class InternetAddressLookup: NSObject {
 	}
 
 	private var addressSourceURL: URL {
-		if TextualPreferences.fileTransferIPAddressDetectionMethod() == .routerAndThirdParty {
+		if Preferences.FileTransfers.ipAddressDetectionMethod.value == .routerAndThirdParty {
 			return Self.thirdPartySourceURLs.randomElement()!
 		}
 

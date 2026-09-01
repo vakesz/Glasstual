@@ -81,8 +81,6 @@ public enum TXMenuChannelViewAction: Int, CaseIterable {
 	case reply = 0
 	case react = 1
 	case reactWithOtherEmoji = 2
-	case copyLogAsHTML = 3
-	case openWebInspector = 4
 	case markScrollback = 5
 	case goToScrollbackMarker = 6
 	case clearScrollback = 7

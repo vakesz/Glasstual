@@ -110,22 +110,16 @@ struct NicknameColorOverrideStorageTests {
 		#expect(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: key) == nil)
 	}
 
-	/// The pair used to be a return value plus an `ObjCBool` out-parameter.
-	@Test("The colour reports whether it came from an override")
-	func colorStyleReportsOverride() throws {
+	@Test("A pinned colour is used for the nickname")
+	func pinnedColorIsUsed() throws {
 		let key = uniqueKey()
 		defer { clear(key) }
-
-		let generated = UserNicknameColorStyleGenerator.colorStyle(for: key)
-		#expect(generated.isOverride == false)
-		#expect(generated.style.hasPrefix("hsl("))
 
 		let color = try #require(NSColor.textual_color(hexadecimalValue: "#2659BF"))
 		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
 
-		let pinned = UserNicknameColorStyleGenerator.colorStyle(for: key)
-		#expect(pinned.isOverride)
-		#expect(pinned.style == color.textualHexadecimalValue)
+		let pinned = UserNicknameColorStyleGenerator.color(for: key)
+		#expect(pinned.textualHexadecimalValue == color.textualHexadecimalValue)
 	}
 
 	@Test("Lookup is case-insensitive on the nickname")
@@ -136,6 +130,9 @@ struct NicknameColorOverrideStorageTests {
 		let color = try #require(NSColor.textual_color(hexadecimalValue: "#2659BF"))
 		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(color, forKey: key)
 
-		#expect(UserNicknameColorStyleGenerator.colorStyle(for: key.uppercased()).isOverride)
+		#expect(
+			UserNicknameColorStyleGenerator.color(for: key.uppercased()).textualHexadecimalValue ==
+				color.textualHexadecimalValue
+		)
 	}
 }

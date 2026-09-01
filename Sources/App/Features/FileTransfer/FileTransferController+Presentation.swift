@@ -39,12 +39,8 @@
 import Foundation
 
 public extension TDCFileTransferDialogTransferController {
-	func updateClearButton() {
-		transferDialog.updateClearButton()
-	}
-
 	func reloadStatusInformation() {
-		transferTableCell?.reloadStatusInformation()
+		transferDialog.model.refreshPresentation()
 	}
 
 	var isActingAsServer: Bool {

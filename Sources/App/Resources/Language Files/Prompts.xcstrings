@@ -61,30 +61,6 @@
         }
       }
     },
-    "are-you-sure-you-wish": {
-      "comment": "Legacy key: 82q-zi.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you sure you wish to enable inline media?"
-          }
-        }
-      }
-    },
-    "caches-custom-addons-custom-styles-preferences": {
-      "comment": "Legacy key: qy4-5o.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Caches, custom addons, custom styles, preferences, and scrollback history.\n\nWould you like to clear up disk space by removing this content from the old location?"
-          }
-        }
-      }
-    },
     "cancel": {
       "comment": "Legacy key: qso-2g.",
       "extractionState": "manual",
@@ -117,18 +93,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "\n\nThe certificate was not trusted by the system: %@"
-          }
-        }
-      }
-    },
-    "choose-different-style": {
-      "comment": "Action title for choosing another style. Consolidates the identical legacy c4z-2b entry. Legacy key: 2a3-5s.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose Different Style"
           }
         }
       }
@@ -229,18 +193,6 @@
         }
       }
     },
-    "disable-webkit2-or-upgrade": {
-      "comment": "Legacy key: kig-m1.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disable WebKit2 or upgrade to a newer version of macOS."
-          }
-        }
-      }
-    },
     "do-not-show-this-message-again": {
       "comment": "Legacy key: 68u-z9.",
       "extractionState": "manual",
@@ -261,18 +213,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Do you want to delete the selection?"
-          }
-        }
-      }
-    },
-    "do-you-want-to-keep-glasstuals": {
-      "comment": "Legacy key: 193-6o.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you want to keep Glasstual's light appearance or switch to dark mode?"
           }
         }
       }
@@ -361,18 +301,6 @@
         }
       }
     },
-    "glasstual-has-copied-the-following-content": {
-      "comment": "Legacy key: ios-na.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstual has copied the following content to a new location your Mac:"
-          }
-        }
-      }
-    },
     "glasstual-is-unable-to-access": {
       "comment": "Legacy key: b7o-v4.",
       "extractionState": "manual",
@@ -421,42 +349,6 @@
         }
       }
     },
-    "i-would-like-to-remove": {
-      "comment": "Legacy key: q3t-45.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I would like to remove the old content"
-          }
-        }
-      }
-    },
-    "inline-media-does-not-use": {
-      "comment": "Legacy key: vcq-sz.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inline media does not use the proxy you may have configured for connecting to IRC. Your IP address will be leaked without configuring a system-wide proxy. If you wish to configure a proxy before continuing, click the “Open System Settings” button."
-          }
-        }
-      }
-    },
-    "inspect-element-feature-of-webkit2-cannot": {
-      "comment": "Legacy key: ujw-64.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The “Inspect Element” feature of WebKit2 cannot be accessed on this version of macOS."
-          }
-        }
-      }
-    },
     "intentionally-empty-informative-text": {
       "comment": "Intentionally empty informative text for the document-open confirmation. Legacy key: 6tj-yp.",
       "extractionState": "manual",
@@ -489,18 +381,6 @@
           "stringUnit": {
             "state": "translated",
             "value": ""
-          }
-        }
-      }
-    },
-    "keep-it-light": {
-      "comment": "Legacy key: hf0-w3.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep It Light"
           }
         }
       }
@@ -609,30 +489,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No logs were found"
-          }
-        }
-      }
-    },
-    "open-system-settings": {
-      "comment": "Legacy key: x3e-ur.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open System Settings"
-          }
-        }
-      }
-    },
-    "paint-it-black": {
-      "comment": "Legacy key: hv0-79.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paint It Black"
           }
         }
       }
@@ -889,54 +745,6 @@
         }
       }
     },
-    "some-features-will-not-work-correctly": {
-      "comment": "Legacy key: 76t-pn.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Some features will not work correctly with this style selected."
-          }
-        }
-      }
-    },
-    "style-named-has-been-modified": {
-      "comment": "Legacy key: fjw-hj.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The style named “%@” has been modified in such a way that it can no longer be used"
-          }
-        }
-      }
-    },
-    "style-named-is-not-designed": {
-      "comment": "Legacy key: py0-cr.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The style named “%@” is not designed to work with this version of Glasstual"
-          }
-        }
-      }
-    },
-    "style-named-wants-to-enable-dark": {
-      "comment": "Legacy key: ezn-rm.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The style named “%@” wants to enable dark mode but styles are no longer allowed to change that preference"
-          }
-        }
-      }
-    },
     "there-is-no-undo-and-all": {
       "comment": "Legacy key: 516-ms.",
       "extractionState": "manual",
@@ -997,18 +805,6 @@
         }
       }
     },
-    "this-usually-occurs-when-one": {
-      "comment": "Legacy key: 3wd-gj.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This usually occurs when one or more critical files have been moved or deleted."
-          }
-        }
-      }
-    },
     "to-install-this-script-save": {
       "comment": "Legacy key: 0bj-ic.",
       "extractionState": "manual",
@@ -1017,18 +813,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "To install this script, save it inside the folder:\n[home folder] ➜ Library ➜ Application Scripts ➜ %@\n\nCreate this folder if it does not exist."
-          }
-        }
-      }
-    },
-    "turn": {
-      "comment": "Legacy key: xkj-nw.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turn On"
           }
         }
       }

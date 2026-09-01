@@ -63,9 +63,8 @@ public nonisolated enum DCCChatEvent: Sendable { // nonisolated: value
 /// as long as the peer stays, so there is no length to count down and no
 /// acknowledgement protocol — the session ends when one side closes.
 ///
-/// Nothing is shared: the actor creates its own `NWConnection` or `NWListener`
-/// and reports through ``events``. Network.framework's callbacks never touch
-/// actor state — they resume a continuation or yield into an `AsyncStream`.
+/// Nothing is shared: the actor creates its own typed Network.framework
+/// connection or listener and reports through ``events``.
 public actor DCCChatConnection {
 	/// How the two ends find each other.
 	public nonisolated enum Endpoint: Sendable { // nonisolated: value
@@ -101,12 +100,12 @@ public actor DCCChatConnection {
 	private let eventContinuation: AsyncStream<DCCChatEvent>.Continuation
 
 	private var runTask: Task<Void, Never>?
-	private var connection: NWConnection?
-	private var listener: NWListener?
-	private var incomingContinuation: AsyncStream<NWConnection>.Continuation?
+	private var connection: NetworkConnection<TCP>?
+	private var listener: NetworkListener<TCP>?
+	private var listenerTask: Task<Void, Never>?
 	/// Set once the connection is carrying bytes, which is when ``send(_:)``
 	/// has somewhere to write.
-	private var readyConnection: NWConnection?
+	private var readyConnection: NetworkConnection<TCP>?
 	private var lineBuffer = Data()
 	private var isCancelled = false
 	private var hasFinished = false
@@ -173,7 +172,7 @@ public actor DCCChatConnection {
 		do {
 			let connection = try await establishConnection()
 			readyConnection = connection
-			emit(.connected(peerAddress: DCCTransfer.host(of: connection.endpoint)))
+			emit(.connected(peerAddress: connection.remoteEndpoint.flatMap(DCCTransfer.host(of:))))
 
 			try await readLines(over: connection)
 
@@ -212,14 +211,11 @@ public actor DCCChatConnection {
 	}
 
 	private func tearDown() {
-		incomingContinuation?.finish()
-		incomingContinuation = nil
-
-		listener?.cancel()
+		listenerTask?.cancel()
+		listenerTask = nil
 		listener = nil
 
 		readyConnection = nil
-		connection?.cancel()
 		connection = nil
 	}
 
@@ -233,7 +229,7 @@ public actor DCCChatConnection {
 
 	// MARK: - Establishing the connection
 
-	private func establishConnection() async throws -> NWConnection {
+	private func establishConnection() async throws -> NetworkConnection<TCP> {
 		switch configuration.endpoint {
 		case let .connect(host, port, interfaceName, timeout):
 			try await connect(toHost: host, port: port, interfaceName: interfaceName, timeout: timeout)
@@ -247,42 +243,44 @@ public actor DCCChatConnection {
 		port: UInt16,
 		interfaceName: String?,
 		timeout: Duration?
-	) async throws -> NWConnection {
+	) async throws -> NetworkConnection<TCP> {
 		guard host.isEmpty == false, let networkPort = NWEndpoint.Port(rawValue: port) else {
 			throw DCCTransferError.badParameter
 		}
 
 		let parameters = DCCTransfer.parameters(interfaceName: interfaceName, connectTimeout: timeout)
-		let connection = NWConnection(host: NWEndpoint.Host(host), port: networkPort, using: parameters)
+		let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: networkPort)
+		let connection = NetworkConnection<TCP>(
+			to: endpoint,
+			using: .parameters(initialParameters: parameters) { TCP() }
+		)
 		self.connection = connection
 
 		try await DCCTransfer.withTimeout(timeout, failingWith: .connectTimeout) {
-			try await DCCTransfer.start(connection)
+			/* Typed Network connections establish on first I/O. Empty data puts no
+			 bytes on the chat stream but makes the connected event truthful. */
+			try await connection.send(Data())
 		}
 
 		return connection
 	}
 
-	private func acceptConnection(portRange: ClosedRange<UInt16>) async throws -> NWConnection {
-		let (incoming, continuation) = AsyncStream<NWConnection>.makeStream()
-		incomingContinuation = continuation
+	private func acceptConnection(portRange: ClosedRange<UInt16>) async throws -> NetworkConnection<TCP> {
+		let listening = try await DCCTransfer.startListener(portRange: portRange)
+		listener = listening.listener
+		listenerTask = listening.task
 
-		let listener = try Self.startListener(portRange: portRange, incoming: continuation)
-		self.listener = listener
+		emit(.listening(port: listening.port))
 
-		try await emit(.listening(port: DCCTransfer.start(listener)))
-
-		for await candidate in incoming {
+		for await candidate in listening.connections {
 			/* One offer serves one conversation. Leaving the port open past the
 			 first accept only gives somebody else a window to reach it. */
-			listener.newConnectionHandler = nil
-			listener.cancel()
-			self.listener = nil
-			incomingContinuation = nil
-			continuation.finish()
+			listenerTask?.cancel()
+			listenerTask = nil
+			listener = nil
 
 			connection = candidate
-			try await DCCTransfer.start(candidate)
+			try await candidate.send(Data())
 
 			return candidate
 		}
@@ -290,36 +288,9 @@ public actor DCCChatConnection {
 		throw DCCTransferError.closedByPeer
 	}
 
-	/// Binds the first port in the range that will take a listener.
-	///
-	/// `newConnectionHandler` is installed before the listener starts because
-	/// Network.framework refuses to start one without it.
-	private nonisolated static func startListener( // nonisolated: pure
-		portRange: ClosedRange<UInt16>,
-		incoming: AsyncStream<NWConnection>.Continuation
-	) throws -> NWListener {
-		guard portRange.lowerBound > 0 else {
-			throw DCCTransferError.noOpenPort
-		}
-
-		for port in portRange {
-			guard let networkPort = NWEndpoint.Port(rawValue: port),
-			      let listener = try? NWListener(using: .tcp, on: networkPort)
-			else {
-				continue
-			}
-
-			listener.newConnectionHandler = { incoming.yield($0) }
-
-			return listener
-		}
-
-		throw DCCTransferError.noOpenPort
-	}
-
 	// MARK: - Reading
 
-	private func readLines(over connection: NWConnection) async throws {
+	private func readLines(over connection: NetworkConnection<TCP>) async throws {
 		while true {
 			try Task.checkCancellation()
 

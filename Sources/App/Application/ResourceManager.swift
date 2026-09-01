@@ -52,7 +52,8 @@ public final nonisolated class ResourceManager: NSObject { // nonisolated: value
 		}
 	}
 
-	public static func copyResourcesToApplicationSupportFolder() {
+	@concurrent
+	public static func copyResourcesToApplicationSupportFolder() async {
 		guard let sourcePath = PathInfo.customScripts,
 		      let destinationRoot = PathInfo.groupContainerApplicationSupport
 		else {

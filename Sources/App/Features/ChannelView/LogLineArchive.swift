@@ -27,7 +27,6 @@ private nonisolated enum LogLineArchiveKey { // nonisolated: value
 	static let nickname = "nickname"
 	static let reactions = "reactions"
 	static let receivedAt = "receivedAt"
-	static let rendererAttributes = "rendererAttributes"
 	static let replyToMessageIdentifier = "replyToMessageIdentifier"
 	static let sessionIdentifier = "sessionIdentifier"
 	static let uniqueIdentifier = "uniqueIdentifier"
@@ -40,10 +39,7 @@ private nonisolated enum LogLineArchiveKey { // nonisolated: value
  discarded on the far side of it. It answers to `TVCLogLine` because that is the
  class name every archive on disk records as its root object, and the key names
  and encoding order are the ones those archives were written with.
-
- The untyped `rendererAttributes` dictionary is still read and written, but only
- the one key the app ever put in it survives into the line: see
- ``LogLine/doNotEscapeBody``. */
+ */
 @objc(TVCLogLine)
 public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendable { // nonisolated: value
 	/// The values one archive carried, before defaults are applied.
@@ -51,7 +47,6 @@ public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendabl
 		var receivedAt = Date()
 		var excludeKeywords: [String]?
 		var highlightKeywords: [String]?
-		var doNotEscapeBody = false
 		var isEncrypted = false
 		var isFirstForDay = false
 		var command = LogLineFormat.defaultCommand
@@ -90,13 +85,6 @@ public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendabl
 			of: stringArrayClasses,
 			forKey: LogLineArchiveKey.highlightKeywords
 		) as? [String]
-
-		let rendererAttributes = coder.textual_decodeDictionary(
-			forKey: LogLineArchiveKey.rendererAttributes
-		)
-		decoded.doNotEscapeBody = (
-			rendererAttributes?[String.doNotEscapeBodyAttribute] as? NSNumber
-		)?.boolValue == true
 
 		decoded.isEncrypted = coder.decodeBool(forKey: LogLineArchiveKey.isEncrypted)
 		decoded.isFirstForDay = coder.decodeBool(forKey: LogLineArchiveKey.isFirstForDay)
@@ -151,12 +139,6 @@ public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendabl
 		}
 		if let highlightKeywords = line.highlightKeywords {
 			coder.encode(highlightKeywords, forKey: LogLineArchiveKey.highlightKeywords)
-		}
-		if line.doNotEscapeBody {
-			coder.encode(
-				[String.doNotEscapeBodyAttribute: true],
-				forKey: LogLineArchiveKey.rendererAttributes
-			)
 		}
 		if let messageIdentifier = line.messageIdentifier {
 			coder.encode(messageIdentifier as NSString, forKey: LogLineArchiveKey.messageIdentifier)

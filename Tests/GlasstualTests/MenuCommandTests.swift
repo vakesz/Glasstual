@@ -17,27 +17,20 @@ import Testing
 @Suite("Menu command vocabulary")
 @MainActor
 struct MenuCommandTests {
-	/// Every tag `TXCMainMenu.xib` assigns has to resolve to a `MenuCommand`:
-	/// the nib's tags *are* the enum's raw values. An item added to the nib
-	/// without a matching case fails here rather than silently falling through
-	/// to the default validator at runtime.
-	///
-	/// The nib is read from the source tree rather than from the loaded menu
-	/// bar, because AppKit injects its own tagged items (Writing Tools,
-	/// Dictation) into the Edit menu at launch.
-	@Test("Every tag in the main menu nib resolves to a command")
-	func mainMenuTagsAreKnownCommands() throws {
-		let tagged = try Self.mainMenuNibTags()
-		#expect(tagged.isEmpty == false, "TXCMainMenu.xib declares no tags")
-
-		let unknown = tagged.filter { MenuCommand(rawValue: $0.tag) == nil }
-		#expect(unknown.isEmpty, "Unmapped menu tags: \(unknown)")
+	@Test("The main menu is built in code without command tags")
+	func mainMenuIsProgrammatic() throws {
+		let controller = TXMenuController()
+		let mainMenu = try #require(NSApp.mainMenu)
+		#expect(mainMenu.items.allSatisfy { $0.tag == 0 })
+		#expect(controller.mainMenuServerMenuItem?.command == .serverMenu)
+		#expect(Bundle.main.path(forResource: "TXCMainMenu", ofType: "nib") == nil)
 	}
 
-	@Test("The nib carries the commands the application's own code looks up")
+	@Test("The programmatic graph carries the commands the application looks up")
 	func mainMenuContainsExpectedCommands() throws {
-		let found = try Set(Self.mainMenuNibTags().compactMap { MenuCommand(rawValue: $0.tag) })
-
+		let controller = TXMenuController()
+		let menu = try #require(NSApp.mainMenu)
+		let menus = [menu, controller.mainMenuChannelMenu, controller.mainMenuQueryMenu]
 		// A sample from each validation group, so a renumbered nib is caught.
 		let expected: [MenuCommand] = [
 			.applicationMenu, .settings, .closeWindow, .paste, .markAllRead,
@@ -45,7 +38,7 @@ struct MenuCommandTests {
 			.mainWindow, .highlightList, .developerMode,
 		]
 		for command in expected {
-			#expect(found.contains(command), "\(command) is missing from the main menu nib")
+			#expect(menus.contains { $0.item(for: command) != nil }, "\(command) is missing from the menu graph")
 		}
 	}
 
@@ -166,14 +159,14 @@ struct MenuCommandTests {
 		)
 	}
 
-	@Test("Setting a command on a menu item writes the nib's tag")
+	@Test("Setting a command uses an identifier and leaves AppKit's tag free")
 	func menuItemCommandAccessor() {
 		let item = NSMenuItem()
 		item.command = .webReply
-		#expect(item.tag == 1211)
+		#expect(item.tag == 0)
 		#expect(item.command == .webReply)
 
-		item.tag = -1
+		item.command = nil
 		#expect(item.command == nil)
 	}
 
@@ -182,22 +175,5 @@ struct MenuCommandTests {
 		#expect(TextFormatterCommand.monospace.rawValue == 102)
 		#expect(MenuCommand.settings.rawValue == 102)
 		#expect(Set(TextFormatterCommand.allCases.map(\.rawValue)).count == TextFormatterCommand.allCases.count)
-	}
-
-	private static func mainMenuNibTags() throws -> [(tag: Int, title: String)] {
-		let url = URL(fileURLWithPath: #filePath)
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.appending(path: "Sources/App/Resources/User Interface/en.lproj/TXCMainMenu.xib")
-		let document = try XMLDocument(contentsOf: url)
-
-		return try document.nodes(forXPath: "//menuItem[@tag]").compactMap { node in
-			guard let element = node as? XMLElement,
-			      let tag = element.attribute(forName: "tag")?.stringValue.flatMap(Int.init)
-			else { return nil }
-			let title = element.attribute(forName: "title")?.stringValue ?? "<separator>"
-			return (tag, title)
-		}
 	}
 }

@@ -37,7 +37,7 @@
 
 import Foundation
 
-public let connectionErrorDomain = "Glasstual.ConnectionError"
+public nonisolated let connectionErrorDomain = "Glasstual.ConnectionError" // nonisolated: let
 
 /// Error codes exchanged across the remote-connection XPC boundary.
 ///

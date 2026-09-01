@@ -41,89 +41,99 @@ import Foundation
 import Network
 import os
 
-/** Every member here is a pure function of `Sendable` arguments: Network's own
- types are `Sendable`, and the callbacks these install only resume a
- continuation or yield into an `AsyncStream`. None of them read or write actor
- state, which is why they can be `nonisolated` and why the actor can call them
- without handing any of its own state across. */
+/** Every member here is a pure function of `Sendable` arguments. None reads or
+ writes actor state, which is why the actor can call them without handing any
+ of its own state across. */
 extension DCCTransfer {
-	// MARK: - Starting
+	// MARK: - Listening
 
-	/// Starts `connection` and returns once it is ready to carry bytes.
-	nonisolated static func start(_ connection: NWConnection) async throws { // nonisolated: pure
-		let states = AsyncStream<NWConnection.State> { continuation in
-			connection.stateUpdateHandler = { state in
-				continuation.yield(state)
-
-				switch state {
-				case .cancelled, .failed:
-					continuation.finish()
-				default:
-					break
-				}
-			}
-		}
-
-		connection.start(queue: callbackQueue)
-
-		defer { connection.stateUpdateHandler = nil }
-
-		for await state in states {
-			switch state {
-			case .ready:
-				return
-			case let .failed(error):
-				throw DCCTransferError.network(error.localizedDescription)
-			case let .waiting(error):
-				logger.debug("DCC connection is waiting: \(error.localizedDescription, privacy: .public)")
-			case .cancelled:
-				throw DCCTransferError.closedByPeer
-			case .setup, .preparing:
-				break
-			@unknown default:
-				break
-			}
-		}
-
-		throw DCCTransferError.closedByPeer
+	nonisolated struct ListeningSession: Sendable { // nonisolated: value
+		let listener: NetworkListener<TCP>
+		let port: UInt16
+		let connections: AsyncStream<NetworkConnection<TCP>>
+		let task: Task<Void, Never>
 	}
 
-	/// Starts `listener` and returns the port it bound.
-	nonisolated static func start(_ listener: NWListener) async throws -> UInt16 { // nonisolated: pure
-		let states = AsyncStream<NWListener.State> { continuation in
-			listener.stateUpdateHandler = { state in
-				continuation.yield(state)
-
-				switch state {
-				case .cancelled, .failed:
-					continuation.finish()
-				default:
-					break
-				}
-			}
+	/// Starts the first listener in `portRange` that actually reaches the
+	/// ready state.
+	///
+	/// Constructing a `NetworkListener` does not bind its port. The bind happens
+	/// in `run`, so returning immediately after construction makes every caller
+	/// believe the range's first port is available even when another listener
+	/// already owns it. This helper owns that asynchronous startup boundary and
+	/// returns only after Network.framework confirms the selected port.
+	nonisolated static func startListener( // nonisolated: pure
+		portRange: ClosedRange<UInt16>
+	) async throws -> ListeningSession {
+		guard portRange.lowerBound > 0 else {
+			throw DCCTransferError.noOpenPort
 		}
 
-		listener.start(queue: callbackQueue)
+		for port in portRange {
+			try Task.checkCancellation()
 
-		defer { listener.stateUpdateHandler = nil }
+			guard let networkPort = NWEndpoint.Port(rawValue: port) else {
+				continue
+			}
 
-		for await state in states {
-			switch state {
-			case .ready:
-				guard let port = listener.port?.rawValue else {
-					throw DCCTransferError.noOpenPort
+			guard let listener = try? NetworkListener<TCP>(
+				using: .parameters { TCP() }.localPort(networkPort)
+			) else {
+				continue
+			}
+
+			let (connections, connectionContinuation) = AsyncStream<NetworkConnection<TCP>>.makeStream()
+			let (readiness, readinessContinuation) = AsyncStream<Bool>.makeStream()
+
+			listener.onStateUpdate { _, state in
+				switch state {
+				case .ready:
+					readinessContinuation.yield(true)
+					readinessContinuation.finish()
+				case .waiting, .failed, .cancelled:
+					readinessContinuation.yield(false)
+					readinessContinuation.finish()
+				case .setup:
+					break
+				@unknown default:
+					readinessContinuation.yield(false)
+					readinessContinuation.finish()
+				}
+			}
+
+			let task = Task {
+				defer {
+					connectionContinuation.finish()
+					readinessContinuation.finish()
 				}
 
-				return port
-			case let .failed(error):
-				throw DCCTransferError.network(error.localizedDescription)
-			case .cancelled:
-				throw DCCTransferError.noOpenPort
-			case .setup, .waiting:
-				break
-			@unknown default:
+				do {
+					try await listener.run { connection in
+						connectionContinuation.yield(connection)
+					}
+				} catch {
+					readinessContinuation.yield(false)
+				}
+			}
+
+			var isReady = false
+
+			for await result in readiness {
+				isReady = result
 				break
 			}
+
+			guard isReady else {
+				task.cancel()
+				continue
+			}
+
+			return ListeningSession(
+				listener: listener,
+				port: listener.port?.rawValue ?? port,
+				connections: connections,
+				task: task
+			)
 		}
 
 		throw DCCTransferError.noOpenPort
@@ -131,32 +141,20 @@ extension DCCTransfer {
 
 	// MARK: - Reading and writing
 
-	nonisolated static func send(_ data: Data, over connection: NWConnection) async throws { // nonisolated: pure
-		try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-			connection.send(content: data, completion: .contentProcessed { error in
-				if let error {
-					continuation.resume(throwing: DCCTransferError.network(error.localizedDescription))
-				} else {
-					continuation.resume()
-				}
-			})
-		}
+	nonisolated static func send( // nonisolated: pure
+		_ data: Data,
+		over connection: NetworkConnection<TCP>
+	) async throws { // nonisolated: pure
+		try await connection.send(data)
 	}
 
 	/// Reads whatever the peer has sent, and reports whether the peer is done.
-	nonisolated static func receive(on connection: NWConnection) async throws -> (Data?, Bool) { // nonisolated: pure
-		try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(Data?, Bool), Error>) in
-			connection.receive(
-				minimumIncompleteLength: 1,
-				maximumLength: bufferSize
-			) { content, _, isComplete, error in
-				if let error {
-					continuation.resume(throwing: DCCTransferError.network(error.localizedDescription))
-				} else {
-					continuation.resume(returning: (content, isComplete))
-				}
-			}
-		}
+	nonisolated static func receive( // nonisolated: pure
+		on connection: NetworkConnection<TCP>
+	) async throws -> (Data?, Bool) { // nonisolated: pure
+		let message = try await connection.receive(atLeast: 1, atMost: bufferSize)
+
+		return (message.content, message.metadata.endOfStream)
 	}
 
 	/// Reads and discards whatever the peer sends until it closes.
@@ -165,24 +163,21 @@ extension DCCTransfer {
 	/// for their contents, but leaving them unread would eventually fill the
 	/// receive buffer and stall the peer, and the close they end with is the
 	/// sender's proof that the whole file landed.
-	nonisolated static func drainUntilPeerCloses(_ connection: NWConnection) async { // nonisolated: pure
-		await withTaskCancellationHandler {
-			while Task.isCancelled == false {
-				do {
-					let (_, isComplete) = try await receive(on: connection)
+	nonisolated static func drainUntilPeerCloses( // nonisolated: pure
+		_ connection: NetworkConnection<TCP>
+	) async { // nonisolated: pure
+		while Task.isCancelled == false {
+			do {
+				let (_, isComplete) = try await receive(on: connection)
 
-					if isComplete {
-						return
-					}
-				} catch {
-					/* A peer that resets instead of closing has still stopped
-					 talking, which is all this needs to know. */
+				if isComplete {
 					return
 				}
+			} catch {
+				/* A peer that resets instead of closing has still stopped
+				 talking, which is all this needs to know. */
+				return
 			}
-		} onCancel: {
-			/* Nothing else would resume the pending receive. */
-			connection.cancel()
 		}
 	}
 
@@ -247,14 +242,14 @@ extension DCCTransfer {
 	/// `DCC SEND` we listen and the remote end announces itself by connecting,
 	/// so there is nothing to compare against and the connection is allowed.
 	nonisolated static func connection( // nonisolated: pure
-		_ connection: NWConnection,
+		_ connection: NetworkConnection<TCP>,
 		isFrom expectedPeerAddress: String
 	) -> Bool {
 		guard expectedPeerAddress.isEmpty == false else {
 			return true
 		}
 
-		guard let peerAddress = host(of: connection.endpoint) else {
+		guard let peerAddress = connection.remoteEndpoint.flatMap(host(of:)) else {
 			return false
 		}
 

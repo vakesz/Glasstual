@@ -103,23 +103,24 @@ struct TLONotificationControllerMigrationTests {
 		let controller = notificationController()
 		let eventType = TXNotificationType.highlight
 
-		#expect(controller.sound(forEvent: eventType, in: nil) == TextualPreferences.sound(for: eventType))
-		#expect(controller.speakEvent(eventType, in: nil) == TextualPreferences.speak(eventType))
+		#expect(controller.sound(forEvent: eventType, in: nil) == Preferences.Notifications.sound(eventType)
+			.storedValue)
+		#expect(controller.speakEvent(eventType, in: nil) == Preferences.Notifications.flag(eventType, .speak).value)
 		#expect(
 			controller.notificationEnabled(forEvent: eventType, in: nil)
-				== TextualPreferences.notificationEnabled(for: eventType)
+				== Preferences.Notifications.flag(eventType, .enabled).value
 		)
 		#expect(
 			controller.disabledWhileAway(forEvent: eventType, in: nil)
-				== TextualPreferences.disabledWhileAway(for: eventType)
+				== Preferences.Notifications.flag(eventType, .disabledWhileAway).value
 		)
 		#expect(
 			controller.bounceDockIcon(forEvent: eventType, in: nil)
-				== TextualPreferences.bounceDockIcon(for: eventType)
+				== Preferences.Notifications.flag(eventType, .bounceDockIcon).value
 		)
 		#expect(
 			controller.bounceDockIconRepeatedly(forEvent: eventType, in: nil)
-				== TextualPreferences.bounceDockIconRepeatedly(for: eventType)
+				== Preferences.Notifications.flag(eventType, .bounceDockIconRepeatedly).value
 		)
 	}
 

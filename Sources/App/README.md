@@ -10,11 +10,11 @@ owner.
 | --- | --- |
 | `Application/` | Process lifecycle and app-wide services: `main.swift`, `Application`, `ApplicationController`, `SharedApplication`/`AppController`, `WindowController`, the appearance and path/resource managers, the file logger, the dock icon and network reachability. |
 | `Protocol/` | The IRC protocol engine, split by concern (`Client/`, `Inbound/`, `Outbound/`, `Negotiation/`, `Modes/`, `Presence/`, …). No AppKit window or sheet lives here. |
-| `Preferences/` | The preference store (`Keys/`), themes (`Themes/`) and the Preferences window (`Dialog/`). |
+| `Preferences/` | The preference store (`Keys/`), native transcript theme model (`Themes/`) and the Preferences window (`Dialog/`). |
 | `Features/<Feature>/` | One directory per user-facing feature. |
 | `UI/` | Shared AppKit building blocks with no feature owner: sheet and window base classes, alerts, prompts, popovers, table and field subclasses, appearance helpers. |
 | `Localization/` | Strings with no single feature owner (`ApplicationStrings`, `PromptStrings`, `AccessibilityStrings`) plus formatting helpers. |
-| `Resources/` | Nibs, asset catalogs, property lists, styles and scripts. Unchanged by this reorganisation. |
+| `Resources/` | Nibs, asset catalogs, property lists and localized string catalogs. |
 
 ## Features
 
@@ -24,7 +24,7 @@ owner.
 | `AddressBook` | Ignore and notify entries for a server. |
 | `ChannelProperties` | The channel properties sheet, its ban/access lists, invites and validation. |
 | `ChannelSpotlight` | The channel spotlight search panel. |
-| `ChannelView` | The message log: log controllers, renderer, WebKit view and scheme handler, link parsing, topic and mode editing. The log document has one origin and no file-system read access — see the cross-origin note in `AGENTS.md` before changing what a theme can reach. |
+| `ChannelView` | The native AppKit/TextKit transcript: log controllers, semantic renderer, bounded inline-image loading, link handling, topic and mode editing. |
 | `FileTransfer` | The file transfer dialog, its transfer controllers and DCC sockets. |
 | `MainWindow` | The main window, its text input view, the menu bar action coordinator and input handling (history, key events, nickname completion). |
 | `MemberList` | The channel member list, its cells, the user info popover and nickname colouring. |
@@ -41,9 +41,10 @@ owner.
 
 - A Swift file is named after its primary type. Files whose primary type still
   carries a legacy Objective-C prefix (`TXMenuController`, `TDCAlert`,
-  `TVCLogScriptEventSink`, `TXMenuAction`) keep that name until the type itself
-  is renamed. `@objc` runtime names are unchanged everywhere — nibs and the
-  plugin API depend on them.
+  `TXMenuAction`) keep that name until the type itself
+  is renamed. Preserve an `@objc` runtime name only where an archive, KVO or
+  the plugin API depends on it. The transcript has no runtime browser or script
+  boundary; do not add WebKit, HTML, CSS, JavaScript or template callbacks to it.
 - Localized strings that belong to exactly one feature live in that feature's
   directory as `<Feature>Strings.swift`. Strings used by several features live
   in `Localization/`.
@@ -86,12 +87,9 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/AppKitSupport/TDCChannelPropertiesSheet.swift` | `Sources/App/Features/ChannelProperties/ChannelPropertiesSheet.swift` |
 | `Sources/App/Features/ChannelValidation/ChannelValidationPolicy.swift` | `Sources/App/Features/ChannelProperties/ChannelValidationPolicy.swift` |
 | `Sources/App/Features/ChannelValidation/ChannelValidationStrings.swift` | `Sources/App/Features/ChannelProperties/ChannelValidationStrings.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCNotificationConfigurationViewController.swift` | `Sources/App/Features/ChannelProperties/NotificationConfigurationViewController.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCChannelSpotlightAppearance.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightAppearance.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCChannelSpotlightController.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightController.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCChannelSpotlightControls.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightControls.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCChannelSpotlightSearchResult.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightSearchResult.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCChannelSpotlightSearchResultsTable.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightSearchResultsTable.swift` |
 | `Sources/App/Features/ChannelModes/ChannelMode.swift` | `Sources/App/Features/ChannelView/ChannelMode.swift` |
 | `Sources/App/Features/ChannelModes/ChannelModesContent.swift` | `Sources/App/Features/ChannelView/ChannelModesContent.swift` |
 | `Sources/App/Features/ChannelModes/ChannelModesModel.swift` | `Sources/App/Features/ChannelView/ChannelModesModel.swift` |
@@ -103,13 +101,10 @@ files) are not listed because they did not move.
 | `Sources/App/Features/ChannelTopic/ChannelTopicModel.swift` | `Sources/App/Features/ChannelView/ChannelTopicModel.swift` |
 | `Sources/App/Features/ChannelTopic/ChannelTopicStrings.swift` | `Sources/App/Features/ChannelView/ChannelTopicStrings.swift` |
 | `Sources/App/Features/ChannelTopic/ChannelTopicView.swift` | `Sources/App/Features/ChannelView/ChannelTopicView.swift` |
-| `Sources/App/Modules/AppKitSupport/HTMLEntities.swift` | `Sources/App/Features/ChannelView/HTMLEntities.swift` |
 | `Sources/App/Features/ChannelTopic/IRCFormattingTopicEditor.swift` | `Sources/App/Features/ChannelView/IRCFormattingTopicEditor.swift` |
 | `Sources/App/Classes/Library/TLOLinkParser.swift` | `Sources/App/Features/ChannelView/LinkParser.swift` |
 | `Sources/App/Classes/Views/Channel View/TVCLogController.swift` | `Sources/App/Features/ChannelView/LogController.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCLogControllerHistoricLogFile.swift` | `Sources/App/Features/ChannelView/LogControllerHistoricLogFile.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCLogControllerInlineMediaService.swift` | `Sources/App/Features/ChannelView/LogControllerInlineMediaService.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCLogControllerOperationQueue.swift` | `Sources/App/Features/ChannelView/LogControllerOperationQueue.swift` |
 | `Sources/App/Classes/Views/Main Window/TVCLogControllerRegistry.swift` | `Sources/App/Features/ChannelView/LogControllerRegistry.swift` |
 | `Sources/App/Classes/Views/Channel View/TVCLogControllerRendering.swift` | `Sources/App/Features/ChannelView/LogControllerRendering.swift` |
 | `Sources/App/Classes/Views/Channel View/TVCLogLine.swift` | `Sources/App/Features/ChannelView/LogLine.swift` |
@@ -117,11 +112,7 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/AppKitSupport/TVCLogPolicy.swift` | `Sources/App/Features/ChannelView/LogPolicy.swift` |
 | `Sources/App/Classes/Views/Channel View/TVCLogRenderer.swift` | `Sources/App/Features/ChannelView/LogRenderer.swift` |
 | `Sources/App/Classes/Views/Channel View/TVCLogView.swift` | `Sources/App/Features/ChannelView/LogView.swift` |
-| `Sources/App/Classes/Views/Channel View/TVCLogViewContentPolicy.swift` | `Sources/App/Features/ChannelView/LogViewContentPolicy.swift` |
-| `Sources/App/Classes/Views/Channel View/TVCLogViewInternalWK2.swift` | `Sources/App/Features/ChannelView/LogViewInternalWK2.swift` |
-| `Sources/App/Classes/Views/Channel View/TVCLogViewSchemeHandler.swift` | `Sources/App/Features/ChannelView/LogViewSchemeHandler.swift` |
 | `Sources/App/Classes/Library/TLOpenLink.swift` | `Sources/App/Features/ChannelView/OpenLink.swift` |
-| `Sources/App/Classes/Views/Channel View/TVCLogScriptEventSink.swift` | `Sources/App/Features/ChannelView/TVCLogScriptEventSink.swift` |
 | `Sources/App/Modules/AppKitSupport/UnicodeHelper.swift` | `Sources/App/Features/ChannelView/UnicodeHelper.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/FileTransferController+Connection.swift` | `Sources/App/Features/FileTransfer/FileTransferController+Connection.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/FileTransferController+FileIO.swift` | `Sources/App/Features/FileTransfer/FileTransferController+FileIO.swift` |
@@ -131,11 +122,9 @@ files) are not listed because they did not move.
 | `Sources/App/Classes/Dialogs/File Transfers/FileTransferDialog+DownloadDestination.swift` | `Sources/App/Features/FileTransfer/FileTransferDialog+DownloadDestination.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/FileTransferDialog+NetworkAddress.swift` | `Sources/App/Features/FileTransfer/FileTransferDialog+NetworkAddress.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/FileTransferDialog+Presentation.swift` | `Sources/App/Features/FileTransfer/FileTransferDialog+Presentation.swift` |
-| `Sources/App/Classes/Dialogs/File Transfers/FileTransferDialog+Table.swift` | `Sources/App/Features/FileTransfer/FileTransferDialog+Table.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/FileTransferDialog+Transfers.swift` | `Sources/App/Features/FileTransfer/FileTransferDialog+Transfers.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/TDCFileTransferDialog.swift` | `Sources/App/Features/FileTransfer/FileTransferDialog.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/TDCFileTransferDialogSocket.swift` | `Sources/App/Features/FileTransfer/FileTransferDialogSocket.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCFileTransferDialogTableCell.swift` | `Sources/App/Features/FileTransfer/FileTransferDialogTableCell.swift` |
 | `Sources/App/Modules/Networking/TLOInternetAddressLookup.swift` | `Sources/App/Features/FileTransfer/InternetAddressLookup.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/TDCFileTransferDialogTransferController.swift` | `Sources/App/Features/FileTransfer/TDCFileTransferDialogTransferController.swift` |
 | `Sources/App/Modules/InputHandling/TLOInputHistory.swift` | `Sources/App/Features/MainWindow/InputHistory.swift` |
@@ -191,12 +180,12 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/Notifications/TLOSpeechSynthesizer.swift` | `Sources/App/Features/Notifications/SpeechSynthesizer.swift` |
 | `Sources/App/Modules/Notifications/TLOSpeechSynthesizerEngine.swift` | `Sources/App/Features/Notifications/SpeechSynthesizerEngine.swift` |
 | `Sources/App/Modules/Notifications/TLOSpokenNotification.swift` | `Sources/App/Features/Notifications/SpokenNotification.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCOnboardingAppearanceStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingAppearanceStepViewController.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCOnboardingIdentityStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingIdentityStepViewController.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCOnboardingNetworkStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingNetworkStepViewController.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCOnboardingNotificationsStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingNotificationsStepViewController.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCOnboardingStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingStepViewController.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCOnboardingStylePreviewView.swift` | `Sources/App/Features/Onboarding/OnboardingStylePreviewView.swift` |
+| `Sources/App/Modules/AppKitSupport/TDCOnboardingAppearanceStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingView.swift` |
+| `Sources/App/Modules/AppKitSupport/TDCOnboardingIdentityStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingView.swift` |
+| `Sources/App/Modules/AppKitSupport/TDCOnboardingNetworkStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingView.swift` |
+| `Sources/App/Modules/AppKitSupport/TDCOnboardingNotificationsStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingView.swift` |
+| `Sources/App/Modules/AppKitSupport/TDCOnboardingStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingModel.swift` |
+| `Sources/App/Modules/AppKitSupport/TDCOnboardingStylePreviewView.swift` | `Sources/App/Features/Onboarding/OnboardingView.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCOnboardingWindowController.swift` | `Sources/App/Features/Onboarding/OnboardingWindowController.swift` |
 | `Sources/App/Modules/AppKitSupport/THOPluginDispatcher.swift` | `Sources/App/Features/Plugins/PluginDispatcher.swift` |
 | `Sources/App/Modules/AppKitSupport/THOPluginDispatcherSupport.swift` | `Sources/App/Features/Plugins/PluginDispatcherSupport.swift` |
@@ -211,8 +200,6 @@ files) are not listed because they did not move.
 | `Sources/App/Features/ProgressIndicator/ProgressIndicatorView.swift` | `Sources/App/Features/Progress/ProgressIndicatorView.swift` |
 | `Sources/App/Modules/AppKitSupport/IRCClientDialogPresentation.swift` | `Sources/App/Features/ServerChannelList/IRCClientDialogPresentation.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCServerChannelListDialog.swift` | `Sources/App/Features/ServerChannelList/ServerChannelListDialog.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCChannelSelectionOutlineCellView.swift` | `Sources/App/Features/ServerList/ChannelSelectionOutlineCellView.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCChannelSelectionViewController.swift` | `Sources/App/Features/ServerList/ChannelSelectionViewController.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCContentNavigationOutlineView.swift` | `Sources/App/Features/ServerList/ContentNavigationOutlineView.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCServerList.swift` | `Sources/App/Features/ServerList/ServerList.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCServerListCell.swift` | `Sources/App/Features/ServerList/ServerListCell.swift` |
@@ -222,11 +209,10 @@ files) are not listed because they did not move.
 | `Sources/App/Features/HighlightEntry/HighlightEntrySheet.swift` | `Sources/App/Features/ServerProperties/HighlightEntrySheet.swift` |
 | `Sources/App/Features/HighlightEntry/HighlightEntryStrings.swift` | `Sources/App/Features/ServerProperties/HighlightEntryStrings.swift` |
 | `Sources/App/Features/HighlightEntry/HighlightEntryView.swift` | `Sources/App/Features/ServerProperties/HighlightEntryView.swift` |
-| `Sources/App/Modules/AppKitSupport/NetworkPickerDetailView.swift` | `Sources/App/Features/ServerProperties/NetworkPickerDetailView.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCNetworkPickerViewController.swift` | `Sources/App/Features/ServerProperties/NetworkPickerViewController.swift` |
+| `Sources/App/Modules/AppKitSupport/NetworkPickerDetailView.swift` | `Sources/App/Features/ServerProperties/NetworkPickerView.swift` |
+| `Sources/App/Modules/AppKitSupport/TDCNetworkPickerViewController.swift` | `Sources/App/Features/ServerProperties/NetworkPickerModel.swift` |
 | `Sources/App/Features/ServerNicknameChange/ServerChangeNicknameSheet.swift` | `Sources/App/Features/ServerProperties/ServerChangeNicknameSheet.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCServerEndpointListSheet.swift` | `Sources/App/Features/ServerProperties/ServerEndpointListSheet.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCServerEndpointListSheetTable.swift` | `Sources/App/Features/ServerProperties/ServerEndpointListSheetTable.swift` |
 | `Sources/App/Features/ServerEndpoints/ServerEndpointStrings.swift` | `Sources/App/Features/ServerProperties/ServerEndpointStrings.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCServerHighlightListSheet.swift` | `Sources/App/Features/ServerProperties/ServerHighlightListSheet.swift` |
 | `Sources/App/Features/ServerNicknameChange/ServerNicknameChangeContent.swift` | `Sources/App/Features/ServerProperties/ServerNicknameChangeContent.swift` |
@@ -234,20 +220,15 @@ files) are not listed because they did not move.
 | `Sources/App/Features/ServerNicknameChange/ServerNicknameChangeStrings.swift` | `Sources/App/Features/ServerProperties/ServerNicknameChangeStrings.swift` |
 | `Sources/App/Features/ServerNicknameChange/ServerNicknameChangeView.swift` | `Sources/App/Features/ServerProperties/ServerNicknameChangeView.swift` |
 | `Sources/App/Classes/Dialogs/TDCServerPropertiesSheet.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheet.swift` |
-| `Sources/App/Classes/Dialogs/TDCServerPropertiesSheetCommandsAndChannels.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheetCommandsAndChannels.swift` |
-| `Sources/App/Classes/Dialogs/TDCServerPropertiesSheetConnection.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheetConnection.swift` |
-| `Sources/App/Classes/Dialogs/TDCServerPropertiesSheetIdentity.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheetIdentity.swift` |
-| `Sources/App/Classes/Dialogs/TDCServerPropertiesSheetProxyAndTLS.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheetProxyAndTLS.swift` |
 | `Sources/App/Classes/Dialogs/TDCServerPropertiesSheetValidation.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheetValidation.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCValidatedComboBox.swift` | `Sources/App/Features/Validation/ValidatedComboBox.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCValidatedTextField.swift` | `Sources/App/Features/Validation/ValidatedTextField.swift` |
+| `Sources/App/Modules/AppKitSupport/TVCValidatedComboBox.swift` | removed with the nib-backed forms |
+| `Sources/App/Modules/AppKitSupport/TVCValidatedTextField.swift` | removed with the nib-backed forms |
 | `Sources/App/Features/Accessibility/AccessibilityStrings.swift` | `Sources/App/Localization/AccessibilityStrings.swift` |
 | `Sources/App/Modules/Localization/ApplicationStrings.swift` | `Sources/App/Localization/ApplicationStrings.swift` |
 | `Sources/App/Modules/Localization/LocalizedByteCount.swift` | `Sources/App/Localization/LocalizedByteCount.swift` |
 | `Sources/App/Modules/Localization/PromptStrings.swift` | `Sources/App/Localization/PromptStrings.swift` |
 | `Sources/App/Classes/Dialogs/Preferences/TDCPreferencesController.swift` | `Sources/App/Preferences/Dialog/PreferencesController.swift` |
 | `Sources/App/Classes/Dialogs/Preferences/TDCPreferencesSupport.swift` | `Sources/App/Preferences/Dialog/PreferencesSupport.swift` |
-| `Sources/App/Modules/AppKitSupport/TDCPreferencesUserStyleSheet.swift` | `Sources/App/Preferences/Dialog/PreferencesUserStyleSheet.swift` |
 | `Sources/App/Classes/Preferences/Keys/ObservablePreferences.swift` | `Sources/App/Preferences/Keys/ObservablePreferences.swift` |
 | `Sources/App/Classes/Preferences/Keys/PreferenceCatalog.swift` | `Sources/App/Preferences/Keys/PreferenceCatalog.swift` |
 | `Sources/App/Classes/Preferences/Keys/PreferenceColor.swift` | `Sources/App/Preferences/Keys/PreferenceColor.swift` |
@@ -265,10 +246,6 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/ApplicationSupport/TPCPreferencesReload.swift` | `Sources/App/Preferences/PreferencesReload.swift` |
 | `Sources/App/Features/Preferences/PreferencesStrings.swift` | `Sources/App/Preferences/PreferencesStrings.swift` |
 | `Sources/App/Modules/ApplicationSupport/TPCPreferencesUserDefaultsLocal.swift` | `Sources/App/Preferences/PreferencesUserDefaultsLocal.swift` |
-| `Sources/App/Classes/Preferences/Themes/TPCTheme.swift` | `Sources/App/Preferences/Themes/Theme.swift` |
-| `Sources/App/Classes/Preferences/Themes/TPCThemeController.swift` | `Sources/App/Preferences/Themes/ThemeController.swift` |
-| `Sources/App/Classes/Preferences/Themes/ThemeTypes.swift` | `Sources/App/Preferences/Themes/ThemeTypes.swift` |
-| `Sources/App/Features/UserStyle/UserStyleStrings.swift` | `Sources/App/Preferences/UserStyleStrings.swift` |
 | `Sources/App/Modules/IRCProtocol/Client/ClientEnvironment.swift` | `Sources/App/Protocol/Client/ClientEnvironment.swift` |
 | `Sources/App/Modules/IRCProtocol/Client/ClientOutput.swift` | `Sources/App/Protocol/Client/ClientOutput.swift` |
 | `Sources/App/Modules/IRCProtocol/Client/IRCClient.swift` | `Sources/App/Protocol/Client/IRCClient.swift` |
@@ -392,9 +369,6 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/IRCProtocol/Presence/IRCWorldObserver.swift` | `Sources/App/Protocol/Presence/IRCWorldObserver.swift` |
 | `Sources/App/Modules/IRCProtocol/Presentation/IRCClientHighlightsAndReachability.swift` | `Sources/App/Protocol/Presentation/IRCClientHighlightsAndReachability.swift` |
 | `Sources/App/Modules/IRCProtocol/Presentation/IRCClientLinePresentation.swift` | `Sources/App/Protocol/Presentation/IRCClientLinePresentation.swift` |
-| `Sources/App/Modules/IRCProtocol/Presentation/IRCClientThemeEvents.swift` | `Sources/App/Protocol/Presentation/IRCClientThemeEvents.swift` |
-| `Sources/App/Modules/IRCProtocol/Presentation/ThemePresentationSchema.swift` | `Sources/App/Protocol/Presentation/ThemePresentationSchema.swift` |
-| `Sources/App/Modules/IRCProtocol/Presentation/ThemeTemplateStore.swift` | `Sources/App/Protocol/Presentation/ThemeTemplateStore.swift` |
 | `Sources/App/Modules/IRCProtocol/Requests/IRCClientPlayback.swift` | `Sources/App/Protocol/Requests/IRCClientPlayback.swift` |
 | `Sources/App/Modules/IRCProtocol/Requests/IRCClientRequestedCommandPresentation.swift` | `Sources/App/Protocol/Requests/IRCClientRequestedCommandPresentation.swift` |
 | `Sources/App/Modules/IRCProtocol/Requests/IRCClientRequestedCommands.swift` | `Sources/App/Protocol/Requests/IRCClientRequestedCommands.swift` |
@@ -404,9 +378,9 @@ files) are not listed because they did not move.
 | `Sources/App/Modules/AppKitSupport/TXAppearanceHelper.swift` | `Sources/App/UI/AppearanceHelper.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCAppearance.swift` | `Sources/App/UI/AppearanceSchema.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCAutoExpandingField.swift` | `Sources/App/UI/AutoExpandingField.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCBasicTableView.swift` | `Sources/App/UI/BasicTableView.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCErrorMessagePopover.swift` | `Sources/App/UI/ErrorMessagePopover.swift` |
-| `Sources/App/Modules/AppKitSupport/TVCErrorMessagePopoverController.swift` | `Sources/App/UI/ErrorMessagePopoverController.swift` |
+| `Sources/App/Modules/AppKitSupport/TVCBasicTableView.swift` | removed with the nib-backed table controllers |
+| `Sources/App/Modules/AppKitSupport/TVCErrorMessagePopover.swift` | removed with the validated AppKit controls |
+| `Sources/App/Modules/AppKitSupport/TVCErrorMessagePopoverController.swift` | removed with the validated AppKit controls |
 | `Sources/App/Modules/AppKitSupport/TDCInputPrompt.swift` | `Sources/App/UI/InputPrompt.swift` |
 | `Sources/App/Modules/AppKitSupport/NSColorHelper.swift` | `Sources/App/UI/NSColorHelper.swift` |
 | `Sources/App/Modules/AppKitSupport/NSTableViewHelper.swift` | `Sources/App/UI/NSTableViewHelper.swift` |

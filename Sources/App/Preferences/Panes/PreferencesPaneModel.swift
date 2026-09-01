@@ -13,6 +13,13 @@
 import AppKit
 import Observation
 
+struct IRCv3ConnectionSummary: Equatable, Identifiable {
+	let id: String
+	let name: String
+	let isConnected: Bool
+	let capabilities: [String]
+}
+
 /** What a pane asks its AppKit shell to do.
 
  Everything here needs a window: a sheet, an open panel, the font panel, or a
@@ -21,26 +28,14 @@ import Observation
 @MainActor
 protocol PreferencesPaneActionHandler: AnyObject {
 	func selectChannelViewFont()
-	func browseStyleFiles()
-	func editUserStyleSheetRules()
-	func selectTheme(_ choice: PreferencesThemeChoice)
+	func importTranscriptTheme()
+	func exportTranscriptTheme()
+	func resetTranscriptTheme()
 	func selectTranscriptFolder()
 	func clearTranscriptFolder()
 	func selectDownloadFolder()
 	func clearDownloadFolder()
 	func openCustomAddOnsFolder()
-	func setInlineMediaEnabled(_ enabled: Bool)
-}
-
-/// One entry of the style popup in the Style pane.
-struct PreferencesThemeChoice: Identifiable, Hashable, Sendable {
-	let themeName: String
-	let storageLocation: TPCThemeStorageLocation
-	let title: String
-
-	var id: String {
-		"\(storageLocation.rawValue):\(themeName)"
-	}
 }
 
 /** The state the panes show that does not live in the key store: what the theme
@@ -57,15 +52,12 @@ final class PreferencesPaneModel {
 	@ObservationIgnored
 	weak var actions: (any PreferencesPaneActionHandler)?
 
-	/// Set while a style reload runs; the controls that would restart it are
-	/// disabled until it finishes.
-	var isReloadingTheme = false
-
-	/// The toolbar's sections, with the panes each one shows.
+	/// The sidebar's sections, with the panes each one shows.
 	var sections: [PreferencesSection] = []
 
-	/// The toolbar item and the sub-page it contains change as one value.
+	/// The sidebar item and the sub-page it contains change as one value.
 	private(set) var selection = PreferencesSelection.general
+	private var lastSubPageBySection: [PreferencesSectionIdentifier: String] = [:]
 
 	@ObservationIgnored
 	var onSelectionChange: ((PreferencesSelection) -> Void)?
@@ -74,8 +66,7 @@ final class PreferencesPaneModel {
 		sections.first { $0.identifier == selection.sectionIdentifier }
 	}
 
-	var themes: [PreferencesThemeChoice] = []
-	var selectedTheme: PreferencesThemeChoice?
+	var transcriptTheme = TranscriptTheme.lines
 	var channelViewFontName = ""
 	var channelViewFontSize: CGFloat = 0
 
@@ -86,20 +77,13 @@ final class PreferencesPaneModel {
 
 	var addOnCommands: [String] = []
 	var scriptInstallationInstructions = ""
-
-	/** The AppKit alert table the Notifications pane hosts.
-
-	 It is built and attached once: `attachToView` refuses a second host, and a
-	 SwiftUI representable is remade every time the pane comes back. */
-	@ObservationIgnored
-	let notificationConfiguration = NotificationConfigurationViewController()
+	var ircv3Connections: [IRCv3ConnectionSummary] = []
 
 	@ObservationIgnored
-	let notificationHostView = NSView(frame: .zero)
+	let notificationItems: [NotificationConfigurationItem]
 
 	init() {
-		notificationConfiguration.notifications = Self.notificationItems
-		notificationConfiguration.attachToView(notificationHostView)
+		notificationItems = Self.defaultNotificationItems
 	}
 
 	/// Applies a complete destination only when the sub-page belongs to the
@@ -115,11 +99,27 @@ final class PreferencesPaneModel {
 			return false
 		}
 		selection = destination
+		lastSubPageBySection[destination.sectionIdentifier] = destination.subPageIdentifier
 		onSelectionChange?(destination)
 		return true
 	}
 
-	/// Changes the picker within the current toolbar section.
+	/// Selects a sidebar section and restores the sub-page last used in it.
+	@discardableResult
+	func selectSection(_ identifier: PreferencesSectionIdentifier) -> Bool {
+		guard let section = sections.first(where: { $0.identifier == identifier }),
+		      let subPage = lastSubPageBySection[identifier] ?? section.subPages.first?.identifier
+		else {
+			return false
+		}
+
+		return select(PreferencesSelection(
+			sectionIdentifier: identifier,
+			subPageIdentifier: subPage
+		))
+	}
+
+	/// Changes the picker within the current sidebar section.
 	@discardableResult
 	func selectSubPage(_ identifier: String) -> Bool {
 		select(PreferencesSelection(
@@ -130,7 +130,7 @@ final class PreferencesPaneModel {
 
 	/** The nil entries are the separators the alert list draws between groups of
 	 related events; the order is the one the nib shipped. */
-	private static let notificationItems: [NotificationConfigurationItem] = {
+	private static let defaultNotificationItems: [NotificationConfigurationItem] = {
 		let eventTypes: [TXNotificationType?] = [
 			.addressBookMatch, nil, .connect, .disconnect, nil, .highlight, nil, .invite, .kick, nil,
 			.channelMessage, .channelNotice, nil, .newPrivateMessage, .privateMessage, .privateNotice, nil,
@@ -144,31 +144,21 @@ final class PreferencesPaneModel {
 		}
 	}()
 
-	func refreshThemes() {
-		let controller = SharedApplication.sharedThemeController()
-		var choices: [PreferencesThemeChoice] = []
-		controller.enumerateAvailableThemes { themeName, storageLocation, multipleVariants, _ in
-			let title = multipleVariants
-				? "\(themeName) (\(TPCThemeController.description(for: storageLocation) ?? ""))"
-				: themeName
-			choices.append(
-				PreferencesThemeChoice(themeName: themeName, storageLocation: storageLocation, title: title)
-			)
-		}
-		themes = choices.sorted { first, second in
-			if first.storageLocation != second.storageLocation {
-				return first.storageLocation == .bundle
-			}
-			return first.title.localizedStandardCompare(second.title) == .orderedAscending
-		}
-		selectedTheme = themes.first {
-			$0.themeName == controller.name && $0.storageLocation == controller.storageLocation
-		}
+	func refreshTheme() {
+		transcriptTheme = SharedApplication.sharedThemeController().theme
+	}
+
+	func updateTheme(_ update: (inout TranscriptTheme) -> Void) {
+		var changed = transcriptTheme
+		update(&changed)
+		SharedApplication.sharedThemeController().apply(changed)
+		refreshTheme()
 	}
 
 	func refreshChannelViewFont() {
-		channelViewFontName = TextualPreferences.themeChannelViewFont()?.displayName ?? ""
-		channelViewFontSize = TextualPreferences.themeChannelViewFontSize()
+		let font = SharedApplication.sharedThemeController().font
+		channelViewFontName = font.displayName ?? font.fontName
+		channelViewFontSize = font.pointSize
 	}
 
 	func refreshFolders() {
@@ -180,17 +170,29 @@ final class PreferencesPaneModel {
 		let manager = SharedApplication.sharedPluginManager()
 		let commands = manager.supportedAppleScriptCommands + manager.supportedUserInputCommands
 		addOnCommands = commands.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
-		let folderName = PathInfo.customScriptsURL?.lastPathComponent
+		let folderName = manager.customScriptsURL?.lastPathComponent
 			?? ApplicationInfo.applicationBundleIdentifier()
 		scriptInstallationInstructions = PromptStrings.DocumentImport.scriptSavePanelBody(
 			bundleIdentifier: folderName
 		)
 	}
 
+	func refreshIRCv3Connections() {
+		ircv3Connections = AppController.shared.world.clientList.map { client in
+			IRCv3ConnectionSummary(
+				id: client.uniqueIdentifier,
+				name: client.networkNameAlt.isEmpty ? client.serverAddress ?? "" : client.networkNameAlt,
+				isConnected: client.isLoggedIn,
+				capabilities: client.enabledCapabilityNames.sorted()
+			)
+		}
+	}
+
 	func refreshAll() {
-		refreshThemes()
+		refreshTheme()
 		refreshChannelViewFont()
 		refreshFolders()
 		refreshAddOnCommands()
+		refreshIRCv3Connections()
 	}
 }

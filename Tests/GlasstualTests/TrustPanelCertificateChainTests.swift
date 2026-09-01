@@ -13,7 +13,7 @@ import Testing
 /// service exports the chain, and the app rebuilds the trust object on the main
 /// actor so no Security.framework value crosses an isolation boundary.
 @Suite("Trust from an exported certificate chain")
-struct TrustPanelCertificateChainTests {
+nonisolated struct TrustPanelCertificateChainTests { // nonisolated: value
 	@Test("A chain of one DER certificate rebuilds into a SecTrust for the named policy")
 	func chainRebuildsIntoTrust() throws {
 		let certificate = try Self.fixtureCertificate()
@@ -27,15 +27,17 @@ struct TrustPanelCertificateChainTests {
 	}
 
 	@Test("The rebuilt trust carries back exactly the bytes it was given")
-	func rebuiltTrustRoundTripsTheChain() throws {
+	func rebuiltTrustRoundTripsTheChain() async throws {
 		let certificate = try Self.fixtureCertificate()
 
-		let trust = try #require(SecureTransportSupport.trust(
-			fromCertificateChain: [certificate],
-			policyName: "irc.example.net"
-		))
+		let exported = try await Task.detached {
+			let trust = try #require(SecureTransportSupport.trust(
+				fromCertificateChain: [certificate],
+				policyName: "irc.example.net"
+			))
 
-		let exported = try #require(SecureTransportSupport.certificates(in: trust))
+			return try #require(SecureTransportSupport.certificates(in: trust))
+		}.value
 
 		#expect(exported == [certificate])
 	}

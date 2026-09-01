@@ -7,7 +7,7 @@
 import Foundation
 
 extension CapabilityRegistry {
-	public static var defaultRegistry: CapabilityRegistry {
+	static var defaultRegistry: CapabilityRegistry {
 		defaultRegistryStorage
 	}
 
@@ -16,14 +16,6 @@ extension CapabilityRegistry {
 	)
 
 	private static var defaultCapabilities: [Capability] {
-		let echoMessageGate: IRCCapabilityPreferenceGate = {
-			TextualPreferences.enableEchoMessageCapability()
-		}
-
-		let saslHook: IRCCapabilityNegotiationHook = { client, mechanisms in
-			client.selectSASLMechanism(fromOffered: mechanisms)
-		}
-
 		let saslGeneric = ClientIRCv3SupportedCapability.saslGeneric
 		let zncPlaybackModule = ClientIRCv3SupportedCapability.zncPlaybackModule
 		let zncServerTime = ClientIRCv3SupportedCapability.zncServerTime
@@ -41,27 +33,35 @@ extension CapabilityRegistry {
 				name: "draft/chathistory",
 				identifier: .chatHistory,
 				requestedByDefault: true,
-				preferenceGate: nil,
+				preference: .chatHistory,
 				dependencies: ["batch", "server-time", "message-tags"],
-				negotiationHook: nil
+				negotiation: .automatic
 			),
 			Capability(
 				name: "chathistory",
 				identifier: .chatHistory,
 				requestedByDefault: true,
-				preferenceGate: nil,
+				preference: .chatHistory,
 				dependencies: ["batch", "server-time", "message-tags"],
-				negotiationHook: nil
+				negotiation: .automatic
 			),
-			Capability.capability(named: "draft/read-marker", identifier: .readMarker),
-			Capability.capability(named: "read-marker", identifier: .readMarker),
+			Capability(
+				name: "draft/read-marker",
+				identifier: .readMarker,
+				requestedByDefault: true,
+				preference: .readMarker
+			),
+			Capability(
+				name: "read-marker",
+				identifier: .readMarker,
+				requestedByDefault: true,
+				preference: .readMarker
+			),
 			Capability(
 				name: "echo-message",
 				identifier: .echoMessage,
 				requestedByDefault: true,
-				preferenceGate: echoMessageGate,
-				dependencies: nil,
-				negotiationHook: nil
+				preference: .echoMessage
 			),
 			Capability.capability(named: "extended-join", identifier: .extendedJoin),
 			Capability.capability(named: "extended-monitor", identifier: .extendedMonitor),
@@ -70,9 +70,8 @@ extension CapabilityRegistry {
 				name: "labeled-response",
 				identifier: .labeledResponse,
 				requestedByDefault: true,
-				preferenceGate: nil,
 				dependencies: ["message-tags"],
-				negotiationHook: nil
+				negotiation: .automatic
 			),
 			Capability.capability(named: "multi-prefix", identifier: .multiPrefix),
 			Capability.capability(named: "pre-away", identifier: .preAway),
@@ -80,9 +79,7 @@ extension CapabilityRegistry {
 				name: "sasl",
 				identifier: saslGeneric,
 				requestedByDefault: true,
-				preferenceGate: nil,
-				dependencies: nil,
-				negotiationHook: saslHook
+				negotiation: .sasl
 			),
 			Capability.capability(named: "server-time", identifier: .serverTime),
 			Capability.capability(named: "setname", identifier: .setName),
@@ -94,9 +91,7 @@ extension CapabilityRegistry {
 					rawValue: ClientIRCv3SupportedCapability.playback.rawValue | zncPlaybackModule.rawValue
 				),
 				requestedByDefault: true,
-				preferenceGate: nil,
-				dependencies: nil,
-				negotiationHook: nil
+				preference: .always
 			),
 			Capability.capability(named: "znc.in/self-message", identifier: .zncSelfMessage),
 			Capability(
@@ -105,9 +100,7 @@ extension CapabilityRegistry {
 					rawValue: ClientIRCv3SupportedCapability.serverTime.rawValue | zncServerTime.rawValue
 				),
 				requestedByDefault: true,
-				preferenceGate: nil,
-				dependencies: nil,
-				negotiationHook: nil
+				preference: .always
 			),
 			Capability(
 				name: "znc.in/server-time-iso",
@@ -115,9 +108,7 @@ extension CapabilityRegistry {
 					rawValue: ClientIRCv3SupportedCapability.serverTime.rawValue | zncServerTimeISO.rawValue
 				),
 				requestedByDefault: true,
-				preferenceGate: nil,
-				dependencies: nil,
-				negotiationHook: nil
+				preference: .always
 			),
 			Capability.capability(named: "znc.in/tlsinfo", identifier: .zncCertInfoModule),
 		]

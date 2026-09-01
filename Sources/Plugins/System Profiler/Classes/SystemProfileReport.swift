@@ -186,8 +186,8 @@ enum SystemProfileReport {
 	}
 
 	static func systemInformation(defaults: UserDefaults) -> String {
-		func enabled(_ feature: String) -> Bool {
-			defaults.bool(forKey: "System Profiler Extension -> Feature Disabled -> \(feature)") == false
+		func enabled(_ feature: SystemProfilerFeature) -> Bool {
+			defaults.bool(forKey: feature.disabledPreferenceKey) == false
 		}
 
 		var result = SystemProfilerLocalization.string(.BasicLanguage.systemInformationHeading)
@@ -196,7 +196,7 @@ enum SystemProfileReport {
 				.BasicLanguage.modelSegment(SystemProfileInformation.modelName(for: identifier))
 			)
 		}
-		if enabled("CPU Model"), let processor = SystemProfileInformation.processor() {
+		if enabled(.cpuModel), let processor = SystemProfileInformation.processor() {
 			result += SystemProfilerLocalization.string(
 				.BasicLanguage.cpuCoreSegment(
 					processor,
@@ -204,29 +204,29 @@ enum SystemProfileReport {
 				)
 			)
 		}
-		if enabled("Memory Information") {
+		if enabled(.memoryInformation) {
 			result += SystemProfilerLocalization.string(
 				.BasicLanguage.memorySegment(
 					SystemProfileInformation.formattedByteCount(ProcessInfo.processInfo.physicalMemory)
 				)
 			)
 		}
-		if enabled("System Uptime") {
+		if enabled(.systemUptime) {
 			let uptime = PluginHost.humanReadableTimeInterval(
 				ProcessInfo.processInfo.systemUptime,
 				shortValue: true
 			)
 			result += SystemProfilerLocalization.string(.BasicLanguage.uptimeSegment(uptime))
 		}
-		if enabled("Disk Information"), let disk = SystemProfileInformation.rootVolumeCapacity() {
+		if enabled(.diskInformation), let disk = SystemProfileInformation.rootVolumeCapacity() {
 			result += SystemProfilerLocalization.string(
 				.BasicLanguage.spaceSegment(SystemProfileInformation.formattedByteCount(disk))
 			)
 		}
-		if enabled("GPU Model"), let graphics = SystemProfileInformation.graphicsDescription() {
+		if enabled(.gpuModel), let graphics = SystemProfileInformation.graphicsDescription() {
 			result += SystemProfilerLocalization.string(.BasicLanguage.graphicsSegment(graphics))
 		}
-		if enabled("Screen Resolution"), let screen = NSScreen.main ?? NSScreen.screens.first {
+		if enabled(.screenResolution), let screen = NSScreen.main ?? NSScreen.screens.first {
 			if let refreshRate = SystemProfileInformation.refreshRate(for: screen) {
 				result += SystemProfilerLocalization.string(
 					.BasicLanguage.displayWithRefreshRateSegment(
@@ -240,7 +240,7 @@ enum SystemProfileReport {
 				)
 			}
 		}
-		if enabled("OS Version") {
+		if enabled(.operatingSystemVersion) {
 			result += SystemProfilerLocalization.string(
 				.BasicLanguage.operatingSystemSegment(
 					SystemInformation.systemOperatingSystemName,

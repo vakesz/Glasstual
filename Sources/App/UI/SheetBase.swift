@@ -58,14 +58,6 @@ open class SheetBase: NSObject {
 		endSheet()
 	}
 
-	public func okOrError(for textField: ValidatedTextField) -> Bool {
-		textField.showValidationErrorPopover() == false
-	}
-
-	public func okOrError(for comboBox: ValidatedComboBox) -> Bool {
-		comboBox.showValidationErrorPopover() == false
-	}
-
 	@IBAction open func cancel(_: Any?) {
 		endSheet()
 	}

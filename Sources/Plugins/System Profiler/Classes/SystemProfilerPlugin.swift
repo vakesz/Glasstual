@@ -37,26 +37,21 @@
 
 import AppKit
 import GlasstualPluginKit
-import os
+import SwiftUI
 
 @objc(TPISystemProfiler)
 final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandling,
 	PluginPreferencesProviding
 {
-	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-		category: "Extension['System Profiler']"
-	)
-
 	private static let defaultPreferences = [
-		"System Profiler Extension -> Feature Disabled -> GPU Model": true,
-		"System Profiler Extension -> Feature Disabled -> Disk Information": true,
-		"System Profiler Extension -> Feature Disabled -> System Uptime": true,
-		"System Profiler Extension -> Feature Disabled -> Memory Information": true,
-		"System Profiler Extension -> Feature Disabled -> Screen Resolution": true,
+		SystemProfilerFeature.gpuModel.disabledPreferenceKey: true,
+		SystemProfilerFeature.diskInformation.disabledPreferenceKey: true,
+		SystemProfilerFeature.systemUptime.disabledPreferenceKey: true,
+		SystemProfilerFeature.memoryInformation.disabledPreferenceKey: true,
+		SystemProfilerFeature.screenResolution.disabledPreferenceKey: true,
 	]
 
-	@IBOutlet private var preferencePaneView: NSView?
+	private var preferencePaneView: NSView?
 	private var host: PluginHostContext?
 
 	var pluginPreferencesPaneView: NSView? {
@@ -74,10 +69,9 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
 		host.defaults.register(defaults: Self.defaultPreferences)
-		let bundle = Bundle(for: SystemProfilerPlugin.self)
-		if bundle.loadNibNamed("TPISystemProfiler", owner: self, topLevelObjects: nil) == false {
-			Self.logger.error("Failed to load TPISystemProfiler.xib; the preferences pane is unavailable")
-		}
+		preferencePaneView = NSHostingView(
+			rootView: SystemProfilerPreferencesView(defaults: host.defaults)
+		)
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {

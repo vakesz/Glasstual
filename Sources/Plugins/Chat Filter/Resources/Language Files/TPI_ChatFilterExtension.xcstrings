@@ -1,6 +1,11 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "add-filter-button" : {
+      "comment" : "Button that begins creating a chat filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Filter" } } }
+    },
     "action-log-user" : {
       "comment" : "Log message for a filter action without a channel. Arguments are the filter title and user nickname. Migrated from legacy key yla-he.",
       "extractionState" : "manual",
@@ -49,6 +54,36 @@
         }
       }
     },
+    "delete-filter-button" : {
+      "comment" : "Destructive button that confirms deleting a chat filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete Filter" } } }
+    },
+    "cancel-button" : {
+      "comment" : "Button that cancels deleting a chat filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } } }
+    },
+    "duplicate-filter-button" : {
+      "comment" : "Menu item that duplicates the selected chat filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Duplicate Filter" } } }
+    },
+    "duplicate-filter-title" : {
+      "comment" : "Title assigned to a duplicated chat filter. The argument is the original title.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ (Duplicate)" } } }
+    },
+    "edit-filter-button" : {
+      "comment" : "Button that edits the selected chat filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Filter" } } }
+    },
+    "export-filter-button" : {
+      "comment" : "Menu item that exports the selected chat filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Export Filter…" } } }
+    },
     "filter-description" : {
       "comment" : "Description of a chat filter. The argument is the filter title. Migrated from legacy key dka-bx.",
       "extractionState" : "manual",
@@ -61,29 +96,25 @@
         }
       }
     },
-    "import-panel-message" : {
-      "comment" : "Message shown by the filter configuration import panel. Migrated from legacy key i9c-s3.",
+    "import-filter-button" : {
+      "comment" : "Menu item that imports a chat filter.",
       "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select filter configuration file to import"
-          }
-        }
-      }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Import Filter…" } } }
     },
-    "no-button" : {
-      "comment" : "Title of the negative confirmation button. Migrated from legacy key p5s-ff.",
+    "more-actions-button" : {
+      "comment" : "Menu containing additional chat-filter actions.",
       "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No"
-          }
-        }
-      }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "More Actions" } } }
+    },
+    "no-filters-description" : {
+      "comment" : "Explanation shown when no chat filters exist.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add a filter to hide, forward, or act on matching messages." } } }
+    },
+    "no-filters-title" : {
+      "comment" : "Title shown when no chat filters exist.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No Filters" } } }
     },
     "ok-button" : {
       "comment" : "Title of the button dismissing the unreadable configuration alert. Migrated from legacy key ybz-7i.",
@@ -109,17 +140,10 @@
         }
       }
     },
-    "select-button" : {
-      "comment" : "Title of the filter configuration import panel confirmation button. Migrated from legacy key 2tc-m7.",
+    "remove-filter-button" : {
+      "comment" : "Button that removes the selected chat filter.",
       "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select"
-          }
-        }
-      }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove Filter" } } }
     },
     "unreadable-configuration-title" : {
       "comment" : "Title of the alert shown when an imported filter configuration cannot be read. Migrated from legacy key eqr-7t.",
@@ -129,18 +153,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Configuration file is in format that cannot be read"
-          }
-        }
-      }
-    },
-    "yes-button" : {
-      "comment" : "Title of the affirmative confirmation button. Migrated from legacy key jvu-m7.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yes"
           }
         }
       }

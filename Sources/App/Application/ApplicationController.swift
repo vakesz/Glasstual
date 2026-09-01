@@ -85,7 +85,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		category: "Termination"
 	)
 
-	private var hasWokenFromMainNib = false
+	private var hasInstalledMainWindow = false
 
 	private var worldStorage: IRCWorld!
 	private var mainWindowStorage: TVCMainWindow!
@@ -109,8 +109,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private let notifications = NotificationSubscriptions()
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
-	/** Nib connects these via KVC (`setValue:forKey:`). IUO matches the
-	 ObjC nonnull headers while still allowing nil before wake / in tests. */
+	/// IUO preserves the established launch-time contract while allowing nil in tests.
 	@objc public var mainWindow: TVCMainWindow! {
 		get { mainWindowStorage }
 		set { mainWindowStorage = newValue }
@@ -167,31 +166,33 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		#endif
 	}
 
-	/// Loads the main window once the main menu nib has finished decoding.
-	///
-	/// This used to be `awakeFromNib`, which AppKit declares nonisolated, so
-	/// every line of it sat behind a runtime assumption about the decoding
-	/// thread. `applicationWillFinishLaunching(_:)` is main-actor isolated by
-	/// declaration and NSApplication posts it right after the main nib is
-	/// loaded — the same point in the launch, with the isolation checked.
-	private func wakeFromMainNib() {
-		guard hasWokenFromMainNib == false else {
+	/// Builds the main window after the programmatic application and menu graph.
+	private func installMainWindow() {
+		guard hasInstalledMainWindow == false else {
 			return
 		}
 
-		hasWokenFromMainNib = true
+		hasInstalledMainWindow = true
 
 		TextualPreferences.initPreferences()
 
 		_ = SharedApplication.sharedAppearance()
 
-		/* Wait until the menu controller created by the main nib has loaded
-		 before waking the window. */
-		Bundle.main.loadNibNamed("TVCMainWindow", owner: self, topLevelObjects: nil)
-
-		/* The window's own nib-time setup: `awakeFromNib` cannot be isolated,
-		 and by here the outlet the nib connected is in place. */
-		mainWindowStorage?.configure()
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 477),
+			styleMask: [.titled, .closable, .miniaturizable, .resizable],
+			backing: .buffered,
+			defer: false
+		)
+		window.title = "Glasstual"
+		window.identifier = NSUserInterfaceItemIdentifier("TVCMainWindow")
+		window.setFrameAutosaveName("Main Window")
+		window.tabbingMode = .disallowed
+		window.collectionBehavior.insert(.fullScreenPrimary)
+		window.isReleasedWhenClosed = false
+		window.setAccessibilityLabel(AccessibilityStrings.mainWindow)
+		mainWindowStorage = window
+		window.configure()
 	}
 
 	public func applicationWakeStepOne() {
@@ -263,8 +264,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		])
 		NSColorPanel.shared.showsAlpha = true
 
-		DispatchQueue.global(qos: .background).async {
-			ResourceManager.copyResourcesToApplicationSupportFolder()
+		Task {
+			await ResourceManager.copyResourcesToApplicationSupportFolder()
 		}
 
 		/* Load plugins last so that -applicationDidFinishLaunching is posted
@@ -295,7 +296,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	// MARK: - NSApplication Delegate
 
 	public func applicationWillFinishLaunching(_: Notification) {
-		wakeFromMainNib()
+		installMainWindow()
 
 		#if !DEBUG
 			/* Asking the user about another running copy needs an alert, and
@@ -351,6 +352,9 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	public func applicationDidBecomeActive(_: Notification) {
 		applicationIsActive = true
 		applicationIsChangingActiveState = false
+		if SharedApplication.sharedPluginManager().pluginsLoaded {
+			SharedApplication.sharedPluginManager().refreshScriptCommands()
+		}
 	}
 
 	public func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
@@ -390,7 +394,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		switch ApplicationTerminationPolicy.decision(
 			isTerminating: applicationIsTerminating,
 			skipConfirmation: skipTerminateConfirmation,
-			confirmQuitPreference: TextualPreferences.confirmQuit(),
+			confirmQuitPreference: Preferences.Connection.confirmQuit.value,
 			hasLiveConnection: stillConnected
 		) {
 		case .alreadyTerminating:
@@ -509,8 +513,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		Self.terminationLogger.debug("Stopping speech synthesizer")
 		SharedApplication.existingSpeechSynthesizer()?.isStopped = true
-
-		LogControllerInlineMediaService.shared().prepareForApplicationTermination()
 
 		menuController?.prepareForApplicationTermination()
 

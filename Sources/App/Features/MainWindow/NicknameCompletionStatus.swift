@@ -22,13 +22,157 @@ protocol NicknameCompletionWindow: AnyObject {
 
 extension MainWindow: NicknameCompletionWindow {}
 
-/// What the current completion attempt is completing. The three states used to
-/// be three booleans set in one if/else chain and cleared together, so an
-/// inconsistent combination was expressible.
-enum CompletionKind: Sendable {
+private enum CompletionKind: Sendable {
 	case nickname
 	case channelName
 	case command
+}
+
+private struct CompletionRequest {
+	let kind: CompletionKind
+	let searchPattern: String
+	let prefix: String
+	let isAtStart: Bool
+	let searchRange: NSRange
+	var suffixRange: NSRange
+	let originalSuffix: String
+
+	init?(textValue: String, selection: NSRange) {
+		guard selection.location != NSNotFound else {
+			return nil
+		}
+
+		let text = textValue as NSString
+		var searchStart = 0
+
+		if selection.location > 0 {
+			for index in stride(from: selection.location - 1, through: 0, by: -1) {
+				let character = text.character(at: index)
+
+				if Self.isWordDelimiter(character) {
+					searchStart = index + 1
+					break
+				}
+			}
+		}
+
+		let range = NSRange(location: searchStart, length: selection.location - searchStart)
+		var pattern = text.substring(with: range)
+		let atStart = searchStart == 0
+		let resolvedKind: CompletionKind
+		let resolvedPrefix: String
+
+		if atStart, pattern.hasPrefix("/") {
+			resolvedKind = .command
+			resolvedPrefix = "/"
+			pattern.removeFirst()
+		} else if pattern.hasPrefix("@") {
+			resolvedKind = .nickname
+			resolvedPrefix = "@"
+			pattern.removeFirst()
+		} else if pattern.hasPrefix("#") {
+			resolvedKind = .channelName
+			resolvedPrefix = ""
+		} else {
+			resolvedKind = .nickname
+			resolvedPrefix = ""
+		}
+
+		let completionSuffixRange = Self.completionSuffixRange(
+			in: text,
+			selection: selection,
+			kind: resolvedKind
+		)
+
+		kind = resolvedKind
+		searchPattern = pattern
+		prefix = resolvedPrefix
+		isAtStart = atStart
+		searchRange = range
+		suffixRange = completionSuffixRange
+		originalSuffix = completionSuffixRange.length == 0 ? "" : text.substring(with: completionSuffixRange)
+	}
+
+	private static func completionSuffixRange(
+		in text: NSString,
+		selection: NSRange,
+		kind: CompletionKind
+	) -> NSRange {
+		guard selection.length == 0 else {
+			return selection
+		}
+
+		let start = selection.location
+		var range = NSRange(location: start, length: 0)
+
+		if kind == .nickname,
+		   let preferredSuffix = Preferences.Input.tabCompletionSuffix.storedValue,
+		   preferredSuffix.isEmpty == false
+		{
+			let searchRange = NSRange(location: start, length: text.length - start)
+			let suffixRange = text.range(of: preferredSuffix, options: [], range: searchRange)
+
+			if suffixRange.location != NSNotFound, suffixRange.length < 30 {
+				let beforeSuffix = NSRange(location: start, length: suffixRange.location - start)
+				let whitespace = text.rangeOfCharacter(from: .whitespaces, options: [], range: beforeSuffix)
+
+				if whitespace.location == NSNotFound {
+					range.length = NSMaxRange(suffixRange) - start
+				}
+			}
+		}
+
+		if range.length == 0,
+		   Preferences.Input.tabCompletionCutForward.value,
+		   start < text.length
+		{
+			for index in start ..< text.length where isSuffixDelimiter(text.character(at: index)) {
+				range.length = index - start
+				return range
+			}
+
+			range.length = text.length - start
+		}
+
+		return range
+	}
+
+	private static func isWordDelimiter(_ character: UniChar) -> Bool {
+		(CharacterSet.whitespaces as NSCharacterSet).characterIsMember(character) || character == 0x2C
+	}
+
+	private static func isSuffixDelimiter(_ character: UniChar) -> Bool {
+		isWordDelimiter(character) || character == 0x3A
+	}
+}
+
+private struct CompletionSession {
+	var request: CompletionRequest
+	var currentText: String
+	var selectionAfterCompletion: NSRange?
+	var selectedCandidateIndex: Int?
+
+	func canContinue(text: String, selection: NSRange) -> Bool {
+		selectedCandidateIndex != nil &&
+			selectionAfterCompletion == selection &&
+			currentText.isEmpty == false &&
+			currentText == text
+	}
+
+	mutating func selectCandidate(count: Int, movingForward: Bool) -> Int {
+		let selectedIndex: Int = if let previous = selectedCandidateIndex, previous < count {
+			if movingForward {
+				(previous + 1) % count
+			} else {
+				previous == 0 ? count - 1 : previous - 1
+			}
+		} else {
+			0
+		}
+
+		selectedCandidateIndex = selectedIndex
+		return selectedIndex
+	}
 }
 
 @MainActor
@@ -39,21 +183,7 @@ public final class NicknameCompletionStatus: NSObject {
 	}
 
 	private weak var window: (any NicknameCompletionWindow)?
-	private var completedValue: String?
-	private var completedValueCompletionSuffix: String?
-	private var currentTextViewStringValue: String?
-	private var cachedSearchPattern: String?
-	private var cachedSearchPatternPrefixCharacter: String?
-	private var cachedCompletionSuffix: String?
-	private var selectionRangeAfterLastCompletion = NSRange(location: NSNotFound, length: 0)
-	private var rangeOfTextSelection = NSRange(location: NSNotFound, length: 0)
-	private var rangeOfSearchPattern = NSRange(location: 0, length: 0)
-	private var rangeOfCompletionSuffix = NSRange(location: 0, length: 0)
-	private var selectionIndexOfLastCompletion = NSNotFound
-	private var completionIsMovingForward = false
-	private var completionKind: CompletionKind?
-	private var searchPatternIsAtStart = false
-	private var completionCacheIsConstructed = false
+	private var session: CompletionSession?
 
 	@available(*, unavailable)
 	override public convenience init() {
@@ -77,108 +207,69 @@ public final class NicknameCompletionStatus: NSObject {
 	}
 
 	public func completeNickname(_ movingForward: Bool) {
-		performCompletion(movingForward: movingForward)
-	}
-
-	public func clear() {
-		clearCache()
-
-		currentTextViewStringValue = nil
-		rangeOfTextSelection = NSRange(location: NSNotFound, length: 0)
-		selectionRangeAfterLastCompletion = NSRange(location: NSNotFound, length: 0)
-		completionIsMovingForward = false
-	}
-
-	private func performCompletion(movingForward: Bool) {
 		guard let textView = window?.inputTextField as? TextViewWithIRCFormatter else {
 			return
 		}
 
 		textView.window?.makeFirstResponder(textView)
 
-		let selectedRange = textView.selectedRange()
+		let selection = textView.selectedRange()
+		let text = textView.string
 
-		guard selectedRange.location != NSNotFound else {
+		if session?.canContinue(text: text, selection: selection) != true {
+			guard let request = CompletionRequest(textValue: text, selection: selection) else {
+				clear()
+				return
+			}
+
+			session = CompletionSession(request: request, currentText: text)
+		}
+
+		guard var session,
+		      let completedValue = completedValue(for: &session, movingForward: movingForward)
+		else {
 			return
 		}
 
-		var canContinuePreviousScan = true
-
-		if selectionIndexOfLastCompletion == NSNotFound || selectionRangeAfterLastCompletion.location == NSNotFound
-			|| (rangeOfTextSelection.location == NSNotFound && rangeOfSearchPattern.location == 0
-				&& rangeOfSearchPattern.length == 0)
-			|| selectedRange != selectionRangeAfterLastCompletion
-		{
-			canContinuePreviousScan = false
-		}
-
-		let textValue = textView.string
-
-		if currentTextViewStringValue?.isEmpty != false || currentTextViewStringValue != textValue {
-			canContinuePreviousScan = false
-		}
-
-		currentTextViewStringValue = textValue
-		completionIsMovingForward = movingForward
-
-		if !canContinuePreviousScan {
-			rangeOfTextSelection = selectedRange
-			constructCache()
-		}
-
-		guard completionCacheIsConstructed, performCompletionStepOne() else {
-			return
-		}
-
-		performCompletionStepTwo()
-		performCompletionStepThree()
-		performCompletionStepFour()
+		NSSpellChecker.shared.ignoreWord(completedValue, inSpellDocumentWithTag: textView.spellCheckerDocumentTag)
+		apply(completedValue, in: textView, session: &session)
+		self.session = session
 	}
 
-	private func performCompletionStepOne() -> Bool {
-		let searchPatternIsEmpty = cachedSearchPattern?.isEmpty != false
+	public func clear() {
+		session = nil
+	}
 
-		guard !searchPatternIsEmpty || completionKind == .nickname else {
-			return false
+	private func completedValue(for session: inout CompletionSession, movingForward: Bool) -> String? {
+		let request = session.request
+		let searchPatternIsEmpty = request.searchPattern.isEmpty
+
+		guard searchPatternIsEmpty == false || request.kind == .nickname else {
+			return nil
 		}
 
-		var candidates = completionCandidates(searchPatternIsEmpty: searchPatternIsEmpty)
+		var candidates = completionCandidates(for: request)
 
-		if completionKind == .channelName || completionKind == .command {
+		if request.kind == .channelName || request.kind == .command {
 			candidates = candidates.map {
 				Candidate(displayValue: $0.displayValue, comparisonValue: $0.displayValue.lowercased())
 			}
 		}
-
 		if !searchPatternIsEmpty {
-			let searchPattern = cachedSearchPattern?.lowercased() ?? ""
+			let searchPattern = request.searchPattern.lowercased()
 			candidates = candidates.filter { $0.comparisonValue.hasPrefix(searchPattern) }
 		}
 
 		guard !candidates.isEmpty else {
-			return false
+			return nil
 		}
 
-		let selectedIndex: Int = if selectionIndexOfLastCompletion == NSNotFound || selectionIndexOfLastCompletion >=
-			candidates.count
-		{
-			0
-		} else if completionIsMovingForward {
-			(selectionIndexOfLastCompletion + 1) % candidates.count
-		} else if selectionIndexOfLastCompletion == 0 {
-			candidates.count - 1
-		} else {
-			selectionIndexOfLastCompletion - 1
-		}
-
-		selectionIndexOfLastCompletion = selectedIndex
-		completedValue = (cachedSearchPatternPrefixCharacter ?? "") + candidates[selectedIndex].displayValue
-
-		return true
+		let index = session.selectCandidate(count: candidates.count, movingForward: movingForward)
+		return request.prefix + candidates[index].displayValue
 	}
 
-	private func completionCandidates(searchPatternIsEmpty: Bool) -> [Candidate] {
-		if completionKind == .command {
+	private func completionCandidates(for request: CompletionRequest) -> [Candidate] {
+		if request.kind == .command {
 			var commands = CommandIndex.localCommandList().map { $0.lowercased() }
 			let pluginManager = SharedApplication.sharedPluginManager()
 
@@ -193,7 +284,7 @@ public final class NicknameCompletionStatus: NSObject {
 			return []
 		}
 
-		if completionKind == .channelName {
+		if request.kind == .channelName {
 			let selectedChannel = window?.selectedChannel
 			var names: [String] = []
 
@@ -208,7 +299,7 @@ public final class NicknameCompletionStatus: NSObject {
 			return names.map { Candidate(displayValue: $0, comparisonValue: $0) }
 		}
 
-		guard completionKind == .nickname, let channel = window?.selectedChannel else {
+		guard request.kind == .nickname, let channel = window?.selectedChannel else {
 			return []
 		}
 
@@ -220,7 +311,7 @@ public final class NicknameCompletionStatus: NSObject {
 		return nicknameCandidates(
 			from: channel.channelMembers,
 			client: client,
-			searchPatternIsEmpty: searchPatternIsEmpty
+			searchPatternIsEmpty: request.searchPattern.isEmpty
 		)
 	}
 
@@ -316,29 +407,20 @@ public final class NicknameCompletionStatus: NSObject {
 		return candidates
 	}
 
-	private func performCompletionStepTwo() {
-		guard let completedValue, let textView = window?.inputTextField as? TextViewWithIRCFormatter else {
-			return
-		}
-
-		NSSpellChecker.shared.ignoreWord(completedValue, inSpellDocumentWithTag: textView.spellCheckerDocumentTag)
-	}
-
-	private func performCompletionStepThree() {
+	private func completionSuffix(for session: CompletionSession) -> String? {
+		let request = session.request
 		let whitespace = CharacterSet.whitespaces
 		var newCompletionSuffix: String?
-		var whitespaceAlreadyInPosition = cachedCompletionSuffix?.unicodeScalars.last.map(whitespace.contains) ?? false
+		var whitespaceAlreadyInPosition = request.originalSuffix.unicodeScalars.last.map(whitespace.contains) ?? false
 		let whitespaceContainedByCachedSuffix = whitespaceAlreadyInPosition
 
-		if !whitespaceAlreadyInPosition,
-		   let currentTextViewStringValue
-		{
-			let text = currentTextViewStringValue as NSString
+		if !whitespaceAlreadyInPosition {
+			let text = session.currentText as NSString
 			// text.length, not length - 1: the last character index is a valid
 			// place for whitespace to already be, and excluding it appended a
 			// second space at the end of the line.
 			let maximumCompletionSuffixEndPoint = text.length
-			let nextCharacterInRange = NSMaxRange(rangeOfCompletionSuffix)
+			let nextCharacterInRange = NSMaxRange(request.suffixRange)
 
 			if nextCharacterInRange < maximumCompletionSuffixEndPoint,
 			   (whitespace as NSCharacterSet).characterIsMember(text.character(at: nextCharacterInRange))
@@ -347,8 +429,8 @@ public final class NicknameCompletionStatus: NSObject {
 			}
 		}
 
-		if completionKind == .nickname, searchPatternIsAtStart {
-			let userCompletionSuffix = TextualPreferences.tabCompletionSuffix() ?? ""
+		if request.kind == .nickname, request.isAtStart {
+			let userCompletionSuffix = Preferences.Input.tabCompletionSuffix.storedValue ?? ""
 
 			if whitespaceAlreadyInPosition {
 				if userCompletionSuffix.unicodeScalars.last.map(whitespace.contains) == true {
@@ -361,7 +443,7 @@ public final class NicknameCompletionStatus: NSObject {
 					newCompletionSuffix = userCompletionSuffix
 				}
 			} else if userCompletionSuffix.isEmpty {
-				if !TextualPreferences.tabCompletionDoNotAppendWhitespace() {
+				if !Preferences.Input.tabCompletionNoWhitespace.value {
 					newCompletionSuffix = " "
 				}
 			} else {
@@ -371,21 +453,20 @@ public final class NicknameCompletionStatus: NSObject {
 			newCompletionSuffix = " "
 		}
 
-		completedValueCompletionSuffix = newCompletionSuffix
+		return newCompletionSuffix
 	}
 
-	private func performCompletionStepFour() {
-		guard let completedValue,
-		      let textView = window?.inputTextField as? TextViewWithIRCFormatter
-		else {
-			return
-		}
-
+	private func apply(
+		_ completedValue: String,
+		in textView: TextViewWithIRCFormatter,
+		session: inout CompletionSession
+	) {
+		let request = session.request
 		var replacementRange = NSRange(
-			location: rangeOfSearchPattern.location,
-			length: rangeOfSearchPattern.length + rangeOfCompletionSuffix.length
+			location: request.searchRange.location,
+			length: request.searchRange.length + request.suffixRange.length
 		)
-		let replacementValue = completedValue + (completedValueCompletionSuffix ?? "")
+		let replacementValue = completedValue + (completionSuffix(for: session) ?? "")
 
 		if textView.shouldChangeText(in: replacementRange, replacementString: replacementValue) {
 			textView.replaceCharacters(in: replacementRange, with: replacementValue)
@@ -397,149 +478,12 @@ public final class NicknameCompletionStatus: NSObject {
 		let newSelectionRange = NSRange(location: NSMaxRange(replacementRange), length: 0)
 		textView.scrollRangeToVisible(newSelectionRange)
 		textView.setSelectedRange(newSelectionRange)
-		selectionRangeAfterLastCompletion = newSelectionRange
-		rangeOfCompletionSuffix = NSRange(
-			location: NSMaxRange(rangeOfSearchPattern),
-			length: replacementRange.length - rangeOfSearchPattern.length
+		session.selectionAfterCompletion = newSelectionRange
+		session.request.suffixRange = NSRange(
+			location: NSMaxRange(request.searchRange),
+			length: replacementRange.length - request.searchRange.length
 		)
-
-		currentTextViewStringValue = textView.string
-		self.completedValue = nil
-		completedValueCompletionSuffix = nil
-	}
-
-	private func constructCache() {
-		clearCache()
-
-		guard constructCachedSearchPattern(),
-		      constructCachedSearchPatternPrefixCharacter(),
-		      constructCachedCompletionSuffix()
-		else {
-			return
-		}
-
-		completionCacheIsConstructed = true
-	}
-
-	private func constructCachedSearchPattern() -> Bool {
-		guard let currentTextViewStringValue else {
-			return false
-		}
-
-		let text = currentTextViewStringValue as NSString
-		var searchPatternStartingPoint = 0
-
-		if rangeOfTextSelection.location > 0 {
-			for index in stride(from: rangeOfTextSelection.location - 1, through: 0, by: -1) {
-				let character = text.character(at: index)
-
-				if (CharacterSet.whitespaces as NSCharacterSet).characterIsMember(character) || character == 0x2C {
-					searchPatternStartingPoint = index + 1
-					break
-				}
-			}
-		}
-
-		let searchPatternLength = rangeOfTextSelection.location - searchPatternStartingPoint
-		rangeOfSearchPattern = NSRange(location: searchPatternStartingPoint, length: searchPatternLength)
-		cachedSearchPattern = searchPatternLength == 0 ? "" : text.substring(with: rangeOfSearchPattern)
-		searchPatternIsAtStart = searchPatternStartingPoint == 0
-
-		return true
-	}
-
-	private func constructCachedSearchPatternPrefixCharacter() -> Bool {
-		guard var searchPattern = cachedSearchPattern else {
-			return false
-		}
-
-		if searchPatternIsAtStart, searchPattern.hasPrefix("/") {
-			completionKind = .command
-			searchPattern.removeFirst()
-			cachedSearchPatternPrefixCharacter = "/"
-		} else if searchPattern.hasPrefix("@") {
-			completionKind = .nickname
-			searchPattern.removeFirst()
-			cachedSearchPatternPrefixCharacter = "@"
-		} else if searchPattern.hasPrefix("#") {
-			completionKind = .channelName
-		} else {
-			completionKind = .nickname
-		}
-
-		cachedSearchPattern = searchPattern
-
-		return true
-	}
-
-	private func constructCachedCompletionSuffix() -> Bool {
-		guard let currentTextViewStringValue else {
-			return false
-		}
-
-		let text = currentTextViewStringValue as NSString
-		let totalTextLength = text.length
-		let selectedRangeStartPoint = rangeOfTextSelection.location
-		var completionSuffixRange: NSRange
-
-		if rangeOfTextSelection.length > 0 {
-			completionSuffixRange = rangeOfTextSelection
-		} else {
-			completionSuffixRange = NSRange(location: selectedRangeStartPoint, length: 0)
-
-			if completionKind == .nickname,
-			   let userCompletionSuffix = TextualPreferences.tabCompletionSuffix(),
-			   !userCompletionSuffix.isEmpty
-			{
-				let completionSearchRange = NSRange(
-					location: selectedRangeStartPoint,
-					length: totalTextLength - selectedRangeStartPoint
-				)
-				let completionRange = text.range(of: userCompletionSuffix, options: [], range: completionSearchRange)
-
-				if completionRange.location != NSNotFound, completionRange.length < 30 {
-					let whitespaceSearchRange = NSRange(
-						location: selectedRangeStartPoint,
-						length: completionRange.location - selectedRangeStartPoint
-					)
-					let whitespaceRange = text.rangeOfCharacter(
-						from: .whitespaces, options: [], range: whitespaceSearchRange
-					)
-
-					if whitespaceRange.location == NSNotFound {
-						completionSuffixRange.length = NSMaxRange(completionRange) - selectedRangeStartPoint
-					}
-				}
-			}
-
-			if completionSuffixRange.length == 0,
-			   TextualPreferences.tabCompletionCutForwardToFirstWhitespace(),
-			   selectedRangeStartPoint < totalTextLength
-			{
-				var foundDelimiter = false
-
-				for index in selectedRangeStartPoint ..< totalTextLength {
-					let character = text.character(at: index)
-
-					if (CharacterSet.whitespaces as NSCharacterSet).characterIsMember(character) || character == 0x3A
-						|| character == 0x2C
-					{
-						completionSuffixRange.length = index - selectedRangeStartPoint
-						foundDelimiter = true
-						break
-					}
-				}
-
-				if !foundDelimiter {
-					completionSuffixRange.length = totalTextLength - selectedRangeStartPoint
-				}
-			}
-		}
-
-		rangeOfCompletionSuffix = completionSuffixRange
-		cachedCompletionSuffix = completionSuffixRange.length == 0 ? "" : text.substring(with: completionSuffixRange)
-
-		return true
+		session.currentText = textView.string
 	}
 
 	private func trimNickname(_ nickname: String, using characterSet: CharacterSet) -> String? {
@@ -552,19 +496,5 @@ public final class NicknameCompletionStatus: NSObject {
 		}
 
 		return nil
-	}
-
-	private func clearCache() {
-		completedValue = nil
-		completedValueCompletionSuffix = nil
-		cachedSearchPattern = nil
-		cachedSearchPatternPrefixCharacter = nil
-		selectionIndexOfLastCompletion = NSNotFound
-		cachedCompletionSuffix = nil
-		rangeOfCompletionSuffix = NSRange(location: 0, length: 0)
-		rangeOfSearchPattern = NSRange(location: 0, length: 0)
-		completionCacheIsConstructed = false
-		completionKind = nil
-		searchPatternIsAtStart = false
 	}
 }

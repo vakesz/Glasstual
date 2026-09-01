@@ -45,6 +45,7 @@ fi
 
 files=()
 while IFS= read -r file; do
+	[ -f "$file" ] || continue
 	files+=("$file")
 done < <(/usr/bin/git ls-files -- 'Tests/*.swift' | sort)
 

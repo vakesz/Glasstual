@@ -57,6 +57,8 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 	var disconnectOnSleep = false
 	var awayOnScreenSleep = false
 	var enableEchoMessageCapability = false
+	var requestChatHistory = true
+	var synchronizeReadMarkers = true
 	var rememberServerListQueryStates = false
 	var trackUserAwayStatusMaximumChannelSize: UInt = 0
 
@@ -69,6 +71,7 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 	var masqueradeCTCPVersion: String?
 	var locationToSendNotices: TXNoticeSendLocation = .selectedChannel
 	var sendTypingNotifications = false
+	var displayTypingNotifications = true
 	var giveFocusOnMessageCommand = false
 	var autoAddScrollbackMark = false
 	var defaultKickMessage = ""
@@ -88,8 +91,6 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 	var memberListSortFavorsServerStaff = false
 	var disableNicknameColorHashing = false
 	var showInlineMedia = false
-	var themeNicknameFormat = ""
-	var themeNicknameFormatDefault = ""
 	var soundIsMuted = false
 
 	// MARK: Highlights

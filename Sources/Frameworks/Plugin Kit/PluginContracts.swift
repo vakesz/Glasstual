@@ -64,7 +64,8 @@ public extension GlasstualPlugin {
 public protocol PluginPreferencesProviding: AnyObject {
 	var pluginPreferencesPaneMenuItemName: String { get }
 
-	/// `nil` when the plugin's interface file failed to load.
+	/// `nil` when the plugin does not currently supply its named preference pane.
+	/// The view is an ABI adapter and may host SwiftUI content.
 	var pluginPreferencesPaneView: NSView? { get }
 }
 
@@ -111,11 +112,6 @@ public protocol PluginUserInputIntercepting: AnyObject {
 @MainActor
 public protocol PluginPostedMessageHandling: AnyObject {
 	func didPostNewMessage(_ message: PluginPostedMessage)
-}
-
-@MainActor
-public protocol PluginJavaScriptPayloadHandling: AnyObject {
-	func didReceiveJavaScriptPayload(_ payload: PluginJavaScriptPayload)
 }
 
 @MainActor

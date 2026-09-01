@@ -23,7 +23,6 @@ public protocol TVCServerListDelegate: NSObjectProtocol {
 	func serverListKeyDown(_ event: NSEvent)
 }
 
-@objc(TVCServerList)
 public final class ServerList: NSOutlineView, AppearanceObserving {
 	public weak var keyDelegate: TVCServerListDelegate?
 

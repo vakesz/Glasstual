@@ -255,7 +255,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		controller?.insert(member, atArrangedObjectIndex: sortedIndex)
-		client?.postEvent(toViewController: "channelMemberAdded", for: channel)
 	}
 
 	public func removeMember(withNickname nickname: String) {
@@ -277,7 +276,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		controller?.remove(atArrangedObjectIndex: sortedIndex)
-		client?.postEvent(toViewController: "channelMemberRemoved", for: channel)
 	}
 
 	public func resortMember(_ member: ChannelUser) {

@@ -292,6 +292,5 @@ private extension IRCClient {
 		if isConnected {
 			_ = notifyEvent(.disconnect, lineType: .debug)
 		}
-		postEvent(toViewController: "serverDisconnected")
 	}
 }

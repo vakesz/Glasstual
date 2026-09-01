@@ -38,4 +38,13 @@ struct PluginManagerRegistryTests {
 			#expect(principal.isKind(of: expectedPrincipalClass), "\(bundleIdentifier)")
 		}
 	}
+
+	@Test("Bundled script commands are ready before command entry")
+	func bundledScriptCommandsAreCachedAtLaunch() {
+		let paths = SharedApplication.sharedPluginManager().supportedAppleScriptCommandsAndPaths
+
+		#expect(Set(paths.keys).isSuperset(of: ["date", "moti"]))
+		#expect(paths["date"]?.hasSuffix("/Bundled Scripts/date.scpt") == true)
+		#expect(paths["moti"]?.hasSuffix("/Bundled Scripts/moti.scpt") == true)
+	}
 }

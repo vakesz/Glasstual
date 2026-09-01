@@ -33,7 +33,7 @@ struct TXMenuPresentationTests {
 
 		#expect(MenuCommand.settings.symbolName == "gear")
 		#expect(MenuCommand.findText.symbolName == "magnifyingglass")
-		#expect(MenuPresentation.symbolName(forTag: -1) == nil)
+		#expect(MenuPresentation.symbolName(for: nil) == nil)
 
 		let unavailableSymbols = mappings.values.filter {
 			NSImage(systemSymbolName: $0, accessibilityDescription: $0) == nil
@@ -42,17 +42,17 @@ struct TXMenuPresentationTests {
 		#expect(unavailableSymbols.isEmpty, "Unavailable symbols: \(unavailableSymbols.sorted())")
 	}
 
-	@Test("The symbol pass adds an image without touching the item's title, tag or key equivalent")
+	@Test("The symbol pass adds an image without touching the item's command or key equivalent")
 	func symbolPassAssignsMappedImageWithoutChangingMenuIdentity() {
 		let menu = NSMenu(title: "Application")
 		let item = NSMenuItem(title: "Settings…", action: nil, keyEquivalent: ",")
-		item.tag = 102
+		item.command = .settings
 		menu.addItem(item)
 
 		MenuPresentation.apply(to: menu)
 
 		#expect(item.title == "Settings…")
-		#expect(item.tag == 102)
+		#expect(item.command == .settings)
 		#expect(item.keyEquivalent == ",")
 		#expect(item.image != nil)
 	}

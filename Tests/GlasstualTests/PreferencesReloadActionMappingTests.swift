@@ -55,7 +55,7 @@ struct PreferencesReloadActionMappingTests {
 				.contains(.scrollbackSaveLimit)
 		)
 		#expect(
-			TextualPreferences.reloadAction(forKeys: [TPCPreferencesThemeNameDefaultsKey]).contains(.style)
+			TextualPreferences.reloadAction(forKeys: [Preferences.Theme.transcriptTheme.name]).contains(.style)
 		)
 	}
 }

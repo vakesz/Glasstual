@@ -52,7 +52,7 @@ public nonisolated struct NotificationPayload: Equatable, Sendable { // nonisola
 		clientIdentifier = userInfo[Self.clientIdentifierKey] as? String
 		channelIdentifier = userInfo[Self.channelIdentifierKey] as? String
 		fileTransferIdentifier = userInfo[Self.fileTransferIdentifierKey] as? String
-		fileTransferEventRawValue = (userInfo as NSDictionary).ce_integer(forKey: Self.fileTransferTypeKey)
+		fileTransferEventRawValue = (userInfo[Self.fileTransferTypeKey] as? NSNumber)?.intValue ?? 0
 	}
 
 	/// The property list UserNotifications stores with the request.
@@ -124,17 +124,19 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 		/* On a first launch the onboarding window explains the permission
 		 before asking for it, so the request is left to that flow. */
-		if TextualPreferences.onboardingCompleted() {
-			UNUserNotificationCenter.current().requestAuthorization(
-				options: [.alert, .providesAppNotificationSettings]
-			) { granted, error in
-				if let error {
+		if Preferences.Identity.onboardingCompleted.value {
+			Task {
+				do {
+					let granted = try await UNUserNotificationCenter.current().requestAuthorization(
+						options: [.alert, .providesAppNotificationSettings]
+					)
+
+					notificationControllerLogger.info("Notification permission: \(granted, privacy: .public)")
+				} catch {
 					notificationControllerLogger.error(
 						"Notifications failed to authorize: \(error.localizedDescription, privacy: .public)"
 					)
 				}
-
-				notificationControllerLogger.info("Notification permission: \(granted, privacy: .public)")
 			}
 		}
 
@@ -203,7 +205,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			body: eventDescription
 		)
 
-		if TextualPreferences.removeAllFormatting() == false, let currentBody = body {
+		if Preferences.Messages.removeAllFormatting.value == false, let currentBody = body {
 			body = (currentBody as NSString).stripIRCEffects
 		}
 
@@ -376,8 +378,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	private func scheduleNotification(request: UNNotificationRequest) {
 		let title = request.content.title
 
-		UNUserNotificationCenter.current().add(request) { error in
-			if let error {
+		Task {
+			do {
+				try await UNUserNotificationCenter.current().add(request)
+			} catch {
 				notificationControllerLogger.error(
 					"Failed to post notification '\(title, privacy: .private)': \(error.localizedDescription, privacy: .public)"
 				)
@@ -427,8 +431,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			"Dismissing notifications for '\(channelId ?? "<No Channel>", privacy: .public)' on '\(clientId, privacy: .public)'"
 		)
 
-		UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
-			let identifiers = requests.compactMap { request -> String? in
+		Task {
+			let center = UNUserNotificationCenter.current()
+			let requests = await center.pendingNotificationRequests()
+			let pendingIdentifiers = requests.compactMap { request -> String? in
 				Self.isNotification(
 					userInfo: request.content.userInfo,
 					inScopeOfClientIdentifier: clientId,
@@ -436,17 +442,16 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 				) ? request.identifier : nil
 			}
 
-			guard !identifiers.isEmpty else {
-				return
+			if pendingIdentifiers.isEmpty == false {
+				center.removePendingNotificationRequests(withIdentifiers: pendingIdentifiers)
+
+				notificationControllerLogger.debug(
+					"Dismissed \(pendingIdentifiers.count, privacy: .public) pending notifications"
+				)
 			}
 
-			UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
-
-			notificationControllerLogger.debug("Dismissed \(identifiers.count, privacy: .public) pending notifications")
-		}
-
-		UNUserNotificationCenter.current().getDeliveredNotifications { notifications in
-			let identifiers = notifications.compactMap { notification -> String? in
+			let notifications = await center.deliveredNotifications()
+			let deliveredIdentifiers = notifications.compactMap { notification -> String? in
 				Self.isNotification(
 					userInfo: notification.request.content.userInfo,
 					inScopeOfClientIdentifier: clientId,
@@ -454,15 +459,13 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 				) ? notification.request.identifier : nil
 			}
 
-			guard !identifiers.isEmpty else {
-				return
+			if deliveredIdentifiers.isEmpty == false {
+				center.removeDeliveredNotifications(withIdentifiers: deliveredIdentifiers)
+
+				notificationControllerLogger.debug(
+					"Dismissed \(deliveredIdentifiers.count, privacy: .public) delivered notifications"
+				)
 			}
-
-			UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: identifiers)
-
-			notificationControllerLogger.debug(
-				"Dismissed \(identifiers.count, privacy: .public) delivered notifications"
-			)
 		}
 	}
 
@@ -585,7 +588,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			return channelValue
 		}
 
-		return TextualPreferences.sound(for: event)
+		return Preferences.Notifications.sound(event).storedValue
 	}
 
 	public func speakEvent(_ event: TXNotificationType, in channel: IRCChannel?) -> Bool {
@@ -593,7 +596,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			event,
 			in: channel,
 			channelValue: { $0.speakEvent($1) },
-			globalValue: TextualPreferences.speak
+			globalValue: { Preferences.Notifications.flag($0, .speak).value }
 		)
 	}
 
@@ -602,7 +605,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			event,
 			in: channel,
 			channelValue: { $0.notificationEnabled(forEvent: $1) },
-			globalValue: TextualPreferences.notificationEnabled(for:)
+			globalValue: { Preferences.Notifications.flag($0, .enabled).value }
 		)
 	}
 
@@ -611,7 +614,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			event,
 			in: channel,
 			channelValue: { $0.disabledWhileAway(forEvent: $1) },
-			globalValue: TextualPreferences.disabledWhileAway(for:)
+			globalValue: { Preferences.Notifications.flag($0, .disabledWhileAway).value }
 		)
 	}
 
@@ -620,7 +623,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			event,
 			in: channel,
 			channelValue: { $0.bounceDockIcon(forEvent: $1) },
-			globalValue: TextualPreferences.bounceDockIcon(for:)
+			globalValue: { Preferences.Notifications.flag($0, .bounceDockIcon).value }
 		)
 	}
 
@@ -629,7 +632,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			event,
 			in: channel,
 			channelValue: { $0.bounceDockIconRepeatedly(forEvent: $1) },
-			globalValue: TextualPreferences.bounceDockIconRepeatedly(for:)
+			globalValue: { Preferences.Notifications.flag($0, .bounceDockIconRepeatedly).value }
 		)
 	}
 

@@ -12,8 +12,8 @@
 
 import Foundation
 
-/** The native and JavaScript transcript buffers use one policy. A zero or
- otherwise invalid preference restores the theme API's established defaults. */
+/** A zero or otherwise invalid scrollback preference restores the transcript's
+ established defaults. */
 nonisolated struct LogViewBufferPolicy: Equatable, Sendable { // nonisolated: value
 	static let defaultSoftLimit = 200
 	static let defaultHardLimit = 1000
@@ -54,9 +54,53 @@ nonisolated struct TranscriptReplaySnapshot: Sendable { // nonisolated: value
 	let lineNumbers: Set<String>
 }
 
-/** Owns the bounded native transcript while its WebKit projection does not
- exist or is rebuilding. It deliberately stores raw lines: a theme reload must
- render them through the new theme, not replay stale HTML. */
+/// Tracks the one visual boundary between restored scrollback and lines from
+/// this process. The boundary may be known during the initial replay or may
+/// have to wait for the first live line that arrives afterwards.
+nonisolated struct TranscriptSessionBoundaryState: Sendable { // nonisolated: value
+	private(set) var newestPreviousSessionLineNumber: String?
+	private(set) var firstCurrentSessionLineNumber: String?
+	private var markerIsPending = false
+
+	mutating func prepareInitialHistory(
+		_ historicLines: [LogLine],
+		renderedLines: [LogLineRenderResult]
+	) -> String? {
+		newestPreviousSessionLineNumber = historicLines.last { $0.fromCurrentSession == false }?
+			.uniqueIdentifier
+		firstCurrentSessionLineNumber = nil
+		guard newestPreviousSessionLineNumber != nil else {
+			markerIsPending = false
+			return nil
+		}
+		guard let firstCurrent = renderedLines.first(where: \.fromCurrentSession) else {
+			markerIsPending = true
+			return nil
+		}
+		markerIsPending = false
+		firstCurrentSessionLineNumber = firstCurrent.lineNumber
+		return firstCurrent.lineNumber
+	}
+
+	mutating func consumePendingMarker(for line: LogLineRenderResult) -> Bool {
+		guard markerIsPending, line.fromCurrentSession else {
+			return false
+		}
+		markerIsPending = false
+		firstCurrentSessionLineNumber = line.lineNumber
+		return true
+	}
+
+	mutating func reset() {
+		newestPreviousSessionLineNumber = nil
+		firstCurrentSessionLineNumber = nil
+		markerIsPending = false
+	}
+}
+
+/** Owns the bounded transcript while its native view does not exist or is
+ rebuilding. It deliberately stores raw lines so a theme change can render
+ them again from semantic values. */
 nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 	enum Phase: Equatable, Sendable {
 		case dormant
@@ -76,6 +120,10 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 	private var capacity: Int
 	private var recentLines: [LogLine] = []
 	private var pendingResults: [LogLineRenderResult] = []
+
+	var lineCount: Int {
+		recentLines.count
+	}
 
 	init(capacity: Int = LogViewBufferPolicy.defaultHardLimit) {
 		self.capacity = max(capacity, 1)
@@ -135,6 +183,10 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 
 	mutating func setMark(_ mark: TranscriptScrollbackMark) {
 		self.mark = mark
+	}
+
+	func renderedLineNumber(onOrAfter date: Date) -> String? {
+		recentLines.first { $0.receivedAt >= date }?.uniqueIdentifier
 	}
 
 	mutating func updateDelivery(

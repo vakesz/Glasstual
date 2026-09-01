@@ -39,99 +39,745 @@
 import AppKit
 import CocoaExtensions
 import Foundation
-import os
-import WebKit
 
-private let logViewLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "LogView"
-)
+private extension NSAttributedString.Key {
+	static let transcriptLineNumber = NSAttributedString.Key("GlasstualTranscriptLineNumber")
+	static let transcriptNickname = NSAttributedString.Key("GlasstualTranscriptNickname")
+	static let transcriptLineType = NSAttributedString.Key("GlasstualTranscriptLineType")
+	static let transcriptMessageIdentifier = NSAttributedString.Key("GlasstualTranscriptMessageIdentifier")
+	static let transcriptExcerpt = NSAttributedString.Key("GlasstualTranscriptExcerpt")
+	static let transcriptAction = NSAttributedString.Key("GlasstualTranscriptAction")
+}
 
-enum LogViewJavaScript {
-	/** Argument names bound by `callAsyncJavaScript`. */
-	static func argumentName(at index: Int) -> String {
-		"a\(index)"
+@MainActor
+private final class NativeTranscriptTextView: NSTextView {
+	weak var owner: LogView?
+	private var bottomAlignmentOffset: CGFloat = 0
+
+	convenience init(owner: LogView) {
+		self.init(usingTextLayoutManager: true)
+		self.owner = owner
 	}
 
-	/** A dotted path of JavaScript identifiers. Call sites are compile-time
-	 constants, but the body is still a script, so the shape is checked rather
-	 than assumed. */
-	static func isValidFunctionPath(_ function: String) -> Bool {
-		let segments = function.split(separator: ".", omittingEmptySubsequences: false)
-		guard segments.isEmpty == false else {
-			return false
+	override var textContainerOrigin: NSPoint {
+		var origin = super.textContainerOrigin
+		origin.y += bottomAlignmentOffset
+		return origin
+	}
+
+	/// Keeps a short conversation beside the input bar. Once the laid-out text
+	/// is taller than the viewport, TextKit returns to its normal top origin and
+	/// the scroll view behaves like an ordinary transcript.
+	func updateBottomAlignment() {
+		guard let layoutManager = textLayoutManager,
+		      let clipView = enclosingScrollView?.contentView
+		else {
+			bottomAlignmentOffset = 0
+			return
 		}
-		return segments.allSatisfy { segment in
-			guard let first = segment.first else {
-				return false
+
+		let previousOffset = bottomAlignmentOffset
+		bottomAlignmentOffset = 0
+		layoutManager.ensureLayout(for: layoutManager.documentRange)
+		let origin = super.textContainerOrigin
+		let contentHeight = layoutManager.usageBoundsForTextContainer.height
+		let availableHeight = clipView.bounds.height
+		let offset = max(0, availableHeight - contentHeight - origin.y - textContainerInset.height)
+		bottomAlignmentOffset = offset
+		guard abs(offset - previousOffset) > 0.5 else { return }
+		needsDisplay = true
+	}
+
+	override func keyDown(with event: NSEvent) {
+		if owner?.keyDown(event, in: self) == true {
+			return
+		}
+		super.keyDown(with: event)
+	}
+
+	override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+		owner?.performDragOperation(sender) ?? false
+	}
+
+	override func menu(for event: NSEvent) -> NSMenu? {
+		owner?.prepareContextTarget(at: convert(event.locationInWindow, from: nil))
+		return owner?.contextMenu(defaultItems: super.menu(for: event)?.items ?? [])
+	}
+}
+
+@MainActor
+private final class NativeTranscriptView: NSView, NSTextViewDelegate {
+	weak var owner: LogView?
+
+	private let topicField = NSTextField(wrappingLabelWithString: "")
+	private let separator = NSBox()
+	private let scrollView = NSScrollView()
+	private let textView: NativeTranscriptTextView
+	private var scrollViewTopWithTopicConstraint: NSLayoutConstraint?
+	private var scrollViewTopWithoutTopicConstraint: NSLayoutConstraint?
+	private let notifications = NotificationSubscriptions()
+	private var lines: [TranscriptLine] = []
+	private var lineRanges: [String: NSRange] = [:]
+	private var inlineImages: [String: [TranscriptInlineImage]] = [:]
+	private var bufferLimit = LogViewBufferPolicy.defaultHardLimit
+	private var textScale: CGFloat = 1
+
+	init(owner: LogView) {
+		self.owner = owner
+		textView = NativeTranscriptTextView(owner: owner)
+		super.init(frame: .zero)
+		configure()
+	}
+
+	@available(*, unavailable)
+	required init?(coder _: NSCoder) {
+		fatalError("init(coder:) has not been implemented")
+	}
+
+	private func configure() {
+		translatesAutoresizingMaskIntoConstraints = false
+		wantsLayer = true
+
+		topicField.isSelectable = true
+		topicField.allowsEditingTextAttributes = true
+		topicField.maximumNumberOfLines = 3
+		topicField.lineBreakMode = .byTruncatingTail
+		topicField.translatesAutoresizingMaskIntoConstraints = false
+		topicField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+		let topicClick = NSClickGestureRecognizer(target: self, action: #selector(topicDoubleClicked(_:)))
+		topicClick.numberOfClicksRequired = 2
+		topicField.addGestureRecognizer(topicClick)
+
+		separator.boxType = .separator
+		separator.translatesAutoresizingMaskIntoConstraints = false
+
+		textView.delegate = self
+		textView.isEditable = false
+		textView.isSelectable = true
+		textView.isRichText = true
+		textView.importsGraphics = false
+		textView.usesFindPanel = true
+		textView.isAutomaticLinkDetectionEnabled = false
+		textView.isAutomaticDataDetectionEnabled = false
+		textView.drawsBackground = false
+		textView.textContainerInset = NSSize(width: 0, height: 8)
+		textView.isVerticallyResizable = true
+		textView.isHorizontallyResizable = false
+		textView.autoresizingMask = [.width]
+		textView.minSize = .zero
+		textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+		textView.textContainer?.widthTracksTextView = true
+		textView.textContainer?.heightTracksTextView = false
+		textView.registerForDraggedTypes([.fileURL])
+		let contentClick = NSClickGestureRecognizer(target: self, action: #selector(contentDoubleClicked(_:)))
+		contentClick.numberOfClicksRequired = 2
+		textView.addGestureRecognizer(contentClick)
+
+		scrollView.documentView = textView
+		scrollView.hasVerticalScroller = true
+		scrollView.hasHorizontalScroller = false
+		scrollView.autohidesScrollers = true
+		scrollView.drawsBackground = false
+		scrollView.translatesAutoresizingMaskIntoConstraints = false
+		scrollView.contentView.postsBoundsChangedNotifications = true
+		notifications.observe(NSView.boundsDidChangeNotification, object: scrollView.contentView) { [weak self] _ in
+			guard let self, scrollView.contentView.bounds.minY < 160 else { return }
+			owner?.viewController?.loadOlderHistory()
+		}
+
+		addSubview(topicField)
+		addSubview(separator)
+		addSubview(scrollView)
+		scrollViewTopWithTopicConstraint = scrollView.topAnchor.constraint(equalTo: separator.bottomAnchor)
+		scrollViewTopWithoutTopicConstraint = scrollView.topAnchor.constraint(equalTo: topAnchor)
+		NSLayoutConstraint.activate([
+			topicField.topAnchor.constraint(equalTo: topAnchor, constant: 7),
+			topicField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+			topicField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+			separator.topAnchor.constraint(equalTo: topicField.bottomAnchor, constant: 7),
+			separator.leadingAnchor.constraint(equalTo: leadingAnchor),
+			separator.trailingAnchor.constraint(equalTo: trailingAnchor),
+			scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
+			scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
+			scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
+		])
+		setTopic(nil)
+		applyTheme()
+	}
+
+	override func layout() {
+		super.layout()
+		textView.updateBottomAlignment()
+	}
+
+	func setTopic(_ topic: String?) {
+		let value = topic?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+		let hasTopic = value.isEmpty == false
+		topicField.attributedStringValue = attributedTopic(value)
+		topicField.toolTip = value
+		topicField.isHidden = hasTopic == false
+		separator.isHidden = hasTopic == false
+		if hasTopic {
+			scrollViewTopWithoutTopicConstraint?.isActive = false
+			scrollViewTopWithTopicConstraint?.isActive = true
+		} else {
+			scrollViewTopWithTopicConstraint?.isActive = false
+			scrollViewTopWithoutTopicConstraint?.isActive = true
+		}
+		needsLayout = true
+	}
+
+	func setBufferLimit(_ limit: Int) {
+		bufferLimit = max(1, limit)
+		trimIfNeeded()
+	}
+
+	func setTextScale(_ scale: CGFloat) {
+		textScale = max(0.5, min(scale, 3))
+		rebuild(preservingScrollPosition: true)
+	}
+
+	func replace(with newLines: [TranscriptLine]) {
+		lines = Array(newLines.suffix(bufferLimit))
+		rebuild(preservingScrollPosition: false)
+		scrollToBottom()
+	}
+
+	func append(_ newLines: [TranscriptLine]) {
+		guard newLines.isEmpty == false else { return }
+		let followsBottom = isNearBottom
+		lines.append(contentsOf: newLines)
+		trimIfNeeded()
+		rebuild(preservingScrollPosition: true)
+		if followsBottom {
+			scrollToBottom()
+		}
+	}
+
+	func prepend(_ newLines: [TranscriptLine]) {
+		guard newLines.isEmpty == false else { return }
+		lines.insert(contentsOf: newLines, at: 0)
+		trimIfNeeded(removingFromEnd: true)
+		rebuild(preservingScrollPosition: true, preserveFromTop: true)
+	}
+
+	func clear() {
+		lines.removeAll()
+		lineRanges.removeAll()
+		inlineImages.removeAll()
+		textView.textStorage?.setAttributedString(NSAttributedString())
+		textView.updateBottomAlignment()
+	}
+
+	func updateDelivery(_ update: TranscriptDeliveryUpdate) {
+		guard let index = lines.firstIndex(where: { $0.lineNumber == update.lineNumber }) else { return }
+		lines[index].deliveryState = update.state
+		lines[index].messageIdentifier = update.messageIdentifier ?? lines[index].messageIdentifier
+		lines[index].deliveryFailureReason = update.reason
+		rebuild(preservingScrollPosition: true)
+	}
+
+	func updateReactions(_ reactions: [String: [String]], messageIdentifier: String) {
+		guard let index = lines.firstIndex(where: { $0.messageIdentifier == messageIdentifier }) else { return }
+		lines[index].reactions = reactions
+		rebuild(preservingScrollPosition: true)
+	}
+
+	func setUnreadMarker(_ mark: TranscriptScrollbackMark) {
+		for index in lines.indices {
+			lines[index].markers.removeAll {
+				if case .unread = $0 {
+					true
+				} else {
+					false
+				}
 			}
-			guard first.isLetter || first == "_" || first == "$" else {
-				return false
+		}
+		let target: Int? = switch mark {
+		case .none: nil
+		case .latest: lines.indices.last
+		case let .after(date): lines.firstIndex { $0.receivedAt >= date }
+		}
+		if let target {
+			lines[target].markers.insert(.unread(MainWindowStrings.Conversation.unreadMessages), at: 0)
+		}
+		rebuild(preservingScrollPosition: true)
+	}
+
+	func jump(to lineNumber: String) -> Bool {
+		guard let range = lineRanges[lineNumber] else { return false }
+		textView.scrollRangeToVisible(range)
+		return true
+	}
+
+	func scrollToTop() {
+		textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
+	}
+
+	func scrollToBottom() {
+		textView.scrollRangeToVisible(NSRange(location: textView.string.utf16.count, length: 0))
+	}
+
+	func find(_ search: String, movingForward: Bool) {
+		guard search.isEmpty == false else { return }
+		let source = textView.string as NSString
+		let selected = textView.selectedRange()
+		let options: NSString.CompareOptions = movingForward ? [.caseInsensitive] : [.caseInsensitive, .backwards]
+		let firstRange = if movingForward {
+			NSRange(location: NSMaxRange(selected), length: source.length - NSMaxRange(selected))
+		} else {
+			NSRange(location: 0, length: selected.location)
+		}
+		var match = source.range(of: search, options: options, range: firstRange)
+		if match.location == NSNotFound {
+			match = source.range(of: search, options: options, range: NSRange(location: 0, length: source.length))
+		}
+		guard match.location != NSNotFound else { NSSound.beep(); return }
+		textView.setSelectedRange(match)
+		textView.scrollRangeToVisible(match)
+	}
+
+	func addInlineImage(_ image: TranscriptInlineImage) {
+		var images = inlineImages[image.lineNumber] ?? []
+		images.removeAll { $0.linkIdentifier == image.linkIdentifier }
+		images.append(image)
+		inlineImages[image.lineNumber] = images
+		rebuild(preservingScrollPosition: true)
+	}
+
+	func applyTheme() {
+		guard let owner else { return }
+		let controller = SharedApplication.sharedThemeController()
+		layer?.backgroundColor = controller.backgroundColor.cgColor
+		textView.insertionPointColor = controller.resolved(controller.theme.palette.primaryText)
+		topicField.attributedStringValue = attributedTopic(topicField.stringValue)
+		rebuild(preservingScrollPosition: true)
+		owner.setViewFinishedLayout()
+	}
+
+	func textViewDidChangeSelection(_: Notification) {
+		guard let owner else { return }
+		let range = textView.selectedRange()
+		owner.selection = range.length > 0 ? (textView.string as NSString).substring(with: range) : nil
+		if Preferences.Messages.copyOnSelect.value, owner.hasSelection {
+			owner.copySelection()
+		}
+	}
+
+	func textView(_: NSTextView, clickedOnLink link: Any, at _: Int) -> Bool {
+		guard let url = link as? URL else { return false }
+		owner?.policy.openWebpage(url)
+		return true
+	}
+
+	func contextTarget(at point: NSPoint) -> LogPolicyTarget {
+		let target = LogPolicyTarget()
+		guard let storage = textView.textStorage, storage.length > 0 else { return target }
+		let index = min(textView.characterIndexForInsertion(at: point), storage.length - 1)
+		target.anchorURL = (storage.attribute(.link, at: index, effectiveRange: nil) as? URL)?.absoluteString
+		target.nickname = storage.attribute(.transcriptNickname, at: index, effectiveRange: nil) as? String
+		target.lineNumber = storage.attribute(.transcriptLineNumber, at: index, effectiveRange: nil) as? String
+		target.lineMessageIdentifier = storage.attribute(
+			.transcriptMessageIdentifier,
+			at: index,
+			effectiveRange: nil
+		) as? String
+		target.lineType = storage.attribute(.transcriptLineType, at: index, effectiveRange: nil) as? String
+		target.lineNickname = target.nickname
+		target.lineExcerpt = storage.attribute(.transcriptExcerpt, at: index, effectiveRange: nil) as? String
+		if let action = storage.attribute(.transcriptAction, at: index, effectiveRange: nil) as? String {
+			if action.hasPrefix("channel:") {
+				target.channelName = String(action.dropFirst(8))
 			}
-			return segment.allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "$" }
+			if action.hasPrefix("nickname:") {
+				target.nickname = String(action.dropFirst(9))
+			}
+		}
+		return target
+	}
+
+	private func trimIfNeeded(removingFromEnd: Bool = false) {
+		guard lines.count > bufferLimit else { return }
+		let count = lines.count - bufferLimit
+		let removed = removingFromEnd ? lines.suffix(count) : lines.prefix(count)
+		for line in removed {
+			inlineImages.removeValue(forKey: line.lineNumber)
+		}
+		if removingFromEnd {
+			lines.removeLast(count)
+		} else {
+			lines.removeFirst(count)
 		}
 	}
 
-	/** The body `callAsyncJavaScript` runs for a call to `function`. Argument
-	 values never appear in it. */
-	static func functionBody(_ function: String, argumentCount: Int) -> String? {
-		guard isValidFunctionPath(function), argumentCount >= 0 else {
-			return nil
+	private func rebuild(preservingScrollPosition: Bool, preserveFromTop: Bool = false) {
+		let oldHeight = textView.bounds.height
+		let oldOrigin = scrollView.contentView.bounds.origin
+		let selection = textView.selectedRange()
+		let result = NSMutableAttributedString()
+		lineRanges.removeAll(keepingCapacity: true)
+
+		for line in lines {
+			let start = result.length
+			result.append(render(line))
+			lineRanges[line.lineNumber] = NSRange(location: start, length: result.length - start)
 		}
-		let names = (0 ..< argumentCount).map(argumentName(at:))
-		return "return \(function)(\(names.joined(separator: ",")));"
+		textView.textStorage?.setAttributedString(result)
+		textView.updateBottomAlignment()
+		if NSMaxRange(selection) <= result.length {
+			textView.setSelectedRange(selection)
+		}
+		guard preservingScrollPosition else { return }
+		textView.layoutSubtreeIfNeeded()
+		var origin = oldOrigin
+		if preserveFromTop {
+			origin.y += max(0, textView.bounds.height - oldHeight)
+		}
+		scrollView.contentView.scroll(to: origin)
+		scrollView.reflectScrolledClipView(scrollView.contentView)
 	}
 
-	/** Binds `arguments` to the names `functionBody` generates, each one
-	 reduced to a value the bridge converts. */
-	static func namedArguments(_ arguments: [Any]?) -> [String: JavaScriptValue] {
-		var result: [String: JavaScriptValue] = [:]
-		for (index, value) in (arguments ?? []).enumerated() {
-			result[argumentName(at: index)] = JavaScriptValue(bridging: value)
+	private func render(_ line: TranscriptLine) -> NSAttributedString {
+		let result = NSMutableAttributedString()
+		for marker in line.markers {
+			result.append(render(marker, lineNumber: line.lineNumber))
+		}
+		let controller = SharedApplication.sharedThemeController()
+		let theme = controller.theme
+		let paragraph = NSMutableParagraphStyle()
+		paragraph.lineSpacing = theme.lineSpacing
+		paragraph.paragraphSpacing = theme.messageSpacing
+		paragraph.firstLineHeadIndent = theme.horizontalPadding
+		paragraph.headIndent = theme.horizontalPadding
+		paragraph.tailIndent = -theme.horizontalPadding
+
+		let metadata = metadataAttributes(for: line, paragraph: paragraph)
+		if theme.layout == .bubbles {
+			let header = "\(line.timestamp)  \(line.formattedNickname)\n"
+			result.append(NSAttributedString(string: header, attributes: metadata))
+		} else {
+			result.append(NSAttributedString(string: "\(line.timestamp)  ", attributes: metadata))
+			if line.formattedNickname.isEmpty == false {
+				result.append(NSAttributedString(
+					string: "\(line.formattedNickname)  ",
+					attributes: nicknameAttributes(for: line, paragraph: paragraph)
+				))
+			}
+		}
+
+		for run in line.body.runs {
+			result.append(NSAttributedString(
+				string: run.text,
+				attributes: runAttributes(run, line: line, paragraph: paragraph)
+			))
+		}
+		appendDeliveryAndReactions(for: line, to: result, paragraph: paragraph)
+		for image in inlineImages[line.lineNumber] ?? [] {
+			append(image, to: result, paragraph: paragraph)
+		}
+		result.append(NSAttributedString(string: "\n", attributes: metadata))
+		return result
+	}
+
+	private func metadataAttributes(
+		for line: TranscriptLine,
+		paragraph: NSParagraphStyle
+	) -> [NSAttributedString.Key: Any] {
+		let controller = SharedApplication.sharedThemeController()
+		let palette = controller.theme.palette
+		var attributes = lineAttributes(for: line).merging([
+			.font: NSFont.systemFont(ofSize: max(9, effectiveFont(controller).pointSize - 1)),
+			.foregroundColor: controller.resolved(palette.secondaryText),
+			.paragraphStyle: paragraph,
+		]) { _, new in new }
+		if let background = bubbleBackground(for: line) {
+			attributes[.backgroundColor] = background
+		}
+		return attributes
+	}
+
+	private func nicknameAttributes(
+		for line: TranscriptLine,
+		paragraph: NSParagraphStyle
+	) -> [NSAttributedString.Key: Any] {
+		let controller = SharedApplication.sharedThemeController()
+		let palette = controller.theme.palette
+		let fallback = line.memberType == .localUser ? palette.localNickname : palette.remoteNickname
+		let color = Preferences.Messages.disableNicknameColorHashing.value
+			? controller.resolved(fallback)
+			: UserNicknameColorStyleGenerator.color(for: line.nickname ?? "")
+		var attributes = lineAttributes(for: line).merging([
+			.font: NSFontManager.shared.convert(effectiveFont(controller), toHaveTrait: .boldFontMask),
+			.foregroundColor: color,
+			.paragraphStyle: paragraph,
+			.transcriptNickname: line.nickname ?? "",
+			.transcriptAction: "nickname:\(line.nickname ?? "")",
+		]) { _, new in new }
+		if let background = bubbleBackground(for: line) {
+			attributes[.backgroundColor] = background
+		}
+		return attributes
+	}
+
+	private func runAttributes(
+		_ run: TranscriptTextRun,
+		line: TranscriptLine,
+		paragraph: NSParagraphStyle
+	) -> [NSAttributedString.Key: Any] {
+		let controller = SharedApplication.sharedThemeController()
+		let palette = controller.theme.palette
+		var attributes = lineAttributes(for: line)
+		var font = effectiveFont(controller)
+		if run.traits
+			.contains(.monospace)
+		{
+			font = NSFont.monospacedSystemFont(ofSize: font.pointSize, weight: .regular)
+		}
+		if run.traits.contains(.bold) {
+			font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+		}
+		if run.traits.contains(.italic) {
+			font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
+		}
+		attributes[.font] = font
+		attributes[.paragraphStyle] = paragraph
+		attributes[.foregroundColor] = resolved(run.foreground) ?? controller.resolved(
+			line.lineType == .privateMessage || line.lineType == .action ? palette.primaryText : palette.eventText
+		)
+		if let background = resolved(run.background) {
+			attributes[.backgroundColor] = background
+		}
+		if run.traits.contains(.highlighted) {
+			attributes[.backgroundColor] = controller.resolved(palette.highlightBackground)
+			attributes[.foregroundColor] = controller.resolved(palette.highlightText)
+		}
+		if run.traits.contains(.strikethrough) {
+			attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+		}
+		if run.traits.contains(.underline) {
+			attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
+		}
+		if let background = bubbleBackground(for: line) {
+			attributes[.backgroundColor] = background
+		}
+		switch run.action {
+		case let .link(url):
+			attributes[.link] = url
+			attributes[.foregroundColor] = controller.resolved(palette.link)
+		case let .channel(name):
+			attributes[.transcriptAction] = "channel:\(name)"
+			attributes[.foregroundColor] = controller.resolved(palette.link)
+		case let .nickname(name):
+			attributes[.transcriptAction] = "nickname:\(name)"
+			attributes[.transcriptNickname] = name
+			attributes[.foregroundColor] = UserNicknameColorStyleGenerator.color(for: name)
+		case nil:
+			break
+		}
+		return attributes
+	}
+
+	private func bubbleBackground(for line: TranscriptLine) -> NSColor? {
+		let controller = SharedApplication.sharedThemeController()
+		guard controller.theme.layout == .bubbles else { return nil }
+		let palette = controller.theme.palette
+		let pair = line.memberType == .localUser ? palette.bubbleOutgoing : palette.bubbleIncoming
+		return controller.resolved(pair)
+	}
+
+	private func lineAttributes(for line: TranscriptLine) -> [NSAttributedString.Key: Any] {
+		[
+			.transcriptLineNumber: line.lineNumber,
+			.transcriptLineType: line.lineTypeString,
+			.transcriptMessageIdentifier: line.messageIdentifier ?? "",
+			.transcriptExcerpt: line.body.plainText,
+		]
+	}
+
+	private func appendDeliveryAndReactions(
+		for line: TranscriptLine,
+		to result: NSMutableAttributedString,
+		paragraph: NSParagraphStyle
+	) {
+		let controller = SharedApplication.sharedThemeController()
+		let palette = controller.theme.palette
+		var details: [String] = []
+		switch line.deliveryState {
+		case .pending: details.append(TranscriptThemeStrings.pending)
+		case .delivered: details.append(TranscriptThemeStrings.delivered)
+		case .failed:
+			details.append(
+				TranscriptThemeStrings.failed + (line.deliveryFailureReason.map { ": \($0)" } ?? "")
+			)
+		case .none: break
+		}
+		for emoji in line.reactions.keys.sorted() {
+			details.append("\(emoji) \(line.reactions[emoji]?.count ?? 0)")
+		}
+		guard details.isEmpty == false else { return }
+		var attributes = lineAttributes(for: line)
+		attributes[.font] = NSFont.systemFont(ofSize: max(9, effectiveFont(controller).pointSize - 1))
+		attributes[.foregroundColor] = line.deliveryState == .failed
+			? controller.resolved(palette.failure)
+			: controller.resolved(palette.secondaryText)
+		attributes[.paragraphStyle] = paragraph
+		result.append(NSAttributedString(string: "  \(details.joined(separator: "  "))", attributes: attributes))
+	}
+
+	private func append(
+		_ inlineImage: TranscriptInlineImage,
+		to result: NSMutableAttributedString,
+		paragraph: NSParagraphStyle
+	) {
+		guard let image = NSImage(data: inlineImage.imageData) else { return }
+		let maxSize = NSSize(
+			width: min(480, max(120, textView.bounds.width - 40)),
+			height: 320
+		)
+		let scale = min(1, maxSize.width / image.size.width, maxSize.height / image.size.height)
+		image.size = NSSize(width: image.size.width * scale, height: image.size.height * scale)
+		let attachment = NSTextAttachment()
+		attachment.image = image
+		let attachmentString = NSMutableAttributedString(string: "\n")
+		attachmentString.append(NSAttributedString(attachment: attachment))
+		attachmentString.addAttribute(.paragraphStyle, value: paragraph, range: attachmentString.fullRange)
+		result.append(attachmentString)
+	}
+
+	private func attributedTopic(_ topic: String) -> NSAttributedString {
+		let controller = SharedApplication.sharedThemeController()
+		let palette = controller.theme.palette
+		let result = NSMutableAttributedString(string: topic, attributes: [
+			.font: NSFont.preferredFont(forTextStyle: .body),
+			.foregroundColor: controller.resolved(palette.primaryText),
+		])
+		for link in LinkParser.locateLinks(in: topic)
+			where LogRenderer.isSafeLink(link.stringValue)
+		{
+			guard let url = URL(string: link.stringValue), NSMaxRange(link.range) <= result.length else {
+				continue
+			}
+			result.addAttributes([
+				.link: url,
+				.foregroundColor: controller.resolved(palette.link),
+				.underlineStyle: NSUnderlineStyle.single.rawValue,
+			], range: link.range)
 		}
 		return result
 	}
 
-	static func describe(_ result: Any) -> String {
-		switch result {
-		case let string as String:
-			return string
-		case let array as NSArray:
-			return array.description
-		case let dictionary as NSDictionary:
-			return dictionary.description
-		case let number as NSNumber:
-			if CFGetTypeID(number) == CFBooleanGetTypeID() {
-				return number.boolValue ? "true" : "false"
-			}
-			return number.stringValue
-		case is NSNull:
-			return "null"
-		default:
-			return "undefined"
+	private func resolved(_ color: TranscriptRunColor?) -> NSColor? {
+		switch color {
+		case let .palette(index):
+			guard NSColor.formatterColors.indices.contains(index) else { return nil }
+			return NSColor.formatterColors[index]
+		case let .rgb(components):
+			return components.color
+		case nil:
+			return nil
 		}
+	}
+
+	private var isNearBottom: Bool {
+		let clip = scrollView.contentView
+		return clip.bounds.maxY >= textView.bounds.maxY - 40
+	}
+
+	private func effectiveFont(_ controller: ThemeController) -> NSFont {
+		let font = controller.font
+		return NSFont(name: font.fontName, size: font.pointSize * textScale)
+			?? NSFont.systemFont(ofSize: font.pointSize * textScale)
+	}
+
+	@objc private func topicDoubleClicked(_: NSClickGestureRecognizer) {
+		owner?.policy.topicBarDoubleClicked()
+	}
+
+	@objc private func contentDoubleClicked(_ recognizer: NSClickGestureRecognizer) {
+		guard let owner else { return }
+		owner.prepareContextTarget(at: recognizer.location(in: textView))
+		if owner.contextMenuTarget.channelName != nil {
+			owner.policy.channelNameDoubleClicked(in: owner)
+		} else if owner.contextMenuTarget.nickname != nil {
+			owner.policy.nicknameDoubleClicked(in: owner)
+		}
+	}
+}
+
+private extension NativeTranscriptView {
+	func render(_ marker: TranscriptMarker, lineNumber: String) -> NSAttributedString {
+		let controller = SharedApplication.sharedThemeController()
+		let palette = controller.theme.palette
+		let paragraph = NSMutableParagraphStyle()
+		paragraph.alignment = .center
+		let text: String
+		let color: NSColor
+		let font: NSFont
+		switch marker {
+		case let .date(value):
+			text = value
+			color = controller.resolved(palette.secondaryText)
+			font = NSFont.systemFont(
+				ofSize: max(9, effectiveFont(controller).pointSize - 1),
+				weight: .medium
+			)
+			paragraph.paragraphSpacing = 6
+		case let .currentSession(value):
+			text = value
+			color = controller.resolved(palette.secondaryText)
+			font = NSFont.systemFont(
+				ofSize: max(9, effectiveFont(controller).pointSize - 1),
+				weight: .medium
+			)
+			paragraph.paragraphSpacingBefore = 5
+			paragraph.paragraphSpacing = 6
+			paragraph.textBlocks = [separatorBlock(
+				ruleColor: color.withAlphaComponent(0.22),
+				topPadding: 5
+			)]
+		case .unread:
+			// The previous Simplified theme used only a quiet accent hairline.
+			// Keeping the caption out of the transcript prevents an unread
+			// boundary from competing with actual messages.
+			text = "\u{200B}"
+			color = .clear
+			font = NSFont.systemFont(ofSize: 1)
+			paragraph.paragraphSpacingBefore = 5
+			paragraph.paragraphSpacing = 5
+			paragraph.textBlocks = [separatorBlock(
+				ruleColor: controller.resolved(palette.unreadMarker).withAlphaComponent(0.6)
+			)]
+		}
+		return NSAttributedString(string: "\(text)\n", attributes: [
+			.font: font,
+			.foregroundColor: color,
+			.paragraphStyle: paragraph,
+			.transcriptLineNumber: lineNumber,
+		])
+	}
+
+	func separatorBlock(ruleColor: NSColor, topPadding: CGFloat = 0) -> NSTextBlock {
+		let block = NSTextBlock()
+		block.setContentWidth(100, type: .percentageValueType)
+		block.setWidth(1, type: .absoluteValueType, for: .border, edge: .minY)
+		block.setBorderColor(ruleColor, for: .minY)
+		if topPadding > 0 {
+			block.setWidth(topPadding, type: .absoluteValueType, for: .padding, edge: .minY)
+		}
+		return block
 	}
 }
 
 @MainActor
 public final class LogView: NSObject {
-	static let commonUserAgent = "Glasstual/1.0"
-
 	public weak var viewController: LogController?
 	public var contextMenuTarget = LogPolicyTarget()
 	public var selection: String?
-	/** Observed with `publisher(for:)` by the channel view host,
-	 which is key-value observation: the property has to stay visible to the
-	 Objective-C runtime and dynamically dispatched or the key path resolves
-	 to nothing. */
 	@objc public private(set) dynamic var isLayingOutView = false
 
-	private let backingView: LogViewWebView
-
-	/** Fixed for the lifetime of the view, so reloads replace this view's
-	 document instead of adding another one. */
-	private let documentIdentifier = UUID().uuidString
-	private var loadedDocumentURL: URL?
+	private lazy var nativeView = NativeTranscriptView(owner: self)
+	fileprivate let policy = LogPolicy()
+	private let notifications = NotificationSubscriptions()
 
 	@available(*, unavailable, message: "Use init(viewController:)")
 	override public init() {
@@ -140,17 +786,10 @@ public final class LogView: NSObject {
 
 	public init(viewController: LogController) {
 		self.viewController = viewController
-		backingView = LogViewWebView()
 		super.init()
-		backingView.attach(to: self)
-	}
-
-	deinit {
-		guard let loadedDocumentURL else {
-			return
-		}
-		Task { @MainActor in
-			LogViewThemeSchemeHandler.shared.unregisterDocument(at: loadedDocumentURL)
+		_ = nativeView
+		for name in [Notification.Name.themeWasModified, .themeAppearanceChanged] {
+			notifications.observe(name) { [weak self] _ in self?.nativeView.applyTheme() }
 		}
 	}
 
@@ -158,16 +797,12 @@ public final class LogView: NSObject {
 		selection?.isEmpty == false
 	}
 
+	public var view: NSView {
+		nativeView
+	}
+
 	public func clearSelection() {
-		evaluateFunction("Glasstual.clearSelection")
-	}
-
-	public var webView: NSView {
-		backingView
-	}
-
-	public var webViewPolicy: LogPolicy {
-		backingView.webViewPolicy
+		nativeView.clearSelection()
 	}
 
 	public func takeContextMenuTarget() -> LogPolicyTarget {
@@ -175,227 +810,136 @@ public final class LogView: NSObject {
 		return contextMenuTarget
 	}
 
-	public func copyContentString() {
-		stringByEvaluatingFunction("Glasstual.documentHTML") { result in
-			guard let result else {
-				return
-			}
-			NSPasteboard.general.clearContents()
-			NSPasteboard.general.setString(result, forType: .string)
-		}
+	public func copySelection() {
+		nativeView.copySelection()
 	}
 
 	public func printContent() {
-		guard let window = backingView.window else {
-			return
-		}
-
-		let printInfo = NSPrintInfo.shared
-		let operation = backingView.printOperation(with: printInfo)
-		operation.view?.frame = NSRect(origin: .zero, size: printInfo.paperSize)
+		guard let window = nativeView.window else { return }
+		let operation = NSPrintOperation(view: nativeView.printableView, printInfo: .shared)
 		operation.showsPrintPanel = true
 		operation.showsProgressPanel = true
 		operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
 	}
 
 	public func keyDown(_ event: NSEvent, in _: NSView) -> Bool {
-		guard let viewController else {
-			return false
-		}
-
 		let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-		if modifiers.isDisjoint(with: [.command, .option, .control]) {
-			viewController.logViewWebViewKeyDown(event)
-			return true
-		}
-		return false
-	}
-
-	public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-		guard
-			let viewController,
-			let fileURL = NSURL(from: sender.draggingPasteboard) as URL?,
-			fileURL.isFileURL
-		else {
-			return false
-		}
-		viewController.logViewWebViewReceivedDrop(withFile: fileURL.path)
+		guard modifiers.isDisjoint(with: [.command, .option, .control]) else { return false }
+		viewController?.logViewKeyDown(event)
 		return true
 	}
 
-	public func informDelegateWebViewFinishedLoading() {
-		guard let viewController else {
-			return
+	public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+		guard let fileURL = NSURL(from: sender.draggingPasteboard) as URL?, fileURL.isFileURL else {
+			return false
 		}
-
-		let viewDescription = description
-		logViewLogger.debug("View finished loading: \(viewDescription, privacy: .public)")
-		viewController.logViewWebViewFinishedLoading()
-	}
-
-	public func informDelegateWebViewClosedUnexpectedly() {
-		viewController?.logViewWebViewClosedUnexpectedly()
+		viewController?.logViewReceivedDrop(withFile: fileURL.path)
+		return true
 	}
 
 	public func setViewFinishedLayout() {
 		isLayingOutView = false
 	}
 
-	public static func emptyCaches() {
-		LogViewWebView.emptyCaches()
-	}
-
-	private func recreateTemporaryCopyOfThemeIfNecessary() {
-		if AppController.shared.mainWindow.reloadingTheme() {
-			return
-		}
-		if ApplicationInfo.timeIntervalSinceApplicationLaunch() < 120 {
-			return
-		}
-		SharedApplication.sharedThemeController().recreateTemporaryCopyOfThemeIfNecessary()
-	}
-
-	/** The document is served from memory by `LogViewThemeSchemeHandler` under
-	 a URL inside `baseURL`, so relative references still resolve against the
-	 theme while nothing is written to disk. */
-	public func loadHTMLString(_ string: String, baseURL: URL) {
-		isLayingOutView = true
-		recreateTemporaryCopyOfThemeIfNecessary()
-
-		let handler = LogViewThemeSchemeHandler.shared
-		handler.removeStaleRenderedDocuments(in: baseURL)
-
-		guard let documentURL = handler.documentURL(forViewIdentifier: documentIdentifier, in: baseURL) else {
-			logViewLogger.error("Failed to derive a document URL inside the theme directory")
-			return
-		}
-
-		if let loadedDocumentURL, loadedDocumentURL != documentURL {
-			handler.unregisterDocument(at: loadedDocumentURL)
-		}
-		loadedDocumentURL = documentURL
-		handler.registerDocument(string, at: documentURL)
-
-		backingView.load(URLRequest(url: documentURL))
-	}
-
-	/** The backing view cancels its own pending completion, so stopping here
-	 is enough to keep a torn-down load from reporting. */
-	public func stopLoading() {
-		backingView.stopLoading()
-	}
-
 	public func findString(_ searchString: String, movingForward: Bool) {
-		backingView.find(searchString, movingForward: movingForward)
+		nativeView.find(searchString, movingForward: movingForward)
 	}
 
-	public func evaluateJavaScript(_ code: String) {
-		evaluateJavaScript(code, completionHandler: nil)
+	func prepareContextTarget(at point: NSPoint) {
+		contextMenuTarget = nativeView.contextTarget(at: point)
 	}
 
-	public func evaluateJavaScript(_ code: String, completionHandler: ((Any?) -> Void)?) {
-		DispatchQueue.main.async { [weak self] in
-			self?.backingView.evaluate(code, completionHandler: completionHandler)
-		}
+	func contextMenu(defaultItems: [NSMenuItem]) -> NSMenu {
+		policy.contextMenu(for: self, defaultMenuItems: defaultItems)
 	}
 
-	public static func descriptionOfJavaScriptResult(_ result: Any) -> String {
-		LogViewJavaScript.describe(result)
+	func setTopic(_ topic: String?) {
+		nativeView.setTopic(topic)
 	}
 
-	/** Calls `function` in the page with `arguments` bound by name. WebKit
-	 converts the values, so nothing is escaped into a script by hand. */
-	public func evaluate<T>(_ function: String, arguments: [Any]? = nil) async throws -> T? {
-		guard let body = LogViewJavaScript.functionBody(function, argumentCount: arguments?.count ?? 0) else {
-			logViewLogger.error("Refused an unusable JavaScript function name: \(function, privacy: .public)")
-			return nil
-		}
-		let result = try await backingView.call(body, arguments: LogViewJavaScript.namedArguments(arguments))
-		return result as? T
+	func setBufferLimit(_ limit: Int) {
+		nativeView.setBufferLimit(limit)
 	}
 
-	public func evaluateFunction(_ function: String) {
-		evaluateFunction(function, withArguments: nil, completionHandler: nil)
+	func setTextScale(_ scale: CGFloat) {
+		nativeView.setTextScale(scale)
 	}
 
-	public func evaluateFunction(_ function: String, withArguments arguments: [Any]?) {
-		evaluateFunction(function, withArguments: arguments, completionHandler: nil)
+	func replaceLines(_ lines: [TranscriptLine]) {
+		nativeView.replace(with: lines)
 	}
 
-	public func evaluateFunction(
-		_ function: String,
-		withArguments arguments: [Any]?,
-		completionHandler: ((Any?) -> Void)?
-	) {
-		Task { @MainActor [weak self] in
-			guard let self else {
-				return
-			}
-			let result: Any? = try? await evaluate(function, arguments: arguments)
-			completionHandler?(result)
-		}
+	func appendLines(_ lines: [TranscriptLine]) {
+		nativeView.append(lines)
 	}
 
-	public func booleanByEvaluatingFunction(_ function: String, completionHandler: ((Bool) -> Void)?) {
-		booleanByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
+	func prependLines(_ lines: [TranscriptLine]) {
+		nativeView.prepend(lines)
 	}
 
-	public func booleanByEvaluatingFunction(
-		_ function: String,
-		withArguments arguments: [Any]?,
-		completionHandler: ((Bool) -> Void)?
-	) {
-		evaluateFunction(function, withArguments: arguments) { result in
-			completionHandler?((result as? NSNumber)?.boolValue ?? false)
-		}
+	func clearLines() {
+		nativeView.clear()
 	}
 
-	public func stringByEvaluatingFunction(_ function: String, completionHandler: ((String?) -> Void)?) {
-		stringByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
+	func updateDelivery(_ update: TranscriptDeliveryUpdate) {
+		nativeView.updateDelivery(update)
 	}
 
-	public func stringByEvaluatingFunction(
-		_ function: String,
-		withArguments arguments: [Any]?,
-		completionHandler: ((String?) -> Void)?
-	) {
-		evaluateFunction(function, withArguments: arguments) { result in
-			completionHandler?(result as? String)
-		}
+	func updateReactions(_ reactions: [String: [String]], messageIdentifier: String) {
+		nativeView.updateReactions(reactions, messageIdentifier: messageIdentifier)
 	}
 
-	public func arrayByEvaluatingFunction(_ function: String, completionHandler: (([Any]?) -> Void)?) {
-		arrayByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
+	func setUnreadMarker(_ mark: TranscriptScrollbackMark) {
+		nativeView.setUnreadMarker(mark)
 	}
 
-	public func arrayByEvaluatingFunction(
-		_ function: String,
-		withArguments arguments: [Any]?,
-		completionHandler: (([Any]?) -> Void)?
-	) {
-		evaluateFunction(function, withArguments: arguments) { result in
-			completionHandler?(result as? [Any])
-		}
+	func jump(to lineNumber: String) -> Bool {
+		nativeView.jump(to: lineNumber)
 	}
 
-	public func dictionaryByEvaluatingFunction(
-		_ function: String,
-		completionHandler: (([String: JavaScriptValue]?) -> Void)?
-	) {
-		dictionaryByEvaluatingFunction(function, withArguments: nil, completionHandler: completionHandler)
+	func scrollToTop() {
+		nativeView.scrollToTop()
 	}
 
-	public func dictionaryByEvaluatingFunction(
-		_ function: String,
-		withArguments arguments: [Any]?,
-		completionHandler: (([String: JavaScriptValue]?) -> Void)?
-	) {
-		evaluateFunction(function, withArguments: arguments) { result in
-			completionHandler?((result as? [AnyHashable: Any]).map(JavaScriptValue.object(bridging:)))
-		}
+	func scrollToBottom() {
+		nativeView.scrollToBottom()
 	}
 
-	public func logToJavaScriptConsole(_ message: String) {
-		evaluateFunction("console.log", withArguments: [message])
+	func addInlineImage(_ image: TranscriptInlineImage) {
+		nativeView.addInlineImage(image)
+	}
+
+	func applyTheme() {
+		nativeView.applyTheme()
+	}
+}
+
+private extension NativeTranscriptView {
+	var plainText: String {
+		textView.string
+	}
+
+	var printableView: NSView {
+		textView
+	}
+
+	func clearSelection() {
+		textView.setSelectedRange(NSRange(location: 0, length: 0))
+	}
+
+	func copySelection() {
+		textView.copy(nil)
+	}
+}
+
+private extension TranscriptLine {
+	var lineTypeString: String {
+		LogLine.string(for: lineType) ?? ""
+	}
+}
+
+private extension NSAttributedString {
+	var fullRange: NSRange {
+		NSRange(location: 0, length: length)
 	}
 }

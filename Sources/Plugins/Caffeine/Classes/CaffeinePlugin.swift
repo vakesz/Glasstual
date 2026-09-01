@@ -38,27 +38,23 @@
 import AppKit
 import GlasstualPluginKit
 import os
+import SwiftUI
 
 @objc(TPI_Caffeine)
 final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProviding {
-	private static let preventSleepPreference = "Private Extension Store -> Caffeine Extension -> Prevent Sleep"
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "Extension['\(Bundle(for: CaffeinePlugin.self).object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Caffeine")']"
 	)
 
-	@IBOutlet private var preferencesPane: NSView?
+	private var preferencesPane: NSView?
 
 	private var activity: NSObjectProtocol?
 	private var connectionObservation: PluginObservation?
 	private var host: PluginHostContext?
 
 	private var shouldPreventSleepWhenConnected: Bool {
-		host?.defaults.bool(forKey: Self.preventSleepPreference) == true
-	}
-
-	private var bundle: Bundle {
-		Bundle(for: CaffeinePlugin.self)
+		host?.defaults.bool(forKey: CaffeinePreferenceKey.preventSleep) == true
 	}
 
 	private func disableSleep() {
@@ -86,15 +82,11 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 		updateSleepState(hasConnectedClient: host?.clients.contains(where: \.isLoggedIn) == true)
 	}
 
-	@IBAction private func toggledDisableSleepModeWhileConnected(_: Any?) {
-		refreshSleepState()
-	}
-
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		if bundle.loadNibNamed("TPI_Caffeine", owner: self, topLevelObjects: nil) == false {
-			Self.logger.error("Failed to load TPI_Caffeine.xib; the preferences pane is unavailable")
-		}
+		preferencesPane = NSHostingView(rootView: CaffeinePreferencesView(defaults: host.defaults) { [weak self] in
+			self?.refreshSleepState()
+		})
 		connectionObservation = host.observeConnectionState { [weak self] hasConnectedClient in
 			self?.updateSleepState(hasConnectedClient: hasConnectedClient)
 		}
@@ -103,6 +95,7 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 	func pluginWillUnload() {
 		connectionObservation?.cancel()
 		connectionObservation = nil
+		preferencesPane = nil
 		host = nil
 		enableSleep()
 	}

@@ -63,7 +63,6 @@ public nonisolated extension Preferences { // nonisolated: value
 			+ Extensions.all
 			+ Internals.all
 			+ LinkSchemes.all
-			+ InlineMedia.all
 
 	static let allFamilies: [PreferenceKeyFamily] = Families.all
 

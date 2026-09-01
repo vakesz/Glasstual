@@ -13,9 +13,9 @@
 
 import AppKit
 
-/// The IRC formatting menu in `TVCMainWindow.xib` carries its own tag
-/// vocabulary, unrelated to `MenuCommand`'s: items 0…15 are colour palette
-/// indices and the rest are the commands below.
+/// The IRC formatting menu carries its own tag vocabulary, unrelated to
+/// `MenuCommand`'s: items 0…15 are colour palette indices and the rest are the
+/// commands below.
 public enum TextFormatterCommand: Int, CaseIterable, Sendable {
 	case bold = 100
 	case italics = 101
@@ -32,12 +32,11 @@ public enum TextFormatterCommand: Int, CaseIterable, Sendable {
 	case hexColor = 300
 }
 
-@objc(TVCTextViewIRCFormattingMenu)
 @MainActor
 public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
-	@IBOutlet public var formatterMenu: NSMenuItem!
-	@IBOutlet public var foregroundColorMenu: NSMenu!
-	@IBOutlet public var backgroundColorMenu: NSMenu!
+	public private(set) var formatterMenu: NSMenuItem!
+	public private(set) var foregroundColorMenu: NSMenu!
+	public private(set) var backgroundColorMenu: NSMenu!
 
 	/// Which presentation of the shared colour panel is current. The close
 	/// notification arrives a turn late, so a teardown has to be able to tell
@@ -48,9 +47,142 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 	private var hasConfigured = false
 
-	/// Nib-time configuration, run by the main window once the nib's outlets
-	/// are connected. `awakeFromNib` is nonisolated and could only reach the
-	/// colour menus behind a runtime assumption.
+	override public init() {
+		super.init()
+		installMenus()
+	}
+
+	private func installMenus() {
+		let root = NSMenu(title: MainWindowStrings.Formatting.menuTitle)
+		formatterMenu = NSMenuItem(title: root.title, action: nil, keyEquivalent: "")
+		formatterMenu.submenu = root
+
+		addFormattingItem(
+			MainWindowStrings.Formatting.bold,
+			command: .bold,
+			action: #selector(insertBoldCharIntoTextBox),
+			to: root
+		)
+		addFormattingItem(
+			MainWindowStrings.Formatting.italics,
+			command: .italics,
+			action: #selector(insertItalicCharIntoTextBox),
+			to: root
+		)
+		addFormattingItem(
+			MainWindowStrings.Formatting.monospace,
+			command: .monospace,
+			action: #selector(insertMonospaceCharIntoTextBox),
+			to: root
+		)
+		addFormattingItem(
+			MainWindowStrings.Formatting.spoiler,
+			command: .spoiler,
+			action: #selector(insertSpoilerCharIntoTextBox),
+			to: root
+		)
+		addFormattingItem(
+			MainWindowStrings.Formatting.strikethrough,
+			command: .strikethrough,
+			action: #selector(insertStrikethroughCharIntoTextBox),
+			to: root
+		)
+		addFormattingItem(
+			MainWindowStrings.Formatting.underline,
+			command: .underline,
+			action: #selector(insertUnderlineCharIntoTextBox),
+			to: root
+		)
+		root.addItem(.separator())
+
+		foregroundColorMenu = colorMenu(
+			title: MainWindowStrings.Formatting.textColor,
+			action: #selector(insertForegroundColorCharIntoTextBox)
+		)
+		addColorItems(
+			to: root,
+			title: MainWindowStrings.Formatting.textColor,
+			setCommand: .foregroundColorSet,
+			missingCommand: .foregroundColorMissing,
+			removeAction: #selector(removeForegroundColorCharFromTextBox),
+			menu: foregroundColorMenu
+		)
+
+		backgroundColorMenu = colorMenu(
+			title: MainWindowStrings.Formatting.backgroundColor,
+			action: #selector(insertBackgroundColorCharIntoTextBox)
+		)
+		addColorItems(
+			to: root,
+			title: MainWindowStrings.Formatting.backgroundColor,
+			setCommand: .backgroundColorSet,
+			missingCommand: .backgroundColorMissing,
+			removeAction: #selector(removeBackgroundColorCharFromTextBox),
+			menu: backgroundColorMenu
+		)
+	}
+
+	private func addFormattingItem(
+		_ title: String,
+		command: TextFormatterCommand,
+		action: Selector,
+		to menu: NSMenu
+	) {
+		let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+		item.tag = command.rawValue
+		item.target = self
+		menu.addItem(item)
+	}
+
+	private func addColorItems(
+		to root: NSMenu,
+		title: String,
+		setCommand: TextFormatterCommand,
+		missingCommand: TextFormatterCommand,
+		removeAction: Selector,
+		menu: NSMenu
+	) {
+		let remove = NSMenuItem(title: title, action: removeAction, keyEquivalent: "")
+		remove.tag = setCommand.rawValue
+		remove.target = self
+		remove.state = .on
+		remove.isHidden = true
+		root.addItem(remove)
+
+		let choose = NSMenuItem(title: title, action: #selector(emptyAction), keyEquivalent: "")
+		choose.tag = missingCommand.rawValue
+		choose.target = self
+		choose.submenu = menu
+		root.addItem(choose)
+	}
+
+	private func colorMenu(title: String, action: Selector) -> NSMenu {
+		let menu = NSMenu(title: title)
+		for index in NSColor.formatterColors.indices {
+			let item = NSMenuItem(
+				title: ApplicationStrings.ircColor(at: index),
+				action: action,
+				keyEquivalent: ""
+			)
+			item.tag = index
+			item.target = self
+			menu.addItem(item)
+		}
+
+		menu.addItem(.separator())
+		let rainbow = NSMenuItem(title: MainWindowStrings.Formatting.rainbow, action: action, keyEquivalent: "")
+		rainbow.tag = TextFormatterCommand.rainbowColor.rawValue
+		rainbow.target = self
+		menu.addItem(rainbow)
+
+		let custom = NSMenuItem(title: MainWindowStrings.Formatting.other, action: action, keyEquivalent: "")
+		custom.tag = TextFormatterCommand.hexColor.rawValue
+		custom.target = self
+		menu.addItem(custom)
+		return menu
+	}
+
+	/// Completes menu configuration once the application graph is available.
 	public func configure() {
 		guard hasConfigured == false else {
 			return

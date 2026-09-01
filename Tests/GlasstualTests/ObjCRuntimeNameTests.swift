@@ -16,12 +16,11 @@ import CocoaExtensions
 import Synchronization
 import Testing
 
-/// The Objective-C names something outside the compiler depends on and no nib
-/// mentions. `NibRuntimeNameTests` sweeps the nibs and checks every class,
-/// outlet, action and binding they name, so the only entries left here are the
-/// ones that survive for a reason a nib cannot express: an archive on disk, a
-/// saved window frame, and the mIRC palette, whose indices are wire format
-/// rather than a design choice.
+/// The Objective-C names something outside the compiler depends on. Interface
+/// Builder resources are gone, so the only entries left here are the ones that
+/// survive for an external reason: an archive on disk, a saved window frame,
+/// KVO, and the mIRC palette, whose indices are wire format rather than a
+/// design choice.
 ///
 /// Nothing else belongs here. A test that asserts a type conforms to a protocol,
 /// responds to a selector it declares, or has the raw value written next to its

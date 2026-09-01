@@ -71,7 +71,7 @@ enum PluginHostAdapter {
 			themeSnapshot: makeThemeSnapshot,
 			observeConnectionState: observeConnectionState,
 			removesFormatting: {
-				TextualPreferences.removeAllFormatting()
+				Preferences.Messages.removeAllFormatting.value
 			}
 		)
 	}
@@ -308,32 +308,14 @@ enum PluginHostAdapter {
 
 	private static func makeThemeSnapshot() -> PluginThemeSnapshot? {
 		let controller = SharedApplication.sharedThemeController()
-		guard let theme = controller.theme else {
-			return nil
-		}
-
-		let resolvedAppearance: PluginThemeAppearance = switch theme.appearance {
-		case .dark: .dark
-		case .light: .light
-		case .default:
-			SharedApplication.sharedAppearance().properties.isDarkAppearance ? .dark : .light
-		}
+		let resolvedAppearance: PluginThemeAppearance = SharedApplication.sharedAppearance().properties.isDarkAppearance
+			? .dark : .light
 
 		return PluginThemeSnapshot(
 			name: controller.name,
-			storageLocation: storageLocation(for: controller.storageLocation),
+			storageLocation: .custom,
 			resolvedAppearance: resolvedAppearance
 		)
-	}
-
-	private static func storageLocation(
-		for location: TPCThemeStorageLocation
-	) -> PluginThemeStorageLocation {
-		switch location {
-		case .unknown: .unknown
-		case .bundle: .bundled
-		case .custom: .custom
-		}
 	}
 
 	private static func observeConnectionState(

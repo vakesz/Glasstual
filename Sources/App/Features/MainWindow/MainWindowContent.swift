@@ -61,7 +61,7 @@ extension MainWindow {
 	}
 
 	public func markAllAsRead(inGroup item: IRCTreeItem?) {
-		let markScrollback = TextualPreferences.autoAddScrollbackMark()
+		let markScrollback = Preferences.Messages.autoAddScrollbackMark.value
 		for client in world.clientList {
 			if markScrollback {
 				client.logController?.mark()
@@ -85,11 +85,7 @@ extension MainWindow {
 		guard isReloadingTheme == false else { return }
 		isReloadingTheme = true
 		NotificationCenter.default.post(name: .mainWindowWillReloadTheme, object: self)
-		DispatchQueue.main.async { [weak self] in
-			guard let self, AppController.shared.applicationIsTerminating == false else { return }
-			LogView.emptyCaches()
-			performThemeReload()
-		}
+		performThemeReload()
 	}
 
 	private func performThemeReload() {
@@ -130,7 +126,7 @@ extension MainWindow {
 	}
 
 	func tab(_: NSEvent) {
-		switch TextualPreferences.tabKeyAction() {
+		switch Preferences.Input.tabKeyAction.value {
 		case .nicknameComplete: completeNickname(true)
 		case .unreadChannel: navigateChannelEntries(true, withNavigationType: .unread)
 		default: break
@@ -138,7 +134,7 @@ extension MainWindow {
 	}
 
 	func shiftTab(_: NSEvent) {
-		switch TextualPreferences.tabKeyAction() {
+		switch Preferences.Input.tabKeyAction.value {
 		case .nicknameComplete: completeNickname(false)
 		case .unreadChannel: navigateChannelEntries(false, withNavigationType: .unread)
 		default: break
@@ -146,7 +142,7 @@ extension MainWindow {
 	}
 
 	func sendControlEnterMessageMaybe(_ event: NSEvent) {
-		if TextualPreferences.controlEnterSendsMessage() {
+		if Preferences.Input.controlEnterSendsMessage.value {
 			textEntered()
 		} else {
 			inputTextField.keyDownToSuper(event)
@@ -154,7 +150,7 @@ extension MainWindow {
 	}
 
 	func sendMessageAsAction(_: NSEvent) {
-		if TextualPreferences.commandReturnSendsMessageAsAction() {
+		if Preferences.Input.commandReturnSendsAction.value {
 			inputTextAsCommand(.privmsgAction)
 		} else {
 			textEntered()
@@ -271,8 +267,8 @@ extension MainWindow {
 		SharedApplication.sharedSpeechSynthesizer().stopSpeakingAndMoveForward()
 	}
 
-	func focusWebview(_: NSEvent) {
-		guard attachedSheet == nil, let view = selectedViewController?.backingView?.webView else { return }
+	func focusTranscript(_: NSEvent) {
+		guard attachedSheet == nil, let view = selectedViewController?.backingView?.view else { return }
 		makeFirstResponder(view)
 	}
 
@@ -311,7 +307,7 @@ public extension MainWindow {
 	}
 
 	override func beginGesture(with event: NSEvent) {
-		guard TextualPreferences.swipeMinimumLength() >= 1 else { return }
+		guard Preferences.Input.swipeMinimumLength.value >= 1 else { return }
 		let touches = Array(event.touches(matching: .touching, in: nil))
 		guard touches.count == 2 else { return }
 		cachedSwipeOriginPoint = point(between: touches[0], and: touches[1])
@@ -326,7 +322,7 @@ public extension MainWindow {
 	}
 
 	override func endGesture(with event: NSEvent) {
-		let minimum = TextualPreferences.swipeMinimumLength()
+		let minimum = Preferences.Input.swipeMinimumLength.value
 		guard minimum >= 1 else { return }
 		let touches = Array(event.touches(matching: .any, in: nil))
 		guard let origin = cachedSwipeOriginPoint, touches.count == 2 else {
@@ -377,7 +373,7 @@ public extension MainWindow {
 	}
 
 	func preferencesChanged() {
-		if TextualPreferences.displayDockBadge() {
+		if Preferences.Notifications.displayDockBadge.value {
 			DockIcon.resetCachedCount(); DockIcon.updateDockIcon()
 		} else {
 			DockIcon.drawWithoutCount()
@@ -495,7 +491,7 @@ public extension MainWindow {
 		}
 
 		memberList.assign(to: changedTo.isChannel ? nativeChannel(changedTo) : nil)
-		if TextualPreferences.focusMainTextViewOnSelectionChange(),
+		if Preferences.Input.focusTextViewOnSelectionChange.value,
 		   Accessibility.isVoiceOverEnabled == false
 		{
 			inputTextField.focus()
@@ -622,90 +618,13 @@ public extension MainWindow {
 	}
 
 	func updateTitle() {
-		guard let client = selectedClient else {
-			title = ApplicationInfo.applicationName()
-			subtitle = ""
+		let content = MainWindowTitleContent(client: selectedClient, channel: selectedChannel)
+		title = content.title
+		subtitle = content.subtitle
+
+		guard selectedClient != nil else {
 			return
 		}
-		let channel = selectedChannel
-		let connectionStatus: MainWindowStrings.ConnectionStatus? = {
-			if client.isConnected == false,
-			   client
-			   .isConnecting ==
-			   false
-			{
-				return client.isReconnecting ? .waitingToReconnect : .disconnected
-			}
-			if client.isConnecting,
-			   client
-			   .isLoggedIn ==
-			   false
-			{
-				return [.retry, .reconnect].contains(client.connectType) ? .reconnecting : .connecting
-			}
-			if client.isConnected, client.isLoggedIn == false {
-				return .loggingOn
-			}
-			if client.isQuitting {
-				return .disconnecting
-			}
-			return nil
-		}()
-		let status = connectionStatus?.title
-
-		var nickname = client.userNickname
-		if client.userIsAway, nickname.isEmpty == false {
-			nickname += MainWindowStrings.Conversation.awayNicknameSuffix
-		}
-		let network = client.networkNameAlt
-		var parts = [String]()
-		if let channel {
-			title = channel.name
-			if let status, status.isEmpty == false {
-				parts.append(status)
-			}
-			if network.isEmpty == false {
-				parts.append(network)
-			}
-			if nickname.isEmpty == false {
-				parts.append(nickname)
-			}
-			switch channel.type {
-			case .channel:
-				parts.append(
-					MainWindowStrings.Conversation.userCount(
-						formattedNumber(Int(channel.numberOfMembers)) as String
-					)
-				)
-				if let modes = channel.modeInfo?.stringWithMaskedPassword, modes.count > 1 {
-					parts.append(modes)
-				}
-			case .privateMessage:
-				if let hostmask = client.findUser(channel.name)?.hostmaskFragment,
-				   hostmask.isEmpty == false
-				{
-					parts.append(hostmask)
-				}
-			case .directChat:
-				parts.append(MainWindowStrings.Conversation.directChat)
-			case .utility:
-				break
-			@unknown default:
-				break
-			}
-		} else {
-			title = network.isEmpty ? ApplicationInfo.applicationName() : network
-			if let status, status.isEmpty == false {
-				parts.append(status)
-			}
-			if nickname.isEmpty == false {
-				parts.append(nickname)
-			}
-			if let serverAddress = client.serverAddress, serverAddress.isEmpty == false {
-				parts.append(serverAddress)
-			}
-		}
-		subtitle = parts.joined(separator: " · ")
 		setAccessibilityTitle(AccessibilityStrings.mainWindow)
 	}
 
@@ -871,18 +790,18 @@ public extension MainWindow {
 		if let channel = selectedChannel {
 			guard client.isLoggedIn else { return }
 			if channel.isActive {
-				if TextualPreferences.leaveOnDoubleclick() {
+				if Preferences.Appearance.leaveOnDoubleClick.value {
 					client.part(channel)
 				}
-			} else if TextualPreferences.joinOnDoubleclick() {
+			} else if Preferences.Appearance.joinOnDoubleClick.value {
 				client.join(channel)
 			}
 		} else {
 			if client.isConnecting || client.isConnected {
-				if TextualPreferences.disconnectOnDoubleclick() {
+				if Preferences.Appearance.disconnectOnDoubleClick.value {
 					client.quit()
 				}
-			} else if client.isQuitting == false, TextualPreferences.connectOnDoubleclick() {
+			} else if client.isQuitting == false, Preferences.Appearance.connectOnDoubleClick.value {
 				client.connect()
 			}
 			expandClient(client)
@@ -932,7 +851,15 @@ public extension MainWindow {
 	func outlineView(_ outlineView: NSOutlineView, viewFor _: NSTableColumn?, item: Any) -> NSView? {
 		let isChildRow = (item as? IRCTreeItem)?.isClient == false
 		let identifier = NSUserInterfaceItemIdentifier(isChildRow ? "ChildView" : "GroupView")
-		return outlineView.makeView(withIdentifier: identifier, owner: self)
+		if let reusable = outlineView.makeView(withIdentifier: identifier, owner: self) {
+			return reusable
+		}
+
+		let cell: ServerListCell = isChildRow
+			? ServerListCellChildItem(frame: .zero)
+			: ServerListCellGroupItem(frame: .zero)
+		cell.identifier = identifier
+		return cell
 	}
 
 	func outlineView(_: NSOutlineView, didAdd _: NSTableRowView, forRow row: Int) {

@@ -21,7 +21,7 @@ public final class SharedApplication: NSObject {
 	private static let appearance = Appearance()
 	private static let networkReachabilityNotifier = Reachability.reachabilityForInternetConnection()
 	private static let notificationController = NotificationController()
-	private static let themeController = TPCThemeController()
+	private static let themeController = ThemeController()
 	private static let windowController = WindowController()
 	private static let fileTransferDialog = TDCFileTransferDialog()
 
@@ -63,7 +63,7 @@ public final class SharedApplication: NSObject {
 		speechSynthesizerStorage
 	}
 
-	public static func sharedThemeController() -> TPCThemeController {
+	public static func sharedThemeController() -> ThemeController {
 		themeController
 	}
 

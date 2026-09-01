@@ -63,41 +63,7 @@ struct PreferencesBehaviorPane: View {
 					title: PreferencesBehaviorStrings.rememberQueries,
 					isOn: model.preferences.binding(for: Preferences.Appearance.rememberQueryStates)
 				)
-				VStack(alignment: .leading, spacing: 4) {
-					PreferencesToggle(
-						title: PreferencesBehaviorStrings.sendTypingNotifications,
-						isOn: model.preferences.binding(for: Preferences.Connection.sendTypingNotifications)
-					)
-					PreferencesNote(PreferencesBehaviorStrings.typingNotificationsNote)
-				}
 			}
-		}
-	}
-}
-
-struct PreferencesCompatibilityPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesCompatibilitySections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// its neighbours.
-struct PreferencesCompatibilitySections: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		Section {
-			PreferencesToggle(
-				title: PreferencesCompatibilityStrings.echoMessage,
-				isOn: model.preferences.binding(for: Preferences.Connection.echoMessageCapability)
-			)
-		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.compatibility))
 		}
 	}
 }

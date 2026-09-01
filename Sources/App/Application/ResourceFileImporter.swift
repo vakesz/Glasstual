@@ -121,8 +121,8 @@ public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
 	// MARK: - Custom Script Files
 
 	public func panel(_: Any, validate url: URL) throws {
-		guard let scriptsPath = PathInfo.customScripts,
-		      Self.url(url, isContainedIn: URL(fileURLWithPath: scriptsPath))
+		guard let scriptsURL = SharedApplication.sharedPluginManager().customScriptsURL,
+		      Self.url(url, isContainedIn: scriptsURL)
 		else {
 			throw NSError(
 				domain: "GlasstualErrorDomain",
@@ -165,10 +165,10 @@ public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
 			return
 		}
 
-		var folderRep = PathInfo.customScriptsURL
+		var folderRep = SharedApplication.sharedPluginManager().customScriptsURL
 
 		if folderRep.map({ FileManager.default.fileExists(at: $0) }) != true {
-			folderRep = PathInfo.userApplicationScriptsURL
+			folderRep = folderRep?.deletingLastPathComponent()
 		}
 
 		let bundleID = ApplicationInfo.applicationBundleIdentifier()
@@ -193,9 +193,8 @@ public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
 
 			let importedFilename = destinationURL.lastPathComponent
 
-			DispatchQueue.main.async {
-				self.performImportOfScriptFilePostflight(importedFilename)
-			}
+			performImportOfScriptFilePostflight(importedFilename)
+			SharedApplication.sharedPluginManager().refreshScriptCommands()
 		}
 	}
 

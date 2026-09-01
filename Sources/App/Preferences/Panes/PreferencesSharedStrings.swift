@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum PreferencesSectionStrings { // nonisolated: value
+enum PreferencesSectionStrings {
 	static var advanced: String {
 		String(localized: .TDCPreferencesController.headingAdvanced)
 	}
@@ -22,7 +22,7 @@ nonisolated enum PreferencesSectionStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesAdvancedStrings { // nonisolated: value
+enum PreferencesAdvancedStrings {
 	static var channels: String {
 		String(localized: .TDCPreferencesController.advancedChannels)
 	}
@@ -44,13 +44,23 @@ nonisolated enum PreferencesAdvancedStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesGeneralStrings { // nonisolated: value
+enum PreferencesGeneralStrings {
 	static var confirmQuit: String {
 		String(localized: .TDCPreferencesController.generalConfirmQuit)
 	}
 }
 
-nonisolated enum PreferencesBehaviorStrings { // nonisolated: value
+enum PreferencesNavigationStrings {
+	static var back: String {
+		String(localized: .TDCPreferencesController.navigationBack)
+	}
+
+	static var forward: String {
+		String(localized: .TDCPreferencesController.navigationForward)
+	}
+}
+
+enum PreferencesBehaviorStrings {
 	static var autojoinOnInvite: String {
 		String(localized: .TDCPreferencesController.behaviorAutojoinOnInvite)
 	}
@@ -74,23 +84,71 @@ nonisolated enum PreferencesBehaviorStrings { // nonisolated: value
 	static var rememberQueries: String {
 		String(localized: .TDCPreferencesController.behaviorRememberQueries)
 	}
+}
+
+enum PreferencesIRCv3Strings {
+	static var automaticFeatures: String {
+		String(localized: .TDCPreferencesController.ircv3AutomaticFeatures)
+	}
+
+	static var automaticFeaturesNote: String {
+		String(localized: .TDCPreferencesController.ircv3AutomaticFeaturesNote)
+	}
+
+	static var connectedServers: String {
+		String(localized: .TDCPreferencesController.ircv3ConnectedServers)
+	}
+
+	static var disconnected: String {
+		String(localized: .TDCPreferencesController.ircv3Disconnected)
+	}
+
+	static var displayTypingNotifications: String {
+		String(localized: .TDCPreferencesController.ircv3DisplayTypingNotifications)
+	}
+
+	static var echoMessage: String {
+		String(localized: .TDCPreferencesController.ircv3EchoMessage)
+	}
+
+	static var history: String {
+		String(localized: .TDCPreferencesController.ircv3History)
+	}
+
+	static var historyNote: String {
+		String(localized: .TDCPreferencesController.ircv3HistoryNote)
+	}
+
+	static var messages: String {
+		String(localized: .TDCPreferencesController.ircv3Messages)
+	}
+
+	static var noCapabilities: String {
+		String(localized: .TDCPreferencesController.ircv3NoCapabilities)
+	}
+
+	static var noConnections: String {
+		String(localized: .TDCPreferencesController.ircv3NoConnections)
+	}
+
+	static var reconnectNote: String {
+		String(localized: .TDCPreferencesController.ircv3ReconnectNote)
+	}
+
+	static var requestChatHistory: String {
+		String(localized: .TDCPreferencesController.ircv3RequestChatHistory)
+	}
 
 	static var sendTypingNotifications: String {
-		String(localized: .TDCPreferencesController.behaviorSendTypingNotifications)
+		String(localized: .TDCPreferencesController.ircv3SendTypingNotifications)
 	}
 
-	static var typingNotificationsNote: String {
-		String(localized: .TDCPreferencesController.behaviorTypingNotificationsNote)
-	}
-}
-
-nonisolated enum PreferencesCompatibilityStrings { // nonisolated: value
-	static var echoMessage: String {
-		String(localized: .TDCPreferencesController.compatibilityEchoMessage)
+	static var synchronizeReadMarkers: String {
+		String(localized: .TDCPreferencesController.ircv3SynchronizeReadMarkers)
 	}
 }
 
-nonisolated enum PreferencesCommandScopeStrings { // nonisolated: value
+enum PreferencesCommandScopeStrings {
 	static var amsg: String {
 		String(localized: .TDCPreferencesController.commandScopeAmsg)
 	}
@@ -128,7 +186,7 @@ nonisolated enum PreferencesCommandScopeStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesChannelManagementStrings { // nonisolated: value
+enum PreferencesChannelManagementStrings {
 	static var banFormatExact: String {
 		String(localized: .TDCPreferencesController.channelManagementBanFormatExact)
 	}

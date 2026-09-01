@@ -355,3 +355,49 @@ nonisolated enum NotificationSoundStrings { // nonisolated: value
 		String(localized: .TVCNotificationConfigurationView.noSound)
 	}
 }
+
+nonisolated enum NotificationConfigurationStrings { // nonisolated: value
+	static var bounceDockIcon: String {
+		String(localized: .TVCNotificationConfigurationView.bounceDockIcon)
+	}
+
+	static var bounceRepeatedly: String {
+		String(localized: .TVCNotificationConfigurationView.bounceRepeatedly)
+	}
+
+	static var disableWhileAway: String {
+		String(localized: .TVCNotificationConfigurationView.disableWhileAway)
+	}
+
+	static var inherit: String {
+		String(localized: .TVCNotificationConfigurationView.inherit)
+	}
+
+	static var noAlerts: String {
+		String(localized: .TVCNotificationConfigurationView.noAlerts)
+	}
+
+	static var off: String {
+		String(localized: .TVCNotificationConfigurationView.off)
+	}
+
+	static var on: String {
+		String(localized: .TVCNotificationConfigurationView.on)
+	}
+
+	static var selectedAlert: String {
+		String(localized: .TVCNotificationConfigurationView.selectedAlert)
+	}
+
+	static var showNotification: String {
+		String(localized: .TVCNotificationConfigurationView.showNotification)
+	}
+
+	static var sound: String {
+		String(localized: .TVCNotificationConfigurationView.sound)
+	}
+
+	static var speak: String {
+		String(localized: .TVCNotificationConfigurationView.speak)
+	}
+}

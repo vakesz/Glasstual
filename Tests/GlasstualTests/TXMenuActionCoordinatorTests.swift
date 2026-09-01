@@ -81,17 +81,13 @@ struct TXMenuActionCoordinatorTests {
 		) == false)
 	}
 
-	/// The nib writes these tags on its Find menu items, so the numbers are the
-	/// contract between the menu and the coordinator.
-	@Test("The Find menu items keep the tags the nib writes on them")
+	@Test("Find commands keep stable identifiers for non-menu callers")
 	func findTagsPreserveMenuContracts() {
 		#expect(MenuFindTag.open == 3_090_000)
 		#expect(MenuFindTag.next == 3_090_001)
 	}
 
-	/// Likewise the mode menu: the nib carries the tag, and the tag is what
-	/// decides whether the mode is set or removed.
-	@Test("A channel mode item's tag decides whether the mode is set or removed")
+	@Test("A channel-mode command decides whether the mode is set or removed")
 	func channelModeTagsPreserveLegacyModeCommands() {
 		#expect(MenuChannelModePolicy.removeModeratedTag == 6_090_001)
 		#expect(MenuChannelModePolicy.removeInviteOnlyTag == 6_090_003)

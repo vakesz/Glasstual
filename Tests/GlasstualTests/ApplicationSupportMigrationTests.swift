@@ -49,7 +49,6 @@ struct ApplicationSupportMigrationTests {
 		#expect(PathInfo.applicationResourcesURL == bundle.resourceURL)
 		#expect(PathInfo.bundledExtensions.hasSuffix("Bundled Extensions"))
 		#expect(PathInfo.bundledScripts.hasSuffix("Bundled Scripts"))
-		#expect(PathInfo.bundledThemes.hasSuffix("Bundled Styles"))
 		#expect(PathInfo.systemDiagnosticReports == "/Library/Logs/DiagnosticReports")
 		#expect(PathInfo.userHome.isEmpty == false)
 	}

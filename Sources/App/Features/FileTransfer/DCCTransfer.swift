@@ -74,11 +74,11 @@ public nonisolated enum DCCTransferEvent: Sendable { // nonisolated: value
 /// One DCC file transfer: the socket, the file and the DCC acknowledgement
 /// protocol, all owned by a single actor.
 ///
-/// Nothing about a transfer is shared: the actor creates its own `NWConnection`
-/// or `NWListener`, opens its own `FileHandle`, and reports what it is doing
-/// through ``events``. Network.framework's callbacks never touch actor state —
-/// they only resume a continuation or yield into an `AsyncStream` — so the
-/// actor is the one place the transfer's state lives.
+/// Nothing about a transfer is shared: the actor creates its own typed
+/// Network.framework connection or listener, opens its own `FileHandle`, and
+/// reports what it is doing through ``events``. The transport's async methods
+/// run inside the transfer task, so the actor is the one place the transfer's
+/// state lives.
 public actor DCCTransfer {
 	/// Which end of the transfer this actor is.
 	public nonisolated enum Role: Sendable { // nonisolated: value
@@ -131,7 +131,7 @@ public actor DCCTransfer {
 		}
 	}
 
-	/// Read buffer, and the ceiling on a single `NWConnection.receive`.
+	/// Read buffer, and the ceiling on a single connection receive.
 	static let bufferSize = 64 * 1024
 	/// The transfer paces itself to this many bytes a second so a local
 	/// transfer cannot starve the rest of the app.
@@ -145,12 +145,6 @@ public actor DCCTransfer {
 		category: "DCCTransfer"
 	)
 
-	/** Network.framework insists on a dispatch queue for its callbacks. Those
-	 callbacks only resume a continuation or yield into an `AsyncStream`, both
-	 of which are thread-safe, so the shared concurrent queue is enough: the
-	 actor, not the queue, is what serialises the transfer. */
-	static let callbackQueue = DispatchQueue.global(qos: .utility)
-
 	/// The transfer's progress, in order. Finishes when the transfer does.
 	public nonisolated let events: AsyncStream<DCCTransferEvent> // nonisolated: let
 
@@ -158,9 +152,9 @@ public actor DCCTransfer {
 	private let eventContinuation: AsyncStream<DCCTransferEvent>.Continuation
 
 	private var runTask: Task<Void, Never>?
-	private var connection: NWConnection?
-	private var listener: NWListener?
-	private var incomingContinuation: AsyncStream<NWConnection>.Continuation?
+	private var connection: NetworkConnection<TCP>?
+	private var listener: NetworkListener<TCP>?
+	private var listenerTask: Task<Void, Never>?
 	private var fileHandle: FileHandle?
 	private var isCancelled = false
 	private var hasFinished = false
@@ -206,7 +200,7 @@ public actor DCCTransfer {
 	private func run() async {
 		do {
 			let connection = try await establishConnection()
-			emit(.connected(peerAddress: Self.host(of: connection.endpoint)))
+			emit(.connected(peerAddress: connection.remoteEndpoint.flatMap(Self.host(of:))))
 
 			switch configuration.role {
 			case .sender:
@@ -249,13 +243,10 @@ public actor DCCTransfer {
 	}
 
 	private func tearDown() {
-		incomingContinuation?.finish()
-		incomingContinuation = nil
-
-		listener?.cancel()
+		listenerTask?.cancel()
+		listenerTask = nil
 		listener = nil
 
-		connection?.cancel()
 		connection = nil
 
 		closeFile()
@@ -287,7 +278,7 @@ public actor DCCTransfer {
 
 	// MARK: - Establishing the connection
 
-	private func establishConnection() async throws -> NWConnection {
+	private func establishConnection() async throws -> NetworkConnection<TCP> {
 		switch configuration.endpoint {
 		case let .connect(host, port, interfaceName, timeout):
 			try await connect(toHost: host, port: port, interfaceName: interfaceName, timeout: timeout)
@@ -301,54 +292,54 @@ public actor DCCTransfer {
 		port: UInt16,
 		interfaceName: String?,
 		timeout: Duration?
-	) async throws -> NWConnection {
+	) async throws -> NetworkConnection<TCP> {
 		guard host.isEmpty == false, let networkPort = NWEndpoint.Port(rawValue: port) else {
 			throw DCCTransferError.badParameter
 		}
 
 		let parameters = Self.parameters(interfaceName: interfaceName, connectTimeout: timeout)
-		let connection = NWConnection(host: NWEndpoint.Host(host), port: networkPort, using: parameters)
+		let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: networkPort)
+		let connection = NetworkConnection<TCP>(
+			to: endpoint,
+			using: .parameters(initialParameters: parameters) { TCP() }
+		)
 		self.connection = connection
 
 		try await Self.withTimeout(timeout, failingWith: .connectTimeout) {
-			try await Self.start(connection)
+			/* Typed Network connections establish on first I/O. Empty data puts no
+			 bytes on the DCC stream but makes the connected event truthful. */
+			try await connection.send(Data())
 		}
 
 		return connection
 	}
 
-	private func acceptConnection(portRange: ClosedRange<UInt16>) async throws -> NWConnection {
-		let (incoming, continuation) = AsyncStream<NWConnection>.makeStream()
-		incomingContinuation = continuation
+	private func acceptConnection(portRange: ClosedRange<UInt16>) async throws -> NetworkConnection<TCP> {
+		let listening = try await Self.startListener(portRange: portRange)
+		listener = listening.listener
+		listenerTask = listening.task
 
-		let listener = try startListener(portRange: portRange, incoming: continuation)
-		self.listener = listener
-
-		let boundPort = try await Self.start(listener)
-		emit(.listening(port: boundPort))
+		emit(.listening(port: listening.port))
 
 		var rejectedAPeer = false
 
-		for await candidate in incoming {
+		for await candidate in listening.connections {
 			guard Self.connection(candidate, isFrom: configuration.expectedPeerAddress) else {
 				Self.logger.error(
 					"Rejected a DCC connection from an address other than the one the transfer was offered from"
 				)
 				rejectedAPeer = true
-				candidate.cancel()
 				continue
 			}
 
 			/* One listener serves one transfer. Leaving the port open past the
 			 first accept only gives somebody else a window to reach it. */
-			listener.newConnectionHandler = nil
-			listener.cancel()
-			self.listener = nil
-			incomingContinuation = nil
-			continuation.finish()
+			listenerTask?.cancel()
+			listenerTask = nil
+			listener = nil
 
 			connection = candidate
-			try await Self.start(candidate)
+			try await candidate.send(Data())
 
 			return candidate
 		}
@@ -360,36 +351,9 @@ public actor DCCTransfer {
 		throw DCCTransferError.closedByPeer
 	}
 
-	/// Binds the first port in the range that will take a listener.
-	///
-	/// `newConnectionHandler` is installed before the listener starts because
-	/// Network.framework refuses to start one without it.
-	private func startListener(
-		portRange: ClosedRange<UInt16>,
-		incoming: AsyncStream<NWConnection>.Continuation
-	) throws -> NWListener {
-		guard portRange.lowerBound > 0 else {
-			throw DCCTransferError.noOpenPort
-		}
-
-		for port in portRange {
-			guard let networkPort = NWEndpoint.Port(rawValue: port),
-			      let listener = try? NWListener(using: .tcp, on: networkPort)
-			else {
-				continue
-			}
-
-			listener.newConnectionHandler = { incoming.yield($0) }
-
-			return listener
-		}
-
-		throw DCCTransferError.noOpenPort
-	}
-
 	// MARK: - Sending
 
-	private func sendFile(over connection: NWConnection) async throws {
+	private func sendFile(over connection: NetworkConnection<TCP>) async throws {
 		let handle = try openFileForReading()
 		defer { closeFile() }
 
@@ -438,7 +402,7 @@ public actor DCCTransfer {
 		return handle
 	}
 
-	private func sendBlocks(from handle: FileHandle, over connection: NWConnection) async throws {
+	private func sendBlocks(from handle: FileHandle, over connection: NetworkConnection<TCP>) async throws {
 		var processedBytes = configuration.resumeOffset
 		var windowStart = ContinuousClock.now
 		var windowBytes: UInt64 = 0
@@ -496,7 +460,7 @@ public actor DCCTransfer {
 
 	// MARK: - Receiving
 
-	private func receiveFile(over connection: NWConnection) async throws {
+	private func receiveFile(over connection: NetworkConnection<TCP>) async throws {
 		let handle = try openFileForWriting()
 		defer { closeFile() }
 

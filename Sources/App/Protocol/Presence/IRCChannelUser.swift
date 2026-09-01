@@ -219,7 +219,10 @@ public nonisolated struct ChannelUser: Identifiable, Hashable, Sendable { // non
 	}
 
 	func compareRank(to other: ChannelUser) -> ComparisonResult {
-		compareRank(to: other, favoringServerStaff: TextualPreferences.memberListSortFavorsServerStaff())
+		compareRank(
+			to: other,
+			favoringServerStaff: Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue
+		)
 	}
 
 	/// Pure comparator. The preference is passed in so that a sort reads it once

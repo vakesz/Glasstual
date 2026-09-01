@@ -10,9 +10,9 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
   AppKit shell (`…Sheet.swift` / window controller) that owns presentation,
   validation, menus, keyboard handling, state restoration and the delegate
   callbacks; existing AppKit surfaces migrate feature by feature behind those
-  shells. The main window, menu bar, member list and WebKit channel view stay
-  AppKit until a migration is planned and measured — never rewrite them as a
-  side effect of another change.
+  shells. The main window, menu bar, member list and native TextKit transcript
+  stay AppKit until a migration is planned and measured — never rewrite them as
+  a side effect of another change.
 - Layout is by feature: `Sources/App/{Application,Protocol,Preferences,
   Features/<Feature>,UI,Localization,Resources}`. `Sources/App/README.md`
   describes each directory's scope and the conventions; a feature owns its
@@ -36,19 +36,13 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
   edited directly. Adding a declaration file under `Keys/` means adding it to
   that phase's `inputFiles` in `project.yml`; the build phase is sandboxed to
   the files it names.
-- The channel log has one origin and no file-system read access. It used to be
-  a `file:` document with `_setAllowFileAccessFromFileURLs:` and
-  `_setAllowUniversalAccessFromFileURLs:` turned on, which gave every script in
-  a theme cross-origin read of the whole disk. Both private switches are gone.
-  The document and every theme resource are now served by
-  `LogViewThemeSchemeHandler` over a custom scheme, from below the theme
-  directories `permittedRoots` names, and rendered documents are held in memory
-  instead of being written into the theme's temporary directory. **This is a
-  breaking change for third-party themes:** a theme's JavaScript can no longer
-  read `file:` URLs cross-origin, fetch arbitrary paths, or reach anything
-  outside its own theme directory and the app's resources. A theme that needs a
-  file must ship it and reference it relatively; one that needs data from the
-  app asks through the script bridge.
+- The channel transcript is native AppKit/TextKit. `LogRenderer` produces
+  semantic `TranscriptLine` values and `LogView` draws them with `NSTextView`;
+  no HTML, CSS, JavaScript, WebKit, template engine or script bridge belongs in
+  this path. `TranscriptTheme` is the single versioned `Codable` appearance
+  model. Store and import/export it as an XML property list, and add colours as
+  semantic light/dark roles instead of view-specific styling hooks. Inline
+  images are decoded natively and fetched only over HTTP(S) with bounded input.
 - `@objc` marks a runtime boundary and nothing else: a class or action a nib
   binds, a KVO-observed property, an XPC protocol member, or a plugin
   principal class. A Swift-to-Swift call never needs one.
@@ -69,11 +63,8 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 | `Caffeine`, `ChatFilter`, `SmileyConverter`, `SystemProfiler`, `UserInsights`, `ZNCAdditions` | `Sources/Plugins/<Name>/**` | first-party plugin bundles | `MainActor` |
 | `CocoaExtensions` | `Sources/Frameworks/Cocoa Extensions/**` | framework (Foundation/AppKit helpers) | `nonisolated` |
 | `GlasstualPluginKit` | `Sources/Frameworks/Plugin Kit/**` | framework (plugin ABI: `Sendable` event payloads, `@MainActor` callbacks) | `nonisolated` |
-| `InlineContentKit` | `Sources/Frameworks/Inline Content Kit/**` | framework (inline-media payloads, `InlineContentModule` protocol, `MediaAssessor`) | `nonisolated` |
 | `HistoricLogStoreKit` | `Sources/Frameworks/Historic Log Store Kit/**` | framework (`actor HistoricLogStore`, `LogLineXPC`, the historic-log XPC protocols) shared by the service and the tests | `nonisolated` |
-| `Mustache` | `Sources/Frameworks/Static Libraries/GRMustache/**` | vendored static library (see `PROVENANCE.md`) | — |
-| `CoreMediaModules` | `Sources/Services/Inline Content Loader/Extensions/Core Media/**` | static library of the inline-media modules, linked by the loader service and the tests | `nonisolated` |
-| `HistoricLogFileManager`, `InlineContentLoader`, `IRCRemoteConnectionManager` | `Sources/Services/<Name>/**` | XPC services; each exported object is a nonisolated shim in front of an actor (`HistoricLogStore`, `InlineContentService`, `ConnectionHost`) that never holds the `NSXPCConnection` — it holds the `Sendable` client proxy | `nonisolated` |
+| `HistoricLogFileManager`, `IRCRemoteConnectionManager` | `Sources/Services/<Name>/**` | XPC services; each exported object is a nonisolated shim in front of an actor (`HistoricLogStore`, `ConnectionHost`) that never holds the `NSXPCConnection` — it holds the `Sendable` client proxy | `nonisolated` |
 | `GlasstualTests` | `Tests/GlasstualTests/**`, corpora under `Tests/Corpora/**` | Swift Testing bundle hosted by the app | `MainActor` |
 
 Shared declarations that cross a process boundary live in `Sources/Shared/`

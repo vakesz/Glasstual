@@ -23,11 +23,26 @@ private func projectionLine(_ body: String) -> LogLine {
 
 private func projectionResult(for line: LogLine) -> LogLineRenderResult {
 	LogLineRenderResult(
-		lineNumber: line.uniqueIdentifier,
-		html: "<div>\(line.messageBody)</div>",
-		timestamp: line.receivedAt.timeIntervalSince1970,
-		isHighlight: false,
-		processesInlineMedia: false
+		transcriptLine: TranscriptLine(
+			lineNumber: line.uniqueIdentifier,
+			receivedAt: line.receivedAt,
+			timestamp: "",
+			nickname: nil,
+			formattedNickname: "",
+			memberType: .normal,
+			lineType: line.lineType,
+			command: line.command,
+			messageIdentifier: nil,
+			replyToMessageIdentifier: nil,
+			deliveryState: .none,
+			deliveryFailureReason: nil,
+			reactions: [:],
+			markers: [],
+			body: TranscriptBody(plainText: line.messageBody)
+		),
+		fromCurrentSession: line.fromCurrentSession,
+		processesInlineMedia: false,
+		pluginMessage: nil
 	)
 }
 
@@ -53,7 +68,7 @@ struct TranscriptProjectionStateTests {
 		#expect(state.phase == .active)
 	}
 
-	@Test("The native tail stays at the DOM hard limit")
+	@Test("The native tail stays at the configured hard limit")
 	func tailIsBounded() {
 		let first = projectionLine("first")
 		let second = projectionLine("second")

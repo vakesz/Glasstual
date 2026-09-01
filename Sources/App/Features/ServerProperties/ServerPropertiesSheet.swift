@@ -1,50 +1,17 @@
 /* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
 import AppKit
 import CocoaExtensions
+import GlasstualPluginKit
+import Security
 import SecurityInterface
+import SwiftUI
 
-let serverPropertiesTableDragToken = NSPasteboard.PasteboardType(
-	"com.vakesz.glasstual.server-properties.table-row"
-)
-
-enum ServerPropertiesSelection: UInt, CaseIterable {
+enum ServerPropertiesSelection: UInt, CaseIterable, Hashable {
 	case `default` = 0
 	case addressBook = 1
 	case autojoin = 2
@@ -67,12 +34,9 @@ func serverPropertiesModel<Model>(_ value: Any, as _: Model.Type) -> Model {
 	guard let model = value as? Model else {
 		preconditionFailure("Expected a \(Model.self) copy, received \(Swift.type(of: value))")
 	}
-
 	return model
 }
 
-/// What `ServerPropertiesSheet` reports back. The configuration is a value
-/// type, so it cannot travel through `perform(_:with:with:)`.
 @MainActor
 public protocol ServerPropertiesSheetDelegate: AnyObject {
 	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: ClientConfig)
@@ -81,222 +45,84 @@ public protocol ServerPropertiesSheetDelegate: AnyObject {
 
 @objc(TDCServerPropertiesSheet)
 @MainActor
-public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegate, NSWindowDelegate,
-	TDCClientPrototype
+public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClientPrototype,
+	AddressBookSheetDelegate, ChannelPropertiesSheetDelegate, HighlightEntrySheetDelegate,
+	ServerEndpointListSheetDelegate
 {
+	private static let contentSize = NSSize(width: 900, height: 650)
+
 	public private(set) var client: IRCClient?
 	public private(set) var clientId: String?
+	let model: ServerPropertiesModel
 
-	var config: ClientConfig
-	let networkList = NetworkList()
-	var encodingList: [String: NSNumber] = [:]
-	var addressBookSheet: AddressBookSheet?
-	var highlightSheet: HighlightEntrySheet?
-	var channelSheet: ChannelPropertiesSheet?
-	var serverEndpointSheet: ServerEndpointListSheet?
-	weak var clientCertificateSelectCertificatePanel: SFChooseIdentityPanel?
-	var populatingPrimaryServer = false
-	var lastServerAddressValue: String?
-	var previousPrimaryServer: Server?
-	/// The client-configuration notification, held while the sheet is up.
 	private let notifications = NotificationSubscriptions()
-	@objc private dynamic var floodControlDelayTimerSliderTempValue: UInt = 0
-	@objc private dynamic var floodControlMessageCountSliderTempValue: UInt = 0
+	private var addressBookSheet: AddressBookSheet?
+	private var channelSheet: ChannelPropertiesSheet?
+	private var highlightSheet: HighlightEntrySheet?
+	private var serverEndpointSheet: ServerEndpointListSheet?
+	private weak var clientCertificatePanel: SFChooseIdentityPanel?
 
-	@IBOutlet var addAddressBookEntryMenu: NSMenu!
-	@IBOutlet var contentViewAddressBook: NSView!
-	@IBOutlet var contentViewAutojoin: NSView!
-	@IBOutlet var contentViewClientCertificate: NSView!
-	@IBOutlet var contentViewConnectCommands: NSView!
-	@IBOutlet var contentViewDisconnectMessages: NSView!
-	@IBOutlet var contentViewEncoding: NSView!
-	@IBOutlet var contentViewFloodControl: NSView!
-	@IBOutlet var contentViewGeneral: NSView!
-	@IBOutlet var contentViewHighlights: NSView!
-	@IBOutlet var contentViewIdentity: NSView!
-	@IBOutlet var contentViewNetworkSocket: NSView!
-	@IBOutlet var contentViewProxyServer: NSView!
-	@IBOutlet var contentViewProxyServerInputView: NSView!
-	@IBOutlet var contentViewProxyServerSystemSocksView: NSView!
-	@IBOutlet var contentViewProxyServerTorBrowserView: NSView!
-	@IBOutlet var contentViewRedundancy: NSView!
-	@IBOutlet var contentViewZncBouncer: NSView!
-
-	@IBOutlet var addAddressBookEntryButton: NSButton!
-	@IBOutlet var addChannelButton: NSButton!
-	@IBOutlet var addHighlightButton: NSButton!
-	@IBOutlet var autoConnectCheck: NSButton!
-	@IBOutlet var autoDisconnectOnSleepCheck: NSButton!
-	@IBOutlet var autoReconnectCheck: NSButton!
-	@IBOutlet var autojoinWaitsForNickServCheck: NSButton!
-	@IBOutlet var disconnectOnSASLFailureCheck: NSButton!
-	@IBOutlet var clientCertificateChangeCertificateButton: NSButton!
-	@IBOutlet var clientCertificateResetCertificateButton: NSButton!
-	@IBOutlet var clientCertificateSHA1FingerprintCopyButton: NSButton!
-	@IBOutlet var clientCertificateSHA2FingerprintCopyButton: NSButton!
-	@IBOutlet var clientCertificateSHA512FingerprintCopyButton: NSButton!
-	@IBOutlet var connectionIPv4AddressTypeCheck: NSButton!
-	@IBOutlet var connectionIPv6AddressTypeCheck: NSButton!
-	@IBOutlet var connectionDefaultAddressTypeCheck: NSButton!
-	@IBOutlet var deleteAddressBookEntryButton: NSButton!
-	@IBOutlet var deleteChannelButton: NSButton!
-	@IBOutlet var deleteHighlightButton: NSButton!
-	@IBOutlet var disconnectOnReachabilityChangeCheck: NSButton!
-	@IBOutlet var editAddressBookEntryButton: NSButton!
-	@IBOutlet var editChannelButton: NSButton!
-	@IBOutlet var editHighlightButton: NSButton!
-	@IBOutlet var hideAutojoinDelayedWarningsCheck: NSButton!
-	@IBOutlet var performDisconnectOnPongTimerCheck: NSButton!
-	@IBOutlet var pongTimerCheck: NSButton!
-	@IBOutlet var prefersSecuredConnectionCheck: NSButton!
-	@IBOutlet var setInvisibleModeOnConnectCheck: NSButton!
-	@IBOutlet var runConnectCommandsSilentlyCheck: NSButton!
-	@IBOutlet var validateServerCertificateChainCheck: NSButton!
-	@IBOutlet var viewListOfPreferredCipherSuitesButton: NSButton!
-	@IBOutlet var zncIgnoreConfiguredAutojoinCheck: NSButton!
-	@IBOutlet var zncIgnorePlaybackNotificationsCheck: NSButton!
-	@IBOutlet var zncOnlyPlaybackLatestCheck: NSButton!
-	@IBOutlet var fallbackEncodingButton: NSPopUpButton!
-	@IBOutlet var primaryEncodingButton: NSPopUpButton!
-	@IBOutlet var preferredCipherSuitesButton: NSPopUpButton!
-	@IBOutlet var proxyTypeButton: NSPopUpButton!
-	@IBOutlet var floodControlDelayTimerSlider: NSSlider!
-	@IBOutlet var floodControlMessageCountSlider: NSSlider!
-	@IBOutlet var clientCertificateCommonNameField: NSTextField!
-	@IBOutlet var clientCertificateSHA1FingerprintField: NSTextField!
-	@IBOutlet var clientCertificateSHA2FingerprintField: NSTextField!
-	@IBOutlet var clientCertificateSHA512FingerprintField: NSTextField!
-	@IBOutlet var nicknamePasswordTextField: NSTextField!
-	@IBOutlet var proxyPasswordTextField: NSTextField!
-	@IBOutlet var proxyUsernameTextField: NSTextField!
-	@IBOutlet var serverPasswordTextField: NSTextField!
-	@IBOutlet var addressBookTable: BasicTableView!
-	@IBOutlet var channelListTable: BasicTableView!
-	@IBOutlet var highlightsTable: BasicTableView!
-	@IBOutlet var serverAddressComboBox: ValidatedComboBox!
-	@IBOutlet var navigationOutlineView: ContentNavigationOutlineView!
-	@IBOutlet var alternateNicknamesTextField: ValidatedTextField!
-	@IBOutlet var awayNicknameTextField: ValidatedTextField!
-	@IBOutlet var ctcpVersionReplyTextField: ValidatedTextField!
-	@IBOutlet var connectionNameTextField: ValidatedTextField!
-	@IBOutlet var nicknameTextField: ValidatedTextField!
-	@IBOutlet var normalLeavingCommentTextField: ValidatedTextField!
-	@IBOutlet var proxyAddressTextField: ValidatedTextField!
-	@IBOutlet var proxyPortTextField: ValidatedTextField!
-	@IBOutlet var realNameTextField: ValidatedTextField!
-	@IBOutlet var serverPortTextField: ValidatedTextField!
-	@IBOutlet var sleepModeQuitMessageTextField: ValidatedTextField!
-	@IBOutlet var usernameTextField: ValidatedTextField!
-	@IBOutlet var connectCommandsField: NSTextView!
-	/* The four lists the sheet edits. They used to live in `NSArrayController`s
-	 that the nib bound to the tables; the tables read them through a diffable
-	 data source now, so the sheet owns them outright. */
-	var addressBookList: [AddressBookEntry] = []
-	var channelList: [ChannelConfig] = []
-	var highlightList: [HighlightMatchCondition] = []
-	var serverList: [Server] = []
-
-	var addressBookTableDataSource: ServerPropertiesTableDataSource?
-	var channelListTableDataSource: ServerPropertiesTableDataSource?
-	var highlightsTableDataSource: ServerPropertiesTableDataSource?
+	var config: ClientConfig {
+		get { model.config }
+		set {
+			model.replace(with: newValue)
+			updateClientCertificateDetails()
+		}
+	}
 
 	public init(client: IRCClient?) {
 		self.client = client
 		clientId = client?.uniqueIdentifier
-
 		if let client {
 			client.updateStoredConfiguration()
-			config = client.config
+			model = ServerPropertiesModel(config: client.config)
 		} else {
-			config = ClientConfig()
+			model = ServerPropertiesModel(config: ClientConfig())
 		}
-
 		super.init(window: nil)
-		prepareInitialState()
-		loadConfig()
-	}
-
-	private func prepareInitialState() {
-		Bundle.main.loadNibNamed("TDCServerPropertiesSheet", owner: self, topLevelObjects: nil)
-		sheet.preventsApplicationTerminationWhenModal = false
-		sheet.autorecalculatesKeyViewLoop = true
-
-		for network in networkList.listOfNetworks {
-			serverAddressComboBox.addItem(withObjectValue: network.networkName)
-		}
-
-		connectCommandsField.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
-		connectCommandsField.textContainerInset = NSSize(width: 1, height: 3)
-		configureValidatedFields()
+		installSheet()
 		addConfigurationDidChangeObserver()
-		configureTables()
-		populateEncodings()
-		populateTabViewList()
+		updateClientCertificateDetails()
 	}
 
-	private func populateTabViewList() {
-		func child(_ title: String, _ selection: ServerPropertiesSelection,
-		           _ view: NSView) -> ContentNavigationOutlineViewItem
-		{
-			ContentNavigationOutlineViewItem(
-				label: title,
-				identifier: selection.rawValue,
-				view: view,
-				firstResponder: nil
-			)
-		}
-		func group(
-			_ title: String,
-			_ children: [ContentNavigationOutlineViewItem]
-		) -> ContentNavigationOutlineViewItem {
-			ContentNavigationOutlineViewItem(
-				label: title,
-				identifier: 0,
-				view: nil,
-				firstResponder: nil,
-				children: children
-			)
-		}
-
-		let general = [
-			child(ServerPropertiesStrings.Navigation.addressBook, .addressBook, contentViewAddressBook),
-			child(ServerPropertiesStrings.Navigation.channelList, .autojoin, contentViewAutojoin),
-			child(ServerPropertiesStrings.Navigation.connectCommands, .connectCommands, contentViewConnectCommands),
-			child(ServerPropertiesStrings.Navigation.encoding, .encoding, contentViewEncoding),
-			child(ServerPropertiesStrings.Navigation.general, .general, contentViewGeneral),
-			child(ServerPropertiesStrings.Navigation.identity, .identity, contentViewIdentity),
-			child(ServerPropertiesStrings.Navigation.highlights, .highlights, contentViewHighlights),
-			child(
-				ServerPropertiesStrings.Navigation.messages,
-				.disconnectMessages,
-				contentViewDisconnectMessages
-			),
-		]
-		let vendor = [
-			child(ServerPropertiesStrings.Navigation.zncBouncer, .zncBouncer, contentViewZncBouncer),
-		]
-		let advanced = [
-			child(
-				ServerPropertiesStrings.Navigation.clientCertificate,
-				.clientCertificate,
-				contentViewClientCertificate
-			),
-			child(ServerPropertiesStrings.Navigation.floodControl, .floodControl, contentViewFloodControl),
-			child(ServerPropertiesStrings.Navigation.networkSocket, .networkSocket, contentViewNetworkSocket),
-			child(ServerPropertiesStrings.Navigation.proxyServer, .proxyServer, contentViewProxyServer),
-			child(ServerPropertiesStrings.Navigation.redundancy, .redundancy, contentViewRedundancy),
-		]
-
-		let tree = [
-			group(ServerPropertiesStrings.Navigation.serverProperties, general),
-			group(ServerPropertiesStrings.Navigation.vendorSpecific, vendor),
-			group(ServerPropertiesStrings.Navigation.advanced, advanced),
-		]
-		navigationOutlineView.navigationTreeMatrix = tree
-		navigationOutlineView.contentViewPreferredWidth = 100
-		navigationOutlineView.contentViewPreferredHeight = 100
-		navigationOutlineView.expandParentOnDoubleClick = true
-		navigationOutlineView.expandItem(tree[0])
+	private func installSheet() {
+		let actions = ServerPropertiesActions(
+			submit: { [weak self] in self?.ok(nil) },
+			cancel: { [weak self] in self?.cancel(nil) },
+			editEndpoints: { [weak self] in self?.editServerEndpoints() },
+			addChannel: { [weak self] in self?.addChannel() },
+			editChannel: { [weak self] in self?.editChannel() },
+			deleteChannel: { [weak self] in self?.deleteChannel() },
+			addHighlight: { [weak self] in self?.addHighlight() },
+			editHighlight: { [weak self] in self?.editHighlight() },
+			deleteHighlight: { [weak self] in self?.deleteHighlight() },
+			addIgnore: { [weak self] in self?.addIgnoreAddressBookEntry(hostmask: nil) },
+			addTracking: { [weak self] in self?.addTrackingAddressBookEntry() },
+			editAddressBookEntry: { [weak self] in self?.editAddressBookEntry() },
+			deleteAddressBookEntry: { [weak self] in self?.deleteAddressBookEntry() },
+			chooseCertificate: { [weak self] in self?.chooseCertificate() },
+			resetCertificate: { [weak self] in self?.resetCertificate() },
+			copyCertificateFingerprint: { [weak self] value in self?.copyCertificateFingerprint(value) },
+			showCipherSuites: { [weak self] in self?.showCipherSuites() },
+			openProxySettings: { PreferencesController.openProxySettingsInSystemPreferences() }
+		)
+		let hostedSheet = NSWindow(
+			contentRect: NSRect(origin: .zero, size: Self.contentSize),
+			styleMask: [.titled, .resizable, .fullSizeContentView],
+			backing: .buffered,
+			defer: false
+		)
+		hostedSheet.contentViewController = NSHostingController(
+			rootView: ServerPropertiesView(model: model, actions: actions)
+		)
+		hostedSheet.contentMinSize = NSSize(width: 760, height: 520)
+		hostedSheet.delegate = self
+		hostedSheet.isReleasedWhenClosed = false
+		hostedSheet.isRestorable = false
+		hostedSheet.preventsApplicationTerminationWhenModal = false
+		hostedSheet.tabbingMode = .disallowed
+		hostedSheet.title = ServerPropertiesStrings.Navigation.serverProperties
+		sheet = hostedSheet
 	}
 
 	public func start() {
@@ -304,58 +130,288 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 	}
 
 	public func start(withSelection selectionValue: UInt, context: Any?) {
+		let requested = ServerPropertiesSelection(rawValue: selectionValue) ?? .default
+		model.selection = switch requested {
+		case .default: .general
+		case .newIgnoreEntry: .addressBook
+		default: requested
+		}
 		startSheet()
-		let selection = ServerPropertiesSelection(rawValue: selectionValue) ?? .default
-		navigate(to: selection)
-		if selection == .newIgnoreEntry {
+		if requested == .newIgnoreEntry {
 			if let hostmask = context as? String {
-				addIgnoreAddressBookEntry(withHostmask: hostmask)
+				addIgnoreAddressBookEntry(hostmask: hostmask)
 			} else if let entry = context as? AddressBookEntry {
 				editAddressBookEntry(with: entry)
 			}
 		}
 	}
 
-	func navigate(to requestedSelection: ServerPropertiesSelection) {
-		let selection: ServerPropertiesSelection = switch requestedSelection {
-		case .default: .general
-		case .newIgnoreEntry: .addressBook
-		default: requestedSelection
-		}
-		navigationOutlineView.navigateToItem(withIdentifier: selection.rawValue)
-		sheet.recalculateKeyViewLoop()
-	}
-
-	private func closeChildSheets() {
-		if let addressBookSheet {
-			addressBookSheet.close()
-		} else if let channelSheet {
-			channelSheet.close()
-		} else if let highlightSheet {
-			highlightSheet.close()
-		} else if let serverEndpointSheet {
-			serverEndpointSheet.close()
-		} else if let panel = clientCertificateSelectCertificatePanel {
-			panel.sheetParent?.endSheet(
-				panel,
-				returnCode: .cancel
-			)
-		}
-	}
-
-	@IBAction override public func ok(_ sender: Any?) {
-		guard okOrError() else { return }
+	override public func ok(_ sender: Any?) {
+		guard let submitted = model.submittedConfig() else { return }
+		model.config = submitted
 		removeConfigurationDidChangeObserver()
 		closeChildSheets()
-		saveConfig()
-		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheet(self, onOk: config)
+		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheet(self, onOk: submitted)
 		super.ok(sender)
 	}
 
-	@IBAction override public func cancel(_ sender: Any?) {
+	override public func cancel(_ sender: Any?) {
 		removeConfigurationDidChangeObserver()
 		closeChildSheets()
 		super.cancel(sender)
+	}
+
+	private func editServerEndpoints() {
+		let controller = ServerEndpointListSheet(window: sheet)
+		controller.delegate = self
+		controller.start(with: model.config.serverList)
+		serverEndpointSheet = controller
+	}
+
+	public func serverEndpointListSheet(_: ServerEndpointListSheet, onOk serverList: [Server]) {
+		model.config.serverList = serverList
+		model.replace(with: model.config)
+	}
+
+	public func serverEndpointListSheetWillClose(_: ServerEndpointListSheet) {
+		serverEndpointSheet = nil
+	}
+
+	private func addChannel() {
+		presentChannelSheet(config: nil)
+	}
+
+	private func editChannel() {
+		guard let id = model.selectedChannelID,
+		      let channel = model.config.channelList.first(where: { $0.uniqueIdentifier == id }) else { return }
+		presentChannelSheet(config: channel)
+	}
+
+	private func presentChannelSheet(config: ChannelConfig?) {
+		let controller = ChannelPropertiesSheet(config: config)
+		controller.delegate = self
+		controller.window = sheet
+		controller.start()
+		channelSheet = controller
+	}
+
+	private func deleteChannel() {
+		guard let id = model.selectedChannelID else { return }
+		model.config.channelList.removeAll { $0.uniqueIdentifier == id }
+		model.selectedChannelID = nil
+	}
+
+	public func channelPropertiesSheet(_: ChannelPropertiesSheet, onOk config: ChannelConfig) {
+		if let index = model.config.channelList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
+			model.config.channelList[index] = config
+		} else {
+			model.config.channelList.append(config)
+		}
+		model.selectedChannelID = config.uniqueIdentifier
+	}
+
+	public func channelPropertiesSheetWillClose(_: ChannelPropertiesSheet) {
+		channelSheet = nil
+	}
+
+	private func addHighlight() {
+		presentHighlightSheet(config: nil)
+	}
+
+	private func editHighlight() {
+		guard let id = model.selectedHighlightID,
+		      let entry = model.config.highlightList.first(where: { $0.uniqueIdentifier == id }) else { return }
+		presentHighlightSheet(config: entry)
+	}
+
+	private func presentHighlightSheet(config: HighlightMatchCondition?) {
+		let controller = HighlightEntrySheet(config: config, channels: model.config.channelList)
+		controller.delegate = self
+		controller.window = sheet
+		controller.start()
+		highlightSheet = controller
+	}
+
+	private func deleteHighlight() {
+		guard let id = model.selectedHighlightID else { return }
+		model.config.highlightList.removeAll { $0.uniqueIdentifier == id }
+		model.selectedHighlightID = nil
+	}
+
+	public func highlightEntrySheet(_: HighlightEntrySheet, didSave config: HighlightMatchCondition) {
+		if let index = model.config.highlightList
+			.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier })
+		{
+			model.config.highlightList[index] = config
+		} else {
+			model.config.highlightList.append(config)
+		}
+		model.selectedHighlightID = config.uniqueIdentifier
+	}
+
+	public func highlightEntrySheetDidClose(_: HighlightEntrySheet) {
+		highlightSheet = nil
+	}
+
+	func addIgnoreAddressBookEntry(withHostmask hostmask: String? = nil) {
+		addIgnoreAddressBookEntry(hostmask: hostmask)
+	}
+
+	private func addIgnoreAddressBookEntry(hostmask: String? = nil) {
+		let controller = hostmask.map { AddressBookSheet(config: .newIgnoreEntry(forHostmask: $0)) }
+			?? AddressBookSheet(entryType: .ignore)
+		presentAddressBookSheet(controller)
+	}
+
+	private func addTrackingAddressBookEntry() {
+		presentAddressBookSheet(AddressBookSheet(entryType: .userTracking))
+	}
+
+	func editAddressBookEntry(with entry: AddressBookEntry) {
+		model.selectedAddressBookEntryID = entry.uniqueIdentifier
+		editAddressBookEntry()
+	}
+
+	private func editAddressBookEntry() {
+		guard let id = model.selectedAddressBookEntryID,
+		      let entry = model.config.ignoreList.first(where: { $0.uniqueIdentifier == id }) else { return }
+		presentAddressBookSheet(AddressBookSheet(config: entry))
+	}
+
+	private func presentAddressBookSheet(_ controller: AddressBookSheet) {
+		controller.delegate = self
+		controller.window = sheet
+		controller.start()
+		addressBookSheet = controller
+	}
+
+	private func deleteAddressBookEntry() {
+		guard let id = model.selectedAddressBookEntryID else { return }
+		model.config.ignoreList.removeAll { $0.uniqueIdentifier == id }
+		model.selectedAddressBookEntryID = nil
+	}
+
+	public func addressBookSheet(_: AddressBookSheet, onOk entry: AddressBookEntry) {
+		if let index = model.config.ignoreList.firstIndex(where: { $0.uniqueIdentifier == entry.uniqueIdentifier }) {
+			model.config.ignoreList[index] = entry
+		} else {
+			model.config.ignoreList.append(entry)
+		}
+		model.selectedAddressBookEntryID = entry.uniqueIdentifier
+	}
+
+	public func addressBookSheetWillClose(_: AddressBookSheet) {
+		addressBookSheet = nil
+	}
+
+	private struct CertificateDetails {
+		let commonName: String
+		let sha512: String
+		let sha256: String
+		let sha1: String
+	}
+
+	private func certificateDetails() -> CertificateDetails? {
+		guard let reference = model.config.identityClientSideCertificate else { return nil }
+		let query: [CFString: Any] = [kSecClass: kSecClassCertificate, kSecValuePersistentRef: reference,
+		                              kSecReturnRef: true]
+		var result: CFTypeRef?
+		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+		      let result, CFGetTypeID(result) == SecCertificateGetTypeID() else { return nil }
+		let certificate = unsafeDowncast(result, to: SecCertificate.self)
+		var commonNameReference: CFString?
+		guard SecCertificateCopyCommonName(certificate, &commonNameReference) == errSecSuccess,
+		      let commonName = commonNameReference as String? else { return nil }
+		let data = SecCertificateCopyData(certificate) as Data
+		return CertificateDetails(
+			commonName: commonName,
+			sha512: (data as NSData).textualSha512.uppercased(),
+			sha256: (data as NSData).textualSha256.uppercased(),
+			sha1: (data as NSData).textualSha1.uppercased()
+		)
+	}
+
+	private func updateClientCertificateDetails() {
+		let details = certificateDetails()
+		let empty = ServerPropertiesStrings.Certificate.noneSelected
+		model.certificateName = details?.commonName ?? empty
+		model.certificateSHA512 = details?.sha512 ?? empty
+		model.certificateSHA256 = details?.sha256 ?? empty
+		model.certificateSHA1 = details?.sha1 ?? empty
+	}
+
+	private func copyCertificateFingerprint(_ fingerprint: String) {
+		guard model.config.identityClientSideCertificate != nil else { return }
+		NSPasteboard.general.textualStringContent = "/msg NickServ cert add \(fingerprint)"
+	}
+
+	private func resetCertificate() {
+		model.config.identityClientSideCertificate = nil
+		updateClientCertificateDetails()
+	}
+
+	private func chooseCertificate() {
+		let query: [CFString: Any] = [kSecClass: kSecClassIdentity, kSecMatchLimit: kSecMatchLimitAll,
+		                              kSecReturnRef: true]
+		var result: CFTypeRef?
+		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+		      let identities = result as? [SecIdentity], !identities.isEmpty
+		else {
+			TDCAlert.alert(
+				withMessage: ServerPropertiesStrings.Certificate.noneAvailableExplanation,
+				title: ServerPropertiesStrings.Certificate.noneAvailableTitle,
+				defaultButton: PromptStrings.Action.confirmation,
+				alternateButton: nil
+			)
+			return
+		}
+		guard let panel = SFChooseIdentityPanel.shared() else { return }
+		clientCertificatePanel = panel
+		panel.setInformativeText(ServerPropertiesStrings.Certificate.chooseExplanation)
+		panel.setAlternateButtonTitle(PromptStrings.Action.cancel)
+		panel.beginSheet(
+			for: sheet,
+			modalDelegate: self,
+			didEnd: #selector(identityPanelDidEnd(_:returnCode:contextInfo:)),
+			contextInfo: nil,
+			identities: identities,
+			message: ServerPropertiesStrings.Certificate.chooseTitle
+		)
+	}
+
+	@objc private func identityPanelDidEnd(
+		_ panel: SFChooseIdentityPanel,
+		returnCode: Int,
+		contextInfo _: UnsafeMutableRawPointer?
+	) {
+		defer { clientCertificatePanel = nil }
+		guard returnCode == NSApplication.ModalResponse.OK.rawValue,
+		      let identity = panel.identity()?.takeUnretainedValue() else { return }
+		var certificate: SecCertificate?
+		guard SecIdentityCopyCertificate(identity, &certificate) == errSecSuccess, let certificate else { return }
+		let query: [CFString: Any] = [kSecClass: kSecClassCertificate, kSecValueRef: certificate,
+		                              kSecReturnPersistentRef: true]
+		var result: CFTypeRef?
+		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+		      let reference = result as? Data else { return }
+		model.config.identityClientSideCertificate = reference
+		model.primaryServerIsSecured = true
+		updateClientCertificateDetails()
+	}
+
+	private func showCipherSuites() {
+		let descriptions = SecureTransportSupport.descriptions(
+			forCipherListCollection: model.config.cipherSuites,
+			withProtocol: true
+		)
+		TDCAlert.alertSheet(
+			with: sheet,
+			body: ServerPropertiesStrings.CipherSuites.description(descriptions.joined(separator: "\n")),
+			title: ServerPropertiesStrings.CipherSuites.title(collectionName: ""),
+			defaultButton: PromptStrings.Action.confirmation,
+			alternateButton: nil,
+			otherButton: nil
+		)
 	}
 
 	private func addConfigurationDidChangeObserver() {
@@ -380,177 +436,48 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 			otherButton: nil
 		) { [weak self] outcome in
 			guard outcome.response == .default, let self else { return }
-			close()
 			client.updateStoredConfiguration()
-			config = client.config
-			loadConfig()
-			start()
+			model.replace(with: client.config)
+			updateClientCertificateDetails()
 		}
 	}
 
-	private func loadConfig() {
-		connectionNameTextField.stringValue = config.connectionName
-		autoConnectCheck.state = config.autoConnect ? .on : .off
-		autoReconnectCheck.state = config.autoReconnect ? .on : .off
-		autoDisconnectOnSleepCheck.state = config.autoSleepModeDisconnect ? .on : .off
-		zncIgnoreConfiguredAutojoinCheck.state = config.zncIgnoreConfiguredAutojoin ? .on : .off
-		zncIgnorePlaybackNotificationsCheck.state = config.zncIgnorePlaybackNotifications ? .on : .off
-		zncOnlyPlaybackLatestCheck.state = config.zncOnlyPlaybackLatest ? .on : .off
-
-		connectionIPv4AddressTypeCheck.state = config.addressType == .v4 ? .on : .off
-		connectionIPv6AddressTypeCheck.state = config.addressType == .v6 ? .on : .off
-		connectionDefaultAddressTypeCheck.state = config.addressType == .default ? .on : .off
-		pongTimerCheck.state = config.performPongTimer ? .on : .off
-		performDisconnectOnPongTimerCheck.state = config.performDisconnectOnPongTimer ? .on : .off
-		disconnectOnReachabilityChangeCheck.state = config.performDisconnectOnReachabilityChange ? .on : .off
-		validateServerCertificateChainCheck.state = config.validateServerCertificateChain ? .on : .off
-		preferredCipherSuitesButton.selectItem(withTag: Int(config.cipherSuites.rawValue))
-
-		nicknameTextField.stringValue = config.nickname.isEmpty ? TextualPreferences.defaultNickname() : config.nickname
-		awayNicknameTextField.stringValue = config.awayNickname ?? ""
-		alternateNicknamesTextField.stringValue = config.alternateNicknames.joined(separator: " ")
-		usernameTextField.stringValue = config.username.isEmpty ? TextualPreferences.defaultUsername() : config.username
-		ctcpVersionReplyTextField.stringValue = config.ctcpVersionReply ?? ""
-		realNameTextField.stringValue = config.realName.isEmpty ? TextualPreferences.defaultRealName() : config.realName
-		nicknamePasswordTextField.stringValue = config.nicknamePassword ?? ""
-		autojoinWaitsForNickServCheck.state = config.autojoinWaitsForNickServ ? .on : .off
-		disconnectOnSASLFailureCheck.state = config.disconnectOnSASLFailure ? .on : .off
-		hideAutojoinDelayedWarningsCheck.state = config.hideAutojoinDelayedWarnings ? .off : .on
-
-		normalLeavingCommentTextField.stringValue = config.normalLeavingComment
-		sleepModeQuitMessageTextField.stringValue = config.sleepModeLeavingComment
-
-		selectEncoding(config.primaryEncoding, in: primaryEncodingButton)
-		selectEncoding(config.fallbackEncoding, in: fallbackEncodingButton)
-
-		proxyTypeButton.selectItem(withTag: Int(config.proxyType.rawValue))
-		proxyAddressTextField.stringValue = config.proxyAddress ?? ""
-		proxyPortTextField.integerValue = Int(config.proxyPort)
-		proxyUsernameTextField.stringValue = config.proxyUsername ?? ""
-		proxyPasswordTextField.stringValue = config.proxyPassword ?? ""
-
-		connectCommandsField.string = config.loginCommands.joined(separator: "\n")
-		setInvisibleModeOnConnectCheck.state = config.setInvisibleModeOnConnect ? .on : .off
-		runConnectCommandsSilentlyCheck.state = config.runConnectCommandsSilently ? .on : .off
-		floodControlDelayTimerSliderTempValue = config.floodControlDelayTimerInterval
-		floodControlMessageCountSliderTempValue = config.floodControlMaximumMessages
-
-		addressBookList = config.ignoreList
-		channelList = config.channelList
-		highlightList = config.highlightList
-		serverList = config.serverList
-
-		applyAddressBookList()
-		applyChannelList()
-		applyHighlightList()
-
-		loadPrimaryServerEndpoint()
-		updateAddressBookPage()
-		updateChannelListPage()
-		updateClientCertificatePage()
-		updateHighlightsPage()
-		updateIdentityPage()
-		preferredCipherSuitesChanged(nil)
-		proxyTypeChanged(nil)
-	}
-
-	private func saveConfig() {
-		config.connectionName = connectionNameTextField.value
-		config.autoConnect = autoConnectCheck.state == .on
-		config.autoReconnect = autoReconnectCheck.state == .on
-		config.autoSleepModeDisconnect = autoDisconnectOnSleepCheck.state == .on
-		config.zncIgnoreConfiguredAutojoin = zncIgnoreConfiguredAutojoinCheck.state == .on
-		config.zncIgnorePlaybackNotifications = zncIgnorePlaybackNotificationsCheck.state == .on
-		config.zncOnlyPlaybackLatest = zncOnlyPlaybackLatestCheck.state == .on
-		config.performPongTimer = pongTimerCheck.state == .on
-		config.performDisconnectOnPongTimer = performDisconnectOnPongTimerCheck.state == .on
-		config.performDisconnectOnReachabilityChange = disconnectOnReachabilityChangeCheck.state == .on
-		config.validateServerCertificateChain = validateServerCertificateChainCheck.state == .on
-		config
-			.cipherSuites = CipherSuiteCollection(rawValue: UInt(preferredCipherSuitesButton.selectedTag())) ??
-			.default
-
-		config.nickname = nicknameTextField.value
-		config.username = usernameTextField.value
-		config.realName = realNameTextField.value
-		let versionReply = ctcpVersionReplyTextField.value
-		config.ctcpVersionReply = versionReply.isEmpty ? nil : versionReply
-		config.awayNickname = Self.nilIfEmpty(awayNicknameTextField.value)
-		config.nicknamePassword = Self.nilIfEmpty(
-			nicknamePasswordTextField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-		)
-		config.autojoinWaitsForNickServ = autojoinWaitsForNickServCheck.state == .on
-		config.disconnectOnSASLFailure = disconnectOnSASLFailureCheck.state == .on
-		config.hideAutojoinDelayedWarnings = hideAutojoinDelayedWarningsCheck.state != .on
-		config.alternateNicknames = uniqueNonempty(
-			alternateNicknamesTextField.value.components(separatedBy: .whitespaces)
-		)
-
-		config.sleepModeLeavingComment = sleepModeQuitMessageTextField.value
-		config.normalLeavingComment = normalLeavingCommentTextField.value
-		config.primaryEncoding = Self.encoding(forTag: primaryEncodingButton.selectedTag(), default: .utf8)
-		config.fallbackEncoding = Self.encoding(forTag: fallbackEncodingButton.selectedTag(), default: .isoLatin1)
-
-		config.proxyType = Self.proxyType(forTag: proxyTypeButton.selectedTag())
-		config.proxyAddress = Self.nilIfEmpty(proxyAddressTextField.lowercaseValue)
-		config.proxyPort = UInt16(clamping: proxyPortTextField.integerValue)
-		config.proxyUsername = Self.nilIfEmpty(
-			proxyUsernameTextField.stringValue.firstToken
-		)
-		config.proxyPassword = Self.nilIfEmpty(
-			proxyPasswordTextField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-		)
-		config.loginCommands = connectCommandsField.string
-			.components(separatedBy: .newlines)
-			.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-			.filter { !$0.isEmpty }
-		config.setInvisibleModeOnConnect = setInvisibleModeOnConnectCheck.state == .on
-		config.runConnectCommandsSilently = runConnectCommandsSilentlyCheck.state == .on
-		config.floodControlMaximumMessages = floodControlMessageCountSliderTempValue
-		config.floodControlDelayTimerInterval = floodControlDelayTimerSliderTempValue
-		config.channelList = channelList
-		config.highlightList = highlightList
-		config.ignoreList = addressBookList
-		config.serverList = serverList
-	}
-
-	/// `dictionaryValue(for:)` omits a nil but persists an empty string, so
-	/// every optional field has to normalise the same way.
-	static func nilIfEmpty(_ value: String) -> String? {
-		value.isEmpty ? nil : value
-	}
-
-	/// One fallback, shared by the sheet, its validators and saveConfig, which
-	/// used to disagree about what an unrecognised tag meant.
-	static func proxyType(forTag tag: Int) -> IRCConnectionProxyType {
-		guard tag >= 0, let type = IRCConnectionProxyType(rawValue: UInt(tag)) else {
-			return .none
+	private func closeChildSheets() {
+		if let addressBookSheet {
+			addressBookSheet.close()
+		} else if let channelSheet {
+			channelSheet.close()
+		} else if let highlightSheet {
+			highlightSheet.close()
+		} else if let serverEndpointSheet {
+			serverEndpointSheet.close()
+		} else if let panel = clientCertificatePanel {
+			panel.sheetParent?.endSheet(panel, returnCode: .cancel)
 		}
-
-		return type
-	}
-
-	static func proxyTypeUsesAddress(_ tag: Int) -> Bool {
-		[.socks5, .HTTP].contains(proxyType(forTag: tag))
-	}
-
-	static func encoding(forTag tag: Int, default fallback: String.Encoding) -> UInt {
-		tag > 0 ? UInt(tag) : fallback.rawValue
-	}
-
-	private func uniqueNonempty(_ values: [String]) -> [String] {
-		var seen = Set<String>()
-		return values.filter { !$0.isEmpty && seen.insert($0).inserted }
 	}
 
 	public func windowWillClose(_: Notification) {
 		removeConfigurationDidChangeObserver()
-		for table in [addressBookTable, channelListTable, highlightsTable] {
-			table?.delegate = nil
-			table?.dataSource = nil
-			table?.unregisterDraggedTypes()
-		}
-		sheet.makeFirstResponder(nil)
 		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheetWillClose(self)
+	}
+
+	static func displayedChannels(in channelList: [ChannelConfig]) -> [ChannelConfig] {
+		channelList.filter { $0.type == .channel }
+	}
+
+	static func nilIfEmpty(_ value: String) -> String? {
+		ServerPropertiesModel.nilIfEmpty(value)
+	}
+
+	static func proxyType(forTag tag: Int) -> IRCConnectionProxyType {
+		ServerPropertiesModel.proxyType(forTag: tag)
+	}
+
+	static func proxyTypeUsesAddress(_ tag: Int) -> Bool {
+		ServerPropertiesModel.proxyTypeUsesAddress(ServerPropertiesModel.proxyType(forTag: tag))
+	}
+
+	static func encoding(forTag tag: Int, default fallback: String.Encoding) -> UInt {
+		ServerPropertiesModel.encoding(forTag: tag, default: fallback)
 	}
 }

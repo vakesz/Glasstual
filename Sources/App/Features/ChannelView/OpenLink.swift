@@ -44,7 +44,7 @@ private let openLinkLogger = Logger(
 )
 
 public class OpenLink: NSObject {
-	public static func open(url: URL, inBackground: Bool = TextualPreferences.openBrowserInBackground()) {
+	public static func open(url: URL, inBackground: Bool = Preferences.Messages.openBrowserInBackground.value) {
 		/* Links come from other people. `NSWorkspace` launches whatever app has
 		 registered the scheme, so the same allowlist that decides what becomes
 		 clickable also decides what may be opened — callers (web view navigation
@@ -69,7 +69,7 @@ public class OpenLink: NSObject {
 		NSWorkspace.shared.open(url)
 	}
 
-	public static func open(string: String, inBackground: Bool = TextualPreferences.openBrowserInBackground()) {
+	public static func open(string: String, inBackground: Bool = Preferences.Messages.openBrowserInBackground.value) {
 		guard let urlToOpen = URL(string: string) else {
 			return
 		}

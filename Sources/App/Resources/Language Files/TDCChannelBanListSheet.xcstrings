@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "access-list" : {
+      "comment" : "Accessibility label for a channel access-list table.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Access List"
+          }
+        }
+      }
+    },
+    "added-by" : {
+      "comment" : "Column title for the user who added a channel access-list entry. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added By"
+          }
+        }
+      }
+    },
     "ban-exceptions" : {
       "comment" : "Heading for the ban-exception list. The argument is the channel name. Legacy key: gbi-wn.",
       "extractionState" : "manual",
@@ -23,6 +47,42 @@
               "one" : { "stringUnit" : { "state" : "translated", "value" : "%ld entry" } },
               "other" : { "stringUnit" : { "state" : "translated", "value" : "%ld entries" } }
             }
+          }
+        }
+      }
+    },
+    "created" : {
+      "comment" : "Column title for the date a channel access-list entry was created. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created"
+          }
+        }
+      }
+    },
+    "empty-description" : {
+      "comment" : "Description shown when the current channel access list has no entries.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server reported no entries for this list."
+          }
+        }
+      }
+    },
+    "empty-title" : {
+      "comment" : "Title shown when the current channel access list has no entries.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Entries"
           }
         }
       }
@@ -63,6 +123,30 @@
         }
       }
     },
+    "hostmask" : {
+      "comment" : "Column title for a channel access-list mask. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostmask"
+          }
+        }
+      }
+    },
+    "loading-list" : {
+      "comment" : "Accessibility label for the progress indicator shown while a channel access list is loading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading List"
+          }
+        }
+      }
+    },
     "of-entries" : {
       "comment" : "MAXLIST Legacy key: n0f-mx.",
       "extractionState" : "manual",
@@ -71,6 +155,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ of %2$@ entries"
+          }
+        }
+      }
+    },
+    "remove-selected" : {
+      "comment" : "Button that removes the selected channel access-list entries. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Selected"
+          }
+        }
+      }
+    },
+    "update-list" : {
+      "comment" : "Button that requests the current channel access list from the IRC server. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update List"
           }
         }
       }

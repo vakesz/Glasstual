@@ -111,7 +111,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 
 		delegate = self
 
-		if TextualPreferences.rightToLeftFormatting() {
+		if Preferences.Messages.rightToLeftFormatting.value {
 			baseWritingDirection = .rightToLeft
 		} else {
 			baseWritingDirection = .leftToRight

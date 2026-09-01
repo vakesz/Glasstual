@@ -13,9 +13,6 @@
 import SwiftUI
 
 struct PreferencesNotificationsPane: View {
-	/// The alert table's own height, taken from the view it loads from its nib.
-	private static let alertTableHeight = 220.0
-
 	let model: PreferencesPaneModel
 
 	private var onlySpeakForSelection: Bool {
@@ -25,8 +22,11 @@ struct PreferencesNotificationsPane: View {
 	var body: some View {
 		PreferencesPaneLayout {
 			Section {
-				PreferencesHostedView(view: model.notificationHostView, height: Self.alertTableHeight)
-					.accessibilityLabel(Text(verbatim: PreferencesNotificationsStrings.headingAlerts))
+				NotificationConfigurationView(
+					notifications: model.notificationItems,
+					allowsInheritedState: false
+				)
+				.accessibilityLabel(Text(verbatim: PreferencesNotificationsStrings.headingAlerts))
 			} header: {
 				Text(verbatim: PreferencesNotificationsStrings.headingAlerts)
 			}

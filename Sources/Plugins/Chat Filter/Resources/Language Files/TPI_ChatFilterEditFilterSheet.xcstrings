@@ -1,6 +1,261 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "action-message-event" : {
+      "comment" : "Event option for IRC action messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Action Message" } } }
+    },
+    "additional-commands-explanation" : {
+      "comment" : "Explanation of the additional IRC command field.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add comma-separated named commands or numerics from 1 through 999 that are not listed above." } } }
+    },
+    "additional-commands-placeholder" : {
+      "comment" : "Placeholder for additional IRC commands and numerics.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Additional commands and numerics" } } }
+    },
+    "additional-commands-section" : {
+      "comment" : "Section containing additional IRC commands and numerics.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Additional Commands" } } }
+    },
+    "advanced-tab" : {
+      "comment" : "Title of the advanced filter settings tab.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Advanced" } } }
+    },
+    "age-comparator-label" : {
+      "comment" : "Label for comparing a channel member's age.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Compare Membership Age" } } }
+    },
+    "age-seconds-label" : {
+      "comment" : "Label for a channel membership age in seconds.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Age in Seconds" } } }
+    },
+    "cancel-button" : {
+      "comment" : "Button that cancels editing a chat filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } } }
+    },
+    "channel-mode-changed-event" : {
+      "comment" : "Event option for a changed channel mode.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channel Mode Changed" } } }
+    },
+    "channel-mode-received-event" : {
+      "comment" : "Event option for a received channel mode.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channel Mode Received" } } }
+    },
+    "channel-topic-changed-event" : {
+      "comment" : "Event option for a changed channel topic.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channel Topic Changed" } } }
+    },
+    "channel-topic-received-event" : {
+      "comment" : "Event option for a received channel topic.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channel Topic Received" } } }
+    },
+    "channels-destination" : {
+      "comment" : "Destination option that limits a filter to channels.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channels Only" } } }
+    },
+    "channels-tab" : {
+      "comment" : "Title of the channel destination tab.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channels" } } }
+    },
+    "events-tab" : {
+      "comment" : "Title of the filter events tab.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Events" } } }
+    },
+    "filter-action-section" : {
+      "comment" : "Section containing the command run for a filter match.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Filter Action" } } }
+    },
+    "filter-match-label" : {
+      "comment" : "Label for the regular expression matched against message text.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Filter Match" } } }
+    },
+    "filter-tab" : {
+      "comment" : "Title of the general filter tab.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Filter" } } }
+    },
+    "filter-title-label" : {
+      "comment" : "Label for the chat filter title.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Filter Title" } } }
+    },
+    "flood-control-section" : {
+      "comment" : "Section containing filter-action flood control.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Flood Control" } } }
+    },
+    "flood-control-seconds-label" : {
+      "comment" : "Label for the minimum seconds between filter actions.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Flood Control in Seconds" } } }
+    },
+    "forward-destination-label" : {
+      "comment" : "Label for the query receiving forwarded matches.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Forward Destination" } } }
+    },
+    "forward-destination-section" : {
+      "comment" : "Section containing the forward destination.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Forward Destination" } } }
+    },
+    "greater-than-option" : {
+      "comment" : "Membership-age comparison option.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Greater Than" } } }
+    },
+    "hide-original-message-toggle" : {
+      "comment" : "Toggle that hides the original message after a match.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hide Original Message" } } }
+    },
+    "ignore-operators-toggle" : {
+      "comment" : "Toggle that excludes channel operators from a filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Ignore Channel Operators" } } }
+    },
+    "insert-placeholder-button" : {
+      "comment" : "Menu that inserts an action placeholder.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Insert Placeholder" } } }
+    },
+    "less-than-option" : {
+      "comment" : "Membership-age comparison option.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Less Than" } } }
+    },
+    "limit-filter-label" : {
+      "comment" : "Label for filter destination limits.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Limit Filter To" } } }
+    },
+    "log-filter-match-toggle" : {
+      "comment" : "Toggle that logs a filter match and performed action.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Log Filter Match and Action" } } }
+    },
+    "membership-age-section" : {
+      "comment" : "Section for limiting matches by membership age.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Membership Age" } } }
+    },
+    "no-connected-servers-title" : {
+      "comment" : "Empty state shown when no servers are available to select.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No Connected Servers" } } }
+    },
+    "notes-section" : {
+      "comment" : "Section containing private notes about a filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } } }
+    },
+    "notes-tab" : {
+      "comment" : "Title of the filter notes tab.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } } }
+    },
+    "notice-message-event" : {
+      "comment" : "Event option for IRC notice messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Notice Message" } } }
+    },
+    "only-my-messages-toggle" : {
+      "comment" : "Toggle that restricts a filter to messages sent by the local user.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Only My Messages" } } }
+    },
+    "plain-text-message-event" : {
+      "comment" : "Event option for plain-text IRC messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Plain Text Message" } } }
+    },
+    "private-messages-destination" : {
+      "comment" : "Destination option that limits a filter to private messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Private Messages Only" } } }
+    },
+    "save-button" : {
+      "comment" : "Button that saves an edited chat filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } } }
+    },
+    "sender-match-label" : {
+      "comment" : "Label for the regular expression matched against a sender.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sender Match" } } }
+    },
+    "sender-tab" : {
+      "comment" : "Title of the filter sender tab.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sender" } } }
+    },
+    "specific-items-destination" : {
+      "comment" : "Destination option that limits a filter to selected items.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Specific Items" } } }
+    },
+    "specific-items-section" : {
+      "comment" : "Section containing specific server and channel choices.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Specific Servers and Channels" } } }
+    },
+    "standard-events-section" : {
+      "comment" : "Section containing standard IRC event choices.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Standard Events" } } }
+    },
+    "unrestricted-destination" : {
+      "comment" : "Destination option that does not limit a filter.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Unrestricted" } } }
+    },
+    "user-changed-nickname-event" : {
+      "comment" : "Event option for a user changing nickname.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "User Changed Nickname" } } }
+    },
+    "user-disconnected-event" : {
+      "comment" : "Event option for a user disconnecting.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "User Disconnected" } } }
+    },
+    "user-joined-channel-event" : {
+      "comment" : "Event option for a user joining a channel.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "User Joined Channel" } } }
+    },
+    "user-kicked-from-channel-event" : {
+      "comment" : "Event option for a user being kicked from a channel.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "User Kicked from Channel" } } }
+    },
+    "user-left-channel-event" : {
+      "comment" : "Event option for a user leaving a channel.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "User Left Channel" } } }
+    },
+    "zero-disables-explanation" : {
+      "comment" : "Explanation that a zero numeric limit disables the limit.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Zero disables this limit." } } }
+    },
     "commands-invalid" : {
       "comment" : "Validation message for an invalid command list. Migrated from legacy key 9ri-sd. Next unused legacy key was 1014.",
       "extractionState" : "manual",

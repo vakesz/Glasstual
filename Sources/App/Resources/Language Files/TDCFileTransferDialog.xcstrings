@@ -1,6 +1,105 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "all": {
+      "comment": "File-transfer filter showing every transfer.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "All" } } }
+    },
+    "cancel-transfer": {
+      "comment": "Action that stops an active or pending file transfer.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Cancel Transfer" } } }
+    },
+    "clear-all-stopped-transfers": {
+      "comment": "Action that removes every finished, stopped, or failed transfer from the list.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Clear All Stopped Transfers" } } }
+    },
+    "file-transfers": {
+      "comment": "Title and accessibility label for the file-transfer window.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "File Transfers" } } }
+    },
+    "filter-transfers": {
+      "comment": "Accessibility label for the transfer-direction filter.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Filter transfers" } } }
+    },
+    "no-file-transfers": {
+      "comment": "Empty-state title in the file-transfer window.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "No File Transfers" } } }
+    },
+    "open-file": {
+      "comment": "Action that opens a transferred file.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Open File" } } }
+    },
+    "quick-look": {
+      "comment": "Action that previews a transferred file with Quick Look.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Quick Look" } } }
+    },
+    "receiving": {
+      "comment": "File-transfer filter showing incoming transfers.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Receiving" } } }
+    },
+    "remove-from-list": {
+      "comment": "Action that permanently removes selected transfers from the list.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Remove From List" } } }
+    },
+    "sending": {
+      "comment": "File-transfer filter showing outgoing transfers.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Sending" } } }
+    },
+    "share": {
+      "comment": "Action that opens the system share picker for transferred files.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Share…" } } }
+    },
+    "show": {
+      "comment": "Label for choosing which file-transfer directions are visible.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Show" } } }
+    },
+    "show-in-finder": {
+      "comment": "Action that reveals transferred files in Finder.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Show in Finder" } } }
+    },
+    "start-transfer": {
+      "comment": "Action that starts or resumes a file transfer.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Start Transfer" } } }
+    },
+    "transfer-progress": {
+      "comment": "Accessibility label for a file transfer's progress indicator.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Transfer progress" } } }
+    },
+    "transfers": {
+      "comment": "Count of file transfers visible under the current filter. The argument is the count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": { "stringUnit": { "state": "translated", "value": "%ld Transfer" } },
+              "other": { "stringUnit": { "state": "translated", "value": "%ld Transfers" } }
+            }
+          }
+        }
+      }
+    },
+    "transfers-appear-here": {
+      "comment": "Empty-state explanation in the file-transfer window.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Incoming and outgoing transfers appear here." } } }
+    },
     "of-s-received": {
       "comment": "Incoming transfer progress. Arguments are processed size, total size, speed, and peer nickname. Legacy key: 7dk-lp.",
       "extractionState": "manual",

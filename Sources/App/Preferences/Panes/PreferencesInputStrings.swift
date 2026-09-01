@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum PreferencesControlsStrings { // nonisolated: value
+enum PreferencesControlsStrings {
 	static var commandReturnAction: String {
 		String(localized: .TDCPreferencesController.controlsCommandReturnAction)
 	}
@@ -162,7 +162,7 @@ nonisolated enum PreferencesControlsStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesAddOnsStrings { // nonisolated: value
+enum PreferencesAddOnsStrings {
 	static var commandsLabel: String {
 		String(localized: .TDCPreferencesController.addonsCommandsLabel)
 	}
@@ -188,7 +188,7 @@ nonisolated enum PreferencesAddOnsStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesDefaultIdentityStrings { // nonisolated: value
+enum PreferencesDefaultIdentityStrings {
 	static var allOptional: String {
 		String(localized: .TDCPreferencesController.defaultIdentityAllOptional)
 	}
@@ -218,7 +218,7 @@ nonisolated enum PreferencesDefaultIdentityStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesIRCopStrings { // nonisolated: value
+enum PreferencesIRCopStrings {
 	static var glineLabel: String {
 		String(localized: .TDCPreferencesController.ircopGlineLabel)
 	}

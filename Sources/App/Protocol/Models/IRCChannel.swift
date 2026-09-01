@@ -360,7 +360,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 
 		if isChannel {
-			client.postEvent(toViewController: "channelJoined", for: legacyChannel)
 			modeInfo = ChannelModeState(channel: legacyChannel)
 		}
 
@@ -386,9 +385,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		statusChangedByAction = true
 		resetStatus(.parted)
 
-		if isChannel {
-			associatedClient?.postEvent(toViewController: "channelParted", for: legacyChannel)
-		}
+		if isChannel {}
 	}
 
 	@MainActor public func prepareForPermanentDestruction() {

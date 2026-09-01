@@ -73,6 +73,7 @@ public extension IRCClient {
 		pendingDeliveries.removeAll()
 		labelForBatchToken.removeAll()
 		enabledCapabilityNames.removeAll()
+		NotificationCenter.default.post(name: .ircClientCapabilitiesDidChange, object: self)
 		offeredCapabilities.removeAll()
 		pendingCapabilityRequests.removeAll()
 	}
@@ -100,7 +101,6 @@ public extension IRCClient {
 		userNickname = nickname
 		successfulConnects += 1
 		socket?.enforceFloodControl()
-		postEvent(toViewController: "serverConnected")
 		_ = notifyEvent(.connect, lineType: .debug)
 
 		isPerformingConnectCommands = true

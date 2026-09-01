@@ -183,14 +183,6 @@ public struct PluginPostedMessage: Sendable {
 	public init() {}
 }
 
-@MainActor
-public final class PluginJavaScriptPayload {
-	public var payloadLabel = ""
-	public var payloadContents: Any?
-
-	public init() {}
-}
-
 /// A value: the plugin manager publishes these rules to the IRC layer, which
 /// reads them off the main actor.
 public struct PluginOutputSuppressionRule: Equatable, Sendable {

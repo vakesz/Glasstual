@@ -1,11 +1,11 @@
 @testable import Glasstual
+import SwiftUI
 import Testing
 
-/// The file transfer table used to be an `NSArrayController` with an
-/// `isSender ==` filter predicate, and it drew whatever `arrangedObjects` gave
-/// back. Both halves are Swift now: the toolbar selection decides which
-/// transfers are shown, and the table diffs them by `uniqueIdentifier`.
-@Suite("File transfer dialog table")
+/// The dialog used to split its state between an `NSArrayController`, a table
+/// data source and the transfer controllers' weak references to AppKit cells.
+/// The SwiftUI list now projects one observable model instead.
+@Suite("File transfer dialog")
 @MainActor
 struct FileTransferDialogTableTests {
 	private struct Transfer: Equatable {
@@ -114,6 +114,49 @@ struct FileTransferDialogTableTests {
 		stored.removeAll { removed.contains($0.uniqueIdentifier) }
 
 		#expect(stored == [first, third])
+	}
+
+	@Test("The model owns newest-first ordering, filtering, and selection")
+	func modelOwnsListState() throws {
+		let client = GLTTestClient()
+		let incoming = try transfer(on: client, filename: "incoming.jpg")
+		let outgoing = try transfer(on: client, filename: "outgoing.jpg")
+		outgoing.isSender = true
+
+		let model = FileTransferDialogModel()
+		model.add(incoming)
+		model.add(outgoing)
+		#expect(model.visibleTransfers == [outgoing, incoming])
+
+		model.selection = [incoming.uniqueIdentifier, outgoing.uniqueIdentifier]
+		model.filter = .receiving
+		#expect(model.visibleTransfers == [incoming])
+		#expect(model.selection == [incoming.uniqueIdentifier])
+
+		model.remove([incoming])
+		#expect(model.visibleTransfers.isEmpty)
+		#expect(model.selection.isEmpty)
+	}
+
+	@Test("Rows project transfer state without retaining a view")
+	func rowPresentationIsAValueSnapshot() throws {
+		let client = GLTTestClient()
+		let transfer = try transfer(on: client, filename: "archive.zip")
+
+		let presentation = FileTransferRowPresentation(transfer: transfer)
+
+		#expect(presentation.filename == "archive.zip")
+		#expect(presentation.totalSize.isEmpty == false)
+		#expect(presentation.status.isEmpty == false)
+		#expect(presentation.progress == .hidden)
+	}
+
+	@Test("The dialog is hosted by SwiftUI and ships no legacy nib")
+	func dialogUsesNativeSwiftUI() {
+		let dialog = FileTransferDialog()
+
+		#expect(dialog.window?.contentViewController is NSHostingController<FileTransferDialogView>)
+		#expect(Bundle.main.path(forResource: "TDCFileTransferDialog", ofType: "nib") == nil)
 	}
 
 	private func transfer(

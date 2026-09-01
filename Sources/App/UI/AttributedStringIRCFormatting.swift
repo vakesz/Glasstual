@@ -50,7 +50,7 @@ public extension NSMutableAttributedString {
 		   (0 ... colorHighestDigit).contains(colorCode)
 		{
 			addAttribute(formatterKey(formatterAttribute), value: colorCode, range: range)
-			addAttribute(appKitAttribute, value: TVCLogRenderer.mapColorCode(UInt(colorCode)), range: range)
+			addAttribute(appKitAttribute, value: LogRenderer.mapColorCode(UInt(colorCode)), range: range)
 		} else if let color = value as? NSColor {
 			addAttribute(formatterKey(formatterAttribute), value: color, range: range)
 			addAttribute(appKitAttribute, value: color, range: range)

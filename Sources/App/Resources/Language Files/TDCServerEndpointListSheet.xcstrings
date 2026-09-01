@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "add-server" : {
+      "comment" : "Accessibility label and help for the button that adds an alternate server endpoint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Server"
+          }
+        }
+      }
+    },
+    "connect-securely" : {
+      "comment" : "Column heading and accessibility label for the TLS toggle in the alternate-server list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secure"
+          }
+        }
+      }
+    },
     "enter-a-whole-number-between-1" : {
       "comment" : "Recovery suggestion for an invalid server port. Legacy key: ox2-od.",
       "extractionState" : "manual",
@@ -13,6 +37,18 @@
         }
       }
     },
+    "explanation" : {
+      "comment" : "Explains that alternate servers are tried in the displayed order.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual tries these servers from top to bottom. Drag rows or use the arrow buttons to change their order; the first server is primary."
+          }
+        }
+      }
+    },
     "intentionally-empty-recovery-suggestion" : {
       "comment" : "Intentionally empty recovery suggestion for an invalid server address. Legacy key: k0c-3u.",
       "extractionState" : "manual",
@@ -21,6 +57,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : ""
+          }
+        }
+      }
+    },
+    "move-down" : {
+      "comment" : "Accessibility label and help for moving the selected server endpoint down.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Down"
+          }
+        }
+      }
+    },
+    "move-up" : {
+      "comment" : "Accessibility label and help for moving the selected server endpoint up.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Up"
+          }
+        }
+      }
+    },
+    "port" : {
+      "comment" : "Column heading and placeholder for an IRC server port.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        }
+      }
+    },
+    "remove-server" : {
+      "comment" : "Accessibility label and help for the button that removes the selected alternate server endpoint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Server"
+          }
+        }
+      }
+    },
+    "server-address" : {
+      "comment" : "Column heading and placeholder for an IRC server address.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server Address"
+          }
+        }
+      }
+    },
+    "server-list" : {
+      "comment" : "Accessibility label for the list of alternate IRC servers.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server List"
+          }
+        }
+      }
+    },
+    "server-password" : {
+      "comment" : "Column heading and placeholder for the IRC server password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server Password"
+          }
+        }
+      }
+    },
+    "server-password-help" : {
+      "comment" : "Help text clarifying that the server password is sent with PASS and is not a NickServ password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent using the PASS command. This is not your NickServ password."
           }
         }
       }
@@ -45,6 +177,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The value you entered is not a properly formatted server port"
+          }
+        }
+      }
+    },
+    "window-title" : {
+      "comment" : "Title of the sheet for editing alternate IRC server endpoints.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternate Servers"
           }
         }
       }

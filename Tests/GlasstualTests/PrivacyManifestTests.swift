@@ -82,14 +82,6 @@ struct PrivacyManifestTests {
 				]
 			),
 			Service(
-				bundleName: "Inline Content Loader.xpc",
-				sourceDirectories: [
-					"Sources/Services/Inline Content Loader",
-					"Sources/Frameworks/Inline Content Kit",
-					"Sources/Shared",
-				]
-			),
-			Service(
 				bundleName: "IRC Connection Host.xpc",
 				sourceDirectories: [
 					"Sources/Services/IRC Remote Connection Manager",

@@ -24,7 +24,6 @@ import AppKit
 ///
 /// The positions in these calls are the model's, not the table's: the table
 /// sections its rows and diffs them, so it asks for members by identity.
-@objc(IRCChannelMemberListController)
 @MainActor
 public final class IRCChannelMemberListController: NSObject {
 	private weak var memberList: ChannelMemberList?
@@ -33,7 +32,12 @@ public final class IRCChannelMemberListController: NSObject {
 	/// the row identity its data source hands back to the value it draws.
 	private var indexesByUserID: [User.ID: Int] = [:]
 
-	@IBOutlet public private(set) var tableView: MemberList!
+	public private(set) weak var tableView: MemberList?
+
+	public func attach(to tableView: MemberList) {
+		precondition(self.tableView == nil || self.tableView === tableView)
+		self.tableView = tableView
+	}
 
 	/// Named for what the array controller used to call it: the member list
 	/// reads its rows from here.

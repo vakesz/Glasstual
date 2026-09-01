@@ -17,7 +17,7 @@ public final class DockIcon: NSObject {
 	@MainActor private static var cachedMessageCount: Int = -1
 
 	@MainActor public static func updateDockIcon() {
-		guard TextualPreferences.displayDockBadge() else {
+		guard Preferences.Notifications.displayDockBadge.value else {
 			return
 		}
 

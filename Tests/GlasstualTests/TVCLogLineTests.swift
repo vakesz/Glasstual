@@ -92,7 +92,6 @@ struct TVCLogLineTests {
 		line.deliveryState = .delivered
 		line.highlightKeywords = ["hello"]
 		line.excludeKeywords = ["ignore"]
-		line.doNotEscapeBody = true
 
 		var copy = line
 		copy.messageBody = "changed"
@@ -112,7 +111,6 @@ struct TVCLogLineTests {
 		#expect(copy.deliveryState == .delivered)
 		#expect(copy.highlightKeywords == ["hello"])
 		#expect(copy.excludeKeywords == ["ignore"])
-		#expect(copy.doNotEscapeBody)
 		#expect(copy.uniqueIdentifier == line.uniqueIdentifier)
 		#expect(copy.sessionIdentifier == line.sessionIdentifier)
 	}

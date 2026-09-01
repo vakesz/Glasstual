@@ -198,4 +198,48 @@ struct ServerEndpointListSheetTests {
 
 		#expect(reported.map(\.serverAddress) == ["irc.example.com", "irc.other.example"])
 	}
+
+	@Test("The native editor validates rows and preserves their order")
+	func nativeEditorSubmitsValidRowsInOrder() throws {
+		let model = ServerEndpointListModel()
+		model.replace(with: [
+			Server(serverAddress: "irc.one.example", serverPort: 6697, prefersSecuredConnection: true),
+			Server(serverAddress: "irc.two.example", serverPort: 6667),
+		])
+
+		model.selectedID = model.entries[1].id
+		model.moveSelection(by: -1)
+
+		let submitted = try #require(model.validatedServers())
+		#expect(submitted.map(\.serverAddress) == ["irc.two.example", "irc.one.example"])
+	}
+
+	@Test("The native editor identifies the field that prevents submission")
+	func nativeEditorReportsInvalidFields() {
+		let model = ServerEndpointListModel()
+		model.replace(with: [Server(serverAddress: "not a host", serverPort: 6667)])
+		let id = model.entries[0].id
+
+		#expect(model.validatedServers() == nil)
+		#expect(model.invalidAddressIDs == [id])
+		#expect(model.invalidPortIDs.isEmpty)
+
+		model.entries[0].address = "irc.example.com"
+		model.entries[0].port = "70000"
+		#expect(model.validatedServers() == nil)
+		#expect(model.invalidAddressIDs.isEmpty)
+		#expect(model.invalidPortIDs == [id])
+	}
+
+	@Test("The native editor keeps default ports aligned with transport")
+	func nativeEditorUpdatesDefaultPortForTransport() {
+		let model = ServerEndpointListModel()
+		model.replace(with: [Server(serverAddress: "irc.example.com", serverPort: 6667)])
+		let id = model.entries[0].id
+
+		model.setSecured(true, for: id)
+
+		#expect(model.entries[0].prefersSecuredConnection)
+		#expect(model.entries[0].port == "6697")
+	}
 }

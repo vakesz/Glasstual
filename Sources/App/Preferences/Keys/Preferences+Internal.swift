@@ -90,16 +90,9 @@ public nonisolated extension Preferences { // nonisolated: value
 			traits: [.unregistered, .uncatalogued]
 		)
 
-		public static let webInspectorStartsAttached = PreferenceKey(
-			"__WebInspectorPageGroupLevel1__.WebKit2InspectorStartsAttached",
-			default: false,
-			storage: .standard,
-			traits: [.unregistered, .uncatalogued]
-		)
-
 		static let all: [any AnyPreferenceKey] = [
 			dictionaryVersion, runCount, runTime, pluginApprovals, selectedPreferencePane,
-			includeAdvancedEncodings, appSleepDisabled, webInspectorStartsAttached,
+			includeAdvancedEncodings, appSleepDisabled,
 		]
 	}
 }

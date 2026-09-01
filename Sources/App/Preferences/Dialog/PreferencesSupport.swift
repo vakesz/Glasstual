@@ -37,16 +37,12 @@
  *********************************************************************** */
 
 import AppKit
-import CocoaExtensions
 
-/** The window has the fixed width a preference-style toolbar wants and grows
- or shrinks to whatever the selected pane needs, up to what the screen has. */
+/// Stable window metrics for the SwiftUI `NavigationSplitView` settings UI.
 enum PreferencesLayout {
-	static let windowWidth = 760.0
-	static let windowMinimumHeight = 180.0
-	static let windowScreenInset = 120.0
-	/// What a grouped `Form` insets its own rows by, so the sub-page picker
-	/// lines up with the content below it.
+	static let windowSize = CGSize(width: 860, height: 620)
+	static let minimumWindowSize = CGSize(width: 700, height: 500)
+	static let sidebarWidth = 190.0
 	static let contentInset = 20.0
 }
 
@@ -64,7 +60,7 @@ struct PreferencesPaneDescriptor: Equatable {
 	let group: PreferencesPaneGroup
 }
 
-/// One pane: a toolbar section on its own, or one segment of a section that
+/// One pane: a sidebar section on its own, or one segment of a section that
 /// holds several.
 struct PreferencesPaneEntry: Equatable, Identifiable {
 	let identifier: String
@@ -77,11 +73,12 @@ struct PreferencesPaneEntry: Equatable, Identifiable {
 	}
 }
 
-/// A toolbar item. The seven main panes are a section each; the add-on and
+/// A sidebar item. The main panes are a section each; the add-on and
 /// advanced panes are gathered behind one item apiece.
 enum PreferencesSectionIdentifier: String, CaseIterable, Sendable {
 	case general
 	case behavior
+	case ircv3
 	case notifications
 	case highlights
 	case interface
@@ -94,6 +91,7 @@ enum PreferencesSectionIdentifier: String, CaseIterable, Sendable {
 		switch self {
 		case .general: "gearshape"
 		case .behavior: "slider.horizontal.3"
+		case .ircv3: "network"
 		case .notifications: "bell"
 		case .highlights: "text.magnifyingglass"
 		case .interface: "macwindow"
@@ -109,6 +107,7 @@ enum PreferencesSectionIdentifier: String, CaseIterable, Sendable {
 		switch self {
 		case .general: .general
 		case .behavior: .behavior
+		case .ircv3: .ircv3
 		case .notifications: .notifications
 		case .highlights: .highlights
 		case .interface: .interface
@@ -119,7 +118,7 @@ enum PreferencesSectionIdentifier: String, CaseIterable, Sendable {
 	}
 }
 
-/// One valid Settings destination. Keeping the toolbar section and its
+/// One valid Settings destination. Keeping the sidebar section and its
 /// sub-page in one value prevents SwiftUI from observing an impossible pair
 /// while the AppKit shell switches sections.
 struct PreferencesSelection: Equatable, Sendable {
@@ -166,10 +165,10 @@ enum PreferencesAdvancedGroup: String, CaseIterable, Sendable {
 
 	var panes: [PreferencesPaneIdentifier] {
 		switch self {
-		case .connection: [.compatibility, .floodControl, .incomingData]
+		case .connection: [.floodControl, .incomingData]
 		case .channels: [.channelManagement, .commandScope]
 		case .identity: [.defaultIdentity, .defaultIRCopMessages]
-		case .media: [.fileTransfers, .inlineMedia]
+		case .media: [.fileTransfers]
 		case .system: [.logLocation, .hidden]
 		}
 	}
@@ -187,28 +186,6 @@ struct PreferencesSection: Equatable, Identifiable {
 	var symbolName: String {
 		identifier.symbolName
 	}
-
-	/// A picker only fits so many segments across a fixed-width window; past
-	/// that the sub-pages are listed in a pop-up instead.
-	static let maximumSegments = 5
-
-	/* A segment is about this wide per character, plus the inset each one keeps
-	 around its label. The estimate is deliberately generous: a row that would
-	 be close to the edge falls back to the pop-up rather than truncating. */
-	private static let segmentCharacterWidth = 7.5
-	private static let segmentPadding = 28.0
-
-	/** Whether the sub-pages fit a segmented row: few enough of them, and short
-	 enough labels to lay out across the window without truncating. */
-	var usesSegmentedPicker: Bool {
-		guard subPages.count <= Self.maximumSegments else {
-			return false
-		}
-		let characters = subPages.reduce(0) { $0 + $1.title.count }
-		let width = Double(characters) * Self.segmentCharacterWidth
-			+ Double(subPages.count) * Self.segmentPadding
-		return width <= PreferencesLayout.windowWidth - 2 * PreferencesLayout.contentInset
-	}
 }
 
 enum PreferencesPaneIdentifier: String, CaseIterable, Sendable {
@@ -216,7 +193,6 @@ enum PreferencesPaneIdentifier: String, CaseIterable, Sendable {
 	case behavior
 	case channelManagement
 	case commandScope
-	case compatibility
 	case controls
 	case defaultIRCopMessages
 	case defaultIdentity
@@ -226,8 +202,8 @@ enum PreferencesPaneIdentifier: String, CaseIterable, Sendable {
 	case hidden
 	case highlights
 	case incomingData
-	case inlineMedia
 	case interface
+	case ircv3
 	case logLocation
 	case notifications
 	case style
@@ -249,6 +225,11 @@ enum PreferencesPaneCatalog {
 		PreferencesPaneDescriptor(
 			identifier: .behavior,
 			symbolName: "slider.horizontal.3",
+			group: .main
+		),
+		PreferencesPaneDescriptor(
+			identifier: .ircv3,
+			symbolName: "network",
 			group: .main
 		),
 		PreferencesPaneDescriptor(
@@ -292,11 +273,6 @@ enum PreferencesPaneCatalog {
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
-			identifier: .compatibility,
-			symbolName: "wrench.and.screwdriver",
-			group: .advanced
-		),
-		PreferencesPaneDescriptor(
 			identifier: .floodControl,
 			symbolName: "timer",
 			group: .advanced
@@ -309,11 +285,6 @@ enum PreferencesPaneCatalog {
 		PreferencesPaneDescriptor(
 			identifier: .fileTransfers,
 			symbolName: "arrow.down.app",
-			group: .advanced
-		),
-		PreferencesPaneDescriptor(
-			identifier: .inlineMedia,
-			symbolName: "photo",
 			group: .advanced
 		),
 		PreferencesPaneDescriptor(
@@ -353,11 +324,9 @@ enum PreferencesPaneCatalog {
 	}
 }
 
-nonisolated enum PreferencesValueValidation { // nonisolated: value
+enum PreferencesValueValidation {
 	static let scrollbackSaveRange = 100 ... 50000
 	static let scrollbackVisibleRange = 100 ... 15000
-	static let inlineMediaWidthRange = 40 ... 2000
-	static let inlineMediaHeightRange = 0 ... 6000
 	static let fileTransferPortRange = 1024 ... 65535
 
 	static func clamped(_ value: Int, to range: ClosedRange<Int>, allowingZero: Bool = false) -> Int {

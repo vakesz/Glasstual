@@ -42,7 +42,7 @@ import Testing
 @MainActor
 @Suite("IRCv3 capability registry")
 struct IRCCapabilityRegistryTests {
-	private func registryWithGateAllowed(_ gateAllowed: Bool) -> CapabilityRegistry {
+	private func registry() -> CapabilityRegistry {
 		let tags = Capability.capability(
 			named: "message-tags",
 			identifier: ClientIRCv3SupportedCapability.messageTags
@@ -51,23 +51,23 @@ struct IRCCapabilityRegistryTests {
 			name: "echo-message",
 			identifier: ClientIRCv3SupportedCapability.echoMessage,
 			requestedByDefault: true,
-			preferenceGate: { () -> Bool in
-				gateAllowed
-			},
-			dependencies: nil,
-			negotiationHook: nil
+			preference: .echoMessage
 		)
 		let dependent = Capability(
 			name: "draft/typing",
 			identifier: [],
 			requestedByDefault: true,
-			preferenceGate: nil,
-			dependencies: ["message-tags"],
-			negotiationHook: nil
+			dependencies: ["message-tags"]
 		)
 		let optional = Capability.capability(named: "draft/opt-in", identifier: [], requestedByDefault: false)
 
 		return CapabilityRegistry(capabilities: [tags, gated, dependent, optional])
+	}
+
+	private func preferences(echoMessage: Bool = true) -> ClientPreferences {
+		var preferences = ClientPreferences()
+		preferences.enableEchoMessageCapability = echoMessage
+		return preferences
 	}
 
 	@Test("A CAP list is split into names and their comma separated values")
@@ -92,7 +92,7 @@ struct IRCCapabilityRegistryTests {
 
 	@Test("Capabilities are looked up by their exact name, or by identifier")
 	func lookupIsByExactName() {
-		let registry = registryWithGateAllowed(true)
+		let registry = registry()
 
 		#expect(registry.capability(named: "message-tags")?.name == "message-tags")
 		/* IRCv3 makes capability names case-sensitive. */
@@ -105,44 +105,65 @@ struct IRCCapabilityRegistryTests {
 	@Test("A capability whose preference gate is closed is neither requested nor supported")
 	func requestListRespectsPreferenceGate() {
 		let offered: [String: [String]] = ["message-tags": [], "echo-message": []]
-		let allowed = registryWithGateAllowed(true).capabilitiesToRequest(fromOffered: offered)
+		let registry = registry()
+		let allowed = registry.capabilitiesToRequest(
+			fromOffered: offered,
+			preferences: preferences()
+		)
 
 		#expect(allowed.map(\.name) == ["message-tags", "echo-message"])
 
-		let denied = registryWithGateAllowed(false).capabilitiesToRequest(fromOffered: offered)
+		let deniedPreferences = preferences(echoMessage: false)
+		let denied = registry.capabilitiesToRequest(
+			fromOffered: offered,
+			preferences: deniedPreferences
+		)
 
 		#expect(denied.map(\.name) == ["message-tags"])
-		#expect(registryWithGateAllowed(true).isCapabilitySupported("echo-message"))
-		#expect(registryWithGateAllowed(false).isCapabilitySupported("echo-message") == false)
+		#expect(registry.isCapabilitySupported("echo-message", preferences: preferences()))
+		#expect(registry.isCapabilitySupported("echo-message", preferences: deniedPreferences) == false)
 	}
 
 	@Test("A capability is requested only once everything it depends on is offered")
 	func requestListRespectsDependencies() {
-		let registry = registryWithGateAllowed(true)
-		let withoutTags = registry.capabilitiesToRequest(fromOffered: ["draft/typing": []])
+		let registry = registry()
+		let preferences = preferences()
+		let withoutTags = registry.capabilitiesToRequest(
+			fromOffered: ["draft/typing": []],
+			preferences: preferences
+		)
 
 		#expect(withoutTags.isEmpty)
 
-		let withTags = registry.capabilitiesToRequest(fromOffered: [
-			"draft/typing": [],
-			"message-tags": [],
-		])
+		let withTags = registry.capabilitiesToRequest(
+			fromOffered: [
+				"draft/typing": [],
+				"message-tags": [],
+			],
+			preferences: preferences
+		)
 
 		#expect(withTags.map(\.name) == ["message-tags", "draft/typing"])
 	}
 
 	@Test("A capability that is not requested by default is skipped")
 	func capabilitiesNotRequestedByDefaultAreSkipped() {
-		let registry = registryWithGateAllowed(true)
+		let registry = registry()
 
-		#expect(registry.capabilitiesToRequest(fromOffered: ["draft/opt-in": []]).isEmpty)
+		#expect(registry.capabilitiesToRequest(
+			fromOffered: ["draft/opt-in": []],
+			preferences: preferences()
+		).isEmpty)
 	}
 
 	@Test("A capability the registry does not know is never requested")
 	func unknownCapabilitiesAreNeverRequested() {
-		let registry = registryWithGateAllowed(true)
+		let registry = registry()
 
-		#expect(registry.capabilitiesToRequest(fromOffered: ["example.com/vendor": []]).isEmpty)
+		#expect(registry.capabilitiesToRequest(
+			fromOffered: ["example.com/vendor": []],
+			preferences: preferences()
+		).isEmpty)
 	}
 
 	@Test("Capabilities that depend on each other are never requested")
@@ -151,22 +172,21 @@ struct IRCCapabilityRegistryTests {
 			name: "first",
 			identifier: [],
 			requestedByDefault: true,
-			preferenceGate: nil,
-			dependencies: ["second"],
-			negotiationHook: nil
+			dependencies: ["second"]
 		)
 		let second = Capability(
 			name: "second",
 			identifier: [],
 			requestedByDefault: true,
-			preferenceGate: nil,
-			dependencies: ["first"],
-			negotiationHook: nil
+			dependencies: ["first"]
 		)
 		let registry = CapabilityRegistry(capabilities: [first, second])
 		let offered: [String: [String]] = ["first": [], "second": []]
 
-		#expect(registry.capabilitiesToRequest(fromOffered: offered).isEmpty)
+		#expect(registry.capabilitiesToRequest(
+			fromOffered: offered,
+			preferences: preferences()
+		).isEmpty)
 	}
 
 	@Test("The default registry carries every capability the client negotiates", arguments: [
@@ -200,11 +220,11 @@ struct IRCCapabilityRegistryTests {
 		#expect(registry.capability(named: "plan.io/playback") == nil)
 	}
 
-	@Test("SASL negotiates through a hook and vendor variants set the generic bit")
+	@Test("SASL has typed negotiation and vendor variants set the generic bit")
 	func defaultRegistryVendorVariantsCarryTheGenericBit() throws {
 		let registry = CapabilityRegistry.defaultRegistry
 
-		#expect(registry.capability(named: "sasl")?.negotiationHook != nil)
+		#expect(registry.capability(named: "sasl")?.negotiation == .sasl)
 
 		/* Vendor variants switch on the generic bit too. */
 		let zncServerTime = try #require(registry.capability(named: "znc.in/server-time-iso")?.identifier)

@@ -176,25 +176,16 @@ extension MainWindow: ClientOutput {
 		inputHistoryManager().destroy(item)
 	}
 
-	func evaluateFunctionOnAllViews(_ function: String, arguments: [Any]?, onQueue: Bool) {
+	func notifyAllViewsAppearanceDidChange() {
 		for client in world.clientList {
 			logControllers.existingController(for: client)?
-				.evaluateFunction(function, withArguments: arguments, onQueue: onQueue)
+				.reloadTheme()
 
 			for channel in client.channelList {
 				logControllers.existingController(for: channel)?
-					.evaluateFunction(function, withArguments: arguments, onQueue: onQueue)
+					.reloadTheme()
 			}
 		}
-	}
-
-	func notifyAllViewsAppearanceDidChange() {
-		let appearance = userInterfaceObjects
-		evaluateFunctionOnAllViews(
-			"Glasstual.appearanceDidChange",
-			arguments: [appearance.shortAppearanceDescription],
-			onQueue: true
-		)
 	}
 }
 

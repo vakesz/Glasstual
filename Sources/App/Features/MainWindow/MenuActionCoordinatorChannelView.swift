@@ -46,8 +46,6 @@ public extension MenuActionCoordinator {
 		case .reply: reply(to: sender)
 		case .react: react(to: sender)
 		case .reactWithOtherEmoji: reactWithOtherEmoji(to: sender)
-		case .copyLogAsHTML: objcSelectedViewControllerBackingView()?.copyContentString()
-		case .openWebInspector: showWebInspectorUnavailableAlert()
 		case .markScrollback: objcSelectedViewController()?.mark()
 		case .goToScrollbackMarker: objcSelectedViewController()?.goToMark()
 		case .clearScrollback: clearScrollback()
@@ -106,7 +104,7 @@ public extension MenuActionCoordinator {
 	private func reactWithOtherEmoji(to sender: Any?) {
 		guard let identifier = messageContext(from: sender)?.messageIdentifier,
 		      identifier.isEmpty == false,
-		      let anchorView = objcSelectedViewControllerBackingView()?.webView,
+		      let anchorView = objcSelectedViewControllerBackingView()?.view,
 		      let window = anchorView.window
 		else { return }
 
@@ -118,15 +116,6 @@ public extension MenuActionCoordinator {
 		let viewLocation = anchorView.convert(mouseLocation, from: nil)
 		popover.present(relativeTo: NSRect(origin: viewLocation, size: NSSize(width: 1, height: 1)), of: anchorView)
 		reactionPopover = popover
-	}
-
-	private func showWebInspectorUnavailableAlert() {
-		TDCAlert.alert(
-			withMessage: PromptStrings.WebInspector.unavailableBody,
-			title: PromptStrings.WebInspector.unavailableTitle,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil
-		)
 	}
 
 	private func clearScrollback() {

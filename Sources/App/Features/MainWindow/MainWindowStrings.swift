@@ -109,12 +109,100 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 	}
 
 	enum Loading {
+		static var welcomeTitle: String {
+			String(localized: .TVCMainWindow.welcomeToGlasstual)
+		}
+
+		static var welcomeDescription: String {
+			String(localized: .TVCMainWindow.getStartedDescription)
+		}
+
+		static var continueAction: String {
+			String(localized: .TVCMainWindow.continue)
+		}
+
+		static var beginSetup: String {
+			String(localized: .TVCMainWindow.beginSetup)
+		}
+
 		static var configuration: String {
 			String(localized: .TVCMainWindow.loadingConfiguration)
 		}
 
 		static var preferences: String {
 			String(localized: .TVCMainWindow.importingPreferences)
+		}
+	}
+
+	enum Formatting {
+		static var menuTitle: String {
+			String(localized: .TVCMainWindow.ircFormatting)
+		}
+
+		static var bold: String {
+			String(localized: .TVCMainWindow.bold)
+		}
+
+		static var italics: String {
+			String(localized: .TVCMainWindow.italics)
+		}
+
+		static var monospace: String {
+			String(localized: .TVCMainWindow.monospace)
+		}
+
+		static var spoiler: String {
+			String(localized: .TVCMainWindow.spoiler)
+		}
+
+		static var strikethrough: String {
+			String(localized: .TVCMainWindow.strikethrough)
+		}
+
+		static var underline: String {
+			String(localized: .TVCMainWindow.underline)
+		}
+
+		static var textColor: String {
+			String(localized: .TVCMainWindow.textColor)
+		}
+
+		static var backgroundColor: String {
+			String(localized: .TVCMainWindow.backgroundColor)
+		}
+
+		static var rainbow: String {
+			String(localized: .TVCMainWindow.rainbow)
+		}
+
+		static var other: String {
+			String(localized: .TVCMainWindow.other)
+		}
+	}
+
+	enum MemberInfo {
+		static var username: String {
+			String(localized: .TVCMainWindow.memberUsername)
+		}
+
+		static var address: String {
+			String(localized: .TVCMainWindow.memberAddress)
+		}
+
+		static var realName: String {
+			String(localized: .TVCMainWindow.memberRealName)
+		}
+
+		static var account: String {
+			String(localized: .TVCMainWindow.memberAccount)
+		}
+
+		static var privileges: String {
+			String(localized: .TVCMainWindow.memberPrivileges)
+		}
+
+		static var status: String {
+			String(localized: .TVCMainWindow.memberStatus)
 		}
 	}
 

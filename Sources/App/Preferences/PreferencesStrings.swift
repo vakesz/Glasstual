@@ -12,13 +12,7 @@
 
 import Foundation
 
-enum PreferencesThemeOverride: Sendable {
-	case channelViewFont
-	case nicknameFormat
-	case timestampFormat
-}
-
-nonisolated enum PreferencesStrings { // nonisolated: value
+enum PreferencesStrings {
 	static var accessibilityTitle: String {
 		String(localized: .TDCPreferencesController.accessibilityLabelSettings)
 	}
@@ -35,16 +29,8 @@ nonisolated enum PreferencesStrings { // nonisolated: value
 		String(localized: .TDCPreferencesController.titleOfTheAdvanced)
 	}
 
-	static var createStyleCopyButtonTitle: String {
-		String(localized: .TDCPreferencesController.createCopy)
-	}
-
 	static var downloadDestinationAccessibilityLabel: String {
 		String(localized: .TDCPreferencesController.downloadDestination)
-	}
-
-	static var editStyleButtonTitle: String {
-		String(localized: .TDCPreferencesController.editStyle)
 	}
 
 	static var noDownloadDestination: String {
@@ -55,28 +41,8 @@ nonisolated enum PreferencesStrings { // nonisolated: value
 		String(localized: .TDCPreferencesController.noLogLocationSelected)
 	}
 
-	static var preferredSelectionTitle: String {
-		String(localized: .TDCPreferencesController.preferredSelection)
-	}
-
-	static var styleAccessibilityLabel: String {
-		String(localized: .TDCPreferencesController.accessibilityLabelStyle)
-	}
-
-	static var styleModificationBody: String {
-		String(localized: .TDCPreferencesController.itsPossibleToModifyTheAppearance)
-	}
-
-	static var styleModificationTitle: String {
-		String(localized: .TDCPreferencesController.areYouOpeningThisStyleBecause)
-	}
-
 	static var transcriptFolderAccessibilityLabel: String {
 		String(localized: .TDCPreferencesController.transcriptFolder)
-	}
-
-	static var viewStyleFilesButtonTitle: String {
-		String(localized: .TDCPreferencesController.viewFiles)
 	}
 
 	static func paneTitle(_ identifier: PreferencesPaneIdentifier) -> String {
@@ -85,7 +51,6 @@ nonisolated enum PreferencesStrings { // nonisolated: value
 		case .behavior: LocalizedStringResource.TDCPreferencesController.titleOfTheBehavior
 		case .channelManagement: LocalizedStringResource.TDCPreferencesController.channelManagement
 		case .commandScope: LocalizedStringResource.TDCPreferencesController.commandScope
-		case .compatibility: LocalizedStringResource.TDCPreferencesController.titleOfTheCompatibility
 		case .controls: LocalizedStringResource.TDCPreferencesController.titleOfTheControls
 		case .defaultIRCopMessages: LocalizedStringResource.TDCPreferencesController.ircopMessages
 		case .defaultIdentity: LocalizedStringResource.TDCPreferencesController.defaultIdentity
@@ -95,28 +60,12 @@ nonisolated enum PreferencesStrings { // nonisolated: value
 		case .hidden: LocalizedStringResource.TDCPreferencesController.titleOfTheHidden
 		case .highlights: LocalizedStringResource.TDCPreferencesController.titleOfTheHighlights
 		case .incomingData: LocalizedStringResource.TDCPreferencesController.incomingData
-		case .inlineMedia: LocalizedStringResource.TDCPreferencesController.inlineMedia
 		case .interface: LocalizedStringResource.TDCPreferencesController.titleOfTheInterface
+		case .ircv3: LocalizedStringResource.TDCPreferencesController.titleOfTheIrcv3
 		case .logLocation: LocalizedStringResource.TDCPreferencesController.logLocation
 		case .notifications: LocalizedStringResource.TDCPreferencesController.titleOfTheNotifications
 		case .style: LocalizedStringResource.TDCPreferencesController.titleOfTheStyle
 		}
 		return String(localized: resource)
-	}
-
-	static func preferredSelectionBody(styleName: String, overrides: [PreferencesThemeOverride]) -> String {
-		let overrideList = overrides.map(overrideTitle).joined(separator: "\n")
-		return String(localized: .TDCPreferencesController.styleNamedHasChosenToOverride(styleName, overrideList))
-	}
-
-	private static func overrideTitle(_ override: PreferencesThemeOverride) -> String {
-		switch override {
-		case .channelViewFont:
-			String(localized: .TDCPreferencesController.channelViewFont)
-		case .nicknameFormat:
-			String(localized: .TDCPreferencesController.nicknameFormat)
-		case .timestampFormat:
-			String(localized: .TDCPreferencesController.timestampFormat)
-		}
 	}
 }

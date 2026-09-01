@@ -365,9 +365,9 @@ private extension IRCClient {
 	@MainActor
 	func formatNicknameOnMainActor(_ nickname: String, in channel: IRCChannel?, format: String?) -> String {
 		let requestedFormat = format?.isEmpty == false ? format : nil
-		let themeFormat = SharedApplication.sharedThemeController().settings.themeNicknameFormat
-		let resolvedFormat = requestedFormat ?? themeFormat ?? environment.preferences.themeNicknameFormat
-		let finalFormat = resolvedFormat.isEmpty ? environment.preferences.themeNicknameFormatDefault : resolvedFormat
+		let themeFormat = SharedApplication.sharedThemeController().theme.nicknameFormat
+		let resolvedFormat = requestedFormat ?? themeFormat
+		let finalFormat = resolvedFormat.isEmpty ? TranscriptTheme.lines.nicknameFormat : resolvedFormat
 		let modeSymbol: String = if channel?.isChannel == true, let member = channel?.findMember(nickname) {
 			member.mark
 		} else {
@@ -412,7 +412,6 @@ private extension IRCClient {
 		logLine.isEncrypted = request.isEncrypted
 		logLine.excludeKeywords = keywordLists.exclude
 		logLine.highlightKeywords = keywordLists.match
-		logLine.doNotEscapeBody = request.escapeMessage == false
 		logLine.nickname = request.nickname
 		logLine.messageBody = request.messageBody
 		let previousLine = channel?.lastLine ?? lastLine

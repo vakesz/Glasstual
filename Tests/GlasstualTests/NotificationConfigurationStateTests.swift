@@ -10,7 +10,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 @testable import Glasstual
 import Testing
 
@@ -19,62 +18,33 @@ private nonisolated let notificationEvents: [TXNotificationType] = [.highlight, 
 @Suite("Notification configuration checkbox state")
 @MainActor
 struct NotificationConfigurationStateTests {
-	@Test("A channel configuration with no override reads back as mixed", arguments: notificationEvents)
-	func channelConfigurationWithoutOverrideIsMixed(event: TXNotificationType) {
+	@Test("A channel configuration with no override reads back as inherited", arguments: notificationEvents)
+	func channelConfigurationWithoutOverrideIsInherited(event: TXNotificationType) {
 		let configuration = ChannelNotificationConfiguration(eventType: event)
 
-		#expect(configuration.speakEvent == .mixed)
-		#expect(configuration.pushNotification == .mixed)
-		#expect(configuration.disabledWhileAway == .mixed)
-		#expect(configuration.bounceDockIcon == .mixed)
-		#expect(configuration.bounceDockIconRepeatedly == .mixed)
+		#expect(configuration.speakEvent == .inherited)
+		#expect(configuration.pushNotification == .inherited)
+		#expect(configuration.disabledWhileAway == .inherited)
+		#expect(configuration.bounceDockIcon == .inherited)
+		#expect(configuration.bounceDockIconRepeatedly == .inherited)
 	}
 
-	/// Every value the checkboxes carry has to survive a trip through the
-	/// configuration unchanged — `.mixed` is negative, which is what used to
-	/// trap on the way through `UInt`.
-	@Test(
-		"Every checkbox state assigns to a button without conversion",
-		arguments: [NSControl.StateValue.off, .on, .mixed]
-	)
-	func checkboxStatesRoundTripThroughAButton(state: NSControl.StateValue) {
-		let button = NSButton()
-		button.setButtonType(.switch)
-		button.allowsMixedState = true
-		button.state = state
+	@Test("Every override state round trips through channel configuration", arguments: ChannelEventOverride.allCases)
+	func overrideStatesRoundTrip(state: ChannelEventOverride) {
+		var config = ChannelConfig()
+		config.setNotificationEnabled(state, forEvent: .highlight)
 
-		#expect(button.state == state)
+		#expect(config.notificationEnabled(forEvent: .highlight) == state)
 	}
 
-	@Test("Preferences-backed configurations report on or off, never mixed", arguments: notificationEvents)
-	func preferencesConfigurationIsNeverMixed(event: TXNotificationType) {
+	@Test("Preferences-backed configurations report on or off, never inherited", arguments: notificationEvents)
+	func preferencesConfigurationIsNeverInherited(event: TXNotificationType) {
 		let configuration = PreferencesNotificationConfiguration(eventType: event)
 
-		#expect(configuration.speakEvent != .mixed)
-		#expect(configuration.pushNotification != .mixed)
-		#expect(configuration.disabledWhileAway != .mixed)
-		#expect(configuration.bounceDockIcon != .mixed)
-		#expect(configuration.bounceDockIconRepeatedly != .mixed)
-	}
-
-	/// Opening Channel Properties → Notifications for a channel with no
-	/// overrides used to abort the process on `Int(UInt.max)`.
-	@Test("Showing a mixed-state configuration in the view controller does not trap")
-	func viewControllerAcceptsMixedConfigurations() {
-		let controller = NotificationConfigurationViewController()
-		controller.allowsMixedState = true
-		controller.notifications = notificationEvents.map {
-			.configuration(ChannelNotificationConfiguration(eventType: $0))
-		}
-		controller.reload()
-	}
-
-	/// `selectedTag()` is -1 once the pop-up's menu has been emptied.
-	@Test("Emptying the notification list leaves the view controller usable")
-	func viewControllerAcceptsAnEmptyNotificationList() {
-		let controller = NotificationConfigurationViewController()
-		controller.notifications = [.configuration(ChannelNotificationConfiguration(eventType: .highlight))]
-		controller.notifications = []
-		controller.reload()
+		#expect(configuration.speakEvent != .inherited)
+		#expect(configuration.pushNotification != .inherited)
+		#expect(configuration.disabledWhileAway != .inherited)
+		#expect(configuration.bounceDockIcon != .inherited)
+		#expect(configuration.bounceDockIconRepeatedly != .inherited)
 	}
 }

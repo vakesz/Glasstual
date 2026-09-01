@@ -40,7 +40,7 @@ import Foundation
 // MARK: - Appearance
 
 public nonisolated extension Preferences { // nonisolated: value
-	/// Window chrome, the two sidebars, and the web view hosting the channel.
+	/// Window chrome and the two sidebars.
 	enum Appearance {
 		public static let preferredAppearance = PreferenceKey(
 			"Appearance",
@@ -92,21 +92,12 @@ public nonisolated extension Preferences { // nonisolated: value
 			default: false
 		)
 
-		public static let webViewCustomScrollersDisabled = PreferenceKey(
-			"WebViewDoNotUsesCustomScrollers",
-			default: false
-		)
-
-		public static let webViewPreviewLinks = PreferenceKey("WebViewPreviewLinks", default: false)
-		public static let webViewProcessPoolLimited = PreferenceKey("WebViewProcessPoolSizeIsLimited", default: true)
-
 		static let all: [any AnyPreferenceKey] = [
 			preferredAppearance, disableSidebarTranslucency, memberListNoModeSymbol,
 			memberListSortFavorsServerStaff, memberListUpdatesPopoverOnScroll,
 			conversationTrackingIncludesModeSymbol, trackUserAwayStatusMaximumChannelSize,
 			channelNavigationIsServerSpecific, connectOnDoubleClick, disconnectOnDoubleClick,
-			joinOnDoubleClick, leaveOnDoubleClick, rememberQueryStates, webViewCustomScrollersDisabled,
-			webViewPreviewLinks, webViewProcessPoolLimited,
+			joinOnDoubleClick, leaveOnDoubleClick, rememberQueryStates,
 		]
 	}
 }
@@ -114,66 +105,13 @@ public nonisolated extension Preferences { // nonisolated: value
 // MARK: - Theme
 
 public nonisolated extension Preferences { // nonisolated: value
-	/// The active style and the font and format overrides layered on top of it.
+	/// The complete native transcript appearance.
 	enum Theme {
-		public static let name = PreferenceKey("Theme -> Name", default: "resource:Lines")
-		public static let fontName = PreferenceKey("Theme -> Font Name", default: ".AppleSystemUIFont")
-		public static let fontSize = PreferenceKey("Theme -> Font Size", default: 13.0)
-		public static let nicknameFormat = PreferenceKey("Theme -> Nickname Format", default: "<%@%n>")
-		public static let timestampFormat = PreferenceKey("Theme -> Timestamp Format", default: "%H:%M:%S")
-
-		public static let userStyleSheetRules = PreferenceKey(
-			"Theme -> User Style Sheet Rules",
-			default: "",
-			traits: .unregistered
-		)
-
-		public static let reloadCustomThemesOnChange = PreferenceKey(
-			"AutomaticallyReloadCustomThemesWhenTheyChange",
-			default: false
-		)
-
-		/* The four "-> Did Not Exist During Last Sync" and "Preference Enabled"
-		 keys describe the machine this copy of the application is running on,
-		 not a choice the user made, so they stay out of an exported file. The
-		 three "Preference Enabled" keys are written into the registration domain
-		 by the theme controller at every launch rather than persisted. */
-
-		public static let nameMissingLocally = PreferenceKey(
-			"Theme -> Name -> Did Not Exist During Last Sync",
-			default: false,
-			traits: [.unregistered, .excludedFromExport]
-		)
-
-		public static let fontNameMissingLocally = PreferenceKey(
-			"Theme -> Font Name -> Did Not Exist During Last Sync",
-			default: false,
-			traits: [.unregistered, .excludedFromExport]
-		)
-
-		public static let fontIsUserConfigurable = PreferenceKey(
-			"Theme -> Channel Font Preference Enabled",
-			default: false,
-			traits: [.unregistered, .excludedFromExport]
-		)
-
-		public static let nicknameFormatIsUserConfigurable = PreferenceKey(
-			"Theme -> Nickname Format Preference Enabled",
-			default: false,
-			traits: [.unregistered, .excludedFromExport]
-		)
-
-		public static let timestampFormatIsUserConfigurable = PreferenceKey(
-			"Theme -> Timestamp Format Preference Enabled",
-			default: false,
-			traits: [.unregistered, .excludedFromExport]
-		)
-
-		static let all: [any AnyPreferenceKey] = [
-			name, fontName, fontSize, nicknameFormat, timestampFormat, userStyleSheetRules,
-			reloadCustomThemesOnChange, nameMissingLocally, fontNameMissingLocally,
-			fontIsUserConfigurable, nicknameFormatIsUserConfigurable, timestampFormatIsUserConfigurable,
-		]
+		/// The complete native transcript theme, encoded as an XML property list.
+		/// Keeping it as one value makes edits atomic and lets preference export
+		/// carry exactly the same document as the dedicated theme exporter.
+		public static let transcriptTheme = PreferenceKey("Transcript Theme", default: Data())
+		static let all: [any AnyPreferenceKey] = [transcriptTheme]
 	}
 }
 

@@ -83,13 +83,6 @@ public nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable 
 	}
 }
 
-/// The colour a nickname is drawn in, and whether the user pinned it.
-public nonisolated struct NicknameColorStyle: Equatable, Sendable { // nonisolated: value
-	/// A CSS `hsl(...)` string, or the hexadecimal value of a pinned colour.
-	public let style: String
-	public let isOverride: Bool
-}
-
 public nonisolated enum UserNicknameColorStyleGenerator { // nonisolated: value
 	private static let overridesDefaultsKey = "Nickname Color Style Overrides (v2)"
 	private static let logger = Logger(
@@ -97,27 +90,23 @@ public nonisolated enum UserNicknameColorStyleGenerator { // nonisolated: value
 		category: "NicknameColorStyle"
 	)
 
-	public static func nicknameColorStyle(for inputString: String) -> String {
-		colorStyle(for: inputString).style
-	}
-
-	/// The colour for `inputString`, and whether it came from a pinned
-	/// override. The pair used to be a return value plus an `ObjCBool`
-	/// out-parameter.
-	public static func colorStyle(for inputString: String) -> NicknameColorStyle {
-		let normalizedString = inputString.lowercased()
-
-		if let override = nicknameColorStyleOverride(forKey: normalizedString) {
-			return NicknameColorStyle(style: override.textualHexadecimalValue, isOverride: true)
+	/// Native transcript colour for a nickname. Pinned colours still win; an
+	/// unpinned name uses the same stable hash as before, with luminance chosen
+	/// for the active native theme appearance rather than a CSS style class.
+	public static func color(for inputString: String) -> NSColor {
+		let normalized = inputString.lowercased()
+		if let override = nicknameColorStyleOverride(forKey: normalized) {
+			return override
 		}
 
-		let colorStyle = ThemeController.activeSnapshot?.nicknameColorStyle ?? .default
-		let hash = hash(for: normalizedString)
-
-		return NicknameColorStyle(
-			style: nicknameColorStyle(forHash: hash, colorStyle: colorStyle),
-			isOverride: false
-		)
+		let hash = hash(for: normalized).uint32Value
+		let hue = CGFloat(hash % 360) / 360
+		let saturation = CGFloat((hash >> 1) % 26 + 55) / 100
+		let isDark = ThemeController.activeSnapshot?.isDarkAppearance ?? false
+		let brightness = isDark
+			? CGFloat((hash >> 2) % 15 + 75) / 100
+			: CGFloat((hash >> 2) % 16 + 35) / 100
+		return NSColor(calibratedHue: hue, saturation: saturation, brightness: brightness, alpha: 1)
 	}
 
 	/// The theme's colour style does not take part in the hash; the parameter
@@ -129,61 +118,6 @@ public nonisolated enum UserNicknameColorStyleGenerator { // nonisolated: value
 		}
 
 		return NSNumber(value: value)
-	}
-
-	public static func nicknameColorStyle(
-		forHash stringHash: NSNumber,
-		colorStyle: TPCThemeSettingsNicknameColorStyle
-	) -> String {
-		let hash = stringHash.uint32Value
-		let saturationHash = hash >> 1
-		let lightnessHash = hash >> 2
-		let hue = Int(hash % 360)
-		var saturation: Int
-		var lightness: Int
-
-		if colorStyle == .light {
-			saturation = Int(saturationHash % 50) + 35
-			lightness = Int(lightnessHash % 38) + 20
-
-			if hue > 45 && hue <= 195 {
-				lightness = Int(lightnessHash % 21) + 20
-				saturation =
-					lightness > 31
-						? Int(saturationHash % 40) + 55
-						: Int(saturationHash % 35) + 65
-			}
-
-			if hue <= 25 || hue >= 335 {
-				saturation = Int(saturationHash % 33) + 45
-			}
-		} else {
-			saturation = Int(saturationHash % 50) + 45
-			lightness = Int(lightnessHash % 36) + 45
-
-			if hue >= 280 && hue < 335 {
-				lightness = Int(lightnessHash % 36) + 50
-			}
-
-			if hue >= 210 && hue < 240 {
-				lightness = Int(lightnessHash % 30) + 60
-			}
-
-			if hue >= 240 && hue < 280 {
-				saturation = Int(saturationHash % 55) + 40
-				lightness = Int(lightnessHash % 20) + 65
-			}
-
-			if hue <= 25 || hue >= 335 {
-				saturation = Int(saturationHash % 33) + 45
-			}
-
-			if hue >= 50, hue <= 150 {
-				saturation = Int(saturationHash % 50) + 40
-			}
-		}
-
-		return "hsl(\(hue),\(saturation)%,\(lightness)%)"
 	}
 
 	/// Overrides are stored as their sRGB components. Values written by earlier

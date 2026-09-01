@@ -192,12 +192,12 @@ struct PreferenceCatalogTests {
 		#expect(Preferences.isCatalogued("Something Glasstual Never Wrote") == false)
 	}
 
-	@Test("The theme key-value store and the window frames stay out of an export")
+	@Test("Internal state stays out of exports while the portable transcript theme stays in")
 	func excludedFamiliesAreExcluded() {
 		#expect(Preferences.isExcludedFromExport("Internal Theme Settings Key-value Store -> Lines"))
 		#expect(Preferences.isExcludedFromExport("NSWindow Frame -> Internal (v3) -> Main Window"))
 		#expect(Preferences.isExcludedFromExport("TextFieldSmartQuotes"))
-		#expect(Preferences.isExcludedFromExport("Theme -> Name") == false)
+		#expect(Preferences.isExcludedFromExport(Preferences.Theme.transcriptTheme.name) == false)
 	}
 
 	@Test("Storage follows the declaration, not the call site")

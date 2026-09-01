@@ -109,22 +109,19 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	MemberListKeyEventDelegate, NSOutlineViewDataSource, NSOutlineViewDelegate, TVCServerListDelegate,
 	CustomKeyboardEventResponder
 {
-	@IBOutlet var channelView: MainWindowChannelView!
-	@IBOutlet public var mainMenuProxy: TXMenuControllerMainWindowProxy!
-	@IBOutlet public var formattingMenu: TextViewIRCFormattingMenu!
-	@IBOutlet private var inputContentView: MainWindowTextViewContentView!
+	private(set) var channelView: MainWindowChannelView!
+	public private(set) var mainMenuProxy: TXMenuControllerMainWindowProxy!
+	public private(set) var formattingMenu: TextViewIRCFormattingMenu!
+	private var inputContentView: MainWindowTextViewContentView!
 
-	/** The input field is built in code by its content view rather than decoded
-	 from the nib: `usesTextKit2` in a xib is ignored, so a decoded NSTextView is
-	 always TextKit 1. */
+	/// The input field is built by its content view so it can use TextKit 2.
 	public var inputTextField: MainWindowTextView! {
 		inputContentView?.textView
 	}
 
-	@IBOutlet private var nibContentSplitView: NSSplitView!
-	@IBOutlet public var loadingScreen: MainWindowLoadingScreenView!
-	@IBOutlet public var memberList: MemberList!
-	@IBOutlet public var serverList: ServerList!
+	public private(set) var loadingScreen: MainWindowLoadingScreenView!
+	public private(set) var memberList: MemberList!
+	public private(set) var serverList: ServerList!
 
 	public private(set) var contentSplitViewController: NSSplitViewController!
 	var serverListSplitItem: NSSplitViewItem!
@@ -138,7 +135,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	private var appearanceStorage: MainWindowAppearance?
 	public var userInterfaceObjects: MainWindowAppearance {
 		guard let appearanceStorage else {
-			preconditionFailure("Main-window appearance requested before the nib finished loading")
+			preconditionFailure("Main-window appearance requested before initialization finished")
 		}
 		return appearanceStorage
 	}
@@ -151,7 +148,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	var cachedSwipeOriginPoint: NSPoint?
 	public internal(set) var textSizeMultiplier = 1.0
 	var isReloadingTheme = false
-	private var hasAwakenedFromNib = false
+	private var hasConfigured = false
 	private var hasInstalledFieldEditorMenu = false
 	private let notifications = NotificationSubscriptions()
 
@@ -169,45 +166,50 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	private func prepareInitialState() {
+		installUIObjects()
 		inputHistory = InputHistory(window: self)
 		keyEventHandler = KeyEventHandler()
 		nicknameCompletionStatus = NicknameCompletionStatus(window: self)
 		updateAppearance()
 	}
 
-	/// Brings the window up once its nib has finished decoding.
-	///
-	/// The application controller calls this immediately after `loadNibNamed`
-	/// returns. It used to be `awakeFromNib`, which AppKit declares nonisolated:
-	/// everything below touches main-actor state and so sat behind a runtime
-	/// assumption about the decoding thread. The owner is on the main actor
-	/// already, so the call is checked instead of assumed.
+	private func installUIObjects() {
+		channelView = MainWindowChannelView(frame: .zero)
+		mainMenuProxy = TXMenuControllerMainWindowProxy()
+		formattingMenu = TextViewIRCFormattingMenu()
+		inputContentView = MainWindowTextViewContentView(frame: .zero)
+		loadingScreen = MainWindowLoadingScreenView(frame: .zero)
+		memberList = MemberList(frame: .zero)
+		serverList = ServerList(frame: .zero)
+	}
+
+	/// Completes the programmatic window graph and starts the application.
 	public func configure() {
-		guard hasAwakenedFromNib == false else {
+		guard hasConfigured == false else {
 			return
 		}
 
-		hasAwakenedFromNib = true
-		finishAwakeningFromNib()
+		hasConfigured = true
+		finishConfiguration()
 	}
 
-	private func finishAwakeningFromNib() {
+	private func finishConfiguration() {
 		let controller: ApplicationController = AppController.shared
 		controller.applicationWakeStepOne()
 
 		/* Before `delegate = self`: building the input field puts controls in
 		 the window, and a control joining a window asks its delegate for a field
 		 editor, which is answered with the input field itself. */
-		inputContentView?.configure()
+		inputContentView.configure()
 
 		delegate = self
 		allowsConcurrentViewDrawing = false
 		autorecalculatesKeyViewLoop = true
 		isRestorable = true
 		restorationClass = Self.self
-		loadingScreen?.configure()
+		loadingScreen.configure()
 		installWindowChrome()
-		formattingMenu?.configure()
+		formattingMenu.configure()
 		installFormattingMenuDecorations()
 		updateAppearance()
 		_ = reloadLoadingScreen()
@@ -326,24 +328,12 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 
 private extension MainWindow {
 	func installContentSplitViewController() {
-		guard let nibContentSplitView, nibContentSplitView.subviews.count >= 3 else {
-			assertionFailure("TVCMainWindow.xib must provide a three-pane content split view")
-			return
-		}
-
-		let panes = Array(nibContentSplitView.subviews.prefix(3))
-		for pane in panes {
-			pane.removeFromSuperview()
-			pane.translatesAutoresizingMaskIntoConstraints = true
-			pane.autoresizingMask = [.width, .height]
-		}
-
 		let serverController = NSViewController()
-		serverController.view = panes[0]
+		serverController.view = scrollView(containing: serverList, columnIdentifier: "ServerListColumn")
 		let channelController = NSViewController()
-		channelController.view = panes[1]
+		channelController.view = channelView
 		let memberController = NSViewController()
-		memberController.view = panes[2]
+		memberController.view = scrollView(containing: memberList, columnIdentifier: "MemberListColumn")
 
 		let sidebarItem = NSSplitViewItem(sidebarWithViewController: serverController)
 		sidebarItem.canCollapse = true
@@ -380,29 +370,46 @@ private extension MainWindow {
 
 		let splitHost = splitController.view
 		splitHost.translatesAutoresizingMaskIntoConstraints = false
-		contentView.addSubview(splitHost, positioned: .below, relativeTo: loadingScreen)
+		contentView.addSubview(splitHost)
+		loadingScreen.translatesAutoresizingMaskIntoConstraints = false
+		contentView.addSubview(loadingScreen)
 		NSLayoutConstraint.activate([
 			splitHost.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
 			splitHost.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
 			splitHost.topAnchor.constraint(equalTo: contentView.topAnchor),
 			splitHost.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+			loadingScreen.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+			loadingScreen.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+			loadingScreen.topAnchor.constraint(equalTo: contentView.topAnchor),
+			loadingScreen.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
 		])
-
-		nibContentSplitView.removeFromSuperview()
-		if let loadingScreen {
-			loadingScreen.translatesAutoresizingMaskIntoConstraints = false
-			NSLayoutConstraint.activate([
-				loadingScreen.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-				loadingScreen.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-				loadingScreen.topAnchor.constraint(equalTo: contentView.topAnchor),
-				loadingScreen.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-			])
-		}
 
 		contentSplitViewController = splitController
 		serverListSplitItem = sidebarItem
 		memberListSplitItem = inspectorItem
 		configureLists()
+	}
+
+	func scrollView(containing tableView: NSTableView, columnIdentifier: String) -> NSScrollView {
+		let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(columnIdentifier))
+		column.resizingMask = .autoresizingMask
+		tableView.addTableColumn(column)
+		tableView.headerView = nil
+		tableView.columnAutoresizingStyle = .firstColumnOnlyAutoresizingStyle
+		tableView.backgroundColor = .clear
+
+		if let outlineView = tableView as? NSOutlineView {
+			outlineView.outlineTableColumn = column
+		}
+
+		let scrollView = NSScrollView()
+		scrollView.borderType = .noBorder
+		scrollView.drawsBackground = false
+		scrollView.hasHorizontalScroller = false
+		scrollView.hasVerticalScroller = true
+		scrollView.autohidesScrollers = true
+		scrollView.documentView = tableView
+		return scrollView
 	}
 
 	func installSidebarFooter(on sidebarItem: NSSplitViewItem) {
@@ -589,10 +596,10 @@ extension MainWindow {
 		notifications.observe(Notification.Name("TXSystemAppearanceChangedNotification")) { [weak self] _ in
 			self?.notifySystemAppearanceChanged()
 		}
-		notifications.observe(Notification.Name("TPCThemeAppearanceChangedNotification")) { [weak self] _ in
+		notifications.observe(.themeAppearanceChanged) { [weak self] _ in
 			self?.reloadTheme()
 		}
-		notifications.observe(Notification.Name("TPCThemeVarietyChangedNotification")) { [weak self] _ in
+		notifications.observe(.themeWasModified) { [weak self] _ in
 			self?.reloadTheme()
 		}
 	}
@@ -915,7 +922,7 @@ extension MainWindow {
 		registerInput(key: .enter, modifiers: .control) { $0.sendControlEnterMessageMaybe($1) }
 		registerInput(key: .returnKey, modifiers: .command) { $0.sendMessageAsAction($1) }
 		registerInput(key: .enter, modifiers: .command) { $0.sendMessageAsAction($1) }
-		registerInput(character: "l", modifiers: [.option, .command]) { $0.focusWebview($1) }
+		registerInput(character: "l", modifiers: [.option, .command]) { $0.focusTranscript($1) }
 		registerInput(key: .upArrow) { $0.inputHistoryUpWithScrollCheck($1) }
 		registerInput(key: .upArrow, modifiers: .option) { $0.inputHistoryUpWithScrollCheck($1) }
 		registerInput(key: .downArrow) { $0.inputHistoryDownWithScrollCheck($1) }
@@ -965,7 +972,7 @@ public extension MainWindow {
 	}
 
 	func navigateChannelEntries(_ isMovingDown: Bool, withNavigationType navigationType: ServerListNavigationMovement) {
-		if TextualPreferences.channelNavigationIsServerSpecific() {
+		if Preferences.Appearance.channelNavigationIsServerSpecific.value {
 			navigateChannelEntriesWithinServerScope(isMovingDown, navigationType: navigationType)
 		} else {
 			navigateChannelEntriesOutsideServerScope(isMovingDown, navigationType: navigationType)

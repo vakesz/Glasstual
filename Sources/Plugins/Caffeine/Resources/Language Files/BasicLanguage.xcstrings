@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "prevent-sleep-explanation" : {
+      "comment" : "Explanation below the Caffeine preference toggle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do not allow your Mac to go to sleep, which would disconnect it from the Internet, while Glasstual has at least one connection open."
+          }
+        }
+      }
+    },
+    "prevent-sleep-while-connected" : {
+      "comment" : "Toggle that keeps the Mac awake while Glasstual is connected.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prevent sleep while Glasstual is connected"
+          }
+        }
+      }
+    },
     "sleep-mode-management" : {
       "comment" : "Name of the Caffeine preferences pane. Migrated from legacy key xqp-6g.",
       "extractionState" : "manual",

@@ -3,10 +3,10 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,20 +39,20 @@
 import AppKit
 import os
 import QuickLookUI
+import SwiftUI
 import Synchronization
 
 public typealias TDCFileTransferDialog = FileTransferDialog
 
-public enum FileTransferSelection: UInt, Sendable {
+public enum FileTransferSelection: UInt, CaseIterable, Identifiable, Sendable {
 	case all
 	case sending
 	case receiving
 
-	/// The transfers this toolbar selection shows.
-	///
-	/// The array controller did this with an `isSender ==` predicate. The
-	/// direction is taken as a projection rather than read off the transfer so
-	/// the rule can be exercised without one.
+	public var id: UInt {
+		rawValue
+	}
+
 	public func shownTransfers<Transfer>(
 		in transfers: [Transfer],
 		isSender: (Transfer) -> Bool
@@ -68,19 +68,8 @@ public enum FileTransferSelection: UInt, Sendable {
 	}
 }
 
-nonisolated enum FileTransferSection: Hashable, Sendable { // nonisolated: value
-	case transfers
-}
-
-/// Rows are identified by the transfer's `uniqueIdentifier`.
-typealias FileTransferDataSource =
-	NSTableViewDiffableDataSource<FileTransferSection, String>
-
 enum FileTransferDialogConstants {
 	static let receiverHardLimit = 120
-	static let quickLookMenuTag = 3007
-	static let shareMenuTag = 3008
-	static let revealMenuTag = 3006
 	static let bookmarkKey = "File Transfers -> File Transfer Download Folder Bookmark"
 	static let maintenanceInterval: Duration = .seconds(1)
 }
@@ -90,17 +79,10 @@ let fileTransferDialogLogger = Logger(
 	category: "FileTransferDialog"
 )
 
-/// What the window's Quick Look overrides are allowed to answer.
-///
-/// QuickLookUI declares `QLPreviewPanelController` on `NSObject` without
-/// isolation, so the overrides below cannot be main-actor. Rather than reach
-/// across isolation for the answer, they read this snapshot, which the dialog
-/// writes on the main actor.
 nonisolated struct FileTransferPreviewState: Sendable { // nonisolated: value
 	var acceptsPreviews = false
 }
 
-@objc(TDCFileTransferDialogWindow)
 public final class FileTransferDialogWindow: NSWindow {
 	nonisolated let previewState = Mutex(FileTransferPreviewState()) // nonisolated: let
 
@@ -108,14 +90,9 @@ public final class FileTransferDialogWindow: NSWindow {
 		previewState.withLock { $0.acceptsPreviews }
 	}
 
-	/** The dialog points the shared panel at itself before the panel appears,
-	 in `toggleQuickLookPanel()`, so these two only have to confirm it and can
-	 wait for a main-actor turn. Nothing crosses isolation: the panel is a
-	 singleton the main actor fetches for itself. */
 	override public nonisolated func beginPreviewPanelControl(_: QLPreviewPanel!) { // nonisolated: pure
 		Task { @MainActor in
 			guard let panel = QLPreviewPanel.shared() else { return }
-
 			(delegate as? FileTransferDialog)?.beginPreviewPanelControlOnMainActor(panel)
 		}
 	}
@@ -123,41 +100,23 @@ public final class FileTransferDialogWindow: NSWindow {
 	override public nonisolated func endPreviewPanelControl(_: QLPreviewPanel!) { // nonisolated: pure
 		Task { @MainActor in
 			guard let panel = QLPreviewPanel.shared() else { return }
-
 			(delegate as? FileTransferDialog)?.endPreviewPanelControlOnMainActor(panel)
 		}
 	}
 }
 
-@objc(TDCFileTransferDialog)
 @MainActor
 public final class FileTransferDialog: WindowBase,
-	NSMenuItemValidation,
-	NSMenuDelegate,
-	NSTableViewDelegate,
 	NSWindowDelegate,
 	QLPreviewPanelDataSource,
 	QLPreviewPanelDelegate,
 	InternetAddressLookupDelegate
 {
-	@IBOutlet var clearButton: NSButton!
-	@IBOutlet var navigationControl: NSSegmentedControl!
-	@IBOutlet public var fileTransferTable: BasicTableView!
-
-	/// Every transfer the dialog knows about, newest first.
-	///
-	/// The array controller used to hold these, and `arrangedObjects` handed
-	/// back only the ones its filter predicate let through — which is why the
-	/// receiver limit, the Clear button and the maintenance timer all used to
-	/// stop seeing transfers the toolbar had filtered out. The whole set lives
-	/// here and `arrangedFileTransfers` is the part the table draws.
-	var storedFileTransfers: [TDCFileTransferDialogTransferController] = []
-	var transferDataSource: FileTransferDataSource?
+	let model = FileTransferDialogModel()
 
 	var ipAddressRequest: InternetAddressLookup?
 	var maintenanceTask: Task<Void, Never>?
 	var downloadDestinationURLPrivate: URL?
-	var keyDownEventMonitor: Any?
 	var previewItems: [URL] = []
 	var ipAddressCompletionBlocks: [(String?) -> Void] = []
 	var cachedIPAddress: String?
@@ -165,19 +124,7 @@ public final class FileTransferDialog: WindowBase,
 
 	override public init() {
 		super.init()
-		prepareInitialState()
-	}
-
-	private func prepareInitialState() {
-		Bundle.main.loadNibNamed("TDCFileTransferDialog", owner: self, topLevelObjects: nil)
-		fileTransferTable.style = .inset
-
-		let transferDataSource = makeTransferDataSource()
-		self.transferDataSource = transferDataSource
-		fileTransferTable.dataSource = transferDataSource
-
-		prepareTableMenu()
-		installKeyDownEventMonitor()
+		installWindow()
 		setPreviewsAccepted(true)
 
 		notifications.observe(.ircWorldWillDestroyClient) { [weak self] notification in
@@ -185,8 +132,34 @@ public final class FileTransferDialog: WindowBase,
 		}
 	}
 
-	/// Tells the window's nonisolated Quick Look overrides whether this dialog
-	/// is still there to answer for them.
+	private func installWindow() {
+		let rootView = FileTransferDialogView(
+			model: model,
+			perform: { [weak self] action, identifiers in self?.perform(action, on: identifiers) },
+			clearStopped: { [weak self] in self?.clearStoppedTransfers() },
+			selectionChanged: { [weak self] in self?.reloadQuickLookPanel() },
+			close: { [weak self] in self?.close() }
+		)
+		let transferWindow = FileTransferDialogWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 680, height: 440),
+			styleMask: [.titled, .closable, .miniaturizable, .resizable],
+			backing: .buffered,
+			defer: false
+		)
+
+		transferWindow.contentViewController = NSHostingController(rootView: rootView)
+		transferWindow.contentMinSize = NSSize(width: 620, height: 360)
+		transferWindow.contentMaxSize = NSSize(width: 1000, height: 900)
+		transferWindow.delegate = self
+		transferWindow.isReleasedWhenClosed = false
+		transferWindow.isRestorable = false
+		transferWindow.tabbingMode = .disallowed
+		transferWindow.preventsApplicationTerminationWhenModal = false
+		transferWindow.autorecalculatesKeyViewLoop = true
+		transferWindow.title = FileTransferStrings.fileTransfers
+		window = transferWindow
+	}
+
 	private func setPreviewsAccepted(_ accepted: Bool) {
 		(window as? FileTransferDialogWindow)?.previewState.withLock {
 			$0.acceptsPreviews = accepted
@@ -197,14 +170,9 @@ public final class FileTransferDialog: WindowBase,
 		setPreviewsAccepted(false)
 		notifications.cancelAll()
 		maintenanceTask?.cancel()
-		removeKeyDownEventMonitor()
 	}
 
 	override public func show() {
 		show(true, restorePosition: true)
 	}
-
-	/* Quick Look walks the responder chain from the first responder, so the
-	 window's overrides above answer first and forward here; a second set of
-	 overrides on the dialog was never reached. */
 }

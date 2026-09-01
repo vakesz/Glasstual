@@ -43,10 +43,9 @@ import GlasstualPluginKit
 /** A channel's answer to one notification setting.
 
  A channel either turns the setting on, turns it off, or says nothing and lets
- the application-wide preference answer. This used to be an
- `NSControl.StateValue`, which is the only reason AppKit reached into the
- protocol layer at all; the checkbox that shows it maps at the sheet. */
-public nonisolated enum ChannelEventOverride: Sendable { // nonisolated: value
+ the application-wide preference answer. Keeping that choice in the protocol
+ model means neither persistence nor the editor depends on AppKit controls. */
+public nonisolated enum ChannelEventOverride: CaseIterable, Sendable, Equatable, Hashable { // nonisolated: value
 	case on
 	case off
 	/// No override: whatever the application-wide preference says.
@@ -102,8 +101,7 @@ public nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable 
 	public var defaultModes: String?
 	public var defaultTopic: String?
 
-	/// Per-event overrides, keyed the way `TextualPreferences.key(for:category:)`
-	/// spells an event and a category.
+	/// Per-event overrides, keyed by the notification preference schema.
 	public var notifications: [String: ChannelNotificationSetting] = [:]
 
 	/** A channel key waiting to be written to the keychain, or one read back
@@ -213,7 +211,7 @@ public nonisolated struct ChannelConfig: Codable, Sendable, Equatable, Hashable 
 			return
 		}
 
-		inlineMediaDisabled = TextualPreferences.showInlineMedia()
+		inlineMediaDisabled = Preferences.Messages.showInlineMedia.detachedValue
 		inlineMediaEnabled = inlineMediaDisabled == false
 	}
 
@@ -307,8 +305,7 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 	}
 
 	func sound(forEvent event: TXNotificationType) -> String? {
-		guard let key = TextualPreferences.key(for: event, category: "Sound"),
-		      case let .sound(name) = notifications[key]
+		guard case let .sound(name) = notifications[event.preferenceKeyName(for: .sound)]
 		else {
 			return nil
 		}
@@ -317,61 +314,55 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 	}
 
 	func notificationEnabled(forEvent event: TXNotificationType) -> ChannelEventOverride {
-		state(for: event, category: "Enabled")
+		state(for: event, setting: .enabled)
 	}
 
 	func disabledWhileAway(forEvent event: TXNotificationType) -> ChannelEventOverride {
-		state(for: event, category: "Disable While Away")
+		state(for: event, setting: .disabledWhileAway)
 	}
 
 	func bounceDockIcon(forEvent event: TXNotificationType) -> ChannelEventOverride {
-		state(for: event, category: "Bounce Dock Icon")
+		state(for: event, setting: .bounceDockIcon)
 	}
 
 	func bounceDockIconRepeatedly(forEvent event: TXNotificationType) -> ChannelEventOverride {
-		state(for: event, category: "Bounce Dock Icon Repeatedly")
+		state(for: event, setting: .bounceDockIconRepeatedly)
 	}
 
 	func speakEvent(_ event: TXNotificationType) -> ChannelEventOverride {
-		state(for: event, category: "Speak")
+		state(for: event, setting: .speak)
 	}
 
 	mutating func setSound(_ value: String?, forEvent event: TXNotificationType) {
-		guard let key = TextualPreferences.key(for: event, category: "Sound") else {
-			return
-		}
-
-		notifications[key] = value.map { ChannelNotificationSetting.sound($0) }
+		notifications[event.preferenceKeyName(for: .sound)] = value.map(ChannelNotificationSetting.sound)
 	}
 
 	mutating func setNotificationEnabled(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
-		setState(value, forEvent: event, category: "Enabled")
+		setState(value, forEvent: event, setting: .enabled)
 	}
 
 	mutating func setDisabledWhileAway(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
-		setState(value, forEvent: event, category: "Disable While Away")
+		setState(value, forEvent: event, setting: .disabledWhileAway)
 	}
 
 	mutating func setBounceDockIcon(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
-		setState(value, forEvent: event, category: "Bounce Dock Icon")
+		setState(value, forEvent: event, setting: .bounceDockIcon)
 	}
 
 	mutating func setBounceDockIconRepeatedly(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
-		setState(value, forEvent: event, category: "Bounce Dock Icon Repeatedly")
+		setState(value, forEvent: event, setting: .bounceDockIconRepeatedly)
 	}
 
 	mutating func setEventIsSpoken(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
-		setState(value, forEvent: event, category: "Speak")
+		setState(value, forEvent: event, setting: .speak)
 	}
 
 	private mutating func setState(
 		_ value: ChannelEventOverride,
 		forEvent event: TXNotificationType,
-		category: String
+		setting: NotificationSetting
 	) {
-		guard let key = TextualPreferences.key(for: event, category: category) else {
-			return
-		}
+		let key = event.preferenceKeyName(for: setting)
 
 		switch value {
 		case .on:
@@ -383,9 +374,8 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 		}
 	}
 
-	private func state(for event: TXNotificationType, category: String) -> ChannelEventOverride {
-		guard let key = TextualPreferences.key(for: event, category: category),
-		      case let .flag(value) = notifications[key]
+	private func state(for event: TXNotificationType, setting: NotificationSetting) -> ChannelEventOverride {
+		guard case let .flag(value) = notifications[event.preferenceKeyName(for: setting)]
 		else {
 			return .inherited
 		}
