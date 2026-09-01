@@ -12,18 +12,19 @@
 
 import Foundation
 
-/** The process-wide singletons. Every one of these owns AppKit state, so the
- whole store is main-actor isolated: `static let` gives lazy, once-only creation
- without a lock, and the isolation removes the main-queue hops the Objective-C
- translation needed to reach it from background threads. */
+/** Long-lived dependencies owned by the running application. The store is
+ main-actor isolated because their lifecycle is coordinated by the application
+ delegate and several publish UI state. `PluginManager` is the deliberate
+ exception: plugin dispatch crosses IRC isolation domains and the manager's
+ public contract is `Sendable`. */
 @MainActor
-public final class SharedApplication: NSObject {
+public enum SharedApplication {
 	private static let appearance = Appearance()
+	private static let applicationScenes = ApplicationScenes()
 	private static let networkReachabilityNotifier = Reachability.reachabilityForInternetConnection()
 	private static let notificationController = NotificationController()
 	private static let themeController = ThemeController()
-	private static let windowController = WindowController()
-	private static let fileTransferDialog = TDCFileTransferDialog()
+	private static let fileTransferCenter = FileTransferCenter()
 
 	/** An optional rather than a `static let` because callers ask whether speech
 	 was ever used (to stop it) without wanting to start the engine. */
@@ -31,6 +32,10 @@ public final class SharedApplication: NSObject {
 
 	public static func sharedAppearance() -> Appearance {
 		appearance
+	}
+
+	static func sharedApplicationScenes() -> ApplicationScenes {
+		applicationScenes
 	}
 
 	public static func sharedNetworkReachabilityNotifier() -> Reachability {
@@ -67,12 +72,8 @@ public final class SharedApplication: NSObject {
 		themeController
 	}
 
-	public static func sharedWindowController() -> WindowController {
-		windowController
-	}
-
-	public static func sharedFileTransferDialog() -> TDCFileTransferDialog {
-		fileTransferDialog
+	public static func sharedFileTransferCenter() -> FileTransferCenter {
+		fileTransferCenter
 	}
 }
 

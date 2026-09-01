@@ -14,6 +14,10 @@
 import AppKit
 import CocoaExtensions
 
+private enum LogPolicySuppressionKey: String {
+	case openExternalURL = "open_non_http_url_warning"
+}
+
 public final class LogPolicyTarget: NSObject {
 	public var anchorURL: String?
 	public var channelName: String?
@@ -117,7 +121,7 @@ public final class LogPolicy: NSObject {
 	}
 
 	private static let replyableLineTypes = Set(
-		[TVCLogLineType.privateMessage, .action, .notice].compactMap(LogLine.string(for:))
+		[LogLineType.privateMessage, .action, .notice].compactMap(LogLine.string(for:))
 	)
 
 	private func messageMenuItems(for target: LogPolicyTarget, in view: LogView) -> [NSMenuItem] {
@@ -150,12 +154,12 @@ public final class LogPolicy: NSObject {
 		}
 
 		let applicationName = NSWorkspace.shared.textual_nameOfApplication(toOpen: url) ?? ""
-		let shouldOpen = TDCAlert.modalAlert(
+		let shouldOpen = Alerts.modalAlert(
 			withMessage: PromptStrings.ExternalApplication.body(url: url.absoluteString),
 			title: PromptStrings.ExternalApplication.title(applicationName: applicationName),
 			defaultButton: PromptStrings.Action.yes,
 			alternateButton: PromptStrings.Action.no,
-			suppressionKey: "open_non_http_url_warning",
+			suppressionKey: LogPolicySuppressionKey.openExternalURL.rawValue,
 			suppressionText: nil
 		)
 		if shouldOpen {

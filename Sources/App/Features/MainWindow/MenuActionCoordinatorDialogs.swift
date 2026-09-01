@@ -38,22 +38,16 @@
 
 import AppKit
 
-enum MenuDialogSelection {
-	static let serverDefault: UInt = 0
-	static let serverAddressBook: UInt = 1
-	static let serverNewIgnoreEntry: UInt = 200
-}
-
 @MainActor
 public extension MenuActionCoordinator {
-	func performDialogAction(_ action: TXMenuDialogAction, sender: Any?) {
+	func performDialogAction(_ action: MenuDialogAction, sender: Any?) {
 		switch action {
 		case .showChannelProperties: showChannelProperties()
 		case .sendInvite: showChannelInvite(sender)
-		case .showAddressBook: showServerProperties(selection: MenuDialogSelection.serverAddressBook, context: nil)
+		case .showAddressBook: showServerProperties(selection: .addressBook, context: nil)
 		case .showOnboarding: showOnboarding()
 		case .showAbout: showAbout()
-		case .showServerProperties: showServerProperties(selection: MenuDialogSelection.serverDefault, context: nil)
+		case .showServerProperties: showServerProperties(selection: .default, context: nil)
 		case .showServerHighlightList: showServerHighlightList()
 		case .showChannelTopic: showChannelTopic()
 		case .showChannelModes: showChannelModes()
@@ -67,26 +61,30 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	func showServerProperties(for client: IRCClient, selection: UInt, context: Any?) {
+	internal func showServerProperties(
+		for client: IRCClient,
+		selection: ServerPropertiesDestination,
+		context: Any?
+	) {
 		presentServerProperties(for: client, selection: selection, context: context)
 	}
 
 	func showNicknameColorSheet(for nickname: String) {
-		windowController.popMainWindowSheetIfExists()
+		mainWindow.presentationModel.closePresentedSheet()
 		guard selectedClient != nil else { return }
 		let sheet = NicknameColorSheet(nickname: nickname)
 		present(sheet) { $0.start() }
 	}
 
 	private func showChannelProperties() {
-		windowController.popMainWindowSheetIfExists()
+		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
 		let sheet = ChannelPropertiesSheet(channel: channel)
 		present(sheet) { $0.start() }
 	}
 
 	private func showChannelInvite(_ sender: Any?) {
-		windowController.popMainWindowSheetIfExists()
+		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient, let selectedChannel,
 		      client.isLoggedIn, selectedChannel.isChannel, selectedChannel.isActive
 		else { return }
@@ -102,73 +100,58 @@ public extension MenuActionCoordinator {
 	}
 
 	private func showOnboarding() {
-		let onboardingKey = WindowController.windowDescription(forClass: OnboardingWindowController.self)
-		guard windowController.maybeBringWindowForward(onboardingKey) == false else { return }
-		windowController.popMainWindowSheetIfExists()
-		let controller = OnboardingWindowController()
-		present(controller) { $0.show() }
+		mainWindow.presentationModel.closePresentedSheet()
+		SharedApplication.sharedApplicationScenes().openOnboarding()
 	}
 
 	private func showAbout() {
-		let aboutKey = WindowController.windowDescription(forClass: AboutDialog.self)
-		guard windowController.maybeBringWindowForward(aboutKey) == false else { return }
-		let dialog = AboutDialog()
-		present(dialog) { $0.show() }
+		SharedApplication.sharedApplicationScenes().openAbout()
 	}
 
-	private func showServerProperties(selection: UInt, context: Any?) {
+	private func showServerProperties(selection: ServerPropertiesDestination, context: Any?) {
 		guard let client = selectedClient else { return }
 		presentServerProperties(for: client, selection: selection, context: context)
 	}
 
-	private func presentServerProperties(for client: IRCClient, selection: UInt, context: Any?) {
-		windowController.popMainWindowSheetIfExists()
+	private func presentServerProperties(for client: IRCClient, selection: ServerPropertiesDestination, context: Any?) {
+		mainWindow.presentationModel.closePresentedSheet()
 		let sheet = ServerPropertiesSheet(client: client)
-		present(sheet) { $0.start(withSelection: selection, context: context) }
+		present(sheet) { $0.start(at: selection, context: context) }
 	}
 
 	private func showServerHighlightList() {
-		windowController.popMainWindowSheetIfExists()
+		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient else { return }
 		let sheet = ServerHighlightListSheet(client: client)
 		present(sheet) { $0.start() }
 	}
 
 	private func showChannelTopic() {
-		windowController.popMainWindowSheetIfExists()
+		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
 		let sheet = ChannelModifyTopicSheet(channel: channel)
 		present(sheet) { $0.start() }
 	}
 
 	private func showChannelModes() {
-		windowController.popMainWindowSheetIfExists()
+		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
 		let sheet = ChannelModifyModesSheet(channel: channel)
 		present(sheet) { $0.start() }
 	}
 
 	private func showChannelSpotlight() {
-		let spotlightKey = WindowController.windowDescription(forClass: ChannelSpotlightController.self)
-		guard windowController.maybeBringWindowForward(spotlightKey) == false else { return }
-		let dialog = ChannelSpotlightController()
-		present(dialog) { $0.show() }
+		SharedApplication.sharedApplicationScenes().openChannelSpotlight()
 	}
 
 	private func showChangeNickname() {
-		windowController.popMainWindowSheetIfExists()
+		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient, client.isLoggedIn else { return }
 		let sheet = ServerChangeNicknameSheet(client: client)
 		present(sheet) { $0.start() }
 	}
 
-	private func showPreferences(_ selection: PreferencesControllerSelection) {
-		let key = WindowController.windowDescription(forClass: PreferencesController.self)
-		if let controller = windowController.window(fromWindowList: key) as? PreferencesController {
-			controller.show(selection)
-			return
-		}
-		let controller = PreferencesController()
-		present(controller) { $0.show(selection) }
+	private func showPreferences(_ selection: PreferencesSceneSelection) {
+		SharedApplication.sharedApplicationScenes().openSettings(selection)
 	}
 }

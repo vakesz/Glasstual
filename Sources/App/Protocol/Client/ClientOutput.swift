@@ -38,6 +38,12 @@
 
 import Foundation
 
+enum ServerPropertiesDestination {
+	case `default`
+	case addressBook
+	case newIgnoreEntry
+}
+
 /** The view a single tree item is drawn into, as the protocol layer sees it.
 
  The item holds this weakly and does not create it: the main window's log
@@ -61,7 +67,7 @@ protocol TreeItemPresentation: AnyObject {
 	func noteReaction(_ emoji: String, fromNickname nickname: String, toMessageIdentifier identifier: String)
 	func updateDeliveryState(
 		forLineNumber lineNumber: String,
-		state: TVCLogLineDeliveryState,
+		state: LogLineDeliveryState,
 		messageIdentifier: String?,
 		reason: String?
 	)
@@ -92,7 +98,7 @@ protocol ClientOutput: AnyObject {
 	 The protocol layer says what to ask; what the sheet hangs from is the window
 	 layer's business. This used to hand an `NSWindow` back, which is how AppKit
 	 reached into the protocol layer at all. */
-	func presentAlertSheet(_ request: AlertRequest, completion: @escaping TDCAlertCompletionBlock)
+	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion)
 
 	// MARK: Server list
 
@@ -131,7 +137,7 @@ protocol ClientOutput: AnyObject {
 @MainActor
 protocol ClientMenuPresenting: AnyObject {
 	func toggleMuteOnNotificationSoundsShortcut(on muted: Bool)
-	func showServerPropertiesSheet(for client: IRCClient, selection: UInt, context: Any?)
+	func showServerPropertiesSheet(for client: IRCClient, selection: ServerPropertiesDestination, context: Any?)
 	func showNicknameColorSheet(forNickname nickname: String)
 	func openAcknowledgements(_ sender: Any?)
 	func navigateToTreeItem(at url: URL)

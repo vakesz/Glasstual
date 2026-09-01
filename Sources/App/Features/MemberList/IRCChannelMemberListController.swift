@@ -10,8 +10,6 @@
  *
  *********************************************************************** */
 
-import AppKit
-
 /// The ordered members the member list draws, and the only writer of them.
 ///
 /// This was an `NSArrayController` subclass, which bought nothing — the table
@@ -25,18 +23,18 @@ import AppKit
 /// The positions in these calls are the model's, not the table's: the table
 /// sections its rows and diffs them, so it asks for members by identity.
 @MainActor
-public final class IRCChannelMemberListController: NSObject {
+public final class IRCChannelMemberListController {
 	private weak var memberList: ChannelMemberList?
 	private var members: [ChannelUser] = []
 	/// Position in `members` by the person's identity, so the table can go from
 	/// the row identity its data source hands back to the value it draws.
 	private var indexesByUserID: [User.ID: Int] = [:]
 
-	public private(set) weak var tableView: MemberList?
+	public private(set) weak var model: MemberList?
 
-	public func attach(to tableView: MemberList) {
-		precondition(self.tableView == nil || self.tableView === tableView)
-		self.tableView = tableView
+	public func attach(to model: MemberList) {
+		precondition(self.model == nil || self.model === model)
+		self.model = model
 	}
 
 	/// Named for what the array controller used to call it: the member list
@@ -87,7 +85,7 @@ public final class IRCChannelMemberListController: NSObject {
 	public func replaceContents(_ contents: [ChannelUser]) {
 		members = contents
 		reindexMembers()
-		tableView?.membersChanged()
+		model?.membersChanged()
 	}
 
 	public func insert(_ member: ChannelUser, atArrangedObjectIndex index: Int) {
@@ -97,7 +95,7 @@ public final class IRCChannelMemberListController: NSObject {
 
 		members.insert(member, at: index)
 		reindexMembers()
-		tableView?.membersChanged()
+		model?.membersChanged()
 	}
 
 	/// Puts an edited member back at the row it already occupies. A member is a
@@ -114,8 +112,8 @@ public final class IRCChannelMemberListController: NSObject {
 
 		members[index] = member
 		reindexMembers()
-		tableView?.membersChanged()
-		tableView?.refreshDrawing(for: member)
+		model?.membersChanged()
+		model?.refreshDrawing(for: member)
 	}
 
 	public func remove(atArrangedObjectIndex index: Int) {
@@ -125,6 +123,6 @@ public final class IRCChannelMemberListController: NSObject {
 
 		members.remove(at: index)
 		reindexMembers()
-		tableView?.membersChanged()
+		model?.membersChanged()
 	}
 }

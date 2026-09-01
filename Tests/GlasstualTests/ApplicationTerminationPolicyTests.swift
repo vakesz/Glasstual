@@ -37,6 +37,7 @@
 
 import AppKit
 @testable import Glasstual
+import SwiftUI
 import Testing
 
 /** What `applicationShouldTerminate` does with a quit request.
@@ -123,19 +124,19 @@ struct DockIconBadgeStrategyTests {
 
 		let dockTile = NSApp.dockTile
 
-		#expect(dockTile.contentView is DockIconBadgeView)
+		#expect(dockTile.contentView is DockIconBadgeHostingView)
 		#expect(dockTile.badgeLabel == nil)
-		#expect((dockTile.contentView as? DockIconBadgeView)?.messageCount == 5)
+		#expect((dockTile.contentView as? DockIconBadgeHostingView)?.rootView.messageCount == 5)
 	}
 
 	@Test("Highlights and messages share the one badge view")
 	func highlightsAndMessagesShareTheView() {
 		draw(highlights: 2, messages: 5)
 
-		let badgeView = NSApp.dockTile.contentView as? DockIconBadgeView
+		let badgeView = NSApp.dockTile.contentView as? DockIconBadgeHostingView
 
-		#expect(badgeView?.highlightCount == 2)
-		#expect(badgeView?.messageCount == 5)
+		#expect(badgeView?.rootView.highlightCount == 2)
+		#expect(badgeView?.rootView.messageCount == 5)
 		#expect(NSApp.dockTile.badgeLabel == nil)
 	}
 

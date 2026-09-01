@@ -39,11 +39,11 @@
 import Foundation
 
 enum IRCLinePresentationPolicy {
-	static func memberType(nickname: String?, localNickname: String) -> TVCLogLineMemberType {
+	static func memberType(nickname: String?, localNickname: String) -> LogLineMemberType {
 		nickname == localNickname ? .localUser : .normal
 	}
 
-	static func normalized(_ lineType: TVCLogLineType) -> TVCLogLineType {
+	static func normalized(_ lineType: LogLineType) -> LogLineType {
 		switch lineType {
 		case .actionNoHighlight:
 			.action
@@ -57,8 +57,8 @@ enum IRCLinePresentationPolicy {
 	static func allowsHighlightMatching(
 		channelExists: Bool,
 		ignoresHighlights: Bool,
-		lineType: TVCLogLineType,
-		memberType: TVCLogLineMemberType
+		lineType: LogLineType,
+		memberType: LogLineMemberType
 	) -> Bool {
 		channelExists && ignoresHighlights == false &&
 			(lineType == .privateMessage || lineType == .action) && memberType == .normal
@@ -69,7 +69,7 @@ enum IRCLinePresentationPolicy {
 		itemIsVisible: Bool,
 		windowIsMain: Bool,
 		channelIsUnread: Bool,
-		lineType: TVCLogLineType
+		lineType: LogLineType
 	) -> Bool {
 		guard autoMark, itemIsVisible == false || windowIsMain == false, channelIsUnread == false else {
 			return false
@@ -87,7 +87,7 @@ struct IRCLinePrintRequest {
 	let messageBody: String
 	let nickname: String?
 	let channel: IRCChannel?
-	let lineType: TVCLogLineType
+	let lineType: LogLineType
 	let command: String?
 	let receivedAt: Date
 	let isEncrypted: Bool
@@ -114,7 +114,7 @@ public extension IRCClient {
 		_ messageBody: String,
 		by nickname: String?,
 		in channel: IRCChannel?,
-		as lineType: TVCLogLineType,
+		as lineType: LogLineType,
 		command: String
 	) {
 		print(messageBody, by: nickname, in: channel, as: lineType, command: command, receivedAt: Date(),
@@ -125,7 +125,7 @@ public extension IRCClient {
 		_ messageBody: String,
 		by nickname: String?,
 		in channel: IRCChannel?,
-		as lineType: TVCLogLineType,
+		as lineType: LogLineType,
 		command: String,
 		escapeMessage: Bool
 	) {
@@ -137,7 +137,7 @@ public extension IRCClient {
 		_ messageBody: String,
 		by nickname: String?,
 		in channel: IRCChannel?,
-		as lineType: TVCLogLineType,
+		as lineType: LogLineType,
 		command: String,
 		receivedAt: Date
 	) {
@@ -149,7 +149,7 @@ public extension IRCClient {
 		_ messageBody: String,
 		by nickname: String?,
 		in channel: IRCChannel?,
-		as lineType: TVCLogLineType,
+		as lineType: LogLineType,
 		command: String,
 		receivedAt: Date,
 		isEncrypted: Bool
@@ -162,7 +162,7 @@ public extension IRCClient {
 		_ messageBody: String,
 		by nickname: String?,
 		in channel: IRCChannel?,
-		as lineType: TVCLogLineType,
+		as lineType: LogLineType,
 		command: String?,
 		receivedAt: Date,
 		isEncrypted: Bool,
@@ -177,7 +177,7 @@ public extension IRCClient {
 		_ messageBody: String,
 		by nickname: String?,
 		in channel: IRCChannel?,
-		as lineType: TVCLogLineType,
+		as lineType: LogLineType,
 		command: String?,
 		receivedAt: Date,
 		isEncrypted: Bool,
@@ -193,7 +193,7 @@ public extension IRCClient {
 		_ messageBody: String,
 		by nickname: String?,
 		in channel: IRCChannel?,
-		as lineType: TVCLogLineType,
+		as lineType: LogLineType,
 		command: String?,
 		receivedAt: Date,
 		isEncrypted: Bool,
@@ -259,7 +259,7 @@ public extension IRCClient {
 	}
 
 	func printDebugInformation(toConsole message: String) {
-		printDebugInformation(toConsole: message, asCommand: TVCLogLineDefaultCommandValue, escapeMessage: true)
+		printDebugInformation(toConsole: message, asCommand: LogLineFormat.defaultCommand, escapeMessage: true)
 	}
 
 	func printDebugInformation(toConsole message: String, asCommand command: String) {
@@ -269,7 +269,7 @@ public extension IRCClient {
 	func printDebugInformation(toConsole message: String, escapeMessage: Bool) {
 		printDebugInformation(
 			toConsole: message,
-			asCommand: TVCLogLineDefaultCommandValue,
+			asCommand: LogLineFormat.defaultCommand,
 			escapeMessage: escapeMessage
 		)
 	}
@@ -279,7 +279,7 @@ public extension IRCClient {
 	}
 
 	func printDebugInformation(_ message: String) {
-		printDebugInformation(message, asCommand: TVCLogLineDefaultCommandValue, escapeMessage: true)
+		printDebugInformation(message, asCommand: LogLineFormat.defaultCommand, escapeMessage: true)
 	}
 
 	func printDebugInformation(multiline message: String) {
@@ -293,7 +293,7 @@ public extension IRCClient {
 	}
 
 	func printDebugInformation(_ message: String, escapeMessage: Bool) {
-		printDebugInformation(message, asCommand: TVCLogLineDefaultCommandValue, escapeMessage: escapeMessage)
+		printDebugInformation(message, asCommand: LogLineFormat.defaultCommand, escapeMessage: escapeMessage)
 	}
 
 	func printDebugInformation(_ message: String, asCommand command: String, escapeMessage: Bool) {
@@ -308,7 +308,7 @@ public extension IRCClient {
 	}
 
 	func printDebugInformation(_ message: String, in channel: IRCChannel?) {
-		printDebugInformation(message, in: channel, asCommand: TVCLogLineDefaultCommandValue, escapeMessage: true)
+		printDebugInformation(message, in: channel, asCommand: LogLineFormat.defaultCommand, escapeMessage: true)
 	}
 
 	func printDebugInformation(_ message: String, in channel: IRCChannel?, asCommand command: String) {
@@ -319,7 +319,7 @@ public extension IRCClient {
 		printDebugInformation(
 			message,
 			in: channel,
-			asCommand: TVCLogLineDefaultCommandValue,
+			asCommand: LogLineFormat.defaultCommand,
 			escapeMessage: escapeMessage
 		)
 	}
@@ -336,7 +336,7 @@ public extension IRCClient {
 	func printDebugInformation(inAllViews message: String) {
 		printDebugInformation(
 			inAllViews: message,
-			asCommand: TVCLogLineDefaultCommandValue,
+			asCommand: LogLineFormat.defaultCommand,
 			escapeMessage: true
 		)
 	}
@@ -348,7 +348,7 @@ public extension IRCClient {
 	func printDebugInformation(inAllViews message: String, escapeMessage: Bool) {
 		printDebugInformation(
 			inAllViews: message,
-			asCommand: TVCLogLineDefaultCommandValue,
+			asCommand: LogLineFormat.defaultCommand,
 			escapeMessage: escapeMessage
 		)
 	}
@@ -381,7 +381,7 @@ private extension IRCClient {
 		precondition(request.command != nil || request.referenceMessage != nil)
 		guard !isTerminating else { return }
 
-		let command = request.command ?? request.referenceMessage?.command ?? TVCLogLineDefaultCommandValue
+		let command = request.command ?? request.referenceMessage?.command ?? LogLineFormat.defaultCommand
 		let channel = request.channel
 		guard channel == nil || !outputRuleMatched(in: request.messageBody, channel: channel) else { return }
 
@@ -452,8 +452,8 @@ private extension IRCClient {
 	@MainActor
 	func highlightKeywordLists(
 		for channel: IRCChannel?,
-		lineType: TVCLogLineType,
-		memberType: TVCLogLineMemberType
+		lineType: LogLineType,
+		memberType: LogLineMemberType
 	) -> (exclude: [String]?, match: [String]?) {
 		guard IRCLinePresentationPolicy.allowsHighlightMatching(
 			channelExists: channel != nil,

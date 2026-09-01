@@ -11,7 +11,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import SwiftUI
 
 @MainActor
@@ -22,12 +21,10 @@ public protocol ChannelModifyTopicSheetDelegate: NSObjectProtocol {
 }
 
 @MainActor
-public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChannelPrototype {
+public final class ChannelModifyTopicSheet: MainWindowSheetSession, ChannelScoped {
 	private enum SuppressionKey: String {
 		case maximumTopicLength = "maximum_topic_length"
 	}
-
-	private static let contentSize = NSSize(width: 600, height: 201)
 
 	public private(set) var client: IRCClient?
 	public private(set) var channel: IRCChannel?
@@ -69,25 +66,7 @@ public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChan
 				self?.cancel(nil)
 			}
 		)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: Self.contentSize),
-			styleMask: [.titled, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-
-		hostedSheet.contentViewController = NSHostingController(rootView: rootView)
-		hostedSheet.contentMinSize = Self.contentSize
-		hostedSheet.contentMaxSize = Self.contentSize
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.title = content.windowTitle
-		hostedSheet.titleVisibility = .hidden
-		hostedSheet.titlebarAppearsTransparent = true
-		hostedSheet.titlebarSeparatorStyle = .none
-		sheet = hostedSheet
+		setContent(rootView.frame(width: 600, height: 201))
 	}
 
 	public func start() {
@@ -107,9 +86,8 @@ public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChan
 			return
 		}
 
-		TDCAlert.alertSheet(
-			with: sheet,
-			body: ChannelTopicStrings.maximumLengthMessage,
+		Alerts.alert(
+			withMessage: ChannelTopicStrings.maximumLengthMessage,
 			title: ChannelTopicStrings.maximumLengthTitle(
 				networkName: client.networkNameAlt,
 				maximumLength: model.maximumLength
@@ -123,7 +101,7 @@ public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChan
 		)
 	}
 
-	@IBAction override public func ok(_ sender: Any?) {
+	override public func ok(_ sender: Any?) {
 		(delegate as? ChannelModifyTopicSheetDelegate)?.channelModifyTopicSheet(
 			self,
 			onOk: model.topicForSubmission
@@ -132,7 +110,7 @@ public final class ChannelModifyTopicSheet: SheetBase, NSWindowDelegate, TDCChan
 		super.ok(sender)
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		(delegate as? ChannelModifyTopicSheetDelegate)?.channelModifyTopicSheetWillClose(self)
 	}
 }

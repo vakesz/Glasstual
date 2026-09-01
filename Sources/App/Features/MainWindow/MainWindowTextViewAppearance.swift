@@ -37,7 +37,7 @@ public final class MainWindowTextViewAppearance: ApplicationAppearance {
 	public private(set) var textViewInset: NSSize = .zero
 	public private(set) var textViewTextColor: NSColor?
 	public private(set) var textViewPlaceholderTextColor: NSColor?
-	public private(set) var textViewPreferredFontSize: TVCMainWindowTextViewFontSize = .normal
+	public private(set) var textViewPreferredFontSize: MainWindowTextFontSize = .normal
 	public private(set) var backgroundViewContentBorderPadding: CGFloat = 0
 
 	@MainActor

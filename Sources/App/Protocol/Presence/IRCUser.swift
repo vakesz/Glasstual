@@ -93,7 +93,7 @@ public nonisolated struct User: Identifiable, Hashable, Sendable, CustomStringCo
 
 	/// The ban mask the preference asks for. The format is passed in because a
 	/// user does not know its client; `IRCClient.banMask(for:)` reads it.
-	public func banMask(format: TXHostmaskBanFormat) -> String {
+	public func banMask(format: HostmaskBanFormat) -> String {
 		guard let username, let address else {
 			return "\(nickname)!*@*"
 		}

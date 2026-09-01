@@ -104,22 +104,22 @@ enum MenuNavigationTag {
 
 @MainActor
 public final class MenuActionCoordinator: NSObject {
-	weak var menuController: TXMenuController?
+	weak var menuController: MenuController?
 	var menuIsOpen = false
 	var menuPerformedActionLastOpen = false
 	weak var pointedClient: IRCClient?
 	weak var pointedChannel: IRCChannel?
 	var currentSearchPhrase = ""
-	var reactionPopover: ReactionPopoverController?
+	var reactionPopover: ReactionPopover?
 	/// Menu-action and selection notifications, dropped with the coordinator.
 	let notifications = NotificationSubscriptions()
 
-	public init(menuController: TXMenuController) {
+	public init(menuController: MenuController) {
 		self.menuController = menuController
 		super.init()
 	}
 
-	var mainWindow: TVCMainWindow {
+	var mainWindow: MainWindow {
 		AppController.shared.mainWindow
 	}
 
@@ -131,8 +131,8 @@ public final class MenuActionCoordinator: NSObject {
 		pointedChannel ?? mainWindow.selectedChannel
 	}
 
-	private var fileTransferController: TDCFileTransferDialog {
-		SharedApplication.sharedFileTransferDialog()
+	private var fileTransferCenter: FileTransferCenter {
+		SharedApplication.sharedFileTransferCenter()
 	}
 
 	/// The members a member-list command applies to: the one the menu was
@@ -180,22 +180,12 @@ public final class MenuActionCoordinator: NSObject {
 		return controller.pointedNickname
 	}
 
-	var windowController: WindowController {
-		SharedApplication.sharedWindowController()
-	}
-
-	/// Attaches a dialog to the menu controller and the main window, starts it,
-	/// and puts it in the window list. Every dialog the menu opens goes through
-	/// here, so none of them can forget one of the three steps.
+	/// Attaches a dialog to the menu controller and main window before starting
+	/// its state-driven SwiftUI presentation.
 	func present<Dialog: AnyObject>(_ dialog: Dialog, start: (Dialog) -> Void) {
-		(dialog as? SheetBase)?.delegate = menuController
-		(dialog as? SheetBase)?.window = mainWindow
-		(dialog as? WindowBase)?.delegate = menuController
-		if let onboarding = dialog as? OnboardingWindowController {
-			onboarding.delegate = menuController
-		}
+		(dialog as? MainWindowSheetSession)?.delegate = menuController
+		(dialog as? MainWindowSheetSession)?.window = mainWindow
 		start(dialog)
-		windowController.addWindow(toWindowList: dialog)
 	}
 
 	/// The world the menu acts on. It is set once the application has finished
@@ -231,7 +221,7 @@ public final class MenuActionCoordinator: NSObject {
 		mainWindow.memberList.deselectAll(sender)
 	}
 
-	public func performMemberAction(_ action: TXMenuMemberAction, sender: Any?) {
+	public func performMemberAction(_ action: MenuMemberAction, sender: Any?) {
 		let sender = sender ?? NSNull()
 		switch action {
 		case .addIgnore:
@@ -273,7 +263,7 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
-	private func performModerationAction(_ action: TXMenuMemberAction, sender: Any) {
+	private func performModerationAction(_ action: MenuMemberAction, sender: Any) {
 		switch action {
 		case .giveOp:
 			performMode("OP", sender: sender)
@@ -343,13 +333,13 @@ public final class MenuActionCoordinator: NSObject {
 		if ignores.count == 1 {
 			menuController?.showServerPropertiesSheet(
 				for: client,
-				selection: MenuDialogSelection.serverNewIgnoreEntry,
+				selection: .newIgnoreEntry,
 				context: ignores[0]
 			)
 		} else {
 			menuController?.showServerPropertiesSheet(
 				for: client,
-				selection: MenuDialogSelection.serverAddressBook,
+				selection: .addressBook,
 				context: nil
 			)
 		}
@@ -486,15 +476,15 @@ public final class MenuActionCoordinator: NSObject {
 		let nicknames = selectedNicknames(for: sender)
 		guard nicknames.isEmpty == false else { return }
 		deselectMembers(for: sender)
-		InputPrompt.prompt(
-			withMessage: PromptStrings.VirtualHost.body,
+		InputPrompt.present(InputPromptRequest(
 			title: PromptStrings.VirtualHost.title,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: PromptStrings.Action.cancel,
-			prefillString: nil
-		) { response, input in
+			message: PromptStrings.VirtualHost.body,
+			submitButtonTitle: PromptStrings.Action.confirmation,
+			cancelButtonTitle: PromptStrings.Action.cancel
+		)) { outcome in
+			guard case let .submitted(input) = outcome else { return }
 			let vhost = input.firstToken
-			guard response == .alertFirstButtonReturn, vhost.isEmpty == false else { return }
+			guard vhost.isEmpty == false else { return }
 			for nickname in nicknames {
 				client.sendCommand(
 					MenuMemberCommand.setVhost(vhost, nickname: nickname),
@@ -510,17 +500,17 @@ public final class MenuActionCoordinator: NSObject {
 		let nicknames = selectedNicknames(for: sender)
 		guard nicknames.isEmpty == false else { return }
 		deselectMembers(for: sender)
-		let panel = NSOpenPanel()
-		panel.allowsMultipleSelection = true
-		panel.canChooseDirectories = false
-		panel.canChooseFiles = true
-		panel.canCreateDirectories = false
-		panel.resolvesAliases = true
-		panel.beginSheetModal(for: mainWindow) { [weak self] response in
-			guard response == .OK, let self else { return }
+		mainWindow.presentationModel.chooseTransferFiles { [weak self] urls in
+			guard let self else { return }
 			for nickname in nicknames {
-				for url in panel.urls {
-					_ = fileTransferController.addSender(
+				for url in urls {
+					let isAccessing = url.startAccessingSecurityScopedResource()
+					defer {
+						if isAccessing {
+							url.stopAccessingSecurityScopedResource()
+						}
+					}
+					_ = fileTransferCenter.addSender(
 						for: client,
 						nickname: nickname,
 						path: url.path,
@@ -554,7 +544,7 @@ public final class MenuActionCoordinator: NSObject {
 			guard FileManager.default.fileExists(atPath: file, isDirectory: &isDirectory),
 			      isDirectory.boolValue == false
 			else { continue }
-			_ = fileTransferController.addSender(for: client, nickname: nickname, path: file, autoOpen: true)
+			_ = fileTransferCenter.addSender(for: client, nickname: nickname, path: file, autoOpen: true)
 		}
 	}
 
@@ -587,7 +577,7 @@ public final class MenuActionCoordinator: NSObject {
 			for channel in client.channelList {
 				let item = NSMenuItem(
 					title: channel.name,
-					action: #selector(TXMenuController.navigateToChannelInNavigationList(_:)),
+					action: #selector(MenuController.navigateToChannelInNavigationList(_:)),
 					keyEquivalent: channelCount < 10 ? String((channelCount + 1) % 10) : ""
 				)
 				item.target = menuController

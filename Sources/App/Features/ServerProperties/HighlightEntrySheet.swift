@@ -36,7 +36,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import SwiftUI
 
 /// The highlight condition is a value type, so this protocol is dispatched in
@@ -48,9 +47,7 @@ public protocol HighlightEntrySheetDelegate: AnyObject {
 }
 
 @MainActor
-public final class HighlightEntrySheet: SheetBase, NSWindowDelegate {
-	private static let contentSize = NSSize(width: 500, height: 150)
-
+public final class HighlightEntrySheet: MainWindowSheetSession {
 	let model: HighlightEntryModel
 
 	private let content: HighlightEntryContent
@@ -88,25 +85,7 @@ public final class HighlightEntrySheet: SheetBase, NSWindowDelegate {
 				self?.cancel(nil)
 			}
 		)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: Self.contentSize),
-			styleMask: [.titled, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-
-		hostedSheet.contentViewController = NSHostingController(rootView: rootView)
-		hostedSheet.contentMinSize = Self.contentSize
-		hostedSheet.contentMaxSize = Self.contentSize
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.title = content.windowTitle
-		hostedSheet.titleVisibility = .hidden
-		hostedSheet.titlebarAppearsTransparent = true
-		hostedSheet.titlebarSeparatorStyle = .none
-		sheet = hostedSheet
+		setContent(rootView)
 	}
 
 	public func start() {
@@ -126,7 +105,7 @@ public final class HighlightEntrySheet: SheetBase, NSWindowDelegate {
 		super.ok(sender)
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		(delegate as? any HighlightEntrySheetDelegate)?.highlightEntrySheetDidClose(self)
 	}
 }

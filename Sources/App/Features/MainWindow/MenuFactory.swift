@@ -37,7 +37,7 @@ enum MenuFactory {
 		}
 	}
 
-	static func install(on controller: TXMenuController) {
+	static func install(on controller: MenuController) {
 		controller.serverListNoSelectionMenu = menu("Add Server", [
 			.item("Add Server…", .serverListAddServer, "addServer:"),
 		], controller)
@@ -74,7 +74,7 @@ enum MenuFactory {
 		NSApp.helpMenu = mainMenu.item(for: .helpMenu)?.submenu
 	}
 
-	private static func menu(_ title: String, _ entries: [Entry], _ controller: TXMenuController) -> NSMenu {
+	private static func menu(_ title: String, _ entries: [Entry], _ controller: MenuController) -> NSMenu {
 		let result = NSMenu(title: title)
 		result.delegate = controller
 		for entry in entries {

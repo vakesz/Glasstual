@@ -272,7 +272,7 @@ private extension IRCClient {
 		)
 
 		if let disconnectError {
-			printError(disconnectError.localizedDescription, asCommand: TVCLogLineDefaultCommandValue)
+			printError(disconnectError.localizedDescription, asCommand: LogLineFormat.defaultCommand)
 		}
 
 		let disconnectMessage = IRCConnectionStrings.disconnectReason(for: disconnectMode)

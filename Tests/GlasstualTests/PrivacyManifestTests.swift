@@ -13,11 +13,10 @@
 import Foundation
 import Testing
 
-/** Each XPC service ships its own privacy manifest, and App Store Connect
- aggregates them with the app's. A missing manifest is silent -- the connection
- host shipped without one -- and so is a manifest that declares a category the
- service never touches, which is the worse failure: it asserts an access to the
- person reading the report that the code does not make.
+/** The XPC connection host ships its own privacy manifest, which App Store
+ Connect aggregates with the app's. A missing manifest is silent, as is a
+ manifest that declares a category the service never touches. The latter
+ falsely reports an API access to the person reading the privacy report.
 
  So both directions are checked, by reading what the service's own sources
  call. The scan is deliberately literal: it looks for the spellings of the
@@ -58,12 +57,11 @@ struct PrivacyManifestTests {
 		]
 	}
 
-	/** A service, its bundle inside the app, and the sources compiled into it.
+	/** The service bundle inside the app and the sources compiled into it.
 
-	 The source list mirrors the target's `sources:` in `project.yml`. It names
-	 `Sources/Shared` whole rather than the individual files each service takes
-	 from it: over-scanning there can only ever make the test stricter, and the
-	 files a service does not compile are the app's, which declares more. */
+	 The source list mirrors the target's `sources:` in `project.yml`. It scans
+	 all of `Sources/Shared`; this is deliberately stricter than the target's
+	 individual shared-file list. */
 	nonisolated struct Service: Sendable, CustomStringConvertible {
 		let bundleName: String
 		let sourceDirectories: [String]
@@ -74,17 +72,9 @@ struct PrivacyManifestTests {
 
 		static let all: [Service] = [
 			Service(
-				bundleName: "Scrollback History Manager.xpc",
-				sourceDirectories: [
-					"Sources/Services/Historic Log File Manager",
-					"Sources/Frameworks/Historic Log Store Kit",
-					"Sources/Shared",
-				]
-			),
-			Service(
 				bundleName: "IRC Connection Host.xpc",
 				sourceDirectories: [
-					"Sources/Services/IRC Remote Connection Manager",
+					"Sources/Services/IRC Connection Host",
 					"Sources/Shared",
 				]
 			),

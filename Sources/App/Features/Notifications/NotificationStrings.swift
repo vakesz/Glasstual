@@ -59,7 +59,7 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		String(localized: .Notifications.bodyActionWithNickname(nickname, text))
 	}
 
-	static func eventTypeTitle(for event: TXNotificationType) -> String {
+	static func eventTypeTitle(for event: NotificationEvent) -> String {
 		switch event {
 		case .addressBookMatch:
 			String(localized: .Notifications.typeAddressBook)
@@ -102,7 +102,7 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		}
 	}
 
-	static func deliveredTitle(for event: TXNotificationType, subject: String?) -> String? {
+	static func deliveredTitle(for event: NotificationEvent, subject: String?) -> String? {
 		switch event {
 		case .highlight:
 			String(localized: .Notifications.titleHighlight(subject ?? ""))
@@ -145,7 +145,7 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		}
 	}
 
-	static func deliveredBody(for event: TXNotificationType, fallback: String?) -> String? {
+	static func deliveredBody(for event: NotificationEvent, fallback: String?) -> String? {
 		switch event {
 		case .connect:
 			String(localized: .Notifications.bodyConnectionSuccessful)
@@ -198,7 +198,7 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		}
 
 		static func privateMessage(
-			for event: TXNotificationType,
+			for event: NotificationEvent,
 			from nickname: String,
 			text: String
 		) -> String? {
@@ -222,7 +222,7 @@ nonisolated enum NotificationStrings { // nonisolated: value
 			String(localized: .Notifications.spokenInvited(channelName, nickname))
 		}
 
-		static func fileTransfer(for event: TXNotificationType, with nickname: String) -> String? {
+		static func fileTransfer(for event: NotificationEvent, with nickname: String) -> String? {
 			switch event {
 			case .fileTransferSendSuccessful:
 				String(localized: .Notifications.spokenFileTransferSendCompleted(nickname))
@@ -240,7 +240,7 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		}
 
 		static func membership(
-			for event: TXNotificationType,
+			for event: NotificationEvent,
 			nickname: String,
 			channelName: String
 		) -> String? {
@@ -309,7 +309,7 @@ nonisolated enum NotificationStrings { // nonisolated: value
 
 	enum FileTransfer {
 		static func description(
-			for event: TXNotificationType,
+			for event: NotificationEvent,
 			filename: String,
 			byteCount: UInt64
 		) -> String? {

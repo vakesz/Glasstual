@@ -36,7 +36,7 @@
  *
  *********************************************************************** */
 
-import AppKit
+import Foundation
 
 /// Stable window metrics for the SwiftUI `NavigationSplitView` settings UI.
 enum PreferencesLayout {
@@ -44,14 +44,6 @@ enum PreferencesLayout {
 	static let minimumWindowSize = CGSize(width: 700, height: 500)
 	static let sidebarWidth = 190.0
 	static let contentInset = 20.0
-}
-
-/// The Settings window itself, which closes on Escape the way a settings
-/// window is expected to.
-final class PreferencesWindow: NSWindow {
-	override func cancelOperation(_: Any?) {
-		performClose(nil)
-	}
 }
 
 struct PreferencesPaneDescriptor: Equatable {

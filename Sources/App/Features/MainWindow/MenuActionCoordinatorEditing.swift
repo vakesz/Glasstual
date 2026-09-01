@@ -46,7 +46,7 @@ enum MenuFindTag {
 
 @MainActor
 public extension MenuActionCoordinator {
-	func performEditingAction(_ action: TXMenuEditingAction, sender: Any?) {
+	func performEditingAction(_ action: MenuEditingAction, sender: Any?) {
 		switch action {
 		case .showFindPrompt:
 			showFindPrompt(sender)
@@ -79,15 +79,15 @@ public extension MenuActionCoordinator {
 	}
 
 	private func showFindPromptOpenDialog() {
-		InputPrompt.prompt(
-			withMessage: PromptStrings.TextSearch.body,
+		InputPrompt.present(InputPromptRequest(
 			title: PromptStrings.TextSearch.title,
-			defaultButton: PromptStrings.TextSearch.buttonTitle,
-			alternateButton: PromptStrings.Action.cancel,
-			prefillString: currentSearchPhrase
-		) { [weak self] response, result in
+			message: PromptStrings.TextSearch.body,
+			submitButtonTitle: PromptStrings.TextSearch.buttonTitle,
+			cancelButtonTitle: PromptStrings.Action.cancel,
+			initialValue: currentSearchPhrase
+		)) { [weak self] outcome in
 			guard let self,
-			      response == .alertFirstButtonReturn,
+			      case let .submitted(result) = outcome,
 			      currentSearchPhrase != result
 			else {
 				return

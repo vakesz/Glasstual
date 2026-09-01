@@ -60,7 +60,7 @@ final class GLTRecordingClientOutput: ClientOutput {
 	var visibleItems: [IRCTreeItem] = []
 	var memberListIsAvailable = false
 
-	func presentAlertSheet(_ request: AlertRequest, completion _: @escaping TDCAlertCompletionBlock) {
+	func presentAlertSheet(_ request: AlertRequest, completion _: @escaping AlertCompletion) {
 		presentedAlerts.append(request)
 	}
 
@@ -138,7 +138,7 @@ final class GLTRecordingClientOutput: ClientOutput {
 @MainActor
 final class GLTRecordingMenuPresenter: ClientMenuPresenting {
 	private(set) var soundsMuted: Bool?
-	private(set) var serverPropertiesSelections: [UInt] = []
+	private(set) var serverPropertiesSelections: [ServerPropertiesDestination] = []
 	private(set) var nicknameColorSheets: [String] = []
 	private(set) var revealedFolders: [URL] = []
 
@@ -146,7 +146,11 @@ final class GLTRecordingMenuPresenter: ClientMenuPresenting {
 		soundsMuted = muted
 	}
 
-	func showServerPropertiesSheet(for _: IRCClient, selection: UInt, context _: Any?) {
+	func showServerPropertiesSheet(
+		for _: IRCClient,
+		selection: ServerPropertiesDestination,
+		context _: Any?
+	) {
 		serverPropertiesSelections.append(selection)
 	}
 

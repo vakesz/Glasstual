@@ -96,12 +96,12 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		public static let tabKeyAction = PreferenceKey(
 			"Keyboard -> Tab Key Action",
-			default: TXTabKeyAction.nicknameComplete
+			default: TabKeyAction.nicknameComplete
 		)
 
 		public static let commandWKeyAction = PreferenceKey(
 			"Keyboard -> Command+W Key Action",
-			default: TXCommandWKeyAction.closeWindow
+			default: CommandWShortcutAction.closeWindow
 		)
 
 		public static let tabCompletionSuffix = PreferenceKey(
@@ -127,7 +127,7 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		public static let textViewFontSize = PreferenceKey(
 			"Main Input Text Field -> Font Size",
-			default: TVCMainWindowTextViewFontSize.normal
+			default: MainWindowTextFontSize.normal
 		)
 
 		public static let commandReturnSendsAction = PreferenceKey(
@@ -141,7 +141,7 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		public static let userDoubleClickAction = PreferenceKey(
 			"UserListDoubleClickAction",
-			default: TXUserDoubleClickAction.privateMessage
+			default: UserDoubleClickAction.privateMessage
 		)
 
 		static let all: [any AnyPreferenceKey] = [
@@ -161,7 +161,7 @@ public nonisolated extension Preferences { // nonisolated: value
 	enum Highlights {
 		public static let matchingMethod = PreferenceKey(
 			"NicknameHighlightMatchingType",
-			default: TXNicknameHighlightMatchType.exact
+			default: NicknameHighlightMatchMode.exact
 		)
 
 		public static let trackLocalNickname = PreferenceKey("TrackNicknameHighlightsOfLocalUser", default: true)

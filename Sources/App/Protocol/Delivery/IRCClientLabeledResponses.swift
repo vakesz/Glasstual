@@ -73,7 +73,7 @@ final class LabeledDelivery: NSObject {
 	weak var channel: IRCChannel?
 	var lineNumber: String?
 	var resolved = false
-	var state: TVCLogLineDeliveryState = .none
+	var state: LogLineDeliveryState = .none
 	var timeoutWorkItem: DispatchWorkItem?
 }
 
@@ -127,7 +127,7 @@ public extension IRCClient {
 
 	func resolveDelivery(
 		withLabel label: String,
-		state: TVCLogLineDeliveryState,
+		state: LogLineDeliveryState,
 		messageIdentifier: String?,
 		reason: String?
 	) {
@@ -155,7 +155,7 @@ public extension IRCClient {
 
 	/// The state of a delivery still awaiting a response. Resolved deliveries are
 	/// removed, so a resolved or unknown label reports `.none`.
-	func deliveryState(forLabel label: String) -> TVCLogLineDeliveryState {
+	func deliveryState(forLabel label: String) -> LogLineDeliveryState {
 		pendingDeliveries[label]?.state ?? .none
 	}
 }

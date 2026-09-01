@@ -6,13 +6,13 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 
 ## Architecture
 
-- The direction is SwiftUI. New UI is written in SwiftUI and hosted by an
-  AppKit shell (`…Sheet.swift` / window controller) that owns presentation,
-  validation, menus, keyboard handling, state restoration and the delegate
-  callbacks; existing AppKit surfaces migrate feature by feature behind those
-  shells. The main window, menu bar, member list and native TextKit transcript
-  stay AppKit until a migration is planned and measured — never rewrite them as
-  a side effect of another change.
+- SwiftUI owns user-facing layout, navigation, forms and scene presentation.
+  AppKit is a capability adapter only: keep it narrow, stateless and owned by
+  the feature that needs it. Before removing an adapter, preserve keyboard
+  commands, focus, selection, drag-and-drop, accessibility, restoration and
+  plugin behavior. The deliberate adapters are the main-window responder and
+  restoration shell, TextKit input/transcript editing, the transcript reaction
+  popover, dock-tile rendering and the pre-scene blocking alert path.
 - Layout is by feature: `Sources/App/{Application,Protocol,Preferences,
   Features/<Feature>,UI,Localization,Resources}`. `Sources/App/README.md`
   describes each directory's scope and the conventions; a feature owns its
@@ -27,17 +27,13 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
   `MainActor.assumeIsolated` to settle an isolation error; move the boundary
   instead. See "Isolation rules" below for what the gate enforces.
 - Preferences are typed `PreferenceKey` declarations under
-  `Sources/App/Preferences/Keys/`, with the handful the XPC services
+  `Sources/App/Preferences/Keys/`, with the handful the XPC connection host
   also read in `Sources/Shared/Preferences/`. Read and write through the key,
-  never through a raw defaults string. The five plists under
-  `Sources/App/Resources/Property Lists/Preferences/` are generated from those
-  declarations by `scripts/generate-preference-plists.sh` — a build phase of
-  the app target, `make generate-preference-plists` by hand — and are never
-  edited directly. Adding a declaration file under `Keys/` means adding it to
-  that phase's `inputFiles` in `project.yml`; the build phase is sandboxed to
-  the files it names.
-- The channel transcript is native AppKit/TextKit. `LogRenderer` produces
-  semantic `TranscriptLine` values and `LogView` draws them with `NSTextView`;
+  never through a raw defaults string. Defaults registration, storage routing,
+  and import/export filtering are derived directly from those declarations;
+  do not add a generated plist mirror or a build phase for them.
+- The channel transcript is native. `LogRenderer` produces semantic
+  `TranscriptLine` values and the transcript adapter draws them with TextKit;
   no HTML, CSS, JavaScript, WebKit, template engine or script bridge belongs in
   this path. `TranscriptTheme` is the single versioned `Codable` appearance
   model. Store and import/export it as an XML property list, and add colours as
@@ -63,19 +59,18 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 | `Caffeine`, `ChatFilter`, `SmileyConverter`, `SystemProfiler`, `UserInsights`, `ZNCAdditions` | `Sources/Plugins/<Name>/**` | first-party plugin bundles | `MainActor` |
 | `CocoaExtensions` | `Sources/Frameworks/Cocoa Extensions/**` | framework (Foundation/AppKit helpers) | `nonisolated` |
 | `GlasstualPluginKit` | `Sources/Frameworks/Plugin Kit/**` | framework (plugin ABI: `Sendable` event payloads, `@MainActor` callbacks) | `nonisolated` |
-| `HistoricLogStoreKit` | `Sources/Frameworks/Historic Log Store Kit/**` | framework (`actor HistoricLogStore`, `LogLineXPC`, the historic-log XPC protocols) shared by the service and the tests | `nonisolated` |
-| `HistoricLogFileManager`, `IRCRemoteConnectionManager` | `Sources/Services/<Name>/**` | XPC services; each exported object is a nonisolated shim in front of an actor (`HistoricLogStore`, `ConnectionHost`) that never holds the `NSXPCConnection` — it holds the `Sendable` client proxy | `nonisolated` |
+| `IRCConnectionHost` | `Sources/Services/IRC Connection Host/**` | capability-limited XPC network host; its exported shim forwards to `ConnectionHost`, which owns sockets and the `Sendable` client proxy | `nonisolated` |
 | `GlasstualTests` | `Tests/GlasstualTests/**`, corpora under `Tests/Corpora/**` | Swift Testing bundle hosted by the app | `MainActor` |
 
-Shared declarations that cross a process boundary live in `Sources/Shared/`
-(XPC protocols, connection envelopes, the preference keys the services read).
+Shared declarations that cross the network-host process boundary live in
+`Sources/Shared/` (XPC protocols and connection envelopes).
 
 ## Isolation rules
 
 Every piece of mutable state belongs to exactly one isolation domain — the main
 actor, a named actor, or a value that never escapes — and the compiler has to
-be able to prove it. The rules below are what `scripts/isolation-gate.sh`
-checks on every `make lint`.
+be able to prove it. SwiftLint custom rules enforce the source-level bans below
+on every `make lint`.
 
 - **Never add** `nonisolated(unsafe)`, `@unchecked Sendable`,
   `MainActor.assumeIsolated`, `Thread.isMainThread` or
@@ -116,7 +111,8 @@ checks on every `make lint`.
   `nonisolated` site: a nonisolated class with mutable state becomes an actor,
   a main-actor class, or a `Mutex`-guarded value.
 
-The gate counts three categories under `Sources/` and fails when it finds any.
+The SwiftLint rules cover three categories under `Sources/` and fail when they
+find any.
 All three are at zero and stay there: there is no ceiling to raise, no
 ratchet, and no exception to add. A change that trips the gate has put a
 boundary in the wrong place — move the state into the domain that uses it, or
@@ -140,7 +136,8 @@ and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
   and `Generated/Xcode/` are never edited by hand.
 - Preserve every upstream copyright notice, license, acknowledgement and
   provenance record when moving or rewriting code. Vendored source stays under
-  `Sources/Frameworks/Static Libraries/` with its `PROVENANCE.md` current.
+  `Sources/Frameworks/Cocoa Extensions/` with
+  `Sources/Frameworks/PROVENANCE.md` current.
 - SwiftFormat and SwiftLint run over all of `Sources/` and `Tests/`. Fix
   findings in the source, or tune a rule once in `.swiftlint.yml` /
   `.swiftformat` with a repository-wide reason. Path exclusions, baselines,
@@ -149,13 +146,8 @@ and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
   `Tests/GlasstualTests/`, named after their subject. Test what the code
   decides, not what the compiler already guarantees: a runtime-name pin earns
   its place only where a nib or a protocol constant depends on it.
-- A test that does not run is not a passing test. `make lint` runs
-  `scripts/test-hygiene.sh`, which bans `.disabled(…)` and `withKnownIssue`
-  under `Tests/` unless `scripts/test-hygiene-allowlist.txt` accounts for the
-  file, the construct and the exact number of sites, with a reason. Six
-  `.disabled("Phase 1: …")` traits once hid unmet exit criteria for weeks;
-  parking a failure there is not what the list is for. Fix the code or delete
-  the test.
+- A test that does not run is not a passing test. SwiftLint bans `.disabled(…)`
+  and `withKnownIssue` under `Tests/`; fix the code or delete the test.
 - Before handing off: `make generate`, `make build`, `make test` and
   `make lint`, all green. Report any runtime, signing, network or release
   boundary the change touched but the checks did not exercise.

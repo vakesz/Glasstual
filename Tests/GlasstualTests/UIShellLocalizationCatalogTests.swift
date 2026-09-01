@@ -89,11 +89,11 @@ struct UIShellLocalizationCatalogTests {
 
 	@Test("Main window copy is keyed by the typed status and the typed member rank")
 	func mainWindowBoundaryUsesTypedStatusAndRankMappings() {
-		#expect(MainWindowStrings.MemberList.privilegeDescription(for: .normalOperator) == "Operator")
-		#expect(MainWindowStrings.MemberList.privilegeDescription(for: .none) == "No Privileges")
-		#expect(MainWindowStrings.MemberList.sectionTitle(for: .irCopByMode) == "Server Staff")
-		#expect(MainWindowStrings.MemberList.sectionTitle(for: .none) == "Members")
-		#expect(MainWindowStrings.MemberList.loggedIn(account: "alice") == "Logged in as alice")
+		#expect(MemberListStrings.privilegeDescription(for: .normalOperator) == "Operator")
+		#expect(MemberListStrings.privilegeDescription(for: .none) == "No Privileges")
+		#expect(MemberListStrings.sectionTitle(for: .irCopByMode) == "Server Staff")
+		#expect(MemberListStrings.sectionTitle(for: .none) == "Members")
+		#expect(MemberListStrings.loggedIn(account: "alice") == "Logged in as alice")
 		#expect(MainWindowStrings.ConnectionStatus.disconnected.title == "Disconnected")
 		#expect(MainWindowStrings.ConnectionStatus.waitingToReconnect.title == "Waiting to reconnect")
 		#expect(MainWindowStrings.ConnectionStatus.connecting.title == "Connecting")

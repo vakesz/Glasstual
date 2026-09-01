@@ -37,21 +37,21 @@
 
 import AppKit
 
-public enum TXAppearanceType: UInt, Sendable {
+public enum AppearanceType: UInt, Sendable {
 	case light
 	case dark
 }
 
-public enum TXAppKitAppearanceTarget: UInt, Sendable {
+public enum AppKitAppearanceTarget: UInt, Sendable {
 	case window
 	case none
 }
 
-public protocol TXAppearanceProperties {
+public protocol AppearanceProperties {
 	var appearanceName: String { get }
-	var appearanceType: TXAppearanceType { get }
+	var appearanceType: AppearanceType { get }
 	var shortAppearanceDescription: String { get }
 	var isDarkAppearance: Bool { get }
-	var appKitAppearanceTarget: TXAppKitAppearanceTarget { get }
+	var appKitAppearanceTarget: AppKitAppearanceTarget { get }
 	var appKitAppearance: NSAppearance? { get }
 }

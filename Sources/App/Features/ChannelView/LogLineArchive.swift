@@ -55,9 +55,9 @@ public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendabl
 		var replyToMessageIdentifier: String?
 		var reactions: [String: [String]]?
 		var nickname: String?
-		var lineType = TVCLogLineType.undefined
-		var memberType = TVCLogLineMemberType.normal
-		var deliveryState = TVCLogLineDeliveryState.none
+		var lineType = LogLineType.undefined
+		var memberType = LogLineMemberType.normal
+		var deliveryState = LogLineDeliveryState.none
 		var uniqueIdentifier: String?
 		var sessionIdentifier: UInt = 0
 	}
@@ -105,16 +105,16 @@ public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendabl
 			forKey: LogLineArchiveKey.reactions
 		) as? [String: [String]]
 		decoded.nickname = coder.textual_decodeString(forKey: LogLineArchiveKey.nickname) as String?
-		decoded.lineType = TVCLogLineType(
+		decoded.lineType = LogLineType(
 			rawValue: UInt(coder.decodeInteger(forKey: LogLineArchiveKey.lineType))
 		) ?? .undefined
-		decoded.memberType = TVCLogLineMemberType(
+		decoded.memberType = LogLineMemberType(
 			rawValue: UInt(coder.decodeInteger(forKey: LogLineArchiveKey.memberType))
 		) ?? .normal
 
 		/* A line that was still in flight when the app last quit is not pending
 		 any more; nothing is going to deliver it. */
-		let decodedDeliveryState = TVCLogLineDeliveryState(
+		let decodedDeliveryState = LogLineDeliveryState(
 			rawValue: UInt(coder.decodeInteger(forKey: LogLineArchiveKey.deliveryState))
 		) ?? .none
 		decoded.deliveryState = decodedDeliveryState == .pending ? .none : decodedDeliveryState

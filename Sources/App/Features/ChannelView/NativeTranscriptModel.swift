@@ -65,12 +65,12 @@ nonisolated struct TranscriptLine: Equatable, Sendable { // nonisolated: value
 	var timestamp: String
 	var nickname: String?
 	var formattedNickname: String
-	var memberType: TVCLogLineMemberType
-	var lineType: TVCLogLineType
+	var memberType: LogLineMemberType
+	var lineType: LogLineType
 	var command: String
 	var messageIdentifier: String?
 	var replyToMessageIdentifier: String?
-	var deliveryState: TVCLogLineDeliveryState
+	var deliveryState: LogLineDeliveryState
 	var deliveryFailureReason: String?
 	var reactions: [String: [String]]
 	var markers: [TranscriptMarker]

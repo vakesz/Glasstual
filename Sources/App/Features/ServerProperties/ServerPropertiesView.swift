@@ -24,12 +24,16 @@ struct ServerPropertiesActions {
 	let resetCertificate: () -> Void
 	let copyCertificateFingerprint: (String) -> Void
 	let showCipherSuites: () -> Void
-	let openProxySettings: () -> Void
 }
 
 struct ServerPropertiesView: View {
 	@Bindable var model: ServerPropertiesModel
+	@Environment(\.openURL) private var openURL
 	let actions: ServerPropertiesActions
+
+	private static let networkProxySettingsURL = URL(
+		string: "x-apple.systempreferences:com.apple.Network-Settings.extension?Proxies"
+	)
 
 	private let encodings: [(value: UInt, title: String)] = {
 		let values = String.Encoding.supportedEncodingsByTitle(favoringUTF8: false)
@@ -327,7 +331,11 @@ struct ServerPropertiesView: View {
 					}
 				}
 			} else if model.config.proxyType == .automatic {
-				Button("Open System Settings", action: actions.openProxySettings)
+				Button("Open System Settings") {
+					if let url = Self.networkProxySettingsURL {
+						openURL(url)
+					}
+				}
 			} else if model.config.proxyType == .tor {
 				Text("Tor Browser must be running before connecting.").foregroundStyle(.secondary)
 			}

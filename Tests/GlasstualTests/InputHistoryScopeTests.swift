@@ -19,8 +19,8 @@ import Testing
 struct InputHistoryScopeTests {
 	private static let channelSpecificKey = "SaveInputHistoryPerSelection"
 
-	private func makeWindow() -> TVCMainWindow {
-		TVCMainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
+	private func makeWindow() -> MainWindow {
+		MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
 	}
 
 	/// The tests run against the scheme's scratch defaults suite, so the

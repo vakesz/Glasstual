@@ -333,7 +333,15 @@ public extension IRCClient {
 
 		case .server:
 			guard requireArguments(arguments, for: parsed.command) else { return true }
-			Extras.createConnectionToServer(arguments.rest, channelList: nil, connectWhenCreated: true)
+			ServerConnectionCoordinator.connect(
+				to: arguments.rest,
+				channels: nil,
+				options: ServerConnectionOptions(
+					connectWhenCreated: true,
+					mergeConnectionIfPossible: false,
+					selectFirstChannelAdded: false
+				)
+			)
 
 		case .sslcontext:
 			presentCertificateTrustInformation()

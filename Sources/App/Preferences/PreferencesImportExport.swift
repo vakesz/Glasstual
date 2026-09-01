@@ -10,10 +10,9 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+import Foundation
 import os
-import UniformTypeIdentifiers
 
 private let importExportLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -21,42 +20,8 @@ private let importExportLogger = Logger(
 )
 
 @MainActor
-public final class PreferencesImportExport: NSObject {
-	public static func `import`(in window: NSWindow) {
-		TDCAlert.alertSheet(
-			with: window,
-			body: PromptStrings.ConfigurationTransfer.importBody,
-			title: PromptStrings.ConfigurationTransfer.importTitle,
-			defaultButton: PromptStrings.Action.chooseFile,
-			alternateButton: PromptStrings.Action.cancel,
-			otherButton: nil,
-			completionBlock: { outcome in
-				importPreflight(outcome.response, in: window)
-			}
-		)
-	}
-
-	private static func importPreflight(_ buttonPressed: TDCAlertResponse, in window: NSWindow) {
-		guard buttonPressed == .default else {
-			return
-		}
-
-		let panel = NSOpenPanel()
-		panel.canChooseFiles = true
-		panel.canChooseDirectories = false
-		panel.canCreateDirectories = false
-		panel.resolvesAliases = true
-		panel.allowsMultipleSelection = false
-		panel.allowedContentTypes = [.propertyList]
-
-		panel.beginSheetModal(for: window) { returnCode in
-			guard returnCode == .OK, let pathURL = panel.urls.first else {
-				return
-			}
-
-			importPostflight(pathURL)
-		}
-	}
+public enum PreferencesImportExport {
+	public static let defaultArchiveFilename = "GlasstualPreferences.plist"
 
 	public static func importPostflightBackupPreferences() -> Bool {
 		let backupPath = NSHomeDirectory().appending(
@@ -67,9 +32,7 @@ public final class PreferencesImportExport: NSObject {
 	}
 
 	public static func importPostflight(_ pathURL: URL) {
-		DispatchQueue.main.async {
-			importPostflightOnMain(pathURL)
-		}
+		importPostflightOnMain(pathURL)
 	}
 
 	private static func importPostflightOnMain(_ pathURL: URL) {
@@ -272,39 +235,6 @@ public final class PreferencesImportExport: NSObject {
 		return (value.propertyListObject as AnyObject).isEqual(registeredDefault.propertyListObject)
 	}
 
-	public static func export(in window: NSWindow) {
-		TDCAlert.alertSheet(
-			with: window,
-			body: PromptStrings.ConfigurationTransfer.exportBody,
-			title: PromptStrings.ConfigurationTransfer.exportTitle,
-			defaultButton: PromptStrings.ConfigurationTransfer.exportButtonTitle,
-			alternateButton: PromptStrings.Action.cancel,
-			otherButton: nil,
-			completionBlock: { outcome in
-				exportPreflight(outcome.response, in: window)
-			}
-		)
-	}
-
-	private static func exportPreflight(_ buttonPressed: TDCAlertResponse, in window: NSWindow) {
-		guard buttonPressed == .default else {
-			return
-		}
-
-		let panel = NSSavePanel()
-		panel.canCreateDirectories = true
-		panel.allowedContentTypes = [.propertyList]
-		panel.nameFieldStringValue = "GlasstualPreferences.plist"
-
-		panel.beginSheetModal(for: window) { returnCode in
-			guard returnCode == .OK, let pathURL = panel.url else {
-				return
-			}
-
-			_ = exportPostflight(for: pathURL, filterJunk: true)
-		}
-	}
-
 	public static func exportPostflight(forPath path: String) -> Bool {
 		exportPostflight(forPath: path, filterJunk: true)
 	}
@@ -318,19 +248,7 @@ public final class PreferencesImportExport: NSObject {
 	}
 
 	public static func exportPostflight(for url: URL, filterJunk: Bool) -> Bool {
-		let exportedPreferences = exportedPreferencesDictionary(filterJunk)
-
-		let propertyList: Data
-		do {
-			propertyList = try PropertyListSerialization.data(
-				fromPropertyList: exportedPreferences.propertyListObject,
-				format: .binary,
-				options: 0
-			)
-		} catch {
-			importExportLogger.error("Error Creating Property List: \(error.localizedDescription, privacy: .public)")
-			return false
-		}
+		guard let propertyList = exportedPreferencesData(filterJunk: filterJunk) else { return false }
 
 		do {
 			try propertyList.write(to: url, options: .atomic)
@@ -340,5 +258,18 @@ public final class PreferencesImportExport: NSObject {
 		}
 
 		return true
+	}
+
+	public static func exportedPreferencesData(filterJunk: Bool) -> Data? {
+		do {
+			return try PropertyListSerialization.data(
+				fromPropertyList: exportedPreferencesDictionary(filterJunk).propertyListObject,
+				format: .binary,
+				options: 0
+			)
+		} catch {
+			importExportLogger.error("Error creating property list: \(error.localizedDescription, privacy: .public)")
+			return nil
+		}
 	}
 }

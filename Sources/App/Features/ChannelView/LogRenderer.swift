@@ -56,8 +56,8 @@ public nonisolated struct LogRenderer { // nonisolated: value
 	private var attributedBody = NSMutableAttributedString()
 	private var configuration = LogRendererConfiguration()
 	private var members: [RenderedMember] = []
-	private var lineType = TVCLogLineType.undefined
-	private var memberType = TVCLogLineMemberType.normal
+	private var lineType = LogLineType.undefined
+	private var memberType = LogLineMemberType.normal
 	private var links: [LinkParserResult] = []
 	private var mentionedNicknames: [String] = []
 	private var isHighlight = false
@@ -77,7 +77,7 @@ public nonisolated struct LogRenderer { // nonisolated: value
 
 	private mutating func filterUnicodeSpam() {
 		guard Preferences.Messages.filterUnicodeTextSpam.detachedValue else { return }
-		let filteredTypes: Set<TVCLogLineType> = [
+		let filteredTypes: Set<LogLineType> = [
 			.action, .ctcp, .ctcpQuery, .ctcpReply, .dccFileTransfer, .notice, .privateMessage, .topic,
 		]
 		guard filteredTypes.contains(lineType) else { return }
@@ -309,10 +309,10 @@ public extension LogRenderer {
 	) -> TranscriptBody {
 		guard body.isEmpty == false else { return TranscriptBody() }
 		var renderer = LogRenderer()
-		renderer.lineType = TVCLogLineType(
+		renderer.lineType = LogLineType(
 			rawValue: configuration.value(for: .lineType, as: UInt.self) ?? 0
 		) ?? .undefined
-		renderer.memberType = TVCLogLineMemberType(
+		renderer.memberType = LogLineMemberType(
 			rawValue: configuration.value(for: .memberType, as: UInt.self) ?? 0
 		) ?? .normal
 		renderer.body = body

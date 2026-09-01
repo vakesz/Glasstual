@@ -40,13 +40,19 @@ import AppKit
 import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
+import SwiftUI
 
 // MARK: - View controls and input
 
 extension MainWindow {
+	private enum TextZoomPolicy {
+		static let step = 1.2
+		static let allowedRange = 0.5 ... 3.0
+	}
+
 	public func changeTextSize(_ bigger: Bool) {
-		let next = bigger ? textSizeMultiplier * 1.2 : textSizeMultiplier / 1.2
-		guard (0.5 ... 3).contains(next) else { return }
+		let next = bigger ? textSizeMultiplier * TextZoomPolicy.step : textSizeMultiplier / TextZoomPolicy.step
+		guard TextZoomPolicy.allowedRange.contains(next) else { return }
 		textSizeMultiplier = next
 		for client in world.clientList {
 			client.logController?.changeTextSize(bigger)
@@ -448,14 +454,12 @@ public extension MainWindow {
 	}
 
 	private func selectionDidChange() {
-		let newItem = serverList.selectedRow >= 0
-			? serverList.item(atRow: serverList.selectedRow) as? IRCTreeItem
-			: nil
+		let newItem = serverList.selectedItem
 		guard selectedItem !== newItem else { return }
 		storePreviousSelection()
 		let previousItem = selectedItem
 		selectedItem = newItem
-		channelView.show(newItem?.logController?.ensureBackingView())
+		presentationModel.transcript = newItem?.logController?.ensureBackingView()
 		previousItem?.logController?.notifyDidBecomeHidden()
 		newItem?.logController?.notifyDidBecomeVisible()
 		selectionDidChangePostflight()
@@ -477,17 +481,9 @@ public extension MainWindow {
 
 		guard let changedTo else {
 			memberList.assign(to: nil)
-			serverList.menu = nil
+			updateMemberListVisibilityForSelection()
 			updateTitle()
 			return
-		}
-
-		if changedTo.isClient {
-			serverList.menu = menuController.mainMenuServerMenuItem?.submenu
-		} else if changedTo.isChannel {
-			serverList.menu = menuController.mainMenuChannelMenu
-		} else {
-			serverList.menu = menuController.mainMenuQueryMenu
 		}
 
 		memberList.assign(to: changedTo.isChannel ? nativeChannel(changedTo) : nil)
@@ -518,31 +514,47 @@ public extension MainWindow {
 	func restoreSavedContentSplitViewState() {
 		let state = MainWindowStateStore().loadLayout()
 		memberList.isHiddenByUser = !state.isMemberListVisible
-		memberListSplitItem.isCollapsed = !state.isMemberListVisible
-		serverListSplitItem.isCollapsed = !state.isServerListVisible
+		presentationModel.isMemberListVisible = state.isMemberListVisible
+		presentationModel.isServerListVisible = state.isServerListVisible
 	}
 
 	func expandServerList() {
-		serverListSplitItem.animator().isCollapsed = false
+		withAnimation {
+			presentationModel.isServerListVisible = true
+		}
 	}
 
 	func collapseServerList() {
-		serverListSplitItem.animator().isCollapsed = true
+		withAnimation {
+			presentationModel.isServerListVisible = false
+		}
 	}
 
 	@objc func toggleServerListVisibility() {
-		serverListSplitItem.animator().isCollapsed = !serverListSplitItem.isCollapsed
+		withAnimation {
+			presentationModel.isServerListVisible.toggle()
+		}
 	}
 
 	func expandMemberList() {
-		memberListSplitItem.animator().isCollapsed = false
+		withAnimation {
+			presentationModel.isMemberListVisible = true
+		}
 	}
 
 	func collapseMemberList() {
-		memberListSplitItem.animator().isCollapsed = true
+		withAnimation {
+			presentationModel.isMemberListVisible = false
+		}
 	}
 
 	func updateMemberListVisibilityForSelection() {
+		let isAvailable = MainWindowMemberListVisibilityPolicy.isAvailable(
+			isChannel: selectedItem?.isChannel == true,
+			isLoggedIn: selectedItem?.associatedClient?.isLoggedIn == true
+		)
+		presentationModel.isMemberListAvailable = isAvailable
+
 		let shouldExpand = MainWindowMemberListVisibilityPolicy.shouldExpand(
 			isChannel: selectedItem?.isChannel == true,
 			isLoggedIn: selectedItem?.associatedClient?.isLoggedIn == true,
@@ -557,7 +569,7 @@ public extension MainWindow {
 	}
 
 	@objc func toggleMemberListVisibility() {
-		if memberListSplitItem.isCollapsed {
+		if presentationModel.isMemberListVisible == false {
 			guard MainWindowMemberListVisibilityPolicy.shouldExpand(
 				isChannel: selectedItem?.isChannel == true,
 				isLoggedIn: selectedItem?.associatedClient?.isLoggedIn == true,
@@ -576,11 +588,11 @@ public extension MainWindow {
 	}
 
 	var isMemberListVisible: Bool {
-		memberListSplitItem?.isCollapsed == false
+		presentationModel.isMemberListVisible
 	}
 
 	var isServerListVisible: Bool {
-		serverListSplitItem?.isCollapsed == false
+		presentationModel.isServerListVisible
 	}
 
 	func setLoadingScreenProgressViewReason(_ reason: String) {
@@ -673,17 +685,6 @@ public extension MainWindow {
 	}
 
 	func setupTrees() {
-		memberList.keyDelegate = self
-		memberList.target = menuController
-		memberList.doubleAction = #selector(TXMenuController.memberInMemberListDoubleClicked(_:))
-		serverList.keyDelegate = self
-		serverList.delegate = self
-		serverList.dataSource = self
-		serverList.allowsEmptySelection = false
-		serverList.allowsMultipleSelection = false
-		serverList.target = self
-		serverList.doubleAction = #selector(outlineViewDoubleClicked(_:))
-		serverList.registerForDraggedTypes([MainWindowConstants.treeItemPasteboardType])
 		restoreExpandedClients()
 		restoreSelectionDuringSetup()
 		serverListSelectionDidChange()
@@ -773,7 +774,7 @@ public extension MainWindow {
 			storePreviousSelection()
 			selectedItem?.logController?.notifyDidBecomeHidden()
 			selectedItem = nil
-			channelView.show(nil)
+			presentationModel.transcript = nil
 			selectionDidChangePostflight()
 			return
 		}
@@ -785,7 +786,7 @@ public extension MainWindow {
 // MARK: - Outline view data source and delegate
 
 public extension MainWindow {
-	@objc private func outlineViewDoubleClicked(_: Any?) {
+	func serverListItemDoubleClicked() {
 		guard let client = selectedClient else { return }
 		if let channel = selectedChannel {
 			guard client.isLoggedIn else { return }
@@ -808,171 +809,15 @@ public extension MainWindow {
 		}
 	}
 
-	func outlineView(_: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
-		if let item = item as? IRCTreeItem {
-			return Int(item.numberOfChildren)
-		}
-		return Int(AppController.shared.world?.clientCount ?? 0)
-	}
-
-	func outlineView(_: NSOutlineView, isItemExpandable item: Any) -> Bool {
-		(item as? IRCTreeItem)?.numberOfChildren ?? 0 > 0
-	}
-
-	func outlineView(_: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
-		if let item = item as? IRCTreeItem {
-			guard let child = item.child(at: index) else {
-				preconditionFailure("Server-list item reported a child count that it cannot satisfy")
-			}
-			return child
-		}
-		return AppController.shared.world!.clientList[index]
-	}
-
-	func outlineView(_: NSOutlineView, objectValueFor _: NSTableColumn?, byItem item: Any?) -> Any? {
-		item
-	}
-
-	func outlineView(_ outlineView: NSOutlineView, rowViewForItem item: Any) -> NSTableRowView? {
-		guard let serverList = outlineView as? ServerList else {
-			assertionFailure("The main-window outline delegate only supports ServerList")
-			return nil
-		}
-
-		/* A row is a child row only for an item that is a channel. Anything the
-		 outline view hands back that is not a tree item at all is drawn as a
-		 group row, which is what the outline's root rows are. */
-		guard let treeItem = item as? IRCTreeItem, treeItem.isClient == false else {
-			return ServerListGroupRowCell(serverList: serverList)
-		}
-		return ServerListChildRowCell(serverList: serverList)
-	}
-
-	func outlineView(_ outlineView: NSOutlineView, viewFor _: NSTableColumn?, item: Any) -> NSView? {
-		let isChildRow = (item as? IRCTreeItem)?.isClient == false
-		let identifier = NSUserInterfaceItemIdentifier(isChildRow ? "ChildView" : "GroupView")
-		if let reusable = outlineView.makeView(withIdentifier: identifier, owner: self) {
-			return reusable
-		}
-
-		let cell: ServerListCell = isChildRow
-			? ServerListCellChildItem(frame: .zero)
-			: ServerListCellGroupItem(frame: .zero)
-		cell.identifier = identifier
-		return cell
-	}
-
-	func outlineView(_: NSOutlineView, didAdd _: NSTableRowView, forRow row: Int) {
-		serverList.refreshDrawing(forRow: row)
-	}
-
-	func outlineViewItemDidCollapse(_ notification: Notification) {
-		(notification.userInfo?["NSObject"] as? IRCTreeItem)?.associatedClient?.sidebarItemIsExpanded = false
-	}
-
-	func outlineViewItemDidExpand(_ notification: Notification) {
-		(notification.userInfo?["NSObject"] as? IRCTreeItem)?.associatedClient?.sidebarItemIsExpanded = true
-	}
-
-	func outlineView(_: NSOutlineView, shouldExpandItem _: Any) -> Bool {
-		true
-	}
-
-	func outlineView(_: NSOutlineView, shouldCollapseItem _: Any) -> Bool {
-		true
-	}
-
-	func outlineViewItemWillCollapse(_: Notification) {}
-
-	func selectionShouldChange(in _: NSOutlineView) -> Bool {
-		isKeyWindow
-	}
-
-	func outlineViewSelectionDidChange(_ notification: Notification) {
-		guard notification.object as? ServerList === serverList else {
-			return
-		}
+	func serverListSelectionDidChangeFromSwiftUI() {
 		serverListSelectionDidChange()
 	}
 
 	private func serverListSelectionDidChange() {
-		if ignoreNextOutlineViewSelectionChange {
-			ignoreNextOutlineViewSelectionChange = false; return
+		if ignoreNextServerListSelectionChange {
+			ignoreNextServerListSelectionChange = false; return
 		}
-		guard ignoreOutlineViewSelectionChanges == false else { return }
+		guard ignoreServerListSelectionChanges == false else { return }
 		selectionDidChange()
-	}
-
-	func outlineView(_: NSOutlineView, pasteboardWriterForItem item: Any) -> (any NSPasteboardWriting)? {
-		guard let item = item as? IRCTreeItem else { return nil }
-		let value = NSPasteboardItem()
-		value.setString(
-			world.pasteboardString(for: item),
-			forType: MainWindowConstants.treeItemPasteboardType
-		)
-		return value
-	}
-
-	func outlineView(
-		_: NSOutlineView,
-		validateDrop info: any NSDraggingInfo,
-		proposedItem item: Any?,
-		proposedChildIndex index: Int
-	) -> NSDragOperation {
-		guard index >= 0, let draggedItem = draggedItem(from: info) else { return [] }
-		if draggedItem.isClient {
-			return item == nil ? .generic : []
-		}
-		guard let client = item as? IRCClient, draggedItem.associatedClient === client else { return [] }
-		let channels = client.channelList
-		let previous = index > 0 && index - 1 < channels.count ? channels[index - 1] : nil
-		let next = index < channels.count ? channels[index] : nil
-		if draggedItem.isChannel, previous?.isChannel == false {
-			return []
-		}
-		if draggedItem.isChannel == false, next?.isChannel == true {
-			return []
-		}
-		return .generic
-	}
-
-	func outlineView(
-		_: NSOutlineView,
-		acceptDrop info: any NSDraggingInfo,
-		item: Any?,
-		childIndex index: Int
-	) -> Bool {
-		guard index >= 0, let draggedItem = draggedItem(from: info) else { return false }
-		/* The world performs the move and tells its observers — this window
-		 among them — to follow, rather than the drop rewriting both. */
-		if draggedItem.isClient {
-			guard let original = world.clientList.firstIndex(where: { $0 === draggedItem }) else { return false }
-			world.moveClient(from: original, to: destinationIndex(proposed: index, movingFrom: original))
-		} else {
-			guard let client = item as? IRCClient, draggedItem.associatedClient === client else { return false }
-			guard let original = client.channelList.firstIndex(where: { $0 === draggedItem }) else { return false }
-			world.moveChannel(
-				on: client,
-				from: original,
-				to: destinationIndex(proposed: index, movingFrom: original)
-			)
-		}
-		return true
-	}
-
-	/// `childIndex` from `acceptDrop` counts the dragged item itself, but both
-	/// the model array and `NSOutlineView.moveItem(at:inParent:to:inParent:)`
-	/// want the index the item lands on once it has been removed. Moving
-	/// downward therefore shifts by one; moving upward does not.
-	private func destinationIndex(proposed index: Int, movingFrom original: Int) -> Int {
-		index > original ? index - 1 : index
-	}
-
-	private func draggedItem(from info: any NSDraggingInfo) -> IRCTreeItem? {
-		let pasteboard = info.draggingPasteboard
-		guard pasteboard.availableType(from: [MainWindowConstants.treeItemPasteboardType]) != nil,
-		      let token = pasteboard.string(forType: MainWindowConstants.treeItemPasteboardType)
-		else { return nil }
-		return world.findItem(withPasteboardString: token)
 	}
 }

@@ -12,7 +12,6 @@
 
 import Foundation
 @testable import Glasstual
-import HistoricLogStoreKit
 import Testing
 
 /// Holds every fetch at the door until the test lets them through, so the
@@ -75,8 +74,8 @@ struct HistoricLogClientTests {
 	private static func enqueue(
 		_ requests: [HistoricLogFetchRequest],
 		on queue: HistoricLogRequestQueue
-	) async -> [Task<[LogLineXPC], Never>] {
-		var tasks: [Task<[LogLineXPC], Never>] = []
+	) async -> [Task<[HistoricLogEntry], Never>] {
+		var tasks: [Task<[HistoricLogEntry], Never>] = []
 
 		for request in requests {
 			tasks.append(Task { await queue.fetch(request) })
@@ -121,7 +120,7 @@ struct HistoricLogClientTests {
 		let queue = HistoricLogRequestQueue { request in
 			await gate.wait()
 			return [
-				LogLineXPC(
+				HistoricLogEntry(
 					logLineData: Data(),
 					uniqueIdentifier: Self.label(of: request),
 					viewIdentifier: request.viewIdentifier,
@@ -177,26 +176,12 @@ struct HistoricLogClientTests {
 		#expect(await queue.pendingCount == 0)
 	}
 
-	@Test("Attaching and detaching twice is one connection and one invalidation")
-	func attachAndDetachAreIdempotent() async {
-		/* No database directory means no message is ever sent, so the real
-		 service is neither launched nor disturbed: the connection bookkeeping
-		 is what is under test here. */
-		let client = HistoricLogClient(
-			serviceName: "com.vakesz.glasstual.tests.NoSuchService",
-			databaseDirectory: nil,
-			reportConnectionFailure: { _ in }
-		)
+	@Test("A client without a database directory stays unloaded and answers safely")
+	func missingDatabaseDirectoryAnswersSafely() async {
+		let client = HistoricLogClient(databaseDirectory: nil)
+		let result = await client.fetchEntries(Self.request(view: "a", label: "a1"))
 
-		await client.attach()
-		await client.attach()
-
-		#expect(await client.isAttached)
-		#expect(await client.connectionsOpened == 1)
-
-		await client.detach()
-		await client.detach()
-
-		#expect(await client.connectionsOpened == 1)
+		#expect(result.isEmpty)
+		#expect(await client.isLoaded == false)
 	}
 }

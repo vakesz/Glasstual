@@ -23,8 +23,6 @@ public nonisolated enum PathInfo { // nonisolated: value
 		category: "PathInfo"
 	)
 
-	private static let transcriptBookmarkDefaultsKey = "LogTranscriptDestinationSecurityBookmark_5"
-
 	/** The security-scoped transcript folder, held open for as long as the
 	 process is using it. Main-actor state: every caller -- the preferences pane
 	 that picks the folder, the file logger that writes into it, the menu item
@@ -362,7 +360,11 @@ public nonisolated enum PathInfo { // nonisolated: value
 	public static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
 		stopUsingTranscriptFolderURL()
 
-		TextualUserDefaults.container.set(transcriptFolderURL, forKey: transcriptBookmarkDefaultsKey)
+		if let transcriptFolderURL {
+			Preferences.Logging.transcriptFolderBookmark.value = transcriptFolderURL
+		} else {
+			Preferences.Logging.transcriptFolderBookmark.reset()
+		}
 		startUsingTranscriptFolderURL()
 	}
 
@@ -385,9 +387,8 @@ public nonisolated enum PathInfo { // nonisolated: value
 		 released before a new one is taken; launch plus a preference reload both call in. */
 		stopUsingTranscriptFolderURL()
 
-		guard let bookmark = TextualUserDefaults.container.data(forKey: transcriptBookmarkDefaultsKey) else {
-			return
-		}
+		let bookmark = Preferences.Logging.transcriptFolderBookmark.value
+		guard bookmark.isEmpty == false else { return }
 
 		var resolvedBookmarkIsStale = true
 		let resolvedBookmark: URL
@@ -431,7 +432,7 @@ public nonisolated enum PathInfo { // nonisolated: value
 				return
 			}
 
-			TextualUserDefaults.container.set(newBookmark, forKey: transcriptBookmarkDefaultsKey)
+			Preferences.Logging.transcriptFolderBookmark.value = newBookmark
 			startUsingTranscriptFolderURL(refreshingStaleBookmark: false)
 
 			return
@@ -455,7 +456,7 @@ public nonisolated enum PathInfo { // nonisolated: value
 			return
 		}
 
-		TDCAlert.alert(
+		Alerts.alert(
 			withMessage: PromptStrings.Logging.staleLocationBody,
 			title: PromptStrings.Logging.staleLocationTitle,
 			defaultButton: PromptStrings.Action.confirmation,

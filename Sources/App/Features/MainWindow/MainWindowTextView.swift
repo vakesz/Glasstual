@@ -39,17 +39,9 @@ import AppKit
 import CocoaExtensions
 import Combine
 import os
-import QuartzCore
-
-public typealias TVCMainWindowTextView = MainWindowTextView
 
 private enum MainWindowTextViewNotification {
-	static let typingDidChange = Notification.Name("IRCTypingTrackerDidChangeNotification")
 	static let typingChannelKey = "channel"
-}
-
-private enum MainWindowTextViewAnimation {
-	static let accessoryDuration: TimeInterval = 0.18
 }
 
 // Insets for the scroll view inside the input bar.
@@ -88,12 +80,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	fileprivate var textViewHeightConstraint: NSLayoutConstraint?
 	fileprivate var windowContentViewMinimumHeight: NSLayoutConstraint?
 	public fileprivate(set) weak var contentView: MainWindowTextViewContentView?
-	fileprivate weak var inputBarContainerView: NSView?
-	fileprivate var inputBarTopConstraint: NSLayoutConstraint?
-
-	private var accessoryView: MainWindowInputAccessoryView?
-	private var accessoryHeightConstraint: NSLayoutConstraint?
-	private var accessoryHeight: CGFloat = 0
+	public let accessoryModel = MainWindowInputAccessoryModel()
 	private var observingTyping = false
 	private var typingObservations: [Task<Void, Never>] = []
 	private weak var typingChannel: IRCChannel?
@@ -111,81 +98,12 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		backgroundColor = .clear
 		enclosingScrollView?.drawsBackground = false
 		updateTextDirection()
-		installAccessoryView()
-	}
-
-	// MARK: - Accessory strip
-
-	private func installAccessoryView() {
-		guard let contentView,
-		      let inputBarContainerView,
-		      let inputBarTopConstraint,
-		      accessoryView == nil
-		else {
-			return
-		}
-
-		let accessoryView = MainWindowInputAccessoryView(frame: .zero)
-		contentView.addSubview(accessoryView)
-
-		let topInset = inputBarTopConstraint.constant
-		inputBarTopConstraint.isActive = false
-
-		let heightConstraint = accessoryView.heightAnchor.constraint(equalToConstant: 0)
-		let topConstraint = inputBarContainerView.topAnchor.constraint(equalTo: accessoryView.bottomAnchor)
-
-		NSLayoutConstraint.activate([
-			accessoryView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: topInset),
-			accessoryView.leadingAnchor.constraint(equalTo: inputBarContainerView.leadingAnchor),
-			accessoryView.trailingAnchor.constraint(equalTo: inputBarContainerView.trailingAnchor),
-			heightConstraint,
-			topConstraint,
-		])
-
-		accessoryView.clipsToBounds = true
-		self.accessoryView = accessoryView
-		accessoryHeightConstraint = heightConstraint
-
-		accessoryView.contentDidChangeBlock = { [weak self] in
-			self?.accessoryContentDidChange()
-		}
-
-		accessoryView.cancelReplyBlock = { [weak self] in
-			self?.focus()
-		}
-	}
-
-	private func accessoryContentDidChange() {
-		guard let accessoryView, let accessoryHeightConstraint else {
-			return
-		}
-
-		let height = accessoryView.preferredHeight
-		guard height != accessoryHeight else {
-			return
-		}
-
-		accessoryHeight = height
-
-		if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion || window == nil {
-			accessoryHeightConstraint.constant = height
-			recalculateTextViewSize(force: true)
-			return
-		}
-
-		NSAnimationContext.runAnimationGroup { context in
-			context.duration = MainWindowTextViewAnimation.accessoryDuration
-			context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-			context.allowsImplicitAnimation = true
-			accessoryHeightConstraint.animator().constant = height
-			recalculateTextViewSize(force: true, animated: true)
-		}
 	}
 
 	// MARK: - Replies
 
 	public var replyMessageIdentifier: String? {
-		accessoryView?.replyMessageIdentifier
+		accessoryModel.replyMessageIdentifier
 	}
 
 	public func beginReply(
@@ -194,12 +112,12 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		excerpt: String?
 	) {
 		precondition(messageIdentifier.isEmpty == false)
-		accessoryView?.showReply(toMessageIdentifier: messageIdentifier, nickname: nickname, excerpt: excerpt)
+		accessoryModel.showReply(toMessageIdentifier: messageIdentifier, nickname: nickname, excerpt: excerpt)
 		focus()
 	}
 
 	public func cancelReply() {
-		accessoryView?.hideReply()
+		accessoryModel.hideReply()
 	}
 
 	public func consumeReply(into client: IRCClient?) {
@@ -232,7 +150,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		typingObservations = [
 			Task { @MainActor [weak self] in
 				let publisher = NotificationCenter.default
-					.publisher(for: MainWindowTextViewNotification.typingDidChange)
+					.publisher(for: .IRCTypingTrackerDidChange)
 
 				for await notification in publisher.bufferedValues {
 					guard let self else {
@@ -287,7 +205,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 			nicknames = channel.associatedClient?.typingTracker.typingNicknames(in: channel) ?? []
 		}
 
-		accessoryView?.setTypingNicknames(nicknames)
+		accessoryModel.setTypingNicknames(nicknames)
 	}
 
 	private func noteTextChangedForTyping() {
@@ -354,7 +272,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	}
 
 	public func applicationAppearanceChanged() {
-		guard let appearance = mainWindow?.userInterfaceObjects.textView else {
+		guard let appearance = (window as? MainWindow)?.userInterfaceObjects.textView else {
 			return
 		}
 
@@ -436,7 +354,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	public func textView(_: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
 		if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-			mainWindow?.textEntered()
+			(window as? MainWindow)?.textEntered()
 			return true
 		}
 
@@ -578,7 +496,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		recalculateTextViewSize(force: true)
 	}
 
-	private func recalculateTextViewSize(force: Bool, animated: Bool = false) {
+	private func recalculateTextViewSize(force: Bool) {
 		guard let appearance = userInterfaceObjects,
 		      let window,
 		      let textViewHeightConstraint,
@@ -599,17 +517,11 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 			backgroundHeight = max(backgroundHeight, minimumHeight)
 		}
 
-		backgroundHeight += accessoryHeight
-
 		/* An unforced recalculation that arrives at the height already in
 		 place does not write the constraint: that would invalidate layout for
 		 the whole window on every keystroke. */
 		if force || backgroundHeight != textViewHeightConstraint.constant {
-			if animated {
-				textViewHeightConstraint.animator().constant = backgroundHeight
-			} else {
-				textViewHeightConstraint.constant = backgroundHeight
-			}
+			textViewHeightConstraint.constant = backgroundHeight
 		}
 
 		guard let scrollContentView = enclosingScrollView?.contentView else {
@@ -657,7 +569,6 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 public final class MainWindowTextViewContentView: NSView {
 	private let inputBarContainerView = NSView()
-	private var inputBarTopConstraint: NSLayoutConstraint!
 	private var textViewHeightConstraint: NSLayoutConstraint!
 	private var windowContentViewMinimumHeight: NSLayoutConstraint!
 
@@ -678,7 +589,7 @@ public final class MainWindowTextViewContentView: NSView {
 		inputBarContainerView.translatesAutoresizingMaskIntoConstraints = false
 		addSubview(inputBarContainerView)
 
-		inputBarTopConstraint = inputBarContainerView.topAnchor.constraint(equalTo: topAnchor, constant: 7)
+		let inputBarTopConstraint = inputBarContainerView.topAnchor.constraint(equalTo: topAnchor, constant: 7)
 		textViewHeightConstraint = heightAnchor.constraint(equalToConstant: 38)
 		windowContentViewMinimumHeight = heightAnchor.constraint(greaterThanOrEqualToConstant: 35)
 		NSLayoutConstraint.activate([
@@ -755,8 +666,6 @@ public final class MainWindowTextViewContentView: NSView {
 		])
 
 		textView.contentView = self
-		textView.inputBarContainerView = inputBarContainerView
-		textView.inputBarTopConstraint = inputBarTopConstraint
 		textView.textViewHeightConstraint = textViewHeightConstraint
 		textView.windowContentViewMinimumHeight = windowContentViewMinimumHeight
 		textView.configure()

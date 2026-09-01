@@ -10,7 +10,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import Observation
 import SwiftUI
 
@@ -21,12 +20,10 @@ public protocol ServerEndpointListSheetDelegate: AnyObject {
 }
 
 @MainActor
-public final class ServerEndpointListSheet: SheetBase, NSWindowDelegate {
-	private static let contentSize = NSSize(width: 780, height: 440)
-
+public final class ServerEndpointListSheet: MainWindowSheetSession {
 	let model = ServerEndpointListModel()
 
-	override public init(window: NSWindow?) {
+	override public init(window: MainWindow?) {
 		super.init(window: window)
 		installSheet()
 	}
@@ -37,23 +34,7 @@ public final class ServerEndpointListSheet: SheetBase, NSWindowDelegate {
 			submit: { [weak self] in self?.ok(nil) },
 			cancel: { [weak self] in self?.cancel(nil) }
 		)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: Self.contentSize),
-			styleMask: [.titled, .resizable, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-
-		hostedSheet.contentViewController = NSHostingController(rootView: rootView)
-		hostedSheet.contentMinSize = NSSize(width: 680, height: 360)
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.preventsApplicationTerminationWhenModal = false
-		hostedSheet.autorecalculatesKeyViewLoop = true
-		hostedSheet.title = ServerEndpointStrings.windowTitle
-		sheet = hostedSheet
+		setContent(rootView)
 	}
 
 	public func start(with serverList: [Server]) {
@@ -70,7 +51,7 @@ public final class ServerEndpointListSheet: SheetBase, NSWindowDelegate {
 		super.ok(sender)
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		(delegate as? any ServerEndpointListSheetDelegate)?.serverEndpointListSheetWillClose(self)
 	}
 }

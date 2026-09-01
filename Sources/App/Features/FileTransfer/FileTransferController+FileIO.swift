@@ -39,7 +39,7 @@
 import Foundation
 import os
 
-extension TDCFileTransferDialogTransferController {
+extension FileTransferController {
 	public func onMaintenanceTimer() {
 		dispatchPrecondition(condition: .onQueue(.main))
 		guard transferStatus == .receiving || transferStatus == .sending else {

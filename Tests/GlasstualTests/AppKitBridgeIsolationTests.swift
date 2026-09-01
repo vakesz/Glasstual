@@ -12,6 +12,7 @@
 
 import AppKit
 @testable import Glasstual
+import SwiftUI
 import Testing
 
 /// A notification that has to be handled before the post returns, in the shape
@@ -47,71 +48,11 @@ private final class NotificationCollector {
 struct AppKitBridgeIsolationTests {
 	// MARK: - Nib-free configuration
 
-	@Test("A member list configures itself once, whatever asks it to")
-	func memberListConfiguresExactlyOnce() {
-		let memberList = MemberList(frame: NSRect(x: 0, y: 0, width: 150, height: 400))
-
-		#expect(memberList.dataSource == nil)
-
-		memberList.configure()
-
-		/* The list is no longer its own data source: `configure()` builds a
-		 diffable one and hands the table to it. The delegate is still the view. */
-		#expect(memberList.dataSource is NSTableViewDiffableDataSource<MemberListSectionIdentifier, User.ID>)
-		#expect(memberList.delegate === memberList)
-
-		/* A second pass would install a second tracking area and re-register the
-		 dragged types; the flag is what keeps `viewDidMoveToWindow` cheap when
-		 the view moves between windows. */
-		let trackingAreaCount = memberList.trackingAreas.count
-
-		memberList.configure()
-		memberList.configure()
-
-		#expect(memberList.trackingAreas.count == trackingAreaCount)
-	}
-
-	@Test("A member cell is configured when the table vends it, not at nib load")
-	func memberListCellConfiguresOnce() throws {
-		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
-		let nicknameField = try #require(cell.textField)
-
-		cell.configure()
-
-		#expect(nicknameField.usesSingleLineMode)
-		#expect(nicknameField.lineBreakMode == .byTruncatingTail)
-
-		/* The second call must not walk over a value set since. */
-		nicknameField.lineBreakMode = .byWordWrapping
-		cell.configure()
-
-		#expect(nicknameField.lineBreakMode == .byWordWrapping)
-	}
-
-	@Test("The member info popover configures itself once")
-	func memberInfoPopoverConfiguresOnce() {
-		let popover = MemberListUserInfoPopover()
-
-		popover.configure()
-		#expect(popover.behavior == .transient)
-
-		popover.behavior = .applicationDefined
-		popover.configure()
-
-		#expect(popover.behavior == .applicationDefined)
-	}
-
 	@Test("No AppKit class in the app still overrides awakeFromNib")
 	func noAwakeFromNibOverridesRemain() {
 		let classes: [AnyClass] = [
 			MainWindow.self,
-			MainWindowChannelView.self,
-			MainWindowLoadingScreenView.self,
 			MainWindowTextView.self,
-			MemberList.self,
-			MemberListCell.self,
-			MemberListUserInfoPopover.self,
-			ContentNavigationOutlineView.self,
 			TextViewIRCFormattingMenu.self,
 			ApplicationController.self,
 		]
@@ -158,10 +99,10 @@ struct AppKitBridgeIsolationTests {
 			defer: false
 		)
 
-		#expect(window.serverList.tableColumns.isEmpty)
-		#expect(window.memberList.tableColumns.isEmpty)
+		#expect(window.serverList.numberOfRows == 0)
+		#expect(window.memberList.numberOfRows == 0)
 		#expect(window.inputTextField.textLayoutManager != nil)
-		#expect(window.loadingScreen.isHidden)
+		#expect(window.loadingScreen.viewIsVisible == false)
 		#expect(window.formattingMenu.formatterMenu.submenu?.items.isEmpty == false)
 		#expect(Bundle.main.path(forResource: "TVCMainWindow", ofType: "nib") == nil)
 	}

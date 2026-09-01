@@ -10,9 +10,19 @@ import SwiftUI
 struct ChannelSpotlightView: View {
 	@Bindable var model: ChannelSpotlightModel
 	let select: (ChannelSpotlightSearchResult) -> Void
-	let layoutChanged: () -> Void
+	let close: () -> Void
 
 	@FocusState private var searchIsFocused: Bool
+
+	private var contentHeight: CGFloat {
+		if model.searchText.isEmpty {
+			return 76
+		}
+		if model.displayedResults.isEmpty {
+			return 148
+		}
+		return 76 + CGFloat(min(model.displayedResults.count, 6)) * 54
+	}
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -71,12 +81,35 @@ struct ChannelSpotlightView: View {
 			}
 		}
 		.glassEffect(.regular, in: .rect(cornerRadius: 22))
+		.frame(width: 600, height: contentHeight)
 		.onAppear {
 			searchIsFocused = true
-			layoutChanged()
 		}
-		.onChange(of: model.searchText) { _, _ in layoutChanged() }
-		.onChange(of: model.displayedResults.count) { _, _ in layoutChanged() }
+		.onKeyPress(.downArrow) {
+			model.selectRelativeResult(offset: 1)
+			return .handled
+		}
+		.onKeyPress(.upArrow) {
+			model.selectRelativeResult(offset: -1)
+			return .handled
+		}
+		.onKeyPress(.escape) {
+			if model.searchText.isEmpty {
+				close()
+			} else {
+				model.searchText = ""
+			}
+			return .handled
+		}
+		.onKeyPress(characters: .decimalDigits, phases: .down) { keyPress in
+			guard keyPress.modifiers == .command,
+			      let number = Int(keyPress.characters),
+			      (0 ... 9).contains(number),
+			      let result = model.result(at: number == 0 ? 9 : number - 1)
+			else { return .ignored }
+			select(result)
+			return .handled
+		}
 	}
 
 	private func shortcut(for index: Int) -> String {

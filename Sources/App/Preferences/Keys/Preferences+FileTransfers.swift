@@ -44,12 +44,12 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		public static let requestReplyAction = PreferenceKey(
 			prefix + "Request Reply Action",
-			default: TXFileTransferRequestReply.openDialog
+			default: FileTransferRequestBehavior.openDialog
 		)
 
 		public static let ipAddressDetectionMethod = PreferenceKey(
 			prefix + "IP Address Detection Method",
-			default: TXFileTransferIPAddressMethodDetection.routerAndFirstParty
+			default: FileTransferIPAddressSource.routerAndFirstParty
 		)
 
 		public static let portRangeStart = PreferenceKey(prefix + "Port Range Start", default: UInt16(1115))

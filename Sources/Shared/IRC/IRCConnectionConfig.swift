@@ -286,6 +286,8 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
  envelope rather than as a class with a property per setting. */
 @objc(RCMConnectionConfigEnvelope)
 public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // nonisolated: value
+	private static let configurationCodingKey = "config"
+
 	public let config: IRCConnectionConfig
 
 	public init(config: IRCConnectionConfig) {
@@ -299,7 +301,7 @@ public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCodin
 	}
 
 	public init?(coder: NSCoder) {
-		guard let data = coder.decodeObject(of: NSData.self, forKey: "config") as Data?,
+		guard let data = coder.decodeObject(of: NSData.self, forKey: Self.configurationCodingKey) as Data?,
 		      let config = try? PropertyListDecoder().decode(IRCConnectionConfig.self, from: data)
 		else {
 			connectionConfigLogger.error("Received a connection configuration that could not be read")
@@ -322,6 +324,6 @@ public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCodin
 			return
 		}
 
-		coder.encode(data, forKey: "config")
+		coder.encode(data, forKey: Self.configurationCodingKey)
 	}
 }

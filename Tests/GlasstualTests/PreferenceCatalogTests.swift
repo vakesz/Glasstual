@@ -15,15 +15,8 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/** The registration domain and the three catalogue plists are generated from the
- key declarations. `scripts/generate-preference-plists.sh` writes the five files
- -- it runs as a build phase of the application and as `make
- generate-preference-plists` -- by compiling the very declarations these tests
- read, so what the bundle carries is that script's output and never a hand edit.
-
- These tests are what makes the checked-in copies safe to keep for the tools
- that read them: a declaration added, removed or re-typed without the generator
- having been re-run fails here rather than at launch. */
+/// Registration, import/export filtering, and storage routing are derived
+/// directly from typed key declarations. No bundled catalogue mirrors them.
 @Suite("Preference catalogue")
 struct PreferenceCatalogTests {
 	// MARK: - Declarations
@@ -83,106 +76,6 @@ struct PreferenceCatalogTests {
 		#expect(key.value == key.defaultValue)
 	}
 
-	// MARK: - Generated resources
-
-	enum Catalogue: String, CaseIterable, Sendable {
-		case keyCatalog = "PreferenceKeyMasterList"
-		case excludedFromContainer = "KeysExcludedFromContainer"
-		case excludedFromExport = "KeysExcludedFromExport"
-
-		var generated: [String: PropertyListValue] {
-			switch self {
-			case .keyCatalog: Preferences.GeneratedResources.keyCatalog
-			case .excludedFromContainer: Preferences.GeneratedResources.keysExcludedFromContainer
-			case .excludedFromExport: Preferences.GeneratedResources.keysExcludedFromExport
-			}
-		}
-	}
-
-	@Test("The checked-in catalogue plists match the declarations", arguments: Catalogue.allCases)
-	func cataloguePlistsMatchDeclarations(catalogue: Catalogue) throws {
-		let name = catalogue.rawValue
-		let generated = catalogue.generated
-		let storedValues = try #require(Self.plist(named: name))
-
-		let generatedNames = Set(generated.keys)
-		let storedNames = Set(storedValues.keys)
-
-		#expect(
-			generatedNames.subtracting(storedNames).sorted() == [],
-			"\(name).plist is missing declared entries"
-		)
-		#expect(
-			storedNames.subtracting(generatedNames).sorted() == [],
-			"\(name).plist has entries no declaration produces"
-		)
-
-		for (key, value) in storedValues {
-			guard let expected = generated[key] else {
-				continue
-			}
-
-			#expect(value == expected, "\(name).plist stores comparator \(value) for \(key)")
-		}
-	}
-
-	@Test(
-		"The checked-in registration plists match the declarations",
-		arguments: [
-			("RegisteredUserDefaults", PreferenceStorage.standard),
-			("RegisteredUserDefaultsInContainer", PreferenceStorage.container),
-		]
-	)
-	func registrationPlistsMatchDeclarations(name: String, storage: PreferenceStorage) throws {
-		let stored = try #require(Self.plist(named: name))
-		let generated = Preferences.registrationDomain(for: storage)
-
-		#expect(
-			Set(generated.keys).subtracting(stored.keys).sorted() == [],
-			"\(name).plist is missing declared defaults"
-		)
-		#expect(
-			Set(stored.keys).subtracting(generated.keys).sorted() == [],
-			"\(name).plist declares defaults no key produces"
-		)
-
-		for (key, value) in stored {
-			guard let declared = generated[key] else {
-				continue
-			}
-
-			#expect(Self.valuesMatch(value, declared), "\(name).plist stores a different default for \(key)")
-		}
-	}
-
-	/** The generator writes five files and only those five. A sixth plist in
-	 the directory is one nothing derives, which is exactly the hand-maintained
-	 state the generator replaced -- and the drift tests above would not see it,
-	 because they only look at names they already know. */
-	@Test("The Preferences resource directory holds only generated plists")
-	func preferencesDirectoryHoldsOnlyGeneratedPlists() throws {
-		let generated = Set(
-			Catalogue.allCases.map(\.rawValue) + ["RegisteredUserDefaults", "RegisteredUserDefaultsInContainer"]
-		)
-
-		let directory = try #require(
-			Bundle.main.url(forResource: "PreferenceKeyMasterList", withExtension: "plist", subdirectory: "Preferences")
-		).deletingLastPathComponent()
-
-		let contents = try FileManager.default.contentsOfDirectory(
-			at: directory,
-			includingPropertiesForKeys: nil
-		)
-
-		let names = Set(contents.map { $0.deletingPathExtension().lastPathComponent })
-
-		#expect(
-			names.subtracting(generated).sorted() == [],
-			"the Preferences resource directory carries files the generator does not write"
-		)
-		#expect(generated.subtracting(names).sorted() == [], "a generated plist is missing from the bundle")
-	}
-
 	// MARK: - Catalogue membership
 
 	@Test("A name made at runtime is matched by its family")
@@ -212,21 +105,6 @@ struct PreferenceCatalogTests {
 	}
 
 	// MARK: - Helpers
-
-	private static func plist(named name: String) -> [String: PropertyListValue]? {
-		guard let url = Bundle.main.url(
-			forResource: name,
-			withExtension: "plist",
-			subdirectory: "Preferences"
-		),
-			let contents = try? Data(contentsOf: url),
-			let plist = try? PropertyListSerialization.propertyList(from: contents, format: nil)
-		else {
-			return nil
-		}
-
-		return [String: PropertyListValue](propertyList: plist)
-	}
 
 	/** Archived colours are not byte-identical between two archives of the same
 	 colour, and a number that was written as a real compares equal to the same

@@ -36,18 +36,6 @@ struct ObjCRuntimeNameTests {
 		#expect(NSStringFromClass(LogLineArchive.self) == "TVCLogLine")
 	}
 
-	/// A window's saved frame is keyed by these strings in the user's defaults.
-	/// They used to come from `NSStringFromClass`; they are written down now, and
-	/// this is what stops one being edited without meaning to.
-	@Test("A window's saved-frame key keeps the string already on disk")
-	func windowStateKeysArePinned() {
-		#expect(WindowStateKey.preferences.rawValue == "TDCPreferencesController")
-		#expect(WindowStateKey.serverChannelList.rawValue == "TDCServerChannelListDialog")
-		#expect(WindowStateKey.about.rawValue == "TDCAboutDialog")
-		#expect(WindowStateKey.channelSpotlight.rawValue == "TDCChannelSpotlightController")
-		#expect(WindowStateKey.fileTransfers.rawValue == "TDCFileTransferDialog")
-	}
-
 	/// `publisher(for:)` resolves a key path through key-value observing, which
 	/// needs the property visible to the Objective-C runtime: a key path to a
 	/// property without `@objc` has no KVC string and the observation traps the

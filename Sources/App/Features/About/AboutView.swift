@@ -10,19 +10,18 @@
  *
  *********************************************************************** */
 
-import AppKit
 import SwiftUI
 
 @MainActor
 struct AboutView: View {
 	let content: AboutContent
-	let applicationIcon: NSImage
+	let applicationIcon: Image
 	let openAcknowledgements: () -> Void
 	let close: () -> Void
 
 	var body: some View {
 		VStack(spacing: 0) {
-			Image(nsImage: applicationIcon)
+			applicationIcon
 				.resizable()
 				.scaledToFit()
 				.frame(width: 98, height: 98)

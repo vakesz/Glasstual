@@ -35,7 +35,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import GlasstualPluginKit
 import os
 import SwiftUI
@@ -62,8 +61,6 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		category: "Extension['Smiley Converter']"
 	)
 
-	private var preferencesPane: NSView?
-
 	private let conversionSnapshot = Mutex(SmileyConversionSnapshot.empty)
 	private var host: PluginHostContext?
 
@@ -80,11 +77,6 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		preferencesPane = NSHostingView(
-			rootView: SmileyConverterPreferencesView(defaults: host.defaults) { [weak self] in
-				self?.preferenceChanged(nil)
-			}
-		)
 		rebuildConversionSnapshot()
 	}
 
@@ -128,12 +120,13 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		rebuildConversionSnapshot()
 	}
 
-	var pluginPreferencesPaneView: NSView? {
-		preferencesPane
-	}
-
-	var pluginPreferencesPaneMenuItemName: String {
-		String(localized: .BasicLanguage.preferencesPaneTitle)
+	var pluginPreferencesPane: PluginPreferencesPane? {
+		guard let host else { return nil }
+		return PluginPreferencesPane(title: String(localized: .BasicLanguage.preferencesPaneTitle)) { [weak self] in
+			SmileyConverterPreferencesView(defaults: host.defaults) {
+				self?.preferenceChanged(nil)
+			}
+		}
 	}
 
 	/** Called from the message renderer's background queue. The conversion table

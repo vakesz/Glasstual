@@ -36,17 +36,8 @@
  *
  *********************************************************************** */
 
-import AppKit
-
 @MainActor
-extension IRCClient: ChannelBanListSheetDelegate, ServerChannelListDialogDelegate {
-	private var clientDialogWindowKey: String {
-		WindowController.windowDescription(
-			forClass: ServerChannelListDialog.self,
-			inRelationTo: uniqueIdentifier
-		)
-	}
-
+extension IRCClient: ChannelBanListSheetDelegate {
 	func createChannelInviteExceptionListSheet() {
 		createChannelBanListSheet(entryType: .inviteException)
 	}
@@ -64,8 +55,7 @@ extension IRCClient: ChannelBanListSheetDelegate, ServerChannelListDialogDelegat
 	}
 
 	func createChannelBanListSheet(entryType: ChannelBanListEntryType) {
-		let windowController = SharedApplication.sharedWindowController()
-		windowController.popMainWindowSheetIfExists()
+		AppController.shared.mainWindow.presentationModel.closePresentedSheet()
 
 		guard let mainWindow = AppController.shared.mainWindow,
 		      let channel = mainWindow.selectedChannel,
@@ -75,7 +65,6 @@ extension IRCClient: ChannelBanListSheetDelegate, ServerChannelListDialogDelegat
 		sheet.delegate = self
 		sheet.window = mainWindow
 		sheet.start()
-		windowController.addWindow(toWindowList: sheet)
 	}
 
 	public func channelBanListSheetOnUpdate(_ sender: ChannelBanListSheet) {
@@ -89,38 +78,13 @@ extension IRCClient: ChannelBanListSheetDelegate, ServerChannelListDialogDelegat
 		for change in sender.listOfChanges ?? [] {
 			sendModes(change, withParametersString: nil, in: channel)
 		}
-
-		SharedApplication.sharedWindowController().removeWindow(fromWindowList: sender)
 	}
 
-	func channelListDialogWindowKey() -> String {
-		clientDialogWindowKey
+	func channelListSession() -> ServerChannelListSession? {
+		SharedApplication.sharedApplicationScenes().serverChannelList(for: uniqueIdentifier)
 	}
 
-	func channelListDialog() -> ServerChannelListDialog? {
-		SharedApplication.sharedWindowController().window(fromWindowList: clientDialogWindowKey)
-			as? ServerChannelListDialog
-	}
-
-	func createChannelListDialog() {
-		let windowController = SharedApplication.sharedWindowController()
-		guard windowController.maybeBringWindowForward(clientDialogWindowKey) == false else { return }
-
-		let dialog = ServerChannelListDialog(client: self)
-		dialog.delegate = self
-		dialog.show()
-		windowController.addWindow(toWindowList: dialog, withDescription: clientDialogWindowKey)
-	}
-
-	public func serverChannelListDialogOnUpdate(_ sender: ServerChannelListDialog) {
-		requestChannelList(withArguments: sender.serverSideListArguments)
-	}
-
-	public func serverChannelListDialog(_: ServerChannelListDialog, joinChannels channels: [String]) {
-		joinUnlistedChannelsAndSelectBestMatch(channels)
-	}
-
-	public func serverChannelDialogWillClose(_: ServerChannelListDialog) {
-		SharedApplication.sharedWindowController().removeWindow(fromWindowList: clientDialogWindowKey)
+	func openServerChannelList() {
+		SharedApplication.sharedApplicationScenes().openServerChannelList(for: self)
 	}
 }

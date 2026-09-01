@@ -464,7 +464,7 @@ extension PluginManager {
 			}
 		}
 
-		TDCAlert.alert(
+		Alerts.alert(
 			withMessage: PromptStrings.Plugin.unsignedBody,
 			title: PromptStrings.Plugin.unsignedTitle(pluginNames: bundleNames.joined(separator: ", ")),
 			defaultButton: PromptStrings.Action.confirmation,
@@ -482,7 +482,7 @@ extension PluginManager {
 
 		let bundlesName = Bundle.textual_formattedDisplayNames(for: obsoleteBundles)
 
-		TDCAlert.alert(
+		Alerts.alert(
 			withMessage: PromptStrings.Plugin.incompatibleBody(
 				minimumVersion: PluginCompatibility.minimumHostVersion
 			),
@@ -639,8 +639,8 @@ public nonisolated extension PluginManager { // nonisolated: pure
 		Self.loadedPluginItems
 			.filter { $0.supportsFeature(.preferencePane) }
 			.sorted {
-				($0.pluginPreferencesPaneMenuItemTitle ?? "")
-					.compare($1.pluginPreferencesPaneMenuItemTitle ?? "") == .orderedAscending
+				($0.pluginPreferencesPane?.title ?? "")
+					.compare($1.pluginPreferencesPane?.title ?? "") == .orderedAscending
 			}
 	}
 }

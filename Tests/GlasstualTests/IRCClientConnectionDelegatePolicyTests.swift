@@ -101,7 +101,7 @@ struct IRCClientConnectionDelegatePolicyTests {
 	@Test("Disconnecting preserves server lines already queued for rendering")
 	func disconnectPreservesQueuedServerLines() async {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: .zero,
 			styleMask: .borderless,
 			backing: .buffered,

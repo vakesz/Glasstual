@@ -11,23 +11,23 @@ import Security
 import SecurityInterface
 import SwiftUI
 
-enum ServerPropertiesSelection: UInt, CaseIterable, Hashable {
-	case `default` = 0
-	case addressBook = 1
-	case autojoin = 2
-	case connectCommands = 3
-	case encoding = 4
-	case general = 5
-	case identity = 6
-	case highlights = 7
-	case disconnectMessages = 8
-	case zncBouncer = 10
-	case clientCertificate = 12
-	case floodControl = 13
-	case networkSocket = 14
-	case proxyServer = 15
-	case redundancy = 16
-	case newIgnoreEntry = 200
+enum ServerPropertiesSelection: CaseIterable, Hashable {
+	case `default`
+	case addressBook
+	case autojoin
+	case connectCommands
+	case encoding
+	case general
+	case identity
+	case highlights
+	case disconnectMessages
+	case zncBouncer
+	case clientCertificate
+	case floodControl
+	case networkSocket
+	case proxyServer
+	case redundancy
+	case newIgnoreEntry
 }
 
 func serverPropertiesModel<Model>(_ value: Any, as _: Model.Type) -> Model {
@@ -45,12 +45,10 @@ public protocol ServerPropertiesSheetDelegate: AnyObject {
 
 @objc(TDCServerPropertiesSheet)
 @MainActor
-public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClientPrototype,
+public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	AddressBookSheetDelegate, ChannelPropertiesSheetDelegate, HighlightEntrySheetDelegate,
 	ServerEndpointListSheetDelegate
 {
-	private static let contentSize = NSSize(width: 900, height: 650)
-
 	public private(set) var client: IRCClient?
 	public private(set) var clientId: String?
 	let model: ServerPropertiesModel
@@ -103,34 +101,24 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 			chooseCertificate: { [weak self] in self?.chooseCertificate() },
 			resetCertificate: { [weak self] in self?.resetCertificate() },
 			copyCertificateFingerprint: { [weak self] value in self?.copyCertificateFingerprint(value) },
-			showCipherSuites: { [weak self] in self?.showCipherSuites() },
-			openProxySettings: { PreferencesController.openProxySettingsInSystemPreferences() }
+			showCipherSuites: { [weak self] in self?.showCipherSuites() }
 		)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: Self.contentSize),
-			styleMask: [.titled, .resizable, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
+		setContent(
+			ServerPropertiesView(model: model, actions: actions)
+				.frame(minWidth: 760, idealWidth: 900, minHeight: 520, idealHeight: 650)
 		)
-		hostedSheet.contentViewController = NSHostingController(
-			rootView: ServerPropertiesView(model: model, actions: actions)
-		)
-		hostedSheet.contentMinSize = NSSize(width: 760, height: 520)
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.preventsApplicationTerminationWhenModal = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.title = ServerPropertiesStrings.Navigation.serverProperties
-		sheet = hostedSheet
 	}
 
 	public func start() {
-		start(withSelection: ServerPropertiesSelection.default.rawValue, context: nil)
+		start(at: .default, context: nil)
 	}
 
-	public func start(withSelection selectionValue: UInt, context: Any?) {
-		let requested = ServerPropertiesSelection(rawValue: selectionValue) ?? .default
+	func start(at destination: ServerPropertiesDestination, context: Any?) {
+		let requested: ServerPropertiesSelection = switch destination {
+		case .default: .default
+		case .addressBook: .addressBook
+		case .newIgnoreEntry: .newIgnoreEntry
+		}
 		model.selection = switch requested {
 		case .default: .general
 		case .newIgnoreEntry: .addressBook
@@ -162,7 +150,7 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 	}
 
 	private func editServerEndpoints() {
-		let controller = ServerEndpointListSheet(window: sheet)
+		let controller = ServerEndpointListSheet(window: window)
 		controller.delegate = self
 		controller.start(with: model.config.serverList)
 		serverEndpointSheet = controller
@@ -190,7 +178,7 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 	private func presentChannelSheet(config: ChannelConfig?) {
 		let controller = ChannelPropertiesSheet(config: config)
 		controller.delegate = self
-		controller.window = sheet
+		controller.window = window
 		controller.start()
 		channelSheet = controller
 	}
@@ -227,7 +215,7 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 	private func presentHighlightSheet(config: HighlightMatchCondition?) {
 		let controller = HighlightEntrySheet(config: config, channels: model.config.channelList)
 		controller.delegate = self
-		controller.window = sheet
+		controller.window = window
 		controller.start()
 		highlightSheet = controller
 	}
@@ -280,7 +268,7 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 
 	private func presentAddressBookSheet(_ controller: AddressBookSheet) {
 		controller.delegate = self
-		controller.window = sheet
+		controller.window = window
 		controller.start()
 		addressBookSheet = controller
 	}
@@ -357,7 +345,7 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
 		      let identities = result as? [SecIdentity], !identities.isEmpty
 		else {
-			TDCAlert.alert(
+			Alerts.alert(
 				withMessage: ServerPropertiesStrings.Certificate.noneAvailableExplanation,
 				title: ServerPropertiesStrings.Certificate.noneAvailableTitle,
 				defaultButton: PromptStrings.Action.confirmation,
@@ -369,8 +357,9 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 		clientCertificatePanel = panel
 		panel.setInformativeText(ServerPropertiesStrings.Certificate.chooseExplanation)
 		panel.setAlternateButtonTitle(PromptStrings.Action.cancel)
+		guard let hostWindow = AppController.shared.mainWindow?.ceDeepestWindow else { return }
 		panel.beginSheet(
-			for: sheet,
+			for: hostWindow,
 			modalDelegate: self,
 			didEnd: #selector(identityPanelDidEnd(_:returnCode:contextInfo:)),
 			contextInfo: nil,
@@ -404,9 +393,8 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 			forCipherListCollection: model.config.cipherSuites,
 			withProtocol: true
 		)
-		TDCAlert.alertSheet(
-			with: sheet,
-			body: ServerPropertiesStrings.CipherSuites.description(descriptions.joined(separator: "\n")),
+		Alerts.alert(
+			withMessage: ServerPropertiesStrings.CipherSuites.description(descriptions.joined(separator: "\n")),
 			title: ServerPropertiesStrings.CipherSuites.title(collectionName: ""),
 			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil,
@@ -427,9 +415,8 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 
 	private func underlyingConfigurationChanged(_ notification: Notification) {
 		guard let client = notification.object as? IRCClient else { return }
-		TDCAlert.alertSheet(
-			with: sheet.ceDeepestWindow,
-			body: ServerPropertiesStrings.ExternalChange.unsavedChangesWarning,
+		Alerts.alert(
+			withMessage: ServerPropertiesStrings.ExternalChange.unsavedChangesWarning,
 			title: ServerPropertiesStrings.ExternalChange.reloadTitle,
 			defaultButton: PromptStrings.Action.yes,
 			alternateButton: PromptStrings.Action.no,
@@ -456,7 +443,7 @@ public final class ServerPropertiesSheet: SheetBase, NSWindowDelegate, TDCClient
 		}
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		removeConfigurationDidChangeObserver()
 		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheetWillClose(self)
 	}

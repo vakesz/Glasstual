@@ -39,6 +39,10 @@
 import AppKit
 import CocoaExtensions
 
+private enum MenuServerSuppressionKey: String {
+	case deleteChannel = "delete_channel"
+}
+
 enum MenuServerActionPolicy {
 	static func canConnect(isConnecting: Bool, isConnected: Bool, isQuitting: Bool) -> Bool {
 		isConnecting == false && isConnected == false && isQuitting == false
@@ -51,7 +55,7 @@ enum MenuServerActionPolicy {
 
 @MainActor
 public extension MenuActionCoordinator {
-	func performServerChannelAction(_ action: TXMenuServerChannelAction, sender: Any?) {
+	func performServerChannelAction(_ action: MenuServerChannelAction, sender: Any?) {
 		switch action {
 		case .connect: connect(bypassingProxy: false)
 		case .connectBypassingProxy: connect(bypassingProxy: true)
@@ -101,13 +105,12 @@ public extension MenuActionCoordinator {
 
 	private func showServerChannelList() {
 		guard let client = selectedClient, client.isLoggedIn else { return }
-		client.createChannelListDialog()
-		client.requestChannelList()
+		client.openServerChannelList()
 	}
 
 	private func addServer() {
-		windowController.popMainWindowSheetIfExists()
-		present(ServerPropertiesSheet(client: nil)) { $0.start(withSelection: 0, context: nil) }
+		mainWindow.presentationModel.closePresentedSheet()
+		present(ServerPropertiesSheet(client: nil)) { $0.start() }
 	}
 
 	private func duplicateServer() {
@@ -128,7 +131,7 @@ public extension MenuActionCoordinator {
 		      client.isConnecting == false,
 		      client.isConnected == false
 		else { return }
-		let completion: TDCAlertCompletionBlock = { outcome in
+		let completion: AlertCompletion = { outcome in
 			guard outcome.response == .default,
 			      client.isConnecting == false,
 			      client.isConnected == false
@@ -136,7 +139,7 @@ public extension MenuActionCoordinator {
 			world.destroy(client)
 			world.save()
 		}
-		TDCAlert.alert(
+		Alerts.alert(
 			withMessage: PromptStrings.Deletion.warning(for: .server),
 			title: PromptStrings.Deletion.confirmationTitle,
 			defaultButton: PromptStrings.Action.yes,
@@ -164,7 +167,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func addChannel() {
-		windowController.popMainWindowSheetIfExists()
+		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient else { return }
 		present(ChannelPropertiesSheet(client: client)) { $0.start() }
 	}
@@ -176,17 +179,17 @@ public extension MenuActionCoordinator {
 			world.save()
 			return
 		}
-		let completion: TDCAlertCompletionBlock = { outcome in
+		let completion: AlertCompletion = { outcome in
 			guard outcome.response == .default else { return }
 			world.destroy(channel)
 			world.save()
 		}
-		TDCAlert.alert(
+		Alerts.alert(
 			withMessage: PromptStrings.Deletion.warning(for: .channel),
 			title: PromptStrings.Deletion.confirmationTitle,
 			defaultButton: PromptStrings.Action.yes,
 			alternateButton: PromptStrings.Action.no,
-			suppressionKey: "delete_channel",
+			suppressionKey: MenuServerSuppressionKey.deleteChannel.rawValue,
 			suppressionText: nil,
 			completionBlock: completion
 		)

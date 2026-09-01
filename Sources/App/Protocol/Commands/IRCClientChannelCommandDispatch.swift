@@ -340,8 +340,7 @@ extension IRCClient {
 			closeCommandChannel(parsed, targetChannel: targetChannel)
 		case .list:
 			guard isLoggedIn else { return true }
-			createChannelListDialog()
-			requestChannelList()
+			openServerChannelList()
 		case .setcolor:
 			setColorForCommandNickname(parsed)
 		default:
@@ -440,7 +439,7 @@ extension IRCClient {
 			return true
 		}
 		if let existingQuery = findChannel(nickname) {
-			let shouldDelete = TDCAlert.modalAlert(
+			let shouldDelete = Alerts.modalAlert(
 				withMessage: PromptStrings.Deletion.warning(for: .query),
 				title: PromptStrings.Deletion.existingQueryTitle(name: existingQuery.name),
 				defaultButton: PromptStrings.Action.yes,

@@ -63,31 +63,22 @@ struct ServerNicknameChangeFeatureTests {
 		#expect(model.normalizedNickname == "NewNick")
 	}
 
-	@Test("The adapter hosts the SwiftUI sheet and forwards its outcome to the delegate")
-	func adapterKeepsClientWindowAndDelegateContracts() {
+	@Test("The sheet session keeps client identity and forwards its outcome")
+	func sessionKeepsClientAndDelegateContracts() {
 		let client = GLTTestClient()
 		client.userNickname = "OldNick"
 		let adapter = ServerChangeNicknameSheet(client: client)
-		let clientPrototype: TDCClientPrototype = adapter
+		let clientPrototype: ClientScoped = adapter
 		let delegate = ServerNicknameChangeDelegateSpy()
 
 		adapter.delegate = delegate
 
 		#expect(adapter.client === client)
 		#expect(clientPrototype.clientId == client.uniqueIdentifier)
-		#expect(adapter.sheet.delegate === adapter)
-		#expect(adapter.sheet.contentViewController is NSHostingController<ServerNicknameChangeView>)
-		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
-		#expect(adapter.sheet.isReleasedWhenClosed == false)
-		#expect(adapter.sheet.isRestorable == false)
-		#expect(adapter.sheet.tabbingMode == .disallowed)
-		#expect(adapter.sheet.contentMinSize == NSSize(width: 350, height: 131))
-		#expect(adapter.sheet.contentMaxSize == NSSize(width: 350, height: 131))
-
 		adapter.ok(nil)
 		#expect(delegate.acceptedNickname == "OldNick")
 
-		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
+		adapter.sheetDidEnd(withReturnCode: 0)
 		#expect(delegate.didClose)
 	}
 }

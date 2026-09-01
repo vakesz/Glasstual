@@ -41,7 +41,7 @@ import CocoaExtensions
 private let textViewWidthPadding: CGFloat = 1.0
 private let textViewHeightPadding: CGFloat = 2.0
 
-public enum TVCTextViewCaretLocation: UInt {
+public enum TextViewCaretLocation: UInt {
 	case onlyLine
 	case firstLine
 	case middle
@@ -344,7 +344,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		return boundingRect.offsetBy(dx: containerOrigin.x, dy: containerOrigin.y)
 	}
 
-	public var caretLocation: TVCTextViewCaretLocation {
+	public var caretLocation: TextViewCaretLocation {
 		let currentStringLength = stringLength
 
 		if currentStringLength == 0 {

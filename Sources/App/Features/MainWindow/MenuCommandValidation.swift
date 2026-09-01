@@ -40,6 +40,16 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 
+private enum MenuValidationConstants {
+	static let maximumDictionaryLookupLength = 40
+	static let maximumDictionaryMenuTitleLength = 25
+	static let truncatedDictionaryMenuTitleLength = 24
+	static let preferredWebServicesKey = "NSPreferredWebServices"
+	static let webSearchProviderKey = "NSWebServicesProviderWebSearch"
+	static let defaultDisplayNameKey = "NSDefaultDisplayName"
+	static let fallbackSearchProviderName = "Google"
+}
+
 @MainActor
 extension MenuActionCoordinator {
 	private var selectedViewController: LogController? {
@@ -460,23 +470,27 @@ extension MenuActionCoordinator {
 	private func validateDictionaryLookup(_ item: NSMenuItem) -> Bool {
 		guard let selection = selectedBackingView?.selection else { return false }
 		let length = selection.count
-		guard length > 0, length <= 40 else {
+		guard length > 0, length <= MenuValidationConstants.maximumDictionaryLookupLength else {
 			item.title = ApplicationStrings.lookUpInDictionary
 			return false
 		}
 
-		let titleSelection = length > 25
-			? "\(selection.prefix(24).trimmingCharacters(in: .whitespacesAndNewlines))…"
+		let truncatedSelection = selection
+			.prefix(MenuValidationConstants.truncatedDictionaryMenuTitleLength)
+			.trimmingCharacters(in: .whitespacesAndNewlines)
+		let titleSelection = length > MenuValidationConstants.maximumDictionaryMenuTitleLength
+			? "\(truncatedSelection)…"
 			: selection
 		item.title = ApplicationStrings.lookUpInDictionary(titleSelection)
 		return true
 	}
 
 	private var searchProviderName: String {
-		let services = UserDefaults.standard.dictionary(forKey: "NSPreferredWebServices")
-		let provider = services?["NSWebServicesProviderWebSearch"]
+		let services = UserDefaults.standard.dictionary(forKey: MenuValidationConstants.preferredWebServicesKey)
+		let provider = services?[MenuValidationConstants.webSearchProviderKey]
 			.flatMap(PropertyListValue.init(propertyList:))
 
-		return provider?.dictionary?["NSDefaultDisplayName"]?.string ?? "Google"
+		return provider?.dictionary?[MenuValidationConstants.defaultDisplayNameKey]?.string
+			?? MenuValidationConstants.fallbackSearchProviderName
 	}
 }

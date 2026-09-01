@@ -59,7 +59,7 @@ public extension MenuActionCoordinator {
 		menuController.channelViewGeneralMenu.item(for: .webChannelMenu)?.submenu =
 			menuController.mainMenuChannelMenu.copy() as? NSMenu
 
-		SharedApplication.sharedFileTransferDialog().startUsingDownloadDestinationURL()
+		SharedApplication.sharedFileTransferCenter().startUsingDownloadDestinationURL()
 		applyMenuSymbols()
 
 		notifications.observe(NSMenu.willSendActionNotification) { [weak self] notification in
@@ -78,11 +78,11 @@ public extension MenuActionCoordinator {
 	}
 
 	func prepareForApplicationTermination() {
-		SharedApplication.sharedFileTransferDialog().prepareForApplicationTermination()
+		SharedApplication.sharedFileTransferCenter().prepareForApplicationTermination()
 	}
 
 	func preferencesChanged() {
-		SharedApplication.sharedFileTransferDialog().clearIPAddress()
+		SharedApplication.sharedFileTransferCenter().clearIPAddress()
 	}
 
 	func menuWillOpen(_: NSMenu) {

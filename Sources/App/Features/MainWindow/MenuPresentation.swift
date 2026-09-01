@@ -94,7 +94,7 @@ public enum MenuPresentation {
 
 		let reply = NSMenuItem(
 			title: MessageMenuStrings.reply,
-			action: #selector(TXMenuController.replyToMessage(_:)),
+			action: #selector(MenuController.replyToMessage(_:)),
 			keyEquivalent: ""
 		)
 		reply.target = target
@@ -114,7 +114,7 @@ public enum MenuPresentation {
 		for emoji in ["👍", "❤️", "😂", "😮", "😢", "👎"] {
 			let item = NSMenuItem(
 				title: emoji,
-				action: #selector(TXMenuController.reactToMessage(_:)),
+				action: #selector(MenuController.reactToMessage(_:)),
 				keyEquivalent: ""
 			)
 			item.target = target
@@ -127,7 +127,7 @@ public enum MenuPresentation {
 
 		let other = NSMenuItem(
 			title: MessageMenuStrings.otherReaction,
-			action: #selector(TXMenuController.reactToMessageWithOtherEmoji(_:)),
+			action: #selector(MenuController.reactToMessageWithOtherEmoji(_:)),
 			keyEquivalent: ""
 		)
 		other.target = target

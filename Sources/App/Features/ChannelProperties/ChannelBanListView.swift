@@ -6,6 +6,13 @@
 import SwiftUI
 
 struct ChannelBanListView: View {
+	private enum Layout {
+		static let minimumWidth: CGFloat = 580
+		static let idealWidth: CGFloat = 680
+		static let minimumHeight: CGFloat = 320
+		static let idealHeight: CGFloat = 400
+	}
+
 	@Bindable var model: ChannelBanListModel
 	let heading: String
 	let update: () -> Void
@@ -83,5 +90,11 @@ struct ChannelBanListView: View {
 			.padding(12)
 		}
 		.onExitCommand(perform: close)
+		.frame(
+			minWidth: Layout.minimumWidth,
+			idealWidth: Layout.idealWidth,
+			minHeight: Layout.minimumHeight,
+			idealHeight: Layout.idealHeight
+		)
 	}
 }

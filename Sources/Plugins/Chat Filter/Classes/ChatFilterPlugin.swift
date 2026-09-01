@@ -35,11 +35,9 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 import SwiftUI
-import UniformTypeIdentifiers
 
 @objc(TPI_ChatFilterExtension)
 final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling,
@@ -47,7 +45,6 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 {
 	private static let defaultsKey = "Glasstual Chat Filter Extension -> Filters"
 
-	private var preferencesPane: NSView?
 	private var store: ChatFilterStore?
 	private var engine: ChatFilterEngine?
 	private var defaultsObserver: NSObjectProtocol?
@@ -81,14 +78,6 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		}
 		loadFilters()
 
-		preferencesPane = NSHostingView(
-			rootView: ChatFilterPreferencesView(
-				store: store,
-				clients: { Self.clientOptions(from: host.clients) },
-				export: { [weak self] filter in self?.export(filter) }
-			)
-		)
-
 		defaultsObserver = NotificationCenter.default.addObserver(
 			forName: UserDefaults.didChangeNotification,
 			object: defaults,
@@ -103,18 +92,19 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 			NotificationCenter.default.removeObserver(defaultsObserver)
 		}
 		defaultsObserver = nil
-		preferencesPane = nil
 		engine = nil
 		store = nil
 		host = nil
 	}
 
-	var pluginPreferencesPaneView: NSView? {
-		preferencesPane
-	}
-
-	var pluginPreferencesPaneMenuItemName: String {
-		String(localized: .TPIChatFilterExtension.preferencesPaneTitle)
+	var pluginPreferencesPane: PluginPreferencesPane? {
+		guard let store, let host else { return nil }
+		return PluginPreferencesPane(title: String(localized: .TPIChatFilterExtension.preferencesPaneTitle)) {
+			ChatFilterPreferencesView(
+				store: store,
+				clients: { Self.clientOptions(from: host.clients) }
+			)
+		}
 	}
 
 	private func loadFilters() {
@@ -136,22 +126,6 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 			isSaving = false
 		} else {
 			loadFilters()
-		}
-	}
-
-	private func export(_ filter: ChatFilter) {
-		guard let window = NSApp.keyWindow else { return }
-		let panel = NSSavePanel()
-		panel.allowedContentTypes = [.propertyList]
-		panel.canCreateDirectories = true
-		panel.nameFieldStringValue = "filter.plist"
-		panel.beginSheetModal(for: window) { response in
-			guard response == .OK, let url = panel.url else { return }
-			do {
-				try filter.write(to: url)
-			} catch {
-				NSAlert(error: error).beginSheetModal(for: window)
-			}
 		}
 	}
 

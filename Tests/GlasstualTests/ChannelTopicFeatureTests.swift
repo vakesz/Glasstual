@@ -106,7 +106,7 @@ struct ChannelTopicFeatureTests {
 		channel.topic = "first\n\u{02}bold"
 
 		let adapter = ChannelModifyTopicSheet(channel: channel)
-		let channelPrototype: TDCChannelPrototype = adapter
+		let channelPrototype: ChannelScoped = adapter
 		let delegate = ChannelTopicDelegateSpy()
 		adapter.delegate = delegate
 
@@ -115,19 +115,10 @@ struct ChannelTopicFeatureTests {
 		#expect(channelPrototype.clientId == client.uniqueIdentifier)
 		#expect(channelPrototype.channelId == channel.uniqueIdentifier)
 		#expect(adapter.model.formattedTopic == "first\n\u{02}bold")
-		#expect(adapter.sheet.delegate === adapter)
-		#expect(adapter.sheet.contentViewController is NSHostingController<ChannelTopicView>)
-		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
-		#expect(adapter.sheet.isReleasedWhenClosed == false)
-		#expect(adapter.sheet.isRestorable == false)
-		#expect(adapter.sheet.tabbingMode == .disallowed)
-		#expect(adapter.sheet.contentMinSize == NSSize(width: 600, height: 201))
-		#expect(adapter.sheet.contentMaxSize == NSSize(width: 600, height: 201))
-
 		adapter.ok(nil)
 		#expect(delegate.acceptedTopic == "first \u{02}bold")
 
-		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
+		adapter.sheetDidEnd(withReturnCode: 0)
 		#expect(delegate.didClose)
 	}
 }

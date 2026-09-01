@@ -146,7 +146,7 @@ struct IRCClientNotificationPolicyTests {
 	}
 
 	private func admission(
-		event: TXNotificationType,
+		event: NotificationEvent,
 		terminating: Bool = false,
 		collapsingNetsplit: Bool = false,
 		nicknameIsLocalUser: Bool = false,
@@ -166,7 +166,7 @@ struct IRCClientNotificationPolicyTests {
 	}
 
 	private func shouldPost(
-		event: TXNotificationType,
+		event: NotificationEvent,
 		enabled: Bool = true,
 		postWhileFocused: Bool = true,
 		focused: Bool = false,

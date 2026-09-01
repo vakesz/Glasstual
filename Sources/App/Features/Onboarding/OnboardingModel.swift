@@ -87,7 +87,7 @@ final class OnboardingSettings {
 
 	var styleName = "Bubbles"
 	var textSize: OnboardingTextSize = .medium
-	var appearance: TXPreferredAppearance = .inherited
+	var appearance: PreferredAppearance = .inherited
 
 	var notifyOnHighlight = true
 	var notifyOnPrivateMessage = true

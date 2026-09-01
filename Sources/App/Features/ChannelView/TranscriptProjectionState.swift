@@ -44,7 +44,7 @@ nonisolated enum TranscriptScrollbackMark: Equatable, Sendable { // nonisolated:
 
 nonisolated struct TranscriptDeliveryUpdate: Equatable, Sendable { // nonisolated: value
 	let lineNumber: String
-	let state: TVCLogLineDeliveryState
+	let state: LogLineDeliveryState
 	let messageIdentifier: String?
 	let reason: String?
 }
@@ -191,7 +191,7 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 
 	mutating func updateDelivery(
 		lineNumber: String,
-		state: TVCLogLineDeliveryState,
+		state: LogLineDeliveryState,
 		messageIdentifier: String?,
 		reason: String?
 	) {

@@ -5,12 +5,7 @@
 
 import AppKit
 
-/* The app and its static menu graph are created in code. Keeping these as
- top-level values gives the weak delegate/menu seams application lifetime. */
-let application = Application.shared
-let applicationController = ApplicationController()
-let menuController = TXMenuController()
-applicationController.menuController = menuController
-application.delegate = applicationController
-
-application.run()
+/* NSApplicationMain performs AppKit's native process registration and launch
+ handoff. The principal Application class owns the code-only delegate and menu
+ graph, so no application nib is required. */
+_ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)

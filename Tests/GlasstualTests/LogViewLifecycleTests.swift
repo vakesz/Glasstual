@@ -5,6 +5,7 @@
 
 import AppKit
 @testable import Glasstual
+import SwiftUI
 import Testing
 
 @MainActor
@@ -42,7 +43,7 @@ struct LogViewLifecycleTests {
 	@Test("The transcript is a native AppKit view")
 	func transcriptUsesAppKit() {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: .zero,
 			styleMask: .borderless,
 			backing: .buffered,
@@ -58,7 +59,7 @@ struct LogViewLifecycleTests {
 	@Test("The view keeps only a weak controller reference")
 	func controllerCanDeallocate() throws {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: .zero,
 			styleMask: .borderless,
 			backing: .buffered,
@@ -85,7 +86,7 @@ struct LogViewLifecycleTests {
 			adjust: false,
 			reload: false
 		)
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: [.titled, .fullSizeContentView],
 			backing: .buffered,
@@ -93,13 +94,15 @@ struct LogViewLifecycleTests {
 		)
 		let controller = window.logControllers.controller(for: channel)
 		let logView = controller.ensureBackingView()
-		let host = MainWindowChannelView(frame: window.contentView?.bounds ?? .zero)
-		window.contentView = host
-		host.show(logView)
+		let host = NSHostingController(rootView: MainWindowTranscriptRepresentable(logView: logView))
+		host.preferredContentSize = NSSize(width: 800, height: 600)
+		window.contentViewController = host
+		window.setContentSize(NSSize(width: 800, height: 600))
 
 		channel.topic = "Native AppKit discussion"
 		await Task.yield()
-		host.layoutSubtreeIfNeeded()
+		window.contentView?.layoutSubtreeIfNeeded()
+		host.view.layoutSubtreeIfNeeded()
 
 		let topicField = try #require(
 			descendants(of: NSTextField.self, in: logView.view)
@@ -107,14 +110,14 @@ struct LogViewLifecycleTests {
 		)
 		#expect(topicField.isHidden == false)
 		#expect(topicField.frame.height > 0)
-		let topicFrame = topicField.convert(topicField.bounds, to: host)
-		#expect(topicFrame.maxY <= host.safeAreaRect.maxY + 0.5)
+		let topicFrame = topicField.convert(topicField.bounds, to: host.view)
+		#expect(topicFrame.maxY <= host.view.safeAreaRect.maxY + 0.5)
 	}
 
 	@Test("Links in the topic are native clickable links")
 	func topicLinksAreClickable() throws {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: .borderless,
 			backing: .buffered,
@@ -149,7 +152,7 @@ struct LogViewLifecycleTests {
 	@Test("A server view with no topic reserves no topic bar")
 	func serverViewHasNoEmptyTopicBar() throws {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: .borderless,
 			backing: .buffered,
@@ -170,7 +173,7 @@ struct LogViewLifecycleTests {
 	@Test("A short transcript starts at the bottom and grows upward")
 	func shortTranscriptIsBottomAnchored() throws {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: .borderless,
 			backing: .buffered,
@@ -194,7 +197,7 @@ struct LogViewLifecycleTests {
 	@Test("A long transcript uses ordinary top-aligned scrolling")
 	func longTranscriptUsesNormalScrolling() throws {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: .borderless,
 			backing: .buffered,
@@ -218,7 +221,7 @@ struct LogViewLifecycleTests {
 	@Test("The current-session marker draws a full-width native separator")
 	func currentSessionMarkerHasFullWidthSeparator() throws {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: .borderless,
 			backing: .buffered,
@@ -247,7 +250,7 @@ struct LogViewLifecycleTests {
 	@Test("The unread marker is a quiet hairline without a caption")
 	func unreadMarkerHasNoCaption() throws {
 		let client = IRCClient(config: ClientConfig())
-		let window = TVCMainWindow(
+		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 			styleMask: .borderless,
 			backing: .buffered,

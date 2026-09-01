@@ -64,19 +64,10 @@ struct NicknameColorFeatureTests {
 		expectColorsEqual(customModel.colorForPersistence, replacementColor)
 	}
 
-	@Test("The sheet hosts its model in a fixed, non-resizable window it built itself")
-	func sheetWindowIsBuiltAroundTheModelWithoutANib() throws {
+	@Test("The sheet session owns the nickname-specific model")
+	func sheetSessionOwnsItsModel() {
 		let adapter = NicknameColorSheet(nickname: "alice")
-		let hostingView = try #require(adapter.sheet.contentView as? NSHostingView<NicknameColorView>)
-
-		#expect(hostingView.rootView.model === adapter.model)
-		#expect(adapter.sheet.delegate === adapter)
-		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
-		#expect(adapter.sheet.isReleasedWhenClosed == false)
-		#expect(adapter.sheet.isRestorable == false)
-		#expect(adapter.sheet.tabbingMode == .disallowed)
-		#expect(adapter.sheet.contentMinSize == NSSize(width: 390, height: 112))
-		#expect(adapter.sheet.contentMaxSize == NSSize(width: 390, height: 112))
+		#expect(adapter.model.nickname == "alice")
 	}
 
 	@Test("Accepting writes the chosen color, and the default color clears it again")
@@ -95,7 +86,7 @@ struct NicknameColorFeatureTests {
 
 		let adapter = NicknameColorSheet(nickname: nickname)
 		adapter.delegate = delegate
-		adapter.nicknameColorChanged(customColor)
+		adapter.selectColor(customColor)
 		adapter.ok(nil)
 
 		let persistedColor = try #require(
@@ -104,13 +95,11 @@ struct NicknameColorFeatureTests {
 		expectColorsEqual(persistedColor, customColor)
 		#expect(delegate.didAccept)
 
-		let defaultColorButton = NSButton(checkboxWithTitle: "", target: nil, action: nil)
-		defaultColorButton.state = .on
-		adapter.useDefaultColorToggled(defaultColorButton)
+		adapter.setUsesDefaultColor(true)
 		adapter.ok(nil)
 		#expect(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: overrideKey) == nil)
 
-		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
+		adapter.sheetDidEnd(withReturnCode: 0)
 		#expect(delegate.didClose)
 	}
 

@@ -1,104 +1,111 @@
 /* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
+ * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+ * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import AppKit
+import Observation
+import SwiftUI
+
+public struct InputPromptRequest: Equatable, Sendable {
+	public let title: String
+	public let message: String
+	public let submitButtonTitle: String
+	public let cancelButtonTitle: String
+	public let initialValue: String
+
+	public init(
+		title: String,
+		message: String,
+		submitButtonTitle: String,
+		cancelButtonTitle: String,
+		initialValue: String = ""
+	) {
+		self.title = title
+		self.message = message
+		self.submitButtonTitle = submitButtonTitle
+		self.cancelButtonTitle = cancelButtonTitle
+		self.initialValue = initialValue
+	}
+}
+
+public enum InputPromptOutcome: Equatable, Sendable {
+	case submitted(String)
+	case cancelled
+}
 
 @MainActor
-public final class InputPrompt: NSObject {
-	/// The alert and the text field inside it. The field used to be handed
-	/// back through an `AutoreleasingUnsafeMutablePointer` out-parameter.
-	private static func makeAlert(
-		withMessage bodyText: String,
-		title titleText: String,
-		defaultButton buttonDefault: String,
-		alternateButton buttonAlternate: String?,
-		prefillString: String?
-	) -> (alert: NSAlert, textField: NSTextField) {
-		let textField = NSTextField()
-		textField.translatesAutoresizingMaskIntoConstraints = false
+@Observable
+final class InputPromptPresentation: Identifiable {
+	let id = UUID()
+	let request: InputPromptRequest
+	var value: String
 
-		textField.addConstraints([
-			NSLayoutConstraint(
-				item: textField,
-				attribute: .width,
-				relatedBy: .equal,
-				toItem: nil,
-				attribute: .notAnAttribute,
-				multiplier: 1.0,
-				constant: 295.0
-			),
-			NSLayoutConstraint(
-				item: textField,
-				attribute: .height,
-				relatedBy: .equal,
-				toItem: nil,
-				attribute: .notAnAttribute,
-				multiplier: 1.0,
-				constant: 22.0
-			),
-		])
+	@ObservationIgnored private var completion: (@MainActor (InputPromptOutcome) -> Void)?
 
-		textField.isEditable = true
-		textField.isSelectable = true
-		textField.drawsBackground = true
-		textField.isBordered = true
-		textField.isBezeled = true
-		textField.cell?.lineBreakMode = .byTruncatingTail
-
-		if let prefillString {
-			textField.stringValue = prefillString
-		}
-
-		let alert = NSAlert()
-		alert.alertStyle = .informational
-		alert.messageText = titleText
-		alert.informativeText = bodyText
-		alert.addButton(withTitle: buttonDefault)
-
-		if let buttonAlternate {
-			alert.addButton(withTitle: buttonAlternate)
-		}
-
-		alert.accessoryView = textField
-		alert.window.initialFirstResponder = textField
-
-		return (alert, textField)
+	init(
+		request: InputPromptRequest,
+		completion: @escaping @MainActor (InputPromptOutcome) -> Void
+	) {
+		self.request = request
+		value = request.initialValue
+		self.completion = completion
 	}
 
-	public static func prompt(
-		withMessage bodyText: String,
-		title titleText: String,
-		defaultButton buttonDefault: String,
-		alternateButton buttonAlternate: String?,
-		prefillString: String?,
-		completionBlock: @escaping (NSApplication.ModalResponse, String) -> Void
-	) {
-		let (alert, textField) = makeAlert(
-			withMessage: bodyText,
-			title: titleText,
-			defaultButton: buttonDefault,
-			alternateButton: buttonAlternate,
-			prefillString: prefillString
-		)
+	func finish(_ outcome: InputPromptOutcome) {
+		let completion = completion
+		self.completion = nil
+		completion?(outcome)
+	}
+}
 
-		let window = NSApp.keyWindow ?? NSApp.mainWindow
+@MainActor
+struct InputPromptView: View {
+	@Bindable var presentation: InputPromptPresentation
+	@FocusState private var inputIsFocused: Bool
 
-		if let window {
-			alert.beginSheetModal(for: window) { response in
-				completionBlock(response, textField.stringValue)
+	let submit: () -> Void
+	let cancel: () -> Void
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 16) {
+			VStack(alignment: .leading, spacing: 6) {
+				Text(verbatim: presentation.request.title)
+					.font(.headline)
+				Text(verbatim: presentation.request.message)
+					.foregroundStyle(.secondary)
+					.fixedSize(horizontal: false, vertical: true)
 			}
-		} else {
-			let response = alert.runModal()
-			completionBlock(response, textField.stringValue)
+
+			TextField("", text: $presentation.value)
+				.labelsHidden()
+				.focused($inputIsFocused)
+				.onSubmit(submit)
+
+			HStack {
+				Spacer()
+				Button(presentation.request.cancelButtonTitle, action: cancel)
+					.keyboardShortcut(.cancelAction)
+				Button(presentation.request.submitButtonTitle, action: submit)
+					.keyboardShortcut(.defaultAction)
+			}
 		}
+		.padding(20)
+		.frame(width: 380)
+		.onAppear {
+			inputIsFocused = true
+		}
+	}
+}
+
+public enum InputPrompt {
+	@MainActor
+	public static func present(
+		_ request: InputPromptRequest,
+		completion: @escaping @MainActor (InputPromptOutcome) -> Void
+	) {
+		AppController.shared.mainWindow.presentationModel.presentInputPrompt(
+			request,
+			completion: completion
+		)
 	}
 }

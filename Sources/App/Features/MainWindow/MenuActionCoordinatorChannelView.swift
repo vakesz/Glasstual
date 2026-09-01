@@ -41,7 +41,7 @@ import CocoaExtensions
 
 @MainActor
 public extension MenuActionCoordinator {
-	func performChannelViewAction(_ action: TXMenuChannelViewAction, sender: Any?) {
+	func performChannelViewAction(_ action: MenuChannelViewAction, sender: Any?) {
 		switch action {
 		case .reply: reply(to: sender)
 		case .react: react(to: sender)
@@ -108,8 +108,8 @@ public extension MenuActionCoordinator {
 		      let window = anchorView.window
 		else { return }
 
-		let popover = ReactionPopoverController(messageIdentifier: identifier)
-		popover.completionBlock = { [weak self] emoji, messageIdentifier in
+		let popover = ReactionPopover(messageIdentifier: identifier)
+		popover.completion = { [weak self] emoji, messageIdentifier in
 			self?.sendReaction(emoji, messageIdentifier: messageIdentifier)
 		}
 		let mouseLocation = window.convertPoint(fromScreen: NSEvent.mouseLocation)

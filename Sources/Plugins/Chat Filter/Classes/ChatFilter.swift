@@ -214,12 +214,15 @@ struct ChatFilter: Identifiable {
 	}
 
 	func write(to url: URL) throws {
-		let data = try PropertyListSerialization.data(
+		try propertyListData().write(to: url, options: .atomic)
+	}
+
+	func propertyListData() throws -> Data {
+		try PropertyListSerialization.data(
 			fromPropertyList: dictionaryValue,
 			format: .binary,
 			options: 0
 		)
-		try data.write(to: url, options: .atomic)
 	}
 
 	private mutating func migrateLegacyEvents(from dictionary: [String: PropertyListValue]) {

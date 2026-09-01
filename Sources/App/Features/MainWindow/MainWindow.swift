@@ -39,8 +39,7 @@
 import AppKit
 import CocoaExtensions
 import Foundation
-
-public typealias TVCMainWindow = MainWindow
+import SwiftUI
 
 public extension Notification.Name {
 	static let mainWindowAppearanceChanged = Notification.Name("TVCMainWindowAppearanceChangedNotification")
@@ -75,27 +74,38 @@ struct MainWindowMouseLocation: OptionSet {
 }
 
 enum MainWindowConstants {
-	static let toggleServerListToolbarItem = NSToolbarItem.Identifier("TVCMainWindowToggleServerList")
-	static let toggleMemberListToolbarItem = NSToolbarItem.Identifier("TVCMainWindowToggleMemberList")
-	static let treeItemPasteboardType = NSPasteboard.PasteboardType("com.vakesz.glasstual.tree-item")
 	static let restorableSelectionKey = "TVCMainWindowSelectedItem"
 	static let legacyRestorableSelectionKey = "TVCMainWindowSelectedItems"
+	static let legacyFrameKey = "NSWindow Frame -> Internal (v3) -> Main Window"
+	static let systemFrameKeyPrefix = "NSWindow Frame "
+	static let serverListMinimumWidth: CGFloat = 180
+	static let serverListIdealWidth: CGFloat = 220
+	static let serverListMaximumWidth: CGFloat = 280
+	static let conversationMinimumWidth: CGFloat = 360
+	static let memberListMinimumWidth: CGFloat = 160
+	static let memberListIdealWidth: CGFloat = 200
+	static let memberListMaximumWidth: CGFloat = 260
+	static let minimumSplitViewSlack: CGFloat = 60
+	static let minimumContentSize = NSSize(
+		width: serverListIdealWidth + conversationMinimumWidth + memberListMinimumWidth + minimumSplitViewSlack,
+		height: 500
+	)
+	static let minimumRestoredVisibleSize = NSSize(width: 80, height: 40)
 	static let sidebarFooterHeight: CGFloat = 32
 }
 
 enum MainWindowMemberListVisibilityPolicy {
+	static func isAvailable(isChannel: Bool, isLoggedIn: Bool) -> Bool {
+		isChannel && isLoggedIn
+	}
+
 	static func shouldExpand(
 		isChannel: Bool,
 		isLoggedIn: Bool,
 		isHiddenByUser: Bool
 	) -> Bool {
-		isChannel && isLoggedIn && isHiddenByUser == false
+		isAvailable(isChannel: isChannel, isLoggedIn: isLoggedIn) && isHiddenByUser == false
 	}
-}
-
-@inline(__always)
-func nativeLogController(_ controller: TVCLogController) -> LogController {
-	controller
 }
 
 @inline(__always)
@@ -105,28 +115,21 @@ func nativeChannel(_ item: IRCTreeItem?) -> IRCChannel? {
 
 @MainActor
 @objc(TVCMainWindow)
-public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, NSToolbarDelegate,
-	MemberListKeyEventDelegate, NSOutlineViewDataSource, NSOutlineViewDelegate, TVCServerListDelegate,
-	CustomKeyboardEventResponder
-{
-	private(set) var channelView: MainWindowChannelView!
-	public private(set) var mainMenuProxy: TXMenuControllerMainWindowProxy!
+public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomKeyboardEventResponder {
+	public private(set) var mainMenuProxy: MainWindowMenuProxy!
 	public private(set) var formattingMenu: TextViewIRCFormattingMenu!
 	private var inputContentView: MainWindowTextViewContentView!
+	let presentationModel = MainWindowPresentationModel()
+	private var hostingController: NSHostingController<MainWindowRootView>?
 
 	/// The input field is built by its content view so it can use TextKit 2.
 	public var inputTextField: MainWindowTextView! {
 		inputContentView?.textView
 	}
 
-	public private(set) var loadingScreen: MainWindowLoadingScreenView!
+	public private(set) var loadingScreen: MainWindowLoadingScreen!
 	public private(set) var memberList: MemberList!
 	public private(set) var serverList: ServerList!
-
-	public private(set) var contentSplitViewController: NSSplitViewController!
-	var serverListSplitItem: NSSplitViewItem!
-	var memberListSplitItem: NSSplitViewItem!
-	private var sidebarFooterController: NSSplitViewItemAccessoryViewController?
 	var inputHistory: InputHistory!
 	var nicknameCompletionStatus: NicknameCompletionStatus!
 	/// The views the tree items are drawn into. The window owns them; the items
@@ -152,8 +155,8 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	private var hasInstalledFieldEditorMenu = false
 	private let notifications = NotificationSubscriptions()
 
-	public var ignoreOutlineViewSelectionChanges = false
-	public var ignoreNextOutlineViewSelectionChange = false
+	public var ignoreServerListSelectionChanges = false
+	public var ignoreNextServerListSelectionChange = false
 
 	override public init(
 		contentRect: NSRect,
@@ -174,13 +177,18 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	private func installUIObjects() {
-		channelView = MainWindowChannelView(frame: .zero)
-		mainMenuProxy = TXMenuControllerMainWindowProxy()
+		mainMenuProxy = MainWindowMenuProxy()
 		formattingMenu = TextViewIRCFormattingMenu()
 		inputContentView = MainWindowTextViewContentView(frame: .zero)
-		loadingScreen = MainWindowLoadingScreenView(frame: .zero)
-		memberList = MemberList(frame: .zero)
-		serverList = ServerList(frame: .zero)
+		loadingScreen = MainWindowLoadingScreen()
+		memberList = MemberList()
+		serverList = ServerList()
+		serverList.attach(to: self)
+		presentationModel.attach(to: self)
+		loadingScreen.visibilityDidChange = { [weak self] visible in
+			self?.inputTextField.isEditable = !visible
+			self?.inputTextField.isSelectable = !visible
+		}
 	}
 
 	/// Completes the programmatic window graph and starts the application.
@@ -213,8 +221,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		installFormattingMenuDecorations()
 		updateAppearance()
 		_ = reloadLoadingScreen()
-		makeMain()
-		makeKeyAndOrderFront(nil)
 		loadWindowState()
 		SharedApplication.sharedThemeController().load()
 		controller.menuController?.prepareInitialState()
@@ -233,7 +239,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		AppController.shared.world
 	}
 
-	var menuController: TXMenuController {
+	var menuController: MenuController {
 		guard let menuController = AppController.shared.menuController else {
 			preconditionFailure("Menu controller is unavailable while the main window is loading")
 		}
@@ -254,335 +260,25 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		titlebarSeparatorStyle = .automatic
 		toolbarStyle = .unified
 		titleVisibility = .visible
-		installToolbar()
-		installContentSplitViewController()
-	}
-
-	private func installToolbar() {
-		let toolbar = NSToolbar(identifier: "TVCMainWindowToolbar")
-		toolbar.delegate = self
-		toolbar.allowsUserCustomization = false
-		toolbar.autosavesConfiguration = false
-		toolbar.displayMode = .iconOnly
-		self.toolbar = toolbar
-	}
-
-	public func toolbarAllowedItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-		[
-			MainWindowConstants.toggleServerListToolbarItem,
-			.sidebarTrackingSeparator,
-			.flexibleSpace,
-			.space,
-			MainWindowConstants.toggleMemberListToolbarItem,
-		]
-	}
-
-	public func toolbarDefaultItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-		[
-			MainWindowConstants.toggleServerListToolbarItem,
-			.sidebarTrackingSeparator,
-			.flexibleSpace,
-			MainWindowConstants.toggleMemberListToolbarItem,
-		]
-	}
-
-	public func toolbar(
-		_: NSToolbar,
-		itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
-		willBeInsertedIntoToolbar _: Bool
-	) -> NSToolbarItem? {
-		let symbolName: String
-		let label: String
-		let action: Selector
-		let navigational: Bool
-
-		switch itemIdentifier {
-		case MainWindowConstants.toggleServerListToolbarItem:
-			symbolName = "sidebar.left"
-			label = MainWindowStrings.Toolbar.toggleServerList
-			action = #selector(toggleServerListVisibility)
-			navigational = true
-		case MainWindowConstants.toggleMemberListToolbarItem:
-			symbolName = "sidebar.right"
-			label = MainWindowStrings.Toolbar.toggleMemberList
-			action = #selector(toggleMemberListVisibility)
-			navigational = false
-		default:
-			return nil
-		}
-
-		let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-		item.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: label)
-		item.label = label
-		item.paletteLabel = label
-		item.toolTip = label
-		item.isBordered = true
-		item.isNavigational = navigational
-		item.target = self
-		item.action = action
-		return item
+		installSwiftUIContent()
 	}
 }
 
 // MARK: - Window chrome
 
 private extension MainWindow {
-	func installContentSplitViewController() {
-		let serverController = NSViewController()
-		serverController.view = scrollView(containing: serverList, columnIdentifier: "ServerListColumn")
-		let channelController = NSViewController()
-		channelController.view = channelView
-		let memberController = NSViewController()
-		memberController.view = scrollView(containing: memberList, columnIdentifier: "MemberListColumn")
-
-		let sidebarItem = NSSplitViewItem(sidebarWithViewController: serverController)
-		sidebarItem.canCollapse = true
-		sidebarItem.minimumThickness = 180
-		sidebarItem.maximumThickness = 280
-		sidebarItem.preferredThicknessFraction = 0.22
-		sidebarItem.holdingPriority = .defaultLow + 1
-
-		let contentItem = NSSplitViewItem(viewController: channelController)
-		contentItem.automaticallyAdjustsSafeAreaInsets = true
-
-		let inspectorItem = NSSplitViewItem(inspectorWithViewController: memberController)
-		inspectorItem.canCollapse = true
-		inspectorItem.minimumThickness = 160
-		inspectorItem.maximumThickness = 260
-		inspectorItem.preferredThicknessFraction = 0.18
-		inspectorItem.holdingPriority = .defaultLow + 1
-
-		installSidebarFooter(on: sidebarItem)
-		installInputAccessory(on: contentItem)
-
-		let splitController = NSSplitViewController()
-		splitController.addSplitViewItem(sidebarItem)
-		splitController.addSplitViewItem(contentItem)
-		splitController.addSplitViewItem(inspectorItem)
-		splitController.splitView.dividerStyle = .thin
-		splitController.splitView.isVertical = true
-		splitController.splitView.autosaveName = "TVCMainWindowContentSplitView"
-
-		guard let contentView else {
-			assertionFailure("Main window has no content view")
-			return
-		}
-
-		let splitHost = splitController.view
-		splitHost.translatesAutoresizingMaskIntoConstraints = false
-		contentView.addSubview(splitHost)
-		loadingScreen.translatesAutoresizingMaskIntoConstraints = false
-		contentView.addSubview(loadingScreen)
-		NSLayoutConstraint.activate([
-			splitHost.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-			splitHost.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-			splitHost.topAnchor.constraint(equalTo: contentView.topAnchor),
-			splitHost.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-			loadingScreen.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-			loadingScreen.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-			loadingScreen.topAnchor.constraint(equalTo: contentView.topAnchor),
-			loadingScreen.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-		])
-
-		contentSplitViewController = splitController
-		serverListSplitItem = sidebarItem
-		memberListSplitItem = inspectorItem
-		configureLists()
-	}
-
-	func scrollView(containing tableView: NSTableView, columnIdentifier: String) -> NSScrollView {
-		let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(columnIdentifier))
-		column.resizingMask = .autoresizingMask
-		tableView.addTableColumn(column)
-		tableView.headerView = nil
-		tableView.columnAutoresizingStyle = .firstColumnOnlyAutoresizingStyle
-		tableView.backgroundColor = .clear
-
-		if let outlineView = tableView as? NSOutlineView {
-			outlineView.outlineTableColumn = column
-		}
-
-		let scrollView = NSScrollView()
-		scrollView.borderType = .noBorder
-		scrollView.drawsBackground = false
-		scrollView.hasHorizontalScroller = false
-		scrollView.hasVerticalScroller = true
-		scrollView.autohidesScrollers = true
-		scrollView.documentView = tableView
-		return scrollView
-	}
-
-	func installSidebarFooter(on sidebarItem: NSSplitViewItem) {
-		let addButton = NSButton(
-			image: NSImage(
-				systemSymbolName: "plus",
-				accessibilityDescription: MainWindowStrings.InputBar.addServerOrChannel
-			)!,
-			target: self,
-			action: #selector(presentSidebarAddMenu(_:))
+	func installSwiftUIContent() {
+		let rootView = MainWindowRootView(
+			model: presentationModel,
+			loadingScreen: loadingScreen,
+			serverList: serverList,
+			memberList: memberList,
+			inputContentView: inputContentView
 		)
-		configureSidebarButton(addButton, title: MainWindowStrings.InputBar.addServerOrChannel)
-
-		let searchButton = sidebarFooterButton(
-			symbolName: "magnifyingglass",
-			title: MainWindowStrings.InputBar.searchChannels,
-			action: #selector(TXMenuController.showChannelSpotlightWindow(_:))
-		)
-		let settingsButton = sidebarFooterButton(
-			symbolName: "ellipsis.circle",
-			title: MainWindowStrings.InputBar.more,
-			action: #selector(presentSidebarMoreMenu(_:))
-		)
-		settingsButton.target = self
-
-		let footer = NSView(frame: NSRect(x: 0, y: 0, width: 180, height: MainWindowConstants.sidebarFooterHeight))
-		footer.translatesAutoresizingMaskIntoConstraints = false
-		[addButton, searchButton, settingsButton].forEach(footer.addSubview)
-		NSLayoutConstraint.activate([
-			footer.heightAnchor.constraint(equalToConstant: MainWindowConstants.sidebarFooterHeight),
-			addButton.leadingAnchor.constraint(equalTo: footer.leadingAnchor, constant: 10),
-			addButton.centerYAnchor.constraint(equalTo: footer.centerYAnchor),
-			settingsButton.trailingAnchor.constraint(equalTo: footer.trailingAnchor, constant: -10),
-			settingsButton.centerYAnchor.constraint(equalTo: footer.centerYAnchor),
-			searchButton.trailingAnchor.constraint(equalTo: settingsButton.leadingAnchor, constant: -6),
-			searchButton.centerYAnchor.constraint(equalTo: footer.centerYAnchor),
-			searchButton.leadingAnchor.constraint(greaterThanOrEqualTo: addButton.trailingAnchor, constant: 8),
-		])
-
-		let accessory = NSSplitViewItemAccessoryViewController()
-		accessory.view = footer
-		accessory.automaticallyAppliesContentInsets = true
-		sidebarItem.addBottomAlignedAccessoryViewController(accessory)
-		sidebarFooterController = accessory
-	}
-
-	func installInputAccessory(on contentItem: NSSplitViewItem) {
-		guard let inputBar = inputTextField.contentView else { return }
-		inputBar.removeFromSuperview()
-		inputBar.translatesAutoresizingMaskIntoConstraints = true
-		inputBar.autoresizingMask = [.width, .height]
-
-		let glass = NSGlassEffectView(frame: NSRect(x: 0, y: 0, width: 400, height: 44))
-		glass.cornerRadius = 22
-		glass.contentView = inputBar
-		glass.style = .regular
-
-		let accessory = NSSplitViewItemAccessoryViewController()
-		accessory.view = glass
-		accessory.automaticallyAppliesContentInsets = true
-		contentItem.addBottomAlignedAccessoryViewController(accessory)
-	}
-
-	func configureLists() {
-		serverList.style = .sourceList
-		serverList.selectionHighlightStyle = .regular
-		serverList.usesAutomaticRowHeights = false
-		serverList.rowSizeStyle = .custom
-		serverList.rowHeight = 28
-		serverList.indentationPerLevel = 14
-		serverList.floatsGroupRows = false
-
-		memberList.style = .sourceList
-		memberList.selectionHighlightStyle = .regular
-		memberList.usesAutomaticRowHeights = false
-		memberList.rowSizeStyle = .custom
-		memberList.rowHeight = 24
-	}
-
-	func sidebarFooterButton(symbolName: String, title: String, action: Selector) -> NSButton {
-		let button = NSButton(
-			image: NSImage(systemSymbolName: symbolName, accessibilityDescription: title)!,
-			target: menuController,
-			action: action
-		)
-		configureSidebarButton(button, title: title)
-		return button
-	}
-
-	func configureSidebarButton(_ button: NSButton, title: String) {
-		button.translatesAutoresizingMaskIntoConstraints = false
-		button.bezelStyle = .accessoryBarAction
-		button.isBordered = false
-		button.toolTip = title
-	}
-
-	@objc func presentSidebarAddMenu(_ sender: Any?) {
-		guard let anchor = sender as? NSView else { return }
-		let menu = menuController.mainWindowSegmentedControllerCellMenu
-		menuController.applySymbols(to: menu)
-		menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchor.bounds.height), in: anchor)
-	}
-
-	@objc func presentSidebarMoreMenu(_ sender: Any?) {
-		guard let anchor = sender as? NSView else { return }
-		let menu = NSMenu()
-		func item(
-			_ title: String,
-			_ symbol: String,
-			_ action: Selector,
-			_ command: MenuCommand
-		) -> NSMenuItem {
-			let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
-			item.target = menuController
-			item.command = command
-			item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)
-			return item
-		}
-		menu.addItem(
-			item(
-				MainWindowStrings.InputBar.markAllAsRead,
-				"checkmark.circle",
-				#selector(TXMenuController.markAllAsRead(_:)),
-				.markAllRead
-			)
-		)
-		menu.addItem(
-			item(
-				MainWindowStrings.InputBar.disableAllNotifications,
-				"bell.slash",
-				#selector(TXMenuController.toggleMuteOnNotifications(_:)),
-				.disableNotifications
-			)
-		)
-		menu.addItem(.separator())
-		menu.addItem(
-			item(
-				MainWindowStrings.InputBar.addressBook,
-				"person.crop.circle",
-				#selector(TXMenuController.showAddressBook(_:)),
-				.addressBook
-			)
-		)
-		menu.addItem(
-			item(
-				MainWindowStrings.InputBar.fileTransfers,
-				"arrow.down.circle",
-				#selector(TXMenuController.showFileTransfersWindow(_:)),
-				.fileTransfers
-			)
-		)
-		menu.addItem(.separator())
-		menu.addItem(
-			item(
-				MainWindowStrings.InputBar.hideMemberList,
-				"sidebar.right",
-				#selector(TXMenuController.toggleMemberListVisibility(_:)),
-				.toggleMemberList
-			)
-		)
-		menu.addItem(
-			.separator()
-		)
-		menu.addItem(
-			item(
-				MainWindowStrings.InputBar.settings,
-				"gear",
-				#selector(TXMenuController.showPreferencesWindow(_:)),
-				.settings
-			)
-		)
-		menuController.applySymbols(to: menu)
-		menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchor.bounds.height), in: anchor)
+		let hostingController = NSHostingController(rootView: rootView)
+		hostingController.sizingOptions = []
+		contentViewController = hostingController
+		self.hostingController = hostingController
 	}
 }
 
@@ -590,10 +286,10 @@ private extension MainWindow {
 
 extension MainWindow {
 	private func observeNotifications() {
-		notifications.observe(Notification.Name("TXApplicationAppearanceChangedNotification")) { [weak self] _ in
+		notifications.observe(.applicationAppearanceChanged) { [weak self] _ in
 			self?.updateAppearance()
 		}
-		notifications.observe(Notification.Name("TXSystemAppearanceChangedNotification")) { [weak self] _ in
+		notifications.observe(.systemAppearanceChanged) { [weak self] _ in
 			self?.notifySystemAppearanceChanged()
 		}
 		notifications.observe(.themeAppearanceChanged) { [weak self] _ in
@@ -616,6 +312,7 @@ extension MainWindow {
 	}
 
 	private func notifyMainWindowAppearanceChanged() {
+		presentationModel.appearanceRevision &+= 1
 		contentView?.superview?.notifyApplicationAppearanceChanged()
 		if styleMask.contains(.titled) {
 			for controller in titlebarAccessoryViewControllers {
@@ -627,29 +324,40 @@ extension MainWindow {
 
 	private func loadWindowState() {
 		migrateLegacyWindowFrame()
+		repairRestoredWindowFrame()
 		restoreSavedContentSplitViewState()
 	}
 
+	private func repairRestoredWindowFrame() {
+		let repairedFrame = MainWindowFrameRestorationPolicy.repairedFrame(
+			frame,
+			minimumSize: minSize,
+			minimumVisibleSize: MainWindowConstants.minimumRestoredVisibleSize,
+			visibleScreenFrames: NSScreen.screens.map(\.visibleFrame)
+		)
+		guard repairedFrame != frame else { return }
+		setFrame(repairedFrame, display: false)
+		if frameAutosaveName.isEmpty == false {
+			saveFrame(usingName: frameAutosaveName)
+		}
+	}
+
 	private func migrateLegacyWindowFrame() {
-		let legacyKey = "NSWindow Frame -> Internal (v3) -> Main Window"
 		let defaults = UserDefaults.standard
-		guard let legacyFrame = defaults.string(forKey: legacyKey) else { return }
+		guard let legacyFrame = defaults.string(forKey: MainWindowConstants.legacyFrameKey) else { return }
 		let autosaveName = frameAutosaveName
-		if autosaveName.isEmpty == false, defaults.string(forKey: "NSWindow Frame \(autosaveName)") == nil {
+		let systemFrameKey = MainWindowConstants.systemFrameKeyPrefix + autosaveName
+		if autosaveName.isEmpty == false, defaults.string(forKey: systemFrameKey) == nil {
 			setFrame(from: legacyFrame)
 			saveFrame(usingName: autosaveName)
 		}
-		defaults.removeObject(forKey: legacyKey)
+		defaults.removeObject(forKey: MainWindowConstants.legacyFrameKey)
 	}
 
 	public func prepareForApplicationTermination() {
 		notifications.cancelAll()
 		saveContentSplitViewState()
 		saveSelection()
-		serverList.dataSource = nil
-		serverList.delegate = nil
-		serverList.keyDelegate = nil
-		memberList.keyDelegate = nil
 		memberList.assign(to: nil)
 		delegate = nil
 		selectedItem = nil
@@ -897,14 +605,6 @@ extension MainWindow {
 		inputTextField.keyDown(with: event)
 	}
 
-	public func memberListKeyDown(_ event: NSEvent) {
-		redirectKeyDown(event)
-	}
-
-	public func serverListKeyDown(_ event: NSEvent) {
-		redirectKeyDown(event)
-	}
-
 	private func registerKeyHandlers() {
 		register(key: .escape) { $0.exitFullscreenMode($1) }
 		register(key: .tab) { $0.tab($1) }
@@ -998,7 +698,7 @@ public extension MainWindow {
 		navigationType: ServerListNavigationMovement
 	) {
 		guard let selectedClient else { return }
-		var rows = (serverList.items(inContainingGroupOf: selectedItem as Any) as? [IRCTreeItem]) ?? []
+		var rows = serverList.items(inContainingGroupOf: selectedItem as Any) ?? []
 		rows.append(selectedClient)
 		navigateServerListEntries(
 			rows,
@@ -1011,7 +711,7 @@ public extension MainWindow {
 	}
 
 	func navigateServerEntries(_ isMovingDown: Bool, withNavigationType navigationType: ServerListNavigationMovement) {
-		let rows = (serverList.groupItems as? [IRCTreeItem]) ?? []
+		let rows = serverList.groupItems
 		navigateServerListEntries(
 			rows,
 			entryCount: rows.count,

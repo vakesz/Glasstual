@@ -226,7 +226,7 @@ public enum AppearanceSchema {
 /// Base class for the three appearance objects loaded from a property list.
 /// It carries the application-wide appearance snapshot the subclasses need to
 /// pick their entry out of the file.
-open class ApplicationAppearance: TXAppearanceProperties {
+open class ApplicationAppearance: AppearanceProperties {
 	private let applicationProperties: AppearancePropertyCollection
 
 	public init(applicationProperties: AppearancePropertyCollection) {
@@ -243,7 +243,7 @@ open class ApplicationAppearance: TXAppearanceProperties {
 		applicationProperties.appearanceName
 	}
 
-	public var appearanceType: TXAppearanceType {
+	public var appearanceType: AppearanceType {
 		applicationProperties.appearanceType
 	}
 
@@ -255,7 +255,7 @@ open class ApplicationAppearance: TXAppearanceProperties {
 		applicationProperties.isDarkAppearance
 	}
 
-	public var appKitAppearanceTarget: TXAppKitAppearanceTarget {
+	public var appKitAppearanceTarget: AppKitAppearanceTarget {
 		applicationProperties.appKitAppearanceTarget
 	}
 

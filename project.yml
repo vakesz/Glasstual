@@ -51,7 +51,6 @@ settings:
     PROVISIONING_PROFILE_SPECIFIER: ""
     GLASSTUAL_MAIN_PROVISIONING_PROFILE: ""
     GLASSTUAL_IRC_PROVISIONING_PROFILE: ""
-    GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE: ""
     GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE: ""
 
     # ---- Platform ---------------------------------------------------------
@@ -132,6 +131,9 @@ settings:
     STRING_CATALOG_GENERATE_SYMBOLS: YES
     REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES: YES
     EXTRACT_APP_INTENTS_METADATA: NO
+    # Xcode 27 otherwise schedules the App Intents tool for every target even
+    # though none links AppIntents, producing one false warning per target.
+    LM_SKIP_METADATA_EXTRACTION: YES
     ENABLE_DEBUG_DYLIB: NO
     LD_RUNPATH_SEARCH_PATHS: "@loader_path/../Frameworks @executable_path/../Frameworks"
     ENABLE_HARDENED_RUNTIME: YES
@@ -294,24 +296,6 @@ targets:
       - sdk: AppKit.framework
       - sdk: Security.framework
 
-  HistoricLogStoreKit:
-    templates: [GlasstualFramework]
-    productName: HistoricLogStoreKit
-    settings:
-      base:
-        PRODUCT_NAME: HistoricLogStoreKit
-        PRODUCT_MODULE_NAME: HistoricLogStoreKit
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.historic-log-store-kit
-    info:
-      properties:
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2016 - 2018 Codeux Software, LLC and respective contributors.
-    sources:
-      # The store lives in a framework rather than in the XPC service so that
-      # the test bundle can drive it over a real anonymous NSXPCListener.
-      - path: Sources/Frameworks/Historic Log Store Kit
-    dependencies:
-      - sdk: CoreData.framework
-
   GlasstualPluginKit:
     templates: [GlasstualFramework]
     productName: GlasstualPluginKit
@@ -329,39 +313,9 @@ targets:
       - sdk: AppKit.framework
       - sdk: Foundation.framework
 
-  # ---- XPC services -------------------------------------------------------
+  # ---- XPC service --------------------------------------------------------
 
-  HistoricLogFileManager:
-    templates: [GlasstualXPCService]
-    productName: Scrollback History Manager
-    settings:
-      base:
-        REGISTER_APP_GROUPS: YES
-        PRODUCT_NAME: Scrollback History Manager
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.ScrollbackHistoryManager
-      configs:
-        Release:
-          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE)
-    info:
-      properties:
-        CFBundleDisplayName: Scrollback History Manager
-        GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2016 - 2018 Codeux Software, LLC and respective contributors.
-    entitlements:
-      properties:
-        com.apple.security.application-groups:
-          - "$(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)"
-    sources:
-      - path: Sources/Services/Historic Log File Manager/Classes
-      - path: Sources/Services/Historic Log File Manager/Resources
-      - path: Sources/Shared/Application/ApplicationGroup.swift
-      - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
-    dependencies:
-      - target: HistoricLogStoreKit
-        embed: false
-      - sdk: CoreData.framework
-
-  IRCRemoteConnectionManager:
+  IRCConnectionHost:
     templates: [GlasstualXPCService]
     productName: IRC Connection Host
     settings:
@@ -383,17 +337,18 @@ targets:
           - "$(AppIdentifierPrefix)$(GLASSTUAL_BUNDLE_IDENTIFIER)"
         com.apple.security.network.client: true
     sources:
-      - path: Sources/Services/IRC Remote Connection Manager/Classes
-      - path: Sources/Services/IRC Remote Connection Manager/Resources/Language Files
+      - path: Sources/Services/IRC Connection Host/Classes
+      - path: Sources/Services/IRC Connection Host/Resources/Language Files
         excludes:
           # Notes for whoever edits the catalogues; not a shipped resource.
           - LocalizationCatalogNotices.md
-      - path: Sources/Services/IRC Remote Connection Manager/Resources/PrivacyInfo.xcprivacy
+      - path: Sources/Services/IRC Connection Host/Resources/PrivacyInfo.xcprivacy
         buildPhase: resources
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
       - path: Sources/Shared/Services/RemoteConnectionProtocols.swift
       - path: Sources/Shared/Services/SecureConnectionInformation.swift
+      - path: Sources/Shared/Preferences/AppSleepPreference.swift
     dependencies:
       - sdk: Security.framework
       - sdk: SecurityInterface.framework
@@ -614,42 +569,6 @@ targets:
         com.apple.security.network.client: true
         com.apple.security.network.server: true
         com.apple.security.print: true
-    # The five plists under Resources/Property Lists/Preferences are derived
-    # from the typed `PreferenceKey` declarations, never hand-edited. Deriving
-    # them here means a key cannot reach the bundle without its catalogue and
-    # registration entries; `PreferenceCatalogTests` fails if a checked-in copy
-    # has drifted, and `make lint` runs the same generator with `--check`.
-    preBuildScripts:
-      - name: Generate preference plists
-        script: '"$SRCROOT/scripts/generate-preference-plists.sh"'
-        inputFiles:
-          - $(SRCROOT)/scripts/generate-preference-plists.sh
-          - $(SRCROOT)/scripts/PreferencePlistGenerator.swift
-          - $(SRCROOT)/scripts/PreferenceGeneratorStandIns.swift
-          - $(SRCROOT)/Sources/App/Features/Notifications/NotificationEvent.swift
-          # Named one by one because the build phase is sandboxed to exactly
-          # the files listed here; naming the directory does not cover them.
-          - $(SRCROOT)/Sources/App/Preferences/Keys/PreferenceCatalog.swift
-          - $(SRCROOT)/Sources/App/Preferences/Keys/PreferenceColor.swift
-          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Appearance.swift
-          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Connection.swift
-          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+FileTransfers.swift
-          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Input.swift
-          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Internal.swift
-          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Messages.swift
-          - $(SRCROOT)/Sources/App/Preferences/Keys/Preferences+Notifications.swift
-          - $(SRCROOT)/Sources/App/Preferences/PreferenceTypes.swift
-          - $(SRCROOT)/Sources/Frameworks/Cocoa Extensions/Classes/PropertyListValue.swift
-          - $(SRCROOT)/Sources/Shared/Application/ApplicationGroup.swift
-          - $(SRCROOT)/Sources/Shared/Preferences/PreferenceKey.swift
-          - $(SRCROOT)/Sources/Shared/Preferences/TPCPreferences.swift
-          - $(SRCROOT)/Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
-        outputFiles:
-          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/KeysExcludedFromContainer.plist
-          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/KeysExcludedFromExport.plist
-          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/PreferenceKeyMasterList.plist
-          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/RegisteredUserDefaults.plist
-          - $(SRCROOT)/Sources/App/Resources/Property Lists/Preferences/RegisteredUserDefaultsInContainer.plist
     sources:
       - path: Sources/App/Application
       - path: Sources/App/Features
@@ -667,11 +586,6 @@ targets:
           # Notes for whoever edits the catalogues; not a shipped resource.
           - LocalizationCatalogNotices.md
       - path: Sources/App/Resources/Property Lists
-        excludes:
-          - Preferences
-      - path: Sources/App/Resources/Property Lists/Preferences
-        type: folder
-        buildPhase: resources
       - path: Sources/App/Resources/Scripting/Script Files/Bundled Scripts
         type: folder
       - path: Sources/App/Resources/User Interface
@@ -682,6 +596,7 @@ targets:
     dependencies:
       - sdk: AudioToolbox.framework
       - sdk: Cocoa.framework
+      - sdk: CoreData.framework
       - sdk: CoreServices.framework
       - sdk: IOKit.framework
       - sdk: Network.framework
@@ -693,16 +608,10 @@ targets:
       - target: CocoaExtensions
         embed: true
         codeSign: true
-      - target: HistoricLogStoreKit
-        embed: true
-        codeSign: true
       - target: GlasstualPluginKit
         embed: true
         codeSign: true
-      - target: HistoricLogFileManager
-        embed: true
-        codeSign: true
-      - target: IRCRemoteConnectionManager
+      - target: IRCConnectionHost
         embed: true
         codeSign: true
       - target: Caffeine
@@ -783,8 +692,6 @@ targets:
     dependencies:
       - target: Glasstual
       - target: CocoaExtensions
-        embed: false
-      - target: HistoricLogStoreKit
         embed: false
       - target: GlasstualPluginKit
         embed: false

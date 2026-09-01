@@ -45,7 +45,7 @@ enum IRCNotificationAdmission: Equatable {
 }
 
 struct IRCNotificationAdmissionContext {
-	let event: TXNotificationType
+	let event: NotificationEvent
 	let isTerminating: Bool
 	let isCollapsingNetsplit: Bool
 	let nicknameIsLocalUser: Bool
@@ -55,7 +55,7 @@ struct IRCNotificationAdmissionContext {
 }
 
 enum IRCNotificationPolicy {
-	static func isTextEvent(_ event: TXNotificationType) -> Bool {
+	static func isTextEvent(_ event: NotificationEvent) -> Bool {
 		switch event {
 		case .highlight, .newPrivateMessage, .channelMessage, .channelNotice, .privateMessage, .privateNotice:
 			true
@@ -99,7 +99,7 @@ enum IRCNotificationPolicy {
 	}
 
 	static func shouldPostUserNotification(
-		event: TXNotificationType,
+		event: NotificationEvent,
 		notificationEnabled: Bool,
 		postWhileFocused: Bool,
 		mainWindowIsFocused: Bool,
@@ -127,7 +127,7 @@ enum IRCNotificationPolicy {
 	}
 
 	static func textEventDescription(
-		lineType: TVCLogLineType,
+		lineType: LogLineType,
 		nickname: String,
 		formattedNickname: String,
 		text: String

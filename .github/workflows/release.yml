@@ -189,7 +189,6 @@ jobs:
             DEVELOPMENT_TEAM="${TEAM_ID}" \
             GLASSTUAL_MAIN_PROVISIONING_PROFILE="Glasstual Developer ID" \
             GLASSTUAL_IRC_PROVISIONING_PROFILE="Glasstual IRC Connection Host Developer ID" \
-            GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE="Glasstual Scrollback History Manager Developer ID" \
             GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE="Glasstual Inline Content Loader Developer ID"
 
       - name: Verify archived version

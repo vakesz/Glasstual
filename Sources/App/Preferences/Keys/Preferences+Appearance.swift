@@ -44,7 +44,7 @@ public nonisolated extension Preferences { // nonisolated: value
 	enum Appearance {
 		public static let preferredAppearance = PreferenceKey(
 			"Appearance",
-			default: TXPreferredAppearance.inherited
+			default: PreferredAppearance.inherited
 		)
 
 		public static let disableSidebarTranslucency = PreferenceKey("DisableSidebarTranslucency", default: false)
@@ -198,19 +198,19 @@ public nonisolated extension Preferences { // nonisolated: value
 		public static let serverListVisible = PreferenceKey(
 			"Window -> Main Window -> Server List is Visible",
 			default: true,
-			traits: .unregistered
+			traits: [.unregistered, .excludedFromExport]
 		)
 
 		public static let memberListVisible = PreferenceKey(
 			"Window -> Main Window -> Member List is Visible",
 			default: true,
-			traits: .unregistered
+			traits: [.unregistered, .excludedFromExport]
 		)
 
 		public static let serverListSelection = PreferenceKey(
 			"Window -> Main Window -> Server List Selection",
 			default: "",
-			traits: .unregistered
+			traits: [.unregistered, .excludedFromExport]
 		)
 
 		static let all: [any AnyPreferenceKey] = [

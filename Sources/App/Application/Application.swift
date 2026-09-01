@@ -21,6 +21,25 @@ public protocol CustomKeyboardEventResponder: AnyObject {
 
 @objc(TXApplication)
 public final class Application: NSApplication, CustomKeyboardEventResponder {
+	private var applicationController: ApplicationController!
+	private var menuController: MenuController!
+
+	override public init() {
+		super.init()
+
+		let applicationController = ApplicationController()
+		let menuController = MenuController()
+		applicationController.menuController = menuController
+		delegate = applicationController
+		self.applicationController = applicationController
+		self.menuController = menuController
+	}
+
+	@available(*, unavailable)
+	required init?(coder _: NSCoder) {
+		fatalError("Application does not support decoding")
+	}
+
 	public static func shouldContinueLaunching() -> Bool {
 		let ourProcessIdentifier = ProcessInfo.processInfo.processIdentifier
 
@@ -37,7 +56,7 @@ public final class Application: NSApplication, CustomKeyboardEventResponder {
 				continue
 			}
 
-			return TDCAlert.modalAlert(
+			return Alerts.modalAlert(
 				withMessage: PromptStrings.Application.continueWithAnotherInstanceBody,
 				title: PromptStrings.Application.continueWithAnotherInstanceTitle,
 				defaultButton: PromptStrings.Action.yes,

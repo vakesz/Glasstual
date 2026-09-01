@@ -36,7 +36,7 @@
  *
  *********************************************************************** */
 
-import AppKit
+import Foundation
 import SwiftUI
 
 @MainActor
@@ -47,9 +47,7 @@ public protocol ChannelInviteSheetDelegate: NSObjectProtocol {
 }
 
 @MainActor
-public final class ChannelInviteSheet: SheetBase, NSWindowDelegate, TDCClientPrototype {
-	private static let contentWidth: CGFloat = 340
-
+public final class ChannelInviteSheet: MainWindowSheetSession, ClientScoped {
 	public private(set) var client: IRCClient?
 	public private(set) var clientId: String?
 	public private(set) var nicknames: [String] = []
@@ -89,29 +87,10 @@ public final class ChannelInviteSheet: SheetBase, NSWindowDelegate, TDCClientPro
 				self?.cancel(nil)
 			}
 		)
-		let hostingController = NSHostingController(rootView: rootView)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(x: 0, y: 0, width: Self.contentWidth, height: 150),
-			styleMask: [.titled, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-
-		hostedSheet.contentViewController = hostingController
-		hostedSheet.contentMinSize = NSSize(width: Self.contentWidth, height: 130)
-		hostedSheet.contentMaxSize = NSSize(width: Self.contentWidth, height: 220)
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.title = content.windowTitle
-		hostedSheet.titleVisibility = .hidden
-		hostedSheet.titlebarAppearsTransparent = true
-		hostedSheet.titlebarSeparatorStyle = .none
-		sheet = hostedSheet
+		setContent(rootView)
 	}
 
-	@IBAction override public func ok(_: Any?) {
+	override public func ok(_: Any?) {
 		guard availableChannels.contains(selectedChannel) else {
 			cancel(nil)
 			return
@@ -126,7 +105,7 @@ public final class ChannelInviteSheet: SheetBase, NSWindowDelegate, TDCClientPro
 		super.ok(nil)
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		(delegate as? ChannelInviteSheetDelegate)?.channelInviteSheetWillClose(self)
 	}
 }

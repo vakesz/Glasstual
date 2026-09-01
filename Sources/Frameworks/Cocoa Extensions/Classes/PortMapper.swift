@@ -146,7 +146,7 @@ public final class XRPortMapper: NSObject {
 		rawPublicAddress = address
 		publicAddress = Self.string(from: address)
 		publicPort = UInt16(bigEndian: port)
-		NotificationCenter.default.post(name: Notification.Name("XRPortMapperDidChangedNotification"), object: self)
+		NotificationCenter.default.post(name: .XRPortMapperDidChanged, object: self)
 	}
 
 	private func disconnect() {

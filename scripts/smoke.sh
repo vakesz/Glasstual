@@ -38,7 +38,6 @@ SMOKE_SEED="${SMOKE_SEED:-1}"
 PROBES="${PROBES:-4}"
 PROBE_INTERVAL="${PROBE_INTERVAL:-10}"
 
-allowlist_file="$script_dir/smoke-allowlist.txt"
 container_prefs="$HOME/Library/Containers/$BUNDLE_ID/Data/Library/Preferences"
 seed_plist="$container_prefs/$SUITE.plist"
 source_plist="$HOME/Library/Group Containers/$GROUP_ID/Library/Preferences/$GROUP_ID.plist"
@@ -183,26 +182,15 @@ fi
 # Only the app's own subsystems: framework noise from AppKit is not
 # this gate's business, and filtering by process would pull all of it in.
 # The app itself is matched by pid so a sibling build's instance is ignored;
-# the XPC services are separate processes and stay matched by subsystem.
+# the XPC connection host is a separate process and stays matched by subsystem.
 
 /usr/bin/log show \
 	--start "$started_at" \
 	--predicate "(messageType == error OR messageType == fault) AND subsystem BEGINSWITH \"com.vakesz\" AND (processIdentifier == $pid OR process != \"Glasstual\")" \
 	--style compact 2> /dev/null | grep -v '^Timestamp' > "$log_output"
 
-allowed_pattern=''
-if [ -f "$allowlist_file" ]; then
-	allowed_pattern="$(grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$allowlist_file" | paste -sd '|' -)"
-fi
-
-if [ -n "$allowed_pattern" ]; then
-	unexpected="$(grep -v -E "$allowed_pattern" "$log_output")"
-else
-	unexpected="$(cat "$log_output")"
-fi
-
-allowed_count=$(($(grep -c . "$log_output") - $(printf '%s' "$unexpected" | grep -c .)))
-echo "smoke: $(grep -c . "$log_output") error/fault lines from com.vakesz subsystems, $allowed_count allowlisted"
+unexpected="$(cat "$log_output")"
+echo "smoke: $(grep -c . "$log_output") error/fault lines from com.vakesz subsystems"
 
 if [ -n "$unexpected" ]; then
 	echo "smoke: unexpected error/fault lines:" >&2

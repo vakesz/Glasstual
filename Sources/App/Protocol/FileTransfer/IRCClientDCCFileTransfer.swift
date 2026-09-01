@@ -51,13 +51,23 @@ enum DCCFileTransferRequest: Equatable {
 	case accept(filename: String, port: UInt16, position: UInt64, token: String?)
 }
 
+enum DCCCommand: String {
+	case accept = "ACCEPT"
+	case chat = "CHAT"
+	case resume = "RESUME"
+	case send = "SEND"
+
+	var ctcpCommand: String {
+		"DCC \(rawValue)"
+	}
+}
+
 enum DCCFileTransferRequestParser {
 	static let maximumFilesize: UInt64 = 1_000_000_000_000
 
 	static func parse(_ source: String) -> DCCFileTransferRequest? {
 		var input = CommandTokenizer(source)
-		let command = input.nextUppercaseToken()
-		guard command == "SEND" || command == "RESUME" || command == "ACCEPT" else { return nil }
+		guard let command = DCCCommand(rawValue: input.nextUppercaseToken()), command != .chat else { return nil }
 
 		let filenameToken = input.remainder.hasPrefix("\"") ? input.nextQuotedToken() : input.nextToken()
 		let section2 = input.nextToken()
@@ -66,7 +76,7 @@ enum DCCFileTransferRequestParser {
 		let section5 = input.nextToken()
 		let filename = filenameToken.trimmingCharacters(in: .whitespacesAndNewlines).safeFilename
 
-		if command == "SEND" {
+		if command == .send {
 			let token = normalizedToken(section5)
 			guard !filename.isEmpty, !section2.isEmpty, !section4.isEmpty,
 			      validToken(token),
@@ -88,7 +98,7 @@ enum DCCFileTransferRequestParser {
 		      let port = validPort(section2, allowsZero: token != nil),
 		      let position = validFilesize(section3)
 		else { return nil }
-		if command == "RESUME" {
+		if command == .resume {
 			return .resume(filename: filename, port: port, position: position, token: token)
 		}
 		return .accept(filename: filename, port: port, position: position, token: token)
@@ -125,7 +135,7 @@ enum DCCFileTransferRequestParser {
 	}
 
 	private static func validPort(_ value: String, allowsZero: Bool) -> UInt16? {
-		guard value.allSatisfy(\.isNumber), let integer = Int(value), integer >= 0, integer <= 65535 else {
+		guard value.allSatisfy(\.isNumber), let integer = Int(value), integer >= 0, integer <= Int(UInt16.max) else {
 			return nil
 		}
 		guard integer > 0 || allowsZero else { return nil }
@@ -141,7 +151,7 @@ enum DCCFileTransferRequestParser {
 @MainActor
 public extension IRCClient {
 	func notifyFileTransfer(
-		_ type: TXNotificationType,
+		_ type: NotificationEvent,
 		nickname: String,
 		filename: String,
 		filesize totalFilesize: UInt64,
@@ -193,10 +203,10 @@ public extension IRCClient {
 			IRCFileTransferStrings.request(nickname: nickname, filename: filename, byteCount: totalFilesize),
 			by: nil,
 			in: nil,
-			as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue
+			as: .dccFileTransfer, command: LogLineFormat.defaultCommand
 		)
 		guard environment.preferences.fileTransferRequestReplyAction != .ignore,
-		      let identifier = fileTransferController.addReceiver(
+		      let identifier = fileTransferCenter.addReceiver(
 		      	for: self, nickname: nickname, address: address, port: port,
 		      	filename: filename, filesize: totalFilesize, token: transferToken
 		      )
@@ -215,7 +225,7 @@ public extension IRCClient {
 	) {
 		sendCTCPQuery(
 			nickname,
-			command: "DCC RESUME",
+			command: DCCCommand.resume.ctcpCommand,
 			text: DCCFileTransferRequestParser.transferArguments(
 				filename: filename, port: port, position: filesize, token: token
 			)
@@ -227,7 +237,7 @@ public extension IRCClient {
 	) {
 		sendCTCPQuery(
 			nickname,
-			command: "DCC ACCEPT",
+			command: DCCCommand.accept.ctcpCommand,
 			text: DCCFileTransferRequestParser.transferArguments(
 				filename: filename, port: port, position: filesize, token: token
 			)
@@ -241,12 +251,12 @@ public extension IRCClient {
 		let arguments = DCCFileTransferRequestParser.sendArguments(
 			filename: filename, address: address, port: port, filesize: filesize, token: token
 		)
-		sendCTCPQuery(nickname, command: "DCC SEND", text: arguments)
+		sendCTCPQuery(nickname, command: DCCCommand.send.ctcpCommand, text: arguments)
 		print(
 			IRCFileTransferStrings.attempt(nickname: nickname, filename: filename, byteCount: filesize),
 			by: nil,
 			in: nil,
-			as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue
+			as: .dccFileTransfer, command: LogLineFormat.defaultCommand
 		)
 	}
 
@@ -255,7 +265,7 @@ public extension IRCClient {
 	}
 
 	var DCCTransferAddress: String? {
-		guard let address = fileTransferController.IPAddress else { return nil }
+		guard let address = fileTransferCenter.IPAddress else { return nil }
 		return DCCFormattedAddress(address)
 	}
 
@@ -282,7 +292,7 @@ public extension IRCClient {
 				return
 			}
 			if let token {
-				let transfer = fileTransferController.fileTransferSender(
+				let transfer = fileTransferCenter.fileTransferSender(
 					matchingToken: token,
 					client: self,
 					peerNickname: sender,
@@ -342,9 +352,9 @@ public extension IRCClient {
 		token: String?,
 		sender: String,
 		filename: String
-	) -> TDCFileTransferDialogTransferController? {
+	) -> FileTransferController? {
 		if let token, port == 0 {
-			return fileTransferController.fileTransferSender(
+			return fileTransferCenter.fileTransferSender(
 				matchingToken: token,
 				client: self,
 				peerNickname: sender,
@@ -352,7 +362,7 @@ public extension IRCClient {
 			)
 		}
 		if token == nil, port > 0 {
-			return fileTransferController.fileTransfer(
+			return fileTransferCenter.fileTransfer(
 				matchingPort: port,
 				client: self,
 				peerNickname: sender,
@@ -365,6 +375,6 @@ public extension IRCClient {
 	private func printInvalidDCCRequest(from sender: String) {
 		dccFileTransferLogger.error("Rejected an invalid DCC file-transfer request from \(sender, privacy: .public)")
 		print(IRCDirectChatStrings.unprocessableRequest(sender: sender), by: nil, in: nil,
-		      as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue)
+		      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
 	}
 }

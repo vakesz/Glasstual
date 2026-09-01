@@ -351,7 +351,7 @@ extension IRCLineBudget {
 	static func forMessage(
 		toChannel channelName: String,
 		on client: IRCClient,
-		lineType: TVCLogLineType,
+		lineType: LogLineType,
 		encoding: UInt
 	) -> IRCLineBudget {
 		var overhead = 1
@@ -421,7 +421,7 @@ public struct IRCLineCursor {
 	public mutating func nextLine(
 		forChannel channelName: String,
 		on client: IRCClient,
-		with lineType: TVCLogLineType
+		with lineType: LogLineType
 	) -> String? {
 		guard remaining.length > 0 else {
 			return nil
@@ -453,7 +453,7 @@ public extension NSAttributedString {
 	func stringFormatted(
 		forChannel channelName: String,
 		on client: IRCClient,
-		with lineType: TVCLogLineType,
+		with lineType: LogLineType,
 		effectiveRange: NSRangePointer?
 	) -> String {
 		let encoding = client.effectivePrimaryEncoding

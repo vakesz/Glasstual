@@ -106,7 +106,7 @@ private final class InputHistoryObject {
  does: on the main actor. That is what makes the plain stored state safe. */
 @MainActor
 public final class InputHistory: NSObject {
-	private weak var window: TVCMainWindow?
+	private weak var window: MainWindow?
 	private var historyObjects: [InputHistoryScope: InputHistoryObject] = [:]
 	private var currentTreeItem: String?
 
@@ -115,7 +115,7 @@ public final class InputHistory: NSObject {
 		fatalError("Use init(window:)")
 	}
 
-	public init(window: TVCMainWindow) {
+	public init(window: MainWindow) {
 		self.window = window
 
 		super.init()

@@ -173,12 +173,12 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		public static let banFormat = PreferenceKey(
 			"DefaultBanCommandHostmaskFormat",
-			default: TXHostmaskBanFormat.whainn
+			default: HostmaskBanFormat.whainn
 		)
 
 		public static let noticeDestination = PreferenceKey(
 			"DestinationOfNonserverNotices",
-			default: TXNoticeSendLocation.serverConsole
+			default: NoticeSendLocation.serverConsole
 		)
 
 		public static let giveFocusOnMessageCommand = PreferenceKey(

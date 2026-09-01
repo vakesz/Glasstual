@@ -49,7 +49,7 @@ public nonisolated enum NotificationSetting: String, CaseIterable, Sendable { //
 	case speakNickname = "Speak Nickname"
 }
 
-public nonisolated extension TXNotificationType { // nonisolated: value
+public nonisolated extension NotificationEvent { // nonisolated: value
 	/// The preference-key prefix this event's settings live under.
 	var preferenceKeyPrefix: String {
 		let name = switch self {
@@ -116,20 +116,20 @@ public nonisolated extension Preferences { // nonisolated: value
 		/// registration domain holds for it, so the `false`/`""` here only
 		/// applies to a setting that ships with no default at all.
 		static func flag(
-			_ event: TXNotificationType,
+			_ event: NotificationEvent,
 			_ setting: NotificationSetting
 		) -> PreferenceKey<Bool> {
 			PreferenceKey(event.preferenceKeyName(for: setting), default: false, traits: .uncatalogued)
 		}
 
-		static func sound(_ event: TXNotificationType) -> PreferenceKey<String> {
+		static func sound(_ event: NotificationEvent) -> PreferenceKey<String> {
 			PreferenceKey(event.preferenceKeyName(for: .sound), default: "", traits: .uncatalogued)
 		}
 
 		/** The settings that ship switched on, by event; anything not listed
 		 defaults to off. `.enabled` and `.bounceDockIcon` travel together for
 		 every event that has either, which is why one list covers both. */
-		private static let enabledByDefault: [(event: TXNotificationType, settings: [NotificationSetting])] = [
+		private static let enabledByDefault: [(event: NotificationEvent, settings: [NotificationSetting])] = [
 			(.addressBookMatch, [.enabled]),
 			(.channelMessage, [.speakChannelName, .speakNickname]),
 			(.highlight, [.enabled, .bounceDockIcon]),
@@ -142,7 +142,7 @@ public nonisolated extension Preferences { // nonisolated: value
 			(.fileTransferReceiveFailed, [.enabled, .bounceDockIcon]),
 		]
 
-		private static let registeredSounds: [(TXNotificationType, String)] = [
+		private static let registeredSounds: [(NotificationEvent, String)] = [
 			(.highlight, "Glass"),
 			(.newPrivateMessage, "Submarine"),
 			(.privateMessage, "Submarine"),

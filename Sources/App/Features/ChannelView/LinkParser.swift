@@ -39,7 +39,7 @@ import Foundation
 
 /// A hyperlink located inside a string by `LinkParser`.
 ///
-/// This is the object exposed to plugins through `THOPluginDidPostNewMessageConcreteObject`
+/// This is the object exposed to plugins through `PluginPostedMessage`
 /// and attached to rendered text as `TVCLogRendererFormattingURLAttribute`.
 ///
 /// `Sendable` because every stored property is an immutable value: a rendered

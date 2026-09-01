@@ -12,7 +12,6 @@
 
 import CocoaExtensions
 import Foundation
-import HistoricLogStoreKit
 import os
 
 private nonisolated let historicLogClientLogger = Logger( // nonisolated: let
@@ -20,10 +19,10 @@ private nonisolated let historicLogClientLogger = Logger( // nonisolated: let
 	category: "HistoricLogClient"
 )
 
-/// One historic-log fetch, in the shape the service understands. A value, so a
+/// One historic-log fetch, in the shape the store understands. A value, so a
 /// request can be queued and replayed without carrying anything isolated.
 nonisolated struct HistoricLogFetchRequest: Sendable { // nonisolated: value
-	/// Which of the service's five fetches to run.
+	/// Which of the store's five fetches to run.
 	enum Kind: Sendable {
 		case newest(ascending: Bool, fetchLimit: UInt, limitToDate: Date?)
 		case around(uniqueIdentifier: String, before: UInt, after: UInt, limitToDate: Date?)
@@ -45,7 +44,7 @@ nonisolated struct HistoricLogFetchRequest: Sendable { // nonisolated: value
  the empty result rather than leaving a caller suspended forever. */
 actor HistoricLogRequestQueue {
 	/// The round trip a queued request performs once its turn comes.
-	typealias Service = @Sendable (HistoricLogFetchRequest) async -> [LogLineXPC]
+	typealias Service = @Sendable (HistoricLogFetchRequest) async -> [HistoricLogEntry]
 
 	/// A request waiting for its turn.
 	private nonisolated struct QueuedFetch: Sendable { // nonisolated: value
@@ -56,7 +55,7 @@ actor HistoricLogRequestQueue {
 	/// The caller suspended on a request that has not answered yet.
 	private nonisolated struct PendingFetch: Sendable { // nonisolated: value
 		let viewIdentifier: String
-		let continuation: CheckedContinuation<[LogLineXPC], Never>
+		let continuation: CheckedContinuation<[HistoricLogEntry], Never>
 	}
 
 	/// One view's serial stream and the task draining it.
@@ -79,7 +78,7 @@ actor HistoricLogRequestQueue {
 	}
 
 	/// Queues `request` behind everything already asked for the same view.
-	func fetch(_ request: HistoricLogFetchRequest) async -> [LogLineXPC] {
+	func fetch(_ request: HistoricLogFetchRequest) async -> [HistoricLogEntry] {
 		let identifier = UUID()
 
 		return await withCheckedContinuation { continuation in
@@ -151,91 +150,52 @@ actor HistoricLogRequestQueue {
 	}
 }
 
-/** Forwards the service's callbacks into the actor.
-
- It holds nothing but the actor reference, which is why XPC may call it on
- whichever thread it likes. */
-private final nonisolated class HistoricLogClientShim: NSObject, // nonisolated: xpc-shim
-	HistoricLogClientProtocol, Sendable
-{
-	private let client: HistoricLogClient
-
-	init(client: HistoricLogClient) {
-		self.client = client
-		super.init()
-	}
-
-	func willDeleteUniqueIdentifiers( // nonisolated: xpc-shim
-		_ uniqueIdentifiers: [String],
-		inView viewIdentifier: String
-	) {
-		Task { await client.handleWillDelete(uniqueIdentifiers, inView: viewIdentifier) }
+/// The typed preference that remembers the existing on-disk database name.
+private nonisolated struct HistoricLogDefaultsFilenameStore: HistoricLogFilenameStoring { // nonisolated: value
+	var databaseFilename: String? {
+		get {
+			let value = TextualUserDefaults.suite().string(forKey: Preferences.Logging.historicLogFileName.name)
+			return value?.isEmpty == false ? value : nil
+		}
+		nonmutating set {
+			TextualUserDefaults.suite().set(newValue, forKey: Preferences.Logging.historicLogFileName.name)
+		}
 	}
 }
 
-/** Owns the connection to the scrollback history service.
-
- The connection is created here and never leaves, which is what makes the
- non-`Sendable` `NSXPCConnection` safe without an escape hatch. Everything that
- used to be guarded by `processStateLock` — the warm and invalidate flags, the
- in-flight replies, the termination bookkeeping — is actor state, and every
- reply the service sends comes back through `HistoricLogClientShim`. */
+/// Coordinates the in-process history store and preserves FIFO fetch ordering
+/// per view. Core Data and save scheduling remain isolated by `HistoricLogStore`.
 actor HistoricLogClient {
-	typealias ConnectionFailureReporter = @MainActor @Sendable (String) -> Void
-
 	static let shared = HistoricLogClient()
 
-	private let serviceName: String
 	private let databaseDirectory: String?
-	private let reportConnectionFailure: ConnectionFailureReporter
-	private var connection: NSXPCConnection?
-	private var connectionCount = 0
-	private var shim: HistoricLogClientShim?
-	private var isLoading = false
-	private var isLoaded = false
+	private let store: HistoricLogStore
+	private var loadTask: Task<Bool, Never>?
+	private(set) var isLoaded = false
 	private var isSaving = false
 	private var isTerminating = false
-	private var invalidatedVoluntarily = false
-	private var didReportConnectionFailure = false
-	private var lastConnectionError: Error?
-	private var inFlight: [UUID: CheckedContinuation<[LogLineXPC], Never>] = [:]
-	private var inFlightSaves: [UUID: CheckedContinuation<Void, Never>] = [:]
 
 	private lazy var requests = HistoricLogRequestQueue { [weak self] request in
 		await self?.performFetch(request) ?? []
 	}
 
 	init(
-		serviceName: String = "com.vakesz.glasstual.ScrollbackHistoryManager",
 		databaseDirectory: String? = PathInfo.groupContainerApplicationCaches,
-		reportConnectionFailure: @escaping ConnectionFailureReporter = { message in
-			LogControllerHistoricLogFile.reportConnectionFailure(message)
-		}
+		filenameStore: any HistoricLogFilenameStoring = HistoricLogDefaultsFilenameStore()
 	) {
-		self.serviceName = serviceName
 		self.databaseDirectory = databaseDirectory
-		self.reportConnectionFailure = reportConnectionFailure
-	}
-
-	/// Whether a connection is currently attached. Test seam.
-	var isAttached: Bool {
-		connection != nil
-	}
-
-	/// How many connections this client has opened over its lifetime. Test seam.
-	var connectionsOpened: Int {
-		connectionCount
+		store = HistoricLogStore(filenameStore: filenameStore) { identifiers, viewIdentifier in
+			await LogControllerHistoricLogFile.noteWillDeleteLines(identifiers, inView: viewIdentifier)
+		}
 	}
 
 	// MARK: - Decoding
 
-	/// Decodes fetched rows. Pure: it reads nothing but its argument, so it can
-	/// run wherever the caller happens to be.
-	nonisolated static func logLines(from xpcObjects: [LogLineXPC]) -> [LogLine] { // nonisolated: pure
-		xpcObjects.compactMap { xpcObject in
-			guard let logLine = LogLine.logLine(from: xpcObject) else {
+	nonisolated static func logLines(from historicEntries: [HistoricLogEntry]) -> [LogLine] { // nonisolated: pure
+		historicEntries.compactMap { historicEntry in
+			guard let logLine = LogLine.logLine(from: historicEntry) else {
 				historicLogClientLogger.error(
-					"Failed to initialize object \(String(describing: xpcObject), privacy: .public). Corrupt data?"
+					"Failed to decode historic line \(historicEntry.uniqueIdentifier, privacy: .public)"
 				)
 				return nil
 			}
@@ -243,314 +203,148 @@ actor HistoricLogClient {
 		}
 	}
 
-	// MARK: - Connection
+	// MARK: - Lifecycle
 
-	/// Connects and opens the database. Idempotent: while a connection is up
-	/// and its database is open — or still opening — a second call does nothing.
-	/// A failed open is retried on the next call, as it always was.
-	func attach() {
-		if connection == nil {
-			historicLogClientLogger.debug("Warming process...")
-			connect()
+	@discardableResult
+	private func ensureLoaded() async -> Bool {
+		guard isTerminating == false else {
+			return false
+		}
+		if isLoaded {
+			return true
+		}
+		if let loadTask {
+			let opened = await loadTask.value
+			return isTerminating == false && opened
+		}
+		guard let databaseDirectory else {
+			return false
 		}
 
-		guard isLoading == false, isLoaded == false, let databaseDirectory else {
-			return
+		let task = Task { [store] in
+			await store.openDatabase(inDirectory: databaseDirectory)
 		}
-
-		isLoading = true
-		openDatabase(in: databaseDirectory)
-		applyMaximumLineCount()
-	}
-
-	/// Tears the connection down. Idempotent: detaching twice is one invalidation.
-	func detach() {
-		guard let connection else {
-			return
-		}
-
-		historicLogClientLogger.debug("Invalidating process...")
-		invalidatedVoluntarily = true
-		connection.invalidate()
-	}
-
-	private func connect() {
-		let connection = NSXPCConnection(serviceName: serviceName)
-
-		let remoteObjectInterface = NSXPCInterface(with: HistoricLogServerProtocol.self)
-		guard HistoricLogInterface.configure(remoteObjectInterface) else {
-			return
-		}
-
-		let shim = HistoricLogClientShim(client: self)
-		connection.remoteObjectInterface = remoteObjectInterface
-		connection.exportedInterface = NSXPCInterface(with: HistoricLogClientProtocol.self)
-		connection.exportedObject = shim
-
-		connection.interruptionHandler = { [weak self] in
-			historicLogClientLogger.log("Interruption handler called")
-			Task { await self?.handleInterruption() }
-		}
-
-		connection.invalidationHandler = { [weak self] in
-			historicLogClientLogger.log("Invalidation handler called")
-			Task { await self?.handleInvalidation() }
-		}
-
-		connection.resume()
-
-		self.connection = connection
-		self.shim = shim
-		connectionCount += 1
-	}
-
-	private func handleInterruption() {
-		detach()
-	}
-
-	private func handleInvalidation() async {
-		connection = nil
-		shim = nil
-		isSaving = false
-		isLoading = false
-		isLoaded = false
-
-		/* A caller suspended on a reply that will never arrive has to be let go,
-		 or the view it is loading never finishes. */
-		failInFlight()
-		await requests.cancelAll()
-		finishSaves()
-
-		guard invalidatedVoluntarily == false else {
-			invalidatedVoluntarily = false
-			return
-		}
-
-		guard didReportConnectionFailure == false else {
-			return
-		}
-		didReportConnectionFailure = true
-
-		var message = lastConnectionError?.localizedDescription ?? ""
-		if message.isEmpty == false {
-			message = PromptStrings.Logging.lastError(message)
-		}
-		await reportConnectionFailure(message)
-	}
-
-	func handleWillDelete(_ uniqueIdentifiers: [String], inView viewIdentifier: String) async {
-		await LogControllerHistoricLogFile.noteWillDeleteLines(uniqueIdentifiers, inView: viewIdentifier)
-	}
-
-	private func proxy(onError handler: (@Sendable (Error) -> Void)? = nil) -> HistoricLogServerProtocol? {
-		connection?.remoteObjectProxyWithErrorHandler { [weak self] error in
-			historicLogClientLogger.error(
-				"Error occurred while communicating with service: \(error.localizedDescription, privacy: .public)"
-			)
-			Task { await self?.noteConnectionError(error) }
-			handler?(error)
-		} as? HistoricLogServerProtocol
-	}
-
-	private func noteConnectionError(_ error: Error) {
-		lastConnectionError = error
-	}
-
-	// MARK: - Database
-
-	private func openDatabase(in databaseDirectory: String) {
-		proxy(onError: { [weak self] _ in
-			historicLogClientLogger.error("Failed to communicate with process to open database")
-			Task { await self?.noteLoadState(loading: false, loaded: false) }
-		})?.openDatabase(inDirectory: databaseDirectory, withCompletionBlock: { [weak self] success in
-			if success {
-				historicLogClientLogger.debug("Successfully opened database")
-			} else {
-				historicLogClientLogger.error("Failed to open database")
+		loadTask = task
+		let opened = await task.value
+		loadTask = nil
+		guard isTerminating == false else {
+			if opened {
+				await store.close()
 			}
-			Task { await self?.noteLoadState(loading: false, loaded: success) }
-		})
+			return false
+		}
+		isLoaded = opened
+
+		if opened {
+			historicLogClientLogger.debug("Successfully opened historic log database")
+			await applyMaximumLineCount()
+		} else {
+			historicLogClientLogger.error("Failed to open historic log database")
+			await LogControllerHistoricLogFile.reportConnectionFailure("")
+		}
+
+		return opened
 	}
 
-	private func noteLoadState(loading: Bool, loaded: Bool) {
-		isLoading = loading
-		isLoaded = loaded
-	}
-
-	/// Pushes the current scrollback save limit to the service.
-	func applyMaximumLineCount() {
-		proxy()?.setMaximumLineCount(Preferences.Logging.scrollbackSaveLimit.detachedValue)
+	func applyMaximumLineCount() async {
+		await store.setMaximumLineCount(Preferences.Logging.scrollbackSaveLimit.detachedValue)
 	}
 
 	// MARK: - Fetching
 
-	/// Queues a fetch behind everything already asked for the same view.
-	func fetchEntries(_ request: HistoricLogFetchRequest) async -> [LogLineXPC] {
-		attach()
-
+	func fetchEntries(_ request: HistoricLogFetchRequest) async -> [HistoricLogEntry] {
+		guard await ensureLoaded() else { return [] }
 		return await requests.fetch(request)
 	}
 
-	private func performFetch(_ request: HistoricLogFetchRequest) async -> [LogLineXPC] {
-		await withCheckedContinuation { continuation in
-			let identifier = UUID()
-			inFlight[identifier] = continuation
-
-			let reply: @Sendable ([LogLineXPC]) -> Void = { [weak self] entries in
-				Task { await self?.completeFetch(identifier, with: entries) }
-			}
-
-			guard let proxy = proxy(onError: { [weak self] _ in
-				Task { await self?.completeFetch(identifier, with: []) }
-			}) else {
-				completeFetch(identifier, with: [])
-				return
-			}
-
-			send(request, through: proxy, reply: reply)
-		}
-	}
-
-	private func send(
-		_ request: HistoricLogFetchRequest,
-		through proxy: HistoricLogServerProtocol,
-		reply: @escaping @Sendable ([LogLineXPC]) -> Void
-	) {
+	private func performFetch(_ request: HistoricLogFetchRequest) async -> [HistoricLogEntry] {
 		let viewIdentifier = request.viewIdentifier
 
 		switch request.kind {
 		case let .newest(ascending, fetchLimit, limitToDate):
-			proxy.fetchEntries(
+			return await store.fetchEntries(
 				forView: viewIdentifier,
 				ascending: ascending,
 				fetchLimit: fetchLimit,
-				limitTo: limitToDate,
-				withCompletionBlock: reply
+				limitToDate: limitToDate
 			)
 		case let .around(uniqueIdentifier, before, after, limitToDate):
-			proxy.fetchEntries(
+			return await store.fetchEntries(
 				forView: viewIdentifier,
-				withUniqueIdentifier: uniqueIdentifier,
+				aroundUniqueIdentifier: uniqueIdentifier,
 				beforeFetchLimit: before,
 				afterFetchLimit: after,
-				limitTo: limitToDate,
-				withCompletionBlock: reply
+				limitToDate: limitToDate
 			)
 		case let .before(uniqueIdentifier, fetchLimit, limitToDate):
-			proxy.fetchEntries(
+			return await store.fetchEntries(
 				forView: viewIdentifier,
-				beforeUniqueIdentifier: uniqueIdentifier,
+				relativeTo: uniqueIdentifier,
+				direction: .before,
 				fetchLimit: fetchLimit,
-				limitTo: limitToDate,
-				withCompletionBlock: reply
+				limitToDate: limitToDate
 			)
 		case let .after(uniqueIdentifier, fetchLimit, limitToDate):
-			proxy.fetchEntries(
+			return await store.fetchEntries(
 				forView: viewIdentifier,
-				afterUniqueIdentifier: uniqueIdentifier,
+				relativeTo: uniqueIdentifier,
+				direction: .after,
 				fetchLimit: fetchLimit,
-				limitTo: limitToDate,
-				withCompletionBlock: reply
+				limitToDate: limitToDate
 			)
 		case let .between(afterUniqueIdentifier, beforeUniqueIdentifier, fetchLimit):
-			proxy.fetchEntries(
+			return await store.fetchEntries(
 				forView: viewIdentifier,
 				afterUniqueIdentifier: afterUniqueIdentifier,
 				beforeUniqueIdentifier: beforeUniqueIdentifier,
-				fetchLimit: fetchLimit,
-				withCompletionBlock: reply
+				fetchLimit: fetchLimit
 			)
-		}
-	}
-
-	/// The error handler and the reply block can both fire; whichever lands
-	/// first answers, and the other one finds nothing to answer.
-	private func completeFetch(_ identifier: UUID, with entries: [LogLineXPC]) {
-		inFlight.removeValue(forKey: identifier)?.resume(returning: entries)
-	}
-
-	private func failInFlight() {
-		for identifier in inFlight.keys {
-			inFlight.removeValue(forKey: identifier)?.resume(returning: [])
 		}
 	}
 
 	// MARK: - Writing
 
-	func writeEntry(_ entry: LogLineXPC) {
-		attach()
-		proxy()?.writeLogLine(entry)
+	func writeEntry(_ entry: HistoricLogEntry) async {
+		guard await ensureLoaded() else { return }
+		await store.writeLogLine(entry)
 	}
 
 	func forgetView(_ viewIdentifier: String) async {
 		await requests.forget(view: viewIdentifier)
-		attach()
-		proxy()?.forgetView(viewIdentifier)
+		guard await ensureLoaded() else { return }
+		await store.forgetView(viewIdentifier)
 	}
 
 	func resetData(forView viewIdentifier: String) async {
 		await requests.forget(view: viewIdentifier)
-		attach()
-		proxy()?.resetData(forView: viewIdentifier)
+		guard await ensureLoaded() else { return }
+		await store.resetData(forView: viewIdentifier)
 	}
 
 	// MARK: - Saving and termination
 
 	@discardableResult
 	func saveData() async -> Bool {
-		if isTerminating, isLoaded == false, isLoading == false {
+		if isTerminating, isLoaded == false, loadTask == nil {
 			return false
 		}
-
-		guard isSaving == false else {
-			historicLogClientLogger.debug("Cancelled save because a save is already saving")
-			return true
-		}
+		guard isSaving == false else { return true }
+		guard await ensureLoaded() else { return false }
 
 		isSaving = true
-		attach()
-
-		await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-			let identifier = UUID()
-			inFlightSaves[identifier] = continuation
-
-			/* If the service fails while saving, the error handler is the only
-			 callback we get. Treat that as the save having ended so that
-			 termination is not held up waiting on a reply that never comes. */
-			guard let proxy = proxy(onError: { [weak self] _ in
-				Task { await self?.completeSave(identifier) }
-			}) else {
-				completeSave(identifier)
-				return
-			}
-
-			proxy.saveData(completionBlock: { [weak self] in
-				Task { await self?.completeSave(identifier) }
-			})
-		}
-
+		await store.saveData()
 		isSaving = false
 		return true
 	}
 
-	private func completeSave(_ identifier: UUID) {
-		inFlightSaves.removeValue(forKey: identifier)?.resume()
-	}
-
-	private func finishSaves() {
-		for identifier in inFlightSaves.keys {
-			inFlightSaves.removeValue(forKey: identifier)?.resume()
-		}
-	}
-
-	/// Saves what is buffered and closes the connection.
 	func prepareForTermination() async {
 		isTerminating = true
-
-		guard await saveData() else {
-			return
+		if let loadTask {
+			_ = await loadTask.value
+			self.loadTask = nil
 		}
-
-		detach()
+		await store.close()
+		isLoaded = false
+		await requests.cancelAll()
 	}
 }

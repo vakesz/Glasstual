@@ -12,13 +12,7 @@ specifications rather than against itself.
 dedicated to the public domain under CC0 1.0; the dedication is kept
 verbatim in `parser-tests/LICENSE`.
 
-The `.yaml` files are the upstream originals. The test bundle has no YAML
-reader, so `convert-parser-tests.py` converts them to the `.json` files the
-suites load. Both forms are committed; re-run the script after refreshing
-the YAML:
-
-    pip install pyyaml
-    python3 Tests/Corpora/IRCSpec/convert-parser-tests.py
-
-The JSON is copied into the test bundle by the `GlasstualTests` target (see
-`project.yml`) and read back through `IRCSpecCorpus`.
+The committed JSON files are the test inputs. They are copied into the test
+bundle by the `GlasstualTests` target and read through `IRCSpecCorpus`. Update
+them directly from the matching upstream release; the repository does not keep
+a second YAML copy or a format-conversion script.

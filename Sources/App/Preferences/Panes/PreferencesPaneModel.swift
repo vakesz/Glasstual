@@ -10,8 +10,9 @@
  *
  *********************************************************************** */
 
-import AppKit
+import Foundation
 import Observation
+import UniformTypeIdentifiers
 
 struct IRCv3ConnectionSummary: Equatable, Identifiable {
 	let id: String
@@ -20,22 +21,21 @@ struct IRCv3ConnectionSummary: Equatable, Identifiable {
 	let capabilities: [String]
 }
 
-/** What a pane asks its AppKit shell to do.
+enum PreferencesImportRequest: Identifiable {
+	case transcriptTheme
+	case transcriptFolder
+	case downloadFolder
 
- Everything here needs a window: a sheet, an open panel, the font panel, or a
- permission prompt. The panes stay declarative and the shell keeps owning
- presentation. */
-@MainActor
-protocol PreferencesPaneActionHandler: AnyObject {
-	func selectChannelViewFont()
-	func importTranscriptTheme()
-	func exportTranscriptTheme()
-	func resetTranscriptTheme()
-	func selectTranscriptFolder()
-	func clearTranscriptFolder()
-	func selectDownloadFolder()
-	func clearDownloadFolder()
-	func openCustomAddOnsFolder()
+	var id: Self {
+		self
+	}
+
+	var allowedContentTypes: [UTType] {
+		switch self {
+		case .transcriptTheme: [.propertyList]
+		case .transcriptFolder, .downloadFolder: [.folder]
+		}
+	}
 }
 
 /** The state the panes show that does not live in the key store: what the theme
@@ -48,9 +48,6 @@ protocol PreferencesPaneActionHandler: AnyObject {
 final class PreferencesPaneModel {
 	/// Bindings for everything that *is* a preference key.
 	let preferences = ObservablePreferences.shared
-
-	@ObservationIgnored
-	weak var actions: (any PreferencesPaneActionHandler)?
 
 	/// The sidebar's sections, with the panes each one shows.
 	var sections: [PreferencesSection] = []
@@ -78,6 +75,14 @@ final class PreferencesPaneModel {
 	var addOnCommands: [String] = []
 	var scriptInstallationInstructions = ""
 	var ircv3Connections: [IRCv3ConnectionSummary] = []
+
+	/// Presentation requests consumed by the SwiftUI Settings scene.
+	var importRequest: PreferencesImportRequest?
+	var exportedThemeData: Data?
+	var exportedThemeFilename = ""
+	var presentationError: String?
+	var externalURL: URL?
+	var showsFontPicker = false
 
 	@ObservationIgnored
 	let notificationItems: [NotificationConfigurationItem]
@@ -131,7 +136,7 @@ final class PreferencesPaneModel {
 	/** The nil entries are the separators the alert list draws between groups of
 	 related events; the order is the one the nib shipped. */
 	private static let defaultNotificationItems: [NotificationConfigurationItem] = {
-		let eventTypes: [TXNotificationType?] = [
+		let eventTypes: [NotificationEvent?] = [
 			.addressBookMatch, nil, .connect, .disconnect, nil, .highlight, nil, .invite, .kick, nil,
 			.channelMessage, .channelNotice, nil, .newPrivateMessage, .privateMessage, .privateNotice, nil,
 			.userJoined, .userParted, .userDisconnected, nil, .fileTransferReceiveRequested, nil,
@@ -156,14 +161,14 @@ final class PreferencesPaneModel {
 	}
 
 	func refreshChannelViewFont() {
-		let font = SharedApplication.sharedThemeController().font
-		channelViewFontName = font.displayName ?? font.fontName
-		channelViewFontSize = font.pointSize
+		let theme = SharedApplication.sharedThemeController().theme
+		channelViewFontName = theme.fontName
+		channelViewFontSize = theme.fontSize
 	}
 
 	func refreshFolders() {
 		transcriptFolder = PathInfo.transcriptFolderURL
-		downloadFolder = SharedApplication.sharedFileTransferDialog().downloadDestinationURL
+		downloadFolder = SharedApplication.sharedFileTransferCenter().downloadDestinationURL
 	}
 
 	func refreshAddOnCommands() {

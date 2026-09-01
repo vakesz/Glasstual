@@ -73,7 +73,7 @@ struct IRCSpecOutboundLimitsTests {
 		_ text: String,
 		target: String,
 		on client: GLTTestClient,
-		as lineType: TVCLogLineType
+		as lineType: LogLineType
 	) -> [String] {
 		var cursor = IRCLineCursor(NSAttributedString(string: text))
 		var pieces: [String] = []

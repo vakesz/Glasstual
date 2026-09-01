@@ -21,8 +21,8 @@ public struct SpokenNotification: Sendable {
 	public let channelIdentifier: String?
 	public let nickname: String?
 	public let text: String?
-	public let lineType: TVCLogLineType
-	public let notificationType: TXNotificationType
+	public let lineType: LogLineType
+	public let notificationType: NotificationEvent
 
 	/** The text the synthesizer speaks. Formatting reads main-actor client state,
 	 so the producer fills it in before the notification is queued. */
@@ -30,8 +30,8 @@ public struct SpokenNotification: Sendable {
 
 	@MainActor
 	public init(
-		notificationType: TXNotificationType,
-		lineType: TVCLogLineType,
+		notificationType: NotificationEvent,
+		lineType: LogLineType,
 		target: IRCTreeItem?,
 		nickname: String?,
 		text: String?

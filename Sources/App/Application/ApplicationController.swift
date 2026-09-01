@@ -88,8 +88,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private var hasInstalledMainWindow = false
 
 	private var worldStorage: IRCWorld!
-	private var mainWindowStorage: TVCMainWindow!
-	private weak var menuControllerStorage: TXMenuController?
+	private var mainWindowStorage: MainWindow!
+	private weak var menuControllerStorage: MenuController?
 
 	public private(set) var debugModeIsOn = false
 	public private(set) var ghostModeIsOn = false
@@ -110,12 +110,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
 	/// IUO preserves the established launch-time contract while allowing nil in tests.
-	@objc public var mainWindow: TVCMainWindow! {
+	@objc public var mainWindow: MainWindow! {
 		get { mainWindowStorage }
 		set { mainWindowStorage = newValue }
 	}
 
-	@objc public weak var menuController: TXMenuController? {
+	@objc public weak var menuController: MenuController? {
 		get { menuControllerStorage }
 		set { menuControllerStorage = newValue }
 	}
@@ -186,6 +186,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		)
 		window.title = "Glasstual"
 		window.identifier = NSUserInterfaceItemIdentifier("TVCMainWindow")
+		window.contentMinSize = MainWindowConstants.minimumContentSize
 		window.setFrameAutosaveName("Main Window")
 		window.tabbingMode = .disallowed
 		window.collectionBehavior.insert(.fullScreenPrimary)
@@ -274,7 +275,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	private func pluginsFinishedLoading(_: Notification) {
-		applicationDidFinishLaunching()
+		completeApplicationLaunch()
 	}
 
 	// MARK: - Services
@@ -296,7 +297,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	// MARK: - NSApplication Delegate
 
 	public func applicationWillFinishLaunching(_: Notification) {
-		installMainWindow()
+		SharedApplication.sharedApplicationScenes().install(in: NSApp)
 
 		#if !DEBUG
 			/* Asking the user about another running copy needs an alert, and
@@ -315,7 +316,13 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		)
 	}
 
-	private func applicationDidFinishLaunching() {
+	public func applicationDidFinishLaunching(_: Notification) {
+		installMainWindow()
+		mainWindow.makeMain()
+		mainWindow.makeKeyAndOrderFront(nil)
+	}
+
+	private func completeApplicationLaunch() {
 		applicationIsLaunched = true
 
 		if mainWindow.reloadLoadingScreen() {
@@ -329,7 +336,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	 been completed or skipped before. The flow is shown on top of the main
 	 window's "add a server" placeholder. */
 	private func presentOnboardingIfNeeded() {
-		guard OnboardingWindowController.shouldPresentOnLaunch() else {
+		guard OnboardingSession.shouldPresentOnLaunch() else {
 			return
 		}
 
@@ -415,7 +422,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 	/// The sheet's completion reports to NSApp and begins termination itself.
 	private func presentTerminationConfirmation() {
-		TDCAlert.alertSheet(
+		Alerts.alertSheet(
 			with: mainWindow,
 			body: PromptStrings.Application.quitBody,
 			title: PromptStrings.Application.quitTitle,
@@ -456,7 +463,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 				}
 			}
 
-		/* Safety net: should the historic log service never answer, do not
+		/* Safety net: should historic-log shutdown never finish, do not
 		 leave the application hanging in NSTerminateLater forever. */
 		historicLogSaveTimeoutTask = Task { [weak self] in
 			try? await Task.sleep(for: .seconds(terminationHistoricLogSaveTimeout))
@@ -552,7 +559,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		Self.terminationLogger.debug("Unloading plugins")
 		SharedApplication.sharedPluginManager().unloadPlugins()
 
-		SharedApplication.sharedWindowController().prepareForApplicationTermination()
 		SharedApplication.sharedThemeController().prepareForApplicationTermination()
 		SoundPlayer.prepareForApplicationTermination()
 
@@ -583,7 +589,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			return
 		}
 
-		Extras.parseIRCProtocolURI(stringValue, withDescriptor: event)
+		ApplicationLinkHandler.open(stringValue)
 	}
 
 	private func computerScreenWillSleep(_: Notification) {

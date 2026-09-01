@@ -10,8 +10,8 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+import Foundation
 import GlasstualPluginKit
 import os
 
@@ -52,8 +52,7 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 	public let supportedUserInputCommands: [String]
 	public let supportedServerInputCommands: [String]
 	public let outputSuppressionRules: [PluginOutputSuppressionRule]
-	public let pluginPreferencesPaneMenuItemTitle: String?
-	public let pluginPreferencesPaneView: NSView?
+	@MainActor public let pluginPreferencesPane: PluginPreferencesPane?
 
 	private init(
 		bundle: Bundle,
@@ -62,8 +61,7 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 		supportedUserInputCommands: [String],
 		supportedServerInputCommands: [String],
 		outputSuppressionRules: [PluginOutputSuppressionRule],
-		pluginPreferencesPaneMenuItemTitle: String?,
-		pluginPreferencesPaneView: NSView?
+		pluginPreferencesPane: PluginPreferencesPane?
 	) {
 		self.bundle = bundle
 		self.primaryClass = primaryClass
@@ -71,8 +69,7 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 		self.supportedUserInputCommands = supportedUserInputCommands
 		self.supportedServerInputCommands = supportedServerInputCommands
 		self.outputSuppressionRules = outputSuppressionRules
-		self.pluginPreferencesPaneMenuItemTitle = pluginPreferencesPaneMenuItemTitle
-		self.pluginPreferencesPaneView = pluginPreferencesPaneView
+		self.pluginPreferencesPane = pluginPreferencesPane
 	}
 
 	/// Instantiates `bundle`'s principal class and runs its load callback.
@@ -103,7 +100,7 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 			features.insert(.outputSuppressionRules)
 		}
 
-		let preferencePane = preferencePane(of: plugin, in: bundle)
+		let preferencePane = preferencePane(of: plugin)
 		if preferencePane != nil {
 			features.insert(.preferencePane)
 		}
@@ -129,8 +126,7 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 			supportedUserInputCommands: userInputCommands,
 			supportedServerInputCommands: serverInputCommands,
 			outputSuppressionRules: suppressionRules,
-			pluginPreferencesPaneMenuItemTitle: preferencePane?.title,
-			pluginPreferencesPaneView: preferencePane?.view
+			pluginPreferencesPane: preferencePane
 		)
 	}
 
@@ -144,24 +140,15 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 	}
 
 	@MainActor
-	private static func preferencePane(
-		of plugin: any GlasstualPlugin,
-		in bundle: Bundle
-	) -> (title: String, view: NSView)? {
+	private static func preferencePane(of plugin: any GlasstualPlugin) -> PluginPreferencesPane? {
 		guard let provider = plugin as? any PluginPreferencesProviding,
-		      provider.pluginPreferencesPaneMenuItemName.isEmpty == false
+		      let pane = provider.pluginPreferencesPane,
+		      pane.title.isEmpty == false
 		else {
 			return nil
 		}
 
-		guard let view = provider.pluginPreferencesPaneView else {
-			logger.error(
-				"The plugin at “\(bundle.bundlePath, privacy: .public)“ names a preferences pane but supplied no view"
-			)
-			return nil
-		}
-
-		return (provider.pluginPreferencesPaneMenuItemName, view)
+		return pane
 	}
 
 	private static func normalizedCommands(_ commands: [String]) -> [String] {

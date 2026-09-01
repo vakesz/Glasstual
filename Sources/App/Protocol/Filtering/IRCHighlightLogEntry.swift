@@ -35,9 +35,7 @@
  *
  *********************************************************************** */
 
-// AppKit: the highlight's attributed text is built with a system font.
-import AppKit
-import CocoaExtensions
+import Foundation
 import os
 
 private let highlightLogEntryLogger = Logger(
@@ -80,45 +78,5 @@ public struct HighlightLogEntry: Codable, Hashable, Sendable {
 
 	public var lineNumber: String {
 		lineLogged.uniqueIdentifier
-	}
-
-	@MainActor public var channel: IRCChannel? {
-		ClientEnvironment.shared.world?.findChannel(
-			withId: channelId,
-			onClientWithId: clientId
-		)
-	}
-
-	@MainActor public var channelName: String {
-		channel?.name ?? ApplicationStrings.unknownValue
-	}
-
-	public var timeLoggedFormatted: String {
-		let timeInterval = lineLogged.receivedAt.timeIntervalSinceNow
-		let formattedTimeInterval = humanReadableTimeInterval(timeInterval, true, 0) as String? ?? ""
-
-		return ApplicationStrings.relativeTime(formattedTimeInterval)
-	}
-
-	@MainActor public var renderedMessage: NSAttributedString {
-		let logLine = lineLogged
-		let channel = channel
-
-		let formatted = if logLine.lineType == .action {
-			NotificationStrings.actionBody(
-				nickname: logLine.nickname ?? "",
-				text: logLine.messageBody
-			)
-		} else {
-			NotificationStrings.messageBody(
-				formattedNickname: logLine.formattedNickname(in: channel) ?? "",
-				text: logLine.messageBody
-			)
-		}
-
-		return (formatted as NSString).attributedString(
-			withIRCFormatting: NSFont.systemFont(ofSize: 13.0),
-			preferredFontColor: .controlTextColor
-		) ?? NSAttributedString(string: formatted)
 	}
 }

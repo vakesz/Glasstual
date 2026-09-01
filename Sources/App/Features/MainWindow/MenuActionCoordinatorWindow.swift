@@ -42,7 +42,7 @@ import CocoaExtensions
 enum MenuWindowPolicy {
 	static let alertSuppressionPrefix = Preferences.Families.alertSuppression.pattern
 
-	static func nextAppearance(current: TXPreferredAppearance, systemIsDark: Bool) -> TXPreferredAppearance {
+	static func nextAppearance(current: PreferredAppearance, systemIsDark: Bool) -> PreferredAppearance {
 		switch current {
 		case .inherited: systemIsDark ? .light : .dark
 		case .light: .dark
@@ -65,7 +65,7 @@ enum MenuWindowPolicy {
 
 @MainActor
 public extension MenuActionCoordinator {
-	func performWindowAction(_ action: TXMenuWindowAction, sender: Any?) {
+	func performWindowAction(_ action: MenuWindowAction, sender: Any?) {
 		switch action {
 		case .close: closeWindow(sender)
 		case .showMainWindow: mainWindow.makeKeyAndOrderFront(sender)
@@ -73,8 +73,8 @@ public extension MenuActionCoordinator {
 		case .resetMainWindowFrame: resetMainWindowFrame(sender)
 		case .sortChannelList: sortChannelList()
 		case .markAllAsRead: mainWindow.markAllAsRead()
-		case .importPreferences: PreferencesImportExport.import(in: mainWindow)
-		case .exportPreferences: PreferencesImportExport.export(in: mainWindow)
+		case .importPreferences: mainWindow.presentationModel.requestPreferencesImport()
+		case .exportPreferences: mainWindow.presentationModel.requestPreferencesExport()
 		case .toggleNotificationSounds: setNotificationSoundsMuted(Preferences.Notifications.soundIsMuted
 				.value == false)
 		case .toggleNotifications:
@@ -150,7 +150,7 @@ public extension MenuActionCoordinator {
 		world.save()
 	}
 
-	private func setAppearance(_ appearance: TXPreferredAppearance) {
+	private func setAppearance(_ appearance: PreferredAppearance) {
 		Preferences.Appearance.preferredAppearance.value = appearance
 		TextualPreferences.performReloadAction(.appearance)
 	}

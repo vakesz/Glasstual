@@ -9,7 +9,7 @@ import Testing
 
 private func makeLogLine(
 	body: String = "hello",
-	lineType: TVCLogLineType = .privateMessage,
+	lineType: LogLineType = .privateMessage,
 	messageIdentifier: String? = nil,
 	reactions: [String: [String]]? = nil
 ) -> LogLine {
@@ -24,7 +24,7 @@ private func makeLogLine(
 
 private func makeSnapshot(
 	body: String = "hello",
-	lineType: TVCLogLineType = .privateMessage,
+	lineType: LogLineType = .privateMessage,
 	messageIdentifier: String? = nil,
 	reactions: [String: [String]]? = nil,
 	in context: LogLineRenderContext = LogLineRenderContext()

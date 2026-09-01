@@ -50,22 +50,6 @@ struct AppearanceSchemaTests {
 		#expect(schema.backgroundView.contentBorderPadding == 23)
 	}
 
-	@Test("The channel spotlight appearance plist decodes")
-	func channelSpotlightAppearanceDecodes() throws {
-		let schema = try #require(
-			AppearanceSchema.load(
-				ChannelSpotlightAppearanceSchema.self,
-				resource: "TDCChannelSpotlightAppearance",
-				appearanceName: Self.appearanceName
-			)
-		)
-
-		#expect(schema.searchField.controlTextColor?.color != nil)
-		#expect(schema.searchField.noResultsTextColor?.color != nil)
-		#expect(schema.searchResult.keyboardShortcutDeselectedOffset == 0)
-		#expect(schema.searchResult.keyboardShortcutSelectedOffset == 3)
-	}
-
 	@Test("An appearance the file does not carry decodes to nil rather than crashing")
 	func unknownAppearanceIsNil() {
 		let schema = AppearanceSchema.load(

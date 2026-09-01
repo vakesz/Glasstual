@@ -13,7 +13,8 @@
 - [ ] The app builds and launches in Debug
 - [ ] Changes to `project.yml` were followed by `make generate` and the regenerated project is included
 - [ ] New or migrated Swift is organized by domain or feature under `Sources/`
-- [ ] No new Objective-C or C source or headers were added; temporary interop names its unmigrated consumer
-- [ ] SwiftUI replacements preserve native commands, keyboard behavior, accessibility, restoration, and plugin contracts before AppKit code is removed
+- [ ] No Objective-C or C source or headers were added
+- [ ] AppKit is limited to a documented macOS capability adapter with no feature state
+- [ ] UI changes preserve native commands, focus, keyboard behavior, accessibility, restoration, and plugin contracts
 - [ ] Source moves and rewrites preserve upstream licenses, acknowledgements, and provenance
 - [ ] New user-facing strings are in a feature- or table-namespaced String Catalog and use generated typed resources

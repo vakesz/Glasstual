@@ -39,7 +39,7 @@
 import Foundation
 import os
 
-extension TDCFileTransferDialogTransferController {
+extension FileTransferController {
 	/// Hands the transfer to a ``DCCTransfer`` actor and follows it.
 	///
 	/// Every event arrives back here on the main actor, which is where the
@@ -90,7 +90,7 @@ extension TDCFileTransferDialogTransferController {
 
 	private func transferDidConnect() {
 		transferStatus = isSender ? .sending : .receiving
-		transferDialog.updateMaintenanceTimer()
+		transferCenter.updateMaintenanceTimer()
 	}
 
 	private func transferDidProgress(to processedBytes: UInt64) {

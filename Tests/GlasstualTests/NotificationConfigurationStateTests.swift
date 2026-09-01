@@ -13,13 +13,13 @@
 @testable import Glasstual
 import Testing
 
-private nonisolated let notificationEvents: [TXNotificationType] = [.highlight, .channelMessage, .kick]
+private nonisolated let notificationEvents: [NotificationEvent] = [.highlight, .channelMessage, .kick]
 
 @Suite("Notification configuration checkbox state")
 @MainActor
 struct NotificationConfigurationStateTests {
 	@Test("A channel configuration with no override reads back as inherited", arguments: notificationEvents)
-	func channelConfigurationWithoutOverrideIsInherited(event: TXNotificationType) {
+	func channelConfigurationWithoutOverrideIsInherited(event: NotificationEvent) {
 		let configuration = ChannelNotificationConfiguration(eventType: event)
 
 		#expect(configuration.speakEvent == .inherited)
@@ -38,7 +38,7 @@ struct NotificationConfigurationStateTests {
 	}
 
 	@Test("Preferences-backed configurations report on or off, never inherited", arguments: notificationEvents)
-	func preferencesConfigurationIsNeverInherited(event: TXNotificationType) {
+	func preferencesConfigurationIsNeverInherited(event: NotificationEvent) {
 		let configuration = PreferencesNotificationConfiguration(eventType: event)
 
 		#expect(configuration.speakEvent != .inherited)

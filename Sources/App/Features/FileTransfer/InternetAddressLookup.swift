@@ -21,7 +21,7 @@ public protocol InternetAddressLookupDelegate: AnyObject {
 }
 
 @MainActor
-public final class InternetAddressLookup: NSObject {
+public final class InternetAddressLookup {
 	private static let requestTimeout: TimeInterval = 30
 	private static let firstPartySourceURL = URL(string: "https://api.ipify.org")!
 	private static let thirdPartySourceURLs = [
@@ -45,15 +45,8 @@ public final class InternetAddressLookup: NSObject {
 	 request cannot report back to the delegate. */
 	private var lookupGeneration: UInt64 = 0
 
-	@available(*, unavailable)
-	override public init() {
-		fatalError("Use init(delegate:)")
-	}
-
 	public init(delegate: InternetAddressLookupDelegate) {
 		requestDelegate = delegate
-
-		super.init()
 	}
 
 	public func performLookup() {

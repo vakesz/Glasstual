@@ -35,7 +35,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import GlasstualPluginKit
 import SwiftUI
 
@@ -51,15 +50,15 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 		SystemProfilerFeature.screenResolution.disabledPreferenceKey: true,
 	]
 
-	private var preferencePaneView: NSView?
 	private var host: PluginHostContext?
 
-	var pluginPreferencesPaneView: NSView? {
-		preferencePaneView
-	}
-
-	var pluginPreferencesPaneMenuItemName: String {
-		SystemProfilerLocalization.string(.BasicLanguage.preferencesPaneTitle)
+	var pluginPreferencesPane: PluginPreferencesPane? {
+		guard let host else { return nil }
+		return PluginPreferencesPane(
+			title: SystemProfilerLocalization.string(.BasicLanguage.preferencesPaneTitle)
+		) {
+			SystemProfilerPreferencesView(defaults: host.defaults)
+		}
 	}
 
 	var subscribedUserInputCommands: [String] {
@@ -69,9 +68,6 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
 		host.defaults.register(defaults: Self.defaultPreferences)
-		preferencePaneView = NSHostingView(
-			rootView: SystemProfilerPreferencesView(defaults: host.defaults)
-		)
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {

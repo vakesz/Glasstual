@@ -7,10 +7,9 @@ import Testing
 
 /// Records a test failure unless the caller is running on the main actor.
 ///
-/// Phase 8 moves work between isolation domains, and the interesting mistakes
-/// are the ones the compiler cannot see: a callback that arrives on a global
-/// executor, an actor method that hands a result back on the wrong domain.
-/// This is the runtime half of the check.
+/// The interesting mistakes are the ones the compiler cannot see: a callback
+/// that arrives on a global executor, or an actor method that hands a result
+/// back on the wrong domain. This is the runtime half of the check.
 ///
 /// `MainActor.preconditionIsolated()` answers the same question by trapping,
 /// which takes the rest of the suite down with it and reports a crash rather

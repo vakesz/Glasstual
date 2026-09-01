@@ -41,9 +41,8 @@ import Testing
 
 /// Behaviour corpus for the inbound line parser and message tag parser.
 ///
-/// Cases marked `.disabled` describe the behaviour the parser is meant to have.
-/// They fail today and are expected to be enabled by the Phase 1 fix that
-/// narrows token splitting to `0x20`.
+/// The corpus pins the IRC grammar's exact token separator (`0x20`) alongside
+/// malformed-input and message-tag edge cases.
 @MainActor
 struct IRCLineParserCorpusTests {
 	nonisolated struct LineCase: Sendable {
