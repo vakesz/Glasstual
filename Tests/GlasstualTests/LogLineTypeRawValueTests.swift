@@ -8,7 +8,7 @@ import Testing
 @MainActor
 struct LogLineTypeRawValueTests {
 	@Test("Line type numbers are stable", arguments: [
-		(TVCLogLineType.undefined, UInt(0)),
+		(LogLineType.undefined, UInt(0)),
 		(.action, 1),
 		(.actionNoHighlight, 2),
 		(.ctcp, 3),
@@ -31,31 +31,31 @@ struct LogLineTypeRawValueTests {
 		(.topic, 20),
 		(.website, 21),
 	])
-	func lineTypeRawValuesAreStable(type: TVCLogLineType, rawValue: UInt) {
+	func lineTypeRawValuesAreStable(type: LogLineType, rawValue: UInt) {
 		#expect(type.rawValue == rawValue)
-		#expect(TVCLogLineType(rawValue: rawValue) == type)
+		#expect(LogLineType(rawValue: rawValue) == type)
 	}
 
 	@Test("Member type numbers are stable")
 	func memberTypeRawValuesAreStable() {
-		#expect(TVCLogLineMemberType.normal.rawValue == 0)
-		#expect(TVCLogLineMemberType.localUser.rawValue == 1)
+		#expect(LogLineMemberType.normal.rawValue == 0)
+		#expect(LogLineMemberType.localUser.rawValue == 1)
 	}
 
 	@Test("Delivery state numbers are stable")
 	func deliveryStateRawValuesAreStable() {
-		#expect(TVCLogLineDeliveryState.none.rawValue == 0)
-		#expect(TVCLogLineDeliveryState.pending.rawValue == 1)
-		#expect(TVCLogLineDeliveryState.delivered.rawValue == 2)
-		#expect(TVCLogLineDeliveryState.failed.rawValue == 3)
+		#expect(LogLineDeliveryState.none.rawValue == 0)
+		#expect(LogLineDeliveryState.pending.rawValue == 1)
+		#expect(LogLineDeliveryState.delivered.rawValue == 2)
+		#expect(LogLineDeliveryState.failed.rawValue == 3)
 	}
 
 	/// A gap or a duplicate would mean a case was renumbered rather than
 	/// appended.
 	@Test("Nothing was inserted in the middle")
 	func numbersAreContiguous() {
-		let highest = TVCLogLineType.website.rawValue
-		let resolved = (0 ... highest).compactMap { TVCLogLineType(rawValue: $0) }
+		let highest = LogLineType.website.rawValue
+		let resolved = (0 ... highest).compactMap { LogLineType(rawValue: $0) }
 		#expect(resolved.count == Int(highest) + 1)
 	}
 }

@@ -30,7 +30,7 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 	 `NSCache` this replaces performed, made deterministic: a message is a value
 	 now, and a cache needs a class. */
 	@MainActor
-	private static var pendingPostedMessages: [String: THOPluginDidPostNewMessageConcreteObject] = [:]
+	private static var pendingPostedMessages: [String: PluginPostedMessage] = [:]
 
 	/// Insertion order of `pendingPostedMessages`, oldest first.
 	@MainActor
@@ -123,7 +123,7 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		_ text: String,
 		authoredBy textAuthor: Prefix,
 		destinedFor textDestination: IRCChannel?,
-		as lineType: TVCLogLineType,
+		as lineType: LogLineType,
 		onClient client: IRCClient,
 		receivedAt: Date,
 		wasEncrypted: Bool
@@ -225,8 +225,8 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 	public static func willRenderMessage(
 		_ newMessage: String,
 		forViewController _: LogController,
-		lineType: TVCLogLineType,
-		memberType _: TVCLogLineMemberType
+		lineType: LogLineType,
+		memberType _: LogLineMemberType
 	) -> String {
 		let renderers = SharedApplication.sharedPluginManager().messageRenderers
 		guard renderers.isEmpty == false else {
@@ -299,7 +299,7 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 	}
 
 	@MainActor
-	public static func enqueueDidPostNewMessage(_ messageObject: THOPluginDidPostNewMessageConcreteObject) {
+	public static func enqueueDidPostNewMessage(_ messageObject: PluginPostedMessage) {
 		let key = messageObject.lineNumber
 
 		if pendingPostedMessages.updateValue(messageObject, forKey: key) == nil {
@@ -314,7 +314,7 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 	/** Delivers a line that has no visible transcript projection. Its native side effects
 	 must not wait for a DOM callback that cannot arrive. */
 	@MainActor
-	public static func dispatchDidPostNewMessage(_ messageObject: THOPluginDidPostNewMessageConcreteObject) {
+	public static func dispatchDidPostNewMessage(_ messageObject: PluginPostedMessage) {
 		let handlers: [any PluginPostedMessageHandling] = handlers(for: .newMessagePostedEvent)
 
 		for handler in handlers {

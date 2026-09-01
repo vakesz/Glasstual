@@ -72,12 +72,14 @@ private struct ChatFilterEditorPresentation: Identifiable {
 struct ChatFilterPreferencesView: View {
 	@Bindable var store: ChatFilterStore
 	let clients: () -> [ChatFilterClientOption]
-	let export: (ChatFilter) -> Void
 
 	@State private var editor: ChatFilterEditorPresentation?
 	@State private var showsDeleteConfirmation = false
 	@State private var showsImporter = false
+	@State private var exportData: Data?
+	@State private var showsExporter = false
 	@State private var importError: String?
+	@State private var exportError: String?
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -141,7 +143,12 @@ struct ChatFilterPreferencesView: View {
 					}
 					Button(String(localized: .TPIChatFilterExtension.exportFilterButton)) {
 						if let filter = store.selectedFilter {
-							export(filter)
+							do {
+								exportData = try filter.propertyListData()
+								showsExporter = true
+							} catch {
+								exportError = error.localizedDescription
+							}
 						}
 					}
 					.disabled(store.selectedFilter == nil)
@@ -167,6 +174,17 @@ struct ChatFilterPreferencesView: View {
 			allowsMultipleSelection: false,
 			onCompletion: importFilter
 		)
+		.fileExporter(
+			isPresented: $showsExporter,
+			item: exportData,
+			contentTypes: [.propertyList],
+			defaultFilename: "filter.plist"
+		) { result in
+			if case let .failure(error) = result {
+				exportError = error.localizedDescription
+			}
+			exportData = nil
+		}
 		.alert(
 			String(localized: .TPIChatFilterExtension.unreadableConfigurationTitle),
 			isPresented: Binding(
@@ -183,6 +201,23 @@ struct ChatFilterPreferencesView: View {
 			}
 		} message: {
 			Text(importError ?? "")
+		}
+		.alert(
+			String(localized: .TPIChatFilterExtension.unreadableConfigurationTitle),
+			isPresented: Binding(
+				get: { exportError != nil },
+				set: {
+					if !$0 {
+						exportError = nil
+					}
+				}
+			)
+		) {
+			Button(String(localized: .TPIChatFilterExtension.okButton)) {
+				exportError = nil
+			}
+		} message: {
+			Text(exportError ?? "")
 		}
 		.alert(
 			String(localized: .TPIChatFilterExtension.deleteFilterTitle),

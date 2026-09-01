@@ -11,7 +11,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import SwiftUI
 
 @MainActor
@@ -21,10 +20,7 @@ public protocol AddressBookSheetDelegate: AnyObject {
 }
 
 @MainActor
-public final class AddressBookSheet: SheetBase, NSWindowDelegate {
-	private static let ignoreContentSize = NSSize(width: 620, height: 540)
-	private static let trackingContentSize = NSSize(width: 520, height: 390)
-
+public final class AddressBookSheet: MainWindowSheetSession {
 	let model: AddressBookEntryModel
 
 	public init(entryType: IRCAddressBookEntryType) {
@@ -49,28 +45,7 @@ public final class AddressBookSheet: SheetBase, NSWindowDelegate {
 			submit: { [weak self] in self?.ok(nil) },
 			cancel: { [weak self] in self?.cancel(nil) }
 		)
-		let contentSize = model.entryType == .userTracking
-			? Self.trackingContentSize
-			: Self.ignoreContentSize
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: contentSize),
-			styleMask: [.titled, .resizable, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-
-		hostedSheet.contentViewController = NSHostingController(rootView: rootView)
-		hostedSheet.contentMinSize = model.entryType == .userTracking
-			? NSSize(width: 460, height: 320)
-			: NSSize(width: 560, height: 440)
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.preventsApplicationTerminationWhenModal = false
-		hostedSheet.autorecalculatesKeyViewLoop = true
-		hostedSheet.title = model.title
-		sheet = hostedSheet
+		setContent(rootView)
 	}
 
 	public func start() {
@@ -88,7 +63,7 @@ public final class AddressBookSheet: SheetBase, NSWindowDelegate {
 		model.validatedEntry() != nil
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		entryDelegate?.addressBookSheetWillClose(self)
 	}
 }

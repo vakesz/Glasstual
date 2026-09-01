@@ -184,7 +184,7 @@ public extension IRCClient {
 			nil
 		}
 		let text: String
-		let lineType: TVCLogLineType
+		let lineType: LogLineType
 		switch message.command {
 		case "FAIL":
 			text = IRCInboundStrings.StandardReply.failure(command: command, code: code, description: description)

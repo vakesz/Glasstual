@@ -83,7 +83,7 @@ struct PreferencesCommandScopePane: View {
 struct PreferencesCommandScopeSections: View {
 	let model: PreferencesPaneModel
 
-	private var noticeDestination: Binding<TXNoticeSendLocation> {
+	private var noticeDestination: Binding<NoticeSendLocation> {
 		model.preferences.binding(for: Preferences.Commands.noticeDestination)
 	}
 
@@ -111,11 +111,11 @@ struct PreferencesCommandScopeSections: View {
 			)
 			Picker(selection: noticeDestination) {
 				Text(verbatim: PreferencesCommandScopeStrings.noticeServerConsole)
-					.tag(TXNoticeSendLocation.serverConsole)
+					.tag(NoticeSendLocation.serverConsole)
 				Text(verbatim: PreferencesCommandScopeStrings.noticeSelectedChannel)
-					.tag(TXNoticeSendLocation.selectedChannel)
+					.tag(NoticeSendLocation.selectedChannel)
 				Text(verbatim: PreferencesCommandScopeStrings.noticeQuery)
-					.tag(TXNoticeSendLocation.query)
+					.tag(NoticeSendLocation.query)
 			} label: {
 				Text(verbatim: PreferencesCommandScopeStrings.noticeLabel)
 			}
@@ -141,7 +141,7 @@ struct PreferencesChannelManagementPane: View {
 struct PreferencesChannelManagementSections: View {
 	let model: PreferencesPaneModel
 
-	private var banFormat: Binding<TXHostmaskBanFormat> {
+	private var banFormat: Binding<HostmaskBanFormat> {
 		model.preferences.binding(for: Preferences.Commands.banFormat)
 	}
 
@@ -149,13 +149,13 @@ struct PreferencesChannelManagementSections: View {
 		Section {
 			Picker(selection: banFormat) {
 				Text(verbatim: PreferencesChannelManagementStrings.banFormatWhnin)
-					.tag(TXHostmaskBanFormat.whnin)
+					.tag(HostmaskBanFormat.whnin)
 				Text(verbatim: PreferencesChannelManagementStrings.banFormatWhainn)
-					.tag(TXHostmaskBanFormat.whainn)
+					.tag(HostmaskBanFormat.whainn)
 				Text(verbatim: PreferencesChannelManagementStrings.banFormatWhanni)
-					.tag(TXHostmaskBanFormat.whanni)
+					.tag(HostmaskBanFormat.whanni)
 				Text(verbatim: PreferencesChannelManagementStrings.banFormatExact)
-					.tag(TXHostmaskBanFormat.exact)
+					.tag(HostmaskBanFormat.exact)
 			} label: {
 				Text(verbatim: PreferencesChannelManagementStrings.banFormatLabel)
 			}

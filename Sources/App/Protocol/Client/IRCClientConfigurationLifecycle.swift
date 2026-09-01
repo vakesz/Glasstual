@@ -217,26 +217,10 @@ public extension IRCClient {
 	}
 
 	func closeDialogs() {
-		let channelListDialogKey = WindowController.windowDescription(
-			forClass: ServerChannelListDialog.self,
-			inRelationTo: uniqueIdentifier
-		)
-		let channelListDialog = SharedApplication.sharedWindowController()
-			.window(fromWindowList: channelListDialogKey) as? ServerChannelListDialog
-		channelListDialog?.close()
-		let descriptions = [
-			ChannelInviteSheet.self,
-			ServerChangeNicknameSheet.self,
-			ServerHighlightListSheet.self,
-			ServerPropertiesSheet.self,
-		].map { WindowController.windowDescription(forClass: $0) }
-		let windows = SharedApplication.sharedWindowController().windows(fromWindowList: descriptions)
-		for window in windows {
-			guard let sheet = window as? SheetBase,
-			      let clientSheet = window as? TDCClientPrototype,
-			      clientSheet.clientId == uniqueIdentifier
-			else { continue }
-			sheet.close()
+		SharedApplication.sharedApplicationScenes().closeServerChannelList(for: uniqueIdentifier)
+		AppController.shared.mainWindow.presentationModel.closeSheets { owner in
+			guard let clientSheet = owner as? ClientScoped else { return false }
+			return clientSheet.clientId == uniqueIdentifier
 		}
 	}
 

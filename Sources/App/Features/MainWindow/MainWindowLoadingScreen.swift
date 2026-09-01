@@ -7,19 +7,66 @@ import AppKit
 import Observation
 import SwiftUI
 
+@MainActor
 @Observable
-private final class MainWindowLoadingModel {
+public final class MainWindowLoadingScreen {
 	enum Content: Equatable {
 		case hidden
 		case welcome
 		case progress(String)
 	}
 
-	var content = Content.hidden
+	private(set) var content = Content.hidden
+
+	@ObservationIgnored var visibilityDidChange: ((Bool) -> Void)?
+
+	public var viewIsVisible: Bool {
+		content != .hidden
+	}
+
+	public func configure() {}
+
+	public func showWelcomeAddServerView() {
+		show(.welcome)
+	}
+
+	public func showProgressView(withReason reason: String) {
+		show(.progress(reason))
+	}
+
+	public func setProgressViewReason(_ reason: String) {
+		guard case .progress = content else { return }
+		content = .progress(reason)
+	}
+
+	public func hide() {
+		hideAnimated(false)
+	}
+
+	public func hideAnimated() {
+		hideAnimated(true)
+	}
+
+	public func hideAnimated(_ animated: Bool) {
+		guard viewIsVisible else { return }
+		visibilityDidChange?(false)
+		if animated {
+			withAnimation(.easeOut(duration: 0.25)) {
+				content = .hidden
+			}
+		} else {
+			content = .hidden
+		}
+	}
+
+	private func show(_ content: Content) {
+		self.content = content
+		visibilityDidChange?(true)
+	}
 }
 
-private struct MainWindowLoadingContent: View {
-	@Bindable var model: MainWindowLoadingModel
+struct MainWindowLoadingContent: View {
+	@Bindable var model: MainWindowLoadingScreen
 
 	var body: some View {
 		Group {
@@ -39,6 +86,7 @@ private struct MainWindowLoadingContent: View {
 			}
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity)
+		.background(.regularMaterial)
 	}
 
 	private func welcome(iconSize: CGFloat, spacing: CGFloat, padding: CGFloat) -> some View {
@@ -80,116 +128,5 @@ private struct MainWindowLoadingContent: View {
 			.scaledToFit()
 			.frame(width: size, height: size)
 			.accessibilityHidden(true)
-	}
-}
-
-@MainActor
-public final class MainWindowLoadingScreenView: NSVisualEffectView {
-	private let model = MainWindowLoadingModel()
-
-	public var viewIsVisible: Bool {
-		isHidden == false
-	}
-
-	override public init(frame frameRect: NSRect) {
-		super.init(frame: frameRect)
-		material = .underWindowBackground
-		blendingMode = .withinWindow
-		state = .followsWindowActiveState
-		isHidden = true
-
-		let host = NSHostingController(rootView: MainWindowLoadingContent(model: model)).view
-		host.translatesAutoresizingMaskIntoConstraints = false
-		addSubview(host)
-		NSLayoutConstraint.activate([
-			host.leadingAnchor.constraint(equalTo: leadingAnchor),
-			host.trailingAnchor.constraint(equalTo: trailingAnchor),
-			host.topAnchor.constraint(equalTo: topAnchor),
-			host.bottomAnchor.constraint(equalTo: bottomAnchor),
-		])
-	}
-
-	@available(*, unavailable)
-	required init?(coder _: NSCoder) {
-		fatalError("MainWindowLoadingScreenView is programmatic")
-	}
-
-	public func configure() {}
-
-	public func showWelcomeAddServerView() {
-		show(.welcome)
-	}
-
-	public func showProgressView(withReason reason: String) {
-		show(.progress(reason))
-	}
-
-	public func setProgressViewReason(_ reason: String) {
-		guard case .progress = model.content else { return }
-		model.content = .progress(reason)
-	}
-
-	public func hide() {
-		hideAnimated(false)
-	}
-
-	public func hideAnimated() {
-		hideAnimated(true)
-	}
-
-	public func hideAnimated(_ animated: Bool) {
-		guard isHidden == false else { return }
-		enableBackgroundControlsStepOne()
-
-		let finish: @MainActor () -> Void = { [weak self] in
-			guard let self else { return }
-			model.content = .hidden
-			isHidden = true
-			alphaValue = 1
-			enableBackgroundControlsStepTwo()
-		}
-
-		guard animated else {
-			finish()
-			return
-		}
-
-		Task { @MainActor in
-			await withCheckedContinuation { continuation in
-				NSAnimationContext.runAnimationGroup { context in
-					context.duration = 0.25
-					self.animator().alphaValue = 0
-				} completionHandler: {
-					continuation.resume()
-				}
-			}
-			finish()
-		}
-	}
-
-	private func show(_ content: MainWindowLoadingModel.Content) {
-		model.content = content
-		disableBackgroundControlsStepOne()
-		alphaValue = 1
-		isHidden = false
-		disableBackgroundControlsStepTwo()
-	}
-
-	private func disableBackgroundControlsStepOne() {
-		mainWindow?.contentSplitViewController.view.isHidden = true
-	}
-
-	private func disableBackgroundControlsStepTwo() {
-		mainWindow?.inputTextField.isEditable = false
-		mainWindow?.inputTextField.isSelectable = false
-	}
-
-	private func enableBackgroundControlsStepOne() {
-		mainWindow?.contentSplitViewController.view.isHidden = false
-	}
-
-	private func enableBackgroundControlsStepTwo() {
-		mainWindow?.inputTextField.isEditable = true
-		mainWindow?.inputTextField.isSelectable = true
 	}
 }

@@ -421,7 +421,7 @@ public final class FileLogger: NSObject {
 		Self.lastNoSpaceFailTime = currentTime
 		Self.noSpaceAlertVisible = true
 
-		TDCAlert.alert(
+		Alerts.alert(
 			withMessage: PromptStrings.Logging.resumeAfterLowStorageBody,
 			title: PromptStrings.Logging.disabledForLowStorageTitle,
 			defaultButton: PromptStrings.Action.confirmation,

@@ -189,12 +189,12 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		dismissNotifications(for: mainWindow.selectedChannel, on: client)
 	}
 
-	public func title(forEvent event: TXNotificationType) -> String {
+	public func title(forEvent event: NotificationEvent) -> String {
 		NotificationStrings.eventTypeTitle(for: event)
 	}
 
 	public func notify(
-		_ eventType: TXNotificationType,
+		_ eventType: NotificationEvent,
 		title eventTitle: String?,
 		description eventDescription: String?,
 		userInfo eventContext: NotificationPayload?
@@ -229,7 +229,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	}
 
 	private func notificationContent(
-		for eventType: TXNotificationType,
+		for eventType: NotificationEvent,
 		title eventTitle: String?,
 		body eventBody: String?
 	) -> (title: String?, body: String?) {
@@ -518,9 +518,9 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		/* Handle file transfer notifications allowing the user to start a
 		 file transfer directly through the notification's action button. */
 		if isFileTransferAction {
-			SharedApplication.sharedFileTransferDialog().show(true, restorePosition: false)
+			SharedApplication.sharedFileTransferCenter().present()
 
-			guard fileTransferNotificationType == TXNotificationType.fileTransferReceiveRequested.rawValue else {
+			guard fileTransferNotificationType == NotificationEvent.fileTransferReceiveRequested.rawValue else {
 				return
 			}
 
@@ -529,7 +529,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			}
 
 			guard
-				let fileTransfer = SharedApplication.sharedFileTransferDialog()
+				let fileTransfer = SharedApplication.sharedFileTransferCenter()
 				.fileTransfer(withUniqueIdentifier: fileTransferUniqueIdentifier)
 			else {
 				return
@@ -583,7 +583,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	// MARK: - Preferences
 
-	public func sound(forEvent event: TXNotificationType, in channel: IRCChannel?) -> String? {
+	public func sound(forEvent event: NotificationEvent, in channel: IRCChannel?) -> String? {
 		if let channel, let channelValue = channel.config.sound(forEvent: event) {
 			return channelValue
 		}
@@ -591,7 +591,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		return Preferences.Notifications.sound(event).storedValue
 	}
 
-	public func speakEvent(_ event: TXNotificationType, in channel: IRCChannel?) -> Bool {
+	public func speakEvent(_ event: NotificationEvent, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
 			in: channel,
@@ -600,7 +600,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	public func notificationEnabled(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
+	public func notificationEnabled(forEvent event: NotificationEvent, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
 			in: channel,
@@ -609,7 +609,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	public func disabledWhileAway(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
+	public func disabledWhileAway(forEvent event: NotificationEvent, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
 			in: channel,
@@ -618,7 +618,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	public func bounceDockIcon(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
+	public func bounceDockIcon(forEvent event: NotificationEvent, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
 			in: channel,
@@ -627,7 +627,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
-	public func bounceDockIconRepeatedly(forEvent event: TXNotificationType, in channel: IRCChannel?) -> Bool {
+	public func bounceDockIconRepeatedly(forEvent event: NotificationEvent, in channel: IRCChannel?) -> Bool {
 		resolve(
 			event,
 			in: channel,
@@ -640,10 +640,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	/// override", so the application-wide preference answers. Five settings
 	/// shared this shape as five byte-identical bodies.
 	private func resolve(
-		_ event: TXNotificationType,
+		_ event: NotificationEvent,
 		in channel: IRCChannel?,
-		channelValue: (ChannelConfig, TXNotificationType) -> ChannelEventOverride,
-		globalValue: (TXNotificationType) -> Bool
+		channelValue: (ChannelConfig, NotificationEvent) -> ChannelEventOverride,
+		globalValue: (NotificationEvent) -> Bool
 	) -> Bool {
 		if let channel {
 			switch channelValue(channel.config, event) {

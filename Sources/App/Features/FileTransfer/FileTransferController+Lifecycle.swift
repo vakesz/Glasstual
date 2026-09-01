@@ -38,7 +38,7 @@
 
 import Foundation
 
-extension TDCFileTransferDialogTransferController {
+extension FileTransferController {
 	public func prepareForPermanentDestruction() {
 		dispatchPrecondition(condition: .onQueue(.main))
 		closeAndPostNotification(false)
@@ -65,7 +65,7 @@ extension TDCFileTransferDialogTransferController {
 			postCompletionNotificationIfNeeded()
 		}
 
-		transferDialog.updateMaintenanceTimer()
+		transferCenter.updateMaintenanceTimer()
 		enableSystemSleep()
 	}
 
@@ -132,7 +132,7 @@ extension TDCFileTransferDialogTransferController {
 	private func postCompletionNotificationIfNeeded() {
 		guard let client else { return }
 
-		let type: TXNotificationType
+		let type: NotificationEvent
 		switch (transferStatus, isSender) {
 		case (.fatalError, true), (.recoverableError, true):
 			type = .fileTransferSendFailed

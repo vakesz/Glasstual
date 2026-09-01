@@ -41,7 +41,7 @@ import Foundation
 
 private struct OutboundTextCommand {
 	let wireCommand: String
-	let lineType: TVCLogLineType
+	let lineType: LogLineType
 
 	init?(_ command: IRCRemoteCommand) {
 		switch command {
@@ -58,6 +58,10 @@ private struct OutboundTextCommand {
 			return nil
 		}
 	}
+}
+
+private enum OutboundTextSuppressionKey: String {
+	case potentialFlood = "input_text_possible_flood_warning"
 }
 
 struct OutboundMessageCommandPolicy {
@@ -394,12 +398,12 @@ public extension IRCClient {
 	}
 
 	private func potentialFloodAlert() -> Bool {
-		TDCAlert.modalAlert(
+		Alerts.modalAlert(
 			withMessage: IRCTransportStrings.confirmLargeMessage,
 			title: IRCTransportStrings.largeMessageWarning,
 			defaultButton: PromptStrings.Action.yes,
 			alternateButton: PromptStrings.Action.no,
-			suppressionKey: "input_text_possible_flood_warning",
+			suppressionKey: OutboundTextSuppressionKey.potentialFlood.rawValue,
 			suppressionText: nil
 		)
 	}

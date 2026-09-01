@@ -69,14 +69,14 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 	var displayServerMOTD = false
 	var replyToCTCPRequests = false
 	var masqueradeCTCPVersion: String?
-	var locationToSendNotices: TXNoticeSendLocation = .selectedChannel
+	var locationToSendNotices: NoticeSendLocation = .selectedChannel
 	var sendTypingNotifications = false
 	var displayTypingNotifications = true
 	var giveFocusOnMessageCommand = false
 	var autoAddScrollbackMark = false
 	var defaultKickMessage = ""
 	var irCopDefaultKillMessage = ""
-	var banFormat: TXHostmaskBanFormat = .whnin
+	var banFormat: HostmaskBanFormat = .whnin
 
 	// MARK: Commands that fan out across connections
 
@@ -96,7 +96,7 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 	// MARK: Highlights
 
 	var highlightCurrentNickname = false
-	var highlightMatchingMethod: TXNicknameHighlightMatchType = .partial
+	var highlightMatchingMethod: NicknameHighlightMatchMode = .partial
 	var highlightMatchKeywords: [String] = []
 	var highlightExcludeKeywords: [String] = []
 	var logHighlights = false
@@ -105,7 +105,7 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 
 	var logToDiskIsEnabled = false
 	var developerModeEnabled = false
-	var fileTransferRequestReplyAction: TXFileTransferRequestReply = .ignore
+	var fileTransferRequestReplyAction: FileTransferRequestBehavior = .ignore
 	var fileTransferPortRangeStart: UInt16 = 0
 	var fileTransferPortRangeEnd: UInt16 = 0
 	var fileTransferIPAddressInterfaceName: String?

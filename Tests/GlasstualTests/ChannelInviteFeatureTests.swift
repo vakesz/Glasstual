@@ -56,7 +56,7 @@ struct ChannelInviteFeatureTests {
 
 		adapter.start(withChannels: ["#general", "#support"])
 		adapter.ok(nil)
-		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
+		adapter.sheetDidEnd(withReturnCode: 0)
 
 		#expect(delegate.selectedChannel == "#general")
 		#expect(delegate.didClose)

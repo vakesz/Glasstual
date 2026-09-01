@@ -29,11 +29,11 @@ public extension Notification.Name {
 /// An immutable snapshot of the appearance the application is currently
 /// drawing in. It is built once per appearance change and only ever read
 /// afterwards, so it is a value.
-public struct AppearancePropertyCollection: TXAppearanceProperties, Equatable, Sendable {
+public struct AppearancePropertyCollection: AppearanceProperties, Equatable, Sendable {
 	public var appearanceName = ""
-	public var appearanceType: TXAppearanceType = .light
+	public var appearanceType: AppearanceType = .light
 	public var isDarkAppearance = false
-	public var appKitAppearanceTarget: TXAppKitAppearanceTarget = .none
+	public var appKitAppearanceTarget: AppKitAppearanceTarget = .none
 
 	public var appKitAppearance: NSAppearance? {
 		if appKitAppearanceTarget == .none {
@@ -151,7 +151,7 @@ public final class Appearance: NSObject {
 	}
 
 	private func updateAppearanceBySystemChange(_ systemChanged: Bool) {
-		var appearanceType: TXAppearanceType = .light
+		var appearanceType: AppearanceType = .light
 		let preferredAppearance = Preferences.Appearance.preferredAppearance.value
 
 		switch preferredAppearance {
@@ -169,7 +169,7 @@ public final class Appearance: NSObject {
 
 		let isAppearanceDark = appearanceType == .dark
 
-		var appKitAppearanceTarget: TXAppKitAppearanceTarget = .none
+		var appKitAppearanceTarget: AppKitAppearanceTarget = .none
 		if preferredAppearance != .inherited {
 			appKitAppearanceTarget = .window
 		}

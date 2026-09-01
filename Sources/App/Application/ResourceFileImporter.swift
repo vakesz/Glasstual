@@ -10,7 +10,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
 import os
 import UniformTypeIdentifiers
@@ -31,19 +30,21 @@ public enum ResourceFileKind: Equatable, Sendable {
 /// `NSApplicationDelegate.application(_:open:)` is main-actor isolated by
 /// declaration and hands over the same URLs.
 @MainActor
-public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
+public final class ResourceFileImporter {
 	public func open(_ urls: [URL]) {
-		for url in urls {
-			open(url)
+		Task { @MainActor in
+			for url in urls {
+				await open(url)
+			}
 		}
 	}
 
-	private func open(_ url: URL) {
+	private func open(_ url: URL) async {
 		switch Self.kind(of: url) {
 		case .script:
-			performImportOfScriptFile(url)
+			await performImportOfScriptFile(url)
 		case .extensionBundle:
-			performImportOfPluginFile(url)
+			await performImportOfPluginFile(url)
 		case nil:
 			Self.logger.error(
 				"Opened file '\(url.lastPathComponent, privacy: .public)' is neither a script nor an extension"
@@ -88,15 +89,10 @@ public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
 
 	// MARK: - Custom Plugin Files
 
-	private func performImportOfPluginFile(_ url: URL) {
+	private func performImportOfPluginFile(_ url: URL) async {
 		let filename = url.lastPathComponent
 
-		let performInstall = TDCAlert.modalAlert(
-			withMessage: PromptStrings.DocumentImport.documentOpenBody,
-			title: PromptStrings.DocumentImport.documentOpenTitle(filename: filename),
-			defaultButton: PromptStrings.Action.yes,
-			alternateButton: PromptStrings.Action.no
-		)
+		let performInstall = await confirmImport(of: filename)
 
 		guard performInstall, let extensionsURL = PathInfo.customExtensionsURL else {
 			return
@@ -110,109 +106,79 @@ public final class ResourceFileImporter: NSObject, NSOpenSavePanelDelegate {
 
 		let filenameWithoutExtension = (filename as NSString).deletingPathExtension
 
-		_ = TDCAlert.modalAlert(
-			withMessage: PromptStrings.DocumentImport.extensionRestartBody,
-			title: PromptStrings.DocumentImport.extensionInstalledTitle(name: filenameWithoutExtension),
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil
+		_ = await Alerts.run(
+			AlertRequest(
+				title: PromptStrings.DocumentImport.extensionInstalledTitle(name: filenameWithoutExtension),
+				body: PromptStrings.DocumentImport.extensionRestartBody,
+				defaultButton: PromptStrings.Action.confirmation
+			),
+			on: .anyVisibleWindow
 		)
 	}
 
 	// MARK: - Custom Script Files
 
-	public func panel(_: Any, validate url: URL) throws {
-		guard let scriptsURL = SharedApplication.sharedPluginManager().customScriptsURL,
-		      Self.url(url, isContainedIn: scriptsURL)
-		else {
-			throw NSError(
-				domain: "GlasstualErrorDomain",
-				code: 27984,
-				userInfo: [
-					NSURLErrorKey: url,
-					NSLocalizedDescriptionKey: PromptStrings.DocumentImport.scriptSaveErrorTitle,
-					NSLocalizedRecoverySuggestionErrorKey: PromptStrings.DocumentImport.scriptSaveErrorBody,
-				]
-			)
-		}
-	}
-
-	/// Whether `url` names something inside `directory`.
-	///
-	/// A string prefix test is not containment: it accepts a sibling whose name
-	/// merely starts with the directory's, such as `…/Application Scripts-evil`.
-	private static func url(_ url: URL, isContainedIn directory: URL) -> Bool {
-		let components = url.standardizedFileURL.resolvingSymlinksInPath().pathComponents
-		let directoryComponents = directory.standardizedFileURL.resolvingSymlinksInPath().pathComponents
-
-		guard components.count > directoryComponents.count else {
-			return false
-		}
-
-		return Array(components.prefix(directoryComponents.count)) == directoryComponents
-	}
-
-	private func performImportOfScriptFile(_ url: URL) {
+	private func performImportOfScriptFile(_ url: URL) async {
 		let filename = url.lastPathComponent
 
-		let performInstall = TDCAlert.modalAlert(
-			withMessage: PromptStrings.DocumentImport.documentOpenBody,
-			title: PromptStrings.DocumentImport.documentOpenTitle(filename: filename),
-			defaultButton: PromptStrings.Action.yes,
-			alternateButton: PromptStrings.Action.no
-		)
+		let performInstall = await confirmImport(of: filename)
 
-		guard performInstall else {
+		guard performInstall,
+		      let scriptsURL = SharedApplication.sharedPluginManager().customScriptsURL
+		else {
 			return
 		}
 
-		var folderRep = SharedApplication.sharedPluginManager().customScriptsURL
-
-		if folderRep.map({ FileManager.default.fileExists(at: $0) }) != true {
-			folderRep = folderRep?.deletingLastPathComponent()
+		do {
+			try FileManager.default.createDirectory(at: scriptsURL, withIntermediateDirectories: true)
+		} catch {
+			Self.logger.error("Could not create the scripts directory: \(error.localizedDescription, privacy: .public)")
+			return
 		}
 
-		let bundleID = ApplicationInfo.applicationBundleIdentifier()
-		let savePanel = NSSavePanel()
+		let destinationURL = scriptsURL.appendingPathComponent(filename, isDirectory: false)
+		guard importItem(url, into: destinationURL) else { return }
 
-		savePanel.delegate = self
-		savePanel.canCreateDirectories = true
-		savePanel.directoryURL = folderRep
-		savePanel.title = PromptStrings.Action.save
-		savePanel.message = PromptStrings.DocumentImport.scriptSavePanelBody(bundleIdentifier: bundleID)
-		savePanel.nameFieldStringValue = url.lastPathComponent
-		savePanel.showsTagField = false
-
-		savePanel.begin { [weak self] returnCode in
-			guard let self, returnCode == .OK, let destinationURL = savePanel.url else {
-				return
-			}
-
-			guard importItem(url, into: destinationURL) else {
-				return
-			}
-
-			let importedFilename = destinationURL.lastPathComponent
-
-			performImportOfScriptFilePostflight(importedFilename)
-			SharedApplication.sharedPluginManager().refreshScriptCommands()
-		}
+		await performImportOfScriptFilePostflight(filename)
+		SharedApplication.sharedPluginManager().refreshScriptCommands()
 	}
 
-	private func performImportOfScriptFilePostflight(_ filename: String) {
+	private func performImportOfScriptFilePostflight(_ filename: String) async {
 		let filenameWithoutExtension = (filename as NSString).deletingPathExtension
 
-		_ = TDCAlert.modalAlert(
-			withMessage: PromptStrings.DocumentImport.scriptCommandBody(name: filenameWithoutExtension),
-			title: PromptStrings.DocumentImport.scriptInstalledTitle(name: filenameWithoutExtension),
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil
+		_ = await Alerts.run(
+			AlertRequest(
+				title: PromptStrings.DocumentImport.scriptInstalledTitle(name: filenameWithoutExtension),
+				body: PromptStrings.DocumentImport.scriptCommandBody(name: filenameWithoutExtension),
+				defaultButton: PromptStrings.Action.confirmation
+			),
+			on: .anyVisibleWindow
 		)
+	}
+
+	private func confirmImport(of filename: String) async -> Bool {
+		await Alerts.run(
+			AlertRequest(
+				title: PromptStrings.DocumentImport.documentOpenTitle(filename: filename),
+				body: PromptStrings.DocumentImport.documentOpenBody,
+				defaultButton: PromptStrings.Action.yes,
+				alternateButton: PromptStrings.Action.no,
+				style: .warning
+			),
+			on: .anyVisibleWindow
+		).response == .default
 	}
 
 	// MARK: - General Import Controller
 
 	private func importItem(_ url: URL, into destination: URL) -> Bool {
-		FileManager.default.replaceItem(
+		let accessWasGranted = url.startAccessingSecurityScopedResource()
+		defer {
+			if accessWasGranted {
+				url.stopAccessingSecurityScopedResource()
+			}
+		}
+		return FileManager.default.replaceItem(
 			at: destination,
 			withItemAt: url
 		)

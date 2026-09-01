@@ -8,8 +8,8 @@ import Testing
 /// A domain that is definitely not the main actor, so the helpers can be shown
 /// to distinguish the two rather than to always agree.
 private actor Bystander {
-	func check() async {
-		await expectMainActor()
+	func isOnMainActor() -> Bool {
+		isMainActor(#isolation)
 	}
 
 	func record(_ label: String, into probe: IsolationProbe) async {
@@ -25,17 +25,13 @@ struct IsolationSupportTests {
 	}
 
 	@Test
-	func expectMainActorRejectsAnotherActor() async {
-		await withKnownIssue("expectMainActor() has to notice a caller on some other actor") {
-			await Bystander().check()
-		}
+	func mainActorPredicateRejectsAnotherActor() async {
+		#expect(await Bystander().isOnMainActor() == false)
 	}
 
 	@Test
-	func expectOffMainActorRejectsTheMainActor() async {
-		await withKnownIssue("expectOffMainActor() has to notice a caller on the main actor") {
-			await expectOffMainActor()
-		}
+	func mainActorPredicateAcceptsTheMainActor() {
+		#expect(currentIsolationIsMainActor())
 	}
 
 	@Test
@@ -59,4 +55,10 @@ struct IsolationSupportTests {
 
 		#expect(probe.labels.isEmpty)
 	}
+}
+
+private func currentIsolationIsMainActor(
+	isolation: isolated (any Actor)? = #isolation
+) -> Bool {
+	isMainActor(isolation)
 }

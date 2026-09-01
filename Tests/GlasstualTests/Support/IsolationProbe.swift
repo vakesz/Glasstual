@@ -8,10 +8,10 @@ import Testing
 
 /// Records where, and in what order, a seam delivered its callbacks.
 ///
-/// The later Phase 8 steps replace queues and operations with actors, and the
-/// two properties that break silently are ordering (the render pipeline must
-/// stay FIFO per view; a historic-log fetch must not overtake its predecessor)
-/// and destination (results must land on the main actor, work must not). A test
+/// The two properties that break silently at asynchronous boundaries are
+/// ordering (the render pipeline must stay FIFO per view; a historic-log fetch
+/// must not overtake its predecessor) and destination (results must land on
+/// the main actor, work must not). A test
 /// hands a probe to the seam, the seam calls ``record(_:)`` at each delivery,
 /// and the test then reads back a list it can compare against.
 ///

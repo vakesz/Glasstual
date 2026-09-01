@@ -92,7 +92,8 @@ private final class RecordingTextHandler: PluginTextEventHandling {
 	private(set) var sawMainActor = false
 
 	func receivedText(_: PluginTextEvent) -> Bool {
-		sawMainActor = MainActor.shared.isCurrentExecutor
+		MainActor.preconditionIsolated()
+		sawMainActor = true
 		return true
 	}
 }
@@ -106,15 +107,8 @@ private final class RecordingCommandHandler: PluginCommandHandling {
 	}
 
 	func userInputCommandInvoked(_: PluginCommandInvocation) {
-		sawMainActor = MainActor.shared.isCurrentExecutor
-	}
-}
-
-private extension MainActor {
-	/// True when the caller really is running on this actor's executor. A
-	/// main-actor callback that was reached any other way would read `false`.
-	nonisolated var isCurrentExecutor: Bool {
-		Thread.isMainThread
+		MainActor.preconditionIsolated()
+		sawMainActor = true
 	}
 }
 

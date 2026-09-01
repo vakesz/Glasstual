@@ -10,13 +10,15 @@
  *
  *********************************************************************** */
 
+import GlasstualPluginKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The complete Settings interface. SwiftUI owns sidebar selection, detail
-/// routing, navigation history, toolbar commands, and pane layout; the AppKit
-/// shell exists only to configure the macOS window.
+/// routing, navigation history, toolbar commands, pane layout, and presentation.
 struct PreferencesRootView: View {
 	@Bindable var model: PreferencesPaneModel
+	@Environment(\.openURL) private var openURL
 	@State private var history = [PreferencesSelection.general]
 	@State private var historyIndex = 0
 
@@ -80,6 +82,75 @@ struct PreferencesRootView: View {
 		.onChange(of: model.selection) { _, selection in
 			record(selection)
 		}
+		.fileImporter(
+			isPresented: importIsPresented,
+			allowedContentTypes: model.importRequest?.allowedContentTypes ?? [.data]
+		) { result in
+			model.completeImport(result)
+		}
+		.fileExporter(
+			isPresented: exportIsPresented,
+			document: model.exportedThemeData.map(PreferencesPropertyListDocument.init(data:)),
+			contentType: .propertyList,
+			defaultFilename: model.exportedThemeFilename
+		) { result in
+			model.completeExport(result)
+		}
+		.alert(
+			TranscriptThemeStrings.themeError,
+			isPresented: errorIsPresented,
+			actions: {
+				Button(PromptStrings.Action.confirmation) { model.presentationError = nil }
+			},
+			message: {
+				Text(verbatim: model.presentationError ?? "")
+			}
+		)
+		.sheet(isPresented: $model.showsFontPicker) {
+			PreferencesFontPicker(
+				fontName: model.transcriptTheme.fontName,
+				fontSize: model.transcriptTheme.fontSize,
+				apply: model.applyChannelViewFont
+			)
+		}
+		.onChange(of: model.externalURL) { _, url in
+			guard let url else { return }
+			openURL(url)
+			model.externalURL = nil
+		}
+	}
+
+	private var importIsPresented: Binding<Bool> {
+		Binding(
+			get: { model.importRequest != nil },
+			set: {
+				if $0 == false {
+					model.importRequest = nil
+				}
+			}
+		)
+	}
+
+	private var exportIsPresented: Binding<Bool> {
+		Binding(
+			get: { model.exportedThemeData != nil },
+			set: {
+				if $0 == false {
+					model.exportedThemeData = nil
+				}
+			}
+		)
+	}
+
+	private var errorIsPresented: Binding<Bool> {
+		Binding(
+			get: { model.presentationError != nil },
+			set: {
+				if $0 == false {
+					model.presentationError = nil
+				}
+			}
+		)
 	}
 
 	private var detail: some View {
@@ -200,8 +271,7 @@ struct PreferencesGroupedPaneSections: View {
 
 /// Maps a pane identifier onto the view that answers to it.
 struct PreferencesPaneRouter: View {
-	/// Plugin ABI exposes an `NSView`; first-party panes use it only as the
-	/// adapter around their SwiftUI content.
+	/// Plugin panes are SwiftUI values, so the Settings scene owns their layout.
 	private static let pluginPaneHeight = 420.0
 
 	let model: PreferencesPaneModel
@@ -244,8 +314,9 @@ struct PreferencesPaneRouter: View {
 	@ViewBuilder
 	private func pluginPane(at index: Int) -> some View {
 		let plugins = SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
-		if plugins.indices.contains(index), let view = plugins[index].pluginPreferencesPaneView {
-			PreferencesHostedView(view: view, height: Self.pluginPaneHeight)
+		if plugins.indices.contains(index), let pane = plugins[index].pluginPreferencesPane {
+			pane.makeView()
+				.frame(minHeight: Self.pluginPaneHeight)
 				.padding(20)
 		}
 	}

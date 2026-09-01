@@ -1,5 +1,5 @@
 import Foundation
-import HistoricLogStoreKit
+@testable import Glasstual
 import Synchronization
 import Testing
 
@@ -20,9 +20,7 @@ private final nonisolated class Locked<Value: Sendable>: Sendable {
 	}
 }
 
-/// A filename store of the test's own, so a run neither reads nor writes the
-/// preference the service keeps the real database's name in.
-private nonisolated struct ScratchFilenameStore: HistoricLogFilenameStoring {
+private nonisolated struct ScratchFilenameStore: HistoricLogFilenameStoring { // nonisolated: value
 	private let storage = Locked<String?>(nil)
 
 	var databaseFilename: String? {
@@ -31,216 +29,140 @@ private nonisolated struct ScratchFilenameStore: HistoricLogFilenameStoring {
 	}
 }
 
-/// The client half. Records what the store said it truncated.
-private final nonisolated class ClientRecorder: NSObject, HistoricLogClientProtocol {
-	private let storage = Locked<[String]>([])
+private actor DeletionRecorder {
+	private(set) var identifiers: [String] = []
 
-	var deletedIdentifiers: [String] {
-		storage.value
-	}
-
-	func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView _: String) {
-		storage.set(storage.value + uniqueIdentifiers)
+	func record(_ newIdentifiers: [String]) {
+		identifiers.append(contentsOf: newIdentifiers)
 	}
 }
 
-/// A live connection to a store, over a real anonymous `NSXPCListener`.
-///
-/// Everything NSXPC hands out is non-`Sendable`, so the listener, the
-/// connection and the proxy are created in here and never leave: a test drives
-/// the store by awaiting this actor, and ten of those awaits are ten XPC calls
-/// in flight at once.
-private actor StoreHarness {
-	private let listener: NSXPCListener
-	private let delegate: HistoricLogProcessDelegate
-	private let connection: NSXPCConnection
-	private let proxy: any HistoricLogServerProtocol
-	private let recorder: ClientRecorder
+/// Drives the real in-process store while keeping temporary-file cleanup and
+/// observation behind one actor.
+private actor HistoricLogStoreHarness {
+	private let store: HistoricLogStore
+	private let recorder: DeletionRecorder
 
 	let directory: URL
 
 	init() throws {
 		directory = URL(fileURLWithPath: NSTemporaryDirectory())
 			.appendingPathComponent("historic-log-\(UUID().uuidString)", isDirectory: true)
-
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
-		listener = NSXPCListener.anonymous()
-		delegate = HistoricLogProcessDelegate(filenameStore: ScratchFilenameStore())
-		recorder = ClientRecorder()
-
-		listener.delegate = delegate
-		listener.resume()
-
-		let serverInterface = NSXPCInterface(with: HistoricLogServerProtocol.self)
-
-		guard HistoricLogInterface.configure(serverInterface) else {
-			throw CocoaError(.coderInvalidValue)
+		let recorder = DeletionRecorder()
+		self.recorder = recorder
+		store = HistoricLogStore(filenameStore: ScratchFilenameStore()) { identifiers, _ in
+			await recorder.record(identifiers)
 		}
-
-		connection = NSXPCConnection(listenerEndpoint: listener.endpoint)
-		connection.remoteObjectInterface = serverInterface
-		connection.exportedInterface = NSXPCInterface(with: HistoricLogClientProtocol.self)
-		connection.exportedObject = recorder
-		connection.resume()
-
-		guard let proxy = connection.remoteObjectProxy as? any HistoricLogServerProtocol else {
-			throw CocoaError(.coderInvalidValue)
-		}
-
-		self.proxy = proxy
 	}
 
 	func shutdown() async {
-		connection.invalidate()
-		listener.invalidate()
-
-		/* The store closes its Core Data stack when the invalidation reaches
-		 it. Removing the directory before that lands leaves it writing into a
-		 file that is no longer there, which Core Data is loud about. */
-		try? await Task.sleep(for: .milliseconds(200), clock: .continuous)
-
+		await store.close()
 		try? FileManager.default.removeItem(at: directory)
 	}
 
 	var deletedIdentifiers: [String] {
-		recorder.deletedIdentifiers
+		get async { await recorder.identifiers }
 	}
 
 	func openDatabase() async -> Bool {
-		let path = directory.path
-
-		return await withCheckedContinuation { continuation in
-			proxy.openDatabase(inDirectory: path) { continuation.resume(returning: $0) }
-		}
+		await store.openDatabase(inDirectory: directory.path)
 	}
 
-	func write(_ index: Int, inView view: String) {
-		proxy.writeLogLine(
-			LogLineXPC(
-				logLineData: Data("line \(index)".utf8),
-				uniqueIdentifier: "line-\(index)",
-				viewIdentifier: view,
-				sessionIdentifier: 1,
-				creationDate: Date().timeIntervalSince1970
-			)
-		)
+	func write(_ index: Int, inView view: String) async {
+		await store.writeLogLine(HistoricLogEntry(
+			logLineData: Data("line \(index)".utf8),
+			uniqueIdentifier: "line-\(index)",
+			viewIdentifier: view,
+			sessionIdentifier: 1,
+			creationDate: Date().timeIntervalSince1970
+		))
 	}
 
 	func save() async {
-		await withCheckedContinuation { continuation in
-			proxy.saveData { continuation.resume() }
-		}
+		await store.saveData()
 	}
 
-	func forgetView(_ view: String) {
-		proxy.forgetView(view)
+	func forgetView(_ view: String) async {
+		await store.forgetView(view)
 	}
 
 	func lineCount(inView view: String, limit: UInt = 100) async -> Int {
-		await withCheckedContinuation { continuation in
-			proxy.fetchEntries(forView: view, ascending: true, fetchLimit: limit, limitTo: nil) { entries in
-				continuation.resume(returning: entries.count)
-			}
-		}
+		await store.fetchEntries(
+			forView: view,
+			ascending: true,
+			fetchLimit: limit,
+			limitToDate: nil
+		).count
 	}
 }
 
-/// The store under the traffic it actually sees: many XPC calls at once,
-/// against the same exported object and the same ownership rules the service
-/// itself uses.
-@Suite("Historic log store over XPC", .serialized)
+@Suite("Historic log store", .serialized)
 struct HistoricLogStoreConcurrencyTests {
-	@Test("Ten fetches at once all see the lines that were written")
+	@Test("Ten concurrent fetches all see the lines that were written")
 	func concurrentFetchesAllSeeTheWrites() async throws {
-		let harness = try StoreHarness()
-
+		let harness = try HistoricLogStoreHarness()
 		#expect(await harness.openDatabase())
 
 		let view = "view-\(UUID().uuidString)"
 		let lineCount = 40
-
 		for index in 0 ..< lineCount {
 			await harness.write(index, inView: view)
 		}
-
 		await harness.save()
 
 		let results = await withTaskGroup(of: Int.self) { group in
 			for _ in 0 ..< 10 {
 				group.addTask { await harness.lineCount(inView: view, limit: UInt(lineCount)) }
 			}
-
-			var collected: [Int] = []
-			for await count in group {
-				collected.append(count)
+			var values: [Int] = []
+			for await value in group {
+				values.append(value)
 			}
-			return collected
+			return values
 		}
 
 		#expect(results.count == 10)
-
-		/* Every fetch is the same query against the same view, so they all have
-		 to agree — a store that let two of them interleave would not. */
 		#expect(Set(results) == [lineCount])
-
 		await harness.shutdown()
 	}
 
-	@Test("A view that is forgotten reports its lines to the client and comes back empty")
+	@Test("Forgetting a view reports its lines and empties it")
 	func forgettingAViewReportsAndEmptiesIt() async throws {
-		let harness = try StoreHarness()
-
+		let harness = try HistoricLogStoreHarness()
 		#expect(await harness.openDatabase())
 
 		let view = "view-\(UUID().uuidString)"
-
 		for index in 0 ..< 5 {
 			await harness.write(index, inView: view)
 		}
-
 		await harness.save()
-
 		#expect(await harness.lineCount(inView: view) == 5)
 
 		await harness.forgetView(view)
 
-		/* forgetView is one way, so the fetch that follows it is what proves it
-		 landed: the store answers XPC calls in order. */
 		#expect(await harness.lineCount(inView: view) == 0)
-
-		/* The deletion notice goes out through the client proxy the store was
-		 handed, and comes back to this process asynchronously. */
-		for _ in 0 ..< 50 where await harness.deletedIdentifiers.count < 5 {
-			try await Task.sleep(for: .milliseconds(20), clock: .continuous)
-		}
-
 		#expect(await Set(harness.deletedIdentifiers) == Set((0 ..< 5).map { "line-\($0)" }))
-
 		await harness.shutdown()
 	}
 
 	@Test("Two views written at once do not see each other's lines")
 	func viewsAreIsolatedFromEachOther() async throws {
-		let harness = try StoreHarness()
-
+		let harness = try HistoricLogStoreHarness()
 		#expect(await harness.openDatabase())
 
 		let first = "view-\(UUID().uuidString)"
 		let second = "view-\(UUID().uuidString)"
-
 		for index in 0 ..< 12 {
 			await harness.write(index, inView: index.isMultiple(of: 2) ? first : second)
 		}
-
 		await harness.save()
 
 		async let firstCount = harness.lineCount(inView: first)
 		async let secondCount = harness.lineCount(inView: second)
-
 		#expect(await firstCount == 6)
 		#expect(await secondCount == 6)
-
 		await harness.shutdown()
 	}
 }

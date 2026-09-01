@@ -200,7 +200,7 @@ nonisolated extension Array: PreferenceValue where Element: PreferenceValue { //
 
 /// Which defaults database a preference lives in.
 public nonisolated enum PreferenceStorage: Sendable { // nonisolated: value
-	/// The application-group container shared with the XPC services.
+	/// The application-group container shared with the XPC connection host.
 	case container
 	/// `UserDefaults.standard`, for keys AppKit or a vendored library reads out
 	/// of the application's own domain.

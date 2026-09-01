@@ -42,7 +42,7 @@ import GlasstualPluginKit
 enum IRCInboundTextPolicy {
 	struct Classification {
 		let text: String
-		let lineType: TVCLogLineType
+		let lineType: LogLineType
 	}
 
 	static func classify(command: String, payload: String) -> Classification {
@@ -60,7 +60,7 @@ enum IRCInboundTextPolicy {
 		return Classification(text: text, lineType: isPrivmsg ? .ctcpQuery : .ctcpReply)
 	}
 
-	static func lineType(_ lineType: TVCLogLineType, suppressingHighlights: Bool) -> TVCLogLineType {
+	static func lineType(_ lineType: LogLineType, suppressingHighlights: Bool) -> LogLineType {
 		guard suppressingHighlights else { return lineType }
 		switch lineType {
 		case .action: return .actionNoHighlight
@@ -162,7 +162,7 @@ public extension IRCClient {
 		rewritten.command = "NOTICE"
 		rewritten.params = [
 			userNickname,
-			String(format: TVCLogLineSpecialNoticeMessageFormat, message.command, payload),
+			String(format: LogLineFormat.specialNoticeMessage, message.command, payload),
 		]
 		receivePrivmsgAndNotice(rewritten)
 	}
@@ -183,7 +183,7 @@ public extension IRCClient {
 		}
 	}
 
-	func receiveText(_ message: Message, lineType originalLineType: TVCLogLineType, text originalText: String) {
+	func receiveText(_ message: Message, lineType originalLineType: LogLineType, text originalText: String) {
 		guard message.params.count > 1 else { return }
 		var text = originalText
 		if text.isEmpty {
@@ -216,7 +216,7 @@ public extension IRCClient {
 	}
 
 	private func receivePublicText(
-		_ message: Message, lineType: TVCLogLineType, target: String, text: String
+		_ message: Message, lineType: LogLineType, target: String, text: String
 	) {
 		guard let channel = findChannel(target) else { return }
 		let sender = message.senderNickname ?? ""
@@ -259,7 +259,7 @@ public extension IRCClient {
 	}
 
 	private func receivePrivateText(
-		_ message: Message, lineType: TVCLogLineType, target: String, text: String
+		_ message: Message, lineType: LogLineType, target: String, text: String
 	) {
 		let sender = message.senderNickname ?? ""
 		let isNotice = lineType == .notice
@@ -293,7 +293,7 @@ public extension IRCClient {
 			let highlight = context.isHighlight
 			var postEvent = true
 			if isSafeToPostNotification(for: message, in: query) {
-				let event: TXNotificationType = isNotice ? .privateNotice
+				let event: NotificationEvent = isNotice ? .privateNotice
 					: (highlight ? .highlight : (newPrivateMessage ? .newPrivateMessage : .privateMessage))
 				if let query {
 					postEvent = notifyText(
@@ -326,7 +326,7 @@ public extension IRCClient {
 	}
 
 	private func receiveServerText(
-		_ message: Message, lineType: TVCLogLineType, target _: String, text: String
+		_ message: Message, lineType: LogLineType, target _: String, text: String
 	) {
 		let sender = message.senderNickname ?? ""
 		let query = lineType == .notice ? findChannel(sender) : findChannelOrCreate(sender, as: .privateMessage)
@@ -398,7 +398,7 @@ public extension IRCClient {
 		_ text: String,
 		message: Message,
 		destination: IRCChannel?,
-		lineType: TVCLogLineType
+		lineType: LogLineType
 	) -> Bool {
 		let author = message.sender
 		return PluginDispatcher.dispatchReceivedText(

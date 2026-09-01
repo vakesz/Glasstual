@@ -19,7 +19,7 @@ import Testing
 struct MenuCommandTests {
 	@Test("The main menu is built in code without command tags")
 	func mainMenuIsProgrammatic() throws {
-		let controller = TXMenuController()
+		let controller = MenuController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		#expect(mainMenu.items.allSatisfy { $0.tag == 0 })
 		#expect(controller.mainMenuServerMenuItem?.command == .serverMenu)
@@ -28,7 +28,7 @@ struct MenuCommandTests {
 
 	@Test("The programmatic graph carries the commands the application looks up")
 	func mainMenuContainsExpectedCommands() throws {
-		let controller = TXMenuController()
+		let controller = MenuController()
 		let menu = try #require(NSApp.mainMenu)
 		let menus = [menu, controller.mainMenuChannelMenu, controller.mainMenuQueryMenu]
 		// A sample from each validation group, so a renumbered nib is caught.

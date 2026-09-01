@@ -40,7 +40,7 @@ import CocoaExtensions
 import Foundation
 import os
 
-extension TDCFileTransferDialogTransferController {
+extension FileTransferController {
 	public func open() {
 		open(withPath: nil)
 	}
@@ -308,7 +308,7 @@ extension TDCFileTransferDialogTransferController {
 	}
 
 	private func updateIPAddress() {
-		var address = transferDialog.IPAddress
+		var address = transferCenter.IPAddress
 		let detectionMethod = Preferences.FileTransfers.ipAddressDetectionMethod.value
 		let manuallyDetect = detectionMethod == .manual
 
@@ -316,7 +316,7 @@ extension TDCFileTransferDialogTransferController {
 		   let publicAddress = portMapping?.publicAddress,
 		   publicAddress.isIPAddress
 		{
-			transferDialog.IPAddress = publicAddress
+			transferCenter.IPAddress = publicAddress
 			address = publicAddress
 		}
 
@@ -324,7 +324,7 @@ extension TDCFileTransferDialogTransferController {
 			if manuallyDetect || detectionMethod == .routerOnly {
 				noteIPAddressLookupFailed()
 			} else {
-				transferDialog.requestIPAddress()
+				transferCenter.requestIPAddress()
 				transferStatus = .waitingForLocalIPAddress
 			}
 			return
@@ -342,7 +342,7 @@ extension TDCFileTransferDialogTransferController {
 	private func buildTransferToken() -> Bool {
 		for _ in 0 ..< 300 {
 			let candidate = String(UInt64.random(in: 1 ... UInt64.max))
-			if !transferDialog.fileTransferExists(withToken: candidate) {
+			if !transferCenter.fileTransferExists(withToken: candidate) {
 				transferToken = candidate
 				return true
 			}

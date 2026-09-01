@@ -40,7 +40,7 @@ import AppKit
 
 @MainActor
 public extension MenuActionCoordinator {
-	func performSupportAction(_ action: TXMenuSupportAction, sender _: Any?) {
+	func performSupportAction(_ action: MenuSupportAction, sender _: Any?) {
 		switch action {
 		case .openLogLocation: openLog(at: PathInfo.transcriptFolderURL)
 		case .openChannelLogs: openLog(at: selectedChannel?.logFilePath)
@@ -59,7 +59,7 @@ public extension MenuActionCoordinator {
 			NSWorkspace.shared.open(url)
 			return
 		}
-		TDCAlert.alert(
+		Alerts.alert(
 			withMessage: PromptStrings.Logging.emptyAlertBody,
 			title: PromptStrings.Logging.noLogsTitle,
 			defaultButton: PromptStrings.Action.confirmation,
@@ -80,12 +80,14 @@ public extension MenuActionCoordinator {
 	}
 
 	private func connectToSupportChannel(_ channel: String) {
-		Extras.createConnectionToServer(
-			"irc.libera.chat +6697",
-			channelList: channel,
-			connectWhenCreated: true,
-			mergeConnectionIfPossible: true,
-			selectFirstChannelAdded: true
+		ServerConnectionCoordinator.connect(
+			to: "irc.libera.chat +6697",
+			channels: channel,
+			options: ServerConnectionOptions(
+				connectWhenCreated: true,
+				mergeConnectionIfPossible: true,
+				selectFirstChannelAdded: true
+			)
 		)
 	}
 }

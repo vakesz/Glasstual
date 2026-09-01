@@ -45,9 +45,7 @@ public protocol NicknameColorSheetDelegate: NSObjectProtocol {
 }
 
 @MainActor
-public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
-	private static let contentSize = NSSize(width: 390, height: 112)
-
+public final class NicknameColorSheet: MainWindowSheetSession {
 	private let nickname: String
 	/* The style generator normalises with lowercased() before looking an
 	 override up, so the sheet has to read and write under the same key or the
@@ -74,10 +72,10 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 			model: model,
 			content: content,
 			selectColor: { [weak self] color in
-				self?.nicknameColorChanged(color)
+				self?.selectColor(color)
 			},
 			setUsesDefaultColor: { [weak self] usesDefaultColor in
-				self?.useDefaultColorToggled(usesDefaultColor)
+				self?.setUsesDefaultColor(usesDefaultColor)
 			},
 			save: { [weak self] in
 				self?.ok(nil)
@@ -86,32 +84,14 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 				self?.cancel(nil)
 			}
 		)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: Self.contentSize),
-			styleMask: [.titled, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-
-		hostedSheet.contentView = NSHostingView(rootView: rootView)
-		hostedSheet.contentMinSize = Self.contentSize
-		hostedSheet.contentMaxSize = Self.contentSize
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.title = content.windowTitle
-		hostedSheet.titleVisibility = .hidden
-		hostedSheet.titlebarAppearsTransparent = true
-		hostedSheet.titlebarSeparatorStyle = .none
-		sheet = hostedSheet
+		setContent(rootView)
 	}
 
 	public func start() {
 		startSheet()
 	}
 
-	@IBAction override public func ok(_ sender: Any?) {
+	override public func ok(_ sender: Any?) {
 		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(
 			model.colorForPersistence,
 			forKey: overrideKey
@@ -122,15 +102,7 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 		super.ok(sender)
 	}
 
-	@IBAction public func useDefaultColorToggled(_ sender: Any?) {
-		let usesDefaultColor: Bool = if let button = sender as? NSButton {
-			button.state == .on
-		} else if let value = sender as? Bool {
-			value
-		} else {
-			!model.usesDefaultColor
-		}
-
+	public func setUsesDefaultColor(_ usesDefaultColor: Bool) {
 		model.setUsesDefaultColor(usesDefaultColor)
 
 		if usesDefaultColor, NSColorPanel.sharedColorPanelExists {
@@ -138,17 +110,11 @@ public final class NicknameColorSheet: SheetBase, NSWindowDelegate {
 		}
 	}
 
-	@IBAction public func nicknameColorChanged(_ sender: Any?) {
-		if let colorWell = sender as? NSColorWell {
-			model.selectColor(colorWell.color)
-		} else if let color = sender as? NSColor {
-			model.selectColor(color)
-		} else {
-			model.markCustomColorSelected()
-		}
+	public func selectColor(_ color: NSColor) {
+		model.selectColor(color)
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		(delegate as? NicknameColorSheetDelegate)?.nicknameColorSheetWillClose(self)
 	}
 }

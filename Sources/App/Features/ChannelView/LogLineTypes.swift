@@ -38,17 +38,11 @@
 
 import Foundation
 
-let TVCLogLineUndefinedNicknameFormat = "<%@%n>"
-let TVCLogLineActionNicknameFormat = "%@ "
-let TVCLogLineNoticeNicknameFormat = "-%@-"
-let TVCLogLineSpecialNoticeMessageFormat = "[%@]: %@"
-let TVCLogLineDefaultCommandValue = "-100"
-
 /** The raw values are persisted — they are written into the renderer
  attribute dictionary and archived with every log line — so a number may never
  be reused and a new case may only ever be appended. `offTheRecordEncryptionStatus`
  stays at 15 for the sake of already-archived lines even though OTR is gone. */
-public enum TVCLogLineType: UInt, Codable, Sendable {
+public enum LogLineType: UInt, Codable, Sendable {
 	case undefined = 0
 	case action = 1
 	case actionNoHighlight = 2
@@ -73,14 +67,14 @@ public enum TVCLogLineType: UInt, Codable, Sendable {
 	case website = 21
 }
 
-/** Persisted alongside the log line; see `TVCLogLineType`. */
-public enum TVCLogLineMemberType: UInt, Codable, Sendable {
+/** Persisted alongside the log line; see `LogLineType`. */
+public enum LogLineMemberType: UInt, Codable, Sendable {
 	case normal = 0
 	case localUser = 1
 }
 
-/** Persisted alongside the log line; see `TVCLogLineType`. */
-public enum TVCLogLineDeliveryState: UInt, Codable, Sendable {
+/** Persisted alongside the log line; see `LogLineType`. */
+public enum LogLineDeliveryState: UInt, Codable, Sendable {
 	case none = 0
 	case pending = 1
 	case delivered = 2

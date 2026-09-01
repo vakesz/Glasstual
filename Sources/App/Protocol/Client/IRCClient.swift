@@ -127,7 +127,10 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	/// KVO: `PluginHostAdapter` watches this through `publisher(for:)` to tell
 	/// plugins when a client finished registering.
 	@objc public dynamic var isLoggedIn = false {
-		didSet { refreshDescription() }
+		didSet {
+			refreshDescription()
+			output?.updateMemberListVisibilityForSelection()
+		}
 	}
 
 	public var isQuitting = false
@@ -239,7 +242,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var lastWhoRequestChannelListIndex: UInt = 0
 	var typingTracker: TypingTracker!
 	var nextMessageReplyIdentifier: String?
-	var nextLineDeliveryState: TVCLogLineDeliveryState = .none
+	var nextLineDeliveryState: LogLineDeliveryState = .none
 	var nextLineReplyToMessageIdentifier: String?
 	var logFile: FileLogger?
 	/** Whether a logging session banner has been written and not yet closed. A line

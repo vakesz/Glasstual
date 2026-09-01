@@ -35,7 +35,7 @@
  *
  *********************************************************************** */
 
-import AppKit
+import SwiftUI
 
 public enum PluginCompatibility {
 	/// First host contract that loads Swift-native plugins without Glasstual.h.
@@ -62,11 +62,28 @@ public extension GlasstualPlugin {
 
 @MainActor
 public protocol PluginPreferencesProviding: AnyObject {
-	var pluginPreferencesPaneMenuItemName: String { get }
+	/// `nil` when the plugin does not currently supply a preference pane.
+	var pluginPreferencesPane: PluginPreferencesPane? { get }
+}
 
-	/// `nil` when the plugin does not currently supply its named preference pane.
-	/// The view is an ABI adapter and may host SwiftUI content.
-	var pluginPreferencesPaneView: NSView? { get }
+/// A plugin-owned SwiftUI preferences surface.
+///
+/// The closure preserves the plugin's ownership of its state while allowing the
+/// host to create the view in the Settings scene. It is main-actor isolated with
+/// the rest of the in-process plugin UI contract.
+@MainActor
+public struct PluginPreferencesPane {
+	public let title: String
+	private let content: () -> AnyView
+
+	public init(title: String, @ViewBuilder content: @escaping () -> some View) {
+		self.title = title
+		self.content = { AnyView(content()) }
+	}
+
+	public func makeView() -> AnyView {
+		content()
+	}
 }
 
 @MainActor

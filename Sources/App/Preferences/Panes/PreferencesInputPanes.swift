@@ -53,11 +53,11 @@ struct PreferencesControlsPane: View {
 	private var doubleClickPicker: some View {
 		Picker(selection: model.preferences.binding(for: Preferences.Input.userDoubleClickAction)) {
 			Text(verbatim: PreferencesControlsStrings.userDoubleClickQuery)
-				.tag(TXUserDoubleClickAction.privateMessage)
+				.tag(UserDoubleClickAction.privateMessage)
 			Text(verbatim: PreferencesControlsStrings.userDoubleClickWhois)
-				.tag(TXUserDoubleClickAction.whois)
+				.tag(UserDoubleClickAction.whois)
 			Text(verbatim: PreferencesControlsStrings.userDoubleClickInsert)
-				.tag(TXUserDoubleClickAction.insertTextField)
+				.tag(UserDoubleClickAction.insertTextField)
 		} label: {
 			Text(verbatim: PreferencesControlsStrings.userDoubleClickLabel)
 		}
@@ -66,13 +66,13 @@ struct PreferencesControlsPane: View {
 	private var commandWPicker: some View {
 		Picker(selection: model.preferences.binding(for: Preferences.Input.commandWKeyAction)) {
 			Text(verbatim: PreferencesControlsStrings.commandWCloseWindow)
-				.tag(TXCommandWKeyAction.closeWindow)
+				.tag(CommandWShortcutAction.closeWindow)
 			Text(verbatim: PreferencesControlsStrings.commandWPartChannel)
-				.tag(TXCommandWKeyAction.partChannel)
+				.tag(CommandWShortcutAction.partChannel)
 			Text(verbatim: PreferencesControlsStrings.commandWDisconnect)
-				.tag(TXCommandWKeyAction.disconnect)
+				.tag(CommandWShortcutAction.disconnect)
 			Text(verbatim: PreferencesControlsStrings.commandWTerminate)
-				.tag(TXCommandWKeyAction.terminate)
+				.tag(CommandWShortcutAction.terminate)
 		} label: {
 			Text(verbatim: PreferencesControlsStrings.commandWLabel)
 		}
@@ -144,13 +144,13 @@ struct PreferencesControlsPane: View {
 			TextualPreferences.performReloadAction(.textFieldFontSize)
 		}) {
 			Text(verbatim: PreferencesControlsStrings.textSizeNormal)
-				.tag(TVCMainWindowTextViewFontSize.normal)
+				.tag(MainWindowTextFontSize.normal)
 			Text(verbatim: PreferencesControlsStrings.textSizeLarge)
-				.tag(TVCMainWindowTextViewFontSize.large)
+				.tag(MainWindowTextFontSize.large)
 			Text(verbatim: PreferencesControlsStrings.textSizeExtraLarge)
-				.tag(TVCMainWindowTextViewFontSize.extraLarge)
+				.tag(MainWindowTextFontSize.extraLarge)
 			Text(verbatim: PreferencesControlsStrings.textSizeHumongous)
-				.tag(TVCMainWindowTextViewFontSize.humongous)
+				.tag(MainWindowTextFontSize.humongous)
 		} label: {
 			Text(verbatim: PreferencesControlsStrings.textSizeLabel)
 		}
@@ -159,11 +159,11 @@ struct PreferencesControlsPane: View {
 	private var tabKeyPicker: some View {
 		Picker(selection: model.preferences.binding(for: Preferences.Input.tabKeyAction)) {
 			Text(verbatim: PreferencesControlsStrings.tabKeyNone)
-				.tag(TXTabKeyAction.none)
+				.tag(TabKeyAction.none)
 			Text(verbatim: PreferencesControlsStrings.tabKeyUnread)
-				.tag(TXTabKeyAction.unreadChannel)
+				.tag(TabKeyAction.unreadChannel)
 			Text(verbatim: PreferencesControlsStrings.tabKeyComplete)
-				.tag(TXTabKeyAction.nicknameComplete)
+				.tag(TabKeyAction.nicknameComplete)
 		} label: {
 			Text(verbatim: PreferencesControlsStrings.tabKeyLabel)
 		}
@@ -220,7 +220,7 @@ struct PreferencesAddOnsPane: View {
 							.bold()
 						Spacer()
 						Button {
-							model.actions?.openCustomAddOnsFolder()
+							model.openCustomAddOnsFolder()
 						} label: {
 							Text(verbatim: PreferencesAddOnsStrings.openInFinder)
 						}

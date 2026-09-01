@@ -304,7 +304,7 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 		return copy
 	}
 
-	func sound(forEvent event: TXNotificationType) -> String? {
+	func sound(forEvent event: NotificationEvent) -> String? {
 		guard case let .sound(name) = notifications[event.preferenceKeyName(for: .sound)]
 		else {
 			return nil
@@ -313,53 +313,53 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 		return name
 	}
 
-	func notificationEnabled(forEvent event: TXNotificationType) -> ChannelEventOverride {
+	func notificationEnabled(forEvent event: NotificationEvent) -> ChannelEventOverride {
 		state(for: event, setting: .enabled)
 	}
 
-	func disabledWhileAway(forEvent event: TXNotificationType) -> ChannelEventOverride {
+	func disabledWhileAway(forEvent event: NotificationEvent) -> ChannelEventOverride {
 		state(for: event, setting: .disabledWhileAway)
 	}
 
-	func bounceDockIcon(forEvent event: TXNotificationType) -> ChannelEventOverride {
+	func bounceDockIcon(forEvent event: NotificationEvent) -> ChannelEventOverride {
 		state(for: event, setting: .bounceDockIcon)
 	}
 
-	func bounceDockIconRepeatedly(forEvent event: TXNotificationType) -> ChannelEventOverride {
+	func bounceDockIconRepeatedly(forEvent event: NotificationEvent) -> ChannelEventOverride {
 		state(for: event, setting: .bounceDockIconRepeatedly)
 	}
 
-	func speakEvent(_ event: TXNotificationType) -> ChannelEventOverride {
+	func speakEvent(_ event: NotificationEvent) -> ChannelEventOverride {
 		state(for: event, setting: .speak)
 	}
 
-	mutating func setSound(_ value: String?, forEvent event: TXNotificationType) {
+	mutating func setSound(_ value: String?, forEvent event: NotificationEvent) {
 		notifications[event.preferenceKeyName(for: .sound)] = value.map(ChannelNotificationSetting.sound)
 	}
 
-	mutating func setNotificationEnabled(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
+	mutating func setNotificationEnabled(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
 		setState(value, forEvent: event, setting: .enabled)
 	}
 
-	mutating func setDisabledWhileAway(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
+	mutating func setDisabledWhileAway(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
 		setState(value, forEvent: event, setting: .disabledWhileAway)
 	}
 
-	mutating func setBounceDockIcon(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
+	mutating func setBounceDockIcon(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
 		setState(value, forEvent: event, setting: .bounceDockIcon)
 	}
 
-	mutating func setBounceDockIconRepeatedly(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
+	mutating func setBounceDockIconRepeatedly(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
 		setState(value, forEvent: event, setting: .bounceDockIconRepeatedly)
 	}
 
-	mutating func setEventIsSpoken(_ value: ChannelEventOverride, forEvent event: TXNotificationType) {
+	mutating func setEventIsSpoken(_ value: ChannelEventOverride, forEvent event: NotificationEvent) {
 		setState(value, forEvent: event, setting: .speak)
 	}
 
 	private mutating func setState(
 		_ value: ChannelEventOverride,
-		forEvent event: TXNotificationType,
+		forEvent event: NotificationEvent,
 		setting: NotificationSetting
 	) {
 		let key = event.preferenceKeyName(for: setting)
@@ -374,7 +374,7 @@ public nonisolated extension ChannelConfig { // nonisolated: value
 		}
 	}
 
-	private func state(for event: TXNotificationType, setting: NotificationSetting) -> ChannelEventOverride {
+	private func state(for event: NotificationEvent, setting: NotificationSetting) -> ChannelEventOverride {
 		guard case let .flag(value) = notifications[event.preferenceKeyName(for: setting)]
 		else {
 			return .inherited

@@ -29,7 +29,7 @@ public enum NotificationAlertSound {
 /// override it; the compiler enforces that now.
 @MainActor
 public protocol NotificationConfiguration: AnyObject {
-	var eventType: TXNotificationType { get }
+	var eventType: NotificationEvent { get }
 	var alertSound: String? { get set }
 	var speakEvent: ChannelEventOverride { get set }
 	var pushNotification: ChannelEventOverride { get set }
@@ -62,9 +62,9 @@ public enum NotificationConfigurationItem {
 /// The application-wide settings for an event.
 @MainActor
 public final class PreferencesNotificationConfiguration: NotificationConfiguration {
-	public let eventType: TXNotificationType
+	public let eventType: NotificationEvent
 
-	public init(eventType: TXNotificationType) {
+	public init(eventType: NotificationEvent) {
 		self.eventType = eventType
 	}
 
@@ -105,15 +105,15 @@ public final class PreferencesNotificationConfiguration: NotificationConfigurati
 /// One channel's override of the application-wide settings.
 @MainActor
 public final class ChannelNotificationConfiguration: NotificationConfiguration {
-	public let eventType: TXNotificationType
+	public let eventType: NotificationEvent
 
 	private weak var sheet: ChannelPropertiesSheet?
 
-	public init(eventType: TXNotificationType) {
+	public init(eventType: NotificationEvent) {
 		self.eventType = eventType
 	}
 
-	public init(eventType: TXNotificationType, in sheet: ChannelPropertiesSheet) {
+	public init(eventType: NotificationEvent, in sheet: ChannelPropertiesSheet) {
 		self.eventType = eventType
 		self.sheet = sheet
 	}

@@ -72,14 +72,14 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 	var command = ""
 	var receivedAt = Date()
 	var formattedTimestamp = ""
-	var lineType = TVCLogLineType.undefined
+	var lineType = LogLineType.undefined
 	var lineTypeString: String?
-	var memberType = TVCLogLineMemberType.normal
+	var memberType = LogLineMemberType.normal
 	var nickname: String?
 	var formattedNickname = ""
 	var messageIdentifier: String?
 	var replyToMessageIdentifier: String?
-	var deliveryState = TVCLogLineDeliveryState.none
+	var deliveryState = LogLineDeliveryState.none
 	var reactions: [String: [String]]?
 	var highlightKeywords: [String]?
 	var excludeKeywords: [String]?
@@ -148,8 +148,8 @@ nonisolated struct RenderedPluginMessage: Sendable { // nonisolated: value
 	var nicknames: [String] = []
 
 	@MainActor
-	func makeObject(resolvingMembersIn channel: IRCChannel?) -> THOPluginDidPostNewMessageConcreteObject {
-		var pluginObject = THOPluginDidPostNewMessageConcreteObject()
+	func makeObject(resolvingMembersIn channel: IRCChannel?) -> PluginPostedMessage {
+		var pluginObject = PluginPostedMessage()
 		pluginObject.keywordMatchFound = keywordMatchFound
 		pluginObject.lineTypeRawValue = lineTypeRawValue
 		pluginObject.memberTypeRawValue = memberTypeRawValue

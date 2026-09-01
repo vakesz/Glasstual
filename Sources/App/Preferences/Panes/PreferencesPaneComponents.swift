@@ -10,7 +10,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import SwiftUI
 
 /// The grouped, independently scrolling `Form` every detail pane uses.
@@ -82,42 +81,5 @@ struct PreferencesComboField: View {
 			.frame(width: 16)
 			.accessibilityLabel(Text(verbatim: title))
 		}
-	}
-}
-
-/** An AppKit view a pane still owns — a plugin's preference pane, or the alert
- table the Notifications pane hosts.
-
- The view is built once and handed over; SwiftUI only places it, which is why
- the height has to be stated rather than measured. */
-struct PreferencesHostedView: NSViewRepresentable {
-	let height: CGFloat
-	let makeView: () -> NSView
-
-	func makeNSView(context _: Context) -> NSView {
-		let container = NSView(frame: NSRect(x: 0, y: 0, width: 0, height: height))
-		let hosted = makeView()
-		hosted.translatesAutoresizingMaskIntoConstraints = false
-		container.addSubview(hosted)
-		NSLayoutConstraint.activate([
-			hosted.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-			hosted.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-			hosted.topAnchor.constraint(equalTo: container.topAnchor),
-			hosted.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-		])
-		return container
-	}
-
-	func updateNSView(_: NSView, context _: Context) {}
-
-	func sizeThatFits(_ proposal: ProposedViewSize, nsView _: NSView, context _: Context) -> CGSize? {
-		CGSize(width: proposal.width ?? 400, height: height)
-	}
-}
-
-/// The same view for the plugin panes, which supply an `NSView` directly.
-extension PreferencesHostedView {
-	init(view: NSView, height: CGFloat) {
-		self.init(height: height, makeView: { view })
 	}
 }

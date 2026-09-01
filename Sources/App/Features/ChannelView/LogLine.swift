@@ -37,7 +37,6 @@
 
 import CocoaExtensions
 import Foundation
-import HistoricLogStoreKit
 
 nonisolated enum LogLineFormat { // nonisolated: value
 	static let actionNickname = "%@ "
@@ -47,6 +46,7 @@ nonisolated enum LogLineFormat { // nonisolated: value
 	static let loggerNoticeNickname = "-%n-"
 	static let loggerUndefinedNickname = "<%@%n>"
 	static let noticeNickname = "-%@-"
+	static let specialNoticeMessage = "[%@]: %@"
 }
 
 /** One printed line: what the renderer draws and what the historic log stores.
@@ -69,9 +69,9 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 	public internal(set) var messageIdentifier: String?
 	public internal(set) var replyToMessageIdentifier: String?
 	public internal(set) var reactions: [String: [String]]?
-	public internal(set) var lineType: TVCLogLineType = .undefined
-	public internal(set) var memberType: TVCLogLineMemberType = .normal
-	public internal(set) var deliveryState: TVCLogLineDeliveryState = .none
+	public internal(set) var lineType: LogLineType = .undefined
+	public internal(set) var memberType: LogLineMemberType = .normal
+	public internal(set) var deliveryState: LogLineDeliveryState = .none
 	public internal(set) var highlightKeywords: [String]?
 	public internal(set) var excludeKeywords: [String]?
 
@@ -100,13 +100,13 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		LogLine(data: data)
 	}
 
-	static func logLine(from xpcObject: LogLineXPC) -> LogLine? {
-		guard var line = LogLine(data: xpcObject.data) else {
+	static func logLine(from historicEntry: HistoricLogEntry) -> LogLine? {
+		guard var line = LogLine(data: historicEntry.data) else {
 			return nil
 		}
 
 		if line.uniqueIdentifier.isEmpty {
-			line.uniqueIdentifier = xpcObject.uniqueIdentifier
+			line.uniqueIdentifier = historicEntry.uniqueIdentifier
 		}
 
 		return line
@@ -168,7 +168,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		uniqueIdentifier.isEmpty ? nil : uniqueIdentifier
 	}
 
-	func xpcObject(forView viewIdentifier: String) -> LogLineXPC {
+	func historicEntry(forView viewIdentifier: String) -> HistoricLogEntry {
 		guard let data = try? NSKeyedArchiver.archivedData(
 			withRootObject: LogLineArchive(self),
 			requiringSecureCoding: true
@@ -176,7 +176,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 			preconditionFailure("A log line must remain securely archivable")
 		}
 
-		return LogLineXPC(
+		return HistoricLogEntry(
 			logLineData: data,
 			uniqueIdentifier: uniqueIdentifier,
 			viewIdentifier: viewIdentifier,
@@ -197,7 +197,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		sessionIdentifier == Self.currentSessionIdentifier()
 	}
 
-	public static func string(for type: TVCLogLineType) -> String? {
+	public static func string(for type: LogLineType) -> String? {
 		switch type {
 		case .action, .actionNoHighlight:
 			"action"
@@ -238,7 +238,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		}
 	}
 
-	public static func string(for type: TVCLogLineMemberType) -> String {
+	public static func string(for type: LogLineMemberType) -> String {
 		type == .localUser ? "myself" : "normal"
 	}
 
@@ -250,7 +250,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		Self.string(for: memberType)
 	}
 
-	public static func string(for state: TVCLogLineDeliveryState) -> String? {
+	public static func string(for state: LogLineDeliveryState) -> String? {
 		switch state {
 		case .pending:
 			"pending"
@@ -366,7 +366,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 	}
 }
 
-nonisolated extension TVCLogLineType { // nonisolated: value
+nonisolated extension LogLineType { // nonisolated: value
 	var hasNicknameColor: Bool {
 		switch self {
 		case .privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight:

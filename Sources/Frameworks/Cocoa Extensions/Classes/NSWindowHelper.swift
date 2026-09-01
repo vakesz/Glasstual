@@ -33,24 +33,8 @@
 import AppKit
 import ObjectiveC
 
-/** The saved-frame key of one window.
-
- The raw values are what is already written under
- `NSWindow Frame -> Internal (v3) -> …` in the user's defaults, so they are the
- former Objective-C class names and have to stay spelled that way. A new window
- picks any new string it likes. */
-public nonisolated struct WindowStateKey: RawRepresentable, Hashable, Sendable { // nonisolated: value
-	public let rawValue: String
-
-	public init(rawValue: String) {
-		self.rawValue = rawValue
-	}
-}
-
 @MainActor
 private enum WindowStateStorage {
-	static let frameKeyPrefix = "NSWindow Frame -> Internal (v3) -> "
-
 	/** The address the default size is keyed on. It was a mutable `UInt8` whose
 	 address was taken, which needed an escape hatch to be a global at all. A
 	 static string literal lives in the binary's constant data, so its bytes have
@@ -129,19 +113,6 @@ public extension NSWindow {
 		return titlebarFrame
 	}
 
-	/** The key used to be `NSStringFromClass`, which made every saved window
-	 frame hostage to a class's Objective-C name: renaming the class, or letting
-	 it fall back to the mangled Swift name, silently lost the frame. Each window
-	 names its own key now, and `WindowStateKey` is where the strings that are
-	 already on disk are written down. */
-	func ce_saveState(for key: WindowStateKey) {
-		ce_saveState(keyword: key.rawValue)
-	}
-
-	func ce_restoreState(for key: WindowStateKey) {
-		ce_restoreState(keyword: key.rawValue)
-	}
-
 	func ce_saveSizeAsDefault() {
 		ceDefaultSize = frame.size
 	}
@@ -188,23 +159,5 @@ public extension NSWindow {
 		return NSApp.orderedWindows.first { window in
 			NSMouseInRect(mouseLocation, window.frame, false)
 		}
-	}
-
-	private func ce_saveState(keyword: String) {
-		precondition(!keyword.isEmpty)
-		UserDefaults.standard.set(
-			frameDescriptor,
-			forKey: WindowStateStorage.frameKeyPrefix + keyword
-		)
-	}
-
-	private func ce_restoreState(keyword: String) {
-		precondition(!keyword.isEmpty)
-		guard let savedFrame = UserDefaults.standard.string(
-			forKey: WindowStateStorage.frameKeyPrefix + keyword
-		) else {
-			return
-		}
-		setFrame(from: savedFrame)
 	}
 }

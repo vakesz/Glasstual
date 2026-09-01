@@ -122,19 +122,19 @@ extension MainWindow: ClientOutput {
 		isMainWindow
 	}
 
-	func presentAlertSheet(_ request: AlertRequest, completion: @escaping TDCAlertCompletionBlock) {
-		TDCAlert.alertSheet(with: self, request: request, completionBlock: completion)
+	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion) {
+		Alerts.alertSheet(with: self, request: request, completionBlock: completion)
 	}
 
 	func reloadServerListItems(for client: IRCClient) {
 		guard let serverList else { return }
 
-		ignoreOutlineViewSelectionChanges = true
+		ignoreServerListSelectionChanges = true
 		serverList.beginUpdates()
 		serverList.reloadItem(client, reloadChildren: true)
 		serverList.endUpdates()
 		adjustSelection()
-		ignoreOutlineViewSelectionChanges = false
+		ignoreServerListSelectionChanges = false
 	}
 
 	func refreshMessageCount(for item: IRCTreeItem) {
@@ -214,7 +214,7 @@ extension IRCTreeItem {
 
 /** A log controller is the view a tree item is drawn into. Every requirement
  already existed on the class; the protocol is what lets the IRC layer hold one
- without naming `TVCLogController`. */
+ without depending on the concrete `LogController`. */
 extension LogController: TreeItemPresentation {
 	public nonisolated var presentationIdentifier: String { // nonisolated: pure
 		uniqueIdentifier

@@ -349,7 +349,7 @@ struct IRCClientNegotiationTests {
 		at index: Int,
 		on client: GLTTestClient,
 		body: String,
-		type: TVCLogLineType,
+		type: LogLineType,
 		channel: Channel?,
 		sourceLocation: SourceLocation = #_sourceLocation
 	) throws {

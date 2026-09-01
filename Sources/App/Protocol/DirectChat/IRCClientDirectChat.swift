@@ -139,7 +139,7 @@ public extension IRCClient {
 				printInvalidSyntaxMessage(for: command)
 				return
 			}
-			if SharedApplication.sharedFileTransferDialog().addSender(
+			if SharedApplication.sharedFileTransferCenter().addSender(
 				for: self, nickname: nickname, path: path, autoOpen: true
 			) == nil {
 				printDebugInformation(IRCDirectChatStrings.fileCouldNotBeOffered(path: path))
@@ -164,7 +164,7 @@ public extension IRCClient {
 		}
 
 		print(IRCDirectChatStrings.incomingRequest(sender: sender), by: nil, in: nil,
-		      as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue)
+		      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
 		let request = AlertRequest(
 			title: PromptStrings.DirectChat.title(sender: sender),
 			body: PromptStrings.DirectChat.body(sender: sender),
@@ -177,7 +177,7 @@ public extension IRCClient {
 				guard let self else { return }
 				guard outcome.response == .default else {
 					print(IRCDirectChatStrings.declined(sender: sender), by: nil, in: nil,
-					      as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue)
+					      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
 					return
 				}
 				guard isLoggedIn else { return }
@@ -245,7 +245,7 @@ public extension IRCClient {
 			return
 		}
 		let isAction = command == .privmsgAction
-		let lineType: TVCLogLineType = isAction ? .action : .privateMessage
+		let lineType: LogLineType = isAction ? .action : .privateMessage
 		for line in string.splitIntoLines {
 			var cursor = IRCLineCursor(line)
 			while let message = cursor.nextLine(forChannel: channel.name, on: self, with: lineType) {
@@ -262,7 +262,7 @@ public extension IRCClient {
 
 	private func printInvalidDCCChatRequest(from sender: String) {
 		print(IRCDirectChatStrings.unprocessableRequest(sender: sender), by: nil, in: nil,
-		      as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue)
+		      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
 	}
 
 	private func legacyDirectChatTreeItem(for channel: IRCChannel) -> IRCTreeItem? {

@@ -527,7 +527,7 @@ struct IRCClientHistoryTests {
 					newLines.first?["messageBody"] as? String
 						== "Netsplit between \u{2}irc.hub\u{2} and \u{2}irc.leaf\u{2}: 2 users left (alice, bob)"
 				)
-				#expect((newLines.first?["lineType"] as? NSNumber)?.uintValue == TVCLogLineType.quit.rawValue)
+				#expect((newLines.first?["lineType"] as? NSNumber)?.uintValue == LogLineType.quit.rawValue)
 				#expect(newLines.first?["channel"] as? Channel === channel)
 
 				linesBefore = client.printedLines.count
@@ -547,7 +547,7 @@ struct IRCClientHistoryTests {
 					newLines.first?["messageBody"] as? String
 						== "Netjoin between \u{2}irc.hub\u{2} and \u{2}irc.leaf\u{2}: 2 users rejoined (alice, bob)"
 				)
-				#expect((newLines.first?["lineType"] as? NSNumber)?.uintValue == TVCLogLineType.join.rawValue)
+				#expect((newLines.first?["lineType"] as? NSNumber)?.uintValue == LogLineType.join.rawValue)
 			}
 		}
 	}

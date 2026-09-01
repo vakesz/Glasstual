@@ -10,7 +10,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import SwiftUI
 
 @MainActor
@@ -21,9 +20,7 @@ public protocol ChannelPropertiesSheetDelegate: AnyObject {
 
 @objc(TDCChannelPropertiesSheet)
 @MainActor
-public final class ChannelPropertiesSheet: SheetBase, NSWindowDelegate, TDCChannelPrototype {
-	private static let contentSize = NSSize(width: 560, height: 450)
-
+public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped {
 	public private(set) var client: IRCClient?
 	public private(set) var channel: IRCChannel?
 	public private(set) var clientId: String?
@@ -93,32 +90,14 @@ public final class ChannelPropertiesSheet: SheetBase, NSWindowDelegate, TDCChann
 			submit: { [weak self] in self?.ok(nil) },
 			cancel: { [weak self] in self?.cancel(nil) }
 		)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: Self.contentSize),
-			styleMask: [.titled, .resizable, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-		hostedSheet.contentViewController = NSHostingController(rootView: rootView)
-		hostedSheet.contentMinSize = Self.contentSize
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.preventsApplicationTerminationWhenModal = false
-		hostedSheet.autorecalculatesKeyViewLoop = true
-		hostedSheet.title = ChannelPropertiesStrings.windowTitle
-		hostedSheet.titleVisibility = .hidden
-		hostedSheet.titlebarAppearsTransparent = true
-		hostedSheet.titlebarSeparatorStyle = .none
-		sheet = hostedSheet
+		setContent(rootView.frame(minWidth: 560, minHeight: 450))
 	}
 
 	public func start() {
 		startSheet()
 	}
 
-	@IBAction override public func ok(_ sender: Any?) {
+	override public func ok(_ sender: Any?) {
 		guard model.validateForSubmission() else { return }
 		removeConfigurationObserver()
 		model.config = model.submittedConfig
@@ -126,7 +105,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSWindowDelegate, TDCChann
 		super.ok(sender)
 	}
 
-	@IBAction override public func cancel(_ sender: Any?) {
+	override public func cancel(_ sender: Any?) {
 		removeConfigurationObserver()
 		super.cancel(sender)
 	}
@@ -136,9 +115,8 @@ public final class ChannelPropertiesSheet: SheetBase, NSWindowDelegate, TDCChann
 		let maximum = client.supportInfo.maximumKeyLength
 		guard maximum > 0, value.count > maximum, secretKeyLengthAlertDisplayed == false else { return }
 		secretKeyLengthAlertDisplayed = true
-		TDCAlert.alertSheet(
-			with: sheet,
-			body: ChannelValidationStrings.maximumKeyLengthMessage,
+		Alerts.alert(
+			withMessage: ChannelValidationStrings.maximumKeyLengthMessage,
 			title: ChannelValidationStrings.maximumKeyLengthTitle(
 				networkName: client.networkNameAlt,
 				maximumLength: Int(clamping: maximum)
@@ -165,9 +143,8 @@ public final class ChannelPropertiesSheet: SheetBase, NSWindowDelegate, TDCChann
 
 	private func underlyingConfigurationChanged(_ notification: Notification) {
 		guard let channel = notification.object as? IRCChannel else { return }
-		TDCAlert.alertSheet(
-			with: sheet,
-			body: ChannelPropertiesStrings.unsavedChangesWarning,
+		Alerts.alert(
+			withMessage: ChannelPropertiesStrings.unsavedChangesWarning,
 			title: ChannelPropertiesStrings.configurationChangedTitle,
 			defaultButton: PromptStrings.Action.yes,
 			alternateButton: PromptStrings.Action.no,
@@ -178,7 +155,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSWindowDelegate, TDCChann
 		}
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		removeConfigurationObserver()
 		(delegate as? any ChannelPropertiesSheetDelegate)?.channelPropertiesSheetWillClose(self)
 	}

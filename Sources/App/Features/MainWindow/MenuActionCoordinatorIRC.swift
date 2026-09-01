@@ -53,7 +53,7 @@ enum MenuChannelModePolicy {
 
 @MainActor
 public extension MenuActionCoordinator {
-	func performIRCAction(_ action: TXMenuIRCAction, sender: Any?) {
+	func performIRCAction(_ action: MenuIRCAction, sender: Any?) {
 		switch action {
 		case .showBanList: showModeList(symbol: "+b", presentation: { $0.createChannelBanListSheet() })
 		case .showBanExceptionList:

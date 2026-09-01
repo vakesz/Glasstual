@@ -84,7 +84,7 @@ public nonisolated extension Preferences { // nonisolated: value
 		 declaration is what says so; it used to be an undocumented exception at
 		 the call site. */
 		public static let appSleepDisabled = PreferenceKey(
-			"NSAppSleepDisabled",
+			AppSleepPreference.name,
 			default: false,
 			storage: .standard,
 			traits: [.unregistered, .uncatalogued]

@@ -47,7 +47,7 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 		}
 		let nickname = connection.peerNickname
 		let transferToken = connection.transferToken
-		SharedApplication.sharedFileTransferDialog().requestIPAddress { [weak self] address in
+		SharedApplication.sharedFileTransferCenter().requestIPAddress { [weak self] address in
 			guard let self,
 			      channel.directChatConnection === connection,
 			      connection.state == .listening
@@ -60,7 +60,7 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 			let arguments = DCCChatPolicy.listeningArguments(
 				address: formattedAddress, port: port, token: transferToken
 			)
-			sendCTCPQuery(nickname, command: "DCC CHAT", text: arguments)
+			sendCTCPQuery(nickname, command: DCCCommand.chat.ctcpCommand, text: arguments)
 			printDebugInformation(
 				IRCDirectChatStrings.waitingForConnection(nickname: nickname, port: port),
 				in: channel
@@ -86,7 +86,7 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 	) {
 		guard let channel = directChatChannel(for: connection) else { return }
 		let nickname = connection.peerNickname
-		let lineType: TVCLogLineType = isAction ? .action : .privateMessage
+		let lineType: LogLineType = isAction ? .action : .privateMessage
 		print(message, by: nickname, in: channel, as: lineType, command: "PRIVMSG",
 		      receivedAt: Date(), isEncrypted: false)
 		_ = notifyText(.privateMessage, lineType: lineType, target: channel, nickname: nickname, text: message)

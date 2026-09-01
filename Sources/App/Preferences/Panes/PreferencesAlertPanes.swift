@@ -83,7 +83,7 @@ struct PreferencesNotificationsPane: View {
 struct PreferencesHighlightsPane: View {
 	let model: PreferencesPaneModel
 
-	private var matchingMethod: TXNicknameHighlightMatchType {
+	private var matchingMethod: NicknameHighlightMatchMode {
 		model.preferences[Preferences.Highlights.matchingMethod]
 	}
 
@@ -96,11 +96,11 @@ struct PreferencesHighlightsPane: View {
 			Section {
 				Picker(selection: model.preferences.binding(for: Preferences.Highlights.matchingMethod)) {
 					Text(verbatim: PreferencesHighlightsStrings.matchTypePartial)
-						.tag(TXNicknameHighlightMatchType.partial)
+						.tag(NicknameHighlightMatchMode.partial)
 					Text(verbatim: PreferencesHighlightsStrings.matchTypeExact)
-						.tag(TXNicknameHighlightMatchType.exact)
+						.tag(NicknameHighlightMatchMode.exact)
 					Text(verbatim: PreferencesHighlightsStrings.matchTypeRegex)
-						.tag(TXNicknameHighlightMatchType.regularExpression)
+						.tag(NicknameHighlightMatchMode.regularExpression)
 				} label: {
 					Text(verbatim: PreferencesHighlightsStrings.matchTypeLabel)
 				}

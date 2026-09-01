@@ -22,7 +22,6 @@ struct ServerChannelListView: View {
 	let activate: (ServerChannelListEntry.ID) -> Void
 	let update: () -> Void
 	let close: () -> Void
-	let displayedCountChanged: (Int) -> Void
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -111,9 +110,6 @@ struct ServerChannelListView: View {
 			.onChange(of: model.selection) { oldSelection, _ in
 				model.limitSelection(from: oldSelection)
 			}
-			.onChange(of: model.rows.count, initial: true) { _, count in
-				displayedCountChanged(count)
-			}
 			.accessibilityLabel(ServerChannelListStrings.channelListAccessibilityLabel)
 
 			Divider()
@@ -143,7 +139,7 @@ struct ServerChannelListView: View {
 	private func formattedTopic(_ topic: String) -> AttributedString {
 		guard topic.isEmpty == false else { return AttributedString() }
 		let formatted = (topic as NSString).attributedString(
-			withIRCFormatting: NSTableView.preferredGlobalTableViewFont(),
+			withIRCFormatting: NSFont.systemFont(ofSize: 13),
 			preferredFontColor: .controlTextColor
 		) ?? NSAttributedString()
 		return AttributedString(formatted)

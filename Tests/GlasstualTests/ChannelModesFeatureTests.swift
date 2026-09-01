@@ -175,7 +175,7 @@ struct ChannelModesFeatureTests {
 		_ = channel.modeInfo?.updateModes("+ntk original +l 12")
 
 		let adapter = ChannelModifyModesSheet(channel: channel)
-		let channelPrototype: TDCChannelPrototype = adapter
+		let channelPrototype: ChannelScoped = adapter
 		let delegate = ChannelModesDelegateSpy()
 		adapter.delegate = delegate
 
@@ -189,15 +189,6 @@ struct ChannelModesFeatureTests {
 		#expect(adapter.model.isEnabled(.userLimit))
 		#expect(adapter.model.secretKey == "original")
 		#expect(adapter.model.userLimit == "12")
-		#expect(adapter.sheet.delegate === adapter)
-		#expect(adapter.sheet.contentViewController is NSHostingController<ChannelModesView>)
-		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
-		#expect(adapter.sheet.isReleasedWhenClosed == false)
-		#expect(adapter.sheet.isRestorable == false)
-		#expect(adapter.sheet.tabbingMode == .disallowed)
-		#expect(adapter.sheet.contentMinSize == NSSize(width: 440, height: 390))
-		#expect(adapter.sheet.contentMaxSize == NSSize(width: 440, height: 390))
-
 		adapter.model.setMode(.moderated, enabled: true)
 		adapter.model.updateSecretKey("edited")
 		#expect(channel.modeInfo?.modes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "original")
@@ -210,7 +201,7 @@ struct ChannelModesFeatureTests {
 		#expect(acceptedModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "edited")
 		#expect(delegate.events == ["accept"])
 
-		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
+		adapter.sheetDidEnd(withReturnCode: 0)
 		#expect(delegate.events == ["accept", "close"])
 	}
 

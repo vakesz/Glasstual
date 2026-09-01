@@ -115,9 +115,7 @@ final class ChannelBanListModel {
 }
 
 @MainActor
-public final class ChannelBanListSheet: SheetBase, NSWindowDelegate, TDCChannelPrototype {
-	private static let contentSize = NSSize(width: 680, height: 400)
-
+public final class ChannelBanListSheet: MainWindowSheetSession, ChannelScoped {
 	public private(set) var client: IRCClient!
 	public private(set) var channel: IRCChannel!
 	public private(set) var clientId: String?
@@ -156,23 +154,7 @@ public final class ChannelBanListSheet: SheetBase, NSWindowDelegate, TDCChannelP
 			removeSelected: { [weak self] in self?.removeSelectedEntries() },
 			close: { [weak self] in self?.cancel(nil) }
 		)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: Self.contentSize),
-			styleMask: [.titled, .resizable, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-
-		hostedSheet.contentViewController = NSHostingController(rootView: rootView)
-		hostedSheet.contentMinSize = NSSize(width: 580, height: 320)
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.preventsApplicationTerminationWhenModal = false
-		hostedSheet.autorecalculatesKeyViewLoop = true
-		hostedSheet.title = heading
-		sheet = hostedSheet
+		setContent(rootView)
 	}
 
 	public func start() {
@@ -239,7 +221,7 @@ public final class ChannelBanListSheet: SheetBase, NSWindowDelegate, TDCChannelP
 		client.supportInfo.modeSymbol(forList: entryType.supportListType) ?? ""
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		banListDelegate?.channelBanListSheetWillClose(self)
 	}
 }

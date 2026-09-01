@@ -3,11 +3,11 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import AppKit
 import SwiftUI
 
 struct OnboardingView: View {
 	@Bindable var model: OnboardingModel
+	let applicationIcon: Image
 	let continueAction: () -> Void
 	let backAction: () -> Void
 	let skipAction: () -> Void
@@ -15,7 +15,7 @@ struct OnboardingView: View {
 	var body: some View {
 		VStack(spacing: 0) {
 			VStack(spacing: 6) {
-				Image(nsImage: NSApp.applicationIconImage)
+				applicationIcon
 					.resizable()
 					.scaledToFit()
 					.frame(width: 72, height: 72)
@@ -208,11 +208,11 @@ private struct OnboardingAppearanceView: View {
 					Text(verbatim: OnboardingStrings.Appearance.interfaceStyleLabel)
 					Picker("", selection: $settings.appearance) {
 						Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitles[0])
-							.tag(TXPreferredAppearance.inherited)
+							.tag(PreferredAppearance.inherited)
 						Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitles[1])
-							.tag(TXPreferredAppearance.light)
+							.tag(PreferredAppearance.light)
 						Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitles[2])
-							.tag(TXPreferredAppearance.dark)
+							.tag(PreferredAppearance.dark)
 					}
 					.labelsHidden()
 					.pickerStyle(.segmented)

@@ -51,8 +51,8 @@ public extension IRCClient {
 		supportInfo.serverAddress ?? socket?.config.serverAddress ?? server?.serverAddress
 	}
 
-	var fileTransferController: FileTransferDialog {
-		SharedApplication.sharedFileTransferDialog()
+	var fileTransferCenter: FileTransferCenter {
+		SharedApplication.sharedFileTransferCenter()
 	}
 
 	var isReconnecting: Bool {

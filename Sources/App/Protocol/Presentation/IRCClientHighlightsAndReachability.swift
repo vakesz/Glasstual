@@ -63,10 +63,8 @@ public extension IRCClient {
 		)
 		cachedHighlights.insert(newEntry, at: 0)
 
-		guard let sheet = SharedApplication.sharedWindowController()
-			.window(
-				fromWindowList: WindowController.windowDescription(forClass: ServerHighlightListSheet.self)
-			) as? ServerHighlightListSheet,
+		guard let sheet = AppController.shared.mainWindow.presentationModel
+			.sheetOwner(ofType: ServerHighlightListSheet.self),
 			sheet.clientId == uniqueIdentifier,
 			let firstEntry = cachedHighlights.first
 		else { return }

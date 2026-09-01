@@ -161,11 +161,11 @@ public extension TextualPreferences {
 	}
 
 	class func registerPreferencesDictionaryVersion() {
-		guard Preferences.Internals.dictionaryVersion.value < TPCPreferencesDictionaryVersion else {
+		guard Preferences.Internals.dictionaryVersion.value < preferencesDictionaryVersion else {
 			return
 		}
 
-		Preferences.Internals.dictionaryVersion.value = TPCPreferencesDictionaryVersion
+		Preferences.Internals.dictionaryVersion.value = preferencesDictionaryVersion
 	}
 
 	class func defaultPreferences() -> [String: PropertyListValue] {

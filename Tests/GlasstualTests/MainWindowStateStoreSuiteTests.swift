@@ -18,9 +18,9 @@ import Testing
 @MainActor
 struct MainWindowStateStoreSuiteTests {
 	private static let keys = [
-		"Window -> Main Window -> Server List is Visible",
-		"Window -> Main Window -> Member List is Visible",
-		"Window -> Main Window -> Server List Selection",
+		Preferences.MainWindow.serverListVisible.name,
+		Preferences.MainWindow.memberListVisible.name,
+		Preferences.MainWindow.serverListSelection.name,
 	]
 
 	/// Preference export/import reads these keys out of the group container, so
@@ -52,17 +52,11 @@ struct MainWindowStateStoreSuiteTests {
 		#expect(store.loadSelectionItemIdentifier() == "an-identifier")
 	}
 
-	@Test("All three keys are listed in the exportable master list")
-	func keysAreExportable() throws {
-		let url = try #require(Bundle.main.url(
-			forResource: "PreferenceKeyMasterList",
-			withExtension: "plist",
-			subdirectory: "Preferences"
-		))
-		let plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil)
-		let listed = try #require(plist as? [String: Any])
+	@Test("Window restoration keys are catalogued but excluded from settings export")
+	func keysAreNotExported() {
 		for key in Self.keys {
-			#expect(listed[key] != nil)
+			#expect(Preferences.isCatalogued(key))
+			#expect(Preferences.isExcludedFromExport(key))
 		}
 	}
 }

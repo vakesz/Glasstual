@@ -191,7 +191,7 @@ enum PluginHostAdapter {
 	}
 
 	/// A pure mapping, so the off-main message renderer can call it too.
-	nonisolated static func messageKind(for lineType: TVCLogLineType) -> PluginMessageKind { // nonisolated: pure
+	nonisolated static func messageKind(for lineType: LogLineType) -> PluginMessageKind { // nonisolated: pure
 		switch lineType {
 		case .privateMessage:
 			.privateMessage
@@ -252,7 +252,7 @@ enum PluginHostAdapter {
 		client.channelList.first { $0.uniqueIdentifier == channel.identifier }
 	}
 
-	private static func logLineType(for kind: PluginMessageKind) -> TVCLogLineType {
+	private static func logLineType(for kind: PluginMessageKind) -> LogLineType {
 		switch kind {
 		case .privateMessage:
 			.privateMessage

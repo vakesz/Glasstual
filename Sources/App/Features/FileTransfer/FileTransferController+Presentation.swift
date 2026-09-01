@@ -38,9 +38,9 @@
 
 import Foundation
 
-public extension TDCFileTransferDialogTransferController {
+public extension FileTransferController {
 	func reloadStatusInformation() {
-		transferDialog.model.refreshPresentation()
+		transferCenter.model.refreshPresentation()
 	}
 
 	var isActingAsServer: Bool {
@@ -65,8 +65,8 @@ public extension TDCFileTransferDialogTransferController {
 		filePath.map { URL(fileURLWithPath: $0) }
 	}
 
-	internal var transferDialog: TDCFileTransferDialog {
-		SharedApplication.sharedFileTransferDialog()
+	internal var transferCenter: FileTransferCenter {
+		SharedApplication.sharedFileTransferCenter()
 	}
 
 	internal var currentFilesize: UInt64 {

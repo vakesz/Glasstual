@@ -34,7 +34,7 @@ struct PreferencesPaneInventoryTests {
 	@Test("Every catalogued pane belongs to exactly one sub-page")
 	func everyPaneBelongsToOneSubPage() {
 		var seen: [String: Int] = [:]
-		for section in PreferencesController.sections() {
+		for section in PreferencesSession.sections() {
 			for pane in section.subPages.flatMap(\.panes) {
 				seen[pane.identifier, default: 0] += 1
 			}
@@ -46,7 +46,7 @@ struct PreferencesPaneInventoryTests {
 
 	@Test("Every section has a title, a symbol and at least one sub-page")
 	func sectionsAreComplete() {
-		let sections = PreferencesController.sections()
+		let sections = PreferencesSession.sections()
 		#expect(Set(sections.map(\.identifier)) == Set(PreferencesSectionIdentifier.allCases))
 		for section in sections {
 			#expect(section.title.isEmpty == false)
@@ -57,14 +57,14 @@ struct PreferencesPaneInventoryTests {
 
 	@Test("A sub-page names something the window can show")
 	func subPagesResolve() {
-		for section in PreferencesController.sections() {
+		for section in PreferencesSession.sections() {
 			for subPage in section.subPages {
 				#expect(
-					PreferencesController.paneExists(subPage.identifier),
+					PreferencesSession.paneExists(subPage.identifier),
 					"unknown sub-page \(subPage.identifier)"
 				)
 				for pane in subPage.panes {
-					#expect(PreferencesController.paneExists(pane.identifier), "unknown pane \(pane.identifier)")
+					#expect(PreferencesSession.paneExists(pane.identifier), "unknown pane \(pane.identifier)")
 				}
 			}
 		}
@@ -72,27 +72,27 @@ struct PreferencesPaneInventoryTests {
 
 	@Test("The Advanced section keeps to five sub-pages")
 	func advancedSectionIsGrouped() {
-		let advanced = PreferencesController.sections().first { $0.identifier == .advanced }
+		let advanced = PreferencesSession.sections().first { $0.identifier == .advanced }
 		let subPages = try? #require(advanced?.subPages)
 		#expect(subPages?.count == PreferencesAdvancedGroup.allCases.count)
 	}
 
 	@Test("A pane identifier stored before the grouping still finds its sub-page")
 	func storedPaneIdentifiersResolve() {
-		let advanced = PreferencesController.sections().first { $0.identifier == .advanced }
+		let advanced = PreferencesSession.sections().first { $0.identifier == .advanced }
 		let subPage = advanced?.subPages.first { $0.contains(PreferencesPaneIdentifier.hidden.rawValue) }
 		#expect(subPage?.identifier == PreferencesAdvancedGroup.system.identifier)
 	}
 
 	@Test("An identifier nothing answers to is not shown")
 	func unknownIdentifiersAreRejected() {
-		#expect(PreferencesController.paneExists("not-a-pane") == false)
-		#expect(PreferencesController.paneExists("plugin-9999") == false)
+		#expect(PreferencesSession.paneExists("not-a-pane") == false)
+		#expect(PreferencesSession.paneExists("plugin-9999") == false)
 	}
 
 	@Test("The main sections show one pane each")
 	func mainSectionsHoldOnePane() {
-		for section in PreferencesController.sections() where section.identifier.pane != nil {
+		for section in PreferencesSession.sections() where section.identifier.pane != nil {
 			#expect(section.subPages.count == 1, "\(section.identifier.rawValue) is not a single pane")
 			#expect(section.subPages.first?.identifier == section.identifier.pane?.rawValue)
 		}
@@ -101,7 +101,7 @@ struct PreferencesPaneInventoryTests {
 	@Test("Changing sections replaces the section and sub-page together")
 	func selectionChangesAtomically() {
 		let model = PreferencesPaneModel()
-		model.sections = PreferencesController.sections()
+		model.sections = PreferencesSession.sections()
 		var changes: [PreferencesSelection] = []
 		model.onSelectionChange = { changes.append($0) }
 
@@ -119,7 +119,7 @@ struct PreferencesPaneInventoryTests {
 	@Test("An invalid section and sub-page pair is rejected without publishing")
 	func invalidSelectionIsRejected() {
 		let model = PreferencesPaneModel()
-		model.sections = PreferencesController.sections()
+		model.sections = PreferencesSession.sections()
 		let original = model.selection
 		var changeCount = 0
 		model.onSelectionChange = { _ in changeCount += 1 }

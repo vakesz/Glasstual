@@ -60,10 +60,9 @@ extension IRCClient {
 		case IRCNumeric.namereply.rawValue: handleNamesNumeric(message, shouldPrint: shouldPrint)
 		case IRCNumeric.endofnames.rawValue: handleEndOfNamesNumeric(message, shouldPrint: shouldPrint)
 		case IRCNumeric.liststart.rawValue:
-			channelListDialog()?.contentAlreadyReceived = false
-			channelListDialog()?.clear()
+			channelListSession()?.receiveListStart()
 		case IRCNumeric.list.rawValue: handleListNumeric(message)
-		case IRCNumeric.listend.rawValue: channelListDialog()?.contentAlreadyReceived = true
+		case IRCNumeric.listend.rawValue: channelListSession()?.finishRefresh()
 		case IRCNumeric.banlist.rawValue, IRCNumeric.invitelist.rawValue, IRCNumeric.exceptlist.rawValue,
 		     IRCNumeric.quietlist.rawValue:
 			handleModeListNumeric(numeric, message: message, shouldPrint: shouldPrint)
@@ -274,7 +273,7 @@ extension IRCClient {
 
 	private func handleListNumeric(_ message: Message) {
 		guard message.params.count > 2, message.params[1] != "*" else { return }
-		channelListDialog()?.addChannel(
+		channelListSession()?.addChannel(
 			message.params[1],
 			count: UInt(message.params[2]) ?? 0,
 			topic: message.sequence(3)
@@ -288,10 +287,8 @@ extension IRCClient {
 		let extended = message.params.count > 4 + offset
 		let author = extended ? (message.params[3 + offset] as NSString).nicknameFromHostmask : nil
 		let date = extended ? Date(timeIntervalSince1970: TimeInterval(message.params[4 + offset]) ?? 0) : nil
-		if let sheet = SharedApplication.sharedWindowController().window(
-			fromWindowList: WindowController.windowDescription(forClass: ChannelBanListSheet.self)
-		)
-			as? ChannelBanListSheet
+		if let sheet = AppController.shared.mainWindow.presentationModel
+			.sheetOwner(ofType: ChannelBanListSheet.self)
 		{
 			if sheet.contentAlreadyReceived {
 				sheet.contentAlreadyReceived = false; sheet.clear()
@@ -311,10 +308,8 @@ extension IRCClient {
 	}
 
 	private func handleEndOfModeListNumeric(_ message: Message, shouldPrint: Bool) {
-		if let sheet = SharedApplication.sharedWindowController().window(
-			fromWindowList: WindowController.windowDescription(forClass: ChannelBanListSheet.self)
-		)
-			as? ChannelBanListSheet
+		if let sheet = AppController.shared.mainWindow.presentationModel
+			.sheetOwner(ofType: ChannelBanListSheet.self)
 		{
 			sheet.contentAlreadyReceived = true
 		} else if shouldPrint {

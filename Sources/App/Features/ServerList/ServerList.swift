@@ -8,314 +8,293 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
 import AppKit
-import CocoaExtensions
-import os
+import Observation
 
-private let serverListLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "ServerList"
-)
+/// Selection, expansion and ordering state for the SwiftUI server sidebar.
+///
+/// The IRC world remains the source of truth for clients and channels. This
+/// model derives visible rows from it and owns only presentation state, which
+/// keeps the view independent of protocol mutation details.
+@MainActor
+@Observable
+public final class ServerList {
+	public private(set) var selectedItemIdentifier: String?
+	public private(set) var presentationRevision = 0
 
-public protocol TVCServerListDelegate: NSObjectProtocol {
-	func serverListKeyDown(_ event: NSEvent)
-}
+	@ObservationIgnored weak var mainWindow: MainWindow?
 
-public final class ServerList: NSOutlineView, AppearanceObserving {
-	public weak var keyDelegate: TVCServerListDelegate?
+	private var updateDepth = 0
+	private var updateIsPending = false
 
-	/** -viewDidMoveToWindow is not guaranteed to alternate between a window and
-	 nil, so the bag is emptied first: moving within the same window must not
-	 leave a second set of subscriptions behind. The bag holds only ours, which
-	 is what a blanket -removeObserver: could not promise — it would also drop
-	 the registrations AppKit keeps for the table itself. */
-	private let notifications = NotificationSubscriptions()
+	public init() {}
 
-	override public func viewDidMoveToWindow() {
-		super.viewDidMoveToWindow()
+	func attach(to window: MainWindow) {
+		precondition(mainWindow == nil || mainWindow === window)
+		mainWindow = window
+	}
 
-		notifications.cancelAll()
+	public var clients: [IRCClient] {
+		mainWindow?.world.clientList ?? []
+	}
 
-		guard let mainWindow else {
+	private var visibleItems: [IRCTreeItem] {
+		clients.flatMap { client in
+			client.sidebarItemIsExpanded ? [client] + client.channelList : [client]
+		}
+	}
+
+	public var numberOfRows: Int {
+		visibleItems.count
+	}
+
+	public var selectedRow: Int {
+		guard let selectedItemIdentifier else { return -1 }
+		return visibleItems.firstIndex { $0.uniqueIdentifier == selectedItemIdentifier } ?? -1
+	}
+
+	public var selectedItem: IRCTreeItem? {
+		guard let selectedItemIdentifier else { return nil }
+		return mainWindow?.world.findItem(withId: selectedItemIdentifier)
+	}
+
+	public var groupItems: [IRCTreeItem] {
+		clients
+	}
+
+	public func item(atRow row: Int) -> Any? {
+		visibleItems.indices.contains(row) ? visibleItems[row] : nil
+	}
+
+	public func row(forItem item: Any?) -> Int {
+		guard let item = item as? IRCTreeItem else { return -1 }
+		return visibleItems.firstIndex { $0 === item } ?? -1
+	}
+
+	public func isRowSelected(_ row: Int) -> Bool {
+		row == selectedRow
+	}
+
+	public func selectItem(at row: Int) {
+		guard let item = item(atRow: row) as? IRCTreeItem else { return }
+		selectedItemIdentifier = item.uniqueIdentifier
+	}
+
+	func selectFromSwiftUI(_ identifier: String?) {
+		guard selectedItemIdentifier != identifier else { return }
+		selectedItemIdentifier = identifier
+		mainWindow?.serverListSelectionDidChangeFromSwiftUI()
+	}
+
+	public func items(inContainingGroupOf item: Any) -> [IRCTreeItem]? {
+		guard let item = item as? IRCTreeItem, let client = item.associatedClient else { return nil }
+		return client.channelList
+	}
+
+	public func indexesOfItems(inGroup item: Any) -> IndexSet? {
+		guard let item = item as? IRCTreeItem, let client = item.associatedClient else { return nil }
+		return IndexSet(client.channelList.compactMap { channel in
+			let row = row(forItem: channel)
+			return row >= 0 ? row : nil
+		})
+	}
+
+	public func isExpanded(_ client: IRCClient) -> Bool {
+		client.sidebarItemIsExpanded
+	}
+
+	public func setExpanded(_ expanded: Bool, for client: IRCClient) {
+		guard client.sidebarItemIsExpanded != expanded else { return }
+		client.sidebarItemIsExpanded = expanded
+		presentationRevision &+= 1
+
+		if expanded == false, selectedItem?.associatedClient === client, selectedItem !== client {
+			selectedItemIdentifier = client.uniqueIdentifier
+			mainWindow?.serverListSelectionDidChangeFromSwiftUI()
+		}
+	}
+
+	public func expandItem(_ item: Any?) {
+		guard let client = (item as? IRCTreeItem)?.associatedClient else { return }
+		setExpanded(true, for: client)
+	}
+
+	public func animator() -> ServerList {
+		self
+	}
+
+	public func beginUpdates() {
+		updateDepth += 1
+	}
+
+	public func endUpdates() {
+		guard updateDepth > 0 else { return }
+		updateDepth -= 1
+		if updateDepth == 0, updateIsPending {
+			updateIsPending = false
+			presentationRevision &+= 1
+		}
+	}
+
+	private func contentsChanged() {
+		guard updateDepth == 0 else {
+			updateIsPending = true
 			return
 		}
-
-		notifications.observe(NSWindow.didBecomeKeyNotification, object: mainWindow) { [weak self] notification in
-			self?.windowDidBecomeKey(notification)
-		}
-		notifications.observe(NSWindow.didResignKeyNotification, object: mainWindow) { [weak self] notification in
-			self?.windowDidResignKey(notification)
-		}
-		notifications.observe(NSWindow.didBecomeMainNotification, object: mainWindow) { [weak self] notification in
-			self?.windowMainStateChanged(notification)
-		}
-		notifications.observe(NSWindow.didResignMainNotification, object: mainWindow) { [weak self] notification in
-			self?.windowMainStateChanged(notification)
-		}
-		notifications.observe(.mainWindowRedrawSubviews, object: mainWindow) { [weak self] notification in
-			self?.mainWindowRequiresRedraw(notification)
-		}
+		presentationRevision &+= 1
 	}
 
-	// MARK: - Additions / Removal
-
-	public func addItem(toList rowIndex: UInt, inParent parent: Any?) {
-		insertItems(
-			at: IndexSet(integer: Int(rowIndex)),
-			inParent: parent,
-			withAnimation: [.effectFade, .slideRight]
-		)
-
-		if let parent {
-			reloadItem(parent)
-		}
+	public func addItem(toList _: UInt, inParent _: Any?) {
+		contentsChanged()
 	}
 
-	public func removeItem(fromList object: Any) {
-		/* Indexes come from the model rather than the view: row(forItem:),
-		 parent(forItem:) and items(inContainingGroupOf:) only know about rows
-		 that are currently displayed, so removing a channel from a collapsed
-		 server used to bail out and leave the view out of step. */
-		let parentItem: Any?
-		let rowIndex: Int
-
-		if let channel = object as? IRCChannel {
-			guard let client = channel.associatedClient,
-			      let index = client.channelList.firstIndex(where: { $0 === channel })
-			else {
-				serverListLogger.error("Object is not a child of its parent item")
-				return
-			}
-
-			parentItem = client
-			rowIndex = index
-		} else {
-			let index = (groupItems as NSArray).index(of: object)
-
-			guard index != NSNotFound else {
-				serverListLogger.error("Object does not exist on outline view")
-				return
-			}
-
-			parentItem = nil
-			rowIndex = index
+	public func removeItem(fromList item: Any) {
+		if let item = item as? IRCTreeItem, item.uniqueIdentifier == selectedItemIdentifier {
+			selectedItemIdentifier = nil
 		}
-
-		removeItems(
-			at: IndexSet(integer: rowIndex),
-			inParent: parentItem,
-			withAnimation: [.effectFade, .slideLeft]
-		)
-
-		if let parentItem {
-			reloadItem(parentItem)
-		}
+		contentsChanged()
 	}
 
-	// MARK: - Drawing Updates
+	public func moveItem(at _: Int, inParent _: Any?, to _: Int, inParent _: Any?) {
+		contentsChanged()
+	}
+
+	public func reloadItem(_: Any?, reloadChildren _: Bool = false) {
+		contentsChanged()
+	}
 
 	public func refreshAllDrawings() {
-		refreshAllDrawings(false)
+		presentationRevision &+= 1
 	}
 
-	public func refreshAllDrawings(_ skipOcclusionCheck: Bool) {
-		for rowIndex in 0 ..< numberOfRows {
-			refreshDrawing(forRow: rowIndex, skipOcclusionCheck: skipOcclusionCheck)
-		}
+	public func refreshAllDrawings(_: Bool) {
+		refreshAllDrawings()
 	}
 
-	public func refreshDrawing(forRows rowIndexes: IndexSet) {
-		refreshDrawing(forRows: rowIndexes, skipOcclusionCheck: false)
+	public func refreshDrawing(forRows _: IndexSet, skipOcclusionCheck _: Bool = false) {
+		presentationRevision &+= 1
 	}
 
-	public func refreshDrawing(forRows rowIndexes: IndexSet, skipOcclusionCheck: Bool) {
-		for index in rowIndexes {
-			refreshDrawing(forRow: index, skipOcclusionCheck: skipOcclusionCheck)
-		}
+	public func refreshDrawing(forRow _: Int, skipOcclusionCheck _: Bool = false) {
+		presentationRevision &+= 1
 	}
 
-	public func refreshDrawing(forRow rowIndex: Int) {
-		refreshDrawing(forRow: rowIndex, skipOcclusionCheck: false)
+	public func refreshDrawing(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
+		presentationRevision &+= 1
 	}
 
-	public func refreshDrawing(forRow rowIndex: Int, skipOcclusionCheck: Bool) {
-		guard rowIndex >= 0 else {
-			return
-		}
-
-		if skipOcclusionCheck == false, mainWindow?.ceIsOccluded == true {
-			return
-		}
-
-		if let rowView = view(atColumn: 0, row: rowIndex, makeIfNecessary: false) {
-			rowView.needsDisplay = true
-		}
-
-		/* The row view draws the selection, whose emphasis follows the
-		 window's key state. */
-		rowView(atRow: rowIndex, makeIfNecessary: false)?.needsDisplay = true
+	public func refreshMessageCount(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
+		presentationRevision &+= 1
 	}
 
-	public func refreshDrawing(forItem cellItem: IRCTreeItem) {
-		refreshDrawing(forItem: cellItem, skipOcclusionCheck: false)
-	}
-
-	public func refreshDrawing(forItem cellItem: IRCTreeItem, skipOcclusionCheck: Bool) {
-		let rowIndex = row(forItem: cellItem)
-		refreshDrawing(forRow: rowIndex, skipOcclusionCheck: skipOcclusionCheck)
-	}
-
-	public func refreshMessageCount(forItem cellItem: IRCTreeItem) {
-		refreshMessageCount(forItem: cellItem, skipOcclusionCheck: false)
-	}
-
-	public func refreshMessageCount(forItem cellItem: IRCTreeItem, skipOcclusionCheck: Bool) {
-		let rowIndex = row(forItem: cellItem)
-		refreshMessageCount(forRow: rowIndex, skipOcclusionCheck: skipOcclusionCheck)
-	}
-
-	public func refreshAllUnreadMessageCountBadges() {
-		refreshAllUnreadMessageCountBadges(false)
-	}
-
-	public func refreshAllUnreadMessageCountBadges(_ skipOcclusionCheck: Bool) {
-		for rowIndex in 0 ..< numberOfRows {
-			refreshMessageCount(forRow: rowIndex, skipOcclusionCheck: skipOcclusionCheck)
-		}
-	}
-
-	public func refreshMessageCount(forRows rowIndexes: IndexSet) {
-		refreshMessageCount(forRows: rowIndexes, skipOcclusionCheck: false)
-	}
-
-	public func refreshMessageCount(forRows rowIndexes: IndexSet, skipOcclusionCheck: Bool) {
-		for index in rowIndexes {
-			refreshMessageCount(forRow: index, skipOcclusionCheck: skipOcclusionCheck)
-		}
-	}
-
-	public func refreshMessageCount(forRow rowIndex: Int) {
-		refreshMessageCount(forRow: rowIndex, skipOcclusionCheck: false)
-	}
-
-	public func refreshMessageCount(forRow rowIndex: Int, skipOcclusionCheck: Bool) {
-		guard rowIndex >= 0 else {
-			return
-		}
-
-		if skipOcclusionCheck == false, mainWindow?.ceIsOccluded == true {
-			return
-		}
-
-		guard let rowView = view(atColumn: 0, row: rowIndex, makeIfNecessary: false) as? ServerListCell else {
-			return
-		}
-
-		if rowView is ServerListCellChildItem {
-			rowView.populateMessageCountBadge()
-		}
-	}
-
-	override public var allowsVibrancy: Bool {
-		true
+	public func refreshAllUnreadMessageCountBadges(_: Bool = false) {
+		presentationRevision &+= 1
 	}
 
 	public func applicationAppearanceChanged() {
-		invalidateSelectionBackground()
-		refreshAllDrawings(true)
-		needsDisplay = true
+		presentationRevision &+= 1
 	}
 
 	public func systemAppearanceChanged() {
-		invalidateSelectionBackground()
-		refreshAllDrawings(true)
-		needsDisplay = true
+		presentationRevision &+= 1
 	}
 
-	private func windowDidBecomeKey(_ notification: Notification) {
-		windowKeyStateChanged(notification)
-	}
-
-	private func windowDidResignKey(_ notification: Notification) {
-		windowKeyStateChanged(notification)
-	}
-
-	private func windowKeyStateChanged(_: Notification) {
-		respondToRequiresRedraw()
-	}
-
-	private func windowMainStateChanged(_: Notification) {
-		/* Row emphasis follows main-window status (see TVCServerListRowCell),
-		 which AppKit does not re-evaluate on its own. */
-		enumerateAvailableRowViews { rowView, _ in
-			if let serverListRow = rowView as? ServerListRowCell {
-				serverListRow.refreshEmphasis()
-			}
+	func menu(for identifiers: Set<String>) -> NSMenu? {
+		guard let controller = AppController.shared.menuController else { return nil }
+		guard let identifier = identifiers.first,
+		      let item = mainWindow?.world.findItem(withId: identifier)
+		else {
+			return controller.serverListNoSelectionMenu
 		}
 
-		respondToRequiresRedraw()
+		if item.isClient {
+			return controller.mainMenuServerMenuItem?.submenu
+		}
+		if item.isChannel {
+			return controller.mainMenuChannelMenu
+		}
+		return controller.mainMenuQueryMenu
 	}
 
-	private func mainWindowRequiresRedraw(_: Notification) {
-		respondToRequiresRedraw()
+	func move(draggedIdentifier: String, before destination: IRCTreeItem) -> Bool {
+		guard let world = mainWindow?.world,
+		      let draggedItem = world.findItem(withId: draggedIdentifier),
+		      draggedItem !== destination
+		else { return false }
+
+		if let draggedClient = draggedItem as? IRCClient,
+		   let destinationClient = destination as? IRCClient,
+		   let original = world.clientList.firstIndex(where: { $0 === draggedClient }),
+		   let proposed = world.clientList.firstIndex(where: { $0 === destinationClient })
+		{
+			world.moveClient(
+				from: original,
+				to: ServerListReorderPolicy.destinationIndex(proposed: proposed, movingFrom: original)
+			)
+			return true
+		}
+
+		guard let draggedChannel = draggedItem as? IRCChannel,
+		      let destinationChannel = destination as? IRCChannel,
+		      let client = draggedChannel.associatedClient
+		else { return false }
+
+		let moveIsPermitted = ServerListReorderPolicy.permitsChannelMove(
+			sharesClient: destinationChannel.associatedClient === client,
+			draggedIsChannel: draggedChannel.isChannel,
+			destinationIsChannel: destinationChannel.isChannel
+		)
+		guard moveIsPermitted,
+		      let original = client.channelList.firstIndex(where: { $0 === draggedChannel }),
+		      let proposed = client.channelList.firstIndex(where: { $0 === destinationChannel })
+		else { return false }
+
+		world.moveChannel(
+			on: client,
+			from: original,
+			to: ServerListReorderPolicy.destinationIndex(proposed: proposed, movingFrom: original)
+		)
+		return true
+	}
+}
+
+enum ServerListReorderPolicy {
+	static func destinationIndex(proposed: Int, movingFrom original: Int) -> Int {
+		proposed > original ? proposed - 1 : proposed
 	}
 
-	private func respondToRequiresRedraw() {
-		refreshAllDrawings(true)
-	}
-
-	// MARK: - Events
-
-	override public func menu(for _: NSEvent) -> NSMenu? {
-		if let clickedRow = rowBeneathMouse {
-			if clickedRow != selectedRow || numberOfSelectedRows > 1 {
-				selectItem(at: clickedRow)
-			}
-		} else {
-			return AppController.shared.menuController?.serverListNoSelectionMenu
-		}
-
-		return menu
-	}
-
-	public var leftMouseIsDownInView: Bool {
-		/* Used by the selection delegate to tell a click driven selection
-		 change apart from a programmatic one. Derived from the current
-		 mouse state instead of tracking -mouseDown:/-mouseUp: which
-		 could get out of sync when the up event landed elsewhere. */
-		if (NSEvent.pressedMouseButtons & 0x1) == 0 {
-			return false
-		}
-
-		guard let window else {
-			return false
-		}
-
-		let mouseLocation = convert(window.mouseLocationOutsideOfEventStream, from: nil)
-		return NSMouseInRect(mouseLocation, bounds, isFlipped)
-	}
-
-	override public func keyDown(with event: NSEvent) {
-		/* With no delegate the list must still respond to the keyboard, so
-		 unhandled keys go to super rather than being swallowed. */
-		guard let keyDelegate else {
-			super.keyDown(with: event)
-
-			return
-		}
-
-		switch KeyCode(rawValue: event.keyCode) {
-		case .downArrow, .upArrow:
-			/* Let the outline view move the selection, as the member list does. */
-			super.keyDown(with: event)
-
-		case .leftArrow, .rightArrow, .pageUp, .pageDown:
-			break
-
-		default:
-			keyDelegate.serverListKeyDown(event)
-		}
+	static func permitsChannelMove(
+		sharesClient: Bool,
+		draggedIsChannel: Bool,
+		destinationIsChannel: Bool
+	) -> Bool {
+		sharesClient && draggedIsChannel == destinationIsChannel
 	}
 }

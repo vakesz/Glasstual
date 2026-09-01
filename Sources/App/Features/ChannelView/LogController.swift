@@ -43,8 +43,6 @@ import GlasstualPluginKit
 import os
 import Synchronization
 
-public typealias TVCLogController = LogController
-
 public extension Notification.Name {
 	static let logControllerViewFinishedLoading = Notification.Name(
 		"TVCLogControllerViewFinishedLoadingNotification"
@@ -99,7 +97,7 @@ public final class LogControllerPrintOperationContext: NSObject {
 public final class LogController: NSObject {
 	public private(set) var backingView: LogView?
 	public private(set) var viewIsLoaded = false
-	public private(set) weak var attachedWindow: TVCMainWindow!
+	public private(set) weak var attachedWindow: MainWindow!
 	public private(set) var newestLineNumberFromPreviousSession: String?
 	public private(set) var oldestLineNumber: String?
 	public private(set) var newestLineNumber: String?
@@ -180,7 +178,7 @@ public final class LogController: NSObject {
 		fatalError("Use a designated log controller initializer")
 	}
 
-	public init(client: IRCClient, in window: TVCMainWindow) {
+	public init(client: IRCClient, in window: MainWindow) {
 		sharedState.withLock {
 			$0.client = client
 			$0.uniqueIdentifier = client.uniqueIdentifier
@@ -190,7 +188,7 @@ public final class LogController: NSObject {
 		setUp()
 	}
 
-	public init(channel: IRCChannel, in window: TVCMainWindow) {
+	public init(channel: IRCChannel, in window: MainWindow) {
 		sharedState.withLock {
 			$0.client = channel.associatedClient
 			$0.channel = channel
@@ -438,7 +436,7 @@ public final class LogController: NSObject {
 		guard results.isEmpty == false else {
 			return
 		}
-		var pluginObjects: [THOPluginDidPostNewMessageConcreteObject] = []
+		var pluginObjects: [PluginPostedMessage] = []
 		let channel = associatedChannel
 		for result in results {
 			if let pluginMessage = result.pluginMessage,
@@ -969,7 +967,7 @@ public extension LogController {
 
 	func updateDeliveryState(
 		forLineNumber lineNumber: String,
-		state: TVCLogLineDeliveryState,
+		state: LogLineDeliveryState,
 		messageIdentifier: String?,
 		reason: String?
 	) {

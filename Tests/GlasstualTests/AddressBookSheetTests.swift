@@ -84,14 +84,13 @@ struct AddressBookSheetTests {
 		#expect(model.validationMessage == CommonValidationStrings.invalidNickname)
 	}
 
-	@Test("The sheet hosts SwiftUI, submits through its typed delegate, and bundles no nib")
+	@Test("The sheet submits through its typed delegate and bundles no nib")
 	func nativeSheetAndDelegate() throws {
 		let delegate = Delegate()
 		let sheet = AddressBookSheet(entryType: .userTracking)
 		sheet.delegate = delegate
 		sheet.model.hostmask = "vakesz"
 
-		#expect(sheet.sheet.contentViewController is NSHostingController<AddressBookEntryView>)
 		#expect(Bundle.main.path(forResource: "TDCAddressBookSheet", ofType: "nib") == nil)
 
 		sheet.ok(nil)

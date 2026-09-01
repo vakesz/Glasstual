@@ -15,8 +15,8 @@ struct FileTransferScopeTests {
 		on client: IRCClient,
 		nickname: String = "alice",
 		filename: String = "photo.jpg"
-	) throws -> TDCFileTransferDialogTransferController {
-		try #require(TDCFileTransferDialogTransferController.receiver(
+	) throws -> FileTransferController {
+		try #require(FileTransferController.receiver(
 			for: client,
 			nickname: nickname,
 			address: "203.0.113.5",
@@ -32,7 +32,7 @@ struct FileTransferScopeTests {
 		let client = client()
 		let transfer = try receiver(on: client)
 
-		#expect(FileTransferDialog.transfer(
+		#expect(FileTransferCenter.transfer(
 			transfer,
 			belongsTo: client,
 			peerNickname: "alice",
@@ -45,7 +45,7 @@ struct FileTransferScopeTests {
 		let client = client()
 		let transfer = try receiver(on: client)
 
-		#expect(FileTransferDialog.transfer(
+		#expect(FileTransferCenter.transfer(
 			transfer,
 			belongsTo: client,
 			peerNickname: "ALICE",
@@ -58,7 +58,7 @@ struct FileTransferScopeTests {
 		let client = client()
 		let transfer = try receiver(on: client)
 
-		#expect(FileTransferDialog.transfer(
+		#expect(FileTransferCenter.transfer(
 			transfer,
 			belongsTo: client,
 			peerNickname: "mallory",
@@ -71,7 +71,7 @@ struct FileTransferScopeTests {
 		let client = client()
 		let transfer = try receiver(on: client)
 
-		#expect(FileTransferDialog.transfer(
+		#expect(FileTransferCenter.transfer(
 			transfer,
 			belongsTo: client,
 			peerNickname: "alice",
@@ -85,7 +85,7 @@ struct FileTransferScopeTests {
 		let otherClient = client()
 		let transfer = try receiver(on: owningClient)
 
-		#expect(FileTransferDialog.transfer(
+		#expect(FileTransferCenter.transfer(
 			transfer,
 			belongsTo: otherClient,
 			peerNickname: "alice",
@@ -98,7 +98,7 @@ struct FileTransferScopeTests {
 		let client = client()
 		let transfer = try receiver(on: client, filename: "holiday:photo.jpg")
 
-		#expect(FileTransferDialog.transfer(
+		#expect(FileTransferCenter.transfer(
 			transfer,
 			belongsTo: client,
 			peerNickname: "alice",

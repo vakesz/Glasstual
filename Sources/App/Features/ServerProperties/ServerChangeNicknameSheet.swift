@@ -36,7 +36,7 @@
  *
  *********************************************************************** */
 
-import AppKit
+import Foundation
 import SwiftUI
 
 @MainActor
@@ -47,9 +47,7 @@ public protocol ServerChangeNicknameSheetDelegate: NSObjectProtocol {
 }
 
 @MainActor
-public final class ServerChangeNicknameSheet: SheetBase, NSWindowDelegate, TDCClientPrototype {
-	private static let contentSize = NSSize(width: 350, height: 131)
-
+public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScoped {
 	public private(set) var client: IRCClient?
 	public private(set) var clientId: String?
 
@@ -89,32 +87,14 @@ public final class ServerChangeNicknameSheet: SheetBase, NSWindowDelegate, TDCCl
 				self?.cancel(nil)
 			}
 		)
-		let hostedSheet = NSWindow(
-			contentRect: NSRect(origin: .zero, size: Self.contentSize),
-			styleMask: [.titled, .fullSizeContentView],
-			backing: .buffered,
-			defer: false
-		)
-
-		hostedSheet.contentViewController = NSHostingController(rootView: rootView)
-		hostedSheet.contentMinSize = Self.contentSize
-		hostedSheet.contentMaxSize = Self.contentSize
-		hostedSheet.delegate = self
-		hostedSheet.isReleasedWhenClosed = false
-		hostedSheet.isRestorable = false
-		hostedSheet.tabbingMode = .disallowed
-		hostedSheet.title = content.windowTitle
-		hostedSheet.titleVisibility = .hidden
-		hostedSheet.titlebarAppearsTransparent = true
-		hostedSheet.titlebarSeparatorStyle = .none
-		sheet = hostedSheet
+		setContent(rootView)
 	}
 
 	public func start() {
 		startSheet()
 	}
 
-	@IBAction override public func ok(_ sender: Any?) {
+	override public func ok(_ sender: Any?) {
 		guard okOrError() else {
 			return
 		}
@@ -131,7 +111,7 @@ public final class ServerChangeNicknameSheet: SheetBase, NSWindowDelegate, TDCCl
 		model.validateForSubmission()
 	}
 
-	public func windowWillClose(_: Notification) {
+	override public func sheetDidEnd(withReturnCode _: Int) {
 		(delegate as? ServerChangeNicknameSheetDelegate)?.serverChangeNicknameSheetWillClose(self)
 	}
 }

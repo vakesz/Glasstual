@@ -79,9 +79,9 @@ struct PreferencesInterfacePane: View {
 		Picker(selection: model.preferences.binding(for: Preferences.Appearance.preferredAppearance) { _ in
 			TextualPreferences.performReloadAction(.appearance)
 		}) {
-			Text(verbatim: PreferencesInterfaceStrings.appearanceSystem).tag(TXPreferredAppearance.inherited)
-			Text(verbatim: PreferencesInterfaceStrings.appearanceLight).tag(TXPreferredAppearance.light)
-			Text(verbatim: PreferencesInterfaceStrings.appearanceDark).tag(TXPreferredAppearance.dark)
+			Text(verbatim: PreferencesInterfaceStrings.appearanceSystem).tag(PreferredAppearance.inherited)
+			Text(verbatim: PreferencesInterfaceStrings.appearanceLight).tag(PreferredAppearance.light)
+			Text(verbatim: PreferencesInterfaceStrings.appearanceDark).tag(PreferredAppearance.dark)
 		} label: {
 			Text(verbatim: PreferencesInterfaceStrings.appearanceLabel)
 		}
@@ -172,11 +172,11 @@ struct PreferencesStylePane: View {
 				}
 				fontRow
 				HStack {
-					Button(TranscriptThemeStrings.importTheme) { model.actions?.importTranscriptTheme() }
-					Button(TranscriptThemeStrings.exportTheme) { model.actions?.exportTranscriptTheme() }
+					Button(TranscriptThemeStrings.importTheme) { model.importTranscriptTheme() }
+					Button(TranscriptThemeStrings.exportTheme) { model.exportTranscriptTheme() }
 					Spacer()
 					Button(PreferencesInterfaceStrings.resetToDefaults) {
-						model.actions?.resetTranscriptTheme()
+						model.resetTranscriptTheme()
 					}
 				}
 			} header: {
@@ -292,7 +292,7 @@ struct PreferencesStylePane: View {
 					size: Double(model.channelViewFontSize).formatted(.number.precision(.fractionLength(0 ... 1)))
 				))
 				Spacer()
-				Button(PreferencesStyleStrings.fontChange) { model.actions?.selectChannelViewFont() }
+				Button(PreferencesStyleStrings.fontChange) { model.selectChannelViewFont() }
 			}
 		} label: {
 			Text(verbatim: PreferencesStyleStrings.fontLabel)

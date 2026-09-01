@@ -395,22 +395,9 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		closeLogFile()
 		config.destroySecretKeyKeychainItem()
 
-		let descriptions = [
-			ChannelPropertiesSheet.self,
-			ChannelModifyTopicSheet.self,
-			ChannelModifyModesSheet.self,
-			ChannelBanListSheet.self,
-		].map { WindowController.windowDescription(forClass: $0) }
-		let windows = SharedApplication.sharedWindowController().windows(fromWindowList: descriptions)
-
-		for case let window as SheetBase in windows {
-			guard let channelWindow = window as? TDCChannelPrototype,
-			      channelWindow.channelId == self.uniqueIdentifier
-			else {
-				continue
-			}
-
-			window.close()
+		AppController.shared.mainWindow.presentationModel.closeSheets { owner in
+			guard let channelSheet = owner as? ChannelScoped else { return false }
+			return channelSheet.channelId == uniqueIdentifier
 		}
 
 		associatedClient?.output?.destroyInputHistory(for: self)

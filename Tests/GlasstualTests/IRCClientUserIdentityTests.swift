@@ -165,7 +165,7 @@ struct IRCClientUserIdentityTests {
 		#expect(client.printedLines.count == 1)
 		let printed = try #require(printedLine(at: 0, on: client))
 		#expect(printed["channel"] as? Channel === channel)
-		#expect((printed["lineType"] as? NSNumber)?.uintValue == TVCLogLineType.invite.rawValue)
+		#expect((printed["lineType"] as? NSNumber)?.uintValue == LogLineType.invite.rawValue)
 
 		let body = printed["messageBody"] as? String
 		#expect(body?.contains("alice") == true)

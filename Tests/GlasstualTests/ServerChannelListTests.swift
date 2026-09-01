@@ -35,9 +35,8 @@
  *
  *********************************************************************** */
 
-import AppKit
+import Foundation
 @testable import Glasstual
-import SwiftUI
 import Testing
 
 @MainActor
@@ -163,11 +162,8 @@ struct ServerChannelListTests {
 		#expect(copied.contains("\n"))
 	}
 
-	@Test("The dialog hosts SwiftUI and no longer bundles its nib")
-	func nativeDialogHasNoNib() {
-		let dialog = ServerChannelListDialog(client: GLTTestClient())
-
-		#expect(dialog.window.contentViewController is NSHostingController<ServerChannelListView>)
+	@Test("The channel-list scene no longer bundles a nib")
+	func nativeSceneHasNoNib() {
 		#expect(Bundle.main.path(forResource: "TDCServerChannelListDialog", ofType: "nib") == nil)
 	}
 

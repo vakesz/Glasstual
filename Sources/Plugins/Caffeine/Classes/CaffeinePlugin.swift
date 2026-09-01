@@ -35,7 +35,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import GlasstualPluginKit
 import os
 import SwiftUI
@@ -46,8 +45,6 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "Extension['\(Bundle(for: CaffeinePlugin.self).object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Caffeine")']"
 	)
-
-	private var preferencesPane: NSView?
 
 	private var activity: NSObjectProtocol?
 	private var connectionObservation: PluginObservation?
@@ -84,9 +81,6 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		preferencesPane = NSHostingView(rootView: CaffeinePreferencesView(defaults: host.defaults) { [weak self] in
-			self?.refreshSleepState()
-		})
 		connectionObservation = host.observeConnectionState { [weak self] hasConnectedClient in
 			self?.updateSleepState(hasConnectedClient: hasConnectedClient)
 		}
@@ -95,16 +89,16 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 	func pluginWillUnload() {
 		connectionObservation?.cancel()
 		connectionObservation = nil
-		preferencesPane = nil
 		host = nil
 		enableSleep()
 	}
 
-	var pluginPreferencesPaneMenuItemName: String {
-		String(localized: .BasicLanguage.sleepModeManagement)
-	}
-
-	var pluginPreferencesPaneView: NSView? {
-		preferencesPane
+	var pluginPreferencesPane: PluginPreferencesPane? {
+		guard let host else { return nil }
+		return PluginPreferencesPane(title: String(localized: .BasicLanguage.sleepModeManagement)) { [weak self] in
+			CaffeinePreferencesView(defaults: host.defaults) {
+				self?.refreshSleepState()
+			}
+		}
 	}
 }

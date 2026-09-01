@@ -96,21 +96,12 @@ public extension MenuActionCoordinator {
 		client.sendModes(changeString, withParametersString: nil, in: channel)
 	}
 
-	func channelSpotlightDidSelect(_: ChannelSpotlightController, channel: IRCChannel) {
-		mainWindow.select(channel)
-	}
-
 	func serverNicknameDidAccept(_ sender: ServerChangeNicknameSheet, nickname: String) {
 		guard let client = sender.client, client.isConnected else { return }
 		client.changeNickname(nickname)
 	}
 
 	func dialogDidClose(_ sender: Any) {
-		SharedApplication.sharedWindowController().removeWindow(fromWindowList: sender)
-	}
-
-	func preferencesDialogDidClose(_ sender: PreferencesController) {
-		TextualPreferences.performReloadAction([.highlightKeywords, .preferencesChanged])
-		dialogDidClose(sender)
+		_ = sender
 	}
 }

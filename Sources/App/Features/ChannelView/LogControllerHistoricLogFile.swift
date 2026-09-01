@@ -12,16 +12,14 @@
 
 import CocoaExtensions
 import Foundation
-import HistoricLogStoreKit
 
 /** What the app knows about the lines of one view, kept in memory so that chat
- history replayed by the server can be checked against the local scrollback
- without a round trip to the XPC service. The index is filled from every line
+ history replayed by the server can be checked against the local scrollback.
+ The index is filled from every line
  written and every line fetched.
 
- A value: it used to be a lock-guarded object because the XPC reply queue
- indexed fetched lines. Decoding now happens on the main actor, so the index
- belongs to the main actor and needs no synchronisation at all. */
+ Decoding happens on the main actor, so the value belongs there and needs no
+ synchronisation. */
 private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: value
 	var messageIdentifiers: Set<String> = []
 	var fallbackKeys: Set<String> = []
@@ -29,11 +27,11 @@ private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: valu
 	var oldestDate: Date?
 }
 
-/** The app's side of the scrollback history service.
+/** The main-actor facade for scrollback history.
 
  It owns the duplicate index — main-actor state, read synchronously by the IRC
  layer when it decides whether a replayed history line is one it already has —
- and forwards everything else to `HistoricLogClient`, which owns the connection. */
+ and forwards storage work to `HistoricLogClient`. */
 @MainActor
 public final class LogControllerHistoricLogFile {
 	public static let sharedInstance = LogControllerHistoricLogFile()
@@ -59,10 +57,9 @@ public final class LogControllerHistoricLogFile {
 		}
 	}
 
-	/// Raised when the connection dies for a reason the user should know about.
-	/// The client awaits this instead of hopping through a detached task.
+	/// Raised when the store cannot open its database.
 	static func reportConnectionFailure(_ message: String) {
-		TDCAlert.alert(
+		Alerts.alert(
 			withMessage: message,
 			title: PromptStrings.Logging.scrollbackFailureTitle,
 			defaultButton: PromptStrings.Action.confirmation,
@@ -70,7 +67,7 @@ public final class LogControllerHistoricLogFile {
 		)
 	}
 
-	/// The service is about to drop these lines from its store.
+	/// The store is about to drop these lines.
 	static func noteWillDeleteLines(_ uniqueIdentifiers: [String], inView viewIdentifier: String) {
 		guard let item = AppController.shared.world?.findItem(withId: viewIdentifier) else {
 			return
@@ -169,8 +166,8 @@ public final class LogControllerHistoricLogFile {
 
 	/// Decodes fetched rows and records them in the index. The rows cross the
 	/// XPC boundary as values; the log lines they decode into are main-actor.
-	func decodeAndIndex(_ xpcObjects: [LogLineXPC], forView viewIdentifier: String) -> [LogLine] {
-		let logLines = HistoricLogClient.logLines(from: xpcObjects)
+	func decodeAndIndex(_ historicEntries: [HistoricLogEntry], forView viewIdentifier: String) -> [LogLine] {
+		let logLines = HistoricLogClient.logLines(from: historicEntries)
 		indexLogLines(logLines, forView: viewIdentifier)
 		return logLines
 	}
@@ -180,7 +177,7 @@ public final class LogControllerHistoricLogFile {
 	public func writeNewEntry(with logLine: LogLine, forView viewIdentifier: String) {
 		indexLogLine(logLine, forView: viewIdentifier)
 
-		let entry = logLine.xpcObject(forView: viewIdentifier)
+		let entry = logLine.historicEntry(forView: viewIdentifier)
 		Task { await HistoricLogClient.shared.writeEntry(entry) }
 	}
 

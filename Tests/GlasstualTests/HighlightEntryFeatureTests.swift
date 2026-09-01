@@ -115,23 +115,14 @@ struct HighlightEntryFeatureTests {
 		#expect(content.windowTitle == "Highlight Rule")
 	}
 
-	@Test("The adapter hosts SwiftUI and reports through the typed delegate callbacks")
-	func adapterHostsSwiftUIAndUsesTypedDelegateCallbacks() throws {
+	@Test("The sheet session reports through typed delegate callbacks")
+	func sessionUsesTypedDelegateCallbacks() throws {
 		let source = HighlightMatchCondition(uniqueIdentifier: "highlight-a", matchKeyword: "ping")
 		let channel = ChannelConfig(uniqueIdentifier: "channel-a", channelName: "#swift")
 		let adapter = HighlightEntrySheet(config: source, channels: [channel])
 		let delegate = HighlightEntryDelegateSpy()
 
 		adapter.delegate = delegate
-
-		#expect(adapter.sheet.delegate === adapter)
-		#expect(adapter.sheet.contentViewController is NSHostingController<HighlightEntryView>)
-		#expect(adapter.sheet.styleMask.contains(.resizable) == false)
-		#expect(adapter.sheet.isReleasedWhenClosed == false)
-		#expect(adapter.sheet.isRestorable == false)
-		#expect(adapter.sheet.tabbingMode == .disallowed)
-		#expect(adapter.sheet.contentMinSize == NSSize(width: 500, height: 150))
-		#expect(adapter.sheet.contentMaxSize == NSSize(width: 500, height: 150))
 
 		adapter.model.setBehavior(.exclude)
 		adapter.model.updateKeyword(" mention ")
@@ -143,7 +134,7 @@ struct HighlightEntryFeatureTests {
 		#expect(savedConfiguration.matchKeyword == "mention")
 		#expect(savedConfiguration.matchChannelId == "channel-a")
 
-		adapter.windowWillClose(Notification(name: NSWindow.willCloseNotification))
+		adapter.sheetDidEnd(withReturnCode: 0)
 		#expect(delegate.didClose)
 	}
 }

@@ -67,3 +67,83 @@ line_length:
 type_body_length:
   warning: 600
   error: 1200
+
+# Repository architecture invariants belong beside the Swift rules they
+# complement. These replace separate source-scanning shell scripts, so one
+# parser and one `make lint` invocation report every source-level violation.
+# `no_magic_numbers` is intentionally not enabled: layout proportions, IRC
+# field indexes, colour components, and corpus values are clearer inline.
+# The rules below instead reject raw strings at boundaries where a typo would
+# silently create a second persistence or presentation contract.
+custom_rules:
+  isolation_escape_hatch:
+    name: "Isolation Escape Hatch"
+    regex: '(?:nonisolated\(unsafe\)|@unchecked\s+Sendable|MainActor\.assumeIsolated|Thread\.isMainThread|DispatchQueue\.main\.sync)'
+    match_kinds:
+      - attribute.builtin
+      - keyword
+      - typeidentifier
+    message: "Move the state to its isolation domain or pass a Sendable snapshot."
+    severity: error
+
+  manual_lock_or_queue:
+    name: "Manual Lock or Queue"
+    regex: '(?m)^(?![^\n]*//\s*lock-queue:\s*fsevents\s*$)[^\n]*(?:NSLock\(|NSRecursiveLock\(|objc_sync_enter|DispatchQueue\(label:|OperationQueue\(\)|perform(?:Asynchronously|Synchronously)OnMainQueue)'
+    message: "Use actor isolation, or Mutex<Value> for a small synchronous value."
+    severity: error
+
+  misplaced_fsevents_queue_marker:
+    name: "Misplaced FSEvents Queue Marker"
+    regex: '(?m)^(?![^\n]*DispatchQueue\(label:)[^\n]*//\s*lock-queue:\s*fsevents\s*$'
+    message: "The FSEvents marker belongs only on its required serial queue."
+    severity: error
+
+  unmarked_nonisolated:
+    name: "Unmarked Nonisolated Declaration"
+    regex: '(?m)\bnonisolated\b(?!\s*\()[^\n]*(?<!// nonisolated: pure)(?<!// nonisolated: let)(?<!// nonisolated: value)(?<!// nonisolated: xpc-shim)$'
+    match_kinds:
+      - keyword
+    message: "Mark a pure, Sendable let, XPC shim, or value declaration with its approved nonisolated reason."
+    severity: error
+
+  disabled_test:
+    name: "Disabled Test"
+    included: 'Tests/.*\.swift'
+    regex: '\.disabled\s*\('
+    message: "A test that does not run is not passing; fix it or remove it."
+    severity: error
+
+  known_issue_test:
+    name: "Known-Issue Test"
+    included: 'Tests/.*\.swift'
+    regex: '\bwithKnownIssue\b'
+    message: "Do not turn a known failure green; fix it or remove the test."
+    severity: error
+
+  stringly_typed_window_lookup:
+    name: "Stringly Typed Window Lookup"
+    included: 'Sources/.*\.swift'
+    regex: '(?:window\(fromWindowList:|windows\(fromWindowList:|maybeBringWindowForward\(|removeWindow\(fromWindowList:|withDescription:)[^\n)]*"'
+    message: "Derive the window-list key from its class instead of spelling its runtime name."
+    severity: error
+
+  raw_notification_observation:
+    name: "Raw Notification Observation"
+    included: 'Sources/.*\.swift'
+    regex: '(?:observe\(|publisher\(for:\s*)Notification\.Name\("'
+    message: "Declare the notification name once at its owning boundary and observe the typed member."
+    severity: error
+
+  raw_alert_suppression_key:
+    name: "Raw Alert Suppression Key"
+    included: 'Sources/.*\.swift'
+    regex: 'suppressionKey:\s*"'
+    message: "Declare the suppression key in the feature that owns the alert."
+    severity: error
+
+  raw_defaults_key:
+    name: "Raw User Defaults Key"
+    included: 'Sources/.*\.swift'
+    regex: '(?:UserDefaults|TextualUserDefaults)[^\n]*forKey:\s*"'
+    message: "Read or write through a typed PreferenceKey declaration."
+    severity: error

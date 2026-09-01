@@ -42,8 +42,8 @@ struct PreferencesFileTransfersSections: View {
 				accessibilityLabel: PreferencesStrings.downloadDestinationAccessibilityLabel,
 				folder: model.downloadFolder,
 				emptyTitle: PreferencesStrings.noDownloadDestination,
-				select: { model.actions?.selectDownloadFolder() },
-				clear: { model.actions?.clearDownloadFolder() }
+				select: { model.selectDownloadFolder() },
+				clear: { model.clearDownloadFolder() }
 			)
 			PreferencesNote(PreferencesFileTransfersStrings.destinationNote)
 			PreferencesToggle(
@@ -62,11 +62,11 @@ struct PreferencesFileTransfersSections: View {
 	private var replyActionPicker: some View {
 		Picker(selection: model.preferences.binding(for: Preferences.FileTransfers.requestReplyAction)) {
 			Text(verbatim: PreferencesFileTransfersStrings.replyIgnore)
-				.tag(TXFileTransferRequestReply.ignore)
+				.tag(FileTransferRequestBehavior.ignore)
 			Text(verbatim: PreferencesFileTransfersStrings.replyOpenDialog)
-				.tag(TXFileTransferRequestReply.openDialog)
+				.tag(FileTransferRequestBehavior.openDialog)
 			Text(verbatim: PreferencesFileTransfersStrings.replyDownload)
-				.tag(TXFileTransferRequestReply.automaticallyDownload)
+				.tag(FileTransferRequestBehavior.automaticallyDownload)
 		} label: {
 			Text(verbatim: PreferencesFileTransfersStrings.replyActionLabel)
 		}
@@ -78,13 +78,13 @@ struct PreferencesFileTransfersSections: View {
 			selection: model.preferences.binding(for: Preferences.FileTransfers.ipAddressDetectionMethod)
 		) {
 			Text(verbatim: PreferencesFileTransfersStrings.detectionRouterOnly)
-				.tag(TXFileTransferIPAddressMethodDetection.routerOnly)
+				.tag(FileTransferIPAddressSource.routerOnly)
 			Text(verbatim: PreferencesFileTransfersStrings.detectionRouterFirstParty)
-				.tag(TXFileTransferIPAddressMethodDetection.routerAndFirstParty)
+				.tag(FileTransferIPAddressSource.routerAndFirstParty)
 			Text(verbatim: PreferencesFileTransfersStrings.detectionRouterThirdParty)
-				.tag(TXFileTransferIPAddressMethodDetection.routerAndThirdParty)
+				.tag(FileTransferIPAddressSource.routerAndThirdParty)
 			Text(verbatim: PreferencesFileTransfersStrings.detectionManual)
-				.tag(TXFileTransferIPAddressMethodDetection.manual)
+				.tag(FileTransferIPAddressSource.manual)
 		} label: {
 			Text(verbatim: PreferencesFileTransfersStrings.detectionLabel)
 		}
@@ -199,8 +199,8 @@ struct PreferencesLogLocationSections: View {
 				accessibilityLabel: PreferencesStrings.transcriptFolderAccessibilityLabel,
 				folder: model.transcriptFolder,
 				emptyTitle: PreferencesStrings.noTranscriptFolder,
-				select: { model.actions?.selectTranscriptFolder() },
-				clear: { model.actions?.clearTranscriptFolder() }
+				select: { model.selectTranscriptFolder() },
+				clear: { model.clearTranscriptFolder() }
 			)
 			.labelsHidden()
 			.disabled(logsToDisk == false)

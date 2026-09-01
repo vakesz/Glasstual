@@ -38,60 +38,60 @@
 
 import Foundation
 
-nonisolated let TPCPreferencesDictionaryVersion: UInt = 602 // nonisolated: let
+nonisolated let preferencesDictionaryVersion: UInt = 602 // nonisolated: let
 
-public enum TXNicknameHighlightMatchType: UInt, Sendable {
+public enum NicknameHighlightMatchMode: UInt, Sendable {
 	case partial
 	case exact
 	case regularExpression
 }
 
-public enum TXTabKeyAction: UInt, Sendable {
+public enum TabKeyAction: UInt, Sendable {
 	case nicknameComplete = 0
 	case unreadChannel = 1
 	case none = 100
 }
 
-public enum TXUserDoubleClickAction: UInt, Sendable {
+public enum UserDoubleClickAction: UInt, Sendable {
 	case whois = 100
 	case privateMessage = 200
 	case insertTextField = 300
 }
 
-public enum TXNoticeSendLocation: UInt, Sendable {
+public enum NoticeSendLocation: UInt, Sendable {
 	case serverConsole
 	case selectedChannel
 	case query
 }
 
-public enum TXCommandWKeyAction: UInt, Sendable {
+public enum CommandWShortcutAction: UInt, Sendable {
 	case closeWindow
 	case partChannel
 	case disconnect
 	case terminate
 }
 
-public enum TXHostmaskBanFormat: UInt, Sendable {
+public enum HostmaskBanFormat: UInt, Sendable {
 	case whnin
 	case whainn
 	case whanni
 	case exact
 }
 
-public enum TVCMainWindowTextViewFontSize: UInt, Sendable {
+public enum MainWindowTextFontSize: UInt, Sendable {
 	case normal = 1
 	case large
 	case extraLarge
 	case humongous
 }
 
-public enum TXFileTransferRequestReply: UInt, Sendable {
+public enum FileTransferRequestBehavior: UInt, Sendable {
 	case ignore = 1
 	case openDialog
 	case automaticallyDownload
 }
 
-public enum TXFileTransferIPAddressMethodDetection: UInt, Sendable {
+public enum FileTransferIPAddressSource: UInt, Sendable {
 	// Raw values preserve existing preferences.
 	case routerOnly = 3
 	case routerAndFirstParty = 1
@@ -99,7 +99,7 @@ public enum TXFileTransferIPAddressMethodDetection: UInt, Sendable {
 	case manual = 2
 }
 
-public enum TXPreferredAppearance: UInt, Sendable {
+public enum PreferredAppearance: UInt, Sendable {
 	case inherited
 	case light
 	case dark
@@ -109,13 +109,13 @@ public enum TXPreferredAppearance: UInt, Sendable {
  reads and writes them directly. A stored value with no matching case decodes to
  nothing and the read falls back to the key's declared default, which is what
  the hand-written `?? .someCase` at each call site used to do. */
-extension TXNicknameHighlightMatchType: PreferenceEnum {}
-extension TXTabKeyAction: PreferenceEnum {}
-extension TXUserDoubleClickAction: PreferenceEnum {}
-extension TXNoticeSendLocation: PreferenceEnum {}
-extension TXCommandWKeyAction: PreferenceEnum {}
-extension TXHostmaskBanFormat: PreferenceEnum {}
-extension TVCMainWindowTextViewFontSize: PreferenceEnum {}
-extension TXFileTransferRequestReply: PreferenceEnum {}
-extension TXFileTransferIPAddressMethodDetection: PreferenceEnum {}
-extension TXPreferredAppearance: PreferenceEnum {}
+extension NicknameHighlightMatchMode: PreferenceEnum {}
+extension TabKeyAction: PreferenceEnum {}
+extension UserDoubleClickAction: PreferenceEnum {}
+extension NoticeSendLocation: PreferenceEnum {}
+extension CommandWShortcutAction: PreferenceEnum {}
+extension HostmaskBanFormat: PreferenceEnum {}
+extension MainWindowTextFontSize: PreferenceEnum {}
+extension FileTransferRequestBehavior: PreferenceEnum {}
+extension FileTransferIPAddressSource: PreferenceEnum {}
+extension PreferredAppearance: PreferenceEnum {}

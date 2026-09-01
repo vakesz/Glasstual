@@ -42,7 +42,7 @@ import Foundation
 
 public extension IRCClient {
 	private func formatSpokenNotification(
-		_ event: TXNotificationType,
+		_ event: NotificationEvent,
 		channel: IRCChannel?,
 		nickname: String?,
 		text rawText: String?
@@ -120,7 +120,7 @@ public extension IRCClient {
 
 	@MainActor
 	private func formatSpokenChannelEvent(
-		_ event: TXNotificationType,
+		_ event: NotificationEvent,
 		channel: IRCChannel?,
 		nickname: String?,
 		text: String?
@@ -151,7 +151,7 @@ public extension IRCClient {
 	}
 
 	private func formatSpokenPrivateEvent(
-		_ event: TXNotificationType,
+		_ event: NotificationEvent,
 		nickname: String?,
 		text: String?
 	) -> String? {
@@ -171,14 +171,14 @@ public extension IRCClient {
 		return NotificationStrings.Spoken.invited(to: nameWithoutBang, by: nickname)
 	}
 
-	private func formatSpokenFileTransfer(_ event: TXNotificationType, nickname: String?) -> String? {
+	private func formatSpokenFileTransfer(_ event: NotificationEvent, nickname: String?) -> String? {
 		guard let nickname else { return nil }
 		return NotificationStrings.Spoken.fileTransfer(for: event, with: nickname)
 	}
 
 	@MainActor
 	private func formatSpokenMembership(
-		_ event: TXNotificationType,
+		_ event: NotificationEvent,
 		channel: IRCChannel?,
 		nickname: String?
 	) -> String? {
@@ -216,8 +216,8 @@ public extension IRCClient {
 	}
 
 	func speakEvent(
-		_ event: TXNotificationType,
-		lineType: TVCLogLineType,
+		_ event: NotificationEvent,
+		lineType: LogLineType,
 		target: IRCTreeItem?,
 		nickname: String?,
 		text: String?
@@ -244,8 +244,8 @@ public extension IRCClient {
 	}
 
 	func notifyText(
-		_ event: TXNotificationType,
-		lineType: TVCLogLineType,
+		_ event: NotificationEvent,
+		lineType: LogLineType,
 		target: IRCChannel,
 		nickname: String,
 		text: String
@@ -253,13 +253,13 @@ public extension IRCClient {
 		notifyEvent(event, lineType: lineType, target: target, nickname: nickname, text: text, userInfo: nil)
 	}
 
-	func notifyEvent(_ event: TXNotificationType, lineType: TVCLogLineType) -> Bool {
+	func notifyEvent(_ event: NotificationEvent, lineType: LogLineType) -> Bool {
 		notifyEvent(event, lineType: lineType, target: nil, nickname: nil, text: nil, userInfo: nil)
 	}
 
 	func notifyEvent(
-		_ event: TXNotificationType,
-		lineType: TVCLogLineType,
+		_ event: NotificationEvent,
+		lineType: LogLineType,
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?
@@ -268,8 +268,8 @@ public extension IRCClient {
 	}
 
 	func notifyEvent(
-		_ event: TXNotificationType,
-		lineType: TVCLogLineType,
+		_ event: NotificationEvent,
+		lineType: LogLineType,
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?,
@@ -287,8 +287,8 @@ public extension IRCClient {
 
 	@MainActor
 	private func deliverNotification(
-		_ event: TXNotificationType,
-		lineType: TVCLogLineType,
+		_ event: NotificationEvent,
+		lineType: LogLineType,
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?,
@@ -374,8 +374,8 @@ public extension IRCClient {
 
 	@MainActor
 	private func notificationContent(
-		for event: TXNotificationType,
-		lineType: TVCLogLineType,
+		for event: NotificationEvent,
+		lineType: LogLineType,
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?
@@ -415,8 +415,8 @@ public extension IRCClient {
 
 	@MainActor
 	private func textNotificationContent(
-		for event: TXNotificationType,
-		lineType: TVCLogLineType,
+		for event: NotificationEvent,
+		lineType: LogLineType,
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?
@@ -444,7 +444,7 @@ public extension IRCClient {
 	}
 
 	private func membershipNotificationContent(
-		for event: TXNotificationType,
+		for event: NotificationEvent,
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?
