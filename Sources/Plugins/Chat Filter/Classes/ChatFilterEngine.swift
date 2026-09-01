@@ -35,26 +35,22 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+import Foundation
 import GlasstualPluginKit
 
-final class ChatFilterEngine: NSObject {
-	private weak var parentObject: NSObject?
+final class ChatFilterEngine {
+	private let filtersProvider: () -> [ChatFilter]
 	private let host: PluginHostContext
 	private var lastActionDates: [String: TimeInterval] = [:]
 
-	init(parentObject: NSObject, host: PluginHostContext) {
-		self.parentObject = parentObject
+	init(host: PluginHostContext, filters: @escaping () -> [ChatFilter]) {
 		self.host = host
-		super.init()
+		filtersProvider = filters
 	}
 
 	private var filters: [ChatFilter] {
-		guard let controller = parentObject?.value(forKey: "filterArrayController") as? NSArrayController else {
-			return []
-		}
-		return controller.arrangedObjects as? [ChatFilter] ?? []
+		filtersProvider()
 	}
 
 	private func matchesDestination(
@@ -63,8 +59,8 @@ final class ChatFilterEngine: NSObject {
 		destination: PluginChannel?,
 		client: PluginClient
 	) -> Bool {
-		let limit = ChatFilterDestination(rawValue: filter.filterLimitedToValue) ?? .unrestricted
-		if limit != .unrestricted || filter.filterIgnoreOperators, destination == nil, !author.isServer {
+		let limit = filter.destination
+		if limit != .unrestricted || filter.ignoresOperators, destination == nil, !author.isServer {
 			return false
 		}
 
@@ -75,11 +71,11 @@ final class ChatFilterEngine: NSObject {
 			return destination?.isPrivateMessage == true
 		case .specificItems:
 			let channelMatches: Bool = if let identifier = destination?.identifier {
-				filter.filterLimitedToChannelsIDs.contains(identifier)
+				filter.limitedChannelIDs.contains(identifier)
 			} else {
 				false
 			}
-			return filter.filterLimitedToClientsIDs.contains(client.identifier) || channelMatches
+			return filter.limitedClientIDs.contains(client.identifier) || channelMatches
 		case .unrestricted:
 			return true
 		}
@@ -91,13 +87,13 @@ final class ChatFilterEngine: NSObject {
 		destination: PluginChannel?,
 		client: PluginClient
 	) -> Bool {
-		if filter.filterLimitedToMyself {
+		if filter.isLimitedToMyself {
 			return client.userNickname.caseInsensitiveCompare(author.nickname) == .orderedSame
 		}
 
-		if !filter.filterSenderMatch.isEmpty {
+		if !filter.senderMatch.isEmpty {
 			let identity = author.isServer ? author.nickname : author.hostmask
-			guard RegularExpression.string(identity, isMatchedByRegex: filter.filterSenderMatch, withoutCase: true)
+			guard RegularExpression.string(identity, isMatchedByRegex: filter.senderMatch, withoutCase: true)
 			else {
 				return false
 			}
@@ -106,17 +102,17 @@ final class ChatFilterEngine: NSObject {
 		guard destination?.isChannel == true, !author.isServer else { return true }
 		let sender = destination?.member(named: author.nickname)
 
-		if filter.filterAgeLimit > 0 {
+		if filter.ageLimit > 0 {
 			guard let sender else { return false }
 			let elapsed = Date.timeIntervalSinceReferenceDate - sender.creationTime
-			switch ChatFilterAgeComparator(rawValue: filter.filterAgeComparator) ?? .none {
-			case .lessThan where elapsed < Double(filter.filterAgeLimit): return false
-			case .greaterThan where elapsed >= Double(filter.filterAgeLimit): return false
+			switch filter.ageComparator {
+			case .lessThan where elapsed < Double(filter.ageLimit): return false
+			case .greaterThan where elapsed >= Double(filter.ageLimit): return false
 			default: break
 			}
 		}
 
-		if filter.filterIgnoreOperators {
+		if filter.ignoresOperators {
 			guard let sender else { return false }
 			return !sender.isHalfOperator
 		}
@@ -125,11 +121,11 @@ final class ChatFilterEngine: NSObject {
 
 	private func matchesText(_ filter: ChatFilter, text: String?, allowingNil: Bool) -> Bool {
 		guard var text else { return allowingNil }
-		guard !filter.filterMatch.isEmpty else { return true }
+		guard !filter.match.isEmpty else { return true }
 		if host.removesIRCFormatting == false {
 			text = IRCFormatting.removingControlCodes(from: text)
 		}
-		return RegularExpression.string(text, isMatchedByRegex: filter.filterMatch, withoutCase: true)
+		return RegularExpression.string(text, isMatchedByRegex: filter.match, withoutCase: true)
 	}
 
 	func receivedCommand(_ event: PluginIncomingCommandEvent) -> Bool {
@@ -159,7 +155,7 @@ final class ChatFilterEngine: NSObject {
 				client: event.client,
 				receivedAt: event.receivedAt
 			)
-			return !filter.filterIgnoreContent
+			return !filter.ignoresContent
 		}
 		return true
 	}
@@ -193,7 +189,7 @@ final class ChatFilterEngine: NSObject {
 				receivedAt: event.receivedAt,
 				wasEncrypted: event.wasEncrypted
 			)
-			return !filter.filterIgnoreContent
+			return !filter.ignoresContent
 		}
 		return true
 	}
@@ -201,11 +197,11 @@ final class ChatFilterEngine: NSObject {
 	private func accepts(_ kind: PluginMessageKind, filter: ChatFilter) -> Bool {
 		switch kind {
 		case .privateMessage, .privateMessageNoHighlight:
-			filter.isEventTypeEnabled(.plainTextMessage)
+			filter.isEventEnabled(.plainTextMessage)
 		case .action, .actionNoHighlight:
-			filter.isEventTypeEnabled(.actionMessage)
+			filter.isEventEnabled(.actionMessage)
 		case .notice:
-			filter.isEventTypeEnabled(.noticeMessage)
+			filter.isEventEnabled(.noticeMessage)
 		default:
 			true
 		}
@@ -218,8 +214,8 @@ final class ChatFilterEngine: NSObject {
 		client: PluginClient,
 		receivedAt: Date
 	) {
-		guard !filter.filterForwardToDestination.isEmpty, let text, !text.isEmpty else { return }
-		guard let destination = client.privateMessage(named: filter.filterForwardToDestination)
+		guard !filter.forwardDestination.isEmpty, let text, !text.isEmpty else { return }
+		guard let destination = client.privateMessage(named: filter.forwardDestination)
 		else {
 			return
 		}
@@ -238,8 +234,8 @@ final class ChatFilterEngine: NSObject {
 		receivedAt: Date,
 		wasEncrypted: Bool
 	) {
-		guard !filter.filterForwardToDestination.isEmpty else { return }
-		guard let destination = client.privateMessage(named: filter.filterForwardToDestination)
+		guard !filter.forwardDestination.isEmpty else { return }
+		guard let destination = client.privateMessage(named: filter.forwardDestination)
 		else {
 			return
 		}
@@ -272,8 +268,8 @@ final class ChatFilterEngine: NSObject {
 		client: PluginClient,
 		messageParameters: [String]
 	) {
-		guard isSafeToPerformAction(filter), !filter.filterAction.isEmpty else { return }
-		var action = filter.filterAction
+		guard isSafeToPerformAction(filter), !filter.action.isEmpty else { return }
+		var action = filter.action
 		let replacements: [String: String?] = [
 			"%_channelName_%": destination?.name,
 			"%_localNickname_%": client.userNickname,
@@ -299,14 +295,14 @@ final class ChatFilterEngine: NSObject {
 			client.sendCommand(String(line.dropFirst()))
 		}
 
-		guard filter.filterLogMatch else { return }
+		guard filter.logsMatch else { return }
 		guard let report = client.utilityChannel(named: "Filter Actions") else {
 			return
 		}
 		let message = if let destination {
 			String(
 				localized: .TPIChatFilterExtension.actionLogUserInChannel(
-					filter.filterTitle,
+					filter.title,
 					author.nickname,
 					destination.name
 				)
@@ -314,7 +310,7 @@ final class ChatFilterEngine: NSObject {
 		} else {
 			String(
 				localized: .TPIChatFilterExtension.actionLogUser(
-					filter.filterTitle,
+					filter.title,
 					author.nickname
 				)
 			)
@@ -324,19 +320,18 @@ final class ChatFilterEngine: NSObject {
 	}
 
 	private func isSafeToPerformAction(_ filter: ChatFilter) -> Bool {
-		let interval = TimeInterval(filter.filterActionFloodControlInterval)
+		let interval = TimeInterval(filter.actionFloodControlInterval)
 		guard interval > 0 else { return true }
 		let now = Date.timeIntervalSinceReferenceDate
-		if let lastAction = lastActionDates[filter.uniqueIdentifier], now - lastAction <= interval {
+		if let lastAction = lastActionDates[filter.id], now - lastAction <= interval {
 			return false
 		}
-		lastActionDates[filter.uniqueIdentifier] = now
+		lastActionDates[filter.id] = now
 		return true
 	}
 
 	func reloadFilterActionPerforms() {
-		let validIdentifiers = Set(filters.lazy.filter { $0.filterActionFloodControlInterval > 0 }
-			.map(\.uniqueIdentifier))
+		let validIdentifiers = Set(filters.lazy.filter { $0.actionFloodControlInterval > 0 }.map(\.id))
 		lastActionDates = lastActionDates.filter { validIdentifiers.contains($0.key) }
 	}
 }

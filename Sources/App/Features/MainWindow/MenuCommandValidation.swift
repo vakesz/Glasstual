@@ -136,7 +136,7 @@ extension MenuActionCoordinator {
 			item.menu?.item(for: .closeQuerySeparator)?.isHidden = isQuery == false
 			return TextualPreferences.logToDiskIsEnabled()
 		case .developerMode:
-			item.state = TextualPreferences.developerModeEnabled() ? .on : .off
+			item.state = Preferences.Commands.developerMode.value ? .on : .off
 			return true
 		default:
 			return true
@@ -246,7 +246,7 @@ extension MenuActionCoordinator {
 			return TextualPreferences.logToDiskIsEnabled()
 		case .highlightList:
 			item.isHidden = mainWindow.isMainWindow == false
-			return client != nil && TextualPreferences.logHighlights()
+			return client != nil && Preferences.Logging.logHighlights.value
 		default:
 			return true
 		}
@@ -260,9 +260,9 @@ extension MenuActionCoordinator {
 		case .webChangeNickname:
 			return client?.isConnected == true
 		case .webSearch:
-			guard let webView = selectedBackingView else { return false }
+			guard let transcriptView = selectedBackingView else { return false }
 			item.title = ApplicationStrings.search(with: searchProviderName)
-			return webView.hasSelection
+			return transcriptView.hasSelection
 		case .webDictionary:
 			return validateDictionaryLookup(item)
 		case .webCopy:
@@ -336,7 +336,7 @@ extension MenuActionCoordinator {
 	}
 
 	private func validateCloseWindow(_ item: NSMenuItem, client: IRCClient?, channel: IRCChannel?) -> Bool {
-		let action = TextualPreferences.commandWKeyAction()
+		let action = Preferences.Input.commandWKeyAction.value
 		if action == .closeWindow || mainWindow.isKeyWindow == false {
 			item.title = ApplicationStrings.closeWindow
 			return true

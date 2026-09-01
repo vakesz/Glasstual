@@ -62,7 +62,79 @@ extension FileTransferFailure {
 	}
 }
 
-nonisolated enum FileTransferStrings { // nonisolated: value
+enum FileTransferStrings {
+	static var fileTransfers: String {
+		String(localized: .TDCFileTransferDialog.fileTransfers)
+	}
+
+	static var show: String {
+		String(localized: .TDCFileTransferDialog.show)
+	}
+
+	static var all: String {
+		String(localized: .TDCFileTransferDialog.all)
+	}
+
+	static var sending: String {
+		String(localized: .TDCFileTransferDialog.sending)
+	}
+
+	static var receiving: String {
+		String(localized: .TDCFileTransferDialog.receiving)
+	}
+
+	static var filterTransfers: String {
+		String(localized: .TDCFileTransferDialog.filterTransfers)
+	}
+
+	static var noTransfers: String {
+		String(localized: .TDCFileTransferDialog.noFileTransfers)
+	}
+
+	static var noTransfersDescription: String {
+		String(localized: .TDCFileTransferDialog.transfersAppearHere)
+	}
+
+	static var clearStopped: String {
+		String(localized: .TDCFileTransferDialog.clearAllStoppedTransfers)
+	}
+
+	static var startTransfer: String {
+		String(localized: .TDCFileTransferDialog.startTransfer)
+	}
+
+	static var cancelTransfer: String {
+		String(localized: .TDCFileTransferDialog.cancelTransfer)
+	}
+
+	static var quickLook: String {
+		String(localized: .TDCFileTransferDialog.quickLook)
+	}
+
+	static var openFile: String {
+		String(localized: .TDCFileTransferDialog.openFile)
+	}
+
+	static var showInFinder: String {
+		String(localized: .TDCFileTransferDialog.showInFinder)
+	}
+
+	static var share: String {
+		String(localized: .TDCFileTransferDialog.share)
+	}
+
+	static var removeFromList: String {
+		String(localized: .TDCFileTransferDialog.removeFromList)
+	}
+
+	static var transferProgress: String {
+		String(localized: .TDCFileTransferDialog.transferProgress)
+	}
+
+	static func transferCount(_ count: Int) -> String {
+		String(localized: .TDCFileTransferDialog.transfers(count))
+	}
+
 	static var destinationPickerMessage: String {
 		String(localized: .TDCFileTransferDialog.selectTheFolderInWhich)
 	}

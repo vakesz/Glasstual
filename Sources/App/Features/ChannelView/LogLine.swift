@@ -75,20 +75,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 	public internal(set) var highlightKeywords: [String]?
 	public internal(set) var excludeKeywords: [String]?
 
-	/** Whether the body reaches the renderer already marked up.
-
-	 This is the whole of what `rendererAttributes` used to carry: an untyped
-	 dictionary the app wrote one key into. It still archives as that
-	 dictionary, so an older build reads a line this one wrote. */
-	public internal(set) var doNotEscapeBody = false
-
-	/// Setting a nickname recomputes the colour style, which is derived from it.
-	public internal(set) var nickname: String? {
-		didSet { computeNicknameColorStyle() }
-	}
-
-	public private(set) var nicknameColorStyle = ""
-	public private(set) var nicknameColorStyleOverride = false
+	public internal(set) var nickname: String?
 	public private(set) var sessionIdentifier: UInt = 0
 
 	/// The line's identity, stable across copies and archives.
@@ -160,7 +147,6 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		receivedAt = decoded.receivedAt
 		excludeKeywords = decoded.excludeKeywords
 		highlightKeywords = decoded.highlightKeywords
-		doNotEscapeBody = decoded.doNotEscapeBody
 		isEncrypted = decoded.isEncrypted
 		isFirstForDay = decoded.isFirstForDay
 		command = decoded.command
@@ -174,7 +160,6 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		deliveryState = decoded.deliveryState
 		uniqueIdentifier = decoded.uniqueIdentifier ?? ""
 		sessionIdentifier = decoded.sessionIdentifier
-		computeNicknameColorStyle()
 	}
 
 	/// The identifier as the archive recorded it: empty when the archive
@@ -291,8 +276,6 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		let selectedFormat = [
 			format,
 			themeFormat,
-			TextualPreferences.themeTimestampFormat(),
-			TextualPreferences.themeTimestampFormatDefault(),
 		]
 		.compactMap(\.self)
 		.first { !$0.isEmpty } ?? ""
@@ -370,18 +353,6 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		components.append(messageBody)
 
 		return (components.joined(separator: " ") as NSString).stripIRCEffects
-	}
-
-	public mutating func computeNicknameColorStyle() {
-		guard let nickname, lineType.hasNicknameColor else {
-			nicknameColorStyle = ""
-			nicknameColorStyleOverride = false
-			return
-		}
-
-		let colorStyle = UserNicknameColorStyleGenerator.colorStyle(for: nickname)
-		nicknameColorStyle = colorStyle.style
-		nicknameColorStyleOverride = colorStyle.isOverride
 	}
 
 	/// Names the line without formatting it: the identifier is what a failure

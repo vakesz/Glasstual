@@ -32,12 +32,68 @@ private final class ServerListCellDrawingContext: NSObject {
 }
 
 public class ServerListCell: NSTableCellView {
-	@IBOutlet private var cellTextField: NSTextField!
-	@IBOutlet private var messageCountBadgeImageView: NSImageView!
+	private var cellTextField: NSTextField!
+	private var messageCountBadgeImageView: NSImageView!
 	/* Deactivating the constraints will dereference them.
 	 We need to maintain a strong reference. */
-	@IBOutlet private var messageCountBadgeLeadingConstraint: NSLayoutConstraint!
-	@IBOutlet private var messageCountBadgeTrailingConstraint: NSLayoutConstraint!
+	private var messageCountBadgeLeadingConstraint: NSLayoutConstraint!
+	private var messageCountBadgeTrailingConstraint: NSLayoutConstraint!
+
+	override public init(frame frameRect: NSRect) {
+		super.init(frame: frameRect)
+		installSubviews()
+	}
+
+	@available(*, unavailable)
+	required init?(coder _: NSCoder) {
+		fatalError("ServerListCell is programmatic")
+	}
+
+	private func installSubviews() {
+		let label = NSTextField(labelWithString: "")
+		label.translatesAutoresizingMaskIntoConstraints = false
+		label.lineBreakMode = .byTruncatingTail
+		label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+		cellTextField = label
+		textField = label
+		addSubview(label)
+
+		let badge = NSImageView()
+		badge.translatesAutoresizingMaskIntoConstraints = false
+		badge.imageScaling = .scaleProportionallyDown
+		messageCountBadgeImageView = badge
+		addSubview(badge)
+
+		messageCountBadgeLeadingConstraint = badge.leadingAnchor.constraint(
+			greaterThanOrEqualTo: label.trailingAnchor,
+			constant: 8
+		)
+		messageCountBadgeTrailingConstraint = badge.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -2)
+
+		var constraints = [
+			label.centerYAnchor.constraint(equalTo: centerYAnchor),
+			label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -2),
+			badge.centerYAnchor.constraint(equalTo: centerYAnchor),
+		]
+
+		if isGroupItem {
+			constraints.append(label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 5))
+		} else {
+			let icon = NSImageView()
+			icon.translatesAutoresizingMaskIntoConstraints = false
+			icon.imageScaling = .scaleProportionallyUpOrDown
+			imageView = icon
+			addSubview(icon)
+			constraints.append(contentsOf: [
+				icon.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 2),
+				icon.centerYAnchor.constraint(equalTo: centerYAnchor),
+				icon.widthAnchor.constraint(equalToConstant: 16),
+				icon.heightAnchor.constraint(equalToConstant: 16),
+				label.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 6),
+			])
+		}
+		NSLayoutConstraint.activate(constraints)
+	}
 
 	public func defineConstraints() {}
 
@@ -430,10 +486,8 @@ public class ServerListCell: NSTableCellView {
 	}
 }
 
-@objc(TVCServerListCellGroupItem)
 public final class ServerListCellGroupItem: ServerListCell {}
 
-@objc(TVCServerListCellChildItem)
 public final class ServerListCellChildItem: ServerListCell {
 	override public func defineConstraints() {
 		guard let imageView else {
@@ -444,9 +498,8 @@ public final class ServerListCellChildItem: ServerListCell {
 
 		/* Only the width is pinned. Symbols differ in width, and the label is laid
 		 out against the trailing edge of this view, so without a fixed width the
-		 names in the list do not line up with one another. The height is left
-		 alone: the nib already fixes it by insetting the image view from the top
-		 and the bottom of the row, and adding a height here conflicts with that. */
+		 names in the list do not line up with one another. The programmatic row
+		 layout owns the height. */
 		for constraint in imageView.constraints where constraint.firstAttribute == .width {
 			return
 		}

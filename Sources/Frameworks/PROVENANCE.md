@@ -21,15 +21,9 @@ links them.
 documentation) in Static Libraries. All of it was removed on 2026-08-22: those
 three libraries are LGPL 2.1, which is incompatible with Mac App Store
 distribution, so Off-the-Record messaging support was dropped from the app.
-Static Libraries now carries a source-built Swift 6 module based on
-GRMustache.swift 7.0.0
-(`4e3449141ce03cb1510f4752a26751bb9fbff9c2`). It replaces the former
-GRMustache.framework, libmustache archive, and three redundant copies of the
-Objective-C headers. Compatibility functions retained from the previous
-GRMustache source (`af9d138f6fc1d985a2c4089ad19b791a02827908`) preserve existing
-Glasstual and third-party theme behavior. Both upstream MIT notices remain in
-`Static Libraries/Documentation`; exact source and adaptation details are in
-`Static Libraries/GRMustache/PROVENANCE.md`.
+GRMustache.swift and the earlier libmustache implementation were removed in
+2026-08 when the channel transcript moved from templates and WebKit to native
+AppKit/TextKit. No template engine is shipped by the app.
 
 `Auto Hyperlinks` (https://github.com/Codeux-Software/Auto-Hyperlinks,
 commit 10c16555305ea775cd4600f0f21594d868b26d6e) was also vendored here but has

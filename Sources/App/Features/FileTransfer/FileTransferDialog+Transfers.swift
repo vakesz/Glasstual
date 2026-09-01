@@ -40,14 +40,14 @@ import AppKit
 import CocoaExtensions
 import os
 
-extension FileTransferDialog {
+public extension FileTransferDialog {
 	/// Locates the transfer a DCC `RESUME`/`ACCEPT` refers to.
 	///
 	/// A port on its own identifies nothing: it is unique to neither a network
 	/// nor a peer, so matching on it alone lets any user on any connected
 	/// network move the resume offset of somebody else's transfer. The client,
 	/// the peer nickname and the filename all have to agree.
-	public func fileTransfer(
+	func fileTransfer(
 		matchingPort port: UInt16,
 		client: IRCClient,
 		peerNickname: String,
@@ -59,7 +59,7 @@ extension FileTransferDialog {
 		}
 	}
 
-	static func transfer(
+	internal static func transfer(
 		_ transfer: TDCFileTransferDialogTransferController,
 		belongsTo client: IRCClient,
 		peerNickname: String,
@@ -78,15 +78,15 @@ extension FileTransferDialog {
 		return ourFilename.caseInsensitiveCompare(filename) == .orderedSame
 	}
 
-	public func fileTransfer(withUniqueIdentifier identifier: String) -> TDCFileTransferDialogTransferController? {
+	func fileTransfer(withUniqueIdentifier identifier: String) -> TDCFileTransferDialogTransferController? {
 		firstFileTransfer { $0.uniqueIdentifier == identifier }
 	}
 
-	public func fileTransferExists(withToken transferToken: String) -> Bool {
+	func fileTransferExists(withToken transferToken: String) -> Bool {
 		firstFileTransfer { $0.transferToken == transferToken } != nil
 	}
 
-	public func fileTransferSender(
+	func fileTransferSender(
 		matchingToken transferToken: String,
 		client: IRCClient,
 		peerNickname: String,
@@ -98,17 +98,17 @@ extension FileTransferDialog {
 		}
 	}
 
-	public func fileTransferReceiver(matchingToken transferToken: String) -> TDCFileTransferDialogTransferController? {
+	func fileTransferReceiver(matchingToken transferToken: String) -> TDCFileTransferDialogTransferController? {
 		firstFileTransfer { $0.transferToken == transferToken && !$0.isSender }
 	}
 
-	public func prepareForApplicationTermination() {
+	func prepareForApplicationTermination() {
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 		close()
-		prepareForPermanentDestruction(allFileTransfers)
+		prepareForPermanentDestruction(model.transfers)
 	}
 
-	public func addReceiver(
+	func addReceiver(
 		for client: IRCClient,
 		nickname: String,
 		address hostAddress: String,
@@ -139,14 +139,14 @@ extension FileTransferDialog {
 		show(false, restorePosition: false)
 		addFileTransfer(controller)
 
-		if TextualPreferences.fileTransferRequestReplyAction() == .automaticallyDownload {
+		if Preferences.FileTransfers.requestReplyAction.value == .automaticallyDownload {
 			controller.open(withPath: downloadDestinationURLPrivate?.path ?? PathInfo.userDownloads)
 		}
 
 		return controller.uniqueIdentifier
 	}
 
-	public func addSender(
+	func addSender(
 		for client: IRCClient,
 		nickname: String,
 		path: String,
@@ -170,25 +170,20 @@ extension FileTransferDialog {
 		return controller.uniqueIdentifier
 	}
 
-	public func updateClearButton() {
-		clearButton?.isEnabled = !stoppedFileTransfers.isEmpty
-	}
-
-	func clientWillBeDestroyed(_ notification: Notification) {
+	internal func clientWillBeDestroyed(_ notification: Notification) {
 		guard let client = notification.object as? IRCClient else { return }
 		removeFileTransfers(matching: client)
 	}
 
-	@IBAction private func clear(_: Any?) {
-		removeFileTransfers(stoppedFileTransfers)
-		updateClearButton()
+	internal func clearStoppedTransfers() {
+		removeFileTransfers(model.stoppedTransfers)
 	}
 
-	@IBAction private func startTransferOfFile(_: Any?) {
+	private func startTransfers(_ transfers: [TDCFileTransferDialogTransferController]) {
 		let savePath = downloadDestinationURLPrivate?.path
 		var pending: [TDCFileTransferDialogTransferController] = []
 
-		for transfer in selectedFileTransfers where [.stopped, .recoverableError].contains(transfer.transferStatus) {
+		for transfer in transfers where [.stopped, .recoverableError].contains(transfer.transferStatus) {
 			if transfer.isSender || transfer.path != nil {
 				transfer.open()
 			} else if let savePath {
@@ -215,16 +210,28 @@ extension FileTransferDialog {
 		}
 	}
 
-	@IBAction private func stopTransferOfFile(_: Any?) {
-		selectedFileTransfers.forEach { $0.closeAndPostNotification(false) }
+	internal func perform(_ action: FileTransferDialogAction, on identifiers: Set<String>) {
+		let transfers = model.transfers(with: identifiers)
+		switch action {
+		case .start:
+			startTransfers(transfers)
+		case .stop:
+			transfers.forEach { $0.closeAndPostNotification(false) }
+		case .remove:
+			removeFileTransfers(transfers)
+		case .open:
+			openFiles(for: identifiers)
+		case .reveal:
+			revealFiles(for: identifiers)
+		case .preview:
+			model.selection = identifiers
+			toggleQuickLookPanel()
+		}
+		model.refreshPresentation()
 	}
 
-	@IBAction private func removeTransferFromList(_: Any?) {
-		removeFileTransfers(selectedFileTransfers)
-	}
-
-	public func updateMaintenanceTimer() {
-		guard activeFileTransfers.isEmpty == false else {
+	func updateMaintenanceTimer() {
+		guard model.activeTransfers.isEmpty == false else {
 			maintenanceTask?.cancel()
 			maintenanceTask = nil
 
@@ -248,54 +255,24 @@ extension FileTransferDialog {
 		}
 	}
 
-	func onMaintenanceTimer() {
-		activeFileTransfers.forEach { $0.onMaintenanceTimer() }
+	internal func onMaintenanceTimer() {
+		model.activeTransfers.forEach { $0.onMaintenanceTimer() }
+		model.refreshPresentation()
 	}
 
-	func fileTransfer(atArrangedIndex index: Int) -> TDCFileTransferDialogTransferController? {
-		guard arrangedFileTransfers.indices.contains(index) else { return nil }
-		return arrangedFileTransfers[index]
-	}
-
-	var selectedFileTransfers: [TDCFileTransferDialogTransferController] {
-		fileTransferTable.selectedRowIndexes.compactMap(fileTransfer(atArrangedIndex:))
-	}
-
-	var senderFileTransfers: [TDCFileTransferDialogTransferController] {
+	internal var senderFileTransfers: [TDCFileTransferDialogTransferController] {
 		fileTransfers(matching: \.isSender)
 	}
 
-	/// The transfers the table is drawing, in row order.
-	var arrangedFileTransfers: [TDCFileTransferDialogTransferController] {
-		navigationSelection.shownTransfers(in: storedFileTransfers, isSender: \.isSender)
-	}
-
 	/// Every transfer, whatever the toolbar is showing.
-	private var allFileTransfers: [TDCFileTransferDialogTransferController] {
-		storedFileTransfers
-	}
-
 	private var receiverCount: Int {
-		allFileTransfers.count { !$0.isSender }
-	}
-
-	private var stoppedFileTransfers: [TDCFileTransferDialogTransferController] {
-		let statuses: Set<FileTransferStatus> = [
-			.complete, .stopped, .fatalError, .recoverableError,
-		]
-		return fileTransfers { statuses.contains($0.transferStatus) }
-	}
-
-	private var activeFileTransfers: [TDCFileTransferDialogTransferController] {
-		fileTransfers { [.receiving, .sending].contains($0.transferStatus) }
+		model.receiverCount
 	}
 
 	private func addFileTransfer(_ controller: TDCFileTransferDialogTransferController) {
 		/* Newest first, and stored whether or not the toolbar is showing its
 		 direction — the filter is applied when the rows are built. */
-		storedFileTransfers.insert(controller, at: 0)
-
-		applyFileTransfers()
+		model.add(controller)
 	}
 
 	private func removeFileTransfers(matching client: IRCClient) {
@@ -307,10 +284,7 @@ extension FileTransferDialog {
 
 		prepareForPermanentDestruction(transfers)
 
-		let removed = Set(transfers.map(\.uniqueIdentifier))
-		storedFileTransfers.removeAll { removed.contains($0.uniqueIdentifier) }
-
-		applyFileTransfers()
+		model.remove(transfers)
 	}
 
 	private func prepareForPermanentDestruction(
@@ -324,12 +298,12 @@ extension FileTransferDialog {
 	private func fileTransfers(
 		matching predicate: (TDCFileTransferDialogTransferController) -> Bool
 	) -> [TDCFileTransferDialogTransferController] {
-		allFileTransfers.filter(predicate)
+		model.transfers.filter(predicate)
 	}
 
 	private func firstFileTransfer(
 		matching predicate: (TDCFileTransferDialogTransferController) -> Bool
 	) -> TDCFileTransferDialogTransferController? {
-		allFileTransfers.first(where: predicate)
+		model.transfers.first(where: predicate)
 	}
 }

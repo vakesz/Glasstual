@@ -32,28 +32,3 @@ struct ChannelSpotlightAppearanceSchema: Decodable, Sendable {
 		case searchResult = "Search Result"
 	}
 }
-
-public final class ChannelSpotlightAppearance: ApplicationAppearance {
-	public private(set) var searchFieldTextColor: NSColor?
-	public private(set) var searchFieldNoResultsTextColor: NSColor?
-	public private(set) var searchResultKeyboardShortcutDeselectedOffset: CGFloat = 0
-	public private(set) var searchResultKeyboardShortcutSelectedOffset: CGFloat = 0
-
-	@MainActor
-	public init?() {
-		super.init(applicationProperties: Self.currentApplicationProperties)
-
-		guard let schema = AppearanceSchema.load(
-			ChannelSpotlightAppearanceSchema.self,
-			resource: "TDCChannelSpotlightAppearance",
-			appearanceName: appearanceName
-		) else {
-			return nil
-		}
-
-		searchFieldTextColor = schema.searchField.controlTextColor?.color
-		searchFieldNoResultsTextColor = schema.searchField.noResultsTextColor?.color
-		searchResultKeyboardShortcutDeselectedOffset = schema.searchResult.keyboardShortcutDeselectedOffset
-		searchResultKeyboardShortcutSelectedOffset = schema.searchResult.keyboardShortcutSelectedOffset
-	}
-}

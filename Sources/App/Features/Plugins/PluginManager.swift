@@ -24,6 +24,18 @@ private nonisolated struct PluginDiscovery: Sendable { // nonisolated: value
 	var loadable: [URL] = []
 	var obsolete: [URL] = []
 	var rejected: [URL] = []
+	var scriptCatalog = PluginScriptCatalog()
+}
+
+/// A filesystem snapshot of the scripts that can act as slash commands.
+///
+/// Directory discovery and traversal can consult the sandbox and code-signing
+/// services, so the snapshot is built away from the main actor. Command
+/// dispatch and completion then become value lookups instead of synchronous
+/// filesystem scans on every keystroke or outgoing command.
+private nonisolated struct PluginScriptCatalog: Sendable { // nonisolated: value
+	var commandsByName: [String: String] = [:]
+	var customScriptsURL: URL?
 }
 
 /// Everything about the loaded plugins that a caller outside the main actor
@@ -38,12 +50,14 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 	var outputSuppressionRules: [PluginOutputSuppressionRule] = []
 	var supportedUserInputCommands: [String] = []
 	var supportedServerInputCommands: [String] = []
+	var scriptCommandsByName: [String: String] = [:]
+	var customScriptsURL: URL?
 	var messageRenderers: [any PluginMessageRendering] = []
 
 	init() {}
 
 	@MainActor
-	init(loadedPlugins: [PluginItem]) {
+	init(loadedPlugins: [PluginItem], scriptCatalog: PluginScriptCatalog) {
 		var userInputCommands = Set<String>()
 		var serverInputCommands = Set<String>()
 
@@ -61,6 +75,8 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 		pluginsLoaded = true
 		supportedUserInputCommands = userInputCommands.sorted()
 		supportedServerInputCommands = serverInputCommands.sorted()
+		scriptCommandsByName = scriptCatalog.commandsByName
+		customScriptsURL = scriptCatalog.customScriptsURL
 	}
 }
 
@@ -78,6 +94,9 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 
 	static let finishedLoadingNotification = Notification.Name(
 		"THOPluginManagerFinishedLoadingPluginsNotification"
+	)
+	static let scriptCommandsDidChangeNotification = Notification.Name(
+		"PluginManagerScriptCommandsDidChangeNotification"
 	)
 
 	public var pluginsLoaded: Bool {
@@ -124,11 +143,32 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 			/* Discovery reads directories and checks code signatures, which is
 			 slow enough to keep off the main actor. Loading itself is main-actor
 			 work: a plugin's load callback touches AppKit. */
-			let discovery = Self.discoverPluginBundles()
+			var discovery = Self.discoverPluginBundles()
+			discovery.scriptCatalog = await Self.discoverAppleScripts()
 
 			await MainActor.run {
 				self?.finishLoading(discovery)
 			}
+		}
+	}
+
+	/// Rebuilds the script-command snapshot without blocking command entry or
+	/// Settings. Activation and a completed import call this so Finder edits are
+	/// picked up while the application remains open.
+	public func refreshScriptCommands() {
+		Task { [weak self] in
+			let catalog = await Self.discoverAppleScripts()
+			guard let self else { return }
+
+			facts.withLock { facts in
+				facts.scriptCommandsByName = catalog.commandsByName
+				facts.customScriptsURL = catalog.customScriptsURL
+			}
+
+			NotificationCenter.default.post(
+				name: Self.scriptCommandsDidChangeNotification,
+				object: self
+			)
 		}
 	}
 
@@ -173,7 +213,7 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 		}
 
 		Self.loadedPluginItems = loadedPlugins
-		let newFacts = PluginFacts(loadedPlugins: loadedPlugins)
+		let newFacts = PluginFacts(loadedPlugins: loadedPlugins, scriptCatalog: discovery.scriptCatalog)
 		facts.withLock { $0 = newFacts }
 
 		NotificationCenter.default.post(name: Self.finishedLoadingNotification, object: self)
@@ -467,27 +507,29 @@ public nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - AppleScript Support
 
 	var supportedAppleScriptCommands: [String] {
-		supportedAppleScriptCommands(returnPathInfo: false) as? [String] ?? []
+		facts.withLock { Array($0.scriptCommandsByName.keys) }
 	}
 
 	var supportedAppleScriptCommandsAndPaths: [String: String] {
-		supportedAppleScriptCommands(returnPathInfo: true) as? [String: String] ?? [:]
+		facts.withLock(\.scriptCommandsByName)
 	}
 
-	private func supportedAppleScriptCommands(returnPathInfo: Bool) -> Any {
-		let forbiddenCommands = listOfForbiddenCommandNames
+	var customScriptsURL: URL? {
+		facts.withLock(\.customScriptsURL)
+	}
+
+	@concurrent
+	private static func discoverAppleScripts() async -> PluginScriptCatalog {
+		let forbiddenCommands = Set(listOfForbiddenCommandNames)
+		let customScriptsURL = PathInfo.customScriptsURL
 
 		var scriptLocations: [(path: String, isBundled: Bool)] = []
-		if let customScripts = PathInfo.customScripts {
-			scriptLocations.append((customScripts, false))
+		if let customScriptsURL {
+			scriptLocations.append((customScriptsURL.path, false))
 		}
 		scriptLocations.append((PathInfo.bundledScripts, true))
 
-		let returnValue: NSObject = if returnPathInfo {
-			NSMutableDictionary()
-		} else {
-			NSMutableArray()
-		}
+		var catalog = PluginScriptCatalog(customScriptsURL: customScriptsURL)
 
 		for location in scriptLocations {
 			let path = location.path
@@ -525,22 +567,16 @@ public nonisolated extension PluginManager { // nonisolated: pure
 					continue
 				}
 
-				if returnPathInfo, let dictionary = returnValue as? NSMutableDictionary {
-					if dictionary.object(forKey: command) == nil {
-						dictionary.setObject(filePath, forKey: command as NSString)
-					}
-				} else if let array = returnValue as? NSMutableArray {
-					if array.contains(command) == false {
-						array.add(command)
-					}
+				if catalog.commandsByName[command] == nil {
+					catalog.commandsByName[command] = filePath
 				}
 			}
 		}
 
-		return returnValue
+		return catalog
 	}
 
-	private var listOfForbiddenCommandNames: [String] {
+	private static var listOfForbiddenCommandNames: [String] {
 		ResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")?
 			.compactMap(\.string) ?? []
 	}

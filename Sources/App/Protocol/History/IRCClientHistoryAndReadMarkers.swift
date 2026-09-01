@@ -82,7 +82,8 @@ public extension IRCClient {
 		let target = casefoldedTarget(channel.name)
 		return IRCChatHistoryPolicy.canUseServerHistory(
 			isLoggedIn: isLoggedIn,
-			capabilityEnabled: isCapabilityEnabled(.chatHistory),
+			capabilityEnabled: environment.preferences.requestChatHistory
+				&& isCapabilityEnabled(.chatHistory),
 			isUtility: channel.isUtility,
 			isDirectChat: channel.isDirectChat,
 			isZNCQuery: channel.isPrivateMessage && channel.isPrivateMessageForZNCUser,
@@ -199,7 +200,8 @@ public extension IRCClient {
 	func readMarkerIsAvailable(for channel: IRCChannel) -> Bool {
 		IRCChatHistoryPolicy.canUseServerHistory(
 			isLoggedIn: isLoggedIn,
-			capabilityEnabled: isCapabilityEnabled(.readMarker),
+			capabilityEnabled: environment.preferences.synchronizeReadMarkers
+				&& isCapabilityEnabled(.readMarker),
 			isUtility: channel.isUtility,
 			isDirectChat: channel.isDirectChat,
 			isZNCQuery: channel.isPrivateMessage && channel.isPrivateMessageForZNCUser,

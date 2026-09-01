@@ -15,15 +15,22 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/// Two preferences were dropped because nothing read them: the "block insecure
-/// inline media" switch and the "no mode" user-list badge colour. Both had a
-/// registered default and a master-list entry, which is what made them look
-/// live from the outside.
+/// Retired settings must not remain in generated defaults after their owners
+/// are removed.
 @Suite("Removed preference keys")
 @MainActor
 struct RemovedPreferenceKeyTests {
 	private static let removedKeys = [
 		"InlineMediaLimitInsecureContent",
+		"InlineMediaMaximumFilesize",
+		"InlineMediaScalingWidth",
+		"InlineMediaMaximumHeight",
+		"InlineMediaLimitToBasics",
+		"InlineMediaLimitBasicsToFiles",
+		"InlineMediaLimitNaughtyContent",
+		"InlineMediaLimitUnsafeContent",
+		"InlineMediaCheckEverything",
+		"InlineMediaAllowsCleartextHTTP",
 		"User List Mode Badge Colors -> no mode",
 		"ChannelViewArrangement",
 		"Window -> Main Window -> Split Channel View Saved Frames",

@@ -1,9 +1,9 @@
 # Loopback TLS identity
 
 `LoopbackTestIdentity.p12` is a throwaway self-signed RSA-2048 identity, kept so
-that `ConnectionTrustGateLoopbackTests` can stand up a TLS listener on
+that `AsyncCertificateValidationLoopbackTests` can stand up a TLS listener on
 `127.0.0.1` and drive the real connection service against it. A self-signed
-chain is exactly what the trust gate exists for: the system will not trust it,
+chain exercises the async certificate validator: the system will not trust it,
 the failure is recoverable, and the service asks the application what to do.
 
 It is not a secret. The passphrase is `glasstual`, it is checked in on purpose,

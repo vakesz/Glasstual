@@ -1,6 +1,101 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "channel-properties-window-title": {
+      "comment": "Window title for the channel properties sheet.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Channel Properties" } } }
+    },
+    "defaults": {
+      "comment": "Title of the default channel values pane.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Defaults" } } }
+    },
+    "defaults-help": {
+      "comment": "Explanation above the default topic and modes fields.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Values to apply if the channel is empty:" } } }
+    },
+    "disable-general-event-messages": {
+      "comment": "Channel option to suppress general event messages.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Disable general event messages" } } }
+    },
+    "disable-highlights": {
+      "comment": "Channel option to disable highlights.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Disable highlights" } } }
+    },
+    "disable-inline-media": {
+      "comment": "Channel option to disable inline media.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Disable inline media" } } }
+    },
+    "general": {
+      "comment": "Title of the general channel properties pane.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "General" } } }
+    },
+    "join-on-connect": {
+      "comment": "Channel option to join when the server connects.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Join on connect" } } }
+    },
+    "label-help": {
+      "comment": "Explanation of the optional channel label.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "When you give a channel a label, that label will appear in the Server List in lieu of the channel name." } } }
+    },
+    "label-label": {
+      "comment": "Label for the channel label field.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Label:" } } }
+    },
+    "modes-label": {
+      "comment": "Label for the default channel modes field.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Modes:" } } }
+    },
+    "name-label": {
+      "comment": "Label for the channel name field.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Name:" } } }
+    },
+    "notifications": {
+      "comment": "Title of the channel notification overrides pane.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Notifications" } } }
+    },
+    "optional": {
+      "comment": "Placeholder for an optional channel property.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Optional" } } }
+    },
+    "password-label": {
+      "comment": "Label for the channel password field.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Password:" } } }
+    },
+    "show-inline-media": {
+      "comment": "Channel option to force inline media on.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Show inline media" } } }
+    },
+    "show-notifications-for-channel": {
+      "comment": "Channel option to enable channel notifications.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Show notifications for channel" } } }
+    },
+    "show-unread-count-in-channel-list": {
+      "comment": "Channel option to show its unread count in the channel list.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Show unread count in channel list" } } }
+    },
+    "topic-label": {
+      "comment": "Label for the default channel topic field.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Topic:" } } }
+    },
     "please-enter-a-properly-formatted-channel": {
       "comment": "Validation error shown when the channel name is not properly formatted. Legacy key: 1nd-7x.",
       "extractionState": "manual",
@@ -40,4 +135,3 @@
   },
   "version": "1.0"
 }
-

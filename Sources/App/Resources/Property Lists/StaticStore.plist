@@ -2,29 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>TPCThemeController Remapped Themes</key>
-	<dict>
-		<key>resource:Simplified</key>
-		<string>resource:Lines</string>
-		<key>resource:Simplified Light</key>
-		<string>resource:Lines</string>
-		<key>resource:Simplified Dark</key>
-		<string>resource:Lines</string>
-		<key>resource:Tomorrow Night (Eighties)</key>
-		<string>resource:Lines</string>
-		<key>resource:Tomorrow</key>
-		<string>resource:Lines</string>
-		<key>resource:Astria</key>
-		<string>resource:Lines</string>
-		<key>resource:Equinox</key>
-		<string>resource:Lines</string>
-		<key>resource:Sapientia</key>
-		<string>resource:Lines</string>
-		<key>resource:Sulaco</key>
-		<string>resource:Lines</string>
-		<key>resource:Total Sublime</key>
-		<string>resource:Lines</string>
-	</dict>
 	<key>IRCClient List of NickServ Successfully Identified Tokens</key>
 	<array>
 		<string>now recognized</string>

@@ -147,10 +147,10 @@ public nonisolated struct ClientConfig: Codable, Equatable, Sendable { // noniso
 
 	public init(connectionName: String? = nil) {
 		self.connectionName = connectionName ?? ApplicationStrings.untitledConnection
-		nickname = TextualPreferences.defaultNickname()
-		awayNickname = TextualPreferences.defaultAwayNickname()
-		username = TextualPreferences.defaultUsername()
-		realName = TextualPreferences.defaultRealName()
+		nickname = Preferences.Identity.nickname.detachedValue
+		awayNickname = Preferences.Identity.awayNickname.detachedStoredValue
+		username = Preferences.Identity.username.detachedValue
+		realName = Preferences.Identity.realName.detachedValue
 	}
 
 	/// A configuration seeded from a preconfigured network.

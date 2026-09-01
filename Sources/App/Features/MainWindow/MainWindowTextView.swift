@@ -52,7 +52,7 @@ private enum MainWindowTextViewAnimation {
 	static let accessoryDuration: TimeInterval = 0.18
 }
 
-/* The insets the xib used to hold on the scroll view inside the input bar. */
+// Insets for the scroll view inside the input bar.
 private let inputBarTrailingInset: CGFloat = 10.0
 private let inputBarVerticalInset: CGFloat = 3.0
 private let inputBarMinimumHeight: CGFloat = 19.0
@@ -101,8 +101,8 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	private var observingUserDefaults = false
 	private var userDefaultsObservation: Task<Void, Never>?
 
-	/// Finishes the view once the content view has connected it to the nib's
-	/// container and constraints.
+	/// Finishes the view once the content view has connected its container and
+	/// constraints.
 	///
 	/// This was `awakeFromNib`, which is nonisolated — and the view is no longer
 	/// decoded from the nib at all, because a nib-instantiated `NSTextView` is
@@ -420,7 +420,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	}
 
 	public func updateTextDirection() {
-		baseWritingDirection = TextualPreferences.rightToLeftFormatting() ? .rightToLeft : .leftToRight
+		baseWritingDirection = Preferences.Messages.rightToLeftFormatting.value ? .rightToLeft : .leftToRight
 	}
 
 	override public func textDidChange(_ notification: Notification) {
@@ -632,37 +632,64 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	private func applyObservedPreference(_ keyPath: String) {
 		switch keyPath {
 		case Preferences.Input.automaticSpellCheck.name:
-			isContinuousSpellCheckingEnabled = TextualPreferences.textFieldAutomaticSpellCheck()
+			isContinuousSpellCheckingEnabled = Preferences.Input.automaticSpellCheck.value
 		case Preferences.Input.automaticGrammarCheck.name:
-			isGrammarCheckingEnabled = TextualPreferences.textFieldAutomaticGrammarCheck()
+			isGrammarCheckingEnabled = Preferences.Input.automaticGrammarCheck.value
 		case Preferences.Input.automaticSpellCorrection.name:
-			isAutomaticSpellingCorrectionEnabled = TextualPreferences.textFieldAutomaticSpellCorrection()
+			isAutomaticSpellingCorrectionEnabled = Preferences.Input.automaticSpellCorrection.value
 		case Preferences.Input.smartCopyPaste.name:
-			smartInsertDeleteEnabled = TextualPreferences.textFieldSmartCopyPaste()
+			smartInsertDeleteEnabled = Preferences.Input.smartCopyPaste.value
 		case Preferences.Input.smartQuotes.name:
-			isAutomaticQuoteSubstitutionEnabled = TextualPreferences.textFieldSmartQuotes()
+			isAutomaticQuoteSubstitutionEnabled = Preferences.Input.smartQuotes.value
 		case Preferences.Input.smartDashes.name:
-			isAutomaticDashSubstitutionEnabled = TextualPreferences.textFieldSmartDashes()
+			isAutomaticDashSubstitutionEnabled = Preferences.Input.smartDashes.value
 		case Preferences.Input.smartLinks.name:
-			isAutomaticLinkDetectionEnabled = TextualPreferences.textFieldSmartLinks()
+			isAutomaticLinkDetectionEnabled = Preferences.Input.smartLinks.value
 		case Preferences.Input.dataDetectors.name:
-			isAutomaticDataDetectionEnabled = TextualPreferences.textFieldDataDetectors()
+			isAutomaticDataDetectionEnabled = Preferences.Input.dataDetectors.value
 		case Preferences.Input.textReplacement.name:
-			isAutomaticTextReplacementEnabled = TextualPreferences.textFieldTextReplacement()
+			isAutomaticTextReplacementEnabled = Preferences.Input.textReplacement.value
 		default:
 			break
 		}
 	}
 }
 
-@objc(TVCMainWindowTextViewContentView)
 public final class MainWindowTextViewContentView: NSView {
-	@IBOutlet private var inputBarContainerView: NSView!
-	@IBOutlet private var inputBarTopConstraint: NSLayoutConstraint!
-	@IBOutlet private var textViewHeightConstraint: NSLayoutConstraint!
-	@IBOutlet private var windowContentViewMinimumHeight: NSLayoutConstraint!
+	private let inputBarContainerView = NSView()
+	private var inputBarTopConstraint: NSLayoutConstraint!
+	private var textViewHeightConstraint: NSLayoutConstraint!
+	private var windowContentViewMinimumHeight: NSLayoutConstraint!
 
 	private var textViewStorage: MainWindowTextView?
+
+	override public init(frame frameRect: NSRect) {
+		super.init(frame: frameRect)
+		installContainer()
+	}
+
+	@available(*, unavailable)
+	required init?(coder _: NSCoder) {
+		fatalError("MainWindowTextViewContentView is programmatic")
+	}
+
+	private func installContainer() {
+		translatesAutoresizingMaskIntoConstraints = false
+		inputBarContainerView.translatesAutoresizingMaskIntoConstraints = false
+		addSubview(inputBarContainerView)
+
+		inputBarTopConstraint = inputBarContainerView.topAnchor.constraint(equalTo: topAnchor, constant: 7)
+		textViewHeightConstraint = heightAnchor.constraint(equalToConstant: 38)
+		windowContentViewMinimumHeight = heightAnchor.constraint(greaterThanOrEqualToConstant: 35)
+		NSLayoutConstraint.activate([
+			inputBarContainerView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+			inputBarContainerView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+			inputBarTopConstraint,
+			inputBarContainerView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -6),
+			textViewHeightConstraint,
+			windowContentViewMinimumHeight,
+		])
+	}
 
 	/// The input field, built the first time it is asked for.
 	///
@@ -688,9 +715,7 @@ public final class MainWindowTextViewContentView: NSView {
 		return textView
 	}
 
-	/// Builds the input field, if it is not built already. The main window calls
-	/// this once its nib has finished decoding, so that everything reading
-	/// `textView` afterwards finds the same one.
+	/// Builds the input field, if it is not built already.
 	public func configure() {
 		_ = textView
 	}

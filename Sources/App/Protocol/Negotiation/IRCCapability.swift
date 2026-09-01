@@ -38,22 +38,40 @@
 
 import Foundation
 
-public typealias IRCCapabilityPreferenceGate = @convention(block) () -> Bool
-public typealias IRCCapabilityNegotiationHook = @convention(block) (IRCClient, [String]) -> Bool
+enum CapabilityPreference: Sendable, Equatable {
+	case always
+	case echoMessage
+	case chatHistory
+	case readMarker
 
-public final nonisolated class Capability: NSObject { // nonisolated: value
-	public let name: String
-	public let identifier: ClientIRCv3SupportedCapability
-	public let requestedByDefault: Bool
-	public let preferenceGate: IRCCapabilityPreferenceGate?
-	public let dependencies: [String]
-	public let negotiationHook: IRCCapabilityNegotiationHook?
+	func isEnabled(in preferences: ClientPreferences) -> Bool {
+		switch self {
+		case .always: true
+		case .echoMessage: preferences.enableEchoMessageCapability
+		case .chatHistory: preferences.requestChatHistory
+		case .readMarker: preferences.synchronizeReadMarkers
+		}
+	}
+}
 
-	public static func capability(named name: String, identifier: ClientIRCv3SupportedCapability) -> Capability {
+enum CapabilityNegotiation: Sendable, Equatable {
+	case automatic
+	case sasl
+}
+
+struct Capability: Sendable {
+	let name: String
+	let identifier: ClientIRCv3SupportedCapability
+	let requestedByDefault: Bool
+	let preference: CapabilityPreference
+	let dependencies: [String]
+	let negotiation: CapabilityNegotiation
+
+	static func capability(named name: String, identifier: ClientIRCv3SupportedCapability) -> Capability {
 		capability(named: name, identifier: identifier, requestedByDefault: true)
 	}
 
-	public static func capability(
+	static func capability(
 		named name: String,
 		identifier: ClientIRCv3SupportedCapability,
 		requestedByDefault: Bool
@@ -62,19 +80,19 @@ public final nonisolated class Capability: NSObject { // nonisolated: value
 			name: name,
 			identifier: identifier,
 			requestedByDefault: requestedByDefault,
-			preferenceGate: nil,
-			dependencies: nil,
-			negotiationHook: nil
+			preference: .always,
+			dependencies: [],
+			negotiation: .automatic
 		)
 	}
 
-	public init(
+	init(
 		name: String,
 		identifier: ClientIRCv3SupportedCapability,
 		requestedByDefault: Bool,
-		preferenceGate: IRCCapabilityPreferenceGate?,
-		dependencies: [String]?,
-		negotiationHook: IRCCapabilityNegotiationHook?
+		preference: CapabilityPreference = .always,
+		dependencies: [String] = [],
+		negotiation: CapabilityNegotiation = .automatic
 	) {
 		precondition(name.isEmpty == false)
 
@@ -84,41 +102,29 @@ public final nonisolated class Capability: NSObject { // nonisolated: value
 		self.name = name
 		self.identifier = identifier
 		self.requestedByDefault = requestedByDefault
-		self.preferenceGate = preferenceGate
-		self.dependencies = dependencies ?? []
-		self.negotiationHook = negotiationHook
-
-		super.init()
-	}
-
-	public var isEnabledByPreferences: Bool {
-		preferenceGate?() ?? true
-	}
-
-	override public var description: String {
-		"<\(NSStringFromClass(type(of: self))) \(name)>"
+		self.preference = preference
+		self.dependencies = dependencies
+		self.negotiation = negotiation
 	}
 }
 
-public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: value
-	public let capabilities: [Capability]
+struct CapabilityRegistry: Sendable {
+	let capabilities: [Capability]
 
 	private let capabilitiesByName: [String: Capability]
 
-	public init(capabilities: [Capability]) {
+	init(capabilities: [Capability]) {
 		self.capabilities = capabilities
 		capabilitiesByName = Dictionary(
 			capabilities.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first }
 		)
-
-		super.init()
 	}
 
-	public func capability(named name: String) -> Capability? {
+	func capability(named name: String) -> Capability? {
 		capabilitiesByName[name]
 	}
 
-	public func capability(for identifier: ClientIRCv3SupportedCapability) -> Capability? {
+	func capability(for identifier: ClientIRCv3SupportedCapability) -> Capability? {
 		guard identifier.rawValue != 0 else {
 			return nil
 		}
@@ -128,8 +134,8 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 		}
 	}
 
-	public func isCapabilitySupported(_ name: String) -> Bool {
-		capability(named: name)?.isEnabledByPreferences ?? false
+	func isCapabilitySupported(_ name: String, preferences: ClientPreferences) -> Bool {
+		capability(named: name)?.preference.isEnabled(in: preferences) ?? false
 	}
 
 	/** The capabilities a `CAP LS`/`NEW` line offers, keyed by name.
@@ -138,7 +144,7 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 	 exactly as the server wrote it. Folding case here made `SASL` and `sasl`
 	 one entry and forced a second table to remember which spelling to echo
 	 back in `CAP REQ`; a name that matches is now already the right spelling. */
-	public static func parseCapabilityList(_ list: String) -> [String: [String]] {
+	static func parseCapabilityList(_ list: String) -> [String: [String]] {
 		var offered: [String: [String]] = [:]
 
 		for token in capabilityTokens(in: list) {
@@ -172,27 +178,39 @@ public final nonisolated class CapabilityRegistry: NSObject { // nonisolated: va
 		return tokens
 	}
 
-	public func capabilitiesToRequest(fromOffered offered: [String: [String]]) -> [Capability] {
-		capabilities.filter { isRequestable($0, fromOffered: offered, depth: 0) }
+	func capabilitiesToRequest(
+		fromOffered offered: [String: [String]],
+		preferences: ClientPreferences
+	) -> [Capability] {
+		capabilities.filter {
+			isRequestable($0, fromOffered: offered, preferences: preferences, depth: 0)
+		}
 	}
 
 	private func isRequestable(
 		_ capability: Capability,
 		fromOffered offered: [String: [String]],
+		preferences: ClientPreferences,
 		depth: Int
 	) -> Bool {
 		guard depth <= 8,
 		      capability.requestedByDefault,
-		      capability.isEnabledByPreferences,
+		      capability.preference.isEnabled(in: preferences),
 		      offered[capability.name] != nil
 		else {
 			return false
 		}
 
 		for dependencyName in capability.dependencies {
-			guard let dependency = self.capability(named: dependencyName),
-			      isRequestable(dependency, fromOffered: offered, depth: depth + 1)
-			else {
+			guard let dependency = self.capability(named: dependencyName) else {
+				return false
+			}
+			guard isRequestable(
+				dependency,
+				fromOffered: offered,
+				preferences: preferences,
+				depth: depth + 1
+			) else {
 				return false
 			}
 		}

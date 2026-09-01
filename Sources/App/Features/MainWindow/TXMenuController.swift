@@ -47,24 +47,23 @@ private let menuControllerLogger = Logger(
 @MainActor
 @objc(TXMenuController)
 public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidation {
-	@IBOutlet public var channelViewChannelNameMenu: NSMenu!
-	@IBOutlet public var channelViewGeneralMenu: NSMenu!
-	@IBOutlet public var channelViewURLMenu: NSMenu!
-	@IBOutlet public var dockMenu: NSMenu!
-	@IBOutlet public var mainMenuNavigationChannelListMenu: NSMenu!
-	@IBOutlet public var mainMenuChannelMenu: NSMenu!
-	@IBOutlet public var mainMenuQueryMenu: NSMenu!
-	@IBOutlet public var mainMenuChannelMenuItem: NSMenuItem!
-	@IBOutlet public var mainMenuQueryMenuItem: NSMenuItem!
-	@IBOutlet public var mainMenuServerMenuItem: NSMenuItem!
-	@IBOutlet @objc(mainWindowSegmentedControllerCellMenu)
-	private var segmentedControllerMenuOutlet: NSMenu!
-	@IBOutlet public var serverListNoSelectionMenu: NSMenu!
-	@IBOutlet public var userControlMenu: NSMenu!
-	@IBOutlet public var muteNotificationsDockMenuItem: NSMenuItem?
-	@IBOutlet public var muteNotificationsFileMenuItem: NSMenuItem?
-	@IBOutlet public var muteNotificationsSoundsDockMenuItem: NSMenuItem?
-	@IBOutlet public var muteNotificationsSoundsFileMenuItem: NSMenuItem?
+	public var channelViewChannelNameMenu = NSMenu()
+	public var channelViewGeneralMenu = NSMenu()
+	public var channelViewURLMenu = NSMenu()
+	public var dockMenu = NSMenu()
+	public var mainMenuNavigationChannelListMenu = NSMenu()
+	public var mainMenuChannelMenu = NSMenu()
+	public var mainMenuQueryMenu = NSMenu()
+	public var mainMenuChannelMenuItem: NSMenuItem?
+	public var mainMenuQueryMenuItem: NSMenuItem?
+	public var mainMenuServerMenuItem: NSMenuItem?
+	public var mainWindowSegmentedControllerCellMenu = NSMenu()
+	public var serverListNoSelectionMenu = NSMenu()
+	public var userControlMenu = NSMenu()
+	public var muteNotificationsDockMenuItem: NSMenuItem?
+	public var muteNotificationsFileMenuItem: NSMenuItem?
+	public var muteNotificationsSoundsDockMenuItem: NSMenuItem?
+	public var muteNotificationsSoundsFileMenuItem: NSMenuItem?
 
 	public var pointedNickname: String?
 	/** Created on first use rather than in prepareInitialState(): menu
@@ -72,8 +71,9 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 	 alert during launch is enough), and an unset coordinator crashed there. */
 	lazy var actionCoordinator = MenuActionCoordinator(menuController: self)
 
-	public var mainWindowSegmentedControllerCellMenu: NSMenu {
-		segmentedControllerMenuOutlet
+	override public init() {
+		super.init()
+		MenuFactory.install(on: self)
 	}
 
 	public func prepareInitialState() {

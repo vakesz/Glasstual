@@ -13,18 +13,6 @@
         }
       }
     },
-    "accessibility-label-style": {
-      "comment": "Accessibility label for the style selection control. Legacy key: ax-theme.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Style"
-          }
-        }
-      }
-    },
     "add-ons": {
       "comment": "Title of the Add-ons group in the Settings sidebar. Legacy key: sb-gr-ad.",
       "extractionState": "manual",
@@ -169,18 +157,6 @@
         }
       }
     },
-    "are-you-opening-this-style-because": {
-      "comment": "Title of the alert shown before opening a bundled style's source files. Legacy key: 5jv-aw.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you opening this style because you are interested in modifying it?"
-          }
-        }
-      }
-    },
     "behavior-autojoin-on-invite": {
       "comment": "Checkbox in the Behavior pane.",
       "extractionState": "manual",
@@ -249,30 +225,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restore the state of queries from previous session"
-          }
-        }
-      }
-    },
-    "behavior-send-typing-notifications": {
-      "comment": "Checkbox in the Behavior pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Send typing notifications"
-          }
-        }
-      }
-    },
-    "behavior-typing-notifications-note": {
-      "comment": "Explanation below the typing notifications checkbox in the Behavior pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lets other people in a channel or query see when you are writing a message."
           }
         }
       }
@@ -369,18 +321,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Default Kick Reason:"
-          }
-        }
-      }
-    },
-    "channel-view-font": {
-      "comment": "List item naming the channel-view font preference overridden by a style. Legacy key: we8-i8.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "• Channel View Font"
           }
         }
       }
@@ -505,14 +445,182 @@
         }
       }
     },
-    "compatibility-echo-message": {
-      "comment": "Checkbox in the Compatibility pane.",
+    "ircv3-automatic-features": {
+      "comment": "Heading for IRCv3 capabilities the client negotiates automatically.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enable echo-message capability"
+            "value": "Automatic Features"
+          }
+        }
+      }
+    },
+    "ircv3-automatic-features-note": {
+      "comment": "Explanation below the automatically negotiated IRCv3 capability list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual enables these features whenever the server supports them."
+          }
+        }
+      }
+    },
+    "ircv3-connected-servers": {
+      "comment": "Heading above the negotiated IRCv3 capability list for live connections.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected Servers"
+          }
+        }
+      }
+    },
+    "ircv3-disconnected": {
+      "comment": "Status beside an IRC server that is not connected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected"
+          }
+        }
+      }
+    },
+    "ircv3-display-typing-notifications": {
+      "comment": "Switch in the IRCv3 Settings pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show typing notifications from other people"
+          }
+        }
+      }
+    },
+    "ircv3-echo-message": {
+      "comment": "Switch in the IRCv3 Settings pane for the echo-message capability.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use server-confirmed outgoing messages"
+          }
+        }
+      }
+    },
+    "ircv3-history": {
+      "comment": "Heading for IRCv3 history and read marker settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
+          }
+        }
+      }
+    },
+    "ircv3-history-note": {
+      "comment": "Explanation below IRCv3 history and read marker switches.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These features are used only when the server advertises the matching capability."
+          }
+        }
+      }
+    },
+    "ircv3-messages": {
+      "comment": "Heading for IRCv3 message behavior settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages"
+          }
+        }
+      }
+    },
+    "ircv3-no-capabilities": {
+      "comment": "Shown when a server has no negotiated IRCv3 capabilities.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No IRCv3 capabilities negotiated"
+          }
+        }
+      }
+    },
+    "ircv3-no-connections": {
+      "comment": "Shown when there are no configured IRC servers to summarize.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No servers configured"
+          }
+        }
+      }
+    },
+    "ircv3-reconnect-note": {
+      "comment": "Explanation below IRCv3 capability switches that affect negotiation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capability changes take effect the next time each server connects."
+          }
+        }
+      }
+    },
+    "ircv3-request-chat-history": {
+      "comment": "Switch in the IRCv3 Settings pane for chathistory.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore recent messages from the server"
+          }
+        }
+      }
+    },
+    "ircv3-send-typing-notifications": {
+      "comment": "Switch in the IRCv3 Settings pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share when I am typing"
+          }
+        }
+      }
+    },
+    "ircv3-synchronize-read-markers": {
+      "comment": "Switch in the IRCv3 Settings pane for read-marker.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize read position with the server"
           }
         }
       }
@@ -961,18 +1069,6 @@
         }
       }
     },
-    "create-copy": {
-      "comment": "Button that creates an editable copy of a bundled style. Legacy key: dj8-1t.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create Copy"
-          }
-        }
-      }
-    },
     "default-identity": {
       "comment": "Title of the Default Identity pane in the Settings sidebar. Legacy key: sb-defaultIdentity.",
       "extractionState": "manual",
@@ -1077,18 +1173,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Download Destination"
-          }
-        }
-      }
-    },
-    "edit-style": {
-      "comment": "Button that opens the user's style override for editing. Legacy key: aib-iy.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edit Style"
           }
         }
       }
@@ -1549,18 +1633,6 @@
         }
       }
     },
-    "hidden-custom-scrollbars": {
-      "comment": "Checkbox in the Hidden pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enable custom scrollbars"
-          }
-        }
-      }
-    },
     "hidden-load-history-lazily": {
       "comment": "Checkbox in the Hidden pane.",
       "extractionState": "manual",
@@ -1641,30 +1713,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Warning:"
-          }
-        }
-      }
-    },
-    "hidden-webkit-preview-links": {
-      "comment": "Checkbox in the Hidden pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enable link previews in WebKit2"
-          }
-        }
-      }
-    },
-    "hidden-webkit-process-pool": {
-      "comment": "Checkbox in the Hidden pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Limit number of processes spawned by WebKit2"
           }
         }
       }
@@ -1917,306 +1965,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "These characters are often combined to form “Zalgo text”, which is used by some users to disrupt chatrooms."
-          }
-        }
-      }
-    },
-    "inline-media": {
-      "comment": "Title of the Inline Media pane in the Settings sidebar. Legacy key: sb-inlineMedia.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inline Media"
-          }
-        }
-      }
-    },
-    "inline-media-check-everything": {
-      "comment": "Checkbox in the Inline Media pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Load everything"
-          }
-        }
-      }
-    },
-    "inline-media-check-everything-accessibility": {
-      "comment": "Accessibility label for the load everything checkbox.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check every link to learn if it is a video or image"
-          }
-        }
-      }
-    },
-    "inline-media-check-everything-note": {
-      "comment": "Explanation below the load everything checkbox.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Load the contents of every URL posted in a channel to determine which are images or videos."
-          }
-        }
-      }
-    },
-    "inline-media-filesize-accessibility": {
-      "comment": "Accessibility label for the maximum file size popup.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maximum File Size for Inline Images"
-          }
-        }
-      }
-    },
-    "inline-media-filesize-label": {
-      "comment": "Label of the popup limiting the size of an inlined image.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do not display images with a file size greater than"
-          }
-        }
-      }
-    },
-    "inline-media-heading-images": {
-      "comment": "Section heading in the Inline Media pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Images & Video"
-          }
-        }
-      }
-    },
-    "inline-media-heading-limitations": {
-      "comment": "Section heading in the Inline Media pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Limitations"
-          }
-        }
-      }
-    },
-    "inline-media-height-accessibility": {
-      "comment": "Accessibility label for the maximum inline image height field.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maximum Inline Image Height"
-          }
-        }
-      }
-    },
-    "inline-media-height-label": {
-      "comment": "Label before the maximum inline image height field.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do not display images with a height greater than"
-          }
-        }
-      }
-    },
-    "inline-media-height-note": {
-      "comment": "Explanation below the maximum inline image height field.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change the value of this preference to zero (0) to disable height checks."
-          }
-        }
-      }
-    },
-    "inline-media-limit-basics-to-files": {
-      "comment": "Checkbox in the Inline Media pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Including video services such as YouTube and others"
-          }
-        }
-      }
-    },
-    "inline-media-limit-naughty": {
-      "comment": "Checkbox in the Inline Media pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only inline media that is safe to view in public"
-          }
-        }
-      }
-    },
-    "inline-media-limit-naughty-note": {
-      "comment": "Explanation below the safe-for-public inline media checkbox.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This preference works by disabling certain services.\nIt doesn't know whether a specific image or video is safe.\nYou should therefore not rely solely on this preference."
-          }
-        }
-      }
-    },
-    "inline-media-limit-to-basics": {
-      "comment": "Checkbox in the Inline Media pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only inline images and videos"
-          }
-        }
-      }
-    },
-    "inline-media-limit-unsafe": {
-      "comment": "Checkbox in the Inline Media pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only inline media from safe sources"
-          }
-        }
-      }
-    },
-    "inline-media-limit-unsafe-note": {
-      "comment": "Explanation below the safe sources checkbox.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Safe sources are services that don't inject HTML nor load external JavaScript resources to appear inline."
-          }
-        }
-      }
-    },
-    "inline-media-megabytes": {
-      "comment": "A file size limit measured in megabytes.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld Megabytes"
-          }
-        }
-      }
-    },
-    "inline-media-one-megabyte": {
-      "comment": "A file size limit of one megabyte.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 Megabyte"
-          }
-        }
-      }
-    },
-    "inline-media-pixels": {
-      "comment": "Unit after the maximum inline image height field.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "pixels"
-          }
-        }
-      }
-    },
-    "inline-media-pixels-wide": {
-      "comment": "Unit after the inline image width field.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "pixels wide"
-          }
-        }
-      }
-    },
-    "inline-media-show": {
-      "comment": "Checkbox in the Inline Media pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show images, videos, and other media inline with chat"
-          }
-        }
-      }
-    },
-    "inline-media-show-note": {
-      "comment": "Explanation below the inline media checkbox.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This preference can be enabled or disabled for individual channels in Channel Properties."
-          }
-        }
-      }
-    },
-    "inline-media-width-accessibility": {
-      "comment": "Accessibility label for the inline image width field.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inline Image Scaled by Width"
-          }
-        }
-      }
-    },
-    "inline-media-width-label": {
-      "comment": "Label before the inline image width field.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scale to a maximum of"
           }
         }
       }
@@ -2593,18 +2341,6 @@
         }
       }
     },
-    "its-possible-to-modify-the-appearance": {
-      "comment": "Body of the alert explaining how to customize a bundled style without editing its source files. Legacy key: ojj-ap.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "It’s possible to modify the appearance of this style without editing its source files.\n\nClick “Edit Style” to add your own style sheet rules. This feature can also be found in the Developers section of Preferences."
-          }
-        }
-      }
-    },
     "label-for-the-settings-back": {
       "comment": "Label for the Settings toolbar back item. Legacy key: tb-back.",
       "extractionState": "manual",
@@ -2677,14 +2413,26 @@
         }
       }
     },
-    "nickname-format": {
-      "comment": "List item naming the nickname format preference overridden by a style. Legacy key: 77t-de.",
+    "navigation-back": {
+      "comment": "Accessibility title for the Settings back button.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "• Nickname Format"
+            "value": "Back"
+          }
+        }
+      }
+    },
+    "navigation-forward": {
+      "comment": "Accessibility title for the Settings forward button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward"
           }
         }
       }
@@ -2821,18 +2569,6 @@
         }
       }
     },
-    "preferred-selection": {
-      "comment": "Title of the alert describing preferences overridden by the selected style. Legacy key: uc0-z7.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preferred Selection"
-          }
-        }
-      }
-    },
     "settings-sidebar-footer-arguments-version": {
       "comment": "Settings sidebar footer. Arguments are the marketing version and build number. Legacy key: sb-vers.",
       "extractionState": "manual",
@@ -2857,30 +2593,6 @@
         }
       }
     },
-    "style-browse-files": {
-      "comment": "Button that opens the folder holding the current style.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Browse Style Files"
-          }
-        }
-      }
-    },
-    "style-browse-files-help": {
-      "comment": "Accessibility label for the browse style files button.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "View files associated with the current style"
-          }
-        }
-      }
-    },
     "style-disable-nickname-colors": {
       "comment": "Checkbox in the Style pane.",
       "extractionState": "manual",
@@ -2901,30 +2613,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change"
-          }
-        }
-      }
-    },
-    "style-font-change-help": {
-      "comment": "Accessibility label for the button that opens the font panel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change Content Font"
-          }
-        }
-      }
-    },
-    "style-font-current": {
-      "comment": "Accessibility label for the field showing the channel view font.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Current Content Font"
           }
         }
       }
@@ -2965,18 +2653,6 @@
         }
       }
     },
-    "style-heading-developers": {
-      "comment": "Section heading in the Style pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Developers"
-          }
-        }
-      }
-    },
     "style-heading-scrollback": {
       "comment": "Section heading in the Style pane.",
       "extractionState": "manual",
@@ -2985,54 +2661,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scrollback"
-          }
-        }
-      }
-    },
-    "style-inline-nickname-mode-symbol": {
-      "comment": "Checkbox in the Style pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show mode symbol in front of inline nicknames"
-          }
-        }
-      }
-    },
-    "style-label": {
-      "comment": "Label of the style selection popup.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Style:"
-          }
-        }
-      }
-    },
-    "style-modify-style-sheet": {
-      "comment": "Button that opens the user style sheet editor.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Modify Custom Style Sheet Rules"
-          }
-        }
-      }
-    },
-    "style-named-has-chosen-to-override": {
-      "comment": "Alert body describing preferences overridden by a style. Arguments are the style name and a newline-separated preference list. Legacy key: q4o-2f.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The style named “%1$@” has chosen to override the following preferences with ones that it prefers for the best viewing experience:\n\n%2$@"
           }
         }
       }
@@ -3069,30 +2697,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "User nickname"
-          }
-        }
-      }
-    },
-    "style-reload-custom-styles": {
-      "comment": "Checkbox in the Style pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Automatically reload custom styles when they change"
-          }
-        }
-      }
-    },
-    "style-reload-custom-styles-note": {
-      "comment": "Explanation below the automatic style reload checkbox.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A reload will occur if any file with the extension .css or .js is modified within the root directory of the active style."
           }
         }
       }
@@ -3145,18 +2749,6 @@
         }
       }
     },
-    "style-show-join-leave-note": {
-      "comment": "Explanation below the general event messages checkbox.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "These include join, part, and quit messages."
-          }
-        }
-      }
-    },
     "style-show-motd": {
       "comment": "Checkbox in the Style pane.",
       "extractionState": "manual",
@@ -3193,18 +2785,6 @@
         }
       }
     },
-    "timestamp-format": {
-      "comment": "List item naming the timestamp format preference overridden by a style. Legacy key: ddh-hr.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "• Timestamp Format"
-          }
-        }
-      }
-    },
     "title-of-the-advanced": {
       "comment": "Title of the Advanced group in the Settings sidebar. Legacy key: sb-gr-av.",
       "extractionState": "manual",
@@ -3229,14 +2809,14 @@
         }
       }
     },
-    "title-of-the-compatibility": {
-      "comment": "Title of the Compatibility pane in the Settings sidebar. Legacy key: sb-compatibility.",
+    "title-of-the-ircv3": {
+      "comment": "Title of the IRCv3 pane in the Settings sidebar.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compatibility"
+            "value": "IRCv3"
           }
         }
       }
@@ -3336,20 +2916,7 @@
           }
         }
       }
-    },
-    "view-files": {
-      "comment": "Button that opens a bundled style's source files. Legacy key: 6ws-av.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "View Files"
-          }
-        }
-      }
     }
   },
   "version": "1.0"
 }
-

@@ -211,7 +211,7 @@ public nonisolated extension NSString { // nonisolated: pure
 		preferredFontColor: NSColor?,
 		honorFormattingPreference formattingPreference: Bool
 	) -> NSAttributedString? {
-		if formattingPreference, TextualPreferences.removeAllFormatting() {
+		if formattingPreference, Preferences.Messages.removeAllFormatting.value {
 			return NSAttributedString(string: stripIRCEffects)
 		}
 
@@ -223,7 +223,7 @@ public nonisolated extension NSString { // nonisolated: pure
 			attributes[.preferredFontColor] = preferredFontColor
 		}
 
-		return TVCLogRenderer.renderBody(asAttributedString: self as String, withAttributes: attributes)
+		return LogRenderer.renderBody(asAttributedString: self as String, withAttributes: attributes)
 	}
 
 	@MainActor

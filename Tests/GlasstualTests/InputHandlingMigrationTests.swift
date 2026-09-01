@@ -197,4 +197,35 @@ struct InputHandlingMigrationTests {
 			#expect(textField.string == "Alice: ")
 		}
 	}
+
+	@Test("Repeated completion cycles through one coherent session in both directions")
+	func nicknameCompletionCyclesThroughCandidates() {
+		withPreference(Self.completionSuffixKey, setTo: ": ") {
+			let client = GLTTestClient()
+			let channel = GLTCompletionChannel(config: ChannelConfig(channelName: "#chat"))
+			channel.testMembers = [
+				GLTTestClient.testChannelUser(nickname: "Bob", on: client),
+				GLTTestClient.testChannelUser(nickname: "Alice", on: client),
+			]
+
+			let host = hostWindow()
+			let textField = makeTextField(in: host)
+			let window = GLTCompletionWindow()
+			window.selectedClient = client
+			window.selectedChannel = channel
+			window.inputTextField = textField
+			textField.setSelectedRange(NSRange(location: 0, length: 0))
+
+			let completion = NicknameCompletionStatus(window: window)
+
+			completion.completeNickname(true)
+			#expect(textField.string == "Alice: ")
+
+			completion.completeNickname(true)
+			#expect(textField.string == "Bob: ")
+
+			completion.completeNickname(false)
+			#expect(textField.string == "Alice: ")
+		}
+	}
 }

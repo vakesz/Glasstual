@@ -40,7 +40,7 @@ import AppKit
 import CocoaExtensions
 import os
 
-private nonisolated let highlightLogEntryLogger = Logger( // nonisolated: let
+private let highlightLogEntryLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCHighlightLogEntry"
 )
@@ -52,7 +52,7 @@ private nonisolated let highlightLogEntryLogger = Logger( // nonisolated: let
  rather than binding an `NSArrayController` to them by KVC key path.
 
  Its identity is the line it logged: `lineNumber` names one printed line. */
-public nonisolated struct HighlightLogEntry: Codable, Hashable, Sendable { // nonisolated: value
+public struct HighlightLogEntry: Codable, Hashable, Sendable {
 	public var lineLogged: LogLine
 	public var clientId: String
 	public var channelId: String
@@ -120,13 +120,5 @@ public nonisolated struct HighlightLogEntry: Codable, Hashable, Sendable { // no
 			withIRCFormatting: NSFont.systemFont(ofSize: 13.0),
 			preferredFontColor: .controlTextColor
 		) ?? NSAttributedString(string: formatted)
-	}
-}
-
-extension HighlightLogEntry: CustomStringConvertible {
-	/** `description` cannot resolve the channel or format the line against it —
-	 both need the main actor — so the identifiers name the entry instead. */
-	public var description: String {
-		"<HighlightLogEntry [\(channelId)]: \(lineNumber)>"
 	}
 }

@@ -319,7 +319,6 @@ public extension IRCClient {
 					updateTrackingStatus(for: newEntry, message: message)
 				}
 			}
-			postEvent(toViewController: "nicknameChanged")
 		}
 		NotificationCenter.default.post(
 			name: .IRCClientUserNicknameChanged, object: self,

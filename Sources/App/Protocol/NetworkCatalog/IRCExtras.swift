@@ -38,8 +38,6 @@ public final class Extras: NSObject {
 		case customScriptsFolder = "custom-scripts-folder"
 		case unsupervisedScriptFolder = "unsupervised-script-folder"
 		case unsupervisedScriptsFolder = "unsupervised-scripts-folder"
-		case customStyleFolder = "custom-style-folder"
-		case customStylesFolder = "custom-styles-folder"
 		case diagnosticReportsFolder = "diagnostic-reports-folder"
 		/// Navigate to an item named by the source location.
 		case goto
@@ -62,9 +60,7 @@ public final class Extras: NSObject {
 		case .applicationSupportFolder:
 			reveal(PathInfo.groupContainerApplicationSupportURL, with: menuController)
 		case .customScriptsFolder, .unsupervisedScriptFolder, .unsupervisedScriptsFolder:
-			reveal(PathInfo.customScriptsURL, with: menuController)
-		case .customStyleFolder, .customStylesFolder:
-			reveal(PathInfo.customThemesURL, with: menuController)
+			reveal(SharedApplication.sharedPluginManager().customScriptsURL, with: menuController)
 		case .diagnosticReportsFolder:
 			reveal(PathInfo.userDiagnosticReportsURL, with: menuController)
 			reveal(PathInfo.systemDiagnosticReportsURL, with: menuController)

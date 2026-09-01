@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum PreferencesFileTransfersStrings { // nonisolated: value
+enum PreferencesFileTransfersStrings {
 	static var destinationLabel: String {
 		String(localized: .TDCPreferencesController.fileTransfersDestinationLabel)
 	}
@@ -98,105 +98,7 @@ nonisolated enum PreferencesFileTransfersStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesInlineMediaStrings { // nonisolated: value
-	static var checkEverything: String {
-		String(localized: .TDCPreferencesController.inlineMediaCheckEverything)
-	}
-
-	static var checkEverythingAccessibility: String {
-		String(localized: .TDCPreferencesController.inlineMediaCheckEverythingAccessibility)
-	}
-
-	static var checkEverythingNote: String {
-		String(localized: .TDCPreferencesController.inlineMediaCheckEverythingNote)
-	}
-
-	static var filesizeAccessibility: String {
-		String(localized: .TDCPreferencesController.inlineMediaFilesizeAccessibility)
-	}
-
-	static var filesizeLabel: String {
-		String(localized: .TDCPreferencesController.inlineMediaFilesizeLabel)
-	}
-
-	static var headingImages: String {
-		String(localized: .TDCPreferencesController.inlineMediaHeadingImages)
-	}
-
-	static var headingLimitations: String {
-		String(localized: .TDCPreferencesController.inlineMediaHeadingLimitations)
-	}
-
-	static var heightAccessibility: String {
-		String(localized: .TDCPreferencesController.inlineMediaHeightAccessibility)
-	}
-
-	static var heightLabel: String {
-		String(localized: .TDCPreferencesController.inlineMediaHeightLabel)
-	}
-
-	static var heightNote: String {
-		String(localized: .TDCPreferencesController.inlineMediaHeightNote)
-	}
-
-	static var limitBasicsToFiles: String {
-		String(localized: .TDCPreferencesController.inlineMediaLimitBasicsToFiles)
-	}
-
-	static var limitNaughty: String {
-		String(localized: .TDCPreferencesController.inlineMediaLimitNaughty)
-	}
-
-	static var limitNaughtyNote: String {
-		String(localized: .TDCPreferencesController.inlineMediaLimitNaughtyNote)
-	}
-
-	static var limitToBasics: String {
-		String(localized: .TDCPreferencesController.inlineMediaLimitToBasics)
-	}
-
-	static var limitUnsafe: String {
-		String(localized: .TDCPreferencesController.inlineMediaLimitUnsafe)
-	}
-
-	static var limitUnsafeNote: String {
-		String(localized: .TDCPreferencesController.inlineMediaLimitUnsafeNote)
-	}
-
-	static func megabytes(count: Int) -> String {
-		String(localized: .TDCPreferencesController.inlineMediaMegabytes(count))
-	}
-
-	static var oneMegabyte: String {
-		String(localized: .TDCPreferencesController.inlineMediaOneMegabyte)
-	}
-
-	static var pixels: String {
-		String(localized: .TDCPreferencesController.inlineMediaPixels)
-	}
-
-	static var pixelsWide: String {
-		String(localized: .TDCPreferencesController.inlineMediaPixelsWide)
-	}
-
-	static var show: String {
-		String(localized: .TDCPreferencesController.inlineMediaShow)
-	}
-
-	static var showNote: String {
-		String(localized: .TDCPreferencesController.inlineMediaShowNote)
-	}
-
-	static var widthAccessibility: String {
-		String(localized: .TDCPreferencesController.inlineMediaWidthAccessibility)
-	}
-
-	static var widthLabel: String {
-		String(localized: .TDCPreferencesController.inlineMediaWidthLabel)
-	}
-}
-
-nonisolated enum PreferencesLogLocationStrings { // nonisolated: value
+enum PreferencesLogLocationStrings {
 	static var clearDestination: String {
 		String(localized: .TDCPreferencesController.logLocationClearDestination)
 	}
@@ -210,13 +112,9 @@ nonisolated enum PreferencesLogLocationStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesHiddenStrings { // nonisolated: value
+enum PreferencesHiddenStrings {
 	static var appNap: String {
 		String(localized: .TDCPreferencesController.hiddenAppNap)
-	}
-
-	static var customScrollbars: String {
-		String(localized: .TDCPreferencesController.hiddenCustomScrollbars)
 	}
 
 	static var loadHistoryLazily: String {
@@ -245,13 +143,5 @@ nonisolated enum PreferencesHiddenStrings { // nonisolated: value
 
 	static var warningLabel: String {
 		String(localized: .TDCPreferencesController.hiddenWarningLabel)
-	}
-
-	static var webkitPreviewLinks: String {
-		String(localized: .TDCPreferencesController.hiddenWebkitPreviewLinks)
-	}
-
-	static var webkitProcessPool: String {
-		String(localized: .TDCPreferencesController.hiddenWebkitProcessPool)
 	}
 }

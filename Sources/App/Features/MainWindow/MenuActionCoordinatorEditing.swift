@@ -66,7 +66,7 @@ public extension MenuActionCoordinator {
 			return
 		}
 
-		let tag = (sender as? NSMenuItem)?.tag ?? (sender as? NSControl)?.tag ?? 0
+		let tag = (sender as? NSMenuItem)?.command?.rawValue ?? (sender as? NSControl)?.tag ?? 0
 		if tag == MenuFindTag.open || currentSearchPhrase.isEmpty {
 			showFindPromptOpenDialog()
 			return

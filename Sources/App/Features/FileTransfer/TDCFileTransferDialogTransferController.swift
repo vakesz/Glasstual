@@ -84,7 +84,6 @@ public enum FileTransferStatus: UInt, Sendable {
 public final class TDCFileTransferDialogTransferController: NSObject, TDCClientPrototype {
 	public internal(set) var client: IRCClient?
 	public internal(set) var clientId: String?
-	public weak var transferTableCell: FileTransferDialogTableCell?
 
 	public internal(set) var isResume = false
 	public internal(set) var isReversed = false
@@ -174,7 +173,7 @@ public final class TDCFileTransferDialogTransferController: NSObject, TDCClientP
 		}
 
 		let controller = TDCFileTransferDialogTransferController(client: client)
-		controller.isReversed = TextualPreferences.fileTransferRequestsAreReversed()
+		controller.isReversed = Preferences.FileTransfers.requestsAreReversed.value
 		controller.isSender = true
 		controller.peerNickname = nickname
 		controller.path = (path as NSString).deletingLastPathComponent

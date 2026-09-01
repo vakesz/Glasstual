@@ -12,13 +12,23 @@
 
 import SwiftUI
 
-/** The window's content below the toolbar: the selected section's pane, with a
- segmented picker above it when the section holds more than one.
-
- The AppKit shell owns the toolbar and therefore the section; this view only
- reports a change of sub-page back through the model. */
+/// The complete Settings interface. SwiftUI owns sidebar selection, detail
+/// routing, navigation history, toolbar commands, and pane layout; the AppKit
+/// shell exists only to configure the macOS window.
 struct PreferencesRootView: View {
 	@Bindable var model: PreferencesPaneModel
+	@State private var history = [PreferencesSelection.general]
+	@State private var historyIndex = 0
+
+	private var sectionSelection: Binding<PreferencesSectionIdentifier?> {
+		Binding(
+			get: { model.selection.sectionIdentifier },
+			set: { identifier in
+				guard let identifier else { return }
+				model.selectSection(identifier)
+			}
+		)
+	}
 
 	private var subPages: [PreferencesSubPage] {
 		model.currentSection?.subPages ?? []
@@ -36,17 +46,58 @@ struct PreferencesRootView: View {
 	}
 
 	var body: some View {
-		ScrollView {
-			VStack(spacing: 0) {
-				if subPages.count > 1 {
-					subPagePicker
-				}
-				if let currentSubPage {
-					PreferencesSubPageView(model: model, subPage: currentSubPage)
+		NavigationSplitView(columnVisibility: .constant(.all)) {
+			List(selection: sectionSelection) {
+				ForEach(model.sections) { section in
+					Label(section.title, systemImage: section.symbolName)
+						.tag(section.identifier)
 				}
 			}
+			.listStyle(.sidebar)
+			.scrollEdgeEffectStyle(.soft, for: .all)
+			.navigationTitle(PreferencesStrings.accessibilityTitle)
+			.navigationSplitViewColumnWidth(
+				min: PreferencesLayout.sidebarWidth,
+				ideal: PreferencesLayout.sidebarWidth,
+				max: PreferencesLayout.sidebarWidth + 40
+			)
+		} detail: {
+			detail
 		}
-		.frame(width: PreferencesLayout.windowWidth)
+		.navigationSplitViewStyle(.balanced)
+		.frame(
+			minWidth: PreferencesLayout.minimumWindowSize.width,
+			minHeight: PreferencesLayout.minimumWindowSize.height
+		)
+		.toolbar {
+			ToolbarItemGroup(placement: .navigation) {
+				Button(PreferencesNavigationStrings.back, systemImage: "chevron.left", action: goBack)
+					.disabled(historyIndex == 0)
+				Button(PreferencesNavigationStrings.forward, systemImage: "chevron.right", action: goForward)
+					.disabled(historyIndex >= history.count - 1)
+			}
+		}
+		.onChange(of: model.selection) { _, selection in
+			record(selection)
+		}
+	}
+
+	private var detail: some View {
+		VStack(spacing: 0) {
+			if subPages.count > 1 {
+				subPagePicker
+			}
+			if let currentSubPage {
+				PreferencesSubPageView(model: model, subPage: currentSubPage)
+			} else {
+				ContentUnavailableView(
+					PreferencesStrings.accessibilityTitle,
+					systemImage: "gearshape"
+				)
+			}
+		}
+		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+		.navigationTitle(model.currentSection?.title ?? PreferencesStrings.accessibilityTitle)
 	}
 
 	/** The picker keeps to the form's own width so no section can push the
@@ -59,15 +110,15 @@ struct PreferencesRootView: View {
 			.padding(.top, 14)
 	}
 
-	/** A segmented row while the section's labels fit across the window, and a
-	 pop-up when they would not: a segment is never allowed to truncate, and the
-	 row never widens the window. */
-	@ViewBuilder
+	/// Uses segments when they fit and automatically falls back to a menu.
 	private var pickerContent: some View {
-		if model.currentSection?.usesSegmentedPicker ?? true {
-			picker.pickerStyle(.segmented).fixedSize()
-		} else {
-			picker.pickerStyle(.menu).fixedSize()
+		ViewThatFits(in: .horizontal) {
+			picker
+				.pickerStyle(.segmented)
+				.fixedSize()
+			picker
+				.pickerStyle(.menu)
+				.fixedSize()
 		}
 	}
 
@@ -81,6 +132,29 @@ struct PreferencesRootView: View {
 		}
 		.labelsHidden()
 		.accessibilityLabel(Text(verbatim: model.currentSection?.title ?? ""))
+	}
+
+	private func goBack() {
+		guard historyIndex > 0 else { return }
+		historyIndex -= 1
+		model.select(history[historyIndex])
+	}
+
+	private func goForward() {
+		guard historyIndex < history.count - 1 else { return }
+		historyIndex += 1
+		model.select(history[historyIndex])
+	}
+
+	private func record(_ selection: PreferencesSelection) {
+		if history.indices.contains(historyIndex), history[historyIndex] == selection {
+			return
+		}
+		if historyIndex < history.count - 1 {
+			history.removeSubrange((historyIndex + 1) ..< history.endIndex)
+		}
+		history.append(selection)
+		historyIndex = history.count - 1
 	}
 }
 
@@ -112,14 +186,12 @@ struct PreferencesGroupedPaneSections: View {
 		switch PreferencesPaneIdentifier(rawValue: identifier) {
 		case .channelManagement: PreferencesChannelManagementSections(model: model)
 		case .commandScope: PreferencesCommandScopeSections(model: model)
-		case .compatibility: PreferencesCompatibilitySections(model: model)
 		case .defaultIRCopMessages: PreferencesIRCopMessagesSections(model: model)
 		case .defaultIdentity: PreferencesDefaultIdentitySections(model: model)
 		case .fileTransfers: PreferencesFileTransfersSections(model: model)
 		case .floodControl: PreferencesFloodControlSections(model: model)
 		case .hidden: PreferencesHiddenSections(model: model)
 		case .incomingData: PreferencesIncomingDataSections(model: model)
-		case .inlineMedia: PreferencesInlineMediaSections(model: model)
 		case .logLocation: PreferencesLogLocationSections(model: model)
 		default: EmptyView()
 		}
@@ -128,7 +200,8 @@ struct PreferencesGroupedPaneSections: View {
 
 /// Maps a pane identifier onto the view that answers to it.
 struct PreferencesPaneRouter: View {
-	/// A plugin's own preference view, which is AppKit and stays that way.
+	/// Plugin ABI exposes an `NSView`; first-party panes use it only as the
+	/// adapter around their SwiftUI content.
 	private static let pluginPaneHeight = 420.0
 
 	let model: PreferencesPaneModel
@@ -151,7 +224,6 @@ struct PreferencesPaneRouter: View {
 		case .behavior: PreferencesBehaviorPane(model: model)
 		case .channelManagement: PreferencesChannelManagementPane(model: model)
 		case .commandScope: PreferencesCommandScopePane(model: model)
-		case .compatibility: PreferencesCompatibilityPane(model: model)
 		case .controls: PreferencesControlsPane(model: model)
 		case .defaultIRCopMessages: PreferencesIRCopMessagesPane(model: model)
 		case .defaultIdentity: PreferencesDefaultIdentityPane(model: model)
@@ -161,8 +233,8 @@ struct PreferencesPaneRouter: View {
 		case .hidden: PreferencesHiddenPane(model: model)
 		case .highlights: PreferencesHighlightsPane(model: model)
 		case .incomingData: PreferencesIncomingDataPane(model: model)
-		case .inlineMedia: PreferencesInlineMediaPane(model: model)
 		case .interface: PreferencesInterfacePane(model: model)
+		case .ircv3: PreferencesIRCv3Pane(model: model)
 		case .logLocation: PreferencesLogLocationPane(model: model)
 		case .notifications: PreferencesNotificationsPane(model: model)
 		case .style: PreferencesStylePane(model: model)

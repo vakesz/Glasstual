@@ -68,12 +68,11 @@ struct ClientConfigSASLFailureTests {
 		#expect(IRCNumeric.saslaborted.rawValue == 906)
 	}
 
-	@Test("The sheet exposes the checkbox the nib connects")
-	@MainActor
-	func sheetDeclaresTheOutlet() {
-		#expect(
-			ServerPropertiesSheet.instancesRespond(to: NSSelectorFromString("disconnectOnSASLFailureCheck"))
-		)
+	@Test("The server-properties draft edits the setting directly")
+	func sheetDraftCarriesTheSetting() {
+		let model = ServerPropertiesModel(config: ClientConfig())
+		model.config.disconnectOnSASLFailure = true
+		#expect(model.config.disconnectOnSASLFailure)
 	}
 
 	@Test("The disconnect reason resolves against the string catalog")

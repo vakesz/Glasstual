@@ -1,17 +1,150 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "client-to-client-ctcp" : {
+      "comment" : "Checkbox for ignoring Client-to-Client Protocol messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Client-to-Client (CTCP)" } } }
+    },
+    "display-message-when-user-becomes-available" : {
+      "comment" : "Checkbox for announcing when a tracked user becomes available.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Display message when user becomes available" } } }
+    },
+    "enter-a-hostmask-to-ignore" : {
+      "comment" : "Placeholder for an ignore rule's hostmask field.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter a hostmask to ignore" } } }
+    },
+    "enter-any-nickname-to-track" : {
+      "comment" : "Placeholder for the nickname of a user to track.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter any nickname to track" } } }
+    },
+    "examples" : {
+      "comment" : "Label introducing hostmask examples.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Examples" } } }
+    },
+    "file-transfer-requests" : {
+      "comment" : "Checkbox for ignoring file transfer requests.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "File Transfer Requests" } } }
+    },
+    "format" : {
+      "comment" : "Label introducing the hostmask format.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Format" } } }
+    },
+    "general-event-messages" : {
+      "comment" : "Checkbox for ignoring join, part, quit, and similar event messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "General Event Messages" } } }
+    },
+    "hostmask" : {
+      "comment" : "Label for an IRC hostmask field.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hostmask" } } }
+    },
+    "hostmask-format-and-examples" : {
+      "comment" : "Disclosure label for help about IRC hostmask syntax.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Hostmask format and examples" } } }
+    },
+    "ignore-description" : {
+      "comment" : "Explanation at the top of the ignore-rule editor.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose which message types Glasstual should ignore from a matching user." } } }
+    },
+    "ignore-user" : {
+      "comment" : "Title of the ignore-rule editor.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Ignore User" } } }
+    },
+    "ignored-messages" : {
+      "comment" : "Section title for message types an ignore rule suppresses.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Messages to Ignore" } } }
+    },
+    "inline-media" : {
+      "comment" : "Checkbox for ignoring inline media.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Inline Media" } } }
+    },
+    "matches-addresses-ending-in-info" : {
+      "comment" : "IRC hostmask example and explanation.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "*!*@*.info (matches any address ending in “.info”)" } } }
+    },
+    "matches-every-possible-user" : {
+      "comment" : "IRC hostmask example and warning.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "*!*@* (matches every possible user — not recommended)" } } }
+    },
+    "matches-nicknames-starting-with-frank" : {
+      "comment" : "IRC hostmask example and explanation.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "frank*!*@* (matches any nickname that starts with “frank”)" } } }
+    },
+    "matches-username-matt" : {
+      "comment" : "IRC hostmask example and explanation.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "*!matt@* (matches any username equal to “matt”)" } } }
+    },
+    "nickname" : {
+      "comment" : "Label for a tracked user's nickname.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Nickname" } } }
+    },
+    "nickname-username-address" : {
+      "comment" : "Canonical IRC hostmask format.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "<nickname>!<username>@<address>" } } }
+    },
+    "notice-messages" : {
+      "comment" : "Checkbox for ignoring notice messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Notice Messages" } } }
+    },
     "please-enter-a-properly-formatted-ignore" : {
       "comment" : "Validation error shown when an ignore mask is not properly formatted. Legacy key: csu-bv.",
       "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Please enter a properly formatted ignore mask."
-          }
-        }
-      }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter a properly formatted ignore mask." } } }
+    },
+    "private-highlights" : {
+      "comment" : "Checkbox for ignoring private-message highlights.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Private Highlights" } } }
+    },
+    "private-messages" : {
+      "comment" : "Checkbox for ignoring private messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Private Messages" } } }
+    },
+    "public-highlights" : {
+      "comment" : "Checkbox for ignoring public-message highlights.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Public Highlights" } } }
+    },
+    "public-messages" : {
+      "comment" : "Checkbox for ignoring public messages.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Public Messages" } } }
+    },
+    "track-user" : {
+      "comment" : "Title of the tracked-user editor.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Track User" } } }
+    },
+    "tracking-description" : {
+      "comment" : "Explanation at the top of the tracked-user editor.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Track when a nickname becomes available on this network." } } }
+    },
+    "tracking-method-description" : {
+      "comment" : "Explanation of how Glasstual determines a tracked user's availability.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Glasstual watches join, part, and quit activity in shared channels. When the server supports them, it also uses ISON, MONITOR, or WATCH to check availability outside shared channels." } } }
     }
   },
   "version" : "1.0"

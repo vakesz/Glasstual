@@ -102,16 +102,6 @@ struct PluginKitMigrationTests {
 		observation.cancel()
 	}
 
-	/// The Chat Filter sheet reaches its channel picker by casting the object the
-	/// host handed it (`ChatFilterEditSheet.swift`), and stops the process when
-	/// the cast fails, so the cast itself is the contract.
-	@Test("Channel selection is offered to plugins through the typed boundary")
-	func channelSelectionUsesTypedPluginBoundary() {
-		let host: NSObject = ChannelSelectionViewController()
-
-		#expect(host is any PluginChannelSelection)
-	}
-
 	@Test("A command invocation carries the client, text and selected channel to its handler")
 	func nativeCommandContractCarriesTypedContext() {
 		let channel = makePluginChannel()

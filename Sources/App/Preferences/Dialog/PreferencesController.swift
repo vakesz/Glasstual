@@ -51,31 +51,17 @@ public protocol PreferencesControllerDelegate: AnyObject {
 	func preferencesDialogWillClose(_ sender: PreferencesController)
 }
 
-/** The Settings window: an AppKit shell around one SwiftUI content view.
+/** The minimal AppKit window shell around the SwiftUI Settings interface.
 
- The shell owns the window, its toolbar of sections, which section and pane are
- shown, the frame it is restored to, and everything that needs a window to
- present — the font panel, the folder choosers, the style sheet editor and the
- alerts. The panes themselves are SwiftUI and reach back through
- `PreferencesPaneActionHandler`. */
+ SwiftUI owns navigation, toolbar state, and every first-party pane. This shell
+ only configures the native window and presents the AppKit panels that have no
+ complete SwiftUI equivalent. */
 @MainActor
-public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindowDelegate,
-	PreferencesUserStyleSheetDelegate
-{
-	private static let toolbarItemPrefix = "TDCPreferencesControllerSection."
-
+public final class PreferencesController: WindowBase, NSWindowDelegate {
 	let model = PreferencesPaneModel()
-
-	private var contentController: NSHostingController<PreferencesRootView>!
-	private var reloadingThemeBySelection = false
-
-	/// Which pane each section was left on, so coming back to a section comes
-	/// back to the segment the user was reading.
-	private var lastPaneBySection: [PreferencesSectionIdentifier: String] = [:]
 
 	var fontPanelIsOwned = false
 	var previousFontManagerAction: Selector?
-	var userStyleSheet: PreferencesUserStyleSheet?
 	private lazy var notifications = NotificationSubscriptions()
 
 	override public init() {
@@ -87,7 +73,7 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 		model.actions = self
 		model.sections = Self.sections()
 		model.onSelectionChange = { [weak self] selection in
-			self?.paneChanged(to: selection, animate: true)
+			self?.paneChanged(to: selection)
 		}
 		model.refreshAll()
 		installWindow()
@@ -95,14 +81,18 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 	}
 
 	private func prepareNotifications() {
-		notifications.observe(.themeListDidChange) { [weak self] _ in
-			self?.model.refreshThemes()
+		notifications.observe(Notification.Name("NativeTranscriptThemeWasModified")) { [weak self] _ in
+			self?.model.refreshTheme()
+			self?.model.refreshChannelViewFont()
 		}
-		notifications.observe(.mainWindowWillReloadTheme) { [weak self] _ in
-			self?.model.isReloadingTheme = true
+		notifications.observe(.ircClientCapabilitiesDidChange) { [weak self] _ in
+			self?.model.refreshIRCv3Connections()
 		}
-		notifications.observe(.mainWindowDidReloadTheme) { [weak self] notification in
-			self?.themeReloadCompleted(notification)
+		notifications.observe(.ircWorldClientListWasModified) { [weak self] _ in
+			self?.model.refreshIRCv3Connections()
+		}
+		notifications.observe(PluginManager.scriptCommandsDidChangeNotification) { [weak self] _ in
+			self?.model.refreshAddOnCommands()
 		}
 	}
 
@@ -110,15 +100,9 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 
 	private func installWindow() {
 		let hostingController = NSHostingController(rootView: PreferencesRootView(model: model))
-		contentController = hostingController
 		let hostedWindow = PreferencesWindow(
-			contentRect: NSRect(
-				x: 0,
-				y: 0,
-				width: PreferencesLayout.windowWidth,
-				height: PreferencesLayout.windowMinimumHeight
-			),
-			styleMask: [.titled, .closable],
+			contentRect: NSRect(origin: .zero, size: PreferencesLayout.windowSize),
+			styleMask: [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView],
 			backing: .buffered,
 			defer: false
 		)
@@ -127,53 +111,13 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 		hostedWindow.isReleasedWhenClosed = false
 		hostedWindow.isRestorable = false
 		hostedWindow.tabbingMode = .disallowed
-		hostedWindow.toolbarStyle = .preference
+		hostedWindow.toolbarStyle = .automatic
+		hostedWindow.minSize = PreferencesLayout.minimumWindowSize
 		hostedWindow.preventsApplicationTerminationWhenModal = false
 		hostedWindow.autorecalculatesKeyViewLoop = true
 		hostedWindow.title = PreferencesStrings.accessibilityTitle
 		window = hostedWindow
-		installToolbar()
 		window.ce_restoreState(for: .preferences)
-	}
-
-	private func installToolbar() {
-		let toolbar = NSToolbar(identifier: "TDCPreferencesControllerToolbar")
-		toolbar.delegate = self
-		toolbar.allowsUserCustomization = false
-		toolbar.autosavesConfiguration = false
-		toolbar.displayMode = .iconAndLabel
-		window.toolbar = toolbar
-	}
-
-	/** Grows or shrinks the window to the pane that is showing, keeping its
-	 top-left corner and its width, the way a settings window behaves. */
-	private func resizeToFitContent(animate: Bool) {
-		guard let window, let contentView = window.contentView else { return }
-		contentView.layoutSubtreeIfNeeded()
-		let screen = window.screen ?? NSScreen.main
-		let available = screen.map { Double($0.visibleFrame.height) }
-			?? PreferencesLayout.windowMinimumHeight
-		let height = min(
-			max(contentController.view.fittingSize.height, PreferencesLayout.windowMinimumHeight),
-			available - PreferencesLayout.windowScreenInset
-		)
-		let current = window.contentRect(forFrameRect: window.frame)
-		guard abs(current.height - height) > 0.5
-			|| abs(current.width - PreferencesLayout.windowWidth) > 0.5
-		else { return }
-		let content = NSRect(
-			x: current.minX,
-			y: current.maxY - height,
-			width: PreferencesLayout.windowWidth,
-			height: height
-		)
-		/* A taller pane grows downwards from the anchored top edge, so keep the
-		 whole window above the Dock and inside the screen. */
-		var frame = window.frameRect(forContentRect: content)
-		if let screen {
-			frame = window.constrainFrameRect(frame, to: screen)
-		}
-		window.setFrame(frame, display: true, animate: animate)
 	}
 
 	override public func show() {
@@ -194,13 +138,13 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 		{
 			identifier = remembered
 		}
-		selectPane(withIdentifier: identifier, animate: false)
+		selectPane(withIdentifier: identifier)
 		super.show()
 	}
 
 	// MARK: - Sections
 
-	/** The toolbar's sections: one for each main pane, one gathering the add-on
+	/** The sidebar sections: one for each main pane, one gathering the add-on
 	 panes the plugins supply, and one gathering the advanced panes. */
 	static func sections() -> [PreferencesSection] {
 		PreferencesSectionIdentifier.allCases.map { identifier in
@@ -299,7 +243,7 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 	/** Shows whichever sub-page holds `identifier`, which may name a sub-page or
 	 one of the panes inside it — a value stored before the advanced panes were
 	 grouped still finds its way home. */
-	private func selectPane(withIdentifier identifier: String, animate: Bool) {
+	private func selectPane(withIdentifier identifier: String) {
 		guard let section = model.sections.first(where: { section in
 			section.subPages.contains { $0.contains(identifier) }
 		}),
@@ -309,131 +253,24 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindo
 			sectionIdentifier: section.identifier,
 			subPageIdentifier: subPage.identifier
 		)
-		let changed = model.select(selection)
-		window?.toolbar?.selectedItemIdentifier = Self.toolbarIdentifier(for: section.identifier)
-		window?.title = section.title
-		if changed == false {
-			// The model publishes only changes, so finish an idempotent request here.
-			paneChanged(to: selection, animate: animate)
+		if model.select(selection) == false {
+			paneChanged(to: selection)
 		}
 	}
 
-	private func paneChanged(to selection: PreferencesSelection, animate: Bool) {
+	private func paneChanged(to selection: PreferencesSelection) {
 		let identifier = selection.subPageIdentifier
-		lastPaneBySection[selection.sectionIdentifier] = identifier
 		Preferences.Internals.selectedPreferencePane.value = identifier
 		// The two panes whose content is read from outside the key store are
 		// refreshed as they are opened rather than polled.
 		if identifier == PreferencesPaneIdentifier.style.rawValue {
-			model.refreshThemes()
+			model.refreshTheme()
 			model.refreshChannelViewFont()
 		} else if identifier == PreferencesPaneIdentifier.addOns.rawValue {
 			model.refreshAddOnCommands()
+		} else if identifier == PreferencesPaneIdentifier.ircv3.rawValue {
+			model.refreshIRCv3Connections()
 		}
-		// The hosted view has not laid the new pane out yet.
-		DispatchQueue.main.async { [weak self] in
-			self?.resizeToFitContent(animate: animate)
-		}
-	}
-
-	@objc private func selectSection(_ sender: NSToolbarItem) {
-		let raw = sender.itemIdentifier.rawValue.dropFirst(Self.toolbarItemPrefix.count)
-		guard let identifier = PreferencesSectionIdentifier(rawValue: String(raw)),
-		      let section = model.sections.first(where: { $0.identifier == identifier }),
-		      let pane = lastPaneBySection[identifier] ?? section.subPages.first?.identifier
-		else { return }
-		selectPane(withIdentifier: pane, animate: true)
-	}
-
-	// MARK: - Toolbar
-
-	private static func toolbarIdentifier(
-		for section: PreferencesSectionIdentifier
-	) -> NSToolbarItem.Identifier {
-		NSToolbarItem.Identifier(toolbarItemPrefix + section.rawValue)
-	}
-
-	private var sectionItemIdentifiers: [NSToolbarItem.Identifier] {
-		model.sections.map { Self.toolbarIdentifier(for: $0.identifier) }
-	}
-
-	public func toolbarAllowedItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-		sectionItemIdentifiers
-	}
-
-	public func toolbarDefaultItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-		sectionItemIdentifiers
-	}
-
-	public func toolbarSelectableItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-		sectionItemIdentifiers
-	}
-
-	public func toolbar(
-		_: NSToolbar,
-		itemForItemIdentifier identifier: NSToolbarItem.Identifier,
-		willBeInsertedIntoToolbar _: Bool
-	) -> NSToolbarItem? {
-		let raw = identifier.rawValue.dropFirst(Self.toolbarItemPrefix.count)
-		guard let sectionIdentifier = PreferencesSectionIdentifier(rawValue: String(raw)),
-		      let section = model.sections.first(where: { $0.identifier == sectionIdentifier })
-		else { return nil }
-		let item = NSToolbarItem(itemIdentifier: identifier)
-		item.image = NSImage(
-			systemSymbolName: section.symbolName,
-			accessibilityDescription: section.title
-		)
-		item.label = section.title
-		item.paletteLabel = section.title
-		item.toolTip = section.title
-		item.target = self
-		item.action = #selector(selectSection(_:))
-		/* The label is what VoiceOver reads for a toolbar item; the image's
-		 accessibility description above covers the icon on its own. */
-		return item
-	}
-
-	// MARK: - Theme reloads
-
-	/// Set by the Style pane before it asks for a reload, so the alert about a
-	/// style's forced values is only shown for a reload the user started there.
-	func beginThemeSelectionReload() {
-		reloadingThemeBySelection = true
-	}
-
-	private func themeReloadCompleted(_: Notification) {
-		model.isReloadingTheme = false
-		model.refreshThemes()
-		model.refreshChannelViewFont()
-		guard reloadingThemeBySelection else { return }
-		reloadingThemeBySelection = false
-		warnAboutStyleOverrides()
-	}
-
-	private func warnAboutStyleOverrides() {
-		var forcedValues: [PreferencesThemeOverride] = []
-		if TextualPreferences.themeNicknameFormatPreferenceUserConfigurable() == false {
-			forcedValues.append(.nicknameFormat)
-		}
-		if TextualPreferences.themeTimestampFormatPreferenceUserConfigurable() == false {
-			forcedValues.append(.timestampFormat)
-		}
-		if TextualPreferences.themeChannelViewFontPreferenceUserConfigurable() == false {
-			forcedValues.append(.channelViewFont)
-		}
-		guard forcedValues.isEmpty == false else { return }
-		let themeName = TPCThemeController.extractThemeName(TextualPreferences.themeName()) ?? ""
-		TDCAlert.alertSheet(
-			with: window,
-			body: PreferencesStrings.preferredSelectionBody(styleName: themeName, overrides: forcedValues),
-			title: PreferencesStrings.preferredSelectionTitle,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil,
-			otherButton: nil,
-			suppressionKey: "theme_override_info",
-			suppressionText: nil,
-			completionBlock: nil
-		)
 	}
 
 	// MARK: - Closing

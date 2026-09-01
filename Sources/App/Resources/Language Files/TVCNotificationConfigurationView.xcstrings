@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "bounce-dock-icon" : {
+      "comment" : "Notification setting that requests attention in the Dock.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Bounce Dock icon" } } }
+    },
+    "bounce-repeatedly" : {
+      "comment" : "Notification setting that repeatedly requests attention in the Dock.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Bounce repeatedly" } } }
+    },
     "default-sound" : {
       "comment" : "Title of the default notification sound option. Migrated from legacy key 0rs-8l.",
       "extractionState" : "manual",
@@ -10,6 +20,51 @@
       "comment" : "Title of the option that disables notification sounds. Migrated from legacy key vje-9n.",
       "extractionState" : "manual",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No Sound" } } }
+    },
+    "disable-while-away" : {
+      "comment" : "Notification setting that suppresses the alert while away.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Disable while away" } } }
+    },
+    "inherit" : {
+      "comment" : "A channel notification setting inherits the application-wide value.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Inherit" } } }
+    },
+    "no-alerts" : {
+      "comment" : "Shown when no notification events are available to configure.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No Alerts Available" } } }
+    },
+    "off" : {
+      "comment" : "A channel notification override is disabled.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Off" } } }
+    },
+    "on" : {
+      "comment" : "A channel notification override is enabled.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "On" } } }
+    },
+    "selected-alert" : {
+      "comment" : "Label for the notification event picker.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Alert" } } }
+    },
+    "show-notification" : {
+      "comment" : "Notification setting that posts a system notification.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Show notification" } } }
+    },
+    "sound" : {
+      "comment" : "Label for the notification sound picker.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sound" } } }
+    },
+    "speak" : {
+      "comment" : "Notification setting that speaks the event using the system voice.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Speak using system voice" } } }
     }
   },
   "version" : "1.0"

@@ -111,18 +111,11 @@ struct FeatureLocalizationMigrationTests {
 		)
 	}
 
-	@Test("Preferences copy is keyed by the typed pane and the typed override")
-	func preferencesStringsUseTypedPaneAndOverrideState() {
+	@Test("Preferences copy is keyed by the typed pane")
+	func preferencesStringsUseTypedPaneState() {
 		#expect(PreferencesStrings.paneTitle(.general) == "General")
 		#expect(PreferencesStrings.paneTitle(.fileTransfers) == "File Transfers")
 		#expect(PreferencesStrings.addOnsGroupTitle == "Add-ons")
 		#expect(PreferencesStrings.advancedGroupTitle == "Advanced")
-		#expect(
-			PreferencesStrings.preferredSelectionBody(
-				styleName: "Default",
-				overrides: [.nicknameFormat, .timestampFormat]
-			) == "The style named “Default” has chosen to override the following preferences with ones that it "
-				+ "prefers for the best viewing experience:\n\n• Nickname Format\n• Timestamp Format"
-		)
 	}
 }

@@ -89,7 +89,19 @@ public nonisolated extension Preferences { // nonisolated: value
 		public static let displayServerMOTD = PreferenceKey("DisplayServerMessageOfTheDayOnConnect", default: true)
 		public static let rejoinOnKick = PreferenceKey("RejoinChannelOnLocalKick", default: false)
 		public static let sendTypingNotifications = PreferenceKey("SendTypingNotifications", default: true)
+		public static let displayTypingNotifications = PreferenceKey(
+			"IRC -> Display Typing Notifications",
+			default: true
+		)
 		public static let confirmQuit = PreferenceKey("ConfirmApplicationQuit", default: true)
+		public static let requestChatHistory = PreferenceKey(
+			"IRC -> Request Chat History",
+			default: true
+		)
+		public static let synchronizeReadMarkers = PreferenceKey(
+			"IRC -> Synchronize Read Markers",
+			default: true
+		)
 
 		public static let echoMessageCapability = PreferenceKey(
 			"IRC -> Enable echo-message Capability",
@@ -107,8 +119,9 @@ public nonisolated extension Preferences { // nonisolated: value
 		static let all: [any AnyPreferenceKey] = [
 			autojoinOnInvite, autojoinDelayAfterIdentification, autojoinDelayBetweenChannelJoins,
 			autojoinMaximumChannelJoins, disconnectOnSleep, awayOnScreenSleep, preferModernCiphers,
-			displayServerMOTD, rejoinOnKick, sendTypingNotifications, confirmQuit, echoMessageCapability,
-			stsPolicies, clientList,
+			displayServerMOTD, rejoinOnKick, sendTypingNotifications, displayTypingNotifications,
+			confirmQuit, requestChatHistory, synchronizeReadMarkers, echoMessageCapability, stsPolicies,
+			clientList,
 		]
 	}
 }

@@ -38,6 +38,7 @@
 import AppKit
 import GlasstualPluginKit
 import os
+import SwiftUI
 import Synchronization
 
 private nonisolated struct SmileyConversionSnapshot: Sendable { // nonisolated: value
@@ -61,10 +62,7 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		category: "Extension['Smiley Converter']"
 	)
 
-	private static let enabledPreference = "Smiley Converter Extension -> Enable Service"
-	private static let extraEmoticonsPreference = "Smiley Converter Extension -> Enable Extra Emoticons"
-
-	@IBOutlet private var preferencesPane: NSView?
+	private var preferencesPane: NSView?
 
 	private let conversionSnapshot = Mutex(SmileyConversionSnapshot.empty)
 	private var host: PluginHostContext?
@@ -82,14 +80,16 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		if bundle.loadNibNamed("TPISmileyConverter", owner: self, topLevelObjects: nil) == false {
-			Self.logger.error("Failed to load TPISmileyConverter.xib; the preferences pane is unavailable")
-		}
+		preferencesPane = NSHostingView(
+			rootView: SmileyConverterPreferencesView(defaults: host.defaults) { [weak self] in
+				self?.preferenceChanged(nil)
+			}
+		)
 		rebuildConversionSnapshot()
 	}
 
 	private func rebuildConversionSnapshot() {
-		let newSnapshot = defaults.bool(forKey: Self.enabledPreference)
+		let newSnapshot = defaults.bool(forKey: SmileyConverterPreferenceKey.serviceEnabled)
 			? buildConversionSnapshot()
 			: SmileyConversionSnapshot.empty
 
@@ -100,7 +100,7 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 
 	private func buildConversionSnapshot() -> SmileyConversionSnapshot {
 		var table = loadConversionTable(named: "conversionTable")
-		if defaults.bool(forKey: Self.extraEmoticonsPreference) {
+		if defaults.bool(forKey: SmileyConverterPreferenceKey.extraEmoticonsEnabled) {
 			table.merge(loadConversionTable(named: "conversionTable2")) { _, new in new }
 		}
 		return SmileyConversionSnapshot(conversionTable: table)
@@ -123,7 +123,8 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		}
 	}
 
-	@IBAction private func preferenceChanged(_: Any?) {
+	@objc(preferenceChanged:)
+	private func preferenceChanged(_: Any?) {
 		rebuildConversionSnapshot()
 	}
 

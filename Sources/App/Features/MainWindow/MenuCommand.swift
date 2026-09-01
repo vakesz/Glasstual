@@ -38,11 +38,9 @@
 
 import AppKit
 
-/// Every command the application's menus can issue, keyed by the tag stored in
-/// `TXCMainMenu.xib`. The raw values are the nib's tags, so they are frozen:
-/// changing one silently repoints a menu item. Symbol art, validation grouping
-/// and the sheet/essential policy all key off this one vocabulary instead of
-/// the three parallel tables that preceded it.
+/// Every command the application's menus can issue. Raw values are stable
+/// persistence-free identifiers used in `NSMenuItem.identifier`; they are not
+/// AppKit tags and do not participate in responder-chain dispatch.
 public enum MenuCommand: Int, CaseIterable, Sendable {
 	case applicationMenu = 1 // Glasstual
 	case fileMenu = 2 // File
@@ -312,7 +310,11 @@ public extension MenuCommand {
 		     .inviteToSeparator, .whois, .privateMessage, .privateMessageSeparator,
 		     .giveOp, .giveHalfop, .giveVoice, .allModesGiven, .allModesGivenSeparator,
 		     .takeOp, .takeHalfop, .takeVoice, .allModesTaken, .allModesTakenSeparator,
-		     .ban, .kick, .kickban, .kickbanSeparator, .ctcp, .ircOperator, .changeColor:
+		     .ban, .kick, .kickban, .kickbanSeparator, .ctcp, .ircOperator, .changeColor,
+		     .ctcpSendFile, .ctcpSendFileSeparator, .ctcpPing, .ctcpTime, .ctcpTimeSeparator,
+		     .ctcpClientInfo, .ctcpVersion, .ctcpVersionSeparator, .ctcpFinger, .ctcpUserInfo,
+		     .operatorSetVirtualHost, .operatorSetVirtualHostSeparator, .operatorKill,
+		     .operatorShun, .operatorGline:
 			.member
 		default:
 			.general
@@ -406,17 +408,35 @@ public extension MenuCommand {
 // MARK: - AppKit bridging
 
 public extension NSMenuItem {
-	/// The command this item issues, or `nil` for an item whose tag is not part
-	/// of the application's command vocabulary (AppKit and WebKit both put their
-	/// own tags on items we copy).
+	/// The command this item issues. Programmatic menus store this in the item
+	/// identifier so AppKit's numeric tag namespace remains available to controls
+	/// and third-party menu items.
 	var command: MenuCommand? {
-		get { MenuCommand(rawValue: tag) }
-		set { tag = newValue?.rawValue ?? 0 }
+		get {
+			guard let value = identifier?.rawValue,
+			      value.hasPrefix("com.vakesz.glasstual.command."),
+			      let rawValue = Int(value.split(separator: ".").last ?? "")
+			else { return nil }
+			return MenuCommand(rawValue: rawValue)
+		}
+		set {
+			identifier = newValue.map {
+				NSUserInterfaceItemIdentifier("com.vakesz.glasstual.command.\($0.rawValue)")
+			}
+		}
 	}
 }
 
 public extension NSMenu {
 	func item(for command: MenuCommand) -> NSMenuItem? {
-		item(withTag: command.rawValue)
+		for item in items {
+			if item.command == command {
+				return item
+			}
+			if let nested = item.submenu?.item(for: command) {
+				return nested
+			}
+		}
+		return nil
 	}
 }

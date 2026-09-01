@@ -133,6 +133,7 @@ public extension IRCClient {
 		if let typing = clientTags["typing"],
 		   let channel,
 		   sender != userNickname,
+		   environment.preferences.displayTypingNotifications,
 		   message.isHistoric == false
 		{
 			typingTracker.noteTypingState(
@@ -171,11 +172,11 @@ public extension IRCClient {
 	func deliverTags(
 		_ clientTags: [String: String],
 		fromSender sender: String,
-		toTarget target: String,
+		toTarget _: String,
 		in item: IRCTreeItem,
-		timestamp: Date,
-		messageIdentifier: String?,
-		account: String?
+		timestamp _: Date,
+		messageIdentifier _: String?,
+		account _: String?
 	) {
 		guard let nativeItem = (item as AnyObject) as? TreeItem else {
 			assertionFailure("IRCTreeItem must bridge to TreeItem")
@@ -189,40 +190,5 @@ public extension IRCClient {
 			nativeItem.presentation?
 				.noteReaction(reaction, fromNickname: sender, toMessageIdentifier: reactedTo)
 		}
-
-		let event = tagMessageEvent(
-			withClientTags: clientTags,
-			sender: sender,
-			target: target,
-			timestamp: timestamp,
-			messageIdentifier: messageIdentifier,
-			account: account
-		)
-		nativeItem.presentation?.evaluateFunction(
-			"_Glasstual.tagMessageReceived",
-			withArguments: [event],
-			onQueue: false
-		)
-	}
-
-	func tagMessageEvent(
-		withClientTags clientTags: [String: String],
-		sender: String,
-		target: String,
-		timestamp: Date,
-		messageIdentifier: String?,
-		account: String?
-	) -> [String: JavaScriptValue] {
-		var event: [String: JavaScriptValue] = [
-			"sender": .string(sender),
-			"target": .string(target),
-			"tags": .object(clientTags.mapValues(JavaScriptValue.string)),
-			"timestamp": .double(timestamp.timeIntervalSince1970),
-			"fromLocalUser": .boolean(sender == userNickname),
-			"localUserNickname": .string(userNickname),
-		]
-		event["msgid"] = messageIdentifier.map(JavaScriptValue.string)
-		event["account"] = account.map(JavaScriptValue.string)
-		return event
 	}
 }

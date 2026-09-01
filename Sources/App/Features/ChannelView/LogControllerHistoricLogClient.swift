@@ -181,10 +181,13 @@ private final nonisolated class HistoricLogClientShim: NSObject, // nonisolated:
  in-flight replies, the termination bookkeeping — is actor state, and every
  reply the service sends comes back through `HistoricLogClientShim`. */
 actor HistoricLogClient {
+	typealias ConnectionFailureReporter = @MainActor @Sendable (String) -> Void
+
 	static let shared = HistoricLogClient()
 
 	private let serviceName: String
 	private let databaseDirectory: String?
+	private let reportConnectionFailure: ConnectionFailureReporter
 	private var connection: NSXPCConnection?
 	private var connectionCount = 0
 	private var shim: HistoricLogClientShim?
@@ -204,10 +207,14 @@ actor HistoricLogClient {
 
 	init(
 		serviceName: String = "com.vakesz.glasstual.ScrollbackHistoryManager",
-		databaseDirectory: String? = PathInfo.groupContainerApplicationCaches
+		databaseDirectory: String? = PathInfo.groupContainerApplicationCaches,
+		reportConnectionFailure: @escaping ConnectionFailureReporter = { message in
+			LogControllerHistoricLogFile.reportConnectionFailure(message)
+		}
 	) {
 		self.serviceName = serviceName
 		self.databaseDirectory = databaseDirectory
+		self.reportConnectionFailure = reportConnectionFailure
 	}
 
 	/// Whether a connection is currently attached. Test seam.
@@ -328,7 +335,7 @@ actor HistoricLogClient {
 		if message.isEmpty == false {
 			message = PromptStrings.Logging.lastError(message)
 		}
-		await LogControllerHistoricLogFile.reportConnectionFailure(message)
+		await reportConnectionFailure(message)
 	}
 
 	func handleWillDelete(_ uniqueIdentifiers: [String], inView viewIdentifier: String) async {
@@ -372,7 +379,7 @@ actor HistoricLogClient {
 
 	/// Pushes the current scrollback save limit to the service.
 	func applyMaximumLineCount() {
-		proxy()?.setMaximumLineCount(TextualPreferences.scrollbackSaveLimit())
+		proxy()?.setMaximumLineCount(Preferences.Logging.scrollbackSaveLimit.detachedValue)
 	}
 
 	// MARK: - Fetching

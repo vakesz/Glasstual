@@ -294,27 +294,6 @@ targets:
       - sdk: AppKit.framework
       - sdk: Security.framework
 
-  Mustache:
-    templates: [GlasstualFramework]
-    productName: Mustache
-    settings:
-      base:
-        PRODUCT_NAME: Mustache
-        PRODUCT_MODULE_NAME: Mustache
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.mustache
-    info:
-      properties:
-        NSHumanReadableCopyright: Copyright © 2024 Gwendal Roué
-    sources:
-      - path: Sources/Frameworks/Static Libraries/GRMustache/Sources
-      - path: Sources/Frameworks/Static Libraries/Documentation/LICENSE-GRMustache-Swift.txt
-        buildPhase: resources
-      - path: Sources/Frameworks/Static Libraries/Documentation/LICENSE-libmustache.txt
-        buildPhase: resources
-    dependencies:
-      - sdk: Foundation.framework
-      - sdk: CoreGraphics.framework
-
   HistoricLogStoreKit:
     templates: [GlasstualFramework]
     productName: HistoricLogStoreKit
@@ -332,27 +311,6 @@ targets:
       - path: Sources/Frameworks/Historic Log Store Kit
     dependencies:
       - sdk: CoreData.framework
-
-  InlineContentKit:
-    templates: [GlasstualFramework]
-    productName: InlineContentKit
-    settings:
-      base:
-        PRODUCT_NAME: InlineContentKit
-        PRODUCT_MODULE_NAME: InlineContentKit
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.inline-content-kit
-    info:
-      properties:
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2017, 2018 Codeux Software, LLC and respective contributors.
-    sources:
-      - path: Sources/Frameworks/Inline Content Kit
-    dependencies:
-      - target: CocoaExtensions
-        embed: false
-      - target: Mustache
-        embed: false
-      - sdk: Foundation.framework
-      - sdk: ImageIO.framework
 
   GlasstualPluginKit:
     templates: [GlasstualFramework]
@@ -403,63 +361,6 @@ targets:
         embed: false
       - sdk: CoreData.framework
 
-  InlineContentLoader:
-    templates: [GlasstualXPCService]
-    productName: Inline Content Loader
-    settings:
-      base:
-        REGISTER_APP_GROUPS: YES
-        PRODUCT_NAME: Inline Content Loader
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader
-      configs:
-        Release:
-          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE)
-    info:
-      properties:
-        CFBundleDisplayName: Inline Content Loader
-        GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
-        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2017, 2018 Codeux Software, LLC and respective contributors.
-    entitlements:
-      properties:
-        com.apple.security.application-groups:
-          - "$(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)"
-        com.apple.security.network.client: true
-    sources:
-      - path: Sources/Services/Inline Content Loader/Classes
-      # The Core Media modules are linked into the service rather than loaded
-      # from a .mediaPlugin bundle: nothing outside this repository can supply
-      # one, and the indirection cost three build settings that fully exported
-      # the service binary. Their templates land beside the executable's own,
-      # which is where each module's Bundle(for:) lookup reads them.
-      - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes
-      - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Resources/Modules
-      - path: Sources/Services/Inline Content Loader/Resources/Modules
-        excludes:
-          # Loaded from the bundle root, not from Components (see InlineImageModule.swift).
-          - InlineImageLiveResize.js
-        buildPhase:
-          copyFiles:
-            destination: resources
-            subpath: Components
-      - path: Sources/Services/Inline Content Loader/Resources/Modules/InlineImageLiveResize.js
-        buildPhase: resources
-      - path: Sources/Services/Inline Content Loader/Resources/PrivacyInfo.xcprivacy
-        buildPhase: resources
-      - path: Sources/Shared/Application/ApplicationGroup.swift
-      - path: Sources/Shared/Preferences/PreferenceKey.swift
-      - path: Sources/Shared/Preferences/TPCPreferences.swift
-      - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
-      - path: Sources/Shared/Services/InlineContentProtocols.swift
-      - path: Sources/Shared/Services/InlineContentServicePreferences.swift
-    dependencies:
-      - sdk: ImageIO.framework
-      - target: Mustache
-        embed: false
-      # Reached through the service's own rpath into the app's
-      # Contents/Frameworks, the way CocoaExtensions and Mustache already are.
-      - target: InlineContentKit
-        embed: false
-
   IRCRemoteConnectionManager:
     templates: [GlasstualXPCService]
     productName: IRC Connection Host
@@ -491,7 +392,6 @@ targets:
         buildPhase: resources
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
-      - path: Sources/Shared/Services/ConnectionTrustGate.swift
       - path: Sources/Shared/Services/RemoteConnectionProtocols.swift
       - path: Sources/Shared/Services/SecureConnectionInformation.swift
     dependencies:
@@ -688,7 +588,6 @@ targets:
           NSAllowsArbitraryLoadsInWebContent: true
         NSAppleEventsUsageDescription: $(PRODUCT_NAME) runs user scripts that can control other applications.
         NSHumanReadableCopyright: Glasstual is an independent fork of Textual, continuing it on macOS 26 and later. Copyright © 2010 - 2026 Codeux Software, LLC and respective contributors.
-        NSMainNibFile: TXCMainMenu
         NSPrincipalClass: TXApplication
         UTExportedTypeDeclarations:
           - UTTypeIdentifier: com.vakesz.glasstual.extension
@@ -775,12 +674,6 @@ targets:
         buildPhase: resources
       - path: Sources/App/Resources/Scripting/Script Files/Bundled Scripts
         type: folder
-      - path: Sources/App/Resources/Styling/Bundled Styles
-        type: folder
-      - path: Sources/App/Resources/Styling/JavaScript
-        type: folder
-      - path: Sources/App/Resources/Styling/Style Default Templates
-        type: folder
       - path: Sources/App/Resources/User Interface
       - path: Sources/App/Resources/Documentation
         type: folder
@@ -797,11 +690,7 @@ targets:
       - sdk: Security.framework
       - sdk: SystemConfiguration.framework
       - sdk: UserNotifications.framework
-      - sdk: WebKit.framework
       - target: CocoaExtensions
-        embed: true
-        codeSign: true
-      - target: InlineContentKit
         embed: true
         codeSign: true
       - target: HistoricLogStoreKit
@@ -810,13 +699,7 @@ targets:
       - target: GlasstualPluginKit
         embed: true
         codeSign: true
-      - target: Mustache
-        embed: true
-        codeSign: true
       - target: HistoricLogFileManager
-        embed: true
-        codeSign: true
-      - target: InlineContentLoader
         embed: true
         codeSign: true
       - target: IRCRemoteConnectionManager
@@ -863,32 +746,6 @@ targets:
 
   # Unit tests run inside Glasstual.app so that they can use the app's
   # classes directly. Tests never touch the network.
-  # The Core Media modules on their own, so the test bundle can cover their URL
-  # matching without handing them its isolation. The inline-content service
-  # compiles the same sources into itself; a unit-test bundle cannot, because
-  # they conform to a nonisolated protocol in Inline Content Kit and the bundle
-  # is main-actor by default, which would make every conformance main-actor
-  # too. A static library keeps them out of the app's product and out of its
-  # link line, and lets them keep the service's isolation default rather than
-  # carrying eleven `nonisolated` annotations they do not otherwise need.
-  CoreMediaModules:
-    platform: macOS
-    type: library.static
-    productName: CoreMediaModules
-    settings:
-      base:
-        PRODUCT_NAME: CoreMediaModules
-        PRODUCT_MODULE_NAME: CoreMediaModules
-        SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
-        SKIP_INSTALL: YES
-    sources:
-      - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes
-    dependencies:
-      - target: InlineContentKit
-        embed: false
-      - target: Mustache
-        embed: false
-
   GlasstualTests:
     templates: [GlasstualBundle]
     type: bundle.unit-test
@@ -927,15 +784,9 @@ targets:
       - target: Glasstual
       - target: CocoaExtensions
         embed: false
-      - target: CoreMediaModules
-        embed: false
-      - target: InlineContentKit
-        embed: false
       - target: HistoricLogStoreKit
         embed: false
       - target: GlasstualPluginKit
-        embed: false
-      - target: Mustache
         embed: false
 
 # ---------------------------------------------------------------------------

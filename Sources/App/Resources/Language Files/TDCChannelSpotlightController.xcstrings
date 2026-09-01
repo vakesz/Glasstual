@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "accessibility-title" : {
+      "comment" : "Accessibility title of the channel search panel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Search"
+          }
+        }
+      }
+    },
     "channel-name" : {
       "comment" : "Channel name in a spotlight search result. Legacy key: jpw-cj.",
       "extractionState" : "manual",
@@ -59,6 +71,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Results"
+          }
+        }
+      }
+    },
+    "results-accessibility-label" : {
+      "comment" : "Accessibility label for the list of matching channels.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matching channels"
+          }
+        }
+      }
+    },
+    "search-placeholder" : {
+      "comment" : "Placeholder in the channel search field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search for a channel"
           }
         }
       }

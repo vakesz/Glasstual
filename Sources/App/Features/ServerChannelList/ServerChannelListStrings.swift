@@ -12,7 +12,51 @@
 
 import Foundation
 
-nonisolated enum ServerChannelListStrings { // nonisolated: value
+enum ServerChannelListStrings {
+	static var channelName: String {
+		String(localized: .TDCServerChannelListDialog.channelName)
+	}
+
+	static var memberCount: String {
+		String(localized: .TDCServerChannelListDialog.memberCount)
+	}
+
+	static var topic: String {
+		String(localized: .TDCServerChannelListDialog.topic)
+	}
+
+	static var searchPlaceholder: String {
+		String(localized: .TDCServerChannelListDialog.searchChannels)
+	}
+
+	static var searchAccessibilityLabel: String {
+		String(localized: .TDCServerChannelListDialog.channelListSearch)
+	}
+
+	static var channelListAccessibilityLabel: String {
+		String(localized: .TDCServerChannelListDialog.publicChannelList)
+	}
+
+	static var joinSelectedChannels: String {
+		String(localized: .TDCServerChannelListDialog.joinSelectedChannels)
+	}
+
+	static var updateList: String {
+		String(localized: .TDCServerChannelListDialog.updateList)
+	}
+
+	static var requestingChannelList: String {
+		String(localized: .TDCServerChannelListDialog.requestingChannelList)
+	}
+
+	static var emptyTitle: String {
+		String(localized: .TDCServerChannelListDialog.noPublicChannels)
+	}
+
+	static var emptyDescription: String {
+		String(localized: .TDCServerChannelListDialog.changeTheSearchOrUpdate)
+	}
+
 	static var minimumUserCountLabel: String {
 		String(localized: .TDCServerChannelListDialog.minimumUsers)
 	}

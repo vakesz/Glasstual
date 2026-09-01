@@ -16,6 +16,23 @@ import Testing
 /// listening side, and a task owns the dialling side.
 @Suite("DCC CHAT over loopback")
 struct DCCChatLoopbackTests {
+	@Test("A listener skips ports that are already in use", .timeLimit(.minutes(1)))
+	func listenerSkipsPortsThatAreAlreadyInUse() async throws {
+		let first = ChatFixture.listeningConnection()
+		let second = ChatFixture.listeningConnection()
+
+		await first.start()
+		let firstPort = try #require(await ChatFixture.listeningPort(of: first))
+
+		await second.start()
+		let secondPort = try #require(await ChatFixture.listeningPort(of: second))
+
+		#expect(secondPort != firstPort)
+
+		await first.close()
+		await second.close()
+	}
+
 	@Test("Lines cross in both directions, in order", .timeLimit(.minutes(1)))
 	func linesCrossInBothDirections() async throws {
 		let listening = ChatFixture.listeningConnection()
@@ -178,6 +195,16 @@ enum ChatFixture {
 			maximumLineLength: maximumLineLength,
 			sendTimeout: .seconds(20)
 		))
+	}
+
+	static func listeningPort(of connection: DCCChatConnection) async -> UInt16? {
+		for await event in connection.events {
+			if case let .listening(port) = event {
+				return port
+			}
+		}
+
+		return nil
 	}
 
 	/// Dials `listening` once it reports its port, and returns when the two

@@ -266,46 +266,6 @@ final class IRCMessageTagsTests {
 		#expect(client.sentLines.count == 0)
 	}
 
-	@Test("The TAGMSG event carries the sender, the tags and who sent it")
-	func tagMessageEventShape() {
-		let client = makeMessageTagsClient()
-		let date = Date(timeIntervalSince1970: 1_700_000_000)
-		let tags = ["draft/react": "👍", "draft/reply": "abc123"]
-		let event = client.tagMessageEvent(
-			withClientTags: tags,
-			sender: "mara",
-			target: "#chat",
-			timestamp: date,
-			messageIdentifier: "tag1",
-			account: "mara"
-		)
-		let expected: [String: JavaScriptValue] = [
-			"sender": "mara",
-			"target": "#chat",
-			"tags": .object(tags.mapValues(JavaScriptValue.string)),
-			"timestamp": 1_700_000_000.0,
-			"fromLocalUser": false,
-			"localUserNickname": "me",
-			"msgid": "tag1",
-			"account": "mara",
-		]
-
-		#expect(event == expected)
-
-		let own = client.tagMessageEvent(
-			withClientTags: tags,
-			sender: "me",
-			target: "#chat",
-			timestamp: date,
-			messageIdentifier: nil,
-			account: nil
-		)
-
-		#expect(own["fromLocalUser"]?.boolean == true)
-		#expect(own["msgid"] == nil)
-		#expect(own["account"] == nil)
-	}
-
 	private func makeMessageTagsClient() -> GLTTestClient {
 		let configuration: NSDictionary = [
 			"nickname": "me",

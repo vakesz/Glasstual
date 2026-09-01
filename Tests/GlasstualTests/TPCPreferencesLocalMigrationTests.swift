@@ -47,8 +47,8 @@ struct TPCPreferencesLocalMigrationTests {
 			defaults.set(oldPort, forKey: portKey)
 		}
 
-		TextualPreferences.setSoundIsMuted(true)
-		TextualPreferences.setFileTransferPortRangeStart(51234)
+		Preferences.Notifications.soundIsMuted.value = true
+		Preferences.FileTransfers.portRangeStart.value = 51234
 
 		#expect(defaults.bool(forKey: soundKey))
 		#expect(defaults.unsignedShort(forKey: portKey) == 51234)
@@ -57,11 +57,11 @@ struct TPCPreferencesLocalMigrationTests {
 	@Test("A notification preference maps to the key the stored schema already holds")
 	func notificationKeyMappingPreservesStoredSchema() {
 		#expect(
-			TextualPreferences.key(for: .channelMessage, category: "Sound")
+			TXNotificationType.channelMessage.preferenceKeyName(for: .sound)
 				== "NotificationType -> Public Message -> Sound"
 		)
 		#expect(
-			TextualPreferences.key(for: .fileTransferReceiveSuccessful, category: "Enabled")
+			TXNotificationType.fileTransferReceiveSuccessful.preferenceKeyName(for: .enabled)
 				== "NotificationType -> Successful File Transfer (Receiving) -> Enabled"
 		)
 	}

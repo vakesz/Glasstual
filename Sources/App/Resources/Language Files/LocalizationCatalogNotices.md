@@ -15,6 +15,7 @@ The migrated source tables retain these original copyright ranges:
   `TDCFileTransferDialog.xcstrings`, `TDCOnboardingWindow.xcstrings`,
   `TDCServerChannelListDialog.xcstrings`,
   `TDCServerEndpointListSheet.xcstrings`,
+  `TDCServerHighlightListSheet.xcstrings`,
   `TDCServerPropertiesSheet.xcstrings`,
   `TVCNotificationConfigurationView.xcstrings`, and
   `TXMenuController.xcstrings`: Copyright (c) 2010 - 2018 Codeux Software,
@@ -27,9 +28,6 @@ The migrated source tables retain these original copyright ranges:
 * `IRC.xcstrings`, `Prompts.xcstrings`, `TDCPreferencesController.xcstrings`,
   and `TVCMainWindow.xcstrings`: Copyright (c) 2010 - 2020 Codeux Software,
   LLC & respective contributors.
-* `TDCPreferencesUserStyleSheet.xcstrings`: Copyright (c) 2019 Codeux
-  Software, LLC & respective contributors.
-
 The same notice and license apply to the bundled extension String Catalogs
 under `Sources/Plugins`, with the original source-file copyright ranges:
 

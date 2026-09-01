@@ -41,8 +41,8 @@ import Foundation
 public extension FileTransferDialog {
 	var IPAddress: String? {
 		get {
-			if TextualPreferences.fileTransferIPAddressDetectionMethod() == .manual {
-				let address = TextualPreferences.fileTransferManuallyEnteredIPAddress()
+			if Preferences.FileTransfers.ipAddressDetectionMethod.value == .manual {
+				let address = Preferences.FileTransfers.manuallyEnteredIPAddress.storedValue
 				return address?.isEmpty == false ? address : nil
 			}
 
@@ -65,7 +65,7 @@ public extension FileTransferDialog {
 			return
 		}
 
-		let method = TextualPreferences.fileTransferIPAddressDetectionMethod()
+		let method = Preferences.FileTransfers.ipAddressDetectionMethod.value
 		guard method != .manual, method != .routerOnly else {
 			completion(nil)
 			return

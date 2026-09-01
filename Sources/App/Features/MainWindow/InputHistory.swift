@@ -122,7 +122,7 @@ public final class InputHistory: NSObject {
 	}
 
 	public func destroy(_ treeItem: IRCTreeItem) {
-		guard TextualPreferences.inputHistoryIsChannelSpecific() else {
+		guard Preferences.Input.historyIsChannelSpecific.value else {
 			return
 		}
 
@@ -141,7 +141,7 @@ public final class InputHistory: NSObject {
 	}
 
 	public func moveFocus(to treeItem: IRCTreeItem) {
-		guard TextualPreferences.inputHistoryIsChannelSpecific(),
+		guard Preferences.Input.historyIsChannelSpecific.value,
 		      let textView = window?.inputTextField as? TextViewWithIRCFormatter
 		else {
 			return
@@ -161,7 +161,7 @@ public final class InputHistory: NSObject {
 	}
 
 	public func noteInputHistoryObjectScopeDidChange() {
-		if TextualPreferences.inputHistoryIsChannelSpecific() {
+		if Preferences.Input.historyIsChannelSpecific.value {
 			for client in AppController.shared.world.clientList {
 				applyGlobalHistory(to: client.uniqueIdentifier)
 
@@ -201,7 +201,7 @@ public final class InputHistory: NSObject {
 
 	/// `nil` when history is channel-specific and nothing is focused.
 	var currentScope: InputHistoryScope? {
-		guard TextualPreferences.inputHistoryIsChannelSpecific() else {
+		guard Preferences.Input.historyIsChannelSpecific.value else {
 			return .global
 		}
 

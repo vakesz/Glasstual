@@ -3,6 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -19,29 +20,11 @@ struct IRCUserNicknameColorStyleGeneratorTests {
 		#expect(hash.uint32Value == 2_746_080_018)
 	}
 
-	@Test("One hash gives the same color in light and dark, differing only in lightness")
-	func lightAndDarkStylesRemainStable() {
-		let hash: NSNumber = 2_746_080_018
+	@Test("The same nickname produces the same native colour")
+	func colorIsStable() {
+		let first = UserNicknameColorStyleGenerator.color(for: "alice")
+		let second = UserNicknameColorStyleGenerator.color(for: "Alice")
 
-		#expect(
-			UserNicknameColorStyleGenerator.nicknameColorStyle(forHash: hash, colorStyle: .light) ==
-				"hsl(18,45%,54%)"
-		)
-		#expect(
-			UserNicknameColorStyleGenerator.nicknameColorStyle(forHash: hash, colorStyle: .dark) ==
-				"hsl(18,45%,49%)"
-		)
-	}
-
-	@Test("The per-hue saturation and lightness adjustments are unchanged")
-	func hueSpecificAdjustmentsRemainStable() {
-		#expect(
-			UserNicknameColorStyleGenerator.nicknameColorStyle(forHash: 1_507_889_104, colorStyle: .dark) ==
-				"hsl(304,47%,54%)"
-		)
-		#expect(
-			UserNicknameColorStyleGenerator.nicknameColorStyle(forHash: 3_807_608_927, colorStyle: .light) ==
-				"hsl(167,78%,34%)"
-		)
+		#expect(first.textualHexadecimalValue == second.textualHexadecimalValue)
 	}
 }

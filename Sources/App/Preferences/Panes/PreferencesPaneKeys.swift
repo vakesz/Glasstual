@@ -18,7 +18,7 @@ import Foundation
  `PreferencesPaneInventoryTests` checks against the catalogue: a key a pane
  binds to that the catalogue does not know is a setting that would never be
  exported, imported or registered. */
-nonisolated enum PreferencesPaneKeys { // nonisolated: value
+enum PreferencesPaneKeys {
 	static let keysByPane: [PreferencesPaneIdentifier: [any AnyPreferenceKey]] = [
 		.general: [Preferences.Connection.confirmQuit],
 		.behavior: [
@@ -28,7 +28,13 @@ nonisolated enum PreferencesPaneKeys { // nonisolated: value
 			Preferences.Connection.awayOnScreenSleep,
 			Preferences.Logging.reloadScrollbackOnLaunch,
 			Preferences.Appearance.rememberQueryStates,
+		],
+		.ircv3: [
+			Preferences.Connection.displayTypingNotifications,
 			Preferences.Connection.sendTypingNotifications,
+			Preferences.Connection.echoMessageCapability,
+			Preferences.Connection.requestChatHistory,
+			Preferences.Connection.synchronizeReadMarkers,
 		],
 		.notifications: [
 			Preferences.Notifications.onlySpeakForSelection,
@@ -54,16 +60,12 @@ nonisolated enum PreferencesPaneKeys { // nonisolated: value
 			Preferences.Badges.serverListUnreadHighlight,
 		] + Preferences.Badges.userListMode,
 		.style: [
-			Preferences.Theme.fontIsUserConfigurable,
+			Preferences.Theme.transcriptTheme,
 			Preferences.Messages.autoAddScrollbackMark,
 			Preferences.Messages.showDateChanges,
 			Preferences.Messages.showJoinLeave,
-			Preferences.Theme.reloadCustomThemesOnChange,
+			Preferences.Messages.showInlineMedia,
 			Preferences.Logging.scrollbackSaveLimit,
-			Preferences.Theme.nicknameFormat,
-			Preferences.Theme.nicknameFormatIsUserConfigurable,
-			Preferences.Theme.timestampFormat,
-			Preferences.Theme.timestampFormatIsUserConfigurable,
 			Preferences.Messages.disableNicknameColorHashing,
 			Preferences.Appearance.conversationTrackingIncludesModeSymbol,
 			Preferences.Connection.displayServerMOTD,
@@ -101,7 +103,6 @@ nonisolated enum PreferencesPaneKeys { // nonisolated: value
 			Preferences.Commands.giveFocusOnMessageCommand,
 			Preferences.Commands.noticeDestination,
 		],
-		.compatibility: [Preferences.Connection.echoMessageCapability],
 		.floodControl: [
 			Preferences.Connection.autojoinDelayBetweenChannelJoins,
 			Preferences.Connection.autojoinDelayAfterIdentification,
@@ -122,17 +123,6 @@ nonisolated enum PreferencesPaneKeys { // nonisolated: value
 			Preferences.FileTransfers.requestsAreReversed,
 			Preferences.FileTransfers.preventIdleSystemSleep,
 		],
-		.inlineMedia: [
-			Preferences.Messages.showInlineMedia,
-			Preferences.InlineMedia.maximumFilesize,
-			Preferences.InlineMedia.maximumHeight,
-			Preferences.InlineMedia.scalingWidth,
-			Preferences.InlineMedia.checkEverything,
-			Preferences.InlineMedia.limitToBasics,
-			Preferences.InlineMedia.limitBasicsToFiles,
-			Preferences.InlineMedia.limitNaughtyContent,
-			Preferences.InlineMedia.limitUnsafeContent,
-		],
 		.logLocation: [Preferences.Logging.logToDisk],
 		.defaultIdentity: [
 			Preferences.Identity.nickname,
@@ -147,9 +137,6 @@ nonisolated enum PreferencesPaneKeys { // nonisolated: value
 		],
 		.hidden: [
 			Preferences.Internals.appSleepDisabled,
-			Preferences.Appearance.webViewProcessPoolLimited,
-			Preferences.Appearance.webViewPreviewLinks,
-			Preferences.Appearance.webViewCustomScrollersDisabled,
 			Preferences.Logging.loadHistoryLazily,
 			Preferences.Appearance.disableSidebarTranslucency,
 			Preferences.Logging.scrollbackVisibleLimit,

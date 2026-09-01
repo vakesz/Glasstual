@@ -53,7 +53,7 @@ public final class CommandIndex: NSObject {
 	}
 
 	public static func localCommandList() -> [String] {
-		commandIndexTables.commandNames(developerModeEnabled: TextualPreferences.developerModeEnabled())
+		commandIndexTables.commandNames(developerModeEnabled: Preferences.Commands.developerMode.value)
 	}
 
 	public static func index(ofRemoteCommand command: String) -> UInt {
@@ -65,7 +65,7 @@ public final class CommandIndex: NSObject {
 			return CommandIndexTables.notFound
 		}
 
-		if entry.isDeveloperModeOnly, TextualPreferences.developerModeEnabled() == false {
+		if entry.isDeveloperModeOnly, Preferences.Commands.developerMode.value == false {
 			return CommandIndexTables.notFound
 		}
 

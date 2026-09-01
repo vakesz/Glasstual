@@ -251,6 +251,90 @@
         }
       }
     },
+    "include-cpu-model" : {
+      "comment" : "Toggle that includes CPU details in the sysinfo command.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPU model and related information"
+          }
+        }
+      }
+    },
+    "include-disk-information" : {
+      "comment" : "Toggle that includes boot-volume capacity in the sysinfo command.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boot volume disk information"
+          }
+        }
+      }
+    },
+    "include-graphics-card" : {
+      "comment" : "Toggle that includes graphics hardware in the sysinfo command.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graphics card"
+          }
+        }
+      }
+    },
+    "include-operating-system-version" : {
+      "comment" : "Toggle that includes the operating-system version in the sysinfo command.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operating system version"
+          }
+        }
+      }
+    },
+    "include-screen-resolution" : {
+      "comment" : "Toggle that includes the active display resolution in the sysinfo command.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active display screen resolution"
+          }
+        }
+      }
+    },
+    "include-system-memory" : {
+      "comment" : "Toggle that includes physical memory in the sysinfo command.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System memory"
+          }
+        }
+      }
+    },
+    "include-system-uptime" : {
+      "comment" : "Toggle that includes system uptime in the sysinfo command.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operating system uptime"
+          }
+        }
+      }
+    },
     "light-appearance" : {
       "comment" : "Name of the light appearance. Migrated from legacy key 890-au.",
       "extractionState" : "manual",
@@ -403,6 +487,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "System Information:"
+          }
+        }
+      }
+    },
+    "sysinfo-options-explanation" : {
+      "comment" : "Explanation above the list of fields included by the sysinfo command.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the information to include in the output of the sysinfo command."
           }
         }
       }

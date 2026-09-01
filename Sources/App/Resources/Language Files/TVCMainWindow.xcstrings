@@ -1,6 +1,139 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "background-color": {
+      "comment": "IRC formatting menu item for background colors.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Background Color" } } }
+    },
+    "begin-setup": {
+      "comment": "Welcome screen accessibility label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begin Setup"
+          }
+        }
+      }
+    },
+    "bold": {
+      "comment": "IRC formatting menu item.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Bold" } } }
+    },
+    "continue": {
+      "comment": "Welcome screen primary action.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        }
+      }
+    },
+    "irc-formatting": {
+      "comment": "Title of the IRC formatting menu.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "IRC Formatting" } } }
+    },
+    "italics": {
+      "comment": "IRC formatting menu item.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Italics" } } }
+    },
+    "member-account": {
+      "comment": "Member information popover row label.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Account" } } }
+    },
+    "member-address": {
+      "comment": "Member information popover row label.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Address" } } }
+    },
+    "member-privileges": {
+      "comment": "Member information popover row label.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Privileges" } } }
+    },
+    "member-real-name": {
+      "comment": "Member information popover row label.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Real Name" } } }
+    },
+    "member-status": {
+      "comment": "Member information popover row label.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Status" } } }
+    },
+    "member-username": {
+      "comment": "Member information popover row label.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Username" } } }
+    },
+    "monospace": {
+      "comment": "IRC formatting menu item.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Monospace" } } }
+    },
+    "other": {
+      "comment": "IRC formatting menu item for choosing a custom color.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Other…" } } }
+    },
+    "rainbow": {
+      "comment": "IRC formatting menu item for rainbow colors.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Rainbow" } } }
+    },
+    "spoiler": {
+      "comment": "IRC formatting menu item.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Spoiler" } } }
+    },
+    "strikethrough": {
+      "comment": "IRC formatting menu item.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Strikethrough" } } }
+    },
+    "text-color": {
+      "comment": "IRC formatting menu item for foreground colors.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Text Color" } } }
+    },
+    "underline": {
+      "comment": "IRC formatting menu item.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Underline" } } }
+    },
+    "get-started-description": {
+      "comment": "Welcome screen description shown before the first server is configured.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual is a powerful, lightweight IRC client built for the Mac. Add your first server to get started."
+          }
+        }
+      }
+    },
+    "welcome-to-glasstual": {
+      "comment": "Welcome and loading screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Glasstual"
+          }
+        }
+      }
+    },
     "add-server-or-channel": {
       "comment": "Toolbar & input bar accessibility. Legacy key: ib-ad.",
       "extractionState": "manual",

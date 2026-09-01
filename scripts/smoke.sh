@@ -180,7 +180,7 @@ fi
 
 # --- unified log ----------------------------------------------------------
 #
-# Only the app's own subsystems: framework noise from AppKit and WebKit is not
+# Only the app's own subsystems: framework noise from AppKit is not
 # this gate's business, and filtering by process would pull all of it in.
 # The app itself is matched by pid so a sibling build's instance is ignored;
 # the XPC services are separate processes and stay matched by subsystem.

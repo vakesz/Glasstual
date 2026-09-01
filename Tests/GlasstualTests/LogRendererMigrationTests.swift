@@ -21,7 +21,7 @@ struct LogRendererMigrationTests {
 		let source = "plain \(bold)bold\(bold) plain"
 		let font = try #require(NSFont(name: "Helvetica", size: 13))
 
-		let rendered = TVCLogRenderer.renderBody(
+		let rendered = LogRenderer.renderBody(
 			asAttributedString: source,
 			withAttributes: [.preferredFont: font]
 		)
@@ -45,11 +45,32 @@ struct LogRendererMigrationTests {
 		) == nil)
 	}
 
-	@Test("HTML escaping and colour mapping keep their legacy results")
-	func htmlAndColorHelpersKeepLegacyResults() {
-		#expect(TVCLogRenderer.escapeHTML("<a&b>") == "&lt;a&amp;b&gt;")
-		#expect(TVCLogRenderer.mapColorCode(4) == NSColor.formatterColors[4])
-		#expect(TVCLogRenderer.mapColor(NSNumber(value: 4)) == NSColor.formatterColors[4])
-		#expect(TVCLogRenderer.mapColor("4") == nil)
+	@Test("Colour sequences and the reset control delimit one attributed run")
+	func attributedRenderingAppliesColorUntilReset() throws {
+		let color = String(UnicodeScalar(UInt8(IRCTextFormatterControlCharacter.colorDigit)))
+		let reset = String(UnicodeScalar(UInt8(IRCTextFormatterControlCharacter.terminator)))
+		let font = try #require(NSFont(name: "Helvetica", size: 13))
+		let rendered = LogRenderer.renderBody(
+			asAttributedString: "\(color)04red\(reset) plain",
+			withAttributes: [.preferredFont: font]
+		)
+
+		#expect(rendered.string == "red plain")
+
+		let colorKey = NSAttributedString.Key(
+			IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue
+		)
+		let redRange = (rendered.string as NSString).range(of: "red")
+		let plainRange = (rendered.string as NSString).range(of: "plain")
+
+		#expect((rendered.attribute(colorKey, at: redRange.location, effectiveRange: nil) as? NSNumber)?.intValue == 4)
+		#expect(rendered.attribute(colorKey, at: plainRange.location, effectiveRange: nil) == nil)
+	}
+
+	@Test("IRC palette codes map to native colours")
+	func colorHelpersMapToNativeColors() {
+		#expect(LogRenderer.mapColorCode(4) == NSColor.formatterColors[4])
+		#expect(LogRenderer.mapColor(NSNumber(value: 4)) == NSColor.formatterColors[4])
+		#expect(LogRenderer.mapColor("4") == nil)
 	}
 }

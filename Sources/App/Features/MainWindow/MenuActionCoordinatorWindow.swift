@@ -75,7 +75,8 @@ public extension MenuActionCoordinator {
 		case .markAllAsRead: mainWindow.markAllAsRead()
 		case .importPreferences: PreferencesImportExport.import(in: mainWindow)
 		case .exportPreferences: PreferencesImportExport.export(in: mainWindow)
-		case .toggleNotificationSounds: setNotificationSoundsMuted(TextualPreferences.soundIsMuted() == false)
+		case .toggleNotificationSounds: setNotificationSoundsMuted(Preferences.Notifications.soundIsMuted
+				.value == false)
 		case .toggleNotifications:
 			setNotificationsMuted(SharedApplication.sharedNotificationController().areNotificationsDisabled == false)
 		case .resetAppearance: setAppearance(.inherited)
@@ -98,14 +99,14 @@ public extension MenuActionCoordinator {
 	}
 
 	func setNotificationSoundsMuted(_ muted: Bool) {
-		TextualPreferences.setSoundIsMuted(muted)
+		Preferences.Notifications.soundIsMuted.value = muted
 		let state: NSControl.StateValue = muted ? .on : .off
 		menuController?.muteNotificationsSoundsDockMenuItem?.state = state
 		menuController?.muteNotificationsSoundsFileMenuItem?.state = state
 	}
 
 	private func closeWindow(_ sender: Any?) {
-		let action = TextualPreferences.commandWKeyAction()
+		let action = Preferences.Input.commandWKeyAction.value
 		if action == .closeWindow || mainWindow.isKeyWindow == false {
 			(NSApp.keyWindow ?? NSApp.mainWindow)?.performClose(sender)
 			return
@@ -150,19 +151,19 @@ public extension MenuActionCoordinator {
 	}
 
 	private func setAppearance(_ appearance: TXPreferredAppearance) {
-		TextualPreferences.setAppearance(appearance)
+		Preferences.Appearance.preferredAppearance.value = appearance
 		TextualPreferences.performReloadAction(.appearance)
 	}
 
 	private func toggleAppearance() {
 		setAppearance(MenuWindowPolicy.nextAppearance(
-			current: TextualPreferences.appearance(),
+			current: Preferences.Appearance.preferredAppearance.value,
 			systemIsDark: SharedApplication.sharedAppearance().properties.isDarkAppearance
 		))
 	}
 
 	private func toggleDeveloperMode() {
-		TextualPreferences.setDeveloperModeEnabled(TextualPreferences.developerModeEnabled() == false)
+		Preferences.Commands.developerMode.value.toggle()
 		TextualPreferences.performReloadAction(.ircCommandCache)
 	}
 

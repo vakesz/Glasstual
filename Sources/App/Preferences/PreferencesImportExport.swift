@@ -160,19 +160,7 @@ public final class PreferencesImportExport: NSObject {
 			return
 		}
 
-		if key == TPCPreferencesThemeNameDefaultsKey {
-			guard let name = value.string else {
-				return
-			}
-
-			TextualPreferences.setThemeNameWithExistenceCheck(name)
-		} else if key == TPCPreferencesThemeFontNameDefaultsKey {
-			guard let name = value.string else {
-				return
-			}
-
-			TextualPreferences.setThemeChannelViewFontNameWithExistenceCheck(name)
-		} else if key == IRCWorldClientListDefaultsKey {
+		if key == IRCWorldClientListDefaultsKey {
 			for config in value.array?.compactMap(\.dictionary) ?? [] {
 				importClientConfiguration(config)
 			}

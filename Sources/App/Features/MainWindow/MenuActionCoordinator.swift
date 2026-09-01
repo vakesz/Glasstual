@@ -298,17 +298,17 @@ public final class MenuActionCoordinator: NSObject {
 		case .kickban:
 			performChannelModeration(sender: sender) { client, channel, nickname in
 				client.sendCommand(
-					MenuMemberCommand.kickban(nickname, reason: TextualPreferences.defaultKickMessage()),
+					MenuMemberCommand.kickban(nickname, reason: Preferences.Commands.kickMessage.value),
 					completeTarget: true,
 					target: channel.name
 				)
 			}
 		case .kill:
-			performOperatorCommand("KILL", reason: TextualPreferences.irCopDefaultKillMessage(), sender: sender)
+			performOperatorCommand("KILL", reason: Preferences.Commands.irCopKillMessage.value, sender: sender)
 		case .gline:
 			performGline(sender: sender)
 		case .shun:
-			performOperatorCommand("SHUN", reason: TextualPreferences.irCopDefaultShunMessage(), sender: sender)
+			performOperatorCommand("SHUN", reason: Preferences.Commands.irCopShunMessage.value, sender: sender)
 		case .setVhost:
 			showSetVhostPrompt(sender: sender)
 		case .sendFile:
@@ -356,7 +356,7 @@ public final class MenuActionCoordinator: NSObject {
 	}
 
 	private func performDoubleClick(sender: Any) {
-		switch TextualPreferences.userDoubleClickOption() {
+		switch Preferences.Input.userDoubleClickAction.value {
 		case .whois:
 			performMemberAction(.whois, sender: sender)
 		case .privateMessage:
@@ -393,7 +393,7 @@ public final class MenuActionCoordinator: NSObject {
 			}
 		}
 		insertion += nicknames.joined(separator: ", ")
-		insertion += TextualPreferences.tabCompletionSuffix() ?? ""
+		insertion += Preferences.Input.tabCompletionSuffix.storedValue ?? ""
 		textView.replaceCharacters(in: selectedRange, with: insertion)
 		textView.resetFontColor(in: selectedRange)
 		textView.focus()
@@ -475,7 +475,7 @@ public final class MenuActionCoordinator: NSObject {
 			client.sendCommand(MenuMemberCommand.operatorCommand(
 				"GLINE",
 				nickname: nickname,
-				reason: TextualPreferences.irCopDefaultGlineMessage()
+				reason: Preferences.Commands.irCopGlineMessage.value
 			))
 		}
 		deselectMembers(for: sender)
@@ -518,8 +518,6 @@ public final class MenuActionCoordinator: NSObject {
 		panel.resolvesAliases = true
 		panel.beginSheetModal(for: mainWindow) { [weak self] response in
 			guard response == .OK, let self else { return }
-			fileTransferController.fileTransferTable.beginUpdates()
-			defer { fileTransferController.fileTransferTable.endUpdates() }
 			for nickname in nicknames {
 				for url in panel.urls {
 					_ = fileTransferController.addSender(
@@ -551,8 +549,6 @@ public final class MenuActionCoordinator: NSObject {
 
 	public func sendDroppedFiles(_ files: [String], nickname: String) {
 		guard let client = selectedClient, client.isLoggedIn else { return }
-		fileTransferController.fileTransferTable.beginUpdates()
-		defer { fileTransferController.fileTransferTable.endUpdates() }
 		for file in files {
 			var isDirectory: ObjCBool = false
 			guard FileManager.default.fileExists(atPath: file, isDirectory: &isDirectory),
@@ -616,7 +612,7 @@ public final class MenuActionCoordinator: NSObject {
 	public func performNavigationAction(_ sender: Any?) {
 		guard selectedClient != nil,
 		      let menuItem = sender as? NSMenuItem,
-		      let action = Self.navigationAction(for: menuItem.tag)
+		      let action = Self.navigationAction(for: menuItem.command?.rawValue ?? menuItem.tag)
 		else { return }
 		perform(action)
 	}

@@ -12,7 +12,43 @@
 
 import Foundation
 
-nonisolated enum ChannelAccessListStrings { // nonisolated: value
+enum ChannelAccessListStrings {
+	static var hostmask: String {
+		String(localized: .TDCChannelBanListSheet.hostmask)
+	}
+
+	static var addedBy: String {
+		String(localized: .TDCChannelBanListSheet.addedBy)
+	}
+
+	static var created: String {
+		String(localized: .TDCChannelBanListSheet.created)
+	}
+
+	static var accessList: String {
+		String(localized: .TDCChannelBanListSheet.accessList)
+	}
+
+	static var removeSelected: String {
+		String(localized: .TDCChannelBanListSheet.removeSelected)
+	}
+
+	static var updateList: String {
+		String(localized: .TDCChannelBanListSheet.updateList)
+	}
+
+	static var loadingList: String {
+		String(localized: .TDCChannelBanListSheet.loadingList)
+	}
+
+	static var emptyTitle: String {
+		String(localized: .TDCChannelBanListSheet.emptyTitle)
+	}
+
+	static var emptyDescription: String {
+		String(localized: .TDCChannelBanListSheet.emptyDescription)
+	}
+
 	static func heading(for entryType: ChannelBanListEntryType, channelName: String) -> String {
 		switch entryType {
 		case .ban:

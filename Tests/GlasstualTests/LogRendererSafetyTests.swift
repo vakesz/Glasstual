@@ -1,9 +1,8 @@
 @testable import Glasstual
 import Testing
 
-/// Everything the renderer emits lands in a `file://` document that holds the
-/// native `app` bridge, so the two values a remote peer can steer — a link's
-/// scheme and its combining marks — are filtered at the renderer boundary.
+/// The two attributed-text values a remote peer can steer — a link's scheme
+/// and its combining marks — are filtered at the renderer boundary.
 @Suite("Log renderer safety")
 @MainActor
 struct LogRendererSafetyTests {
@@ -18,11 +17,11 @@ struct LogRendererSafetyTests {
 		]
 	)
 	func permittedSchemesRender(location: String) {
-		#expect(LogRenderer.isRenderableAnchorLocation(location))
+		#expect(LogRenderer.isSafeLink(location))
 	}
 
-	/// `LinkParser`'s permitted set is user-configurable, so the renderer does
-	/// not delegate the decision to it entirely.
+	/// `LinkParser`'s permitted set is user-configurable, so the native renderer
+	/// keeps an unconditional denylist as well.
 	@Test(
 		"Scripting and local schemes never reach an href",
 		arguments: [
@@ -37,7 +36,7 @@ struct LogRendererSafetyTests {
 		]
 	)
 	func refusedSchemesDoNotRender(location: String) {
-		#expect(LogRenderer.isRenderableAnchorLocation(location) == false)
+		#expect(LogRenderer.isSafeLink(location) == false)
 	}
 
 	@Test(
@@ -52,7 +51,7 @@ struct LogRendererSafetyTests {
 		]
 	)
 	func schemelessLocationsAreRefused(location: String) {
-		#expect(LogRenderer.isRenderableAnchorLocation(location) == false)
+		#expect(LogRenderer.isSafeLink(location) == false)
 	}
 
 	/// An invalid pattern would make the filter a silent no-op, which is

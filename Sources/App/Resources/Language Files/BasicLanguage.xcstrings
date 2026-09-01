@@ -1,11 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "built-in-theme-group" : {
-      "comment" : "Built-in theme group title. Legacy key: 7lm-bq.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Built-in" } } }
-    },
     "close-query" : {
       "comment" : "Close-query menu title. Legacy key: hri-l0.",
       "extractionState" : "manual",
@@ -16,16 +11,6 @@
       "extractionState" : "manual",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close Window" } } }
     },
-    "copy-log-as-html" : {
-      "comment" : "Copy-log-as-HTML menu title. Legacy key: 6cw-ni.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy Log as HTML" } } }
-    },
-    "custom-theme-group-title" : {
-      "comment" : "Custom theme group title. Legacy key: bm2-4p.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Custom" } } }
-    },
     "disconnect-menu-title" : {
       "comment" : "Disconnect menu title. The argument is the network name. Legacy key: w3a-je.",
       "extractionState" : "manual",
@@ -35,11 +20,6 @@
       "comment" : "Required-field validation message. Legacy key: fo8-1h.",
       "extractionState" : "manual",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fill out this field" } } }
-    },
-    "force-reload-style" : {
-      "comment" : "Force-reload-style menu title. Legacy key: ngd-ms.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Force Reload Style" } } }
     },
     "glasstual-irc-client" : {
       "comment" : "Default quit message advertising the application. Legacy key: 1dd-0f.",
@@ -80,11 +60,6 @@
       "comment" : "Placeholder shown when a contextual menu has no actions. Legacy key: 7kc-mo.",
       "extractionState" : "manual",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No Actions Available" } } }
-    },
-    "open-web-inspector" : {
-      "comment" : "Open-Web-Inspector menu title. Legacy key: tfj-m9.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Web Inspector" } } }
     },
     "quit-glasstual" : {
       "comment" : "Quit-application menu title. Legacy key: x97-ro.",

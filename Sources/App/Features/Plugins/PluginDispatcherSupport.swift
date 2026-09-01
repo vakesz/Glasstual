@@ -14,8 +14,6 @@ import Foundation
 import GlasstualPluginKit
 
 public typealias PluginPostedMessage = GlasstualPluginKit.PluginPostedMessage
-public typealias PluginJavaScriptPayload = GlasstualPluginKit.PluginJavaScriptPayload
 public typealias PluginOutputSuppressionRule = GlasstualPluginKit.PluginOutputSuppressionRule
 public typealias THOPluginDidPostNewMessageConcreteObject = GlasstualPluginKit.PluginPostedMessage
-public typealias THOPluginWebViewJavaScriptPayloadConcreteObject = GlasstualPluginKit.PluginJavaScriptPayload
 public typealias THOPluginOutputSuppressionRule = GlasstualPluginKit.PluginOutputSuppressionRule

@@ -38,6 +38,7 @@
 
 import AppKit
 import os
+import UniformTypeIdentifiers
 
 private let preferencesActionsLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -49,73 +50,60 @@ private let preferencesActionsLogger = Logger(
 extension PreferencesController: PreferencesPaneActionHandler {
 	// MARK: - Style
 
-	func selectTheme(_ choice: PreferencesThemeChoice) {
-		guard let newTheme = TPCThemeController.buildFilename(
-			choice.themeName,
-			for: choice.storageLocation
-		) else { return }
-		guard TextualPreferences.themeName() != newTheme else { return }
-		TextualPreferences.setThemeName(newTheme)
-		model.selectedTheme = choice
-		beginThemeSelectionReload()
-		TextualPreferences.performReloadAction([.style, .textDirection])
+	func importTranscriptTheme() {
+		let panel = NSOpenPanel()
+		panel.allowedContentTypes = [.propertyList]
+		panel.allowsMultipleSelection = false
+		panel.canChooseDirectories = false
+		panel.prompt = PromptStrings.Action.chooseFile
+		panel.beginSheetModal(for: window) { [weak self] response in
+			guard response == .OK, let self, let url = panel.url else { return }
+			do {
+				try SharedApplication.sharedThemeController().importTheme(from: Data(contentsOf: url))
+				model.refreshTheme()
+				model.refreshChannelViewFont()
+			} catch {
+				showThemeFileError(error)
+			}
+		}
 	}
 
-	func browseStyleFiles() {
-		guard SharedApplication.sharedThemeController().isBundledTheme else {
-			openPathToTheme()
-			return
+	func exportTranscriptTheme() {
+		let panel = NSSavePanel()
+		panel.allowedContentTypes = [.propertyList]
+		panel.nameFieldStringValue = "\(SharedApplication.sharedThemeController().name).plist"
+		panel.beginSheetModal(for: window) { [weak self] response in
+			guard response == .OK, let self, let url = panel.url else { return }
+			do {
+				try SharedApplication.sharedThemeController().exportTheme().write(to: url, options: .atomic)
+			} catch {
+				showThemeFileError(error)
+			}
 		}
+	}
+
+	func resetTranscriptTheme() {
+		SharedApplication.sharedThemeController().reset()
+		model.refreshTheme()
+		model.refreshChannelViewFont()
+	}
+
+	private func showThemeFileError(_ error: Error) {
 		TDCAlert.alertSheet(
 			with: window,
-			body: PreferencesStrings.styleModificationBody,
-			title: PreferencesStrings.styleModificationTitle,
-			defaultButton: PreferencesStrings.viewStyleFilesButtonTitle,
-			alternateButton: PreferencesStrings.editStyleButtonTitle,
-			otherButton: PreferencesStrings.createStyleCopyButtonTitle
-		) { [weak self] outcome in
-			self?.openPathToThemesCallback(outcome.response)
-		}
-	}
-
-	private func openPathToThemesCallback(_ returnCode: TDCAlertResponse) {
-		switch returnCode {
-		case .default:
-			openPathToTheme()
-		case .alternate:
-			editUserStyleSheetRules()
-		case .other:
-			SharedApplication.sharedThemeController().copyActiveTheme(
-				to: .custom,
-				reloadOnCopy: true,
-				openOnCopy: true
-			)
-		}
-	}
-
-	private func openPathToTheme() {
-		NSWorkspace.shared.open(SharedApplication.sharedThemeController().originalURL)
-	}
-
-	func editUserStyleSheetRules() {
-		let sheet = PreferencesUserStyleSheet(window: window)
-		sheet.delegate = self
-		sheet.start()
-		userStyleSheet = sheet
-	}
-
-	public func userStyleSheetRulesChanged(_: PreferencesUserStyleSheet) {
-		TextualPreferences.performReloadAction([.style, .textDirection])
-	}
-
-	public func userStyleSheetWillClose(_: PreferencesUserStyleSheet) {
-		userStyleSheet = nil
+			body: error.localizedDescription,
+			title: TranscriptThemeStrings.themeError,
+			defaultButton: PromptStrings.Action.confirmation,
+			alternateButton: nil,
+			otherButton: nil,
+			completionBlock: nil
+		)
 	}
 
 	// MARK: - Font panel
 
 	func selectChannelViewFont() {
-		guard let currentFont = TextualPreferences.themeChannelViewFont() else { return }
+		let currentFont = SharedApplication.sharedThemeController().font
 		NSFontManager.shared.setSelectedFont(currentFont, isMultiple: false)
 		NSFontManager.shared.orderFrontFontPanel(self)
 		if fontPanelIsOwned == false {
@@ -126,12 +114,13 @@ extension PreferencesController: PreferencesPaneActionHandler {
 	}
 
 	@objc private func changeChannelViewFont(_ sender: NSFontManager) {
-		guard let currentFont = TextualPreferences.themeChannelViewFont() else { return }
+		let currentFont = SharedApplication.sharedThemeController().font
 		let newFont = sender.convert(currentFont)
-		TextualPreferences.setThemeChannelViewFontName(newFont.fontName)
-		TextualPreferences.setThemeChannelViewFontSize(newFont.pointSize)
+		model.updateTheme {
+			$0.fontName = newFont.fontName
+			$0.fontSize = newFont.pointSize
+		}
 		model.refreshChannelViewFont()
-		TextualPreferences.performReloadAction([.style, .textDirection])
 	}
 
 	func releaseFontPanel() {
@@ -205,34 +194,16 @@ extension PreferencesController: PreferencesPaneActionHandler {
 	}
 
 	func openCustomAddOnsFolder() {
-		if let scriptsURL = PathInfo.customScriptsURL,
+		let scriptsURL = SharedApplication.sharedPluginManager().customScriptsURL
+		if let scriptsURL,
 		   FileManager.default.fileExists(atPath: scriptsURL.path)
 		{
 			NSWorkspace.shared.open(scriptsURL)
-		} else if let applicationScriptsURL = PathInfo.userApplicationScriptsURL {
+		} else if let applicationScriptsURL = scriptsURL?.deletingLastPathComponent() {
 			/* A sandboxed app may read its Application Scripts directory but may
 			 not create it. Finder gives the user the right place to create the
 			 bundle-ID folder named in the pane's installation note. */
 			NSWorkspace.shared.open(applicationScriptsURL)
-		}
-	}
-
-	// MARK: - Inline media
-
-	func setInlineMediaEnabled(_ enabled: Bool) {
-		guard enabled else {
-			TextualPreferences.setShowInlineMedia(false)
-			model.preferences.invalidate()
-			TextualPreferences.performReloadAction([.style, .textDirection])
-			return
-		}
-		LogControllerInlineMediaService.askPermissionToEnableInlineMedia { [weak self] granted in
-			Task { @MainActor [weak self] in
-				guard let self, granted else { return }
-				TextualPreferences.setShowInlineMedia(true)
-				model.preferences.invalidate()
-				TextualPreferences.performReloadAction([.style, .textDirection])
-			}
 		}
 	}
 }

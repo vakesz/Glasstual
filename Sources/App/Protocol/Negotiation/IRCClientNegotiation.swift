@@ -38,6 +38,10 @@
 
 import Foundation
 
+extension Notification.Name {
+	static let ircClientCapabilitiesDidChange = Notification.Name("IRCClientCapabilitiesDidChange")
+}
+
 enum ClientNegotiationUtilities {
 	/// Ceiling on the reassembled `AUTHENTICATE` payload. Every mechanism the
 	/// client supports fits in a fraction of this; without it a server can
@@ -182,7 +186,7 @@ extension IRCClient {
 	}
 
 	public func isCapabilitySupported(_ capability: String) -> Bool {
-		capabilityRegistry.isCapabilitySupported(capability)
+		capabilityRegistry.isCapabilitySupported(capability, preferences: environment.preferences)
 	}
 
 	public var enabledCapabilitiesStringValue: String {
@@ -198,7 +202,10 @@ extension IRCClient {
 	@MainActor private func queueCapabilityRequests(from offered: [String: [String]]) {
 		handleSTSCapability(from: offered)
 
-		let requestable = capabilityRegistry.capabilitiesToRequest(fromOffered: offered)
+		let requestable = capabilityRegistry.capabilitiesToRequest(
+			fromOffered: offered,
+			preferences: environment.preferences
+		)
 
 		for capability in requestable {
 			let name = capability.name
@@ -207,7 +214,9 @@ extension IRCClient {
 				continue
 			}
 
-			if let hook = capability.negotiationHook, hook(self, offered[name] ?? []) == false {
+			if capability.negotiation == .sasl,
+			   selectSASLMechanism(fromOffered: offered[name] ?? []) == false
+			{
 				continue
 			}
 
@@ -342,6 +351,8 @@ extension IRCClient {
 		if enabled, name == "sasl", sendSASLIdentificationRequest() {
 			pauseCapabilityNegotiation()
 		}
+
+		NotificationCenter.default.post(name: .ircClientCapabilitiesDidChange, object: self)
 	}
 
 	@MainActor

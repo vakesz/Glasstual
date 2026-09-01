@@ -13,11 +13,7 @@
 import AppKit
 import SwiftUI
 
-/** The grouped `Form` every pane is laid out in, so the metrics live once.
-
- The form does not scroll on its own: it takes the height its content needs and
- the window is resized to match, the way a preference window behaves. The one
- scroll view is the root view's, for the panes taller than the screen. */
+/// The grouped, independently scrolling `Form` every detail pane uses.
 struct PreferencesPaneLayout<Content: View>: View {
 	@ViewBuilder let content: Content
 
@@ -26,9 +22,8 @@ struct PreferencesPaneLayout<Content: View>: View {
 			content
 		}
 		.formStyle(.grouped)
-		.scrollDisabled(true)
 		.scrollContentBackground(.hidden)
-		.fixedSize(horizontal: false, vertical: true)
+		.contentMargins(.top, 8, for: .scrollContent)
 	}
 }
 
@@ -49,7 +44,7 @@ struct PreferencesNote: View {
 	}
 }
 
-/// A checkbox driven by a preference binding, with the label the nib carried.
+/// A native settings switch driven by a typed preference binding.
 struct PreferencesToggle: View {
 	let title: String
 	@Binding var isOn: Bool
@@ -58,7 +53,7 @@ struct PreferencesToggle: View {
 		Toggle(isOn: $isOn) {
 			Text(verbatim: title)
 		}
-		.toggleStyle(.checkbox)
+		.toggleStyle(.switch)
 	}
 }
 

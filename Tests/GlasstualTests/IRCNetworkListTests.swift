@@ -232,16 +232,16 @@ struct IRCNetworkListTests {
 
 	@Test("The onboarding flag round trips through the preference store")
 	func onboardingCompletedFlagRoundTrips() {
-		let original: Bool = TextualPreferences.onboardingCompleted()
+		let original: Bool = Preferences.Identity.onboardingCompleted.value
 
-		TextualPreferences.setOnboardingCompleted(false)
+		Preferences.Identity.onboardingCompleted.value = false
 
-		#expect(TextualPreferences.onboardingCompleted() == false)
+		#expect(Preferences.Identity.onboardingCompleted.value == false)
 
-		TextualPreferences.setOnboardingCompleted(true)
+		Preferences.Identity.onboardingCompleted.value = true
 
-		#expect(TextualPreferences.onboardingCompleted())
+		#expect(Preferences.Identity.onboardingCompleted.value)
 
-		TextualPreferences.setOnboardingCompleted(original)
+		Preferences.Identity.onboardingCompleted.value = original
 	}
 }

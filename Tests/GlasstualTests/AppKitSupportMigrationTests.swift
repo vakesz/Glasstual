@@ -79,20 +79,6 @@ struct AppKitSupportMigrationTests {
 		#expect(field.preferredMaxLayoutWidth == 0)
 	}
 
-	/// `stringValueIsTrimmed` is what keeps a pasted "  #swift  " from being
-	/// sent to the server with its whitespace.
-	@Test("A validated control reports its value trimmed once asked to")
-	func validatedControlsTrimTheirValue() {
-		let textField = ValidatedTextField(string: "  #swift  ")
-		textField.stringValueIsTrimmed = true
-		#expect(textField.value == "#swift")
-
-		let comboBox = ValidatedComboBox()
-		comboBox.stringValue = "  libera  "
-		comboBox.stringValueIsTrimmed = true
-		#expect(comboBox.value == "libera")
-	}
-
 	/// The suppression family is catalogued as a container key, so the flags are
 	/// stored there rather than in UserDefaults.standard, which is what makes an
 	/// imported "do not ask again" take effect.
@@ -126,8 +112,8 @@ struct AppKitSupportMigrationTests {
 		#expect(popover.behavior == .transient)
 	}
 
-	@Test("The topic sheet loads from its nib and keeps hold of its channel")
-	func channelModifyTopicSheetLoadsFromNib() {
+	@Test("The SwiftUI topic sheet keeps hold of its channel")
+	func channelModifyTopicSheetKeepsItsChannel() {
 		let client = GLTTestClient()
 		let channel = makeChannel(named: "#chat", client: client)
 		let sheet = ChannelModifyTopicSheet(channel: channel)
@@ -136,21 +122,6 @@ struct AppKitSupportMigrationTests {
 		#expect(sheet.channel === channel)
 		#expect(sheet.channelId == channel.uniqueIdentifier)
 		#expect(sheet.sheet != nil)
-	}
-
-	@Test("An onboarding style preview reads to VoiceOver as a radio button")
-	func onboardingStylePreviewViewExposesRadioButtonAccessibility() {
-		let view = OnboardingStylePreviewView()
-		view.styleTitle = "Bubbles"
-
-		#expect(view.isAccessibilityElement())
-		#expect(view.accessibilityRole() == .radioButton)
-		#expect(view.accessibilityLabel() == "Bubbles")
-		#expect((view.accessibilityValue() as? Bool) == false)
-
-		view.selected = true
-
-		#expect((view.accessibilityValue() as? Bool) == true)
 	}
 
 	@Test("A notification about a client names that client and no channel")

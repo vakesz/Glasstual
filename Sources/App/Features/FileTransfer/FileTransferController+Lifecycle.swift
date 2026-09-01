@@ -41,7 +41,6 @@ import Foundation
 extension TDCFileTransferDialogTransferController {
 	public func prepareForPermanentDestruction() {
 		dispatchPrecondition(condition: .onQueue(.main))
-		transferTableCell = nil
 		closeAndPostNotification(false)
 		lifecycleNotifications.cancelAll()
 		portMapperNotifications.cancelAll()

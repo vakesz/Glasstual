@@ -85,6 +85,6 @@ public extension MenuActionCoordinator {
 	}
 
 	private func senderTag(_ sender: Any?) -> Int {
-		(sender as? NSMenuItem)?.tag ?? (sender as? NSControl)?.tag ?? 0
+		(sender as? NSMenuItem)?.command?.rawValue ?? (sender as? NSControl)?.tag ?? 0
 	}
 }

@@ -96,10 +96,10 @@ public extension IRCClient {
 		guard let channel, let nickname, let text, !text.isEmpty else { return nil }
 		let visibility = IRCSpokenNotificationPolicy.highlightVisibility(
 			isChannel: channel.isChannel,
-			onlySpeakSelection: TextualPreferences.onlySpeakEventsForSelection(),
+			onlySpeakSelection: Preferences.Notifications.onlySpeakForSelection.value,
 			channelIsSelected: isSelected(channel),
-			includeConfiguredChannelName: TextualPreferences.channelMessageSpeakChannelName(),
-			includeConfiguredNickname: TextualPreferences.channelMessageSpeakNickname()
+			includeConfiguredChannelName: Preferences.Notifications.flag(.channelMessage, .speakChannelName).value,
+			includeConfiguredNickname: Preferences.Notifications.flag(.channelMessage, .speakNickname).value
 		)
 		var message = NotificationStrings.Spoken.highlight
 		if visibility.includesChannelName || visibility.includesNickname {
@@ -127,10 +127,10 @@ public extension IRCClient {
 	) -> String? {
 		guard let channel, let nickname, let text, !text.isEmpty else { return nil }
 		let visibility = IRCSpokenNotificationPolicy.channelMessageVisibility(
-			onlySpeakSelection: TextualPreferences.onlySpeakEventsForSelection(),
+			onlySpeakSelection: Preferences.Notifications.onlySpeakForSelection.value,
 			channelIsSelected: isSelected(channel),
-			includeConfiguredChannelName: TextualPreferences.channelMessageSpeakChannelName(),
-			includeConfiguredNickname: TextualPreferences.channelMessageSpeakNickname()
+			includeConfiguredChannelName: Preferences.Notifications.flag(.channelMessage, .speakChannelName).value,
+			includeConfiguredNickname: Preferences.Notifications.flag(.channelMessage, .speakNickname).value
 		)
 		guard visibility.shouldSpeak else { return nil }
 
@@ -194,7 +194,7 @@ public extension IRCClient {
 	private func normalizedSpeechText(_ text: String?) -> String? {
 		guard var text else { return nil }
 		text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-		if !TextualPreferences.removeAllFormatting() {
+		if !Preferences.Messages.removeAllFormatting.value {
 			text = (text as NSString).stripIRCEffects
 		}
 		return text
@@ -326,7 +326,7 @@ public extension IRCClient {
 		guard !controller.areNotificationsDisabled else { return true }
 
 		let mainWindowIsFocused = AppController.shared.mainWindow?.ceIsInactive == false
-		let postWhileFocused = TextualPreferences.postNotificationsWhileInFocus()
+		let postWhileFocused = Preferences.Notifications.postWhileInFocus.value
 		let targetIsSelected = isSelected(target)
 		let onlySpeak = IRCNotificationPolicy.shouldOnlySpeak(
 			postWhileFocused: postWhileFocused,
@@ -334,7 +334,7 @@ public extension IRCClient {
 			targetIsSelected: targetIsSelected
 		)
 
-		if !TextualPreferences.soundIsMuted() {
+		if !Preferences.Notifications.soundIsMuted.value {
 			if !onlySpeak, let soundName = controller.sound(forEvent: event, in: target) {
 				SoundPlayer.playAlertSound(soundName)
 			}

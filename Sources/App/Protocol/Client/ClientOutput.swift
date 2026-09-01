@@ -66,7 +66,6 @@ protocol TreeItemPresentation: AnyObject {
 		reason: String?
 	)
 	func prependHistoricLogLines(_ logLines: [LogLine])
-	func evaluateFunction(_ function: String, withArguments arguments: [Any]?, onQueue: Bool)
 
 	func prepareForPermanentDestruction()
 	func prepareForApplicationTermination()
@@ -123,7 +122,6 @@ protocol ClientOutput: AnyObject {
 
 	func clearContents(of item: IRCTreeItem)
 	func destroyInputHistory(for item: IRCTreeItem)
-	func evaluateFunctionOnAllViews(_ function: String, arguments: [Any]?, onQueue: Bool)
 	/// Tells every view that the window's appearance changed.
 	func notifyAllViewsAppearanceDidChange()
 }

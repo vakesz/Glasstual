@@ -65,8 +65,8 @@ public enum MenuPresentation {
 		return image
 	}()
 
-	static func symbolName(forTag tag: Int) -> String? {
-		MenuCommand(rawValue: tag)?.symbolName
+	static func symbolName(for command: MenuCommand?) -> String? {
+		command?.symbolName
 	}
 
 	static var symbolMappings: [MenuCommand: String] {
@@ -170,7 +170,7 @@ public enum MenuPresentation {
 
 		for item in menu.items {
 			if item.image == nil,
-			   let symbolName = symbolName(forTag: item.tag),
+			   let symbolName = symbolName(for: item.command),
 			   let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: item.title)
 			{
 				item.image = symbol

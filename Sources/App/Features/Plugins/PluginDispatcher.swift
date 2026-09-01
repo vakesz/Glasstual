@@ -21,11 +21,11 @@ import GlasstualPluginKit
 /// to hand across it. Nothing is built until a plugin has actually subscribed
 /// to the event, because building a `PluginClient` walks the whole channel list.
 public final nonisolated class PluginDispatcher: NSObject { // nonisolated: value
-	/** Holds a rendered message between the render pass and the JavaScript
-	 callback that reports the line has appeared.
+	/** Holds a rendered message between the render pass and the native view
+	 confirming that the line has appeared.
 
 	 Entries are removed as they are dequeued. A line that is never dequeued --
-	 the view was closed, the theme reloaded -- would otherwise accumulate, so
+	 the view was closed while rendering -- would otherwise accumulate, so
 	 the oldest is dropped once the buffer is full. That is the eviction the
 	 `NSCache` this replaces performed, made deterministic: a message is a value
 	 now, and a cache needs a class. */
@@ -278,18 +278,6 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 	}
 
 	@MainActor
-	public static func didReceiveJavaScriptPayload(
-		_ payloadObject: THOPluginWebViewJavaScriptPayloadConcreteObject,
-		fromViewController _: LogController
-	) {
-		let handlers: [any PluginJavaScriptPayloadHandling] = handlers(for: .webViewJavaScriptPayloads)
-
-		for handler in handlers {
-			handler.didReceiveJavaScriptPayload(payloadObject)
-		}
-	}
-
-	@MainActor
 	public static func didReceiveServerInput(_ inputObject: Message, onClient client: IRCClient) {
 		let handlers: [any PluginServerInputHandling] = handlers(
 			for: .subscribedServerInputCommands,
@@ -323,7 +311,7 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 		}
 	}
 
-	/** Delivers a line that has no WebKit projection. Its native side effects
+	/** Delivers a line that has no visible transcript projection. Its native side effects
 	 must not wait for a DOM callback that cannot arrive. */
 	@MainActor
 	public static func dispatchDidPostNewMessage(_ messageObject: THOPluginDidPostNewMessageConcreteObject) {

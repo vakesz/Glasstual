@@ -13,6 +13,10 @@
 import Foundation
 
 nonisolated enum ChannelSpotlightStrings { // nonisolated: value
+	static var accessibilityTitle: String {
+		String(localized: .TDCChannelSpotlightController.accessibilityTitle)
+	}
+
 	static var noResults: String {
 		String(localized: .TDCChannelSpotlightController.noResults)
 	}
@@ -35,5 +39,13 @@ nonisolated enum ChannelSpotlightStrings { // nonisolated: value
 
 	static func combined(_ firstDescription: String, _ secondDescription: String) -> String {
 		String(localized: .TDCChannelSpotlightController.joinsTwoChannelStatus(firstDescription, secondDescription))
+	}
+
+	static var resultsAccessibilityLabel: String {
+		String(localized: .TDCChannelSpotlightController.resultsAccessibilityLabel)
+	}
+
+	static var searchPlaceholder: String {
+		String(localized: .TDCChannelSpotlightController.searchPlaceholder)
 	}
 }

@@ -1,6 +1,42 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "enable-extra-emoticons" : {
+      "comment" : "Toggle that adds the extended emoticon conversion table.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable the extended emoticon set"
+          }
+        }
+      }
+    },
+    "enable-service" : {
+      "comment" : "Toggle that enables Smiley Converter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Smiley Converter"
+          }
+        }
+      }
+    },
+    "smiley-converter-explanation" : {
+      "comment" : "Explanation of what Smiley Converter changes and who sees the result.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smiley Converter replaces plain-text emoticons, such as :-), with emoji. The replacement is visible only to you."
+          }
+        }
+      }
+    },
     "preferences-pane-title" : {
       "comment" : "Name of the Smiley Converter preferences pane. Migrated from legacy key 3kj-8f.",
       "extractionState" : "manual",

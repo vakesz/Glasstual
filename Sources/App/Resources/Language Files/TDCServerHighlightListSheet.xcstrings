@@ -1,0 +1,126 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "action-note" : {
+      "comment" : "Explains the bullet prefix used for IRC action messages in the highlight list. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages beginning with a bullet (•) are actions."
+          }
+        }
+      }
+    },
+    "channel" : {
+      "comment" : "Column title for the channel that contains a highlighted message. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel"
+          }
+        }
+      }
+    },
+    "clear-list" : {
+      "comment" : "Button that removes all cached highlights for the selected server. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear List"
+          }
+        }
+      }
+    },
+    "empty-description" : {
+      "comment" : "Description shown when a server has no cached highlighted messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New highlighted messages will appear here while Glasstual is running."
+          }
+        }
+      }
+    },
+    "empty-title" : {
+      "comment" : "Title shown when a server has no cached highlighted messages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Highlights"
+          }
+        }
+      }
+    },
+    "heading" : {
+      "comment" : "Heading above a server's highlight list. The placeholder is the network name. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlights for \"%@\""
+          }
+        }
+      }
+    },
+    "highlight-list" : {
+      "comment" : "Accessibility label for the table of cached highlighted messages. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight List"
+          }
+        }
+      }
+    },
+    "message" : {
+      "comment" : "Column title for the highlighted message. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message"
+          }
+        }
+      }
+    },
+    "time" : {
+      "comment" : "Column title for the time a highlighted message was received. Migrated from the legacy interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        }
+      }
+    },
+    "window-title" : {
+      "comment" : "Window title for a server's highlight list. The placeholder is the network name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlights for %@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -31,7 +31,6 @@ public nonisolated struct PluginSupportedFeature: OptionSet, Sendable { // nonis
 	public static let subscribedServerInputCommands = Self(rawValue: 1 << 8)
 	public static let subscribedUserInputCommands = Self(rawValue: 1 << 9)
 	public static let userInputDataInterception = Self(rawValue: 1 << 10)
-	public static let webViewJavaScriptPayloads = Self(rawValue: 1 << 11)
 	public static let willRenderMessageEvent = Self(rawValue: 1 << 12)
 }
 
@@ -157,7 +156,7 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 
 		guard let view = provider.pluginPreferencesPaneView else {
 			logger.error(
-				"The plugin at “\(bundle.bundlePath, privacy: .public)“ names a preferences pane but supplied no view; its interface file most likely failed to load"
+				"The plugin at “\(bundle.bundlePath, privacy: .public)“ names a preferences pane but supplied no view"
 			)
 			return nil
 		}
@@ -177,9 +176,6 @@ public final nonisolated class PluginItem: NSObject { // nonisolated: value
 		}
 		if plugin is any PluginMessageRendering {
 			features.insert(.willRenderMessageEvent)
-		}
-		if plugin is any PluginJavaScriptPayloadHandling {
-			features.insert(.webViewJavaScriptPayloads)
 		}
 		if plugin is any PluginServerMessageIntercepting {
 			features.insert(.serverInputDataInterception)

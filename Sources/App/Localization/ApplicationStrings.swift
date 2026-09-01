@@ -51,18 +51,6 @@ nonisolated enum ApplicationStrings { // nonisolated: value
 		String(localized: .BasicLanguage.disconnectMenuTitle(networkName))
 	}
 
-	static var copyLogAsHTML: String {
-		String(localized: .BasicLanguage.copyLogAsHtml)
-	}
-
-	static var forceReloadStyle: String {
-		String(localized: .BasicLanguage.forceReloadStyle)
-	}
-
-	static var openWebInspector: String {
-		String(localized: .BasicLanguage.openWebInspector)
-	}
-
 	static var lookUpInDictionary: String {
 		String(localized: .BasicLanguage.lookUpInDictionary)
 	}
@@ -77,14 +65,6 @@ nonisolated enum ApplicationStrings { // nonisolated: value
 
 	static var noActionsAvailable: String {
 		String(localized: .BasicLanguage.noActionsAvailable)
-	}
-
-	static var builtInTheme: String {
-		String(localized: .BasicLanguage.builtInThemeGroup)
-	}
-
-	static var customTheme: String {
-		String(localized: .BasicLanguage.customThemeGroupTitle)
 	}
 
 	static var requiredField: String {

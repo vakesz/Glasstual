@@ -21,10 +21,11 @@ struct IRCCapabilitySpellingTests {
 	@Test("A capability offered under a different case is not the one we know")
 	func differentCaseIsADifferentCapability() {
 		let registry = CapabilityRegistry.defaultRegistry
+		let preferences = ClientPreferences()
 
 		#expect(registry.capability(named: "multi-prefix") != nil)
 		#expect(registry.capability(named: "Multi-Prefix") == nil)
-		#expect(registry.isCapabilitySupported("SASL") == false)
+		#expect(registry.isCapabilitySupported("SASL", preferences: preferences) == false)
 	}
 
 	@Test("An empty list yields no names")

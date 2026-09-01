@@ -184,7 +184,8 @@ struct HistoricLogClientTests {
 		 is what is under test here. */
 		let client = HistoricLogClient(
 			serviceName: "com.vakesz.glasstual.tests.NoSuchService",
-			databaseDirectory: nil
+			databaseDirectory: nil,
+			reportConnectionFailure: { _ in }
 		)
 
 		await client.attach()

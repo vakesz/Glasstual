@@ -72,10 +72,9 @@ struct AppKitBridgeIsolationTests {
 	}
 
 	@Test("A member cell is configured when the table vends it, not at nib load")
-	func memberListCellConfiguresOnce() {
+	func memberListCellConfiguresOnce() throws {
 		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
-		let nicknameField = NSTextField(labelWithString: "")
-		cell.setValue(nicknameField, forKey: "cellTextField")
+		let nicknameField = try #require(cell.textField)
 
 		cell.configure()
 
@@ -113,7 +112,6 @@ struct AppKitBridgeIsolationTests {
 			MemberListCell.self,
 			MemberListUserInfoPopover.self,
 			ContentNavigationOutlineView.self,
-			ValidatedComboBox.self,
 			TextViewIRCFormattingMenu.self,
 			ApplicationController.self,
 		]
@@ -137,24 +135,6 @@ struct AppKitBridgeIsolationTests {
 	@Test("The input field is built in code and backed by TextKit 2")
 	func inputFieldUsesTextKit2() {
 		let contentView = MainWindowTextViewContentView(frame: NSRect(x: 0, y: 0, width: 800, height: 38))
-		let container = NSView(frame: NSRect(x: 0, y: 0, width: 618, height: 25))
-		container.translatesAutoresizingMaskIntoConstraints = false
-		contentView.addSubview(container)
-
-		contentView.setValue(container, forKey: "inputBarContainerView")
-		contentView.setValue(
-			container.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 7),
-			forKey: "inputBarTopConstraint"
-		)
-		contentView.setValue(
-			contentView.heightAnchor.constraint(equalToConstant: 38),
-			forKey: "textViewHeightConstraint"
-		)
-		contentView.setValue(
-			contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 35),
-			forKey: "windowContentViewMinimumHeight"
-		)
-
 		contentView.configure()
 
 		let textView = contentView.textView
@@ -169,35 +149,21 @@ struct AppKitBridgeIsolationTests {
 		#expect(contentView.textView === textView)
 	}
 
-	// MARK: - Observation tasks
-
-	@Test("A search-result cell drops its channel observations when the table reuses it")
-	func spotlightCellCancelsObservationsOnReuse() {
-		let window = NSWindow(
-			contentRect: NSRect(x: 0, y: 0, width: 400, height: 200),
-			styleMask: [.titled],
+	@Test("The main window shell is programmatic")
+	func mainWindowShellIsProgrammatic() {
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 477),
+			styleMask: [.titled, .closable, .miniaturizable, .resizable],
 			backing: .buffered,
-			defer: true
+			defer: false
 		)
-		let cell = ChannelSpotlightSearchResultCellView(frame: NSRect(x: 0, y: 0, width: 300, height: 40))
-		window.contentView?.addSubview(cell)
 
-		let client = GLTTestClient()
-		let channel = Channel(config: ChannelConfig(channelName: "#observed"))
-		channel.associatedClient = client
-
-		cell.objectValue = ChannelSpotlightSearchResult(channel: channel)
-
-		let observations = cell.channelObservations
-		#expect(observations.count == 2)
-
-		cell.prepareForReuse()
-
-		#expect(cell.channelObservations.isEmpty)
-
-		for observation in observations {
-			#expect(observation.isCancelled)
-		}
+		#expect(window.serverList.tableColumns.isEmpty)
+		#expect(window.memberList.tableColumns.isEmpty)
+		#expect(window.inputTextField.textLayoutManager != nil)
+		#expect(window.loadingScreen.isHidden)
+		#expect(window.formattingMenu.formatterMenu.submenu?.items.isEmpty == false)
+		#expect(Bundle.main.path(forResource: "TVCMainWindow", ofType: "nib") == nil)
 	}
 
 	@Test("Notifications posted in one turn all reach the handler")

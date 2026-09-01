@@ -43,17 +43,17 @@ esac
 cd "$repo_root" || exit 2
 
 # Vendored and generated Swift is not ours to isolate. `Sources/**/Vendor` is
-# the convention; the GRMustache import is the one tree that predates it.
+# the convention.
 is_excluded() {
 	case "$1" in
 		*/Vendor/*) return 0 ;;
-		"Sources/Frameworks/Static Libraries/GRMustache/"*) return 0 ;;
 		*) return 1 ;;
 	esac
 }
 
 files=()
 while IFS= read -r file; do
+	[ -f "$file" ] || continue
 	is_excluded "$file" && continue
 	files+=("$file")
 done < <(/usr/bin/git ls-files -- 'Sources/*.swift' | sort)

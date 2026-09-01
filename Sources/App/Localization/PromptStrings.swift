@@ -145,20 +145,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 		}
 	}
 
-	enum DataMigration {
-		static var copiedContentTitle: String {
-			String(localized: .Prompts.glasstualHasCopiedTheFollowingContent)
-		}
-
-		static var removeOldContentBody: String {
-			String(localized: .Prompts.cachesCustomAddonsCustomStylesPreferences)
-		}
-
-		static var removeOldContentButtonTitle: String {
-			String(localized: .Prompts.iWouldLikeToRemove)
-		}
-	}
-
 	enum Deletion {
 		static var confirmationTitle: String {
 			String(localized: .Prompts.doYouWantToDelete)
@@ -246,24 +232,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 		}
 	}
 
-	enum InlineMedia {
-		static var body: String {
-			String(localized: .Prompts.inlineMediaDoesNotUse)
-		}
-
-		static var openSystemSettingsButtonTitle: String {
-			String(localized: .Prompts.openSystemSettings)
-		}
-
-		static var title: String {
-			String(localized: .Prompts.areYouSureYouWish)
-		}
-
-		static var turnOnButtonTitle: String {
-			String(localized: .Prompts.turn)
-		}
-	}
-
 	enum Logging {
 		static var disabledForLowStorageTitle: String {
 			String(localized: .Prompts.loggingHasBeenDisabledBecauseThere)
@@ -338,44 +306,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 		}
 	}
 
-	enum Theme {
-		static var chooseDifferentStyleButtonTitle: String {
-			String(localized: .Prompts.chooseDifferentStyle)
-		}
-
-		static var incompatibleBody: String {
-			String(localized: .Prompts.someFeaturesWillNotWorkCorrectly)
-		}
-
-		static var keepLightButtonTitle: String {
-			String(localized: .Prompts.keepItLight)
-		}
-
-		static var modifiedBody: String {
-			String(localized: .Prompts.thisUsuallyOccursWhenOne)
-		}
-
-		static var switchToDarkButtonTitle: String {
-			String(localized: .Prompts.paintItBlack)
-		}
-
-		static var wantsDarkAppearanceBody: String {
-			String(localized: .Prompts.doYouWantToKeepGlasstuals)
-		}
-
-		static func incompatibleTitle(name: String) -> String {
-			String(localized: .Prompts.styleNamedIsNotDesigned(name))
-		}
-
-		static func modifiedTitle(name: String) -> String {
-			String(localized: .Prompts.styleNamedHasBeenModified(name))
-		}
-
-		static func wantsDarkAppearanceTitle(name: String) -> String {
-			String(localized: .Prompts.styleNamedWantsToEnableDark(name))
-		}
-	}
-
 	enum TransportSecurity {
 		static var invalidCertificateContinueButtonTitle: String {
 			Action.continueAction
@@ -429,16 +359,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 
 		static var title: String {
 			String(localized: .Prompts.setUserVhost)
-		}
-	}
-
-	enum WebInspector {
-		static var unavailableBody: String {
-			String(localized: .Prompts.disableWebkit2OrUpgrade)
-		}
-
-		static var unavailableTitle: String {
-			String(localized: .Prompts.inspectElementFeatureOfWebkit2Cannot)
 		}
 	}
 }

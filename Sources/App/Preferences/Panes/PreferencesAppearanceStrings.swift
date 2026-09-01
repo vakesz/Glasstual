@@ -12,7 +12,7 @@
 
 import Foundation
 
-nonisolated enum PreferencesInterfaceStrings { // nonisolated: value
+enum PreferencesInterfaceStrings {
 	static var appearanceDark: String {
 		String(localized: .TDCPreferencesController.interfaceAppearanceDark)
 	}
@@ -102,17 +102,9 @@ nonisolated enum PreferencesInterfaceStrings { // nonisolated: value
 	}
 }
 
-nonisolated enum PreferencesStyleStrings { // nonisolated: value
+enum PreferencesStyleStrings {
 	static var autoScrollbackMarker: String {
 		String(localized: .TDCPreferencesController.styleAutoScrollbackMarker)
-	}
-
-	static var browseFiles: String {
-		String(localized: .TDCPreferencesController.styleBrowseFiles)
-	}
-
-	static var browseFilesHelp: String {
-		String(localized: .TDCPreferencesController.styleBrowseFilesHelp)
 	}
 
 	static var disableNicknameColors: String {
@@ -121,14 +113,6 @@ nonisolated enum PreferencesStyleStrings { // nonisolated: value
 
 	static var fontChange: String {
 		String(localized: .TDCPreferencesController.styleFontChange)
-	}
-
-	static var fontChangeHelp: String {
-		String(localized: .TDCPreferencesController.styleFontChangeHelp)
-	}
-
-	static var fontCurrent: String {
-		String(localized: .TDCPreferencesController.styleFontCurrent)
 	}
 
 	static func fontDescription(name: String, size: String) -> String {
@@ -143,24 +127,8 @@ nonisolated enum PreferencesStyleStrings { // nonisolated: value
 		String(localized: .TDCPreferencesController.styleFormatSymbolsLabel)
 	}
 
-	static var headingDevelopers: String {
-		String(localized: .TDCPreferencesController.styleHeadingDevelopers)
-	}
-
 	static var headingScrollback: String {
 		String(localized: .TDCPreferencesController.styleHeadingScrollback)
-	}
-
-	static var inlineNicknameModeSymbol: String {
-		String(localized: .TDCPreferencesController.styleInlineNicknameModeSymbol)
-	}
-
-	static var label: String {
-		String(localized: .TDCPreferencesController.styleLabel)
-	}
-
-	static var modifyStyleSheet: String {
-		String(localized: .TDCPreferencesController.styleModifyStyleSheet)
 	}
 
 	static var nicknameFormatLabel: String {
@@ -173,14 +141,6 @@ nonisolated enum PreferencesStyleStrings { // nonisolated: value
 
 	static var nicknameFormatSymbolNickname: String {
 		String(localized: .TDCPreferencesController.styleNicknameFormatSymbolNickname)
-	}
-
-	static var reloadCustomStyles: String {
-		String(localized: .TDCPreferencesController.styleReloadCustomStyles)
-	}
-
-	static var reloadCustomStylesNote: String {
-		String(localized: .TDCPreferencesController.styleReloadCustomStylesNote)
 	}
 
 	static var scrollbackSaveLimit: String {
@@ -197,10 +157,6 @@ nonisolated enum PreferencesStyleStrings { // nonisolated: value
 
 	static var showJoinLeave: String {
 		String(localized: .TDCPreferencesController.styleShowJoinLeave)
-	}
-
-	static var showJoinLeaveNote: String {
-		String(localized: .TDCPreferencesController.styleShowJoinLeaveNote)
 	}
 
 	static var showMotd: String {

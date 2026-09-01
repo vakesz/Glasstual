@@ -81,7 +81,6 @@ public final class World: NSObject {
 	public private(set) var bandwidthOut: UInt64 = 0
 
 	/// Pending debounce of the preference-change broadcast, if any.
-	private var preferencesDidChangeTask: Task<Void, Never>?
 	private var savePeriodicallyLastSave = CFAbsoluteTimeGetCurrent()
 	private var lastDateHasChangedDate: Date?
 	/// Waits for the next local midnight so views can redraw their date rules.
@@ -206,9 +205,6 @@ public final class World: NSObject {
 
 		midnightTask?.cancel()
 		midnightTask = nil
-		preferencesDidChangeTask?.cancel()
-		preferencesDidChangeTask = nil
-
 		for client in clientList {
 			client.prepareForApplicationTermination()
 		}
@@ -218,23 +214,6 @@ public final class World: NSObject {
 		/* Every branch the connection code takes on a preference reads the
 		 snapshot, so it is refreshed before anything else reacts to the write. */
 		refreshEnvironmentPreferences()
-
-		guard SharedApplication.sharedThemeController().settings.postsPreferenceChangeNotifications else {
-			return
-		}
-		/* Preferences change in bursts as a pane is edited; tell the views once. */
-		guard preferencesDidChangeTask == nil else {
-			return
-		}
-
-		preferencesDidChangeTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(1))
-
-			guard Task.isCancelled == false, let self else { return }
-
-			preferencesDidChangeTask = nil
-			evaluateFunction(onAllViews: "Glasstual.preferencesDidChange", arguments: nil, onQueue: true)
-		}
 	}
 
 	/// Re-reads the defaults store and republishes the snapshot to every client.
@@ -265,10 +244,6 @@ public final class World: NSObject {
 	}
 
 	private func mainWindowAppearanceChanged(_: Notification) {
-		guard SharedApplication.sharedThemeController().settings.postsAppearanceChangeNotifications else {
-			return
-		}
-
 		environment.output?.notifyAllViewsAppearanceDidChange()
 	}
 
@@ -382,15 +357,6 @@ public final class World: NSObject {
 		}
 
 		NotificationCenter.default.post(name: .ircWorldDateHasChanged, object: nil)
-		evaluateFunction(
-			onAllViews: "Glasstual.dateChanged",
-			arguments: [
-				currentDayComponents.year ?? 0,
-				currentDayComponents.month ?? 0,
-				currentDayComponents.day ?? 0,
-			],
-			onQueue: false
-		)
 	}
 
 	private func dateChanged(_: Any?) {
@@ -469,21 +435,6 @@ public final class World: NSObject {
 				server.serverAddress.caseInsensitiveCompare(serverAddress) == .orderedSame
 			}
 		}
-	}
-
-	// MARK: - JavaScript
-
-	public func evaluateFunction(onAllViews function: String, arguments: [Any]?) {
-		evaluateFunction(onAllViews: function, arguments: arguments, onQueue: true)
-	}
-
-	public func evaluateFunction(onAllViews function: String, arguments: [Any]?, onQueue: Bool) {
-		let isTerminating = environment.services.applicationState?.applicationIsTerminating ?? false
-		guard isTerminating == false else {
-			return
-		}
-
-		environment.output?.evaluateFunctionOnAllViews(function, arguments: arguments, onQueue: onQueue)
 	}
 
 	// MARK: - Factory

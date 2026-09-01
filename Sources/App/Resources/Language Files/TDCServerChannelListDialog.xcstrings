@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "change-the-search-or-update" : {
+      "comment" : "Description shown when the public channel table has no visible rows.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change the search or update the list from the server."
+          }
+        }
+      }
+    },
+    "channel-list-search" : {
+      "comment" : "Accessibility label for the public channel search field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel List Search"
+          }
+        }
+      }
+    },
     "channel-list" : {
       "comment" : "Heading for a server channel list. The argument is the network name. Legacy key: 7qf-r0.",
       "extractionState" : "manual",
@@ -9,6 +33,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Channel List for “%@”"
+          }
+        }
+      }
+    },
+    "channel-name" : {
+      "comment" : "Column heading for public IRC channel names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Name"
+          }
+        }
+      }
+    },
+    "join-selected-channels" : {
+      "comment" : "Button that joins the selected public IRC channels.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join Selected Channels"
+          }
+        }
+      }
+    },
+    "member-count" : {
+      "comment" : "Column heading for the number of members in a public IRC channel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Member Count"
           }
         }
       }
@@ -25,6 +85,18 @@
         }
       }
     },
+    "no-public-channels" : {
+      "comment" : "Empty-state title for the public channel list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Public Channels"
+          }
+        }
+      }
+    },
     "only-list-channels-with-at-least" : {
       "comment" : "Help text for the server-side minimum channel member count filter. Legacy key: u7e-2s.",
       "extractionState" : "manual",
@@ -33,6 +105,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Only list channels with at least this many members. The server applies this filter (ELIST)."
+          }
+        }
+      }
+    },
+    "public-channel-list" : {
+      "comment" : "Accessibility label for the table of public IRC channels.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public Channel List"
           }
         }
       }
@@ -47,6 +131,54 @@
               "one" : { "stringUnit" : { "state" : "translated", "value" : "Channel List \u2014 %ld Public Channel" } },
               "other" : { "stringUnit" : { "state" : "translated", "value" : "Channel List \u2014 %ld Public Channels" } }
             }
+          }
+        }
+      }
+    },
+    "requesting-channel-list" : {
+      "comment" : "Progress text shown while requesting the public channel list from a server.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requesting channel list…"
+          }
+        }
+      }
+    },
+    "search-channels" : {
+      "comment" : "Placeholder in the public channel search field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search channels"
+          }
+        }
+      }
+    },
+    "topic" : {
+      "comment" : "Column heading for public IRC channel topics.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Topic"
+          }
+        }
+      }
+    },
+    "update-list" : {
+      "comment" : "Button that requests the public channel list again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update List"
           }
         }
       }

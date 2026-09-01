@@ -152,7 +152,7 @@ public final class Appearance: NSObject {
 
 	private func updateAppearanceBySystemChange(_ systemChanged: Bool) {
 		var appearanceType: TXAppearanceType = .light
-		let preferredAppearance = TextualPreferences.appearance()
+		let preferredAppearance = Preferences.Appearance.preferredAppearance.value
 
 		switch preferredAppearance {
 		case .inherited:

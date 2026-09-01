@@ -221,7 +221,7 @@ extension TDCFileTransferDialogTransferController {
 			endpoint: .connect(
 				host: hostAddress,
 				port: hostPort,
-				interfaceName: TextualPreferences.fileTransferIPAddressInterfaceName(),
+				interfaceName: Preferences.FileTransfers.ipAddressInterfaceName.storedValue,
 				timeout: .seconds(FileTransferLimits.connectTimeout)
 			),
 			filePath: filePath
@@ -234,8 +234,8 @@ extension TDCFileTransferDialogTransferController {
 		resetProperties()
 		transferStatus = .initializing
 
-		let portRangeStart = TextualPreferences.fileTransferPortRangeStart()
-		let portRangeEnd = TextualPreferences.fileTransferPortRangeEnd()
+		let portRangeStart = Preferences.FileTransfers.portRangeStart.value
+		let portRangeEnd = Preferences.FileTransfers.portRangeEnd.value
 		guard portRangeStart != 0, portRangeStart <= portRangeEnd else {
 			close(with: .noListeningPort)
 			return
@@ -309,7 +309,7 @@ extension TDCFileTransferDialogTransferController {
 
 	private func updateIPAddress() {
 		var address = transferDialog.IPAddress
-		let detectionMethod = TextualPreferences.fileTransferIPAddressDetectionMethod()
+		let detectionMethod = Preferences.FileTransfers.ipAddressDetectionMethod.value
 		let manuallyDetect = detectionMethod == .manual
 
 		if address == nil, !manuallyDetect,

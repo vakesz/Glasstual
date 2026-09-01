@@ -249,7 +249,7 @@ public extension TextualPreferences {
 		}
 
 		if reloadAction.contains(.highlightLogging) {
-			if logHighlights() == false {
+			if Preferences.Logging.logHighlights.value == false {
 				for client in appController.world.clientList {
 					client.clearCachedHighlights()
 				}
@@ -325,20 +325,13 @@ public extension TextualPreferences {
 
 	private class var styleReloadKeys: Set<String> {
 		[
+			Preferences.Theme.transcriptTheme.name,
 			"AutomaticallyFilterUnicodeTextSpam",
 			"ConversationTrackingIncludesUserModeSymbol",
 			"DisableRemoteNicknameColorHashing",
 			"DisplayEventInLogView -> Date Changes",
 			"DisplayEventInLogView -> Inline Media",
 			"DisplayEventInLogView -> Join, Part, Quit",
-			"Theme -> Nickname Format",
-			"Theme -> Timestamp Format",
-			"Theme -> Channel Font Preference Enabled",
-			"Theme -> Nickname Format Preference Enabled",
-			"Theme -> Timestamp Format Preference Enabled",
-			TPCPreferencesThemeFontNameDefaultsKey,
-			TPCPreferencesThemeFontSizeDefaultsKey,
-			TPCPreferencesThemeNameDefaultsKey,
 		]
 	}
 

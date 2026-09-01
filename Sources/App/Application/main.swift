@@ -5,8 +5,12 @@
 
 import AppKit
 
-/* The duplicate-instance check lives in -applicationWillFinishLaunching. It
- puts an alert on screen, and running one before NSApplicationMain forces
- NSApplication.shared into existence as a plain NSApplication rather than the
- principal class named by the bundle. */
-_ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)
+/* The app and its static menu graph are created in code. Keeping these as
+ top-level values gives the weak delegate/menu seams application lifetime. */
+let application = Application.shared
+let applicationController = ApplicationController()
+let menuController = TXMenuController()
+applicationController.menuController = menuController
+application.delegate = applicationController
+
+application.run()

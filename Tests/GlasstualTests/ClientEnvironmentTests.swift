@@ -99,9 +99,9 @@ struct ClientEnvironmentTests {
 	func liveSnapshotReadsTheStore() {
 		let snapshot = ClientPreferences.current()
 
-		#expect(snapshot.defaultKickMessage == TextualPreferences.defaultKickMessage())
-		#expect(snapshot.showJoinLeave == TextualPreferences.showJoinLeave())
-		#expect(snapshot.autojoinMaximumChannelJoins == TextualPreferences.autojoinMaximumChannelJoins())
+		#expect(snapshot.defaultKickMessage == Preferences.Commands.kickMessage.value)
+		#expect(snapshot.showJoinLeave == Preferences.Messages.showJoinLeave.value)
+		#expect(snapshot.autojoinMaximumChannelJoins == Preferences.Connection.autojoinMaximumChannelJoins.value)
 	}
 
 	@Test("Services are shared by reference, so installing a window reaches the clients")

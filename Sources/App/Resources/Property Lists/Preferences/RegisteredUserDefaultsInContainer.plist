@@ -28,8 +28,6 @@
 	<true/>
 	<key>AutomaticallyFilterUnicodeTextSpam</key>
 	<false/>
-	<key>AutomaticallyReloadCustomThemesWhenTheyChange</key>
-	<false/>
 	<key>ChannelNavigationIsServerSpecific</key>
 	<true/>
 	<key>ChannelOperatorDefaultLocalization -&gt; Kick Reason</key>
@@ -90,34 +88,22 @@
 	<true/>
 	<key>GlasstualDeveloperEnvironment</key>
 	<false/>
+	<key>IRC -&gt; Display Typing Notifications</key>
+	<true/>
 	<key>IRC -&gt; Enable echo-message Capability</key>
 	<false/>
+	<key>IRC -&gt; Request Chat History</key>
+	<true/>
 	<key>IRC -&gt; STS Policies</key>
 	<dict/>
+	<key>IRC -&gt; Synchronize Read Markers</key>
+	<true/>
 	<key>IRCopDefaultLocalizaiton -&gt; G:Line Reason</key>
 	<string>35d Your behavior is not conducive to the desired environment.</string>
 	<key>IRCopDefaultLocalizaiton -&gt; Kill Reason</key>
 	<string>Your behavior is not conducive to the desired environment.</string>
 	<key>IRCopDefaultLocalizaiton -&gt; Shun Reason</key>
 	<string>1d Shunned.</string>
-	<key>InlineMediaAllowsCleartextHTTP</key>
-	<true/>
-	<key>InlineMediaCheckEverything</key>
-	<false/>
-	<key>InlineMediaLimitBasicsToFiles</key>
-	<false/>
-	<key>InlineMediaLimitNaughtyContent</key>
-	<true/>
-	<key>InlineMediaLimitToBasics</key>
-	<false/>
-	<key>InlineMediaLimitUnsafeContent</key>
-	<true/>
-	<key>InlineMediaMaximumFilesize</key>
-	<integer>2</integer>
-	<key>InlineMediaMaximumHeight</key>
-	<integer>0</integer>
-	<key>InlineMediaScalingWidth</key>
-	<integer>300</integer>
 	<key>Keyboard -&gt; Command+W Key Action</key>
 	<integer>0</integer>
 	<key>Keyboard -&gt; Tab Key Action</key>
@@ -250,20 +236,13 @@
 	<false/>
 	<key>TextFieldTextReplacement</key>
 	<true/>
-	<key>Theme -&gt; Font Name</key>
-	<string>.AppleSystemUIFont</string>
-	<key>Theme -&gt; Font Size</key>
-	<real>13</real>
-	<key>Theme -&gt; Name</key>
-	<string>resource:Lines</string>
-	<key>Theme -&gt; Nickname Format</key>
-	<string>&lt;%@%n&gt;</string>
-	<key>Theme -&gt; Timestamp Format</key>
-	<string>%H:%M:%S</string>
 	<key>TrackNicknameHighlightsOfLocalUser</key>
 	<true/>
 	<key>TrackUserAwayStatusMaximumChannelSize</key>
 	<integer>300</integer>
+	<key>Transcript Theme</key>
+	<data>
+	</data>
 	<key>User List Mode Badge Colors -&gt; +a</key>
 	<data>
 	YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMS
@@ -314,11 +293,5 @@
 	</data>
 	<key>UserListDoubleClickAction</key>
 	<integer>200</integer>
-	<key>WebViewDoNotUsesCustomScrollers</key>
-	<false/>
-	<key>WebViewPreviewLinks</key>
-	<false/>
-	<key>WebViewProcessPoolSizeIsLimited</key>
-	<true/>
 </dict>
 </plist>

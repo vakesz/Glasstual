@@ -85,14 +85,6 @@ public extension TXMenuController {
 		channelView(.reactWithOtherEmoji, sender)
 	}
 
-	@IBAction func copyLogAsHtml(_ sender: Any?) {
-		channelView(.copyLogAsHTML, sender)
-	}
-
-	@IBAction func openWebInspector(_ sender: Any?) {
-		channelView(.openWebInspector, sender)
-	}
-
 	@IBAction func markScrollback(_ sender: Any?) {
 		channelView(.markScrollback, sender)
 	}
@@ -444,10 +436,6 @@ public extension TXMenuController {
 
 	@IBAction func toggleMemberListVisibility(_ sender: Any?) {
 		window(.toggleMemberList, sender)
-	}
-
-	@IBAction func forceReloadTheme(_ sender: Any?) {
-		window(.reloadTheme, sender)
 	}
 
 	@IBAction func toggleDeveloperMode(_ sender: Any?) {

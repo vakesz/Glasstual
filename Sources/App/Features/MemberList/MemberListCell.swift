@@ -26,36 +26,8 @@ private final class MemberListCellDrawingContext: NSObject {
 	var isWindowActive = false
 }
 
-private func avatarColorFromHSL(hue: CGFloat, saturation: CGFloat, lightness: CGFloat) -> NSColor {
-	/* HSL to HSB; both share the hue. */
-	let brightness = lightness + (saturation * min(lightness, 1.0 - lightness))
-	var hsbSaturation: CGFloat = 0.0
-
-	if brightness > 0.0 {
-		hsbSaturation = 2.0 * (1.0 - (lightness / brightness))
-	}
-
-	return NSColor(hue: hue, saturation: hsbSaturation, brightness: brightness, alpha: 1.0)
-}
-
 private func avatarColor(forNickname nickname: String) -> NSColor {
-	let style = UserNicknameColorStyleGenerator.nicknameColorStyle(for: nickname)
-
-	var color: NSColor?
-
-	if style.hasPrefix("#") {
-		color = NSColor.textual_color(hexadecimalValue: style)
-	} else if let match = style.wholeMatch(of: /hsl\((\d+),(\d+)%\,(\d+)%\)/) {
-		color = avatarColorFromHSL(
-			hue: CGFloat(Int(match.1) ?? 0) / 360.0,
-			saturation: CGFloat(Int(match.2) ?? 0) / 100.0,
-			lightness: CGFloat(Int(match.3) ?? 0) / 100.0
-		)
-	}
-
-	guard var color else {
-		return .systemGray
-	}
+	var color = UserNicknameColorStyleGenerator.color(for: nickname)
 
 	color = color.usingColorSpace(.sRGB) ?? color
 
@@ -161,11 +133,10 @@ private func symbolName(for rank: UserRank) -> String? {
 	}
 }
 
-@objc(TVCMemberListCell)
 public final class MemberListCell: NSTableCellView {
-	@IBOutlet private var cellTextField: NSTextField!
-	@IBOutlet private var statusImageView: NSImageView!
-	@IBOutlet private var statusImageWidthConstraint: NSLayoutConstraint!
+	private var cellTextField: NSTextField!
+	private var statusImageView: NSImageView!
+	private var statusImageWidthConstraint: NSLayoutConstraint!
 
 	private static let avatarCache: NSCache<NSString, NSImage> = {
 		let cache = NSCache<NSString, NSImage>()
@@ -175,11 +146,51 @@ public final class MemberListCell: NSTableCellView {
 
 	private var hasConfigured = false
 
-	/// Nib-time configuration, run by the table view when it vends the cell.
-	///
-	/// `awakeFromNib` is nonisolated, so this used to reach the text field
-	/// behind a runtime assumption. `tableView(_:viewFor:row:)` is on the main
-	/// actor by declaration and runs before the cell is ever drawn.
+	override public init(frame frameRect: NSRect) {
+		super.init(frame: frameRect)
+		installSubviews()
+	}
+
+	@available(*, unavailable)
+	required init?(coder _: NSCoder) {
+		fatalError("MemberListCell is programmatic")
+	}
+
+	private func installSubviews() {
+		let avatar = NSImageView()
+		avatar.imageScaling = .scaleProportionallyDown
+		avatar.translatesAutoresizingMaskIntoConstraints = false
+		imageView = avatar
+
+		let label = NSTextField(labelWithString: "")
+		label.translatesAutoresizingMaskIntoConstraints = false
+		label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+		cellTextField = label
+		textField = label
+
+		let status = NSImageView()
+		status.imageScaling = .scaleProportionallyDown
+		status.translatesAutoresizingMaskIntoConstraints = false
+		statusImageView = status
+
+		[avatar, label, status].forEach(addSubview)
+		statusImageWidthConstraint = status.widthAnchor.constraint(equalToConstant: statusImageWidth)
+		NSLayoutConstraint.activate([
+			avatar.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 2),
+			avatar.centerYAnchor.constraint(equalTo: centerYAnchor),
+			avatar.widthAnchor.constraint(equalToConstant: 24),
+			avatar.heightAnchor.constraint(equalToConstant: 24),
+			label.leadingAnchor.constraint(equalTo: avatar.trailingAnchor, constant: 8),
+			label.centerYAnchor.constraint(equalTo: centerYAnchor),
+			status.leadingAnchor.constraint(greaterThanOrEqualTo: label.trailingAnchor, constant: 4),
+			status.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+			status.centerYAnchor.constraint(equalTo: centerYAnchor),
+			statusImageWidthConstraint,
+			status.heightAnchor.constraint(equalToConstant: 16),
+		])
+	}
+
+	/// Completes cell presentation setup when the table vends it.
 	public func configure() {
 		guard hasConfigured == false else {
 			return
@@ -321,7 +332,7 @@ public final class MemberListCell: NSTableCellView {
 
 		var userRank: UserRank = .none
 
-		if TextualPreferences.memberListSortFavorsServerStaff(), cellItem.user.isIRCop {
+		if Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue, cellItem.user.isIRCop {
 			userRank = .irCopByMode
 		}
 
@@ -365,22 +376,19 @@ public final class MemberListCell: NSTableCellView {
 			return
 		}
 
-		/* Configured here rather than at nib load: `awakeFromNib` is nonisolated,
-		 and the member list's outlets are not connected yet when the list joins
-		 its window. The call is idempotent. */
+		// The call is idempotent and keeps presentation setup at the use site.
 		userInfoPopover.configure()
 
 		let nickname = cellItem.user.nickname
 
 		userInfoPopover.nicknameField.stringValue = nickname
 
-		if let avatarImageView = userInfoPopover.avatarImageView {
-			avatarImageView.image = Self.avatarImage(
-				forNickname: nickname,
-				size: avatarImageView.bounds.height
-			)
-			avatarImageView.cell?.setAccessibilityElement(false)
-		}
+		let avatarImageView = userInfoPopover.avatarImageView
+		avatarImageView.image = Self.avatarImage(
+			forNickname: nickname,
+			size: avatarImageView.bounds.height
+		)
+		avatarImageView.cell?.setAccessibilityElement(false)
 
 		var hostmaskUsername = cellItem.user.username ?? ""
 		if hostmaskUsername.isEmpty {
@@ -388,7 +396,7 @@ public final class MemberListCell: NSTableCellView {
 		}
 		userInfoPopover.usernameField.stringValue = hostmaskUsername
 
-		let stripIRCFormatting = TextualPreferences.removeAllFormatting()
+		let stripIRCFormatting = Preferences.Messages.removeAllFormatting.value
 
 		var hostmaskAddress = cellItem.user.address ?? ""
 		if hostmaskAddress.isEmpty {
@@ -485,8 +493,26 @@ public final class MemberListCell: NSTableCellView {
 
 // MARK: - Header Cell
 
-@objc(TVCMemberListHeaderCell)
 public final class MemberListHeaderCell: NSTableCellView {
+	override public init(frame frameRect: NSRect) {
+		super.init(frame: frameRect)
+		let label = NSTextField(labelWithString: "")
+		label.translatesAutoresizingMaskIntoConstraints = false
+		label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+		textField = label
+		addSubview(label)
+		NSLayoutConstraint.activate([
+			label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+			label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -2),
+			label.centerYAnchor.constraint(equalTo: centerYAnchor),
+		])
+	}
+
+	@available(*, unavailable)
+	required init?(coder _: NSCoder) {
+		fatalError("MemberListHeaderCell is programmatic")
+	}
+
 	override public var objectValue: Any? {
 		didSet {
 			guard let section = objectValue as? MemberListSection else {
