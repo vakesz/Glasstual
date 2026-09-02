@@ -252,6 +252,7 @@ extension IRCClient {
 		}
 		guard let channel = findChannel(message.params[1]), !channel.channelNamesReceived else { return }
 		channel.channelNamesReceived = true
+		sendInitialWhoRequest(to: channel)
 		if channel.numberOfMembers == 1, !isBrokenIRCdKnownAsTwitch {
 			if let defaultModes = channel.config.defaultModes, !defaultModes.isEmpty {
 				sendModes(defaultModes, withParametersString: nil, in: channel)

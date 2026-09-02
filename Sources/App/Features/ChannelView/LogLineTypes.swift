@@ -65,6 +65,18 @@ public enum LogLineType: UInt, Codable, Sendable {
 	case quit = 19
 	case topic = 20
 	case website = 21
+
+	/// Something a person said, as opposed to an event the client narrates —
+	/// a join, a mode, a topic. The unread marker is placed before the first
+	/// of these, not before the first line of any kind.
+	public nonisolated var isConversation: Bool { // nonisolated: value
+		switch self {
+		case .action, .actionNoHighlight, .notice, .privateMessage, .privateMessageNoHighlight:
+			true
+		default:
+			false
+		}
+	}
 }
 
 /** Persisted alongside the log line; see `LogLineType`. */
