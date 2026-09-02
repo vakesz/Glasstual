@@ -82,6 +82,7 @@ public final class ServerList {
 				isActive: client.isActive,
 				isSecured: client.isSecured,
 				isExpanded: isFiltering || isExpanded(client),
+				showsDisclosure: isFiltering == false,
 				channels: visibleChannels(for: client).map(channelRow)
 			)
 		}
@@ -110,12 +111,17 @@ public final class ServerList {
 	}
 
 	public var clients: [IRCClient] {
-		mainWindow?.world.clientList ?? []
+		mainWindow?.world?.clientList ?? []
 	}
 
+	/** The items the list is drawing, in row order.
+
+	 The same projection `rebuildRows()` draws, so the index-based commands —
+	 next and previous conversation, the jump to a random unread row — address
+	 the rows the reader can see rather than a tree the filter has hidden. */
 	private var visibleItems: [IRCTreeItem] {
-		clients.flatMap { client in
-			client.sidebarItemIsExpanded ? [client] + client.channelList : [client]
+		clients.filter(isVisible).flatMap { client -> [IRCTreeItem] in
+			[client] + visibleChannels(for: client)
 		}
 	}
 
@@ -130,7 +136,7 @@ public final class ServerList {
 
 	public var selectedItem: IRCTreeItem? {
 		guard let selectedItemIdentifier else { return nil }
-		return mainWindow?.world.findItem(withId: selectedItemIdentifier)
+		return mainWindow?.world?.findItem(withId: selectedItemIdentifier)
 	}
 
 	public var groupItems: [IRCTreeItem] {
@@ -144,10 +150,6 @@ public final class ServerList {
 	public func row(forItem item: Any?) -> Int {
 		guard let item = item as? IRCTreeItem else { return -1 }
 		return visibleItems.firstIndex { $0 === item } ?? -1
-	}
-
-	public func isRowSelected(_ row: Int) -> Bool {
-		row == selectedRow
 	}
 
 	public func selectItem(at row: Int) {
@@ -224,10 +226,6 @@ public final class ServerList {
 		setExpanded(true, for: client)
 	}
 
-	public func animator() -> ServerList {
-		self
-	}
-
 	public func beginUpdates() {
 		updateDepth += 1
 	}
@@ -272,27 +270,11 @@ public final class ServerList {
 		rebuildRows()
 	}
 
-	public func refreshAllDrawings(_: Bool) {
-		refreshAllDrawings()
-	}
-
-	public func refreshDrawing(forRows _: IndexSet, skipOcclusionCheck _: Bool = false) {
-		rebuildRows()
-	}
-
-	public func refreshDrawing(forRow _: Int, skipOcclusionCheck _: Bool = false) {
-		rebuildRows()
-	}
-
 	public func refreshDrawing(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
 		rebuildRows()
 	}
 
 	public func refreshMessageCount(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
-		rebuildRows()
-	}
-
-	public func refreshAllUnreadMessageCountBadges(_: Bool = false) {
 		rebuildRows()
 	}
 
@@ -307,7 +289,7 @@ public final class ServerList {
 	func menu(for identifiers: Set<String>) -> NSMenu? {
 		guard let controller = AppController.shared.menuController else { return nil }
 		guard let identifier = identifiers.first,
-		      let item = mainWindow?.world.findItem(withId: identifier)
+		      let item = mainWindow?.world?.findItem(withId: identifier)
 		else {
 			return controller.serverListNoSelectionMenu
 		}

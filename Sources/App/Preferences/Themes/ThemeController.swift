@@ -83,10 +83,6 @@ public final class ThemeController: NSObject {
 		super.init()
 	}
 
-	public func load() {
-		reload()
-	}
-
 	public func reload() {
 		let stored = Preferences.Theme.transcriptTheme.value
 		guard stored.isEmpty == false else {
@@ -105,11 +101,17 @@ public final class ThemeController: NSObject {
 		}
 	}
 
-	public func apply(_ newTheme: TranscriptTheme) {
+	/// Publishes a theme, or reports that it was rejected so the caller can say
+	/// so instead of dropping the edit silently.
+	@discardableResult
+	public func apply(_ newTheme: TranscriptTheme) -> Bool {
 		guard newTheme.isValid else {
-			return
+			Self.logger.error("Rejected a transcript theme with values outside the supported ranges")
+			return false
 		}
+
 		publish(newTheme, persist: true)
+		return true
 	}
 
 	public func reset(layout: TranscriptThemeLayout? = nil) {
@@ -118,6 +120,8 @@ public final class ThemeController: NSObject {
 	}
 
 	public func importTheme(from data: Data) throws {
+		/* `decode` rejects anything `isValid` would, so `apply` cannot fail
+		 here. */
 		try apply(Self.decode(data))
 	}
 
@@ -126,8 +130,6 @@ public final class ThemeController: NSObject {
 		encoder.outputFormat = .xml
 		return try encoder.encode(theme)
 	}
-
-	public func prepareForApplicationTermination() {}
 
 	public func appearanceDidChange() {
 		publishSnapshot()

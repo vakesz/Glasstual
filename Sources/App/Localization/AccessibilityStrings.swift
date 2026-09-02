@@ -37,10 +37,6 @@ nonisolated enum AccessibilityStrings { // nonisolated: value
 		String(localized: .Accessibility.connectionDisconnected(connectionName))
 	}
 
-	static var errorIcon: String {
-		String(localized: .Accessibility.errorIcon)
-	}
-
 	static var mainWindow: String {
 		String(localized: .Accessibility.mainWindow)
 	}

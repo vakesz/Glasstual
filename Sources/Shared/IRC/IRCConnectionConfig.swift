@@ -40,7 +40,7 @@ import Foundation
 import os
 
 private nonisolated let connectionConfigLogger = Logger( // nonisolated: let
-	subsystem: "com.vakesz.glasstual",
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "Connection"
 )
 
@@ -237,8 +237,12 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		try container.encode(fallbackEncoding, forKey: .fallbackEncoding)
 	}
 
-	/// A zero for any of these means the sender left it out, not that it wanted
-	/// a port of zero or a flood window of nothing.
+	/** A zero for any of these means the sender left it out, not that it wanted
+	 a port of zero or a flood window of nothing.
+
+	 The flood-control clamps cannot cover this: `init(from:)` assigns inside an
+	 initializer, where a `didSet` observer does not run, so a stored zero
+	 survives until it is repaired here. */
 	private mutating func applyMissingDefaults() {
 		if proxyPort == 0 {
 			proxyPort = IRCConnectionDefaults.proxyPort
@@ -285,7 +289,7 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
  to, so the encoded configuration travels as one `Data` blob inside this
  envelope rather than as a class with a property per setting. */
 @objc(RCMConnectionConfigEnvelope)
-public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // nonisolated: value
+public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCoding { // nonisolated: immutable
 	private static let configurationCodingKey = "config"
 
 	public let config: IRCConnectionConfig

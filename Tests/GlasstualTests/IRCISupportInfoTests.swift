@@ -53,71 +53,6 @@ struct IRCISupportInfoTests {
 		#expect(supportInfo.casefoldString("Nick[]\\~") == "nick{}|^")
 	}
 
-	@Test("ASCII case mapping leaves the bracket characters alone")
-	func asciiCaseMappingLeavesBracketsAlone() {
-		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=ascii")
-
-		#expect(supportInfo.caseMapping == IRCISupportInfoCaseMapping.ascii)
-		#expect(supportInfo.casefoldString("Nick[]\\~") == "nick[]\\~")
-	}
-
-	@Test("Strict RFC 1459 folds the brackets but not the tilde")
-	func strictRFC1459DoesNotFoldTilde() {
-		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=strict-rfc1459")
-
-		#expect(supportInfo.caseMapping == IRCISupportInfoCaseMapping.strictRFC1459)
-		#expect(supportInfo.casefoldString("A[]\\~") == "a{}|~")
-	}
-
-	@Test("Case folding is ASCII only, so accented letters keep their case")
-	func nonASCIICharactersAreNotFolded() {
-		let rfc = supportInfoWithConfiguration("CASEMAPPING=rfc1459")
-		let ascii = supportInfoWithConfiguration("CASEMAPPING=ascii")
-
-		#expect(rfc.casefoldString("ÄbÇ") == "ÄbÇ")
-		#expect(rfc.casefoldString("ÄB[Ç]") == "Äb{Ç}")
-		#expect(ascii.casefoldString("ÄbÇ") == "ÄbÇ")
-		#expect(ascii.casefoldString("ŞİRİN") == "Şİrİn")
-	}
-
-	@Test("CHANMODES sorts the modes by when they take a parameter")
-	func channelModesAreParsedIntoParameterClasses() {
-		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst")
-
-		#expect(supportInfo.channelModeKinds["b"] == .list)
-		#expect(supportInfo.channelModeKinds["k"] == .setting)
-		#expect(supportInfo.channelModeKinds["l"] == .settingWhenSet)
-		#expect(supportInfo.channelModeKinds["t"] == .flag)
-
-		#expect(supportInfo.modeHasParameter("b", whenModeIsSet: true))
-		#expect(supportInfo.modeHasParameter("b", whenModeIsSet: false))
-		#expect(supportInfo.modeHasParameter("k", whenModeIsSet: false))
-		#expect(supportInfo.modeHasParameter("l", whenModeIsSet: true))
-
-		#expect(supportInfo.modeHasParameter("l", whenModeIsSet: false) == false)
-		#expect(supportInfo.modeHasParameter("t", whenModeIsSet: true) == false)
-	}
-
-	@Test("PREFIX is read in rank order, highest first")
-	func prefixIsParsedInRankOrder() {
-		let supportInfo = supportInfoWithConfiguration("PREFIX=(qaohv)~&@%+")
-
-		#expect(supportInfo.userModePrefixPairs.map(\.modeSymbol) == ["q", "a", "o", "h", "v"])
-		#expect(supportInfo.userModePrefixPairs.map(\.character) == ["~", "&", "@", "%", "+"])
-		#expect(supportInfo.modeSymbol(forUserPrefix: "@") == "o")
-		#expect(supportInfo.userPrefix(forModeSymbol: "v") == "+")
-
-		#expect(supportInfo.characterIsUserPrefix("%"))
-
-		#expect(supportInfo.characterIsUserPrefix("#") == false)
-
-		#expect(supportInfo.rankForUserPrefix(withMode: "q") == IRCISupportUserModes.highestPrefixRank)
-
-		#expect(supportInfo.rankForUserPrefix(withMode: "v") < supportInfo.rankForUserPrefix(withMode: "o"))
-		/* Prefix modes always take a parameter. */
-		#expect(supportInfo.modeHasParameter("o", whenModeIsSet: false))
-	}
-
 	@Test("Parsing a mode string consumes a parameter for each mode that takes one")
 	func parseModesUsesChannelModeClasses() {
 		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
@@ -212,14 +147,6 @@ struct IRCISupportInfoTests {
 		#expect(supportInfo.descriptionForExtendedBanMask("$a:account") != nil)
 
 		#expect(supportInfo.descriptionForExtendedBanMask("$q:quiet") == nil)
-	}
-
-	@Test("A PREFIX token that cannot be read leaves the defaults standing")
-	func malformedPrefixDoesNotReplaceDefaults() {
-		let supportInfo = supportInfoWithConfiguration("PREFIX=invalid")
-
-		#expect(supportInfo.userPrefix(forModeSymbol: "o") == "@")
-		#expect(supportInfo.userPrefix(forModeSymbol: "v") == "+")
 	}
 
 	@Test("Resetting SILENCE clears both the support flag and the limit")

@@ -40,7 +40,7 @@ import Foundation
 import Testing
 
 /// One entry from the numerics registry.
-nonisolated struct IRCSpecNumericCase: CustomTestStringConvertible {
+nonisolated struct IRCSpecNumericCase: CustomTestStringConvertible { // nonisolated: value
 	let name: String
 	let value: UInt
 	let numeric: IRCNumeric
@@ -57,7 +57,7 @@ nonisolated struct IRCSpecNumericCase: CustomTestStringConvertible {
 @MainActor
 struct IRCSpecNumericsTests {
 	/// RFC 2812 §5.1 and §5.2, plus the modern additions the client handles.
-	nonisolated static let registry: [IRCSpecNumericCase] = [
+	nonisolated static let registry: [IRCSpecNumericCase] = [ // nonisolated: let
 		IRCSpecNumericCase(name: "RPL_WELCOME", value: 1, numeric: .welcome),
 		IRCSpecNumericCase(name: "RPL_YOURHOST", value: 2, numeric: .yourhost),
 		IRCSpecNumericCase(name: "RPL_CREATED", value: 3, numeric: .created),

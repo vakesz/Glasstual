@@ -40,7 +40,7 @@ import Foundation
 import Testing
 
 /// One parsed mode change, in the shape the assertions read.
-nonisolated struct IRCSpecParsedMode: Equatable, CustomStringConvertible {
+nonisolated struct IRCSpecParsedMode: Equatable, CustomStringConvertible { // nonisolated: value
 	let symbol: String
 	let isSet: Bool
 	let parameter: String?

@@ -260,10 +260,6 @@ public extension IRCClient {
 		)
 	}
 
-	func DCCSendEscapeFilename(_ filename: String) -> String {
-		ClientWireUtilities.escapedDCCFilename(filename)
-	}
-
 	var DCCTransferAddress: String? {
 		guard let address = fileTransferCenter.IPAddress else { return nil }
 		return DCCFormattedAddress(address)
@@ -275,10 +271,6 @@ public extension IRCClient {
 			dccFileTransferLogger.error("The configured file-transfer address is invalid")
 		}
 		return formattedAddress
-	}
-
-	func DCCAddressFromString(_ string: String) -> String {
-		ClientWireUtilities.displayDCCAddress(string)
 	}
 
 	private func processFileTransferRequest(_ request: DCCFileTransferRequest, sender: String) {

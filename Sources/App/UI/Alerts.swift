@@ -508,10 +508,9 @@ public extension Alerts {
 		}
 	}
 
-	/// A non-blocking sheet on a specific window.
+	/// A non-blocking sheet on the main window.
 	@MainActor
 	static func alertSheet(
-		with _: MainWindow,
 		body bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -537,16 +536,8 @@ public extension Alerts {
 	/// The same sheet, taking the request whole. What a caller that already has
 	/// an `AlertRequest` — the protocol layer, through `ClientOutput` — needs.
 	static func alertSheet(
-		with _: MainWindow,
 		request: AlertRequest,
 		completionBlock: AlertCompletion? = nil
-	) {
-		alertSheet(request: request, completionBlock: completionBlock)
-	}
-
-	private static func alertSheet(
-		request: AlertRequest,
-		completionBlock: AlertCompletion?
 	) {
 		Task { @MainActor in
 			let outcome = await run(request, on: .mainWindow)

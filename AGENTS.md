@@ -106,14 +106,24 @@ on every `make lint`.
   | `// nonisolated: let` | a `let` of `Sendable` type |
   | `// nonisolated: xpc-shim` | an XPC/`@objc` protocol requirement, or its one-line forwarding shim |
   | `// nonisolated: value` | a `struct`/`enum` with no reference-typed state |
+  | `// nonisolated: immutable` | a `final class` with no stored state, or whose every stored property is a `let` of `Sendable` type |
+  | `// nonisolated: guarded` | a class a boundary pins outside every actor, whose mutable state is a `Mutex<Value>` or a store that synchronizes itself |
 
-  Nothing else counts as marked. If a site fits none of the four, it is not a
-  `nonisolated` site: a nonisolated class with mutable state becomes an actor,
-  a main-actor class, or a `Mutex`-guarded value.
+  Nothing else counts as marked. `value` says the type is one, so it never
+  belongs on a `class`: a namespace of `static` members becomes an `enum`, and
+  a class that only holds `let`s is `immutable`. `guarded` is the last resort
+  and covers two sites — `PluginManager`, which the transcript renderer reads
+  off the main actor, and `TextualUserDefaults`, a handle on a suite Foundation
+  synchronizes. If a site fits none of the six, it is not a `nonisolated` site:
+  a nonisolated class with mutable state becomes an actor or a main-actor
+  class.
 
-The SwiftLint rules cover three categories under `Sources/` and fail when they
-find any.
-All three are at zero and stay there: there is no ceiling to raise, no
+Five SwiftLint custom rules cover these categories over `Sources/` and `Tests/`
+alike, and fail when they find any: `isolation_escape_hatch`,
+`manual_lock_or_queue`, `misplaced_fsevents_queue_marker`,
+`unmarked_nonisolated` and `value_marker_on_class`. A test helper is a
+`nonisolated` site like any other and carries the same marker.
+All five are at zero and stay there: there is no ceiling to raise, no
 ratchet, and no exception to add. A change that trips the gate has put a
 boundary in the wrong place — move the state into the domain that uses it, or
 hand a `Sendable` snapshot across.

@@ -43,8 +43,8 @@ import Testing
 @MainActor
 @Suite("Log line")
 struct LogLineTests {
-	@Test("The message identifier survives a copy and a secure-coding round trip")
-	func messageIdentifierSurvivesArchivingAndCopying() throws {
+	@Test("The message identifier survives a secure-coding round trip")
+	func messageIdentifierSurvivesArchiving() throws {
 		var line = LogLine()
 		line.command = "privmsg"
 		line.lineType = .privateMessage
@@ -52,14 +52,11 @@ struct LogLineTests {
 		line.messageBody = "hello"
 		line.messageIdentifier = "63E1033A0"
 
-		let copy = line
-		#expect(copy.messageIdentifier == "63E1033A0")
-
-		let data = try NSKeyedArchiver.archivedData(withRootObject: copy.archived, requiringSecureCoding: true)
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
 		let decoded = try #require(LogLine(data: data))
 
 		#expect(decoded.messageIdentifier == "63E1033A0")
-		#expect(decoded.uniqueIdentifier == copy.uniqueIdentifier)
+		#expect(decoded.uniqueIdentifier == line.uniqueIdentifier)
 		#expect(decoded.messageBody == "hello")
 	}
 
@@ -74,8 +71,11 @@ struct LogLineTests {
 		#expect(decoded.messageIdentifier == nil)
 	}
 
-	@Test("A copy carries every value of the original and is independent of it")
-	func copyPreservesCompleteValueState() {
+	/// Scrollback is stored as this archive, so a field the encoder forgets is a
+	/// field the user loses on relaunch. Every property a line carries is set to
+	/// something distinguishable and read back off the decoded value.
+	@Test("Every value a line carries survives the scrollback archive")
+	func archivePreservesCompleteValueState() throws {
 		let receivedAt = Date(timeIntervalSince1970: 1_725_000_000)
 		var line = LogLine()
 		line.isEncrypted = true
@@ -93,26 +93,25 @@ struct LogLineTests {
 		line.highlightKeywords = ["hello"]
 		line.excludeKeywords = ["ignore"]
 
-		var copy = line
-		copy.messageBody = "changed"
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.archived, requiringSecureCoding: true)
+		let decoded = try #require(LogLine(data: data))
 
-		#expect(line.messageBody == "hello")
-		#expect(copy.isEncrypted)
-		#expect(copy.isFirstForDay)
-		#expect(copy.receivedAt == receivedAt)
-		#expect(copy.nickname == "alice")
-		#expect(copy.messageBody == "changed")
-		#expect(copy.command == "PRIVMSG")
-		#expect(copy.messageIdentifier == "message-id")
-		#expect(copy.replyToMessageIdentifier == "parent-id")
-		#expect(copy.reactions == ["👍": ["bob", "carol"]])
-		#expect(copy.lineType == .privateMessage)
-		#expect(copy.memberType == .localUser)
-		#expect(copy.deliveryState == .delivered)
-		#expect(copy.highlightKeywords == ["hello"])
-		#expect(copy.excludeKeywords == ["ignore"])
-		#expect(copy.uniqueIdentifier == line.uniqueIdentifier)
-		#expect(copy.sessionIdentifier == line.sessionIdentifier)
+		#expect(decoded.isEncrypted)
+		#expect(decoded.isFirstForDay)
+		#expect(decoded.receivedAt == receivedAt)
+		#expect(decoded.nickname == "alice")
+		#expect(decoded.messageBody == "hello")
+		#expect(decoded.command == "PRIVMSG")
+		#expect(decoded.messageIdentifier == "message-id")
+		#expect(decoded.replyToMessageIdentifier == "parent-id")
+		#expect(decoded.reactions == ["👍": ["bob", "carol"]])
+		#expect(decoded.lineType == .privateMessage)
+		#expect(decoded.memberType == .localUser)
+		#expect(decoded.deliveryState == .delivered)
+		#expect(decoded.highlightKeywords == ["hello"])
+		#expect(decoded.excludeKeywords == ["ignore"])
+		#expect(decoded.uniqueIdentifier == line.uniqueIdentifier)
+		#expect(decoded.sessionIdentifier == line.sessionIdentifier)
 	}
 
 	@Test("A pending delivery state is not carried out of the archive")

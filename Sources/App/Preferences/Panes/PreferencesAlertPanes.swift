@@ -275,14 +275,6 @@ struct PreferencesFloodControlSections: View {
 	var body: some View {
 		Section {
 			delaySlider(
-				label: PreferencesFloodControlStrings.joinDelayLabel,
-				note: PreferencesFloodControlStrings.joinDelayNote,
-				value: model.preferences.sliderBinding(
-					for: Preferences.Connection.autojoinDelayBetweenChannelJoins
-				),
-				range: 0.5 ... 10.0
-			)
-			delaySlider(
 				label: PreferencesFloodControlStrings.identifyDelayLabel,
 				note: PreferencesFloodControlStrings.identifyDelayNote,
 				value: model.preferences.sliderBinding(

@@ -35,6 +35,7 @@ enum PreferencesPaneKeys {
 			Preferences.Connection.echoMessageCapability,
 			Preferences.Connection.requestChatHistory,
 			Preferences.Connection.synchronizeReadMarkers,
+			Preferences.Connection.disabledCapabilities,
 		],
 		.notifications: [
 			Preferences.Notifications.onlySpeakForSelection,
@@ -104,7 +105,6 @@ enum PreferencesPaneKeys {
 			Preferences.Commands.noticeDestination,
 		],
 		.floodControl: [
-			Preferences.Connection.autojoinDelayBetweenChannelJoins,
 			Preferences.Connection.autojoinDelayAfterIdentification,
 			Preferences.Appearance.trackUserAwayStatusMaximumChannelSize,
 		],

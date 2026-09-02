@@ -70,7 +70,10 @@ public extension IRCClient {
 			      !channel.config.ignoreGeneralEventMessages
 			else { continue }
 
-			let nicknameList = Self.netsplitNicknameList(for: nicknames)
+			let nicknameList = ClientWireUtilities.netsplitNicknameList(
+				nicknames,
+				limit: IRCNetsplitSummaryPolicy.nicknameLimit
+			)
 			let message = if isNetsplit {
 				IRCInboundStrings.History.netsplit(
 					firstServer: firstServer,
@@ -94,10 +97,6 @@ public extension IRCClient {
 				command: isNetsplit ? "QUIT" : "JOIN"
 			)
 		}
-	}
-
-	class func netsplitNicknameList(for nicknames: [String]) -> String {
-		ClientWireUtilities.netsplitNicknameList(nicknames, limit: IRCNetsplitSummaryPolicy.nicknameLimit)
 	}
 
 	func collapseNetsplitMessage(_ message: Message, in channel: IRCChannel) -> Bool {

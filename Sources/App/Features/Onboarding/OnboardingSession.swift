@@ -87,7 +87,7 @@ public final class OnboardingSession {
 	private func applyAppearanceSettings() {
 		var reloadAction: PreferencesReloadAction = []
 		let fontSize = OnboardingSettings.fontSize(for: model.settings.textSize)
-		var transcriptTheme = model.settings.styleName == "Lines" ? TranscriptTheme.lines : .bubbles
+		var transcriptTheme = model.settings.transcriptStyle.theme
 		transcriptTheme.fontSize = fontSize
 		SharedApplication.sharedThemeController().apply(transcriptTheme)
 
@@ -129,7 +129,7 @@ public final class OnboardingSession {
 			return
 		}
 
-		let client = world.createClient(with: config, reload: true)
+		let client = world.createClient(with: config)
 		mainWindow.expandClient(client)
 		world.save()
 		_ = mainWindow.reloadLoadingScreen()

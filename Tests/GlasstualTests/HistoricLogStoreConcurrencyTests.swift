@@ -1,31 +1,20 @@
 import Foundation
 @testable import Glasstual
-import Synchronization
 import Testing
 
-/// One value, shared by the store's isolation domain and the test's.
-private final nonisolated class Locked<Value: Sendable>: Sendable {
-	private let storage: Mutex<Value>
-
-	init(_ value: Value) {
-		storage = Mutex(value)
-	}
-
-	var value: Value {
-		storage.withLock { $0 }
-	}
-
-	func set(_ value: Value) {
-		storage.withLock { $0 = value }
-	}
-}
-
+/// The database name for one harness. `HistoricLogStore` only writes the slot
+/// when it finds it empty and has to name the file itself, so filling it in up
+/// front makes the store's reads answerable from a `let` instead of a box the
+/// store's isolation domain and the test would have to share. Each harness gets
+/// its own temporary directory, so a name per store is all the tests need.
 private nonisolated struct ScratchFilenameStore: HistoricLogFilenameStoring { // nonisolated: value
-	private let storage = Locked<String?>(nil)
+	private let filename = "logControllerHistoricLog_\(UUID().uuidString).sqlite"
 
 	var databaseFilename: String? {
-		get { storage.value }
-		nonmutating set { storage.set(newValue) }
+		get { filename }
+		nonmutating set {
+			Issue.record("The store renamed its database to \(newValue ?? "nothing").")
+		}
 	}
 }
 
@@ -67,7 +56,7 @@ private actor HistoricLogStoreHarness {
 	}
 
 	func openDatabase() async -> Bool {
-		await store.openDatabase(inDirectory: directory.path)
+		await store.openDatabase(inDirectory: directory.path).isOpen
 	}
 
 	func write(_ index: Int, inView view: String) async {

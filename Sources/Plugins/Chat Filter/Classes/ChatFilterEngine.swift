@@ -104,10 +104,15 @@ final class ChatFilterEngine {
 
 		if filter.ageLimit > 0 {
 			guard let sender else { return false }
-			let elapsed = Date.timeIntervalSinceReferenceDate - sender.creationTime
+
+			/* The editor asks for the membership age the filter applies to, so a
+			 sender outside that comparison is the one that does not match. */
+			let age = sender.membershipAge
+			let limit = Double(filter.ageLimit)
+
 			switch filter.ageComparator {
-			case .lessThan where elapsed < Double(filter.ageLimit): return false
-			case .greaterThan where elapsed >= Double(filter.ageLimit): return false
+			case .lessThan where age >= limit: return false
+			case .greaterThan where age <= limit: return false
 			default: break
 			}
 		}

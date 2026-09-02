@@ -24,7 +24,7 @@ import Testing
 @Suite("XPC service privacy manifests")
 struct PrivacyManifestTests {
 	/// One required-reason API category and the spellings that reach it.
-	nonisolated struct Category: Sendable {
+	nonisolated struct Category: Sendable { // nonisolated: value
 		let name: String
 		let tokens: [String]
 
@@ -62,7 +62,7 @@ struct PrivacyManifestTests {
 	 The source list mirrors the target's `sources:` in `project.yml`. It scans
 	 all of `Sources/Shared`; this is deliberately stricter than the target's
 	 individual shared-file list. */
-	nonisolated struct Service: Sendable, CustomStringConvertible {
+	nonisolated struct Service: Sendable, CustomStringConvertible { // nonisolated: value
 		let bundleName: String
 		let sourceDirectories: [String]
 

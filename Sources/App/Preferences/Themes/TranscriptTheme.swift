@@ -183,10 +183,15 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 		)
 	}
 
+	/// The sizes the transcript renders at. The font picker offers exactly this
+	/// range: anything else is rejected by `isValid`, so offering more would
+	/// only produce a choice that cannot be applied.
+	static let fontSizeRange: ClosedRange<CGFloat> = 9 ... 36
+
 	var isValid: Bool {
 		formatVersion == Self.currentFormatVersion &&
 			name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false &&
-			fontSize.isFinite && (9 ... 36).contains(fontSize) &&
+			fontSize.isFinite && Self.fontSizeRange.contains(fontSize) &&
 			lineSpacing.isFinite && (0 ... 16).contains(lineSpacing) &&
 			messageSpacing.isFinite && (0 ... 32).contains(messageSpacing) &&
 			horizontalPadding.isFinite && (0 ... 48).contains(horizontalPadding) &&

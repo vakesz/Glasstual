@@ -60,7 +60,7 @@ struct IRCClientTextEncodingCorpusTests {
 
 	// MARK: - Encoding
 
-	nonisolated struct EncodeCase: Sendable {
+	nonisolated struct EncodeCase: Sendable { // nonisolated: value
 		let primary: String.Encoding
 		let fallback: String.Encoding
 		let text: String
@@ -74,7 +74,7 @@ struct IRCClientTextEncodingCorpusTests {
 		}
 	}
 
-	nonisolated static let encodeCases: [EncodeCase] = [
+	nonisolated static let encodeCases: [EncodeCase] = [ // nonisolated: let
 		/* The primary encoding is used whenever it can represent the text. */
 		EncodeCase(primary: .utf8, fallback: .isoLatin1, "hello", [104, 101, 108, 108, 111]),
 		EncodeCase(primary: .utf8, fallback: .isoLatin1, "h\u{00E9}llo", [104, 195, 169, 108, 108, 111]),
@@ -111,7 +111,7 @@ struct IRCClientTextEncodingCorpusTests {
 
 	// MARK: - Decoding
 
-	nonisolated struct DecodeCase: Sendable {
+	nonisolated struct DecodeCase: Sendable { // nonisolated: value
 		let primary: String.Encoding
 		let fallback: String.Encoding
 		let bytes: [UInt8]
@@ -125,7 +125,7 @@ struct IRCClientTextEncodingCorpusTests {
 		}
 	}
 
-	nonisolated static let decodeCases: [DecodeCase] = [
+	nonisolated static let decodeCases: [DecodeCase] = [ // nonisolated: let
 		DecodeCase(primary: .utf8, fallback: .isoLatin1, [104, 105], "hi"),
 		/* Valid UTF-8 is decoded by the primary encoding. */
 		DecodeCase(primary: .utf8, fallback: .isoLatin1, [0xC3, 0xA9], "\u{00E9}"),
@@ -135,7 +135,7 @@ struct IRCClientTextEncodingCorpusTests {
 		DecodeCase(primary: .utf8, fallback: .ascii, [0xFF], "\u{00FF}"),
 		DecodeCase(primary: .utf8, fallback: .ascii, [0x80], "\u{0080}"),
 		DecodeCase(primary: .utf8, fallback: .ascii, [0xE9, 0x41], "\u{00E9}A"),
-		/* A Latin-1 primary reads UTF-8 bytes as their Latin-1 characters. */
+		/* The ladder ends at Latin-1: two UTF-8 bytes read as two of its own. */
 		DecodeCase(primary: .ascii, fallback: .isoLatin1, [0xC3, 0xA9], "\u{00C3}\u{00A9}"),
 		DecodeCase(primary: .utf8, fallback: .isoLatin1, [], ""),
 	]
@@ -158,7 +158,7 @@ struct IRCClientTextEncodingCorpusTests {
 
 	// MARK: - UTF8ONLY
 
-	nonisolated struct EncodingPair: Sendable {
+	nonisolated struct EncodingPair: Sendable { // nonisolated: value
 		let primary: String.Encoding
 		let fallback: String.Encoding
 

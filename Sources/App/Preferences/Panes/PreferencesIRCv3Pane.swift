@@ -17,12 +17,38 @@ import SwiftUI
 struct PreferencesIRCv3Pane: View {
 	let model: PreferencesPaneModel
 
-	private var automaticCapabilities: String {
+	/** The capabilities this pane switches individually.
+
+	 A capability gated by a preference of its own — chat history, read
+	 markers, echo-message — keeps that switch and stays out of this list, so
+	 the draft and final spellings of one feature never appear as two
+	 controls. */
+	private var switchableCapabilities: [Capability] {
 		CapabilityRegistry.defaultRegistry.capabilities
 			.filter { $0.preference == .always }
-			.map(\.name)
-			.sorted()
-			.joined(separator: ", ")
+			.sorted { $0.name < $1.name }
+	}
+
+	/** A capability's switch, read and written through the list of disabled
+	 names: on means the name is absent. Absence as the enabled state is what
+	 lets a capability added later start enabled. */
+	private func capabilityBinding(for name: String) -> Binding<Bool> {
+		let disabled = model.preferences.binding(for: Preferences.Connection.disabledCapabilities)
+
+		return Binding(
+			get: { disabled.wrappedValue.contains(name) == false },
+			set: { isEnabled in
+				var names = Set(disabled.wrappedValue)
+
+				if isEnabled {
+					names.remove(name)
+				} else {
+					names.insert(name)
+				}
+
+				disabled.wrappedValue = names.sorted()
+			}
+		)
 	}
 
 	var body: some View {
@@ -65,12 +91,28 @@ struct PreferencesIRCv3Pane: View {
 				}
 			}
 
-			Section(PreferencesIRCv3Strings.automaticFeatures) {
-				Text(verbatim: automaticCapabilities)
-					.textSelection(.enabled)
-				PreferencesNote(PreferencesIRCv3Strings.automaticFeaturesNote)
+			Section(PreferencesIRCv3Strings.capabilities) {
+				ForEach(switchableCapabilities, id: \.name) { capability in
+					capabilityRow(capability)
+				}
+				PreferencesNote(PreferencesIRCv3Strings.reconnectNote)
 			}
 		}
+	}
+
+	private func capabilityRow(_ capability: Capability) -> some View {
+		let summary = PreferencesIRCv3Strings.capabilitySummary(for: capability.name)
+
+		return PreferencesCapabilityToggle(
+			name: capability.name,
+			summary: summary,
+			accessibilityLabel: summary.map {
+				PreferencesIRCv3Strings.capabilityAccessibilityLabel(name: capability.name, summary: $0)
+			} ?? capability.name,
+			specification: capability.specification,
+			specificationTitle: PreferencesIRCv3Strings.capabilitySpecification,
+			isOn: capabilityBinding(for: capability.name)
+		)
 	}
 
 	private func connectionRow(_ connection: IRCv3ConnectionSummary) -> some View {

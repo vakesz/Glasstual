@@ -266,13 +266,6 @@ public extension IRCClient {
 	}
 
 	func applyReadMarker(_ date: Date, to channel: IRCChannel) {
-		applyReadMarkerOnMainActor(date, to: channel)
-	}
-}
-
-private extension IRCClient {
-	@MainActor
-	func applyReadMarkerOnMainActor(_ date: Date, to channel: IRCChannel) {
 		let newestDate = newestKnownLineDate(for: channel)
 		if newestDate.map({ $0 > date }) != true {
 			if channel.isUnread || channel.nicknameHighlightCount > 0 {
@@ -287,5 +280,13 @@ private extension IRCClient {
 		      !output.isItemVisible(channel) || !output.windowIsKey
 		else { return }
 		channel.presentation?.mark(at: date)
+		/* The lines past the marker may have arrived in a join burst, which is
+		 printed without touching the unread count. The server has just said they
+		 are unread, so the badge comes from here instead. setUnreadState leaves a
+		 channel selected in the key window alone, and the count is set rather
+		 than accumulated: the marker says "unread from here", not "one more". */
+		if channel.isUnread == false {
+			setUnreadState(for: channel)
+		}
 	}
 }

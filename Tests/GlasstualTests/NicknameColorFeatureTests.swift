@@ -36,7 +36,6 @@ struct NicknameColorFeatureTests {
 		#expect(content.useDefaultColorTitle == "Use default color")
 		#expect(content.saveButtonTitle == "Save")
 		#expect(content.cancelButtonTitle == "Cancel")
-		#expect(content.windowTitle == "Nickname Color")
 	}
 
 	@Test("Choosing the default color withholds a color from persistence without forgetting the old one")

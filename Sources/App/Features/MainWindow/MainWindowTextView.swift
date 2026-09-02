@@ -38,7 +38,6 @@
 import AppKit
 import CocoaExtensions
 import Combine
-import os
 
 private enum MainWindowTextViewNotification {
 	static let typingChannelKey = "channel"
@@ -49,10 +48,16 @@ private let inputBarTrailingInset: CGFloat = 10.0
 private let inputBarVerticalInset: CGFloat = 3.0
 private let inputBarMinimumHeight: CGFloat = 19.0
 
-private let mainWindowTextViewLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "MainWindowTextView"
-)
+/// How much of the window the input bar may take before it stops growing.
+enum MainWindowInputBarHeightPolicy {
+	/// The transcript keeps the rest. The bar used to be capped against its own
+	/// minimum-height constraint, which left it free to cover the transcript.
+	static let maximumWindowHeightFraction: CGFloat = 0.45
+
+	static func maximumHeight(windowHeight: CGFloat, padding: CGFloat) -> CGFloat {
+		max(0, (windowHeight * maximumWindowHeightFraction) - padding)
+	}
+}
 
 private let observedPreferenceKeys = [
 	Preferences.Input.automaticSpellCheck.name,
@@ -78,7 +83,6 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	 were outlets until the input field had to be a TextKit 2 view, which only
 	 an `init(usingTextLayoutManager:)` produces. */
 	fileprivate var textViewHeightConstraint: NSLayoutConstraint?
-	fileprivate var windowContentViewMinimumHeight: NSLayoutConstraint?
 	public fileprivate(set) weak var contentView: MainWindowTextViewContentView?
 	public let accessoryModel = MainWindowInputAccessoryModel()
 	private var observingTyping = false
@@ -225,6 +229,14 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 		setUserDefaultsObserved(window != nil)
 		setTypingObserved(window != nil)
+
+		guard window != nil else { return }
+
+		/* The field is put together before it joins the window, so the appearance
+		 walk the window runs while it configures itself passes it by. Asking
+		 again on the way in is what gives the field its appearance at all. */
+		applicationAppearanceChanged()
+		updatePlaceholderText()
 	}
 
 	private func setUserDefaultsObserved(_ observed: Bool) {
@@ -263,6 +275,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	isolated deinit {
 		setUserDefaultsObserved(false)
+		setTypingObserved(false)
 	}
 
 	// MARK: - Appearance
@@ -380,19 +393,22 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		return label
 	}()
 
+	/// The placeholder as the reader sees it, or `nil` when nothing is drawn.
+	var drawnPlaceholderText: String? {
+		guard placeholderLabel.superview != nil, placeholderLabel.isHidden == false else { return nil }
+
+		return placeholderLabel.stringValue
+	}
+
 	private func installPlaceholderLabelIfNeeded() {
 		guard placeholderLabel.superview == nil else { return }
 		addSubview(placeholderLabel)
+		layoutPlaceholderLabel()
 	}
 
-	private func updatePlaceholderVisibility() {
-		placeholderLabel.isHidden = stringLength != 0 || inputPlaceholderAttributedString == nil
-	}
-
-	override public func layout() {
-		super.layout()
-
+	private func layoutPlaceholderLabel() {
 		guard let textContainer else { return }
+
 		let padding = textContainer.lineFragmentPadding
 		let origin = textContainerOrigin
 		placeholderLabel.frame = NSRect(
@@ -401,6 +417,49 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 			width: max(0, textContainer.size.width - (padding * 2)),
 			height: defaultLineHeight
 		)
+	}
+
+	private func updatePlaceholderVisibility() {
+		placeholderLabel.isHidden = stringLength != 0 || inputPlaceholderAttributedString == nil
+	}
+
+	/** Builds the placeholder out of what the field knows now.
+
+	 It used to be built only from the appearance pass, which reads the main
+	 window's appearance objects and so needs the field to already be in that
+	 window. The field is built before it joins one — SwiftUI hands it over from
+	 `makeNSView`, after the window has run its appearance walk — so on a normal
+	 launch nothing ever built the string, the label was never added as a
+	 subview, and an empty field showed a caret and nothing else. The appearance
+	 colour is used once there is one, and `placeholderTextColor` stands in
+	 until then. */
+	private func updatePlaceholderText() {
+		let paragraphStyle = NSMutableParagraphStyle()
+		paragraphStyle.baseWritingDirection = baseWritingDirection
+		paragraphStyle.alignment = .natural
+		paragraphStyle.lineBreakMode = .byTruncatingTail
+
+		let placeholder = NSAttributedString(
+			string: MainWindowStrings.Conversation.inputPlaceholder,
+			attributes: [
+				.font: preferredFont,
+				.foregroundColor: userInterfaceObjects?.textViewPlaceholderTextColor ?? .placeholderTextColor,
+				.paragraphStyle: paragraphStyle,
+			]
+		)
+
+		inputPlaceholderAttributedString = placeholder
+		installPlaceholderLabelIfNeeded()
+		placeholderLabel.attributedStringValue = placeholder
+		needsLayout = true
+		layoutPlaceholderLabel()
+		updatePlaceholderVisibility()
+	}
+
+	override public func layout() {
+		super.layout()
+
+		layoutPlaceholderLabel()
 		updatePlaceholderVisibility()
 	}
 
@@ -419,34 +478,19 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		}
 	}
 
+	/// The placeholder's colour is not part of the guard: a missing colour is a
+	/// reason to draw it in the system's placeholder grey, not a reason to leave
+	/// the field without a placeholder.
 	private func updateTextBoxCachedPreferredFontSize() {
 		guard let appearance = userInterfaceObjects,
-		      appearance.preferredTextViewFontChanged() || inputPlaceholderAttributedString == nil,
-		      let placeholderTextColor = appearance.textViewPlaceholderTextColor
+		      appearance.preferredTextViewFontChanged() || inputPlaceholderAttributedString == nil
 		else {
 			return
 		}
 
-		let preferredFont = appearance.makeTextViewPreferredFont()
-		self.preferredFont = preferredFont
+		preferredFont = appearance.makeTextViewPreferredFont()
 
-		let paragraphStyle = NSMutableParagraphStyle()
-		paragraphStyle.baseWritingDirection = baseWritingDirection
-		paragraphStyle.alignment = .natural
-		paragraphStyle.lineBreakMode = .byTruncatingTail
-
-		inputPlaceholderAttributedString = NSAttributedString(
-			string: MainWindowStrings.Conversation.inputPlaceholder,
-			attributes: [
-				.font: preferredFont,
-				.foregroundColor: placeholderTextColor,
-				.paragraphStyle: paragraphStyle,
-			]
-		)
-		installPlaceholderLabelIfNeeded()
-		placeholderLabel.attributedStringValue = inputPlaceholderAttributedString ?? NSAttributedString()
-		needsLayout = true
-		updatePlaceholderVisibility()
+		updatePlaceholderText()
 	}
 
 	public func updateTextBasedOnPreferredFontSize() {
@@ -492,15 +536,10 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		recalculateTextViewSize(force: false)
 	}
 
-	public func recalculateTextViewSizeForced() {
-		recalculateTextViewSize(force: true)
-	}
-
 	private func recalculateTextViewSize(force: Bool) {
 		guard let appearance = userInterfaceObjects,
 		      let window,
-		      let textViewHeightConstraint,
-		      let windowContentViewMinimumHeight
+		      let textViewHeightConstraint
 		else {
 			return
 		}
@@ -510,8 +549,9 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		var backgroundHeight = minimumHeight
 
 		if stringLength > 0 {
-			let maximumHeight = window.frame.height - (
-				windowContentViewMinimumHeight.constant + contentBorderPadding
+			let maximumHeight = MainWindowInputBarHeightPolicy.maximumHeight(
+				windowHeight: window.frame.height,
+				padding: contentBorderPadding
 			)
 			backgroundHeight = highestHeight(below: maximumHeight, withPadding: contentBorderPadding)
 			backgroundHeight = max(backgroundHeight, minimumHeight)
@@ -570,7 +610,6 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 public final class MainWindowTextViewContentView: NSView {
 	private let inputBarContainerView = NSView()
 	private var textViewHeightConstraint: NSLayoutConstraint!
-	private var windowContentViewMinimumHeight: NSLayoutConstraint!
 
 	private var textViewStorage: MainWindowTextView?
 
@@ -591,14 +630,12 @@ public final class MainWindowTextViewContentView: NSView {
 
 		let inputBarTopConstraint = inputBarContainerView.topAnchor.constraint(equalTo: topAnchor, constant: 7)
 		textViewHeightConstraint = heightAnchor.constraint(equalToConstant: 38)
-		windowContentViewMinimumHeight = heightAnchor.constraint(greaterThanOrEqualToConstant: 35)
 		NSLayoutConstraint.activate([
 			inputBarContainerView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
 			inputBarContainerView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
 			inputBarTopConstraint,
 			inputBarContainerView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -6),
 			textViewHeightConstraint,
-			windowContentViewMinimumHeight,
 		])
 	}
 
@@ -667,7 +704,6 @@ public final class MainWindowTextViewContentView: NSView {
 
 		textView.contentView = self
 		textView.textViewHeightConstraint = textViewHeightConstraint
-		textView.windowContentViewMinimumHeight = windowContentViewMinimumHeight
 		textView.configure()
 	}
 

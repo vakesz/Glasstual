@@ -28,8 +28,4 @@ nonisolated enum NicknameColorStrings { // nonisolated: value
 	static var useDefaultColorTitle: String {
 		String(localized: .TDCNicknameColorSheet.useDefaultColor)
 	}
-
-	static var windowTitle: String {
-		String(localized: .TDCNicknameColorSheet.windowTitle)
-	}
 }

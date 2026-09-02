@@ -40,7 +40,7 @@ import Foundation
 
 public typealias IRCSTSPolicyStore = STSPolicyStore
 
-public let IRCSTSPolicyStoreDefaultsKey = "IRC -> STS Policies"
+public let IRCSTSPolicyStoreDefaultsKey = Preferences.Connection.stsPolicies.name
 
 /// The STS policies this client has been told to honour, keyed by host.
 ///

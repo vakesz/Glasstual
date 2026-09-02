@@ -51,6 +51,26 @@ final class GLTRecordingClientOutput: ClientOutput {
 	/// Every sheet the protocol layer asked for, in order. No window is
 	/// involved, which is the point of the seam.
 	private(set) var presentedAlerts: [AlertRequest] = []
+	/// Every blocking confirmation the protocol layer asked for, in order.
+	private(set) var modalConfirmations: [AlertRequest] = []
+	private(set) var closedSheetClients: [IRCClient] = []
+	/// One `+b`/`+e`/`+I`/`+q` entry a sheet would have taken.
+	struct AccessListEntry: Equatable {
+		let mask: String
+		let author: String?
+		let date: Date?
+	}
+
+	private(set) var accessListEntries: [AccessListEntry] = []
+	private(set) var accessListFinishedCount = 0
+
+	/// What `confirmModally` answers, and whether an access list sheet is up.
+	var modalConfirmationAnswer = true
+	var showsAccessListSheet = false
+	/// The channels whose sheets the protocol layer asked to have closed.
+	private(set) var closedSheetChannelIds: [String] = []
+	/// Every highlight offered to an open highlight list, in order.
+	private(set) var loggedHighlights: [HighlightLogEntry] = []
 
 	var selectedItem: IRCTreeItem?
 	var selectedClient: IRCClient?
@@ -62,6 +82,40 @@ final class GLTRecordingClientOutput: ClientOutput {
 
 	func presentAlertSheet(_ request: AlertRequest, completion _: @escaping AlertCompletion) {
 		presentedAlerts.append(request)
+	}
+
+	func confirmModally(_ request: AlertRequest) -> Bool {
+		modalConfirmations.append(request)
+
+		return modalConfirmationAnswer
+	}
+
+	func closeSheets(for client: IRCClient) {
+		closedSheetClients.append(client)
+	}
+
+	func accessListEntryReceived(mask: String, setBy author: String?, creationDate date: Date?) -> Bool {
+		guard showsAccessListSheet else { return false }
+
+		accessListEntries.append(AccessListEntry(mask: mask, author: author, date: date))
+
+		return true
+	}
+
+	func accessListFinished() -> Bool {
+		guard showsAccessListSheet else { return false }
+
+		accessListFinishedCount += 1
+
+		return true
+	}
+
+	func closeSheets(forChannelId channelId: String) {
+		closedSheetChannelIds.append(channelId)
+	}
+
+	func highlightWasLogged(_ entry: HighlightLogEntry) {
+		loggedHighlights.append(entry)
 	}
 
 	func selectedChannel(on client: IRCClient) -> IRCChannel? {

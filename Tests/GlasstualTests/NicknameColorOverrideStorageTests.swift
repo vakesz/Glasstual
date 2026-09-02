@@ -18,7 +18,7 @@ import Testing
 @Suite("Nickname colour overrides")
 @MainActor
 struct NicknameColorOverrideStorageTests {
-	private static let defaultsKey = "Nickname Color Style Overrides (v2)"
+	private static let defaultsKey = Preferences.Messages.nicknameColorStyleOverrides.name
 
 	private func uniqueKey() -> String {
 		"nickname-color-\(UUID().uuidString)".lowercased()

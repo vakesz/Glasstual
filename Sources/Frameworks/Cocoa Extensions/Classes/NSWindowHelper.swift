@@ -31,22 +31,6 @@
  *********************************************************************** */
 
 import AppKit
-import ObjectiveC
-
-@MainActor
-private enum WindowStateStorage {
-	/** The address the default size is keyed on. It was a mutable `UInt8` whose
-	 address was taken, which needed an escape hatch to be a global at all. A
-	 static string literal lives in the binary's constant data, so its bytes have
-	 exactly the property a key needs — a unique, stable address — and the
-	 literal itself is a value. */
-	nonisolated static let defaultSizeKeyToken: StaticString = // nonisolated: let
-		"com.vakesz.glasstual.windowDefaultSize" // nonisolated: let
-
-	nonisolated static var defaultSizeAssociationKey: UnsafeRawPointer { // nonisolated: pure
-		UnsafeRawPointer(defaultSizeKeyToken.utf8Start)
-	}
-}
 
 public extension NSWindow {
 	var ceIsOccluded: Bool {
@@ -55,18 +39,6 @@ public extension NSWindow {
 
 	var ceIsInactive: Bool {
 		!isKeyWindow && !isMainWindow
-	}
-
-	var ceIsActiveForDrawing: Bool {
-		if styleMask.contains(.fullScreen) {
-			return true
-		}
-
-		return isMainWindow
-			&& isOnActiveSpace
-			&& isVisible
-			&& NSApp.isActive
-			&& NSApp.modalWindow == nil
 	}
 
 	func ce_exactlyCenter() {
@@ -84,10 +56,6 @@ public extension NSWindow {
 
 	var ceIsBeneathMouse: Bool {
 		Self.ceWindowBeneathMouse === self
-	}
-
-	var ceRunningInHighResolutionMode: Bool {
-		(screen?.backingScaleFactor ?? 1) > 1
 	}
 
 	var ceIsInFullscreenMode: Bool {
@@ -111,47 +79,6 @@ public extension NSWindow {
 		titlebarFrame.origin.y += contentView.frame.height
 		titlebarFrame.size.height -= contentView.frame.height
 		return titlebarFrame
-	}
-
-	func ce_saveSizeAsDefault() {
-		ceDefaultSize = frame.size
-	}
-
-	var ceDefaultSize: NSSize {
-		get {
-			guard let value = objc_getAssociatedObject(
-				self,
-				WindowStateStorage.defaultSizeAssociationKey
-			) as? NSValue else {
-				return .zero
-			}
-			return value.sizeValue
-		}
-		set {
-			objc_setAssociatedObject(
-				self,
-				WindowStateStorage.defaultSizeAssociationKey,
-				NSValue(size: newValue),
-				.OBJC_ASSOCIATION_RETAIN_NONATOMIC
-			)
-		}
-	}
-
-	func ce_restoreDefaultSize(display: Bool) {
-		let defaultSize = ceDefaultSize
-		guard defaultSize != .zero else {
-			return
-		}
-
-		var defaultFrame = frame
-		let widthDifference = defaultFrame.width - defaultSize.width
-		defaultFrame.size.width = defaultSize.width
-		defaultFrame.origin.x += widthDifference
-
-		let heightDifference = defaultFrame.height - defaultSize.height
-		defaultFrame.size.height = defaultSize.height
-		defaultFrame.origin.y += heightDifference
-		setFrame(defaultFrame, display: display)
 	}
 
 	private static var ceWindowBeneathMouse: NSWindow? {

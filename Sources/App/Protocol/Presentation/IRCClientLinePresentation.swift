@@ -97,12 +97,17 @@ struct IRCLinePrintRequest {
 }
 
 public extension IRCClient {
-	func formatNickname(_ nickname: String, in channel: IRCChannel?) -> String {
-		formatNickname(nickname, in: channel, withFormat: nil)
-	}
-
-	func formatNickname(_ nickname: String, in channel: IRCChannel?, withFormat format: String?) -> String {
-		formatNicknameOnMainActor(nickname, in: channel, format: format)
+	func formatNickname(_ nickname: String, in channel: IRCChannel?, withFormat format: String? = nil) -> String {
+		let requestedFormat = format?.isEmpty == false ? format : nil
+		let themeFormat = SharedApplication.sharedThemeController().theme.nicknameFormat
+		let resolvedFormat = requestedFormat ?? themeFormat
+		let finalFormat = resolvedFormat.isEmpty ? TranscriptTheme.lines.nicknameFormat : resolvedFormat
+		let modeSymbol: String = if channel?.isChannel == true, let member = channel?.findMember(nickname) {
+			member.mark
+		} else {
+			""
+		}
+		return ClientWireUtilities.formatNickname(nickname, modeSymbol: modeSymbol, format: finalFormat)
 	}
 
 	func printAndLog(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?) {
@@ -143,50 +148,6 @@ public extension IRCClient {
 	) {
 		print(messageBody, by: nickname, in: channel, as: lineType, command: command, receivedAt: receivedAt,
 		      isEncrypted: false, escapeMessage: true, referenceMessage: nil, completionBlock: nil)
-	}
-
-	func print(
-		_ messageBody: String,
-		by nickname: String?,
-		in channel: IRCChannel?,
-		as lineType: LogLineType,
-		command: String,
-		receivedAt: Date,
-		isEncrypted: Bool
-	) {
-		print(messageBody, by: nickname, in: channel, as: lineType, command: command, receivedAt: receivedAt,
-		      isEncrypted: isEncrypted, escapeMessage: true, referenceMessage: nil, completionBlock: nil)
-	}
-
-	func print(
-		_ messageBody: String,
-		by nickname: String?,
-		in channel: IRCChannel?,
-		as lineType: LogLineType,
-		command: String?,
-		receivedAt: Date,
-		isEncrypted: Bool,
-		referenceMessage: Message? = nil
-	) {
-		print(messageBody, by: nickname, in: channel, as: lineType, command: command, receivedAt: receivedAt,
-		      isEncrypted: isEncrypted, escapeMessage: true, referenceMessage: referenceMessage,
-		      completionBlock: nil)
-	}
-
-	func print(
-		_ messageBody: String,
-		by nickname: String?,
-		in channel: IRCChannel?,
-		as lineType: LogLineType,
-		command: String?,
-		receivedAt: Date,
-		isEncrypted: Bool,
-		referenceMessage: Message? = nil,
-		completionBlock: LogControllerPrintOperationCompletion? = nil
-	) {
-		print(messageBody, by: nickname, in: channel, as: lineType, command: command, receivedAt: receivedAt,
-		      isEncrypted: isEncrypted, escapeMessage: true, referenceMessage: referenceMessage,
-		      completionBlock: completionBlock)
 	}
 
 	func print(
@@ -258,28 +219,27 @@ public extension IRCClient {
 		print(errorMessage, by: nil, in: nil, as: .debug, command: command)
 	}
 
-	func printDebugInformation(toConsole message: String) {
-		printDebugInformation(toConsole: message, asCommand: LogLineFormat.defaultCommand, escapeMessage: true)
-	}
-
-	func printDebugInformation(toConsole message: String, asCommand command: String) {
-		printDebugInformation(toConsole: message, asCommand: command, escapeMessage: true)
-	}
-
-	func printDebugInformation(toConsole message: String, escapeMessage: Bool) {
-		printDebugInformation(
-			toConsole: message,
-			asCommand: LogLineFormat.defaultCommand,
-			escapeMessage: escapeMessage
-		)
-	}
-
-	func printDebugInformation(toConsole message: String, asCommand command: String, escapeMessage: Bool) {
+	func printDebugInformation(
+		toConsole message: String,
+		asCommand command: String = LogLineFormat.defaultCommand,
+		escapeMessage: Bool = true
+	) {
 		print(message, by: nil, in: nil, as: .debug, command: command, escapeMessage: escapeMessage)
 	}
 
-	func printDebugInformation(_ message: String) {
-		printDebugInformation(message, asCommand: LogLineFormat.defaultCommand, escapeMessage: true)
+	/// Prints into whichever channel of this client is selected, or the console
+	/// when none is.
+	func printDebugInformation(
+		_ message: String,
+		asCommand command: String = LogLineFormat.defaultCommand,
+		escapeMessage: Bool = true
+	) {
+		printDebugInformation(
+			message,
+			in: output?.selectedChannel(on: self),
+			asCommand: command,
+			escapeMessage: escapeMessage
+		)
 	}
 
 	func printDebugInformation(multiline message: String) {
@@ -288,72 +248,20 @@ public extension IRCClient {
 		}
 	}
 
-	func printDebugInformation(_ message: String, asCommand command: String) {
-		printDebugInformation(message, asCommand: command, escapeMessage: true)
-	}
-
-	func printDebugInformation(_ message: String, escapeMessage: Bool) {
-		printDebugInformation(message, asCommand: LogLineFormat.defaultCommand, escapeMessage: escapeMessage)
-	}
-
-	func printDebugInformation(_ message: String, asCommand command: String, escapeMessage: Bool) {
-		let channel = output?.selectedChannel(on: self)
-
-		printDebugInformation(
-			message,
-			in: channel,
-			asCommand: command,
-			escapeMessage: escapeMessage
-		)
-	}
-
-	func printDebugInformation(_ message: String, in channel: IRCChannel?) {
-		printDebugInformation(message, in: channel, asCommand: LogLineFormat.defaultCommand, escapeMessage: true)
-	}
-
-	func printDebugInformation(_ message: String, in channel: IRCChannel?, asCommand command: String) {
-		print(message, by: nil, in: channel, as: .debug, command: command, escapeMessage: true)
-	}
-
-	func printDebugInformation(_ message: String, in channel: IRCChannel?, escapeMessage: Bool) {
-		printDebugInformation(
-			message,
-			in: channel,
-			asCommand: LogLineFormat.defaultCommand,
-			escapeMessage: escapeMessage
-		)
-	}
-
 	func printDebugInformation(
 		_ message: String,
 		in channel: IRCChannel?,
-		asCommand command: String,
-		escapeMessage: Bool
+		asCommand command: String = LogLineFormat.defaultCommand,
+		escapeMessage: Bool = true
 	) {
 		print(message, by: nil, in: channel, as: .debug, command: command, escapeMessage: escapeMessage)
 	}
 
-	func printDebugInformation(inAllViews message: String) {
-		printDebugInformation(
-			inAllViews: message,
-			asCommand: LogLineFormat.defaultCommand,
-			escapeMessage: true
-		)
-	}
-
-	func printDebugInformation(inAllViews message: String, asCommand command: String) {
-		printDebugInformation(inAllViews: message, asCommand: command, escapeMessage: true)
-	}
-
-	func printDebugInformation(inAllViews message: String, escapeMessage: Bool) {
-		printDebugInformation(
-			inAllViews: message,
-			asCommand: LogLineFormat.defaultCommand,
-			escapeMessage: escapeMessage
-		)
-	}
-
-	func printDebugInformation(inAllViews message: String, asCommand command: String, escapeMessage: Bool) {
+	func printDebugInformation(
+		inAllViews message: String,
+		asCommand command: String = LogLineFormat.defaultCommand,
+		escapeMessage: Bool = true
+	) {
 		for channel in channelList {
 			printDebugInformation(message, in: channel, asCommand: command, escapeMessage: escapeMessage)
 		}
@@ -363,27 +271,13 @@ public extension IRCClient {
 
 private extension IRCClient {
 	@MainActor
-	func formatNicknameOnMainActor(_ nickname: String, in channel: IRCChannel?, format: String?) -> String {
-		let requestedFormat = format?.isEmpty == false ? format : nil
-		let themeFormat = SharedApplication.sharedThemeController().theme.nicknameFormat
-		let resolvedFormat = requestedFormat ?? themeFormat
-		let finalFormat = resolvedFormat.isEmpty ? TranscriptTheme.lines.nicknameFormat : resolvedFormat
-		let modeSymbol: String = if channel?.isChannel == true, let member = channel?.findMember(nickname) {
-			member.mark
-		} else {
-			""
-		}
-		return ClientWireUtilities.formatNickname(nickname, modeSymbol: modeSymbol, format: finalFormat)
-	}
-
-	@MainActor
 	func printOnMainActor(_ request: IRCLinePrintRequest) {
 		precondition(request.command != nil || request.referenceMessage != nil)
 		guard !isTerminating else { return }
 
 		let command = request.command ?? request.referenceMessage?.command ?? LogLineFormat.defaultCommand
 		let channel = request.channel
-		guard channel == nil || !outputRuleMatched(in: request.messageBody, channel: channel) else { return }
+		guard outputRuleMatched(in: request.messageBody, channel: channel) == false else { return }
 
 		let memberType = IRCLinePresentationPolicy.memberType(nickname: request.nickname, localNickname: userNickname)
 		let keywordLists = highlightKeywordLists(
@@ -444,7 +338,13 @@ private extension IRCClient {
 			channel.presentation?.mark()
 		}
 		channel.print(logLine, completionBlock: request.completionBlock)
-		if output.windowIsKey, output.isItemVisible(channel) {
+		/* A replayed line must not carry the server's read marker past what the
+		 user has actually looked at, however visible the channel is: the burst
+		 lands before anyone has had a chance to read it. Selecting the channel
+		 still marks it read through markChannel(asRead:). */
+		if output.windowIsKey, output.isItemVisible(channel),
+		   lineIsJoinBurst(request.referenceMessage, in: channel) == false
+		{
 			scheduleReadMarker(for: channel, date: request.receivedAt)
 		}
 	}

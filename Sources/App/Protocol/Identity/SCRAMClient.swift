@@ -126,27 +126,9 @@ public final class SCRAMClient: NSObject {
 	/// Parses `r=,s=,i=` and returns `c=,r=,p=`. Throws on a malformed
 	/// message, a nonce that does not begin with ours, or an iteration
 	/// count below the RFC 7677 minimum.
-	public func clientFinalMessage(forServerFirstMessage serverFirst: String) throws -> String {
-		let challenge = try parseServerFirstMessage(serverFirst)
-
-		guard let saltedPassword = SCRAMClient.pbkdf2(
-			password: password,
-			salt: challenge.salt,
-			iterations: challenge.iterations
-		) else {
-			throw fail(.keyDerivationFailed, "PBKDF2 failed")
-		}
-
-		return completeClientFinalMessage(
-			serverFirst: serverFirst,
-			challenge: challenge,
-			saltedPassword: saltedPassword
-		)
-	}
-
-	/// Same exchange step as `clientFinalMessage(forServerFirstMessage:)`,
-	/// but the PBKDF2 derivation runs off the caller's actor so a large
-	/// server supplied iteration count cannot block the main thread.
+	///
+	/// The PBKDF2 derivation runs off the caller's actor, so a large server
+	/// supplied iteration count cannot block the main thread.
 	public func clientFinalMessage(forServerFirstMessage serverFirst: String) async throws -> String {
 		let challenge = try parseServerFirstMessage(serverFirst)
 

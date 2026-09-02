@@ -45,7 +45,14 @@ struct ChannelPropertiesView: View {
 			}
 		}
 		.padding(20)
-		.frame(minWidth: 520, minHeight: 390)
+		.frame(
+			minWidth: 560,
+			idealWidth: 620,
+			maxWidth: .infinity,
+			minHeight: 450,
+			idealHeight: 500,
+			maxHeight: .infinity
+		)
 		.onAppear { channelNameIsFocused = model.channelNameIsEditable }
 		.onExitCommand(perform: cancel)
 		.onChange(of: model.config.pushNotifications) { _, enabled in
@@ -94,8 +101,7 @@ struct ChannelPropertiesView: View {
 			Toggle(ChannelPropertiesStrings.showUnreadCount, isOn: $model.config.showTreeBadgeCount)
 			Toggle(ChannelPropertiesStrings.disableGeneralEvents, isOn: $model.config.ignoreGeneralEventMessages)
 			Toggle(ChannelPropertiesStrings.disableHighlights, isOn: $model.config.ignoreHighlights)
-			Toggle(ChannelPropertiesStrings.disableInlineMedia, isOn: $model.config.inlineMediaDisabled)
-			Toggle(ChannelPropertiesStrings.showInlineMedia, isOn: $model.config.inlineMediaEnabled)
+			Toggle(model.inlineMediaOverrideTitle, isOn: $model.inlineMediaOverride)
 		}
 		.formStyle(.grouped)
 	}

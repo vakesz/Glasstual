@@ -23,7 +23,7 @@
 /// The positions in these calls are the model's, not the table's: the table
 /// sections its rows and diffs them, so it asks for members by identity.
 @MainActor
-public final class IRCChannelMemberListController {
+public final class IRCChannelMemberListController: ChannelMemberListPresentation {
 	private weak var memberList: ChannelMemberList?
 	private var members: [ChannelUser] = []
 	/// Position in `members` by the person's identity, so the table can go from
@@ -48,11 +48,6 @@ public final class IRCChannelMemberListController {
 		indexesByUserID[id].map { members[$0] }
 	}
 
-	/// The member at `index` in sorted order, or `nil` when there is none.
-	public func member(at index: Int) -> ChannelUser? {
-		members.indices.contains(index) ? members[index] : nil
-	}
-
 	/** Rebuilds the identity index.
 
 	 It is rebuilt rather than patched because an insert or a removal shifts
@@ -69,7 +64,7 @@ public final class IRCChannelMemberListController {
 			memberList.assign(nil)
 		}
 
-		let newList = channel?.memberInfo as? ChannelMemberList
+		let newList = channel?.memberInfo
 
 		if let newList {
 			newList.assign(self)
@@ -80,6 +75,13 @@ public final class IRCChannelMemberListController {
 		if channel == nil || newList == nil {
 			replaceContents([])
 		}
+	}
+
+	/// The list this was drawing is going away; `assign(to:)` does the same for
+	/// a list that is merely being swapped out.
+	public func memberListDidEnd() {
+		memberList = nil
+		replaceContents([])
 	}
 
 	public func replaceContents(_ contents: [ChannelUser]) {
@@ -113,7 +115,7 @@ public final class IRCChannelMemberListController {
 		members[index] = member
 		reindexMembers()
 		model?.membersChanged()
-		model?.refreshDrawing(for: member)
+		model?.invalidatePresentation()
 	}
 
 	public func remove(atArrangedObjectIndex index: Int) {

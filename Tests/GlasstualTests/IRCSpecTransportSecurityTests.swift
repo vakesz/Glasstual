@@ -264,6 +264,13 @@ struct IRCSpecTransportSecurityTests {
 		)
 
 		#expect(policyStore.policy(forHost: "irc.example.net") != nil)
+		#expect(policyStore.enforcedEndpoint(forHost: "IRC.EXAMPLE.NET") == STSPolicyEndpoint(port: 6697))
+
+		/* Withdrawal has to fold the host the same way, or a policy could be
+		 stored under one spelling and be unremovable under another. */
+		policyStore.removePolicy(forHost: "irc.EXAMPLE.net")
+
+		#expect(policyStore.policy(forHost: "irc.example.net") == nil)
 	}
 
 	/// An expired policy no longer pins anything.

@@ -40,7 +40,7 @@ import Foundation
 import Testing
 
 /// One CTCP payload and the command and parameters it splits into.
-nonisolated struct IRCSpecCTCPSplitCase: CustomTestStringConvertible {
+nonisolated struct IRCSpecCTCPSplitCase: CustomTestStringConvertible { // nonisolated: value
 	let text: String
 	let command: String
 	let arguments: String

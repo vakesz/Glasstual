@@ -1,12 +1,7 @@
 /* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
+ *         Copyright (c) 2015 - 2018 Codeux Software, LLC
+ *     Please see ACKNOWLEDGEMENT for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -17,9 +12,9 @@
  *  * Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ *  * Neither the name of "Codeux Software, LLC", nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -35,29 +30,25 @@
  *
  *********************************************************************** */
 
-import CocoaExtensions
-import Foundation
-import os
-import Synchronization
+import AppKit
 
-private let pluginLoggingSubsystems = Mutex([String: OSLog]())
+@MainActor
+public extension NSTextView {
+	var focused: Bool {
+		window?.firstResponder === self
+	}
 
-@_cdecl("_THOPluginLoggingSubsystemForBundle")
-public func _THOPluginLoggingSubsystemForBundle(_ bundle: Bundle) -> OSLog {
-	pluginLoggingSubsystems.withLock { subsystems in
-		let identifier = bundle.bundleIdentifier ?? ""
+	func focus() {
+		guard !focused else { return }
+		window?.makeFirstResponder(self)
+	}
 
-		if let subsystem = subsystems[identifier] {
-			return subsystem
-		}
+	/// The whole of the text, in the UTF-16 units `NSTextStorage` counts in.
+	var range: NSRange {
+		NSRange(location: 0, length: Int(stringLength))
+	}
 
-		let category = "Extension['\(bundle.textualDisplayName ?? "")']"
-		let subsystem = OSLog(
-			subsystem: ApplicationInfo.applicationBundleIdentifier(),
-			category: category
-		)
-		subsystems[identifier] = subsystem
-
-		return subsystem
+	var stringLength: UInt {
+		UInt((string as NSString).length)
 	}
 }

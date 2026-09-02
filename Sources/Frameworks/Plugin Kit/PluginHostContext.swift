@@ -214,6 +214,11 @@ public struct PluginChannelMember: Equatable, Sendable {
 	public let user: PluginUser
 	public let mark: String
 	public let ranks: UserRank
+
+	/// When the host first saw this member in the channel, in seconds since the
+	/// 1970 epoch. Compare it with ``membershipAge`` rather than by hand: the
+	/// other epoch is nearly a billion seconds away, and the difference is not
+	/// one a wrong answer shows.
 	public let creationTime: TimeInterval
 
 	public init(user: PluginUser, mark: String, ranks: UserRank, creationTime: TimeInterval) {
@@ -226,6 +231,11 @@ public struct PluginChannelMember: Equatable, Sendable {
 	public var isHalfOperator: Bool {
 		ranks.contains(.halfOperator) || ranks.contains(.normalOperator) || ranks.contains(.superOperator) ||
 			ranks.contains(.channelOwner)
+	}
+
+	/// How long this member has been in the channel, in seconds.
+	public var membershipAge: TimeInterval {
+		Date().timeIntervalSince1970 - creationTime
 	}
 }
 

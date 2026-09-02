@@ -216,9 +216,7 @@ public extension IRCClient {
 			IRCDirectChatStrings.connecting(nickname: nickname, address: address, port: port),
 			in: channel
 		)
-		if let treeItem = legacyDirectChatTreeItem(for: channel) {
-			output?.selectItem(treeItem)
-		}
+		output?.selectItem(channel)
 		connection.open()
 	}
 
@@ -229,9 +227,7 @@ public extension IRCClient {
 		)
 		channel.directChatConnection = connection
 		printDebugInformation(IRCDirectChatStrings.offering(to: nickname), in: channel)
-		if let treeItem = legacyDirectChatTreeItem(for: channel) {
-			output?.selectItem(treeItem)
-		}
+		output?.selectItem(channel)
 		connection.open()
 	}
 
@@ -263,9 +259,5 @@ public extension IRCClient {
 	private func printInvalidDCCChatRequest(from sender: String) {
 		print(IRCDirectChatStrings.unprocessableRequest(sender: sender), by: nil, in: nil,
 		      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
-	}
-
-	private func legacyDirectChatTreeItem(for channel: IRCChannel) -> IRCTreeItem? {
-		(channel as AnyObject) as? IRCTreeItem
 	}
 }

@@ -119,7 +119,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 
 		textContainerInset = NSSize(width: textViewWidthPadding, height: textViewHeightPadding)
 		insertionPointColor = preferredFontColorStorage
-		/* Do not touch typingAttributes here — nib decode is still running.
+		/* Do not touch typingAttributes here — the view has no appearance yet.
 		 Appearance / first textDidChange installs them once the view is live. */
 	}
 

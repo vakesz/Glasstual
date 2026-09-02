@@ -84,7 +84,12 @@ struct OnboardingView: View {
 		}
 		.frame(width: 720, height: 700)
 		.animation(.snappy(duration: 0.2), value: model.currentStep)
-		.onExitCommand(perform: skipAction)
+		/* Escape is the Skip button by another name, so it is offered exactly
+		 where the button is: a step that cannot be skipped cannot be escaped. */
+		.onExitCommand {
+			guard model.currentStep.isSkippable else { return }
+			skipAction()
+		}
 		.alert(model.currentStep.title, isPresented: $model.isValidationPresented) {
 			Button(PromptStrings.Action.confirmation, role: .cancel) {}
 		} message: {
@@ -172,21 +177,13 @@ private struct OnboardingAppearanceView: View {
 	var body: some View {
 		VStack(spacing: 18) {
 			HStack(spacing: 18) {
-				OnboardingStylePreview(
-					styleName: "Bubbles",
-					title: OnboardingStrings.Appearance.bubblesTitle,
-					description: OnboardingStrings.Appearance.bubblesDescription,
-					fontSize: OnboardingSettings.fontSize(for: settings.textSize),
-					isSelected: settings.styleName == "Bubbles"
-				) { settings.styleName = "Bubbles" }
-
-				OnboardingStylePreview(
-					styleName: "Lines",
-					title: OnboardingStrings.Appearance.linesTitle,
-					description: OnboardingStrings.Appearance.linesDescription,
-					fontSize: OnboardingSettings.fontSize(for: settings.textSize),
-					isSelected: settings.styleName == "Lines"
-				) { settings.styleName = "Lines" }
+				ForEach(OnboardingTranscriptStyle.allCases) { style in
+					OnboardingStylePreview(
+						style: style,
+						fontSize: OnboardingSettings.fontSize(for: settings.textSize),
+						isSelected: settings.transcriptStyle == style
+					) { settings.transcriptStyle = style }
+				}
 			}
 			.accessibilityElement(children: .contain)
 			.accessibilityLabel(Text(verbatim: OnboardingStrings.Appearance.previewAccessibilityLabel))
@@ -225,15 +222,13 @@ private struct OnboardingAppearanceView: View {
 }
 
 private struct OnboardingStylePreview: View {
-	let styleName: String
-	let title: String
-	let description: String
+	let style: OnboardingTranscriptStyle
 	let fontSize: CGFloat
 	let isSelected: Bool
 	let select: () -> Void
 
 	private var usesBubbles: Bool {
-		styleName == "Bubbles"
+		style == .bubbles
 	}
 
 	var body: some View {
@@ -265,8 +260,8 @@ private struct OnboardingStylePreview: View {
 					}
 				}
 
-				Text(verbatim: title).font(.headline)
-				Text(verbatim: description)
+				Text(verbatim: style.title).font(.headline)
+				Text(verbatim: style.summary)
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -274,7 +269,7 @@ private struct OnboardingStylePreview: View {
 		.buttonStyle(.plain)
 		.frame(maxWidth: .infinity)
 		.accessibilityElement(children: .ignore)
-		.accessibilityLabel(Text(verbatim: title))
+		.accessibilityLabel(Text(verbatim: style.title))
 		.accessibilityAddTraits(isSelected ? [.isSelected] : [])
 	}
 

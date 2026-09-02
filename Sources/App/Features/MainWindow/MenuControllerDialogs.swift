@@ -40,67 +40,67 @@ import AppKit
 
 @MainActor
 public extension MenuController {
-	@IBAction func showChannelPropertiesSheet(_ sender: Any?) {
+	@objc func showChannelPropertiesSheet(_ sender: Any?) {
 		dialog(.showChannelProperties, sender)
 	}
 
-	@IBAction func memberSendInvite(_ sender: Any?) {
+	@objc func memberSendInvite(_ sender: Any?) {
 		dialog(.sendInvite, sender)
 	}
 
-	@IBAction func showAddressBook(_ sender: Any?) {
+	@objc func showAddressBook(_ sender: Any?) {
 		dialog(.showAddressBook, sender)
 	}
 
-	@IBAction func showIgnoreList(_ sender: Any?) {
+	@objc func showIgnoreList(_ sender: Any?) {
 		dialog(.showAddressBook, sender)
 	}
 
-	@IBAction func showOnboardingWindow(_ sender: Any?) {
+	@objc func showOnboardingWindow(_ sender: Any?) {
 		dialog(.showOnboarding, sender)
 	}
 
-	@IBAction func showAboutWindow(_ sender: Any?) {
+	@objc func showAboutWindow(_ sender: Any?) {
 		dialog(.showAbout, sender)
 	}
 
-	@IBAction func showServerPropertiesSheet(_ sender: Any?) {
+	@objc func showServerPropertiesSheet(_ sender: Any?) {
 		dialog(.showServerProperties, sender)
 	}
 
-	@IBAction func showServerHighlightList(_ sender: Any?) {
+	@objc func showServerHighlightList(_ sender: Any?) {
 		dialog(.showServerHighlightList, sender)
 	}
 
-	@IBAction func showChannelModifyTopicSheet(_ sender: Any?) {
+	@objc func showChannelModifyTopicSheet(_ sender: Any?) {
 		dialog(.showChannelTopic, sender)
 	}
 
-	@IBAction func showChannelModifyModesSheet(_ sender: Any?) {
+	@objc func showChannelModifyModesSheet(_ sender: Any?) {
 		dialog(.showChannelModes, sender)
 	}
 
-	@IBAction func showChannelSpotlightWindow(_ sender: Any?) {
+	@objc func showChannelSpotlightWindow(_ sender: Any?) {
 		dialog(.showChannelSpotlight, sender)
 	}
 
-	@IBAction func showServerChangeNicknameSheet(_ sender: Any?) {
+	@objc func showServerChangeNicknameSheet(_ sender: Any?) {
 		dialog(.showChangeNickname, sender)
 	}
 
-	@IBAction func showPreferencesWindow(_ sender: Any?) {
+	@objc func showPreferencesWindow(_ sender: Any?) {
 		dialog(.showPreferences, sender)
 	}
 
-	@IBAction func showNotificationPreferences(_ sender: Any?) {
+	func showNotificationPreferences(_ sender: Any?) {
 		dialog(.showNotificationPreferences, sender)
 	}
 
-	@IBAction func showStylePreferences(_ sender: Any?) {
+	func showStylePreferences(_ sender: Any?) {
 		dialog(.showStylePreferences, sender)
 	}
 
-	@IBAction func showHiddenPreferences(_ sender: Any?) {
+	@objc func showHiddenPreferences(_ sender: Any?) {
 		dialog(.showHiddenPreferences, sender)
 	}
 
@@ -132,68 +132,48 @@ public extension MenuController {
 		actionCoordinator.channelPropertiesDidAccept(sender, config: config)
 	}
 
-	func channelPropertiesSheetWillClose(_ sender: ChannelPropertiesSheet) {
-		dialogDidClose(sender)
-	}
+	func channelPropertiesSheetWillClose(_: ChannelPropertiesSheet) {}
 
 	func channelInviteSheet(_ sender: ChannelInviteSheet, onSelectChannel channelName: String) {
 		actionCoordinator.channelInviteDidSelect(sender, channelName: channelName)
 	}
 
-	func channelInviteSheetWillClose(_ sender: ChannelInviteSheet) {
-		dialogDidClose(sender)
-	}
+	func channelInviteSheetWillClose(_: ChannelInviteSheet) {}
 
 	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: IRCClientConfig) {
 		actionCoordinator.serverPropertiesDidAccept(sender, config: config)
 	}
 
-	func serverPropertiesSheetWillClose(_ sender: ServerPropertiesSheet) {
-		dialogDidClose(sender)
-	}
+	func serverPropertiesSheetWillClose(_: ServerPropertiesSheet) {}
 
-	func serverHighlightListSheetWillClose(_ sender: ServerHighlightListSheet) {
-		dialogDidClose(sender)
-	}
+	func serverHighlightListSheetWillClose(_: ServerHighlightListSheet) {}
 
 	func nicknameColorSheetOnOk(_ sender: NicknameColorSheet) {
 		actionCoordinator.nicknameColorDidAccept(sender)
 	}
 
-	func nicknameColorSheetWillClose(_ sender: NicknameColorSheet) {
-		dialogDidClose(sender)
-	}
+	func nicknameColorSheetWillClose(_: NicknameColorSheet) {}
 
 	func channelModifyTopicSheet(_ sender: ChannelModifyTopicSheet, onOk topic: String) {
 		actionCoordinator.channelTopicDidAccept(sender, topic: topic)
 	}
 
-	func channelModifyTopicSheetWillClose(_ sender: ChannelModifyTopicSheet) {
-		dialogDidClose(sender)
-	}
+	func channelModifyTopicSheetWillClose(_: ChannelModifyTopicSheet) {}
 
 	func channelModifyModesSheet(_ sender: ChannelModifyModesSheet, onOk modes: ChannelModeContainer) {
 		actionCoordinator.channelModesDidAccept(sender, modes: modes)
 	}
 
-	func channelModifyModesSheetWillClose(_ sender: ChannelModifyModesSheet) {
-		dialogDidClose(sender)
-	}
+	func channelModifyModesSheetWillClose(_: ChannelModifyModesSheet) {}
 
 	func serverChangeNicknameSheet(_ sender: ServerChangeNicknameSheet, didInputNickname nickname: String) {
 		actionCoordinator.serverNicknameDidAccept(sender, nickname: nickname)
 	}
 
-	func serverChangeNicknameSheetWillClose(_ sender: ServerChangeNicknameSheet) {
-		dialogDidClose(sender)
-	}
+	func serverChangeNicknameSheetWillClose(_: ServerChangeNicknameSheet) {}
 
 	private func dialog(_ action: MenuDialogAction, _ sender: Any?) {
 		actionCoordinator.performDialogAction(action, sender: sender)
-	}
-
-	private func dialogDidClose(_ sender: Any) {
-		actionCoordinator.dialogDidClose(sender)
 	}
 }
 
@@ -202,10 +182,3 @@ extension MenuController: ChannelInviteSheetDelegate, ChannelModifyTopicSheetDel
 	NicknameColorSheetDelegate, ServerChangeNicknameSheetDelegate,
 	ServerHighlightListSheetDelegate, ServerPropertiesSheetDelegate
 {}
-
-@MainActor
-public final class MainWindowMenuProxy: NSObject {
-	@IBAction public func showOnboardingWindow(_ sender: Any?) {
-		AppController.shared.menuController?.showOnboardingWindow(sender)
-	}
-}

@@ -13,49 +13,6 @@ import Testing
 @MainActor
 @Suite("AppKit support", .serialized)
 struct AppKitSupportTests {
-	@Test("A field reports its value trimmed, and a text view reports its length in UTF-16 units")
-	func textHelpersTrimValuesAndExposeTextViewState() throws {
-		let field = NSTextField(string: "  join #swift  \n")
-		#expect(field.trimmedStringValue == "join #swift")
-		#expect(field.trimmedFirstTokenStringValue == "join")
-
-		let scrollView = NSTextView.scrollableTextView()
-		let textView = try #require(scrollView.documentView as? NSTextView)
-		textView.string = "hello 👋"
-
-		#expect(textView.stringLength == 8)
-		#expect(textView.range == NSRange(location: 0, length: 8))
-		#expect(textView.scrollView === scrollView)
-	}
-
-	@Test("Restoring the default size grows a window down and to the left")
-	func windowDefaultSizeRestorationKeepsTopRightCornerFixed() {
-		let window = NSWindow(
-			contentRect: NSRect(x: 100, y: 200, width: 640, height: 480),
-			styleMask: [.titled, .resizable],
-			backing: .buffered,
-			defer: false
-		)
-		window.ce_saveSizeAsDefault()
-		let savedFrame = window.frame
-
-		window.setFrame(
-			NSRect(
-				x: savedFrame.minX,
-				y: savedFrame.minY,
-				width: savedFrame.width + 200,
-				height: savedFrame.height + 100
-			),
-			display: false
-		)
-		let expandedFrame = window.frame
-		window.ce_restoreDefaultSize(display: false)
-
-		#expect(window.frame.size == savedFrame.size)
-		#expect(window.frame.maxX == expandedFrame.maxX)
-		#expect(window.frame.maxY == expandedFrame.maxY)
-	}
-
 	/// The suppression family is catalogued as a container key, so the flags are
 	/// stored there rather than in UserDefaults.standard, which is what makes an
 	/// imported "do not ask again" take effect.

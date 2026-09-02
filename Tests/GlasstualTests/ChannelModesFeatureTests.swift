@@ -112,6 +112,7 @@ struct ChannelModesFeatureTests {
 			("not a number", ""),
 			("-1", "0"),
 			("00007", "7"),
+			(" 25 ", "25"),
 			("0", "0"),
 			("99999", "99999"),
 			("100000", "99999"),
@@ -133,6 +134,9 @@ struct ChannelModesFeatureTests {
 
 		let (_, unlimitedModel) = try makeModel(maximumKeyLength: 0)
 		#expect(unlimitedModel.updateSecretKey(String(repeating: "x", count: 1000)) == false)
+
+		let (_, roomyModel) = try makeModel(maximumKeyLength: 8)
+		#expect(roomyModel.updateSecretKey("hunter2") == false)
 
 		// KEYLEN is an octet count, so a single emoji is four bytes over a
 		// one-byte limit.

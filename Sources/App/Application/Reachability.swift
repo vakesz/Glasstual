@@ -116,26 +116,6 @@ public final class Reachability: NSObject {
 		}
 	}
 
-	public nonisolated static func evaluatePathChange( // nonisolated: pure
-		reachable: Bool,
-		currentlyReachable: UnsafeMutablePointer<ObjCBool>,
-		receivedInitialPath: UnsafeMutablePointer<ObjCBool>
-	) -> Int {
-		var currently = currentlyReachable.pointee.boolValue
-		var received = receivedInitialPath.pointee.boolValue
-
-		let event = evaluatePathChange(
-			reachable: reachable,
-			currentlyReachable: &currently,
-			receivedInitialPath: &received
-		)
-
-		currentlyReachable.pointee = ObjCBool(currently)
-		receivedInitialPath.pointee = ObjCBool(received)
-
-		return event.rawValue
-	}
-
 	nonisolated static func evaluatePathChange( // nonisolated: pure
 		reachable: Bool,
 		currentlyReachable: inout Bool,

@@ -57,16 +57,4 @@ struct LogLineArchiveCompatibilityTests {
 
 		#expect(text.contains("TVCLogLine"))
 	}
-
-	@Test("A copy carries the whole line and is independent of it")
-	func copyIsIndependent() throws {
-		let line = try #require(LogLine(data: Self.fixtureData))
-		var copy = line
-
-		#expect(copy.uniqueIdentifier == line.uniqueIdentifier)
-		#expect(copy.sessionIdentifier == line.sessionIdentifier)
-		copy.messageBody = "changed"
-
-		#expect(line.messageBody == "hello world")
-	}
 }

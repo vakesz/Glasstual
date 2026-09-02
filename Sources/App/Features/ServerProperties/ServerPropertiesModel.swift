@@ -69,22 +69,14 @@ final class ServerPropertiesModel {
 		connectCommands = replacement.connectCommands
 	}
 
-	func securedConnectionChanged() {
-		guard var server = primaryServer else { return }
-		if server.prefersSecuredConnection, serverPort == "6667" {
-			serverPort = "6697"
-		} else if !server.prefersSecuredConnection, serverPort == "6697" {
-			serverPort = "6667"
-		}
-		server.serverPort = UInt16(serverPort) ?? server.serverPort
-		storePrimaryServer(server)
-	}
-
+	/// Turns TLS on or off for the primary endpoint, moving the port with it the
+	/// way the endpoint-list sheet does.
 	func setPrimaryServerSecured(_ secured: Bool) {
 		var server = primaryServer ?? Server()
-		server.prefersSecuredConnection = secured
+		server.serverPort = UInt16(serverPort) ?? server.serverPort
+		server = ServerEndpointValidation.server(server, preferringSecuredConnection: secured)
+		serverPort = String(server.serverPort)
 		storePrimaryServer(server)
-		securedConnectionChanged()
 	}
 
 	var primaryServerIsSecured: Bool {
@@ -98,7 +90,7 @@ final class ServerPropertiesModel {
 		var server = primaryServer ?? Server()
 		server.serverAddress = serverAddress.firstToken.lowercased()
 		server.serverPort = UInt16(serverPort) ?? UInt16(IRCConnectionDefaults.serverPort)
-		server.serverPassword = Self.nilIfEmpty(serverPassword.trimmed)
+		server.pendingServerPassword = .edited(serverPassword.trimmed)
 		if result.serverList.isEmpty {
 			result.serverList = [server]
 		} else {
@@ -108,12 +100,12 @@ final class ServerPropertiesModel {
 		result.awayNickname = Self.nilIfEmpty(result.awayNickname?.firstToken ?? "")
 		result.username = result.username.firstToken
 		result.ctcpVersionReply = Self.nilIfEmpty(result.ctcpVersionReply?.trimmed ?? "")
-		result.nicknamePassword = Self.nilIfEmpty(nicknamePassword.trimmed)
+		result.pendingNicknamePassword = .edited(nicknamePassword.trimmed)
 		result.alternateNicknames = uniqueNonempty(alternateNicknames.components(separatedBy: .whitespaces))
 		result.proxyAddress = Self.nilIfEmpty(proxyAddress.firstToken.lowercased())
 		result.proxyPort = UInt16(proxyPort) ?? UInt16(IRCConnectionDefaults.proxyPort)
 		result.proxyUsername = Self.nilIfEmpty(proxyUsername.firstToken)
-		result.proxyPassword = Self.nilIfEmpty(proxyPassword.trimmed)
+		result.pendingProxyPassword = .edited(proxyPassword.trimmed)
 		result.loginCommands = connectCommands.components(separatedBy: .newlines)
 			.map(\.trimmed).filter { !$0.isEmpty }
 		return result

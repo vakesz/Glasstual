@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -54,16 +54,8 @@ enum UserTrackingWhoBatchPolicy {
 }
 
 extension IRCClient {
-	private var userTracking: AddressBookUserTrackingContainer {
-		guard let container = (trackedUsers as AnyObject) as? AddressBookUserTrackingContainer else {
-			preconditionFailure("IRCClient must own its Swift user-tracking container")
-		}
-
-		return container
-	}
-
 	func clearTrackedUsers() {
-		userTracking.clearTrackedUsers()
+		trackedUsers.clearTrackedUsers()
 	}
 
 	func setTrackedNickname(_ nickname: String, status: IRCAddressBookUserTrackingStatus) {
@@ -75,7 +67,7 @@ extension IRCClient {
 		status: IRCAddressBookUserTrackingStatus,
 		notify: Bool
 	) {
-		userTracking.status(ofTrackedNickname: nickname, changedTo: status)
+		trackedUsers.status(ofTrackedNickname: nickname, changedTo: status)
 
 		if notify {
 			notifyTrackedNickname(nickname, status: status)
@@ -101,26 +93,26 @@ extension IRCClient {
 
 		var additions: [String] = []
 		var removals: [String] = []
-		let previousNicknames = Array(userTracking.trackedUsers.keys)
+		let previousNicknames = Array(trackedUsers.trackedUsers.keys)
 		var currentNicknames: [String] = []
 
 		for entry in config.ignoreList where entry.trackUserActivity {
 			guard let nickname = entry.trackingNickname else { continue }
 
-			if userTracking.status(ofUser: nickname) != .unknown {
+			if trackedUsers.status(ofUser: nickname) != .unknown {
 				currentNicknames.append(nickname)
 				continue
 			}
 
 			additions.append(nickname)
-			userTracking.addTrackedUserWithoutDuplicateCheck(nickname)
+			trackedUsers.addTrackedUserWithoutDuplicateCheck(nickname)
 		}
 
 		for nickname in previousNicknames where currentNicknames.contains(where: {
 			$0.caseInsensitiveCompare(nickname) == .orderedSame
 		}) == false {
 			removals.append(nickname)
-			userTracking.removeTrackedUserWithoutLookup(nickname)
+			trackedUsers.removeTrackedUserWithoutLookup(nickname)
 		}
 
 		modifyWatchList(byAdding: true, nicknames: additions)
@@ -189,7 +181,7 @@ extension IRCClient {
 	@MainActor func onISONTimer() {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false else { return }
 
-		var nicknames = supportsAdvancedTracking ? [] : Array(userTracking.trackedUsers.keys)
+		var nicknames = supportsAdvancedTracking ? [] : Array(trackedUsers.trackedUsers.keys)
 		nicknames.append(contentsOf: channelList.filter(\.isPrivateMessage).map(\.name))
 		sendIson(forNicknames: nicknames, hideResponse: true)
 	}
@@ -278,7 +270,7 @@ extension IRCClient {
 	func updateUserTrackingStatus(for entry: AddressBookEntry, message: Message) {
 		guard supportsAdvancedTracking == false else { return }
 
-		let trackingStatus = userTracking.status(of: entry)
+		let trackingStatus = trackedUsers.status(of: entry)
 		guard trackingStatus != .unknown, let senderNickname = message.senderNickname else { return }
 
 		let isAvailable = trackingStatus == .available

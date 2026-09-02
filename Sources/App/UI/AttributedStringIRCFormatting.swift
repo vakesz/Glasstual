@@ -47,7 +47,7 @@ public extension NSMutableAttributedString {
 		range: NSRange
 	) {
 		if let colorCode = (value as? NSNumber)?.intValue,
-		   (0 ... colorHighestDigit).contains(colorCode)
+		   (0 ... IRCTextFormatterColor.maximumPaletteIndex).contains(colorCode)
 		{
 			addAttribute(formatterKey(formatterAttribute), value: colorCode, range: range)
 			addAttribute(appKitAttribute, value: LogRenderer.mapColorCode(UInt(colorCode)), range: range)
@@ -126,27 +126,31 @@ public extension NSMutableAttributedString {
 
 	func removeIRCFormatterAttribute(_ effect: IRCTextFormatterEffectType, range limitRange: NSRange) {
 		enumerateAttributes(in: limitRange, options: .reverse) { attributes, effectiveRange, _ in
-			guard var baseFont = attributes[.font] as? NSFont else {
-				return
-			}
+			/* Only the two trait effects need a font: a run without one still
+			 has its underline, strikethrough, colours and spoiler removed. */
+			let baseFont = attributes[.font] as? NSFont
 
 			switch effect {
 			case .none:
 				break
 			case .bold:
-				if baseFont.textual_fontTraitIsSet(.boldFontMask) {
-					baseFont = NSFontManager.shared.convert(baseFont, toNotHaveTrait: .boldFontMask)
-
-					addAttribute(.font, value: baseFont, range: effectiveRange)
+				if let baseFont, baseFont.textual_fontTraitIsSet(.boldFontMask) {
+					addAttribute(
+						.font,
+						value: NSFontManager.shared.convert(baseFont, toNotHaveTrait: .boldFontMask),
+						range: effectiveRange
+					)
 					removeAttribute(
 						formatterKey(IRCTextFormatterAttributeName.boldAttributeName), range: effectiveRange
 					)
 				}
 			case .italic:
-				if baseFont.textual_fontTraitIsSet(.italicFontMask) {
-					baseFont = NSFontManager.shared.convert(baseFont, toNotHaveTrait: .italicFontMask)
-
-					addAttribute(.font, value: baseFont, range: effectiveRange)
+				if let baseFont, baseFont.textual_fontTraitIsSet(.italicFontMask) {
+					addAttribute(
+						.font,
+						value: NSFontManager.shared.convert(baseFont, toNotHaveTrait: .italicFontMask),
+						range: effectiveRange
+					)
 					removeAttribute(
 						formatterKey(IRCTextFormatterAttributeName.italicAttributeName), range: effectiveRange
 					)
@@ -167,9 +171,7 @@ public extension NSMutableAttributedString {
 					formatterKey(IRCTextFormatterAttributeName.strikethroughAttributeName), range: effectiveRange
 				)
 			case .foregroundColor:
-				/* Matches the original implementation, which removes the AppKit
-				 background color when clearing the IRC foreground formatter. */
-				removeAttribute(.backgroundColor, range: effectiveRange)
+				removeAttribute(.foregroundColor, range: effectiveRange)
 				removeAttribute(
 					formatterKey(IRCTextFormatterAttributeName.foregroundColorAttributeName), range: effectiveRange
 				)

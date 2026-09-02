@@ -54,6 +54,10 @@ nonisolated enum ClientConfigDefaults { // nonisolated: value
 	static let maximumFloodDelay: UInt = 60
 	static let minimumFloodMessages: UInt = 1
 	static let maximumFloodMessages: UInt = 60
+	/// How long an autojoin waits after the connect commands were sent, for a
+	/// connection that asks it to. Long enough for a services reply to land.
+	static let autojoinConnectCommandDelay: TimeInterval = 3
+	static let maximumAutojoinConnectCommandDelay: TimeInterval = 60
 	/// Networks that rate-limit hard enough to need the reduced flood settings.
 	static let rateLimitedServerSuffix = ".freenode.net"
 }
@@ -62,8 +66,10 @@ nonisolated enum ClientConfigDefaults { // nonisolated: value
 
  The two secrets this carries — the nickname password and the proxy password —
  live in the keychain under `uniqueIdentifier` and are never encoded. The
- `pending…` properties hold one the user has just typed, or one read back out
- of the keychain so a duplicate can rewrite it under its own identifier. */
+ `pending…` properties carry the edit waiting to reach the keychain: one the
+ user has just typed, one read back out of the keychain so a duplicate can
+ rewrite it under its own identifier, or the removal an emptied field asks
+ for. */
 public nonisolated struct ClientConfig: Codable, Equatable, Sendable { // nonisolated: value
 	// MARK: - Identity
 
@@ -106,6 +112,16 @@ public nonisolated struct ClientConfig: Codable, Equatable, Sendable { // noniso
 	// MARK: - Behaviour
 
 	public var autojoinWaitsForNickServ = false
+	/// Holds the autojoin back until the connect commands below have been sent,
+	/// for a server where a channel only accepts the connection afterwards.
+	public var autojoinWaitsForConnectCommands = false
+	/** How long that wait lasts, in seconds.
+
+	 The commands are sent, not answered: whatever a server replies arrives
+	 later and out of band, so what the wait can offer is a pause long enough
+	 for the reply to land. It applies only when there are commands to wait
+	 for. */
+	public var autojoinDelayAfterConnectCommands = ClientConfigDefaults.autojoinConnectCommandDelay
 	public var hideAutojoinDelayedWarnings = false
 	public var hideNetworkUnavailabilityNotices = false
 	public var sendWhoCommandRequestsToChannels = true
@@ -133,10 +149,10 @@ public nonisolated struct ClientConfig: Codable, Equatable, Sendable { // noniso
 
 	// MARK: - Secrets and transient state
 
-	/// A nickname password waiting to be written to the keychain. Never encoded.
-	public var pendingNicknamePassword: String?
-	/// A proxy password waiting to be written to the keychain. Never encoded.
-	public var pendingProxyPassword: String?
+	/// An unflushed edit to the nickname password. Never encoded.
+	public var pendingNicknamePassword: PendingKeychainSecret = .unchanged
+	/// An unflushed edit to the proxy password. Never encoded.
+	public var pendingProxyPassword: PendingKeychainSecret = .unchanged
 
 	/** The single address, port and TLS flag that releases before the server
 	 list stored. They are still written out so an older build can read the
@@ -219,41 +235,33 @@ public nonisolated extension ClientConfig { // nonisolated: value
 	/// The nickname password: an unflushed edit if there is one, and otherwise
 	/// whatever the keychain holds.
 	var nicknamePassword: String? {
-		get { pendingNicknamePassword ?? nicknamePasswordFromKeychain }
-		set { pendingNicknamePassword = newValue }
+		get { pendingNicknamePassword.value(orStored: nicknamePasswordFromKeychain) }
+		set { pendingNicknamePassword = PendingKeychainSecret(newValue) }
 	}
 
 	var proxyPassword: String? {
-		get { pendingProxyPassword ?? proxyPasswordFromKeychain }
-		set { pendingProxyPassword = newValue }
+		get { pendingProxyPassword.value(orStored: proxyPasswordFromKeychain) }
+		set { pendingProxyPassword = PendingKeychainSecret(newValue) }
 	}
 
 	mutating func writeNicknamePasswordToKeychain() {
-		guard let pendingNicknamePassword else {
-			return
-		}
-
-		nicknamePasswordKeychainItem.write(pendingNicknamePassword)
-		self.pendingNicknamePassword = nil
+		nicknamePasswordKeychainItem.apply(pendingNicknamePassword)
+		pendingNicknamePassword = .unchanged
 	}
 
 	mutating func writeProxyPasswordToKeychain() {
-		guard let pendingProxyPassword else {
-			return
-		}
-
-		proxyPasswordKeychainItem.write(pendingProxyPassword)
-		self.pendingProxyPassword = nil
+		proxyPasswordKeychainItem.apply(pendingProxyPassword)
+		pendingProxyPassword = .unchanged
 	}
 
 	mutating func destroyNicknamePasswordKeychainItem() {
 		nicknamePasswordKeychainItem.delete()
-		pendingNicknamePassword = nil
+		pendingNicknamePassword = .unchanged
 	}
 
 	mutating func destroyProxyPasswordKeychainItem() {
 		proxyPasswordKeychainItem.delete()
-		pendingProxyPassword = nil
+		pendingProxyPassword = .unchanged
 	}
 }
 
@@ -268,8 +276,8 @@ public nonisolated extension ClientConfig { // nonisolated: value
 	 Without this the duplicate silently loses its passwords. */
 	func uniqueCopy() -> ClientConfig {
 		var copy = self
-		copy.pendingNicknamePassword = pendingNicknamePassword ?? nicknamePasswordFromKeychain
-		copy.pendingProxyPassword = pendingProxyPassword ?? proxyPasswordFromKeychain
+		copy.pendingNicknamePassword = pendingNicknamePassword.detached(from: nicknamePasswordFromKeychain)
+		copy.pendingProxyPassword = pendingProxyPassword.detached(from: proxyPasswordFromKeychain)
 		copy.channelList = channelList.map { $0.uniqueCopy() }
 		copy.highlightList = highlightList.map { $0.uniqueCopy() }
 		copy.ignoreList = ignoreList.map { $0.uniqueCopy() }
@@ -291,8 +299,8 @@ public nonisolated extension ClientConfig { // nonisolated: value
 		merged.merge(PropertyListModel.encode(second)) { _, replacement in replacement }
 
 		var config = PropertyListModel.decode(ClientConfig.self, from: merged) ?? second
-		config.pendingNicknamePassword = second.pendingNicknamePassword ?? first.pendingNicknamePassword
-		config.pendingProxyPassword = second.pendingProxyPassword ?? first.pendingProxyPassword
+		config.pendingNicknamePassword = second.pendingNicknamePassword.merged(over: first.pendingNicknamePassword)
+		config.pendingProxyPassword = second.pendingProxyPassword.merged(over: first.pendingProxyPassword)
 
 		return config
 	}
@@ -302,18 +310,11 @@ public nonisolated extension ClientConfig { // nonisolated: value
 
 nonisolated extension ClientConfig { // nonisolated: value
 	/** Networks that rate-limit hard enough to need the reduced settings get
-	 them as their default, both when the configuration is read and when it is
-	 written back out. */
+	 them the first time a configuration naming one is read. Encoding always
+	 measures against the standard defaults, so a reduced value is written out
+	 verbatim and survives the round trip. */
 	var usesRateLimitedFloodControl: Bool {
 		serverList.contains { $0.serverAddress.hasSuffix(ClientConfigDefaults.rateLimitedServerSuffix) }
-	}
-
-	var defaultFloodControlDelay: UInt {
-		usesRateLimitedFloodControl ? ClientConfigDefaults.limitedFloodDelay : ClientConfigDefaults.floodDelay
-	}
-
-	var defaultFloodControlMaximum: UInt {
-		usesRateLimitedFloodControl ? ClientConfigDefaults.limitedFloodMaximum : ClientConfigDefaults.floodMaximum
 	}
 
 	/// Moves a configuration still sitting on the standard defaults onto the

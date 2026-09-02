@@ -77,8 +77,12 @@ enum IRCJoinBatching {
 	/// - Parameters:
 	///   - targets: The channels to join.
 	///   - maximumLineLength: The server's `LINELEN`, or 0 for the RFC default.
-	///   - maximumTargets: The server's `MAXTARGETS` for `JOIN`, or 0 when the
-	///     server advertises no limit.
+	///   - maximumTargets: The server's `TARGMAX`/`MAXTARGETS` for `JOIN`, or 0
+	///     when it advertised none. Zero leaves the batch bounded only by the
+	///     line budget and `CHANLIMIT`, because a comma-separated channel list
+	///     is core `JOIN` syntax that every server takes — unlike a multi-target
+	///     `PRIVMSG`, which `IRCISupportInfo.groupsMultipleTargets(forCommand:)`
+	///     withholds until the server has advertised room for it.
 	///   - channelLimits: `CHANLIMIT`, keyed by channel prefix. A batch never
 	///     carries more channels of one prefix than the server lets the user
 	///     be in.

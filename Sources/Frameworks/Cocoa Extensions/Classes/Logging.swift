@@ -81,7 +81,7 @@ public enum Logging {
 	}
 
 	/// Subsystem used by Cocoa Extensions itself.
-	static let frameworkSubsystem: Logger? = Logger(
+	static let frameworkSubsystem = Logger(
 		subsystem: "com.vakesz.glasstual.frameworks.CocoaExtensions",
 		category: "Framework"
 	)

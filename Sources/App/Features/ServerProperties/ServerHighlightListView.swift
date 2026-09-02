@@ -80,6 +80,14 @@ struct ServerHighlightListView: View {
 			.padding(12)
 		}
 		.onExitCommand(perform: close)
+		.frame(
+			minWidth: 620,
+			idealWidth: 760,
+			maxWidth: .infinity,
+			minHeight: 380,
+			idealHeight: 460,
+			maxHeight: .infinity
+		)
 	}
 
 	private func cell(_ text: String, rowID: String) -> some View {

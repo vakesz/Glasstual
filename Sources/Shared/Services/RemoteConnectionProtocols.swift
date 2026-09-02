@@ -42,8 +42,14 @@ import Security
 typealias SecureConnectionInformationReceiver = @Sendable (SecureConnectionInformation) -> Void
 
 /// Commands the application sends to the isolated connection host.
+///
+/// `Sendable` because both ends already are: what the application holds is an
+/// NSXPC proxy, and what the service exports is a forwarding shim whose only
+/// state is the queue it hands the commands to. Saying so lets a caller pass
+/// the connection between tasks without the compiler having to take it on
+/// trust.
 @objc(RCMConnectionManagerServerProtocol)
-nonisolated protocol RemoteConnectionServerProtocol: AnyObject { // nonisolated: xpc-shim
+nonisolated protocol RemoteConnectionServerProtocol: AnyObject, Sendable { // nonisolated: xpc-shim
 	@objc(openWithConfig:)
 	func open(with config: ConnectionConfigEnvelope)
 

@@ -41,7 +41,7 @@ import GlasstualPluginKit
 import Testing
 
 /// One RFC 1459 §2.2 case pair: a mask, and the two spellings it has to match.
-nonisolated struct IRCSpecCaseFoldPair: CustomTestStringConvertible {
+nonisolated struct IRCSpecCaseFoldPair: CustomTestStringConvertible { // nonisolated: value
 	let mask: String
 	let upper: String
 	let lower: String
@@ -129,6 +129,30 @@ struct IRCSpecCasemappingTests {
 
 		#expect(matcher.matches(hostmask: "İrfan!user@example.org"))
 		#expect(matcher.matches(hostmask: "irfan!user@example.org") == false)
+	}
+
+	/// One casemapping governs the whole address book. A tracking entry used to
+	/// match with Unicode case folding, so it missed the pairs an ignore for the
+	/// same nickname caught.
+	@Test("A user-tracking entry folds the RFC 1459 §2.2 pairs too")
+	func userTrackingEntriesFoldTheScandinavianPairs() {
+		let matcher = AddressBookEntryMatcher(entryType: .userTracking, hostmask: "nick[home]")
+
+		#expect(matcher.trackingNickname == "nick[home]")
+		#expect(matcher.matches(hostmask: "nick[home]!user@example.org"))
+		#expect(matcher.matches(hostmask: "nick{home}!user@example.org"))
+		#expect(matcher.matches(hostmask: "NICK{HOME}!user@example.org"))
+		#expect(matcher.matches(hostmask: "nick(home)!user@example.org") == false)
+	}
+
+	/// A tracked nickname is a name, not a mask: a wildcard in it matches
+	/// itself, as it did when the entry compiled to an escaped expression.
+	@Test("A user-tracking entry treats a wildcard in the nickname literally")
+	func userTrackingEntriesTreatWildcardsLiterally() {
+		let matcher = AddressBookEntryMatcher(entryType: .userTracking, hostmask: "ni*ck")
+
+		#expect(matcher.matches(hostmask: "ni*ck!user@example.org"))
+		#expect(matcher.matches(hostmask: "nianythingck!user@example.org") == false)
 	}
 
 	/// The mapping is a parameter: `ascii` folds A–Z only, so the four pairs

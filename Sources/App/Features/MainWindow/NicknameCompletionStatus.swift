@@ -112,7 +112,11 @@ private struct CompletionRequest {
 			let searchRange = NSRange(location: start, length: text.length - start)
 			let suffixRange = text.range(of: preferredSuffix, options: [], range: searchRange)
 
-			if suffixRange.location != NSNotFound, suffixRange.length < 30 {
+			/* The suffix has to sit near the caret to belong to the word being
+			 completed; the search itself runs to the end of the field. */
+			if suffixRange.location != NSNotFound,
+			   suffixRange.location - start < maximumSuffixDistance
+			{
 				let beforeSuffix = NSRange(location: start, length: suffixRange.location - start)
 				let whitespace = text.rangeOfCharacter(from: .whitespaces, options: [], range: beforeSuffix)
 
@@ -136,6 +140,10 @@ private struct CompletionRequest {
 
 		return range
 	}
+
+	/// How far past the caret the preferred suffix may be found and still be
+	/// treated as the suffix of the word being completed.
+	private static let maximumSuffixDistance = 30
 
 	private static func isWordDelimiter(_ character: UniChar) -> Bool {
 		(CharacterSet.whitespaces as NSCharacterSet).characterIsMember(character) || character == 0x2C
@@ -190,14 +198,6 @@ public final class NicknameCompletionStatus: NSObject {
 		fatalError("Use init(window:)")
 	}
 
-	public init(window: MainWindow) {
-		self.window = window
-
-		super.init()
-
-		clear()
-	}
-
 	init(window: any NicknameCompletionWindow) {
 		self.window = window
 
@@ -207,7 +207,7 @@ public final class NicknameCompletionStatus: NSObject {
 	}
 
 	public func completeNickname(_ movingForward: Bool) {
-		guard let textView = window?.inputTextField as? TextViewWithIRCFormatter else {
+		guard let textView = window?.inputTextField else {
 			return
 		}
 
@@ -468,10 +468,16 @@ public final class NicknameCompletionStatus: NSObject {
 		)
 		let replacementValue = completedValue + (completionSuffix(for: session) ?? "")
 
-		if textView.shouldChangeText(in: replacementRange, replacementString: replacementValue) {
-			textView.replaceCharacters(in: replacementRange, with: replacementValue)
-			textView.didChangeText()
+		/* The session records the text and selection the completion produced, so
+		 a refused edit has to end the session rather than record an edit that
+		 never happened: the next Tab would replace a range computed from it. */
+		guard textView.shouldChangeText(in: replacementRange, replacementString: replacementValue) else {
+			clear()
+			return
 		}
+
+		textView.replaceCharacters(in: replacementRange, with: replacementValue)
+		textView.didChangeText()
 
 		replacementRange.length = replacementValue.utf16.count
 

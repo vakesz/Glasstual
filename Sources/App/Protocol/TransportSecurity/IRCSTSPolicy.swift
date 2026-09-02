@@ -69,7 +69,7 @@ public nonisolated struct STSPolicyEndpoint: Sendable, Equatable { // nonisolate
 	}
 }
 
-public final nonisolated class STSPolicy: NSObject { // nonisolated: value
+public final nonisolated class STSPolicy: NSObject { // nonisolated: immutable
 	public let port: UInt16
 	public let expiresAt: Date
 	public let preload: Bool

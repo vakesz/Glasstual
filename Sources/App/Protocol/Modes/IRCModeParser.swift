@@ -48,7 +48,9 @@ public final class ModeParser: NSObject {
 		_ modeString: String,
 		channelModeKinds: [Character: ChannelModeKind]
 	) -> [ModeInfo] {
-		let tokens = modeString.split(whereSeparator: { $0.isWhitespace }).map(String.init)
+		/* RFC 1459/2812 separate tokens on SPACE only. Splitting on the wider
+		 Unicode set would cut a mode parameter that legitimately contains one. */
+		let tokens = LineParser.wireTokens(in: modeString)
 		var tokenIndex = 0
 		var modeIsSet = false
 		var modes: [ModeInfo] = []

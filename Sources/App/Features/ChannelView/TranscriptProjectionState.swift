@@ -15,22 +15,17 @@ import Foundation
 /** A zero or otherwise invalid scrollback preference restores the transcript's
  established defaults. */
 nonisolated struct LogViewBufferPolicy: Equatable, Sendable { // nonisolated: value
-	static let defaultSoftLimit = 200
 	static let defaultHardLimit = 1000
 	static let validLimits = 100 ... 50000
 
-	let softLimit: Int
 	let hardLimit: Int
 
 	init(preference: UInt) {
 		if preference >= UInt(Self.validLimits.lowerBound),
 		   preference <= UInt(Self.validLimits.upperBound)
 		{
-			let limit = Int(preference)
-			softLimit = limit
-			hardLimit = limit
+			hardLimit = Int(preference)
 		} else {
-			softLimit = Self.defaultSoftLimit
 			hardLimit = Self.defaultHardLimit
 		}
 	}

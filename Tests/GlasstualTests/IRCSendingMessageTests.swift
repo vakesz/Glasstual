@@ -79,18 +79,14 @@ struct IRCSendingMessageTests {
 			"f": "trailing\\",
 			"g": "unicode ✓",
 			"h": "",
+			// A value that already spells out escape sequences: the encoder has to
+			// escape the backslashes so the decoder reads them back verbatim.
+			"i": "a;b \r\n\\s\\:end\\",
 		]
 		let line = SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags)
 		let message = try #require(Message(line: line))
 
 		#expect(message.command == "TAGMSG")
 		#expect(message.messageTags == tags)
-	}
-
-	@Test("Encoding and decoding a tag value round-trips every escape")
-	func encodeDecodeHelpersRoundTripEveryEscape() {
-		let value = "a;b \r\n\\s\\:end\\"
-
-		#expect(value.encodedMessageTagString.decodedMessageTagString == value)
 	}
 }

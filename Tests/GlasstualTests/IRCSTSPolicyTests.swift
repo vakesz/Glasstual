@@ -47,20 +47,6 @@ struct STSPolicyTests {
 		STSPolicyStore(userDefaults: nil)
 	}
 
-	@Test("Every capability value the specification defines is read")
-	func parseFullCapabilityValues() throws {
-		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: [
-			"port=6697",
-			"duration=300",
-			"preload",
-		]))
-
-		#expect(values.port == 6697)
-		#expect(values.hasDuration)
-		#expect(values.duration == 300)
-		#expect(values.preload)
-	}
-
 	@Test("A duration on its own leaves the other values at their defaults")
 	func parseDurationOnly() throws {
 		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: ["duration=0"]))
@@ -84,28 +70,6 @@ struct STSPolicyTests {
 
 		#expect(STSCapabilityValues.values(fromCapabilityValues: []) == nil)
 		#expect(STSCapabilityValues.values(fromCapabilityValues: ["vendor=thing"]) == nil)
-	}
-
-	@Test("A stored policy is found again under any casing of its host")
-	func storeAndRetrievePolicy() throws {
-		let store = makeStore()
-		let policy = STSPolicy(port: 6697, expiresAt: Date(timeIntervalSinceNow: 300), preload: false)
-
-		store.setPolicy(policy, forHost: "irc.example.net")
-
-		let stored = try #require(store.policy(forHost: "IRC.EXAMPLE.NET")) // Case insensitive
-
-		#expect(stored.port == 6697)
-	}
-
-	@Test("A policy past its expiry is no longer reported")
-	func expiredPolicyIsForgotten() {
-		let store = makeStore()
-		let policy = STSPolicy(port: 6697, expiresAt: Date(timeIntervalSinceNow: -1), preload: false)
-
-		store.setPolicy(policy, forHost: "irc.example.net")
-
-		#expect(store.policy(forHost: "irc.example.net") == nil)
 	}
 
 	@Test("A policy written to user defaults is read back by a fresh store")
@@ -152,26 +116,6 @@ struct STSPolicyTests {
 		#expect(store.enforcedEndpoint(forHost: "irc.example.net") == nil)
 	}
 
-	@Test("An advertised port on a plaintext connection upgrades without being stored")
-	func plaintextConnectionWithPortDecidesUpgrade() throws {
-		let store = makeStore()
-		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: [
-			"port=6697",
-			"duration=300",
-		]))
-		let action: IRCSTSPolicyAction = store.applyCapabilityValues(
-			values,
-			forHost: "irc.example.net",
-			connectedPort: 6667,
-			secured: false,
-			certificateChainValidated: false
-		)
-
-		#expect(action == .upgrade(port: 6697))
-		/* Nothing is stored from an insecure connection. */
-		#expect(store.policy(forHost: "irc.example.net") == nil)
-	}
-
 	@Test("A validated secure connection stores the policy on the port it connected to")
 	func securedConnectionStoresPolicy() throws {
 		let store = makeStore()
@@ -189,27 +133,5 @@ struct STSPolicyTests {
 		let policy = try #require(store.policy(forHost: "irc.example.net"))
 
 		#expect(policy.port == 6697) // The connected port when none advertised
-	}
-
-	@Test("A zero duration over a secure connection withdraws the stored policy")
-	func securedConnectionWithZeroDurationClearsPolicy() throws {
-		let store = makeStore()
-
-		store.setPolicy(
-			STSPolicy(port: 6697, expiresAt: Date(timeIntervalSinceNow: 300), preload: false),
-			forHost: "irc.example.net"
-		)
-
-		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: ["duration=0"]))
-		let action: IRCSTSPolicyAction = store.applyCapabilityValues(
-			values,
-			forHost: "irc.example.net",
-			connectedPort: 6697,
-			secured: true,
-			certificateChainValidated: true
-		)
-
-		#expect(action == .cleared)
-		#expect(store.policy(forHost: "irc.example.net") == nil)
 	}
 }

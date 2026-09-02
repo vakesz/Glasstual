@@ -42,7 +42,7 @@ import Testing
 /// Behaviour corpus for hyperlink detection in message bodies.
 @MainActor
 struct LinkParserCorpusTests {
-	nonisolated struct LinkCase: Sendable {
+	nonisolated struct LinkCase: Sendable { // nonisolated: value
 		let text: String
 		let links: [String]
 
@@ -54,7 +54,7 @@ struct LinkParserCorpusTests {
 
 	// MARK: - Detection
 
-	nonisolated static let detectionCases: [LinkCase] = [
+	nonisolated static let detectionCases: [LinkCase] = [ // nonisolated: let
 		/* Plain addresses with an explicit scheme. */
 		LinkCase("see http://example.com/page for details", ["http://example.com/page"]),
 		LinkCase("http://example.com:8080/x", ["http://example.com:8080/x"]),
@@ -97,7 +97,7 @@ struct LinkParserCorpusTests {
 
 	// MARK: - Trailing punctuation and brackets
 
-	nonisolated static let punctuationCases: [LinkCase] = [
+	nonisolated static let punctuationCases: [LinkCase] = [ // nonisolated: let
 		/* Sentence punctuation is not part of the address. */
 		LinkCase("see http://example.com/page. for details", ["http://example.com/page"]),
 		LinkCase("question? http://example.com/a?", ["http://example.com/a"]),
@@ -143,13 +143,10 @@ struct LinkParserCorpusTests {
 	func neverLinksExecutableOrLocalSchemes(text: String) {
 		let located = LinkParser.locateLinks(in: text)
 
-		for result in located {
-			let scheme = result.stringValue.lowercased()
-
-			#expect(scheme.hasPrefix("javascript:") == false)
-			#expect(scheme.hasPrefix("data:") == false)
-			#expect(scheme.hasPrefix("file:") == false)
-		}
+		/* Asserting emptiness rather than filtering the results: a loop over an
+		 empty array checks nothing, and a link to somewhere else entirely is
+		 just as wrong as the scheme this case is named for. */
+		#expect(located.isEmpty, "\(text) produced \(located.map(\.stringValue))")
 	}
 
 	// MARK: - Ranges and whole-string matches
@@ -196,21 +193,23 @@ struct LinkParserCorpusTests {
 	}
 }
 
-/// Corpus for the policy `OpenLink` applies before handing a URL to
-/// `NSWorkspace`.
-///
-/// `refusesToday(_:)` asks the production allowlist itself — the same call
-/// `OpenLink.open(url:inBackground:)` makes — rather than mirroring it, so the
-/// suite cannot pass against a copy of the rule that has drifted. Opening is
-/// only exercised for URLs that must be refused: driving the openable cases
-/// would launch applications.
-@MainActor
-struct OpenLinkCorpusTests {
-	/// The gate in `OpenLink.open(url:inBackground:)`, called directly.
-	private static func refusesToday(_ url: URL) -> Bool {
-		guard let scheme = url.scheme else { return true }
+/** Corpus for the allowlist `OpenLink.open(url:inBackground:)` consults before
+ handing a URL to `NSWorkspace`, stated over whole URLs rather than bare
+ schemes so that scheme extraction is part of what is checked.
 
-		return LinkParser.isPermittedScheme(scheme) == false
+ `OpenLink.open` itself is not driven here. It returns `Void` and reaches
+ `NSWorkspace.shared` directly, so a call proves nothing about whether it
+ opened, and a call that *did* open would launch an application out of the test
+ run. Pinning the guard itself needs an injectable opener on `OpenLink`; until
+ that exists this suite covers the rule the guard applies, and
+ `LinkSchemePolicyTests` covers the same rule over bare scheme strings. */
+@MainActor
+struct OpenLinkSchemeCorpusTests {
+	/// The predicate `OpenLink.open(url:inBackground:)` guards on.
+	private static func permitsOpening(_ url: URL) -> Bool {
+		guard let scheme = url.scheme else { return false }
+
+		return LinkParser.isPermittedScheme(scheme)
 	}
 
 	@Test(arguments: [
@@ -221,10 +220,7 @@ struct OpenLinkCorpusTests {
 	func refusesFileURLs(address: String) throws {
 		let url = try #require(URL(string: address))
 
-		#expect(Self.refusesToday(url))
-
-		/* Exercise the production guard: it must return without opening. */
-		OpenLink.open(url: url, inBackground: true)
+		#expect(Self.permitsOpening(url) == false)
 	}
 
 	@Test(arguments: [
@@ -235,7 +231,7 @@ struct OpenLinkCorpusTests {
 	func acceptsOrdinaryRemoteURLs(address: String) throws {
 		let url = try #require(URL(string: address))
 
-		#expect(Self.refusesToday(url) == false)
+		#expect(Self.permitsOpening(url))
 	}
 
 	/// Schemes that reach local shares or system surfaces must be refused too.
@@ -247,16 +243,16 @@ struct OpenLinkCorpusTests {
 	func refusesLocalShareAndSystemSchemes(address: String) throws {
 		let url = try #require(URL(string: address))
 
-		#expect(Self.refusesToday(url))
-
-		/* Exercise the production guard: it must return without opening. */
-		OpenLink.open(url: url, inBackground: true)
+		#expect(Self.permitsOpening(url) == false)
 	}
 
-	@Test
-	func ignoresStringsThatAreNotURLs() {
-		/* The string entry point must not crash on malformed input. */
-		OpenLink.open(string: "", inBackground: true)
-		OpenLink.open(string: "file:///etc/passwd", inBackground: true)
+	/// A URL with no scheme at all — what `OpenLink.open(string:)` produces from
+	/// a relative reference — is refused rather than defaulted.
+	@Test(arguments: ["example.com/path", "/etc/passwd"])
+	func refusesURLsWithoutAScheme(address: String) throws {
+		let url = try #require(URL(string: address))
+
+		#expect(url.scheme == nil)
+		#expect(Self.permitsOpening(url) == false)
 	}
 }

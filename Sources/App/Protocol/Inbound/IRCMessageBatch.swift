@@ -37,9 +37,6 @@
 
 import Foundation
 
-public typealias IRCMessageBatchMessageContainer = MessageBatchContainer
-public typealias IRCMessageBatchMessage = MessageBatch
-
 /// What a batch can hold: a message, or a batch nested inside it.
 public enum BatchEntry {
 	case message(Message)
@@ -59,14 +56,28 @@ public enum BatchEntry {
 /// Main-actor, like everything else that reads an inbound message, so the
 /// entries need no lock of their own.
 public final class MessageBatchContainer: NSObject {
+	/// Each open batch holds its own queue, so the per-batch ceiling bounds
+	/// nothing unless the number of open batches is bounded too. A server that
+	/// opens batches and never closes them stops being able to open more.
+	/// No network opens anywhere near this many at once.
+	public static let maximumOpenBatches = 64
+
 	private var entries: [String: MessageBatch] = [:]
 
 	public var queuedEntries: [String: MessageBatch] {
 		entries
 	}
 
-	public func queueEntry(_ entry: MessageBatch) {
+	/// `true` when the batch was registered; `false` when too many are open.
+	@discardableResult
+	public func queueEntry(_ entry: MessageBatch) -> Bool {
+		guard entries[entry.batchToken] != nil || entries.count < MessageBatchContainer.maximumOpenBatches else {
+			return false
+		}
+
 		entries[entry.batchToken] = entry
+
+		return true
 	}
 
 	public func dequeueEntry(_ entry: MessageBatch) {

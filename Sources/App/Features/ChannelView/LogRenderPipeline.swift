@@ -15,7 +15,8 @@ import Foundation
 /** One unit of work for a log view's render pipeline.
 
  The closure runs off the main actor and returns the main-actor half of the job
- — the part that touches the web view — or `nil` when there is nothing to apply.
+ — the part that touches the transcript view — or `nil` when there is nothing to
+ apply.
  A closure isolated to the main actor may capture values that are not `Sendable`
  because it can only ever run there, which is what lets a job carry an
  `NSAttributedString`, a `LogLine` or a caller's completion block home.
@@ -45,8 +46,9 @@ struct LogRenderSubmission: Sendable {
  in the order the client printed them.
 
  Nothing here is a lock or a queue: the ordering is the delivery chain, the
- back-pressure is the task group's width, and cancellation is
- ``stop()`` plus the controller's own generation check. */
+ back-pressure is the task group's width, and cancellation is ``stop()``, which
+ cancels the deliveries still in flight, plus the controller's own generation
+ check for the one that has already reached the main actor. */
 actor LogRenderPipeline {
 	/** How many lines render at once. The pipeline is per view, so this is a
 	 per-view width; rendering is CPU-bound string work with no shared state. */
@@ -58,6 +60,9 @@ actor LogRenderPipeline {
 
 	private let stream: AsyncStream<LogRenderSubmission>
 	private var isStopped = false
+	/// The deliveries that have not been applied yet, so ``stop()`` can reach
+	/// them. A delivery withdraws its own entry as it finishes.
+	private var deliveries: [UUID: Task<Void, Never>] = [:]
 
 	init() {
 		/* Unbounded on purpose. A dropping policy would silently lose lines
@@ -109,23 +114,43 @@ actor LogRenderPipeline {
 		_ submission: LogRenderSubmission,
 		after predecessor: Task<Void, Never>?
 	) -> Task<Void, Never> {
-		Task {
+		let identifier = UUID()
+
+		let delivery = Task { [weak self] in
 			let apply = await submission.job()
 
 			await predecessor?.value
 
-			guard Task.isCancelled == false else {
-				return
+			if Task.isCancelled == false {
+				await MainActor.run { apply?() }
 			}
 
-			await MainActor.run { apply?() }
+			await self?.finishDelivery(identifier)
 		}
+
+		deliveries[identifier] = delivery
+
+		return delivery
 	}
 
-	/// Ends the pipeline and stops accepting submissions.
+	private func finishDelivery(_ identifier: UUID) {
+		deliveries.removeValue(forKey: identifier)
+	}
+
+	/** Ends the pipeline and stops accepting submissions.
+
+	 Cancelling the deliveries is what makes it take effect on the work already
+	 running: a render in flight stops rendering, and one that finished before
+	 the cancellation reached it applies nothing. */
 	func stop() {
 		isStopped = true
 		submissions.finish()
+
+		for delivery in deliveries.values {
+			delivery.cancel()
+		}
+
+		deliveries.removeAll()
 	}
 
 	/** Waits until every job submitted so far has been applied. Tests use this

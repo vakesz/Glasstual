@@ -1,6 +1,30 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "add-user-ignore-entry": {
+      "comment": "Menu item that adds an Address Book entry which ignores a user.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add User Ignore Entry"
+          }
+        }
+      }
+    },
+    "add-user-tracking-entry": {
+      "comment": "Menu item that adds an Address Book entry which tracks a user.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add User Tracking Entry"
+          }
+        }
+      }
+    },
     "address-book": {
       "comment": "Server properties navigation menu. Legacy key: 8zc-6y.",
       "extractionState": "manual",
@@ -13,6 +37,42 @@
         }
       }
     },
+    "address-type-automatic": {
+      "comment": "Address family option that lets the system pick between IPv4 and IPv6.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically choose"
+          }
+        }
+      }
+    },
+    "address-type-ipv4": {
+      "comment": "Address family option that pins the connection to IPv4.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IPv4"
+          }
+        }
+      }
+    },
+    "address-type-ipv6": {
+      "comment": "Address family option that pins the connection to IPv6.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IPv6"
+          }
+        }
+      }
+    },
     "all-channels": {
       "comment": "Server specific highlight entry things. Legacy key: 61f-6b.",
       "extractionState": "manual",
@@ -21,6 +81,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "All Channels"
+          }
+        }
+      }
+    },
+    "alternative-nicknames": {
+      "comment": "Field label for the space separated fallback nicknames.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternative Nicknames"
+          }
+        }
+      }
+    },
+    "autojoin-delay-after-connect-commands": {
+      "comment": "Server properties Connect Commands pane. Stepper that sets how long the autojoin pauses after the commands were sent. The argument is the number of seconds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Wait %ld second after these commands before joining"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Wait %ld seconds after these commands before joining"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "autojoin-waits-for-connect-commands": {
+      "comment": "Server properties Connect Commands pane. Checkbox that holds the autojoin back until the commands above have been sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join channels only after these commands have run"
+          }
+        }
+      }
+    },
+    "autojoin-waits-for-nickserv": {
+      "comment": "Toggle that delays autojoin until NickServ identification succeeds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait for identification before joining channels"
+          }
+        }
+      }
+    },
+    "away-nickname": {
+      "comment": "Field label for the nickname used while marked away.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away Nickname"
+          }
+        }
+      }
+    },
+    "certificate-name": {
+      "comment": "Label for the name of the selected client-side certificate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certificate Name"
           }
         }
       }
@@ -49,6 +193,66 @@
         }
       }
     },
+    "cipher-suites-default": {
+      "comment": "Cipher suite collection option using the application default list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default list"
+          }
+        }
+      }
+    },
+    "cipher-suites-label": {
+      "comment": "Picker label for the TLS cipher suite collection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cipher suites"
+          }
+        }
+      }
+    },
+    "cipher-suites-mozilla-2015": {
+      "comment": "Cipher suite collection option using the list shipped with version 5.2.7.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version 5.2.7 list"
+          }
+        }
+      }
+    },
+    "cipher-suites-mozilla-2017": {
+      "comment": "Cipher suite collection option using the list shipped with version 7.0.0.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version 7.0.0 list"
+          }
+        }
+      }
+    },
+    "cipher-suites-none": {
+      "comment": "Cipher suite collection option that leaves the choice to the system.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not prefer specific suites"
+          }
+        }
+      }
+    },
     "client-certificate": {
       "comment": "Server properties navigation menu. Legacy key: ce7-kc.",
       "extractionState": "manual",
@@ -61,6 +265,18 @@
         }
       }
     },
+    "computer-sleep-quit-message": {
+      "comment": "Field label for the quit message used when the computer sleeps.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer Sleep Quit Message"
+          }
+        }
+      }
+    },
     "connect-commands": {
       "comment": "Server properties navigation menu. Legacy key: hip-13.",
       "extractionState": "manual",
@@ -69,6 +285,150 @@
           "stringUnit": {
             "state": "translated",
             "value": "Connect Commands"
+          }
+        }
+      }
+    },
+    "connect-securely": {
+      "comment": "Toggle that turns TLS on for the primary server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Securely"
+          }
+        }
+      }
+    },
+    "connect-using": {
+      "comment": "Picker label for the IP address family used to connect.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect using"
+          }
+        }
+      }
+    },
+    "connect-when-glasstual-opens": {
+      "comment": "Toggle for connecting this server automatically at launch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect when Glasstual opens"
+          }
+        }
+      }
+    },
+    "connection-name": {
+      "comment": "Field label for the connection's display name on the server properties General pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection Name"
+          }
+        }
+      }
+    },
+    "copy-fingerprint": {
+      "comment": "Button that copies a certificate fingerprint to the pasteboard.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
+    "ctcp-version-reply": {
+      "comment": "Field label for the custom reply sent to a CTCP VERSION request.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CTCP VERSION Reply"
+          }
+        }
+      }
+    },
+    "disconnect-on-pong-timer": {
+      "comment": "Toggle that disconnects when the server stops answering PING.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect when no PING response is received"
+          }
+        }
+      }
+    },
+    "disconnect-on-reachability-change": {
+      "comment": "Toggle that disconnects when the network reachability changes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect when reachability changes"
+          }
+        }
+      }
+    },
+    "disconnect-on-sasl-failure": {
+      "comment": "Toggle for disconnecting when SASL authentication is rejected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect if SASL authentication fails"
+          }
+        }
+      }
+    },
+    "disconnect-when-computer-sleeps": {
+      "comment": "Toggle for disconnecting when the computer goes to sleep.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect when the computer sleeps"
+          }
+        }
+      }
+    },
+    "encoding-fallback": {
+      "comment": "Picker label for the encoding used when the primary one cannot decode a message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fallback"
+          }
+        }
+      }
+    },
+    "encoding-primary": {
+      "comment": "Picker label for the text encoding used on this connection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encoding"
           }
         }
       }
@@ -97,6 +457,30 @@
         }
       }
     },
+    "flood-control-interval": {
+      "comment": "Label for the flood control slider setting the delay between batches.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number of seconds"
+          }
+        }
+      }
+    },
+    "flood-control-message-count": {
+      "comment": "Label for the flood control slider limiting how many commands are sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number of commands"
+          }
+        }
+      }
+    },
     "includes-the-following-cipher-suites": {
       "comment": "Cipher suites. Legacy key: yko-5g.",
       "extractionState": "manual",
@@ -109,6 +493,30 @@
         }
       }
     },
+    "join-on-connect": {
+      "comment": "Accessibility label for the per-channel autojoin checkbox in the channel list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join on connect"
+          }
+        }
+      }
+    },
+    "modify-alternate-servers": {
+      "comment": "Button that opens the alternate-server list sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modify Alternate Servers"
+          }
+        }
+      }
+    },
     "network-socket": {
       "comment": "Server properties navigation menu. Legacy key: ffy-xt.",
       "extractionState": "manual",
@@ -117,6 +525,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Network Socket"
+          }
+        }
+      }
+    },
+    "nickname": {
+      "comment": "Field label for the nickname used on this connection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        }
+      }
+    },
+    "nickserv-or-sasl-password": {
+      "comment": "Field label for the account password used for NickServ or SASL.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NickServ or SASL Password"
           }
         }
       }
@@ -141,6 +573,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "No Certificates Available"
+          }
+        }
+      }
+    },
+    "open-system-settings": {
+      "comment": "Button that opens the network proxy pane of System Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        }
+      }
+    },
+    "part-and-quit-message": {
+      "comment": "Field label for the message sent when leaving a channel or the server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part and Quit Message"
+          }
+        }
+      }
+    },
+    "perform-commands-on-connect": {
+      "comment": "Heading above the editor holding commands run after connecting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perform commands on connect:"
+          }
+        }
+      }
+    },
+    "periodically-ping-the-server": {
+      "comment": "Toggle that sends periodic PING messages to the server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periodically PING the server"
           }
         }
       }
@@ -205,6 +685,42 @@
         }
       }
     },
+    "proxy-address": {
+      "comment": "Field label for the proxy server's host name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address"
+          }
+        }
+      }
+    },
+    "proxy-password": {
+      "comment": "Field label for the proxy server's password.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        }
+      }
+    },
+    "proxy-port": {
+      "comment": "Field label for the proxy server's port.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
+          }
+        }
+      }
+    },
     "proxy-server": {
       "comment": "Server properties navigation menu. Legacy key: t52-7a.",
       "extractionState": "manual",
@@ -217,6 +733,138 @@
         }
       }
     },
+    "proxy-type": {
+      "comment": "Picker label for the kind of proxy the connection uses.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type of Proxy"
+          }
+        }
+      }
+    },
+    "proxy-type-automatic": {
+      "comment": "Proxy option for using the proxy configured in System Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
+          }
+        }
+      }
+    },
+    "proxy-type-http": {
+      "comment": "Proxy option for an anonymous HTTP proxy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP Proxy (Anonymous)"
+          }
+        }
+      }
+    },
+    "proxy-type-none": {
+      "comment": "Proxy option for connecting without a proxy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      }
+    },
+    "proxy-type-socks5": {
+      "comment": "Proxy option for a SOCKS 5 proxy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SOCKS 5 Proxy"
+          }
+        }
+      }
+    },
+    "proxy-type-tor": {
+      "comment": "Proxy option for connecting through the Tor network.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor Anonymity Network"
+          }
+        }
+      }
+    },
+    "proxy-username": {
+      "comment": "Field label for the proxy server's user name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username"
+          }
+        }
+      }
+    },
+    "real-name": {
+      "comment": "Field label for the real name sent during registration.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real Name"
+          }
+        }
+      }
+    },
+    "reconnect-after-disconnect": {
+      "comment": "Toggle for reconnecting automatically after an unexpected disconnect.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnect after disconnect"
+          }
+        }
+      }
+    },
+    "reset-certificate": {
+      "comment": "Button that removes the selected client-side certificate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Certificate"
+          }
+        }
+      }
+    },
+    "run-commands-silently": {
+      "comment": "Toggle that hides the output of the connect commands.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run commands silently"
+          }
+        }
+      }
+    },
     "select-a-certificate-to-send-when": {
       "comment": "Custom client-side certificate selection. Legacy key: mi4-fd.",
       "extractionState": "manual",
@@ -225,6 +873,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Select a certificate to send when you connect securely."
+          }
+        }
+      }
+    },
+    "select-certificate": {
+      "comment": "Button that opens the client-side certificate chooser.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select Certificate"
+          }
+        }
+      }
+    },
+    "server-address": {
+      "comment": "Field label for the primary server's host name on the server properties General pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Address"
+          }
+        }
+      }
+    },
+    "server-password": {
+      "comment": "Field label for the password sent to the server on connect.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Password"
+          }
+        }
+      }
+    },
+    "server-port": {
+      "comment": "Field label for the primary server's port on the server properties General pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
           }
         }
       }
@@ -349,6 +1045,54 @@
         }
       }
     },
+    "set-invisible-mode-on-connect": {
+      "comment": "Toggle that sends user mode +i after connecting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set invisible (+i) mode on connect"
+          }
+        }
+      }
+    },
+    "sha-1-fingerprint": {
+      "comment": "Label for the SHA-1 fingerprint of the client-side certificate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SHA-1 Fingerprint"
+          }
+        }
+      }
+    },
+    "sha-256-fingerprint": {
+      "comment": "Label for the SHA-256 fingerprint of the client-side certificate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SHA-256 Fingerprint"
+          }
+        }
+      }
+    },
+    "sha-512-fingerprint": {
+      "comment": "Label for the SHA-512 fingerprint of the client-side certificate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SHA-512 Fingerprint"
+          }
+        }
+      }
+    },
     "there-are-no-certificates": {
       "comment": "Custom client-side certificate selection. Legacy key: 489-hG.",
       "extractionState": "manual",
@@ -385,6 +1129,18 @@
         }
       }
     },
+    "tor-browser-note": {
+      "comment": "Note explaining that Tor Browser provides the local proxy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor Browser must be running before connecting."
+          }
+        }
+      }
+    },
     "user-ignore": {
       "comment": "Server properties Address Book entry types. Legacy key: f7o-x4.",
       "extractionState": "manual",
@@ -409,6 +1165,30 @@
         }
       }
     },
+    "username": {
+      "comment": "Field label for the user name sent during registration.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username"
+          }
+        }
+      }
+    },
+    "validate-server-certificate-chain": {
+      "comment": "Toggle for validating the server's TLS certificate chain.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validate the certificate chain when connecting"
+          }
+        }
+      }
+    },
     "vendor-specific": {
       "comment": "Server properties navigation menu. Legacy key: v27-8w.",
       "extractionState": "manual",
@@ -417,6 +1197,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vendor Specific"
+          }
+        }
+      }
+    },
+    "view-cipher-suites": {
+      "comment": "Button that shows the cipher suites in the selected collection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View List"
+          }
+        }
+      }
+    },
+    "warn-when-channels-cannot-be-joined": {
+      "comment": "Toggle for the warning shown when autojoin is delayed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warn if channels cannot be joined"
           }
         }
       }
@@ -441,6 +1245,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "ZNC Bouncer"
+          }
+        }
+      }
+    },
+    "znc-ignore-configured-autojoin": {
+      "comment": "Toggle that suppresses autojoin when connecting through a ZNC bouncer.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not automatically join channels on connect"
+          }
+        }
+      }
+    },
+    "znc-ignore-playback-notifications": {
+      "comment": "Toggle that suppresses notifications for messages replayed by ZNC.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not show notifications for the playback buffer"
+          }
+        }
+      }
+    },
+    "znc-only-playback-latest": {
+      "comment": "Toggle that limits ZNC playback to messages received while disconnected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only play back messages you missed"
+          }
+        }
+      }
+    },
+    "znc-version-note": {
+      "comment": "Note under the ZNC options naming the bouncer versions they apply to.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These options target ZNC 1.2 and later."
           }
         }
       }

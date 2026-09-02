@@ -43,7 +43,7 @@ import Testing
 /// ladder, and the WHOX request/response token.
 @MainActor
 struct IRCNumericReplyCorpusTests {
-	nonisolated struct NumericCase: Sendable {
+	nonisolated struct NumericCase: Sendable { // nonisolated: value
 		let numeric: UInt
 		let isError: Bool
 
@@ -55,7 +55,7 @@ struct IRCNumericReplyCorpusTests {
 
 	/// Errors are the 401-596 band, with RPL_NOMOTD carved out because servers
 	/// send it as an ordinary reply.
-	nonisolated static let classificationCases: [NumericCase] = [
+	nonisolated static let classificationCases: [NumericCase] = [ // nonisolated: let
 		NumericCase(1, isError: false),
 		NumericCase(5, isError: false),
 		NumericCase(315, isError: false),
@@ -116,7 +116,7 @@ struct IRCNumericReplyCorpusTests {
 
 	// MARK: - Nickname retry ladder
 
-	nonisolated struct AlternateCase: Sendable {
+	nonisolated struct AlternateCase: Sendable { // nonisolated: value
 		let attempt: UInt
 		let nicknames: [String]
 		let chosen: String?
@@ -140,7 +140,7 @@ struct IRCNumericReplyCorpusTests {
 		#expect(IRCNicknameRetryPolicy.alternate(at: testCase.attempt, from: testCase.nicknames) == testCase.chosen)
 	}
 
-	nonisolated struct PaddingCase: Sendable {
+	nonisolated struct PaddingCase: Sendable { // nonisolated: value
 		let nickname: String?
 		let maximumLength: UInt
 		let padded: String
@@ -174,10 +174,34 @@ struct IRCNumericReplyCorpusTests {
 	@Test
 	func retryPolicyDefaults() {
 		#expect(IRCNicknameRetryPolicy.fallbackNickname == "0")
-		#expect(
-			IRCNicknameRetryPolicy.defaultMaximumLength
-				== UInt(IRCProtocolLimits.defaultNicknameMaximumLength)
-		)
+	}
+
+	/** The retry padded to a hardcoded 31 whatever the server said, so on a
+	 network with a shorter `NICKLEN` every retry drew another 432 until the
+	 nickname was nothing but underscores. */
+	@Test
+	func aRetriedNicknameIsPaddedToTheAdvertisedNicknameLength() {
+		let client = GLTTestClient(configDictionary: ["nickname": "abcdefghi", "username": "abcdefghi"])
+
+		client.supportInfo.processConfigurationData("NICKLEN=9")
+		client.isConnected = true
+		client.tryingNicknameSentNickname = "abcdefghi"
+		client.tryAnotherNickname()
+
+		#expect(client.tryingNicknameSentNickname == "abcdefgh_")
+	}
+
+	/// Before ISUPPORT lands there is nothing to read, so the RFC-era default
+	/// still stands in.
+	@Test
+	func aRetryBeforeISupportUsesTheDefaultLength() {
+		let client = GLTTestClient(configDictionary: ["nickname": "nick", "username": "nick"])
+
+		client.isConnected = true
+		client.tryingNicknameSentNickname = "nick"
+		client.tryAnotherNickname()
+
+		#expect(client.tryingNicknameSentNickname == "nick_")
 	}
 }
 

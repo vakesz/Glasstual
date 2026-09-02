@@ -172,6 +172,9 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	/// `perform(_:afterDelay:)`: the ZNC autojoin retry, the first ISON sweep,
 	/// and one rejoin per channel the server kicked us out of.
 	var postRegistrationAutoJoinTask: Task<Void, Never>?
+	/// Counts out `autojoinDelayAfterConnectCommands` before the autojoin that
+	/// was waiting for the connect commands is released.
+	var connectCommandsSettlingTask: Task<Void, Never>?
 	var trackedUserPopulationTask: Task<Void, Never>?
 	var rejoinTasks: [String: Task<Void, Never>] = [:]
 	public var connectType: IRCClientConnectMode = .normal
@@ -184,7 +187,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	/// Capability names the server acknowledged, in the order they arrived.
 	var enabledCapabilityNames: [String] = []
 	var offeredCapabilities: [String: [String]] = [:]
-	/// Lowercased capability name to the exact spelling the server advertised.
 	var lastAwayMessage: String?
 	var saslOfferedMechanisms: [String]?
 	var saslScramClient: SCRAMClient?
@@ -202,6 +204,11 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var isTerminating = false
 	var configurationIsStale = false
 	var isPerformingConnectCommands = false
+	/// Whether this connection has already sent its configured connect commands.
+	var didPerformConnectCommands = false
+	/// Whether the wait that follows them is over, which is what
+	/// `autojoinWaitsForConnectCommands` holds the autojoin for.
+	var connectCommandsHaveSettled = false
 	public var isAutojoined = false
 	public var isAutojoining = false
 	var reconnectEnabledBecauseOfSleepMode = false
@@ -229,7 +236,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var isonTimer: ClientTimer!
 	var whoTimer: ClientTimer!
 	var autojoinTimer: ClientTimer!
-	var autojoinNextJoinTimer: ClientTimer!
 	var autojoinDelayedWarningTimer: ClientTimer!
 	var pongTimer: ClientTimer!
 	var reconnectTimer: ClientTimer!
@@ -318,10 +324,11 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	isolated deinit {
 		notifications.cancelAll()
 		[
-			autojoinTimer, autojoinNextJoinTimer, autojoinDelayedWarningTimer,
+			autojoinTimer, autojoinDelayedWarningTimer,
 			isonTimer, pongTimer, reconnectTimer, retryTimer, whoTimer, readMarkerTimer,
 		].forEach { $0?.stop() }
 		postRegistrationAutoJoinTask?.cancel()
+		connectCommandsSettlingTask?.cancel()
 		trackedUserPopulationTask?.cancel()
 		rejoinTasks.values.forEach { $0.cancel() }
 	}
@@ -388,7 +395,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		refreshDescription()
 
 		autojoinTimer = makeTimer { $0.onAutojoinTimer() }
-		autojoinNextJoinTimer = makeTimer { $0.onAutojoinNextJoinTimer() }
 		autojoinDelayedWarningTimer = makeTimer { $0.onAutojoinDelayedWarningTimer() }
 		isonTimer = makeTimer { $0.onISONTimer() }
 		reconnectTimer = makeTimer { $0.onReconnectTimer() }
@@ -420,11 +426,15 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		}
 	}
 
+	/** Notes a change worth writing back and asks the world to write it.
+
+	 `lastMessageServerTime` changes on every inbound line a modern network
+	 sends, so this used to allocate a `Task` and take a main-actor hop per
+	 message for work `savePeriodically()` then threw away. Both setters are
+	 already on the main actor, so the call is direct. */
 	private func markConfigurationStaleIfChanged<T: Equatable>(from oldValue: T, to newValue: T) {
 		guard oldValue != newValue else { return }
 		configurationIsStale = true
-		Task { @MainActor [environment] in
-			environment.world?.savePeriodically()
-		}
+		environment.world?.savePeriodically()
 	}
 }

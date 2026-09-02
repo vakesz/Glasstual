@@ -151,14 +151,6 @@ enum PreferencesFloodControlStrings {
 		String(localized: .TDCPreferencesController.floodControlIdentifyDelayNote)
 	}
 
-	static var joinDelayLabel: String {
-		String(localized: .TDCPreferencesController.floodControlJoinDelayLabel)
-	}
-
-	static var joinDelayNote: String {
-		String(localized: .TDCPreferencesController.floodControlJoinDelayNote)
-	}
-
 	static var note: String {
 		String(localized: .TDCPreferencesController.floodControlNote)
 	}

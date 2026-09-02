@@ -140,6 +140,7 @@ public enum MenuCommand: Int, CaseIterable, Sendable {
 	case navigationChannelList = 714 // Channel List…
 	case navigationChannelListSeparator = 715
 	case searchChannels = 716 // Search channels…
+	case channelSpotlight = 717 // Channel Spotlight…
 	case minimize = 800 // Minimize
 	case zoom = 801 // Zoom
 	case zoomSeparator = 802
@@ -383,7 +384,8 @@ public extension MenuCommand {
 		.addChannel: "plus.circle", .deleteChannel: "trash", .viewChannelLogs: "doc.text",
 		.modifyTopic: "text.quote", .modes: "slider.horizontal.3", .bans: "hand.raised",
 		.channelProperties: "gearshape", .jumpToPresent: "arrow.down.to.line",
-		.searchChannels: "magnifyingglass", .minimize: "minus", .zoom: "plus.rectangle",
+		.searchChannels: "magnifyingglass", .channelSpotlight: "sparkle.magnifyingglass",
+		.minimize: "minus", .zoom: "plus.rectangle",
 		.toggleMemberList: "person.2", .toggleServerList: "sidebar.left",
 		.mainWindow: "macwindow", .addressBook: "person.crop.circle",
 		.ignoreList: "hand.raised", .viewLogs: "doc.text",

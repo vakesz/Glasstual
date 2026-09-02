@@ -45,12 +45,12 @@ import Testing
 /// The corpus is the community's reading of RFC 1459 §2.3.1 and the IRCv3
 /// message-tags grammar, so it is the closest thing to an executable
 /// specification for the wire format.
-nonisolated enum IRCSpecCorpus {
+nonisolated enum IRCSpecCorpus { // nonisolated: value
 	/// A bundle-resident anchor: Swift Testing suites are structs, so there is
 	/// no test class to hand to `Bundle(for:)`.
 	private final class Anchor {}
 
-	nonisolated struct MissingResource: Error, CustomStringConvertible {
+	nonisolated struct MissingResource: Error, CustomStringConvertible { // nonisolated: value
 		let name: String
 
 		var description: String {
@@ -77,8 +77,8 @@ nonisolated enum IRCSpecCorpus {
 
 /// `ircdocs/parser-tests` msg-split: splitting a line into tags, source, verb
 /// and parameters. RFC 1459 §2.3.1 with the IRCv3 message-tags prelude.
-nonisolated struct IRCSpecMessageSplitCase: Decodable, CustomTestStringConvertible {
-	nonisolated struct Atoms: Decodable {
+nonisolated struct IRCSpecMessageSplitCase: Decodable, CustomTestStringConvertible { // nonisolated: value
+	nonisolated struct Atoms: Decodable { // nonisolated: value
 		let tags: [String: String]?
 		let source: String?
 		let verb: String?
@@ -94,8 +94,8 @@ nonisolated struct IRCSpecMessageSplitCase: Decodable, CustomTestStringConvertib
 }
 
 /// `ircdocs/parser-tests` msg-join: assembling atoms back into a line.
-nonisolated struct IRCSpecMessageJoinCase: Decodable, CustomTestStringConvertible {
-	nonisolated struct Atoms: Decodable {
+nonisolated struct IRCSpecMessageJoinCase: Decodable, CustomTestStringConvertible { // nonisolated: value
+	nonisolated struct Atoms: Decodable { // nonisolated: value
 		let tags: [String: String]?
 		let source: String?
 		let verb: String?
@@ -113,8 +113,8 @@ nonisolated struct IRCSpecMessageJoinCase: Decodable, CustomTestStringConvertibl
 
 /// `ircdocs/parser-tests` userhost-split: splitting a prefix into
 /// nick/user/host, per RFC 2812 §2.3.1.
-nonisolated struct IRCSpecUserhostSplitCase: Decodable, CustomTestStringConvertible {
-	nonisolated struct Atoms: Decodable {
+nonisolated struct IRCSpecUserhostSplitCase: Decodable, CustomTestStringConvertible { // nonisolated: value
+	nonisolated struct Atoms: Decodable { // nonisolated: value
 		let nick: String?
 		let user: String?
 		let host: String?
@@ -129,7 +129,7 @@ nonisolated struct IRCSpecUserhostSplitCase: Decodable, CustomTestStringConverti
 }
 
 /// `ircdocs/parser-tests` mask-match: glob matching of `nick!user@host` masks.
-nonisolated struct IRCSpecMaskMatchCase: Decodable, CustomTestStringConvertible {
+nonisolated struct IRCSpecMaskMatchCase: Decodable, CustomTestStringConvertible { // nonisolated: value
 	let mask: String
 	let matches: [String]?
 	let fails: [String]?
@@ -140,7 +140,7 @@ nonisolated struct IRCSpecMaskMatchCase: Decodable, CustomTestStringConvertible 
 }
 
 /// `ircdocs/parser-tests` validate-hostname.
-nonisolated struct IRCSpecHostnameCase: Decodable, CustomTestStringConvertible {
+nonisolated struct IRCSpecHostnameCase: Decodable, CustomTestStringConvertible { // nonisolated: value
 	let host: String
 	let valid: Bool
 
@@ -154,7 +154,7 @@ nonisolated struct IRCSpecHostnameCase: Decodable, CustomTestStringConvertible {
 struct IRCSpecParserCorpusTests {
 	// MARK: - msg-split
 
-	nonisolated static let splitCases: [IRCSpecMessageSplitCase] =
+	nonisolated static let splitCases: [IRCSpecMessageSplitCase] = // nonisolated: let
 		(try? IRCSpecCorpus.load("msg-split", as: IRCSpecMessageSplitCase.self)) ?? []
 
 	@Test("The corpus files reached the test bundle")
@@ -191,7 +191,7 @@ struct IRCSpecParserCorpusTests {
 
 	// MARK: - msg-join
 
-	nonisolated static let joinCases: [IRCSpecMessageJoinCase] =
+	nonisolated static let joinCases: [IRCSpecMessageJoinCase] = // nonisolated: let
 		(try? IRCSpecCorpus.load("msg-join", as: IRCSpecMessageJoinCase.self)) ?? []
 
 	/// The corpus' candidate lines, rewritten the two ways a client's own line
@@ -272,7 +272,7 @@ struct IRCSpecParserCorpusTests {
 
 	// MARK: - userhost-split
 
-	nonisolated static let userhostCases: [IRCSpecUserhostSplitCase] =
+	nonisolated static let userhostCases: [IRCSpecUserhostSplitCase] = // nonisolated: let
 		(try? IRCSpecCorpus.load("userhost-split", as: IRCSpecUserhostSplitCase.self)) ?? []
 
 	/// RFC 2812 §2.3.1 `prefix = servername / (nickname [[ "!" user ] "@" host ])`.
@@ -325,7 +325,7 @@ struct IRCSpecParserCorpusTests {
 
 	// MARK: - mask-match
 
-	nonisolated static let maskCases: [IRCSpecMaskMatchCase] =
+	nonisolated static let maskCases: [IRCSpecMaskMatchCase] = // nonisolated: let
 		(try? IRCSpecCorpus.load("mask-match", as: IRCSpecMaskMatchCase.self)) ?? []
 
 	@Test("mask-match", arguments: maskCases)
@@ -346,7 +346,7 @@ struct IRCSpecParserCorpusTests {
 
 	// MARK: - validate-hostname
 
-	nonisolated static let hostnameCases: [IRCSpecHostnameCase] =
+	nonisolated static let hostnameCases: [IRCSpecHostnameCase] = // nonisolated: let
 		(try? IRCSpecCorpus.load("validate-hostname", as: IRCSpecHostnameCase.self)) ?? []
 
 	/// The corpus notes that hostname validation is a server-side job and that

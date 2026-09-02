@@ -77,7 +77,7 @@ public extension IRCClient {
 	func stopAllTimers() {
 		stopAutojoinTimer()
 		stopAutojoinDelayedWarningTimer()
-		stopAutojoinNextJoinTimer()
+		cancelPendingAutojoin()
 		stopISONTimer()
 		stopReconnectTimer()
 		stopRetryTimer()

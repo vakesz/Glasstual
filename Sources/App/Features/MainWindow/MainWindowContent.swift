@@ -54,6 +54,7 @@ extension MainWindow {
 		let next = bigger ? textSizeMultiplier * TextZoomPolicy.step : textSizeMultiplier / TextZoomPolicy.step
 		guard TextZoomPolicy.allowedRange.contains(next) else { return }
 		textSizeMultiplier = next
+		guard let world else { return }
 		for client in world.clientList {
 			client.logController?.changeTextSize(bigger)
 			for channel in client.channelList {
@@ -63,10 +64,7 @@ extension MainWindow {
 	}
 
 	public func markAllAsRead() {
-		markAllAsRead(inGroup: nil)
-	}
-
-	public func markAllAsRead(inGroup item: IRCTreeItem?) {
+		guard let world else { return }
 		let markScrollback = Preferences.Messages.autoAddScrollbackMark.value
 		for client in world.clientList {
 			if markScrollback {
@@ -80,29 +78,17 @@ extension MainWindow {
 			}
 		}
 		DockIcon.updateDockIcon()
-		if let item {
-			reloadTreeGroup(item)
-		} else {
-			reloadTree()
-		}
+		reloadTree()
 	}
 
 	public func reloadTheme() {
-		guard isReloadingTheme == false else { return }
-		isReloadingTheme = true
-		NotificationCenter.default.post(name: .mainWindowWillReloadTheme, object: self)
-		performThemeReload()
-	}
-
-	private func performThemeReload() {
+		guard let world else { return }
 		for client in world.clientList {
 			client.logController?.reloadTheme()
 			for channel in client.channelList {
 				channel.logController?.reloadTheme()
 			}
 		}
-		isReloadingTheme = false
-		NotificationCenter.default.post(name: .mainWindowDidReloadTheme, object: self)
 	}
 
 	public func clearContents(of client: IRCClient) {
@@ -118,6 +104,7 @@ extension MainWindow {
 	}
 
 	public func clearAllViews() {
+		guard let world else { return }
 		for client in world.clientList {
 			clearContents(of: client)
 			for channel in client.channelList {
@@ -241,11 +228,7 @@ extension MainWindow {
 			formattingMenu.removeForegroundColorCharFromTextBox(nil)
 			return
 		}
-		var point = inputTextField.frame.origin
-		point.y -= 200
-		point.x += 100
-		let menu: NSMenu = formattingMenu.foregroundColorMenu
-		menu.popUp(positioning: nil, at: point, in: inputTextField)
+		popUpColorMenu(formattingMenu.foregroundColorMenu)
 	}
 
 	func textFormattingBackgroundColor(_: NSEvent) {
@@ -254,11 +237,13 @@ extension MainWindow {
 			formattingMenu.removeBackgroundColorCharFromTextBox(nil)
 			return
 		}
-		var point = inputTextField.frame.origin
-		point.y -= 200
-		point.x += 100
-		let menu: NSMenu = formattingMenu.backgroundColorMenu
-		menu.popUp(positioning: nil, at: point, in: inputTextField)
+		popUpColorMenu(formattingMenu.backgroundColorMenu)
+	}
+
+	/// The colour the menu picks applies at the caret, so the menu opens there
+	/// — in the field's own coordinates, which is what `popUp` expects.
+	private func popUpColorMenu(_ menu: NSMenu) {
+		menu.popUp(positioning: nil, at: inputTextField.selectedRect.origin, in: inputTextField)
 	}
 
 	func exitFullscreenMode(_ event: NSEvent) {
@@ -347,37 +332,6 @@ public extension MainWindow {
 		}
 	}
 
-	func locationOfMouseInWindow() -> UInt {
-		locationOfMouseValue(NSEvent.mouseLocation).rawValue
-	}
-
-	func locationOfMouse(_ location: NSPoint) -> UInt {
-		locationOfMouseValue(location).rawValue
-	}
-
-	private func locationOfMouseValue(_ location: NSPoint) -> MainWindowMouseLocation {
-		guard frame.contains(location) else { return .outsideWindow }
-		let titleFrame = ceTitlebarFrame
-		guard titleFrame.contains(location) else { return .insideWindow }
-		let titleLocation: MainWindowMouseLocation = [.insideWindow, .insideWindowTitle]
-		func contains(_ view: NSView?) -> Bool {
-			guard let view else { return false }
-			var frame = view.frame
-			frame.origin.x += titleFrame.origin.x
-			frame.origin.y += titleFrame.origin.y
-			return frame.contains(location)
-		}
-		if contains(standardWindowButton(.closeButton)) || contains(standardWindowButton(.miniaturizeButton)) ||
-			contains(standardWindowButton(.zoomButton))
-		{
-			return [titleLocation, .onTopOfWindowTitleControl]
-		}
-		if titlebarAccessoryViewControllers.contains(where: { contains($0.view.superview) }) {
-			return [titleLocation, .onTopOfWindowTitleControl]
-		}
-		return titleLocation
-	}
-
 	func preferencesChanged() {
 		if Preferences.Notifications.displayDockBadge.value {
 			DockIcon.resetCachedCount(); DockIcon.updateDockIcon()
@@ -400,20 +354,6 @@ public extension MainWindow {
 		true
 	}
 
-	var isDisabled: Bool {
-		false
-	}
-
-	override func makeKeyAndOrderFront(_: Any?) {
-		guard isDisabled == false else { return }
-		super.makeKeyAndOrderFront(nil)
-	}
-
-	override func orderFront(_: Any?) {
-		guard isDisabled == false else { return }
-		super.orderFront(nil)
-	}
-
 	var defaultWindowFrame: NSRect {
 		var value = frame
 		value.size = userInterfaceObjects.defaultWindowSize
@@ -426,7 +366,7 @@ public extension MainWindow {
 public extension MainWindow {
 	var previouslySelectedItem: IRCTreeItem? {
 		guard let previousSelectedItemId else { return nil }
-		return world.findItem(withId: previousSelectedItemId)
+		return world?.findItem(withId: previousSelectedItemId)
 	}
 
 	var selectedClient: IRCClient? {
@@ -600,7 +540,7 @@ public extension MainWindow {
 	}
 
 	func reloadLoadingScreen() -> Bool {
-		guard let world = AppController.shared.world else {
+		guard let world else {
 			loadingScreen.showProgressView(withReason: MainWindowStrings.Loading.configuration)
 			return false
 		}
@@ -641,8 +581,8 @@ public extension MainWindow {
 	}
 
 	func updateDrawingForUserInUserList(_ user: User) {
-		guard let channelUser = selectedChannel?.findMember(user.nickname) else { return }
-		memberList.refreshDrawing(for: channelUser)
+		guard selectedChannel?.findMember(user.nickname) != nil else { return }
+		memberList.invalidatePresentation()
 	}
 }
 
@@ -654,7 +594,7 @@ public extension MainWindow {
 	}
 
 	private func restoreExpandedClients() {
-		for client in world.clientList
+		for client in world?.clientList ?? []
 			where client.config.sidebarItemExpanded
 		{
 			expandClient(client)
@@ -663,7 +603,7 @@ public extension MainWindow {
 
 	private func restoreSelectionDuringSetup() {
 		guard let identifier = MainWindowStateStore().loadSelectionItemIdentifier(),
-		      let item = world.findItem(withId: identifier)
+		      let item = world?.findItem(withId: identifier)
 		else {
 			selectBestChoiceDuringSetup()
 			return
@@ -672,7 +612,7 @@ public extension MainWindow {
 	}
 
 	private func selectBestChoiceDuringSetup() {
-		let first = world.clientList.first(where: { $0.config.autoConnect && $0.config.sidebarItemExpanded })
+		let first = world?.clientList.first(where: { $0.config.autoConnect && $0.config.sidebarItemExpanded })
 		if let first {
 			var row = serverList.row(forItem: first)
 			if first.channelCount > 0 {
@@ -713,7 +653,7 @@ public extension MainWindow {
 	}
 
 	func expandClient(_ client: IRCClient) {
-		serverList.animator().expandItem(client)
+		serverList.expandItem(client)
 	}
 
 	func adjustSelection() {

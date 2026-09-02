@@ -38,61 +38,31 @@
 import CocoaExtensions
 import Foundation
 
-/// The member-list operations shared by channels and their backing store.
-public protocol ChannelMemberListing: AnyObject {
-	func addUser(_ user: User)
+/** The view a channel's member list is drawn into, as the protocol layer sees
+ it.
 
-	func addMember(_ member: ChannelUser)
+ The list does not create it: the member-list feature owns the controller and
+ installs itself here for the one channel that is on screen. When nothing is
+ drawing the list this is `nil`, and every update below is a no-op. */
+@MainActor
+public protocol ChannelMemberListPresentation: AnyObject {
+	/// Hands over a whole new ordering, rather than a removal and an insert.
+	func replaceContents(_ contents: [ChannelUser])
 
-	func removeMember(_ member: ChannelUser)
+	func insert(_ member: ChannelUser, atArrangedObjectIndex index: Int)
 
-	func removeMember(withNickname nickname: String)
+	func replace(_ member: ChannelUser, atArrangedObjectIndex index: Int)
 
-	func memberExists(_ nickname: String) -> Bool
+	func remove(atArrangedObjectIndex index: Int)
 
-	func findMember(_ nickname: String) -> ChannelUser?
-
-	var numberOfMembers: UInt { get }
-	var memberList: [ChannelUser] { get }
-
-	func sortMembers()
+	/// The list it was drawing is going away, so it has nothing left to draw.
+	func memberListDidEnd()
 }
 
-public protocol ChannelMemberListPrivateProtocol: AnyObject {
-	func addMember(_ member: ChannelUser, checkForDuplicates: Bool)
-
-	func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser)
-
-	func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool)
-
-	func replaceMember(
-		_ oldMember: ChannelUser,
-		with newMember: ChannelUser,
-		resort: Bool,
-		replaceInAllChannels: Bool
-	)
-
-	func resortMember(_ member: ChannelUser)
-
-	func clearMembers()
-
-	func pasteboardData(for members: [ChannelUser]) -> Data
-
-	static func readNicknames(
-		from pasteboardData: Data,
-		with callback: (IRCChannel, [String]) -> Void
-	) -> Bool
-
-	static func readMembers(
-		from pasteboardData: Data,
-		with callback: (IRCChannel, [ChannelUser]) -> Void
-	) -> Bool
-}
-
-public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMemberListPrivateProtocol {
+public final class ChannelMemberList: NSObject {
 	private weak var clientStorage: IRCClient?
 	private weak var channelStorage: IRCChannel?
-	private var controller: IRCChannelMemberListController?
+	private var presentation: ChannelMemberListPresentation?
 	private var memberContainer: [ChannelUser] = []
 	/// Position in `memberContainer` by the member's identity.
 	private var indexByUserID: [User.ID: Int] = [:]
@@ -125,12 +95,12 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	}
 
 	isolated deinit {
-		controller?.assign(to: nil)
+		presentation?.memberListDidEnd()
 	}
 
-	public func assign(_ controller: IRCChannelMemberListController?) {
-		controller?.replaceContents(memberList)
-		self.controller = controller
+	public func assign(_ presentation: ChannelMemberListPresentation?) {
+		presentation?.replaceContents(memberList)
+		self.presentation = presentation
 	}
 
 	private func sortedIndex(for member: ChannelUser) -> Int {
@@ -185,12 +155,29 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	 A member is a value now, so the list cannot be searched by object identity;
 	 a member's identity is the person's, and one channel holds one member per
 	 person. The index is rebuilt rather than patched because an insert or a
-	 removal shifts every position after it anyway. */
+	 removal shifts every position after it anyway.
+
+	 A repeat is dropped rather than indexed away: every lookup, replacement and
+	 removal goes through this index, so a second entry for the same person is a
+	 row no PART, QUIT or KICK could ever reach again. */
 	private func reindexMembers() {
-		indexByUserID = Dictionary(
-			memberContainer.enumerated().map { ($0.element.id, $0.offset) },
-			uniquingKeysWith: { _, latest in latest }
-		)
+		var indexes: [User.ID: Int] = [:]
+		indexes.reserveCapacity(memberContainer.count)
+		var uniqueMembers: [ChannelUser] = []
+		uniqueMembers.reserveCapacity(memberContainer.count)
+
+		for member in memberContainer {
+			guard indexes[member.id] == nil else {
+				assertionFailure("Channel member \(member.user.nickname) is listed twice")
+				continue
+			}
+
+			indexes[member.id] = uniqueMembers.count
+			uniqueMembers.append(member)
+		}
+
+		memberContainer = uniqueMembers
+		indexByUserID = indexes
 	}
 
 	/// The member for `id`, or `nil` when that person is not in this channel.
@@ -208,7 +195,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		block(&memberContainer[index])
-		controller?.replace(memberContainer[index], atArrangedObjectIndex: index)
+		presentation?.replace(memberContainer[index], atArrangedObjectIndex: index)
 	}
 
 	/// Edits the stored member for `nickname` in place, if the channel has one.
@@ -230,11 +217,14 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		addMember(ChannelUser(user: user, prefixes: currentPrefixes))
 	}
 
-	public func addMember(_ member: ChannelUser) {
-		addMember(member, checkForDuplicates: false)
-	}
+	/** Adds `member`, or replaces the entry this channel already holds for that
+	 person.
 
-	public func addMember(_ member: ChannelUser, checkForDuplicates: Bool) {
+	 The duplicate check is not optional. A second entry for one person is only
+	 reachable through the identity index, which holds one position per person,
+	 so the entry that lost the race becomes a row nothing can find, replace or
+	 remove until the channel is joined again. */
+	public func addMember(_ member: ChannelUser) {
 		guard let channel else {
 			return
 		}
@@ -242,7 +232,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		/* Asked of this list rather than of the channel's relations: the list is
 		 what holds the members, and the answer has to be the one this call is
 		 about to replace. */
-		if checkForDuplicates, let oldMember = findMember(withUserID: member.id) {
+		if let oldMember = findMember(withUserID: member.id) {
 			replaceMember(oldMember, with: member)
 			return
 		}
@@ -254,7 +244,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return
 		}
 
-		controller?.insert(member, atArrangedObjectIndex: sortedIndex)
+		presentation?.insert(member, atArrangedObjectIndex: sortedIndex)
 	}
 
 	public func removeMember(withNickname nickname: String) {
@@ -275,7 +265,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return
 		}
 
-		controller?.remove(atArrangedObjectIndex: sortedIndex)
+		presentation?.remove(atArrangedObjectIndex: sortedIndex)
 	}
 
 	public func resortMember(_ member: ChannelUser) {
@@ -303,9 +293,9 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			replaceStoredMember(oldMember, with: newMember)
 		}
 
-		/* A controller is only attached to the channel whose member list is on
+		/* A presentation is only attached to the channel whose member list is on
 		 screen, so this is also the test for "is anyone drawing this?". */
-		guard let newIndex, let controller, channel.isChannel else {
+		guard let newIndex, let presentation, channel.isChannel else {
 			return
 		}
 
@@ -313,9 +303,9 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			/* Handed over as one ordering rather than a removal followed by an
 			 insert: taking the person out of the list, even for an instant, is
 			 what used to drop a selection that was on them. */
-			controller.replaceContents(memberList)
+			presentation.replaceContents(memberList)
 		} else {
-			controller.replace(newMember, atArrangedObjectIndex: newIndex)
+			presentation.replace(newMember, atArrangedObjectIndex: newIndex)
 		}
 	}
 
@@ -410,7 +400,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 		reindexMembers()
 
-		controller?.replaceContents(memberList)
+		presentation?.replaceContents(memberList)
 	}
 
 	public func clearMembers() {
@@ -424,7 +414,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		memberContainer.removeAll()
 		indexByUserID.removeAll()
 
-		controller?.replaceContents([])
+		presentation?.replaceContents([])
 	}
 
 	public var numberOfMembers: UInt {
@@ -433,59 +423,6 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 	public var memberList: [ChannelUser] {
 		memberContainer
-	}
-
-	public func pasteboardData(for members: [ChannelUser]) -> Data {
-		let payload: [String: PropertyListValue] = [
-			"channelId": .string(channel?.uniqueIdentifier ?? ""),
-			"nicknames": PropertyListValue(members.map(\.user.nickname)),
-		]
-
-		do {
-			return try NSKeyedArchiver.archivedData(
-				withRootObject: payload.propertyListObject,
-				requiringSecureCoding: true
-			)
-		} catch {
-			assertionFailure("Failed to archive channel member pasteboard data: \(error)")
-			return Data()
-		}
-	}
-
-	public static func readNicknames(
-		from pasteboardData: Data,
-		with callback: (IRCChannel, [String]) -> Void
-	) -> Bool {
-		let allowedClasses: [AnyClass] = [NSDictionary.self, NSString.self, NSArray.self]
-		guard let unarchived = try? NSKeyedUnarchiver.unarchivedObject(
-			ofClasses: allowedClasses,
-			from: pasteboardData
-		),
-			let payload = [String: PropertyListValue](propertyList: unarchived),
-			let channelID = payload["channelId"]?.string,
-			let nicknames = payload["nicknames"]?.stringArray
-		else {
-			return false
-		}
-
-		let world = ClientEnvironment.shared.world
-		let channel = (world?.findItem(withId: channelID) as AnyObject?) as? IRCChannel
-
-		guard let channel else {
-			return false
-		}
-
-		callback(channel, nicknames)
-		return true
-	}
-
-	public static func readMembers(
-		from pasteboardData: Data,
-		with callback: (IRCChannel, [ChannelUser]) -> Void
-	) -> Bool {
-		readNicknames(from: pasteboardData) { channel, nicknames in
-			callback(channel, nicknames.compactMap { channel.findMember($0) })
-		}
 	}
 
 	public func memberExists(_ nickname: String) -> Bool {

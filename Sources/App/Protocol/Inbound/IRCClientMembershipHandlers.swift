@@ -60,9 +60,14 @@ public extension IRCClient {
 		if !printOnly, isLocalUser {
 			guard let found = findChannelOrCreate(channelName), !found.isActive, found.isChannel else { return }
 			channel = found
-			channel.activate()
+			/* The server's clock where it supplies one, so the burst a bouncer
+			 replays right after the JOIN is measured against the same clock its
+			 lines are stamped with. A JOIN that is itself replayed carries an old
+			 stamp, which would close the grace window before the burst behind it
+			 arrives; that one is measured from its arrival instead. */
+			channel.activate(at: message.isHistoric ? Date() : message.receivedAt)
 			userHostmask = message.senderHostmask
-			reloadTreeItem(channel)
+			output?.reloadTreeItem(channel)
 		} else {
 			guard let found = findChannel(channelName), found.isChannel else { return }
 			channel = found
@@ -78,8 +83,7 @@ public extension IRCClient {
 				user.realName = message.params[2]
 			}
 			channel.memberInfo?.addMember(
-				ChannelUser(user: addAndReturn(user), prefixes: currentUserPrefixes),
-				checkForDuplicates: true
+				ChannelUser(user: addAndReturn(user), prefixes: currentUserPrefixes)
 			)
 		}
 
@@ -87,7 +91,7 @@ public extension IRCClient {
 			query.activate()
 			print(IRCInboundStrings.Membership.joinedQuery(nickname: sender), by: nil, in: query, as: .join,
 			      command: message.command, receivedAt: message.receivedAt)
-			reloadTreeItem(query)
+			output?.reloadTreeItem(query)
 		}
 
 		let ignore = isLocalUser ? nil : message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:))
@@ -114,7 +118,7 @@ public extension IRCClient {
 			)
 		}
 		guard !printOnly else { return }
-		updateTitle(channel)
+		output?.updateTitle(for: channel)
 		if isLocalUser {
 			if config.sendWhoCommandRequestsToChannels, !isBrokenIRCdKnownAsTwitch {
 				requestModes(for: channel)
@@ -135,7 +139,7 @@ public extension IRCClient {
 		if !message.isPrintOnlyMessage {
 			if isLocalUser {
 				channel.deactivate()
-				reloadTreeItem(channel)
+				output?.reloadTreeItem(channel)
 			} else {
 				channel.removeMember(withNickname: sender)
 				_ = notifyEvent(.userParted, lineType: .part, target: channel, nickname: sender, text: comment)
@@ -164,7 +168,7 @@ public extension IRCClient {
 			print(text, by: nil, in: channel, as: .part, command: message.command, receivedAt: message.receivedAt)
 		}
 		if !message.isPrintOnlyMessage {
-			updateTitle(channel)
+			output?.updateTitle(for: channel)
 		}
 	}
 
@@ -179,7 +183,7 @@ public extension IRCClient {
 		if !message.isPrintOnlyMessage {
 			if isLocalUser {
 				channel.deactivate()
-				reloadTreeItem(channel)
+				output?.reloadTreeItem(channel)
 				_ = notifyEvent(.kick, lineType: .kick, target: channel, nickname: sender, text: comment)
 				if environment.preferences.rejoinOnKick, !channel.errorOnLastJoinAttempt {
 					printDebugInformation(IRCInboundStrings.Membership.rejoinScheduled, in: channel)
@@ -215,7 +219,7 @@ public extension IRCClient {
 			print(text, by: nil, in: channel, as: .kick, command: message.command, receivedAt: message.receivedAt)
 		}
 		if !message.isPrintOnlyMessage {
-			updateTitle(channel)
+			output?.updateTitle(for: channel)
 		}
 	}
 
@@ -266,7 +270,7 @@ public extension IRCClient {
 						channelIgnoresEvents: channel.config.ignoreGeneralEventMessages,
 						addressBookIgnoresEvents: ignore?.ignoreGeneralEventMessages ?? false
 					)
-				updateTitle(channel)
+				output?.updateTitle(for: channel)
 				guard canPrint else { return }
 			}
 			print(text, by: nil, in: channel, as: .quit, command: message.command, receivedAt: message.receivedAt)
@@ -278,7 +282,7 @@ public extension IRCClient {
 		} else {
 			channelList.forEach(process)
 			if !isLocalUser {
-				updateTitle(self)
+				output?.updateTitle(for: self)
 				_ = notifyEvent(.userDisconnected, lineType: .quit, target: nil, nickname: sender, text: comment)
 			}
 		}
@@ -308,7 +312,7 @@ public extension IRCClient {
 				if tryingNicknameSentNickname != nil {
 					tryingNicknameSentNickname = newNickname
 				}
-				updateTitle(self)
+				output?.updateTitle(for: self)
 			} else {
 				if let oldIgnore {
 					updateTrackingStatus(for: oldIgnore, message: message)
@@ -341,8 +345,8 @@ public extension IRCClient {
 						stopTrackingQueryPeer(oldNickname)
 						channel.name = newNickname
 						trackQueryPeer(newNickname)
-						reloadTreeItem(channel)
-						updateTitle(channel)
+						output?.reloadTreeItem(channel)
+						output?.updateTitle(for: channel)
 					}
 				} else {
 					return
@@ -368,16 +372,6 @@ public extension IRCClient {
 			rename(user, to: newNickname)
 			channelList.forEach(process)
 		}
-	}
-
-	private func reloadTreeItem(_ item: AnyObject) {
-		guard let legacyItem = item as? IRCTreeItem else { return }
-		output?.reloadTreeItem(legacyItem)
-	}
-
-	private func updateTitle(_ item: AnyObject) {
-		guard let legacyItem = item as? IRCTreeItem else { return }
-		output?.updateTitle(for: legacyItem)
 	}
 
 	private func updateTrackingStatus(for entry: AddressBookEntry, message: Message) {

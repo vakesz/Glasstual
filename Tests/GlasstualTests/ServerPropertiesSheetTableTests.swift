@@ -29,6 +29,13 @@ struct ServerPropertiesSheetTableTests {
 		return config
 	}
 
+	private func displayedChannels(in channelList: [ChannelConfig]) -> [ChannelConfig] {
+		var config = ClientConfig()
+		config.channelList = channelList
+
+		return ServerPropertiesModel(config: config).displayedChannels
+	}
+
 	@Test("A private message is not drawn in the channel list")
 	func privateMessagesAreNotDrawn() {
 		let channels = [
@@ -37,7 +44,7 @@ struct ServerPropertiesSheetTableTests {
 			makeChannel(named: "#two", type: .channel),
 		]
 
-		let displayed = ServerPropertiesSheet.displayedChannels(in: channels)
+		let displayed = displayedChannels(in: channels)
 
 		#expect(displayed.map(\.channelName) == ["#one", "#two"])
 	}
@@ -49,12 +56,12 @@ struct ServerPropertiesSheetTableTests {
 			makeChannel(named: "#two", type: .channel),
 		]
 
-		#expect(ServerPropertiesSheet.displayedChannels(in: channels).count == 2)
+		#expect(displayedChannels(in: channels).count == 2)
 	}
 
 	@Test("An empty list draws nothing rather than failing")
 	func emptyListIsEmpty() {
-		#expect(ServerPropertiesSheet.displayedChannels(in: []).isEmpty)
+		#expect(displayedChannels(in: []).isEmpty)
 	}
 
 	@Test("The rows keep the order the list is stored in")
@@ -66,7 +73,7 @@ struct ServerPropertiesSheetTableTests {
 			makeChannel(named: "#b", type: .channel),
 		]
 
-		let displayed = ServerPropertiesSheet.displayedChannels(in: channels)
+		let displayed = displayedChannels(in: channels)
 
 		#expect(displayed.map(\.channelName) == ["#c", "#a", "#b"])
 	}

@@ -68,6 +68,38 @@ struct IRCBatchLimitsTests {
 		#expect(batch.queuedEntries.count == MessageBatch.maximumQueuedEntries)
 	}
 
+	/// The per-batch ceiling bounded nothing while a server could open an
+	/// unlimited number of batches and leave every one of them open.
+	@Test
+	func openingMoreBatchesThanTheCeilingIsRefused() throws {
+		let client = GLTTestClient()
+
+		for index in 0 ..< MessageBatchContainer.maximumOpenBatches {
+			try client.receiveBatch(message("BATCH +b\(index) chathistory", on: client))
+		}
+
+		#expect(client.batchMessages.queuedEntries.count == MessageBatchContainer.maximumOpenBatches)
+
+		try client.receiveBatch(message("BATCH +overflow chathistory", on: client))
+
+		#expect(client.batchMessages.queuedEntry(withBatchToken: "overflow") == nil)
+		#expect(client.batchMessages.queuedEntries.count == MessageBatchContainer.maximumOpenBatches)
+	}
+
+	/// Closing a batch frees its slot, so a well-behaved server never hits the
+	/// ceiling however many batches it sends in sequence.
+	@Test
+	func closingABatchFreesItsSlot() throws {
+		let client = GLTTestClient()
+
+		for index in 0 ..< (MessageBatchContainer.maximumOpenBatches * 2) {
+			try client.receiveBatch(message("BATCH +b\(index) chathistory", on: client))
+			try client.receiveBatch(message("BATCH -b\(index)", on: client))
+		}
+
+		#expect(client.batchMessages.queuedEntries.isEmpty)
+	}
+
 	/// `depth` was declared and then ignored, so nested batches recursed
 	/// without bound.
 	@Test
@@ -122,6 +154,38 @@ struct IRCMessageTagLimitTests {
 }
 
 @MainActor
+struct IRCClientOfferedCapabilityLimitTests {
+	/// Only a final, non-`*` `CAP LS` cleared the table, so a server sending
+	/// nothing but continuations grew it for as long as it stayed connected.
+	@Test
+	func continuedCapabilityListsPastTheLimitEndNegotiation() throws {
+		let client = GLTTestClient()
+		let perLine = 32
+		let lines = (ClientNegotiationUtilities.maximumOfferedCapabilities / perLine) + 1
+
+		for line in 0 ..< lines {
+			let names = (0 ..< perLine).map { "cap-\(line)-\($0)" }.joined(separator: " ")
+			let message = try #require(Message(line: "CAP * LS * :\(names)", on: client))
+
+			client.handleCapabilityOrAuthenticationRequest(message)
+		}
+
+		#expect(client.offeredCapabilities.isEmpty)
+		#expect(client.sentCapabilityCommands.contains("END"))
+	}
+
+	@Test
+	func aCapabilityListWithinTheLimitIsStillAccumulated() throws {
+		let client = GLTTestClient()
+		let message = try #require(Message(line: "CAP * LS * :sasl multi-prefix", on: client))
+
+		client.handleCapabilityOrAuthenticationRequest(message)
+
+		#expect(client.offeredCapabilities.count == 2)
+	}
+}
+
+@MainActor
 struct IRCClientSASLPayloadLimitTests {
 	/// `saslIncomingPayload` grew 400 characters per AUTHENTICATE with no
 	/// ceiling, so a server could grow it until the process died.
@@ -135,13 +199,13 @@ struct IRCClientSASLPayloadLimitTests {
 
 		for _ in 0 ..< chunksBeforeOverflow {
 			let message = try #require(Message(line: "AUTHENTICATE \(chunk)", on: client))
-			client.receiveCapabilityOrAuthenticationRequest(message)
+			client.handleCapabilityOrAuthenticationRequest(message)
 		}
 
 		#expect(client.saslIncomingPayload?.count == chunksBeforeOverflow * 400)
 
 		let overflow = try #require(Message(line: "AUTHENTICATE \(chunk)", on: client))
-		client.receiveCapabilityOrAuthenticationRequest(overflow)
+		client.handleCapabilityOrAuthenticationRequest(overflow)
 
 		#expect(client.saslIncomingPayload == nil)
 	}

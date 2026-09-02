@@ -37,7 +37,7 @@
 
 import Foundation
 
-public final nonisolated class ISupportPrefixConfiguration: NSObject { // nonisolated: value
+public final nonisolated class ISupportPrefixConfiguration: NSObject { // nonisolated: immutable
 	public let modeSymbols: [String]
 	public let characters: [String]
 
@@ -48,7 +48,7 @@ public final nonisolated class ISupportPrefixConfiguration: NSObject { // noniso
 	}
 }
 
-public final nonisolated class ISupportExtendedBanConfiguration: NSObject { // nonisolated: value
+public final nonisolated class ISupportExtendedBanConfiguration: NSObject { // nonisolated: immutable
 	public let prefix: String?
 	public let types: [String]
 
@@ -59,12 +59,7 @@ public final nonisolated class ISupportExtendedBanConfiguration: NSObject { // n
 	}
 }
 
-public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: value
-	@available(*, unavailable)
-	override public init() {
-		fatalError("ISupportTokenParser is a static namespace")
-	}
-
+public nonisolated enum ISupportTokenParser { // nonisolated: value
 	/// `CHANLIMIT`, keyed by the channel prefix each limit applies to.
 	public static func channelLimits(from token: String) -> [Character: UInt] {
 		var limits: [Character: UInt] = [:]
@@ -237,6 +232,10 @@ public final nonisolated class ISupportTokenParser: NSObject { // nonisolated: v
 		return denied
 	}
 
+	/// Splits `targets` into lists of at most `limit` entries, in order.
+	///
+	/// Zero is a server that advertised no limit, and it chunks the same way as
+	/// one: a target list the server never said it accepts is not sent.
 	public static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
 		let chunkSize = max(Int(limit), 1)
 		var chunks: [[String]] = []

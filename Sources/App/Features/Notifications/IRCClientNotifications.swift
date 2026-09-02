@@ -85,9 +85,6 @@ public extension IRCClient {
 
 		case .userDisconnected:
 			return nickname.map(NotificationStrings.Spoken.userDisconnected)
-
-		@unknown default:
-			return nil
 		}
 	}
 
@@ -167,7 +164,7 @@ public extension IRCClient {
 
 	private func formatSpokenInvite(nickname: String?, channelName: String?) -> String? {
 		guard let nickname, let channelName else { return nil }
-		let nameWithoutBang = (channelName as NSString).channelNameWithoutBang ?? channelName
+		let nameWithoutBang = (channelName as NSString).channelNameWithoutPrefix
 		return NotificationStrings.Spoken.invited(to: nameWithoutBang, by: nickname)
 	}
 
@@ -202,7 +199,7 @@ public extension IRCClient {
 
 	@MainActor
 	private func spokenChannelName(_ channel: IRCChannel) -> String {
-		(channel.name as NSString).channelNameWithoutBang ?? channel.name
+		(channel.name as NSString).channelNameWithoutPrefix
 	}
 
 	@MainActor
@@ -382,7 +379,7 @@ public extension IRCClient {
 	) -> (title: String?, description: String?)? {
 		switch event {
 		case .highlight, .newPrivateMessage, .channelMessage, .channelNotice, .privateMessage, .privateNotice:
-			return textNotificationContent(
+			textNotificationContent(
 				for: event,
 				lineType: lineType,
 				target: target,
@@ -392,24 +389,21 @@ public extension IRCClient {
 
 		case .fileTransferSendSuccessful, .fileTransferReceiveSuccessful, .fileTransferSendFailed,
 		     .fileTransferReceiveFailed, .fileTransferReceiveRequested:
-			return fileTransferNotificationContent(nickname: nickname, text: text)
+			fileTransferNotificationContent(nickname: nickname, text: text)
 
 		case .connect, .disconnect:
-			return (networkNameAlt, nil)
+			(networkNameAlt, nil)
 
 		case .addressBookMatch:
-			return text.map { (nil, $0) }
+			text.map { (nil, $0) }
 
 		case .kick, .invite, .userJoined, .userParted, .userDisconnected:
-			return membershipNotificationContent(
+			membershipNotificationContent(
 				for: event,
 				target: target,
 				nickname: nickname,
 				text: text
 			)
-
-		@unknown default:
-			return nil
 		}
 	}
 

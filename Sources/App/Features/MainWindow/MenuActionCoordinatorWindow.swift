@@ -72,6 +72,7 @@ public extension MenuActionCoordinator {
 		case .centerMainWindow: mainWindow.ce_exactlyCenter()
 		case .resetMainWindowFrame: resetMainWindowFrame(sender)
 		case .sortChannelList: sortChannelList()
+		case .focusSearchField: mainWindow.presentationModel.focusSearchField()
 		case .markAllAsRead: mainWindow.markAllAsRead()
 		case .importPreferences: mainWindow.presentationModel.requestPreferencesImport()
 		case .exportPreferences: mainWindow.presentationModel.requestPreferencesExport()
@@ -79,7 +80,6 @@ public extension MenuActionCoordinator {
 				.value == false)
 		case .toggleNotifications:
 			setNotificationsMuted(SharedApplication.sharedNotificationController().areNotificationsDisabled == false)
-		case .resetAppearance: setAppearance(.inherited)
 		case .toggleAppearance: toggleAppearance()
 		case .toggleServerList: mainWindow.toggleServerListVisibility()
 		case .toggleMemberList:

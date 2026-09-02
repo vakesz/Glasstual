@@ -44,13 +44,13 @@ import Testing
 @MainActor
 @Suite("IRCv3 message tags", .serialized)
 final class IRCMessageTagsTests {
-	private nonisolated static let typingPreferenceKey = "SendTypingNotifications"
+	private nonisolated static let typingPreferenceKey = "SendTypingNotifications" // nonisolated: let
 	private let originalTypingPreference: Bool?
 
 	init() {
 		let defaults = TextualUserDefaults.container
 		originalTypingPreference = defaults
-			.persistentDomain(forName: ApplicationGroup.identifier)?[Self.typingPreferenceKey] as? Bool
+			.persistedObject(forKey: Self.typingPreferenceKey) as? Bool
 		defaults.set(true, forKey: Self.typingPreferenceKey)
 	}
 

@@ -250,9 +250,12 @@ struct IRCSpecISupportTests {
 
 	// MARK: - TARGMAX, MAXTARGETS and MODES
 
-	/// `TARGMAX=CMD:n[,CMD:n]`: a command with no number after the colon has
-	/// no limit, which the client stores as zero and reads as "unlimited".
-	@Test("TARGMAX: per-command limits, and an empty limit meaning unlimited")
+	/** `TARGMAX=CMD:n[,CMD:n]`: a command with no number after the colon states
+	 no limit, and the client stores that as the same zero it stores for a
+	 command the token never named. Zero is therefore "the server said nothing
+	 usable", not "unlimited": the client sends one target per line for it, the
+	 same as for `KICK:1` above. */
+	@Test("TARGMAX: per-command limits, and an empty limit read as no limit stated")
 	func targetMaximumsAreParsedPerCommand() {
 		let info = supportInfo("TARGMAX=PRIVMSG:3,NOTICE:3,JOIN:,KICK:1")
 
@@ -260,6 +263,11 @@ struct IRCSpecISupportTests {
 		#expect(info.maximumTargets(forCommand: "privmsg") == 3)
 		#expect(info.maximumTargets(forCommand: "JOIN") == 0)
 		#expect(info.maximumTargets(forCommand: "KICK") == 1)
+
+		#expect(info.groupsMultipleTargets(forCommand: "PRIVMSG"))
+		#expect(info.groupsMultipleTargets(forCommand: "JOIN") == false)
+		#expect(info.groupsMultipleTargets(forCommand: "KICK") == false)
+		#expect(info.groupsMultipleTargets(forCommand: "TOPIC") == false)
 	}
 
 	/// `MAXTARGETS` is the older, command-agnostic form and stands in for any
@@ -272,13 +280,15 @@ struct IRCSpecISupportTests {
 		#expect(info.maximumTargets(forCommand: "NOTICE") == 4)
 	}
 
-	/// Targets go out in chunks no larger than the advertised limit.
+	/// Targets go out in chunks no larger than the advertised limit, and a limit
+	/// the server never advertised puts one target on each line.
 	@Test("TARGMAX: targets are chunked to the limit")
 	func targetsAreChunkedToTheLimit() {
 		let targets = ["#a", "#b", "#c", "#d", "#e"]
 
 		#expect(IRCISupportInfo.chunkTargets(targets, limit: 2) == [["#a", "#b"], ["#c", "#d"], ["#e"]])
 		#expect(IRCISupportInfo.chunkTargets(targets, limit: 5) == [targets])
+		#expect(IRCISupportInfo.chunkTargets(targets, limit: 0) == targets.map { [$0] })
 	}
 
 	/// `MODES=n` is how many parameterised modes may ride on one MODE command.
@@ -362,7 +372,7 @@ struct IRCSpecISupportTests {
 
 		#expect(info.userPrefix(forModeSymbol: "o") == "@")
 		#expect(info.channelNamePrefixes == ["#", "&"])
-		#expect(info.statusMessageModeSymbols == ["@", "+"])
+		#expect(info.statusMessagePrefixCharacters == ["@", "+"])
 
 		info.processConfigurationData("PREFIX= CHANTYPES= STATUSMSG=")
 
@@ -370,7 +380,7 @@ struct IRCSpecISupportTests {
 		#expect(info.userPrefix(forModeSymbol: "v") == nil)
 		#expect(info.modeSymbolIsUserPrefix("o") == false)
 		#expect(info.channelNamePrefixes.isEmpty)
-		#expect(info.statusMessageModeSymbols.isEmpty)
+		#expect(info.statusMessagePrefixCharacters.isEmpty)
 	}
 
 	/// A server with no channel types has no channel names either, so nothing

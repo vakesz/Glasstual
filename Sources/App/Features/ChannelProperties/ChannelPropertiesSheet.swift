@@ -40,10 +40,6 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		self.init(config: nil, onClient: client)
 	}
 
-	public convenience init(clientId: String) {
-		self.init(config: nil, onClientWithId: clientId)
-	}
-
 	public init(channel: IRCChannel) {
 		client = channel.associatedClient
 		clientId = channel.associatedClient?.uniqueIdentifier
@@ -55,21 +51,12 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		observeConfigurationChanges()
 	}
 
-	public convenience init(config: ChannelConfig?) {
-		self.init(config: config, onClientWithId: nil)
-	}
-
 	public init(config: ChannelConfig?, onClient client: IRCClient?) {
 		self.client = client
 		clientId = client?.uniqueIdentifier
 		model = ChannelPropertiesModel(config: config ?? ChannelConfig())
 		super.init(window: nil)
 		installSheet()
-	}
-
-	public convenience init(config: ChannelConfig?, onClientWithId clientId: String?) {
-		self.init(config: config, onClient: nil)
-		self.clientId = clientId
 	}
 
 	private func installSheet() {
@@ -90,7 +77,9 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 			submit: { [weak self] in self?.ok(nil) },
 			cancel: { [weak self] in self?.cancel(nil) }
 		)
-		setContent(rootView.frame(minWidth: 560, minHeight: 450))
+		/* `ChannelPropertiesView` owns the size; a second frame here would only
+		 fight it. */
+		setContent(rootView)
 	}
 
 	public func start() {

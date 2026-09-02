@@ -69,6 +69,35 @@ final class ChannelPropertiesModel {
 		set { config.secretKey = newValue }
 	}
 
+	/** The channel's inline-media override, which is one switch and not two.
+
+	 `inlineMediaDisabled` and `inlineMediaEnabled` are the two halves of a
+	 single override migrated from one boolean, and
+	 `LogController.inlineMediaEnabledForView` consults exactly one of them
+	 depending on the application-wide preference. Editing both leaves whichever
+	 does not match the preference inert, and lets the channel end up asking for
+	 media to be hidden and shown at the same time. */
+	var overridesInlineMediaByDisabling: Bool {
+		Preferences.Messages.showInlineMedia.value
+	}
+
+	var inlineMediaOverrideTitle: String {
+		overridesInlineMediaByDisabling
+			? ChannelPropertiesStrings.disableInlineMedia
+			: ChannelPropertiesStrings.showInlineMedia
+	}
+
+	var inlineMediaOverride: Bool {
+		get { overridesInlineMediaByDisabling ? config.inlineMediaDisabled : config.inlineMediaEnabled }
+		set {
+			if overridesInlineMediaByDisabling {
+				config.inlineMediaDisabled = newValue
+			} else {
+				config.inlineMediaEnabled = newValue
+			}
+		}
+	}
+
 	@discardableResult
 	func validateForSubmission() -> Bool {
 		refreshValidation()

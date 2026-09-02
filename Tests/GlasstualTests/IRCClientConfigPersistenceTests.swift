@@ -73,8 +73,8 @@ struct IRCClientConfigPersistenceTests {
 		#expect(restored.channelList.first?.channelName == "#swift")
 	}
 
-	@Test("A nested channel survives decoding and copying")
-	func nestedChannelSurvivesDecodingAndCopying() throws {
+	@Test("A nested channel survives decoding")
+	func nestedChannelSurvivesDecoding() throws {
 		let config = try decode([
 			"dictionaryVersion": 710,
 			"channelList": [[
@@ -83,8 +83,7 @@ struct IRCClientConfigPersistenceTests {
 			]],
 		])
 
-		let copy = config
-		let channel = try #require(copy.channelList.first)
+		let channel = try #require(config.channelList.first)
 
 		#expect(channel.channelName == "#runtime-dispatch")
 		#expect(channel.type == .channel)
@@ -104,14 +103,11 @@ struct IRCClientConfigPersistenceTests {
 		let channelCopy = ChannelConfig(channelName: "#swift")
 		config.channelList = [channelCopy]
 
-		let plain = config
 		let unique = config.uniqueCopy()
 
-		#expect(plain.connectionName == "SwiftNet")
-		#expect(plain.nicknamePassword == "nick-password")
-		#expect(plain.proxyPassword == "proxy-password")
-		#expect(plain.uniqueIdentifier == config.uniqueIdentifier)
+		#expect(unique.connectionName == "SwiftNet")
 		#expect(unique.nicknamePassword == "nick-password")
+		#expect(unique.proxyPassword == "proxy-password")
 		#expect(unique.uniqueIdentifier != config.uniqueIdentifier)
 		#expect(unique.serverList.first?.uniqueIdentifier != serverCopy.uniqueIdentifier)
 		#expect(unique.channelList.first?.uniqueIdentifier != channelCopy.uniqueIdentifier)

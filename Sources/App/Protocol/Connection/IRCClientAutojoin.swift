@@ -42,11 +42,6 @@ enum IRCClientAutojoinPolicy {
 	static let delayedWarningInterval: TimeInterval = 90
 	static let maximumDelayedWarningCount: UInt = 3
 
-	static func nextBatchCount(remaining: Int, configuredMaximum: UInt) -> Int {
-		guard remaining > 0 else { return 0 }
-		return min(remaining, max(1, Int(configuredMaximum)))
-	}
-
 	static func shouldWaitForIdentification(
 		isIdentifiedWithSASL: Bool,
 		waitsForNickServ: Bool,
@@ -54,6 +49,32 @@ enum IRCClientAutojoinPolicy {
 		isIdentifiedWithNickServ: Bool
 	) -> Bool {
 		!isIdentifiedWithSASL && waitsForNickServ && serverHasNickServ && !isIdentifiedWithNickServ
+	}
+
+	/** Whether the autojoin is still owed this connection's connect commands.
+
+	 It is a wait of its own, not an alternative to the identification wait: a
+	 configuration that asks for both joins only once both have been answered. */
+	static func shouldWaitForConnectCommands(
+		waitsForConnectCommands: Bool,
+		connectCommandsHaveSettled: Bool
+	) -> Bool {
+		waitsForConnectCommands && !connectCommandsHaveSettled
+	}
+
+	/** How long to pause after the connect commands were sent before joining.
+
+	 The commands are written to the socket, not answered: a server's reply to
+	 one arrives later and out of band, so the wait the option offers is a
+	 delay long enough for that reply to land. Zero means nothing to wait
+	 for — the option is off, or the connection has no commands to send. */
+	static func delayAfterConnectCommands(
+		waitsForConnectCommands: Bool,
+		hasConnectCommands: Bool,
+		configuredDelay: TimeInterval
+	) -> TimeInterval {
+		guard waitsForConnectCommands, hasConnectCommands else { return 0 }
+		return max(0, min(configuredDelay, ClientConfigDefaults.maximumAutojoinConnectCommandDelay))
 	}
 }
 
@@ -74,8 +95,71 @@ public extension IRCClient {
 		autojoinTimer.stop()
 	}
 
+	/** Joins every pending channel at once.
+
+	 One JOIN per line that fits the server's budget, and the connection host's
+	 flood control paces the lines; the two-channels-every-few-seconds throttle
+	 this used to run on top of that only made a long channel list take tens of
+	 seconds to arrive. */
 	func onAutojoinTimer() {
-		startAutojoinNextJoinTimer()
+		guard isAutojoining, let channels = channelsToAutojoin else { return }
+		channelsToAutojoin = nil
+		joinChannels(channels)
+		isAutojoining = false
+		isAutojoined = true
+	}
+
+	/** Records that this connection's configured connect commands have been
+	 sent, and starts the pause the user asked for before the autojoin follows.
+
+	 With no pause to serve — no commands to send, or the option switched off —
+	 the wait is over at once. */
+	func markConnectCommandsPerformed() {
+		guard !didPerformConnectCommands else { return }
+		didPerformConnectCommands = true
+
+		let delay = IRCClientAutojoinPolicy.delayAfterConnectCommands(
+			waitsForConnectCommands: config.autojoinWaitsForConnectCommands,
+			hasConnectCommands: !config.loginCommands.isEmpty,
+			configuredDelay: config.autojoinDelayAfterConnectCommands
+		)
+		guard delay > 0 else {
+			settleConnectCommands()
+			return
+		}
+
+		connectCommandsSettlingTask?.cancel()
+		connectCommandsSettlingTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(delay))
+
+			guard Task.isCancelled == false, let self else { return }
+
+			settleConnectCommands()
+		}
+	}
+
+	/** Ends that wait and releases an autojoin held back by it. Every other
+	 wait still applies: `performAutoJoin()` re-checks them. */
+	func settleConnectCommands() {
+		guard !connectCommandsHaveSettled else { return }
+		connectCommandsSettlingTask = nil
+		connectCommandsHaveSettled = true
+		guard config.autojoinWaitsForConnectCommands else { return }
+		performAutoJoin()
+	}
+
+	/// Forgets the wait, so the next connection serves its own.
+	func cancelConnectCommandSettling() {
+		connectCommandsSettlingTask?.cancel()
+		connectCommandsSettlingTask = nil
+		didPerformConnectCommands = false
+		connectCommandsHaveSettled = false
+	}
+
+	/// Forgets a join list that has not been sent yet.
+	func cancelPendingAutojoin() {
+		channelsToAutojoin = nil
+		isAutojoining = false
 	}
 
 	func startAutojoinDelayedWarningTimer() {
@@ -104,43 +188,6 @@ public extension IRCClient {
 		}
 	}
 
-	func startAutojoinNextJoinTimer() {
-		guard !autojoinNextJoinTimer.isActive else { return }
-		autojoinNextJoinTimer.start(environment.preferences.autojoinDelayBetweenChannelJoins, repeats: true)
-		onAutojoinNextJoinTimer()
-	}
-
-	func stopAutojoinNextJoinTimer() {
-		guard autojoinNextJoinTimer.isActive else { return }
-		autojoinNextJoinTimer.stop()
-		channelsToAutojoin = nil
-	}
-
-	func onAutojoinNextJoinTimer() {
-		autojoinNextChannel()
-	}
-
-	func autojoinNextChannel() {
-		guard isAutojoining, let pendingChannels = channelsToAutojoin else { return }
-		let count = IRCClientAutojoinPolicy.nextBatchCount(
-			remaining: pendingChannels.count,
-			configuredMaximum: environment.preferences.autojoinMaximumChannelJoins
-		)
-		joinChannels(Array(pendingChannels.prefix(count)))
-
-		if count < pendingChannels.count {
-			channelsToAutojoin = Array(pendingChannels.dropFirst(count))
-		} else {
-			isAutojoining = false
-			isAutojoined = true
-			stopAutojoinNextJoinTimer()
-		}
-	}
-
-	func autojoinChannels(_ channels: [IRCChannel]) {
-		joinChannels(channels)
-	}
-
 	func performAutoJoin() {
 		performAutoJoin(initiatedByUser: false)
 	}
@@ -160,6 +207,10 @@ public extension IRCClient {
 				waitsForNickServ: config.autojoinWaitsForNickServ,
 				serverHasNickServ: serverHasNickServ,
 				isIdentifiedWithNickServ: userIsIdentifiedWithNickServ
+			) else { return }
+			guard !IRCClientAutojoinPolicy.shouldWaitForConnectCommands(
+				waitsForConnectCommands: config.autojoinWaitsForConnectCommands,
+				connectCommandsHaveSettled: connectCommandsHaveSettled
 			) else { return }
 		}
 

@@ -49,16 +49,6 @@ public extension NSFont {
 	func textual_fontTraitIsSet(_ trait: NSFontTraitMask) -> Bool {
 		NSFontManager.shared.traits(of: self).contains(trait)
 	}
-
-	class func textual_fontIsAvailable(_ fontName: String) -> Bool {
-		if NSFont(name: fontName, size: 9) != nil {
-			return true
-		}
-
-		return NSFontManager.shared.availableFonts.contains {
-			$0.compare(fontName, options: .caseInsensitive) == .orderedSame
-		}
-	}
 }
 
 public extension NSScreen {
@@ -114,57 +104,5 @@ public extension NSMenuItem {
 		}
 
 		textualUserInfo = userInfo
-	}
-}
-
-/** These are Swift extension members, not Objective-C categories: an
- method on NSObject installs an unprefixed selector on every class in the
- process and can collide with a current or future Apple implementation. */
-public extension NSObject {
-	func textual_isEqualIgnoringCase(_ other: Any) -> Bool {
-		if let left = self as? NSString, let right = other as? NSString {
-			return left.caseInsensitiveCompare(right as String) == .orderedSame
-		}
-		return isEqual(other)
-	}
-
-	func textual_cancelPerformRequests() {
-		NSObject.cancelPreviousPerformRequests(withTarget: self)
-	}
-
-	func textual_performSelectorInCommonModes(_ selector: Selector, afterDelay delay: TimeInterval) {
-		perform(selector, with: nil, afterDelay: delay, inModes: [.common])
-	}
-
-	func textual_performSelectorInCommonModes(
-		_ selector: Selector,
-		with object: Any?,
-		afterDelay delay: TimeInterval
-	) {
-		perform(selector, with: object, afterDelay: delay, inModes: [.common])
-	}
-}
-
-public extension NSArrayController {
-	func textual_removeAllArrangedObjects() {
-		let count = (arrangedObjects as? [Any])?.count ?? 0
-		remove(atArrangedObjectIndexes: IndexSet(integersIn: 0 ..< count))
-	}
-
-	func textual_replaceObject(atArrangedObjectIndex index: UInt, with object: Any) {
-		insert(object, atArrangedObjectIndex: Int(index) + 1)
-		remove(atArrangedObjectIndex: Int(index))
-	}
-
-	func textual_moveObject(atArrangedObjectIndex sourceIndex: UInt, to destinationIndex: UInt) {
-		guard let objects = arrangedObjects as? [Any] else {
-			return
-		}
-
-		let object = objects[Int(sourceIndex)]
-		remove(atArrangedObjectIndex: Int(sourceIndex))
-
-		let insertionIndex = sourceIndex < destinationIndex ? destinationIndex - 1 : destinationIndex
-		insert(object, atArrangedObjectIndex: Int(insertionIndex))
 	}
 }

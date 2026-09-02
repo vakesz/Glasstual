@@ -267,13 +267,13 @@ struct IRCClientUserIdentityTests {
 	func preAwayIsRequestedAndRestoresAwayOnReconnect() throws {
 		let client = makeClient(named: "me")
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :pre-away",
 			on: client
 		))
 		#expect(capabilityCommands(of: client) == ["REQ pre-away"])
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :pre-away",
 			on: client
 		))

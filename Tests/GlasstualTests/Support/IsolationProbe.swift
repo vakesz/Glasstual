@@ -49,20 +49,9 @@ final class IsolationProbe: Sendable {
 		observations.map(\.label)
 	}
 
-	func clear() {
-		storage.withLock { $0.removeAll() }
-	}
-
 	/// Checks that the deliveries arrived in exactly this order.
 	func expectOrder(_ expected: [String], sourceLocation: SourceLocation = #_sourceLocation) {
 		#expect(labels == expected, sourceLocation: sourceLocation)
-	}
-
-	/// Checks that every delivery so far reached the main actor.
-	func expectAllOnMainActor(sourceLocation: SourceLocation = #_sourceLocation) {
-		let strays = observations.filter { !$0.onMainActor }.map(\.label)
-
-		#expect(strays.isEmpty, "these deliveries missed the main actor: \(strays)", sourceLocation: sourceLocation)
 	}
 
 	/// Checks that no delivery so far reached the main actor.

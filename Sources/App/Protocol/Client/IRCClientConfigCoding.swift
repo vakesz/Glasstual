@@ -81,6 +81,8 @@ nonisolated extension ClientConfig { // nonisolated: value
 		case disconnectOnSASLFailure
 
 		case autojoinWaitsForNickServ
+		case autojoinWaitsForConnectCommands
+		case autojoinDelayAfterConnectCommands
 		case hideAutojoinDelayedWarnings
 		case hideNetworkUnavailabilityNotices
 		case sendWhoCommandRequestsToChannels
@@ -321,6 +323,18 @@ nonisolated extension ClientConfig { // nonisolated: value
 			forKey: .autojoinWaitsForNickServ,
 			aliases: [],
 			default: false
+		)
+		autojoinWaitsForConnectCommands = container.decode(
+			Bool.self,
+			forKey: .autojoinWaitsForConnectCommands,
+			aliases: [],
+			default: false
+		)
+		autojoinDelayAfterConnectCommands = container.decode(
+			TimeInterval.self,
+			forKey: .autojoinDelayAfterConnectCommands,
+			aliases: [],
+			default: ClientConfigDefaults.autojoinConnectCommandDelay
 		)
 		hideAutojoinDelayedWarnings = container.decode(
 			Bool.self,

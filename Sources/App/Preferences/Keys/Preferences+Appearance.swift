@@ -134,22 +134,6 @@ public nonisolated enum UserListModeBadge: String, CaseIterable, Sendable { // n
 		rawValue
 	}
 
-	/// The tag on the matching colour well in the preferences nib.
-	public var preferencesTag: Int {
-		switch self {
-		case .ircOperator: 10
-		case .channelOwner: 9
-		case .superOperator: 8
-		case .normalOperator: 7
-		case .halfOperator: 6
-		case .voiced: 5
-		}
-	}
-
-	public static func badge(forPreferencesTag tag: Int) -> Self? {
-		allCases.first { $0.preferencesTag == tag }
-	}
-
 	public static func badge(forPreferenceKeyNamed name: String) -> Self? {
 		allCases.first { $0.preferenceKey.name == name }
 	}

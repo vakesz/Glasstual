@@ -74,7 +74,9 @@ final class LabeledDelivery: NSObject {
 	var lineNumber: String?
 	var resolved = false
 	var state: LogLineDeliveryState = .none
-	var timeoutWorkItem: DispatchWorkItem?
+	/// Fails the delivery when nothing answers the label. Cancelled the moment
+	/// the delivery resolves.
+	var timeoutTask: Task<Void, Never>?
 }
 
 public extension IRCClient {
@@ -102,12 +104,14 @@ public extension IRCClient {
 		delivery.channel = channel
 		delivery.state = .pending
 
-		let timeout = DispatchWorkItem { [weak self] in
-			Task { @MainActor in self?.timeoutDelivery(withLabel: label) }
+		delivery.timeoutTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(IRCLabeledResponsePolicy.timeoutInterval))
+
+			guard Task.isCancelled == false else { return }
+
+			self?.timeoutDelivery(withLabel: label)
 		}
-		delivery.timeoutWorkItem = timeout
 		pendingDeliveries[label] = delivery
-		DispatchQueue.main.asyncAfter(deadline: .now() + IRCLabeledResponsePolicy.timeoutInterval, execute: timeout)
 		return label
 	}
 
@@ -134,8 +138,8 @@ public extension IRCClient {
 		guard let delivery = pendingDeliveries[label], !delivery.resolved else { return }
 		delivery.resolved = true
 		delivery.state = state
-		delivery.timeoutWorkItem?.cancel()
-		delivery.timeoutWorkItem = nil
+		delivery.timeoutTask?.cancel()
+		delivery.timeoutTask = nil
 		/* Without this the table grows by one entry per outgoing message for the
 		 whole session, and a server reusing a stale label would keep matching it. */
 		pendingDeliveries.removeValue(forKey: label)
@@ -150,19 +154,6 @@ public extension IRCClient {
 	}
 
 	func resolveLabeledResponse(for message: Message) -> Bool {
-		resolveLabeledResponseOnMainActor(message)
-	}
-
-	/// The state of a delivery still awaiting a response. Resolved deliveries are
-	/// removed, so a resolved or unknown label reports `.none`.
-	func deliveryState(forLabel label: String) -> LogLineDeliveryState {
-		pendingDeliveries[label]?.state ?? .none
-	}
-}
-
-private extension IRCClient {
-	@MainActor
-	func resolveLabeledResponseOnMainActor(_ message: Message) -> Bool {
 		guard isCapabilityEnabled(.labeledResponse) else { return false }
 		let command = message.command
 
@@ -206,7 +197,14 @@ private extension IRCClient {
 		}
 	}
 
-	@MainActor
+	/// The state of a delivery still awaiting a response. Resolved deliveries are
+	/// removed, so a resolved or unknown label reports `.none`.
+	func deliveryState(forLabel label: String) -> LogLineDeliveryState {
+		pendingDeliveries[label]?.state ?? .none
+	}
+}
+
+private extension IRCClient {
 	func resolveLabeledBatchBoundary(_ message: Message) {
 		guard let reference = message.params.first else { return }
 		if reference.hasPrefix("+"), let label = message.messageTags?["label"], !label.isEmpty {

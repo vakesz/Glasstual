@@ -168,7 +168,7 @@ struct IRCClientHistoryTests {
 			on: client
 		)
 
-		client.receiveCapabilityOrAuthenticationRequest(partialList)
+		client.handleCapabilityOrAuthenticationRequest(partialList)
 
 		#expect(capabilityCommands(of: client) == ["REQ draft/read-marker"])
 
@@ -178,7 +178,7 @@ struct IRCClientHistoryTests {
 			on: complete
 		)
 
-		complete.receiveCapabilityOrAuthenticationRequest(completeList)
+		complete.handleCapabilityOrAuthenticationRequest(completeList)
 
 		#expect(capabilityCommands(of: complete) == ["REQ message-tags"])
 		#expect(complete.pendingCapabilityRequests == [
@@ -187,7 +187,7 @@ struct IRCClientHistoryTests {
 
 		let acknowledgement = try message(":irc.example.net CAP me ACK :chathistory", on: complete)
 
-		complete.receiveCapabilityOrAuthenticationRequest(acknowledgement)
+		complete.handleCapabilityOrAuthenticationRequest(acknowledgement)
 
 		#expect(complete.isCapabilityEnabled(.chatHistory))
 	}

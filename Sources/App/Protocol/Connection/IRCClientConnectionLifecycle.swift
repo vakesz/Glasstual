@@ -181,7 +181,6 @@ public extension IRCClient {
 		guard isConnecting || isConnected, isQuitting == false, isDisconnecting == false else { return }
 		isQuitting = true
 		cancelReconnect()
-		if isTerminating == false {}
 		NotificationCenter.default.post(name: .IRCClientWillSendQuit, object: self)
 		socket?.clearSendQueue()
 		guard isLoggedIn else {

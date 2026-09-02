@@ -37,9 +37,12 @@
 
 enum IRCProtocolLimits {
 	static let maximumBodyLength = 510
-	static let maximumNicknameLength = 50
-	static let maximumUsernameLength = 40
-	static let maximumTCPPort = 65535
 	static let maximumNodesPerModeCommand = 4
 	static let defaultNicknameMaximumLength = 31
+	/** The largest `LINELEN` worth believing.
+
+	 IRCv3 raises the RFC 1459 line length, but only to a few times it. A larger
+	 advertised value stops the client splitting outgoing lines at all, so it is
+	 clamped rather than trusted. */
+	static let maximumServerLineLength = maximumBodyLength * 4
 }

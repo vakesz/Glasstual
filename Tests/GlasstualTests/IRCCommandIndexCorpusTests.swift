@@ -181,7 +181,7 @@ struct IRCCommandIndexCorpusTests {
 
 	// MARK: - Outgoing colon positions
 
-	nonisolated struct ColonCase: Sendable {
+	nonisolated struct ColonCase: Sendable { // nonisolated: value
 		let command: String
 		let position: UInt
 
@@ -193,7 +193,7 @@ struct IRCCommandIndexCorpusTests {
 
 	/// The colon marks the start of the trailing parameter. `notApplicable`
 	/// stands for commands that never take one.
-	nonisolated static let colonCases: [ColonCase] = [
+	nonisolated static let colonCases: [ColonCase] = [ // nonisolated: let
 		ColonCase("PRIVMSG", 1),
 		ColonCase("NOTICE", 1),
 		ColonCase("PART", 1),
@@ -247,7 +247,9 @@ struct IRCCommandIndexCorpusTests {
 			SendingMessage.string(command: "KICK", arguments: ["#chat", "alice", "bye now"])
 				== "KICK #chat alice :bye now"
 		)
-		/* PASS never gets a colon, even for a value containing a space. */
+		/* PASS declares no colon position, so nothing before the last argument
+		 gets one — but a last argument holding a space still needs the trailing
+		 marker to survive the wire as one token. */
 		#expect(SendingMessage.string(command: "PASS", arguments: ["a b"]) == "PASS :a b")
 		#expect(SendingMessage.string(command: "JOIN", arguments: ["#chat"]) == "JOIN #chat")
 	}

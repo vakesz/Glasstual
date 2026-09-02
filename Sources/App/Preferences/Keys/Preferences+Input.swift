@@ -40,9 +40,9 @@ import Foundation
 
 /** One entry of a highlight list.
 
- The list is stored as an array of single-field dictionaries — the shape the
- array controller in the preferences nib binds to — rather than an array of
- strings, so the record is spelled out here instead of being rebuilt from
+ The list is stored as an array of single-field dictionaries — the shape every
+ existing preferences file already holds — rather than an array of strings, so
+ the record is spelled out here instead of being rebuilt from
  `["string": …]` literals at every use. */
 public nonisolated struct HighlightKeyword: Hashable, Sendable { // nonisolated: value
 	public static let field = "string"
@@ -63,7 +63,7 @@ nonisolated extension HighlightKeyword: PreferenceValue { // nonisolated: value
 		return HighlightKeyword(string: string)
 	}
 
-	public var preferenceObject: Any {
+	public var preferenceObject: Any? {
 		[Self.field: string]
 	}
 }
@@ -86,13 +86,6 @@ public nonisolated extension Preferences { // nonisolated: value
 		public static let smartLinks = PreferenceKey("TextFieldSmartLinks", default: false)
 		public static let dataDetectors = PreferenceKey("TextFieldDataDetectors", default: false)
 		public static let textReplacement = PreferenceKey("TextFieldTextReplacement", default: true)
-
-		/// Every `TextField…` key is restored state of the text system rather
-		/// than a portable setting, so the prefix is excluded from export.
-		public static let textFieldFamily = PreferenceKeyFamily(
-			"TextField",
-			traits: [.excludedFromExport, .uncatalogued]
-		)
 
 		public static let tabKeyAction = PreferenceKey(
 			"Keyboard -> Tab Key Action",

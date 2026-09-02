@@ -128,10 +128,6 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			String(localized: .TVCMainWindow.currentSession)
 		}
 
-		static var noTopic: String {
-			String(localized: .TVCMainWindow.noTopic)
-		}
-
 		static var unreadMessages: String {
 			String(localized: .TVCMainWindow.unreadMessages)
 		}
@@ -144,10 +140,6 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 	enum Toolbar {
 		static var connectionSecurity: String {
 			String(localized: .TVCMainWindow.connectionSecurity)
-		}
-
-		static var toggleServerList: String {
-			String(localized: .TVCMainWindow.toggleServerList)
 		}
 
 		static var toggleMemberList: String {

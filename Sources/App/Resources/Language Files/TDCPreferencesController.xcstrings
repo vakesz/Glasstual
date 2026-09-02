@@ -445,26 +445,314 @@
         }
       }
     },
-    "ircv3-automatic-features": {
-      "comment": "Heading for IRCv3 capabilities the client negotiates automatically.",
+    "ircv3-capabilities": {
+      "comment": "Heading above the per-capability switches in the IRCv3 Settings pane.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Automatic Features"
+            "value": "Capabilities"
           }
         }
       }
     },
-    "ircv3-automatic-features-note": {
-      "comment": "Explanation below the automatically negotiated IRCv3 capability list.",
+    "ircv3-capability-accessibility-label": {
+      "comment": "Accessibility label pairing an IRCv3 capability name with its summary.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glasstual enables these features whenever the server supports them."
+            "value": "%1$@. %2$@"
+          }
+        }
+      }
+    },
+    "ircv3-capability-account-notify": {
+      "comment": "Summary of the account-notify IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows when someone signs in to or out of a network account."
+          }
+        }
+      }
+    },
+    "ircv3-capability-account-tag": {
+      "comment": "Summary of the account-tag IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marks each message with the network account its sender is signed in to."
+          }
+        }
+      }
+    },
+    "ircv3-capability-away-notify": {
+      "comment": "Summary of the away-notify IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows when people go away or come back without asking the server."
+          }
+        }
+      }
+    },
+    "ircv3-capability-batch": {
+      "comment": "Summary of the batch IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lets the server group related messages so they arrive together."
+          }
+        }
+      }
+    },
+    "ircv3-capability-cap-notify": {
+      "comment": "Summary of the cap-notify IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picks up features a server turns on or off while you stay connected."
+          }
+        }
+      }
+    },
+    "ircv3-capability-chghost": {
+      "comment": "Summary of the chghost IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follows a person's address changing without showing them leave and rejoin."
+          }
+        }
+      }
+    },
+    "ircv3-capability-extended-join": {
+      "comment": "Summary of the extended-join IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the account and real name of each person as they join a channel."
+          }
+        }
+      }
+    },
+    "ircv3-capability-extended-monitor": {
+      "comment": "Summary of the extended-monitor IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extends away, account and name notices to the people you watch for."
+          }
+        }
+      }
+    },
+    "ircv3-capability-invite-notify": {
+      "comment": "Summary of the invite-notify IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows invitations other members send to a channel you are in."
+          }
+        }
+      }
+    },
+    "ircv3-capability-labeled-response": {
+      "comment": "Summary of the labeled-response IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matches each server reply to the command that asked for it."
+          }
+        }
+      }
+    },
+    "ircv3-capability-message-tags": {
+      "comment": "Summary of the message-tags IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carries the extra detail other features attach to a message, such as its time."
+          }
+        }
+      }
+    },
+    "ircv3-capability-multi-prefix": {
+      "comment": "Summary of the multi-prefix IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows every rank a person holds in a channel instead of only the highest."
+          }
+        }
+      }
+    },
+    "ircv3-capability-pre-away": {
+      "comment": "Summary of the pre-away IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marks you away as the connection starts, before you join anything."
+          }
+        }
+      }
+    },
+    "ircv3-capability-sasl": {
+      "comment": "Summary of the sasl IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signs in to the network with your account before joining anything."
+          }
+        }
+      }
+    },
+    "ircv3-capability-server-time": {
+      "comment": "Summary of the server-time IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timestamps a message with when the server saw it, not when it reached you."
+          }
+        }
+      }
+    },
+    "ircv3-capability-setname": {
+      "comment": "Summary of the setname IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows when a person changes their real name."
+          }
+        }
+      }
+    },
+    "ircv3-capability-specification": {
+      "comment": "Link beside an IRCv3 capability switch, opening the document that defines it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specification"
+          }
+        }
+      }
+    },
+    "ircv3-capability-standard-replies": {
+      "comment": "Summary of the standard-replies IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lets the server describe a failure in a form the client can explain."
+          }
+        }
+      }
+    },
+    "ircv3-capability-userhost-in-names": {
+      "comment": "Summary of the userhost-in-names IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learns each member's full address while a channel's member list arrives."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-playback": {
+      "comment": "Summary of the znc.in/playback IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asks a ZNC bouncer for the messages you missed and nothing else."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-self-message": {
+      "comment": "Summary of the znc.in/self-message IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Includes messages you sent from another client in ZNC playback."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-server-time": {
+      "comment": "Summary of the znc.in/server-time IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timestamps ZNC playback with when each message was originally sent."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-server-time-iso": {
+      "comment": "Summary of the znc.in/server-time-iso IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timestamps ZNC playback on bouncers too old for the standard capability."
+          }
+        }
+      }
+    },
+    "ircv3-capability-znc-tlsinfo": {
+      "comment": "Summary of the znc.in/tlsinfo IRCv3 capability, shown beside its switch in Settings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports the encryption a ZNC bouncer uses to reach the network."
           }
         }
       }

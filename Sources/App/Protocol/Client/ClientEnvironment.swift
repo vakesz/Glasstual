@@ -48,8 +48,6 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 	// MARK: Connection
 
 	var autojoinDelayAfterIdentification: TimeInterval = 0
-	var autojoinDelayBetweenChannelJoins: TimeInterval = 0
-	var autojoinMaximumChannelJoins: UInt = 0
 	var autojoinOnInvite = false
 	var rejoinOnKick = false
 	var appNapEnabled = false
@@ -59,6 +57,9 @@ nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: valu
 	var enableEchoMessageCapability = false
 	var requestChatHistory = true
 	var synchronizeReadMarkers = true
+	/// The IRCv3 capabilities the user switched off, by wire name. Empty means
+	/// every capability the registry knows is available.
+	var disabledCapabilities: Set<String> = []
 	var rememberServerListQueryStates = false
 	var trackUserAwayStatusMaximumChannelSize: UInt = 0
 

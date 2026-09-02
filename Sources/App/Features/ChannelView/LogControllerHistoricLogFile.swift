@@ -15,16 +15,68 @@ import Foundation
 
 /** What the app knows about the lines of one view, kept in memory so that chat
  history replayed by the server can be checked against the local scrollback.
- The index is filled from every line
- written and every line fetched.
+ The index is filled from every line written and every line fetched, and
+ withdrawn again when the store prunes the row behind it — otherwise it would
+ hold a second copy of every message the process has ever seen.
+
+ The two lookups are counted rather than set-valued: two lines can carry the
+ same body at the same second from the same nickname, and dropping one of them
+ must not make the other invisible to the duplicate check.
 
  Decoding happens on the main actor, so the value belongs there and needs no
  synchronisation. */
 private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: value
-	var messageIdentifiers: Set<String> = []
-	var fallbackKeys: Set<String> = []
+	/// What one indexed line contributed, so the contribution can be withdrawn
+	/// when the line goes. `nil` where the line carried no such value.
+	struct Contribution: Sendable {
+		var messageIdentifier: String?
+		var fallbackKey: String?
+	}
+
+	private(set) var messageIdentifiers: [String: Int] = [:]
+	private(set) var fallbackKeys: [String: Int] = [:]
+	private var contributions: [String: Contribution] = [:]
 	var newestDate: Date?
-	var oldestDate: Date?
+
+	/// Records what `uniqueIdentifier` contributes. A line the index already
+	/// holds is left alone: the same row is indexed again on every fetch.
+	mutating func add(
+		_ contribution: Contribution,
+		for uniqueIdentifier: String
+	) {
+		guard uniqueIdentifier.isEmpty == false else {
+			retain(contribution)
+			return
+		}
+		guard contributions[uniqueIdentifier] == nil else { return }
+		contributions[uniqueIdentifier] = contribution
+		retain(contribution)
+	}
+
+	/// Withdraws what a pruned line contributed.
+	mutating func remove(_ uniqueIdentifier: String) {
+		guard let contribution = contributions.removeValue(forKey: uniqueIdentifier) else { return }
+		release(contribution.messageIdentifier, from: &messageIdentifiers)
+		release(contribution.fallbackKey, from: &fallbackKeys)
+	}
+
+	private mutating func retain(_ contribution: Contribution) {
+		if let messageIdentifier = contribution.messageIdentifier {
+			messageIdentifiers[messageIdentifier, default: 0] += 1
+		}
+		if let fallbackKey = contribution.fallbackKey {
+			fallbackKeys[fallbackKey, default: 0] += 1
+		}
+	}
+
+	private func release(_ key: String?, from counts: inout [String: Int]) {
+		guard let key, let count = counts[key] else { return }
+		if count <= 1 {
+			counts.removeValue(forKey: key)
+		} else {
+			counts[key] = count - 1
+		}
+	}
 }
 
 /** The main-actor facade for scrollback history.
@@ -67,8 +119,11 @@ public final class LogControllerHistoricLogFile {
 		)
 	}
 
-	/// The store is about to drop these lines.
+	/// The store is about to drop these lines. The duplicate index is pruned
+	/// first, and unconditionally: it outlives any view controller.
 	static func noteWillDeleteLines(_ uniqueIdentifiers: [String], inView viewIdentifier: String) {
+		shared().forgetLines(uniqueIdentifiers, inView: viewIdentifier)
+
 		guard let item = AppController.shared.world?.findItem(withId: viewIdentifier) else {
 			return
 		}
@@ -95,18 +150,19 @@ public final class LogControllerHistoricLogFile {
 
 	public func indexLogLine(_ logLine: LogLine, forView viewIdentifier: String) {
 		var index = viewIndexes[viewIdentifier] ?? HistoricLogViewIndex()
+		let messageIdentifier = logLine.messageIdentifier
 
-		if let messageIdentifier = logLine.messageIdentifier, messageIdentifier.isEmpty == false {
-			index.messageIdentifiers.insert(messageIdentifier)
-		}
-
-		if let fallbackKey = Self.fallbackKey(
-			for: logLine.receivedAt,
-			nickname: logLine.nickname,
-			messageBody: logLine.messageBody
-		) {
-			index.fallbackKeys.insert(fallbackKey)
-		}
+		index.add(
+			HistoricLogViewIndex.Contribution(
+				messageIdentifier: messageIdentifier?.isEmpty == false ? messageIdentifier : nil,
+				fallbackKey: Self.fallbackKey(
+					for: logLine.receivedAt,
+					nickname: logLine.nickname,
+					messageBody: logLine.messageBody
+				)
+			),
+			for: logLine.uniqueIdentifier
+		)
 
 		let receivedAt = logLine.receivedAt
 
@@ -114,12 +170,6 @@ public final class LogControllerHistoricLogFile {
 			index.newestDate = max(newestDate, receivedAt)
 		} else {
 			index.newestDate = receivedAt
-		}
-
-		if let oldestDate = index.oldestDate {
-			index.oldestDate = min(oldestDate, receivedAt)
-		} else {
-			index.oldestDate = receivedAt
 		}
 
 		viewIndexes[viewIdentifier] = index
@@ -131,8 +181,19 @@ public final class LogControllerHistoricLogFile {
 		}
 	}
 
+	/// Withdraws the lines the store has pruned from the view's index.
+	func forgetLines(_ uniqueIdentifiers: [String], inView viewIdentifier: String) {
+		guard var index = viewIndexes[viewIdentifier] else { return }
+
+		for uniqueIdentifier in uniqueIdentifiers {
+			index.remove(uniqueIdentifier)
+		}
+
+		viewIndexes[viewIdentifier] = index
+	}
+
 	public func containsMessageIdentifier(_ messageIdentifier: String, forView viewIdentifier: String) -> Bool {
-		viewIndexes[viewIdentifier]?.messageIdentifiers.contains(messageIdentifier) ?? false
+		viewIndexes[viewIdentifier]?.messageIdentifiers[messageIdentifier] != nil
 	}
 
 	public func containsLine(
@@ -151,15 +212,11 @@ public final class LogControllerHistoricLogFile {
 			return false
 		}
 
-		return index.fallbackKeys.contains(fallbackKey)
+		return index.fallbackKeys[fallbackKey] != nil
 	}
 
 	public func newestLineDate(forView viewIdentifier: String) -> Date? {
 		viewIndexes[viewIdentifier]?.newestDate
-	}
-
-	public func oldestLineDate(forView viewIdentifier: String) -> Date? {
-		viewIndexes[viewIdentifier]?.oldestDate
 	}
 
 	// MARK: - Fetching

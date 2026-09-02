@@ -78,13 +78,13 @@ extension IRCClient {
 			printDebugInformation(IRCTimerStrings.alreadyStopped(identifier: identifier))
 			return
 		}
-		stopTimedCommand(timedCommand)
+		timedCommand.stop()
 		printDebugInformation(IRCTimerStrings.stopped(identifier: identifier))
 	}
 
 	private func restartTimer(identifier: String) {
 		guard let timedCommand = existingTimer(identifier: identifier) else { return }
-		let message = restartTimedCommand(timedCommand)
+		let message = timedCommand.restart()
 			? IRCTimerStrings.restarted(identifier: identifier)
 			: IRCTimerStrings.cannotRestart(identifier: identifier)
 		printDebugInformation(message)
@@ -163,9 +163,8 @@ extension IRCClient {
 		}
 		let timedCommand = TimedCommand(command: command, onClient: self, inChannel: targetChannel)
 		addTimedCommand(timedCommand)
-		startTimedCommand(
-			timedCommand,
-			interval: UInt(interval),
+		timedCommand.start(
+			TimeInterval(interval),
 			onRepeat: repeatCount != 1,
 			iterations: UInt(repeatCount)
 		)

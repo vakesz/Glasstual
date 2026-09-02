@@ -439,12 +439,15 @@ extension IRCClient {
 			return true
 		}
 		if let existingQuery = findChannel(nickname) {
-			let shouldDelete = Alerts.modalAlert(
-				withMessage: PromptStrings.Deletion.warning(for: .query),
-				title: PromptStrings.Deletion.existingQueryTitle(name: existingQuery.name),
-				defaultButton: PromptStrings.Action.yes,
-				alternateButton: PromptStrings.Action.no
-			)
+			let shouldDelete = output?.confirmModally(
+				AlertRequest(
+					title: PromptStrings.Deletion.existingQueryTitle(name: existingQuery.name),
+					body: PromptStrings.Deletion.warning(for: .query),
+					defaultButton: PromptStrings.Action.yes,
+					alternateButton: PromptStrings.Action.no,
+					style: .warning
+				)
+			) ?? true
 			guard shouldDelete else { return true }
 			world?.destroy(existingQuery)
 		}

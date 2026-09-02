@@ -71,10 +71,10 @@ struct PreferencesPaneInventoryTests {
 	}
 
 	@Test("The Advanced section keeps to five sub-pages")
-	func advancedSectionIsGrouped() {
+	func advancedSectionIsGrouped() throws {
 		let advanced = PreferencesSession.sections().first { $0.identifier == .advanced }
-		let subPages = try? #require(advanced?.subPages)
-		#expect(subPages?.count == PreferencesAdvancedGroup.allCases.count)
+		let subPages = try #require(advanced?.subPages)
+		#expect(subPages.count == PreferencesAdvancedGroup.allCases.count)
 	}
 
 	@Test("A pane identifier stored before the grouping still finds its sub-page")
@@ -163,16 +163,31 @@ struct PreferencesFacadeBindingTests {
 		#expect(observed == key.value)
 	}
 
+	/** Declared here rather than borrowed from the shipping catalogue: the
+	 inverted binding is what is under test, and a `.standard`-storage key such
+	 as `Preferences.Internals.appSleepDisabled` would write the developer's own
+	 defaults domain, which the test scheme does not redirect. */
+	private static let scratchInversionKey = PreferenceKey(
+		"Tests -> Pane Bindings -> Inverted",
+		default: false,
+		traits: [.unregistered, .uncatalogued]
+	)
+
 	@Test("An inverted binding stores the opposite of what it shows")
 	func invertedBinding() {
-		let key = Preferences.Internals.appSleepDisabled
+		let key = Self.scratchInversionKey
 		defer { key.reset() }
+
+		key.reset()
 
 		let binding = preferences.invertedBinding(for: key)
 		binding.wrappedValue = true
 		#expect(key.value == false)
 		binding.wrappedValue = false
 		#expect(key.value == true)
+
+		/* A fresh binding reads the same way round as the one that wrote. */
+		#expect(preferences.invertedBinding(for: key).wrappedValue == false)
 	}
 
 	@Test("A gated binding reads as off while its gate is closed")

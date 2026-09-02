@@ -29,13 +29,43 @@ struct SwiftUIResourceTests {
 			.sorted { $0.path < $1.path }
 	}
 
+	/** Both helpers exist because the three gates below assert that a walk found
+	 nothing, so each one first has to show that the walk happened at all:
+	 `enumerator(at:)` answers `nil` for a directory that has moved, and a
+	 `#filePath` this file is three `deletingLastPathComponent()` calls away
+	 from is exactly the kind of path that goes stale silently. */
+	private static func containsAnyFile(below root: URL) -> Bool {
+		guard let enumerator = FileManager.default.enumerator(
+			at: root,
+			includingPropertiesForKeys: nil,
+			options: [.skipsHiddenFiles]
+		) else {
+			return false
+		}
+
+		return enumerator.nextObject() != nil
+	}
+
+	private static func directory(_ relativePath: String) throws -> URL {
+		let url = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+			.appending(path: relativePath)
+
+		try #require(
+			FileManager.default.fileExists(atPath: url.path),
+			"\(url.path) is not where this test looks for it"
+		)
+
+		return url
+	}
+
 	@Test("The source tree contains no Interface Builder documents")
-	func sourceTreeContainsNoInterfaceBuilderDocuments() {
-		let sources = URL(fileURLWithPath: #filePath)
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.appending(path: "Sources")
+	func sourceTreeContainsNoInterfaceBuilderDocuments() throws {
+		let sources = try Self.directory("Sources")
+
+		#expect(Self.files(withExtension: "swift", below: sources).isEmpty == false)
 
 		let documents = Self.files(withExtension: "xib", below: sources)
 
@@ -45,6 +75,9 @@ struct SwiftUIResourceTests {
 	@Test("The application bundle contains no compiled Interface Builder resources")
 	func applicationBundleContainsNoCompiledInterfaceBuilderResources() throws {
 		let resources = try #require(Bundle.main.resourceURL)
+
+		#expect(Self.containsAnyFile(below: resources), "\(resources.path) held nothing to audit")
+
 		let nibs = Self.files(withExtension: "nib", below: resources)
 
 		#expect(nibs.isEmpty, "Compiled Interface Builder resources found: \(nibs.map(\.path))")
@@ -52,14 +85,12 @@ struct SwiftUIResourceTests {
 
 	@Test("The application defines no migrated AppKit controls or outlets")
 	func sourceTreeContainsNoMigratedAppKitControls() throws {
-		let appSources = URL(fileURLWithPath: #filePath)
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.appending(path: "Sources/App")
+		let appSources = try Self.directory("Sources/App")
 		let swiftFiles = Self.files(withExtension: "swift", below: appSources)
 		let bannedTokens = ["@IBOutlet", "NSAlert", "NSButton", "NSTableView", "NSOutlineView"]
 		var offenders: [String] = []
+
+		#expect(swiftFiles.isEmpty == false, "\(appSources.path) held no Swift to audit")
 
 		for file in swiftFiles {
 			let contents = try String(contentsOf: file, encoding: .utf8)

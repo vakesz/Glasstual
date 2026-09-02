@@ -196,7 +196,7 @@ enum ServerConnectionCoordinator {
 		config.serverList = [server]
 		config.channelList = request.channels.map(ChannelConfig.seed(withName:))
 
-		guard let client = ClientEnvironment.shared.world?.createClient(with: config, reload: true) else {
+		guard let client = ClientEnvironment.shared.world?.createClient(with: config) else {
 			return
 		}
 		ClientEnvironment.shared.world?.save()

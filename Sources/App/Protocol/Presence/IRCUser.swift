@@ -112,14 +112,6 @@ public nonisolated struct User: Identifiable, Hashable, Sendable, CustomStringCo
 		}
 	}
 
-	public var lowercaseNickname: String {
-		nickname.lowercased()
-	}
-
-	public var uppercaseNickname: String {
-		nickname.uppercased()
-	}
-
 	public mutating func markAsAway() {
 		isAway = true
 	}

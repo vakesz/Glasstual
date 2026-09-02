@@ -23,7 +23,7 @@ import Testing
  downcast to a CoreFoundation type always succeeds -- and `as!` is not
  something this tree writes. Behind a generic parameter the same cast is the
  ordinary dynamic one, which is what it should have been. */
-private nonisolated func dynamicCast<Value>(_ value: Any) -> Value? {
+private nonisolated func dynamicCast<Value>(_ value: Any) -> Value? { // nonisolated: pure
 	value as? Value
 }
 
@@ -150,7 +150,7 @@ private actor LoopbackTLSServer {
 /// Everything the connection host reports back, in the order it sent it.
 private enum HostEvent: Sendable {
 	case didConnect
-	case didSecure
+	case didSecure(protocolVersion: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
 	case didReceive(Data)
 	case didDisconnect(Error?)
 	case requestInsecureCertificateTrust(TrustDecisionHandler)
@@ -176,10 +176,10 @@ private final class HostClientShim: NSObject, RemoteConnectionClientProtocol {
 	}
 
 	func ircConnectionDidSecureConnection(
-		withProtocolType _: tls_protocol_version_t,
-		cipherSuite _: tls_ciphersuite_t
+		withProtocolType protocolType: tls_protocol_version_t,
+		cipherSuite: tls_ciphersuite_t
 	) {
-		events.yield(.didSecure)
+		events.yield(.didSecure(protocolVersion: protocolType, cipherSuite: cipherSuite))
 	}
 
 	func ircConnectionDidCloseReadStream() {}
@@ -238,10 +238,33 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 		#expect(lines == Self.testLines, "the bytes did not arrive, or did not arrive in order")
 	}
 
+	/** The metadata a handshake produces only exists once the handshake has run,
+	 and a typed connection establishes lazily: reading it when the transport
+	 hands over the connection reads it from a connection still in setup, and
+	 the event is silently never sent. */
+	@Test("An accepted certificate reports the protocol and cipher that were negotiated")
+	@concurrent
+	func acceptedTrustReportsWhatWasNegotiated() async throws {
+		let outcome = try await Self.driveHandshake(answering: true)
+
+		let secured = try #require(outcome.secured, "the connection never reported itself secured")
+
+		#expect(secured.protocolVersion != tlsProtocolVersionUnknown)
+		#expect(secured.protocolVersion.rawValue >= SecureTransportSupport.minimumProtocolType.rawValue)
+		#expect(secured.cipherSuite != tlsCipherSuiteUnknown)
+		#expect(SecureTransportSupport.description(forCipherSuite: secured.cipherSuite) != "Unknown")
+	}
+
 	// MARK: - The harness
+
+	struct Secured: Sendable {
+		var protocolVersion: tls_protocol_version_t
+		var cipherSuite: tls_ciphersuite_t
+	}
 
 	struct Outcome {
 		var received: [Data] = []
+		var secured: Secured?
 		var disconnectError: Error?
 	}
 
@@ -308,11 +331,13 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 				if trusted, outcome.received.count == testLines.count {
 					continuation.finish()
 				}
+			case let .didSecure(protocolVersion, cipherSuite):
+				outcome.secured = Secured(protocolVersion: protocolVersion, cipherSuite: cipherSuite)
 			case let .didDisconnect(error):
 				outcome.disconnectError = error
 
 				continuation.finish()
-			case .didConnect, .didSecure:
+			case .didConnect:
 				break
 			}
 		}

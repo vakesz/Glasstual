@@ -82,26 +82,6 @@ enum MenuNavigationAction: Sendable, CaseIterable {
 	case previousSelection
 }
 
-enum MenuNavigationTag {
-	static let nextServer = 7_000_000
-	static let previousServer = 7_000_001
-	static let nextActiveServer = 7_000_003
-	static let previousActiveServer = 7_000_004
-	static let nextChannel = 7_010_000
-	static let previousChannel = 7_010_001
-	static let nextActiveChannel = 7_010_003
-	static let previousActiveChannel = 7_010_004
-	static let nextUnreadChannel = 7_010_006
-	static let previousUnreadChannel = 7_010_007
-	static let moveBackward = 703
-	static let moveForward = 704
-	static let previousSelection = 706
-	static let nextHighlight = 708
-	static let previousHighlight = 709
-	static let jumpToCurrentSession = 711
-	static let jumpToPresent = 712
-}
-
 @MainActor
 public final class MenuActionCoordinator: NSObject {
 	weak var menuController: MenuController?
@@ -111,8 +91,11 @@ public final class MenuActionCoordinator: NSObject {
 	weak var pointedChannel: IRCChannel?
 	var currentSearchPhrase = ""
 	var reactionPopover: ReactionPopover?
-	/// Menu-action and selection notifications, dropped with the coordinator.
+	/// Menu-action and selection notifications, cancelled at termination.
 	let notifications = NotificationSubscriptions()
+	/// The deferred selection reset a closing menu schedules, held so that
+	/// termination can cancel one that has not run yet.
+	var selectionResetTask: Task<Void, Never>?
 
 	public init(menuController: MenuController) {
 		self.menuController = menuController
@@ -129,6 +112,15 @@ public final class MenuActionCoordinator: NSObject {
 
 	var selectedChannel: IRCChannel? {
 		pointedChannel ?? mainWindow.selectedChannel
+	}
+
+	/// The transcript the selection is showing, and the view drawing it.
+	var selectedViewController: LogController? {
+		selectedChannel?.logController ?? selectedClient?.logController
+	}
+
+	var selectedBackingView: LogView? {
+		selectedViewController?.backingView
 	}
 
 	private var fileTransferCenter: FileTransferCenter {
@@ -364,7 +356,7 @@ public final class MenuActionCoordinator: NSObject {
 		guard nicknames.isEmpty == false else { return }
 		deselectMembers(for: sender)
 
-		let textView = mainWindow.inputTextField!
+		guard let textView = mainWindow.inputTextField else { return }
 		let selectedRange = textView.selectedRange
 		var insertion = ""
 		if selectedRange.location > 0 {
@@ -384,8 +376,12 @@ public final class MenuActionCoordinator: NSObject {
 		}
 		insertion += nicknames.joined(separator: ", ")
 		insertion += Preferences.Input.tabCompletionSuffix.storedValue ?? ""
+		/* Through the editing pair, so the bar resizes, the placeholder hides,
+		 the typing state is sent and the insertion is undoable. */
+		guard textView.shouldChangeText(in: selectedRange, replacementString: insertion) else { return }
 		textView.replaceCharacters(in: selectedRange, with: insertion)
 		textView.resetFontColor(in: selectedRange)
+		textView.didChangeText()
 		textView.focus()
 	}
 
@@ -556,7 +552,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	public func navigateToTreeItem(withIdentifier identifier: String) {
 		guard identifier.count == 36,
-		      let item = AppController.shared.world.findItem(withId: identifier)
+		      let item = world?.findItem(withId: identifier)
 		else { return }
 		navigateToTreeItem(item)
 	}
@@ -566,10 +562,10 @@ public final class MenuActionCoordinator: NSObject {
 	}
 
 	public func populateNavigationChannelList() {
-		guard let menu = menuController?.mainMenuNavigationChannelListMenu else { return }
+		guard let menu = menuController?.mainMenuNavigationChannelListMenu, let world else { return }
 		menu.removeAllItems()
 		var channelCount = 0
-		for client in AppController.shared.world.clientList {
+		for client in world.clientList {
 			let submenu = NSMenu()
 			let clientItem = NSMenuItem()
 			clientItem.title = client.name
@@ -584,7 +580,7 @@ public final class MenuActionCoordinator: NSObject {
 				if channelCount < 10 {
 					item.keyEquivalentModifierMask = .command
 				}
-				item.textualUserInfo = AppController.shared.world.pasteboardString(for: channel)
+				item.textualUserInfo = world.pasteboardString(for: channel)
 				submenu.addItem(item)
 				channelCount += 1
 			}
@@ -594,7 +590,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	@objc public func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
 		guard let pasteboardString = sender.textualUserInfo,
-		      let item = AppController.shared.world.findItem(withPasteboardString: pasteboardString)
+		      let item = world?.findItem(withPasteboardString: pasteboardString)
 		else { return }
 		mainWindow.select(item)
 	}
@@ -602,7 +598,7 @@ public final class MenuActionCoordinator: NSObject {
 	public func performNavigationAction(_ sender: Any?) {
 		guard selectedClient != nil,
 		      let menuItem = sender as? NSMenuItem,
-		      let action = Self.navigationAction(for: menuItem.command?.rawValue ?? menuItem.tag)
+		      let action = Self.navigationAction(for: menuItem.command)
 		else { return }
 		perform(action)
 	}
@@ -610,21 +606,21 @@ public final class MenuActionCoordinator: NSObject {
 	/// The menu items used to be dispatched by selector string onto the main
 	/// window, whose handlers are declared `(NSEvent)` and were handed an
 	/// `NSMenuItem`. They are called directly now, with no event.
-	static func navigationAction(for tag: Int) -> MenuNavigationAction? {
-		switch tag {
-		case MenuNavigationTag.nextServer: .nextServer
-		case MenuNavigationTag.previousServer: .previousServer
-		case MenuNavigationTag.nextActiveServer: .nextActiveServer
-		case MenuNavigationTag.previousActiveServer: .previousActiveServer
-		case MenuNavigationTag.nextChannel: .nextChannel
-		case MenuNavigationTag.previousChannel: .previousChannel
-		case MenuNavigationTag.nextActiveChannel: .nextActiveChannel
-		case MenuNavigationTag.previousActiveChannel: .previousActiveChannel
-		case MenuNavigationTag.nextUnreadChannel: .nextUnreadChannel
-		case MenuNavigationTag.previousUnreadChannel: .previousUnreadChannel
-		case MenuNavigationTag.moveBackward: .moveBackward
-		case MenuNavigationTag.moveForward: .moveForward
-		case MenuNavigationTag.previousSelection: .previousSelection
+	static func navigationAction(for command: MenuCommand?) -> MenuNavigationAction? {
+		switch command {
+		case .nextServer: .nextServer
+		case .previousServer: .previousServer
+		case .nextActiveServer: .nextActiveServer
+		case .previousActiveServer: .previousActiveServer
+		case .nextChannel: .nextChannel
+		case .previousChannel: .previousChannel
+		case .nextActiveChannel: .nextActiveChannel
+		case .previousActiveChannel: .previousActiveChannel
+		case .nextUnreadChannel: .nextUnreadChannel
+		case .previousUnreadChannel: .previousUnreadChannel
+		case .moveBackward: .moveBackward
+		case .moveForward: .moveForward
+		case .previousSelection: .previousSelection
 		default: nil
 		}
 	}
@@ -647,13 +643,13 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
-	public func moveHighlightOrScrollback(forTag tag: Int) {
-		guard let controller = selectedChannel?.logController ?? selectedClient?.logController else { return }
-		switch tag {
-		case MenuNavigationTag.nextHighlight: controller.nextHighlight()
-		case MenuNavigationTag.previousHighlight: controller.previousHighlight()
-		case MenuNavigationTag.jumpToCurrentSession: controller.jumpToCurrentSession()
-		case MenuNavigationTag.jumpToPresent: controller.jumpToPresent()
+	public func moveHighlightOrScrollback(for command: MenuCommand?) {
+		guard let controller = selectedViewController else { return }
+		switch command {
+		case .nextHighlight: controller.nextHighlight()
+		case .previousHighlight: controller.previousHighlight()
+		case .jumpToCurrentSession: controller.jumpToCurrentSession()
+		case .jumpToPresent: controller.jumpToPresent()
 		default: break
 		}
 	}

@@ -48,10 +48,9 @@ enum IRCClientChannelStoragePolicy {
 public extension IRCClient {
 	@MainActor
 	func selectFirstChannelInChannelList() {
-		guard let firstChannel = channelList.first,
-		      let treeItem = (firstChannel as AnyObject) as? IRCTreeItem
-		else { return }
-		output?.selectItem(treeItem)
+		guard let firstChannel = channelList.first else { return }
+
+		output?.selectItem(firstChannel)
 	}
 
 	func add(_ channel: IRCChannel) {
@@ -61,12 +60,6 @@ public extension IRCClient {
 			existingKinds: channelListPrivate.map(\.isChannel)
 		)
 		channelListPrivate.insert(channel, at: index)
-		updateStoredChannelList()
-	}
-
-	func add(_ channel: IRCChannel, atPosition position: UInt) {
-		guard channelListPrivate.contains(channel) == false else { return }
-		channelListPrivate.insert(channel, at: Int(position))
 		updateStoredChannelList()
 	}
 

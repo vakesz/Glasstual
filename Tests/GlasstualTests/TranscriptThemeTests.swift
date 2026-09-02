@@ -37,6 +37,26 @@ struct TranscriptThemeTests {
 
 		#expect(theme.isValid == false)
 	}
+
+	/// The font picker used to offer 6...72 while only 9...36 could be applied,
+	/// so the sizes outside it dismissed the sheet and changed nothing.
+	@Test("The offered font sizes are exactly the ones a theme accepts")
+	func fontSizeRangeMatchesValidation() {
+		var theme = TranscriptTheme.lines
+
+		for size in [TranscriptTheme.fontSizeRange.lowerBound, TranscriptTheme.fontSizeRange.upperBound] {
+			theme.fontSize = size
+			#expect(theme.isValid)
+		}
+
+		for size in [
+			TranscriptTheme.fontSizeRange.lowerBound - 1,
+			TranscriptTheme.fontSizeRange.upperBound + 1,
+		] {
+			theme.fontSize = size
+			#expect(theme.isValid == false)
+		}
+	}
 }
 
 @MainActor
@@ -47,7 +67,7 @@ struct TranscriptThemeControllerTests {
 		let previous = Preferences.Theme.transcriptTheme.value
 		defer {
 			Preferences.Theme.transcriptTheme.value = previous
-			ThemeController().load()
+			ThemeController().reload()
 		}
 		let controller = ThemeController()
 		var theme = TranscriptTheme.bubbles
@@ -59,6 +79,19 @@ struct TranscriptThemeControllerTests {
 
 		#expect(controller.theme == theme)
 		#expect(try PropertyListDecoder().decode(TranscriptTheme.self, from: controller.exportTheme()) == theme)
+	}
+
+	/// `apply` used to drop an invalid theme without a word, so an out-of-range
+	/// edit looked like it had been accepted.
+	@Test("An invalid theme is refused rather than applied silently")
+	func invalidThemeIsReportedAsRefused() {
+		let controller = ThemeController()
+		let unchanged = controller.theme
+		var theme = TranscriptTheme.lines
+		theme.name = "   "
+
+		#expect(controller.apply(theme) == false)
+		#expect(controller.theme == unchanged)
 	}
 
 	@Test("Malformed files are refused")

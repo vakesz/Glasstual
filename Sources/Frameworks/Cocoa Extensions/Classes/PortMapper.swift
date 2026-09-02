@@ -45,7 +45,9 @@ import dnssd
 import Foundation
 
 public extension Notification.Name {
-	static let XRPortMapperDidChanged = Notification.Name("XRPortMapperDidChangedNotification")
+	/// Posted by the `XRPortMapper` whose mapping changed. Both observers are in
+	/// process, so the raw string crosses no boundary and is not persisted.
+	static let portMapperDidChange = Notification.Name("com.vakesz.glasstual.portMapperDidChange")
 }
 
 /// A NAT-PMP port mapping for one local port.
@@ -106,13 +108,16 @@ public final class XRPortMapper: NSObject {
 			Unmanaged.passUnretained(self).toOpaque()
 		)
 		guard status == kDNSServiceErr_NoError, let newService else {
-			error = Int32(kDNSServiceErr_Unknown)
+			/* Report what mDNSResponder said: "NAT-PMP unsupported" and "bad
+			 parameter" ask the caller for different things. */
+			error = status == kDNSServiceErr_NoError ? Int32(kDNSServiceErr_Unknown) : status
 			return false
 		}
 		service = newService
-		guard DNSServiceSetDispatchQueue(newService, .main) == kDNSServiceErr_NoError else {
+		let dispatchStatus = DNSServiceSetDispatchQueue(newService, .main)
+		guard dispatchStatus == kDNSServiceErr_NoError else {
 			disconnect()
-			error = Int32(kDNSServiceErr_Unknown)
+			error = dispatchStatus
 			return false
 		}
 		return true
@@ -146,7 +151,7 @@ public final class XRPortMapper: NSObject {
 		rawPublicAddress = address
 		publicAddress = Self.string(from: address)
 		publicPort = UInt16(bigEndian: port)
-		NotificationCenter.default.post(name: .XRPortMapperDidChanged, object: self)
+		NotificationCenter.default.post(name: .portMapperDidChange, object: self)
 	}
 
 	private func disconnect() {

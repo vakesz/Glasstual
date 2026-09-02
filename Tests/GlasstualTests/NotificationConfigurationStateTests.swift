@@ -13,7 +13,11 @@
 @testable import Glasstual
 import Testing
 
-private nonisolated let notificationEvents: [NotificationEvent] = [.highlight, .channelMessage, .kick]
+private nonisolated let notificationEvents: [NotificationEvent] = [ // nonisolated: let
+	.highlight,
+	.channelMessage,
+	.kick,
+]
 
 @Suite("Notification configuration checkbox state")
 @MainActor

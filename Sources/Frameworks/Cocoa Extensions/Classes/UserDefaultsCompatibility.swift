@@ -44,70 +44,14 @@ public extension UserDefaults {
 		} catch {
 			/* A colour that will not archive is a preference the user loses, not
 			 a programming error worth trapping on. */
-			Logging.frameworkSubsystem?.error(
+			Logging.frameworkSubsystem.error(
 				"Could not archive colour for key [\(key, privacy: .public)]: \(error.localizedDescription, privacy: .public)"
 			)
 		}
 	}
 
-	func setUnsignedInteger(_ value: UInt, forKey key: String) {
-		set(NSNumber(value: value), forKey: key)
-	}
-
-	func setShort(_ value: Int16, forKey key: String) {
-		set(NSNumber(value: value), forKey: key)
-	}
-
-	func setUnsignedShort(_ value: UInt16, forKey key: String) {
-		set(NSNumber(value: value), forKey: key)
-	}
-
-	func setLong(_ value: Int, forKey key: String) {
-		set(NSNumber(value: value), forKey: key)
-	}
-
-	func setUnsignedLong(_ value: UInt, forKey key: String) {
-		set(NSNumber(value: value), forKey: key)
-	}
-
-	func setLongLong(_ value: Int64, forKey key: String) {
-		set(NSNumber(value: value), forKey: key)
-	}
-
-	func setUnsignedLongLong(_ value: UInt64, forKey key: String) {
-		set(NSNumber(value: value), forKey: key)
-	}
-
 	func color(forKey key: String) -> NSColor? {
 		guard let data = object(forKey: key) as? Data else { return nil }
 		return try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data)
-	}
-
-	func unsignedInteger(forKey key: String) -> UInt {
-		(object(forKey: key) as? NSNumber)?.uintValue ?? 0
-	}
-
-	func short(forKey key: String) -> Int16 {
-		(object(forKey: key) as? NSNumber)?.int16Value ?? 0
-	}
-
-	func unsignedShort(forKey key: String) -> UInt16 {
-		(object(forKey: key) as? NSNumber)?.uint16Value ?? 0
-	}
-
-	func long(forKey key: String) -> Int {
-		(object(forKey: key) as? NSNumber)?.intValue ?? 0
-	}
-
-	func unsignedLong(forKey key: String) -> UInt {
-		(object(forKey: key) as? NSNumber)?.uintValue ?? 0
-	}
-
-	func longLong(forKey key: String) -> Int64 {
-		(object(forKey: key) as? NSNumber)?.int64Value ?? 0
-	}
-
-	func unsignedLongLong(forKey key: String) -> UInt64 {
-		(object(forKey: key) as? NSNumber)?.uint64Value ?? 0
 	}
 }

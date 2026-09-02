@@ -105,10 +105,14 @@ open class TreeItem: NSObject {
 		treeUnreadCount > 0
 	}
 
+	/// Clears the counts and redraws the badge that showed them. `setUnreadState`
+	/// asks for the redraw when it raises a count, so the reset does the same
+	/// rather than leaving a stale badge until something else redraws the row.
 	public func resetState() {
 		dockUnreadCount = 0
 		nicknameHighlightCount = 0
 		treeUnreadCount = 0
+		associatedClient?.output?.refreshMessageCount(for: self)
 	}
 
 	open func child(at _: Int) -> TreeItem? {

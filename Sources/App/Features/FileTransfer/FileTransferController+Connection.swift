@@ -50,8 +50,6 @@ extension FileTransferController {
 	}
 
 	public func open(withPath path: String?) {
-		dispatchPrecondition(condition: .onQueue(.main))
-
 		if self.path == nil {
 			self.path = path
 		}
@@ -64,6 +62,9 @@ extension FileTransferController {
 		if isSender {
 			openTransfer()
 		} else {
+			/* The resume offset is the size of the file this transfer writes
+			 into, so the destination has to be settled before it is read. */
+			claimDestinationFilename()
 			sendTransferResumeRequestToClient()
 		}
 	}
@@ -82,7 +83,7 @@ extension FileTransferController {
 		portMapping = mapper
 
 		portMapperNotifications.cancelAll()
-		portMapperNotifications.observe(.XRPortMapperDidChanged, object: mapper) { [weak self] notification in
+		portMapperNotifications.observe(.portMapperDidChange, object: mapper) { [weak self] notification in
 			self?.portMapperDidFinishWork(notification)
 		}
 		transferStatus = .mappingListeningPort
@@ -116,7 +117,6 @@ extension FileTransferController {
 	}
 
 	public func didReceiveResumeRequest(_ proposedPosition: UInt64) {
-		dispatchPrecondition(condition: .onQueue(.main))
 		guard proposedPosition > 0, currentFilesize >= proposedPosition else { return }
 
 		isResume = true
@@ -125,12 +125,13 @@ extension FileTransferController {
 	}
 
 	public func didReceiveResumeAccept(_ proposedPosition: UInt64) {
-		dispatchPrecondition(condition: .onQueue(.main))
-		NSObject.cancelPreviousPerformRequests(
-			withTarget: self,
-			selector: #selector(transferResumeRequestTimeout),
-			object: nil
-		)
+		/* An accept is only ever an answer to a resume this transfer asked for.
+		 One that arrives at any other moment would move the offset into a file
+		 nothing has claimed. */
+		guard transferStatus == .waitingForResumeAccept else { return }
+
+		resumeRequestTimeout?.cancel()
+		resumeRequestTimeout = nil
 
 		guard currentFilesize == proposedPosition else {
 			close(
@@ -146,7 +147,6 @@ extension FileTransferController {
 	}
 
 	public func didReceiveSendRequest(_ hostAddress: String, hostPort: UInt16) {
-		dispatchPrecondition(condition: .onQueue(.main))
 		self.hostAddress = hostAddress
 		self.hostPort = hostPort
 		processedFilesize = 0
@@ -270,8 +270,8 @@ extension FileTransferController {
 
 	/// The file this transfer reads from, or the one it writes into.
 	private func prepareTransferFile() -> String? {
-		if !isSender, !isResume {
-			setNonexistentFilename()
+		if !isSender {
+			claimDestinationFilename()
 		}
 
 		guard let filePath else {
@@ -282,11 +282,12 @@ extension FileTransferController {
 		return filePath
 	}
 
+	/** `XRPortMapper` reports on every mDNSResponder callback, and a NAT-PMP
+	 mapping is renewed for as long as it is held — so this fires again long
+	 after the first result moved the transfer on. Only the first one has
+	 anything to do. */
 	private func portMapperDidFinishWork(_: Notification?) {
-		guard transferStatus == .mappingListeningPort, let portMapping else {
-			assertionFailure("Port mapping completed in an invalid transfer state")
-			return
-		}
+		guard transferStatus == .mappingListeningPort, let portMapping else { return }
 
 		if portMapping.isMapped {
 			/* Bound to a local because the log message is an autoclosure, where
@@ -353,18 +354,24 @@ extension FileTransferController {
 	}
 
 	private func sendTransferResumeRequestToClient() {
-		dispatchPrecondition(condition: .onQueue(.main))
+		/* `currentFilesize` is the claimed destination's size, so it is above
+		 zero only when this transfer has already written part of the file. */
 		guard currentFilesize > 0, currentFilesize <= totalFilesize else {
-			transferResumeRequestTimeout()
+			openTransfer()
 			return
 		}
 
-		perform(
-			#selector(transferResumeRequestTimeout),
-			with: nil,
-			afterDelay: FileTransferLimits.resumeAcceptTimeout,
-			inModes: [.common]
-		)
+		resumeRequestTimeout?.cancel()
+		resumeRequestTimeout = Task { [weak self] in
+			do {
+				try await Task.sleep(for: .seconds(FileTransferLimits.resumeAcceptTimeout))
+			} catch {
+				return
+			}
+
+			self?.resumeRequestTimeout = nil
+			self?.openTransfer()
+		}
 		transferStatus = .waitingForResumeAccept
 		client?.sendFileResume(
 			peerNickname,
@@ -385,16 +392,12 @@ extension FileTransferController {
 		)
 	}
 
-	@objc private func transferResumeRequestTimeout() {
-		openTransfer()
-	}
-
 	private func resetProperties() {
 		if !isResume {
 			processedFilesize = 0
 		}
 		currentRecord = 0
 		errorMessageDescription = nil
-		speedRecordsPrivate.removeAll(keepingCapacity: true)
+		speedRecords.removeAll(keepingCapacity: true)
 	}
 }

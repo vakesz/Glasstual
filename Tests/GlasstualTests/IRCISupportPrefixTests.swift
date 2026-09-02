@@ -53,29 +53,6 @@ struct IRCISupportPrefixTests {
 	/// `(ab)👍` has matching UTF-16 lengths but produces two mode symbols
 	/// against a single prefix character, which used to trap on lookup.
 	@Test
-	func prefixTokenWithUnequalCharacterCountsIsRejected() {
-		#expect(ISupportTokenParser.userPrefixConfiguration(from: "(ab)👍") == nil)
-		#expect(ISupportTokenParser.userPrefixConfiguration(from: "(ov)@") == nil)
-	}
-
-	@Test
-	func wellFormedPrefixTokenIsAccepted() throws {
-		let configuration = try #require(ISupportTokenParser.userPrefixConfiguration(from: "(qaohv)~&@%+"))
-
-		#expect(configuration.modeSymbols == ["q", "a", "o", "h", "v"])
-		#expect(configuration.characters == ["~", "&", "@", "%", "+"])
-	}
-
-	@Test
-	func malformedPrefixTokenLeavesLookupsIntact() {
-		let supportInfo = supportInfo("PREFIX=(ab)👍")
-
-		#expect(supportInfo.userPrefix(forModeSymbol: "b") == nil)
-		#expect(supportInfo.userPrefix(forModeSymbol: "o") == "@")
-		#expect(supportInfo.modeSymbol(forUserPrefix: "👍") == nil)
-	}
-
-	@Test
 	func prefixLookupsStayPairedForEveryMode() {
 		let supportInfo = supportInfo("PREFIX=(qaohv)~&@%+")
 

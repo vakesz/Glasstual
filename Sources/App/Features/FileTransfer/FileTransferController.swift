@@ -43,9 +43,6 @@ import os
 
 enum FileTransferLimits {
 	static let speedRecordCount = 10
-	static let maximumSendQueueSize = 2
-	static let bufferSize = 64 * 1024
-	static let rateLimit: UInt64 = 10 * 1024 * 1024
 	static let connectTimeout: TimeInterval = 30
 	static let sendTimeout: TimeInterval = 30
 	static let resumeAcceptTimeout: TimeInterval = 10
@@ -81,7 +78,7 @@ public enum FileTransferStatus: UInt, Sendable {
 /// turns them into the status the dialog, IRCClient and the maintenance timer
 /// read -- all of which are main-actor too.
 @MainActor
-public final class FileTransferController: NSObject, ClientScoped {
+public final class FileTransferController: ClientScoped {
 	public internal(set) var client: IRCClient?
 	public internal(set) var clientId: String?
 
@@ -100,32 +97,35 @@ public final class FileTransferController: NSObject, ClientScoped {
 	public internal(set) var uniqueIdentifier = UUID().uuidString
 	public internal(set) var hostPort: UInt16 = 0
 
-	var speedRecordsPrivate: [NSNumber] = []
+	public internal(set) var speedRecords: [UInt64] = []
+
+	/** The destination this receiver has taken on disk, once it has one.
+
+	 A resume appends to whatever sits at this path, so the path has to be one
+	 this transfer created: an unrelated file that happens to carry the offered
+	 name is somebody else's data. `claimDestinationFilename()` is what takes the
+	 next free name and records the claim, and it only ever happens once. */
+	var claimedFilePath: String?
 	var portMapping: XRPortMapper?
 	var transfer: DCCTransfer?
 	var transferEvents: Task<Void, Never>?
+	/// Gives up on a `DCC RESUME` the peer never answered and starts over.
+	var resumeRequestTimeout: Task<Void, Never>?
 	var transferProgressHandler: NSObjectProtocol?
 	var lifecycleNotifications = NotificationSubscriptions()
 	var portMapperNotifications = NotificationSubscriptions()
 
 	public internal(set) var transferStatus: FileTransferStatus = .stopped {
 		didSet {
-			dispatchPrecondition(condition: .onQueue(.main))
 			if oldValue != transferStatus {
 				reloadStatusInformation()
 			}
 		}
 	}
 
-	@available(*, unavailable)
-	override public init() {
-		fatalError("Use receiver(for:...) or sender(for:...)")
-	}
-
 	private init(client: IRCClient) {
 		self.client = client
 		clientId = client.uniqueIdentifier
-		super.init()
 		prepareInitialState()
 	}
 
@@ -183,7 +183,6 @@ public final class FileTransferController: NSObject, ClientScoped {
 	}
 
 	private func prepareInitialState() {
-		dispatchPrecondition(condition: .onQueue(.main))
 		lifecycleNotifications.observe(.IRCClientDidDisconnect, object: client) { [weak self] notification in
 			self?.clientDisconnected(notification)
 		}

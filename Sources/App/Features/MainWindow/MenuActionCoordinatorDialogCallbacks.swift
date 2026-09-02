@@ -62,7 +62,7 @@ public extension MenuActionCoordinator {
 	func serverPropertiesDidAccept(_ sender: ServerPropertiesSheet, config: IRCClientConfig) {
 		guard let world else { return }
 		guard let client = sender.client else {
-			let client = world.createClient(with: config, reload: true)
+			let client = world.createClient(with: config)
 			mainWindow.expandClient(client)
 			world.save()
 			return
@@ -99,9 +99,5 @@ public extension MenuActionCoordinator {
 	func serverNicknameDidAccept(_ sender: ServerChangeNicknameSheet, nickname: String) {
 		guard let client = sender.client, client.isConnected else { return }
 		client.changeNickname(nickname)
-	}
-
-	func dialogDidClose(_ sender: Any) {
-		_ = sender
 	}
 }

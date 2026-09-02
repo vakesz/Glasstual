@@ -45,6 +45,35 @@ struct ReachabilityTests {
 		#expect(currentlyReachable)
 	}
 
+	/** The notifier is stopped on sleep and started again on wake, and the seed
+	 is per object lifetime rather than per start: `startNotifier()` resetting
+	 `receivedInitialPath` made every restart discard its first update, so a
+	 connectivity change across the sleep was never reported. The flags the
+	 notifier carries across that restart are exactly the two below, so the
+	 sequence is stated through the evaluator it hands them to. */
+	@Test("A change after the seed is reported")
+	func changeAfterSeedIsReported() {
+		var currentlyReachable = false
+		var receivedInitialPath = false
+
+		_ = Reachability.evaluatePathChange(
+			reachable: true,
+			currentlyReachable: &currentlyReachable,
+			receivedInitialPath: &receivedInitialPath
+		)
+
+		#expect(receivedInitialPath)
+
+		let event = Reachability.evaluatePathChange(
+			reachable: false,
+			currentlyReachable: &currentlyReachable,
+			receivedInitialPath: &receivedInitialPath
+		)
+
+		#expect(event == .becameUnreachable)
+		#expect(currentlyReachable == false)
+	}
+
 	@Test("Losing and regaining the path reports one event each way")
 	func reachabilityTransitionsEmitExpectedEvents() {
 		var currentlyReachable = true

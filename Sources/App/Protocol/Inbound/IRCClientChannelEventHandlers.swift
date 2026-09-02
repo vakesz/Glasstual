@@ -112,11 +112,7 @@ public extension IRCClient {
 			)
 		}
 		if !message.isPrintOnlyMessage {
-			guard let item = (channel as AnyObject) as? IRCTreeItem else {
-				assertionFailure("IRCChannel must bridge to IRCTreeItem")
-				return
-			}
-			output?.updateTitle(for: item)
+			output?.updateTitle(for: channel)
 		}
 	}
 
@@ -207,12 +203,12 @@ public extension IRCClient {
 		guard isCapabilityEnabled(.changeHost) else { return }
 		guard message.params.count == 2, let nickname = message.senderNickname else { return }
 		let username = message.params[0]
-		guard username.isHostmaskUsername(on: self) else {
+		guard username.isHostmaskUsername else {
 			inboundEventLogger.error("CHGHOST contains an improperly formatted username")
 			return
 		}
 		let address = message.params[1]
-		guard address.isHostmaskAddress(on: self) else {
+		guard address.isHostmaskAddress else {
 			inboundEventLogger.error("CHGHOST contains an improperly formatted address")
 			return
 		}

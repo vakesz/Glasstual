@@ -132,7 +132,7 @@ public extension KeyedDecodingContainer {
 		aliases: [Key] = []
 	) -> Value? {
 		for candidate in [key] + aliases {
-			if let value = try? decodeIfPresent(type, forKey: candidate), let value = value as Value? {
+			if let value = try? decodeIfPresent(type, forKey: candidate) {
 				return value
 			}
 		}

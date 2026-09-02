@@ -19,7 +19,6 @@ struct NicknameColorContent: Equatable, Sendable {
 	let useDefaultColorAccessibilityHint: String
 	let saveButtonTitle: String
 	let cancelButtonTitle: String
-	let windowTitle: String
 
 	static var current: Self {
 		Self(
@@ -28,8 +27,7 @@ struct NicknameColorContent: Equatable, Sendable {
 			useDefaultColorTitle: NicknameColorStrings.useDefaultColorTitle,
 			useDefaultColorAccessibilityHint: NicknameColorStrings.useDefaultColorAccessibilityHint,
 			saveButtonTitle: PromptStrings.Action.save,
-			cancelButtonTitle: PromptStrings.Action.cancel,
-			windowTitle: NicknameColorStrings.windowTitle
+			cancelButtonTitle: PromptStrings.Action.cancel
 		)
 	}
 }

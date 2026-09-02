@@ -107,9 +107,4 @@ public extension IRCClient {
 
 		return world.createPrivateMessage(name, on: self, as: type)
 	}
-
-	internal func findChannelOrCreateFromObjectiveC(_ name: String, asType rawValue: UInt) -> IRCChannel? {
-		guard let type = ChannelType(rawValue: rawValue) else { return nil }
-		return findChannelOrCreate(name, as: type)
-	}
 }

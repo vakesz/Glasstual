@@ -106,9 +106,7 @@ struct TranscriptProjectionStateTests {
 		#expect(LogViewBufferPolicy(preference: 0) == LogViewBufferPolicy(
 			preference: UInt.max
 		))
-		#expect(LogViewBufferPolicy(preference: 0).softLimit == 200)
 		#expect(LogViewBufferPolicy(preference: 0).hardLimit == 1000)
-		#expect(LogViewBufferPolicy(preference: 450).softLimit == 450)
 		#expect(LogViewBufferPolicy(preference: 450).hardLimit == 450)
 	}
 }

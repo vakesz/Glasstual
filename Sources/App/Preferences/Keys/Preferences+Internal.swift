@@ -59,12 +59,6 @@ public nonisolated extension Preferences { // nonisolated: value
 			traits: [.unregistered, .excludedFromExport]
 		)
 
-		public static let pluginApprovals = UntypedPreferenceKey(
-			"Plugin Approvals",
-			default: .emptyDictionary,
-			traits: .excludedFromExport
-		)
-
 		/// Which pane the preferences window reopens on. Restored state of one
 		/// window, so it is not part of the catalogue.
 		public static let selectedPreferencePane = PreferenceKey(
@@ -91,7 +85,7 @@ public nonisolated extension Preferences { // nonisolated: value
 		)
 
 		static let all: [any AnyPreferenceKey] = [
-			dictionaryVersion, runCount, runTime, pluginApprovals, selectedPreferencePane,
+			dictionaryVersion, runCount, runTime, selectedPreferencePane,
 			includeAdvancedEncodings, appSleepDisabled,
 		]
 	}
@@ -157,7 +151,7 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		static let all: [PreferenceKeyFamily] = [
 			windowFrames, themeSettings, alertSuppression, mainWindowState,
-			Preferences.Notifications.family, Preferences.Input.textFieldFamily,
+			Preferences.Notifications.family,
 		]
 	}
 }

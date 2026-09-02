@@ -51,10 +51,6 @@ public final class ServerHighlightListSheet: MainWindowSheetSession, ClientScope
 		model.addEntries([newEntry])
 	}
 
-	public func addEntries(_ newEntries: [HighlightLogEntry]) {
-		model.addEntries(newEntries)
-	}
-
 	private func clearHighlights() {
 		model.clear()
 		client.clearCachedHighlights()

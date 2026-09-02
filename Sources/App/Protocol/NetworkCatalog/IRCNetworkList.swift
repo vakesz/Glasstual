@@ -44,7 +44,7 @@ public enum IRCNetworkRegistration: UInt, Sendable {
 	case required = 2
 }
 
-public final nonisolated class NetworkList: NSObject { // nonisolated: value
+public final nonisolated class NetworkList: NSObject { // nonisolated: immutable
 	private static let popularNetworkNames = [
 		"Libera.Chat",
 		"HybridIRC",
@@ -135,7 +135,7 @@ public final nonisolated class NetworkList: NSObject { // nonisolated: value
 	}
 }
 
-public final nonisolated class Network: NSObject { // nonisolated: value
+public final nonisolated class Network: NSObject { // nonisolated: immutable
 	public let networkName: String
 	public let networkDescription: String
 	public let serverAddress: String

@@ -51,7 +51,9 @@ import Network
 /// the connection and `IRC_Connection_Host.…` on the other, and the decode
 /// fails.
 @objc(RCMSecureConnectionInformation)
-public final nonisolated class SecureConnectionInformation: NSObject, NSSecureCoding, Sendable { // nonisolated: value
+public final nonisolated class SecureConnectionInformation: // nonisolated: immutable
+	NSObject, NSSecureCoding, Sendable
+{
 	/// The name the certificate chain was evaluated against.
 	public let policyName: String?
 

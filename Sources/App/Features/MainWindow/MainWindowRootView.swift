@@ -6,8 +6,14 @@
 import AppKit
 import CocoaExtensions
 import Observation
+import os
 import SwiftUI
 import UniformTypeIdentifiers
+
+private let mainWindowRootViewLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "MainWindowRootView"
+)
 
 @MainActor
 @Observable
@@ -22,6 +28,10 @@ final class MainWindowPresentationModel {
 	var isExportingPreferencesArchive = false
 	var preferencesArchiveDocument: PreferencesPropertyListDocument?
 	var inputPrompt: InputPromptPresentation?
+	/** Mirrors the toolbar search field's focus. The root view keeps it in step
+	 with its `@FocusState` in both directions, so setting it is what moves the
+	 keyboard into the field and clicking away is what clears it. */
+	var isSearchFieldFocused = false
 	private(set) var sheetStack: [MainWindowSheetPresentation] = []
 
 	@ObservationIgnored weak var window: MainWindow?
@@ -40,18 +50,10 @@ final class MainWindowPresentationModel {
 		window?.menuController.addChannel(nil)
 	}
 
-	var addServerTitle: String {
-		window?.menuController.mainWindowSegmentedControllerCellMenu.item(for: .segmentedAddServer)?.title
-			?? MainWindowStrings.InputBar.addServerOrChannel
-	}
-
-	var addChannelTitle: String {
-		window?.menuController.mainWindowSegmentedControllerCellMenu.item(for: .segmentedAddChannel)?.title
-			?? MainWindowStrings.InputBar.addServerOrChannel
-	}
-
-	func searchChannels() {
-		window?.menuController.showChannelSpotlightWindow(nil)
+	/// Puts the keyboard in the sidebar filter field, which now lives in the
+	/// window toolbar. Channel Spotlight has a command of its own.
+	func focusSearchField() {
+		isSearchFieldFocused = true
 	}
 
 	func markAllAsRead() {
@@ -85,8 +87,12 @@ final class MainWindowPresentationModel {
 
 	func completeTransferFileSelection(_ result: Result<[URL], Error>) {
 		defer { transferFileSelection = nil }
-		guard case let .success(urls) = result else { return }
-		transferFileSelection?(urls)
+		switch result {
+		case let .success(urls):
+			transferFileSelection?(urls)
+		case let .failure(error):
+			mainWindowRootViewLogger.error("Choosing files to transfer failed: \(error)")
+		}
 	}
 
 	func requestPreferencesImport() {
@@ -107,14 +113,40 @@ final class MainWindowPresentationModel {
 	}
 
 	func completePreferencesImport(_ result: Result<URL, Error>) {
-		guard case let .success(url) = result else { return }
+		guard case let .success(url) = result else {
+			if case let .failure(error) = result {
+				mainWindowRootViewLogger.error("Choosing a preferences archive failed: \(error)")
+			}
+			return
+		}
 		let accessWasGranted = url.startAccessingSecurityScopedResource()
 		defer {
 			if accessWasGranted {
 				url.stopAccessingSecurityScopedResource()
 			}
 		}
-		PreferencesImportExport.importPostflight(url)
+
+		do {
+			try PreferencesImportExport.importPostflight(url)
+		} catch {
+			presentPreferencesImportFailure(error)
+		}
+	}
+
+	/// An import that stops has to say so: the user chose a file and would
+	/// otherwise see the picker close with nothing changed.
+	private func presentPreferencesImportFailure(_ error: any Error) {
+		Task { @MainActor in
+			_ = await Alerts.run(
+				AlertRequest(
+					title: PromptStrings.ConfigurationTransfer.importFailureTitle,
+					body: error.localizedDescription,
+					defaultButton: PromptStrings.Action.confirmation,
+					style: .warning
+				),
+				on: .anyVisibleWindow
+			)
+		}
 	}
 
 	func requestPreferencesExport() {
@@ -209,11 +241,12 @@ struct MainWindowRootView: View {
 	@Bindable var model: MainWindowPresentationModel
 	@Bindable var loadingScreen: MainWindowLoadingScreen
 
-	let serverList: ServerList
+	@Bindable var serverList: ServerList
 	let memberList: MemberList
 	let inputContentView: MainWindowTextViewContentView
 
 	@State private var inputBarHeight: CGFloat = 0
+	@FocusState private var isSearchFieldFocused: Bool
 
 	var body: some View {
 		ZStack {
@@ -240,6 +273,15 @@ struct MainWindowRootView: View {
 							)
 					}
 			}
+			/* On the split view rather than on the sidebar: `.sidebar` placement
+			 draws the field above the server list, and the window's toolbar is
+			 where the user looks for it. */
+			.searchable(
+				text: $serverList.filterText,
+				placement: .toolbar,
+				prompt: Text(MainWindowStrings.InputBar.searchChannels)
+			)
+			.searchFocused($isSearchFieldFocused)
 			.disabled(loadingScreen.viewIsVisible)
 			.opacity(loadingScreen.viewIsVisible ? 0 : 1)
 
@@ -260,6 +302,15 @@ struct MainWindowRootView: View {
 			}
 		}
 		.presentedWindowToolbarStyle(.unified)
+		/* Two directions: the menu command sets the model's flag to move the
+		 keyboard into the field, and the field reports back so the flag still
+		 reads true when the user focused it themselves. */
+		.onChange(of: model.isSearchFieldFocused) { _, isFocused in
+			isSearchFieldFocused = isFocused
+		}
+		.onChange(of: isSearchFieldFocused) { _, isFocused in
+			model.isSearchFieldFocused = isFocused
+		}
 		.fileImporter(
 			isPresented: $model.isChoosingTransferFiles,
 			allowedContentTypes: [.item],
@@ -340,10 +391,10 @@ struct MainWindowRootView: View {
 	private var sidebarFooter: some View {
 		HStack(spacing: 6) {
 			Menu {
-				Button(model.addServerTitle, systemImage: "server.rack") {
+				Button(MenuStrings.Server.addServer, systemImage: "server.rack") {
 					model.addServer()
 				}
-				Button(model.addChannelTitle, systemImage: "number") {
+				Button(MenuStrings.Server.addChannel, systemImage: "number") {
 					model.addChannel()
 				}
 			} label: {
@@ -449,6 +500,10 @@ private struct MainWindowSheetHost: View {
 
 	var body: some View {
 		presentation.content
+			/* Every hosted sheet is sized by its own content: `.fitted` asks for
+			 the content's ideal size and leaves the user free to drag the sheet
+			 anywhere between the content's minimum and maximum. */
+			.presentationSizing(.fitted)
 			.sheet(isPresented: nestedSheetIsPresented) {
 				if let nested = model.sheet(at: index + 1) {
 					MainWindowSheetHost(model: model, presentation: nested, index: index + 1)

@@ -41,7 +41,7 @@ private nonisolated enum LogLineArchiveKey { // nonisolated: value
  and encoding order are the ones those archives were written with.
  */
 @objc(TVCLogLine)
-public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendable { // nonisolated: value
+public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendable { // nonisolated: immutable
 	/// The values one archive carried, before defaults are applied.
 	struct DecodedValues {
 		var receivedAt = Date()

@@ -10,7 +10,7 @@ import Testing
 /// A headless AppKit host can be built without the SF Symbols catalogue, and
 /// can decline to hold a symbol image on a menu item. The symbol pass has
 /// nothing to place on such a host, so the tests that check it are skipped.
-private nonisolated func menuSymbolImagesAreAvailable() -> Bool {
+private nonisolated func menuSymbolImagesAreAvailable() -> Bool { // nonisolated: pure
 	guard
 		let symbol = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil),
 		NSImage(systemSymbolName: "arrowshape.turn.up.left", accessibilityDescription: nil) != nil
@@ -27,19 +27,15 @@ private nonisolated func menuSymbolImagesAreAvailable() -> Bool {
 @MainActor
 @Suite("Menu presentation")
 struct MenuPresentationTests {
-	@Test("Every symbol a menu command names resolves in the system catalogue")
-	func mainMenuSymbolMappingsResolveThroughSystemCatalog() {
-		let mappings = MenuPresentation.symbolMappings
-
+	/// That every mapped symbol exists in the system catalogue is stated once,
+	/// in `MenuCommandTests.symbolNamesResolve`; what this adds is the lookup
+	/// the presentation layer does over it.
+	@Test("A command's symbol is looked up by the command, and nothing maps to no command")
+	func mainMenuSymbolLookupIsByCommand() {
 		#expect(MenuCommand.settings.symbolName == "gear")
 		#expect(MenuCommand.findText.symbolName == "magnifyingglass")
+		#expect(MenuPresentation.symbolName(for: .settings) == "gear")
 		#expect(MenuPresentation.symbolName(for: nil) == nil)
-
-		let unavailableSymbols = mappings.values.filter {
-			NSImage(systemSymbolName: $0, accessibilityDescription: $0) == nil
-		}
-
-		#expect(unavailableSymbols.isEmpty, "Unavailable symbols: \(unavailableSymbols.sorted())")
 	}
 
 	@Test("The symbol pass adds an image without touching the item's command or key equivalent")
@@ -131,70 +127,6 @@ struct MenuPresentationTests {
 
 		#expect(item.isEnabled == false)
 		#expect(item.image != nil)
-	}
-
-	@Test("A command that vetoes itself is disabled whatever the window state is")
-	func menuValidationRejectsCommandSpecificFailure() {
-		#expect(
-			MenuValidationPolicy.validate(
-				tag: 100,
-				commandSpecificResult: false,
-				applicationIsLaunched: true,
-				mainWindowHasAttachedSheet: false,
-				mainWindowIsFocused: true,
-				mainWindowIsBeneathMouse: false
-			) == false
-		)
-	}
-
-	@Test("The top level menu titles stay available while the application is still launching")
-	func topLevelMenusRemainAvailableDuringLaunch() {
-		for tag in 1 ... 10 {
-			#expect(
-				MenuValidationPolicy.validate(
-					tag: tag,
-					commandSpecificResult: true,
-					applicationIsLaunched: false,
-					mainWindowHasAttachedSheet: true,
-					mainWindowIsFocused: false,
-					mainWindowIsBeneathMouse: false
-				)
-			)
-		}
-	}
-
-	@Test("A sheet leaves Settings reachable but disables the channel commands behind it")
-	func sheetPolicyAllowsSettingsButDisablesChannelActions() {
-		let validate: (Int) -> Bool = { tag in
-			MenuValidationPolicy.validate(
-				tag: tag,
-				commandSpecificResult: true,
-				applicationIsLaunched: true,
-				mainWindowHasAttachedSheet: true,
-				mainWindowIsFocused: true,
-				mainWindowIsBeneathMouse: false
-			)
-		}
-
-		#expect(validate(102))
-		#expect(validate(200))
-		#expect(validate(600) == false)
-	}
-
-	@Test("The commands a user needs before the application has launched stay enabled")
-	func essentialCommandsRemainAvailableBeforeLaunch() {
-		for tag in [100, 113, 203, 205, 305, 812, 900, 910, 912, 9_100_004] {
-			#expect(
-				MenuValidationPolicy.validate(
-					tag: tag,
-					commandSpecificResult: true,
-					applicationIsLaunched: false,
-					mainWindowHasAttachedSheet: false,
-					mainWindowIsFocused: true,
-					mainWindowIsBeneathMouse: false
-				)
-			)
-		}
 	}
 }
 

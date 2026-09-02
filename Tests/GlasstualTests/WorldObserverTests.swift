@@ -139,7 +139,7 @@ private struct WorldFixture {
 	func makeClient(named name: String) -> IRCClient {
 		var config = ClientConfig()
 		config.connectionName = name
-		return world.createClient(with: config, reload: true)
+		return world.createClient(with: config)
 	}
 }
 
@@ -248,6 +248,50 @@ struct WorldObserverTests {
 			.removedChannel("#one", on: client.uniqueIdentifier)
 		))
 		#expect(client.channelList.isEmpty)
+	}
+
+	@Test("A channel destroyed without a redraw still leaves its client")
+	func removingAChannelWithoutReloadStillDropsItFromTheClient() {
+		let context = WorldFixture()
+		let client = context.makeClient(named: "First")
+		let channel = context.world.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
+
+		context.world.destroyChannel(channel, reload: false, part: false)
+
+		#expect(client.channelList.isEmpty)
+		#expect(context.observer.events.contains(
+			.removedChannel("#one", on: client.uniqueIdentifier)
+		) == false)
+	}
+
+	@Test("A move past the end reports the position the client landed at")
+	func movingAClientPastTheEndReportsTheClampedIndex() {
+		let context = WorldFixture()
+		let first = context.makeClient(named: "First")
+		let second = context.makeClient(named: "Second")
+
+		context.world.moveClient(from: 0, to: 9)
+
+		#expect(context.observer.events.contains(.movedClient(0, 1)))
+		#expect(context.observer.events.contains(.movedClient(0, 9)) == false)
+		#expect(context.world.clientList.map(\.uniqueIdentifier) == [
+			second.uniqueIdentifier, first.uniqueIdentifier,
+		])
+	}
+
+	@Test("A channel move past the end reports the position the channel landed at")
+	func movingAChannelPastTheEndReportsTheClampedIndex() {
+		let context = WorldFixture()
+		let client = context.makeClient(named: "First")
+		_ = context.world.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
+		_ = context.world.createChannel(with: ChannelConfig.seed(withName: "#two"), on: client)
+
+		context.world.moveChannel(on: client, from: 0, to: 9)
+
+		#expect(context.observer.events.contains(
+			.movedChannel(on: client.uniqueIdentifier, from: 0, to: 1)
+		))
+		#expect(client.channelList.map(\.name) == ["#two", "#one"])
 	}
 
 	@Test("Reordering channels publishes the move and the new order")

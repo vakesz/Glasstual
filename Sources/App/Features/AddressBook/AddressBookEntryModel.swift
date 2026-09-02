@@ -68,11 +68,8 @@ final class AddressBookEntryModel {
 
 	func validatedEntry() -> AddressBookEntry? {
 		let value = hostmask.firstToken
-		guard value.isEmpty == false else {
-			validationMessage = validationError(for: value)
-			return nil
-		}
-
+		/* An empty hostmask is neither a mask nor a nickname, so the validator
+		 already refuses it with a message of its own. */
 		if let error = validationError(for: value) {
 			validationMessage = error
 			return nil

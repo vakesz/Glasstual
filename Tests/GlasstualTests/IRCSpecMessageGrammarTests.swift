@@ -40,7 +40,7 @@ import Foundation
 import Testing
 
 /// One line and the command atoms it has to produce.
-nonisolated struct IRCSpecCommandCase: CustomTestStringConvertible {
+nonisolated struct IRCSpecCommandCase: CustomTestStringConvertible { // nonisolated: value
 	let line: String
 	let command: String
 	let numeric: UInt

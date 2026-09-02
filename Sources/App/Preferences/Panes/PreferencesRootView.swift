@@ -73,9 +73,16 @@ struct PreferencesRootView: View {
 			detail
 		}
 		.navigationSplitViewStyle(.balanced)
+		/* The Settings window takes its size from here and nowhere else. The
+		 infinite maxima are what make it resizable: with a minimum alone the
+		 content refuses to grow and the window has nothing to resize into. */
 		.frame(
 			minWidth: PreferencesLayout.minimumWindowSize.width,
-			minHeight: PreferencesLayout.minimumWindowSize.height
+			idealWidth: PreferencesLayout.windowSize.width,
+			maxWidth: .infinity,
+			minHeight: PreferencesLayout.minimumWindowSize.height,
+			idealHeight: PreferencesLayout.windowSize.height,
+			maxHeight: .infinity
 		)
 		.fileImporter(
 			isPresented: importIsPresented,
@@ -150,8 +157,16 @@ struct PreferencesRootView: View {
 
 	private var detail: some View {
 		VStack(spacing: 0) {
-			if subPages.count > 1 {
-				subPagePicker
+			if let section = model.currentSection {
+				/* Identified by its section, so that moving to another one
+				 rebuilds the picker rather than updating one whose tags still
+				 belong to the section being left. */
+				PreferencesSubPagePicker(
+					sectionTitle: section.title,
+					subPages: section.subPages,
+					selection: selectedSubPage
+				)
+				.id(section.identifier)
 			}
 			if let currentSubPage {
 				PreferencesSubPageView(model: model, subPage: currentSubPage)
@@ -165,15 +180,38 @@ struct PreferencesRootView: View {
 		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 		.navigationTitle(model.currentSection?.title ?? PreferencesStrings.accessibilityTitle)
 	}
+}
 
-	/** The picker keeps to the form's own width so no section can push the
-	 window wider; a section with more sub-pages than a segmented row holds
-	 lists them in a pop-up instead. */
-	private var subPagePicker: some View {
-		pickerContent
-			.frame(maxWidth: .infinity)
-			.padding(.horizontal, PreferencesLayout.contentInset)
-			.padding(.top, 14)
+/// When a section's sub-page picker can be drawn at all.
+enum PreferencesSubPagePickerPolicy {
+	/** A picker needs more than one segment to be worth drawing, and it needs a
+	 selection one of those segments carries as its tag: SwiftUI reports a
+	 selection with no matching tag as undefined and draws nothing sensible. */
+	static func drawsPicker(subPageIdentifiers: [String], selection: String) -> Bool {
+		subPageIdentifiers.count > 1 && subPageIdentifiers.contains(selection)
+	}
+}
+
+/** The segmented row that picks between one section's sub-pages.
+
+ It keeps to the form's own width so no section can push the window wider, and
+ a section with more sub-pages than a segmented row holds lists them in a
+ pop-up instead. */
+private struct PreferencesSubPagePicker: View {
+	let sectionTitle: String
+	let subPages: [PreferencesSubPage]
+	@Binding var selection: String
+
+	var body: some View {
+		if PreferencesSubPagePickerPolicy.drawsPicker(
+			subPageIdentifiers: subPages.map(\.identifier),
+			selection: selection
+		) {
+			pickerContent
+				.frame(maxWidth: .infinity)
+				.padding(.horizontal, PreferencesLayout.contentInset)
+				.padding(.top, 14)
+		}
 	}
 
 	/// Uses segments when they fit and automatically falls back to a menu.
@@ -189,7 +227,7 @@ struct PreferencesRootView: View {
 	}
 
 	private var picker: some View {
-		Picker(selection: selectedSubPage) {
+		Picker(selection: $selection) {
 			ForEach(subPages) { subPage in
 				Text(verbatim: subPage.title).tag(subPage.identifier)
 			}
@@ -197,7 +235,7 @@ struct PreferencesRootView: View {
 			EmptyView()
 		}
 		.labelsHidden()
-		.accessibilityLabel(Text(verbatim: model.currentSection?.title ?? ""))
+		.accessibilityLabel(Text(verbatim: sectionTitle))
 	}
 }
 

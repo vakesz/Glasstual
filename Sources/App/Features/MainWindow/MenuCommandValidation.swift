@@ -52,18 +52,6 @@ private enum MenuValidationConstants {
 
 @MainActor
 extension MenuActionCoordinator {
-	private var selectedViewController: LogController? {
-		if let controller = selectedChannel?.logController {
-			return controller
-		}
-
-		return selectedClient?.logController
-	}
-
-	private var selectedBackingView: LogView? {
-		selectedViewController?.backingView
-	}
-
 	public func validate(_ menuItem: NSMenuItem) -> Bool {
 		let appController: ApplicationController = AppController.shared
 		guard appController.applicationIsTerminating == false else { return false }
@@ -240,7 +228,7 @@ extension MenuActionCoordinator {
 			return validateMainWindowCommand(item)
 		case .mainWindow:
 			item.isHidden = mainWindow.isMainWindow
-			return mainWindow.isDisabled == false
+			return true
 		case .toggleMemberList:
 			item.isHidden = mainWindow.isMainWindow == false
 			item.title = MainWindowStrings.Menu.memberList(isVisible: mainWindow.isMemberListVisible)
@@ -275,8 +263,6 @@ extension MenuActionCoordinator {
 			return transcriptView.hasSelection
 		case .webDictionary:
 			return validateDictionaryLookup(item)
-		case .webCopy:
-			return selectedBackingView?.hasSelection == true
 		case .webPaste:
 			return validatePaste()
 		case .webQueryLogs:

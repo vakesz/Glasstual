@@ -64,16 +64,6 @@ public extension NSTableView {
 		return row >= 0 ? row : nil
 	}
 
-	func selectionIndexes(
-		forProposedSelection proposedSelection: IndexSet,
-		maximumCount: Int
-	) -> IndexSet {
-		precondition(maximumCount > 0)
-		guard proposedSelection.count > maximumCount else { return proposedSelection }
-		guard numberOfSelectedRows != maximumCount else { return selectedRowIndexes }
-		return IndexSet(proposedSelection.prefix(maximumCount))
-	}
-
 	func selectRowIndexes(_ indexes: IndexSet, byExtendingSelection extend: Bool, scrollingToSelection: Bool) {
 		selectRowIndexes(indexes, byExtendingSelection: extend)
 		if scrollingToSelection, let firstIndex = indexes.first {
@@ -87,23 +77,15 @@ public extension NSOutlineView {
 		selectedRowIndexes.compactMap { item(atRow: $0) }
 	}
 
-	func isGroupItem(_ item: Any) -> Bool {
-		level(forItem: item) == 0
-	}
-
 	var groupItems: [Any] {
 		(0 ..< numberOfRows).compactMap { row in
 			level(forRow: row) == 0 ? item(atRow: row) : nil
 		}
 	}
 
-	func items(inContainingGroupOf item: Any) -> [Any]? {
-		items(inGroup: item)
-	}
-
 	func items(inGroup candidate: Any) -> [Any]? {
 		let groupItem: Any
-		if isGroupItem(candidate) {
+		if level(forItem: candidate) == 0 {
 			groupItem = candidate
 		} else if let parent = parent(forItem: candidate) {
 			groupItem = parent

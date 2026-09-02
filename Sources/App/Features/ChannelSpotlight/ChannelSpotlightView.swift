@@ -127,7 +127,11 @@ private struct ChannelSpotlightRow: View {
 	let shortcut: String
 	let isSelected: Bool
 
-	@State private var revision = 0
+	/* The counts live on an `NSObject` the row cannot observe, so the two tasks
+	 below mirror them into state. Storing them is what redraws the row; giving
+	 the row a new identity would tear the observations down with it. */
+	@State private var highlightCount = 0
+	@State private var unreadCount = 0
 
 	private var channel: IRCChannel? {
 		result.channel
@@ -153,17 +157,18 @@ private struct ChannelSpotlightRow: View {
 		.frame(height: 54)
 		.background(isSelected ? Color.accentColor : .clear)
 		.foregroundStyle(isSelected ? Color.white : Color.primary)
-		.id(revision)
 		.task(id: channel?.uniqueIdentifier) {
 			guard let channel else { return }
-			for await _ in channel.publisher(for: \.nicknameHighlightCount, options: [.new]).bufferedValues {
-				revision &+= 1
+			highlightCount = Int(channel.nicknameHighlightCount)
+			for await count in channel.publisher(for: \.nicknameHighlightCount, options: [.new]).bufferedValues {
+				highlightCount = Int(count)
 			}
 		}
 		.task(id: channel?.uniqueIdentifier) {
 			guard let channel else { return }
-			for await _ in channel.publisher(for: \.treeUnreadCount, options: [.new]).bufferedValues {
-				revision &+= 1
+			unreadCount = Int(channel.treeUnreadCount)
+			for await count in channel.publisher(for: \.treeUnreadCount, options: [.new]).bufferedValues {
+				unreadCount = Int(count)
 			}
 		}
 	}
@@ -175,10 +180,10 @@ private struct ChannelSpotlightRow: View {
 	}
 
 	private var unreadDescription: String {
-		guard let channel else { return "" }
+		guard channel != nil else { return "" }
 		return ChannelSpotlightStrings.combined(
-			ChannelSpotlightStrings.highlights(Int(channel.nicknameHighlightCount)),
-			ChannelSpotlightStrings.unreadMessages(Int(channel.treeUnreadCount))
+			ChannelSpotlightStrings.highlights(highlightCount),
+			ChannelSpotlightStrings.unreadMessages(unreadCount)
 		)
 	}
 }

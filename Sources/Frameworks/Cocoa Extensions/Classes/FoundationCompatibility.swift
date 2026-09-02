@@ -33,17 +33,6 @@
 
 import AppKit
 import CoreFoundation
-import ObjectiveC
-
-/** An associated-object key is only an address: nothing ever reads or writes
- through it. A static string literal supplies one from the binary's constant
- data, which makes it stable, unique to this property and `Sendable` -- none of
- which a mutable global was. */
-private let archivedConstraintConstantName: StaticString = "com.vakesz.glasstual.archivedConstraintConstant"
-
-private var archivedConstraintConstantKey: UnsafeRawPointer {
-	UnsafeRawPointer(archivedConstraintConstantName.utf8Start)
-}
 
 /// `CharacterSet` is a `Sendable` value type, so these need no isolation
 /// annotation and no `NSCharacterSet` bridging at the point of use.
@@ -64,10 +53,6 @@ public extension CharacterSet {
 }
 
 public extension NSCoder {
-	func textual_decodeDictionary(forKey key: String) -> NSDictionary? {
-		decodeObject(of: NSDictionary.self, forKey: key)
-	}
-
 	func textual_decodeString(forKey key: String) -> NSString? {
 		decodeObject(of: NSString.self, forKey: key)
 	}
@@ -116,39 +101,5 @@ public extension Bundle {
 		for location in locations {
 			NSWorkspace.shared.open(location)
 		}
-	}
-}
-
-public extension NSLayoutConstraint {
-	private var textualArchivedConstantNumber: NSNumber? {
-		objc_getAssociatedObject(self, archivedConstraintConstantKey) as? NSNumber
-	}
-
-	var textualArchivedConstant: CGFloat {
-		get { textualArchivedConstantNumber.map { CGFloat(truncating: $0) } ?? 0 }
-		set {
-			objc_setAssociatedObject(
-				self,
-				archivedConstraintConstantKey,
-				NSNumber(value: Double(newValue)),
-				.OBJC_ASSOCIATION_COPY
-			)
-		}
-	}
-
-	func textual_archiveConstant() {
-		textualArchivedConstant = constant
-	}
-
-	func textual_restoreArchivedConstant() {
-		guard let archivedConstant = textualArchivedConstantNumber else {
-			return
-		}
-
-		constant = CGFloat(truncating: archivedConstant)
-	}
-
-	func textual_zeroOutConstant() {
-		constant = 0
 	}
 }

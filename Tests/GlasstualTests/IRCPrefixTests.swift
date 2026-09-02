@@ -54,43 +54,56 @@ struct IRCPrefixTests {
 		#expect(prefix.address == nil)
 	}
 
-	@Test("Copying a prefix and changing the copy leaves the original alone")
-	func copyingAValueDoesNotChangeTheOriginal() {
-		let source = Prefix(
-			nickname: "nick",
-			username: "user",
-			address: "host",
-			hostmask: "nick!user@host",
-			isServer: true
-		)
+	@Test("A user prefix parsed from the wire keeps every component")
+	func parsedUserPrefixKeepsEveryComponent() throws {
+		let message = try #require(Message(line: ":nick!user@host PRIVMSG #channel :hello"))
 
-		var changed = source
-		changed.nickname = "other"
-
-		#expect(source.nickname == "nick")
-		#expect(changed.nickname == "other")
-		#expect(changed.username == "user")
-		#expect(changed.address == "host")
-		#expect(changed.hostmask == "nick!user@host")
-		#expect(changed.isServer)
+		#expect(message.sender.nickname == "nick")
+		#expect(message.sender.username == "user")
+		#expect(message.sender.address == "host")
+		#expect(message.sender.hostmask == "nick!user@host")
+		#expect(message.sender.isServer == false)
 	}
 
+	@Test("A server prefix is marked as one")
+	func serverPrefixIsMarked() throws {
+		let message = try #require(Message(line: ":irc.example.net 001 me :Welcome"))
+
+		#expect(message.sender.isServer)
+		#expect(message.sender.nickname == "irc.example.net")
+		#expect(message.sender.username == nil)
+	}
+
+	/** `Prefix` used to be an immutable class with a mutable subclass, so two
+	 prefixes carrying the same hostmask were two objects. Equality is
+	 structural now, and every field takes part in it — including `isServer`,
+	 which is what keeps a server notice apart from a user of the same name. */
 	@Test("Equality and hashing take every field into account")
 	func equalityAndHashUseAllFields() {
-		let first = Prefix(
-			nickname: "nick",
-			username: "user",
-			address: "host",
-			hostmask: "nick!user@host"
+		let prefix = Prefix(nickname: "nick", username: "user", address: "host", hostmask: "nick!user@host")
+		let same = Prefix(nickname: "nick", username: "user", address: "host", hostmask: "nick!user@host")
+
+		#expect(prefix == same)
+		#expect(prefix.hashValue == same.hashValue)
+
+		#expect(
+			prefix != Prefix(
+				nickname: "nick",
+				username: "user",
+				address: "host",
+				hostmask: "nick!user@host",
+				isServer: true
+			)
 		)
-
-		var second = first
-
-		#expect(first == second)
-		#expect(first.hashValue == second.hashValue)
-
-		second.isServer = true
-
-		#expect(first != second)
+		#expect(
+			prefix != Prefix(nickname: "other", username: "user", address: "host", hostmask: "nick!user@host")
+		)
+		#expect(
+			prefix != Prefix(nickname: "nick", username: "other", address: "host", hostmask: "nick!user@host")
+		)
+		#expect(
+			prefix != Prefix(nickname: "nick", username: "user", address: "other", hostmask: "nick!user@host")
+		)
+		#expect(prefix != Prefix(nickname: "nick", username: "user", address: "host", hostmask: "other"))
 	}
 }

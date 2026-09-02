@@ -77,20 +77,6 @@ struct CommandArgumentsTests {
 		#expect(arguments.rest == "bye now")
 	}
 
-	/// The struct is a value: a dispatcher that pulls a token cannot disturb
-	/// the copy the next dispatcher is handed.
-	@Test
-	func copiesDoNotShareACursor() {
-		var arguments = CommandArguments("one two three")
-		var copy = arguments
-
-		_ = arguments.next()
-
-		#expect(arguments.rest == "two three")
-		#expect(copy.rest == "one two three")
-		#expect(copy.next() == "one")
-	}
-
 	@Test
 	func keepsReturningTheEmptyStringOnceExhausted() {
 		var arguments = CommandArguments("only")

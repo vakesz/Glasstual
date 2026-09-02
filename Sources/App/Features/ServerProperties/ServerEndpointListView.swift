@@ -88,6 +88,14 @@ struct ServerEndpointListView: View {
 			.padding(12)
 		}
 		.onExitCommand(perform: cancel)
+		.frame(
+			minWidth: 560,
+			idealWidth: 640,
+			maxWidth: .infinity,
+			minHeight: 360,
+			idealHeight: 440,
+			maxHeight: .infinity
+		)
 	}
 
 	private var columnHeader: some View {

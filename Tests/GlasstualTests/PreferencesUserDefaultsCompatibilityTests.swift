@@ -11,8 +11,8 @@ import Testing
 @MainActor
 @Suite("Textual preference storage", .serialized)
 struct PreferencesUserDefaultsCompatibilityTests {
-	@Test("The compatibility numeric setter announces the key it changed")
-	func compatibilityNumericSetterPostsPreferenceNotification() async {
+	@Test("A scalar write announces the key it changed")
+	func scalarWritePostsPreferenceNotification() async {
 		let defaults = TextualUserDefaults.container
 		let key = "PreferencesUserDefaultsCompatibilityTests.\(UUID().uuidString)"
 		let center = NotificationCenter.default
@@ -29,10 +29,10 @@ struct PreferencesUserDefaultsCompatibilityTests {
 			}
 			defer { center.removeObserver(token) }
 
-			defaults.setUnsignedInteger(42, forKey: key)
+			defaults.set(42, forKey: key)
 		}
 
-		#expect(defaults.unsignedInteger(forKey: key) == 42)
+		#expect(defaults.integer(forKey: key) == 42)
 	}
 
 	@Test("The scalar setters still write the defaults keys the stored schema uses")
@@ -51,7 +51,7 @@ struct PreferencesUserDefaultsCompatibilityTests {
 		Preferences.FileTransfers.portRangeStart.value = 51234
 
 		#expect(defaults.bool(forKey: soundKey))
-		#expect(defaults.unsignedShort(forKey: portKey) == 51234)
+		#expect(defaults.integer(forKey: portKey) == 51234)
 	}
 
 	@Test("A notification preference maps to the key the stored schema already holds")

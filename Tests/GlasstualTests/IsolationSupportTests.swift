@@ -45,16 +45,6 @@ struct IsolationSupportTests {
 		probe.expectOrder(["first", "second", "third"])
 		#expect(probe.observations.map(\.onMainActor) == [true, false, true])
 	}
-
-	@Test
-	func probeClearsItsHistory() async {
-		let probe = IsolationProbe()
-
-		await probe.record("stale")
-		probe.clear()
-
-		#expect(probe.labels.isEmpty)
-	}
 }
 
 private func currentIsolationIsMainActor(

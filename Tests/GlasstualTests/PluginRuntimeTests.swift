@@ -140,8 +140,10 @@ struct PluginRuntimeTests {
 		defer { plugin.unloadBundle() }
 
 		let primaryClass = try #require(plugin.primaryClass as? NSObject)
-		let preferenceChanged = NSSelectorFromString("preferenceChanged:")
-		#expect(primaryClass.responds(to: preferenceChanged))
+		/* The plugin is a runtime-loaded bundle, so its Swift type is invisible
+		 here and its selector is the only way to ask it to reload. */
+		let rebuildSnapshot = NSSelectorFromString("rebuildConversionSnapshot")
+		#expect(primaryClass.responds(to: rebuildSnapshot))
 		let renderer = try #require(plugin.primaryClass as? any PluginMessageRendering)
 
 		let renderTask = Task.detached { () -> [String] in
@@ -157,7 +159,7 @@ struct PluginRuntimeTests {
 				iteration.isMultiple(of: 2),
 				forKey: "Smiley Converter Extension -> Enable Extra Emoticons"
 			)
-			primaryClass.perform(preferenceChanged, with: nil)
+			primaryClass.perform(rebuildSnapshot)
 			await Task.yield()
 		}
 

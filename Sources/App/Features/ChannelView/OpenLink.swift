@@ -43,7 +43,37 @@ private let openLinkLogger = Logger(
 	category: "OpenLink"
 )
 
-public class OpenLink: NSObject {
+public enum OpenLink {
+	/** Hands a URL the allowlist has already cleared to the system.
+
+	 `NSWorkspace` launches whatever app has registered the scheme, so this is
+	 the last step of a launch a remote peer asked for. It is a stored value
+	 rather than a call so that ``opener`` can stand somewhere else in a test. */
+	static let workspaceOpener: @MainActor (URL, Bool) -> Void = { url, inBackground in
+		guard inBackground else {
+			NSWorkspace.shared.open(url)
+
+			return
+		}
+
+		/* User should not be clicking links frequently enough that
+		 we need to worry about making the configuration static. */
+		let configuration = NSWorkspace.OpenConfiguration()
+		configuration.activates = false
+
+		NSWorkspace.shared.open(url, configuration: configuration)
+	}
+
+	/** Where a URL goes once ``open(url:inBackground:)`` has cleared it.
+
+	 The guard in front of this is the only thing between a string a stranger
+	 typed in a channel and an app launch on this machine, so a test has to be
+	 able to prove that the guard refuses what it should and passes what it
+	 should — without asking the real workspace to open `file:///etc/passwd` to
+	 find out. Tests substitute their own opener and restore
+	 ``workspaceOpener``; nothing in the app replaces it. */
+	static var opener = workspaceOpener
+
 	public static func open(url: URL, inBackground: Bool = Preferences.Messages.openBrowserInBackground.value) {
 		/* Links come from other people. `NSWorkspace` launches whatever app has
 		 registered the scheme, so the same allowlist that decides what becomes
@@ -55,18 +85,7 @@ public class OpenLink: NSObject {
 			return
 		}
 
-		if inBackground {
-			/* User should not be clicking links frequently enough that
-			 we need to worry about making the configuration static. */
-			let configuration = NSWorkspace.OpenConfiguration()
-			configuration.activates = false
-
-			NSWorkspace.shared.open(url, configuration: configuration)
-
-			return
-		}
-
-		NSWorkspace.shared.open(url)
+		opener(url, inBackground)
 	}
 
 	public static func open(string: String, inBackground: Bool = Preferences.Messages.openBrowserInBackground.value) {
@@ -75,15 +94,5 @@ public class OpenLink: NSObject {
 		}
 
 		open(url: urlToOpen, inBackground: inBackground)
-	}
-}
-
-public extension OpenLink {
-	static func openBridged(url: URL) {
-		open(url: url)
-	}
-
-	static func openBridged(string: String) {
-		open(string: string)
 	}
 }

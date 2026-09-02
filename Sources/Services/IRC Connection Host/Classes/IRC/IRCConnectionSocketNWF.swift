@@ -82,6 +82,35 @@ private nonisolated enum IRCNetworkConnection: Sendable { // nonisolated: value
 
 		return metadata.securityProtocolMetadata
 	}
+
+	/** Every transition into the ready state, as values.
+
+	 `onStateUpdate` is generic over the protocol stack, so its two states are
+	 two unrelated types; readiness is the only one this transport acts on. The
+	 handler touches nothing but the continuation, which is what lets it be
+	 registered from either case. Register before the first read: establishment
+	 starts with that read, and a transition delivered before the stream exists
+	 is a transition nobody hears. */
+	func readyTransitions() -> AsyncStream<Void> {
+		let (stream, continuation) = AsyncStream<Void>.makeStream()
+
+		switch self {
+		case let .tcp(connection):
+			connection.onStateUpdate { _, state in
+				guard state == .ready else { return }
+
+				continuation.yield()
+			}
+		case let .tls(connection):
+			connection.onStateUpdate { _, state in
+				guard state == .ready else { return }
+
+				continuation.yield()
+			}
+		}
+
+		return stream
+	}
 }
 
 /// The structured-concurrency Network.framework transport, as an actor.
@@ -99,6 +128,12 @@ actor ConnectionSocket {
 
 	/// Seconds allowed for the transport to reach the ready state.
 	private static let connectTimeout: TimeInterval = 30
+
+	/// Seconds the application is given to answer the certificate prompt. The
+	/// reply block belongs to the other side of an XPC connection, so a
+	/// dismissed panel or an interrupted connection can mean no answer ever
+	/// arrives; the handshake must not wait on that forever.
+	private static let trustPromptTimeout: TimeInterval = 300
 
 	private static let torProxyAddress = "127.0.0.1"
 	private static let torProxyPort: UInt16 = 9150
@@ -283,8 +318,21 @@ actor ConnectionSocket {
 
 		/* Typed connections establish lazily when the first operation starts.
 		 Network.framework holds sends behind DNS, proxy and TLS establishment;
-		 a failed handshake is reported by the first async operation. */
+		 a failed handshake is reported by the first async operation. So the
+		 connection handed to us here has no TLS metadata yet, and what was
+		 negotiated is only knowable once it reports itself ready. */
+		let readyTransitions = connection.readyTransitions()
+
 		onConnect()
+
+		let readiness = Task { [weak self] in
+			for await _ in readyTransitions {
+				await self?.onReady()
+			}
+		}
+
+		defer { readiness.cancel() }
+
 		try await read(from: connection)
 	}
 
@@ -297,13 +345,24 @@ actor ConnectionSocket {
 		/* When a proxy is in use the remote endpoint is the proxy, not the
 		 server, so report nil as the host contract asks. */
 		events.yield(.connected(host: proxyEndpoint == nil ? connectedHost : nil))
+	}
+
+	/// The transport finished establishing, so the handshake — if there was
+	/// one — has run and its metadata is readable.
+	private func onReady() {
+		guard connected, disconnecting == false else { return }
 
 		onSecured()
 	}
 
 	private func onSecured() {
-		/* Only mark ourselves secured once there is protocol information. */
-		guard let protocolVersion = tlsNegotiatedProtocol, let cipherSuite = tlsNegotiatedCipherSuite else {
+		/* Announced once. A plain TCP connection has no metadata to report and
+		 so never becomes secured; a connection that drops back to preparing and
+		 returns to ready negotiated nothing new. */
+		guard secured == false,
+		      let protocolVersion = tlsNegotiatedProtocol,
+		      let cipherSuite = tlsNegotiatedCipherSuite
+		else {
 			return
 		}
 
@@ -324,20 +383,24 @@ actor ConnectionSocket {
 		resetState()
 
 		events.yield(.disconnected(payload))
-	}
 
-	/// The failure paths that never reached a connection at all.
-	private func finish(with error: ConnectionError) {
-		resetState()
-
-		events.yield(.disconnected(error))
+		/* Nothing follows a disconnect, so the host's event loop can end here
+		 rather than waiting on a stream nobody will write to again. */
+		events.finish()
 	}
 
 	// MARK: - Read & Write
 
 	private func read(from connection: IRCNetworkConnection) async throws {
 		while connected, disconnecting == false {
-			let message = try await connection.receive(atMost: Self.maximumDataLength)
+			/* Never ask for more than the line budget still allows. The cap has
+			 to bound the buffer, not merely be noticed after a hundred-megabyte
+			 append: one byte past the budget is enough to recognise a peer that
+			 is never going to send a newline. */
+			let budget = Self.maximumBufferedLineLength + 1 - readInBuffer.count
+			let maximumLength = min(Self.maximumDataLength, max(budget, 1))
+
+			let message = try await connection.receive(atMost: maximumLength)
 
 			let (content, isComplete) = message
 
@@ -389,20 +452,26 @@ actor ConnectionSocket {
 		}
 	}
 
-	func write(_ data: Data) async {
-		guard connected, disconnecting == false else { return }
+	/** Sends `data`, reporting whether it was taken.
 
-		/* We only allow one write at a time. */
-		guard sending == false else { return }
-
-		await startWriting(data)
-	}
-
-	private func startWriting(_ data: Data) async {
-		guard let connection else { return }
+	 Only one write is in flight at a time, and this is where that is decided:
+	 the claim on `sending` is made without an intervening suspension, so a
+	 caller that is told `false` knows the data was not sent and can queue it
+	 again. Deciding it anywhere else meant two callers could both pass the
+	 check and the loser's line would be dropped with nobody told. */
+	func write(_ data: Data) async -> Bool {
+		guard connected, disconnecting == false, sending == false, let connection else {
+			return false
+		}
 
 		sending = true
 
+		await startWriting(data, over: connection)
+
+		return true
+	}
+
+	private func startWriting(_ data: Data, over connection: IRCNetworkConnection) async {
 		events.yield(.willSend(data))
 
 		do {
@@ -615,7 +684,7 @@ private extension ConnectionSocket {
 	/// user, so no traffic needs to be buffered behind a separate trust gate.
 	nonisolated static func evaluateCertificate( // nonisolated: pure
 		_ trust: sec_trust_t
-	) -> TLSTrustEvaluation { // nonisolated: pure
+	) -> TLSTrustEvaluation {
 		/* sec_trust_copy_ref() follows the Create Rule; the result is +1. */
 		let trustRef = sec_trust_copy_ref(trust).takeRetainedValue()
 
@@ -663,11 +732,45 @@ private extension ConnectionSocket {
 			return false
 		}
 
-		return await withCheckedContinuation { continuation in
-			client.ircConnectionRequestInsecureCertificateTrust { trusted in
-				continuation.resume(returning: trusted)
-			}
+		return await requestInsecureTrust()
+	}
+
+	/** Asks the application whether to proceed with a chain the system refused.
+
+	 The reply block is the application's to invoke, across XPC, and there are
+	 real paths where it never is: the trust panel closed programmatically, or
+	 the connection interrupted while it was open. Waiting on that forever
+	 strands this actor — and with it the socket, the client proxy and the event
+	 stream — for the life of a service process that every connection shares. So
+	 the wait is bounded, and cancelling the connection ends it too. Both of
+	 those answer `false`, which is the answer the system already gave. */
+	func requestInsecureTrust() async -> Bool {
+		let (answers, continuation) = AsyncStream<Bool>.makeStream(bufferingPolicy: .bufferingNewest(1))
+
+		client.ircConnectionRequestInsecureCertificateTrust { trusted in
+			continuation.yield(trusted)
+			continuation.finish()
 		}
+
+		let deadline = Task {
+			try? await Task.sleep(for: .seconds(Self.trustPromptTimeout), clock: .continuous)
+
+			continuation.finish()
+		}
+
+		defer { deadline.cancel() }
+
+		for await trusted in answers {
+			return trusted
+		}
+
+		let identifier = uniqueIdentifier
+
+		ConnectionHostLog.connection.error(
+			"Certificate trust prompt for connection \(identifier, privacy: .public) went unanswered"
+		)
+
+		return false
 	}
 }
 

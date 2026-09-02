@@ -78,28 +78,7 @@ struct MemberListSectionTests {
 		#expect(rowDescriptions == ["[Operators]", "carol", "[Members]", "alice", "bob"])
 		#expect(memberList.isGroupRow(0))
 		#expect(memberList.isGroupRow(2))
-		#expect(memberList.rowForMember(at: 0) == 1)
-		#expect(memberList.rowForMember(at: 1) == 3)
-		#expect(memberList.rowForMember(at: 2) == 4)
 		#expect(memberList.item(atRow: 2) == nil)
-	}
-
-	@Test("A member's row round trips back to the member")
-	func rowForItemMatchesItemAtRow() {
-		let alice = makeMember(named: "alice")
-		let carol = makeMember(named: "carol", modes: "o")
-		let dave = makeMember(named: "dave", modes: "v")
-
-		insert(alice, at: 0)
-		insert(carol, at: 0)
-		insert(dave, at: 1)
-
-		for member in [alice, carol, dave] {
-			let row = memberList.row(forItem: member)
-			let item = memberList.item(atRow: row) as? ChannelUser
-
-			#expect(item == member)
-		}
 	}
 
 	@Test("Removing the last member of a section drops its header")
@@ -285,7 +264,9 @@ struct MemberListSectionTests {
 	}
 
 	private func select(_ member: ChannelUser) {
-		let row = memberList.row(forItem: member)
+		let row = (0 ..< memberList.numberOfRows).first {
+			(memberList.item(atRow: $0) as? ChannelUser)?.id == member.id
+		} ?? -1
 		memberList.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
 	}
 }

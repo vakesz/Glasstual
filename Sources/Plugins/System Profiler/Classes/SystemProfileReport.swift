@@ -314,8 +314,15 @@ enum SystemProfileInformation {
 	}
 
 	static func modelName(for identifier: String) -> String {
-		let lookupKey = identifier.hasPrefix("VMware") ? "VMware" : identifier
-			.hasPrefix("Parallels") ? "Parallels" : identifier
+		/* A virtual machine reports a model identifier with a build suffix, so
+		 the table is keyed on the hypervisor's name alone. */
+		let lookupKey = if identifier.hasPrefix("VMware") {
+			"VMware"
+		} else if identifier.hasPrefix("Parallels") {
+			"Parallels"
+		} else {
+			identifier
+		}
 		guard let url = Bundle(for: SystemProfilerPlugin.self).url(
 			forResource: "MacintoshModels",
 			withExtension: "plist"

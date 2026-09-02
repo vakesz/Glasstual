@@ -18,6 +18,10 @@ struct ServerRow: Identifiable, Equatable {
 	/// What is drawn beneath the row, not what the user disclosed: a filter
 	/// shows matching conversations under a collapsed server too.
 	let isExpanded: Bool
+	/// Whether the chevron is offered. While a filter decides what is drawn
+	/// beneath a server, disclosure is not what a click there would change, so
+	/// the control is withdrawn rather than left pointing at the wrong state.
+	let showsDisclosure: Bool
 	let channels: [ChannelRow]
 }
 

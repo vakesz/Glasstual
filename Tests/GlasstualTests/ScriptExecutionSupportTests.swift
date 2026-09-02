@@ -122,4 +122,44 @@ struct ScriptExecutionSupportTests {
 			#expect(isScript || isExecutable, "Unsupported bundled script resource: \(entry.lastPathComponent)")
 		}
 	}
+
+	/// Writes `byteCount` bytes and closes the handle. Blocking on purpose: a
+	/// pipe holds about 64 KB, so this returns only once something else has
+	/// drained what it wrote.
+	@concurrent
+	private static func write(byteCount: Int, to handle: FileHandle) async {
+		try? handle.write(contentsOf: Data(repeating: 0x41, count: byteCount))
+		try? handle.close()
+	}
+
+	/// A script's output used to be read only after it had terminated, which
+	/// deadlocked any script writing more than the pipe holds: it blocked in
+	/// `write(2)`, so it never exited, so the read never started.
+	@Test("Output larger than the pipe buffer is drained while the script still runs")
+	func outputLargerThanThePipeBufferIsDrained() async {
+		let pipe = Pipe()
+		let byteCount = 512 * 1024
+		let output = Task { await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
+
+		await Self.write(byteCount: byteCount, to: pipe.fileHandleForWriting)
+
+		let data = await output.value
+		try? pipe.fileHandleForReading.close()
+
+		#expect(data.count == byteCount)
+	}
+
+	@Test("A runaway script's output is capped, and the rest is still drained")
+	func outputPastTheCeilingIsDroppedRatherThanBuffered() async {
+		let pipe = Pipe()
+		let byteCount = ScriptExecutionSupport.maximumOutputBytes + (128 * 1024)
+		let output = Task { await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
+
+		await Self.write(byteCount: byteCount, to: pipe.fileHandleForWriting)
+
+		let data = await output.value
+		try? pipe.fileHandleForReading.close()
+
+		#expect(data.count == ScriptExecutionSupport.maximumOutputBytes)
+	}
 }

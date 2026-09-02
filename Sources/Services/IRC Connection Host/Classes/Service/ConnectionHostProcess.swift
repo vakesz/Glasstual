@@ -38,36 +38,91 @@
 import CocoaExtensions
 import Foundation
 
+/// One thing the application asked the host to do.
+///
+/// The commands are values so that they can wait their turn in a queue. NSXPC
+/// delivers messages in order on its own serial queue; putting each one in here
+/// is what carries that order across to the actor.
+private enum HostCommand: Sendable {
+	case open(IRCConnectionConfig)
+	case close
+	case send(Data, bypassQueue: Bool)
+	case exportSecureConnectionInformation(SecureConnectionInformationReceiver)
+	case enforceFloodControl
+	case clearSendQueue
+	case enableAppNap
+	case disableAppNap
+	case enableSuddenTermination
+	case disableSuddenTermination
+}
+
 /// The object NSXPC exports for a connection host.
 ///
-/// It holds the connection — which is not `Sendable` and so passes nowhere —
-/// and the host actor, which owns every piece of state. Each `` call is a
-/// one-line hop into the actor.
+/// Every exported method is a one-line hop into `ConnectionHost`, which owns
+/// all of the state. The hop goes through a single stream that one task drains
+/// in order: an unstructured `Task` per call would have handed the messages to
+/// the global executor, which schedules them against each other however it
+/// likes, so `open` could land after the first `send` and two sends could swap
+/// places on the wire.
 final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
-	private let host: ConnectionHost
-	private let serviceConnection: NSXPCConnection
+	private let commands: AsyncStream<HostCommand>.Continuation
 
-	init(host: ConnectionHost, connection: NSXPCConnection) {
-		self.host = host
-		serviceConnection = connection
+	init(host: ConnectionHost) {
+		let (commands, continuation) = AsyncStream<HostCommand>.makeStream(
+			/* Nothing the application asks for may be dropped, and a command
+			 that takes a while (a write behind an unresponsive peer) must not
+			 cost the ones queued behind it. */
+			bufferingPolicy: .unbounded
+		)
+
+		self.commands = continuation
 
 		super.init()
 
 		Logging.setDefaultSubsystem(toMainBundleCategory: "General")
+
+		Task {
+			for await command in commands {
+				await Self.perform(command, on: host)
+			}
+		}
+	}
+
+	deinit {
+		commands.finish()
+	}
+
+	private static func perform(_ command: HostCommand, on host: ConnectionHost) async {
+		switch command {
+		case let .open(config):
+			await host.open(with: config)
+		case .close:
+			await host.close()
+		case let .send(data, bypassQueue):
+			await host.send(data, bypassQueue: bypassQueue)
+		case let .exportSecureConnectionInformation(receiver):
+			await receiver(host.secureConnectionInformation())
+		case .enforceFloodControl:
+			await host.enforceFloodControl()
+		case .clearSendQueue:
+			await host.clearSendQueue()
+		case .enableAppNap:
+			await host.enableAppNap()
+		case .disableAppNap:
+			await host.disableAppNap()
+		case .enableSuddenTermination:
+			await host.enableSuddenTermination()
+		case .disableSuddenTermination:
+			await host.disableSuddenTermination()
+		}
 	}
 
 	func open(with config: ConnectionConfigEnvelope) {
-		let config = config.config
-
-		Task { [host] in
-			await host.open(with: config)
-		}
+		commands.yield(.open(config.config))
 	}
 
 	func close() {
-		Task { [host] in
-			await host.close()
-		}
+		commands.yield(.close)
 	}
 
 	func send(_ data: Data) {
@@ -75,52 +130,36 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	}
 
 	func send(_ data: Data, bypassQueue: Bool) {
-		Task { [host] in
-			await host.send(data, bypassQueue: bypassQueue)
-		}
+		commands.yield(.send(data, bypassQueue: bypassQueue))
 	}
 
 	func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver) {
 		/* The caller treats this as a reply block, so it has to be invoked on
 		 every path. */
-		Task { [host] in
-			await receiver(host.secureConnectionInformation())
-		}
+		commands.yield(.exportSecureConnectionInformation(receiver))
 	}
 
 	func enforceFloodControl() {
-		Task { [host] in
-			await host.enforceFloodControl()
-		}
+		commands.yield(.enforceFloodControl)
 	}
 
 	func clearSendQueue() {
-		Task { [host] in
-			await host.clearSendQueue()
-		}
+		commands.yield(.clearSendQueue)
 	}
 
 	func enableAppNap() {
-		Task { [host] in
-			await host.enableAppNap()
-		}
+		commands.yield(.enableAppNap)
 	}
 
 	func disableAppNap() {
-		Task { [host] in
-			await host.disableAppNap()
-		}
+		commands.yield(.disableAppNap)
 	}
 
 	func enableSuddenTermination() {
-		Task { [host] in
-			await host.enableSuddenTermination()
-		}
+		commands.yield(.enableSuddenTermination)
 	}
 
 	func disableSuddenTermination() {
-		Task { [host] in
-			await host.disableSuddenTermination()
-		}
+		commands.yield(.disableSuddenTermination)
 	}
 }

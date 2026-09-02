@@ -85,37 +85,39 @@ public extension TextualPreferences {
 			reloadAction.insert(.style)
 		}
 
-		if keys.contains("Highlight List -> Excluded Matches")
-			|| keys.contains("Highlight List -> Primary Matches")
+		if keys.contains(Preferences.Highlights.excludeKeywords.name)
+			|| keys.contains(Preferences.Highlights.matchKeywords.name)
 		{
 			reloadAction.insert(.highlightKeywords)
 		}
 
-		if keys.contains("LogHighlights") {
+		if keys.contains(Preferences.Logging.logHighlights.name) {
 			reloadAction.insert(.highlightLogging)
 		}
 
-		if keys.contains("RightToLeftTextFormatting") {
+		if keys.contains(Preferences.Messages.rightToLeftFormatting.name) {
 			reloadAction.insert(.textDirection)
 		}
 
-		if keys.contains("Main Input Text Field -> Font Size") {
+		if keys.contains(Preferences.Input.textViewFontSize.name) {
 			reloadAction.insert(.textFieldFontSize)
 		}
 
-		if keys.contains("SaveInputHistoryPerSelection") {
+		if keys.contains(Preferences.Input.historyIsChannelSpecific.name) {
 			reloadAction.insert(.inputHistoryScope)
 		}
 
-		if keys.contains("DisplayDockBadges") || keys.contains("DisplayPublicMessageCountInDockBadge") {
+		if keys.contains(Preferences.Notifications.displayDockBadge.name)
+			|| keys.contains(Preferences.Notifications.publicMessageCountOnDockBadge.name)
+		{
 			reloadAction.insert(.dockIconBadges)
 		}
 
-		if keys.contains("Appearance") {
+		if keys.contains(Preferences.Appearance.preferredAppearance.name) {
 			reloadAction.insert(.appearance)
 		}
 
-		if keys.contains("MemberListSortFavorsServerStaff") {
+		if keys.contains(Preferences.Appearance.memberListSortFavorsServerStaff.name) {
 			reloadAction.insert(.memberListSortOrder)
 		}
 
@@ -128,19 +130,19 @@ public extension TextualPreferences {
 			reloadAction.insert(.serverListUnreadBadges)
 		}
 
-		if keys.contains("GlasstualDeveloperEnvironment") {
+		if keys.contains(Preferences.Commands.developerMode.name) {
 			reloadAction.insert(.ircCommandCache)
 		}
 
-		if keys.contains("ScrollbackMaximumSavedLineCount") {
+		if keys.contains(Preferences.Logging.scrollbackSaveLimit.name) {
 			reloadAction.insert(.scrollbackSaveLimit)
 		}
 
-		if keys.contains("ScrollbackMaximumVisibleLineCount") {
+		if keys.contains(Preferences.Logging.scrollbackVisibleLimit.name) {
 			reloadAction.insert(.scrollbackVisibleLimit)
 		}
 
-		if keys.contains("LogTranscript") {
+		if keys.contains(Preferences.Logging.logToDisk.name) {
 			reloadAction.insert(.logTranscripts)
 		}
 
@@ -188,7 +190,7 @@ public extension TextualPreferences {
 			if reloadAction == .memberListUserBadges, let key {
 				memberList?.refreshDrawing(forChangesToPreference: key)
 			} else {
-				memberList?.refreshAllDrawings()
+				memberList?.invalidatePresentation()
 			}
 		}
 
@@ -240,7 +242,7 @@ public extension TextualPreferences {
 
 		if reloadAction.contains(.memberList) {
 			if didReloadMemberListSortOrder == false {
-				memberList?.refreshAllDrawings()
+				memberList?.invalidatePresentation()
 			}
 		}
 
@@ -326,12 +328,12 @@ public extension TextualPreferences {
 	private class var styleReloadKeys: Set<String> {
 		[
 			Preferences.Theme.transcriptTheme.name,
-			"AutomaticallyFilterUnicodeTextSpam",
-			"ConversationTrackingIncludesUserModeSymbol",
-			"DisableRemoteNicknameColorHashing",
-			"DisplayEventInLogView -> Date Changes",
-			"DisplayEventInLogView -> Inline Media",
-			"DisplayEventInLogView -> Join, Part, Quit",
+			Preferences.Messages.filterUnicodeTextSpam.name,
+			Preferences.Appearance.conversationTrackingIncludesModeSymbol.name,
+			Preferences.Messages.disableNicknameColorHashing.name,
+			Preferences.Messages.showDateChanges.name,
+			Preferences.Messages.showInlineMedia.name,
+			Preferences.Messages.showJoinLeave.name,
 		]
 	}
 

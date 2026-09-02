@@ -24,8 +24,6 @@ public final class MainWindowLoadingScreen {
 		content != .hidden
 	}
 
-	public func configure() {}
-
 	public func showWelcomeAddServerView() {
 		show(.welcome)
 	}
@@ -37,10 +35,6 @@ public final class MainWindowLoadingScreen {
 	public func setProgressViewReason(_ reason: String) {
 		guard case .progress = content else { return }
 		content = .progress(reason)
-	}
-
-	public func hide() {
-		hideAnimated(false)
 	}
 
 	public func hideAnimated() {

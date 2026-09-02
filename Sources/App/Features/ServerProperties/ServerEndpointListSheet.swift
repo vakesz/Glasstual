@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Observation
 import SwiftUI
 
@@ -77,7 +78,7 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 			serverAddress: ServerEndpointValidation.validatedAddress(address),
 			serverPort: ServerEndpointValidation.validatedPort(port),
 			prefersSecuredConnection: prefersSecuredConnection,
-			pendingServerPassword: password
+			pendingServerPassword: .edited(password)
 		)
 	}
 }
@@ -152,7 +153,7 @@ final class ServerEndpointListModel {
 			serverAddress: entries[index].address,
 			serverPort: UInt16(entries[index].port) ?? ServerEndpointValidation.plainTextPort,
 			prefersSecuredConnection: entries[index].prefersSecuredConnection,
-			pendingServerPassword: entries[index].password
+			pendingServerPassword: .edited(entries[index].password)
 		)
 		server = ServerEndpointValidation.server(server, preferringSecuredConnection: secured)
 		entries[index].prefersSecuredConnection = server.prefersSecuredConnection
@@ -172,7 +173,9 @@ final class ServerEndpointListModel {
 		clearValidation()
 		var servers: [Server] = []
 
-		for entry in entries where entry.address.isEmpty == false {
+		/* An empty address is an invalid address, not a row to drop: silently
+		 discarding it loses whatever else the user typed into it. */
+		for entry in entries {
 			do {
 				try servers.append(entry.validatedServer())
 			} catch let error as NSError where error.code == ServerEndpointValidation.invalidAddressCode {

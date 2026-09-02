@@ -41,15 +41,6 @@ private actor FetchGate {
 	}
 }
 
-/// Records the order the fake service was asked for things in.
-private actor FetchRecorder {
-	private(set) var labels: [String] = []
-
-	func record(_ label: String) {
-		labels.append(label)
-	}
-}
-
 @Suite("Historic log client")
 struct HistoricLogClientTests {
 	/// A request labelled by the line number it asks for, which is what the
@@ -61,7 +52,7 @@ struct HistoricLogClientTests {
 		)
 	}
 
-	private nonisolated static func label(of request: HistoricLogFetchRequest) -> String {
+	private nonisolated static func label(of request: HistoricLogFetchRequest) -> String { // nonisolated: pure
 		guard case let .before(uniqueIdentifier, _, _) = request.kind else {
 			return ""
 		}
@@ -91,10 +82,10 @@ struct HistoricLogClientTests {
 	@Test("Ten interleaved fetches for two views are served first in, first out per view")
 	func fetchesAreServedInOrderPerView() async {
 		let gate = FetchGate()
-		let recorder = FetchRecorder()
+		let probe = IsolationProbe()
 		let queue = HistoricLogRequestQueue { request in
 			await gate.wait()
-			await recorder.record(Self.label(of: request))
+			await probe.record(Self.label(of: request))
 			return []
 		}
 
@@ -108,10 +99,14 @@ struct HistoricLogClientTests {
 			_ = await task.value
 		}
 
-		let served = await recorder.labels
+		let served = probe.labels
 		#expect(served.count == labels.count)
 		#expect(served.filter { $0.hasPrefix("a") } == ["a1", "a2", "a3", "a4", "a5"])
 		#expect(served.filter { $0.hasPrefix("b") } == ["b1", "b2", "b3", "b4", "b5"])
+
+		/* Scrollback comes out of Core Data. A fetch that ran on the main actor
+		 would block the transcript for as long as the store took. */
+		probe.expectNoneOnMainActor()
 	}
 
 	@Test("Forgetting a view answers everything still queued for it and leaves the others alone")

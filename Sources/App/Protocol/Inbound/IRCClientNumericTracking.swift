@@ -173,7 +173,7 @@ extension IRCClient {
 		}
 		let isOnline = numeric == IRCNumeric.mononline.rawValue
 		for changedUser in message.params[1].components(separatedBy: ",") {
-			let nickname = (changedUser as NSString).nicknameFromHostmask ?? changedUser
+			let nickname = (changedUser as NSString).nicknameFromHostmask
 			applyPresence(isOnline, toQueryWith: nickname)
 			guard findUserTrackingAddressBookEntry(forNickname: nickname) != nil else { continue }
 			setTrackedNickname(nickname, status: isOnline ? .signedOn : .signedOff, notify: true)

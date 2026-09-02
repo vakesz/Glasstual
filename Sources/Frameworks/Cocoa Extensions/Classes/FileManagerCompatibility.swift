@@ -52,9 +52,6 @@ public struct FileOperationOptions: OptionSet, Sendable {
 	/// Send the replaced item to the trash rather than deleting it outright.
 	public static let moveToTrash = FileOperationOptions(rawValue: 1 << 5)
 
-	/// Move the source instead of copying it.
-	public static let moveToDestination = FileOperationOptions(rawValue: 1 << 6)
-
 	/// Link, rather than copy, applications and other bundles.
 	public static let symlinkPackages = FileOperationOptions(rawValue: 1 << 8)
 }
@@ -73,15 +70,6 @@ public extension FileManager {
 
 	func fileExists(at url: URL) -> Bool {
 		fileExists(atPath: url.path)
-	}
-
-	func directoryExists(at url: URL) -> Bool {
-		directoryExists(atPath: url.path)
-	}
-
-	func directoryExists(atPath path: String) -> Bool {
-		var isDirectory = ObjCBool(false)
-		return fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
 	}
 
 	func replaceItem(at destination: URL, withItemAt source: URL) -> Bool {
@@ -117,8 +105,6 @@ public extension FileManager {
 					(values.isApplication == true || values.isPackage == true))
 			if shouldLink {
 				try createSymbolicLink(at: destination, withDestinationURL: source.resolvingSymlinksInPath())
-			} else if options.contains(.moveToDestination) {
-				try moveItem(at: source, to: destination)
 			} else {
 				try copyItem(at: source, to: destination)
 			}
