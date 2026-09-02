@@ -22,24 +22,28 @@ struct ServerListView: View {
 
 	var body: some View {
 		List(selection: selection) {
-			ForEach(model.clients, id: \.uniqueIdentifier) { client in
-				ServerDisclosureRow(model: model, client: client)
-					.tag(client.uniqueIdentifier)
+			ForEach(model.rows) { server in
+				ServerDisclosureRow(model: model, server: server)
+					.tag(server.id)
 					.listRowInsets(ServerListLayout.rowInsets)
 					.listRowSeparator(.hidden)
 
-				if model.isExpanded(client) {
-					ForEach(client.channelList, id: \.uniqueIdentifier) { channel in
-						ServerListRow(model: model, item: channel)
-							.padding(.leading, ServerListLayout.channelLeadingPadding)
-							.tag(channel.uniqueIdentifier)
-							.listRowInsets(ServerListLayout.rowInsets)
-							.listRowSeparator(.hidden)
-					}
+				ForEach(server.channels) { channel in
+					ChannelRowView(model: model, channel: channel)
+						.padding(.leading, ServerListLayout.channelLeadingPadding)
+						.tag(channel.id)
+						.listRowInsets(ServerListLayout.rowInsets)
+						.listRowSeparator(.hidden)
 				}
 			}
 		}
-		.listStyle(.plain)
+		.listStyle(.sidebar)
+		.scrollContentBackground(.hidden)
+		.searchable(
+			text: $model.filterText,
+			placement: .sidebar,
+			prompt: Text(MainWindowStrings.InputBar.searchChannels)
+		)
 		.environment(\.defaultMinListRowHeight, ServerListLayout.rowHeight)
 		.contextMenu(forSelectionType: String.self) { identifiers in
 			if let menu = model.menu(for: identifiers) {
@@ -54,11 +58,6 @@ struct ServerListView: View {
 			model.selectFromSwiftUI(identifier)
 			model.mainWindow?.serverListItemDoubleClicked()
 		}
-		.overlay {
-			Color.clear
-				.id(model.presentationRevision)
-				.allowsHitTesting(false)
-		}
 		.redirectsPrintableInput(to: redirectTyping)
 	}
 
@@ -72,48 +71,60 @@ struct ServerListView: View {
 
 private struct ServerDisclosureRow: View {
 	let model: ServerList
-	let client: IRCClient
+	let server: ServerRow
 
 	var body: some View {
 		HStack(spacing: ServerListLayout.disclosureSpacing) {
 			Button {
-				model.setExpanded(model.isExpanded(client) == false, for: client)
+				model.toggleExpanded(serverID: server.id)
 			} label: {
-				Image(systemName: model.isExpanded(client) ? "chevron.down" : "chevron.right")
+				Image(systemName: server.isExpanded ? "chevron.down" : "chevron.right")
 					.font(.system(size: 9, weight: .semibold))
 					.foregroundStyle(.secondary)
 					.frame(width: ServerListLayout.disclosureWidth, height: ServerListLayout.rowHeight)
 					.contentShape(Rectangle())
 			}
 			.buttonStyle(.plain)
-			.accessibilityLabel(client.label)
+			.accessibilityLabel(server.title)
 
-			ServerListRow(model: model, item: client)
+			ServerRowView(model: model, server: server)
 		}
 	}
 }
 
-private struct ServerListRow: View {
+/// What a server row and a channel row share: the frame, the drag handle and
+/// the drop target, keyed by the tree item's identity.
+private struct SidebarRowChrome: ViewModifier {
 	let model: ServerList
-	let item: IRCTreeItem
+	let id: String
+	let accessibilityLabel: String
+
+	func body(content: Content) -> some View {
+		content
+			.frame(height: ServerListLayout.rowHeight)
+			.contentShape(Rectangle())
+			.accessibilityLabel(accessibilityLabel)
+			.draggable(id)
+			.dropDestination(for: String.self) { identifiers, _ in
+				guard let identifier = identifiers.first else { return false }
+				return model.move(draggedIdentifier: identifier, beforeIdentifier: id)
+			}
+	}
+}
+
+private struct ServerRowView: View {
+	let model: ServerList
+	let server: ServerRow
 
 	var body: some View {
 		HStack(spacing: 7) {
-			if let channel = item as? IRCChannel {
-				Image(systemName: symbolName(for: channel))
-					.font(.system(size: 12, weight: .medium))
-					.foregroundStyle(channel.isActive ? .secondary : .tertiary)
-					.frame(width: 16)
-					.accessibilityHidden(true)
-			}
-
-			Text(item.label)
-				.fontWeight(item.isClient ? .semibold : .regular)
-				.foregroundStyle(labelColor)
+			Text(server.title)
+				.fontWeight(.semibold)
+				.foregroundStyle(server.isActive ? Color.primary : Color(nsColor: .tertiaryLabelColor))
 				.lineLimit(1)
 				.truncationMode(.tail)
 
-			if let client = item as? IRCClient, client.isSecured {
+			if server.isSecured {
 				Image(systemName: "lock.fill")
 					.font(.system(size: 9, weight: .semibold))
 					.foregroundStyle(.secondary)
@@ -121,54 +132,75 @@ private struct ServerListRow: View {
 			}
 
 			Spacer(minLength: 4)
+		}
+		.modifier(SidebarRowChrome(model: model, id: server.id, accessibilityLabel: accessibilityDescription))
+	}
 
-			if let channel = item as? IRCChannel,
-			   channel.config.showTreeBadgeCount,
-			   channel.treeUnreadCount > 0
-			{
-				Text(channel.treeUnreadCount, format: .number)
-					.font(.system(size: 11, weight: .medium, design: .monospaced))
-					.foregroundStyle(badgeForeground(for: channel))
+	private var accessibilityDescription: String {
+		server.isActive
+			? AccessibilityStrings.connectedServer(server.title)
+			: AccessibilityStrings.disconnectedServer(server.title)
+	}
+}
+
+private struct ChannelRowView: View {
+	let model: ServerList
+	let channel: ChannelRow
+
+	var body: some View {
+		HStack(spacing: 7) {
+			if let symbolName {
+				Image(systemName: symbolName)
+					.font(.system(size: 12, weight: .medium))
+					.foregroundStyle(channel.isActive ? .secondary : .tertiary)
+					.frame(width: 16)
+					.accessibilityHidden(true)
+			}
+
+			Text(channel.title)
+				.foregroundStyle(labelColor)
+				.lineLimit(1)
+				.truncationMode(.tail)
+
+			Spacer(minLength: 4)
+
+			if channel.showsUnreadBadge {
+				Text(channel.unreadCount, format: .number)
+					.font(.system(size: 11, weight: .semibold, design: .rounded))
+					.monospacedDigit()
+					.foregroundStyle(channel.isEmphasized ? Color.white : Color.primary)
 					.padding(.horizontal, 7)
-					.frame(minWidth: 22, minHeight: 16)
-					.background(badgeBackground(for: channel), in: Capsule())
+					.frame(minWidth: 22, minHeight: 18)
+					.background(badgeBackground, in: Capsule())
 					.accessibilityHidden(true)
 			}
 		}
-		.frame(height: ServerListLayout.rowHeight)
-		.contentShape(Rectangle())
-		.accessibilityLabel(accessibilityDescription)
-		.draggable(item.uniqueIdentifier)
-		.dropDestination(for: String.self) { identifiers, _ in
-			guard let identifier = identifiers.first else { return false }
-			return model.move(draggedIdentifier: identifier, before: item)
-		}
+		.modifier(SidebarRowChrome(model: model, id: channel.id, accessibilityLabel: accessibilityDescription))
 	}
 
 	private var labelColor: Color {
-		guard let channel = item as? IRCChannel else { return .primary }
-		if channel.errorOnLastJoinAttempt {
+		if channel.hasJoinError {
 			return .red
 		}
-		if channel.isActive, channel.nicknameHighlightCount > 0, channel.config.ignoreHighlights == false {
+		if channel.isActive, channel.isEmphasized {
 			return .blue
 		}
 		return channel.isActive ? .primary : Color(nsColor: .tertiaryLabelColor)
 	}
 
-	private func symbolName(for channel: IRCChannel) -> String {
-		if channel.isChannel {
-			return "number"
+	/// A channel's name already carries its `#`; only a conversation that is
+	/// not a channel needs a glyph to say what it is.
+	private var symbolName: String? {
+		switch channel.kind {
+		case .channel: nil
+		case .directChat: "bubble.left.and.bubble.right.fill"
+		case .privateMessage, .utility: "person.fill"
 		}
-		if channel.isDirectChat {
-			return "bubble.left.and.bubble.right.fill"
-		}
-		return "person.fill"
 	}
 
-	private func badgeBackground(for channel: IRCChannel) -> Color {
-		guard channel.nicknameHighlightCount > 0, channel.config.ignoreHighlights == false else {
-			return Color(nsColor: .secondarySystemFill)
+	private var badgeBackground: Color {
+		guard channel.isEmphasized else {
+			return Color(nsColor: .quaternaryLabelColor)
 		}
 		if let color = TextualUserDefaults.container
 			.storedColor(for: Preferences.Badges.serverListUnreadHighlight),
@@ -179,36 +211,25 @@ private struct ServerListRow: View {
 		return .accentColor
 	}
 
-	private func badgeForeground(for channel: IRCChannel) -> Color {
-		channel.nicknameHighlightCount > 0 && channel.config.ignoreHighlights == false ? .white : .secondary
-	}
-
 	private var accessibilityDescription: String {
-		if let client = item as? IRCClient {
-			return client.isActive
-				? AccessibilityStrings.connectedServer(client.label)
-				: AccessibilityStrings.disconnectedServer(client.label)
-		}
-
-		guard let channel = item as? IRCChannel else { return item.label }
-		var description: String = if channel.isChannel == false {
-			AccessibilityStrings.privateMessageQuery(with: channel.label)
+		var description: String = if channel.kind != .channel {
+			AccessibilityStrings.privateMessageQuery(with: channel.title)
 		} else if channel.isActive {
-			AccessibilityStrings.joinedChannel(channel.label)
+			AccessibilityStrings.joinedChannel(channel.title)
 		} else {
-			AccessibilityStrings.unjoinedChannel(channel.label)
+			AccessibilityStrings.unjoinedChannel(channel.title)
 		}
 
-		if channel.treeUnreadCount > 0 {
+		if channel.unreadCount > 0 {
 			description = ChannelSpotlightStrings.combined(
 				description,
-				ChannelSpotlightStrings.unreadMessages(channel.treeUnreadCount)
+				ChannelSpotlightStrings.unreadMessages(channel.unreadCount)
 			)
 		}
-		if channel.nicknameHighlightCount > 0, channel.config.ignoreHighlights == false {
+		if channel.highlightCount > 0 {
 			description = ChannelSpotlightStrings.combined(
 				description,
-				ChannelSpotlightStrings.highlights(channel.nicknameHighlightCount)
+				ChannelSpotlightStrings.highlights(channel.highlightCount)
 			)
 		}
 		return description

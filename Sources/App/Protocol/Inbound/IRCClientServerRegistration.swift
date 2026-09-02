@@ -119,11 +119,10 @@ public extension IRCClient {
 		requestPlayback()
 
 		let output = output
+		/* Presumed present until a MONITOR reply or the ISON poll says otherwise;
+		 activating now is what asks the server for each query's history. */
 		for channel in channelList where channel.isPrivateMessage {
-			channel.activate()
-			if let treeItem = (channel as AnyObject) as? IRCTreeItem {
-				output?.reloadTreeItem(treeItem)
-			}
+			applyPresence(true, to: channel)
 		}
 		output?.reloadTreeItem(self)
 		output?.updateTitle(for: self)

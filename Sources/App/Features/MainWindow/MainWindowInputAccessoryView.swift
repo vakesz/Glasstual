@@ -89,7 +89,7 @@ struct MainWindowInputAccessoryView: View {
 		}
 		.padding(.horizontal, 10)
 		.frame(height: 30)
-		.background(.quaternary, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+		.glassEffect(.regular, in: .rect(cornerRadius: 8))
 	}
 
 	private var replyText: AttributedString {

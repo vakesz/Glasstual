@@ -39,6 +39,7 @@
 import AppKit
 import CocoaExtensions
 import Foundation
+import SwiftUI
 
 private extension NSAttributedString.Key {
 	static let transcriptLineNumber = NSAttributedString.Key("GlasstualTranscriptLineNumber")
@@ -81,7 +82,8 @@ private final class NativeTranscriptTextView: NSTextView {
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
 		let origin = super.textContainerOrigin
 		let contentHeight = layoutManager.usageBoundsForTextContainer.height
-		let availableHeight = clipView.bounds.height
+		let insets = enclosingScrollView?.contentInsets ?? NSEdgeInsets()
+		let availableHeight = clipView.bounds.height - insets.top - insets.bottom
 		let offset = max(0, availableHeight - contentHeight - origin.y - textContainerInset.height)
 		bottomAlignmentOffset = offset
 		guard abs(offset - previousOffset) > 0.5 else { return }
@@ -109,7 +111,10 @@ private final class NativeTranscriptTextView: NSTextView {
 private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 	weak var owner: LogView?
 
-	private let topicField = NSTextField(wrappingLabelWithString: "")
+	let topicField = NSTextField(wrappingLabelWithString: "")
+	/* SwiftUI owns controls; this adapter only hosts one. */
+	let topicDisclosure = NSHostingView(rootView: TopicDisclosureButton(isExpanded: false, action: {}))
+	var isTopicExpanded = false
 	private let separator = NSBox()
 	private let scrollView = NSScrollView()
 	private let textView: NativeTranscriptTextView
@@ -140,13 +145,21 @@ private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 
 		topicField.isSelectable = true
 		topicField.allowsEditingTextAttributes = true
-		topicField.maximumNumberOfLines = 3
 		topicField.lineBreakMode = .byTruncatingTail
 		topicField.translatesAutoresizingMaskIntoConstraints = false
 		topicField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 		let topicClick = NSClickGestureRecognizer(target: self, action: #selector(topicDoubleClicked(_:)))
 		topicClick.numberOfClicksRequired = 2
 		topicField.addGestureRecognizer(topicClick)
+
+		/* The topic stays on one line and the chevron unfolds it. A click on the
+		 text itself cannot do that: the field is selectable so its links open
+		 and its words copy, and a single click there has to keep meaning that. */
+		topicDisclosure.sizingOptions = .intrinsicContentSize
+		topicDisclosure.translatesAutoresizingMaskIntoConstraints = false
+		topicDisclosure.setContentHuggingPriority(.required, for: .horizontal)
+		topicDisclosure.setContentCompressionResistancePriority(.required, for: .horizontal)
+		applyTopicExpansion()
 
 		separator.boxType = .separator
 		separator.translatesAutoresizingMaskIntoConstraints = false
@@ -186,6 +199,7 @@ private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 		}
 
 		addSubview(topicField)
+		addSubview(topicDisclosure)
 		addSubview(separator)
 		addSubview(scrollView)
 		scrollViewTopWithTopicConstraint = scrollView.topAnchor.constraint(equalTo: separator.bottomAnchor)
@@ -193,7 +207,9 @@ private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 		NSLayoutConstraint.activate([
 			topicField.topAnchor.constraint(equalTo: topAnchor, constant: 7),
 			topicField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
-			topicField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+			topicField.trailingAnchor.constraint(equalTo: topicDisclosure.leadingAnchor, constant: -6),
+			topicDisclosure.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+			topicDisclosure.firstBaselineAnchor.constraint(equalTo: topicField.firstBaselineAnchor),
 			separator.topAnchor.constraint(equalTo: topicField.bottomAnchor, constant: 7),
 			separator.leadingAnchor.constraint(equalTo: leadingAnchor),
 			separator.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -207,7 +223,17 @@ private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 
 	override func layout() {
 		super.layout()
+		updateTopicDisclosure()
 		textView.updateBottomAlignment()
+	}
+
+	/// The space beneath the transcript that something else is drawn over.
+	func setBottomContentInset(_ inset: CGFloat) {
+		guard scrollView.contentInsets.bottom != inset else { return }
+		scrollView.automaticallyAdjustsContentInsets = false
+		scrollView.contentInsets.bottom = inset
+		scrollView.scrollerInsets.bottom = inset
+		needsLayout = true
 	}
 
 	func setTopic(_ topic: String?) {
@@ -217,6 +243,10 @@ private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 		topicField.toolTip = value
 		topicField.isHidden = hasTopic == false
 		separator.isHidden = hasTopic == false
+		if isTopicExpanded {
+			isTopicExpanded = false
+			applyTopicExpansion()
+		}
 		if hasTopic {
 			scrollViewTopWithoutTopicConstraint?.isActive = false
 			scrollViewTopWithTopicConstraint?.isActive = true
@@ -857,6 +887,10 @@ public final class LogView: NSObject {
 		nativeView.setTopic(topic)
 	}
 
+	func setBottomContentInset(_ inset: CGFloat) {
+		nativeView.setBottomContentInset(inset)
+	}
+
 	func setBufferLimit(_ limit: Int) {
 		nativeView.setBufferLimit(limit)
 	}
@@ -911,6 +945,64 @@ public final class LogView: NSObject {
 
 	func applyTheme() {
 		nativeView.applyTheme()
+	}
+}
+
+// MARK: - Topic disclosure
+
+private struct TopicDisclosureButton: View {
+	let isExpanded: Bool
+	let action: () -> Void
+
+	private var label: String {
+		isExpanded ? AccessibilityStrings.showLessTopic : AccessibilityStrings.showFullTopic
+	}
+
+	var body: some View {
+		Button(action: action) {
+			Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+				.font(.system(size: 11, weight: .semibold))
+				.foregroundStyle(.secondary)
+				.frame(width: 16, height: 16)
+				.contentShape(Rectangle())
+		}
+		.buttonStyle(.plain)
+		.accessibilityLabel(label)
+		.help(label)
+	}
+}
+
+private extension NativeTranscriptView {
+	func toggleTopicExpansion() {
+		isTopicExpanded.toggle()
+		applyTopicExpansion()
+	}
+
+	func applyTopicExpansion() {
+		topicField.maximumNumberOfLines = isTopicExpanded ? 0 : 1
+		topicDisclosure.rootView = TopicDisclosureButton(isExpanded: isTopicExpanded) { [weak self] in
+			self?.toggleTopicExpansion()
+		}
+		needsLayout = true
+	}
+
+	/// The chevron is only offered when one line does not hold the topic.
+	func updateTopicDisclosure() {
+		guard topicField.isHidden == false, let font = topicField.font, topicField.bounds.width > 0 else {
+			topicDisclosure.isHidden = true
+			return
+		}
+		let fullHeight = topicField.attributedStringValue.boundingRect(
+			with: NSSize(width: topicField.bounds.width, height: .greatestFiniteMagnitude),
+			options: [.usesLineFragmentOrigin, .usesFontLeading]
+		).height
+		let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
+		let overflows = fullHeight > lineHeight * 1.5
+		topicDisclosure.isHidden = overflows == false
+		if overflows == false, isTopicExpanded {
+			isTopicExpanded = false
+			applyTopicExpansion()
+		}
 	}
 }
 

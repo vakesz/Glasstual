@@ -213,6 +213,8 @@ struct MainWindowRootView: View {
 	let memberList: MemberList
 	let inputContentView: MainWindowTextViewContentView
 
+	@State private var inputBarHeight: CGFloat = 0
+
 	var body: some View {
 		ZStack {
 			NavigationSplitView(columnVisibility: serverListVisibility) {
@@ -223,23 +225,20 @@ struct MainWindowRootView: View {
 						max: MainWindowConstants.serverListMaximumWidth
 					)
 			} detail: {
-				HSplitView {
-					conversation
-						.frame(
-							minWidth: MainWindowConstants.conversationMinimumWidth,
-							maxWidth: .infinity,
-							maxHeight: .infinity
-						)
-
-					if model.isMemberListAvailable, model.isMemberListVisible {
+				conversation
+					.frame(
+						minWidth: MainWindowConstants.conversationMinimumWidth,
+						maxWidth: .infinity,
+						maxHeight: .infinity
+					)
+					.inspector(isPresented: memberListVisibility) {
 						MemberListView(model: memberList, redirectTyping: redirectTyping)
-							.frame(
-								minWidth: MainWindowConstants.memberListMinimumWidth,
-								idealWidth: MainWindowConstants.memberListIdealWidth,
-								maxWidth: MainWindowConstants.memberListMaximumWidth
+							.inspectorColumnWidth(
+								min: MainWindowConstants.memberListMinimumWidth,
+								ideal: MainWindowConstants.memberListIdealWidth,
+								max: MainWindowConstants.memberListMaximumWidth
 							)
 					}
-				}
 			}
 			.disabled(loadingScreen.viewIsVisible)
 			.opacity(loadingScreen.viewIsVisible ? 0 : 1)
@@ -250,8 +249,8 @@ struct MainWindowRootView: View {
 			}
 		}
 		.toolbar {
-			DefaultToolbarItem(kind: .sidebarToggle, placement: .navigation)
-
+			/* No sidebar toggle is declared here: the split view contributes its
+			 own where the system wants it, and re-declaring it only moved it. */
 			if model.isMemberListAvailable {
 				ToolbarItem(placement: .primaryAction) {
 					Button(MainWindowStrings.Toolbar.toggleMemberList, systemImage: "sidebar.right") {
@@ -304,6 +303,20 @@ struct MainWindowRootView: View {
 		)
 	}
 
+	private var memberListVisibility: Binding<Bool> {
+		Binding(
+			get: { model.isMemberListAvailable && model.isMemberListVisible },
+			set: { isPresented in
+				/* Through the window, so the "hidden by user" flag that decides
+				 whether the list returns on the next channel tracks the inspector. */
+				guard model.isMemberListAvailable,
+				      isPresented != model.isMemberListVisible
+				else { return }
+				model.toggleMemberList()
+			}
+		)
+	}
+
 	private var rootSheetIsPresented: Binding<Bool> {
 		Binding(
 			get: { model.sheetStack.isEmpty == false },
@@ -320,6 +333,7 @@ struct MainWindowRootView: View {
 			ServerListView(model: serverList, redirectTyping: redirectTyping)
 			Divider()
 			sidebarFooter
+				.background(.bar)
 		}
 	}
 
@@ -339,13 +353,6 @@ struct MainWindowRootView: View {
 			.help(MainWindowStrings.InputBar.addServerOrChannel)
 
 			Spacer(minLength: 8)
-
-			Button(MainWindowStrings.InputBar.searchChannels, systemImage: "magnifyingglass") {
-				model.searchChannels()
-			}
-			.labelStyle(.iconOnly)
-			.buttonStyle(.borderless)
-			.help(MainWindowStrings.InputBar.searchChannels)
 
 			Menu {
 				Button(MainWindowStrings.InputBar.markAllAsRead, systemImage: "checkmark.circle") {
@@ -379,25 +386,48 @@ struct MainWindowRootView: View {
 		.frame(height: MainWindowConstants.sidebarFooterHeight)
 	}
 
+	/** The transcript fills the column and the input bar floats over its foot.
+	 The bar's height is measured and handed to the transcript, which applies it
+	 as its scroll view's bottom content inset. It is deliberately not a
+	 `safeAreaInset`: the field is a constraint-based AppKit view whose geometry
+	 would then both feed and follow the inset, and AppKit ends that loop by
+	 throwing. A content inset changes nothing SwiftUI lays out. */
 	private var conversation: some View {
-		VStack(spacing: 0) {
-			MainWindowTranscriptRepresentable(logView: model.transcript)
+		ZStack(alignment: .bottom) {
+			MainWindowTranscriptRepresentable(logView: model.transcript, bottomInset: inputBarHeight)
 				.id(model.appearanceRevision)
 
-			MainWindowInputAccessoryView(model: inputContentView.textView.accessoryModel) {
-				inputContentView.textView.focus()
-			}
-			.padding(.horizontal, 18)
-
-			MainWindowInputRepresentable(contentView: inputContentView)
-				.frame(minHeight: 35, idealHeight: 44)
-				.padding(.horizontal, 10)
-				.padding(.vertical, 6)
-				.background(.regularMaterial, in: Capsule())
-				.padding(.horizontal, 8)
-				.padding(.bottom, 6)
+			inputBar
+				.onGeometryChange(for: CGFloat.self) { proxy in
+					proxy.size.height
+				} action: { height in
+					inputBarHeight = height
+				}
 		}
 		.background(conversationBackground)
+	}
+
+	/** The reply banner and the field are two glass shapes over the same ground,
+	 so they share one container and sample one backdrop. The zero spacing keeps
+	 them from merging: they carry different shapes and insets, and a blend
+	 between the two reads as a smear rather than as one control. */
+	private var inputBar: some View {
+		GlassEffectContainer(spacing: 0) {
+			VStack(spacing: 0) {
+				MainWindowInputAccessoryView(model: inputContentView.textView.accessoryModel) {
+					inputContentView.textView.focus()
+				}
+				.padding(.horizontal, 18)
+
+				MainWindowInputRepresentable(contentView: inputContentView)
+					.frame(minHeight: 35, idealHeight: 44)
+					.padding(.horizontal, 10)
+					.padding(.vertical, 6)
+					.glassEffect(.regular, in: .capsule)
+					.padding(.horizontal, 8)
+					.padding(.bottom, 6)
+			}
+		}
 	}
 
 	private var conversationBackground: Color {
@@ -490,22 +520,25 @@ private struct MainWindowInputRepresentable: NSViewRepresentable {
 
 struct MainWindowTranscriptRepresentable: NSViewRepresentable {
 	let logView: LogView?
+	/// Height of whatever floats over the transcript's foot.
+	let bottomInset: CGFloat
 
 	func makeNSView(context _: Context) -> MainWindowTranscriptHostView {
 		let host = MainWindowTranscriptHostView()
-		host.show(logView)
+		host.show(logView, bottomInset: bottomInset)
 		return host
 	}
 
 	func updateNSView(_ host: MainWindowTranscriptHostView, context _: Context) {
-		host.show(logView)
+		host.show(logView, bottomInset: bottomInset)
 	}
 }
 
 final class MainWindowTranscriptHostView: NSView {
 	private weak var logView: LogView?
 
-	func show(_ nextLogView: LogView?) {
+	func show(_ nextLogView: LogView?, bottomInset: CGFloat) {
+		defer { nextLogView?.setBottomContentInset(bottomInset) }
 		guard logView !== nextLogView else { return }
 		logView?.view.removeFromSuperview()
 		logView = nextLogView

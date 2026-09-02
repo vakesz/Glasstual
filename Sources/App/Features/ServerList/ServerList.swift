@@ -41,13 +41,22 @@ import Observation
 /// Selection, expansion and ordering state for the SwiftUI server sidebar.
 ///
 /// The IRC world remains the source of truth for clients and channels. This
-/// model derives visible rows from it and owns only presentation state, which
-/// keeps the view independent of protocol mutation details.
+/// model derives `rows` from it — value snapshots the view draws without
+/// touching the tree — and owns only presentation state, which keeps the view
+/// independent of protocol mutation details.
 @MainActor
 @Observable
 public final class ServerList {
 	public private(set) var selectedItemIdentifier: String?
-	public private(set) var presentationRevision = 0
+	/// What the view draws. Rebuilt whenever the tree reports a change, so a
+	/// row is never asked to notice one on its own.
+	private(set) var rows: [ServerRow] = []
+	/// What the sidebar's search field holds. While it is non-empty the list
+	/// shows every channel whose name contains it, under its server, whether or
+	/// not that server is disclosed.
+	public var filterText = "" {
+		didSet { rebuildRows() }
+	}
 
 	@ObservationIgnored weak var mainWindow: MainWindow?
 
@@ -56,9 +65,48 @@ public final class ServerList {
 
 	public init() {}
 
+	/** No rows are built here: the window attaches before the world exists, and
+	 the world's first `addItem` is what fills them. */
 	func attach(to window: MainWindow) {
 		precondition(mainWindow == nil || mainWindow === window)
 		mainWindow = window
+	}
+
+	// MARK: - Rows
+
+	private func rebuildRows() {
+		rows = clients.filter(isVisible).map { client in
+			ServerRow(
+				id: client.uniqueIdentifier,
+				title: client.label,
+				isActive: client.isActive,
+				isSecured: client.isSecured,
+				isExpanded: isFiltering || isExpanded(client),
+				channels: visibleChannels(for: client).map(channelRow)
+			)
+		}
+	}
+
+	private func channelRow(_ channel: IRCChannel) -> ChannelRow {
+		let kind: ChannelRow.Kind = if channel.isChannel {
+			.channel
+		} else if channel.isDirectChat {
+			.directChat
+		} else if channel.isUtility {
+			.utility
+		} else {
+			.privateMessage
+		}
+		return ChannelRow(
+			id: channel.uniqueIdentifier,
+			title: channel.label,
+			kind: kind,
+			isActive: channel.isActive,
+			hasJoinError: channel.errorOnLastJoinAttempt,
+			unreadCount: channel.treeUnreadCount,
+			showsUnreadCount: channel.config.showTreeBadgeCount,
+			highlightCount: channel.config.ignoreHighlights ? 0 : channel.nicknameHighlightCount
+		)
 	}
 
 	public var clients: [IRCClient] {
@@ -130,15 +178,45 @@ public final class ServerList {
 		client.sidebarItemIsExpanded
 	}
 
+	private var isFiltering: Bool {
+		filterQuery.isEmpty == false
+	}
+
+	private var filterQuery: String {
+		filterText.trimmingCharacters(in: .whitespacesAndNewlines)
+	}
+
+	/// The channels drawn under a server: all of them while it is disclosed,
+	/// only the matching ones while a filter is in effect.
+	private func visibleChannels(for client: IRCClient) -> [IRCChannel] {
+		guard isFiltering else {
+			return isExpanded(client) ? client.channelList : []
+		}
+		return client.channelList.filter { $0.label.localizedStandardContains(filterQuery) }
+	}
+
+	/// A server row stays while it, or a channel under it, matches the filter.
+	private func isVisible(_ client: IRCClient) -> Bool {
+		guard isFiltering else { return true }
+		return client.label.localizedStandardContains(filterQuery)
+			|| visibleChannels(for: client).isEmpty == false
+	}
+
 	public func setExpanded(_ expanded: Bool, for client: IRCClient) {
 		guard client.sidebarItemIsExpanded != expanded else { return }
 		client.sidebarItemIsExpanded = expanded
-		presentationRevision &+= 1
+		rebuildRows()
 
 		if expanded == false, selectedItem?.associatedClient === client, selectedItem !== client {
 			selectedItemIdentifier = client.uniqueIdentifier
 			mainWindow?.serverListSelectionDidChangeFromSwiftUI()
 		}
+	}
+
+	/// The disclosure toggle, from a row that only knows the server's identity.
+	func toggleExpanded(serverID: String) {
+		guard let client = clients.first(where: { $0.uniqueIdentifier == serverID }) else { return }
+		setExpanded(isExpanded(client) == false, for: client)
 	}
 
 	public func expandItem(_ item: Any?) {
@@ -159,7 +237,7 @@ public final class ServerList {
 		updateDepth -= 1
 		if updateDepth == 0, updateIsPending {
 			updateIsPending = false
-			presentationRevision &+= 1
+			rebuildRows()
 		}
 	}
 
@@ -168,7 +246,7 @@ public final class ServerList {
 			updateIsPending = true
 			return
 		}
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	public func addItem(toList _: UInt, inParent _: Any?) {
@@ -191,7 +269,7 @@ public final class ServerList {
 	}
 
 	public func refreshAllDrawings() {
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	public func refreshAllDrawings(_: Bool) {
@@ -199,31 +277,31 @@ public final class ServerList {
 	}
 
 	public func refreshDrawing(forRows _: IndexSet, skipOcclusionCheck _: Bool = false) {
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	public func refreshDrawing(forRow _: Int, skipOcclusionCheck _: Bool = false) {
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	public func refreshDrawing(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	public func refreshMessageCount(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	public func refreshAllUnreadMessageCountBadges(_: Bool = false) {
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	public func applicationAppearanceChanged() {
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	public func systemAppearanceChanged() {
-		presentationRevision &+= 1
+		rebuildRows()
 	}
 
 	func menu(for identifiers: Set<String>) -> NSMenu? {
@@ -243,9 +321,10 @@ public final class ServerList {
 		return controller.mainMenuQueryMenu
 	}
 
-	func move(draggedIdentifier: String, before destination: IRCTreeItem) -> Bool {
+	func move(draggedIdentifier: String, beforeIdentifier destinationIdentifier: String) -> Bool {
 		guard let world = mainWindow?.world,
 		      let draggedItem = world.findItem(withId: draggedIdentifier),
+		      let destination = world.findItem(withId: destinationIdentifier),
 		      draggedItem !== destination
 		else { return false }
 

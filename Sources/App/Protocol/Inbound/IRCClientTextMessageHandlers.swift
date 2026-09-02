@@ -317,11 +317,8 @@ public extension IRCClient {
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message,
 			      completionBlock: completion)
 		}
-		if !isNotice, let query, !query.isActive {
-			query.activate()
-			if let item = (query as AnyObject) as? IRCTreeItem {
-				output?.reloadTreeItem(item)
-			}
+		if !isNotice, let query {
+			applyPresence(true, to: query)
 		}
 	}
 

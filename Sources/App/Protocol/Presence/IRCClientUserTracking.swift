@@ -125,13 +125,59 @@ extension IRCClient {
 
 		modifyWatchList(byAdding: true, nicknames: additions)
 		modifyWatchList(byAdding: false, nicknames: removals)
+		modifyWatchList(byAdding: true, nicknames: queryPeerNicknames)
 		startISONTimer()
+	}
+
+	// MARK: - Query peers
+
+	/// The people the open queries are with. The sidebar draws each query in
+	/// the colour of its peer's presence, so that presence is worth asking for.
+	var queryPeerNicknames: [String] {
+		channelList.filter(\.isPrivateMessage).map(\.name)
+	}
+
+	/// Has the server report the peer signing on and off, where it can. With
+	/// neither MONITOR nor WATCH this sends nothing, and the ISON poll — which
+	/// already covers every query — is what the row follows instead.
+	func trackQueryPeer(_ nickname: String) {
+		modifyWatchList(byAdding: true, nicknames: [nickname])
+	}
+
+	/// The address book may track the same person; that entry keeps its place.
+	func stopTrackingQueryPeer(_ nickname: String) {
+		guard findUserTrackingAddressBookEntry(forNickname: nickname) == nil else { return }
+		modifyWatchList(byAdding: false, nicknames: [nickname])
+	}
+
+	/// Applies a presence report to the query with that peer, if one is open.
+	func applyPresence(_ isOnline: Bool, toQueryWith nickname: String) {
+		guard let query = findChannel(nickname), query.isPrivateMessage else { return }
+		applyPresence(isOnline, to: query)
+	}
+
+	/// The one place a query follows its peer on and off line, whichever source
+	/// reported it: MONITOR, WATCH, ISON, a QUIT, a message arriving, or login.
+	/// Address-book tracking is a separate concern with its own notifications;
+	/// this only recolours the row.
+	func applyPresence(_ isOnline: Bool, to query: IRCChannel) {
+		guard query.isActive != isOnline else { return }
+		if isOnline {
+			query.activate()
+		} else {
+			query.deactivate()
+		}
+		output?.reloadTreeItem(query)
 	}
 
 	func startISONTimer() {
 		guard isonTimer.isActive == false else { return }
 		isonTimer.start(30, repeats: true)
 		startWhoTimer()
+		/* The timer sleeps a full interval before its first fire, and login has
+		 just marked every query active. Ask now, so a peer who is offline is
+		 not drawn as present for the next thirty seconds. */
+		onISONTimer()
 	}
 
 	func stopISONTimer() {

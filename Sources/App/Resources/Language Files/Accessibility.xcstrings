@@ -36,6 +36,16 @@
       "extractionState" : "manual",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Query with User %@" } } }
     },
+    "topic-show-full" : {
+      "comment" : "Accessibility label for the button that expands a channel topic truncated to one line.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Show full topic" } } }
+    },
+    "topic-show-less" : {
+      "comment" : "Accessibility label for the button that collapses an expanded channel topic back to one line.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Show less of the topic" } } }
+    },
     "user-in-user-list" : {
       "comment" : "Accessibility description for a user-list row. The argument is the user's nickname. Migrated from legacy key alq-6s.",
       "extractionState" : "manual",

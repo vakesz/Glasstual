@@ -300,7 +300,7 @@ public final class LogController: NSObject {
 		/* Bound to a local because the log message is an autoclosure, where
 		 `self.` would be required and SwiftFormat would strip it. */
 		let identifier = uniqueIdentifier
-		logControllerLogger.log("Preparing view controller: \(identifier, privacy: .public)")
+		logControllerLogger.debug("Preparing view controller: \(identifier, privacy: .public)")
 		prepareForTermination(true)
 	}
 

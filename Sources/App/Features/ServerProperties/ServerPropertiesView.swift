@@ -95,6 +95,10 @@ struct ServerPropertiesView: View {
 					}
 				}
 			}
+			/* A sheet has no toolbar to put a sidebar toggle in, so the one the
+			 split view adds by default lands on top of the section list. The
+			 list is always visible here anyway. */
+			.toolbar(removing: .sidebarToggle)
 
 			Divider()
 			HStack {

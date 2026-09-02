@@ -50,16 +50,6 @@ enum PreferencesGeneralStrings {
 	}
 }
 
-enum PreferencesNavigationStrings {
-	static var back: String {
-		String(localized: .TDCPreferencesController.navigationBack)
-	}
-
-	static var forward: String {
-		String(localized: .TDCPreferencesController.navigationForward)
-	}
-}
-
 enum PreferencesBehaviorStrings {
 	static var autojoinOnInvite: String {
 		String(localized: .TDCPreferencesController.behaviorAutojoinOnInvite)
