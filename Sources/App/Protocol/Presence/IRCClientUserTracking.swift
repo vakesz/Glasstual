@@ -209,6 +209,23 @@ extension IRCClient {
 		sendTimedWhoRequests(to: channelList)
 	}
 
+	/** A channel's first WHO goes out as soon as its members are known.
+
+	 It is the reply that carries who was already away when the channel was
+	 joined; away-notify only reports changes from then on. Left to the timer,
+	 that first request waited for a two-minute tick that starts ten seconds
+	 after login and takes five channels at a time. */
+	@MainActor
+	func sendInitialWhoRequest(to channel: IRCChannel) {
+		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
+		      channel.isActive, channel.isChannel, channel.sentInitialWhoRequest == false,
+		      config.sendWhoCommandRequestsToChannels,
+		      UInt(channel.numberOfMembers) <= UserTrackingWhoBatchPolicy.maximumInitialChannelSize
+		else { return }
+		channel.sentInitialWhoRequest = true
+		sendWho(to: channel, hideResponse: true)
+	}
+
 	@MainActor
 	func sendTimedWhoRequests(to channels: [IRCChannel]) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,

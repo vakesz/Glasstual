@@ -300,6 +300,7 @@
 		5AD3D3989B87E151A9220845 /* IRCSpecNumericsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD0DD47DF620419A20F8305 /* IRCSpecNumericsTests.swift */; };
 		5B341651B1B6077643A8DE1A /* ConnectionErrors.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 038C4112E5B5EF58CBC8E672 /* ConnectionErrors.xcstrings */; };
 		5B8C2D68F5EC6F0038F2A1E5 /* IRCClientLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1143757CFFA8F56A416D0456 /* IRCClientLogFile.swift */; };
+		5BEE9DD69B7FAEAC2744753B /* LogLineTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3515307D0DDE3F4D949779D /* LogLineTypeTests.swift */; };
 		5C7E8DFBCF0139990A507789 /* PluginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5867F582E77E83BD152D1A0 /* PluginItem.swift */; };
 		5C81406A22ED5DF2C77E7AE4 /* KeychainStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3547C502B2F9F014CC5E589C /* KeychainStoreTests.swift */; };
 		5C95E6F9D28C5711A57A72A2 /* NotificationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3DFBE5771D85B87EB9EA81 /* NotificationEvent.swift */; };
@@ -1655,6 +1656,7 @@
 		D24F1AB8A92159119BA3D2A4 /* MemberListStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberListStrings.swift; sourceTree = "<group>"; };
 		D27BC210B34EDDF2B0ADEDE9 /* IRCClientNumericErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientNumericErrors.swift; sourceTree = "<group>"; };
 		D28F13698392CF35EBDE896B /* IRCModeInfoValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCModeInfoValueTests.swift; sourceTree = "<group>"; };
+		D3515307D0DDE3F4D949779D /* LogLineTypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLineTypeTests.swift; sourceTree = "<group>"; };
 		D3B630B7CAA3000955F3B2FE /* IRCClientRequestedCommandPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientRequestedCommandPresentation.swift; sourceTree = "<group>"; };
 		D3E0D27EACF1D6114AE62C6F /* RemoteConnectionProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConnectionProtocolTests.swift; sourceTree = "<group>"; };
 		D429F8CFC47E2E46984B6944 /* IRCClientConfigPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientConfigPersistenceTests.swift; sourceTree = "<group>"; };
@@ -3165,6 +3167,7 @@
 				8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */,
 				3DD8491BA0AFAE8095558011 /* LogLineTests.swift */,
 				9B562D6F1BBEFFBE09214007 /* LogLineTypeRawValueTests.swift */,
+				D3515307D0DDE3F4D949779D /* LogLineTypeTests.swift */,
 				BFB501D3F16D7355583620ED /* LogRendererSafetyTests.swift */,
 				F424C4B6AB937448EBF6EA27 /* LogRendererTests.swift */,
 				9B50B65ECCE5DD899A702E0E /* LogRenderPipelineTests.swift */,
@@ -4244,6 +4247,7 @@
 				53537C46936246C47434AA20 /* LogLineRenderRequestTests.swift in Sources */,
 				4351ECE3958AAAE4C1B2AC7A /* LogLineTests.swift in Sources */,
 				E5EFD2984C33C9A7908A9FCD /* LogLineTypeRawValueTests.swift in Sources */,
+				5BEE9DD69B7FAEAC2744753B /* LogLineTypeTests.swift in Sources */,
 				518C569244E685DF38BE71E6 /* LogRenderPipelineTests.swift in Sources */,
 				80743127EE90051A2EB8D3A8 /* LogRendererSafetyTests.swift in Sources */,
 				6D6815F7D034AE27AE1A0164 /* LogRendererTests.swift in Sources */,

@@ -326,7 +326,7 @@ private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 		let target: Int? = switch mark {
 		case .none: nil
 		case .latest: lines.indices.last
-		case let .after(date): lines.firstIndex { $0.receivedAt >= date }
+		case let .after(date): lines.firstIndex { $0.receivedAt >= date && $0.lineType.isConversation }
 		}
 		if let target {
 			lines[target].markers.insert(.unread(MainWindowStrings.Conversation.unreadMessages), at: 0)
@@ -344,8 +344,22 @@ private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 		textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
 	}
 
+	/** Scrolls so the last line sits just above the bottom content inset.
+
+	 `scrollRangeToVisible` judges visibility by the clip view's bounds, which
+	 still include the strip beneath the floating input bar; a line that lands
+	 there counts as visible and the view stops following. The target is
+	 computed from the inset instead. */
 	func scrollToBottom() {
-		textView.scrollRangeToVisible(NSRange(location: textView.string.utf16.count, length: 0))
+		if let layoutManager = textView.textLayoutManager {
+			layoutManager.ensureLayout(for: layoutManager.documentRange)
+		}
+		textView.sizeToFit()
+		let clip = scrollView.contentView
+		let insets = scrollView.contentInsets
+		let targetY = textView.frame.maxY + insets.bottom - clip.bounds.height
+		clip.scroll(to: NSPoint(x: clip.bounds.origin.x, y: max(-insets.top, targetY)))
+		scrollView.reflectScrolledClipView(clip)
 	}
 
 	func find(_ search: String, movingForward: Bool) {
@@ -708,9 +722,12 @@ private final class NativeTranscriptView: NSView, NSTextViewDelegate {
 		}
 	}
 
+	/// Whether the reader is at the end, judged by the part of the clip view
+	/// the input bar does not cover.
 	private var isNearBottom: Bool {
 		let clip = scrollView.contentView
-		return clip.bounds.maxY >= textView.bounds.maxY - 40
+		let visibleBottom = clip.bounds.maxY - scrollView.contentInsets.bottom
+		return visibleBottom >= textView.frame.maxY - 40
 	}
 
 	private func effectiveFont(_ controller: ThemeController) -> NSFont {

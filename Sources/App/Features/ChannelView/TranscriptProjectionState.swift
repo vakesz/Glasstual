@@ -185,8 +185,9 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		self.mark = mark
 	}
 
+	/// The first thing said on or after `date`; what "go to mark" jumps to.
 	func renderedLineNumber(onOrAfter date: Date) -> String? {
-		recentLines.first { $0.receivedAt >= date }?.uniqueIdentifier
+		recentLines.first { $0.receivedAt >= date && $0.lineType.isConversation }?.uniqueIdentifier
 	}
 
 	mutating func updateDelivery(
