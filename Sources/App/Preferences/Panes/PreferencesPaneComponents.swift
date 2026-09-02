@@ -56,6 +56,46 @@ struct PreferencesToggle: View {
 	}
 }
 
+/** One protocol capability the user can switch off: its wire name, what it
+ does in a sentence, and a link to the document that defines it.
+
+ The name is verbatim because it is the identifier the server and the client
+ exchange; the summary is what says why anyone would keep it on. The spoken
+ label is passed in already composed, so the sentence a screen reader hears is
+ localized as one string rather than assembled here. */
+struct PreferencesCapabilityToggle: View {
+	let name: String
+	let summary: String?
+	let accessibilityLabel: String
+	let specification: URL?
+	let specificationTitle: String
+	@Binding var isOn: Bool
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 4) {
+			Toggle(isOn: $isOn) {
+				VStack(alignment: .leading, spacing: 2) {
+					Text(verbatim: name)
+					if let summary {
+						Text(verbatim: summary)
+							.font(.callout)
+							.foregroundStyle(.secondary)
+							.fixedSize(horizontal: false, vertical: true)
+					}
+				}
+			}
+			.toggleStyle(.switch)
+			.accessibilityLabel(Text(verbatim: accessibilityLabel))
+
+			if let specification {
+				Link(specificationTitle, destination: specification)
+					.font(.callout)
+			}
+		}
+		.padding(.vertical, 2)
+	}
+}
+
 /** The nib's combo boxes: a field the user can type into, with the list of
  values it shipped reachable from the button beside it. */
 struct PreferencesComboField: View {

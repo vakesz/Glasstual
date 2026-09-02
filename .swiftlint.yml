@@ -79,10 +79,6 @@ custom_rules:
   isolation_escape_hatch:
     name: "Isolation Escape Hatch"
     regex: '(?:nonisolated\(unsafe\)|@unchecked\s+Sendable|MainActor\.assumeIsolated|Thread\.isMainThread|DispatchQueue\.main\.sync)'
-    match_kinds:
-      - attribute.builtin
-      - keyword
-      - typeidentifier
     message: "Move the state to its isolation domain or pass a Sendable snapshot."
     severity: error
 
@@ -100,10 +96,18 @@ custom_rules:
 
   unmarked_nonisolated:
     name: "Unmarked Nonisolated Declaration"
-    regex: '(?m)\bnonisolated\b(?!\s*\()[^\n]*(?<!// nonisolated: pure)(?<!// nonisolated: let)(?<!// nonisolated: value)(?<!// nonisolated: xpc-shim)$'
-    match_kinds:
-      - keyword
-    message: "Mark a pure, Sendable let, XPC shim, or value declaration with its approved nonisolated reason."
+    regex: '(?m)^[ \t]*(?:(?:private|fileprivate|internal|public|open|package|final|static|class|override|dynamic|convenience|required|@[A-Za-z_][A-Za-z0-9_]*(?:\([^)\n]*\))?)[ \t]+)*nonisolated\b(?!\s*\()[^\n]*(?<!// nonisolated: pure)(?<!// nonisolated: let)(?<!// nonisolated: value)(?<!// nonisolated: xpc-shim)(?<!// nonisolated: immutable)(?<!// nonisolated: guarded)$'
+    message: "Mark a pure, Sendable let, XPC shim, value, immutable, or guarded declaration with its approved nonisolated reason."
+    severity: error
+
+  # `value` is a claim about the type, not about its members, so a class can
+  # never satisfy it: a namespace of statics is an `enum`, a class of `let`s is
+  # `immutable`, and anything else belongs in an isolation domain. The marker
+  # sat on twenty classes before this rule existed.
+  value_marker_on_class:
+    name: "Value Marker on a Class"
+    regex: '(?m)^[^\n]*\bclass\s[^\n]*//\s*nonisolated:\s*value\s*$'
+    message: "A class is not a value: use immutable, make the namespace an enum, or move the state to its isolation domain."
     severity: error
 
   disabled_test:

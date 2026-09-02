@@ -92,6 +92,23 @@ struct IRCConnectionConfigEnvelopeTests {
 		#expect(config.floodControlMaximumMessages == 4)
 	}
 
+	/// `init(from:)` assigns inside an initializer, where the clamping `didSet`
+	/// observers do not run, so a stored zero reaches `applyMissingDefaults`
+	/// and is repaired there.
+	@Test("A decoded zero flood-control value comes back as the default")
+	func decodedFloodControlZeroesFallBackToTheDefault() throws {
+		let data = try PropertyListEncoder().encode(sampleConfig())
+		let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
+		var encoded = try #require([String: PropertyListValue](propertyList: plist))
+		encoded["floodControlDelayInterval"] = 0
+		encoded["floodControlMaximumMessages"] = 0
+
+		let config = try #require(PropertyListModel.decode(IRCConnectionConfig.self, from: encoded))
+
+		#expect(config.floodControlDelayInterval == IRCConnectionDefaults.floodControlDelayInterval)
+		#expect(config.floodControlMaximumMessages == IRCConnectionDefaults.floodControlMaximumMessages)
+	}
+
 	@Test("A proxy type this build does not know becomes no proxy")
 	func unsupportedProxyTypeIsRefused() throws {
 		let data = try PropertyListEncoder().encode(sampleConfig())

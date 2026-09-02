@@ -164,6 +164,43 @@ struct IRCColorFormatTests {
 		) == false)
 	}
 
+	/// Clearing the foreground used to remove `.backgroundColor`, so the text
+	/// stayed coloured on screen while the colour stopped going out on the wire
+	/// and an unrelated background was wiped.
+	@Test("Removing the foreground colour leaves the background colour alone")
+	func removingForegroundColorKeepsBackgroundColor() {
+		let range = NSRange(location: 0, length: 5)
+		let string = NSMutableAttributedString(
+			string: "color",
+			attributes: [.font: NSFont.systemFont(ofSize: 13)]
+		)
+		string.setIRCFormatterAttribute(.foregroundColor, value: NSColor.red, range: range)
+		string.setIRCFormatterAttribute(.backgroundColor, value: NSColor.blue, range: range)
+
+		string.removeIRCFormatterAttribute(.foregroundColor, range: range)
+
+		#expect(string.ircFormatterAttributeSet(inRange: .foregroundColor, range: range) == false)
+		#expect(string.ircFormatterAttributeSet(inRange: .backgroundColor, range: range))
+		#expect(string.attribute(.foregroundColor, at: 0, effectiveRange: nil) == nil)
+		#expect(string.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor == .blue)
+	}
+
+	/// The whole run used to be skipped when it carried no font, so effects that
+	/// do not need one were never removed.
+	@Test("Effects that need no font are removed from a run that has none")
+	func removingUnderlineWorksWithoutAFont() {
+		let range = NSRange(location: 0, length: 4)
+		let string = NSMutableAttributedString(string: "line")
+		string.setIRCFormatterAttribute(.underline, value: true, range: range)
+
+		#expect(string.ircFormatterAttributeSet(inRange: .underline, range: range))
+
+		string.removeIRCFormatterAttribute(.underline, range: range)
+
+		#expect(string.ircFormatterAttributeSet(inRange: .underline, range: range) == false)
+		#expect(string.attribute(.underlineStyle, at: 0, effectiveRange: nil) == nil)
+	}
+
 	@Test("Wrapping deletes back to the nearest whitespace inside the maximum distance")
 	func wrapHelperDeletesBackToWhitespaceInsideMaxDistance() {
 		var string = "aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii"

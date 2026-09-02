@@ -172,7 +172,7 @@ public extension IRCClient {
 		var destinationToSelect: IRCChannel?
 		if invocation.isSecretMessage == false, silentlyConnecting == false,
 		   operatorPrefix == nil,
-		   supportInfo.maximumTargets(forCommand: invocation.outbound.wireCommand) > 1
+		   supportInfo.groupsMultipleTargets(forCommand: invocation.outbound.wireCommand)
 		{
 			let groupedChannels = destinations.compactMap { destinationName -> IRCChannel? in
 				guard let channel = self.findChannel(destinationName), channel.isChannel, channel.isActive else {
@@ -228,7 +228,7 @@ public extension IRCClient {
 
 		let lines = text.splitIntoLines
 		let shouldWarn = lines.count > 4 || text.length > 2040
-		if shouldWarn, shouldContinuePotentialFlood() == false {
+		if shouldWarn, potentialFloodAlert() == false {
 			return
 		}
 
@@ -324,10 +324,15 @@ public extension IRCClient {
 	@MainActor
 	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, toChannels channels: [IRCChannel]) {
 		guard text.length > 0, channels.isEmpty == false, let outbound = OutboundTextCommand(command) else { return }
+		/* Grouping needs the server's word for it: without an advertised limit
+		 above one, every channel gets its own line. A query is never grouped
+		 even where the server would take the targets, because the transcript
+		 the user reads is per-conversation. */
+		let groupsTargets = supportInfo.groupsMultipleTargets(forCommand: outbound.wireCommand)
 		let targetLimit = supportInfo.maximumTargets(forCommand: outbound.wireCommand)
 		var groupedChannels: [IRCChannel] = []
 		for channel in channels {
-			if targetLimit > 1, channel.isChannel {
+			if groupsTargets, channel.isChannel {
 				groupedChannels.append(channel)
 			} else {
 				sendText(text, as: command, to: channel)
@@ -365,7 +370,7 @@ public extension IRCClient {
 						}
 					}
 					let wireMessage = outbound.lineType == .action
-						? CTCPPayload.framed(command: "ACTION", text: message, sanitizingLineBreaks: false)
+						? CTCPPayload.action(message)
 						: message
 					if let deliveryLabel {
 						sendCommand(
@@ -393,19 +398,18 @@ public extension IRCClient {
 		return nil
 	}
 
-	private func shouldContinuePotentialFlood() -> Bool {
-		potentialFloodAlert()
-	}
-
+	/// `true` when the user is content to send a burst this large.
 	private func potentialFloodAlert() -> Bool {
-		Alerts.modalAlert(
-			withMessage: IRCTransportStrings.confirmLargeMessage,
-			title: IRCTransportStrings.largeMessageWarning,
-			defaultButton: PromptStrings.Action.yes,
-			alternateButton: PromptStrings.Action.no,
-			suppressionKey: OutboundTextSuppressionKey.potentialFlood.rawValue,
-			suppressionText: nil
-		)
+		output?.confirmModally(
+			AlertRequest(
+				title: IRCTransportStrings.largeMessageWarning,
+				body: IRCTransportStrings.confirmLargeMessage,
+				defaultButton: PromptStrings.Action.yes,
+				alternateButton: PromptStrings.Action.no,
+				suppressionKey: OutboundTextSuppressionKey.potentialFlood.rawValue,
+				style: .warning
+			)
+		) ?? true
 	}
 
 	private func printLocallyIfNeeded(
@@ -491,7 +495,7 @@ public extension IRCClient {
 			}
 
 			let wireMessage = invocation.outbound.lineType == .action
-				? CTCPPayload.framed(command: "ACTION", text: message, sanitizingLineBreaks: false)
+				? CTCPPayload.action(message)
 				: message
 			if let deliveryLabel {
 				sendCommand(
@@ -516,9 +520,7 @@ public extension IRCClient {
 
 	@MainActor
 	private func selectCommandDestination(_ channel: IRCChannel?) {
-		guard let channel,
-		      let treeItem = (channel as AnyObject) as? IRCTreeItem
-		else { return }
-		output?.selectItem(treeItem)
+		guard let channel else { return }
+		output?.selectItem(channel)
 	}
 }

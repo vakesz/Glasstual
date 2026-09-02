@@ -99,6 +99,33 @@ protocol ClientOutput: AnyObject {
 	 layer's business. This used to hand an `NSWindow` back, which is how AppKit
 	 reached into the protocol layer at all. */
 	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion)
+	/** Asks a yes/no question and blocks until the user answers, reporting
+	 `true` for the default button.
+
+	 The two call sites need the answer before they can decide whether to keep
+	 going. With no window to ask in, the answer is the default one, which is
+	 also what an already-suppressed alert reports. */
+	func confirmModally(_ request: AlertRequest) -> Bool
+	/// Closes every sheet the window is showing on this client's behalf.
+	func closeSheets(for client: IRCClient)
+
+	// MARK: Access lists
+
+	/** A `+b`/`+e`/`+I`/`+q` list entry arrived from the server.
+
+	 `true` when a sheet is showing the list and took the entry, in which case
+	 the protocol layer does not also print it into the transcript. */
+	func accessListEntryReceived(mask: String, setBy author: String?, creationDate date: Date?) -> Bool
+	/// The end of such a list. `true` when a sheet took it.
+	func accessListFinished() -> Bool
+	/// Dismisses whatever sheet is scoped to a channel that is going away. The
+	/// protocol layer knows the channel is gone; which sheets were hanging off
+	/// it is the window layer's business.
+	func closeSheets(forChannelId channelId: String)
+	/// Offers a freshly logged highlight to a highlight list that happens to be
+	/// open for the same client, so the list does not have to be reopened to
+	/// show it. A no-op when none is open.
+	func highlightWasLogged(_ entry: HighlightLogEntry)
 
 	// MARK: Server list
 

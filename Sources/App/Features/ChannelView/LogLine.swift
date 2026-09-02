@@ -38,9 +38,11 @@
 import CocoaExtensions
 import Foundation
 
-nonisolated enum LogLineFormat { // nonisolated: value
+public nonisolated enum LogLineFormat { // nonisolated: value
 	static let actionNickname = "%@ "
-	static let defaultCommand = "-100"
+	/// The command a line Glasstual printed itself carries, in place of the
+	/// server command a line off the wire has.
+	public static let defaultCommand = "-100"
 	static let loggerActionNickname = "\u{2022} %n:"
 	static let loggerClock = "[%Y-%m-%dT%H:%M:%S%z]"
 	static let loggerNoticeNickname = "-%n-"
@@ -94,10 +96,6 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		}
 
 		self = archive.line
-	}
-
-	public static func logLine(with data: Data) -> LogLine? {
-		LogLine(data: data)
 	}
 
 	static func logLine(from historicEntry: HistoricLogEntry) -> LogLine? {
@@ -363,16 +361,5 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 
 	private enum Session {
 		static let identifier = UInt(UInt32.random(in: 0 ..< 999_999))
-	}
-}
-
-nonisolated extension LogLineType { // nonisolated: value
-	var hasNicknameColor: Bool {
-		switch self {
-		case .privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight:
-			true
-		default:
-			false
-		}
 	}
 }

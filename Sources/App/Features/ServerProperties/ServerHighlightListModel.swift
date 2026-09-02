@@ -21,7 +21,6 @@ struct ServerHighlightListRow: Identifiable, Equatable {
 	let message: AttributedString
 	let plainMessage: String
 	let time: Date
-	let timeLabel: String
 
 	init(entry: HighlightLogEntry) {
 		id = "\(entry.clientId):\(entry.channelId):\(entry.lineNumber)"
@@ -52,10 +51,15 @@ struct ServerHighlightListRow: Identifiable, Equatable {
 		message = AttributedString(renderedMessage)
 		plainMessage = renderedMessage.string
 		time = entry.timeLogged
+	}
 
-		let interval = entry.timeLogged.timeIntervalSinceNow
-		let formattedInterval = humanReadableTimeInterval(interval, true, 0) as String? ?? ""
-		timeLabel = ApplicationStrings.relativeTime(formattedInterval)
+	/// How long ago the highlight arrived, read at the moment the row is drawn.
+	/// Freezing it at construction left every row showing the age it had when it
+	/// was added, so nothing in an open sheet ever grew older.
+	var timeLabel: String {
+		let formattedInterval = humanReadableTimeInterval(time.timeIntervalSinceNow, true, 0) as String? ?? ""
+
+		return ApplicationStrings.relativeTime(formattedInterval)
 	}
 
 	var copyText: String {

@@ -37,7 +37,7 @@
 
 import Foundation
 
-public final nonisolated class ParsedLine: NSObject { // nonisolated: value
+public nonisolated struct ParsedLine: Sendable { // nonisolated: value
 	public let messageTagSection: String?
 	public let senderSection: String?
 	public let command: String
@@ -50,8 +50,6 @@ public final nonisolated class ParsedLine: NSObject { // nonisolated: value
 		self.command = command
 		commandNumeric = Self.numericValue(of: command)
 		self.parameters = parameters
-
-		super.init()
 	}
 
 	/// IRC numerics are exactly three ASCII digits. `CharacterSet.decimalDigits`
@@ -70,7 +68,7 @@ public final nonisolated class ParsedLine: NSObject { // nonisolated: value
 	}
 }
 
-public final nonisolated class LineParser: NSObject { // nonisolated: value
+public nonisolated enum LineParser { // nonisolated: value
 	/// RFC 1459/2812 and IRCv3 separate tokens on SPACE (0x20) only, never on
 	/// the wider Unicode whitespace set.
 	private static let space: Unicode.Scalar = " "

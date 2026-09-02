@@ -75,6 +75,30 @@ struct ApplicationSupportTests {
 		#expect(FileManager.default.fileExists(atPath: directory.path) == false)
 	}
 
+	/// The path used to be recorded as ensured before the creation was even
+	/// attempted, so a directory that failed once was never tried again.
+	@Test("A directory that could not be created is created on the next call")
+	func pathInfoRetriesADirectoryItCouldNotCreate() throws {
+		let fileManager = FileManager.default
+		let blocker = fileManager.temporaryDirectory
+			.appendingPathComponent("GlasstualPathTests-\(UUID().uuidString)", isDirectory: false)
+		let directory = blocker.appendingPathComponent("directory", isDirectory: true)
+		defer { try? fileManager.removeItem(at: blocker) }
+
+		/* A directory cannot be made inside a regular file. */
+		try Data().write(to: blocker)
+
+		PathInfo.createDirectory(at: directory)
+
+		#expect(fileManager.fileExists(atPath: directory.path) == false)
+
+		try fileManager.removeItem(at: blocker)
+
+		PathInfo.createDirectory(at: directory)
+
+		#expect(fileManager.fileExists(atPath: directory.path))
+	}
+
 	@Test("The bundled property lists load through the resource manager")
 	func resourceManagerLoadsKnownPropertyLists() {
 		let networks = ResourceManager.dictionary(fromResources: "IRCNetworks", cacheValue: false)

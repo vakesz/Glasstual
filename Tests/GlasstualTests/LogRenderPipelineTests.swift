@@ -53,7 +53,7 @@ private actor RenderGate {
 
 /// A one-shot signal that a synchronous main-actor apply can fire and an async
 /// test can wait for. `AsyncStream` buffers, so firing first is safe.
-private final nonisolated class DeliverySignal: Sendable {
+private final nonisolated class DeliverySignal: Sendable { // nonisolated: immutable
 	private let stream: AsyncStream<Void>
 	private let continuation: AsyncStream<Void>.Continuation
 
@@ -128,6 +128,39 @@ struct LogRenderPipelineTests {
 		})
 
 		await delivered.wait()
+		await pipeline.stop()
+		await runner.value
+	}
+
+	/** The burst above pins delivery order; this pins the other half of the same
+	 contract — that every render ran off the main actor, not just the first.
+
+	 Only the apply half is ordered. Four renders run at once on the cooperative
+	 pool, so which of them finishes rendering first is the pool's business:
+	 asserting submission order over the probe made this fail whenever the pool
+	 happened to finish them out of order. The probe answers where each render
+	 ran and that all five ran; the delivery log answers the ordering. */
+	@Test("Every render in a burst leaves the main actor, and every apply lands in order")
+	func everyRenderLeavesTheMainActor() async {
+		let pipeline = LogRenderPipeline()
+		let runner = Task { await pipeline.run() }
+		let probe = IsolationProbe()
+		let log = DeliveryLog()
+
+		for line in 0 ..< 5 {
+			let label = String(line)
+			pipeline.submissions.yield(LogRenderSubmission(isStandalone: false) {
+				await probe.record(label)
+				return { log.append(label) }
+			})
+		}
+
+		await pipeline.drain()
+
+		#expect(log.labels == ["0", "1", "2", "3", "4"])
+		#expect(probe.labels.sorted() == ["0", "1", "2", "3", "4"])
+		probe.expectNoneOnMainActor()
+
 		await pipeline.stop()
 		await runner.value
 	}
@@ -218,5 +251,29 @@ struct LogRenderPipelineTests {
 
 		await pipeline.stop()
 		await runner.value
+	}
+
+	/// Stopping is the pipeline's cancellation: a render that is still parked
+	/// when the view is cleared must not reach the document afterwards.
+	@Test("Stopping cancels a render that has not been applied yet")
+	func stoppingCancelsWorkStillInFlight() async {
+		let pipeline = LogRenderPipeline()
+		let runner = Task { await pipeline.run() }
+		let log = DeliveryLog()
+		let gate = RenderGate()
+		let rendering = DeliverySignal()
+
+		pipeline.submissions.yield(LogRenderSubmission(isStandalone: false) {
+			rendering.fire()
+			await gate.wait()
+			return { log.append("parked") }
+		})
+
+		await rendering.wait()
+		await pipeline.stop()
+		await gate.open()
+		await runner.value
+
+		#expect(log.labels.isEmpty, "a cancelled render still reached the transcript")
 	}
 }

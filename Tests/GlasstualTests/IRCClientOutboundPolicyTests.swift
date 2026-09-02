@@ -91,4 +91,21 @@ struct IRCClientOutboundPolicyTests {
 		#expect(message.isSecretMessage)
 		#expect(action.isSecretMessage == false)
 	}
+
+	/// The modifier used to carry its own leading space and `SendingMessage`
+	/// added the separator on top, so the line went out `WATCH  +alice +bob`.
+	@Test("WATCH separates its nicknames with a single space")
+	func watchListLinesCarryOneSpaceBetweenNicknames() {
+		let client = GLTTestClient()
+		client.markAsLoggedIn()
+		client.enableCapability(.watchCommand)
+
+		client.modifyWatchList(byAdding: true, nicknames: ["alice", "bob"])
+
+		#expect(client.sentLines.contains("WATCH +alice +bob"))
+
+		client.modifyWatchList(byAdding: false, nicknames: ["alice"])
+
+		#expect(client.sentLines.contains("WATCH -alice"))
+	}
 }

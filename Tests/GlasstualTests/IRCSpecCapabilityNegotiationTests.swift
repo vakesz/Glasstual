@@ -54,7 +54,7 @@ struct IRCSpecCapabilityNegotiationTests {
 	private func receive(_ line: String, on client: GLTTestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 
-		client.receiveCapabilityOrAuthenticationRequest(message)
+		client.handleCapabilityOrAuthenticationRequest(message)
 	}
 
 	private func capabilityCommands(of client: GLTTestClient) -> [String] {

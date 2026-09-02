@@ -40,19 +40,15 @@ import AppKit
 
 @MainActor
 public extension MenuController {
-	@IBAction func showFindPrompt(_ sender: Any?) {
+	@objc func showFindPrompt(_ sender: Any?) {
 		edit(.showFindPrompt, sender)
 	}
 
-	@IBAction func copy(_ sender: Any?) {
-		edit(.copy, sender)
-	}
-
-	@IBAction func paste(_ sender: Any?) {
+	@objc func paste(_ sender: Any?) {
 		edit(.paste, sender)
 	}
 
-	@IBAction func print(_ sender: Any?) {
+	@objc func print(_ sender: Any?) {
 		edit(.print, sender)
 	}
 
@@ -73,108 +69,104 @@ public extension MenuController {
 		messageReplyMenuItems(messageIdentifier: messageIdentifier, nickname: nickname, excerpt: excerpt)
 	}
 
-	@IBAction func replyToMessage(_ sender: Any?) {
+	@objc func replyToMessage(_ sender: Any?) {
 		channelView(.reply, sender)
 	}
 
-	@IBAction func reactToMessage(_ sender: Any?) {
+	@objc func reactToMessage(_ sender: Any?) {
 		channelView(.react, sender)
 	}
 
-	@IBAction func reactToMessageWithOtherEmoji(_ sender: Any?) {
+	@objc func reactToMessageWithOtherEmoji(_ sender: Any?) {
 		channelView(.reactWithOtherEmoji, sender)
 	}
 
-	@IBAction func markScrollback(_ sender: Any?) {
+	@objc func markScrollback(_ sender: Any?) {
 		channelView(.markScrollback, sender)
 	}
 
-	@IBAction func gotoScrollbackMarker(_ sender: Any?) {
+	@objc func gotoScrollbackMarker(_ sender: Any?) {
 		channelView(.goToScrollbackMarker, sender)
 	}
 
-	@IBAction func clearScrollback(_ sender: Any?) {
+	@objc func clearScrollback(_ sender: Any?) {
 		channelView(.clearScrollback, sender)
 	}
 
-	@IBAction func increaseLogFontSize(_ sender: Any?) {
+	@objc func increaseLogFontSize(_ sender: Any?) {
 		channelView(.increaseFontSize, sender)
 	}
 
-	@IBAction func decreaseLogFontSize(_ sender: Any?) {
+	@objc func decreaseLogFontSize(_ sender: Any?) {
 		channelView(.decreaseFontSize, sender)
 	}
 
-	@IBAction func searchGoogle(_ sender: Any?) {
+	@objc func searchGoogle(_ sender: Any?) {
 		channelView(.searchWeb, sender)
 	}
 
-	@IBAction func lookUpInDictionary(_ sender: Any?) {
+	@objc func lookUpInDictionary(_ sender: Any?) {
 		channelView(.lookUpInDictionary, sender)
 	}
 
-	@IBAction func copyUrl(_ sender: Any?) {
+	@objc func copyUrl(_ sender: Any?) {
 		channelView(.copyURL, sender)
 	}
 
-	@IBAction func connect(_ sender: Any?) {
+	@objc func connect(_ sender: Any?) {
 		serverChannel(.connect, sender)
 	}
 
-	@IBAction func connectBypassingProxy(_ sender: Any?) {
+	@objc func connectBypassingProxy(_ sender: Any?) {
 		serverChannel(.connectBypassingProxy, sender)
 	}
 
-	@IBAction func disconnect(_ sender: Any?) {
+	@objc func disconnect(_ sender: Any?) {
 		serverChannel(.disconnect, sender)
 	}
 
-	@IBAction func cancelReconnection(_ sender: Any?) {
+	@objc func cancelReconnection(_ sender: Any?) {
 		serverChannel(.cancelReconnection, sender)
 	}
 
-	@IBAction func showServerChannelList(_ sender: Any?) {
+	@objc func showServerChannelList(_ sender: Any?) {
 		serverChannel(.showChannelList, sender)
 	}
 
-	@IBAction func addServer(_ sender: Any?) {
+	@objc func addServer(_ sender: Any?) {
 		serverChannel(.addServer, sender)
 	}
 
-	@IBAction func duplicateServer(_ sender: Any?) {
+	@objc func duplicateServer(_ sender: Any?) {
 		serverChannel(.duplicateServer, sender)
 	}
 
-	@IBAction func deleteServer(_ sender: Any?) {
+	@objc func deleteServer(_ sender: Any?) {
 		serverChannel(.deleteServer, sender)
 	}
 
-	@IBAction func joinChannel(_ sender: Any?) {
+	@objc func joinChannel(_ sender: Any?) {
 		serverChannel(.joinChannel, sender)
 	}
 
-	@IBAction func leaveChannel(_ sender: Any?) {
+	@objc func leaveChannel(_ sender: Any?) {
 		serverChannel(.leaveChannel, sender)
 	}
 
-	@IBAction func addChannel(_ sender: Any?) {
+	@objc func addChannel(_ sender: Any?) {
 		serverChannel(.addChannel, sender)
 	}
 
-	@IBAction func deleteChannel(_ sender: Any?) {
+	@objc func deleteChannel(_ sender: Any?) {
 		serverChannel(.deleteChannel, sender)
 	}
 
-	@IBAction func copyUniqueIdentifier(_ sender: Any?) {
+	@objc func copyUniqueIdentifier(_ sender: Any?) {
 		serverChannel(.copyUniqueIdentifier, sender)
 	}
 
-	@IBAction func joinChannelClicked(_ sender: Any?) {
+	@objc func joinChannelClicked(_ sender: Any?) {
 		serverChannel(.joinClickedChannel, sender)
-	}
-
-	@IBAction func emptyAction(_ sender: Any?) {
-		serverChannel(.empty, sender)
 	}
 
 	func shareMenuItem(for items: [Any]) -> NSMenuItem {
@@ -186,23 +178,23 @@ public extension MenuController {
 		shareMenuItem(for: items)
 	}
 
-	@IBAction func memberAddIgnore(_ sender: Any?) {
+	@objc func memberAddIgnore(_ sender: Any?) {
 		member(.addIgnore, sender)
 	}
 
-	@IBAction func memberRemoveIgnore(_ sender: Any?) {
+	@objc func memberRemoveIgnore(_ sender: Any?) {
 		member(.removeIgnore, sender)
 	}
 
-	@IBAction func memberModifyIgnore(_ sender: Any?) {
+	@objc func memberModifyIgnore(_ sender: Any?) {
 		member(.modifyIgnore, sender)
 	}
 
-	@objc func memberInMemberListDoubleClicked(_ sender: Any) {
+	func memberInMemberListDoubleClicked(_ sender: Any) {
 		member(.memberListDoubleClick, sender)
 	}
 
-	@IBAction func memberInChannelViewDoubleClicked(_ sender: Any?) {
+	func memberInChannelViewDoubleClicked(_ sender: Any?) {
 		member(.channelViewDoubleClick, sender)
 	}
 
@@ -210,99 +202,95 @@ public extension MenuController {
 		member(.insertNickname, sender)
 	}
 
-	@IBAction func memberSendWhois(_ sender: Any?) {
+	@objc func memberSendWhois(_ sender: Any?) {
 		member(.whois, sender)
 	}
 
-	func whoisSelectedMembers(_ sender: Any) {
-		member(.whois, sender)
-	}
-
-	@IBAction func memberStartPrivateMessage(_ sender: Any?) {
+	@objc func memberStartPrivateMessage(_ sender: Any?) {
 		member(.privateMessage, sender)
 	}
 
-	@IBAction func memberChangeColor(_ sender: Any?) {
+	@objc func memberChangeColor(_ sender: Any?) {
 		member(.changeColor, sender)
 	}
 
-	@IBAction func memberSendCTCPPing(_ sender: Any?) {
+	@objc func memberSendCTCPPing(_ sender: Any?) {
 		member(.ctcpPing, sender)
 	}
 
-	@IBAction func memberSendCTCPFinger(_ sender: Any?) {
+	@objc func memberSendCTCPFinger(_ sender: Any?) {
 		member(.ctcpFinger, sender)
 	}
 
-	@IBAction func memberSendCTCPTime(_ sender: Any?) {
+	@objc func memberSendCTCPTime(_ sender: Any?) {
 		member(.ctcpTime, sender)
 	}
 
-	@IBAction func memberSendCTCPVersion(_ sender: Any?) {
+	@objc func memberSendCTCPVersion(_ sender: Any?) {
 		member(.ctcpVersion, sender)
 	}
 
-	@IBAction func memberSendCTCPUserinfo(_ sender: Any?) {
+	@objc func memberSendCTCPUserinfo(_ sender: Any?) {
 		member(.ctcpUserinfo, sender)
 	}
 
-	@IBAction func memberSendCTCPClientInfo(_ sender: Any?) {
+	@objc func memberSendCTCPClientInfo(_ sender: Any?) {
 		member(.ctcpClientInfo, sender)
 	}
 
-	@IBAction func memberModeGiveOp(_ sender: Any?) {
+	@objc func memberModeGiveOp(_ sender: Any?) {
 		member(.giveOp, sender)
 	}
 
-	@IBAction func memberModeTakeOp(_ sender: Any?) {
+	@objc func memberModeTakeOp(_ sender: Any?) {
 		member(.takeOp, sender)
 	}
 
-	@IBAction func memberModeGiveHalfop(_ sender: Any?) {
+	@objc func memberModeGiveHalfop(_ sender: Any?) {
 		member(.giveHalfop, sender)
 	}
 
-	@IBAction func memberModeTakeHalfop(_ sender: Any?) {
+	@objc func memberModeTakeHalfop(_ sender: Any?) {
 		member(.takeHalfop, sender)
 	}
 
-	@IBAction func memberModeGiveVoice(_ sender: Any?) {
+	@objc func memberModeGiveVoice(_ sender: Any?) {
 		member(.giveVoice, sender)
 	}
 
-	@IBAction func memberModeTakeVoice(_ sender: Any?) {
+	@objc func memberModeTakeVoice(_ sender: Any?) {
 		member(.takeVoice, sender)
 	}
 
-	@IBAction func memberKickFromChannel(_ sender: Any?) {
+	@objc func memberKickFromChannel(_ sender: Any?) {
 		member(.kick, sender)
 	}
 
-	@IBAction func memberBanFromChannel(_ sender: Any?) {
+	@objc func memberBanFromChannel(_ sender: Any?) {
 		member(.ban, sender)
 	}
 
-	@IBAction func memberKickbanFromChannel(_ sender: Any?) {
+	@objc func memberKickbanFromChannel(_ sender: Any?) {
 		member(.kickban, sender)
 	}
 
-	@IBAction func memberKillFromServer(_ sender: Any?) {
+	@objc func memberKillFromServer(_ sender: Any?) {
 		member(.kill, sender)
 	}
 
-	@IBAction func memberBanFromServer(_ sender: Any?) {
+	@objc func memberBanFromServer(_ sender: Any?) {
 		member(.gline, sender)
 	}
 
-	@IBAction func memberShunOnServer(_ sender: Any?) {
+	@objc func memberShunOnServer(_ sender: Any?) {
 		member(.shun, sender)
 	}
 
-	@IBAction func showSetVhostPrompt(_ sender: Any?) {
+	@objc func showSetVhostPrompt(_ sender: Any?) {
 		member(.setVhost, sender)
 	}
 
-	@IBAction func memberSendFileRequest(_ sender: Any?) {
+	@objc func memberSendFileRequest(_ sender: Any?) {
 		member(.sendFile, sender)
 	}
 
@@ -310,7 +298,7 @@ public extension MenuController {
 		SharedApplication.sharedFileTransferCenter()
 	}
 
-	@IBAction func showFileTransfersWindow(_: Any?) {
+	@objc func showFileTransfersWindow(_: Any?) {
 		fileTransferCenter.present()
 	}
 
@@ -326,83 +314,83 @@ public extension MenuController {
 		actionCoordinator.sendDroppedFiles(files, nickname: nickname)
 	}
 
-	@IBAction func openLogLocation(_ sender: Any?) {
+	@objc func openLogLocation(_ sender: Any?) {
 		support(.openLogLocation, sender)
 	}
 
-	@IBAction func openChannelLogs(_ sender: Any?) {
+	@objc func openChannelLogs(_ sender: Any?) {
 		support(.openChannelLogs, sender)
 	}
 
-	@IBAction func openAcknowledgements(_ sender: Any?) {
+	@objc func openAcknowledgements(_ sender: Any?) {
 		support(.openAcknowledgements, sender)
 	}
 
-	@IBAction func contactSupport(_ sender: Any?) {
-		support(.contactSupport, sender)
-	}
-
-	@IBAction func connectToGlasstualHelpChannel(_ sender: Any?) {
+	@objc func connectToGlasstualHelpChannel(_ sender: Any?) {
 		support(.connectToHelpChannel, sender)
 	}
 
-	@IBAction func connectToGlasstualTestingChannel(_ sender: Any?) {
+	@objc func connectToGlasstualTestingChannel(_ sender: Any?) {
 		support(.connectToTestingChannel, sender)
 	}
 
-	@IBAction func showChannelBanList(_ sender: Any?) {
+	@objc func showChannelBanList(_ sender: Any?) {
 		irc(.showBanList, sender)
 	}
 
-	@IBAction func showChannelBanExceptionList(_ sender: Any?) {
+	@objc func showChannelBanExceptionList(_ sender: Any?) {
 		irc(.showBanExceptionList, sender)
 	}
 
-	@IBAction func showChannelInviteExceptionList(_ sender: Any?) {
+	@objc func showChannelInviteExceptionList(_ sender: Any?) {
 		irc(.showInviteExceptionList, sender)
 	}
 
-	@IBAction func showChannelQuietList(_ sender: Any?) {
+	@objc func showChannelQuietList(_ sender: Any?) {
 		irc(.showQuietList, sender)
 	}
 
-	@IBAction func toggleChannelModerationMode(_ sender: Any?) {
+	@objc func toggleChannelModerationMode(_ sender: Any?) {
 		irc(.toggleModerationMode, sender)
 	}
 
-	@IBAction func toggleChannelInviteMode(_ sender: Any?) {
+	@objc func toggleChannelInviteMode(_ sender: Any?) {
 		irc(.toggleInviteMode, sender)
 	}
 
-	@IBAction func closeWindow(_ sender: Any?) {
+	@objc func closeWindow(_ sender: Any?) {
 		window(.close, sender)
 	}
 
-	@IBAction func showMainWindow(_ sender: Any?) {
+	@objc func showMainWindow(_ sender: Any?) {
 		window(.showMainWindow, sender)
 	}
 
-	@IBAction func centerMainWindow(_ sender: Any?) {
+	@objc func centerMainWindow(_ sender: Any?) {
 		window(.centerMainWindow, sender)
 	}
 
-	@IBAction func resetMainWindowFrame(_ sender: Any?) {
+	@objc func resetMainWindowFrame(_ sender: Any?) {
 		window(.resetMainWindowFrame, sender)
 	}
 
-	@IBAction func sortChannelListNames(_ sender: Any?) {
+	@objc func sortChannelListNames(_ sender: Any?) {
 		window(.sortChannelList, sender)
 	}
 
-	@IBAction func markAllAsRead(_ sender: Any?) {
+	@objc func focusSearchField(_ sender: Any?) {
+		window(.focusSearchField, sender)
+	}
+
+	@objc func markAllAsRead(_ sender: Any?) {
 		window(.markAllAsRead, sender)
 	}
 
-	@IBAction func importPreferences(_ sender: Any?) {
+	@objc func importPreferences(_ sender: Any?) {
 		window(.importPreferences, sender)
 	}
 
-	@IBAction func exportPreferences(_ sender: Any?) {
+	@objc func exportPreferences(_ sender: Any?) {
 		window(.exportPreferences, sender)
 	}
 
@@ -414,35 +402,31 @@ public extension MenuController {
 		actionCoordinator.setNotificationSoundsMuted(on)
 	}
 
-	@IBAction func toggleMuteOnNotificationSounds(_ sender: Any?) {
+	@objc func toggleMuteOnNotificationSounds(_ sender: Any?) {
 		window(.toggleNotificationSounds, sender)
 	}
 
-	@IBAction func toggleMuteOnNotifications(_ sender: Any?) {
+	@objc func toggleMuteOnNotifications(_ sender: Any?) {
 		window(.toggleNotifications, sender)
 	}
 
-	@IBAction func resetMainWindowAppearance(_ sender: Any?) {
-		window(.resetAppearance, sender)
-	}
-
-	@IBAction func toggleMainWindowAppearance(_ sender: Any?) {
+	@objc func toggleMainWindowAppearance(_ sender: Any?) {
 		window(.toggleAppearance, sender)
 	}
 
-	@IBAction func toggleServerListVisibility(_ sender: Any?) {
+	@objc func toggleServerListVisibility(_ sender: Any?) {
 		window(.toggleServerList, sender)
 	}
 
-	@IBAction func toggleMemberListVisibility(_ sender: Any?) {
+	@objc func toggleMemberListVisibility(_ sender: Any?) {
 		window(.toggleMemberList, sender)
 	}
 
-	@IBAction func toggleDeveloperMode(_ sender: Any?) {
+	@objc func toggleDeveloperMode(_ sender: Any?) {
 		window(.toggleDeveloperMode, sender)
 	}
 
-	@IBAction func resetDoNotAskMePopupWarnings(_ sender: Any?) {
+	@objc func resetDoNotAskMePopupWarnings(_ sender: Any?) {
 		window(.resetSuppressedWarnings, sender)
 	}
 
@@ -466,24 +450,24 @@ public extension MenuController {
 		actionCoordinator.navigateToChannelInNavigationList(sender)
 	}
 
-	@IBAction func performNavigationAction(_ sender: Any?) {
+	@objc func performNavigationAction(_ sender: Any?) {
 		actionCoordinator.performNavigationAction(sender)
 	}
 
-	@IBAction func onNextHighlight(_: Any?) {
-		actionCoordinator.moveHighlightOrScrollback(forTag: MenuNavigationTag.nextHighlight)
+	@objc func onNextHighlight(_: Any?) {
+		actionCoordinator.moveHighlightOrScrollback(for: .nextHighlight)
 	}
 
-	@IBAction func onPreviousHighlight(_: Any?) {
-		actionCoordinator.moveHighlightOrScrollback(forTag: MenuNavigationTag.previousHighlight)
+	@objc func onPreviousHighlight(_: Any?) {
+		actionCoordinator.moveHighlightOrScrollback(for: .previousHighlight)
 	}
 
-	@IBAction func jumpToCurrentSession(_: Any?) {
-		actionCoordinator.moveHighlightOrScrollback(forTag: MenuNavigationTag.jumpToCurrentSession)
+	@objc func jumpToCurrentSession(_: Any?) {
+		actionCoordinator.moveHighlightOrScrollback(for: .jumpToCurrentSession)
 	}
 
-	@IBAction func jumpToPresent(_: Any?) {
-		actionCoordinator.moveHighlightOrScrollback(forTag: MenuNavigationTag.jumpToPresent)
+	@objc func jumpToPresent(_: Any?) {
+		actionCoordinator.moveHighlightOrScrollback(for: .jumpToPresent)
 	}
 
 	private func edit(_ action: MenuEditingAction, _ sender: Any?) {

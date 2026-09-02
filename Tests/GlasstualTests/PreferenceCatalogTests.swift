@@ -89,8 +89,39 @@ struct PreferenceCatalogTests {
 	func excludedFamiliesAreExcluded() {
 		#expect(Preferences.isExcludedFromExport("Internal Theme Settings Key-value Store -> Lines"))
 		#expect(Preferences.isExcludedFromExport("NSWindow Frame -> Internal (v3) -> Main Window"))
-		#expect(Preferences.isExcludedFromExport("TextFieldSmartQuotes"))
 		#expect(Preferences.isExcludedFromExport(Preferences.Theme.transcriptTheme.name) == false)
+	}
+
+	/// A `TextField` family used to exclude all nine text-system settings from
+	/// export, and `isExcludedFromExport` gates import too, so three checkboxes
+	/// in Settings -> Controls neither left nor entered a configuration file.
+	@Test("The input text-system settings are portable")
+	func textSystemSettingsAreExported() {
+		for key in [
+			Preferences.Input.automaticSpellCheck,
+			Preferences.Input.automaticGrammarCheck,
+			Preferences.Input.automaticSpellCorrection,
+			Preferences.Input.smartCopyPaste,
+			Preferences.Input.smartQuotes,
+			Preferences.Input.smartDashes,
+			Preferences.Input.smartLinks,
+			Preferences.Input.dataDetectors,
+			Preferences.Input.textReplacement,
+		] {
+			#expect(Preferences.isExcludedFromExport(key.name) == false)
+		}
+	}
+
+	/// The IRCv3 pane writes this one, so a user who switched a capability off
+	/// expects it switched off on the machine they import the file into.
+	@Test("The list of switched-off IRCv3 capabilities is catalogued and portable")
+	func disabledCapabilitiesAreCataloguedAndExported() {
+		let key = Preferences.Connection.disabledCapabilities
+
+		#expect(Preferences.key(named: key.name) != nil)
+		#expect(Preferences.isCatalogued(key.name))
+		#expect(Preferences.isExcludedFromExport(key.name) == false)
+		#expect(key.defaultValue.isEmpty)
 	}
 
 	@Test("Storage follows the declaration, not the call site")

@@ -51,10 +51,6 @@ public nonisolated struct MemberListSection: Hashable, Sendable { // nonisolated
 	public var rank: UserRank {
 		identifier.rank
 	}
-
-	public var objectiveCRankRawValue: UInt {
-		rank.rawValue
-	}
 }
 
 public struct MemberListGroup: Identifiable {
@@ -166,7 +162,7 @@ public final class MemberList {
 		if let lastInteractedMemberID, admitted.contains(lastInteractedMemberID) == false {
 			self.lastInteractedMemberID = nil
 		}
-		presentationRevision &+= 1
+		invalidatePresentation()
 	}
 
 	private static func sectionRank(for member: ChannelUser) -> UserRank {
@@ -208,20 +204,6 @@ public final class MemberList {
 		section(atRow: row) != nil
 	}
 
-	public func row(forItem item: Any?) -> Int {
-		guard let member = item as? ChannelUser else { return -1 }
-
-		return flatRows.firstIndex {
-			guard case let .member(candidate) = $0 else { return false }
-			return candidate.id == member.id
-		} ?? -1
-	}
-
-	public func rowForMember(at memberIndex: Int) -> Int {
-		guard let member = contentController.member(at: memberIndex) else { return -1 }
-		return row(forItem: member)
-	}
-
 	public func selectRowIndexes(_ indexes: IndexSet, byExtendingSelection extends: Bool) {
 		var identities = extends ? selectedMemberIDs : []
 		for row in indexes {
@@ -256,32 +238,26 @@ public final class MemberList {
 		}
 	}
 
-	public func refreshAllDrawings() {
-		presentationRevision &+= 1
-	}
+	/** Tells the rows to draw themselves again.
 
-	public func refreshAllDrawings(skipOcclusionCheck _: Bool) {
-		refreshAllDrawings()
-	}
-
-	public func refreshDrawing(forRow _: Int) {
-		presentationRevision &+= 1
-	}
-
-	public func refreshDrawing(for _: ChannelUser) {
+	 The list is a value projection: a row's appearance is a function of the
+	 member it holds and of preferences and appearance the row reads directly,
+	 so there is nothing to redraw a single row with. One revision is what every
+	 caller needs, whichever member prompted it. */
+	public func invalidatePresentation() {
 		presentationRevision &+= 1
 	}
 
 	public func refreshDrawing(forChangesToPreference preferenceKey: String) {
 		guard UserListModeBadge.badge(forPreferenceKeyNamed: preferenceKey) != nil else { return }
-		presentationRevision &+= 1
+		invalidatePresentation()
 	}
 
 	public func applicationAppearanceChanged() {
-		presentationRevision &+= 1
+		invalidatePresentation()
 	}
 
 	public func systemAppearanceChanged() {
-		presentationRevision &+= 1
+		invalidatePresentation()
 	}
 }

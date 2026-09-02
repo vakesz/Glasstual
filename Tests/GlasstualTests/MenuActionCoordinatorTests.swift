@@ -17,38 +17,39 @@ struct MenuActionCoordinatorTests {
 		#expect(MenuMemberCommand.setVhost("staff.example", nickname: "Alice") == "hs setall Alice staff.example")
 	}
 
-	@Test("Every navigation action is reachable from the tag its menu item carries")
-	func navigationTagsMapToNavigationActions() {
-		let mappings: [(Int, MenuNavigationAction)] = [
-			(MenuNavigationTag.nextServer, .nextServer),
-			(MenuNavigationTag.previousServer, .previousServer),
-			(MenuNavigationTag.nextActiveServer, .nextActiveServer),
-			(MenuNavigationTag.previousActiveServer, .previousActiveServer),
-			(MenuNavigationTag.nextChannel, .nextChannel),
-			(MenuNavigationTag.previousChannel, .previousChannel),
-			(MenuNavigationTag.nextActiveChannel, .nextActiveChannel),
-			(MenuNavigationTag.previousActiveChannel, .previousActiveChannel),
-			(MenuNavigationTag.nextUnreadChannel, .nextUnreadChannel),
-			(MenuNavigationTag.previousUnreadChannel, .previousUnreadChannel),
-			(MenuNavigationTag.moveBackward, .moveBackward),
-			(MenuNavigationTag.moveForward, .moveForward),
-			(MenuNavigationTag.previousSelection, .previousSelection),
+	@Test("Every navigation action is reachable from the command its menu item carries")
+	func navigationCommandsMapToNavigationActions() {
+		let mappings: [(MenuCommand, MenuNavigationAction)] = [
+			(.nextServer, .nextServer),
+			(.previousServer, .previousServer),
+			(.nextActiveServer, .nextActiveServer),
+			(.previousActiveServer, .previousActiveServer),
+			(.nextChannel, .nextChannel),
+			(.previousChannel, .previousChannel),
+			(.nextActiveChannel, .nextActiveChannel),
+			(.previousActiveChannel, .previousActiveChannel),
+			(.nextUnreadChannel, .nextUnreadChannel),
+			(.previousUnreadChannel, .previousUnreadChannel),
+			(.moveBackward, .moveBackward),
+			(.moveForward, .moveForward),
+			(.previousSelection, .previousSelection),
 		]
 
-		for (tag, action) in mappings {
-			#expect(MenuActionCoordinator.navigationAction(for: tag) == action)
+		for (command, action) in mappings {
+			#expect(MenuActionCoordinator.navigationAction(for: command) == action)
 		}
 
-		/* Every action has to be reachable from a tag, or a menu item exists
-		 that nothing can invoke. */
+		/* Every action has to be reachable from a command, or a menu item
+		 exists that nothing can invoke. */
 		#expect(
 			Set(mappings.map(\.1).map(String.init(describing:))).count == MenuNavigationAction.allCases.count
 		)
 	}
 
-	@Test("A tag that belongs to no navigation item is not treated as navigation")
-	func navigationIgnoresUnrelatedTags() {
-		#expect(MenuActionCoordinator.navigationAction(for: 100) == nil)
+	@Test("A command that belongs to no navigation item is not treated as navigation")
+	func navigationIgnoresUnrelatedCommands() {
+		#expect(MenuActionCoordinator.navigationAction(for: .about) == nil)
+		#expect(MenuActionCoordinator.navigationAction(for: nil) == nil)
 	}
 
 	@Test("The click-time selection is kept until the action it was captured for has run")
@@ -81,20 +82,14 @@ struct MenuActionCoordinatorTests {
 		) == false)
 	}
 
-	@Test("Find commands keep stable identifiers for non-menu callers")
-	func findTagsPreserveMenuContracts() {
-		#expect(MenuFindTag.open == 3_090_000)
-		#expect(MenuFindTag.next == 3_090_001)
-	}
-
 	@Test("A channel-mode command decides whether the mode is set or removed")
-	func channelModeTagsPreserveLegacyModeCommands() {
-		#expect(MenuChannelModePolicy.removeModeratedTag == 6_090_001)
-		#expect(MenuChannelModePolicy.removeInviteOnlyTag == 6_090_003)
-		#expect(MenuChannelModePolicy.moderationMode(for: 0) == "+m")
-		#expect(MenuChannelModePolicy.moderationMode(for: 6_090_001) == "-m")
-		#expect(MenuChannelModePolicy.inviteMode(for: 0) == "+i")
-		#expect(MenuChannelModePolicy.inviteMode(for: 6_090_003) == "-i")
+	func channelModeCommandsChooseTheModeChange() {
+		#expect(MenuChannelModePolicy.moderationMode(for: .channelModeModerated) == "+m")
+		#expect(MenuChannelModePolicy.moderationMode(for: .channelModeUnmoderated) == "-m")
+		#expect(MenuChannelModePolicy.moderationMode(for: nil) == "+m")
+		#expect(MenuChannelModePolicy.inviteMode(for: .channelModeInviteOnly) == "+i")
+		#expect(MenuChannelModePolicy.inviteMode(for: .channelModeAnyoneCanJoin) == "-i")
+		#expect(MenuChannelModePolicy.inviteMode(for: nil) == "+i")
 	}
 
 	@Test("The appearance toggle cycles away from whatever the system is showing")

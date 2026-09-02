@@ -709,6 +709,18 @@
         }
       }
     },
+    "scrollback-database-could-not-be-opened": {
+      "comment": "Body of the alert shown when the scrollback database cannot be opened and the failure came with no description of its own.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The scrollback database could not be opened."
+          }
+        }
+      }
+    },
     "search": {
       "comment": "Legacy key: q5h-xx.",
       "extractionState": "manual",
@@ -741,6 +753,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Set User vHost"
+          }
+        }
+      }
+    },
+    "the-preferences-could-not-be-imported": {
+      "comment": "Title of the alert shown when importing a preferences file fails.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The preferences could not be imported."
+          }
+        }
+      }
+    },
+    "the-selected-file-is-not-a-preferences-file": {
+      "comment": "Reason shown when an imported file is not a preferences property list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected file is not a Glasstual preferences file."
           }
         }
       }
@@ -945,6 +981,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "You have clicked on a link that will open the application “%@”"
+          }
+        }
+      }
+    },
+    "your-current-preferences-could-not-be-backed-up": {
+      "comment": "Reason shown when the backup taken before an import could not be written.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your current preferences could not be backed up, so nothing was changed."
           }
         }
       }

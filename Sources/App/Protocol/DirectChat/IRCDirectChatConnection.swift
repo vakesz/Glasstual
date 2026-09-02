@@ -282,7 +282,7 @@ public final class DirectChatConnection: NSObject {
 		portMapping.desiredPublicPort = port
 		self.portMapping = portMapping
 
-		portMappingNotifications.observe(.XRPortMapperDidChanged, object: portMapping) { [weak self] _ in
+		portMappingNotifications.observe(.portMapperDidChange, object: portMapping) { [weak self] _ in
 			self?.portMapperDidFinishWork()
 		}
 

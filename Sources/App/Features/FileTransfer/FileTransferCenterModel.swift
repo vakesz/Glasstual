@@ -41,10 +41,6 @@ final class FileTransferCenterModel {
 		return filter.shownTransfers(in: transfers, isSender: \.isSender)
 	}
 
-	var selectedTransfers: [FileTransferController] {
-		transfers.filter { selection.contains($0.uniqueIdentifier) }
-	}
-
 	var stoppedTransfers: [FileTransferController] {
 		transfers.filter { Self.stoppedStatuses.contains($0.transferStatus) }
 	}
@@ -220,11 +216,11 @@ struct FileTransferRowPresentation {
 		)
 	}
 
-	private static func averageSpeed(_ records: [NSNumber]) -> UInt64 {
+	private static func averageSpeed(_ records: [UInt64]) -> UInt64 {
 		guard records.isEmpty == false else { return 0 }
 		var total: UInt64 = 0
 		for record in records {
-			let (sum, overflow) = total.addingReportingOverflow(record.uint64Value)
+			let (sum, overflow) = total.addingReportingOverflow(record)
 			total = overflow ? .max : sum
 		}
 		return total / UInt64(records.count)

@@ -40,11 +40,10 @@ struct ObjCRuntimeNameTests {
 	/// needs the property visible to the Objective-C runtime: a key path to a
 	/// property without `@objc` has no KVC string and the observation traps the
 	/// first time the view sets it up. Nothing in the compiler checks that, so
-	/// the four key paths the application observes are pinned here.
+	/// the key paths the application observes are pinned here.
 	@Test("The key paths the application observes resolve through key-value coding")
 	func observedKeyPathsResolve() {
 		let observed: [(String, AnyKeyPath)] = [
-			("LogView.isLayingOutView", \LogView.isLayingOutView),
 			("IRCClient.isLoggedIn", \IRCClient.isLoggedIn),
 			("IRCTreeItem.nicknameHighlightCount", \IRCTreeItem.nicknameHighlightCount),
 			("IRCTreeItem.treeUnreadCount", \IRCTreeItem.treeUnreadCount),

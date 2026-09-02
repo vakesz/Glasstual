@@ -45,7 +45,7 @@ import Testing
 /// `PREFIX=(ov)@+`, the shape almost every network advertises.
 @MainActor
 struct IRCModeParserCorpusTests {
-	nonisolated struct ParsedMode: Sendable, Equatable {
+	nonisolated struct ParsedMode: Sendable, Equatable { // nonisolated: value
 		let symbol: String
 		let isSet: Bool
 		let parameter: String?
@@ -57,7 +57,7 @@ struct IRCModeParserCorpusTests {
 		}
 	}
 
-	nonisolated struct ModeCase: Sendable {
+	nonisolated struct ModeCase: Sendable { // nonisolated: value
 		let modeString: String
 		let expected: [ParsedMode]
 
@@ -75,7 +75,7 @@ struct IRCModeParserCorpusTests {
 		return supportInfo
 	}
 
-	nonisolated static let modeCases: [ModeCase] = [
+	nonisolated static let modeCases: [ModeCase] = [ // nonisolated: let
 		/* Prefix modes consume one parameter in both directions. */
 		ModeCase("+o alice", [ParsedMode("o", true, "alice")]),
 		ModeCase("-o alice", [ParsedMode("o", false, "alice")]),

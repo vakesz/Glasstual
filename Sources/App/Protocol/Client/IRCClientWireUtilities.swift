@@ -42,7 +42,7 @@ import Foundation
 /// Pure transformations used by `IRCClient` at the wire and presentation
 /// seams. Keeping these transformations independent of connection state makes
 /// protocol output deterministic and directly testable.
-public final nonisolated class ClientWireUtilities: NSObject { // nonisolated: value
+public nonisolated enum ClientWireUtilities { // nonisolated: value
 	private static let credentialMask = "••••••"
 
 	/// Ceiling on `%<width>n` style padding in the nickname format. The width

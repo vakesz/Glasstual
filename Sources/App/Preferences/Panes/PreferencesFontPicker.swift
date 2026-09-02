@@ -25,6 +25,11 @@ struct PreferencesFontPicker: View {
 		}
 	}()
 
+	/// The transcript renderer's own bounds: a size outside them is rejected
+	/// when the theme is applied, so it is not offered here.
+	private static let sizeRange = Double(TranscriptTheme.fontSizeRange.lowerBound)
+		... Double(TranscriptTheme.fontSizeRange.upperBound)
+
 	@Environment(\.dismiss) private var dismiss
 	@State private var fontName: String
 	@State private var fontSize: Double
@@ -63,7 +68,7 @@ struct PreferencesFontPicker: View {
 					Spacer()
 					TextField("", value: $fontSize, format: .number)
 						.frame(width: 64)
-					Stepper("", value: $fontSize, in: 6 ... 72, step: 1)
+					Stepper("", value: $fontSize, in: Self.sizeRange, step: 1)
 						.labelsHidden()
 				}
 				.padding()
@@ -78,7 +83,7 @@ struct PreferencesFontPicker: View {
 						apply(fontName, CGFloat(fontSize))
 						dismiss()
 					}
-					.disabled(fontName.isEmpty || (6 ... 72).contains(fontSize) == false)
+					.disabled(fontName.isEmpty || Self.sizeRange.contains(fontSize) == false)
 				}
 			}
 		}

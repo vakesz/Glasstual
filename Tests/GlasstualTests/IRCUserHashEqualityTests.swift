@@ -18,15 +18,6 @@ import Testing
 /// `hash` override, and no object identity to fall back on.
 @MainActor
 struct IRCUserHashEqualityTests {
-	@Test("A copy of a user is equal to it and hashes with it")
-	func copiesOfAUserHashEqually() {
-		let user = User(nickname: "Alice")
-		let copy = user
-
-		#expect(copy == user)
-		#expect(Set([user, copy]).count == 1)
-	}
-
 	@Test("Two users with the same nickname are two people")
 	func separatelyCreatedUsersAreDistinct() {
 		let first = User(nickname: "Alice")

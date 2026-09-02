@@ -15,7 +15,6 @@ import CocoaExtensions
 // AppKit: IRC formatting is applied to attributed strings as fonts and colours.
 import AppKit
 import Foundation
-import os
 
 public enum IRCTextFormatterEffectType: Int, Sendable {
 	case none
@@ -67,12 +66,6 @@ private let truncationACTIONCommandConstant = 17
 private let truncationNOTICECommandConstant = 8
 private let truncationHostmaskConstant = 60
 private let truncationWrapMaxDistance = 25
-let colorHighestDigit = 98
-
-private let colorFormatLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCColorFormat"
-)
 
 private func appendControlCharacter(_ character: unichar, to string: inout String) {
 	guard let scalar = Unicode.Scalar(character) else {
@@ -155,18 +148,6 @@ public final class TextFormatterEffect: NSObject {
 	public private(set) var value: String?
 	public private(set) var controlCharacter: unichar = 0
 	public private(set) var length: UInt = 0
-
-	override public convenience init() {
-		self.init(effect: .none, withValue: nil)!
-	}
-
-	public static func effect(with type: IRCTextFormatterEffectType) -> TextFormatterEffect? {
-		self.init(effect: type, withValue: nil)
-	}
-
-	public static func effect(with type: IRCTextFormatterEffectType, withValue value: Any?) -> TextFormatterEffect? {
-		self.init(effect: type, withValue: value)
-	}
 
 	public convenience init?(effect type: IRCTextFormatterEffectType) {
 		self.init(effect: type, withValue: nil)
@@ -259,14 +240,6 @@ public final class TextFormatterEffect: NSObject {
 public final class TextFormatterEffects: NSObject {
 	public private(set) var effects: [TextFormatterEffect] = []
 	public private(set) var maximumLength: UInt = 0
-
-	override public convenience init() {
-		self.init(attributes: [:])
-	}
-
-	public static func effects(in attributes: [NSAttributedString.Key: Any]) -> TextFormatterEffects {
-		TextFormatterEffects(attributes: attributes)
-	}
 
 	public init(attributes: [NSAttributedString.Key: Any]) {
 		super.init()
@@ -480,7 +453,7 @@ public extension NSAttributedString {
 				longestEffectiveRange: &segmentRange,
 				in: limitRange
 			)
-			let formatters = TextFormatterEffects.effects(in: attributes)
+			let formatters = TextFormatterEffects(attributes: attributes)
 			let formattersLength = formatters.maximumLength
 
 			if segmentRange.location > 0, budget.fits(Int(formattersLength) + 2) == false {
@@ -553,14 +526,6 @@ public extension NSAttributedString {
 			effectiveRange.pointee = NSRange(location: 0, length: Int(deletionLength))
 		}
 
-		colorFormatLogger.debug(
-			"""
-			Minimum length: \(budget.overhead, privacy: .public); \
-			Final length: \(budget.used, privacy: .public); \
-			Difference: \(budget.maximum - budget.used, privacy: .public);
-			"""
-		)
-
 		return result
 	}
 
@@ -570,7 +535,7 @@ public extension NSAttributedString {
 		let fullRange = NSRange(location: 0, length: length)
 
 		enumerateAttributes(in: fullRange, options: []) { attributes, effectiveRange, _ in
-			let formatters = TextFormatterEffects.effects(in: attributes)
+			let formatters = TextFormatterEffects(attributes: attributes)
 
 			formatters.appendToStart(of: &result)
 			result.append(string.substring(with: effectiveRange))
@@ -638,5 +603,257 @@ public nonisolated extension String { // nonisolated: pure
 		self = text.substring(to: spaceRange.location)
 
 		return UInt(indexDifference)
+	}
+}
+
+// MARK: - Colour control codes
+
+private nonisolated func isBase10Numeric(_ character: unichar) -> Bool { // nonisolated: pure
+	character >= 0x30 && character <= 0x39
+}
+
+/// A colour named by an IRC colour control code.
+public nonisolated enum IRCColor: Sendable { // nonisolated: value
+	/// An mIRC palette index.
+	case palette(Int)
+	/// A literal colour from a hexadecimal control code.
+	case rgb(NSColor)
+
+	/// The value the renderer stores as a text attribute.
+	public var attributeValue: AnyObject {
+		switch self {
+		case let .palette(index): NSNumber(value: index)
+		case let .rgb(color): color
+		}
+	}
+}
+
+/// What one colour control code says.
+public nonisolated struct IRCColorComponents: Sendable { // nonisolated: value
+	public let foreground: IRCColor?
+	public let background: IRCColor?
+	/// How many characters of the control code were read.
+	public let charactersConsumed: Int
+}
+
+/** Reading a colour control code out of a line.
+
+ The scan is indexed in UTF-16 units because a control code is ASCII and the
+ renderer walks the same `NSString` ranges the attributed string uses. */
+public nonisolated extension NSString { // nonisolated: pure
+	/// The colours a colour control code names, and how many characters of the
+	/// code were read.
+	///
+	/// A digit code names palette indices and a hex code names literal colours;
+	/// they used to be written through one `AnyObject?` out-parameter each, so
+	/// which kind arrived was not knowable at the call site.
+	func colorComponents(ofCharacter character: unichar, startingAt rangeStart: UInt) -> IRCColorComponents {
+		if character == UniChar(IRCTextFormatterControlCharacter.colorDigit) {
+			var foregroundNumber: NSNumber?
+			var backgroundNumber: NSNumber?
+
+			let consumed = colorAsDigit(
+				startingAt: rangeStart,
+				foregroundColor: &foregroundNumber,
+				backgroundColor: &backgroundNumber
+			)
+
+			return IRCColorComponents(
+				foreground: foregroundNumber.map { .palette($0.intValue) },
+				background: backgroundNumber.map { .palette($0.intValue) },
+				charactersConsumed: Int(consumed)
+			)
+		}
+
+		if character == UniChar(IRCTextFormatterControlCharacter.colorHex) {
+			var foregroundNSColor: NSColor?
+			var backgroundNSColor: NSColor?
+
+			let consumed = colorAsHex(
+				startingAt: rangeStart,
+				foregroundColor: &foregroundNSColor,
+				backgroundColor: &backgroundNSColor
+			)
+
+			return IRCColorComponents(
+				foreground: foregroundNSColor.map { .rgb($0) },
+				background: backgroundNSColor.map { .rgb($0) },
+				charactersConsumed: Int(consumed)
+			)
+		}
+
+		return IRCColorComponents(foreground: nil, background: nil, charactersConsumed: 0)
+	}
+
+	private func colorAsHex(
+		startingAt rangeStart: UInt,
+		foregroundColor: inout NSColor?,
+		backgroundColor: inout NSColor?
+	) -> UInt {
+		let selfLength = length
+		precondition(Int(rangeStart) < selfLength)
+
+		var currentPosition = Int(rangeStart)
+		var mForegroundColor: String?
+		var mBackgroundColor: String?
+		var commaEaten = false
+
+		currentPosition += 1
+
+		func finish() -> UInt {
+			if mBackgroundColor == nil, commaEaten {
+				currentPosition -= 1
+			}
+
+			if let mForegroundColor {
+				foregroundColor = NSColor.textual_color(hexadecimalValue: mForegroundColor.uppercased())
+			}
+
+			if let mBackgroundColor {
+				backgroundColor = NSColor.textual_color(hexadecimalValue: mBackgroundColor.uppercased())
+			}
+
+			return UInt(currentPosition - Int(rangeStart))
+		}
+
+		guard currentPosition + 6 <= selfLength else {
+			return finish()
+		}
+
+		let foregroundCandidate = substring(with: NSRange(location: currentPosition, length: 6))
+
+		if foregroundCandidate.onlyContainsCharacters(from: .textualHexadecimal) {
+			mForegroundColor = foregroundCandidate
+			currentPosition += 6
+		} else {
+			return finish()
+		}
+
+		guard currentPosition < selfLength else {
+			return finish()
+		}
+
+		let separator = character(at: currentPosition)
+
+		guard separator == 0x2C else {
+			return finish()
+		}
+
+		commaEaten = true
+		currentPosition += 1
+
+		guard currentPosition + 6 <= selfLength else {
+			return finish()
+		}
+
+		let backgroundCandidate = substring(with: NSRange(location: currentPosition, length: 6))
+
+		if backgroundCandidate.onlyContainsCharacters(from: .textualHexadecimal) {
+			mBackgroundColor = backgroundCandidate
+			currentPosition += 6
+		}
+
+		return finish()
+	}
+
+	private func colorAsDigit(
+		startingAt rangeStart: UInt,
+		foregroundColor: inout NSNumber?,
+		backgroundColor: inout NSNumber?
+	) -> UInt {
+		let selfLength = length
+		precondition(Int(rangeStart) < selfLength)
+
+		var currentPosition = Int(rangeStart)
+		var mForegroundColor = NSNotFound
+		var mBackgroundColor = NSNotFound
+		var commaEaten = false
+
+		currentPosition += 1
+
+		func finish() -> UInt {
+			if mBackgroundColor == NSNotFound, commaEaten {
+				currentPosition -= 1
+			}
+
+			if mForegroundColor != NSNotFound,
+			   mForegroundColor <= Int(IRCTextFormatterColor.maximumPaletteIndex)
+			{
+				foregroundColor = NSNumber(value: mForegroundColor)
+			}
+
+			if mBackgroundColor != NSNotFound,
+			   mBackgroundColor <= Int(IRCTextFormatterColor.maximumPaletteIndex)
+			{
+				backgroundColor = NSNumber(value: mBackgroundColor)
+			}
+
+			return UInt(currentPosition - Int(rangeStart))
+		}
+
+		guard currentPosition < selfLength else {
+			return finish()
+		}
+
+		let firstForegroundDigit = character(at: currentPosition)
+
+		guard isBase10Numeric(firstForegroundDigit) else {
+			return finish()
+		}
+
+		mForegroundColor = Int(firstForegroundDigit - 0x30)
+		currentPosition += 1
+
+		guard currentPosition < selfLength else {
+			return finish()
+		}
+
+		let secondForegroundDigit = character(at: currentPosition)
+
+		if isBase10Numeric(secondForegroundDigit) {
+			mForegroundColor = mForegroundColor * 10 + Int(secondForegroundDigit - 0x30)
+			currentPosition += 1
+		}
+
+		guard currentPosition < selfLength else {
+			return finish()
+		}
+
+		let separator = character(at: currentPosition)
+
+		guard separator == 0x2C else {
+			return finish()
+		}
+
+		commaEaten = true
+		currentPosition += 1
+
+		guard currentPosition < selfLength else {
+			return finish()
+		}
+
+		let firstBackgroundDigit = character(at: currentPosition)
+
+		guard isBase10Numeric(firstBackgroundDigit) else {
+			return finish()
+		}
+
+		mBackgroundColor = Int(firstBackgroundDigit - 0x30)
+		currentPosition += 1
+
+		guard currentPosition < selfLength else {
+			return finish()
+		}
+
+		let secondBackgroundDigit = character(at: currentPosition)
+
+		guard isBase10Numeric(secondBackgroundDigit) else {
+			return finish()
+		}
+
+		mBackgroundColor = mBackgroundColor * 10 + Int(secondBackgroundDigit - 0x30)
+		currentPosition += 1
+
+		return finish()
 	}
 }

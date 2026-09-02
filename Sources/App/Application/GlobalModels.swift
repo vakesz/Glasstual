@@ -40,11 +40,11 @@ import GlasstualPluginKit
 
 /* The helpers below were `@_cdecl` C entry points for the Objective-C half of
  the application, which no longer exists. Every caller is Swift, so they are
- ordinary Swift functions — nothing in this file is `@_cdecl`. (One `@_cdecl`
- does survive elsewhere, `_THOPluginLoggingSubsystemForBundle`, because a
- third-party plugin binary can still call it by that C name.) The date
- formatters also existed twice, once taking `AnyObject` and once `Any`; only
- the `Any` form is kept. */
+ ordinary Swift functions, and no `@_cdecl` is left anywhere in the tree:
+ `PluginManager` admits a bundle only when it ships inside the application or
+ carries the application's own Team ID, so there is no foreign binary left to
+ reach one by its C name. The date formatters also existed twice, once taking
+ `AnyObject` and once `Any`; only the `Any` form is kept. */
 
 private nonisolated let isoStandardDateFormatter: DateFormatter = { // nonisolated: let
 	let dateFormatter = DateFormatter()

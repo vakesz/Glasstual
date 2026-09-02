@@ -147,7 +147,7 @@ private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtoc
 }
 
 public final class Connection: NSObject {
-	public private(set) weak var client: IRCClient!
+	public private(set) weak var client: IRCClient?
 	public private(set) var config: IRCConnectionConfig
 	public private(set) var isConnected = false
 	public private(set) var isConnectedWithClientSideCertificate = false
@@ -507,11 +507,15 @@ public final class Connection: NSObject {
 	}
 
 	private func convertFromCommonEncoding(_ data: Data) -> String? {
-		client.convert(fromCommonEncoding: data)
+		guard let client else { return nil }
+
+		return client.convert(fromCommonEncoding: data)
 	}
 
 	private func convertToCommonEncoding(_ string: String) -> Data? {
-		client.convert(toCommonEncoding: string)
+		guard let client else { return nil }
+
+		return client.convert(toCommonEncoding: string)
 	}
 
 	public func sendLine(_ line: String) {

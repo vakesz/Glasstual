@@ -162,9 +162,7 @@ extension IRCClient {
 			send("JOIN", arguments: arguments)
 		}
 
-		guard let selection,
-		      let treeItem = (selection as AnyObject) as? IRCTreeItem
-		else { return }
-		output?.selectItem(treeItem)
+		guard let selection else { return }
+		output?.selectItem(selection)
 	}
 }

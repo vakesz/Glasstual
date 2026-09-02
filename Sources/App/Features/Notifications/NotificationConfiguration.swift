@@ -68,11 +68,11 @@ public final class PreferencesNotificationConfiguration: NotificationConfigurati
 		self.eventType = eventType
 	}
 
+	/// `nil` is the picker's "Default" row: no sound has been chosen for this
+	/// event. Substituting "None" for it made "Default" unreachable — picking it
+	/// stored `nil`, and the next read turned that straight back into "None".
 	public var alertSound: String? {
-		get {
-			Preferences.Notifications.sound(eventType).storedValue
-				?? NotificationAlertSound.noSoundPreferenceValue
-		}
+		get { Preferences.Notifications.sound(eventType).storedValue }
 		set { Preferences.Notifications.sound(eventType).storedValue = newValue }
 	}
 

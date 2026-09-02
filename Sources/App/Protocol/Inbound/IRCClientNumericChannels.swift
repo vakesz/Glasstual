@@ -108,7 +108,7 @@ extension IRCClient {
 		guard message.params.count == 4, let channel = findChannel(message.params[1]),
 		      postReceivedMessage(message, withText: nil, destinedFor: channel)
 		else { return }
-		let setter = (message.params[2] as NSString).nicknameFromHostmask ?? message.params[2]
+		let setter = (message.params[2] as NSString).nicknameFromHostmask
 		let date = Date(timeIntervalSince1970: TimeInterval(message.params[3]) ?? 0)
 		print(
 			IRCInboundStrings.ChannelEvent.topicSet(
@@ -145,11 +145,11 @@ extension IRCClient {
 		let tracked = supportsAdvancedTracking ? [:] : trackedUsers.trackedUsers
 		for (nickname, previousValue) in tracked {
 			let isOnline = online.contains { $0.caseInsensitiveCompare(nickname) == .orderedSame }
-			let status: IRCAddressBookUserTrackingStatus = if previousValue.boolValue, !isOnline,
+			let status: IRCAddressBookUserTrackingStatus = if previousValue, !isOnline,
 			                                                  !invokingISONCommandForFirstTime
 			{
 				.signedOff
-			} else if !previousValue.boolValue, isOnline {
+			} else if !previousValue, isOnline {
 				invokingISONCommandForFirstTime ? .available : .signedOn
 			} else {
 				.unknown
@@ -242,7 +242,7 @@ extension IRCClient {
 			editedMember = ChannelUser(user: user, prefixes: currentUserPrefixes)
 		}
 		editedMember.modes = ChannelModeSymbolSet(letters: modes)
-		channel.memberInfo?.addMember(editedMember, checkForDuplicates: true)
+		channel.memberInfo?.addMember(editedMember)
 	}
 
 	private func handleEndOfNamesNumeric(_ message: Message, shouldPrint: Bool) {
@@ -280,13 +280,7 @@ extension IRCClient {
 		let extended = message.params.count > 4 + offset
 		let author = extended ? (message.params[3 + offset] as NSString).nicknameFromHostmask : nil
 		let date = extended ? Date(timeIntervalSince1970: TimeInterval(message.params[4 + offset]) ?? 0) : nil
-		if let sheet = AppController.shared.mainWindow.presentationModel
-			.sheetOwner(ofType: ChannelBanListSheet.self)
-		{
-			if sheet.contentAlreadyReceived {
-				sheet.contentAlreadyReceived = false; sheet.clear()
-			}
-			sheet.addEntry(mask, setBy: author, creationDate: date)
+		if output?.accessListEntryReceived(mask: mask, setBy: author, creationDate: date) == true {
 			return
 		}
 		guard shouldPrint else { return }
@@ -301,11 +295,7 @@ extension IRCClient {
 	}
 
 	private func handleEndOfModeListNumeric(_ message: Message, shouldPrint: Bool) {
-		if let sheet = AppController.shared.mainWindow.presentationModel
-			.sheetOwner(ofType: ChannelBanListSheet.self)
-		{
-			sheet.contentAlreadyReceived = true
-		} else if shouldPrint {
+		if output?.accessListFinished() != true, shouldPrint {
 			printReply(message)
 		}
 	}

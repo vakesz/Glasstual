@@ -23,11 +23,9 @@ struct PreferencesSceneRoot: View {
 	@State private var session = PreferencesSession()
 
 	var body: some View {
+		/* No frame here: `PreferencesRootView` declares the window's minimum,
+		 ideal and maximum size, and a second frame would only fight it. */
 		PreferencesRootView(model: session.model)
-			.frame(
-				minWidth: PreferencesLayout.minimumWindowSize.width,
-				minHeight: PreferencesLayout.minimumWindowSize.height
-			)
 			.onAppear {
 				session.activate(selection: request.selection)
 			}

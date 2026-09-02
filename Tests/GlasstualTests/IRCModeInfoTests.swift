@@ -52,6 +52,42 @@ struct ModeInfoTests {
 		#expect(set.modeIsSet)
 	}
 
+	/** `ModeInfo` used to be an immutable class with a mutable subclass, so a
+	 mode read out of a container was the same object the parser produced. It is
+	 a value now and equality is structural, which is what lets the container
+	 hand back a mode that compares equal to the parsed one. */
+	@Test("Equality and hashing use every field")
+	func equalityUsesEveryField() {
+		let mode = ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
+
+		#expect(mode == ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret"))
+		#expect(
+			mode.hashValue == ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret").hashValue
+		)
+
+		#expect(mode != ModeInfo(modeSymbol: "l", modeIsSet: true, modeParameter: "secret"))
+		#expect(mode != ModeInfo(modeSymbol: "k", modeIsSet: false, modeParameter: "secret"))
+		#expect(mode != ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "other"))
+		#expect(mode != ModeInfo(modeSymbol: "k", modeIsSet: true))
+	}
+
+	@MainActor
+	@Test("Modes parsed off a MODE line survive being stored and read back")
+	func parsedModesRoundTripThroughTheContainer() {
+		let client = GLTTestClient()
+		client.supportInfo.processConfigurationData("PREFIX=(ov)@+")
+
+		let parsed = client.supportInfo.parseModes("+nt-k+l secret 10")
+		let container = ChannelModeContainer(client: client)
+		container.apply(parsed)
+
+		#expect(parsed.isEmpty == false)
+
+		for mode in parsed {
+			#expect(container.modeInfo(for: mode.modeSymbol) == mode)
+		}
+	}
+
 	/// `GLTTestClient` and its support info are main-actor isolated; the rest
 	/// of this suite works on plain values.
 	@MainActor

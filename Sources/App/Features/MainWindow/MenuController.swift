@@ -117,15 +117,11 @@ public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidatio
 	}
 
 	public var selectedViewController: LogController? {
-		actionCoordinator.objcSelectedViewController()
+		actionCoordinator.selectedViewController
 	}
 
 	public var selectedViewControllerBackingView: LogView? {
-		actionCoordinator.objcSelectedViewControllerBackingView()
-	}
-
-	public func checkSelectedMembers(_ sender: Any) -> Bool {
-		selectedMembers(sender).isEmpty == false
+		actionCoordinator.selectedBackingView
 	}
 
 	public func selectedMembers(_ sender: Any) -> [ChannelUser] {

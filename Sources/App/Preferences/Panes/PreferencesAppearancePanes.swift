@@ -162,10 +162,16 @@ struct PreferencesStylePane: View {
 
 	let model: PreferencesPaneModel
 
+	/// The name being typed, held here until it is committed. A theme with an
+	/// empty name is rejected, so writing every keystroke through made the
+	/// field snap back as soon as the last character was deleted.
+	@State private var themeNameDraft: String?
+	@FocusState private var themeNameIsFocused: Bool
+
 	var body: some View {
 		PreferencesPaneLayout {
 			Section {
-				LabeledContent(TranscriptThemeStrings.themeName) { TextField("", text: themeName) }
+				LabeledContent(TranscriptThemeStrings.themeName) { themeNameField }
 				Picker(TranscriptThemeStrings.layout, selection: themeLayout) {
 					Text(verbatim: TranscriptThemeStrings.lines).tag(TranscriptThemeLayout.lines)
 					Text(verbatim: TranscriptThemeStrings.bubbles).tag(TranscriptThemeLayout.bubbles)
@@ -328,8 +334,32 @@ struct PreferencesStylePane: View {
 		}
 	}
 
-	private var themeName: Binding<String> {
-		themeBinding(\.name)
+	private var themeNameField: some View {
+		TextField("", text: Binding(
+			get: { themeNameDraft ?? model.transcriptTheme.name },
+			set: { themeNameDraft = $0 }
+		))
+		.focused($themeNameIsFocused)
+		.onSubmit { commitThemeName() }
+		.onChange(of: themeNameIsFocused) { _, isFocused in
+			if isFocused == false {
+				commitThemeName()
+			}
+		}
+	}
+
+	/// Commits the typed name, or drops it and restores the stored one when it
+	/// is blank.
+	private func commitThemeName() {
+		guard let draft = themeNameDraft else { return }
+
+		themeNameDraft = nil
+
+		let name = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+
+		guard name.isEmpty == false, name != model.transcriptTheme.name else { return }
+
+		model.updateTheme { $0.name = name }
 	}
 
 	private var themeLayout: Binding<TranscriptThemeLayout> {

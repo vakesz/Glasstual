@@ -234,8 +234,11 @@ struct IRCSpecOutboundLimitsTests {
 		#expect(batches.contains { $0.channels == ["#secret"] && $0.keys == ["hunter2"] })
 	}
 
-	/// `TARGMAX=JOIN:n` caps how many channels one JOIN may name, and an empty
-	/// limit means the server set none.
+	/** `TARGMAX=JOIN:n` caps how many channels one JOIN may name. No limit at
+	 all leaves the batch bounded only by the line budget, because a channel
+	 list is core JOIN syntax rather than something a server has to advertise —
+	 which is why zero here means "as many as fit" while the same zero for
+	 PRIVMSG means "one target per line". */
 	@Test("TARGMAX caps the channels in one JOIN")
 	func targetMaximumCapsOneJoin() {
 		let targets = (0 ..< 10).map { IRCJoinBatching.Target(name: "#c\($0)") }

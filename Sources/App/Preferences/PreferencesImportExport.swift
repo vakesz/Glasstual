@@ -19,30 +19,46 @@ private let importExportLogger = Logger(
 	category: "PreferencesImportExport"
 )
 
+/** Why an import stopped before anything was changed. An import that fails
+ without saying so looks to the user like a file picker that closed and did
+ nothing. */
+public nonisolated enum PreferencesImportError: LocalizedError, Equatable, Sendable { // nonisolated: value
+	/// The snapshot taken before overwriting the current settings failed, so
+	/// the import was not attempted.
+	case backupFailed
+	/// The chosen file is not a property list with a dictionary at its root.
+	case invalidDocument
+
+	public var errorDescription: String? {
+		switch self {
+		case .backupFailed:
+			PromptStrings.ConfigurationTransfer.importBackupFailedBody
+		case .invalidDocument:
+			PromptStrings.ConfigurationTransfer.importInvalidDocumentBody
+		}
+	}
+}
+
 @MainActor
 public enum PreferencesImportExport {
 	public static let defaultArchiveFilename = "GlasstualPreferences.plist"
 
+	/** Writes the current settings to the process's own temporary directory,
+	 which the system reclaims, rather than to the container root, where the
+	 backups used to pile up with nothing to delete them. */
 	public static func importPostflightBackupPreferences() -> Bool {
-		let backupPath = NSHomeDirectory().appending(
-			"/Glasstual-importBackup-\(UUID().uuidString).plist"
-		)
+		let backupURL = PathInfo.applicationTemporaryProcessSpecificURL
+			.appendingPathComponent("Glasstual-importBackup-\(UUID().uuidString).plist")
 
-		return exportPostflight(forPath: backupPath, filterJunk: false)
+		return exportPostflight(for: backupURL, filterJunk: false)
 	}
 
-	public static func importPostflight(_ pathURL: URL) {
-		importPostflightOnMain(pathURL)
-	}
-
-	private static func importPostflightOnMain(_ pathURL: URL) {
+	public static func importPostflight(_ pathURL: URL) throws {
 		guard importPostflightBackupPreferences() else {
-			return
+			throw PreferencesImportError.backupFailed
 		}
 
-		guard let fileContents = try? Data(contentsOf: pathURL) else {
-			return
-		}
+		let fileContents = try Data(contentsOf: pathURL)
 
 		var format = PropertyListSerialization.PropertyListFormat.binary
 		let propertyList: Any
@@ -54,14 +70,14 @@ public enum PreferencesImportExport {
 			)
 		} catch {
 			importExportLogger.error("Import failed: \(error.localizedDescription, privacy: .public)")
-			return
+			throw PreferencesImportError.invalidDocument
 		}
 
 		/* `Any` is what the serializer returns; it is narrowed here so the
 		 import works in typed values from this point on. */
 		guard let dictionary = [String: PropertyListValue](propertyList: propertyList) else {
 			importExportLogger.error("Import failed: root object is not a dictionary")
-			return
+			throw PreferencesImportError.invalidDocument
 		}
 
 		let mainWindow = AppController.shared.mainWindow!
@@ -142,7 +158,7 @@ public enum PreferencesImportExport {
 		if let client = world.findClient(withId: clientConfig.uniqueIdentifier) {
 			client.updateConfig(clientConfig)
 		} else {
-			_ = world.createClient(with: clientConfig, reload: true)
+			_ = world.createClient(with: clientConfig)
 		}
 	}
 
@@ -173,9 +189,7 @@ public enum PreferencesImportExport {
 	 and have to be subtracted again by name. */
 	private static func writtenValues() -> [String: PropertyListValue] {
 		let defaults = TextualUserDefaults.container
-		var written = [String: PropertyListValue](
-			propertyList: defaults.persistentDomain(forName: defaults.suiteName) ?? [:]
-		) ?? [:]
+		var written = [String: PropertyListValue](propertyList: defaults.persistedValues()) ?? [:]
 
 		if let bundleIdentifier = Bundle.main.bundleIdentifier,
 		   let standard = [String: PropertyListValue](
@@ -253,7 +267,7 @@ public enum PreferencesImportExport {
 		do {
 			try propertyList.write(to: url, options: .atomic)
 		} catch {
-			importExportLogger.error("Write failed")
+			importExportLogger.error("Write failed: \(error.localizedDescription, privacy: .public)")
 			return false
 		}
 

@@ -89,31 +89,6 @@ extension IRCClient {
 		timedCommandsByIdentifier.removeValue(forKey: timedCommand.identifier)
 	}
 
-	func stopTimedCommand(_ timedCommand: TimedCommand) {
-		timedCommand.stop()
-	}
-
-	func startTimedCommand(_ timedCommand: TimedCommand, interval: UInt) {
-		startTimedCommand(timedCommand, interval: interval, onRepeat: false, iterations: 0)
-	}
-
-	func startTimedCommand(_ timedCommand: TimedCommand, interval: UInt, onRepeat: Bool) {
-		startTimedCommand(timedCommand, interval: interval, onRepeat: onRepeat, iterations: 0)
-	}
-
-	func startTimedCommand(
-		_ timedCommand: TimedCommand,
-		interval: UInt,
-		onRepeat: Bool,
-		iterations: UInt
-	) {
-		timedCommand.start(TimeInterval(interval), onRepeat: onRepeat, iterations: iterations)
-	}
-
-	func restartTimedCommand(_ timedCommand: TimedCommand) -> Bool {
-		timedCommand.restart()
-	}
-
 	@MainActor
 	func onTimedCommand(_ timedCommand: TimedCommand) {
 		if timedCommand.timerIsActive == false {

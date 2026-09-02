@@ -80,7 +80,14 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		rebuildConversionSnapshot()
 	}
 
-	private func rebuildConversionSnapshot() {
+	/** Rebuilds the conversion table from the preferences as they stand now.
+
+	 `@objc` because this plugin is loaded from its bundle at runtime: nothing
+	 that links against Glasstual can see this Swift type, so a selector is the
+	 only way into it. `PluginRuntimeTests` uses that to drive a preference
+	 reload against a live renderer. The preferences pane, which is inside the
+	 bundle, calls it directly. */
+	@objc private func rebuildConversionSnapshot() {
 		let newSnapshot = defaults.bool(forKey: SmileyConverterPreferenceKey.serviceEnabled)
 			? buildConversionSnapshot()
 			: SmileyConversionSnapshot.empty
@@ -115,16 +122,11 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		}
 	}
 
-	@objc(preferenceChanged:)
-	private func preferenceChanged(_: Any?) {
-		rebuildConversionSnapshot()
-	}
-
 	var pluginPreferencesPane: PluginPreferencesPane? {
 		guard let host else { return nil }
 		return PluginPreferencesPane(title: String(localized: .BasicLanguage.preferencesPaneTitle)) { [weak self] in
 			SmileyConverterPreferencesView(defaults: host.defaults) {
-				self?.preferenceChanged(nil)
+				self?.rebuildConversionSnapshot()
 			}
 		}
 	}

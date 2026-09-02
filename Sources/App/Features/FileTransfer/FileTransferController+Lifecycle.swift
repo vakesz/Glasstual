@@ -40,7 +40,6 @@ import Foundation
 
 extension FileTransferController {
 	public func prepareForPermanentDestruction() {
-		dispatchPrecondition(condition: .onQueue(.main))
 		closeAndPostNotification(false)
 		lifecycleNotifications.cancelAll()
 		portMapperNotifications.cancelAll()
@@ -51,8 +50,8 @@ extension FileTransferController {
 	}
 
 	public func closeAndPostNotification(_ postNotification: Bool) {
-		dispatchPrecondition(condition: .onQueue(.main))
-		NSObject.cancelPreviousPerformRequests(withTarget: self)
+		resumeRequestTimeout?.cancel()
+		resumeRequestTimeout = nil
 
 		stopTransfer()
 		closePortMapping()
@@ -67,10 +66,6 @@ extension FileTransferController {
 
 		transferCenter.updateMaintenanceTimer()
 		enableSystemSleep()
-	}
-
-	func failWithNoSpaceLeftOnDevice() {
-		close(with: .storageFull)
 	}
 
 	func close(

@@ -37,16 +37,28 @@
  *********************************************************************** */
 
 import Foundation
+import os
 
 extension Notification.Name {
 	static let ircClientCapabilitiesDidChange = Notification.Name("IRCClientCapabilitiesDidChange")
 }
+
+private let negotiationLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "IRCCapabilityNegotiation"
+)
 
 enum ClientNegotiationUtilities {
 	/// Ceiling on the reassembled `AUTHENTICATE` payload. Every mechanism the
 	/// client supports fits in a fraction of this; without it a server can
 	/// grow the buffer 400 characters at a time forever.
 	static let maximumSASLPayloadLength = 16384
+
+	/// Ceiling on what a multi-line `CAP LS` may offer. The names are arbitrary
+	/// server-controlled tokens and only a final, non-`*` line clears the
+	/// table, so a server sending nothing but continuations grows it forever.
+	/// The largest advertisement any real network sends is a few dozen.
+	static let maximumOfferedCapabilities = 256
 
 	static func supportedSASLMechanisms(
 		hasClientCertificate: Bool,
@@ -163,10 +175,6 @@ extension IRCClient {
 
 	class func redactedServiceMessage(_ message: String, sentTo target: String?) -> String {
 		ClientWireUtilities.redactedServiceMessage(message, sentTo: target)
-	}
-
-	class func targetLooksLikeService(_ target: String?) -> Bool {
-		ClientWireUtilities.targetLooksLikeService(target)
 	}
 
 	func enableCapability(_ capability: ClientIRCv3SupportedCapability) {
@@ -387,6 +395,14 @@ extension IRCClient {
 					offeredCapabilities[name] = values
 				}
 
+				guard offeredCapabilities.count <= ClientNegotiationUtilities.maximumOfferedCapabilities else {
+					negotiationLogger.error("Ended negotiation: CAP LS offered more capabilities than the limit")
+					offeredCapabilities.removeAll()
+					pendingCapabilityRequests.removeAll()
+					sendNextQueuedCapability()
+					return
+				}
+
 				if moreToCome {
 					return
 				}
@@ -394,9 +410,9 @@ extension IRCClient {
 				queueCapabilityRequests(from: offeredCapabilities)
 				offeredCapabilities.removeAll()
 			case "ACK":
-				capabilityTokens(actions).forEach { toggleCapability($0, enabled: true) }
+				LineParser.wireTokens(in: actions).forEach { toggleCapability($0, enabled: true) }
 			case "NAK", "DEL":
-				capabilityTokens(actions).forEach { toggleCapability($0, enabled: false) }
+				LineParser.wireTokens(in: actions).forEach { toggleCapability($0, enabled: false) }
 			case "NEW":
 				queueCapabilityRequests(from: CapabilityRegistry.parseCapabilityList(actions))
 			default:
@@ -599,15 +615,6 @@ extension IRCClient {
 		disableCapability(.isIdentifiedWithSASL)
 		saslScramClient = nil
 		saslIncomingPayload = nil
-	}
-
-	@MainActor
-	func receiveCapabilityOrAuthenticationRequest(_ message: Message) {
-		handleCapabilityOrAuthenticationRequest(message)
-	}
-
-	private func capabilityTokens(_ string: String) -> [String] {
-		string.components(separatedBy: .whitespaces).filter { $0.isEmpty == false }
 	}
 }
 

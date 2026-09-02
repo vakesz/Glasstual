@@ -43,12 +43,6 @@ import GlasstualPluginKit
 import os
 import Synchronization
 
-public extension Notification.Name {
-	static let logControllerViewFinishedLoading = Notification.Name(
-		"TVCLogControllerViewFinishedLoadingNotification"
-	)
-}
-
 public typealias LogControllerPrintOperationCompletion = (LogControllerPrintOperationContext) -> Void
 
 private nonisolated let logControllerLogger = Logger( // nonisolated: let
@@ -97,7 +91,7 @@ public final class LogControllerPrintOperationContext: NSObject {
 public final class LogController: NSObject {
 	public private(set) var backingView: LogView?
 	public private(set) var viewIsLoaded = false
-	public private(set) weak var attachedWindow: MainWindow!
+	public private(set) weak var attachedWindow: MainWindow?
 	public private(set) var newestLineNumberFromPreviousSession: String?
 	public private(set) var oldestLineNumber: String?
 	public private(set) var newestLineNumber: String?
@@ -156,10 +150,6 @@ public final class LogController: NSObject {
 			.inlineMediaEnabled
 	}
 
-	public var viewIsSelected: Bool {
-		attachedWindow.selectedViewController === self
-	}
-
 	public var viewIsVisible: Bool {
 		guard let attachedWindow else {
 			return false
@@ -197,10 +187,6 @@ public final class LogController: NSObject {
 		attachedWindow = window
 		super.init()
 		setUp()
-	}
-
-	deinit {
-		NSObject.cancelPreviousPerformRequests(withTarget: self)
 	}
 
 	private func setUp() {
@@ -288,6 +274,7 @@ public final class LogController: NSObject {
 		terminating = true
 		viewIsLoaded = false
 		backingView = nil
+		NativeInlineImageLoader.shared.cancelLoads(forView: uniqueIdentifier)
 		stopPipeline()
 		if isTerminatingApplication {
 			closeHistoricLog()
@@ -392,10 +379,6 @@ public final class LogController: NSObject {
 	private func setTopicNow(_ topic: String?) {
 		guard !terminating else { return }
 		backingView?.setTopic(topic?.isEmpty == false ? topic : nil)
-	}
-
-	public func moveToTop() {
-		backingView?.scrollToTop()
 	}
 
 	public func moveToBottom() {
@@ -504,8 +487,9 @@ public final class LogController: NSObject {
 			kind: .newest(ascending: false, fetchLimit: 100, limitToDate: limitDate)
 		)
 		/* Everything the render needs is a value, so the fetch is awaited inside
-		 the job rather than before it. The pipeline slot stays open until the
-		 history has been applied, which is what keeps later prints behind it. */
+		 the job rather than before it. The job is standalone, so later prints do
+		 not queue behind the fetch; the projection's replay buffer is what holds
+		 them until the history has been applied. */
 		enqueueRenderJob(isStandalone: true) { [weak self] in
 			guard let viewController = self else {
 				return nil
@@ -659,6 +643,9 @@ public extension LogController {
 	func notifySelectionChanged() {}
 
 	func changeTextSize(_: Bool) {
+		guard let attachedWindow else {
+			return
+		}
 		backingView?.setTextScale(attachedWindow.textSizeMultiplier)
 	}
 
@@ -687,22 +674,24 @@ public extension LogController {
 
 	func processInlineMediaAtAddress(
 		_ address: String,
-		withUniqueIdentifier uniqueIdentifier: String,
+		withUniqueIdentifier linkIdentifier: String,
 		atLineNumber lineNumber: String
 	) {
 		/* The link parser's scheme set is user-extensible, so an address that
 		 became clickable is not necessarily one the inline-content service can
 		 handle. It only ever fetches over HTTP, and aborts on a file: URL. */
-		guard let scheme = URL(string: address)?.scheme?.lowercased(),
+		guard let url = URL(string: address),
+		      let scheme = url.scheme?.lowercased(),
 		      scheme == "http" || scheme == "https"
 		else {
 			return
 		}
 
 		NativeInlineImageLoader.shared.load(
-			url: URL(string: address)!,
+			url: url,
+			viewIdentifier: uniqueIdentifier,
 			lineNumber: lineNumber,
-			linkIdentifier: uniqueIdentifier
+			linkIdentifier: linkIdentifier
 		) { [weak self] result in
 			switch result {
 			case let .success(image): self?.backingView?.addInlineImage(image)
@@ -963,6 +952,14 @@ public extension LogController {
 		}
 		reactions[emoji] = nicknames
 		reactionsByMessageIdentifier[messageIdentifier] = reactions
+		/* A view that is still replaying history has not drawn the line yet; the
+		 reactions are handed to it when the replay finishes. */
+		guard transcriptProjection.phase == .active else {
+			return
+		}
+		enqueueMainActorWork { [weak self] in
+			self?.backingView?.updateReactions(reactions, messageIdentifier: messageIdentifier)
+		}
 	}
 
 	func updateDeliveryState(
@@ -988,13 +985,6 @@ public extension LogController {
 		)
 		enqueueMainActorWork { [weak self] in self?.backingView?.updateDelivery(update) }
 	}
-
-	func reactionsForMessageIdentifier(_ messageIdentifier: String) -> [String: [String]]? {
-		guard let reactions = reactionsByMessageIdentifier[messageIdentifier], !reactions.isEmpty else {
-			return nil
-		}
-		return reactions
-	}
 }
 
 public extension LogController {
@@ -1012,7 +1002,6 @@ public extension LogController {
 			view.setTextScale(attachedWindow.textSizeMultiplier)
 			setInitialTopic()
 			reloadHistory()
-			NotificationCenter.default.post(name: .logControllerViewFinishedLoading, object: self)
 		}
 	}
 

@@ -48,6 +48,9 @@ enum ApplicationTerminationPolicy {
 	enum Decision: Equatable {
 		/// Termination is already running: do nothing and let it finish.
 		case alreadyTerminating
+		/// The confirmation sheet is on screen: the answer to that one decides
+		/// this request too, so do not ask a second time.
+		case alreadyDeciding
 		/// Run the termination steps now.
 		case begin
 		/// Ask before quitting on top of a live connection.
@@ -56,12 +59,17 @@ enum ApplicationTerminationPolicy {
 
 	static func decision(
 		isTerminating: Bool,
+		isAwaitingConfirmation: Bool,
 		skipConfirmation: Bool,
 		confirmQuitPreference: Bool,
 		hasLiveConnection: Bool
 	) -> Decision {
 		if isTerminating {
 			return .alreadyTerminating
+		}
+
+		if isAwaitingConfirmation {
+			return .alreadyDeciding
 		}
 
 		if skipConfirmation || confirmQuitPreference == false || hasLiveConnection == false {
@@ -106,6 +114,10 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	/// service never answers.
 	private var historicLogSaveTimeoutTask: Task<Void, Never>?
 	private var skipTerminateConfirmation = false
+	/// Raised while the quit confirmation sheet is on screen. Sheets stack, so
+	/// without it a second ⌘Q queues a second sheet and both completions run:
+	/// two shutdowns, or a cancel answered on top of one already in flight.
+	private var terminationConfirmationIsPending = false
 	private let notifications = NotificationSubscriptions()
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
@@ -311,9 +323,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		/* UserNotifications.framework wants delegation set before app has
 		 finished launching. A simple access to the singleton will set this
 		 for us which we can just do here. */
-		Self.logger.debug(
-			"Preparing notification controller singleton: \(SharedApplication.sharedNotificationController().description, privacy: .public)"
-		)
+		_ = SharedApplication.sharedNotificationController()
 	}
 
 	public func applicationDidFinishLaunching(_: Notification) {
@@ -400,6 +410,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		switch ApplicationTerminationPolicy.decision(
 			isTerminating: applicationIsTerminating,
+			isAwaitingConfirmation: terminationConfirmationIsPending,
 			skipConfirmation: skipTerminateConfirmation,
 			confirmQuitPreference: Preferences.Connection.confirmQuit.value,
 			hasLiveConnection: stillConnected
@@ -409,6 +420,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			 used to schedule step one a second time, tearing everything down
 			 twice. */
 			Self.terminationLogger.debug("Termination is already in progress")
+		case .alreadyDeciding:
+			Self.terminationLogger.debug("Termination confirmation is already on screen")
 		case .begin:
 			Task { @MainActor [weak self] in
 				self?.performApplicationTerminationStepOne()
@@ -422,14 +435,17 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 	/// The sheet's completion reports to NSApp and begins termination itself.
 	private func presentTerminationConfirmation() {
+		terminationConfirmationIsPending = true
+
 		Alerts.alertSheet(
-			with: mainWindow,
 			body: PromptStrings.Application.quitBody,
 			title: PromptStrings.Application.quitTitle,
 			defaultButton: PromptStrings.Application.quitButtonTitle,
 			alternateButton: PromptStrings.Action.cancel,
 			otherButton: nil
 		) { [weak self] outcome in
+			self?.terminationConfirmationIsPending = false
+
 			let result = outcome.response == .default
 
 			Self.terminationLogger.debug("Perform termination: \(result)")
@@ -495,6 +511,14 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	private func performApplicationTerminationStepOne() {
+		/* Nothing may run the teardown twice: a second pass nils the delegate
+		 again and re-seeds `terminatingClientCount` while the first round's
+		 clients are still reporting in. */
+		guard applicationIsTerminating == false else {
+			Self.terminationLogger.debug("Step one skipped; termination is already in progress")
+			return
+		}
+
 		Self.terminationLogger.debug("Step one entry")
 
 		applicationIsTerminating = true
@@ -559,7 +583,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		Self.terminationLogger.debug("Unloading plugins")
 		SharedApplication.sharedPluginManager().unloadPlugins()
 
-		SharedApplication.sharedThemeController().prepareForApplicationTermination()
 		SoundPlayer.prepareForApplicationTermination()
 
 		Self.terminationLogger.debug("Saving running internal")
@@ -631,6 +654,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 /// connection code does not name the application controller.
 extension ApplicationController: ClientApplicationState {
 	func noteClientDidFinishTerminating() {
+		/* A client that reports in more than once must not trap the subtraction
+		 on an unsigned count. */
+		guard terminatingClientCount > 0 else {
+			return
+		}
+
 		terminatingClientCount -= 1
 	}
 }

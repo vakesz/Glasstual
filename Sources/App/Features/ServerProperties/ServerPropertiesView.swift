@@ -35,6 +35,14 @@ struct ServerPropertiesView: View {
 		string: "x-apple.systempreferences:com.apple.Network-Settings.extension?Proxies"
 	)
 
+	/* The pickers list their options in a deliberate order rather than the
+	 declaration order of the enums, so each carries its own array. */
+	private static let addressTypes: [IRCConnectionAddressType] = [.default, .v4, .v6]
+	private static let cipherSuiteCollections: [CipherSuiteCollection] = [
+		.default, .mozilla2017, .mozilla2015, .none,
+	]
+	private static let proxyTypes: [IRCConnectionProxyType] = [.none, .automatic, .socks5, .HTTP, .tor]
+
 	private let encodings: [(value: UInt, title: String)] = {
 		let values = String.Encoding.supportedEncodingsByTitle(favoringUTF8: false)
 		return values.map { ($0.value.uintValue, $0.key) }.sorted { $0.title < $1.title }
@@ -105,12 +113,22 @@ struct ServerPropertiesView: View {
 				Spacer()
 				Button(PromptStrings.Action.cancel, action: actions.cancel)
 					.keyboardShortcut(.cancelAction)
-				Button("Save", action: actions.submit)
+				Button(PromptStrings.Action.save, action: actions.submit)
 					.keyboardShortcut(.defaultAction)
 			}
 			.padding(12)
 		}
-		.frame(minWidth: 820, minHeight: 590)
+		/* The sheet takes its size from here and nowhere else. The infinite
+		 maxima are what let the user drag its edges: without them the content
+		 refuses to grow and the sheet has nothing to resize into. */
+		.frame(
+			minWidth: 820,
+			idealWidth: 900,
+			maxWidth: .infinity,
+			minHeight: 590,
+			idealHeight: 650,
+			maxHeight: .infinity
+		)
 		.onExitCommand(perform: actions.cancel)
 	}
 
@@ -141,16 +159,19 @@ struct ServerPropertiesView: View {
 	private var generalPane: some View {
 		pane(ServerPropertiesStrings.Navigation.general) {
 			Form {
-				TextField("Connection Name", text: $model.config.connectionName)
-				TextField("Server Address", text: $model.serverAddress)
-				TextField("Port", text: $model.serverPort)
-				SecureField("Server Password", text: $model.serverPassword)
-				Toggle("Connect Securely", isOn: $model.primaryServerIsSecured)
-				Button("Modify Alternate Servers", action: actions.editEndpoints)
+				TextField(ServerPropertiesStrings.General.connectionName, text: $model.config.connectionName)
+				TextField(ServerPropertiesStrings.General.serverAddress, text: $model.serverAddress)
+				TextField(ServerPropertiesStrings.General.serverPort, text: $model.serverPort)
+				SecureField(ServerPropertiesStrings.General.serverPassword, text: $model.serverPassword)
+				Toggle(ServerPropertiesStrings.General.connectSecurely, isOn: $model.primaryServerIsSecured)
+				Button(ServerPropertiesStrings.General.modifyAlternateServers, action: actions.editEndpoints)
 				Divider()
-				Toggle("Connect when Glasstual opens", isOn: $model.config.autoConnect)
-				Toggle("Reconnect after disconnect", isOn: $model.config.autoReconnect)
-				Toggle("Disconnect when the computer sleeps", isOn: $model.config.autoSleepModeDisconnect)
+				Toggle(ServerPropertiesStrings.General.connectOnLaunch, isOn: $model.config.autoConnect)
+				Toggle(ServerPropertiesStrings.General.reconnectAfterDisconnect, isOn: $model.config.autoReconnect)
+				Toggle(
+					ServerPropertiesStrings.General.disconnectWhenComputerSleeps,
+					isOn: $model.config.autoSleepModeDisconnect
+				)
 			}
 		}
 	}
@@ -158,17 +179,23 @@ struct ServerPropertiesView: View {
 	private var identityPane: some View {
 		pane(ServerPropertiesStrings.Navigation.identity) {
 			Form {
-				TextField("Nickname", text: $model.config.nickname)
-				TextField("Away Nickname", text: optionalBinding(\.awayNickname))
-				TextField("Alternative Nicknames", text: $model.alternateNicknames)
-				TextField("Username", text: $model.config.username)
-				TextField("Real Name", text: $model.config.realName)
-				TextField("CTCP VERSION Reply", text: optionalBinding(\.ctcpVersionReply))
-				SecureField("NickServ or SASL Password", text: $model.nicknamePassword)
+				TextField(ServerPropertiesStrings.Identity.nickname, text: $model.config.nickname)
+				TextField(ServerPropertiesStrings.Identity.awayNickname, text: optionalBinding(\.awayNickname))
+				TextField(ServerPropertiesStrings.Identity.alternativeNicknames, text: $model.alternateNicknames)
+				TextField(ServerPropertiesStrings.Identity.username, text: $model.config.username)
+				TextField(ServerPropertiesStrings.Identity.realName, text: $model.config.realName)
+				TextField(ServerPropertiesStrings.Identity.ctcpVersionReply, text: optionalBinding(\.ctcpVersionReply))
+				SecureField(ServerPropertiesStrings.Identity.nicknamePassword, text: $model.nicknamePassword)
 				Divider()
-				Toggle("Wait for identification before joining channels", isOn: $model.config.autojoinWaitsForNickServ)
-				Toggle("Warn if channels cannot be joined", isOn: warningBinding)
-				Toggle("Disconnect if SASL authentication fails", isOn: $model.config.disconnectOnSASLFailure)
+				Toggle(
+					ServerPropertiesStrings.Identity.autojoinWaitsForNickServ,
+					isOn: $model.config.autojoinWaitsForNickServ
+				)
+				Toggle(ServerPropertiesStrings.Identity.warnWhenChannelsCannotBeJoined, isOn: warningBinding)
+				Toggle(
+					ServerPropertiesStrings.Identity.disconnectOnSASLFailure,
+					isOn: $model.config.disconnectOnSASLFailure
+				)
 			}
 		}
 	}
@@ -178,7 +205,10 @@ struct ServerPropertiesView: View {
 			List(selection: $model.selectedChannelID) {
 				ForEach(model.displayedChannels, id: \.uniqueIdentifier) { channel in
 					HStack {
-						Toggle("", isOn: channelAutoJoinBinding(channel.uniqueIdentifier)).labelsHidden()
+						Toggle(
+							ServerPropertiesStrings.ChannelList.joinOnConnect,
+							isOn: channelAutoJoinBinding(channel.uniqueIdentifier)
+						).labelsHidden()
 						Text(verbatim: channel.channelName)
 						Spacer()
 						if let key = channel.secretKey, !key.isEmpty {
@@ -222,8 +252,8 @@ struct ServerPropertiesView: View {
 			}.frame(minHeight: 300)
 			HStack {
 				Menu {
-					Button("Add User Ignore Entry", action: actions.addIgnore)
-					Button("Add User Tracking Entry", action: actions.addTracking)
+					Button(ServerPropertiesStrings.AddressBookActions.addIgnoreEntry, action: actions.addIgnore)
+					Button(ServerPropertiesStrings.AddressBookActions.addTrackingEntry, action: actions.addTracking)
 				} label: { Image(systemName: "plus") }
 				Button(action: actions.editAddressBookEntry) { Image(systemName: "pencil") }
 					.disabled(model.selectedAddressBookEntryID == nil)
@@ -237,18 +267,39 @@ struct ServerPropertiesView: View {
 
 	private var commandsPane: some View {
 		pane(ServerPropertiesStrings.Navigation.connectCommands) {
-			Text("Perform commands on connect:").frame(maxWidth: .infinity, alignment: .leading)
+			Text(verbatim: ServerPropertiesStrings.ConnectCommands.heading)
+				.frame(maxWidth: .infinity, alignment: .leading)
 			TextEditor(text: $model.connectCommands).font(.system(.body, design: .monospaced)).frame(minHeight: 280)
-			Toggle("Set invisible (+i) mode on connect", isOn: $model.config.setInvisibleModeOnConnect)
-			Toggle("Run commands silently", isOn: $model.config.runConnectCommandsSilently)
+			Toggle(
+				ServerPropertiesStrings.ConnectCommands.setInvisibleMode,
+				isOn: $model.config.setInvisibleModeOnConnect
+			)
+			Toggle(ServerPropertiesStrings.ConnectCommands.runSilently, isOn: $model.config.runConnectCommandsSilently)
+			Toggle(
+				ServerPropertiesStrings.ConnectCommands.autojoinWaitsForConnectCommands,
+				isOn: $model.config.autojoinWaitsForConnectCommands
+			)
+			Stepper(
+				value: $model.config.autojoinDelayAfterConnectCommands,
+				in: 0 ... ClientConfigDefaults.maximumAutojoinConnectCommandDelay,
+				step: 1
+			) {
+				Text(verbatim: ServerPropertiesStrings.ConnectCommands.autojoinDelay(
+					seconds: Int(model.config.autojoinDelayAfterConnectCommands)
+				))
+			}
+			.disabled(model.config.autojoinWaitsForConnectCommands == false)
 		}
 	}
 
 	private var messagesPane: some View {
 		pane(ServerPropertiesStrings.Navigation.messages) {
 			Form {
-				TextField("Part and Quit Message", text: $model.config.normalLeavingComment)
-				TextField("Computer Sleep Quit Message", text: $model.config.sleepModeLeavingComment)
+				TextField(ServerPropertiesStrings.LeavingMessages.normal, text: $model.config.normalLeavingComment)
+				TextField(
+					ServerPropertiesStrings.LeavingMessages.sleepMode,
+					text: $model.config.sleepModeLeavingComment
+				)
 			}
 		}
 	}
@@ -256,10 +307,10 @@ struct ServerPropertiesView: View {
 	private var encodingPane: some View {
 		pane(ServerPropertiesStrings.Navigation.encoding) {
 			Form {
-				Picker("Encoding", selection: $model.config.primaryEncoding) {
+				Picker(ServerPropertiesStrings.Encoding.primary, selection: $model.config.primaryEncoding) {
 					ForEach(encodings, id: \.value) { Text(verbatim: $0.title).tag($0.value) }
 				}
-				Picker("Fallback", selection: $model.config.fallbackEncoding) {
+				Picker(ServerPropertiesStrings.Encoding.fallback, selection: $model.config.fallbackEncoding) {
 					ForEach(encodings, id: \.value) { Text(verbatim: $0.title).tag($0.value) }
 				}
 			}
@@ -268,27 +319,30 @@ struct ServerPropertiesView: View {
 
 	private var zncPane: some View {
 		pane(ServerPropertiesStrings.Navigation.zncBouncer) {
-			Toggle("Do not automatically join channels on connect", isOn: $model.config.zncIgnoreConfiguredAutojoin)
 			Toggle(
-				"Do not show notifications for the playback buffer",
+				ServerPropertiesStrings.ZNC.ignoreConfiguredAutojoin,
+				isOn: $model.config.zncIgnoreConfiguredAutojoin
+			)
+			Toggle(
+				ServerPropertiesStrings.ZNC.ignorePlaybackNotifications,
 				isOn: $model.config.zncIgnorePlaybackNotifications
 			)
-			Toggle("Only play back messages you missed", isOn: $model.config.zncOnlyPlaybackLatest)
-			Text("These options target ZNC 1.2 and later.").foregroundStyle(.secondary)
+			Toggle(ServerPropertiesStrings.ZNC.onlyPlaybackLatest, isOn: $model.config.zncOnlyPlaybackLatest)
+			Text(verbatim: ServerPropertiesStrings.ZNC.versionNote).foregroundStyle(.secondary)
 		}
 	}
 
 	private var certificatePane: some View {
 		pane(ServerPropertiesStrings.Navigation.clientCertificate) {
 			Form {
-				LabeledContent("Certificate Name", value: model.certificateName)
-				fingerprint("SHA-512 Fingerprint", model.certificateSHA512)
-				fingerprint("SHA-256 Fingerprint", model.certificateSHA256)
-				fingerprint("SHA-1 Fingerprint", model.certificateSHA1)
+				LabeledContent(ServerPropertiesStrings.Certificate.name, value: model.certificateName)
+				fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA512, model.certificateSHA512)
+				fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA256, model.certificateSHA256)
+				fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA1, model.certificateSHA1)
 			}
 			HStack {
-				Button("Select Certificate", action: actions.chooseCertificate)
-				Button("Reset Certificate", action: actions.resetCertificate)
+				Button(ServerPropertiesStrings.Certificate.select, action: actions.chooseCertificate)
+				Button(ServerPropertiesStrings.Certificate.reset, action: actions.resetCertificate)
 					.disabled(model.config.identityClientSideCertificate == nil)
 			}
 		}
@@ -296,71 +350,89 @@ struct ServerPropertiesView: View {
 
 	private var socketPane: some View {
 		pane(ServerPropertiesStrings.Navigation.networkSocket) {
-			Picker("Connect using", selection: $model.config.addressType) {
-				Text("Automatically choose").tag(IRCConnectionAddressType.default)
-				Text("IPv4").tag(IRCConnectionAddressType.v4)
-				Text("IPv6").tag(IRCConnectionAddressType.v6)
+			Picker(ServerPropertiesStrings.Socket.connectUsing, selection: $model.config.addressType) {
+				ForEach(Self.addressTypes, id: \.self) { addressType in
+					Text(verbatim: ServerPropertiesStrings.Socket.addressType(addressType)).tag(addressType)
+				}
 			}.pickerStyle(.radioGroup)
-			Toggle("Validate the certificate chain when connecting", isOn: $model.config.validateServerCertificateChain)
-			Toggle("Periodically PING the server", isOn: $model.config.performPongTimer)
-			Toggle("Disconnect when no PING response is received", isOn: $model.config.performDisconnectOnPongTimer)
-			Toggle("Disconnect when reachability changes", isOn: $model.config.performDisconnectOnReachabilityChange)
-			Picker("Cipher suites", selection: $model.config.cipherSuites) {
-				Text("Default list").tag(CipherSuiteCollection.default)
-				Text("Version 7.0.0 list").tag(CipherSuiteCollection.mozilla2017)
-				Text("Version 5.2.7 list").tag(CipherSuiteCollection.mozilla2015)
-				Text("Do not prefer specific suites").tag(CipherSuiteCollection.none)
+			Toggle(
+				ServerPropertiesStrings.Socket.validateCertificateChain,
+				isOn: $model.config.validateServerCertificateChain
+			)
+			Toggle(ServerPropertiesStrings.Socket.performPongTimer, isOn: $model.config.performPongTimer)
+			Toggle(
+				ServerPropertiesStrings.Socket.disconnectOnPongTimer,
+				isOn: $model.config.performDisconnectOnPongTimer
+			)
+			Toggle(
+				ServerPropertiesStrings.Socket.disconnectOnReachabilityChange,
+				isOn: $model.config.performDisconnectOnReachabilityChange
+			)
+			Picker(ServerPropertiesStrings.CipherSuites.label, selection: $model.config.cipherSuites) {
+				ForEach(Self.cipherSuiteCollections, id: \.self) { collection in
+					Text(verbatim: ServerPropertiesStrings.CipherSuites.collectionName(collection)).tag(collection)
+				}
 			}
-			Button("View List", action: actions.showCipherSuites)
+			Button(ServerPropertiesStrings.CipherSuites.viewList, action: actions.showCipherSuites)
 				.disabled(model.config.cipherSuites == .none)
 		}
 	}
 
 	private var proxyPane: some View {
 		pane(ServerPropertiesStrings.Navigation.proxyServer) {
-			Picker("Type of Proxy", selection: $model.config.proxyType) {
-				Text("None").tag(IRCConnectionProxyType.none)
-				Text("Automatic").tag(IRCConnectionProxyType.automatic)
-				Text("SOCKS 5 Proxy").tag(IRCConnectionProxyType.socks5)
-				Text("HTTP Proxy (Anonymous)").tag(IRCConnectionProxyType.HTTP)
-				Text("Tor Anonymity Network").tag(IRCConnectionProxyType.tor)
+			Picker(ServerPropertiesStrings.Proxy.type, selection: $model.config.proxyType) {
+				ForEach(Self.proxyTypes, id: \.self) { proxyType in
+					Text(verbatim: ServerPropertiesStrings.Proxy.typeName(proxyType)).tag(proxyType)
+				}
 			}
 			if ServerPropertiesModel.proxyTypeUsesAddress(model.config.proxyType) {
 				Form {
-					TextField("Address", text: $model.proxyAddress)
-					TextField("Port", text: $model.proxyPort)
+					TextField(ServerPropertiesStrings.Proxy.address, text: $model.proxyAddress)
+					TextField(ServerPropertiesStrings.Proxy.port, text: $model.proxyPort)
 					if model.config.proxyType == .socks5 {
-						TextField("Username", text: $model.proxyUsername)
-						SecureField("Password", text: $model.proxyPassword)
+						TextField(ServerPropertiesStrings.Proxy.username, text: $model.proxyUsername)
+						SecureField(ServerPropertiesStrings.Proxy.password, text: $model.proxyPassword)
 					}
 				}
 			} else if model.config.proxyType == .automatic {
-				Button("Open System Settings") {
+				Button(ServerPropertiesStrings.Proxy.openSystemSettings) {
 					if let url = Self.networkProxySettingsURL {
 						openURL(url)
 					}
 				}
 			} else if model.config.proxyType == .tor {
-				Text("Tor Browser must be running before connecting.").foregroundStyle(.secondary)
+				Text(verbatim: ServerPropertiesStrings.Proxy.torBrowserNote).foregroundStyle(.secondary)
 			}
 		}
 	}
 
 	private var floodPane: some View {
 		pane(ServerPropertiesStrings.Navigation.floodControl) {
-			LabeledContent("Number of commands", value: String(model.config.floodControlMaximumMessages))
+			LabeledContent(
+				ServerPropertiesStrings.FloodControl.messageCount,
+				value: String(model.config.floodControlMaximumMessages)
+			)
 			Slider(value: uintBinding(\.floodControlMaximumMessages), in: 1 ... 60, step: 1)
-			LabeledContent("Number of seconds", value: String(model.config.floodControlDelayTimerInterval))
+			LabeledContent(
+				ServerPropertiesStrings.FloodControl.interval,
+				value: String(model.config.floodControlDelayTimerInterval)
+			)
 			Slider(value: uintBinding(\.floodControlDelayTimerInterval), in: 1 ... 60, step: 1)
 		}
 	}
 
 	private var redundancyPane: some View {
 		pane(ServerPropertiesStrings.Navigation.redundancy) {
-			Toggle("Reconnect after disconnect", isOn: $model.config.autoReconnect)
-			Toggle("Disconnect when the computer sleeps", isOn: $model.config.autoSleepModeDisconnect)
-			Toggle("Disconnect when reachability changes", isOn: $model.config.performDisconnectOnReachabilityChange)
-			Button("Modify Alternate Servers", action: actions.editEndpoints)
+			Toggle(ServerPropertiesStrings.General.reconnectAfterDisconnect, isOn: $model.config.autoReconnect)
+			Toggle(
+				ServerPropertiesStrings.General.disconnectWhenComputerSleeps,
+				isOn: $model.config.autoSleepModeDisconnect
+			)
+			Toggle(
+				ServerPropertiesStrings.Socket.disconnectOnReachabilityChange,
+				isOn: $model.config.performDisconnectOnReachabilityChange
+			)
+			Button(ServerPropertiesStrings.General.modifyAlternateServers, action: actions.editEndpoints)
 		}
 	}
 
@@ -385,7 +457,7 @@ struct ServerPropertiesView: View {
 	private func fingerprint(_ label: String, _ value: String) -> some View {
 		HStack {
 			LabeledContent(label, value: value)
-			Button("Copy") { actions.copyCertificateFingerprint(value) }
+			Button(ServerPropertiesStrings.Certificate.copyFingerprint) { actions.copyCertificateFingerprint(value) }
 				.disabled(model.config.identityClientSideCertificate == nil)
 		}
 	}

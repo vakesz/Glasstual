@@ -39,15 +39,12 @@
 import AppKit
 
 enum MenuChannelModePolicy {
-	static let removeModeratedTag = 6_090_001
-	static let removeInviteOnlyTag = 6_090_003
-
-	static func moderationMode(for tag: Int) -> String {
-		tag == removeModeratedTag ? "-m" : "+m"
+	static func moderationMode(for command: MenuCommand?) -> String {
+		command == .channelModeUnmoderated ? "-m" : "+m"
 	}
 
-	static func inviteMode(for tag: Int) -> String {
-		tag == removeInviteOnlyTag ? "-i" : "+i"
+	static func inviteMode(for command: MenuCommand?) -> String {
+		command == .channelModeAnyoneCanJoin ? "-i" : "+i"
 	}
 }
 
@@ -62,9 +59,9 @@ public extension MenuActionCoordinator {
 			showModeList(symbol: "+I", presentation: { $0.createChannelInviteExceptionListSheet() })
 		case .showQuietList: showModeList(symbol: "+q", presentation: { $0.createChannelQuietListSheet() })
 		case .toggleModerationMode:
-			sendMode(MenuChannelModePolicy.moderationMode(for: senderTag(sender)))
+			sendMode(MenuChannelModePolicy.moderationMode(for: senderCommand(sender)))
 		case .toggleInviteMode:
-			sendMode(MenuChannelModePolicy.inviteMode(for: senderTag(sender)))
+			sendMode(MenuChannelModePolicy.inviteMode(for: senderCommand(sender)))
 		@unknown default: break
 		}
 	}
@@ -84,7 +81,7 @@ public extension MenuActionCoordinator {
 		client.sendModes(symbol, withParametersString: nil, in: channel)
 	}
 
-	private func senderTag(_ sender: Any?) -> Int {
-		(sender as? NSMenuItem)?.command?.rawValue ?? (sender as? NSControl)?.tag ?? 0
+	private func senderCommand(_ sender: Any?) -> MenuCommand? {
+		(sender as? NSMenuItem)?.command
 	}
 }

@@ -178,14 +178,6 @@ public final class ChannelBanListSheet: MainWindowSheetSession, ChannelScoped {
 		model.add(entry)
 	}
 
-	public var entryCount: Int {
-		model.entries.count
-	}
-
-	public var entryCountDescription: String {
-		model.entryCountDescription
-	}
-
 	private func updateList() {
 		model.clear()
 		model.isRefreshing = true

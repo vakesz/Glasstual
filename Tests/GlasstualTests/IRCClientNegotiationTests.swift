@@ -47,7 +47,7 @@ struct IRCClientNegotiationTests {
 	func capabilityListContinuationDefersRequests() throws {
 		let client = GLTTestClient()
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS * :multi-prefix sasl=PLAIN,EXTERNAL",
 			on: client
 		))
@@ -55,7 +55,7 @@ struct IRCClientNegotiationTests {
 		#expect(client.sentCapabilityCommands.count == 0)
 		#expect(client.pendingCapabilityRequests.count == 0)
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :server-time message-tags example.com/vendor",
 			on: client
 		))
@@ -68,13 +68,13 @@ struct IRCClientNegotiationTests {
 	func acknowledgementEnablesCapabilityAndContinuesNegotiation() throws {
 		let client = GLTTestClient()
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :multi-prefix server-time",
 			on: client
 		))
 		#expect(capabilityCommands(of: client) == ["REQ multi-prefix"])
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :multi-prefix",
 			on: client
 		))
@@ -83,7 +83,7 @@ struct IRCClientNegotiationTests {
 		#expect(client.isCapabilityEnabled(.serverTime) == false)
 		#expect(capabilityCommands(of: client) == ["REQ multi-prefix", "REQ server-time"])
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me NAK :server-time",
 			on: client
 		))
@@ -97,18 +97,18 @@ struct IRCClientNegotiationTests {
 	func vendorServerTimeEnablesGenericBit() throws {
 		let client = GLTTestClient()
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :znc.in/server-time-iso",
 			on: client
 		))
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :znc.in/server-time-iso",
 			on: client
 		))
 
 		#expect(client.isCapabilityEnabled(.serverTime))
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me DEL :znc.in/server-time-iso",
 			on: client
 		))
@@ -123,13 +123,13 @@ struct IRCClientNegotiationTests {
 			nicknamePassword: "secret"
 		)
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=PLAIN,EXTERNAL",
 			on: client
 		))
 		#expect(capabilityCommands(of: client) == ["REQ sasl"])
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :sasl",
 			on: client
 		))
@@ -142,7 +142,7 @@ struct IRCClientNegotiationTests {
 	func saslIsSkippedWhenOnlyUnsupportedMechanismsAreOffered() throws {
 		let client = makeClient(configuration: [:], nicknamePassword: "secret")
 
-		try client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=SCRAM-SHA-512,GSSAPI",
 			on: client
 		))

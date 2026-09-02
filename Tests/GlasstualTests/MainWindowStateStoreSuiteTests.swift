@@ -28,9 +28,14 @@ struct MainWindowStateStoreSuiteTests {
 	@Test("The store writes to the shared container suite by default")
 	func defaultSuiteIsTheSharedContainer() {
 		let container = TextualUserDefaults.container
+
+		/* `.standard` is the developer's own domain — the test scheme redirects
+		 the container and nothing else — so it is read to prove the write did
+		 not land there, never written or cleared. */
+		let standardBefore = Self.keys.map { UserDefaults.standard.object(forKey: $0) as? NSObject }
+
 		for key in Self.keys {
 			container.removeObject(forKey: key)
-			UserDefaults.standard.removeObject(forKey: key)
 		}
 		defer {
 			for key in Self.keys {
@@ -45,6 +50,9 @@ struct MainWindowStateStoreSuiteTests {
 		#expect(container.object(forKey: Self.keys[0]) != nil)
 		#expect(container.object(forKey: Self.keys[1]) != nil)
 		#expect(container.string(forKey: Self.keys[2]) == "an-identifier")
+
+		let standardAfter = Self.keys.map { UserDefaults.standard.object(forKey: $0) as? NSObject }
+		#expect(standardAfter == standardBefore, "the store wrote window state to the standard domain")
 
 		let reloaded = store.loadLayout()
 		#expect(reloaded.isServerListVisible == false)

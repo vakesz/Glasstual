@@ -33,7 +33,7 @@ struct InputHandlingTests {
 	/// the key held is put back rather than left behind.
 	private func withPreference(_ key: String, setTo value: Any, _ body: () throws -> Void) rethrows {
 		let defaults = TextualUserDefaults.container
-		let original = defaults.persistentDomain(forName: ApplicationGroup.identifier)?[key]
+		let original = defaults.persistedObject(forKey: key)
 		defer {
 			if let original {
 				defaults.set(original, forKey: key)
@@ -226,6 +226,37 @@ struct InputHandlingTests {
 
 			completion.completeNickname(false)
 			#expect(textField.string == "Alice: ")
+		}
+	}
+
+	/// The loading screen makes the field uneditable, which is what makes
+	/// `shouldChangeText` refuse. The session must not then record a range for
+	/// an edit that never happened, or the next Tab replaces from it.
+	@Test("A refused completion changes neither the field nor the session")
+	func nicknameCompletionLeavesNoSessionWhenTheEditIsRefused() {
+		withPreference(Self.completionSuffixKey, setTo: ": ") {
+			let client = GLTTestClient()
+			let channel = GLTCompletionChannel(config: ChannelConfig(channelName: "#chat"))
+			channel.testMembers = [GLTTestClient.testChannelUser(nickname: "Alice", on: client)]
+
+			let host = hostWindow()
+			let textField = makeTextField(in: host)
+			let window = GLTCompletionWindow()
+			window.selectedClient = client
+			window.selectedChannel = channel
+			window.inputTextField = textField
+			textField.stringValue = "Al"
+			textField.setSelectedRange(NSRange(location: 2, length: 0))
+			textField.isEditable = false
+
+			let completion = NicknameCompletionStatus(window: window)
+
+			completion.completeNickname(true)
+			#expect(textField.string == "Al")
+			#expect(textField.selectedRange == NSRange(location: 2, length: 0))
+
+			completion.completeNickname(true)
+			#expect(textField.string == "Al")
 		}
 	}
 }

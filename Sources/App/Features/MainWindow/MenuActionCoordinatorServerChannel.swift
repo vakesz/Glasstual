@@ -71,7 +71,6 @@ public extension MenuActionCoordinator {
 		case .deleteChannel: deleteChannel()
 		case .copyUniqueIdentifier: copyUniqueIdentifier()
 		case .joinClickedChannel: joinClickedChannel(sender)
-		case .empty: break
 		@unknown default: break
 		}
 	}
@@ -118,7 +117,7 @@ public extension MenuActionCoordinator {
 
 		var config = client.config.uniqueCopy()
 		config.connectionName += "_"
-		let newClient = world.createClient(with: config, reload: true)
+		let newClient = world.createClient(with: config)
 		if newClient.config.sidebarItemExpanded {
 			mainWindow.expandClient(newClient)
 		}

@@ -106,13 +106,17 @@ public enum SecureTransportSupport {
 		descriptions(forCipherListCollection: collection, withProtocol: false)
 	}
 
+	/// What the server-properties sheet shows the user. It has to name the same
+	/// suites the transport offers, which is why every entry of every
+	/// collection is a value `tls_ciphersuite_t` defines.
 	public static func descriptions(forCipherListCollection collection: CipherSuiteCollection,
 	                                withProtocol: Bool) -> [String]
 	{
-		cipherSuites(inCollection: collection).map { description(
-			forCipherSuite: tls_ciphersuite_t(rawValue: $0.uint16Value)!,
-			withProtocol: withProtocol
-		) ?? "Unknown" }
+		cipherSuites(inCollection: collection).map { number in
+			guard let suite = tls_ciphersuite_t(rawValue: number.uint16Value) else { return "Unknown" }
+
+			return description(forCipherSuite: suite, withProtocol: withProtocol) ?? "Unknown"
+		}
 	}
 
 	public static func cipherSuites(inCollection collection: CipherSuiteCollection) -> [NSNumber] {
@@ -132,21 +136,8 @@ public enum SecureTransportSupport {
 	{
 		guard includeDeprecated else { return cipherSuites(inCollection: collection) }
 		var suites = cipherSuites(inCollection: collection).map(\.uint16Value)
-		suites.append(contentsOf: [0x009F, 0x009E])
 		suites.append(contentsOf: deprecatedSuites)
 		return suites.map(NSNumber.init(value:))
-	}
-
-	public static func appendCipherSuites(
-		inCollection collection: CipherSuiteCollection,
-		includeDeprecated: Bool,
-		to options: sec_protocol_options_t
-	) {
-		let suites = cipherSuites(inCollection: collection, includeDeprecated: includeDeprecated).map(\.uint16Value)
-		for suite in suites {
-			guard let value = tls_ciphersuite_t(rawValue: suite) else { continue }
-			sec_protocol_options_append_tls_ciphersuite(options, value)
-		}
 	}
 
 	public static func isTLSError(_ error: NSError) -> Bool {
@@ -194,20 +185,30 @@ public enum SecureTransportSupport {
 		return nil
 	}
 
+	/* Every raw value below is a case of `tls_ciphersuite_t`. The enum is what
+	 Network.framework negotiates from, so a value outside it is not a weaker
+	 choice — it is silently no choice at all, and the list the user picked
+	 stops being the list that is offered. `cipherSuiteRawValuesAreDefined`
+	 pins that. */
+
 	private static let modernSuites: [UInt16] = [
 		0x1302, 0x1301, 0x1303,
 		0xC02C, 0xC030, 0xCCA9, 0xCCA8, 0xC02B, 0xC02F,
 		0xC024, 0xC028, 0xC023, 0xC027,
 	]
 
+	/** Mozilla's 2015 "intermediate" list, less the DHE and DHE-DSS suites the
+	 platform never implemented. */
 	private static let mozilla2015Suites: [UInt16] = [
-		0xC02F, 0xC02B, 0xC030, 0xC02C, 0x009E, 0x00A2, 0x00A3, 0x009F,
+		0xC02F, 0xC02B, 0xC030, 0xC02C,
 		0xC027, 0xC023, 0xC013, 0xC009, 0xC028, 0xC024, 0xC014, 0xC00A,
-		0x0067, 0x0033, 0x0040, 0x006B, 0x0038, 0x0039,
 	]
 
 	private static let deprecatedSuites: [UInt16] = [0x009C, 0x009D, 0x003C, 0x003D, 0x002F, 0x0035]
 
+	/// One name for every case of `tls_ciphersuite_t`, so a negotiated suite
+	/// always has one -- including the suites only the platform's own
+	/// `.default` group can pick.
 	private static let cipherNames: [UInt16: String] = [
 		0x1301: "AES-128-GCM", 0x1302: "AES-256-GCM", 0x1303: "CHACHA20-POLY1305",
 		0xC02B: "ECDHE-ECDSA-AES-128-GCM", 0xC02C: "ECDHE-ECDSA-AES-256-GCM",
@@ -217,14 +218,11 @@ public enum SecureTransportSupport {
 		0xC027: "ECDHE-RSA-AES-128-CBC-SHA256", 0xC028: "ECDHE-RSA-AES-256-CBC-SHA384",
 		0xC009: "ECDHE-ECDSA-AES-128-CBC-SHA1", 0xC00A: "ECDHE-ECDSA-AES-256-CBC-SHA1",
 		0xC013: "ECDHE-RSA-AES-128-CBC-SHA1", 0xC014: "ECDHE-RSA-AES-256-CBC-SHA1",
-		0x009E: "DHE-RSA-AES-128-GCM", 0x009F: "DHE-RSA-AES-256-GCM",
-		0x00A2: "DHE-DSS-AES-128-GCM", 0x00A3: "DHE-DSS-AES-256-GCM",
-		0x0067: "DHE-RSA-AES-128-CBC-SHA256", 0x006B: "DHE-RSA-AES-256-CBC-SHA256",
-		0x0033: "DHE-RSA-AES-128-CBC-SHA1", 0x0039: "DHE-RSA-AES-256-CBC-SHA1",
-		0x0040: "DHE-DSS-AES-128-CBC-SHA256", 0x0038: "DHE-DSS-AES-256-CBC-SHA1",
+		0xC008: "ECDHE-ECDSA-3DES-EDE-CBC-SHA1", 0xC012: "ECDHE-RSA-3DES-EDE-CBC-SHA1",
 		0x009C: "RSA-AES-128-GCM", 0x009D: "RSA-AES-256-GCM",
 		0x003C: "RSA-AES-128-CBC-SHA256", 0x003D: "RSA-AES-256-CBC-SHA256",
 		0x002F: "RSA-AES-128-CBC-SHA1", 0x0035: "RSA-AES-256-CBC-SHA1",
+		0x000A: "RSA-3DES-EDE-CBC-SHA1",
 	]
 
 	private static let badCertificateErrors: Set<Int> = [

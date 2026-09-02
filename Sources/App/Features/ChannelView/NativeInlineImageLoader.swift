@@ -34,20 +34,27 @@ final class NativeInlineImageLoader {
 	static let shared = NativeInlineImageLoader()
 
 	private nonisolated static let maximumByteCount = 16 * 1024 * 1024 // nonisolated: let
-	private var tasks: [String: Task<Void, Never>] = [:]
+	/// How much of a body is collected before it is handed to the accumulator.
+	/// The bytes arrive one at a time; appending them to `Data` one at a time is
+	/// what makes a large image expensive.
+	private nonisolated static let chunkByteCount = 64 * 1024 // nonisolated: let
+	/// The downloads in flight, per transcript view, so closing a view takes its
+	/// requests with it.
+	private var tasks: [String: [String: Task<Void, Never>]] = [:]
 
 	private init() {}
 
 	func load(
 		url: URL,
+		viewIdentifier: String,
 		lineNumber: String,
 		linkIdentifier: String,
 		completion: @escaping @MainActor (Result<TranscriptInlineImage, Error>) -> Void
 	) {
 		let key = "\(lineNumber):\(linkIdentifier)"
-		guard tasks[key] == nil else { return }
-		tasks[key] = Task { [weak self] in
-			defer { self?.tasks.removeValue(forKey: key) }
+		guard tasks[viewIdentifier]?[key] == nil else { return }
+		tasks[viewIdentifier, default: [:]][key] = Task { [weak self] in
+			defer { self?.tasks[viewIdentifier]?.removeValue(forKey: key) }
 			do {
 				let data = try await Self.download(url)
 				completion(.success(TranscriptInlineImage(
@@ -64,6 +71,22 @@ final class NativeInlineImageLoader {
 		}
 	}
 
+	/// Drops the downloads a view is still waiting for. Its transcript is going
+	/// away, so nothing is left to draw them on.
+	func cancelLoads(forView viewIdentifier: String) {
+		guard let cancelled = tasks.removeValue(forKey: viewIdentifier) else { return }
+		for task in cancelled.values {
+			task.cancel()
+		}
+	}
+
+	/** Fetches and validates one image body.
+
+	 `@concurrent` rather than the project's `nonisolated(nonsending)` default: a
+	 plain `nonisolated async` function runs on its caller's executor, and the
+	 caller here is a main-actor task — which would put the whole transfer, the
+	 body accumulation and the image probe on the main thread. */
+	@concurrent
 	private nonisolated static func download(_ url: URL) async throws -> Data { // nonisolated: pure
 		guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
 			throw NativeInlineImageError.unsupportedContent
@@ -86,10 +109,23 @@ final class NativeInlineImageLoader {
 		if response.expectedContentLength > 0 {
 			data.reserveCapacity(Int(response.expectedContentLength))
 		}
+		/* `AsyncBytes` yields one byte at a time and has no chunked accessor, so
+		 the run is buffered here and handed over in blocks: the cap is still
+		 checked before anything is kept, and `Data` grows once per block rather
+		 than once per byte. */
+		var chunk: [UInt8] = []
+		chunk.reserveCapacity(chunkByteCount)
 		for try await byte in bytes {
-			guard data.count < maximumByteCount else { throw NativeInlineImageError.bodyTooLarge }
-			data.append(byte)
+			guard data.count + chunk.count < maximumByteCount else {
+				throw NativeInlineImageError.bodyTooLarge
+			}
+			chunk.append(byte)
+			if chunk.count == chunkByteCount {
+				data.append(contentsOf: chunk)
+				chunk.removeAll(keepingCapacity: true)
+			}
 		}
+		data.append(contentsOf: chunk)
 		guard data.isEmpty == false,
 		      CGImageSourceCreateWithData(data as CFData, nil) != nil
 		else {

@@ -136,7 +136,19 @@ struct DCCChatLoopbackTests {
 
 		await dialled?.close()
 
-		let events = await collected?.value ?? []
+		let events = try #require(await collected?.value)
+
+		/* Requiring the stream to have produced the connection first: an empty
+		 array would satisfy the absence assertion below without the session
+		 ever having happened. */
+		#expect(events.isEmpty == false)
+		#expect(events.contains {
+			if case .connected = $0 {
+				true
+			} else {
+				false
+			}
+		})
 		#expect(events.contains {
 			if case .closed = $0 {
 				true
@@ -225,12 +237,19 @@ enum ChatFixture {
 				prepare(connection)
 
 				await connection.start()
-			default:
-				/* `connected` is the one that ends the wait; anything else at
-				 this point is a failure the caller's assertions will report. */
+			case .connected:
+				return
+			case .line, .closed:
+				/* Returning here would leave `prepare` unrun, and every
+				 assertion the caller makes on what it attached vacuously true,
+				 so the failure is recorded where it happened. */
+				Issue.record("the listening side reported \(event) before it connected")
+
 				return
 			}
 		}
+
+		Issue.record("the listening side never reported a connection")
 	}
 
 	/// Reads `connection` until it has `expected` lines, sends `replies`, and
@@ -299,7 +318,7 @@ enum ChatFixture {
 
 	/// A line as text. The fixture only ever sends UTF-8, so anything else is
 	/// the test's own bug and should read as one.
-	nonisolated static func decode(_ data: Data) -> String {
+	nonisolated static func decode(_ data: Data) -> String { // nonisolated: pure
 		(String(bytes: data, encoding: .utf8) ?? "<not utf-8>").trimmingCharacters(in: .newlines)
 	}
 }

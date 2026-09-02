@@ -39,19 +39,12 @@
 import AppKit
 import CocoaExtensions
 
-enum MenuFindTag {
-	static let open = 3_090_000
-	static let next = 3_090_001
-}
-
 @MainActor
 public extension MenuActionCoordinator {
 	func performEditingAction(_ action: MenuEditingAction, sender: Any?) {
 		switch action {
 		case .showFindPrompt:
 			showFindPrompt(sender)
-		case .copy:
-			forwardResponderAction(#selector(NSText.copy(_:)), sender: sender)
 		case .paste:
 			paste(sender)
 		case .print:
@@ -66,15 +59,15 @@ public extension MenuActionCoordinator {
 			return
 		}
 
-		let tag = (sender as? NSMenuItem)?.command?.rawValue ?? (sender as? NSControl)?.tag ?? 0
-		if tag == MenuFindTag.open || currentSearchPhrase.isEmpty {
+		let command = (sender as? NSMenuItem)?.command
+		if command == .findText || currentSearchPhrase.isEmpty {
 			showFindPromptOpenDialog()
 			return
 		}
 
-		objcSelectedViewControllerBackingView()?.findString(
+		selectedBackingView?.findString(
 			currentSearchPhrase,
-			movingForward: tag == MenuFindTag.next
+			movingForward: command == .findNext
 		)
 	}
 
@@ -93,7 +86,7 @@ public extension MenuActionCoordinator {
 				return
 			}
 			currentSearchPhrase = result
-			objcSelectedViewControllerBackingView()?.findString(result, movingForward: true)
+			selectedBackingView?.findString(result, movingForward: true)
 		}
 	}
 
@@ -108,7 +101,7 @@ public extension MenuActionCoordinator {
 
 	private func printContent(_ sender: Any?) {
 		if mainWindow.isKeyWindow {
-			objcSelectedViewControllerBackingView()?.printContent()
+			selectedBackingView?.printContent()
 			return
 		}
 		forwardResponderAction(#selector(NSView.printView(_:)), sender: sender)

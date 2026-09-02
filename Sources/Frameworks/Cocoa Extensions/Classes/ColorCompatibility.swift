@@ -48,10 +48,6 @@ public extension NSColor {
 		)
 	}
 
-	class func textual_calibratedDeviceColor(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> NSColor {
-		NSColor(deviceRed: normalized(red), green: normalized(green), blue: normalized(blue), alpha: normalized(alpha))
-	}
-
 	var textualHexadecimalValue: String {
 		/* Asking a catalog or pattern colour for its components raises an
 		 uncatchable exception, and an extended-range colour can report a

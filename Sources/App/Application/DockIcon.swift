@@ -19,9 +19,14 @@ public enum DockIcon {
 	@MainActor private static var cachedMessageCount = -1
 
 	@MainActor public static func updateDockIcon() {
-		guard Preferences.Notifications.displayDockBadge.value,
-		      let world = AppController.shared.world
-		else { return }
+		/* Turning the preference off has to clear whatever is already drawn:
+		 this is the only thing the preference-change path calls. */
+		guard Preferences.Notifications.displayDockBadge.value else {
+			drawWithoutCount()
+			return
+		}
+
+		guard let world = AppController.shared.world else { return }
 
 		var highlightCount: UInt = 0
 		var messageCount: UInt = 0

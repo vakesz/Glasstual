@@ -39,35 +39,10 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/** The configuration values the plan calls for as `Codable, Sendable` structs.
-
- `Sendable` was implicit — inferred for these types inside the module and
- nowhere written down — so nothing stopped a later field of reference type from
- quietly withdrawing it. Stating the conformance makes the compiler check it. */
-struct ValueTypeConformanceTests {
-	/// A generic function only accepts what actually conforms, so this fails to
-	/// compile rather than to run if a conformance is lost.
-	private func requireSendable(_: some Sendable) {}
-
-	private func requireCodable(_: some Codable) {}
-
-	@MainActor
-	@Test("The client configuration is a Sendable, Codable value")
-	func clientConfigConforms() {
-		let config = ClientConfig()
-
-		requireSendable(config)
-		requireCodable(config)
-	}
-
-	@Test("An address book entry is a Sendable, Codable value")
-	func addressBookEntryConforms() {
-		let entry = AddressBookEntry(entryType: .ignore)
-
-		requireSendable(entry)
-		requireCodable(entry)
-	}
-
+/// The highlight list is written to disk as JSON, so an entry has to carry the
+/// whole line it recorded through a `Codable` round trip.
+@Suite("Highlight log entry")
+struct HighlightLogEntryTests {
 	@Test("A highlight log entry survives a Codable round trip")
 	func highlightLogEntryRoundTrips() throws {
 		var line = LogLine()

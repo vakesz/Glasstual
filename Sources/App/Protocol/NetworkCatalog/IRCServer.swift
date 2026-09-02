@@ -41,25 +41,26 @@ import Foundation
 /** One endpoint in a connection's server list.
 
  The password is not part of the value: it lives in the keychain under this
- endpoint's `uniqueIdentifier`, and `pendingServerPassword` only holds one that
- the user has just typed and that has not been flushed there yet. */
+ endpoint's `uniqueIdentifier`, and `pendingServerPassword` only carries an
+ edit the user has just made and that has not been flushed there yet. */
 public nonisolated struct Server: Codable, Sendable, Equatable, Hashable { // nonisolated: value
 	public var uniqueIdentifier: String
 	public var serverAddress: String
 	public var serverPort: UInt16
 	public var prefersSecuredConnection: Bool
 
-	/** A password waiting to be written to the keychain, or one read back out
-	 of it so that a duplicate can carry it to its own identifier. It is never
+	/** An unflushed edit to the password: one waiting to be written, one read
+	 back out of the keychain so that a duplicate can carry it to its own
+	 identifier, or the removal an emptied field asks for. It is never
 	 encoded — see `serverPassword`. */
-	public var pendingServerPassword: String?
+	public var pendingServerPassword: PendingKeychainSecret = .unchanged
 
 	public init(
 		uniqueIdentifier: String = UUID().uuidString,
 		serverAddress: String = "",
 		serverPort: UInt16 = UInt16(IRCConnectionDefaults.serverPort),
 		prefersSecuredConnection: Bool = false,
-		pendingServerPassword: String? = nil
+		pendingServerPassword: PendingKeychainSecret = .unchanged
 	) {
 		self.uniqueIdentifier = uniqueIdentifier
 		self.serverAddress = serverAddress
@@ -110,7 +111,7 @@ public nonisolated extension Server { // nonisolated: value
 	/// duplicate does not silently lose it.
 	func uniqueCopy() -> Server {
 		var copy = self
-		copy.pendingServerPassword = pendingServerPassword ?? serverPasswordFromKeychain
+		copy.pendingServerPassword = pendingServerPassword.detached(from: serverPasswordFromKeychain)
 		copy.uniqueIdentifier = UUID().uuidString
 
 		return copy
@@ -127,21 +128,17 @@ public nonisolated extension Server { // nonisolated: value
 	/// The password to connect with: an unflushed edit if there is one, and
 	/// otherwise whatever the keychain holds.
 	var serverPassword: String? {
-		get { pendingServerPassword ?? serverPasswordFromKeychain }
-		set { pendingServerPassword = newValue }
+		get { pendingServerPassword.value(orStored: serverPasswordFromKeychain) }
+		set { pendingServerPassword = PendingKeychainSecret(newValue) }
 	}
 
 	mutating func writeServerPasswordToKeychain() {
-		guard let pendingServerPassword else {
-			return
-		}
-
-		keychainItem.write(pendingServerPassword)
-		self.pendingServerPassword = nil
+		keychainItem.apply(pendingServerPassword)
+		pendingServerPassword = .unchanged
 	}
 
 	mutating func destroyServerPasswordKeychainItem() {
 		keychainItem.delete()
-		pendingServerPassword = nil
+		pendingServerPassword = .unchanged
 	}
 }

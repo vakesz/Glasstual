@@ -35,14 +35,10 @@ struct CompatibilitySurfaceTests {
 		#expect(connection.connectedAddress == nil)
 	}
 
-	@Test("The NSString hostmask accessors return the parsed components")
+	@Test("The nickname accessor returns the parsed component, or the whole string")
 	func nsStringHostmaskAccessorsPreserveParsedComponents() {
-		let source: NSString = "nick!user@example.test"
-
-		#expect(source.nicknameFromHostmask == "nick")
-		#expect(source.usernameFromHostmask == "user")
-		#expect(source.addressFromHostmask == "example.test")
-		#expect(("not a hostmask" as NSString).usernameFromHostmask == nil)
+		#expect(("nick!user@example.test" as NSString).nicknameFromHostmask == "nick")
+		#expect(("not a hostmask" as NSString).nicknameFromHostmask == "not a hostmask")
 	}
 
 	@Test("A complete control sequence is removed by both formatting entry points")

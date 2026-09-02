@@ -53,23 +53,30 @@ public nonisolated enum PathInfo { // nonisolated: value
 
 	public static func createDirectory(at directoryURL: URL) {
 		let alreadyEnsured = ensuredDirectories.withLock { ensured in
-			ensured.insert(directoryURL).inserted == false
+			ensured.contains(directoryURL)
 		}
 
 		if alreadyEnsured {
 			return
 		}
 
-		if fileManager.fileExists(at: directoryURL) {
-			return
+		if fileManager.fileExists(at: directoryURL) == false {
+			do {
+				try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+			} catch {
+				/* Not remembered: a directory that could not be created has to
+				 be tried again, or every later caller is told a path is ready
+				 to write into when it is not. */
+				logger.error(
+					"Failed to create directory at path: '\(displayPath(for: directoryURL), privacy: .public)' - \(error.localizedDescription, privacy: .public)"
+				)
+
+				return
+			}
 		}
 
-		do {
-			try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-		} catch {
-			logger.error(
-				"Failed to create directory at path: '\(displayPath(for: directoryURL), privacy: .public)' - \(error.localizedDescription, privacy: .public)"
-			)
+		ensuredDirectories.withLock { ensured in
+			_ = ensured.insert(directoryURL)
 		}
 	}
 

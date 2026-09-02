@@ -38,6 +38,16 @@
 
 import Foundation
 
+extension IRCClient {
+	/** How many highlights one client keeps.
+
+	 The cache exists so the highlight sheet can be opened after the fact; it
+	 draws a finite list, and nothing else reads more than the newest entry.
+	 Without a ceiling a long session on a highlight-heavy channel holds every
+	 `LogLine` it ever matched for the life of the process. */
+	static let maximumCachedHighlights = 500
+}
+
 enum IRCClientReachabilityPolicy {
 	/// Whether losing reachability should tear the session down. Callers only
 	/// ask once the connection is already known to be unreachable, so there is
@@ -61,14 +71,15 @@ public extension IRCClient {
 			clientId: uniqueIdentifier,
 			channelId: channel.uniqueIdentifier
 		)
-		cachedHighlights.insert(newEntry, at: 0)
+		/* Appended rather than inserted at the front: inserting copied the whole
+		 array on every highlight, and the one reader sorts by time anyway. */
+		cachedHighlights.append(newEntry)
 
-		guard let sheet = AppController.shared.mainWindow.presentationModel
-			.sheetOwner(ofType: ServerHighlightListSheet.self),
-			sheet.clientId == uniqueIdentifier,
-			let firstEntry = cachedHighlights.first
-		else { return }
-		sheet.addEntry(firstEntry)
+		if cachedHighlights.count > Self.maximumCachedHighlights {
+			cachedHighlights.removeFirst(cachedHighlights.count - Self.maximumCachedHighlights)
+		}
+
+		output?.highlightWasLogged(newEntry)
 	}
 
 	func noteReachabilityChanged(_ reachable: Bool) {

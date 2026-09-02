@@ -55,6 +55,11 @@ actor ConnectionHost {
 
 	private var sendQueue: [Data] = []
 
+	/// How many entries at the head of `sendQueue` came from a bypass write.
+	/// A bypass line goes in front of the queued traffic but behind the bypass
+	/// lines already waiting, so two of them cannot swap places on the wire.
+	private var sendQueueBypassCount = 0
+
 	/// Ticks the flood-control window. A `ContinuousClock` task rather than a
 	/// timer, so it keeps its cadence across system sleep and cancels cleanly.
 	private var floodControlTask: Task<Void, Never>?
@@ -133,6 +138,12 @@ actor ConnectionHost {
 		resetState()
 
 		await socket.close()
+
+		/* A transport that was already down sends no disconnect event, so this
+		 is the only chance to let go of it. */
+		if await socket.disconnected {
+			releaseSocket()
+		}
 	}
 
 	/// Invoked when closing and again when the transport reports it
@@ -142,15 +153,28 @@ actor ConnectionHost {
 		floodControlEnforced = false
 		floodControlCurrentMessageCount = 0
 
-		sendQueue.removeAll()
+		clearSendQueue()
 
 		stopFloodControlTimer()
+	}
+
+	/// Lets go of a transport that has finished, so `open(with:)` can build the
+	/// next one. The socket, its event stream and everything they hold are
+	/// released here rather than when the client happens to invalidate its
+	/// connection.
+	private func releaseSocket() {
+		socket = nil
+
+		eventTask?.cancel()
+		eventTask = nil
 	}
 
 	// MARK: - Send Queue
 
 	func clearSendQueue() {
 		sendQueue.removeAll()
+
+		sendQueueBypassCount = 0
 	}
 
 	func send(_ data: Data, bypassQueue: Bool) async {
@@ -161,13 +185,13 @@ actor ConnectionHost {
 		}
 
 		if bypassQueue {
-			/* A bypass write that collides with an in-flight write would be
-			 dropped by the transport. Put it at the front of the queue so it is
-			 the very next thing sent instead. */
-			if await socket.sending {
-				sendQueue.insert(data, at: 0)
-			} else {
-				await socket.write(data)
+			/* A bypass write that collides with an in-flight write cannot go
+			 out now. Queue it ahead of the ordinary traffic so it is the next
+			 thing sent, rather than losing it to the collision. */
+			if await socket.write(data) == false {
+				sendQueue.insert(data, at: sendQueueBypassCount)
+
+				sendQueueBypassCount += 1
 			}
 
 			return
@@ -180,7 +204,7 @@ actor ConnectionHost {
 
 	@discardableResult
 	private func trySend() async -> Bool {
-		guard let socket, await socket.sending == false, sendQueue.isEmpty == false else {
+		guard let socket, sendQueue.isEmpty == false else {
 			return false
 		}
 
@@ -188,9 +212,30 @@ actor ConnectionHost {
 			return false
 		}
 
+		let data = sendQueue.removeFirst()
+		let wasBypass = sendQueueBypassCount > 0
+
+		if wasBypass {
+			sendQueueBypassCount -= 1
+		}
+
 		floodControlCurrentMessageCount += 1
 
-		await socket.write(sendQueue.removeFirst())
+		/* The transport decides, in one step, whether it can take this line;
+		 asking first and writing afterwards let a second caller slip in between
+		 and cost one of the two lines. A refusal puts the line back where it
+		 came from, so wire order survives the collision. */
+		guard await socket.write(data) else {
+			floodControlCurrentMessageCount -= 1
+
+			sendQueue.insert(data, at: 0)
+
+			if wasBypass {
+				sendQueueBypassCount += 1
+			}
+
+			return false
+		}
 
 		return true
 	}
@@ -290,6 +335,8 @@ actor ConnectionHost {
 			resetState()
 
 			client?.ircConnectionDidDisconnectWithError(error.map { $0 as NSError })
+
+			releaseSocket()
 		}
 	}
 }

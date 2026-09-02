@@ -35,18 +35,23 @@ private nonisolated enum RendererPatterns { // nonisolated: value
 	}
 }
 
+/** The marks the formatting parser leaves on the string it hands the renderer.
+
+ They live on a transient `NSMutableAttributedString` that never leaves this
+ file's call chain: nothing persists them, no plugin reads them, and the names
+ carry no compatibility requirement. */
 nonisolated enum RendererFormatting { // nonisolated: value
-	static let foregroundColor = NSAttributedString.Key("TVCLogRendererFormattingForegroundColorAttribute")
-	static let backgroundColor = NSAttributedString.Key("TVCLogRendererFormattingBackgroundColorAttribute")
-	static let bold = NSAttributedString.Key("TVCLogRendererFormattingBoldTextAttribute")
-	static let italic = NSAttributedString.Key("TVCLogRendererFormattingItalicTextAttribute")
-	static let monospace = NSAttributedString.Key("TVCLogRendererFormattingMonospaceTextAttribute")
-	static let strikethrough = NSAttributedString.Key("TVCLogRendererFormattingStrikethroughTextAttribute")
-	static let underline = NSAttributedString.Key("TVCLogRendererFormattingUnderlineTextAttribute")
-	static let channelName = NSAttributedString.Key("TVCLogRendererFormattingChannelNameAttribute")
-	static let conversationTracking = NSAttributedString.Key("TVCLogRendererFormattingConversationTrackingAttribute")
-	static let keywordHighlight = NSAttributedString.Key("TVCLogRendererFormattingKeywordHighlightAttribute")
-	static let url = NSAttributedString.Key("TVCLogRendererFormattingURLAttribute")
+	static let foregroundColor = NSAttributedString.Key("GlasstualRendererForegroundColor")
+	static let backgroundColor = NSAttributedString.Key("GlasstualRendererBackgroundColor")
+	static let bold = NSAttributedString.Key("GlasstualRendererBold")
+	static let italic = NSAttributedString.Key("GlasstualRendererItalic")
+	static let monospace = NSAttributedString.Key("GlasstualRendererMonospace")
+	static let strikethrough = NSAttributedString.Key("GlasstualRendererStrikethrough")
+	static let underline = NSAttributedString.Key("GlasstualRendererUnderline")
+	static let channelName = NSAttributedString.Key("GlasstualRendererChannelName")
+	static let conversationTracking = NSAttributedString.Key("GlasstualRendererConversationTracking")
+	static let keywordHighlight = NSAttributedString.Key("GlasstualRendererKeywordHighlight")
+	static let url = NSAttributedString.Key("GlasstualRendererURL")
 }
 
 /// Parses IRC control codes and annotates semantic runs for the native

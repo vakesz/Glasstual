@@ -94,6 +94,7 @@ public extension IRCClient {
 		invokingISONCommandForFirstTime = false
 		isAutojoining = false
 		isAutojoined = false
+		cancelConnectCommandSettling()
 		autojoinDelayedWarningCount = 0
 		isConnected = false
 		isConnecting = false
@@ -145,7 +146,7 @@ public extension IRCClient {
 		removeTimedCommands()
 		removeRequestedCommands()
 		stopAutojoinTimer()
-		stopAutojoinNextJoinTimer()
+		cancelPendingAutojoin()
 		stopAutojoinDelayedWarningTimer()
 		stopISONTimer()
 		stopPongTimer()

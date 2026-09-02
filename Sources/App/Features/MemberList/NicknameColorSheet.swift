@@ -46,7 +46,6 @@ public protocol NicknameColorSheetDelegate: NSObjectProtocol {
 
 @MainActor
 public final class NicknameColorSheet: MainWindowSheetSession {
-	private let nickname: String
 	/* The style generator normalises with lowercased() before looking an
 	 override up, so the sheet has to read and write under the same key or the
 	 override it stores is never applied. */
@@ -55,7 +54,6 @@ public final class NicknameColorSheet: MainWindowSheetSession {
 
 	public init(nickname: String) {
 		let normalizedKey = nickname.lowercased()
-		self.nickname = nickname
 		overrideKey = normalizedKey
 		model = NicknameColorModel(
 			nickname: nickname,

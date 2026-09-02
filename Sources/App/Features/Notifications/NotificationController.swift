@@ -222,7 +222,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			title: title ?? "",
 			message: body ?? "",
 			userInfo: eventContext,
-			notificationIdentifier: nil,
 			threadIdentifier: eventContext?.threadIdentifier,
 			categoryIdentifier: categoryIdentifier
 		)
@@ -251,45 +250,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		).threadIdentifier
 	}
 
-	public func scheduleNotification(title: String, message: String, userInfo: NotificationPayload?) {
-		scheduleNotification(
-			title: title,
-			message: message,
-			userInfo: userInfo,
-			notificationIdentifier: nil,
-			threadIdentifier: nil,
-			categoryIdentifier: nil
-		)
-	}
-
-	public func scheduleNotification(
-		title: String,
-		message: String,
-		userInfo: NotificationPayload?,
-		threadIdentifier: String
-	) {
-		scheduleNotification(
-			title: title,
-			message: message,
-			userInfo: userInfo,
-			notificationIdentifier: nil,
-			threadIdentifier: threadIdentifier,
-			categoryIdentifier: nil
-		)
-	}
-
-	public func scheduleNotification(title: String, message: String, for channel: IRCChannel) {
-		guard let client = channel.associatedClient else {
-			return
-		}
-
-		scheduleNotification(title: title, message: message, for: channel, on: client)
-	}
-
-	public func scheduleNotification(title: String, message: String, on client: IRCClient) {
-		scheduleNotification(title: title, message: message, for: nil, on: client)
-	}
-
 	public func scheduleNotification(
 		title: String,
 		message: String,
@@ -305,7 +265,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			title: title,
 			message: message,
 			userInfo: payload,
-			notificationIdentifier: nil,
 			threadIdentifier: payload.threadIdentifier,
 			categoryIdentifier: nil
 		)
@@ -315,7 +274,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		title: String,
 		message: String,
 		userInfo: NotificationPayload?,
-		notificationIdentifier: String?,
 		threadIdentifier: String?,
 		categoryIdentifier: String?
 	) {
@@ -341,20 +299,14 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		 same identifier. That's not a bad behavior. Just not one we want. */
 		/* Glasstual will format the identifier as such:
 		 TXNotification[-<clientID>[-<channelId>]]-<eventTitle hash>-<eventDescription hash> */
-		let identifier: String
-		if let notificationIdentifier {
-			identifier = notificationIdentifier
-		} else {
-			notificationSequenceNumber &+= 1
-			let scope = Self.notificationIdentifier(
-				title: title,
-				message: message,
-				threadIdentifier: threadIdentifier
-			)
-			identifier = "\(scope)-\(notificationSequenceNumber)"
-		}
+		notificationSequenceNumber &+= 1
+		let scope = Self.notificationIdentifier(
+			title: title,
+			message: message,
+			threadIdentifier: threadIdentifier
+		)
 
-		scheduleNotification(content: content, identifier: identifier)
+		scheduleNotification(content: content, identifier: "\(scope)-\(notificationSequenceNumber)")
 	}
 
 	public static func notificationIdentifier(
@@ -426,10 +378,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	public func dismissNotifications(for channel: IRCChannel?, on client: IRCClient) {
 		let clientId = client.uniqueIdentifier
 		let channelId = channel?.uniqueIdentifier
-
-		notificationControllerLogger.debug(
-			"Dismissing notifications for '\(channelId ?? "<No Channel>", privacy: .public)' on '\(clientId, privacy: .public)'"
-		)
 
 		Task {
 			let center = UNUserNotificationCenter.current()

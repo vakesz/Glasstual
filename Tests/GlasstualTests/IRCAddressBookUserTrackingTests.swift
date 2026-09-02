@@ -83,7 +83,7 @@ struct IRCAddressBookUserTrackingTests {
 				object: tracker,
 				queue: nil
 			) { notification in
-				#expect(notification.userInfo?["nickname"] as? String == "Alice")
+				#expect(notification.userInfo?[addressBookTrackingNicknameKey] as? String == "Alice")
 				removed()
 			}
 			defer { center.removeObserver(token) }

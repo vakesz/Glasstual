@@ -84,7 +84,6 @@ public nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable 
 }
 
 public nonisolated enum UserNicknameColorStyleGenerator { // nonisolated: value
-	private static let overridesDefaultsKey = "Nickname Color Style Overrides (v2)"
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "NicknameColorStyle"
@@ -124,15 +123,17 @@ public nonisolated enum UserNicknameColorStyleGenerator { // nonisolated: value
 	/// builds are `NSKeyedArchiver` blobs and are still read, so a user's pinned
 	/// colours survive the format change; the next edit rewrites them.
 	public static func nicknameColorStyleOverride(forKey styleKey: String) -> NSColor? {
-		guard let overrides = userDefaults.dictionary(forKey: overridesDefaultsKey) else {
+		guard let stored = storedOverrides()[styleKey] else {
 			return nil
 		}
 
-		if let stored = overrides[styleKey], let components = NicknameColorComponents(stored: stored) {
+		if let dictionary = stored.dictionary,
+		   let components = NicknameColorComponents(stored: dictionary.compactMapValues(\.double))
+		{
 			return components.color
 		}
 
-		guard let colorData = overrides[styleKey] as? Data else {
+		guard let colorData = stored.data else {
 			return nil
 		}
 
@@ -148,7 +149,7 @@ public nonisolated enum UserNicknameColorStyleGenerator { // nonisolated: value
 	}
 
 	public static func setNicknameColorStyleOverride(_ styleValue: NSColor?, forKey styleKey: String) {
-		let existingOverrides = userDefaults.dictionary(forKey: overridesDefaultsKey)
+		let existingOverrides = overridesKey.detachedPropertyListValue?.dictionary
 
 		if existingOverrides == nil, styleValue == nil {
 			return
@@ -163,21 +164,22 @@ public nonisolated enum UserNicknameColorStyleGenerator { // nonisolated: value
 				return
 			}
 
-			overrides[styleKey] = components.storedValue
+			overrides[styleKey] = .dictionary(components.storedValue.mapValues(PropertyListValue.double))
 		} else {
 			overrides.removeValue(forKey: styleKey)
 		}
 
-		if overrides.isEmpty {
-			userDefaults.removeObject(forKey: overridesDefaultsKey)
-		} else {
-			userDefaults.set(overrides, forKey: overridesDefaultsKey)
-		}
+		overridesKey.detachedPropertyListValue = overrides.isEmpty ? nil : .dictionary(overrides)
 	}
 
-	/// A private handle, not the main actor's: a nickname colour is resolved
-	/// while a line renders, which happens off the main actor.
-	private static var userDefaults: TextualUserDefaults {
-		TextualUserDefaults.suite()
+	/// The overrides as they are stored. Read through the detached handle, not
+	/// the main actor's: a nickname colour is resolved while a line renders,
+	/// which happens off the main actor.
+	private static func storedOverrides() -> [String: PropertyListValue] {
+		overridesKey.detachedPropertyListValue?.dictionary ?? [:]
+	}
+
+	private static var overridesKey: UntypedPreferenceKey {
+		Preferences.Messages.nicknameColorStyleOverrides
 	}
 }

@@ -362,7 +362,11 @@ private final class PluginConnectionTracker {
 	}
 
 	private func rebuild() {
-		let clients = AppController.shared.world.clientList
+		/* Both callbacks can arrive while the world is being torn down, and
+		 `AppController.world` is implicitly unwrapped. */
+		guard let world = AppController.shared.world else { return }
+
+		let clients = world.clientList
 		let identifiers = Set(clients.map(ObjectIdentifier.init))
 		for (identifier, observation) in clientObservations where identifiers.contains(identifier) == false {
 			observation.cancel()
@@ -389,7 +393,8 @@ private final class PluginConnectionTracker {
 	}
 
 	private func notify() {
-		let isConnected = AppController.shared.world.clientList.contains(where: \.isLoggedIn)
-		handler(isConnected)
+		guard let world = AppController.shared.world else { return }
+
+		handler(world.clientList.contains(where: \.isLoggedIn))
 	}
 }

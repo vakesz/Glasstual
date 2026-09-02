@@ -39,7 +39,8 @@
 import AppKit
 
 /// Owns the visual policy for AppKit menu symbols. Keeping this policy in one
-/// place prevents nib menus and menus assembled at runtime from drifting.
+/// place prevents the menu bar and the menus assembled at runtime from
+/// drifting apart.
 @MainActor
 public enum MenuPresentation {
 	private static let symbolConfiguration = NSImage.SymbolConfiguration(

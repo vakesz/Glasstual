@@ -41,18 +41,36 @@ import os
 
 extension FileTransferController {
 	public func onMaintenanceTimer() {
-		dispatchPrecondition(condition: .onQueue(.main))
 		guard transferStatus == .receiving || transferStatus == .sending else {
 			assertionFailure("Maintenance timer fired for an inactive transfer")
 			return
 		}
 
-		speedRecordsPrivate.append(NSNumber(value: currentRecord))
-		if speedRecordsPrivate.count > FileTransferLimits.speedRecordCount {
-			speedRecordsPrivate.removeFirst()
+		speedRecords.append(currentRecord)
+		if speedRecords.count > FileTransferLimits.speedRecordCount {
+			speedRecords.removeFirst()
 		}
 		currentRecord = 0
 		reloadStatusInformation()
+	}
+
+	/** Takes the destination this receiver writes into, once.
+
+	 Everything downstream — the resume offset the client proposes, and the
+	 handle `DCCTransfer` seeks in — reads `filePath`, so the name has to settle
+	 before any of it runs. Claiming a free name is also what makes a resume
+	 safe: the only file this transfer will ever append to is the one it took
+	 here, so a partial download can carry on while an unrelated file of the
+	 same name is left alone.
+
+	 A second call is a no-op, which is what lets a stopped transfer be started
+	 again without walking on to yet another name and losing the bytes it
+	 already has. */
+	func claimDestinationFilename() {
+		guard claimedFilePath == nil else { return }
+
+		setNonexistentFilename()
+		claimedFilePath = filePath
 	}
 
 	/// Moves `filename` on to the next free name in the download folder.
@@ -60,7 +78,7 @@ extension FileTransferController {
 	/// A transfer that lands on a name already in use would otherwise overwrite
 	/// somebody's file, so the receiver takes the next free one before the
 	/// transfer opens anything.
-	func setNonexistentFilename() {
+	private func setNonexistentFilename() {
 		guard let directoryPath = path,
 		      var candidatePath = filePath,
 		      FileManager.default.fileExists(atPath: candidatePath)

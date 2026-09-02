@@ -82,7 +82,7 @@ final class GLTTestClient: IRCClient {
 		)
 
 		self.fixture = fixture
-		config.pendingNicknamePassword = nicknamePassword
+		config.pendingNicknamePassword = nicknamePassword.map(PendingKeychainSecret.set) ?? .unchanged
 		linePrintObserver = { [weak self] request in
 			self?.recordPrintedLine(request)
 		}

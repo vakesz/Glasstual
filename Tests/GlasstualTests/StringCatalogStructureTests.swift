@@ -79,14 +79,14 @@ struct StringCatalogStructureTests {
 				guard let english = entry.localizations["en"] else { continue }
 				var shapes: Set<String> = []
 				for unit in english.stringUnits {
-					let indices = StringCatalog.positionalIndices(in: unit.value)
+					let indices = try StringCatalog.positionalIndices(in: unit.value)
 					if let highest = indices.max() {
 						#expect(
 							indices == Set(1 ... highest),
 							"\(catalog.name):\(key) skips a positional argument"
 						)
 					}
-					shapes.insert(StringCatalog.placeholderShape(of: unit.value))
+					try shapes.insert(StringCatalog.placeholderShape(of: unit.value))
 				}
 				#expect(shapes.count <= 1, "\(catalog.name):\(key) varies its placeholders by plural form")
 			}
@@ -192,11 +192,15 @@ private struct StringCatalog: Decodable {
 		return first.isLetter ? first.lowercased() + joined.dropFirst() : "_" + joined
 	}
 
-	static func positionalIndices(in value: String) -> Set<Int> {
+	/** Both helpers let a pattern that failed to compile throw. `try?` here made
+	 a malformed pattern return an empty index set and an empty shape, which
+	 reads exactly like a catalogue with nothing wrong in it, so the caller's
+	 assertions would have checked nothing. */
+	static func positionalIndices(in value: String) throws -> Set<Int> {
 		var indices: Set<Int> = []
-		let pattern = try? NSRegularExpression(pattern: #"%(\d+)\$"#)
+		let pattern = try NSRegularExpression(pattern: #"%(\d+)\$"#)
 		let range = NSRange(value.startIndex ..< value.endIndex, in: value)
-		pattern?.enumerateMatches(in: value, range: range) { match, _, _ in
+		pattern.enumerateMatches(in: value, range: range) { match, _, _ in
 			guard let match, let digits = Range(match.range(at: 1), in: value) else { return }
 			indices.insert(Int(value[digits]) ?? 0)
 		}
@@ -204,13 +208,13 @@ private struct StringCatalog: Decodable {
 	}
 
 	/// The specifiers a value uses, in order, ignoring the surrounding text.
-	static func placeholderShape(of value: String) -> String {
-		let pattern = try? NSRegularExpression(
+	static func placeholderShape(of value: String) throws -> String {
+		let pattern = try NSRegularExpression(
 			pattern: #"%(\d+\$)?[-+ #0]*[\d.*]*(hh|h|ll|l|q|j|z|t|L)?[@diouxXeEfgGaAcsp]"#
 		)
 		let range = NSRange(value.startIndex ..< value.endIndex, in: value)
 		var specifiers: [String] = []
-		pattern?.enumerateMatches(in: value, range: range) { match, _, _ in
+		pattern.enumerateMatches(in: value, range: range) { match, _, _ in
 			guard let match, let found = Range(match.range, in: value) else { return }
 			specifiers.append(String(value[found]))
 		}

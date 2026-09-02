@@ -137,6 +137,18 @@ nonisolated extension ClientConfig { // nonisolated: value
 
 	private func encodeBehaviour(into container: inout Container) throws {
 		try encode(autojoinWaitsForNickServ, forKey: .autojoinWaitsForNickServ, default: false, &container)
+		try encode(
+			autojoinWaitsForConnectCommands,
+			forKey: .autojoinWaitsForConnectCommands,
+			default: false,
+			&container
+		)
+		try encode(
+			autojoinDelayAfterConnectCommands,
+			forKey: .autojoinDelayAfterConnectCommands,
+			default: ClientConfigDefaults.autojoinConnectCommandDelay,
+			&container
+		)
 		try encode(hideAutojoinDelayedWarnings, forKey: .hideAutojoinDelayedWarnings, default: false, &container)
 		try encode(
 			hideNetworkUnavailabilityNotices,
@@ -181,13 +193,13 @@ nonisolated extension ClientConfig { // nonisolated: value
 		try encode(
 			floodControlDelayTimerInterval,
 			forKey: .floodControlDelayTimerInterval,
-			default: defaultFloodControlDelay,
+			default: ClientConfigDefaults.floodDelay,
 			&container
 		)
 		try encode(
 			floodControlMaximumMessages,
 			forKey: .floodControlMaximumMessages,
-			default: defaultFloodControlMaximum,
+			default: ClientConfigDefaults.floodMaximum,
 			&container
 		)
 		try encode(lastMessageServerTime, forKey: .lastMessageServerTime, default: 0, &container)

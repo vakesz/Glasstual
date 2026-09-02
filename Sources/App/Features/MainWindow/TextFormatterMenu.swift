@@ -23,7 +23,6 @@ public enum TextFormatterCommand: Int, CaseIterable, Sendable {
 	case spoiler = 103
 	case strikethrough = 104
 	case underline = 105
-	case colorSeparator = 106
 	case foregroundColorSet = 107
 	case foregroundColorMissing = 108
 	case backgroundColorSet = 109
@@ -200,10 +199,6 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		return firstResponder
 	}
 
-	public var firstResponderSupportsFormatting: Bool {
-		textField != nil
-	}
-
 	public func validateMenuItem(_ item: NSMenuItem) -> Bool {
 		guard textField != nil else {
 			return false
@@ -282,14 +277,14 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			item.isHidden = textHasBackgroundColor == false
 			return textHasSpoiler == false
 
-		case .colorSeparator, .rainbowColor, .hexColor, nil:
+		case .rainbowColor, .hexColor, nil:
 			break
 		}
 
 		return true
 	}
 
-	@IBAction @objc(emptyAction:)
+	@objc(emptyAction:)
 	public func emptyAction(_: Any?) {
 		/* Empty action used to validate submenus */
 	}
@@ -425,7 +420,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 	// MARK: - Add Formatting
 
-	@IBAction @objc(insertBoldCharIntoTextBox:)
+	@objc(insertBoldCharIntoTextBox:)
 	public func insertBoldCharIntoTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -434,7 +429,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.bold, withValue: true, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(insertItalicCharIntoTextBox:)
+	@objc(insertItalicCharIntoTextBox:)
 	public func insertItalicCharIntoTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -443,7 +438,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.italic, withValue: true, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(insertMonospaceCharIntoTextBox:)
+	@objc(insertMonospaceCharIntoTextBox:)
 	public func insertMonospaceCharIntoTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -452,7 +447,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.monospace, withValue: true, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(insertStrikethroughCharIntoTextBox:)
+	@objc(insertStrikethroughCharIntoTextBox:)
 	public func insertStrikethroughCharIntoTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -461,7 +456,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.strikethrough, withValue: true, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(insertUnderlineCharIntoTextBox:)
+	@objc(insertUnderlineCharIntoTextBox:)
 	public func insertUnderlineCharIntoTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -470,7 +465,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.underline, withValue: true, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(insertForegroundColorCharIntoTextBox:)
+	@objc(insertForegroundColorCharIntoTextBox:)
 	public func insertForegroundColorCharIntoTextBox(_ sender: Any?) {
 		guard let sender = sender as? NSMenuItem else {
 			return
@@ -500,7 +495,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		)
 	}
 
-	@IBAction @objc(insertBackgroundColorCharIntoTextBox:)
+	@objc(insertBackgroundColorCharIntoTextBox:)
 	public func insertBackgroundColorCharIntoTextBox(_ sender: Any?) {
 		guard let sender = sender as? NSMenuItem else {
 			return
@@ -653,7 +648,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		}
 	}
 
-	@IBAction @objc(insertSpoilerCharIntoTextBox:)
+	@objc(insertSpoilerCharIntoTextBox:)
 	public func insertSpoilerCharIntoTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -668,7 +663,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 	// MARK: - Remove Formatting
 
-	@IBAction
+	@objc
 	public func removeBoldCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -677,7 +672,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.bold, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction
+	@objc
 	public func removeItalicCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -686,7 +681,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.italic, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction
+	@objc
 	public func removeMonospaceCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -695,7 +690,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.monospace, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction
+	@objc
 	public func removeStrikethroughCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -704,7 +699,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.strikethrough, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction
+	@objc
 	public func removeUnderlineCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -713,7 +708,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.underline, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(removeForegroundColorCharFromTextBox:)
+	@objc(removeForegroundColorCharFromTextBox:)
 	public func removeForegroundColorCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -722,7 +717,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.foregroundColor, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction @objc(removeBackgroundColorCharFromTextBox:)
+	@objc(removeBackgroundColorCharFromTextBox:)
 	public func removeBackgroundColorCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return
@@ -731,7 +726,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyEffectToTextBox(.backgroundColor, withValue: nil, inRange: textField.selectedRange())
 	}
 
-	@IBAction
+	@objc
 	public func removeSpoilerCharFromTextBox(_: Any?) {
 		guard let textField else {
 			return

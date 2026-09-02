@@ -75,7 +75,7 @@ struct TypedPreferenceStoreTests {
 		key.value = key.defaultValue
 
 		let defaults = TextualUserDefaults.container
-		#expect(defaults.persistentDomain(forName: defaults.suiteName)?[key.name] != nil)
+		#expect(defaults.persistedObject(forKey: key.name) != nil)
 	}
 
 	@Test("A stored value of the wrong type reads as the declared default")

@@ -28,13 +28,6 @@ struct ClientConfigSASLFailureTests {
 		#expect(IRCClientConfig().disconnectOnSASLFailure == false)
 	}
 
-	@Test("The setting can be turned on")
-	func configSetsIt() {
-		var config = IRCClientConfig()
-		config.disconnectOnSASLFailure = true
-		#expect(config.disconnectOnSASLFailure)
-	}
-
 	@Test("The value survives a round trip through the dictionary representation")
 	func roundTripsThroughADictionary() throws {
 		var config = IRCClientConfig()
@@ -66,13 +59,6 @@ struct ClientConfigSASLFailureTests {
 		#expect(IRCNumeric.saslfail.rawValue == 904)
 		#expect(IRCNumeric.sasltoolong.rawValue == 905)
 		#expect(IRCNumeric.saslaborted.rawValue == 906)
-	}
-
-	@Test("The server-properties draft edits the setting directly")
-	func sheetDraftCarriesTheSetting() {
-		let model = ServerPropertiesModel(config: ClientConfig())
-		model.config.disconnectOnSASLFailure = true
-		#expect(model.config.disconnectOnSASLFailure)
 	}
 
 	@Test("The disconnect reason resolves against the string catalog")

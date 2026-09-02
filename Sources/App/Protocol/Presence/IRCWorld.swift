@@ -67,10 +67,6 @@ extension Notification.Name {
 	static let ircWorldWillDestroyChannel = Notification.Name("IRCWorldWillDestroyChannelNotification")
 }
 
-private func nativeChannel(from item: IRCTreeItem?) -> IRCChannel? {
-	(item as AnyObject?) as? IRCChannel
-}
-
 @MainActor
 public final class World: NSObject {
 	private var clients: [IRCClient] = []
@@ -158,7 +154,7 @@ public final class World: NSObject {
 				continue
 			}
 
-			_ = createClient(with: config, reload: true)
+			_ = createClient(with: config)
 		}
 
 		notifyObservers { $0.worldDidEndBulkUpdate(self) }
@@ -440,10 +436,6 @@ public final class World: NSObject {
 	// MARK: - Factory
 
 	public func createClient(with config: IRCClientConfig) -> IRCClient {
-		createClient(with: config, reload: true)
-	}
-
-	public func createClient(with config: IRCClientConfig, reload _: Bool) -> IRCClient {
 		let client = IRCClient(config: config, environment: environment)
 		client.channelList = client.config.channelList.map {
 			createChannel(with: $0, on: client, add: false, adjust: false, reload: false)
@@ -524,17 +516,6 @@ public final class World: NSObject {
 		return channel
 	}
 
-	public func createPrivateMessageFromObjectiveC(
-		_ nickname: String,
-		on client: IRCClient,
-		asType rawValue: UInt
-	) -> IRCChannel {
-		guard let type = ChannelType(rawValue: rawValue) else {
-			preconditionFailure("Unknown channel type raw value: \(rawValue)")
-		}
-		return createPrivateMessage(nickname, on: client, as: type)
-	}
-
 	// MARK: - Ordering
 
 	/// Moves a client within the list and tells observers to follow.
@@ -542,11 +523,15 @@ public final class World: NSObject {
 		guard clients.indices.contains(oldIndex) else { return }
 
 		let client = clients.remove(at: oldIndex)
-		clients.insert(client, at: min(newIndex, clients.count))
+		/* Observers are told where the client landed, not where it was asked to
+		 go: one that indexed its own rows by the requested position would read
+		 past the end. */
+		let insertedIndex = min(newIndex, clients.count)
+		clients.insert(client, at: insertedIndex)
 
 		postClientListWasModifiedNotification()
 		notifyObservers {
-			$0.world(self, didMoveClientFrom: oldIndex, to: newIndex)
+			$0.world(self, didMoveClientFrom: oldIndex, to: insertedIndex)
 			$0.worldNavigationListDidChange(self)
 		}
 	}
@@ -557,11 +542,12 @@ public final class World: NSObject {
 		guard channels.indices.contains(oldIndex) else { return }
 
 		let channel = channels.remove(at: oldIndex)
-		channels.insert(channel, at: min(newIndex, channels.count))
+		let insertedIndex = min(newIndex, channels.count)
+		channels.insert(channel, at: insertedIndex)
 		client.channelList = channels
 
 		notifyObservers {
-			$0.world(self, didMoveChannelOn: client, from: oldIndex, to: newIndex)
+			$0.world(self, didMoveChannelOn: client, from: oldIndex, to: insertedIndex)
 			$0.worldNavigationListDidChange(self)
 		}
 	}
@@ -650,9 +636,13 @@ public final class World: NSObject {
 			client.lastSelectedChannel = nil
 		}
 
+		/* `reload` names a redraw. The client drops the channel either way: one
+		 that still listed a destroyed channel would write it back out with its
+		 configuration, and nothing could reach it again. */
+		client.remove(channel)
+
 		if reload {
 			notifyObservers { $0.world(self, didRemoveChannel: channel, on: client) }
-			client.remove(channel)
 			notifyObservers {
 				$0.worldRequestsSelectionAdjustment(self)
 				$0.worldNavigationListDidChange(self)

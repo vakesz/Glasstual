@@ -123,7 +123,61 @@ extension MainWindow: ClientOutput {
 	}
 
 	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion) {
-		Alerts.alertSheet(with: self, request: request, completionBlock: completion)
+		Alerts.alertSheet(request: request, completionBlock: completion)
+	}
+
+	func confirmModally(_ request: AlertRequest) -> Bool {
+		Alerts.runModal(request).response == .default
+	}
+
+	func closeSheets(for client: IRCClient) {
+		presentationModel.closeSheets { owner in
+			guard let clientSheet = owner as? ClientScoped else { return false }
+
+			return clientSheet.clientId == client.uniqueIdentifier
+		}
+	}
+
+	func accessListEntryReceived(mask: String, setBy author: String?, creationDate date: Date?) -> Bool {
+		guard let sheet = presentationModel.sheetOwner(ofType: ChannelBanListSheet.self) else {
+			return false
+		}
+
+		/* The sheet holds the previous reply until the next one starts arriving,
+		 so that a refresh does not blank the table before the new list lands. */
+		if sheet.contentAlreadyReceived {
+			sheet.contentAlreadyReceived = false
+			sheet.clear()
+		}
+
+		sheet.addEntry(mask, setBy: author, creationDate: date)
+
+		return true
+	}
+
+	func accessListFinished() -> Bool {
+		guard let sheet = presentationModel.sheetOwner(ofType: ChannelBanListSheet.self) else {
+			return false
+		}
+
+		sheet.contentAlreadyReceived = true
+
+		return true
+	}
+
+	func closeSheets(forChannelId channelId: String) {
+		presentationModel.closeSheets { owner in
+			guard let channelSheet = owner as? ChannelScoped else { return false }
+			return channelSheet.channelId == channelId
+		}
+	}
+
+	func highlightWasLogged(_ entry: HighlightLogEntry) {
+		guard let sheet = presentationModel.sheetOwner(ofType: ServerHighlightListSheet.self),
+		      sheet.clientId == entry.clientId
+		else { return }
+
+		sheet.addEntry(entry)
 	}
 
 	func reloadServerListItems(for client: IRCClient) {
@@ -155,9 +209,8 @@ extension MainWindow: ClientOutput {
 		memberList?.endUpdates()
 	}
 
-	func refreshMemberListDrawing(forMemberAt index: Int) {
-		guard let memberList else { return }
-		memberList.refreshDrawing(forRow: memberList.rowForMember(at: index))
+	func refreshMemberListDrawing(forMemberAt _: Int) {
+		memberList?.invalidatePresentation()
 	}
 
 	func assignMemberList(to channel: IRCChannel) {
@@ -177,7 +230,7 @@ extension MainWindow: ClientOutput {
 	}
 
 	func notifyAllViewsAppearanceDidChange() {
-		for client in world.clientList {
+		for client in world?.clientList ?? [] {
 			logControllers.existingController(for: client)?
 				.reloadTheme()
 

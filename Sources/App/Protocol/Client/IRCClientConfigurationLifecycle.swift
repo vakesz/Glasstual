@@ -218,10 +218,7 @@ public extension IRCClient {
 
 	func closeDialogs() {
 		SharedApplication.sharedApplicationScenes().closeServerChannelList(for: uniqueIdentifier)
-		AppController.shared.mainWindow.presentationModel.closeSheets { owner in
-			guard let clientSheet = owner as? ClientScoped else { return false }
-			return clientSheet.clientId == uniqueIdentifier
-		}
+		output?.closeSheets(for: self)
 	}
 
 	func preferencesChanged() {

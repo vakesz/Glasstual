@@ -38,10 +38,7 @@
 import AppKit
 import CocoaExtensions
 
-public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
-	private static let runtimeDefaultsKey = "TXRunTime"
-	private static let runCountDefaultsKey = "TXRunCount"
-
+public nonisolated enum ApplicationInfo { // nonisolated: value
 	public static func applicationName() -> String {
 		bundleValue(for: "CFBundleName")
 	}
@@ -93,19 +90,19 @@ public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
 	}
 
 	@MainActor public static func timeIntervalSinceApplicationInstall() -> TimeInterval {
-		userDefaults.double(forKey: runtimeDefaultsKey) + timeIntervalSinceApplicationLaunch()
+		Preferences.Internals.runTime.value + timeIntervalSinceApplicationLaunch()
 	}
 
 	@MainActor public static func saveTimeIntervalSinceApplicationInstall() {
-		userDefaults.set(timeIntervalSinceApplicationInstall(), forKey: runtimeDefaultsKey)
+		Preferences.Internals.runTime.value = timeIntervalSinceApplicationInstall()
 	}
 
 	@MainActor public static func applicationRunCount() -> UInt {
-		userDefaults.unsignedInteger(forKey: runCountDefaultsKey)
+		Preferences.Internals.runCount.value
 	}
 
 	@MainActor public static func incrementApplicationRunCount() {
-		userDefaults.setUnsignedInteger(applicationRunCount() + 1, forKey: runCountDefaultsKey)
+		Preferences.Internals.runCount.value = applicationRunCount() + 1
 	}
 
 	public static func applicationBirthday() -> TimeInterval {
@@ -114,10 +111,5 @@ public final nonisolated class ApplicationInfo: NSObject { // nonisolated: value
 
 	private static func bundleValue(for key: String) -> String {
 		Bundle.main.object(forInfoDictionaryKey: key) as? String ?? ""
-	}
-
-	@MainActor
-	private static var userDefaults: TextualUserDefaults {
-		TextualUserDefaults.container
 	}
 }

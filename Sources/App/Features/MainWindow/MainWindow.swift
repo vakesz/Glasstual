@@ -43,9 +43,6 @@ import SwiftUI
 
 public extension Notification.Name {
 	static let mainWindowAppearanceChanged = Notification.Name("TVCMainWindowAppearanceChangedNotification")
-	static let mainWindowRedrawSubviews = Notification.Name("TVCMainWindowRedrawSubviewsNotification")
-	static let mainWindowWillReloadTheme = Notification.Name("TVCMainWindowWillReloadThemeNotification")
-	static let mainWindowDidReloadTheme = Notification.Name("TVCMainWindowDidReloadThemeNotification")
 	/// The one declaration of the selection notification. It was declared in
 	/// four places and written as a bare string in a fifth, so an observer
 	/// could quietly watch a name nobody posted.
@@ -62,15 +59,6 @@ private enum ServerListNavigationSelection {
 	case any
 	case channel
 	case server
-}
-
-struct MainWindowMouseLocation: OptionSet {
-	let rawValue: UInt
-
-	static let outsideWindow: Self = []
-	static let insideWindow = Self(rawValue: 1 << 1)
-	static let insideWindowTitle = Self(rawValue: 1 << 2)
-	static let onTopOfWindowTitleControl = Self(rawValue: 1 << 3)
 }
 
 enum MainWindowConstants {
@@ -116,7 +104,6 @@ func nativeChannel(_ item: IRCTreeItem?) -> IRCChannel? {
 @MainActor
 @objc(TVCMainWindow)
 public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomKeyboardEventResponder {
-	public private(set) var mainMenuProxy: MainWindowMenuProxy!
 	public private(set) var formattingMenu: TextViewIRCFormattingMenu!
 	private var inputContentView: MainWindowTextViewContentView!
 	let presentationModel = MainWindowPresentationModel()
@@ -145,12 +132,9 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 
 	public internal(set) var selectedItem: IRCTreeItem?
 	var previousSelectedItemId: String?
-	private var lastKeyWindowStateChange: TimeInterval = 0
-	private var lastKeyWindowRedrawFailedBecauseOfOcclusion = false
 	private var keyEventHandler: KeyEventHandler!
 	var cachedSwipeOriginPoint: NSPoint?
 	public internal(set) var textSizeMultiplier = 1.0
-	var isReloadingTheme = false
 	private var hasConfigured = false
 	private var hasInstalledFieldEditorMenu = false
 	private let notifications = NotificationSubscriptions()
@@ -177,7 +161,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	private func installUIObjects() {
-		mainMenuProxy = MainWindowMenuProxy()
 		formattingMenu = TextViewIRCFormattingMenu()
 		inputContentView = MainWindowTextViewContentView(frame: .zero)
 		loadingScreen = MainWindowLoadingScreen()
@@ -215,14 +198,13 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		autorecalculatesKeyViewLoop = true
 		isRestorable = true
 		restorationClass = Self.self
-		loadingScreen.configure()
 		installWindowChrome()
 		formattingMenu.configure()
 		installFormattingMenuDecorations()
 		updateAppearance()
 		_ = reloadLoadingScreen()
 		loadWindowState()
-		SharedApplication.sharedThemeController().load()
+		SharedApplication.sharedThemeController().reload()
 		controller.menuController?.prepareInitialState()
 		registerKeyHandlers()
 		/* Both have to be listening before the stored clients are restored:
@@ -235,7 +217,9 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		controller.applicationWakeStepTwo()
 	}
 
-	var world: IRCWorld {
+	/// The world the window draws. It is `nil` until the application finishes
+	/// waking, which window restoration can precede.
+	var world: IRCWorld? {
 		AppController.shared.world
 	}
 
@@ -248,10 +232,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 
 	public func inputHistoryManager() -> InputHistory {
 		inputHistory
-	}
-
-	public func reloadingTheme() -> Bool {
-		isReloadingTheme
 	}
 
 	private func installWindowChrome() {
@@ -384,7 +364,7 @@ extension MainWindow {
 
 	override public func restoreState(with coder: NSCoder) {
 		super.restoreState(with: coder)
-		guard let world = AppController.shared.world else { return }
+		guard let world else { return }
 		let identifier = coder.decodeObject(
 			of: NSString.self,
 			forKey: MainWindowConstants.restorableSelectionKey
@@ -421,39 +401,14 @@ public extension MainWindow {
 		channel.associatedClient.markChannel(asRead: channel)
 	}
 
-	private func reloadSubviewDrawings() {
-		NotificationCenter.default.post(name: .mainWindowRedrawSubviews, object: self)
-	}
-
 	func windowDidDeminiaturize(_: Notification) {}
 
 	func windowDidChangeScreen(_: Notification) {
 		reloadMainWindowFrameOnScreenChange()
 	}
 
-	func windowDidChangeOcclusionState(_: Notification) {
-		guard ceIsOccluded == false else { return }
-		if lastKeyWindowRedrawFailedBecauseOfOcclusion {
-			lastKeyWindowRedrawFailedBecauseOfOcclusion = false
-			reloadSubviewDrawings()
-		} else if Date.timeIntervalSinceReferenceDate - lastKeyWindowStateChange > 1 {
-			reloadSubviewDrawings()
-		}
-	}
-
 	func windowDidBecomeKey(_: Notification) {
-		lastKeyWindowStateChange = Date.timeIntervalSinceReferenceDate
 		resetSelectedItemState()
-		if ceIsOccluded {
-			lastKeyWindowRedrawFailedBecauseOfOcclusion = true
-			return
-		}
-		reloadSubviewDrawings()
-	}
-
-	func windowDidResignKey(_: Notification) {
-		lastKeyWindowStateChange = Date.timeIntervalSinceReferenceDate
-		reloadSubviewDrawings()
 	}
 
 	func window(_: NSWindow, shouldPopUpDocumentPathMenu _: NSMenu) -> Bool {

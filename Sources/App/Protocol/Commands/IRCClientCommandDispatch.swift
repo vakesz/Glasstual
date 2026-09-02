@@ -80,30 +80,22 @@ public extension IRCClient {
 
 	private func dispatchAddonOrRawCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) {
 		let lowercaseCommand = parsed.command.lowercased()
-		var addonPath: NSString?
-		var scriptFound = ObjCBool(false)
-		var pluginFound = ObjCBool(false)
-		SharedApplication.sharedPluginManager().findHandler(
-			forOutgoingCommand: lowercaseCommand,
-			path: &addonPath,
-			isScript: &scriptFound,
-			isExtension: &pluginFound
-		)
 
-		if pluginFound.boolValue, scriptFound.boolValue {
+		switch SharedApplication.sharedPluginManager().handler(forOutgoingCommand: lowercaseCommand) {
+		case .ambiguous:
 			printDebugInformation(IRCCommandStrings.pluginAndScriptConflict(command: parsed.command.uppercased()))
-		} else if pluginFound.boolValue {
+		case .pluginExtension:
 			processBundlesUserMessage(parsed.arguments.rest, command: lowercaseCommand)
-		} else if scriptFound.boolValue, let addonPath {
+		case let .script(path):
 			var context = [
 				"inputString": parsed.arguments.rest,
-				"path": addonPath as String,
+				"path": path,
 			]
 			if let targetChannel {
 				context["targetChannel"] = targetChannel.name
 			}
 			executeGlasstualCmdScript(inContext: context)
-		} else {
+		case .none:
 			sendCommand(parsed.command.uppercased(), withData: parsed.arguments.rest)
 		}
 	}
@@ -386,7 +378,7 @@ public extension IRCClient {
 		case .monitor, .watch:
 			guard isLoggedIn else { return true }
 			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
-			let components = arguments.components(separatedBy: .whitespaces)
+			let components = LineParser.wireTokens(in: arguments)
 			if components.contains(where: { $0.hasPrefix("-") || $0.hasPrefix("+") }) {
 				printDebugInformation(IRCCommandStrings.useAddressBookForTrackedUsers)
 				return true

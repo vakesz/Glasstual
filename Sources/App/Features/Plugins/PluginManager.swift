@@ -38,6 +38,23 @@ private nonisolated struct PluginScriptCatalog: Sendable { // nonisolated: value
 	var customScriptsURL: URL?
 }
 
+/** What an add-on command typed into the input field is dispatched to.
+
+ The client asks this before falling back to sending the command to the server
+ as a raw line. Both an AppleScript and a loaded plugin can declare the same
+ name, which is nothing the client can choose between, so that is a case of its
+ own rather than a silent preference for one of them. */
+public nonisolated enum OutgoingCommandHandler: Equatable, Sendable { // nonisolated: value
+	/// Nothing claims the command.
+	case none
+	/// An AppleScript at this path.
+	case script(path: String)
+	/// A loaded plugin that declares the command.
+	case pluginExtension
+	/// Both a script and a plugin claim it.
+	case ambiguous
+}
+
 /// Everything about the loaded plugins that a caller outside the main actor
 /// needs: a plugin's own object stays on the main actor, but which features
 /// exist, which commands are subscribed, and the suppression rules are values.
@@ -86,7 +103,14 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 /// installed by the user that is signed by the same Team ID. There is no
 /// approval prompt — a bundle either satisfies the requirement or is refused
 /// and logged.
-public final nonisolated class PluginManager: NSObject, Sendable { // nonisolated: value
+///
+/// Nonisolated because the transcript renderer reads it off the main actor:
+/// `PluginDispatcher.willRenderMessage` and `LogController.makePluginMessage`
+/// both run on the renderer's own queue, so the manager cannot move onto the
+/// main actor with the plugin objects it loads. What those callers read is the
+/// `Mutex`-guarded `PluginFacts` value below; the plugin objects themselves
+/// stay in `loadedPluginItems`, which is main-actor.
+public final nonisolated class PluginManager: NSObject, Sendable { // nonisolated: guarded
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginManager"
@@ -200,6 +224,15 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 
 	@MainActor
 	private func finishLoading(_ discovery: PluginDiscovery) {
+		/* Discovery is slow, so the application can be on its way out by the
+		 time it lands. Loading now would run every plugin's load callback during
+		 termination and leave them there: `unloadPlugins()` has already run and
+		 will not run twice. */
+		guard scheduling.withLock(\.didScheduleUnload) == false else {
+			Self.logger.info("Discarding a plugin load that finished after unloading")
+			return
+		}
+
 		let host = PluginHostAdapter.makeContext()
 		let loadedPlugins = discovery.loadable.compactMap { url in
 			guard let bundle = Bundle(url: url) else {
@@ -581,30 +614,16 @@ public nonisolated extension PluginManager { // nonisolated: pure
 			.compactMap(\.string) ?? []
 	}
 
-	func findHandler(
-		forOutgoingCommand command: String,
-		path: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		isScript: UnsafeMutablePointer<ObjCBool>?,
-		isExtension: UnsafeMutablePointer<ObjCBool>?
-	) {
-		path?.pointee = nil
-		isScript?.pointee = false
-		isExtension?.pointee = false
+	/// What claims an outgoing command the client has no built-in handler for.
+	func handler(forOutgoingCommand command: String) -> OutgoingCommandHandler {
+		let scriptPath = supportedAppleScriptCommandsAndPaths[command]
+		let isExtension = supportedUserInputCommands.contains(command)
 
-		let scriptPaths = supportedAppleScriptCommandsAndPaths
-
-		for (scriptCommand, scriptPath) in scriptPaths {
-			guard scriptCommand == command else {
-				continue
-			}
-
-			path?.pointee = scriptPath as NSString
-			isScript?.pointee = true
-			return
-		}
-
-		if supportedUserInputCommands.contains(command) {
-			isExtension?.pointee = true
+		return switch (scriptPath, isExtension) {
+		case let (.some(path), false): .script(path: path)
+		case (.none, true): .pluginExtension
+		case (.some, true): .ambiguous
+		case (.none, false): .none
 		}
 	}
 }

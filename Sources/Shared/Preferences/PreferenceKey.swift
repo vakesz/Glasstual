@@ -50,7 +50,11 @@ import Foundation
 public protocol PreferenceValue: Equatable, Sendable {
 	nonisolated static func preferenceValue(from object: Any) -> Self? // nonisolated: pure
 
-	nonisolated var preferenceObject: Any { get } // nonisolated: pure
+	/// The object written into the defaults store, or `nil` for a value that
+	/// has no representation there — an unarchivable colour, say. Nothing is
+	/// written for a `nil`: a placeholder would read back as unusable and
+	/// shadow the declared default.
+	nonisolated var preferenceObject: Any? { get } // nonisolated: pure
 }
 
 /** Enumerations whose raw value is the integer stored in the preference.
@@ -68,7 +72,7 @@ public nonisolated extension PreferenceEnum { // nonisolated: value
 		return Self(rawValue: raw)
 	}
 
-	var preferenceObject: Any {
+	var preferenceObject: Any? {
 		NSNumber(value: rawValue)
 	}
 }
@@ -104,7 +108,7 @@ nonisolated extension Bool: PreferenceValue { // nonisolated: value
 		}
 	}
 
-	public var preferenceObject: Any {
+	public var preferenceObject: Any? {
 		NSNumber(value: self)
 	}
 }
@@ -114,7 +118,7 @@ nonisolated extension Int: PreferenceValue { // nonisolated: value
 		preferenceNumber(from: object)?.intValue
 	}
 
-	public var preferenceObject: Any {
+	public var preferenceObject: Any? {
 		NSNumber(value: self)
 	}
 }
@@ -124,7 +128,7 @@ nonisolated extension UInt: PreferenceValue { // nonisolated: value
 		preferenceNumber(from: object)?.uintValue
 	}
 
-	public var preferenceObject: Any {
+	public var preferenceObject: Any? {
 		NSNumber(value: self)
 	}
 }
@@ -134,7 +138,7 @@ nonisolated extension UInt16: PreferenceValue { // nonisolated: value
 		preferenceNumber(from: object)?.uint16Value
 	}
 
-	public var preferenceObject: Any {
+	public var preferenceObject: Any? {
 		NSNumber(value: self)
 	}
 }
@@ -144,7 +148,7 @@ nonisolated extension Double: PreferenceValue { // nonisolated: value
 		preferenceNumber(from: object)?.doubleValue
 	}
 
-	public var preferenceObject: Any {
+	public var preferenceObject: Any? {
 		NSNumber(value: self)
 	}
 }
@@ -154,7 +158,7 @@ nonisolated extension String: PreferenceValue { // nonisolated: value
 		object as? String
 	}
 
-	public var preferenceObject: Any {
+	public var preferenceObject: Any? {
 		self
 	}
 }
@@ -164,7 +168,7 @@ nonisolated extension Data: PreferenceValue { // nonisolated: value
 		object as? Data
 	}
 
-	public var preferenceObject: Any {
+	public var preferenceObject: Any? {
 		self
 	}
 }
@@ -191,8 +195,21 @@ nonisolated extension Array: PreferenceValue where Element: PreferenceValue { //
 		return elements
 	}
 
-	public var preferenceObject: Any {
-		map(\.preferenceObject)
+	public var preferenceObject: Any? {
+		var objects: [Any] = []
+		objects.reserveCapacity(count)
+
+		for element in self {
+			// One element with no stored representation makes the whole list
+			// unwritable rather than a silently shortened list.
+			guard let object = element.preferenceObject else {
+				return nil
+			}
+
+			objects.append(object)
+		}
+
+		return objects
 	}
 }
 
@@ -267,15 +284,21 @@ public nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKe
 	}
 
 	public var registeredDefault: PropertyListValue? {
-		traits.contains(.unregistered) ? nil : PropertyListValue(propertyList: defaultValue.preferenceObject)
-	}
-
-	public func coerce(_ value: PropertyListValue) -> PropertyListValue? {
-		guard let coerced = Value.preferenceValue(from: value.propertyListObject) else {
+		guard traits.contains(.unregistered) == false, let object = defaultValue.preferenceObject else {
 			return nil
 		}
 
-		return PropertyListValue(propertyList: coerced.preferenceObject)
+		return PropertyListValue(propertyList: object)
+	}
+
+	public func coerce(_ value: PropertyListValue) -> PropertyListValue? {
+		guard let coerced = Value.preferenceValue(from: value.propertyListObject),
+		      let object = coerced.preferenceObject
+		else {
+			return nil
+		}
+
+		return PropertyListValue(propertyList: object)
 	}
 }
 
@@ -405,14 +428,25 @@ public nonisolated extension TextualUserDefaults { // nonisolated: pure
 				return
 			}
 
-			store.set(newValue.preferenceObject, forKey: key.name)
+			guard let object = newValue.preferenceObject else {
+				/* A value with no stored representation leaves what is already
+				 there alone. Writing a placeholder would discard the setting
+				 and shadow the declared default with something unreadable. */
+				return
+			}
+
+			store.set(object, forKey: key.name)
 		}
 	}
 
 	/// Writes the default into the registration domain rather than the
 	/// persistent one, for settings a theme recomputes at every launch.
 	func registerDefault<Value>(_ value: Value, for key: PreferenceKey<Value>) {
-		store(for: key.storage).register(defaults: [key.name: value.preferenceObject])
+		guard let object = value.preferenceObject else {
+			return
+		}
+
+		store(for: key.storage).register(defaults: [key.name: object])
 	}
 
 	func removeValue(for key: some AnyPreferenceKey) {
@@ -485,6 +519,13 @@ public extension AnyPreferenceKey {
 	var propertyListValue: PropertyListValue? {
 		get { Preferences.defaults.propertyListValue(for: self) }
 		nonmutating set { Preferences.defaults.setPropertyListValue(newValue, for: self) }
+	}
+
+	/// ``propertyListValue`` through the private handle on the store, for code
+	/// that runs outside the main actor.
+	nonisolated var detachedPropertyListValue: PropertyListValue? { // nonisolated: pure
+		get { Preferences.detachedDefaults.propertyListValue(for: self) }
+		nonmutating set { Preferences.detachedDefaults.setPropertyListValue(newValue, for: self) }
 	}
 
 	@MainActor

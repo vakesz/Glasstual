@@ -78,6 +78,9 @@ public extension MenuActionCoordinator {
 	}
 
 	func prepareForApplicationTermination() {
+		selectionResetTask?.cancel()
+		selectionResetTask = nil
+		notifications.cancelAll()
 		SharedApplication.sharedFileTransferCenter().prepareForApplicationTermination()
 	}
 
@@ -95,39 +98,28 @@ public extension MenuActionCoordinator {
 	func menuDidClose(_: NSMenu) {
 		menuIsOpen = false
 
-		// AppKit closes the menu before it sends the selected item's action.
-		// Deferring preserves the click-time selection until that action runs.
-		DispatchQueue.main.async { [weak self] in
-			guard let self,
-			      MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(
-			      	performedAction: self.menuPerformedActionLastOpen
-			      )
-			else {
+		/* AppKit closes the menu before it sends the selected item's action.
+		 Deferring to the next main-actor turn preserves the click-time
+		 selection until that action has run. */
+		selectionResetTask?.cancel()
+		selectionResetTask = Task { @MainActor [weak self] in
+			guard let self, Task.isCancelled == false else {
 				return
 			}
-			resetSelectedItems()
+
+			let shouldReset = MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(
+				performedAction: menuPerformedActionLastOpen
+			)
+
+			if shouldReset {
+				resetSelectedItems()
+			}
 		}
 	}
 
 	func resetSelectedItems() {
 		pointedClient = nil
 		pointedChannel = nil
-	}
-
-	func objcSelectedClient() -> IRCClient? {
-		selectedClient
-	}
-
-	func objcSelectedChannel() -> IRCChannel? {
-		selectedChannel
-	}
-
-	func objcSelectedViewController() -> LogController? {
-		selectedChannel?.logController ?? selectedClient?.logController
-	}
-
-	func objcSelectedViewControllerBackingView() -> LogView? {
-		objcSelectedViewController()?.backingView
 	}
 
 	private func applyMenuSymbols() {

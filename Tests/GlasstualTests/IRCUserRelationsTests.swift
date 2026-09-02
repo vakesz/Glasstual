@@ -56,28 +56,27 @@ struct IRCUserRelationsTests {
 		#expect(relations.isAssociated(with: privateMessage) == false)
 	}
 
-	@Test("A copied member is the same person and carries its own modes and weights")
-	func channelUserCopiesPreserveIdentityModesAndConversationWeights() {
+	/// Sorting the member list reads the ranks off the mode string, and the
+	/// conversation weights are what put recent talkers at the top of tab
+	/// completion.
+	@Test("A member's modes become ranks, and talking moves its conversation weights")
+	func channelUserDerivesRanksAndConversationWeights() {
 		let user = User(nickname: "alice")
 		var member = ChannelUser(user: user, prefixes: client.currentUserPrefixes)
+
+		#expect(member.ranks == UserRank.none)
+		#expect(member.incomingWeight == 0)
+		#expect(member.outgoingWeight == 0)
 
 		member.modes = "ov"
 		member.incomingConversation()
 		member.outgoingConversation()
 
-		var copy = member
-
-		#expect(copy.id == member.id)
-		#expect(copy.user == user)
-		#expect(copy.modes == "ov")
-		#expect(copy.ranks == [UserRank.normalOperator, UserRank.voiced])
-		#expect(copy.incomingWeight == 100)
-		#expect(copy.outgoingWeight == 20)
-		#expect(copy.creationTime == member.creationTime)
-
-		copy.modes = "o"
-
-		#expect(member.modes == "ov")
+		#expect(member.id == user.id)
+		#expect(member.user == user)
+		#expect(member.ranks == [UserRank.normalOperator, UserRank.voiced])
+		#expect(member.incomingWeight == 100)
+		#expect(member.outgoingWeight == 20)
 	}
 
 	@Test("A member list keeps itself sorted and clears the relation on removal")
@@ -113,7 +112,7 @@ struct IRCUserRelationsTests {
 		replacement.modes = "o"
 
 		memberList.addMember(original)
-		memberList.addMember(replacement, checkForDuplicates: true)
+		memberList.addMember(replacement)
 
 		#expect(memberList.numberOfMembers == 1)
 		#expect(memberList.memberList.first?.modes == "o")
@@ -145,5 +144,64 @@ struct IRCUserRelationsTests {
 
 	private func makeMember(named nickname: String) -> ChannelUser {
 		ChannelUser(user: client.findUserOrCreate(nickname), prefixes: client.currentUserPrefixes)
+	}
+}
+
+/** The direction is documented from the local user's point of view, so a
+ channel line naming the local nickname is `.incoming` — they spoke to us. It
+ was recorded as `.outgoing`, which swapped the `/weights` columns and left
+ `.incoming` unreachable anywhere in the app. */
+@MainActor
+@Suite("Conversation weights")
+struct IRCConversationWeightTests {
+	private func channelWithMember(_ nickname: String, on client: GLTTestClient) throws -> Channel {
+		let channel = try #require(client.findChannelOrCreate("#chat"))
+
+		channel.activate()
+		/* The member has to be a user the client knows: the list looks members
+		 up by the identity the client's user table holds. */
+		channel.addMember(
+			ChannelUser(user: client.findUserOrCreate(nickname), prefixes: client.currentUserPrefixes)
+		)
+
+		return channel
+	}
+
+	private func testClient() -> GLTTestClient {
+		GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+	}
+
+	@Test("A channel line naming the local user credits the speaker's incoming weight")
+	func lineNamingTheLocalUserIsIncoming() throws {
+		let client = testClient()
+		let channel = try channelWithMember("alice", on: client)
+		let text = "hey me"
+
+		try client.receiveText(
+			#require(Message(line: ":alice!u@h PRIVMSG #chat :\(text)", on: client)),
+			lineType: .privateMessage, text: text
+		)
+
+		let member = try #require(channel.findMember("alice"))
+
+		#expect(member.incomingWeight == 100)
+		#expect(member.outgoingWeight == 0)
+	}
+
+	@Test("A channel line naming nobody is a plain mention")
+	func lineNamingNobodyIsAMention() throws {
+		let client = testClient()
+		let channel = try channelWithMember("alice", on: client)
+		let text = "morning everyone"
+
+		try client.receiveText(
+			#require(Message(line: ":alice!u@h PRIVMSG #chat :\(text)", on: client)),
+			lineType: .privateMessage, text: text
+		)
+
+		let member = try #require(channel.findMember("alice"))
+
+		#expect(member.incomingWeight == 4)
+		#expect(member.outgoingWeight == 0)
 	}
 }

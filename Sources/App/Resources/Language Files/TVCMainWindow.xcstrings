@@ -602,18 +602,6 @@
         }
       }
     },
-    "no-topic": {
-      "comment": "Empty channel-topic placeholder. Legacy key: vi3-23.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "(No Topic)"
-          }
-        }
-      }
-    },
     "not-logged": {
       "comment": "Member account-status description. Legacy key: acc-nl.",
       "extractionState": "manual",
@@ -734,18 +722,6 @@
         }
       }
     },
-    "toggle-server-list": {
-      "comment": "Toolbar & input bar accessibility. Legacy key: tb-sl.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toggle Server List"
-          }
-        }
-      }
-    },
     "toolbar-input-bar-accessibility-more": {
       "comment": "Toolbar & input bar accessibility. Legacy key: ib-mo.",
       "extractionState": "manual",
@@ -840,6 +816,1782 @@
           "stringUnit": {
             "state": "translated",
             "value": "Waiting to reconnect"
+          }
+        }
+      }
+    },
+    "menu-bar-application": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual"
+          }
+        }
+      }
+    },
+    "menu-bar-file": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        }
+      }
+    },
+    "menu-bar-edit": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
+    "menu-bar-view": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
+          }
+        }
+      }
+    },
+    "menu-bar-server": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        }
+      }
+    },
+    "menu-bar-channel": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel"
+          }
+        }
+      }
+    },
+    "menu-bar-query": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Query"
+          }
+        }
+      }
+    },
+    "menu-bar-navigation": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navigation"
+          }
+        }
+      }
+    },
+    "menu-bar-window": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window"
+          }
+        }
+      }
+    },
+    "menu-bar-help": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help"
+          }
+        }
+      }
+    },
+    "menu-application-about": {
+      "comment": "Application menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Glasstual"
+          }
+        }
+      }
+    },
+    "menu-application-settings": {
+      "comment": "Application menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
+          }
+        }
+      }
+    },
+    "menu-application-services": {
+      "comment": "Application menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Services"
+          }
+        }
+      }
+    },
+    "menu-application-hide": {
+      "comment": "Application menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Glasstual"
+          }
+        }
+      }
+    },
+    "menu-application-hide-others": {
+      "comment": "Application menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Others"
+          }
+        }
+      }
+    },
+    "menu-application-show-all": {
+      "comment": "Application menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show All"
+          }
+        }
+      }
+    },
+    "menu-application-quit": {
+      "comment": "Application menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Glasstual"
+          }
+        }
+      }
+    },
+    "menu-file-disable-notifications": {
+      "comment": "File menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable All Notifications"
+          }
+        }
+      }
+    },
+    "menu-file-disable-notification-sounds": {
+      "comment": "File menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable All Notification Sounds"
+          }
+        }
+      }
+    },
+    "menu-file-print": {
+      "comment": "File menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Print"
+          }
+        }
+      }
+    },
+    "menu-file-close-window": {
+      "comment": "File menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Window"
+          }
+        }
+      }
+    },
+    "menu-edit-undo": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        }
+      }
+    },
+    "menu-edit-redo": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redo"
+          }
+        }
+      }
+    },
+    "menu-edit-cut": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut"
+          }
+        }
+      }
+    },
+    "menu-edit-copy": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
+    "menu-edit-paste": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste"
+          }
+        }
+      }
+    },
+    "menu-edit-delete": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "menu-edit-select-all": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select All"
+          }
+        }
+      }
+    },
+    "menu-edit-find": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find"
+          }
+        }
+      }
+    },
+    "menu-edit-find-text": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find…"
+          }
+        }
+      }
+    },
+    "menu-edit-find-next": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find Next"
+          }
+        }
+      }
+    },
+    "menu-edit-find-previous": {
+      "comment": "Edit menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find Previous"
+          }
+        }
+      }
+    },
+    "menu-view-mark-scrollback": {
+      "comment": "View menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark Scrollback"
+          }
+        }
+      }
+    },
+    "menu-view-scrollback-marker": {
+      "comment": "View menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrollback Marker"
+          }
+        }
+      }
+    },
+    "menu-view-mark-all-as-read": {
+      "comment": "View menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark All As Read"
+          }
+        }
+      }
+    },
+    "menu-view-clear-scrollback": {
+      "comment": "View menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Scrollback"
+          }
+        }
+      }
+    },
+    "menu-view-increase-font-size": {
+      "comment": "View menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Increase Font Size"
+          }
+        }
+      }
+    },
+    "menu-view-decrease-font-size": {
+      "comment": "View menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decrease Font Size"
+          }
+        }
+      }
+    },
+    "menu-view-enter-full-screen": {
+      "comment": "View menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Full Screen"
+          }
+        }
+      }
+    },
+    "menu-server-connect": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        }
+      }
+    },
+    "menu-server-connect-without-proxy": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Without Proxy"
+          }
+        }
+      }
+    },
+    "menu-server-disconnect": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
+          }
+        }
+      }
+    },
+    "menu-server-cancel-reconnect": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Reconnect"
+          }
+        }
+      }
+    },
+    "menu-server-channel-list": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel List…"
+          }
+        }
+      }
+    },
+    "menu-server-change-nickname": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Nickname…"
+          }
+        }
+      }
+    },
+    "menu-server-add-server": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Server…"
+          }
+        }
+      }
+    },
+    "menu-server-duplicate-server": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate Server"
+          }
+        }
+      }
+    },
+    "menu-server-delete-server": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Server…"
+          }
+        }
+      }
+    },
+    "menu-server-add-channel": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Channel…"
+          }
+        }
+      }
+    },
+    "menu-server-properties": {
+      "comment": "Server menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Properties…"
+          }
+        }
+      }
+    },
+    "menu-channel-join": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join Channel"
+          }
+        }
+      }
+    },
+    "menu-channel-leave": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave Channel"
+          }
+        }
+      }
+    },
+    "menu-channel-delete": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Channel"
+          }
+        }
+      }
+    },
+    "menu-channel-view-logs": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Logs"
+          }
+        }
+      }
+    },
+    "menu-channel-modify-topic": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modify Topic"
+          }
+        }
+      }
+    },
+    "menu-channel-modes": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modes"
+          }
+        }
+      }
+    },
+    "menu-channel-mode-moderated": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moderated (+m)"
+          }
+        }
+      }
+    },
+    "menu-channel-mode-unmoderated": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unmoderated (-m)"
+          }
+        }
+      }
+    },
+    "menu-channel-mode-invite-only": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite Only (+i)"
+          }
+        }
+      }
+    },
+    "menu-channel-mode-anyone-can-join": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone Can Join (-i)"
+          }
+        }
+      }
+    },
+    "menu-channel-mode-manage-all": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage All Modes"
+          }
+        }
+      }
+    },
+    "menu-channel-bans": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List of Bans"
+          }
+        }
+      }
+    },
+    "menu-channel-ban-exceptions": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List of Ban Exceptions"
+          }
+        }
+      }
+    },
+    "menu-channel-invite-exceptions": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List of Invite Exceptions"
+          }
+        }
+      }
+    },
+    "menu-channel-quiets": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List of Quiets"
+          }
+        }
+      }
+    },
+    "menu-channel-properties": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Properties…"
+          }
+        }
+      }
+    },
+    "menu-channel-copy-unique-identifier": {
+      "comment": "Channel menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Unique Identifier"
+          }
+        }
+      }
+    },
+    "menu-query-close": {
+      "comment": "Query menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Query"
+          }
+        }
+      }
+    },
+    "menu-query-logs": {
+      "comment": "Query menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Query Logs"
+          }
+        }
+      }
+    },
+    "menu-navigation-servers": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servers"
+          }
+        }
+      }
+    },
+    "menu-navigation-next-server": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Server"
+          }
+        }
+      }
+    },
+    "menu-navigation-previous-server": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Server"
+          }
+        }
+      }
+    },
+    "menu-navigation-next-active-server": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Active Server"
+          }
+        }
+      }
+    },
+    "menu-navigation-previous-active-server": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Active Server"
+          }
+        }
+      }
+    },
+    "menu-navigation-channels": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channels"
+          }
+        }
+      }
+    },
+    "menu-navigation-next-channel": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Channel"
+          }
+        }
+      }
+    },
+    "menu-navigation-previous-channel": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Channel"
+          }
+        }
+      }
+    },
+    "menu-navigation-next-active-channel": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Active Channel"
+          }
+        }
+      }
+    },
+    "menu-navigation-previous-active-channel": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Active Channel"
+          }
+        }
+      }
+    },
+    "menu-navigation-next-unread-channel": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Unread Channel"
+          }
+        }
+      }
+    },
+    "menu-navigation-previous-unread-channel": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Unread Channel"
+          }
+        }
+      }
+    },
+    "menu-navigation-move-backward": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Backward"
+          }
+        }
+      }
+    },
+    "menu-navigation-move-forward": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Forward"
+          }
+        }
+      }
+    },
+    "menu-navigation-previous-selection": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Selection"
+          }
+        }
+      }
+    },
+    "menu-navigation-next-highlight": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Highlight"
+          }
+        }
+      }
+    },
+    "menu-navigation-previous-highlight": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous Highlight"
+          }
+        }
+      }
+    },
+    "menu-navigation-jump-to-current-session": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jump to Current Session"
+          }
+        }
+      }
+    },
+    "menu-navigation-jump-to-present": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jump to Present"
+          }
+        }
+      }
+    },
+    "menu-navigation-channel-list": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel List…"
+          }
+        }
+      }
+    },
+    "menu-navigation-channel-spotlight": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Spotlight…"
+          }
+        }
+      }
+    },
+    "menu-navigation-search-channels": {
+      "comment": "Navigation menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search channels…"
+          }
+        }
+      }
+    },
+    "menu-window-minimize": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimize"
+          }
+        }
+      }
+    },
+    "menu-window-zoom": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom"
+          }
+        }
+      }
+    },
+    "menu-window-toggle-appearance": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toggle Window Appearance"
+          }
+        }
+      }
+    },
+    "menu-window-sort-channel-list": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort Channel List"
+          }
+        }
+      }
+    },
+    "menu-window-center": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Center Window"
+          }
+        }
+      }
+    },
+    "menu-window-reset-size": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Window to Default Size"
+          }
+        }
+      }
+    },
+    "menu-window-main-window": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main Window"
+          }
+        }
+      }
+    },
+    "menu-window-address-book": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address Book"
+          }
+        }
+      }
+    },
+    "menu-window-ignore-list": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignore List"
+          }
+        }
+      }
+    },
+    "menu-window-view-logs": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Logs"
+          }
+        }
+      }
+    },
+    "menu-window-highlight-list": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight List"
+          }
+        }
+      }
+    },
+    "menu-window-file-transfers": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfers"
+          }
+        }
+      }
+    },
+    "menu-window-bring-all-to-front": {
+      "comment": "Window menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring All to Front"
+          }
+        }
+      }
+    },
+    "menu-help-acknowledgements": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acknowledgements"
+          }
+        }
+      }
+    },
+    "menu-help-connect-to-help-channel": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to Help Channel"
+          }
+        }
+      }
+    },
+    "menu-help-connect-to-testing-channel": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to Testing Channel"
+          }
+        }
+      }
+    },
+    "menu-help-advanced": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        }
+      }
+    },
+    "menu-help-developer-mode": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Developer Mode"
+          }
+        }
+      }
+    },
+    "menu-help-hidden-settings": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden Settings…"
+          }
+        }
+      }
+    },
+    "menu-help-export-preferences": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Preferences"
+          }
+        }
+      }
+    },
+    "menu-help-import-preferences": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Preferences"
+          }
+        }
+      }
+    },
+    "menu-help-reset-warnings": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Don't Ask Me Warnings"
+          }
+        }
+      }
+    },
+    "menu-help-welcome": {
+      "comment": "Help menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Glasstual…"
+          }
+        }
+      }
+    },
+    "menu-transcript-search-with-google": {
+      "comment": "Transcript context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search With Google"
+          }
+        }
+      }
+    },
+    "menu-transcript-look-up-in-dictionary": {
+      "comment": "Transcript context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look Up in Dictionary"
+          }
+        }
+      }
+    },
+    "menu-transcript-copy-url": {
+      "comment": "Transcript context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy URL"
+          }
+        }
+      }
+    },
+    "menu-member-add-ignore": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Ignore"
+          }
+        }
+      }
+    },
+    "menu-member-modify-ignore": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modify Ignore"
+          }
+        }
+      }
+    },
+    "menu-member-remove-ignore": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Ignore"
+          }
+        }
+      }
+    },
+    "menu-member-invite-to": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite to…"
+          }
+        }
+      }
+    },
+    "menu-member-whois": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Info (Whois)"
+          }
+        }
+      }
+    },
+    "menu-member-private-message": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Message (Query)"
+          }
+        }
+      }
+    },
+    "menu-member-give-op": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give Op (+o)"
+          }
+        }
+      }
+    },
+    "menu-member-give-halfop": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give Halfop (+h)"
+          }
+        }
+      }
+    },
+    "menu-member-give-voice": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give Voice (+v)"
+          }
+        }
+      }
+    },
+    "menu-member-all-modes-given": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Modes Given"
+          }
+        }
+      }
+    },
+    "menu-member-take-op": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take Op (-o)"
+          }
+        }
+      }
+    },
+    "menu-member-take-halfop": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take Halfop (-h)"
+          }
+        }
+      }
+    },
+    "menu-member-take-voice": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take Voice (-v)"
+          }
+        }
+      }
+    },
+    "menu-member-all-modes-taken": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Modes Taken"
+          }
+        }
+      }
+    },
+    "menu-member-ban": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban"
+          }
+        }
+      }
+    },
+    "menu-member-kick": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kick"
+          }
+        }
+      }
+    },
+    "menu-member-kickban": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban and Kick"
+          }
+        }
+      }
+    },
+    "menu-member-ctcp": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client-to-Client"
+          }
+        }
+      }
+    },
+    "menu-member-send-file": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send File…"
+          }
+        }
+      }
+    },
+    "menu-member-ctcp-ping": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lag (PING)"
+          }
+        }
+      }
+    },
+    "menu-member-ctcp-time": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local Time (TIME)"
+          }
+        }
+      }
+    },
+    "menu-member-ctcp-client-info": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Information (CLIENTINFO)"
+          }
+        }
+      }
+    },
+    "menu-member-ctcp-version": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client Version (VERSION)"
+          }
+        }
+      }
+    },
+    "menu-member-ctcp-finger": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Information (FINGER)"
+          }
+        }
+      }
+    },
+    "menu-member-ctcp-user-info": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Information (USERINFO)"
+          }
+        }
+      }
+    },
+    "menu-member-irc-operator": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC Operator"
+          }
+        }
+      }
+    },
+    "menu-member-set-virtual-host": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Virtual Host (vHost)"
+          }
+        }
+      }
+    },
+    "menu-member-kill": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kill from Server"
+          }
+        }
+      }
+    },
+    "menu-member-shun": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shun on Server"
+          }
+        }
+      }
+    },
+    "menu-member-gline": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban from Server (G:Line)"
+          }
+        }
+      }
+    },
+    "menu-member-change-color": {
+      "comment": "Member list context menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Color…"
           }
         }
       }

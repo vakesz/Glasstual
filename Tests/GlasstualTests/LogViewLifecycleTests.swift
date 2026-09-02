@@ -78,7 +78,7 @@ struct LogViewLifecycleTests {
 	@Test("A topic received while connecting is fixed above the transcript")
 	func connectingTopicAppearsInHeader() async throws {
 		let fixture = GLTClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig(), reload: false)
+		let client = fixture.world.createClient(with: ClientConfig())
 		let channel = fixture.world.createChannel(
 			with: ChannelConfig.seed(withName: "#swift"),
 			on: client,

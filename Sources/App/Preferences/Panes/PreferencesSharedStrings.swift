@@ -77,13 +77,53 @@ enum PreferencesBehaviorStrings {
 }
 
 enum PreferencesIRCv3Strings {
-	static var automaticFeatures: String {
-		String(localized: .TDCPreferencesController.ircv3AutomaticFeatures)
+	static var capabilities: String {
+		String(localized: .TDCPreferencesController.ircv3Capabilities)
 	}
 
-	static var automaticFeaturesNote: String {
-		String(localized: .TDCPreferencesController.ircv3AutomaticFeaturesNote)
+	static var capabilitySpecification: String {
+		String(localized: .TDCPreferencesController.ircv3CapabilitySpecification)
 	}
+
+	static func capabilityAccessibilityLabel(name: String, summary: String) -> String {
+		String(localized: .TDCPreferencesController.ircv3CapabilityAccessibilityLabel(name, summary))
+	}
+
+	/** What a capability does, in one sentence, for the switch that turns it
+	 off. Keyed by the wire name the registry declares, because that name is
+	 what the pane shows and what the disabled list stores.
+
+	 A capability with no entry here has no summary to show rather than an
+	 English fallback in a translated interface. */
+	static func capabilitySummary(for name: String) -> String? {
+		capabilitySummaries[name].map { String(localized: $0) }
+	}
+
+	private static let capabilitySummaries: [String: LocalizedStringResource] = [
+		"account-notify": .TDCPreferencesController.ircv3CapabilityAccountNotify,
+		"account-tag": .TDCPreferencesController.ircv3CapabilityAccountTag,
+		"away-notify": .TDCPreferencesController.ircv3CapabilityAwayNotify,
+		"batch": .TDCPreferencesController.ircv3CapabilityBatch,
+		"cap-notify": .TDCPreferencesController.ircv3CapabilityCapNotify,
+		"chghost": .TDCPreferencesController.ircv3CapabilityChghost,
+		"extended-join": .TDCPreferencesController.ircv3CapabilityExtendedJoin,
+		"extended-monitor": .TDCPreferencesController.ircv3CapabilityExtendedMonitor,
+		"invite-notify": .TDCPreferencesController.ircv3CapabilityInviteNotify,
+		"labeled-response": .TDCPreferencesController.ircv3CapabilityLabeledResponse,
+		"message-tags": .TDCPreferencesController.ircv3CapabilityMessageTags,
+		"multi-prefix": .TDCPreferencesController.ircv3CapabilityMultiPrefix,
+		"pre-away": .TDCPreferencesController.ircv3CapabilityPreAway,
+		"sasl": .TDCPreferencesController.ircv3CapabilitySasl,
+		"server-time": .TDCPreferencesController.ircv3CapabilityServerTime,
+		"setname": .TDCPreferencesController.ircv3CapabilitySetname,
+		"standard-replies": .TDCPreferencesController.ircv3CapabilityStandardReplies,
+		"userhost-in-names": .TDCPreferencesController.ircv3CapabilityUserhostInNames,
+		"znc.in/playback": .TDCPreferencesController.ircv3CapabilityZncPlayback,
+		"znc.in/self-message": .TDCPreferencesController.ircv3CapabilityZncSelfMessage,
+		"znc.in/server-time": .TDCPreferencesController.ircv3CapabilityZncServerTime,
+		"znc.in/server-time-iso": .TDCPreferencesController.ircv3CapabilityZncServerTimeIso,
+		"znc.in/tlsinfo": .TDCPreferencesController.ircv3CapabilityZncTlsinfo,
+	]
 
 	static var connectedServers: String {
 		String(localized: .TDCPreferencesController.ircv3ConnectedServers)

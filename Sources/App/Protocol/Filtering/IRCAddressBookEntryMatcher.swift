@@ -11,12 +11,6 @@
  *********************************************************************** */
 
 import Foundation
-import os
-
-private nonisolated let addressBookMatcherLogger = Logger( // nonisolated: let
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCAddressBook"
-)
 
 /// One element of a compiled hostmask glob.
 nonisolated enum IRCHostmaskGlobToken: Equatable, Sendable { // nonisolated: value
@@ -166,12 +160,11 @@ nonisolated enum IRCHostmaskGlob { // nonisolated: value
 	}
 }
 
-public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // nonisolated: value
+public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // nonisolated: immutable
 	public let regularExpressionPattern: String
 	public let trackingNickname: String?
 
 	private let globTokens: [IRCHostmaskGlobToken]?
-	private let regularExpression: NSRegularExpression?
 	private let caseMapping: IRCISupportInfoCaseMapping
 
 	/// An address book entry belongs to no one connection — the same ignore
@@ -193,57 +186,57 @@ public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // 
 			regularExpressionPattern = IRCHostmaskGlob.regularExpressionPattern(for: hostmask)
 			globTokens = IRCHostmaskGlob.compile(hostmask, caseMapping: caseMapping)
 			trackingNickname = nil
-			regularExpression = nil
 		case .userTracking:
-			let escapedHostmask = NSRegularExpression.escapedPattern(for: hostmask)
+			/* A tracking entry names a person, so it matches that nickname at
+			 whatever user@host they connect from. Compiled through the same glob
+			 matcher as an ignore because one casemapping has to govern the whole
+			 address book: `NSRegularExpression`'s `.caseInsensitive` is Unicode
+			 folding, under which a tracking entry for `nick[home]` missed
+			 `nick{home}` while an ignore for the same mask matched it. */
+			let mask = Self.escapedGlobLiteral(Self.nickname(from: hostmask)) + "!*@*"
 
-			regularExpressionPattern = "^\(escapedHostmask)!(.*?)@(.*?)$"
-			globTokens = nil
+			regularExpressionPattern = IRCHostmaskGlob.regularExpressionPattern(for: mask)
+			globTokens = IRCHostmaskGlob.compile(mask, caseMapping: caseMapping)
 			trackingNickname = Self.nickname(from: hostmask)
-			regularExpression = Self.compiledExpression(regularExpressionPattern)
 		case .mixed:
 			regularExpressionPattern = ""
 			globTokens = nil
 			trackingNickname = nil
-			regularExpression = nil
 		@unknown default:
 			regularExpressionPattern = ""
 			globTokens = nil
 			trackingNickname = nil
-			regularExpression = nil
 		}
 
 		super.init()
 	}
 
 	public func matches(hostmask: String) -> Bool {
-		if let globTokens {
-			return IRCHostmaskGlob.matches(
-				tokens: globTokens,
-				subject: hostmask,
-				caseMapping: caseMapping
-			)
-		}
-
-		guard let regularExpression else {
+		guard let globTokens else {
 			return false
 		}
 
-		let range = NSRange(hostmask.startIndex ..< hostmask.endIndex, in: hostmask)
-
-		return regularExpression.firstMatch(in: hostmask, range: range) != nil
+		return IRCHostmaskGlob.matches(
+			tokens: globTokens,
+			subject: hostmask,
+			caseMapping: caseMapping
+		)
 	}
 
-	private static func compiledExpression(_ pattern: String) -> NSRegularExpression? {
-		do {
-			return try NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
-		} catch {
-			addressBookMatcherLogger.error(
-				"Failed to compile hostmask regular expression: \(error.localizedDescription, privacy: .public)"
-			)
+	/// `value` as a mask that matches itself: a nickname the user typed is a
+	/// literal, so a glob metacharacter in it must not become a wildcard.
+	private static func escapedGlobLiteral(_ value: String) -> String {
+		var escaped = ""
 
-			return nil
+		for character in value {
+			if character == "*" || character == "?" || character == "\\" {
+				escaped.append("\\")
+			}
+
+			escaped.append(character)
 		}
+
+		return escaped
 	}
 
 	private static func nickname(from hostmask: String) -> String {

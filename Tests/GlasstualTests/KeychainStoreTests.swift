@@ -18,71 +18,38 @@ import Testing
 @Suite("Keychain store", .serialized)
 @MainActor
 struct KeychainStoreTests {
-	private static let kind = KeychainItemClass.applicationPassword
-	private static let service = "com.vakesz.glasstual.tests.keychain"
-
-	private func uniqueName() -> String {
-		"Glasstual test item \(UUID().uuidString)"
+	private func uniqueItem() -> KeychainItem {
+		.serverPassword(UUID().uuidString)
 	}
 
 	@Test("A password written to the data-protection keychain reads back")
 	func passwordRoundTrips() {
-		let name = uniqueName()
-		defer { KeychainStore.deleteItem(name, kind: Self.kind, username: "user", service: Self.service) }
+		let item = uniqueItem()
+		defer { item.delete() }
 
-		#expect(
-			KeychainStore.addItem(
-				name,
-				kind: Self.kind,
-				username: "user",
-				password: "hunter2",
-				service: Self.service
-			)
-		)
-		#expect(
-			KeychainStore.password(
-				forItem: name,
-				kind: Self.kind,
-				username: "user",
-				service: Self.service
-			) == "hunter2"
-		)
+		#expect(item.write("hunter2"))
+		#expect(item.password == "hunter2")
 	}
 
 	/// The lookup used to fall through to the file keychain when the
 	/// data-protection keychain reported errSecItemNotFound. It now reports
-	/// that status straight back to the caller.
-	@Test("A missing item reports errSecItemNotFound rather than searching elsewhere")
+	/// that absence straight back to the caller, distinct from a refused read.
+	@Test("A missing item reports that it is missing rather than searching elsewhere")
 	func missingItemReportsNotFound() {
-		var status = errSecSuccess
-		let password = KeychainStore.password(
-			forItem: uniqueName(),
-			kind: Self.kind,
-			username: "user",
-			service: Self.service,
-			status: &status
-		)
+		let item = uniqueItem()
 
-		#expect(password == nil)
-		#expect(status == errSecItemNotFound)
+		#expect(item.readPassword() == .missing)
+		#expect(item.password == nil)
 	}
 
 	/// deleteItem used to discard the result of a second, legacy delete; its
 	/// return value now describes the one delete it performs.
 	@Test("Deleting reports success once and failure afterwards")
 	func deleteReportsTheDataProtectionResult() {
-		let name = uniqueName()
-		#expect(
-			KeychainStore.addItem(
-				name,
-				kind: Self.kind,
-				username: "user",
-				password: "hunter2",
-				service: Self.service
-			)
-		)
+		let item = uniqueItem()
 
-		#expect(KeychainStore.deleteItem(name, kind: Self.kind, username: "user", service: Self.service))
-		#expect(KeychainStore.deleteItem(name, kind: Self.kind, username: "user", service: Self.service) == false)
+		#expect(item.write("hunter2"))
+		#expect(item.delete())
+		#expect(item.delete() == false)
 	}
 }

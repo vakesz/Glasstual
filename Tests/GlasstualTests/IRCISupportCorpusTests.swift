@@ -56,7 +56,7 @@ struct IRCISupportCorpusTests {
 
 	// MARK: - CASEMAPPING
 
-	nonisolated struct CasefoldCase: Sendable {
+	nonisolated struct CasefoldCase: Sendable { // nonisolated: value
 		let configuration: String
 		let input: String
 		let folded: String
@@ -68,7 +68,7 @@ struct IRCISupportCorpusTests {
 		}
 	}
 
-	nonisolated static let casefoldCases: [CasefoldCase] = [
+	nonisolated static let casefoldCases: [CasefoldCase] = [ // nonisolated: let
 		/* rfc1459 folds the four "national" characters as well as A-Z. */
 		CasefoldCase("CASEMAPPING=rfc1459", "Alice[]\\~", "alice{}|^"),
 		CasefoldCase("CASEMAPPING=RFC1459", "Alice[]\\~", "alice{}|^"),
@@ -119,7 +119,7 @@ struct IRCISupportCorpusTests {
 
 	// MARK: - CHANMODES
 
-	nonisolated struct ModeParameterCase: Sendable {
+	nonisolated struct ModeParameterCase: Sendable { // nonisolated: value
 		let modeSymbol: String
 		let whenSet: Bool
 		let hasParameter: Bool
@@ -132,7 +132,7 @@ struct IRCISupportCorpusTests {
 	}
 
 	/// `CHANMODES=beI,k,l,imnpst` with `PREFIX=(ov)@+`.
-	nonisolated static let modeParameterCases: [ModeParameterCase] = [
+	nonisolated static let modeParameterCases: [ModeParameterCase] = [ // nonisolated: let
 		/* Class A (list modes) always take a parameter. */
 		ModeParameterCase("b", whenSet: true, hasParameter: true),
 		ModeParameterCase("b", whenSet: false, hasParameter: true),
@@ -168,7 +168,7 @@ struct IRCISupportCorpusTests {
 
 	// MARK: - PREFIX
 
-	nonisolated struct PrefixCase: Sendable {
+	nonisolated struct PrefixCase: Sendable { // nonisolated: value
 		let modeSymbol: String
 		let character: String
 		let rank: UInt
@@ -181,7 +181,7 @@ struct IRCISupportCorpusTests {
 	}
 
 	/// `PREFIX=(qaohv)~&@%+` ranks earlier symbols higher.
-	nonisolated static let prefixCases: [PrefixCase] = [
+	nonisolated static let prefixCases: [PrefixCase] = [ // nonisolated: let
 		PrefixCase("q", "~", rank: 100),
 		PrefixCase("a", "&", rank: 99),
 		PrefixCase("o", "@", rank: 98),
@@ -260,7 +260,7 @@ struct IRCISupportCorpusTests {
 		#expect(supportInfo.configurationReceived == false)
 	}
 
-	nonisolated struct ChannelLimitCase: Sendable {
+	nonisolated struct ChannelLimitCase: Sendable { // nonisolated: value
 		let channel: String
 		let limit: UInt
 
@@ -283,7 +283,7 @@ struct IRCISupportCorpusTests {
 		#expect(supportInfo.channelLimit(forChannelNamed: testCase.channel) == testCase.limit)
 	}
 
-	nonisolated struct TargetLimitCase: Sendable {
+	nonisolated struct TargetLimitCase: Sendable { // nonisolated: value
 		let command: String
 		let limit: UInt
 
@@ -326,7 +326,7 @@ struct IRCISupportCorpusTests {
 		)
 
 		#expect(supportInfo.channelNamePrefixes == ["#", "&"])
-		#expect(supportInfo.statusMessageModeSymbols == ["@", "+"])
+		#expect(supportInfo.statusMessagePrefixCharacters == ["@", "+"])
 		#expect(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("b")) == 100)
 		#expect(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("q")) == 0)
 		#expect(supportInfo.extendedBanPrefix == "~")
@@ -375,6 +375,30 @@ struct IRCISupportCorpusTests {
 		#expect(supportInfo.userPrefix(forModeSymbol: "o") == "@")
 		#expect(supportInfo.userPrefix(forModeSymbol: "q") == nil)
 		#expect(supportInfo.configurationReceived == false)
+	}
+
+	/** `NSString.integerValue` used to parse these: it accepts trailing junk and
+	 saturates at `Int.max` on overflow, so `LINELEN` could grow past anything
+	 the splitter would ever cut and the client stopped splitting at all. */
+	@Test
+	func numericTokensRejectTrailingJunkAndOverflow() {
+		let junk = Self.supportInfo("NICKLEN=50abc")
+
+		#expect(junk.maximumNicknameLength == UInt(IRCProtocolLimits.defaultNicknameMaximumLength))
+
+		let overflow = Self.supportInfo("LINELEN=99999999999999999999")
+
+		#expect(overflow.maximumLineLength == 0)
+	}
+
+	/// A `LINELEN` larger than any real server's is clamped rather than
+	/// believed, so outgoing lines keep being split.
+	@Test
+	func anOversizedLineLengthIsClamped() {
+		let supportInfo = Self.supportInfo("LINELEN=100000")
+
+		#expect(supportInfo.maximumLineLength == UInt(IRCProtocolLimits.maximumServerLineLength))
+		#expect(Self.supportInfo("LINELEN=1024").maximumLineLength == 1024)
 	}
 
 	/// Tokens that no server should send must not crash the parser.

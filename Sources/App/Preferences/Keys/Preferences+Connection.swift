@@ -73,16 +73,6 @@ public nonisolated extension Preferences { // nonisolated: value
 			default: 0.0
 		)
 
-		public static let autojoinDelayBetweenChannelJoins = PreferenceKey(
-			"AutojoinDelayBetweenChannelJoins",
-			default: 2.2
-		)
-
-		public static let autojoinMaximumChannelJoins = PreferenceKey(
-			"AutojoinMaximumChannelJoinCount",
-			default: UInt(2)
-		)
-
 		public static let disconnectOnSleep = PreferenceKey("AutomaticallyDisconnectForSleepMode", default: true)
 		public static let awayOnScreenSleep = PreferenceKey("SetAwayOnScreenSleep", default: false)
 		public static let preferModernCiphers = PreferenceKey("PreferModernCiphers", default: false)
@@ -108,6 +98,16 @@ public nonisolated extension Preferences { // nonisolated: value
 			default: false
 		)
 
+		/** The IRCv3 capabilities the user switched off, by their wire name.
+
+		 Absence is the enabled state, so a capability added to the registry
+		 later starts enabled without a migration, and a name left behind by a
+		 capability that was removed does nothing. */
+		public static let disabledCapabilities = PreferenceKey(
+			"IRC -> Disabled Capabilities",
+			default: [String]()
+		)
+
 		public static let stsPolicies = UntypedPreferenceKey(
 			"IRC -> STS Policies",
 			default: .emptyDictionary,
@@ -117,11 +117,11 @@ public nonisolated extension Preferences { // nonisolated: value
 		public static let clientList = UntypedPreferenceKey(IRCWorldClientListDefaultsKey)
 
 		static let all: [any AnyPreferenceKey] = [
-			autojoinOnInvite, autojoinDelayAfterIdentification, autojoinDelayBetweenChannelJoins,
-			autojoinMaximumChannelJoins, disconnectOnSleep, awayOnScreenSleep, preferModernCiphers,
+			autojoinOnInvite, autojoinDelayAfterIdentification, disconnectOnSleep, awayOnScreenSleep,
+			preferModernCiphers,
 			displayServerMOTD, rejoinOnKick, sendTypingNotifications, displayTypingNotifications,
-			confirmQuit, requestChatHistory, synchronizeReadMarkers, echoMessageCapability, stsPolicies,
-			clientList,
+			confirmQuit, requestChatHistory, synchronizeReadMarkers, echoMessageCapability,
+			disabledCapabilities, stsPolicies, clientList,
 		]
 	}
 }

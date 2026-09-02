@@ -1,3 +1,4 @@
+import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
 import Testing
@@ -50,6 +51,40 @@ struct IRCChannelTests {
 
 		#expect(channel.status == .parted)
 		#expect(channel.isActive == false)
+	}
+
+	@Test("Joining records when it happened, on the clock the caller supplies")
+	func activationRecordsTheJoinTime() {
+		let channel = makeChannel(type: .channel)
+		let joinedAt = Date(timeIntervalSince1970: 1_700_000_000)
+
+		#expect(channel.joinedAt == nil)
+
+		channel.activate(at: joinedAt)
+
+		#expect(channel.joinedAt == joinedAt)
+	}
+
+	@Test("Leaving forgets the join time, so a parted channel replays nothing")
+	func deactivationClearsTheJoinTime() {
+		let channel = makeChannel(type: .channel)
+
+		channel.activate(at: Date(timeIntervalSince1970: 1_700_000_000))
+		channel.deactivate()
+
+		#expect(channel.joinedAt == nil)
+	}
+
+	@Test("Rejoining replaces the join time rather than keeping the first one")
+	func rejoiningReplacesTheJoinTime() {
+		let channel = makeChannel(type: .channel)
+		let second = Date(timeIntervalSince1970: 1_700_000_060)
+
+		channel.activate(at: Date(timeIntervalSince1970: 1_700_000_000))
+		channel.deactivate()
+		channel.activate(at: second)
+
+		#expect(channel.joinedAt == second)
 	}
 
 	private func makeChannel(

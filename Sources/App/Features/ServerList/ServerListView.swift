@@ -16,8 +16,11 @@ private enum ServerListLayout {
 	static let rowInsets = EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
 }
 
+/** The rows of the sidebar. The filter field that narrows them belongs to the
+ window toolbar, not to this list: `MainWindowRootView` owns it and writes
+ through `ServerList.filterText`. */
 struct ServerListView: View {
-	@Bindable var model: ServerList
+	let model: ServerList
 	let redirectTyping: (String) -> Void
 
 	var body: some View {
@@ -39,11 +42,6 @@ struct ServerListView: View {
 		}
 		.listStyle(.sidebar)
 		.scrollContentBackground(.hidden)
-		.searchable(
-			text: $model.filterText,
-			placement: .sidebar,
-			prompt: Text(MainWindowStrings.InputBar.searchChannels)
-		)
 		.environment(\.defaultMinListRowHeight, ServerListLayout.rowHeight)
 		.contextMenu(forSelectionType: String.self) { identifiers in
 			if let menu = model.menu(for: identifiers) {
@@ -86,6 +84,9 @@ private struct ServerDisclosureRow: View {
 			}
 			.buttonStyle(.plain)
 			.accessibilityLabel(server.title)
+			.opacity(server.showsDisclosure ? 1 : 0)
+			.allowsHitTesting(server.showsDisclosure)
+			.accessibilityHidden(server.showsDisclosure == false)
 
 			ServerRowView(model: model, server: server)
 		}

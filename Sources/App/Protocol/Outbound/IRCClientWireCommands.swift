@@ -40,17 +40,8 @@ public extension IRCClient {
 		send("NICK", arguments: [nickname])
 	}
 
-	func partUnlistedChannel(_ channelName: String) {
-		partUnlistedChannel(channelName, withComment: nil)
-	}
-
 	func part(_ channel: IRCChannel) {
 		part(channel, withComment: nil)
-	}
-
-	func partUnlistedChannel(_ channelName: String, withComment comment: String?) {
-		guard stringIsChannelName(channelName), let channel = findChannel(channelName) else { return }
-		part(channel, withComment: comment)
 	}
 
 	func part(_ channel: IRCChannel, withComment comment: String?) {
@@ -99,10 +90,6 @@ public extension IRCClient {
 		sendModes(nil, withParameters: nil, in: channel)
 	}
 
-	func requestModes(forChannelNamed channelName: String) {
-		sendModes(nil, withParameters: nil, inChannelNamed: channelName)
-	}
-
 	func sendModes(_ symbols: String?, withParameters parameters: [String]?, in channel: IRCChannel) {
 		sendModes(symbols, withParameters: parameters, inChannelNamed: channel.name)
 	}
@@ -145,14 +132,6 @@ public extension IRCClient {
 	func sendInvite(to nickname: String, toJoinChannelNamed channelName: String) {
 		guard nickname.isEmpty == false, channelName.isEmpty == false else { return }
 		send("INVITE", arguments: [nickname, channelName])
-	}
-
-	func requestTopic(for channel: IRCChannel) {
-		sendTopic(to: nil, in: channel)
-	}
-
-	func requestTopic(forChannelNamed channelName: String) {
-		sendTopic(to: nil, inChannelNamed: channelName)
 	}
 
 	func sendTopic(to topic: String?, in channel: IRCChannel) {
@@ -213,8 +192,8 @@ public extension IRCClient {
 		if isCapabilityEnabled(.monitorCommand) {
 			send("MONITOR", arguments: [adding ? "+" : "-", nicknames.joined(separator: ",")])
 		} else if isCapabilityEnabled(.watchCommand) {
-			let modifier = adding ? " +" : " -"
-			send("WATCH", arguments: [modifier + nicknames.joined(separator: modifier)])
+			let modifier = adding ? "+" : "-"
+			send("WATCH", arguments: [nicknames.map { modifier + $0 }.joined(separator: " ")])
 		}
 	}
 }

@@ -45,8 +45,4 @@ final class NicknameColorModel {
 		selectedColor = color
 		usesDefaultColor = false
 	}
-
-	func markCustomColorSelected() {
-		usesDefaultColor = false
-	}
 }

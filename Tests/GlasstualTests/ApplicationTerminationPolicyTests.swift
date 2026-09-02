@@ -53,6 +53,7 @@ struct ApplicationTerminationPolicyTests {
 		#expect(
 			ApplicationTerminationPolicy.decision(
 				isTerminating: false,
+				isAwaitingConfirmation: false,
 				skipConfirmation: true,
 				confirmQuitPreference: true,
 				hasLiveConnection: true
@@ -65,6 +66,7 @@ struct ApplicationTerminationPolicyTests {
 		#expect(
 			ApplicationTerminationPolicy.decision(
 				isTerminating: false,
+				isAwaitingConfirmation: false,
 				skipConfirmation: false,
 				confirmQuitPreference: true,
 				hasLiveConnection: true
@@ -77,6 +79,7 @@ struct ApplicationTerminationPolicyTests {
 		#expect(
 			ApplicationTerminationPolicy.decision(
 				isTerminating: false,
+				isAwaitingConfirmation: false,
 				skipConfirmation: false,
 				confirmQuitPreference: false,
 				hasLiveConnection: true
@@ -85,6 +88,7 @@ struct ApplicationTerminationPolicyTests {
 		#expect(
 			ApplicationTerminationPolicy.decision(
 				isTerminating: false,
+				isAwaitingConfirmation: false,
 				skipConfirmation: false,
 				confirmQuitPreference: true,
 				hasLiveConnection: false
@@ -99,9 +103,39 @@ struct ApplicationTerminationPolicyTests {
 		#expect(
 			ApplicationTerminationPolicy.decision(
 				isTerminating: true,
+				isAwaitingConfirmation: false,
 				skipConfirmation: true,
 				confirmQuitPreference: false,
 				hasLiveConnection: false
+			) == .alreadyTerminating
+		)
+	}
+
+	/// Sheets stack, so a second ⌘Q while the confirmation is up used to queue a
+	/// second sheet: answering quit on one and cancel on the other replied
+	/// `false` to a shutdown already in flight.
+	@Test("A confirmation already on screen answers for later requests too")
+	func aPendingConfirmationIsNotAskedTwice() {
+		#expect(
+			ApplicationTerminationPolicy.decision(
+				isTerminating: false,
+				isAwaitingConfirmation: true,
+				skipConfirmation: false,
+				confirmQuitPreference: true,
+				hasLiveConnection: true
+			) == .alreadyDeciding
+		)
+	}
+
+	@Test("A shutdown in flight outranks a confirmation still on screen")
+	func terminationOutranksAPendingConfirmation() {
+		#expect(
+			ApplicationTerminationPolicy.decision(
+				isTerminating: true,
+				isAwaitingConfirmation: true,
+				skipConfirmation: false,
+				confirmQuitPreference: true,
+				hasLiveConnection: true
 			) == .alreadyTerminating
 		)
 	}
@@ -144,6 +178,23 @@ struct DockIconBadgeStrategyTests {
 	func zeroCountsClearTheTile() {
 		draw(highlights: 1, messages: 1)
 		draw(highlights: 0, messages: 0)
+
+		#expect(NSApp.dockTile.contentView == nil)
+		#expect(NSApp.dockTile.badgeLabel == nil)
+	}
+
+	/// Unticking the preference used to return before clearing, leaving the
+	/// badge on the dock until the next relaunch.
+	@Test("Turning the preference off clears a badge already drawn")
+	func disablingThePreferenceClearsTheTile() {
+		let key = Preferences.Notifications.displayDockBadge
+		let original = key.value
+		defer { key.value = original }
+
+		draw(highlights: 1, messages: 1)
+
+		key.value = false
+		DockIcon.updateDockIcon()
 
 		#expect(NSApp.dockTile.contentView == nil)
 		#expect(NSApp.dockTile.badgeLabel == nil)

@@ -39,6 +39,47 @@ struct IRCChannelModeKindTests {
 		#expect(info.modeHasParameter("X", whenModeIsSet: true) == false)
 	}
 
+	/// `-CHANMODES` fell through every reset helper, so the classification
+	/// stayed at whatever the withdrawn token had set.
+	@Test
+	func withdrawingChanModesRestoresTheDefaultClassification() {
+		let info = supportInfo("CHANMODES=beI,k,l,imnpst")
+
+		info.processConfigurationData("-CHANMODES")
+
+		#expect(info.channelModeKinds["b"] == nil)
+		#expect(info.channelModeKinds["o"] == .userPrefix)
+		#expect(info.channelModeKinds["v"] == .userPrefix)
+	}
+
+	/// The table used to be merged into, so a shorter CHANMODES left the modes
+	/// it dropped behind and their parameters went to the wrong mode.
+	@Test
+	func aShorterChanModesReplacesTheTable() {
+		let info = supportInfo("CHANMODES=beI,k,l,imnpst")
+
+		info.processConfigurationData("CHANMODES=b,k,l,imnpst")
+
+		#expect(info.channelModeKinds["b"] == .list)
+		#expect(info.channelModeKinds["e"] == nil)
+		#expect(info.channelModeKinds["I"] == nil)
+	}
+
+	/// Replacing CHANMODES must not drop what PREFIX contributed, and the two
+	/// tokens arrive in either order.
+	@Test
+	func replacingChanModesKeepsThePrefixModes() {
+		let info = supportInfo("PREFIX=(qaohv)~&@%+")
+
+		info.processConfigurationData("CHANMODES=beI,k,l,imnpst")
+
+		for symbol in "qaohv" {
+			#expect(info.channelModeKinds[symbol] == .userPrefix)
+		}
+
+		#expect(info.channelModeKinds["b"] == .list)
+	}
+
 	@Test
 	func marksEveryPrefixModeAsAUserPrefix() {
 		let info = supportInfo("PREFIX=(qaohv)~&@%+")
@@ -80,15 +121,6 @@ struct IRCChannelModeKindTests {
 		#expect(modes[2].modeSymbol == "k")
 		// Clearing a group B mode still carries its parameter, and there is none.
 		#expect(modes[2].modeParameter == nil)
-	}
-
-	@Test(arguments: [
-		(IRCISupportInfoCaseMapping.rfc1459, "nick{}|^"),
-		(.strictRFC1459, "nick{}|~"),
-		(.ascii, "nick[]\\~"),
-	])
-	func foldsCaseAccordingToTheMappingEnum(testCase: (IRCISupportInfoCaseMapping, String)) {
-		#expect(ISupportTokenParser.casefold("Nick[]\\~", caseMapping: testCase.0) == testCase.1)
 	}
 }
 

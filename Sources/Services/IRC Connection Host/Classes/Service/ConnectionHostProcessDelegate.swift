@@ -53,7 +53,7 @@ final class RemoteConnectionProcessDelegate: NSObject, NSXPCListenerDelegate {
 		 into the actor. */
 		let host = ConnectionHost()
 
-		connection.exportedObject = RemoteConnectionProcess(host: host, connection: connection)
+		connection.exportedObject = RemoteConnectionProcess(host: host)
 
 		guard let client = connection.remoteObjectProxy as? any RemoteConnectionClientProtocol else {
 			processDelegateLogger.error("Client does not conform to the remote connection client protocol")

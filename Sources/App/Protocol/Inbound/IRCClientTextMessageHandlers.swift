@@ -222,8 +222,11 @@ public extension IRCClient {
 		let sender = message.senderNickname ?? ""
 		let isSelfMessage = isCapabilityEnabled(.echoMessage) && nicknameIsMyself(sender)
 		let isNotice = lineType == .notice
+		/* Decided now rather than in the completion: the grace period is measured
+		 against arrival, and a print finishes whenever the view gets to it. */
+		let alreadySeen = lineArrivedAlreadySeen(message, in: channel)
 		let completion: LogControllerPrintOperationCompletion = { [weak self, weak channel] context in
-			guard let self, let channel, !isSelfMessage else { return }
+			guard let self, let channel, !isSelfMessage, !alreadySeen else { return }
 			if isNotice {
 				if isSafeToPostNotification(for: message, in: channel) {
 					_ = notifyText(.channelNotice, lineType: lineType, target: channel, nickname: sender, text: text)
@@ -250,11 +253,13 @@ public extension IRCClient {
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message,
 			      completionBlock: completion)
 		}
+		/* This weights the speaker. `LogController` weights whoever the rendered
+		 line mentioned, which is a different subject; the two do not overlap. */
 		guard !isNotice, channel.memberInfo?.findMember(sender) != nil else { return }
 		let localNickname = userNickname.trimmingCharacters(in: CharacterSet(charactersIn: "_"))
 		channel.recordConversation(
 			with: sender,
-			direction: text.localizedCaseInsensitiveContains(localNickname) ? .outgoing : .mention
+			direction: text.localizedCaseInsensitiveContains(localNickname) ? .incoming : .mention
 		)
 	}
 
@@ -287,9 +292,12 @@ public extension IRCClient {
 			query = findChannelOrCreate(isSelfMessage ? target : sender, as: .privateMessage)
 		}
 		let textToDeliver = deliveredText
+		/* Decided now rather than in the completion: the grace period is measured
+		 against arrival, and a print finishes whenever the view gets to it. */
+		let alreadySeen = lineArrivedAlreadySeen(message, in: query)
 
 		let completion: LogControllerPrintOperationCompletion = { [weak self, weak query] context in
-			guard let self, !isSelfMessage else { return }
+			guard let self, !isSelfMessage, !alreadySeen else { return }
 			let highlight = context.isHighlight
 			var postEvent = true
 			if isSafeToPostNotification(for: message, in: query) {

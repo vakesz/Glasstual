@@ -56,7 +56,7 @@ private struct RegistryFixture {
 			backing: .buffered,
 			defer: false
 		)
-		client = fixture.world.createClient(with: ClientConfig(), reload: false)
+		client = fixture.world.createClient(with: ClientConfig())
 	}
 
 	func makeChannel(named name: String) -> IRCChannel {
@@ -182,7 +182,7 @@ struct LogControllerRegistryTests {
 	@Test("A tree item with no window has no view to print into")
 	func itemsWithoutAWindowHaveNoPresentation() {
 		let fixture = GLTClientEnvironmentFixture()
-		let client = fixture.world.createClient(with: ClientConfig(), reload: false)
+		let client = fixture.world.createClient(with: ClientConfig())
 
 		#expect(client.presentation == nil)
 		#expect(client.logController == nil)

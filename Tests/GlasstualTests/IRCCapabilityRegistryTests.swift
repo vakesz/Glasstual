@@ -124,6 +124,39 @@ struct IRCCapabilityRegistryTests {
 		#expect(registry.isCapabilitySupported("echo-message", preferences: deniedPreferences) == false)
 	}
 
+	@Test("A capability the user switched off is neither requested nor supported")
+	func requestListRespectsDisabledCapabilities() {
+		let registry = registry()
+		var preferences = preferences()
+		preferences.disabledCapabilities = ["echo-message"]
+
+		let offered: [String: [String]] = ["message-tags": [], "echo-message": []]
+		let allowed = registry.capabilitiesToRequest(fromOffered: offered, preferences: preferences)
+
+		#expect(allowed.map(\.name) == ["message-tags"])
+		#expect(registry.isCapabilitySupported("echo-message", preferences: preferences) == false)
+		#expect(registry.isCapabilitySupported("message-tags", preferences: preferences))
+	}
+
+	/** Switching a capability off has to take everything built on top of it
+	 with it: `draft/typing` without `message-tags` is a request the server
+	 would answer with tagged messages the client asked not to receive. */
+	@Test("Switching a capability off also stops the capabilities that depend on it")
+	func disabledDependenciesDisableTheirDependents() {
+		let registry = registry()
+		let offered: [String: [String]] = ["message-tags": [], "draft/typing": []]
+		var preferences = preferences()
+
+		#expect(registry.capabilitiesToRequest(
+			fromOffered: offered,
+			preferences: preferences
+		).map(\.name) == ["message-tags", "draft/typing"])
+
+		preferences.disabledCapabilities = ["message-tags"]
+
+		#expect(registry.capabilitiesToRequest(fromOffered: offered, preferences: preferences).isEmpty)
+	}
+
 	@Test("A capability is requested only once everything it depends on is offered")
 	func requestListRespectsDependencies() {
 		let registry = registry()

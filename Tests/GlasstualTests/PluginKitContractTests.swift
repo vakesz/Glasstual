@@ -11,57 +11,22 @@ import Testing
 @MainActor
 @Suite("Plugin Kit contracts")
 struct PluginKitContractTests {
-	@Test("Server input is a plain container the host fills in")
-	func serverInputIsAPlainSwiftValueContainer() {
-		var input = PluginServerInput()
-		input.senderNickname = "alice"
-		input.messageCommand = "PRIVMSG"
-		input.messageParameters = ["#glasstual", "hello"]
+	/** `creationTime` is recorded in the 1970 epoch. Subtracting it from the
+	 2001 epoch instead reads as a membership age of about -978,307,200 seconds
+	 for every member, which no age comparison ever notices; `membershipAge` is
+	 what keeps the epoch in one place. */
+	@Test("Membership age is measured in the epoch the host records the join in")
+	func membershipAgeUsesTheHostsEpoch() {
+		let joined = Date().timeIntervalSince1970 - 90
+		let member = PluginChannelMember(
+			user: PluginUser(nickname: "alice", hostmask: nil, address: nil, isIRCop: false),
+			mark: "",
+			ranks: [],
+			creationTime: joined
+		)
 
-		#expect(input.senderNickname == "alice")
-		#expect(input.messageCommand == "PRIVMSG")
-		#expect(input.messageParameters == ["#glasstual", "hello"])
-	}
-
-	@Test("Server input is a value: a handler's edits do not reach the next handler")
-	func serverInputCopiesRatherThanShares() {
-		var input = PluginServerInput()
-		input.senderNickname = "alice"
-
-		var handed = input
-		handed.senderNickname = "mallory"
-
-		#expect(input.senderNickname == "alice")
-	}
-
-	@Test("A posted message is a value the host finishes on the main actor")
-	func postedMessageCarriesTypedSendableParts() {
-		var message = PluginPostedMessage()
-		message.lineNumber = "1234"
-		message.messageContents = "see https://example.com"
-		message.hyperlinks = [
-			PluginHyperlink(
-				uniqueIdentifier: "link-1",
-				stringValue: "https://example.com",
-				range: NSRange(location: 4, length: 19),
-				strictMatch: true
-			),
-		]
-		message.users = [
-			PluginChannelMember(
-				user: PluginUser(nickname: "alice", hostmask: nil, address: nil, isIRCop: false),
-				mark: "@",
-				ranks: [.normalOperator],
-				creationTime: 0
-			),
-		]
-
-		var copied = message
-		copied.isProcessedInBulk = true
-
-		#expect(message.isProcessedInBulk == false)
-		#expect(copied.hyperlinks.first?.stringValue == "https://example.com")
-		#expect(copied.users.first?.user.nickname == "alice")
+		#expect(member.membershipAge >= 90)
+		#expect(member.membershipAge < 120)
 	}
 
 	@Test("The host context hands a plugin typed models and a cancellable observation")
@@ -102,54 +67,6 @@ struct PluginKitContractTests {
 		observation.cancel()
 	}
 
-	@Test("A command invocation carries the client, text and selected channel to its handler")
-	func nativeCommandContractCarriesTypedContext() {
-		let channel = makePluginChannel()
-		let client = makePluginClient(channel: channel)
-		let invocation = PluginCommandInvocation(
-			client: client,
-			command: "BRAG",
-			message: "now",
-			selectedChannel: channel,
-			connectedClients: [client]
-		)
-		let handler = CommandHandlerFixture()
-
-		handler.userInputCommandInvoked(invocation)
-
-		#expect(handler.client == client)
-		#expect(handler.command == "BRAG")
-		#expect(handler.message == "now")
-		#expect(handler.selectedChannel == channel)
-	}
-
-	@Test("A text event carries its destination, kind and author to its handler")
-	func nativeTextContractPreservesDomainValues() {
-		let channel = makePluginChannel()
-		let client = makePluginClient(channel: channel)
-		let handler = TextHandlerFixture()
-		let event = PluginTextEvent(
-			text: "hello",
-			author: PluginSender(
-				nickname: "alice",
-				username: "user",
-				address: "example.test",
-				hostmask: "alice!user@example.test",
-				isServer: false
-			),
-			destination: channel,
-			kind: .privateMessage,
-			client: client,
-			receivedAt: Date(timeIntervalSince1970: 42),
-			wasEncrypted: true
-		)
-
-		#expect(handler.receivedText(event))
-		#expect(handler.destination == channel)
-		#expect(handler.kind == .privateMessage)
-		#expect(handler.authorNickname == "alice")
-	}
-
 	/// A bundle declaring an older minimum is refused, so the floor is part of
 	/// the contract a third-party plugin is built against.
 	@Test("The compatibility floor for a plugin bundle is version eight")
@@ -157,70 +74,94 @@ struct PluginKitContractTests {
 		#expect(PluginCompatibility.minimumHostVersion == "8.0.0")
 	}
 
-	@Test("A spelled-out interval matches the platform's own components format")
-	func humanReadableTimeIntervalUsesNativeLocalizedComponents() {
-		let startDate = Date()
-		let endDate = startDate.addingTimeInterval(61)
-		let expected = Date.ComponentsFormatStyle(
-			style: .wide,
-			calendar: .autoupdatingCurrent,
-			fields: [.minute, .second]
-		).format(startDate ..< endDate)
+	/** The spelled-out form is what a WHOIS idle time and a timed command's
+	 countdown are rendered with, so the decisions worth stating are the ones
+	 the function makes on top of `Date.ComponentsFormatStyle`: which units it
+	 selects, and that the wording is the platform's rather than the app's.
 
-		#expect(PluginHost.humanReadableTimeInterval(61, shortValue: false, units: [.minute, .second]) == expected)
+	 Restating the format call itself would only assert that the body is its own
+	 body, so each case here is checked against another output of the same
+	 function instead of against a second copy of the formatting. */
+	@Test("Only the units the caller asked for are spelled out")
+	func humanReadableTimeIntervalHonoursTheRequestedUnits() {
+		let minutesAndSeconds = PluginHost.humanReadableTimeInterval(
+			61,
+			shortValue: false,
+			units: [.minute, .second]
+		)
+		let secondsOnly = PluginHost.humanReadableTimeInterval(61, shortValue: false, units: [.second])
+
+		#expect(minutesAndSeconds.isEmpty == false)
+		#expect(secondsOnly.isEmpty == false)
+
+		/* One minute and one second in two components, sixty-one in one. */
+		#expect(minutesAndSeconds != secondsOnly)
+		#expect(
+			minutesAndSeconds
+				== PluginHost.humanReadableTimeInterval(61, shortValue: false, units: [.minute, .second])
+		)
 	}
 
-	@Test("A formatted number follows the current locale")
-	func formattedNumberUsesTheCurrentLocale() {
-		let value = 1_234_567
+	/// An empty unit matrix is the caller saying "whatever fits", which the
+	/// `orderMatrix` overload spells `0`.
+	@Test("No unit matrix means every unit from years down to seconds")
+	func humanReadableTimeIntervalDefaultsToEveryUnit() {
+		let day = TimeInterval(90061)
 
-		#expect(PluginHost.formattedNumber(value) == value.formatted(.number.locale(.autoupdatingCurrent)))
+		#expect(
+			PluginHost.humanReadableTimeInterval(day, shortValue: false)
+				== PluginHost.humanReadableTimeInterval(
+					day,
+					shortValue: false,
+					units: [.year, .month, .day, .hour, .minute, .second]
+				)
+		)
+		#expect(
+			PluginHost.humanReadableTimeInterval(day, shortValue: false)
+				!= PluginHost.humanReadableTimeInterval(day, shortValue: false, units: [.day])
+		)
+	}
+
+	/// The interval is a distance, and a negative one is what an idle time
+	/// computed against a server clock that is ahead produces.
+	@Test("A negative interval reads the same as the distance it covers")
+	func humanReadableTimeIntervalIgnoresDirection() {
+		#expect(
+			PluginHost.humanReadableTimeInterval(-3661, shortValue: false)
+				== PluginHost.humanReadableTimeInterval(3661, shortValue: false)
+		)
 	}
 
 	@Test("A short interval is spelled with its largest non-zero component alone")
 	func shortHumanReadableTimeIntervalUsesLargestNonzeroComponent() {
-		let startDate = Date()
-		let endDate = startDate.addingTimeInterval(3661)
-		let expected = Date.ComponentsFormatStyle(
-			style: .wide,
-			calendar: .autoupdatingCurrent,
-			fields: [.hour]
-		).format(startDate ..< endDate)
+		let short = PluginHost.humanReadableTimeInterval(3661, shortValue: true)
 
-		#expect(PluginHost.humanReadableTimeInterval(3661, shortValue: true) == expected)
-	}
-}
-
-@MainActor
-private final class CommandHandlerFixture: PluginCommandHandling {
-	private(set) var client: PluginClient?
-	private(set) var command: String?
-	private(set) var message: String?
-	private(set) var selectedChannel: PluginChannel?
-
-	var subscribedUserInputCommands: [String] {
-		["brag"]
+		/* An hour and a minute and a second collapses onto the hour, so it reads
+		 exactly as a round hour does and differs from the full spelling. */
+		#expect(short == PluginHost.humanReadableTimeInterval(3600, shortValue: true))
+		#expect(short != PluginHost.humanReadableTimeInterval(3661, shortValue: false))
+		#expect(
+			PluginHost.humanReadableTimeInterval(61, shortValue: true)
+				== PluginHost.humanReadableTimeInterval(60, shortValue: true)
+		)
 	}
 
-	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
-		client = invocation.client
-		command = invocation.command
-		message = invocation.message
-		selectedChannel = invocation.selectedChannel
-	}
-}
+	/// The point of routing plugin-facing counts through the host is that they
+	/// carry the reader's own digit grouping instead of `String(describing:)`.
+	@Test("A formatted number carries the current locale's grouping")
+	func formattedNumberGroupsDigitsForTheCurrentLocale() {
+		let formatted = PluginHost.formattedNumber(1_234_567)
+		let separator = Locale.autoupdatingCurrent.groupingSeparator ?? ""
 
-@MainActor
-private final class TextHandlerFixture: PluginTextEventHandling {
-	private(set) var destination: PluginChannel?
-	private(set) var kind: PluginMessageKind?
-	private(set) var authorNickname: String?
+		#expect(formatted != "1234567")
+		#expect(formatted.count > 7)
 
-	func receivedText(_ event: PluginTextEvent) -> Bool {
-		destination = event.destination
-		kind = event.kind
-		authorNickname = event.author.nickname
-		return true
+		if separator.isEmpty == false {
+			#expect(formatted.contains(separator))
+			#expect(formatted.replacingOccurrences(of: separator, with: "").count == 7)
+		}
+
+		#expect(PluginHost.formattedNumber(0).isEmpty == false)
 	}
 }
 

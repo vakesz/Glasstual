@@ -50,8 +50,12 @@ private nonisolated func serverTimeDate(from value: String) -> Date? { // noniso
  A message is a reference type because it is passed down a long handler chain
  and because it points back at the `MessageBatch` that contains it. Handlers
  treat it as read-only; the two places that need a changed message start from
- `duplicate()`, which never touches the receiver. */
-public final nonisolated class Message: NSObject { // nonisolated: value
+ `duplicate()`, which never touches the receiver.
+
+ It is main-actor state: every handler that reads or rewrites one is already
+ there, and so is the batch it points back at. A nonisolated snapshot for the
+ plugin ABI is `didReceiveServerInputConcreteObject()`. */
+public final class Message: NSObject {
 	public internal(set) var sender = Prefix()
 	public internal(set) var command = ""
 	public internal(set) var commandNumeric: UInt = 0
@@ -106,12 +110,10 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 		super.init()
 	}
 
-	@MainActor
 	public convenience init?(line: String) {
 		self.init(line: line, on: nil)
 	}
 
-	@MainActor
 	public init?(line: String, on client: IRCClient?) {
 		super.init()
 
@@ -175,7 +177,6 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 	// MARK: - Line Parser
 
 	@discardableResult
-	@MainActor
 	public func parseLine(_ line: String, for client: IRCClient?) -> Bool {
 		guard let parsed = LineParser.parsedLine(fromLine: line) else {
 			return false
@@ -199,7 +200,6 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 		return true
 	}
 
-	@MainActor
 	public func parseExtensions(_ extensionInfo: String, for client: IRCClient?) {
 		let parsedTags = MessageTagParser.parsedTags(fromSection: extensionInfo)
 
@@ -241,7 +241,6 @@ public final nonisolated class Message: NSObject { // nonisolated: value
 		}
 	}
 
-	@MainActor
 	public func parseSender(_ senderInfo: String, for client: IRCClient?) {
 		guard let parsed = (senderInfo as NSString).senderPrefix(on: client) else {
 			sender = Prefix(nickname: senderInfo, hostmask: senderInfo, isServer: true)

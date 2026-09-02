@@ -98,10 +98,6 @@ public extension FileTransferCenter {
 		}
 	}
 
-	func fileTransferReceiver(matchingToken transferToken: String) -> FileTransferController? {
-		firstFileTransfer { $0.transferToken == transferToken && !$0.isSender }
-	}
-
 	func prepareForApplicationTermination() {
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 		SharedApplication.sharedApplicationScenes().closeFileTransfers()

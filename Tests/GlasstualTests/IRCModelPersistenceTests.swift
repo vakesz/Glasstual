@@ -73,24 +73,23 @@ struct IRCModelPersistenceTests {
 		#expect(legacy.showTreeBadgeCount == false)
 	}
 
-	@Test("A plain copy keeps the identifier while a unique copy takes a new one")
-	func channelConfigCopiesAndUniqueCopiesPreserveValues() {
+	/// Duplicating a channel is how "Add channel" seeds itself from the selected
+	/// one, so everything but the identity has to come across.
+	@Test("A unique copy takes a new identifier and keeps the rest of the channel")
+	func channelConfigUniqueCopyTakesANewIdentifier() {
 		var config = ChannelConfig(channelName: "#swift")
 		config.label = "Swift migration"
 		config.defaultModes = "+nt"
 		config.secretKey = "join-key"
 
-		let copy = config
 		let unique = config.uniqueCopy()
 
-		#expect(copy.channelName == "#swift")
-		#expect(copy.label == "Swift migration")
-		#expect(copy.defaultModes == "+nt")
-		#expect(copy.secretKey == "join-key")
-		#expect(copy.uniqueIdentifier == config.uniqueIdentifier)
 		#expect(unique.channelName == "#swift")
+		#expect(unique.label == "Swift migration")
+		#expect(unique.defaultModes == "+nt")
 		#expect(unique.secretKey == "join-key")
 		#expect(unique.uniqueIdentifier != config.uniqueIdentifier)
+		#expect(unique.uniqueIdentifier.isEmpty == false)
 	}
 
 	@Test("A per-channel notification override is three-state, not a boolean")
@@ -131,22 +130,16 @@ struct IRCModelPersistenceTests {
 		#expect(dictionary["uniqueIdentifier"]?.string == condition.uniqueIdentifier)
 	}
 
-	@Test("Editing a highlight condition leaves the value it was copied from alone")
-	func highlightMatchConditionEditsAndUniqueCopyAreIndependent() {
+	@Test("A unique copy of a highlight condition takes a new identifier")
+	func highlightMatchConditionUniqueCopyTakesANewIdentifier() {
 		let original = HighlightMatchCondition(matchKeyword: "ping")
-		var edited = original
-		edited.matchKeyword = "pong"
-		edited.matchIsExcluded = true
-
-		#expect(original.matchKeyword == "ping")
-		#expect(original.matchIsExcluded == false)
-		#expect(edited.matchKeyword == "pong")
-		#expect(edited.matchIsExcluded)
 
 		let unique = original.uniqueCopy()
 
 		#expect(unique.matchKeyword == "ping")
+		#expect(unique.matchIsExcluded == original.matchIsExcluded)
 		#expect(unique.uniqueIdentifier != original.uniqueIdentifier)
+		#expect(unique.uniqueIdentifier.isEmpty == false)
 	}
 
 	@Test("A server decodes the keys it was given and defaults the rest")

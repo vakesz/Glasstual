@@ -17,6 +17,10 @@ import Testing
 @Suite("Server properties sheet values")
 @MainActor
 struct ServerPropertiesSheetValueTests {
+	private func usesAddress(forTag tag: Int) -> Bool {
+		ServerPropertiesModel.proxyTypeUsesAddress(ServerPropertiesModel.proxyType(forTag: tag))
+	}
+
 	/// proxyTypeChanged fell back to .none and saveConfig to .automatic, so an
 	/// unrecognised tag disabled the proxy fields while quietly enabling the
 	/// system SOCKS proxy in the saved configuration.
@@ -34,15 +38,15 @@ struct ServerPropertiesSheetValueTests {
 		]
 	)
 	func proxyTypeForTag(tag: Int, expected: UInt) {
-		#expect(ServerPropertiesSheet.proxyType(forTag: tag).rawValue == expected)
+		#expect(ServerPropertiesModel.proxyType(forTag: tag).rawValue == expected)
 	}
 
 	@Test("Only SOCKS5 and HTTP proxies take an address")
 	func proxyTypesThatTakeAnAddress() {
-		#expect(ServerPropertiesSheet.proxyTypeUsesAddress(5))
-		#expect(ServerPropertiesSheet.proxyTypeUsesAddress(6))
+		#expect(usesAddress(forTag: 5))
+		#expect(usesAddress(forTag: 6))
 		for tag in [-1, 0, 1, 8, 99] {
-			#expect(ServerPropertiesSheet.proxyTypeUsesAddress(tag) == false)
+			#expect(usesAddress(forTag: tag) == false)
 		}
 	}
 
@@ -51,10 +55,10 @@ struct ServerPropertiesSheetValueTests {
 	@Test("An encoding tag round-trips, and an unset tag falls back")
 	func encodingForTag() {
 		let advanced = String.Encoding.japaneseEUC.rawValue
-		#expect(ServerPropertiesSheet.encoding(forTag: Int(advanced), default: .utf8) == advanced)
-		#expect(ServerPropertiesSheet.encoding(forTag: 0, default: .utf8) == String.Encoding.utf8.rawValue)
+		#expect(ServerPropertiesModel.encoding(forTag: Int(advanced), default: .utf8) == advanced)
+		#expect(ServerPropertiesModel.encoding(forTag: 0, default: .utf8) == String.Encoding.utf8.rawValue)
 		#expect(
-			ServerPropertiesSheet.encoding(forTag: -1, default: .isoLatin1) == String.Encoding.isoLatin1.rawValue
+			ServerPropertiesModel.encoding(forTag: -1, default: .isoLatin1) == String.Encoding.isoLatin1.rawValue
 		)
 	}
 
@@ -62,8 +66,8 @@ struct ServerPropertiesSheetValueTests {
 	/// optional fields all have to normalise the same way.
 	@Test("Empty text normalises to nil")
 	func emptyTextIsNil() {
-		#expect(ServerPropertiesSheet.nilIfEmpty("") == nil)
-		#expect(ServerPropertiesSheet.nilIfEmpty("value") == "value")
+		#expect(ServerPropertiesModel.nilIfEmpty("") == nil)
+		#expect(ServerPropertiesModel.nilIfEmpty("value") == "value")
 	}
 
 	@Test("The advanced encodings preference is read from the shared container")
@@ -81,11 +85,10 @@ struct ServerPropertiesSheetValueTests {
 
 		container.set(true, forKey: key)
 		#expect(container.bool(forKey: key))
-		// The sheet's checkbox binds through TPCPreferencesUserDefaultsController.
-		// It holds its own handle, so what matters is that the handle is on this
-		// suite -- not on UserDefaults.standard -- and reads the same value back.
-		let bound = TextualUserDefaultsController().defaults as? TextualUserDefaults
-		#expect(bound?.suiteName == container.suiteName)
-		#expect(bound?.bool(forKey: key) == true)
+		// A handle taken away from the main actor has to be on this suite -- not
+		// on UserDefaults.standard -- and read the same value back.
+		let detached = TextualUserDefaults.suite()
+		#expect(detached.suiteName == container.suiteName)
+		#expect(detached.bool(forKey: key))
 	}
 }

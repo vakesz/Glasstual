@@ -78,10 +78,6 @@ public extension TextualPreferences {
 
 @MainActor
 public extension TextualPreferences {
-	class func enableEchoMessageCapability() -> Bool {
-		false
-	}
-
 	class func clientList() -> [[String: PropertyListValue]]? {
 		Preferences.Connection.clientList.propertyListValue?.array?.compactMap(\.dictionary)
 	}
@@ -102,11 +98,6 @@ public extension TextualPreferences {
 	}
 }
 
-// MARK: - Appearance
-
-@MainActor
-public extension TextualPreferences {}
-
 // MARK: - Highlights
 
 @MainActor
@@ -118,14 +109,6 @@ public extension TextualPreferences {
 	private class func reloadHighlightKeywords() {
 		highlightKeywords.match = loadKeywords(for: Preferences.Highlights.matchKeywords)
 		highlightKeywords.exclude = loadKeywords(for: Preferences.Highlights.excludeKeywords)
-	}
-
-	class func loadExcludeKeywords() {
-		highlightKeywords.exclude = loadKeywords(for: Preferences.Highlights.excludeKeywords)
-	}
-
-	class func loadMatchKeywords() {
-		highlightKeywords.match = loadKeywords(for: Preferences.Highlights.matchKeywords)
 	}
 
 	private class func cleanKeywords(for key: PreferenceKey<[HighlightKeyword]>) {

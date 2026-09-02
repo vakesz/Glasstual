@@ -43,24 +43,6 @@ import Foundation
 @MainActor
 public enum MenuValidationPolicy {
 	public static func validate(
-		tag: Int,
-		commandSpecificResult: Bool,
-		applicationIsLaunched: Bool,
-		mainWindowHasAttachedSheet: Bool,
-		mainWindowIsFocused: Bool,
-		mainWindowIsBeneathMouse: Bool
-	) -> Bool {
-		validate(
-			command: MenuCommand(rawValue: tag),
-			commandSpecificResult: commandSpecificResult,
-			applicationIsLaunched: applicationIsLaunched,
-			mainWindowHasAttachedSheet: mainWindowHasAttachedSheet,
-			mainWindowIsFocused: mainWindowIsFocused,
-			mainWindowIsBeneathMouse: mainWindowIsBeneathMouse
-		)
-	}
-
-	public static func validate(
 		command: MenuCommand?,
 		commandSpecificResult: Bool,
 		applicationIsLaunched: Bool,

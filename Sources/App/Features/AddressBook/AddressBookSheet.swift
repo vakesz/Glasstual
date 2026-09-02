@@ -59,10 +59,6 @@ public final class AddressBookSheet: MainWindowSheetSession {
 		super.ok(sender)
 	}
 
-	public func okOrError() -> Bool {
-		model.validatedEntry() != nil
-	}
-
 	override public func sheetDidEnd(withReturnCode _: Int) {
 		entryDelegate?.addressBookSheetWillClose(self)
 	}

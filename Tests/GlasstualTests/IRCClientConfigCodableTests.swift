@@ -86,7 +86,7 @@ struct IRCClientConfigCodableTests {
 		#expect(encoded["nicknamePassword"] == nil)
 		#expect(encoded["proxyPassword"] == nil)
 		#expect(encoded["proxyServerPassword"] == nil)
-		#expect(config.pendingNicknamePassword == "nick-secret")
+		#expect(config.pendingNicknamePassword == .set("nick-secret"))
 	}
 
 	/// The class this replaced assigned every optional unconditionally, so a
@@ -160,5 +160,69 @@ struct IRCClientConfigCodableTests {
 		]))
 
 		#expect(config.highlightList.count == 1)
+	}
+
+	/// The encoder used to measure the outgoing burst against the reduced
+	/// default a rate-limited network gets, while the decoder filled a missing
+	/// key from the standard one, so the setting tripled on every save.
+	@Test("A rate-limited network keeps its reduced flood control across a round trip")
+	func rateLimitedFloodControlSurvivesRoundTrip() throws {
+		var config = ClientConfig(connectionName: "freenode")
+		config.serverList = [Server(serverAddress: "chat.freenode.net")]
+		config.floodControlMaximumMessages = 2
+
+		let encoded = PropertyListModel.encode(config)
+		let decoded = try #require(PropertyListModel.decode(ClientConfig.self, from: encoded))
+
+		#expect(decoded.floodControlMaximumMessages == 2)
+	}
+
+	/// A setting sitting on its default stays out of the dictionary; one the
+	/// user changed has to come back.
+	@Test("The connect-command autojoin wait and its delay survive a round trip")
+	func autojoinWaitForConnectCommandsSurvivesRoundTrip() throws {
+		var config = ClientConfig(connectionName: "Libera Chat")
+		let untouched = PropertyListModel.encode(config)
+
+		#expect(untouched["autojoinWaitsForConnectCommands"] == nil)
+		#expect(untouched["autojoinDelayAfterConnectCommands"] == nil)
+
+		config.autojoinWaitsForConnectCommands = true
+		config.autojoinDelayAfterConnectCommands = 12
+		let encoded = PropertyListModel.encode(config)
+
+		#expect(encoded["autojoinWaitsForConnectCommands"] == true)
+		#expect(encoded["autojoinDelayAfterConnectCommands"] == 12.0)
+
+		let decoded = try #require(PropertyListModel.decode(ClientConfig.self, from: encoded))
+
+		#expect(decoded.autojoinWaitsForConnectCommands)
+		#expect(decoded.autojoinDelayAfterConnectCommands == 12)
+	}
+
+	/// A configuration written before the option existed reads back with the
+	/// wait switched off and the delay on its default.
+	@Test("A dictionary without the keys leaves the wait off and the delay standard")
+	func missingConnectCommandWaitKeyDefaultsToOff() throws {
+		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: [
+			"dictionaryVersion": 710,
+			"connectionName": "Libera Chat",
+		]))
+
+		#expect(config.autojoinWaitsForConnectCommands == false)
+		#expect(config.autojoinDelayAfterConnectCommands == ClientConfigDefaults.autojoinConnectCommandDelay)
+	}
+
+	/// The same configuration left on the standard maximum has to keep that
+	/// too, rather than being pulled down to the reduced default on load.
+	@Test("A rate-limited network keeps a standard flood maximum the user chose")
+	func rateLimitedFloodControlKeepsStandardMaximum() throws {
+		var config = ClientConfig(connectionName: "freenode")
+		config.serverList = [Server(serverAddress: "chat.freenode.net")]
+
+		let encoded = PropertyListModel.encode(config)
+		let decoded = try #require(PropertyListModel.decode(ClientConfig.self, from: encoded))
+
+		#expect(decoded.floodControlMaximumMessages == 6)
 	}
 }

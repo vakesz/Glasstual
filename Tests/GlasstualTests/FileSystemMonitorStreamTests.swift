@@ -11,7 +11,7 @@ import Testing
 /// the consumer to run at the same time. On the main actor they would take
 /// turns, which is not the shape FSEvents is being asked about.
 @Suite("File-system monitor stream")
-nonisolated struct FileSystemMonitorStreamTests {
+nonisolated struct FileSystemMonitorStreamTests { // nonisolated: value
 	@Test("The stream reports a file written into a watched folder")
 	func reportsAWrite() async throws {
 		let folder = try makeTemporaryFolder()

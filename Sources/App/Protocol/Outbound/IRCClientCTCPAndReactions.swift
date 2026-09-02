@@ -91,19 +91,10 @@ public extension IRCClient {
 		let tags = ["+draft/react": emoji, "+draft/reply": messageIdentifier]
 		guard sendTagMessage(tags, toTarget: channel.name) else { return false }
 
-		guard let treeItem = (channel as AnyObject) as? IRCTreeItem else {
-			assertionFailure("IRCChannel must bridge to IRCTreeItem")
-			return false
-		}
-
 		deliverTags(
 			["draft/react": emoji, "draft/reply": messageIdentifier],
 			fromSender: userNickname,
-			toTarget: channel.name,
-			in: treeItem,
-			timestamp: Date(),
-			messageIdentifier: nil,
-			account: nil
+			in: channel
 		)
 		return true
 	}

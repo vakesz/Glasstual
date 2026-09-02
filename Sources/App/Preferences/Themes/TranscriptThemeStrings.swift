@@ -25,6 +25,7 @@ nonisolated enum TranscriptThemeStrings { // nonisolated: value
 	static let importTheme = value(.TranscriptTheme.importTheme)
 	static let incomingBubble = value(.TranscriptTheme.incomingBubble)
 	static let invalidDocument = value(.TranscriptTheme.invalidDocument)
+	static let invalidValues = value(.TranscriptTheme.invalidValues)
 	static let layout = value(.TranscriptTheme.layout)
 	static let light = value(.TranscriptTheme.light)
 	static let lineSpacing = value(.TranscriptTheme.lineSpacing)

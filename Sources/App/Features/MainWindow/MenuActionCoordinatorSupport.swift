@@ -37,6 +37,12 @@
  *********************************************************************** */
 
 import AppKit
+import os
+
+private let menuSupportLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "MenuSupport"
+)
 
 @MainActor
 public extension MenuActionCoordinator {
@@ -45,8 +51,6 @@ public extension MenuActionCoordinator {
 		case .openLogLocation: openLog(at: PathInfo.transcriptFolderURL)
 		case .openChannelLogs: openLog(at: selectedChannel?.logFilePath)
 		case .openAcknowledgements: openAcknowledgements()
-		case .contactSupport:
-			OpenLink.open(string: "https://github.com/vakesz/Glasstual/issues", inBackground: false)
 		case .connectToHelpChannel: connectToSupportChannel("#glasstual")
 		case .connectToTestingChannel: connectToSupportChannel("#glasstual-testing")
 		@unknown default: break
@@ -73,7 +77,7 @@ public extension MenuActionCoordinator {
 			withExtension: "pdf",
 			subdirectory: "Documentation"
 		) else {
-			NSLog("Acknowledgements.pdf is missing from the application bundle")
+			menuSupportLogger.error("Acknowledgements.pdf is missing from the application bundle")
 			return
 		}
 		NSWorkspace.shared.open(url)

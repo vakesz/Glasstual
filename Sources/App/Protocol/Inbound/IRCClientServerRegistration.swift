@@ -38,11 +38,9 @@
 
 import CocoaExtensions
 import Foundation
-import ObjectiveC
 
 enum IRCNicknameRetryPolicy {
 	static let fallbackNickname = "0"
-	static let defaultMaximumLength: UInt = 31
 
 	static func alternate(at attempt: UInt, from nicknames: [String]) -> String? {
 		guard attempt < nicknames.count else { return nil }
@@ -109,6 +107,10 @@ public extension IRCClient {
 			sendCommand(command, completeTarget: false, target: nil)
 		}
 		isPerformingConnectCommands = false
+		/* The commands are sent inline, so by here they have run — or there were
+		 none to run. This releases an autojoin held back by
+		 `autojoinWaitsForConnectCommands`; every other wait still applies. */
+		markConnectCommandsPerformed()
 
 		if isCapabilityEnabled(.zncCertInfoModule) {
 			sendCommand(
@@ -170,11 +172,24 @@ public extension IRCClient {
 		tryingNicknameNumber += 1
 	}
 
+	/** The length to pad a retried nickname to.
+
+	 A hardcoded 31 used to stand here, so on a network advertising a shorter
+	 `NICKLEN` the server answered 432 again and the retry ran over the wire
+	 until `padNickname` had nothing left to pad. */
+	private var nicknameRetryMaximumLength: UInt {
+		guard supportInfo.configurationReceived, supportInfo.maximumNicknameLength > 0 else {
+			return UInt(IRCProtocolLimits.defaultNicknameMaximumLength)
+		}
+
+		return supportInfo.maximumNicknameLength
+	}
+
 	func tryAnotherNickname() {
 		guard isConnected, !isLoggedIn else { return }
 		let nickname = IRCNicknameRetryPolicy.padded(
 			tryingNicknameSentNickname,
-			maximumLength: IRCNicknameRetryPolicy.defaultMaximumLength
+			maximumLength: nicknameRetryMaximumLength
 		)
 		tryingNicknameSentNickname = nickname
 		changeNickname(nickname)

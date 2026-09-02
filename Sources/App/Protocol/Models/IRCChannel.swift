@@ -53,7 +53,7 @@ public extension Notification.Name {
 /// the runtime name below.
 public typealias IRCChannel = Channel
 
-open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProtocol {
+open class Channel: TreeItem {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "IRCChannel"
@@ -88,18 +88,18 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		}
 	}
 
-	/// Compatibility getter for Objective-C plug-ins that still declare the
-	/// historic `IRCChannelStatus` enum in their bridging header.
-	public var objectiveCStatusRawValue: UInt {
-		status.rawValue
-	}
-
 	public var directChatConnection: DirectChatConnection?
 	public var sentInitialWhoRequest = false
 	public var channelModesReceived = false
 	public var channelNamesReceived = false
 	public var errorOnLastJoinAttempt = false
-	public private(set) var channelJoinTime: TimeInterval = 0
+	/** When the local user joined, on the server's clock where `server-time`
+	 supplies one and on this Mac's otherwise. `nil` until the channel is joined.
+
+	 A bouncer or a server replays the tail of a conversation right after the
+	 JOIN, so this is the reference point `ChannelJoinBurstPolicy` measures that
+	 burst against. */
+	public private(set) var joinedAt: Date?
 	public private(set) var modeInfo: ChannelModeState?
 	public private(set) var memberInfo: ChannelMemberList?
 	/** Whether a logging session banner has been written and not yet closed. A line
@@ -108,12 +108,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 	private var logFile: FileLogger?
 	private var statusChangedByAction = false
-
-	/// The Objective-C declarations remain visible until their consumers are
-	/// migrated. Both values refer to this same Objective-C runtime object.
-	private var legacyChannel: IRCChannel {
-		self
-	}
 
 	@available(*, unavailable)
 	override public init() {
@@ -264,12 +258,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		config.type
 	}
 
-	/// Compatibility getter for Objective-C plug-ins that still declare the
-	/// historic `IRCChannelType` enum in their bridging header.
-	public var objectiveCTypeRawValue: UInt {
-		type.rawValue
-	}
-
 	public var channelTypeString: String {
 		switch type {
 		case .channel:
@@ -328,7 +316,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		channelNamesReceived = false
 		errorOnLastJoinAttempt = false
 		sentInitialWhoRequest = false
-		channelJoinTime = 0
+		joinedAt = nil
 		modeInfo = nil
 		status = newStatus
 		statusChangedByAction = false
@@ -337,30 +325,33 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo = nil
 	}
 
-	public func resetStatusFromObjectiveC(_ rawValue: UInt) {
-		guard let status = ChannelStatus(rawValue: rawValue) else { return }
-		resetStatus(status)
-	}
+	/** Marks the channel joined.
 
-	open func activate() {
+	 `date` is when the join happened rather than when this runs, so a JOIN
+	 carrying `server-time` records the server's clock. */
+	open func activate(at date: Date = Date()) {
 		statusChangedByAction = true
 		resetStatus(.joined)
+		/* Recorded before anything that can leave early: the channel is joined
+		 whether or not it has a client to talk to, and noteChannelActivated
+		 below already asks the server what has been read in it. */
+		joinedAt = date
 
 		guard let client = associatedClient else {
 			return
 		}
 
 		if isUtility == false {
-			memberInfo = ChannelMemberList(channel: legacyChannel)
+			memberInfo = ChannelMemberList(channel: self)
 
 			if isSelectedChannel, let output = associatedClient?.output {
-				output.assignMemberList(to: legacyChannel)
+				output.assignMemberList(to: self)
 				output.updateMemberListVisibilityForSelection()
 			}
 		}
 
 		if isChannel {
-			modeInfo = ChannelModeState(channel: legacyChannel)
+			modeInfo = ChannelModeState(channel: self)
 		}
 
 		if isPrivateMessage || isDirectChat {
@@ -374,18 +365,14 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			addUser(client.findUserOrCreate(client.userNickname))
 		}
 
-		channelJoinTime = Date().timeIntervalSince1970
-
 		if isChannel || isPrivateMessage {
-			client.noteChannelActivated(legacyChannel)
+			client.noteChannelActivated(self)
 		}
 	}
 
 	open func deactivate() {
 		statusChangedByAction = true
 		resetStatus(.parted)
-
-		if isChannel {}
 	}
 
 	@MainActor public func prepareForPermanentDestruction() {
@@ -395,11 +382,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		closeLogFile()
 		config.destroySecretKeyKeychainItem()
 
-		AppController.shared.mainWindow.presentationModel.closeSheets { owner in
-			guard let channelSheet = owner as? ChannelScoped else { return false }
-			return channelSheet.channelId == uniqueIdentifier
-		}
-
+		associatedClient?.output?.closeSheets(forChannelId: uniqueIdentifier)
 		associatedClient?.output?.destroyInputHistory(for: self)
 		presentation?.prepareForPermanentDestruction()
 	}
@@ -451,13 +434,13 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 		/* Set before writing: the banner is written through writeToLogFile. */
 		logFileSessionIsOpen = true
-		associatedClient?.logFileRecordSessionChanged(true, in: legacyChannel)
+		associatedClient?.logFileRecordSessionChanged(true, in: self)
 	}
 
 	public func logFileWriteSessionEnd() {
 		guard logFileSessionIsOpen else { return }
 
-		associatedClient?.logFileRecordSessionChanged(false, in: legacyChannel)
+		associatedClient?.logFileRecordSessionChanged(false, in: self)
 		logFileSessionIsOpen = false
 	}
 
@@ -469,7 +452,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		logFileWriteSessionBegin()
 
 		if logFile == nil {
-			logFile = FileLogger(channel: legacyChannel)
+			logFile = FileLogger(channel: self)
 		}
 
 		logFile?.writeLogLine(logLine)
@@ -497,42 +480,8 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo?.addMember(member)
 	}
 
-	public func addMember(_ member: ChannelUser, checkForDuplicates: Bool) {
-		memberInfo?.addMember(member, checkForDuplicates: checkForDuplicates)
-	}
-
 	public func removeMember(withNickname nickname: String) {
 		memberInfo?.removeMember(withNickname: nickname)
-	}
-
-	public func removeMember(_ member: ChannelUser) {
-		memberInfo?.removeMember(member)
-	}
-
-	public func resortMember(_ member: ChannelUser) {
-		memberInfo?.resortMember(member)
-	}
-
-	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser) {
-		memberInfo?.replaceMember(oldMember, with: newMember)
-	}
-
-	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool) {
-		memberInfo?.replaceMember(oldMember, with: newMember, resort: resort)
-	}
-
-	public func replaceMember(
-		_ oldMember: ChannelUser,
-		with newMember: ChannelUser,
-		resort: Bool,
-		replaceInAllChannels: Bool
-	) {
-		memberInfo?.replaceMember(
-			oldMember,
-			with: newMember,
-			resort: resort,
-			replaceInAllChannels: replaceInAllChannels
-		)
 	}
 
 	public func changeMember(_ nickname: String, mode: ChannelModeSymbol, value: Bool) {
@@ -587,24 +536,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberList
 	}
 
-	public func pasteboardData(for members: [ChannelUser]) -> Data {
-		memberInfo?.pasteboardData(for: members) ?? Data()
-	}
-
-	public class func readNicknames(
-		from pasteboardData: Data,
-		with callback: (IRCChannel, [String]) -> Void
-	) -> Bool {
-		ChannelMemberList.readNicknames(from: pasteboardData, with: callback)
-	}
-
-	public class func readMembers(
-		from pasteboardData: Data,
-		with callback: (IRCChannel, [ChannelUser]) -> Void
-	) -> Bool {
-		ChannelMemberList.readMembers(from: pasteboardData, with: callback)
-	}
-
 	public func memberExists(_ nickname: String) -> Bool {
 		memberInfo?.memberExists(nickname) ?? false
 	}
@@ -646,6 +577,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	override open var associatedChannel: IRCChannel? {
-		legacyChannel
+		self
 	}
 }

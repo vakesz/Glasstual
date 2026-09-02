@@ -119,6 +119,18 @@ nonisolated enum PromptStrings { // nonisolated: value
 		static var importTitle: String {
 			String(localized: .Prompts.thisActionWillOverwriteYourConfiguration)
 		}
+
+		static var importBackupFailedBody: String {
+			String(localized: .Prompts.yourCurrentPreferencesCouldNotBeBackedUp)
+		}
+
+		static var importFailureTitle: String {
+			String(localized: .Prompts.thePreferencesCouldNotBeImported)
+		}
+
+		static var importInvalidDocumentBody: String {
+			String(localized: .Prompts.theSelectedFileIsNotAPreferencesFile)
+		}
 	}
 
 	enum ConnectionLink {
@@ -193,14 +205,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 			String(localized: .Prompts.restartGlasstualToLoadThisExtension)
 		}
 
-		static var scriptSaveErrorBody: String {
-			String(localized: .Prompts.intentionallyEmptyRecoverySuggestion)
-		}
-
-		static var scriptSaveErrorTitle: String {
-			String(localized: .Prompts.scriptCannotBeSavedHere)
-		}
-
 		static func documentOpenTitle(filename: String) -> String {
 			String(localized: .Prompts.areYouSureYouWantToOpenTheFileNamed(filename))
 		}
@@ -247,6 +251,10 @@ nonisolated enum PromptStrings { // nonisolated: value
 
 		static var resumeAfterLowStorageBody: String {
 			String(localized: .Prompts.loggingWillResumeWhenThere)
+		}
+
+		static var scrollbackFailureBody: String {
+			String(localized: .Prompts.scrollbackDatabaseCouldNotBeOpened)
 		}
 
 		static var scrollbackFailureTitle: String {

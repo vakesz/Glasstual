@@ -40,7 +40,7 @@ public nonisolated struct PluginSupportedFeature: OptionSet, Sendable { // nonis
 /// The value is immutable: `load(_:host:)` is the only way to make one, and it
 /// either returns a fully populated item or `nil`. Nothing observes a
 /// half-configured plugin.
-public final nonisolated class PluginItem: NSObject { // nonisolated: value
+public final nonisolated class PluginItem: NSObject { // nonisolated: immutable
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginItem"

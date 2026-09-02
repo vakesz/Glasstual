@@ -57,12 +57,12 @@ struct SCRAMClientHardeningTests {
 	/// `i=5000000000` overflows `UInt32` and used to trap inside PBKDF2;
 	/// `i=2000000000` was in range but ran for minutes on the main thread.
 	@Test(arguments: ["5000000000", "2000000000", "600001", "99999999999999999999"])
-	func excessiveIterationCountsAreRejected(_ iterations: String) {
+	func excessiveIterationCountsAreRejected(_ iterations: String) async {
 		let client = exampleClient()
 		_ = client.clientFirstMessage
 
 		do {
-			_ = try client.clientFinalMessage(forServerFirstMessage: serverFirst(iterations: iterations))
+			_ = try await client.clientFinalMessage(forServerFirstMessage: serverFirst(iterations: iterations))
 			Issue.record("Iteration count \(iterations) should have been rejected")
 		} catch {
 			// A count that does not fit in `Int` fails the earlier
@@ -76,19 +76,19 @@ struct SCRAMClientHardeningTests {
 	}
 
 	@Test
-	func iterationCountAtTheCeilingIsAccepted() throws {
+	func iterationCountAtTheCeilingIsAccepted() async throws {
 		let client = exampleClient()
 		_ = client.clientFirstMessage
 
-		_ = try client.clientFinalMessage(forServerFirstMessage: serverFirst(iterations: "600000"))
+		_ = try await client.clientFinalMessage(forServerFirstMessage: serverFirst(iterations: "600000"))
 
 		#expect(client.state == .sentClientFinal)
 	}
 
-	/// The offloaded derivation has to agree with the RFC 7677 vector the
-	/// synchronous path is checked against.
+	/// The derivation the client actually runs has to produce the RFC 7677
+	/// vector when the exchange is driven with the vector's nonce and salt.
 	@Test
-	func offloadedDerivationMatchesTheSynchronousResult() async throws {
+	func offloadedDerivationMatchesTheRFC7677Vector() async throws {
 		let client = exampleClient()
 		_ = client.clientFirstMessage
 
@@ -143,10 +143,10 @@ struct IRCClientSCRAMMutualAuthenticationTests {
 	}
 
 	@Test
-	func scramWithAVerifiedServerFinalMessageIsSatisfied() throws {
+	func scramWithAVerifiedServerFinalMessageIsSatisfied() async throws {
 		let scram = SCRAMClient(username: "user", password: "pencil", clientNonce: "rOprNGfwEbeRWgbNEkqO")
 		_ = scram.clientFirstMessage
-		_ = try scram.clientFinalMessage(
+		_ = try await scram.clientFinalMessage(
 			forServerFirstMessage:
 			"r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096"
 		)

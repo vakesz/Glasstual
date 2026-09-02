@@ -211,7 +211,11 @@ private extension IRCClient {
 		if let parentToken = message.batchToken {
 			batch.parentBatchMessage = batchMessages.queuedEntry(withBatchToken: parentToken)
 		}
-		batchMessages.queueEntry(batch)
+
+		guard batchMessages.queueEntry(batch) else {
+			batchProcessingLogger.error("Refused a BATCH past the limit on simultaneously open batches")
+			return
+		}
 
 		if batch.batchType == IRCServerQuirks.ZNC.playbackBatchType {
 			zncBouncerIsPlayingBackHistory = isConnectedToZNC

@@ -22,13 +22,11 @@ private nonisolated let historicLogClientLogger = Logger( // nonisolated: let
 /// One historic-log fetch, in the shape the store understands. A value, so a
 /// request can be queued and replayed without carrying anything isolated.
 nonisolated struct HistoricLogFetchRequest: Sendable { // nonisolated: value
-	/// Which of the store's five fetches to run.
+	/// Which of the store's fetches to run: the newest page of a view, or the
+	/// page before a line the view already holds.
 	enum Kind: Sendable {
 		case newest(ascending: Bool, fetchLimit: UInt, limitToDate: Date?)
-		case around(uniqueIdentifier: String, before: UInt, after: UInt, limitToDate: Date?)
 		case before(uniqueIdentifier: String, fetchLimit: UInt, limitToDate: Date?)
-		case after(uniqueIdentifier: String, fetchLimit: UInt, limitToDate: Date?)
-		case between(afterUniqueIdentifier: String, beforeUniqueIdentifier: String, fetchLimit: UInt)
 	}
 
 	let viewIdentifier: String
@@ -170,9 +168,8 @@ actor HistoricLogClient {
 
 	private let databaseDirectory: String?
 	private let store: HistoricLogStore
-	private var loadTask: Task<Bool, Never>?
+	private var loadTask: Task<HistoricLogOpenOutcome, Never>?
 	private(set) var isLoaded = false
-	private var isSaving = false
 	private var isTerminating = false
 
 	private lazy var requests = HistoricLogRequestQueue { [weak self] request in
@@ -214,7 +211,7 @@ actor HistoricLogClient {
 			return true
 		}
 		if let loadTask {
-			let opened = await loadTask.value
+			let opened = await loadTask.value.isOpen
 			return isTerminating == false && opened
 		}
 		guard let databaseDirectory else {
@@ -225,25 +222,31 @@ actor HistoricLogClient {
 			await store.openDatabase(inDirectory: databaseDirectory)
 		}
 		loadTask = task
-		let opened = await task.value
+		let outcome = await task.value
 		loadTask = nil
 		guard isTerminating == false else {
-			if opened {
+			if case .opened = outcome {
 				await store.close()
 			}
 			return false
 		}
-		isLoaded = opened
+		isLoaded = outcome.isOpen
 
-		if opened {
+		switch outcome {
+		case .opened:
 			historicLogClientLogger.debug("Successfully opened historic log database")
 			await applyMaximumLineCount()
-		} else {
-			historicLogClientLogger.error("Failed to open historic log database")
-			await LogControllerHistoricLogFile.reportConnectionFailure("")
+		case let .failed(reason):
+			historicLogClientLogger
+				.error("Failed to open historic log database: \(reason ?? "no reason given", privacy: .public)")
+			/* The alert is the only place the failure reaches the reader, so it
+			 carries what the store knows rather than an empty body. */
+			await LogControllerHistoricLogFile.reportConnectionFailure(
+				reason.map(PromptStrings.Logging.lastError) ?? PromptStrings.Logging.scrollbackFailureBody
+			)
 		}
 
-		return opened
+		return outcome.isOpen
 	}
 
 	func applyMaximumLineCount() async {
@@ -268,36 +271,12 @@ actor HistoricLogClient {
 				fetchLimit: fetchLimit,
 				limitToDate: limitToDate
 			)
-		case let .around(uniqueIdentifier, before, after, limitToDate):
-			return await store.fetchEntries(
-				forView: viewIdentifier,
-				aroundUniqueIdentifier: uniqueIdentifier,
-				beforeFetchLimit: before,
-				afterFetchLimit: after,
-				limitToDate: limitToDate
-			)
 		case let .before(uniqueIdentifier, fetchLimit, limitToDate):
 			return await store.fetchEntries(
 				forView: viewIdentifier,
-				relativeTo: uniqueIdentifier,
-				direction: .before,
+				before: uniqueIdentifier,
 				fetchLimit: fetchLimit,
 				limitToDate: limitToDate
-			)
-		case let .after(uniqueIdentifier, fetchLimit, limitToDate):
-			return await store.fetchEntries(
-				forView: viewIdentifier,
-				relativeTo: uniqueIdentifier,
-				direction: .after,
-				fetchLimit: fetchLimit,
-				limitToDate: limitToDate
-			)
-		case let .between(afterUniqueIdentifier, beforeUniqueIdentifier, fetchLimit):
-			return await store.fetchEntries(
-				forView: viewIdentifier,
-				afterUniqueIdentifier: afterUniqueIdentifier,
-				beforeUniqueIdentifier: beforeUniqueIdentifier,
-				fetchLimit: fetchLimit
 			)
 		}
 	}
@@ -321,21 +300,7 @@ actor HistoricLogClient {
 		await store.resetData(forView: viewIdentifier)
 	}
 
-	// MARK: - Saving and termination
-
-	@discardableResult
-	func saveData() async -> Bool {
-		if isTerminating, isLoaded == false, loadTask == nil {
-			return false
-		}
-		guard isSaving == false else { return true }
-		guard await ensureLoaded() else { return false }
-
-		isSaving = true
-		await store.saveData()
-		isSaving = false
-		return true
-	}
+	// MARK: - Termination
 
 	func prepareForTermination() async {
 		isTerminating = true

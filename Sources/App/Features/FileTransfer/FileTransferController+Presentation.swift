@@ -47,15 +47,6 @@ public extension FileTransferController {
 		isSender != isReversed
 	}
 
-	var isActingAsClient: Bool {
-		isSender == isReversed
-	}
-
-	var speedRecords: [NSNumber] {
-		dispatchPrecondition(condition: .onQueue(.main))
-		return speedRecordsPrivate
-	}
-
 	var filePath: String? {
 		guard let path else { return nil }
 		return (path as NSString).appendingPathComponent(filename)

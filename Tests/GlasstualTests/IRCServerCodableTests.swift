@@ -35,7 +35,7 @@ struct IRCServerCodableTests {
 				serverAddress: "irc.example.test",
 				serverPort: 6697,
 				prefersSecuredConnection: true,
-				pendingServerPassword: "never-written"
+				pendingServerPassword: .set("never-written")
 			)
 		)
 
@@ -81,6 +81,6 @@ struct IRCServerCodableTests {
 		server.serverPassword = "hunter2"
 
 		#expect(PropertyListModel.encode(server)["serverPassword"] == nil)
-		#expect(server.pendingServerPassword == "hunter2")
+		#expect(server.pendingServerPassword == .set("hunter2"))
 	}
 }

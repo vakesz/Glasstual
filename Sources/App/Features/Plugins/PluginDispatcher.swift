@@ -20,7 +20,7 @@ import GlasstualPluginKit
 /// inline on the main actor: there is no plugin queue to hop to and no snapshot
 /// to hand across it. Nothing is built until a plugin has actually subscribed
 /// to the event, because building a `PluginClient` walks the whole channel list.
-public final nonisolated class PluginDispatcher: NSObject { // nonisolated: value
+public nonisolated enum PluginDispatcher { // nonisolated: value
 	/** Holds a rendered message between the render pass and the native view
 	 confirming that the line has appeared.
 
@@ -111,8 +111,14 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 			messageParameters: referenceMessage?.params ?? []
 		)
 
-		for handler in handlers where handler.receivedCommand(event) == false {
-			return false
+		/* Every handler is asked in turn, and the first refusal stops the
+		 message. The call is the point of the loop, not a filter on it. */
+		for handler in handlers {
+			let handlerAcceptedEvent = handler.receivedCommand(event)
+
+			if handlerAcceptedEvent == false {
+				return false
+			}
 		}
 
 		return true
@@ -143,8 +149,12 @@ public final nonisolated class PluginDispatcher: NSObject { // nonisolated: valu
 			wasEncrypted: wasEncrypted
 		)
 
-		for handler in handlers where handler.receivedText(event) == false {
-			return false
+		for handler in handlers {
+			let handlerAcceptedEvent = handler.receivedText(event)
+
+			if handlerAcceptedEvent == false {
+				return false
+			}
 		}
 
 		return true

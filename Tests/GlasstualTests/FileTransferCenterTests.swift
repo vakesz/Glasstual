@@ -80,11 +80,11 @@ struct FileTransferCenterTests {
 
 		#expect(
 			FileTransferSelection.sending.shownTransfers(in: all, isSender: \.isSender)
-				== [outgoing]
+				.map(\.uniqueIdentifier) == [outgoing.uniqueIdentifier]
 		)
 		#expect(
 			FileTransferSelection.receiving.shownTransfers(in: all, isSender: \.isSender)
-				== [incoming]
+				.map(\.uniqueIdentifier) == [incoming.uniqueIdentifier]
 		)
 	}
 
@@ -96,10 +96,6 @@ struct FileTransferCenterTests {
 
 		#expect(first.uniqueIdentifier.isEmpty == false)
 		#expect(first.uniqueIdentifier != second.uniqueIdentifier)
-
-		/* The identity has to survive being read twice, or a snapshot would
-		 replace every row on every apply. */
-		#expect(first.uniqueIdentifier == first.uniqueIdentifier)
 	}
 
 	@Test("Removing transfers by identity keeps the order of the rest")
@@ -109,11 +105,19 @@ struct FileTransferCenterTests {
 		let second = try transfer(on: client, filename: "two.jpg")
 		let third = try transfer(on: client, filename: "three.jpg")
 
-		var stored = [first, second, third]
-		let removed = Set([second].map(\.uniqueIdentifier))
-		stored.removeAll { removed.contains($0.uniqueIdentifier) }
+		let model = FileTransferCenterModel()
+		model.add(first)
+		model.add(second)
+		model.add(third)
 
-		#expect(stored == [first, third])
+		/* `add` puts the newest transfer first, which is the order the list
+		 shows; removal has to leave the rest of that order alone. */
+		#expect(model.transfers.map(\.uniqueIdentifier) == [third, second, first].map(\.uniqueIdentifier))
+
+		model.remove([second])
+
+		#expect(model.transfers.map(\.uniqueIdentifier) == [third, first].map(\.uniqueIdentifier))
+		#expect(model.visibleTransfers.map(\.uniqueIdentifier) == [third, first].map(\.uniqueIdentifier))
 	}
 
 	@Test("The model owns newest-first ordering, filtering, and selection")
@@ -126,11 +130,14 @@ struct FileTransferCenterTests {
 		let model = FileTransferCenterModel()
 		model.add(incoming)
 		model.add(outgoing)
-		#expect(model.visibleTransfers == [outgoing, incoming])
+		#expect(
+			model.visibleTransfers.map(\.uniqueIdentifier)
+				== [outgoing.uniqueIdentifier, incoming.uniqueIdentifier]
+		)
 
 		model.selection = [incoming.uniqueIdentifier, outgoing.uniqueIdentifier]
 		model.filter = .receiving
-		#expect(model.visibleTransfers == [incoming])
+		#expect(model.visibleTransfers.map(\.uniqueIdentifier) == [incoming.uniqueIdentifier])
 		#expect(model.selection == [incoming.uniqueIdentifier])
 
 		model.remove([incoming])

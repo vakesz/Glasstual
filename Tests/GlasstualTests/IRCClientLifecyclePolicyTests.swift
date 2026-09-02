@@ -9,18 +9,6 @@ import Testing
 @MainActor
 @Suite("Client lifecycle policies")
 struct IRCClientLifecyclePolicyTests {
-	@Test("An autojoin batch never exceeds the configured maximum")
-	func autojoinBatchHonorsConfiguredMaximum() {
-		#expect(IRCClientAutojoinPolicy.nextBatchCount(remaining: 9, configuredMaximum: 3) == 3)
-		#expect(IRCClientAutojoinPolicy.nextBatchCount(remaining: 2, configuredMaximum: 3) == 2)
-	}
-
-	@Test("A maximum of zero still joins one channel, and nothing remaining joins none")
-	func autojoinBatchAlwaysMakesProgress() {
-		#expect(IRCClientAutojoinPolicy.nextBatchCount(remaining: 4, configuredMaximum: 0) == 1)
-		#expect(IRCClientAutojoinPolicy.nextBatchCount(remaining: 0, configuredMaximum: 4) == 0)
-	}
-
 	@Test("Autojoin waits only for a NickServ session that has not identified")
 	func autojoinWaitsOnlyForUnidentifiedNickServSession() {
 		#expect(IRCClientAutojoinPolicy.shouldWaitForIdentification(

@@ -30,13 +30,6 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 	case newIgnoreEntry
 }
 
-func serverPropertiesModel<Model>(_ value: Any, as _: Model.Type) -> Model {
-	guard let model = value as? Model else {
-		preconditionFailure("Expected a \(Model.self) copy, received \(Swift.type(of: value))")
-	}
-	return model
-}
-
 @MainActor
 public protocol ServerPropertiesSheetDelegate: AnyObject {
 	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: ClientConfig)
@@ -103,10 +96,10 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 			copyCertificateFingerprint: { [weak self] value in self?.copyCertificateFingerprint(value) },
 			showCipherSuites: { [weak self] in self?.showCipherSuites() }
 		)
-		setContent(
-			ServerPropertiesView(model: model, actions: actions)
-				.frame(minWidth: 760, idealWidth: 900, minHeight: 520, idealHeight: 650)
-		)
+		/* No frame here: `ServerPropertiesView` declares the sheet's minimum and
+		 ideal size. Two owners meant the host asked for less than the content
+		 demanded, and the sheet clipped both edges of it. */
+		setContent(ServerPropertiesView(model: model, actions: actions))
 	}
 
 	public func start() {
@@ -176,7 +169,7 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	}
 
 	private func presentChannelSheet(config: ChannelConfig?) {
-		let controller = ChannelPropertiesSheet(config: config)
+		let controller = ChannelPropertiesSheet(config: config, onClient: client)
 		controller.delegate = self
 		controller.window = window
 		controller.start()
@@ -239,10 +232,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 
 	public func highlightEntrySheetDidClose(_: HighlightEntrySheet) {
 		highlightSheet = nil
-	}
-
-	func addIgnoreAddressBookEntry(withHostmask hostmask: String? = nil) {
-		addIgnoreAddressBookEntry(hostmask: hostmask)
 	}
 
 	private func addIgnoreAddressBookEntry(hostmask: String? = nil) {
@@ -395,7 +384,9 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		)
 		Alerts.alert(
 			withMessage: ServerPropertiesStrings.CipherSuites.description(descriptions.joined(separator: "\n")),
-			title: ServerPropertiesStrings.CipherSuites.title(collectionName: ""),
+			title: ServerPropertiesStrings.CipherSuites.title(
+				collectionName: ServerPropertiesStrings.CipherSuites.collectionName(model.config.cipherSuites)
+			),
 			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil,
 			otherButton: nil
@@ -430,15 +421,11 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	}
 
 	private func closeChildSheets() {
-		if let addressBookSheet {
-			addressBookSheet.close()
-		} else if let channelSheet {
-			channelSheet.close()
-		} else if let highlightSheet {
-			highlightSheet.close()
-		} else if let serverEndpointSheet {
-			serverEndpointSheet.close()
-		} else if let panel = clientCertificatePanel {
+		addressBookSheet?.close()
+		channelSheet?.close()
+		highlightSheet?.close()
+		serverEndpointSheet?.close()
+		if let panel = clientCertificatePanel {
 			panel.sheetParent?.endSheet(panel, returnCode: .cancel)
 		}
 	}
@@ -446,25 +433,5 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	override public func sheetDidEnd(withReturnCode _: Int) {
 		removeConfigurationDidChangeObserver()
 		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheetWillClose(self)
-	}
-
-	static func displayedChannels(in channelList: [ChannelConfig]) -> [ChannelConfig] {
-		channelList.filter { $0.type == .channel }
-	}
-
-	static func nilIfEmpty(_ value: String) -> String? {
-		ServerPropertiesModel.nilIfEmpty(value)
-	}
-
-	static func proxyType(forTag tag: Int) -> IRCConnectionProxyType {
-		ServerPropertiesModel.proxyType(forTag: tag)
-	}
-
-	static func proxyTypeUsesAddress(_ tag: Int) -> Bool {
-		ServerPropertiesModel.proxyTypeUsesAddress(ServerPropertiesModel.proxyType(forTag: tag))
-	}
-
-	static func encoding(forTag tag: Int, default fallback: String.Encoding) -> UInt {
-		ServerPropertiesModel.encoding(forTag: tag, default: fallback)
 	}
 }

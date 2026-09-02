@@ -92,16 +92,33 @@ actor HistoricLogStore {
 
 	// MARK: - Database
 
-	func openDatabase(inDirectory databaseDirectory: String) -> Bool {
+	func openDatabase(inDirectory databaseDirectory: String) async -> HistoricLogOpenOutcome {
 		databaseDirectoryURL = URL(fileURLWithPath: databaseDirectory, isDirectory: true)
 
 		setDatabasePath()
 
-		guard let databaseURL else { return false }
+		guard let databaseURL else { return .failed(reason: nil) }
 
 		HistoricLogDatabase.logger.info("Opening database at path: \(databaseURL.path, privacy: .public)")
 
-		var context = HistoricLogDatabase.makeStack(at: databaseURL)
+		/* What stopped the last attempt, kept because it is the only thing the
+		 failure alert has to tell the reader. */
+		var failure: (any Error)?
+
+		func openStack(at url: URL) -> NSManagedObjectContext? {
+			do {
+				let context = try HistoricLogDatabase.makeStack(at: url)
+				failure = nil
+
+				return context
+			} catch {
+				failure = error
+
+				return nil
+			}
+		}
+
+		var context = openStack(at: databaseURL)
 
 		if context == nil {
 			/* A store that cannot be opened is almost always a corrupt file
@@ -111,16 +128,24 @@ actor HistoricLogStore {
 
 			setDatabasePath()
 
-			context = self.databaseURL.flatMap { HistoricLogDatabase.makeStack(at: $0) }
+			context = self.databaseURL.flatMap(openStack)
 		}
 
-		guard let context else { return false }
+		guard let context else {
+			return .failed(reason: failure?.localizedDescription)
+		}
 
 		rootContext = context
 
+		/* On the root context's own queue, before any view context is built, so
+		 the first fetch a view makes already sorts by the corrected column. */
+		await context.perform {
+			HistoricLogDatabase.restampEntryCreationDates(in: context)
+		}
+
 		rescheduleSave()
 
-		return true
+		return .opened
 	}
 
 	func setMaximumLineCount(_ maximumLineCount: UInt) {
@@ -185,10 +210,6 @@ actor HistoricLogStore {
 
 		views[viewIdentifier]?.totalLineCount = counts.lineCount
 		views[viewIdentifier]?.newestIdentifier = counts.newestIdentifier
-
-		HistoricLogDatabase.logger.debug(
-			"Context created for \(viewIdentifier, privacy: .public), line count: \(counts.lineCount), newest identifier: \(counts.newestIdentifier)"
-		)
 
 		return context
 	}
@@ -281,43 +302,11 @@ actor HistoricLogStore {
 		}
 	}
 
+	/// The page of lines immediately before one the view already holds, which is
+	/// what scrolling back off the top of the transcript asks for.
 	func fetchEntries(
 		forView viewIdentifier: String,
-		aroundUniqueIdentifier uniqueIdentifier: String,
-		beforeFetchLimit: UInt,
-		afterFetchLimit: UInt,
-		limitToDate: Date?
-	) async -> [HistoricLogEntry] {
-		guard let context = await context(forView: viewIdentifier) else { return [] }
-
-		/* Bound the centered query to the configured scrollback capacity. */
-		let fetchLimit = maximumLineCount
-
-		return await context.perform {
-			let entryIdentifier = HistoricLogDatabase.entryIdentifier(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				uniqueIdentifier: uniqueIdentifier
-			)
-
-			guard entryIdentifier != HistoricLogDatabase.missingEntryIdentifier else { return [] }
-
-			return HistoricLogDatabase.fetchEntries(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				ascending: true,
-				fetchLimit: fetchLimit,
-				lowestEntryIdentifier: entryIdentifier > beforeFetchLimit ? entryIdentifier - beforeFetchLimit : 0,
-				highestEntryIdentifier: saturatedAdd(entryIdentifier, afterFetchLimit),
-				limitToDate: limitToDate
-			)
-		}
-	}
-
-	func fetchEntries(
-		forView viewIdentifier: String,
-		relativeTo uniqueIdentifier: String,
-		direction: FetchDirection,
+		before uniqueIdentifier: String,
 		fetchLimit: UInt,
 		limitToDate: Date?
 	) async -> [HistoricLogEntry] {
@@ -338,61 +327,14 @@ actor HistoricLogStore {
 
 			guard entryIdentifier != HistoricLogDatabase.missingEntryIdentifier else { return [] }
 
-			let bounds: (lowest: UInt, highest: UInt) = switch direction {
-			case .before:
-				(
-					entryIdentifier > fetchLimit ? entryIdentifier - fetchLimit : 0,
-					entryIdentifier > 0 ? entryIdentifier - 1 : 0
-				)
-			case .after:
-				(saturatedAdd(entryIdentifier, 1), saturatedAdd(entryIdentifier, fetchLimit))
-			}
-
 			return HistoricLogDatabase.fetchEntries(
 				in: context,
 				viewIdentifier: viewIdentifier,
 				ascending: true,
 				fetchLimit: fetchLimit,
-				lowestEntryIdentifier: bounds.lowest,
-				highestEntryIdentifier: bounds.highest,
+				lowestEntryIdentifier: entryIdentifier > fetchLimit ? entryIdentifier - fetchLimit : 0,
+				highestEntryIdentifier: entryIdentifier > 0 ? entryIdentifier - 1 : 0,
 				limitToDate: limitToDate
-			)
-		}
-	}
-
-	func fetchEntries(
-		forView viewIdentifier: String,
-		afterUniqueIdentifier uniqueIdentifierAfter: String,
-		beforeUniqueIdentifier uniqueIdentifierBefore: String,
-		fetchLimit: UInt
-	) async -> [HistoricLogEntry] {
-		guard let context = await context(forView: viewIdentifier) else { return [] }
-
-		return await context.perform {
-			let first = HistoricLogDatabase.entryIdentifier(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				uniqueIdentifier: uniqueIdentifierAfter
-			)
-			let second = HistoricLogDatabase.entryIdentifier(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				uniqueIdentifier: uniqueIdentifierBefore
-			)
-
-			guard
-				first != HistoricLogDatabase.missingEntryIdentifier,
-				second != HistoricLogDatabase.missingEntryIdentifier
-			else { return [] }
-
-			return HistoricLogDatabase.fetchEntries(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				ascending: true,
-				fetchLimit: fetchLimit,
-				lowestEntryIdentifier: saturatedAdd(first, 1),
-				highestEntryIdentifier: second > 0 ? second - 1 : 0,
-				limitToDate: nil
 			)
 		}
 	}
@@ -502,16 +444,25 @@ actor HistoricLogStore {
 	}
 }
 
-/// Which side of a known entry a relative fetch reads.
-nonisolated enum FetchDirection: Sendable { // nonisolated: value
-	case before
-	case after
-}
-
 /// Saturating addition. A free function so the Core Data helpers, which run
 /// on a context's queue rather than on the actor, can use it too.
 nonisolated func saturatedAdd(_ lhs: UInt, _ rhs: UInt) -> UInt { // nonisolated: pure
 	let (result, overflow) = lhs.addingReportingOverflow(rhs)
 
 	return overflow ? UInt.max : result
+}
+
+/// Whether the store's database opened, and what stopped it when it did not.
+nonisolated enum HistoricLogOpenOutcome: Sendable { // nonisolated: value
+	case opened
+	/// What to tell the reader, when the failure came with a description.
+	case failed(reason: String?)
+
+	var isOpen: Bool {
+		if case .opened = self {
+			true
+		} else {
+			false
+		}
+	}
 }

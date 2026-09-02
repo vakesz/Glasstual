@@ -46,6 +46,37 @@ enum OnboardingTextSize: UInt, CaseIterable, Identifiable {
 	}
 }
 
+/// The two transcript appearances the appearance step offers.
+enum OnboardingTranscriptStyle: CaseIterable, Identifiable {
+	case bubbles
+	case lines
+
+	var id: Self {
+		self
+	}
+
+	var theme: TranscriptTheme {
+		switch self {
+		case .bubbles: .bubbles
+		case .lines: .lines
+		}
+	}
+
+	var title: String {
+		switch self {
+		case .bubbles: OnboardingStrings.Appearance.bubblesTitle
+		case .lines: OnboardingStrings.Appearance.linesTitle
+		}
+	}
+
+	var summary: String {
+		switch self {
+		case .bubbles: OnboardingStrings.Appearance.bubblesDescription
+		case .lines: OnboardingStrings.Appearance.linesDescription
+		}
+	}
+}
+
 enum OnboardingStep: Int, CaseIterable, Identifiable {
 	case identity
 	case appearance
@@ -85,7 +116,7 @@ final class OnboardingSettings {
 	var realName = ""
 	var alternateNickname = ""
 
-	var styleName = "Bubbles"
+	var transcriptStyle: OnboardingTranscriptStyle = .bubbles
 	var textSize: OnboardingTextSize = .medium
 	var appearance: PreferredAppearance = .inherited
 

@@ -67,14 +67,32 @@ struct Capability: Sendable {
 	let dependencies: [String]
 	let negotiation: CapabilityNegotiation
 
-	static func capability(named name: String, identifier: ClientIRCv3SupportedCapability) -> Capability {
-		capability(named: name, identifier: identifier, requestedByDefault: true)
+	/** Where the capability is defined: an IRCv3 extension page, or the ZNC
+	 documentation for a bouncer capability.
+
+	 It is a protocol-level constant rather than something a view holds, so the
+	 declaration that names a capability is also what says where it comes from.
+	 A capability the client requests without a published document has none. */
+	let specification: URL?
+
+	static func capability(
+		named name: String,
+		identifier: ClientIRCv3SupportedCapability,
+		specification: URL? = nil
+	) -> Capability {
+		capability(
+			named: name,
+			identifier: identifier,
+			requestedByDefault: true,
+			specification: specification
+		)
 	}
 
 	static func capability(
 		named name: String,
 		identifier: ClientIRCv3SupportedCapability,
-		requestedByDefault: Bool
+		requestedByDefault: Bool,
+		specification: URL? = nil
 	) -> Capability {
 		Capability(
 			name: name,
@@ -82,7 +100,8 @@ struct Capability: Sendable {
 			requestedByDefault: requestedByDefault,
 			preference: .always,
 			dependencies: [],
-			negotiation: .automatic
+			negotiation: .automatic,
+			specification: specification
 		)
 	}
 
@@ -92,7 +111,8 @@ struct Capability: Sendable {
 		requestedByDefault: Bool,
 		preference: CapabilityPreference = .always,
 		dependencies: [String] = [],
-		negotiation: CapabilityNegotiation = .automatic
+		negotiation: CapabilityNegotiation = .automatic,
+		specification: URL? = nil
 	) {
 		precondition(name.isEmpty == false)
 
@@ -105,6 +125,7 @@ struct Capability: Sendable {
 		self.preference = preference
 		self.dependencies = dependencies
 		self.negotiation = negotiation
+		self.specification = specification
 	}
 }
 
@@ -135,7 +156,20 @@ struct CapabilityRegistry: Sendable {
 	}
 
 	func isCapabilitySupported(_ name: String, preferences: ClientPreferences) -> Bool {
-		capability(named: name)?.preference.isEnabled(in: preferences) ?? false
+		guard let capability = capability(named: name) else {
+			return false
+		}
+
+		return isEnabled(capability, preferences: preferences)
+	}
+
+	/** Whether the user leaves the capability available at all: the preference
+	 that gates it is on, and its name is not one of the capabilities switched
+	 off in Settings. Both are read here so that a request and a support check
+	 can never disagree about what the user asked for. */
+	private func isEnabled(_ capability: Capability, preferences: ClientPreferences) -> Bool {
+		capability.preference.isEnabled(in: preferences)
+			&& preferences.disabledCapabilities.contains(capability.name) == false
 	}
 
 	/** The capabilities a `CAP LS`/`NEW` line offers, keyed by name.
@@ -195,7 +229,7 @@ struct CapabilityRegistry: Sendable {
 	) -> Bool {
 		guard depth <= 8,
 		      capability.requestedByDefault,
-		      capability.preference.isEnabled(in: preferences),
+		      isEnabled(capability, preferences: preferences),
 		      offered[capability.name] != nil
 		else {
 			return false

@@ -98,30 +98,38 @@ struct NotificationControllerTests {
 		) == false)
 	}
 
+	/** The flags are written as an alternating pattern first. Comparing each
+	 lookup against the key it is meant to read passes for a lookup wired to the
+	 wrong key whenever the two keys agree, which at the shipped defaults they
+	 do for every boolean pair here. */
 	@Test("A lookup with no channel answers with the global preference")
 	func preferenceLookupsWithNilChannelMatchGlobalPreferences() {
 		let controller = notificationController()
 		let eventType = NotificationEvent.highlight
+		let sound = Preferences.Notifications.sound(eventType)
+		let flags: [NotificationSetting] = [
+			.enabled, .speak, .disabledWhileAway, .bounceDockIcon, .bounceDockIconRepeatedly,
+		]
+		let storedSound = sound.storedValue
+		let storedFlags = flags.map { Preferences.Notifications.flag(eventType, $0).storedValue }
+		defer {
+			sound.storedValue = storedSound
+			for (flag, stored) in zip(flags, storedFlags) {
+				Preferences.Notifications.flag(eventType, flag).storedValue = stored
+			}
+		}
 
-		#expect(controller.sound(forEvent: eventType, in: nil) == Preferences.Notifications.sound(eventType)
-			.storedValue)
-		#expect(controller.speakEvent(eventType, in: nil) == Preferences.Notifications.flag(eventType, .speak).value)
-		#expect(
-			controller.notificationEnabled(forEvent: eventType, in: nil)
-				== Preferences.Notifications.flag(eventType, .enabled).value
-		)
-		#expect(
-			controller.disabledWhileAway(forEvent: eventType, in: nil)
-				== Preferences.Notifications.flag(eventType, .disabledWhileAway).value
-		)
-		#expect(
-			controller.bounceDockIcon(forEvent: eventType, in: nil)
-				== Preferences.Notifications.flag(eventType, .bounceDockIcon).value
-		)
-		#expect(
-			controller.bounceDockIconRepeatedly(forEvent: eventType, in: nil)
-				== Preferences.Notifications.flag(eventType, .bounceDockIconRepeatedly).value
-		)
+		sound.value = "Glass"
+		for (offset, flag) in flags.enumerated() {
+			Preferences.Notifications.flag(eventType, flag).value = offset.isMultiple(of: 2)
+		}
+
+		#expect(controller.sound(forEvent: eventType, in: nil) == "Glass")
+		#expect(controller.notificationEnabled(forEvent: eventType, in: nil))
+		#expect(controller.speakEvent(eventType, in: nil) == false)
+		#expect(controller.disabledWhileAway(forEvent: eventType, in: nil))
+		#expect(controller.bounceDockIcon(forEvent: eventType, in: nil) == false)
+		#expect(controller.bounceDockIconRepeatedly(forEvent: eventType, in: nil))
 	}
 
 	@Test("Suppressing notifications is a plain toggle")

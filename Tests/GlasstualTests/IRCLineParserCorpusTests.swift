@@ -45,7 +45,7 @@ import Testing
 /// malformed-input and message-tag edge cases.
 @MainActor
 struct IRCLineParserCorpusTests {
-	nonisolated struct LineCase: Sendable {
+	nonisolated struct LineCase: Sendable { // nonisolated: value
 		let line: String
 		let tagSection: String?
 		let sender: String?
@@ -70,7 +70,7 @@ struct IRCLineParserCorpusTests {
 		}
 	}
 
-	nonisolated struct TagCase: Sendable {
+	nonisolated struct TagCase: Sendable { // nonisolated: value
 		let section: String
 		let name: String
 		let value: String?
@@ -84,7 +84,7 @@ struct IRCLineParserCorpusTests {
 
 	// MARK: - Structure
 
-	nonisolated static let wellFormedLines: [LineCase] = [
+	nonisolated static let wellFormedLines: [LineCase] = [ // nonisolated: let
 		LineCase("PING :12345", command: "PING", parameters: ["12345"]),
 		LineCase("PING", command: "PING"),
 		LineCase(
@@ -170,7 +170,7 @@ struct IRCLineParserCorpusTests {
 
 	/// Parameters are separated by `0x20` and by nothing else. Everything below
 	/// splits or merges tokens incorrectly today.
-	nonisolated static let splittingLines: [LineCase] = [
+	nonisolated static let splittingLines: [LineCase] = [ // nonisolated: let
 		/* U+00A0 NO-BREAK SPACE is a channel-name character, not a separator. */
 		LineCase(
 			":nick!user@host PRIVMSG #ch\u{00A0}an :hi",
@@ -201,7 +201,7 @@ struct IRCLineParserCorpusTests {
 
 	// MARK: - Message tags
 
-	nonisolated static let tagCases: [TagCase] = [
+	nonisolated static let tagCases: [TagCase] = [ // nonisolated: let
 		TagCase("msgid=abc", "msgid", "abc"),
 		TagCase("account=alice", "account", "alice"),
 		/* A tag with no "=" is present with an empty value. */
@@ -312,7 +312,7 @@ struct IRCMessageTagCorpusTests {
 		#expect(message.isHistoric == false)
 	}
 
-	nonisolated struct BatchCase: Sendable {
+	nonisolated struct BatchCase: Sendable { // nonisolated: value
 		let tagSection: String
 		let token: String?
 

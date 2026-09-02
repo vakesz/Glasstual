@@ -54,6 +54,38 @@ enum ScriptExecutionSupport {
 	/// `errAEEventNotHandled`: the script has no handler under that name.
 	static let handlerNotDefinedError = -1708
 
+	/// How much of a Unix script's standard output is kept. Everything past it
+	/// is read and dropped: the pipe still has to be drained so the script can
+	/// finish, but a runaway script must not grow the buffer without bound.
+	nonisolated static let maximumOutputBytes = 1 << 20 // nonisolated: let
+
+	private nonisolated static let outputChunkBytes = 64 * 1024 // nonisolated: let
+
+	/// Reads `handle` to end of file, keeping at most ``maximumOutputBytes``.
+	///
+	/// This runs while the script is still executing. A pipe holds a fixed
+	/// amount (64 KB on macOS); a script that writes more blocks in `write(2)`
+	/// until something reads, so a reader that waits for termination first
+	/// would wedge the script and never start.
+	@concurrent
+	static func readOutput(from handle: FileHandle) async -> Data {
+		var accumulated = Data()
+
+		while true {
+			guard let chunk = try? handle.read(upToCount: outputChunkBytes), chunk.isEmpty == false else {
+				break
+			}
+
+			let remaining = maximumOutputBytes - accumulated.count
+
+			if remaining > 0 {
+				accumulated.append(chunk.prefix(remaining))
+			}
+		}
+
+		return accumulated
+	}
+
 	static func appleEvent(handler: String, input: String, target: String?) -> NSAppleEventDescriptor {
 		let parameters = NSAppleEventDescriptor.list()
 		parameters.insert(NSAppleEventDescriptor(string: input), at: 1)
@@ -103,7 +135,7 @@ extension IRCClient {
 		let input = inputString.isEmpty ? "(no input)" : inputString
 		printDebugInformation(
 			IRCDiagnosticStrings.scriptFailure(
-				filename: (path as NSString).lastPathComponent,
+				filename: URL(fileURLWithPath: path).lastPathComponent,
 				input: input,
 				description: description
 			)
@@ -113,9 +145,9 @@ extension IRCClient {
 
 	func sendGlasstualCmdScriptResult(_ result: String, toChannel channelName: String?) {
 		let destination: IRCTreeItem? = if let channelName {
-			(findChannel(channelName) as AnyObject?) as? IRCTreeItem
+			findChannel(channelName)
 		} else {
-			(self as AnyObject) as? IRCTreeItem
+			self
 		}
 		guard let destination else {
 			scriptExecutionLogger.fault("A script returned a result but its destination no longer exists")
@@ -227,13 +259,18 @@ extension IRCClient {
 			let pipe = Pipe()
 			task.standardOutput = pipe.fileHandleForWriting
 			let arguments = [target ?? ""] + input.components(separatedBy: .whitespaces)
+			let readHandle = pipe.fileHandleForReading
+			let writeHandle = pipe.fileHandleForWriting
+			// Start draining before the script runs. Reading only once it has
+			// terminated deadlocks a script whose output overflows the pipe.
+			let output = Task { await ScriptExecutionSupport.readOutput(from: readHandle) }
 			task.execute(withArguments: arguments) { [weak self] error in
 				// The task holds the only other reference to the write end; closing
-				// it here is what lets the read below see EOF instead of blocking.
-				try? pipe.fileHandleForWriting.close()
-				let data = pipe.fileHandleForReading.readDataToEndOfFile()
-				try? pipe.fileHandleForReading.close()
+				// it here is what lets the drain above see EOF instead of blocking.
+				try? writeHandle.close()
 				Task { @MainActor [weak self] in
+					let data = await output.value
+					try? readHandle.close()
 					guard let self else { return }
 					if let error {
 						outputDescription(for: error, forGlasstualCmdScriptAtPath: path, inputString: input)

@@ -9,8 +9,8 @@ import Testing
  that swap land on the same person. */
 @MainActor
 struct IRCUserDuplicateTests {
-	@Test("A copy carries every field and stays the same person")
-	func copyCarriesEveryField() throws {
+	@Test("An edit made through the directory carries every field and stays the same person")
+	func editingThroughTheDirectoryCarriesEveryField() throws {
 		let client = GLTTestClient()
 		let user = client.findUserOrCreate("Alice")
 
@@ -25,30 +25,20 @@ struct IRCUserDuplicateTests {
 		}
 
 		let stored = try #require(client.findUser("Alice"))
-		let copy = stored
 
-		#expect(copy.id == user.id)
-		#expect(copy.nickname == "Alice")
-		#expect(copy.username == "alice")
-		#expect(copy.address == "example.net")
-		#expect(copy.realName == "Alice")
-		#expect(copy.account == "alice-account")
-		#expect(copy.isIRCop)
-		#expect(copy.isBot)
-		#expect(copy.isAway)
-	}
+		#expect(stored.id == user.id)
+		#expect(stored.nickname == "Alice")
+		#expect(stored.username == "alice")
+		#expect(stored.address == "example.net")
+		#expect(stored.realName == "Alice")
+		#expect(stored.account == "alice-account")
+		#expect(stored.isIRCop)
+		#expect(stored.isBot)
+		#expect(stored.isAway)
 
-	@Test("Editing a copy does not touch the stored user")
-	func copiesAreIndependent() {
-		let client = GLTTestClient()
-		let user = client.findUserOrCreate("Alice")
-
-		var copy = user
-		copy.nickname = "Bob"
-
-		#expect(user.nickname == "Alice")
-		#expect(client.findUser("Alice") == user)
-		#expect(client.findUser("Bob") == nil)
+		/* The caller's own handle still holds what it did before the edit, so
+		 the directory is the only place the new state lives. */
+		#expect(user.username == nil)
 	}
 
 	@Test("Renaming through the directory rekeys it and keeps the person")
@@ -84,22 +74,6 @@ struct IRCUserDuplicateTests {
 		#expect(memberList.memberList.first?.modes == "o")
 		#expect(client.userAssociated(user, with: channel)?.modes == "o")
 		#expect(member.modes.isEmpty)
-	}
-
-	@Test("A member copy keeps the same person and carries its own modes")
-	func memberCopyKeepsTheUser() {
-		let client = GLTTestClient()
-		let user = client.findUserOrCreate("Alice")
-		var member = ChannelUser(user: user, prefixes: client.currentUserPrefixes)
-		member.modes = "ov"
-
-		var copy = member
-		copy.modes = "v"
-
-		#expect(copy.id == member.id)
-		#expect(copy.user == user)
-		#expect(member.modes == "ov")
-		#expect(copy.modes == "v")
 	}
 
 	@Test("A rename reaches the member every channel holds for the person")

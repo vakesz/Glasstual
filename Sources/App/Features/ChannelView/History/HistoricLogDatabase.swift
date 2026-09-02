@@ -48,7 +48,7 @@ import os
 /// model are not, so both are built from the context inside the block.
 /// Locates this framework's bundle. `Bundle(for:)` needs a class to point at;
 /// this one exists for no other reason.
-private final nonisolated class HistoricLogStoreBundleToken {} // nonisolated: value
+private final nonisolated class HistoricLogStoreBundleToken {} // nonisolated: immutable
 
 /// Where the name of the database file is kept between launches.
 nonisolated protocol HistoricLogFilenameStoring: Sendable { // nonisolated: value
@@ -60,7 +60,7 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 	static let entityName = "LogLine2"
 
 	static let logger = Logger(
-		subsystem: "com.vakesz.glasstual",
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "Storage"
 	)
 
@@ -86,14 +86,16 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 
 	// MARK: - Stack
 
-	static func makeStack(at url: URL) -> NSManagedObjectContext? {
+	/// Builds the stack, or throws what stopped it. The reason travels: it is
+	/// the only thing the failure alert has to tell the reader.
+	static func makeStack(at url: URL) throws -> NSManagedObjectContext {
 		guard
 			let modelURL = modelBundle.url(forResource: modelName, withExtension: "momd"),
 			let model = NSManagedObjectModel(contentsOf: modelURL)
 		else {
 			logger.error("Historic log model is missing")
 
-			return nil
+			throw CocoaError(.fileNoSuchFile)
 		}
 
 		let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
@@ -108,7 +110,7 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		} catch {
 			logger.error("Error creating persistent store: \(error.localizedDescription, privacy: .public)")
 
-			return nil
+			throw error
 		}
 
 		let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -175,7 +177,9 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		request.includesPropertyValues = true
 		request.returnsObjectsAsFaults = false
 		request.resultType = resultType
-		request.sortDescriptors = [NSSortDescriptor(key: "entryCreationDate", ascending: ascending)]
+		request.sortDescriptors = [
+			NSSortDescriptor(key: HistoricLogAttribute.entryCreationDate.rawValue, ascending: ascending),
+		]
 
 		return request
 	}
@@ -235,8 +239,6 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 
 		do {
 			let objects = try context.fetch(request)
-
-			logger.debug("\(objects.count) results fetched for view \(viewIdentifier, privacy: .public)")
 
 			return objects.compactMap { HistoricLogEntry(managedObject: $0) }
 		} catch {
@@ -326,8 +328,11 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 			NSNumber(value: entryIdentifier),
 			forKey: HistoricLogAttribute.entryIdentifier.rawValue
 		)
+		/* The line's own timestamp, not the moment it reached the database: the
+		 fetch template both sorts and filters on this column, and a chat-history
+		 replay inserts lines that are hours old. */
 		entry.setValue(
-			NSNumber(value: Date().timeIntervalSince1970),
+			NSNumber(value: logLine.creationDate),
 			forKey: HistoricLogAttribute.entryCreationDate.rawValue
 		)
 		entry.setValue(logLine.viewIdentifier, forKey: HistoricLogAttribute.logLineViewIdentifier.rawValue)
@@ -337,6 +342,117 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 			NSNumber(value: logLine.sessionIdentifier),
 			forKey: HistoricLogAttribute.sessionIdentifier.rawValue
 		)
+	}
+
+	// MARK: - Re-stamping
+
+	/// Records that the stored rows carry the line's own time. Versioned so a
+	/// later correction can run its own pass over a store this one finished.
+	static let restampMetadataKey = "restampedEntryCreationDate"
+	/// The re-stamp this build performs.
+	static let restampVersion = 1
+
+	/// Rows read and rewritten between saves. Large enough that a full store is
+	/// a handful of transactions, small enough that none of them is long.
+	private static let restampBatchSize = 500
+
+	/// How far a stamp may sit from the line's own time and still be left alone.
+	/// Earlier versions wrote the insert time, which is later than the line's
+	/// time by anything from milliseconds to hours.
+	private static let restampTolerance: TimeInterval = 1
+
+	/// Whether this store still has to be re-stamped.
+	static func needsEntryCreationDateRestamp(in context: NSManagedObjectContext) -> Bool {
+		guard let coordinator = context.persistentStoreCoordinator,
+		      let store = coordinator.persistentStores.first
+		else { return false }
+
+		let recorded = coordinator.metadata(for: store)[restampMetadataKey] as? NSNumber
+
+		return (recorded?.intValue ?? 0) < restampVersion
+	}
+
+	/** Rewrites `entryCreationDate` from the line's own `receivedAt`.
+
+	 Rows written before the insert started storing the line's time carry the
+	 moment they reached the database, so they sort against newer rows by a
+	 different clock until they age out. This runs once, the first time the store
+	 opens after the change, and records itself in the store's metadata. A pass
+	 that throws leaves the flag unwritten, so the next launch tries again.
+	 */
+	static func restampEntryCreationDates(in context: NSManagedObjectContext) {
+		guard needsEntryCreationDateRestamp(in: context) else { return }
+
+		do {
+			let restamped = try restampRows(in: context)
+
+			try recordRestampCompletion(in: context)
+
+			logger.info("Re-stamped \(restamped) historic rows with the line's own time")
+		} catch {
+			context.reset()
+
+			logger.error("Failed to re-stamp historic rows: \(error.localizedDescription, privacy: .public)")
+		}
+	}
+
+	/// The identifiers are read first and the rows fetched a batch at a time, so
+	/// no single transaction holds the whole store.
+	private static func restampRows(in context: NSManagedObjectContext) throws -> Int {
+		let request = NSFetchRequest<NSManagedObjectID>(entityName: entityName)
+		request.resultType = .managedObjectIDResultType
+		request.includesPendingChanges = false
+
+		let objectIDs = try context.fetch(request)
+		var restamped = 0
+
+		for batch in stride(from: 0, to: objectIDs.count, by: restampBatchSize) {
+			let upperBound = min(batch + restampBatchSize, objectIDs.count)
+
+			for objectID in objectIDs[batch ..< upperBound] where restamp(objectID, in: context) {
+				restamped += 1
+			}
+
+			if context.hasChanges {
+				try context.save()
+			}
+
+			context.reset()
+		}
+
+		return restamped
+	}
+
+	/// Whether the row was rewritten. A row whose archive cannot be decoded is
+	/// left as it stands: there is nothing better to stamp it with.
+	private static func restamp(_ objectID: NSManagedObjectID, in context: NSManagedObjectContext) -> Bool {
+		guard let object = try? context.existingObject(with: objectID),
+		      let entry = HistoricLogEntry(managedObject: object),
+		      let line = LogLine(data: entry.data)
+		else { return false }
+
+		let receivedAt = line.receivedAt.timeIntervalSince1970
+
+		guard abs(receivedAt - entry.creationDate) > restampTolerance else { return false }
+
+		object.setValue(NSNumber(value: receivedAt), forKey: HistoricLogAttribute.entryCreationDate.rawValue)
+
+		return true
+	}
+
+	/// Core Data holds store metadata in memory until a save carries it down, so
+	/// the flag is written through a save of its own rather than left to the
+	/// next one.
+	private static func recordRestampCompletion(in context: NSManagedObjectContext) throws {
+		guard let coordinator = context.persistentStoreCoordinator,
+		      let store = coordinator.persistentStores.first
+		else { return }
+
+		var metadata = coordinator.metadata(for: store)
+		metadata[restampMetadataKey] = NSNumber(value: restampVersion)
+		coordinator.setMetadata(metadata, for: store)
+
+		try context.save()
 	}
 
 	static func quickSave(_ context: NSManagedObjectContext) {
@@ -400,7 +516,7 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		}
 
 		identifierRequest.resultType = .dictionaryResultType
-		identifierRequest.propertiesToFetch = ["logLineUniqueIdentifier"]
+		identifierRequest.propertiesToFetch = [HistoricLogAttribute.logLineUniqueIdentifier.rawValue]
 		/* A dictionary result with a batch size has to fetch the object ID too,
 		 and Core Data logs a complaint and drops the batching when it does not.
 		 Nothing here wants batching: the identifiers are read once. */
@@ -410,7 +526,9 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		identifierRequest.sortDescriptors = nil
 
 		do {
-			return try context.fetch(identifierRequest).compactMap { $0["logLineUniqueIdentifier"] as? String }
+			return try context.fetch(identifierRequest).compactMap {
+				$0[HistoricLogAttribute.logLineUniqueIdentifier.rawValue] as? String
+			}
 		} catch {
 			logger.error("Error occurred fetching identifiers: \(error.localizedDescription, privacy: .public)")
 

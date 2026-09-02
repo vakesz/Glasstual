@@ -50,17 +50,16 @@ extension ClientPreferences {
 		var snapshot = ClientPreferences()
 
 		snapshot.autojoinDelayAfterIdentification = Preferences.Connection.autojoinDelayAfterIdentification.value
-		snapshot.autojoinDelayBetweenChannelJoins = Preferences.Connection.autojoinDelayBetweenChannelJoins.value
-		snapshot.autojoinMaximumChannelJoins = Preferences.Connection.autojoinMaximumChannelJoins.value
 		snapshot.autojoinOnInvite = Preferences.Connection.autojoinOnInvite.value
 		snapshot.rejoinOnKick = Preferences.Connection.rejoinOnKick.value
 		snapshot.appNapEnabled = TextualPreferences.appNapEnabled()
 		snapshot.preferModernCiphers = Preferences.Connection.preferModernCiphers.value
 		snapshot.disconnectOnSleep = Preferences.Connection.disconnectOnSleep.value
 		snapshot.awayOnScreenSleep = Preferences.Connection.awayOnScreenSleep.value
-		snapshot.enableEchoMessageCapability = TextualPreferences.enableEchoMessageCapability()
+		snapshot.enableEchoMessageCapability = Preferences.Connection.echoMessageCapability.value
 		snapshot.requestChatHistory = Preferences.Connection.requestChatHistory.value
 		snapshot.synchronizeReadMarkers = Preferences.Connection.synchronizeReadMarkers.value
+		snapshot.disabledCapabilities = Set(Preferences.Connection.disabledCapabilities.value)
 		snapshot.rememberServerListQueryStates = Preferences.Appearance.rememberQueryStates.value
 		snapshot.trackUserAwayStatusMaximumChannelSize = Preferences.Appearance
 			.trackUserAwayStatusMaximumChannelSize
@@ -88,13 +87,13 @@ extension ClientPreferences {
 		snapshot.displayPublicMessageCountOnDockBadge = Preferences.Notifications
 			.publicMessageCountOnDockBadge
 			.value
-		snapshot.memberListSortFavorsServerStaff = Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue
-		snapshot.disableNicknameColorHashing = Preferences.Messages.disableNicknameColorHashing.detachedValue
-		snapshot.showInlineMedia = Preferences.Messages.showInlineMedia.detachedValue
+		snapshot.memberListSortFavorsServerStaff = Preferences.Appearance.memberListSortFavorsServerStaff.value
+		snapshot.disableNicknameColorHashing = Preferences.Messages.disableNicknameColorHashing.value
+		snapshot.showInlineMedia = Preferences.Messages.showInlineMedia.value
 		snapshot.soundIsMuted = Preferences.Notifications.soundIsMuted.value
 
 		snapshot.highlightCurrentNickname = Preferences.Highlights.trackLocalNickname.value
-		snapshot.highlightMatchingMethod = Preferences.Highlights.matchingMethod.detachedValue
+		snapshot.highlightMatchingMethod = Preferences.Highlights.matchingMethod.value
 		snapshot.highlightMatchKeywords = TextualPreferences.highlightMatchKeywords() ?? []
 		snapshot.highlightExcludeKeywords = TextualPreferences.highlightExcludeKeywords() ?? []
 		snapshot.logHighlights = Preferences.Logging.logHighlights.value

@@ -147,48 +147,19 @@ public extension IRCClient {
 		// A TAGMSG has no presentation destination until its channel or query
 		// exists. In particular, typing tags must not create UI implicitly.
 		guard let channel else { return }
-		let candidate: AnyObject = channel
-		guard let nativeItem = candidate as? TreeItem else {
-			assertionFailure("Inbound tag target must bridge to TreeItem")
-			return
-		}
-		guard let item = (nativeItem as AnyObject) as? IRCTreeItem else {
-			assertionFailure("TreeItem must bridge to IRCTreeItem")
-			return
-		}
-		deliverTags(
-			clientTags,
-			fromSender: sender,
-			toTarget: target,
-			in: item,
-			timestamp: message.receivedAt,
-			messageIdentifier: message.messageIdentifier,
-			account: message.senderAccount
-		)
+		deliverTags(clientTags, fromSender: sender, in: channel)
 		_ = postReceivedMessage(message)
 	}
 
+	/// Hands the one client tag pair that has a destination — a reaction — to
+	/// the view drawing `item`.
 	@MainActor
-	func deliverTags(
-		_ clientTags: [String: String],
-		fromSender sender: String,
-		toTarget _: String,
-		in item: IRCTreeItem,
-		timestamp _: Date,
-		messageIdentifier _: String?,
-		account _: String?
-	) {
-		guard let nativeItem = (item as AnyObject) as? TreeItem else {
-			assertionFailure("IRCTreeItem must bridge to TreeItem")
-			return
-		}
+	func deliverTags(_ clientTags: [String: String], fromSender sender: String, in item: IRCTreeItem) {
+		guard let reaction = clientTags["draft/react"], !reaction.isEmpty,
+		      let reactedTo = clientTags["draft/reply"], !reactedTo.isEmpty,
+		      !sender.isEmpty
+		else { return }
 
-		if let reaction = clientTags["draft/react"], !reaction.isEmpty,
-		   let reactedTo = clientTags["draft/reply"], !reactedTo.isEmpty,
-		   !sender.isEmpty
-		{
-			nativeItem.presentation?
-				.noteReaction(reaction, fromNickname: sender, toMessageIdentifier: reactedTo)
-		}
+		item.presentation?.noteReaction(reaction, fromNickname: sender, toMessageIdentifier: reactedTo)
 	}
 }

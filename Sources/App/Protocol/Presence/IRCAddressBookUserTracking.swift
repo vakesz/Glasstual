@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -54,13 +54,22 @@ public extension Notification.Name {
 	)
 }
 
+/// The nickname a tracking notification is about.
+public nonisolated let addressBookTrackingNicknameKey = "nickname" // nonisolated: let
+
+/// The `IRCAddressBookUserTrackingStatus` raw value a status-change
+/// notification carries.
+public nonisolated let addressBookTrackingStatusKey = "status" // nonisolated: let
+
 public final class AddressBookUserTrackingContainer: NSObject {
 	public private(set) weak var client: IRCClient?
 
 	private var availabilityByNickname: [String: Bool] = [:]
 
-	public var trackedUsers: [String: NSNumber] {
-		availabilityByNickname.mapValues(NSNumber.init(value:))
+	/// Every tracked nickname, as added, against whether that person is known
+	/// to be online.
+	public var trackedUsers: [String: Bool] {
+		availabilityByNickname
 	}
 
 	@available(*, unavailable)
@@ -87,10 +96,6 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		}
 
 		return status(ofUser: nickname)
-	}
-
-	public func storedStatus(ofUser nickname: String) -> IRCAddressBookUserTrackingStatus {
-		availabilityByNickname[nickname] == true ? .available : .notAvailable
 	}
 
 	public func addTrackedUser(_ nickname: String) {
@@ -142,7 +147,10 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		NotificationCenter.default.post(
 			name: .addressBookTrackingStatusChanged,
 			object: self,
-			userInfo: ["nickname": nickname, "status": NSNumber(value: newStatus.rawValue)]
+			userInfo: [
+				addressBookTrackingNicknameKey: nickname,
+				addressBookTrackingStatusKey: newStatus.rawValue,
+			]
 		)
 	}
 
@@ -183,7 +191,7 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		NotificationCenter.default.post(
 			name: name,
 			object: self,
-			userInfo: ["nickname": nickname]
+			userInfo: [addressBookTrackingNicknameKey: nickname]
 		)
 	}
 }

@@ -198,15 +198,16 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		modeObjects
 	}
 
+	/// The list modes this container refuses to hold, because their contents
+	/// belong to the ban-list sheet rather than to the channel's mode string.
+	/// A list the server does not support contributes no symbol at all.
 	private var unwantedModes: [String] {
-		let supportInfo = client?.supportInfo
+		guard let supportInfo = client?.supportInfo else {
+			return []
+		}
 
-		return [
-			supportInfo?.modeSymbol(forList: .ban) ?? "not supported: b",
-			supportInfo?.modeSymbol(forList: .banException) ?? "not supported: e",
-			supportInfo?.modeSymbol(forList: .inviteException) ?? "not supported: I",
-			supportInfo?.modeSymbol(forList: .quiet) ?? "not supported: q",
-		]
+		return [IRCISupportInfoListType.ban, .banException, .inviteException, .quiet]
+			.compactMap { supportInfo.modeSymbol(forList: $0) }
 	}
 
 	private func modeIsPermitted(_ modeSymbol: String) -> Bool {

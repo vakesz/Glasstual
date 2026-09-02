@@ -46,8 +46,8 @@ public extension MenuActionCoordinator {
 		case .reply: reply(to: sender)
 		case .react: react(to: sender)
 		case .reactWithOtherEmoji: reactWithOtherEmoji(to: sender)
-		case .markScrollback: objcSelectedViewController()?.mark()
-		case .goToScrollbackMarker: objcSelectedViewController()?.goToMark()
+		case .markScrollback: selectedViewController?.mark()
+		case .goToScrollbackMarker: selectedViewController?.goToMark()
 		case .clearScrollback: clearScrollback()
 		case .increaseFontSize: mainWindow.changeTextSize(true)
 		case .decreaseFontSize: mainWindow.changeTextSize(false)
@@ -104,7 +104,7 @@ public extension MenuActionCoordinator {
 	private func reactWithOtherEmoji(to sender: Any?) {
 		guard let identifier = messageContext(from: sender)?.messageIdentifier,
 		      identifier.isEmpty == false,
-		      let anchorView = objcSelectedViewControllerBackingView()?.view,
+		      let anchorView = selectedBackingView?.view,
 		      let window = anchorView.window
 		else { return }
 
@@ -128,7 +128,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func searchSelectedText() {
-		guard let selection = objcSelectedViewControllerBackingView()?.selection,
+		guard let selection = selectedBackingView?.selection,
 		      selection.isEmpty == false
 		else { return }
 		let pasteboard = NSPasteboard(name: NSPasteboard.Name("Glasstual.Search.\(UUID().uuidString)"))
@@ -137,7 +137,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func lookUpSelectedText() {
-		guard let selection = objcSelectedViewControllerBackingView()?.selection,
+		guard let selection = selectedBackingView?.selection,
 		      selection.isEmpty == false,
 		      let encodedSelection = selection.addingPercentEncoding(
 		      	withAllowedCharacters: CharacterSet.textualPercentEncoded

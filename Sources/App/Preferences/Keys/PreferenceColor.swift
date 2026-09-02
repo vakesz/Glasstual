@@ -37,9 +37,15 @@
 
 import AppKit
 import CocoaExtensions
+import os
 
-/** A colour preference, stored as an archived `NSColor` because that is the
- format the colour wells in the preferences nib have always written.
+private nonisolated let preferenceColorLogger = Logger( // nonisolated: let
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "Preferences"
+)
+
+/** A colour preference, stored as an archived `NSColor`, which is the format
+ already written into every existing preferences file.
 
  Holding the components rather than the archived bytes keeps the declared
  default comparable: two archives of the same colour are not byte-identical
@@ -86,8 +92,19 @@ public nonisolated struct PreferenceColor: PreferenceValue { // nonisolated: val
 		return PreferenceColor(color)
 	}
 
-	public var preferenceObject: Any {
-		(try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)) ?? Data()
+	public var preferenceObject: Any? {
+		do {
+			return try NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)
+		} catch {
+			/* Nothing is written for a colour that will not archive. The empty
+			 `Data` this used to store read back as unarchivable, so the choice
+			 was lost and the store held a blob that shadowed nothing. */
+			preferenceColorLogger.error(
+				"Could not archive a colour preference: \(error.localizedDescription, privacy: .public)"
+			)
+
+			return nil
+		}
 	}
 }
 

@@ -35,14 +35,23 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+import Foundation
 
 public nonisolated extension Notification.Name { // nonisolated: value
 	static let textualUserDefaultsDidChange = Self("TPCPreferencesUserDefaultsDidChangeNotification")
 }
 
-public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolated: value
+/** The application's preference store.
+
+ Nonisolated because a preference is read from both sides of the connection
+ host and from the transcript renderer: `PreferenceKey.detachedDefaults` and
+ `LogController`'s historic-log filename take their own handle through
+ ``suite()``, so the type cannot move onto the main actor. Nothing is shared
+ across a domain to make it safe -- `UserDefaults` is not `Sendable`, and each
+ domain holds a handle of its own -- and the values behind the handles are one
+ suite, which Foundation synchronizes. */
+public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolated: guarded
 	private static let storageSuiteName: String = {
 		#if DEBUG
 			if let reviewSuite = ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_SUITE"],
@@ -66,7 +75,7 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 	public static let container = TextualUserDefaults(storageSuiteName: storageSuiteName)
 
 	/// The suite this instance is bound to, kept because `UserDefaults` does not
-	/// expose it and `persistentDomain(forName:)` needs it.
+	/// expose it and the persisted-value reads need it.
 	public let suiteName: String
 
 	private init(storageSuiteName: String) {
@@ -97,13 +106,39 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 		set(value, forKey: defaultName, postNotification: true)
 	}
 
+	/** What the suite has persisted for `defaultName`, with no fall-through to
+	 the registration domain.
+
+	 Read straight from the current-user, any-host source, which is the one a
+	 suite writes to. `persistentDomain(forName:)` answers the same question but
+	 also opens the any-user, by-host source, which cfprefsd refuses for an app
+	 group container and detaches from with a warning on every write. */
+	public func persistedObject(forKey defaultName: String) -> Any? {
+		CFPreferencesCopyValue(
+			defaultName as CFString,
+			suiteName as CFString,
+			kCFPreferencesCurrentUser,
+			kCFPreferencesAnyHost
+		)
+	}
+
+	/// Every key the suite has persisted, with no registration-domain values.
+	public func persistedValues() -> [String: Any] {
+		CFPreferencesCopyMultiple(
+			nil,
+			suiteName as CFString,
+			kCFPreferencesCurrentUser,
+			kCFPreferencesAnyHost
+		) as? [String: Any] ?? [:]
+	}
+
 	public func set(_ value: Any?, forKey defaultName: String, postNotification: Bool) {
-		/* Compared against the persistent domain, not `object(forKey:)`: the
+		/* Compared against the persisted value, not `object(forKey:)`: the
 		 latter falls through to the registration domain, so writing a value that
 		 happened to equal the shipped default returned early and nothing was
 		 persisted. The user's explicit choice then looked like "never touched"
 		 and would silently follow a change to the default in a later release. */
-		let oldValue = persistentDomain(forName: suiteName)?[defaultName]
+		let oldValue = persistedObject(forKey: defaultName)
 		if let oldValue = oldValue as? NSObject, oldValue.isEqual(value) {
 			return
 		}
@@ -156,27 +191,5 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 		[String: PropertyListValue](
 			propertyList: volatileDomain(forName: UserDefaults.registrationDomain)
 		) ?? [:]
-	}
-}
-
-/** The bindings controller the nibs instantiate, pointed at the application
- container rather than `UserDefaults.standard`.
-
- It takes its own handle on the suite: `NSUserDefaultsController`'s initialisers
- are nonisolated, so they cannot reach the main actor's instance, and they do
- not need to -- the controller is the only observer of the object it holds, and
- the values behind it are the same file. Writes made elsewhere reach bound
- controls through `UserDefaults.didChangeNotification`, which the controller
- already watches. */
-@objc(TPCPreferencesUserDefaultsController)
-public final nonisolated class TextualUserDefaultsController: NSUserDefaultsController { // nonisolated: value
-	required init?(coder _: NSCoder) {
-		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
-	}
-
-	/* `[String: Any]` is NSUserDefaultsController's own signature; the override
-	 exists to ignore both arguments, so nothing reads them. */
-	override public init(defaults _: UserDefaults?, initialValues _: [String: Any]?) {
-		super.init(defaults: TextualUserDefaults.suite(), initialValues: nil)
 	}
 }

@@ -57,8 +57,8 @@ nonisolated enum IRCISupportUserModes { // nonisolated: value
 /// One token of an ISUPPORT line as the server sent it.
 ///
 /// A token is either `KEY=value` or a bare `KEY` standing for a feature the
-/// server merely announces. The cache keeps them verbatim so the raw-traffic
-/// view can replay the line the server actually sent.
+/// server merely announces. The most recent line is kept verbatim so the
+/// numeric handler can spell it back out as the server sent it.
 enum ISupportValue: Sendable, Equatable {
 	case flag
 	case text(String)
@@ -124,6 +124,8 @@ public class IRCISupportInfo: NSObject {
 	public private(set) var maximumTopicLength: UInt = 0
 	public private(set) var maximumModeCount: UInt = 0
 	public private(set) var maximumLineLength: UInt = 0
+	/// `MAXTARGETS`: how many targets any command not named by `TARGMAX` takes,
+	/// or zero when the server never sent one.
 	public private(set) var maximumTargets: UInt = 0
 	public private(set) var maximumSilenceEntries: UInt = 0
 	public private(set) var chatHistoryMaximumLines: UInt = 0
@@ -132,7 +134,7 @@ public class IRCISupportInfo: NSObject {
 	public private(set) var whoxSupported = false
 	public private(set) var utf8Only = false
 	public private(set) var channelNamePrefixes: [String] = ["#"]
-	public private(set) var statusMessageModeSymbols: [String] = []
+	public private(set) var statusMessagePrefixCharacters: [String] = []
 	public private(set) var extendedBanTypes: [String] = []
 	public private(set) var extendedListTokens: [String] = []
 	public private(set) var clientTagDenyList: [String] = []
@@ -143,7 +145,9 @@ public class IRCISupportInfo: NSObject {
 	public private(set) var channelLimits: [Character: UInt] = [:]
 	/// `MAXLIST`, keyed by list mode.
 	public private(set) var maximumListEntries: [Character: UInt] = [:]
-	/// `TARGMAX`, keyed by uppercased command name.
+	/// `TARGMAX`, keyed by uppercased command name. An entry with an empty
+	/// limit is stored as zero; ``maximumTargets(forCommand:)`` says what that
+	/// is worth.
 	public private(set) var maximumTargetsByCommand: [String: UInt] = [:]
 	/// Mode symbol / prefix character pairs from ISUPPORT `PREFIX=`, stored as
 	/// pairs so the two halves can never disagree in length.
@@ -163,6 +167,19 @@ public class IRCISupportInfo: NSObject {
 		didSet { publishUserPrefixTable() }
 	}
 
+	/** The `PREFIX` modes as channel-mode kinds.
+
+	 `CHANMODES` never lists them, so they are folded back in every time the
+	 channel-mode table is replaced. */
+	private var userPrefixModeKinds: [Character: ChannelModeKind] {
+		Dictionary(
+			userModePrefixPairs.compactMap { pair in
+				pair.modeSymbol.first.map { ($0, ChannelModeKind.userPrefix) }
+			},
+			uniquingKeysWith: { first, _ in first }
+		)
+	}
+
 	/// Republishes the values channel members read off the main actor.
 	private func publishUserPrefixTable() {
 		let table = IRCUserPrefixTable(
@@ -173,7 +190,13 @@ public class IRCISupportInfo: NSObject {
 		client?.userPrefixes.withLock { $0 = table }
 	}
 
-	private var cachedConfiguration: [[String: ISupportValue]] = []
+	/** The most recent 005 line, kept verbatim so the numeric handler can spell
+	 back out what the server just said.
+
+	 Only the newest line is ever read, and a server may send 005 for as long as
+	 it stays connected, so the earlier ones are not kept. */
+	private var lastConfiguration: [String: ISupportValue] = [:]
+	private var hasReceivedConfiguration = false
 
 	override public init() {
 		client = nil
@@ -188,22 +211,22 @@ public class IRCISupportInfo: NSObject {
 	}
 
 	public var configurationReceived: Bool {
-		cachedConfiguration.isEmpty == false
+		hasReceivedConfiguration
 	}
 
 	public var stringValueForLastUpdate: String? {
-		guard let configuration = cachedConfiguration.last else {
+		guard lastConfiguration.isEmpty == false else {
 			return nil
 		}
 
-		return stringValue(forConfiguration: configuration)
+		return stringValue(forConfiguration: lastConfiguration)
 	}
 
 	public func reset() {
-		cachedConfiguration = []
+		lastConfiguration = [:]
+		hasReceivedConfiguration = false
 		serverAddress = nil
 		userModePrefixPairs = defaultUserModePrefixPairs
-		channelModeKinds = defaultChannelModeKinds
 
 		for key in Self.resettableSettings() {
 			resetSetting(key)
@@ -212,8 +235,8 @@ public class IRCISupportInfo: NSObject {
 
 	public static func resettableSettings() -> [String] {
 		[
-			"AWAYLEN", "BOT", "CALLERID", "CASEMAPPING", "CHANLIMIT", "CHANNELLEN",
-			"CHANTYPES", "CHATHISTORY", "CLIENTTAGDENY", "DEAF", "ELIST", "EXCEPTS",
+			"AWAYLEN", "BOT", "CALLERID", "CASEMAPPING", "CHANLIMIT", "CHANMODES",
+			"CHANNELLEN", "CHANTYPES", "CHATHISTORY", "CLIENTTAGDENY", "DEAF", "ELIST", "EXCEPTS",
 			"EXTBAN", "INVEX", "KEYLEN", "KICKLEN", "LINELEN", "MAXLIST",
 			"MAXTARGETS", "MODES", "NETWORK", "NICKLEN", "PREFIX", "SAFELIST", "SILENCE",
 			"STATUSMSG", "TARGMAX", "TOPICLEN", "UTF8ONLY", "WHOX",
@@ -278,6 +301,8 @@ public class IRCISupportInfo: NSObject {
 			callerIDModeSymbol = nil
 		case "CASEMAPPING":
 			caseMapping = .rfc1459
+		case "CHANMODES":
+			channelModeKinds = userPrefixModeKinds
 		case "CHANTYPES":
 			channelNamePrefixes = ["#"]
 		case "DEAF":
@@ -289,7 +314,7 @@ public class IRCISupportInfo: NSObject {
 		case "PREFIX":
 			userModePrefixPairs = defaultUserModePrefixPairs
 		case "STATUSMSG":
-			statusMessageModeSymbols = []
+			statusMessagePrefixCharacters = []
 		default:
 			return false
 		}
@@ -336,21 +361,9 @@ public class IRCISupportInfo: NSObject {
 	}
 
 	public func removeCachedSetting(_ key: String) {
-		var updatedConfiguration: [[String: ISupportValue]] = []
-
-		for configuration in cachedConfiguration {
-			var configurationMutable = configuration
-
-			for cachedKey in configuration.keys where cachedKey.caseInsensitiveCompare(key) == .orderedSame {
-				configurationMutable.removeValue(forKey: cachedKey)
-			}
-
-			if configurationMutable.isEmpty == false {
-				updatedConfiguration.append(configurationMutable)
-			}
+		for cachedKey in lastConfiguration.keys where cachedKey.caseInsensitiveCompare(key) == .orderedSame {
+			lastConfiguration.removeValue(forKey: cachedKey)
 		}
-
-		cachedConfiguration = updatedConfiguration
 	}
 
 	/// The tokens whose value is a list of characters, and for which
@@ -407,7 +420,8 @@ public class IRCISupportInfo: NSObject {
 		}
 
 		if configuration.isEmpty == false {
-			cachedConfiguration.append(configuration)
+			lastConfiguration = configuration
+			hasReceivedConfiguration = true
 		}
 	}
 
@@ -423,6 +437,15 @@ public class IRCISupportInfo: NSObject {
 		return channelLimits[prefix] ?? 0
 	}
 
+	/** How many targets the server said `command` takes on one line.
+
+	 Zero means the server said nothing usable: it named no `TARGMAX` entry for
+	 the command, or named one with an empty limit, and sent no `MAXTARGETS`
+	 either. The empty `TARGMAX` limit does mean "no limit" in the specification,
+	 but it arrives as the same zero as silence and is read the same
+	 conservative way, because the two are worth the same to a client: see
+	 ``groupsMultipleTargets(forCommand:)`` for what the client then does.
+	 */
 	public func maximumTargets(forCommand command: String) -> UInt {
 		if let limit = maximumTargetsByCommand[command.uppercased()] {
 			return limit
@@ -431,6 +454,27 @@ public class IRCISupportInfo: NSObject {
 		return maximumTargets
 	}
 
+	/** Whether several targets may ride on one `command`.
+
+	 Only an advertised limit above one earns a comma-separated target list. A
+	 server that advertised nothing (zero) gets one target per line, the same as
+	 one that said `TARGMAX=PRIVMSG:1`: a server that does not take a list
+	 answers `ERR_TOOMANYTARGETS` or silently drops every target after the
+	 first, and the user has no way to tell that the message never arrived. One
+	 line per target always arrives, and costs only lines.
+
+	 `JOIN` does not come through here. A comma-separated channel list is core
+	 `JOIN` syntax rather than an extension, so ``IRCJoinBatching`` fills a line
+	 whether or not the server advertised a `TARGMAX` for it.
+	 */
+	public func groupsMultipleTargets(forCommand command: String) -> Bool {
+		maximumTargets(forCommand: command) > 1
+	}
+
+	/// Splits `targets` into lists no longer than `limit` allows, in order.
+	///
+	/// A `limit` of zero or one puts one target on each line, which is what an
+	/// unadvertised limit means here; see ``groupsMultipleTargets(forCommand:)``.
 	public static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
 		ISupportTokenParser.chunkTargets(targets, limit: limit)
 	}
@@ -569,19 +613,7 @@ public class IRCISupportInfo: NSObject {
 	}
 
 	public func extractStatusMessagePrefix(fromChannelNamed channel: String) -> String {
-		extractCharacters(statusMessageModeSymbols, fromChannelNamed: channel)
-	}
-
-	public func createMode(withSymbol modeSymbol: String) -> ModeInfo {
-		ModeInfo(modeSymbol: modeSymbol)
-	}
-
-	public func createMode(
-		withSymbol modeSymbol: String,
-		modeIsSet: Bool,
-		modeParameter: String?
-	) -> ModeInfo {
-		ModeInfo(modeSymbol: modeSymbol, modeIsSet: modeIsSet, modeParameter: modeParameter)
+		extractCharacters(statusMessagePrefixCharacters, fromChannelNamed: channel)
 	}
 
 	public func isListSupported(_ listType: IRCISupportInfoListType) -> Bool {
@@ -612,7 +644,7 @@ public class IRCISupportInfo: NSObject {
 			return nil
 		}
 
-		if statusMessageModeSymbols.contains(character) == false {
+		if statusMessagePrefixCharacters.contains(character) == false {
 			return nil
 		}
 
@@ -656,7 +688,7 @@ private extension IRCISupportInfo {
 		case "KICKLEN":
 			maximumKickLength = parsedValue
 		case "LINELEN":
-			maximumLineLength = parsedValue
+			maximumLineLength = min(parsedValue, UInt(IRCProtocolLimits.maximumServerLineLength))
 		case "MAXTARGETS":
 			maximumTargets = parsedValue
 		case "MODES":
@@ -677,7 +709,9 @@ private extension IRCISupportInfo {
 		case "CASEMAPPING":
 			parseCaseMapping(value)
 		case "CHANMODES":
-			channelModeKinds = ISupportTokenParser.channelModeKinds(from: value, merging: channelModeKinds)
+			/* A re-sent CHANMODES replaces the table rather than adding to it,
+			 so a shorter one does not leave the modes it dropped behind. */
+			channelModeKinds = ISupportTokenParser.channelModeKinds(from: value, merging: userPrefixModeKinds)
 		case "CHANTYPES":
 			updateChannelNamePrefixes(from: value)
 		case "NETWORK":
@@ -686,7 +720,7 @@ private extension IRCISupportInfo {
 		case "PREFIX":
 			parseUserModeSymbols(value)
 		case "STATUSMSG":
-			statusMessageModeSymbols = value.map(String.init)
+			statusMessagePrefixCharacters = value.map(String.init)
 		default:
 			return false
 		}
@@ -715,9 +749,18 @@ private extension IRCISupportInfo {
 		}
 	}
 
+	/** A token's value as a count.
+
+	 `NSString.integerValue` used to do this, which accepts trailing junk
+	 (`NICKLEN=50abc` read as 50) and saturates at `Int.max` on overflow instead
+	 of rejecting, which is how `LINELEN=99999999999999999999` turned into a
+	 line budget that never split anything. */
 	func positiveInteger(from value: String) -> UInt? {
-		let parsedValue = (value as NSString).integerValue
-		return parsedValue > 0 ? UInt(parsedValue) : nil
+		guard let parsedValue = UInt(value), parsedValue > 0 else {
+			return nil
+		}
+
+		return parsedValue
 	}
 
 	/// An empty `CHANTYPES` is the server saying it supports no channel types
@@ -844,10 +887,13 @@ private extension IRCISupportInfo {
 		userModePrefixPairs = zip(configuration.modeSymbols, configuration.characters)
 			.map { (modeSymbol: $0, character: $1) }
 
-		var updatedChannelModes = channelModeKinds
+		/* A re-sent PREFIX replaces the prefix modes rather than adding to
+		 them, so a mode the server has dropped stops ranking members. What
+		 CHANMODES put in the table is left alone. */
+		var updatedChannelModes = channelModeKinds.filter { $0.value != .userPrefix }
 
-		for modeSymbol in configuration.modeSymbols.compactMap(\.first) {
-			updatedChannelModes[modeSymbol] = .userPrefix
+		for (modeSymbol, kind) in userPrefixModeKinds {
+			updatedChannelModes[modeSymbol] = kind
 		}
 
 		channelModeKinds = updatedChannelModes

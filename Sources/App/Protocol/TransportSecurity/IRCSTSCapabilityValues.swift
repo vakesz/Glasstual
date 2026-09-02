@@ -58,19 +58,17 @@ public struct STSCapabilityValues: Hashable, Sendable, CustomStringConvertible {
 
 			switch key.lowercased() {
 			case "port":
-				if isDecimalNumber(keyValue) {
-					let port = (keyValue as NSString).integerValue
-
-					if port > 0, port <= UInt16.max {
-						result.port = UInt16(port)
-					}
+				/* `UInt16(_:)` reports an out-of-range port by failing, where the
+				 `NSString` conversion this replaced saturated at `Int.max`. */
+				if isDecimalNumber(keyValue), let port = UInt16(keyValue), port > 0 {
+					result.port = port
 				}
 
 				recognizedKey = true
 			case "duration":
-				if isDecimalNumber(keyValue) {
+				if isDecimalNumber(keyValue), let duration = Double(keyValue) {
 					result.hasDuration = true
-					result.duration = (keyValue as NSString).doubleValue
+					result.duration = duration
 				}
 
 				recognizedKey = true

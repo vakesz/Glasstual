@@ -156,7 +156,11 @@ final class PreferencesPaneModel {
 	func updateTheme(_ update: (inout TranscriptTheme) -> Void) {
 		var changed = transcriptTheme
 		update(&changed)
-		SharedApplication.sharedThemeController().apply(changed)
+
+		if SharedApplication.sharedThemeController().apply(changed) == false {
+			presentationError = TranscriptThemeStrings.invalidValues
+		}
+
 		refreshTheme()
 	}
 

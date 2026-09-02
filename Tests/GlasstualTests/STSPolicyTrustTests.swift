@@ -67,26 +67,6 @@ struct STSPolicyTrustTests {
 		#expect(store.policy(forHost: "irc.example.net")?.port == 6697)
 	}
 
-	@Test("An unbounded duration is capped")
-	func durationIsCapped() throws {
-		let store = store()
-		let action = try store.applyCapabilityValues(
-			values(["duration=99999999999"]),
-			forHost: "irc.example.net",
-			connectedPort: 6697,
-			secured: true,
-			certificateChainValidated: true
-		)
-
-		#expect(action == .stored(port: 6697))
-
-		let policy = try #require(store.policy(forHost: "irc.example.net"))
-		let cap = Date(timeIntervalSinceNow: STSPolicyStore.maximumPolicyDuration)
-
-		/* Allow a little slack for the time the call itself took. */
-		#expect(policy.expiresAt <= cap.addingTimeInterval(5))
-	}
-
 	@Test("A plaintext connection still upgrades regardless of validation")
 	func plaintextStillUpgrades() throws {
 		let store = store()

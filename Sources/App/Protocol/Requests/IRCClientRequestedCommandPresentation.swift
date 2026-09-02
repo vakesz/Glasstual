@@ -50,10 +50,7 @@ public extension IRCClient {
 		else { return }
 
 		hiddenCommandResponsesQuery = query
-		guard let treeItem = (query as AnyObject) as? IRCTreeItem else {
-			preconditionFailure("IRCChannel must bridge to its Objective-C tree item")
-		}
-		output?.selectItem(treeItem)
+		output?.selectItem(query)
 		printDebugInformation(IRCDiagnosticStrings.hiddenCommandResponsesNotice, in: query)
 	}
 

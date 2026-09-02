@@ -72,7 +72,6 @@ public enum MenuMemberAction: Int, CaseIterable {
 
 public enum MenuEditingAction: Int, CaseIterable {
 	case showFindPrompt = 0
-	case copy = 1
 	case paste = 2
 	case print = 3
 }
@@ -106,14 +105,12 @@ public enum MenuServerChannelAction: Int, CaseIterable {
 	case deleteChannel = 11
 	case copyUniqueIdentifier = 12
 	case joinClickedChannel = 13
-	case empty = 14
 }
 
 public enum MenuSupportAction: Int, CaseIterable {
 	case openLogLocation = 0
 	case openChannelLogs = 1
 	case openAcknowledgements = 2
-	case contactSupport = 3
 	case connectToHelpChannel = 4
 	case connectToTestingChannel = 5
 }
@@ -138,13 +135,13 @@ public enum MenuWindowAction: Int, CaseIterable {
 	case exportPreferences = 7
 	case toggleNotificationSounds = 8
 	case toggleNotifications = 9
-	case resetAppearance = 10
 	case toggleAppearance = 11
 	case toggleServerList = 12
 	case toggleMemberList = 13
 	case reloadTheme = 14
 	case toggleDeveloperMode = 15
 	case resetSuppressedWarnings = 16
+	case focusSearchField = 17
 }
 
 public enum MenuDialogAction: Int, CaseIterable {

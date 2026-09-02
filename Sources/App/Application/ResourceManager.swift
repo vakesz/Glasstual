@@ -22,7 +22,7 @@ public nonisolated enum ResourceDocumentType { // nonisolated: value
 	public static let scriptFilenameExtension = "scpt"
 }
 
-public final nonisolated class ResourceManager: NSObject { // nonisolated: value
+public nonisolated enum ResourceManager { // nonisolated: value
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "ResourceManager"

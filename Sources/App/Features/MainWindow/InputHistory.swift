@@ -142,7 +142,7 @@ public final class InputHistory: NSObject {
 
 	public func moveFocus(to treeItem: IRCTreeItem) {
 		guard Preferences.Input.historyIsChannelSpecific.value,
-		      let textView = window?.inputTextField as? TextViewWithIRCFormatter
+		      let textView = window?.inputTextField
 		else {
 			return
 		}
