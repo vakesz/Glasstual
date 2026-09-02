@@ -161,15 +161,7 @@ extension IRCClient {
 		invokingISONCommandForFirstTime = false
 		for channel in channelList where channel.isPrivateMessage {
 			let isOnline = online.contains { $0.caseInsensitiveCompare(channel.name) == .orderedSame }
-			guard channel.isActive != isOnline else { continue }
-			if isOnline {
-				channel.activate()
-			} else {
-				channel.deactivate()
-			}
-			if let treeItem = (channel as AnyObject) as? IRCTreeItem {
-				output?.reloadTreeItem(treeItem)
-			}
+			applyPresence(isOnline, to: channel)
 		}
 	}
 

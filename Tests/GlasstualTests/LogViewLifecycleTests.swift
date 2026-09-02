@@ -94,7 +94,7 @@ struct LogViewLifecycleTests {
 		)
 		let controller = window.logControllers.controller(for: channel)
 		let logView = controller.ensureBackingView()
-		let host = NSHostingController(rootView: MainWindowTranscriptRepresentable(logView: logView))
+		let host = NSHostingController(rootView: MainWindowTranscriptRepresentable(logView: logView, bottomInset: 0))
 		host.preferredContentSize = NSSize(width: 800, height: 600)
 		window.contentViewController = host
 		window.setContentSize(NSSize(width: 800, height: 600))

@@ -15,12 +15,10 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// The complete Settings interface. SwiftUI owns sidebar selection, detail
-/// routing, navigation history, toolbar commands, pane layout, and presentation.
+/// routing, pane layout, and presentation.
 struct PreferencesRootView: View {
 	@Bindable var model: PreferencesPaneModel
 	@Environment(\.openURL) private var openURL
-	@State private var history = [PreferencesSelection.general]
-	@State private var historyIndex = 0
 
 	private var sectionSelection: Binding<PreferencesSectionIdentifier?> {
 		Binding(
@@ -40,9 +38,13 @@ struct PreferencesRootView: View {
 		subPages.first { $0.identifier == model.selection.subPageIdentifier }
 	}
 
+	/** Resolved against the section's own sub-pages rather than read straight off
+	 the selection. While a section change settles, the picker can be asked to
+	 draw with the incoming selection and the outgoing section's tags, and a
+	 selection with no matching tag is undefined behaviour SwiftUI logs about. */
 	private var selectedSubPage: Binding<String> {
 		Binding(
-			get: { model.selection.subPageIdentifier },
+			get: { currentSubPage?.identifier ?? subPages.first?.identifier ?? "" },
 			set: { _ = model.selectSubPage($0) }
 		)
 	}
@@ -58,6 +60,10 @@ struct PreferencesRootView: View {
 			.listStyle(.sidebar)
 			.scrollEdgeEffectStyle(.soft, for: .all)
 			.navigationTitle(PreferencesStrings.accessibilityTitle)
+			/* The section list is pinned open, so the toggle a split view adds
+			 by default is a button that can never do anything. This belongs on
+			 the column's content: on the split view itself it does nothing. */
+			.toolbar(removing: .sidebarToggle)
 			.navigationSplitViewColumnWidth(
 				min: PreferencesLayout.sidebarWidth,
 				ideal: PreferencesLayout.sidebarWidth,
@@ -71,17 +77,6 @@ struct PreferencesRootView: View {
 			minWidth: PreferencesLayout.minimumWindowSize.width,
 			minHeight: PreferencesLayout.minimumWindowSize.height
 		)
-		.toolbar {
-			ToolbarItemGroup(placement: .navigation) {
-				Button(PreferencesNavigationStrings.back, systemImage: "chevron.left", action: goBack)
-					.disabled(historyIndex == 0)
-				Button(PreferencesNavigationStrings.forward, systemImage: "chevron.right", action: goForward)
-					.disabled(historyIndex >= history.count - 1)
-			}
-		}
-		.onChange(of: model.selection) { _, selection in
-			record(selection)
-		}
 		.fileImporter(
 			isPresented: importIsPresented,
 			allowedContentTypes: model.importRequest?.allowedContentTypes ?? [.data]
@@ -203,29 +198,6 @@ struct PreferencesRootView: View {
 		}
 		.labelsHidden()
 		.accessibilityLabel(Text(verbatim: model.currentSection?.title ?? ""))
-	}
-
-	private func goBack() {
-		guard historyIndex > 0 else { return }
-		historyIndex -= 1
-		model.select(history[historyIndex])
-	}
-
-	private func goForward() {
-		guard historyIndex < history.count - 1 else { return }
-		historyIndex += 1
-		model.select(history[historyIndex])
-	}
-
-	private func record(_ selection: PreferencesSelection) {
-		if history.indices.contains(historyIndex), history[historyIndex] == selection {
-			return
-		}
-		if historyIndex < history.count - 1 {
-			history.removeSubrange((historyIndex + 1) ..< history.endIndex)
-		}
-		history.append(selection)
-		historyIndex = history.count - 1
 	}
 }
 

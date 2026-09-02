@@ -255,6 +255,11 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	private func installWindowChrome() {
+		/* `.fullSizeContentView` is what lets the sidebar material run the full
+		 height of the window, behind the traffic lights. The titlebar stays
+		 opaque on purpose: the unified toolbar draws the glass, and a
+		 transparent titlebar instead leaves the toolbar's items floating over
+		 the transcript with the topic header sliding under them. */
 		styleMask.insert(.fullSizeContentView)
 		titlebarAppearsTransparent = false
 		titlebarSeparatorStyle = .automatic

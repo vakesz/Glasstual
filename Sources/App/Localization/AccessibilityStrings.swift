@@ -21,6 +21,14 @@ nonisolated enum AccessibilityStrings { // nonisolated: value
 		String(localized: .Accessibility.channelNotJoined(channelName))
 	}
 
+	static var showFullTopic: String {
+		String(localized: .Accessibility.topicShowFull)
+	}
+
+	static var showLessTopic: String {
+		String(localized: .Accessibility.topicShowLess)
+	}
+
 	static func connectedServer(_ connectionName: String) -> String {
 		String(localized: .Accessibility.connectionConnected(connectionName))
 	}

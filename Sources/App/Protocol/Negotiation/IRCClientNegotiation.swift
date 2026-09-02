@@ -170,7 +170,15 @@ extension IRCClient {
 	}
 
 	func enableCapability(_ capability: ClientIRCv3SupportedCapability) {
+		let couldTrackPresence = supportsAdvancedTracking
 		capabilities.formUnion(capability)
+		/* ISUPPORT lands after login has already marked every query active. The
+		 moment the server offers MONITOR or WATCH, ask about the peers; it
+		 answers at once with who is really there, well before the tracked-user
+		 list is built ten seconds in. */
+		if couldTrackPresence == false, supportsAdvancedTracking {
+			modifyWatchList(byAdding: true, nicknames: queryPeerNicknames)
+		}
 	}
 
 	func disableCapability(_ capability: ClientIRCv3SupportedCapability) {

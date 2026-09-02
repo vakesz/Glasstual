@@ -518,6 +518,7 @@ public final class World: NSObject {
 		let channel = createChannel(with: config, on: client, add: true, adjust: true, reload: true)
 		if client.isLoggedIn, channel.isPrivateMessage {
 			channel.activate()
+			client.trackQueryPeer(nickname)
 		}
 
 		return channel

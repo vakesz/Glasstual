@@ -152,6 +152,8 @@ extension IRCClient {
 			printReplyToHiddenCommandResponsesQuery(message)
 		}
 		let nickname = message.params[1]
+		let isOnline = numeric == IRCNumeric.logon.rawValue || numeric == IRCNumeric.nowon.rawValue
+		applyPresence(isOnline, toQueryWith: nickname)
 		guard findUserTrackingAddressBookEntry(forNickname: nickname) != nil else { return }
 		let status: IRCAddressBookUserTrackingStatus
 		let notify: Bool
@@ -169,14 +171,12 @@ extension IRCClient {
 		if shouldPrint {
 			printReplyToHiddenCommandResponsesQuery(message)
 		}
+		let isOnline = numeric == IRCNumeric.mononline.rawValue
 		for changedUser in message.params[1].components(separatedBy: ",") {
 			let nickname = (changedUser as NSString).nicknameFromHostmask ?? changedUser
+			applyPresence(isOnline, toQueryWith: nickname)
 			guard findUserTrackingAddressBookEntry(forNickname: nickname) != nil else { continue }
-			setTrackedNickname(
-				nickname,
-				status: numeric == IRCNumeric.mononline.rawValue ? .signedOn : .signedOff,
-				notify: true
-			)
+			setTrackedNickname(nickname, status: isOnline ? .signedOn : .signedOff, notify: true)
 		}
 	}
 

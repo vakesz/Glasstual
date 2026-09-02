@@ -13,14 +13,13 @@ struct MemberListView: View {
 	let redirectTyping: (String) -> Void
 
 	var body: some View {
-		List(selection: $model.selectedMemberIDs) {
+		_ = model.presentationRevision
+		return List(selection: $model.selectedMemberIDs) {
 			ForEach(model.groups) { group in
-				if model.groups.count > 1 {
-					Section(group.section.title.localizedUppercase) {
-						memberRows(group.members)
-					}
-				} else {
+				Section {
 					memberRows(group.members)
+				} header: {
+					sectionHeader(for: group)
 				}
 			}
 		}
@@ -37,12 +36,20 @@ struct MemberListView: View {
 			model.notePrimaryInteraction(withID: identifier)
 			AppController.shared.menuController?.memberInMemberListDoubleClicked(model)
 		}
-		.overlay {
-			Color.clear
-				.id(model.presentationRevision)
-				.allowsHitTesting(false)
-		}
 		.redirectsPrintableInput(to: redirectTyping)
+	}
+
+	/// Rank title on the left, head count on the right, the way Mail counts a
+	/// mailbox. Every group gets one, so a channel with a single rank still
+	/// shows how many people are in it.
+	private func sectionHeader(for group: MemberListGroup) -> some View {
+		HStack {
+			Text(group.section.title.localizedUppercase)
+			Spacer()
+			Text(group.members.count, format: .number)
+				.monospacedDigit()
+				.foregroundStyle(.secondary)
+		}
 	}
 
 	private func memberRows(_ members: [ChannelUser]) -> some View {
@@ -56,6 +63,19 @@ struct MemberListView: View {
 private struct MemberListRowView: View {
 	let model: MemberList
 	let member: ChannelUser
+	/* `ChannelUser` compares as the same person with the same modes, which is
+	 the comparison the list's diffing wants. SwiftUI uses that same `==` to
+	 decide whether this row's body needs another pass, so the two states it
+	 draws that fall outside it are held here, where a change is seen. */
+	let isAway: Bool
+	let isBot: Bool
+
+	init(model: MemberList, member: ChannelUser) {
+		self.model = model
+		self.member = member
+		isAway = member.user.isAway
+		isBot = member.user.isBot
+	}
 
 	@State private var showsDetails = false
 	@State private var hoverTask: Task<Void, Never>?
@@ -63,16 +83,16 @@ private struct MemberListRowView: View {
 	var body: some View {
 		HStack(spacing: 8) {
 			MemberAvatar(nickname: member.user.nickname, size: 24)
-				.opacity(member.user.isAway ? 0.5 : 1)
+				.opacity(isAway ? 0.5 : 1)
 				.accessibilityHidden(true)
 
 			HStack(spacing: 4) {
 				Text(member.user.nickname)
 					.lineLimit(1)
 					.truncationMode(.tail)
-					.foregroundStyle(member.user.isAway ? .secondary : .primary)
+					.foregroundStyle(isAway ? .secondary : .primary)
 
-				if member.user.isBot {
+				if isBot {
 					Text(MemberListStrings.botCaption)
 						.font(.caption.weight(.medium))
 						.foregroundStyle(.secondary)
@@ -134,10 +154,10 @@ private struct MemberListRowView: View {
 	private var accessibilityDescription: String {
 		var description = AccessibilityStrings.userListEntry(for: member.user.nickname)
 		description += ", \(MemberListPresentation.privilegesDescription(for: member))"
-		if member.user.isAway {
+		if isAway {
 			description += ", \(MemberListStrings.userIsAway)"
 		}
-		if member.user.isBot {
+		if isBot {
 			description += ", \(MemberListStrings.userIsBot)"
 		}
 		if let account = member.user.account, account.isEmpty == false {

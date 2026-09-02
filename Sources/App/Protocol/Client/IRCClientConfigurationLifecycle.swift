@@ -235,6 +235,9 @@ public extension IRCClient {
 	/// holds for it is dropped while the channel is still whole.
 	func willDestroyChannel(_ channel: IRCChannel) {
 		guard channel.associatedClient === self else { return }
+		if channel.isPrivateMessage {
+			stopTrackingQueryPeer(channel.name)
+		}
 		clearZNCPlayback(for: channel)
 		if hiddenCommandResponsesQuery === channel {
 			hiddenCommandResponsesQuery = nil

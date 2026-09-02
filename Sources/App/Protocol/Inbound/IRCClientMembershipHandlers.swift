@@ -252,9 +252,7 @@ public extension IRCClient {
 					guard let member = userAssociated(user, with: channel) else { return }
 					channel.memberInfo?.removeMember(member)
 				} else if channel.isPrivateMessage, casefoldNickname(sender) == casefoldNickname(channel.name) {
-					if channel.isActive {
-						channel.deactivate(); reloadTreeItem(channel)
-					}
+					applyPresence(false, to: channel)
 				} else {
 					return
 				}
@@ -340,7 +338,9 @@ public extension IRCClient {
 				} else if channel.isPrivateMessage {
 					guard casefoldNickname(oldNickname) == casefoldNickname(channel.name) else { return }
 					if findChannel(newNickname) == nil {
+						stopTrackingQueryPeer(oldNickname)
 						channel.name = newNickname
+						trackQueryPeer(newNickname)
 						reloadTreeItem(channel)
 						updateTitle(channel)
 					}
