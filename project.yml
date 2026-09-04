@@ -33,7 +33,7 @@ settings:
     # ---- Product identity -------------------------------------------------
     GLASSTUAL_BUNDLE_IDENTIFIER: com.vakesz.glasstual
     GLASSTUAL_GROUP_CONTAINER_IDENTIFIER: group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUNDLE_IDENTIFIER)
-    MARKETING_VERSION: "1.0.6"
+    MARKETING_VERSION: "1.0.7"
     # CFBundleVersion is what LaunchServices and updaters compare, so it has to
     # move every release. The release workflow overrides MARKETING_VERSION on
     # the xcodebuild line and refuses to run for a tag that already exists, so
