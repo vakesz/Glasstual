@@ -24,6 +24,9 @@ private let onboardingLogger = Logger(
 public final class OnboardingSession {
 	let model: OnboardingModel
 	private var finished = false
+	private let createConnection: (ClientConfig, Bool) -> Bool
+	private let applySettings: (OnboardingModel) -> Void
+	private let markCompleted: () -> Void
 
 	public static func shouldPresentOnLaunch() -> Bool {
 		if Preferences.Identity.onboardingCompleted.value {
@@ -33,7 +36,7 @@ public final class OnboardingSession {
 		return (AppController.shared.world?.clientCount ?? 0) == 0
 	}
 
-	public init() {
+	public convenience init() {
 		let settings = OnboardingSettings()
 		settings.nickname = Preferences.Identity.nickname.detachedValue
 		settings.realName = Preferences.Identity.realName.detachedValue
@@ -42,15 +45,32 @@ public final class OnboardingSession {
 		)
 		settings.appearance = Preferences.Appearance.preferredAppearance.value
 
-		model = OnboardingModel(settings: settings)
+		self.init(
+			model: OnboardingModel(settings: settings),
+			createConnection: Self.createClient,
+			applySettings: Self.applyAcceptedSettings,
+			markCompleted: { Preferences.Identity.onboardingCompleted.value = true }
+		)
+	}
+
+	init(
+		model: OnboardingModel,
+		createConnection: @escaping (ClientConfig, Bool) -> Bool,
+		applySettings: @escaping (OnboardingModel) -> Void,
+		markCompleted: @escaping () -> Void
+	) {
+		self.model = model
+		self.createConnection = createConnection
+		self.applySettings = applySettings
+		self.markCompleted = markCompleted
 	}
 
 	/// Advances one step and applies the collected settings after the last step.
 	/// Returns `true` when the scene should close.
 	func continueFlow() -> Bool {
+		guard finished == false else { return true }
 		if model.continueFlow() {
-			finish()
-			return true
+			return finish()
 		}
 		return false
 	}
@@ -59,74 +79,79 @@ public final class OnboardingSession {
 		model.moveBack()
 	}
 
-	func markCompleted() {
-		Preferences.Identity.onboardingCompleted.value = true
+	func skipRemainingSteps() -> Bool {
+		guard finished == false else { return true }
+		guard model.skipRemainingSteps() else { return false }
+		return finish()
 	}
 
-	private func finish() {
-		guard finished == false else { return }
-		finished = true
+	/** The title-bar close button.
 
-		applyIdentitySettings()
-		applyAppearanceSettings()
-		applyNotificationSettings()
-		createClient()
+	 Closing the window is the same decision as pressing Cancel — the user is
+	 done with onboarding — so it persists what Cancel persists. Treating it as
+	 "nothing happened" is what made onboarding come back at every launch after
+	 the user had closed it. */
+	func windowDidClose() {
+		_ = cancel()
+	}
+
+	/// Cancel retains previously accepted steps, not an unfinished network draft.
+	func cancel() -> Bool {
+		guard finished == false else { return true }
+		guard model.acceptedIdentity != nil else { return true }
+		model.settings.clientConfig = nil
+		model.settings.channelsToJoin = []
+		return finish()
+	}
+
+	private func finish() -> Bool {
+		guard finished == false else { return true }
+		guard let identity = model.acceptedIdentity else { return false }
+		if var config = model.settings.clientConfig {
+			config.nickname = identity.nickname
+			config.realName = identity.realName
+			config.alternateNicknames = identity.alternateNickname.isEmpty ? [] : [identity.alternateNickname]
+			config.autoConnect = model.settings.connectWhenFinished
+			config.channelList = model.settings.channelsToJoin.map(ChannelConfig.seed(withName:))
+			guard createConnection(config, model.settings.connectWhenFinished) else {
+				model.validationMessage = OnboardingStrings.Window.connectionUnavailable
+				model.isValidationPresented = true
+				return false
+			}
+		}
+		applySettings(model)
 		markCompleted()
+		finished = true
+		return true
 	}
 
-	private func applyIdentitySettings() {
-		if model.settings.nickname.isEmpty == false {
-			Preferences.Identity.nickname.value = model.settings.nickname
+	private static func applyAcceptedSettings(_ model: OnboardingModel) {
+		if let identity = model.acceptedIdentity {
+			Preferences.Identity.nickname.value = identity.nickname
+			Preferences.Identity.realName.value = identity.realName
 		}
-
-		if model.settings.realName.isEmpty == false {
-			Preferences.Identity.realName.value = model.settings.realName
+		if let appearance = model.acceptedAppearance {
+			SharedApplication.sharedThemeController().apply(appearance.theme)
+			if Preferences.Appearance.preferredAppearance.value != appearance.appearance {
+				Preferences.Appearance.preferredAppearance.value = appearance.appearance
+				TextualPreferences.performReloadAction(.appearance)
+			}
 		}
-	}
-
-	private func applyAppearanceSettings() {
-		var reloadAction: PreferencesReloadAction = []
-		let fontSize = OnboardingSettings.fontSize(for: model.settings.textSize)
-		var transcriptTheme = model.settings.transcriptStyle.theme
-		transcriptTheme.fontSize = fontSize
-		SharedApplication.sharedThemeController().apply(transcriptTheme)
-
-		if Preferences.Appearance.preferredAppearance.value != model.settings.appearance {
-			Preferences.Appearance.preferredAppearance.value = model.settings.appearance
-			reloadAction.insert(.appearance)
-		}
-
-		if reloadAction.isEmpty == false {
-			TextualPreferences.performReloadAction(reloadAction)
+		if let notifications = model.acceptedNotifications {
+			Preferences.Notifications.flag(.highlight, .enabled).value = notifications.highlight
+			Preferences.Notifications.flag(.privateMessage, .enabled).value = notifications.privateMessage
+			Preferences.Notifications.flag(.newPrivateMessage, .enabled).value = notifications.privateMessage
+			Preferences.Notifications.soundIsMuted.value = notifications.sounds == false
 		}
 	}
 
-	private func applyNotificationSettings() {
-		Preferences.Notifications.flag(.highlight, .enabled).value = model.settings.notifyOnHighlight
-		Preferences.Notifications.flag(.privateMessage, .enabled).value = model.settings.notifyOnPrivateMessage
-		Preferences.Notifications.flag(.newPrivateMessage, .enabled).value = model.settings.notifyOnPrivateMessage
-		Preferences.Notifications.soundIsMuted.value = model.settings.playSounds == false
-	}
-
-	private func createClient() {
-		guard var config = model.settings.clientConfig else { return }
-
-		config.nickname = model.settings.nickname
-		if model.settings.realName.isEmpty == false {
-			config.realName = model.settings.realName
-		}
-		if model.settings.alternateNickname.isEmpty == false {
-			config.alternateNicknames = [model.settings.alternateNickname]
-		}
-		config.autoConnect = model.settings.connectWhenFinished
-		config.channelList = model.settings.channelsToJoin.map(ChannelConfig.seed(withName:))
-
+	private static func createClient(_ config: ClientConfig, connectWhenFinished: Bool) -> Bool {
 		guard
 			let world = AppController.shared.world,
 			let mainWindow = AppController.shared.mainWindow
 		else {
 			onboardingLogger.error("Cannot create a connection before the world is ready")
-			return
+			return false
 		}
 
 		let client = world.createClient(with: config)
@@ -134,10 +159,11 @@ public final class OnboardingSession {
 		world.save()
 		_ = mainWindow.reloadLoadingScreen()
 
-		if model.settings.connectWhenFinished {
+		if connectWhenFinished {
 			client.connect()
 		}
 
 		client.selectFirstChannelInChannelList()
+		return true
 	}
 }

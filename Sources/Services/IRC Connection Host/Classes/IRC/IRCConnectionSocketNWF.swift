@@ -120,7 +120,7 @@ private nonisolated enum IRCNetworkConnection: Sendable { // nonisolated: value
 /// what the host needs to know comes back through `events`, in wire order.
 actor ConnectionSocket {
 	/// Maximum bytes requested from the transport in a single read.
-	private static let maximumDataLength = 1000 * 1000 * 100 // 100 megabytes
+	private static let maximumDataLength = 64 * 1024
 
 	/// Maximum bytes buffered while waiting for a newline. A peer that never
 	/// sends one is disconnected instead of growing memory forever.
@@ -153,14 +153,17 @@ actor ConnectionSocket {
 
 	private var connection: IRCNetworkConnection?
 	private var connectionTask: Task<Void, Never>?
+	/// The part of a line that arrived without its terminator, waiting for the
+	/// read that completes it.
 	private var readInBuffer = Data()
 	private var connectTimeoutTask: Task<Void, Never>?
+	private var trustAnswer: AsyncStream<Bool>.Continuation?
 
 	private var connecting = false
 	private var connected = false
 	private var disconnecting = false
 	private var secured = false
-	private(set) var sending = false
+	private var sending = false
 
 	private var alternateDisconnectError: ConnectionError?
 
@@ -207,6 +210,8 @@ actor ConnectionSocket {
 
 		cancelConnectTimeout()
 
+		trustAnswer?.finish()
+		trustAnswer = nil
 		connectionTask?.cancel()
 	}
 
@@ -323,8 +328,6 @@ actor ConnectionSocket {
 		 negotiated is only knowable once it reports itself ready. */
 		let readyTransitions = connection.readyTransitions()
 
-		onConnect()
-
 		let readiness = Task { [weak self] in
 			for await _ in readyTransitions {
 				await self?.onReady()
@@ -350,8 +353,9 @@ actor ConnectionSocket {
 	/// The transport finished establishing, so the handshake — if there was
 	/// one — has run and its metadata is readable.
 	private func onReady() {
-		guard connected, disconnecting == false else { return }
+		guard connecting, disconnecting == false else { return }
 
+		onConnect()
 		onSecured()
 	}
 
@@ -392,15 +396,11 @@ actor ConnectionSocket {
 	// MARK: - Read & Write
 
 	private func read(from connection: IRCNetworkConnection) async throws {
-		while connected, disconnecting == false {
-			/* Never ask for more than the line budget still allows. The cap has
-			 to bound the buffer, not merely be noticed after a hundred-megabyte
-			 append: one byte past the budget is enough to recognise a peer that
-			 is never going to send a newline. */
-			let budget = Self.maximumBufferedLineLength + 1 - readInBuffer.count
-			let maximumLength = min(Self.maximumDataLength, max(budget, 1))
-
-			let message = try await connection.receive(atMost: maximumLength)
+		while connecting || connected, disconnecting == false {
+			let message = try await connection.receive(atMost: Self.maximumDataLength)
+			try Task.checkCancellation()
+			// A completed read also proves readiness if its state callback is still queued.
+			onReady()
 
 			let (content, isComplete) = message
 
@@ -408,9 +408,17 @@ actor ConnectionSocket {
 			 disconnect) can arrive together with the EOF. */
 			if content.isEmpty == false {
 				readIn(content)
+				let (drained, continuation) = AsyncStream<Void>.makeStream()
+				events.yield(.readDrained(continuation))
+				// This wait never occupies the host's command or writer task.
+				for await _ in drained {}
+				try Task.checkCancellation()
 			}
 
 			if isComplete {
+				if readInBuffer.isEmpty == false {
+					throw ConnectionError.socket(error: NSError(domain: NSPOSIXErrorDomain, code: Int(EPROTO)))
+				}
 				events.yield(.closedReadStream)
 
 				return
@@ -418,38 +426,61 @@ actor ConnectionSocket {
 		}
 	}
 
+	/** Cuts `data` into lines and reports each one as it completes.
+
+	 Terminators are found a line at a time rather than a byte at a time, and
+	 the common case — a read that carries whole lines and nothing was left
+	 over — hands each line straight out of the read without touching the
+	 buffer at all. Only a partial line is copied, and only once: the buffer
+	 keeps its allocation across lines and is never rescanned. */
 	private func readIn(_ data: Data) {
 		guard disconnected == false, disconnecting == false else { return }
 
-		readInBuffer.append(data)
+		var remaining = data[...]
 
-		guard let (lines, remainingData) = readInBuffer.splitNetworkLines() else {
-			return
-		}
+		while let terminator = remaining.firstIndex(of: 0x0A) {
+			let line = remaining[..<terminator]
+			remaining = remaining[remaining.index(after: terminator)...]
 
-		for line in lines {
-			events.yield(.received(line))
-		}
+			if readInBuffer.isEmpty {
+				/* A whole line inside one read. A read is bounded by
+				 `maximumDataLength`, well under the line ceiling. */
+				let trimmed = line.last == 0x0D ? line.dropLast() : line
 
-		if let remainder = remainingData {
-			/* The remainder is a slice of the old buffer. Copying it into a
-			 fresh Data rebases indices to zero and releases the storage holding
-			 the lines already delivered. */
-			readInBuffer = Data(remainder)
-		} else {
+				if trimmed.isEmpty == false {
+					events.yield(.received(Data(trimmed)))
+				}
+
+				continue
+			}
+
+			guard bufferPartialLine(line) else { return }
+
+			if readInBuffer.last == 0x0D {
+				readInBuffer.removeLast()
+			}
+			if readInBuffer.isEmpty == false {
+				events.yield(.received(readInBuffer))
+			}
 			readInBuffer.removeAll(keepingCapacity: true)
 		}
 
-		if readInBuffer.count > Self.maximumBufferedLineLength {
-			let identifier = uniqueIdentifier
-			let bufferedByteCount = readInBuffer.count
+		guard remaining.isEmpty == false else { return }
 
-			ConnectionHostLog.connection.error(
-				"Connection \(identifier, privacy: .public) buffered \(bufferedByteCount, privacy: .public) bytes without a newline"
-			)
+		_ = bufferPartialLine(remaining)
+	}
 
+	/// Holds `bytes` until the rest of their line arrives, disconnecting a peer
+	/// that grows one past the ceiling. Reports whether framing may continue.
+	private func bufferPartialLine(_ bytes: Data.SubSequence) -> Bool {
+		guard readInBuffer.count + bytes.count <= Self.maximumBufferedLineLength else {
 			close(with: String(localized: .ConnectionErrors.peerLineTooLong))
+			return false
 		}
+
+		readInBuffer.append(contentsOf: bytes)
+
+		return true
 	}
 
 	/** Sends `data`, reporting whether it was taken.
@@ -514,7 +545,7 @@ actor ConnectionSocket {
 	}
 
 	private var tlsMetadata: sec_protocol_metadata_t? {
-		connection?.tlsMetadata
+		connected ? connection?.tlsMetadata : nil
 	}
 
 	private var connectedHost: String? {
@@ -708,6 +739,7 @@ private extension ConnectionSocket {
 	}
 
 	func validateCertificate(_ evaluation: TLSTrustEvaluation) async -> Bool {
+		guard connecting, disconnecting == false else { return false }
 		trustExport = evaluation.export
 
 		guard let failureDescription = evaluation.export.failureDescription else {
@@ -746,6 +778,8 @@ private extension ConnectionSocket {
 	 those answer `false`, which is the answer the system already gave. */
 	func requestInsecureTrust() async -> Bool {
 		let (answers, continuation) = AsyncStream<Bool>.makeStream(bufferingPolicy: .bufferingNewest(1))
+		trustAnswer = continuation
+		cancelConnectTimeout()
 
 		client.ircConnectionRequestInsecureCertificateTrust { trusted in
 			continuation.yield(trusted)
@@ -758,10 +792,16 @@ private extension ConnectionSocket {
 			continuation.finish()
 		}
 
-		defer { deadline.cancel() }
+		defer {
+			deadline.cancel()
+			trustAnswer = nil
+			if connecting, disconnecting == false {
+				scheduleConnectTimeout()
+			}
+		}
 
 		for await trusted in answers {
-			return trusted
+			return trusted && connecting && disconnecting == false && Task.isCancelled == false
 		}
 
 		let identifier = uniqueIdentifier

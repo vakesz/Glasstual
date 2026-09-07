@@ -237,12 +237,12 @@ public nonisolated enum ISupportTokenParser { // nonisolated: value
 	/// Zero is a server that advertised no limit, and it chunks the same way as
 	/// one: a target list the server never said it accepts is not sent.
 	public static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
-		let chunkSize = max(Int(limit), 1)
+		let chunkSize = max(Int(min(limit, UInt(targets.count))), 1)
 		var chunks: [[String]] = []
 		var start = 0
 
 		while start < targets.count {
-			let end = min(start + chunkSize, targets.count)
+			let end = start + min(chunkSize, targets.count - start)
 			chunks.append(Array(targets[start ..< end]))
 			start = end
 		}

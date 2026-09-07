@@ -55,6 +55,7 @@ nonisolated extension ClientConfig { // nonisolated: value
 		case username
 		case realName
 		case alternateNicknames
+		case usesSASL
 		case saslMechanismPreference
 		case saslAuthenticationDisableExternalMechanism
 		case sendAuthenticationRequestsToUserServ
@@ -196,6 +197,7 @@ nonisolated extension ClientConfig { // nonisolated: value
 			default: []
 		)
 		saslMechanismPreference = container.decodeOptional(String.self, forKey: .saslMechanismPreference)
+		usesSASL = container.decode(Bool.self, forKey: .usesSASL, aliases: [], default: true)
 		saslAuthenticationDisableExternalMechanism = container.decode(
 			Bool.self,
 			forKey: .saslAuthenticationDisableExternalMechanism,

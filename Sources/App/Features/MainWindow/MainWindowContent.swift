@@ -564,7 +564,7 @@ public extension MainWindow {
 
 public extension MainWindow {
 	func updateTitle(for item: IRCTreeItem) {
-		if isItemSelected(item) {
+		if isItemSelected(item) || (item.isClient && selectedClient === item) {
 			updateTitle()
 		}
 	}
@@ -574,10 +574,8 @@ public extension MainWindow {
 		title = content.title
 		subtitle = content.subtitle
 
-		guard selectedClient != nil else {
-			return
-		}
-		setAccessibilityTitle(AccessibilityStrings.mainWindow)
+		setAccessibilityIdentifier("main-window")
+		setAccessibilityTitle([content.title, content.subtitle].filter { $0.isEmpty == false }.joined(separator: ", "))
 	}
 
 	func updateDrawingForUserInUserList(_ user: User) {
@@ -642,10 +640,7 @@ public extension MainWindow {
 
 	func reloadTreeGroup(_ item: IRCTreeItem) {
 		guard item.isClient, let client = item.associatedClient else { return }
-		reloadTreeItem(client)
-		for channel in client.channelList {
-			reloadTreeItem(channel)
-		}
+		serverList.reloadItem(client, reloadChildren: true)
 	}
 
 	func reloadTree() {
@@ -738,11 +733,12 @@ public extension MainWindow {
 				client.join(channel)
 			}
 		} else {
-			if client.isConnecting || client.isConnected {
+			let policy = MenuServerActionPolicy(client: client)
+			if policy.canDisconnect {
 				if Preferences.Appearance.disconnectOnDoubleClick.value {
 					client.quit()
 				}
-			} else if client.isQuitting == false, Preferences.Appearance.connectOnDoubleClick.value {
+			} else if policy.canConnect, Preferences.Appearance.connectOnDoubleClick.value {
 				client.connect()
 			}
 			expandClient(client)

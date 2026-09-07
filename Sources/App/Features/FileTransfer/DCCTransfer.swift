@@ -67,6 +67,7 @@ public nonisolated enum DCCTransferEvent: Sendable { // nonisolated: value
 	case listening(port: UInt16)
 	case connected(peerAddress: String?)
 	case progress(processedBytes: UInt64)
+	case completion(DCCTransfer.Completion)
 	case finished
 	case failed(DCCTransferError)
 }
@@ -80,6 +81,14 @@ public nonisolated enum DCCTransferEvent: Sendable { // nonisolated: value
 /// run inside the transfer task, so the actor is the one place the transfer's
 /// state lives.
 public actor DCCTransfer {
+	public nonisolated enum Completion: Sendable { // nonisolated: value
+		case received
+		case acknowledged
+		/// All bytes were submitted and the ACKless peer closed cleanly. This
+		/// does not claim that the peer persisted or acknowledged the file.
+		case unacknowledged
+	}
+
 	/// Which end of the transfer this actor is.
 	public nonisolated enum Role: Sendable { // nonisolated: value
 		case sender
@@ -97,9 +106,10 @@ public actor DCCTransfer {
 	public nonisolated struct Configuration: Sendable { // nonisolated: value
 		public var role: Role
 		public var endpoint: Endpoint
-		/// The file to read from, or the file to write into. The caller picks
-		/// the name: the actor only opens what it is handed.
-		public var filePath: String
+		/// The file to read from, or the file to write into. The caller
+		/// reserves it: the actor only ever uses the descriptor it is handed,
+		/// so nothing here can open a second file under the same name.
+		public var file: DCCTransferFile
 		/// How many bytes the transfer announced. The receiver refuses to
 		/// store more than this and the sender stops after it.
 		public var fileSize: UInt64
@@ -111,23 +121,31 @@ public actor DCCTransfer {
 		public var expectedPeerAddress: String
 		/// How long a single write may take before the transfer fails.
 		public var sendTimeout: Duration?
+		public var inactivityTimeout: Duration?
+		/// The whole window a listening transfer has to bind a port and take
+		/// the peer's connection, not a budget for each step in turn.
+		public var acceptanceTimeout: Duration?
 
 		public init(
 			role: Role,
 			endpoint: Endpoint,
-			filePath: String,
+			file: DCCTransferFile,
 			fileSize: UInt64,
 			resumeOffset: UInt64 = 0,
 			expectedPeerAddress: String = "",
-			sendTimeout: Duration? = nil
+			sendTimeout: Duration? = .seconds(30),
+			inactivityTimeout: Duration? = .seconds(30),
+			acceptanceTimeout: Duration? = .seconds(120)
 		) {
 			self.role = role
 			self.endpoint = endpoint
-			self.filePath = filePath
+			self.file = file
 			self.fileSize = fileSize
 			self.resumeOffset = resumeOffset
 			self.expectedPeerAddress = expectedPeerAddress
 			self.sendTimeout = sendTimeout
+			self.inactivityTimeout = inactivityTimeout
+			self.acceptanceTimeout = acceptanceTimeout
 		}
 	}
 
@@ -148,14 +166,16 @@ public actor DCCTransfer {
 	/// The transfer's progress, in order. Finishes when the transfer does.
 	public nonisolated let events: AsyncStream<DCCTransferEvent> // nonisolated: let
 
-	private let configuration: Configuration
+	private var configuration: Configuration
 	private let eventContinuation: AsyncStream<DCCTransferEvent>.Continuation
 
 	private var runTask: Task<Void, Never>?
 	private var connection: NetworkConnection<TCP>?
 	private var listener: NetworkListener<TCP>?
 	private var listenerTask: Task<Void, Never>?
-	private var fileHandle: FileHandle?
+	private var file: DCCTransferFile?
+	private var bytesStarted = false
+	private var submittedBytes: UInt64 = 0
 	private var isCancelled = false
 	private var hasFinished = false
 
@@ -182,24 +202,40 @@ public actor DCCTransfer {
 	}
 
 	/// Stops the transfer and ends ``events`` without a terminal event.
-	public func cancel() {
-		guard isCancelled == false else {
-			return
+	public func cancel() async {
+		let running = runTask
+		if isCancelled == false {
+			isCancelled = true
+			running?.cancel()
+			tearDown()
+			hasFinished = true
+			eventContinuation.finish()
 		}
 
-		isCancelled = true
-		runTask?.cancel()
+		// Every caller must observe quiescence before releasing the file lease,
+		// including a second cancellation while the first is still draining.
+		await running?.value
 		runTask = nil
-		tearDown()
-		hasFinished = true
-		eventContinuation.finish()
+	}
+
+	/// RESUME changes the pending byte offset, never the listening socket.
+	public func commitResumeOffset(_ offset: UInt64) -> Bool {
+		guard !Task.isCancelled, !isCancelled, !hasFinished, !bytesStarted,
+		      offset > 0, offset <= configuration.fileSize else { return false }
+		configuration.resumeOffset = offset
+		return true
 	}
 
 	// MARK: - Running
 
 	private func run() async {
 		do {
+			guard configuration.resumeOffset <= configuration.fileSize else { throw DCCTransferError.badParameter }
+			file = configuration.file
 			let connection = try await establishConnection()
+			try Task.checkCancellation()
+			bytesStarted = true
+			submittedBytes = configuration.resumeOffset
 			emit(.connected(peerAddress: connection.remoteEndpoint.flatMap(Self.host(of:))))
 
 			switch configuration.role {
@@ -207,6 +243,7 @@ public actor DCCTransfer {
 				try await sendFile(over: connection)
 			case .receiver:
 				try await receiveFile(over: connection)
+				emit(.completion(.received))
 			}
 
 			tearDown()
@@ -249,23 +286,7 @@ public actor DCCTransfer {
 
 		connection = nil
 
-		closeFile()
-	}
-
-	private func closeFile() {
-		guard let fileHandle else {
-			return
-		}
-
-		do {
-			try fileHandle.close()
-		} catch {
-			Self.logger.error(
-				"Failed to close the transfer file: \(error.localizedDescription, privacy: .public)"
-			)
-		}
-
-		self.fileHandle = nil
+		file = nil
 	}
 
 	private nonisolated static func transferError(from error: Error) -> DCCTransferError { // nonisolated: pure
@@ -315,94 +336,122 @@ public actor DCCTransfer {
 	}
 
 	private func acceptConnection(portRange: ClosedRange<UInt16>) async throws -> NetworkConnection<TCP> {
-		let listening = try await Self.startListener(portRange: portRange)
+		/* Binding a port and waiting for the peer share one window. Applying
+		 the timeout to each in turn gave a slow bind twice what was asked. */
+		let deadline = configuration.acceptanceTimeout.map { ContinuousClock.now + $0 }
+
+		let listening = try await Self.withDeadline(deadline, failingWith: .connectTimeout) {
+			try await Self.startListener(portRange: portRange)
+		}
 		listener = listening.listener
 		listenerTask = listening.task
 
 		emit(.listening(port: listening.port))
 
-		var rejectedAPeer = false
+		let expectedPeerAddress = configuration.expectedPeerAddress
+		let sendTimeout = configuration.sendTimeout
+		return try await Self.withDeadline(deadline, failingWith: .connectTimeout) { [self] in
+			var rejectedAPeer = false
+			for await candidate in listening.connections {
+				try Task.checkCancellation()
+				guard Self.connection(candidate, isFrom: expectedPeerAddress) else {
+					Self.logger.error(
+						"Rejected a DCC connection from an address other than the one the transfer was offered from"
+					)
+					rejectedAPeer = true
+					continue
+				}
 
-		for await candidate in listening.connections {
-			guard Self.connection(candidate, isFrom: configuration.expectedPeerAddress) else {
-				Self.logger.error(
-					"Rejected a DCC connection from an address other than the one the transfer was offered from"
-				)
-				rejectedAPeer = true
-				continue
+				/* One listener serves one transfer. Leaving the port open past the
+				 first accept only gives somebody else a window to reach it. */
+				await accepted(candidate)
+				try await Self.withTimeout(sendTimeout, failingWith: .connectTimeout) {
+					try await candidate.send(Data())
+				}
+
+				return candidate
 			}
 
-			/* One listener serves one transfer. Leaving the port open past the
-			 first accept only gives somebody else a window to reach it. */
-			listenerTask?.cancel()
-			listenerTask = nil
-			listener = nil
+			if rejectedAPeer {
+				throw DCCTransferError.rejectedPeerAddress
+			}
 
-			connection = candidate
-			try await candidate.send(Data())
-
-			return candidate
+			throw DCCTransferError.closedByPeer
 		}
+	}
 
-		if rejectedAPeer {
-			throw DCCTransferError.rejectedPeerAddress
-		}
-
-		throw DCCTransferError.closedByPeer
+	private func accepted(_ candidate: NetworkConnection<TCP>) {
+		listenerTask?.cancel()
+		listenerTask = nil
+		listener = nil
+		connection = candidate
 	}
 
 	// MARK: - Sending
 
+	private nonisolated enum SendResult: Sendable { // nonisolated: value
+		case sent
+		case peer(Completion)
+	}
+
 	private func sendFile(over connection: NetworkConnection<TCP>) async throws {
-		let handle = try openFileForReading()
-		defer { closeFile() }
-
-		try await withThrowingTaskGroup(of: Void.self) { group in
-			/* The receiver acknowledges every block and closes the connection
-			 once it has the whole file. Draining its acknowledgements keeps
-			 them from filling our receive buffer and stalling it, and waiting
-			 for the close is what stops us tearing the connection down — and
-			 resetting away the last block — before it has landed. */
-			group.addTask { await Self.drainUntilPeerCloses(connection) }
-
-			try await sendBlocks(from: handle, over: connection)
-
-			/* Only now does the clock on the close start: a slow but healthy
-			 transfer must not trip it. */
+		guard let file else { throw DCCTransferError.fileUnreadable }
+		try await withThrowingTaskGroup(of: SendResult.self) { group in
+			defer { group.cancelAll() }
+			group.addTask { try await .peer(self.readAcknowledgements(over: connection)) }
 			group.addTask {
-				try await Task.sleep(for: Self.gracefulCloseTimeout)
-
-				throw DCCTransferError.writeTimeout
+				try await self.sendBlocks(from: file, over: connection)
+				return .sent
+			}
+			var sent = false
+			var completion: Completion?
+			while let result = try await group.next() {
+				switch result {
+				case .sent:
+					sent = true
+					group.addTask {
+						try await Task.sleep(for: Self.gracefulCloseTimeout)
+						throw DCCTransferError.writeTimeout
+					}
+				case let .peer(result):
+					completion = result
+				}
+				if sent, let completion {
+					emit(.completion(completion))
+					return
+				}
 			}
 
-			_ = try await group.next()
-			group.cancelAll()
+			/* Both sides of the group finished without agreeing on a verdict,
+			 which only happens if the connection went away underneath them. */
+			throw DCCTransferError.closedByPeer
 		}
 	}
 
-	private func openFileForReading() throws -> FileHandle {
-		guard let handle = FileHandle(forReadingAtPath: configuration.filePath) else {
-			throw DCCTransferError.fileUnreadable
+	private func readAcknowledgements(over connection: NetworkConnection<TCP>) async throws -> Completion {
+		var acknowledgements = DCCAcknowledgements(
+			offset: configuration.resumeOffset,
+			offeredSize: configuration.fileSize
+		)
+		while true {
+			let (payload, complete) = try await Self.receive(on: connection)
+			if let payload {
+				try acknowledgements.append(payload)
+			}
+			guard acknowledgements.acknowledged <= submittedBytes else { throw DCCTransferError.badParameter }
+			if acknowledgements.isComplete {
+				return .acknowledged
+			}
+			if complete {
+				guard submittedBytes == configuration.fileSize, !acknowledgements.hasBytes else {
+					throw DCCTransferError.closedByPeer
+				}
+				return .unacknowledged
+			}
 		}
-
-		fileHandle = handle
-
-		guard configuration.resumeOffset > 0 else {
-			return handle
-		}
-
-		do {
-			try handle.seek(toOffset: configuration.resumeOffset)
-		} catch {
-			closeFile()
-
-			throw DCCTransferError.fileUnreadable
-		}
-
-		return handle
 	}
 
-	private func sendBlocks(from handle: FileHandle, over connection: NetworkConnection<TCP>) async throws {
+	private func sendBlocks(from file: DCCTransferFile, over connection: NetworkConnection<TCP>) async throws {
 		var processedBytes = configuration.resumeOffset
 		var windowStart = ContinuousClock.now
 		var windowBytes: UInt64 = 0
@@ -410,7 +459,10 @@ public actor DCCTransfer {
 		while processedBytes < configuration.fileSize {
 			try Task.checkCancellation()
 
-			let chunk = try Self.read(from: handle, upTo: Self.bufferSize)
+			let count = Int(min(UInt64(Self.bufferSize), configuration.fileSize - processedBytes))
+			let chunk = try await file.read(at: processedBytes, count: count)
+			try Task.checkCancellation()
+			submittedBytes = processedBytes + UInt64(chunk.count)
 
 			try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
 				try await Self.send(chunk, over: connection)
@@ -429,23 +481,6 @@ public actor DCCTransfer {
 		}
 	}
 
-	private nonisolated static func read(from handle: FileHandle, upTo count: Int) throws -> Data { // nonisolated: pure
-		let chunk: Data?
-
-		do {
-			chunk = try handle.read(upToCount: count)
-		} catch {
-			throw DCCTransferError.fileUnreadable
-		}
-
-		guard let chunk, chunk.isEmpty == false else {
-			/* The file shrank, or it never held what the offer announced. */
-			throw DCCTransferError.fileUnreadable
-		}
-
-		return chunk
-	}
-
 	private nonisolated static func pause( // nonisolated: pure
 		untilASecondHasPassedSince start: ContinuousClock.Instant
 	) async throws { // nonisolated: pure
@@ -461,22 +496,41 @@ public actor DCCTransfer {
 	// MARK: - Receiving
 
 	private func receiveFile(over connection: NetworkConnection<TCP>) async throws {
-		let handle = try openFileForWriting()
-		defer { closeFile() }
+		guard let file, try await file.size() == configuration.resumeOffset else {
+			throw DCCTransferError.fileUnwritable
+		}
 
 		var processedBytes = configuration.resumeOffset
+		if processedBytes == configuration.fileSize {
+			let acknowledgement = Self.acknowledgement(for: processedBytes)
+			try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+				try await Self.send(acknowledgement, over: connection)
+			}
+		}
 
 		while processedBytes < configuration.fileSize {
 			try Task.checkCancellation()
 
-			let (payload, isComplete) = try await Self.receive(on: connection)
+			let (payload, isComplete) = try await Self.withTimeout(
+				configuration.inactivityTimeout,
+				failingWith: .connectTimeout
+			) {
+				try await Self.receive(on: connection)
+			}
 
 			if let payload, payload.isEmpty == false {
-				let overshot = try store(payload, into: handle, processedBytes: &processedBytes)
+				let remaining = configuration.fileSize - processedBytes
+				let overshot = UInt64(payload.count) > remaining
+				let accepted = overshot ? Data(payload.prefix(Int(remaining))) : payload
+				try await file.write(accepted, at: processedBytes)
+				processedBytes += UInt64(accepted.count)
 
 				/* The DCC acknowledgement is the receiver's running total, so
 				 it goes out before the transfer is torn down for the excess. */
-				try await Self.send(Self.acknowledgement(for: processedBytes), over: connection)
+				let acknowledgement = Self.acknowledgement(for: processedBytes)
+				try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+					try await Self.send(acknowledgement, over: connection)
+				}
 				emit(.progress(processedBytes: processedBytes))
 
 				if overshot {
@@ -488,71 +542,6 @@ public actor DCCTransfer {
 				throw DCCTransferError.closedByPeer
 			}
 		}
-	}
-
-	/// Writes as much of `payload` as the announced size still has room for.
-	///
-	/// Returns whether the peer overshot: a peer that sends more than it
-	/// advertised would otherwise grow the file by up to one read buffer past
-	/// what the user agreed to receive.
-	private func store(
-		_ payload: Data,
-		into handle: FileHandle,
-		processedBytes: inout UInt64
-	) throws -> Bool {
-		let remaining = configuration.fileSize - processedBytes
-		let overshot = UInt64(payload.count) > remaining
-		let accepted = overshot ? payload.prefix(Int(remaining)) : payload
-
-		guard accepted.isEmpty == false else {
-			return overshot
-		}
-
-		do {
-			try handle.write(contentsOf: accepted)
-		} catch {
-			let writeError = error as NSError
-
-			if writeError.domain == NSPOSIXErrorDomain, writeError.code == Int(ENOSPC) {
-				throw DCCTransferError.storageFull
-			}
-
-			throw DCCTransferError.fileUnwritable
-		}
-
-		processedBytes += UInt64(accepted.count)
-
-		return overshot
-	}
-
-	private func openFileForWriting() throws -> FileHandle {
-		let path = configuration.filePath
-
-		if FileManager.default.fileExists(atPath: path) == false {
-			guard FileManager.default.createFile(atPath: path, contents: Data()) else {
-				throw DCCTransferError.fileUnwritable
-			}
-		}
-
-		guard let handle = FileHandle(forUpdatingAtPath: path) else {
-			throw DCCTransferError.fileUnwritable
-		}
-
-		fileHandle = handle
-
-		do {
-			if configuration.resumeOffset > 0 {
-				try handle.seek(toOffset: configuration.resumeOffset)
-			} else {
-				try handle.truncate(atOffset: 0)
-			}
-		} catch {
-			closeFile()
-
-			throw DCCTransferError.fileUnwritable
-		}
-
-		return handle
 	}
 
 	/// DCC acknowledges with the receiver's running total as a big-endian

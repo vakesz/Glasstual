@@ -35,7 +35,11 @@ final class NetworkPickerModel {
 	let networkList: NetworkList
 	var query = ""
 	var selectionID: String? {
-		didSet { applySelection() }
+		didSet {
+			if selectionID != oldValue {
+				applySelection()
+			}
+		}
 	}
 
 	var serverAddress = ""
@@ -129,6 +133,13 @@ final class NetworkPickerModel {
 		guard ServerPropertiesValidation.isInternetPort(serverPort) else {
 			throw OnboardingStepError(OnboardingStrings.NetworkPicker.invalidPort)
 		}
+		let account = accountName.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard accountPassword.isEmpty || account.isEmpty || ServerPropertiesValidation.isUsername(account) else {
+			throw OnboardingStepError(OnboardingStrings.NetworkPicker.invalidAccount)
+		}
+		guard accountPassword.rangeOfCharacter(from: .controlCharacters) == nil else {
+			throw OnboardingStepError(OnboardingStrings.NetworkPicker.invalidAccount)
+		}
 	}
 
 	func clientConfig() -> ClientConfig? {
@@ -136,6 +147,7 @@ final class NetworkPickerModel {
 
 		let normalizedAddress = serverAddress.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 		var config = ClientConfig()
+		config.usesSASL = usesSASL && saslIsSupported
 		config.connectionName = selectedNetwork?.networkName ?? normalizedAddress
 		config.serverList = [
 			Server(
@@ -148,7 +160,7 @@ final class NetworkPickerModel {
 		if accountPassword.isEmpty == false {
 			config.nicknamePassword = accountPassword
 			let name = accountName.trimmingCharacters(in: .whitespacesAndNewlines)
-			if usesSASL, name.isEmpty == false {
+			if name.isEmpty == false {
 				config.username = name
 			}
 		}

@@ -50,22 +50,20 @@ extension PreferencesPaneModel {
 	// MARK: - Style
 
 	func importTranscriptTheme() {
-		importRequest = .transcriptTheme
+		fileRequest.present(.transcriptTheme)
 	}
 
 	func exportTranscriptTheme() {
 		do {
-			exportedThemeData = try SharedApplication.sharedThemeController().exportTheme()
-			exportedThemeFilename = "\(SharedApplication.sharedThemeController().name).plist"
+			exportedThemeData = try themeController.exportTheme()
+			exportedThemeFilename = "\(themeController.name).plist"
 		} catch {
 			present(error)
 		}
 	}
 
 	func resetTranscriptTheme() {
-		SharedApplication.sharedThemeController().reset()
-		refreshTheme()
-		refreshChannelViewFont()
+		themeController.reset()
 	}
 
 	func selectChannelViewFont() {
@@ -77,13 +75,12 @@ extension PreferencesPaneModel {
 			$0.fontName = name
 			$0.fontSize = size
 		}
-		refreshChannelViewFont()
 	}
 
 	// MARK: - Folders
 
 	func selectTranscriptFolder() {
-		importRequest = .transcriptFolder
+		fileRequest.present(.transcriptFolder)
 	}
 
 	func clearTranscriptFolder() {
@@ -91,7 +88,7 @@ extension PreferencesPaneModel {
 	}
 
 	func selectDownloadFolder() {
-		importRequest = .downloadFolder
+		fileRequest.present(.downloadFolder)
 	}
 
 	func clearDownloadFolder() {
@@ -99,10 +96,7 @@ extension PreferencesPaneModel {
 		refreshFolders()
 	}
 
-	func completeImport(_ result: Result<URL, any Error>) {
-		guard let request = importRequest else { return }
-		importRequest = nil
-
+	func completeImport(_ result: Result<URL, any Error>, request: PreferencesImportRequest) {
 		do {
 			let url = try result.get()
 			let accessWasGranted = url.startAccessingSecurityScopedResource()
@@ -114,9 +108,7 @@ extension PreferencesPaneModel {
 
 			switch request {
 			case .transcriptTheme:
-				try SharedApplication.sharedThemeController().importTheme(from: Data(contentsOf: url))
-				refreshTheme()
-				refreshChannelViewFont()
+				try themeController.importTheme(from: Data(contentsOf: url))
 			case .transcriptFolder:
 				try setTranscriptFolder(securityScopedBookmark(for: url))
 			case .downloadFolder:
@@ -126,16 +118,15 @@ extension PreferencesPaneModel {
 				refreshFolders()
 			}
 		} catch {
-			guard (error as NSError).code != NSUserCancelledError else { return }
+			// A closed file panel is the user saying "nothing", not a failure.
+			guard (error as? CocoaError)?.code != .userCancelled else { return }
 			present(error)
 		}
 	}
 
 	func completeExport(_ result: Result<URL, any Error>) {
 		exportedThemeData = nil
-		if case let .failure(error) = result,
-		   (error as NSError).code != NSUserCancelledError
-		{
+		if case let .failure(error) = result, (error as? CocoaError)?.code != .userCancelled {
 			present(error)
 		}
 	}

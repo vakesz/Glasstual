@@ -12,18 +12,14 @@
 
 import SwiftUI
 
-enum CaffeinePreferenceKey {
-	static let preventSleep = "Private Extension Store -> Caffeine Extension -> Prevent Sleep"
-}
-
 struct CaffeinePreferencesView: View {
 	@AppStorage private var preventSleep: Bool
 	let onPreferenceChange: () -> Void
 
 	init(defaults: UserDefaults, onPreferenceChange: @escaping () -> Void) {
 		_preventSleep = AppStorage(
-			wrappedValue: false,
-			CaffeinePreferenceKey.preventSleep,
+			wrappedValue: FirstPartyPluginPreferences.caffeinePreventSleep.defaultValue,
+			FirstPartyPluginPreferences.caffeinePreventSleep.name,
 			store: defaults
 		)
 		self.onPreferenceChange = onPreferenceChange

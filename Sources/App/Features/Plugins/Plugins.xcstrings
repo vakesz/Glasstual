@@ -1,0 +1,78 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "script-no-input" : {
+      "comment" : "Placeholder in a script failure diagnostic when the command had no arguments.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "(no input)" } } }
+    },
+    "load-failed-title" : {
+      "comment" : "Title when a compatible, trusted extension cannot instantiate its plugin principal class.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Extensions Could Not Be Loaded" } } }
+    },
+    "load-failed-body" : {
+      "comment" : "The argument lists extensions that passed static validation but failed to load their plugin class.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "These extensions could not be loaded: %@. Reinstall compatible versions and restart Glasstual." } } }
+    },
+    "incompatible-interface-body" : {
+      "comment" : "Covers both obsolete legacy plugins and explicit future plugin interface versions.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "These extensions use an unsupported plugin interface. Install compatible versions before trying again." } } }
+    },
+    "script-output-too-large" : {
+      "comment" : "A script returned more than the allowed one MiB. None of its output is executed.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The script returned more than 1 MiB of output. No commands were executed." } } }
+    },
+    "script-output-invalid-encoding" : {
+      "comment" : "Script stdout could not be decoded as UTF-8. None of its output is executed.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The script output is not valid UTF-8. No commands were executed." } } }
+    },
+    "script-unavailable" : {
+      "comment" : "The requested script is no longer in the current script command catalog.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This script is no longer available. Refresh the script list and try again." } } }
+    },
+    "import-failed-title" : {
+      "comment" : "Title of an add-on installation failure alert.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The Add-on Could Not Be Installed" } } }
+    },
+    "extension-not-compatible-or-not-signed" : {
+      "comment" : "An extension failed staged signature, metadata or bundle validation before replacing an installed copy.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The extension is not compatible with this version of Glasstual or is not signed by the same developer. The installed copy has not been changed." } } }
+    },
+    "invalid-script" : {
+      "comment" : "A script failed staged validation before installation.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This file is not a readable AppleScript. The installed copy has not been changed." } } }
+    },
+    "script-install-instructions" : {
+      "comment" : "Explains that the user must install scripts using Finder because the sandbox cannot write Application Scripts. Argument is the destination folder path.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use Finder to copy the script into %@. If the folder does not exist, create it in Finder. Glasstual cannot write to this folder. Return to Glasstual after copying to refresh the script list." } } }
+    },
+    "script-install-title" : {
+      "comment" : "Title of the user-mediated script installation instructions.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Install the Script in Finder" } } }
+    }
+  },
+  "version" : "1.0"
+}

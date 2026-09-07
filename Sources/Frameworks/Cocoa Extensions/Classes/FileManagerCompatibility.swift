@@ -80,34 +80,8 @@ public extension FileManager {
 	/// depending on `options`. Theme and plugin installation run through here,
 	/// so a failure is logged rather than swallowed into a bare `false`.
 	func replaceItem(at destination: URL, withItemAt source: URL, options: FileOperationOptions) -> Bool {
-		guard source.isFileURL, destination.isFileURL else {
-			fileOperationLogger.error("Refusing to replace a non-file URL")
-			return false
-		}
-
 		do {
-			if fileExists(at: destination) {
-				guard options.contains(.removeIfExists) else {
-					fileOperationLogger.error(
-						"Destination [\(destination.standardizedTildePath ?? "", privacy: .public)] already exists"
-					)
-					return false
-				}
-
-				try removeItem(at: destination, movingToTrash: options.contains(.moveToTrash))
-			}
-
-			try createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-
-			let values = try source.resourceValues(forKeys: [.isSymbolicLinkKey, .isApplicationKey, .isPackageKey])
-			let shouldLink = values.isSymbolicLink == true ||
-				(options.contains(.symlinkPackages) &&
-					(values.isApplication == true || values.isPackage == true))
-			if shouldLink {
-				try createSymbolicLink(at: destination, withDestinationURL: source.resolvingSymlinksInPath())
-			} else {
-				try copyItem(at: source, to: destination)
-			}
+			try stageAndReplaceItem(at: destination, withItemAt: source, options: options)
 			return true
 		} catch {
 			fileOperationLogger.error(
@@ -121,12 +95,97 @@ public extension FileManager {
 		}
 	}
 
-	private func removeItem(at url: URL, movingToTrash: Bool) throws {
-		if movingToTrash {
-			var resultingURL: NSURL?
-			try trashItem(at: url, resultingItemURL: &resultingURL)
+	/// Validates a staged copy, then publishes it with one filesystem operation.
+	/// Neither copying nor validation can damage an already installed item.
+	func stageAndReplaceItem(
+		at destination: URL,
+		withItemAt source: URL,
+		options: FileOperationOptions = [.removeIfExists, .moveToTrash],
+		validate: (URL) throws -> Void = { _ in }
+	) throws {
+		guard source.isFileURL, destination.isFileURL else { throw CocoaError(.fileWriteUnsupportedScheme) }
+		let sourcePath = source.resolvingSymlinksInPath().standardizedFileURL.path
+		let destinationPath = destination.resolvingSymlinksInPath().standardizedFileURL.path
+		if sourcePath == destinationPath {
+			guard fileExists(at: source) else { throw CocoaError(.fileNoSuchFile) }
+			try validate(source)
+			return
+		}
+		guard !sourcePath.hasPrefix(destinationPath + "/"), !destinationPath.hasPrefix(sourcePath + "/") else {
+			throw CocoaError(.fileWriteInvalidFileName)
+		}
+		let replacing = fileExists(at: destination)
+		guard !replacing || options.contains(.removeIfExists) else { throw CocoaError(.fileWriteFileExists) }
+		let parent = destination.deletingLastPathComponent()
+		try createDirectory(at: parent, withIntermediateDirectories: true)
+		removeStagingDirectories(in: parent)
+		let stagingDirectory = parent.appendingPathComponent(
+			"\(stagingDirectoryPrefix)\(UUID().uuidString)",
+			isDirectory: true
+		)
+		try createDirectory(at: stagingDirectory, withIntermediateDirectories: false)
+		var removeStagingDirectory = true
+		defer {
+			if removeStagingDirectory {
+				try? removeItem(at: stagingDirectory)
+			}
+		}
+		let staged = stagingDirectory.appendingPathComponent(destination.lastPathComponent)
+		let values = try source.resourceValues(forKeys: [.isSymbolicLinkKey, .isApplicationKey, .isPackageKey])
+		let shouldLink = values.isSymbolicLink == true ||
+			(options.contains(.symlinkPackages) && (values.isApplication == true || values.isPackage == true))
+		if shouldLink {
+			try createSymbolicLink(at: staged, withDestinationURL: source.resolvingSymlinksInPath())
 		} else {
-			try removeItem(at: url)
+			try copyItem(at: source, to: staged)
+		}
+		try validate(staged)
+		// SWAP leaves the old item in staging; EXCL cannot clobber a racing create.
+		let flags = replacing ? UInt32(RENAME_SWAP) : UInt32(RENAME_EXCL)
+		guard renamex_np(staged.path, destination.path, flags) == 0 else {
+			throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+		}
+		if replacing, options.contains(.moveToTrash) {
+			do {
+				try trashItem(at: staged, resultingItemURL: nil)
+			} catch {
+				// Publication succeeded. Preserve the old copy if Trash is unavailable.
+				removeStagingDirectory = false
+				fileOperationLogger
+					.error("Installed replacement; previous item retained at \(staged.path, privacy: .public)")
+			}
+		}
+	}
+
+	/// Clears whatever an earlier install left in `parent`.
+	///
+	/// A staging directory outlives its install exactly once: when the replaced
+	/// item could not reach the Trash, it is kept there deliberately. Nothing
+	/// else ever collects those, so each install sweeps the ones before it
+	/// rather than letting a directory accumulate a copy per failed trash.
+	private func removeStagingDirectories(in parent: URL) {
+		guard let siblings = try? contentsOfDirectory(
+			at: parent,
+			includingPropertiesForKeys: nil,
+			options: .skipsSubdirectoryDescendants
+		) else {
+			return
+		}
+
+		for sibling in siblings where sibling.lastPathComponent.hasPrefix(stagingDirectoryPrefix) {
+			do {
+				try removeItem(at: sibling)
+			} catch {
+				fileOperationLogger.error(
+					"""
+					Could not clear the staging directory left at \
+					[\(sibling.path, privacy: .public)]: \(error.localizedDescription, privacy: .public)
+					"""
+				)
+			}
 		}
 	}
 }
+
+/// Names the directory an install stages into, and the ones it sweeps.
+private let stagingDirectoryPrefix = ".glasstual-install-"

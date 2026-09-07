@@ -88,10 +88,23 @@ public nonisolated extension Preferences { // nonisolated: value
 	enum Notifications {
 		static let keyPrefix = "NotificationType -> "
 
-		/// The individual `NotificationType -> …` keys are matched by prefix in
-		/// the catalogue rather than listed one by one, because a name is made
-		/// from an event and a setting at the point of use.
-		public static let family = PreferenceKeyFamily(keyPrefix)
+		/** The individual `NotificationType -> …` keys are matched by prefix in
+		 the catalogue rather than listed one by one, because a name is made
+		 from an event and a setting at the point of use.
+
+		 The family carries the shape those names hold — a sound is a string and
+		 every other setting is a flag — so an imported file cannot write a
+		 dictionary or a blob under a name no declaration covers one by one. */
+		public static let family = PreferenceKeyFamily(keyPrefix, coerce: { name, value in
+			guard let setting = NotificationSetting.allCases.first(where: {
+				name.hasSuffix(" -> \($0.rawValue)")
+			}) else {
+				return PreferenceKeyFamily.scalar(name, value)
+			}
+			return setting == .sound
+				? PreferenceKey(name, default: "").coerce(value)
+				: PreferenceKey(name, default: false).coerce(value)
+		})
 
 		public static let soundIsMuted = PreferenceKey(
 			"Notification Sound Is Muted",

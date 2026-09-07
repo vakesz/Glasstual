@@ -175,7 +175,7 @@ extension IRCClient {
 		let reason = invocation.remainingArguments.isEmpty
 			? environment.preferences.defaultKickMessage
 			: invocation.remainingArguments
-		let maximumLength = Int(supportInfo.maximumKickLength)
+		let maximumLength = Int(min(supportInfo.maximumKickLength, UInt(reason.utf8.count)))
 		let truncatedReason = ClientWireUtilities.truncated(reason, toByteCount: maximumLength)
 		if truncatedReason != reason {
 			printDebugInformation(
@@ -504,7 +504,7 @@ extension IRCClient {
 			send("TOPIC", arguments: [channelName])
 			return
 		}
-		let maximumLength = Int(supportInfo.maximumTopicLength)
+		let maximumLength = Int(min(supportInfo.maximumTopicLength, UInt(topic.utf8.count)))
 		let truncatedTopic = ClientWireUtilities.truncated(topic, toByteCount: maximumLength)
 		if truncatedTopic != topic {
 			printDebugInformation(

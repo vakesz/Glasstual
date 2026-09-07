@@ -242,7 +242,7 @@ struct WorldObserverTests {
 		let client = context.makeClient(named: "First")
 		let channel = context.world.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
 
-		context.world.destroyChannel(channel, reload: true, part: false)
+		context.world.destroyChannel(channel, options: [.reloadsNavigationList])
 
 		#expect(context.observer.events.contains(
 			.removedChannel("#one", on: client.uniqueIdentifier)
@@ -256,12 +256,13 @@ struct WorldObserverTests {
 		let client = context.makeClient(named: "First")
 		let channel = context.world.createChannel(with: ChannelConfig.seed(withName: "#one"), on: client)
 
-		context.world.destroyChannel(channel, reload: false, part: false)
+		context.world.destroyChannel(channel, options: [])
 
 		#expect(client.channelList.isEmpty)
+		// Removal releases the controller even when redraw is batched.
 		#expect(context.observer.events.contains(
 			.removedChannel("#one", on: client.uniqueIdentifier)
-		) == false)
+		))
 	}
 
 	@Test("A move past the end reports the position the client landed at")

@@ -56,6 +56,9 @@ public extension FileTransferCenter {
 		ipAddressRequest?.cancelLookup()
 		ipAddressRequest = nil
 		flushIPAddressCompletionBlocks(with: nil)
+		for transfer in model.transfers where transfer.transferStatus == .waitingForLocalIPAddress {
+			transfer.noteIPAddressLookupFailed()
+		}
 	}
 
 	@MainActor
@@ -99,7 +102,7 @@ public extension FileTransferCenter {
 
 	@MainActor private func completeIPAddressLookup(with address: String) {
 		IPAddress = address
-		for transfer in senderFileTransfers where transfer.transferStatus == .waitingForLocalIPAddress {
+		for transfer in model.transfers where transfer.transferStatus == .waitingForLocalIPAddress {
 			transfer.noteIPAddressLookupSucceeded()
 		}
 
@@ -108,7 +111,7 @@ public extension FileTransferCenter {
 	}
 
 	@MainActor private func completeFailedIPAddressLookup() {
-		for transfer in senderFileTransfers where transfer.transferStatus == .waitingForLocalIPAddress {
+		for transfer in model.transfers where transfer.transferStatus == .waitingForLocalIPAddress {
 			transfer.noteIPAddressLookupFailed()
 		}
 

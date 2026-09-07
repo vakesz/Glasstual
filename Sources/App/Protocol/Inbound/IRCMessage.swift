@@ -29,6 +29,14 @@ private nonisolated let serverTimeWholeSecondsFormatter: DateFormatter = { // no
 	return dateFormatter
 }()
 
+/** The largest `@time=` a bouncer's Unix timestamp may carry.
+
+ The tag is read as whole seconds, and 1e11 of them is the year 5138: past that
+ the value is not a time at all. It matters because the tag is server-supplied
+ text — a forty-digit one parses to a `Double` that no later narrowing can
+ survive, and `Int64(_:)` traps on it rather than reporting the overflow. */
+private nonisolated let maximumServerTimeInterval: Double = 1e11 // nonisolated: let
+
 /// A `time` (or bouncer `t`) tag read as a date, or `nil` when it carries no
 /// timestamp the client can act on.
 private nonisolated func serverTimeDate(from value: String) -> Date? { // nonisolated: pure
@@ -38,7 +46,13 @@ private nonisolated func serverTimeDate(from value: String) -> Date? { // noniso
 		/* A bouncer's Unix timestamp. `doubleValue` reads an unparsable string
 		 as zero, so an empty or punctuation-only tag used to backdate the
 		 message to 1970 and mark it historic; `Double` reports the failure. */
-		return Double(value).map(Date.init(timeIntervalSince1970:))
+		guard let seconds = Double(value), seconds.isFinite,
+		      abs(seconds) <= maximumServerTimeInterval
+		else {
+			return nil
+		}
+
+		return Date(timeIntervalSince1970: seconds)
 	}
 
 	return sharedISOStandardDateFormatter().date(from: value)

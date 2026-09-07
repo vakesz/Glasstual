@@ -10,7 +10,6 @@
  *
  *********************************************************************** */
 
-import CocoaExtensions
 import Combine
 import Foundation
 
@@ -45,19 +44,24 @@ final class NotificationSubscriptions {
 	private var tasks: [Task<Void, Never>] = []
 	private var observerTokens: [(NotificationCenter, NotificationCenter.ObservationToken)] = []
 
+	isolated deinit {
+		cancelAll()
+	}
+
 	func observe(
 		_ name: Notification.Name,
 		object: AnyObject? = nil,
 		center: NotificationCenter = .default,
 		using handler: @escaping @MainActor (Notification) -> Void
 	) {
-		/* Delivered on a later main-actor turn: a handler that ran inside the post
-		 that triggered it (a UserDefaults write, for example) would re-enter the
-		 poster, and posts can come from any thread. Awaiting the publisher's
-		 values inside a main-actor task is what gives the handler isolation the
-		 compiler checks; a `sink` closure is nonisolated and cannot. */
+		// Creating the sequence registers now, before the consumer task starts.
+		let notifications = center.notifications(named: name)
 		let task = Task { @MainActor in
-			for await notification in center.publisher(for: name, object: object).bufferedValues {
+			for await notification in notifications {
+				guard Task.isCancelled == false else { return }
+				if let object, notification.object as AnyObject? !== object {
+					continue
+				}
 				handler(notification)
 			}
 		}

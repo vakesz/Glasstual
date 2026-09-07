@@ -62,38 +62,86 @@ public struct MemberListGroup: Identifiable {
 	}
 }
 
-private enum MemberListFlatRow {
-	case section(MemberListSection)
-	case member(ChannelUser)
-}
-
 /// Observable state for the SwiftUI member list.
 ///
-/// Rows are derived from the controller's ordered members. Selection is held
+/// Rows are derived from the channel's ordered members. Selection is held
 /// by stable user identity rather than row number, so joins, parts and rank
 /// changes cannot move the selection onto a different person.
 @MainActor
 @Observable
-public final class MemberList {
+public final class MemberList: ChannelMemberListPresentation {
 	public var isHiddenByUser = false
 	public var selectedMemberIDs: Set<User.ID> = []
 	public private(set) var groups: [MemberListGroup] = []
 	public private(set) var presentationRevision = 0
 
-	public let contentController: IRCChannelMemberListController
-
-	private var flatRows: [MemberListFlatRow] = []
+	@ObservationIgnored private weak var memberList: ChannelMemberList?
+	@ObservationIgnored private var members: [ChannelUser] = []
+	@ObservationIgnored private var indexesByUserID: [User.ID: Int] = [:]
 	private var updateDepth = 0
 	private var updateIsPending = false
 	private var lastInteractedMemberID: User.ID?
 
-	public init() {
-		contentController = IRCChannelMemberListController()
-		contentController.attach(to: self)
-	}
+	public init() {}
 
 	public func assign(to channel: IRCChannel?) {
-		contentController.assign(to: channel)
+		memberList?.assign(nil)
+		memberList = channel?.memberInfo
+		if let memberList {
+			memberList.assign(self)
+		} else {
+			replaceContents([])
+		}
+	}
+
+	public func memberListDidEnd() {
+		memberList = nil
+		replaceContents([])
+	}
+
+	public func replaceContents(_ contents: [ChannelUser]) {
+		members = contents
+		reindexMembers()
+		membersChanged()
+	}
+
+	public func insert(_ member: ChannelUser, atArrangedObjectIndex index: Int) {
+		guard index >= 0, index <= members.count else { return }
+		members.insert(member, at: index)
+		reindexMembers()
+		membersChanged()
+	}
+
+	public func replace(_ member: ChannelUser, atArrangedObjectIndex index: Int) {
+		guard members.indices.contains(index) else { return }
+		if members[index].id != member.id {
+			indexesByUserID.removeValue(forKey: members[index].id)
+			indexesByUserID[member.id] = index
+		}
+		members[index] = member
+		membersChanged()
+	}
+
+	public func remove(atArrangedObjectIndex index: Int) {
+		guard members.indices.contains(index) else { return }
+		members.remove(at: index)
+		reindexMembers()
+		membersChanged()
+	}
+
+	private func reindexMembers() {
+		indexesByUserID = Dictionary(members.enumerated().map { ($0.element.id, $0.offset) },
+		                             uniquingKeysWith: { _, latest in latest })
+	}
+
+	public var selectedMembers: [ChannelUser] {
+		selectedMemberIDs.compactMap { indexesByUserID[$0] }.sorted().compactMap { index in
+			let member = members[index]
+			if let memberList {
+				return memberList.findMember(withUserID: member.id)
+			}
+			return member
+		}
 	}
 
 	public func beginUpdates() {
@@ -120,7 +168,6 @@ public final class MemberList {
 	}
 
 	private func rebuildRows() {
-		let members = contentController.arrangedObjects
 		var ordinalsByRank: [UserRank: Int] = [:]
 		var builtGroups: [MemberListGroup] = []
 		var admitted: Set<User.ID> = []
@@ -151,13 +198,6 @@ public final class MemberList {
 		appendCurrentGroup()
 
 		groups = builtGroups
-		let showsHeaders = builtGroups.count > 1
-		flatRows = builtGroups.flatMap { group in
-			var rows: [MemberListFlatRow] = showsHeaders ? [.section(group.section)] : []
-			rows.append(contentsOf: group.members.map(MemberListFlatRow.member))
-			return rows
-		}
-
 		selectedMemberIDs.formIntersection(admitted)
 		if let lastInteractedMemberID, admitted.contains(lastInteractedMemberID) == false {
 			self.lastInteractedMemberID = nil
@@ -173,46 +213,6 @@ public final class MemberList {
 		return member.rank
 	}
 
-	public var numberOfRows: Int {
-		flatRows.count
-	}
-
-	public var selectedRowIndexes: IndexSet {
-		IndexSet(flatRows.indices.filter { row in
-			guard case let .member(member) = flatRows[row] else { return false }
-			return selectedMemberIDs.contains(member.id)
-		})
-	}
-
-	public func item(atRow row: Int) -> Any? {
-		guard flatRows.indices.contains(row), case let .member(member) = flatRows[row] else {
-			return nil
-		}
-
-		return member
-	}
-
-	public func section(atRow row: Int) -> MemberListSection? {
-		guard flatRows.indices.contains(row), case let .section(section) = flatRows[row] else {
-			return nil
-		}
-
-		return section
-	}
-
-	public func isGroupRow(_ row: Int) -> Bool {
-		section(atRow: row) != nil
-	}
-
-	public func selectRowIndexes(_ indexes: IndexSet, byExtendingSelection extends: Bool) {
-		var identities = extends ? selectedMemberIDs : []
-		for row in indexes {
-			guard let member = item(atRow: row) as? ChannelUser else { continue }
-			identities.insert(member.id)
-		}
-		selectedMemberIDs = identities
-	}
-
 	public func deselectAll(_: Any?) {
 		selectedMemberIDs.removeAll()
 		lastInteractedMemberID = nil
@@ -226,16 +226,17 @@ public final class MemberList {
 	}
 
 	func notePrimaryInteraction(withID identifier: User.ID) {
-		guard let member = contentController.member(withID: identifier) else { return }
+		guard let index = indexesByUserID[identifier] else { return }
+		let member = members[index]
 		notePrimaryInteraction(with: member)
 	}
 
-	public var rowBeneathMouse: Int? {
+	public var primaryInteractedMember: ChannelUser? {
 		guard let lastInteractedMemberID else { return nil }
-		return flatRows.firstIndex {
-			guard case let .member(member) = $0 else { return false }
-			return member.id == lastInteractedMemberID
+		if let memberList {
+			return memberList.findMember(withUserID: lastInteractedMemberID)
 		}
+		return indexesByUserID[lastInteractedMemberID].map { members[$0] }
 	}
 
 	/** Tells the rows to draw themselves again.

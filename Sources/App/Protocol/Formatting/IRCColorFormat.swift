@@ -463,6 +463,15 @@ public extension NSAttributedString {
 			budget.charge(Int(formattersLength))
 			formatters.appendToStart(of: &result)
 
+			/* Where this segment's own characters start in `result`.
+
+			 `deletionLength` counts UTF-16 units of the plain source; `result`
+			 also holds the control codes the formatters injected, so the two
+			 run at different offsets. Everything appended from here to the end
+			 of the segment is copied from the source verbatim, which is what
+			 lets a wrap inside this window be measured in either. */
+			let segmentResultLocation = result.utf16.count
+
 			var i = 0
 
 			while i < segmentRange.length {
@@ -479,8 +488,12 @@ public extension NSAttributedString {
 
 				if budget.isOverBudget {
 					if consumedAnyCharacter {
+						/* The floor is in `result`'s coordinates, so the wrap
+						 cannot back past this segment's first character. Held
+						 there, the units it removed from `result` are exactly
+						 the source units it gave back. */
 						let indexDifference = result.wrapIRCTextFormatterResult(
-							with: UInt(segmentRange.location),
+							with: UInt(segmentResultLocation),
 							maxDistance: UInt(truncationWrapMaxDistance)
 						)
 

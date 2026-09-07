@@ -46,64 +46,63 @@ extension ClientPreferences {
 	/// Reads the shared defaults store once, on the main actor that owns it.
 	/// The result is a `Sendable` value the connection layer keeps.
 	@MainActor
-	static func current() -> ClientPreferences {
+	static func current(stores: PreferencesTransferStores = .live) -> ClientPreferences {
 		var snapshot = ClientPreferences()
 
-		snapshot.autojoinDelayAfterIdentification = Preferences.Connection.autojoinDelayAfterIdentification.value
-		snapshot.autojoinOnInvite = Preferences.Connection.autojoinOnInvite.value
-		snapshot.rejoinOnKick = Preferences.Connection.rejoinOnKick.value
-		snapshot.appNapEnabled = TextualPreferences.appNapEnabled()
-		snapshot.preferModernCiphers = Preferences.Connection.preferModernCiphers.value
-		snapshot.disconnectOnSleep = Preferences.Connection.disconnectOnSleep.value
-		snapshot.awayOnScreenSleep = Preferences.Connection.awayOnScreenSleep.value
-		snapshot.enableEchoMessageCapability = Preferences.Connection.echoMessageCapability.value
-		snapshot.requestChatHistory = Preferences.Connection.requestChatHistory.value
-		snapshot.synchronizeReadMarkers = Preferences.Connection.synchronizeReadMarkers.value
-		snapshot.disabledCapabilities = Set(Preferences.Connection.disabledCapabilities.value)
-		snapshot.rememberServerListQueryStates = Preferences.Appearance.rememberQueryStates.value
-		snapshot.trackUserAwayStatusMaximumChannelSize = Preferences.Appearance
-			.trackUserAwayStatusMaximumChannelSize
-			.value
+		snapshot.autojoinDelayAfterIdentification = stores[Preferences.Connection.autojoinDelayAfterIdentification]
+		snapshot.autojoinOnInvite = stores[Preferences.Connection.autojoinOnInvite]
+		snapshot.rejoinOnKick = stores[Preferences.Connection.rejoinOnKick]
+		snapshot.appNapEnabled = !stores[Preferences.Internals.appSleepDisabled]
+		snapshot.preferModernCiphers = stores[Preferences.Connection.preferModernCiphers]
+		snapshot.disconnectOnSleep = stores[Preferences.Connection.disconnectOnSleep]
+		snapshot.awayOnScreenSleep = stores[Preferences.Connection.awayOnScreenSleep]
+		snapshot.enableEchoMessageCapability = stores[Preferences.Connection.echoMessageCapability]
+		snapshot.requestChatHistory = stores[Preferences.Connection.requestChatHistory]
+		snapshot.synchronizeReadMarkers = stores[Preferences.Connection.synchronizeReadMarkers]
+		snapshot.disabledCapabilities = Set(stores[Preferences.Connection.disabledCapabilities])
+		snapshot.rememberServerListQueryStates = stores[Preferences.Appearance.rememberQueryStates]
+		let awayTrackingLimit = Preferences.Appearance.trackUserAwayStatusMaximumChannelSize
+		snapshot.trackUserAwayStatusMaximumChannelSize = stores[awayTrackingLimit]
 
-		snapshot.removeAllFormatting = Preferences.Messages.removeAllFormatting.value
-		snapshot.showJoinLeave = Preferences.Messages.showJoinLeave.value
-		snapshot.displayServerMOTD = Preferences.Connection.displayServerMOTD.value
-		snapshot.replyToCTCPRequests = Preferences.Messages.replyToCTCPRequests.value
-		snapshot.masqueradeCTCPVersion = Preferences.Identity.ctcpVersionMasquerade.storedValue
-		snapshot.locationToSendNotices = Preferences.Commands.noticeDestination.value
-		snapshot.sendTypingNotifications = Preferences.Connection.sendTypingNotifications.value
-		snapshot.displayTypingNotifications = Preferences.Connection.displayTypingNotifications.value
-		snapshot.giveFocusOnMessageCommand = Preferences.Commands.giveFocusOnMessageCommand.value
-		snapshot.autoAddScrollbackMark = Preferences.Messages.autoAddScrollbackMark.value
-		snapshot.defaultKickMessage = Preferences.Commands.kickMessage.value
-		snapshot.irCopDefaultKillMessage = Preferences.Commands.irCopKillMessage.value
-		snapshot.banFormat = Preferences.Commands.banFormat.value
+		snapshot.removeAllFormatting = stores[Preferences.Messages.removeAllFormatting]
+		snapshot.showJoinLeave = stores[Preferences.Messages.showJoinLeave]
+		snapshot.displayServerMOTD = stores[Preferences.Connection.displayServerMOTD]
+		snapshot.replyToCTCPRequests = stores[Preferences.Messages.replyToCTCPRequests]
+		snapshot.masqueradeCTCPVersion = stores[stored: Preferences.Identity.ctcpVersionMasquerade]
+		snapshot.locationToSendNotices = stores[Preferences.Commands.noticeDestination]
+		snapshot.sendTypingNotifications = stores[Preferences.Connection.sendTypingNotifications]
+		snapshot.displayTypingNotifications = stores[Preferences.Connection.displayTypingNotifications]
+		snapshot.giveFocusOnMessageCommand = stores[Preferences.Commands.giveFocusOnMessageCommand]
+		snapshot.autoAddScrollbackMark = stores[Preferences.Messages.autoAddScrollbackMark]
+		snapshot.defaultKickMessage = stores[Preferences.Commands.kickMessage]
+		snapshot.irCopDefaultKillMessage = stores[Preferences.Commands.irCopKillMessage]
+		snapshot.banFormat = stores[Preferences.Commands.banFormat]
 
-		snapshot.amsgAllConnections = Preferences.Commands.amsgAllConnections.value
-		snapshot.awayAllConnections = Preferences.Commands.awayAllConnections.value
-		snapshot.nickAllConnections = Preferences.Commands.nickAllConnections.value
-		snapshot.clearAllConnections = Preferences.Commands.clearAllConnections.value
+		snapshot.amsgAllConnections = stores[Preferences.Commands.amsgAllConnections]
+		snapshot.awayAllConnections = stores[Preferences.Commands.awayAllConnections]
+		snapshot.nickAllConnections = stores[Preferences.Commands.nickAllConnections]
+		snapshot.clearAllConnections = stores[Preferences.Commands.clearAllConnections]
 
-		snapshot.displayPublicMessageCountOnDockBadge = Preferences.Notifications
-			.publicMessageCountOnDockBadge
-			.value
-		snapshot.memberListSortFavorsServerStaff = Preferences.Appearance.memberListSortFavorsServerStaff.value
-		snapshot.disableNicknameColorHashing = Preferences.Messages.disableNicknameColorHashing.value
-		snapshot.showInlineMedia = Preferences.Messages.showInlineMedia.value
-		snapshot.soundIsMuted = Preferences.Notifications.soundIsMuted.value
+		snapshot.displayPublicMessageCountOnDockBadge = stores[Preferences.Notifications.publicMessageCountOnDockBadge]
+		snapshot.memberListSortFavorsServerStaff = stores[Preferences.Appearance.memberListSortFavorsServerStaff]
+		snapshot.disableNicknameColorHashing = stores[Preferences.Messages.disableNicknameColorHashing]
+		snapshot.showInlineMedia = stores[Preferences.Messages.showInlineMedia]
+		snapshot.soundIsMuted = stores[Preferences.Notifications.soundIsMuted]
 
-		snapshot.highlightCurrentNickname = Preferences.Highlights.trackLocalNickname.value
-		snapshot.highlightMatchingMethod = Preferences.Highlights.matchingMethod.value
-		snapshot.highlightMatchKeywords = TextualPreferences.highlightMatchKeywords() ?? []
-		snapshot.highlightExcludeKeywords = TextualPreferences.highlightExcludeKeywords() ?? []
-		snapshot.logHighlights = Preferences.Logging.logHighlights.value
+		snapshot.highlightCurrentNickname = stores[Preferences.Highlights.trackLocalNickname]
+		snapshot.highlightMatchingMethod = stores[Preferences.Highlights.matchingMethod]
+		snapshot.highlightMatchKeywords = Preferences.Highlights
+			.keywords(in: stores[Preferences.Highlights.matchKeywords])
+		snapshot.highlightExcludeKeywords = Preferences.Highlights
+			.keywords(in: stores[Preferences.Highlights.excludeKeywords])
+		snapshot.logHighlights = stores[Preferences.Logging.logHighlights]
 
-		snapshot.logToDiskIsEnabled = TextualPreferences.logToDiskIsEnabled()
-		snapshot.developerModeEnabled = Preferences.Commands.developerMode.value
-		snapshot.fileTransferRequestReplyAction = Preferences.FileTransfers.requestReplyAction.value
-		snapshot.fileTransferPortRangeStart = Preferences.FileTransfers.portRangeStart.value
-		snapshot.fileTransferPortRangeEnd = Preferences.FileTransfers.portRangeEnd.value
-		snapshot.fileTransferIPAddressInterfaceName = Preferences.FileTransfers.ipAddressInterfaceName.storedValue
+		snapshot.logToDiskIsEnabled = stores[Preferences.Logging.logToDisk] && PathInfo.transcriptFolderURL != nil
+		snapshot.developerModeEnabled = stores[Preferences.Commands.developerMode]
+		snapshot.fileTransferRequestReplyAction = stores[Preferences.FileTransfers.requestReplyAction]
+		snapshot.fileTransferPortRangeStart = stores[Preferences.FileTransfers.portRangeStart]
+		snapshot.fileTransferPortRangeEnd = stores[Preferences.FileTransfers.portRangeEnd]
+		snapshot.fileTransferIPAddressInterfaceName = stores[stored: Preferences.FileTransfers.ipAddressInterfaceName]
 
 		return snapshot
 	}

@@ -140,8 +140,10 @@ public final class ChannelBanListSheet: MainWindowSheetSession, ChannelScoped {
 		channelId = channel.uniqueIdentifier
 		super.init(window: nil)
 
+		/* The limit is whatever the server advertised in ISUPPORT, so it is
+		 saturated rather than trusted to fit. */
 		model.maximumEntries = ChannelModeSymbol(modeSymbol)
-			.map { Int(client.supportInfo.maximumListEntries(forModeSymbol: $0)) } ?? 0
+			.map { Int(clamping: client.supportInfo.maximumListEntries(forModeSymbol: $0)) } ?? 0
 		installSheet()
 	}
 

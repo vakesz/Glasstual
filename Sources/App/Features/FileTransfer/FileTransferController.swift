@@ -91,6 +91,7 @@ public final class FileTransferController: ClientScoped {
 	public internal(set) var errorMessageDescription: String?
 	public internal(set) var path: String?
 	public internal(set) var filename = ""
+	var wireFilename = ""
 	public internal(set) var hostAddress = ""
 	public internal(set) var peerNickname = ""
 	public internal(set) var transferToken: String?
@@ -99,18 +100,33 @@ public final class FileTransferController: ClientScoped {
 
 	public internal(set) var speedRecords: [UInt64] = []
 
-	/** The destination this receiver has taken on disk, once it has one.
+	/// The descriptor this transfer reads from or writes into, and the
+	/// authority for all byte I/O and resume validation.
+	var ownedFile: DCCTransferFile? {
+		didSet {
+			/* The reservation is what settles which directory the user let us
+			 reach, and the row still has to open and reveal the file once the
+			 descriptor is closed. Keep the URL after the file goes, and never
+			 replace a known one with nothing. */
+			if let ownedFile {
+				fileAccessURL = ownedFile.accessURL
+			}
+		}
+	}
 
-	 A resume appends to whatever sits at this path, so the path has to be one
-	 this transfer created: an unrelated file that happens to carry the offered
-	 name is somebody else's data. `claimDestinationFilename()` is what takes the
-	 next free name and records the claim, and it only ever happens once. */
-	var claimedFilePath: String?
+	/// An inactive capability URL, not an outstanding security-scope lease.
+	var fileAccessURL: URL?
+	var destinationAccessURL: URL?
+	var negotiationTask: Task<Void, Never>?
+	var stopTask: Task<Void, Never>?
+	var sessionID = UUID()
+	public internal(set) var completion: DCCTransfer.Completion?
 	var portMapping: XRPortMapper?
 	var transfer: DCCTransfer?
 	var transferEvents: Task<Void, Never>?
-	/// Gives up on a `DCC RESUME` the peer never answered and starts over.
+	/// Gives up on an unanswered RESUME without truncating the partial file.
 	var resumeRequestTimeout: Task<Void, Never>?
+	var offerTimeout: Task<Void, Never>?
 	var transferProgressHandler: NSObjectProtocol?
 	var lifecycleNotifications = NotificationSubscriptions()
 	var portMapperNotifications = NotificationSubscriptions()
@@ -123,10 +139,38 @@ public final class FileTransferController: ClientScoped {
 		}
 	}
 
+	/// Whether starting this transfer would do anything: it is idle, and the
+	/// reason it is idle is one a retry can get past. Every place that offers
+	/// to start a transfer asks this, so they cannot drift apart.
+	public var canStart: Bool {
+		[.stopped, .recoverableError].contains(transferStatus)
+	}
+
 	private init(client: IRCClient) {
 		self.client = client
 		clientId = client.uniqueIdentifier
 		prepareInitialState()
+	}
+
+	isolated deinit {
+		negotiationTask?.cancel()
+		resumeRequestTimeout?.cancel()
+		offerTimeout?.cancel()
+		transferEvents?.cancel()
+		lifecycleNotifications.cancelAll()
+		portMapperNotifications.cancelAll()
+		portMapping?.close()
+		if let transferProgressHandler {
+			ProcessInfo.processInfo.endActivity(transferProgressHandler)
+		}
+		let transfer = transfer
+		let file = ownedFile
+		let stopping = stopTask
+		Task {
+			await stopping?.value
+			await transfer?.cancel()
+			await file?.close()
+		}
 	}
 
 	public static func receiver(
@@ -138,6 +182,8 @@ public final class FileTransferController: ClientScoped {
 		filesize totalFilesize: UInt64,
 		token transferToken: String?
 	) -> FileTransferController? {
+		let wireFilename = filename.safeFilename
+		guard !wireFilename.isEmpty, totalFilesize > 0 else { return nil }
 		let controller = FileTransferController(client: client)
 
 		if let transferToken, !transferToken.isEmpty {
@@ -149,6 +195,7 @@ public final class FileTransferController: ClientScoped {
 		controller.hostAddress = hostAddress
 		controller.hostPort = hostPort
 		controller.filename = filename
+		controller.wireFilename = wireFilename
 		controller.totalFilesize = totalFilesize
 		return controller
 	}
@@ -156,17 +203,17 @@ public final class FileTransferController: ClientScoped {
 	public static func sender(
 		for client: IRCClient,
 		nickname: String,
-		path: String
+		path: String,
+		accessURL: URL? = nil
 	) -> FileTransferController? {
 		let filename = (path as NSString).lastPathComponent
 
-		guard let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-		      let fileSize = attributes[.size] as? NSNumber
+		guard let file = try? DCCTransferFile(url: URL(fileURLWithPath: path), receiving: false, accessURL: accessURL)
 		else {
 			return nil
 		}
 
-		let totalFilesize = fileSize.uint64Value
+		let totalFilesize = file.initialSize
 		guard totalFilesize > 0 else {
 			fileTransferLogger.error("Cannot create a sender for an empty file")
 			return nil
@@ -178,6 +225,8 @@ public final class FileTransferController: ClientScoped {
 		controller.peerNickname = nickname
 		controller.path = (path as NSString).deletingLastPathComponent
 		controller.filename = filename
+		controller.wireFilename = filename.safeFilename
+		controller.ownedFile = file
 		controller.totalFilesize = totalFilesize
 		return controller
 	}

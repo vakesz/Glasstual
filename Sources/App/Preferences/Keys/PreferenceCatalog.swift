@@ -77,6 +77,26 @@ public nonisolated extension Preferences { // nonisolated: value
 		keysByName[name]
 	}
 
+	/** Validates and coerces an imported value for a stored name, or returns
+	 `nil` to reject it.
+
+	 A name the code declares one by one answers for itself. A name made at
+	 runtime has no declaration, so its family decides the shape it may hold —
+	 without that, a catalogued family name was the one import path that
+	 accepted an arbitrary property list. A name the catalogue does not cover
+	 at all belongs to something else and travels unchanged. */
+	static func coerce(_ value: PropertyListValue, forKey name: String) -> PropertyListValue? {
+		if let key = keysByName[name] {
+			return key.coerce(value)
+		}
+
+		guard let family = allFamilies.first(where: { $0.matches(name) }) else {
+			return value
+		}
+
+		return family.coerce(name, value)
+	}
+
 	/// The registration domain for one defaults database, built from the
 	/// declarations rather than read from a plist.
 	static func registrationDomain(for storage: PreferenceStorage) -> [String: PropertyListValue] {

@@ -50,8 +50,31 @@ extension World {
 	}
 
 	func destroy(_ channel: IRCChannel, reload: Bool = true) {
-		destroyChannel(channel, reload: reload)
+		destroyChannel(channel, options: reload ? .default : [.partsChannel])
 	}
+}
+
+/** What tearing a channel down does beyond removing it.
+
+ The three used to be positional booleans on five overloads, and a call site
+ saying `true, true, false` said nothing about which `true` meant what. */
+public struct ChannelDestruction: OptionSet, Sendable {
+	public let rawValue: Int
+
+	public init(rawValue: Int) {
+		self.rawValue = rawValue
+	}
+
+	/// Move the selection off the channel and redraw the navigation list. The
+	/// client drops the channel either way; this names the redraw.
+	public static let reloadsNavigationList = Self(rawValue: 1 << 0)
+	/// Send `PART` for a channel that is still joined.
+	public static let partsChannel = Self(rawValue: 1 << 1)
+	/// Keep the channel's logs, keychain item and input history.
+	public static let preservesLocalData = Self(rawValue: 1 << 2)
+
+	/// What the user asking to close a channel means.
+	public static let `default`: Self = [.reloadsNavigationList, .partsChannel]
 }
 
 private enum WorldTiming {
@@ -572,12 +595,16 @@ public final class World: NSObject {
 	}
 
 	public func destroyClient(_ client: IRCClient) {
+		destroyClient(client, preservingLocalData: false)
+	}
+
+	public func destroyClient(_ client: IRCClient, preservingLocalData: Bool) {
 		if client.isConnecting || client.isConnected {
 			client.addDisconnectCallback { [weak self, weak client] in
 				guard let client else {
 					return
 				}
-				self?.destroyClient(client)
+				self?.destroyClient(client, preservingLocalData: preservingLocalData)
 			}
 			client.quit()
 			return
@@ -588,7 +615,7 @@ public final class World: NSObject {
 			object: client
 		)
 		selectOtherBeforeDestroy(client)
-		client.prepareForPermanentDestruction()
+		client.prepareForRemoval(preservingLocalData: preservingLocalData)
 		notifyObservers { $0.world(self, didRemoveClient: client) }
 
 		clients.removeAll { $0 === client }
@@ -600,15 +627,11 @@ public final class World: NSObject {
 		}
 	}
 
-	public func destroyChannel(_ channel: IRCChannel) {
-		destroyChannel(channel, reload: true, part: true)
-	}
+	public func destroyChannel(_ channel: IRCChannel, options: ChannelDestruction = .default) {
+		let reload = options.contains(.reloadsNavigationList)
+		let partChannel = options.contains(.partsChannel)
+		let preservingLocalData = options.contains(.preservesLocalData)
 
-	public func destroyChannel(_ channel: IRCChannel, reload: Bool) {
-		destroyChannel(channel, reload: reload, part: true)
-	}
-
-	public func destroyChannel(_ channel: IRCChannel, reload: Bool, part partChannel: Bool) {
 		/* The client drops what it holds for this channel before anything tears
 		 the channel down. It used to hear that through the notification below,
 		 which is delivered a turn later — after the channel had gone. */
@@ -631,7 +654,7 @@ public final class World: NSObject {
 			selectOtherBeforeDestroy(channel)
 		}
 
-		channel.prepareForPermanentDestruction()
+		channel.prepareForRemoval(preservingLocalData: preservingLocalData)
 		if client.lastSelectedChannel === channel {
 			client.lastSelectedChannel = nil
 		}
@@ -641,8 +664,9 @@ public final class World: NSObject {
 		 configuration, and nothing could reach it again. */
 		client.remove(channel)
 
+		// Removal also releases the window's controller, even during a batched redraw.
+		notifyObservers { $0.world(self, didRemoveChannel: channel, on: client) }
 		if reload {
-			notifyObservers { $0.world(self, didRemoveChannel: channel, on: client) }
 			notifyObservers {
 				$0.worldRequestsSelectionAdjustment(self)
 				$0.worldNavigationListDidChange(self)

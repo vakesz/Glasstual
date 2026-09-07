@@ -83,14 +83,46 @@ private let clientTerminationLogger = Logger(
 	category: "Termination"
 )
 
-@MainActor
-public extension IRCClient {
-	func updateConfig(_ newConfig: ClientConfig) {
-		updateConfig(newConfig, updateSelection: true)
+/** Why a client's configuration is being replaced.
+
+ The three reasons differ in what survives the replacement, which used to be
+ spelled out at each call site as a pair of booleans whose combinations did not
+ all mean anything. */
+public enum ConfigurationUpdate: Sendable {
+	/// The user edited the configuration in Server Properties. What the edit
+	/// dropped is dropped, keychain items for removed endpoints included.
+	case edit
+	/// A settings import or a transfer from another Mac laid a configuration
+	/// over the live one. It says what the settings are, not what the whole
+	/// machine is, so local data and live conversations it does not mention
+	/// are kept.
+	case transfer
+	/// A snapshot was restored. It is a statement about the whole machine, so
+	/// a live conversation the snapshot does not list goes away with it —
+	/// while its logs and secrets, which the snapshot never carried, stay.
+	case restore
+
+	/// Whether keychain items and logs outlive the endpoints and channels the
+	/// new configuration leaves out.
+	var preservesLocalData: Bool {
+		self != .edit
 	}
 
-	func updateConfig(_ newConfig: ClientConfig, updateSelection: Bool) {
-		guard isTerminating == false, config != newConfig else { return }
+	/// Whether a live conversation the new configuration does not list
+	/// survives it.
+	var preservesUnmatchedQueries: Bool {
+		self != .restore
+	}
+}
+
+@MainActor
+public extension IRCClient {
+	func updateConfig(_ newConfig: ClientConfig, for reason: ConfigurationUpdate = .edit) {
+		let preservingLocalData = reason.preservesLocalData
+		let preservingUnmatchedQueries = reason.preservesUnmatchedQueries
+
+		// A restore also removes live queries its configuration left out.
+		guard isTerminating == false, config != newConfig || !preservingUnmatchedQueries else { return }
 		guard config.uniqueIdentifier == newConfig.uniqueIdentifier else {
 			clientConfigurationLogger.error("Tried to load configuration for incorrect client")
 			return
@@ -98,12 +130,14 @@ public extension IRCClient {
 
 		let currentConfig = config
 		config = newConfig
-		reconcileChannels(with: newConfig.channelList)
-		reconcileServers(from: currentConfig.serverList, to: newConfig.serverList)
-
-		if updateSelection {
-			reloadServerListItems()
-		}
+		reconcileChannels(with: newConfig.channelList, preservingLocalData: preservingLocalData,
+		                  preservingUnmatchedQueries: preservingUnmatchedQueries)
+		reconcileServers(
+			from: currentConfig.serverList,
+			to: newConfig.serverList,
+			preservingLocalData: preservingLocalData
+		)
+		reloadServerListItems()
 
 		world?.noteNavigationListDidChange()
 		writePasswordsToKeychain()
@@ -153,6 +187,7 @@ public extension IRCClient {
 	}
 
 	func prepareForApplicationTermination() {
+		guard isTerminating == false else { return }
 		isTerminating = true
 		let clientIdentifier = uniqueIdentifier
 		clientTerminationLogger.info("Preparing client: <\(clientIdentifier, privacy: .public)>")
@@ -171,10 +206,13 @@ public extension IRCClient {
 		addDisconnectCallback { [weak self] in
 			self?.prepareForApplicationTerminationPostflight()
 		}
+		socket?.beginCloseDeadline()
 		quit()
 	}
 
 	func prepareForApplicationTerminationPostflight() {
+		guard terminationPostflightFinished == false else { return }
+		terminationPostflightFinished = true
 		let clientIdentifier = uniqueIdentifier
 		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Closing log file")
 		closeLogFile()
@@ -195,25 +233,28 @@ public extension IRCClient {
 		clientTerminationLogger.info(
 			"[\(clientIdentifier, privacy: .public)] Preparing view controller: <\(viewIdentifier, privacy: .public)>"
 		)
-		presentation?.prepareForApplicationTermination()
+		presentation?.tearDown(.applicationTermination)
 		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Decrementing client count")
 		environment.services.applicationState?.noteClientDidFinishTerminating()
 	}
 
-	func prepareForPermanentDestruction() {
+	func prepareForRemoval(preservingLocalData: Bool) {
+		// Cancels the session's scheduled work and stops its timers.
 		isTerminating = true
-		stopAllTimers()
+		socket?.close()
 		closeDialogs()
 		closeLogFile()
 		clearEventsToSpeak()
 		clearAddressBookCache()
 		clearTrackedUsers()
-		config.destroyNicknamePasswordKeychainItem()
-		config.destroyProxyPasswordKeychainItem()
-		destroyServerPasswordsKeychainItems()
-		channelList.forEach { $0.prepareForPermanentDestruction() }
-		output?.destroyInputHistory(for: self)
-		presentation?.prepareForPermanentDestruction()
+		if !preservingLocalData {
+			config.destroyNicknamePasswordKeychainItem()
+			config.destroyProxyPasswordKeychainItem()
+			destroyServerPasswordsKeychainItems()
+			output?.destroyInputHistory(for: self)
+		}
+		channelList.forEach { $0.prepareForRemoval(preservingLocalData: preservingLocalData) }
+		presentation?.tearDown(preservingLocalData ? .preservingRemoval : .permanentRemoval)
 	}
 
 	func closeDialogs() {
@@ -248,14 +289,20 @@ public extension IRCClient {
 		config.serverList.forEach { $0.keychainItem.delete() }
 	}
 
-	private func reconcileChannels(with configurations: [ChannelConfig]) {
+	private func reconcileChannels(with configurations: [ChannelConfig], preservingLocalData: Bool,
+	                               preservingUnmatchedQueries: Bool)
+	{
 		var remainingChannels = channelList
 		var updatedChannels: [IRCChannel] = []
 		var insertedNames = Set<String>()
 		guard let world else { return }
 
 		for channelConfig in configurations where insertedNames.insert(channelConfig.channelName).inserted {
-			if let channel = findChannel(channelConfig.channelName, in: remainingChannels) {
+			if let channel = findChannel(channelConfig.channelName, in: remainingChannels),
+			   channel.uniqueIdentifier == channelConfig.uniqueIdentifier,
+			   channel.name == channelConfig.channelName,
+			   channel.type == channelConfig.type
+			{
 				channel.updateConfig(
 					channelConfig,
 					fireChangedNotification: false,
@@ -271,8 +318,12 @@ public extension IRCClient {
 		}
 
 		for channel in remainingChannels {
-			if channel.isChannel {
-				world.destroy(channel, reload: false)
+			let replacedByName = findChannel(channel.name, in: updatedChannels) != nil
+			if !preservingUnmatchedQueries || channel.isChannel || replacedByName {
+				world.destroyChannel(
+					channel,
+					options: preservingLocalData ? [.partsChannel, .preservesLocalData] : [.partsChannel]
+				)
 			} else {
 				updatedChannels.append(channel)
 			}
@@ -280,12 +331,12 @@ public extension IRCClient {
 		channelList = updatedChannels
 	}
 
-	private func reconcileServers(from oldServers: [Server], to newServers: [Server]) {
-		/* An endpoint the user removed no longer has anywhere to keep its
-		 password, so the keychain item goes with it. The endpoint the client is
-		 connected to right now keeps its secret until the connection ends. */
+	private func reconcileServers(from oldServers: [Server], to newServers: [Server], preservingLocalData: Bool) {
+		/* Explicit edits delete removed endpoints' passwords after any active
+		 connection ends. Transfers retain them so restoring a backup recovers
+		 the same local credentials. */
 		let newIdentifiers = Set(newServers.map(\.uniqueIdentifier))
-		for oldServer in oldServers where newIdentifiers.contains(oldServer.uniqueIdentifier) == false {
+		for oldServer in oldServers where !preservingLocalData && !newIdentifiers.contains(oldServer.uniqueIdentifier) {
 			if oldServer.uniqueIdentifier == server?.uniqueIdentifier {
 				retiredServerKeychainItems.insert(oldServer.keychainItem)
 			} else {

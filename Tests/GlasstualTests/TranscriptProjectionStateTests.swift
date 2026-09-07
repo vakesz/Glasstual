@@ -26,9 +26,7 @@ private func projectionResult(for line: LogLine) -> LogLineRenderResult {
 		transcriptLine: TranscriptLine(
 			lineNumber: line.uniqueIdentifier,
 			receivedAt: line.receivedAt,
-			timestamp: "",
 			nickname: nil,
-			formattedNickname: "",
 			memberType: .normal,
 			lineType: line.lineType,
 			command: line.command,
@@ -80,8 +78,11 @@ struct TranscriptProjectionStateTests {
 		#expect(state.beginReplay().lines.map(\.uniqueIdentifier) == [second.uniqueIdentifier])
 	}
 
-	@Test("An in-memory delivery update wins over the historic copy")
-	func deliveryUpdateSurvivesReplayMerge() throws {
+	/** A delivery receipt can arrive after the line was written to storage, so
+	 the copy the tail replays has to be the one carrying it: the historic row
+	 the same replay reads back still says "pending". */
+	@Test("A delivery update reaches the copy the tail replays")
+	func deliveryUpdateSurvivesReplay() throws {
 		let historic = projectionLine("message")
 		var state = TranscriptProjectionState(capacity: 10)
 		_ = state.record(historic, rendered: projectionResult(for: historic))
@@ -92,13 +93,66 @@ struct TranscriptProjectionStateTests {
 			reason: nil
 		)
 
-		let merged = TranscriptProjectionState.merging(
-			historic: [historic],
-			replay: state.beginReplay().lines
-		)
-		let line = try #require(merged.first)
+		let replay = state.beginReplay()
+		let line = try #require(replay.lines.first)
 		#expect(line.deliveryState == .delivered)
 		#expect(line.messageIdentifier == "server-id")
+		#expect(state.deliveryUpdates[historic.uniqueIdentifier]?.state == .delivered)
+	}
+
+	/** Reprinting a line the tail already holds moves it to the end rather than
+	 leaving two copies, and the side table that finds it has to move with it —
+	 a stale index would hand a later update the wrong row. */
+	@Test("A reprinted line moves to the end and stays findable")
+	func reprintingMovesTheLineToTheEnd() {
+		let first = projectionLine("first")
+		let second = projectionLine("second")
+		var state = TranscriptProjectionState(capacity: 10)
+
+		_ = state.record(first, rendered: projectionResult(for: first))
+		_ = state.record(second, rendered: projectionResult(for: second))
+		_ = state.record(first, rendered: projectionResult(for: first))
+		state.updateDelivery(
+			lineNumber: second.uniqueIdentifier,
+			state: .failed,
+			messageIdentifier: nil,
+			reason: "rejected"
+		)
+
+		let replay = state.beginReplay()
+		#expect(replay.lines.map(\.uniqueIdentifier) == [second.uniqueIdentifier, first.uniqueIdentifier])
+		#expect(replay.lines.first?.deliveryState == .failed)
+	}
+
+	/// Trimming the head shifts every remaining line, so the side table has to
+	/// keep pointing at the rows it names.
+	@Test("A line that survives trimming is still found by a later update")
+	func trimmingKeepsTheSurvivingLineFindable() {
+		let first = projectionLine("first")
+		let second = projectionLine("second")
+		let third = projectionLine("third")
+		var state = TranscriptProjectionState(capacity: 2)
+
+		_ = state.record(first, rendered: projectionResult(for: first))
+		_ = state.record(second, rendered: projectionResult(for: second))
+		_ = state.record(third, rendered: projectionResult(for: third))
+		state.updateDelivery(
+			lineNumber: third.uniqueIdentifier,
+			state: .delivered,
+			messageIdentifier: "server-id",
+			reason: nil
+		)
+		state.updateDelivery(
+			lineNumber: first.uniqueIdentifier,
+			state: .delivered,
+			messageIdentifier: "dropped",
+			reason: nil
+		)
+
+		let replay = state.beginReplay()
+		#expect(replay.lines.map(\.uniqueIdentifier) == [second.uniqueIdentifier, third.uniqueIdentifier])
+		#expect(replay.lines.last?.messageIdentifier == "server-id")
+		#expect(replay.lines.contains { $0.messageIdentifier == "dropped" } == false)
 	}
 
 	@Test("The default and custom buffer policies match the theme API")

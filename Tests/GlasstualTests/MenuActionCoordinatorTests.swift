@@ -1,3 +1,4 @@
+import AppKit
 @testable import Glasstual
 import Testing
 
@@ -58,28 +59,93 @@ struct MenuActionCoordinatorTests {
 		#expect(MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(performedAction: true) == false)
 	}
 
-	@Test("Connect and disconnect stay guarded by the connection state they were guarded by")
-	func serverConnectionActionsPreserveLegacyStateGuards() {
-		#expect(MenuServerActionPolicy.canConnect(
-			isConnecting: false,
-			isConnected: false,
-			isQuitting: false
-		))
-		#expect(MenuServerActionPolicy.canConnect(
-			isConnecting: true,
-			isConnected: false,
-			isQuitting: false
-		) == false)
-		#expect(MenuServerActionPolicy.canDisconnect(
-			isConnecting: false,
-			isConnected: true,
-			isQuitting: false
-		))
-		#expect(MenuServerActionPolicy.canDisconnect(
-			isConnecting: false,
-			isConnected: true,
-			isQuitting: true
-		) == false)
+	@Test("Connection commands reject every stopping state", arguments: 0 ..< 32)
+	func serverConnectionActionsShareStateGuards(flags: Int) {
+		let client = GLTTestClient()
+		client.isConnecting = flags & 1 != 0
+		client.isConnected = flags & 2 != 0
+		client.isQuitting = flags & 4 != 0
+		client.isDisconnecting = flags & 8 != 0
+		client.isTerminating = flags & 16 != 0
+		client.config.proxyType = .socks5
+		let policy = MenuServerActionPolicy(client: client)
+
+		#expect(policy.canConnect == (flags == 0))
+		#expect(policy.canConnectWithoutProxy == policy.canConnect)
+		#expect(policy.canDisconnect == (flags > 0 && flags < 4))
+	}
+
+	@Test("Proxy bypass requires a proxy and all connection commands require a client")
+	func connectionCommandsRequireTheirTargets() {
+		let client = GLTTestClient()
+		client.config.proxyType = .none
+		#expect(MenuServerActionPolicy(client: client).canConnect)
+		#expect(MenuServerActionPolicy(client: client).canConnectWithoutProxy == false)
+		let noClient = MenuServerActionPolicy(client: nil)
+		#expect(noClient.canConnect == false)
+		#expect(noClient.canConnectWithoutProxy == false)
+		#expect(noClient.canDisconnect == false)
+		#expect(noClient.canCancelReconnect == false)
+	}
+
+	@Test("Cancel reconnect is eligible only while a live client is waiting")
+	func cancelReconnectRequiresWaitingClient() {
+		let client = GLTTestClient()
+		#expect(MenuServerActionPolicy(client: client).canCancelReconnect == false)
+		client.reconnectTimer.start(3600, repeats: false)
+		defer { client.reconnectTimer.stop() }
+		#expect(MenuServerActionPolicy(client: client).canCancelReconnect)
+		client.isDisconnecting = true
+		#expect(MenuServerActionPolicy(client: client).canCancelReconnect == false)
+		client.isDisconnecting = false
+		client.isQuitting = true
+		#expect(MenuServerActionPolicy(client: client).canCancelReconnect == false)
+		client.isQuitting = false
+		client.isTerminating = true
+		#expect(MenuServerActionPolicy(client: client).canCancelReconnect == false)
+	}
+
+	@Test("Connection menu validation shares action eligibility without changing visibility", arguments: 0 ..< 32)
+	func connectionMenuPreservesVisibility(flags: Int) {
+		let controller = MenuController()
+		let coordinator = controller.actionCoordinator
+		let client = GLTTestClient()
+		coordinator.pointedClient = client
+		client.isConnecting = flags & 1 != 0
+		client.isConnected = flags & 2 != 0
+		client.isQuitting = flags & 4 != 0
+		client.isDisconnecting = flags & 8 != 0
+		client.isTerminating = flags & 16 != 0
+		let policy = MenuServerActionPolicy(client: client)
+		let connect = NSMenuItem()
+		connect.command = .connect
+		let disconnect = NSMenuItem()
+		disconnect.command = .disconnect
+
+		#expect(coordinator.validateServerCommand(connect) == policy.canConnect)
+		#expect(coordinator.validateServerCommand(disconnect) == policy.canDisconnect)
+		#expect(connect.isHidden == (client.isConnecting || client.isConnected))
+		#expect(disconnect.isHidden == (client.isConnecting == false && client.isConnected == false))
+	}
+
+	@Test("Disconnect becomes disabled after its first invocation and cannot quit twice")
+	func disconnectActionAndValidationAgree() {
+		let controller = MenuController()
+		let coordinator = controller.actionCoordinator
+		let client = GLTTestClient()
+		coordinator.pointedClient = client
+		client.isConnecting = true
+		let item = NSMenuItem()
+		item.command = .disconnect
+
+		#expect(coordinator.validateServerCommand(item))
+		coordinator.performServerChannelAction(.disconnect, sender: item)
+		#expect(client.isQuitting)
+		#expect(coordinator.validateServerCommand(item) == false)
+		#expect(item.isHidden == false)
+		let titleUpdateCount = client.recordedOutput.titleUpdates.count
+		coordinator.performServerChannelAction(.disconnect, sender: item)
+		#expect(client.recordedOutput.titleUpdates.count == titleUpdateCount)
 	}
 
 	@Test("A channel-mode command decides whether the mode is set or removed")

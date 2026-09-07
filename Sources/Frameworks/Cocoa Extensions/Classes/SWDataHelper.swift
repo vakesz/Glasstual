@@ -56,32 +56,24 @@ public extension Data {
 	}
 
 	var IPv4Address: String? {
-		if isEmpty {
-			return nil
-		}
-
-		let bufferLength = INET_ADDRSTRLEN
-
-		var buffer = [CChar](repeating: 0, count: Int(bufferLength))
-
-		if inet_ntop(AF_INET, [UInt8](self), &buffer, socklen_t(bufferLength)) == nil {
-			return nil
-		}
-
-		let bytes = buffer.prefix(while: { $0 != 0 }).map { UInt8(bitPattern: $0) }
-		return String(bytes: bytes, encoding: .utf8)
+		presentedAddress(family: AF_INET, addressLength: MemoryLayout<in_addr>.size, textLength: INET_ADDRSTRLEN)
 	}
 
 	var IPv6Address: String? {
-		if isEmpty {
+		presentedAddress(family: AF_INET6, addressLength: MemoryLayout<in6_addr>.size, textLength: INET6_ADDRSTRLEN)
+	}
+
+	/// `inet_ntop` reads a fixed number of bytes for the family it is given and
+	/// has no way to be told how many are there, so anything but exactly that
+	/// many is refused rather than handed over to be read past.
+	private func presentedAddress(family: Int32, addressLength: Int, textLength: Int32) -> String? {
+		guard count == addressLength else {
 			return nil
 		}
 
-		let bufferLength = INET6_ADDRSTRLEN
+		var buffer = [CChar](repeating: 0, count: Int(textLength))
 
-		var buffer = [CChar](repeating: 0, count: Int(bufferLength))
-
-		if inet_ntop(AF_INET6, [UInt8](self), &buffer, socklen_t(bufferLength)) == nil {
+		guard inet_ntop(family, [UInt8](self), &buffer, socklen_t(textLength)) != nil else {
 			return nil
 		}
 

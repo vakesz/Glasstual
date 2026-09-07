@@ -187,6 +187,10 @@ struct ServerPropertiesView: View {
 				TextField(ServerPropertiesStrings.Identity.ctcpVersionReply, text: optionalBinding(\.ctcpVersionReply))
 				SecureField(ServerPropertiesStrings.Identity.nicknamePassword, text: $model.nicknamePassword)
 				Divider()
+				/* The onboarding network picker was the only place this could be
+				 chosen, so a connection made any other way was stuck with the
+				 default until someone hand-edited the stored configuration. */
+				Toggle(ServerPropertiesStrings.Identity.signInWithSASL, isOn: $model.config.usesSASL)
 				Toggle(
 					ServerPropertiesStrings.Identity.autojoinWaitsForNickServ,
 					isOn: $model.config.autojoinWaitsForNickServ

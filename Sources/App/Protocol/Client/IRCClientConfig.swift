@@ -80,6 +80,8 @@ public nonisolated struct ClientConfig: Codable, Equatable, Sendable { // noniso
 	public var username = ""
 	public var realName = ""
 	public var alternateNicknames: [String] = []
+	/// Absence in older configurations means SASL remains enabled.
+	public var usesSASL = true
 	public var saslMechanismPreference: String?
 	public var saslAuthenticationDisableExternalMechanism = false
 	public var sendAuthenticationRequestsToUserServ = false
@@ -265,7 +267,7 @@ public nonisolated extension ClientConfig { // nonisolated: value
 	}
 }
 
-// MARK: - Copying and merging
+// MARK: - Copying
 
 public nonisolated extension ClientConfig { // nonisolated: value
 	/** A duplicate under fresh identities, all the way down.
@@ -285,24 +287,6 @@ public nonisolated extension ClientConfig { // nonisolated: value
 		copy.uniqueIdentifier = UUID().uuidString
 
 		return copy
-	}
-
-	/** `second`'s settings laid over `first`'s.
-
-	 The merge happens between the stored dictionaries, so a setting `second`
-	 does not carry keeps the value `first` had. The class this replaced
-	 assigned every optional unconditionally and so wiped `awayNickname`,
-	 `ctcpVersionReply`, `proxyAddress`, `proxyUsername` and
-	 `saslMechanismPreference` whenever `second` left them out. */
-	static func merging(_ first: ClientConfig, with second: ClientConfig) -> ClientConfig {
-		var merged = PropertyListModel.encode(first)
-		merged.merge(PropertyListModel.encode(second)) { _, replacement in replacement }
-
-		var config = PropertyListModel.decode(ClientConfig.self, from: merged) ?? second
-		config.pendingNicknamePassword = second.pendingNicknamePassword.merged(over: first.pendingNicknamePassword)
-		config.pendingProxyPassword = second.pendingProxyPassword.merged(over: first.pendingProxyPassword)
-
-		return config
 	}
 }
 

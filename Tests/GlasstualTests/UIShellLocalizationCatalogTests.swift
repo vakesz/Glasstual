@@ -83,7 +83,7 @@ struct UIShellLocalizationCatalogTests {
 		)
 		#expect(
 			ServerPropertiesStrings.ExternalChange.unsavedChangesWarning ==
-				"You will loose unsaved changes if you click “Yes”"
+				"You will lose unsaved changes if you click “Yes”"
 		)
 	}
 

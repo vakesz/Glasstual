@@ -375,16 +375,18 @@ open class Channel: TreeItem {
 		resetStatus(.parted)
 	}
 
-	@MainActor public func prepareForPermanentDestruction() {
+	@MainActor func prepareForRemoval(preservingLocalData: Bool) {
 		statusChangedByAction = true
 		resetStatus(.terminated)
 		closeDirectChatConnection()
 		closeLogFile()
-		config.destroySecretKeyKeychainItem()
 
 		associatedClient?.output?.closeSheets(forChannelId: uniqueIdentifier)
-		associatedClient?.output?.destroyInputHistory(for: self)
-		presentation?.prepareForPermanentDestruction()
+		if !preservingLocalData {
+			config.destroySecretKeyKeychainItem()
+			associatedClient?.output?.destroyInputHistory(for: self)
+		}
+		presentation?.tearDown(preservingLocalData ? .preservingRemoval : .permanentRemoval)
 	}
 
 	@MainActor
@@ -402,7 +404,7 @@ open class Channel: TreeItem {
 
 		let viewIdentifier = presentation?.presentationIdentifier ?? ""
 		Self.terminationLogger.debug("Preparing view controller: <\(viewIdentifier, privacy: .public)>")
-		presentation?.prepareForApplicationTermination()
+		presentation?.tearDown(.applicationTermination)
 	}
 
 	public func closeDirectChatConnection() {
@@ -423,9 +425,9 @@ open class Channel: TreeItem {
 	}
 
 	public func closeLogFile() {
+		logFileWriteSessionEnd()
 		logFile?.close()
-		/* Leaving the handle in place made the lazy re-creation below unreachable, so
-		 every later write went to a closed logger. */
+		// The shared file-command stream retains the pending banner and close.
 		logFile = nil
 	}
 
@@ -508,13 +510,15 @@ open class Channel: TreeItem {
 	/// Applies time decay to every member's conversation weights. Call once
 	/// before ordering by weight, never from inside a comparator.
 	public func decayMemberConversations() {
-		guard let memberInfo else {
-			return
-		}
+		memberInfo?.decayConversations()
+	}
 
-		for member in memberInfo.memberList {
-			memberInfo.updateMember(withUserID: member.id) { $0.decayConversation() }
-		}
+	/// Applies a single protocol unit immediately, publishing its final member list once.
+	func withMemberPresentationUpdates(_ body: () throws -> Void) rethrows {
+		let list = memberInfo
+		list?.beginPresentationUpdates()
+		defer { list?.endPresentationUpdates() }
+		try body()
 	}
 
 	public func clearMembers() {

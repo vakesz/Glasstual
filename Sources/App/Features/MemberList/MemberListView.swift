@@ -63,18 +63,14 @@ struct MemberListView: View {
 private struct MemberListRowView: View {
 	let model: MemberList
 	let member: ChannelUser
-	/* `ChannelUser` compares as the same person with the same modes, which is
-	 the comparison the list's diffing wants. SwiftUI uses that same `==` to
-	 decide whether this row's body needs another pass, so the two states it
-	 draws that fall outside it are held here, where a change is seen. */
-	let isAway: Bool
-	let isBot: Bool
+	/// ChannelUser equality omits user details. Keep the full user as a view input
+	/// so rename, account and host changes refresh the row and its open popover too.
+	let user: User
 
 	init(model: MemberList, member: ChannelUser) {
 		self.model = model
 		self.member = member
-		isAway = member.user.isAway
-		isBot = member.user.isBot
+		user = member.user
 	}
 
 	@State private var showsDetails = false
@@ -82,17 +78,17 @@ private struct MemberListRowView: View {
 
 	var body: some View {
 		HStack(spacing: 8) {
-			MemberAvatar(nickname: member.user.nickname, size: 24)
-				.opacity(isAway ? 0.5 : 1)
+			MemberAvatar(nickname: user.nickname, size: 24)
+				.opacity(user.isAway ? 0.5 : 1)
 				.accessibilityHidden(true)
 
 			HStack(spacing: 4) {
-				Text(member.user.nickname)
+				Text(user.nickname)
 					.lineLimit(1)
 					.truncationMode(.tail)
-					.foregroundStyle(isAway ? .secondary : .primary)
+					.foregroundStyle(user.isAway ? .secondary : .primary)
 
-				if isBot {
+				if user.isBot {
 					Text(MemberListStrings.botCaption)
 						.font(.caption.weight(.medium))
 						.foregroundStyle(.secondary)
@@ -139,28 +135,28 @@ private struct MemberListRowView: View {
 		.dropDestination(for: URL.self) { urls, _ in
 			let files = urls.filter(\.isFileURL).map(\.path)
 			guard files.isEmpty == false else { return false }
-			AppController.shared.menuController?.memberSendDroppedFiles(files, to: member.user.nickname)
+			AppController.shared.menuController?.memberSendDroppedFiles(files, to: user.nickname)
 			return true
 		}
 	}
 
 	private var displayRank: UserRank {
-		if Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue, member.user.isIRCop {
+		if Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue, user.isIRCop {
 			return .irCopByMode
 		}
 		return member.rank
 	}
 
 	private var accessibilityDescription: String {
-		var description = AccessibilityStrings.userListEntry(for: member.user.nickname)
+		var description = AccessibilityStrings.userListEntry(for: user.nickname)
 		description += ", \(MemberListPresentation.privilegesDescription(for: member))"
-		if isAway {
+		if user.isAway {
 			description += ", \(MemberListStrings.userIsAway)"
 		}
-		if isBot {
+		if user.isBot {
 			description += ", \(MemberListStrings.userIsBot)"
 		}
-		if let account = member.user.account, account.isEmpty == false {
+		if let account = user.account, account.isEmpty == false {
 			description += ", \(MemberListStrings.loggedIn(account: account))"
 		}
 		return description
@@ -173,11 +169,21 @@ private struct MemberListContextMenu: View {
 	let menu: NSMenu?
 
 	var body: some View {
-		if let menu {
-			AppMenuContent(menu: menu) {
+		if let menu, let coordinator = AppController.shared.menuController?.actionCoordinator {
+			AppMenuContent(
+				menu: menu,
+				context: AppMenuContext(coordinator: coordinator, members: clickedMembers)
+			) {
 				model.selectedMemberIDs = identities
 			}
 		}
+	}
+
+	/// The rows the menu was opened on, so that validation and the command
+	/// that follows both answer for what was clicked rather than for the
+	/// selection the click is about to replace.
+	private var clickedMembers: [ChannelUser] {
+		model.groups.flatMap(\.members).filter { identities.contains($0.id) }
 	}
 }
 

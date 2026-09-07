@@ -204,13 +204,13 @@ extension IRCClient {
 			? message.params[1].components(separatedBy: CharacterSet(charactersIn: ", ")).filter { !$0.isEmpty }
 			: []
 		guard !retrySASLNegotiation(withMechanisms: mechanisms) else { return }
-		disableCapability(.isInSASLNegotiation)
-		resumeQueuedCapabilityNegotiation()
+		finishSASLNegotiation(failed: true)
 	}
 
 	/// The numerics that mean the server refused this SASL attempt, as opposed
 	/// to 903 (success) or 907 (already authenticated).
 	private static let saslFailureNumerics: Set<UInt> = [
+		IRCNumeric.nicklocked.rawValue,
 		IRCNumeric.saslfail.rawValue,
 		IRCNumeric.sasltoolong.rawValue,
 		IRCNumeric.saslaborted.rawValue,
@@ -225,21 +225,15 @@ extension IRCClient {
 			}
 		}
 		guard isCapabilityEnabled(.isInSASLNegotiation) else { return }
-		if numeric == IRCNumeric.saslsuccess.rawValue, scramMutualAuthenticationIsSatisfied() == false {
+		let failed = Self.saslFailureNumerics.contains(numeric)
+		if !failed, scramMutualAuthenticationIsSatisfied() == false {
 			abortUnverifiedSASLSuccess()
 			return
 		}
-		disableCapability(.isInSASLNegotiation)
-		saslScramClient = nil
-		saslIncomingPayload = nil
-		if Self.saslFailureNumerics.contains(numeric), config.disconnectOnSASLFailure {
-			// Otherwise registration completes unauthenticated, which many
-			// networks treat as a security failure.
-			printDebugInformation(IRCInboundStrings.Numeric.saslAuthenticationFailedDisconnecting)
-			quit()
-			return
+		if !failed {
+			enableCapability(.isIdentifiedWithSASL)
 		}
-		resumeQueuedCapabilityNegotiation()
+		finishSASLNegotiation(failed: failed)
 	}
 
 	private func printNumericSequence(_ message: Message, startingAt index: UInt) {

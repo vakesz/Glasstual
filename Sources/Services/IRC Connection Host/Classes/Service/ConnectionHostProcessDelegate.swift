@@ -51,15 +51,14 @@ final class RemoteConnectionProcessDelegate: NSObject, NSXPCListenerDelegate {
 		/* The host owns every piece of mutable state. The connection stays out
 		 here — it is not Sendable — and only the client proxy, which is, crosses
 		 into the actor. */
-		let host = ConnectionHost()
-
-		connection.exportedObject = RemoteConnectionProcess(host: host)
-
 		guard let client = connection.remoteObjectProxy as? any RemoteConnectionClientProtocol else {
 			processDelegateLogger.error("Client does not conform to the remote connection client protocol")
 
 			return false
 		}
+
+		let host = ConnectionHost(client: client)
+		connection.exportedObject = RemoteConnectionProcess(host: host)
 
 		connection.interruptionHandler = {
 			processDelegateLogger.debug("Client connection interrupted")
@@ -71,8 +70,6 @@ final class RemoteConnectionProcessDelegate: NSObject, NSXPCListenerDelegate {
 
 			Task { await host.detach() }
 		}
-
-		Task { await host.attach(client: client) }
 
 		connection.resume()
 

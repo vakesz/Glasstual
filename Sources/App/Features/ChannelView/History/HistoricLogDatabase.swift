@@ -50,6 +50,34 @@ import os
 /// this one exists for no other reason.
 private final nonisolated class HistoricLogStoreBundleToken {} // nonisolated: immutable
 
+/// Read only the historic timestamp; opening storage must not construct UI log
+/// lines, populate new identifiers or read current rendering preferences.
+@objc(GLTHistoricTimestampArchive)
+private final nonisolated class HistoricTimestampArchive: NSObject, NSSecureCoding { // nonisolated: immutable
+	static var supportsSecureCoding: Bool {
+		true
+	}
+
+	let date: Date
+	required init?(coder: NSCoder) {
+		guard let date = coder.decodeObject(of: NSDate.self, forKey: "receivedAt") as Date? else { return nil }
+		self.date = date
+	}
+
+	func encode(with coder: NSCoder) {
+		coder.encode(date, forKey: "receivedAt")
+	}
+
+	static func read(_ data: Data) -> Date? {
+		guard let decoder = try? NSKeyedUnarchiver(forReadingFrom: data) else { return nil }
+		decoder.requiresSecureCoding = true
+		decoder.decodingFailurePolicy = .setErrorAndReturn
+		decoder.setClass(Self.self, forClassName: "TVCLogLine")
+		defer { decoder.finishDecoding() }
+		return decoder.decodeObject(of: Self.self, forKey: NSKeyedArchiveRootObjectKey)?.date
+	}
+}
+
 /// Where the name of the database file is kept between launches.
 nonisolated protocol HistoricLogFilenameStoring: Sendable { // nonisolated: value
 	var databaseFilename: String? { get nonmutating set }
@@ -64,14 +92,12 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		category: "Storage"
 	)
 
-	/// The identifier a lookup returns when the view has no such entry.
-	static let missingEntryIdentifier = UInt.max
-
 	/// Which rows a deletion covers. `Sendable` so the request can be rebuilt
 	/// on the parent context's queue instead of being carried across.
 	enum Deletion: Sendable {
 		case everything
 		case entriesBelow(entryIdentifier: UInt)
+		case retainingNewest(count: UInt)
 	}
 
 	/// Rows a deletion removed, together with the unique identifiers the client
@@ -80,8 +106,6 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 	struct DeletionResult: Sendable {
 		let deletedCount: UInt
 		let uniqueIdentifiers: [String]
-
-		static let none = DeletionResult(deletedCount: 0, uniqueIdentifiers: [])
 	}
 
 	// MARK: - Stack
@@ -99,9 +123,11 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		}
 
 		let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+		// Inferred migration may legally drop entire entities and their archives.
+		// Open only compatible stores until a data-preserving migration is defined.
 		let options: [AnyHashable: Any] = [
-			NSMigratePersistentStoresAutomaticallyOption: true,
-			NSInferMappingModelAutomaticallyOption: true,
+			NSMigratePersistentStoresAutomaticallyOption: false,
+			NSInferMappingModelAutomaticallyOption: false,
 			NSSQLitePragmasOption: ["synchronous": "NORMAL", "journal_mode": "WAL"],
 		]
 
@@ -115,7 +141,6 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 
 		let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
 		context.persistentStoreCoordinator = coordinator
-		context.retainsRegisteredObjects = true
 		context.undoManager = nil
 
 		return context
@@ -126,15 +151,6 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 	/// `Bundle.main`, which is the host application under test.
 	private static var modelBundle: Bundle {
 		Bundle(for: HistoricLogStoreBundleToken.self)
-	}
-
-	static func makeViewContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
-		let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-		context.parent = parent
-		context.retainsRegisteredObjects = true
-		context.undoManager = nil
-
-		return context
 	}
 
 	/// A child context reaches the model through its parent's coordinator.
@@ -170,7 +186,7 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		}
 
 		if fetchLimit > 0 {
-			request.fetchLimit = Int(fetchLimit)
+			request.fetchLimit = Int(clamping: fetchLimit)
 		}
 
 		request.includesPendingChanges = true
@@ -179,40 +195,11 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		request.resultType = resultType
 		request.sortDescriptors = [
 			NSSortDescriptor(key: HistoricLogAttribute.entryCreationDate.rawValue, ascending: ascending),
+			NSSortDescriptor(key: HistoricLogAttribute.entryIdentifier.rawValue, ascending: ascending),
+			NSSortDescriptor(key: HistoricLogAttribute.logLineUniqueIdentifier.rawValue, ascending: ascending),
 		]
 
 		return request
-	}
-
-	private static func deletionRequest(
-		_ deletion: Deletion,
-		in context: NSManagedObjectContext,
-		viewIdentifier: String
-	) -> NSFetchRequest<NSManagedObject>? {
-		switch deletion {
-		case .everything:
-			return conditionalRequest(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				resultType: .managedObjectResultType
-			)
-		case let .entriesBelow(entryIdentifier):
-			guard let request = model(in: context)?.fetchRequestFromTemplate(
-				withName: "Truncate",
-				substitutionVariables: [
-					"view_id": viewIdentifier,
-					"entry_id_lowest": NSNumber(value: entryIdentifier),
-				]
-			) as? NSFetchRequest<NSManagedObject> else {
-				return nil
-			}
-
-			request.includesPendingChanges = true
-			request.includesPropertyValues = true
-			request.returnsObjectsAsFaults = false
-
-			return request
-		}
 	}
 
 	// MARK: - Reads
@@ -226,6 +213,25 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		highestEntryIdentifier: UInt = UInt(Int.max),
 		limitToDate: Date?
 	) -> [HistoricLogEntry] {
+		fetchOutcome(
+			in: context, viewIdentifier: viewIdentifier, ascending: ascending, fetchLimit: fetchLimit,
+			lowestEntryIdentifier: lowestEntryIdentifier, highestEntryIdentifier: highestEntryIdentifier,
+			limitToDate: limitToDate
+		).entries
+	}
+
+	static func fetchOutcome(
+		in context: NSManagedObjectContext,
+		viewIdentifier: String,
+		ascending: Bool,
+		fetchLimit: UInt,
+		lowestEntryIdentifier: UInt = 0,
+		highestEntryIdentifier: UInt = UInt(Int.max),
+		limitToDate: Date?
+	) -> HistoricLogFetchOutcome {
+		if let limitToDate, !limitToDate.timeIntervalSince1970.isFinite {
+			return .failed(.invalidRequest)
+		}
 		guard let request = conditionalRequest(
 			in: context,
 			viewIdentifier: viewIdentifier,
@@ -235,91 +241,111 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 			highestEntryIdentifier: highestEntryIdentifier,
 			limitToDate: limitToDate,
 			resultType: .managedObjectResultType
-		) else { return [] }
+		) else { return .failed(.invalidRequest) }
 
 		do {
 			let objects = try context.fetch(request)
 
-			return objects.compactMap { HistoricLogEntry(managedObject: $0) }
+			let entries = objects.compactMap { HistoricLogEntry(managedObject: $0) }
+			guard entries.count == objects.count else { return .failed(.invalidEntry) }
+			return .page(entries)
 		} catch {
 			logger.error("Error occurred fetching objects: \(error.localizedDescription, privacy: .public)")
 
-			return []
+			return .failed(.read(error.localizedDescription))
 		}
 	}
 
-	static func lineCount(in context: NSManagedObjectContext, viewIdentifier: String) -> UInt {
-		guard let request = conditionalRequest(
-			in: context,
-			viewIdentifier: viewIdentifier,
-			resultType: .countResultType
-		) else { return 0 }
+	/// Allocation must include every row, even one excluded by the display date
+	/// filter or carrying an unreadable archive. A failed read must not restart IDs.
+	static func initialCounts(
+		in context: NSManagedObjectContext,
+		viewIdentifier: String
+	) throws -> (lineCount: UInt, maximumIdentifier: UInt) {
+		let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+		request.predicate = NSPredicate(
+			format: "%K == %@", HistoricLogAttribute.logLineViewIdentifier.rawValue, viewIdentifier
+		)
+		request.includesPendingChanges = true
+		let lineCount = try UInt(context.count(for: request))
+		request.sortDescriptors = [
+			NSSortDescriptor(key: HistoricLogAttribute.entryIdentifier.rawValue, ascending: false),
+		]
+		request.fetchLimit = 1
+		let maximum = try (context.fetch(request).first?.value(
+			forKey: HistoricLogAttribute.entryIdentifier.rawValue
+		) as? NSNumber)?.int64Value ?? 0
 
-		do {
-			return try UInt(context.count(for: request))
-		} catch {
-			logger.error("Failed to count log lines: \(error.localizedDescription, privacy: .public)")
-
-			return 0
-		}
+		return (lineCount, UInt(max(0, maximum)))
 	}
 
-	static func newestIdentifier(in context: NSManagedObjectContext, viewIdentifier: String) -> UInt {
-		guard let request = conditionalRequest(
-			in: context,
-			viewIdentifier: viewIdentifier,
-			ascending: false,
-			fetchLimit: 1,
-			resultType: .managedObjectResultType
-		) else { return 0 }
-
-		do {
-			return try (context.fetch(request).first?.value(
-				forKey: HistoricLogAttribute.entryIdentifier.rawValue
-			) as? NSNumber)?.uintValue ?? 0
-		} catch {
-			logger.error("Failed to fetch newest identifier: \(error.localizedDescription, privacy: .public)")
-
-			return 0
-		}
-	}
-
-	static func entryIdentifier(
+	static func fetchEntries(
 		in context: NSManagedObjectContext,
 		viewIdentifier: String,
-		uniqueIdentifier: String
-	) -> UInt {
+		before uniqueIdentifier: String,
+		fetchLimit: UInt,
+		limitToDate: Date?
+	) -> [HistoricLogEntry] {
+		fetchOutcome(in: context, viewIdentifier: viewIdentifier, before: uniqueIdentifier,
+		             fetchLimit: fetchLimit, limitToDate: limitToDate).entries
+	}
+
+	static func fetchOutcome(
+		in context: NSManagedObjectContext,
+		viewIdentifier: String,
+		before uniqueIdentifier: String,
+		fetchLimit: UInt,
+		limitToDate: Date?
+	) -> HistoricLogFetchOutcome {
+		guard fetchLimit > 0 else { return .failed(.invalidRequest) }
+		if let limitToDate, !limitToDate.timeIntervalSince1970.isFinite {
+			return .failed(.invalidRequest)
+		}
 		guard let request = model(in: context)?.fetchRequestFromTemplate(
 			withName: "UniqueIdToEntryId",
 			substitutionVariables: [
 				"view_id": viewIdentifier,
 				"unique_id": uniqueIdentifier,
 			]
-		) as? NSFetchRequest<NSManagedObject> else { return missingEntryIdentifier }
+		) as? NSFetchRequest<NSManagedObject> else { return .failed(.invalidRequest) }
 
+		// The public cursor names a line, not a Core Data row. Do not guess if
+		// an old store contains multiple rows with that same line identity.
+		request.fetchLimit = 2
 		request.includesPendingChanges = true
 		request.includesPropertyValues = true
 		request.returnsObjectsAsFaults = false
 
 		do {
-			return try (context.fetch(request).first?.value(
-				forKey: HistoricLogAttribute.entryIdentifier.rawValue
-			) as? NSNumber)?
-				.uintValue ?? missingEntryIdentifier
+			try context.obtainPermanentIDs(for: Array(context.insertedObjects))
+			let anchors = try context.fetch(request)
+			if anchors.count > 1 {
+				logger.error("Cannot paginate history from a duplicate line identifier")
+				return .failed(.ambiguousCursor)
+			}
+			guard let anchor = anchors.first else { return .failed(.missingCursor) }
+			guard let cursor = HistoricLogRowCursor(object: anchor) else { return .failed(.invalidEntry) }
+			let outcome = fetchRowPage(in: context, viewIdentifier: viewIdentifier, before: cursor,
+			                           fetchLimit: fetchLimit, limitToDate: limitToDate)
+			if case let .page(entries) = outcome {
+				return .page(Array(entries.reversed()))
+			}
+			return outcome
 		} catch {
-			logger.error("Failed to resolve unique identifier: \(error.localizedDescription, privacy: .public)")
+			logger.error("Failed to fetch older entries: \(error.localizedDescription, privacy: .public)")
 
-			return missingEntryIdentifier
+			return .failed(.read(error.localizedDescription))
 		}
 	}
 
 	// MARK: - Writes
 
-	static func insert(_ logLine: HistoricLogEntry, in context: NSManagedObjectContext, entryIdentifier: UInt) {
+	@discardableResult
+	static func insert(_ logLine: HistoricLogEntry, in context: NSManagedObjectContext, entryIdentifier: UInt) -> Bool {
 		guard let entity = NSEntityDescription.entity(forEntityName: entityName, in: context) else {
 			logger.error("The LogLine2 entity is missing")
 
-			return
+			return false
 		}
 
 		let entry = NSManagedObject(entity: entity, insertInto: context)
@@ -342,6 +368,7 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 			NSNumber(value: logLine.sessionIdentifier),
 			forKey: HistoricLogAttribute.sessionIdentifier.rawValue
 		)
+		return true
 	}
 
 	// MARK: - Re-stamping
@@ -380,8 +407,9 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 	 opens after the change, and records itself in the store's metadata. A pass
 	 that throws leaves the flag unwritten, so the next launch tries again.
 	 */
-	static func restampEntryCreationDates(in context: NSManagedObjectContext) {
-		guard needsEntryCreationDateRestamp(in: context) else { return }
+	@discardableResult
+	static func restampEntryCreationDates(in context: NSManagedObjectContext) -> HistoricLogSaveOutcome {
+		guard needsEntryCreationDateRestamp(in: context) else { return .saved }
 
 		do {
 			let restamped = try restampRows(in: context)
@@ -389,10 +417,10 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 			try recordRestampCompletion(in: context)
 
 			logger.info("Re-stamped \(restamped) historic rows with the line's own time")
+			return .saved
 		} catch {
-			context.reset()
-
 			logger.error("Failed to re-stamp historic rows: \(error.localizedDescription, privacy: .public)")
+			return .failed(error.localizedDescription)
 		}
 	}
 
@@ -428,10 +456,10 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 	private static func restamp(_ objectID: NSManagedObjectID, in context: NSManagedObjectContext) -> Bool {
 		guard let object = try? context.existingObject(with: objectID),
 		      let entry = HistoricLogEntry(managedObject: object),
-		      let line = LogLine(data: entry.data)
+		      let date = HistoricTimestampArchive.read(entry.data)
 		else { return false }
 
-		let receivedAt = line.receivedAt.timeIntervalSince1970
+		let receivedAt = date.timeIntervalSince1970
 
 		guard abs(receivedAt - entry.creationDate) > restampTolerance else { return false }
 
@@ -455,118 +483,87 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		try context.save()
 	}
 
-	static func quickSave(_ context: NSManagedObjectContext) {
-		guard context.hasChanges else { return }
+	@discardableResult
+	static func quickSave(_ context: NSManagedObjectContext) -> HistoricLogSaveOutcome {
+		guard context.hasChanges else { return .saved }
 
 		do {
 			try context.save()
 		} catch {
 			logger.error("Failed to perform save: \(error.localizedDescription, privacy: .public)")
+			return .failed(error.localizedDescription)
 		}
-
-		context.reset()
+		return .saved
 	}
 
 	// MARK: - Deletes
 
-	static func delete(
+	static func deleteOutcome(
 		_ deletion: Deletion,
 		in context: NSManagedObjectContext,
 		viewIdentifier: String
-	) -> DeletionResult {
-		guard
-			let parentContext = context.parent,
-			let request = deletionRequest(deletion, in: context, viewIdentifier: viewIdentifier)
-		else { return .none }
-
-		quickSave(context)
-		parentContext.performAndWait { quickSave(parentContext) }
-
-		let uniqueIdentifiers = doomedUniqueIdentifiers(request, in: context)
-
-		guard uniqueIdentifiers.isEmpty == false else { return .none }
-
-		/* The batch delete runs on the parent, which owns the coordinator. Its
-		 request is rebuilt there from the same `Sendable` inputs rather than
-		 carried across the hop. */
-		let objectIDs = parentContext.performAndWait {
-			executeBatchDelete(deletion, in: parentContext, viewIdentifier: viewIdentifier)
+	) -> HistoricLogDeletionOutcome {
+		// Rollback below may discard only this deletion, never an earlier accepted write.
+		if case let .failed(reason) = quickSave(context) {
+			return .failed(reason)
 		}
-
-		guard let objectIDs, objectIDs.isEmpty == false else { return .none }
-
-		NSManagedObjectContext.mergeChanges(
-			fromRemoteContextSave: [NSDeletedObjectsKey: objectIDs],
-			into: [parentContext, context]
-		)
-
-		logger.debug("Deleted \(objectIDs.count) rows in \(viewIdentifier, privacy: .public)")
-
-		return DeletionResult(deletedCount: UInt(objectIDs.count), uniqueIdentifiers: uniqueIdentifiers)
-	}
-
-	private static func doomedUniqueIdentifiers(
-		_ fetchRequest: NSFetchRequest<NSManagedObject>,
-		in context: NSManagedObjectContext
-	) -> [String] {
-		guard let identifierRequest = fetchRequest.copy() as? NSFetchRequest<NSDictionary> else {
-			assertionFailure("Unable to copy the historic-log identifier fetch request")
-
-			return []
-		}
-
-		identifierRequest.resultType = .dictionaryResultType
-		identifierRequest.propertiesToFetch = [HistoricLogAttribute.logLineUniqueIdentifier.rawValue]
-		/* A dictionary result with a batch size has to fetch the object ID too,
-		 and Core Data logs a complaint and drops the batching when it does not.
-		 Nothing here wants batching: the identifiers are read once. */
-		identifierRequest.fetchBatchSize = 0
-		identifierRequest.includesPendingChanges = false
-		identifierRequest.returnsObjectsAsFaults = false
-		identifierRequest.sortDescriptors = nil
-
-		do {
-			return try context.fetch(identifierRequest).compactMap {
-				$0[HistoricLogAttribute.logLineUniqueIdentifier.rawValue] as? String
+		if let parent = context.parent {
+			let outcome = parent.performAndWait { quickSave(parent) }
+			if case let .failed(reason) = outcome {
+				return .failed(reason)
 			}
-		} catch {
-			logger.error("Error occurred fetching identifiers: \(error.localizedDescription, privacy: .public)")
-
-			return []
-		}
-	}
-
-	private static func executeBatchDelete(
-		_ deletion: Deletion,
-		in parentContext: NSManagedObjectContext,
-		viewIdentifier: String
-	) -> [NSManagedObjectID]? {
-		guard
-			let request = deletionRequest(deletion, in: parentContext, viewIdentifier: viewIdentifier),
-			let deleteFetchRequest = request.copy() as? NSFetchRequest<NSFetchRequestResult>
-		else {
-			assertionFailure("Unable to copy the historic-log deletion fetch request")
-
-			return nil
-		}
-
-		deleteFetchRequest.resultType = .managedObjectResultType
-		deleteFetchRequest.includesPendingChanges = false
-		deleteFetchRequest.sortDescriptors = nil
-
-		let batchRequest = NSBatchDeleteRequest(fetchRequest: deleteFetchRequest)
-		batchRequest.resultType = .resultTypeObjectIDs
-
-		do {
-			guard let result = try parentContext.execute(batchRequest) as? NSBatchDeleteResult else {
-				throw CocoaError(.coderInvalidValue)
+			let deletion = parent.performAndWait { deleteOutcome(deletion, in: parent, viewIdentifier: viewIdentifier) }
+			if case .deleted = deletion {
+				context.reset()
 			}
-
-			return result.result as? [NSManagedObjectID]
+			return deletion
+		}
+		do {
+			let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+			request.predicate = NSPredicate(
+				format: "%K == %@",
+				HistoricLogAttribute.logLineViewIdentifier.rawValue,
+				viewIdentifier
+			)
+			let objects = try context.fetch(request).sorted { left, right in
+				let leftID = (left.value(forKey: HistoricLogAttribute.entryIdentifier.rawValue) as? NSNumber)?
+					.int64Value ?? 0
+				let rightID = (right.value(forKey: HistoricLogAttribute.entryIdentifier.rawValue) as? NSNumber)?
+					.int64Value ?? 0
+				if leftID != rightID {
+					return leftID < rightID
+				}
+				return left.objectID.uriRepresentation().absoluteString < right.objectID.uriRepresentation()
+					.absoluteString
+			}
+			let doomed: [NSManagedObject] = switch deletion {
+			case .everything: objects
+			case let .retainingNewest(count): Array(objects.prefix(max(0, objects.count - Int(clamping: count))))
+			case let .entriesBelow(identifier):
+				objects
+					.filter {
+						(($0.value(forKey: HistoricLogAttribute.entryIdentifier.rawValue) as? NSNumber)?
+							.int64Value ?? 0) <=
+							Int64(clamping: identifier)
+					}
+			}
+			let ids = Set(doomed.map(\.objectID))
+			let removed = Set(doomed
+				.compactMap { $0.value(forKey: HistoricLogAttribute.logLineUniqueIdentifier.rawValue) as? String })
+			let retained = Set(objects.filter { !ids.contains($0.objectID) }.compactMap {
+				$0.value(forKey: HistoricLogAttribute.logLineUniqueIdentifier.rawValue) as? String
+			})
+			for object in doomed {
+				context.delete(object)
+			}
+			try context.save()
+			return .deleted(DeletionResult(
+				deletedCount: UInt(doomed.count),
+				uniqueIdentifiers: removed.subtracting(retained).sorted()
+			))
 		} catch {
-			logger.error("Failed to perform batch delete: \(error.localizedDescription, privacy: .public)")
-
-			return nil
+			context.rollback()
+			return .failed(error.localizedDescription)
 		}
 	}
 }

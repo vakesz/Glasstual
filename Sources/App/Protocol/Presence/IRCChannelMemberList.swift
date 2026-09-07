@@ -66,6 +66,10 @@ public final class ChannelMemberList: NSObject {
 	private var memberContainer: [ChannelUser] = []
 	/// Position in `memberContainer` by the member's identity.
 	private var indexByUserID: [User.ID: Int] = [:]
+	private var presentationUpdateDepth = 0
+	private var presentationUpdatePending = false
+	/// Changes only when membership, ordering, nicknames or prefix marks change.
+	private(set) var renderRevision: UInt64 = 0
 
 	/** Both are weak: a member list can outlive its owners during teardown, and
 	 force-unwrapping them turned that into a crash. */
@@ -103,6 +107,32 @@ public final class ChannelMemberList: NSObject {
 		self.presentation = presentation
 	}
 
+	/// Scope these to one synchronous protocol message, not an entire NAMES/WHO exchange.
+	/// Directory and member lookups remain current while presentation is deferred.
+	func beginPresentationUpdates() {
+		presentationUpdateDepth += 1
+	}
+
+	func endPresentationUpdates() {
+		precondition(presentationUpdateDepth > 0)
+		presentationUpdateDepth -= 1
+		if presentationUpdateDepth == 0, presentationUpdatePending {
+			presentationUpdatePending = false
+			presentation?.replaceContents(memberContainer)
+		}
+	}
+
+	private func publish(_ update: (ChannelMemberListPresentation) -> Void) {
+		guard channel?.isChannel == true else { return }
+		guard presentationUpdateDepth == 0 else {
+			presentationUpdatePending = true
+			return
+		}
+		if let presentation {
+			update(presentation)
+		}
+	}
+
 	private func sortedIndex(for member: ChannelUser) -> Int {
 		var lowerBound = 0
 		var upperBound = memberContainer.count
@@ -136,7 +166,10 @@ public final class ChannelMemberList: NSObject {
 		}
 
 		memberContainer[index] = newMember
-		reindexMembers()
+		if oldMember.id != newMember.id {
+			indexByUserID.removeValue(forKey: oldMember.id)
+			indexByUserID[newMember.id] = index
+		}
 		return index
 	}
 
@@ -194,8 +227,10 @@ public final class ChannelMemberList: NSObject {
 			return
 		}
 
-		block(&memberContainer[index])
-		presentation?.replace(memberContainer[index], atArrangedObjectIndex: index)
+		let oldMember = memberContainer[index]
+		var editedMember = oldMember
+		block(&editedMember)
+		performReplacement(oldMember, with: editedMember, resort: true)
 	}
 
 	/// Edits the stored member for `nickname` in place, if the channel has one.
@@ -205,6 +240,13 @@ public final class ChannelMemberList: NSObject {
 		}
 
 		updateMember(withUserID: user.id, block)
+	}
+
+	func decayConversations() {
+		// No array snapshot or presentation copy on this completion hot path.
+		for index in memberContainer.indices {
+			memberContainer[index].decayConversation()
+		}
 	}
 
 	/// The client's ISUPPORT `PREFIX` table as it stands now. Members are
@@ -239,12 +281,13 @@ public final class ChannelMemberList: NSObject {
 
 		client?.associate(member.user, with: channel)
 		let sortedIndex = sortedInsert(member)
+		renderRevision &+= 1
 
 		guard channel.isChannel else {
 			return
 		}
 
-		presentation?.insert(member, atArrangedObjectIndex: sortedIndex)
+		publish { $0.insert(member, atArrangedObjectIndex: sortedIndex) }
 	}
 
 	public func removeMember(withNickname nickname: String) {
@@ -260,12 +303,15 @@ public final class ChannelMemberList: NSObject {
 
 		client?.disassociate(member.user, from: channel)
 		let sortedIndex = removeStoredMember(member)
+		if sortedIndex != nil {
+			renderRevision &+= 1
+		}
 
 		guard let sortedIndex, channel.isChannel else {
 			return
 		}
 
-		presentation?.remove(atArrangedObjectIndex: sortedIndex)
+		publish { $0.remove(atArrangedObjectIndex: sortedIndex) }
 	}
 
 	public func resortMember(_ member: ChannelUser) {
@@ -273,8 +319,19 @@ public final class ChannelMemberList: NSObject {
 	}
 
 	private func performReplacement(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool) {
-		guard let channel else {
+		guard let channel, let storedMember = findMember(withUserID: oldMember.id) else {
 			return
+		}
+		let oldMember = storedMember
+		let visibleChange = oldMember.user != newMember.user || oldMember.modes != newMember.modes ||
+			oldMember.mark != newMember.mark
+		let needsResort = resort && visibleChange && oldMember.compareRank(
+			to: newMember, favoringServerStaff: preferences.memberListSortFavorsServerStaff
+		) != .orderedSame
+		if needsResort || oldMember.id != newMember.id ||
+			oldMember.user.nickname != newMember.user.nickname || oldMember.mark != newMember.mark
+		{
+			renderRevision &+= 1
 		}
 
 		if oldMember.id != newMember.id {
@@ -282,7 +339,7 @@ public final class ChannelMemberList: NSObject {
 			client?.associate(newMember.user, with: channel)
 		}
 
-		let newIndex: Int? = if resort {
+		let newIndex: Int? = if needsResort {
 			{
 				/* The old position is not needed any more: a resort is handed to
 				 the table as one new ordering. */
@@ -295,17 +352,17 @@ public final class ChannelMemberList: NSObject {
 
 		/* A presentation is only attached to the channel whose member list is on
 		 screen, so this is also the test for "is anyone drawing this?". */
-		guard let newIndex, let presentation, channel.isChannel else {
+		guard let newIndex, visibleChange || needsResort else {
 			return
 		}
 
-		if resort {
+		if needsResort {
 			/* Handed over as one ordering rather than a removal followed by an
 			 insert: taking the person out of the list, even for an instant, is
 			 what used to drop a selection that was on them. */
-			presentation.replaceContents(memberList)
+			publish { $0.replaceContents(memberContainer) }
 		} else {
-			presentation.replace(newMember, atArrangedObjectIndex: newIndex)
+			publish { $0.replace(newMember, atArrangedObjectIndex: newIndex) }
 		}
 	}
 
@@ -385,6 +442,7 @@ public final class ChannelMemberList: NSObject {
 	}
 
 	public func sortMembers() {
+		let previousOrder = memberContainer.map { ($0.id, $0.mark) }
 		/* Snapshot the preference so the comparator stays pure for the whole sort. */
 		let favorIRCop = preferences.memberListSortFavorsServerStaff
 
@@ -399,11 +457,14 @@ public final class ChannelMemberList: NSObject {
 			$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
 		}
 		reindexMembers()
-
-		presentation?.replaceContents(memberList)
+		if zip(previousOrder, memberContainer).contains(where: { $0.0 != $1.id || $0.1 != $1.mark }) {
+			renderRevision &+= 1
+		}
+		publish { $0.replaceContents(memberContainer) }
 	}
 
 	public func clearMembers() {
+		guard memberContainer.isEmpty == false else { return }
 		let channel = channel
 
 		if let channel {
@@ -413,8 +474,8 @@ public final class ChannelMemberList: NSObject {
 		}
 		memberContainer.removeAll()
 		indexByUserID.removeAll()
-
-		presentation?.replaceContents([])
+		renderRevision &+= 1
+		publish { $0.replaceContents([]) }
 	}
 
 	public var numberOfMembers: UInt {

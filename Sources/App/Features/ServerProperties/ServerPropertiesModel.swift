@@ -69,6 +69,41 @@ final class ServerPropertiesModel {
 		connectCommands = replacement.connectCommands
 	}
 
+	func serverListForEditing() -> [Server]? {
+		let error: String? = if !ServerPropertiesValidation.isInternetAddress(serverAddress.firstToken) {
+			CommonValidationStrings.invalidServerAddress
+		} else if !ServerPropertiesValidation.isInternetPort(serverPort) {
+			CommonValidationStrings.invalidInternetPort
+		} else {
+			nil
+		}
+		if let error {
+			selection = .general
+			validationMessage = error
+			isValidationMessagePresented = true
+			return nil
+		}
+		var servers = config.serverList
+		var primary = primaryServer ?? Server()
+		primary.serverAddress = serverAddress.firstToken.lowercased()
+		primary.serverPort = UInt16(serverPort) ?? primary.serverPort
+		primary.pendingServerPassword = .edited(serverPassword.trimmed)
+		if servers.isEmpty {
+			servers.append(primary)
+		} else {
+			servers[0] = primary
+		}
+		return servers
+	}
+
+	func applyServerList(_ servers: [Server]) {
+		config.serverList = servers
+		let primary = servers.first
+		serverAddress = primary?.serverAddress ?? ""
+		serverPort = String(primary?.serverPort ?? UInt16(IRCConnectionDefaults.serverPort))
+		serverPassword = primary?.serverPassword ?? ""
+	}
+
 	/// Turns TLS on or off for the primary endpoint, moving the port with it the
 	/// way the endpoint-list sheet does.
 	func setPrimaryServerSecured(_ secured: Bool) {

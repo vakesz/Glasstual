@@ -63,6 +63,10 @@ extension FileTransferFailure {
 }
 
 enum FileTransferStrings {
+	static func unacknowledgedCompletion(peerNickname: String) -> String {
+		String(localized: .TDCFileTransferDialog.sentToWithoutAPeerAcknowledgement(peerNickname))
+	}
+
 	static var fileTransfers: String {
 		String(localized: .TDCFileTransferDialog.fileTransfers)
 	}
@@ -129,6 +133,12 @@ enum FileTransferStrings {
 
 	static var transferProgress: String {
 		String(localized: .TDCFileTransferDialog.transferProgress)
+	}
+
+	/// The accessibility label for a row's size. The argument is already
+	/// formatted as a byte count.
+	static func totalSize(_ formattedSize: String) -> String {
+		String(localized: .TDCFileTransferDialog.transferTotalSize(formattedSize))
 	}
 
 	static func transferCount(_ count: Int) -> String {

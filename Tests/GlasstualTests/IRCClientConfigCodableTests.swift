@@ -15,6 +15,19 @@ import Testing
 @Suite("Client configuration property-list round trip")
 @MainActor
 struct IRCClientConfigCodableTests {
+	@Test("Absent SASL choice retains legacy behavior and explicit off survives encoding")
+	func saslChoicePersistence() throws {
+		var config = try #require(PropertyListModel.decode(ClientConfig.self, from: Self.worldFixture))
+		#expect(config.usesSASL)
+		config.usesSASL = false
+		config.nicknamePassword = "secret"
+		let encoded = PropertyListModel.encode(config)
+		let restored = try #require(PropertyListModel.decode(ClientConfig.self, from: encoded))
+		#expect(restored.usesSASL == false)
+		#expect(encoded["nicknamePassword"] == nil)
+		#expect(config.pendingNicknamePassword == .set("secret"))
+	}
+
 	/// Captured from the class-based `IRCClientConfig.dictionaryValue`, with
 	/// one entry in each owned list.
 	private static let worldFixture: [String: PropertyListValue] = [
@@ -91,30 +104,6 @@ struct IRCClientConfigCodableTests {
 
 	/// The class this replaced assigned every optional unconditionally, so a
 	/// merge from a configuration that left one out wiped it.
-	@Test("Merging keeps an optional the second configuration does not carry")
-	func mergingDoesNotWipeAbsentOptionals() {
-		var first = ClientConfig(connectionName: "Libera Chat")
-		first.awayNickname = "swift-user|away"
-		first.ctcpVersionReply = "Glasstual"
-		first.proxyAddress = "proxy.example.test"
-		first.saslMechanismPreference = "PLAIN"
-
-		var second = first
-		second.awayNickname = nil
-		second.ctcpVersionReply = nil
-		second.proxyAddress = nil
-		second.saslMechanismPreference = nil
-		second.connectionName = "Libera"
-
-		let merged = ClientConfig.merging(first, with: second)
-
-		#expect(merged.connectionName == "Libera")
-		#expect(merged.awayNickname == "swift-user|away")
-		#expect(merged.ctcpVersionReply == "Glasstual")
-		#expect(merged.proxyAddress == "proxy.example.test")
-		#expect(merged.saslMechanismPreference == "PLAIN")
-	}
-
 	@Test("A version 0 dictionary moves its flood-control settings across")
 	func versionZeroFloodControl() throws {
 		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: [

@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import Foundation
 import Observation
 import os
@@ -65,6 +66,7 @@ public final class ThemeController: NSObject {
 	}
 
 	public private(set) var theme = TranscriptTheme.lines
+	private let stores: PreferencesTransferStores
 
 	public var name: String {
 		theme.name
@@ -79,12 +81,18 @@ public final class ThemeController: NSObject {
 		resolved(theme.palette.background)
 	}
 
-	override public init() {
+	override public convenience init() {
+		self.init(stores: .live)
+	}
+
+	init(stores: PreferencesTransferStores) {
+		self.stores = stores
 		super.init()
 	}
 
 	public func reload() {
-		let stored = Preferences.Theme.transcriptTheme.value
+		let key = Preferences.Theme.transcriptTheme
+		let stored = stores.store(for: key).data(forKey: key.name) ?? Data()
 		guard stored.isEmpty == false else {
 			publish(.lines, persist: false)
 			return
@@ -94,9 +102,8 @@ public final class ThemeController: NSObject {
 			try publish(Self.decode(stored), persist: false)
 		} catch {
 			Self.logger.error(
-				"Discarding invalid stored transcript theme: \(error.localizedDescription, privacy: .public)"
+				"Using fallback for unreadable stored transcript theme: \(error.localizedDescription, privacy: .public)"
 			)
-			Preferences.Theme.transcriptTheme.reset()
 			publish(.lines, persist: false)
 		}
 	}
@@ -146,7 +153,7 @@ public final class ThemeController: NSObject {
 
 		if persist {
 			do {
-				Preferences.Theme.transcriptTheme.value = try exportTheme()
+				try stores.set(.data(exportTheme()), for: Preferences.Theme.transcriptTheme)
 			} catch {
 				Self.logger.error(
 					"Failed to store transcript theme: \(error.localizedDescription, privacy: .public)"

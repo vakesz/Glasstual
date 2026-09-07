@@ -44,6 +44,64 @@ import Testing
 @Suite("WHO and WHOIS replies")
 @MainActor
 struct IRCSpecWhoTests {
+	@Test("One wire NAMES numeric publishes one member snapshot")
+	func namesPublishesOncePerNumeric() throws {
+		let client = client()
+		let channel = try joinedChannel("#names", on: client)
+		let list = MemberList()
+		list.assign(to: channel)
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = connection
+		client.isConnected = true
+		let revision = list.presentationRevision
+		let names = (0 ..< 256).map { "member\($0)" }.joined(separator: " ")
+		client.ircConnection(connection, didReceiveData: ":server 353 me = #names :\(names)")
+		#expect(channel.numberOfMembers == 256)
+		#expect(channel.findMember("member255") != nil)
+		#expect(list.presentationRevision == revision + 1)
+		#expect(list.groups.flatMap(\.members).count == 256)
+		list.assign(to: nil)
+	}
+
+	@Test("WHO and WHOX publish each related list once and preserve selection", arguments: [false, true])
+	func whoBatchesRelatedPresentations(_ whox: Bool) throws {
+		let client = client()
+		client.enableCapability(.awayNotify)
+		let first = try joinedChannel("#first", on: client)
+		let second = try joinedChannel("#second", on: client)
+		let user = client.findUserOrCreate("alice")
+		for channel in [first, second] {
+			channel.addMember(ChannelUser(user: user, prefixes: client.currentUserPrefixes))
+		}
+		let firstList = MemberList()
+		let secondList = MemberList()
+		firstList.assign(to: first)
+		secondList.assign(to: second)
+		firstList.selectedMemberIDs = [user.id]
+		secondList.selectedMemberIDs = [user.id]
+		let revisions = [firstList.presentationRevision, secondList.presentationRevision]
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = connection
+		client.isConnected = true
+		let line = whox
+			? ":server 354 me \(IRCServerQuirks.whoxResponseToken) #first ali example.org alice G* account :Alice Example"
+			: ":server 352 me #first ali example.org server alice G* :0 Alice Example"
+		client.ircConnection(connection, didReceiveData: line)
+		for (index, list) in [firstList, secondList].enumerated() {
+			#expect(list.presentationRevision == revisions[index] + 1)
+			#expect(list.selectedMemberIDs == [user.id])
+			let shown = try #require(list.groups.flatMap(\.members).first?.user)
+			#expect(shown.isAway)
+			#expect(shown.isIRCop)
+			#expect(shown.realName == "Alice Example")
+		}
+		client.ircConnection(connection, didReceiveData: line)
+		#expect(firstList.presentationRevision == revisions[0] + 1)
+		#expect(secondList.presentationRevision == revisions[1] + 1)
+		firstList.assign(to: nil)
+		secondList.assign(to: nil)
+	}
+
 	private func client() -> GLTTestClient {
 		GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
 	}

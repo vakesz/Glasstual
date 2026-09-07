@@ -67,9 +67,12 @@ public enum SCRAMClientErrorCode: Int {
 /// PBKDF2 derivation leaves it, and that is a pure function.
 @MainActor
 public final class SCRAMClient: NSObject {
-	public enum State: Int {
+	/// The exchange, in the order it runs.
+	public enum State {
 		case initial
 		case sentClientFirst
+		/// The PBKDF2 derivation the client-final message waits on.
+		case derivingClientFinal
 		case sentClientFinal
 		case authenticated
 		case failed
@@ -93,6 +96,7 @@ public final class SCRAMClient: NSObject {
 	private let username: String
 	private let password: String
 	private let clientNonce: String
+	private let deriveKey: @Sendable (String, Data, Int) async -> Data?
 
 	private var clientFirstMessageBare = ""
 	private var serverSignature = Data()
@@ -104,10 +108,20 @@ public final class SCRAMClient: NSObject {
 
 	/// Creates a client with a caller supplied nonce. Only tests should
 	/// pick their own nonce.
-	public init(username: String, password: String, clientNonce: String) {
+	public convenience init(username: String, password: String, clientNonce: String) {
+		self.init(username: username, password: password, clientNonce: clientNonce, deriveKey: Self.pbkdf2Offloaded)
+	}
+
+	init(
+		username: String,
+		password: String,
+		clientNonce: String,
+		deriveKey: @escaping @Sendable (String, Data, Int) async -> Data?
+	) {
 		self.username = username
 		self.password = password
 		self.clientNonce = clientNonce
+		self.deriveKey = deriveKey
 	}
 
 	// MARK: - Messages
@@ -131,20 +145,26 @@ public final class SCRAMClient: NSObject {
 	/// supplied iteration count cannot block the main thread.
 	public func clientFinalMessage(forServerFirstMessage serverFirst: String) async throws -> String {
 		let challenge = try parseServerFirstMessage(serverFirst)
-
-		guard let saltedPassword = await SCRAMClient.pbkdf2Offloaded(
-			password: password,
-			salt: challenge.salt,
-			iterations: challenge.iterations
-		) else {
-			throw fail(.keyDerivationFailed, "PBKDF2 failed")
+		state = .derivingClientFinal
+		do {
+			try Task.checkCancellation()
+			let derived = await deriveKey(password, challenge.salt, challenge.iterations)
+			try Task.checkCancellation()
+			guard state == .derivingClientFinal else {
+				throw fail(.invalidState, "SCRAM exchange ended during key derivation")
+			}
+			guard let saltedPassword = derived else {
+				throw fail(.keyDerivationFailed, "PBKDF2 failed")
+			}
+			return completeClientFinalMessage(
+				serverFirst: serverFirst,
+				challenge: challenge,
+				saltedPassword: saltedPassword
+			)
+		} catch {
+			state = .failed
+			throw error
 		}
-
-		return completeClientFinalMessage(
-			serverFirst: serverFirst,
-			challenge: challenge,
-			saltedPassword: saltedPassword
-		)
 	}
 
 	private struct ServerFirstChallenge {

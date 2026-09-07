@@ -83,7 +83,7 @@ nonisolated enum IRCFormattingParser { // nonisolated: value
 		}
 
 		private func toggle(_ key: NSAttributedString.Key, at position: Int) -> Int {
-			if position > 0, result.attribute(key, at: position, effectiveRange: nil) != nil {
+			if result.attribute(key, at: position, effectiveRange: nil) != nil {
 				result.removeAttribute(key, range: remainingRange(from: position))
 			} else {
 				result.addAttribute(key, value: true, range: remainingRange(from: position))
@@ -102,7 +102,7 @@ nonisolated enum IRCFormattingParser { // nonisolated: value
 
 			if components.background != nil {
 				applyColor(components.background, key: RendererFormatting.backgroundColor, at: position)
-			} else if components.foreground == nil, position > 0 {
+			} else if components.foreground == nil {
 				removeAttribute(RendererFormatting.backgroundColor, at: position)
 			}
 
@@ -118,7 +118,7 @@ nonisolated enum IRCFormattingParser { // nonisolated: value
 					value: color.attributeValue,
 					range: remainingRange(from: position)
 				)
-			} else if position > 0 {
+			} else {
 				removeAttribute(key, at: position)
 			}
 		}

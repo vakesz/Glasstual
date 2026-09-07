@@ -36,8 +36,7 @@ private final class RecordingChannelPresentation: TreeItemPresentation {
 		reason _: String?
 	) {}
 	func prependHistoricLogLines(_: [LogLine]) {}
-	func prepareForPermanentDestruction() {}
-	func prepareForApplicationTermination() {}
+	func tearDown(_: TreeItemTeardown) {}
 }
 
 /** The two lists a printed line is matched against are assembled per line, out

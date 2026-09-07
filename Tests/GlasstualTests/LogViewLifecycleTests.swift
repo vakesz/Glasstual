@@ -21,9 +21,7 @@ struct LogViewLifecycleTests {
 		TranscriptLine(
 			lineNumber: UUID().uuidString,
 			receivedAt: Date(),
-			timestamp: "12:00",
 			nickname: "alice",
-			formattedNickname: "alice",
 			memberType: .normal,
 			lineType: .privateMessage,
 			command: "PRIVMSG",
@@ -76,7 +74,7 @@ struct LogViewLifecycleTests {
 	}
 
 	@Test("A topic received while connecting is fixed above the transcript")
-	func connectingTopicAppearsInHeader() async throws {
+	func connectingTopicAppearsInHeader() throws {
 		let fixture = GLTClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig())
 		let channel = fixture.world.createChannel(
@@ -100,7 +98,6 @@ struct LogViewLifecycleTests {
 		window.setContentSize(NSSize(width: 800, height: 600))
 
 		channel.topic = "Native AppKit discussion"
-		await Task.yield()
 		window.contentView?.layoutSubtreeIfNeeded()
 		host.view.layoutSubtreeIfNeeded()
 

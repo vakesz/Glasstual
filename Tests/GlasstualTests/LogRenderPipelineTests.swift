@@ -75,6 +75,46 @@ private final nonisolated class DeliverySignal: Sendable { // nonisolated: immut
 
 @Suite("Log render pipeline")
 struct LogRenderPipelineTests {
+	@Test("The barrier waits for standalone delivery while ordered drain remains independent")
+	func barrierIncludesStandaloneWork() async {
+		let pipeline = LogRenderPipeline()
+		let runner = Task { await pipeline.run() }
+		let gate = RenderGate()
+		let started = DeliverySignal()
+		let log = DeliveryLog()
+		pipeline.submissions.yield(LogRenderSubmission(isStandalone: true) {
+			started.fire()
+			await gate.wait()
+			return { log.append("history") }
+		})
+		await started.wait()
+		let barrier = Task {
+			await pipeline.barrier()
+			log.append("barrier")
+		}
+		await pipeline.drain()
+		#expect(log.labels.isEmpty)
+		await gate.open()
+		await barrier.value
+		#expect(log.labels == ["history", "barrier"])
+		await pipeline.stop()
+		await runner.value
+	}
+
+	@Test("Barrier cancellation and stop release callers without requiring a consumer", arguments: [false, true])
+	func barrierCancellationReleasesWaiter(stop: Bool) async {
+		let pipeline = LogRenderPipeline()
+		let waiter = Task { await pipeline.barrier() }
+		if stop {
+			await pipeline.stop()
+		} else {
+			waiter.cancel()
+		}
+		await waiter.value
+		await pipeline.stop()
+		await pipeline.barrier()
+	}
+
 	@Test("Every view keeps its own submission order under 200 interleaved prints")
 	func orderIsPreservedPerViewUnderABurst() async {
 		let viewCount = 3
@@ -275,5 +315,108 @@ struct LogRenderPipelineTests {
 		await runner.value
 
 		#expect(log.labels.isEmpty, "a cancelled render still reached the transcript")
+	}
+
+	@Test("Stopping at capacity never starts the next buffered render")
+	func stoppingWhileWaitingForCapacityRejectsBufferedWork() async {
+		let pipeline = LogRenderPipeline()
+		let gate = RenderGate()
+		let started = (0 ..< 4).map { _ in DeliverySignal() }
+		let rendered = DeliveryLog()
+		let delivered = DeliveryLog()
+		for index in 0 ..< 5 {
+			let signal = index < started.count ? started[index] : nil
+			pipeline.submissions.yield(LogRenderSubmission(isStandalone: false) {
+				await rendered.append(String(index))
+				signal?.fire()
+				await gate.wait()
+				return { delivered.append(String(index)) }
+			})
+		}
+		let runner = Task { await pipeline.run() }
+		for signal in started {
+			await signal.wait()
+		}
+		await pipeline.stop()
+		await gate.open()
+		await runner.value
+
+		#expect(rendered.labels.sorted() == ["0", "1", "2", "3"])
+		#expect(delivered.labels.isEmpty)
+	}
+
+	@Test("Drain returns when the pipeline is already stopped or its stream has ended")
+	func drainRejectsStoppedAndTerminatedPipelines() async {
+		let stopped = LogRenderPipeline()
+		await stopped.stop()
+		await stopped.drain()
+
+		let terminated = LogRenderPipeline()
+		terminated.submissions.finish()
+		await terminated.drain()
+	}
+
+	@Test("Stopping releases every drain caller even without a running consumer")
+	func stopReleasesAllDrainWaiters() async {
+		let pipeline = LogRenderPipeline()
+		let started = (0 ..< 8).map { _ in DeliverySignal() }
+		let waiters = started.map { signal in
+			Task {
+				signal.fire()
+				await pipeline.drain()
+			}
+		}
+		for signal in started {
+			await signal.wait()
+		}
+		await pipeline.stop()
+		for waiter in waiters {
+			await waiter.value
+		}
+	}
+
+	@Test("Cancelling a drain caller does not stop the pipeline or drop ordered work")
+	func cancellingDrainKeepsOrderedWork() async {
+		let pipeline = LogRenderPipeline()
+		let started = DeliverySignal()
+		let waiter = Task {
+			started.fire()
+			await pipeline.drain()
+		}
+		await started.wait()
+		waiter.cancel()
+		await waiter.value
+
+		let log = DeliveryLog()
+		pipeline.submissions.yield(LogRenderSubmission(isStandalone: false) {
+			{ log.append("retained") }
+		})
+		let runner = Task { await pipeline.run() }
+		await pipeline.drain()
+		#expect(log.labels == ["retained"])
+		await pipeline.stop()
+		await runner.value
+	}
+
+	@Test("Cancelling the runner cancels in-flight delivery and releases drain callers")
+	func cancellingRunnerStopsPipeline() async {
+		let pipeline = LogRenderPipeline()
+		let gate = RenderGate()
+		let rendering = DeliverySignal()
+		let log = DeliveryLog()
+		pipeline.submissions.yield(LogRenderSubmission(isStandalone: false) {
+			rendering.fire()
+			await gate.wait()
+			return { log.append("cancelled") }
+		})
+		let runner = Task { await pipeline.run() }
+		await rendering.wait()
+		let waiter = Task { await pipeline.drain() }
+		runner.cancel()
+		await waiter.value
+		await gate.open()
+		await runner.value
+		#expect(log.labels.isEmpty)
+		await pipeline.drain()
 	}
 }

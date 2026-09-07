@@ -23,8 +23,8 @@ import Foundation
  same body at the same second from the same nickname, and dropping one of them
  must not make the other invisible to the duplicate check.
 
- Decoding happens on the main actor, so the value belongs there and needs no
- synchronisation. */
+ The index itself is a value with no reference-typed state; the facade below
+ owns the only copies and keeps them on the main actor. */
 private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: value
 	/// What one indexed line contributed, so the contribution can be withdrawn
 	/// when the line goes. `nil` where the line carried no such value.
@@ -56,8 +56,8 @@ private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: valu
 	/// Withdraws what a pruned line contributed.
 	mutating func remove(_ uniqueIdentifier: String) {
 		guard let contribution = contributions.removeValue(forKey: uniqueIdentifier) else { return }
-		release(contribution.messageIdentifier, from: &messageIdentifiers)
-		release(contribution.fallbackKey, from: &fallbackKeys)
+		Self.release(contribution.messageIdentifier, from: &messageIdentifiers)
+		Self.release(contribution.fallbackKey, from: &fallbackKeys)
 	}
 
 	private mutating func retain(_ contribution: Contribution) {
@@ -69,7 +69,7 @@ private nonisolated struct HistoricLogViewIndex: Sendable { // nonisolated: valu
 		}
 	}
 
-	private func release(_ key: String?, from counts: inout [String: Int]) {
+	private static func release(_ key: String?, from counts: inout [String: Int]) {
 		guard let key, let count = counts[key] else { return }
 		if count <= 1 {
 			counts.removeValue(forKey: key)
@@ -89,6 +89,19 @@ public final class LogControllerHistoricLogFile {
 	public static let sharedInstance = LogControllerHistoricLogFile()
 
 	private var viewIndexes: [String: HistoricLogViewIndex] = [:]
+	private let client: HistoricLogClient
+	let recovery = TranscriptHistoryRecoveryState()
+	private var operations: Task<Void, Never>?
+	private enum Termination {
+		case none
+		case pending([@MainActor @Sendable () -> Void])
+	}
+
+	private var termination = Termination.none
+
+	init(client: HistoricLogClient = .shared) {
+		self.client = client
+	}
 
 	public static func shared() -> LogControllerHistoricLogFile {
 		sharedInstance
@@ -97,15 +110,34 @@ public final class LogControllerHistoricLogFile {
 	// MARK: - Process life cycle
 
 	public func resetMaximumLineCount() {
-		Task { await HistoricLogClient.shared.applyMaximumLineCount() }
+		Task { await client.applyMaximumLineCount() }
 	}
 
 	public func prepareForApplicationTermination(
 		completionBlock: (@MainActor @Sendable () -> Void)? = nil
 	) {
-		Task { @MainActor in
-			await HistoricLogClient.shared.prepareForTermination()
-			completionBlock?()
+		if case var .pending(completions) = termination {
+			if let completionBlock {
+				completions.append(completionBlock)
+			}
+			termination = .pending(completions)
+			return
+		}
+		termination = .pending(completionBlock.map { [$0] } ?? [])
+		let predecessor = operations
+		operations = Task { @MainActor in
+			await predecessor?.value
+			let result = await client.prepareForTermination()
+			if case let .failed(reason) = result {
+				recovery.storageFailure = reason
+				return
+			}
+			if case let .pending(completions) = termination {
+				termination = .none
+				for completion in completions {
+					completion()
+				}
+			}
 		}
 	}
 
@@ -143,16 +175,21 @@ public final class LogControllerHistoricLogFile {
 		}
 
 		/* Server timestamps carry millisecond precision. Rounding to the
-		 millisecond keeps a value parsed twice from the same string equal. */
-		let milliseconds = Int64((date.timeIntervalSince1970 * 1000.0).rounded())
+		 millisecond keeps a value parsed twice from the same string equal.
+
+		 A date so far from the epoch that its millisecond count leaves `Int64`
+		 cannot have been written by anything that reads it back, so it gets no
+		 fallback key rather than trapping the conversion. */
+		guard let milliseconds = Int64(exactly: (date.timeIntervalSince1970 * 1000.0).rounded()) else {
+			return nil
+		}
 		return String(format: "%lld\u{001f}%@\u{001f}%@", milliseconds, nickname ?? "", messageBody)
 	}
 
 	public func indexLogLine(_ logLine: LogLine, forView viewIdentifier: String) {
-		var index = viewIndexes[viewIdentifier] ?? HistoricLogViewIndex()
 		let messageIdentifier = logLine.messageIdentifier
 
-		index.add(
+		viewIndexes[viewIdentifier, default: HistoricLogViewIndex()].add(
 			HistoricLogViewIndex.Contribution(
 				messageIdentifier: messageIdentifier?.isEmpty == false ? messageIdentifier : nil,
 				fallbackKey: Self.fallbackKey(
@@ -166,13 +203,8 @@ public final class LogControllerHistoricLogFile {
 
 		let receivedAt = logLine.receivedAt
 
-		if let newestDate = index.newestDate {
-			index.newestDate = max(newestDate, receivedAt)
-		} else {
-			index.newestDate = receivedAt
-		}
-
-		viewIndexes[viewIdentifier] = index
+		let newestDate = viewIndexes[viewIdentifier]?.newestDate ?? receivedAt
+		viewIndexes[viewIdentifier]?.newestDate = max(newestDate, receivedAt)
 	}
 
 	public func indexLogLines(_ logLines: [LogLine], forView viewIdentifier: String) {
@@ -183,13 +215,9 @@ public final class LogControllerHistoricLogFile {
 
 	/// Withdraws the lines the store has pruned from the view's index.
 	func forgetLines(_ uniqueIdentifiers: [String], inView viewIdentifier: String) {
-		guard var index = viewIndexes[viewIdentifier] else { return }
-
 		for uniqueIdentifier in uniqueIdentifiers {
-			index.remove(uniqueIdentifier)
+			viewIndexes[viewIdentifier]?.remove(uniqueIdentifier)
 		}
-
-		viewIndexes[viewIdentifier] = index
 	}
 
 	public func containsMessageIdentifier(_ messageIdentifier: String, forView viewIdentifier: String) -> Bool {
@@ -219,32 +247,80 @@ public final class LogControllerHistoricLogFile {
 		viewIndexes[viewIdentifier]?.newestDate
 	}
 
-	// MARK: - Fetching
-
-	/// Decodes fetched rows and records them in the index. The rows cross the
-	/// XPC boundary as values; the log lines they decode into are main-actor.
-	func decodeAndIndex(_ historicEntries: [HistoricLogEntry], forView viewIdentifier: String) -> [LogLine] {
-		let logLines = HistoricLogClient.logLines(from: historicEntries)
-		indexLogLines(logLines, forView: viewIdentifier)
-		return logLines
-	}
-
 	// MARK: - Writing
 
 	public func writeNewEntry(with logLine: LogLine, forView viewIdentifier: String) {
-		indexLogLine(logLine, forView: viewIdentifier)
-
 		let entry = logLine.historicEntry(forView: viewIdentifier)
-		Task { await HistoricLogClient.shared.writeEntry(entry) }
+		let predecessor = operations
+		operations = Task {
+			await predecessor?.value
+			switch await client.writeEntry(entry) {
+			case .accepted: indexLogLine(logLine, forView: viewIdentifier)
+			case .unavailable: recovery.storageFailure = PromptStrings.Logging.scrollbackFailureBody
+			case let .failed(reason): recovery.storageFailure = reason
+			}
+		}
 	}
 
-	public func forgetView(_ viewIdentifier: String) {
-		viewIndexes.removeValue(forKey: viewIdentifier)
-		Task { await HistoricLogClient.shared.forgetView(viewIdentifier) }
+	@discardableResult
+	public func forgetView(_ viewIdentifier: String) -> Task<Void, Never> {
+		let predecessor = operations
+		let operation = Task {
+			await predecessor?.value
+			switch await client.forgetView(viewIdentifier) {
+			case .deleted:
+				viewIndexes.removeValue(forKey: viewIdentifier)
+				recovery.deletionFailures.removeValue(forKey: viewIdentifier)
+			case let .failed(reason): recovery.deletionFailures[viewIdentifier] = reason
+			case .unavailable: recovery.deletionFailures[viewIdentifier] = PromptStrings.Logging.scrollbackFailureBody
+			}
+		}
+		operations = operation
+		return operation
 	}
 
-	public func resetData(forView viewIdentifier: String) {
-		viewIndexes.removeValue(forKey: viewIdentifier)
-		Task { await HistoricLogClient.shared.resetData(forView: viewIdentifier) }
+	@discardableResult
+	public func resetData(forView viewIdentifier: String) -> Task<Void, Never> {
+		let predecessor = operations
+		let operation = Task {
+			await predecessor?.value
+			switch await client.resetData(forView: viewIdentifier) {
+			case .deleted:
+				viewIndexes.removeValue(forKey: viewIdentifier)
+				recovery.deletionFailures.removeValue(forKey: viewIdentifier)
+			case let .failed(reason): recovery.deletionFailures[viewIdentifier] = reason
+			case .unavailable: recovery.deletionFailures[viewIdentifier] = PromptStrings.Logging.scrollbackFailureBody
+			}
+		}
+		operations = operation
+		return operation
+	}
+
+	func retryLoading() async -> Bool {
+		await operations?.value
+		guard await client.retryLoading() else { return false }
+		switch await client.saveData() {
+		case .saved:
+			if case let .pending(completions) = termination {
+				if case let .failed(reason) = await client.prepareForTermination() {
+					recovery.storageFailure = reason
+					return false
+				}
+				termination = .none
+				recovery.storageFailure = nil
+				for completion in completions {
+					completion()
+				}
+			} else {
+				recovery.storageFailure = nil
+			}
+			return true
+		case let .failed(reason): recovery.storageFailure = reason; return false
+		}
+	}
+
+	func fetchOutcome(_ request: HistoricLogFetchRequest) async -> HistoricLogFetchOutcome {
+		await operations?.value
+		return await client.fetchOutcome(request)
 	}
 }

@@ -12,6 +12,38 @@ import Testing
 /// declares, and the developer-mode flag that gates dispatch.
 @MainActor
 struct IRCUserCommandTests {
+	/** A QUIT typed before registration finishes has to unwind the session, not
+	 just set a flag.
+
+	 The client is given a real `Connection` so the teardown runs all the way
+	 through: a connection that never opened closes at once, and the client
+	 hears its own disconnect back. A fixture with no socket at all would stop
+	 the quit half way and could not show the flags unwinding. */
+	@Test("Typed QUIT cancels a connecting session", arguments: ["QUIT", "QUIT leaving"])
+	func quitWhileConnecting(_ command: String) {
+		CommandIndex.populateCommandIndex()
+		let client = GLTTestClient()
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = connection
+		client.isConnecting = true
+		client.autoConnect(withDelay: 60, afterWakeUp: false)
+		let scheduled = client.pendingConnectionTask
+
+		client.sendCommand(command, completeTarget: false, target: nil)
+
+		#expect(scheduled?.isCancelled == true)
+		#expect(client.pendingConnectionTask == nil)
+		#expect(client.sentLines.count == 0)
+		/* The connection reported the disconnect back, so the session is over
+		 rather than stuck mid-quit: `isQuitting` is cleared with the rest. */
+		#expect(client.socket == nil)
+		#expect(client.isQuitting == false)
+		#expect(client.isDisconnecting == false)
+		#expect(client.isConnecting == false)
+		#expect(client.isConnected == false)
+		#expect(connection.isConnected == false)
+	}
+
 	private func parsed(_ input: String) throws -> ParsedUserCommand {
 		CommandIndex.populateCommandIndex()
 

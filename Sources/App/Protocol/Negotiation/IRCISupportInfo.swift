@@ -141,6 +141,10 @@ public class IRCISupportInfo: NSObject {
 	/// What class the server put each channel mode in, and therefore whether
 	/// the mode carries a parameter.
 	public private(set) var channelModeKinds: [Character: ChannelModeKind] = defaultChannelModeKinds
+	private var advertisedChannelModeKinds: [Character: ChannelModeKind] = [:] {
+		didSet { updateChannelModeKinds() }
+	}
+
 	/// `CHANLIMIT`, keyed by channel prefix.
 	public private(set) var channelLimits: [Character: UInt] = [:]
 	/// `MAXLIST`, keyed by list mode.
@@ -152,7 +156,10 @@ public class IRCISupportInfo: NSObject {
 	/// Mode symbol / prefix character pairs from ISUPPORT `PREFIX=`, stored as
 	/// pairs so the two halves can never disagree in length.
 	private(set) var userModePrefixPairs = defaultUserModePrefixPairs {
-		didSet { publishUserPrefixTable() }
+		didSet {
+			updateChannelModeKinds()
+			publishUserPrefixTable()
+		}
 	}
 
 	public private(set) var banExceptionModeSymbol: String?
@@ -178,6 +185,12 @@ public class IRCISupportInfo: NSObject {
 			},
 			uniquingKeysWith: { first, _ in first }
 		)
+	}
+
+	private func updateChannelModeKinds() {
+		// PREFIX overrides CHANMODES, but withdrawing a prefix must reveal the
+		// original CHANMODES kind rather than erase it.
+		channelModeKinds = advertisedChannelModeKinds.merging(userPrefixModeKinds) { _, prefix in prefix }
 	}
 
 	/// Republishes the values channel members read off the main actor.
@@ -239,7 +252,7 @@ public class IRCISupportInfo: NSObject {
 			"CHANNELLEN", "CHANTYPES", "CHATHISTORY", "CLIENTTAGDENY", "DEAF", "ELIST", "EXCEPTS",
 			"EXTBAN", "INVEX", "KEYLEN", "KICKLEN", "LINELEN", "MAXLIST",
 			"MAXTARGETS", "MODES", "NETWORK", "NICKLEN", "PREFIX", "SAFELIST", "SILENCE",
-			"STATUSMSG", "TARGMAX", "TOPICLEN", "UTF8ONLY", "WHOX",
+			"STATUSMSG", "TARGMAX", "TOPICLEN", "UTF8ONLY", "WHOX", "MONITOR", "WATCH", "NAMESX", "UHNAMES",
 		]
 	}
 
@@ -302,7 +315,7 @@ public class IRCISupportInfo: NSObject {
 		case "CASEMAPPING":
 			caseMapping = .rfc1459
 		case "CHANMODES":
-			channelModeKinds = userPrefixModeKinds
+			advertisedChannelModeKinds = [:]
 		case "CHANTYPES":
 			channelNamePrefixes = ["#"]
 		case "DEAF":
@@ -349,6 +362,14 @@ public class IRCISupportInfo: NSObject {
 
 	private func resetFeatureSetting(_ key: String) {
 		switch key {
+		case "MONITOR":
+			client?.removeCapabilityFacts(.monitorCommand)
+		case "WATCH":
+			client?.removeCapabilityFacts(.watchCommand)
+		case "NAMESX":
+			client?.removeCapabilityFacts(.multiPrefix)
+		case "UHNAMES":
+			client?.removeCapabilityFacts(.userhostInNames)
 		case "SAFELIST":
 			safeListSupported = false
 		case "UTF8ONLY":
@@ -711,7 +732,7 @@ private extension IRCISupportInfo {
 		case "CHANMODES":
 			/* A re-sent CHANMODES replaces the table rather than adding to it,
 			 so a shorter one does not leave the modes it dropped behind. */
-			channelModeKinds = ISupportTokenParser.channelModeKinds(from: value, merging: userPrefixModeKinds)
+			advertisedChannelModeKinds = ISupportTokenParser.channelModeKinds(from: value, merging: [:])
 		case "CHANTYPES":
 			updateChannelNamePrefixes(from: value)
 		case "NETWORK":
@@ -834,12 +855,12 @@ private extension IRCISupportInfo {
 		command: String,
 		on client: IRCClient?
 	) {
-		guard let client, client.isCapabilityEnabled(capability) == false else {
+		guard let client, client.capabilityFacts.contains(capability) == false else {
 			return
 		}
 
 		client.sendLine(command)
-		client.enableCapability(capability)
+		client.addCapabilityFacts(capability)
 	}
 
 	func processAvailabilityFlag(_ key: String, value: String?) {
@@ -886,17 +907,6 @@ private extension IRCISupportInfo {
 
 		userModePrefixPairs = zip(configuration.modeSymbols, configuration.characters)
 			.map { (modeSymbol: $0, character: $1) }
-
-		/* A re-sent PREFIX replaces the prefix modes rather than adding to
-		 them, so a mode the server has dropped stops ranking members. What
-		 CHANMODES put in the table is left alone. */
-		var updatedChannelModes = channelModeKinds.filter { $0.value != .userPrefix }
-
-		for (modeSymbol, kind) in userPrefixModeKinds {
-			updatedChannelModes[modeSymbol] = kind
-		}
-
-		channelModeKinds = updatedChannelModes
 	}
 
 	func extractCharacters(_ characters: [String], fromChannelNamed channel: String) -> String {

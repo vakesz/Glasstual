@@ -95,6 +95,60 @@ private nonisolated func preferenceNumber(from object: Any) -> NSNumber? { // no
 	return Double(string).map(NSNumber.init(value:))
 }
 
+/// Parse integral numeric strings without rounding them through Double first.
+private nonisolated func preferenceInteger<Value: FixedWidthInteger>( // nonisolated: pure
+	from string: String, as _: Value.Type
+) -> Value? {
+	let sign: Substring
+	var digits: String
+	let fractionCount: Int
+	let exponentText: Substring
+	let radix: Int
+	if let match = string.wholeMatch(of: /([+-]?)([0-9]*)(?:\.([0-9]*))?(?:[eE]([+-]?[0-9]+))?/) {
+		let fraction = match.3 ?? ""
+		sign = match.1
+		digits = String(match.2) + fraction
+		fractionCount = fraction.count
+		exponentText = match.4 ?? "0"
+		radix = 10
+	} else if let match = string
+		.wholeMatch(of: /([+-]?)0[xX]([0-9a-fA-F]*)(?:\.([0-9a-fA-F]*))?(?:[pP]([+-]?[0-9]+))?/)
+	{
+		// Double accepted hexadecimal strings too. Expand nibbles so their binary exponent stays exact.
+		let fraction = match.3 ?? ""
+		let bits = (String(match.2) + fraction).compactMap(\.hexDigitValue).map { value in
+			let bits = String(value, radix: 2)
+			return String(repeating: "0", count: 4 - bits.count) + bits
+		}.joined()
+		sign = match.1
+		digits = bits
+		fractionCount = fraction.count * 4
+		exponentText = match.4 ?? "0"
+		radix = 2
+	} else {
+		return nil
+	}
+	guard !digits.isEmpty else { return nil }
+	digits = String(digits.drop(while: { $0 == "0" }))
+	if digits.isEmpty {
+		return 0
+	}
+	guard let exponent = Int(exponentText) else { return nil }
+	let (shift, overflow) = exponent.subtractingReportingOverflow(fractionCount)
+	guard !overflow else { return nil }
+	if shift >= 0 {
+		let limit = radix == 10 ? 20 : 64
+		guard shift <= limit, digits.count <= limit - shift else { return nil }
+		digits += String(repeating: "0", count: shift)
+	} else {
+		guard shift > -digits.count else { return nil }
+		let removedCount = -shift
+		guard digits.suffix(removedCount).allSatisfy({ $0 == "0" }) else { return nil }
+		digits.removeLast(removedCount)
+	}
+	return Value(String(sign) + digits, radix: radix)
+}
+
 nonisolated extension Bool: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> Bool? {
 		if let number = object as? NSNumber {
@@ -115,7 +169,10 @@ nonisolated extension Bool: PreferenceValue { // nonisolated: value
 
 nonisolated extension Int: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> Int? {
-		preferenceNumber(from: object)?.intValue
+		if let string = object as? String {
+			return preferenceInteger(from: string, as: Self.self)
+		}
+		return (object as? NSNumber).flatMap { Int(exactly: $0) }
 	}
 
 	public var preferenceObject: Any? {
@@ -125,7 +182,10 @@ nonisolated extension Int: PreferenceValue { // nonisolated: value
 
 nonisolated extension UInt: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> UInt? {
-		preferenceNumber(from: object)?.uintValue
+		if let string = object as? String {
+			return preferenceInteger(from: string, as: Self.self)
+		}
+		return (object as? NSNumber).flatMap { UInt(exactly: $0) }
 	}
 
 	public var preferenceObject: Any? {
@@ -135,7 +195,10 @@ nonisolated extension UInt: PreferenceValue { // nonisolated: value
 
 nonisolated extension UInt16: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> UInt16? {
-		preferenceNumber(from: object)?.uint16Value
+		if let string = object as? String {
+			return preferenceInteger(from: string, as: Self.self)
+		}
+		return (object as? NSNumber).flatMap { UInt16(exactly: $0) }
 	}
 
 	public var preferenceObject: Any? {
@@ -145,11 +208,12 @@ nonisolated extension UInt16: PreferenceValue { // nonisolated: value
 
 nonisolated extension Double: PreferenceValue { // nonisolated: value
 	public static func preferenceValue(from object: Any) -> Double? {
-		preferenceNumber(from: object)?.doubleValue
+		guard let value = preferenceNumber(from: object)?.doubleValue, value.isFinite else { return nil }
+		return value
 	}
 
 	public var preferenceObject: Any? {
-		NSNumber(value: self)
+		isFinite ? NSNumber(value: self) : nil
 	}
 }
 
@@ -250,9 +314,16 @@ public protocol AnyPreferenceKey: Sendable {
 
 	/// Validates and coerces an imported value, or returns `nil` to reject it.
 	nonisolated func coerce(_ value: PropertyListValue) -> PropertyListValue? // nonisolated: pure
+	nonisolated func isValid( // nonisolated: pure
+		_ value: PropertyListValue, in values: [String: PropertyListValue]
+	) -> Bool
 }
 
 public nonisolated extension AnyPreferenceKey { // nonisolated: value
+	func isValid(_ value: PropertyListValue, in _: [String: PropertyListValue]) -> Bool {
+		coerce(value) != nil
+	}
+
 	var isCatalogued: Bool {
 		traits.contains(.uncatalogued) == false
 	}
@@ -270,17 +341,23 @@ public nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKe
 	public let defaultValue: Value
 	public let storage: PreferenceStorage
 	public let traits: PreferenceTraits
+	private let validation: @Sendable (Value) -> Bool
+	private let relatedValidation: @Sendable (Value, [String: PropertyListValue]) -> Bool
 
 	public init(
 		_ name: String,
 		default defaultValue: Value,
 		storage: PreferenceStorage = .container,
-		traits: PreferenceTraits = []
+		traits: PreferenceTraits = [],
+		validation: @escaping @Sendable (Value) -> Bool = { _ in true },
+		relatedValidation: @escaping @Sendable (Value, [String: PropertyListValue]) -> Bool = { _, _ in true }
 	) {
 		self.name = name
 		self.defaultValue = defaultValue
 		self.storage = storage
 		self.traits = traits
+		self.validation = validation
+		self.relatedValidation = relatedValidation
 	}
 
 	public var registeredDefault: PropertyListValue? {
@@ -293,12 +370,18 @@ public nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKe
 
 	public func coerce(_ value: PropertyListValue) -> PropertyListValue? {
 		guard let coerced = Value.preferenceValue(from: value.propertyListObject),
+		      validation(coerced),
 		      let object = coerced.preferenceObject
 		else {
 			return nil
 		}
 
 		return PropertyListValue(propertyList: object)
+	}
+
+	public func isValid(_ value: PropertyListValue, in values: [String: PropertyListValue]) -> Bool {
+		guard let coerced = Value.preferenceValue(from: value.propertyListObject) else { return false }
+		return validation(coerced) && relatedValidation(coerced, values)
 	}
 }
 
@@ -317,15 +400,18 @@ public nonisolated struct UntypedPreferenceKey: AnyPreferenceKey { // nonisolate
 	public let storage: PreferenceStorage
 	public let traits: PreferenceTraits
 	private let registration: RegisteredDefault
+	private let validation: @Sendable (PropertyListValue) -> Bool
 
 	public init(
 		_ name: String,
 		default registration: RegisteredDefault = .none,
 		storage: PreferenceStorage = .container,
-		traits: PreferenceTraits = []
+		traits: PreferenceTraits = [],
+		validation: @escaping @Sendable (PropertyListValue) -> Bool = { _ in true }
 	) {
 		self.name = name
 		self.registration = registration
+		self.validation = validation
 		self.storage = storage
 
 		switch registration {
@@ -342,16 +428,25 @@ public nonisolated struct UntypedPreferenceKey: AnyPreferenceKey { // nonisolate
 		}
 	}
 
-	/// A ``PropertyListValue`` is a property list by construction, so a key with
-	/// no declared type has nothing left to check.
 	public func coerce(_ value: PropertyListValue) -> PropertyListValue? {
-		value
+		guard validation(value) else { return nil }
+		switch registration {
+		case .emptyArray: guard value.array != nil else { return nil }
+		case .emptyDictionary: guard value.dictionary != nil else { return nil }
+		case .none: break
+		}
+		return value
 	}
 }
 
 /** A family of keys sharing a prefix or suffix — per-notification settings,
  per-window frames, per-theme setting stores. The individual names are made at
- runtime, so the catalogue matches them by pattern. */
+ runtime, so the catalogue matches them by pattern.
+
+ A family carries the same import contract a declaration does: `coerce` decides
+ what shape a name in the family may hold, so an imported file cannot write an
+ arbitrary property list under a name nothing declares one by one. The default
+ refuses every container, which is what a family of scalar settings wants. */
 public nonisolated struct PreferenceKeyFamily: Sendable { // nonisolated: value
 	public enum Match: UInt, Sendable {
 		case exact = 0
@@ -363,17 +458,20 @@ public nonisolated struct PreferenceKeyFamily: Sendable { // nonisolated: value
 	public let match: Match
 	public let storage: PreferenceStorage
 	public let traits: PreferenceTraits
+	private let coercion: @Sendable (String, PropertyListValue) -> PropertyListValue?
 
 	public init(
 		_ pattern: String,
 		match: Match = .prefix,
 		storage: PreferenceStorage = .container,
-		traits: PreferenceTraits = []
+		traits: PreferenceTraits = [],
+		coerce: @escaping @Sendable (String, PropertyListValue) -> PropertyListValue? = Self.scalar
 	) {
 		self.pattern = pattern
 		self.match = match
 		self.storage = storage
 		self.traits = traits
+		coercion = coerce
 	}
 
 	public func matches(_ name: String) -> Bool {
@@ -381,6 +479,21 @@ public nonisolated struct PreferenceKeyFamily: Sendable { // nonisolated: value
 		case .exact: name == pattern
 		case .prefix: name.hasPrefix(pattern)
 		case .suffix: name.hasSuffix(pattern)
+		}
+	}
+
+	/// Validates and coerces an imported value for one name in the family, or
+	/// returns `nil` to reject it.
+	public func coerce(_ name: String, _ value: PropertyListValue) -> PropertyListValue? {
+		guard matches(name) else { return nil }
+		return coercion(name, value)
+	}
+
+	/// The default shape: one scalar, never a container or an opaque blob.
+	public static let scalar: @Sendable (String, PropertyListValue) -> PropertyListValue? = { _, value in
+		switch value {
+		case .string, .boolean, .integer, .double: value
+		case .date, .data, .array, .dictionary: nil
 		}
 	}
 

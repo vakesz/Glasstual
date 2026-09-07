@@ -97,7 +97,25 @@ private nonisolated let notificationControllerLogger = Logger( // nonisolated: l
 
 @MainActor
 public final class NotificationController: NSObject, UNUserNotificationCenterDelegate {
-	public var areNotificationsDisabled = false
+	public var areNotificationsDisabled = false {
+		didSet {
+			guard oldValue != areNotificationsDisabled else { return }
+			SharedApplication.sharedSpeechSynthesizer().setNotificationsMuted(
+				areNotificationsDisabled || Preferences.Notifications.soundIsMuted.value
+			)
+			guard areNotificationsDisabled else { return }
+			/* Cancellation is the whole retraction mechanism: a delivery that
+			 has not reached the system stops, and one that has takes itself
+			 back below. */
+			deliveryTasks.values.forEach { $0.cancel() }
+			deliveryTasks.removeAll()
+			let center = UNUserNotificationCenter.current()
+			center.removeAllPendingNotificationRequests()
+			center.removeAllDeliveredNotifications()
+		}
+	}
+
+	private var deliveryTasks: [String: Task<Void, Never>] = [:]
 
 	/** The title/message hash is not unique on its own: repeating the same message in
 	 the same channel would otherwise replace the earlier notification. */
@@ -113,6 +131,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	isolated deinit {
 		notifications.cancelAll()
+		deliveryTasks.values.forEach { $0.cancel() }
 	}
 
 	private func prepareInitialState() {
@@ -147,7 +166,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		let fileTransferAcceptAction = UNNotificationAction(
 			identifier: fileTransferAcceptActionIdentifier,
 			title: PromptStrings.Action.accept,
-			options: []
+			options: [.foreground]
 		)
 
 		let fileTransferCategory = UNNotificationCategory(
@@ -328,11 +347,20 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	}
 
 	private func scheduleNotification(request: UNNotificationRequest) {
+		guard !areNotificationsDisabled else { return }
 		let title = request.content.title
-
-		Task {
+		deliveryTasks[request.identifier] = Task { [weak self] in
+			defer { self?.deliveryTasks[request.identifier] = nil }
+			guard !Task.isCancelled else { return }
 			do {
-				try await UNUserNotificationCenter.current().add(request)
+				let center = UNUserNotificationCenter.current()
+				try await center.add(request)
+				/* Muting cancelled this while the request was already with the
+				 system, so it has to be taken back rather than left showing. */
+				if Task.isCancelled {
+					center.removePendingNotificationRequests(withIdentifiers: [request.identifier])
+					center.removeDeliveredNotifications(withIdentifiers: [request.identifier])
+				}
 			} catch {
 				notificationControllerLogger.error(
 					"Failed to post notification '\(title, privacy: .private)': \(error.localizedDescription, privacy: .public)"
@@ -354,7 +382,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		_: UNUserNotificationCenter,
 		willPresent _: UNNotification
 	) async -> UNNotificationPresentationOptions {
-		[.list, .banner]
+		areNotificationsDisabled ? [] : [.list, .banner]
 	}
 
 	public func userNotificationCenter(
@@ -430,7 +458,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	// MARK: - Notification Callback
 
-	private func notificationResponseReceived(
+	func notificationResponseReceived(
 		actionIdentifier: String,
 		clientId: String?,
 		channelId: String?,
@@ -445,59 +473,31 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 			return
 		}
-
-		/* If we ever expand beyond a few different actions, then revisit
-		 this so that we aren't just declaring a bunch of booleans.
-		 This was just the easier solution at the time. */
-		let isFileTransferAction = actionIdentifier == fileTransferAcceptActionIdentifier
-		let isPrivateMessageAction = actionIdentifier == privateMessageReplyActionIdentifier
-
-		let activateApp = !isPrivateMessageAction
-		let keyMainWindow = !isPrivateMessageAction && !isFileTransferAction
-
-		if activateApp {
+		if let identifier = fileTransferUniqueIdentifier {
+			guard actionIdentifier == UNNotificationDefaultActionIdentifier || actionIdentifier ==
+				fileTransferAcceptActionIdentifier else { return }
+			let center = SharedApplication.sharedFileTransferCenter()
+			let accept = actionIdentifier == fileTransferAcceptActionIdentifier
+				&& fileTransferNotificationType == NotificationEvent.fileTransferReceiveRequested.rawValue
+			/* The transfer may have been cleared before the click arrived. The
+			 click still asked for the transfer list, so it is still shown. */
+			_ = center.respondToNotification(for: identifier, clientIdentifier: clientId, accept: accept)
 			NSApp.activate()
+			center.present()
+			return
 		}
 
-		if keyMainWindow {
+		/* A reply is answered where it was typed. Raising the main window over
+		 it is the one thing the person did not ask for. */
+		if actionIdentifier != privateMessageReplyActionIdentifier {
+			NSApp.activate()
 			AppController.shared.mainWindow.makeKeyAndOrderFront(nil)
 		}
 
-		/* Handle file transfer notifications allowing the user to start a
-		 file transfer directly through the notification's action button. */
-		if isFileTransferAction {
-			SharedApplication.sharedFileTransferCenter().present()
-
-			guard fileTransferNotificationType == NotificationEvent.fileTransferReceiveRequested.rawValue else {
-				return
-			}
-
-			guard let fileTransferUniqueIdentifier else {
-				return
-			}
-
-			guard
-				let fileTransfer = SharedApplication.sharedFileTransferCenter()
-				.fileTransfer(withUniqueIdentifier: fileTransferUniqueIdentifier)
-			else {
-				return
-			}
-
-			guard fileTransfer.transferStatus == .stopped else {
-				return
-			}
-
-			fileTransfer.openWithPathOrUserDownloads()
-
-			return
-		}
-
 		/* Handle all other IRC related notifications. */
-		guard let clientId else {
+		guard let clientId, let world = AppController.shared.world else {
 			return
 		}
-
-		let world = AppController.shared.world!
 
 		let channel: IRCChannel?
 		let client: IRCClient?

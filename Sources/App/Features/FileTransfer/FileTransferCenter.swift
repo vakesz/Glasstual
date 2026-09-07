@@ -77,6 +77,7 @@ public final class FileTransferCenter: InternetAddressLookupDelegate {
 	var ipAddressCompletionBlocks: [(String?) -> Void] = []
 	var cachedIPAddress: String?
 	var pendingDestinationTransferIDs: Set<String> = []
+	let workspace = FileTransferWorkspace()
 	private lazy var notifications = NotificationSubscriptions()
 
 	public init() {
@@ -92,5 +93,7 @@ public final class FileTransferCenter: InternetAddressLookupDelegate {
 	isolated deinit {
 		notifications.cancelAll()
 		maintenanceTask?.cancel()
+		ipAddressRequest?.cancelLookup()
+		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 	}
 }

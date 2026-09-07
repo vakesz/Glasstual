@@ -43,6 +43,18 @@ import Testing
 @MainActor
 @Suite("Client capability negotiation")
 struct IRCClientNegotiationTests {
+	@Test("Disabling SASL skips negotiation while retaining the password for NickServ")
+	func disabledSASLKeepsPassword() throws {
+		let client = makeClient(configuration: ["usesSASL": false], nicknamePassword: "secret")
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=PLAIN,SCRAM-SHA-256,EXTERNAL",
+			on: client
+		))
+		#expect(capabilityCommands(of: client) == ["END"])
+		#expect(client.saslMechanism == nil)
+		#expect(client.config.nicknamePassword == "secret")
+	}
+
 	@Test("A continued capability listing is not answered until the last line arrives")
 	func capabilityListContinuationDefersRequests() throws {
 		let client = GLTTestClient()
@@ -53,15 +65,17 @@ struct IRCClientNegotiationTests {
 		))
 
 		#expect(client.sentCapabilityCommands.count == 0)
-		#expect(client.pendingCapabilityRequests.count == 0)
+		#expect(client.capabilityNegotiation.outstandingRequests.isEmpty)
 
 		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :server-time message-tags example.com/vendor",
 			on: client
 		))
 
-		#expect(capabilityCommands(of: client) == ["REQ message-tags"])
-		#expect(client.pendingCapabilityRequests == ["multi-prefix", "server-time"])
+		/* Every request the completed listing makes eligible goes out at once,
+		 so one that is never answered cannot hold back the rest. */
+		#expect(capabilityCommands(of: client) == ["REQ message-tags", "REQ multi-prefix", "REQ server-time"])
+		#expect(client.capabilityNegotiation.outstandingRequests == ["message-tags", "multi-prefix", "server-time"])
 	}
 
 	@Test("An acknowledgement enables the capability and asks for the next one")
@@ -72,7 +86,7 @@ struct IRCClientNegotiationTests {
 			":irc.example.net CAP * LS :multi-prefix server-time",
 			on: client
 		))
-		#expect(capabilityCommands(of: client) == ["REQ multi-prefix"])
+		#expect(capabilityCommands(of: client) == ["REQ multi-prefix", "REQ server-time"])
 
 		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :multi-prefix",
@@ -81,7 +95,8 @@ struct IRCClientNegotiationTests {
 
 		#expect(client.isCapabilityEnabled(.multiPrefix))
 		#expect(client.isCapabilityEnabled(.serverTime) == false)
-		#expect(capabilityCommands(of: client) == ["REQ multi-prefix", "REQ server-time"])
+		// One answer arriving does not close a negotiation the other still holds.
+		#expect(client.capabilityNegotiation.outstandingRequests == ["server-time"])
 
 		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me NAK :server-time",

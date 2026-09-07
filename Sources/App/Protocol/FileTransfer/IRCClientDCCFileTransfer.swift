@@ -301,7 +301,9 @@ public extension IRCClient {
 					)
 					return
 				}
-				guard let transfer, transfer.transferStatus == .waitingForReceiverToAccept else {
+				guard let transfer, transfer.transferStatus == .waitingForReceiverToAccept,
+				      transfer.totalFilesize == filesize
+				else {
 					printInvalidDCCRequest(from: sender)
 					return
 				}
@@ -314,7 +316,8 @@ public extension IRCClient {
 				port: port,
 				token: token,
 				sender: sender,
-				filename: filename
+				filename: filename,
+				isSender: true
 			),
 				transfer.transferStatus == .waitingForReceiverToAccept || transfer
 				.transferStatus == .isListeningAsSender
@@ -328,7 +331,8 @@ public extension IRCClient {
 				port: port,
 				token: token,
 				sender: sender,
-				filename: filename
+				filename: filename,
+				isSender: false
 			),
 				transfer.transferStatus == .waitingForResumeAccept
 			else {
@@ -343,14 +347,16 @@ public extension IRCClient {
 		port: UInt16,
 		token: String?,
 		sender: String,
-		filename: String
+		filename: String,
+		isSender: Bool
 	) -> FileTransferController? {
 		if let token, port == 0 {
-			return fileTransferCenter.fileTransferSender(
+			return fileTransferCenter.fileTransfer(
 				matchingToken: token,
 				client: self,
 				peerNickname: sender,
-				filename: filename
+				filename: filename,
+				isSender: isSender
 			)
 		}
 		if token == nil, port > 0 {
@@ -358,7 +364,8 @@ public extension IRCClient {
 				matchingPort: port,
 				client: self,
 				peerNickname: sender,
-				filename: filename
+				filename: filename,
+				isSender: isSender
 			)
 		}
 		return nil

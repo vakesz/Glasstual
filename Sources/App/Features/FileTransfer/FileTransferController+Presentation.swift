@@ -56,6 +56,10 @@ public extension FileTransferController {
 		filePath.map { URL(fileURLWithPath: $0) }
 	}
 
+	internal var localFile: FileTransferLocalFile? {
+		fileURL.map { FileTransferLocalFile(url: $0, accessURL: fileAccessURL ?? $0) }
+	}
+
 	internal var transferCenter: FileTransferCenter {
 		SharedApplication.sharedFileTransferCenter()
 	}

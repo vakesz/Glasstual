@@ -101,13 +101,18 @@ struct PreferencesCapabilityToggle: View {
 struct PreferencesComboField: View {
 	let title: String
 	let presets: [String]
+	var commitsOnEndEditing = false
 	@Binding var text: String
 
 	var body: some View {
 		HStack(spacing: 6) {
-			TextField("", text: $text)
-				.labelsHidden()
-				.accessibilityLabel(Text(verbatim: title))
+			if commitsOnEndEditing {
+				PreferencesCommittedNumberField(title: title, text: $text)
+			} else {
+				TextField("", text: $text)
+					.labelsHidden()
+					.accessibilityLabel(Text(verbatim: title))
+			}
 			Menu {
 				ForEach(presets, id: \.self) { preset in
 					Button(preset) {
@@ -120,6 +125,49 @@ struct PreferencesComboField: View {
 			.menuStyle(.borderlessButton)
 			.frame(width: 16)
 			.accessibilityLabel(Text(verbatim: title))
+		}
+	}
+}
+
+/// A partially typed number never changes the preference or triggers a reload.
+struct PreferencesCommittedNumberField: View {
+	let title: String
+	@Binding var text: String
+	@State private var draft = PreferencesNumberDraft()
+	@FocusState private var focused: Bool
+
+	var body: some View {
+		VStack(alignment: .leading) {
+			TextField("", text: $draft.text)
+				.labelsHidden()
+				.accessibilityLabel(Text(verbatim: title))
+				.focused($focused)
+				.onSubmit { draft.commit(to: $text) }
+				.onChange(of: focused) { _, focused in
+					if !focused {
+						draft.commit(to: $text)
+					}
+				}
+				.onChange(of: text, initial: true) { _, value in
+					draft.text = value
+				}
+			if draft.rejected {
+				Text(.PreferencesTransfer.enterAValidWholeNumber).font(.caption).foregroundStyle(.red)
+			}
+		}
+	}
+}
+
+struct PreferencesNumberDraft {
+	var text = ""
+	private(set) var rejected = false
+
+	mutating func commit(to value: Binding<String>) {
+		let submitted = text
+		value.wrappedValue = submitted
+		rejected = UInt(submitted) == nil || UInt(submitted) != UInt(value.wrappedValue)
+		if !rejected {
+			text = value.wrappedValue
 		}
 	}
 }

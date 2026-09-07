@@ -3,6 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
@@ -10,6 +11,39 @@ import Testing
 
 @Suite("Plugin runtime")
 struct PluginRuntimeTests {
+	@MainActor
+	@Test(
+		"ZNC buffextras bounds parsed server nickname counts before conversion",
+		arguments: [UInt(3), 8, UInt(Int.max), UInt(Int.max) + 1, UInt.max]
+	)
+	func zncNicknameLimitReachesInterceptor(_ limit: UInt) throws {
+		let bundleURL = PathInfo.bundledExtensionsURL.appendingPathComponent("ZNC Additions.bundle", isDirectory: true)
+		let bundle = try #require(Bundle(url: bundleURL))
+		let suiteName = "PluginRuntimeTests.\(UUID().uuidString)"
+		let defaults = try #require(UserDefaults(suiteName: suiteName))
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let plugin = try #require(PluginItem.load(bundle, host: makePluginHost(defaults: defaults)))
+		defer { plugin.unloadBundle() }
+		let interceptor = try #require(plugin.primaryClass as? any PluginServerMessageIntercepting)
+		let info = IRCISupportInfo()
+		info.processConfigurationData("NICKLEN=\(limit)")
+		let client = makePluginClient(maximumNicknameLength: info.maximumNicknameLength, isConnectedToZNC: true)
+		let input = PluginServerMessage(
+			sender: PluginSender(
+				nickname: "buffextras",
+				username: nil,
+				address: nil,
+				hostmask: "buffextras",
+				isServer: false
+			),
+			command: "PRIVMSG", parameters: ["#test", "alice!u@host joined"], isPrintOnlyMessage: false
+		)
+		let result = try #require(interceptor.interceptServerInput(input, client: client))
+		#expect(result.command == "JOIN")
+		#expect(result.sender.nickname == (limit < 5 ? "alice!u@host" : "alice"))
+		#expect(result.sender.isServer == (limit < 5))
+	}
+
 	@MainActor
 	@Test(
 		"Simple bundled plugin preferences are SwiftUI hosted",
@@ -39,9 +73,103 @@ struct PluginRuntimeTests {
 		#expect(bundle.path(forResource: fixture.legacyNibName, ofType: "nib") == nil)
 	}
 
+	@Test("Bundled boolean preference declarations preserve shipped names and defaults")
+	func bundledPreferenceDefaultsMatchShippedContract() {
+		let keys = [
+			Preferences.Extensions.caffeinePreventSleep,
+			Preferences.Extensions.smileyServiceEnabled,
+			Preferences.Extensions.smileyExtraEmoticons,
+		] + Preferences.Extensions.systemProfilerFeatures
+		#expect(Dictionary(uniqueKeysWithValues: keys.map { ($0.name, $0.defaultValue) }) == [
+			"Private Extension Store -> Caffeine Extension -> Prevent Sleep": false,
+			"Smiley Converter Extension -> Enable Service": false,
+			"Smiley Converter Extension -> Enable Extra Emoticons": false,
+			"System Profiler Extension -> Feature Disabled -> CPU Model": false,
+			"System Profiler Extension -> Feature Disabled -> Disk Information": true,
+			"System Profiler Extension -> Feature Disabled -> GPU Model": true,
+			"System Profiler Extension -> Feature Disabled -> Memory Information": true,
+			"System Profiler Extension -> Feature Disabled -> OS Version": false,
+			"System Profiler Extension -> Feature Disabled -> Screen Resolution": true,
+			"System Profiler Extension -> Feature Disabled -> System Uptime": true,
+		])
+		let registrations = Preferences.registrationDomain(for: .container)
+		for key in keys {
+			#expect(key.registeredDefault == nil)
+			#expect(registrations[key.name] == nil)
+			#expect(Preferences.storage(for: key.name) == .container)
+		}
+	}
+
+	@MainActor
+	@Test(
+		"Compiled plugins agree with typed defaults without changing registration or persistence policy",
+		arguments: ["Caffeine", "Smiley Converter", "System Info"], [false, true]
+	)
+	func compiledPluginDefaultsMatchApp(_ bundleName: String, _ hasStoredOverrides: Bool) throws {
+		let keys: [PreferenceKey<Bool>] = switch bundleName {
+		case "Caffeine": [Preferences.Extensions.caffeinePreventSleep]
+		case "Smiley Converter": [
+				Preferences.Extensions.smileyServiceEnabled,
+				Preferences.Extensions.smileyExtraEmoticons,
+			]
+		default: Preferences.Extensions.systemProfilerFeatures
+		}
+		let suiteName = "PluginRuntimeTests.\(UUID().uuidString)"
+		let standardName = "PluginRuntimeTests.standard.\(UUID().uuidString)"
+		let defaults = try #require(UserDefaults(suiteName: suiteName))
+		let standard = try #require(UserDefaults(suiteName: standardName))
+		defer {
+			defaults.removePersistentDomain(forName: suiteName)
+			standard.removePersistentDomain(forName: standardName)
+		}
+		let stores = PreferencesTransferStores(
+			container: defaults, containerDomain: suiteName, standard: standard, standardDomain: standardName
+		)
+		let initialSnapshot = stores.snapshot(clients: [])
+		for key in keys {
+			#expect(stores[key] == key.defaultValue)
+			// Registration defaults are process-wide, even for a fresh suite.
+			if let value = defaults.object(forKey: key.name) as? Bool {
+				#expect(initialSnapshot.values[key.name] == .boolean(value))
+			} else {
+				#expect(initialSnapshot.unset.contains(key.name))
+			}
+			if hasStoredOverrides {
+				stores.set(.boolean(!key.defaultValue), for: key)
+			}
+		}
+		let persistedBefore = defaults.persistentDomain(forName: suiteName) ?? [:]
+		let bundle = try #require(Bundle(url: PathInfo.bundledExtensionsURL
+				.appendingPathComponent("\(bundleName).bundle", isDirectory: true)))
+		let plugin = try #require(PluginItem.load(bundle, host: makePluginHost(defaults: defaults)))
+		defer { plugin.unloadBundle() }
+		let pane = try #require(plugin.pluginPreferencesPane)
+		_ = pane.makeView()
+
+		let registrations = defaults.volatileDomain(forName: UserDefaults.registrationDomain)
+		let snapshot = stores.snapshot(clients: [])
+		for key in keys {
+			let expected = hasStoredOverrides ? !key.defaultValue : key.defaultValue
+			#expect(defaults.bool(forKey: key.name) == expected)
+			#expect(stores[key] == expected)
+			let registered = bundleName == "System Info" && key.defaultValue
+			#expect((registrations[key.name] as? Bool) == (registered ? true : nil))
+			if hasStoredOverrides || registered {
+				#expect(snapshot.values[key.name] == .boolean(expected))
+				#expect(!snapshot.unset.contains(key.name))
+			} else {
+				#expect(snapshot.values[key.name] == nil)
+				#expect(snapshot.unset.contains(key.name))
+			}
+		}
+		#expect(NSDictionary(dictionary: defaults.persistentDomain(forName: suiteName) ?? [:])
+			.isEqual(to: persistedBefore))
+		#expect((standard.persistentDomain(forName: standardName) ?? [:]).isEmpty)
+	}
+
 	@MainActor
 	@Test("Chat Filters reads legacy property-list rules through its typed model")
-	func chatFiltersReadsLegacyPropertyListRules() throws {
+	func chatFiltersReadsLegacyPropertyListRules() async throws {
 		let bundleURL = PathInfo.bundledExtensionsURL
 			.appendingPathComponent("Chat Filters.bundle", isDirectory: true)
 		let bundle = try #require(Bundle(url: bundleURL))
@@ -111,6 +239,20 @@ struct PluginRuntimeTests {
 				)
 			) == false
 		)
+
+		// An import can write through a different handle and emit several
+		// notifications in one turn. Every callback must read the final value.
+		let importedDefaults = try #require(UserDefaults(suiteName: suiteName))
+		importedDefaults.set([], forKey: "Glasstual Chat Filter Extension -> Filters")
+		for _ in 0 ..< 3 {
+			NotificationCenter.default.post(name: .textualUserDefaultsDidChange, object: importedDefaults)
+		}
+		try await waitForPluginUpdate {
+			commandFilter.receivedCommand(PluginIncomingCommandEvent(
+				command: "001", text: "another secret message", author: author,
+				destination: nil, client: client, receivedAt: Date(), messageParameters: []
+			))
+		}
 	}
 
 	@Test("An output suppression rule holds what it was given")
@@ -139,11 +281,6 @@ struct PluginRuntimeTests {
 		let plugin = try #require(PluginItem.load(bundle, host: makePluginHost(defaults: defaults)))
 		defer { plugin.unloadBundle() }
 
-		let primaryClass = try #require(plugin.primaryClass as? NSObject)
-		/* The plugin is a runtime-loaded bundle, so its Swift type is invisible
-		 here and its selector is the only way to ask it to reload. */
-		let rebuildSnapshot = NSSelectorFromString("rebuildConversionSnapshot")
-		#expect(primaryClass.responds(to: rebuildSnapshot))
 		let renderer = try #require(plugin.primaryClass as? any PluginMessageRendering)
 
 		let renderTask = Task.detached { () -> [String] in
@@ -154,26 +291,68 @@ struct PluginRuntimeTests {
 			}
 		}
 
-		for iteration in 0 ..< 50 {
-			defaults.set(
-				iteration.isMultiple(of: 2),
+		let importedDefaults = try #require(UserDefaults(suiteName: suiteName))
+		for iteration in 0 ..< 10 {
+			let extraEnabled = iteration.isMultiple(of: 2)
+			importedDefaults.set(
+				extraEnabled,
 				forKey: "Smiley Converter Extension -> Enable Extra Emoticons"
 			)
-			primaryClass.perform(rebuildSnapshot)
-			await Task.yield()
+			NotificationCenter.default.post(name: .textualUserDefaultsDidChange, object: importedDefaults)
+			try await waitForPluginUpdate {
+				renderer.willRenderMessage(PluginRenderEvent(message: ":+1:", kind: .privateMessage)) ==
+					(extraEnabled ? "\u{1F44D}" : ":+1:")
+			}
 		}
 
 		let renderedMessages = await renderTask.value
 		#expect(renderedMessages.count == 500)
 		#expect(renderedMessages.allSatisfy { $0 == "😊" })
+		importedDefaults.removeObject(forKey: "Smiley Converter Extension -> Enable Service")
+		NotificationCenter.default.post(name: .textualUserDefaultsDidChange, object: importedDefaults)
+		try await waitForPluginUpdate {
+			renderer.willRenderMessage(PluginRenderEvent(message: ":)", kind: .privateMessage)) == ":)"
+		}
+	}
+
+	@MainActor
+	@Test("Caffeine reevaluates connected clients when defaults change outside its pane")
+	func caffeineObservesImportedDefaults() async throws {
+		let bundle = try #require(Bundle(url: PathInfo.bundledExtensionsURL.appendingPathComponent("Caffeine.bundle")))
+		let suiteName = "PluginRuntimeTests.\(UUID().uuidString)"
+		let defaults = try #require(UserDefaults(suiteName: suiteName))
+		let importedDefaults = try #require(UserDefaults(suiteName: suiteName))
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		var clientReads = 0
+		let host = makePluginHost(defaults: defaults, clients: {
+			clientReads += 1
+			return []
+		})
+		let plugin = try #require(PluginItem.load(bundle, host: host))
+		defer { plugin.unloadBundle() }
+		let initialReads = clientReads
+		importedDefaults.set(true, forKey: "Private Extension Store -> Caffeine Extension -> Prevent Sleep")
+		NotificationCenter.default.post(name: .textualUserDefaultsDidChange, object: importedDefaults)
+		try await waitForPluginUpdate { clientReads > initialReads }
+	}
+
+	@MainActor
+	private func waitForPluginUpdate(_ predicate: () -> Bool) async throws {
+		let deadline = ContinuousClock.now + .seconds(5)
+		while !predicate(), ContinuousClock.now < deadline {
+			try await Task.sleep(for: .milliseconds(10))
+		}
+		#expect(predicate(), "Plugin did not apply the effective defaults within five seconds")
 	}
 }
 
 @MainActor
-private func makePluginHost(defaults: UserDefaults) -> PluginHostContext {
+private func makePluginHost(defaults: UserDefaults,
+                            clients: @escaping () -> [PluginClient] = { [] }) -> PluginHostContext
+{
 	PluginHostContext(
 		defaults: defaults,
-		clients: { [] },
+		clients: clients,
 		selectedChannel: { nil },
 		metrics: {
 			PluginApplicationMetrics(
@@ -197,7 +376,7 @@ private func makePluginHost(defaults: UserDefaults) -> PluginHostContext {
 }
 
 @MainActor
-private func makePluginClient() -> PluginClient {
+private func makePluginClient(maximumNicknameLength: UInt = 30, isConnectedToZNC: Bool = false) -> PluginClient {
 	PluginClient(
 		identifier: "client",
 		userNickname: "tester",
@@ -208,9 +387,9 @@ private func makePluginClient() -> PluginClient {
 		isIRCop: false,
 		localUser: nil,
 		channels: [],
-		isConnectedToZNC: false,
+		isConnectedToZNC: isConnectedToZNC,
 		zncCertificateChainData: nil,
-		maximumNicknameLength: 30,
+		maximumNicknameLength: maximumNicknameLength,
 		nicknameMatchesZNCUser: { $0 == $1 },
 		isChannelName: { $0.hasPrefix("#") },
 		findChannel: { _ in nil },

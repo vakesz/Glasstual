@@ -93,7 +93,7 @@ enum IRCJoinBatching {
 		channelLimits: [Character: UInt] = [:]
 	) -> [Batch] {
 		let budget = lineBudget(maximumLineLength: maximumLineLength)
-		let targetCap = maximumTargets == 0 ? Int.max : Int(maximumTargets)
+		let targetCap = maximumTargets == 0 ? targets.count : Int(min(maximumTargets, UInt(targets.count)))
 
 		let keyless = targets.filter { ($0.key ?? "").isEmpty }
 		let keyed = targets.filter { ($0.key ?? "").isEmpty == false }
@@ -142,7 +142,14 @@ enum IRCJoinBatching {
 		for entry in entries {
 			// A nameless entry has no prefix, so no per-prefix limit applies.
 			let prefix = entry.name.first
-			let prefixLimit = prefix.flatMap { channelLimits[$0] }.map { Int($0) } ?? Int.max
+			/* RFC 2812's ISUPPORT draft gives `#:` — an empty limit — the
+			 meaning "no limit for this prefix", and a server writing `#:0` is
+			 saying the same thing rather than "no channels at all": nobody
+			 advertises a prefix in CHANLIMIT to forbid it. Both parse to zero
+			 here, and zero means unlimited. */
+			let advertisedPrefixLimit = prefix.flatMap { channelLimits[$0] } ?? 0
+			let prefixLimit = advertisedPrefixLimit == 0
+				? entries.count : Int(min(advertisedPrefixLimit, UInt(entries.count)))
 			let prefixCount = prefix.map { countByPrefix[$0, default: 0] } ?? 0
 			// One comma in the channel list, plus one in the key list when
 			// this batch carries keys.

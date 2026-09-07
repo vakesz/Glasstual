@@ -46,6 +46,9 @@ struct MainWindowTitleContent: Equatable {
 	}
 
 	private static func connectionStatus(for client: IRCClient) -> MainWindowStrings.ConnectionStatus? {
+		if client.isQuitting || client.isDisconnecting {
+			return .disconnecting
+		}
 		if client.isConnected == false, client.isConnecting == false {
 			return client.isReconnecting ? .waitingToReconnect : .disconnected
 		}
@@ -54,9 +57,6 @@ struct MainWindowTitleContent: Equatable {
 		}
 		if client.isConnected, client.isLoggedIn == false {
 			return .loggingOn
-		}
-		if client.isQuitting {
-			return .disconnecting
 		}
 		return nil
 	}

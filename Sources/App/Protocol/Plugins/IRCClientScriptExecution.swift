@@ -43,6 +43,20 @@ private let appleScriptSubroutineName = AEKeyword(0x736E_616D)
 /// Helpers for the `glasstualcmd` script bridge, kept free of `IRCClient` so
 /// they can be exercised without a live client.
 enum ScriptExecutionSupport {
+	nonisolated enum OutputError: LocalizedError, Equatable { // nonisolated: value
+		case tooLarge
+		case invalidUTF8
+		case unavailableScript
+
+		var errorDescription: String? {
+			switch self {
+			case .tooLarge: String(localized: .Plugins.scriptOutputTooLarge)
+			case .invalidUTF8: String(localized: .Plugins.scriptOutputInvalidEncoding)
+			case .unavailableScript: String(localized: .Plugins.scriptUnavailable)
+			}
+		}
+	}
+
 	/// The handler name Glasstual asks a script to run.
 	static let handlerName = "glasstualcmd"
 
@@ -54,9 +68,13 @@ enum ScriptExecutionSupport {
 	/// `errAEEventNotHandled`: the script has no handler under that name.
 	static let handlerNotDefinedError = -1708
 
-	/// How much of a Unix script's standard output is kept. Everything past it
-	/// is read and dropped: the pipe still has to be drained so the script can
-	/// finish, but a runaway script must not grow the buffer without bound.
+	/** How much of a script's output is kept.
+
+	 Everything past it is read and dropped: the pipe still has to be drained so
+	 the script can finish, but a runaway script must not grow the buffer
+	 without bound. The same ceiling bounds the decoded text and the result a
+	 script hands back, because an AppleScript result never passes through the
+	 reader at all. */
 	nonisolated static let maximumOutputBytes = 1 << 20 // nonisolated: let
 
 	private nonisolated static let outputChunkBytes = 64 * 1024 // nonisolated: let
@@ -68,22 +86,31 @@ enum ScriptExecutionSupport {
 	/// until something reads, so a reader that waits for termination first
 	/// would wedge the script and never start.
 	@concurrent
-	static func readOutput(from handle: FileHandle) async -> Data {
+	static func readOutput(from handle: FileHandle) async throws -> Data {
 		var accumulated = Data()
+		var exceededLimit = false
 
 		while true {
-			guard let chunk = try? handle.read(upToCount: outputChunkBytes), chunk.isEmpty == false else {
+			guard let chunk = try handle.read(upToCount: outputChunkBytes), chunk.isEmpty == false else {
 				break
 			}
 
 			let remaining = maximumOutputBytes - accumulated.count
+			exceededLimit = exceededLimit || chunk.count > remaining
 
 			if remaining > 0 {
 				accumulated.append(chunk.prefix(remaining))
 			}
 		}
 
+		guard exceededLimit == false else { throw OutputError.tooLarge }
 		return accumulated
+	}
+
+	nonisolated static func decodedOutput(_ data: Data) throws -> String { // nonisolated: pure
+		guard data.count <= maximumOutputBytes else { throw OutputError.tooLarge }
+		guard let output = String(data: data, encoding: .utf8) else { throw OutputError.invalidUTF8 }
+		return output
 	}
 
 	static func appleEvent(handler: String, input: String, target: String?) -> NSAppleEventDescriptor {
@@ -132,7 +159,7 @@ extension IRCClient {
 			?? (nsError.userInfo[NSAppleScript.errorBriefMessage] as? String)
 			?? nsError.localizedFailureReason
 			?? nsError.localizedDescription
-		let input = inputString.isEmpty ? "(no input)" : inputString
+		let input = inputString.isEmpty ? String(localized: .Plugins.scriptNoInput) : inputString
 		printDebugInformation(
 			IRCDiagnosticStrings.scriptFailure(
 				filename: URL(fileURLWithPath: path).lastPathComponent,
@@ -144,6 +171,10 @@ extension IRCClient {
 	}
 
 	func sendGlasstualCmdScriptResult(_ result: String, toChannel channelName: String?) {
+		guard result.utf8.count <= ScriptExecutionSupport.maximumOutputBytes else {
+			printDebugInformation(String(localized: .Plugins.scriptOutputTooLarge))
+			return
+		}
 		let destination: IRCTreeItem? = if let channelName {
 			findChannel(channelName)
 		} else {
@@ -161,20 +192,30 @@ extension IRCClient {
 		let input = context["inputString"] ?? ""
 		let target = context["targetChannel"]
 		let url = URL(fileURLWithPath: path)
-		if path.hasSuffix(ResourceDocumentType.scriptFileExtension) {
-			executeAppleScript(at: url, path: path, input: input, target: target)
-		} else {
+		guard let script = SharedApplication.sharedPluginManager().script(at: url) else {
+			outputDescription(
+				for: ScriptExecutionSupport.OutputError.unavailableScript,
+				forGlasstualCmdScriptAtPath: path,
+				inputString: input
+			)
+			return
+		}
+		switch script.kind {
+		case .appleScript:
+			executeAppleScript(script, input: input, target: target)
+		case .unixExecutable:
 			executeUnixScript(at: url, path: path, input: input, target: target)
 		}
 	}
 
-	private func executeAppleScript(at url: URL, path: String, input: String, target: String?) {
-		if path.hasPrefix(PathInfo.applicationResources) {
-			executeBundledAppleScript(at: url, path: path, input: input, target: target)
-		} else {
+	private func executeAppleScript(_ script: PluginScript, input: String, target: String?) {
+		switch script.origin {
+		case .bundled:
+			executeBundledAppleScript(at: script.url, path: script.url.path, input: input, target: target)
+		case .custom:
 			executeUserAppleScript(
-				at: url,
-				path: path,
+				at: script.url,
+				path: script.url.path,
 				input: input,
 				target: target,
 				handler: ScriptExecutionSupport.handlerName
@@ -263,19 +304,23 @@ extension IRCClient {
 			let writeHandle = pipe.fileHandleForWriting
 			// Start draining before the script runs. Reading only once it has
 			// terminated deadlocks a script whose output overflows the pipe.
-			let output = Task { await ScriptExecutionSupport.readOutput(from: readHandle) }
+			let output = Task { try await ScriptExecutionSupport.readOutput(from: readHandle) }
 			task.execute(withArguments: arguments) { [weak self] error in
 				// The task holds the only other reference to the write end; closing
 				// it here is what lets the drain above see EOF instead of blocking.
 				try? writeHandle.close()
 				Task { @MainActor [weak self] in
-					let data = await output.value
+					let result = await output.result
 					try? readHandle.close()
 					guard let self else { return }
-					if let error {
+					do {
+						if let error {
+							throw error
+						}
+						let text = try ScriptExecutionSupport.decodedOutput(result.get())
+						sendGlasstualCmdScriptResult(text, toChannel: target)
+					} catch {
 						outputDescription(for: error, forGlasstualCmdScriptAtPath: path, inputString: input)
-					} else if let result = String(data: data, encoding: .utf8) {
-						sendGlasstualCmdScriptResult(result, toChannel: target)
 					}
 				}
 			}

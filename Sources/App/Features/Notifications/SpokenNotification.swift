@@ -57,6 +57,13 @@ public enum SpeechItem: Sendable {
 	case text(String)
 	case notification(SpokenNotification)
 
+	var isNotification: Bool {
+		if case .notification = self {
+			return true
+		}
+		return false
+	}
+
 	var spokenText: String? {
 		switch self {
 		case let .text(text):

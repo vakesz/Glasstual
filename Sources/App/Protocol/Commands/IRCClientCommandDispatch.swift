@@ -228,7 +228,12 @@ public extension IRCClient {
 					printDebugInformation(IRCCommandStrings.invalidArguments)
 					return true
 				}
-				temporaryServerAddressOverride = serverAddress
+				pendingEndpoint = PendingIRCEndpoint(
+					host: serverAddress,
+					port: IRCConnectionDefaults.serverPort,
+					origin: server,
+					reason: .userCommand
+				)
 			}
 			if isConnecting || isConnected {
 				addDisconnectCallback { [weak self] in self?.connect() }
@@ -267,7 +272,7 @@ public extension IRCClient {
 
 	private func broadcastAwayStatus(comment: String) {
 		for client in currentClients() where client === self || environment.preferences.awayAllConnections {
-			let maximumLength = Int(client.supportInfo.maximumAwayLength)
+			let maximumLength = Int(min(client.supportInfo.maximumAwayLength, UInt(comment.utf8.count)))
 			let truncated = ClientWireUtilities.truncated(comment, toByteCount: maximumLength)
 			if truncated != comment {
 				client.printDebugInformation(
@@ -316,7 +321,7 @@ public extension IRCClient {
 			SharedApplication.sharedSpeechSynthesizer().speak(text: arguments.rest)
 
 		case .quit:
-			guard isConnected else { return true }
+			guard isConnecting || isConnected else { return true }
 			if arguments.isEmpty {
 				quit()
 			} else {

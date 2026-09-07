@@ -306,25 +306,12 @@ enum PreferencesPaneCatalog {
 		return panes.first { $0.identifier == identifier }
 	}
 
-	static func pluginIdentifier(at index: Int) -> String {
-		"plugin-\(index)"
+	static func pluginIdentifier(bundleIdentifier: String) -> String {
+		"plugin:\(bundleIdentifier)"
 	}
 
-	static func pluginIndex(from identifier: String) -> Int? {
-		guard identifier.hasPrefix("plugin-") else { return nil }
-		return Int(identifier.dropFirst(7))
-	}
-}
-
-enum PreferencesValueValidation {
-	static let scrollbackSaveRange = 100 ... 50000
-	static let scrollbackVisibleRange = 100 ... 15000
-	static let fileTransferPortRange = 1024 ... 65535
-
-	static func clamped(_ value: Int, to range: ClosedRange<Int>, allowingZero: Bool = false) -> Int {
-		if allowingZero, value == 0 {
-			return 0
-		}
-		return min(max(value, range.lowerBound), range.upperBound)
+	static func pluginBundleIdentifier(from identifier: String) -> String? {
+		guard identifier.hasPrefix("plugin:"), identifier.count > 7 else { return nil }
+		return String(identifier.dropFirst(7))
 	}
 }

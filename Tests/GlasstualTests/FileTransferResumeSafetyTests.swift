@@ -18,6 +18,7 @@ struct FileTransferResumeSafetyTests {
 	@Test("An offered name already in use is never the one written into")
 	func anExistingFileIsNotResumedInto() throws {
 		let directory = try temporaryDirectory()
+		defer { try? FileManager.default.removeItem(atPath: directory) }
 		let existing = (directory as NSString).appendingPathComponent("photo.jpg")
 		#expect(FileManager.default.createFile(atPath: existing, contents: Data(repeating: 0xAB, count: 512)))
 
@@ -32,24 +33,28 @@ struct FileTransferResumeSafetyTests {
 	}
 
 	@Test("A destination is claimed once, so a partial download can carry on")
-	func aClaimedDestinationIsKept() throws {
+	func aClaimedDestinationIsKept() async throws {
 		let directory = try temporaryDirectory()
+		defer { try? FileManager.default.removeItem(atPath: directory) }
 		let transfer = try receiver(filename: "photo.jpg", in: directory)
 
 		transfer.claimDestinationFilename()
 		let claimed = transfer.filename
-		let claimedPath = try #require(transfer.filePath)
-		#expect(FileManager.default.createFile(atPath: claimedPath, contents: Data(count: 128)))
+		let file = try #require(transfer.ownedFile)
+		try await file.write(Data(count: 128), at: 0)
 
 		transfer.claimDestinationFilename()
 
 		#expect(transfer.filename == claimed)
 		#expect(transfer.currentFilesize == 128)
+		#expect(try await file.size() == 128)
+		#expect(transfer.wireFilename == "photo.jpg")
 	}
 
 	@Test("A resume accept nobody asked for moves nothing")
 	func anUnsolicitedResumeAcceptIsIgnored() throws {
 		let directory = try temporaryDirectory()
+		defer { try? FileManager.default.removeItem(atPath: directory) }
 		let transfer = try receiver(filename: "photo.jpg", in: directory)
 
 		transfer.didReceiveResumeAccept(512)

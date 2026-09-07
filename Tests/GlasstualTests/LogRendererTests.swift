@@ -23,7 +23,7 @@ struct LogRendererTests {
 
 		let rendered = LogRenderer.renderBody(
 			asAttributedString: source,
-			withAttributes: [.preferredFont: font]
+			withAttributes: LogRendererConfiguration(preferredFont: font)
 		)
 
 		#expect(rendered.string == "plain bold plain")
@@ -52,7 +52,7 @@ struct LogRendererTests {
 		let font = try #require(NSFont(name: "Helvetica", size: 13))
 		let rendered = LogRenderer.renderBody(
 			asAttributedString: "\(color)04red\(reset) plain",
-			withAttributes: [.preferredFont: font]
+			withAttributes: LogRendererConfiguration(preferredFont: font)
 		)
 
 		#expect(rendered.string == "red plain")
@@ -72,5 +72,56 @@ struct LogRendererTests {
 		#expect(LogRenderer.mapColorCode(4) == NSColor.formatterColors[4])
 		#expect(LogRenderer.mapColor(NSNumber(value: 4)) == NSColor.formatterColors[4])
 		#expect(LogRenderer.mapColor("4") == nil)
+	}
+
+	@Test("Leading paired formatting toggles cancel before any text", arguments: [
+		"\u{02}", "\u{1D}", "\u{16}", "\u{11}", "\u{1E}", "\u{1F}",
+	])
+	func leadingPairedTogglesCancel(control: String) {
+		let body = LogRenderer.renderNativeBody(
+			control + control + "plain", withAttributes: TranscriptRenderOptions(), members: []
+		)
+		#expect(body.runs == [TranscriptTextRun(text: "plain")])
+	}
+
+	@Test("Leading color resets clear both colors before any text", arguments: [
+		"\u{03}04,02\u{03}",
+		"\u{04}FF0000,0000FF\u{04}",
+		"\u{03}04,02\u{0F}",
+		"\u{03}04,02\u{03}99,99",
+	])
+	func leadingColorResetsClearBothColors(controls: String) {
+		let body = LogRenderer.renderNativeBody(
+			controls + "plain", withAttributes: TranscriptRenderOptions(), members: []
+		)
+		#expect(body.runs == [TranscriptTextRun(text: "plain")])
+	}
+
+	@Test("A foreground-only change retains the preceding background at offset zero")
+	func leadingForegroundChangeRetainsBackground() {
+		let body = LogRenderer.renderNativeBody(
+			"\u{03}04,02\u{03}03plain", withAttributes: TranscriptRenderOptions(), members: []
+		)
+		#expect(body.runs == [TranscriptTextRun(text: "plain", foreground: .palette(3), background: .palette(2))])
+	}
+
+	@Test("Formatting splits retain the complete channel and canonical nickname targets")
+	func formattedAnnotationsKeepCompleteTargets() {
+		let body = LogRenderer.renderNativeBody(
+			"a\u{02}LI\u{02}ce #sw\u{1D}IF\u{1D}t",
+			withAttributes: TranscriptRenderOptions(lineType: .privateMessage),
+			members: [RenderedMember(nickname: "Alice")]
+		)
+		#expect(body.plainText == "aLIce #swIFt")
+		#expect(body.mentionedNicknames == ["Alice"])
+		#expect(body.runs == [
+			TranscriptTextRun(text: "a", action: .nickname("Alice")),
+			TranscriptTextRun(text: "LI", traits: .bold, action: .nickname("Alice")),
+			TranscriptTextRun(text: "ce", action: .nickname("Alice")),
+			TranscriptTextRun(text: " "),
+			TranscriptTextRun(text: "#sw", action: .channel("#swIFt")),
+			TranscriptTextRun(text: "IF", traits: .italic, action: .channel("#swIFt")),
+			TranscriptTextRun(text: "t", action: .channel("#swIFt")),
+		])
 	}
 }

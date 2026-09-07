@@ -169,14 +169,17 @@ struct ApplicationSupportTests {
 	}
 
 	@Test("Writing without a transcript folder opens no file")
-	func fileLoggerWriteWithoutTranscriptFolderDoesNotOpenFile() {
-		let logger = FileLogger(client: GLTTestClient())
+	func fileLoggerWriteWithoutTranscriptFolderDoesNotOpenFile() async {
+		let sink = RecordingFileLogSink()
+		let commands = FileLogCommands(sink: sink)
+		let client = GLTTestClient()
+		let logger = FileLogger(client: client, commands: commands)
 
 		logger.writePlainText("should not write")
 
-		#expect(logger.filePath == nil)
-		#expect(logger.writePath == nil)
-		#expect(logger.fileName == nil)
+		#expect(await commands.flush())
+		#expect(await sink.operations == [.flush])
+		withExtendedLifetime(logger) {}
 	}
 
 	@Test("Sounds are keyed by name, and a name claimed twice keeps one file")

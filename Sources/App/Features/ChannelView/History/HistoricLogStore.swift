@@ -39,425 +39,356 @@ import CoreData
 import Foundation
 import os
 
-/// Owns the historic log Core Data stack, per-view contexts, line counts,
-/// resize timers, and save scheduling in one isolation domain.
+/// One FIFO lane owns the root transaction and every view's counters. An await
+/// may let another caller enqueue work, but never enter an in-flight transaction.
 actor HistoricLogStore {
 	typealias DeletionHandler = @Sendable ([String], String) async -> Void
+	typealias StackFactory = @Sendable (URL) throws -> NSManagedObjectContext
+	/** How long a scheduled retention pass waits before it runs. Spread over
+	 half an hour in production so a launch that opens many views does not stop
+	 to prune all of them at once; a test substitutes a fixed value. */
+	typealias ResizeDelay = @Sendable () -> Duration
 
-	/// Everything the store knows about one log view. The context is the only
-	/// thing Core Data owns; the counts are kept here so a write does not have
-	/// to re-count the table on every line.
+	private enum Lifecycle { case closed, open, closing }
 	private struct ViewState {
-		let context: NSManagedObjectContext
-		var totalLineCount: UInt = 0
-		var newestIdentifier: UInt = 0
+		var generation = UUID()
+		var totalLineCount: UInt
+		var maximumIdentifier: UInt
 		var resizeTask: Task<Void, Never>?
 	}
 
-	private var rootContext: NSManagedObjectContext?
+	private var lifecycle = Lifecycle.closed
+	private var occupied = false
+	private var closingCount = 0
+	private var waiting: [CheckedContinuation<Void, Never>] = []
+	private var context: NSManagedObjectContext?
 	private var databaseURL: URL?
-	private var databaseDirectoryURL: URL?
-
 	private var views: [String: ViewState] = [:]
 	private var maximumLineCount: UInt = 100
-
 	private var saveTask: Task<Void, Never>?
-	/// Where the name of the database file is kept between launches.
-	///
-	/// Production uses the typed preference; tests inject isolated storage.
 	private let filenameStore: any HistoricLogFilenameStoring
 	private let deletionHandler: DeletionHandler
-
-	/// How long the store waits between unattended saves.
-	private static let saveInterval = Duration.seconds(120)
-
-	/// The widest random delay before a view over its line cap is truncated.
-	/// Spreading the work keeps a hundred views from resizing in lockstep.
-	private static let maximumResizeDelay: UInt32 = 1800
+	private let makeStack: StackFactory
+	private let resizeDelay: ResizeDelay
+	private let willPerform: (@Sendable (HistoricLogStoreOperation) async -> Void)?
+	var pendingOperationCount: Int {
+		waiting.count
+	}
 
 	init(
 		filenameStore: any HistoricLogFilenameStoring,
+		makeStack: @escaping StackFactory = { try HistoricLogDatabase.makeStack(at: $0) },
+		resizeDelay: @escaping ResizeDelay = { .seconds(Int.random(in: 0 ..< 1800)) },
+		willPerform: (@Sendable (HistoricLogStoreOperation) async -> Void)? = nil,
 		deletionHandler: @escaping DeletionHandler = { _, _ in }
 	) {
 		self.filenameStore = filenameStore
+		self.makeStack = makeStack
+		self.resizeDelay = resizeDelay
+		self.willPerform = willPerform
 		self.deletionHandler = deletionHandler
 	}
 
-	func close() async {
-		cancelScheduledSave()
-		await saveAllContexts(cancellingResize: true)
-		views.removeAll()
-		rootContext = nil
+	private func enter() async {
+		if occupied {
+			await withCheckedContinuation { waiting.append($0) }
+		} else {
+			occupied = true
+		}
 	}
 
-	// MARK: - Database
+	private func leave() {
+		if waiting.isEmpty {
+			occupied = false
+		} else {
+			waiting.removeFirst().resume()
+		}
+	}
 
-	func openDatabase(inDirectory databaseDirectory: String) async -> HistoricLogOpenOutcome {
-		databaseDirectoryURL = URL(fileURLWithPath: databaseDirectory, isDirectory: true)
-
-		setDatabasePath()
-
-		guard let databaseURL else { return .failed(reason: nil) }
-
-		HistoricLogDatabase.logger.info("Opening database at path: \(databaseURL.path, privacy: .public)")
-
-		/* What stopped the last attempt, kept because it is the only thing the
-		 failure alert has to tell the reader. */
-		var failure: (any Error)?
-
-		func openStack(at url: URL) -> NSManagedObjectContext? {
-			do {
-				let context = try HistoricLogDatabase.makeStack(at: url)
-				failure = nil
-
-				return context
-			} catch {
-				failure = error
-
-				return nil
+	func openDatabase(inDirectory directory: String) async -> HistoricLogOpenOutcome {
+		await enter()
+		defer { leave() }
+		let filename: String
+		if let saved = filenameStore.databaseFilename {
+			filename = saved
+		} else {
+			filename = "logControllerHistoricLog_\(UUID().uuidString).sqlite"
+			filenameStore.databaseFilename = filename
+		}
+		let url = URL(fileURLWithPath: directory, isDirectory: true).appendingPathComponent(filename)
+		if let databaseURL, context != nil, databaseURL != url {
+			return .failed(reason: CocoaError(.persistentStoreOperation).localizedDescription)
+		}
+		do {
+			if context == nil {
+				context = try makeStack(url)
 			}
-		}
-
-		var context = openStack(at: databaseURL)
-
-		if context == nil {
-			/* A store that cannot be opened is almost always a corrupt file
-			 from an older build. Start a fresh one rather than leave the view
-			 without any history at all. */
-			_ = resetDatabaseFilename()
-
-			setDatabasePath()
-
-			context = self.databaseURL.flatMap(openStack)
-		}
-
-		guard let context else {
-			return .failed(reason: failure?.localizedDescription)
-		}
-
-		rootContext = context
-
-		/* On the root context's own queue, before any view context is built, so
-		 the first fetch a view makes already sorts by the corrected column. */
-		await context.perform {
-			HistoricLogDatabase.restampEntryCreationDates(in: context)
-		}
-
-		rescheduleSave()
-
-		return .opened
-	}
-
-	func setMaximumLineCount(_ maximumLineCount: UInt) {
-		// A malformed stored value must not destabilize history.
-		guard maximumLineCount > 0 else {
-			HistoricLogDatabase.logger.error("Ignoring a request to set the maximum line count to zero")
-
-			return
-		}
-
-		self.maximumLineCount = maximumLineCount
-	}
-
-	private func setDatabasePath() {
-		databaseURL = databaseDirectoryURL?.appendingPathComponent(databaseSaveFilename(), isDirectory: false)
-	}
-
-	private func databaseSaveFilename() -> String {
-		filenameStore.databaseFilename ?? resetDatabaseFilename()
-	}
-
-	private func resetDatabaseFilename() -> String {
-		let filename = "logControllerHistoricLog_\(UUID().uuidString).sqlite"
-
-		filenameStore.databaseFilename = filename
-
-		return filename
-	}
-
-	// MARK: - Views
-
-	/// The context for a view, created on first use. The bookkeeping entry is
-	/// installed before the counts are read so a second request arriving during
-	/// that await joins the same context instead of building a rival one.
-	private func context(forView viewIdentifier: String) async -> NSManagedObjectContext? {
-		if let existing = views[viewIdentifier] {
-			return existing.context
-		}
-
-		guard let rootContext else {
-			HistoricLogDatabase.logger
-				.error("Requested context for \(viewIdentifier, privacy: .public) before the database was opened")
-
-			return nil
-		}
-
-		let context = HistoricLogDatabase.makeViewContext(parent: rootContext)
-
-		views[viewIdentifier] = ViewState(context: context)
-
-		let counts = await context.perform {
-			(
-				lineCount: HistoricLogDatabase.lineCount(in: context, viewIdentifier: viewIdentifier),
-				newestIdentifier: HistoricLogDatabase.newestIdentifier(in: context, viewIdentifier: viewIdentifier)
-			)
-		}
-
-		/* The view may have been forgotten while the counts were being read. */
-		guard views[viewIdentifier]?.context === context else {
-			return views[viewIdentifier]?.context
-		}
-
-		views[viewIdentifier]?.totalLineCount = counts.lineCount
-		views[viewIdentifier]?.newestIdentifier = counts.newestIdentifier
-
-		return context
-	}
-
-	func forgetView(_ viewIdentifier: String) async {
-		HistoricLogDatabase.logger.debug("Forgetting view: \(viewIdentifier, privacy: .public)")
-
-		guard let context = await context(forView: viewIdentifier) else { return }
-
-		cancelResize(forView: viewIdentifier)
-
-		let result = await context.perform {
-			let result = HistoricLogDatabase.delete(.everything, in: context, viewIdentifier: viewIdentifier)
-
-			context.reset()
-
-			return result
-		}
-
-		views.removeValue(forKey: viewIdentifier)
-
-		await reportDeletion(result, inView: viewIdentifier)
-	}
-
-	func resetData(forView viewIdentifier: String) async {
-		HistoricLogDatabase.logger.debug("Resetting the contents of view: \(viewIdentifier, privacy: .public)")
-
-		guard let context = await context(forView: viewIdentifier) else { return }
-
-		cancelResize(forView: viewIdentifier)
-
-		let result = await context.perform {
-			let result = HistoricLogDatabase.delete(.everything, in: context, viewIdentifier: viewIdentifier)
-
-			context.reset()
-
-			return result
-		}
-
-		views[viewIdentifier]?.totalLineCount = 0
-
-		await reportDeletion(result, inView: viewIdentifier)
-	}
-
-	// MARK: - Writing
-
-	func writeLogLine(_ logLine: HistoricLogEntry) async {
-		let viewIdentifier = logLine.viewIdentifier
-
-		guard let context = await context(forView: viewIdentifier) else { return }
-
-		let entryIdentifier = incrementNewestIdentifier(forView: viewIdentifier)
-
-		await context.perform {
-			HistoricLogDatabase.insert(logLine, in: context, entryIdentifier: entryIdentifier)
-		}
-
-		scheduleResize(forView: viewIdentifier)
-	}
-
-	private func incrementNewestIdentifier(forView viewIdentifier: String) -> UInt {
-		guard var state = views[viewIdentifier] else { return 0 }
-
-		state.totalLineCount = saturatedAdd(state.totalLineCount, 1)
-		state.newestIdentifier = saturatedAdd(state.newestIdentifier, 1)
-
-		views[viewIdentifier] = state
-
-		return state.newestIdentifier
-	}
-
-	// MARK: - Fetching
-
-	func fetchEntries(
-		forView viewIdentifier: String,
-		ascending: Bool,
-		fetchLimit: UInt,
-		limitToDate: Date?
-	) async -> [HistoricLogEntry] {
-		guard let context = await context(forView: viewIdentifier) else { return [] }
-
-		return await context.perform {
-			HistoricLogDatabase.fetchEntries(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				ascending: ascending,
-				fetchLimit: fetchLimit,
-				limitToDate: limitToDate
-			)
-		}
-	}
-
-	/// The page of lines immediately before one the view already holds, which is
-	/// what scrolling back off the top of the transcript asks for.
-	func fetchEntries(
-		forView viewIdentifier: String,
-		before uniqueIdentifier: String,
-		fetchLimit: UInt,
-		limitToDate: Date?
-	) async -> [HistoricLogEntry] {
-		guard fetchLimit > 0 else {
-			HistoricLogDatabase.logger.error("Ignoring a fetch request with a zero fetch limit")
-
-			return []
-		}
-
-		guard let context = await context(forView: viewIdentifier) else { return [] }
-
-		return await context.perform {
-			let entryIdentifier = HistoricLogDatabase.entryIdentifier(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				uniqueIdentifier: uniqueIdentifier
-			)
-
-			guard entryIdentifier != HistoricLogDatabase.missingEntryIdentifier else { return [] }
-
-			return HistoricLogDatabase.fetchEntries(
-				in: context,
-				viewIdentifier: viewIdentifier,
-				ascending: true,
-				fetchLimit: fetchLimit,
-				lowestEntryIdentifier: entryIdentifier > fetchLimit ? entryIdentifier - fetchLimit : 0,
-				highestEntryIdentifier: entryIdentifier > 0 ? entryIdentifier - 1 : 0,
-				limitToDate: limitToDate
-			)
-		}
-	}
-
-	// MARK: - Saving
-
-	func saveData() async {
-		rescheduleSave()
-		await saveAllContexts(cancellingResize: false)
-	}
-
-	private func saveAllContexts(cancellingResize: Bool) async {
-		guard let rootContext else { return }
-
-		HistoricLogDatabase.logger.debug("Performing save")
-
-		for (viewIdentifier, state) in views {
-			if cancellingResize {
-				cancelResize(forView: viewIdentifier)
+			guard let context else { return .failed(reason: nil) }
+			databaseURL = url
+			let outcome = await context.perform {
+				context.retainsRegisteredObjects = false
+				return HistoricLogDatabase.restampEntryCreationDates(in: context)
 			}
-
-			let context = state.context
-
-			await context.perform { HistoricLogDatabase.quickSave(context) }
-		}
-
-		await rootContext.perform { HistoricLogDatabase.quickSave(rootContext) }
-	}
-
-	private func rescheduleSave() {
-		cancelScheduledSave()
-
-		saveTask = Task { [weak self] in
-			while Task.isCancelled == false {
-				try? await Task.sleep(for: Self.saveInterval, clock: .continuous)
-
-				guard Task.isCancelled == false, let self else { return }
-
-				await saveAllContexts(cancellingResize: false)
+			guard case .saved = outcome else {
+				if case let .failed(reason) = outcome {
+					return .failed(reason: reason)
+				}
+				return .failed(reason: nil)
 			}
-		}
+			lifecycle = closingCount == 0 ? .open : .closing
+			scheduleSave()
+			return .opened
+		} catch { return .failed(reason: error.localizedDescription) }
 	}
 
-	private func cancelScheduledSave() {
+	@discardableResult
+	func close() async -> HistoricLogSaveOutcome {
+		// Close admission immediately. Writes already in the FIFO still get their turn.
+		lifecycle = .closing
+		closingCount += 1
 		saveTask?.cancel()
 		saveTask = nil
-	}
-
-	// MARK: - Resizing
-
-	private func scheduleResize(forView viewIdentifier: String) {
-		guard let state = views[viewIdentifier],
-		      state.resizeTask == nil,
-		      state.totalLineCount >= maximumLineCount
-		else { return }
-
-		let delay = TimeInterval(UInt32.random(in: 0 ..< Self.maximumResizeDelay))
-
-		views[viewIdentifier]?.resizeTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(delay), clock: .continuous)
-
-			guard Task.isCancelled == false, let self else { return }
-
-			await resize(viewIdentifier)
+		await enter()
+		defer { closingCount -= 1; leave() }
+		await willPerform?(.close)
+		for state in views.values {
+			state.resizeTask?.cancel()
 		}
-
-		HistoricLogDatabase.logger
-			.debug("Scheduled to resize \(viewIdentifier, privacy: .public) in \(delay) seconds")
-	}
-
-	private func cancelResize(forView viewIdentifier: String) {
-		views[viewIdentifier]?.resizeTask?.cancel()
-		views[viewIdentifier]?.resizeTask = nil
-	}
-
-	private func resize(_ viewIdentifier: String) async {
-		guard let state = views[viewIdentifier] else { return }
-
-		HistoricLogDatabase.logger.debug("Resizing view \(viewIdentifier, privacy: .public)")
-
-		views[viewIdentifier]?.resizeTask = nil
-
-		let context = state.context
-		let lowest = state.newestIdentifier > maximumLineCount ? state.newestIdentifier - maximumLineCount : 0
-
-		let result = await context.perform {
-			HistoricLogDatabase.delete(
-				.entriesBelow(entryIdentifier: lowest),
-				in: context,
-				viewIdentifier: viewIdentifier
-			)
+		guard let context else { lifecycle = .closed; return .saved }
+		let outcome = await context.perform { HistoricLogDatabase.quickSave(context) }
+		switch outcome {
+		case .saved:
+			views.removeAll()
+			self.context = nil
+			lifecycle = .closed
+		case .failed:
+			// No reset: unsaved objects remain available to saveData or a later close.
+			lifecycle = closingCount == 1 ? .open : .closing
+			for identifier in views.keys {
+				views[identifier]?.resizeTask = nil
+			}
 		}
-
-		if let total = views[viewIdentifier]?.totalLineCount {
-			views[viewIdentifier]?.totalLineCount = result.deletedCount > total ? 0 : total - result.deletedCount
-		}
-
-		await reportDeletion(result, inView: viewIdentifier)
+		return outcome
 	}
 
-	// MARK: - Client Notifications
+	func setMaximumLineCount(_ count: UInt) {
+		guard count > 0 else { return }
+		let lowered = count < maximumLineCount
+		maximumLineCount = count
+		for identifier in views.keys {
+			/* A pass already waiting was armed for the old limit and may not be
+			 due for another half hour. Retiring it is what lets the new limit
+			 arm a pass of its own. */
+			if lowered {
+				views[identifier]?.resizeTask?.cancel()
+				views[identifier]?.resizeTask = nil
+			}
+			scheduleResize(identifier)
+		}
+	}
 
-	private func reportDeletion(_ result: HistoricLogDatabase.DeletionResult, inView viewIdentifier: String) async {
-		guard result.uniqueIdentifiers.isEmpty == false else { return }
+	private func initializeView(_ identifier: String, in context: NSManagedObjectContext) async throws {
+		guard views[identifier] == nil else { return }
+		let counts = try await context.perform {
+			try HistoricLogDatabase.initialCounts(in: context, viewIdentifier: identifier)
+		}
+		views[identifier] = ViewState(totalLineCount: counts.lineCount, maximumIdentifier: counts.maximumIdentifier)
+	}
 
-		await deletionHandler(result.uniqueIdentifiers, viewIdentifier)
+	@discardableResult
+	func writeLogLine(_ entry: HistoricLogEntry) async -> HistoricLogWriteOutcome {
+		guard lifecycle == .open else { return .unavailable }
+		await enter()
+		defer { leave() }
+		await willPerform?(.write)
+		guard let context else { return .unavailable }
+		do {
+			try await initializeView(entry.viewIdentifier, in: context)
+			guard let state = views[entry.viewIdentifier], state.maximumIdentifier < UInt(Int64.max) else {
+				return .failed(CocoaError(.validationNumberTooLarge).localizedDescription)
+			}
+			let next = state.maximumIdentifier + 1
+			let inserted = await context
+				.perform { HistoricLogDatabase.insert(entry, in: context, entryIdentifier: next) }
+			guard inserted else { return .failed(CocoaError(.persistentStoreOperation).localizedDescription) }
+			views[entry.viewIdentifier]?.maximumIdentifier = next
+			views[entry.viewIdentifier]?.totalLineCount = saturatedAdd(state.totalLineCount, 1)
+			scheduleResize(entry.viewIdentifier)
+			return .accepted
+		} catch { return .failed(error.localizedDescription) }
+	}
+
+	@discardableResult
+	func forgetView(_ identifier: String) async -> HistoricLogDeletionOutcome {
+		await removeHistory(identifier, forget: true)
+	}
+
+	@discardableResult
+	func resetData(forView identifier: String) async -> HistoricLogDeletionOutcome {
+		await removeHistory(identifier, forget: false)
+	}
+
+	private func removeHistory(_ identifier: String, forget: Bool) async -> HistoricLogDeletionOutcome {
+		guard lifecycle == .open else { return .unavailable }
+		await enter()
+		defer { leave() }
+		await willPerform?(forget ? .forget : .reset)
+		guard let context else { return .unavailable }
+		let outcome = await context.perform {
+			HistoricLogDatabase.deleteOutcome(.everything, in: context, viewIdentifier: identifier)
+		}
+		if case let .deleted(result) = outcome {
+			views[identifier]?.resizeTask?.cancel()
+			if forget {
+				views.removeValue(forKey: identifier)
+			} else {
+				views[identifier]?.generation = UUID()
+				views[identifier]?.totalLineCount = 0
+				views[identifier]?.resizeTask = nil
+			}
+			// The one-way notification completes before a newer view generation can enter.
+			if !result.uniqueIdentifiers.isEmpty {
+				await deletionHandler(result.uniqueIdentifiers, identifier)
+			}
+		}
+		return outcome
+	}
+
+	func fetchEntries(forView identifier: String, ascending: Bool, fetchLimit: UInt,
+	                  limitToDate: Date?) async -> [HistoricLogEntry]
+	{
+		await fetchOutcome(HistoricLogFetchRequest(
+			viewIdentifier: identifier,
+			kind: .newest(ascending: ascending, fetchLimit: fetchLimit, limitToDate: limitToDate)
+		)).entries
+	}
+
+	func fetchEntries(forView identifier: String, before line: String, fetchLimit: UInt,
+	                  limitToDate: Date?) async -> [HistoricLogEntry]
+	{
+		await fetchOutcome(HistoricLogFetchRequest(
+			viewIdentifier: identifier,
+			kind: .before(uniqueIdentifier: line, fetchLimit: fetchLimit, limitToDate: limitToDate)
+		)).entries
+	}
+
+	func fetchOutcome(_ request: HistoricLogFetchRequest) async -> HistoricLogFetchOutcome {
+		guard !Task.isCancelled else { return .cancelled }
+		guard lifecycle == .open else { return .failed(.unavailable) }
+		await enter()
+		defer { leave() }
+		guard !Task.isCancelled else { return .cancelled }
+		guard let context else { return .failed(.unavailable) }
+		do {
+			try await initializeView(request.viewIdentifier, in: context)
+		} catch {
+			return .failed(.read(error.localizedDescription))
+		}
+		let outcome = await context.perform {
+			switch request.kind {
+			case let .newest(ascending, limit, date):
+				HistoricLogDatabase.fetchOutcome(
+					in: context,
+					viewIdentifier: request.viewIdentifier,
+					ascending: ascending,
+					fetchLimit: limit,
+					limitToDate: date
+				)
+			case let .before(line, limit, date):
+				HistoricLogDatabase.fetchOutcome(in: context, viewIdentifier: request.viewIdentifier, before: line,
+				                                 fetchLimit: limit, limitToDate: date)
+			case let .rowPage(cursor, limit, date):
+				HistoricLogDatabase.fetchRowPage(in: context, viewIdentifier: request.viewIdentifier, before: cursor,
+				                                 fetchLimit: limit, limitToDate: date)
+			}
+		}
+		return Task.isCancelled ? .cancelled : outcome
+	}
+
+	@discardableResult
+	func saveData() async -> HistoricLogSaveOutcome {
+		guard lifecycle == .open else { return .failed(CocoaError(.persistentStoreOperation).localizedDescription) }
+		await enter()
+		defer { leave() }
+		await willPerform?(.save)
+		guard let context else { return .failed(CocoaError(.persistentStoreOperation).localizedDescription) }
+		return await context.perform { HistoricLogDatabase.quickSave(context) }
+	}
+
+	private func scheduleSave() {
+		guard saveTask == nil else { return }
+		saveTask = Task { [weak self] in
+			while !Task.isCancelled {
+				try? await Task.sleep(for: .seconds(120))
+				guard !Task.isCancelled, let self else { return }
+				_ = await saveData()
+			}
+		}
+	}
+
+	private func scheduleResize(_ identifier: String) {
+		guard lifecycle == .open, let state = views[identifier], state.resizeTask == nil,
+		      state.totalLineCount > maximumLineCount else { return }
+		let delay = resizeDelay()
+		views[identifier]?.resizeTask = Task { [weak self] in
+			try? await Task.sleep(for: delay)
+			guard !Task.isCancelled else { return }
+			_ = await self?.resize(identifier, generation: state.generation)
+		}
+	}
+
+	/** Hands the view's scheduled-pass slot back, so a later pass can be armed.
+
+	 The slot is the only thing ``scheduleResize`` checks before it arms one, so
+	 a pass that returns without releasing it leaves the view over its limit
+	 until something else replaces the whole view state. A newer generation owns
+	 its own slot and must not have it cleared from under it. */
+	private func releaseResizeSlot(_ identifier: String, generation: UUID?) {
+		guard generation == nil || generation == views[identifier]?.generation else { return }
+		views[identifier]?.resizeTask = nil
+	}
+
+	@discardableResult
+	func resize(_ identifier: String, generation: UUID? = nil) async -> HistoricLogDeletionOutcome {
+		guard lifecycle == .open else { return .unavailable }
+		await enter()
+		defer { leave() }
+		await willPerform?(.resize)
+		guard !Task.isCancelled, generation == nil || generation == views[identifier]?.generation,
+		      let context
+		else {
+			releaseResizeSlot(identifier, generation: generation)
+			return .unavailable
+		}
+		let limit = maximumLineCount
+		let outcome = await context.perform {
+			HistoricLogDatabase.deleteOutcome(.retainingNewest(count: limit), in: context, viewIdentifier: identifier)
+		}
+		releaseResizeSlot(identifier, generation: generation)
+		if case let .deleted(result) = outcome, result.deletedCount > 0 {
+			if let count = views[identifier]?.totalLineCount {
+				views[identifier]?.totalLineCount = count - min(count, result.deletedCount)
+			}
+			if !result.uniqueIdentifiers.isEmpty {
+				await deletionHandler(result.uniqueIdentifiers, identifier)
+			}
+			/* One pass may leave the view over its limit — the limit can have been
+			 lowered again while this one ran. A pass that deleted nothing arms no
+			 successor, so a counter that disagrees with the store cannot spin. */
+			scheduleResize(identifier)
+		}
+		return outcome
 	}
 }
 
-/// Saturating addition. A free function so the Core Data helpers, which run
-/// on a context's queue rather than on the actor, can use it too.
 nonisolated func saturatedAdd(_ lhs: UInt, _ rhs: UInt) -> UInt { // nonisolated: pure
 	let (result, overflow) = lhs.addingReportingOverflow(rhs)
-
 	return overflow ? UInt.max : result
 }
 
-/// Whether the store's database opened, and what stopped it when it did not.
 nonisolated enum HistoricLogOpenOutcome: Sendable { // nonisolated: value
 	case opened
-	/// What to tell the reader, when the failure came with a description.
 	case failed(reason: String?)
-
 	var isOpen: Bool {
 		if case .opened = self {
 			true

@@ -5,13 +5,20 @@
 
 import Foundation
 @testable import Glasstual
+import Network
 import Testing
 
 @MainActor
 private final class InternetAddressLookupDelegateSpy: NSObject, InternetAddressLookupDelegate {
-	func internetAddressLookupReturnedAddress(_: String) {}
+	let results = AsyncStream<Bool>.makeStream()
 
-	func internetAddressLookupFailed() {}
+	func internetAddressLookupReturnedAddress(_: String) {
+		results.continuation.yield(true)
+	}
+
+	func internetAddressLookupFailed() {
+		results.continuation.yield(false)
+	}
 }
 
 @MainActor
@@ -106,5 +113,46 @@ struct InternetAddressLookupTests {
 
 		#expect(lookup.ipv4AddressIsValid)
 		#expect(lookup.ipv6AddressIsValid)
+	}
+
+	@Test("An oversized chunked lookup is cancelled before the server finishes its body", .timeLimit(.minutes(1)))
+	func streamedBodyIsBounded() async throws {
+		let listening = try await DCCTransfer.startListener(portRange: TransferFixture.portRange)
+		defer { listening.task.cancel() }
+		let (sent, continuation) = AsyncStream<Bool>.makeStream()
+		let server = Task {
+			defer { continuation.finish() }
+			for await connection in listening.connections {
+				do {
+					_ = try await connection.receive(atLeast: 1, atMost: 4096)
+					let header = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n401\r\n"
+					try await connection
+						.send(Data(header.utf8) + Data(repeating: 0x61, count: 1025) + Data("\r\n".utf8))
+					continuation.yield(true)
+					// No terminating chunk. A post-download size check would wait
+					// for the resource timeout instead of rejecting this body now.
+					try await Task.sleep(for: .seconds(60))
+					withExtendedLifetime(connection) {}
+				} catch {}
+				return
+			}
+		}
+		defer { server.cancel() }
+		let delegate = InternetAddressLookupDelegateSpy()
+		let lookup = InternetAddressLookup(delegate: delegate)
+		let url = try #require(URL(string: "http://127.0.0.1:\(listening.port)/address"))
+		lookup.performLookup(from: url)
+		defer { lookup.cancelLookup() }
+		let didSend = try await DCCTransfer.withTimeout(.seconds(3), failingWith: .connectTimeout) {
+			var iterator = sent.makeAsyncIterator()
+			return await iterator.next()
+		}
+		#expect(didSend == true)
+		let results = delegate.results.stream
+		let result = try await DCCTransfer.withTimeout(.seconds(3), failingWith: .connectTimeout) {
+			var iterator = results.makeAsyncIterator()
+			return await iterator.next()
+		}
+		#expect(result == false)
 	}
 }

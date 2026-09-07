@@ -50,6 +50,18 @@ struct ServerChannelListTests {
 		]
 	}
 
+	/// `RPL_LIST` carries whatever the server decided to put in the field, and
+	/// a count that does not fit an `Int` used to end the process.
+	@Test("A member count too large for the row is saturated rather than fatal")
+	func oversizedMemberCountIsSaturated() {
+		let model = ServerChannelListModel()
+
+		model.enqueue(channelName: "#huge", memberCount: .max, topic: nil)
+		model.flushQueuedEntries()
+
+		#expect(model.rows.map(\.memberCount) == [.max])
+	}
+
 	@Test("The native table starts with the largest channels first")
 	func defaultSortIsDescendingMemberCount() {
 		let model = populatedModel()

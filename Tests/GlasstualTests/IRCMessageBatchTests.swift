@@ -92,8 +92,8 @@ struct IRCMessageBatchTests {
 		#expect(parent.queuedEntries.first?.object as? Message === second)
 	}
 
-	@Test("Emptying the container leaves the batches it held with their contents")
-	func dequeuingEveryBatchKeepsTheirContents() throws {
+	@Test("Discarding every batch releases queued messages instead of retaining retired replay")
+	func dequeuingEveryBatchDiscardsTheirContents() throws {
 		let container = MessageBatchContainer()
 		let batch = batchWithToken("batch")
 		let message = try #require(Message(line: "PING :token"))
@@ -105,7 +105,7 @@ struct IRCMessageBatchTests {
 
 		#expect(container.queuedEntries.count == 0)
 
-		#expect(batch.queuedEntries.first?.object as? Message === message)
+		#expect(batch.queuedEntries.isEmpty)
 	}
 
 	private func batchWithToken(_ token: String) -> MessageBatch {

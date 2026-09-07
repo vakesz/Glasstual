@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 public nonisolated extension Preferences { // nonisolated: value
@@ -99,7 +100,7 @@ public nonisolated extension Preferences { // nonisolated: value
 			"com.adiumX.AutoHyperlinks.permittedSchemesDefault",
 			default: [
 				"feed", "ftp", "gopher", "irc", "ircs", "itms", "sftp", "ssh",
-				"telnet", "glasstual", "webcal", "x-man-page",
+				"telnet", "glasstual", "textual", "webcal", "x-man-page",
 			],
 			storage: .standard
 		)
@@ -135,7 +136,8 @@ public nonisolated extension Preferences { // nonisolated: value
 		/// A style's own key-value store, keyed by style name.
 		public static let themeSettings = PreferenceKeyFamily(
 			"Internal Theme Settings Key-value Store -> ",
-			traits: .excludedFromExport
+			traits: .excludedFromExport,
+			coerce: { _, value in value.dictionary == nil ? nil : value }
 		)
 
 		/// "Do not ask me again" flags, one per prompt.

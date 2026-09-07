@@ -50,7 +50,8 @@ struct PreferencesRootView: View {
 	}
 
 	var body: some View {
-		NavigationSplitView(columnVisibility: .constant(.all)) {
+		let fileRequest = model.fileRequest.request
+		return NavigationSplitView(columnVisibility: .constant(.all)) {
 			List(selection: sectionSelection) {
 				ForEach(model.sections) { section in
 					Label(section.title, systemImage: section.symbolName)
@@ -73,6 +74,7 @@ struct PreferencesRootView: View {
 			detail
 		}
 		.navigationSplitViewStyle(.balanced)
+		.modifier(PreferencesTransferPresentation(session: .shared, host: .settings))
 		/* The Settings window takes its size from here and nowhere else. The
 		 infinite maxima are what make it resizable: with a minimum alone the
 		 content refuses to grow and the window has nothing to resize into. */
@@ -85,11 +87,13 @@ struct PreferencesRootView: View {
 			maxHeight: .infinity
 		)
 		.fileImporter(
-			isPresented: importIsPresented,
-			allowedContentTypes: model.importRequest?.allowedContentTypes ?? [.data]
+			isPresented: PendingFileRequest<PreferencesImportRequest>.presentation($model.fileRequest),
+			allowedContentTypes: fileRequest?.kind.allowedContentTypes ?? [.data]
 		) { result in
-			model.completeImport(result)
+			guard let fileRequest, let kind = model.fileRequest.complete(fileRequest.id) else { return }
+			model.completeImport(result, request: kind)
 		}
+		.onDisappear { model.fileRequest.reset() }
 		.fileExporter(
 			isPresented: exportIsPresented,
 			document: model.exportedThemeData.map(PreferencesPropertyListDocument.init(data:)),
@@ -120,17 +124,6 @@ struct PreferencesRootView: View {
 			openURL(url)
 			model.externalURL = nil
 		}
-	}
-
-	private var importIsPresented: Binding<Bool> {
-		Binding(
-			get: { model.importRequest != nil },
-			set: {
-				if $0 == false {
-					model.importRequest = nil
-				}
-			}
-		)
 	}
 
 	private var exportIsPresented: Binding<Bool> {
@@ -288,8 +281,8 @@ struct PreferencesPaneRouter: View {
 	let identifier: String?
 
 	var body: some View {
-		if let index = identifier.flatMap(PreferencesPaneCatalog.pluginIndex(from:)) {
-			pluginPane(at: index)
+		if let paneIdentifier = identifier.flatMap(PreferencesPaneCatalog.pluginBundleIdentifier(from:)) {
+			pluginPane(paneIdentifier: paneIdentifier)
 		} else if let pane = identifier.flatMap(PreferencesPaneIdentifier.init(rawValue:)) {
 			view(for: pane)
 		} else {
@@ -322,9 +315,9 @@ struct PreferencesPaneRouter: View {
 	}
 
 	@ViewBuilder
-	private func pluginPane(at index: Int) -> some View {
+	private func pluginPane(paneIdentifier: String) -> some View {
 		let plugins = SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
-		if plugins.indices.contains(index), let pane = plugins[index].pluginPreferencesPane {
+		if let pane = plugins.first(where: { $0.preferencePaneIdentifier == paneIdentifier })?.pluginPreferencesPane {
 			pane.makeView()
 				.frame(minHeight: Self.pluginPaneHeight)
 				.padding(20)

@@ -35,7 +35,7 @@ struct AppKitSupportTests {
 		let session = PreferencesSession()
 
 		#expect(session.model.sections.isEmpty == false)
-		#expect(session.model.importRequest == nil)
+		#expect(session.model.fileRequest.request == nil)
 	}
 
 	@Test("Member details are modeled for native SwiftUI presentation")

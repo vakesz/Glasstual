@@ -320,7 +320,7 @@ public final class NicknameCompletionStatus: NSObject {
 	///
 	/// `nil` when every member carries the same weight: there is then no
 	/// "most highly weighted" user and the alphabetical order stands alone.
-	/// Weights are read once each because reading one decays it.
+	/// Weights have already been decayed before candidate construction.
 	private func mostWeightedMember(of members: [ChannelUser]) -> ChannelUser? {
 		let weighted = members.map { (member: $0, weight: $0.totalWeight) }
 
@@ -365,11 +365,14 @@ public final class NicknameCompletionStatus: NSObject {
 		}
 
 		var candidates: [Candidate] = []
+		var comparisonValues: Set<String> = []
 		let trimmedCharacters = CharacterSet(charactersIn: "^[]-_`{}\\")
 		let includeTrimmedNicknames = !searchPatternIsEmpty
 
 		func addNickname(_ nickname: String, includeTrimmedVariant: Bool) {
-			candidates.append(Candidate(displayValue: nickname, comparisonValue: nickname.lowercased()))
+			let comparisonValue = nickname.lowercased()
+			candidates.append(Candidate(displayValue: nickname, comparisonValue: comparisonValue))
+			comparisonValues.insert(comparisonValue)
 
 			guard includeTrimmedVariant,
 			      let trimmedNickname = trimNickname(nickname, using: trimmedCharacters),
@@ -379,10 +382,10 @@ public final class NicknameCompletionStatus: NSObject {
 				return
 			}
 
-			let comparisonValue = trimmedNickname.lowercased()
+			let trimmedComparisonValue = trimmedNickname.lowercased()
 
-			if !candidates.contains(where: { $0.comparisonValue == comparisonValue }) {
-				candidates.append(Candidate(displayValue: nickname, comparisonValue: comparisonValue))
+			if comparisonValues.insert(trimmedComparisonValue).inserted {
+				candidates.append(Candidate(displayValue: nickname, comparisonValue: trimmedComparisonValue))
 			}
 		}
 

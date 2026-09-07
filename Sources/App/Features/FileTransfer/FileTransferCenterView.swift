@@ -104,6 +104,10 @@ struct FileTransferCenterView: View {
 		}
 		.onExitCommand(perform: close)
 		.quickLookPreview($model.previewSelection, in: model.previewItems)
+		.onDisappear {
+			model.previewSelection = nil
+			model.releaseShareAccess()
+		}
 		.fileImporter(
 			isPresented: $model.isChoosingDestination,
 			allowedContentTypes: [.folder],
@@ -126,7 +130,9 @@ struct FileTransferCenterView: View {
 		Button(FileTransferStrings.showInFinder) { perform(.reveal, identifiers) }
 			.disabled(model.canPerform(.reveal, on: identifiers) == false)
 
-		let urls = model.selectedFileURLs(for: identifiers)
+		/* Asking the model settles the rows' local files once for the whole
+		 menu, and leaves the share holding the access it needs to read them. */
+		let urls = model.shareableFileURLs(for: identifiers)
 		ShareLink(items: urls) {
 			Text(verbatim: FileTransferStrings.share)
 		}
@@ -156,11 +162,15 @@ private struct FileTransferRowView: View {
 				HStack {
 					Text(verbatim: presentation.filename)
 						.lineLimit(1)
+						.accessibilityIdentifier("file-transfer-filename-\(transfer.uniqueIdentifier)")
 					Spacer()
 					Text(verbatim: presentation.totalSize)
 						.font(.caption)
 						.foregroundStyle(.secondary)
 						.monospacedDigit()
+						.accessibilityIdentifier("file-transfer-bytes-\(transfer.uniqueIdentifier)")
+						.accessibilityLabel(Text(verbatim: FileTransferStrings.totalSize(presentation.totalSize)))
+						.accessibilityValue(Text(verbatim: presentation.processedSize))
 				}
 
 				progressView(presentation.progress)
@@ -169,10 +179,12 @@ private struct FileTransferRowView: View {
 					.font(.caption)
 					.foregroundStyle(.secondary)
 					.lineLimit(1)
+					.accessibilityIdentifier("file-transfer-status-\(transfer.uniqueIdentifier)")
 			}
 		}
 		.padding(.vertical, 5)
-		.accessibilityElement(children: .combine)
+		.accessibilityElement(children: .contain)
+		.accessibilityIdentifier("file-transfer-row-\(transfer.uniqueIdentifier)")
 	}
 
 	@ViewBuilder

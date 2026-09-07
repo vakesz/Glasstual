@@ -62,7 +62,8 @@ extension MenuActionCoordinator {
 			applicationIsLaunched: appController.applicationIsLaunched,
 			mainWindowHasAttachedSheet: mainWindow.attachedSheet != nil,
 			mainWindowIsFocused: mainWindow.isMainWindow,
-			mainWindowIsBeneathMouse: mainWindow.ceIsBeneathMouse
+			mainWindowIsBeneathMouse: mainWindow.ceIsBeneathMouse,
+			hasExplicitMenuContext: hasExplicitMenuContext
 		)
 	}
 
@@ -141,8 +142,9 @@ extension MenuActionCoordinator {
 		}
 	}
 
-	private func validateServerCommand(_ item: NSMenuItem) -> Bool {
+	func validateServerCommand(_ item: NSMenuItem) -> Bool {
 		let client = selectedClient
+		let policy = MenuServerActionPolicy(client: client)
 
 		switch item.command {
 		case .connect:
@@ -152,7 +154,7 @@ extension MenuActionCoordinator {
 			}
 			let connected = client.isConnected || client.isConnecting
 			item.isHidden = connected
-			return connected == false && client.isQuitting == false
+			return policy.canConnect
 		case .connectWithoutProxy:
 			let flags = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
 			guard flags == .shift, let client else {
@@ -161,15 +163,15 @@ extension MenuActionCoordinator {
 			}
 			let unavailable = client.isConnected || client.isConnecting || client.config.proxyType == .none
 			item.isHidden = unavailable
-			return unavailable == false && client.isQuitting == false
+			return policy.canConnectWithoutProxy
 		case .disconnect:
 			let connected = client.map { $0.isConnected || $0.isConnecting } == true
 			item.isHidden = connected == false
-			return connected
+			return policy.canDisconnect
 		case .cancelReconnect:
 			let reconnecting = client?.isReconnecting == true
 			item.isHidden = reconnecting == false
-			return reconnecting
+			return policy.canCancelReconnect
 		case .channelList:
 			return client?.isLoggedIn == true
 		case .changeNickname:
@@ -187,32 +189,42 @@ extension MenuActionCoordinator {
 	private func validateChannelCommand(_ item: NSMenuItem) -> Bool {
 		let client = selectedClient
 		let channel = selectedChannel
+		/* The mirror of `IRCClient.canJoin`, for a channel that is already
+		 joined: the same connection, the same channel list, and a channel the
+		 client has not finished with. */
+		let canActOnChannel = channel.map { channel in
+			client?.canJoinChannels == true
+				&& channel.associatedClient === client
+				&& client?.channelList.contains(where: { $0 === channel }) == true
+				&& channel.isChannel && channel.isActive
+		} == true
 
 		switch item.command {
 		case .joinChannel:
-			item.isHidden = client?.isLoggedIn != true || channel?.isActive == true
-			return true
+			let canJoin = channel.map { client?.canJoin($0) == true } == true
+			item.isHidden = !canJoin
+			return canJoin
 		case .leaveChannel:
-			item.isHidden = client?.isLoggedIn != true || channel?.isActive != true
+			item.isHidden = !canActOnChannel
 			let joinHidden = item.menu?.item(for: .joinChannel)?.isHidden == true
 			item.menu?.item(for: .leaveChannelSeparator)?.isHidden =
 				item.isHidden && joinHidden
-			return true
+			return canActOnChannel
 		case .addChannel:
 			return client != nil
 		case .viewChannelLogs:
 			return TextualPreferences.logToDiskIsEnabled()
 		case .modifyTopic, .modes, .bans:
-			return client?.isLoggedIn == true && channel?.isActive == true
+			return canActOnChannel
 		case .banExceptions:
 			item.isHidden = client?.supportInfo.isListSupported(.banException) != true
-			return client?.isLoggedIn == true && channel?.isActive == true
+			return canActOnChannel
 		case .inviteExceptions:
 			item.isHidden = client?.supportInfo.isListSupported(.inviteException) != true
-			return client?.isLoggedIn == true && channel?.isActive == true
+			return canActOnChannel
 		case .quiets:
 			item.isHidden = client?.supportInfo.isListSupported(.quiet) != true
-			return client?.isLoggedIn == true && channel?.isActive == true
+			return canActOnChannel
 		default:
 			return true
 		}
@@ -349,7 +361,7 @@ extension MenuActionCoordinator {
 			return channel.isChannel == false || channel.isActive
 		case .disconnect:
 			item.title = ApplicationStrings.disconnect(from: client.networkNameAlt)
-			return client.isConnecting || client.isConnected
+			return MenuServerActionPolicy(client: client).canDisconnect
 		case .terminate:
 			item.title = ApplicationStrings.quitApplication
 			return true

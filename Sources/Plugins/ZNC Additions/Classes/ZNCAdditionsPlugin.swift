@@ -182,7 +182,7 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		var sender = input.sender
 		if let components = IRCHostmask(
 			parsing: hostmask,
-			maximumNicknameLength: Int(client.maximumNicknameLength)
+			maximumNicknameLength: Int(min(client.maximumNicknameLength, UInt(hostmask.utf16.count)))
 		) {
 			guard components.nickname != client.userNickname else { return nil }
 			sender.nickname = components.nickname

@@ -112,10 +112,12 @@ private struct NetworkPickerDetailView: View {
 						OnboardingStrings.NetworkPicker.serverAddressPlaceholder,
 						text: $model.serverAddress
 					)
+					.accessibilityIdentifier("network-address")
 					Text(verbatim: OnboardingStrings.NetworkPicker.portLabel)
 					TextField(OnboardingStrings.NetworkPicker.portPlaceholder, text: $model.serverPort)
 						.frame(width: 58)
 						.monospacedDigit()
+						.accessibilityIdentifier("network-port")
 				}
 			}
 
@@ -141,6 +143,9 @@ private struct NetworkPickerDetailView: View {
 						}
 						Toggle(OnboardingStrings.NetworkPicker.useSASLCheckbox, isOn: $model.usesSASL)
 							.disabled(model.saslIsSupported == false)
+						Text(verbatim: OnboardingStrings.NetworkPicker.accountIdentityHelp)
+							.font(.caption)
+							.foregroundStyle(.secondary)
 
 						if let registrationNote = model.registrationNote {
 							Text(verbatim: registrationNote)

@@ -35,13 +35,10 @@ public nonisolated extension NSString { // nonisolated: pure
 			return NSAttributedString(string: stripIRCEffects)
 		}
 
-		var attributes = LogRendererConfiguration()
-
-		attributes[.preferredFont] = preferredFont
-
-		if let preferredFontColor {
-			attributes[.preferredFontColor] = preferredFontColor
-		}
+		let attributes = LogRendererConfiguration(
+			preferredFont: preferredFont,
+			preferredFontColor: preferredFontColor
+		)
 
 		return LogRenderer.renderBody(asAttributedString: self as String, withAttributes: attributes)
 	}

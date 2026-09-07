@@ -53,39 +53,35 @@ private func makePreviousSessionLine(body: String = "previous") -> LogLine {
 @MainActor
 struct LogLineRenderRequestTests {
 	@Test("A rendered line carries semantic context without markup")
-	func renderCarriesContextIntoResult() throws {
+	func renderCarriesContextIntoResult() {
 		let line = makeLogLine()
-		let context = LogLineRenderContext(
-			networkName: "ExampleNet",
-			inlineMediaEnabled: true,
-			nicknameFormat: "<%n>"
-		)
-		let result = try #require(LogController.renderJob(LogLineRenderRequest(logLine: line, context: context)))
+		let context = LogLineRenderContext(inlineMediaEnabled: true)
+		let result = LogController.renderJob(LogLineRenderRequest(logLine: line, context: context))
 
 		#expect(result.lineNumber == line.uniqueIdentifier)
 		#expect(result.transcriptLine.body.plainText == "hello")
-		#expect(result.transcriptLine.formattedNickname == "<alice>")
+		#expect(result.transcriptLine.nickname == "alice")
 		#expect(result.processesInlineMedia)
 	}
 
 	@Test("A keyword match is represented semantically")
-	func keywordMatchIsAHighlight() throws {
+	func keywordMatchIsAHighlight() {
 		var line = makeLogLine(body: "hello alice")
 		line.highlightKeywords = ["alice"]
-		let result = try #require(LogController.renderJob(
+		let result = LogController.renderJob(
 			LogLineRenderRequest(logLine: line, context: LogLineRenderContext())
-		))
+		)
 
 		#expect(result.isHighlight)
 		#expect(result.transcriptLine.body.runs.contains { $0.traits.contains(.highlighted) })
 	}
 
 	@Test("Inline images only apply to message rows")
-	func inlineMediaOnlyAppliesToMessages() throws {
+	func inlineMediaOnlyAppliesToMessages() {
 		let context = LogLineRenderContext(inlineMediaEnabled: true)
 		let request = LogLineRenderRequest(logLine: makeLogLine(lineType: .topic), context: context)
 
-		#expect(try #require(LogController.renderJob(request)).processesInlineMedia == false)
+		#expect(LogController.renderJob(request).processesInlineMedia == false)
 	}
 
 	@Test("A batch preserves line order")
@@ -119,15 +115,15 @@ struct LogLineRenderRequestTests {
 	}
 
 	@Test("A current-session marker waits for the first live line when replay contains only history")
-	func currentSessionMarkerCanWaitForLiveTraffic() throws {
+	func currentSessionMarkerCanWaitForLiveTraffic() {
 		let historical = makePreviousSessionLine()
 		let current = makeLogLine(body: "current")
-		let historicalResult = try #require(LogController.renderJob(
+		let historicalResult = LogController.renderJob(
 			LogLineRenderRequest(logLine: historical, context: LogLineRenderContext())
-		))
-		let currentResult = try #require(LogController.renderJob(
+		)
+		let currentResult = LogController.renderJob(
 			LogLineRenderRequest(logLine: current, context: LogLineRenderContext())
-		))
+		)
 		var boundary = TranscriptSessionBoundaryState()
 
 		let initialMarker = boundary.prepareInitialHistory([historical], renderedLines: [historicalResult])

@@ -42,14 +42,6 @@ import SwiftUI
 final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandling,
 	PluginPreferencesProviding
 {
-	private static let defaultPreferences = [
-		SystemProfilerFeature.gpuModel.disabledPreferenceKey: true,
-		SystemProfilerFeature.diskInformation.disabledPreferenceKey: true,
-		SystemProfilerFeature.systemUptime.disabledPreferenceKey: true,
-		SystemProfilerFeature.memoryInformation.disabledPreferenceKey: true,
-		SystemProfilerFeature.screenResolution.disabledPreferenceKey: true,
-	]
-
 	private var host: PluginHostContext?
 
 	var pluginPreferencesPane: PluginPreferencesPane? {
@@ -67,14 +59,13 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		host.defaults.register(defaults: Self.defaultPreferences)
+		// Only the five historically default-disabled features enter the registration domain.
+		host.defaults.register(defaults: Dictionary(uniqueKeysWithValues:
+			FirstPartyPluginPreferences.systemProfilerFeatures.filter(\.defaultValue)
+				.map { ($0.name, $0.defaultValue) }))
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
-		handleCommand(invocation)
-	}
-
-	private func handleCommand(_ invocation: PluginCommandInvocation) {
 		guard let channel = invocation.selectedChannel, let host else { return }
 		let command = invocation.command
 		let quiet = invocation.message.caseInsensitiveCompare("quiet") == .orderedSame

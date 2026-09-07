@@ -34,6 +34,16 @@ import GlasstualPluginKit
 
 @MainActor
 extension IRCClient {
+	var canJoinChannels: Bool {
+		isLoggedIn && !isQuitting && !isDisconnecting && !isTerminating
+	}
+
+	func canJoin(_ channel: IRCChannel) -> Bool {
+		canJoinChannels && channel.associatedClient === self
+			&& channelList.contains { $0 === channel }
+			&& channel.isChannel && !channel.isActive && channel.status != .terminated
+	}
+
 	func join(_ channel: IRCChannel) {
 		join(channel, password: nil)
 	}
@@ -43,8 +53,11 @@ extension IRCClient {
 	}
 
 	func join(_ channel: IRCChannel, password: String?) {
-		guard channel.isChannel, channel.isActive == false else { return }
+		guard canJoin(channel) else { return }
+		channel.errorOnLastJoinAttempt = false
 		channel.status = .joining
+		output?.reloadTreeItem(channel)
+		output?.updateTitle(for: channel)
 		forceJoinChannel(channel.name, password: password ?? channel.secretKey)
 	}
 
@@ -63,7 +76,7 @@ extension IRCClient {
 	}
 
 	func forceJoinChannel(_ channelName: String, password: String?) {
-		guard isLoggedIn, channelName.isEmpty == false else { return }
+		guard canJoinChannels, channelName.isEmpty == false else { return }
 		warnIfJoiningChannelsExceedsLimit([channelName])
 		var arguments = [channelName]
 		if let password, password.isEmpty == false {
@@ -73,12 +86,15 @@ extension IRCClient {
 	}
 
 	func joinChannels(_ channels: [IRCChannel]) {
-		guard isLoggedIn, channels.isEmpty == false else { return }
-		let pending = channels.filter { $0.isChannel && $0.isActive == false }
+		guard canJoinChannels, channels.isEmpty == false else { return }
+		let pending = channels.filter { canJoin($0) }
 		guard pending.isEmpty == false else { return }
 		warnIfJoiningChannelsExceedsLimit(pending.map(\.name))
 		for channel in pending {
+			channel.errorOnLastJoinAttempt = false
 			channel.status = .joining
+			output?.reloadTreeItem(channel)
+			output?.updateTitle(for: channel)
 		}
 
 		// One JOIN per line that fits the protocol budget; a single line with
@@ -146,7 +162,7 @@ extension IRCClient {
 	}
 
 	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: [String], passwords: String?) {
-		guard isLoggedIn, channelNames.isEmpty == false else { return }
+		guard canJoinChannels, channelNames.isEmpty == false else { return }
 
 		let selection = channelNames.lazy
 			.filter { self.stringIsChannelName($0) }

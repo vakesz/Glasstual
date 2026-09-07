@@ -42,6 +42,55 @@ import Testing
 
 @MainActor
 struct IRCBatchLimitsTests {
+	@Test("A duplicate active wire token cannot replace its batch or create a parent cycle")
+	func duplicateActiveTokenIsRejected() throws {
+		let client = GLTTestClient()
+		client.enableCapability(.batch)
+		try client.receiveBatch(message("BATCH +outer example/outer", on: client))
+		let original = try #require(client.batchMessages.queuedEntry(withBatchToken: "outer"))
+		try #expect(client.filterBatchCommandIncomingData(message("@batch=outer :a!u@h PRIVMSG #c :one", on: client)))
+
+		try client.receiveBatch(message("@batch=outer BATCH +outer example/replacement", on: client))
+		#expect(client.batchMessages.queuedEntry(withBatchToken: "outer") === original)
+		#expect(original.parentBatchMessage == nil)
+		#expect(original.queuedEntries.count == 1)
+		try client.receiveBatch(message("BATCH -outer", on: client))
+		#expect(client.processedMessages.count == 1)
+		#expect(client.batchMessages.queuedEntries.isEmpty)
+	}
+
+	@Test("Teardown releases real nested wire queues, including a child already closed", arguments: [true, false])
+	func teardownReleasesNestedWireQueues(_ closeChild: Bool) throws {
+		let client = GLTTestClient()
+		client.enableCapability(.batch)
+		try client.receiveBatch(message("BATCH +outer example/outer", on: client))
+		try client.receiveBatch(message("@batch=outer BATCH +inner example/inner", on: client))
+		weak var outer: MessageBatch?
+		weak var inner: MessageBatch?
+		outer = client.batchMessages.queuedEntry(withBatchToken: "outer")
+		inner = client.batchMessages.queuedEntry(withBatchToken: "inner")
+		weak var queuedMessage: Message?
+		do {
+			let direct = try message("@batch=outer :a!u@h PRIVMSG #c :one", on: client)
+			let nested = try message("@batch=inner :a!u@h PRIVMSG #c :two", on: client)
+			queuedMessage = nested
+			#expect(client.filterBatchCommandIncomingData(direct))
+			#expect(client.filterBatchCommandIncomingData(nested))
+		}
+		if closeChild {
+			try client.receiveBatch(message("BATCH -inner", on: client))
+		}
+		#expect(outer?.queuedEntries.count == 2)
+		#expect(inner != nil)
+		#expect(queuedMessage != nil)
+
+		client.batchMessages.dequeueEntries()
+		#expect(outer == nil)
+		#expect(inner == nil)
+		#expect(queuedMessage == nil)
+		#expect(client.processedMessages.count == 0)
+	}
+
 	private func message(_ line: String, on client: IRCClient) throws -> Message {
 		try #require(Message(line: line, on: client))
 	}
@@ -170,7 +219,7 @@ struct IRCClientOfferedCapabilityLimitTests {
 			client.handleCapabilityOrAuthenticationRequest(message)
 		}
 
-		#expect(client.offeredCapabilities.isEmpty)
+		#expect(client.capabilityNegotiation.offeredCapabilities.isEmpty)
 		#expect(client.sentCapabilityCommands.contains("END"))
 	}
 
@@ -181,7 +230,7 @@ struct IRCClientOfferedCapabilityLimitTests {
 
 		client.handleCapabilityOrAuthenticationRequest(message)
 
-		#expect(client.offeredCapabilities.count == 2)
+		#expect(client.capabilityNegotiation.offeredCapabilities.count == 2)
 	}
 }
 

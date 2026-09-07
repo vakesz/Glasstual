@@ -62,6 +62,7 @@ private enum ConnectionEvent: Sendable {
 	case didSendData
 	case serviceInterrupted
 	case serviceInvalidated
+	case inputOverload
 }
 
 public protocol ConnectionDelegate: AnyObject {
@@ -96,6 +97,7 @@ public protocol ConnectionDelegate: AnyObject {
  continuation and hands every callback straight to it. */
 private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtocol {
 	private let events: AsyncStream<ConnectionEvent>.Continuation
+	let inputBudget = ConnectionInputBudget()
 
 	init(events: AsyncStream<ConnectionEvent>.Continuation) {
 		self.events = events
@@ -130,7 +132,11 @@ private final class ConnectionClientShim: NSObject, RemoteConnectionClientProtoc
 	}
 
 	func ircConnectionDidReceive(_ data: Data) {
-		events.yield(.didReceive(data))
+		switch inputBudget.admit(bytes: data.count) {
+		case .accepted: events.yield(.didReceive(data))
+		case .overflow: events.yield(.inputOverload)
+		case .closed: break
+		}
 	}
 
 	func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping TrustDecisionHandler) {
@@ -168,7 +174,10 @@ public final class Connection: NSObject {
 			&& config.connectionShouldValidateCertificateChain
 	}
 
-	public private(set) var isSending = false
+	/// Whether a line has been handed to the host and its write has not yet
+	/// been reported back. It is this side's view of the last send, not the
+	/// host writer's admission or flood-control state.
+	private(set) var isSending = false
 	public private(set) var EOFReceived = false
 	public private(set) var connectedAddress: String?
 	public private(set) var uniqueIdentifier: String
@@ -178,21 +187,42 @@ public final class Connection: NSObject {
 	private nonisolated let eventContinuation: AsyncStream<ConnectionEvent>.Continuation // nonisolated: let
 	private nonisolated let clientShim: ConnectionClientShim // nonisolated: let
 	private var eventTask: Task<Void, Never>?
+	private let closeClock: TimerClock
+	private let makeService: () -> NSXPCConnection
+	private var closeDeadlineTask: Task<Void, Never>?
+	private var terminal = false
 
 	private var serviceConnection: NSXPCConnection?
+	/// The same receiver exported to XPC, also usable by in-process transports.
+	var callbackReceiver: any RemoteConnectionClientProtocol {
+		clientShim
+	}
+
 	private var trustPanel: SFCertificateTrustPanel?
 	/** `trustPanel` is only assigned once the asynchronous certificate export lands, so it
 	 cannot gate re-entry on its own. This latch is set synchronously on the main queue. */
 	private var trustPanelIsPresenting = false
-	private var trustPanelDoNotInvokeCompletionBlock = false
-	private var connectionInvalidatedVoluntarily = false
+	private var trustResponse: TrustDecisionHandler?
 
 	@available(*, unavailable)
 	override public init() {
 		fatalError("init() is unavailable; use init(config:onClient:)")
 	}
 
-	public init(config: IRCConnectionConfig, onClient client: IRCClient) {
+	public convenience init(config: IRCConnectionConfig, onClient client: IRCClient) {
+		self.init(config: config, onClient: client, closeClock: .continuous)
+	}
+
+	init(
+		config: IRCConnectionConfig,
+		onClient client: IRCClient,
+		closeClock: TimerClock,
+		makeService: @escaping () -> NSXPCConnection = {
+			NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
+		}
+	) {
+		self.closeClock = closeClock
+		self.makeService = makeService
 		self.client = client
 		self.config = config
 		uniqueIdentifier = UUID().uuidString
@@ -203,6 +233,8 @@ public final class Connection: NSObject {
 	}
 
 	isolated deinit {
+		closeDeadlineTask?.cancel()
+		serviceConnection?.invalidate()
 		eventContinuation.finish()
 		eventTask?.cancel()
 	}
@@ -210,23 +242,39 @@ public final class Connection: NSObject {
 	/// Drains the host's callbacks on the main actor in the order they arrived.
 	private func startDeliveringEvents() {
 		eventTask = Task { [weak self, events] in
+			var handled = 0
 			for await event in events {
 				guard let self else { return }
+				if case let .didReceive(data) = event {
+					clientShim.inputBudget.consumed(bytes: data.count)
+				}
 				handle(event)
+				handled += 1
+				if handled.isMultiple(of: 64) {
+					await Task.yield()
+				}
 			}
 		}
 	}
 
 	private func handle(_ event: ConnectionEvent) {
+		guard terminal == false, client?.socket === self else {
+			if case let .requestInsecureCertificateTrust(response) = event {
+				response(false)
+			}
+			return
+		}
 		switch event {
 		case let .willConnectToProxy(host, port):
 			client?.ircConnection(self, willConnectToProxy: host, port: port)
 		case let .didConnect(host):
+			guard isDisconnecting == false else { return }
 			connectedAddress = host
 			isConnecting = false
 			isConnected = true
 			client?.ircConnectionDidConnect(self)
 		case let .didSecure(protocolType, cipherSuite):
+			guard isDisconnecting == false else { return }
 			isSecured = true
 			isConnectedWithClientSideCertificate = config.identityClientSideCertificate != nil
 			client?.ircConnectionDidSecureConnection(
@@ -238,8 +286,6 @@ public final class Connection: NSObject {
 			EOFReceived = true
 			client?.ircConnectionDidCloseReadStream(self)
 		case let .didDisconnect(error):
-			connectionInvalidatedVoluntarily = true
-			invalidateProcess()
 			didDisconnect(with: error)
 		case let .didReceive(data):
 			guard let string = convertFromCommonEncoding(data) else { return }
@@ -252,16 +298,23 @@ public final class Connection: NSObject {
 		case .didSendData:
 			isSending = false
 		case .serviceInterrupted:
-			invalidateProcess()
+			handleServiceInvalidation()
 		case .serviceInvalidated:
 			handleServiceInvalidation()
+		case .inputOverload:
+			connectionLogger
+				.error(
+					"IRC input exceeded the bounded application queue; disconnecting without claiming complete delivery"
+				)
+			invalidateProcess()
+			didDisconnect(with: NSError(domain: NSPOSIXErrorDomain, code: Int(ENOBUFS)))
 		}
 	}
 
 	private func handleServiceInvalidation() {
-		serviceConnection = nil
-
-		if isConnecting || isConnected, connectionInvalidatedVoluntarily == false {
+		if isDisconnecting {
+			didDisconnect(with: nil)
+		} else {
 			let error = NSError(
 				domain: connectionErrorDomain,
 				code: Int(ConnectionErrorCode.other.rawValue),
@@ -269,11 +322,9 @@ public final class Connection: NSObject {
 			)
 			didDisconnect(with: error)
 		}
-
-		resetState()
 	}
 
-	public func resetState() {
+	func resetState() {
 		isConnecting = false
 		isConnected = false
 		isConnectedWithClientSideCertificate = false
@@ -283,13 +334,13 @@ public final class Connection: NSObject {
 		certificateTrustWasOverridden = false
 		isSending = false
 		connectedAddress = nil
-		connectionInvalidatedVoluntarily = false
 	}
 
 	private func invalidateProcess() {
 		guard let serviceConnection else { return }
 		connectionLogger.debug("Invalidating IRC connection service")
 		serviceConnection.invalidate()
+		self.serviceConnection = nil
 	}
 
 	private func warmProcessIfNeeded() {
@@ -299,10 +350,10 @@ public final class Connection: NSObject {
 
 	private func warmProcess() {
 		connectionLogger.debug("Warming IRC connection service")
-		let connection = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
+		let connection = makeService()
 		connection.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
 		connection.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
-		connection.exportedObject = clientShim
+		connection.exportedObject = callbackReceiver
 		connection.interruptionHandler = { [weak self] in
 			self?.eventContinuation.yield(.serviceInterrupted)
 			connectionLogger.info("IRC connection service interrupted")
@@ -325,7 +376,8 @@ public final class Connection: NSObject {
 	}
 
 	public func open() {
-		guard isConnecting == false, isConnected == false, isDisconnecting == false else { return }
+		guard terminal == false, client?.isTerminating == false,
+		      isConnecting == false, isConnected == false, isDisconnecting == false else { return }
 		warmProcessIfNeeded()
 		isConnecting = true
 		remoteObjectProxy()?.open(with: ConnectionConfigEnvelope(config: config))
@@ -338,13 +390,26 @@ public final class Connection: NSObject {
 	}
 
 	public func close() {
-		guard isDisconnecting == false else { return }
+		guard terminal == false, isDisconnecting == false else { return }
+		beginCloseDeadline()
+		closeInsecureCertificateTrustPanel()
 
 		if isConnecting || isConnected {
 			isDisconnecting = true
 			remoteObjectProxy()?.close()
 		} else {
-			invalidateProcess()
+			didDisconnect(with: nil)
+		}
+	}
+
+	/// QUIT starts this before its two-second grace period, keeping the total at five seconds.
+	func beginCloseDeadline() {
+		guard terminal == false, closeDeadlineTask == nil else { return }
+		closeDeadlineTask = Task { [weak self, closeClock] in
+			await closeClock.wait(5)
+			guard Task.isCancelled == false, let self else { return }
+			connectionLogger.error("IRC connection did not close within five seconds; invalidating service")
+			didDisconnect(with: nil)
 		}
 	}
 
@@ -407,12 +472,15 @@ public final class Connection: NSObject {
 	}
 
 	private func openInsecureCertificateTrustPanel(_ response: @escaping TrustDecisionHandler) {
-		guard trustPanelIsPresenting == false else {
+		guard terminal == false, isDisconnecting == false, client?.isTerminating == false,
+		      trustPanelIsPresenting == false
+		else {
 			/* The connection host blocks its handshake until this reply arrives. */
 			response(false)
 			return
 		}
 		trustPanelIsPresenting = true
+		trustResponse = response
 
 		/* Reaching this panel means the chain did not validate. Whatever the
 		 user answers, this connection is no longer one whose certificate the
@@ -422,12 +490,23 @@ public final class Connection: NSObject {
 
 		exportSecureConnectionInformation { [weak self] information in
 			Task { @MainActor [weak self] in
-				guard let self else {
-					response(false)
+				/* The host blocks its handshake on this reply, so every path out
+				 of here answers. Only a deallocated connection cannot, and that
+				 has already invalidated the service the handshake belongs to. */
+				guard let self else { return }
+
+				guard terminal == false, isDisconnecting == false, client?.socket === self else {
+					trustPanelIsPresenting = false
+					resolveTrust(false)
 					return
 				}
 
-				presentInsecureCertificateTrustPanel(for: information, response: response)
+				guard trustResponse != nil else {
+					trustPanelIsPresenting = false
+					return
+				}
+
+				presentInsecureCertificateTrustPanel(for: information)
 			}
 		}
 	}
@@ -438,8 +517,7 @@ public final class Connection: NSObject {
 	/// The rebuild happens here rather than in the export callback so that no
 	/// Security.framework object ever leaves the main actor.
 	private func presentInsecureCertificateTrustPanel(
-		for information: SecureConnectionInformation,
-		response: @escaping TrustDecisionHandler
+		for information: SecureConnectionInformation
 	) {
 		guard
 			let policyName = information.policyName,
@@ -449,7 +527,7 @@ public final class Connection: NSObject {
 			)
 		else {
 			trustPanelIsPresenting = false
-			response(false)
+			resolveTrust(false)
 			return
 		}
 
@@ -462,20 +540,12 @@ public final class Connection: NSObject {
 			trust: trust,
 			completion: { [weak self] _, trusted, _ in
 				Task { @MainActor [weak self] in
-					guard let self else {
-						response(false)
-						return
-					}
+					guard let self else { return }
 
 					trustPanel = nil
 					trustPanelIsPresenting = false
 
-					if trustPanelDoNotInvokeCompletionBlock {
-						trustPanelDoNotInvokeCompletionBlock = false
-						return
-					}
-
-					response(trusted)
+					resolveTrust(trusted && terminal == false && isDisconnecting == false)
 				}
 			},
 			context: nil
@@ -483,8 +553,10 @@ public final class Connection: NSObject {
 	}
 
 	private func closeInsecureCertificateTrustPanel() {
+		resolveTrust(false)
+		trustPanelIsPresenting = false
 		guard let trustPanel else { return }
-		trustPanelDoNotInvokeCompletionBlock = true
+		self.trustPanel = nil
 
 		if let parent = trustPanel.sheetParent {
 			parent.endSheet(trustPanel, returnCode: .cancel)
@@ -497,9 +569,12 @@ public final class Connection: NSObject {
 		}
 
 		trustPanel.orderOut(nil)
-		trustPanelDoNotInvokeCompletionBlock = false
-		trustPanelIsPresenting = false
-		self.trustPanel = nil
+	}
+
+	private func resolveTrust(_ trusted: Bool) {
+		let response = trustResponse
+		trustResponse = nil
+		response?(trusted)
 	}
 
 	private func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver) {
@@ -538,7 +613,17 @@ public final class Connection: NSObject {
 	}
 
 	private func didDisconnect(with error: Error?) {
+		guard terminal == false else { return }
+		terminal = true
+		closeDeadlineTask?.cancel()
+		closeDeadlineTask = nil
+		invalidateProcess()
 		closeInsecureCertificateTrustPanel()
-		client?.ircConnection(self, didDisconnectWithError: error)
+		resetState()
+		if client?.socket === self {
+			client?.ircConnection(self, didDisconnectWithError: error)
+		}
+		eventContinuation.finish()
+		eventTask?.cancel()
 	}
 }

@@ -105,7 +105,7 @@ func nativeChannel(_ item: IRCTreeItem?) -> IRCChannel? {
 @objc(TVCMainWindow)
 public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomKeyboardEventResponder {
 	public private(set) var formattingMenu: TextViewIRCFormattingMenu!
-	private var inputContentView: MainWindowTextViewContentView!
+	private(set) var inputContentView: MainWindowTextViewContentView!
 	let presentationModel = MainWindowPresentationModel()
 	private var hostingController: NSHostingController<MainWindowRootView>?
 

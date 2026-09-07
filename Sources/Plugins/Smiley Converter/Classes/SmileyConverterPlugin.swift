@@ -63,6 +63,13 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 
 	private let conversionSnapshot = Mutex(SmileyConversionSnapshot.empty)
 	private var host: PluginHostContext?
+	private var defaultsObservation: PluginDefaultsObservation?
+	private var effectiveSettings: Settings?
+
+	private struct Settings: Equatable {
+		let serviceEnabled: Bool
+		let extraEmoticonsEnabled: Bool
+	}
 
 	private var bundle: Bundle {
 		Bundle(for: SmileyConverterPlugin.self)
@@ -76,20 +83,31 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 	}
 
 	func pluginLoaded(using host: PluginHostContext) {
+		pluginWillUnload()
 		self.host = host
 		rebuildConversionSnapshot()
+		defaultsObservation = PluginDefaultsObservation { [weak self] in
+			self?.rebuildConversionSnapshot()
+		}
 	}
 
-	/** Rebuilds the conversion table from the preferences as they stand now.
+	func pluginWillUnload() {
+		defaultsObservation = nil
+		host = nil
+		effectiveSettings = nil
+		conversionSnapshot.withLock { $0 = .empty }
+	}
 
-	 `@objc` because this plugin is loaded from its bundle at runtime: nothing
-	 that links against Glasstual can see this Swift type, so a selector is the
-	 only way into it. `PluginRuntimeTests` uses that to drive a preference
-	 reload against a live renderer. The preferences pane, which is inside the
-	 bundle, calls it directly. */
-	@objc private func rebuildConversionSnapshot() {
-		let newSnapshot = defaults.bool(forKey: SmileyConverterPreferenceKey.serviceEnabled)
-			? buildConversionSnapshot()
+	private func rebuildConversionSnapshot() {
+		guard host != nil else { return }
+		let settings = Settings(
+			serviceEnabled: defaults.bool(forKey: FirstPartyPluginPreferences.smileyServiceEnabled.name),
+			extraEmoticonsEnabled: defaults.bool(forKey: FirstPartyPluginPreferences.smileyExtraEmoticons.name)
+		)
+		guard settings != effectiveSettings else { return }
+		effectiveSettings = settings
+		let newSnapshot = settings.serviceEnabled
+			? buildConversionSnapshot(extraEmoticonsEnabled: settings.extraEmoticonsEnabled)
 			: SmileyConversionSnapshot.empty
 
 		conversionSnapshot.withLock { snapshot in
@@ -97,9 +115,9 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		}
 	}
 
-	private func buildConversionSnapshot() -> SmileyConversionSnapshot {
+	private func buildConversionSnapshot(extraEmoticonsEnabled: Bool) -> SmileyConversionSnapshot {
 		var table = loadConversionTable(named: "conversionTable")
-		if defaults.bool(forKey: SmileyConverterPreferenceKey.extraEmoticonsEnabled) {
+		if extraEmoticonsEnabled {
 			table.merge(loadConversionTable(named: "conversionTable2")) { _, new in new }
 		}
 		return SmileyConversionSnapshot(conversionTable: table)

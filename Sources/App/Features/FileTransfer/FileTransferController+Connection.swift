@@ -50,6 +50,7 @@ extension FileTransferController {
 	}
 
 	public func open(withPath path: String?) {
+		guard canStart else { return }
 		if self.path == nil {
 			self.path = path
 		}
@@ -60,11 +61,16 @@ extension FileTransferController {
 		}
 
 		if isSender {
+			// A new offer needs a new agreement. SEND answering the current
+			// reverse offer bypasses this entry point and retains its offset.
+			isResume = false
+			processedFilesize = 0
 			openTransfer()
 		} else {
 			/* The resume offset is the size of the file this transfer writes
 			 into, so the destination has to be settled before it is read. */
 			claimDestinationFilename()
+			guard ownedFile != nil else { return }
 			sendTransferResumeRequestToClient()
 		}
 	}
@@ -102,6 +108,7 @@ extension FileTransferController {
 	}
 
 	public func noteIPAddressLookupSucceeded() {
+		guard [.initializing, .mappingListeningPort, .waitingForLocalIPAddress].contains(transferStatus) else { return }
 		if isSender {
 			transferStatus = isReversed ? .waitingForReceiverToAccept : .isListeningAsSender
 		} else if isReversed {
@@ -110,30 +117,50 @@ extension FileTransferController {
 			return
 		}
 		sendTransferRequestToClient()
+		if isSender, isReversed {
+			let sessionID = sessionID
+			offerTimeout?.cancel()
+			offerTimeout = Task { [weak self] in
+				do { try await Task.sleep(for: .seconds(120)) } catch { return }
+				guard let self, self.sessionID == sessionID,
+				      transferStatus == .waitingForReceiverToAccept else { return }
+				close(with: FileTransferFailure(.connectTimeout))
+			}
+		}
 	}
 
 	public func noteIPAddressLookupFailed() {
+		guard [.initializing, .mappingListeningPort, .waitingForLocalIPAddress].contains(transferStatus) else { return }
 		close(with: .sourceIPAddressUnknown)
 	}
 
 	public func didReceiveResumeRequest(_ proposedPosition: UInt64) {
-		guard proposedPosition > 0, currentFilesize >= proposedPosition else { return }
-
-		isResume = true
-		processedFilesize = proposedPosition
-		sendTransferResumeAcceptToClient()
+		guard isSender, proposedPosition > 0, totalFilesize >= proposedPosition,
+		      [.waitingForReceiverToAccept, .isListeningAsSender].contains(transferStatus) else { return }
+		let sessionID = sessionID
+		let transfer = transfer
+		negotiationTask?.cancel()
+		negotiationTask = Task { [weak self] in
+			if let transfer, await transfer.commitResumeOffset(proposedPosition) == false {
+				return
+			}
+			guard !Task.isCancelled, let self, self.sessionID == sessionID else { return }
+			isResume = true
+			processedFilesize = proposedPosition
+			sendTransferResumeAcceptToClient()
+		}
 	}
 
 	public func didReceiveResumeAccept(_ proposedPosition: UInt64) {
 		/* An accept is only ever an answer to a resume this transfer asked for.
 		 One that arrives at any other moment would move the offset into a file
 		 nothing has claimed. */
-		guard transferStatus == .waitingForResumeAccept else { return }
+		guard !isSender, transferStatus == .waitingForResumeAccept else { return }
 
 		resumeRequestTimeout?.cancel()
 		resumeRequestTimeout = nil
 
-		guard currentFilesize == proposedPosition else {
+		guard proposedPosition > 0, proposedPosition <= totalFilesize, processedFilesize == proposedPosition else {
 			close(
 				with: .invalidResumePosition,
 				isFatalError: true
@@ -142,15 +169,21 @@ extension FileTransferController {
 		}
 
 		isResume = true
-		processedFilesize = currentFilesize
 		openTransfer()
 	}
 
 	public func didReceiveSendRequest(_ hostAddress: String, hostPort: UInt16) {
+		guard isSender, isReversed, transferStatus == .waitingForReceiverToAccept else { return }
 		self.hostAddress = hostAddress
 		self.hostPort = hostPort
-		processedFilesize = 0
-		openConnectionToHost()
+		transferStatus = .connecting
+		let negotiation = negotiationTask
+		let sessionID = sessionID
+		Task { [weak self] in
+			await negotiation?.value
+			guard let self, self.sessionID == sessionID, transferStatus == .connecting else { return }
+			openConnectionToHost()
+		}
 	}
 
 	public func sendTransferRequestToClient() {
@@ -169,16 +202,16 @@ extension FileTransferController {
 				client.sendFile(
 					peerNickname,
 					port: 0,
-					filename: filename,
-					filesize: currentFilesize,
+					filename: wireFilename,
+					filesize: totalFilesize,
 					token: transferToken
 				)
 			} else {
 				client.sendFile(
 					peerNickname,
 					port: hostPort,
-					filename: filename,
-					filesize: currentFilesize,
+					filename: wireFilename,
+					filesize: totalFilesize,
 					token: nil
 				)
 			}
@@ -186,7 +219,7 @@ extension FileTransferController {
 			client.sendFile(
 				peerNickname,
 				port: hostPort,
-				filename: filename,
+				filename: wireFilename,
 				filesize: totalFilesize,
 				token: transferToken
 			)
@@ -196,6 +229,9 @@ extension FileTransferController {
 	private func openTransfer() {
 		switch (isSender, isReversed) {
 		case (true, true):
+			closeAndPostNotification(false)
+			resetProperties()
+			transferStatus = .initializing
 			updateIPAddress()
 		case (true, false), (false, true):
 			openConnectionAsServer()
@@ -215,7 +251,7 @@ extension FileTransferController {
 			return
 		}
 
-		guard let filePath = prepareTransferFile() else { return }
+		guard let file = prepareTransferFile() else { return }
 
 		startTransfer(with: transferConfiguration(
 			endpoint: .connect(
@@ -224,7 +260,7 @@ extension FileTransferController {
 				interfaceName: Preferences.FileTransfers.ipAddressInterfaceName.storedValue,
 				timeout: .seconds(FileTransferLimits.connectTimeout)
 			),
-			filePath: filePath
+			file: file
 		))
 		disableSystemSleep()
 	}
@@ -241,23 +277,23 @@ extension FileTransferController {
 			return
 		}
 
-		guard let filePath = prepareTransferFile() else { return }
+		guard let file = prepareTransferFile() else { return }
 
 		startTransfer(with: transferConfiguration(
 			endpoint: .listen(portRange: portRangeStart ... portRangeEnd),
-			filePath: filePath
+			file: file
 		))
 		disableSystemSleep()
 	}
 
 	private func transferConfiguration(
 		endpoint: DCCTransfer.Endpoint,
-		filePath: String
+		file: DCCTransferFile
 	) -> DCCTransfer.Configuration {
 		DCCTransfer.Configuration(
 			role: isSender ? .sender : .receiver,
 			endpoint: endpoint,
-			filePath: filePath,
+			file: file,
 			fileSize: totalFilesize,
 			resumeOffset: processedFilesize,
 			/* Only a reverse DCC names the peer up front. For a plain DCC SEND
@@ -269,17 +305,17 @@ extension FileTransferController {
 	}
 
 	/// The file this transfer reads from, or the one it writes into.
-	private func prepareTransferFile() -> String? {
+	private func prepareTransferFile() -> DCCTransferFile? {
 		if !isSender {
 			claimDestinationFilename()
 		}
 
-		guard let filePath else {
+		guard let ownedFile else {
 			close(with: .sourceFileUnreadable)
 			return nil
 		}
 
-		return filePath
+		return ownedFile
 	}
 
 	/** `XRPortMapper` reports on every mDNSResponder callback, and a NAT-PMP
@@ -325,8 +361,8 @@ extension FileTransferController {
 			if manuallyDetect || detectionMethod == .routerOnly {
 				noteIPAddressLookupFailed()
 			} else {
-				transferCenter.requestIPAddress()
 				transferStatus = .waitingForLocalIPAddress
+				transferCenter.requestIPAddress()
 			}
 			return
 		}
@@ -354,13 +390,30 @@ extension FileTransferController {
 	}
 
 	private func sendTransferResumeRequestToClient() {
-		/* `currentFilesize` is the claimed destination's size, so it is above
-		 zero only when this transfer has already written part of the file. */
-		guard currentFilesize > 0, currentFilesize <= totalFilesize else {
-			openTransfer()
-			return
+		guard let ownedFile else { return }
+		transferStatus = .initializing
+		let sessionID = sessionID
+		let stopping = stopTask
+		negotiationTask = Task { [weak self] in
+			await stopping?.value
+			do {
+				let size = try await ownedFile.size()
+				guard !Task.isCancelled, let self, self.sessionID == sessionID else { return }
+				guard size <= totalFilesize else { close(with: .invalidResumePosition, isFatalError: true); return }
+				processedFilesize = size
+				isResume = false
+				if size == 0 {
+					openTransfer(); return
+				}
+				requestResume(position: size)
+			} catch {
+				guard !Task.isCancelled, let self, self.sessionID == sessionID else { return }
+				close(with: .invalidResumePosition, isFatalError: true)
+			}
 		}
+	}
 
+	private func requestResume(position: UInt64) {
 		resumeRequestTimeout?.cancel()
 		resumeRequestTimeout = Task { [weak self] in
 			do {
@@ -370,14 +423,15 @@ extension FileTransferController {
 			}
 
 			self?.resumeRequestTimeout = nil
-			self?.openTransfer()
+			// A refused resume must not truncate the partial download.
+			self?.close(with: .invalidResumePosition)
 		}
 		transferStatus = .waitingForResumeAccept
 		client?.sendFileResume(
 			peerNickname,
 			port: isReversed ? 0 : hostPort,
-			filename: filename,
-			filesize: currentFilesize,
+			filename: wireFilename,
+			filesize: position,
 			token: isReversed ? transferToken : nil
 		)
 	}
@@ -386,13 +440,14 @@ extension FileTransferController {
 		client?.sendFileResumeAccept(
 			peerNickname,
 			port: isReversed ? 0 : hostPort,
-			filename: filename,
+			filename: wireFilename,
 			filesize: processedFilesize,
 			token: isReversed ? transferToken : nil
 		)
 	}
 
 	private func resetProperties() {
+		completion = nil
 		if !isResume {
 			processedFilesize = 0
 		}

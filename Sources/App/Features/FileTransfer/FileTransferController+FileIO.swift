@@ -54,49 +54,21 @@ extension FileTransferController {
 		reloadStatusInformation()
 	}
 
-	/** Takes the destination this receiver writes into, once.
-
-	 Everything downstream — the resume offset the client proposes, and the
-	 handle `DCCTransfer` seeks in — reads `filePath`, so the name has to settle
-	 before any of it runs. Claiming a free name is also what makes a resume
-	 safe: the only file this transfer will ever append to is the one it took
-	 here, so a partial download can carry on while an unrelated file of the
-	 same name is left alone.
-
-	 A second call is a no-op, which is what lets a stopped transfer be started
-	 again without walking on to yet another name and losing the bytes it
-	 already has. */
+	/// Reserves once with O_EXCL. Retries keep the descriptor and partial bytes;
+	/// the local suffix never changes the filename used in DCC negotiation.
 	func claimDestinationFilename() {
-		guard claimedFilePath == nil else { return }
-
-		setNonexistentFilename()
-		claimedFilePath = filePath
-	}
-
-	/// Moves `filename` on to the next free name in the download folder.
-	///
-	/// A transfer that lands on a name already in use would otherwise overwrite
-	/// somebody's file, so the receiver takes the next free one before the
-	/// transfer opens anything.
-	private func setNonexistentFilename() {
-		guard let directoryPath = path,
-		      var candidatePath = filePath,
-		      FileManager.default.fileExists(atPath: candidatePath)
-		else {
-			return
+		guard ownedFile == nil, let path else { return }
+		do {
+			let url = URL(fileURLWithPath: path).appendingPathComponent(wireFilename)
+			let file = try DCCTransferFile(
+				url: url,
+				receiving: true,
+				accessURL: destinationAccessURL ?? url.deletingLastPathComponent()
+			)
+			ownedFile = file
+			filename = (file.path as NSString).lastPathComponent
+		} catch {
+			close(with: FileTransferFailure(.fileUnwritable))
 		}
-
-		let filenameExtension = (filename as NSString).pathExtension
-		let stem = (filename as NSString).deletingPathExtension
-		var suffix = 1
-		repeat {
-			let candidateName = filenameExtension.isEmpty
-				? "\(stem)_\(suffix)"
-				: "\(stem)_\(suffix).\(filenameExtension)"
-			candidatePath = (directoryPath as NSString).appendingPathComponent(candidateName)
-			suffix += 1
-		} while FileManager.default.fileExists(atPath: candidatePath)
-
-		filename = (candidatePath as NSString).lastPathComponent
 	}
 }

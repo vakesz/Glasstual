@@ -19,21 +19,6 @@ struct LogControllerReactionTests {
 		}.first
 	}
 
-	/** Waits for the controller to finish the work it started on its own.
-
-	 The initial history load is a standalone pipeline job, so draining the
-	 batched chain does not wait for it, and until it has been applied every
-	 printed line is held in the projection's replay buffer. */
-	private func settle(_ controller: LogController, until isReady: () -> Bool) async {
-		for _ in 0 ..< 200 {
-			await controller.drainRenderJobs()
-			if isReady() {
-				return
-			}
-			try? await Task.sleep(for: .milliseconds(10))
-		}
-	}
-
 	@Test("A reaction to a line already on screen is drawn without a history reload")
 	func reactionReachesTheTranscript() async throws {
 		/* The transcript only draws live lines once the initial history load has
@@ -65,7 +50,7 @@ struct LogControllerReactionTests {
 		controller.print(line)
 
 		let transcript = try #require(textView(in: logView.view))
-		await settle(controller) { transcript.string.contains("shipping it") }
+		await controller.drainRenderJobs()
 		try #require(transcript.string.contains("shipping it"))
 
 		try controller.noteReaction(
@@ -73,7 +58,7 @@ struct LogControllerReactionTests {
 			fromNickname: "bob",
 			toMessageIdentifier: #require(line.messageIdentifier)
 		)
-		await settle(controller) { transcript.string.contains("\u{1f44d} 1") }
+		await controller.drainRenderJobs()
 
 		#expect(transcript.string.contains("\u{1f44d} 1"))
 	}

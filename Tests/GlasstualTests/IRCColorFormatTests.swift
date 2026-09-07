@@ -281,6 +281,105 @@ struct IRCColorFormatTests {
 		#expect(cursor.isEmpty)
 	}
 
+	/** The same guarantee for a message that carries formatting.
+
+	 A wrap is measured against the formatted result, which holds the control
+	 codes the attributes injected, while the cursor advances through the plain
+	 source. Mixing the two coordinate systems made a long formatted line
+	 repeat a few words at the seam, or lose them. */
+	@Test("A formatted message splits without duplicating or dropping text")
+	func formattedLinesReassembleIntoTheSource() {
+		let client = GLTTestClient()
+		let words = (0 ..< 240).map { "word\($0)" }.joined(separator: " ")
+		let text = NSMutableAttributedString(string: words)
+		let bold = formatterKey(IRCTextFormatterAttributeName.boldAttributeName)
+		let foreground = formatterKey(IRCTextFormatterAttributeName.foregroundColorAttributeName)
+
+		/* Short alternating runs, so an attribute boundary — and the control
+		 codes that come with it — falls inside every wrapped line. */
+		var location = 0
+		var runIndex = 0
+		while location < text.length {
+			let length = min(31, text.length - location)
+			let range = NSRange(location: location, length: length)
+
+			if runIndex.isMultiple(of: 2) {
+				text.addAttribute(bold, value: true, range: range)
+			} else {
+				text.addAttribute(foreground, value: NSNumber(value: 4), range: range)
+			}
+
+			location += length
+			runIndex += 1
+		}
+
+		var cursor = IRCLineCursor(text)
+		var reassembled = ""
+
+		while true {
+			let before = cursor.length
+			guard let line = cursor.nextLine(forChannel: "#test", on: client, with: .privateMessage) else {
+				break
+			}
+			#expect(cursor.length < before, "a line that consumes nothing never ends the message")
+			reassembled += stripControlCharacters(from: line)
+		}
+
+		#expect(cursor.isEmpty)
+		/* A wrap hands the space it broke at back to the next line, so nothing
+		 is lost and nothing is repeated: the lines are the source, in order. */
+		#expect(reassembled == words)
+	}
+
+	/// Removes the bold and digit-colour control codes this test's attributes
+	/// inject, leaving the source text the line was cut from.
+	private func stripControlCharacters(from line: String) -> String {
+		var result = ""
+		var scalars = Array(line.unicodeScalars)[...]
+
+		while let scalar = scalars.popFirst() {
+			switch Int(scalar.value) {
+			case IRCTextFormatterControlCharacter.bold, IRCTextFormatterControlCharacter.terminator:
+				continue
+			case IRCTextFormatterControlCharacter.colorDigit:
+				scalars = droppingColorArguments(from: scalars)
+			default:
+				result.unicodeScalars.append(scalar)
+			}
+		}
+
+		return result
+	}
+
+	/// A digit colour is up to two digits, optionally followed by a comma and
+	/// up to two more for the background.
+	private func droppingColorArguments(
+		from scalars: ArraySlice<Unicode.Scalar>
+	) -> ArraySlice<Unicode.Scalar> {
+		var scalars = droppingDigits(from: scalars, limit: 2)
+
+		guard scalars.first == "," else { return scalars }
+
+		scalars = scalars.dropFirst()
+
+		return droppingDigits(from: scalars, limit: 2)
+	}
+
+	private func droppingDigits(
+		from scalars: ArraySlice<Unicode.Scalar>,
+		limit: Int
+	) -> ArraySlice<Unicode.Scalar> {
+		var scalars = scalars
+		var dropped = 0
+
+		while dropped < limit, let scalar = scalars.first, scalar.value >= 0x30, scalar.value <= 0x39 {
+			scalars = scalars.dropFirst()
+			dropped += 1
+		}
+
+		return scalars
+	}
+
 	private func controlCharacter(at index: Int, in string: String) -> unichar {
 		(string as NSString).character(at: index)
 	}

@@ -61,19 +61,15 @@ enum IRCNicknameRetryPolicy {
 @MainActor
 public extension IRCClient {
 	func resetCapabilityNegotiation() {
-		capabilities = []
-		capabilityNegotiationIsPaused = false
+		capabilityNegotiation.reset()
 		saslMechanism = nil
 		saslOfferedMechanisms = nil
 		saslScramClient = nil
 		saslIncomingPayload = nil
 		saslTriedMechanisms.removeAll()
+		pendingDeliveries.values.forEach { $0.timeoutTask?.cancel() }
 		pendingDeliveries.removeAll()
-		labelForBatchToken.removeAll()
-		enabledCapabilityNames.removeAll()
 		NotificationCenter.default.post(name: .ircClientCapabilitiesDidChange, object: self)
-		offeredCapabilities.removeAll()
-		pendingCapabilityRequests.removeAll()
 	}
 
 	func receivePing(_ message: Message) {

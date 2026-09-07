@@ -1,0 +1,448 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "apply-settings-and-add-or-update-servers" : {
+      "comment" : "Import preview. What Merge will do, shown under the mode picker.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply the settings in this file and add or update its servers. Keep other servers and settings. Servers being updated will disconnect. A recovery backup is saved first."
+          }
+        }
+      }
+    },
+    "backups-notice" : {
+      "comment" : "Configuration recovery policy, shown in Settings.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The five most recent protected local backups are kept here. They retain connect commands and certificate references so removed servers can be recovered. Keychain passwords and certificate objects are not copied. Folder access is not included."
+          }
+        }
+      }
+    },
+    "configuration" : {
+      "comment" : "Settings section header for configuration export, import and local recovery.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration and recovery"
+          }
+        }
+      }
+    },
+    "configuration-changed-after-preview" : {
+      "comment" : "Error shown when the settings or servers changed between preparing a preview and applying it.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The current configuration changed after this preview was prepared. Cancel and preview the file again. No imported settings were applied."
+          }
+        }
+      }
+    },
+    "configuration-file-exceeds-size-limit" : {
+      "comment" : "Error shown when a configuration file is larger, or more deeply nested, than the importer accepts.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The configuration file exceeds the 16 MB size limit or contains too many nested values. No settings were changed."
+          }
+        }
+      }
+    },
+    "configuration-imported-settings-changed" : {
+      "comment" : "Counts in order: changed preferences, added servers, updated servers, removed servers, ignored keys.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration imported. Settings changed: %1$lld. Servers added: %2$lld; updated: %3$lld; removed: %4$lld. Keys not imported: %5$lld. The recovery backup is available in Settings."
+          }
+        }
+      }
+    },
+    "configuration-snapshot-uses-a-newer-format" : {
+      "comment" : "Error shown when a configuration file was written by a newer version of the application.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This configuration snapshot uses a newer format. Update Glasstual before importing it. No settings were changed."
+          }
+        }
+      }
+    },
+    "configuration-transfer-complete" : {
+      "comment" : "Title of the alert shown after a configuration import or export succeeds.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration transfer complete"
+          }
+        }
+      }
+    },
+    "configuration-transfer-in-progress" : {
+      "comment" : "Error shown when an import or export is started while another one is still running.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A configuration transfer is already in progress."
+          }
+        }
+      }
+    },
+    "configuration-transfer-stopped" : {
+      "comment" : "Title of the alert shown when a configuration import or export fails.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration transfer stopped"
+          }
+        }
+      }
+    },
+    "connect-commands-warning" : {
+      "comment" : "Warning next to an export option that defaults to off. Commands are copied verbatim if the user opts in.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect commands may contain passwords or other private information. Enable this option only if you intend to include every command in the exported file. Keychain passwords and certificate references are never included in portable exports."
+          }
+        }
+      }
+    },
+    "enter-a-valid-whole-number" : {
+      "comment" : "Validation note under a Settings number field that was given something that is not a whole number.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a valid whole number. The saved value has not changed."
+          }
+        }
+      }
+    },
+    "export-configuration" : {
+      "comment" : "Settings button that exports the configuration to a file. The ellipsis marks a button that opens a dialog, so keep it.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Configuration…"
+          }
+        }
+      }
+    },
+    "export-options" : {
+      "comment" : "Title of the sheet that asks what an exported configuration should include.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export configuration"
+          }
+        }
+      }
+    },
+    "export-succeeded" : {
+      "comment" : "Confirmation shown after a configuration file has been written.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The configuration snapshot was exported successfully."
+          }
+        }
+      }
+    },
+    "file-is-not-a-valid-configuration-snapshot" : {
+      "comment" : "Error shown when the chosen file is not a configuration this application wrote.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file is not a valid configuration snapshot. No settings were changed."
+          }
+        }
+      }
+    },
+    "import-configuration" : {
+      "comment" : "Settings button that imports a configuration from a file. The ellipsis marks a button that opens a dialog, so keep it.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Configuration…"
+          }
+        }
+      }
+    },
+    "include-connect-commands" : {
+      "comment" : "Export option. Checkbox that puts each server's connect commands into the exported file.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include connect commands"
+          }
+        }
+      }
+    },
+    "invalid-value" : {
+      "comment" : "%@ is the preference or configuration field name, not its value.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid value or conflicting settings for %@. No settings were changed."
+          }
+        }
+      }
+    },
+    "keys-not-imported" : {
+      "comment" : "Number of unknown or machine-local preference keys not imported. %lld is the count.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keys not imported: %lld"
+          }
+        }
+      }
+    },
+    "legacy-notice" : {
+      "comment" : "Import preview. Note shown for an older, partial configuration file, which can only be merged.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This legacy file contains only selected settings. It can be merged, but cannot be used to restore a complete configuration."
+          }
+        }
+      }
+    },
+    "local-recovery-notice" : {
+      "comment" : "Import preview. What a protected local backup restores that a portable file cannot.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This protected local backup restores original connect commands and certificate references, including for removed servers. Keychain objects stay on this Mac and are not imported. Recovered servers do not connect automatically."
+          }
+        }
+      }
+    },
+    "merge" : {
+      "comment" : "Import mode, and the button that applies it: add to the current configuration.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge"
+          }
+        }
+      }
+    },
+    "mode" : {
+      "comment" : "Label of the picker that chooses between merging and restoring an imported configuration.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import mode"
+          }
+        }
+      }
+    },
+    "passwords-and-certificates-stay-on-this-mac" : {
+      "comment" : "Import preview. What a portable configuration file does and does not carry.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keychain passwords and certificate references are not imported from portable files. Included connect commands replace current commands; omitted commands are kept. Included commands may contain passwords. Imported servers do not connect automatically."
+          }
+        }
+      }
+    },
+    "preferences-changed" : {
+      "comment" : "%lld is the number of preference keys that will change.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings to change: %lld"
+          }
+        }
+      }
+    },
+    "preview-backup" : {
+      "comment" : "Button that shows what restoring one protected local backup would change.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview Recovery"
+          }
+        }
+      }
+    },
+    "preview-title" : {
+      "comment" : "Title of the sheet that shows what importing a configuration would change.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview configuration import"
+          }
+        }
+      }
+    },
+    "restore" : {
+      "comment" : "Import mode, and the button that applies it: replace the current configuration.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore"
+          }
+        }
+      }
+    },
+    "restore-notice" : {
+      "comment" : "Import preview. What Restore will do, shown under the mode picker.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace portable settings and remove servers missing from this snapshot. Changed or removed servers will disconnect. Restore proceeds only after a recovery backup has been saved."
+          }
+        }
+      }
+    },
+    "servers-to-add" : {
+      "comment" : "Import preview heading, followed by a comma separated list of server names.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servers to add"
+          }
+        }
+      }
+    },
+    "servers-to-remove" : {
+      "comment" : "Import preview heading, followed by a comma separated list of server names.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servers to remove"
+          }
+        }
+      }
+    },
+    "servers-to-update" : {
+      "comment" : "Import preview heading, followed by a comma separated list of server names.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servers to update"
+          }
+        }
+      }
+    },
+    "show-backups" : {
+      "comment" : "Button that reveals the newest protected local backup in the Finder.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Backup Folder"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

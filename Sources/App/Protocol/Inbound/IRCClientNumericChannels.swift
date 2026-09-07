@@ -206,8 +206,10 @@ extension IRCClient {
 			printReplyToHiddenCommandResponsesQuery(message)
 		}
 		guard let channel = findChannel(message.params[2]), !channel.channelNamesReceived else { return }
-		for rawName in LineParser.wireTokens(in: message.params[3]) {
-			addName(rawName, to: channel)
+		channel.withMemberPresentationUpdates {
+			for rawName in LineParser.wireTokens(in: message.params[3]) {
+				addName(rawName, to: channel)
+			}
 		}
 	}
 

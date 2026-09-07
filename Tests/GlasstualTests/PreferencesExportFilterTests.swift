@@ -15,82 +15,70 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/// Export used to strip every key that merely *had* a registered default,
-/// which is 118 of the 167 exportable keys -- so an exported plist contained
-/// almost nothing the user had chosen.
-@Suite("Preference export filtering", .serialized)
+/** Export used to strip every key that merely *had* a registered default,
+ which is most of the exportable ones — so an exported plist contained almost
+ nothing the user had chosen. It is now a complete snapshot: what a setting
+ *is*, plus the names deliberately left unset, so a restore can tell "the
+ shipped default" from "the user cleared this". */
+@Suite("Preference export scope", .serialized)
 @MainActor
 struct PreferencesExportFilterTests {
-	private static let key = "ScrollbackMaximumSavedLineCount"
+	private static let key = Preferences.Logging.scrollbackSaveLimit
+
+	private var snapshot: PreferencesArchive {
+		PreferencesTransferStores.live.snapshot(clients: [])
+	}
 
 	private func withRestoredValue(_ body: () -> Void) {
-		let defaults = TextualUserDefaults.container
-		let original = defaults.object(forKey: Self.key)
-		defer {
-			if let original {
-				defaults.set(original, forKey: Self.key)
-			} else {
-				defaults.removeObject(forKey: Self.key)
-			}
-		}
+		let original = Self.key.storedValue
+		defer { Self.key.storedValue = original }
 		body()
 	}
 
 	@Test("A value the user changed is exported")
 	func changedValueIsExported() {
 		withRestoredValue {
-			let registered = TextualPreferences.defaultPreferences()[Self.key]?.integer ?? 0
-			TextualUserDefaults.container.set(registered + 1234, forKey: Self.key)
+			Self.key.value = Self.key.defaultValue + 1234
 
-			let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
-			#expect(exported[Self.key]?.integer == registered + 1234)
+			#expect(snapshot.values[Self.key.name]?.integer == Int(Self.key.defaultValue) + 1234)
+			#expect(snapshot.unset.contains(Self.key.name) == false)
 		}
 	}
 
-	@Test("A value equal to the registered default is not exported")
-	func unchangedValueIsNotExported() {
+	@Test("A value equal to the registered default is exported too")
+	func unchangedValueIsExportedAsWell() {
 		withRestoredValue {
-			guard let registered = TextualPreferences.defaultPreferences()[Self.key] else {
-				Issue.record("\(Self.key) has no registered default")
-				return
-			}
-			TextualUserDefaults.container.set(registered.propertyListObject, forKey: Self.key)
+			Self.key.reset()
 
-			let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
-			#expect(exported[Self.key] == nil)
+			#expect(snapshot.values[Self.key.name] == Self.key.registeredDefault)
+			#expect(snapshot.unset.contains(Self.key.name) == false)
 		}
 	}
 
-	@Test("Without the defaults filter the value is exported either way")
-	func unfilteredExportKeepsDefaults() {
-		withRestoredValue {
-			guard let registered = TextualPreferences.defaultPreferences()[Self.key] else {
-				Issue.record("\(Self.key) has no registered default")
-				return
-			}
-			TextualUserDefaults.container.set(registered.propertyListObject, forKey: Self.key)
+	/// A key that ships with no registered default at all has nothing to fall
+	/// back to, so its absence is what the file has to carry.
+	@Test("A key with nothing written and nothing registered is listed as unset")
+	func unwrittenKeysAreListedAsUnset() {
+		let key = Preferences.FileTransfers.manuallyEnteredIPAddress
+		let original = key.storedValue
+		defer { key.storedValue = original }
+		key.reset()
 
-			let exported = PreferencesImportExport.exportedPreferencesDictionary(false, filterDefaults: false)
-			#expect(exported[Self.key] != nil)
-		}
-	}
-
-	@Test("Comparison is by value, not by presence")
-	func valueMatchesDefaultComparesValues() {
-		#expect(PreferencesImportExport.valueMatchesDefault(42, 42))
-		#expect(PreferencesImportExport.valueMatchesDefault(42, 43) == false)
-		#expect(PreferencesImportExport.valueMatchesDefault("a", "a"))
-		#expect(PreferencesImportExport.valueMatchesDefault(nil, 42) == false)
+		#expect(key.registeredDefault == nil)
+		#expect(snapshot.values[key.name] == nil)
+		#expect(snapshot.unset.contains(key.name))
 	}
 
 	/// The theme key-value store's exclusion entry used the "equal" comparator
 	/// while the real keys carry a store name suffix, so nothing ever matched.
 	@Test("The theme key-value store is excluded from export")
 	func themeKeyValueStoreIsExcluded() {
-		#expect(
-			TextualUserDefaults.keyIsExcludedFromExportImport(
-				"Internal Theme Settings Key-value Store -> Some Theme"
-			)
-		)
+		let name = "Internal Theme Settings Key-value Store -> Some Theme"
+		TextualUserDefaults.container.set(["setting": true], forKey: name)
+		defer { TextualUserDefaults.container.removeObject(forKey: name) }
+
+		#expect(Preferences.isExcludedFromExport(name))
+		#expect(snapshot.values[name] == nil)
+		#expect(snapshot.unset.contains(name) == false)
 	}
 }

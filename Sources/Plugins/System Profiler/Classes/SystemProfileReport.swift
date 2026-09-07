@@ -187,7 +187,7 @@ enum SystemProfileReport {
 
 	static func systemInformation(defaults: UserDefaults) -> String {
 		func enabled(_ feature: SystemProfilerFeature) -> Bool {
-			defaults.bool(forKey: feature.disabledPreferenceKey) == false
+			defaults.bool(forKey: feature.disabledPreference.name) == false
 		}
 
 		var result = SystemProfilerLocalization.string(.BasicLanguage.systemInformationHeading)
@@ -386,9 +386,12 @@ enum SystemProfileInformation {
 		) >
 			0
 		{
-			let nextAddress = region.pri_address + region.pri_size
-			/* A zero-sized region would otherwise leave the address unchanged forever. */
-			guard nextAddress > address else { break }
+			/* The kernel's own numbers, but they still come from outside this
+			 process: an overflowing pair would trap here rather than end the
+			 walk. A zero-sized region would leave the address unchanged
+			 forever, so that ends it too. */
+			let (nextAddress, overflowed) = region.pri_address.addingReportingOverflow(region.pri_size)
+			guard overflowed == false, nextAddress > address else { break }
 			address = nextAddress
 			if region.pri_share_mode == SM_PRIVATE {
 				usage += UInt64(region.pri_private_pages_resident) * UInt64(getpagesize())
@@ -429,9 +432,10 @@ enum SystemProfileInformation {
 			defer { current = item.ifa_next }
 			guard let address = item.ifa_addr, address.pointee.sa_family == UInt8(AF_LINK),
 			      item.ifa_flags & UInt32(IFF_UP | IFF_RUNNING) != 0,
-			      let rawData = item.ifa_data
+			      let rawData = item.ifa_data,
+			      let rawName = item.ifa_name
 			else { continue }
-			let name = String(cString: item.ifa_name)
+			let name = String(cString: rawName)
 			guard name.hasPrefix("lo") == false else { continue }
 			let data = rawData.assumingMemoryBound(to: if_data.self).pointee
 			guard data.ifi_ibytes >= 20_000_000, data.ifi_obytes >= 2_000_000 else { continue }

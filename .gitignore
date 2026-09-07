@@ -13,6 +13,7 @@ DerivedData/
 build/
 Build Results/
 .tmp/
+*.profraw
 .build/
 rule_docs/
 /Generated/Xcode/

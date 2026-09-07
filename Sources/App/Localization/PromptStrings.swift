@@ -287,10 +287,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 			String(localized: .Prompts.viewFiles)
 		}
 
-		static func incompatibleBody(minimumVersion: String) -> String {
-			String(localized: .Prompts.pleaseContactTheDeveloperOfEach(minimumVersion))
-		}
-
 		static func incompatibleTitle(pluginNames: String) -> String {
 			String(localized: .Prompts.versionOfGlasstual(pluginNames))
 		}

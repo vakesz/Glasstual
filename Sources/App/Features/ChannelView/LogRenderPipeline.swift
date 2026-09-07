@@ -29,10 +29,12 @@ typealias LogRenderJob = @Sendable @concurrent () async -> (@MainActor () -> Voi
 /// A job together with the ordering it asked for.
 struct LogRenderSubmission: Sendable {
 	/** A standalone job is applied after everything already submitted, but the
-	 jobs submitted after it do not wait for it. Topic changes, history loads and
-	 scrollback pages are standalone; printed lines are not, because each one has
-	 to reach the document behind the line before it. */
+	 jobs submitted after it do not wait for it. The initial history load is
+	 standalone, so a burst of live lines does not queue behind a database read;
+	 printed lines and scrollback pages are not, because each one has to reach
+	 the document behind the line before it. */
 	var isStandalone: Bool
+	var waitsForAllSubmissions = false
 	var job: LogRenderJob
 }
 
@@ -63,6 +65,7 @@ actor LogRenderPipeline {
 	/// The deliveries that have not been applied yet, so ``stop()`` can reach
 	/// them. A delivery withdraws its own entry as it finishes.
 	private var deliveries: [UUID: Task<Void, Never>] = [:]
+	private var drainWaiters: [UUID: CheckedContinuation<Void, Never>] = [:]
 
 	init() {
 		/* Unbounded on purpose. A dropping policy would silently lose lines
@@ -79,31 +82,38 @@ actor LogRenderPipeline {
 	/** Consumes submissions until the stream finishes. Call once, from a task
 	 the owner keeps: the loop is the pipeline. */
 	func run() async {
-		await withTaskGroup(of: Void.self) { group in
-			var predecessor: Task<Void, Never>?
-			var inFlight = 0
+		await withTaskCancellationHandler {
+			await withTaskGroup(of: Void.self) { group in
+				var predecessor: Task<Void, Never>?
+				var inFlight = 0
 
-			for await submission in stream {
-				if isStopped {
-					break
+				for await submission in stream {
+					if isStopped || Task.isCancelled {
+						break
+					}
+
+					while inFlight >= Self.maximumConcurrentRenders {
+						await group.next()
+						inFlight -= 1
+					}
+					guard isStopped == false, Task.isCancelled == false else { break }
+
+					let predecessors = submission.waitsForAllSubmissions
+						? Array(deliveries.values) : predecessor.map { [$0] } ?? []
+					let delivery = deliver(submission, after: predecessors)
+
+					if submission.isStandalone == false {
+						predecessor = delivery
+					}
+
+					group.addTask { await delivery.value }
+					inFlight += 1
 				}
 
-				while inFlight >= Self.maximumConcurrentRenders {
-					await group.next()
-					inFlight -= 1
-				}
-
-				let delivery = deliver(submission, after: predecessor)
-
-				if submission.isStandalone == false {
-					predecessor = delivery
-				}
-
-				group.addTask { await delivery.value }
-				inFlight += 1
+				await group.waitForAll()
 			}
-
-			await group.waitForAll()
+		} onCancel: {
+			Task { await self.stop() }
 		}
 	}
 
@@ -112,17 +122,23 @@ actor LogRenderPipeline {
 	 pipeline concurrent; waiting afterwards is what keeps it in order. */
 	private func deliver(
 		_ submission: LogRenderSubmission,
-		after predecessor: Task<Void, Never>?
+		after predecessors: [Task<Void, Never>]
 	) -> Task<Void, Never> {
 		let identifier = UUID()
 
 		let delivery = Task { [weak self] in
 			let apply = await submission.job()
 
-			await predecessor?.value
+			for predecessor in predecessors {
+				await predecessor.value
+			}
 
 			if Task.isCancelled == false {
-				await MainActor.run { apply?() }
+				await MainActor.run {
+					if Task.isCancelled == false {
+						apply?()
+					}
+				}
 			}
 
 			await self?.finishDelivery(identifier)
@@ -151,15 +167,47 @@ actor LogRenderPipeline {
 		}
 
 		deliveries.removeAll()
+		let waiters = drainWaiters.values
+		drainWaiters.removeAll()
+		for waiter in waiters {
+			waiter.resume()
+		}
 	}
 
-	/** Waits until every job submitted so far has been applied. Tests use this
+	/** Waits for the ordered lane, not outstanding standalone work. Stopping
+	 the pipeline or cancelling the caller also ends the wait. Tests use this
 	 instead of sleeping; the app has no reason to. */
 	func drain() async {
-		await withCheckedContinuation { continuation in
-			submissions.yield(LogRenderSubmission(isStandalone: false) {
-				{ continuation.resume() }
-			})
+		await waitForSubmissions(includingStandalone: false)
+	}
+
+	/// A fence in the submission stream. Later submissions do not extend this wait.
+	func barrier() async {
+		await waitForSubmissions(includingStandalone: true)
+	}
+
+	private func waitForSubmissions(includingStandalone: Bool) async {
+		let identifier = UUID()
+		await withTaskCancellationHandler {
+			guard isStopped == false, Task.isCancelled == false else { return }
+			await withCheckedContinuation { continuation in
+				drainWaiters[identifier] = continuation
+				let result = submissions.yield(LogRenderSubmission(
+					isStandalone: true,
+					waitsForAllSubmissions: includingStandalone
+				) { [weak self] in
+					{ Task { await self?.finishDrain(identifier) } }
+				})
+				if case .terminated = result {
+					finishDrain(identifier)
+				}
+			}
+		} onCancel: {
+			Task { await self.finishDrain(identifier) }
 		}
+	}
+
+	private func finishDrain(_ identifier: UUID) {
+		drainWaiters.removeValue(forKey: identifier)?.resume()
 	}
 }

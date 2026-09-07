@@ -75,7 +75,7 @@ public nonisolated extension Preferences { // nonisolated: value
 		)
 
 		public static let nicknameColorStyleOverrides = UntypedPreferenceKey(
-			"Nickname Color Style Overrides (v2)"
+			"Nickname Color Style Overrides (v2)", validation: PreferencesPayloadValidation.nicknameColors
 		)
 
 		static let all: [any AnyPreferenceKey] = [
@@ -97,14 +97,23 @@ public nonisolated extension Preferences { // nonisolated: value
 		public static let reloadScrollbackOnLaunch = PreferenceKey("ReloadScrollbackOnLaunch", default: true)
 		public static let loadHistoryLazily = PreferenceKey("Optimizations -> Load History Lazily", default: true)
 
+		/// How many lines a channel keeps on disk. The bounds are the ones the
+		/// field has always enforced, declared here so an import obeys them too.
+		public static let scrollbackSaveRange: ClosedRange<UInt> = 100 ... 50000
+
+		/// How many lines the transcript draws, where zero means "no limit".
+		public static let scrollbackVisibleRange: ClosedRange<UInt> = 100 ... 15000
+
 		public static let scrollbackSaveLimit = PreferenceKey(
 			"ScrollbackMaximumSavedLineCount",
-			default: UInt(15000)
+			default: UInt(15000),
+			validation: { Self.scrollbackSaveRange.contains($0) }
 		)
 
 		public static let scrollbackVisibleLimit = PreferenceKey(
 			"ScrollbackMaximumVisibleLineCount",
-			default: UInt(0)
+			default: UInt(0),
+			validation: { $0 == 0 || Self.scrollbackVisibleRange.contains($0) }
 		)
 
 		/// A security-scoped bookmark for the folder the user picked; useless in

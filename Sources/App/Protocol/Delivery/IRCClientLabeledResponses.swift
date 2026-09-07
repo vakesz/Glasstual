@@ -40,6 +40,7 @@ import Foundation
 
 enum IRCLabeledResponsePolicy {
 	static let timeoutInterval: TimeInterval = 30
+	static let maximumPendingDeliveries = 512
 
 	static func responseKind(command: String, commandNumeric: UInt) -> ResponseKind {
 		if command.caseInsensitiveCompare("FAIL") == .orderedSame {
@@ -97,7 +98,8 @@ public extension IRCClient {
 	}
 
 	func registerPendingDelivery(for channel: IRCChannel?) -> String? {
-		guard labeledResponseTrackingEnabled() else { return nil }
+		guard labeledResponseTrackingEnabled(),
+		      pendingDeliveries.count < IRCLabeledResponsePolicy.maximumPendingDeliveries else { return nil }
 		let label = nextMessageLabel()
 		let delivery = LabeledDelivery()
 		delivery.label = label
@@ -143,6 +145,9 @@ public extension IRCClient {
 		/* Without this the table grows by one entry per outgoing message for the
 		 whole session, and a server reusing a stale label would keep matching it. */
 		pendingDeliveries.removeValue(forKey: label)
+		for batch in batchMessages.queuedEntries.values where batch.responseLabel == label {
+			batch.responseLabel = nil
+		}
 		guard let lineNumber = delivery.lineNumber else { return }
 
 		delivery.channel?.presentation?.updateDeliveryState(
@@ -158,13 +163,13 @@ public extension IRCClient {
 		let command = message.command
 
 		if command.caseInsensitiveCompare("BATCH") == .orderedSame {
-			resolveLabeledBatchBoundary(message)
 			return false
 		}
 
 		var label = message.messageTags?["label"]
-		if label?.isEmpty ?? true, let batchToken = message.batchToken, !batchToken.isEmpty {
-			label = labelForBatchToken[batchToken]
+		let batch = message.parentBatchMessage?.labeledResponseBatch
+		if label?.isEmpty ?? true {
+			label = batch?.responseLabel
 		}
 		guard
 			let label,
@@ -177,7 +182,23 @@ public extension IRCClient {
 			return false
 		}
 
-		switch IRCLabeledResponsePolicy.responseKind(command: command, commandNumeric: message.commandNumeric) {
+		let kind = IRCLabeledResponsePolicy.responseKind(command: command, commandNumeric: message.commandNumeric)
+		if let batch, batch.responseLabel == label {
+			switch kind {
+			case .failure:
+				batch.deliveryState = .failed
+				batch.deliveryFailureReason = message.params.last
+			case .echo:
+				batch.deliveryMessageIdentifier = message.messageIdentifier
+			case .acknowledgement:
+				break
+			case .unrelated:
+				return false
+			}
+			return true
+		}
+
+		switch kind {
 		case .failure:
 			resolveDelivery(withLabel: label, state: .failed, messageIdentifier: nil, reason: message.params.last)
 			return true
@@ -201,19 +222,5 @@ public extension IRCClient {
 	/// removed, so a resolved or unknown label reports `.none`.
 	func deliveryState(forLabel label: String) -> LogLineDeliveryState {
 		pendingDeliveries[label]?.state ?? .none
-	}
-}
-
-private extension IRCClient {
-	func resolveLabeledBatchBoundary(_ message: Message) {
-		guard let reference = message.params.first else { return }
-		if reference.hasPrefix("+"), let label = message.messageTags?["label"], !label.isEmpty {
-			labelForBatchToken[String(reference.dropFirst())] = label
-		} else if reference.hasPrefix("-") {
-			let token = String(reference.dropFirst())
-			if let label = labelForBatchToken.removeValue(forKey: token) {
-				resolveDelivery(withLabel: label, state: .delivered, messageIdentifier: nil, reason: nil)
-			}
-		}
 	}
 }

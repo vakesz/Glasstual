@@ -48,9 +48,9 @@ public extension IRCClient {
 	}
 
 	func closeLogFile() {
+		endLogSession()
 		logFile?.close()
-		/* Leaving the handle in place made the lazy re-creation below unreachable, so
-		 every later write went to a closed logger. */
+		// The shared file-command stream retains the pending banner and close.
 		logFile = nil
 	}
 

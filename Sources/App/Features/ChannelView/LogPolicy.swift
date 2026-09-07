@@ -148,7 +148,7 @@ public final class LogPolicy: NSObject {
 		}
 
 		let scheme = url.scheme?.lowercased()
-		if scheme == "http" || scheme == "https" || scheme == "glasstual" {
+		if scheme == "http" || scheme == "https" || scheme == "glasstual" || scheme == "textual" {
 			OpenLink.open(url: url, inBackground: openInBackground)
 			return
 		}

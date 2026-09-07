@@ -38,6 +38,27 @@ private let connectionLifecycleLogger = Logger(
 	category: "ConnectionLifecycle"
 )
 
+struct PendingIRCEndpoint {
+	enum Reason {
+		case stsUpgrade
+		case serverRedirect
+		case userCommand
+	}
+
+	let host: String
+	let port: UInt16
+	let origin: Server?
+	let reason: Reason
+
+	var credentialEndpoint: Server? {
+		// Only STS carries endpoint credentials across a reconnect. Redirects
+		// and explicit /conn targets do not inherit another endpoint's PASS.
+		guard reason == .stsUpgrade,
+		      let origin, origin.serverAddress.caseInsensitiveCompare(host) == .orderedSame else { return nil }
+		return origin
+	}
+}
+
 @MainActor
 public extension IRCClient {
 	func connect() {
@@ -49,6 +70,7 @@ public extension IRCClient {
 	}
 
 	func connect(_ mode: IRCClientConnectMode, bypassProxy: Bool) {
+		guard isTerminating == false else { return }
 		guard isConnecting == false, isConnected == false, isQuitting == false, isDisconnecting == false else {
 			return
 		}
@@ -56,39 +78,7 @@ public extension IRCClient {
 			connectionLifecycleLogger.info("Refusing to connect because the system is sleeping")
 			return
 		}
-		let servers = config.serverList
-		guard servers.isEmpty == false else {
-			printDebugInformation(toConsole: IRCConnectionStrings.noConfiguredServers)
-			return
-		}
-
-		var serverAddress = temporaryServerAddressOverride ?? ""
-		var serverPort = temporaryServerPortOverride > 0 ? temporaryServerPortOverride : UInt16(6667)
-		var prefersSecuredConnection = false
-		if (serverAddress as NSString).isValidInternetAddress == false {
-			let nextIndex = lastServerSelected == UInt(NSNotFound) ? 0 : (lastServerSelected + 1) % UInt(servers.count)
-			lastServerSelected = nextIndex
-			let selectedServer = servers[Int(nextIndex)]
-			serverAddress = selectedServer.serverAddress
-			serverPort = selectedServer.serverPort
-			prefersSecuredConnection = selectedServer.prefersSecuredConnection
-			server = selectedServer
-		}
-		temporaryServerAddressOverride = nil
-		temporaryServerPortOverride = 0
-
-		if let enforced = STSPolicyStore.shared.enforcedEndpoint(forHost: serverAddress) {
-			if enforced.port != serverPort || prefersSecuredConnection == false {
-				printDebugInformation(toConsole: IRCTransportSecurityStrings.enforcedPolicy(port: enforced.port))
-			}
-			serverPort = enforced.port
-			prefersSecuredConnection = true
-		}
-		if forceSecuredConnectionOnNextConnect {
-			forceSecuredConnectionOnNextConnect = false
-			prefersSecuredConnection = true
-		}
-
+		guard var socketConfig = takeConnectionEndpoint() else { return }
 		connectType = mode
 		disconnectType = .normal
 		isConnecting = true
@@ -103,15 +93,14 @@ public extension IRCClient {
 		if config.showConnectionPrefersIPv4Warning {
 			printDebugInformation(IRCConnectionStrings.legacyIPv4PreferenceNotice)
 		}
-		printDebugInformation(toConsole: IRCConnectionStrings.connecting(host: serverAddress, port: serverPort))
+		printDebugInformation(toConsole: IRCConnectionStrings.connecting(
+			host: socketConfig.serverAddress,
+			port: socketConfig.serverPort
+		))
 		NotificationCenter.default.post(name: .IRCClientWillConnect, object: self)
 
-		var socketConfig = IRCConnectionConfig()
 		socketConfig.addressType = config.addressType
-		socketConfig.serverAddress = serverAddress
-		socketConfig.serverPort = serverPort
 		socketConfig.cipherSuites = config.cipherSuites
-		socketConfig.connectionPrefersSecuredConnection = prefersSecuredConnection
 		socketConfig.connectionShouldValidateCertificateChain = config.validateServerCertificateChain
 		socketConfig.identityClientSideCertificate = config.identityClientSideCertificate
 		if bypassProxy == false {
@@ -129,6 +118,41 @@ public extension IRCClient {
 		let connection = Connection(config: socketConfig, onClient: self)
 		socket = connection
 		connection.open()
+	}
+
+	internal func takeConnectionEndpoint() -> IRCConnectionConfig? {
+		let servers = config.serverList
+		guard servers.isEmpty == false else {
+			printDebugInformation(toConsole: IRCConnectionStrings.noConfiguredServers)
+			return nil
+		}
+		let endpoint = pendingEndpoint
+		pendingEndpoint = nil
+		var host = endpoint?.host ?? ""
+		var port = endpoint?.port ?? IRCConnectionDefaults.serverPort
+		var secured = endpoint?.reason == .stsUpgrade
+		server = endpoint?.credentialEndpoint
+		if (host as NSString).isValidInternetAddress == false {
+			let nextIndex = lastServerSelected == UInt(NSNotFound) ? 0 : (lastServerSelected + 1) % UInt(servers.count)
+			lastServerSelected = nextIndex
+			let selected = servers[Int(nextIndex)]
+			host = selected.serverAddress
+			port = selected.serverPort
+			secured = selected.prefersSecuredConnection
+			server = selected
+		}
+		if let enforced = STSPolicyStore.shared.enforcedEndpoint(forHost: host) {
+			if enforced.port != port || secured == false {
+				printDebugInformation(toConsole: IRCTransportSecurityStrings.enforcedPolicy(port: enforced.port))
+			}
+			port = enforced.port
+			secured = true
+		}
+		var connectionConfig = IRCConnectionConfig()
+		connectionConfig.serverAddress = host
+		connectionConfig.serverPort = port
+		connectionConfig.connectionPrefersSecuredConnection = secured
+		return connectionConfig
 	}
 
 	func autoConnect(withDelay delay: UInt, afterWakeUp: Bool) {
@@ -163,9 +187,11 @@ public extension IRCClient {
 	}
 
 	func disconnect() {
+		resetSASLNegotiation()
 		cancelDelayedDisconnect()
 		guard isConnecting || isConnected, let socket else { return }
 		isDisconnecting = true
+		output?.updateTitle(for: self)
 		NotificationCenter.default.post(name: .IRCClientWillDisconnect, object: self)
 		socket.close()
 	}
@@ -179,7 +205,9 @@ public extension IRCClient {
 
 	func quit(withComment comment: String) {
 		guard isConnecting || isConnected, isQuitting == false, isDisconnecting == false else { return }
+		resetSASLNegotiation()
 		isQuitting = true
+		socket?.beginCloseDeadline()
 		cancelReconnect()
 		NotificationCenter.default.post(name: .IRCClientWillSendQuit, object: self)
 		socket?.clearSendQueue()
@@ -191,10 +219,10 @@ public extension IRCClient {
 
 		/* Held so that a reconnect inside the two-second window cannot have this
 		 stale block tear down the *new* session. */
-		pendingDisconnectTask = Task { [weak self] in
+		pendingDisconnectTask = Task { [weak self, weak socket] in
 			try? await Task.sleep(for: .seconds(2))
 
-			guard Task.isCancelled == false, let self else { return }
+			guard Task.isCancelled == false, let self, self.socket === socket else { return }
 
 			pendingDisconnectTask = nil
 			disconnect()
@@ -211,7 +239,22 @@ public extension IRCClient {
 		pendingConnectionTask = nil
 	}
 
+	func cancelPendingSessionTasks() {
+		resetSASLNegotiation()
+		cancelScheduledConnection()
+		cancelConnectCommandSettling()
+		postRegistrationAutoJoinTask?.cancel()
+		postRegistrationAutoJoinTask = nil
+		trackedUserPopulationTask?.cancel()
+		trackedUserPopulationTask = nil
+		rejoinTasks.values.forEach { $0.cancel() }
+		rejoinTasks.removeAll()
+		typingPauseTasks.values.forEach { $0.cancel() }
+		typingPauseTasks.removeAll()
+	}
+
 	func cancelReconnect() {
+		cancelScheduledConnection()
 		reconnectEnabled = false
 		reconnectEnabledBecauseOfSleepMode = false
 		stopReconnectTimer()
@@ -261,6 +304,7 @@ public extension IRCClient {
 
 	private func scheduleConnection(after delay: UInt, action: @escaping @MainActor () -> Void) {
 		cancelScheduledConnection()
+		guard isTerminating == false else { return }
 
 		guard delay > 0 else {
 			action()

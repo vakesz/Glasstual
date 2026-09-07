@@ -25,6 +25,15 @@ struct StringCatalogStructureTests {
 		}
 	}
 
+	@Test("Every entry opts into symbol generation or is manually extracted")
+	func entriesAreEligibleForSymbolGeneration() throws {
+		for catalog in try StringCatalog.all() {
+			for (key, entry) in catalog.strings {
+				#expect(entry.generatesSymbol ?? (entry.extractionState == "manual"), "\(catalog.name):\(key)")
+			}
+		}
+	}
+
 	/// A key whose generated symbol collides with another key's is silently
 	/// unreachable from Swift, so uniqueness is the property that matters
 	/// rather than the spelling of any one key.
@@ -69,28 +78,56 @@ struct StringCatalogStructureTests {
 		}
 	}
 
-	/// A gap in the positional specifiers ("%1$@ %3$@") drops an argument at
-	/// runtime, and a plural form that disagrees with its siblings changes
-	/// the generated function's arity depending on the count.
-	@Test("Placeholders are contiguous and agree across plural forms")
+	@Test("Every supplied translation preserves argument positions and types")
 	func placeholdersAreConsistent() throws {
 		for catalog in try StringCatalog.all() {
 			for (key, entry) in catalog.strings {
-				guard let english = entry.localizations["en"] else { continue }
-				var shapes: Set<String> = []
-				for unit in english.stringUnits {
-					let indices = try StringCatalog.positionalIndices(in: unit.value)
-					if let highest = indices.max() {
+				let english = try #require(entry.localizations[catalog.sourceLanguage], "\(catalog.name):\(key)")
+				let source = try #require(english.stringUnits.first, "\(catalog.name):\(key)")
+				let shape = try StringCatalog.placeholderShape(of: source.value)
+				for (language, localization) in entry.localizations {
+					#expect(localization.stringUnits.isEmpty == false, "\(catalog.name):\(key):\(language)")
+					for unit in localization.stringUnits {
 						#expect(
-							indices == Set(1 ... highest),
-							"\(catalog.name):\(key) skips a positional argument"
+							try StringCatalog.placeholderShape(of: unit.value) == shape,
+							"\(catalog.name):\(key):\(language) changes the argument contract: \(unit.value)"
 						)
 					}
-					try shapes.insert(StringCatalog.placeholderShape(of: unit.value))
 				}
-				#expect(shapes.count <= 1, "\(catalog.name):\(key) varies its placeholders by plural form")
 			}
 		}
+	}
+
+	@Test("Placeholder comparison permits reordering, repetition and formatting, not type changes")
+	func placeholderFixtures() throws {
+		#expect(try StringCatalog.placeholderShape(of: "%@ %lld") == StringCatalog
+			.placeholderShape(of: "%2$lld %1$@ %1$@"))
+		#expect(try StringCatalog.placeholderShape(of: "%d %%") == StringCatalog.placeholderShape(of: "%1$03i"))
+		#expect(try StringCatalog.placeholderShape(of: "%@") != StringCatalog.placeholderShape(of: "%d"))
+		#expect(throws: (any Error).self) { try StringCatalog.placeholderShape(of: "%1$@ %3$@") }
+		#expect(throws: (any Error).self) { try StringCatalog.placeholderShape(of: "%1$@ %1$d") }
+		#expect(throws: (any Error).self) { try StringCatalog.placeholderShape(of: "%1$@ %@") }
+	}
+
+	@Test("Device and plural variations are traversed recursively")
+	func recursiveVariationFixture() throws {
+		let data = Data("""
+		{"variations":{"device":{"mac":{"variations":{"plural":{
+		  "one":{"stringUnit":{"state":"translated","value":"%d item"}},
+		  "other":{"stringUnit":{"state":"translated","value":"%d items"}}
+		}}}}}}
+		""".utf8)
+		let localization = try JSONDecoder().decode(StringCatalog.Localization.self, from: data)
+		#expect(localization.stringUnits.map(\.value).sorted() == ["%d item", "%d items"])
+	}
+
+	@Test("A missing or empty source inventory fails instead of passing vacuously")
+	func missingInventoryFixture() throws {
+		let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+		#expect(throws: (any Error).self) { try StringCatalog.all(in: directory) }
+		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
+		defer { try? FileManager.default.removeItem(at: directory) }
+		#expect(throws: (any Error).self) { try StringCatalog.all(in: directory) }
 	}
 
 	/// The migration from the legacy `.strings` tables left keys named after
@@ -134,25 +171,19 @@ private struct StringCatalog: Decodable {
 	struct Entry: Decodable {
 		var comment: String?
 		var extractionState: String?
+		var generatesSymbol: Bool?
 		var localizations: [String: Localization] = [:]
 	}
 
 	struct Localization: Decodable {
 		var stringUnit: StringUnit?
-		var variations: Variations?
+		var variations: [String: [String: Localization]]?
 
-		/// Every English spelling of the entry: one, or one per plural form.
 		var stringUnits: [StringUnit] {
-			if let stringUnit {
-				return [stringUnit]
+			(stringUnit.map { [$0] } ?? []) + (variations ?? [:]).values.flatMap {
+				$0.values.flatMap(\.stringUnits)
 			}
-			return (variations?.plural ?? [:]).keys.sorted().compactMap { variations?.plural?[$0]?.stringUnit }
 		}
-	}
-
-	struct Variations: Decodable {
-		var plural: [String: Localization]?
-		var device: [String: Localization]?
 	}
 
 	struct StringUnit: Decodable {
@@ -160,14 +191,14 @@ private struct StringCatalog: Decodable {
 		let value: String
 	}
 
-	static func all() throws -> [StringCatalog] {
-		let sourcesURL = URL(fileURLWithPath: #filePath)
+	static func all(in directory: URL? = nil) throws -> [StringCatalog] {
+		let sourcesURL = directory ?? URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
 			.appending(path: "Sources")
 		guard let walker = FileManager.default.enumerator(at: sourcesURL, includingPropertiesForKeys: nil) else {
-			return []
+			throw ContractError.missingCatalogs
 		}
 
 		var catalogs: [StringCatalog] = []
@@ -176,6 +207,7 @@ private struct StringCatalog: Decodable {
 			catalog.name = url.deletingPathExtension().lastPathComponent
 			catalogs.append(catalog)
 		}
+		guard catalogs.isEmpty == false else { throw ContractError.missingCatalogs }
 		return catalogs.sorted { $0.name < $1.name }
 	}
 
@@ -192,33 +224,47 @@ private struct StringCatalog: Decodable {
 		return first.isLetter ? first.lowercased() + joined.dropFirst() : "_" + joined
 	}
 
-	/** Both helpers let a pattern that failed to compile throw. `try?` here made
-	 a malformed pattern return an empty index set and an empty shape, which
-	 reads exactly like a catalogue with nothing wrong in it, so the caller's
-	 assertions would have checked nothing. */
-	static func positionalIndices(in value: String) throws -> Set<Int> {
-		var indices: Set<Int> = []
-		let pattern = try NSRegularExpression(pattern: #"%(\d+)\$"#)
-		let range = NSRange(value.startIndex ..< value.endIndex, in: value)
-		pattern.enumerateMatches(in: value, range: range) { match, _, _ in
-			guard let match, let digits = Range(match.range(at: 1), in: value) else { return }
-			indices.insert(Int(value[digits]) ?? 0)
-		}
-		return indices
-	}
-
-	/// The specifiers a value uses, in order, ignoring the surrounding text.
+	/// Compare argument slots, not textual order or presentation flags. A
+	/// translation can repeat an argument but cannot change its ABI type.
 	static func placeholderShape(of value: String) throws -> String {
 		let pattern = try NSRegularExpression(
-			pattern: #"%(\d+\$)?[-+ #0]*[\d.*]*(hh|h|ll|l|q|j|z|t|L)?[@diouxXeEfgGaAcsp]"#
+			pattern: #"%%|%(?:(\d+)\$)?[-+ #0]*(?:\d+)?(?:\.\d+)?(hh|h|ll|l|q|j|z|t|L)?([@diouxXeEfgGaAcsp])"#
 		)
 		let range = NSRange(value.startIndex ..< value.endIndex, in: value)
-		var specifiers: [String] = []
-		pattern.enumerateMatches(in: value, range: range) { match, _, _ in
-			guard let match, let found = Range(match.range, in: value) else { return }
-			specifiers.append(String(value[found]))
+		var slots: [Int: String] = [:]
+		var nextIndex = 1
+		var positional: Bool?
+		for match in pattern.matches(in: value, range: range) {
+			let token = (value as NSString).substring(with: match.range)
+			if token == "%%" {
+				continue
+			}
+			let explicit = match.range(at: 1).location != NSNotFound
+			guard positional == nil || positional == explicit else { throw ContractError.mixedPositions }
+			positional = explicit
+			let index = explicit ? Int((value as NSString).substring(with: match.range(at: 1))) ?? 0 : nextIndex
+			nextIndex += 1
+			let length = match.range(at: 2).location == NSNotFound ? "" : (value as NSString)
+				.substring(with: match.range(at: 2))
+			let conversion = (value as NSString).substring(with: match.range(at: 3))
+			let kind = switch conversion {
+			case "d", "i": "d"
+			case "o", "u", "x", "X": "u"
+			case "e", "E", "f", "g", "G", "a", "A": "f"
+			default: conversion
+			}
+			let type = length + kind
+			guard slots[index] == nil || slots[index] == type else { throw ContractError.conflictingTypes }
+			slots[index] = type
 		}
-		return specifiers.joined(separator: " ")
+		if let highest = slots.keys.max() {
+			guard highest > 0, Set(slots.keys) == Set(1 ... highest) else { throw ContractError.missingPosition }
+		}
+		return slots.keys.sorted().map { "\($0):\(slots[$0] ?? "")" }.joined(separator: " ")
+	}
+
+	private enum ContractError: Error {
+		case mixedPositions, conflictingTypes, missingPosition, missingCatalogs
 	}
 
 	static func words(in text: String) -> Set<String> {

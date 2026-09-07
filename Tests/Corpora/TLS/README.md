@@ -6,9 +6,13 @@ that `AsyncCertificateValidationLoopbackTests` can stand up a TLS listener on
 chain exercises the async certificate validator: the system will not trust it,
 the failure is recoverable, and the service asks the application what to do.
 
+`Tests/E2EHarness`'s loopback peer serves the same identity for the TLS E2E
+fixtures, resolving it as `../TLS/LoopbackTestIdentity.p12` from the directory
+holding `E2E_FIXTURE`.
+
 It is not a secret. The passphrase is `glasstual`, it is checked in on purpose,
-it names no host anyone owns, and nothing outside the test bundle loads it — the
-test imports it with `kSecImportToMemoryOnly`, so it never reaches a keychain.
+and it names no host anyone owns. Only the test bundle and the E2E harness load
+it, both with `kSecImportToMemoryOnly`, so it never reaches a keychain.
 
 Regenerate it with:
 

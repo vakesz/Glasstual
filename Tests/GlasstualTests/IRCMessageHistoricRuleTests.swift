@@ -216,4 +216,46 @@ struct IRCMessageHistoricRuleTests {
 
 		#expect(abs(client.lastMessageServerTime - sentAt.timeIntervalSince1970) < 1)
 	}
+
+	/** A bouncer's Unix stamp is server-controlled text, and one that is not a
+	 time has to be refused rather than believed.
+
+	 An unbounded `Double` is a `Date` far outside anything a clock can hold,
+	 and every later narrowing of it — the resume point the reconnect sends, the
+	 line numbers the transcript stores — traps on the conversion. */
+	@Test(
+		"A Unix stamp that cannot be a time is ignored",
+		arguments: [
+			String(repeating: "9", count: 40),
+			"1e400",
+			"inf",
+			"nan",
+			"100000000000.1",
+			"",
+			".",
+		]
+	)
+	func implausibleUnixStampIsIgnored(_ tag: String) throws {
+		let client = historicRuleClient()
+		let message = try #require(Message(line: "@time=\(tag) :mara!u@h PRIVMSG #chat :hi", on: client))
+
+		#expect(message.hasServerTime == false)
+		#expect(message.isHistoric == false)
+		#expect(message.receivedAt.timeIntervalSince1970.isFinite)
+		#expect(Int64(exactly: message.receivedAt.timeIntervalSince1970.rounded()) != nil)
+	}
+
+	/// The ceiling only rejects what cannot be a Unix time in seconds, which is
+	/// how the tag has always been read.
+	@Test("A plausible Unix stamp is still read", arguments: [1_700_000_000.0, 946_684_800.0])
+	func plausibleUnixStampIsRead(_ seconds: TimeInterval) throws {
+		let client = historicRuleClient()
+		let message = try #require(Message(
+			line: "@time=\(Int(seconds)) :mara!u@h PRIVMSG #chat :hi",
+			on: client
+		))
+
+		#expect(message.hasServerTime)
+		#expect(message.receivedAt.timeIntervalSince1970 == seconds)
+	}
 }
