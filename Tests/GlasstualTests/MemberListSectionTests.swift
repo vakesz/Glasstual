@@ -36,8 +36,9 @@
  *
  *********************************************************************** */
 
-import Foundation
+import AppKit
 @testable import Glasstual
+import GlasstualPluginKit
 import Testing
 
 @MainActor
@@ -45,18 +46,20 @@ import Testing
 struct MemberListSectionTests {
 	private let client: GLTTestClient
 	private let memberList: MemberList
-	private let controller: IRCChannelMemberListController
+	private let channel: IRCChannel
 
 	init() {
 		let client = GLTTestClient()
 		let memberList = MemberList()
 
-		let controller = memberList.contentController
-		controller.replaceContents([])
+		let channel = IRCChannel(config: ChannelConfig(channelName: "#members"))
+		channel.associatedClient = client
+		channel.activate()
+		memberList.assign(to: channel)
 
 		self.client = client
 		self.memberList = memberList
-		self.controller = controller
+		self.channel = channel
 	}
 
 	@Test("Members of a single rank are shown as a flat list")
@@ -64,8 +67,8 @@ struct MemberListSectionTests {
 		insert(makeMember(named: "alice"), at: 0)
 		insert(makeMember(named: "bob"), at: 1)
 
-		#expect(memberList.numberOfRows == 2)
-		#expect(memberList.isGroupRow(0) == false)
+		#expect(memberList.groups.count == 1)
+		#expect(memberList.groups.first?.members.count == 2)
 		#expect(rowDescriptions == ["alice", "bob"])
 	}
 
@@ -76,9 +79,7 @@ struct MemberListSectionTests {
 		insert(makeMember(named: "carol", modes: "o"), at: 0)
 
 		#expect(rowDescriptions == ["[Operators]", "carol", "[Members]", "alice", "bob"])
-		#expect(memberList.isGroupRow(0))
-		#expect(memberList.isGroupRow(2))
-		#expect(memberList.item(atRow: 2) == nil)
+		#expect(memberList.groups.map(\.section.rank) == [.normalOperator, .none])
 	}
 
 	@Test("Removing the last member of a section drops its header")
@@ -91,29 +92,29 @@ struct MemberListSectionTests {
 			"[Operators]", "carol", "[Voiced]", "dave", "[Members]", "alice",
 		])
 
-		controller.remove(atArrangedObjectIndex: 1)
+		channel.removeMember(withNickname: "dave")
 
 		#expect(rowDescriptions == ["[Operators]", "carol", "[Members]", "alice"])
 
-		controller.remove(atArrangedObjectIndex: 0)
+		channel.removeMember(withNickname: "carol")
 
 		#expect(rowDescriptions == ["alice"])
-		#expect(memberList.numberOfRows == 1)
+		#expect(memberList.groups.first?.members.count == 1)
 	}
 
 	@Test("Removing the only member leaves an empty flat list")
 	func removingOnlyMemberLeavesAnEmptyFlatList() {
 		insert(makeMember(named: "alice"), at: 0)
 
-		controller.remove(atArrangedObjectIndex: 0)
+		channel.removeMember(withNickname: "alice")
 
-		#expect(memberList.numberOfRows == 0)
+		#expect(memberList.groups.isEmpty)
 		#expect(rowDescriptions.isEmpty)
 	}
 
 	@Test("Replacing the contents rebuilds every section")
 	func replacingContentsRebuildsSections() {
-		controller.replaceContents([
+		replaceContents([
 			makeMember(named: "carol", modes: "o"),
 			makeMember(named: "alice"),
 			makeMember(named: "bob"),
@@ -121,22 +122,20 @@ struct MemberListSectionTests {
 
 		#expect(rowDescriptions == ["[Operators]", "carol", "[Members]", "alice", "bob"])
 
-		controller.replaceContents([])
+		replaceContents([])
 
-		#expect(memberList.numberOfRows == 0)
+		#expect(memberList.groups.isEmpty)
 	}
 
-	@Test("A header row is not an item and cannot enter the selection")
-	func headerRowsAreNotSelectable() {
+	@Test("Selection resolves only member identities in presentation order")
+	func selectionResolvesMemberIdentities() throws {
 		insert(makeMember(named: "alice"), at: 0)
 		insert(makeMember(named: "carol", modes: "o"), at: 0)
 
-		memberList.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
-		#expect(memberList.selectedMemberIDs.isEmpty)
-
-		memberList.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
-		#expect(memberList.selectedMemberIDs.count == 1)
-		#expect((memberList.item(atRow: 1) as? ChannelUser)?.user.nickname == "carol")
+		let carol = try #require(channel.findMember("carol"))
+		let alice = try #require(channel.findMember("alice"))
+		memberList.selectedMemberIDs = [alice.id, carol.id, UUID()]
+		#expect(selectedNicknames == ["carol", "alice"])
 	}
 
 	// MARK: - Snapshot diffs
@@ -146,10 +145,10 @@ struct MemberListSectionTests {
 		let alice = makeMember(named: "alice")
 		let bob = makeMember(named: "bob")
 
-		controller.replaceContents([alice, bob])
+		replaceContents([alice, bob])
 		select(bob)
 
-		controller.insert(makeMember(named: "aaron"), atArrangedObjectIndex: 0)
+		channel.addMember(makeMember(named: "aaron"))
 
 		#expect(rowDescriptions == ["aaron", "alice", "bob"])
 		#expect(selectedNicknames == ["bob"])
@@ -161,10 +160,10 @@ struct MemberListSectionTests {
 		let bob = makeMember(named: "bob")
 		let carol = makeMember(named: "carol")
 
-		controller.replaceContents([alice, bob, carol])
+		replaceContents([alice, bob, carol])
 		select(carol)
 
-		controller.remove(atArrangedObjectIndex: 0)
+		channel.removeMember(withNickname: "alice")
 
 		#expect(rowDescriptions == ["bob", "carol"])
 		#expect(selectedNicknames == ["carol"])
@@ -175,10 +174,10 @@ struct MemberListSectionTests {
 		let alice = makeMember(named: "alice")
 		let bob = makeMember(named: "bob")
 
-		controller.replaceContents([alice, bob])
+		replaceContents([alice, bob])
 		select(alice)
 
-		controller.remove(atArrangedObjectIndex: 0)
+		channel.removeMember(withNickname: "alice")
 
 		#expect(rowDescriptions == ["bob"])
 		#expect(selectedNicknames.isEmpty)
@@ -189,12 +188,10 @@ struct MemberListSectionTests {
 		let alice = makeMember(named: "alice")
 		let bob = makeMember(named: "bob")
 
-		controller.replaceContents([alice, bob])
+		replaceContents([alice, bob])
 		select(alice)
 
-		var renamed = alice
-		renamed.user.nickname = "alicia"
-		controller.replace(renamed, atArrangedObjectIndex: 0)
+		client.rename(alice.user, to: "alicia")
 
 		#expect(rowDescriptions == ["alicia", "bob"])
 		#expect(selectedNicknames == ["alicia"])
@@ -205,14 +202,12 @@ struct MemberListSectionTests {
 		let alice = makeMember(named: "alice")
 		let bob = makeMember(named: "bob")
 
-		controller.replaceContents([alice, bob])
+		replaceContents([alice, bob])
 		select(bob)
 
 		/* An op promotion resorts the member list, which reaches the table as one
 		 new ordering. */
-		var promoted = bob
-		promoted.modes = "o"
-		controller.replaceContents([promoted, alice])
+		channel.changeMember("bob", mode: ChannelModeSymbol(Character("o")), value: true)
 
 		#expect(rowDescriptions == ["[Operators]", "bob", "[Members]", "alice"])
 		#expect(selectedNicknames == ["bob"])
@@ -223,50 +218,157 @@ struct MemberListSectionTests {
 		let alice = makeMember(named: "alice")
 		let bob = makeMember(named: "bob")
 
-		controller.replaceContents([alice, bob])
+		replaceContents([alice, bob])
 		select(bob)
 
-		var away = alice
-		away.user.isAway = true
-		controller.replace(away, atArrangedObjectIndex: 0)
+		let revision = memberList.presentationRevision
+		client.modify(alice.user) { $0.isAway = true }
 
 		#expect(rowDescriptions == ["alice", "bob"])
 		#expect(selectedNicknames == ["bob"])
-		#expect((memberList.item(atRow: 0) as? ChannelUser)?.user.isAway == true)
+		#expect(memberList.groups.first?.members.first?.user.isAway == true)
+		#expect(memberList.presentationRevision == revision + 1)
 	}
 
 	private var rowDescriptions: [String] {
-		(0 ..< memberList.numberOfRows).compactMap { row in
-			if let section = memberList.section(atRow: row) {
-				return "[\(section.title)]"
-			}
-
-			return (memberList.item(atRow: row) as? ChannelUser)?.user.nickname
+		memberList.groups.flatMap { group in
+			let header = memberList.groups.count > 1 ? ["[\(group.section.title)]"] : []
+			return header + group.members.map(\.user.nickname)
 		}
 	}
 
+	@Test("A large protocol unit publishes once while directory lookups stay immediate")
+	func bulkPresentationPreservesImmediateState() throws {
+		let revision = memberList.presentationRevision
+		channel.withMemberPresentationUpdates {
+			for index in 0 ..< 2048 {
+				channel.addMember(makeMember(named: "member\(index)"))
+			}
+			#expect(channel.numberOfMembers == 2048)
+			#expect(channel.findMember("member2047") != nil)
+			#expect(memberList.presentationRevision == revision)
+		}
+		#expect(memberList.presentationRevision == revision + 1)
+		#expect(memberList.groups.flatMap(\.members).count == 2048)
+
+		let member = try #require(channel.findMember("member2047"))
+		select(member)
+		client.rename(member.user, to: "renamed")
+		#expect(selectedNicknames == ["renamed"])
+		#expect(memberList.presentationRevision == revision + 2)
+		channel.changeMember("renamed", mode: ChannelModeSymbol(Character("o")), value: true)
+		#expect(memberList.presentationRevision == revision + 3)
+
+		channel.withMemberPresentationUpdates {
+			channel.removeMember(withNickname: "renamed")
+			#expect(channel.findMember("renamed") == nil)
+			#expect(memberList.selectedMembers.isEmpty)
+			channel.withMemberPresentationUpdates {
+				channel.addMember(makeMember(named: "next"))
+			}
+			#expect(memberList.presentationRevision == revision + 3)
+		}
+		#expect(memberList.presentationRevision == revision + 4)
+		#expect(memberList.selectedMemberIDs.isEmpty)
+		#expect(channel.findMember("next") != nil)
+		channel.withMemberPresentationUpdates {
+			channel.recordConversation(with: "next", direction: .mention)
+			channel.decayMemberConversations()
+		}
+		#expect(memberList.presentationRevision == revision + 4)
+	}
+
+	@Test("Render snapshots ignore weights and details but refresh names, marks and list identity")
+	func renderSnapshotRevisions() throws {
+		channel.addMember(makeMember(named: "alice"))
+		let cache = MemberListRenderCache()
+		let original = cache.members(in: channel)
+		#expect(original == [RenderedMember(nickname: "alice")])
+		let revision = memberList.presentationRevision
+		channel.recordConversation(with: "alice", direction: .incoming)
+		channel.decayMemberConversations()
+		#expect(cache.members(in: channel) == original)
+		#expect(cache.rebuildCount == 1)
+		#expect(memberList.presentationRevision == revision)
+
+		let alice = try #require(channel.findMember("alice"))
+		select(alice)
+		client.modify(alice.user) {
+			$0.isAway = true
+			$0.account = "account"
+			$0.username = "username"
+		}
+		#expect(memberList.presentationRevision == revision + 1)
+		#expect(cache.members(in: channel) == original)
+		#expect(cache.rebuildCount == 1)
+		let displayed = try #require(memberList.groups.first?.members.first)
+		let details = MemberListUserInfoContent(member: displayed, privileges: "")
+		#expect(details.awayStatus == MemberListStrings.userIsAway)
+		#expect(details.account == "account")
+		#expect(details.username == "username")
+
+		channel.changeMember("alice", mode: ChannelModeSymbol(Character("o")), value: true)
+		#expect(cache.members(in: channel) == [RenderedMember(nickname: "alice", mark: "@")])
+		#expect(cache.rebuildCount == 2)
+		client.renameUser(withNickname: "alice", to: "zoe")
+		#expect(cache.members(in: channel) == [RenderedMember(nickname: "zoe", mark: "@")])
+		#expect(selectedNicknames == ["zoe"])
+		#expect(cache.rebuildCount == 3)
+
+		channel.activate()
+		memberList.assign(to: channel)
+		channel.addMember(makeMember(named: "bob"))
+		#expect(cache.members(in: channel) == [RenderedMember(nickname: "bob")])
+		#expect(cache.rebuildCount == 4)
+		channel.clearMembers()
+		#expect(cache.members(in: channel).isEmpty)
+		#expect(cache.members(in: nil).isEmpty)
+	}
+
+	@Test("An unchanged or weight-only replacement does not publish or lose its identity index")
+	func sameIdentityReplacement() throws {
+		channel.addMember(makeMember(named: "alice"))
+		channel.addMember(makeMember(named: "bob"))
+		let revision = memberList.presentationRevision
+		let member = try #require(channel.findMember("bob"))
+		var weighted = member
+		weighted.incomingConversation()
+		channel.memberInfo?.replaceMember(member, with: weighted)
+		channel.memberInfo?.replaceMember(weighted, with: weighted, resort: false)
+		#expect(memberList.presentationRevision == revision)
+		#expect(channel.findMember("bob")?.totalWeight == 100)
+		channel.removeMember(withNickname: "alice")
+		channel.recordConversation(with: "bob", direction: .outgoing)
+		#expect(channel.findMember("bob")?.totalWeight == 120)
+		#expect(memberList.presentationRevision == revision + 1)
+	}
+
 	private func makeMember(named nickname: String, modes: ChannelModeSymbolSet = "") -> ChannelUser {
-		let user = User(nickname: nickname)
+		let user = client.findUserOrCreate(nickname)
 		var member = ChannelUser(user: user, prefixes: client.currentUserPrefixes)
 		member.modes = modes
 
 		return member
 	}
 
-	private func insert(_ member: ChannelUser, at index: Int) {
-		controller.insert(member, atArrangedObjectIndex: index)
+	private func insert(_ member: ChannelUser, at _: Int) {
+		channel.addMember(member)
 	}
 
-	private var selectedNicknames: [String] {
-		memberList.selectedRowIndexes.compactMap {
-			(memberList.item(atRow: $0) as? ChannelUser)?.user.nickname
+	private func replaceContents(_ members: [ChannelUser]) {
+		channel.withMemberPresentationUpdates {
+			channel.clearMembers()
+			for member in members {
+				channel.addMember(member)
+			}
 		}
 	}
 
+	private var selectedNicknames: [String] {
+		memberList.selectedMembers.map(\.user.nickname)
+	}
+
 	private func select(_ member: ChannelUser) {
-		let row = (0 ..< memberList.numberOfRows).first {
-			(memberList.item(atRow: $0) as? ChannelUser)?.id == member.id
-		} ?? -1
-		memberList.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+		memberList.selectedMemberIDs = [member.id]
 	}
 }

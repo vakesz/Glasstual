@@ -61,9 +61,18 @@ are no `.h`, `.m`, `.c` or `.mm` files left, and none should come back.
 | `GlasstualPluginKit` | `Sources/Frameworks/Plugin Kit/**` | framework (plugin ABI: `Sendable` event payloads, `@MainActor` callbacks) | `nonisolated` |
 | `IRCConnectionHost` | `Sources/Services/IRC Connection Host/**` | capability-limited XPC network host; its exported shim forwards to `ConnectionHost`, which owns sockets and the `Sendable` client proxy | `nonisolated` |
 | `GlasstualTests` | `Tests/GlasstualTests/**`, corpora under `Tests/Corpora/**` | Swift Testing bundle hosted by the app | `MainActor` |
+| `GlasstualE2ETests` | `Tests/GlasstualE2ETests/**` | Swift Testing bundle hosted by the test runner, not the app | `MainActor` |
+| `GlasstualE2EHarness` | `Tests/E2EHarness/**` | external Accessibility driver, watchdog and loopback peers | `MainActor` |
 
-Shared declarations that cross the network-host process boundary live in
-`Sources/Shared/` (XPC protocols and connection envelopes).
+`Sources/Shared/` holds the declarations the network host shares with the app
+(XPC protocols and connection envelopes) and the app-side preference store the
+host also reads; only what the `IRCConnectionHost` target lists crosses the
+process boundary. First-party plugin preference names live under
+`Sources/Plugins/Shared/`, compiled into the app and every bundled plugin.
+
+Before editing or running E2E workflows, read `Documentation/E2E.md` for the
+process, signing and disposable-login contracts. `make e2e-fixtures` checks
+loopback peers without launching the app; it is not a GUI E2E pass.
 
 ## Isolation rules
 
@@ -106,15 +115,19 @@ on every `make lint`.
   | `// nonisolated: let` | a `let` of `Sendable` type |
   | `// nonisolated: xpc-shim` | an XPC/`@objc` protocol requirement, or its one-line forwarding shim |
   | `// nonisolated: value` | a `struct`/`enum` with no reference-typed state |
-  | `// nonisolated: immutable` | a `final class` with no stored state, or whose every stored property is a `let` of `Sendable` type |
-  | `// nonisolated: guarded` | a class a boundary pins outside every actor, whose mutable state is a `Mutex<Value>` or a store that synchronizes itself |
+  | `// nonisolated: immutable` | a `final class` with no stored state, or whose every stored property is a `let` of `Sendable` type, a `let Mutex<Value>` included |
+  | `// nonisolated: guarded` | a class a boundary pins outside every actor that also holds mutable state, and keeps it safe behind a `Mutex<Value>` or a store that synchronizes itself |
 
   Nothing else counts as marked. `value` says the type is one, so it never
   belongs on a `class`: a namespace of `static` members becomes an `enum`, and
-  a class that only holds `let`s is `immutable`. `guarded` is the last resort
-  and covers two sites — `PluginManager`, which the transcript renderer reads
-  off the main actor, and `TextualUserDefaults`, a handle on a suite Foundation
-  synchronizes. If a site fits none of the six, it is not a `nonisolated` site:
+  a class that only holds `let`s is `immutable`. Owning a `Mutex` as a `let` is
+  still `immutable`, which is why `ConnectionInputBudget` and
+  `NativeInlineImageTransfer` carry that marker. What moves a class to
+  `guarded` is a stored `var`: `PluginManager` keeps main-actor state beside
+  the `Mutex` the transcript renderer reads off the main actor, and
+  `TextualUserDefaults` is a handle on a suite Foundation synchronizes. Those
+  are the two `guarded` sites. If a site fits none of the six, it is not a
+  `nonisolated` site:
   a nonisolated class with mutable state becomes an actor or a main-actor
   class.
 
@@ -158,8 +171,9 @@ and `IsolationProbe` from `Tests/GlasstualTests/Support/`.
   its place only where a nib or a protocol constant depends on it.
 - A test that does not run is not a passing test. SwiftLint bans `.disabled(…)`
   and `withKnownIssue` under `Tests/`; fix the code or delete the test.
-- Before handing off: `make generate`, `make build`, `make test` and
-  `make lint`, all green. Report any runtime, signing, network or release
-  boundary the change touched but the checks did not exercise.
+- Before handing off: `make generate`, `make build`, `make test`,
+  `make e2e-fixtures` and `make lint`, all green. Report any runtime, signing,
+  network or release boundary the change touched but the checks did not
+  exercise.
 - Commits carry no AI attribution: no `Co-Authored-By` trailer, no generated-by
   note.

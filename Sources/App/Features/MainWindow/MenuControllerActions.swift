@@ -306,10 +306,6 @@ public extension MenuController {
 		actionCoordinator.sendDroppedFilesToSelectedChannel(files)
 	}
 
-	func memberSendDroppedFiles(_ files: [String], row: UInt) {
-		actionCoordinator.sendDroppedFiles(files, row: row)
-	}
-
 	func memberSendDroppedFiles(_ files: [String], to nickname: String) {
 		actionCoordinator.sendDroppedFiles(files, nickname: nickname)
 	}

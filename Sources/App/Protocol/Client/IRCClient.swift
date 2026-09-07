@@ -179,29 +179,61 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var rejoinTasks: [String: Task<Void, Never>] = [:]
 	public var connectType: IRCClientConnectMode = .normal
 	public var disconnectType: IRCClientDisconnectMode = .normal
-	public var capabilities: ClientIRCv3SupportedCapability = []
-	var socket: Connection?
-	var capabilityNegotiationIsPaused = false
-	/// Capability names still waiting to be sent, in the order they were queued.
-	var pendingCapabilityRequests: [String] = []
+	/// The whole of `CAP` negotiation: what the server offered, what is still
+	/// outstanding, what it acknowledged, and the bitset those project onto.
+	var capabilityNegotiation = CapabilityNegotiationState()
+	/// The public bitset remains writable for plugin compatibility. CAP itself
+	/// only mutates acknowledged names; SASL and ISUPPORT facts live separately.
+	public var capabilities: ClientIRCv3SupportedCapability {
+		get { capabilityNegotiation.capabilities }
+		set { capabilityNegotiation.replaceProjection(with: newValue) }
+	}
+
 	/// Capability names the server acknowledged, in the order they arrived.
-	var enabledCapabilityNames: [String] = []
-	var offeredCapabilities: [String: [String]] = [:]
+	public var enabledCapabilityNames: [String] {
+		capabilityNegotiation.acknowledgedNames
+	}
+
+	var socket: Connection?
 	var lastAwayMessage: String?
 	var saslOfferedMechanisms: [String]?
-	var saslScramClient: SCRAMClient?
+	var saslScramTask: Task<Void, Never>?
+	var saslScramClient: SCRAMClient? {
+		didSet {
+			// Every reset or replacement invalidates work from the old exchange.
+			saslScramTask?.cancel()
+			saslScramTask = nil
+		}
+	}
+
 	var saslIncomingPayload: String?
 	var saslMechanism: String?
 	var saslTriedMechanisms: [String] = []
-	var temporaryServerAddressOverride: String?
-	var temporaryServerPortOverride: UInt16 = 0
+	var pendingEndpoint: PendingIRCEndpoint?
 	var performedSTSUpgrade = false
-	var forceSecuredConnectionOnNextConnect = false
 	var sidebarItemIsExpanded = false {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: sidebarItemIsExpanded) }
 	}
 
-	var isTerminating = false
+	/** Whether the client is on its way out, for good or for a relaunch.
+
+	 Setting it is the one place the session's scheduled work is cancelled, so
+	 no teardown path has to remember the list. Every one of them sets this
+	 first and then does only what is its own. */
+	var isTerminating = false {
+		didSet {
+			guard isTerminating else { return }
+			cancelPendingSessionTasks()
+			cancelDelayedDisconnect()
+			reconnectEnabled = false
+			reconnectEnabledBecauseOfSleepMode = false
+			stopAllTimers()
+			removeTimedCommands()
+			removeRequestedCommands()
+		}
+	}
+
+	var terminationPostflightFinished = false
 	var configurationIsStale = false
 	var isPerformingConnectCommands = false
 	/// Whether this connection has already sent its configured connect commands.
@@ -259,8 +291,8 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var batchMessages: MessageBatchContainer!
 	/// Casefolded targets whose history request the server refused.
 	var chatHistoryFailedTargets: Set<String> = []
-	/// Casefolded targets with a history request in flight.
-	var chatHistoryPendingBeforeTargets: Set<String> = []
+	/// BEFORE requests keyed by channel identity, independent of CASEMAPPING.
+	var serverHistoryRequests: [String: PendingServerHistoryRequest] = [:]
 	/// The newest read marker sent per channel, keyed by channel identifier.
 	var readMarkerSentDates: [String: Date] = [:]
 	var readMarkerPendingChannels: [IRCChannel] = []
@@ -270,7 +302,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	/// identifier, in the order they arrived.
 	var collapsedNetsplitNicknames: [String: [String]]?
 	var pendingDeliveries: [String: LabeledDelivery] = [:]
-	var labelForBatchToken: [String: String] = [:]
 	var labelCounter: UInt = 0
 	var zncBouncerIsSendingCertificateInfo = false
 	var zncBouncerIsPlayingBackHistory = false
@@ -322,6 +353,9 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	}
 
 	isolated deinit {
+		saslScramTask?.cancel()
+		pendingDisconnectTask?.cancel()
+		pendingConnectionTask?.cancel()
 		notifications.cancelAll()
 		[
 			autojoinTimer, autojoinDelayedWarningTimer,

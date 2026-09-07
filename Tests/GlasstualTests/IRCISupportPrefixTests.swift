@@ -41,6 +41,36 @@ import Testing
 
 @MainActor
 struct IRCISupportPrefixTests {
+	@Test("PREFIX replacement, empty value and withdrawal keep MODE parameters aligned")
+	func prefixUpdatesReachModeParsing() {
+		let info = supportInfo("CHANMODES=b,k,l,im PREFIX=(qov)~@+")
+		info.processConfigurationData("PREFIX=(hv)%+")
+		#expect(info.parseModes("+qhk alice key").map(\.modeParameter) == [nil, "alice", "key"])
+
+		info.processConfigurationData("PREFIX=")
+		#expect(info.parseModes("+hvk key").map(\.modeParameter) == [nil, nil, "key"])
+		#expect(info.userModePrefixPairs.isEmpty)
+
+		info.processConfigurationData("-PREFIX")
+		#expect(info.parseModes("+hovk alice bob key").map(\.modeParameter) == [nil, "alice", "bob", "key"])
+	}
+
+	@Test(
+		"PREFIX overlays CHANMODES regardless of token order and restores its underlying kind",
+		arguments: [true, false]
+	)
+	func prefixOverlayPreservesChannelModeKinds(_ prefixFirst: Bool) {
+		let tokens = ["PREFIX=(qov)~@+", "CHANMODES=b,k,l,qim"]
+		let info = supportInfo((prefixFirst ? tokens : Array(tokens.reversed())).joined(separator: " "))
+		#expect(info.parseModes("+qk alice key").map(\.modeParameter) == ["alice", "key"])
+
+		info.processConfigurationData("PREFIX=(ov)@+")
+		#expect(info.parseModes("+qk key").map(\.modeParameter) == [nil, "key"])
+
+		info.processConfigurationData("PREFIX=(qov)~@+ -CHANMODES -PREFIX")
+		#expect(info.parseModes("+qov alice bob").map(\.modeParameter) == [nil, "alice", "bob"])
+	}
+
 	private func supportInfo(_ configuration: String) -> IRCISupportInfo {
 		let client = GLTTestClient()
 		let supportInfo = IRCISupportInfo(client: client)

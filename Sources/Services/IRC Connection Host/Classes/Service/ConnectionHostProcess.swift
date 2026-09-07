@@ -66,6 +66,7 @@ private enum HostCommand: Sendable {
 /// places on the wire.
 final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	private let commands: AsyncStream<HostCommand>.Continuation
+	private let commandTask: Task<Void, Never>
 
 	init(host: ConnectionHost) {
 		let (commands, continuation) = AsyncStream<HostCommand>.makeStream(
@@ -76,19 +77,20 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 		)
 
 		self.commands = continuation
+		commandTask = Task {
+			for await command in commands {
+				guard Task.isCancelled == false else { return }
+				await Self.perform(command, on: host)
+			}
+		}
 
 		super.init()
 
 		Logging.setDefaultSubsystem(toMainBundleCategory: "General")
-
-		Task {
-			for await command in commands {
-				await Self.perform(command, on: host)
-			}
-		}
 	}
 
 	deinit {
+		commandTask.cancel()
 		commands.finish()
 	}
 

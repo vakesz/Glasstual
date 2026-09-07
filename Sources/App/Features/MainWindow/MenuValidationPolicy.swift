@@ -48,7 +48,8 @@ public enum MenuValidationPolicy {
 		applicationIsLaunched: Bool,
 		mainWindowHasAttachedSheet: Bool,
 		mainWindowIsFocused: Bool,
-		mainWindowIsBeneathMouse: Bool
+		mainWindowIsBeneathMouse: Bool,
+		hasExplicitMenuContext: Bool
 	) -> Bool {
 		guard commandSpecificResult else {
 			return false
@@ -60,7 +61,7 @@ public enum MenuValidationPolicy {
 
 		let anotherWindowOrSheetHasFocus =
 			mainWindowHasAttachedSheet
-				|| (mainWindowIsFocused == false && mainWindowIsBeneathMouse == false)
+				|| (mainWindowIsFocused == false && mainWindowIsBeneathMouse == false && !hasExplicitMenuContext)
 
 		var result = applicationIsLaunched && anotherWindowOrSheetHasFocus == false
 

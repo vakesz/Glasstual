@@ -56,6 +56,7 @@ enum SocketEvent: Sendable {
 	case connected(host: String?)
 	case secured(protocolVersion: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
 	case received(Data)
+	case readDrained(AsyncStream<Void>.Continuation)
 	case willSend(Data)
 	case didSend
 	case closedReadStream

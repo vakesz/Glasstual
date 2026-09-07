@@ -47,7 +47,8 @@ struct IRCSpecCapabilityNegotiationTests {
 	private func client(nickname: String = "me", password: String? = nil) -> GLTTestClient {
 		GLTTestClient(
 			configDictionary: ["nickname": nickname, "username": nickname],
-			nicknamePassword: password
+			nicknamePassword: password,
+			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
 		)
 	}
 
@@ -62,6 +63,196 @@ struct IRCSpecCapabilityNegotiationTests {
 	}
 
 	// MARK: - CAP LS
+
+	@Test("Wire CAP facts lose withdrawn dependencies without erasing SASL or ISUPPORT")
+	func wireProjectionSeparatesFacts() {
+		let client = client(password: "secret")
+		client.isConnected = true
+		let socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = socket
+		func receive(_ line: String) {
+			client.ircConnection(socket, didReceiveData: line)
+		}
+		receive(":server 005 me MONITOR=100 :supported")
+		receive("CAP * LS :sasl=PLAIN")
+		receive("CAP me ACK :batch message-tags server-time chathistory labeled-response sasl example/unknown")
+		receive(":server 903 me :Authenticated")
+		#expect(client.isCapabilityEnabled(.chatHistory))
+		#expect(client.enabledCapabilitiesStringValue.contains("example/unknown"))
+		receive("CAP me DEL :message-tags sasl")
+		#expect(client.isCapabilityEnabled(.chatHistory) == false)
+		#expect(client.isCapabilityEnabled(.labeledResponse) == false)
+		#expect(client.isCapabilityEnabled(.monitorCommand))
+		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL))
+		#expect(client.isCapabilityEnabled(.saslGeneric) == false)
+		#expect(client.enabledCapabilityNames.contains("sasl") == false)
+		receive("CAP me NEW :message-tags")
+		receive("CAP me ACK :message-tags")
+		#expect(client.isCapabilityEnabled(.chatHistory))
+		#expect(client.isCapabilityEnabled(.labeledResponse))
+	}
+
+	@Test("ISUPPORT legacy facts and CAP names survive each other's withdrawal")
+	func legacyFactsAreIndependent() {
+		let client = client()
+		client.isConnected = true
+		let socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = socket
+		func receive(_ line: String) {
+			client.ircConnection(socket, didReceiveData: line)
+		}
+		receive("CAP me ACK :multi-prefix userhost-in-names")
+		receive(":server 005 me NAMESX UHNAMES MONITOR=100 WATCH=100 :supported")
+		receive("CAP me DEL :multi-prefix userhost-in-names")
+		#expect(client.isCapabilityEnabled([.multiPrefix, .userhostInNames, .monitorCommand, .watchCommand]))
+		#expect(client.enabledCapabilityNames.isEmpty)
+		receive("CAP me ACK :userhost-in-names")
+		// A DEL capability needs a new advertisement before another ACK can enable it.
+		receive("CAP me NEW :userhost-in-names")
+		receive("CAP me ACK :userhost-in-names")
+		receive(":server 005 me -NAMESX -UHNAMES -MONITOR -WATCH :withdrawn")
+		#expect(client.isCapabilityEnabled(.userhostInNames))
+		#expect(client.isCapabilityEnabled(.multiPrefix) == false)
+		#expect(client.supportsAdvancedTracking == false)
+	}
+
+	@Test("DEL answers an outstanding request, and the stale ACK cannot resurrect it")
+	func withdrawalAnswersOutstandingRequest() {
+		let client = client()
+		client.isConnected = true
+		client.isLoggedIn = true
+		let socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = socket
+		func receive(_ line: String) {
+			client.ircConnection(socket, didReceiveData: line)
+		}
+		receive("CAP me NEW :message-tags")
+		// `labeled-response` needs an acknowledged `message-tags`, so it waits.
+		receive("CAP me NEW :labeled-response")
+		#expect(capabilityCommands(of: client) == ["REQ message-tags"])
+
+		receive("CAP me DEL :message-tags")
+		#expect(client.capabilityNegotiation.outstandingRequests.isEmpty)
+		#expect(capabilityCommands(of: client) == ["REQ message-tags"])
+
+		// The answer to the withdrawn request arrives late and changes nothing.
+		receive("CAP me ACK :message-tags")
+		#expect(client.isCapabilityEnabled(.messageTags) == false)
+		#expect(capabilityCommands(of: client) == ["REQ message-tags"])
+
+		receive("CAP me NEW :message-tags")
+		#expect(capabilityCommands(of: client) == ["REQ message-tags", "REQ message-tags"])
+		receive("CAP me ACK :message-tags")
+		#expect(client.isCapabilityEnabled(.messageTags))
+		#expect(capabilityCommands(of: client).last == "REQ labeled-response")
+		receive("CAP me ACK :labeled-response")
+		#expect(client.labeledResponseTrackingEnabled())
+	}
+
+	/// A server that answers nothing must not stop `CAP END`: with the requests
+	/// pipelined, the only thing holding registration open is an outstanding
+	/// answer, and a `CAP DEL` of the name counts as one.
+	@Test("A withdrawal of the last outstanding request releases CAP END")
+	func withdrawalOfLastOutstandingRequestEndsNegotiation() throws {
+		let client = client()
+
+		try receive("CAP * LS :away-notify", on: client)
+		#expect(capabilityCommands(of: client) == ["REQ away-notify"])
+
+		try receive("CAP * DEL :away-notify", on: client)
+
+		#expect(client.capabilityNegotiation.outstandingRequests.isEmpty)
+		#expect(capabilityCommands(of: client) == ["REQ away-notify", "END"])
+	}
+
+	/// Requests are sent together rather than one at a time, so a capability
+	/// the server simply never answers cannot hold up the ones it would have
+	/// granted. What bounds an unanswered request is the registration timeout,
+	/// not the negotiation.
+	@Test("Every eligible request goes out before any answer arrives")
+	func eligibleRequestsArePipelined() throws {
+		let client = client()
+
+		try receive("CAP * LS :away-notify multi-prefix setname", on: client)
+
+		#expect(capabilityCommands(of: client) == ["REQ away-notify", "REQ multi-prefix", "REQ setname"])
+
+		// Two of the three are answered; the third still holds CAP END.
+		try receive("CAP me ACK :away-notify", on: client)
+		try receive("CAP me NAK :setname", on: client)
+
+		#expect(capabilityCommands(of: client).contains("END") == false)
+		#expect(client.capabilityNegotiation.outstandingRequests == ["multi-prefix"])
+
+		try receive("CAP me ACK :multi-prefix", on: client)
+
+		#expect(capabilityCommands(of: client).last == "END")
+		#expect(client.isCapabilityEnabled([.awayNotify, .multiPrefix]))
+		#expect(client.isCapabilityEnabled(.setName) == false)
+	}
+
+	/// Answers may come back in any order, and each is matched to its request
+	/// by name rather than by arrival.
+	@Test("Answers are matched by name, not by the order they arrive")
+	func answersAreMatchedByName() throws {
+		let client = client()
+
+		try receive("CAP * LS :away-notify multi-prefix setname", on: client)
+		try receive("CAP me ACK :setname", on: client)
+		try receive("CAP me ACK :multi-prefix", on: client)
+
+		#expect(client.capabilityNegotiation.outstandingRequests == ["away-notify"])
+		#expect(capabilityCommands(of: client).contains("END") == false)
+
+		try receive("CAP me NAK :away-notify", on: client)
+
+		#expect(capabilityCommands(of: client).last == "END")
+		#expect(client.isCapabilityEnabled([.setName, .multiPrefix]))
+	}
+
+	/// `CAP NEW` during negotiation adds to the same pass: the new name is
+	/// requested at once and joins the outstanding set that gates `CAP END`.
+	@Test("CAP NEW during negotiation joins the same pass")
+	func newDuringNegotiationJoinsTheSamePass() throws {
+		let client = client()
+
+		try receive("CAP * LS :away-notify", on: client)
+		try receive("CAP * NEW :multi-prefix", on: client)
+
+		#expect(capabilityCommands(of: client) == ["REQ away-notify", "REQ multi-prefix"])
+
+		try receive("CAP me ACK :away-notify", on: client)
+
+		#expect(capabilityCommands(of: client).contains("END") == false)
+
+		try receive("CAP me ACK :multi-prefix", on: client)
+
+		#expect(capabilityCommands(of: client) == ["REQ away-notify", "REQ multi-prefix", "END"])
+	}
+
+	@Test("A NAK dependency blocks its dependents and CAP END is emitted only once")
+	func rejectedDependencyDoesNotDeadlockOrRepeatEnd() throws {
+		let client = client()
+		try receive("CAP * LS :message-tags labeled-response", on: client)
+		try receive("CAP * NAK :message-tags", on: client)
+		try receive("CAP * DEL :labeled-response", on: client)
+		#expect(capabilityCommands(of: client) == ["REQ message-tags", "END"])
+		#expect(client.capabilityNegotiation.outstandingRequests.isEmpty)
+	}
+
+	@Test("NEW and DEL during a continued LS update the offer without sending premature requests")
+	func listingInterleavesWithNotifications() throws {
+		let client = client()
+		try receive("CAP * LS * :message-tags", on: client)
+		try receive("CAP * NEW :labeled-response", on: client)
+		try receive("CAP * DEL :message-tags", on: client)
+		#expect(capabilityCommands(of: client).isEmpty)
+		try receive("CAP * LS :away-notify", on: client)
+		#expect(capabilityCommands(of: client) == ["REQ away-notify"])
+		#expect(client.capabilityNegotiation.outstandingRequests == ["away-notify"])
+		try receive("CAP * ACK :away-notify", on: client)
+		#expect(capabilityCommands(of: client) == ["REQ away-notify", "END"])
+	}
 
 	/// capability-negotiation §"The CAP LS subcommand": with version 302 the
 	/// server may split the list over several lines, marking every line but
@@ -82,7 +273,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		try receive(":irc.example.net CAP * LS :message-tags", on: client)
 
 		#expect(capabilityCommands(of: client).isEmpty == false)
-		#expect(client.pendingCapabilityRequests.isEmpty == false)
+		#expect(client.capabilityNegotiation.outstandingRequests.isEmpty == false)
 	}
 
 	/// capability-negotiation §"Capability values": with 302 a capability may
@@ -172,6 +363,60 @@ struct IRCSpecCapabilityNegotiationTests {
 
 	// MARK: - CAP NEW and CAP DEL
 
+	@Test("Removing one alias preserves the bits supplied by another", arguments: [true, false])
+	func aliasRemovalProjectsRemainingCapabilities(_ removeStableFirst: Bool) throws {
+		let client = client()
+		client.enableCapability(.monitorCommand)
+		try receive("CAP me ACK :server-time znc.in/server-time-iso read-marker draft/read-marker", on: client)
+		let first = removeStableFirst ? "server-time read-marker" : "znc.in/server-time-iso draft/read-marker"
+		let last = removeStableFirst ? "znc.in/server-time-iso draft/read-marker" : "server-time read-marker"
+
+		try receive("CAP me DEL :\(first)", on: client)
+		#expect(client.isCapabilityEnabled(.serverTime))
+		#expect(client.isCapabilityEnabled(.readMarker))
+		#expect(client.isCapabilityEnabled(.zncServerTimeISO) == removeStableFirst)
+		#expect(client.isCapabilityEnabled(.monitorCommand))
+
+		try receive("CAP me ACK :-" + last.replacingOccurrences(of: " ", with: " -"), on: client)
+		#expect(client.isCapabilityEnabled(.serverTime) == false)
+		#expect(client.isCapabilityEnabled(.readMarker) == false)
+		#expect(client.isCapabilityEnabled(.zncServerTimeISO) == false)
+		#expect(client.isCapabilityEnabled(.monitorCommand))
+	}
+
+	@Test("NAK leaves an already enabled capability unchanged")
+	func negativeAcknowledgementDoesNotDisableExistingCapability() throws {
+		let client = client()
+		try receive("CAP me ACK :server-time", on: client)
+		try receive("CAP me NAK :-server-time", on: client)
+		#expect(client.isCapabilityEnabled(.serverTime))
+	}
+
+	@Test(
+		"CAP NEW uses dependencies already enabled by an earlier ACK",
+		arguments: ["server-time", "znc.in/server-time", "znc.in/server-time-iso"]
+	)
+	func newCapabilityUsesEnabledDependencies(_ serverTimeName: String) throws {
+		var preferences = ClientPreferences()
+		preferences.requestChatHistory = true
+		let client = GLTTestClient(
+			configDictionary: [:], nicknamePassword: nil,
+			fixture: GLTClientEnvironmentFixture(preferences: preferences)
+		)
+		client.markAsLoggedIn()
+		try receive("CAP me ACK :batch message-tags \(serverTimeName)", on: client)
+		try receive("CAP me NEW :chathistory", on: client)
+		#expect(capabilityCommands(of: client) == ["REQ chathistory"])
+
+		/* Withdrawing the dependency stops the re-offer: `chathistory` itself is
+		 withdrawn too so that the request is weighed afresh, not skipped for
+		 being outstanding already. */
+		try receive("CAP me DEL :message-tags chathistory", on: client)
+		client.sentCapabilityCommands.removeAllObjects()
+		try receive("CAP me NEW :chathistory", on: client)
+		#expect(capabilityCommands(of: client).isEmpty)
+	}
+
 	/// capability-negotiation §"The CAP NEW subcommand": after registration a
 	/// server may advertise new capabilities, which the client requests the
 	/// same way — but without a further `CAP END`, since registration is over.
@@ -205,6 +450,76 @@ struct IRCSpecCapabilityNegotiationTests {
 
 	// MARK: - SASL and CAP END timing
 
+	@Test("Successful SASL results do not apply the failure policy", arguments: [903, 907])
+	func successfulSASLResult(_ numeric: Int) throws {
+		let client = GLTTestClient(
+			configDictionary: ["disconnectOnSASLFailure": true], nicknamePassword: "secret",
+			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+		)
+		client.isConnected = true
+		try receive("CAP * LS :sasl=PLAIN", on: client)
+		try receive("CAP me ACK :sasl", on: client)
+		let result = try #require(Message(line: ":irc.example.net \(numeric) me :Authenticated", on: client))
+		#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL))
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
+		#expect(client.isQuitting == false)
+		#expect(capabilityCommands(of: client).last == "END")
+	}
+
+	@Test("All terminal SASL failures use the configured policy", arguments: [902, 904, 905, 906, 908], [true, false])
+	func terminalSASLFailurePolicy(_ numeric: Int, _ disconnect: Bool) throws {
+		let client = GLTTestClient(
+			configDictionary: ["nickname": "me", "username": "me", "disconnectOnSASLFailure": disconnect],
+			nicknamePassword: "secret",
+			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+		)
+		client.isConnected = true
+		try receive("CAP * LS :sasl=PLAIN", on: client)
+		try receive("CAP me ACK :sasl", on: client)
+		let result = try #require(Message(line: ":irc.example.net \(numeric) me PLAIN :Failed", on: client))
+		#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
+		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL) == false)
+		#expect(client.isQuitting == disconnect)
+		#expect(capabilityCommands(of: client).contains("END") == !disconnect)
+		#expect(client.saslIncomingPayload == nil)
+		#expect(client.saslScramClient == nil)
+	}
+
+	@Test("SCRAM integrity failures use the same terminal policy", arguments: [900, 903, 907, 0], [true, false])
+	func scramIntegrityFailurePolicy(_ numeric: Int, _ disconnect: Bool) throws {
+		let client = GLTTestClient(
+			configDictionary: ["nickname": "me", "username": "me", "disconnectOnSASLFailure": disconnect],
+			nicknamePassword: "secret",
+			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+		)
+		client.isConnected = true
+		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: client)
+		try receive("CAP me ACK :sasl", on: client)
+		try receive("AUTHENTICATE +", on: client)
+		if numeric == 0 {
+			try receive("AUTHENTICATE !not-base64!", on: client)
+		} else {
+			let result = try #require(Message(
+				line: ":irc.example.net \(numeric) me me!u@h account :Authenticated",
+				on: client
+			))
+			#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+		}
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
+		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL) == false)
+		#expect(client.isQuitting == disconnect)
+		#expect(capabilityCommands(of: client).contains("END") == !disconnect)
+		#expect(client.sentLines.contains("AUTHENTICATE *"))
+
+		// The server's response to our abort cannot retry PLAIN or resume twice.
+		let aborted = try #require(Message(line: ":irc.example.net 906 me :Aborted", on: client))
+		#expect(client.handleTrackingNumeric(aborted.commandNumeric, message: aborted, shouldPrint: false))
+		#expect(capabilityCommands(of: client).filter { $0 == "END" }.count == (disconnect ? 0 : 1))
+		#expect(client.sentLines.contains("AUTHENTICATE PLAIN") == false)
+	}
+
 	/// sasl-3.2: "Clients... MUST NOT send CAP END until the authentication
 	/// exchange has completed." Requesting `sasl` therefore pauses the queue.
 	@Test("sasl-3.2: CAP END waits for the authentication exchange")
@@ -220,10 +535,11 @@ struct IRCSpecCapabilityNegotiationTests {
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
 		#expect(capabilityCommands(of: client) == ["REQ sasl"])
 
-		// Standing in for the 903 that ends a real exchange.
-		client.resumeQueuedCapabilityNegotiation()
+		let result = try #require(Message(line: ":irc.example.net 903 me :SASL authentication successful", on: client))
+		#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
 
 		#expect(capabilityCommands(of: client) == ["REQ sasl", "END"])
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
 	}
 
 	/// sasl-3.2: a client with no way to authenticate must not ask for `sasl`
@@ -374,16 +690,23 @@ struct IRCSpecCapabilityNegotiationTests {
 	/// sasl-3.2 §"RPL_SASLMECHS": a 908 lists the mechanisms the server will
 	/// accept, and the client retries with one it has not tried yet.
 	@Test("sasl-3.2: 908 drives a retry with an untried mechanism")
-	func saslMechanismsNumericDrivesARetry() {
+	func saslMechanismsNumericDrivesARetry() throws {
 		let client = client(password: "hunter2")
+		client.isConnected = true
+		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: client)
+		try receive("CAP me ACK :sasl", on: client)
 
-		#expect(client.selectSASLMechanism(fromOffered: ["SCRAM-SHA-256", "PLAIN"]))
 		#expect(client.saslMechanism == SCRAMClient.mechanismName)
 
-		#expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
+		let mechanisms = try #require(Message(line: ":irc.example.net 908 me PLAIN :Available mechanisms", on: client))
+		#expect(client.handleTrackingNumeric(mechanisms.commandNumeric, message: mechanisms, shouldPrint: false))
 		#expect(client.saslMechanism == "PLAIN")
+		#expect(client.sentLines.contains("AUTHENTICATE PLAIN"))
+		#expect(capabilityCommands(of: client).contains("END") == false)
 
-		#expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]) == false)
+		#expect(client.handleTrackingNumeric(mechanisms.commandNumeric, message: mechanisms, shouldPrint: false))
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
+		#expect(capabilityCommands(of: client).last == "END")
 	}
 
 	/// A reassembled payload cannot be allowed to grow without bound: a server

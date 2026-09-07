@@ -105,23 +105,23 @@ public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendabl
 			forKey: LogLineArchiveKey.reactions
 		) as? [String: [String]]
 		decoded.nickname = coder.textual_decodeString(forKey: LogLineArchiveKey.nickname) as String?
-		decoded.lineType = LogLineType(
-			rawValue: UInt(coder.decodeInteger(forKey: LogLineArchiveKey.lineType))
-		) ?? .undefined
-		decoded.memberType = LogLineMemberType(
-			rawValue: UInt(coder.decodeInteger(forKey: LogLineArchiveKey.memberType))
-		) ?? .normal
+		/* Nothing here was ever encoded negative, so a negative value belongs to
+		 a damaged or hand-written archive. `UInt(exactly:)` sends it to the same
+		 default an unknown raw value takes rather than trapping the conversion. */
+		decoded.lineType = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.lineType))
+			.flatMap(LogLineType.init(rawValue:)) ?? .undefined
+		decoded.memberType = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.memberType))
+			.flatMap(LogLineMemberType.init(rawValue:)) ?? .normal
 
 		/* A line that was still in flight when the app last quit is not pending
 		 any more; nothing is going to deliver it. */
-		let decodedDeliveryState = LogLineDeliveryState(
-			rawValue: UInt(coder.decodeInteger(forKey: LogLineArchiveKey.deliveryState))
-		) ?? .none
+		let decodedDeliveryState = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.deliveryState))
+			.flatMap(LogLineDeliveryState.init(rawValue:)) ?? .none
 		decoded.deliveryState = decodedDeliveryState == .pending ? .none : decodedDeliveryState
 		decoded.uniqueIdentifier = coder.textual_decodeString(
 			forKey: LogLineArchiveKey.uniqueIdentifier
 		) as String?
-		decoded.sessionIdentifier = UInt(coder.decodeInteger(forKey: LogLineArchiveKey.sessionIdentifier))
+		decoded.sessionIdentifier = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.sessionIdentifier)) ?? 0
 
 		var line = LogLine()
 		line.restore(from: decoded)

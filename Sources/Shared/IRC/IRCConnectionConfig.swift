@@ -62,6 +62,7 @@ public nonisolated enum IRCConnectionAddressType: UInt, Codable, Sendable { // n
 
 public nonisolated enum IRCConnectionDefaults { // nonisolated: value
 	public static let serverPort: UInt16 = 6667
+	public static let serverPortSecure: UInt16 = 6697
 	public static let proxyPort: UInt16 = 1080
 	public static let floodControlDelayInterval: UInt = 2
 	public static let minimumFloodControlDelayInterval: UInt = 1
@@ -103,6 +104,8 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		didSet { floodControlMaximumMessages = Self.clampedFloodValue(floodControlMaximumMessages, oldValue) }
 	}
 
+	// Retained Codable/XPC fields for external envelope consumers. The current
+	// host transports bytes; only the app interprets character encodings.
 	public var primaryEncoding: UInt = 0
 	public var fallbackEncoding: UInt = 0
 

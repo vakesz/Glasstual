@@ -152,7 +152,7 @@ public extension IRCClient {
 		stopPongTimer()
 		stopRetryTimer()
 		cancelDelayedDisconnect()
-		cancelScheduledConnection()
+		cancelPendingSessionTasks()
 
 		if !terminating, reconnectEnabled {
 			startReconnectTimer()
@@ -176,7 +176,7 @@ public extension IRCClient {
 	}
 
 	func ircConnection(_ sender: Connection, willConnectToProxy proxyHost: String, port proxyPort: UInt16) {
-		precondition(sender === socket)
+		guard sender === socket else { return }
 		switch sender.config.proxyType {
 		case .socks5, .tor:
 			printDebugInformation(toConsole: IRCConnectionStrings.socksProxy(host: proxyHost, port: proxyPort))
@@ -192,8 +192,10 @@ public extension IRCClient {
 		withProtocolType protocolType: tls_protocol_version_t,
 		cipherSuite: tls_ciphersuite_t
 	) {
-		precondition(sender === socket)
+		guard sender === socket else { return }
 		performedSTSUpgrade = false
+		output?.reloadTreeItem(self)
+		output?.updateTitle(for: self)
 		guard let protocolDescription = SecureTransportSupport.description(forProtocolType: protocolType),
 		      let cipherDescription = SecureTransportSupport.description(forCipherSuite: cipherSuite)
 		else { return }
@@ -207,7 +209,7 @@ public extension IRCClient {
 	}
 
 	func ircConnectionDidConnect(_ sender: Connection) {
-		precondition(sender === socket)
+		guard sender === socket else { return }
 		guard !isTerminating else { return }
 
 		startRetryTimer()
@@ -239,14 +241,14 @@ public extension IRCClient {
 	}
 
 	func ircConnection(_ sender: Connection, didDisconnectWithError disconnectError: Error?) {
-		precondition(sender === socket)
+		guard sender === socket else { return }
 		changeStateOff(withError: disconnectError)
 		invokeDisconnectCallbacks()
 		NotificationCenter.default.post(name: .IRCClientDidDisconnect, object: self)
 	}
 
 	func ircConnectionDidCloseReadStream(_ sender: Connection) {
-		precondition(sender === socket)
+		guard sender === socket else { return }
 		guard !isTerminating, !isDisconnecting else { return }
 		if isQuitting {
 			disconnect()
@@ -256,7 +258,7 @@ public extension IRCClient {
 	}
 
 	func ircConnection(_ sender: Connection, willSendData data: String) {
-		precondition(sender === socket)
+		guard sender === socket else { return }
 		guard !isTerminating else { return }
 		rawDataLogOutgoingTraffic(data)
 	}

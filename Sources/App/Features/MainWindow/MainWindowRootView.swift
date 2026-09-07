@@ -24,9 +24,11 @@ final class MainWindowPresentationModel {
 	var transcript: LogView?
 	var appearanceRevision = 0
 	var isChoosingTransferFiles = false
-	var isChoosingPreferencesArchive = false
+	var preferencesImportRequest = PendingFileRequest<Void>()
 	var isExportingPreferencesArchive = false
+	var isChoosingPreferencesExportOptions = false
 	var preferencesArchiveDocument: PreferencesPropertyListDocument?
+	let preferencesTransfer = PreferencesTransferSession.shared
 	var inputPrompt: InputPromptPresentation?
 	/** Mirrors the toolbar search field's focus. The root view keeps it in step
 	 with its `@FocusState` in both directions, so setting it is what moves the
@@ -96,81 +98,40 @@ final class MainWindowPresentationModel {
 	}
 
 	func requestPreferencesImport() {
-		Task { @MainActor in
-			let outcome = await Alerts.run(
-				AlertRequest(
-					title: PromptStrings.ConfigurationTransfer.importTitle,
-					body: PromptStrings.ConfigurationTransfer.importBody,
-					defaultButton: PromptStrings.Action.chooseFile,
-					alternateButton: PromptStrings.Action.cancel,
-					style: .warning
-				),
-				on: .anyVisibleWindow
-			)
-			guard outcome.response == .default else { return }
-			isChoosingPreferencesArchive = true
-		}
+		guard preferencesImportRequest.request == nil, preferencesTransfer.canStart else { return }
+		preferencesTransfer.host = .mainWindow
+		preferencesImportRequest.present()
 	}
 
-	func completePreferencesImport(_ result: Result<URL, Error>) {
-		guard case let .success(url) = result else {
-			if case let .failure(error) = result {
-				mainWindowRootViewLogger.error("Choosing a preferences archive failed: \(error)")
-			}
-			return
-		}
-		let accessWasGranted = url.startAccessingSecurityScopedResource()
-		defer {
-			if accessWasGranted {
-				url.stopAccessingSecurityScopedResource()
-			}
-		}
-
-		do {
-			try PreferencesImportExport.importPostflight(url)
-		} catch {
-			presentPreferencesImportFailure(error)
-		}
-	}
-
-	/// An import that stops has to say so: the user chose a file and would
-	/// otherwise see the picker close with nothing changed.
-	private func presentPreferencesImportFailure(_ error: any Error) {
-		Task { @MainActor in
-			_ = await Alerts.run(
-				AlertRequest(
-					title: PromptStrings.ConfigurationTransfer.importFailureTitle,
-					body: error.localizedDescription,
-					defaultButton: PromptStrings.Action.confirmation,
-					style: .warning
-				),
-				on: .anyVisibleWindow
-			)
+	func completePreferencesImport(_ result: Result<URL, Error>, requestID: UUID) {
+		guard preferencesImportRequest.complete(requestID) != nil else { return }
+		switch result {
+		case let .success(url):
+			Task { await preferencesTransfer.prepareImport(from: url) }
+		case let .failure(error): preferencesTransfer.report(error)
 		}
 	}
 
 	func requestPreferencesExport() {
+		guard preferencesTransfer.canStart,
+		      !isExportingPreferencesArchive, !isChoosingPreferencesExportOptions else { return }
+		preferencesTransfer.host = .mainWindow
+		isChoosingPreferencesExportOptions = true
+	}
+
+	func exportPreferences(includeConnectCommands: Bool) {
 		Task { @MainActor in
-			let outcome = await Alerts.run(
-				AlertRequest(
-					title: PromptStrings.ConfigurationTransfer.exportTitle,
-					body: PromptStrings.ConfigurationTransfer.exportBody,
-					defaultButton: PromptStrings.ConfigurationTransfer.exportButtonTitle,
-					alternateButton: PromptStrings.Action.cancel,
-					style: .warning
-				),
-				on: .anyVisibleWindow
-			)
-			guard outcome.response == .default,
-			      let data = PreferencesImportExport.exportedPreferencesData(filterJunk: true)
-			else { return }
-			preferencesArchiveDocument = PreferencesPropertyListDocument(data: data)
-			isExportingPreferencesArchive = true
+			do {
+				preferencesArchiveDocument = try await PreferencesPropertyListDocument(data: preferencesTransfer
+					.exportData(includeConnectCommands: includeConnectCommands))
+				isExportingPreferencesArchive = true
+			} catch { preferencesTransfer.report(error) }
 		}
 	}
 
-	func completePreferencesExport(_: Result<URL, Error>) {
+	func completePreferencesExport(_ result: Result<URL, Error>) {
 		preferencesArchiveDocument = nil
+		preferencesTransfer.completeExport(result)
 	}
 
 	func presentInputPrompt(
@@ -249,6 +210,7 @@ struct MainWindowRootView: View {
 	@FocusState private var isSearchFieldFocused: Bool
 
 	var body: some View {
+		let preferencesImportRequestID = model.preferencesImportRequest.request?.id
 		ZStack {
 			NavigationSplitView(columnVisibility: serverListVisibility) {
 				serverSidebar
@@ -318,10 +280,12 @@ struct MainWindowRootView: View {
 			onCompletion: model.completeTransferFileSelection
 		)
 		.fileImporter(
-			isPresented: $model.isChoosingPreferencesArchive,
-			allowedContentTypes: [.propertyList],
-			onCompletion: model.completePreferencesImport
-		)
+			isPresented: PendingFileRequest<Void>.presentation($model.preferencesImportRequest),
+			allowedContentTypes: [.propertyList]
+		) { result in
+			guard let preferencesImportRequestID else { return }
+			model.completePreferencesImport(result, requestID: preferencesImportRequestID)
+		}
 		.fileExporter(
 			isPresented: $model.isExportingPreferencesArchive,
 			document: model.preferencesArchiveDocument,
@@ -329,6 +293,11 @@ struct MainWindowRootView: View {
 			defaultFilename: PreferencesImportExport.defaultArchiveFilename,
 			onCompletion: model.completePreferencesExport
 		)
+		.modifier(PreferencesTransferPresentation(session: model.preferencesTransfer, host: .mainWindow))
+		.modifier(PreferencesExportOptionsPresentation(
+			isPresented: $model.isChoosingPreferencesExportOptions,
+			export: model.exportPreferences
+		))
 		.sheet(item: $model.inputPrompt, onDismiss: model.inputPromptDidDismiss) { prompt in
 			InputPromptView(
 				presentation: prompt,
@@ -444,16 +413,19 @@ struct MainWindowRootView: View {
 	 would then both feed and follow the inset, and AppKit ends that loop by
 	 throwing. A content inset changes nothing SwiftUI lays out. */
 	private var conversation: some View {
-		ZStack(alignment: .bottom) {
-			MainWindowTranscriptRepresentable(logView: model.transcript, bottomInset: inputBarHeight)
-				.id(model.appearanceRevision)
+		VStack(spacing: 0) {
+			TranscriptHistoryRecoveryView(controller: model.transcript?.viewController)
+			ZStack(alignment: .bottom) {
+				MainWindowTranscriptRepresentable(logView: model.transcript, bottomInset: inputBarHeight)
+					.id(model.appearanceRevision)
 
-			inputBar
-				.onGeometryChange(for: CGFloat.self) { proxy in
-					proxy.size.height
-				} action: { height in
-					inputBarHeight = height
-				}
+				inputBar
+					.onGeometryChange(for: CGFloat.self) { proxy in
+						proxy.size.height
+					} action: { height in
+						inputBarHeight = height
+					}
+			}
 		}
 		.background(conversationBackground)
 	}

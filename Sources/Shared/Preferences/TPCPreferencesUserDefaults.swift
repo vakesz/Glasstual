@@ -39,7 +39,8 @@ import CocoaExtensions
 import Foundation
 
 public nonisolated extension Notification.Name { // nonisolated: value
-	static let textualUserDefaultsDidChange = Self("TPCPreferencesUserDefaultsDidChangeNotification")
+	/// One spelling, shared with the bundled plugins that observe it.
+	static let textualUserDefaultsDidChange = FirstPartyPluginPreferences.defaultsDidChangeNotification
 }
 
 /** The application's preference store.
@@ -120,16 +121,6 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 			kCFPreferencesCurrentUser,
 			kCFPreferencesAnyHost
 		)
-	}
-
-	/// Every key the suite has persisted, with no registration-domain values.
-	public func persistedValues() -> [String: Any] {
-		CFPreferencesCopyMultiple(
-			nil,
-			suiteName as CFString,
-			kCFPreferencesCurrentUser,
-			kCFPreferencesAnyHost
-		) as? [String: Any] ?? [:]
 	}
 
 	public func set(_ value: Any?, forKey defaultName: String, postNotification: Bool) {

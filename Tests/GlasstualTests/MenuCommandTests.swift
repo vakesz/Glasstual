@@ -104,7 +104,8 @@ struct MenuCommandTests {
 					applicationIsLaunched: false,
 					mainWindowHasAttachedSheet: true,
 					mainWindowIsFocused: false,
-					mainWindowIsBeneathMouse: false
+					mainWindowIsBeneathMouse: false,
+					hasExplicitMenuContext: false
 				)
 			)
 		}
@@ -120,7 +121,8 @@ struct MenuCommandTests {
 				applicationIsLaunched: true,
 				mainWindowHasAttachedSheet: true,
 				mainWindowIsFocused: true,
-				mainWindowIsBeneathMouse: false
+				mainWindowIsBeneathMouse: false,
+				hasExplicitMenuContext: false
 			)
 		}
 
@@ -139,9 +141,27 @@ struct MenuCommandTests {
 					applicationIsLaunched: false,
 					mainWindowHasAttachedSheet: false,
 					mainWindowIsFocused: true,
-					mainWindowIsBeneathMouse: false
+					mainWindowIsBeneathMouse: false,
+					hasExplicitMenuContext: false
 				)
 			)
+		}
+	}
+
+	@Test("A clicked context remains usable without focus but never bypasses sheets or eligibility")
+	func contextDoesNotBypassSafety() {
+		for (eligible, launched, sheet, expected) in [
+			(true, true, false, true),
+			(false, true, false, false),
+			(true, false, false, false),
+			(true, true, true, false),
+		] {
+			#expect(MenuValidationPolicy.validate(
+				command: .joinChannel, commandSpecificResult: eligible,
+				applicationIsLaunched: launched, mainWindowHasAttachedSheet: sheet,
+				mainWindowIsFocused: false, mainWindowIsBeneathMouse: false,
+				hasExplicitMenuContext: true
+			) == expected)
 		}
 	}
 
@@ -154,7 +174,8 @@ struct MenuCommandTests {
 				applicationIsLaunched: true,
 				mainWindowHasAttachedSheet: false,
 				mainWindowIsFocused: true,
-				mainWindowIsBeneathMouse: false
+				mainWindowIsBeneathMouse: false,
+				hasExplicitMenuContext: false
 			) == false
 		)
 	}

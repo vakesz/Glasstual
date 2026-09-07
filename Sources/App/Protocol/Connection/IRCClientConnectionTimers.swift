@@ -83,6 +83,7 @@ public extension IRCClient {
 		stopRetryTimer()
 		stopPongTimer()
 		stopWhoTimer()
+		readMarkerTimer.stop()
 	}
 
 	func startPongTimer() {
@@ -125,6 +126,7 @@ public extension IRCClient {
 	}
 
 	func startReconnectTimer() {
+		guard isTerminating == false else { return }
 		let enabled = reconnectEnabledBecauseOfSleepMode
 			? !config.autoSleepModeDisconnect
 			: config.autoReconnect

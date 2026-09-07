@@ -38,8 +38,6 @@
 
 import AppKit
 import CocoaExtensions
-import Combine
-import Synchronization
 
 /// Computed, not stored: `TextualUserDefaults.container` is already the handle
 /// the main actor keeps, and a second global reference to it would only be a
@@ -48,21 +46,6 @@ import Synchronization
 private var preferences: TextualUserDefaults {
 	TextualUserDefaults.container
 }
-
-/** The keyword lists, cached so that a client snapshot does not re-read and
- re-filter two preference arrays. Main-actor state: the defaults observation
- that refreshes it, the preference panes that edit it and the snapshot that
- reads it are all there. */
-private struct HighlightKeywords {
-	var match: [String]?
-	var exclude: [String]?
-}
-
-@MainActor
-private var highlightKeywords = HighlightKeywords()
-
-@MainActor
-private var highlightKeywordObservation: Task<Void, Never>?
 
 // MARK: - Identity
 
@@ -102,17 +85,10 @@ public extension TextualPreferences {
 
 @MainActor
 public extension TextualPreferences {
-	private class func loadKeywords(for key: PreferenceKey<[HighlightKeyword]>) -> [String] {
-		key.value.map(\.string).filter { $0.isEmpty == false }
-	}
-
-	private class func reloadHighlightKeywords() {
-		highlightKeywords.match = loadKeywords(for: Preferences.Highlights.matchKeywords)
-		highlightKeywords.exclude = loadKeywords(for: Preferences.Highlights.excludeKeywords)
-	}
-
+	/// Drops the entries that match nothing and sorts what is left, so the
+	/// Settings list and the stored value stay in one order.
 	private class func cleanKeywords(for key: PreferenceKey<[HighlightKeyword]>) {
-		key.value = loadKeywords(for: key)
+		key.value = Preferences.Highlights.keywords(in: key.value)
 			.sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
 			.map(HighlightKeyword.init(string:))
 	}
@@ -120,14 +96,6 @@ public extension TextualPreferences {
 	class func cleanUpHighlightKeywords() {
 		cleanKeywords(for: Preferences.Highlights.matchKeywords)
 		cleanKeywords(for: Preferences.Highlights.excludeKeywords)
-	}
-
-	class func highlightMatchKeywords() -> [String]? {
-		highlightKeywords.match
-	}
-
-	class func highlightExcludeKeywords() -> [String]? {
-		highlightKeywords.exclude
 	}
 }
 
@@ -173,19 +141,5 @@ public extension TextualPreferences {
 		ApplicationInfo.incrementApplicationRunCount()
 		registerDefaults()
 		PathInfo.startUsingTranscriptFolderURL()
-		/* Awaited on the main actor rather than sunk: the post can come from any
-		 thread, and the handler writes main-actor state. No `object` filter --
-		 a suite can be open through more than one handle, and a write through
-		 any of them changes the keywords. */
-		highlightKeywordObservation?.cancel()
-		highlightKeywordObservation = Task { @MainActor in
-			for await _ in NotificationCenter.default
-				.publisher(for: UserDefaults.didChangeNotification)
-				.bufferedValues
-			{
-				reloadHighlightKeywords()
-			}
-		}
-		reloadHighlightKeywords()
 	}
 }

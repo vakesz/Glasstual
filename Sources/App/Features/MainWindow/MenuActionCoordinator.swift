@@ -89,6 +89,26 @@ public final class MenuActionCoordinator: NSObject {
 	var menuPerformedActionLastOpen = false
 	weak var pointedClient: IRCClient?
 	weak var pointedChannel: IRCChannel?
+	/** What an explicitly clicked row means while a contextual menu validates
+	 and runs its commands.
+
+	 Without one, the main window's own selection answers — which is what a
+	 menu bar command wants, and what a context menu opened on an unselected
+	 row does not: it would validate against the row the person did not
+	 click. */
+	public enum MenuContext {
+		/// A server-list row. A nil item is the list's background: the server,
+		/// or empty space, rather than the window's selected channel.
+		case treeItem(IRCTreeItem?)
+		/// Member-list rows, in the order the list shows them.
+		case members([ChannelUser])
+	}
+
+	private var menuContext: MenuContext?
+	var hasExplicitMenuContext: Bool {
+		menuContext != nil
+	}
+
 	var currentSearchPhrase = ""
 	var reactionPopover: ReactionPopover?
 	/// Menu-action and selection notifications, cancelled at termination.
@@ -107,11 +127,29 @@ public final class MenuActionCoordinator: NSObject {
 	}
 
 	var selectedClient: IRCClient? {
-		pointedClient ?? mainWindow.selectedClient
+		if case let .treeItem(item) = menuContext {
+			/* A member-list menu names members, not a connection, so it keeps
+			 the window's selection: the members belong to it. */
+			return (item as? IRCClient) ?? item?.associatedClient
+		}
+		return pointedClient ?? mainWindow.selectedClient
 	}
 
 	var selectedChannel: IRCChannel? {
-		pointedChannel ?? mainWindow.selectedChannel
+		if case let .treeItem(item) = menuContext {
+			return item as? IRCChannel
+		}
+		return pointedChannel ?? mainWindow.selectedChannel
+	}
+
+	/// Runs `perform` against the row a contextual menu was opened on, so that
+	/// validation and execution both answer for what was clicked. Never
+	/// publishes window selection while validating.
+	func withContext<Result>(_ context: MenuContext, perform: () throws -> Result) rethrows -> Result {
+		let previous = menuContext
+		menuContext = context
+		defer { menuContext = previous }
+		return try perform()
 	}
 
 	/// The transcript the selection is showing, and the view drawing it.
@@ -195,9 +233,13 @@ public final class MenuActionCoordinator: NSObject {
 			return []
 		}
 
-		return mainWindow.memberList.selectedRowIndexes.compactMap { row in
-			mainWindow.memberList.item(atRow: row) as? ChannelUser
+		/* The rows the menu was opened on, which are not the list's selection
+		 until the command that follows replaces it. */
+		if case let .members(members) = menuContext {
+			return members
 		}
+
+		return mainWindow.memberList.selectedMembers
 	}
 
 	public func deselectMembers(for sender: Any) {
@@ -223,7 +265,7 @@ public final class MenuActionCoordinator: NSObject {
 		case .modifyIgnore:
 			modifyIgnore(sender: sender)
 		case .memberListDoubleClick:
-			guard mainWindow.memberList.rowBeneathMouse != nil else { return }
+			guard mainWindow.memberList.primaryInteractedMember != nil else { return }
 			performDoubleClick(sender: sender)
 		case .channelViewDoubleClick:
 			performDoubleClick(sender: sender)
@@ -497,20 +539,15 @@ public final class MenuActionCoordinator: NSObject {
 		guard nicknames.isEmpty == false else { return }
 		deselectMembers(for: sender)
 		mainWindow.presentationModel.chooseTransferFiles { [weak self] urls in
-			guard let self else { return }
+			guard let self, client.isLoggedIn else { return }
 			for nickname in nicknames {
 				for url in urls {
-					let isAccessing = url.startAccessingSecurityScopedResource()
-					defer {
-						if isAccessing {
-							url.stopAccessingSecurityScopedResource()
-						}
-					}
 					_ = fileTransferCenter.addSender(
 						for: client,
 						nickname: nickname,
 						path: url.path,
-						autoOpen: true
+						autoOpen: true,
+						accessURL: url
 					)
 				}
 			}
@@ -522,15 +559,6 @@ public final class MenuActionCoordinator: NSObject {
 		      client.isLoggedIn, channel.isPrivateMessage
 		else { return }
 		sendDroppedFiles(files, nickname: channel.name)
-	}
-
-	public func sendDroppedFiles(_ files: [String], row: UInt) {
-		// The member list is only ever populated for channels, so no
-		// isPrivateMessage check here: the file goes to the row's nickname.
-		guard let client = selectedClient, client.isLoggedIn,
-		      let member = mainWindow.memberList.item(atRow: Int(row)) as? ChannelUser
-		else { return }
-		sendDroppedFiles(files, nickname: member.user.nickname)
 	}
 
 	public func sendDroppedFiles(_ files: [String], nickname: String) {

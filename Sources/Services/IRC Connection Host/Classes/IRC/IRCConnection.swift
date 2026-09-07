@@ -52,6 +52,9 @@ actor ConnectionHost {
 
 	private var socket: ConnectionSocket?
 	private var eventTask: Task<Void, Never>?
+	private var writerTask: Task<Void, Never>?
+	private var ready = false
+	private var closing = false
 
 	private var sendQueue: [Data] = []
 
@@ -74,7 +77,7 @@ actor ConnectionHost {
 
 	// MARK: - Connection Lifecycle
 
-	func attach(client: any RemoteConnectionClientProtocol) {
+	init(client: any RemoteConnectionClientProtocol) {
 		self.client = client
 	}
 
@@ -83,9 +86,8 @@ actor ConnectionHost {
 	func detach() async {
 		ConnectionHostLog.connection.debug("Client connection ended")
 
-		await close()
-
 		client = nil
+		await close()
 
 		balanceSuddenTermination()
 	}
@@ -106,20 +108,21 @@ actor ConnectionHost {
 		}
 
 		let (events, continuation) = AsyncStream<SocketEvent>.makeStream(
-			/* The server can outrun the client; buffering everything keeps wire
-			 order rather than dropping lines under a burst. */
+			// The reader waits for readDrained after each bounded chunk. Never use
+			// a dropping stream policy for IRC data or terminal events.
 			bufferingPolicy: .unbounded
 		)
 
 		let socket = ConnectionSocket(config: config, client: client, events: continuation)
 
 		self.socket = socket
+		closing = false
 		floodControlInterval = .seconds(Double(config.floodControlDelayInterval))
 		floodControlMaximumMessages = config.floodControlMaximumMessages
 
 		eventTask = Task { [weak self] in
 			for await event in events {
-				await self?.handle(event)
+				await self?.handle(event, from: socket)
 			}
 		}
 
@@ -132,6 +135,7 @@ actor ConnectionHost {
 
 	func close() async {
 		guard let socket else { return }
+		closing = true
 
 		ConnectionHostLog.connection.debug("Closing connection \(socket.uniqueIdentifier, privacy: .public)...")
 
@@ -139,17 +143,20 @@ actor ConnectionHost {
 
 		await socket.close()
 
-		/* A transport that was already down sends no disconnect event, so this
-		 is the only chance to let go of it. */
-		if await socket.disconnected {
-			releaseSocket()
-		}
+		/* The transport is not let go of here. Every path out of its connection
+		 task ends in a `.disconnected` event, and that event is what carries
+		 the disconnect to the client; dropping the reference first would make
+		 `handle(_:from:)` discard it as belonging to a transport nobody owns.
+		 `releaseSocket()` runs when the event lands. */
 	}
 
 	/// Invoked when closing and again when the transport reports it
 	/// disconnected. Both paths are idempotent so doing the work twice is
 	/// harmless and keeps the state machine simple.
 	private func resetState() {
+		ready = false
+		writerTask?.cancel()
+		writerTask = nil
 		floodControlEnforced = false
 		floodControlCurrentMessageCount = 0
 
@@ -177,67 +184,60 @@ actor ConnectionHost {
 		sendQueueBypassCount = 0
 	}
 
-	func send(_ data: Data, bypassQueue: Bool) async {
-		guard let socket, await socket.disconnected == false else {
+	func send(_ data: Data, bypassQueue: Bool) {
+		guard socket != nil, closing == false, client != nil else {
 			ConnectionHostLog.connection.error("Cannot send data while disconnected")
 
 			return
 		}
 
 		if bypassQueue {
-			/* A bypass write that collides with an in-flight write cannot go
-			 out now. Queue it ahead of the ordinary traffic so it is the next
-			 thing sent, rather than losing it to the collision. */
-			if await socket.write(data) == false {
-				sendQueue.insert(data, at: sendQueueBypassCount)
-
-				sendQueueBypassCount += 1
-			}
-
-			return
+			sendQueue.insert(data, at: sendQueueBypassCount)
+			sendQueueBypassCount += 1
+		} else {
+			sendQueue.append(data)
 		}
-
-		sendQueue.append(data)
-
-		await trySend()
+		startWriterIfNeeded()
 	}
 
-	@discardableResult
-	private func trySend() async -> Bool {
-		guard let socket, sendQueue.isEmpty == false else {
-			return false
+	private func startWriterIfNeeded() {
+		guard writerTask == nil, ready, closing == false, let socket, sendQueue.isEmpty == false else { return }
+		// Only this task waits for network writes. Command and event drains stay live.
+		writerTask = Task { [weak self] in
+			await self?.drainWrites(to: socket)
 		}
+	}
 
-		if floodControlEnforced, floodControlCurrentMessageCount >= Int(floodControlMaximumMessages) {
-			return false
-		}
-
-		let data = sendQueue.removeFirst()
-		let wasBypass = sendQueueBypassCount > 0
-
-		if wasBypass {
-			sendQueueBypassCount -= 1
-		}
-
-		floodControlCurrentMessageCount += 1
-
-		/* The transport decides, in one step, whether it can take this line;
-		 asking first and writing afterwards let a second caller slip in between
-		 and cost one of the two lines. A refusal puts the line back where it
-		 came from, so wire order survives the collision. */
-		guard await socket.write(data) else {
-			floodControlCurrentMessageCount -= 1
-
-			sendQueue.insert(data, at: 0)
-
-			if wasBypass {
-				sendQueueBypassCount += 1
+	private func drainWrites(to socket: ConnectionSocket) async {
+		while Task.isCancelled == false, self.socket === socket, ready, closing == false, sendQueue.isEmpty == false {
+			let bypass = sendQueueBypassCount > 0
+			if bypass == false, floodControlEnforced,
+			   floodControlCurrentMessageCount >= Int(floodControlMaximumMessages)
+			{
+				break
 			}
-
-			return false
+			let data = sendQueue.removeFirst()
+			if bypass {
+				sendQueueBypassCount -= 1
+			} else {
+				floodControlCurrentMessageCount += 1
+			}
+			guard await socket.write(data) else {
+				/* The transport reports `false` only when it did not take the
+				 line, so the line is still owed to the server: put it back at
+				 the head, in front of the traffic queued behind it, and let
+				 the next drain try again. */
+				sendQueue.insert(data, at: 0)
+				if bypass {
+					sendQueueBypassCount += 1
+				} else {
+					floodControlCurrentMessageCount -= 1
+				}
+				break
+			}
 		}
-
-		return true
+		guard Task.isCancelled == false, self.socket === socket else { return }
+		writerTask = nil
 	}
 
 	// MARK: - Flood Control
@@ -267,10 +267,10 @@ actor ConnectionHost {
 		floodControlTask = nil
 	}
 
-	private func onFloodControlTimer() async {
+	private func onFloodControlTimer() {
 		floodControlCurrentMessageCount = 0
 
-		while await trySend() {}
+		startWriterIfNeeded()
 	}
 
 	// MARK: - Secure Connection Information
@@ -300,6 +300,7 @@ actor ConnectionHost {
 	}
 
 	func disableSuddenTermination() {
+		guard client != nil else { return }
 		suddenTerminationDisableCount += 1
 
 		ProcessInfo.processInfo.disableSuddenTermination()
@@ -313,22 +314,30 @@ actor ConnectionHost {
 
 	// MARK: - Transport Events
 
-	private func handle(_ event: SocketEvent) async {
+	private func handle(_ event: SocketEvent, from socket: ConnectionSocket) {
+		if case let .readDrained(continuation) = event {
+			continuation.finish()
+			return
+		}
+		guard self.socket === socket else { return }
 		switch event {
 		case let .willConnectToProxy(host, port):
 			client?.ircConnectionWillConnect(toProxy: host, port: port)
 		case let .connected(host):
+			guard closing == false else { return }
+			ready = true
 			client?.ircConnectionDidConnect(toHost: host)
+			startWriterIfNeeded()
 		case let .secured(protocolVersion, cipherSuite):
 			client?.ircConnectionDidSecureConnection(withProtocolType: protocolVersion, cipherSuite: cipherSuite)
 		case let .received(data):
 			client?.ircConnectionDidReceive(data)
+		case .readDrained:
+			break
 		case let .willSend(data):
 			client?.ircConnectionWillSend(data)
 		case .didSend:
 			client?.ircConnectionDidSendData()
-
-			await trySend()
 		case .closedReadStream:
 			client?.ircConnectionDidCloseReadStream()
 		case let .disconnected(error):

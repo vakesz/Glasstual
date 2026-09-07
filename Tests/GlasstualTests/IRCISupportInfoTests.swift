@@ -38,6 +38,7 @@
 
 import Foundation
 @testable import Glasstual
+import GlasstualPluginKit
 import Testing
 
 typealias SupportInfo = Glasstual.IRCISupportInfo
@@ -45,6 +46,65 @@ typealias SupportInfo = Glasstual.IRCISupportInfo
 @MainActor
 @Suite("ISUPPORT parsing")
 struct IRCISupportInfoTests {
+	@Test(
+		"Parsed byte budgets reach AWAY, KICK and TOPIC consumers",
+		arguments: [UInt(0), 3, UInt(Int.max), UInt(Int.max) + 1, UInt.max]
+	)
+	func lengthBudgetsReachCommandConsumers(_ limit: UInt) {
+		CommandIndex.populateCommandIndex()
+		let fixture = GLTClientEnvironmentFixture(preferences: ClientPreferences())
+		let awayClient = fixture.world.createClient(with: IRCClientConfig())
+		awayClient.isLoggedIn = true
+		awayClient.supportInfo.processConfigurationData("AWAYLEN=\(limit)")
+		awayClient.sendCommand("AWAY \u{e9}\u{e9}ab", completeTarget: false, target: nil)
+		let expected = limit == 3 ? "\u{e9}" : "\u{e9}\u{e9}ab"
+		#expect(awayClient.lastAwayMessage == expected)
+
+		let client = GLTTestClient()
+		client.isConnected = true
+		client.markAsLoggedIn()
+		client.supportInfo.processConfigurationData("KICKLEN=\(limit) TOPICLEN=\(limit)")
+		client.sendCommand("KICK #test nick \u{e9}\u{e9}ab", completeTarget: false, target: nil)
+		client.sendCommand("TOPIC #test \u{e9}\u{e9}ab", completeTarget: false, target: nil)
+		#expect(client.sentLines.compactMap { $0 as? String } == [
+			"KICK #test nick :\(expected)",
+			"TOPIC #test :\(expected)",
+		])
+	}
+
+	@Test(
+		"Parsed NICKLEN bounds names and sender prefixes without narrowing UInt early",
+		arguments: [UInt(3), 8, UInt(Int.max), UInt(Int.max) + 1, UInt.max]
+	)
+	func nicknameLimitsReachNameConsumers(_ limit: UInt) throws {
+		let client = GLTTestClient()
+		client.supportInfo.processConfigurationData("NICKLEN=\(limit)")
+		#expect(client.stringIsNickname("alice") == (limit >= 5))
+		#expect(("alice!u@host" as NSString).hostmask(on: client)?.nickname == (limit >= 5 ? "alice" : nil))
+		let message = try #require(Message(line: ":alice!u@host PRIVMSG #test :hello", on: client))
+		#expect(message.senderIsServer == (limit < 5))
+		#expect(("alice" as NSString).padNickname(
+			withCharacter: 95,
+			maximumLength: client.supportInfo.maximumNicknameLength
+		)
+			== (limit == 3 ? "al_" : "alice_"))
+	}
+
+	@Test(
+		"Server target counts are bounded before conversion and slicing",
+		arguments: [UInt(0), 1, 2, UInt(Int.max), UInt(Int.max) + 1, UInt.max]
+	)
+	func targetCountsReachTheChunkingConsumer(_ limit: UInt) {
+		let info = supportInfoWithConfiguration("TARGMAX=PRIVMSG:\(limit)")
+		let targets = ["a", "b", "c", "d", "e"]
+		let expected = limit <= 1 ? targets.map { [$0] }
+			: limit == 2 ? [["a", "b"], ["c", "d"], ["e"]] : [targets]
+
+		#expect(info.maximumTargets(forCommand: "PRIVMSG") == limit)
+		#expect(SupportInfo.chunkTargets(targets, limit: info.maximumTargets(forCommand: "PRIVMSG")) == expected)
+		#expect(SupportInfo.chunkTargets([], limit: info.maximumTargets(forCommand: "PRIVMSG")).isEmpty)
+	}
+
 	@Test("A server that says nothing about case mapping gets RFC 1459")
 	func defaultCaseMappingIsRFC1459() {
 		let supportInfo = supportInfoWithConfiguration("NETWORK=Example")

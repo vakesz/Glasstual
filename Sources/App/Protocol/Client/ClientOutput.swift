@@ -60,7 +60,7 @@ protocol TreeItemPresentation: AnyObject {
 	 both callers (`IRCChannel.lastLine`, `IRCClient.lastLine`) are already
 	 there. */
 	func lastPrintedLine() -> LogLine?
-	nonisolated func setTopic(_ topic: String?) // nonisolated: pure
+	func setTopic(_ topic: String?)
 
 	func mark()
 	func mark(at date: Date)
@@ -73,8 +73,23 @@ protocol TreeItemPresentation: AnyObject {
 	)
 	func prependHistoricLogLines(_ logLines: [LogLine])
 
-	func prepareForPermanentDestruction()
-	func prepareForApplicationTermination()
+	func tearDown(_ reason: TreeItemTeardown)
+}
+
+/** Why a tree item's view is being torn down.
+
+ The three were three protocol members, so every conformer answered the same
+ question three times and every caller had to know which of them meant what a
+ `preservingLocalData` flag was saying elsewhere. */
+enum TreeItemTeardown {
+	/// The application is quitting. The transcript is flushed and its historic
+	/// log closed; nothing is deleted.
+	case applicationTermination
+	/// The item is going away but is expected back — a transfer, an import —
+	/// so its historic log stays where it is.
+	case preservingRemoval
+	/// The item is going away for good, and its historic log goes with it.
+	case permanentRemoval
 }
 
 /** The window-side work the protocol layer asks for: selection, redraws, titles

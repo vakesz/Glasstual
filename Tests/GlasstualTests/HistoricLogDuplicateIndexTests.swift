@@ -91,4 +91,42 @@ struct HistoricLogDuplicateIndexTests {
 			index.containsLine(receivedAt: date, nickname: "alice", messageBody: "hello", forView: view) == false
 		)
 	}
+
+	/** The fallback key rounds a timestamp to whole milliseconds. A date far
+	 enough from the epoch that the count leaves `Int64` has no key, and asking
+	 for one must answer "not indexed" rather than trap the conversion. */
+	@Test("A timestamp beyond the millisecond range is indexed without a fallback key")
+	func unrepresentableTimestampHasNoFallbackKey() {
+		let index = LogControllerHistoricLogFile()
+		let view = "view-\(UUID().uuidString)"
+		let date = Date(timeIntervalSince1970: 1e40)
+		let line = logLine(body: "hello", messageIdentifier: "msg-1", at: date)
+
+		index.indexLogLine(line, forView: view)
+
+		#expect(index.containsMessageIdentifier("msg-1", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "hello", forView: view) == false)
+		#expect(index.newestLineDate(forView: view) == date)
+	}
+
+	@Test("Shared identifiers remain counted across repeated indexing and pruning")
+	func sharedIdentifiersAreCountedUntilLastPrune() {
+		let index = LogControllerHistoricLogFile()
+		let view = "view-\(UUID().uuidString)"
+		let date = Date(timeIntervalSince1970: 1000)
+		let first = logLine(body: "same", messageIdentifier: "shared", at: date)
+		let second = logLine(body: "same", messageIdentifier: "shared", at: date)
+		let newest = logLine(body: "newest", messageIdentifier: "newest", at: date.addingTimeInterval(1))
+
+		index.indexLogLines([newest, first, second, first, second], forView: view)
+		#expect(index.newestLineDate(forView: view) == newest.receivedAt)
+		index.forgetLines([first.uniqueIdentifier, first.uniqueIdentifier, "missing"], inView: view)
+		#expect(index.containsMessageIdentifier("shared", forView: view))
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "same", forView: view))
+
+		index.forgetLines([second.uniqueIdentifier], inView: view)
+		#expect(index.containsMessageIdentifier("shared", forView: view) == false)
+		#expect(index.containsLine(receivedAt: date, nickname: "alice", messageBody: "same", forView: view) == false)
+		#expect(index.containsMessageIdentifier("newest", forView: view))
+	}
 }

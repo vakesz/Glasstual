@@ -90,6 +90,14 @@ extension IRCClient {
 		)
 
 		let existingUser = findUser(reply.nickname)
+		var channels = existingUser.map { relations(of: $0).map(\.channel) } ?? []
+		if !channels.contains(where: { $0 === channel }) {
+			channels.append(channel)
+		}
+		var seenLists: Set<ObjectIdentifier> = []
+		let memberLists = channels.compactMap(\.memberInfo).filter { seenLists.insert(ObjectIdentifier($0)).inserted }
+		memberLists.forEach { $0.beginPresentationUpdates() }
+		defer { memberLists.forEach { $0.endPresentationUpdates() } }
 		var editedUser = draftUser(withNickname: reply.nickname)
 		editedUser.nickname = reply.nickname
 		editedUser.username = reply.username
@@ -123,8 +131,6 @@ extension IRCClient {
 						resort: true,
 						replaceInAllChannels: environment.preferences.memberListSortFavorsServerStaff
 					)
-				} else if existingUser.isAway != finalUser.isAway {
-					output?.updateDrawingForUser(finalUser)
 				}
 			}
 		} else {

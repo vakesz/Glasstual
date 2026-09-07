@@ -81,6 +81,11 @@
       "extractionState": "manual",
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Transfer progress" } } }
     },
+    "transfer-total-size": {
+      "comment": "Accessibility label for a file transfer's size. The argument is the total size, already formatted.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Total size: %@" } } }
+    },
     "transfers": {
       "comment": "Count of file transfers visible under the current filter. The argument is the count.",
       "extractionState": "manual",
@@ -444,6 +449,19 @@
           "stringUnit": {
             "state": "translated",
             "value": "Transfer with %@ failed. You are not connected to IRC"
+          }
+        }
+      }
+    },
+    "sent-to-without-a-peer-acknowledgement": {
+      "comment": "File transfer status. The argument is the recipient's IRC nickname. All offered bytes were sent and the peer closed cleanly, but the peer sent no DCC acknowledgement. Do not imply verified receipt or storage.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to %@ without a peer acknowledgement."
           }
         }
       }

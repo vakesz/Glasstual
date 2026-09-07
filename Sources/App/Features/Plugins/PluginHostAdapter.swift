@@ -331,32 +331,27 @@ enum PluginHostAdapter {
 private final class PluginConnectionTracker {
 	private let handler: (Bool) -> Void
 	private var clientObservations: [ObjectIdentifier: Task<Void, Never>] = [:]
-	private var notificationObservers: [NSObjectProtocol] = []
+	private let notifications = NotificationSubscriptions()
+	private var isCancelled = false
 
 	init(handler: @escaping (Bool) -> Void) {
 		self.handler = handler
-		let center = NotificationCenter.default
 		let names: [Notification.Name] = [
 			.ircWorldClientListWasModified,
 			.IRCClientDidConnect,
 			.IRCClientDidDisconnect,
 		]
-		notificationObservers = names.map { name in
-			center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-				// The queue is `.main`, but the callback signature is not
-				// isolated, so hop rather than assume.
-				Task { @MainActor in
-					self?.rebuild()
-				}
+		for name in names {
+			notifications.observe(name) { [weak self] _ in
+				self?.rebuild()
 			}
 		}
 		rebuild()
 	}
 
 	func cancel() {
-		let center = NotificationCenter.default
-		notificationObservers.forEach(center.removeObserver)
-		notificationObservers.removeAll()
+		isCancelled = true
+		notifications.cancelAll()
 		clientObservations.values.forEach { $0.cancel() }
 		clientObservations.removeAll()
 	}
@@ -364,7 +359,7 @@ private final class PluginConnectionTracker {
 	private func rebuild() {
 		/* Both callbacks can arrive while the world is being torn down, and
 		 `AppController.world` is implicitly unwrapped. */
-		guard let world = AppController.shared.world else { return }
+		guard !isCancelled, let world = AppController.shared.world else { return }
 
 		let clients = world.clientList
 		let identifiers = Set(clients.map(ObjectIdentifier.init))
@@ -379,8 +374,8 @@ private final class PluginConnectionTracker {
 			 awaiting the key path inside the task is the same delivery with the
 			 isolation stated once. */
 			clientObservations[ObjectIdentifier(client)] = Task { @MainActor [weak self] in
-				for await _ in client.publisher(for: \.isLoggedIn, options: [.new]).bufferedValues {
-					guard let self else {
+				for await _ in client.publisher(for: \.isLoggedIn, options: [.initial, .new]).bufferedValues {
+					guard let self, !isCancelled, !Task.isCancelled else {
 						return
 					}
 

@@ -26,7 +26,7 @@ private nonisolated struct FixedFilenameStore: HistoricLogFilenameStoring { // n
 /// a different clock. These cover the one-off pass that corrects them.
 @Suite("Historic log re-stamp", .serialized)
 struct HistoricLogRestampTests {
-	private static let view = "restamp-view"
+	private nonisolated static let view = "restamp-view" // nonisolated: let
 
 	private func makeDirectory() throws -> URL {
 		let directory = URL(fileURLWithPath: NSTemporaryDirectory())

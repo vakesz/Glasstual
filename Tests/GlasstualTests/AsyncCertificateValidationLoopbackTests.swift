@@ -45,6 +45,7 @@ private actor LoopbackTLSServer {
 
 	private let listener: NWListener
 	private var peer: NWConnection?
+	private var received = Data()
 
 	init() throws {
 		let identity = try Self.identity()
@@ -97,6 +98,33 @@ private actor LoopbackTLSServer {
 		peer = connection
 
 		connection.start(queue: .global())
+		receiveNextChunk()
+	}
+
+	private func receiveNextChunk() {
+		peer?.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, complete, error in
+			Task { await self?.received(data, complete: complete || error != nil) }
+		}
+	}
+
+	private func received(_ data: Data?, complete: Bool) {
+		if let data {
+			received.append(data)
+		}
+		if complete == false {
+			receiveNextChunk()
+		}
+	}
+
+	func registrationLines() async throws -> [String] {
+		for _ in 0 ..< 200 {
+			let lines = (String(bytes: received, encoding: .utf8) ?? "").components(separatedBy: "\r\n")
+			if lines.count >= 4 {
+				return Array(lines.dropLast())
+			}
+			try await Task.sleep(for: .milliseconds(10))
+		}
+		return []
 	}
 
 	private func readyPeer() async throws -> NWConnection {
@@ -154,6 +182,7 @@ private enum HostEvent: Sendable {
 	case didReceive(Data)
 	case didDisconnect(Error?)
 	case requestInsecureCertificateTrust(TrustDecisionHandler)
+	case exportedTrust(SecureConnectionInformation, TrustDecisionHandler)
 }
 
 /** The object NSXPC exports for the host's callbacks.
@@ -255,6 +284,27 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 		#expect(SecureTransportSupport.description(forCipherSuite: secured.cipherSuite) != "Unknown")
 	}
 
+	@Test("Registration and certificate export do not depend on a pending TLS send")
+	@concurrent
+	func registrationAndTrustExportRemainLive() async throws {
+		let outcome = try await Self.driveHandshake(answering: true)
+		#expect(outcome.exportedCertificate)
+		#expect(outcome.connectedBeforeTrust == false)
+		#expect(outcome.registration == ["CAP LS 302", "NICK tester", "USER tester 0 * :Tester"])
+		#expect(outcome.secured != nil)
+	}
+
+	@Test("Closing while the certificate prompt is unanswered cancels the handshake")
+	@concurrent
+	func closeCancelsPendingTrust() async throws {
+		let outcome = try await Self.driveHandshake(answering: false, closeDuringTrust: true)
+		#expect(outcome.exportedCertificate)
+		#expect(outcome.disconnected)
+		#expect(outcome.received.isEmpty)
+		#expect(outcome.secured == nil)
+		#expect(outcome.connectedBeforeTrust == false)
+	}
+
 	// MARK: - The harness
 
 	struct Secured: Sendable {
@@ -266,12 +316,16 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 		var received: [Data] = []
 		var secured: Secured?
 		var disconnectError: Error?
+		var exportedCertificate = false
+		var connectedBeforeTrust = false
+		var registration: [String] = []
+		var disconnected = false
 	}
 
 	/** Connects the real service to the loopback listener, sends
 	 answers the trust prompt, sends ``testLines`` after an accepted handshake,
 	 and collects what the application was told. */
-	static func driveHandshake(answering trusted: Bool) async throws -> Outcome {
+	static func driveHandshake(answering trusted: Bool, closeDuringTrust: Bool = false) async throws -> Outcome {
 		let server = try LoopbackTLSServer()
 		let port = try await server.start()
 
@@ -304,9 +358,10 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 		/* A test that hangs tells nobody anything, so the stream ends on its own
 		 if the handshake never gets anywhere. */
 		let deadline = Task {
-			try? await Task.sleep(for: .seconds(30), clock: .continuous)
-
+			try? await Task.sleep(for: .seconds(8), clock: .continuous)
+			guard Task.isCancelled == false else { return }
 			continuation.finish()
+			await server.stop()
 		}
 
 		defer { deadline.cancel() }
@@ -314,10 +369,21 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 		host.open(with: ConnectionConfigEnvelope(config: config))
 
 		var outcome = Outcome()
+		var trustAnswered = false
 
 		for await event in events {
 			switch event {
 			case let .requestInsecureCertificateTrust(answer):
+				host.exportSecureConnectionInformation { information in
+					continuation.yield(.exportedTrust(information, answer))
+				}
+			case let .exportedTrust(information, answer):
+				outcome.exportedCertificate = information.certificateChain.isEmpty == false
+				if closeDuringTrust {
+					host.close()
+					break
+				}
+				trustAnswered = true
 				answer(trusted)
 
 				if trusted {
@@ -334,14 +400,21 @@ nonisolated struct AsyncCertificateValidationLoopbackTests { // nonisolated: val
 			case let .didSecure(protocolVersion, cipherSuite):
 				outcome.secured = Secured(protocolVersion: protocolVersion, cipherSuite: cipherSuite)
 			case let .didDisconnect(error):
+				outcome.disconnected = true
 				outcome.disconnectError = error
 
 				continuation.finish()
 			case .didConnect:
-				break
+				outcome.connectedBeforeTrust = trustAnswered == false
+				for line in ["CAP LS 302", "NICK tester", "USER tester 0 * :Tester"] {
+					host.send(Data((line + "\r\n").utf8))
+				}
 			}
 		}
 
+		if trusted, outcome.secured != nil {
+			outcome.registration = try await server.registrationLines()
+		}
 		host.close()
 
 		return outcome

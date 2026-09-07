@@ -18,6 +18,22 @@ struct ChannelBanListSheetTests {
 		return entry
 	}
 
+	/// `MAXLIST` is whatever the server put in `ISUPPORT`, and a limit that
+	/// did not fit an `Int` used to end the process while opening the sheet.
+	@Test("A ban limit too large for the sheet is saturated rather than fatal")
+	func oversizedListLimitIsSaturated() throws {
+		let client = GLTTestClient()
+		client.supportInfo.processConfigurationData(
+			"CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ MAXLIST=b:18446744073709551615"
+		)
+		let channel = try #require(client.findChannelOrCreate("#limits"))
+		channel.activate()
+
+		let sheet = try #require(ChannelBanListSheet(entryType: .ban, inChannel: channel))
+
+		#expect(sheet.model.maximumEntries == .max)
+	}
+
 	@Test("The native table starts with the newest entry first")
 	func newestEntryIsFirst() {
 		let model = ChannelBanListModel()

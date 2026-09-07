@@ -1,0 +1,36 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "deletion-not-repeated" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "A history clear or removal failed. Retrying history only repairs loading and saving; it never repeats deletion because new messages may have arrived. The user must explicitly clear the affected conversation again.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "History could not be cleared. Retry History does not repeat deletion, so newer messages are kept. To delete history, clear the affected conversation again." } } }
+    },
+    "retry" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Retry opening or reading the existing local history database. This does not delete history.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry History" } } }
+    },
+    "retry-server" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Request the failed older-history page from the IRC server again.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry Server History" } } }
+    },
+    "server-history-could-not-be-loaded" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Status above a conversation when its server-history request failed.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Server history could not be loaded." } } }
+    },
+    "local-history-needs-attention" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Status above a conversation when local history cannot be opened, saved or read. Existing history is retained.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Local history needs attention." } } }
+    }
+  },
+  "version" : "1.0"
+}

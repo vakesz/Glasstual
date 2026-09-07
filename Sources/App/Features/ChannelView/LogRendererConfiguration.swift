@@ -10,37 +10,18 @@
  *
  *********************************************************************** */
 
-import Foundation
+import AppKit
 
-nonisolated struct LogRendererConfiguration: ExpressibleByDictionaryLiteral { // nonisolated: value
-	private var values: [LogRendererConfigurationKey: Any] = [:]
-
-	init() {}
-
-	init(dictionaryLiteral elements: (LogRendererConfigurationKey, Any)...) {
-		values = Dictionary(uniqueKeysWithValues: elements)
-	}
-
-	subscript(key: LogRendererConfigurationKey) -> Any? {
-		get { values[key] }
-		set { values[key] = newValue }
-	}
-
-	func value<Value>(for key: LogRendererConfigurationKey, as _: Value.Type = Value.self) -> Value? {
-		values[key] as? Value
-	}
-
-	func bool(for key: LogRendererConfigurationKey) -> Bool {
-		(values[key] as? NSNumber)?.boolValue ?? (values[key] as? Bool ?? false)
-	}
+/// Editor presentation stays on the main actor and never enters a render job.
+struct LogRendererConfiguration {
+	var preferredFont: NSFont?
+	var preferredFontColor: NSColor?
 }
 
-nonisolated enum LogRendererConfigurationKey: Sendable { // nonisolated: value
-	case renderLinks
-	case lineType
-	case memberType
-	case highlightKeywords
-	case excludedKeywords
-	case preferredFont
-	case preferredFontColor
+nonisolated struct TranscriptRenderOptions: Sendable { // nonisolated: value
+	var renderLinks = false
+	var lineType = LogLineType.undefined
+	var memberType = LogLineMemberType.normal
+	var highlightKeywords: [String] = []
+	var excludedKeywords: [String] = []
 }

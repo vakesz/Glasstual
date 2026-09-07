@@ -48,18 +48,24 @@ extension FileTransferController {
 	func startTransfer(with configuration: DCCTransfer.Configuration) {
 		let transfer = DCCTransfer(configuration: configuration)
 		self.transfer = transfer
+		let sessionID = sessionID
+		let stopping = stopTask
 
 		transferEvents = Task { [weak self] in
+			await stopping?.value
+			guard !Task.isCancelled else { await transfer.cancel(); return }
 			await transfer.start()
 
 			for await event in transfer.events {
-				self?.transferDidReport(event)
+				guard !Task.isCancelled else { return }
+				self?.transferDidReport(event, from: transfer, sessionID: sessionID)
 			}
 		}
 	}
 
 	/// Stops the running transfer, if there is one.
 	func stopTransfer() {
+		sessionID = UUID()
 		transferEvents?.cancel()
 		transferEvents = nil
 
@@ -69,10 +75,15 @@ extension FileTransferController {
 
 		self.transfer = nil
 
-		Task { await transfer.cancel() }
+		let previousStop = stopTask
+		stopTask = Task {
+			await previousStop?.value
+			await transfer.cancel()
+		}
 	}
 
-	private func transferDidReport(_ event: DCCTransferEvent) {
+	func transferDidReport(_ event: DCCTransferEvent, from transfer: DCCTransfer, sessionID: UUID) {
+		guard self.sessionID == sessionID, self.transfer === transfer else { return }
 		switch event {
 		case let .listening(port):
 			listeningServerDidStart(on: port)
@@ -80,6 +91,8 @@ extension FileTransferController {
 			transferDidConnect()
 		case let .progress(processedBytes):
 			transferDidProgress(to: processedBytes)
+		case let .completion(completion):
+			self.completion = completion
 		case .finished:
 			transferStatus = .complete
 			close()

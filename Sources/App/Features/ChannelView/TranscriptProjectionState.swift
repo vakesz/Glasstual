@@ -34,6 +34,7 @@ nonisolated struct LogViewBufferPolicy: Equatable, Sendable { // nonisolated: va
 nonisolated enum TranscriptScrollbackMark: Equatable, Sendable { // nonisolated: value
 	case none
 	case latest
+	case line(String)
 	case after(Date)
 }
 
@@ -47,6 +48,7 @@ nonisolated struct TranscriptDeliveryUpdate: Equatable, Sendable { // nonisolate
 nonisolated struct TranscriptReplaySnapshot: Sendable { // nonisolated: value
 	let lines: [LogLine]
 	let lineNumbers: Set<String>
+	let results: [LogLineRenderResult]
 }
 
 /// Tracks the one visual boundary between restored scrollback and lines from
@@ -114,7 +116,17 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 
 	private var capacity: Int
 	private var recentLines: [LogLine] = []
+	private var recentResults: [String: LogLineRenderResult] = [:]
 	private var pendingResults: [LogLineRenderResult] = []
+	/** Where each retained line sits, counted from the first line the state ever
+	 held rather than from the head of `recentLines`. Trimming the head then
+	 costs nothing to record: `droppedLineCount` moves instead of every entry. */
+	private var positions: [String: Int] = [:]
+	private var droppedLineCount = 0
+
+	var pendingLineNumbers: Set<String> {
+		Set(pendingResults.map(\.lineNumber))
+	}
 
 	var lineCount: Int {
 		recentLines.count
@@ -130,10 +142,17 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 	}
 
 	mutating func record(_ line: LogLine, rendered result: LogLineRenderResult) -> LiveLineAction {
-		if let existing = recentLines.firstIndex(where: { $0.uniqueIdentifier == line.uniqueIdentifier }) {
+		if let existing = index(of: line.uniqueIdentifier) {
+			/* Re-recording a line the tail already holds moves it to the end, and
+			 only then is renumbering what follows worth the walk. */
 			recentLines.remove(at: existing)
+			for offset in existing ..< recentLines.count {
+				positions[recentLines[offset].uniqueIdentifier] = droppedLineCount + offset
+			}
 		}
+		positions[line.uniqueIdentifier] = droppedLineCount + recentLines.count
 		recentLines.append(line)
+		recentResults[line.uniqueIdentifier] = result
 		trimToCapacity()
 
 		switch phase {
@@ -141,6 +160,9 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 			return .append
 		case .loading:
 			pendingResults.append(result)
+			if pendingResults.count > capacity {
+				pendingResults.removeFirst(pendingResults.count - capacity)
+			}
 			return .buffered
 		case .dormant:
 			return .buffered
@@ -152,14 +174,20 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		pendingResults.removeAll(keepingCapacity: true)
 		return TranscriptReplaySnapshot(
 			lines: recentLines,
-			lineNumbers: Set(recentLines.map(\.uniqueIdentifier))
+			lineNumbers: Set(recentLines.map(\.uniqueIdentifier)),
+			results: recentLines.compactMap { recentResults[$0.uniqueIdentifier] }
 		)
 	}
 
 	mutating func finishReplay(displaying lineNumbers: Set<String>) -> [LogLineRenderResult] {
-		let pending = pendingResults.filter { lineNumbers.contains($0.lineNumber) == false }
-		pendingResults.removeAll(keepingCapacity: true)
+		let pending = takePendingResults(displaying: lineNumbers)
 		phase = .active
+		return pending
+	}
+
+	mutating func takePendingResults(displaying lineNumbers: Set<String>) -> [LogLineRenderResult] {
+		let pending = pendingResults.filter { !lineNumbers.contains($0.lineNumber) }
+		pendingResults.removeAll(keepingCapacity: true)
 		return pending
 	}
 
@@ -173,16 +201,21 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		mark = .none
 		deliveryUpdates.removeAll()
 		recentLines.removeAll()
+		recentResults.removeAll()
 		pendingResults.removeAll()
+		positions.removeAll()
+		droppedLineCount = 0
+	}
+
+	/// Where a retained line sits in `recentLines`, or `nil` when it is not one.
+	private func index(of uniqueIdentifier: String) -> Int? {
+		guard let position = positions[uniqueIdentifier] else { return nil }
+		let index = position - droppedLineCount
+		return recentLines.indices.contains(index) ? index : nil
 	}
 
 	mutating func setMark(_ mark: TranscriptScrollbackMark) {
 		self.mark = mark
-	}
-
-	/// The first thing said on or after `date`; what "go to mark" jumps to.
-	func renderedLineNumber(onOrAfter date: Date) -> String? {
-		recentLines.first { $0.receivedAt >= date && $0.lineType.isConversation }?.uniqueIdentifier
 	}
 
 	mutating func updateDelivery(
@@ -198,27 +231,13 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 			reason: reason
 		)
 		deliveryUpdates[lineNumber] = update
-		guard let index = recentLines.firstIndex(where: { $0.uniqueIdentifier == lineNumber }) else {
+		guard let index = index(of: lineNumber) else {
 			return
 		}
 		recentLines[index].deliveryState = state
 		if let messageIdentifier, messageIdentifier.isEmpty == false {
 			recentLines[index].messageIdentifier = messageIdentifier
 		}
-	}
-
-	/** Merges historic storage with the in-memory tail. When both contain a
-	 line, the in-memory copy wins because it may carry a delivery update that
-	 arrived after the historic write. */
-	static func merging(historic: [LogLine], replay: [LogLine]) -> [LogLine] {
-		let replayByIdentifier = Dictionary(uniqueKeysWithValues: replay.map { ($0.uniqueIdentifier, $0) })
-		var seen = Set<String>()
-		var merged = historic.map { line in
-			seen.insert(line.uniqueIdentifier)
-			return replayByIdentifier[line.uniqueIdentifier] ?? line
-		}
-		merged.append(contentsOf: replay.filter { seen.insert($0.uniqueIdentifier).inserted })
-		return merged
 	}
 
 	private mutating func trimToCapacity() {
@@ -228,8 +247,11 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		let removalCount = recentLines.count - capacity
 		let removedLineNumbers = recentLines.prefix(removalCount).map(\.uniqueIdentifier)
 		recentLines.removeFirst(removalCount)
+		droppedLineCount += removalCount
 		for lineNumber in removedLineNumbers {
+			recentResults.removeValue(forKey: lineNumber)
 			deliveryUpdates.removeValue(forKey: lineNumber)
+			positions.removeValue(forKey: lineNumber)
 		}
 	}
 }

@@ -41,13 +41,14 @@ struct ServerListView: View {
 			}
 		}
 		.listStyle(.sidebar)
+		.accessibilityIdentifier("server-list")
 		.scrollContentBackground(.hidden)
 		.environment(\.defaultMinListRowHeight, ServerListLayout.rowHeight)
 		.contextMenu(forSelectionType: String.self) { identifiers in
 			if let menu = model.menu(for: identifiers) {
-				AppMenuContent(menu: menu) {
-					if let identifier = identifiers.first {
-						model.selectFromSwiftUI(identifier)
+				AppMenuContent(menu: menu.menu, context: menu.context) {
+					if let item = menu.context.treeItem {
+						model.selectFromSwiftUI(item.uniqueIdentifier)
 					}
 				}
 			}

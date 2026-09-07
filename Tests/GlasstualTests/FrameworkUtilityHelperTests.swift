@@ -31,6 +31,25 @@ struct FrameworkUtilityHelperTests {
 			"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 	}
 
+	/// `inet_ntop` reads four or sixteen bytes for the family it is handed and
+	/// cannot be told how many are there, so anything else has to be refused
+	/// before it reads past the end of the data.
+	@Test("An address is presented only from exactly the bytes its family has")
+	func addressesRequireTheirExactByteCount() {
+		#expect(Data([127, 0, 0, 1]).IPv4Address == "127.0.0.1")
+		#expect(Data().IPv4Address == nil)
+		#expect(Data([127, 0, 0]).IPv4Address == nil)
+		#expect(Data([127, 0, 0, 1, 1]).IPv4Address == nil)
+
+		let loopback = Data([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+
+		#expect(loopback.IPv6Address == "::1")
+		#expect(Data().IPv6Address == nil)
+		#expect(loopback.dropLast().IPv6Address == nil)
+		#expect((loopback + Data([0])).IPv6Address == nil)
+		#expect(Data([127, 0, 0, 1]).IPv6Address == nil)
+	}
+
 	@Test("A byte count is formatted with a padded fraction")
 	func byteCountsAreFormatted() {
 		#expect(Int64(0).textualPaddedByteCountDescription.isEmpty == false)

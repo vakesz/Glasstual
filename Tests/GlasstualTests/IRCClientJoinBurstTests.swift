@@ -49,8 +49,7 @@ private final class GLTCompletingPresentation: TreeItemPresentation {
 		reason _: String?
 	) {}
 	func prependHistoricLogLines(_: [LogLine]) {}
-	func prepareForPermanentDestruction() {}
-	func prepareForApplicationTermination() {}
+	func tearDown(_: TreeItemTeardown) {}
 }
 
 /** The whole point of the grace period is what the user sees after a bouncer

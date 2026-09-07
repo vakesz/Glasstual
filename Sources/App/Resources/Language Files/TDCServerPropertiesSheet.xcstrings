@@ -1093,6 +1093,18 @@
         }
       }
     },
+    "sign-in-with-sasl": {
+      "comment": "Server properties Identity pane. Checkbox that authenticates the connection with SASL instead of sending the password to NickServ after connecting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with SASL"
+          }
+        }
+      }
+    },
     "there-are-no-certificates": {
       "comment": "Custom client-side certificate selection. Legacy key: 489-hG.",
       "extractionState": "manual",
@@ -1232,7 +1244,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You will loose unsaved changes if you click “Yes”"
+            "value": "You will lose unsaved changes if you click “Yes”"
           }
         }
       }

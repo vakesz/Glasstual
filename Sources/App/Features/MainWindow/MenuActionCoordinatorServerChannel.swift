@@ -43,24 +43,33 @@ private enum MenuServerSuppressionKey: String {
 	case deleteChannel = "delete_channel"
 }
 
-enum MenuServerActionPolicy {
-	static func canConnect(isConnecting: Bool, isConnected: Bool, isQuitting: Bool) -> Bool {
-		isConnecting == false && isConnected == false && isQuitting == false
-	}
+struct MenuServerActionPolicy {
+	let canConnect: Bool
+	let canConnectWithoutProxy: Bool
+	let canDisconnect: Bool
+	let canCancelReconnect: Bool
 
-	static func canDisconnect(isConnecting: Bool, isConnected: Bool, isQuitting: Bool) -> Bool {
-		(isConnecting || isConnected) && isQuitting == false
+	init(client: IRCClient?) {
+		let connected = client.map { $0.isConnecting || $0.isConnected } == true
+		let available = client.map { !$0.isQuitting && !$0.isDisconnecting && !$0.isTerminating } == true
+		canConnect = available && connected == false
+		canConnectWithoutProxy = canConnect && client.map { $0.config.proxyType != .none } == true
+		canDisconnect = available && connected
+		canCancelReconnect = available && client?.isReconnecting == true
 	}
 }
 
 @MainActor
 public extension MenuActionCoordinator {
 	func performServerChannelAction(_ action: MenuServerChannelAction, sender: Any?) {
+		guard AppController.shared.applicationIsTerminating == false else { return }
 		switch action {
 		case .connect: connect(bypassingProxy: false)
 		case .connectBypassingProxy: connect(bypassingProxy: true)
 		case .disconnect: disconnect()
-		case .cancelReconnection: selectedClient?.cancelReconnect()
+		case .cancelReconnection:
+			guard let client = selectedClient, MenuServerActionPolicy(client: client).canCancelReconnect else { return }
+			client.cancelReconnect()
 		case .showChannelList: showServerChannelList()
 		case .addServer: addServer()
 		case .duplicateServer: duplicateServer()
@@ -76,13 +85,9 @@ public extension MenuActionCoordinator {
 	}
 
 	private func connect(bypassingProxy: Bool) {
-		guard let client = selectedClient,
-		      MenuServerActionPolicy.canConnect(
-		      	isConnecting: client.isConnecting,
-		      	isConnected: client.isConnected,
-		      	isQuitting: client.isQuitting
-		      )
-		else { return }
+		guard let client = selectedClient else { return }
+		let policy = MenuServerActionPolicy(client: client)
+		guard bypassingProxy ? policy.canConnectWithoutProxy : policy.canConnect else { return }
 		if bypassingProxy {
 			client.connect(.normal, bypassProxy: true)
 		} else {
@@ -93,11 +98,7 @@ public extension MenuActionCoordinator {
 
 	private func disconnect() {
 		guard let client = selectedClient,
-		      MenuServerActionPolicy.canDisconnect(
-		      	isConnecting: client.isConnecting,
-		      	isConnected: client.isConnected,
-		      	isQuitting: client.isQuitting
-		      )
+		      MenuServerActionPolicy(client: client).canDisconnect
 		else { return }
 		client.quit()
 	}
@@ -149,16 +150,18 @@ public extension MenuActionCoordinator {
 
 	private func joinSelectedChannel() {
 		guard let client = selectedClient, let channel = selectedChannel,
-		      client.isLoggedIn, channel.isChannel, channel.isActive == false
+		      client.canJoin(channel)
 		else { return }
 		client.join(channel)
 		selectInMainWindow(channel)
 	}
 
 	private func leaveSelectedChannel() {
-		guard let client = selectedClient, let channel = selectedChannel else { return }
+		guard let client = selectedClient, let channel = selectedChannel,
+		      channel.associatedClient === client
+		else { return }
 		if channel.isChannel {
-			guard client.isLoggedIn, channel.isActive else { return }
+			guard client.canJoinChannels, channel.isActive else { return }
 			client.part(channel)
 		} else {
 			world?.destroy(channel)
@@ -200,7 +203,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func joinClickedChannel(_ sender: Any?) {
-		guard let client = selectedClient, client.isLoggedIn else { return }
+		guard let client = selectedClient, client.canJoinChannels else { return }
 		let channelName: String? = if let menuItem = sender as? NSMenuItem {
 			menuItem.textualUserInfo
 		} else {

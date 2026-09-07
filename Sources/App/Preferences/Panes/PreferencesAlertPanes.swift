@@ -321,7 +321,7 @@ struct PreferencesFloodControlSections: View {
 		return VStack(alignment: .leading, spacing: 4) {
 			Text(verbatim: PreferencesFloodControlStrings.whoLimitLabel)
 			PreferencesNote(PreferencesFloodControlStrings.whoLimitNote)
-			Text(verbatim: PreferencesFloodControlStrings.countValue(value: countText(value.wrappedValue)))
+			Text(verbatim: PreferencesFloodControlStrings.countValue(value: Self.countText(value.wrappedValue)))
 				.font(.callout)
 				.foregroundStyle(.secondary)
 			HStack(spacing: 8) {
@@ -330,7 +330,7 @@ struct PreferencesFloodControlSections: View {
 					.foregroundStyle(.secondary)
 				Slider(value: value, in: 0 ... Self.channelSizeMaximum, step: Self.channelSizeStep)
 					.accessibilityLabel(Text(verbatim: PreferencesFloodControlStrings.whoLimitLabel))
-				Text(verbatim: countText(Self.channelSizeMaximum))
+				Text(verbatim: Self.countText(Self.channelSizeMaximum))
 					.font(.callout)
 					.foregroundStyle(.secondary)
 			}
@@ -341,7 +341,11 @@ struct PreferencesFloodControlSections: View {
 		value.formatted(.number.precision(.fractionLength(1)))
 	}
 
-	private func countText(_ value: Double) -> String {
-		Int(value).formatted(.number)
+	/** The value comes from a stored count that a hand-edited defaults file can
+	 put anywhere in `UInt`, so the conversion has to be total: `Int(_:)` traps
+	 on a `Double` outside `Int`, and this label is not worth a crash. */
+	static func countText(_ value: Double) -> String {
+		let count = Int(exactly: value.rounded()) ?? (value < 0 ? Int.min : Int.max)
+		return count.formatted(.number)
 	}
 }

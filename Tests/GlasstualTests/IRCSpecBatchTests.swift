@@ -328,11 +328,13 @@ struct IRCSpecBatchTests {
 		let opening = try message("@label=\(label) :irc.example.net BATCH +ref labeled-response", on: client)
 
 		#expect(client.resolveLabeledResponse(for: opening) == false)
+		client.receiveBatch(opening)
 		#expect(client.deliveryState(forLabel: label) == .pending)
 
 		let closing = try message(":irc.example.net BATCH -ref", on: client)
 
 		#expect(client.resolveLabeledResponse(for: closing) == false)
+		client.receiveBatch(closing)
 		#expect(client.deliveryState(forLabel: label) == .none)
 	}
 

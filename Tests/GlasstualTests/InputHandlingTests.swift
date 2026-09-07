@@ -15,15 +15,6 @@ private final class GLTCompletionWindow: NicknameCompletionWindow {
 }
 
 @MainActor
-class GLTCompletionChannel: Channel {
-	var testMembers: [ChannelUser] = []
-
-	override var channelMembers: [ChannelUser] {
-		testMembers
-	}
-}
-
-@MainActor
 @Suite("Input handling", .serialized)
 struct InputHandlingTests {
 	private static let channelSpecificHistoryKey = "SaveInputHistoryPerSelection"
@@ -77,6 +68,16 @@ struct InputHandlingTests {
 		host.contentView?.addSubview(textField)
 
 		return textField
+	}
+
+	private func makeChannel(on client: IRCClient, nicknames: [String]) -> IRCChannel {
+		let channel = IRCChannel(config: ChannelConfig(channelName: "#chat"))
+		channel.associatedClient = client
+		channel.activate()
+		for nickname in nicknames {
+			channel.addUser(client.findUserOrCreate(nickname))
+		}
+		return channel
 	}
 
 	@Test("Walking the input history skips a repeat of the entry before it")
@@ -177,10 +178,7 @@ struct InputHandlingTests {
 	func nicknameCompletionUsesChannelMembersAndConfiguredSuffix() {
 		withPreference(Self.completionSuffixKey, setTo: ": ") {
 			let client = GLTTestClient()
-			let member = GLTTestClient.testChannelUser(nickname: "Alice", on: client)
-			let channel = GLTCompletionChannel(config: ChannelConfig(channelName: "#chat"))
-
-			channel.testMembers = [member]
+			let channel = makeChannel(on: client, nicknames: ["Alice"])
 
 			let host = hostWindow()
 			let textField = makeTextField(in: host)
@@ -202,11 +200,7 @@ struct InputHandlingTests {
 	func nicknameCompletionCyclesThroughCandidates() {
 		withPreference(Self.completionSuffixKey, setTo: ": ") {
 			let client = GLTTestClient()
-			let channel = GLTCompletionChannel(config: ChannelConfig(channelName: "#chat"))
-			channel.testMembers = [
-				GLTTestClient.testChannelUser(nickname: "Bob", on: client),
-				GLTTestClient.testChannelUser(nickname: "Alice", on: client),
-			]
+			let channel = makeChannel(on: client, nicknames: ["Bob", "Alice"])
 
 			let host = hostWindow()
 			let textField = makeTextField(in: host)
@@ -229,6 +223,60 @@ struct InputHandlingTests {
 		}
 	}
 
+	@Test("Production completion over a large attached member list never publishes weight decay")
+	func largeMemberListCompletionDoesNotPublish() {
+		let client = GLTTestClient()
+		let channel = IRCChannel(config: ChannelConfig(channelName: "#completion"))
+		channel.associatedClient = client
+		channel.activate()
+		let memberList = MemberList()
+		memberList.assign(to: channel)
+		let beforeNames = memberList.presentationRevision
+		channel.withMemberPresentationUpdates {
+			for index in 0 ..< 2048 {
+				channel.addUser(client.findUserOrCreate(String(format: "member%04d", index)))
+			}
+			channel.addUser(client.findUserOrCreate("_memberTrimmed"))
+		}
+		#expect(memberList.presentationRevision == beforeNames + 1)
+		let publicationCount = memberList.presentationRevision
+		channel.recordConversation(with: "member2047", direction: .incoming)
+		channel.recordConversation(with: "member2046", direction: .outgoing)
+		let cache = MemberListRenderCache()
+		let snapshot = cache.members(in: channel)
+
+		let host = hostWindow()
+		let textField = makeTextField(in: host)
+		let window = GLTCompletionWindow()
+		window.inputTextField = textField
+		window.selectedClient = client
+		window.selectedChannel = channel
+		let completion = NicknameCompletionStatus(window: window)
+		textField.stringValue = "say @member"
+		textField.setSelectedRange(NSRange(location: textField.string.utf16.count, length: 0))
+		completion.completeNickname(true)
+		#expect(textField.string == "say @member2047 ")
+		completion.completeNickname(true)
+		#expect(textField.string == "say @member2046 ")
+		completion.completeNickname(false)
+		#expect(textField.string == "say @member2047 ")
+
+		completion.clear()
+		textField.stringValue = "say @memberT"
+		textField.setSelectedRange(NSRange(location: textField.string.utf16.count, length: 0))
+		completion.completeNickname(true)
+		#expect(textField.string == "say @_memberTrimmed ")
+		completion.clear()
+		textField.stringValue = "say @"
+		textField.setSelectedRange(NSRange(location: textField.string.utf16.count, length: 0))
+		completion.completeNickname(true)
+		#expect(textField.string == "say @member2047 ")
+		#expect(channel.findMember("member2047")?.totalWeight == 100)
+		#expect(memberList.presentationRevision == publicationCount)
+		#expect(cache.members(in: channel) == snapshot)
+		#expect(cache.rebuildCount == 1)
+	}
+
 	/// The loading screen makes the field uneditable, which is what makes
 	/// `shouldChangeText` refuse. The session must not then record a range for
 	/// an edit that never happened, or the next Tab replaces from it.
@@ -236,8 +284,7 @@ struct InputHandlingTests {
 	func nicknameCompletionLeavesNoSessionWhenTheEditIsRefused() {
 		withPreference(Self.completionSuffixKey, setTo: ": ") {
 			let client = GLTTestClient()
-			let channel = GLTCompletionChannel(config: ChannelConfig(channelName: "#chat"))
-			channel.testMembers = [GLTTestClient.testChannelUser(nickname: "Alice", on: client)]
+			let channel = makeChannel(on: client, nicknames: ["Alice"])
 
 			let host = hostWindow()
 			let textField = makeTextField(in: host)

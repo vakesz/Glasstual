@@ -106,23 +106,92 @@ struct TypedPreferenceStoreTests {
 	@Test("Import coerces a number written as a string")
 	func importCoercesStringsToNumbers() {
 		#expect(
-			PreferencesImportExport.validatedValue("1", forKey: Self.declaredInt.name) == .integer(1)
+			Preferences.coerce("1", forKey: Self.declaredInt.name) == .integer(1)
 		)
 		#expect(
-			PreferencesImportExport.validatedValue("yes", forKey: Self.declaredBool.name) == .boolean(true)
+			Preferences.coerce("yes", forKey: Self.declaredBool.name) == .boolean(true)
 		)
 	}
 
 	@Test("Import rejects a value the declaration cannot represent")
 	func importRejectsGarbage() {
-		#expect(PreferencesImportExport.validatedValue("banana", forKey: Self.declaredInt.name) == nil)
-		#expect(PreferencesImportExport.validatedValue(["a", "b"], forKey: Self.declaredBool.name) == nil)
+		#expect(Preferences.coerce("banana", forKey: Self.declaredInt.name) == nil)
+		#expect(Preferences.coerce(["a", "b"], forKey: Self.declaredBool.name) == nil)
+	}
+
+	@Test("Integer preferences reject fractions, negative unsigned values and overflow")
+	func integerConversionsAreExact() {
+		for object: Any in [NSNumber(value: -1), NSNumber(value: 1.5), "-1", "1.5", "18446744073709551616"] {
+			#expect(UInt.preferenceValue(from: object) == nil)
+			#expect(UInt16.preferenceValue(from: object) == nil)
+		}
+		for object: Any in [NSNumber(value: UInt.max), NSNumber(value: 1.5), "9223372036854775808",
+		                    "-9223372036854775809", "1.00000000000000000001"]
+		{
+			#expect(Int.preferenceValue(from: object) == nil)
+		}
+		#expect(UInt16.preferenceValue(from: 65536) == nil)
+		#expect(UInt16.preferenceValue(from: "65536") == nil)
+		#expect(Preferences.coerce("1.5", forKey: Self.declaredInt.name) == nil)
+	}
+
+	@Test("Legacy integral numbers and numeric strings retain their exact values")
+	func legacyNumbersRemainReadable() {
+		#expect(Int.preferenceValue(from: NSNumber(value: Int.max)) == Int.max)
+		#expect(Int.preferenceValue(from: String(Int.min)) == Int.min)
+		#expect(UInt.preferenceValue(from: NSNumber(value: UInt.max)) == UInt.max)
+		#expect(UInt.preferenceValue(from: String(UInt.max)) == UInt.max)
+		#expect(UInt.preferenceValue(from: "18446744073709551615.0") == UInt.max)
+		#expect(Int.preferenceValue(from: "9007199254740993.0") == 9_007_199_254_740_993)
+		for object: Any in [NSNumber(value: 42.0), "42", "42.0", "4.2e1", "+42", "420e-1"] {
+			#expect(Int.preferenceValue(from: object) == 42)
+			#expect(UInt.preferenceValue(from: object) == 42)
+			#expect(UInt16.preferenceValue(from: object) == 42)
+		}
+		#expect(UInt16.preferenceValue(from: "65535") == 65535)
+		#expect(Double.preferenceValue(from: "1.25e2") == 125)
+		#expect(UInt16.preferenceValue(from: "0xFF") == 255)
+		#expect(Int.preferenceValue(from: "0x1.5p5") == 42)
+		#expect(UInt.preferenceValue(from: "0x20000000000001") == 9_007_199_254_740_993)
+		#expect(UInt.preferenceValue(from: "0xFFFFFFFFFFFFFFFF") == UInt.max)
+		#expect(Int.preferenceValue(from: "0x1.0000000000000001") == nil)
+	}
+
+	@Test("Non-finite preferences are rejected and invalid stored numbers use the declared default")
+	func invalidNumbersPreserveDefaults() {
+		for object: Any in [NSNumber(value: Double.nan), NSNumber(value: Double.infinity),
+		                    NSNumber(value: -Double.infinity), "nan", "inf", "-inf", "1e999"]
+		{
+			#expect(Int.preferenceValue(from: object) == nil)
+			#expect(UInt.preferenceValue(from: object) == nil)
+			#expect(UInt16.preferenceValue(from: object) == nil)
+			#expect(Double.preferenceValue(from: object) == nil)
+		}
+		withScratchKeys {
+			TextualUserDefaults.container.set("7.5", forKey: Self.intKey.name)
+			#expect(Self.intKey.value == 7)
+			#expect(Self.intKey.storedValue == nil)
+			TextualUserDefaults.container.set("4.2e1", forKey: Self.intKey.name)
+			#expect(Self.intKey.value == 42)
+		}
+	}
+
+	@Test("Writing a non-finite double leaves the previous preference intact")
+	func nonFiniteDoubleIsNotStored() {
+		let key = PreferenceKey("Tests -> Typed Store -> Double", default: 2.5,
+		                        traits: [.unregistered, .uncatalogued])
+		defer { key.reset() }
+		key.value = 4.5
+		for value in [Double.nan, .infinity, -.infinity] {
+			key.value = value
+			#expect(key.value == 4.5)
+		}
 	}
 
 	@Test("A key the catalogue does not know keeps whatever shape it was written with")
 	func importPassesThroughUnknownKeys() {
 		let payload: PropertyListValue = ["anything": 1]
-		let validated = PreferencesImportExport.validatedValue(payload, forKey: "Some Plugin -> Its Own Key")
+		let validated = Preferences.coerce(payload, forKey: "Some Plugin -> Its Own Key")
 
 		#expect(validated?.dictionary?["anything"]?.integer == 1)
 	}
@@ -146,28 +215,32 @@ struct TypedPreferenceStoreTests {
 }
 
 /// Export used to filter by name and to read the whole search list. It now reads
-/// what the user actually wrote and compares it against the declared default.
+/// the declarations: a complete snapshot of every exportable key, and nothing
+/// that describes this Mac rather than the user's settings.
 @Suite("Preference export contents", .serialized)
 @MainActor
 struct PreferenceExportContentsTests {
+	private var snapshot: PreferencesArchive {
+		PreferencesTransferStores.live.snapshot(clients: [])
+	}
+
 	private func withRestored(_ key: PreferenceKey<some Any>, _ body: () -> Void) {
 		let original = key.storedValue
 		defer { key.storedValue = original }
 		body()
 	}
 
-	@Test("A changed value is exported and an unchanged default is not")
-	func exportCarriesOnlyChangedValues() {
+	@Test("A changed value is exported, and so is one left at its default")
+	func exportCarriesEveryExportableValue() {
 		let key = Preferences.Appearance.trackUserAwayStatusMaximumChannelSize
 
 		withRestored(key) {
 			key.value = key.defaultValue + 11
-			var exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
-			#expect(exported[key.name]?.integer == Int(key.defaultValue) + 11)
+			#expect(snapshot.values[key.name]?.integer == Int(key.defaultValue) + 11)
 
-			key.value = key.defaultValue
-			exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
-			#expect(exported[key.name] == nil)
+			key.reset()
+			#expect(snapshot.values[key.name] == key.registeredDefault)
+			#expect(snapshot.unset.contains(key.name) == false)
 		}
 	}
 
@@ -175,19 +248,24 @@ struct PreferenceExportContentsTests {
 	func excludedKeysAreNotExported() {
 		let excluded = Preferences.Internals.runCount
 		let suppression = "Text Input Prompt Suppression -> tests_export"
+		let themeStore = "Internal Theme Settings Key-value Store -> Lines"
 
 		let original = excluded.storedValue
 		defer { excluded.storedValue = original }
 
 		excluded.value = 12345
 		TextualUserDefaults.container.set(true, forKey: suppression)
-		defer { TextualUserDefaults.container.removeObject(forKey: suppression) }
+		TextualUserDefaults.container.set(["setting": true], forKey: themeStore)
+		defer {
+			TextualUserDefaults.container.removeObject(forKey: suppression)
+			TextualUserDefaults.container.removeObject(forKey: themeStore)
+		}
 
-		let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
-
-		#expect(exported[excluded.name] == nil)
-		#expect(exported[suppression] == nil)
-		#expect(exported["Internal Theme Settings Key-value Store -> Lines"] == nil)
+		let exported = snapshot
+		for name in [excluded.name, suppression, themeStore] {
+			#expect(exported.values[name] == nil)
+			#expect(exported.unset.contains(name) == false)
+		}
 	}
 
 	@Test("A key outside the catalogue is not exported")
@@ -196,7 +274,7 @@ struct PreferenceExportContentsTests {
 		TextualUserDefaults.container.set("value", forKey: name)
 		defer { TextualUserDefaults.container.removeObject(forKey: name) }
 
-		let exported = PreferencesImportExport.exportedPreferencesDictionary(true, filterDefaults: true)
-		#expect(exported[name] == nil)
+		#expect(snapshot.values[name] == nil)
+		#expect(snapshot.unset.contains(name) == false)
 	}
 }

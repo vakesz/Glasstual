@@ -267,15 +267,15 @@ public final class ServerList {
 	}
 
 	public func refreshAllDrawings() {
-		rebuildRows()
+		contentsChanged()
 	}
 
 	public func refreshDrawing(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
-		rebuildRows()
+		contentsChanged()
 	}
 
 	public func refreshMessageCount(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
-		rebuildRows()
+		contentsChanged()
 	}
 
 	public func applicationAppearanceChanged() {
@@ -286,21 +286,20 @@ public final class ServerList {
 		rebuildRows()
 	}
 
-	func menu(for identifiers: Set<String>) -> NSMenu? {
+	func menu(for identifiers: Set<String>) -> (menu: NSMenu, context: AppMenuContext)? {
 		guard let controller = AppController.shared.menuController else { return nil }
-		guard let identifier = identifiers.first,
-		      let item = mainWindow?.world?.findItem(withId: identifier)
-		else {
-			return controller.serverListNoSelectionMenu
+		let item = identifiers.first.flatMap { mainWindow?.world?.findItem(withId: $0) }
+		let menu: NSMenu? = if let item {
+			if item.isClient {
+				controller.mainMenuServerMenuItem?.submenu
+			} else {
+				item.isChannel ? controller.mainMenuChannelMenu : controller.mainMenuQueryMenu
+			}
+		} else {
+			controller.serverListNoSelectionMenu
 		}
-
-		if item.isClient {
-			return controller.mainMenuServerMenuItem?.submenu
-		}
-		if item.isChannel {
-			return controller.mainMenuChannelMenu
-		}
-		return controller.mainMenuQueryMenu
+		guard let menu else { return nil }
+		return (menu, AppMenuContext(coordinator: controller.actionCoordinator, item: item))
 	}
 
 	func move(draggedIdentifier: String, beforeIdentifier destinationIdentifier: String) -> Bool {

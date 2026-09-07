@@ -19,9 +19,10 @@ private final class SpeechSynthesizerEngineSpy: NSObject, SpeechSynthesizerEngin
 		isSpeaking = true
 	}
 
-	func stopSpeakingImmediately() {
+	func stopSpeakingImmediately() -> Bool {
 		stopCount += 1
-		isSpeaking = false
+		defer { isSpeaking = false }
+		return isSpeaking
 	}
 
 	func completeCurrentUtterance() {
@@ -31,6 +32,12 @@ private final class SpeechSynthesizerEngineSpy: NSObject, SpeechSynthesizerEngin
 
 	func simulateActiveUtterance() {
 		isSpeaking = true
+	}
+
+	/// The engine finishing without ever telling its delegate, which is what a
+	/// dropped completion callback looks like from the queue's side.
+	func finishWithoutNotifying() {
+		isSpeaking = false
 	}
 }
 
@@ -163,5 +170,119 @@ struct SpeechSynthesizerTests {
 
 		#expect(engine.spokenTexts == ["valid"])
 		#expect(synthesizer.pendingItemCount == 0)
+	}
+
+	@Test("Mute stops active notification speech and drops only notification backlog")
+	func muteKeepsExplicitSpeech() {
+		let engine = SpeechSynthesizerEngineSpy()
+		let synthesizer = SpeechSynthesizer(engine: engine)
+		synthesizer.speak(notification("active notification"))
+		synthesizer.speak(notification("pending notification"))
+		synthesizer.speak(text: "explicit speech")
+		synthesizer.setNotificationsMuted(true)
+		synthesizer.speak(notification("muted notification"))
+		#expect(engine.stopCount == 1)
+		#expect(synthesizer.pendingItemCount == 1)
+		// Stop completes asynchronously. Do not start a new utterance before
+		// that completion can retire the previous one.
+		synthesizer.speak(text: "another explicit request")
+		#expect(engine.spokenTexts == ["active notification"])
+		engine.completeCurrentUtterance()
+		#expect(engine.spokenTexts == ["active notification", "explicit speech"])
+		engine.completeCurrentUtterance()
+		#expect(engine.spokenTexts.last == "another explicit request")
+	}
+
+	@Test("Mute leaves an explicit utterance running and unmute does not replay stale notifications")
+	func muteDoesNotStopExplicitUtterance() {
+		let engine = SpeechSynthesizerEngineSpy()
+		let synthesizer = SpeechSynthesizer(engine: engine)
+		synthesizer.speak(text: "explicit")
+		synthesizer.speak(notification("stale"))
+		synthesizer.setNotificationsMuted(true)
+		synthesizer.setNotificationsMuted(false)
+		synthesizer.speak(notification("fresh"))
+		#expect(engine.stopCount == 0)
+		engine.completeCurrentUtterance()
+		#expect(engine.spokenTexts == ["explicit", "fresh"])
+	}
+
+	@Test("Notification backlog retains a bounded number of recent requests")
+	func backlogIsBounded() {
+		let engine = SpeechSynthesizerEngineSpy()
+		let synthesizer = SpeechSynthesizer(engine: engine)
+		synthesizer.speak(text: "active")
+		for index in 0 ..< 100 {
+			synthesizer.speak(notification("notification \(index)"))
+		}
+		#expect(synthesizer.pendingItemCount == UInt(SpeechSynthesizer.maximumPendingNotifications))
+		engine.completeCurrentUtterance()
+		#expect(engine.spokenTexts.last == "notification 36")
+	}
+
+	@Test("Oversized notification speech is refused without consuming queue capacity")
+	func oversizedNotification() {
+		let engine = SpeechSynthesizerEngineSpy()
+		let synthesizer = SpeechSynthesizer(engine: engine)
+		synthesizer.speak(notification(String(repeating: "x", count: SpeechSynthesizer.maximumNotificationBytes + 1)))
+		#expect(engine.spokenTexts.isEmpty)
+		#expect(synthesizer.pendingItemCount == 0)
+	}
+
+	@Test("A completion the engine never reports does not wedge the queue")
+	func missedCompletionDoesNotWedgeTheQueue() {
+		let engine = SpeechSynthesizerEngineSpy()
+		let synthesizer = SpeechSynthesizer(engine: engine)
+
+		synthesizer.speak(text: "first")
+		engine.finishWithoutNotifying()
+		synthesizer.speak(text: "second")
+
+		#expect(engine.spokenTexts == ["first", "second"])
+		#expect(synthesizer.pendingItemCount == 0)
+	}
+
+	@Test("Skipping forward moves on even when the engine has already gone quiet")
+	func skippingForwardAdvancesAnEngineThatWentQuiet() {
+		let engine = SpeechSynthesizerEngineSpy()
+		let synthesizer = SpeechSynthesizer(engine: engine)
+
+		synthesizer.speak(text: "first")
+		synthesizer.speak(text: "second")
+		engine.finishWithoutNotifying()
+		synthesizer.stopSpeakingAndMoveForward()
+
+		#expect(engine.stopCount == 0)
+		#expect(engine.spokenTexts == ["first", "second"])
+		#expect(synthesizer.pendingItemCount == 0)
+	}
+
+	@Test("Skipping a live utterance cancels it and lets its callback move the queue on")
+	func skippingALiveUtteranceWaitsForItsCancellation() {
+		let engine = SpeechSynthesizerEngineSpy()
+		let synthesizer = SpeechSynthesizer(engine: engine)
+
+		synthesizer.speak(text: "first")
+		synthesizer.speak(text: "second")
+		synthesizer.stopSpeakingAndMoveForward()
+
+		#expect(engine.stopCount == 1)
+		#expect(engine.spokenTexts == ["first"])
+
+		engine.completeCurrentUtterance()
+
+		#expect(engine.spokenTexts == ["first", "second"])
+	}
+
+	private func notification(_ text: String) -> SpeechItem {
+		var notification = SpokenNotification(
+			notificationType: .connect,
+			lineType: .notice,
+			target: nil,
+			nickname: nil,
+			text: text
+		)
+		notification.spokenText = text
+		return .notification(notification)
 	}
 }

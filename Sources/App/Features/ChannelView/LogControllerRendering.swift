@@ -13,12 +13,15 @@
 
 import Foundation
 import GlasstualPluginKit
-import os
 
-private nonisolated let logLineRenderingLogger = Logger( // nonisolated: let
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "LogLineRendering"
-)
+/// Initial replay keeps raw archives distinct from the native rows it rendered.
+nonisolated struct TranscriptHistoryRenderOutput: Sendable { // nonisolated: value
+	let historicEntries: [LogLine]
+	let entries: [LogLine]
+	let results: [LogLineRenderResult]
+	let fetchSucceeded: Bool
+	let failure: HistoricLogFetchFailure?
+}
 
 nonisolated struct RenderedMember: Sendable, Hashable { // nonisolated: value
 	var nickname: String
@@ -35,10 +38,8 @@ nonisolated struct RenderedMember: Sendable, Hashable { // nonisolated: value
 }
 
 nonisolated struct LogLineRenderContext: Sendable { // nonisolated: value
-	var networkName = ""
 	var inlineMediaEnabled = false
 	var isChannel = false
-	var nicknameFormat = ""
 	var members: [RenderedMember] = []
 	var sessionReactions: [String: [String: [String]]] = [:]
 
@@ -71,12 +72,9 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 	var messageBody = ""
 	var command = ""
 	var receivedAt = Date()
-	var formattedTimestamp = ""
 	var lineType = LogLineType.undefined
-	var lineTypeString: String?
 	var memberType = LogLineMemberType.normal
 	var nickname: String?
-	var formattedNickname = ""
 	var messageIdentifier: String?
 	var replyToMessageIdentifier: String?
 	var deliveryState = LogLineDeliveryState.none
@@ -85,19 +83,19 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 	var excludeKeywords: [String]?
 	var isEncrypted = false
 	var isFirstForDay = false
-	var sourceDescription = ""
 	var fromCurrentSession = true
+	var modeSymbol = ""
+	var historyCursor: HistoricLogRowCursor?
 
 	init() {}
 
-	init(_ logLine: LogLine, in context: LogLineRenderContext) {
-		uniqueIdentifier = logLine.uniqueIdentifier
+	init(_ logLine: LogLine, in context: LogLineRenderContext, historyCursor: HistoricLogRowCursor? = nil) {
+		self.historyCursor = historyCursor
+		uniqueIdentifier = historyCursor?.rowURI ?? logLine.uniqueIdentifier
 		messageBody = logLine.messageBody
 		command = logLine.command
 		receivedAt = logLine.receivedAt
-		formattedTimestamp = logLine.formattedTimestamp
 		lineType = logLine.lineType
-		lineTypeString = logLine.lineTypeString
 		memberType = logLine.memberType
 		nickname = logLine.nickname
 		messageIdentifier = logLine.messageIdentifier
@@ -108,17 +106,13 @@ nonisolated struct LogLineSnapshot: Sendable { // nonisolated: value
 		excludeKeywords = logLine.excludeKeywords
 		isEncrypted = logLine.isEncrypted
 		isFirstForDay = logLine.isFirstForDay
-		sourceDescription = logLine.description
 		fromCurrentSession = logLine.fromCurrentSession
 
-		let modeSymbol = if context.isChannel, let sender = logLine.nickname {
+		modeSymbol = if context.isChannel, let sender = logLine.nickname {
 			context.member(named: sender)?.mark ?? ""
 		} else {
 			""
 		}
-		formattedNickname = logLine
-			.formattedNickname(modeSymbol: modeSymbol, format: context.nicknameFormat)?
-			.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 	}
 }
 
@@ -220,30 +214,26 @@ extension LogController {
 		_ lines: [LogLineSnapshot],
 		context: LogLineRenderContext
 	) -> [LogLineRenderResult] {
-		lines.compactMap { render(LogLineRenderRequest(line: $0, context: context)) }
+		lines.map { render(LogLineRenderRequest(line: $0, context: context)) }
 	}
 
-	nonisolated static func renderJob(_ request: LogLineRenderRequest) -> LogLineRenderResult? { // nonisolated: pure
+	nonisolated static func renderJob(_ request: LogLineRenderRequest) -> LogLineRenderResult { // nonisolated: pure
 		render(request)
 	}
 
 	private nonisolated static func render( // nonisolated: pure
 		_ request: LogLineRenderRequest
 	)
-		-> LogLineRenderResult?
+		-> LogLineRenderResult
 	{
 		let line = request.line
-		let lineTypeString = line.lineTypeString ?? ""
-		var attributes = LogRendererConfiguration()
-		if let excluded = line.excludeKeywords {
-			attributes[.excludedKeywords] = excluded
-		}
-		if let highlighted = line.highlightKeywords {
-			attributes[.highlightKeywords] = highlighted
-		}
-		attributes[.renderLinks] = LinkParser.bannedLineTypes.contains(lineTypeString) == false
-		attributes[.lineType] = line.lineType.rawValue
-		attributes[.memberType] = line.memberType.rawValue
+		let attributes = TranscriptRenderOptions(
+			renderLinks: !LinkParser.bannedLineTypes.contains(LogLine.string(for: line.lineType) ?? ""),
+			lineType: line.lineType,
+			memberType: line.memberType,
+			highlightKeywords: line.highlightKeywords ?? [],
+			excludedKeywords: line.excludeKeywords ?? []
+		)
 
 		let body = LogRenderer.renderNativeBody(
 			line.messageBody,
@@ -254,9 +244,7 @@ extension LogController {
 		let transcriptLine = TranscriptLine(
 			lineNumber: line.uniqueIdentifier,
 			receivedAt: line.receivedAt,
-			timestamp: line.formattedTimestamp,
 			nickname: line.nickname,
-			formattedNickname: line.formattedNickname,
 			memberType: line.memberType,
 			lineType: line.lineType,
 			command: line.command,
@@ -266,7 +254,9 @@ extension LogController {
 			deliveryFailureReason: nil,
 			reactions: request.context.reactions(for: line),
 			markers: markers,
-			body: body
+			body: body,
+			modeSymbol: line.modeSymbol,
+			historyCursor: line.historyCursor
 		)
 		let inlineMedia = request.context.inlineMediaEnabled &&
 			(line.lineType == .privateMessage || line.lineType == .action)

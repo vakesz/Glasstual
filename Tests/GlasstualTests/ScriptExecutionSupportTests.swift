@@ -136,30 +136,55 @@ struct ScriptExecutionSupportTests {
 	/// deadlocked any script writing more than the pipe holds: it blocked in
 	/// `write(2)`, so it never exited, so the read never started.
 	@Test("Output larger than the pipe buffer is drained while the script still runs")
-	func outputLargerThanThePipeBufferIsDrained() async {
+	func outputLargerThanThePipeBufferIsDrained() async throws {
 		let pipe = Pipe()
 		let byteCount = 512 * 1024
-		let output = Task { await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
+		let output = Task { try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
 
 		await Self.write(byteCount: byteCount, to: pipe.fileHandleForWriting)
 
-		let data = await output.value
+		let data = try await output.value
 		try? pipe.fileHandleForReading.close()
 
 		#expect(data.count == byteCount)
 	}
 
-	@Test("A runaway script's output is capped, and the rest is still drained")
-	func outputPastTheCeilingIsDroppedRatherThanBuffered() async {
+	@Test("Oversized output is drained but rejected, never returned as partial commands")
+	func outputPastTheCeilingIsRejected() async {
 		let pipe = Pipe()
 		let byteCount = ScriptExecutionSupport.maximumOutputBytes + (128 * 1024)
-		let output = Task { await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
+		let output = Task { try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading) }
 
 		await Self.write(byteCount: byteCount, to: pipe.fileHandleForWriting)
 
-		let data = await output.value
+		let result = await output.result
 		try? pipe.fileHandleForReading.close()
 
-		#expect(data.count == ScriptExecutionSupport.maximumOutputBytes)
+		#expect(throws: ScriptExecutionSupport.OutputError.tooLarge) { try result.get() }
+	}
+
+	@Test("Invalid UTF-8 is an error, including a valid command followed by a truncated scalar")
+	func invalidEncodingRejectsTheWholeOutput() {
+		let data = Data("/join #must-not-run\n".utf8) + Data([0xF0, 0x9F])
+		#expect(throws: ScriptExecutionSupport.OutputError.invalidUTF8) {
+			try ScriptExecutionSupport.decodedOutput(data)
+		}
+	}
+
+	@Test("Empty output and exactly the output ceiling remain valid")
+	func validOutputBoundaries() throws {
+		#expect(try ScriptExecutionSupport.decodedOutput(Data()) == "")
+		let data = Data(repeating: 0x41, count: ScriptExecutionSupport.maximumOutputBytes)
+		#expect(try ScriptExecutionSupport.decodedOutput(data).utf8.count == data.count)
+	}
+
+	@Test("A read failure is propagated instead of returning the bytes read so far")
+	func outputReadFailureIsReported() async throws {
+		let pipe = Pipe()
+		try pipe.fileHandleForReading.close()
+		try pipe.fileHandleForWriting.close()
+		await #expect(throws: (any Error).self) {
+			try await ScriptExecutionSupport.readOutput(from: pipe.fileHandleForReading)
+		}
 	}
 }

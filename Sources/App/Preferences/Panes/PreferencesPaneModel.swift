@@ -21,14 +21,10 @@ struct IRCv3ConnectionSummary: Equatable, Identifiable {
 	let capabilities: [String]
 }
 
-enum PreferencesImportRequest: Identifiable {
+enum PreferencesImportRequest {
 	case transcriptTheme
 	case transcriptFolder
 	case downloadFolder
-
-	var id: Self {
-		self
-	}
 
 	var allowedContentTypes: [UTType] {
 		switch self {
@@ -38,11 +34,8 @@ enum PreferencesImportRequest: Identifiable {
 	}
 }
 
-/** The state the panes show that does not live in the key store: what the theme
- controller lists, which folders the security-scoped bookmarks point at, the
- font the style is drawn with, and whether a style reload is in flight.
-
- The shell refreshes it; the panes only read it. */
+/// Pane selection, folder locations, inventory and presentation requests. Theme
+/// and font fields read the controller directly rather than keeping a second copy.
 @MainActor
 @Observable
 final class PreferencesPaneModel {
@@ -63,9 +56,19 @@ final class PreferencesPaneModel {
 		sections.first { $0.identifier == selection.sectionIdentifier }
 	}
 
-	var transcriptTheme = TranscriptTheme.lines
-	var channelViewFontName = ""
-	var channelViewFontSize: CGFloat = 0
+	let themeController: ThemeController
+
+	var transcriptTheme: TranscriptTheme {
+		themeController.theme
+	}
+
+	var channelViewFontName: String {
+		transcriptTheme.fontName
+	}
+
+	var channelViewFontSize: CGFloat {
+		transcriptTheme.fontSize
+	}
 
 	/// `nil` when no folder is configured, which the popup shows as its
 	/// "no location selected" title.
@@ -76,8 +79,10 @@ final class PreferencesPaneModel {
 	var scriptInstallationInstructions = ""
 	var ircv3Connections: [IRCv3ConnectionSummary] = []
 
-	/// Presentation requests consumed by the SwiftUI Settings scene.
-	var importRequest: PreferencesImportRequest?
+	/// Presentation requests consumed by the SwiftUI Settings scene. The file
+	/// panel's request lives here rather than in the view, so the action that
+	/// raises it and the completion that consumes it read one value.
+	var fileRequest = PendingFileRequest<PreferencesImportRequest>()
 	var exportedThemeData: Data?
 	var exportedThemeFilename = ""
 	var presentationError: String?
@@ -87,7 +92,8 @@ final class PreferencesPaneModel {
 	@ObservationIgnored
 	let notificationItems: [NotificationConfigurationItem]
 
-	init() {
+	init(themeController: ThemeController = SharedApplication.sharedThemeController()) {
+		self.themeController = themeController
 		notificationItems = Self.defaultNotificationItems
 	}
 
@@ -149,25 +155,13 @@ final class PreferencesPaneModel {
 		}
 	}()
 
-	func refreshTheme() {
-		transcriptTheme = SharedApplication.sharedThemeController().theme
-	}
-
 	func updateTheme(_ update: (inout TranscriptTheme) -> Void) {
-		var changed = transcriptTheme
+		var changed = themeController.theme
 		update(&changed)
 
-		if SharedApplication.sharedThemeController().apply(changed) == false {
+		if themeController.apply(changed) == false {
 			presentationError = TranscriptThemeStrings.invalidValues
 		}
-
-		refreshTheme()
-	}
-
-	func refreshChannelViewFont() {
-		let theme = SharedApplication.sharedThemeController().theme
-		channelViewFontName = theme.fontName
-		channelViewFontSize = theme.fontSize
 	}
 
 	func refreshFolders() {
@@ -198,8 +192,6 @@ final class PreferencesPaneModel {
 	}
 
 	func refreshAll() {
-		refreshTheme()
-		refreshChannelViewFont()
 		refreshFolders()
 		refreshAddOnCommands()
 		refreshIRCv3Connections()

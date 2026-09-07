@@ -33,7 +33,7 @@ settings:
     # ---- Product identity -------------------------------------------------
     GLASSTUAL_BUNDLE_IDENTIFIER: com.vakesz.glasstual
     GLASSTUAL_GROUP_CONTAINER_IDENTIFIER: group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUNDLE_IDENTIFIER)
-    MARKETING_VERSION: "1.0.7"
+    MARKETING_VERSION: "1.0.8"
     # CFBundleVersion is what LaunchServices and updaters compare, so it has to
     # move every release. The release workflow overrides MARKETING_VERSION on
     # the xcodebuild line and refuses to run for a tag that already exists, so
@@ -51,7 +51,6 @@ settings:
     PROVISIONING_PROFILE_SPECIFIER: ""
     GLASSTUAL_MAIN_PROVISIONING_PROFILE: ""
     GLASSTUAL_IRC_PROVISIONING_PROFILE: ""
-    GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE: ""
 
     # ---- Platform ---------------------------------------------------------
     SDKROOT: macosx
@@ -204,6 +203,7 @@ targetTemplates:
     info:
       properties:
         MinimumGlasstualVersion: 8.0.0
+        GlasstualPluginInterfaceVersion: 1
     settings:
       base:
         # Plugins are UI/app-state code loaded into the app; main actor by default.
@@ -369,6 +369,8 @@ targets:
         NSPrincipalClass: TPI_Caffeine
     sources:
       - path: Sources/Plugins/Caffeine/Classes
+      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
+      - path: Sources/Plugins/Shared/PluginDefaultsObservation.swift
       - path: Sources/Plugins/Caffeine/Resources
     dependencies:
       - target: CocoaExtensions
@@ -390,6 +392,8 @@ targets:
         NSPrincipalClass: TPI_ChatFilterExtension
     sources:
       - path: Sources/Plugins/Chat Filter/Classes
+      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
+      - path: Sources/Plugins/Shared/PluginDefaultsObservation.swift
       - path: Sources/Plugins/Chat Filter/Resources
     dependencies:
       - target: CocoaExtensions
@@ -410,6 +414,8 @@ targets:
         NSPrincipalClass: TPISmileyConverter
     sources:
       - path: Sources/Plugins/Smiley Converter/Classes
+      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
+      - path: Sources/Plugins/Shared/PluginDefaultsObservation.swift
       - path: Sources/Plugins/Smiley Converter/Resources
     dependencies:
       - target: CocoaExtensions
@@ -430,6 +436,7 @@ targets:
         NSPrincipalClass: TPISystemProfiler
     sources:
       - path: Sources/Plugins/System Profiler/Classes
+      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
       - path: Sources/Plugins/System Profiler/Resources
     dependencies:
       - target: CocoaExtensions
@@ -530,15 +537,16 @@ targets:
               - irc
               - ircs
               - glasstual
+              # ApplicationLink still answers the name the app was forked from.
+              - textual
         GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
         ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.social-networking
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
-        # The channel log renders inline images and video from whatever host an
-        # IRC peer names, and plenty of those are still http-only. ATS stays
-        # relaxed for web content so those keep loading; the runtime gate is
-        # `InlineMediaAllowsCleartextHTTP`, which the inline-content service
-        # consults before it will fetch or embed an http URL.
+        # This legacy web-content exception does not relax ATS for the native
+        # URLSession image loader. NativeInlineImageLoader applies the
+        # InlineMediaAllowsCleartextHTTP preference before fetching; URLSession
+        # still applies ATS independently. There is no inline-content service.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInWebContent: true
         NSAppleEventsUsageDescription: $(PRODUCT_NAME) runs user scripts that can control other applications.
@@ -577,6 +585,12 @@ targets:
       - path: Sources/App/Protocol
       - path: Sources/App/UI
       - path: Sources/Shared
+      # The bundled plugins and the app agree on these names and defaults, so
+      # the declarations live with the plugins and the app compiles them too.
+      # Sources/Shared holds the app-side preference store and the declarations
+      # the connection host shares; only the files the IRCConnectionHost target
+      # lists actually cross that process boundary.
+      - path: Sources/Plugins/Shared/FirstPartyPluginPreferences.swift
       # Resources -----------------------------------------------------------
       - path: Sources/App/Resources/Images/Application/AppIcon.icon
         type: file
@@ -654,7 +668,7 @@ targets:
   # ---- Tests --------------------------------------------------------------
 
   # Unit tests run inside Glasstual.app so that they can use the app's
-  # classes directly. Tests never touch the network.
+  # classes directly. Network fixtures use loopback listeners.
   GlasstualTests:
     templates: [GlasstualBundle]
     type: bundle.unit-test
@@ -675,6 +689,10 @@ targets:
     # signature is never consulted.
     sources:
       - path: Tests/GlasstualTests
+      - path: Sources/Plugins/Chat Filter/Classes/ChatFilter.swift
+      - path: Sources/Plugins/Chat Filter/Classes/ChatFilterStore.swift
+      - path: Sources/Plugins/Chat Filter/Resources/Language Files/TPI_ChatFilterExtension.xcstrings
+        buildPhase: resources
       # Specification corpora the IRCSpec suites read back at runtime. Only
       # the converted JSON ships; the YAML originals and the conversion
       # script stay out of the bundle.
@@ -696,11 +714,75 @@ targets:
       - target: GlasstualPluginKit
         embed: false
 
+  # Public AX/NSWorkspace driver and scripted loopback peer, outside the app sandbox.
+  GlasstualE2EHarness:
+    templates: [GlasstualTarget]
+    type: tool
+    info:
+      properties:
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleName: $(PRODUCT_NAME)
+    sources:
+      - path: Tests/E2EHarness
+    settings:
+      base:
+        PRODUCT_NAME: GlasstualE2EHarness
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-harness
+        CREATE_INFOPLIST_SECTION_IN_BINARY: YES
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        ENABLE_APP_SANDBOX: NO
+    dependencies:
+      - sdk: AppKit.framework
+      - sdk: ApplicationServices.framework
+      - sdk: CryptoKit.framework
+      - sdk: Network.framework
+      - sdk: Security.framework
+
+  # A Swift Testing bundle loaded by the test runner, not Glasstual.app.
+  GlasstualE2ETests:
+    templates: [GlasstualBundle]
+    type: bundle.unit-test
+    sources:
+      - path: Tests/GlasstualE2ETests
+    settings:
+      base:
+        PRODUCT_NAME: GlasstualE2ETests
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-tests
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        TEST_HOST: ""
+        BUNDLE_LOADER: ""
+        ENABLE_APP_SANDBOX: NO
+
 # ---------------------------------------------------------------------------
 # Schemes
 # ---------------------------------------------------------------------------
 
 schemes:
+  GlasstualE2E:
+    build:
+      parallelizeBuild: true
+      buildImplicitDependencies: true
+      targets:
+        Glasstual: [build, testing]
+        GlasstualE2EHarness: [build, testing]
+        GlasstualE2ETests: [testing]
+    test:
+      config: Debug
+      gatherCoverageData: false
+      # Every value here is stable across runs, so the supervisor can pass them as
+      # build settings without changing the build description. The per-run
+      # directory is read from $E2E_OUTPUT/current-run instead.
+      environmentVariables:
+        E2E_APP: $(E2E_APP)
+        E2E_HELPER: $(E2E_HELPER)
+        E2E_FIXTURE: $(E2E_FIXTURE)
+        E2E_OUTPUT: $(E2E_OUTPUT)
+        E2E_DISPOSABLE_USER_CONSENT: $(E2E_DISPOSABLE_USER_CONSENT)
+      targets:
+        - name: GlasstualE2ETests
+          parallelizable: false
+          randomExecutionOrder: false
+
   Glasstual:
     build:
       parallelizeBuild: true

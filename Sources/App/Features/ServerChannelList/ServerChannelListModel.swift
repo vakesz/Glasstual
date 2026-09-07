@@ -101,7 +101,9 @@ final class ServerChannelListModel {
 	func enqueue(channelName: String, memberCount: UInt, topic: String?) {
 		queuedEntries.append(ServerChannelListEntry(
 			channelName: channelName,
-			memberCount: Int(memberCount),
+			/* The count comes off the wire as an unbounded RPL_LIST field, so
+				it is saturated rather than trusted to fit. */
+			memberCount: Int(clamping: memberCount),
 			unformattedTopic: topic ?? ""
 		))
 

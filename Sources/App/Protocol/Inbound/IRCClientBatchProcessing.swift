@@ -84,16 +84,9 @@ public extension IRCClient {
 		      batch.batchIsOpen
 		else { return false }
 
-		// A server can nest batches arbitrarily deeply, so the walk to the
-		// root is bounded rather than trusting the chain to be short.
-		var rootBatch = batch
-		var depth = 0
-		while let parent = rootBatch.parentBatchMessage, depth < IRCBatchPolicy.maximumParentDepth {
-			rootBatch = parent
-			depth += 1
-		}
-
+		let rootBatch = batch.rootBatch
 		if rootBatch.queueEntry(message) == false {
+			rootBatch.deliveryState = .failed
 			batchProcessingLogger.error("Dropped a message from a batch that exceeded its queue limit")
 		}
 
@@ -209,11 +202,20 @@ private extension IRCClient {
 		batch.batchType = message.params.count > 1 ? message.params[1] : nil
 		batch.batchParameters = message.params.count > 2 ? Array(message.params.dropFirst(2)) : nil
 		if let parentToken = message.batchToken {
-			batch.parentBatchMessage = batchMessages.queuedEntry(withBatchToken: parentToken)
+			guard let parent = batchMessages.queuedEntry(withBatchToken: parentToken),
+			      parent.batchIsOpen else { return }
+			var ancestor: MessageBatch? = parent
+			var depth = 1
+			while let current = ancestor {
+				depth += 1
+				guard depth <= IRCBatchPolicy.maximumParentDepth else { return }
+				ancestor = current.parentBatchMessage
+			}
+			batch.parentBatchMessage = parent
 		}
 
 		guard batchMessages.queueEntry(batch) else {
-			batchProcessingLogger.error("Refused a BATCH past the limit on simultaneously open batches")
+			batchProcessingLogger.error("Refused a duplicate BATCH token or a batch past the open-batch limit")
 			return
 		}
 
@@ -225,6 +227,10 @@ private extension IRCClient {
 				zncBouncerCertificateChainDataMutable = ""
 			}
 		}
+		if isCapabilityEnabled(.labeledResponse), let label = message.messageTags?["label"], !label.isEmpty {
+			batch.responseLabel = label
+		}
+		associateServerHistoryRequest(with: batch)
 	}
 
 	func closeBatch(token: String) {
@@ -234,18 +240,64 @@ private extension IRCClient {
 		}
 		batch.batchIsOpen = false
 		if batch.parentBatchMessage != nil {
-			batchMessages.dequeueEntry(batch)
+			// Keep closed children admitted until the root replays. Messages retain
+			// their immediate batch, whose parent and label must still be available.
 			return
 		}
 
-		if IRCBatchPolicy.isChatHistory(batch.batchType) {
+		let family = batchMessages.queuedEntries.values.filter { $0.rootBatch === batch }
+		let incomplete = batch.deliveryState == .failed || family.contains { $0.batchIsOpen }
+
+		replay(batch, family: family)
+		resolveDeliveries(in: family, incomplete: incomplete)
+		endZNCPlaybackState(for: batch)
+	}
+
+	/// Hands the closed batch to whichever replay owns its type. A labelled
+	/// response wrapping exactly one chat-history batch is that history page,
+	/// so the wrapper's contents are what gets replayed.
+	private func replay(_ batch: MessageBatch, family: [MessageBatch]) {
+		let historyBatches = family.filter { IRCBatchPolicy.isChatHistory($0.batchType) }
+		let nestedHistory = historyBatches.first { $0.parentBatchMessage != nil }
+
+		if let nestedHistory, historyBatches.count == 1 {
+			replayChatHistoryBatch(nestedHistory, contents: batch)
+		} else if IRCBatchPolicy.isChatHistory(batch.batchType) {
 			replayChatHistoryBatch(batch)
 		} else if IRCBatchPolicy.isNetsplit(batch.batchType) {
 			replayNetsplitBatch(batch)
 		} else {
 			recursivelyProcessBatchMessage(batch)
 		}
+	}
 
+	/** Answers every labelled member of the family and empties the queue.
+
+	 A batch's final result is known only after every queued reply ran: in
+	 particular an echo before FAIL must not commit success early, which is why
+	 `incomplete` is settled by the caller rather than in here. The failures go
+	 first because a label two members share resolves once, and the dictionary
+	 the family came out of has no order of its own. */
+	private func resolveDeliveries(in family: [MessageBatch], incomplete: Bool) {
+		let failuresFirst = family.sorted { first, second in
+			first.deliveryState == .failed && second.deliveryState != .failed
+		}
+
+		for member in failuresFirst {
+			if let label = member.responseLabel {
+				let memberFailed = incomplete || member.deliveryState == .failed
+				resolveDelivery(
+					withLabel: label,
+					state: incomplete ? .failed : member.deliveryState,
+					messageIdentifier: memberFailed ? nil : member.deliveryMessageIdentifier,
+					reason: member.deliveryFailureReason
+				)
+			}
+			batchMessages.dequeueEntry(member)
+		}
+	}
+
+	private func endZNCPlaybackState(for batch: MessageBatch) {
 		if batch.batchType == IRCServerQuirks.ZNC.playbackBatchType {
 			zncBouncerIsPlayingBackHistory = false
 		} else if batch.batchType == IRCServerQuirks.ZNC.certificateInfoBatchType {

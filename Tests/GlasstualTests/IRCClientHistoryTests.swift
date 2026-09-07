@@ -180,15 +180,20 @@ struct IRCClientHistoryTests {
 
 		complete.handleCapabilityOrAuthenticationRequest(completeList)
 
-		#expect(capabilityCommands(of: complete) == ["REQ message-tags"])
-		#expect(complete.pendingCapabilityRequests == [
-			"batch", "chathistory", "read-marker", "server-time",
+		/* `chathistory` waits: its dependencies are offered but not yet
+		 acknowledged, so only the four that stand on their own go out. */
+		#expect(capabilityCommands(of: complete) == [
+			"REQ message-tags", "REQ batch", "REQ read-marker", "REQ server-time",
 		])
 
 		let acknowledgement = try message(":irc.example.net CAP me ACK :chathistory", on: complete)
 
 		complete.handleCapabilityOrAuthenticationRequest(acknowledgement)
 
+		#expect(complete.isCapabilityEnabled(.chatHistory) == false)
+		try complete.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP me ACK :batch server-time message-tags", on: complete
+		))
 		#expect(complete.isCapabilityEnabled(.chatHistory))
 	}
 
@@ -294,6 +299,63 @@ struct IRCClientHistoryTests {
 			client.requestChatHistory(before: Date(), in: channel)
 
 			#expect(client.sentLines.count == 0)
+		}
+	}
+
+	@Test("Cancelling an unlabeled BEFORE retires its slot until the old wire response arrives")
+	func unlabeledCancellationCannotConsumeARetry() throws {
+		let client = makeHistoryClient()
+		try withChannel(named: "#chat", on: client) { channel in
+			client.isConnected = true
+			let socket = Connection(config: IRCConnectionConfig(), onClient: client)
+			client.socket = socket
+			let before = Date(timeIntervalSince1970: 100)
+			client.requestChatHistory(before: before, in: channel)
+			let pending = try #require(client.serverHistoryRequests[channel.uniqueIdentifier])
+			client.cancelServerHistoryRequest(pending.request)
+			client.requestChatHistory(before: before, in: channel)
+			#expect(client.sentLines.count == 1)
+			for wire in [
+				"BATCH +retired chathistory #chat",
+				"@batch=retired;time=1970-01-01T00:00:50.000Z :alice!u@h PRIVMSG #chat :retired",
+				"BATCH -retired",
+			] {
+				client.ircConnection(socket, didReceiveData: wire)
+			}
+			#expect(client.processedMessages.count == 0)
+			#expect(client.serverHistoryRequests.isEmpty)
+			client.requestChatHistory(before: before, in: channel)
+			#expect(client.sentLines.count == 2)
+			client.resetChatHistoryState()
+		}
+	}
+
+	/** The retired slot is what the transcript has to be able to see.
+
+	 An unlabelled request that timed out keeps its slot for the rest of the
+	 connection, so a Retry button would send nothing. The view asks first and
+	 hides the button instead of offering a dead one. */
+	@Test("A retired slot reports that no retry is possible")
+	func retiredSlotReportsThatRetryIsUnavailable() throws {
+		let client = makeHistoryClient()
+		try withChannel(named: "#chat", on: client) { channel in
+			#expect(client.canRetryServerHistory(for: channel))
+
+			let before = Date(timeIntervalSince1970: 100)
+			client.requestChatHistory(before: before, in: channel)
+
+			// A request in flight is not a retry opportunity either.
+			#expect(client.canRetryServerHistory(for: channel) == false)
+
+			let pending = try #require(client.serverHistoryRequests[channel.uniqueIdentifier])
+			client.cancelServerHistoryRequest(pending.request)
+
+			#expect(client.serverHistoryRequests[channel.uniqueIdentifier] != nil)
+			#expect(client.canRetryServerHistory(for: channel) == false)
+
+			client.resetChatHistoryState()
+
+			#expect(client.canRetryServerHistory(for: channel))
 		}
 	}
 

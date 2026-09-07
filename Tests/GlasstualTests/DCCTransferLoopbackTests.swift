@@ -6,6 +6,7 @@
 import CryptoKit
 import Foundation
 @testable import Glasstual
+import Network
 import Testing
 
 /// Drives two `DCCTransfer` actors against each other over the loopback
@@ -25,8 +26,8 @@ struct DCCTransferLoopbackTests {
 		let destination = directory.appendingPathComponent("destination.bin")
 		try payload.write(to: source)
 
-		let sender = DCCTransfer(configuration: TransferFixture.listeningSender(
-			filePath: source.path,
+		let sender = try DCCTransfer(configuration: TransferFixture.listeningSender(
+			file: TransferFixture.source(source),
 			fileSize: UInt64(payload.count)
 		))
 
@@ -42,9 +43,9 @@ struct DCCTransferLoopbackTests {
 				continue
 			}
 
-			let receiver = DCCTransfer(configuration: TransferFixture.diallingReceiver(
+			let receiver = try DCCTransfer(configuration: TransferFixture.diallingReceiver(
 				port: port,
-				filePath: destination.path,
+				file: TransferFixture.destination(destination),
 				fileSize: UInt64(payload.count)
 			))
 			receiverEvents = TransferFixture.collectEvents(from: receiver)
@@ -73,8 +74,8 @@ struct DCCTransferLoopbackTests {
 
 		/* The receiver listens so that the side under test is the one this
 		 loop is driving: it has to be cancelled part-way through. */
-		let receiver = DCCTransfer(configuration: TransferFixture.listeningReceiver(
-			filePath: destination.path,
+		let receiver = try DCCTransfer(configuration: TransferFixture.listeningReceiver(
+			file: TransferFixture.destination(destination),
 			fileSize: UInt64(payload.count)
 		))
 
@@ -88,9 +89,9 @@ struct DCCTransferLoopbackTests {
 
 			switch event {
 			case let .listening(port):
-				let sender = DCCTransfer(configuration: TransferFixture.diallingSender(
+				let sender = try DCCTransfer(configuration: TransferFixture.diallingSender(
 					port: port,
-					filePath: source.path,
+					file: TransferFixture.source(source),
 					fileSize: UInt64(payload.count)
 				))
 				senderEvents = TransferFixture.collectEvents(from: sender)
@@ -126,8 +127,8 @@ struct DCCTransferLoopbackTests {
 		 will actually push, so the last block overshoots the announced size. */
 		let announcedSize = UInt64(payload.count) - 1
 
-		let sender = DCCTransfer(configuration: TransferFixture.listeningSender(
-			filePath: source.path,
+		let sender = try DCCTransfer(configuration: TransferFixture.listeningSender(
+			file: TransferFixture.source(source),
 			fileSize: UInt64(payload.count)
 		))
 
@@ -140,9 +141,9 @@ struct DCCTransferLoopbackTests {
 				continue
 			}
 
-			let receiver = DCCTransfer(configuration: TransferFixture.diallingReceiver(
+			let receiver = try DCCTransfer(configuration: TransferFixture.diallingReceiver(
 				port: port,
-				filePath: destination.path,
+				file: TransferFixture.destination(destination),
 				fileSize: announcedSize
 			))
 			receiverEvents = TransferFixture.collectEvents(from: receiver)
@@ -158,6 +159,226 @@ struct DCCTransferLoopbackTests {
 	}
 
 	// MARK: - The acknowledgement
+
+	@Test("A source that grows sends only the offered byte count", .timeLimit(.minutes(1)))
+	func growingSourceIsBounded() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		let destination = directory.appendingPathComponent("destination")
+		let payload = TransferFixture.payload(byteCount: 100_003)
+		try payload.write(to: source)
+		let sender = try DCCTransfer(configuration: TransferFixture.listeningSender(
+			file: TransferFixture.source(source),
+			fileSize: 70001
+		))
+		var receiverEvents: Task<[DCCTransferEvent], Never>?
+		var events: [DCCTransferEvent] = []
+		await sender.start()
+		for await event in sender.events {
+			events.append(event)
+			if case let .listening(port) = event {
+				let receiver = try DCCTransfer(configuration: TransferFixture.diallingReceiver(
+					port: port,
+					file: TransferFixture.destination(destination),
+					fileSize: 70001
+				))
+				receiverEvents = TransferFixture.collectEvents(from: receiver)
+				await receiver.start()
+			}
+		}
+		#expect(events.last.map(TransferFixture.isFinished) == true)
+		#expect(await receiverEvents?.value.last.map(TransferFixture.isFinished) == true)
+		#expect(try Data(contentsOf: destination) == Data(payload.prefix(70001)))
+	}
+
+	@Test("RESUME commits into an already listening sender without rebinding", .timeLimit(.minutes(1)))
+	func resumeListeningSender() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let payload = TransferFixture.payload(byteCount: 100_003)
+		let source = directory.appendingPathComponent("source")
+		let destination = directory.appendingPathComponent("destination")
+		try payload.write(to: source)
+		let file = try DCCTransferFile(url: destination, receiving: true)
+		try await file.write(Data(payload.prefix(37003)), at: 0)
+		let sender = try DCCTransfer(configuration: TransferFixture.listeningSender(
+			file: TransferFixture.source(source),
+			fileSize: UInt64(payload.count)
+		))
+		var receiverEvents: Task<[DCCTransferEvent], Never>?
+		var listeningCount = 0
+		var events: [DCCTransferEvent] = []
+		await sender.start()
+		for await event in sender.events {
+			events.append(event)
+			if case let .listening(port) = event {
+				listeningCount += 1
+				#expect(await sender.commitResumeOffset(37003))
+				var configuration = TransferFixture.diallingReceiver(
+					port: port,
+					file: file,
+					fileSize: UInt64(payload.count)
+				)
+				configuration.resumeOffset = 37003
+				let receiver = DCCTransfer(configuration: configuration)
+				receiverEvents = TransferFixture.collectEvents(from: receiver)
+				await receiver.start()
+			}
+			if case .connected = event {
+				#expect(await sender.commitResumeOffset(1) == false)
+			}
+		}
+		#expect(listeningCount == 1)
+		#expect(events.last.map(TransferFixture.isFinished) == true)
+		#expect(await receiverEvents?.value.last.map(TransferFixture.isFinished) == true)
+		#expect(try Data(contentsOf: destination) == payload)
+		await file.close()
+	}
+
+	@Test("A listener with no accepting peer expires", .timeLimit(.minutes(1)))
+	func acceptanceDeadline() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		try Data([1]).write(to: source)
+		var configuration = try TransferFixture.listeningSender(file: TransferFixture.source(source), fileSize: 1)
+		configuration.acceptanceTimeout = .milliseconds(100)
+		let sender = DCCTransfer(configuration: configuration)
+		let events = TransferFixture.collectEvents(from: sender)
+		await sender.start()
+		#expect(await events.value.last.flatMap(TransferFixture.failure) == .connectTimeout)
+	}
+
+	@Test("An idle connected sender cannot hold a receiver forever", .timeLimit(.minutes(1)))
+	func receiverInactivityDeadline() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		var configuration = try TransferFixture.listeningReceiver(
+			file: TransferFixture.destination(directory.appendingPathComponent("destination")),
+			fileSize: 42
+		)
+		configuration.inactivityTimeout = .milliseconds(100)
+		let receiver = DCCTransfer(configuration: configuration)
+		var connection: NetworkConnection<TCP>?
+		var events: [DCCTransferEvent] = []
+		await receiver.start()
+		for await event in receiver.events {
+			events.append(event)
+			if case let .listening(port) = event {
+				let peer = try NetworkConnection(
+					to: .hostPort(host: "127.0.0.1", port: #require(NWEndpoint.Port(rawValue: port))),
+					using: .parameters { TCP() }
+				)
+				connection = peer
+				try await peer.send(Data())
+			}
+		}
+		#expect(events.last.flatMap(TransferFixture.failure) == .connectTimeout)
+		withExtendedLifetime(connection) {}
+	}
+
+	@Test("ACKless close remains supported but is not called acknowledged", .timeLimit(.minutes(1)))
+	func acklessCompletion() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		try Data(repeating: 7, count: 100_003).write(to: source)
+		let sender = try DCCTransfer(configuration: TransferFixture.listeningSender(
+			file: TransferFixture.source(source),
+			fileSize: 100_003
+		))
+		var peerTask: Task<Void, Error>?
+		var unacknowledged = false
+		var events: [DCCTransferEvent] = []
+		await sender.start()
+		for await event in sender.events {
+			events.append(event)
+			if case let .listening(port) = event {
+				peerTask = Task {
+					let peer = NetworkConnection(
+						to: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port)!),
+						using: .parameters { TCP() }
+					)
+					var count = 0
+					while count < 100_003 {
+						count += try await peer.receive(atLeast: 1, atMost: 65536).content.count
+					}
+					try await peer.send(Data(), endOfStream: true)
+				}
+			}
+			if case .completion(.unacknowledged) = event {
+				unacknowledged = true
+			}
+		}
+		try await peerTask?.value
+		#expect(unacknowledged)
+		#expect(events.last.map(TransferFixture.isFinished) == true)
+	}
+
+	@Test("A truncated ACK followed by EOF is a failure", .timeLimit(.minutes(1)))
+	func truncatedAcknowledgementFails() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		try Data([7]).write(to: source)
+		let sender = try DCCTransfer(configuration: TransferFixture.listeningSender(
+			file: TransferFixture.source(source),
+			fileSize: 1
+		))
+		var peerTask: Task<Void, Error>?
+		var events: [DCCTransferEvent] = []
+		await sender.start()
+		for await event in sender.events {
+			events.append(event)
+			if case let .listening(port) = event {
+				peerTask = Task {
+					let peer = NetworkConnection(
+						to: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port)!),
+						using: .parameters { TCP() }
+					)
+					_ = try await peer.receive(atLeast: 1, atMost: 1)
+					try await peer.send(Data([0, 0]), endOfStream: true)
+				}
+			}
+		}
+		try await peerTask?.value
+		#expect(events.last.flatMap(TransferFixture.failure) == .closedByPeer)
+	}
+
+	@Test("A malformed ACK interrupts an in-flight sender", .timeLimit(.minutes(1)))
+	func malformedAcknowledgementInterruptsSending() async throws {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let source = directory.appendingPathComponent("source")
+		let size = 16 * 1024 * 1024
+		try Data(repeating: 7, count: size).write(to: source)
+		let sender = try DCCTransfer(configuration: TransferFixture.listeningSender(
+			file: TransferFixture.source(source),
+			fileSize: UInt64(size)
+		))
+		var peer: NetworkConnection<TCP>?
+		var progress: UInt64 = 0
+		var events: [DCCTransferEvent] = []
+		await sender.start()
+		for await event in sender.events {
+			events.append(event)
+			if case let .listening(port) = event {
+				let connection = try NetworkConnection(
+					to: .hostPort(host: "127.0.0.1", port: #require(NWEndpoint.Port(rawValue: port))),
+					using: .parameters { TCP() }
+				)
+				peer = connection
+				try await connection.send(DCCTransfer.acknowledgement(for: UInt64(size) + 1))
+			}
+			if case let .progress(bytes) = event {
+				progress = bytes
+			}
+		}
+		#expect(events.last.flatMap(TransferFixture.failure) == .badParameter)
+		#expect(progress < UInt64(size))
+		withExtendedLifetime(peer) {}
+	}
 
 	@Test(
 		"The acknowledgement is the running total as a big-endian 32-bit count",
@@ -207,46 +428,58 @@ enum TransferFixture {
 		return data
 	}
 
-	static func listeningSender(filePath: String, fileSize: UInt64) -> DCCTransfer.Configuration {
+	/// Reserves the file a transfer reads from. The transfer only ever uses
+	/// the descriptor it is handed, so the test opens it the same way the
+	/// application does.
+	static func source(_ url: URL) throws -> DCCTransferFile {
+		try DCCTransferFile(url: url, receiving: false)
+	}
+
+	/// Reserves the file a transfer writes into.
+	static func destination(_ url: URL) throws -> DCCTransferFile {
+		try DCCTransferFile(url: url, receiving: true)
+	}
+
+	static func listeningSender(file: DCCTransferFile, fileSize: UInt64) -> DCCTransfer.Configuration {
 		DCCTransfer.Configuration(
 			role: .sender,
 			endpoint: .listen(portRange: portRange),
-			filePath: filePath,
+			file: file,
 			fileSize: fileSize
 		)
 	}
 
-	static func listeningReceiver(filePath: String, fileSize: UInt64) -> DCCTransfer.Configuration {
+	static func listeningReceiver(file: DCCTransferFile, fileSize: UInt64) -> DCCTransfer.Configuration {
 		DCCTransfer.Configuration(
 			role: .receiver,
 			endpoint: .listen(portRange: portRange),
-			filePath: filePath,
+			file: file,
 			fileSize: fileSize
 		)
 	}
 
 	static func diallingReceiver(
 		port: UInt16,
-		filePath: String,
+		file: DCCTransferFile,
 		fileSize: UInt64
 	) -> DCCTransfer.Configuration {
 		DCCTransfer.Configuration(
 			role: .receiver,
 			endpoint: .connect(host: loopbackHost, port: port, interfaceName: nil, timeout: .seconds(20)),
-			filePath: filePath,
+			file: file,
 			fileSize: fileSize
 		)
 	}
 
 	static func diallingSender(
 		port: UInt16,
-		filePath: String,
+		file: DCCTransferFile,
 		fileSize: UInt64
 	) -> DCCTransfer.Configuration {
 		DCCTransfer.Configuration(
 			role: .sender,
 			endpoint: .connect(host: loopbackHost, port: port, interfaceName: nil, timeout: .seconds(20)),
-			filePath: filePath,
+			file: file,
 			fileSize: fileSize
 		)
 	}

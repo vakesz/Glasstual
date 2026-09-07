@@ -13,9 +13,9 @@
 import AppKit
 import AudioToolbox
 import os
-import Synchronization
 import UniformTypeIdentifiers
 
+@MainActor
 public final class SoundPlayer: NSObject {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -24,7 +24,7 @@ public final class SoundPlayer: NSObject {
 
 	/** A SystemSoundID is an owned resource. Creating one per playback leaked it and
 	 rescanned three sound directories on the notification-delivery path. */
-	private static let soundCache = Mutex<[String: SystemSoundID]>([:])
+	private static var soundCache: [String: SystemSoundID] = [:]
 
 	public static func soundFiles(atPath path: String) -> [String: String] {
 		let files = (try? FileManager.default.contentsOfDirectory(atPath: path)) ?? []
@@ -98,29 +98,21 @@ public final class SoundPlayer: NSObject {
 
 	/// Disposes every cached sound. Call once, during application termination.
 	public static func prepareForApplicationTermination() {
-		soundCache.withLock { cache in
-			for soundID in cache.values {
-				AudioServicesDisposeSystemSoundID(soundID)
-			}
-
-			cache.removeAll()
+		for soundID in soundCache.values {
+			AudioServicesDisposeSystemSoundID(soundID)
 		}
+		soundCache.removeAll()
 	}
 
 	private static func cachedAlertSound(named name: String) -> SystemSoundID {
-		soundCache.withLock { cache in
-			if let cached = cache[name] {
-				return cached
-			}
-
-			let soundID = alertSound(named: name)
-
-			if soundID != 0 {
-				cache[name] = soundID
-			}
-
-			return soundID
+		if let cached = soundCache[name] {
+			return cached
 		}
+		let soundID = alertSound(named: name)
+		if soundID != 0 {
+			soundCache[name] = soundID
+		}
+		return soundID
 	}
 
 	private static func alertSound(named name: String) -> SystemSoundID {

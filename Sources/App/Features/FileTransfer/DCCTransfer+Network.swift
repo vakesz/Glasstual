@@ -82,7 +82,8 @@ extension DCCTransfer {
 				continue
 			}
 
-			let (connections, connectionContinuation) = AsyncStream<NetworkConnection<TCP>>.makeStream()
+			let (connections, connectionContinuation) = AsyncStream<NetworkConnection<TCP>>
+				.makeStream(bufferingPolicy: .bufferingNewest(1))
 			let (readiness, readinessContinuation) = AsyncStream<Bool>.makeStream()
 
 			listener.onStateUpdate { _, state in
@@ -125,7 +126,12 @@ extension DCCTransfer {
 
 			guard isReady else {
 				task.cancel()
+				try Task.checkCancellation()
 				continue
+			}
+			if Task.isCancelled {
+				task.cancel()
+				throw CancellationError()
 			}
 
 			return ListeningSession(
@@ -157,43 +163,18 @@ extension DCCTransfer {
 		return (message.content, message.metadata.endOfStream)
 	}
 
-	/// Reads and discards whatever the peer sends until it closes.
-	///
-	/// The sender uses this for the receiver's acknowledgements: it has no use
-	/// for their contents, but leaving them unread would eventually fill the
-	/// receive buffer and stall the peer, and the close they end with is the
-	/// sender's proof that the whole file landed.
-	nonisolated static func drainUntilPeerCloses( // nonisolated: pure
-		_ connection: NetworkConnection<TCP>
-	) async { // nonisolated: pure
-		while Task.isCancelled == false {
-			do {
-				let (_, isComplete) = try await receive(on: connection)
-
-				if isComplete {
-					return
-				}
-			} catch {
-				/* A peer that resets instead of closing has still stopped
-				 talking, which is all this needs to know. */
-				return
-			}
-		}
-	}
-
 	/// Runs `operation`, failing with `error` if it outlasts `duration`.
-	nonisolated static func withTimeout( // nonisolated: pure
+	nonisolated static func withTimeout<Value: Sendable>( // nonisolated: pure
 		_ duration: Duration?,
 		failingWith error: DCCTransferError,
-		operation: @escaping @Sendable () async throws -> Void
-	) async throws { // nonisolated: pure
+		operation: @escaping @Sendable () async throws -> Value
+	) async throws -> Value { // nonisolated: pure
 		guard let duration else {
-			try await operation()
-
-			return
+			return try await operation()
 		}
 
-		try await withThrowingTaskGroup(of: Void.self) { group in
+		return try await withThrowingTaskGroup(of: Value.self) { group in
+			defer { group.cancelAll() }
 			group.addTask { try await operation() }
 			group.addTask {
 				try await Task.sleep(for: duration)
@@ -201,9 +182,21 @@ extension DCCTransfer {
 				throw error
 			}
 
-			_ = try await group.next()
-			group.cancelAll()
+			guard let value = try await group.next() else { throw CancellationError() }
+			return value
 		}
+	}
+
+	/// Runs `operation` against a deadline shared with the other steps in the
+	/// same window, rather than restarting the clock for each of them.
+	nonisolated static func withDeadline<Value: Sendable>( // nonisolated: pure
+		_ deadline: ContinuousClock.Instant?,
+		failingWith error: DCCTransferError,
+		operation: @escaping @Sendable () async throws -> Value
+	) async throws -> Value { // nonisolated: pure
+		let remaining = deadline.map { max(.zero, $0 - ContinuousClock.now) }
+
+		return try await withTimeout(remaining, failingWith: error, operation: operation)
 	}
 
 	// MARK: - Addresses
@@ -330,9 +323,12 @@ extension DCCTransfer {
 		of interface: UnsafeMutablePointer<ifaddrs>,
 		named interfaceName: String
 	) -> (address: String, isIPv4: Bool)? {
+		/* `ifa_name` is an implicitly unwrapped import of a C pointer the
+		 kernel is not obliged to fill in, so it is bound rather than read. */
 		guard let address = interface.pointee.ifa_addr,
+		      let name = interface.pointee.ifa_name,
 		      interface.pointee.ifa_flags & UInt32(IFF_UP) != 0,
-		      String(cString: interface.pointee.ifa_name) == interfaceName
+		      String(cString: name) == interfaceName
 		else {
 			return nil
 		}

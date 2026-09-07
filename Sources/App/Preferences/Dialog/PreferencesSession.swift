@@ -52,6 +52,7 @@ public final class PreferencesSession {
 	let model = PreferencesPaneModel()
 	private lazy var notifications = NotificationSubscriptions()
 	private var notificationsAreActive = false
+	private var pendingPluginSelection: String?
 
 	public init() {
 		prepareInitialState()
@@ -68,10 +69,6 @@ public final class PreferencesSession {
 	private func prepareNotifications() {
 		guard notificationsAreActive == false else { return }
 		notificationsAreActive = true
-		notifications.observe(.themeWasModified) { [weak self] _ in
-			self?.model.refreshTheme()
-			self?.model.refreshChannelViewFont()
-		}
 		notifications.observe(.ircClientCapabilitiesDidChange) { [weak self] _ in
 			self?.model.refreshIRCv3Connections()
 		}
@@ -81,10 +78,15 @@ public final class PreferencesSession {
 		notifications.observe(PluginManager.scriptCommandsDidChangeNotification) { [weak self] _ in
 			self?.model.refreshAddOnCommands()
 		}
+		notifications.observe(PluginManager.finishedLoadingNotification) { [weak self] _ in
+			self?.refreshPluginPanes()
+		}
 	}
 
 	func activate(selection: PreferencesSceneSelection) {
 		prepareNotifications()
+		model.sections = Self.sections()
+		model.refreshAll()
 		select(selection)
 	}
 
@@ -104,11 +106,27 @@ public final class PreferencesSession {
 		var identifier = requestedPane.rawValue
 		if selection == .default,
 		   let remembered = Preferences.Internals.selectedPreferencePane.storedValue,
+		   PreferencesPaneCatalog.pluginBundleIdentifier(from: remembered) != nil,
+		   SharedApplication.sharedPluginManager().loadedPlugins == nil
+		{
+			pendingPluginSelection = remembered
+			return
+		}
+		if selection == .default,
+		   let remembered = Preferences.Internals.selectedPreferencePane.storedValue,
 		   Self.paneExists(remembered)
 		{
 			identifier = remembered
 		}
 		selectPane(withIdentifier: identifier)
+	}
+
+	private func refreshPluginPanes() {
+		model.sections = Self.sections()
+		model.refreshAddOnCommands()
+		let identifier = pendingPluginSelection ?? model.selection.subPageIdentifier
+		pendingPluginSelection = nil
+		selectPane(withIdentifier: Self.paneExists(identifier) ? identifier : PreferencesPaneIdentifier.addOns.rawValue)
 	}
 
 	// MARK: - Sections
@@ -175,8 +193,8 @@ public final class PreferencesSession {
 	}
 
 	private static func pluginEntries() -> [PreferencesPaneEntry] {
-		SharedApplication.sharedPluginManager().pluginsWithPreferencePanes.enumerated()
-			.map { index, plugin in
+		SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
+			.map { plugin in
 				let title: String = if let suppliedTitle = plugin.pluginPreferencesPane?.title,
 				                       suppliedTitle.isEmpty == false
 				{
@@ -184,8 +202,13 @@ public final class PreferencesSession {
 				} else {
 					PreferencesStrings.addOnPaneTitle
 				}
+				/* A bundle with no identifier is named by its location instead
+				 of dropping out of the sidebar, which is what an add-on with a
+				 malformed Info.plist used to do. */
 				return PreferencesPaneEntry(
-					identifier: PreferencesPaneCatalog.pluginIdentifier(at: index),
+					identifier: PreferencesPaneCatalog.pluginIdentifier(
+						bundleIdentifier: plugin.preferencePaneIdentifier
+					),
 					title: title,
 					symbolName: "puzzlepiece.extension",
 					group: .addOns
@@ -197,9 +220,9 @@ public final class PreferencesSession {
 	 plugin pane disappears with the plugin, so the check is not only over the
 	 enumeration. */
 	static func paneExists(_ identifier: String) -> Bool {
-		if let index = PreferencesPaneCatalog.pluginIndex(from: identifier) {
-			return SharedApplication.sharedPluginManager().pluginsWithPreferencePanes.indices
-				.contains(index)
+		if let paneIdentifier = PreferencesPaneCatalog.pluginBundleIdentifier(from: identifier) {
+			return SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
+				.contains { $0.preferencePaneIdentifier == paneIdentifier }
 		}
 		if PreferencesPaneIdentifier(rawValue: identifier) != nil {
 			return true
@@ -228,14 +251,12 @@ public final class PreferencesSession {
 	}
 
 	private func paneChanged(to selection: PreferencesSelection) {
+		pendingPluginSelection = nil
 		let identifier = selection.subPageIdentifier
 		Preferences.Internals.selectedPreferencePane.value = identifier
 		// The two panes whose content is read from outside the key store are
 		// refreshed as they are opened rather than polled.
-		if identifier == PreferencesPaneIdentifier.style.rawValue {
-			model.refreshTheme()
-			model.refreshChannelViewFont()
-		} else if identifier == PreferencesPaneIdentifier.addOns.rawValue {
+		if identifier == PreferencesPaneIdentifier.addOns.rawValue {
 			model.refreshAddOnCommands()
 		} else if identifier == PreferencesPaneIdentifier.ircv3.rawValue {
 			model.refreshIRCv3Connections()

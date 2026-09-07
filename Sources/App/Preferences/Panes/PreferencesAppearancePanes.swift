@@ -275,9 +275,9 @@ struct PreferencesStylePane: View {
 					PreferencesComboField(
 						title: PreferencesStyleStrings.scrollbackSaveLimit,
 						presets: Self.scrollbackPresets,
+						commitsOnEndEditing: true,
 						text: model.preferences.numberFieldBinding(
-							for: Preferences.Logging.scrollbackSaveLimit,
-							range: PreferencesValueValidation.scrollbackSaveRange
+							for: Preferences.Logging.scrollbackSaveLimit
 						) { TextualPreferences.performReloadAction(.scrollbackSaveLimit) }
 					)
 				} label: {

@@ -76,8 +76,9 @@ public extension MenuActionCoordinator {
 		case .markAllAsRead: mainWindow.markAllAsRead()
 		case .importPreferences: mainWindow.presentationModel.requestPreferencesImport()
 		case .exportPreferences: mainWindow.presentationModel.requestPreferencesExport()
-		case .toggleNotificationSounds: setNotificationSoundsMuted(Preferences.Notifications.soundIsMuted
-				.value == false)
+		case .toggleNotificationSounds:
+			let soundsAreMuted = Preferences.Notifications.soundIsMuted.value
+			setNotificationSoundsMuted(soundsAreMuted == false)
 		case .toggleNotifications:
 			setNotificationsMuted(SharedApplication.sharedNotificationController().areNotificationsDisabled == false)
 		case .toggleAppearance: toggleAppearance()
@@ -100,6 +101,9 @@ public extension MenuActionCoordinator {
 
 	func setNotificationSoundsMuted(_ muted: Bool) {
 		Preferences.Notifications.soundIsMuted.value = muted
+		SharedApplication.sharedSpeechSynthesizer().setNotificationsMuted(
+			muted || SharedApplication.sharedNotificationController().areNotificationsDisabled
+		)
 		let state: NSControl.StateValue = muted ? .on : .off
 		menuController?.muteNotificationsSoundsDockMenuItem?.state = state
 		menuController?.muteNotificationsSoundsFileMenuItem?.state = state

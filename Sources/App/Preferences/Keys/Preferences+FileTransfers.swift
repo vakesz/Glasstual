@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 public nonisolated extension Preferences { // nonisolated: value
@@ -52,8 +53,40 @@ public nonisolated extension Preferences { // nonisolated: value
 			default: FileTransferIPAddressSource.routerAndFirstParty
 		)
 
-		public static let portRangeStart = PreferenceKey(prefix + "Port Range Start", default: UInt16(1115))
-		public static let portRangeEnd = PreferenceKey(prefix + "Port Range End", default: UInt16(1130))
+		/** The ports the DCC listener may bind.
+
+		 Anything below 1024 is privileged, and a sandboxed process cannot bind
+		 one at all, so this is what a valid port is here rather than a
+		 suggestion the field makes. */
+		public static let portRange: ClosedRange<UInt16> = 1024 ... 65535
+
+		/** The ordered-pair rule, written once for both ends of the range.
+
+		 Either end can arrive on its own, so each is checked against whatever
+		 the other end holds once the import lands — the value carried in the
+		 same file, or the declared default when the file does not carry it. */
+		private static func ordered(
+			against other: @autoclosure @escaping @Sendable () -> PreferenceKey<UInt16>,
+			_ isOrdered: @escaping @Sendable (UInt16, UInt16) -> Bool
+		) -> @Sendable (UInt16, [String: PropertyListValue]) -> Bool {
+			{ value, values in
+				let key = other()
+				let limit = values[key.name].flatMap { UInt16.preferenceValue(from: $0.propertyListObject) }
+					?? key.defaultValue
+				return isOrdered(value, limit)
+			}
+		}
+
+		public static let portRangeStart: PreferenceKey<UInt16> = PreferenceKey(
+			prefix + "Port Range Start", default: UInt16(1115),
+			validation: { Self.portRange.contains($0) },
+			relatedValidation: ordered(against: portRangeEnd, <=)
+		)
+		public static let portRangeEnd: PreferenceKey<UInt16> = PreferenceKey(
+			prefix + "Port Range End", default: UInt16(1130),
+			validation: { Self.portRange.contains($0) },
+			relatedValidation: ordered(against: portRangeStart, >=)
+		)
 		public static let requestsAreReversed = PreferenceKey(prefix + "Requests Use Reverse DCC", default: false)
 
 		public static let manuallyEnteredIPAddress = PreferenceKey(
@@ -92,23 +125,25 @@ public nonisolated extension Preferences { // nonisolated: value
 	/// Settings owned by the bundled extensions, declared here so they are
 	/// catalogued and travel with an exported configuration.
 	enum Extensions {
-		public static let chatFilters = UntypedPreferenceKey("Glasstual Chat Filter Extension -> Filters")
+		public static let chatFilters = UntypedPreferenceKey(
+			FirstPartyPluginPreferences.chatFilters, validation: PreferencesPayloadValidation.chatFilters
+		)
 
 		public static let caffeinePreventSleep = PreferenceKey(
-			"Private Extension Store -> Caffeine Extension -> Prevent Sleep",
-			default: false,
+			FirstPartyPluginPreferences.caffeinePreventSleep.name,
+			default: FirstPartyPluginPreferences.caffeinePreventSleep.defaultValue,
 			traits: .unregistered
 		)
 
 		public static let smileyServiceEnabled = PreferenceKey(
-			"Smiley Converter Extension -> Enable Service",
-			default: false,
+			FirstPartyPluginPreferences.smileyServiceEnabled.name,
+			default: FirstPartyPluginPreferences.smileyServiceEnabled.defaultValue,
 			traits: .unregistered
 		)
 
 		public static let smileyExtraEmoticons = PreferenceKey(
-			"Smiley Converter Extension -> Enable Extra Emoticons",
-			default: false,
+			FirstPartyPluginPreferences.smileyExtraEmoticons.name,
+			default: FirstPartyPluginPreferences.smileyExtraEmoticons.defaultValue,
 			traits: .unregistered
 		)
 
@@ -119,17 +154,14 @@ public nonisolated extension Preferences { // nonisolated: value
 		)
 
 		public static let wikiLinkPrefixes = UntypedPreferenceKey(
-			"Wiki-style Link Parser Extension -> Link Prefixes"
+			"Wiki-style Link Parser Extension -> Link Prefixes", validation: { $0.dictionary != nil }
 		)
 
 		/// The seven "Feature Disabled" switches of the system profiler.
-		public static let systemProfilerFeatures = [
-			"CPU Model", "Disk Information", "GPU Model", "Memory Information",
-			"OS Version", "Screen Resolution", "System Uptime",
-		].map {
+		public static let systemProfilerFeatures = FirstPartyPluginPreferences.systemProfilerFeatures.map {
 			PreferenceKey(
-				"System Profiler Extension -> Feature Disabled -> \($0)",
-				default: false,
+				$0.name,
+				default: $0.defaultValue,
 				traits: .unregistered
 			)
 		}

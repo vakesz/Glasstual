@@ -8,92 +8,42 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/** The export side is covered by `PreferencesExportFilterTests`; this is the
- way back in. An imported plist is a file the user was handed, so what matters
- is that a value it carries actually lands in the store, that a value the
- declaration cannot represent does not, and that the keys export deliberately
- withholds are refused on the way in as well as on the way out.
+/** What an imported file is allowed to say.
 
- Every key here routes to the container, which the test scheme redirects to its
- own suite. A `.standard`-storage key would be written to the developer's own
- defaults domain by `importValue`, so none is used. */
-@Suite("Preference import", .serialized)
+ Applying a configuration is `PreferencesTransferSession`'s job and is covered
+ by `PreferencesTransferTests`. This is the gate in front of it: every value
+ that arrives is answered for by the declaration that owns the name, by the
+ family that owns the pattern when the name is made at runtime, or by nothing
+ at all when the name belongs to somebody else's plugin. */
+@Suite("Preference import validation")
 @MainActor
 struct PreferencesImportTests {
 	private static let integerKey = Preferences.Logging.scrollbackSaveLimit
 	private static let booleanKey = Preferences.Messages.showJoinLeave
 	private static let excludedKey = Preferences.MainWindow.serverListSelection
 
-	private func withRestoredValues(
-		_ keys: [String],
-		_ body: () -> Void
-	) {
-		let defaults = TextualUserDefaults.container
-		let originals = keys.map { defaults.object(forKey: $0) }
-		defer {
-			for (key, original) in zip(keys, originals) {
-				if let original {
-					defaults.set(original, forKey: key)
-				} else {
-					defaults.removeObject(forKey: key)
-				}
-			}
-		}
-
-		body()
-	}
-
-	@Test("An imported value lands in the store the key is declared against")
-	func importedValuesLand() {
-		withRestoredValues([Self.integerKey.name, Self.booleanKey.name]) {
-			Self.integerKey.reset()
-			Self.booleanKey.reset()
-
-			PreferencesImportExport.importContentsOfDictionary(
-				[
-					Self.integerKey.name: 4321,
-					/* `showJoinLeave` ships on, so importing `false` is the case
-						that distinguishes a value that landed from one that did not. */
-					Self.booleanKey.name: false,
-				],
-				reloadPreferences: false
-			)
-
-			#expect(Self.integerKey.value == 4321)
-			#expect(Self.booleanKey.defaultValue)
-			#expect(Self.booleanKey.value == false)
-		}
-	}
-
 	/// A hand-edited plist writes numbers and booleans as strings; the
 	/// declaration is what says which of those are the same value.
 	@Test("A value written as a string is coerced to the declared type")
 	func stringsAreCoercedToTheDeclaredType() {
-		withRestoredValues([Self.integerKey.name, Self.booleanKey.name]) {
-			Self.integerKey.reset()
-			Self.booleanKey.reset()
-
-			PreferencesImportExport.importValue("8765", withKey: Self.integerKey.name)
-			PreferencesImportExport.importValue("yes", withKey: Self.booleanKey.name)
-
-			#expect(Self.integerKey.value == 8765)
-			#expect(Self.booleanKey.value)
-		}
+		#expect(Preferences.coerce("8765", forKey: Self.integerKey.name) == .integer(8765))
+		#expect(Preferences.coerce("yes", forKey: Self.booleanKey.name) == .boolean(true))
 	}
 
-	/// `storedValue` falls through to the registration domain, so what says a
-	/// rejected value was not written is the suite's own persistent domain.
-	@Test("A value the declaration cannot represent is not written at all")
-	func unrepresentableValuesAreNotWritten() {
-		withRestoredValues([Self.integerKey.name]) {
-			let defaults = TextualUserDefaults.container
-			Self.integerKey.reset()
+	@Test("A value the declaration cannot represent is refused")
+	func unrepresentableValuesAreRefused() {
+		#expect(Preferences.coerce(["not": "a number"], forKey: Self.integerKey.name) == nil)
+		#expect(Preferences.coerce("banana", forKey: Self.integerKey.name) == nil)
+		#expect(Preferences.coerce(["a", "b"], forKey: Self.booleanKey.name) == nil)
+	}
 
-			PreferencesImportExport.importValue(["not": "a number"], withKey: Self.integerKey.name)
-
-			#expect(defaults.persistedObject(forKey: Self.integerKey.name) == nil)
-			#expect(Self.integerKey.value == Self.integerKey.defaultValue)
-		}
+	/// The bounds the Settings field has always enforced are declared on the
+	/// key, so a file cannot write a count the field would refuse.
+	@Test("A count outside the declared bounds is refused")
+	func outOfRangeCountsAreRefused() {
+		#expect(Preferences.coerce(99, forKey: Self.integerKey.name) == nil)
+		#expect(Preferences.coerce(50001, forKey: Self.integerKey.name) == nil)
+		#expect(Preferences.coerce(100, forKey: Self.integerKey.name) == .integer(100))
 	}
 
 	/** Window position, the selected row and the other restoration state are
@@ -101,38 +51,85 @@ struct PreferencesImportTests {
 	 user's settings. Importing one would move somebody else's window state onto
 	 this machine, so the same list is applied in both directions. */
 	@Test("A key excluded from export is skipped on the way in")
-	func excludedKeysAreSkipped() {
-		#expect(PreferencesImportExport.isKeyNameSupposedToBeIgnored(Self.excludedKey.name))
-		#expect(PreferencesImportExport.isKeyNameSupposedToBeIgnored(Self.integerKey.name) == false)
+	func excludedKeysAreSkipped() throws {
+		#expect(Preferences.isExcludedFromExport(Self.excludedKey.name))
+		#expect(Preferences.isExcludedFromExport(Self.integerKey.name) == false)
 
-		withRestoredValues([Self.excludedKey.name, Self.integerKey.name]) {
-			Self.excludedKey.reset()
-			Self.integerKey.reset()
+		let archive = try PreferencesArchive.decode(Self.encoded([
+			Self.excludedKey.name: "someone-elses-row",
+			Self.integerKey.name: 2468,
+		]))
 
-			PreferencesImportExport.importContentsOfDictionary(
-				[
-					Self.excludedKey.name: "someone-elses-row",
-					Self.integerKey.name: 2468,
-				],
-				reloadPreferences: false
-			)
+		#expect(archive.values[Self.excludedKey.name] == nil)
+		#expect(archive.ignoredKeys.contains(Self.excludedKey.name))
+		/* The rest of the dictionary is imported all the same. */
+		#expect(archive.values[Self.integerKey.name] == .integer(2468))
+	}
 
-			#expect(Self.excludedKey.storedValue == nil)
-			/* The rest of the dictionary is imported all the same. */
-			#expect(Self.integerKey.value == 2468)
+	/** A name the catalogue does not cover belongs to somebody else, so there is
+	 nothing here that could say what shape it should hold; it travels unchanged
+	 rather than being rejected. A configuration file never carries one — an
+	 uncatalogued name is excluded from export in both directions — but the
+	 coercion has to be total for every caller that reaches it. */
+	@Test("A key the catalogue does not know is left as it stands")
+	func unknownKeysAreLeftUnchanged() throws {
+		let name = "Tests -> Import -> Unknown Plugin Key"
+		let payload: PropertyListValue = ["anything": 1]
+
+		#expect(Preferences.coerce(payload, forKey: name)?.dictionary?["anything"]?.integer == 1)
+		#expect(Preferences.isExcludedFromExport(name))
+
+		let archive = try PreferencesArchive.decode(Self.encoded([name: payload]))
+		#expect(archive.values[name] == nil)
+		#expect(archive.ignoredKeys.contains(name))
+	}
+
+	/** The per-event notification settings are named from an event and a
+	 setting at the point of use, so no declaration lists them one by one. The
+	 family is what says a sound is a string and everything else is a flag —
+	 without it, a catalogued name was the one import path that accepted an
+	 arbitrary property list. */
+	@Test("A family-catalogued name is held to the shape its family declares")
+	func familyCataloguedNamesAreCoerced() throws {
+		let sound = NotificationEvent.highlight.preferenceKeyName(for: .sound)
+		let flag = NotificationEvent.highlight.preferenceKeyName(for: .enabled)
+
+		#expect(Preferences.coerce("Beep", forKey: sound) == .string("Beep"))
+		#expect(Preferences.coerce("yes", forKey: flag) == .boolean(true))
+		#expect(Preferences.coerce(["a", "b"], forKey: sound) == nil)
+		#expect(Preferences.coerce(["nested": ["deeper": 1]], forKey: flag) == nil)
+		#expect(Preferences.coerce(.data(Data("blob".utf8)), forKey: "NotificationType -> Made Up -> Setting") == nil)
+
+		#expect(throws: PreferencesTransferError.self) {
+			try PreferencesArchive.decode(Self.encoded([flag: ["nested": 1]]))
 		}
 	}
 
-	/// A plugin's own key has no declaration to validate against, so it is
-	/// carried across with whatever shape it was written with.
-	@Test("A key the catalogue does not know is imported as it stands")
-	func unknownKeysAreImportedUnchanged() {
-		let name = "Tests -> Import -> Unknown Plugin Key"
-		let defaults = TextualUserDefaults.container
-		defer { defaults.removeObject(forKey: name) }
-
-		PreferencesImportExport.importValue(["anything": 1], withKey: name)
-
-		#expect(defaults.dictionary(forKey: name)?["anything"] as? Int == 1)
+	/// A complete archive has to list every declared, exportable key, so the
+	/// fixture fills in whatever the test itself does not care about.
+	private static func encoded(_ values: [String: PropertyListValue]) throws -> Data {
+		var preferences = values
+		var unset: Set<String> = []
+		for key in Preferences.allKeys
+			where !Preferences.isExcludedFromExport(key.name)
+			&& key.name != Preferences.Connection.clientList.name
+			&& preferences[key.name] == nil
+		{
+			if let registered = key.registeredDefault {
+				preferences[key.name] = registered
+			} else {
+				unset.insert(key.name)
+			}
+		}
+		let document: [String: PropertyListValue] = [
+			"format": .string(PreferencesArchive.format),
+			"version": .integer(PreferencesArchive.version),
+			"preferences": .dictionary(preferences),
+			"unset": .array(unset.sorted().map(PropertyListValue.string)),
+			"clients": .array([]),
+		]
+		return try PropertyListSerialization.data(
+			fromPropertyList: document.propertyListObject, format: .xml, options: 0
+		)
 	}
 }

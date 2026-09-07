@@ -543,13 +543,19 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 		/* Coloured by composed character sequence, not by UTF-16 unit: a
 		 surrogate pair or a combining sequence used to be split across two
-		 colour codes, which broke the character. */
-		mutableStringCopy.string.enumerateSubstrings(
-			in: mutableStringCopy.string.startIndex ..< mutableStringCopy.string.endIndex,
+		 colour codes, which broke the character.
+
+		 Every index below belongs to this one bridged copy. Reading
+		 `.string` again would hand back a different String, and an index
+		 from one is not valid in another. */
+		let text = mutableStringCopy.string
+
+		text.enumerateSubstrings(
+			in: text.startIndex ..< text.endIndex,
 			options: .byComposedCharacterSequences
 		) { [self] _, substringRange, _, _ in
 			let currentColorCode = colorCodes[rainbowArrayIndex % colorCodes.count]
-			let currentCharacterRange = NSRange(substringRange, in: mutableStringCopy.string)
+			let currentCharacterRange = NSRange(substringRange, in: text)
 
 			applyEffect(
 				asForegroundColor ? .foregroundColor : .backgroundColor,

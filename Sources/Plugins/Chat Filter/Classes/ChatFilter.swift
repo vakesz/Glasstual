@@ -123,7 +123,9 @@ struct ChatFilter: Identifiable {
 		id = dictionary["uniqueIdentifier"]?.string ?? ""
 		actionFloodControlInterval = Self.uint(dictionary["filterActionFloodControlInterval"])
 		destination = ChatFilterDestination(rawValue: Self.uint(dictionary["filterLimitedToValue"])) ?? .unrestricted
-		ageComparator = ChatFilterAgeComparator(rawValue: Self.uint(dictionary["filterAgeComparator"])) ?? .greaterThan
+		if let comparator = dictionary["filterAgeComparator"] {
+			ageComparator = ChatFilterAgeComparator(rawValue: Self.uint(comparator)) ?? .greaterThan
+		}
 		ageLimit = Self.uint(dictionary["filterAgeLimit"])
 
 		if let rawEvents = dictionary["filterEvents"]?.integer {
@@ -219,7 +221,7 @@ struct ChatFilter: Identifiable {
 
 	func propertyListData() throws -> Data {
 		try PropertyListSerialization.data(
-			fromPropertyList: dictionaryValue,
+			fromPropertyList: dictionaryValue.propertyListObject,
 			format: .binary,
 			options: 0
 		)

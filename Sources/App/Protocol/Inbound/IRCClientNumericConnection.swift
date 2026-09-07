@@ -128,10 +128,10 @@ extension IRCClient {
 		}
 		/* Assign the overrides inside the callback so the redirect stays atomic: if
 		 disconnect() finds nothing to close, nothing is left half-applied. */
+		let endpoint = PendingIRCEndpoint(host: serverAddress, port: port, origin: server, reason: .serverRedirect)
 		addDisconnectCallback { [weak self] in
 			guard let self else { return }
-			temporaryServerAddressOverride = serverAddress
-			temporaryServerPortOverride = port
+			pendingEndpoint = endpoint
 			connect()
 		}
 		disconnect()

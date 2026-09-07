@@ -105,23 +105,23 @@ struct PreferencesFileTransfersSections: View {
 	private var portRange: some View {
 		LabeledContent {
 			HStack(spacing: 6) {
-				TextField("", text: model.preferences.portFieldBinding(
-					for: Preferences.FileTransfers.portRangeStart,
-					limitedBy: Preferences.FileTransfers.portRangeEnd,
-					isLowerBound: true
-				))
-				.labelsHidden()
+				PreferencesCommittedNumberField(
+					title: PreferencesFileTransfersStrings.portRangeFirst,
+					text: model.preferences.portFieldBinding(
+						for: Preferences.FileTransfers.portRangeStart,
+						limitedBy: Preferences.FileTransfers.portRangeEnd
+					)
+				)
 				.frame(width: 80)
-				.accessibilityLabel(Text(verbatim: PreferencesFileTransfersStrings.portRangeFirst))
 				Text(verbatim: PreferencesFileTransfersStrings.portRangeSeparator)
-				TextField("", text: model.preferences.portFieldBinding(
-					for: Preferences.FileTransfers.portRangeEnd,
-					limitedBy: Preferences.FileTransfers.portRangeStart,
-					isLowerBound: false
-				))
-				.labelsHidden()
+				PreferencesCommittedNumberField(
+					title: PreferencesFileTransfersStrings.portRangeLast,
+					text: model.preferences.portFieldBinding(
+						for: Preferences.FileTransfers.portRangeEnd,
+						limitedBy: Preferences.FileTransfers.portRangeStart
+					)
+				)
 				.frame(width: 80)
-				.accessibilityLabel(Text(verbatim: PreferencesFileTransfersStrings.portRangeLast))
 				Spacer()
 			}
 		} label: {
@@ -264,10 +264,9 @@ struct PreferencesHiddenSections: View {
 				PreferencesComboField(
 					title: PreferencesHiddenStrings.scrollbackVisibleLimit,
 					presets: Self.scrollbackPresets,
+					commitsOnEndEditing: true,
 					text: model.preferences.numberFieldBinding(
-						for: Preferences.Logging.scrollbackVisibleLimit,
-						range: PreferencesValueValidation.scrollbackVisibleRange,
-						allowingZero: true
+						for: Preferences.Logging.scrollbackVisibleLimit
 					) {
 						TextualPreferences.performReloadAction(.scrollbackVisibleLimit)
 					}

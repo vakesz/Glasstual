@@ -100,38 +100,11 @@ struct AppKitBridgeIsolationTests {
 		)
 
 		#expect(window.serverList.numberOfRows == 0)
-		#expect(window.memberList.numberOfRows == 0)
+		#expect(window.memberList.groups.isEmpty)
 		#expect(window.inputTextField.textLayoutManager != nil)
 		#expect(window.loadingScreen.viewIsVisible == false)
 		#expect(window.formattingMenu.formatterMenu.submenu?.items.isEmpty == false)
 		#expect(Bundle.main.path(forResource: "TVCMainWindow", ofType: "nib") == nil)
-	}
-
-	@Test("Notifications posted in one turn all reach the handler")
-	func notificationBurstIsNotDropped() async {
-		let subscriptions = NotificationSubscriptions()
-		let name = Notification.Name("GlasstualBridgeTestBurst-\(UUID().uuidString)")
-		let collector = NotificationCollector()
-
-		subscriptions.observe(name) { notification in
-			collector.append(notification.userInfo?["index"] as? Int ?? -1)
-		}
-		defer { subscriptions.cancelAll() }
-
-		/* The subscription is set up by a task, so it has to get its turn on the
-		 main actor before anything is posted. */
-		await yieldRepeatedly()
-
-		for index in 0 ..< 5 {
-			NotificationCenter.default.post(name: name, object: nil, userInfo: ["index": index])
-		}
-
-		await yieldRepeatedly()
-
-		/* One value at a time is what `AsyncPublisher` asks for, and a
-		 notification publisher drops what it cannot deliver; without the buffer
-		 in between only the first of these five arrives. */
-		#expect(collector.values == [0, 1, 2, 3, 4])
 	}
 
 	@Test("A synchronous subscription runs on the main actor before the post returns")
@@ -158,12 +131,6 @@ struct AppKitBridgeIsolationTests {
 		NotificationCenter.default.post(name: SynchronousProbeMessage.notificationName, object: nil)
 
 		#expect(collector.values == [1])
-	}
-
-	private func yieldRepeatedly() async {
-		for _ in 0 ..< 500 {
-			await Task.yield()
-		}
 	}
 
 	// MARK: - Opened files

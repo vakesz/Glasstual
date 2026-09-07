@@ -45,10 +45,6 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
-		handleCommand(invocation)
-	}
-
-	private func handleCommand(_ invocation: PluginCommandInvocation) {
 		guard let channel = invocation.selectedChannel else { return }
 		let command = invocation.command
 		let client = invocation.client

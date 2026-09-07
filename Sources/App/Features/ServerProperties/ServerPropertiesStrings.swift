@@ -176,6 +176,10 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 			String(localized: .TDCServerPropertiesSheet.nickservOrSaslPassword)
 		}
 
+		static var signInWithSASL: String {
+			String(localized: .TDCServerPropertiesSheet.signInWithSasl)
+		}
+
 		static var autojoinWaitsForNickServ: String {
 			String(localized: .TDCServerPropertiesSheet.autojoinWaitsForNickserv)
 		}

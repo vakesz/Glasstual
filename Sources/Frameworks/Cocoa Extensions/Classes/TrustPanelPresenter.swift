@@ -82,8 +82,14 @@ public final class TrustPanelPresenter: NSObject {
 			completion: completion,
 			context: context
 		)
-		let callbackPointer = Unmanaged.passRetained(callback).toOpaque()
 		let panel = SFCertificateTrustPanel()
+		/* The panel owns the callback, because `didEnd` is not the only way a
+		 sheet goes away: a caller that dismisses it with `orderOut(_:)` never
+		 reaches the selector, and a retain balanced only there is never
+		 released. `contextInfo` therefore only names the callback; the panel's
+		 own lifetime is what keeps it alive. */
+		objc_setAssociatedObject(panel, Self.callbackKey, callback, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+		let callbackPointer = Unmanaged.passUnretained(callback).toOpaque()
 		panel.setDefaultButtonTitle(defaultButton)
 		panel.setAlternateButtonTitle(alternateButton)
 		panel.setInformativeText(body)
@@ -103,8 +109,16 @@ public final class TrustPanelPresenter: NSObject {
 		returnCode: Int,
 		contextInfo: UnsafeMutableRawPointer
 	) {
-		let context = Unmanaged<TrustPanelContext>.fromOpaque(contextInfo).takeRetainedValue()
+		let context = Unmanaged<TrustPanelContext>.fromOpaque(contextInfo).takeUnretainedValue()
 		context.completion(context.trust, returnCode == NSApplication.ModalResponse.OK.rawValue, context.context)
+	}
+
+	/// Keys the callback the panel carries. The token is never read: only the
+	/// address it occupies for the life of the process matters.
+	private static let callbackToken = NSObject()
+
+	private static var callbackKey: UnsafeRawPointer {
+		UnsafeRawPointer(Unmanaged.passUnretained(callbackToken).toOpaque())
 	}
 }
 

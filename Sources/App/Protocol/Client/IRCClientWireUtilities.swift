@@ -341,12 +341,22 @@ public nonisolated enum ClientWireUtilities { // nonisolated: value
 		return octets
 	}
 
-	public static func chatHistoryLatestCommand(target: String, selector: String, limit: UInt) -> String {
-		"CHATHISTORY LATEST \(target) \(selector) \(limit)"
-	}
+	/// The one command name every chat-history request goes out under.
+	public static let chatHistoryCommand = "CHATHISTORY"
 
-	public static func chatHistoryBeforeCommand(target: String, selector: String, limit: UInt) -> String {
-		"CHATHISTORY BEFORE \(target) \(selector) \(limit)"
+	/** The arguments of a `CHATHISTORY` request, as arguments rather than a
+	 line.
+
+	 The caller hands them to the outbound transport, which is what builds the
+	 wire line and attaches the message tags a labelled request needs; a line
+	 assembled here would have to have its `@label=` interpolated on top. */
+	public static func chatHistoryArguments(
+		subcommand: String,
+		target: String,
+		selector: String,
+		limit: UInt
+	) -> [String] {
+		[subcommand, target, selector, String(limit)]
 	}
 
 	public static func netsplitNicknameList(_ nicknames: [String], limit: UInt) -> String {

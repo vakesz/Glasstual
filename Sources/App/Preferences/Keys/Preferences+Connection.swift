@@ -70,7 +70,8 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		public static let autojoinDelayAfterIdentification = PreferenceKey(
 			"AutojoinDelayAfterIdentification",
-			default: 0.0
+			default: 0.0,
+			validation: { $0.isFinite && $0 >= 0 && $0 < Double(Int64.max) / 1_000_000_000 }
 		)
 
 		public static let disconnectOnSleep = PreferenceKey("AutomaticallyDisconnectForSleepMode", default: true)

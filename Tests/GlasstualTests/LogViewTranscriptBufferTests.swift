@@ -17,6 +17,123 @@ import Testing
 @MainActor
 @Suite("Native transcript buffer")
 struct LogViewTranscriptBufferTests {
+	@Test("Both selection endpoints follow body text across markers, theme headers and prefix trimming")
+	func selectionEndpointsSurviveRestylingAndTrim() throws {
+		let themeController = SharedApplication.sharedThemeController()
+		let previousTheme = themeController.theme
+		let previousData = Preferences.Theme.transcriptTheme.value
+		let copyOnSelect = Preferences.Messages.copyOnSelect.value
+		defer {
+			themeController.apply(previousTheme)
+			Preferences.Theme.transcriptTheme.value = previousData
+			Preferences.Messages.copyOnSelect.value = copyOnSelect
+		}
+		Preferences.Messages.copyOnSelect.value = false
+		let view = makeLogView(bufferLimit: 3)
+		view.appendLines([
+			transcriptLine("before"),
+			transcriptLine("first e\u{0301}"),
+			transcriptLine("last \u{1F600}"),
+		])
+		let text = try textView(of: view)
+		let start = (text.string as NSString).range(of: "first").location
+		let end = NSMaxRange((text.string as NSString).range(of: "last \u{1F600}"))
+		text.setSelectedRange(NSRange(location: start, length: end - start))
+		view.setUnreadMarker(.line("first e\u{0301}"))
+		var theme = previousTheme
+		theme.timestampFormat = "%Y-%m-%d %H:%M:%S"
+		theme.nicknameFormat = "[%n]"
+		#expect(themeController.apply(theme))
+		view.applyTheme()
+		view.appendLines([transcriptLine("after")])
+		let selection = (text.string as NSString).substring(with: text.selectedRange())
+		#expect(selection.hasPrefix("first e\u{0301}"))
+		#expect(selection.hasSuffix("last \u{1F600}"))
+		#expect(!selection.contains("before"))
+		#expect(!selection.contains("after"))
+		#expect(selection.contains("[alice]"))
+	}
+
+	@Test("An edit batch preserves archived reactions and one selection through multiple row refreshes")
+	func batchedRefreshKeepsSelectionAndReactionBase() throws {
+		let copyOnSelect = Preferences.Messages.copyOnSelect.value
+		defer { Preferences.Messages.copyOnSelect.value = copyOnSelect }
+		Preferences.Messages.copyOnSelect.value = false
+		let view = makeLogView()
+		var first = transcriptLine("selected body")
+		first.reactions = ["+1": ["alice"]]
+		view.appendLines([first, transcriptLine("last")])
+		let text = try textView(of: view)
+		text.setSelectedRange((text.string as NSString).range(of: "selected body"))
+		view.performEditingBatch {
+			view.setUnreadMarker(.line(first.lineNumber))
+			view.updateReactions(["+1": ["bob"]], messageIdentifier: "id-selected body")
+			view.updateDelivery(TranscriptDeliveryUpdate(
+				lineNumber: first.lineNumber, state: .delivered, messageIdentifier: nil, reason: nil
+			))
+		}
+		#expect((text.string as NSString).substring(with: text.selectedRange()) == "selected body")
+		#expect(view.displayedLines.first?.reactions == ["+1": ["alice", "bob"]])
+	}
+
+	@Test("Prepend reports only adjacent accepted rows and does not spend capacity on duplicates")
+	func prependReportsAcceptedRows() {
+		let view = makeLogView(bufferLimit: 1)
+		let newest = transcriptLine("newest")
+		view.appendLines([newest])
+		let accepted = view.prependLines([transcriptLine("older"), newest])
+		#expect(accepted == ["older"])
+		#expect(view.displayedBounds.oldest == "older")
+		#expect(view.displayedBounds.newest == "newest")
+		#expect(view.displayedBounds.count == 2)
+		#expect(view.prependLines([transcriptLine("older")]).isEmpty)
+	}
+
+	@Test("Capacity keeps only the adjacent part of a page without advancing past refused rows")
+	func prependAtCapacityRetainsAdjacentRows() {
+		let limit = LogViewBufferPolicy.validLimits.upperBound
+		let view = makeLogView(bufferLimit: limit)
+		view.view.removeFromSuperview()
+		view.appendLines((0 ..< limit - 1).map(message))
+		#expect(view.prependLines([transcriptLine("oldest"), transcriptLine("adjacent")]) == ["adjacent"])
+		#expect(view.displayedBounds.remainingCapacity == 0)
+		#expect(view.displayedBounds.oldest == "adjacent")
+		#expect(view.displayedBounds.newest == "message \(limit - 2)")
+		#expect(view.prependLines([transcriptLine("oldest")]).isEmpty)
+		#expect(!view.jump(to: "oldest"))
+	}
+
+	@Test("Refreshing a line reuses its decoded image and attachment")
+	func attachmentIsCachedAcrossRefreshes() throws {
+		let view = makeLogView()
+		view.appendLines([transcriptLine("image")])
+		let bitmap = try #require(NSBitmapImageRep(
+			bitmapDataPlanes: nil, pixelsWide: 2, pixelsHigh: 2, bitsPerSample: 8, samplesPerPixel: 4,
+			hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+		))
+		let data = try #require(bitmap.representation(using: .png, properties: [:]))
+		try view.addInlineImage(TranscriptInlineImage(
+			lineNumber: "image", linkIdentifier: "link", sourceURL: #require(URL(string: "https://example.com/image")),
+			imageData: data
+		))
+		let storage = try #require(textView(of: view).textStorage)
+		func attachment() throws -> NSTextAttachment {
+			var attachment: NSTextAttachment?
+			storage.enumerateAttribute(.attachment, in: NSRange(location: 0, length: storage.length)) { value, _, _ in
+				if let value = value as? NSTextAttachment {
+					attachment = value
+				}
+			}
+			return try #require(attachment)
+		}
+		let original = try attachment()
+		view.updateReactions(["+1": ["bob"]], messageIdentifier: "id-image")
+		view.applyTheme()
+		view.setUnreadMarker(.latest)
+		#expect(try attachment() === original)
+		#expect(try attachment().image === original.image)
+	}
+
 	private func makeLogView(bufferLimit: Int = 1000) -> LogView {
 		let client = IRCClient(config: ClientConfig())
 		let window = MainWindow(
@@ -37,9 +154,7 @@ struct LogViewTranscriptBufferTests {
 		TranscriptLine(
 			lineNumber: text,
 			receivedAt: Date(),
-			timestamp: "12:00",
 			nickname: "alice",
-			formattedNickname: "alice",
 			memberType: .normal,
 			lineType: .privateMessage,
 			command: "PRIVMSG",
@@ -105,6 +220,24 @@ struct LogViewTranscriptBufferTests {
 		#expect(abs(visibleBottom - textView.frame.maxY) < 2)
 	}
 
+	/** The deferred scroll is performed by the view's layout pass, so the pass
+	 has to be asked for. A hidden view that is never marked dirty never lays
+	 out again, and the transcript stays parked where the reader left it. */
+	@Test("A scroll to the end asked for while hidden marks the view for layout")
+	func hiddenScrollToBottomRequestsLayout() throws {
+		let logView = makeLogView()
+		let native = try #require(logView.view as? NativeTranscriptView)
+		logView.appendLines((1 ... 20).map(message))
+		native.layoutSubtreeIfNeeded()
+		native.isHidden = true
+		native.layoutSubtreeIfNeeded()
+		#expect(native.needsLayout == false)
+
+		logView.scrollToBottom()
+
+		#expect(native.needsLayout)
+	}
+
 	private func document(of logView: LogView) throws -> String {
 		try textView(of: logView).string
 	}
@@ -127,6 +260,102 @@ struct LogViewTranscriptBufferTests {
 		logView.appendLines(Array(lines[5 ..< 12]))
 
 		#expect(try document(of: logView) == rebuiltDocument(of: lines))
+	}
+
+	@Test("Appending uses the storage end after UTF-16 edits, trimming and clearing")
+	func appendAfterVariableLengthEditsMatchesRebuild() throws {
+		let logView = makeLogView(bufferLimit: 3)
+		let first = transcriptLine("first \u{1F600}")
+		var changed = transcriptLine("changed e\u{0301}")
+		let last = transcriptLine("last")
+		logView.appendLines([first, changed])
+		logView.updateDelivery(TranscriptDeliveryUpdate(
+			lineNumber: changed.lineNumber, state: .failed, messageIdentifier: nil, reason: "longer reason"
+		))
+		changed.deliveryState = .failed
+		changed.deliveryFailureReason = "longer reason"
+		logView.prependLines([transcriptLine("older")])
+		logView.appendLines([last, transcriptLine("newest")])
+		#expect(try document(of: logView) == rebuiltDocument(of: [first, changed, last, transcriptLine("newest")]))
+
+		logView.clearLines()
+		logView.appendLines([last])
+		#expect(try document(of: logView) == rebuiltDocument(of: [last]))
+	}
+
+	@Test("Find and jump suspend bottom following until explicitly resumed", arguments: [false, true])
+	func navigationSuspendsBottomFollowing(usingFind: Bool) throws {
+		let copyOnSelect = Preferences.Messages.copyOnSelect.value
+		defer { Preferences.Messages.copyOnSelect.value = copyOnSelect }
+		Preferences.Messages.copyOnSelect.value = false
+		let logView = makeLogView()
+		logView.appendLines((0 ..< 200).map(message))
+		let textView = try textView(of: logView)
+		let scrollView = try #require(textView.enclosingScrollView)
+		if usingFind {
+			logView.findString("message 0", movingForward: true)
+			#expect(logView.selection == "message 0")
+		} else {
+			#expect(logView.jump(to: "message 0"))
+		}
+		// A pending first layout must not undo the navigation either.
+		logView.view.layoutSubtreeIfNeeded()
+		logView.appendLines((200 ..< 220).map(message))
+		let layoutManager = try #require(textView.textLayoutManager)
+		layoutManager.ensureLayout(for: layoutManager.documentRange)
+		textView.sizeToFit()
+		#expect(scrollView.contentView.bounds.maxY < textView.frame.maxY - 100)
+		if usingFind {
+			#expect(logView.selection == "message 0")
+		}
+
+		logView.scrollToBottom()
+		logView.appendLines([message(220)])
+		let visibleBottom = scrollView.contentView.bounds.maxY - scrollView.contentInsets.bottom
+		#expect(abs(visibleBottom - textView.frame.maxY) < 2)
+	}
+
+	@Test("An unknown jump target leaves bottom following enabled")
+	func failedJumpKeepsBottomFollowing() throws {
+		let logView = makeLogView()
+		logView.appendLines((0 ..< 200).map(message))
+		logView.view.layoutSubtreeIfNeeded()
+		#expect(logView.jump(to: "missing") == false)
+		logView.appendLines([message(200)])
+		let textView = try textView(of: logView)
+		let scrollView = try #require(textView.enclosingScrollView)
+		let visibleBottom = scrollView.contentView.bounds.maxY - scrollView.contentInsets.bottom
+		#expect(abs(visibleBottom - textView.frame.maxY) < 2)
+	}
+
+	@Test("Bubble fills are fallback backgrounds, below IRC colors and highlights")
+	func bubbleBackgroundPreservesExplicitAndHighlightColors() throws {
+		let controller = SharedApplication.sharedThemeController()
+		let previousTheme = controller.theme
+		let previousData = Preferences.Theme.transcriptTheme.value
+		defer {
+			controller.apply(previousTheme)
+			Preferences.Theme.transcriptTheme.value = previousData
+		}
+		#expect(controller.apply(.bubbles))
+		let logView = makeLogView()
+		var line = transcriptLine("plain colored highlighted")
+		line.body.runs = [
+			TranscriptTextRun(text: "plain "),
+			TranscriptTextRun(text: "colored ", background: .palette(4)),
+			TranscriptTextRun(text: "highlighted", traits: .highlighted, background: .palette(4)),
+		]
+		logView.appendLines([line])
+		let storage = try #require(textView(of: logView).textStorage)
+		for (text, expected) in [
+			("plain", controller.resolved(controller.theme.palette.bubbleIncoming)),
+			("colored", NSColor.formatterColors[4]),
+			("highlighted", controller.resolved(controller.theme.palette.highlightBackground)),
+		] {
+			let range = (storage.string as NSString).range(of: text)
+			#expect(storage
+				.attribute(.backgroundColor, at: range.location, effectiveRange: nil) as? NSColor == expected)
+		}
 	}
 
 	@Test("Trimming drops the oldest lines and keeps the newest addressable")

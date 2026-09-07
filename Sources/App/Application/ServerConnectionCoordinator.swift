@@ -15,6 +15,12 @@ import Foundation
 import os
 
 nonisolated struct ServerConnectionOptions: Equatable, Sendable { // nonisolated: value
+	static let externalLink = Self(
+		connectWhenCreated: false,
+		mergeConnectionIfPossible: true,
+		selectFirstChannelAdded: false
+	)
+
 	let connectWhenCreated: Bool
 	let mergeConnectionIfPossible: Bool
 	let selectFirstChannelAdded: Bool
@@ -33,8 +39,8 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable { // nonisolated
 	let channels: [String]
 	let options: ServerConnectionOptions
 
-	/// Parses the `[-SSL] host[:port] [password]` form accepted by `/server`
-	/// and application links.
+	/// Legacy command adapter for `[-SSL] host[:port] [password]`.
+	/// URL requests bypass this tokenizer entirely.
 	static func parse(
 		_ serverInfo: String,
 		channels channelList: String?,
@@ -85,7 +91,9 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable { // nonisolated
 			return nil
 		}
 
-		var port = IRCConnectionDefaults.serverPort
+		var port: UInt16 = connectSecurely
+			? IRCConnectionDefaults.serverPortSecure
+			: IRCConnectionDefaults.serverPort
 		var portText: String?
 		if portSuffix.hasPrefix(":") {
 			portText = String(portSuffix.dropFirst())
@@ -146,25 +154,56 @@ enum ServerConnectionCoordinator {
 		connect(using: request)
 	}
 
-	private static func connect(using request: ServerConnectionRequest) {
+	static func connect(
+		using request: ServerConnectionRequest,
+		clients: [IRCClient]? = nil,
+		confirmMerge: @MainActor (IRCClient, String, [String]) -> Bool = shouldMerge,
+		mergeConnection: @MainActor (ServerConnectionRequest, IRCClient) -> Void = merge,
+		createConnection: @MainActor (ServerConnectionRequest) -> Void = createClient
+	) {
 		var existingClient: IRCClient?
 		if request.options.mergeConnectionIfPossible, request.channels.isEmpty == false {
-			existingClient = ClientEnvironment.shared.world?.findClient(
-				withServerAddress: request.serverAddress
-			)
+			existingClient = (clients ?? ClientEnvironment.shared.world?.clientList ?? []).first {
+				canReuse($0, for: request)
+			}
 		}
 
 		if let matchedClient = existingClient,
-		   shouldMerge(matchedClient, address: request.serverAddress, channels: request.channels) == false
+		   confirmMerge(matchedClient, request.serverAddress, request.channels) == false
 		{
 			existingClient = nil
 		}
 
 		if let existingClient {
-			merge(request, into: existingClient)
+			mergeConnection(request, existingClient)
 		} else {
-			createClient(for: request)
+			createConnection(request)
 		}
+	}
+
+	static func canReuse(_ client: IRCClient, for request: ServerConnectionRequest) -> Bool {
+		let config = client.config
+		guard config.serverAddress?.caseInsensitiveCompare(request.serverAddress) == .orderedSame,
+		      config.serverPort == request.serverPort,
+		      config.prefersSecuredConnection == request.connectSecurely,
+		      config.cipherSuites == .default,
+		      request.connectSecurely == false || config.validateServerCertificateChain
+		else { return false }
+		if let password = request.serverPassword,
+		   config.serverList.first?.serverPassword != password
+		{
+			return false
+		}
+		// A live connection can still be using the endpoint from before an edit.
+		if let socket = client.socket {
+			guard socket.config.serverAddress.caseInsensitiveCompare(request.serverAddress) == .orderedSame,
+			      socket.config.serverPort == request.serverPort,
+			      socket.config.connectionPrefersSecuredConnection == request.connectSecurely,
+			      socket.config.cipherSuites == .default,
+			      request.connectSecurely == false || socket.config.connectionShouldValidateCertificateChain
+			else { return false }
+		}
+		return true
 	}
 
 	private static func merge(_ request: ServerConnectionRequest, into client: IRCClient) {
@@ -177,9 +216,9 @@ enum ServerConnectionCoordinator {
 			}
 		}
 
-		ClientEnvironment.shared.world?.save()
+		client.world?.save()
 		if request.options.selectFirstChannelAdded, let firstChannel {
-			ClientEnvironment.shared.output?.selectItem(firstChannel)
+			client.output?.selectItem(firstChannel)
 		}
 	}
 

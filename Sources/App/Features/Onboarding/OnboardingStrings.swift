@@ -32,6 +32,10 @@ extension OnboardingTextSize {
 
 enum OnboardingStrings {
 	enum Window {
+		static var connectionUnavailable: String {
+			String(localized: .OnboardingCompletion.connectionUnavailable)
+		}
+
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.windowChromeWelcomeToGlasstual)
 		}
@@ -227,6 +231,14 @@ enum OnboardingStrings {
 	}
 
 	enum NetworkPicker {
+		static var accountIdentityHelp: String {
+			String(localized: .OnboardingCompletion.accountIdentityHelp)
+		}
+
+		static var invalidAccount: String {
+			String(localized: .OnboardingCompletion.invalidAccount)
+		}
+
 		static var searchPlaceholder: String {
 			String(localized: .TDCOnboardingWindow.searchNetworks)
 		}

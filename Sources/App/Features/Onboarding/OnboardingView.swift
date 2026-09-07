@@ -11,6 +11,7 @@ struct OnboardingView: View {
 	let continueAction: () -> Void
 	let backAction: () -> Void
 	let skipAction: () -> Void
+	let cancelAction: () -> Void
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -57,6 +58,7 @@ struct OnboardingView: View {
 			Divider()
 
 			HStack {
+				Button(PromptStrings.Action.cancel, action: cancelAction)
 				if model.currentStep.isSkippable {
 					Button(OnboardingStrings.Window.skipButton, action: skipAction)
 						.buttonStyle(.link)
@@ -84,12 +86,7 @@ struct OnboardingView: View {
 		}
 		.frame(width: 720, height: 700)
 		.animation(.snappy(duration: 0.2), value: model.currentStep)
-		/* Escape is the Skip button by another name, so it is offered exactly
-		 where the button is: a step that cannot be skipped cannot be escaped. */
-		.onExitCommand {
-			guard model.currentStep.isSkippable else { return }
-			skipAction()
-		}
+		.onExitCommand(perform: cancelAction)
 		.alert(model.currentStep.title, isPresented: $model.isValidationPresented) {
 			Button(PromptStrings.Action.confirmation, role: .cancel) {}
 		} message: {
@@ -136,6 +133,7 @@ private struct OnboardingIdentityView: View {
 					text: $settings.nickname
 				)
 				.focused($focusedField, equals: .nickname)
+				.accessibilityIdentifier("onboarding-nickname")
 			}
 
 			GridRow {
@@ -145,6 +143,7 @@ private struct OnboardingIdentityView: View {
 					text: $settings.realName
 				)
 				.focused($focusedField, equals: .realName)
+				.accessibilityIdentifier("onboarding-real-name")
 			}
 
 			GridRow {
@@ -154,6 +153,7 @@ private struct OnboardingIdentityView: View {
 					text: $settings.alternateNickname
 				)
 				.focused($focusedField, equals: .alternateNickname)
+				.accessibilityIdentifier("onboarding-alternate-nickname")
 			}
 
 			GridRow {

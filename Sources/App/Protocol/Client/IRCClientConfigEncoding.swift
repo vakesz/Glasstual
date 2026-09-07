@@ -70,6 +70,7 @@ nonisolated extension ClientConfig { // nonisolated: value
 		try container.encode(alternateNicknames, forKey: .alternateNicknames)
 		try container.encodeIfPresent(awayNickname, forKey: .awayNickname)
 		try container.encodeIfPresent(saslMechanismPreference, forKey: .saslMechanismPreference)
+		try encode(usesSASL, forKey: .usesSASL, default: true, &container)
 		try container.encodeIfPresent(identityClientSideCertificate, forKey: .identityClientSideCertificate)
 
 		try encode(connectionName, forKey: .connectionName, default: ApplicationStrings.untitledConnection, &container)

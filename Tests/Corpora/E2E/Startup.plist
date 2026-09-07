@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ConfirmApplicationQuit</key><false/>
+	<key>ReloadScrollbackOnLaunch</key><true/>
+	<key>Smiley Converter Extension -&gt; Enable Service</key><false/>
+	<key>File Transfers -&gt; File Transfer Request Reply Action</key><integer>2</integer>
+	<key>File Transfers -&gt; File Transfer IP Address Detection Method</key><integer>2</integer>
+	<key>File Transfers -&gt; File Transfer Manually Entered IP Address</key><string>127.0.0.1</string>
+	<key>World Controller Client Configurations</key>
+	<array><dict>
+		<key>dictionaryVersion</key><integer>710</integer>
+		<key>connectionName</key><string>E2E</string>
+		<key>nickname</key><string>e2euser</string>
+		<key>username</key><string>e2euser</string>
+		<key>realName</key><string>Synthetic E2E User</string>
+		<key>proxyType</key><integer>0</integer>
+		<key>autoConnect</key><false/>
+		<key>autoReconnect</key><false/>
+		<key>validateServerCertificateChain</key><true/>
+		<key>setInvisibleModeOnConnect</key><false/>
+		<key>performPongTimer</key><false/>
+		<key>performDisconnectOnReachabilityChange</key><false/>
+		<key>normalLeavingComment</key><string>E2E_QUIT</string>
+		<key>channelList</key><array/>
+	</dict></array>
+</dict>
+</plist>

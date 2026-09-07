@@ -113,18 +113,37 @@ struct IRCClientWireUtilitiesTests {
 		#expect(ClientWireUtilities.escapedDCCFilename("say \"hi\".txt") == "\"say \\\"hi\\\".txt\"")
 	}
 
-	@Test("Chat history commands name their selector and limit explicitly")
-	func chatHistoryCommandsUseExplicitSelectorAndLimit() {
+	@Test("Chat history requests name their selector and limit explicitly")
+	func chatHistoryRequestsUseExplicitSelectorAndLimit() {
 		#expect(
-			ClientWireUtilities.chatHistoryLatestCommand(target: "#swift", selector: "*", limit: 100)
-				== "CHATHISTORY LATEST #swift * 100"
+			ClientWireUtilities.chatHistoryArguments(
+				subcommand: "LATEST",
+				target: "#swift",
+				selector: "*",
+				limit: 100
+			) == ["LATEST", "#swift", "*", "100"]
 		)
 		#expect(
-			ClientWireUtilities.chatHistoryBeforeCommand(
+			ClientWireUtilities.chatHistoryArguments(
+				subcommand: "BEFORE",
 				target: "#swift",
 				selector: "timestamp=2026-08-26T12:00:00.000Z",
 				limit: 50
-			) == "CHATHISTORY BEFORE #swift timestamp=2026-08-26T12:00:00.000Z 50"
+			) == ["BEFORE", "#swift", "timestamp=2026-08-26T12:00:00.000Z", "50"]
+		)
+		/* The transport is what turns them into a line, so a labelled request
+		 gets its tag through the same path as any other tagged command. */
+		#expect(
+			SendingMessage.string(
+				command: ClientWireUtilities.chatHistoryCommand,
+				arguments: ClientWireUtilities.chatHistoryArguments(
+					subcommand: "BEFORE",
+					target: "#swift",
+					selector: "timestamp=2026-08-26T12:00:00.000Z",
+					limit: 50
+				),
+				tags: ["label": "history-1"]
+			) == "@label=history-1 CHATHISTORY BEFORE #swift timestamp=2026-08-26T12:00:00.000Z 50"
 		)
 	}
 

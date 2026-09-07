@@ -214,10 +214,45 @@ struct CapabilityRegistry: Sendable {
 
 	func capabilitiesToRequest(
 		fromOffered offered: [String: [String]],
-		preferences: ClientPreferences
+		preferences: ClientPreferences,
+		enabledCapabilities: ClientIRCv3SupportedCapability = []
 	) -> [Capability] {
 		capabilities.filter {
-			isRequestable($0, fromOffered: offered, preferences: preferences, depth: 0)
+			isRequestable(
+				$0,
+				fromOffered: offered,
+				preferences: preferences,
+				enabledCapabilities: enabledCapabilities,
+				depth: 0
+			)
+		}
+	}
+
+	var knownIdentifiers: ClientIRCv3SupportedCapability {
+		capabilities.reduce(into: []) { $0.formUnion($1.identifier) }
+	}
+
+	/// Dependencies are semantic identifiers, so a surviving vendor alias can
+	/// still supply server-time. Iterate to a fixed point for transitive needs.
+	func projection(of names: [String]) -> ClientIRCv3SupportedCapability {
+		let acknowledged = names.compactMap { capability(named: $0) }
+		var result: ClientIRCv3SupportedCapability = []
+		for _ in 0 ... capabilities.count {
+			let previous = result
+			for capability in acknowledged where dependenciesSatisfied(for: capability, by: result) {
+				result.formUnion(capability.identifier)
+			}
+			if result == previous {
+				break
+			}
+		}
+		return result
+	}
+
+	func dependenciesSatisfied(for capability: Capability, by enabled: ClientIRCv3SupportedCapability) -> Bool {
+		capability.dependencies.allSatisfy { name in
+			guard let dependency = self.capability(named: name) else { return false }
+			return enabled.contains(dependency.identifier)
 		}
 	}
 
@@ -225,6 +260,7 @@ struct CapabilityRegistry: Sendable {
 		_ capability: Capability,
 		fromOffered offered: [String: [String]],
 		preferences: ClientPreferences,
+		enabledCapabilities: ClientIRCv3SupportedCapability,
 		depth: Int
 	) -> Bool {
 		guard depth <= 8,
@@ -239,10 +275,14 @@ struct CapabilityRegistry: Sendable {
 			guard let dependency = self.capability(named: dependencyName) else {
 				return false
 			}
+			if dependency.identifier.rawValue != 0, enabledCapabilities.contains(dependency.identifier) {
+				continue
+			}
 			guard isRequestable(
 				dependency,
 				fromOffered: offered,
 				preferences: preferences,
+				enabledCapabilities: enabledCapabilities,
 				depth: depth + 1
 			) else {
 				return false

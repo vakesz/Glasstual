@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import Foundation
+import GlasstualPluginKit
 
 private enum IRCNumericErrorGroup {
 	static let missingTarget: Set<UInt> = [IRCNumeric.nosuchserver.rawValue, IRCNumeric.nosuchchannel.rawValue]
@@ -71,6 +72,9 @@ public extension IRCClient {
 			printError(message, inTargetChannelNamed: message.param(at: 1))
 			return
 		}
+		if handleJoinFailure(message, numeric: numeric, shouldPrint: shouldPrint) {
+			return
+		}
 		if IRCNumericErrorGroup.missingTarget.contains(numeric) {
 			if shouldPrint {
 				printErrorReply(message)
@@ -78,9 +82,6 @@ public extension IRCClient {
 			return
 		}
 		if handleNicknameError(message, numeric: numeric, shouldPrint: shouldPrint) {
-			return
-		}
-		if handleJoinFailure(message, numeric: numeric, shouldPrint: shouldPrint) {
 			return
 		}
 		if IRCNumericErrorGroup.whoFailure.contains(numeric) {
@@ -122,9 +123,21 @@ private extension IRCClient {
 	}
 
 	func handleJoinFailure(_ message: Message, numeric: UInt, shouldPrint: Bool) -> Bool {
-		guard IRCNumericErrorGroup.joinFailure.contains(numeric) else { return false }
-		if let channel = findChannel(message.param(at: 1)) {
-			channel.errorOnLastJoinAttempt = true
+		let target = message.param(at: 1)
+		let channel = findChannel(target)
+		let isPendingJoin = channel?.isChannel == true && channel?.status == .joining && stringIsChannelName(target)
+		let unavailableResource = IRCNumeric.unavailresource.rawValue
+		let isUnavailableChannel = numeric == IRCNumeric.nosuchchannel.rawValue || numeric == unavailableResource
+		guard IRCNumericErrorGroup.joinFailure.contains(numeric) || (isUnavailableChannel && isPendingJoin)
+		else { return false }
+		if let channel {
+			// 477 can also reject MODE; only a pending JOIN owns this failure.
+			if isPendingJoin, !message.isPrintOnlyMessage {
+				channel.status = .parted
+				channel.errorOnLastJoinAttempt = true
+				output?.reloadTreeItem(channel)
+				output?.updateTitle(for: channel)
+			}
 			if shouldPrint {
 				printErrorReply(message, in: channel, withSequence: 2)
 			}

@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import SwiftUI
 
@@ -67,26 +68,18 @@ extension ObservablePreferences {
 		)
 	}
 
-	/** A text field holding a whole number, clamped on commit to the range the
-	 nib's formatter enforced.
-
-	 `allowingZero` keeps the two fields where zero means "no limit" from being
-	 pulled up to the lower bound. */
+	/// A committed number field. The key's own declaration decides which counts
+	/// are valid, so a rejected entry leaves the saved value alone.
 	func numberFieldBinding(
 		for key: PreferenceKey<UInt>,
-		range: ClosedRange<Int>,
-		allowingZero: Bool = false,
 		didSet: @escaping () -> Void = {}
 	) -> Binding<String> {
 		Binding(
 			get: { String(self[key]) },
 			set: { newValue in
-				let clamped = PreferencesValueValidation.clamped(
-					Int(newValue.filter(\.isNumber)) ?? Int(self[key]),
-					to: range,
-					allowingZero: allowingZero
-				)
-				self[key] = UInt(clamped)
+				guard let value = UInt(newValue), let object = value.preferenceObject,
+				      let plist = PropertyListValue(propertyList: object), key.coerce(plist) != nil else { return }
+				self[key] = value
 				didSet()
 			}
 		)
@@ -121,23 +114,23 @@ extension ObservablePreferences {
 		)
 	}
 
-	/// The two file-transfer port fields, which also clamp against each other.
+	/// The same declaration-level port constraints used by configuration import,
+	/// including the ordered-pair rule the two ends of a range share.
 	func portFieldBinding(
 		for key: PreferenceKey<UInt16>,
-		limitedBy other: PreferenceKey<UInt16>?,
-		isLowerBound: Bool
+		limitedBy other: PreferenceKey<UInt16>?
 	) -> Binding<String> {
 		Binding(
 			get: { String(self[key]) },
 			set: { newValue in
-				var clamped = PreferencesValueValidation.clamped(
-					Int(newValue.filter(\.isNumber)) ?? Int(self[key]),
-					to: PreferencesValueValidation.fileTransferPortRange
-				)
+				guard let value = UInt16(newValue), let object = value.preferenceObject,
+				      let plist = PropertyListValue(propertyList: object) else { return }
+				var values: [String: PropertyListValue] = [:]
 				if let other {
-					clamped = isLowerBound ? min(clamped, Int(self[other])) : max(clamped, Int(self[other]))
+					values[other.name] = other.propertyListValue
 				}
-				self[key] = UInt16(clamped)
+				guard key.isValid(plist, in: values) else { return }
+				self[key] = value
 			}
 		)
 	}

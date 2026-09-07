@@ -6,6 +6,29 @@
 import AppKit
 import SwiftUI
 
+/// The rows a contextual menu was opened on, and the coordinator that
+/// resolves commands against them.
+struct AppMenuContext {
+	let coordinator: MenuActionCoordinator
+	let context: MenuActionCoordinator.MenuContext
+
+	init(coordinator: MenuActionCoordinator, item: IRCTreeItem?) {
+		self.coordinator = coordinator
+		context = .treeItem(item)
+	}
+
+	init(coordinator: MenuActionCoordinator, members: [ChannelUser]) {
+		self.coordinator = coordinator
+		context = .members(members)
+	}
+
+	/// The server-list row this context names, if it names one at all.
+	var treeItem: IRCTreeItem? {
+		guard case let .treeItem(item) = context else { return nil }
+		return item
+	}
+}
+
 /// Renders the app's typed command menu graph as native SwiftUI menu content.
 /// The `NSMenu` remains the macOS command boundary used by the menu bar and
 /// responder chain; no AppKit view is hosted for contextual presentation.
@@ -18,8 +41,8 @@ struct AppMenuContent: View {
 	private let entries: [AppMenuEntry]
 	private let prepareSelection: () -> Void
 
-	init(menu: NSMenu, prepareSelection: @escaping () -> Void) {
-		entries = AppMenuEntry.validating(menu)
+	init(menu: NSMenu, context: AppMenuContext? = nil, prepareSelection: @escaping () -> Void) {
+		entries = AppMenuEntry.validating(menu, context: context)
 		self.prepareSelection = prepareSelection
 	}
 
@@ -57,12 +80,22 @@ struct AppMenuEntry: Identifiable {
 	let symbolName: String?
 	let isEnabled: Bool
 	let content: Content
+	private let context: AppMenuContext?
 
 	/// Validates `menu`, then snapshots the items it left visible.
 	///
 	/// `update()` is what runs the validators, so it also settles the titles,
 	/// the hidden flags and the submenus a validator attaches.
-	static func validating(_ menu: NSMenu) -> [AppMenuEntry] {
+	static func validating(_ menu: NSMenu, context: AppMenuContext? = nil) -> [AppMenuEntry] {
+		if let context {
+			return context.coordinator.withContext(context.context) {
+				snapshot(menu, context: context)
+			}
+		}
+		return snapshot(menu, context: nil)
+	}
+
+	private static func snapshot(_ menu: NSMenu, context: AppMenuContext?) -> [AppMenuEntry] {
 		menu.update()
 
 		return menu.items.compactMap { item in
@@ -71,7 +104,7 @@ struct AppMenuEntry: Identifiable {
 			let content: Content = if item.isSeparatorItem {
 				.separator
 			} else if let submenu = item.submenu {
-				.submenu(validating(submenu))
+				.submenu(snapshot(submenu, context: context))
 			} else {
 				.command(action: item.action, target: item.target)
 			}
@@ -82,8 +115,27 @@ struct AppMenuEntry: Identifiable {
 				title: item.title,
 				symbolName: item.command?.symbolName,
 				isEnabled: item.isEnabled,
-				content: content
+				content: content,
+				context: context
 			)
+		}
+	}
+
+	@discardableResult
+	func perform(prepareSelection: () -> Void) -> Bool {
+		guard isEnabled, case let .command(action?, target) = content else { return false }
+
+		/* Publishing the selection is the point of the click, not part of the
+		 clicked-row context: only the command itself is answered for the row
+		 the menu was opened on. */
+		prepareSelection()
+
+		guard let context else {
+			return NSApp.sendAction(action, to: target, from: item)
+		}
+
+		return context.coordinator.withContext(context.context) {
+			NSApp.sendAction(action, to: target, from: item)
 		}
 	}
 }
@@ -103,11 +155,9 @@ private struct AppMenuItemContent: View {
 				menuLabel
 			}
 			.disabled(entry.isEnabled == false)
-		case let .command(action, target):
+		case .command:
 			Button {
-				prepareSelection()
-				guard let action else { return }
-				NSApp.sendAction(action, to: target, from: entry.item)
+				entry.perform(prepareSelection: prepareSelection)
 			} label: {
 				menuLabel
 			}

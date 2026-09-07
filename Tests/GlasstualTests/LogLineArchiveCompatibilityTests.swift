@@ -57,4 +57,59 @@ struct LogLineArchiveCompatibilityTests {
 
 		#expect(text.contains("TVCLogLine"))
 	}
+
+	/** Every enumerated field is written as an unsigned raw value, so a negative
+	 one belongs to a damaged or hand-written archive. Decoding has to fall back
+	 to the same default an unknown raw value takes; converting it to `UInt`
+	 would trap and take the launch that read the row with it. */
+	@Test("An archive holding negative raw values decodes to the defaults")
+	func negativeRawValuesDecodeToDefaults() throws {
+		let data = try NegativeRawValueLine.archived()
+
+		let line = try #require(LogLine(data: data))
+
+		#expect(line.lineType == .undefined)
+		#expect(line.memberType == .normal)
+		#expect(line.deliveryState == .none)
+		// A zero session identifier is the one a fresh line gets: this one's.
+		#expect(line.fromCurrentSession)
+		#expect(line.messageBody == "hello")
+	}
+}
+
+/** Writes the archive the test above reads: the same keys a `LogLine` is stored
+ under, with every enumerated field encoded as -1. It answers to `TVCLogLine`
+ through the archiver's class-name mapping, which is what makes the archive
+ indistinguishable from a stored row. */
+@objc(GLTNegativeRawValueLine) // the archiver records a class name, so this one is pinned
+private final nonisolated class NegativeRawValueLine: NSObject, NSSecureCoding { // nonisolated: immutable
+	static var supportsSecureCoding: Bool {
+		true
+	}
+
+	override init() {
+		super.init()
+	}
+
+	required init?(coder _: NSCoder) {
+		nil
+	}
+
+	func encode(with coder: NSCoder) {
+		coder.encode("privmsg" as NSString, forKey: "command")
+		coder.encode("hello" as NSString, forKey: "messageBody")
+		coder.encode(Date(timeIntervalSince1970: 1000), forKey: "receivedAt")
+		coder.encode(-1, forKey: "lineType")
+		coder.encode(-1, forKey: "memberType")
+		coder.encode(-1, forKey: "deliveryState")
+		coder.encode(-1, forKey: "sessionIdentifier")
+	}
+
+	static func archived() throws -> Data {
+		let archiver = NSKeyedArchiver(requiringSecureCoding: true)
+		archiver.setClassName("TVCLogLine", for: Self.self)
+		archiver.encode(NegativeRawValueLine(), forKey: NSKeyedArchiveRootObjectKey)
+		archiver.finishEncoding()
+		return archiver.encodedData
+	}
 }

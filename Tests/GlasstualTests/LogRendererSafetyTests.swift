@@ -71,4 +71,32 @@ struct LogRendererSafetyTests {
 		let accented = "cafe\u{0301} nai\u{0308}ve"
 		#expect(LogRenderer.strippingDangerousUnicodeCharacters(accented) == accented)
 	}
+
+	@Test("Zero-width highlights never access an end index", arguments: ["$", "^", "(?=a)", "["], ["a", "\u{02}"])
+	func zeroWidthHighlightsAreIgnored(pattern: String, source: String) {
+		let previous = Preferences.Highlights.matchingMethod.value
+		defer { Preferences.Highlights.matchingMethod.value = previous }
+		Preferences.Highlights.matchingMethod.value = .regularExpression
+
+		let body = LogRenderer.renderNativeBody(source, withAttributes: TranscriptRenderOptions(
+			lineType: .privateMessage, highlightKeywords: [pattern]
+		), members: [])
+
+		#expect(body.isHighlight == false)
+		#expect(body.runs.allSatisfy { $0.traits.contains(.highlighted) == false })
+	}
+
+	@Test("A zero-width first match does not hide a later nonempty highlight")
+	func nonemptyMatchAfterZeroWidthStillHighlights() {
+		let previous = Preferences.Highlights.matchingMethod.value
+		defer { Preferences.Highlights.matchingMethod.value = previous }
+		Preferences.Highlights.matchingMethod.value = .regularExpression
+
+		let body = LogRenderer.renderNativeBody("ba", withAttributes: TranscriptRenderOptions(
+			lineType: .privateMessage, highlightKeywords: ["a*"]
+		), members: [])
+
+		#expect(body.isHighlight)
+		#expect(body.runs == [TranscriptTextRun(text: "b"), TranscriptTextRun(text: "a", traits: .highlighted)])
+	}
 }

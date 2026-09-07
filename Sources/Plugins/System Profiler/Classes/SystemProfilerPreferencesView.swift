@@ -12,23 +12,8 @@
 
 import SwiftUI
 
-enum SystemProfilerFeature: String, CaseIterable, Identifiable {
-	case cpuModel = "CPU Model"
-	case memoryInformation = "Memory Information"
-	case systemUptime = "System Uptime"
-	case diskInformation = "Disk Information"
-	case gpuModel = "GPU Model"
-	case screenResolution = "Screen Resolution"
-	case operatingSystemVersion = "OS Version"
-
-	var id: Self {
-		self
-	}
-
-	var disabledPreferenceKey: String {
-		"System Profiler Extension -> Feature Disabled -> \(rawValue)"
-	}
-
+@MainActor
+extension SystemProfilerFeature {
 	var title: String {
 		switch self {
 		case .cpuModel: SystemProfilerLocalization.string(.BasicLanguage.includeCpuModel)
@@ -70,8 +55,8 @@ private struct SystemProfilerFeatureToggle: View {
 	init(feature: SystemProfilerFeature, defaults: UserDefaults) {
 		self.feature = feature
 		_isDisabled = AppStorage(
-			wrappedValue: false,
-			feature.disabledPreferenceKey,
+			wrappedValue: feature.disabledPreference.defaultValue,
+			feature.disabledPreference.name,
 			store: defaults
 		)
 	}

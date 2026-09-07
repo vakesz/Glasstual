@@ -3,70 +3,13 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import Observation
 import SwiftUI
 import UniformTypeIdentifiers
-
-@Observable
-final class ChatFilterStore {
-	private(set) var filters: [ChatFilter] = []
-	var selection: ChatFilter.ID?
-
-	private let didChange: ([ChatFilter]) -> Void
-
-	init(didChange: @escaping ([ChatFilter]) -> Void) {
-		self.didChange = didChange
-	}
-
-	func replaceAll(with filters: [ChatFilter]) {
-		self.filters = filters
-		if selection.map({ selectedID in filters.contains { $0.id == selectedID } }) != true {
-			selection = filters.first?.id
-		}
-	}
-
-	func save(_ filter: ChatFilter, replacing index: Int?) {
-		if let index, filters.indices.contains(index) {
-			filters[index] = filter
-		} else {
-			filters.append(filter)
-		}
-		selection = filter.id
-		persist()
-	}
-
-	func removeSelection() {
-		guard let selectedIndex else { return }
-		filters.remove(at: selectedIndex)
-		selection = filters.indices.contains(selectedIndex)
-			? filters[selectedIndex].id
-			: filters.last?.id
-		persist()
-	}
-
-	func move(from offsets: IndexSet, to destination: Int) {
-		filters.move(fromOffsets: offsets, toOffset: destination)
-		persist()
-	}
-
-	var selectedIndex: Int? {
-		guard let selection else { return nil }
-		return filters.firstIndex { $0.id == selection }
-	}
-
-	var selectedFilter: ChatFilter? {
-		selectedIndex.map { filters[$0] }
-	}
-
-	private func persist() {
-		didChange(filters)
-	}
-}
 
 private struct ChatFilterEditorPresentation: Identifiable {
 	let id = UUID()
 	let filter: ChatFilter
-	let index: Int?
+	let replacingIdentifier: ChatFilter.ID?
 }
 
 struct ChatFilterPreferencesView: View {
@@ -84,12 +27,12 @@ struct ChatFilterPreferencesView: View {
 	var body: some View {
 		VStack(spacing: 0) {
 			List(selection: $store.selection) {
-				ForEach(Array(store.filters.enumerated()), id: \.element.id) { index, filter in
+				ForEach(store.filters) { filter in
 					Text(filter.description)
 						.tag(filter.id)
 						.contentShape(.rect)
 						.onTapGesture(count: 2) {
-							editor = ChatFilterEditorPresentation(filter: filter, index: index)
+							editor = ChatFilterEditorPresentation(filter: filter, replacingIdentifier: filter.id)
 						}
 				}
 				.onMove(perform: store.move)
@@ -109,7 +52,7 @@ struct ChatFilterPreferencesView: View {
 
 			HStack(spacing: 8) {
 				Button {
-					editor = ChatFilterEditorPresentation(filter: ChatFilter(), index: nil)
+					editor = ChatFilterEditorPresentation(filter: ChatFilter(), replacingIdentifier: nil)
 				} label: {
 					Label(String(localized: .TPIChatFilterExtension.addFilterButton), systemImage: "plus")
 				}
@@ -162,7 +105,9 @@ struct ChatFilterPreferencesView: View {
 		.frame(minWidth: 520, minHeight: 300)
 		.sheet(item: $editor) { presentation in
 			ChatFilterEditorView(filter: presentation.filter, clients: clients()) { filter in
-				store.save(filter, replacing: presentation.index)
+				if store.save(filter, replacing: presentation.replacingIdentifier) == false {
+					importError = String(localized: .TPIChatFilterExtension.editedFilterRemoved)
+				}
 				editor = nil
 			} onCancel: {
 				editor = nil
@@ -233,15 +178,15 @@ struct ChatFilterPreferencesView: View {
 	}
 
 	private func editSelection() {
-		guard let index = store.selectedIndex else { return }
-		editor = ChatFilterEditorPresentation(filter: store.filters[index], index: index)
+		guard let filter = store.selectedFilter else { return }
+		editor = ChatFilterEditorPresentation(filter: filter, replacingIdentifier: filter.id)
 	}
 
 	private func duplicateSelection() {
 		guard var filter = store.selectedFilter else { return }
 		filter.id = UUID().uuidString
 		filter.title = String(localized: .TPIChatFilterExtension.duplicateFilterTitle(filter.title))
-		editor = ChatFilterEditorPresentation(filter: filter, index: nil)
+		editor = ChatFilterEditorPresentation(filter: filter, replacingIdentifier: nil)
 	}
 
 	private func importFilter(_ result: Result<[URL], any Error>) {
@@ -255,7 +200,7 @@ struct ChatFilterPreferencesView: View {
 			}
 			var filter = try ChatFilter(contentsOf: url)
 			filter.id = UUID().uuidString
-			editor = ChatFilterEditorPresentation(filter: filter, index: nil)
+			editor = ChatFilterEditorPresentation(filter: filter, replacingIdentifier: nil)
 		} catch {
 			importError = error.localizedDescription
 		}

@@ -80,7 +80,6 @@ enum ApplicationTerminationPolicy {
 	}
 }
 
-@objc(TXMasterController)
 @MainActor
 public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private static let logger = Logger(
@@ -95,10 +94,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 	private var hasInstalledMainWindow = false
 
-	private var worldStorage: IRCWorld!
-	private var mainWindowStorage: MainWindow!
-	private weak var menuControllerStorage: MenuController?
-
 	public private(set) var debugModeIsOn = false
 	public private(set) var ghostModeIsOn = false
 	public private(set) var applicationIsActive = false
@@ -109,9 +104,10 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	public var skipTerminateSave = false
 
 	private var terminateHistoricLogSaveStarted = false
+	private var terminateHistoricLogSaveFinished = false
+	private var terminateFileLogDrainFinished = false
 	private var terminateStepThreePerformed = false
-	/// The safety net that unblocks NSTerminateLater if the historic-log
-	/// service never answers.
+	/// Bounds both history persistence and the independent transcript-file drain.
 	private var historicLogSaveTimeoutTask: Task<Void, Never>?
 	private var skipTerminateConfirmation = false
 	/// Raised while the quit confirmation sheet is on screen. Sheets stack, so
@@ -122,20 +118,9 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
 	/// IUO preserves the established launch-time contract while allowing nil in tests.
-	@objc public var mainWindow: MainWindow! {
-		get { mainWindowStorage }
-		set { mainWindowStorage = newValue }
-	}
-
-	@objc public weak var menuController: MenuController? {
-		get { menuControllerStorage }
-		set { menuControllerStorage = newValue }
-	}
-
-	public var world: IRCWorld! {
-		get { worldStorage }
-		set { worldStorage = newValue }
-	}
+	public var mainWindow: MainWindow!
+	public weak var menuController: MenuController?
+	public var world: IRCWorld!
 
 	public var terminatingClientCount: UInt = 0 {
 		didSet {
@@ -204,7 +189,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		window.collectionBehavior.insert(.fullScreenPrimary)
 		window.isReleasedWhenClosed = false
 		window.setAccessibilityLabel(AccessibilityStrings.mainWindow)
-		mainWindowStorage = window
+		mainWindow = window
 		window.configure()
 	}
 
@@ -217,17 +202,17 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	 used to reach for through `AppController.shared` arrives this way. */
 	func installClientServices() {
 		let services = ClientEnvironment.shared.services
-		services.output = mainWindowStorage
-		services.menu = menuControllerStorage
+		services.output = mainWindow
+		services.menu = menuController
 		services.applicationState = self
-		services.world = worldStorage
+		services.world = world
 
-		if let mainWindowStorage {
-			worldStorage?.addObserver(mainWindowStorage)
+		if let mainWindow {
+			world?.addObserver(mainWindow)
 		}
 
-		if let menuControllerStorage {
-			worldStorage?.addObserver(menuControllerStorage)
+		if let menuController {
+			world?.addObserver(menuController)
 		}
 	}
 
@@ -466,7 +451,25 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		terminateHistoricLogSaveStarted = true
 
-		Self.terminationLogger.debug("All clients finished; saving historic log")
+		Self.terminationLogger.debug("All clients finished; saving history and draining transcript files")
+
+		// Do not await a blocked disk operation in a task group: cancellation cannot
+		// interrupt fsync, and the group would still wait for its child to return.
+		historicLogSaveTimeoutTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(terminationHistoricLogSaveTimeout))
+			guard Task.isCancelled == false, let self else { return }
+			Self.terminationLogger.error("Log shutdown deadline expired; pending log data may be lost")
+			completeHistoricLogSaveAndContinueTermination(timedOut: true)
+		}
+
+		FileLogger.prepareForApplicationTermination { [weak self] succeeded in
+			guard let self else { return }
+			if !succeeded {
+				Self.terminationLogger.error("Transcript drain completed with file errors; some log data was not saved")
+			}
+			terminateFileLogDrainFinished = true
+			completeHistoricLogSaveAndContinueTermination()
+		}
 
 		LogControllerHistoricLogFile.shared()
 			.prepareForApplicationTermination { [weak self] in
@@ -475,22 +478,14 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 				}
 
 				Task { @MainActor [weak self] in
+					self?.terminateHistoricLogSaveFinished = true
 					self?.completeHistoricLogSaveAndContinueTermination()
 				}
 			}
-
-		/* Safety net: should historic-log shutdown never finish, do not
-		 leave the application hanging in NSTerminateLater forever. */
-		historicLogSaveTimeoutTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(terminationHistoricLogSaveTimeout))
-
-			guard Task.isCancelled == false, let self else { return }
-
-			completeHistoricLogSaveAndContinueTermination()
-		}
 	}
 
-	private func completeHistoricLogSaveAndContinueTermination() {
+	private func completeHistoricLogSaveAndContinueTermination(timedOut: Bool = false) {
+		guard timedOut || (terminateHistoricLogSaveFinished && terminateFileLogDrainFinished) else { return }
 		historicLogSaveTimeoutTask?.cancel()
 		historicLogSaveTimeoutTask = nil
 
@@ -561,8 +556,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		 Notable actions: gracefully leaving IRC, saving historic logs, etc.
 		 Each client decrements -terminatingClientCount once it has finished and
 		 the setter continues with step three once the count reaches zero and the
-		 historic log has been saved. With no clients, assigning zero here
-		 continues immediately. */
+		 historic log has been saved and transcript files drained. With no clients,
+		 assigning zero here continues immediately. */
 		terminatingClientCount = world.clientCount
 
 		world.prepareForApplicationTermination()
@@ -607,6 +602,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 	// MARK: - NSWorkspace Notifications
 
+	/// Registered with `NSAppleEventManager`, which reaches it by selector.
 	@objc private func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent _: NSAppleEventDescriptor) {
 		guard let stringValue = event.atIndex(1)?.stringValue else {
 			return

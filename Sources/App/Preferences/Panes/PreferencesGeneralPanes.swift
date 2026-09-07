@@ -23,6 +23,7 @@ struct PreferencesGeneralPane: View {
 					isOn: model.preferences.binding(for: Preferences.Connection.confirmQuit)
 				)
 			}
+			PreferencesRecoverySection()
 		}
 	}
 }

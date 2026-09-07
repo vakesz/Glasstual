@@ -683,6 +683,7 @@ public final class MainWindowTextViewContentView: NSView {
 		textView.drawsBackground = false
 		textView.insertionPointColor = .controlTextColor
 		textView.setAccessibilityLabel(MainWindowStrings.Conversation.inputPlaceholder)
+		textView.setAccessibilityIdentifier("message-input")
 
 		inputBarContainerView.addSubview(scrollView)
 

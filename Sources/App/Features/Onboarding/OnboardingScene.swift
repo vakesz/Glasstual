@@ -30,15 +30,24 @@ private struct OnboardingSceneRoot: View {
 				}
 			},
 			backAction: session.moveBack,
-			skipAction: dismiss
+			skipAction: {
+				if session.skipRemainingSteps() {
+					dismiss()
+				}
+			},
+			cancelAction: {
+				if session.cancel() {
+					dismiss()
+				}
+			}
 		)
-		.onDisappear {
-			session.markCompleted()
-		}
+		/* The window keeps its close button even with the title bar hidden, and
+		 closing it is the same decision as Cancel. A finished session ignores
+		 this, so dismissing after Continue or Skip changes nothing. */
+		.onDisappear(perform: session.windowDidClose)
 	}
 
 	private func dismiss() {
-		session.markCompleted()
 		dismissWindow(id: ApplicationSceneID.onboarding)
 	}
 }

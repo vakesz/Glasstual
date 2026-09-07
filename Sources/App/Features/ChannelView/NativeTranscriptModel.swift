@@ -62,9 +62,7 @@ nonisolated enum TranscriptMarker: Equatable, Sendable { // nonisolated: value
 nonisolated struct TranscriptLine: Equatable, Sendable { // nonisolated: value
 	var lineNumber: String
 	var receivedAt: Date
-	var timestamp: String
 	var nickname: String?
-	var formattedNickname: String
 	var memberType: LogLineMemberType
 	var lineType: LogLineType
 	var command: String
@@ -75,9 +73,49 @@ nonisolated struct TranscriptLine: Equatable, Sendable { // nonisolated: value
 	var reactions: [String: [String]]
 	var markers: [TranscriptMarker]
 	var body: TranscriptBody
+	var modeSymbol = ""
+	var historyCursor: HistoricLogRowCursor?
+
+	/** Whether `identifier` names this row.
+
+	 A row restored from storage answers to two identifiers: the line number it
+	 was printed with, and the identifier of the history row it came back from.
+	 Everything that looks a row up by number — jumping, marking, delivery and
+	 duplicate checks — has to accept both, so it asks here. */
+	func matches(identifier: String) -> Bool {
+		lineNumber == identifier || historyCursor?.lineIdentifier == identifier
+	}
+
+	mutating func mergeReactions(_ delta: [String: [String]]) {
+		for (emoji, nicknames) in delta {
+			for nickname in nicknames where !reactions[emoji, default: []].contains(nickname) {
+				reactions[emoji, default: []].append(nickname)
+			}
+		}
+	}
+
+	func header(using theme: TranscriptTheme) -> (timestamp: String, nickname: String) {
+		let timestamp = Glasstual
+			.formattedTimestamp(receivedAt as NSDate, theme.timestampFormat as NSString) as String? ?? ""
+		guard let nickname else { return (timestamp, "") }
+		let formattedNickname: String = switch lineType {
+		case .action: String(format: LogLineFormat.actionNickname, nickname)
+		case .notice: String(format: LogLineFormat.noticeNickname, nickname)
+		default:
+			ClientWireUtilities.formatNickname(
+				nickname, modeSymbol: modeSymbol,
+				format: theme.nicknameFormat.isEmpty ? TranscriptTheme.lines.nicknameFormat : theme.nicknameFormat
+			)
+		}
+		return (timestamp, formattedNickname.trimmingCharacters(in: .whitespacesAndNewlines))
+	}
 
 	var isMessage: Bool {
 		lineType == .privateMessage || lineType == .action || lineType == .notice
+	}
+
+	var lineTypeString: String {
+		LogLine.string(for: lineType) ?? ""
 	}
 }
 

@@ -149,9 +149,24 @@ final class OnboardingSettings {
 
 @Observable
 final class OnboardingModel {
+	struct Identity {
+		let nickname: String
+		let realName: String
+		let alternateNickname: String
+	}
+
+	struct Notifications {
+		let highlight: Bool
+		let privateMessage: Bool
+		let sounds: Bool
+	}
+
 	let settings: OnboardingSettings
 	let networkPicker: NetworkPickerModel
 	private let notificationAuthorization: OnboardingNotificationAuthorization
+	private(set) var acceptedIdentity: Identity?
+	private(set) var acceptedAppearance: (theme: TranscriptTheme, appearance: PreferredAppearance)?
+	private(set) var acceptedNotifications: Notifications?
 
 	var currentStep: OnboardingStep = .identity
 	var validationMessage = ""
@@ -224,6 +239,17 @@ final class OnboardingModel {
 		}
 	}
 
+	/// Skip accepts the visible optional choices, but never creates a network.
+	func skipRemainingSteps() -> Bool {
+		guard currentStep.isSkippable, acceptedIdentity != nil else { return false }
+		if currentStep != .network {
+			try? commitCurrentStep(requestsNotificationPermission: false)
+		}
+		settings.clientConfig = nil
+		settings.channelsToJoin = []
+		return true
+	}
+
 	func refreshNotificationPermission() async {
 		let authorizationStatus = await notificationAuthorization.currentStatus()
 
@@ -240,14 +266,23 @@ final class OnboardingModel {
 		}
 	}
 
-	private func commitCurrentStep() throws {
+	private func commitCurrentStep(requestsNotificationPermission: Bool = true) throws {
 		switch currentStep {
 		case .identity:
 			try commitIdentity()
 		case .appearance:
-			break
+			var theme = settings.transcriptStyle.theme
+			theme.fontSize = OnboardingSettings.fontSize(for: settings.textSize)
+			acceptedAppearance = (theme, settings.appearance)
 		case .notifications:
-			requestNotificationAuthorization()
+			acceptedNotifications = Notifications(
+				highlight: settings.notifyOnHighlight,
+				privateMessage: settings.notifyOnPrivateMessage,
+				sounds: settings.playSounds
+			)
+			if requestsNotificationPermission {
+				requestNotificationAuthorization()
+			}
 		case .network:
 			try commitNetwork()
 		}
@@ -266,10 +301,18 @@ final class OnboardingModel {
 		guard alternate.isEmpty || ServerPropertiesValidation.isNickname(alternate) else {
 			throw OnboardingStepError(CommonValidationStrings.invalidNickname)
 		}
+		guard settings.realName.rangeOfCharacter(from: .controlCharacters) == nil else {
+			throw OnboardingStepError(CommonValidationStrings.singleLineRequired)
+		}
 
 		settings.nickname = nickname
 		settings.realName = settings.realName.trimmingCharacters(in: .whitespacesAndNewlines)
 		settings.alternateNickname = alternate
+		acceptedIdentity = Identity(
+			nickname: settings.nickname,
+			realName: settings.realName,
+			alternateNickname: alternate
+		)
 	}
 
 	private func requestNotificationAuthorization() {

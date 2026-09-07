@@ -12,11 +12,6 @@
 
 import SwiftUI
 
-enum SmileyConverterPreferenceKey {
-	static let serviceEnabled = "Smiley Converter Extension -> Enable Service"
-	static let extraEmoticonsEnabled = "Smiley Converter Extension -> Enable Extra Emoticons"
-}
-
 struct SmileyConverterPreferencesView: View {
 	@AppStorage private var serviceEnabled: Bool
 	@AppStorage private var extraEmoticonsEnabled: Bool
@@ -24,13 +19,13 @@ struct SmileyConverterPreferencesView: View {
 
 	init(defaults: UserDefaults, onPreferenceChange: @escaping () -> Void) {
 		_serviceEnabled = AppStorage(
-			wrappedValue: false,
-			SmileyConverterPreferenceKey.serviceEnabled,
+			wrappedValue: FirstPartyPluginPreferences.smileyServiceEnabled.defaultValue,
+			FirstPartyPluginPreferences.smileyServiceEnabled.name,
 			store: defaults
 		)
 		_extraEmoticonsEnabled = AppStorage(
-			wrappedValue: false,
-			SmileyConverterPreferenceKey.extraEmoticonsEnabled,
+			wrappedValue: FirstPartyPluginPreferences.smileyExtraEmoticons.defaultValue,
+			FirstPartyPluginPreferences.smileyExtraEmoticons.name,
 			store: defaults
 		)
 		self.onPreferenceChange = onPreferenceChange

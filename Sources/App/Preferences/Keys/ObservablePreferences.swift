@@ -88,6 +88,7 @@ public final class ObservablePreferences {
 		}
 		set {
 			key.value = newValue
+			AppController.shared.world?.refreshEnvironmentPreferences()
 			/* The store drops a write that matches what is already stored, so it
 			 posts nothing; a view that pushed the value still has to be told
 			 that its read is stale. */
@@ -105,6 +106,7 @@ public final class ObservablePreferences {
 		}
 		set {
 			key.storedValue = newValue
+			AppController.shared.world?.refreshEnvironmentPreferences()
 			invalidate()
 		}
 	}
@@ -134,6 +136,7 @@ public final class ObservablePreferences {
 	/// Restores a key to its declared default.
 	public func reset(_ key: some AnyPreferenceKey) {
 		key.reset()
+		AppController.shared.world?.refreshEnvironmentPreferences()
 		invalidate()
 	}
 

@@ -42,6 +42,35 @@ import Testing
 
 @MainActor
 struct SCRAMClientHardeningTests {
+	@Test("A duplicate challenge cannot revive a deriving exchange")
+	func duplicateChallengeFailsTheSuspendedExchange() async throws {
+		let (started, signal) = AsyncStream<Void>.makeStream()
+		let (release, resume) = AsyncStream<Void>.makeStream()
+		defer { resume.finish(); signal.finish() }
+		let client = SCRAMClient(username: "user", password: "pencil",
+		                         clientNonce: Self.nonce)
+		{ password, salt, iterations in
+			signal.yield()
+			for await _ in release {
+				break
+			}
+			return await SCRAMClient.pbkdf2Offloaded(password: password, salt: salt, iterations: iterations)
+		}
+		_ = client.clientFirstMessage
+		let challenge = serverFirst(iterations: "4096")
+		let first = Task { try await client.clientFinalMessage(forServerFirstMessage: challenge) }
+		for await _ in started {
+			break
+		}
+		#expect(client.state == .derivingClientFinal)
+		await #expect(throws: NSError.self) {
+			try await client.clientFinalMessage(forServerFirstMessage: challenge)
+		}
+		resume.yield()
+		await #expect(throws: NSError.self) { try await first.value }
+		#expect(client.state == .failed)
+	}
+
 	private static let nonce = "rOprNGfwEbeRWgbNEkqO"
 	private static let combinedNonce = "rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0"
 	private static let salt = "W22ZaJ0SNY7soEsUEjb6gQ=="
@@ -114,6 +143,139 @@ struct SCRAMClientHardeningTests {
 
 @MainActor
 struct IRCClientSCRAMMutualAuthenticationTests {
+	enum EndAction: CaseIterable {
+		case saslReset, capabilityReset, retry, failure, abort, disconnect, termination
+	}
+
+	private func receive(_ line: String, on client: IRCClient) throws {
+		try client.handleCapabilityOrAuthenticationRequest(#require(Message(line: line, on: client)))
+	}
+
+	private func derivingClient() async throws -> (GLTTestClient, AsyncStream<Void>.Continuation) {
+		let client = GLTTestClient(
+			configDictionary: ["nickname": "user"], nicknamePassword: "pencil",
+			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+		)
+		client.socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.isConnected = true
+		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: client)
+		try receive("CAP user ACK :sasl", on: client)
+		let (started, signal) = AsyncStream<Void>.makeStream()
+		let (release, resume) = AsyncStream<Void>.makeStream()
+		let scram = SCRAMClient(username: "user", password: "pencil",
+		                        clientNonce: "rOprNGfwEbeRWgbNEkqO")
+		{ password, salt, iterations in
+			signal.yield()
+			for await _ in release {
+				break
+			}
+			return await SCRAMClient.pbkdf2Offloaded(password: password, salt: salt, iterations: iterations)
+		}
+		_ = scram.clientFirstMessage
+		client.saslScramClient = scram
+		let challenge = Data("r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096"
+			.utf8).base64EncodedString()
+		try receive("AUTHENTICATE \(challenge)", on: client)
+		_ = try #require(client.saslScramTask)
+		for await _ in started {
+			break
+		}
+		#expect(scram.state == .derivingClientFinal)
+		return (client, resume)
+	}
+
+	@Test("The tracked wire exchange sends the RFC proof and verifies the server")
+	func trackedExchangeCompletes() async throws {
+		let (client, resume) = try await derivingClient()
+		defer { resume.finish() }
+		let task = try #require(client.saslScramTask)
+		resume.yield()
+		await task.value
+		let proof = "c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ="
+		#expect(client.sentLines.lastObject as? String == "AUTHENTICATE \(Data(proof.utf8).base64EncodedString())")
+		#expect(client.saslScramTask == nil)
+		#expect(client.saslScramClient?.state == .sentClientFinal)
+		let verified = Data("v=6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=".utf8).base64EncodedString()
+		try receive("AUTHENTICATE \(verified)", on: client)
+		#expect(client.saslScramClient?.state == .authenticated)
+		let result = try #require(Message(line: ":server 903 user :Authenticated", on: client))
+		#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL))
+	}
+
+	@Test("Session endings cancel suspended SCRAM without sending its result", arguments: EndAction.allCases)
+	func sessionEndCancelsDerivation(_ action: EndAction) async throws {
+		let (client, resume) = try await derivingClient()
+		let task = try #require(client.saslScramTask)
+		defer { resume.finish() }
+		switch action {
+		case .saslReset: client.resetSASLNegotiation()
+		case .capabilityReset: client.resetCapabilityNegotiation()
+		case .retry: #expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
+		case .failure:
+			let message = try #require(Message(line: ":server 902 user :Locked", on: client))
+			#expect(client.handleTrackingNumeric(message.commandNumeric, message: message, shouldPrint: false))
+		case .abort: try receive("AUTHENTICATE !invalid!", on: client)
+		case .disconnect: client.disconnect()
+		case .termination: client.isTerminating = true
+		}
+		#expect(task.isCancelled)
+		#expect(client.saslScramTask == nil)
+		let sent = client.sentLines.compactMap { $0 as? String }
+		resume.yield()
+		await task.value
+		#expect(client.sentLines.compactMap { $0 as? String } == sent)
+	}
+
+	@Test("A suspended SCRAM result cannot reach a replacement connection")
+	func replacementConnectionRejectsOldResult() async throws {
+		let (client, resume) = try await derivingClient()
+		let task = try #require(client.saslScramTask)
+		defer { resume.finish() }
+		client.socket = Connection(config: IRCConnectionConfig(), onClient: client)
+		let sent = client.sentLines.compactMap { $0 as? String }
+		resume.yield()
+		await task.value
+		#expect(client.sentLines.compactMap { $0 as? String } == sent)
+		#expect(client.saslScramTask == nil)
+	}
+
+	@Test("A retired exchange cannot send or clear a replacement exchange's task")
+	func replacementExchangeKeepsItsTask() async throws {
+		let (client, resume) = try await derivingClient()
+		let retired = try #require(client.saslScramTask)
+		defer { resume.finish() }
+		let replacement = SCRAMClient(username: "user", password: "pencil", clientNonce: "replacement")
+		client.saslScramClient = replacement
+		let pending = Task<Void, Never> { try? await Task.sleep(for: .seconds(60)) }
+		client.saslScramTask = pending
+		defer { client.resetSASLNegotiation() }
+		let sent = client.sentLines.compactMap { $0 as? String }
+		resume.yield()
+		await retired.value
+		#expect(retired.isCancelled)
+		#expect(client.saslScramClient === replacement)
+		#expect(client.saslScramTask != nil)
+		#expect(pending.isCancelled == false)
+		#expect(client.sentLines.compactMap { $0 as? String } == sent)
+	}
+
+	@Test("A second wire challenge aborts rather than launching another derivation")
+	func duplicateWireChallengeAborts() async throws {
+		let (client, resume) = try await derivingClient()
+		let task = try #require(client.saslScramTask)
+		defer { resume.finish() }
+		let challenge = Data("r=nonce-server,s=c2FsdA==,i=4096".utf8).base64EncodedString()
+		try receive("AUTHENTICATE \(challenge)", on: client)
+		#expect(task.isCancelled)
+		#expect(client.saslScramTask == nil)
+		#expect(client.sentLines.contains("AUTHENTICATE *"))
+		let sent = client.sentLines.compactMap { $0 as? String }
+		resume.yield()
+		await task.value
+		#expect(client.sentLines.compactMap { $0 as? String } == sent)
+	}
+
 	private func client(mechanism: String?, scram: SCRAMClient?) -> GLTTestClient {
 		let client = GLTTestClient()
 		client.saslMechanism = mechanism

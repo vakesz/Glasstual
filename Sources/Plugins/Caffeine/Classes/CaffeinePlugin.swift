@@ -48,10 +48,11 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 
 	private var activity: NSObjectProtocol?
 	private var connectionObservation: PluginObservation?
+	private var defaultsObservation: PluginDefaultsObservation?
 	private var host: PluginHostContext?
 
 	private var shouldPreventSleepWhenConnected: Bool {
-		host?.defaults.bool(forKey: CaffeinePreferenceKey.preventSleep) == true
+		host?.defaults.bool(forKey: FirstPartyPluginPreferences.caffeinePreventSleep.name) == true
 	}
 
 	private func disableSleep() {
@@ -80,13 +81,19 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 	}
 
 	func pluginLoaded(using host: PluginHostContext) {
+		pluginWillUnload()
 		self.host = host
 		connectionObservation = host.observeConnectionState { [weak self] hasConnectedClient in
 			self?.updateSleepState(hasConnectedClient: hasConnectedClient)
 		}
+		defaultsObservation = PluginDefaultsObservation { [weak self] in
+			self?.refreshSleepState()
+		}
+		refreshSleepState()
 	}
 
 	func pluginWillUnload() {
+		defaultsObservation = nil
 		connectionObservation?.cancel()
 		connectionObservation = nil
 		host = nil

@@ -143,15 +143,15 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	}
 
 	private func editServerEndpoints() {
+		guard let servers = model.serverListForEditing() else { return }
 		let controller = ServerEndpointListSheet(window: window)
 		controller.delegate = self
-		controller.start(with: model.config.serverList)
+		controller.start(with: servers)
 		serverEndpointSheet = controller
 	}
 
 	public func serverEndpointListSheet(_: ServerEndpointListSheet, onOk serverList: [Server]) {
-		model.config.serverList = serverList
-		model.replace(with: model.config)
+		model.applyServerList(serverList)
 	}
 
 	public func serverEndpointListSheetWillClose(_: ServerEndpointListSheet) {

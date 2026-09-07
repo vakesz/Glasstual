@@ -21,13 +21,13 @@ import GlasstualPluginKit
 private nonisolated let defaultHostmaskNicknameLength = 50 // nonisolated: let
 
 @MainActor
-private func maximumHostmaskNicknameLength(on client: IRCClient?) -> Int {
+private func maximumHostmaskNicknameLength(on client: IRCClient?, inputLength: Int) -> Int {
 	guard let client, client.isConnectedToZNC == false, client.supportInfo.configurationReceived else {
 		return defaultHostmaskNicknameLength
 	}
 
-	let configuredMaximum = Int(client.supportInfo.maximumNicknameLength)
-	return configuredMaximum > 0 ? configuredMaximum : defaultHostmaskNicknameLength
+	let configuredMaximum = client.supportInfo.maximumNicknameLength
+	return configuredMaximum > 0 ? Int(min(configuredMaximum, UInt(inputLength))) : defaultHostmaskNicknameLength
 }
 
 /** The string-level questions the protocol layer asks about a name.
@@ -69,7 +69,7 @@ public nonisolated extension NSString { // nonisolated: pure
 	func hostmask(on client: IRCClient?) -> IRCHostmask? {
 		IRCHostmask(
 			parsing: self as String,
-			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
 		)
 	}
 
@@ -79,7 +79,7 @@ public nonisolated extension NSString { // nonisolated: pure
 	func senderPrefix(on client: IRCClient?) -> Prefix? {
 		Prefix.user(
 			parsing: self as String,
-			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
 		)
 	}
 
@@ -108,7 +108,7 @@ public nonisolated extension NSString { // nonisolated: pure
 	func isHostmaskNickname(on client: IRCClient?) -> Bool {
 		IRCHostmask.isValidNickname(
 			self as String,
-			maximumLength: maximumHostmaskNicknameLength(on: client)
+			maximumLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
 		)
 	}
 
@@ -162,7 +162,7 @@ public nonisolated extension NSString { // nonisolated: pure
 
 		let padCharacterString = String(utf16CodeUnits: [padCharacter], count: 1)
 
-		if length < Int(maximumLength) {
+		if UInt(length) < maximumLength {
 			return (self as String) + padCharacterString
 		}
 

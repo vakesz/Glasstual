@@ -28,7 +28,30 @@ enum FileTransferAction: Sendable {
 final class FileTransferCenterModel {
 	private(set) var transfers: [FileTransferController] = []
 	var selection: Set<String> = []
-	var previewSelection: URL?
+	var previewSelection: URL? {
+		didSet {
+			if previewSelection == nil {
+				previewAccessLeases.removeAll()
+			}
+		}
+	}
+
+	private var previewAccessLeases: [FileTransferAccessLease] = []
+
+	/** Held while a share the row menu offered is still in the system's hands.
+
+	 The share picker reads the file after the menu that offered it is gone, so
+	 the scope cannot be a transient one taken around a `withAccess` call the
+	 way Open, Reveal and Quick Look take theirs. */
+	@ObservationIgnored private var shareAccessLeases: [FileTransferAccessLease] = []
+
+	/** Which transfers have a readable local file, as of one presentation.
+
+	 Answering costs a security-scope round trip and a `stat` per row, and a
+	 single row menu asks four separate questions of it: whether Open, Reveal
+	 and Quick Look apply, and what Share would hand over. */
+	@ObservationIgnored private var localFileCache: (revision: Int, files: [String: FileTransferLocalFile?]) = (-1, [:])
+
 	var isChoosingDestination = false
 	var filter = FileTransferSelection.all {
 		didSet { retainVisibleSelection() }
@@ -66,6 +89,7 @@ final class FileTransferCenterModel {
 		let identifiers = Set(removedTransfers.map(\.uniqueIdentifier))
 		transfers.removeAll { identifiers.contains($0.uniqueIdentifier) }
 		selection.subtract(identifiers)
+		selectionDidChange()
 		refreshPresentation()
 	}
 
@@ -83,22 +107,38 @@ final class FileTransferCenterModel {
 
 		switch action {
 		case .start:
-			return selected.contains { [.stopped, .recoverableError].contains($0.transferStatus) }
+			return selected.contains(where: \.canStart)
 		case .stop:
 			return selected.contains { Self.activeOrPendingStatuses.contains($0.transferStatus) }
 		case .remove:
 			return true
 		case .open, .reveal:
-			return selected.contains(where: Self.hasLocalFile)
+			return selected.contains { hasLocalFile($0) }
 		case .preview:
-			return selected.allSatisfy(Self.hasLocalFile)
+			return selected.allSatisfy { hasLocalFile($0) }
 		}
 	}
 
 	func selectedFileURLs(for identifiers: Set<String>? = nil) -> [URL] {
-		transfers(with: identifiers ?? selection)
-			.filter(Self.hasLocalFile)
-			.compactMap(\.fileURL)
+		selectedLocalFiles(for: identifiers).map(\.url)
+	}
+
+	func selectedLocalFiles(for identifiers: Set<String>? = nil) -> [FileTransferLocalFile] {
+		transfers(with: identifiers ?? selection).compactMap { localFile(of: $0) }
+	}
+
+	/// The files a share of `identifiers` puts in front of the user, with their
+	/// access held for as long as the share can still read them.
+	func shareableFileURLs(for identifiers: Set<String>) -> [URL] {
+		let files = selectedLocalFiles(for: identifiers)
+		shareAccessLeases = files.map { FileTransferAccessLease(url: $0.accessURL) }
+		return files.map(\.url)
+	}
+
+	/// Ends the access the last share was offered. Nothing can reach the rows
+	/// the share came from once the window is gone.
+	func releaseShareAccess() {
+		shareAccessLeases.removeAll()
 	}
 
 	var previewItems: [URL] {
@@ -106,12 +146,16 @@ final class FileTransferCenterModel {
 	}
 
 	func presentPreview() {
-		previewSelection = previewItems.first
+		let files = selectedLocalFiles()
+		previewAccessLeases = files.map { FileTransferAccessLease(url: $0.accessURL) }
+		previewSelection = files.first?.url
 	}
 
 	func selectionDidChange() {
 		guard previewSelection != nil else { return }
-		let items = previewItems
+		let files = selectedLocalFiles()
+		previewAccessLeases = files.map { FileTransferAccessLease(url: $0.accessURL) }
+		let items = files.map(\.url)
 		if let previewSelection, items.contains(previewSelection) {
 			return
 		}
@@ -131,6 +175,7 @@ final class FileTransferCenterModel {
 	]
 
 	private static let activeOrPendingStatuses: Set<FileTransferStatus> = [
+		.initializing,
 		.connecting,
 		.receiving,
 		.isListeningAsSender,
@@ -142,13 +187,44 @@ final class FileTransferCenterModel {
 		.waitingForResumeAccept,
 	]
 
-	private static func hasLocalFile(_ transfer: FileTransferController) -> Bool {
-		if transfer.isSender == false, transfer.transferStatus != .complete {
-			return false
+	private func hasLocalFile(_ transfer: FileTransferController) -> Bool {
+		localFile(of: transfer) != nil
+	}
+
+	/// The transfer's readable local file, answered once per presentation.
+	///
+	/// Only the rows something asks about are looked up: the maintenance timer
+	/// refreshes the presentation once a second while a transfer is running,
+	/// and sweeping every row on each of those would cost far more than the
+	/// repetition this is here to remove.
+	private func localFile(of transfer: FileTransferController) -> FileTransferLocalFile? {
+		if localFileCache.revision != presentationRevision {
+			localFileCache = (presentationRevision, [:])
 		}
 
-		guard let filePath = transfer.filePath else { return false }
-		return FileManager.default.fileExists(atPath: filePath)
+		let identifier = transfer.uniqueIdentifier
+
+		if let answered = localFileCache.files[identifier] {
+			return answered
+		}
+
+		let file = Self.readableLocalFile(of: transfer)
+		localFileCache.files[identifier] = file
+		return file
+	}
+
+	private static func readableLocalFile(of transfer: FileTransferController) -> FileTransferLocalFile? {
+		if transfer.isSender == false, transfer.transferStatus != .complete {
+			return nil
+		}
+
+		guard let file = transfer.localFile,
+		      file.withAccess({ FileManager.default.fileExists(atPath: $0.path) })
+		else {
+			return nil
+		}
+
+		return file
 	}
 }
 
@@ -161,12 +237,16 @@ struct FileTransferRowPresentation {
 
 	let filename: String
 	let totalSize: String
+	/// How much has arrived so far, written the way the row's sizes are. The
+	/// accessibility value reads it, so it is not a raw byte count.
+	let processedSize: String
 	let status: String
 	let progress: Progress
 
 	init(transfer: FileTransferController) {
 		filename = transfer.filename
 		totalSize = Int64(clamping: transfer.totalFilesize).textualPaddedByteCountDescription
+		processedSize = Int64(clamping: transfer.processedFilesize).textualPaddedByteCountDescription
 		progress = switch transfer.transferStatus {
 		case .connecting:
 			.indeterminate
@@ -176,10 +256,12 @@ struct FileTransferRowPresentation {
 			.hidden
 		}
 
-		if [.fatalError, .recoverableError].contains(transfer.transferStatus) {
+		if transfer.transferStatus == .complete, case .unacknowledged? = transfer.completion {
+			status = FileTransferStrings.unacknowledgedCompletion(peerNickname: transfer.peerNickname)
+		} else if [.fatalError, .recoverableError].contains(transfer.transferStatus) {
 			status = transfer.errorMessageDescription ?? ""
 		} else if [.sending, .receiving].contains(transfer.transferStatus) {
-			status = Self.activeStatus(for: transfer, totalSize: totalSize)
+			status = Self.activeStatus(for: transfer, processedSize: processedSize, totalSize: totalSize)
 		} else {
 			status = FileTransferStrings.status(
 				transfer.transferStatus,
@@ -191,10 +273,10 @@ struct FileTransferRowPresentation {
 
 	private static func activeStatus(
 		for transfer: FileTransferController,
+		processedSize: String,
 		totalSize: String
 	) -> String {
 		let currentSpeed = averageSpeed(transfer.speedRecords)
-		let processedSize = Int64(clamping: transfer.processedFilesize).textualPaddedByteCountDescription
 		let speed = Int64(clamping: currentSpeed).textualPaddedByteCountDescription
 		let timeRemaining: String? = if currentSpeed > 0,
 		                                transfer.processedFilesize < transfer.totalFilesize

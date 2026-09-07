@@ -43,19 +43,19 @@ import SwiftUI
 final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling,
 	PluginPreferencesProviding, PluginTextEventHandling
 {
-	private static let defaultsKey = "Glasstual Chat Filter Extension -> Filters"
-
 	private var store: ChatFilterStore?
 	private var engine: ChatFilterEngine?
-	private var defaultsObserver: NSObjectProtocol?
-	private var isSaving = false
+	private var defaultsObserver: PluginDefaultsObservation?
+	private var savedConfigurations: [PropertyListValue]?
 	private var host: PluginHostContext?
 
-	private var defaults: UserDefaults {
-		guard let host else {
-			preconditionFailure("The plugin host must load Chat Filters before it is used")
-		}
-		return host.defaults
+	/** `nil` once the host has unloaded the plugin.
+
+	 The store hands its edits back through a callback the preferences pane
+	 still owns, so a save can arrive after `pluginWillUnload()`. Trapping there
+	 would take the application down for a write with nowhere to go. */
+	private var defaults: UserDefaults? {
+		host?.defaults
 	}
 
 	func receivedCommand(_ event: PluginIncomingCommandEvent) -> Bool {
@@ -67,6 +67,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 	}
 
 	func pluginLoaded(using host: PluginHostContext) {
+		pluginWillUnload()
 		self.host = host
 
 		let store = ChatFilterStore { [weak self] filters in
@@ -78,20 +79,14 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		}
 		loadFilters()
 
-		defaultsObserver = NotificationCenter.default.addObserver(
-			forName: UserDefaults.didChangeNotification,
-			object: defaults,
-			queue: .main
-		) { [weak self] _ in
-			Task { @MainActor in self?.defaultsChanged() }
+		defaultsObserver = PluginDefaultsObservation { [weak self] in
+			self?.loadFilters()
 		}
 	}
 
 	func pluginWillUnload() {
-		if let defaultsObserver {
-			NotificationCenter.default.removeObserver(defaultsObserver)
-		}
 		defaultsObserver = nil
+		savedConfigurations = nil
 		engine = nil
 		store = nil
 		host = nil
@@ -108,25 +103,22 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 	}
 
 	private func loadFilters() {
+		guard let defaults else { return }
 		let configurations = [PropertyListValue](
-			propertyList: defaults.array(forKey: Self.defaultsKey) ?? []
+			propertyList: defaults.array(forKey: FirstPartyPluginPreferences.chatFilters) ?? []
 		) ?? []
+		guard configurations != savedConfigurations else { return }
+		savedConfigurations = configurations
 		store?.replaceAll(with: configurations.compactMap(\.dictionary).map(ChatFilter.init(dictionary:)))
 		engine?.reloadFilterActionPerforms()
 	}
 
 	private func save(_ filters: [ChatFilter]) {
-		isSaving = true
-		defaults.set(filters.map(\.dictionaryValue.propertyListObject), forKey: Self.defaultsKey)
+		guard let defaults else { return }
+		let configurations = filters.map { PropertyListValue.dictionary($0.dictionaryValue) }
+		savedConfigurations = configurations
+		defaults.set(configurations.map(\.propertyListObject), forKey: FirstPartyPluginPreferences.chatFilters)
 		engine?.reloadFilterActionPerforms()
-	}
-
-	private func defaultsChanged() {
-		if isSaving {
-			isSaving = false
-		} else {
-			loadFilters()
-		}
 	}
 
 	private static func clientOptions(from clients: [PluginClient]) -> [ChatFilterClientOption] {

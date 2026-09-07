@@ -130,7 +130,10 @@ public nonisolated extension Preferences { // nonisolated: value
 
 		public static let controlEnterSendsMessage = PreferenceKey("ControlEnterSendsMessage", default: false)
 		public static let historyIsChannelSpecific = PreferenceKey("SaveInputHistoryPerSelection", default: false)
-		public static let swipeMinimumLength = PreferenceKey("SwipeMinimumLength", default: 30.0)
+		public static let swipeMinimumLength = PreferenceKey(
+			"SwipeMinimumLength", default: 30.0,
+			validation: { $0.isFinite && $0 >= 0 }
+		)
 
 		public static let userDoubleClickAction = PreferenceKey(
 			"UserListDoubleClickAction",
@@ -170,6 +173,16 @@ public nonisolated extension Preferences { // nonisolated: value
 			default: [HighlightKeyword](),
 			traits: .unregistered
 		)
+
+		/** The keywords a stored list actually matches on.
+
+		 One implementation, because both the connection layer's snapshot and
+		 the maintenance pass that rewrites the stored list have to agree on
+		 which entries count: an empty entry matches everything, so it is not a
+		 keyword at all. */
+		public static func keywords(in list: [HighlightKeyword]) -> [String] {
+			list.map(\.string).filter { $0.isEmpty == false }
+		}
 
 		static let all: [any AnyPreferenceKey] = [
 			matchingMethod, trackLocalNickname, matchKeywords, excludeKeywords,

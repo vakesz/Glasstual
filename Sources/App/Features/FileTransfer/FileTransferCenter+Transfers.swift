@@ -51,10 +51,12 @@ public extension FileTransferCenter {
 		matchingPort port: UInt16,
 		client: IRCClient,
 		peerNickname: String,
-		filename: String
+		filename: String,
+		isSender: Bool? = nil
 	) -> FileTransferController? {
 		firstFileTransfer {
 			$0.hostPort == port
+				&& !$0.isReversed && (isSender == nil || $0.isSender == isSender)
 				&& Self.transfer($0, belongsTo: client, peerNickname: peerNickname, filename: filename)
 		}
 	}
@@ -65,17 +67,18 @@ public extension FileTransferCenter {
 		peerNickname: String,
 		filename: String
 	) -> Bool {
-		guard transfer.clientId == client.uniqueIdentifier,
-		      transfer.peerNickname.caseInsensitiveCompare(peerNickname) == .orderedSame
-		else {
+		let ourPeer = client.supportInfo.casefoldString(transfer.peerNickname)
+		let theirPeer = client.supportInfo.casefoldString(peerNickname)
+
+		guard transfer.clientId == client.uniqueIdentifier, ourPeer == theirPeer else {
 			return false
 		}
 
 		/* The peer echoes back the name we sent it, which crossed the wire in
 		 its sanitised form, so compare the sanitised forms. */
-		let ourFilename = transfer.filename.safeFilename
+		let ourFilename = transfer.wireFilename
 
-		return ourFilename.caseInsensitiveCompare(filename) == .orderedSame
+		return ourFilename == filename
 	}
 
 	func fileTransfer(withUniqueIdentifier identifier: String) -> FileTransferController? {
@@ -98,10 +101,26 @@ public extension FileTransferCenter {
 		}
 	}
 
+	func fileTransfer(
+		matchingToken token: String,
+		client: IRCClient,
+		peerNickname: String,
+		filename: String,
+		isSender: Bool
+	) -> FileTransferController? {
+		firstFileTransfer {
+			$0.isReversed && $0.transferToken == token && $0.isSender == isSender
+				&& Self.transfer($0, belongsTo: client, peerNickname: peerNickname, filename: filename)
+		}
+	}
+
 	func prepareForApplicationTermination() {
-		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
-		SharedApplication.sharedApplicationScenes().closeFileTransfers()
+		workspace.cancelPendingWork()
 		prepareForPermanentDestruction(model.transfers)
+		clearIPAddress()
+		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
+		downloadDestinationURLPrivate = nil
+		SharedApplication.sharedApplicationScenes().closeFileTransfers()
 	}
 
 	func addReceiver(
@@ -136,6 +155,7 @@ public extension FileTransferCenter {
 		addFileTransfer(controller)
 
 		if Preferences.FileTransfers.requestReplyAction.value == .automaticallyDownload {
+			controller.destinationAccessURL = downloadDestinationURLPrivate
 			controller.open(withPath: downloadDestinationURLPrivate?.path ?? PathInfo.userDownloads)
 		}
 
@@ -146,12 +166,14 @@ public extension FileTransferCenter {
 		for client: IRCClient,
 		nickname: String,
 		path: String,
-		autoOpen: Bool
+		autoOpen: Bool,
+		accessURL: URL? = nil
 	) -> String? {
 		guard let controller = FileTransferController.sender(
 			for: client,
 			nickname: nickname,
-			path: path
+			path: path,
+			accessURL: accessURL
 		) else {
 			return nil
 		}
@@ -179,10 +201,11 @@ public extension FileTransferCenter {
 		let savePath = downloadDestinationURLPrivate?.path
 		var pending: [FileTransferController] = []
 
-		for transfer in transfers where [.stopped, .recoverableError].contains(transfer.transferStatus) {
+		for transfer in transfers where transfer.canStart {
 			if transfer.isSender || transfer.path != nil {
 				transfer.open()
 			} else if let savePath {
+				transfer.destinationAccessURL = downloadDestinationURLPrivate
 				transfer.open(withPath: savePath)
 			} else {
 				pending.append(transfer)
@@ -191,20 +214,18 @@ public extension FileTransferCenter {
 
 		guard !pending.isEmpty else { return }
 
-		pendingDestinationTransferIDs = Set(pending.map(\.uniqueIdentifier))
+		pendingDestinationTransferIDs.formUnion(pending.map(\.uniqueIdentifier))
 		model.isChoosingDestination = true
 	}
 
 	func completeDestinationSelection(_ result: Result<URL, Error>) {
 		defer { pendingDestinationTransferIDs = [] }
 		guard case let .success(url) = result else { return }
-		let isAccessing = url.startAccessingSecurityScopedResource()
-		defer {
-			if isAccessing {
-				url.stopAccessingSecurityScopedResource()
-			}
+		for transfer in model.transfers(with: pendingDestinationTransferIDs) {
+			guard !transfer.isSender, transfer.canStart else { continue }
+			transfer.destinationAccessURL = url
+			transfer.open(withPath: url.path)
 		}
-		model.transfers(with: pendingDestinationTransferIDs).forEach { $0.open(withPath: url.path) }
 	}
 
 	internal func perform(_ action: FileTransferAction, on identifiers: Set<String>) {
@@ -217,14 +238,26 @@ public extension FileTransferCenter {
 		case .remove:
 			removeFileTransfers(transfers)
 		case .open:
-			FileTransferWorkspace.open(model.selectedFileURLs(for: identifiers))
+			workspace.open(model.selectedLocalFiles(for: identifiers))
 		case .reveal:
-			FileTransferWorkspace.reveal(model.selectedFileURLs(for: identifiers))
+			workspace.reveal(model.selectedLocalFiles(for: identifiers))
 		case .preview:
 			model.selection = identifiers
 			model.presentPreview()
 		}
 		model.refreshPresentation()
+	}
+
+	/// Notification actions use the same start/destination workflow as the list.
+	internal func respondToNotification(for identifier: String, clientIdentifier: String?, accept: Bool) -> Bool {
+		guard let transfer = fileTransfer(withUniqueIdentifier: identifier),
+		      clientIdentifier == nil || clientIdentifier == transfer.clientId else { return false }
+		model.filter = .all
+		model.selection = [identifier]
+		if accept, !transfer.isSender, transfer.transferStatus == .stopped {
+			perform(.start, on: [identifier])
+		}
+		return true
 	}
 
 	func updateMaintenanceTimer() {

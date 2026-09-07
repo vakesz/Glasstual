@@ -19,30 +19,11 @@ private nonisolated let historicLogClientLogger = Logger( // nonisolated: let
 	category: "HistoricLogClient"
 )
 
-/// One historic-log fetch, in the shape the store understands. A value, so a
-/// request can be queued and replayed without carrying anything isolated.
-nonisolated struct HistoricLogFetchRequest: Sendable { // nonisolated: value
-	/// Which of the store's fetches to run: the newest page of a view, or the
-	/// page before a line the view already holds.
-	enum Kind: Sendable {
-		case newest(ascending: Bool, fetchLimit: UInt, limitToDate: Date?)
-		case before(uniqueIdentifier: String, fetchLimit: UInt, limitToDate: Date?)
-	}
-
-	let viewIdentifier: String
-	let kind: Kind
-}
-
-/** Serialises fetches per view.
-
- The printing queue used to provide this ordering by holding a slot open for the
- whole round trip. It is this queue's job now: requests for one view are served
- one at a time in the order they were made, requests for different views run
- concurrently, and forgetting a view answers everything still queued for it with
- the empty result rather than leaving a caller suspended forever. */
+/// Serializes fetches per view while allowing different views to read concurrently.
+/// Forgetting a view answers its pending callers with cancellation, not exhaustion.
 actor HistoricLogRequestQueue {
 	/// The round trip a queued request performs once its turn comes.
-	typealias Service = @Sendable (HistoricLogFetchRequest) async -> [HistoricLogEntry]
+	typealias Service = @Sendable (HistoricLogFetchRequest) async -> HistoricLogFetchOutcome
 
 	/// A request waiting for its turn.
 	private nonisolated struct QueuedFetch: Sendable { // nonisolated: value
@@ -53,7 +34,7 @@ actor HistoricLogRequestQueue {
 	/// The caller suspended on a request that has not answered yet.
 	private nonisolated struct PendingFetch: Sendable { // nonisolated: value
 		let viewIdentifier: String
-		let continuation: CheckedContinuation<[HistoricLogEntry], Never>
+		let continuation: CheckedContinuation<HistoricLogFetchOutcome, Never>
 	}
 
 	/// One view's serial stream and the task draining it.
@@ -77,16 +58,29 @@ actor HistoricLogRequestQueue {
 
 	/// Queues `request` behind everything already asked for the same view.
 	func fetch(_ request: HistoricLogFetchRequest) async -> [HistoricLogEntry] {
-		let identifier = UUID()
+		await fetchOutcome(request).entries
+	}
 
-		return await withCheckedContinuation { continuation in
-			pending[identifier] = PendingFetch(
-				viewIdentifier: request.viewIdentifier,
-				continuation: continuation
-			)
-			viewQueue(for: request.viewIdentifier)
-				.yield(QueuedFetch(identifier: identifier, request: request))
+	func fetchOutcome(_ request: HistoricLogFetchRequest) async -> HistoricLogFetchOutcome {
+		let identifier = UUID()
+		let outcome: HistoricLogFetchOutcome = await withTaskCancellationHandler {
+			guard !Task.isCancelled else { return .cancelled }
+			return await withCheckedContinuation { continuation in
+				pending[identifier] = PendingFetch(
+					viewIdentifier: request.viewIdentifier,
+					continuation: continuation
+				)
+				viewQueue(for: request.viewIdentifier)
+					.yield(QueuedFetch(identifier: identifier, request: request))
+			}
+		} onCancel: {
+			Task { await self.cancelFetch(identifier) }
 		}
+		return Task.isCancelled ? .cancelled : outcome
+	}
+
+	private func cancelFetch(_ identifier: UUID) {
+		pending.removeValue(forKey: identifier)?.continuation.resume(returning: .cancelled)
 	}
 
 	/// Drops the view's queue and answers everything still waiting on it.
@@ -135,15 +129,15 @@ actor HistoricLogRequestQueue {
 			return
 		}
 
-		let entries = await service(queued.request)
-		pending.removeValue(forKey: queued.identifier)?.continuation.resume(returning: entries)
+		let outcome = await service(queued.request)
+		pending.removeValue(forKey: queued.identifier)?.continuation.resume(returning: outcome)
 	}
 
 	private func failPending(_ isMatch: (PendingFetch) -> Bool) {
 		let identifiers = pending.filter { isMatch($0.value) }.map(\.key)
 
 		for identifier in identifiers {
-			pending.removeValue(forKey: identifier)?.continuation.resume(returning: [])
+			cancelFetch(identifier)
 		}
 	}
 }
@@ -161,29 +155,78 @@ private nonisolated struct HistoricLogDefaultsFilenameStore: HistoricLogFilename
 	}
 }
 
+/// The actor-owned storage operations used by the client. Tests supply an
+/// in-memory service so opening failures never touch the user's database.
+protocol HistoricLogServicing: Actor {
+	func openDatabase(inDirectory databaseDirectory: String) async -> HistoricLogOpenOutcome
+	func close() async -> HistoricLogSaveOutcome
+	func setMaximumLineCount(_ maximumLineCount: UInt) async
+	func writeLogLine(_ logLine: HistoricLogEntry) async -> HistoricLogWriteOutcome
+	func forgetView(_ viewIdentifier: String) async -> HistoricLogDeletionOutcome
+	func resetData(forView viewIdentifier: String) async -> HistoricLogDeletionOutcome
+	func saveData() async -> HistoricLogSaveOutcome
+	func fetchOutcome(_ request: HistoricLogFetchRequest) async -> HistoricLogFetchOutcome
+}
+
+extension HistoricLogStore: HistoricLogServicing {}
+
 /// Coordinates the in-process history store and preserves FIFO fetch ordering
 /// per view. Core Data and save scheduling remain isolated by `HistoricLogStore`.
 actor HistoricLogClient {
 	static let shared = HistoricLogClient()
 
-	private let databaseDirectory: String?
-	private let store: HistoricLogStore
-	private var loadTask: Task<HistoricLogOpenOutcome, Never>?
-	private(set) var isLoaded = false
+	private nonisolated enum LoadState { // nonisolated: value
+		case unloaded
+		case loading(Task<Bool, Never>)
+		case loaded
+		case unavailable
+	}
+
+	private let databaseDirectory: @Sendable () async -> String?
+	private let store: any HistoricLogServicing
+	private let reportFailure: @MainActor @Sendable (String) -> Void
+	private var loadState = LoadState.unloaded
 	private var isTerminating = false
 
+	var isLoaded: Bool {
+		if case .loaded = loadState {
+			true
+		} else {
+			false
+		}
+	}
+
+	var isUnavailable: Bool {
+		if case .unavailable = loadState {
+			true
+		} else {
+			false
+		}
+	}
+
 	private lazy var requests = HistoricLogRequestQueue { [weak self] request in
-		await self?.performFetch(request) ?? []
+		await self?.store.fetchOutcome(request) ?? .cancelled
 	}
 
 	init(
 		databaseDirectory: String? = PathInfo.groupContainerApplicationCaches,
 		filenameStore: any HistoricLogFilenameStoring = HistoricLogDefaultsFilenameStore()
 	) {
-		self.databaseDirectory = databaseDirectory
-		store = HistoricLogStore(filenameStore: filenameStore) { identifiers, viewIdentifier in
+		self.databaseDirectory = { databaseDirectory }
+		reportFailure = { LogControllerHistoricLogFile.reportConnectionFailure($0) }
+		store = HistoricLogStore(filenameStore: filenameStore, deletionHandler: { identifiers, viewIdentifier in
 			await LogControllerHistoricLogFile.noteWillDeleteLines(identifiers, inView: viewIdentifier)
-		}
+		})
+	}
+
+	init(
+		store: any HistoricLogServicing,
+		databaseDirectory: @escaping @Sendable () async -> String?,
+		reportFailure: @escaping @MainActor @Sendable (String) -> Void
+	) {
+		self.store = store
+		self.databaseDirectory = databaseDirectory
+		self.reportFailure = reportFailure
 	}
 
 	// MARK: - Decoding
@@ -207,46 +250,59 @@ actor HistoricLogClient {
 		guard isTerminating == false else {
 			return false
 		}
-		if isLoaded {
+		switch loadState {
+		case .loaded:
 			return true
-		}
-		if let loadTask {
-			let opened = await loadTask.value.isOpen
-			return isTerminating == false && opened
-		}
-		guard let databaseDirectory else {
+		case .unavailable:
 			return false
+		case let .loading(task):
+			return await task.value && isTerminating == false
+		case .unloaded:
+			let task = Task { await self.loadDatabase() }
+			loadState = .loading(task)
+			return await task.value && isTerminating == false
 		}
+	}
 
-		let task = Task { [store] in
-			await store.openDatabase(inDirectory: databaseDirectory)
-		}
-		loadTask = task
-		let outcome = await task.value
-		loadTask = nil
-		guard isTerminating == false else {
-			if case .opened = outcome {
-				await store.close()
-			}
+	private func loadDatabase() async -> Bool {
+		guard let databaseDirectory = await databaseDirectory() else {
+			// Setup has not supplied a directory yet; no database open has failed.
+			loadState = .unloaded
 			return false
 		}
-		isLoaded = outcome.isOpen
+		guard isTerminating == false else { return false }
+		let outcome = await store.openDatabase(inDirectory: databaseDirectory)
+		guard isTerminating == false else { return false }
 
 		switch outcome {
 		case .opened:
+			loadState = .loaded
 			historicLogClientLogger.debug("Successfully opened historic log database")
 			await applyMaximumLineCount()
 		case let .failed(reason):
+			// Latch before presenting the alert, which can suspend this actor.
+			loadState = .unavailable
 			historicLogClientLogger
 				.error("Failed to open historic log database: \(reason ?? "no reason given", privacy: .public)")
 			/* The alert is the only place the failure reaches the reader, so it
 			 carries what the store knows rather than an empty body. */
-			await LogControllerHistoricLogFile.reportConnectionFailure(
+			await reportFailure(
 				reason.map(PromptStrings.Logging.lastError) ?? PromptStrings.Logging.scrollbackFailureBody
 			)
 		}
 
 		return outcome.isOpen
+	}
+
+	/// Retries the selected database after recovery, without replacing its file.
+	/// Ordinary writes and fetches never clear an actual open failure.
+	@discardableResult
+	func retryLoading() async -> Bool {
+		guard isTerminating == false else { return false }
+		if isUnavailable {
+			loadState = .unloaded
+		}
+		return await ensureLoaded()
 	}
 
 	func applyMaximumLineCount() async {
@@ -256,60 +312,59 @@ actor HistoricLogClient {
 	// MARK: - Fetching
 
 	func fetchEntries(_ request: HistoricLogFetchRequest) async -> [HistoricLogEntry] {
-		guard await ensureLoaded() else { return [] }
-		return await requests.fetch(request)
+		await fetchOutcome(request).entries
 	}
 
-	private func performFetch(_ request: HistoricLogFetchRequest) async -> [HistoricLogEntry] {
-		let viewIdentifier = request.viewIdentifier
-
-		switch request.kind {
-		case let .newest(ascending, fetchLimit, limitToDate):
-			return await store.fetchEntries(
-				forView: viewIdentifier,
-				ascending: ascending,
-				fetchLimit: fetchLimit,
-				limitToDate: limitToDate
-			)
-		case let .before(uniqueIdentifier, fetchLimit, limitToDate):
-			return await store.fetchEntries(
-				forView: viewIdentifier,
-				before: uniqueIdentifier,
-				fetchLimit: fetchLimit,
-				limitToDate: limitToDate
-			)
-		}
+	func fetchOutcome(_ request: HistoricLogFetchRequest) async -> HistoricLogFetchOutcome {
+		guard !isTerminating, !Task.isCancelled else { return .cancelled }
+		guard await ensureLoaded()
+		else { return isTerminating || Task.isCancelled ? .cancelled : .failed(.unavailable) }
+		guard !isTerminating, !Task.isCancelled else { return .cancelled }
+		let outcome = await requests.fetchOutcome(request)
+		return isTerminating || Task.isCancelled ? .cancelled : outcome
 	}
 
 	// MARK: - Writing
 
-	func writeEntry(_ entry: HistoricLogEntry) async {
-		guard await ensureLoaded() else { return }
-		await store.writeLogLine(entry)
+	@discardableResult
+	func writeEntry(_ entry: HistoricLogEntry) async -> HistoricLogWriteOutcome {
+		guard await ensureLoaded(), !isTerminating else { return .unavailable }
+		return await store.writeLogLine(entry)
 	}
 
-	func forgetView(_ viewIdentifier: String) async {
+	@discardableResult
+	func forgetView(_ viewIdentifier: String) async -> HistoricLogDeletionOutcome {
 		await requests.forget(view: viewIdentifier)
-		guard await ensureLoaded() else { return }
-		await store.forgetView(viewIdentifier)
+		guard await ensureLoaded(), !isTerminating else { return .unavailable }
+		return await store.forgetView(viewIdentifier)
 	}
 
-	func resetData(forView viewIdentifier: String) async {
+	@discardableResult
+	func resetData(forView viewIdentifier: String) async -> HistoricLogDeletionOutcome {
 		await requests.forget(view: viewIdentifier)
-		guard await ensureLoaded() else { return }
-		await store.resetData(forView: viewIdentifier)
+		guard await ensureLoaded(), !isTerminating else { return .unavailable }
+		return await store.resetData(forView: viewIdentifier)
+	}
+
+	func saveData() async -> HistoricLogSaveOutcome {
+		await store.saveData()
 	}
 
 	// MARK: - Termination
 
-	func prepareForTermination() async {
+	@discardableResult
+	func prepareForTermination() async -> HistoricLogSaveOutcome {
 		isTerminating = true
-		if let loadTask {
-			_ = await loadTask.value
-			self.loadTask = nil
-		}
-		await store.close()
-		isLoaded = false
 		await requests.cancelAll()
+		if case let .loading(task) = loadState {
+			_ = await task.value
+		}
+		let result = await store.close()
+		if case .saved = result {
+			loadState = .unloaded
+		} else {
+			isTerminating = false
+		}
+		return result
 	}
 }

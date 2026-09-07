@@ -5,11 +5,33 @@
 
 import Foundation
 @testable import Glasstual
+import GlasstualPluginKit
 import Testing
 
 @Suite("JOIN batching")
 @MainActor
 struct IRCJoinBatchingTests {
+	@Test(
+		"Parsed JOIN and channel limits keep zero unlimited and accept all UInt counts",
+		arguments: ["", "0", "1", "2", String(Int.max), String(UInt(Int.max) + 1), String(UInt.max)]
+	)
+	func parsedCountsReachJoinBatching(_ value: String) {
+		let info = IRCISupportInfo()
+		let names = ["#a", "#b", "#c"]
+		let expected = value == "1" ? names.map { [$0] }
+			: value == "2" ? [["#a", "#b"], ["#c"]] : [names]
+
+		info.processConfigurationData("TARGMAX=JOIN:\(value)")
+		#expect(IRCJoinBatching.batches(
+			for: targets(names), maximumTargets: info.maximumTargets(forCommand: "JOIN")
+		).map(\.channels) == expected)
+
+		info.processConfigurationData("CHANLIMIT=#:\(value)")
+		#expect(IRCJoinBatching.batches(
+			for: targets(names), channelLimits: info.channelLimits
+		).map(\.channels) == expected)
+	}
+
 	private func targets(_ names: [String], key: String? = nil) -> [IRCJoinBatching.Target] {
 		names.map { IRCJoinBatching.Target(name: $0, key: key) }
 	}
@@ -109,6 +131,120 @@ struct IRCJoinBatchingTests {
 @Suite("JOIN command emission")
 @MainActor
 struct IRCClientJoinCommandTests {
+	@Test("Offline and stopping clients cannot start single or batched joins", arguments: 0 ..< 16)
+	func joinRequiresAvailableClient(flags: Int) throws {
+		let client = GLTTestClient()
+		client.isLoggedIn = flags & 1 != 0
+		client.isQuitting = flags & 2 != 0
+		client.isDisconnecting = flags & 4 != 0
+		client.isTerminating = flags & 8 != 0
+		let channel = try #require(client.findChannelOrCreate("#retry"))
+		channel.errorOnLastJoinAttempt = true
+
+		client.join(channel, password: "fixture-key")
+		client.joinChannels([channel])
+
+		#expect(channel.status == (flags == 1 ? .joining : .parted))
+		#expect(channel.errorOnLastJoinAttempt == (flags != 1))
+		#expect(client.sentLines.count == (flags == 1 ? 2 : 0))
+	}
+
+	@Test("JOIN rejects another client's channel, queries, and active channels")
+	func joinRequiresOwnedInactiveChannel() throws {
+		let client = GLTTestClient()
+		client.markAsLoggedIn()
+		let other = GLTTestClient()
+		let foreign = try #require(other.findChannelOrCreate("#foreign"))
+		let query = try #require(client.findChannelOrCreate("friend", isPrivateMessage: true))
+		let active = try #require(client.findChannelOrCreate("#active"))
+		active.activate()
+		for channel in [foreign, query, active] {
+			client.join(channel)
+		}
+		client.joinChannels([foreign, query, active])
+		#expect(client.sentLines.count == 0)
+		#expect(foreign.status == .parted)
+		#expect(active.isActive)
+	}
+
+	@Test("A pending join remains retryable with explicit, absent, or empty passwords")
+	func pendingJoinCanRetry() throws {
+		let client = GLTTestClient()
+		client.markAsLoggedIn()
+		let channel = try #require(client.findChannelOrCreate("#retry"))
+		client.join(channel, password: "explicit-fixture-key")
+		#expect(channel.status == .joining)
+		#expect(channel.isActive == false)
+		channel.errorOnLastJoinAttempt = true
+		client.join(channel)
+		client.join(channel, password: "")
+		#expect(client.sentLines.compactMap { $0 as? String } == [
+			"JOIN #retry explicit-fixture-key", "JOIN #retry", "JOIN #retry",
+		])
+		#expect(channel.errorOnLastJoinAttempt == false)
+	}
+
+	@Test(
+		"Join rejection retires pending state and refreshes presentation",
+		arguments: [403, 437, 471, 473, 474, 475, 477]
+	)
+	func joinFailureRetiresPendingState(numeric: Int) throws {
+		let client = GLTTestClient()
+		client.markAsLoggedIn()
+		let channel = try #require(client.findChannelOrCreate("#retry"))
+		client.join(channel)
+		let reloads = client.recordedOutput.reloadedItems.count
+		let titles = client.recordedOutput.titleUpdates.count
+
+		try client.receiveNumericReply(#require(Message(
+			line: ":irc.example.test \(numeric) mynick #retry :Join rejected", on: client
+		)))
+
+		#expect(channel.status == .parted)
+		#expect(channel.errorOnLastJoinAttempt)
+		#expect(client.recordedOutput.reloadedItems.dropFirst(reloads).contains { $0 === channel })
+		#expect(client.recordedOutput.titleUpdates.dropFirst(titles).contains { $0 === channel })
+		client.join(channel)
+		#expect(channel.status == .joining)
+		#expect(channel.errorOnLastJoinAttempt == false)
+		#expect(client.sentLines.compactMap { $0 as? String } == ["JOIN #retry", "JOIN #retry"])
+	}
+
+	@Test("Mode errors and stale join failures do not alter nonpending channels", arguments: [403, 437, 477])
+	func nonpendingErrorsDoNotPartChannels(numeric: Int) throws {
+		let client = GLTTestClient()
+		client.markAsLoggedIn()
+		let channel = try #require(client.findChannelOrCreate("#retry"))
+		for active in [false, true] {
+			if active {
+				channel.activate()
+			}
+			let titles = client.recordedOutput.titleUpdates.count
+			try client.receiveNumericReply(#require(Message(
+				line: ":irc.example.test \(numeric) mynick #retry :No channel modes", on: client
+			)))
+			#expect(channel.status == (active ? .joined : .parted))
+			#expect(channel.errorOnLastJoinAttempt == false)
+			#expect(client.recordedOutput.titleUpdates.count == titles)
+		}
+	}
+
+	@Test("Nickname-shaped 437 and server-shaped 402 do not retire a pending join")
+	func otherTargetErrorsLeaveJoinPending() throws {
+		let client = GLTTestClient()
+		client.markAsLoggedIn()
+		let channel = try #require(client.findChannelOrCreate("#retry"))
+		client.join(channel)
+		for line in [
+			":irc.example.test 437 mynick nickname :Unavailable nickname",
+			":irc.example.test 402 mynick #retry :No such server",
+		] {
+			try client.receiveNumericReply(#require(Message(line: line, on: client)))
+		}
+		#expect(channel.status == .joining)
+		#expect(channel.errorOnLastJoinAttempt == false)
+	}
+
 	@Test("Many autojoin channels go out as several JOIN lines")
 	func splitsAcrossLines() throws {
 		let client = GLTTestClient()

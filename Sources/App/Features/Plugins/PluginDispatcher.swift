@@ -21,24 +21,6 @@ import GlasstualPluginKit
 /// to hand across it. Nothing is built until a plugin has actually subscribed
 /// to the event, because building a `PluginClient` walks the whole channel list.
 public nonisolated enum PluginDispatcher { // nonisolated: value
-	/** Holds a rendered message between the render pass and the native view
-	 confirming that the line has appeared.
-
-	 Entries are removed as they are dequeued. A line that is never dequeued --
-	 the view was closed while rendering -- would otherwise accumulate, so
-	 the oldest is dropped once the buffer is full. That is the eviction the
-	 `NSCache` this replaces performed, made deterministic: a message is a value
-	 now, and a cache needs a class. */
-	@MainActor
-	private static var pendingPostedMessages: [String: PluginPostedMessage] = [:]
-
-	/// Insertion order of `pendingPostedMessages`, oldest first.
-	@MainActor
-	private static var pendingPostedMessageOrder: [String] = []
-
-	/// Roughly a full screen of scrollback in each of a few busy views.
-	private static let pendingPostedMessageLimit = 1024
-
 	@MainActor
 	private static var plugins: [PluginItem] {
 		SharedApplication.sharedPluginManager().loadedPlugins ?? []
@@ -308,21 +290,7 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 		}
 	}
 
-	@MainActor
-	public static func enqueueDidPostNewMessage(_ messageObject: PluginPostedMessage) {
-		let key = messageObject.lineNumber
-
-		if pendingPostedMessages.updateValue(messageObject, forKey: key) == nil {
-			pendingPostedMessageOrder.append(key)
-		}
-
-		while pendingPostedMessageOrder.count > pendingPostedMessageLimit {
-			pendingPostedMessages.removeValue(forKey: pendingPostedMessageOrder.removeFirst())
-		}
-	}
-
-	/** Delivers a line that has no visible transcript projection. Its native side effects
-	 must not wait for a DOM callback that cannot arrive. */
+	/// Called in transcript application order, including dormant projections.
 	@MainActor
 	public static func dispatchDidPostNewMessage(_ messageObject: PluginPostedMessage) {
 		let handlers: [any PluginPostedMessageHandling] = handlers(for: .newMessagePostedEvent)
@@ -330,19 +298,5 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 		for handler in handlers {
 			handler.didPostNewMessage(messageObject)
 		}
-	}
-
-	@MainActor
-	public static func dequeueDidPostNewMessage(
-		withLineNumber messageLineNumber: String,
-		forViewController _: LogController
-	) {
-		guard let messageObject = pendingPostedMessages.removeValue(forKey: messageLineNumber) else {
-			return
-		}
-
-		pendingPostedMessageOrder.removeAll { $0 == messageLineNumber }
-
-		dispatchDidPostNewMessage(messageObject)
 	}
 }

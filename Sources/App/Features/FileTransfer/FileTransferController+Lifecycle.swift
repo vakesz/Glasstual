@@ -43,6 +43,17 @@ extension FileTransferController {
 		closeAndPostNotification(false)
 		lifecycleNotifications.cancelAll()
 		portMapperNotifications.cancelAll()
+		releaseOwnedFile()
+	}
+
+	private func releaseOwnedFile() {
+		guard let file = ownedFile else { return }
+		ownedFile = nil
+		let stopping = stopTask
+		stopTask = Task {
+			await stopping?.value
+			await file.close()
+		}
 	}
 
 	public func close() {
@@ -50,10 +61,17 @@ extension FileTransferController {
 	}
 
 	public func closeAndPostNotification(_ postNotification: Bool) {
+		negotiationTask?.cancel()
+		negotiationTask = nil
 		resumeRequestTimeout?.cancel()
 		resumeRequestTimeout = nil
+		offerTimeout?.cancel()
+		offerTimeout = nil
 
 		stopTransfer()
+		if transferStatus == .complete || transferStatus == .fatalError {
+			releaseOwnedFile()
+		}
 		closePortMapping()
 
 		if ![.complete, .fatalError, .recoverableError].contains(transferStatus) {

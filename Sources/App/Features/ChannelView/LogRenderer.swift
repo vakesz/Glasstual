@@ -59,7 +59,7 @@ nonisolated enum RendererFormatting { // nonisolated: value
 public nonisolated struct LogRenderer { // nonisolated: value
 	private var body = ""
 	private var attributedBody = NSMutableAttributedString()
-	private var configuration = LogRendererConfiguration()
+	private var configuration = TranscriptRenderOptions()
 	private var members: [RenderedMember] = []
 	private var lineType = LogLineType.undefined
 	private var memberType = LogLineMemberType.normal
@@ -99,7 +99,7 @@ public nonisolated struct LogRenderer { // nonisolated: value
 	}
 
 	private mutating func annotateLinks() {
-		guard configuration.bool(for: .renderLinks) else { return }
+		guard configuration.renderLinks else { return }
 		links = LinkParser.locateLinks(in: body)
 		for link in links {
 			attributedBody.addAttribute(RendererFormatting.url, value: link, range: link.range)
@@ -108,9 +108,9 @@ public nonisolated struct LogRenderer { // nonisolated: value
 
 	private mutating func annotateHighlight() {
 		guard isMessage, memberType == .normal else { return }
-		let highlighted = configuration.value(for: .highlightKeywords, as: [String].self) ?? []
+		let highlighted = configuration.highlightKeywords
 		guard highlighted.isEmpty == false else { return }
-		let excluded = configuration.value(for: .excludedKeywords, as: [String].self) ?? []
+		let excluded = configuration.excludedKeywords
 		let excludedRanges = excluded.flatMap { ranges(of: $0, options: .caseInsensitive) }
 		let matchMethod = Preferences.Highlights.matchingMethod.detachedValue
 
@@ -138,7 +138,11 @@ public nonisolated struct LogRenderer { // nonisolated: value
 			guard isSurroundedByNonAlphanumerics(range),
 			      attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
 			else { continue }
-			attributedBody.addAttribute(RendererFormatting.channelName, value: true, range: range)
+			attributedBody.addAttribute(
+				RendererFormatting.channelName,
+				value: (body as NSString).substring(with: range),
+				range: range
+			)
 		}
 	}
 
@@ -152,7 +156,11 @@ public nonisolated struct LogRenderer { // nonisolated: value
 				guard isSurroundedByNonAlphanumerics(range),
 				      attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
 				else { continue }
-				attributedBody.addAttribute(RendererFormatting.conversationTracking, value: true, range: range)
+				attributedBody.addAttribute(
+					RendererFormatting.conversationTracking,
+					value: member.nickname,
+					range: range
+				)
 				if mentionedNicknames.contains(member.nickname) == false {
 					mentionedNicknames.append(member.nickname)
 				}
@@ -201,7 +209,7 @@ public nonisolated struct LogRenderer { // nonisolated: value
 		expression.matches(
 			in: body,
 			range: NSRange(location: 0, length: (body as NSString).length)
-		).map(\.range)
+		).map(\.range).filter { $0.length > 0 }
 	}
 
 	private func isSurroundedByNonAlphanumerics(_ range: NSRange) -> Bool {
@@ -224,10 +232,6 @@ public nonisolated struct LogRenderer { // nonisolated: value
 			return false
 		}
 		return true
-	}
-
-	private func member(named nickname: String) -> RenderedMember? {
-		members.first { $0.nickname.caseInsensitiveCompare(nickname) == .orderedSame }
 	}
 
 	private func result() -> TranscriptBody {
@@ -263,10 +267,10 @@ public nonisolated struct LogRenderer { // nonisolated: value
 				let url = URL(string: link.stringValue)
 			{
 				.link(url)
-			} else if attributes[RendererFormatting.channelName] != nil {
-				.channel(text)
-			} else if attributes[RendererFormatting.conversationTracking] != nil {
-				.nickname(member(named: text)?.nickname ?? text)
+			} else if let channel = attributes[RendererFormatting.channelName] as? String {
+				.channel(channel)
+			} else if let nickname = attributes[RendererFormatting.conversationTracking] as? String {
+				.nickname(nickname)
 			} else {
 				nil
 			}
@@ -309,17 +313,13 @@ public nonisolated struct LogRenderer { // nonisolated: value
 public extension LogRenderer {
 	internal nonisolated static func renderNativeBody( // nonisolated: pure
 		_ body: String,
-		withAttributes configuration: LogRendererConfiguration,
+		withAttributes configuration: TranscriptRenderOptions,
 		members: [RenderedMember]
 	) -> TranscriptBody {
 		guard body.isEmpty == false else { return TranscriptBody() }
 		var renderer = LogRenderer()
-		renderer.lineType = LogLineType(
-			rawValue: configuration.value(for: .lineType, as: UInt.self) ?? 0
-		) ?? .undefined
-		renderer.memberType = LogLineMemberType(
-			rawValue: configuration.value(for: .memberType, as: UInt.self) ?? 0
-		) ?? .normal
+		renderer.lineType = configuration.lineType
+		renderer.memberType = configuration.memberType
 		renderer.body = body
 		renderer.configuration = configuration
 		renderer.members = members
@@ -351,8 +351,8 @@ public extension LogRenderer {
 		configuration: LogRendererConfiguration
 	) -> [NSAttributedString.Key: Any] {
 		var result: [NSAttributedString.Key: Any] = [:]
-		let defaultFont = configuration.value(for: .preferredFont, as: NSFont.self)
-		let defaultColor = configuration.value(for: .preferredFontColor, as: NSColor.self)
+		let defaultFont = configuration.preferredFont
+		let defaultColor = configuration.preferredFontColor
 		var font = defaultFont
 		if attributes[RendererFormatting.monospace] != nil, let current = font {
 			font = NSFontManager.shared.convert(current, toFamily: "Menlo")

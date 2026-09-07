@@ -62,54 +62,84 @@ private struct LogControllerSharedState: Sendable {
 	var uniqueIdentifier = ""
 }
 
-/// One initial projection render, including the subset that actually came from
-/// historic storage so indexing and previous-session markers stay accurate.
-private nonisolated struct TranscriptHistoryRenderOutput: Sendable { // nonisolated: value
-	let historicEntries: [LogLine]
-	let entries: [LogLine]
-	let results: [LogLineRenderResult]
-}
-
-public final class LogControllerPrintOperationContext: NSObject {
-	public private(set) weak var client: IRCClient?
-	public private(set) weak var channel: IRCChannel?
-	public private(set) var isHighlight: Bool
-	public private(set) var logLine: LogLine
-	public private(set) var lineNumber: String
-
-	init(client: IRCClient, channel: IRCChannel?, highlight: Bool, logLine: LogLine, lineNumber: String) {
-		self.client = client
-		self.channel = channel
-		isHighlight = highlight
-		self.logLine = logLine
-		self.lineNumber = lineNumber
-		super.init()
-	}
-}
-
 @MainActor
-public final class LogController: NSObject {
+public final class LogController: NSObject, ServerHistoryPresentation {
 	public private(set) var backingView: LogView?
 	public private(set) var viewIsLoaded = false
 	public private(set) weak var attachedWindow: MainWindow?
-	public private(set) var newestLineNumberFromPreviousSession: String?
-	public private(set) var oldestLineNumber: String?
-	public private(set) var newestLineNumber: String?
+	public internal(set) var newestLineNumberFromPreviousSession: String?
+	public var oldestLineNumber: String? {
+		backingView?.displayedBounds.oldest
+	}
+
+	public var newestLineNumber: String? {
+		backingView?.displayedBounds.newest
+	}
 
 	private nonisolated let sharedState = Mutex(LogControllerSharedState()) // nonisolated: let
-	private var terminating = false
-	private var historyLoadedForFirstTime = false
-	private var reloadingHistory = false
-	private var historyLoaded = false
-	private var loadingOlderHistory = false
+	private(set) var terminating = false
+	/* Loading history is the other half of this controller, and it lives in
+	 `LogControllerHistoryLoading.swift`: the initial replay, the scrollback
+	 pages and the server-history handshake. The state the two halves share is
+	 declared here and reaches no further than this feature. */
+	var historyLoadedForFirstTime = false
+	var reloadingHistory = false
+	var historyLoaded = false
+	var historyLoadFailure: HistoricLogFetchFailure? {
+		didSet { historyRecovery.initialFailure = historyLoadFailure }
+	}
+
+	var loadingOlderHistory = false
+	var olderHistoryTask: Task<Void, Never>?
+	var locallyExhaustedBefore: String?
+	var serverHistoryRequest: ServerHistoryRequest? {
+		didSet { refreshServerRetryAvailability() }
+	}
+
+	var serverHistoryCompletedBefore: Date?
+	var serverHistoryExhaustedBefore: Date?
+	var serverHistoryFailed = false {
+		didSet {
+			historyRecovery.serverFailed = serverHistoryFailed
+			if !serverHistoryFailed {
+				historyRecovery.serverFailureReason = nil
+			}
+			refreshServerRetryAvailability()
+		}
+	}
+
+	var olderHistoryFailure: HistoricLogFetchFailure? {
+		didSet { historyRecovery.olderFailure = olderHistoryFailure }
+	}
+
+	let historyRecovery = TranscriptHistoryRecoveryState()
+	var historyStorageRecovery: TranscriptHistoryRecoveryState {
+		historicLog.recovery
+	}
+
+	var historyRetryTask: Task<Void, Never>?
+	var olderHistoryFailed: Bool {
+		olderHistoryFailure != nil
+	}
+
+	var historyPageFetcher: @Sendable @concurrent (HistoricLogFetchRequest) async
+		-> HistoricLogFetchOutcome
+
+	private let memberRenderCache = MemberListRenderCache()
+	let inlineImageLoader: NativeInlineImageLoader
+	let historicLog: LogControllerHistoricLogFile
+	private(set) var historicLogMutationTask: Task<Void, Never>?
+
 	private var lastVisitedHighlight: String?
-	private var highlightedLineNumbers: [String] = []
-	private var reactionsByMessageIdentifier: [String: [String: [String]]] = [:]
-	private var viewLoadedTimestamp: TimeInterval = 0
-	private var lastLineStorage: LogLine?
-	private var oldestLineStorage: LogLine?
-	private var transcriptProjection = TranscriptProjectionState()
-	private var transcriptSessionBoundary = TranscriptSessionBoundaryState()
+	private var highlightedLineNumbers: [String] {
+		backingView?.displayedLines.filter(\.body.isHighlight).map(\.lineNumber) ?? []
+	}
+
+	private(set) var reactionsByMessageIdentifier: [String: [String: [String]]] = [:]
+	private(set) var viewLoadedTimestamp: TimeInterval = 0
+	var lastLineStorage: LogLine?
+	var transcriptProjection = TranscriptProjectionState()
+	var transcriptSessionBoundary = TranscriptSessionBoundaryState()
 
 	/** This view's render pipeline, and the task that drains it. Replaced
 	 wholesale when the view is cleared: dropping the stream is how queued work
@@ -119,7 +149,10 @@ public final class LogController: NSObject {
 	/** Bumped whenever queued work is cancelled. A job that was already
 	 rendering checks it before it applies, which is the synchronous half of
 	 cancellation — the pipeline drops the rest asynchronously. */
-	private var renderGeneration = 0
+	private(set) var renderGeneration = 0
+	var pendingApplications: [@MainActor () -> Void] = []
+	var deferredPrepends: [@MainActor () -> Void] = []
+	private var applicationTask: Task<Void, Never>?
 
 	public nonisolated var associatedClient: IRCClient! { // nonisolated: pure
 		sharedState.withLock { $0.client }
@@ -129,7 +162,7 @@ public final class LogController: NSObject {
 		sharedState.withLock { $0.channel }
 	}
 
-	private nonisolated var associatedItem: IRCTreeItem? { // nonisolated: pure
+	nonisolated var associatedItem: IRCTreeItem? { // nonisolated: pure
 		sharedState.withLock { $0.channel ?? $0.client }
 	}
 
@@ -138,7 +171,7 @@ public final class LogController: NSObject {
 	}
 
 	public var numberOfLines: UInt {
-		UInt(transcriptProjection.lineCount)
+		UInt(backingView?.displayedBounds.count ?? transcriptProjection.lineCount)
 	}
 
 	public var inlineMediaEnabledForView: Bool {
@@ -168,7 +201,17 @@ public final class LogController: NSObject {
 		fatalError("Use a designated log controller initializer")
 	}
 
-	public init(client: IRCClient, in window: MainWindow) {
+	public convenience init(client: IRCClient, in window: MainWindow) {
+		self.init(client: client, in: window, inlineImageLoader: .shared)
+	}
+
+	init(
+		client: IRCClient, in window: MainWindow, inlineImageLoader: NativeInlineImageLoader,
+		historicLog: LogControllerHistoricLogFile = .sharedInstance
+	) {
+		self.inlineImageLoader = inlineImageLoader
+		self.historicLog = historicLog
+		historyPageFetcher = { await historicLog.fetchOutcome($0) }
 		sharedState.withLock {
 			$0.client = client
 			$0.uniqueIdentifier = client.uniqueIdentifier
@@ -179,6 +222,10 @@ public final class LogController: NSObject {
 	}
 
 	public init(channel: IRCChannel, in window: MainWindow) {
+		inlineImageLoader = .shared
+		historicLog = .sharedInstance
+		let storage = historicLog
+		historyPageFetcher = { await storage.fetchOutcome($0) }
 		sharedState.withLock {
 			$0.client = channel.associatedClient
 			$0.channel = channel
@@ -194,7 +241,16 @@ public final class LogController: NSObject {
 		startPipeline()
 	}
 
-	private var bufferPolicy: LogViewBufferPolicy {
+	isolated deinit {
+		historyRetryTask?.cancel()
+		pipelineTask?.cancel()
+		olderHistoryTask?.cancel()
+		applicationTask?.cancel()
+		backingView?.clearLines()
+		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
+	}
+
+	var bufferPolicy: LogViewBufferPolicy {
 		LogViewBufferPolicy(preference: Preferences.Logging.scrollbackVisibleLimit.value)
 	}
 
@@ -222,6 +278,7 @@ public final class LogController: NSObject {
 	private func stopPipeline() {
 		let retired = pipeline
 		Task { await retired.stop() }
+		pipelineTask?.cancel()
 		pipelineTask = nil
 	}
 
@@ -236,27 +293,64 @@ public final class LogController: NSObject {
 			return
 		}
 		renderGeneration += 1
+		cancelOlderHistory()
+		pendingApplications.removeAll()
+		deferredPrepends.removeAll()
+		applicationTask?.cancel()
+		applicationTask = nil
+		/* The dropped jobs include whatever was going to finish the replay, so
+		 the latch has to be released here rather than waiting for a completion
+		 that is never going to arrive. */
+		reloadingHistory = false
 		stopPipeline()
 		pipeline = LogRenderPipeline()
 		startPipeline()
 	}
 
 	func drainRenderJobs() async {
-		await pipeline.drain()
+		await olderHistoryTask?.value
+		await pipeline.barrier()
+		while !pendingApplications.isEmpty {
+			applyPendingBatch()
+			await Task.yield()
+		}
+	}
+
+	private func cancelOlderHistory() {
+		historyRetryTask?.cancel()
+		historyRetryTask = nil
+		historyRecovery.isRetrying = false
+		olderHistoryTask?.cancel()
+		olderHistoryTask = nil
+		loadingOlderHistory = false
+		locallyExhaustedBefore = nil
+		let retiredRequest = serverHistoryRequest
+		serverHistoryRequest = nil
+		if let retiredRequest {
+			associatedClient?.cancelServerHistoryRequest(retiredRequest)
+		}
+		serverHistoryCompletedBefore = nil
+		serverHistoryExhaustedBefore = nil
+		serverHistoryFailed = false
+		olderHistoryFailure = nil
+	}
+
+	func acceptsRenderGeneration(_ generation: Int) -> Bool {
+		renderGeneration == generation && !terminating
 	}
 
 	private func historicLogForgetChannel() {
 		guard let associatedItem else {
 			return
 		}
-		LogControllerHistoricLogFile.shared().forgetView(associatedItem.uniqueIdentifier)
+		historicLogMutationTask = historicLog.forgetView(associatedItem.uniqueIdentifier)
 	}
 
 	private func historicLogResetChannel() {
 		guard let associatedItem else {
 			return
 		}
-		LogControllerHistoricLogFile.shared().resetData(forView: associatedItem.uniqueIdentifier)
+		historicLogMutationTask = historicLog.resetData(forView: associatedItem.uniqueIdentifier)
 	}
 
 	private func closeHistoricLog() {
@@ -269,30 +363,32 @@ public final class LogController: NSObject {
 		}
 	}
 
-	private func prepareForTermination(_ isTerminatingApplication: Bool) {
+	func tearDown(_ reason: TreeItemTeardown) {
+		guard !terminating else { return }
+		if reason == .applicationTermination {
+			/* Bound to a local because the log message is an autoclosure, where
+			 `self.` would be required and SwiftFormat would strip it. */
+			let identifier = uniqueIdentifier
+			logControllerLogger.debug("Preparing view controller: \(identifier, privacy: .public)")
+		}
 		renderGeneration += 1
 		terminating = true
+		refreshServerRetryAvailability()
+		cancelOlderHistory()
+		pendingApplications.removeAll()
+		deferredPrepends.removeAll()
+		applicationTask?.cancel()
+		applicationTask = nil
 		viewIsLoaded = false
+		backingView?.clearLines()
 		backingView = nil
-		NativeInlineImageLoader.shared.cancelLoads(forView: uniqueIdentifier)
+		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
 		stopPipeline()
-		if isTerminatingApplication {
-			closeHistoricLog()
-		} else {
-			historicLogForgetChannel()
+		switch reason {
+		case .applicationTermination: closeHistoricLog()
+		case .permanentRemoval: historicLogForgetChannel()
+		case .preservingRemoval: break
 		}
-	}
-
-	public func prepareForApplicationTermination() {
-		/* Bound to a local because the log message is an autoclosure, where
-		 `self.` would be required and SwiftFormat would strip it. */
-		let identifier = uniqueIdentifier
-		logControllerLogger.debug("Preparing view controller: \(identifier, privacy: .public)")
-		prepareForTermination(true)
-	}
-
-	public func prepareForPermanentDestruction() {
-		prepareForTermination(false)
 	}
 
 	/** Submits one render job to this view's pipeline.
@@ -302,19 +398,22 @@ public final class LogController: NSObject {
 	 replaced the printing operation: `render` may only capture what can cross
 	 isolation, while `apply` is written here, on the main actor, and so may
 	 capture a `LogLine`, a caller's completion block or anything else the view
-	 needs. Returning `nil` from `render` drops the job.
+	 needs. Returning `nil` from `render` drops the job. Render outputs are
+	 Sendable values; AppKit presentation is constructed only during application. */
+	/// Whether this view still has a pipeline to submit to. A retired view, or
+	/// one whose application is on its way out, silently drops every job.
+	var acceptsRenderJobs: Bool {
+		terminating == false && AppController.shared.applicationIsTerminating == false
+	}
 
-	 `sending` rather than `Sendable`: a job may produce values that are not
-	 `Sendable` — log lines decoded inside the render, for one — as long as it
-	 built them itself and keeps no reference, which is exactly what region
-	 isolation checks. */
-	private func enqueueRenderJob<Output>(
+	@discardableResult
+	func enqueueRenderJob<Output: Sendable>(
 		isStandalone: Bool = false,
-		render: @escaping @Sendable @concurrent () async -> sending Output?,
-		apply: @escaping @MainActor (sending Output) -> Void
-	) {
-		guard terminating == false, AppController.shared.applicationIsTerminating == false else {
-			return
+		render: @escaping @Sendable @concurrent () async -> Output?,
+		apply: @escaping @MainActor (Output) -> Void
+	) -> Bool {
+		guard acceptsRenderJobs else {
+			return false
 		}
 		let generation = renderGeneration
 		pipeline.submissions.yield(LogRenderSubmission(isStandalone: isStandalone) { [weak self] in
@@ -323,17 +422,48 @@ public final class LogController: NSObject {
 			}
 			return { self?.applyRenderOutput(output, generation: generation, apply) }
 		})
+		return true
 	}
 
-	private func applyRenderOutput<Output>(
-		_ output: sending Output,
+	private func applyRenderOutput<Output: Sendable>(
+		_ output: Output,
 		generation: Int,
-		_ apply: @MainActor (sending Output) -> Void
+		_ apply: @escaping @MainActor (Output) -> Void
 	) {
 		guard renderGeneration == generation, terminating == false else {
 			return
 		}
-		apply(output)
+		pendingApplications.append { [weak self] in
+			guard let self, acceptsRenderGeneration(generation) else { return }
+			apply(output)
+		}
+		guard applicationTask == nil else { return }
+		applicationTask = Task { @MainActor [weak self] in
+			await Task.yield()
+			while let self, !Task.isCancelled {
+				guard !pendingApplications.isEmpty else {
+					applicationTask = nil
+					return
+				}
+				applyPendingBatch()
+				await Task.yield()
+			}
+		}
+	}
+
+	private func applyPendingBatch() {
+		let count = min(32, pendingApplications.count)
+		let batch = Array(pendingApplications.prefix(count))
+		pendingApplications.removeFirst(count)
+		if let backingView {
+			backingView.performEditingBatch { for apply in batch {
+				apply()
+			} }
+		} else {
+			for apply in batch {
+				apply()
+			}
+		}
 	}
 
 	/// Convenience for work that has nothing to do off the main actor. It still
@@ -346,34 +476,22 @@ public final class LogController: NSObject {
 	}
 
 	/// Snapshot of the main-actor state that rendering needs.
-	private func makeRenderContext() -> LogLineRenderContext {
+	func makeRenderContext() -> LogLineRenderContext {
 		let channel = associatedChannel
 		return LogLineRenderContext(
-			networkName: associatedClient?.networkNameAlt ?? "",
 			inlineMediaEnabled: inlineMediaEnabledForView,
 			isChannel: channel?.isChannel == true,
-			nicknameFormat: Self.resolvedNicknameFormat(),
-			members: (channel?.memberList ?? []).map(RenderedMember.init),
+			members: memberRenderCache.members(in: channel),
 			sessionReactions: reactionsByMessageIdentifier
 		)
-	}
-
-	/// The nickname format is part of the native transcript theme.
-	private static func resolvedNicknameFormat() -> String {
-		let format = SharedApplication.sharedThemeController().theme.nicknameFormat
-		return format.isEmpty ? TranscriptTheme.lines.nicknameFormat : format
 	}
 
 	private func setInitialTopic() {
 		setTopicNow(associatedChannel?.topic)
 	}
 
-	/// `IRCChannel` publishes topic changes from a property observer that is not
-	/// isolated, so hop before touching any of the controller's state.
-	public nonisolated func setTopic(_ topic: String?) { // nonisolated: pure
-		Task { @MainActor in
-			self.setTopicNow(topic)
-		}
+	public func setTopic(_ topic: String?) {
+		setTopicNow(topic)
 	}
 
 	private func setTopicNow(_ topic: String?) {
@@ -386,8 +504,9 @@ public final class LogController: NSObject {
 	}
 
 	public func mark() {
-		transcriptProjection.setMark(.latest)
-		backingView?.setUnreadMarker(.latest)
+		let mark = (newestLineNumber ?? lastLineStorage?.uniqueIdentifier).map(TranscriptScrollbackMark.line) ?? .latest
+		transcriptProjection.setMark(mark)
+		backingView?.setUnreadMarker(mark)
 	}
 
 	public func mark(at date: Date) {
@@ -404,14 +523,20 @@ public final class LogController: NSObject {
 		switch transcriptProjection.mark {
 		case .none: break
 		case .latest: moveToBottom()
+		case let .line(identifier):
+			jump(toLine: backingView?.displayedLines
+				.first(where: { $0.matches(identifier: identifier) })?.lineNumber
+				?? oldestLineNumber ?? identifier)
 		case let .after(date):
-			if let line = transcriptProjection.renderedLineNumber(onOrAfter: date) {
+			if let line = backingView?.displayedLines
+				.first(where: { $0.receivedAt >= date && $0.lineType.isConversation })?.lineNumber
+			{
 				jump(toLine: line)
 			}
 		}
 	}
 
-	private func applyReloadedLines(
+	func applyReloadedLines(
 		_ results: [LogLineRenderResult],
 		isReload: Bool,
 		suppressingPluginMessages lineNumbersToSuppress: Set<String> = []
@@ -421,17 +546,16 @@ public final class LogController: NSObject {
 		}
 		var pluginObjects: [PluginPostedMessage] = []
 		let channel = associatedChannel
+		let suppressed = lineNumbersToSuppress.union(transcriptProjection.pendingLineNumbers)
 		for result in results {
 			if let pluginMessage = result.pluginMessage,
-			   lineNumbersToSuppress.contains(result.lineNumber) == false
+			   suppressed.contains(result.lineNumber) == false,
+			   result.transcriptLine.historyCursor.map({ suppressed.contains($0.lineIdentifier) }) != true
 			{
 				pluginObjects.append(pluginMessage.makeObject(resolvingMembersIn: channel))
 			}
-			if result.isHighlight, highlightedLineNumbers.contains(result.lineNumber) == false {
-				highlightedLineNumbers.append(result.lineNumber)
-			}
 		}
-		let lines = results.map(\.transcriptLine)
+		let lines = results.map { applyingCurrentState(to: $0.transcriptLine) }
 		if isReload {
 			backingView?.appendLines(lines)
 		} else {
@@ -439,190 +563,32 @@ public final class LogController: NSObject {
 		}
 		for var pluginObject in pluginObjects {
 			pluginObject.isProcessedInBulk = true
-			PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
-		}
-		for result in results where lineNumbersToSuppress.contains(result.lineNumber) == false {
-			PluginDispatcher.dequeueDidPostNewMessage(withLineNumber: result.lineNumber, forViewController: self)
+			PluginDispatcher.dispatchDidPostNewMessage(pluginObject)
 		}
 		for result in results where result.processesInlineMedia {
 			processInlineMedia(result.links, atLineNumber: result.lineNumber)
-		}
-	}
-
-	private func maybeReloadHistory() {
-		guard viewIsLoaded, !historyLoaded, !reloadingHistory else {
-			return
-		}
-		reloadHistory()
-	}
-
-	private func reloadHistory() {
-		guard !terminating, !reloadingHistory else {
-			return
-		}
-		let firstLoad = !historyLoadedForFirstTime
-		let channel = associatedChannel
-		let includeStoredHistory = !(firstLoad && !Preferences.Logging.reloadScrollbackOnLaunch.value ||
-			channel?.isUtility == true ||
-			channel?.isDirectChat == true ||
-			(firstLoad && channel?.isPrivateMessage == true && !Preferences.Appearance.rememberQueryStates.value))
-		if Preferences.Logging.loadHistoryLazily.value, !viewIsVisible {
-			return
-		}
-
-		reloadingHistory = true
-		fetchHistory(firstLoad: firstLoad, includeStoredHistory: includeStoredHistory)
-	}
-
-	private func fetchHistory(firstLoad: Bool, includeStoredHistory: Bool) {
-		guard let associatedItem else {
-			return
-		}
-		let viewIdentifier = associatedItem.uniqueIdentifier
-		let replay = transcriptProjection.beginReplay()
-		let context = makeRenderContext()
-		let limitDate = Date(timeIntervalSince1970: viewLoadedTimestamp)
-		let request = HistoricLogFetchRequest(
-			viewIdentifier: viewIdentifier,
-			kind: .newest(ascending: false, fetchLimit: 100, limitToDate: limitDate)
-		)
-		/* Everything the render needs is a value, so the fetch is awaited inside
-		 the job rather than before it. The job is standalone, so later prints do
-		 not queue behind the fetch; the projection's replay buffer is what holds
-		 them until the history has been applied. */
-		enqueueRenderJob(isStandalone: true) { [weak self] in
-			guard let viewController = self else {
-				return nil
-			}
-			let xpcEntries = includeStoredHistory
-				? await HistoricLogClient.shared.fetchEntries(request)
-				: []
-			let historicEntries = Array(HistoricLogClient.logLines(from: xpcEntries).reversed())
-			let entries = TranscriptProjectionState.merging(
-				historic: historicEntries,
-				replay: replay.lines
-			)
-			let snapshots = Self.applyingMessageRenderers(
-				to: entries.map { LogLineSnapshot($0, in: context) },
-				for: viewController
-			)
-			let results = Self.renderJob(snapshots, context: context)
-			return TranscriptHistoryRenderOutput(
-				historicEntries: historicEntries,
-				entries: entries,
-				results: results
-			)
-		} apply: { [weak self] (loaded: TranscriptHistoryRenderOutput) in
-			self?.applyReloadedHistory(
-				loaded.historicEntries,
-				loaded.entries,
-				results: loaded.results,
-				forView: viewIdentifier,
-				firstLoad: firstLoad,
-				replayedLineNumbers: replay.lineNumbers
-			)
-		}
-	}
-
-	private func applyReloadedHistory(
-		_ historicEntries: [LogLine],
-		_ entries: [LogLine],
-		results inputResults: [LogLineRenderResult],
-		forView viewIdentifier: String,
-		firstLoad: Bool,
-		replayedLineNumbers: Set<String>
-	) {
-		var results = inputResults
-		LogControllerHistoricLogFile.shared().indexLogLines(historicEntries, forView: viewIdentifier)
-		if lastLineStorage == nil {
-			lastLineStorage = entries.last
-		}
-		noteOldestLineCandidate(entries.first)
-		oldestLineNumber = entries.first?.uniqueIdentifier ?? oldestLineNumber
-		if firstLoad {
-			let markerLineNumber = transcriptSessionBoundary.prepareInitialHistory(
-				historicEntries,
-				renderedLines: results
-			)
-			newestLineNumberFromPreviousSession = transcriptSessionBoundary
-				.newestPreviousSessionLineNumber
-			if let markerLineNumber,
-			   let markerIndex = results.firstIndex(where: { $0.lineNumber == markerLineNumber })
-			{
-				results[markerIndex].transcriptLine.markers.insert(
-					.currentSession(MainWindowStrings.Conversation.currentSession),
-					at: 0
-				)
-			}
-		}
-		applyReloadedLines(
-			results,
-			isReload: !firstLoad,
-			suppressingPluginMessages: replayedLineNumbers
-		)
-		var pending = transcriptProjection.finishReplay(displaying: Set(results.map(\.lineNumber)))
-		if let pendingIndex = pending.firstIndex(where: { transcriptSessionBoundary.consumePendingMarker(for: $0) }) {
-			pending[pendingIndex].transcriptLine.markers.insert(
-				.currentSession(MainWindowStrings.Conversation.currentSession),
-				at: 0
-			)
-		}
-		applyReloadedLines(
-			pending,
-			isReload: true,
-			suppressingPluginMessages: Set(pending.map(\.lineNumber))
-		)
-		restoreTranscriptProjectionState()
-		reloadingHistory = false
-		historyLoaded = true
-		historyLoadedForFirstTime = true
-	}
-
-	private func restoreTranscriptProjectionState() {
-		for update in transcriptProjection.deliveryUpdates.values {
-			backingView?.updateDelivery(update)
-		}
-		for (identifier, reactions) in reactionsByMessageIdentifier {
-			backingView?.updateReactions(reactions, messageIdentifier: identifier)
-		}
-		switch transcriptProjection.mark {
-		case .none:
-			break
-		case .latest:
-			backingView?.setUnreadMarker(.latest)
-		case let .after(date):
-			backingView?.setUnreadMarker(.after(date))
 		}
 	}
 }
 
 public extension LogController {
 	func reloadTheme() {
-		reloadThemeNow()
-	}
-
-	private func reloadThemeNow() {
-		guard !terminating else {
-			return
+		if !terminating {
+			backingView?.applyTheme()
 		}
-		backingView?.applyTheme()
 	}
 
 	func jumpToCurrentSession() {
-		guard let lineNumber = transcriptSessionBoundary.firstCurrentSessionLineNumber
-			?? newestLineNumberFromPreviousSession
-			?? oldestLineNumber
-		else {
+		for lineNumber in [transcriptSessionBoundary.firstCurrentSessionLineNumber,
+		                   newestLineNumberFromPreviousSession, oldestLineNumber].compactMap(\.self)
+			where backingView?.jump(to: lineNumber) == true
+		{
 			return
 		}
-		jump(toLine: lineNumber)
 	}
 
 	func jumpToPresent() {
-		guard let lineNumber = newestLineNumber ?? newestLineNumberFromPreviousSession else {
-			return
-		}
-		jump(toLine: lineNumber)
+		moveToBottom()
 	}
 
 	func jump(toLine lineNumber: String) {
@@ -659,10 +625,12 @@ public extension LogController {
 		guard !terminating else {
 			return
 		}
-		highlightedLineNumbers.removeAll { lineNumbers.contains($0) }
+		if let lastVisitedHighlight, lineNumbers.contains(lastVisitedHighlight) {
+			self.lastVisitedHighlight = nil
+		}
 	}
 
-	private func processInlineMedia(_ links: [LinkParserResult], atLineNumber lineNumber: String) {
+	func processInlineMedia(_ links: [LinkParserResult], atLineNumber lineNumber: String) {
 		for link in links {
 			processInlineMediaAtAddress(
 				link.stringValue,
@@ -672,11 +640,12 @@ public extension LogController {
 		}
 	}
 
+	@discardableResult
 	func processInlineMediaAtAddress(
 		_ address: String,
 		withUniqueIdentifier linkIdentifier: String,
 		atLineNumber lineNumber: String
-	) {
+	) -> UUID? {
 		/* The link parser's scheme set is user-extensible, so an address that
 		 became clickable is not necessarily one the inline-content service can
 		 handle. It only ever fetches over HTTP, and aborts on a file: URL. */
@@ -684,23 +653,36 @@ public extension LogController {
 		      let scheme = url.scheme?.lowercased(),
 		      scheme == "http" || scheme == "https"
 		else {
-			return
+			return nil
 		}
 
-		NativeInlineImageLoader.shared.load(
+		guard backingView?.displayedLines.contains(where: { $0.lineNumber == lineNumber }) == true else { return nil }
+		let generation = renderGeneration
+		let loader = inlineImageLoader
+		// Only admission failures run synchronously; successful callbacks receive the assigned token.
+		var requestIdentifier: UUID?
+		requestIdentifier = loader.load(
 			url: url,
 			viewIdentifier: uniqueIdentifier,
 			lineNumber: lineNumber,
 			linkIdentifier: linkIdentifier
 		) { [weak self] result in
 			switch result {
-			case let .success(image): self?.backingView?.addInlineImage(image)
+			case let .success(image):
+				guard let self, acceptsRenderGeneration(generation), backingView?.addInlineImage(image) == true else {
+					if let requestIdentifier {
+						loader.cancelLoad(requestIdentifier)
+					}
+					return
+				}
 			case let .failure(error):
+				let reason = (error as? NativeInlineImageError)?.logDescription ?? error.localizedDescription
 				logControllerLogger.error(
-					"Inline image request failed for '\(address, privacy: .public)': \(error.localizedDescription, privacy: .public)"
+					"Inline image request failed for '\(address, privacy: .public)': \(reason, privacy: .public)"
 				)
 			}
 		}
+		return requestIdentifier
 	}
 
 	func highlightAvailable(_: Bool) -> Bool {
@@ -723,7 +705,8 @@ public extension LogController {
 			return
 		}
 		let current = lastVisitedHighlight.flatMap(highlightedLineNumbers.firstIndex(of:))
-		let index = current.map { ($0 + offset + highlightedLineNumbers.count) % highlightedLineNumbers.count } ?? 0
+		let index = current.map { ($0 + offset + highlightedLineNumbers.count) % highlightedLineNumbers.count }
+			?? (offset > 0 ? 0 : highlightedLineNumbers.count - 1)
 		let target = highlightedLineNumbers[index]
 		lastVisitedHighlight = target
 		jump(toLine: target)
@@ -734,19 +717,17 @@ public extension LogController {
 			return
 		}
 		cancelRenderJobs()
+		inlineImageLoader.cancelLoads(forView: uniqueIdentifier)
 		if resetHistoricLog {
 			historicLogResetChannel()
 			transcriptProjection.reset()
 			transcriptSessionBoundary.reset()
+			newestLineNumberFromPreviousSession = nil
 		} else {
 			transcriptProjection.becomeDormant()
 		}
-		highlightedLineNumbers.removeAll()
 		lastVisitedHighlight = nil
-		oldestLineNumber = nil
-		newestLineNumber = nil
 		lastLineStorage = nil
-		oldestLineStorage = nil
 		reloadingHistory = false
 		historyLoaded = false
 		backingView?.clearLines()
@@ -759,77 +740,23 @@ public extension LogController {
 	func clear() {
 		clear(resetHistoricLog: true)
 	}
+}
 
-	func loadOlderHistory() {
-		guard !loadingOlderHistory,
-		      let associatedItem,
-		      let oldestDisplayedLineNumber = oldestLineNumber
-		else { return }
-		loadingOlderHistory = true
-		let viewIdentifier = associatedItem.uniqueIdentifier
-		let request = HistoricLogFetchRequest(
-			viewIdentifier: viewIdentifier,
-			kind: .before(uniqueIdentifier: oldestDisplayedLineNumber, fetchLimit: 100, limitToDate: nil)
-		)
-		Task { @MainActor [weak self] in
-			let xpcEntries = await HistoricLogClient.shared.fetchEntries(request)
-			guard let self else { return }
-			let entries = LogControllerHistoricLogFile.shared()
-				.decodeAndIndex(xpcEntries, forView: viewIdentifier)
-			loadingOlderHistory = false
-			guard entries.isEmpty == false else {
-				noteLocalScrollbackExhausted()
-				return
-			}
-			oldestLineNumber = entries.first?.uniqueIdentifier
-			prependHistoricLogLines(entries)
+extension LogController {
+	/// The row as it should be drawn now: the delivery and reaction updates
+	/// that arrived after it rendered are folded in at the last moment, so a
+	/// line re-applied by a replay or a theme change carries them too.
+	func applyingCurrentState(to input: TranscriptLine) -> TranscriptLine {
+		var line = input
+		if let update = transcriptProjection.deliveryUpdates[line.lineNumber] {
+			line.deliveryState = update.state
+			line.messageIdentifier = update.messageIdentifier ?? line.messageIdentifier
+			line.deliveryFailureReason = update.reason
 		}
-	}
-
-	private func noteOldestLineCandidate(_ logLine: LogLine?) {
-		guard let logLine else {
-			return
+		if let identifier = line.messageIdentifier, let delta = reactionsByMessageIdentifier[identifier] {
+			line.mergeReactions(delta)
 		}
-		guard let oldestLineStorage else {
-			oldestLineStorage = logLine
-			return
-		}
-		if logLine.receivedAt < oldestLineStorage.receivedAt {
-			self.oldestLineStorage = logLine
-		}
-	}
-
-	private func noteLocalScrollbackExhausted() {
-		guard let channel = associatedChannel,
-		      let client = associatedClient,
-		      let oldestLineStorage
-		else {
-			return
-		}
-		client.requestChatHistory(before: oldestLineStorage.receivedAt, in: channel)
-	}
-
-	func prependHistoricLogLines(_ logLines: [LogLine]) {
-		guard !terminating, !logLines.isEmpty, let associatedItem else {
-			return
-		}
-		LogControllerHistoricLogFile.shared().indexLogLines(logLines, forView: associatedItem.uniqueIdentifier)
-		noteOldestLineCandidate(logLines.first)
-		let context = makeRenderContext()
-		let lines = logLines.map { LogLineSnapshot($0, in: context) }
-		enqueueRenderJob { [weak self] in
-			guard let viewController = self else {
-				return nil
-			}
-			let snapshots = Self.applyingMessageRenderers(to: lines, for: viewController)
-			let results = Self.renderJob(snapshots, context: context)
-			guard results.isEmpty == false else {
-				return nil
-			}
-			return results.map(\.transcriptLine)
-		} apply: { [weak self] (prepended: [TranscriptLine]) in
-			self?.backingView?.prependLines(prepended)
-		}
+		return line
 	}
 }
 
@@ -849,7 +776,6 @@ public extension LogController {
 		 continues off the main actor after this returns. */
 		let logLine = inputLogLine
 		lastLineStorage = logLine
-		noteOldestLineCandidate(logLine)
 		let context = makeRenderContext()
 		let line = LogLineSnapshot(logLine, in: context)
 		enqueueRenderJob { [weak self] in
@@ -860,12 +786,7 @@ public extension LogController {
 				line: Self.applyingMessageRenderers(to: [line], for: viewController)[0],
 				context: context
 			)
-			guard let result = Self.renderJob(request) else {
-				logControllerLogger
-					.error("Failed to render log line \(request.line.sourceDescription, privacy: .public)")
-				return nil
-			}
-			return result
+			return Self.renderJob(request)
 		} apply: { [weak self] result in
 			self?.applyPrintedLine(logLine, result: result, completionBlock: postPrintBlock)
 		}
@@ -886,27 +807,15 @@ public extension LogController {
 		}
 		let lineNumber = result.lineNumber
 		let channel = associatedChannel
-		if oldestLineNumber == nil {
-			oldestLineNumber = lineNumber
-		}
-		newestLineNumber = lineNumber
+		let alreadyDisplayed = backingView?.displayedLines.contains { $0.matches(identifier: lineNumber) } == true
 		if result.isHighlight {
-			highlightedLineNumbers.append(lineNumber)
 			if let channel {
 				client.cacheHighlight(in: channel, with: logLine)
 			}
 		}
 		let projectionAction = transcriptProjection.record(logLine, rendered: result)
-		if let pluginMessage = result.pluginMessage {
-			let messageObject = pluginMessage.makeObject(resolvingMembersIn: channel)
-			if case .append = projectionAction {
-				PluginDispatcher.enqueueDidPostNewMessage(messageObject)
-			} else {
-				PluginDispatcher.dispatchDidPostNewMessage(messageObject)
-			}
-		}
-		if case .append = projectionAction {
-			var displayedLine = result.transcriptLine
+		if case .append = projectionAction, !alreadyDisplayed {
+			var displayedLine = applyingCurrentState(to: result.transcriptLine)
 			if transcriptSessionBoundary.consumePendingMarker(for: result) {
 				displayedLine.markers.insert(
 					.currentSession(MainWindowStrings.Conversation.currentSession),
@@ -914,12 +823,14 @@ public extension LogController {
 				)
 			}
 			backingView?.appendLines([displayedLine])
-			PluginDispatcher.dequeueDidPostNewMessage(withLineNumber: lineNumber, forViewController: self)
-			if result.processesInlineMedia {
-				processInlineMedia(result.links, atLineNumber: lineNumber)
-			}
 		}
-		LogControllerHistoricLogFile.shared().writeNewEntry(with: logLine, forView: associatedItem.uniqueIdentifier)
+		if let pluginMessage = result.pluginMessage, !alreadyDisplayed {
+			PluginDispatcher.dispatchDidPostNewMessage(pluginMessage.makeObject(resolvingMembersIn: channel))
+		}
+		if case .append = projectionAction, !alreadyDisplayed, result.processesInlineMedia {
+			processInlineMedia(result.links, atLineNumber: lineNumber)
+		}
+		historicLog.writeNewEntry(with: logLine, forView: associatedItem.uniqueIdentifier)
 		/* The body was scanned against the member snapshot the line rendered
 		 with; the conversation weight belongs to whoever is in the channel now. */
 		if let channel {
@@ -983,7 +894,13 @@ public extension LogController {
 			messageIdentifier: messageIdentifier,
 			reason: reason
 		)
-		enqueueMainActorWork { [weak self] in self?.backingView?.updateDelivery(update) }
+		enqueueMainActorWork { [weak self] in
+			guard let self else { return }
+			backingView?.updateDelivery(update)
+			if let identifier = update.messageIdentifier, let reactions = reactionsByMessageIdentifier[identifier] {
+				backingView?.updateReactions(reactions, messageIdentifier: identifier)
+			}
+		}
 	}
 }
 

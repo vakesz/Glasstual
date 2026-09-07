@@ -25,17 +25,27 @@ private nonisolated struct PluginDiscovery: Sendable { // nonisolated: value
 	var obsolete: [URL] = []
 	var rejected: [URL] = []
 	var scriptCatalog = PluginScriptCatalog()
+	var scriptGeneration: UInt64 = 0
 }
 
-/// A filesystem snapshot of the scripts that can act as slash commands.
-///
-/// Directory discovery and traversal can consult the sandbox and code-signing
-/// services, so the snapshot is built away from the main actor. Command
-/// dispatch and completion then become value lookups instead of synchronous
-/// filesystem scans on every keystroke or outgoing command.
-private nonisolated struct PluginScriptCatalog: Sendable { // nonisolated: value
-	var commandsByName: [String: String] = [:]
+/** The AppleScript commands on disk, and which scan found them.
+
+ The generation is what tells a stale scan from a current one: discovery and a
+ refresh both run off the main actor and can land in either order, so a scan
+ whose generation is no longer the reserved one has been overtaken and its
+ catalog is dropped. */
+private nonisolated struct PluginScriptFacts: Sendable { // nonisolated: value
+	var commandsByName: [String: PluginScript] = [:]
 	var customScriptsURL: URL?
+	var generation: UInt64 = 0
+
+	init() {}
+
+	init(catalog: PluginScriptCatalog, generation: UInt64) {
+		commandsByName = catalog.commandsByName
+		customScriptsURL = catalog.customScriptsURL
+		self.generation = generation
+	}
 }
 
 /** What an add-on command typed into the input field is dispatched to.
@@ -47,7 +57,7 @@ private nonisolated struct PluginScriptCatalog: Sendable { // nonisolated: value
 public nonisolated enum OutgoingCommandHandler: Equatable, Sendable { // nonisolated: value
 	/// Nothing claims the command.
 	case none
-	/// An AppleScript at this path.
+	/// A script at this path. Kept as a path for existing command consumers.
 	case script(path: String)
 	/// A loaded plugin that declares the command.
 	case pluginExtension
@@ -67,14 +77,13 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 	var outputSuppressionRules: [PluginOutputSuppressionRule] = []
 	var supportedUserInputCommands: [String] = []
 	var supportedServerInputCommands: [String] = []
-	var scriptCommandsByName: [String: String] = [:]
-	var customScriptsURL: URL?
+	var scripts = PluginScriptFacts()
 	var messageRenderers: [any PluginMessageRendering] = []
 
 	init() {}
 
 	@MainActor
-	init(loadedPlugins: [PluginItem], scriptCatalog: PluginScriptCatalog) {
+	init(loadedPlugins: [PluginItem]) {
 		var userInputCommands = Set<String>()
 		var serverInputCommands = Set<String>()
 
@@ -92,8 +101,6 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 		pluginsLoaded = true
 		supportedUserInputCommands = userInputCommands.sorted()
 		supportedServerInputCommands = serverInputCommands.sorted()
-		scriptCommandsByName = scriptCatalog.commandsByName
-		customScriptsURL = scriptCatalog.customScriptsURL
 	}
 }
 
@@ -131,13 +138,11 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 	/// live object and its preferences view.
 	@MainActor
 	public var loadedPlugins: [PluginItem]? {
-		pluginsLoaded ? Self.loadedPluginItems : nil
+		pluginsLoaded ? loadedPluginItems : nil
 	}
 
-	/// Static because there is one plugin manager and its plugin objects must
-	/// live on the main actor, which lets the manager itself stay `Sendable`.
 	@MainActor
-	private static var loadedPluginItems: [PluginItem] = []
+	private var loadedPluginItems: [PluginItem] = []
 
 	private let facts = Mutex(PluginFacts())
 	private let scheduling = Mutex(Scheduling())
@@ -163,12 +168,14 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 			return
 		}
 
+		let generation = reserveScriptGeneration()
 		Task { [weak self] in
 			/* Discovery reads directories and checks code signatures, which is
 			 slow enough to keep off the main actor. Loading itself is main-actor
 			 work: a plugin's load callback touches AppKit. */
 			var discovery = Self.discoverPluginBundles()
 			discovery.scriptCatalog = await Self.discoverAppleScripts()
+			discovery.scriptGeneration = generation
 
 			await MainActor.run {
 				self?.finishLoading(discovery)
@@ -180,19 +187,32 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 	/// Settings. Activation and a completed import call this so Finder edits are
 	/// picked up while the application remains open.
 	public func refreshScriptCommands() {
+		let generation = reserveScriptGeneration()
 		Task { [weak self] in
 			let catalog = await Self.discoverAppleScripts()
 			guard let self else { return }
 
-			facts.withLock { facts in
-				facts.scriptCommandsByName = catalog.commandsByName
-				facts.customScriptsURL = catalog.customScriptsURL
-			}
+			await publishScriptCatalog(catalog, generation: generation)
+		}
+	}
 
-			NotificationCenter.default.post(
-				name: Self.scriptCommandsDidChangeNotification,
-				object: self
-			)
+	func reserveScriptGeneration() -> UInt64 {
+		facts.withLock {
+			$0.scripts.generation &+= 1
+			return $0.scripts.generation
+		}
+	}
+
+	@MainActor
+	func publishScriptCatalog(_ catalog: PluginScriptCatalog, generation: UInt64) {
+		guard scheduling.withLock(\.didScheduleUnload) == false else { return }
+		let published = facts.withLock { facts in
+			guard facts.scripts.generation == generation else { return false }
+			facts.scripts = PluginScriptFacts(catalog: catalog, generation: generation)
+			return true
+		}
+		if published {
+			NotificationCenter.default.post(name: Self.scriptCommandsDidChangeNotification, object: self)
 		}
 	}
 
@@ -213,8 +233,8 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 			return
 		}
 
-		let plugins = Self.loadedPluginItems
-		Self.loadedPluginItems = []
+		let plugins = loadedPluginItems
+		loadedPluginItems = []
 		facts.withLock { $0 = PluginFacts() }
 
 		for plugin in plugins {
@@ -245,12 +265,30 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 			return PluginItem.load(bundle, host: host)
 		}
 
-		Self.loadedPluginItems = loadedPlugins
-		let newFacts = PluginFacts(loadedPlugins: loadedPlugins, scriptCatalog: discovery.scriptCatalog)
-		facts.withLock { $0 = newFacts }
+		loadedPluginItems = loadedPlugins
+		var replacement = PluginFacts(loadedPlugins: loadedPlugins)
+		facts.withLock { facts in
+			/* A refresh that landed while discovery was still running has
+			 already published a newer catalog; discovery's own is then the
+			 stale one and only the plugin facts are replaced. */
+			replacement.scripts = facts.scripts.generation == discovery.scriptGeneration
+				? PluginScriptFacts(catalog: discovery.scriptCatalog, generation: facts.scripts.generation)
+				: facts.scripts
+			facts = replacement
+		}
 
 		NotificationCenter.default.post(name: Self.finishedLoadingNotification, object: self)
 
+		let loadedURLs = Set(loadedPlugins.map(\.bundle.bundleURL))
+		let failedNames = discovery.loadable.filter { !loadedURLs.contains($0) }.map(\.lastPathComponent)
+		if !failedNames.isEmpty {
+			Alerts.alert(
+				withMessage: String(localized: .Plugins.loadFailedBody(failedNames.joined(separator: ", "))),
+				title: String(localized: .Plugins.loadFailedTitle),
+				defaultButton: PromptStrings.Action.confirmation,
+				alternateButton: nil
+			)
+		}
 		presentRejectedBundlesAlert(for: discovery.rejected)
 		Self.presentObsoleteBundlesAlert(for: discovery.obsolete.compactMap(Bundle.init(url:)))
 	}
@@ -305,7 +343,7 @@ nonisolated extension PluginManager { // nonisolated: pure
 				return []
 			}
 
-			return filenames.compactMap { filename in
+			return filenames.sorted().compactMap { filename in
 				guard filename.hasSuffix(ResourceDocumentType.bundleFileExtension) else {
 					return nil
 				}
@@ -318,7 +356,26 @@ nonisolated extension PluginManager { // nonisolated: pure
 		}
 	}
 
-	private static func supportsCurrentPluginProtocol(_ bundle: Bundle) -> Bool {
+	static let interfaceVersionMetadataKey = "GlasstualPluginInterfaceVersion"
+	static let currentInterfaceVersion = 1
+
+	/// A bundle predating the interface-version key declares a host version
+	/// instead. The major it has to name is the one the contract itself names.
+	static let legacyMinimumMajorVersion = String(
+		PluginCompatibility.minimumHostVersion.prefix { $0 != "." }
+	)
+
+	static func supportsCurrentPluginProtocol(_ bundle: Bundle) -> Bool {
+		if let declaredVersion = bundle.object(forInfoDictionaryKey: interfaceVersionMetadataKey) {
+			guard case let .integer(version)? = PropertyListValue(propertyList: declaredVersion),
+			      version == currentInterfaceVersion
+			else {
+				logger.error("Unsupported plugin interface in \(bundle.bundlePath, privacy: .public)")
+				return false
+			}
+			return true
+		}
+
 		guard let minimumVersion = bundle.infoDictionary?["MinimumGlasstualVersion"] as? String else {
 			logger.error(
 				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because it does not declare MinimumGlasstualVersion; the current minimum is \(PluginCompatibility.minimumHostVersion, privacy: .public)"
@@ -326,12 +383,16 @@ nonisolated extension PluginManager { // nonisolated: pure
 			return false
 		}
 
-		guard minimumVersion.compare(
-			PluginCompatibility.minimumHostVersion,
-			options: .numeric
-		) != .orderedAscending else {
+		/* Any 8.x.y is accepted, not just the exact minimum: a bundle built
+		 against an earlier point release of the same host contract still loads,
+		 and the interface-version key above is what pins the contract itself. */
+		let components = minimumVersion.split(separator: ".", omittingEmptySubsequences: false)
+		guard components.count == 3,
+		      components.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }),
+		      components.first.map(String.init) == legacyMinimumMajorVersion
+		else {
 			logger.error(
-				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its minimum Glasstual version \(minimumVersion, privacy: .public) is older than the supported plugin protocol \(PluginCompatibility.minimumHostVersion, privacy: .public)"
+				"Refusing legacy plugin metadata in \(bundle.bundlePath, privacy: .public): \(minimumVersion, privacy: .public)"
 			)
 			return false
 		}
@@ -516,9 +577,7 @@ extension PluginManager {
 		let bundlesName = Bundle.textual_formattedDisplayNames(for: obsoleteBundles)
 
 		Alerts.alert(
-			withMessage: PromptStrings.Plugin.incompatibleBody(
-				minimumVersion: PluginCompatibility.minimumHostVersion
-			),
+			withMessage: String(localized: .Plugins.incompatibleInterfaceBody),
 			title: PromptStrings.Plugin.incompatibleTitle(pluginNames: bundlesName),
 			defaultButton: PromptStrings.Plugin.incompatibleReminderButtonTitle,
 			alternateButton: nil,
@@ -540,73 +599,28 @@ public nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - AppleScript Support
 
 	var supportedAppleScriptCommands: [String] {
-		facts.withLock { Array($0.scriptCommandsByName.keys) }
+		facts.withLock { $0.scripts.commandsByName.keys.sorted() }
 	}
 
 	var supportedAppleScriptCommandsAndPaths: [String: String] {
-		facts.withLock(\.scriptCommandsByName)
+		facts.withLock { $0.scripts.commandsByName.mapValues(\.url.path) }
+	}
+
+	func script(at url: URL) -> PluginScript? {
+		facts.withLock { $0.scripts.commandsByName.values.first { $0.url == url } }
 	}
 
 	var customScriptsURL: URL? {
-		facts.withLock(\.customScriptsURL)
+		facts.withLock(\.scripts.customScriptsURL)
 	}
 
 	@concurrent
 	private static func discoverAppleScripts() async -> PluginScriptCatalog {
-		let forbiddenCommands = Set(listOfForbiddenCommandNames)
-		let customScriptsURL = PathInfo.customScriptsURL
-
-		var scriptLocations: [(path: String, isBundled: Bool)] = []
-		if let customScriptsURL {
-			scriptLocations.append((customScriptsURL.path, false))
-		}
-		scriptLocations.append((PathInfo.bundledScripts, true))
-
-		var catalog = PluginScriptCatalog(customScriptsURL: customScriptsURL)
-
-		for location in scriptLocations {
-			let path = location.path
-			guard let pathFiles = try? FileManager.default.contentsOfDirectory(atPath: path) else {
-				continue
-			}
-
-			for file in pathFiles where file.hasPrefix(".") == false {
-				let filePath = (path as NSString).appendingPathComponent(file)
-				let fileExtension = (file as NSString).pathExtension.lowercased()
-				let fileWithoutExtension = (file as NSString).deletingPathExtension
-				let command = fileWithoutExtension.lowercased()
-
-				let executable = FileManager.default.isExecutableFile(atPath: filePath)
-
-				if executable == false,
-				   fileExtension != ResourceDocumentType.scriptFilenameExtension.lowercased()
-				{
-					if location.isBundled {
-						Self.logger.error(
-							"Bundled script resource “\(file, privacy: .public)“ is neither AppleScript nor executable"
-						)
-					} else {
-						Self.logger.info(
-							"Ignoring unsupported custom script file “\(file, privacy: .public)“"
-						)
-					}
-					continue
-				}
-
-				if forbiddenCommands.contains(command) {
-					Self.logger.info(
-						"Ignoring script command “\(fileWithoutExtension, privacy: .public)“ because its command name is reserved"
-					)
-					continue
-				}
-
-				if catalog.commandsByName[command] == nil {
-					catalog.commandsByName[command] = filePath
-				}
-			}
-		}
-
-		return catalog
+		PluginScriptCatalog.discover(
+			customURL: PathInfo.customScriptsURL,
+			bundledURL: URL(fileURLWithPath: PathInfo.bundledScripts, isDirectory: true),
+			forbiddenCommands: Set(listOfForbiddenCommandNames)
+		)
 	}
 
 	private static var listOfForbiddenCommandNames: [String] {
@@ -616,14 +630,14 @@ public nonisolated extension PluginManager { // nonisolated: pure
 
 	/// What claims an outgoing command the client has no built-in handler for.
 	func handler(forOutgoingCommand command: String) -> OutgoingCommandHandler {
-		let scriptPath = supportedAppleScriptCommandsAndPaths[command]
-		let isExtension = supportedUserInputCommands.contains(command)
-
-		return switch (scriptPath, isExtension) {
-		case let (.some(path), false): .script(path: path)
-		case (.none, true): .pluginExtension
-		case (.some, true): .ambiguous
-		case (.none, false): .none
+		facts.withLock { facts in
+			let name = command.lowercased()
+			return switch (facts.scripts.commandsByName[name], facts.supportedUserInputCommands.contains(name)) {
+			case let (.some(script), false): .script(path: script.url.path)
+			case (.none, true): .pluginExtension
+			case (.some, true): .ambiguous
+			case (.none, false): .none
+			}
 		}
 	}
 }
@@ -655,7 +669,7 @@ public nonisolated extension PluginManager { // nonisolated: pure
 
 	@MainActor
 	var pluginsWithPreferencePanes: [PluginItem] {
-		Self.loadedPluginItems
+		loadedPluginItems
 			.filter { $0.supportsFeature(.preferencePane) }
 			.sorted {
 				($0.pluginPreferencesPane?.title ?? "")

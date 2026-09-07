@@ -55,19 +55,22 @@ nonisolated struct HistoricLogEntry: Sendable { // nonisolated: value
 	let viewIdentifier: String
 	let sessionIdentifier: UInt
 	let creationDate: TimeInterval
+	let cursor: HistoricLogRowCursor?
 
 	init(
 		logLineData data: Data,
 		uniqueIdentifier: String,
 		viewIdentifier: String,
 		sessionIdentifier: UInt,
-		creationDate: TimeInterval
+		creationDate: TimeInterval,
+		cursor: HistoricLogRowCursor? = nil
 	) {
 		self.data = data
 		self.uniqueIdentifier = uniqueIdentifier
 		self.viewIdentifier = viewIdentifier
 		self.sessionIdentifier = sessionIdentifier
 		self.creationDate = creationDate
+		self.cursor = cursor
 	}
 
 	/// One malformed historic row is discarded without affecting the store.
@@ -99,5 +102,14 @@ nonisolated struct HistoricLogEntry: Sendable { // nonisolated: value
 		self.viewIdentifier = viewIdentifier
 		self.sessionIdentifier = sessionIdentifier
 		self.creationDate = creationDate
+		if !managedObject.objectID.isTemporaryID,
+		   let insertion = managedObject.value(forKey: HistoricLogAttribute.entryIdentifier.rawValue) as? NSNumber
+		{
+			cursor = HistoricLogRowCursor(timestamp: creationDate, insertionIdentifier: insertion.int64Value,
+			                              lineIdentifier: uniqueIdentifier,
+			                              rowURI: managedObject.objectID.uriRepresentation().absoluteString)
+		} else {
+			cursor = nil
+		}
 	}
 }

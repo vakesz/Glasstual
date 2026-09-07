@@ -59,8 +59,8 @@ public extension FileTransferCenter {
 				bookmarkDataIsStale: &isStale
 			)
 		} catch {
-			fileTransferLogger
-				.error("Error resolving download bookmark: \(error.localizedDescription, privacy: .public)")
+			let reason = error.localizedDescription
+			fileTransferLogger.error("Error resolving download bookmark: \(reason, privacy: .public)")
 			return
 		}
 
@@ -74,6 +74,9 @@ public extension FileTransferCenter {
 			return
 		}
 
+		/* Resolving again while a scope is already held would strand it: the
+		 URL it belongs to is about to be the only reference dropped. */
+		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 		downloadDestinationURLPrivate = resolvedURL
 	}
 
@@ -104,8 +107,8 @@ public extension FileTransferCenter {
 			)
 			setDownloadDestinationURL(refreshed)
 		} catch {
-			fileTransferLogger
-				.error("Failed to refresh stale download bookmark: \(error.localizedDescription, privacy: .public)")
+			let reason = error.localizedDescription
+			fileTransferLogger.error("Failed to refresh stale download bookmark: \(reason, privacy: .public)")
 		}
 	}
 }

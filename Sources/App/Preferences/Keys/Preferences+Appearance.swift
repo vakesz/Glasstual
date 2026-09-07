@@ -64,9 +64,16 @@ public nonisolated extension Preferences { // nonisolated: value
 			default: false
 		)
 
+		/** The largest channel a WHO sweep still tracks away status in.
+
+		 The Settings slider is a `Double`, so the bound has to be a count that
+		 survives that round trip exactly: `Int(Double(UInt(Int.max)))` is one
+		 past `Int.max` and traps. `Int32.max` is exact as a `Double`, and no
+		 channel comes within seven orders of magnitude of it. */
 		public static let trackUserAwayStatusMaximumChannelSize = PreferenceKey(
 			"TrackUserAwayStatusMaximumChannelSize",
-			default: UInt(300)
+			default: UInt(300),
+			validation: { $0 <= UInt(Int32.max) }
 		)
 
 		public static let channelNavigationIsServerSpecific = PreferenceKey(
@@ -110,7 +117,18 @@ public nonisolated extension Preferences { // nonisolated: value
 		/// The complete native transcript theme, encoded as an XML property list.
 		/// Keeping it as one value makes edits atomic and lets preference export
 		/// carry exactly the same document as the dedicated theme exporter.
-		public static let transcriptTheme = PreferenceKey("Transcript Theme", default: Data())
+		public static let transcriptTheme = PreferenceKey("Transcript Theme", default: Data(), validation: { data in
+			guard !data.isEmpty else { return true }
+			guard let root = try? PropertyListSerialization
+				.propertyList(from: data, options: [], format: nil) as? [String: Any],
+				let version = root["formatVersion"].flatMap({ Int.preferenceValue(from: $0) }) else { return false }
+			// Future themes stay byte-for-byte intact while this build renders its fallback.
+			if version > TranscriptTheme.currentFormatVersion {
+				return true
+			}
+			guard let theme = try? PropertyListDecoder().decode(TranscriptTheme.self, from: data) else { return false }
+			return theme.formatVersion == TranscriptTheme.currentFormatVersion && theme.isValid
+		})
 		static let all: [any AnyPreferenceKey] = [transcriptTheme]
 	}
 }

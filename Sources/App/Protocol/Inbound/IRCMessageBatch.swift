@@ -38,6 +38,8 @@
 import Foundation
 
 /// What a batch can hold: a message, or a batch nested inside it.
+/// The wire path queues messages at the root. Keep the public nested case and
+/// overloads for external Swift consumers, which cannot be ruled out by a tree search.
 public enum BatchEntry {
 	case message(Message)
 	case batch(MessageBatch)
@@ -68,10 +70,10 @@ public final class MessageBatchContainer: NSObject {
 		entries
 	}
 
-	/// `true` when the batch was registered; `false` when too many are open.
+	/// Rejects duplicate active tokens as well as batches beyond the ceiling.
 	@discardableResult
 	public func queueEntry(_ entry: MessageBatch) -> Bool {
-		guard entries[entry.batchToken] != nil || entries.count < MessageBatchContainer.maximumOpenBatches else {
+		guard entries[entry.batchToken] == nil, entries.count < MessageBatchContainer.maximumOpenBatches else {
 			return false
 		}
 
@@ -89,6 +91,11 @@ public final class MessageBatchContainer: NSObject {
 	}
 
 	public func dequeueEntries() {
+		// Queued messages retain their batch metadata until replay. Break those
+		// back-references before dropping the connection's batch table.
+		for batch in entries.values {
+			batch.dequeueEntries()
+		}
 		entries.removeAll()
 	}
 
@@ -110,6 +117,32 @@ public final class MessageBatch: NSObject {
 	public var batchType: String?
 	public var batchParameters: [String]?
 	public weak var parentBatchMessage: MessageBatch?
+	var responseLabel: String?
+	var serverHistoryRequestID: UUID?
+	var deliveryState: LogLineDeliveryState = .delivered
+	var deliveryMessageIdentifier: String?
+	var deliveryFailureReason: String?
+
+	var labeledResponseBatch: MessageBatch? {
+		var batch: MessageBatch? = self
+		for _ in 0 ..< IRCBatchPolicy.maximumParentDepth {
+			guard let current = batch else { return nil }
+			if current.responseLabel != nil {
+				return current
+			}
+			batch = current.parentBatchMessage
+		}
+		return nil
+	}
+
+	var rootBatch: MessageBatch {
+		var root = self
+		for _ in 0 ..< IRCBatchPolicy.maximumParentDepth {
+			guard let parent = root.parentBatchMessage else { break }
+			root = parent
+		}
+		return root
+	}
 
 	public var queuedEntries: [BatchEntry] {
 		entries

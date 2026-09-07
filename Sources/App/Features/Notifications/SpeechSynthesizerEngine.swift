@@ -17,7 +17,9 @@ public protocol SpeechSynthesizerEngine: AnyObject {
 	var isSpeaking: Bool { get }
 
 	func speakText(_ text: String)
-	func stopSpeakingImmediately()
+	/// Cuts the current utterance short. Reports whether there was one to cut,
+	/// which is whether a cancel callback is going to follow.
+	func stopSpeakingImmediately() -> Bool
 }
 
 /** `AVSpeechSynthesizer` is main-thread affine, so the engine is too: that is
@@ -49,8 +51,8 @@ public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine,
 		speechSynthesizer.speak(utterance)
 	}
 
-	public func stopSpeakingImmediately() {
-		_ = speechSynthesizer.stopSpeaking(at: .immediate)
+	public func stopSpeakingImmediately() -> Bool {
+		speechSynthesizer.stopSpeaking(at: .immediate)
 	}
 
 	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, // nonisolated: pure

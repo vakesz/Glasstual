@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -179,7 +180,7 @@ extension IRCClient {
 
 	func enableCapability(_ capability: ClientIRCv3SupportedCapability) {
 		let couldTrackPresence = supportsAdvancedTracking
-		capabilities.formUnion(capability)
+		capabilityNegotiation.enable(capability)
 		/* ISUPPORT lands after login has already marked every query active. The
 		 moment the server offers MONITOR or WATCH, ask about the peers; it
 		 answers at once with who is really there, well before the tracked-user
@@ -190,7 +191,25 @@ extension IRCClient {
 	}
 
 	func disableCapability(_ capability: ClientIRCv3SupportedCapability) {
-		capabilities.subtract(capability)
+		capabilityNegotiation.disable(capability)
+	}
+
+	/** Capability bits that did not come from `CAP`.
+
+	 ISUPPORT stands in for a handful of capabilities on servers that never
+	 offered them, and SASL records its result the same way. They are kept
+	 apart from the acknowledged names so that withdrawing one never withdraws
+	 the other. */
+	var capabilityFacts: ClientIRCv3SupportedCapability {
+		capabilityNegotiation.facts
+	}
+
+	func addCapabilityFacts(_ capability: ClientIRCv3SupportedCapability) {
+		capabilityNegotiation.addFacts(capability)
+	}
+
+	func removeCapabilityFacts(_ capability: ClientIRCv3SupportedCapability) {
+		capabilityNegotiation.removeFacts(capability)
 	}
 
 	public func isCapabilityEnabled(_ capability: ClientIRCv3SupportedCapability) -> Bool {
@@ -206,41 +225,40 @@ extension IRCClient {
 	}
 
 	public var enabledCapabilitiesStringValue: String {
-		var enabled = enabledCapabilityNames
-
-		if isCapabilityEnabled(.isIdentifiedWithSASL), enabled.contains("sasl") == false {
-			enabled.append("sasl")
-		}
-
-		return enabled.joined(separator: ", ")
+		capabilityNegotiation.enabledCapabilitiesStringValue
 	}
 
-	@MainActor private func queueCapabilityRequests(from offered: [String: [String]]) {
-		handleSTSCapability(from: offered)
-
+	/// What the server has offered that can be asked for right now: the client
+	/// implements it, the user leaves it on, the server has not refused or
+	/// withdrawn it, and every dependency it names is already acknowledged.
+	@MainActor private func eligibleCapabilityRequests() -> [String] {
+		let offer = capabilityNegotiation.requestableOffer
 		let requestable = capabilityRegistry.capabilitiesToRequest(
-			fromOffered: offered,
-			preferences: environment.preferences
+			fromOffered: offer,
+			preferences: environment.preferences,
+			enabledCapabilities: capabilities
 		)
 
-		for capability in requestable {
+		return requestable.compactMap { capability in
 			let name = capability.name
 
-			guard enabledCapabilityNames.contains(name) == false else {
-				continue
+			guard capabilityNegotiation.isAcknowledged(name) == false,
+			      capabilityNegotiation.isOutstanding(name) == false,
+			      capabilityNegotiation.isWithdrawn(name) == false,
+			      capabilityRegistry.dependenciesSatisfied(for: capability, by: capabilities)
+			else {
+				return nil
 			}
 
 			if capability.negotiation == .sasl,
-			   selectSASLMechanism(fromOffered: offered[name] ?? []) == false
+			   selectSASLMechanism(fromOffered: offer[name] ?? []) == false
 			{
-				continue
+				return nil
 			}
 
 			/* `name` matched the offer exactly — capability names are
 			 case-sensitive — so it is already the spelling to echo back. */
-			if pendingCapabilityRequests.contains(name) == false {
-				pendingCapabilityRequests.append(name)
-			}
+			return name
 		}
 	}
 
@@ -275,11 +293,13 @@ extension IRCClient {
 			performedSTSUpgrade = true
 			printDebugInformation(toConsole: IRCTransportSecurityStrings.offeredPolicy(port: upgradePort))
 
+			// Snapshot the pending secret too: teardown may retire its keychain item.
+			var origin = server
+			origin?.pendingServerPassword = PendingKeychainSecret(server?.serverPassword)
+			let endpoint = PendingIRCEndpoint(host: host, port: upgradePort, origin: origin, reason: .stsUpgrade)
 			addDisconnectCallback { [weak self] in
 				guard let self else { return }
-				temporaryServerAddressOverride = host
-				temporaryServerPortOverride = upgradePort
-				forceSecuredConnectionOnNextConnect = true
+				pendingEndpoint = endpoint
 				connect()
 			}
 
@@ -293,25 +313,34 @@ extension IRCClient {
 		}
 	}
 
-	@MainActor public func sendNextQueuedCapability() {
-		guard capabilityNegotiationIsPaused == false else {
+	/** Sends every request the negotiation is ready for, then closes it.
+
+	 The requests go out together rather than one at a time: a server that
+	 never answers one of them cannot hold the rest of the negotiation, and the
+	 answers are matched back by name as they arrive. `CAP END` follows once
+	 nothing is outstanding and nothing else is eligible, which is also what a
+	 `NAK` or a `CAP DEL` of the last outstanding request brings about. */
+	@MainActor func advanceCapabilityNegotiation() {
+		guard capabilityNegotiation.isPaused == false,
+		      capabilityNegotiation.isCollectingList == false
+		else {
 			return
 		}
 
-		let capability: String? = pendingCapabilityRequests.isEmpty
-			? nil
-			: pendingCapabilityRequests.removeFirst()
+		for name in eligibleCapabilityRequests() {
+			capabilityNegotiation.noteRequested(name)
+			sendCapability("REQ", data: name)
+		}
 
-		guard let capability else {
-			if isLoggedIn == false {
-				sendPreAwayIfNeeded()
-				sendCapability("END", data: nil)
-			}
-
+		guard capabilityNegotiation.outstandingRequests.isEmpty,
+		      isLoggedIn == false, capabilityNegotiation.endSent == false
+		else {
 			return
 		}
 
-		sendCapability("REQ", data: capability)
+		capabilityNegotiation.endSent = true
+		sendPreAwayIfNeeded()
+		sendCapability("END", data: nil)
 	}
 
 	private var awayMessageForRegistration: String? {
@@ -331,12 +360,12 @@ extension IRCClient {
 	}
 
 	private func pauseCapabilityNegotiation() {
-		capabilityNegotiationIsPaused = true
+		capabilityNegotiation.isPaused = true
 	}
 
-	@MainActor func resumeQueuedCapabilityNegotiation() {
-		capabilityNegotiationIsPaused = false
-		sendNextQueuedCapability()
+	@MainActor func resumeCapabilityNegotiation() {
+		capabilityNegotiation.isPaused = false
+		advanceCapabilityNegotiation()
 	}
 
 	@MainActor private func toggleCapability(_ capabilityString: String, enabled initialValue: Bool) {
@@ -348,20 +377,18 @@ extension IRCClient {
 			enabled = false
 		}
 
-		guard let name = CapabilityRegistry.parseCapabilityList(capabilityString).keys.first,
-		      let capability = capabilityRegistry.capability(named: name)
+		guard let name = CapabilityRegistry.parseCapabilityList(capabilityString).keys.first
 		else {
 			return
 		}
 
 		if enabled {
-			enableCapability(capability.identifier)
-			if enabledCapabilityNames.contains(name) == false {
-				enabledCapabilityNames.append(name)
-			}
+			guard capabilityNegotiation.acknowledge(name) else { return }
 		} else {
-			disableCapability(capability.identifier)
-			enabledCapabilityNames.removeAll { $0 == name }
+			capabilityNegotiation.revoke(name)
+			if name == "sasl", isCapabilityEnabled(.isInSASLNegotiation) {
+				finishSASLNegotiation(failed: true)
+			}
 		}
 
 		if enabled, name == "sasl", sendSASLIdentificationRequest() {
@@ -371,6 +398,25 @@ extension IRCClient {
 		NotificationCenter.default.post(name: .ircClientCapabilitiesDidChange, object: self)
 	}
 
+	/// Matches an `ACK` or `NAK` back to the outstanding requests it names.
+	@MainActor
+	private func receiveCapabilityAnswer(_ actions: String, accepted: Bool) {
+		for token in LineParser.wireTokens(in: actions) {
+			let name = String(token.drop(while: { $0 == "-" }).prefix(while: { $0 != "=" }))
+
+			capabilityNegotiation.resolveRequest(name)
+
+			if accepted {
+				toggleCapability(token, enabled: true)
+				if token.hasPrefix("-") {
+					capabilityNegotiation.refuse(name)
+				}
+			} else {
+				capabilityNegotiation.refuse(name)
+			}
+		}
+	}
+
 	@MainActor
 	func handleCapabilityOrAuthenticationRequest(_ message: Message) {
 		guard message.paramsCount > 0 else {
@@ -378,57 +424,102 @@ extension IRCClient {
 		}
 
 		let command = message.command
-		let modifier = message.param(at: 0)
-		let subcommand = message.param(at: 1)
-		var actions = message.sequence(2)
 
 		if command.caseInsensitiveCompare("CAP") == .orderedSame {
-			switch subcommand.uppercased() {
-			case "LS":
-				let moreToCome = message.param(at: 2) == "*"
-
-				if moreToCome {
-					actions = message.sequence(3)
-				}
-
-				for (name, values) in CapabilityRegistry.parseCapabilityList(actions) {
-					offeredCapabilities[name] = values
-				}
-
-				guard offeredCapabilities.count <= ClientNegotiationUtilities.maximumOfferedCapabilities else {
-					negotiationLogger.error("Ended negotiation: CAP LS offered more capabilities than the limit")
-					offeredCapabilities.removeAll()
-					pendingCapabilityRequests.removeAll()
-					sendNextQueuedCapability()
-					return
-				}
-
-				if moreToCome {
-					return
-				}
-
-				queueCapabilityRequests(from: offeredCapabilities)
-				offeredCapabilities.removeAll()
-			case "ACK":
-				LineParser.wireTokens(in: actions).forEach { toggleCapability($0, enabled: true) }
-			case "NAK", "DEL":
-				LineParser.wireTokens(in: actions).forEach { toggleCapability($0, enabled: false) }
-			case "NEW":
-				queueCapabilityRequests(from: CapabilityRegistry.parseCapabilityList(actions))
-			default:
-				break
-			}
-
-			sendNextQueuedCapability()
+			handleCapabilitySubcommand(message)
 		} else if command.caseInsensitiveCompare("AUTHENTICATE") == .orderedSame {
-			receiveSASLAuthenticatePayload(modifier)
+			receiveSASLAuthenticatePayload(message.param(at: 0))
 		}
 
 		_ = postReceivedMessage(message)
 	}
 
+	@MainActor private func handleCapabilitySubcommand(_ message: Message) {
+		let actions = message.sequence(2)
+
+		switch message.param(at: 1).uppercased() {
+		case "LS":
+			guard receiveCapabilityListing(message) else { return }
+		case "ACK":
+			receiveCapabilityAnswer(actions, accepted: true)
+		case "NAK":
+			receiveCapabilityAnswer(actions, accepted: false)
+		case "DEL":
+			receiveCapabilityWithdrawal(actions)
+		case "NEW":
+			receiveCapabilityAdvertisement(actions)
+		default:
+			break
+		}
+
+		advanceCapabilityNegotiation()
+	}
+
+	/** Takes one line of a `CAP LS`, reporting whether the listing is complete.
+
+	 With version 302 the server may split the advertisement over several
+	 lines, marking every line but the last with a lone `*`; nothing may be
+	 requested until the last one lands. An advertisement that grows past the
+	 ceiling is dropped whole and negotiation ends, which is also a complete
+	 listing as far as the caller is concerned. */
+	@MainActor private func receiveCapabilityListing(_ message: Message) -> Bool {
+		capabilityNegotiation.beginListing()
+
+		let moreToCome = message.param(at: 2) == "*"
+		let actions = moreToCome ? message.sequence(3) : message.sequence(2)
+
+		for (name, values) in CapabilityRegistry.parseCapabilityList(actions) {
+			capabilityNegotiation.offer(name, values: values)
+		}
+
+		let offeredCount = capabilityNegotiation.offeredCapabilities.count
+
+		guard offeredCount <= ClientNegotiationUtilities.maximumOfferedCapabilities else {
+			negotiationLogger.error("Ended negotiation: CAP LS offered more capabilities than the limit")
+			capabilityNegotiation.discardListing()
+			return true
+		}
+
+		guard moreToCome == false else {
+			return false
+		}
+
+		capabilityNegotiation.finishListing()
+		handleSTSCapability(from: capabilityNegotiation.offeredCapabilities)
+
+		return true
+	}
+
+	/// `CAP DEL`: the capability stops being available at once, and a request
+	/// still waiting for its answer will never get one, so the withdrawal
+	/// stands in for the refusal.
+	@MainActor private func receiveCapabilityWithdrawal(_ actions: String) {
+		for name in CapabilityRegistry.parseCapabilityList(actions).keys {
+			capabilityNegotiation.withdraw(name)
+			toggleCapability(name, enabled: false)
+		}
+	}
+
+	/// `CAP NEW`: an advertisement made after the initial listing. It is
+	/// requested the same way, but without reopening registration.
+	@MainActor private func receiveCapabilityAdvertisement(_ actions: String) {
+		let offered = CapabilityRegistry.parseCapabilityList(actions)
+		let ceiling = ClientNegotiationUtilities.maximumOfferedCapabilities
+
+		for (name, values) in offered {
+			let alreadyOffered = capabilityNegotiation.offeredCapabilities[name] != nil
+
+			guard alreadyOffered || capabilityNegotiation.offeredCapabilities.count < ceiling else { continue }
+
+			capabilityNegotiation.offer(name, values: values)
+		}
+
+		handleSTSCapability(from: offered)
+	}
+
 	private var supportedSASLMechanisms: [String] {
-		ClientNegotiationUtilities.supportedSASLMechanisms(
+		guard config.usesSASL else { return [] }
+		return ClientNegotiationUtilities.supportedSASLMechanisms(
 			hasClientCertificate: socket?.isConnectedWithClientSideCertificate ?? false,
 			externalMechanismDisabled: config.saslAuthenticationDisableExternalMechanism,
 			hasPassword: config.nicknamePassword?.isEmpty == false,
@@ -495,6 +586,10 @@ extension IRCClient {
 	}
 
 	@MainActor private func sendSASLScramInformation(forServerData serverData: String) {
+		guard saslScramTask == nil else {
+			abortSASLNegotiation(reason: IRCTransportSecurityStrings.malformedSCRAMMessage)
+			return
+		}
 		let username = config.username.nonEmpty ?? config.nickname
 
 		guard let saslScramClient else {
@@ -524,13 +619,28 @@ extension IRCClient {
 
 		// The key derivation is deliberately expensive, so it runs off the
 		// main actor; the client object itself stays main-actor bound.
-		Task { @MainActor [weak self] in
-			guard let self else { return }
+		saslScramTask = Task { @MainActor [weak self, weak connection = socket] in
+			defer {
+				if self?.saslScramClient === saslScramClient {
+					self?.saslScramTask = nil
+				}
+			}
+			guard !Task.isCancelled, let connection,
+			      self?.socket === connection, self?.saslScramClient === saslScramClient,
+			      self?.isConnected == true, self?.isTerminating == false else { return }
 
 			do {
 				let final = try await saslScramClient.clientFinalMessage(forServerFirstMessage: message)
+				guard !Task.isCancelled, let self,
+				      socket === connection, self.saslScramClient === saslScramClient,
+				      isConnected, !isQuitting, !isDisconnecting, !isTerminating,
+				      isCapabilityEnabled(.isInSASLNegotiation) else { return }
 				sendSASLPayloadInChunks(final)
 			} catch {
+				guard !Task.isCancelled, let self,
+				      socket === connection, self.saslScramClient === saslScramClient,
+				      isConnected, !isQuitting, !isDisconnecting, !isTerminating,
+				      isCapabilityEnabled(.isInSASLNegotiation) else { return }
 				abortSASLNegotiation(reason: IRCTransportSecurityStrings.scramFailure(error.localizedDescription))
 			}
 		}
@@ -546,6 +656,9 @@ extension IRCClient {
 	/// server's final message. A server that jumps straight to 900/903
 	/// without one has proved nothing, so its success must not be believed.
 	@MainActor func scramMutualAuthenticationIsSatisfied() -> Bool {
+		if isCapabilityEnabled(.isIdentifiedWithSASL) {
+			return true
+		}
 		guard let saslMechanism,
 		      saslMechanism.caseInsensitiveCompare(SCRAMClient.mechanismName) == .orderedSame
 		else {
@@ -558,16 +671,28 @@ extension IRCClient {
 	/// Ends SASL after a success numeric that the SCRAM exchange did not back up.
 	@MainActor func abortUnverifiedSASLSuccess() {
 		abortSASLNegotiation(reason: IRCTransportSecurityStrings.scramServerSignatureMissing)
-		disableCapability(.isInSASLNegotiation)
-		disableCapability(.isIdentifiedWithSASL)
-		resumeQueuedCapabilityNegotiation()
 	}
 
 	@MainActor private func abortSASLNegotiation(reason: String) {
+		guard isCapabilityEnabled(.isInSASLNegotiation) else { return }
 		printDebugInformation(toConsole: reason)
 		sendCapabilityAuthenticate("*")
+		finishSASLNegotiation(failed: true)
+	}
+
+	@MainActor func finishSASLNegotiation(failed: Bool) {
+		disableCapability(.isInSASLNegotiation)
 		saslScramClient = nil
 		saslIncomingPayload = nil
+		if failed {
+			disableCapability(.isIdentifiedWithSASL)
+			if config.disconnectOnSASLFailure {
+				printDebugInformation(IRCInboundStrings.Numeric.saslAuthenticationFailedDisconnecting)
+				quit()
+				return
+			}
+		}
+		resumeCapabilityNegotiation()
 	}
 
 	@MainActor

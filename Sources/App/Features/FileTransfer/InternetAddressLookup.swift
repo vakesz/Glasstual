@@ -49,7 +49,16 @@ public final class InternetAddressLookup {
 		requestDelegate = delegate
 	}
 
+	isolated deinit {
+		lookupTask?.cancel()
+		session?.invalidateAndCancel()
+	}
+
 	public func performLookup() {
+		performLookup(from: addressSourceURL)
+	}
+
+	func performLookup(from sourceURL: URL) {
 		/* A second request while one is in flight restarts rather than aborting the app;
 		 two concurrent DCC offers can reach this. */
 		cancelLookup()
@@ -63,12 +72,17 @@ public final class InternetAddressLookup {
 		configuration.timeoutIntervalForResource = Self.requestTimeout
 
 		let session = URLSession(configuration: configuration)
-		let sourceURL = addressSourceURL
-
 		self.session = session
 		lookupTask = Task { [weak self] in
 			do {
-				let (data, response) = try await session.data(from: sourceURL)
+				let (bytes, response) = try await session.bytes(from: sourceURL)
+				guard let http = response as? HTTPURLResponse, http.statusCode == 200,
+				      response.expectedContentLength <= 1024 else { throw URLError(.badServerResponse) }
+				var data = Data()
+				for try await byte in bytes {
+					guard data.count < 1024 else { throw URLError(.dataLengthExceedsMaximum) }
+					data.append(byte)
+				}
 
 				self?.completeLookup(generation: generation, data: data, response: response, error: nil)
 			} catch {

@@ -1,0 +1,24 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "account-identity-help" : {
+      "comment" : "Explains the existing shared SASL account and IRC USER identity contract, and that disabling SASL retains the password for NickServ.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "When a password is saved, this account name is also sent as your IRC username. Turning off SASL keeps the password for NickServ identification." } } }
+    },
+    "connection-unavailable" : {
+      "comment" : "Onboarding stays open and can retry if application services are unavailable when creating the connection.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The connection could not be created. Try again, or skip the network to finish without a connection." } } }
+    },
+    "invalid-account" : {
+      "comment" : "Validation failure for an IRC account name or a password containing control characters.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter a valid IRC username and a password without control characters." } } }
+    }
+  },
+  "version" : "1.0"
+}

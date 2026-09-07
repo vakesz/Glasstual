@@ -3,6 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 @testable import Glasstual
 import SwiftUI
 import Testing
@@ -200,19 +201,25 @@ struct PreferencesFacadeBindingTests {
 		#expect(preferences.gatedBinding(for: key, enabledWhen: { true }).wrappedValue)
 	}
 
-	@Test("A number field clamps to the range the pane declares")
-	func numberFieldClamping() {
+	/** The bounds the field enforces are the key's own, so an imported file
+	 obeys the same ones. A count outside them leaves the saved value alone
+	 rather than being silently clamped to the nearest legal one, which is what
+	 the old field did and what made "50000" and "5000000" the same setting. */
+	@Test("A number field holds counts to the bounds the key declares")
+	func numberFieldEnforcesDeclaredBounds() {
 		let key = Preferences.Logging.scrollbackSaveLimit
 		defer { key.reset() }
 
-		let binding = preferences.numberFieldBinding(
-			for: key,
-			range: PreferencesValueValidation.scrollbackSaveRange
-		)
+		let binding = preferences.numberFieldBinding(for: key)
+		binding.wrappedValue = "20000"
+		#expect(key.value == 20000)
 		binding.wrappedValue = "1"
-		#expect(key.value == 100)
+		#expect(key.value == 20000)
 		binding.wrappedValue = "999999"
-		#expect(key.value == 50000)
+		#expect(key.value == 20000)
+		binding.wrappedValue = "-7"
+		#expect(key.value == 20000)
+		#expect(Preferences.Logging.scrollbackSaveRange == 100 ... 50000)
 	}
 
 	@Test("Zero survives in the fields where it means 'no limit'")
@@ -220,16 +227,19 @@ struct PreferencesFacadeBindingTests {
 		let key = Preferences.Logging.scrollbackVisibleLimit
 		defer { key.reset() }
 
-		let binding = preferences.numberFieldBinding(
-			for: key,
-			range: PreferencesValueValidation.scrollbackVisibleRange,
-			allowingZero: true
-		)
+		let binding = preferences.numberFieldBinding(for: key)
 		binding.wrappedValue = "0"
 		#expect(key.value == 0)
+		binding.wrappedValue = "50"
+		#expect(key.value == 0)
+		binding.wrappedValue = "15001"
+		#expect(key.value == 0)
+		binding.wrappedValue = "5000"
+		#expect(key.value == 5000)
+		#expect(Preferences.Logging.scrollbackVisibleRange == 100 ... 15000)
 	}
 
-	@Test("The port fields keep the range in order")
+	@Test("The port fields reject conflicting bounds without changing the saved values")
 	func portFieldsClampAgainstEachOther() {
 		let start = Preferences.FileTransfers.portRangeStart
 		let end = Preferences.FileTransfers.portRangeEnd
@@ -241,13 +251,57 @@ struct PreferencesFacadeBindingTests {
 		start.value = 2000
 		end.value = 3000
 
-		preferences.portFieldBinding(for: start, limitedBy: end, isLowerBound: true)
-			.wrappedValue = "5000"
-		#expect(start.value == 3000)
+		preferences.portFieldBinding(for: start, limitedBy: end).wrappedValue = "5000"
+		#expect(start.value == 2000)
 
-		preferences.portFieldBinding(for: end, limitedBy: start, isLowerBound: false)
-			.wrappedValue = "1024"
+		preferences.portFieldBinding(for: end, limitedBy: start).wrappedValue = "1024"
 		#expect(end.value == 3000)
+	}
+
+	/// A sandboxed process cannot bind a privileged port at all, so the low end
+	/// is a bound the field and an import both refuse to cross.
+	@Test("The port fields refuse privileged and out-of-range ports")
+	func portFieldsRefusePrivilegedPorts() {
+		let start = Preferences.FileTransfers.portRangeStart
+		let end = Preferences.FileTransfers.portRangeEnd
+		defer {
+			start.reset()
+			end.reset()
+		}
+
+		start.value = 2000
+		end.value = 65535
+
+		preferences.portFieldBinding(for: start, limitedBy: end).wrappedValue = "80"
+		#expect(start.value == 2000)
+		preferences.portFieldBinding(for: start, limitedBy: end).wrappedValue = "1024"
+		#expect(start.value == 1024)
+		preferences.portFieldBinding(for: end, limitedBy: start).wrappedValue = "70000"
+		#expect(end.value == 65535)
+		#expect(Preferences.FileTransfers.portRange == 1024 ... 65535)
+	}
+
+	/** The Settings slider is a `Double`, so a stored count has to survive that
+	 round trip: `Int(Double(UInt(Int.max)))` is one past `Int.max` and traps
+	 while the label is being drawn. */
+	@Test("The away-tracking limit stays inside what the slider can render")
+	func awayTrackingLimitSurvivesTheSliderRoundTrip() {
+		let key = Preferences.Appearance.trackUserAwayStatusMaximumChannelSize
+		defer { key.reset() }
+
+		#expect(Preferences.coerce(.integer(Int(Int32.max)), forKey: key.name) != nil)
+		#expect(Preferences.coerce(.integer(Int(Int32.max) + 1), forKey: key.name) == nil)
+
+		key.value = UInt(Int32.max)
+		let rendered = preferences.sliderBinding(for: key).wrappedValue
+		#expect(Int(exactly: rendered.rounded()) == Int(Int32.max))
+		#expect(PreferencesFloodControlSections.countText(rendered) == Int(Int32.max).formatted(.number))
+
+		// The old bound let a file store a count whose Double round trip traps.
+		TextualUserDefaults.container.set(NSNumber(value: UInt.max), forKey: key.name)
+		#expect(PreferencesFloodControlSections.countText(
+			preferences.sliderBinding(for: key).wrappedValue
+		).isEmpty == false)
 	}
 
 	@Test("A slider binding rounds onto the stored integer")

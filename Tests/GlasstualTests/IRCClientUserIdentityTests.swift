@@ -294,7 +294,7 @@ struct IRCClientUserIdentityTests {
 		client.isLoggedIn = false
 		client.connectType = .reconnect
 		client.enableCapability(.preAway)
-		client.sendNextQueuedCapability()
+		client.advanceCapabilityNegotiation()
 
 		#expect(sentLines(of: client) == ["AWAY :brb"])
 		#expect(capabilityCommands(of: client) == ["END"])
@@ -308,7 +308,7 @@ struct IRCClientUserIdentityTests {
 		client.sentLines.removeAllObjects()
 		client.isLoggedIn = false
 		client.connectType = .reconnect
-		client.sendNextQueuedCapability()
+		client.advanceCapabilityNegotiation()
 
 		#expect(client.sentLines.count == 0)
 		#expect(capabilityCommands(of: client) == ["END"])
