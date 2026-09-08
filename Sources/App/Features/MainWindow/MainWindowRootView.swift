@@ -206,8 +206,8 @@ struct MainWindowRootView: View {
 	let memberList: MemberList
 	let inputContentView: MainWindowTextViewContentView
 
-	@State private var inputBarHeight: CGFloat = 0
 	@FocusState private var isSearchFieldFocused: Bool
+	@State private var memberListWidth = CGFloat(Preferences.MainWindow.memberListWidth.value)
 
 	var body: some View {
 		let preferencesImportRequestID = model.preferencesImportRequest.request?.id
@@ -220,20 +220,30 @@ struct MainWindowRootView: View {
 						max: MainWindowConstants.serverListMaximumWidth
 					)
 			} detail: {
-				conversation
-					.frame(
-						minWidth: MainWindowConstants.conversationMinimumWidth,
-						maxWidth: .infinity,
-						maxHeight: .infinity
-					)
-					.inspector(isPresented: memberListVisibility) {
+				/* Beside the conversation, not in a split of its own. Presenting the
+				 member list as an inspector, or as a second `HSplitView` pane,
+				 inserts a pane into the detail column, and the column then grows
+				 by the pane's width instead of sharing its space: the columns
+				 spilled past the window, or AppKit gave up after three hundred
+				 layout passes with the transcript left at whatever width the loop
+				 was passing through. A stack inside the column changes nothing
+				 the split view measures, so the divider carries its own drag. */
+				HStack(spacing: 0) {
+					conversation
+						.frame(
+							minWidth: MainWindowConstants.conversationMinimumWidth,
+							maxWidth: .infinity,
+							maxHeight: .infinity
+						)
+					if model.isMemberListAvailable, model.isMemberListVisible {
+						MemberListResizeHandle(width: $memberListWidth)
 						MemberListView(model: memberList, redirectTyping: redirectTyping)
-							.inspectorColumnWidth(
-								min: MainWindowConstants.memberListMinimumWidth,
-								ideal: MainWindowConstants.memberListIdealWidth,
-								max: MainWindowConstants.memberListMaximumWidth
-							)
+							.frame(width: memberListWidth)
+							/* The list paints no ground of its own; the column's is
+							 the conversation's, so the divider is the only edge. */
+							.background(conversationBackground)
 					}
+				}
 			}
 			/* On the split view rather than on the sidebar: `.sidebar` placement
 			 draws the field above the server list, and the window's toolbar is
@@ -323,20 +333,6 @@ struct MainWindowRootView: View {
 		)
 	}
 
-	private var memberListVisibility: Binding<Bool> {
-		Binding(
-			get: { model.isMemberListAvailable && model.isMemberListVisible },
-			set: { isPresented in
-				/* Through the window, so the "hidden by user" flag that decides
-				 whether the list returns on the next channel tracks the inspector. */
-				guard model.isMemberListAvailable,
-				      isPresented != model.isMemberListVisible
-				else { return }
-				model.toggleMemberList()
-			}
-		)
-	}
-
 	private var rootSheetIsPresented: Binding<Bool> {
 		Binding(
 			get: { model.sheetStack.isEmpty == false },
@@ -407,24 +403,30 @@ struct MainWindowRootView: View {
 	}
 
 	/** The transcript fills the column and the input bar floats over its foot.
-	 The bar's height is measured and handed to the transcript, which applies it
-	 as its scroll view's bottom content inset. It is deliberately not a
-	 `safeAreaInset`: the field is a constraint-based AppKit view whose geometry
-	 would then both feed and follow the inset, and AppKit ends that loop by
-	 throwing. A content inset changes nothing SwiftUI lays out. */
+	 The transcript keeps the bar's height clear as its scroll view's bottom
+	 content inset, and it measures that in AppKit: the field's frame plus the
+	 capsule padding above it, and the accessory strip's height from what the
+	 strip is showing. Nothing here reads SwiftUI's layout back into state. An
+	 `onGeometryChange` on the bar did, and a size read during layout that then
+	 changes the view tree sends the split view back to measure the column; it
+	 lays the bar out at its probe sizes on the way, those are reported too, and
+	 the loop never settles: the columns were drawn at whatever width it was
+	 passing through, and AppKit threw after three hundred passes. A
+	 `safeAreaInset` is the same loop through a different door. */
 	private var conversation: some View {
 		VStack(spacing: 0) {
 			TranscriptHistoryRecoveryView(controller: model.transcript?.viewController)
 			ZStack(alignment: .bottom) {
-				MainWindowTranscriptRepresentable(logView: model.transcript, bottomInset: inputBarHeight)
-					.id(model.appearanceRevision)
+				MainWindowTranscriptRepresentable(
+					logView: model.transcript,
+					inputField: inputContentView,
+					accessoryHeight: MainWindowInputBarLayout.accessoryHeight(
+						for: inputContentView.textView.accessoryModel
+					)
+				)
+				.id(model.appearanceRevision)
 
 				inputBar
-					.onGeometryChange(for: CGFloat.self) { proxy in
-						proxy.size.height
-					} action: { height in
-						inputBarHeight = height
-					}
 			}
 		}
 		.background(conversationBackground)
@@ -445,10 +447,10 @@ struct MainWindowRootView: View {
 				MainWindowInputRepresentable(contentView: inputContentView)
 					.frame(minHeight: 35, idealHeight: 44)
 					.padding(.horizontal, 10)
-					.padding(.vertical, 6)
+					.padding(.vertical, MainWindowInputBarLayout.fieldVerticalPadding)
 					.glassEffect(.regular, in: .capsule)
 					.padding(.horizontal, 8)
-					.padding(.bottom, 6)
+					.padding(.bottom, MainWindowInputBarLayout.bottomPadding)
 			}
 		}
 	}
@@ -543,29 +545,155 @@ private struct MainWindowInputRepresentable: NSViewRepresentable {
 	}
 
 	func updateNSView(_: MainWindowTextViewContentView, context _: Context) {}
+
+	/** Width from SwiftUI, height from the field.
+
+	 The field's height is a constraint its text view moves as the text grows,
+	 and that is what the column should follow. Its width, left to SwiftUI's
+	 default measurement of an AppKit view, comes back as whatever it was last
+	 laid out at, and the split view reads that as the column's minimum: the
+	 column could then never shrink to make room for the member list, and the
+	 columns spilled past the window's edges. */
+	func sizeThatFits(
+		_ proposal: ProposedViewSize,
+		nsView: MainWindowTextViewContentView,
+		context _: Context
+	) -> CGSize? {
+		CGSize(
+			width: proposal.width ?? MainWindowConstants.conversationMinimumWidth,
+			height: nsView.fittingSize.height
+		)
+	}
+}
+
+/** The fixed distances the input bar is built from. The transcript's inset
+ is the field's frame -- which already includes `bottomPadding` and the padding
+ below the field -- plus `fieldVerticalPadding` for the capsule's top, plus the
+ accessory strip; adding `bottomPadding` to it counts that edge twice. */
+enum MainWindowInputBarLayout {
+	/// Above and below the field, inside the capsule.
+	static let fieldVerticalPadding: CGFloat = 6
+	/// Between the capsule and the column's foot; SwiftUI's side only.
+	static let bottomPadding: CGFloat = 6
+	static let replyBannerHeight: CGFloat = 30
+	static let typingRowHeight: CGFloat = 18
+	static let accessorySpacing: CGFloat = 4
+
+	static func accessoryHeight(replyVisible: Bool, typingVisible: Bool) -> CGFloat {
+		var height: CGFloat = 0
+		if replyVisible {
+			height += replyBannerHeight
+		}
+		if typingVisible {
+			height += typingRowHeight
+		}
+		if replyVisible, typingVisible {
+			height += accessorySpacing
+		}
+		return height
+	}
+
+	static func accessoryHeight(for model: MainWindowInputAccessoryModel) -> CGFloat {
+		accessoryHeight(
+			replyVisible: model.replyMessageIdentifier != nil,
+			typingVisible: model.typingNicknames.isEmpty == false
+		)
+	}
+}
+
+/** The edge between the conversation and the member list: a divider the user
+ can drag, with the width it settles on kept across launches. */
+private struct MemberListResizeHandle: View {
+	@Binding var width: CGFloat
+	@State private var widthAtDragStart: CGFloat?
+
+	var body: some View {
+		Divider()
+			.frame(width: 7)
+			.contentShape(Rectangle())
+			.onHover { hovering in
+				if hovering {
+					NSCursor.resizeLeftRight.push()
+				} else {
+					NSCursor.pop()
+				}
+			}
+			.gesture(
+				DragGesture(minimumDistance: 1)
+					.onChanged { value in
+						let start = widthAtDragStart ?? width
+						widthAtDragStart = start
+						width = min(
+							MainWindowConstants.memberListMaximumWidth,
+							max(MainWindowConstants.memberListMinimumWidth, start - value.translation.width)
+						)
+					}
+					.onEnded { _ in
+						widthAtDragStart = nil
+						Preferences.MainWindow.memberListWidth.value = Double(width)
+					}
+			)
+	}
 }
 
 struct MainWindowTranscriptRepresentable: NSViewRepresentable {
 	let logView: LogView?
-	/// Height of whatever floats over the transcript's foot.
-	let bottomInset: CGFloat
+	/// The field floating over the transcript's foot, measured for the inset.
+	var inputField: MainWindowTextViewContentView?
+	/// Height of the accessory strip above the field, from what it is showing.
+	var accessoryHeight: CGFloat = 0
 
 	func makeNSView(context _: Context) -> MainWindowTranscriptHostView {
 		let host = MainWindowTranscriptHostView()
-		host.show(logView, bottomInset: bottomInset)
+		host.show(logView, inputField: inputField, accessoryHeight: accessoryHeight)
 		return host
 	}
 
 	func updateNSView(_ host: MainWindowTranscriptHostView, context _: Context) {
-		host.show(logView, bottomInset: bottomInset)
+		host.show(logView, inputField: inputField, accessoryHeight: accessoryHeight)
+	}
+
+	/** The column is SwiftUI's to size; the transcript takes what it is offered.
+
+	 Left to the default, SwiftUI measures an AppKit view by its Auto Layout
+	 fitting size, and the transcript's is whatever its topic bar happens to
+	 measure: a few dozen points with no topic, the width of the whole topic on
+	 one line with one. The split view then reads that as the detail column's
+	 minimum and ideal width, which is how the transcript ended up drawn as a
+	 strip a few characters wide beside the member list, and how a long topic
+	 pushed the columns out past the window. With no height on offer the answer
+	 is zero: the transcript has no height of its own to ask for, the column's
+	 ideal height is then the input bar's, and the window decides the rest. */
+	func sizeThatFits(
+		_ proposal: ProposedViewSize,
+		nsView _: MainWindowTranscriptHostView,
+		context _: Context
+	) -> CGSize? {
+		CGSize(width: proposal.width ?? MainWindowConstants.conversationMinimumWidth, height: proposal.height ?? 0)
 	}
 }
 
 final class MainWindowTranscriptHostView: NSView {
 	private weak var logView: LogView?
+	private weak var inputField: MainWindowTextViewContentView?
+	private var accessoryHeight: CGFloat = 0
 
-	func show(_ nextLogView: LogView?, bottomInset: CGFloat) {
-		defer { nextLogView?.setBottomContentInset(bottomInset) }
+	func show(
+		_ nextLogView: LogView?,
+		inputField nextInputField: MainWindowTextViewContentView?,
+		accessoryHeight nextAccessoryHeight: CGFloat
+	) {
+		defer {
+			accessoryHeight = nextAccessoryHeight
+			updateBottomInset()
+		}
+		if inputField !== nextInputField {
+			inputField?.frameDidChange = nil
+			inputField = nextInputField
+			nextInputField?.frameDidChange = { [weak self] in
+				self?.updateBottomInset()
+			}
+		}
 		guard logView !== nextLogView else { return }
 		logView?.view.removeFromSuperview()
 		logView = nextLogView
@@ -579,5 +707,27 @@ final class MainWindowTranscriptHostView: NSView {
 			transcriptView.topAnchor.constraint(equalTo: topAnchor),
 			transcriptView.bottomAnchor.constraint(equalTo: bottomAnchor),
 		])
+	}
+
+	override func layout() {
+		super.layout()
+		updateBottomInset()
+	}
+
+	/** The space beneath the transcript that the input bar covers: from this
+	 view's foot up to the field's top edge, then the capsule's padding above
+	 the field and the accessory strip. It runs on every layout pass and on
+	 every move of the field, and that is safe because it writes no SwiftUI
+	 state: the transcript ignores an unchanged inset, and a changed one
+	 dirties the transcript alone, not this view. A field that is not in this
+	 window yet -- it is re-hosted when the appearance changes -- keeps the
+	 inset it had rather than pulling the transcript under the bar and back. */
+	private func updateBottomInset() {
+		guard let logView, let inputField, let window, inputField.window === window else { return }
+		let fieldFrame = inputField.convert(inputField.bounds, to: self)
+		let fieldTop = isFlipped ? bounds.maxY - fieldFrame.minY : fieldFrame.maxY
+		logView.setBottomContentInset(
+			max(0, fieldTop) + MainWindowInputBarLayout.fieldVerticalPadding + accessoryHeight
+		)
 	}
 }

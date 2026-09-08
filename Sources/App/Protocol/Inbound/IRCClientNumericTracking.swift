@@ -119,6 +119,15 @@ extension IRCClient {
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 3)
 			}
+			/* Sent for a NickServ identification too, on a network that tracks
+			 accounts, so it settles the wait the same way the service notice
+			 does. The capability enabled above is what releases it: the
+			 autojoin policy treats it as "identified", NickServ or SASL. Only
+			 the waiting configuration is served here; without the option the
+			 join is owed to the end of registration, not to this reply. */
+			if config.autojoinWaitsForNickServ {
+				performAutoJoin()
+			}
 		case IRCNumeric.loggedout.rawValue:
 			guard message.params.count == 3 else { return true }
 			resetSASLNegotiation()

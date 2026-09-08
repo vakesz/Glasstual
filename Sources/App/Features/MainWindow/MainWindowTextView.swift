@@ -520,14 +520,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 			return cache.height
 		}
 
-		let contentStorage = NSTextContentStorage()
-		let layoutManager = NSTextLayoutManager()
-		contentStorage.addTextLayoutManager(layoutManager)
-		layoutManager.textContainer = NSTextContainer(size: NSSize(width: 10000, height: 10000))
-		contentStorage.attributedString = NSAttributedString(string: "X", attributes: [.font: font])
-		layoutManager.ensureLayout(for: layoutManager.documentRange)
-
-		let height = layoutManager.usageBoundsForTextContainer.height
+		let height = TextLineMetrics.lineHeight(for: font)
 		defaultLineHeightCache = (font, height)
 		return height
 	}
@@ -610,6 +603,21 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 public final class MainWindowTextViewContentView: NSView {
 	private let inputBarContainerView = NSView()
 	private var textViewHeightConstraint: NSLayoutConstraint!
+
+	/** Told in the same pass that moves this view, so what follows the
+	 field's edge -- the transcript's bottom inset -- lands in the layout that
+	 moved it rather than a run-loop turn later. */
+	public var frameDidChange: (() -> Void)?
+
+	override public func setFrameSize(_ newSize: NSSize) {
+		super.setFrameSize(newSize)
+		frameDidChange?()
+	}
+
+	override public func setFrameOrigin(_ newOrigin: NSPoint) {
+		super.setFrameOrigin(newOrigin)
+		frameDidChange?()
+	}
 
 	private var textViewStorage: MainWindowTextView?
 

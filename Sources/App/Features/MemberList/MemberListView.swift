@@ -23,7 +23,13 @@ struct MemberListView: View {
 				}
 			}
 		}
-		.listStyle(.sidebar)
+		/* Inset rows on no ground of their own: the sidebar style brings a
+		 material with it, and beside the transcript that read as a second
+		 sidebar. The column's background is the caller's, and the divider
+		 beside it is the only edge. */
+		.listStyle(.inset)
+		.scrollContentBackground(.hidden)
+		.listSectionSeparator(.hidden)
 		.contextMenu(forSelectionType: User.ID.self) { identities in
 			MemberListContextMenu(
 				model: model,
@@ -56,6 +62,7 @@ struct MemberListView: View {
 		ForEach(members, id: \.id) { member in
 			MemberListRowView(model: model, member: member)
 				.tag(member.id)
+				.listRowSeparator(.hidden)
 		}
 	}
 }

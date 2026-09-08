@@ -122,7 +122,7 @@ final class NativeTranscriptTextView: NSTextView {
 }
 
 @MainActor
-final class NativeTranscriptView: NSView, NSTextViewDelegate {
+final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDelegate {
 	weak var owner: LogView?
 
 	let topicField = NSTextField(wrappingLabelWithString: "")
@@ -157,6 +157,7 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate {
 	 to the window all scroll to the end while it holds. */
 	private var followsBottom = true
 	private var scrollsToBottomOnLayout = false
+	private var topicLineHeightCache: (font: NSFont, height: CGFloat)?
 	/// Resolved nickname colours for the batch being rendered. Each lookup costs
 	/// a read of the defaults store, and one batch asks for the same handful of
 	/// names over and over.
@@ -203,6 +204,9 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate {
 		separator.translatesAutoresizingMaskIntoConstraints = false
 
 		textView.delegate = self
+		/* The separators are layout fragments of their own; see
+		 `TranscriptRuleLayoutFragment`. */
+		textView.textLayoutManager?.delegate = self
 		textView.isEditable = false
 		textView.isSelectable = true
 		textView.setAccessibilityIdentifier("channel-transcript")
@@ -829,10 +833,25 @@ extension NativeTranscriptView {
 		return (endpoint, verticalPosition - top)
 	}
 
+	/// The top of the line holding `index`, in the text view's coordinates.
 	private func verticalPosition(at index: Int) -> CGFloat? {
-		guard let window else { return nil }
-		let rect = textView.firstRect(forCharacterRange: NSRange(location: index, length: 0), actualRange: nil)
-		return textView.convert(window.convertFromScreen(rect), from: nil).minY
+		guard let layoutManager = textView.textLayoutManager,
+		      let contentManager = layoutManager.textContentManager,
+		      let location = contentManager.location(contentManager.documentRange.location, offsetBy: index)
+		else { return nil }
+		let range = NSTextRange(location: location)
+		layoutManager.ensureLayout(for: range)
+		var top: CGFloat?
+		layoutManager.enumerateTextSegments(
+			in: range,
+			type: .standard,
+			options: [.rangeNotRequired]
+		) { _, frame, _, _ in
+			top = frame.minY
+			return false
+		}
+		guard let top else { return nil }
+		return top + textView.textContainerOrigin.y
 	}
 
 	private func restoreViewport(_ anchor: (endpoint: SelectionAnchor.Endpoint, offset: CGFloat)) {
@@ -948,20 +967,65 @@ extension NativeTranscriptView {
 	/// The chevron is only offered when one line does not hold the topic.
 	func updateTopicDisclosure() {
 		guard topicField.isHidden == false, let font = topicField.font, topicField.bounds.width > 0 else {
-			topicDisclosure.isHidden = true
+			setTopicDisclosureHidden(true)
 			return
 		}
 		let fullHeight = topicField.attributedStringValue.boundingRect(
 			with: NSSize(width: topicField.bounds.width, height: .greatestFiniteMagnitude),
 			options: [.usesLineFragmentOrigin, .usesFontLeading]
 		).height
-		let lineHeight = NSLayoutManager().defaultLineHeight(for: font)
-		let overflows = fullHeight > lineHeight * 1.5
-		topicDisclosure.isHidden = overflows == false
+		let overflows = fullHeight > topicLineHeight(for: font) * 1.5
+		setTopicDisclosureHidden(overflows == false)
+		/* Also a constraint write from inside `layout()`, and bounded the same
+		 way: the flag flips first, so the next pass finds nothing to fold. */
 		if overflows == false, isTopicExpanded {
 			isTopicExpanded = false
 			applyTopicExpansion()
 		}
+	}
+
+	/// Runs from `layout()`, so a write that changes nothing must not ask for
+	/// another constraint pass.
+	private func setTopicDisclosureHidden(_ hidden: Bool) {
+		guard topicDisclosure.isHidden != hidden else { return }
+		topicDisclosure.isHidden = hidden
+	}
+
+	/// Asked on every layout pass, so the measurement is kept per font.
+	private func topicLineHeight(for font: NSFont) -> CGFloat {
+		if let topicLineHeightCache, topicLineHeightCache.font == font {
+			return topicLineHeightCache.height
+		}
+		let height = TextLineMetrics.lineHeight(for: font)
+		topicLineHeightCache = (font, height)
+		return height
+	}
+}
+
+extension NativeTranscriptView {
+	/** Hands a marker paragraph the fragment that draws its rule. Pure: the
+	 answer comes from the paragraph's own attributes, and nothing of the
+	 view is read. */
+	nonisolated func textLayoutManager( // nonisolated: pure
+		_: NSTextLayoutManager,
+		textLayoutFragmentFor _: any NSTextLocation,
+		in textElement: NSTextElement
+	) -> NSTextLayoutFragment {
+		guard let paragraph = textElement as? NSTextParagraph,
+		      paragraph.attributedString.length > 0,
+		      let color = paragraph.attributedString.attribute(.transcriptRuleColor, at: 0, effectiveRange: nil)
+		      as? NSColor
+		else {
+			return NSTextLayoutFragment(textElement: textElement, range: textElement.elementRange)
+		}
+		let inset = (paragraph.attributedString.attribute(.transcriptRuleInset, at: 0, effectiveRange: nil)
+			as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
+		return TranscriptRuleLayoutFragment(
+			textElement: textElement,
+			range: textElement.elementRange,
+			ruleColor: color,
+			ruleInset: inset
+		)
 	}
 }
 
