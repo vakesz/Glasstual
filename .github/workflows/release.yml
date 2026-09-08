@@ -50,15 +50,12 @@ jobs:
 
   release:
     needs: validate
-    # Provision separately from PR/Quality runners, with a protected environment.
-    # The signing runner must be ephemeral and never accept untrusted PR jobs.
-    # Prerequisite: the `release-signing` runner group must exist and hold the
-    # Developer ID identity, notarization credentials and the profiles in
-    # .github/signing. Until it is provisioned this job stays queued and never
-    # starts; see the outstanding release gate in Documentation/Remediation.md.
-    runs-on:
-      group: release-signing
-      labels: xcode-27
+    # Runs on the same hosted macOS image as Quality: the Developer ID identity
+    # and the notary key are imported from repository secrets into a throwaway
+    # keychain below and removed again at the end, so nothing has to live on the
+    # runner. The `release` environment is where the protection goes: add a
+    # required reviewer there and only that approval can start this job.
+    runs-on: xcode-27
     environment: release
     timeout-minutes: 90
     permissions:
