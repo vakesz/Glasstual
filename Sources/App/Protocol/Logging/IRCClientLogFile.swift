@@ -58,11 +58,17 @@ public extension IRCClient {
 		guard environment.preferences.logToDiskIsEnabled else { return }
 
 		beginLogSession()
+		openedLogFile().writeLogLine(logLine)
+	}
 
-		if logFile == nil {
-			logFile = FileLogger(client: self)
+	/// Same shape as `IRCChannel.openedLogFile()`, for the same compiler reason.
+	private func openedLogFile() -> FileLogger {
+		if let logFile {
+			return logFile
 		}
-		logFile?.writeLogLine(logLine)
+		let opened = FileLogger(client: self)
+		logFile = opened
+		return opened
 	}
 
 	func logFileRecordSessionChanged(_ startsSession: Bool, in channel: IRCChannel?) {

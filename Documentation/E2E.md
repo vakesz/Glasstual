@@ -452,11 +452,11 @@ the broader DCC/notification checklist and its separately recorded local evidenc
 
 ## Required gate
 
-Quality CI builds the signed Debug app, runs the Swift Testing suite, builds the
-`GlasstualE2E` scheme for testing, runs `make e2e-fixtures`, and uploads
-run-specific artifacts even after failure. None of that is the real-app E2E gate:
-a generic runner is not assumed to have an interactive login, Accessibility
-consent or safe storage isolation.
+Quality CI runs lint and format checks only; building, the Swift Testing suite
+and `make e2e-fixtures` run locally before a push, as AGENTS.md's hand-off list
+requires, because hosted macOS build minutes are reserved for the signed
+release. None of that is the real-app E2E gate: a generic runner is not assumed
+to have an interactive login, Accessibility consent or safe storage isolation.
 
 Before merging connection or UI lifecycle changes, run `make e2e` in the
 provisioned disposable GUI login and retain the unique result directory. A

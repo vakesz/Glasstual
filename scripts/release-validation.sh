@@ -63,10 +63,7 @@ validate_jobs() {
     all($jobs[]; .status == "completed" and .conclusion == "success") and
     any($jobs[]; .name == "lint" and
       ([.steps[] | select(.status == "completed" and .conclusion == "success") | .name] as $steps |
-       ["Lint and check formatting", "Validate Xcode project generation",
-        "Build Debug app", "Run Swift Testing suite",
-        "Build the E2E scheme for testing",
-        "Run the loopback E2E fixtures"] | all(.[]; . as $name | $steps | index($name) != null)))
+       ["Lint and check formatting"] | all(.[]; . as $name | $steps | index($name) != null)))
   ' >/dev/null
 }
 

@@ -452,12 +452,21 @@ open class Channel: TreeItem {
 		}
 
 		logFileWriteSessionBegin()
+		openedLogFile().writeLogLine(logLine)
+	}
 
-		if logFile == nil {
-			logFile = FileLogger(channel: self)
+	/** The session banner is written through `writeToLogFile`, which opens the
+	 session, which writes the banner: the optimizer inlines that cycle, and a
+	 lazy assignment left inside the read of the same property made it produce
+	 SIL its own verifier rejects (Xcode 27 beta 6). Resolving the logger into a
+	 local first keeps the read and the write apart. */
+	private func openedLogFile() -> FileLogger {
+		if let logFile {
+			return logFile
 		}
-
-		logFile?.writeLogLine(logLine)
+		let opened = FileLogger(channel: self)
+		logFile = opened
+		return opened
 	}
 
 	@MainActor

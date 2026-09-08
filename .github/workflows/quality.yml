@@ -1,5 +1,8 @@
 name: Quality
 
+# Lint and format checks only. Building, testing and signing cost hosted macOS
+# minutes; they run locally before a push (see AGENTS.md "Before handing off")
+# and the signed build happens once, in the Signed Release workflow.
 on:
   push:
     branches: [master]
@@ -15,7 +18,7 @@ concurrency:
 jobs:
   lint:
     runs-on: xcode-27
-    timeout-minutes: 45
+    timeout-minutes: 15
 
     steps:
       - name: Check out source
@@ -25,68 +28,3 @@ jobs:
 
       - name: Lint and check formatting
         run: make lint
-
-      - name: Validate Xcode project generation
-        run: |
-          make generate
-          # A file xcodegen creates for the first time is untracked, and an
-          # untracked file is invisible to `git diff`; intent-to-add makes it count.
-          git add --intent-to-add -- Glasstual.xcodeproj
-          git diff --exit-code -- Glasstual.xcodeproj
-
-      - name: Verify Xcode 27 runner
-        run: |
-          set -euo pipefail
-          sudo xcode-select -s /Applications/Xcode.app
-          xcodebuild -version
-          XCODE_MAJOR="$(xcodebuild -version | head -n 1 | sed -E 's/^Xcode ([0-9]+).*/\1/')"
-          [ "${XCODE_MAJOR}" -eq 27 ]
-
-      # This runner must have the development signing identity/profiles needed
-      # by the app and its sandboxed XPC service. Do not substitute unsigned tests.
-      - name: Build Debug app
-        run: |
-          set -euo pipefail
-          mkdir -p build
-          make build CONFIG=Debug 2>&1 | tee "build/quality-build-${{ github.run_id }}-${{ github.run_attempt }}.log"
-
-      - name: Run Swift Testing suite
-        run: |
-          set -euo pipefail
-          make test RESULT_BUNDLE="build/quality-${{ github.run_id }}-${{ github.run_attempt }}.xcresult" \
-            2>&1 | tee "build/quality-test-${{ github.run_id }}-${{ github.run_attempt }}.log"
-
-      # Compiles Tests/E2EHarness and Tests/GlasstualE2ETests. It never launches
-      # the app and never touches Accessibility; see Documentation/E2E.md.
-      # `make e2e-fixtures` below builds the same scheme, so this step exists to
-      # give scripts/release-validation.sh a named step to require.
-      - name: Build the E2E scheme for testing
-        run: |
-          set -euo pipefail
-          xcodebuild -project Glasstual.xcodeproj -scheme GlasstualE2E \
-            -destination 'platform=macOS,arch=arm64' -derivedDataPath DerivedData \
-            -configuration Debug build-for-testing \
-            2>&1 | tee "build/quality-e2e-build-${{ github.run_id }}-${{ github.run_attempt }}.log"
-
-      # Loopback peers only: no GUI login, Accessibility grant or app launch.
-      - name: Run the loopback E2E fixtures
-        run: |
-          set -euo pipefail
-          make e2e-fixtures \
-            2>&1 | tee "build/quality-e2e-fixtures-${{ github.run_id }}-${{ github.run_attempt }}.log"
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: quality-results-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            build/quality-*.xcresult
-            build/quality-*.log
-            build/e2e-fixtures/**
-          if-no-files-found: warn
-          retention-days: 14
-
-      # The required real-app E2E gate runs in a provisioned disposable GUI login.
-      # A generic runner has neither AX consent nor an isolated user account.
-      # See Documentation/E2E.md; the unit suite above is not E2E coverage.

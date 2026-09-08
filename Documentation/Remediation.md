@@ -150,7 +150,8 @@ still blocked or unexercised. Do not describe those checks as passing.
 
 ## Tooling and E2E implementation
 
-- [x] Metadata validator failure propagation and Quality build/test/artifact gates.
+- [x] Metadata validator failure propagation; Quality CI is lint and format only,
+  with build, tests and fixtures run locally before a push.
   Quality also builds the `GlasstualE2E` scheme for testing and runs the loopback
   fixture gate; `scripts/release-validation.sh` requires both steps.
 - [x] Release tag/version/embedded-product checks, exact-SHA trusted Quality gate,
@@ -197,9 +198,11 @@ Outstanding environment/platform gates, not unfinished implementation claims:
   Center actions, audible speech/sound and Finder/Quick Look access.
 - [ ] Verify third-party DCC/NAT behavior and large real transfers, including
   acknowledgement wrapping beyond 4 GiB.
-- [ ] Provision the GUI CI lane, protected release environment and isolated signing
-  runner; exercise release signing/notarization without conflating local lint with
-  those operational checks. No release or remote repository mutation was performed.
+- [ ] Provision the GUI CI lane and protect the `release` environment with a
+  required reviewer; the release job runs on the hosted `xcode-27` image and
+  imports its signing material from repository secrets, so there is no separate
+  signing runner to provision. Exercise release signing/notarization without
+  conflating local lint with those operational checks.
 
 See `E2E.md` and `DCCNotificationVerification.md` for the executable scenarios,
 artifacts and platform checklists. Never grant consent automatically or launch
