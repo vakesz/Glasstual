@@ -50,7 +50,7 @@ struct MainWindowInputAccessoryView: View {
 	let cancelReply: () -> Void
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 4) {
+		VStack(alignment: .leading, spacing: MainWindowInputBarLayout.accessorySpacing) {
 			if model.replyMessageIdentifier != nil {
 				replyBanner
 					.transition(.move(edge: .bottom).combined(with: .opacity))
@@ -88,7 +88,7 @@ struct MainWindowInputAccessoryView: View {
 			.foregroundStyle(.secondary)
 		}
 		.padding(.horizontal, 10)
-		.frame(height: 30)
+		.frame(height: MainWindowInputBarLayout.replyBannerHeight)
 		.glassEffect(.regular, in: .rect(cornerRadius: 8))
 	}
 
@@ -119,7 +119,7 @@ struct MainWindowInputAccessoryView: View {
 		}
 		.foregroundStyle(.secondary)
 		.padding(.horizontal, 10)
-		.frame(height: 18)
+		.frame(height: MainWindowInputBarLayout.typingRowHeight)
 		.help(model.typingNicknames.joined(separator: ", "))
 	}
 }

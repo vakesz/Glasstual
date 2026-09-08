@@ -240,16 +240,30 @@ public struct PluginChannelMember: Equatable, Sendable {
 }
 
 /// A snapshot of one IRC conversation, plus the operations a plugin may run
-/// against it. The operations reach live app models, so the type is bound to
-/// the main actor.
+/// against it. The scalar fields are taken when the value is made; `members`
+/// is taken on its first read. The operations reach live app models, so the
+/// type is bound to the main actor.
 @MainActor
 public final class PluginChannel: Hashable {
 	public let identifier: String
 	public let name: String
 	public let type: ChannelType
 	public let isActive: Bool
-	public let members: [PluginChannelMember]
+	/** Built the first time a plugin reads it, from the channel as it is
+	 then, and kept: the host hands one of these to every plugin for every
+	 line the server sends, and a channel of a few hundred members costs as
+	 much to snapshot as the line took to parse. */
+	public var members: [PluginChannelMember] {
+		if let membersSnapshot {
+			return membersSnapshot
+		}
+		let snapshot = membersProvider()
+		membersSnapshot = snapshot
+		return snapshot
+	}
 
+	private var membersSnapshot: [PluginChannelMember]?
+	private let membersProvider: () -> [PluginChannelMember]
 	private let autoJoinReader: () -> Bool
 	private let autoJoinWriter: (Bool) -> Void
 	private let deactivation: () -> Void
@@ -259,7 +273,7 @@ public final class PluginChannel: Hashable {
 		name: String,
 		type: ChannelType,
 		isActive: Bool,
-		members: [PluginChannelMember],
+		members: @autoclosure @escaping () -> [PluginChannelMember],
 		autoJoin: @escaping () -> Bool,
 		setAutoJoin: @escaping (Bool) -> Void,
 		deactivate: @escaping () -> Void
@@ -268,7 +282,7 @@ public final class PluginChannel: Hashable {
 		self.name = name
 		self.type = type
 		self.isActive = isActive
-		self.members = members
+		membersProvider = members
 		autoJoinReader = autoJoin
 		autoJoinWriter = setAutoJoin
 		deactivation = deactivate
@@ -317,7 +331,9 @@ public struct PluginPrintResult: Equatable, Sendable {
 }
 
 /// A snapshot of one IRC connection, plus the operations a plugin may run
-/// against it. Bound to the main actor for the same reason as `PluginChannel`.
+/// against it. As with `PluginChannel`, the scalar fields are taken when the
+/// value is made and `channels` on its first read; bound to the main actor
+/// for the same reason.
 @MainActor
 public final class PluginClient: Hashable {
 	public let identifier: String
@@ -328,11 +344,23 @@ public final class PluginClient: Hashable {
 	public let isLoggedIn: Bool
 	public let isIRCop: Bool
 	public let localUser: PluginUser?
-	public let channels: [PluginChannel]
+	/// Built on the first read and kept, for the reason ``PluginChannel/members`` gives.
+	public var channels: [PluginChannel] {
+		if let channelsSnapshot {
+			return channelsSnapshot
+		}
+		let snapshot = channelsProvider()
+		channelsSnapshot = snapshot
+		return snapshot
+	}
+
+	private var channelsSnapshot: [PluginChannel]?
+
 	public let isConnectedToZNC: Bool
 	public let zncCertificateChainData: Data?
 	public let maximumNicknameLength: UInt
 
+	private let channelsProvider: () -> [PluginChannel]
 	private let nicknameMatcher: (String, String) -> Bool
 	private let channelNameValidator: (String) -> Bool
 	private let channelFinder: (String) -> PluginChannel?
@@ -367,7 +395,7 @@ public final class PluginClient: Hashable {
 		isLoggedIn: Bool,
 		isIRCop: Bool,
 		localUser: PluginUser?,
-		channels: [PluginChannel],
+		channels: @autoclosure @escaping () -> [PluginChannel],
 		isConnectedToZNC: Bool,
 		zncCertificateChainData: Data?,
 		maximumNicknameLength: UInt,
@@ -404,7 +432,7 @@ public final class PluginClient: Hashable {
 		self.isLoggedIn = isLoggedIn
 		self.isIRCop = isIRCop
 		self.localUser = localUser
-		self.channels = channels
+		channelsProvider = channels
 		self.isConnectedToZNC = isConnectedToZNC
 		self.zncCertificateChainData = zncCertificateChainData
 		self.maximumNicknameLength = maximumNicknameLength

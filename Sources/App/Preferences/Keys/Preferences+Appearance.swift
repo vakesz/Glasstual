@@ -215,8 +215,16 @@ public nonisolated extension Preferences { // nonisolated: value
 			traits: [.unregistered, .excludedFromExport]
 		)
 
+		/// Where the user last left the member list's edge, in points.
+		public static let memberListWidth = PreferenceKey(
+			"Window -> Main Window -> Member List Width",
+			default: 200.0,
+			traits: [.unregistered, .excludedFromExport],
+			validation: { $0.isFinite && $0 >= 160 && $0 <= 260 }
+		)
+
 		static let all: [any AnyPreferenceKey] = [
-			serverListVisible, memberListVisible, serverListSelection,
+			serverListVisible, memberListVisible, serverListSelection, memberListWidth,
 		]
 	}
 }

@@ -260,7 +260,7 @@ listener stays open across recovery attempts. No external IRC server is used.
 The app exposes `main-window` and `channel-transcript`. The driver scopes the
 transcript lookup to that window, checks its AXTextArea role and reads its native
 AXValue, without inspecting private SwiftUI storage or invoking app methods.
-`MainWindow.updateTitle()` exposes the actual title and subtitle joined by `, ` in
+`MainWindow.updateTitle()` exposes the actual title and subtitle joined by `,` in
 the window's AXTitle, so status checks read that identified window and never
 accept an unrelated static-text or sidebar node. The exact connected value is
 `E2E, e2euser \u{00B7} e2e.local`, where `\u{00B7}` is the UI's middle dot; this

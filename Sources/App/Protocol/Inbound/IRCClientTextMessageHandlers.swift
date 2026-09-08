@@ -134,11 +134,14 @@ enum IRCServiceNoticePolicy {
 	}
 
 	static func nickServAction(for text: String, context: NickServContext) -> NickServAction? {
-		if context.isWaiting {
-			guard context.successfulIdentificationTokens.contains(where: text.localizedCaseInsensitiveContains) else {
-				return nil
-			}
+		/* Whether or not this client is the one that asked: a connect command
+		 may have sent the identification, and the service confirms it the
+		 same way. */
+		if context.successfulIdentificationTokens.contains(where: text.localizedCaseInsensitiveContains) {
 			return .identificationSucceeded
+		}
+		if context.isWaiting {
+			return nil
 		}
 
 		guard let password = context.password, !password.isEmpty,

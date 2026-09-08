@@ -39,6 +39,16 @@ extension NSAttributedString.Key {
 	static let transcriptExcerpt = NSAttributedString.Key("GlasstualTranscriptExcerpt")
 	static let transcriptAction = NSAttributedString.Key("GlasstualTranscriptAction")
 	static let transcriptSelectionSegment = NSAttributedString.Key("GlasstualTranscriptSelectionSegment")
+	/** A hairline drawn across the paragraph that carries it, in this colour,
+	 `transcriptRuleInset` points below the paragraph's top; the paragraph's
+	 layout fragment is a `TranscriptRuleLayoutFragment`. It stands in for an
+	 `NSTextBlock` border: text blocks are TextKit 1 features, and a view whose
+	 storage holds one is silently moved back to TextKit 1, where the
+	 transcript's bottom alignment does not exist. */
+	nonisolated static let transcriptRuleColor = // nonisolated: let
+		NSAttributedString.Key("GlasstualTranscriptRuleColor")
+	nonisolated static let transcriptRuleInset = // nonisolated: let
+		NSAttributedString.Key("GlasstualTranscriptRuleInset")
 }
 
 /// Both UTF-16 endpoints are relative to a semantic segment within a stable row.

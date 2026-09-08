@@ -315,6 +315,10 @@ extension NativeTranscriptView {
 		let text: String
 		let color: NSColor
 		let font: NSFont
+		/* The separators are hairlines the paragraph's layout fragment draws,
+		 `inset` points below the paragraph's top, not `NSTextBlock` borders: a
+		 text block in the storage moves the whole view back to TextKit 1. */
+		var rule: (color: NSColor, inset: CGFloat)?
 		switch marker {
 		case let .date(value):
 			text = value
@@ -331,12 +335,9 @@ extension NativeTranscriptView {
 				ofSize: max(9, effectiveFont(controller).pointSize - 1),
 				weight: .medium
 			)
-			paragraph.paragraphSpacingBefore = 5
+			paragraph.paragraphSpacingBefore = 10
 			paragraph.paragraphSpacing = 6
-			paragraph.textBlocks = [separatorBlock(
-				ruleColor: color.withAlphaComponent(0.22),
-				topPadding: 5
-			)]
+			rule = (color.withAlphaComponent(0.22), 5)
 		case .unread:
 			// The previous Simplified theme used only a quiet accent hairline.
 			// Keeping the caption out of the transcript prevents an unread
@@ -346,27 +347,19 @@ extension NativeTranscriptView {
 			font = NSFont.systemFont(ofSize: 1)
 			paragraph.paragraphSpacingBefore = 5
 			paragraph.paragraphSpacing = 5
-			paragraph.textBlocks = [separatorBlock(
-				ruleColor: controller.resolved(palette.unreadMarker).withAlphaComponent(0.6)
-			)]
+			rule = (controller.resolved(palette.unreadMarker).withAlphaComponent(0.6), 5)
 		}
-		return NSAttributedString(string: "\(text)\n", attributes: [
+		var attributes: [NSAttributedString.Key: Any] = [
 			.font: font,
 			.foregroundColor: color,
 			.paragraphStyle: paragraph,
 			.transcriptLineNumber: lineNumber,
-		])
-	}
-
-	func separatorBlock(ruleColor: NSColor, topPadding: CGFloat = 0) -> NSTextBlock {
-		let block = NSTextBlock()
-		block.setContentWidth(100, type: .percentageValueType)
-		block.setWidth(1, type: .absoluteValueType, for: .border, edge: .minY)
-		block.setBorderColor(ruleColor, for: .minY)
-		if topPadding > 0 {
-			block.setWidth(topPadding, type: .absoluteValueType, for: .padding, edge: .minY)
+		]
+		if let rule {
+			attributes[.transcriptRuleColor] = rule.color
+			attributes[.transcriptRuleInset] = NSNumber(value: Double(rule.inset))
 		}
-		return block
+		return NSAttributedString(string: "\(text)\n", attributes: attributes)
 	}
 }
 
