@@ -102,6 +102,20 @@ struct PluginKitContractTests {
 		)
 	}
 
+	/// An interval a caller read out of server text can be `inf` or `nan`;
+	/// Foundation clamps the date rather than refusing it, which would spell a
+	/// NaN as a span of thousands of years in the wrong direction.
+	@Test(
+		"An interval that is not a number reads as no time at all",
+		arguments: [Double.nan, .infinity, -.infinity] as [TimeInterval]
+	)
+	func humanReadableTimeIntervalIgnoresIntervalsThatAreNotNumbers(_ interval: TimeInterval) {
+		#expect(
+			PluginHost.humanReadableTimeInterval(interval, shortValue: false)
+				== PluginHost.humanReadableTimeInterval(0, shortValue: false)
+		)
+	}
+
 	/// An empty unit matrix is the caller saying "whatever fits", which the
 	/// `orderMatrix` overload spells `0`.
 	@Test("No unit matrix means every unit from years down to seconds")

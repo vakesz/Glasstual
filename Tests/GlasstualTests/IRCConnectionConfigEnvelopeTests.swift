@@ -93,20 +93,35 @@ struct IRCConnectionConfigEnvelopeTests {
 	}
 
 	/// `init(from:)` assigns inside an initializer, where the clamping `didSet`
-	/// observers do not run, so a stored zero reaches `applyMissingDefaults`
-	/// and is repaired there.
-	@Test("A decoded zero flood-control value comes back as the default")
-	func decodedFloodControlZeroesFallBackToTheDefault() throws {
+	/// observers do not run, so whatever the envelope carried reaches
+	/// `repairDecodedValues` and is put back in range there.
+	@Test(
+		"A decoded flood-control value outside the supported range comes back as the default",
+		arguments: [0, 900, UInt(Int.max) + 1, UInt.max] as [UInt]
+	)
+	func decodedFloodControlValuesOutsideTheRangeFallBackToTheDefault(_ stored: UInt) throws {
+		/* A property list holds an unsigned 64-bit integer, so a crafted
+		 envelope reaches the host with a message count no `Int` can name. The
+		 dictionary is built and serialized directly because
+		 `PropertyListValue.integer` carries an `Int` and could not express it. */
 		let data = try PropertyListEncoder().encode(sampleConfig())
 		let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-		var encoded = try #require([String: PropertyListValue](propertyList: plist))
-		encoded["floodControlDelayInterval"] = 0
-		encoded["floodControlMaximumMessages"] = 0
+		var encoded = try #require(plist as? [String: Any])
+		encoded["floodControlDelayInterval"] = NSNumber(value: UInt64(stored))
+		encoded["floodControlMaximumMessages"] = NSNumber(value: UInt64(stored))
+		let crafted = try PropertyListSerialization.data(
+			fromPropertyList: encoded,
+			format: .binary,
+			options: 0
+		)
 
-		let config = try #require(PropertyListModel.decode(IRCConnectionConfig.self, from: encoded))
+		let config = try PropertyListDecoder().decode(IRCConnectionConfig.self, from: crafted)
 
 		#expect(config.floodControlDelayInterval == IRCConnectionDefaults.floodControlDelayInterval)
 		#expect(config.floodControlMaximumMessages == IRCConnectionDefaults.floodControlMaximumMessages)
+		/* The host narrows the message count on every write, which is what an
+		 unbounded decoded value would trap on. */
+		#expect(Int(exactly: config.floodControlMaximumMessages) != nil)
 	}
 
 	@Test("A proxy type this build does not know becomes no proxy")

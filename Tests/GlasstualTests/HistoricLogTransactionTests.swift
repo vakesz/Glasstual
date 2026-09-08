@@ -7,13 +7,6 @@ import CoreData
 @testable import Glasstual
 import Testing
 
-private nonisolated struct TransactionFilename: HistoricLogFilenameStoring { // nonisolated: value
-	var databaseFilename: String? {
-		get { "history.sqlite" }
-		nonmutating set { Issue.record("Unexpected database replacement: \(newValue ?? "nil")") }
-	}
-}
-
 private actor HistoryOperationGate {
 	private var blocked: CheckedContinuation<Void, Never>?
 	private var entered = false
@@ -60,7 +53,7 @@ struct HistoricLogTransactionTests {
 		let directory = try directory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = HistoryOperationGate()
-		let store = HistoricLogStore(filenameStore: TransactionFilename(), willPerform: { operation in
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(), willPerform: { operation in
 			switch operation {
 			case .reset, .forget: await gate.wait()
 			default: break
@@ -97,7 +90,7 @@ struct HistoricLogTransactionTests {
 		let directory = try directory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let gate = HistoryOperationGate()
-		let store = HistoricLogStore(filenameStore: TransactionFilename(), willPerform: { operation in
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(), willPerform: { operation in
 			if case .write = operation {
 				await gate.wait()
 			}
@@ -124,7 +117,7 @@ struct HistoricLogTransactionTests {
 		let directory = try directory()
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try HistoricLogDatabase.makeStack(at: directory.appendingPathComponent("history.sqlite"))
-		let store = HistoricLogStore(filenameStore: TransactionFilename(), makeStack: { _ in context })
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(), makeStack: { _ in context })
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		let row = entry("pending")
 		#expect(await store.writeLogLine(row) == .accepted)
@@ -152,7 +145,7 @@ struct HistoricLogTransactionTests {
 		}
 		#expect(await store.saveData() == .saved)
 		#expect(await store.close() == .saved)
-		let reopened = HistoricLogStore(filenameStore: TransactionFilename())
+		let reopened = HistoricLogStore(filenameStore: HistoricLogFilenameFixture())
 		#expect(await reopened.openDatabase(inDirectory: directory.path).isOpen)
 		#expect(await reopened.fetchEntries(forView: "view", ascending: true, fetchLimit: 10, limitToDate: nil)
 			.map(\.data) == [row.data])

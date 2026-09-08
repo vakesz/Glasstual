@@ -8,13 +8,6 @@ import CoreData
 @testable import Glasstual
 import Testing
 
-private nonisolated struct RecoveryFilename: HistoricLogFilenameStoring { // nonisolated: value
-	var databaseFilename: String? {
-		get { "history.sqlite" }
-		nonmutating set { Issue.record("Recovery renamed the database: \(newValue ?? "nil")") }
-	}
-}
-
 @MainActor
 @Suite("Visible history recovery", .serialized)
 struct LogControllerHistoryRecoveryTests {
@@ -38,7 +31,7 @@ struct LogControllerHistoryRecoveryTests {
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try HistoricLogDatabase.makeStack(at: directory.appendingPathComponent("history.sqlite"))
-		let store = HistoricLogStore(filenameStore: RecoveryFilename(), makeStack: { _ in context })
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(), makeStack: { _ in context })
 		let historyClient = HistoricLogClient(
 			store: store,
 			databaseDirectory: { directory.path },
@@ -95,7 +88,7 @@ struct LogControllerHistoryRecoveryTests {
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
 		let context = try HistoricLogDatabase.makeStack(at: directory.appendingPathComponent("history.sqlite"))
-		let store = HistoricLogStore(filenameStore: RecoveryFilename(), makeStack: { _ in context })
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(), makeStack: { _ in context })
 		let client = HistoricLogClient(store: store, databaseDirectory: { directory.path },
 		                               reportFailure: { Issue.record("\($0)") })
 		let history = LogControllerHistoricLogFile(client: client)

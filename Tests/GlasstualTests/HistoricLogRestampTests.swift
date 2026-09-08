@@ -8,19 +8,6 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/// Names the database file, so the test can seed the store before the real
-/// store opens it and read it back afterwards.
-private nonisolated struct FixedFilenameStore: HistoricLogFilenameStoring { // nonisolated: value
-	let filename: String
-
-	var databaseFilename: String? {
-		get { filename }
-		nonmutating set {
-			Issue.record("The store renamed its database to \(newValue ?? "nothing").")
-		}
-	}
-}
-
 /// Rows written before the insert started storing the line's own time carry the
 /// moment they reached the database instead, so they sort against newer rows by
 /// a different clock. These cover the one-off pass that corrects them.
@@ -122,7 +109,7 @@ struct HistoricLogRestampTests {
 
 		#expect(try await restampIsOutstanding(at: url))
 
-		let store = HistoricLogStore(filenameStore: FixedFilenameStore(filename: filename))
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(filename))
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		await store.close()
 
@@ -151,7 +138,7 @@ struct HistoricLogRestampTests {
 		)
 		try await seed([first.entry], at: url, startingAt: 1)
 
-		let store = HistoricLogStore(filenameStore: FixedFilenameStore(filename: filename))
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(filename))
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		await store.close()
 
@@ -164,7 +151,7 @@ struct HistoricLogRestampTests {
 		)
 		try await seed([late.entry], at: url, startingAt: 2)
 
-		let reopened = HistoricLogStore(filenameStore: FixedFilenameStore(filename: filename))
+		let reopened = HistoricLogStore(filenameStore: HistoricLogFilenameFixture(filename))
 		#expect(await reopened.openDatabase(inDirectory: directory.path).isOpen)
 		await reopened.close()
 

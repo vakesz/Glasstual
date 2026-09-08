@@ -225,6 +225,20 @@ struct PreferencesTransferStores {
 		key.storage == .standard ? standard : container
 	}
 
+	/// What a store actually holds, without the registration domain that
+	/// `object(forKey:)` falls back to. `nil` means nothing is persisted, which
+	/// is a different answer from "the registered default".
+	func persistedValue(for key: some AnyPreferenceKey) -> PropertyListValue? {
+		persistentDomain(for: key.storage)[key.name].flatMap(PropertyListValue.init(propertyList:))
+	}
+
+	func persistentDomain(for storage: PreferenceStorage) -> [String: Any] {
+		switch storage {
+		case .container: container.persistentDomain(forName: containerDomain) ?? [:]
+		case .standard: standard.persistentDomain(forName: standardDomain) ?? [:]
+		}
+	}
+
 	subscript<Value>(key: PreferenceKey<Value>) -> Value {
 		self[stored: key] ?? key.defaultValue
 	}
@@ -240,6 +254,47 @@ struct PreferencesTransferStores {
 		} else {
 			store.removeObject(forKey: key.name)
 		}
+	}
+
+	/** Removes every persisted value a declaration would refuse, and reports
+	 which keys lost one.
+
+	 Bounds arrive after values do: a count or port stored before its range was
+	 declared, or by an older build, reads back exactly as it was stored.
+	 Everything downstream holds values to the declarations — the Settings
+	 fields, an export, the recovery backup taken before an import, the import
+	 plan itself — so one stale value would make all of them fail on this
+	 Mac's own state. Removing it leaves the registered default in its place,
+	 which is what the field would have refused it back to. Runs once at
+	 launch, before anything reads. */
+	@discardableResult
+	func removeValuesDeclarationsRefuse() -> [String] {
+		let persisted: [PreferenceStorage: [String: Any]] = [
+			.container: persistentDomain(for: .container),
+			.standard: persistentDomain(for: .standard),
+		]
+		var values: [String: PropertyListValue] = [:]
+		var refused: [String] = []
+		for key in Preferences.allKeys {
+			guard let object = persisted[key.storage]?[key.name] else { continue }
+			if let value = PropertyListValue(propertyList: object),
+			   let coerced = Preferences.coerce(value, forKey: key.name)
+			{
+				values[key.name] = coerced
+			} else {
+				refused.append(key.name)
+			}
+		}
+		// A value that is fine on its own can still contradict its partner.
+		for key in Preferences.allKeys {
+			if let value = values[key.name], !key.isValid(value, in: values) {
+				refused.append(key.name)
+			}
+		}
+		for name in refused {
+			set(nil, for: UntypedPreferenceKey(name, storage: Preferences.storage(for: name)))
+		}
+		return refused
 	}
 
 	func snapshot(clients: [ClientConfig]) -> PreferencesArchive {
@@ -314,14 +369,7 @@ nonisolated struct PreferencesTransferPlan: Sendable { // nonisolated: value
 			result.unset.formUnion(archive.unset)
 			result.unset.subtract(archive.values.keys)
 		}
-		/* Only what the archive changes is held to the declarations. A value
-		 this Mac stored before its bound was declared is not the file's fault,
-		 and must not lock every import out. A restore replaces everything, so
-		 there every key is the archive's. */
-		let touched: Set<String> = mode == .restore
-			? Set(Preferences.allKeys.map(\.name))
-			: Set(archive.values.keys).union(archive.unset)
-		for key in Preferences.allKeys where touched.contains(key.name) {
+		for key in Preferences.allKeys {
 			if let value = result.values[key.name] ?? key.registeredDefault,
 			   !key.isValid(value, in: result.values)
 			{

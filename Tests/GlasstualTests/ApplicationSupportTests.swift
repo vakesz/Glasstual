@@ -210,6 +210,57 @@ struct ApplicationSupportTests {
 		#expect(sounds == sortedSounds)
 	}
 
+	/** The launch count is read back out of the defaults suite before it is
+	 raised, so a value a hand-edited entry can carry has to survive the
+	 increment. The declaration's bound is what keeps one out of the suite in the
+	 first place, and the System Profiler plugin reports the count as an `Int`. */
+	@Test("The launch count survives a stored value no count could reach")
+	func launchCountSaturatesAndIsBounded() {
+		let stored = Preferences.Internals.runCount.value
+		defer { Preferences.Internals.runCount.value = stored }
+
+		Preferences.Internals.runCount.value = .max
+		ApplicationInfo.incrementApplicationRunCount()
+
+		#expect(ApplicationInfo.applicationRunCount() == .max)
+
+		Preferences.Internals.runCount.value = 41
+		ApplicationInfo.incrementApplicationRunCount()
+
+		#expect(ApplicationInfo.applicationRunCount() == 42)
+		#expect(Preferences.Internals.runCount.coerce(.integer(Int(Int32.max))) != nil)
+		#expect(Preferences.Internals.runCount.coerce(.string("\(UInt.max)")) == nil)
+	}
+
+	/// The bound is exclusive, so there is no number below zero of them.
+	@Test("A random number below nothing is nothing")
+	func randomNumberBelowZeroIsZero() {
+		#expect(randomNumber(0) == 0)
+		#expect(randomNumber(1) == 0)
+	}
+
+	/** A transcript row carries an archived `NSDate`, and one that is not a
+	 moment `localtime_r` can name would trap on the narrowing to `time_t`.
+	 An unformattable stamp reads as no stamp, which is what callers expect. */
+	@Test(
+		"A stored date that is not a moment formats as nothing rather than trapping",
+		arguments: [Double.nan, .infinity, -.infinity, 1e300, -1e300] as [TimeInterval]
+	)
+	func storedDatesThatAreNotMomentsFormatAsNothing(_ seconds: TimeInterval) {
+		let date = Date(timeIntervalSince1970: seconds) as NSDate
+
+		#expect(formattedTimestamp(date, "[%H:%M:%S]" as NSString) == nil)
+	}
+
+	@Test("A stored date that is a moment still formats")
+	func storedDatesThatAreMomentsStillFormat() throws {
+		let date = Date(timeIntervalSince1970: 1_709_641_800) as NSDate
+		let formatted = try #require(formattedTimestamp(date, "[%H:%M:%S]" as NSString) as String?)
+
+		#expect(formatted.hasPrefix("["))
+		#expect(formatted.hasSuffix("]"))
+	}
+
 	private func makeChannel(named name: String, type: ChannelType, client: IRCClient) -> Channel {
 		let channel = Channel(config: ChannelConfig(channelName: name, type: type))
 

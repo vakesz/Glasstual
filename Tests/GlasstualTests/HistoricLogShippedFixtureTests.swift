@@ -7,13 +7,6 @@ import CoreData
 @testable import Glasstual
 import Testing
 
-private nonisolated struct ShippedFixtureFilename: HistoricLogFilenameStoring { // nonisolated: value
-	var databaseFilename: String? {
-		get { "fixture.sqlite" }
-		nonmutating set { Issue.record("The fixture was replaced: \(newValue ?? "nil")") }
-	}
-}
-
 @MainActor
 @Suite("v1.0.7 model-3 history fixture", .serialized)
 struct HistoricLogShippedFixtureTests {
@@ -44,7 +37,7 @@ struct HistoricLogShippedFixtureTests {
 		#expect(Set(decoded.map(\.messageBody)) == ["older", "duplicate-a", "duplicate-b", "duplicate-c", "newer"])
 		#expect(decoded
 			.allSatisfy { $0.sessionIdentifier == 77 && $0.nickname == "alice" && $0.reactions == ["+1": ["bob"]] })
-		let store = HistoricLogStore(filenameStore: ShippedFixtureFilename())
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture("fixture.sqlite"))
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
 		var cursor: HistoricLogRowCursor?
 		var visited: [HistoricLogEntry] = []

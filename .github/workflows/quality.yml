@@ -58,6 +58,8 @@ jobs:
 
       # Compiles Tests/E2EHarness and Tests/GlasstualE2ETests. It never launches
       # the app and never touches Accessibility; see Documentation/E2E.md.
+      # `make e2e-fixtures` below builds the same scheme, so this step exists to
+      # give scripts/release-validation.sh a named step to require.
       - name: Build the E2E scheme for testing
         run: |
           set -euo pipefail

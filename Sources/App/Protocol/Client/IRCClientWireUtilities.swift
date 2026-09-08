@@ -53,13 +53,18 @@ public nonisolated enum ClientWireUtilities { // nonisolated: value
 		"REGAIN", "REGISTER", "RELEASE", "RESETPASS", "SENDPASS", "SET", "SETPASS", "SIDENTIFY",
 	]
 
+	/// The `MODE` lines that set or clear one mode over a list of parameters,
+	/// or none when there is no single mode letter to change. The symbol can be
+	/// one a server advertised and then withdrew, which is not a mode to send.
 	public static func compileModeChanges(
 		symbol: String,
 		isSet: Bool,
 		parameters: [String],
 		maximumModes: UInt
 	) -> [String] {
-		precondition((symbol as NSString).length == 1)
+		guard (symbol as NSString).length == 1 else {
+			return []
+		}
 
 		var results: [String] = []
 		var modeSymbols = ""

@@ -50,6 +50,38 @@ struct AppearanceSchemaTests {
 		#expect(schema.backgroundView.contentBorderPadding == 23)
 	}
 
+	private static func colorPlist(_ value: String) throws -> Data {
+		try PropertyListSerialization.data(
+			fromPropertyList: ["type": 2, "value": value] as [String: Any],
+			format: .binary,
+			options: 0
+		)
+	}
+
+	/** An appearance plist states colour components as text, and `Double` reads
+	 `"nan"` and `"inf"` as values. Neither is a component: a colour built from
+	 one carries it through `usingColorSpace(_:)` to the byte conversion that
+	 writes the colour back out as hexadecimal. */
+	@Test(
+		"A colour component that is not a number fails the decode",
+		arguments: ["nan 0 0", "inf 0 0", "0 0 -inf", "0.2 nan 0.4 1"]
+	)
+	func componentsThatAreNotNumbersFailTheDecode(_ value: String) throws {
+		let data = try Self.colorPlist(value)
+
+		#expect(throws: (any Error).self) {
+			try PropertyListDecoder().decode(AppearanceColor.self, from: data)
+		}
+	}
+
+	@Test("A colour whose components are numbers still decodes")
+	func componentsThatAreNumbersDecode() throws {
+		let data = try Self.colorPlist("0.2 0.4 0.6 1")
+		let color = try PropertyListDecoder().decode(AppearanceColor.self, from: data)
+
+		#expect(color.color != nil)
+	}
+
 	@Test("An appearance the file does not carry decodes to nil rather than crashing")
 	func unknownAppearanceIsNil() {
 		let schema = AppearanceSchema.load(

@@ -26,11 +26,15 @@ generate: ensure-xcodegen ## Regenerate Glasstual.xcodeproj from project.yml
 	xcodegen generate --spec project.yml
 	$(MAKE) validate-generated-metadata
 
+# The list travels NUL-separated so a newline in a path cannot split one name
+# into two; `-s` on the list file is the emptiness check, and `plutil -lint -s`
+# stays quiet until a file is malformed, which makes xargs exit non-zero.
 validate-generated-metadata: ## Validate XcodeGen-owned Info.plists and entitlements
 	@set -euo pipefail; \
-	files="$$(find "$(GENERATED_XCODE_DIR)" -type f \( -name '*.plist' -o -name '*.entitlements' \))"; \
-	[ -n "$$files" ] || { echo "No generated Xcode metadata found in $(GENERATED_XCODE_DIR)" >&2; exit 1; }; \
-	printf '%s\n' "$$files" | while IFS= read -r file; do plutil -lint "$$file" >/dev/null || exit 1; done
+	list="$$(mktemp)"; trap 'rm -f "$$list"' EXIT; \
+	find "$(GENERATED_XCODE_DIR)" -type f \( -name '*.plist' -o -name '*.entitlements' \) -print0 >"$$list"; \
+	[ -s "$$list" ] || { echo "No generated Xcode metadata found in $(GENERATED_XCODE_DIR)" >&2; exit 1; }; \
+	xargs -0 plutil -lint -s <"$$list"
 
 build: generate ## Build the app (CONFIG=Debug|Release)
 	$(XCODEBUILD) -configuration $(CONFIG) build

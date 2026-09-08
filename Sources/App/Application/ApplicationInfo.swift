@@ -101,8 +101,13 @@ public nonisolated enum ApplicationInfo { // nonisolated: value
 		Preferences.Internals.runCount.value
 	}
 
+	/// The stored count is read back before it is raised, and a value a
+	/// hand-edited defaults entry can carry is not a count: the bound on the
+	/// declaration is what keeps one out, and the saturation here is what keeps
+	/// a launch from ending on the increment if one ever gets past it.
 	@MainActor public static func incrementApplicationRunCount() {
-		Preferences.Internals.runCount.value = applicationRunCount() + 1
+		let count = applicationRunCount()
+		Preferences.Internals.runCount.value = count < .max ? count + 1 : count
 	}
 
 	public static func applicationBirthday() -> TimeInterval {

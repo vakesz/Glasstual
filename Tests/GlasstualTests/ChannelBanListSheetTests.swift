@@ -34,6 +34,33 @@ struct ChannelBanListSheetTests {
 		#expect(sheet.model.maximumEntries == .max)
 	}
 
+	/** A server can withdraw an ISUPPORT token mid-session with a `-` prefixed
+	 one, and a reconnect resets the set wholesale — either can happen while the
+	 sheet is open. The sheet names no mode then, and asking the client to
+	 change one compiles to nothing rather than ending the process. */
+	@Test("A list mode the server stops advertising leaves the sheet with no symbol")
+	func withdrawnListModeLeavesNoSymbol() throws {
+		let client = GLTTestClient()
+		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ EXCEPTS=e")
+		let channel = try #require(client.findChannelOrCreate("#withdrawn"))
+		channel.activate()
+		let sheet = try #require(ChannelBanListSheet(entryType: .banException, inChannel: channel))
+
+		#expect(sheet.modeSymbol?.description == "e")
+
+		client.supportInfo.processConfigurationData("-EXCEPTS")
+
+		#expect(sheet.modeSymbol == nil)
+
+		let changes = client.compileListOfModeChanges(
+			forModeSymbol: sheet.modeSymbol?.description ?? "",
+			modeIsSet: false,
+			modeParameters: ["*!*@example.test"]
+		)
+
+		#expect(changes.isEmpty)
+	}
+
 	@Test("The native table starts with the newest entry first")
 	func newestEntryIsFirst() {
 		let model = ChannelBanListModel()

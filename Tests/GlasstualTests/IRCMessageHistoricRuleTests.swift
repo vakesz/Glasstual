@@ -217,12 +217,11 @@ struct IRCMessageHistoricRuleTests {
 		#expect(abs(client.lastMessageServerTime - sentAt.timeIntervalSince1970) < 1)
 	}
 
-	/** A bouncer's Unix stamp is server-controlled text, and one that is not a
-	 time has to be refused rather than believed.
-
-	 An unbounded `Double` is a `Date` far outside anything a clock can hold,
-	 and every later narrowing of it — the resume point the reconnect sends, the
-	 line numbers the transcript stores — traps on the conversion. */
+	/** A `@time` tag is server-controlled text, so the parser reads only what
+	 can be a Unix time in seconds. Anything else leaves the message with no
+	 server time and its own arrival stamp, which stays inside the range every
+	 later narrowing holds — the resume point the reconnect sends, and the line
+	 numbers the transcript stores. */
 	@Test(
 		"A Unix stamp that cannot be a time is ignored",
 		arguments: [

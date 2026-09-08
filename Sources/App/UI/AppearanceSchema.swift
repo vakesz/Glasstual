@@ -124,10 +124,12 @@ public enum AppearanceColor: Decodable, Equatable, Sendable {
 	]
 
 	/// `nil` when any token is not a number, so a typo in a plist fails the
-	/// decode instead of silently becoming a zero component.
+	/// decode instead of silently becoming a zero component. `Double("nan")`
+	/// and `Double("inf")` both parse and neither is a colour component, so the
+	/// finiteness check is part of being a number here.
 	private static func components(of value: String) -> [Double]? {
 		let tokens = value.split(whereSeparator: \.isWhitespace)
-		let numbers = tokens.compactMap { Double($0) }
+		let numbers = tokens.compactMap { Double($0) }.filter(\.isFinite)
 		return numbers.count == tokens.count ? numbers : nil
 	}
 }

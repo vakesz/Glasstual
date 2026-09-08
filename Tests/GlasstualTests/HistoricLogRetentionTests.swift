@@ -8,13 +8,6 @@ import Foundation
 import Synchronization
 import Testing
 
-private nonisolated struct RetentionFilename: HistoricLogFilenameStoring { // nonisolated: value
-	var databaseFilename: String? {
-		get { "history.sqlite" }
-		nonmutating set { Issue.record("Unexpected database replacement: \(newValue ?? "nil")") }
-	}
-}
-
 /// Signals each retention pass as it takes the store's lane. A caller that
 /// waits for the count it expects is behind that pass in the lane, so the work
 /// it reads back has finished.
@@ -66,7 +59,7 @@ struct HistoricLogRetentionTests {
 		let delay = Mutex<Duration>(.seconds(1800))
 		let passes = RetentionPassCounter()
 		let store = HistoricLogStore(
-			filenameStore: RetentionFilename(),
+			filenameStore: HistoricLogFilenameFixture(),
 			resizeDelay: { delay.withLock { $0 } },
 			willPerform: { operation in
 				if case .resize = operation {

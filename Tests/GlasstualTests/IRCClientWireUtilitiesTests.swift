@@ -63,6 +63,25 @@ struct IRCClientWireUtilitiesTests {
 		)
 	}
 
+	/** A list sheet names its mode from ISUPPORT, and a server can withdraw the
+	 token — with a `-` prefixed token, or by resetting the whole set on
+	 reconnect — while the sheet is still open. There is no mode to change then,
+	 which used to be a `precondition` rather than an answer. */
+	@Test(
+		"A symbol that is not one mode letter compiles to no changes",
+		arguments: ["", "be", "  "]
+	)
+	func aSymbolThatIsNotOneModeLetterCompilesToNothing(_ symbol: String) {
+		#expect(
+			ClientWireUtilities.compileModeChanges(
+				symbol: symbol,
+				isSet: false,
+				parameters: ["one", "two"],
+				maximumModes: 3
+			).isEmpty
+		)
+	}
+
 	@Test("A credential sent to services is redacted without changing its spacing")
 	func serviceCredentialsAreRedactedWithoutChangingSpacing() {
 		#expect(

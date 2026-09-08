@@ -68,8 +68,8 @@ extension IRCClient: ChannelBanListSheetDelegate {
 	}
 
 	public func channelBanListSheetOnUpdate(_ sender: ChannelBanListSheet) {
-		guard let channel = sender.channel else { return }
-		sendModes("+\(sender.modeSymbol)", withParametersString: nil, in: channel)
+		guard let channel = sender.channel, let modeSymbol = sender.modeSymbol else { return }
+		sendModes("+\(modeSymbol)", withParametersString: nil, in: channel)
 	}
 
 	public func channelBanListSheetWillClose(_ sender: ChannelBanListSheet) {

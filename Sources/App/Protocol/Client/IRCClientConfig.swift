@@ -58,6 +58,24 @@ nonisolated enum ClientConfigDefaults { // nonisolated: value
 	/// connection that asks it to. Long enough for a services reply to land.
 	static let autojoinConnectCommandDelay: TimeInterval = 3
 	static let maximumAutojoinConnectCommandDelay: TimeInterval = 60
+
+	/** The autojoin pause as a number of seconds the rest of the app can use.
+
+	 The Settings stepper offers `0 ... maximumAutojoinConnectCommandDelay` and
+	 an imported configuration is checked against the same range, which leaves a
+	 hand-edited `plist` as the one way something else reaches the property. It
+	 is bounded where the configuration is read so that every later use — the
+	 label that narrows it to an `Int`, the sleep that turns it into a
+	 `Duration` — is reading seconds. `min`/`max` pass NaN through, so the
+	 finiteness check comes first. */
+	static func autojoinConnectCommandDelay(clamping value: TimeInterval) -> TimeInterval {
+		guard value.isFinite else {
+			return autojoinConnectCommandDelay
+		}
+
+		return min(max(value, 0), maximumAutojoinConnectCommandDelay)
+	}
+
 	/// Networks that rate-limit hard enough to need the reduced flood settings.
 	static let rateLimitedServerSuffix = ".freenode.net"
 }

@@ -135,6 +135,7 @@ public extension TextualPreferences {
 		UserDefaults.standard.register(defaults: Preferences.registrationDomain(for: .standard).propertyListObject)
 		preferences.register(defaults: Preferences.registrationDomain(for: .container).propertyListObject)
 		registerDynamicDefaults()
+		PreferencesTransferStores.live.removeValuesDeclarationsRefuse()
 	}
 
 	class func initPreferences() {

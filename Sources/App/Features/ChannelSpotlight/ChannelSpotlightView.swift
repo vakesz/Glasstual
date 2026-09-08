@@ -61,7 +61,7 @@ struct ChannelSpotlightView: View {
 								ForEach(Array(model.displayedResults.enumerated()), id: \.element.id) { index, result in
 									ChannelSpotlightRow(
 										result: result,
-										shortcut: shortcut(for: index),
+										shortcut: shortcut(for: index, isSelected: model.selectedResultID == result.id),
 										isSelected: model.selectedResultID == result.id
 									)
 									.contentShape(.rect)
@@ -112,9 +112,15 @@ struct ChannelSpotlightView: View {
 		}
 	}
 
-	private func shortcut(for index: Int) -> String {
+	/** The shortcut label for one row.
+
+	 The row is built inside a `LazyVStack`, so its content closure runs against
+	 whatever `displayedResults` holds at that moment while `index` names a
+	 position in the snapshot `ForEach` captured. Nothing here reads the model
+	 back by that index: the caller already has the row it is drawing. */
+	private func shortcut(for index: Int, isSelected: Bool) -> String {
 		guard index < 10 else { return "" }
-		if model.displayedResults[index].id == model.selectedResultID {
+		if isSelected {
 			return "↩︎"
 		}
 		return "⌘\(index == 9 ? 0 : index + 1)"
