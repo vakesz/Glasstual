@@ -2,7 +2,11 @@
 # Read-only release gates. Network access is confined to preflight.
 set -euo pipefail
 
-fail() { echo "::error::$*" >&2; return 1; }
+# Every diagnosed failure ends the run here, so no caller repeats the exit
+# status. The three predicates below (canonical_version, validate_run,
+# validate_jobs) report by return status instead, because their callers decide
+# what a rejection means.
+fail() { echo "::error::$*" >&2; exit 1; }
 
 # Canonical form without diagnostics: callers decide whether a rejection means a
 # bad input version or a repository tag/release that is not canonical.
@@ -14,9 +18,8 @@ canonical_version() {
 }
 
 normalize_version() {
-  canonical_version "$1" || {
-    fail "Invalid version: $1 (use canonical numeric major.minor[.patch])."; return 1;
-  }
+  canonical_version "$1" ||
+    fail "Invalid version: $1 (use canonical numeric major.minor[.patch])."
 }
 
 version_number() {
@@ -27,20 +30,17 @@ version_number() {
 
 validate_versions() {
   local version="$1" maintenance="$2" tags="$3" tag previous
-  [[ "${maintenance}" == true || "${maintenance}" == false ]] || return 1
+  [[ "${maintenance}" == true || "${maintenance}" == false ]] ||
+    fail "Maintenance flag must be true or false, got ${maintenance}."
   while IFS= read -r tag; do
     [[ "${tag}" =~ ^v[0-9]+(\.[0-9]+){1,2}$ ]] || continue
-    previous="$(canonical_version "${tag#v}")" || {
+    previous="$(canonical_version "${tag#v}")" ||
       fail "Existing tag or release ${tag} is not a canonical numeric version; fix the tag inventory."
-      return 1
-    }
-    [[ "${previous}" != "${version}" ]] || {
-      fail "Version ${version} already has a tag or release (${tag})."; return 1;
-    }
+    [[ "${previous}" != "${version}" ]] ||
+      fail "Version ${version} already has a tag or release (${tag})."
     if [[ "${maintenance}" != true ]] &&
        (( $(version_number "${version}") <= $(version_number "${previous}") )); then
       fail "Product/build ${version} must exceed ${previous}; an older maintenance release must not be latest."
-      return 1
     fi
   done <<< "${tags}"
 }

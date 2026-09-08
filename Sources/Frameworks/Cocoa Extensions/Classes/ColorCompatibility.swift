@@ -66,11 +66,19 @@ public extension NSColor {
 		)
 	}
 
-	/// A colour component as the byte it is written as. The clamp is what makes
-	/// `UInt8` safe: an extended-range colour can report a component outside
-	/// 0...1.
+	/// A colour component as the byte it is written as.
+	///
+	/// An extended-range colour can report a component outside 0...1, which the
+	/// clamp covers — infinity included. What it does not cover is a component
+	/// that is not a number at all: a theme plist states components as text and
+	/// `Double("nan")` parses, `min`/`max` hand NaN straight through, and the
+	/// conversion traps on it. No intensity is the honest reading of one.
 	private static func textualChannelByte(_ component: CGFloat) -> UInt8 {
-		UInt8((min(max(component, 0), 1) * 0xFF).rounded())
+		guard component.isNaN == false else {
+			return 0
+		}
+
+		return UInt8((min(max(component, 0), 1) * 0xFF).rounded())
 	}
 
 	class func textual_color(hexadecimalValue value: String) -> NSColor? {

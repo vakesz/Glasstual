@@ -26,6 +26,18 @@ struct ColorHexadecimalTests {
 		)
 	}
 
+	/** A colour can be unarchived out of a preferences plist with whatever
+	 components that archive holds, and NaN survives `usingColorSpace(_:)`.
+	 The clamp does not remove it — `min`/`max` hand NaN through — so the byte
+	 conversion has to refuse it: nothing to state reads as no intensity, and
+	 an infinite component clamps the way an extended-range one does. */
+	@Test("A colour with components that are not numbers still formats")
+	func componentsThatAreNotNumbersFormat() {
+		let color = NSColor(srgbRed: .nan, green: .infinity, blue: -.infinity, alpha: 1)
+
+		#expect(color.textualHexadecimalValue == "#00FF00")
+	}
+
 	@Test("A channel byte of one is nearly black, not full intensity")
 	func channelOfOneIsNotFullIntensity() throws {
 		let parsed = try components("#010101")

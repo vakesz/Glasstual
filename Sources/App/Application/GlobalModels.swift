@@ -55,7 +55,15 @@ private nonisolated let isoStandardDateFormatter: DateFormatter = { // nonisolat
 }()
 
 public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? { // nonisolated: pure
-	var global = time_t(date.timeIntervalSince1970)
+	/* The date can come off disk: a historic log row carries an archived
+	 `NSDate`, and one that is not a moment `localtime_r` can name traps on the
+	 narrowing rather than reporting it. Every caller already falls back to the
+	 empty string, which is what an unformattable stamp means. */
+	guard let epoch = Int64(exactly: date.timeIntervalSince1970.rounded()) else {
+		return nil
+	}
+
+	var global = time_t(epoch)
 	var localTime = tm()
 
 	guard localtime_r(&global, &localTime) != nil else {
@@ -145,7 +153,9 @@ private nonisolated func parseDateValue(_ string: String) -> Date? { // nonisola
 		return date
 	}
 
-	if let seconds = TimeInterval(trimmed) {
+	/* `TimeInterval("inf")` and `TimeInterval("nan")` both parse, and neither
+	 is a moment: the caller shows the server's own text instead. */
+	if let seconds = TimeInterval(trimmed), seconds.isFinite {
 		return Date(timeIntervalSince1970: seconds)
 	}
 
@@ -156,8 +166,10 @@ public nonisolated func sharedISOStandardDateFormatter() -> DateFormatter { // n
 	isoStandardDateFormatter
 }
 
+/// A number below `maximum`, or zero when there is no such number.
 public nonisolated func randomNumber(_ maximum: UInt32) -> UInt { // nonisolated: pure
-	UInt(UInt32.random(in: 0 ..< maximum))
+	guard maximum > 0 else { return 0 }
+	return UInt(UInt32.random(in: 0 ..< maximum))
 }
 
 public nonisolated func formattedNumber(_ number: Int) -> NSString { // nonisolated: pure

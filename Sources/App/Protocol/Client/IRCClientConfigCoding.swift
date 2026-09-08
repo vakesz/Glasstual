@@ -332,11 +332,13 @@ nonisolated extension ClientConfig { // nonisolated: value
 			aliases: [],
 			default: false
 		)
-		autojoinDelayAfterConnectCommands = container.decode(
-			TimeInterval.self,
-			forKey: .autojoinDelayAfterConnectCommands,
-			aliases: [],
-			default: ClientConfigDefaults.autojoinConnectCommandDelay
+		autojoinDelayAfterConnectCommands = ClientConfigDefaults.autojoinConnectCommandDelay(
+			clamping: container.decode(
+				TimeInterval.self,
+				forKey: .autojoinDelayAfterConnectCommands,
+				aliases: [],
+				default: ClientConfigDefaults.autojoinConnectCommandDelay
+			)
 		)
 		hideAutojoinDelayedWarnings = container.decode(
 			Bool.self,

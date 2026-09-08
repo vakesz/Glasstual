@@ -415,8 +415,10 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		Int(channelCount)
 	}
 
+	/// The base declares the index as an `Int`, so a caller can name a position
+	/// no child occupies; there is no channel there either way.
 	override public func child(at index: Int) -> TreeItem? {
-		channel(at: UInt(index))
+		UInt(exactly: index).flatMap(channel(at:))
 	}
 
 	@MainActor func prepareInitialState() {

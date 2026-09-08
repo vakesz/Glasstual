@@ -8,13 +8,6 @@ import CoreData
 @testable import Glasstual
 import Testing
 
-private nonisolated struct LatchFilename: HistoricLogFilenameStoring { // nonisolated: value
-	var databaseFilename: String? {
-		get { "history.sqlite" }
-		nonmutating set { Issue.record("Unexpected database replacement: \(newValue ?? "nil")") }
-	}
-}
-
 /// Holds the first history read open until the test lets it answer. Every read
 /// after it returns an empty page, so a controller that starts a second one
 /// finishes without help.
@@ -131,7 +124,7 @@ struct LogControllerHistoryLatchTests {
 		)
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
-		let store = HistoricLogStore(filenameStore: LatchFilename())
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture())
 		let historyClient = HistoricLogClient(
 			store: store,
 			databaseDirectory: { directory.path },

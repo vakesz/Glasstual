@@ -48,10 +48,17 @@ public nonisolated extension Preferences { // nonisolated: value
 			traits: .unregistered
 		)
 
+		/** How many times the application has been launched.
+
+		 The count is raised on every launch and reported as an `Int` by the
+		 System Profiler plugin, so it is bounded the way the other counts are:
+		 `Int32.max` launches is past any real number of them, and the launch
+		 scrub drops a stored value above it. */
 		public static let runCount = PreferenceKey(
 			"TXRunCount",
 			default: UInt(0),
-			traits: [.unregistered, .excludedFromExport]
+			traits: [.unregistered, .excludedFromExport],
+			validation: { $0 <= UInt(Int32.max) }
 		)
 
 		public static let runTime = PreferenceKey(

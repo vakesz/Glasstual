@@ -100,9 +100,9 @@ struct TranscriptProjectionStateTests {
 		#expect(state.deliveryUpdates[historic.uniqueIdentifier]?.state == .delivered)
 	}
 
-	/** Reprinting a line the tail already holds moves it to the end rather than
-	 leaving two copies, and the side table that finds it has to move with it —
-	 a stale index would hand a later update the wrong row. */
+	/** The tail keeps one row per line: reprinting a line it already holds
+	 moves that row to the end instead of adding a second, and the index a later
+	 delivery update looks through names the row's new position. */
 	@Test("A reprinted line moves to the end and stays findable")
 	func reprintingMovesTheLineToTheEnd() {
 		let first = projectionLine("first")
@@ -124,8 +124,9 @@ struct TranscriptProjectionStateTests {
 		#expect(replay.lines.first?.deliveryState == .failed)
 	}
 
-	/// Trimming the head shifts every remaining line, so the side table has to
-	/// keep pointing at the rows it names.
+	/// Trimming the head renumbers the rows that stay, and the index follows
+	/// them, so a later delivery update reaches a surviving line and finds
+	/// nothing for one the trim dropped.
 	@Test("A line that survives trimming is still found by a later update")
 	func trimmingKeepsTheSurvivingLineFindable() {
 		let first = projectionLine("first")

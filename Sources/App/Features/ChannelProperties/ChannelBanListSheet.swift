@@ -142,7 +142,7 @@ public final class ChannelBanListSheet: MainWindowSheetSession, ChannelScoped {
 
 		/* The limit is whatever the server advertised in ISUPPORT, so it is
 		 saturated rather than trusted to fit. */
-		model.maximumEntries = ChannelModeSymbol(modeSymbol)
+		model.maximumEntries = modeSymbol
 			.map { Int(clamping: client.supportInfo.maximumListEntries(forModeSymbol: $0)) } ?? 0
 		installSheet()
 	}
@@ -187,9 +187,9 @@ public final class ChannelBanListSheet: MainWindowSheetSession, ChannelScoped {
 	}
 
 	private func removeSelectedEntries() {
-		guard model.selectedMasks.isEmpty == false else { return }
+		guard model.selectedMasks.isEmpty == false, let modeSymbol else { return }
 		listOfChanges = client.compileListOfModeChanges(
-			forModeSymbol: modeSymbol,
+			forModeSymbol: modeSymbol.description,
 			modeIsSet: false,
 			modeParameters: model.selectedMasks
 		)
@@ -211,8 +211,15 @@ public final class ChannelBanListSheet: MainWindowSheetSession, ChannelScoped {
 		return client.supportInfo.isListSupported(entryType.supportListType)
 	}
 
-	public var modeSymbol: String {
-		client.supportInfo.modeSymbol(forList: entryType.supportListType) ?? ""
+	/** The mode letter this list is kept under.
+
+	 `nil` once the server stops advertising the list: a `-` token withdraws one
+	 mid-session and a reconnect resets ISUPPORT wholesale, either of which can
+	 happen while the sheet is open. There is no mode to name then, so nothing
+	 asks the client to change one. */
+	public var modeSymbol: ChannelModeSymbol? {
+		client.supportInfo.modeSymbol(forList: entryType.supportListType)
+			.flatMap(ChannelModeSymbol.init)
 	}
 
 	override public func sheetDidEnd(withReturnCode _: Int) {

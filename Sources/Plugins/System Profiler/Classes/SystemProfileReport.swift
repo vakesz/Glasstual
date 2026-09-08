@@ -109,7 +109,7 @@ enum SystemProfileReport {
 		let runtime = min(snapshot.timeIntervalSinceInstall, birthday)
 		return SystemProfilerLocalization.string(
 			.BasicLanguage.applicationRuntimeStatistics(
-				PluginHost.formattedNumber(Int(snapshot.runCount)),
+				PluginHost.formattedNumber(Int(clamping: snapshot.runCount)),
 				PluginHost.humanReadableTimeInterval(runtime, shortValue: false)
 			)
 		)
@@ -131,8 +131,12 @@ enum SystemProfileReport {
 			      let total = values.volumeTotalCapacity,
 			      let free = values.volumeAvailableCapacityForImportantUsage
 			else { return nil }
-			let totalDescription = SystemProfileInformation.formattedByteCount(UInt64(total))
-			let freeDescription = SystemProfileInformation.formattedByteCount(UInt64(free))
+			/* A mounted volume can be a network share, a disk image or a FUSE
+			 mount, and its capacities are whatever that filesystem reports;
+			 `volumeAvailableCapacityForImportantUsage` also goes negative when
+			 purgeable-space accounting overshoots. Neither is a byte count. */
+			let totalDescription = SystemProfileInformation.formattedByteCount(UInt64(clamping: total))
+			let freeDescription = SystemProfileInformation.formattedByteCount(UInt64(clamping: free))
 			return if index == 0 {
 				SystemProfilerLocalization.string(.BasicLanguage.firstMountedDrive(
 					name,
@@ -336,7 +340,7 @@ enum SystemProfileInformation {
 	static func rootVolumeCapacity() -> UInt64? {
 		let values = try? URL(fileURLWithPath: "/", isDirectory: true)
 			.resourceValues(forKeys: [.volumeTotalCapacityKey])
-		return values?.volumeTotalCapacity.map(UInt64.init)
+		return values?.volumeTotalCapacity.map { UInt64(clamping: $0) }
 	}
 
 	static func graphicsDescription() -> String? {

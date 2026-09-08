@@ -189,6 +189,7 @@
 		2DDA9E3199038C40D881A597 /* InternetAddressLookupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E21E68231C1C84FEDD0881 /* InternetAddressLookupTests.swift */; };
 		2E28AFD107AEE2BF51BF9C36 /* IRCHighlightMatchConditionCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0BBE7F356AA146469C2AA93 /* IRCHighlightMatchConditionCodableTests.swift */; };
 		2F03750A3CE35BB4A6658A2D /* NSTextViewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C4291664F413FF89F28832 /* NSTextViewHelper.swift */; };
+		2F1D0635879130F0E50E90F8 /* HistoricLogFilenameFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2998AB48BC5C2BA65880B39 /* HistoricLogFilenameFixture.swift */; };
 		3035579DDC3EBF8EF62B9652 /* PluginKitContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CD599AF71E90144AE28F04 /* PluginKitContractTests.swift */; };
 		303B1ED4E275A7DCAE0805EA /* MainWindowInputAccessoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5A599E4CFAEBE2030E55A3 /* MainWindowInputAccessoryView.swift */; };
 		30BB56CFEACE7A4A171216D0 /* IRCModeInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD72DD834627F638A0A9915 /* IRCModeInfoTests.swift */; };
@@ -1815,6 +1816,7 @@
 		BFC9F1C22251DA27CCB19773 /* MenuFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuFactory.swift; sourceTree = "<group>"; };
 		BFF684A1F200FEDB5CEEBF16 /* IRCSpecWhoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSpecWhoTests.swift; sourceTree = "<group>"; };
 		C22784D4403CA4D55506E433 /* BasicLanguage.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = BasicLanguage.xcstrings; sourceTree = "<group>"; };
+		C2998AB48BC5C2BA65880B39 /* HistoricLogFilenameFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoricLogFilenameFixture.swift; sourceTree = "<group>"; };
 		C2D65DEFCE9B4803207126D0 /* KeychainItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainItemTests.swift; sourceTree = "<group>"; };
 		C35613FC7304DDC9E44F66E6 /* HistoricLogFetchOutcomeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoricLogFetchOutcomeTests.swift; sourceTree = "<group>"; };
 		C434F0D96BB92F510CAA9A17 /* IRCClientNumericWHOIS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientNumericWHOIS.swift; sourceTree = "<group>"; };
@@ -2201,6 +2203,7 @@
 		086944D07434380FD4225079 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				C2998AB48BC5C2BA65880B39 /* HistoricLogFilenameFixture.swift */,
 				147C9AAF51627C51306D5C47 /* IsolationExpectations.swift */,
 				36D81D1C481398D2AB26EAFB /* IsolationProbe.swift */,
 				2FC29B3FC24097D2D84107B5 /* PreferencesTransferFixture.swift */,
@@ -4556,6 +4559,7 @@
 				348C563433DEB62D146A1323 /* HistoricLogClientTests.swift in Sources */,
 				8D0119E89037654354E6DC10 /* HistoricLogDuplicateIndexTests.swift in Sources */,
 				0653EA25161031FB1C72412A /* HistoricLogFetchOutcomeTests.swift in Sources */,
+				2F1D0635879130F0E50E90F8 /* HistoricLogFilenameFixture.swift in Sources */,
 				8DEE887C704C1C855DA5CC28 /* HistoricLogRestampTests.swift in Sources */,
 				8DE5588E4E45162EAB296DBB /* HistoricLogRetentionTests.swift in Sources */,
 				F36F9D524FA4A7EACB13D85F /* HistoricLogShippedFixtureTests.swift in Sources */,

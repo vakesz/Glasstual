@@ -37,4 +37,14 @@ struct DateValueFormattingTests {
 	func rejectsUnparseableString() {
 		#expect(formatDateLongStyle("not a date" as Any, false) == nil)
 	}
+
+	/// `TimeInterval("inf")` and `TimeInterval("nan")` both parse, so a server
+	/// that sends one would otherwise be believed and formatted as a moment.
+	@Test(
+		"A numeric string that is not a moment yields nil",
+		arguments: ["inf", "-inf", "infinity", "nan", "1e400"]
+	)
+	func rejectsNonFiniteEpochString(_ text: String) {
+		#expect(formatDateLongStyle(text as Any, false) == nil)
+	}
 }

@@ -102,7 +102,11 @@ public extension PluginHost {
 		}
 		let calendar = Calendar.autoupdatingCurrent
 		let startDate = Date()
-		let endDate = startDate.addingTimeInterval(dateInterval)
+		/* The interval can be server text a caller read as a `Double`, and
+		 `Double("nan")` parses. Foundation clamps the resulting date rather
+		 than trapping, which turns a NaN into a plausible-looking span in the
+		 wrong direction; nothing to measure reads as nothing. */
+		let endDate = startDate.addingTimeInterval(dateInterval.isFinite ? dateInterval : 0)
 		let dateRange = min(startDate, endDate) ..< max(startDate, endDate)
 		let formatComponents: Set<Date.ComponentsFormatStyle.Field>
 

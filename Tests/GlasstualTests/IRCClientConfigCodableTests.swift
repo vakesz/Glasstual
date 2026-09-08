@@ -15,6 +15,34 @@ import Testing
 @Suite("Client configuration property-list round trip")
 @MainActor
 struct IRCClientConfigCodableTests {
+	/** The Settings stepper offers `0 ... 60` seconds and the import check
+	 refuses anything else, which leaves a hand-edited client list as the one way
+	 something else reaches the property. Every later use reads it as seconds:
+	 the sheet's label narrows it to an `Int`, and the autojoin turns it into a
+	 `Duration`. */
+	@Test(
+		"An autojoin delay a plist edit can carry is bounded where the configuration is read",
+		arguments: [
+			PropertyListValue.double(.nan),
+			.double(.infinity),
+			.double(-.infinity),
+			.double(1e308),
+			.double(-5),
+			.double(600),
+		]
+	)
+	func autojoinDelayIsBoundedOnDecode(_ stored: PropertyListValue) throws {
+		var fixture = Self.worldFixture
+		fixture["autojoinDelayAfterConnectCommands"] = stored
+
+		let config = try #require(PropertyListModel.decode(ClientConfig.self, from: fixture))
+		let delay = config.autojoinDelayAfterConnectCommands
+
+		#expect(delay >= 0)
+		#expect(delay <= ClientConfigDefaults.maximumAutojoinConnectCommandDelay)
+		#expect(Int(exactly: delay) != nil)
+	}
+
 	@Test("Absent SASL choice retains legacy behavior and explicit off survives encoding")
 	func saslChoicePersistence() throws {
 		var config = try #require(PropertyListModel.decode(ClientConfig.self, from: Self.worldFixture))

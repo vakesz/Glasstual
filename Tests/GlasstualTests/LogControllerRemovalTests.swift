@@ -7,13 +7,6 @@ import AppKit
 @testable import Glasstual
 import Testing
 
-private nonisolated struct RemovalHistoryFilename: HistoricLogFilenameStoring { // nonisolated: value
-	var databaseFilename: String? {
-		get { "removal.sqlite" }
-		nonmutating set { Issue.record("Removal changed the selected history filename to \(newValue ?? "nil")") }
-	}
-}
-
 @MainActor
 @Suite("Controller removal history policy", .serialized)
 struct LogControllerRemovalTests {
@@ -34,7 +27,7 @@ struct LogControllerRemovalTests {
 		)
 		try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 		defer { try? FileManager.default.removeItem(at: directory) }
-		let store = HistoricLogStore(filenameStore: RemovalHistoryFilename())
+		let store = HistoricLogStore(filenameStore: HistoricLogFilenameFixture("removal.sqlite"))
 		let historyClient = HistoricLogClient(
 			store: store, databaseDirectory: { directory.path }, reportFailure: { Issue.record(Comment(rawValue: $0)) }
 		)

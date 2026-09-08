@@ -165,7 +165,7 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		primaryEncoding = container.decode(UInt.self, forKey: .primaryEncoding, aliases: [], default: 0)
 		fallbackEncoding = container.decode(UInt.self, forKey: .fallbackEncoding, aliases: [], default: 0)
 
-		applyMissingDefaults()
+		repairDecodedValues()
 	}
 
 	private mutating func decodeSecurity(from container: KeyedDecodingContainer<CodingKeys>) {
@@ -240,13 +240,16 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		try container.encode(fallbackEncoding, forKey: .fallbackEncoding)
 	}
 
-	/** A zero for any of these means the sender left it out, not that it wanted
-	 a port of zero or a flood window of nothing.
+	/** Puts a decoded configuration back inside the range the rest of the host
+	 assumes it is in.
 
-	 The flood-control clamps cannot cover this: `init(from:)` assigns inside an
-	 initializer, where a `didSet` observer does not run, so a stored zero
-	 survives until it is repaired here. */
-	private mutating func applyMissingDefaults() {
+	 A zero port means the sender left it out, not that it wanted a port of
+	 zero. The flood-control range is the larger point: `init(from:)` assigns
+	 inside an initializer, where the `didSet` observers that clamp these two do
+	 not run, so whatever the envelope carried survives — and the host narrows
+	 the message count to an `Int` on every write, which traps on a `UInt` above
+	 `Int.max`. Clamping here is what the observers would have done. */
+	private mutating func repairDecodedValues() {
 		if proxyPort == 0 {
 			proxyPort = IRCConnectionDefaults.proxyPort
 		}
@@ -255,13 +258,14 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 			serverPort = IRCConnectionDefaults.serverPort
 		}
 
-		if floodControlDelayInterval == 0 {
-			floodControlDelayInterval = IRCConnectionDefaults.floodControlDelayInterval
-		}
-
-		if floodControlMaximumMessages == 0 {
-			floodControlMaximumMessages = IRCConnectionDefaults.floodControlMaximumMessages
-		}
+		floodControlDelayInterval = Self.clampedFloodValue(
+			floodControlDelayInterval,
+			IRCConnectionDefaults.floodControlDelayInterval
+		)
+		floodControlMaximumMessages = Self.clampedFloodValue(
+			floodControlMaximumMessages,
+			IRCConnectionDefaults.floodControlMaximumMessages
+		)
 	}
 
 	/** A value outside the supported set means a configuration written by a

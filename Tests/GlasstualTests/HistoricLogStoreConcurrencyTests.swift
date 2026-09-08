@@ -3,22 +3,6 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/// The database name for one harness. `HistoricLogStore` only writes the slot
-/// when it finds it empty and has to name the file itself, so filling it in up
-/// front makes the store's reads answerable from a `let` instead of a box the
-/// store's isolation domain and the test would have to share. Each harness gets
-/// its own temporary directory, so a name per store is all the tests need.
-private nonisolated struct ScratchFilenameStore: HistoricLogFilenameStoring { // nonisolated: value
-	let filename = "logControllerHistoricLog_\(UUID().uuidString).sqlite"
-
-	var databaseFilename: String? {
-		get { filename }
-		nonmutating set {
-			Issue.record("The store renamed its database to \(newValue ?? "nothing").")
-		}
-	}
-}
-
 private actor DeletionRecorder {
 	private(set) var identifiers: [String] = []
 
@@ -32,7 +16,7 @@ private actor DeletionRecorder {
 private actor HistoricLogStoreHarness {
 	private let store: HistoricLogStore
 	private let recorder: DeletionRecorder
-	private let filenameStore: ScratchFilenameStore
+	private let filenameStore: HistoricLogFilenameFixture
 
 	let directory: URL
 
@@ -43,7 +27,7 @@ private actor HistoricLogStoreHarness {
 
 		let recorder = DeletionRecorder()
 		self.recorder = recorder
-		let filenameStore = ScratchFilenameStore()
+		let filenameStore = HistoricLogFilenameFixture.unique()
 		self.filenameStore = filenameStore
 		store = HistoricLogStore(filenameStore: filenameStore, deletionHandler: { identifiers, _ in
 			await recorder.record(identifiers)
@@ -362,7 +346,7 @@ struct HistoricLogStoreConcurrencyTests {
 	)
 	func failedOpenPreservesTheSelectedDatabase(inferable: Bool) async throws {
 		let harness = try HistoricLogStoreHarness()
-		let filenameStore = ScratchFilenameStore()
+		let filenameStore = HistoricLogFilenameFixture.unique()
 		let directory = harness.directory
 		let url = directory.appendingPathComponent(filenameStore.filename)
 		let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
