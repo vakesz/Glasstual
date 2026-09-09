@@ -83,34 +83,50 @@ private nonisolated enum IRCNetworkConnection: Sendable { // nonisolated: value
 		return metadata.securityProtocolMetadata
 	}
 
-	/** Every transition into the ready state, as values.
+	/** The state transitions this transport acts on, as values.
 
 	 `onStateUpdate` is generic over the protocol stack, so its two states are
-	 two unrelated types; readiness is the only one this transport acts on. The
-	 handler touches nothing but the continuation, which is what lets it be
-	 registered from either case. Register before the first read: establishment
-	 starts with that read, and a transition delivered before the stream exists
-	 is a transition nobody hears. */
-	func readyTransitions() -> AsyncStream<Void> {
-		let (stream, continuation) = AsyncStream<Void>.makeStream()
+	 two unrelated types; the handler touches nothing but the continuation,
+	 which is what lets it be registered from either case. Register before the
+	 first read: establishment starts with that read, and a transition
+	 delivered before the stream exists is a transition nobody hears.
+
+	 `waiting` counts as a failure. Network.framework parks a connection there
+	 when the peer hung up mid-handshake, refused the port or the name did not
+	 resolve, and leaves it parked until the network path changes — which for
+	 a server that just said no is never. The application has its own retry
+	 timer, so the error is reported now rather than when the connect deadline
+	 gives up half a minute later. */
+	func stateTransitions() -> AsyncStream<TransportTransition> {
+		let (stream, continuation) = AsyncStream<TransportTransition>.makeStream()
 
 		switch self {
 		case let .tcp(connection):
 			connection.onStateUpdate { _, state in
-				guard state == .ready else { return }
-
-				continuation.yield()
+				switch state {
+				case .ready: continuation.yield(.ready)
+				case let .waiting(error), let .failed(error): continuation.yield(.failed(error))
+				default: break
+				}
 			}
 		case let .tls(connection):
 			connection.onStateUpdate { _, state in
-				guard state == .ready else { return }
-
-				continuation.yield()
+				switch state {
+				case .ready: continuation.yield(.ready)
+				case let .waiting(error), let .failed(error): continuation.yield(.failed(error))
+				default: break
+				}
 			}
 		}
 
 		return stream
 	}
+}
+
+/// What `IRCNetworkConnection.stateTransitions()` reports.
+private nonisolated enum TransportTransition: Sendable { // nonisolated: value
+	case ready
+	case failed(NWError)
 }
 
 /// The structured-concurrency Network.framework transport, as an actor.
@@ -187,6 +203,7 @@ actor ConnectionSocket {
 
 	func open() {
 		guard disconnected, disconnecting == false else { return }
+		config.diagnostics?.record(.transportStarted)
 
 		if let proxyEndpoint {
 			events.yield(.willConnectToProxy(host: proxyEndpoint.host, port: proxyEndpoint.port))
@@ -326,11 +343,16 @@ actor ConnectionSocket {
 		 a failed handshake is reported by the first async operation. So the
 		 connection handed to us here has no TLS metadata yet, and what was
 		 negotiated is only knowable once it reports itself ready. */
-		let readyTransitions = connection.readyTransitions()
+		let transitions = connection.stateTransitions()
 
 		let readiness = Task { [weak self] in
-			for await _ in readyTransitions {
-				await self?.onReady()
+			for await transition in transitions {
+				switch transition {
+				case .ready:
+					await self?.onReady()
+				case let .failed(error):
+					await self?.onTransportFailure(error)
+				}
 			}
 		}
 
@@ -355,8 +377,19 @@ actor ConnectionSocket {
 	private func onReady() {
 		guard connecting, disconnecting == false else { return }
 
+		config.diagnostics?.record(.transportReady)
 		onConnect()
 		onSecured()
+	}
+
+	/// The transport reported it cannot establish. Only an establishing
+	/// connection is closed here: once ready, a drop is reported by the read
+	/// that fails, and a close already under way keeps its own error.
+	private func onTransportFailure(_ error: NWError) {
+		guard connecting, connected == false, disconnecting == false else { return }
+
+		config.diagnostics?.record(.transportFailed)
+		close(with: connectionError(from: error))
 	}
 
 	private func onSecured() {
@@ -624,7 +657,10 @@ extension ConnectionSocket {
 		tls = tls.certificateValidator { [weak self] _, trust in
 			guard let self else { return false }
 
+			let diagnostics = config.diagnostics
+			diagnostics?.record(.certificateEvaluationStarted)
 			let evaluation = Self.evaluateCertificate(trust)
+			diagnostics?.record(.certificateEvaluationCompleted)
 
 			return await validateCertificate(evaluation)
 		}
@@ -743,6 +779,7 @@ private extension ConnectionSocket {
 		trustExport = evaluation.export
 
 		guard let failureDescription = evaluation.export.failureDescription else {
+			config.diagnostics?.record(.certificateAccepted)
 			return true
 		}
 

@@ -43,6 +43,15 @@ import Testing
 @MainActor
 @Suite("Client capability negotiation")
 struct IRCClientNegotiationTests {
+	@Test("Grouped requests fit the wire budget and preserve order")
+	func groupedRequestsRespectByteLimit() {
+		let names = (0 ..< 80).map { "vendor/capability-\($0)" }
+		let groups = CapabilityRequestBatching.groups(names)
+		#expect(groups.count > 1)
+		#expect(groups.flatMap(\.self) == names)
+		#expect(groups.allSatisfy { "CAP REQ :\($0.joined(separator: " "))\r\n".utf8.count <= 512 })
+	}
+
 	@Test("Disabling SASL skips negotiation while retaining the password for NickServ")
 	func disabledSASLKeepsPassword() throws {
 		let client = makeClient(configuration: ["usesSASL": false], nicknamePassword: "secret")
@@ -74,7 +83,7 @@ struct IRCClientNegotiationTests {
 
 		/* Every request the completed listing makes eligible goes out at once,
 		 so one that is never answered cannot hold back the rest. */
-		#expect(capabilityCommands(of: client) == ["REQ message-tags", "REQ multi-prefix", "REQ server-time"])
+		#expect(capabilityCommands(of: client) == ["REQ message-tags multi-prefix server-time"])
 		#expect(client.capabilityNegotiation.outstandingRequests == ["message-tags", "multi-prefix", "server-time"])
 	}
 
@@ -86,7 +95,7 @@ struct IRCClientNegotiationTests {
 			":irc.example.net CAP * LS :multi-prefix server-time",
 			on: client
 		))
-		#expect(capabilityCommands(of: client) == ["REQ multi-prefix", "REQ server-time"])
+		#expect(capabilityCommands(of: client) == ["REQ multi-prefix server-time"])
 
 		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :multi-prefix",

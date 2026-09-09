@@ -1778,7 +1778,7 @@
       }
     },
     "flood-control-identify-delay-label": {
-      "comment": "Label of the slider setting the delay before joining after identifying.",
+      "comment": "Label of the slider setting the delay before joins that do not wait for NickServ confirmation.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1796,7 +1796,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "How long, in seconds, to wait before joining channels after identifying."
+            "value": "Delay before joining channels, in seconds. NickServ identification uses confirmation instead and joins immediately when confirmed or after its 30-second deadline."
           }
         }
       }

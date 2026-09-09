@@ -9,22 +9,6 @@ import Testing
 @MainActor
 @Suite("Client lifecycle policies")
 struct IRCClientLifecyclePolicyTests {
-	@Test("Autojoin waits only for a NickServ session that has not identified")
-	func autojoinWaitsOnlyForUnidentifiedNickServSession() {
-		#expect(IRCClientAutojoinPolicy.shouldWaitForIdentification(
-			isIdentifiedWithSASL: false,
-			waitsForNickServ: true,
-			serverHasNickServ: true,
-			isIdentifiedWithNickServ: false
-		))
-		#expect(IRCClientAutojoinPolicy.shouldWaitForIdentification(
-			isIdentifiedWithSASL: true,
-			waitsForNickServ: true,
-			serverHasNickServ: true,
-			isIdentifiedWithNickServ: false
-		) == false)
-	}
-
 	@Test("A missed pong disconnects at the timeout when the preference asks for it")
 	func pongPolicyDisconnectsAtTimeoutWhenConfigured() {
 		#expect(IRCClientConnectionTimerPolicy.pongAction(

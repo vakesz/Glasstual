@@ -102,6 +102,9 @@ final class GLTTestClient: IRCClient {
 	}
 
 	override func sendCapability(_ subcommand: String, data: String?) {
+		if forwardsSentLines {
+			super.sendCapability(subcommand, data: data)
+		}
 		if let data {
 			sentCapabilityCommands.add("\(subcommand) \(data)")
 		} else {
@@ -109,8 +112,13 @@ final class GLTTestClient: IRCClient {
 		}
 	}
 
+	var forwardsSentLines = false
+
 	override func sendLine(_ string: String) {
 		sentLines.add(string)
+		if forwardsSentLines {
+			super.sendLine(string)
+		}
 	}
 
 	override func processIncomingMessage(_ message: Message) {

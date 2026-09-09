@@ -52,22 +52,6 @@ struct IRCClientAutojoinConnectCommandsTests {
 			.filter { $0.hasPrefix("JOIN") }
 	}
 
-	@Test("The wait is over once the commands have settled")
-	func waitEndsWhenConnectCommandsHaveSettled() {
-		#expect(IRCClientAutojoinPolicy.shouldWaitForConnectCommands(
-			waitsForConnectCommands: true,
-			connectCommandsHaveSettled: false
-		))
-		#expect(IRCClientAutojoinPolicy.shouldWaitForConnectCommands(
-			waitsForConnectCommands: true,
-			connectCommandsHaveSettled: true
-		) == false)
-		#expect(IRCClientAutojoinPolicy.shouldWaitForConnectCommands(
-			waitsForConnectCommands: false,
-			connectCommandsHaveSettled: false
-		) == false)
-	}
-
 	/// There is nothing to wait out when no command was sent, and nothing to
 	/// wait out when the option is off.
 	@Test("Only a connection with commands to send serves the delay")
@@ -108,7 +92,7 @@ struct IRCClientAutojoinConnectCommandsTests {
 	func autojoinHoldsUntilTheDelayHasRun() async throws {
 		let client = makeClient(
 			waitsForConnectCommands: true,
-			connectCommands: ["/msg NickServ identify hunter2"]
+			connectCommands: ["/mode swift-user +i"]
 		)
 		_ = try #require(client.findChannelOrCreate("#swift"))
 
@@ -151,11 +135,13 @@ struct IRCClientAutojoinConnectCommandsTests {
 	func autojoinRunsImmediatelyWithoutTheOption() throws {
 		let client = makeClient(
 			waitsForConnectCommands: false,
-			connectCommands: ["/msg NickServ identify hunter2"]
+			connectCommands: ["/mode swift-user +i"]
 		)
 		_ = try #require(client.findChannelOrCreate("#swift"))
 
 		client.performAutoJoin()
+		#expect(joinLines(of: client).isEmpty)
+		client.markConnectCommandsPerformed()
 
 		#expect(joinLines(of: client).contains { $0.contains("#swift") })
 	}
@@ -164,7 +150,7 @@ struct IRCClientAutojoinConnectCommandsTests {
 	func userInitiatedJoinIgnoresTheWait() throws {
 		let client = makeClient(
 			waitsForConnectCommands: true,
-			connectCommands: ["/msg NickServ identify hunter2"]
+			connectCommands: ["/mode swift-user +i"]
 		)
 		_ = try #require(client.findChannelOrCreate("#swift"))
 
@@ -179,17 +165,17 @@ struct IRCClientAutojoinConnectCommandsTests {
 	func disconnectingForgetsTheWait() {
 		let client = makeClient(
 			waitsForConnectCommands: true,
-			connectCommands: ["/msg NickServ identify hunter2"]
+			connectCommands: ["/mode swift-user +i"]
 		)
 		client.markConnectCommandsPerformed()
 
 		#expect(client.didPerformConnectCommands)
-		#expect(client.connectCommandsSettlingTask != nil)
+		#expect(client.startup.settlingTask != nil)
 
 		client.resetAllPropertyValues()
 
 		#expect(client.didPerformConnectCommands == false)
 		#expect(client.connectCommandsHaveSettled == false)
-		#expect(client.connectCommandsSettlingTask == nil)
+		#expect(client.startup.settlingTask == nil)
 	}
 }

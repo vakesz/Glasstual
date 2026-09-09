@@ -312,17 +312,13 @@ public final class World: NSObject {
 		}
 
 		for client in clientList {
-			client.toggleAwayStatus(true)
+			client.setAwayForScreenSleep()
 		}
 	}
 
 	public func wakeFromScreenSleep() {
-		guard environment.preferences.awayOnScreenSleep else {
-			return
-		}
-
 		for client in clientList {
-			client.toggleAwayStatus(false)
+			client.clearAwayAfterScreenSleep()
 		}
 	}
 

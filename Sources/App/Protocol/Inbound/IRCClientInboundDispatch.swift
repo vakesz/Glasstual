@@ -40,24 +40,12 @@ import CocoaExtensions
 import Foundation
 
 enum IRCClientHistoricMessagePolicy {
-	/** How far behind arrival a `server-time` may fall and still describe a
-	 live line.
-
-	 Every message on a modern network carries `server-time`, so the tag on its
-	 own says nothing about replay: what separates a replayed line from a live
-	 one is that the replayed line was said minutes or hours ago. The tolerance
-	 absorbs network delay and the clock skew between the server and this Mac
-	 without swallowing a real scrollback, whose oldest entries are far older
-	 than half a minute. */
 	static let liveServerTimeTolerance: TimeInterval = 30
 
-	/** Whether a `server-time` stamp describes something already said.
-
-	 Replay arrives either inside a `chathistory`/`playback` batch — which says
-	 so outright — or, from a bouncer that replays plain lines, with a stamp
-	 well behind the clock. */
-	static func isHistoric(serverTime: Date, arrivedAt: Date, inReplayBatch: Bool) -> Bool {
-		inReplayBatch || arrivedAt.timeIntervalSince(serverTime) > liveServerTimeTolerance
+	static func isHistoric(serverTime: Date, arrivedAt: Date, inReplayBatch: Bool,
+	                       isKnownBouncer: Bool = false) -> Bool
+	{
+		inReplayBatch || (isKnownBouncer && arrivedAt.timeIntervalSince(serverTime) > liveServerTimeTolerance)
 	}
 
 	static func shouldAdvanceServerTime(

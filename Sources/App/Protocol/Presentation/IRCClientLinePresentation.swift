@@ -337,14 +337,16 @@ private extension IRCClient {
 		) {
 			channel.presentation?.mark()
 		}
-		channel.print(logLine, completionBlock: request.completionBlock)
-		/* A replayed line must not carry the server's read marker past what the
-		 user has actually looked at, however visible the channel is: the burst
-		 lands before anyone has had a chance to read it. Selecting the channel
-		 still marks it read through markChannel(asRead:). */
-		if output.windowIsKey, output.isItemVisible(channel),
-		   lineIsJoinBurst(request.referenceMessage, in: channel) == false
-		{
+		let readGeneration = channel.readStateGeneration
+		let connectionIdentifier = socket?.uniqueIdentifier
+		let isPlayback = lineIsJoinBurst(request.referenceMessage, in: channel)
+		channel.print(logLine) { [weak self, weak channel] context in
+			request.completionBlock?(context)
+			guard let self, let channel, !isTerminating,
+			      socket?.uniqueIdentifier == connectionIdentifier,
+			      channel.associatedClient === self else { return }
+			guard context.isDisplayed, !context.isDuplicate, !isPlayback, channel.readStateGeneration == readGeneration,
+			      self.output?.windowIsKey == true, self.output?.isItemVisible(channel) == true else { return }
 			scheduleReadMarker(for: channel, date: request.receivedAt)
 		}
 	}

@@ -223,13 +223,16 @@ public extension IRCClient {
 	) {
 		guard let channel = findChannel(target) else { return }
 		let sender = message.senderNickname ?? ""
-		let isSelfMessage = isCapabilityEnabled(.echoMessage) && nicknameIsMyself(sender)
+		let isSelfMessage = nicknameIsMyself(sender)
 		let isNotice = lineType == .notice
-		/* Decided now rather than in the completion: the grace period is measured
-		 against arrival, and a print finishes whenever the view gets to it. */
+		// Capture the read state before asynchronous rendering.
 		let alreadySeen = lineArrivedAlreadySeen(message, in: channel)
+		let readGeneration = channel.readStateGeneration
+		let connectionIdentifier = socket?.uniqueIdentifier
 		let completion: LogControllerPrintOperationCompletion = { [weak self, weak channel] context in
-			guard let self, let channel, !isSelfMessage, !alreadySeen else { return }
+			guard let self, let channel, !isSelfMessage, !alreadySeen, !context.isDuplicate, !isTerminating,
+			      socket?.uniqueIdentifier == connectionIdentifier, channel.associatedClient === self,
+			      channel.readStateGeneration == readGeneration else { return }
 			if isNotice {
 				if isSafeToPostNotification(for: message, in: channel) {
 					_ = notifyText(.channelNotice, lineType: lineType, target: channel, nickname: sender, text: text)
@@ -237,14 +240,12 @@ public extension IRCClient {
 				return
 			}
 			let highlight = context.isHighlight
-			var postEvent = true
 			if isSafeToPostNotification(for: message, in: channel) {
-				postEvent = notifyText(
+				_ = notifyText(
 					highlight ? .highlight : .channelMessage,
 					lineType: lineType, target: channel, nickname: sender, text: text
 				)
 			}
-			guard postEvent else { return }
 			if highlight {
 				setHighlightState(for: channel)
 			}
@@ -271,9 +272,7 @@ public extension IRCClient {
 	) {
 		let sender = message.senderNickname ?? ""
 		let isNotice = lineType == .notice
-		let isSelfMessage =
-			(isCapabilityEnabled(.echoMessage) || isCapabilityEnabled(.zncSelfMessage) || isConnectedToZNC)
-				&& nicknameIsMyself(sender)
+		let isSelfMessage = nicknameIsMyself(sender)
 		var query = findChannel(isSelfMessage ? target : sender)
 		var deliveredText = text
 		var newPrivateMessage = false
@@ -295,28 +294,27 @@ public extension IRCClient {
 			query = findChannelOrCreate(isSelfMessage ? target : sender, as: .privateMessage)
 		}
 		let textToDeliver = deliveredText
-		/* Decided now rather than in the completion: the grace period is measured
-		 against arrival, and a print finishes whenever the view gets to it. */
+		// Capture the read state before asynchronous rendering.
 		let alreadySeen = lineArrivedAlreadySeen(message, in: query)
+		let readGeneration = query?.readStateGeneration
+		let connectionIdentifier = socket?.uniqueIdentifier
 
 		let completion: LogControllerPrintOperationCompletion = { [weak self, weak query] context in
-			guard let self, !isSelfMessage, !alreadySeen else { return }
+			guard let self, let query, !isSelfMessage, !alreadySeen, !context.isDuplicate, !isTerminating,
+			      socket?.uniqueIdentifier == connectionIdentifier, query.associatedClient === self,
+			      query.readStateGeneration == readGeneration else { return }
 			let highlight = context.isHighlight
-			var postEvent = true
 			if isSafeToPostNotification(for: message, in: query) {
 				let event: NotificationEvent = isNotice ? .privateNotice
 					: (highlight ? .highlight : (newPrivateMessage ? .newPrivateMessage : .privateMessage))
-				if let query {
-					postEvent = notifyText(
-						event,
-						lineType: lineType,
-						target: query,
-						nickname: sender,
-						text: textToDeliver
-					)
-				}
+				_ = notifyText(
+					event,
+					lineType: lineType,
+					target: query,
+					nickname: sender,
+					text: textToDeliver
+				)
 			}
-			guard postEvent, let query else { return }
 			if highlight {
 				setHighlightState(for: query)
 			}
@@ -364,6 +362,7 @@ public extension IRCClient {
 	}
 
 	private func processNickServNotice(_ text: String, from message: Message) {
+		guard !message.isHistoric, message.params.first.map(nicknameIsMyself) == true else { return }
 		guard IRCServiceNoticePolicy.noticeIsFromServices(
 			senderIsServer: message.senderIsServer,
 			senderAddress: message.senderAddress,
@@ -394,9 +393,7 @@ public extension IRCClient {
 		case .identificationSucceeded:
 			isWaitingForNickServ = false
 			userIsIdentifiedWithNickServ = true
-			if config.autojoinWaitsForNickServ {
-				performAutoJoin()
-			}
+			noteAccountAuthenticated()
 		case nil:
 			break
 		}

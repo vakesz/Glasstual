@@ -71,6 +71,10 @@ nonisolated enum IRCConnectionStrings { // nonisolated: value
 		String(localized: .IRC.connectionToHostEstablished)
 	}
 
+	static var nickServIdentificationTimedOut: String {
+		String(localized: .IRC.nickServIdentificationTimedOut)
+	}
+
 	static var autojoinDelayedForIdentification: String {
 		String(localized: .IRC.joiningChannelsHasBeenDelayedBecause)
 	}

@@ -110,27 +110,24 @@ extension IRCClient {
 			}
 		case IRCNumeric.umodegmsg.rawValue: handleUserModeMessageNumeric(message, shouldPrint: shouldPrint)
 		case IRCNumeric.loggedin.rawValue:
-			guard message.params.count == 4 else { return true }
+			guard message.params.count == 4, message.senderIsServer,
+			      nicknameIsMyself(message.params[0]), message.params[2] != "*",
+			      !message.params[2].isEmpty else { return true }
 			guard scramMutualAuthenticationIsSatisfied() else {
 				abortUnverifiedSASLSuccess()
 				return true
 			}
-			enableCapability(.isIdentifiedWithSASL)
+			noteAccountAuthenticated()
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 3)
-			}
-			/* Sent for a NickServ identification too, on a network that tracks
-			 accounts, so it settles the wait the same way the service notice
-			 does. The capability enabled above is what releases it: the
-			 autojoin policy treats it as "identified", NickServ or SASL. Only
-			 the waiting configuration is served here; without the option the
-			 join is owed to the end of registration, not to this reply. */
-			if config.autojoinWaitsForNickServ {
-				performAutoJoin()
 			}
 		case IRCNumeric.loggedout.rawValue:
 			guard message.params.count == 3 else { return true }
 			resetSASLNegotiation()
+			if startup.authentication == .confirmed {
+				startup.authentication = .pending
+			}
+			userIsIdentifiedWithNickServ = false
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 2)
 			}
@@ -241,6 +238,7 @@ extension IRCClient {
 		}
 		if !failed {
 			enableCapability(.isIdentifiedWithSASL)
+			noteAccountAuthenticated()
 		}
 		finishSASLNegotiation(failed: failed)
 	}

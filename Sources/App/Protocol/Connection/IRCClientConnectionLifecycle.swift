@@ -78,7 +78,11 @@ public extension IRCClient {
 			connectionLifecycleLogger.info("Refusing to connect because the system is sleeping")
 			return
 		}
+		let diagnostics = ConnectionDiagnostics()
+		diagnostics.record(.requested)
 		guard var socketConfig = takeConnectionEndpoint() else { return }
+		socketConfig.diagnostics = diagnostics
+		cancelConnectCommandSettling()
 		connectType = mode
 		disconnectType = .normal
 		isConnecting = true
@@ -187,7 +191,7 @@ public extension IRCClient {
 	}
 
 	func disconnect() {
-		resetSASLNegotiation()
+		cancelPendingSessionTasks()
 		cancelDelayedDisconnect()
 		guard isConnecting || isConnected, let socket else { return }
 		isDisconnecting = true
@@ -205,8 +209,8 @@ public extension IRCClient {
 
 	func quit(withComment comment: String) {
 		guard isConnecting || isConnected, isQuitting == false, isDisconnecting == false else { return }
-		resetSASLNegotiation()
 		isQuitting = true
+		cancelPendingSessionTasks()
 		socket?.beginCloseDeadline()
 		cancelReconnect()
 		NotificationCenter.default.post(name: .IRCClientWillSendQuit, object: self)
@@ -240,11 +244,11 @@ public extension IRCClient {
 	}
 
 	func cancelPendingSessionTasks() {
+		readMarkerTimer.stop()
+		readMarkerPendingChannels.removeAll()
 		resetSASLNegotiation()
 		cancelScheduledConnection()
 		cancelConnectCommandSettling()
-		postRegistrationAutoJoinTask?.cancel()
-		postRegistrationAutoJoinTask = nil
 		trackedUserPopulationTask?.cancel()
 		trackedUserPopulationTask = nil
 		rejoinTasks.values.forEach { $0.cancel() }
@@ -277,6 +281,7 @@ public extension IRCClient {
 	}
 
 	func toggleAwayStatus(_ setAway: Bool, withComment comment: String?) {
+		automaticallyAwayForScreenSleep = false
 		guard isLoggedIn, setAway == false || comment != nil else { return }
 		if setAway, let comment {
 			send("AWAY", arguments: [comment])
@@ -294,6 +299,23 @@ public extension IRCClient {
 		}
 		if let newNickname {
 			changeNickname(newNickname)
+		}
+	}
+
+	internal func setAwayForScreenSleep() {
+		guard isLoggedIn, !userIsAway, lastAwayMessage == nil, !automaticallyAwayForScreenSleep else { return }
+		toggleAwayStatus(true)
+		automaticallyAwayForScreenSleep = true
+	}
+
+	internal func clearAwayAfterScreenSleep() {
+		guard automaticallyAwayForScreenSleep else { return }
+		automaticallyAwayForScreenSleep = false
+		if isLoggedIn {
+			toggleAwayStatus(false)
+		} else {
+			lastAwayMessage = nil
+			preAwayUserNickname = nil
 		}
 	}
 

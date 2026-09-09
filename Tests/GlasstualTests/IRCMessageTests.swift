@@ -133,7 +133,7 @@ struct IRCMessageTests {
 		client.enableCapability(.serverTime)
 		let message = try #require(Message(line: line, on: client))
 
-		#expect(message.isHistoric)
+		#expect(!message.isHistoric)
 
 		var components = DateComponents()
 		components.year = 2024

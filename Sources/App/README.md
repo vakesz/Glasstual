@@ -65,3 +65,6 @@ provides a native SwiftUI scene or modifier.
 `project.yml` globs the application directories. Run `make generate` after
 adding, moving or removing source files; never edit the generated Xcode project
 by hand.
+
+Connection ordering, playback classification, read markers and connection-timing
+diagnostics are documented in [IRC startup](../../Documentation/IRCStartup.md).

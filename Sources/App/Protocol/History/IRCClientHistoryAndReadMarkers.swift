@@ -250,7 +250,12 @@ public extension IRCClient {
 	}
 
 	func markChannel(asRead channel: IRCChannel) {
-		guard let date = newestKnownLineDate(for: channel) else { return }
+		let viewedDate = if let presentation = channel.presentation {
+			presentation.lastRenderedLineDate()
+		} else {
+			newestKnownLineDate(for: channel)
+		}
+		guard let date = viewedDate else { return }
 		scheduleReadMarker(for: channel, date: date)
 	}
 
@@ -261,7 +266,8 @@ public extension IRCClient {
 		      	previous: readMarkerSentDates[channel.uniqueIdentifier]
 		      )
 		else { return }
-		readMarkerPendingChannels.append(channel)
+		let identifier = channel.uniqueIdentifier
+		readMarkerPendingChannels[identifier] = max(date, readMarkerPendingChannels[identifier] ?? .distantPast)
 		if !readMarkerTimer.isActive {
 			readMarkerTimer.start(IRCChatHistoryPolicy.readMarkerDebounceInterval)
 		}
@@ -270,13 +276,19 @@ public extension IRCClient {
 	func onReadMarkerTimer() {
 		let channels = readMarkerPendingChannels
 		readMarkerPendingChannels.removeAll()
-		for channel in channels {
-			sendReadMarker(for: channel)
+		for (identifier, date) in channels {
+			guard let channel = channelList.first(where: { $0.uniqueIdentifier == identifier }) else { continue }
+			sendReadMarker(for: channel, date: date)
 		}
 	}
 
 	func sendReadMarker(for channel: IRCChannel) {
-		guard readMarkerIsAvailable(for: channel), let newestDate = newestKnownLineDate(for: channel),
+		guard let date = newestKnownLineDate(for: channel) else { return }
+		sendReadMarker(for: channel, date: date)
+	}
+
+	internal func sendReadMarker(for channel: IRCChannel, date newestDate: Date) {
+		guard !isTerminating, readMarkerIsAvailable(for: channel),
 		      IRCChatHistoryPolicy.shouldAdvanceMarker(
 		      	candidate: newestDate,
 		      	previous: readMarkerSentDates[channel.uniqueIdentifier]
@@ -297,7 +309,7 @@ public extension IRCClient {
 		) {
 			readMarkerSentDates[channel.uniqueIdentifier] = date
 		}
-		applyReadMarker(date, to: channel)
+		applyReadMarker(readMarkerSentDates[channel.uniqueIdentifier] ?? date, to: channel)
 	}
 
 	func applyReadMarker(_ date: Date, to channel: IRCChannel) {

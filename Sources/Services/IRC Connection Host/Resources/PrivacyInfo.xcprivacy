@@ -8,12 +8,9 @@
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
-	<!-- The only required-reason API this service reaches for. It registers
-	     NSAppSleepDisabled in its own defaults domain so App Nap cannot
-	     suspend the process while a connection is open, and it compiles
-	     TPCPreferencesUserDefaults for the connection settings it reads from
-	     the shared app-group suite. It stats no file, reads no free space and
-	     asks for no boot time, so nothing else belongs here. -->
+	<!-- Defaults keep App Nap disabled during connections and provide shared
+	     connection settings. System uptime measures elapsed startup stages;
+	     diagnostic events contain only elapsed durations and an attempt UUID. -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>
@@ -22,6 +19,14 @@
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
 			</array>
 		</dict>
 	</array>

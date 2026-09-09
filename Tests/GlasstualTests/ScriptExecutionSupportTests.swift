@@ -19,6 +19,26 @@ import Testing
 struct ScriptExecutionSupportTests {
 	private static let subroutineNameKeyword = AEKeyword(0x736E_616D)
 
+	@Test("Delayed script output cannot target a replacement connection or channel")
+	func staleScriptDestination() throws {
+		let client = GLTTestClient()
+		client.isConnected = true
+		let channel = try #require(client.findChannelOrCreate("#scripts"))
+		let original = ScriptInvocation(client: client, target: channel.name)
+		#expect(client.scriptInvocationIsCurrent(original))
+		client.cancelPendingSessionTasks()
+		client.sendGlasstualCmdScriptResult("/raw PRIVMSG #scripts :old session", to: original)
+		#expect(client.sentLines.count == 0)
+		let removedChannel = ScriptInvocation(client: client, target: channel.name)
+		client.channelList = []
+		_ = try #require(client.findChannelOrCreate("#scripts"))
+		client.sendGlasstualCmdScriptResult("/raw PRIVMSG #scripts :old channel", to: removedChannel)
+		#expect(client.sentLines.count == 0)
+		let current = ScriptInvocation(client: client, target: "#scripts")
+		client.sendGlasstualCmdScriptResult("/raw PRIVMSG #scripts :current", to: current)
+		#expect(client.sentLines as? [String] == ["PRIVMSG #scripts :current"])
+	}
+
 	@Test("The Apple event carries the requested handler name")
 	func appleEventCarriesHandlerName() throws {
 		for handler in [ScriptExecutionSupport.handlerName, ScriptExecutionSupport.legacyHandlerName] {

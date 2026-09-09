@@ -68,12 +68,16 @@ seed_preferences() {
 
 	mkdir -p "$container_prefs" || setup_failure "cannot write to $container_prefs"
 	cp "$source_plist" "$seed_plist" || setup_failure "cannot seed $seed_plist"
+	"$plistbuddy" -c "Print :'$client_list_key'" "$seed_plist" > /dev/null 2>&1 ||
+		setup_failure "the source preferences have no client configuration list"
 
 	local index=0 disabled=0
-	while "$plistbuddy" -c "Print :$client_list_key:$index" "$seed_plist" > /dev/null 2>&1; do
-		"$plistbuddy" -c "Set :$client_list_key:$index:autoConnect false" "$seed_plist" > /dev/null 2>&1 ||
-			"$plistbuddy" -c "Add :$client_list_key:$index:autoConnect bool false" "$seed_plist" > /dev/null 2>&1 ||
+	while "$plistbuddy" -c "Print :'$client_list_key':$index" "$seed_plist" > /dev/null 2>&1; do
+		"$plistbuddy" -c "Set :'$client_list_key':$index:autoConnect false" "$seed_plist" > /dev/null 2>&1 ||
+			"$plistbuddy" -c "Add :'$client_list_key':$index:autoConnect bool false" "$seed_plist" > /dev/null 2>&1 ||
 			setup_failure "cannot clear autoConnect on client $index"
+		[ "$("$plistbuddy" -c "Print :'$client_list_key':$index:autoConnect" "$seed_plist" 2>/dev/null)" = "false" ] ||
+			setup_failure "autoConnect remains enabled on client $index"
 		disabled=$((disabled + 1))
 		index=$((index + 1))
 	done

@@ -239,6 +239,8 @@ public final class Message: NSObject {
 			}
 		}
 
+		isHistoric = parentBatchMessage?.isReplay ?? false
+
 		if client.isCapabilityEnabled(.serverTime) {
 			let dateString = parsedTags.tags["time"] ?? parsedTags.tags["t"]
 
@@ -249,7 +251,8 @@ public final class Message: NSObject {
 				isHistoric = IRCClientHistoricMessagePolicy.isHistoric(
 					serverTime: dateObject,
 					arrivedAt: arrivedAt,
-					inReplayBatch: parentBatchMessage?.isReplay ?? false
+					inReplayBatch: isHistoric,
+					isKnownBouncer: client.isConnectedToZNC
 				)
 			}
 		}

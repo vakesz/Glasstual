@@ -1308,6 +1308,24 @@
           }
         }
       }
+    },
+    "nick-serv-confirmation-explanation": {
+      "comment": "Explains automatic joining and the exception to the optional fixed delay.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect commands are sent before joining channels. NickServ identification waits for confirmation, for up to 30 seconds after sending. The delay above applies to other command lists."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kapcsolódási parancsok a csatornákhoz csatlakozás előtt kerülnek elküldésre. A NickServ-azonosítás legfeljebb 30 másodpercig vár a megerősítésre. A fenti késleltetés más parancslistákra vonatkozik."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -168,13 +168,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 cannot have a stale block act on the new session. */
 	var pendingDisconnectTask: Task<Void, Never>?
 	var pendingConnectionTask: Task<Void, Never>?
-	/// The post-registration work the client used to schedule with
-	/// `perform(_:afterDelay:)`: the ZNC autojoin retry, the first ISON sweep,
-	/// and one rejoin per channel the server kicked us out of.
-	var postRegistrationAutoJoinTask: Task<Void, Never>?
-	/// Counts out `autojoinDelayAfterConnectCommands` before the autojoin that
-	/// was waiting for the connect commands is released.
-	var connectCommandsSettlingTask: Task<Void, Never>?
+	var startup = IRCStartupCoordinator()
 	var trackedUserPopulationTask: Task<Void, Never>?
 	var rejoinTasks: [String: Task<Void, Never>] = [:]
 	public var connectType: IRCClientConnectMode = .normal
@@ -196,6 +190,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 
 	var socket: Connection?
 	var lastAwayMessage: String?
+	var automaticallyAwayForScreenSleep = false
 	var saslOfferedMechanisms: [String]?
 	var saslScramTask: Task<Void, Never>?
 	var saslScramClient: SCRAMClient? {
@@ -235,14 +230,40 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 
 	var terminationPostflightFinished = false
 	var configurationIsStale = false
-	var isPerformingConnectCommands = false
-	/// Whether this connection has already sent its configured connect commands.
-	var didPerformConnectCommands = false
-	/// Whether the wait that follows them is over, which is what
-	/// `autojoinWaitsForConnectCommands` holds the autojoin for.
-	var connectCommandsHaveSettled = false
-	public var isAutojoined = false
-	public var isAutojoining = false
+	var isPerformingConnectCommands: Bool {
+		startup.commands == .dispatching
+	}
+
+	var didPerformConnectCommands: Bool {
+		startup.commands == .settling || startup.commands == .ready
+	}
+
+	var connectCommandsHaveSettled: Bool {
+		startup.commands == .ready
+	}
+
+	public var isAutojoined: Bool {
+		get { startup.joining == .completed }
+		set {
+			if newValue {
+				startup.joining = .completed
+			} else if startup.joining == .completed {
+				startup.joining = .pending
+			}
+		}
+	}
+
+	public var isAutojoining: Bool {
+		get { startup.joining == .scheduled }
+		set {
+			if newValue {
+				startup.joining = .scheduled
+			} else if startup.joining == .scheduled {
+				startup.joining = .pending
+			}
+		}
+	}
+
 	var reconnectEnabledBecauseOfSleepMode = false
 	var timeoutWarningShownToUser = false
 	var invokingISONCommandForFirstTime = false
@@ -295,7 +316,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var serverHistoryRequests: [String: PendingServerHistoryRequest] = [:]
 	/// The newest read marker sent per channel, keyed by channel identifier.
 	var readMarkerSentDates: [String: Date] = [:]
-	var readMarkerPendingChannels: [IRCChannel] = []
+	var readMarkerPendingChannels: [String: Date] = [:]
 	var readMarkerTimer: ClientTimer!
 	private let notifications = NotificationSubscriptions()
 	/// Nicknames seen in the netsplit batch being collapsed, per channel
@@ -361,8 +382,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 			autojoinTimer, autojoinDelayedWarningTimer,
 			isonTimer, pongTimer, reconnectTimer, retryTimer, whoTimer, readMarkerTimer,
 		].forEach { $0?.stop() }
-		postRegistrationAutoJoinTask?.cancel()
-		connectCommandsSettlingTask?.cancel()
+		startup.cancel()
 		trackedUserPopulationTask?.cancel()
 		rejoinTasks.values.forEach { $0.cancel() }
 	}

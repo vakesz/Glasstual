@@ -226,6 +226,10 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 			String(localized: .TDCServerPropertiesSheet.autojoinWaitsForConnectCommands)
 		}
 
+		static var identificationExplanation: String {
+			String(localized: .TDCServerPropertiesSheet.nickServConfirmationExplanation)
+		}
+
 		/// The stepper's label, which carries the value it is stepping.
 		static func autojoinDelay(seconds: Int) -> String {
 			String(localized: .TDCServerPropertiesSheet.autojoinDelayAfterConnectCommands(seconds))

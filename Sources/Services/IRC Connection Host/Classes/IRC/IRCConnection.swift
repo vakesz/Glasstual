@@ -95,6 +95,7 @@ actor ConnectionHost {
 	// MARK: - Open/Close
 
 	func open(with config: IRCConnectionConfig) async {
+		config.diagnostics?.record(.hostStarted)
 		guard socket == nil else {
 			ConnectionHostLog.connection.error("Cannot open a connection that is already open")
 
@@ -243,7 +244,10 @@ actor ConnectionHost {
 	// MARK: - Flood Control
 
 	func enforceFloodControl() {
+		guard !floodControlEnforced else { return }
+		floodControlCurrentMessageCount = 0
 		floodControlEnforced = true
+		startWriterIfNeeded()
 	}
 
 	private func startFloodControlTimer() {

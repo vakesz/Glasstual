@@ -10,6 +10,7 @@
 		<string>successfully identified</string>
 		<string>you are already logged in</string>
 		<string>you are now identified</string>
+		<string>Jelszavad elfogadva - azonosítás sikeres</string>
 		<string>password accepted</string>
 	</array>
 	<key>IRCClient List of NickServ Needs Identification Tokens</key>

@@ -16,6 +16,8 @@ public struct LogControllerPrintOperationContext {
 	public let isHighlight: Bool
 	public let logLine: LogLine
 	public let lineNumber: String
+	var isDuplicate = false
+	var isDisplayed = true
 
 	init(client: IRCClient, channel: IRCChannel?, highlight: Bool, logLine: LogLine, lineNumber: String) {
 		self.client = client

@@ -293,6 +293,9 @@ struct ServerPropertiesView: View {
 				))
 			}
 			.disabled(model.config.autojoinWaitsForConnectCommands == false)
+			Text(verbatim: ServerPropertiesStrings.ConnectCommands.identificationExplanation)
+				.font(.callout)
+				.foregroundStyle(.secondary)
 		}
 	}
 

@@ -84,7 +84,7 @@ struct IRCSpecCapabilityBehaviourTests {
 			Message(line: "@time=2011-10-19T16:40:51.620Z :nick!u@h PRIVMSG #chan :hi", on: client)
 		)
 
-		#expect(message.isHistoric)
+		#expect(!message.isHistoric)
 		#expect(abs(message.receivedAt.timeIntervalSince1970 - 1_319_042_451.620) < 0.001)
 	}
 
@@ -133,7 +133,7 @@ struct IRCSpecCapabilityBehaviourTests {
 			Message(line: "@time=2011-10-19T16:40:51Z :nick!u@h PRIVMSG #chan :hi", on: client)
 		)
 
-		#expect(message.isHistoric)
+		#expect(!message.isHistoric)
 		#expect(message.receivedAt.timeIntervalSince1970 == 1_319_042_451)
 	}
 
@@ -149,7 +149,7 @@ struct IRCSpecCapabilityBehaviourTests {
 			Message(line: "@t=1319042451.620 :nick!u@h PRIVMSG #chan :hi", on: client)
 		)
 
-		#expect(message.isHistoric)
+		#expect(!message.isHistoric)
 		#expect(abs(message.receivedAt.timeIntervalSince1970 - 1_319_042_451.620) < 0.001)
 	}
 
