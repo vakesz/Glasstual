@@ -62,6 +62,7 @@ public final class ServerList {
 
 	private var updateDepth = 0
 	private var updateIsPending = false
+	@ObservationIgnored private var refreshTask: Task<Void, Never>?
 
 	public init() {}
 
@@ -240,11 +241,17 @@ public final class ServerList {
 	}
 
 	private func contentsChanged() {
-		guard updateDepth == 0 else {
-			updateIsPending = true
-			return
+		updateIsPending = true
+		guard updateDepth == 0, refreshTask == nil else { return }
+		// Inbound bursts can invalidate the same rows several times before the
+		// next actor turn. Publish one snapshot of their final state.
+		refreshTask = Task { [weak self] in
+			guard let self else { return }
+			refreshTask = nil
+			guard updateDepth == 0, updateIsPending else { return }
+			updateIsPending = false
+			rebuildRows()
 		}
-		rebuildRows()
 	}
 
 	public func addItem(toList _: UInt, inParent _: Any?) {

@@ -273,6 +273,10 @@ extension LogController: TreeItemPresentation {
 		uniqueIdentifier
 	}
 
+	func lastRenderedLineDate() -> Date? {
+		backingView?.displayedLines.map(\.receivedAt).max()
+	}
+
 	public func lastPrintedLine() -> LogLine? {
 		lastLine()
 	}

@@ -147,6 +147,23 @@ enum ScriptExecutionSupport {
 	}
 }
 
+/// The destination is fixed when execution starts. A reused channel name or a
+/// reconnected server is a different destination for delayed script output.
+@MainActor
+final class ScriptInvocation {
+	let sessionIdentifier: UUID
+	let connectionIdentifier: String?
+	let targetName: String?
+	weak var channel: IRCChannel?
+
+	init(client: IRCClient, target: String?) {
+		sessionIdentifier = client.startup.identifier
+		connectionIdentifier = client.socket?.uniqueIdentifier
+		targetName = target
+		channel = target.flatMap(client.findChannel)
+	}
+}
+
 @MainActor
 extension IRCClient {
 	func outputDescription(
@@ -170,27 +187,33 @@ extension IRCClient {
 		scriptExecutionLogger.error("\(IRCDiagnosticStrings.scriptFailure(description), privacy: .public)")
 	}
 
-	func sendGlasstualCmdScriptResult(_ result: String, toChannel channelName: String?) {
+	func scriptInvocationIsCurrent(_ invocation: ScriptInvocation) -> Bool {
+		guard !isTerminating, !isQuitting, !isDisconnecting,
+		      startup.identifier == invocation.sessionIdentifier,
+		      socket?.uniqueIdentifier == invocation.connectionIdentifier else { return false }
+		guard invocation.targetName != nil else { return true }
+		return invocation.channel.map { channel in channelList.contains { $0 === channel } } ?? false
+	}
+
+	func sendGlasstualCmdScriptResult(_ result: String, to invocation: ScriptInvocation) {
+		guard scriptInvocationIsCurrent(invocation) else { return }
 		guard result.utf8.count <= ScriptExecutionSupport.maximumOutputBytes else {
 			printDebugInformation(String(localized: .Plugins.scriptOutputTooLarge))
 			return
 		}
-		let destination: IRCTreeItem? = if let channelName {
-			findChannel(channelName)
-		} else {
-			self
-		}
-		guard let destination else {
-			scriptExecutionLogger.fault("A script returned a result but its destination no longer exists")
-			return
-		}
-		inputText(result.trimmingCharacters(in: .whitespacesAndNewlines), destination: destination)
+		inputText(result.trimmingCharacters(in: .whitespacesAndNewlines), destination: invocation.channel ?? self)
+	}
+
+	func sendGlasstualCmdScriptResult(_ result: String, toChannel channelName: String?) {
+		sendGlasstualCmdScriptResult(result, to: ScriptInvocation(client: self, target: channelName))
 	}
 
 	func executeGlasstualCmdScript(inContext context: [String: String]) {
 		guard let path = context["path"] else { return }
 		let input = context["inputString"] ?? ""
 		let target = context["targetChannel"]
+		let invocation = ScriptInvocation(client: self, target: target)
+		guard scriptInvocationIsCurrent(invocation) else { return }
 		let url = URL(fileURLWithPath: path)
 		guard let script = SharedApplication.sharedPluginManager().script(at: url) else {
 			outputDescription(
@@ -202,28 +225,46 @@ extension IRCClient {
 		}
 		switch script.kind {
 		case .appleScript:
-			executeAppleScript(script, input: input, target: target)
+			executeAppleScript(script, input: input, target: target, invocation: invocation)
 		case .unixExecutable:
-			executeUnixScript(at: url, path: path, input: input, target: target)
+			executeUnixScript(at: url, path: path, input: input, target: target, invocation: invocation)
 		}
 	}
 
-	private func executeAppleScript(_ script: PluginScript, input: String, target: String?) {
+	private func executeAppleScript(
+		_ script: PluginScript,
+		input: String,
+		target: String?,
+		invocation: ScriptInvocation
+	) {
 		switch script.origin {
 		case .bundled:
-			executeBundledAppleScript(at: script.url, path: script.url.path, input: input, target: target)
+			executeBundledAppleScript(
+				at: script.url,
+				path: script.url.path,
+				input: input,
+				target: target,
+				invocation: invocation
+			)
 		case .custom:
 			executeUserAppleScript(
 				at: script.url,
 				path: script.url.path,
 				input: input,
 				target: target,
-				handler: ScriptExecutionSupport.handlerName
+				handler: ScriptExecutionSupport.handlerName,
+				invocation: invocation
 			)
 		}
 	}
 
-	private func executeBundledAppleScript(at url: URL, path: String, input: String, target: String?) {
+	private func executeBundledAppleScript(
+		at url: URL,
+		path: String,
+		input: String,
+		target: String?,
+		invocation: ScriptInvocation
+	) {
 		var initializationError: NSDictionary?
 		guard let script = NSAppleScript(contentsOf: url, error: &initializationError) else {
 			outputDescription(
@@ -240,7 +281,7 @@ extension IRCClient {
 			let result = script.executeAppleEvent(event, error: &executionError)
 			guard let executionError else {
 				if let resultString = result.stringValue {
-					sendGlasstualCmdScriptResult(resultString, toChannel: target)
+					sendGlasstualCmdScriptResult(resultString, to: invocation)
 				}
 				return
 			}
@@ -258,7 +299,8 @@ extension IRCClient {
 		path: String,
 		input: String,
 		target: String?,
-		handler: String
+		handler: String,
+		invocation: ScriptInvocation
 	) {
 		do {
 			let task = try NSUserAppleScriptTask(url: url)
@@ -267,10 +309,10 @@ extension IRCClient {
 				let resultString = result?.stringValue
 				let scriptError = error as NSError?
 				Task { @MainActor [weak self] in
-					guard let self else { return }
+					guard let self, scriptInvocationIsCurrent(invocation) else { return }
 					guard let scriptError else {
 						if let resultString {
-							sendGlasstualCmdScriptResult(resultString, toChannel: target)
+							sendGlasstualCmdScriptResult(resultString, to: invocation)
 						}
 						return
 					}
@@ -282,7 +324,8 @@ extension IRCClient {
 							path: path,
 							input: input,
 							target: target,
-							handler: ScriptExecutionSupport.legacyHandlerName
+							handler: ScriptExecutionSupport.legacyHandlerName,
+							invocation: invocation
 						)
 						return
 					}
@@ -294,7 +337,13 @@ extension IRCClient {
 		}
 	}
 
-	private func executeUnixScript(at url: URL, path: String, input: String, target: String?) {
+	private func executeUnixScript(
+		at url: URL,
+		path: String,
+		input: String,
+		target: String?,
+		invocation: ScriptInvocation
+	) {
 		do {
 			let task = try NSUserUnixTask(url: url)
 			let pipe = Pipe()
@@ -312,13 +361,13 @@ extension IRCClient {
 				Task { @MainActor [weak self] in
 					let result = await output.result
 					try? readHandle.close()
-					guard let self else { return }
+					guard let self, scriptInvocationIsCurrent(invocation) else { return }
 					do {
 						if let error {
 							throw error
 						}
 						let text = try ScriptExecutionSupport.decodedOutput(result.get())
-						sendGlasstualCmdScriptResult(text, toChannel: target)
+						sendGlasstualCmdScriptResult(text, to: invocation)
 					} catch {
 						outputDescription(for: error, forGlasstualCmdScriptAtPath: path, inputString: input)
 					}

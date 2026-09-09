@@ -8,7 +8,7 @@ import Foundation
 /** Everything `CAP` negotiation remembers for one connection.
 
  Requests are pipelined. Every capability the server has offered whose
- dependencies it has already acknowledged goes out as its own `CAP REQ` in one
+ dependencies it has already acknowledged is grouped into byte-bounded `CAP REQ` lines in one
  pass, and each `ACK` or `NAK` is matched back by name; `CAP END` follows the
  moment nothing is outstanding and nothing else is eligible. A `CAP DEL` naming
  an outstanding request counts as its refusal, so a withdrawal cannot leave a

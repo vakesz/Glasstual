@@ -38,63 +38,25 @@
 
 import Foundation
 
-/** Whether a line belongs to the burst a server or bouncer replays right after
- a JOIN.
-
- A bouncer replays the tail of a conversation the moment it puts the user back
- in a channel, and a server answering `CHATHISTORY` on activation does the same.
- None of it is news: the user has either read it already or is about to scroll
- through it. Marking the channel unread, raising a highlight badge or posting a
- notification for any of it is noise, so the burst is suppressed and the read
- marker the server reports is left to decide what is genuinely unread.
-
- Textual drew the same window off `channelJoinTime` until 2013 and dropped it
- when `server-time` arrived. `server-time` turned out not to be enough on its
- own: it says when a line was said, not whether the user has seen it, and the
- servers that need the window most are the ones that supply the least. */
+/// Explicit playback stays historical for its entire delivery. Only known legacy
+/// bouncers use the short timestamp heuristic; an untagged live message is never replay.
 enum ChannelJoinBurstPolicy {
-	/** How long after a join the burst is still expected.
-
-	 Long enough for a bouncer to finish replaying a channel over a slow link,
-	 short enough that the first live line of a real conversation falls outside
-	 it. */
 	static let gracePeriod: TimeInterval = 10
 
-	/** Whether `receivedAt` describes a replayed line rather than something
-	 said to the user just now.
-
-	 `joinedAt` is the local user's join, `now` the moment the line arrived.
-	 Outside the grace period nothing is a burst line: a channel joined a minute
-	 ago is a channel the user is sitting in.
-
-	 Inside it, three separate shapes of replay count, and each needs its own
-	 clause:
-
-	 - `isHistoric`, which is what a `chathistory` or `znc.in/playback` batch
-	   sets, and what a stamp far behind arrival sets on a bouncer that replays
-	   plain lines outside a batch.
-	 - `hasServerTime == false`, because a server without `server-time` replays
-	   with no stamp at all: nothing distinguishes its replay from live traffic
-	   except that it arrived in the seconds after the join.
-	 - `receivedAt <= joinedAt`, for a stamped line that was said before the
-	   user was in the channel. Nobody can have addressed the user with it, so
-	   it is scrollback however it was delivered.
-
-	 `joinedAt` may be on the server's clock while `now` is on this Mac's, so
-	 skew between them shifts the window; the grace period is wide enough to
-	 absorb the second or two that is worth absorbing. */
 	static func isJoinBurstLine(
 		joinedAt: Date?,
 		now: Date,
 		isHistoric: Bool,
 		hasServerTime: Bool,
-		receivedAt: Date
+		receivedAt: Date,
+		isKnownBouncer: Bool = false
 	) -> Bool {
-		guard let joinedAt, now.timeIntervalSince(joinedAt) <= gracePeriod else {
-			return false
+		if isHistoric {
+			return true
 		}
-
-		return isHistoric || hasServerTime == false || receivedAt <= joinedAt
+		guard isKnownBouncer, hasServerTime, let joinedAt,
+		      (0 ... gracePeriod).contains(now.timeIntervalSince(joinedAt)) else { return false }
+		return receivedAt <= joinedAt
 	}
 }
 
@@ -119,8 +81,7 @@ extension IRCClient {
 	/** Whether an inbound line arrived already seen, so it prints without
 	 touching the unread count, the highlight badge or a notification.
 
-	 Decided when the line arrives rather than when it finishes printing: the
-	 grace period is measured against arrival, and printing is asynchronous. */
+	 Decided at arrival because printing is asynchronous. */
 	func lineArrivedAlreadySeen(_ message: Message, in channel: IRCChannel?) -> Bool {
 		guard let channel else { return false }
 
@@ -144,7 +105,8 @@ extension IRCClient {
 			now: Date(),
 			isHistoric: message.isHistoric,
 			hasServerTime: message.hasServerTime,
-			receivedAt: message.receivedAt
+			receivedAt: message.receivedAt,
+			isKnownBouncer: isConnectedToZNC
 		)
 	}
 }

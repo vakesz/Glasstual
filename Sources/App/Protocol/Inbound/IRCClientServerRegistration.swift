@@ -84,10 +84,12 @@ public extension IRCClient {
 	}
 
 	func receiveInit(_ message: Message) {
-		guard let nickname = message.params.first else { return }
+		guard !isLoggedIn, !isTerminating, !isQuitting, !isDisconnecting,
+		      let nickname = message.params.first else { return }
 		startPongTimer()
 		stopRetryTimer()
 		isLoggedIn = true
+		socket?.config.diagnostics?.record(.registered)
 		supportInfo.serverAddress = message.senderHostmask
 		invokingISONCommandForFirstTime = true
 		reconnectEnabledBecauseOfSleepMode = false
@@ -97,16 +99,7 @@ public extension IRCClient {
 		socket?.enforceFloodControl()
 		_ = notifyEvent(.connect, lineType: .debug)
 
-		isPerformingConnectCommands = true
-		for configuredCommand in config.loginCommands {
-			let command = configuredCommand.hasPrefix("/") ? String(configuredCommand.dropFirst()) : configuredCommand
-			sendCommand(command, completeTarget: false, target: nil)
-		}
-		isPerformingConnectCommands = false
-		/* The commands are sent inline, so by here they have run — or there were
-		 none to run. This releases an autojoin held back by
-		 `autojoinWaitsForConnectCommands`; every other wait still applies. */
-		markConnectCommandsPerformed()
+		beginConnectCommands()
 
 		if isCapabilityEnabled(.zncCertInfoModule) {
 			sendCommand(
@@ -125,20 +118,7 @@ public extension IRCClient {
 		output?.reloadTreeItem(self)
 		output?.updateTitle(for: self)
 
-		if !config.autojoinWaitsForNickServ || isCapabilityEnabled(.isIdentifiedWithSASL) {
-			performAutoJoin(initiatedByUser: false)
-		} else if isConnectedToZNC {
-			postRegistrationAutoJoinTask?.cancel()
-			postRegistrationAutoJoinTask = Task { [weak self] in
-				try? await Task.sleep(for: .seconds(3))
-
-				guard Task.isCancelled == false, let self else { return }
-
-				performAutoJoin()
-			}
-		} else {
-			startAutojoinDelayedWarningTimer()
-		}
+		performAutoJoin()
 
 		trackedUserPopulationTask?.cancel()
 		trackedUserPopulationTask = Task { [weak self] in

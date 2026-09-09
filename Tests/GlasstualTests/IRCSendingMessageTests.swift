@@ -54,6 +54,20 @@ struct IRCSendingMessageTests {
 		)
 	}
 
+	/** The command index fixes where PRIVMSG's colon goes; it says nothing about
+	 a CAP REQ that names several capabilities. The trailing parameter still has
+	 to carry the colon, or the server keeps the first name and drops the rest. */
+	@Test("A last argument with spaces is written as a trailing parameter even for an indexed command")
+	func spacedLastArgumentIsTrailingRegardlessOfIndex() {
+		#expect(
+			SendingMessage.string(command: "CAP", arguments: ["REQ", "account-notify away-notify server-time"])
+				== "CAP REQ :account-notify away-notify server-time"
+		)
+		#expect(SendingMessage.string(command: "CAP", arguments: ["REQ", "multi-prefix"]) == "CAP REQ multi-prefix")
+		#expect(SendingMessage.string(command: "CAP", arguments: ["LS", "302"]) == "CAP LS 302")
+		#expect(SendingMessage.string(command: "CAP", arguments: ["END"]) == "CAP END")
+	}
+
 	@Test("Tags are written in key order with the reserved characters escaped")
 	func tagsAreSerializedSortedAndEscaped() {
 		let tags = ["+typing": "active", "+draft/reply": "a b;c\\d\r\n", "flag": ""]

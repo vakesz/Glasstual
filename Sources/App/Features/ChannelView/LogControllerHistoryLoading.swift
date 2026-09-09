@@ -246,6 +246,9 @@ private extension LogController {
 		reloadingHistory = false
 		historyLoaded = fetchSucceeded
 		historyLoadedForFirstTime = historyLoadedForFirstTime || fetchSucceeded
+		if viewIsVisible, let associatedItem {
+			attachedWindow?.noteItemWasViewed(associatedItem)
+		}
 		pendingApplications.insert(contentsOf: deferredPrepends, at: 0)
 		deferredPrepends.removeAll()
 	}

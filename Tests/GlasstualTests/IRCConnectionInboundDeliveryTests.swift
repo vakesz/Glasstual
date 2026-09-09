@@ -12,6 +12,22 @@ import Testing
 @Suite("Inbound connection delivery")
 @MainActor
 struct IRCConnectionInboundDeliveryTests {
+	@Test("A missing XPC service ends startup explicitly")
+	func unavailableConnectionService() async throws {
+		let client = GLTTestClient()
+		client.isConnecting = true
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client, closeClock: .continuous,
+		                            makeService: { NSXPCConnection(serviceName: "test.glasstual.unavailable-service") })
+		client.socket = connection
+		connection.open()
+		let deadline = ContinuousClock.now + .seconds(5)
+		while client.socket != nil, ContinuousClock.now < deadline {
+			try await Task.sleep(for: .milliseconds(10))
+		}
+		#expect(client.socket == nil)
+		#expect(!client.isConnecting)
+	}
+
 	@Test("TLS publishes sidebar and title before 001, even for unknown cipher descriptions")
 	func securityCallbackRefreshesBeforeRegistration() async {
 		let (client, connection) = connectedClient()

@@ -60,13 +60,13 @@ private actor LoopbackTCPServer {
 		listener.cancel()
 	}
 
-	func sendToClient(_ chunks: [Data]) async throws {
+	func sendToClient(_ chunks: [Data], finishing: Bool = true) async throws {
 		for _ in 0 ..< 200 where peer == nil {
 			try await Task.sleep(for: .milliseconds(10))
 		}
 		guard let peer else { throw LoopbackTCPServerError.peerNeverArrived }
 		for (index, chunk) in chunks.enumerated() {
-			let final = index == chunks.count - 1
+			let final = finishing && index == chunks.count - 1
 			try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
 				peer.send(
 					content: chunk,
@@ -235,6 +235,63 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 		#expect(Set(received) == Set(sent), "the lines that arrived are not the lines that were sent")
 	}
 
+	@Test("Registration traffic cannot consume the post-registration flood allowance")
+	@concurrent
+	func registrationHasSeparateFloodBudget() async throws {
+		let received = try await Self.driveConnection(waitingFor: 3) { host, server in
+			host.send(Data("CAP LS 302\r\n".utf8))
+			host.send(Data("NICK tester\r\n".utf8))
+			let registration = try await server.lines(waitingFor: 2)
+			try #require(registration.count == 2)
+			host.enforceFloodControl()
+			host.send(Data("PRIVMSG NickServ :IDENTIFY test-only\r\n".utf8))
+		}
+		#expect(received == ["CAP LS 302", "NICK tester", "PRIVMSG NickServ :IDENTIFY test-only"])
+	}
+
+	@Test("Connect commands precede automatic JOIN on the real XPC wire")
+	@MainActor
+	func connectCommandsPrecedeJoinOnWire() async throws {
+		let server = try LoopbackTCPServer()
+		let port = try await server.start()
+		let client = GLTTestClient(configDictionary: [
+			"nickname": "tester",
+			"onConnectCommands": ["raw MODE tester +i", "msg NickServ IDENTIFY test-only", "raw WHOIS tester"],
+		])
+		client.forwardsSentLines = true
+		client.forwardsProcessedMessages = true
+		_ = try #require(client.findChannelOrCreate("#order"))
+		var config = IRCConnectionConfig()
+		config.serverAddress = "127.0.0.1"
+		config.serverPort = port
+		config.diagnostics = ConnectionDiagnostics()
+		let connection = Connection(config: config, onClient: client)
+		client.socket = connection
+		defer {
+			connection.close()
+			client.stopAllTimers()
+			client.cancelPendingSessionTasks()
+			Task { await server.stop() }
+		}
+		connection.open()
+		let registration = try await server.lines(waitingFor: 3)
+		try #require(registration.count == 3)
+		try await server.sendToClient([Data(":irc.example.org CAP * LS :\r\n".utf8)], finishing: false)
+		let capabilities = try await server.lines(waitingFor: 4)
+		try #require(capabilities.last == "CAP END")
+		try await server.sendToClient([Data(":irc.example.org 001 tester :Welcome\r\n".utf8)], finishing: false)
+		let commands = try await server.lines(waitingFor: 7)
+		#expect(Array(commands.suffix(3)) == ["MODE tester +i", "PRIVMSG NickServ :IDENTIFY test-only", "WHOIS tester"])
+		#expect(!commands.contains { $0.hasPrefix("JOIN ") })
+		#expect(client.startup.authentication == .waiting)
+		try await server.sendToClient([
+			Data(":NickServ!NickServ@services. NOTICE tester :You are now identified\r\n".utf8),
+		], finishing: false)
+		let joined = try await server.lines(waitingFor: 8)
+		#expect(joined.last == "JOIN #order")
+		#expect(client.startup.authenticationTask == nil)
+	}
+
 	@Test("Queued PONGs bypass an exhausted flood window and retain their own order")
 	@concurrent
 	func queuedPongsBypassFloodControl() async throws {
@@ -355,6 +412,9 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 			Data("PING :frag".utf8), Data("mented\r".utf8), Data("\n".utf8),
 			Data((burst.joined(separator: "\n") + "\nERROR :final rejection\r\n").utf8),
 		])
+		if case .didConnect = result.first {} else {
+			Issue.record("First server bytes preceded readiness")
+		}
 		let lines = result.compactMap { event -> String? in
 			guard case let .received(data) = event else { return nil }
 			return String(data: data, encoding: .utf8)
@@ -459,13 +519,15 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 			Task { await server.stop() }
 		}
 		let host = try #require(service.remoteObjectProxy as? RemoteConnectionServerProtocol)
+		let sending = Task { try await server.sendToClient(chunks) }
+		defer { sending.cancel() }
 		host.open(with: ConnectionConfigEnvelope(config: config))
 		var result: [ConnectionEvent] = []
 		for await event in events {
 			result.append(event)
 			switch event {
 			case .didConnect:
-				try await server.sendToClient(chunks)
+				break
 			case .didDisconnect:
 				continuation.finish()
 			case .received, .closedReadStream:

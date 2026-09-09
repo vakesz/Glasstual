@@ -60,6 +60,7 @@ protocol TreeItemPresentation: AnyObject {
 	 both callers (`IRCChannel.lastLine`, `IRCClient.lastLine`) are already
 	 there. */
 	func lastPrintedLine() -> LogLine?
+	func lastRenderedLineDate() -> Date?
 	func setTopic(_ topic: String?)
 
 	func mark()
@@ -74,6 +75,12 @@ protocol TreeItemPresentation: AnyObject {
 	func prependHistoricLogLines(_ logLines: [LogLine])
 
 	func tearDown(_ reason: TreeItemTeardown)
+}
+
+extension TreeItemPresentation {
+	func lastRenderedLineDate() -> Date? {
+		lastPrintedLine()?.receivedAt
+	}
 }
 
 /** Why a tree item's view is being torn down.

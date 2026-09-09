@@ -15,6 +15,10 @@ import Testing
 private final class GLTCompletingPresentation: TreeItemPresentation {
 	private(set) var printedLines: [LogLine] = []
 	var isHighlight = false
+	var defersCompletions = false
+	var isDisplayed = true
+	private var completions: [@MainActor () -> Void] = []
+	private var renderedDate: Date?
 	weak var client: IRCClient?
 	weak var channel: IRCChannel?
 
@@ -25,13 +29,33 @@ private final class GLTCompletingPresentation: TreeItemPresentation {
 
 		guard let completionBlock, let client else { return }
 
-		completionBlock(LogControllerPrintOperationContext(
+		var context = LogControllerPrintOperationContext(
 			client: client,
 			channel: channel,
 			highlight: isHighlight,
 			logLine: logLine,
 			lineNumber: "\(printedLines.count)"
-		))
+		)
+		context.isDisplayed = isDisplayed
+		let complete = { @MainActor [self] in
+			renderedDate = max(renderedDate ?? .distantPast, logLine.receivedAt)
+			completionBlock(context)
+		}
+		if defersCompletions {
+			completions.append(complete)
+		} else {
+			complete()
+		}
+	}
+
+	func finishPrinting() {
+		let pending = completions
+		completions.removeAll()
+		pending.forEach { $0() }
+	}
+
+	func lastRenderedLineDate() -> Date? {
+		renderedDate
 	}
 
 	func lastPrintedLine() -> LogLine? {
@@ -111,6 +135,66 @@ struct IRCClientJoinBurstTests {
 		return channel
 	}
 
+	@Test("Opening and leaving a channel cannot restore its cleared badge after delayed rendering")
+	func delayedPrintCannotRestoreClearedBadge() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = GLTCompletingPresentation()
+			presentation.defersCompletions = true
+			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
+			try client.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :hello", on: client))
+			channel.resetState()
+			client.markChannel(asRead: channel)
+			#expect(client.readMarkerPendingChannels.isEmpty)
+			presentation.finishPrinting()
+			#expect(channel.treeUnreadCount == 0)
+			#expect(client.readMarkerPendingChannels.isEmpty)
+		}
+	}
+
+	@Test("Own echoes never count, while background messages and actions count with notifications muted")
+	func backgroundMessagesAndOwnEchoes() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = GLTCompletingPresentation()
+			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
+			client.recordedOutput.selectedChannel = channel
+			client.recordedOutput.visibleItems = [channel]
+			client.recordedOutput.windowIsKey = false
+			for line in [":mara!u@h PRIVMSG #chat :own", ":bob!u@h PRIVMSG #chat :hello",
+			             ":bob!u@h PRIVMSG #chat :\u{1}ACTION waves\u{1}"]
+			{
+				try client.receivePrivmsgAndNotice(message(line, on: client))
+			}
+			#expect(channel.treeUnreadCount == 2)
+		}
+	}
+
+	@Test("Live messages count immediately after JOIN without server timestamps")
+	func immediateLiveMessageIsUnread() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = GLTCompletingPresentation()
+			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
+			try client.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :hello", on: client))
+			#expect(channel.treeUnreadCount == 1)
+		}
+	}
+
+	@Test("Explicit playback remains excluded after a slow replay")
+	func delayedPlaybackDoesNotCount() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = GLTCompletingPresentation()
+			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
+			channel.activate(at: Date().addingTimeInterval(-60))
+			let replay = try message(":bob!u@h PRIVMSG #chat :old message", on: client)
+			replay.markAsHistoric()
+			client.receivePrivmsgAndNotice(replay)
+			#expect(channel.treeUnreadCount == 0)
+		}
+	}
+
 	@Test("A line replayed within the grace period prints without counting as unread")
 	func replayedLineInsideTheWindowIsNotUnread() throws {
 		try withNotificationsSilenced {
@@ -128,8 +212,11 @@ struct IRCClientJoinBurstTests {
 				on: client
 			)
 
+			replayed.markAsHistoric()
+
 			#expect(client.lineArrivedAlreadySeen(replayed, in: channel))
 
+			replayed.markAsHistoric()
 			client.receivePrivmsgAndNotice(replayed)
 
 			#expect(presentation.printedLines.last?.messageBody == "did you see this")
@@ -144,6 +231,7 @@ struct IRCClientJoinBurstTests {
 	func replayedJoinIsMeasuredFromArrival() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
+			client.isConnectedToZNC = true
 			let presentation = GLTCompletingPresentation()
 			let now = Date()
 			/* A bouncer that replays the JOIN stamps it with when it happened,
@@ -159,8 +247,11 @@ struct IRCClientJoinBurstTests {
 				on: client
 			)
 
+			replayed.markAsHistoric()
+
 			#expect(client.lineArrivedAlreadySeen(replayed, in: channel))
 
+			replayed.markAsHistoric()
 			client.receivePrivmsgAndNotice(replayed)
 
 			#expect(presentation.printedLines.last?.messageBody == "while you were out")
@@ -181,6 +272,7 @@ struct IRCClientJoinBurstTests {
 				on: client
 			)
 
+			replayed.markAsHistoric()
 			client.receivePrivmsgAndNotice(replayed)
 
 			#expect(presentation.printedLines.count == 1)
@@ -263,6 +355,7 @@ struct IRCClientJoinBurstTests {
 				on: client
 			)
 
+			replayed.markAsHistoric()
 			client.receivePrivmsgAndNotice(replayed)
 
 			#expect(client.readMarkerPendingChannels.isEmpty)
@@ -277,6 +370,20 @@ struct IRCClientJoinBurstTests {
 			client.receivePrivmsgAndNotice(live)
 
 			#expect(client.readMarkerPendingChannels.count == 1)
+		}
+	}
+
+	@Test("Rendering into a pending view cannot acknowledge the message")
+	func bufferedLineCannotAdvanceReadMarker() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = GLTCompletingPresentation()
+			presentation.isDisplayed = false
+			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
+			client.recordedOutput.windowIsKey = true
+			client.recordedOutput.visibleItems = [channel]
+			try client.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :still loading", on: client))
+			#expect(client.readMarkerPendingChannels.isEmpty)
 		}
 	}
 }

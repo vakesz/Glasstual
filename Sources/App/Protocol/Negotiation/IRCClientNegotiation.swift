@@ -327,9 +327,11 @@ extension IRCClient {
 			return
 		}
 
-		for name in eligibleCapabilityRequests() {
-			capabilityNegotiation.noteRequested(name)
-			sendCapability("REQ", data: name)
+		for group in CapabilityRequestBatching.groups(eligibleCapabilityRequests()) {
+			for name in group {
+				capabilityNegotiation.noteRequested(name)
+			}
+			sendCapability("REQ", data: group.joined(separator: " "))
 		}
 
 		guard capabilityNegotiation.outstandingRequests.isEmpty,
@@ -339,6 +341,7 @@ extension IRCClient {
 		}
 
 		capabilityNegotiation.endSent = true
+		socket?.config.diagnostics?.record(.capabilitiesCompleted)
 		sendPreAwayIfNeeded()
 		sendCapability("END", data: nil)
 	}
@@ -746,5 +749,29 @@ extension IRCClient {
 private extension String {
 	var nonEmpty: String? {
 		isEmpty ? nil : self
+	}
+}
+
+/// Registration uses the base IRC line limit, including CRLF and the trailing-parameter prefix.
+nonisolated enum CapabilityRequestBatching { // nonisolated: value
+	static func groups(_ names: [String], maximumLineBytes: Int = 512) -> [[String]] {
+		let budget = maximumLineBytes - "CAP REQ :\r\n".utf8.count
+		var groups: [[String]] = []
+		var group: [String] = []
+		var used = 0
+		for name in names where !name.isEmpty && name.utf8.count <= budget {
+			let cost = name.utf8.count + (group.isEmpty ? 0 : 1)
+			if used + cost > budget {
+				groups.append(group)
+				group = []
+				used = 0
+			}
+			used += name.utf8.count + (group.isEmpty ? 0 : 1)
+			group.append(name)
+		}
+		if !group.isEmpty {
+			groups.append(group)
+		}
+		return groups
 	}
 }

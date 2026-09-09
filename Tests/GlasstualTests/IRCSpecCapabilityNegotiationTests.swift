@@ -175,7 +175,7 @@ struct IRCSpecCapabilityNegotiationTests {
 
 		try receive("CAP * LS :away-notify multi-prefix setname", on: client)
 
-		#expect(capabilityCommands(of: client) == ["REQ away-notify", "REQ multi-prefix", "REQ setname"])
+		#expect(capabilityCommands(of: client) == ["REQ away-notify multi-prefix setname"])
 
 		// Two of the three are answered; the third still holds CAP END.
 		try receive("CAP me ACK :away-notify", on: client)

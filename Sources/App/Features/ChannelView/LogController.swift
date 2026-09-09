@@ -808,7 +808,13 @@ public extension LogController {
 		let lineNumber = result.lineNumber
 		let channel = associatedChannel
 		let alreadyDisplayed = backingView?.displayedLines.contains { $0.matches(identifier: lineNumber) } == true
-		if result.isHighlight {
+		let isDuplicate = alreadyDisplayed || transcriptProjection
+			.containsLine(withIdentifier: logLine.uniqueIdentifier)
+			|| logLine.messageIdentifier.map { historicLog.containsMessageIdentifier(
+				$0,
+				forView: associatedItem.uniqueIdentifier
+			) } == true
+		if result.isHighlight, !isDuplicate {
 			if let channel {
 				client.cacheHighlight(in: channel, with: logLine)
 			}
@@ -839,13 +845,17 @@ public extension LogController {
 				channel.recordConversation(with: nickname, direction: direction)
 			}
 		}
-		postPrintBlock?(LogControllerPrintOperationContext(
+		var context = LogControllerPrintOperationContext(
 			client: client,
 			channel: channel,
 			highlight: result.isHighlight,
 			logLine: logLine,
 			lineNumber: lineNumber
-		))
+		)
+		context.isDuplicate = isDuplicate
+		context.isDisplayed = alreadyDisplayed || backingView?.displayedLines.last?
+			.matches(identifier: lineNumber) == true
+		postPrintBlock?(context)
 	}
 
 	func noteReaction(

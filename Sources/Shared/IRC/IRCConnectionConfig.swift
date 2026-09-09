@@ -79,6 +79,7 @@ public nonisolated enum IRCConnectionDefaults { // nonisolated: value
  password travels with it by design — the host is the process that has to
  present it — and it goes no further than that XPC connection. */
 public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { // nonisolated: value
+	var diagnostics: ConnectionDiagnostics?
 	public var serverAddress = ""
 	public var serverPort = IRCConnectionDefaults.serverPort
 	public var addressType = IRCConnectionAddressType.default
@@ -112,6 +113,7 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 	public init() {}
 
 	private enum CodingKeys: String, CodingKey {
+		case diagnostics
 		case serverAddress
 		case serverPort
 		case addressType
@@ -135,6 +137,7 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 
 		self.init()
+		diagnostics = container.decodeOptional(ConnectionDiagnostics.self, forKey: .diagnostics)
 
 		serverAddress = container.decode(String.self, forKey: .serverAddress, aliases: [], default: "")
 		serverPort = container.decode(
@@ -217,6 +220,7 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 
 	public func encode(to encoder: any Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(diagnostics, forKey: .diagnostics)
 
 		try container.encode(serverAddress, forKey: .serverAddress)
 		try container.encode(serverPort, forKey: .serverPort)
@@ -336,5 +340,31 @@ public final nonisolated class ConnectionConfigEnvelope: NSObject, NSSecureCodin
 		}
 
 		coder.encode(data, forKey: Self.configurationCodingKey)
+	}
+}
+
+/// A shared monotonic origin correlates app and XPC milestones without recording
+/// server names, account names, credentials, or IRC message contents.
+nonisolated struct ConnectionDiagnostics: Codable, Sendable, Equatable { // nonisolated: value
+	let identifier: UUID
+	let requestedAt: TimeInterval
+
+	init() {
+		identifier = UUID()
+		requestedAt = ProcessInfo.processInfo.systemUptime
+	}
+
+	enum Event: String, Codable, Sendable {
+		case requested, serviceRequested, hostStarted, transportStarted
+		case certificateEvaluationStarted, certificateEvaluationCompleted, certificateAccepted
+		case transportReady, transportFailed, capabilitiesCompleted, registered, identificationWritten, authenticated
+		case firstJoin, disconnected
+	}
+
+	func record(_ event: Event) {
+		let elapsed = ProcessInfo.processInfo.systemUptime - requestedAt
+		Logger(subsystem: "com.vakesz.glasstual", category: "IRCStartup").info(
+			"Attempt \(identifier.uuidString, privacy: .public) \(event.rawValue, privacy: .public) elapsed=\(elapsed, privacy: .public)s"
+		)
 	}
 }

@@ -69,11 +69,15 @@ public final class SendingMessage: NSObject {
 				continue
 			}
 
-			if colonPosition == NSNotFound {
-				if isLastArgument, argument.hasPrefix(":") || argument.contains(" ") {
-					line.append(":")
-				}
-			} else if index == colonPosition {
+			/* A parameter with a space in it can only travel as the trailing one,
+			 whatever the command's fixed colon position says: the index knows
+			 where PRIVMSG puts its text, but not that this CAP REQ names eleven
+			 capabilities. Without the colon the server keeps the first word and
+			 drops the rest — Libera answered a batched request with one ACK and
+			 registration hung for the ten it never saw. */
+			if isLastArgument, argument.hasPrefix(":") || argument.contains(" ") {
+				line.append(":")
+			} else if colonPosition != NSNotFound, index == colonPosition {
 				line.append(":")
 			}
 

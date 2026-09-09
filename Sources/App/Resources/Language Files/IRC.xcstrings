@@ -1,6 +1,24 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "nick-serv-identification-timed-out" : {
+      "comment" : "Warning after the identification command was written and the authentication deadline elapsed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NickServ has not confirmed identification within 30 seconds. Joining configured channels anyway."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A NickServ 30 másodpercen belül nem erősítette meg az azonosítást. Csatlakozás a beállított csatornákhoz."
+          }
+        }
+      }
+    },
     "added-ignore-that-matches-with-pattern" : {
       "comment" : "/ignore/ command. Legacy key: ret-20.",
       "extractionState" : "manual",

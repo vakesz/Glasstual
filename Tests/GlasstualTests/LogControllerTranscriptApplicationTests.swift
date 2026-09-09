@@ -50,6 +50,39 @@ struct LogControllerTranscriptApplicationTests {
 		           styleMask: .borderless, backing: .buffered, defer: false)
 	}
 
+	@Test("Duplicate render completions still finish but cannot count as new messages")
+	func duplicateRenderCompletion() async {
+		let client = IRCClient(config: ClientConfig())
+		let controller = LogController(client: client, in: window())
+		defer { controller.tearDown(.permanentRemoval) }
+		let message = line("duplicate")
+		var results: [Bool] = []
+		controller.print(message) { results.append($0.isDuplicate) }
+		controller.print(message) { results.append($0.isDuplicate) }
+		await controller.drainRenderJobs()
+		#expect(results == [false, true])
+	}
+
+	@Test("Buffered rendering is not a viewed timestamp until the transcript is displayed")
+	func bufferedRenderingIsNotViewed() async {
+		let client = IRCClient(config: ClientConfig())
+		let controller = LogController(client: client, in: window())
+		defer { controller.tearDown(.permanentRemoval) }
+		controller.historyPageFetcher = { _ in .page([]) }
+		let message = line("waiting for the view")
+		var wasDisplayed: Bool?
+		controller.print(message) { wasDisplayed = $0.isDisplayed }
+		await controller.drainRenderJobs()
+		#expect(wasDisplayed == false)
+		#expect(controller.lastRenderedLineDate() == nil)
+		let lazy = Preferences.Logging.loadHistoryLazily.value
+		Preferences.Logging.loadHistoryLazily.value = false
+		_ = controller.ensureBackingView()
+		Preferences.Logging.loadHistoryLazily.value = lazy
+		await controller.drainRenderJobs()
+		#expect(controller.lastRenderedLineDate() == message.receivedAt)
+	}
+
 	@Test("Jump to Present resumes following from either the present or historical text", arguments: [false, true])
 	func jumpToPresentFollowsSubsequentPrints(fromHistory: Bool) async throws {
 		let lazy = Preferences.Logging.loadHistoryLazily.value

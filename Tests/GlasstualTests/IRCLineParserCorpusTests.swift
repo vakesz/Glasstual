@@ -279,7 +279,7 @@ struct IRCMessageTagCorpusTests {
 	}
 
 	@Test
-	func serverTimeCapabilityMarksMessageHistoric() throws {
+	func serverTimeCapabilityDoesNotImplyPlayback() throws {
 		let client = GLTTestClient()
 		client.enableCapability(.serverTime)
 
@@ -287,7 +287,7 @@ struct IRCMessageTagCorpusTests {
 			Message(line: "@time=2021-01-01T00:00:00.000Z :nick!user@host PRIVMSG #chan :hi", on: client)
 		)
 
-		#expect(message.isHistoric)
+		#expect(!message.isHistoric)
 		#expect(message.receivedAt == Date(timeIntervalSince1970: 1_609_459_200))
 	}
 
@@ -298,7 +298,7 @@ struct IRCMessageTagCorpusTests {
 
 		let message = try #require(Message(line: "@t=1609459200 :nick!user@host PRIVMSG #chan :hi", on: client))
 
-		#expect(message.isHistoric)
+		#expect(!message.isHistoric)
 		#expect(message.receivedAt == Date(timeIntervalSince1970: 1_609_459_200))
 	}
 

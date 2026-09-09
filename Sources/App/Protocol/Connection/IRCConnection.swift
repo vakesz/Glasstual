@@ -60,6 +60,7 @@ private enum ConnectionEvent: Sendable {
 	case requestInsecureCertificateTrust(TrustDecisionHandler)
 	case willSend(Data)
 	case didSendData
+	case serviceFailed(Error)
 	case serviceInterrupted
 	case serviceInvalidated
 	case inputOverload
@@ -191,6 +192,8 @@ public final class Connection: NSObject {
 	private let makeService: () -> NSXPCConnection
 	private var closeDeadlineTask: Task<Void, Never>?
 	private var terminal = false
+	private var pendingStartupEvent: ConnectionDiagnostics.Event?
+	private var recordedFirstJoin = false
 
 	private var serviceConnection: NSXPCConnection?
 	/// The same receiver exported to XPC, also usable by in-process transports.
@@ -293,10 +296,11 @@ public final class Connection: NSObject {
 		case let .requestInsecureCertificateTrust(response):
 			openInsecureCertificateTrustPanel(response)
 		case let .willSend(data):
-			guard let string = convertFromCommonEncoding(data) else { return }
-			client?.ircConnection(self, willSendData: string)
+			willWrite(data)
 		case .didSendData:
-			isSending = false
+			didWrite()
+		case let .serviceFailed(error):
+			didDisconnect(with: error)
 		case .serviceInterrupted:
 			handleServiceInvalidation()
 		case .serviceInvalidated:
@@ -309,6 +313,32 @@ public final class Connection: NSObject {
 			invalidateProcess()
 			didDisconnect(with: NSError(domain: NSPOSIXErrorDomain, code: Int(ENOBUFS)))
 		}
+	}
+
+	private func willWrite(_ data: Data) {
+		guard let string = convertFromCommonEncoding(data) else { return }
+		pendingStartupEvent = if IRCStartupCommandPolicy.identifiesNickServOnWire(string) {
+			.identificationWritten
+		} else if !recordedFirstJoin, Message(line: string, on: nil)?.command == "JOIN" {
+			.firstJoin
+		} else {
+			nil
+		}
+		client?.ircConnection(self, willSendData: string)
+	}
+
+	private func didWrite() {
+		isSending = false
+		if let event = pendingStartupEvent {
+			config.diagnostics?.record(event)
+			if event == .identificationWritten {
+				client?.noteNickServIdentificationWritten()
+			}
+			if event == .firstJoin {
+				recordedFirstJoin = true
+			}
+		}
+		pendingStartupEvent = nil
 	}
 
 	private func handleServiceInvalidation() {
@@ -378,9 +408,15 @@ public final class Connection: NSObject {
 	public func open() {
 		guard terminal == false, client?.isTerminating == false,
 		      isConnecting == false, isConnected == false, isDisconnecting == false else { return }
+		config.diagnostics?.record(.serviceRequested)
 		warmProcessIfNeeded()
 		isConnecting = true
-		remoteObjectProxy()?.open(with: ConnectionConfigEnvelope(config: config))
+		let events = eventContinuation
+		guard let proxy = remoteObjectProxy(errorHandler: { events.yield(.serviceFailed($0)) }) else {
+			handleServiceInvalidation()
+			return
+		}
+		proxy.open(with: ConnectionConfigEnvelope(config: config))
 
 		if TextualPreferences.appNapEnabled() == false {
 			remoteObjectProxy()?.disableAppNap()
@@ -615,6 +651,7 @@ public final class Connection: NSObject {
 	private func didDisconnect(with error: Error?) {
 		guard terminal == false else { return }
 		terminal = true
+		config.diagnostics?.record(.disconnected)
 		closeDeadlineTask?.cancel()
 		closeDeadlineTask = nil
 		invalidateProcess()

@@ -183,7 +183,7 @@ struct IRCClientHistoryTests {
 		/* `chathistory` waits: its dependencies are offered but not yet
 		 acknowledged, so only the four that stand on their own go out. */
 		#expect(capabilityCommands(of: complete) == [
-			"REQ message-tags", "REQ batch", "REQ read-marker", "REQ server-time",
+			"REQ message-tags batch read-marker server-time",
 		])
 
 		let acknowledgement = try message(":irc.example.net CAP me ACK :chathistory", on: complete)
@@ -429,6 +429,7 @@ struct IRCClientHistoryTests {
 			let otherTime = try message("@time=2023-11-14T22:13:21.000Z :b!u@h PRIVMSG #chat :two", on: client)
 			let noTime = try message(":b!u@h PRIVMSG #chat :two", on: client)
 
+			[sameLine, otherSender, otherTime].forEach { $0.markAsHistoric() }
 			#expect(client.chatHistoryMessageIsDuplicate(sameLine))
 			#expect(client.chatHistoryMessageIsDuplicate(otherSender) == false)
 			#expect(client.chatHistoryMessageIsDuplicate(otherTime) == false)
@@ -473,6 +474,21 @@ struct IRCClientHistoryTests {
 			client.receiveReadMarker(starMarker)
 
 			#expect(channel.treeUnreadCount == 1)
+		}
+	}
+
+	@Test("A pending read marker cannot acknowledge a later unseen message")
+	func pendingReadMarkerCapturesViewedDate() throws {
+		let client = makeHistoryClient()
+		client.enableCapability(.readMarker)
+		try withChannel(named: "#chat", on: client) { channel in
+			let date = Date(timeIntervalSince1970: 1_700_000_000)
+			index(logLine(messageIdentifier: "seen", nickname: "a", text: "seen", date: date), for: channel)
+			client.markChannel(asRead: channel)
+			index(logLine(messageIdentifier: "unseen", nickname: "a", text: "unseen",
+			              date: date.addingTimeInterval(5)), for: channel)
+			client.onReadMarkerTimer()
+			#expect(sentLines(of: client) == ["MARKREAD #chat timestamp=2023-11-14T22:13:20.000Z"])
 		}
 	}
 

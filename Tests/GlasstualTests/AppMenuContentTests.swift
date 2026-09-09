@@ -59,7 +59,7 @@ struct AppMenuContentTests {
 				try client.receiveNumericReply(#require(Message(line: line, on: client)))
 			}
 			try client.receiveMode(#require(Message(line: ":irc.example.test MODE mynick +r", on: client)))
-			#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL))
+			#expect(client.startup.authentication == .confirmed)
 			let menu = try #require(window.serverList.menu(for: [channel.uniqueIdentifier]))
 			let entries = AppMenuEntry.validating(menu.menu, context: menu.context)
 			let join = try #require(entries.first { $0.item.command == .joinChannel })

@@ -128,6 +128,10 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		Set(pendingResults.map(\.lineNumber))
 	}
 
+	func containsLine(withIdentifier identifier: String) -> Bool {
+		positions[identifier] != nil
+	}
+
 	var lineCount: Int {
 		recentLines.count
 	}

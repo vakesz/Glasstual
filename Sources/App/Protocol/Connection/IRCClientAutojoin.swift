@@ -36,38 +36,17 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 enum IRCClientAutojoinPolicy {
 	static let delayedWarningInterval: TimeInterval = 90
 	static let maximumDelayedWarningCount: UInt = 3
 
-	static func shouldWaitForIdentification(
-		isIdentifiedWithSASL: Bool,
-		waitsForNickServ: Bool,
-		serverHasNickServ: Bool,
-		isIdentifiedWithNickServ: Bool
-	) -> Bool {
-		!isIdentifiedWithSASL && waitsForNickServ && serverHasNickServ && !isIdentifiedWithNickServ
-	}
-
-	/** Whether the autojoin is still owed this connection's connect commands.
-
-	 It is a wait of its own, not an alternative to the identification wait: a
-	 configuration that asks for both joins only once both have been answered. */
-	static func shouldWaitForConnectCommands(
-		waitsForConnectCommands: Bool,
-		connectCommandsHaveSettled: Bool
-	) -> Bool {
-		waitsForConnectCommands && !connectCommandsHaveSettled
-	}
-
 	/** How long to pause after the connect commands were sent before joining.
 
-	 The commands are written to the socket, not answered: a server's reply to
-	 one arrives later and out of band, so the wait the option offers is a
-	 delay long enough for that reply to land. Zero means nothing to wait
-	 for — the option is off, or the connection has no commands to send. */
+	 This legacy delay applies to lists without NickServ identification.
+	 Zero disables it; identification uses its own confirmation deadline. */
 	static func delayAfterConnectCommands(
 		waitsForConnectCommands: Bool,
 		hasConnectCommands: Bool,
@@ -78,11 +57,139 @@ enum IRCClientAutojoinPolicy {
 	}
 }
 
+/// State and deadlines belong to one connection attempt. Replacing this object
+/// invalidates every delayed callback from that attempt.
+final class IRCStartupCoordinator {
+	enum Commands { case pending, dispatching, settling, ready }
+	enum Authentication { case pending, waiting, confirmed, timedOut }
+	enum Joining { case pending, scheduled, completed }
+
+	let identifier = UUID()
+	var commands = Commands.pending
+	var authentication = Authentication.pending
+	var joining = Joining.pending
+	var requiresAuthentication = false
+	var settlingTask: Task<Void, Never>?
+	var authenticationTask: Task<Void, Never>?
+
+	var canJoin: Bool {
+		commands == .ready && (!requiresAuthentication || authentication == .confirmed || authentication == .timedOut)
+	}
+
+	func cancel() {
+		settlingTask?.cancel()
+		authenticationTask?.cancel()
+		settlingTask = nil
+		authenticationTask = nil
+	}
+
+	isolated deinit {
+		settlingTask?.cancel()
+		authenticationTask?.cancel()
+	}
+}
+
+/// Uses the same command parser as interactive input. Only identification
+/// commands count; words inside a message or an unrelated raw command do not.
+enum IRCStartupCommandPolicy {
+	static func identifiesNickServ(_ input: String) -> Bool {
+		guard let parsed = ParsedUserCommand(input) else { return false }
+		switch parsed.localCommand {
+		case .raw, .quote, .araw, .aquote:
+			return identifiesNickServOnWire(parsed.arguments.rest)
+		case .msg, .smsg, .umsg:
+			var arguments = parsed.arguments
+			let target = arguments.next()
+			return identifiesNickServOnWire("PRIVMSG \(target) :\(arguments.rest)")
+		default:
+			return identifiesNickServOnWire(input)
+		}
+	}
+
+	static func identifiesNickServOnWire(_ line: String) -> Bool {
+		guard let message = Message(line: line, on: nil) else { return false }
+		let body: String
+		switch message.command {
+		case "PRIVMSG":
+			guard message.params.count == 2,
+			      message.params[0].components(separatedBy: "@").first?.lowercased() == "nickserv"
+			else { return false }
+			body = message.params[1]
+		case "NICKSERV", "NS":
+			body = message.params.joined(separator: " ")
+		default: return false
+		}
+		var tokens = CommandTokenizer(body)
+		return tokens.nextToken().caseInsensitiveCompare("IDENTIFY") == .orderedSame && !tokens.nextToken().isEmpty
+	}
+}
+
+@MainActor
+extension IRCClient {
+	func beginConnectCommands() {
+		guard startup.commands == .pending else { return }
+		startup.requiresAuthentication = config.autojoinWaitsForNickServ
+			|| config.loginCommands.contains(where: IRCStartupCommandPolicy.identifiesNickServ)
+		if isCapabilityEnabled(.isIdentifiedWithSASL) || userIsIdentifiedWithNickServ {
+			startup.authentication = .confirmed
+		}
+		startup.commands = .dispatching
+		if config.loginCommands.contains(where: IRCStartupCommandPolicy.identifiesNickServ),
+		   startup.authentication != .confirmed
+		{
+			isWaitingForNickServ = true
+		}
+		for command in config.loginCommands {
+			sendCommand(command, completeTarget: false, target: nil)
+		}
+		markConnectCommandsPerformed()
+	}
+
+	func noteAccountAuthenticated() {
+		guard !isTerminating, !isQuitting, !isDisconnecting else { return }
+		if startup.authentication != .confirmed {
+			socket?.config.diagnostics?.record(.authenticated)
+		}
+		startup.authentication = .confirmed
+		startup.authenticationTask?.cancel()
+		startup.authenticationTask = nil
+		isWaitingForNickServ = false
+		if startup.requiresAuthentication {
+			performAutoJoin()
+		}
+	}
+
+	/// Called after the connection host completes the identification write.
+	func noteNickServIdentificationWritten() {
+		guard !isTerminating, !isQuitting, !isDisconnecting,
+		      startup.requiresAuthentication, startup.authentication == .pending else { return }
+		startup.authentication = .waiting
+		isWaitingForNickServ = true
+		let identifier = startup.identifier
+		startup.authenticationTask = Task { [weak self] in
+			do { try await Task.sleep(for: .seconds(30), clock: .continuous) } catch { return }
+			guard let self else { return }
+			authenticationDeadlineExpired(for: identifier)
+		}
+	}
+
+	func authenticationDeadlineExpired(for identifier: UUID) {
+		guard startup.identifier == identifier, startup.authentication == .waiting,
+		      isLoggedIn, !isTerminating, !isQuitting, !isDisconnecting else { return }
+		startup.authenticationTask?.cancel()
+		startup.authenticationTask = nil
+		startup.authentication = .timedOut
+		isWaitingForNickServ = false
+		printDebugInformation(toConsole: IRCConnectionStrings.nickServIdentificationTimedOut)
+		performAutoJoin()
+	}
+}
+
 @MainActor
 public extension IRCClient {
 	func startAutojoinTimer() {
 		guard !autojoinTimer.isActive else { return }
-		let interval = environment.preferences.autojoinDelayAfterIdentification
+		let interval = startup.requiresAuthentication ? 0 : environment.preferences.autojoinDelayAfterIdentification
 		guard interval > 0 else {
 			onAutojoinTimer()
 			return
@@ -102,58 +209,48 @@ public extension IRCClient {
 	 this used to run on top of that only made a long channel list take tens of
 	 seconds to arrive. */
 	func onAutojoinTimer() {
-		guard isAutojoining, let channels = channelsToAutojoin else { return }
+		guard isLoggedIn, !isTerminating, !isQuitting, !isDisconnecting,
+		      isAutojoining, let channels = channelsToAutojoin else { return }
 		channelsToAutojoin = nil
 		joinChannels(channels)
 		isAutojoining = false
 		isAutojoined = true
 	}
 
-	/** Records that this connection's configured connect commands have been
-	 sent, and starts the pause the user asked for before the autojoin follows.
-
-	 With no pause to serve — no commands to send, or the option switched off —
-	 the wait is over at once. */
+	/// Complete dispatch before evaluating any automatic join, even when the
+	/// legacy fixed-delay preference is off.
 	func markConnectCommandsPerformed() {
-		guard !didPerformConnectCommands else { return }
-		didPerformConnectCommands = true
-
+		guard startup.commands == .pending || startup.commands == .dispatching else { return }
+		startup.requiresAuthentication = config.autojoinWaitsForNickServ
+			|| config.loginCommands.contains(where: IRCStartupCommandPolicy.identifiesNickServ)
+		startup.commands = .settling
+		let hasIdentification = config.loginCommands.contains(where: IRCStartupCommandPolicy.identifiesNickServ)
 		let delay = IRCClientAutojoinPolicy.delayAfterConnectCommands(
-			waitsForConnectCommands: config.autojoinWaitsForConnectCommands,
+			waitsForConnectCommands: config.autojoinWaitsForConnectCommands && !hasIdentification,
 			hasConnectCommands: !config.loginCommands.isEmpty,
 			configuredDelay: config.autojoinDelayAfterConnectCommands
 		)
-		guard delay > 0 else {
-			settleConnectCommands()
-			return
-		}
-
-		connectCommandsSettlingTask?.cancel()
-		connectCommandsSettlingTask = Task { [weak self] in
-			try? await Task.sleep(for: .seconds(delay))
-
-			guard Task.isCancelled == false, let self else { return }
-
+		guard delay > 0 else { settleConnectCommands(); return }
+		let identifier = startup.identifier
+		startup.settlingTask = Task { [weak self] in
+			do { try await Task.sleep(for: .seconds(delay), clock: .continuous) } catch { return }
+			guard let self, startup.identifier == identifier else { return }
 			settleConnectCommands()
 		}
 	}
 
-	/** Ends that wait and releases an autojoin held back by it. Every other
-	 wait still applies: `performAutoJoin()` re-checks them. */
 	func settleConnectCommands() {
-		guard !connectCommandsHaveSettled else { return }
-		connectCommandsSettlingTask = nil
-		connectCommandsHaveSettled = true
-		guard config.autojoinWaitsForConnectCommands else { return }
+		guard startup.commands == .settling else { return }
+		startup.settlingTask = nil
+		startup.commands = .ready
 		performAutoJoin()
 	}
 
-	/// Forgets the wait, so the next connection serves its own.
 	func cancelConnectCommandSettling() {
-		connectCommandsSettlingTask?.cancel()
-		connectCommandsSettlingTask = nil
-		didPerformConnectCommands = false
-		connectCommandsHaveSettled = false
+		stopAutojoinTimer()
+		channelsToAutojoin = nil
+		startup.cancel()
+		startup = IRCStartupCoordinator()
 	}
 
 	/// Forgets a join list that has not been sent yet.
@@ -193,7 +290,7 @@ public extension IRCClient {
 	}
 
 	func performAutoJoin(initiatedByUser: Bool) {
-		guard !isAutojoining else { return }
+		guard isLoggedIn, !isTerminating, !isQuitting, !isDisconnecting, !isAutojoining else { return }
 		stopAutojoinDelayedWarningTimer()
 
 		if !initiatedByUser {
@@ -202,16 +299,7 @@ public extension IRCClient {
 				isAutojoined = true
 				return
 			}
-			guard !IRCClientAutojoinPolicy.shouldWaitForIdentification(
-				isIdentifiedWithSASL: isCapabilityEnabled(.isIdentifiedWithSASL),
-				waitsForNickServ: config.autojoinWaitsForNickServ,
-				serverHasNickServ: serverHasNickServ,
-				isIdentifiedWithNickServ: userIsIdentifiedWithNickServ
-			) else { return }
-			guard !IRCClientAutojoinPolicy.shouldWaitForConnectCommands(
-				waitsForConnectCommands: config.autojoinWaitsForConnectCommands,
-				connectCommandsHaveSettled: connectCommandsHaveSettled
-			) else { return }
+			guard startup.canJoin else { return }
 		}
 
 		let channels = channelList.filter { $0.isChannel && !$0.isActive && $0.config.autoJoin }
