@@ -398,14 +398,18 @@ public extension IRCClient {
 		return nil
 	}
 
-	/// `true` when the user is content to send a burst this large.
+	/** `true` when the user is content to send a burst this large.
+
+	 Send/Cancel, not Yes/No: the question is whether to send, so the button
+	 that does it says so -- and the one that answers Escape says that nothing
+	 was sent. */
 	private func potentialFloodAlert() -> Bool {
 		output?.confirmModally(
 			AlertRequest(
 				title: IRCTransportStrings.largeMessageWarning,
 				body: IRCTransportStrings.confirmLargeMessage,
-				defaultButton: PromptStrings.Action.yes,
-				alternateButton: PromptStrings.Action.no,
+				defaultButton: PromptStrings.Action.send,
+				alternateButton: PromptStrings.Action.cancel,
 				suppressionKey: OutboundTextSuppressionKey.potentialFlood.rawValue,
 				style: .warning
 			)

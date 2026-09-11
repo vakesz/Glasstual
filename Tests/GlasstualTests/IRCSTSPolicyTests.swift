@@ -134,4 +134,67 @@ struct STSPolicyTests {
 
 		#expect(policy.port == 6697) // The connected port when none advertised
 	}
+
+	/** A policy is about a name, not a spelling of it. `irc.example.com.` is the
+	 root-anchored form of `irc.example.com`, a bracketed IPv6 literal is the
+	 same host as a bare one, and DNS names are case-insensitive. Keying on the
+	 text as typed filed those as separate hosts, so a policy stored under the
+	 spelling one connection used never applied to the next. */
+	@Test(arguments: [
+		("irc.example.com.", "irc.example.com"),
+		("irc.example.com", "irc.example.com."),
+		("IRC.Example.COM", "irc.example.com"),
+		("irc.example.com..", "IRC.EXAMPLE.COM."),
+		("[2001:db8::1]", "2001:db8::1"),
+	])
+	func spellingsOfTheSameHostShareOnePolicy(_ stored: String, _ looked: String) {
+		let store = makeStore()
+		store.setPolicy(STSPolicy(port: 6697, expiresAt: .distantFuture, preload: false), forHost: stored)
+
+		#expect(store.policy(forHost: looked) != nil)
+	}
+
+	/// Normalising has to stop at the host: two different names still get two
+	/// different policies.
+	@Test("Different hosts keep different policies")
+	func differentHostsAreNotMerged() {
+		let store = makeStore()
+		store.setPolicy(STSPolicy(port: 6697, expiresAt: .distantFuture, preload: false), forHost: "irc.example.com")
+
+		#expect(store.policy(forHost: "irc.example.net") == nil)
+		#expect(store.policy(forHost: "other.irc.example.com") == nil)
+	}
+
+	/// Removing has to normalise the same way, or a policy the user cleared
+	/// under one spelling stays in force under another.
+	@Test("A policy is removed whichever spelling names it")
+	func removalNormalisesTheSameWay() {
+		let store = makeStore()
+		store.setPolicy(STSPolicy(port: 6697, expiresAt: .distantFuture, preload: false), forHost: "irc.example.com")
+
+		store.removePolicy(forHost: "IRC.example.com.")
+
+		#expect(store.policy(forHost: "irc.example.com") == nil)
+	}
+}
+
+/** `performedSTSUpgrade` stops one connection attempt from upgrading twice.
+
+ It was cleared only by a successful TLS handshake, so an upgrade that failed to
+ connect left it set for the life of the client object and every later STS offer
+ from that server was ignored — the client kept talking in the clear to a server
+ that had asked it not to. The session the flag guards ends at the disconnect. */
+@MainActor
+@Suite("STS upgrade state")
+struct ConnectionSTSUpgradeResetTests {
+	@Test("A disconnect clears the upgrade flag")
+	func disconnectClearsTheUpgradeFlag() {
+		let client = GLTTestClient(configDictionary: ["nickname": "mara"])
+		defer { client.stopAllTimers() }
+		client.performedSTSUpgrade = true
+
+		client.resetAllPropertyValues()
+
+		#expect(client.performedSTSUpgrade == false)
+	}
 }

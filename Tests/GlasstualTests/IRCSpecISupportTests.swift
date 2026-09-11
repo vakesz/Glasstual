@@ -131,6 +131,30 @@ struct IRCSpecISupportTests {
 		#expect(info.modeHasParameter("t", whenModeIsSet: false) == false)
 	}
 
+	/** A `MODE` can arrive before 005 does — a bouncer replays one on attach,
+	 and `RPL_CHANNELMODEIS` answers a join — and the parser has always filled
+	 in RFC 1459's table until `CHANMODES` lands. Asking the same question
+	 through `modeHasParameter` did not, so `+b nick!*@*` was a list mode to one
+	 and a bare flag to the other. */
+	@Test("CHANMODES: the RFC 1459 table stands in until the server sends one")
+	func theRFC1459TableStandsInBeforeChanModes() {
+		let info = supportInfo("PREFIX=(ov)@+")
+
+		#expect(info.modeHasParameter("b", whenModeIsSet: true))
+		#expect(info.modeHasParameter("b", whenModeIsSet: false))
+		#expect(info.modeHasParameter("k", whenModeIsSet: true))
+		#expect(info.modeHasParameter("l", whenModeIsSet: true))
+		#expect(info.modeHasParameter("l", whenModeIsSet: false) == false)
+		#expect(info.modeHasParameter("t", whenModeIsSet: true) == false)
+		#expect(info.parseModes("+b nick!*@*").first?.modeParameter == "nick!*@*")
+
+		/* And stands down the moment the server answers for itself, even where
+		 its answer is narrower than the RFC's. */
+		let advertised = supportInfo("PREFIX=(ov)@+", "CHANMODES=,,,imnpst")
+
+		#expect(advertised.modeHasParameter("b", whenModeIsSet: true) == false)
+	}
+
 	/// A mode the server never classified takes no parameter: guessing would
 	/// eat the next token and desynchronise the whole MODE line.
 	@Test("CHANMODES: an unlisted mode takes no parameter")

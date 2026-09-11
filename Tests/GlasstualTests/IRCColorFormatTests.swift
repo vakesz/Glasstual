@@ -331,6 +331,206 @@ struct IRCColorFormatTests {
 		#expect(reassembled == words)
 	}
 
+	// MARK: - Colour control codes
+
+	/** mIRC's 99 is "no colour", not colour ninety-nine.
+
+	 `\u{3}04,99` names a foreground and takes the background away. Reading 99
+	 as an out-of-range palette index dropped it, and dropping it left whatever
+	 background the previous code had set: red text kept the last line's yellow
+	 behind it for the rest of the message. */
+	@Test("A background of 99 clears the background rather than leaving it")
+	func background99ClearsTheBackground() {
+		let components = ("\u{3}04,99" as NSString).colorComponents(
+			ofCharacter: unichar(IRCTextFormatterControlCharacter.colorDigit),
+			startingAt: 0
+		)
+
+		#expect(components.foreground == .color(.palette(4)))
+		#expect(components.background == .reset)
+		#expect(components.charactersConsumed == 6)
+	}
+
+	@Test("A foreground of 99 clears the foreground and says nothing about the background")
+	func foreground99ClearsOnlyTheForeground() {
+		let components = ("\u{3}99" as NSString).colorComponents(
+			ofCharacter: unichar(IRCTextFormatterControlCharacter.colorDigit),
+			startingAt: 0
+		)
+
+		#expect(components.foreground == .reset)
+		#expect(components.background == .unchanged)
+		#expect(components.charactersConsumed == 3)
+	}
+
+	@Test("A foreground on its own leaves the background in force")
+	func foregroundAloneLeavesTheBackgroundAlone() {
+		let components = ("\u{3}04text" as NSString).colorComponents(
+			ofCharacter: unichar(IRCTextFormatterControlCharacter.colorDigit),
+			startingAt: 0
+		)
+
+		#expect(components.foreground == .color(.palette(4)))
+		#expect(components.background == .unchanged)
+		#expect(components.charactersConsumed == 3)
+	}
+
+	/// A control character with nothing readable behind it is mIRC's "colour
+	/// off": both halves go. A comma with no digits in front of it is text.
+	@Test("A colour code with no digits clears both halves and consumes only itself")
+	func bareColourCodesClearBothHalves() {
+		let bare = ("\u{3}" as NSString).colorComponents(
+			ofCharacter: unichar(IRCTextFormatterControlCharacter.colorDigit),
+			startingAt: 0
+		)
+
+		#expect(bare.foreground == .reset)
+		#expect(bare.background == .reset)
+		#expect(bare.charactersConsumed == 1)
+
+		let comma = ("\u{3}," as NSString).colorComponents(
+			ofCharacter: unichar(IRCTextFormatterControlCharacter.colorDigit),
+			startingAt: 0
+		)
+
+		#expect(comma.foreground == .reset)
+		#expect(comma.background == .reset)
+		#expect(comma.charactersConsumed == 1)
+
+		let shortHex = ("\u{4}0F" as NSString).colorComponents(
+			ofCharacter: unichar(IRCTextFormatterControlCharacter.colorHex),
+			startingAt: 0
+		)
+
+		#expect(shortHex.foreground == .reset)
+		#expect(shortHex.background == .reset)
+		#expect(shortHex.charactersConsumed == 1)
+	}
+
+	@Test("A hexadecimal code reads both halves as channels")
+	func hexadecimalCodeReadsBothHalves() {
+		let components = ("\u{4}FF8000,000102" as NSString).colorComponents(
+			ofCharacter: unichar(IRCTextFormatterControlCharacter.colorHex),
+			startingAt: 0
+		)
+
+		#expect(components.foreground == .color(.rgb(IRCColorChannels(
+			red: 1, green: Double(0x80) / 0xFF, blue: 0
+		))))
+		#expect(components.background == .color(.rgb(IRCColorChannels(
+			red: 0, green: Double(1) / 0xFF, blue: Double(2) / 0xFF
+		))))
+		#expect(components.charactersConsumed == 14)
+	}
+
+	/// A public entry point answers about a range it does not have. It used to
+	/// carry a `precondition`, so a caller's arithmetic slip crashed the app.
+	@Test("A start past the end of the string reads nothing instead of trapping")
+	func startPastTheEndReadsNothing() {
+		let components = ("\u{3}04" as NSString).colorComponents(
+			ofCharacter: unichar(IRCTextFormatterControlCharacter.colorDigit),
+			startingAt: 99
+		)
+
+		#expect(components.foreground == .unchanged)
+		#expect(components.background == .unchanged)
+		#expect(components.charactersConsumed == 0)
+	}
+
+	// MARK: - Wrapping
+
+	/** A zero-width joiner sequence is one emoji and has to travel as one.
+
+	 `rangeOfComposedCharacterSequence` stops at the joiner, so a wrap could
+	 fall between the halves of a family and send two unrelated people. */
+	@Test("A line never breaks inside a zero-width joiner sequence")
+	func linesDoNotSplitJoinedEmoji() {
+		let client = GLTTestClient()
+		let family = "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}"
+		let payload = String(repeating: "\(family) ", count: 60)
+		var cursor = IRCLineCursor(NSAttributedString(string: payload))
+		var reassembled = ""
+
+		while true {
+			let before = cursor.length
+			guard let line = cursor.nextLine(forChannel: "#test", on: client, with: .privateMessage) else {
+				break
+			}
+
+			#expect(cursor.length < before, "a line that consumes nothing never ends the message")
+			#expect(line.unicodeScalars.last != "\u{200D}")
+			#expect(line.unicodeScalars.first != "\u{200D}")
+			reassembled += line
+		}
+
+		#expect(cursor.isEmpty)
+		#expect(reassembled == payload)
+	}
+
+	/** A colour code the person typed is one token too.
+
+	 Split between the control character and its digits, the digits arrive on
+	 the next line as text: the reader sees a stray "04" where a colour was. */
+	@Test("A line never breaks between a colour code and its digits")
+	func linesDoNotSplitColourCodes() {
+		let client = GLTTestClient()
+		let payload = String(repeating: "\u{3}04word\u{3} ", count: 120)
+		var cursor = IRCLineCursor(NSAttributedString(string: payload))
+		var reassembled = ""
+
+		while true {
+			let before = cursor.length
+			guard let line = cursor.nextLine(forChannel: "#test", on: client, with: .privateMessage) else {
+				break
+			}
+
+			#expect(cursor.length < before, "a line that consumes nothing never ends the message")
+			#expect(endsMidColourCode(line) == false)
+			reassembled += line
+		}
+
+		#expect(cursor.isEmpty)
+		#expect(reassembled == payload)
+	}
+
+	/// Whether `line` ends part-way through one of the two-digit colour codes
+	/// the test above wrote: the control character reached the wire with one of
+	/// its two digits, and the other one arrives on the next line as text. A
+	/// control character followed by anything that is not a digit — the space the
+	/// payload puts after it — carries no argument and is whole.
+	private func endsMidColourCode(_ line: String) -> Bool {
+		let scalars = Array(line.unicodeScalars)
+
+		guard let index = scalars.lastIndex(where: { Int($0.value) == IRCTextFormatterControlCharacter.colorDigit })
+		else {
+			return false
+		}
+
+		let arguments = scalars[scalars.index(after: index)...]
+
+		return arguments.count == 1 && arguments.allSatisfy { $0.value >= 0x30 && $0.value <= 0x39 }
+	}
+
+	/** The wrap may only take back what the caller can re-queue.
+
+	 It truncated the line unconditionally and gave the characters back only
+	 when the caller could account for them; past that point the text left the
+	 line being sent and nothing ever sent it. */
+	@Test("Wrapping declines rather than truncate more than the caller can re-queue")
+	func wrapDeclinesWhenItCannotGiveTheCharactersBack() {
+		var string = "aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii"
+		let unchanged = string
+
+		#expect(
+			string.wrapIRCTextFormatterResult(with: 0, maxDistance: 25, maximumGiveBack: 2)
+				== UInt(bitPattern: NSNotFound)
+		)
+		#expect(string == unchanged)
+
+		#expect(string.wrapIRCTextFormatterResult(with: 0, maxDistance: 25, maximumGiveBack: 5) == 5)
+		#expect(string.hasSuffix("hhhh"))
+	}
+
 	/// Removes the bold and digit-colour control codes this test's attributes
 	/// inject, leaving the source text the line was cut from.
 	private func stripControlCharacters(from line: String) -> String {

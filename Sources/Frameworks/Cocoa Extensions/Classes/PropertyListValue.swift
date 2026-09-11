@@ -228,7 +228,12 @@ public extension PropertyListValue {
 		case .float32Type, .float64Type, .floatType, .doubleType, .cgFloatType:
 			self = .double(number.doubleValue)
 		default:
-			self = .integer(number.intValue)
+			/* An unsigned 64-bit value above `Int.max` — a size or an identifier
+			 written by another process, or by hand — has no `Int` to narrow to,
+			 and `intValue` would hand back its bit pattern as a negative number.
+			 Carrying it as a double keeps its magnitude, which is what a reader
+			 comparing it against a bound needs. */
+			self = Int(exactly: number).map(Self.integer) ?? .double(number.doubleValue)
 		}
 	}
 

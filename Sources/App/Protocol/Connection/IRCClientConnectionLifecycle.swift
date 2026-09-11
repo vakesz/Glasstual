@@ -283,6 +283,10 @@ public extension IRCClient {
 	func toggleAwayStatus(_ setAway: Bool, withComment comment: String?) {
 		automaticallyAwayForScreenSleep = false
 		guard isLoggedIn, setAway == false || comment != nil else { return }
+		/* `AWAYLEN` is measured here rather than at each caller: the menu, the
+		 screen-sleep timer and `/away` all end up on this line, and only the
+		 first of them used to bound the comment. */
+		let comment = comment.map(truncatedAwayComment)
 		if setAway, let comment {
 			send("AWAY", arguments: [comment])
 		} else {

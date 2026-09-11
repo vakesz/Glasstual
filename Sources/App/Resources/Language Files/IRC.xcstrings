@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "nickname-retries-exhausted" : {
+      "comment" : "Console warning after the server refused every nickname the client tried while registering; the client stops retrying and waits for the user to choose one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server refused every nickname that was tried. Choose another one with the /nick command to continue."
+          }
+        }
+      }
+    },
     "nick-serv-identification-timed-out" : {
       "comment" : "Warning after the identification command was written and the authentication deadline elapsed.",
       "extractionState" : "manual",
@@ -1063,6 +1075,18 @@
         }
       }
     },
+    "join-refused-name-too-long" : {
+      "comment" : "ISUPPORT driven messages. Console notice when the client does not send a JOIN at all because the channel name is longer than the server's advertised CHANNELLEN. %1$@ is the channel name, %2$ld the longest name this server accepts.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not joining %1$@ because this server accepts channel names of at most %2$ld characters."
+          }
+        }
+      }
+    },
     "joining-would-exceed-the-limit" : {
       "comment" : "ISUPPORT driven messages. Legacy key: w7c-lm.",
       "extractionState" : "manual",
@@ -1587,6 +1611,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Please use the \u0002Address Book\u0002 to add or remove tracked users. Open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
+          }
+        }
+      }
+    },
+    "presence-list-is-full" : {
+      "comment" : "ISUPPORT driven messages. Console notice when some nicknames are not added to the server's presence list (MONITOR or WATCH) because it is already as full as the server said it gets. %1$ld is how many nicknames were left out, %2$ld how many entries this server tracks in total.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not watching %1$ld of the nicknames you track: this server keeps at most %2$ld presence entries."
           }
         }
       }

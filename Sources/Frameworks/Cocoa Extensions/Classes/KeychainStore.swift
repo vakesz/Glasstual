@@ -35,11 +35,12 @@ import Security
 
 /// The keychain class an item lives in.
 ///
-/// An item's identity is `kSecAttrService` together with `kSecAttrAccount`;
-/// `descriptionAttribute` is written to `kSecAttrDescription`, which is not an
-/// identity attribute. Every lookup query still filters on it, so the strings
-/// below must keep matching what earlier releases wrote or the items those
-/// releases created stop being found.
+/// An item's identity is `kSecAttrService` together with `kSecAttrAccount`.
+/// `descriptionAttribute` is written to `kSecAttrDescription` when the item is
+/// created, so Keychain Access has something to show, and nothing ever looks an
+/// item up by it: `kSecAttrDescription` and `kSecAttrLabel` are both editable
+/// in Keychain Access, and a lookup that filtered on either stopped finding the
+/// item the moment a user renamed it.
 public enum KeychainItemClass: Sendable {
 	case applicationPassword
 	case internetPassword
@@ -81,8 +82,11 @@ public enum PendingKeychainSecret: Sendable, Equatable, Hashable {
 	}
 
 	/// `nil` means the secret is gone, so it clears rather than doing nothing.
+	/// So does an empty string: a field holding no characters is a field the
+	/// user emptied, and writing `""` back would leave a keychain item behind
+	/// that answers every later read with a password nobody typed.
 	public init(_ value: String?) {
-		self = value.map(Self.set) ?? .cleared
+		self = value.map(Self.edited) ?? .cleared
 	}
 
 	/// The secret this edit resolves to, `stored` standing in when nothing is
@@ -154,7 +158,7 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	/// The stored secret, telling an absent item apart from a keychain that
 	/// refused the read — which `password` cannot.
 	public func readPassword() -> KeychainReadOutcome {
-		KeychainStore.readPassword(label: label, kind: itemClass, username: nil, service: service)
+		KeychainStore.readPassword(kind: itemClass, username: nil, service: service)
 	}
 
 	/// Writes `password`, creating the item when it does not exist yet.
@@ -171,7 +175,7 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 
 	@discardableResult
 	public func delete() -> Bool {
-		KeychainStore.deleteItem(label, kind: itemClass, username: nil, service: service)
+		KeychainStore.deleteItem(kind: itemClass, username: nil, service: service)
 	}
 
 	/// Writes or deletes the item so it matches `secret`. `.unchanged` leaves
@@ -201,13 +205,11 @@ public enum KeychainReadOutcome: Sendable, Equatable {
 enum KeychainStore {
 	@discardableResult
 	static func deleteItem(
-		_ name: String,
 		kind: KeychainItemClass,
 		username: String?,
 		service: String
 	) -> Bool {
-		let status = SecItemDelete(protectedQuery(
-			name: name,
+		let status = SecItemDelete(identityQuery(
 			kind: kind,
 			username: username,
 			service: service
@@ -229,16 +231,34 @@ enum KeychainStore {
 		if let newPassword {
 			changes[kSecValueData] = Data(newPassword.utf8)
 		}
-		let status = SecItemUpdate(
-			protectedQuery(name: name, kind: kind, username: username, service: service) as CFDictionary,
-			changes as CFDictionary
-		)
-		if status == errSecItemNotFound, let newPassword, newPassword.isEmpty == false {
-			return addItem(name, kind: kind, username: username, password: newPassword, service: service)
+		let query = identityQuery(kind: kind, username: username, service: service)
+		let status = SecItemUpdate(query as CFDictionary, changes as CFDictionary)
+		guard status == errSecItemNotFound else {
+			return status == errSecSuccess
 		}
-		return status == errSecSuccess
+		guard let newPassword, newPassword.isEmpty == false else {
+			return false
+		}
+
+		/* An add can still collide: another process may have created the item
+		 between the two calls, or one may exist with attributes this add does
+		 not repeat. Updating the existing item is what the caller asked for,
+		 so a duplicate is a second chance rather than a dropped password. */
+		let addStatus = addItem(
+			name,
+			kind: kind,
+			username: username,
+			password: newPassword,
+			service: service
+		)
+		guard addStatus == errSecDuplicateItem else {
+			return addStatus == errSecSuccess
+		}
+		return SecItemUpdate(query as CFDictionary, changes as CFDictionary) == errSecSuccess
 	}
 
+	/// Creates the item, reporting the `OSStatus` so a caller can tell a
+	/// collision from a refusal.
 	@discardableResult
 	static func addItem(
 		_ name: String,
@@ -246,20 +266,23 @@ enum KeychainStore {
 		username: String?,
 		password: String,
 		service: String
-	) -> Bool {
-		var query = protectedQuery(name: name, kind: kind, username: username, service: service)
+	) -> OSStatus {
+		var query = identityQuery(kind: kind, username: username, service: service)
+		/* Written once, at creation, and never looked up by: these are the two
+		 attributes Keychain Access lets the user edit. */
+		query[kSecAttrLabel] = name
+		query[kSecAttrDescription] = kind.descriptionAttribute
 		query[kSecAttrAccessible] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
 		query[kSecValueData] = Data(password.utf8)
-		return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
+		return SecItemAdd(query as CFDictionary, nil)
 	}
 
 	static func readPassword(
-		label: String,
 		kind: KeychainItemClass,
 		username: String?,
 		service: String
 	) -> KeychainReadOutcome {
-		var query = protectedQuery(name: label, kind: kind, username: username, service: service)
+		var query = identityQuery(kind: kind, username: username, service: service)
 		query[kSecMatchLimit] = kSecMatchLimitOne
 		query[kSecReturnData] = true
 
@@ -280,16 +303,18 @@ enum KeychainStore {
 		}
 	}
 
-	private static func protectedQuery(
-		name: String,
+	/// The attributes that name one item and nothing else. Everything a user can
+	/// rename in Keychain Access stays out of it, so renaming an item there does
+	/// not hide it from the update that follows — which used to fail as
+	/// `errSecItemNotFound`, then fail again as `errSecDuplicateItem` when the
+	/// add ran, dropping the new password without saying so.
+	private static func identityQuery(
 		kind: KeychainItemClass,
 		username: String?,
 		service: String
 	) -> [CFString: Any] {
 		var query: [CFString: Any] = [
 			kSecClass: kind.secClass,
-			kSecAttrLabel: name,
-			kSecAttrDescription: kind.descriptionAttribute,
 			kSecAttrService: service,
 			kSecUseDataProtectionKeychain: true,
 		]

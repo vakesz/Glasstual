@@ -65,6 +65,15 @@ enum MenuMemberCommand {
 	}
 }
 
+/// Where an insertion landed once it has replaced a selection. The replaced
+/// range describes storage that no longer exists, so nothing may be measured
+/// against it afterwards.
+nonisolated enum MenuInsertionRangePolicy { // nonisolated: value
+	static func insertedRange(replacing replaced: NSRange, with insertion: String) -> NSRange {
+		NSRange(location: replaced.location, length: insertion.utf16.count)
+	}
+}
+
 /// One of the main window's navigation commands.
 enum MenuNavigationAction: Sendable, CaseIterable {
 	case nextServer
@@ -109,7 +118,6 @@ public final class MenuActionCoordinator: NSObject {
 		menuContext != nil
 	}
 
-	var currentSearchPhrase = ""
 	var reactionPopover: ReactionPopover?
 	/// Menu-action and selection notifications, cancelled at termination.
 	let notifications = NotificationSubscriptions()
@@ -422,7 +430,13 @@ public final class MenuActionCoordinator: NSObject {
 		 the typing state is sent and the insertion is undoable. */
 		guard textView.shouldChangeText(in: selectedRange, replacementString: insertion) else { return }
 		textView.replaceCharacters(in: selectedRange, with: insertion)
-		textView.resetFontColor(in: selectedRange)
+		/* The text that was there is gone: what has to be recoloured is what
+		 replaced it. Reusing the pre-edit range walks off the end of a storage
+		 the replacement shrank -- select eleven characters, insert a nickname
+		 shorter than that, and the range check throws. */
+		textView.resetFontColor(
+			in: MenuInsertionRangePolicy.insertedRange(replacing: selectedRange, with: insertion)
+		)
 		textView.didChangeText()
 		textView.focus()
 	}

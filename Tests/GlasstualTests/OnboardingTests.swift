@@ -18,6 +18,40 @@ struct OnboardingTests {
 		)
 	}
 
+	@MainActor
+	private final class SoundDeliveryRefreshes {
+		var count = 0
+	}
+
+	/** Whether the system will play a notification's sound follows from the
+	 permission answer, and the notification controller reads it once at launch —
+	 which on a first launch is before the onboarding window has asked. Nothing
+	 told it the answer had arrived, so the rest of that session had the
+	 application playing every sound itself. */
+	@Test("Granting permission during onboarding has the sound delivery read again")
+	func grantingPermissionRefreshesSoundDelivery() async {
+		let refreshes = SoundDeliveryRefreshes()
+		var authorization = testAuthorization
+		authorization.soundDeliveryDidChange = { refreshes.count += 1 }
+		let settings = OnboardingSettings()
+		settings.nickname = "alice"
+		let model = OnboardingModel(settings: settings, notificationAuthorization: authorization)
+
+		_ = model.continueFlow()
+		_ = model.continueFlow()
+		_ = model.continueFlow()
+
+		#expect(model.currentStep == .network)
+
+		/* The prompt is answered in a task of its own, so the answer lands after
+		 the step has moved on. */
+		for _ in 0 ..< 200 where refreshes.count == 0 {
+			try? await Task.sleep(for: .milliseconds(5))
+		}
+
+		#expect(refreshes.count == 1)
+	}
+
 	@Test("Identity validation keeps the user on the first step")
 	func invalidIdentityDoesNotAdvance() {
 		let settings = OnboardingSettings()
@@ -139,16 +173,43 @@ struct OnboardingTests {
 		#expect(completed == 1)
 	}
 
-	@Test("Cancel without accepted identity leaves onboarding incomplete")
+	/** Cancelling on the very first step is still an answer.
+
+	 It used to persist nothing at all, so onboarding re-presented itself at
+	 every launch with no way to stop it: nothing is applied, but the fact that
+	 the user closed it is recorded. */
+	@Test("Cancel without accepted identity applies nothing and still completes")
 	func cancelBeforeIdentity() {
 		let model = OnboardingModel(settings: OnboardingSettings(), notificationAuthorization: testAuthorization)
+		var events: [String] = []
 		let session = OnboardingSession(
 			model: model,
 			createConnection: { _, _ in Issue.record("Cancel created a connection"); return false },
 			applySettings: { _ in Issue.record("Unaccepted settings were saved") },
-			markCompleted: { Issue.record("Onboarding incorrectly completed") }
+			markCompleted: { events.append("complete") }
 		)
+
 		#expect(session.cancel())
+		#expect(session.cancel())
+		#expect(events == ["complete"])
+	}
+
+	@Test("Set Up Later applies nothing and does not come back")
+	func setUpLaterCompletesWithoutApplying() {
+		let settings = OnboardingSettings()
+		settings.nickname = "alice"
+		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
+		var events: [String] = []
+		let session = OnboardingSession(
+			model: model,
+			createConnection: { _, _ in Issue.record("Set Up Later created a connection"); return false },
+			applySettings: { _ in Issue.record("Set Up Later saved settings") },
+			markCompleted: { events.append("complete") }
+		)
+		_ = session.continueFlow()
+
+		#expect(session.setUpLater())
+		#expect(events == ["complete"])
 	}
 
 	@Test("Cancel preserves the last accepted values rather than later edits")
@@ -206,21 +267,33 @@ struct OnboardingTests {
 		#expect(settings.channelsToJoin.isEmpty)
 	}
 
-	/// Nothing was accepted, so there is nothing to save and nothing to mark:
-	/// onboarding is offered again rather than skipped for good.
-	@Test("Closing the window before the first step persists nothing")
-	func windowCloseBeforeIdentityPersistsNothing() {
+	/// Nothing was accepted, so there is nothing to apply — but the window was
+	/// closed on purpose, and asking again at the next launch is what the user
+	/// just declined.
+	@Test("Closing the window before the first step applies nothing and completes")
+	func windowCloseBeforeIdentityAppliesNothing() {
 		let model = OnboardingModel(settings: OnboardingSettings(), notificationAuthorization: testAuthorization)
+		var events: [String] = []
 		let session = OnboardingSession(
 			model: model,
 			createConnection: { _, _ in Issue.record("Closing the window created a connection"); return false },
 			applySettings: { _ in Issue.record("Unaccepted settings were saved") },
-			markCompleted: { Issue.record("Onboarding incorrectly completed") }
+			markCompleted: { events.append("complete") }
 		)
 
 		session.windowDidClose()
 
 		#expect(model.acceptedIdentity == nil)
+		#expect(events == ["complete"])
+	}
+
+	@Test("Every appearance the picker offers has a title of its own")
+	func appearanceTitlesCoverEveryCase() {
+		let titles = PreferredAppearance.allCases.map(OnboardingStrings.Appearance.interfaceStyleTitle)
+
+		#expect(titles.count == PreferredAppearance.allCases.count)
+		#expect(Set(titles).count == titles.count)
+		#expect(titles.contains(where: \.isEmpty) == false)
 	}
 
 	@Test("Finish without a network saves preferences and completes once")

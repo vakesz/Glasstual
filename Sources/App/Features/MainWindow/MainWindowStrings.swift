@@ -142,8 +142,14 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			String(localized: .TVCMainWindow.connectionSecurity)
 		}
 
-		static var toggleMemberList: String {
-			String(localized: .TVCMainWindow.toggleMemberList)
+		/// The draggable edge between the conversation and the member list.
+		static var memberListWidth: String {
+			String(localized: .TVCMainWindow.memberListWidth)
+		}
+
+		/// How to move that edge without the pointer.
+		static var memberListWidthHint: String {
+			String(localized: .TVCMainWindow.memberListWidthHint)
 		}
 	}
 
@@ -168,20 +174,12 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			String(localized: .TVCMainWindow.markAllAsRead)
 		}
 
-		static var disableAllNotifications: String {
-			String(localized: .TVCMainWindow.disableAllNotifications)
-		}
-
 		static var addressBook: String {
 			String(localized: .TVCMainWindow.addressBook)
 		}
 
 		static var fileTransfers: String {
 			String(localized: .TVCMainWindow.fileTransfers)
-		}
-
-		static var hideMemberList: String {
-			String(localized: .TVCMainWindow.hideMemberList)
 		}
 	}
 
@@ -196,6 +194,13 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			isVisible
 				? String(localized: .TVCMainWindow.dynamicViewWindowMenuHideMemberList)
 				: String(localized: .TVCMainWindow.showMemberList)
+		}
+
+		/// A switch names what the next press does, not the state it is in.
+		static func notifications(areDisabled: Bool) -> String {
+			areDisabled
+				? String(localized: .TVCMainWindow.enableAllNotifications)
+				: String(localized: .TVCMainWindow.disableAllNotifications)
 		}
 	}
 
@@ -217,6 +222,20 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 		static func target(_ nickname: String?) -> String {
 			let recipient = nickname.flatMap { $0.isEmpty ? nil : $0 } ?? anonymousMessage
 			return String(localized: .TVCMainWindow.inputBarReplyBannerReplying(recipient))
+		}
+	}
+
+	enum Reaction {
+		static var moreEmoji: String {
+			String(localized: .TVCMainWindow.moreEmoji)
+		}
+
+		static var custom: String {
+			String(localized: .TVCMainWindow.customReaction)
+		}
+
+		static func reactWith(_ emoji: String) -> String {
+			String(localized: .TVCMainWindow.reactWithEmoji(emoji))
 		}
 	}
 

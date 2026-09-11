@@ -15,6 +15,9 @@ import Foundation
 struct AboutContent: Equatable, Sendable {
 	let applicationName: String
 	let versionDescription: String
+	/// `NSHumanReadableCopyright`, the same line the standard About panel
+	/// shows. An About box without one is not a complete About box.
+	let copyright: String
 	let upstreamAttribution: String
 	let acknowledgementsButtonTitle: String
 	let applicationIconAccessibilityLabel: String
@@ -27,8 +30,10 @@ struct AboutContent: Equatable, Sendable {
 			applicationName: applicationName,
 			versionDescription: AboutStrings.versionDescription(
 				applicationName: applicationName,
-				version: version
+				version: version,
+				build: ApplicationInfo.applicationVersion()
 			),
+			copyright: ApplicationInfo.applicationCopyright(),
 			upstreamAttribution: AboutStrings.upstreamAttribution,
 			acknowledgementsButtonTitle: AboutStrings.acknowledgementsButtonTitle,
 			applicationIconAccessibilityLabel: AboutStrings.applicationIconAccessibilityLabel(

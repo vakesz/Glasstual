@@ -53,6 +53,32 @@ enum IRCAddressBookLookupPolicy {
 		}
 		return [hostmask, trackingHostmask(forNickname: nickname)]
 	}
+
+	/** The tracking rule inside a match, or `nil` when the match only ignores.
+
+	 The cache answers with whatever rule the hostmask matched, and an
+	 `/ignore spammer` matches `spammer!*@*` exactly as a tracking rule for the
+	 same person does. Taking the match unfiltered made WATCH and MONITOR
+	 numerics treat an ignore as something to report presence for, and left the
+	 nickname on the watch list because the ignore looked like a reason to keep
+	 it there. A `.mixed` match is the merge the cache built, so the tracking
+	 half is one of its parents — and it is the parent, not the merge, that
+	 carries the nickname being tracked. */
+	static func userTrackingEntry(in match: AddressBookEntry?) -> AddressBookEntry? {
+		guard let match else {
+			return nil
+		}
+
+		if match.entryType == .userTracking {
+			return match.trackUserActivity ? match : nil
+		}
+
+		guard match.entryType == .mixed else {
+			return nil
+		}
+
+		return match.parentEntries?.first { $0.entryType == .userTracking && $0.trackUserActivity }
+	}
 }
 
 public extension IRCClient {
@@ -68,8 +94,10 @@ public extension IRCClient {
 	}
 
 	internal func findUserTrackingAddressBookEntry(forNickname nickname: String) -> AddressBookEntry? {
-		findAddressBookEntry(
-			forHostmask: IRCAddressBookLookupPolicy.trackingHostmask(forNickname: nickname)
+		IRCAddressBookLookupPolicy.userTrackingEntry(
+			in: findAddressBookEntry(
+				forHostmask: IRCAddressBookLookupPolicy.trackingHostmask(forNickname: nickname)
+			)
 		)
 	}
 

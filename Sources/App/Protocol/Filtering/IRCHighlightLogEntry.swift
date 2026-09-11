@@ -46,7 +46,7 @@ private let highlightLogEntryLogger = Logger(
 /** An entry in a client's in-memory highlight log.
 
  A value, owned by the client that logged it (`IRCClient.cachedHighlights`) and
- read by `ServerHighlightListSheet`, which sorts and draws the entries itself
+ read by `ServerHighlightListSession`, which sorts and draws the entries itself
  rather than binding an `NSArrayController` to them by KVC key path.
 
  Its identity is the line it logged: `lineNumber` names one printed line. */

@@ -94,6 +94,8 @@ public extension MenuActionCoordinator {
 
 	func setNotificationsMuted(_ muted: Bool) {
 		SharedApplication.sharedNotificationController().areNotificationsDisabled = muted
+		/* The sidebar's overflow menu names the next press from this. */
+		mainWindow.presentationModel.areNotificationsDisabled = muted
 		let state: NSControl.StateValue = muted ? .on : .off
 		menuController?.muteNotificationsFileMenuItem?.state = state
 		menuController?.muteNotificationsDockMenuItem?.state = state

@@ -42,8 +42,26 @@ enum IRCClientConnectionTimerPolicy {
 	static let pingInterval: TimeInterval = 270
 	static let pongCheckInterval: TimeInterval = 30
 	static let reconnectInterval: TimeInterval = 20
+	static let maximumReconnectInterval: TimeInterval = 300
 	static let retryInterval: TimeInterval = 240
 	static let timeoutInterval: TimeInterval = 360
+
+	/** How long to wait before reconnection attempt number `attempt`.
+
+	 A fixed twenty seconds forever is a client that keeps knocking at the same
+	 rate whether the server bounced once or has been down since yesterday, and
+	 a network outage has every client on it knock in lockstep. The delay
+	 doubles from twenty seconds to a five-minute ceiling, and `jitter` — a
+	 fraction the caller draws at random — takes up to a quarter of it back off
+	 again so that the attempts spread out instead of arriving together. */
+	static func reconnectDelay(attempt: UInt, jitter: Double) -> TimeInterval {
+		// Capped before the shift so that a long-running client cannot overflow it.
+		let doublings = min(attempt, 8)
+		let backoff = min(reconnectInterval * TimeInterval(1 << doublings), maximumReconnectInterval)
+		let spread = backoff * 0.25 * min(max(jitter, 0), 1)
+
+		return max(1, backoff - spread)
+	}
 
 	enum PongAction: Equatable {
 		case none
@@ -82,6 +100,7 @@ public extension IRCClient {
 		stopReconnectTimer()
 		stopRetryTimer()
 		stopPongTimer()
+		stopSASLTimeoutTimer()
 		stopWhoTimer()
 		readMarkerTimer.stop()
 	}
@@ -125,13 +144,24 @@ public extension IRCClient {
 		}
 	}
 
+	/** Schedules the next reconnection attempt.
+
+	 The run is one-shot rather than repeating because each attempt waits longer
+	 than the last: a disconnect that leaves `reconnectEnabled` set brings the
+	 client back here, and `onReconnectTimer` re-arms the schedule itself when
+	 the attempt it started never got as far as connecting. */
 	func startReconnectTimer() {
 		guard isTerminating == false else { return }
 		let enabled = reconnectEnabledBecauseOfSleepMode
 			? !config.autoSleepModeDisconnect
 			: config.autoReconnect
 		guard enabled, !reconnectTimer.isActive else { return }
-		reconnectTimer.start(IRCClientConnectionTimerPolicy.reconnectInterval, repeats: true)
+		let delay = IRCClientConnectionTimerPolicy.reconnectDelay(
+			attempt: reconnectAttemptCount,
+			jitter: .random(in: 0 ... 1)
+		)
+		reconnectAttemptCount &+= 1
+		reconnectTimer.start(delay, repeats: false)
 	}
 
 	func stopReconnectTimer() {
@@ -141,7 +171,16 @@ public extension IRCClient {
 
 	func onReconnectTimer() {
 		guard !isConnecting, !isConnected else { return }
+
 		connect(.reconnect)
+
+		/* `connect` refuses while the machine is asleep, while the client is
+		 quitting, and when there is no endpoint to take. Nothing else would put
+		 the schedule back, so it is put back here rather than letting the one
+		 refusal end automatic reconnection for the session. */
+		guard !isConnecting, !isConnected, !isTerminating, reconnectEnabled else { return }
+
+		startReconnectTimer()
 	}
 
 	func startRetryTimer() {

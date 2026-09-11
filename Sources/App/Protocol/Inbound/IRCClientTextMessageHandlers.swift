@@ -54,10 +54,42 @@ enum IRCInboundTextPolicy {
 		if let close = text.firstIndex(of: "\u{1}") {
 			text = String(text[..<close])
 		}
-		if isPrivmsg, text.lowercased().hasPrefix("action ") {
-			return Classification(text: String(text.dropFirst(7)), lineType: .action)
+		if isPrivmsg, hasActionPrefix(text) {
+			return Classification(text: String(text.dropFirst(actionPrefix.count)), lineType: .action)
 		}
 		return Classification(text: text, lineType: isPrivmsg ? .ctcpQuery : .ctcpReply)
+	}
+
+	/// The CTCP verb an emote is sent as, in the casing the tag is compared in.
+	private static let actionPrefix = "action "
+
+	/** Whether `text` opens with the ACTION verb, compared as ASCII.
+
+	 A CTCP verb is an ASCII token, so it folds as one. Folding the payload with
+	 `lowercased()` folded the whole message under Unicode rules — Turkish
+	 dotless I, Kelvin sign, ligatures — and could change its length, while the
+	 seven characters were then dropped from the *unfolded* text; a message
+	 whose fold was shorter kept part of the verb, and one whose fold was longer
+	 lost the first characters of what the person actually wrote. */
+	private static func hasActionPrefix(_ text: String) -> Bool {
+		var index = text.utf8.startIndex
+
+		for expected in actionPrefix.utf8 {
+			guard index < text.utf8.endIndex else {
+				return false
+			}
+
+			let byte = text.utf8[index]
+			let folded = (byte >= 0x41 && byte <= 0x5A) ? byte + 0x20 : byte
+
+			guard folded == expected else {
+				return false
+			}
+
+			index = text.utf8.index(after: index)
+		}
+
+		return true
 	}
 
 	static func lineType(_ lineType: LogLineType, suppressingHighlights: Bool) -> LogLineType {

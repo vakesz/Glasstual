@@ -40,6 +40,13 @@ nonisolated struct RenderedMember: Sendable, Hashable { // nonisolated: value
 nonisolated struct LogLineRenderContext: Sendable { // nonisolated: value
 	var inlineMediaEnabled = false
 	var isChannel = false
+	/// Whether a day boundary is drawn between lines. It is read from the
+	/// preferences on the main actor and carried here, so rendering stays a
+	/// function of the values it was handed.
+	var showsDateChanges = false
+	/// The preference facts the body renderer branches on, taken on the main
+	/// actor for the same reason `showsDateChanges` is.
+	var textPolicy = TranscriptTextPolicy()
 	var members: [RenderedMember] = []
 	var sessionReactions: [String: [String: [String]]] = [:]
 
@@ -194,7 +201,15 @@ nonisolated struct LogLineRenderResult: Sendable { // nonisolated: value
 }
 
 extension LogController {
-	nonisolated static func applyingMessageRenderers( // nonisolated: pure
+	/** Runs the plugins that rewrite a message before it is drawn.
+
+	 Main-actor, and not because it touches the view: the plugin ABI declares
+	 these callbacks on the main actor, and the manager they are reached through
+	 keeps main-actor state beside its lock. It is the one part of rendering
+	 that is not a function of its inputs, so it is taken before a render job
+	 starts rather than inside one. */
+	@MainActor
+	static func applyingMessageRenderers(
 		to lines: [LogLineSnapshot],
 		for viewController: LogController
 	) -> [LogLineSnapshot] {
@@ -232,7 +247,8 @@ extension LogController {
 			lineType: line.lineType,
 			memberType: line.memberType,
 			highlightKeywords: line.highlightKeywords ?? [],
-			excludedKeywords: line.excludeKeywords ?? []
+			excludedKeywords: line.excludeKeywords ?? [],
+			textPolicy: request.context.textPolicy
 		)
 
 		let body = LogRenderer.renderNativeBody(
@@ -274,7 +290,7 @@ extension LogController {
 		-> [TranscriptMarker]
 	{
 		var result: [TranscriptMarker] = []
-		if request.line.isFirstForDay, Preferences.Messages.showDateChanges.detachedValue {
+		if request.line.isFirstForDay, request.context.showsDateChanges {
 			result.append(.date(formatDate(request.line.receivedAt, .long, .none, false) ?? ""))
 		}
 		return result

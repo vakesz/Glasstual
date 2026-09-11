@@ -156,8 +156,28 @@ public final class STSPolicyStore: NSObject {
 		return .stored(port: policyPort)
 	}
 
+	/** The key one host's policy is stored under.
+
+	 A policy is about a name, not about a spelling of it. `irc.example.com.`
+	 names the root-anchored form of `irc.example.com`, an IPv6 literal is
+	 written both bare and bracketed depending on which end of the connection
+	 wrote it, and DNS names are case-insensitive. Keying on the text as typed
+	 filed those as separate hosts, so a policy stored under one spelling never
+	 applied to the connection that used another. Case folding is invariant
+	 rather than locale-sensitive: the Turkish locale maps `I` to a dotless
+	 `ı`, which would key the same host differently for one user. */
 	private func key(forHost host: String) -> String {
-		host.lowercased()
+		var host = host
+
+		while host.hasSuffix(".") {
+			host.removeLast()
+		}
+
+		if host.hasPrefix("["), host.hasSuffix("]") {
+			host = String(host.dropFirst().dropLast())
+		}
+
+		return host.lowercased(with: Locale(identifier: "en_US_POSIX"))
 	}
 
 	private func load() {

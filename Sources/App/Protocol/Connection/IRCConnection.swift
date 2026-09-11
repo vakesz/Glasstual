@@ -175,13 +175,17 @@ public final class Connection: NSObject {
 			&& config.connectionShouldValidateCertificateChain
 	}
 
-	/// Whether a line has been handed to the host and its write has not yet
-	/// been reported back. It is this side's view of the last send, not the
-	/// host writer's admission or flood-control state.
-	private(set) var isSending = false
 	public private(set) var EOFReceived = false
 	public private(set) var connectedAddress: String?
 	public private(set) var uniqueIdentifier: String
+
+	/** The longest line this server carries, CR LF included.
+
+	 `LINELEN` as 005 advertised it, and the RFC's 512 until one does — which is
+	 also what a reconnect goes back to, because the next server has not said
+	 anything yet. Everything upstream already sizes its text from the same
+	 figure; this is where the assembled line is measured against it. */
+	public var maximumLineLength = IRCProtocolLimits.maximumBodyLength + IRCProtocolLimits.lineTerminatorLength
 
 	/// The host's callbacks, in arrival order, on their way to the main actor.
 	private nonisolated let events: AsyncStream<ConnectionEvent> // nonisolated: let
@@ -328,7 +332,6 @@ public final class Connection: NSObject {
 	}
 
 	private func didWrite() {
-		isSending = false
 		if let event = pendingStartupEvent {
 			config.diagnostics?.record(event)
 			if event == .identificationWritten {
@@ -355,6 +358,8 @@ public final class Connection: NSObject {
 	}
 
 	func resetState() {
+		/* The next server advertises its own `LINELEN`, or none at all. */
+		maximumLineLength = IRCProtocolLimits.maximumBodyLength + IRCProtocolLimits.lineTerminatorLength
 		isConnecting = false
 		isConnected = false
 		isConnectedWithClientSideCertificate = false
@@ -362,7 +367,6 @@ public final class Connection: NSObject {
 		EOFReceived = false
 		isSecured = false
 		certificateTrustWasOverridden = false
-		isSending = false
 		connectedAddress = nil
 	}
 
@@ -630,12 +634,33 @@ public final class Connection: NSObject {
 	}
 
 	public func sendLine(_ line: String) {
-		let cleanLine = line
+		let body = line
 			.replacingOccurrences(of: "\r", with: "")
-			.replacingOccurrences(of: "\n", with: "") + "\r\n"
+			.replacingOccurrences(of: "\n", with: "")
+		/* Last stop before the socket: everything upstream budgets its own text,
+		 but nothing measured the assembled line, so a long enough command went
+		 out over what the protocol carries and the server cut it where it
+		 landed — mid-character for anything but ASCII. */
+		let bodyLimit = IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: maximumLineLength)
+		let enforcedBody = IRCProtocolLimits.enforcedWireLine(body, bodyLimit: bodyLimit)
+
+		if enforcedBody != body {
+			connectionLogger.error(
+				"Truncated an outgoing line from \(body.utf8.count, privacy: .public) to \(enforcedBody.utf8.count, privacy: .public) bytes"
+			)
+			/* The log is not where the user is looking. Text they typed is gone
+			 from what the server saw, so the transcript has to say so. */
+			client?.printDebugInformation(
+				toConsole: ConnectionSafetyStrings.Wire.lineTruncated(
+					sentByteCount: body.utf8.count,
+					limit: enforcedBody.utf8.count
+				)
+			)
+		}
+
+		let cleanLine = enforcedBody + "\r\n"
 
 		guard let data = convertToCommonEncoding(cleanLine) else { return }
-		isSending = true
 
 		if cleanLine.hasPrefix("PONG") {
 			remoteObjectProxy()?.send(data, bypassQueue: true)

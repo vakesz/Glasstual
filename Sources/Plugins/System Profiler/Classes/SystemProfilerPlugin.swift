@@ -81,12 +81,42 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 			return
 		}
 
+		/* The two reports that stat filesystems and enumerate Metal devices
+		 collect first and format afterwards. The task inherits the main actor,
+		 so nothing but the collection leaves it, and the window keeps drawing
+		 while a network mount or a sleeping GPU takes its time to answer. */
+		switch command {
+		case "SYSINFO":
+			let defaults = host.defaults
+			Task { [weak self] in
+				let facts = await SystemProfileInformation.hardwareFacts()
+				self?.output(
+					SystemProfileReport.systemInformation(defaults: defaults, facts: facts),
+					quiet: quiet,
+					client: invocation.client,
+					channel: channel
+				)
+			}
+			return
+		case "DISKSPACE":
+			Task { [weak self] in
+				let volumes = await SystemProfileInformation.mountedVolumeCapacities()
+				self?.output(
+					SystemProfileReport.systemDiskSpaceInformation(volumes: volumes),
+					quiet: quiet,
+					client: invocation.client,
+					channel: channel
+				)
+			}
+			return
+		default:
+			break
+		}
+
 		let report: String? = switch command {
-		case "SYSINFO": SystemProfileReport.systemInformation(defaults: host.defaults)
 		case "UPTIME": SystemProfileReport.applicationAndSystemUptime(host: host)
 		case "NETSTATS": SystemProfileReport.systemNetworkInformation()
 		case "MSGCOUNT": SystemProfileReport.applicationBandwidthStatistics(metrics: metrics)
-		case "DISKSPACE": SystemProfileReport.systemDiskSpaceInformation()
 		case "STYLE": SystemProfileReport.applicationActiveStyle(metrics: metrics, host: host)
 		case "SCREENS": SystemProfileReport.systemDisplayInformation()
 		case "RUNCOUNT": SystemProfileReport.applicationRuntimeStatistics(host: host)

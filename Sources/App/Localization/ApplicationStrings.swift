@@ -71,6 +71,10 @@ nonisolated enum ApplicationStrings { // nonisolated: value
 		String(localized: .BasicLanguage.fillOutThisField)
 	}
 
+	static var invalidRegularExpression: String {
+		String(localized: .BasicLanguage.invalidRegularExpression)
+	}
+
 	static var ircColors: String {
 		String(localized: .BasicLanguage.ircColors)
 	}

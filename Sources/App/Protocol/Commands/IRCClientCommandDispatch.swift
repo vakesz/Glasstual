@@ -155,14 +155,17 @@ public extension IRCClient {
 			guard isLoggedIn else { return true }
 			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			createHiddenCommandResponses()
-			requestedCommands.recordIsonRequestOpenedAsVisible()
-			send("ISON", arguments: [arguments])
+			/* One nickname per parameter, and split over as many commands as the
+			 list needs. `sendIson` opens a request for each of them. */
+			sendIson(forNicknames: LineParser.wireTokens(in: arguments), hideResponse: false)
 
 		case .names:
 			guard isLoggedIn else { return true }
 			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
 			createHiddenCommandResponses()
-			send("NAMES", arguments: [arguments])
+			/* `NAMES #one #two` asks about two channels. Sent as one parameter it
+			 asked about a channel whose name has a space in it. */
+			send("NAMES", arguments: LineParser.wireTokens(in: arguments))
 
 		case .recv:
 			guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
@@ -197,9 +200,12 @@ public extension IRCClient {
 			guard isLoggedIn else { return true }
 			let firstSegment = arguments.next()
 			let secondSegment = arguments.next()
+			/* An absent reason is no parameter at all. Passed through as an empty
+			 string it became a bare trailing colon — `GLINE nick 30d :` — which
+			 several ircds read as a reason of one space. */
 			send(
 				parsed.command.uppercased(),
-				arguments: [firstSegment, secondSegment, arguments.rest]
+				arguments: [firstSegment, secondSegment, arguments.rest].filter { $0.isEmpty == false }
 			)
 
 		case .kill:
@@ -270,19 +276,12 @@ public extension IRCClient {
 		return true
 	}
 
+	/** Each connection measures the comment against its own `AWAYLEN`, inside
+	 `toggleAwayStatus`, so that the menu item and the screen-sleep timer are
+	 bounded the same way this command is. */
 	private func broadcastAwayStatus(comment: String) {
 		for client in currentClients() where client === self || environment.preferences.awayAllConnections {
-			let maximumLength = Int(min(client.supportInfo.maximumAwayLength, UInt(comment.utf8.count)))
-			let truncated = ClientWireUtilities.truncated(comment, toByteCount: maximumLength)
-			if truncated != comment {
-				client.printDebugInformation(
-					IRCCommandStrings.awayMessageTooLong(
-						networkName: networkNameAlt,
-						maximumLength: maximumLength
-					)
-				)
-			}
-			client.toggleAwayStatus(true, withComment: truncated)
+			client.toggleAwayStatus(true, withComment: comment)
 		}
 	}
 
@@ -374,11 +373,10 @@ public extension IRCClient {
 
 		case .umode:
 			guard isLoggedIn else { return true }
-			var parameters = [userNickname]
-			if arguments.isEmpty == false {
-				parameters.append(arguments)
-			}
-			send("MODE", arguments: parameters)
+			/* `/umode +s +cfk` is two mode strings, and each is its own wire
+			 parameter; joined into one the server read `+s +cfk` as a single
+			 mode string and set nothing after the space. */
+			sendModes(arguments, withParametersString: nil, inChannelNamed: userNickname)
 
 		case .monitor, .watch:
 			guard isLoggedIn else { return true }
@@ -391,7 +389,11 @@ public extension IRCClient {
 			if components.contains(where: { $0.caseInsensitiveCompare("c") == .orderedSame }) == false {
 				createHiddenCommandResponses()
 			}
-			sendCommand(parsed.command.uppercased(), withData: arguments)
+			/* One parameter per token, the way the command index describes the
+			 command. The raw path this used to take marks no trailing parameter
+			 at all, so anything the user typed after a space was left to the
+			 server to interpret. */
+			send(parsed.command.uppercased(), arguments: components)
 
 		case .silence:
 			guard isLoggedIn else { return true }
@@ -399,7 +401,7 @@ public extension IRCClient {
 				printDebugInformation(IRCCommandStrings.silenceUnsupported)
 				return true
 			}
-			sendCommand(parsed.command.uppercased(), withData: arguments)
+			send(parsed.command.uppercased(), arguments: LineParser.wireTokens(in: arguments))
 
 		default:
 			return dispatchNativeInformationCommand(parsed, targetChannel: targetChannel)
@@ -419,7 +421,9 @@ public extension IRCClient {
 			guard requireArguments(arguments, for: parsed.command) else { return true }
 			createHiddenCommandResponses()
 			requestedCommands.recordWhoRequestOpenedAsVisible()
-			send("WHO", arguments: [arguments.rest])
+			/* `WHO #chan o` is a target and a flag. Joined into one parameter the
+			 server matched a mask with a space in it and answered nothing. */
+			send("WHO", arguments: LineParser.wireTokens(in: arguments.rest))
 
 		case .whois:
 			guard isLoggedIn else { return true }

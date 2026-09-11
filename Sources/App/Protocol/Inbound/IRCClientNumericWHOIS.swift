@@ -53,16 +53,7 @@ extension IRCClient {
 				printReply(message, in: selectedChannel)
 			}
 		case IRCNumeric.whoisactually.rawValue:
-			guard shouldPrint, message.params.count == 5 else { return true }
-			printWhoisLine(
-				IRCInboundStrings.Whois.connection(
-					nickname: message.params[1],
-					address: message.params[2],
-					realName: message.params[3],
-					isHistorical: inWhowasResponse
-				),
-				message: message, channel: selectedChannel
-			)
+			handleWhoisActually(message, shouldPrint: shouldPrint, channel: selectedChannel)
 		case IRCNumeric.whoisuser.rawValue, IRCNumeric.whowasuser.rawValue:
 			handleWhoisUser(numeric, message: message, shouldPrint: shouldPrint, channel: selectedChannel)
 		case IRCNumeric.whoisserver.rawValue:
@@ -87,6 +78,34 @@ extension IRCClient {
 			return false
 		}
 		return true
+	}
+
+	/** RPL_WHOISACTUALLY (338), which no specification pins down.
+
+	 ircu and Hybrid send `<me> <nick> <user@host> <ip> :is actually using host`,
+	 which is the five-parameter form below. InspIRCd and Charybdis send
+	 `<me> <nick> <ip> :is actually using host` instead, and swallowing that one
+	 as handled printed nothing at all: the generic reply printer spells it out
+	 the way the server wrote it. */
+	private func handleWhoisActually(_ message: Message, shouldPrint: Bool, channel: IRCChannel?) {
+		guard shouldPrint else { return }
+
+		if message.params.count == 5 {
+			printWhoisLine(
+				IRCInboundStrings.Whois.connection(
+					nickname: message.params[1],
+					address: message.params[2],
+					realName: message.params[3],
+					isHistorical: inWhowasResponse
+				),
+				message: message, channel: channel
+			)
+			return
+		}
+
+		guard message.params.count > 2 else { return }
+
+		printReply(message, in: channel)
 	}
 
 	private func handleWhoisBot(_ message: Message, shouldPrint: Bool, channel: IRCChannel?) {
@@ -130,10 +149,10 @@ extension IRCClient {
 	private func handleWhoisIdle(_ message: Message, shouldPrint: Bool, channel: IRCChannel?) {
 		guard shouldPrint, message.params.count >= 4 else { return }
 		let idle = humanReadableTimeInterval(TimeInterval(message.params[2]) ?? 0, false, 0) as String? ?? ""
-		let connected = formatDateLongStyle(
-			Date(timeIntervalSince1970: TimeInterval(message.params[3]) ?? 0),
-			true
-		) ?? ""
+		/* An unreadable sign-on timestamp leaves the date out rather than
+		 reporting that the person connected in 1970. */
+		let connected = ircWireTimestampDate(from: message.params[3])
+			.flatMap { formatDateLongStyle($0, true) } ?? ""
 		printWhoisLine(
 			IRCInboundStrings.Whois.signOnAndIdle(
 				nickname: message.params[1],

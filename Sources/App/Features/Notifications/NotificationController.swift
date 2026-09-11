@@ -134,11 +134,47 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		deliveryTasks.values.forEach { $0.cancel() }
 	}
 
+	/** Whether the system will play the sound a notification carries, or `nil`
+	 before the first settings read has answered.
+
+	 A notification is where a sound belongs: the system honours Do Not Disturb,
+	 the notification's own settings and the alert volume, none of which an
+	 `AudioServicesPlayAlertSound` behind its back does. The application only
+	 plays one itself where the system will not — permission refused, or sounds
+	 switched off for the app — because otherwise nothing is heard at all.
+
+	 The answer is a question for the system, so it is not here yet when the
+	 first events of a launch arrive. `nil` says so rather than claiming the
+	 system plays nothing, which would have the application and the notification
+	 each play the same sound. `IRCNotificationPolicy.soundPlayback` is what
+	 reads it. */
+	public private(set) var systemPlaysNotificationSounds: Bool?
+
+	/** Asks the system what it will do with a notification's sound.
+
+	 Read at launch, again once permission has been answered — in the onboarding
+	 flow as well as here — and every time the application comes forward,
+	 because the person can switch its sounds off in System Settings while it is
+	 running and nothing announces that. */
+	public func refreshSoundDelivery() async {
+		let settings = await UNUserNotificationCenter.current().notificationSettings()
+
+		systemPlaysNotificationSounds = settings.authorizationStatus == .authorized
+			&& settings.soundSetting == .enabled
+	}
+
 	private func prepareInitialState() {
 		UNUserNotificationCenter.current().delegate = self
 
+		Task { await refreshSoundDelivery() }
+
 		notifications.observe(.mainWindowSelectionChanged) { [weak self] notification in
 			self?.mainWindowSelectionChanged(notification)
+		}
+
+		// Cheapest moment to notice a change made in System Settings.
+		notifications.observe(NSApplication.didBecomeActiveNotification) { [weak self] _ in
+			Task { await self?.refreshSoundDelivery() }
 		}
 
 		/* On a first launch the onboarding window explains the permission
@@ -147,10 +183,11 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			Task {
 				do {
 					let granted = try await UNUserNotificationCenter.current().requestAuthorization(
-						options: [.alert, .providesAppNotificationSettings]
+						options: [.alert, .sound, .providesAppNotificationSettings]
 					)
 
 					notificationControllerLogger.info("Notification permission: \(granted, privacy: .public)")
+					await refreshSoundDelivery()
 				} catch {
 					notificationControllerLogger.error(
 						"Notifications failed to authorize: \(error.localizedDescription, privacy: .public)"
@@ -160,6 +197,18 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		}
 
 		registerCategories()
+	}
+
+	/** The sound a notification carries.
+
+	 A name the system cannot resolve falls back to the default notification
+	 sound: still the system playing something at the right moment, which is
+	 the point, rather than silence or a sound played behind its back. */
+	static func notificationSound(named name: String) -> UNNotificationSound? {
+		guard name != NotificationAlertSound.noSoundPreferenceValue else { return nil }
+		guard name != SoundPlayer.beepSoundName else { return .default }
+
+		return UNNotificationSound(named: UNNotificationSoundName(name))
 	}
 
 	private var categoriesToRegister: Set<UNNotificationCategory> {
@@ -212,10 +261,20 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		NotificationStrings.eventTypeTitle(for: event)
 	}
 
+	/** Posts one event as a notification.
+
+	 `sound` is the alert the event asks for, or `nil` where the person has
+	 muted them: the notification carries it so the system plays it with Do Not
+	 Disturb, the alert volume and the notification's own settings applied.
+	 Leaving it off here meant every event but a message — connect, disconnect,
+	 a kick, an invite, a join or part, an address-book match, a file transfer —
+	 was posted silently as soon as the application stopped playing sounds
+	 itself. */
 	public func notify(
 		_ eventType: NotificationEvent,
 		title eventTitle: String?,
 		description eventDescription: String?,
+		sound: String?,
 		userInfo eventContext: NotificationPayload?
 	) {
 		var (title, body) = notificationContent(
@@ -228,22 +287,23 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			body = (currentBody as NSString).stripIRCEffects
 		}
 
-		let categoryIdentifier: String? = switch eventType {
-		case .fileTransferReceiveRequested:
-			fileTransferCategoryIdentifier
-		case .newPrivateMessage, .privateMessage:
-			privateMessageCategoryIdentifier
-		default:
-			nil
-		}
-
 		scheduleNotification(
 			title: title ?? "",
 			message: body ?? "",
+			sound: sound,
 			userInfo: eventContext,
 			threadIdentifier: eventContext?.threadIdentifier,
-			categoryIdentifier: categoryIdentifier
+			categoryIdentifier: Self.categoryIdentifier(for: eventType)
 		)
+	}
+
+	/// The actions the system offers on a delivered notification, by event.
+	public static func categoryIdentifier(for event: NotificationEvent) -> String? {
+		switch event {
+		case .fileTransferReceiveRequested: fileTransferCategoryIdentifier
+		case .newPrivateMessage, .privateMessage: privateMessageCategoryIdentifier
+		default: nil
+		}
 	}
 
 	private func notificationContent(
@@ -289,9 +349,41 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
+	/** Posts a message the way the system shapes one.
+
+	 Who sent it is the title, where it arrived is the subtitle and what they
+	 said is the body — the shape Messages and Mail use — rather than one
+	 sentence folded into the title. */
+	public func notifyMessage(
+		from sender: String,
+		in location: String?,
+		message: String,
+		sound: String?,
+		userInfo: NotificationPayload?,
+		categoryIdentifier: String?
+	) {
+		var message = message
+
+		if Preferences.Messages.removeAllFormatting.value == false {
+			message = (message as NSString).stripIRCEffects
+		}
+
+		scheduleNotification(
+			title: sender,
+			subtitle: location,
+			message: message,
+			sound: sound,
+			userInfo: userInfo,
+			threadIdentifier: userInfo?.threadIdentifier,
+			categoryIdentifier: categoryIdentifier
+		)
+	}
+
 	private func scheduleNotification(
 		title: String,
+		subtitle: String? = nil,
 		message: String,
+		sound: String? = nil,
 		userInfo: NotificationPayload?,
 		threadIdentifier: String?,
 		categoryIdentifier: String?
@@ -300,6 +392,14 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 		content.title = title
 		content.body = message
+
+		if let subtitle, subtitle.isEmpty == false {
+			content.subtitle = subtitle
+		}
+
+		if let sound {
+			content.sound = Self.notificationSound(named: sound)
+		}
 
 		if let userInfo {
 			content.userInfo = userInfo.userInfo.propertyListObject
@@ -382,7 +482,16 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		_: UNUserNotificationCenter,
 		willPresent _: UNNotification
 	) async -> UNNotificationPresentationOptions {
-		areNotificationsDisabled ? [] : [.list, .banner]
+		Self.presentationOptions(notificationsAreDisabled: areNotificationsDisabled)
+	}
+
+	/** How a notification that arrives while Glasstual is frontmost is shown.
+
+	 `.sound` is part of the answer: without it the system shows the banner and
+	 drops the sound the notification carries, which is every sound for an event
+	 raised while the application is in front. */
+	static func presentationOptions(notificationsAreDisabled: Bool) -> UNNotificationPresentationOptions {
+		notificationsAreDisabled ? [] : [.list, .banner, .sound]
 	}
 
 	public func userNotificationCenter(

@@ -118,16 +118,20 @@ struct IRCClientAutojoinIdentificationTests {
 		#expect(client.sentLines.count == 0)
 	}
 
-	@Test("Authentication deadline begins at write completion and falls back only once")
+	/// 001 starts the long unattended wait; the identification write replaces
+	/// it with the short one. Either deadline falls back to joining exactly once.
+	@Test("The identification write replaces the unattended deadline, and falls back only once")
 	func deadlineStartsWhenWritten() throws {
 		let client = try registeredIdentificationClient()
 		defer { client.stopAllTimers(); client.cancelPendingSessionTasks() }
 		let identifier = client.startup.identifier
-		#expect(client.startup.authenticationTask == nil)
-		client.authenticationDeadlineExpired(for: identifier)
-		#expect(joinLines(of: client).isEmpty)
+		let unattendedDeadline = try #require(client.startup.authenticationTask)
+		#expect(client.startup.authentication == .waiting)
 		client.noteNickServIdentificationWritten()
-		#expect(client.startup.authenticationTask != nil)
+		let writeDeadline = try #require(client.startup.authenticationTask)
+		#expect(unattendedDeadline.isCancelled)
+		#expect(writeDeadline.isCancelled == false)
+		#expect(joinLines(of: client).isEmpty)
 		try receive(":NickServ!NickServ@services. NOTICE swift-user :Invalid password", on: client)
 		#expect(joinLines(of: client).isEmpty)
 		client.authenticationDeadlineExpired(for: identifier)

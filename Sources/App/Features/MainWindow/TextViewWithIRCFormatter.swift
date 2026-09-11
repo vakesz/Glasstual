@@ -162,12 +162,17 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		[.string, .fileURL]
 	}
 
+	/** Replacing the whole field, not editing it.
+
+	 Both value setters drop the undo stack and go through the editing pair. The
+	 stack has to go because the ranges recorded in it describe text that is
+	 being thrown away wholesale -- a channel switch replaces the field's
+	 contents, and the next Undo replayed the previous channel's ranges against
+	 the new text. This setter used to do neither, so which of the two a caller
+	 reached for decided whether Undo was safe. */
 	public var stringValue: String {
 		get { string }
-		set {
-			textStorage?.replaceCharacters(in: range, with: newValue)
-			didChangeText()
-		}
+		set { replaceEntireValue(with: NSAttributedString(string: newValue)) }
 	}
 
 	public var stringValueWithIRCFormatting: String {
@@ -187,11 +192,17 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 
 	open var attributedStringValue: NSAttributedString {
 		get { attributedString() }
-		set {
-			undoManager?.removeAllActions()
-			textStorage?.replaceCharacters(in: range, with: newValue)
-			didChangeText()
-		}
+		set { replaceEntireValue(with: newValue) }
+	}
+
+	/// The one path both value setters take: ask, replace, forget the undo
+	/// stack the old text was recorded against, then tell.
+	private func replaceEntireValue(with newValue: NSAttributedString) {
+		let entireRange = range
+		guard shouldChangeText(in: entireRange, replacementString: newValue.string) else { return }
+		textStorage?.replaceCharacters(in: entireRange, with: newValue)
+		didChangeText()
+		undoManager?.removeAllActions()
 	}
 
 	open func textDidChange(_: Notification) {

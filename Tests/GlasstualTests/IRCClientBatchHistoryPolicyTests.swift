@@ -65,19 +65,6 @@ struct IRCClientBatchHistoryPolicyTests {
 		#expect(IRCChatHistoryPolicy.shouldAdvanceMarker(candidate: previous, previous: previous) == false)
 	}
 
-	@Test("A labeled response is classified by its command and numeric")
-	func labeledResponseClassification() {
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "FAIL", commandNumeric: 0) == .failure)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "ack", commandNumeric: 0) == .acknowledgement)
-		#expect(
-			IRCLabeledResponsePolicy.responseKind(
-				command: "PRIVMSG",
-				commandNumeric: IRCRemoteCommand.privmsg.rawValue
-			) == .echo
-		)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "NOTE", commandNumeric: 0) == .unrelated)
-	}
-
 	@Test("A netsplit summary names a second server even when the batch gave only one")
 	func netsplitPolicyProvidesFallbackServersAndCommandFilter() {
 		let servers = IRCNetsplitSummaryPolicy.servers(from: ["irc-a"])

@@ -40,37 +40,116 @@ import os
 import SwiftUI
 import Synchronization
 
+/** The table the renderer looks tokens up in.
+
+ Keyed by the lower-cased smiley: a smiley has always matched without regard to
+ case, and what is looked up is a whole space-delimited token, so one dictionary
+ hit answers what used to be a case-insensitive scan of the message per smiley —
+ nine hundred and fifty-odd of them for every rendered line. */
 private nonisolated struct SmileyConversionSnapshot: Sendable { // nonisolated: value
 	static let empty = SmileyConversionSnapshot(conversionTable: [:])
 
 	let conversionTable: [String: String]
-	let sortedSmileys: [String]
 
 	init(conversionTable: [String: String]) {
-		self.conversionTable = conversionTable
-		sortedSmileys = conversionTable.keys.sorted(by: >)
+		var lowercased: [String: String] = [:]
+		lowercased.reserveCapacity(conversionTable.count)
+
+		/* Twenty-one smileys in the shipped table differ from another only in
+		 case, and a case-insensitive match could never tell them apart either.
+		 Ascending order makes the winner the greatest key, which is the one the
+		 old descending scan reached first — and the same one on every launch. */
+		for key in conversionTable.keys.sorted() {
+			lowercased[key.lowercased()] = conversionTable[key]
+		}
+
+		self.conversionTable = lowercased
 	}
 }
 
+/// The two preferences the conversion table is built from.
+private nonisolated struct SmileyConverterSettings: Equatable, Sendable { // nonisolated: value
+	let serviceEnabled: Bool
+	let extraEmoticonsEnabled: Bool
+}
+
+/** Converts the smileys in a message body to emoji.
+
+ Nonisolated because the transcript renderer calls `willRenderMessage` on its
+ own queue. The conversion table is the only thing that crosses, and it crosses
+ as a value behind a `Mutex`; everything the load and unload callbacks own —
+ the host, the defaults observation, the settings last applied — is main-actor
+ and stays there. */
 @objc(TPISmileyConverter)
-final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRendering,
-	PluginPreferencesProviding
-{
+final nonisolated class SmileyConverterPlugin: NSObject, PluginMessageRendering { // nonisolated: guarded
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "Extension['Smiley Converter']"
 	)
 
-	private let conversionSnapshot = Mutex(SmileyConversionSnapshot.empty)
-	private var host: PluginHostContext?
-	private var defaultsObservation: PluginDefaultsObservation?
-	private var effectiveSettings: Settings?
+	private let conversions = Mutex(SmileyConversionSnapshot.empty)
 
-	private struct Settings: Equatable {
-		let serviceEnabled: Bool
-		let extraEmoticonsEnabled: Bool
+	@MainActor private var host: PluginHostContext?
+	@MainActor private var defaultsObservation: PluginDefaultsObservation?
+	@MainActor private var effectiveSettings: SmileyConverterSettings?
+
+	func willRenderMessage(_ event: PluginRenderEvent) -> String? {
+		guard event.kind == .action || event.kind == .privateMessage else {
+			return event.message
+		}
+
+		return Self.converting(event.message, using: conversions.withLock { $0 })
 	}
 
+	/** `message` with every smiley token replaced.
+
+	 A pure function of the snapshot handed in, which is what lets the renderer
+	 read the table once and leave the plugin object alone for the rest of the
+	 work.
+
+	 The old scan asked `NSMutableString` for every one of the table's smileys in
+	 turn, then checked that what it found was surrounded by spaces. Only a whole
+	 space-delimited token could ever pass that check, so splitting on the space
+	 and looking the token up decides the same thing in one pass. */
+	private static func converting(_ message: String, using snapshot: SmileyConversionSnapshot) -> String {
+		guard snapshot.conversionTable.isEmpty == false else { return message }
+
+		var result = ""
+		result.reserveCapacity(message.count)
+		var needsSeparator = false
+
+		/* Empty subsequences are kept so a run of spaces survives the round
+		 trip: one space is written back between every pair of tokens, which is
+		 exactly what was split on. */
+		for token in message.split(separator: " ", omittingEmptySubsequences: false) {
+			if needsSeparator {
+				result.append(" ")
+			}
+			needsSeparator = true
+			result += replacement(for: token, using: snapshot) ?? String(token)
+		}
+
+		return result
+	}
+
+	/** The smiley `token` stands for, if it is one.
+
+	 A link needs no special case: the whole token has to be a smiley, and a URL
+	 that ends in `:+1:` is not one — it is a token of its own, and no address is
+	 a table key. The check that used to be here dated from the scan that looked
+	 inside the message. */
+	private static func replacement(
+		for token: Substring,
+		using snapshot: SmileyConversionSnapshot
+	) -> String? {
+		guard token.isEmpty == false else { return nil }
+
+		return snapshot.conversionTable[token.lowercased()]
+	}
+}
+
+@MainActor
+extension SmileyConverterPlugin: GlasstualPlugin, PluginPreferencesProviding {
 	private var bundle: Bundle {
 		Bundle(for: SmileyConverterPlugin.self)
 	}
@@ -95,12 +174,21 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 		defaultsObservation = nil
 		host = nil
 		effectiveSettings = nil
-		conversionSnapshot.withLock { $0 = .empty }
+		conversions.withLock { $0 = .empty }
+	}
+
+	var pluginPreferencesPane: PluginPreferencesPane? {
+		guard let host else { return nil }
+		return PluginPreferencesPane(title: String(localized: .BasicLanguage.preferencesPaneTitle)) { [weak self] in
+			SmileyConverterPreferencesView(defaults: host.defaults) {
+				self?.rebuildConversionSnapshot()
+			}
+		}
 	}
 
 	private func rebuildConversionSnapshot() {
 		guard host != nil else { return }
-		let settings = Settings(
+		let settings = SmileyConverterSettings(
 			serviceEnabled: defaults.bool(forKey: FirstPartyPluginPreferences.smileyServiceEnabled.name),
 			extraEmoticonsEnabled: defaults.bool(forKey: FirstPartyPluginPreferences.smileyExtraEmoticons.name)
 		)
@@ -110,7 +198,7 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 			? buildConversionSnapshot(extraEmoticonsEnabled: settings.extraEmoticonsEnabled)
 			: SmileyConversionSnapshot.empty
 
-		conversionSnapshot.withLock { snapshot in
+		conversions.withLock { snapshot in
 			snapshot = newSnapshot
 		}
 	}
@@ -135,60 +223,8 @@ final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRende
 			}
 			return table
 		} catch {
-			assertionFailure("Failed to load conversion table named \(name)")
+			Self.logger.error("Failed to load the conversion table named \(name, privacy: .public)")
 			return [:]
-		}
-	}
-
-	var pluginPreferencesPane: PluginPreferencesPane? {
-		guard let host else { return nil }
-		return PluginPreferencesPane(title: String(localized: .BasicLanguage.preferencesPaneTitle)) { [weak self] in
-			SmileyConverterPreferencesView(defaults: host.defaults) {
-				self?.rebuildConversionSnapshot()
-			}
-		}
-	}
-
-	/** Called from the message renderer's background queue. The conversion table
-	 is the only state it reads, and that table is empty whenever the preference
-	 is off, so there is nothing to consult on the main actor. */
-	nonisolated func willRenderMessage(_ event: PluginRenderEvent) -> String? { // nonisolated: pure
-		guard event.kind == .action || event.kind == .privateMessage else {
-			return event.message
-		}
-		return convertToEmoji(event.message)
-	}
-
-	private nonisolated func convertToEmoji(_ string: String) -> String { // nonisolated: pure
-		let snapshot = conversionSnapshot.withLock { $0 }
-		let result = NSMutableString(string: string)
-		for smiley in snapshot.sortedSmileys {
-			replace(smiley, in: result, using: snapshot)
-		}
-		return result as String
-	}
-
-	private nonisolated func replace( // nonisolated: pure
-		_ smiley: String,
-		in string: NSMutableString,
-		using snapshot: SmileyConversionSnapshot
-	) {
-		var searchLocation = 0
-		while searchLocation < string.length {
-			let searchRange = NSRange(location: searchLocation, length: string.length - searchLocation)
-			let match = string.range(of: smiley, options: .caseInsensitive, range: searchRange)
-			guard match.location != NSNotFound else { return }
-
-			let hasLeftBoundary = match.location == 0 || string.character(at: match.location - 1) == 0x20
-			let rightLocation = NSMaxRange(match)
-			let hasRightBoundary = rightLocation == string.length || string.character(at: rightLocation) == 0x20
-
-			if hasLeftBoundary, hasRightBoundary, let emoji = snapshot.conversionTable[smiley] {
-				string.replaceCharacters(in: match, with: emoji)
-				searchLocation = match.location + (emoji as NSString).length + 1
-			} else {
-				searchLocation = rightLocation + 1
-			}
 		}
 	}
 }

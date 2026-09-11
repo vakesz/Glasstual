@@ -88,9 +88,16 @@ private final class InputHistoryObject {
 	private func addToBuffer(_ string: NSAttributedString) {
 		historyBuffer.append(NSAttributedString(attributedString: string))
 
-		if historyBuffer.count > inputHistoryMaximumCount {
-			historyBuffer.removeFirst()
+		guard historyBuffer.count > inputHistoryMaximumCount else {
+			return
 		}
+
+		historyBuffer.removeFirst()
+		/* Dropping the oldest entry shifts every index down by one, and the
+		 cursor is an index. Left where it was, the first press of Up at a full
+		 buffer returned the draft that had just been stashed and every entry
+		 after it was off by one. */
+		historyBufferPosition = max(0, historyBufferPosition - 1)
 	}
 
 	private func entryAtBufferPosition() -> NSAttributedString? {

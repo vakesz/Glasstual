@@ -81,7 +81,7 @@ public final class SCRAMClient: NSObject {
 	public static let errorDomain = "TLOSCRAMClientErrorDomain"
 
 	/// The mechanism name as advertised in `sasl=` values and on the wire.
-	public static let mechanismName = "SCRAM-SHA-256"
+	public nonisolated static let mechanismName = "SCRAM-SHA-256" // nonisolated: let
 
 	private static let gs2Header = "n,,"
 	private static let minimumIterationCount = 4096

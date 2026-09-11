@@ -270,4 +270,139 @@ struct IRCSpecOutboundLimitsTests {
 	func outgoingCommandsAreUpperCased() {
 		#expect(SendingMessage.string(command: "privmsg", arguments: ["#chan", "hi"]) == "PRIVMSG #chan :hi")
 	}
+
+	// MARK: - The assembled line
+
+	/** RFC 1459 §2.3: a line is at most 512 bytes with its CR LF, so 510 for
+	 the rest. Nothing measured the finished line, so a long enough command left
+	 the client over the limit and the server cut it wherever it landed. */
+	@Test("An over-long line is cut to the protocol's body length")
+	func assembledLinesAreCutToTheBodyLength() {
+		let line = "PRIVMSG #chan :" + String(repeating: "a", count: 600)
+		let enforced = IRCProtocolLimits.enforcedWireLine(line)
+
+		#expect(enforced.utf8.count == IRCProtocolLimits.maximumBodyLength)
+		#expect(line.hasPrefix(enforced))
+	}
+
+	/** The enforcement used to pin 510 while everything that sized the text
+	 going into the line — the message splitter, the JOIN batcher, the parameter
+	 budget — read `LINELEN`. On a server carrying 1024 the last stop before the
+	 socket therefore cut text the server would have taken. */
+	@Test("The cut follows the length the server advertised")
+	func theCutFollowsTheAdvertisedLineLength() {
+		let line = "PRIVMSG #chan :" + String(repeating: "a", count: 2000)
+		let raised = IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 1024)
+
+		#expect(raised == 1022)
+		#expect(IRCProtocolLimits.enforcedWireLine(line, bodyLimit: raised).utf8.count == raised)
+		// A server that advertised nothing, or nonsense, keeps the RFC's budget.
+		#expect(IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 0) == IRCProtocolLimits.maximumBodyLength)
+		#expect(IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 1) == IRCProtocolLimits.maximumBodyLength)
+		// And one that advertises more than is believable is clamped, not trusted.
+		#expect(
+			IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: 1_000_000)
+				== IRCProtocolLimits.maximumServerLineLength - IRCProtocolLimits.lineTerminatorLength
+		)
+	}
+
+	/// The socket starts on the RFC's 512 and takes the server's `LINELEN` from
+	/// 005, and a reconnect goes back to the default because the next server has
+	/// said nothing yet.
+	@Test("The connection's line length follows ISUPPORT and resets with it")
+	func connectionLineLengthFollowsISupport() throws {
+		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "user"])
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = connection
+
+		#expect(connection.maximumLineLength == 512)
+
+		let message = try #require(Message(line: ":irc.example.net 005 me LINELEN=1024 :are supported", on: client))
+		client.receiveNumericReply(message)
+
+		#expect(connection.maximumLineLength == 1024)
+
+		connection.resetState()
+
+		#expect(connection.maximumLineLength == 512)
+	}
+
+	/** The log is not where the user is looking. Text they typed is gone from
+	 what the server saw, and only the unified log ever said so. */
+	@Test("A cut line is reported where the user can see it")
+	func aCutLineIsReportedInTheTranscript() {
+		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "user"])
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = connection
+
+		connection.sendLine("PRIVMSG #chan :" + String(repeating: "a", count: 600))
+
+		let bodies = client.printedLines.compactMap {
+			($0 as? [String: Any])?["messageBody"] as? String
+		}
+
+		#expect(bodies.contains {
+			$0 == ConnectionSafetyStrings.Wire.lineTruncated(
+				sentByteCount: 615,
+				limit: IRCProtocolLimits.maximumBodyLength
+			)
+		})
+	}
+
+	/// A line that fits says nothing at all: every line would otherwise be
+	/// reported as having been trimmed to itself.
+	@Test("A line that fits is not reported")
+	func aLineThatFitsIsNotReported() {
+		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "user"])
+		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
+		client.socket = connection
+
+		connection.sendLine("PRIVMSG #chan :hello")
+
+		#expect(client.printedLines.count == 0)
+	}
+
+	@Test("A line that already fits is left alone")
+	func linesWithinTheBudgetAreUnchanged() {
+		let line = "PRIVMSG #chan :hello"
+
+		#expect(IRCProtocolLimits.enforcedWireLine(line) == line)
+	}
+
+	/// The cut lands on a character boundary: half a UTF-8 sequence is not text
+	/// on any server, and the encoder would refuse it or the peer would draw a
+	/// replacement character.
+	@Test("The cut never splits a character")
+	func truncationLandsOnACharacterBoundary() {
+		let line = "PRIVMSG #chan :" + String(repeating: "\u{1F4AC}", count: 200)
+		let enforced = IRCProtocolLimits.enforcedWireLine(line)
+
+		#expect(enforced.utf8.count <= IRCProtocolLimits.maximumBodyLength)
+		#expect(enforced.utf8.count > IRCProtocolLimits.maximumBodyLength - 4)
+		#expect(enforced.hasSuffix("\u{1F4AC}"))
+	}
+
+	/// IRCv3 budgets the tag section separately, so a tagged line gets its own
+	/// 510 bytes for the command that follows the tags.
+	@Test("Tags are budgeted apart from the body")
+	func tagsAreBudgetedApartFromTheBody() {
+		let tags = "@time=2026-08-26T12:00:00.000Z "
+		let enforced = IRCProtocolLimits.enforcedWireLine(tags + String(repeating: "a", count: 600))
+
+		#expect(enforced.hasPrefix(tags))
+		#expect(enforced.utf8.count == tags.utf8.count + IRCProtocolLimits.maximumBodyLength)
+	}
+
+	/// Half a tag is not a tag, so an oversized tag section loses whole ones.
+	@Test("An oversized tag section drops whole tags")
+	func oversizedTagSectionsDropWholeTags() {
+		let tags = (0 ..< 300).map { "t\($0)=" + String(repeating: "v", count: 20) }
+		let enforced = IRCProtocolLimits.enforcedWireLine("@" + tags.joined(separator: ";") + " PING token")
+		let tagSection = String(enforced.prefix(while: { $0 != " " }))
+
+		#expect(enforced.hasSuffix(" PING token"))
+		#expect(tagSection.utf8.count < IRCProtocolLimits.maximumClientTagLength)
+		#expect(tagSection.hasPrefix("@t0=vvv"))
+		#expect(tagSection.components(separatedBy: ";").allSatisfy { $0.hasSuffix("vvvvv") })
+	}
 }

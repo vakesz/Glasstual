@@ -45,12 +45,39 @@ public final class MainWindowInputAccessoryModel {
 	}
 }
 
+/** Whether the message field holds the keyboard.
+
+ The field is an AppKit view, so SwiftUI's `@FocusState` never sees it; the
+ field reports its own first-responder transitions here and the capsule drawn
+ around it observes them.
+
+ First-responder status alone is not the answer. A window keeps its first
+ responder while it is inactive, and `resignFirstResponder` is not sent when
+ the window stops being key -- so a ring driven by that transition alone stayed
+ lit on every background window in the space. Key-window status is the second
+ half of the question, and both have to hold. */
+@MainActor
+@Observable
+public final class MainWindowInputFocusModel {
+	/// Whether the field is its window's first responder.
+	public internal(set) var isFirstResponder = false
+	/// Whether that window is the one the keyboard is going to.
+	public internal(set) var windowIsKey = false
+
+	/// What the capsule draws its ring from.
+	public var isFocused: Bool {
+		isFirstResponder && windowIsKey
+	}
+}
+
 struct MainWindowInputAccessoryView: View {
 	@Bindable var model: MainWindowInputAccessoryModel
 	let cancelReply: () -> Void
 
+	@Environment(\.accessibilityReduceMotion) private var reduceMotion
+
 	var body: some View {
-		VStack(alignment: .leading, spacing: MainWindowInputBarLayout.accessorySpacing) {
+		VStack(alignment: .leading, spacing: UISpacing.tight) {
 			if model.replyMessageIdentifier != nil {
 				replyBanner
 					.transition(.move(edge: .bottom).combined(with: .opacity))
@@ -61,11 +88,11 @@ struct MainWindowInputAccessoryView: View {
 					.transition(.opacity)
 			}
 		}
-		.animation(.easeOut(duration: 0.18), value: model.hasContent)
+		.animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: model.hasContent)
 	}
 
 	private var replyBanner: some View {
-		HStack(spacing: 6) {
+		HStack(spacing: UISpacing.tight) {
 			Image(systemName: "arrowshape.turn.up.left")
 				.font(.system(size: 12, weight: .medium))
 				.foregroundStyle(.secondary)
@@ -77,7 +104,7 @@ struct MainWindowInputAccessoryView: View {
 				.truncationMode(.tail)
 				.help(model.replyExcerpt ?? "")
 
-			Spacer(minLength: 4)
+			Spacer(minLength: UISpacing.tight)
 
 			Button(MainWindowStrings.Reply.cancel, systemImage: "xmark.circle.fill") {
 				model.hideReply()
@@ -87,7 +114,7 @@ struct MainWindowInputAccessoryView: View {
 			.buttonStyle(.plain)
 			.foregroundStyle(.secondary)
 		}
-		.padding(.horizontal, 10)
+		.padding(.horizontal, UISpacing.wide)
 		.frame(height: MainWindowInputBarLayout.replyBannerHeight)
 		.glassEffect(.regular, in: .rect(cornerRadius: 8))
 	}
@@ -107,10 +134,15 @@ struct MainWindowInputAccessoryView: View {
 	}
 
 	private var typingRow: some View {
-		HStack(spacing: 5) {
+		HStack(spacing: UISpacing.tight) {
+			/* The dots pulse forever, which is exactly what Reduce Motion asks
+			 an interface not to do; the row itself still says who is typing. */
 			Image(systemName: "ellipsis")
 				.font(.system(size: 13, weight: .bold))
-				.symbolEffect(.variableColor.cumulative.reversing, options: .repeating)
+				.symbolEffect(
+					.variableColor.cumulative.reversing,
+					options: reduceMotion ? .nonRepeating : .repeating
+				)
 				.accessibilityHidden(true)
 			Text(MainWindowStrings.Typing.caption(for: model.typingNicknames))
 				.font(.caption)
@@ -118,7 +150,7 @@ struct MainWindowInputAccessoryView: View {
 				.truncationMode(.tail)
 		}
 		.foregroundStyle(.secondary)
-		.padding(.horizontal, 10)
+		.padding(.horizontal, UISpacing.wide)
 		.frame(height: MainWindowInputBarLayout.typingRowHeight)
 		.help(model.typingNicknames.joined(separator: ", "))
 	}

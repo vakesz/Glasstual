@@ -304,6 +304,16 @@
         }
       }
     },
+    "regular-expression-limits-explanation" : {
+      "comment" : "Explanation of the limits placed on filter match patterns. The argument is the number of characters a pattern is matched against.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Patterns are matched against at most the first %@ characters of a message, and a pattern that repeats a group which already repeats without bound is pointed out as slow." } } }
+    },
+    "regular-expression-nested-quantifier" : {
+      "comment" : "Warning shown beside a filter match field whose pattern repeats a group that already repeats without bound. The filter is saved either way.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This pattern repeats a group that already repeats without bound, such as (a+)+. A pattern of that shape can take a very long time to match. It is saved as it is; rewriting it without the nested repetition will make it faster." } } }
+    },
     "token-channel-name" : {
       "comment" : "Title of the action token representing a channel name. Migrated from legacy key 90e-tj.",
       "extractionState" : "manual",

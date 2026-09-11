@@ -44,6 +44,15 @@ struct AboutView: View {
 				.textSelection(.enabled)
 				.padding(.top, 4)
 
+			if content.copyright.isEmpty == false {
+				Text(verbatim: content.copyright)
+					.font(.caption2)
+					.foregroundStyle(.secondary)
+					.multilineTextAlignment(.center)
+					.textSelection(.enabled)
+					.padding(.top, 6)
+			}
+
 			Spacer(minLength: 8)
 
 			Button(action: openAcknowledgements) {
@@ -53,7 +62,7 @@ struct AboutView: View {
 		.padding(.horizontal, 16)
 		.padding(.top, 20)
 		.padding(.bottom, 20)
-		.frame(width: 218, height: 244)
+		.frame(width: 244, height: 320)
 		.onExitCommand(perform: close)
 	}
 }

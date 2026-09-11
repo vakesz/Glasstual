@@ -12,6 +12,11 @@ struct OnboardingView: View {
 	let backAction: () -> Void
 	let skipAction: () -> Void
 	let cancelAction: () -> Void
+	let setUpLaterAction: () -> Void
+
+	/// Sliding a full panel across the window is exactly the motion Reduce
+	/// Motion asks applications to stop making.
+	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -51,7 +56,7 @@ struct OnboardingView: View {
 				}
 			}
 			.id(model.currentStep)
-			.transition(.opacity.combined(with: .move(edge: .trailing)))
+			.transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .trailing)))
 			.frame(maxWidth: .infinity, maxHeight: .infinity)
 			.padding(.horizontal, 32)
 
@@ -59,6 +64,10 @@ struct OnboardingView: View {
 
 			HStack {
 				Button(PromptStrings.Action.cancel, action: cancelAction)
+				/* Onboarding has to be dismissible without answering it, and
+				 without it asking again at the next launch. */
+				Button(OnboardingStrings.Window.setUpLaterButton, action: setUpLaterAction)
+					.buttonStyle(.link)
 				if model.currentStep.isSkippable {
 					Button(OnboardingStrings.Window.skipButton, action: skipAction)
 						.buttonStyle(.link)
@@ -85,7 +94,7 @@ struct OnboardingView: View {
 			.padding(16)
 		}
 		.frame(width: 720, height: 700)
-		.animation(.snappy(duration: 0.2), value: model.currentStep)
+		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: model.currentStep)
 		.onExitCommand(perform: cancelAction)
 		.alert(model.currentStep.title, isPresented: $model.isValidationPresented) {
 			Button(PromptStrings.Action.confirmation, role: .cancel) {}
@@ -204,12 +213,10 @@ private struct OnboardingAppearanceView: View {
 				GridRow {
 					Text(verbatim: OnboardingStrings.Appearance.interfaceStyleLabel)
 					Picker("", selection: $settings.appearance) {
-						Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitles[0])
-							.tag(PreferredAppearance.inherited)
-						Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitles[1])
-							.tag(PreferredAppearance.light)
-						Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitles[2])
-							.tag(PreferredAppearance.dark)
+						ForEach(PreferredAppearance.allCases, id: \.self) { appearance in
+							Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitle(appearance))
+								.tag(appearance)
+						}
 					}
 					.labelsHidden()
 					.pickerStyle(.segmented)

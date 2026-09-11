@@ -70,6 +70,25 @@ struct ServerPropertiesSheetValueTests {
 		#expect(ServerPropertiesModel.nilIfEmpty("value") == "value")
 	}
 
+	/** A keyword typed in Regular Expression mode has to compile.
+
+	 The renderer builds the expression with `try?`, so a pattern that does not
+	 compile stopped highlighting and said nothing; the sheet only ever checked
+	 that the field was not empty. */
+	@Test("An unusable pattern is rejected only where patterns are what is matched")
+	func regularExpressionKeywordsAreValidated() {
+		#expect(HighlightKeywordPattern.isValid("^alice[0-9]+$"))
+		#expect(HighlightKeywordPattern.isValid("alice(") == false)
+		#expect(HighlightKeywordPattern.isValid("[unclosed") == false)
+
+		#expect(
+			HighlightKeywordPattern.validationError(for: "alice(", usesRegularExpression: true)
+				== ApplicationStrings.invalidRegularExpression
+		)
+		#expect(HighlightKeywordPattern.validationError(for: "alice(", usesRegularExpression: false) == nil)
+		#expect(HighlightKeywordPattern.validationError(for: "^alice$", usesRegularExpression: true) == nil)
+	}
+
 	@Test("The advanced encodings preference is read from the shared container")
 	func advancedEncodingsKeyLivesInTheContainer() {
 		let key = Preferences.Internals.includeAdvancedEncodings.name

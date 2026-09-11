@@ -85,12 +85,17 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	fileprivate var textViewHeightConstraint: NSLayoutConstraint?
 	public fileprivate(set) weak var contentView: MainWindowTextViewContentView?
 	public let accessoryModel = MainWindowInputAccessoryModel()
+	/// What the capsule around this field watches to draw its focus ring.
+	public let focusModel = MainWindowInputFocusModel()
 	private var observingTyping = false
 	private var typingObservations: [Task<Void, Never>] = []
 	private weak var typingChannel: IRCChannel?
 	private var userInterfaceObjects: MainWindowTextViewAppearance?
 	private var observingUserDefaults = false
 	private var userDefaultsObservation: Task<Void, Never>?
+	/// Key-window transitions of the window the field is in, so the focus ring
+	/// goes out with the window rather than staying lit behind another app.
+	private let keyStateNotifications = NotificationSubscriptions()
 
 	/// Finishes the view once the content view has connected its container and
 	/// constraints.
@@ -102,6 +107,33 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		backgroundColor = .clear
 		enclosingScrollView?.drawsBackground = false
 		updateTextDirection()
+	}
+
+	/** The field is an AppKit view inside a SwiftUI capsule, so first-responder
+	 status is the signal the capsule draws its focus ring from -- but only half
+	 of it. A window keeps its first responder while it is inactive and sends no
+	 `resignFirstResponder` when it stops being key, so the ring stayed lit on
+	 every window the user had switched away from. The other half is
+	 ``windowKeyStateChanged()``. */
+	override public func becomeFirstResponder() -> Bool {
+		let accepted = super.becomeFirstResponder()
+		if accepted {
+			focusModel.isFirstResponder = true
+		}
+		return accepted
+	}
+
+	override public func resignFirstResponder() -> Bool {
+		let resigned = super.resignFirstResponder()
+		if resigned {
+			focusModel.isFirstResponder = false
+		}
+		return resigned
+	}
+
+	/// The window became or stopped being key, or the field changed windows.
+	private func windowKeyStateChanged() {
+		focusModel.windowIsKey = window?.isKeyWindow == true
 	}
 
 	// MARK: - Replies
@@ -229,6 +261,8 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 		setUserDefaultsObserved(window != nil)
 		setTypingObserved(window != nil)
+		setKeyStateObserved(window != nil)
+		windowKeyStateChanged()
 
 		guard window != nil else { return }
 
@@ -237,6 +271,21 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		 again on the way in is what gives the field its appearance at all. */
 		applicationAppearanceChanged()
 		updatePlaceholderText()
+	}
+
+	/** Watches the window the field is in for the key state the ring depends on.
+
+	 The subscriptions are dropped when the field leaves the window: they are
+	 filtered on that window, and a field that has moved is watching a window
+	 nothing will post about. */
+	private func setKeyStateObserved(_ observed: Bool) {
+		keyStateNotifications.cancelAll()
+		guard observed, let window else { return }
+		for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification] {
+			keyStateNotifications.observe(name, object: window) { [weak self] _ in
+				self?.windowKeyStateChanged()
+			}
+		}
 	}
 
 	private func setUserDefaultsObserved(_ observed: Bool) {
@@ -658,10 +707,9 @@ public final class MainWindowTextViewContentView: NSView {
 			return textViewStorage
 		}
 
-		/* Stored before it is laid out, not after: putting the accessory strip
-		 together builds controls, and a control joining the window asks the
-		 window delegate for a field editor — which answers with this very
-		 property. Storing last made that a recursion. */
+		/* Stored before it is installed. Installing builds the scroll view and
+		 configures the field, and anything on that path that reaches back for
+		 `textView` must find it already stored rather than build a second one. */
 		let textView = MainWindowTextView(usingTextLayoutManager: true)
 		textView.prepareInitialState()
 		textViewStorage = textView

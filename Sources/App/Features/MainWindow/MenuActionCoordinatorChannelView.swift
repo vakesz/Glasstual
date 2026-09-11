@@ -131,8 +131,13 @@ public extension MenuActionCoordinator {
 		guard let selection = selectedBackingView?.selection,
 		      selection.isEmpty == false
 		else { return }
-		let pasteboard = NSPasteboard(name: NSPasteboard.Name("Glasstual.Search.\(UUID().uuidString)"))
-		pasteboard.setString(selection, forType: .string)
+		/* A pasteboard named by hand is never reclaimed: every search left one
+		 behind in the pasteboard server for the life of the login session.
+		 `withUniqueName()` hands back one this process owns, and releasing it
+		 after the service has copied the text gives it back. */
+		let pasteboard = NSPasteboard.withUniqueName()
+		defer { pasteboard.releaseGlobally() }
+		pasteboard.textualStringContent = selection
 		NSPerformService("Search With %WebSearchProvider@", pasteboard)
 	}
 

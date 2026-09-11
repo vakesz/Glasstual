@@ -234,10 +234,13 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 			messageIdentifier: messageIdentifier,
 			reason: reason
 		)
-		deliveryUpdates[lineNumber] = update
+		/* An ack can arrive after its line has been trimmed away. Recording one
+		 for a line the state no longer holds would keep it for the session:
+		 only lines still in `recentLines` are ever trimmed from here. */
 		guard let index = index(of: lineNumber) else {
 			return
 		}
+		deliveryUpdates[lineNumber] = update
 		recentLines[index].deliveryState = state
 		if let messageIdentifier, messageIdentifier.isEmpty == false {
 			recentLines[index].messageIdentifier = messageIdentifier

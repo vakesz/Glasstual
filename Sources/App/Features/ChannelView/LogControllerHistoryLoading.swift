@@ -122,22 +122,34 @@ private extension LogController {
 			let entries = historicEntries + replay.lines
 			let renderedReplay = Dictionary(uniqueKeysWithValues: replay.results.map { ($0.lineNumber, $0) })
 			var consumedReplay = Set<String>()
-			var results: [LogLineRenderResult] = []
+			var slots: [LogLineRenderResult?] = []
+			var freshSnapshots: [LogLineSnapshot] = []
+			var freshSlots: [Int] = []
 			for row in rows {
 				guard let line = LogLine.logLine(from: row) else { continue }
 				if var replayed = renderedReplay[line.uniqueIdentifier],
 				   consumedReplay.insert(line.uniqueIdentifier).inserted
 				{
 					replayed.transcriptLine.historyCursor = row.cursor
-					results.append(replayed)
+					slots.append(replayed)
 				} else {
-					let snapshot = LogLineSnapshot(line, in: context, historyCursor: row.cursor)
-					results += Self.renderJob(
-						Self.applyingMessageRenderers(to: [snapshot], for: viewController),
-						context: context
-					)
+					freshSlots.append(slots.count)
+					freshSnapshots.append(LogLineSnapshot(line, in: context, historyCursor: row.cursor))
+					slots.append(nil)
 				}
 			}
+			/* A plugin that rewrites a message before it is drawn is a main-actor
+			 callback, so the pass that runs them is taken there, once for the
+			 page. Turning the text into runs stays here, off the main actor. */
+			if freshSnapshots.isEmpty == false {
+				let prepared = await MainActor.run {
+					LogController.applyingMessageRenderers(to: freshSnapshots, for: viewController)
+				}
+				for (slot, rendered) in zip(freshSlots, Self.renderJob(prepared, context: context)) {
+					slots[slot] = rendered
+				}
+			}
+			var results = slots.compactMap(\.self)
 			results += replay.results.filter { !consumedReplay.contains($0.lineNumber) }
 			return TranscriptHistoryRenderOutput(
 				historicEntries: historicEntries,
@@ -283,8 +295,13 @@ extension LogController {
 		guard !reloadingHistory else { return }
 		let generation = renderGeneration
 		let storage = historicLog
-		historyRecovery.isRetrying = true
+		/* The banner outlives the controller, so the recovery state is held
+		 strongly and cleared on every exit: a retry whose controller died
+		 mid-flight otherwise left the spinner turning for good. */
+		let recovery = historyRecovery
+		recovery.isRetrying = true
 		historyRetryTask = Task { @MainActor [weak self] in
+			defer { recovery.isRetrying = false }
 			let available = await storage.retryLoading()
 			guard let self, !Task.isCancelled, acceptsRenderGeneration(generation) else { return }
 			if available {
@@ -298,7 +315,6 @@ extension LogController {
 			} else if historyLoadFailure == nil {
 				historyLoadFailure = .unavailable
 			}
-			historyRecovery.isRetrying = false
 		}
 	}
 
@@ -508,12 +524,11 @@ extension LogController {
 				historyCursor: cursors.indices.contains($0.offset) ? cursors[$0.offset] : nil
 			)
 		}
-		enqueueRenderJob { [weak self] in
-			guard let viewController = self else {
-				return nil
-			}
-			let snapshots = Self.applyingMessageRenderers(to: lines, for: viewController)
-			return Self.renderJob(snapshots, context: context)
+		/* The plugin renderers run here, on the main actor they are declared for;
+		 the render job that follows is a function of the snapshots alone. */
+		let snapshots = Self.applyingMessageRenderers(to: lines, for: self)
+		enqueueRenderJob {
+			Self.renderJob(snapshots, context: context)
 		} apply: { [weak self] (results: [LogLineRenderResult]) in
 			guard let self else { return }
 			let generation = renderGeneration

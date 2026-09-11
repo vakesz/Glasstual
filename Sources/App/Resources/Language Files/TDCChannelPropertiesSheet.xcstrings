@@ -6,6 +6,11 @@
       "extractionState": "manual",
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Channel Properties" } } }
     },
+    "reload-button": {
+      "comment": "Button that reloads the channel's configuration from the connection, discarding unsaved edits in the sheet.",
+      "extractionState": "manual",
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Reload" } } }
+    },
     "defaults": {
       "comment": "Title of the default channel values pane.",
       "extractionState": "manual",

@@ -55,21 +55,23 @@ public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine,
 		speechSynthesizer.stopSpeaking(at: .immediate)
 	}
 
-	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, // nonisolated: pure
+	/** Both callbacks are `@objc` protocol requirements, so they are nonisolated
+	 whichever thread `AVSpeechSynthesizer` happens to call them on. Each is a
+	 hop and nothing else; the completion itself belongs to the main actor,
+	 where the engine and its delegate live. */
+	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, // nonisolated: xpc-shim
 	                                          didFinish _: AVSpeechUtterance)
 	{
-		notifyCompletion()
+		Task { @MainActor [weak self] in self?.notifyCompletion() }
 	}
 
-	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, // nonisolated: pure
+	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, // nonisolated: xpc-shim
 	                                          didCancel _: AVSpeechUtterance)
 	{
-		notifyCompletion()
+		Task { @MainActor [weak self] in self?.notifyCompletion() }
 	}
 
-	private nonisolated func notifyCompletion() { // nonisolated: pure
-		Task { @MainActor [weak self] in
-			self?.delegate?.speechSynthesizerEngineDidCompleteUtterance()
-		}
+	private func notifyCompletion() {
+		delegate?.speechSynthesizerEngineDidCompleteUtterance()
 	}
 }

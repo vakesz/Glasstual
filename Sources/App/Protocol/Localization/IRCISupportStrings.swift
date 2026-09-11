@@ -72,4 +72,12 @@ nonisolated enum IRCISupportStrings { // nonisolated: value
 	) -> String {
 		String(localized: .IRC.joiningWouldExceedTheLimit(channelName, limit, prefix))
 	}
+
+	static func channelNameTooLong(channelName: String, maximumLength: UInt) -> String {
+		String(localized: .IRC.joinRefusedNameTooLong(channelName, Int(clamping: maximumLength)))
+	}
+
+	static func presenceListIsFull(droppedCount: Int, ceiling: UInt) -> String {
+		String(localized: .IRC.presenceListIsFull(droppedCount, Int(clamping: ceiling)))
+	}
 }

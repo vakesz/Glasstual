@@ -43,6 +43,19 @@ enum IRCClientAutojoinPolicy {
 	static let delayedWarningInterval: TimeInterval = 90
 	static let maximumDelayedWarningCount: UInt = 3
 
+	/** How long the client waits for an identification nothing in the session
+	 is actually sending.
+
+	 `noteNickServIdentificationWritten()` starts a thirty second deadline when
+	 the client itself wrote the IDENTIFY line. Turning on "wait for NickServ"
+	 without any login command that identifies — a bouncer that authenticates
+	 for you, a server that recognises the certificate — armed nothing, so the
+	 join list sat unsent for the rest of the session. This deadline covers that
+	 wait, and is measured in warning intervals so that the user has been told
+	 what is being waited for before the client gives up and joins anyway. */
+	static let unattendedAuthenticationDeadline: TimeInterval =
+		delayedWarningInterval * TimeInterval(maximumDelayedWarningCount)
+
 	/** How long to pause after the connect commands were sent before joining.
 
 	 This legacy delay applies to lists without NickServ identification.
@@ -159,15 +172,57 @@ extension IRCClient {
 		}
 	}
 
-	/// Called after the connection host completes the identification write.
+	/** Called after the connection host completes the identification write.
+
+	 The automatic join can already have started the long unattended wait,
+	 because 001 usually lands before the IDENTIFY line has gone out. The
+	 write is the better signal: services answer it within seconds, so its
+	 short deadline replaces whatever was armed before it. */
 	func noteNickServIdentificationWritten() {
 		guard !isTerminating, !isQuitting, !isDisconnecting,
-		      startup.requiresAuthentication, startup.authentication == .pending else { return }
+		      startup.requiresAuthentication,
+		      startup.authentication == .pending || startup.authentication == .waiting
+		else { return }
+		startup.authenticationTask?.cancel()
 		startup.authentication = .waiting
 		isWaitingForNickServ = true
 		let identifier = startup.identifier
 		startup.authenticationTask = Task { [weak self] in
 			do { try await Task.sleep(for: .seconds(30), clock: .continuous) } catch { return }
+			guard let self else { return }
+			authenticationDeadlineExpired(for: identifier)
+		}
+	}
+
+	/** Starts the clock on a wait for an identification the client did not send
+	 itself, and tells the user it is waiting.
+
+	 Called where the wait actually begins — the automatic join that finds the
+	 startup coordinator unwilling to join yet. Nothing else knows that the
+	 identification is never going to arrive on its own. */
+	func beginUnattendedAuthenticationWait() {
+		guard !isTerminating, !isQuitting, !isDisconnecting, startup.requiresAuthentication,
+		      startup.authentication == .pending || startup.authentication == .waiting
+		else { return }
+
+		/* `performAutoJoin` stops the warnings on its way in, because most of
+		 its callers are about to join. This one is not, so they go back on
+		 every time the wait is re-entered. */
+		startAutojoinDelayedWarningTimer()
+
+		guard startup.authentication == .pending, startup.authenticationTask == nil else { return }
+
+		startup.authentication = .waiting
+		let identifier = startup.identifier
+		startup.authenticationTask = Task { [weak self] in
+			do {
+				try await Task.sleep(
+					for: .seconds(IRCClientAutojoinPolicy.unattendedAuthenticationDeadline),
+					clock: .continuous
+				)
+			} catch {
+				return
+			}
 			guard let self else { return }
 			authenticationDeadlineExpired(for: identifier)
 		}
@@ -299,7 +354,10 @@ public extension IRCClient {
 				isAutojoined = true
 				return
 			}
-			guard startup.canJoin else { return }
+			guard startup.canJoin else {
+				beginUnattendedAuthenticationWait()
+				return
+			}
 		}
 
 		let channels = channelList.filter { $0.isChannel && !$0.isActive && $0.config.autoJoin }

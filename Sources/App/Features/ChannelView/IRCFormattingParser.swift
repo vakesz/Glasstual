@@ -98,28 +98,31 @@ nonisolated enum IRCFormattingParser { // nonisolated: value
 				ofCharacter: character,
 				startingAt: UInt(position)
 			)
-			applyColor(components.foreground, key: RendererFormatting.foregroundColor, at: position)
 
-			if components.background != nil {
-				applyColor(components.background, key: RendererFormatting.backgroundColor, at: position)
-			} else if components.foreground == nil {
-				removeAttribute(RendererFormatting.backgroundColor, at: position)
-			}
+			/* Each half is applied on its own. Deciding the background from
+			 whether the foreground was named is what kept an old background
+			 alive through \u{3}04,99: the code did name a background, and what
+			 it named was the absence of one. */
+			apply(components.foreground, key: RendererFormatting.foregroundColor, at: position)
+			apply(components.background, key: RendererFormatting.backgroundColor, at: position)
 
 			let consumedCount = max(components.charactersConsumed, 1)
 			result.deleteCharacters(in: NSRange(location: position, length: consumedCount))
 			return consumedCount
 		}
 
-		private func applyColor(_ color: IRCColor?, key: NSAttributedString.Key, at position: Int) {
-			if let color {
+		private func apply(_ selection: IRCColorSelection, key: NSAttributedString.Key, at position: Int) {
+			switch selection {
+			case .unchanged:
+				break
+			case .reset:
+				removeAttribute(key, at: position)
+			case let .color(color):
 				result.addAttribute(
 					key,
 					value: color.attributeValue,
 					range: remainingRange(from: position)
 				)
-			} else {
-				removeAttribute(key, at: position)
 			}
 		}
 

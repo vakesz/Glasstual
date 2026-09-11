@@ -39,6 +39,17 @@
 import Foundation
 
 public extension IRCClient {
+	/** Writes `command` and `data` to the wire exactly as given.
+
+	 Nothing here marks a trailing parameter, and nothing should: this is the
+	 raw path — the one an unrecognised `/command` takes — where the text is the
+	 user's and the line is whatever they typed. A parameter of theirs that has
+	 to hold spaces needs the colon they typed in front of it, the way it would
+	 on any other client's raw line.
+
+	 A command the client itself assembles has parameters it already knows the
+	 boundaries of, so it goes through `send(_:arguments:)` instead, which marks
+	 the trailing one from the command index. */
 	func sendCommand(_ command: String, withData data: String) {
 		sendLine("\(command) \(data)")
 	}

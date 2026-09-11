@@ -66,6 +66,16 @@ public final class XRPortMapper: NSObject {
 	private let port: UInt16
 	private var rawPublicAddress: UInt32 = 0
 	private var service: DNSServiceRef?
+	/// The `+1` handed to mDNSResponder as the callback context, released in
+	/// `disconnect()`. It is a box that names the mapper weakly, not the mapper
+	/// itself: see ``XRPortMapperCallbackBox``.
+	private var callbackContext: UnsafeMutableRawPointer?
+	/// Which mapping is open, counting up from the first. A reply carries the
+	/// number of the mapping it belongs to, which is what tells a reply for the
+	/// mapping being held apart from one for a mapping that has been closed or
+	/// reopened since. A `DNSServiceRef` could not: it is a pointer, and the
+	/// allocator is free to hand the next mapping the address the last one had.
+	private var mappingGeneration: UInt64 = 0
 
 	override public convenience init() {
 		self.init(port: 0)
@@ -76,8 +86,9 @@ public final class XRPortMapper: NSObject {
 		super.init()
 	}
 
-	/// Isolated so it can release the mDNSResponder handle, which is only ever
-	/// touched on the main actor.
+	/// Closes a mapping whose owner simply let go of it. Isolated so it can
+	/// release the mDNSResponder handle, which is only ever touched on the main
+	/// actor.
 	isolated deinit {
 		disconnect()
 	}
@@ -96,6 +107,19 @@ public final class XRPortMapper: NSObject {
 			protocols |= DNSServiceProtocol(kDNSServiceProtocol_UDP)
 		}
 		var newService: DNSServiceRef?
+		mappingGeneration &+= 1
+		/* The context is a raw pointer a C API keeps for as long as the service
+		 lives, so what it names is retained for exactly that long and released
+		 in `disconnect()`. What is retained is a box that names the mapper
+		 weakly: retaining the mapper itself made an open mapping keep its own
+		 owner alive, which put `deinit` — and the `disconnect()` it runs —
+		 beyond reach for anything but an explicit `close()`. An unretained
+		 pointer is not the answer either: it was only sound while nothing
+		 released the mapper between the callback firing and the hop to the main
+		 actor, which is a guarantee no caller was told about. */
+		let context = Unmanaged.passRetained(
+			XRPortMapperCallbackBox(mapper: self, generation: mappingGeneration)
+		).toOpaque()
 		let status = DNSServiceNATPortMappingCreate(
 			&newService,
 			0,
@@ -105,15 +129,17 @@ public final class XRPortMapper: NSObject {
 			desiredPublicPort.bigEndian,
 			0,
 			portMapperCallback,
-			Unmanaged.passUnretained(self).toOpaque()
+			context
 		)
 		guard status == kDNSServiceErr_NoError, let newService else {
+			Unmanaged<XRPortMapperCallbackBox>.fromOpaque(context).release()
 			/* Report what mDNSResponder said: "NAT-PMP unsupported" and "bad
 			 parameter" ask the caller for different things. */
 			error = status == kDNSServiceErr_NoError ? Int32(kDNSServiceErr_Unknown) : status
 			return false
 		}
 		service = newService
+		callbackContext = context
 		let dispatchStatus = DNSServiceSetDispatchQueue(newService, .main)
 		guard dispatchStatus == kDNSServiceErr_NoError else {
 			disconnect()
@@ -142,12 +168,42 @@ public final class XRPortMapper: NSObject {
 		return ranges.contains { address & $0.0 == $0.1 }
 	}
 
-	fileprivate func update(error errorCode: DNSServiceErrorType, address: UInt32, port: UInt16) {
-		var errorCode = errorCode
-		if errorCode == 0, port == 0, desiredPublicPort > 0 {
-			errorCode = Int32(kDNSServiceErr_NATPortMappingUnsupported)
+	/** What one mDNSResponder reply means for the mapping.
+
+	 A reply that reports success and a public port of zero is the router saying
+	 it mapped nothing, whatever port was asked for. Reading it as success left
+	 a transfer advertising port zero to its peer, and the condition used to
+	 depend on `desiredPublicPort` — so a mapper that let the router choose the
+	 port took the refusal for a mapping. */
+	public nonisolated static func resolvedError( // nonisolated: pure
+		reportedError: DNSServiceErrorType,
+		publicPort: UInt16
+	) -> DNSServiceErrorType {
+		guard reportedError == 0, publicPort == 0 else {
+			return reportedError
 		}
-		error = errorCode
+
+		return DNSServiceErrorType(kDNSServiceErr_NATPortMappingUnsupported)
+	}
+
+	/** Records one reply, from the mapping numbered `replyingGeneration`.
+
+	 mDNSResponder answers on the main queue, but a C callback carries no
+	 isolation and reaching the main actor from one costs a hop. A `close()` can
+	 land inside that hop, and the update that arrived afterwards put back the
+	 address and port `close()` had just cleared — so a transfer whose mapping
+	 had been released went on advertising it. Comparing the mapping the reply
+	 belongs to against the one being held rejects both that and a reply
+	 belonging to a mapping that has since been reopened. */
+	fileprivate func update(
+		fromGeneration replyingGeneration: UInt64,
+		error errorCode: DNSServiceErrorType,
+		address: UInt32,
+		port: UInt16
+	) {
+		guard service != nil, replyingGeneration == mappingGeneration else { return }
+
+		error = Self.resolvedError(reportedError: errorCode, publicPort: port)
 		rawPublicAddress = address
 		publicAddress = Self.string(from: address)
 		publicPort = UInt16(bigEndian: port)
@@ -161,6 +217,13 @@ public final class XRPortMapper: NSObject {
 		rawPublicAddress = 0
 		publicAddress = nil
 		publicPort = 0
+		/* Deallocating the service is what ends the callback's claim on the
+		 context, and the same call is what stops further callbacks — both on
+		 this queue, so nothing is in flight to be released out from under. */
+		if let callbackContext {
+			self.callbackContext = nil
+			Unmanaged<XRPortMapperCallbackBox>.fromOpaque(callbackContext).release()
+		}
 	}
 
 	private nonisolated static var rawLocalAddress: UInt32 { // nonisolated: pure
@@ -190,13 +253,47 @@ public final class XRPortMapper: NSObject {
 	}
 }
 
+/** What mDNSResponder is handed as the callback context for one mapping.
+
+ The service holds a `+1` on this, and `disconnect()` releases it. The mapper is
+ named weakly so that an open mapping does not keep its own owner alive: the
+ mapper's `deinit` is what closes a mapping nobody closed explicitly, and it
+ cannot run while the service is holding a reference to it.
+
+ Main actor because the mapper it names is, and the weak reference is read there.
+ A reply arrives on the main queue but carries no isolation, so it hops; the
+ callback itself only takes the box unretained and hands it to that hop. */
+@MainActor
+private final class XRPortMapperCallbackBox {
+	weak var mapper: XRPortMapper?
+	/// Which mapping this box was made for. A reply for an earlier one is
+	/// rejected even though the box is only ever used by one.
+	let generation: UInt64
+
+	init(mapper: XRPortMapper, generation: UInt64) {
+		self.mapper = mapper
+		self.generation = generation
+	}
+}
+
 private let portMapperCallback: DNSServiceNATPortMappingReply =
 	{ _, _, _, errorCode, publicAddress, _, _, publicPort, _, context in
 		guard let context else { return }
-		let mapper = Unmanaged<XRPortMapper>.fromOpaque(context).takeUnretainedValue()
+		/* Unretained: the `+1` belongs to the service, not to one reply, and a
+		 retained take here would release it on the first callback of a mapping
+		 that goes on reporting for as long as it is renewed. The box outlives
+		 the hop below because the hop holds a reference of its own. */
+		let box = Unmanaged<XRPortMapperCallbackBox>.fromOpaque(context).takeUnretainedValue()
 		/* mDNSResponder delivers on the main queue, but the callback signature
-		 carries no isolation, so hop rather than assume. */
+		 carries no isolation, so hop rather than assume. `update` re-checks that
+		 the reply still belongs to the mapping being held, because a close can
+		 land inside the hop. */
 		Task { @MainActor in
-			mapper.update(error: errorCode, address: publicAddress, port: publicPort)
+			box.mapper?.update(
+				fromGeneration: box.generation,
+				error: errorCode,
+				address: publicAddress,
+				port: publicPort
+			)
 		}
 	}

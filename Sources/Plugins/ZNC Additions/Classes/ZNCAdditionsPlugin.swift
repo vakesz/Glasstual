@@ -180,9 +180,13 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		guard hostmask.isEmpty == false else { return input }
 
 		var sender = input.sender
+		/* The server's NICKLEN is the whole bound. Clamping it to the length of
+		 the token being parsed made it a no-op — a nickname can never be longer
+		 than the hostmask it was cut out of — so an over-long nickname from a
+		 buffextras replay was accepted whatever the network said. */
 		if let components = IRCHostmask(
 			parsing: hostmask,
-			maximumNicknameLength: Int(min(client.maximumNicknameLength, UInt(hostmask.utf16.count)))
+			maximumNicknameLength: Int(clamping: client.maximumNicknameLength)
 		) {
 			guard components.nickname != client.userNickname else { return nil }
 			sender.nickname = components.nickname

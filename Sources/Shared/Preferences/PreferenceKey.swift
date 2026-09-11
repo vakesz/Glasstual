@@ -63,8 +63,8 @@ public protocol PreferenceValue: Equatable, Sendable {
  key's declared default rather than trapping. */
 public protocol PreferenceEnum: PreferenceValue, RawRepresentable where RawValue == UInt {}
 
-public nonisolated extension PreferenceEnum { // nonisolated: value
-	static func preferenceValue(from object: Any) -> Self? {
+public extension PreferenceEnum {
+	nonisolated static func preferenceValue(from object: Any) -> Self? { // nonisolated: pure
 		guard let raw = UInt.preferenceValue(from: object) else {
 			return nil
 		}
@@ -72,7 +72,7 @@ public nonisolated extension PreferenceEnum { // nonisolated: value
 		return Self(rawValue: raw)
 	}
 
-	var preferenceObject: Any? {
+	nonisolated var preferenceObject: Any? { // nonisolated: pure
 		NSNumber(value: rawValue)
 	}
 }
@@ -319,12 +319,14 @@ public protocol AnyPreferenceKey: Sendable {
 	) -> Bool
 }
 
-public nonisolated extension AnyPreferenceKey { // nonisolated: value
-	func isValid(_ value: PropertyListValue, in _: [String: PropertyListValue]) -> Bool {
+public extension AnyPreferenceKey {
+	nonisolated func isValid( // nonisolated: pure
+		_ value: PropertyListValue, in _: [String: PropertyListValue]
+	) -> Bool {
 		coerce(value) != nil
 	}
 
-	var isCatalogued: Bool {
+	nonisolated var isCatalogued: Bool { // nonisolated: pure
 		traits.contains(.uncatalogued) == false
 	}
 }
@@ -507,7 +509,7 @@ public nonisolated enum Preferences {} // nonisolated: value
 
 // MARK: - Typed access
 
-public nonisolated extension TextualUserDefaults { // nonisolated: pure
+public nonisolated extension TextualUserDefaults { // nonisolated: guarded
 	/// The defaults database a declaration is stored in.
 	func store(for storage: PreferenceStorage) -> UserDefaults {
 		switch storage {
@@ -585,13 +587,6 @@ public extension Preferences {
 	static var defaults: TextualUserDefaults {
 		TextualUserDefaults.container
 	}
-
-	/** A private handle on the same store, for code that runs outside the main
-	 actor. Reads and writes land in the same file; only KVO identity differs,
-	 and nothing off the main actor observes it. */
-	nonisolated static var detachedDefaults: TextualUserDefaults { // nonisolated: pure
-		TextualUserDefaults.suite()
-	}
 }
 
 public extension PreferenceKey {
@@ -610,18 +605,32 @@ public extension PreferenceKey {
 		get { Preferences.defaults[stored: self] }
 		nonmutating set { Preferences.defaults[stored: self] = newValue }
 	}
+}
 
-	/// ``value``, read through a private handle on the store, for code that
-	/// runs outside the main actor.
-	nonisolated var detachedValue: Value { // nonisolated: pure
-		get { Preferences.detachedDefaults[self] }
-		nonmutating set { Preferences.detachedDefaults[self] = newValue }
+/** ``PreferenceKey/value`` and ``PreferenceKey/storedValue`` through a private
+ handle on the store, for code that runs outside the main actor.
+
+ Every access builds a handle, and there is no shared one to hand out instead:
+ `UserDefaults` is not `Sendable`, so nothing outside an actor may hold one for
+ the process. Code that reads in a loop — a sort comparator, a rendered line, a
+ member row — takes one `TextualUserDefaults.suite()` into a local and
+ subscripts that with the keys it needs.
+
+ An extension of its own, marked as a whole, rather than two unmarked members
+ beside the main-actor ones above: the key is a value type, and every access
+ here goes through `TextualUserDefaults`, a handle on a suite Foundation
+ synchronizes. `UntypedPreferenceKey` carries the same pair below for the same
+ reason. */
+public nonisolated extension PreferenceKey { // nonisolated: value
+	var detachedValue: Value {
+		get { TextualUserDefaults.suite()[self] }
+		nonmutating set { TextualUserDefaults.suite()[self] = newValue }
 	}
 
-	/// ``storedValue`` through the same private handle.
-	nonisolated var detachedStoredValue: Value? { // nonisolated: pure
-		get { Preferences.detachedDefaults[stored: self] }
-		nonmutating set { Preferences.detachedDefaults[stored: self] = newValue }
+	/// ``detachedValue``, but `nil` where nothing has been written.
+	var detachedStoredValue: Value? {
+		get { TextualUserDefaults.suite()[stored: self] }
+		nonmutating set { TextualUserDefaults.suite()[stored: self] = newValue }
 	}
 }
 
@@ -634,15 +643,24 @@ public extension AnyPreferenceKey {
 		nonmutating set { Preferences.defaults.setPropertyListValue(newValue, for: self) }
 	}
 
-	/// ``propertyListValue`` through the private handle on the store, for code
-	/// that runs outside the main actor.
-	nonisolated var detachedPropertyListValue: PropertyListValue? { // nonisolated: pure
-		get { Preferences.detachedDefaults.propertyListValue(for: self) }
-		nonmutating set { Preferences.detachedDefaults.setPropertyListValue(newValue, for: self) }
-	}
-
 	@MainActor
 	func reset() {
 		Preferences.defaults.removeValue(for: self)
+	}
+}
+
+/** ``AnyPreferenceKey/propertyListValue`` through the private handle on the
+ store, for code that runs outside the main actor.
+
+ It lives on the untyped key rather than on the `AnyPreferenceKey` extension
+ above, whose members are main-actor: a lone `nonisolated` member there would be
+ an isolation claim about a protocol requirement, where `UntypedPreferenceKey` is
+ a value type whose extension is nonisolated as a whole — as the typed key's
+ detached pair is. Every access goes through `TextualUserDefaults`, a handle on
+ a suite Foundation synchronizes. */
+public nonisolated extension UntypedPreferenceKey { // nonisolated: value
+	var detachedPropertyListValue: PropertyListValue? {
+		get { TextualUserDefaults.suite().propertyListValue(for: self) }
+		nonmutating set { TextualUserDefaults.suite().setPropertyListValue(newValue, for: self) }
 	}
 }

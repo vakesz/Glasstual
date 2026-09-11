@@ -146,8 +146,6 @@ public extension MenuController {
 
 	func serverPropertiesSheetWillClose(_: ServerPropertiesSheet) {}
 
-	func serverHighlightListSheetWillClose(_: ServerHighlightListSheet) {}
-
 	func nicknameColorSheetOnOk(_ sender: NicknameColorSheet) {
 		actionCoordinator.nicknameColorDidAccept(sender)
 	}
@@ -180,5 +178,5 @@ public extension MenuController {
 extension MenuController: ChannelInviteSheetDelegate, ChannelModifyTopicSheetDelegate,
 	ChannelModifyModesSheetDelegate, ChannelPropertiesSheetDelegate,
 	NicknameColorSheetDelegate, ServerChangeNicknameSheetDelegate,
-	ServerHighlightListSheetDelegate, ServerPropertiesSheetDelegate
+	ServerPropertiesSheetDelegate
 {}

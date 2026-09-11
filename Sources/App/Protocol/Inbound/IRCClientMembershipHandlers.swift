@@ -312,6 +312,11 @@ public extension IRCClient {
 				if tryingNicknameSentNickname != nil {
 					tryingNicknameSentNickname = newNickname
 				}
+				/* A nickname the client now holds is the retry sequence resolved,
+				 whether the client asked for it or the user did. Leaving the count
+				 where it was is what would keep the ceiling in force for the rest of
+				 the session. */
+				tryingNicknameNumber = 0
 				output?.updateTitle(for: self)
 			} else {
 				if let oldIgnore {
@@ -341,13 +346,7 @@ public extension IRCClient {
 					channel.memberInfo?.resortMember(member)
 				} else if channel.isPrivateMessage {
 					guard casefoldNickname(oldNickname) == casefoldNickname(channel.name) else { return }
-					if findChannel(newNickname) == nil {
-						stopTrackingQueryPeer(oldNickname)
-						channel.name = newNickname
-						trackQueryPeer(newNickname)
-						output?.reloadTreeItem(channel)
-						output?.updateTitle(for: channel)
-					}
+					renameQuery(channel, from: oldNickname, to: newNickname)
 				} else {
 					return
 				}
@@ -371,6 +370,38 @@ public extension IRCClient {
 		} else if let user {
 			rename(user, to: newNickname)
 			channelList.forEach(process)
+		}
+	}
+
+	/** Follows the query with `oldNickname` onto the name its peer just took.
+
+	 Two queries cannot share a name, so a rename into a nickname that already
+	 has one open has to pick a winner, and the winner is the query that is
+	 already called `newNickname`: it is the one the sidebar shows under that
+	 name, the one the user has been reading, and the one the server is already
+	 watching. The renamed query keeps its transcript under the old nickname and
+	 is closed — drawn as offline, and its watch entry released, because the
+	 person it was with is not there any more. Leaving it alone stranded it: it
+	 was never renamed and `stopTrackingQueryPeer` was never called, so the watch
+	 list kept asking after a nickname that now belongs to somebody else. */
+	private func renameQuery(_ query: IRCChannel, from oldNickname: String, to newNickname: String) {
+		guard let existing = findChannel(newNickname) else {
+			stopTrackingQueryPeer(oldNickname)
+			query.name = newNickname
+			trackQueryPeer(newNickname)
+			output?.reloadTreeItem(query)
+			output?.updateTitle(for: query)
+			return
+		}
+
+		guard existing !== query else { return }
+
+		stopTrackingQueryPeer(oldNickname)
+		applyPresence(false, to: query)
+		output?.reloadTreeItem(query)
+
+		if existing.isPrivateMessage {
+			applyPresence(true, to: existing)
 		}
 	}
 

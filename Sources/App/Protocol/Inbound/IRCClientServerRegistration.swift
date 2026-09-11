@@ -42,6 +42,16 @@ import Foundation
 enum IRCNicknameRetryPolicy {
 	static let fallbackNickname = "0"
 
+	/** How many nicknames the client tries before it stops asking.
+
+	 Ten is a full alternate list and several rounds of padding behind it, which
+	 is more than a server refusing one name in use needs. What it stops is the
+	 server that refuses every name — a `NICKLEN` the client cannot satisfy, a
+	 ban on the whole family of names, or services holding them — where each
+	 432/433 produced another NICK and the exchange only ended when one side gave
+	 up on the connection. */
+	static let maximumAttempts: UInt = 10
+
 	static func alternate(at attempt: UInt, from nicknames: [String]) -> String? {
 		guard attempt < nicknames.count else { return nil }
 		return nicknames[Int(attempt)]
@@ -135,6 +145,17 @@ public extension IRCClient {
 		printDebugInformation(
 			toConsole: IRCInboundStrings.Numeric.nicknameUnavailable(tryingNicknameSentNickname ?? "")
 		)
+
+		/* Past the ceiling the client says so once and waits: the count is reset
+		 when the user's own /nick lands, so asking again is what starts it over. */
+		guard tryingNicknameNumber < IRCNicknameRetryPolicy.maximumAttempts else {
+			if tryingNicknameNumber == IRCNicknameRetryPolicy.maximumAttempts {
+				tryingNicknameNumber += 1
+				printDebugInformation(toConsole: IRCInboundStrings.Numeric.nicknameRetriesExhausted)
+			}
+
+			return
+		}
 
 		if let nickname = IRCNicknameRetryPolicy.alternate(
 			at: tryingNicknameNumber,

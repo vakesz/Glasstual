@@ -57,6 +57,11 @@ public nonisolated enum DCCChatEvent: Sendable { // nonisolated: value
 
 /// One DCC CHAT session: the socket and the line framing, owned by one actor.
 ///
+private nonisolated let directChatConnectionLogger = Logger( // nonisolated: let
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "DCCChatConnection"
+)
+
 /// The file-transfer side of DCC is ``DCCTransfer``, and the two share the
 /// Network.framework helpers in `DCCTransfer+Network.swift`. What differs is
 /// what travels: a chat carries newline-terminated lines in both directions for
@@ -81,15 +86,23 @@ public actor DCCChatConnection {
 		public var maximumLineLength: Int
 		/// How long a single write may take before the session fails.
 		public var sendTimeout: Duration?
+		/// Only a connection from this address is accepted while listening.
+		/// Empty accepts any, which is what is left when the offer named no
+		/// address — every `DCC CHAT` offer this client listens for, since the
+		/// peer's own hostmask says where they reached the *server* from rather
+		/// than where they will dial out from.
+		public var expectedPeerAddress: String
 
 		public init(
 			endpoint: Endpoint,
 			maximumLineLength: Int = 16 * 1024,
-			sendTimeout: Duration? = nil
+			sendTimeout: Duration? = nil,
+			expectedPeerAddress: String = ""
 		) {
 			self.endpoint = endpoint
 			self.maximumLineLength = maximumLineLength
 			self.sendTimeout = sendTimeout
+			self.expectedPeerAddress = expectedPeerAddress
 		}
 	}
 
@@ -162,7 +175,7 @@ public actor DCCChatConnection {
 		}
 
 		try await DCCTransfer.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
-			try await DCCTransfer.send(payload, over: connection)
+			try await connection.send(payload)
 		}
 	}
 
@@ -272,7 +285,24 @@ public actor DCCChatConnection {
 
 		emit(.listening(port: listening.port))
 
+		let expectedPeerAddress = configuration.expectedPeerAddress
+		var rejectedAPeer = false
+
 		for await candidate in listening.connections {
+			try Task.checkCancellation()
+
+			/* The transfer side checks this too. Nothing negotiates an address
+			 for a chat, so the expectation is normally empty and every caller
+			 gets in; a caller that configures one is held to it. */
+			guard DCCTransfer.connection(candidate, isFrom: expectedPeerAddress) else {
+				directChatConnectionLogger.error(
+					"Rejected a DCC CHAT connection from an address other than the one the offer named"
+				)
+				rejectedAPeer = true
+				await reject(candidate)
+				continue
+			}
+
 			/* One offer serves one conversation. Leaving the port open past the
 			 first accept only gives somebody else a window to reach it. */
 			listenerTask?.cancel()
@@ -285,16 +315,40 @@ public actor DCCChatConnection {
 			return candidate
 		}
 
+		if rejectedAPeer {
+			throw DCCTransferError.rejectedPeerAddress
+		}
+
 		throw DCCTransferError.closedByPeer
 	}
 
-	// MARK: - Reading
+	// MARK: - Reading and writing
+
+	/** Refuses one inbound connection.
+
+	 Half-closing tells whoever dialled that the port is not going to answer,
+	 rather than leaving them holding a socket that never carries anything, and
+	 releasing the last reference lets the stack finish tearing it down. */
+	private func reject(_ connection: NetworkConnection<TCP>) async {
+		try? await connection.send(Data(), endOfStream: true)
+	}
+
+	/** Reads whatever the peer has sent, and reports whether the peer is done.
+
+	 An instance method rather than a shared `nonisolated static` one: it is I/O
+	 on a connection this session owns, not a pure function of its inputs, so
+	 its isolation follows the socket. */
+	private func receive(on connection: NetworkConnection<TCP>) async throws -> (Data?, Bool) {
+		let message = try await connection.receive(atLeast: 1, atMost: DCCTransfer.bufferSize)
+
+		return (message.content, message.metadata.endOfStream)
+	}
 
 	private func readLines(over connection: NetworkConnection<TCP>) async throws {
 		while true {
 			try Task.checkCancellation()
 
-			let (payload, isComplete) = try await DCCTransfer.receive(on: connection)
+			let (payload, isComplete) = try await receive(on: connection)
 
 			if let payload, payload.isEmpty == false {
 				try consume(payload)

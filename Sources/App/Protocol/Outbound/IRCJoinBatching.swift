@@ -114,7 +114,12 @@ enum IRCJoinBatching {
 	}
 
 	private static func lineBudget(maximumLineLength: Int) -> Int {
-		let advertised = maximumLineLength > 0 ? maximumLineLength : IRCProtocolLimits.maximumBodyLength
+		/* `LINELEN` counts the CR LF that ends the line; the RFC default of 510
+		 is the body alone. Spending the pair on channel names put a server's
+		 `LINELEN=512` on the wire as 514 bytes. */
+		let advertised = maximumLineLength > 0
+			? maximumLineLength - IRCProtocolLimits.lineTerminatorLength
+			: IRCProtocolLimits.maximumBodyLength
 		// Never let a nonsensical LINELEN shrink the budget to nothing: a
 		// batch always has to be able to carry at least one channel.
 		return max(advertised - commandOverhead, 1)

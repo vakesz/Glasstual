@@ -72,6 +72,14 @@ public final class CommandIndex: NSObject {
 		return entry.index
 	}
 
+	/** The `outgoingColonIndex` of a command that never has a trailing parameter.
+
+	 It sits past any argument list a command can have, so the position check in
+	 `SendingMessage` never matches it. Every parameter of such a command is one
+	 wire token, which is what makes a pre-joined list a bug rather than a
+	 formatting choice. */
+	public static let colonPositionNever: UInt = 999
+
 	public static func colonPosition(forRemoteCommand command: String) -> UInt {
 		guard let entry = commandIndexTables.remote[command.lowercased()],
 		      entry.outgoingColonIndex >= 0

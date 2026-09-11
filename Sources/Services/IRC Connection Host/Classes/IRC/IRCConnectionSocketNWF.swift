@@ -40,7 +40,10 @@ import Foundation
 import Network
 import Security
 
-private nonisolated enum IRCNetworkConnection: Sendable { // nonisolated: value
+/** The target is nonisolated by default, so the enum needs no claim of its own:
+ it holds a Network.framework connection, which is a reference, and the `value`
+ marker it used to carry said the opposite. */
+private enum IRCNetworkConnection: Sendable {
 	case tcp(NetworkConnection<TCP>)
 	case tls(NetworkConnection<TLS>)
 
@@ -220,8 +223,16 @@ actor ConnectionSocket {
 		}
 	}
 
-	func close() {
-		guard disconnected == false, disconnecting == false else { return }
+	/** Begins closing, and reports whether a `.disconnected` event will follow.
+
+	 The owner waits for that event before letting go of the transport, so this
+	 has to be honest about it. A close already under way is still on its way to
+	 one. `false` means there is nothing to wait for: the transport never
+	 dialled, or has already finished. */
+	@discardableResult
+	func close() -> Bool {
+		guard disconnecting == false else { return true }
+		guard disconnected == false else { return false }
 
 		disconnecting = true
 
@@ -230,14 +241,24 @@ actor ConnectionSocket {
 		trustAnswer?.finish()
 		trustAnswer = nil
 		connectionTask?.cancel()
+
+		return true
 	}
 
-	func close(with error: ConnectionError) {
-		guard disconnected == false, disconnecting == false else { return }
+	@discardableResult
+	func close(with error: ConnectionError) -> Bool {
+		guard disconnected == false || disconnecting else { return false }
 
-		alternateDisconnectError = error
+		/* The reason is recorded whether or not a close is already under way: a
+		 read failure and a write failure land in the same turn, and a plain
+		 `close()` carries none at all, so dropping the error here was how a
+		 disconnect the transport had a reason for reached the client as one it
+		 did not. The first reason given is the one that caused the close. */
+		if alternateDisconnectError == nil {
+			alternateDisconnectError = error
+		}
 
-		close()
+		return close()
 	}
 
 	func close(with message: String) {
@@ -547,9 +568,12 @@ actor ConnectionSocket {
 			return
 		}
 
+		/* Cleared before the disconnect check: returning with it still set left
+		 the writer believing a send was in flight, and nothing else clears it. */
+		sending = false
+
 		guard disconnecting == false else { return }
 
-		sending = false
 		events.yield(.didSend)
 	}
 
@@ -749,7 +773,11 @@ private extension ConnectionSocket {
 	/// Evaluates the peer inside Network.framework's async TLS handshake. A
 	/// recoverable failure suspends the handshake while the application asks the
 	/// user, so no traffic needs to be buffered behind a separate trust gate.
-	nonisolated static func evaluateCertificate( // nonisolated: pure
+	/** A `static` member of an actor is already outside its isolation, so this
+	 needs no `nonisolated` of its own — and it could not honestly carry the
+	 `pure` claim the keyword used to require: `sec_trust_t` is a reference, and
+	 evaluating a chain reads the trust store. */
+	static func evaluateCertificate(
 		_ trust: sec_trust_t
 	) -> TLSTrustEvaluation {
 		/* sec_trust_copy_ref() follows the Create Rule; the result is +1. */

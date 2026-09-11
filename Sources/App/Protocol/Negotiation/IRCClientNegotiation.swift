@@ -109,6 +109,9 @@ enum ClientNegotiationUtilities {
 		}
 	}
 
+	/// How long the client waits for the server's half of a SASL exchange.
+	static let saslTimeout: TimeInterval = 30
+
 	static func saslWireChunks(for payload: String) -> [String] {
 		let encoded = Data(payload.utf8).base64EncodedString()
 
@@ -250,8 +253,12 @@ extension IRCClient {
 				return nil
 			}
 
+			/* Asking whether SASL can be requested is a question, not a place to
+			 pick the mechanism: this runs again on every `CAP NEW` and `CAP DEL`,
+			 and choosing here overwrote the mechanism of an exchange already in
+			 flight. The choice is made once, on the ACK. */
 			if capability.negotiation == .sasl,
-			   selectSASLMechanism(fromOffered: offer[name] ?? []) == false
+			   nextSASLMechanism(from: offer[name] ?? []) == nil
 			{
 				return nil
 			}
@@ -394,7 +401,13 @@ extension IRCClient {
 			}
 		}
 
-		if enabled, name == "sasl", sendSASLIdentificationRequest() {
+		/* The ACK is where the mechanism is chosen, and only while nothing is
+		 mid-exchange: a `CAP NEW sasl` arriving during an in-flight SCRAM would
+		 otherwise replace the mechanism the exchange is already speaking. */
+		if enabled, name == "sasl", isCapabilityEnabled(.isInSASLNegotiation) == false,
+		   selectSASLMechanism(fromOffered: capabilityNegotiation.offeredCapabilities[name] ?? []),
+		   sendSASLIdentificationRequest()
+		{
 			pauseCapabilityNegotiation()
 		}
 
@@ -549,6 +562,13 @@ extension IRCClient {
 			return
 		}
 
+		/* The server answered, so this round is over and the next one starts:
+		 the clock is what bounds the wait for the server's next word, not the
+		 exchange as a whole. A 400-byte continuation is the same round still
+		 arriving, and re-arming for it is right too — the payload is not
+		 complete until the short chunk that ends it lands. */
+		startSASLTimeoutTimer()
+
 		let chunk = payload == "+" ? "" : payload
 
 		if saslIncomingPayload == nil {
@@ -577,8 +597,16 @@ extension IRCClient {
 		switch saslMechanism {
 		case "PLAIN":
 			let username = config.username.nonEmpty ?? config.nickname
-			let authentication = "\(username)\0\(username)\0\(config.nicknamePassword ?? "")"
-			sendSASLPayloadInChunks(authentication)
+			let password = config.nicknamePassword ?? ""
+			/* PLAIN is three fields separated by U+0000. A field that contains
+			 one splits somewhere else on the server, which either authenticates
+			 as a name the user did not type or sends the tail of the password
+			 as a separate field. Neither is a login worth attempting. */
+			guard username.contains("\0") == false, password.contains("\0") == false else {
+				abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.credentialsContainNullCharacter)
+				return
+			}
+			sendSASLPayloadInChunks("\(username)\0\(username)\0\(password)")
 		case "EXTERNAL":
 			sendCapabilityAuthenticate("+")
 		case SCRAMClient.mechanismName:
@@ -683,7 +711,39 @@ extension IRCClient {
 		finishSASLNegotiation(failed: true)
 	}
 
+	/** Bounds the wait for the server's next word in the SASL exchange.
+
+	 `AUTHENTICATE` has no reply the protocol obliges the server to send, so a
+	 server that acknowledges `sasl` and then says nothing leaves capability
+	 negotiation paused with `CAP END` unsent. Registration stalls until the
+	 240-second retry timer takes the whole connection down, which reads as the
+	 network being broken rather than as authentication failing.
+
+	 Armed once per round rather than once per exchange. SCRAM is three
+	 challenges, each of which the client answers and then waits again; a single
+	 timer for the whole exchange gave the last round whatever was left of the
+	 thirty seconds the first one had already spent, so a slow but working
+	 login was aborted partway through. */
+	@MainActor func startSASLTimeoutTimer() {
+		saslTimeoutTimer.stop()
+		saslTimeoutTimer.start(ClientNegotiationUtilities.saslTimeout, repeats: false)
+	}
+
+	@MainActor func stopSASLTimeoutTimer() {
+		guard saslTimeoutTimer.isActive else { return }
+		saslTimeoutTimer.stop()
+	}
+
+	/// Gives up on the exchange and lets negotiation finish. `disconnectOnSASLFailure`
+	/// still decides whether that means carrying on unauthenticated or quitting,
+	/// because a timeout is a failure to authenticate like any other.
+	@MainActor func onSASLTimeoutTimer() {
+		stopSASLTimeoutTimer()
+		abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.timedOut)
+	}
+
 	@MainActor func finishSASLNegotiation(failed: Bool) {
+		stopSASLTimeoutTimer()
 		disableCapability(.isInSASLNegotiation)
 		saslScramClient = nil
 		saslIncomingPayload = nil
@@ -719,6 +779,7 @@ extension IRCClient {
 
 		saslMechanism = mechanism
 		saslOfferedMechanisms = offered
+		startSASLTimeoutTimer()
 		sendCapabilityAuthenticate(mechanism)
 
 		return true
@@ -733,12 +794,14 @@ extension IRCClient {
 		}
 
 		enableCapability(.isInSASLNegotiation)
+		startSASLTimeoutTimer()
 		sendCapabilityAuthenticate(saslMechanism)
 
 		return true
 	}
 
 	func resetSASLNegotiation() {
+		stopSASLTimeoutTimer()
 		disableCapability(.isInSASLNegotiation)
 		disableCapability(.isIdentifiedWithSASL)
 		saslScramClient = nil

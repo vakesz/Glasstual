@@ -12,6 +12,20 @@
 
 import SwiftUI
 
+/** The vertical rhythm the Settings window keeps.
+
+ One 4-pt scale, in one place: the panes, the root picker and the transfer
+ sheets each used to pick a number of their own, and six different paddings is
+ what that looked like. */
+enum PreferencesMetrics {
+	static let spacingSmall = 4.0
+	static let spacingMedium = 8.0
+	static let spacingLarge = 16.0
+	/// The inset around a sheet's own content, which is a window edge rather
+	/// than a row gap.
+	static let sheetInset = 24.0
+}
+
 /// The grouped, independently scrolling `Form` every detail pane uses.
 struct PreferencesPaneLayout<Content: View>: View {
 	@ViewBuilder let content: Content
@@ -22,7 +36,7 @@ struct PreferencesPaneLayout<Content: View>: View {
 		}
 		.formStyle(.grouped)
 		.scrollContentBackground(.hidden)
-		.contentMargins(.top, 8, for: .scrollContent)
+		.contentMargins(.top, PreferencesMetrics.spacingMedium, for: .scrollContent)
 	}
 }
 
@@ -46,11 +60,22 @@ struct PreferencesNote: View {
 /// A native settings switch driven by a typed preference binding.
 struct PreferencesToggle: View {
 	let title: String
+	/** The sentence explaining the setting, where it needs one.
+
+	 It belongs to the switch's own row: a grouped form draws a second label as
+	 the row's subtitle, with the system's spacing and alignment. Stacking the
+	 note under the toggle by hand collapsed both into one undifferentiated
+	 row. */
+	var note: String?
 	@Binding var isOn: Bool
 
 	var body: some View {
 		Toggle(isOn: $isOn) {
 			Text(verbatim: title)
+
+			if let note {
+				Text(verbatim: note)
+			}
 		}
 		.toggleStyle(.switch)
 	}

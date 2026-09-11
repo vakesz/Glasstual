@@ -181,10 +181,21 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		}
 	}
 
+	/** The stored spelling of `nickname`, or `nil` when nobody by that name is
+	 tracked.
+
+	 Folded the way the server folds nicknames rather than by
+	 `caseInsensitiveCompare`, which is Unicode folding: under RFC 1459 casing
+	 `nick[home]` and `nick{home}` are one person, and the tracker used to hold
+	 two entries for them and report each other's presence changes. */
 	private func canonicalNickname(matching nickname: String) -> String? {
-		availabilityByNickname.keys.first {
-			$0.caseInsensitiveCompare(nickname) == .orderedSame
-		}
+		let folded = casefolded(nickname)
+
+		return availabilityByNickname.keys.first { casefolded($0) == folded }
+	}
+
+	private func casefolded(_ nickname: String) -> String {
+		client?.casefoldNickname(nickname) ?? nickname.lowercased()
 	}
 
 	private func postNotification(named name: Notification.Name, nickname: String) {

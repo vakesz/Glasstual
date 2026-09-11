@@ -122,17 +122,30 @@ extension IRCClient {
 			preconditionFailure("An unchanged WHO user must already exist")
 		}
 		if let existingUser, let member = userAssociated(existingUser, with: channel) {
-			if userChanged {
-				let staffStatusChanged = existingUser.isIRCop != finalUser.isIRCop
-				if staffStatusChanged {
-					channel.memberInfo?.replaceMember(
-						member,
-						with: member,
-						resort: true,
-						replaceInAllChannels: environment.preferences.memberListSortFavorsServerStaff
-					)
-				}
-			}
+			var editedMember = member
+			editedMember.changeUser(to: finalUser)
+			editedMember.prefixes = currentUserPrefixes
+			editedMember.modes = membershipModes(
+				reportedBy: parsedFlags.userModes,
+				heldBy: member
+			)
+
+			let staffStatusChanged = existingUser.isIRCop != finalUser.isIRCop
+			let favorsServerStaff = environment.preferences.memberListSortFavorsServerStaff
+			/* A WHO sweep answers for every member of the channel, and a
+			 re-sort per line sorted a two-thousand-member list two thousand
+			 times over for a reply that usually changes nothing a sort reads.
+			 The order is the conversation weight, the staff flag when it is
+			 favoured, the channel rank and the nickname — and a WHO reply moves
+			 only the middle two. */
+			let orderChanged = editedMember.channelRank != member.channelRank
+				|| (staffStatusChanged && favorsServerStaff)
+			channel.memberInfo?.replaceMember(
+				member,
+				with: editedMember,
+				resort: orderChanged,
+				replaceInAllChannels: staffStatusChanged && favorsServerStaff
+			)
 		} else {
 			var member = ChannelUser(user: finalUser, prefixes: currentUserPrefixes)
 			member.modes = ChannelModeSymbolSet(letters: parsedFlags.userModes)
@@ -142,5 +155,35 @@ extension IRCClient {
 		if nicknameIsMyself(reply.nickname) {
 			userHostmask = "\(reply.nickname)!\(reply.username)@\(reply.address)"
 		}
+	}
+
+	/** The membership modes a WHO reply leaves a member holding.
+
+	 A WHO reply's flag field carries the person's channel status, and it used to
+	 reach a member only on the way in: someone opped or devoiced while the client
+	 was already in the channel kept whatever mark they had when they joined,
+	 because the reply that says otherwise arrives for a member that already
+	 exists.
+
+	 How much of that field to believe depends on `multi-prefix`. With it the
+	 server lists every prefix the person holds, so the reply is the whole answer
+	 and replaces what the member had. Without it RFC 1459 6.2 gives one character
+	 — the highest — so a reply that says `@` says nothing about the `+` the
+	 member also holds, and the modes are merged instead of replaced. */
+	private func membershipModes(reportedBy reported: String, heldBy member: ChannelUser) -> ChannelModeSymbolSet {
+		let reportedModes = ChannelModeSymbolSet(letters: reported)
+
+		guard isCapabilityEnabled(.multiPrefix) == false else {
+			return reportedModes
+		}
+
+		var modes = member.modes
+		let prefixRanks = supportInfo
+
+		for mode in reportedModes {
+			modes.insert(mode) { prefixRanks.rankForUserPrefix(withMode: String($0.character)) }
+		}
+
+		return modes
 	}
 }

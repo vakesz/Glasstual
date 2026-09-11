@@ -139,11 +139,14 @@ public extension MenuActionCoordinator {
 			world.destroy(client)
 			world.save()
 		}
+		/* Delete/Cancel, not Yes/No: the default button says what it does, which
+		 is what makes a destructive confirmation readable at a glance. */
 		Alerts.alert(
 			withMessage: PromptStrings.Deletion.warning(for: .server),
 			title: PromptStrings.Deletion.confirmationTitle,
-			defaultButton: PromptStrings.Action.yes,
-			alternateButton: PromptStrings.Action.no,
+			defaultButton: PromptStrings.Action.delete,
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default,
 			completionBlock: completion
 		)
 	}
@@ -189,8 +192,9 @@ public extension MenuActionCoordinator {
 		Alerts.alert(
 			withMessage: PromptStrings.Deletion.warning(for: .channel),
 			title: PromptStrings.Deletion.confirmationTitle,
-			defaultButton: PromptStrings.Action.yes,
-			alternateButton: PromptStrings.Action.no,
+			defaultButton: PromptStrings.Action.delete,
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default,
 			suppressionKey: MenuServerSuppressionKey.deleteChannel.rawValue,
 			suppressionText: nil,
 			completionBlock: completion

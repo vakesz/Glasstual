@@ -82,8 +82,11 @@ extension DCCTransfer {
 				continue
 			}
 
+			/* Bounded, but oldest-first: `bufferingNewest(1)` dropped the peer's
+			 connection the moment anything else reached the port, which is the
+			 one arrival that matters and the one a racing connector displaced. */
 			let (connections, connectionContinuation) = AsyncStream<NetworkConnection<TCP>>
-				.makeStream(bufferingPolicy: .bufferingNewest(1))
+				.makeStream(bufferingPolicy: .bufferingOldest(8))
 			let (readiness, readinessContinuation) = AsyncStream<Bool>.makeStream()
 
 			listener.onStateUpdate { _, state in
@@ -143,24 +146,6 @@ extension DCCTransfer {
 		}
 
 		throw DCCTransferError.noOpenPort
-	}
-
-	// MARK: - Reading and writing
-
-	nonisolated static func send( // nonisolated: pure
-		_ data: Data,
-		over connection: NetworkConnection<TCP>
-	) async throws { // nonisolated: pure
-		try await connection.send(data)
-	}
-
-	/// Reads whatever the peer has sent, and reports whether the peer is done.
-	nonisolated static func receive( // nonisolated: pure
-		on connection: NetworkConnection<TCP>
-	) async throws -> (Data?, Bool) { // nonisolated: pure
-		let message = try await connection.receive(atLeast: 1, atMost: bufferSize)
-
-		return (message.content, message.metadata.endOfStream)
 	}
 
 	/// Runs `operation`, failing with `error` if it outlasts `duration`.
@@ -228,12 +213,17 @@ extension DCCTransfer {
 		return parameters
 	}
 
-	/// Whether an inbound connection came from the peer the transfer was
-	/// negotiated with.
-	///
-	/// Only a reverse DCC gives us the peer's address up front: for a plain
-	/// `DCC SEND` we listen and the remote end announces itself by connecting,
-	/// so there is nothing to compare against and the connection is allowed.
+	/** Whether an inbound connection came from the peer the transfer was
+	 negotiated with.
+
+	 An empty expectation accepts anything, which is what is left whenever the
+	 offer named no address — a plain `DCC SEND` names none, and the peer's
+	 hostmask is not a substitute for one.
+
+	 Both sides are reduced to address bytes before they are compared. One
+	 address has many spellings: `2001:0db8::1` and `2001:db8::1` are the same
+	 host, and `Network` renders what it resolved rather than what the offer
+	 wrote, so comparing the text refused the very peer the offer named. */
 	nonisolated static func connection( // nonisolated: pure
 		_ connection: NetworkConnection<TCP>,
 		isFrom expectedPeerAddress: String
@@ -246,7 +236,15 @@ extension DCCTransfer {
 			return false
 		}
 
-		return peerAddress == expectedPeerAddress
+		guard let expectedBytes = ClientWireUtilities.addressBytes(of: expectedPeerAddress),
+		      let peerBytes = ClientWireUtilities.addressBytes(of: peerAddress)
+		else {
+			/* A resolved name on either side is not an address to canonicalise,
+			 so the text is all there is to go on. */
+			return peerAddress == expectedPeerAddress
+		}
+
+		return peerBytes == expectedBytes
 	}
 
 	nonisolated static func host(of endpoint: NWEndpoint) -> String? { // nonisolated: pure

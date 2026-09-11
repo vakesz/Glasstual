@@ -24,13 +24,24 @@ struct OnboardingNotificationAuthorization {
 	let currentStatus: () async -> UNAuthorizationStatus
 	let request: () async throws -> Bool
 
+	/** Told after the person has answered the permission prompt.
+
+	 Whether the system will play a notification's sound follows from that
+	 answer, and the notification controller reads it once at launch. On a first
+	 launch the answer arrives here instead, so the controller is asked to read
+	 it again — otherwise it spends the rest of the session believing sounds are
+	 the application's job and plays them itself. */
+	var soundDeliveryDidChange: @MainActor () async -> Void = {
+		await SharedApplication.sharedNotificationController().refreshSoundDelivery()
+	}
+
 	static let live = OnboardingNotificationAuthorization(
 		currentStatus: {
 			await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
 		},
 		request: {
 			try await UNUserNotificationCenter.current().requestAuthorization(
-				options: [.alert, .providesAppNotificationSettings]
+				options: [.alert, .sound, .providesAppNotificationSettings]
 			)
 		}
 	)
@@ -320,6 +331,7 @@ final class OnboardingModel {
 			do {
 				_ = try await notificationAuthorization.request()
 				await refreshNotificationPermission()
+				await notificationAuthorization.soundDeliveryDidChange()
 			} catch {
 				onboardingLogger.error(
 					"Notifications failed to authorize: \(error.localizedDescription, privacy: .public)"

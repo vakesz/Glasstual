@@ -62,14 +62,43 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 	var address: String
 	var port: String
 	var prefersSecuredConnection: Bool
-	var password: String
+
+	/// Typing into the field is what turns the draft's secret into an
+	/// instruction for the keychain; see ``passwordWasEdited``.
+	var password: String {
+		didSet {
+			guard password != oldValue else { return }
+			passwordWasEdited = true
+		}
+	}
+
+	/** Whether the person typed into the password field.
+
+	 The stored secret arrives after the sheet is on screen, so a draft that
+	 nobody has touched is showing an empty field for a secret that may well
+	 exist. Submitting that field as an edit is what deleted it, which is why an
+	 untouched draft hands back the edit its endpoint already carried. */
+	private(set) var passwordWasEdited = false
+
+	private let storedPassword: PendingKeychainSecret
 
 	init(server: Server) {
 		id = server.uniqueIdentifier
 		address = server.serverAddress
 		port = String(server.serverPort)
 		prefersSecuredConnection = server.prefersSecuredConnection
-		password = server.serverPassword ?? ""
+		/* Only an unflushed edit: reading the stored one is a synchronous
+		 keychain lookup, and a draft is built for every endpoint in the list.
+		 `ServerEndpointListModel` fills the rest in off the main actor. */
+		storedPassword = server.pendingServerPassword
+		password = server.pendingServerPassword.value(orStored: nil) ?? ""
+	}
+
+	/// Shows what the one keychain read found, leaving the draft untouched as
+	/// far as submission is concerned.
+	mutating func showStoredPassword(_ stored: String?) {
+		password = storedPassword.value(orStored: stored) ?? ""
+		passwordWasEdited = false
 	}
 
 	func validatedServer() throws -> Server {
@@ -78,7 +107,7 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 			serverAddress: ServerEndpointValidation.validatedAddress(address),
 			serverPort: ServerEndpointValidation.validatedPort(port),
 			prefersSecuredConnection: prefersSecuredConnection,
-			pendingServerPassword: .edited(password)
+			pendingServerPassword: passwordWasEdited ? .edited(password) : storedPassword
 		)
 	}
 }
@@ -87,6 +116,7 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 final class ServerEndpointListModel {
 	var entries: [ServerEndpointDraft] = []
 	var selectedID: String?
+	@ObservationIgnored private var passwordsTask: Task<Void, Never>?
 	private(set) var invalidAddressIDs: Set<String> = []
 	private(set) var invalidPortIDs: Set<String> = []
 
@@ -109,6 +139,36 @@ final class ServerEndpointListModel {
 		entries = servers.map(ServerEndpointDraft.init)
 		selectedID = nil
 		clearValidation()
+		loadPasswords(for: servers)
+	}
+
+	/// One keychain read for the whole list, off the main actor, instead of one
+	/// synchronous read per endpoint while the sheet is being built.
+	private func loadPasswords(for servers: [Server]) {
+		passwordsTask?.cancel()
+		passwordsTask = Task { [weak self] in
+			let passwords = await KeychainSecretLoader.passwords(for: servers.map(\.keychainItem))
+			self?.applyLoadedPasswords(passwords, for: servers)
+		}
+	}
+
+	private func applyLoadedPasswords(_ passwords: [KeychainItem: String], for servers: [Server]) {
+		guard Task.isCancelled == false else { return }
+
+		for server in servers {
+			/* A field the person has already typed into keeps what they typed —
+			 an emptied one included, which is why this asks what was edited
+			 rather than what is empty. */
+			guard let index = entries.firstIndex(where: { $0.id == server.uniqueIdentifier }),
+			      entries[index].passwordWasEdited == false
+			else { continue }
+
+			entries[index].showStoredPassword(passwords[server.keychainItem])
+		}
+	}
+
+	isolated deinit {
+		passwordsTask?.cancel()
 	}
 
 	func addEntry() {
@@ -148,12 +208,13 @@ final class ServerEndpointListModel {
 
 	func setSecured(_ secured: Bool, for entryID: String) {
 		guard let index = entries.firstIndex(where: { $0.id == entryID }) else { return }
+		// Only the port and the flag come back out, so the secret plays no part.
 		var server = Server(
 			uniqueIdentifier: entries[index].id,
 			serverAddress: entries[index].address,
 			serverPort: UInt16(entries[index].port) ?? ServerEndpointValidation.plainTextPort,
 			prefersSecuredConnection: entries[index].prefersSecuredConnection,
-			pendingServerPassword: .edited(entries[index].password)
+			pendingServerPassword: .unchanged
 		)
 		server = ServerEndpointValidation.server(server, preferringSecuredConnection: secured)
 		entries[index].prefersSecuredConnection = server.prefersSecuredConnection

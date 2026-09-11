@@ -121,15 +121,14 @@ on every `make lint`.
   Nothing else counts as marked. `value` says the type is one, so it never
   belongs on a `class`: a namespace of `static` members becomes an `enum`, and
   a class that only holds `let`s is `immutable`. Owning a `Mutex` as a `let` is
-  still `immutable`, which is why `ConnectionInputBudget` and
-  `NativeInlineImageTransfer` carry that marker. What moves a class to
-  `guarded` is a stored `var`: `PluginManager` keeps main-actor state beside
-  the `Mutex` the transcript renderer reads off the main actor, and
-  `TextualUserDefaults` is a handle on a suite Foundation synchronizes. Those
-  are the two `guarded` sites. If a site fits none of the six, it is not a
-  `nonisolated` site:
-  a nonisolated class with mutable state becomes an actor or a main-actor
-  class.
+  still `immutable`, which is why `ConnectionInputBudget`,
+  `NativeInlineImageTransfer` and `TranscriptHighlightExpressions` carry that
+  marker. What moves a class to `guarded` is a stored `var`: `PluginManager`
+  and `SmileyConverterPlugin` each keep main-actor state beside the `Mutex` the
+  transcript renderer reads off the main actor, and `TextualUserDefaults` is a
+  handle on a suite Foundation synchronizes. Those are the three `guarded`
+  types. If a site fits none of the six, it is not a `nonisolated` site: a
+  nonisolated class with mutable state becomes an actor or a main-actor class.
 
 Five SwiftLint custom rules cover these categories over `Sources/` and `Tests/`
 alike, and fail when they find any: `isolation_escape_hatch`,

@@ -140,7 +140,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Custom Server…"
+            "value": "Custom Server"
           }
         }
       }
@@ -765,6 +765,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Finish"
+          }
+        }
+      }
+    },
+    "window-chrome-set-up-later": {
+      "comment": "Window chrome. Button that closes onboarding without setting anything up, and without it coming back at the next launch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Up Later"
           }
         }
       }

@@ -25,6 +25,18 @@
         }
       }
     },
+    "application-version-with-build" : {
+      "comment" : "Application name, its short version, and the build number in parentheses. The arguments are the application name, the version, and the build number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ (%3$@)"
+          }
+        }
+      }
+    },
     "icon-accessibility" : {
       "comment" : "Accessibility label for the application icon. The argument is the application name.",
       "extractionState" : "manual",

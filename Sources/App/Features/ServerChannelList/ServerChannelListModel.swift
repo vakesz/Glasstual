@@ -19,6 +19,18 @@ struct ServerChannelListEntry: Identifiable, Hashable, Sendable {
 	var memberCount = 0
 	var unformattedTopic = ""
 
+	/** The topic as the row shows it.
+
+	 An RPL_LIST topic is unbounded server text and the column is one line, so
+	 the row draws a bounded copy; the full text stays in `unformattedTopic` for
+	 the tooltip and for copying. */
+	var displayedTopic: String {
+		let topic = unformattedTopic
+		guard topic.count > ServerChannelListModel.maximumDisplayedTopicLength else { return topic }
+
+		return String(topic.prefix(ServerChannelListModel.maximumDisplayedTopicLength)) + "\u{2026}"
+	}
+
 	func matches(_ searchString: String) -> Bool {
 		guard searchString.isEmpty == false else { return true }
 		return channelName.localizedCaseInsensitiveContains(searchString)
@@ -68,11 +80,23 @@ struct ServerChannelListComparator: SortComparator {
 @Observable
 final class ServerChannelListModel {
 	static let maximumSelectionCount = 8
+	/** How many channels the window keeps.
+
+	 A large network answers `LIST` with hundreds of thousands of rows, and
+	 every one of them was kept, re-filtered and re-sorted on each keystroke.
+	 What is past the cap is counted and reported, not silently dropped. */
+	static let maximumEntryCount = 20000
+	static let maximumDisplayedTopicLength = 200
+	/// How long typing has to pause before the list is filtered again.
+	static let filterDelay = Duration.milliseconds(120)
 
 	private(set) var rows: [ServerChannelListEntry] = []
 	var selection: Set<ServerChannelListEntry.ID> = []
 	var searchString = "" {
-		didSet { applyFilterAndSort() }
+		didSet {
+			guard searchString != oldValue else { return }
+			scheduleFilter()
+		}
 	}
 
 	var minimumUserCount = ""
@@ -84,9 +108,25 @@ final class ServerChannelListModel {
 
 	var isRefreshing = true
 
+	/// How many channels the server sent past the cap. Zero means the list is
+	/// complete.
+	private(set) var discardedEntryCount = 0
+
 	private var allEntries: [ServerChannelListEntry] = []
 	private var queuedEntries: [ServerChannelListEntry] = []
-	private var queuedWriteTask: Task<Void, Never>?
+	@ObservationIgnored private var queuedWriteTask: Task<Void, Never>?
+	@ObservationIgnored private var filterTask: Task<Void, Never>?
+
+	/** What to tell the user when the list is not all of it, or `nil` when it is.
+
+	 The count is what the window kept, not what the table is showing: the search
+	 field narrows the rows further, and a notice that named the row count would
+	 be wrong for as long as anything was typed into it. */
+	var truncationNotice: String? {
+		guard discardedEntryCount > 0 else { return nil }
+
+		return ServerChannelListStrings.truncationNotice(keptChannelCount: allEntries.count)
+	}
 
 	var selectedChannelNames: [String] {
 		rows.filter { selection.contains($0.id) }.map(\.channelName)
@@ -99,6 +139,11 @@ final class ServerChannelListModel {
 	}
 
 	func enqueue(channelName: String, memberCount: UInt, topic: String?) {
+		guard allEntries.count + queuedEntries.count < Self.maximumEntryCount else {
+			discardedEntryCount += 1
+			return
+		}
+
 		queuedEntries.append(ServerChannelListEntry(
 			channelName: channelName,
 			/* The count comes off the wire as an unbounded RPL_LIST field, so
@@ -138,10 +183,18 @@ final class ServerChannelListModel {
 	func clear() {
 		queuedWriteTask?.cancel()
 		queuedWriteTask = nil
+		filterTask?.cancel()
+		filterTask = nil
 		queuedEntries.removeAll()
 		allEntries.removeAll()
 		rows.removeAll()
 		selection.removeAll()
+		discardedEntryCount = 0
+	}
+
+	isolated deinit {
+		queuedWriteTask?.cancel()
+		filterTask?.cancel()
 	}
 
 	func cancelPendingWrites() {
@@ -152,7 +205,8 @@ final class ServerChannelListModel {
 
 	func replace(with entries: [ServerChannelListEntry]) {
 		cancelPendingWrites()
-		allEntries = entries
+		allEntries = Array(entries.prefix(Self.maximumEntryCount))
+		discardedEntryCount = entries.count - allEntries.count
 		selection.removeAll()
 		applyFilterAndSort()
 	}
@@ -226,7 +280,24 @@ final class ServerChannelListModel {
 		return conditions.isEmpty ? nil : conditions.joined(separator: ",")
 	}
 
-	private func applyFilterAndSort() {
+	/** Filters once typing pauses.
+
+	 Every keystroke used to re-filter and re-sort the whole list, which is what
+	 made searching a large network feel like the window had stopped. */
+	private func scheduleFilter() {
+		filterTask?.cancel()
+		filterTask = Task { [weak self] in
+			try? await Task.sleep(for: Self.filterDelay)
+			guard Task.isCancelled == false else { return }
+			self?.applyFilterAndSort()
+		}
+	}
+
+	/// Filters now, for the callers that already have every row they are going
+	/// to get — a finished refresh, a new sort order, the tests.
+	func applyFilterAndSort() {
+		filterTask?.cancel()
+		filterTask = nil
 		let query = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
 		rows = allEntries.filter { $0.matches(query) }
 		rows.sort(using: sortOrder)

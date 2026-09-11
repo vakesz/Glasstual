@@ -72,8 +72,27 @@ final class FileTransferCenterModel {
 		transfers.filter { [.receiving, .sending].contains($0.transferStatus) }
 	}
 
+	/** How many downloads are actually in flight or still waiting to start.
+
+	 This is what the receiver limit bounds, so a completed, stopped or failed
+	 row must not count towards it: those stay in the list until the user clears
+	 them, and counting them spent the limit permanently — a session that had
+	 finished a hundred and twenty downloads refused the next offer outright. */
 	var receiverCount: Int {
-		transfers.count { $0.isSender == false }
+		transfers.count { $0.isSender == false && Self.activeOrPendingStatuses.contains($0.transferStatus) }
+	}
+
+	/// How many bytes the downloads that are running or waiting still have left
+	/// to write, which is what a new offer has to find room beside.
+	var pendingReceiveByteCount: UInt64 {
+		transfers.reduce(into: UInt64(0)) { total, transfer in
+			guard transfer.isSender == false,
+			      Self.activeOrPendingStatuses.contains(transfer.transferStatus),
+			      transfer.totalFilesize > transfer.processedFilesize
+			else { return }
+
+			total += transfer.totalFilesize - transfer.processedFilesize
+		}
 	}
 
 	var canClearStoppedTransfers: Bool {

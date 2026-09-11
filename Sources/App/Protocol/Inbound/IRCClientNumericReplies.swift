@@ -70,8 +70,15 @@ public extension IRCClient {
 			return
 		}
 
-		let numericString = String(numeric)
-		guard !SharedApplication.sharedPluginManager().supportedServerInputCommands.contains(numericString) else {
+		/* The wire token, not the number: `String(numeric)` dropped the leading
+		 zeros a numeric is always written with, so a plugin subscribed to "001"
+		 was never asked about one. `PluginItem` stores what it subscribed to
+		 lowercased, which for a three-digit numeric changes nothing but is the
+		 contract the set is keyed by. */
+		let subscribedCommand = message.command.lowercased()
+		guard !SharedApplication.sharedPluginManager().supportedServerInputCommands
+			.contains(subscribedCommand)
+		else {
 			return
 		}
 		guard shouldPrint else { return }

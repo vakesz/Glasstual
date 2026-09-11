@@ -131,7 +131,129 @@ struct AlertRequestTests {
 		let secondOutcome = await Alerts.run(request, on: .anyVisibleWindow, using: second)
 
 		#expect(second.requests.isEmpty, "A suppressed alert must not reach the presenter")
-		#expect(secondOutcome == AlertOutcome(response: .default, isSuppressed: true))
+		/* The answer the user gave is the answer they keep giving: a suppressed
+		 "Cancel" that came back as the default button silently opened links and
+		 deleted channels the user had said no to. */
+		#expect(secondOutcome == AlertOutcome(response: .alternate, isSuppressed: true))
+		#expect(Alerts.suppressedResponse(baseKey: baseKey) == .alternate)
+	}
+
+	@Test("Each recorded answer is the one repeated", arguments: [
+		AlertResponse.default, .alternate, .other,
+	])
+	func suppressedRunsRepeatTheRecordedButton(response: AlertResponse) async {
+		let baseKey = Self.uniqueKey()
+		let request = AlertRequest(
+			title: "Title",
+			body: "Body",
+			defaultButton: "Open",
+			alternateButton: "Cancel",
+			otherButton: "Later",
+			suppressionKey: baseKey
+		)
+
+		let first = RecordingAlertPresenter(response: response, suppressionChecked: true)
+		#expect(await Alerts.run(request, on: .anyVisibleWindow, using: first).response == response)
+
+		let second = RecordingAlertPresenter(response: .default)
+		let outcome = await Alerts.run(request, on: .anyVisibleWindow, using: second)
+
+		#expect(second.requests.isEmpty)
+		#expect(outcome == AlertOutcome(response: response, isSuppressed: true))
+	}
+
+	@Test("The blocking form repeats the recorded answer too")
+	func suppressedModalRunsRepeatTheRecordedButton() {
+		let baseKey = Self.uniqueKey()
+		let request = AlertRequest(
+			title: "Title",
+			body: "Body",
+			defaultButton: "Delete",
+			alternateButton: "Cancel",
+			suppressionKey: baseKey
+		)
+
+		let first = RecordingAlertPresenter(response: .alternate, suppressionChecked: true)
+		#expect(Alerts.runModal(request, using: first).response == .alternate)
+
+		let second = RecordingAlertPresenter(response: .default)
+		let outcome = Alerts.runModal(request, using: second)
+
+		#expect(second.requests.isEmpty)
+		#expect(outcome == AlertOutcome(response: .alternate, isSuppressed: true))
+	}
+
+	@Test("A flag written before answers were recorded still reads as the default button")
+	func legacySuppressionFlagsMigrateAsTheDefaultButton() async {
+		let baseKey = Self.uniqueKey()
+		// What a previous version wrote: the flag, and nothing about the answer.
+		PreferenceKey(
+			Alerts.suppressionKey(withBase: baseKey),
+			default: false,
+			traits: [.unregistered, .uncatalogued]
+		).value = true
+
+		#expect(Alerts.suppressedResponse(baseKey: baseKey) == .default)
+
+		let presenter = RecordingAlertPresenter(response: .other)
+		let outcome = await Alerts.run(
+			AlertRequest(title: "Title", body: "Body", defaultButton: "OK", suppressionKey: baseKey),
+			on: .anyVisibleWindow,
+			using: presenter
+		)
+
+		#expect(presenter.requests.isEmpty)
+		#expect(outcome == AlertOutcome(response: .default, isSuppressed: true))
+	}
+
+	@Test("Nothing is recorded for an alert the user did not silence")
+	func noResponseIsRecordedWithoutSuppression() async {
+		let baseKey = Self.uniqueKey()
+		let presenter = RecordingAlertPresenter(response: .alternate, suppressionChecked: false)
+		await Alerts.run(
+			AlertRequest(
+				title: "Title",
+				body: "Body",
+				defaultButton: "OK",
+				alternateButton: "Cancel",
+				suppressionKey: baseKey
+			),
+			on: .anyVisibleWindow,
+			using: presenter
+		)
+
+		#expect(Alerts.suppressedResponse(baseKey: baseKey) == nil)
+	}
+
+	@Test("A destructive button is carried through to the presenter")
+	func destructiveRoleIsCarried() async {
+		let presenter = RecordingAlertPresenter()
+		let request = AlertRequest(
+			title: "Delete the channel?",
+			body: "There is no undo.",
+			defaultButton: "Delete",
+			alternateButton: "Cancel",
+			destructiveButton: .default
+		)
+
+		await Alerts.run(request, on: .mainWindow, using: presenter)
+
+		#expect(presenter.requests.first?.destructiveButton == .default)
+	}
+
+	@Test("The suppression checkbox is offered with the system's own wording")
+	func suppressionTextDefaultsToTheStandardPhrase() async {
+		let presenter = RecordingAlertPresenter()
+		let request = AlertRequest(
+			title: "Title",
+			body: "Body",
+			defaultButton: "OK",
+			suppressionKey: Self.uniqueKey()
+		)
+
+		await Alerts.run(request, on: .anyVisibleWindow, using: presenter)
+
+		#expect(presenter.requests.first?.suppressionText == PromptStrings.Alert.doNotAskAgain)
 	}
 
 	@Test("Leaving the checkbox alone records nothing")

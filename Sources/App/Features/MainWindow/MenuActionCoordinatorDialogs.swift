@@ -119,11 +119,12 @@ public extension MenuActionCoordinator {
 		present(sheet) { $0.start(at: selection, context: context) }
 	}
 
+	/// A window rather than a sheet: the list exists to jump into the transcript
+	/// with, and a sheet had to be dismissed to get there and reopened for the
+	/// next highlight.
 	private func showServerHighlightList() {
-		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient else { return }
-		let sheet = ServerHighlightListSheet(client: client)
-		present(sheet) { $0.start() }
+		SharedApplication.sharedApplicationScenes().openServerHighlightList(for: client)
 	}
 
 	private func showChannelTopic() {

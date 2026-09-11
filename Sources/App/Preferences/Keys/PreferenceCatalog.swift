@@ -55,6 +55,7 @@ public nonisolated extension Preferences { // nonisolated: value
 			+ Notifications.all
 			+ Input.all
 			+ Highlights.all
+			+ Reactions.all
 			+ FileTransfers.all
 			+ Extensions.all
 			+ Internals.all

@@ -1,0 +1,36 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "copy-image" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Context menu command on an image drawn inline in a conversation. Copies the picture itself to the clipboard, not its address.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy Image" } } }
+    },
+    "image-accessibility" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken description of an image drawn inline in a conversation. Nothing is known about the picture beyond where it came from, so its address stands in. %@ is the web address it was fetched from.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Image from %@" } } }
+    },
+    "open-image-link" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Context menu command on an image drawn inline in a conversation. Opens the address the picture was fetched from in the browser.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Link" } } }
+    },
+    "reaction-accessibility" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken description of one reaction chip beneath a message. %1$@ is the emoji people reacted with and %2$lld is how many of them did.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Reaction %1$@, %2$lld" } } }
+    },
+    "save-image" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Context menu command on an image drawn inline in a conversation. Opens a save panel so the picture can be kept as a file. The ellipsis marks that a panel follows.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Save Image…" } } }
+    }
+  },
+  "version" : "1.0"
+}

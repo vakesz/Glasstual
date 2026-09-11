@@ -69,6 +69,10 @@ enum ServerChannelListStrings {
 		String(localized: .TDCServerChannelListDialog.channelList(networkName))
 	}
 
+	static func truncationNotice(keptChannelCount: Int) -> String {
+		String(localized: .TDCServerChannelListDialog.listTruncatedNotice(keptChannelCount))
+	}
+
 	static func windowTitle(publicChannelCount: Int) -> String {
 		String(localized: .TDCServerChannelListDialog.publicChannelCount(publicChannelCount))
 	}

@@ -64,6 +64,49 @@ struct FileTransferResumeSafetyTests {
 		#expect(transfer.transferStatus == .stopped)
 	}
 
+	/** The RESUME timeout used to close the transfer on whatever it found when it
+	 woke, and a `DCC ACCEPT` that arrived during the wait leaves the transfer
+	 connecting rather than waiting: the sleep then killed a download that had
+	 just begun. The wait fails only the session it was started for, and only
+	 while that session is still waiting. */
+	@Test("A RESUME timeout that fires after the accept arrived closes nothing")
+	func aResumeTimeoutAfterTheAcceptIsIgnored() throws {
+		let directory = try temporaryDirectory()
+		defer { try? FileManager.default.removeItem(atPath: directory) }
+		let transfer = try receiver(filename: "photo.jpg", in: directory)
+		/* Where `didReceiveResumeAccept` leaves the transfer: the wait is over
+		 and the connection it asked for is being made. */
+		transfer.transferStatus = .connecting
+
+		#expect(transfer.resumeTimeoutExpired(for: transfer.sessionID) == false)
+		#expect(transfer.transferStatus == .connecting)
+		#expect(transfer.errorMessageDescription == nil)
+	}
+
+	@Test("A RESUME timeout belonging to an earlier session closes nothing")
+	func aResumeTimeoutFromAnEarlierSessionIsIgnored() throws {
+		let directory = try temporaryDirectory()
+		defer { try? FileManager.default.removeItem(atPath: directory) }
+		let transfer = try receiver(filename: "photo.jpg", in: directory)
+		transfer.transferStatus = .waitingForResumeAccept
+
+		#expect(transfer.resumeTimeoutExpired(for: UUID()) == false)
+		#expect(transfer.transferStatus == .waitingForResumeAccept)
+		#expect(transfer.errorMessageDescription == nil)
+	}
+
+	@Test("A RESUME the peer never answered fails its own session")
+	func anUnansweredResumeTimesOut() throws {
+		let directory = try temporaryDirectory()
+		defer { try? FileManager.default.removeItem(atPath: directory) }
+		let transfer = try receiver(filename: "photo.jpg", in: directory)
+		transfer.transferStatus = .waitingForResumeAccept
+
+		#expect(transfer.resumeTimeoutExpired(for: transfer.sessionID))
+		#expect(transfer.transferStatus == .recoverableError)
+		#expect(transfer.errorMessageDescription != nil)
+	}
+
 	private func receiver(filename: String, in directory: String) throws -> FileTransferController {
 		let transfer = try #require(FileTransferController.receiver(
 			for: GLTTestClient(),

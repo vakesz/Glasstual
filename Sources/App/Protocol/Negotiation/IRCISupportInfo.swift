@@ -128,6 +128,11 @@ public class IRCISupportInfo: NSObject {
 	/// or zero when the server never sent one.
 	public private(set) var maximumTargets: UInt = 0
 	public private(set) var maximumSilenceEntries: UInt = 0
+	/// `MONITOR=`: how many entries the server's monitor list holds, or zero
+	/// when it advertised the token without a count.
+	public private(set) var maximumMonitorEntries: UInt = 0
+	/// `WATCH=`: the same ceiling for the older watch list.
+	public private(set) var maximumWatchEntries: UInt = 0
 	public private(set) var chatHistoryMaximumLines: UInt = 0
 	public private(set) var silenceSupported = false
 	public private(set) var safeListSupported = false
@@ -193,14 +198,14 @@ public class IRCISupportInfo: NSObject {
 		channelModeKinds = advertisedChannelModeKinds.merging(userPrefixModeKinds) { _, prefix in prefix }
 	}
 
-	/// Republishes the values channel members read off the main actor.
+	/// Republishes the table members are stamped with when the list edits one.
 	private func publishUserPrefixTable() {
 		let table = IRCUserPrefixTable(
 			modeSymbols: userModePrefixPairs.map(\.modeSymbol),
 			prefixCharacters: userModePrefixPairs.map(\.character),
 			caseMapping: caseMapping
 		)
-		client?.userPrefixes.withLock { $0 = table }
+		client?.publishUserPrefixes(table)
 	}
 
 	/** The most recent 005 line, kept verbatim so the numeric handler can spell
@@ -236,13 +241,23 @@ public class IRCISupportInfo: NSObject {
 	}
 
 	public func reset() {
+		reset(withdrawingCapabilityFacts: true)
+	}
+
+	/** Clears every advertised value.
+
+	 `withdrawingCapabilityFacts` is what separates a reconnect from a first
+	 look: a reconnect really has lost the `MONITOR`, `WATCH`, `NAMESX` and
+	 `UHNAMES` the client recorded as capability facts, while a brand new
+	 instance has nothing to withdraw -- see ``prepareInitialState()``. */
+	private func reset(withdrawingCapabilityFacts: Bool) {
 		lastConfiguration = [:]
 		hasReceivedConfiguration = false
 		serverAddress = nil
 		userModePrefixPairs = defaultUserModePrefixPairs
 
 		for key in Self.resettableSettings() {
-			resetSetting(key)
+			resetSetting(key, withdrawingCapabilityFacts: withdrawingCapabilityFacts)
 		}
 	}
 
@@ -257,6 +272,10 @@ public class IRCISupportInfo: NSObject {
 	}
 
 	public func resetSetting(_ key: String) {
+		resetSetting(key, withdrawingCapabilityFacts: true)
+	}
+
+	private func resetSetting(_ key: String, withdrawingCapabilityFacts: Bool) {
 		let normalizedKey = key.uppercased()
 
 		if resetLengthSetting(normalizedKey) {
@@ -271,7 +290,7 @@ public class IRCISupportInfo: NSObject {
 			return
 		}
 
-		resetFeatureSetting(normalizedKey)
+		resetFeatureSetting(normalizedKey, withdrawingCapabilityFacts: withdrawingCapabilityFacts)
 	}
 
 	private func resetLengthSetting(_ key: String) -> Bool {
@@ -360,16 +379,25 @@ public class IRCISupportInfo: NSObject {
 		return true
 	}
 
-	private func resetFeatureSetting(_ key: String) {
+	private func resetFeatureSetting(_ key: String, withdrawingCapabilityFacts: Bool) {
+		/// The fact this token stands in for, withdrawn only when the token it
+		/// came from is being taken away rather than merely cleared.
+		func withdraw(_ capability: ClientIRCv3SupportedCapability) {
+			guard withdrawingCapabilityFacts else { return }
+			client?.removeCapabilityFacts(capability)
+		}
+
 		switch key {
 		case "MONITOR":
-			client?.removeCapabilityFacts(.monitorCommand)
+			maximumMonitorEntries = 0
+			withdraw(.monitorCommand)
 		case "WATCH":
-			client?.removeCapabilityFacts(.watchCommand)
+			maximumWatchEntries = 0
+			withdraw(.watchCommand)
 		case "NAMESX":
-			client?.removeCapabilityFacts(.multiPrefix)
+			withdraw(.multiPrefix)
 		case "UHNAMES":
-			client?.removeCapabilityFacts(.userhostInNames)
+			withdraw(.userhostInNames)
 		case "SAFELIST":
 			safeListSupported = false
 		case "UTF8ONLY":
@@ -592,12 +620,19 @@ public class IRCISupportInfo: NSObject {
 		ISupportTokenParser.casefold(string, caseMapping: caseMapping)
 	}
 
+	/// Whether a mode letter carries a parameter.
+	///
+	/// Through the same RFC 1459 fallback ``ModeParser/parse(_:channelModeKinds:)``
+	/// applies, so that a `MODE` arriving before 005 is answered the same way
+	/// whether it is being parsed or being asked about: without it `+b` read as a
+	/// bare flag here and as a list mode there.
 	public func modeHasParameter(_ modeSymbol: String, whenModeIsSet: Bool) -> Bool {
 		guard let symbol = modeSymbol.first, modeSymbol.count == 1 else {
 			return false
 		}
 
-		let policy = channelModeKinds[symbol]?.parameterPolicy ?? .never
+		let modeKinds = ModeParser.effectiveChannelModeKinds(channelModeKinds)
+		let policy = modeKinds[symbol]?.parameterPolicy ?? .never
 
 		return policy.requiresParameter(whenModeIsSet: whenModeIsSet)
 	}
@@ -674,8 +709,17 @@ public class IRCISupportInfo: NSObject {
 }
 
 private extension IRCISupportInfo {
+	/** The state a connection starts in.
+
+	 No capability fact is withdrawn on the way. `IRCClient.supportInfo` is
+	 `lazy`, so the first read of it can come long after ISUPPORT-derived facts
+	 were recorded -- `enableCapability(.watchCommand)` reads it on its way to
+	 asking the server about the tracked peers -- and a construction-time reset
+	 that called back into the client withdrew the very fact that had just been
+	 set, leaving `WATCH` and `MONITOR` disabled on servers that offer them. A
+	 new instance has nothing to withdraw. */
 	func prepareInitialState() {
-		reset()
+		reset(withdrawingCapabilityFacts: false)
 	}
 
 	func processValueSegment(segmentKey: String, segmentValue: String) {
@@ -714,6 +758,14 @@ private extension IRCISupportInfo {
 			maximumTargets = parsedValue
 		case "MODES":
 			maximumModeCount = parsedValue
+		/* The count is the whole point of these two: past it the server answers
+		 ERR_MONLISTFULL or ERR_TOOMANYWATCH and the tail of the list is simply
+		 not tracked. The flag half of the token still enables the capability in
+		 `processCapabilityFlag`. */
+		case "MONITOR":
+			maximumMonitorEntries = parsedValue
+		case "WATCH":
+			maximumWatchEntries = parsedValue
 		case "NICKLEN":
 			maximumNicknameLength = parsedValue
 		case "TOPICLEN":

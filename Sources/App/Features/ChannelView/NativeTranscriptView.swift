@@ -45,6 +45,18 @@ import SwiftUI
  the topic bar, plus the editing, selection and scrolling that keep them in
  step. ``LogView`` is the feature-facing handle on it, and rendering a row into
  attributed text lives in `NativeTranscriptViewRendering.swift`. */
+/** A completed mouse click on the transcript, as the adapter needs to judge it:
+ the text view has already placed the caret, followed a link and settled the
+ selection by the time one of these is handed over. */
+struct TranscriptClick {
+	let point: NSPoint
+	let clickCount: Int
+	let modifiers: NSEvent.ModifierFlags
+	/// Whether the pointer moved between press and release, which is what a
+	/// selection drag over a name looks like.
+	let dragged: Bool
+}
+
 @MainActor
 final class NativeTranscriptTextView: NSTextView {
 	weak var owner: LogView?
@@ -54,9 +66,49 @@ final class NativeTranscriptTextView: NSTextView {
 	/// that follows its end can stay there in the same pass that grew it.
 	var onHeightChange: (@MainActor () -> Void)?
 
+	/** Told about a click once the text view has had it. A gesture recognizer
+	 cannot stand in for this: one that claims the primary button delays every
+	 mouse-down and swallows the events it recognizes, so the caret stops
+	 moving, the selection stops clearing and links stop opening. */
+	var onClick: (@MainActor (TranscriptClick) -> Void)?
+
+	/// Where the click that is currently down began, in view coordinates.
+	private var clickOrigin: NSPoint?
+
 	convenience init(owner: LogView) {
 		self.init(usingTextLayoutManager: true)
 		self.owner = owner
+	}
+
+	override func mouseDown(with event: NSEvent) {
+		clickOrigin = convert(event.locationInWindow, from: nil)
+		super.mouseDown(with: event)
+		/* `NSTextView` tracks the drag selection in an event loop of its own and
+		 usually consumes the mouse up that ends it, so the click finishes here;
+		 `mouseUp(with:)` covers the case where it is delivered normally, and
+		 whichever runs first clears the origin. */
+		let ending = NSApp.currentEvent
+		finishClick(endedBy: ending?.type == .leftMouseUp ? ending : nil, startedBy: event)
+	}
+
+	override func mouseUp(with event: NSEvent) {
+		super.mouseUp(with: event)
+		finishClick(endedBy: event, startedBy: event)
+	}
+
+	private func finishClick(endedBy ending: NSEvent?, startedBy start: NSEvent) {
+		guard let origin = clickOrigin else { return }
+		clickOrigin = nil
+		/* Either way it is a left mouse event, which is what makes `clickCount`
+		 meaningful. */
+		let release = ending ?? start
+		let point = convert(release.locationInWindow, from: nil)
+		onClick?(TranscriptClick(
+			point: origin,
+			clickCount: release.clickCount,
+			modifiers: release.modifierFlags.intersection(.deviceIndependentFlagsMask),
+			dragged: abs(point.x - origin.x) > 2 || abs(point.y - origin.y) > 2
+		))
 	}
 
 	override func setFrameSize(_ newSize: NSSize) {
@@ -125,12 +177,20 @@ final class NativeTranscriptTextView: NSTextView {
 final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDelegate {
 	weak var owner: LogView?
 
-	let topicField = NSTextField(wrappingLabelWithString: "")
+	let topicField = TopicLabel(wrappingLabelWithString: "")
 	/* SwiftUI owns controls; this adapter only hosts one. */
 	let topicDisclosure = NSHostingView(rootView: TopicDisclosureButton(isExpanded: false, action: {}))
 	var isTopicExpanded = false
-	private let separator = NSBox()
-	private let scrollView = NSScrollView()
+	/// The profile a single click on a nickname asked for, while it waits out
+	/// the double-click interval.
+	private var pendingNicknameClick: Task<Void, Never>?
+	/// Whether such a click is still waiting. The edits that have to call it off
+	/// are what this reports on.
+	var hasPendingNicknameClick: Bool {
+		pendingNicknameClick != nil
+	}
+
+	private let scrollView = OverlayScrollView()
 	let textView: NativeTranscriptTextView
 	private var scrollViewTopWithTopicConstraint: NSLayoutConstraint?
 	private var scrollViewTopWithoutTopicConstraint: NSLayoutConstraint?
@@ -142,6 +202,9 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 	 trimming and restyling a single line all touch the document in place
 	 instead of rewriting it. */
 	private var lineLengths: [Int] = []
+	/// The identifiers ``lines`` holds, so an edit can reject a line the
+	/// document already shows without walking it.
+	private var lineNumbers: Set<String> = []
 	var inlineImages: [String: [CachedTranscriptImage]] = [:]
 	private var editDepth = 0
 	private var batchSelection: SelectionAnchor?
@@ -157,11 +220,18 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 	 to the window all scroll to the end while it holds. */
 	private var followsBottom = true
 	private var scrollsToBottomOnLayout = false
+	/// The clip view's last observed top, so a bounds change can say whether
+	/// the reader moved towards the start of the transcript.
+	private var lastVisibleTop: CGFloat = 0
 	private var topicLineHeightCache: (font: NSFont, height: CGFloat)?
 	/// Resolved nickname colours for the batch being rendered. Each lookup costs
 	/// a read of the defaults store, and one batch asks for the same handful of
 	/// names over and over.
 	var nicknameColors: [String: NSColor] = [:]
+	/// The pinned colours the batch resolves against, read on the first miss and
+	/// kept for the rest of the batch so a name the cache has not seen does not
+	/// build another handle on the defaults suite.
+	var nicknameColorOverrides: NicknameColorOverrides?
 	/// Set while the view re-selects text it moved itself, so the delegate does
 	/// not mistake bookkeeping for something the reader did.
 	private var isAdjustingSelection = false
@@ -176,6 +246,13 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 	@available(*, unavailable)
 	required init?(coder _: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
+	}
+
+	/// The pending click only holds this view weakly, so it would wake to find
+	/// nothing; cancelling ends the sleep now rather than leaving a task
+	/// running for a view that is gone.
+	isolated deinit {
+		pendingNicknameClick?.cancel()
 	}
 
 	private func configure() {
@@ -200,9 +277,6 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		topicDisclosure.setContentCompressionResistancePriority(.required, for: .horizontal)
 		applyTopicExpansion()
 
-		separator.boxType = .separator
-		separator.translatesAutoresizingMaskIntoConstraints = false
-
 		textView.delegate = self
 		/* The separators are layout fragments of their own; see
 		 `TranscriptRuleLayoutFragment`. */
@@ -212,7 +286,10 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		textView.setAccessibilityIdentifier("channel-transcript")
 		textView.isRichText = true
 		textView.importsGraphics = false
-		textView.usesFindPanel = true
+		/* The find bar is the transcript's own, inline above the text, which is
+		 where macOS puts search in a document window. */
+		textView.usesFindBar = true
+		textView.isIncrementalSearchingEnabled = true
 		textView.isAutomaticLinkDetectionEnabled = false
 		textView.isAutomaticDataDetectionEnabled = false
 		textView.drawsBackground = false
@@ -228,8 +305,19 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		let contentClick = NSClickGestureRecognizer(target: self, action: #selector(contentDoubleClicked(_:)))
 		contentClick.numberOfClicksRequired = 2
 		textView.addGestureRecognizer(contentClick)
+		textView.onClick = { [weak self] click in
+			self?.textViewClicked(click)
+		}
 
 		scrollView.documentView = textView
+		/* The insets are this view's, from the first layout on. The window
+		 carries a transparent titlebar over a full-size content view, which is
+		 exactly what AppKit's automatic adjustment reaches for -- and the
+		 transcript is laid out inside the safe area, so an adjustment for the
+		 titlebar is space nothing covers. Turning it off at construction rather
+		 than at the first `setBottomContentInset(_:)` is what keeps the view
+		 from ever running with both. */
+		scrollView.automaticallyAdjustsContentInsets = false
 		scrollView.hasVerticalScroller = true
 		scrollView.hasHorizontalScroller = false
 		scrollView.autohidesScrollers = true
@@ -255,7 +343,16 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 			}
 		}
 		notifications.observe(NSView.boundsDidChangeNotification, object: scrollView.contentView) { [weak self] _ in
-			guard let self, scrollView.contentView.bounds.minY < 160 else { return }
+			guard let self else { return }
+			/* Only a reader moving towards the top asks for more history. The
+			 clip's bounds also change for a scroll this view performed, for the
+			 document growing underneath, and for a transcript too short to
+			 scroll, which sits at zero forever and would otherwise fetch on
+			 every notification it receives. */
+			let top = scrollView.contentView.bounds.minY
+			let movedUp = top < lastVisibleTop
+			lastVisibleTop = top
+			guard movedUp, top < 160 else { return }
 			owner?.viewController?.loadOlderHistory()
 		}
 		/* The reader's own scrolling updates whether they follow the end.
@@ -271,9 +368,13 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 
 		addSubview(topicField)
 		addSubview(topicDisclosure)
-		addSubview(separator)
 		addSubview(scrollView)
-		scrollViewTopWithTopicConstraint = scrollView.topAnchor.constraint(equalTo: separator.bottomAnchor)
+		/* No rule under the topic: the change of colour and the gap are the
+		 edge, and a hairline there read as a second toolbar. */
+		scrollViewTopWithTopicConstraint = scrollView.topAnchor.constraint(
+			equalTo: topicField.bottomAnchor,
+			constant: 6
+		)
 		scrollViewTopWithoutTopicConstraint = scrollView.topAnchor.constraint(equalTo: topAnchor)
 		NSLayoutConstraint.activate([
 			topicField.topAnchor.constraint(equalTo: topAnchor, constant: 7),
@@ -281,9 +382,6 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 			topicField.trailingAnchor.constraint(equalTo: topicDisclosure.leadingAnchor, constant: -6),
 			topicDisclosure.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
 			topicDisclosure.firstBaselineAnchor.constraint(equalTo: topicField.firstBaselineAnchor),
-			separator.topAnchor.constraint(equalTo: topicField.bottomAnchor, constant: 7),
-			separator.leadingAnchor.constraint(equalTo: leadingAnchor),
-			separator.trailingAnchor.constraint(equalTo: trailingAnchor),
 			scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
 			scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
 			scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
@@ -295,6 +393,7 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 	override func layout() {
 		super.layout()
 		guard window != nil, !isHiddenOrHasHiddenAncestor, editDepth == 0 else { return }
+		updateTopicWrappingWidth()
 		updateTopicDisclosure()
 		textView.updateBottomAlignment()
 		if scrollsToBottomOnLayout {
@@ -334,15 +433,27 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 	 the window, where the clip view has its real height. */
 	override func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
+		/* A popover cannot be anchored to a view that is in no window, and the
+		 view that comes back is showing a conversation the click is no longer
+		 about. */
+		if window == nil {
+			cancelPendingNicknameClick()
+		}
 		guard window != nil, followsBottom else { return }
 		scrollsToBottomOnLayout = true
 		needsLayout = true
 	}
 
+	/// Starts a batch of renders: the colours resolved for the last one, and the
+	/// pinned-colour table they were resolved against, both belong to it alone.
+	private func beginNicknameColorBatch() {
+		nicknameColors.removeAll(keepingCapacity: true)
+		nicknameColorOverrides = nil
+	}
+
 	/// The space beneath the transcript that something else is drawn over.
 	func setBottomContentInset(_ inset: CGFloat) {
 		guard scrollView.contentInsets.bottom != inset else { return }
-		scrollView.automaticallyAdjustsContentInsets = false
 		scrollView.contentInsets.bottom = inset
 		scrollView.scrollerInsets.bottom = inset
 		needsLayout = true
@@ -354,7 +465,6 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		topicField.attributedStringValue = attributedTopic(value)
 		topicField.toolTip = value
 		topicField.isHidden = hasTopic == false
-		separator.isHidden = hasTopic == false
 		if isTopicExpanded {
 			isTopicExpanded = false
 			applyTopicExpansion()
@@ -378,6 +488,12 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 
 	func setTextScale(_ scale: CGFloat) {
 		textScale = max(0.5, min(scale, 3))
+		/* The topic is drawn by a label rather than by the document, so the
+		 rebuild below does not reach it. */
+		topicField.attributedStringValue = attributedTopic(topicField.stringValue)
+		topicField.invalidateIntrinsicContentSize()
+		topicLineHeightCache = nil
+		needsLayout = true
 		rebuild()
 	}
 
@@ -391,10 +507,13 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 	}
 
 	func append(_ newLines: [TranscriptLine]) {
-		guard newLines.isEmpty == false else { return }
+		/* A reload that is retried re-sends lines the document already shows,
+		 and a line drawn twice is a line the reader reads twice. */
+		let accepted = acceptingNewIdentifiers(newLines)
+		guard accepted.isEmpty == false else { return }
 		let followsBottom = followsBottom
 		let anchor = selectionAnchor()
-		insert(newLines, at: lines.count)
+		insert(accepted, at: lines.count)
 		trimToBufferLimit()
 		updateLayoutAfterEdit()
 		restoreSelection(anchor)
@@ -416,8 +535,7 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		guard room > 0 else { return [] }
 		/* The tail of the fetched block is the part adjacent to what is on
 		 screen, so a block that does not fit keeps its newest lines. */
-		var seen = Set(lines.map(\.lineNumber))
-		let accepted = Array(newLines.filter { seen.insert($0.lineNumber).inserted }.suffix(room))
+		let accepted = Array(acceptingNewIdentifiers(newLines).suffix(room))
 		let anchor = selectionAnchor()
 		preservingVisibleText {
 			insert(accepted, at: 0)
@@ -428,11 +546,22 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		return accepted.map(\.lineNumber)
 	}
 
+	/// The lines of `newLines` the document does not already hold, in order and
+	/// without repeats within the batch itself.
+	private func acceptingNewIdentifiers(_ newLines: [TranscriptLine]) -> [TranscriptLine] {
+		var batch = Set<String>()
+		return newLines.filter {
+			lineNumbers.contains($0.lineNumber) == false && batch.insert($0.lineNumber).inserted
+		}
+	}
+
 	func clear() {
+		cancelPendingNicknameClick()
 		lines.removeAll()
 		lineLengths.removeAll()
+		lineNumbers.removeAll()
 		inlineImages.removeAll()
-		nicknameColors.removeAll()
+		beginNicknameColorBatch()
 		scrollbackAllowance = 0
 		textView.textStorage?.setAttributedString(NSAttributedString())
 		if let owner {
@@ -522,25 +651,45 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		scrollView.reflectScrolledClipView(clip)
 	}
 
-	func find(_ search: String, movingForward: Bool) {
-		guard search.isEmpty == false else { return }
-		let source = textView.string as NSString
-		let selected = textView.selectedRange()
-		let options: NSString.CompareOptions = movingForward ? [.caseInsensitive] : [.caseInsensitive, .backwards]
-		let firstRange = if movingForward {
-			NSRange(location: NSMaxRange(selected), length: source.length - NSMaxRange(selected))
-		} else {
-			NSRange(location: 0, length: selected.location)
+	/** Runs a find command on the transcript's own find bar.
+
+	 The bar is the text view's, and the tag is how `NSTextView` reads which
+	 find action a sender asked for.
+
+	 Only opening the bar takes the keyboard, and only when the find session
+	 does not already hold it: ⌘G and ⇧⌘G are pressed while the reader is typing
+	 in the find field or in the message field, and moving the keyboard onto the
+	 transcript under them stopped the next keystroke reaching either. */
+	func performFindAction(_ action: NSTextFinder.Action) {
+		if action == .showFindInterface, findSessionHoldsKeyboard == false {
+			window?.makeFirstResponder(textView)
 		}
-		var match = source.range(of: search, options: options, range: firstRange)
-		if match.location == NSNotFound {
-			match = source.range(of: search, options: options, range: NSRange(location: 0, length: source.length))
+		/* A match the reader is reading is a place in the transcript, so the
+		 next line to arrive must not pull the viewport off it -- and neither may
+		 a scroll-to-end that an earlier append deferred to the next layout pass.
+		 Both flags, exactly as `jump(to:)` clears them. Following resumes the
+		 same way a jump's does: by scrolling back to the end. */
+		switch action {
+		case .showFindInterface, .nextMatch, .previousMatch:
+			followsBottom = false
+			scrollsToBottomOnLayout = false
+		default:
+			break
 		}
-		guard match.location != NSNotFound else { NSSound.beep(); return }
-		followsBottom = false
-		scrollsToBottomOnLayout = false
-		textView.setSelectedRange(match)
-		textView.scrollRangeToVisible(match)
+		let sender = NSMenuItem()
+		sender.tag = action.rawValue
+		textView.performTextFinderAction(sender)
+	}
+
+	/// Whether the keyboard is already inside the find session: the transcript
+	/// itself, or the find bar the text view puts above it.
+	private var findSessionHoldsKeyboard: Bool {
+		guard let responder = window?.firstResponder as? NSView else { return false }
+		if responder === textView || responder.isDescendant(of: textView) {
+			return true
+		}
+		guard let findBar = scrollView.findBarView else { return false }
+		return responder === findBar || responder.isDescendant(of: findBar)
 	}
 
 	/// A download outlives the line that asked for it, so an image whose line
@@ -554,7 +703,11 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		let attachment = NSTextAttachment()
 		attachment.image = decoded
 		images.append(CachedTranscriptImage(
-			linkIdentifier: image.linkIdentifier, image: decoded, originalSize: decoded.size, attachment: attachment
+			linkIdentifier: image.linkIdentifier,
+			sourceURL: image.sourceURL,
+			image: decoded,
+			originalSize: decoded.size,
+			attachment: attachment
 		))
 		inlineImages[image.lineNumber] = images
 		refresh(at: index)
@@ -575,6 +728,10 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		guard let owner, isAdjustingSelection == false else { return }
 		let range = textView.selectedRange()
 		owner.selection = range.length > 0 ? (textView.string as NSString).substring(with: range) : nil
+		/* Stepping through find results selects each match in turn; that is the
+		 find bar moving the reader, not the reader selecting text, so it must
+		 not overwrite the pasteboard. */
+		guard scrollView.isFindBarVisible == false else { return }
 		if Preferences.Messages.copyOnSelect.value, owner.hasSelection {
 			owner.copySelection()
 		}
@@ -588,8 +745,7 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 
 	func contextTarget(at point: NSPoint) -> LogPolicyTarget {
 		let target = LogPolicyTarget()
-		guard let storage = textView.textStorage, storage.length > 0 else { return target }
-		let index = min(textView.characterIndexForInsertion(at: point), storage.length - 1)
+		guard let storage = textView.textStorage, let index = characterIndex(at: point) else { return target }
 		target.anchorURL = (storage.attribute(.link, at: index, effectiveRange: nil) as? URL)?.absoluteString
 		target.nickname = storage.attribute(.transcriptNickname, at: index, effectiveRange: nil) as? String
 		target.lineNumber = storage.attribute(.transcriptLineNumber, at: index, effectiveRange: nil) as? String
@@ -599,15 +755,21 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 			effectiveRange: nil
 		) as? String
 		target.lineType = storage.attribute(.transcriptLineType, at: index, effectiveRange: nil) as? String
-		target.lineNickname = target.nickname
+		/* The line's author, not whichever name the click landed on: a reply
+		 raised from a message body answers the person who wrote it. */
+		target.lineNickname = storage.attribute(.transcriptLineNickname, at: index, effectiveRange: nil) as? String
 		target.lineExcerpt = storage.attribute(.transcriptExcerpt, at: index, effectiveRange: nil) as? String
-		if let action = storage.attribute(.transcriptAction, at: index, effectiveRange: nil) as? String {
-			if action.hasPrefix("channel:") {
-				target.channelName = String(action.dropFirst(8))
-			}
-			if action.hasPrefix("nickname:") {
-				target.nickname = String(action.dropFirst(9))
-			}
+		switch TranscriptAction(attributeValue: storage.attribute(.transcriptAction, at: index, effectiveRange: nil)) {
+		case let .channel(name): target.channelName = name
+		case let .nickname(name): target.nickname = name
+		case nil: break
+		}
+		/* Only an inline image, not every attachment: a delivery receipt is a
+		 symbol drawn the same way, and it is not a picture to copy or save. */
+		if let address = storage.attribute(.transcriptInlineImage, at: index, effectiveRange: nil) as? String {
+			target.inlineImageURL = address
+			target.inlineImage = (storage.attribute(.attachment, at: index, effectiveRange: nil) as? NSTextAttachment)?
+				.image
 		}
 		return target
 	}
@@ -645,7 +807,8 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 	/// Renders `newLines` and splices them into the document at `index`.
 	private func insert(_ newLines: [TranscriptLine], at index: Int) {
 		guard let storage = textView.textStorage, newLines.isEmpty == false else { return }
-		nicknameColors.removeAll(keepingCapacity: true)
+		cancelPendingNicknameClick()
+		beginNicknameColorBatch()
 		var lengths: [Int] = []
 		lengths.reserveCapacity(newLines.count)
 		var location = index == lines.count ? storage.length : documentLocation(ofLineAt: index)
@@ -663,11 +826,13 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		}
 		lines.insert(contentsOf: newLines, at: index)
 		lineLengths.insert(contentsOf: lengths, at: index)
+		lineNumbers.formUnion(newLines.lazy.map(\.lineNumber))
 	}
 
 	/// Removes a contiguous run of lines and the characters they drew.
 	private func remove(_ indices: Range<Int>) {
 		guard let storage = textView.textStorage, indices.isEmpty == false else { return }
+		cancelPendingNicknameClick()
 		let location = documentLocation(ofLineAt: indices.lowerBound)
 		let length = lineLengths[indices].reduce(0, +)
 		var retiredMarkers: [String: TranscriptMarker] = [:]
@@ -681,6 +846,14 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		storage.deleteCharacters(in: NSRange(location: location, length: length))
 		lines.removeSubrange(indices)
 		lineLengths.removeSubrange(indices)
+		lineNumbers.subtract(retiredLineNumbers)
+		if indices.lowerBound == 0 {
+			/* The oldest lines are the ones scrollback added, so the ceiling
+			 they raised comes back down with them. Without this a reader who
+			 pulled history in once holds the widened buffer for the session,
+			 and a 500-line scrollback ends up keeping tens of thousands. */
+			scrollbackAllowance = max(0, scrollbackAllowance - indices.count)
+		}
 		if let owner {
 			for identifier in retiredLineNumbers {
 				owner.inlineImageLoader.cancelLoads(forView: owner.viewIdentifier, lineNumber: identifier)
@@ -700,7 +873,7 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 	/// boundary or a decoded image changes that line and nothing else.
 	private func refresh(at index: Int) {
 		guard let storage = textView.textStorage, lines.indices.contains(index) else { return }
-		nicknameColors.removeAll(keepingCapacity: true)
+		beginNicknameColorBatch()
 		let anchor = selectionAnchor()
 		let rendered = render(lines[index])
 		storage.replaceCharacters(
@@ -721,7 +894,7 @@ final class NativeTranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManage
 		let oldOrigin = scrollView.contentView.bounds.origin
 		let viewport = viewportAnchor()
 		let anchor = selectionAnchor()
-		nicknameColors.removeAll(keepingCapacity: true)
+		beginNicknameColorBatch()
 		let retainedLines = lines
 		lines.removeAll(keepingCapacity: true)
 		lineLengths.removeAll(keepingCapacity: true)
@@ -799,8 +972,11 @@ extension NativeTranscriptView {
 
 	private func restoreSelection(_ anchor: SelectionAnchor?) {
 		guard editDepth == 0, let anchor else { return }
-		let start = position(anchor.start) ?? 0
-		let end = position(anchor.end) ?? 0
+		/* Both endpoints have to survive the edit. Standing an unresolved one at
+		 zero stretches the selection to the top of the document, and
+		 copy-on-select would then put text the reader never selected on the
+		 pasteboard; a selection whose text is gone is simply gone. */
+		guard let start = position(anchor.start), let end = position(anchor.end) else { return }
 		let restored = NSRange(location: min(start, end), length: max(0, end - start))
 		isAdjustingSelection = true
 		textView.setSelectedRange(restored)
@@ -855,8 +1031,12 @@ extension NativeTranscriptView {
 	}
 
 	private func restoreViewport(_ anchor: (endpoint: SelectionAnchor.Endpoint, offset: CGFloat)) {
+		/* The line the viewport was anchored to may not have survived the edit.
+		 Keeping the reader where they are beats jumping them to the top of a
+		 transcript they had scrolled away from. */
 		guard window != nil, !isHiddenOrHasHiddenAncestor,
-		      let verticalPosition = verticalPosition(at: position(anchor.endpoint) ?? 0) else { return }
+		      let index = position(anchor.endpoint),
+		      let verticalPosition = verticalPosition(at: index) else { return }
 		var origin = scrollView.contentView.bounds.origin
 		origin.y = max(0, verticalPosition - anchor.offset)
 		scrollView.contentView.scroll(to: origin)
@@ -864,6 +1044,7 @@ extension NativeTranscriptView {
 	}
 
 	func beginEditing() {
+		cancelPendingNicknameClick()
 		if editDepth == 0 {
 			batchSelection = selectionAnchor()
 			batchViewport = viewportAnchor()
@@ -915,7 +1096,165 @@ extension NativeTranscriptView {
 		owner?.policy.topicBarDoubleClicked()
 	}
 
+	/** Answers a click the text view has already handled.
+
+	 A plain click on a name opens that member's profile, but only once the
+	 double-click interval has passed without a second click: double-clicking a
+	 name opens a conversation with them, and that must not also leave a popover
+	 behind. Everything else about the click — the caret, the selection, a link
+	 the reader followed — was settled before this ran. */
+	private func textViewClicked(_ click: TranscriptClick) {
+		cancelPendingNicknameClick()
+		/* A click that left a selection behind was a drag over the text, and a
+		 drag over a name selects the name rather than asking about its owner. */
+		guard click.clickCount == 1, click.dragged == false, click.modifiers.isEmpty,
+		      textView.selectedRange().length == 0
+		else { return }
+		if let reaction = clickedReaction(at: click.point) {
+			owner?.policy.reactionChipClicked(reaction)
+			return
+		}
+		guard let (nickname, range) = clickedNickname(at: click.point) else { return }
+		pendingNicknameClick = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(NSEvent.doubleClickInterval))
+			guard let self, Task.isCancelled == false else { return }
+			pendingNicknameClick = nil
+			/* The wait is long enough for a line to arrive, and the characters
+			 the click named may no longer spell that name -- or may be gone. */
+			guard let range = nicknameRange(spelling: nickname, at: range) else { return }
+			showMemberInformation(for: nickname, spelledIn: range, clickedAt: click.point)
+		}
+	}
+
+	/** Calls off the profile a single click asked for.
+
+	 The popover is anchored to characters, so every edit that can move or
+	 remove them takes the pending click with it: a line appended under the
+	 name, a trim that dropped it, a theme change that rewrote the document.
+	 Leaving it to the next click meant a popover opening a quarter of a second
+	 later against whatever text had taken that range. */
+	private func cancelPendingNicknameClick() {
+		guard pendingNicknameClick != nil else { return }
+		pendingNicknameClick?.cancel()
+		pendingNicknameClick = nil
+	}
+
+	/// `range` if the storage still spells `nickname` there, and nothing if the
+	/// document moved underneath the click.
+	private func nicknameRange(spelling nickname: String, at range: NSRange) -> NSRange? {
+		guard let storage = textView.textStorage, range.length > 0, NSMaxRange(range) <= storage.length
+		else { return nil }
+		var current = NSRange(location: NSNotFound, length: 0)
+		guard case let .nickname(spelled) = TranscriptAction(attributeValue: storage.attribute(
+			.transcriptAction, at: range.location, effectiveRange: &current
+		)), spelled == nickname, NSEqualRanges(current, range) else { return nil }
+		return current
+	}
+
+	private func showMemberInformation(for nickname: String, spelledIn range: NSRange, clickedAt point: NSPoint) {
+		guard let window else { return }
+		let screenRect = textView.firstRect(forCharacterRange: range, actualRange: nil)
+		/* A range the layout has not reached answers with an empty rect, and a
+		 popover anchored to one points at the view's corner rather than at the
+		 name; the click itself is always somewhere real. */
+		let rect = screenRect.isEmpty
+			? NSRect(origin: point, size: .zero).insetBy(dx: -1, dy: -1)
+			: textView.convert(window.convertFromScreen(screenRect), from: nil)
+		owner?.showMemberInformation(for: nickname, relativeTo: rect, of: textView)
+	}
+
+	/// The reaction chip under a point, or nil where there is none.
+	private func clickedReaction(at point: NSPoint) -> TranscriptReactionTarget? {
+		guard let storage = textView.textStorage, let index = characterIndex(at: point) else { return nil }
+		return TranscriptReactionTarget(
+			attributeValue: storage.attribute(.transcriptReaction, at: index, effectiveRange: nil)
+		)
+	}
+
+	/** The character a point in the text view names, or nil where the point is
+	 not on the text at all.
+
+	 Every question asked of a click -- the chip under it, the menu's target,
+	 the name to show a profile for -- is a question about a character, and
+	 `characterIndexForInsertion(at:)` answers a different one: it is the
+	 nearest insertion point, so a click in the blank tail of a line, in the
+	 gutter beside it, or below the last line all answer with a real character
+	 that nothing was drawn at. Holding the point against the line fragment's
+	 typographic bounds first is what makes the answer the character the reader
+	 pointed at. */
+	private func characterIndex(at point: NSPoint) -> Int? {
+		guard let storage = textView.textStorage, storage.length > 0,
+		      let layoutManager = textView.textLayoutManager
+		else { return nil }
+		let layoutPoint = layoutPoint(for: point)
+		guard let fragment = layoutManager.textLayoutFragment(for: layoutPoint) else { return nil }
+		let pointInFragment = NSPoint(
+			x: layoutPoint.x - fragment.layoutFragmentFrame.minX,
+			y: layoutPoint.y - fragment.layoutFragmentFrame.minY
+		)
+		guard fragment.textLineFragments.contains(where: { $0.typographicBounds.contains(pointInFragment) })
+		else { return nil }
+		return min(textView.characterIndexForInsertion(at: point), storage.length - 1)
+	}
+
+	/// Layout coordinates start at the container's origin, which the text view
+	/// moves to keep a short transcript at the foot of the viewport.
+	private func layoutPoint(for point: NSPoint) -> NSPoint {
+		let origin = textView.textContainerOrigin
+		return NSPoint(x: point.x - origin.x, y: point.y - origin.y)
+	}
+
+	/** The nickname under a point in the text view, and the characters that
+	 spell it, or nil where there is none. Links are the text view's own, and
+	 a click on one has already opened it. */
+	private func clickedNickname(at point: NSPoint) -> (String, NSRange)? {
+		guard let storage = textView.textStorage, var index = characterIndex(at: point) else { return nil }
+		/* An insertion index rounds to the nearer boundary, so a click in the
+		 right half of a name's last glyph answers with the character after the
+		 name. Stepping back belongs to that case alone: the gap after a name
+		 deliberately carries none of its action, and neither does whatever
+		 follows an inline mention. */
+		if index > 0, let boundary = insertionBoundaryX(at: index), layoutPoint(for: point).x < boundary {
+			var runRange = NSRange(location: NSNotFound, length: 0)
+			let previous = TranscriptAction(attributeValue: storage.attribute(
+				.transcriptAction, at: index - 1, effectiveRange: &runRange
+			))
+			if case .nickname = previous, NSMaxRange(runRange) == index {
+				index -= 1
+			}
+		}
+		guard storage.attribute(.link, at: index, effectiveRange: nil) == nil else { return nil }
+		var range = NSRange(location: NSNotFound, length: 0)
+		guard case let .nickname(nickname) = TranscriptAction(
+			attributeValue: storage.attribute(.transcriptAction, at: index, effectiveRange: &range)
+		), nickname.isEmpty == false else { return nil }
+		return (nickname, range)
+	}
+
+	/// Where an insertion boundary sits horizontally, in layout coordinates, so
+	/// a click can be told from the glyph on either side of it.
+	private func insertionBoundaryX(at index: Int) -> CGFloat? {
+		guard let layoutManager = textView.textLayoutManager,
+		      let contentManager = layoutManager.textContentManager,
+		      let location = contentManager.location(contentManager.documentRange.location, offsetBy: index)
+		else { return nil }
+		var boundary: CGFloat?
+		layoutManager.enumerateTextSegments(
+			in: NSTextRange(location: location),
+			type: .standard,
+			options: [.rangeNotRequired]
+		) { _, frame, _, _ in
+			boundary = frame.minX
+			return false
+		}
+		return boundary
+	}
+
 	@objc private func contentDoubleClicked(_ recognizer: NSClickGestureRecognizer) {
+		/* The recognizer can claim the second click before the text view sees
+		 it, so this is the other place a double click calls off the popover the
+		 first click asked for. */
+		cancelPendingNicknameClick()
 		guard let owner else { return }
 		owner.prepareContextTarget(at: recognizer.location(in: textView))
 		if owner.contextMenuTarget.channelName != nil {
@@ -956,21 +1295,45 @@ extension NativeTranscriptView {
 		applyTopicExpansion()
 	}
 
+	/// Unfolded, the topic still stops short of taking the transcript's room:
+	/// the longest topic a server allows wraps to about this many lines at the
+	/// column's minimum width, and anything beyond it is in the tooltip.
+	static let expandedTopicLineLimit = 8
+
+	/** Folded, the topic is one truncated line; unfolded it wraps in full from
+	 its first word, up to `expandedTopicLineLimit` lines. The field caches its intrinsic height, so the cache is
+	 dropped here: without that the chevron flipped and the field stayed one
+	 line tall until something else moved the layout. */
 	func applyTopicExpansion() {
-		topicField.maximumNumberOfLines = isTopicExpanded ? 0 : 1
+		/* The field wraps up to the line limit and truncates the last line,
+		 in both states; only the limit changes. */
+		topicField.maximumNumberOfLines = isTopicExpanded ? Self.expandedTopicLineLimit : 1
+		topicField.invalidateIntrinsicContentSize()
 		topicDisclosure.rootView = TopicDisclosureButton(isExpanded: isTopicExpanded) { [weak self] in
 			self?.toggleTopicExpansion()
 		}
 		needsLayout = true
 	}
 
+	/** Tells the field how wide it is, so its intrinsic height is the height of
+	 the topic wrapped at that width rather than of one line. A constraint
+	 write inside `layout()`, bounded the way the disclosure's is: the width
+	 only changes when the frame does, and an unchanged width writes nothing. */
+	private func updateTopicWrappingWidth() {
+		let width = topicField.bounds.width
+		guard width > 0, topicField.preferredMaxLayoutWidth != width else { return }
+		topicField.preferredMaxLayoutWidth = width
+		topicField.invalidateIntrinsicContentSize()
+	}
+
 	/// The chevron is only offered when one line does not hold the topic.
 	func updateTopicDisclosure() {
-		guard topicField.isHidden == false, let font = topicField.font, topicField.bounds.width > 0 else {
+		let text = topicField.attributedStringValue
+		guard topicField.isHidden == false, let font = topicFont(of: text), topicField.bounds.width > 0 else {
 			setTopicDisclosureHidden(true)
 			return
 		}
-		let fullHeight = topicField.attributedStringValue.boundingRect(
+		let fullHeight = text.boundingRect(
 			with: NSSize(width: topicField.bounds.width, height: .greatestFiniteMagnitude),
 			options: [.usesLineFragmentOrigin, .usesFontLeading]
 		).height
@@ -989,6 +1352,18 @@ extension NativeTranscriptView {
 	private func setTopicDisclosureHidden(_ hidden: Bool) {
 		guard topicDisclosure.isHidden != hidden else { return }
 		topicDisclosure.isHidden = hidden
+	}
+
+	/** The font the topic is actually drawn in.
+
+	 ``attributedTopic(_:)`` scales the body size by the reader's text zoom and
+	 writes the result into the string, which the field's own `font` never
+	 learns: measuring the scaled string against an unscaled line height made
+	 every one-line topic overflow at ⌘=, and the chevron appeared on a topic
+	 with nothing to unfold. */
+	private func topicFont(of text: NSAttributedString) -> NSFont? {
+		guard text.length > 0 else { return topicField.font }
+		return text.attribute(.font, at: 0, effectiveRange: nil) as? NSFont ?? topicField.font
 	}
 
 	/// Asked on every layout pass, so the measurement is kept per font.
@@ -1040,5 +1415,18 @@ extension NativeTranscriptView {
 
 	func copySelection() {
 		textView.copy(nil)
+	}
+}
+
+/** The topic label. Its intrinsic width is withheld from Auto Layout: a
+ wrapping label reports the whole topic on one line as its natural width, and
+ through the transcript's fitting size that became the column's minimum, so
+ the window grew to the topic's length on every corner drag. The height still
+ comes from the label, wrapped at `preferredMaxLayoutWidth`. */
+final class TopicLabel: NSTextField {
+	override var intrinsicContentSize: NSSize {
+		var size = super.intrinsicContentSize
+		size.width = NSView.noIntrinsicMetric
+		return size
 	}
 }

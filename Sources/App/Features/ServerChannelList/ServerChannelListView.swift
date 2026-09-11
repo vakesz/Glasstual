@@ -84,7 +84,7 @@ struct ServerChannelListView: View {
 					ServerChannelListStrings.topic,
 					sortUsing: ServerChannelListComparator(field: .topic, order: .forward)
 				) { entry in
-					Text(formattedTopic(entry.unformattedTopic))
+					Text(formattedTopic(entry.displayedTopic))
 						.lineLimit(1)
 						.frame(maxWidth: .infinity, alignment: .leading)
 						.contentShape(.rect)
@@ -111,6 +111,15 @@ struct ServerChannelListView: View {
 				model.limitSelection(from: oldSelection)
 			}
 			.accessibilityLabel(ServerChannelListStrings.channelListAccessibilityLabel)
+
+			if let notice = model.truncationNotice {
+				Text(verbatim: notice)
+					.font(.callout)
+					.foregroundStyle(.secondary)
+					.frame(maxWidth: .infinity, alignment: .leading)
+					.padding(.horizontal, 12)
+					.padding(.top, 8)
+			}
 
 			Divider()
 			HStack {

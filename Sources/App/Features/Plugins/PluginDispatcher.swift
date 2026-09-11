@@ -212,32 +212,19 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 	}
 
 	/// The one dispatch that is not main-actor: the message renderer runs on its
-	/// own queue and calls this synchronously, so the renderers are published as
-	/// a `Sendable` list of their own.
+	/// own queue and calls this synchronously. Reading the renderers and calling
+	/// them is one operation the manager performs, so an unload cannot land
+	/// between the two.
 	public static func willRenderMessage(
 		_ newMessage: String,
 		forViewController _: LogController,
 		lineType: LogLineType,
 		memberType _: LogLineMemberType
 	) -> String {
-		let renderers = SharedApplication.sharedPluginManager().messageRenderers
-		guard renderers.isEmpty == false else {
-			return newMessage
-		}
-
-		var returnValue = newMessage
-
-		for renderer in renderers {
-			guard let returnedValue = renderer.willRenderMessage(
-				PluginRenderEvent(message: returnValue, kind: PluginHostAdapter.messageKind(for: lineType))
-			), returnedValue.isEmpty == false else {
-				continue
-			}
-
-			returnValue = returnedValue
-		}
-
-		return returnValue
+		SharedApplication.sharedPluginManager().renderingMessage(
+			newMessage,
+			kind: PluginHostAdapter.messageKind(for: lineType)
+		)
 	}
 
 	@MainActor

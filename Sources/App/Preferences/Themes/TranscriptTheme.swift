@@ -79,6 +79,11 @@ public nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 	public var background: AdaptiveTranscriptColor
 	public var primaryText: AdaptiveTranscriptColor
 	public var secondaryText: AdaptiveTranscriptColor
+	/// The clock beside each line, quieter than the secondary text it used to
+	/// share but still legible: the default is the quietest grey that keeps
+	/// 4.5:1 against the default ground. Themes written before the role existed
+	/// decode it as their secondary text.
+	public var timestampText: AdaptiveTranscriptColor
 	public var eventText: AdaptiveTranscriptColor
 	public var link: AdaptiveTranscriptColor
 	public var localNickname: AdaptiveTranscriptColor
@@ -90,9 +95,62 @@ public nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 	public var unreadMarker: AdaptiveTranscriptColor
 	public var failure: AdaptiveTranscriptColor
 
+	public init(
+		background: AdaptiveTranscriptColor,
+		primaryText: AdaptiveTranscriptColor,
+		secondaryText: AdaptiveTranscriptColor,
+		timestampText: AdaptiveTranscriptColor,
+		eventText: AdaptiveTranscriptColor,
+		link: AdaptiveTranscriptColor,
+		localNickname: AdaptiveTranscriptColor,
+		remoteNickname: AdaptiveTranscriptColor,
+		highlightBackground: AdaptiveTranscriptColor,
+		highlightText: AdaptiveTranscriptColor,
+		bubbleIncoming: AdaptiveTranscriptColor,
+		bubbleOutgoing: AdaptiveTranscriptColor,
+		unreadMarker: AdaptiveTranscriptColor,
+		failure: AdaptiveTranscriptColor
+	) {
+		self.background = background
+		self.primaryText = primaryText
+		self.secondaryText = secondaryText
+		self.timestampText = timestampText
+		self.eventText = eventText
+		self.link = link
+		self.localNickname = localNickname
+		self.remoteNickname = remoteNickname
+		self.highlightBackground = highlightBackground
+		self.highlightText = highlightText
+		self.bubbleIncoming = bubbleIncoming
+		self.bubbleOutgoing = bubbleOutgoing
+		self.unreadMarker = unreadMarker
+		self.failure = failure
+	}
+
+	/// Themes written before `timestampText` existed decode it as their
+	/// secondary text, which is the colour their timestamps had.
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		background = try container.decode(AdaptiveTranscriptColor.self, forKey: .background)
+		primaryText = try container.decode(AdaptiveTranscriptColor.self, forKey: .primaryText)
+		secondaryText = try container.decode(AdaptiveTranscriptColor.self, forKey: .secondaryText)
+		timestampText = try container.decodeIfPresent(AdaptiveTranscriptColor.self, forKey: .timestampText)
+			?? secondaryText
+		eventText = try container.decode(AdaptiveTranscriptColor.self, forKey: .eventText)
+		link = try container.decode(AdaptiveTranscriptColor.self, forKey: .link)
+		localNickname = try container.decode(AdaptiveTranscriptColor.self, forKey: .localNickname)
+		remoteNickname = try container.decode(AdaptiveTranscriptColor.self, forKey: .remoteNickname)
+		highlightBackground = try container.decode(AdaptiveTranscriptColor.self, forKey: .highlightBackground)
+		highlightText = try container.decode(AdaptiveTranscriptColor.self, forKey: .highlightText)
+		bubbleIncoming = try container.decode(AdaptiveTranscriptColor.self, forKey: .bubbleIncoming)
+		bubbleOutgoing = try container.decode(AdaptiveTranscriptColor.self, forKey: .bubbleOutgoing)
+		unreadMarker = try container.decode(AdaptiveTranscriptColor.self, forKey: .unreadMarker)
+		failure = try container.decode(AdaptiveTranscriptColor.self, forKey: .failure)
+	}
+
 	var isValid: Bool {
 		[
-			background, primaryText, secondaryText, eventText, link,
+			background, primaryText, secondaryText, timestampText, eventText, link,
 			localNickname, remoteNickname, highlightBackground, highlightText,
 			bubbleIncoming, bubbleOutgoing, unreadMarker, failure,
 		].allSatisfy(\.isValid)
@@ -103,7 +161,11 @@ public nonisolated struct TranscriptThemePalette: Codable, Equatable, Sendable {
 /// the payload written by Export Theme, avoiding adapters between preference,
 /// file, and rendering representations.
 public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // nonisolated: value
-	public static let currentFormatVersion = 1
+	/// Version 2 replaced the `<>` around nicknames in the default format with
+	/// a trailing colon; a version 1 document is read and carried forward, see
+	/// `migrated()`.
+	public static let currentFormatVersion = 2
+	public static let supportedFormatVersions = 1 ... currentFormatVersion
 
 	public var formatVersion = currentFormatVersion
 	public var name: String
@@ -123,7 +185,10 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 		fontName: String = ".AppleSystemUIFont",
 		fontSize: Double = 13,
 		timestampFormat: String = "%H:%M:%S",
-		nicknameFormat: String = "<%@%n>",
+		/* The colon is what separates the nickname from the message: the
+			renderer's gap alone reads as `12:34  @alice  hello`, three columns
+			with nothing saying which one is the speaker. */
+		nicknameFormat: String = "%@%n:",
 		lineSpacing: Double = 2,
 		messageSpacing: Double = 3,
 		horizontalPadding: Double = 10,
@@ -159,6 +224,13 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 		background: pair(light: 0xFFFFFF, dark: 0x1E1E1E),
 		primaryText: pair(light: 0x202124, dark: 0xF2F2F2),
 		secondaryText: pair(light: 0x6E6E73, dark: 0xA1A1A6),
+		/* A role of its own, added with the native transcript: timestamps used
+			to be drawn in `secondaryText`, which measures 5.07:1 on white and
+			6.48:1 on the dark ground. These are deliberately quieter than that —
+			a timestamp is the least of what a line says — and were picked to stay
+			above the 4.5:1 the WCAG AA contrast minimum asks of body text, which
+			this is a point smaller than: 4.65:1 on white, 5.11:1 on dark. */
+		timestampText: pair(light: 0x747479, dark: 0x8E8E93),
 		eventText: pair(light: 0x65656A, dark: 0xAEAEB2),
 		link: pair(light: 0x0068D9, dark: 0x64A8FF),
 		localNickname: pair(light: 0x006B3C, dark: 0x67D99A),
@@ -183,6 +255,62 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 		)
 	}
 
+	/// The nickname format every version 1 theme shipped with.
+	static let legacyBracketedNicknameFormat = "<%@%n>"
+
+	/** A version 1 document brought up to the current version.
+
+	 The brackets were the version 1 default rather than a choice, so a version
+	 1 theme still carrying them is read as asking for the current default; a
+	 theme that has been through this once keeps whatever it says, brackets
+	 included, because it is then version 2 and is not read this way again. */
+	func migrated() -> Self {
+		var theme = self
+		if theme.formatVersion < 2, theme.nicknameFormat == Self.legacyBracketedNicknameFormat {
+			theme.nicknameFormat = Self.lines.nicknameFormat
+		}
+		theme.formatVersion = Self.currentFormatVersion
+		return theme
+	}
+
+	/** One decoded document: the theme to draw with, and the format version the
+	 file itself carried.
+
+	 They differ exactly when `migrated()` moved the document forward, which is
+	 what tells a caller to write the upgraded document back instead of
+	 migrating the same file again at every launch. */
+	public nonisolated struct Document: Equatable, Sendable { // nonisolated: value
+		public let theme: TranscriptTheme
+		public let formatVersion: Int
+
+		public var wasMigrated: Bool {
+			formatVersion != theme.formatVersion
+		}
+	}
+
+	/** The one way a stored or imported property list becomes a theme: decode,
+	 refuse a version this build does not know, carry an older one forward, and
+	 refuse anything the renderer could not draw. */
+	public static func decoded(from data: Data) throws -> Document {
+		let decoded: Self
+		do {
+			decoded = try PropertyListDecoder().decode(Self.self, from: data)
+		} catch {
+			throw TranscriptThemeCodingError.invalidDocument
+		}
+
+		guard supportedFormatVersions.contains(decoded.formatVersion) else {
+			throw TranscriptThemeCodingError.unsupportedVersion(decoded.formatVersion)
+		}
+
+		let theme = decoded.migrated()
+		guard theme.isValid else {
+			throw TranscriptThemeCodingError.invalidDocument
+		}
+
+		return Document(theme: theme, formatVersion: decoded.formatVersion)
+	}
+
 	/// The sizes the transcript renders at. The font picker offers exactly this
 	/// range: anything else is rejected by `isValid`, so offering more would
 	/// only produce a choice that cannot be applied.
@@ -196,5 +324,21 @@ public nonisolated struct TranscriptTheme: Codable, Equatable, Sendable { // non
 			messageSpacing.isFinite && (0 ... 32).contains(messageSpacing) &&
 			horizontalPadding.isFinite && (0 ... 48).contains(horizontalPadding) &&
 			palette.isValid
+	}
+}
+
+/// Why a stored or imported theme document was refused, in the words the theme
+/// sheet shows.
+public nonisolated enum TranscriptThemeCodingError: LocalizedError, Equatable, Sendable { // nonisolated: value
+	case invalidDocument
+	case unsupportedVersion(Int)
+
+	public var errorDescription: String? {
+		switch self {
+		case .invalidDocument:
+			TranscriptThemeStrings.invalidDocument
+		case let .unsupportedVersion(version):
+			TranscriptThemeStrings.unsupportedVersion(version)
+		}
 	}
 }

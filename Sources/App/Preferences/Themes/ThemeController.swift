@@ -24,7 +24,7 @@ public extension Notification.Name {
 
 /// The immutable theme values message rendering may read away from the main
 /// actor. The controller republishes the whole value after each edit.
-public nonisolated struct ThemeSnapshot: Sendable { // nonisolated: value
+public nonisolated struct ThemeSnapshot: Sendable, Equatable { // nonisolated: value
 	public let transcript: TranscriptTheme
 	public let isDarkAppearance: Bool
 
@@ -33,16 +33,36 @@ public nonisolated struct ThemeSnapshot: Sendable { // nonisolated: value
 	}
 }
 
-public nonisolated enum TranscriptThemeCodingError: LocalizedError, Equatable, Sendable { // nonisolated: value
-	case invalidDocument
-	case unsupportedVersion(Int)
+/** The theme as the paths that draw a line off the main actor see it, kept
+ current by `ThemeController`.
 
-	public var errorDescription: String? {
-		switch self {
-		case .invalidDocument:
-			TranscriptThemeStrings.invalidDocument
-		case let .unsupportedVersion(version):
-			TranscriptThemeStrings.unsupportedVersion(version)
+ It is a namespace of its own rather than a pair of members on the controller
+ because the controller is a main-actor class with main-actor state, and a
+ `nonisolated` accessor on it says nothing true about that class. An `enum`
+ around a `let Mutex` of a value is a value, which is all this is. */
+public nonisolated enum ThemeSnapshotStore { // nonisolated: value
+	private static let published = Mutex(ThemeSnapshot(
+		transcript: .lines,
+		isDarkAppearance: false
+	))
+
+	/// The theme and appearance a render should use right now.
+	public static var current: ThemeSnapshot {
+		published.withLock { $0 }
+	}
+
+	/// Publishes `snapshot`, reporting whether it moved so a caller can skip
+	/// announcing a change that is not one.
+	@discardableResult
+	static func publish(_ snapshot: ThemeSnapshot) -> Bool {
+		published.withLock { published in
+			guard published != snapshot else {
+				return false
+			}
+
+			published = snapshot
+
+			return true
 		}
 	}
 }
@@ -52,21 +72,14 @@ public nonisolated enum TranscriptThemeCodingError: LocalizedError, Equatable, S
 @MainActor
 @Observable
 public final class ThemeController: NSObject {
-	private nonisolated static let publishedSnapshot = Mutex(ThemeSnapshot( // nonisolated: let
-		transcript: .lines,
-		isDarkAppearance: false
-	))
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "TranscriptTheme"
 	)
 
-	public nonisolated static var activeSnapshot: ThemeSnapshot? { // nonisolated: pure
-		publishedSnapshot.withLock { $0 }
-	}
-
 	public private(set) var theme = TranscriptTheme.lines
 	private let stores: PreferencesTransferStores
+	private let notifications = NotificationSubscriptions()
 
 	public var name: String {
 		theme.name
@@ -88,6 +101,16 @@ public final class ThemeController: NSObject {
 	init(stores: PreferencesTransferStores) {
 		self.stores = stores
 		super.init()
+
+		/* The snapshot carries the appearance the colours off the main actor are
+		 resolved against, and the system's own light/dark switch never passes
+		 through a preference change, so the appearance notifications are the
+		 only thing that says the snapshot has gone stale. */
+		for name in [Notification.Name.applicationAppearanceChanged, .systemAppearanceChanged] {
+			notifications.observe(name) { [weak self] _ in
+				self?.appearanceDidChange()
+			}
+		}
 	}
 
 	public func reload() {
@@ -99,7 +122,12 @@ public final class ThemeController: NSObject {
 		}
 
 		do {
-			try publish(Self.decode(stored), persist: false)
+			let document = try TranscriptTheme.decoded(from: stored)
+			/* Written back exactly when the stored document was older than what
+			 was decoded from it. Publishing the migration without storing it
+			 left the file at its old version for good: every launch migrated it
+			 again, and every export carried the old version out. */
+			publish(document.theme, persist: document.wasMigrated)
 		} catch {
 			Self.logger.error(
 				"Using fallback for unreadable stored transcript theme: \(error.localizedDescription, privacy: .public)"
@@ -127,9 +155,9 @@ public final class ThemeController: NSObject {
 	}
 
 	public func importTheme(from data: Data) throws {
-		/* `decode` rejects anything `isValid` would, so `apply` cannot fail
-		 here. */
-		try apply(Self.decode(data))
+		/* `decoded(from:)` rejects anything `isValid` would, so `apply` cannot
+		 fail here. */
+		try apply(TranscriptTheme.decoded(from: data).theme)
 	}
 
 	public func exportTheme() throws -> Data {
@@ -138,8 +166,16 @@ public final class ThemeController: NSObject {
 		return try encoder.encode(theme)
 	}
 
+	/// Republishes the snapshot for the appearance now in effect, and says so.
+	///
+	/// The preference path and the system's own switch both arrive here, and the
+	/// second of them is not news: a snapshot that already says what this one
+	/// would say leaves the transcript alone rather than redrawing it twice.
 	public func appearanceDidChange() {
-		publishSnapshot()
+		guard publishSnapshot() else {
+			return
+		}
+
 		NotificationCenter.default.post(name: .themeAppearanceChanged, object: self)
 	}
 
@@ -164,28 +200,15 @@ public final class ThemeController: NSObject {
 		NotificationCenter.default.post(name: .themeWasModified, object: self)
 	}
 
-	private func publishSnapshot() {
+	/// Reports whether the snapshot moved, so a caller can skip announcing a
+	/// change that is not one.
+	@discardableResult
+	private func publishSnapshot() -> Bool {
 		let snapshot = ThemeSnapshot(
 			transcript: theme,
 			isDarkAppearance: SharedApplication.sharedAppearance().properties.isDarkAppearance
 		)
-		Self.publishedSnapshot.withLock { $0 = snapshot }
-	}
 
-	private nonisolated static func decode(_ data: Data) throws -> TranscriptTheme { // nonisolated: pure
-		let decoded: TranscriptTheme
-		do {
-			decoded = try PropertyListDecoder().decode(TranscriptTheme.self, from: data)
-		} catch {
-			throw TranscriptThemeCodingError.invalidDocument
-		}
-
-		guard decoded.formatVersion == TranscriptTheme.currentFormatVersion else {
-			throw TranscriptThemeCodingError.unsupportedVersion(decoded.formatVersion)
-		}
-		guard decoded.isValid else {
-			throw TranscriptThemeCodingError.invalidDocument
-		}
-		return decoded
+		return ThemeSnapshotStore.publish(snapshot)
 	}
 }

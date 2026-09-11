@@ -161,6 +161,8 @@ public enum MenuCommand: Int, CaseIterable, Sendable {
 	case fileTransfers = 817 // File Transfers
 	case fileTransfersSeparator = 818
 	case bringAllToFront = 819 // Bring All to Front
+	/// Below the two sidebar toggles in the View menu, so it goes when they do.
+	case toggleSidebarsSeparator = 820
 	case acknowledgements = 900 // Acknowledgements
 	case acknowledgementsSeparator = 906
 	case connectToHelpChannel = 907 // Connect to Help Channel
@@ -219,6 +221,7 @@ public enum MenuCommand: Int, CaseIterable, Sendable {
 	case findText = 3_090_000 // Find…
 	case findNext = 3_090_001 // Find Next
 	case findPrevious = 3_090_002 // Find Previous
+	case useSelectionForFind = 3_090_003 // Use Selection for Find
 	case channelModeModerated = 6_090_000 // Moderated (+m)
 	case channelModeUnmoderated = 6_090_001 // Unmoderated (-m)
 	case channelModeInviteOnly = 6_090_002 // Invite Only (+i)
@@ -298,6 +301,7 @@ public extension MenuCommand {
 		     .channelProperties, .channelPropertiesSeparator, .copyChannelIdentifier:
 			.channel
 		case .minimize, .zoom, .zoomSeparator, .toggleMemberList, .toggleServerList,
+		     .toggleSidebarsSeparator,
 		     .toggleAppearance, .toggleAppearanceSeparator, .sortChannelList,
 		     .sortChannelListSeparator, .centerWindow, .resetWindow,
 		     .resetWindowSeparator, .mainWindow, .addressBook, .ignoreList, .viewLogs,

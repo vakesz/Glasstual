@@ -99,7 +99,12 @@ public enum FileTransferIPAddressSource: UInt, Sendable {
 	case manual = 2
 }
 
-public enum PreferredAppearance: UInt, Sendable {
+/** What the window chrome follows.
+
+ The case order is the order the appearance picker offers, because the picker
+ builds its rows from `allCases`. The conformance is here rather than beside the
+ picker because the synthesis only happens in the file that declares the enum. */
+public enum PreferredAppearance: UInt, CaseIterable, Sendable {
 	case inherited
 	case light
 	case dark

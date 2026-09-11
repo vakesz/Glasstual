@@ -42,6 +42,19 @@ enum MenuLifecyclePolicy {
 	static func shouldResetSelectionAfterMenuCloses(performedAction: Bool) -> Bool {
 		performedAction == false
 	}
+
+	/** Only the menu the user opened opens and closes a menu session.
+
+	 Every submenu shares this delegate, and AppKit sends `menuWillOpen` and
+	 `menuDidClose` for each of them as the pointer moves in and out. Treating a
+	 submenu transition as a session boundary re-read the window's selection
+	 half way through the menu -- so a command chosen from a submenu of a
+	 right-clicked row acted on the row that was selected, not the one clicked
+	 -- and closed the session while the root menu was still up. A root menu has
+	 no supermenu; a submenu does. */
+	static func isRootMenu(supermenu: NSMenu?) -> Bool {
+		supermenu == nil
+	}
 }
 
 @MainActor
@@ -55,6 +68,11 @@ public extension MenuActionCoordinator {
 			menuController.muteNotificationsSoundsDockMenuItem?.state = .on
 			menuController.muteNotificationsSoundsFileMenuItem?.state = .on
 		}
+
+		/* The sidebar's overflow menu names its notification item from this;
+		 `setNotificationsMuted(_:)` keeps it in step afterwards. */
+		mainWindow.presentationModel.areNotificationsDisabled =
+			SharedApplication.sharedNotificationController().areNotificationsDisabled
 
 		menuController.channelViewGeneralMenu.item(for: .webChannelMenu)?.submenu =
 			menuController.mainMenuChannelMenu.copy() as? NSMenu
@@ -88,14 +106,16 @@ public extension MenuActionCoordinator {
 		SharedApplication.sharedFileTransferCenter().clearIPAddress()
 	}
 
-	func menuWillOpen(_: NSMenu) {
+	func menuWillOpen(_ menu: NSMenu) {
+		guard MenuLifecyclePolicy.isRootMenu(supermenu: menu.supermenu) else { return }
 		menuIsOpen = true
 		pointedClient = mainWindow.selectedClient
 		pointedChannel = mainWindow.selectedChannel
 		menuPerformedActionLastOpen = false
 	}
 
-	func menuDidClose(_: NSMenu) {
+	func menuDidClose(_ menu: NSMenu) {
+		guard MenuLifecyclePolicy.isRootMenu(supermenu: menu.supermenu) else { return }
 		menuIsOpen = false
 
 		/* AppKit closes the menu before it sends the selected item's action.

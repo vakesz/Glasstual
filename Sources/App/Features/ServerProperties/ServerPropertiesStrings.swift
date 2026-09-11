@@ -27,6 +27,46 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 		}
 	}
 
+	/// Help tags and spoken labels for the icon-only buttons under each list.
+	/// An image of a plus sign says nothing on its own.
+	enum ListButton {
+		static var addChannel: String {
+			String(localized: .TDCServerPropertiesSheet.addChannelButton)
+		}
+
+		static var editChannel: String {
+			String(localized: .TDCServerPropertiesSheet.editChannelButton)
+		}
+
+		static var removeChannel: String {
+			String(localized: .TDCServerPropertiesSheet.removeChannelButton)
+		}
+
+		static var addHighlight: String {
+			String(localized: .TDCServerPropertiesSheet.addHighlightButton)
+		}
+
+		static var editHighlight: String {
+			String(localized: .TDCServerPropertiesSheet.editHighlightButton)
+		}
+
+		static var removeHighlight: String {
+			String(localized: .TDCServerPropertiesSheet.removeHighlightButton)
+		}
+
+		static var addAddressBookEntry: String {
+			String(localized: .TDCServerPropertiesSheet.addAddressBookEntryButton)
+		}
+
+		static var editAddressBookEntry: String {
+			String(localized: .TDCServerPropertiesSheet.editAddressBookEntryButton)
+		}
+
+		static var removeAddressBookEntry: String {
+			String(localized: .TDCServerPropertiesSheet.removeAddressBookEntryButton)
+		}
+	}
+
 	enum Highlight {
 		static var allChannels: String {
 			String(localized: .TDCServerPropertiesSheet.allChannels)
@@ -462,6 +502,10 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 	}
 
 	enum ExternalChange {
+		static var reloadButton: String {
+			String(localized: .TDCServerPropertiesSheet.reloadButton)
+		}
+
 		static var reloadTitle: String {
 			String(localized: .TDCServerPropertiesSheet.thisConnectionsConfigurationHasChangedDo)
 		}

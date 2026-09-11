@@ -46,13 +46,39 @@ import GlasstualPluginKit
  reach one by its C name. The date formatters also existed twice, once taking
  `AnyObject` and once `Any`; only the `Any` form is kept. */
 
-private nonisolated let isoStandardDateFormatter: DateFormatter = { // nonisolated: let
-	let dateFormatter = DateFormatter()
-	dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-	dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
-	dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-	return dateFormatter
-}()
+/** The one ISO 8601 representation the protocol layer reads and writes.
+
+ It used to be a process-global `DateFormatter` handed to every caller, so any
+ one of them could set `dateFormat` on it and silently change how every other
+ timestamp in the application parsed. A format style is a value: there is
+ nothing shared left to reconfigure. */
+public nonisolated struct ISOStandardDateFormatter: Sendable { // nonisolated: value
+	private static let style = Date.ISO8601FormatStyle(
+		includingFractionalSeconds: true,
+		timeZone: TimeZone(identifier: "UTC") ?? .gmt
+	)
+
+	/** Half a millisecond, added before formatting so that the fraction rounds.
+
+	 `Date.ISO8601FormatStyle` truncates the fractional seconds where the
+	 `DateFormatter` this replaced rounded them, and a millisecond figure is
+	 rarely exact in binary: the nearest `Double` to `…20.123` sits just below
+	 it, so the stamp came out `…20.122`. A millisecond is a difference a server
+	 acts on — MARKREAD and CHATHISTORY both compare these stamps, and a CTCP
+	 TIME reply is read by whoever asked — so the truncation is turned back into
+	 a round by nudging the moment first. */
+	private static let millisecondRoundingBias: TimeInterval = 0.000_5
+
+	public init() {}
+
+	public func string(from date: Date) -> String {
+		Self.style.format(date.addingTimeInterval(Self.millisecondRoundingBias))
+	}
+
+	public func date(from string: String) -> Date? {
+		try? Self.style.parse(string)
+	}
+}
 
 public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? { // nonisolated: pure
 	/* The date can come off disk: a historic log row carries an archived
@@ -149,7 +175,7 @@ private nonisolated func formatDateValue( // nonisolated: pure
 private nonisolated func parseDateValue(_ string: String) -> Date? { // nonisolated: pure
 	let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
 
-	if let date = isoStandardDateFormatter.date(from: trimmed) {
+	if let date = sharedISOStandardDateFormatter().date(from: trimmed) {
 		return date
 	}
 
@@ -162,14 +188,38 @@ private nonisolated func parseDateValue(_ string: String) -> Date? { // nonisola
 	return nil
 }
 
-public nonisolated func sharedISOStandardDateFormatter() -> DateFormatter { // nonisolated: pure
-	isoStandardDateFormatter
+/** An `ISOStandardDateFormatter` of the caller's own.
+
+ Named for the call sites it replaced, where "shared" meant one mutable
+ `DateFormatter` the whole process reached for. Nothing is shared any more: this
+ returns a value, and two callers cannot reach each other through it. */
+public nonisolated func sharedISOStandardDateFormatter() -> ISOStandardDateFormatter { // nonisolated: pure
+	ISOStandardDateFormatter()
 }
 
-/// A number below `maximum`, or zero when there is no such number.
-public nonisolated func randomNumber(_ maximum: UInt32) -> UInt { // nonisolated: pure
+/** A number below `maximum`, drawn from `generator`, or zero when there is no
+ such number.
+
+ `inout`, the way the standard library takes a generator: a generator is state
+ that advances, and taking it by value drew from a copy and left the caller's
+ own generator where it was — so two draws in a row from the same generator
+ answered the same number. */
+public nonisolated func randomNumber( // nonisolated: pure
+	_ maximum: UInt32,
+	using generator: inout some RandomNumberGenerator
+) -> UInt {
 	guard maximum > 0 else { return 0 }
-	return UInt(UInt32.random(in: 0 ..< maximum))
+
+	return UInt(UInt32.random(in: 0 ..< maximum, using: &generator))
+}
+
+/// The same number from the system generator, for the callers that want one and
+/// have no generator of their own. It holds no state of ours: every draw goes to
+/// the operating system.
+public nonisolated func randomNumber(_ maximum: UInt32) -> UInt { // nonisolated: pure
+	var generator = SystemRandomNumberGenerator()
+
+	return randomNumber(maximum, using: &generator)
 }
 
 public nonisolated func formattedNumber(_ number: Int) -> NSString { // nonisolated: pure

@@ -160,7 +160,12 @@ nonisolated enum IRCHostmaskGlob { // nonisolated: value
 	}
 }
 
-public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // nonisolated: immutable
+/** The compiled form of one address-book hostmask.
+
+ A value rather than a class: everything it holds is one, and an
+ `AddressBookEntry` stores it, so a reference here made a struct that claims to
+ be a value type hold a reference after all. */
+public nonisolated struct AddressBookEntryMatcher: Sendable { // nonisolated: value
 	public let regularExpressionPattern: String
 	public let trackingNickname: String?
 
@@ -170,14 +175,10 @@ public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // 
 	/// An address book entry belongs to no one connection — the same ignore
 	/// applies on every network — so it folds under `rfc1459`, the mapping a
 	/// server that advertises none is assumed to use.
-	public convenience init(entryType: IRCAddressBookEntryType, hostmask: String) {
-		self.init(entryType: entryType, hostmask: hostmask, caseMapping: .rfc1459)
-	}
-
 	public init(
 		entryType: IRCAddressBookEntryType,
 		hostmask: String,
-		caseMapping: IRCISupportInfoCaseMapping
+		caseMapping: IRCISupportInfoCaseMapping = .rfc1459
 	) {
 		self.caseMapping = caseMapping
 
@@ -207,8 +208,6 @@ public final nonisolated class AddressBookEntryMatcher: NSObject, Sendable { // 
 			globTokens = nil
 			trackingNickname = nil
 		}
-
-		super.init()
 	}
 
 	public func matches(hostmask: String) -> Bool {

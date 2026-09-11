@@ -9,7 +9,7 @@ import Testing
 
 @MainActor
 @Suite("Server highlight list")
-struct ServerHighlightListTests {
+struct ServerHighlightListSessionTests {
 	private func entry(body: String, receivedAt: Date) -> HighlightLogEntry {
 		var line = LogLine()
 		line.messageBody = body
@@ -70,6 +70,37 @@ struct ServerHighlightListTests {
 
 		#expect(model.rows.isEmpty)
 		#expect(model.selection.isEmpty)
+	}
+
+	/** The list opens on what the client has already logged, and takes the
+	 highlights that arrive while it is up. A sheet could only be filled from the
+	 cache it was opened with; a window is open long enough to matter. */
+	@Test("A highlight logged while the window is open joins the table")
+	func aHighlightLoggedWhileOpenIsAdded() {
+		let client = GLTTestClient()
+		client.cachedHighlights = [entry(body: "earlier", receivedAt: Date(timeIntervalSince1970: 100))]
+		let session = ServerHighlightListSession(client: client)
+
+		#expect(session.model.rows.count == 1)
+
+		session.addEntry(entry(body: "later", receivedAt: Date(timeIntervalSince1970: 200)))
+
+		#expect(session.model.rows.count == 2)
+	}
+
+	/// Clearing the window clears the client's log with it: the list is a view of
+	/// that log, so leaving one full and the other empty would refill the table
+	/// the next time the window opened.
+	@Test("Clearing the window clears the client's logged highlights")
+	func clearingTheWindowClearsTheClientLog() {
+		let client = GLTTestClient()
+		client.cachedHighlights = [entry(body: "message", receivedAt: .now)]
+		let session = ServerHighlightListSession(client: client)
+
+		session.clearHighlights()
+
+		#expect(session.model.rows.isEmpty)
+		#expect(client.cachedHighlights.isEmpty)
 	}
 
 	@Test("The legacy highlight nib is no longer bundled")

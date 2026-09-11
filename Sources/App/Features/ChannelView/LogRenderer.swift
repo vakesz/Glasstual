@@ -57,15 +57,35 @@ nonisolated enum RendererFormatting { // nonisolated: value
 /// Parses IRC control codes and annotates semantic runs for the native
 /// transcript. It never produces markup or holds a reference to a view.
 public nonisolated struct LogRenderer { // nonisolated: value
-	private var body = ""
-	private var attributedBody = NSMutableAttributedString()
-	private var configuration = TranscriptRenderOptions()
-	private var members: [RenderedMember] = []
-	private var lineType = LogLineType.undefined
-	private var memberType = LogLineMemberType.normal
+	/* The attributed text the annotation steps mark up is a reference, so it is
+	 threaded through them as an argument rather than stored here: a renderer
+	 that held one could not honestly call itself a value. It never leaves this
+	 file's call chain — `result(from:)` projects it into the `Sendable`
+	 `TranscriptBody` the transcript draws. */
+	private let configuration: TranscriptRenderOptions
+	private let members: [RenderedMember]
+	private var body: String
 	private var links: [LinkParserResult] = []
 	private var mentionedNicknames: [String] = []
 	private var isHighlight = false
+
+	init(body: String, configuration: TranscriptRenderOptions, members: [RenderedMember]) {
+		self.body = body
+		self.configuration = configuration
+		self.members = members
+	}
+
+	private var lineType: LogLineType {
+		configuration.lineType
+	}
+
+	private var memberType: LogLineMemberType {
+		configuration.memberType
+	}
+
+	private var policy: TranscriptTextPolicy {
+		configuration.textPolicy
+	}
 
 	private var isMessage: Bool {
 		lineType == .privateMessage || lineType == .action
@@ -75,13 +95,17 @@ public nonisolated struct LogRenderer { // nonisolated: value
 		isMessage || lineType == .notice
 	}
 
-	private mutating func parseFormatting() {
-		attributedBody = IRCFormattingParser.parse(body)
+	/// Parses the control codes, returning the attributed text the annotation
+	/// steps mark up.
+	private mutating func parseFormatting() -> NSMutableAttributedString {
+		let attributedBody = IRCFormattingParser.parse(body)
 		body = attributedBody.string
+
+		return attributedBody
 	}
 
 	private mutating func filterUnicodeSpam() {
-		guard Preferences.Messages.filterUnicodeTextSpam.detachedValue else { return }
+		guard policy.filtersUnicodeTextSpam else { return }
 		let filteredTypes: Set<LogLineType> = [
 			.action, .ctcp, .ctcpQuery, .ctcpReply, .dccFileTransfer, .notice, .privateMessage, .topic,
 		]
@@ -98,21 +122,21 @@ public nonisolated struct LogRenderer { // nonisolated: value
 		)
 	}
 
-	private mutating func annotateLinks() {
+	private mutating func annotateLinks(in attributedBody: NSMutableAttributedString) {
 		guard configuration.renderLinks else { return }
-		links = LinkParser.locateLinks(in: body)
+		links = LinkParser.locateLinks(in: body, allowing: policy.linkSchemes)
 		for link in links {
 			attributedBody.addAttribute(RendererFormatting.url, value: link, range: link.range)
 		}
 	}
 
-	private mutating func annotateHighlight() {
+	private mutating func annotateHighlight(in attributedBody: NSMutableAttributedString) {
 		guard isMessage, memberType == .normal else { return }
 		let highlighted = configuration.highlightKeywords
 		guard highlighted.isEmpty == false else { return }
 		let excluded = configuration.excludedKeywords
 		let excludedRanges = excluded.flatMap { ranges(of: $0, options: .caseInsensitive) }
-		let matchMethod = Preferences.Highlights.matchingMethod.detachedValue
+		let matchMethod = policy.highlightMatchingMethod
 
 		for keyword in highlighted where isHighlight == false {
 			let matches = matchMethod == .regularExpression
@@ -132,9 +156,14 @@ public nonisolated struct LogRenderer { // nonisolated: value
 		}
 	}
 
-	private mutating func annotateChannels() {
+	private func annotateChannels(in attributedBody: NSMutableAttributedString) {
 		guard isMessageOrNotice, let expression = RendererPatterns.channelName else { return }
-		for range in ranges(of: expression) {
+		/* The whole line, not the first four kilobytes of it: that cap is for
+		 the patterns the reader writes, and this one is the renderer's own --
+		 a bounded alternation that cannot backtrack. Sharing the cap meant a
+		 channel named past the cap in a long line was not a link, while the
+		 same name a line earlier was. */
+		for range in ranges(of: expression, matchedLength: (body as NSString).length) {
 			guard isSurroundedByNonAlphanumerics(range),
 			      attributedBody.attribute(RendererFormatting.url, at: range.location, effectiveRange: nil) == nil
 			else { continue }
@@ -146,7 +175,7 @@ public nonisolated struct LogRenderer { // nonisolated: value
 		}
 	}
 
-	private mutating func annotateMembers() {
+	private mutating func annotateMembers(in attributedBody: NSMutableAttributedString) {
 		guard isMessage, body.isEmpty == false, members.isEmpty == false else { return }
 		var nicknameCount = 0
 		var nicknameLength = 0
@@ -177,7 +206,7 @@ public nonisolated struct LogRenderer { // nonisolated: value
 			}
 		}
 
-		if Preferences.Messages.detectHighlightSpam.detachedValue {
+		if policy.detectsHighlightSpam {
 			let percent = Double(nicknameLength) / Double((body as NSString).length) * 100
 			if percent > 75 && nicknameCount > 10 || percent > 50 && nicknameCount > 20 {
 				isHighlight = false
@@ -200,15 +229,25 @@ public nonisolated struct LogRenderer { // nonisolated: value
 		return result
 	}
 
+	/** A highlight keyword in Regular Expression mode: a pattern the reader
+	 wrote, matched against text a stranger sent.
+
+	 That pairing is the one the cap is for -- the cost of a pathological
+	 pattern grows with the input, and only the reader's patterns are
+	 unbounded in shape. The cap is far past any real message and far short of
+	 anything that could stall a render. */
 	private func ranges(ofRegularExpression pattern: String) -> [NSRange] {
-		guard let expression = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return [] }
-		return ranges(of: expression)
+		guard let expression = TranscriptHighlightExpressions.shared.expression(for: pattern) else { return [] }
+		return ranges(
+			of: expression,
+			matchedLength: min((body as NSString).length, TranscriptHighlightExpressions.maximumMatchedLength)
+		)
 	}
 
-	private func ranges(of expression: NSRegularExpression) -> [NSRange] {
+	private func ranges(of expression: NSRegularExpression, matchedLength: Int) -> [NSRange] {
 		expression.matches(
 			in: body,
-			range: NSRange(location: 0, length: (body as NSString).length)
+			range: NSRange(location: 0, length: matchedLength)
 		).map(\.range).filter { $0.length > 0 }
 	}
 
@@ -234,7 +273,7 @@ public nonisolated struct LogRenderer { // nonisolated: value
 		return true
 	}
 
-	private func result() -> TranscriptBody {
+	private func result(from attributedBody: NSMutableAttributedString) -> TranscriptBody {
 		let source = attributedBody.string as NSString
 		var runs: [TranscriptTextRun] = []
 		attributedBody.enumerateAttributes(
@@ -263,7 +302,7 @@ public nonisolated struct LogRenderer { // nonisolated: value
 			let text = source.substring(with: range)
 			let action: TranscriptRunAction? = if let link = attributes[RendererFormatting.url]
 				as? LinkParserResult,
-				Self.isSafeLink(link.stringValue),
+				Self.isSafeLink(link.stringValue, allowing: policy.linkSchemes),
 				let url = URL(string: link.stringValue)
 			{
 				.link(url)
@@ -296,9 +335,17 @@ public nonisolated struct LogRenderer { // nonisolated: value
 		"javascript", "data", "vbscript", "blob", "filesystem", "about",
 	]
 
-	static func isSafeLink(_ location: String) -> Bool {
+	static func isSafeLink(_ location: String, allowing schemes: LinkSchemePolicy) -> Bool {
 		guard let url = URL(string: location), let scheme = url.scheme?.lowercased() else { return false }
-		return refusedLinkSchemes.contains(scheme) == false && LinkParser.isPermittedScheme(scheme)
+		return refusedLinkSchemes.contains(scheme) == false
+			&& LinkParser.isPermittedScheme(scheme, allowing: schemes)
+	}
+
+	/** The same answer for a caller already on the main actor, which can read the
+	 reader's scheme customization itself — a topic being drawn, a clicked link. */
+	@MainActor
+	static func isSafeLink(_ location: String) -> Bool {
+		isSafeLink(location, allowing: .current())
 	}
 
 	private static func nativeColor(_ value: Any?) -> TranscriptRunColor? {
@@ -317,19 +364,15 @@ public extension LogRenderer {
 		members: [RenderedMember]
 	) -> TranscriptBody {
 		guard body.isEmpty == false else { return TranscriptBody() }
-		var renderer = LogRenderer()
-		renderer.lineType = configuration.lineType
-		renderer.memberType = configuration.memberType
-		renderer.body = body
-		renderer.configuration = configuration
-		renderer.members = members
+		var renderer = LogRenderer(body: body, configuration: configuration, members: members)
 		renderer.filterUnicodeSpam()
-		renderer.parseFormatting()
-		renderer.annotateLinks()
-		renderer.annotateHighlight()
-		renderer.annotateChannels()
-		renderer.annotateMembers()
-		return renderer.result()
+		let attributedBody = renderer.parseFormatting()
+		renderer.annotateLinks(in: attributedBody)
+		renderer.annotateHighlight(in: attributedBody)
+		renderer.annotateChannels(in: attributedBody)
+		renderer.annotateMembers(in: attributedBody)
+
+		return renderer.result(from: attributedBody)
 	}
 
 	@MainActor

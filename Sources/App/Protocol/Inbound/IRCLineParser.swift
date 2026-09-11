@@ -118,6 +118,15 @@ public nonisolated enum LineParser { // nonisolated: value
 				break
 			}
 
+			/* The last slot takes everything that is left, verbatim. A line of
+			 single-character parameters is otherwise one array element per two
+			 bytes received, so a megabyte of them built half a million strings
+			 before any handler could look at the command. */
+			if parameters.count == IRCProtocolLimits.maximumInboundParameterCount - 1 {
+				parameters.append(String(remainder))
+				break
+			}
+
 			parameters.append(nextToken(from: &remainder))
 		}
 

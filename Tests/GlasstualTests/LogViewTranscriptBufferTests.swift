@@ -134,6 +134,52 @@ struct LogViewTranscriptBufferTests {
 		#expect(try attachment().image === original.image)
 	}
 
+	/** The scrollback a reader pulled in gives way to new traffic.
+
+	 Loading older lines raises the buffer's ceiling so history stays on screen,
+	 but the ceiling used to stay raised for the session: a reader who scrolled
+	 back once held tens of thousands of lines live for as long as the view
+	 existed. */
+	@Test("The ceiling scrollback raised comes back down as the lines it raised it for are trimmed")
+	func scrollbackAllowanceDecaysWithTheLinesItHeld() {
+		let logView = makeLogView(bufferLimit: 6)
+
+		logView.appendLines((0 ..< 8).map(message))
+		logView.prependLines((0 ..< 3).map { transcriptLine("older \($0)") })
+		/* History on screen still widens the buffer while it is there. */
+		#expect(logView.displayedLines.count == 9)
+
+		logView.appendLines([transcriptLine("newest")])
+		logView.appendLines([transcriptLine("newer still")])
+		#expect(logView.displayedLines.contains { $0.lineNumber.hasPrefix("older") } == false)
+
+		logView.appendLines([transcriptLine("newest of all")])
+		#expect(logView.displayedLines.count == 6)
+	}
+
+	/** A reload that has to be retried re-sends lines the document already
+	 shows. Prepending has always refused a line it already holds; appending
+	 drew it a second time, so the reader read the same message twice. */
+	@Test("Appending a line the document already holds changes nothing")
+	func appendingRefusesLinesAlreadyOnScreen() throws {
+		let logView = makeLogView(bufferLimit: 20)
+		let lines = (0 ..< 4).map(message)
+
+		logView.appendLines(lines)
+		logView.appendLines(lines)
+		logView.appendLines(Array(lines[2 ..< 4]) + [message(4)])
+
+		#expect(logView.displayedLines.map(\.lineNumber) == (0 ..< 5).map { "message \($0)" })
+		#expect(try document(of: logView) == rebuiltDocument(of: (0 ..< 5).map(message)))
+	}
+
+	@Test("A batch that repeats a line within itself draws it once")
+	func appendingRefusesRepeatsWithinOneBatch() {
+		let logView = makeLogView(bufferLimit: 20)
+		logView.appendLines([message(0), message(1), message(0)])
+		#expect(logView.displayedLines.map(\.lineNumber) == ["message 0", "message 1"])
+	}
+
 	private func makeLogView(bufferLimit: Int = 1000) -> LogView {
 		let client = IRCClient(config: ClientConfig())
 		let window = MainWindow(
@@ -283,8 +329,28 @@ struct LogViewTranscriptBufferTests {
 		#expect(try document(of: logView) == rebuiltDocument(of: [last]))
 	}
 
-	@Test("Find and jump suspend bottom following until explicitly resumed", arguments: [false, true])
-	func navigationSuspendsBottomFollowing(usingFind: Bool) throws {
+	/// The two ways a reader moves off the end of the transcript.
+	enum TranscriptNavigation: String, CustomTestStringConvertible {
+		case usingJump
+		case usingFind
+
+		var testDescription: String {
+			rawValue
+		}
+	}
+
+	/** Both ways of navigating have to stop the transcript following the end,
+	 or the next line to arrive takes the reader off what they navigated to.
+
+	 Find used to leave the flag alone: `performFindAction(_:)` handed the
+	 command to the text view's find bar and never said that the reader was no
+	 longer at the end, so the first message to arrive scrolled the match out of
+	 sight. */
+	@Test(
+		"Navigating away suspends bottom following until it is explicitly resumed",
+		arguments: [TranscriptNavigation.usingJump, .usingFind]
+	)
+	func navigationSuspendsBottomFollowing(_ navigation: TranscriptNavigation) throws {
 		let copyOnSelect = Preferences.Messages.copyOnSelect.value
 		defer { Preferences.Messages.copyOnSelect.value = copyOnSelect }
 		Preferences.Messages.copyOnSelect.value = false
@@ -292,11 +358,16 @@ struct LogViewTranscriptBufferTests {
 		logView.appendLines((0 ..< 200).map(message))
 		let textView = try textView(of: logView)
 		let scrollView = try #require(textView.enclosingScrollView)
-		if usingFind {
-			logView.findString("message 0", movingForward: true)
-			#expect(logView.selection == "message 0")
-		} else {
+		switch navigation {
+		case .usingJump:
 			#expect(logView.jump(to: "message 0"))
+		case .usingFind:
+			/* The find bar is `NSTextFinder`'s and it has no search session in a
+			 test process, so the transcript's own half of the command is what is
+			 driven here: the command suspends following, and the scroll onto the
+			 first line stands for the one the bar performs onto a match. */
+			logView.performFindAction(.nextMatch)
+			textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
 		}
 		// A pending first layout must not undo the navigation either.
 		logView.view.layoutSubtreeIfNeeded()
@@ -305,14 +376,35 @@ struct LogViewTranscriptBufferTests {
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
 		textView.sizeToFit()
 		#expect(scrollView.contentView.bounds.maxY < textView.frame.maxY - 100)
-		if usingFind {
-			#expect(logView.selection == "message 0")
-		}
 
 		logView.scrollToBottom()
 		logView.appendLines([message(220)])
 		let visibleBottom = scrollView.contentView.bounds.maxY - scrollView.contentInsets.bottom
 		#expect(abs(visibleBottom - textView.frame.maxY) < 2)
+	}
+
+	/** ⌘G and ⇧⌘G are pressed while the reader is typing in the find field or
+	 in the message field, so stepping through matches must leave the keyboard
+	 where it is. Every find command used to take it for the transcript. */
+	@Test("Stepping through matches leaves the keyboard where it is")
+	func steppingThroughMatchesKeepsFirstResponder() throws {
+		let logView = makeLogView()
+		logView.appendLines((0 ..< 20).map(message))
+		let window = try #require(logView.view.window)
+		let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 100, height: 20))
+		logView.view.addSubview(field)
+		#expect(window.makeFirstResponder(field))
+		let editor = window.firstResponder
+
+		logView.performFindAction(.nextMatch)
+		#expect(window.firstResponder === editor)
+		logView.performFindAction(.previousMatch)
+		#expect(window.firstResponder === editor)
+
+		/* Opening the bar is the one command that does take the keyboard: it is
+		 how the reader gets to the search field at all. */
+		logView.performFindAction(.showFindInterface)
+		#expect(window.firstResponder !== editor)
 	}
 
 	@Test("An unknown jump target leaves bottom following enabled")

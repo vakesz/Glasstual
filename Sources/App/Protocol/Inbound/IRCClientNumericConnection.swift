@@ -95,10 +95,35 @@ extension IRCClient {
 		let configuration = message.params.dropFirst().dropLast().joined(separator: " ")
 		let explanatoryText = message.params.last ?? ""
 		let previousCaseMapping = supportInfo.caseMapping
+		let previousPrefixes = currentUserPrefixes
 		let wasUTF8Only = supportInfo.utf8Only
 		supportInfo.processConfigurationData(configuration)
-		if supportInfo.caseMapping != previousCaseMapping {
+		/* The socket is what measures the assembled line, and until 005 lands it
+		 has only the RFC's 512 to measure against. A `LINELEN` that raises the
+		 budget every other outbound path already reads has to reach it too, or
+		 a line those paths sized for 1024 is cut to 510 on the way out. */
+		socket?.maximumLineLength = supportInfo.maximumLineLength > 0
+			? Int(clamping: supportInfo.maximumLineLength)
+			: IRCProtocolLimits.maximumBodyLength + IRCProtocolLimits.lineTerminatorLength
+		let caseMappingChanged = supportInfo.caseMapping != previousCaseMapping
+		if caseMappingChanged {
 			rekeyUserList()
+		}
+		/* A member carries the prefix table it was stamped with, because it has
+		 no client to ask off the main actor. A 005 that changes `PREFIX` or
+		 `CASEMAPPING` therefore changes how every member already in a channel
+		 ranks and marks itself, and until now only a preferences reload ever
+		 re-stamped them: the ranks stayed on the table that was current when
+		 each member joined, and the member list stayed in an order built from
+		 it. Servers do send a second 005 — a bouncer replays the network's on
+		 attach, and services reload theirs — so this is not hypothetical. */
+		let prefixes = currentUserPrefixes
+		let prefixesChanged = prefixes.modeSymbols != previousPrefixes.modeSymbols ||
+			prefixes.prefixCharacters != previousPrefixes.prefixCharacters
+		if caseMappingChanged || prefixesChanged {
+			for channel in channelList where channel.isChannel {
+				channel.memberInfo?.sortMembers()
+			}
 		}
 		if shouldPrint {
 			printDebugInformation(

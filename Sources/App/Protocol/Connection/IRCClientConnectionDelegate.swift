@@ -113,6 +113,13 @@ public extension IRCClient {
 		zncBouncerCertificateChainDataMutable = nil
 		zncBouncerIsPlayingBackHistory = false
 
+		/* The flag exists to stop one connection attempt from upgrading twice.
+		 Clearing it only on a successful TLS handshake meant an upgrade that
+		 failed to connect left it set for the life of the client object, and
+		 every later STS offer from that server was ignored. The session it
+		 guards ends here. */
+		performedSTSUpgrade = false
+
 		resetChatHistoryState()
 		reconnectEnabled = false
 		timeoutWarningShownToUser = false
@@ -127,6 +134,7 @@ public extension IRCClient {
 		preAwayUserNickname = nil
 		lastMessageReceived = 0
 
+		resetSASLNegotiation()
 		resetCapabilityNegotiation()
 		removeAllUsers()
 	}
@@ -156,6 +164,11 @@ public extension IRCClient {
 
 		if !terminating, reconnectEnabled {
 			startReconnectTimer()
+		} else {
+			/* Nothing is scheduled, so the backoff has nothing to grow for. A
+			 user-initiated disconnect ends the run, and the connection the user
+			 starts next must not inherit the delay this one had reached. */
+			reconnectAttemptCount = 0
 		}
 
 		supportInfo.reset()

@@ -42,7 +42,13 @@ enum IRCLabeledResponsePolicy {
 	static let timeoutInterval: TimeInterval = 30
 	static let maximumPendingDeliveries = 512
 
-	static func responseKind(command: String, commandNumeric: UInt) -> ResponseKind {
+	/** How a labelled response answers the command that carried the label.
+
+	 The verb is all there is to go on. A numeric was compared with
+	 `IRCRemoteCommand` here too, but `commandNumeric` is a three-digit reply
+	 code and those raw values start at a thousand, so no numeric could ever
+	 match one and the three clauses decided nothing. */
+	static func responseKind(command: String) -> ResponseKind {
 		if command.caseInsensitiveCompare("FAIL") == .orderedSame {
 			return .failure
 		}
@@ -51,10 +57,7 @@ enum IRCLabeledResponsePolicy {
 		}
 		if command.caseInsensitiveCompare("PRIVMSG") == .orderedSame ||
 			command.caseInsensitiveCompare("NOTICE") == .orderedSame ||
-			command.caseInsensitiveCompare("TAGMSG") == .orderedSame ||
-			commandNumeric == IRCRemoteCommand.privmsg.rawValue ||
-			commandNumeric == IRCRemoteCommand.notice.rawValue ||
-			commandNumeric == IRCRemoteCommand.tagmsg.rawValue
+			command.caseInsensitiveCompare("TAGMSG") == .orderedSame
 		{
 			return .echo
 		}
@@ -182,7 +185,7 @@ public extension IRCClient {
 			return false
 		}
 
-		let kind = IRCLabeledResponsePolicy.responseKind(command: command, commandNumeric: message.commandNumeric)
+		let kind = IRCLabeledResponsePolicy.responseKind(command: command)
 		if let batch, batch.responseLabel == label {
 			switch kind {
 			case .failure:

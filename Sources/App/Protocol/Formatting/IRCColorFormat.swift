@@ -67,6 +67,49 @@ private let truncationNOTICECommandConstant = 8
 private let truncationHostmaskConstant = 60
 private let truncationWrapMaxDistance = 25
 
+/// U+200D. A composed character sequence stops at one, so a family or a
+/// profession emoji is several sequences that must not be told apart.
+private let zeroWidthJoiner: unichar = 0x200D
+
+/** The smallest run at `location` that a line break must not fall inside.
+
+ `rangeOfComposedCharacterSequence(at:)` alone is not that run. It stops at a
+ zero-width joiner, so wrapping a line between two of its sequences turned one
+ emoji into two or three unrelated ones; and it knows nothing about mIRC codes,
+ so a `\u{3}` the person pasted could go out on one line with its digits on the
+ next, where they read as text. */
+private func unbreakableUnitRange(in string: NSString, at location: Int) -> NSRange {
+	let length = string.length
+	let character = string.character(at: location)
+
+	if character == UniChar(IRCTextFormatterControlCharacter.colorDigit) ||
+		character == UniChar(IRCTextFormatterControlCharacter.colorHex)
+	{
+		let consumed = string.colorComponents(
+			ofCharacter: character,
+			startingAt: UInt(location)
+		).charactersConsumed
+
+		return NSRange(location: location, length: min(max(consumed, 1), length - location))
+	}
+
+	let range = string.rangeOfComposedCharacterSequence(at: location)
+	var end = range.location + range.length
+
+	while end < length, string.character(at: end) == zeroWidthJoiner {
+		end += 1
+
+		guard end < length else {
+			break
+		}
+
+		let joined = string.rangeOfComposedCharacterSequence(at: end)
+		end = joined.location + joined.length
+	}
+
+	return NSRange(location: range.location, length: end - range.location)
+}
+
 private func appendControlCharacter(_ character: unichar, to string: inout String) {
 	guard let scalar = Unicode.Scalar(character) else {
 		return
@@ -476,7 +519,7 @@ public extension NSAttributedString {
 
 			while i < segmentRange.length {
 				let characterIndex = segmentRange.location + i
-				let characterRange = string.rangeOfComposedCharacterSequence(at: characterIndex)
+				let characterRange = unbreakableUnitRange(in: string, at: characterIndex)
 				let character = string.substring(with: characterRange)
 				var characterSize = (character as NSString).lengthOfBytes(using: encoding.rawValue)
 
@@ -491,13 +534,18 @@ public extension NSAttributedString {
 						/* The floor is in `result`'s coordinates, so the wrap
 						 cannot back past this segment's first character. Held
 						 there, the units it removed from `result` are exactly
-						 the source units it gave back. */
+						 the source units it gave back — and `deletionLength` is
+						 the ceiling on how many it may remove, because a unit
+						 taken off `result` that is not given back here is a
+						 character the caller believes it sent and never will.
+						 The wrap declines rather than truncate past it. */
 						let indexDifference = result.wrapIRCTextFormatterResult(
 							with: UInt(segmentResultLocation),
-							maxDistance: UInt(truncationWrapMaxDistance)
+							maxDistance: UInt(truncationWrapMaxDistance),
+							maximumGiveBack: deletionLength
 						)
 
-						if indexDifference != UInt(bitPattern: NSNotFound), deletionLength >= indexDifference {
+						if indexDifference != UInt(bitPattern: NSNotFound) {
 							deletionLength -= indexDifference
 						}
 					} else {
@@ -579,8 +627,18 @@ public nonisolated extension String { // nonisolated: pure
 	 units of its end and answers how many units went; `NSNotFound` when there is
 	 no space to break at, in which case the string is left alone. It used to be
 	 a method on Foundation's mutable string, which is the only reason a
-	 protocol-layer accumulator had to be one. */
-	mutating func wrapIRCTextFormatterResult(with minimumIndex: UInt, maxDistance: UInt) -> UInt {
+	 protocol-layer accumulator had to be one.
+
+	 `maximumGiveBack` is how many units the caller can hand back to the queue.
+	 Truncating more than that drops text: the characters leave the line being
+	 sent while the caller still counts them as consumed, so nothing ever sends
+	 them. Past that ceiling the wrap declines and the line goes out unwrapped,
+	 which re-queues the tail instead of losing it. */
+	mutating func wrapIRCTextFormatterResult(
+		with minimumIndex: UInt,
+		maxDistance: UInt,
+		maximumGiveBack: UInt = .max
+	) -> UInt {
 		let text = self as NSString
 		let selfLength = text.length
 		let distance = Int(clamping: maxDistance)
@@ -613,6 +671,10 @@ public nonisolated extension String { // nonisolated: pure
 
 		let indexDifference = selfLength - spaceRange.location
 
+		guard UInt(indexDifference) <= maximumGiveBack else {
+			return UInt(bitPattern: NSNotFound)
+		}
+
 		self = text.substring(to: spaceRange.location)
 
 		return UInt(indexDifference)
@@ -625,28 +687,99 @@ private nonisolated func isBase10Numeric(_ character: unichar) -> Bool { // noni
 	character >= 0x30 && character <= 0x39
 }
 
+/// The character separating a colour code's foreground from its background.
+private nonisolated let comma: unichar = 0x2C // nonisolated: let
+
+private nonisolated func paletteSelection(forIndex index: Int) -> IRCColorSelection { // nonisolated: pure
+	/* mIRC 99 is not a palette entry, it is the absence of one. */
+	guard index <= IRCTextFormatterColor.maximumPaletteIndex else {
+		return .reset
+	}
+
+	return .color(.palette(index))
+}
+
+/// The channels a hexadecimal colour control code names, each in `0...1`.
+///
+/// A value rather than an `NSColor`: the enum below is a `Sendable` value that
+/// crosses isolation domains, and an `NSColor` payload made it hold a class.
+/// The colour is built where it is drawn.
+public nonisolated struct IRCColorChannels: Sendable, Equatable, Hashable { // nonisolated: value
+	public let red: Double
+	public let green: Double
+	public let blue: Double
+	public let alpha: Double
+
+	public init(red: Double, green: Double, blue: Double, alpha: Double = 1) {
+		self.red = red
+		self.green = green
+		self.blue = blue
+		self.alpha = alpha
+	}
+
+	/// Six hexadecimal digits, `RRGGBB`, the only form a `\u{4}` code carries.
+	public init?(sixDigitHexadecimal value: String) {
+		guard value.count == 6, let packed = UInt32(value, radix: 16) else {
+			return nil
+		}
+
+		self.init(
+			red: Double((packed >> 16) & 0xFF) / 0xFF,
+			green: Double((packed >> 8) & 0xFF) / 0xFF,
+			blue: Double(packed & 0xFF) / 0xFF
+		)
+	}
+
+	public var color: NSColor {
+		NSColor(
+			deviceRed: CGFloat(red),
+			green: CGFloat(green),
+			blue: CGFloat(blue),
+			alpha: CGFloat(alpha)
+		)
+	}
+}
+
 /// A colour named by an IRC colour control code.
-public nonisolated enum IRCColor: Sendable { // nonisolated: value
+public nonisolated enum IRCColor: Sendable, Equatable { // nonisolated: value
 	/// An mIRC palette index.
 	case palette(Int)
 	/// A literal colour from a hexadecimal control code.
-	case rgb(NSColor)
+	case rgb(IRCColorChannels)
 
 	/// The value the renderer stores as a text attribute.
 	public var attributeValue: AnyObject {
 		switch self {
 		case let .palette(index): NSNumber(value: index)
-		case let .rgb(color): color
+		case let .rgb(channels): channels.color
 		}
 	}
 }
 
+/** What one half of a colour control code said about that half.
+
+ The three answers are not two: a code that names no background at all leaves
+ whatever background is in force, and one that names 99 takes it away. Reading
+ both as "no colour" is why `\u{3}04,99` painted red text on the background the
+ previous code had set — 99 fell outside the palette and was dropped, so
+ nothing cleared it. */
+public nonisolated enum IRCColorSelection: Sendable, Equatable { // nonisolated: value
+	/// The code did not name this half.
+	case unchanged
+	/// The code asked for the view's own colour: mIRC 99, or a bare control
+	/// character with no digits behind it.
+	case reset
+	case color(IRCColor)
+}
+
 /// What one colour control code says.
 public nonisolated struct IRCColorComponents: Sendable { // nonisolated: value
-	public let foreground: IRCColor?
-	public let background: IRCColor?
+	public let foreground: IRCColorSelection
+	public let background: IRCColorSelection
 	/// How many characters of the control code were read.
 	public let charactersConsumed: Int
+
+	static let unread = IRCColorComponents(foreground: .unchanged, background: .unchanged, charactersConsumed: 0)
 }
 
 /** Reading a colour control code out of a line.
@@ -661,212 +794,116 @@ public nonisolated extension NSString { // nonisolated: pure
 	/// they used to be written through one `AnyObject?` out-parameter each, so
 	/// which kind arrived was not knowable at the call site.
 	func colorComponents(ofCharacter character: unichar, startingAt rangeStart: UInt) -> IRCColorComponents {
+		/* A start past the end is a question about a range this string does not
+		 have, and the answer is "nothing was read". It used to be a
+		 `precondition` on a public entry point, which turned a caller's
+		 arithmetic slip into a crash. */
+		guard rangeStart < UInt(length) else {
+			return .unread
+		}
+
+		let rangeStart = Int(rangeStart)
+
 		if character == UniChar(IRCTextFormatterControlCharacter.colorDigit) {
-			var foregroundNumber: NSNumber?
-			var backgroundNumber: NSNumber?
-
-			let consumed = colorAsDigit(
-				startingAt: rangeStart,
-				foregroundColor: &foregroundNumber,
-				backgroundColor: &backgroundNumber
-			)
-
-			return IRCColorComponents(
-				foreground: foregroundNumber.map { .palette($0.intValue) },
-				background: backgroundNumber.map { .palette($0.intValue) },
-				charactersConsumed: Int(consumed)
-			)
+			return paletteColorComponents(startingAt: rangeStart)
 		}
 
 		if character == UniChar(IRCTextFormatterControlCharacter.colorHex) {
-			var foregroundNSColor: NSColor?
-			var backgroundNSColor: NSColor?
+			return hexadecimalColorComponents(startingAt: rangeStart)
+		}
 
-			let consumed = colorAsHex(
-				startingAt: rangeStart,
-				foregroundColor: &foregroundNSColor,
-				backgroundColor: &backgroundNSColor
-			)
+		return .unread
+	}
 
+	private func paletteColorComponents(startingAt rangeStart: Int) -> IRCColorComponents {
+		var position = rangeStart + 1
+
+		guard let foreground = paletteIndex(at: &position) else {
+			/* A control character with no digits behind it is mIRC's "colour
+			 off": it clears both halves. */
 			return IRCColorComponents(
-				foreground: foregroundNSColor.map { .rgb($0) },
-				background: backgroundNSColor.map { .rgb($0) },
-				charactersConsumed: Int(consumed)
+				foreground: .reset,
+				background: .reset,
+				charactersConsumed: position - rangeStart
 			)
 		}
 
-		return IRCColorComponents(foreground: nil, background: nil, charactersConsumed: 0)
+		var background = IRCColorSelection.unchanged
+		var afterSeparator = position + 1
+
+		if position < length, character(at: position) == comma, let index = paletteIndex(at: &afterSeparator) {
+			position = afterSeparator
+			background = paletteSelection(forIndex: index)
+		}
+
+		return IRCColorComponents(
+			foreground: paletteSelection(forIndex: foreground),
+			background: background,
+			charactersConsumed: position - rangeStart
+		)
 	}
 
-	private func colorAsHex(
-		startingAt rangeStart: UInt,
-		foregroundColor: inout NSColor?,
-		backgroundColor: inout NSColor?
-	) -> UInt {
-		let selfLength = length
-		precondition(Int(rangeStart) < selfLength)
+	private func hexadecimalColorComponents(startingAt rangeStart: Int) -> IRCColorComponents {
+		var position = rangeStart + 1
 
-		var currentPosition = Int(rangeStart)
-		var mForegroundColor: String?
-		var mBackgroundColor: String?
-		var commaEaten = false
-
-		currentPosition += 1
-
-		func finish() -> UInt {
-			if mBackgroundColor == nil, commaEaten {
-				currentPosition -= 1
-			}
-
-			if let mForegroundColor {
-				foregroundColor = NSColor.textual_color(hexadecimalValue: mForegroundColor.uppercased())
-			}
-
-			if let mBackgroundColor {
-				backgroundColor = NSColor.textual_color(hexadecimalValue: mBackgroundColor.uppercased())
-			}
-
-			return UInt(currentPosition - Int(rangeStart))
+		guard let foreground = hexadecimalChannels(at: &position) else {
+			return IRCColorComponents(
+				foreground: .reset,
+				background: .reset,
+				charactersConsumed: position - rangeStart
+			)
 		}
 
-		guard currentPosition + 6 <= selfLength else {
-			return finish()
+		var background = IRCColorSelection.unchanged
+		var afterSeparator = position + 1
+
+		if position < length, character(at: position) == comma,
+		   let channels = hexadecimalChannels(at: &afterSeparator)
+		{
+			position = afterSeparator
+			background = .color(.rgb(channels))
 		}
 
-		let foregroundCandidate = substring(with: NSRange(location: currentPosition, length: 6))
-
-		if foregroundCandidate.onlyContainsCharacters(from: .textualHexadecimal) {
-			mForegroundColor = foregroundCandidate
-			currentPosition += 6
-		} else {
-			return finish()
-		}
-
-		guard currentPosition < selfLength else {
-			return finish()
-		}
-
-		let separator = character(at: currentPosition)
-
-		guard separator == 0x2C else {
-			return finish()
-		}
-
-		commaEaten = true
-		currentPosition += 1
-
-		guard currentPosition + 6 <= selfLength else {
-			return finish()
-		}
-
-		let backgroundCandidate = substring(with: NSRange(location: currentPosition, length: 6))
-
-		if backgroundCandidate.onlyContainsCharacters(from: .textualHexadecimal) {
-			mBackgroundColor = backgroundCandidate
-			currentPosition += 6
-		}
-
-		return finish()
+		return IRCColorComponents(
+			foreground: .color(.rgb(foreground)),
+			background: background,
+			charactersConsumed: position - rangeStart
+		)
 	}
 
-	private func colorAsDigit(
-		startingAt rangeStart: UInt,
-		foregroundColor: inout NSNumber?,
-		backgroundColor: inout NSNumber?
-	) -> UInt {
-		let selfLength = length
-		precondition(Int(rangeStart) < selfLength)
-
-		var currentPosition = Int(rangeStart)
-		var mForegroundColor = NSNotFound
-		var mBackgroundColor = NSNotFound
-		var commaEaten = false
-
-		currentPosition += 1
-
-		func finish() -> UInt {
-			if mBackgroundColor == NSNotFound, commaEaten {
-				currentPosition -= 1
-			}
-
-			if mForegroundColor != NSNotFound,
-			   mForegroundColor <= Int(IRCTextFormatterColor.maximumPaletteIndex)
-			{
-				foregroundColor = NSNumber(value: mForegroundColor)
-			}
-
-			if mBackgroundColor != NSNotFound,
-			   mBackgroundColor <= Int(IRCTextFormatterColor.maximumPaletteIndex)
-			{
-				backgroundColor = NSNumber(value: mBackgroundColor)
-			}
-
-			return UInt(currentPosition - Int(rangeStart))
+	/// One or two decimal digits at `position`, advancing past what it read.
+	private func paletteIndex(at position: inout Int) -> Int? {
+		guard position < length, isBase10Numeric(character(at: position)) else {
+			return nil
 		}
 
-		guard currentPosition < selfLength else {
-			return finish()
+		var value = Int(character(at: position) - 0x30)
+		position += 1
+
+		if position < length, isBase10Numeric(character(at: position)) {
+			value = value * 10 + Int(character(at: position) - 0x30)
+			position += 1
 		}
 
-		let firstForegroundDigit = character(at: currentPosition)
+		return value
+	}
 
-		guard isBase10Numeric(firstForegroundDigit) else {
-			return finish()
+	/// Six hexadecimal digits at `position`, advancing past them.
+	private func hexadecimalChannels(at position: inout Int) -> IRCColorChannels? {
+		guard position + 6 <= length else {
+			return nil
 		}
 
-		mForegroundColor = Int(firstForegroundDigit - 0x30)
-		currentPosition += 1
+		let candidate = substring(with: NSRange(location: position, length: 6))
 
-		guard currentPosition < selfLength else {
-			return finish()
+		guard candidate.onlyContainsCharacters(from: .textualHexadecimal),
+		      let channels = IRCColorChannels(sixDigitHexadecimal: candidate)
+		else {
+			return nil
 		}
 
-		let secondForegroundDigit = character(at: currentPosition)
+		position += 6
 
-		if isBase10Numeric(secondForegroundDigit) {
-			mForegroundColor = mForegroundColor * 10 + Int(secondForegroundDigit - 0x30)
-			currentPosition += 1
-		}
-
-		guard currentPosition < selfLength else {
-			return finish()
-		}
-
-		let separator = character(at: currentPosition)
-
-		guard separator == 0x2C else {
-			return finish()
-		}
-
-		commaEaten = true
-		currentPosition += 1
-
-		guard currentPosition < selfLength else {
-			return finish()
-		}
-
-		let firstBackgroundDigit = character(at: currentPosition)
-
-		guard isBase10Numeric(firstBackgroundDigit) else {
-			return finish()
-		}
-
-		mBackgroundColor = Int(firstBackgroundDigit - 0x30)
-		currentPosition += 1
-
-		guard currentPosition < selfLength else {
-			return finish()
-		}
-
-		let secondBackgroundDigit = character(at: currentPosition)
-
-		guard isBase10Numeric(secondBackgroundDigit) else {
-			return finish()
-		}
-
-		mBackgroundColor = mBackgroundColor * 10 + Int(secondBackgroundDigit - 0x30)
-		currentPosition += 1
-
-		return finish()
+		return channels
 	}
 }

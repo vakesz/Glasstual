@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import SwiftUI
 
 struct ChatFilterChannelOption: Identifiable {
@@ -148,6 +149,10 @@ struct ChatFilterEditorView: View {
 			TextField(String(localized: .TPIChatFilterEditFilterSheet.filterTitleLabel), text: $filter.title)
 			TextField(String(localized: .TPIChatFilterEditFilterSheet.filterMatchLabel), text: $filter.match)
 			validationMessage(matchError)
+			validationWarning(matchWarning)
+			Text(Self.patternLimitsExplanation)
+				.font(.caption)
+				.foregroundStyle(.secondary)
 
 			Section(String(localized: .TPIChatFilterEditFilterSheet.filterActionSection)) {
 				TextEditor(text: $filter.action)
@@ -244,6 +249,10 @@ struct ChatFilterEditorView: View {
 			TextField(String(localized: .TPIChatFilterEditFilterSheet.senderMatchLabel), text: $filter.senderMatch)
 				.disabled(filter.isLimitedToMyself)
 			validationMessage(senderMatchError)
+			validationWarning(senderMatchWarning)
+			Text(Self.patternLimitsExplanation)
+				.font(.caption)
+				.foregroundStyle(.secondary)
 
 			Section(String(localized: .TPIChatFilterEditFilterSheet.membershipAgeSection)) {
 				Picker(
@@ -330,6 +339,14 @@ struct ChatFilterEditorView: View {
 
 	private var senderMatchError: String? {
 		filter.isLimitedToMyself ? nil : regularExpressionError(filter.senderMatch)
+	}
+
+	private var matchWarning: String? {
+		regularExpressionWarning(filter.match)
+	}
+
+	private var senderMatchWarning: String? {
+		filter.isLimitedToMyself ? nil : regularExpressionWarning(filter.senderMatch)
 	}
 
 	private var commandsError: String? {
@@ -457,14 +474,52 @@ struct ChatFilterEditorView: View {
 		}
 	}
 
+	/// Shown beside a field whose pattern is legal but slow. It does not stop
+	/// the filter being saved: the shape is a heuristic, and the person typing
+	/// the pattern is the one who knows what it is for.
+	@ViewBuilder
+	private func validationWarning(_ message: String?) -> some View {
+		if let message {
+			Label(message, systemImage: "exclamationmark.triangle")
+				.font(.caption)
+				.foregroundStyle(.orange)
+				.accessibilityLabel(message)
+		}
+	}
+
+	/// What the two match fields promise: how much of a message a pattern sees,
+	/// and that a pattern which can backtrack without bound is pointed out here
+	/// rather than at the point a peer sends the line that triggers it.
+	private static let patternLimitsExplanation = String(
+		localized: .TPIChatFilterEditFilterSheet.regularExpressionLimitsExplanation(
+			ChatFilterEngine.matchInputLimit.formatted(.number)
+		)
+	)
+
 	private func regularExpressionError(_ pattern: String) -> String? {
 		guard pattern.isEmpty == false else { return nil }
 		do {
 			_ = try NSRegularExpression(pattern: pattern)
-			return nil
 		} catch {
 			return String(localized: .TPIChatFilterEditFilterSheet.regularExpressionInvalid(error.localizedDescription))
 		}
+		return nil
+	}
+
+	/** A pattern that compiles but has a shape that can backtrack for a long
+	 time.
+
+	 Compiling says nothing about how long matching takes, and ICU has no budget
+	 to stop it, so the place to point this out is where a person types the
+	 pattern. It is said rather than enforced: recognising the shape is a
+	 heuristic, the pattern may well be the one the person meant, and what bounds
+	 the damage is the cap on how much of a message a filter is matched
+	 against. */
+	private func regularExpressionWarning(_ pattern: String) -> String? {
+		guard pattern.isEmpty == false, regularExpressionError(pattern) == nil else { return nil }
+		guard RegularExpression.hasNestedQuantifier(pattern) else { return nil }
+
+		return String(localized: .TPIChatFilterEditFilterSheet.regularExpressionNestedQuantifier)
 	}
 
 	private func normalizedCommands(from value: String) -> [String]? {

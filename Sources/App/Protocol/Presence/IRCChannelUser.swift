@@ -133,7 +133,10 @@ public nonisolated struct ChannelUser: Identifiable, Hashable, Sendable { // non
 		modes.contains(mode)
 	}
 
-	private var channelRank: UInt {
+	/// Where the member sorts among the channel's ranks: the rank of the highest
+	/// prefix mode they hold, under the table they were stamped with. What a
+	/// sort orders on, and so what has to change for a re-sort to be worth it.
+	var channelRank: UInt {
 		guard let highest = modes.highest else {
 			return 0
 		}
@@ -203,7 +206,19 @@ public nonisolated struct ChannelUser: Identifiable, Hashable, Sendable { // non
 		}
 	}
 
+	/// Main-actor because it reads the preference itself. The overload that
+	/// takes the preference is the one a sort should call.
+	@MainActor
 	public func compare(usingWeights other: ChannelUser) -> ComparisonResult {
+		compare(
+			usingWeights: other,
+			favoringServerStaff: Preferences.Appearance.memberListSortFavorsServerStaff.value
+		)
+	}
+
+	/// Pure comparator. The preference is passed in so that a sort reads it once
+	/// rather than once per comparison.
+	public func compare(usingWeights other: ChannelUser, favoringServerStaff favorIRCop: Bool) -> ComparisonResult {
 		let localWeight = totalWeight
 		let remoteWeight = other.totalWeight
 
@@ -215,19 +230,47 @@ public nonisolated struct ChannelUser: Identifiable, Hashable, Sendable { // non
 			return .orderedDescending
 		}
 
-		return compareRank(to: other)
+		return compareRank(to: other, favoringServerStaff: favorIRCop)
 	}
 
+	/** Orders `members` by how much has been said to and by each of them.
+
+	 The one place a weight-ordered sort belongs, because a sort has to read the
+	 preference once: asking for it inside the comparator made a completion in a
+	 two-thousand-member channel read `UserDefaults` some twenty-two thousand
+	 times, once per comparison. */
+	@MainActor
+	public static func sortedByConversationWeight(_ members: [ChannelUser]) -> [ChannelUser] {
+		let favorIRCop = Preferences.Appearance.memberListSortFavorsServerStaff.value
+
+		return members.sorted { $0.compare(usingWeights: $1, favoringServerStaff: favorIRCop) == .orderedAscending }
+	}
+
+	@MainActor
 	func compareRank(to other: ChannelUser) -> ComparisonResult {
 		compareRank(
 			to: other,
-			favoringServerStaff: Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue
+			favoringServerStaff: Preferences.Appearance.memberListSortFavorsServerStaff.value
 		)
 	}
 
-	/// Pure comparator. The preference is passed in so that a sort reads it once
-	/// rather than once per comparison.
 	func compareRank(to other: ChannelUser, favoringServerStaff favorIRCop: Bool) -> ComparisonResult {
+		compareRank(to: other, favoringServerStaff: favorIRCop, casefoldingWith: prefixes)
+	}
+
+	/** Pure comparator. Both the preference and the table the nicknames fold
+	 under are passed in, so that a sort reads the preference once and orders
+	 every pair under one casemapping.
+
+	 Folding each side with the receiver's own table looks symmetric and is not:
+	 a member stamped before a `CASEMAPPING` change carries the old mapping, and
+	 a comparator that answers "a before b" and "b before a" for the same pair
+	 is not the strict weak ordering `sort` requires. */
+	func compareRank(
+		to other: ChannelUser,
+		favoringServerStaff favorIRCop: Bool,
+		casefoldingWith table: IRCUserPrefixTable
+	) -> ComparisonResult {
 		if favorIRCop, user.isIRCop, other.user.isIRCop == false {
 			return .orderedAscending
 		}
@@ -244,8 +287,8 @@ public nonisolated struct ChannelUser: Identifiable, Hashable, Sendable { // non
 			return .orderedDescending
 		}
 
-		let localNickname = prefixes.casefold(user.nickname)
-		let remoteNickname = prefixes.casefold(other.user.nickname)
+		let localNickname = table.casefold(user.nickname)
+		let remoteNickname = table.casefold(other.user.nickname)
 
 		return localNickname.compare(remoteNickname)
 	}

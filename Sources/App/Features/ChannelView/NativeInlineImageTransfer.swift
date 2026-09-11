@@ -14,6 +14,10 @@ final nonisolated class NativeInlineImageTransfer: NSObject, Sendable { // nonis
 		var failure: NativeInlineImageError?
 		var continuation: CheckedContinuation<Data, any Error>?
 		var redirects = 0
+		/// Set once the surrounding task was cancelled and the session torn
+		/// down, so a continuation installed afterwards is not left waiting on
+		/// a data task that will never run.
+		var isCancelled = false
 	}
 
 	private let state = Mutex(State())
@@ -50,13 +54,32 @@ final nonisolated class NativeInlineImageTransfer: NSObject, Sendable { // nonis
 		return try await withTaskCancellationHandler {
 			try Task.checkCancellation()
 			return try await withCheckedThrowingContinuation { continuation in
-				delegate.state.withLock { $0.continuation = continuation }
+				/* Cancellation can arrive between the check above and this
+				 line. It would then invalidate the session before the data
+				 task was ever resumed, and nothing would come back to resume
+				 the continuation, so the cancelled state is re-read here under
+				 the same lock that installs it. */
+				let cancelled = delegate.state.withLock { state -> Bool in
+					guard state.isCancelled == false else { return true }
+					state.continuation = continuation
+					return false
+				}
+				guard cancelled == false else {
+					continuation.resume(throwing: CancellationError())
+					return
+				}
 				var request = URLRequest(url: url)
 				request.setValue("image/*", forHTTPHeaderField: "Accept")
 				session.dataTask(with: request).resume()
 			}
 		} onCancel: {
+			let continuation = delegate.state.withLock { state -> CheckedContinuation<Data, any Error>? in
+				state.isCancelled = true
+				defer { state.continuation = nil }
+				return state.continuation
+			}
 			session.invalidateAndCancel()
+			continuation?.resume(throwing: CancellationError())
 		}
 	}
 }

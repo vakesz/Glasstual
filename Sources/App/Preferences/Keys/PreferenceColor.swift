@@ -108,7 +108,7 @@ public nonisolated struct PreferenceColor: PreferenceValue { // nonisolated: val
 	}
 }
 
-public nonisolated extension TextualUserDefaults { // nonisolated: pure
+public nonisolated extension TextualUserDefaults { // nonisolated: guarded
 	/// The stored colour, or the key's declared default when nothing is stored.
 	func color(for key: PreferenceKey<PreferenceColor>) -> NSColor {
 		self[key].color

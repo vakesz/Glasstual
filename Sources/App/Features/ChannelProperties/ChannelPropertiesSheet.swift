@@ -45,7 +45,7 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		clientId = channel.associatedClient?.uniqueIdentifier
 		self.channel = channel
 		channelId = channel.uniqueIdentifier
-		model = ChannelPropertiesModel(config: channel.config)
+		model = ChannelPropertiesModel(config: channel.config, client: channel.associatedClient)
 		super.init(window: nil)
 		installSheet()
 		observeConfigurationChanges()
@@ -54,7 +54,7 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 	public init(config: ChannelConfig?, onClient client: IRCClient?) {
 		self.client = client
 		clientId = client?.uniqueIdentifier
-		model = ChannelPropertiesModel(config: config ?? ChannelConfig())
+		model = ChannelPropertiesModel(config: config ?? ChannelConfig(), client: client)
 		super.init(window: nil)
 		installSheet()
 	}
@@ -135,9 +135,11 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		Alerts.alert(
 			withMessage: ChannelPropertiesStrings.unsavedChangesWarning,
 			title: ChannelPropertiesStrings.configurationChangedTitle,
-			defaultButton: PromptStrings.Action.yes,
-			alternateButton: PromptStrings.Action.no,
-			otherButton: nil
+			defaultButton: ChannelPropertiesStrings.reloadButton,
+			alternateButton: PromptStrings.Action.cancel,
+			otherButton: nil,
+			// Reloading throws away whatever the user has typed into the sheet.
+			destructiveButton: .default
 		) { [weak self] outcome in
 			guard let self, outcome.response == .default else { return }
 			model.replace(with: channel.config)

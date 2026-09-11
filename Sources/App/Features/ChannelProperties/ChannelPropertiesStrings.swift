@@ -93,6 +93,10 @@ nonisolated enum ChannelPropertiesStrings { // nonisolated: value
 		String(localized: .TDCChannelPropertiesSheet.pleaseEnterAProperlyFormattedChannel)
 	}
 
+	static var reloadButton: String {
+		String(localized: .TDCChannelPropertiesSheet.reloadButton)
+	}
+
 	static var configurationChangedTitle: String {
 		String(localized: .TDCChannelPropertiesSheet.thisChannelsConfigurationHasChangedDo)
 	}

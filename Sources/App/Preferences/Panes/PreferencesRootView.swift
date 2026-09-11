@@ -203,7 +203,7 @@ private struct PreferencesSubPagePicker: View {
 			pickerContent
 				.frame(maxWidth: .infinity)
 				.padding(.horizontal, PreferencesLayout.contentInset)
-				.padding(.top, 14)
+				.padding(.top, PreferencesMetrics.spacingLarge)
 		}
 	}
 

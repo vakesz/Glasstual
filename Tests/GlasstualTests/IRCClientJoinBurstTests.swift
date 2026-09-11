@@ -22,7 +22,7 @@ private final class GLTCompletingPresentation: TreeItemPresentation {
 	weak var client: IRCClient?
 	weak var channel: IRCChannel?
 
-	nonisolated let presentationIdentifier = "join-burst-presentation" // nonisolated: let
+	let presentationIdentifier = "join-burst-presentation"
 
 	func print(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?) {
 		printedLines.append(logLine)

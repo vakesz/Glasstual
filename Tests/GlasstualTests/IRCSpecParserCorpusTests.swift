@@ -276,14 +276,26 @@ struct IRCSpecParserCorpusTests {
 		(try? IRCSpecCorpus.load("userhost-split", as: IRCSpecUserhostSplitCase.self)) ?? []
 
 	/// RFC 2812 §2.3.1 `prefix = servername / (nickname [[ "!" user ] "@" host ])`.
-	/// The `!user` half is optional, so any source carrying an `@` names a
-	/// user; one without an `@` is a server name, whatever else it holds.
+	/// Both bracketed halves are optional, so a source carrying an `@` names a
+	/// user and so does a bare nickname; the grammar reaches `!user` only through
+	/// `@host`, so a source with a user half and no host names nobody.
 	@Test("userhost-split", arguments: userhostCases)
 	func hostmaskSplitsIntoAtoms(_ testCase: IRCSpecUserhostSplitCase) throws {
 		let parsed = Prefix.user(parsing: testCase.source, maximumNicknameLength: 50)
 
 		guard testCase.atoms.host != nil else {
-			#expect(parsed == nil, "a source with no host is a server name")
+			guard testCase.atoms.user == nil else {
+				#expect(parsed == nil, "a user half with no host names nobody")
+				return
+			}
+
+			let bareNickname = try #require(parsed, "a bare nickname is a prefix of its own")
+
+			#expect(bareNickname.isServer == false)
+			#expect(bareNickname.nickname == testCase.atoms.nick)
+			#expect(bareNickname.username == nil)
+			#expect(bareNickname.address == nil)
+			#expect(bareNickname.hostmask == testCase.source)
 			return
 		}
 
@@ -309,11 +321,15 @@ struct IRCSpecParserCorpusTests {
 		#expect(message.senderAddress == "127.0.0.1")
 	}
 
-	/// A prefix that cannot name a user is still a server name, and the whole
-	/// prefix stays the "nickname" the console prints.
+	/** A prefix that cannot name a user is still a server name, and the whole
+	 prefix stays the "nickname" the console prints.
+
+	 A server name is told apart from a bare nickname by its dot, which the
+	 nickname grammar has no room for. `coolguy!ag` carries a user half the
+	 grammar only reaches through `@host`, and `*` is not a nickname at all. */
 	@Test(
 		"userhost-split: a source with no host stays a server name",
-		arguments: ["irc.example.org", "coolguy", "coolguy!ag", "*"]
+		arguments: ["irc.example.org", "coolguy!ag", "*"]
 	)
 	func sourcesWithoutAHostStayServerNames(_ source: String) throws {
 		let client = GLTTestClient()
@@ -321,6 +337,20 @@ struct IRCSpecParserCorpusTests {
 
 		#expect(message.senderIsServer)
 		#expect(message.senderNickname == source)
+	}
+
+	/// A server relaying a NICK or a QUIT it generated itself may name the person
+	/// and nothing else. Filed as a server, the line reached no ignore rule, no
+	/// notification and no query.
+	@Test("userhost-split: a bare nickname on a real line names a user")
+	func bareNicknameOnTheWireNamesAUser() throws {
+		let client = GLTTestClient()
+		let message = try #require(Message(line: ":coolguy NOTICE * :hello", on: client))
+
+		#expect(message.senderIsServer == false)
+		#expect(message.senderNickname == "coolguy")
+		#expect(message.senderUsername == nil)
+		#expect(message.senderAddress == nil)
 	}
 
 	// MARK: - mask-match

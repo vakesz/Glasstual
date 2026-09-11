@@ -7,13 +7,13 @@
 import AppKit
 import SwiftUI
 
+/// The unread badge's own size, and nothing else. Everything the sidebar is
+/// spaced and sized by is `UISpacing` and `UIListMetrics`, which the member
+/// list beside it shares; indentation, row insets and the disclosure control
+/// belong to the sidebar list style.
 private enum ServerListLayout {
-	static let rowHeight: CGFloat = 28
-	static let disclosureWidth: CGFloat = 12
-	static let disclosureSpacing: CGFloat = 6
-	static let outlineIndentation: CGFloat = 14
-	static let channelLeadingPadding = disclosureWidth + disclosureSpacing + outlineIndentation
-	static let rowInsets = EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
+	static let badgeWidth: CGFloat = 24
+	static let badgeHeight: CGFloat = 20
 }
 
 /** The rows of the sidebar. The filter field that narrows them belongs to the
@@ -25,25 +25,37 @@ struct ServerListView: View {
 
 	var body: some View {
 		List(selection: selection) {
+			/* A real outline rather than a hand-rolled chevron and a literal
+			 indent: the disclosure control, the left and right arrow keys that
+			 work it, the Option-click that opens every server at once and the
+			 Expand/Collapse VoiceOver announces all come with it. */
 			ForEach(model.rows) { server in
-				ServerDisclosureRow(model: model, server: server)
+				if server.showsDisclosure {
+					DisclosureGroup(isExpanded: disclosure(of: server)) {
+						channelRows(server)
+					} label: {
+						ServerRowView(model: model, server: server)
+					}
 					.tag(server.id)
-					.listRowInsets(ServerListLayout.rowInsets)
 					.listRowSeparator(.hidden)
-
-				ForEach(server.channels) { channel in
-					ChannelRowView(model: model, channel: channel)
-						.padding(.leading, ServerListLayout.channelLeadingPadding)
-						.tag(channel.id)
-						.listRowInsets(ServerListLayout.rowInsets)
+				} else {
+					ServerRowView(model: model, server: server)
+						.tag(server.id)
 						.listRowSeparator(.hidden)
 				}
 			}
 		}
 		.listStyle(.sidebar)
+		.overlayScrollers()
 		.accessibilityIdentifier("server-list")
 		.scrollContentBackground(.hidden)
-		.environment(\.defaultMinListRowHeight, ServerListLayout.rowHeight)
+		/* A filter that matches nothing left a blank sidebar, which reads as a
+		 lost account rather than as a search with no answer. */
+		.overlay {
+			if model.hasNoFilterMatches {
+				ContentUnavailableView.search(text: model.filterText)
+			}
+		}
 		.contextMenu(forSelectionType: String.self) { identifiers in
 			if let menu = model.menu(for: identifiers) {
 				AppMenuContent(menu: menu.menu, context: menu.context) {
@@ -60,37 +72,26 @@ struct ServerListView: View {
 		.redirectsPrintableInput(to: redirectTyping)
 	}
 
+	private func channelRows(_ server: ServerRow) -> some View {
+		ForEach(server.channels) { channel in
+			ChannelRowView(model: model, channel: channel)
+				.tag(channel.id)
+				.listRowSeparator(.hidden)
+		}
+	}
+
 	private var selection: Binding<String?> {
 		Binding(
 			get: { model.selectedItemIdentifier },
 			set: { model.selectFromSwiftUI($0) }
 		)
 	}
-}
 
-private struct ServerDisclosureRow: View {
-	let model: ServerList
-	let server: ServerRow
-
-	var body: some View {
-		HStack(spacing: ServerListLayout.disclosureSpacing) {
-			Button {
-				model.toggleExpanded(serverID: server.id)
-			} label: {
-				Image(systemName: server.isExpanded ? "chevron.down" : "chevron.right")
-					.font(.system(size: 9, weight: .semibold))
-					.foregroundStyle(.secondary)
-					.frame(width: ServerListLayout.disclosureWidth, height: ServerListLayout.rowHeight)
-					.contentShape(Rectangle())
-			}
-			.buttonStyle(.plain)
-			.accessibilityLabel(server.title)
-			.opacity(server.showsDisclosure ? 1 : 0)
-			.allowsHitTesting(server.showsDisclosure)
-			.accessibilityHidden(server.showsDisclosure == false)
-
-			ServerRowView(model: model, server: server)
-		}
+	private func disclosure(of server: ServerRow) -> Binding<Bool> {
+		Binding(
+			get: { server.isExpanded },
+			set: { model.setExpanded($0, forServerID: server.id) }
+		)
 	}
 }
 
@@ -102,14 +103,16 @@ private struct SidebarRowChrome: ViewModifier {
 	let accessibilityLabel: String
 
 	func body(content: Content) -> some View {
+		/* No fixed height: the sidebar style sizes its own cells, and content
+		 pinned shorter than the cell sat 4 pt below its origin, which is where
+		 a ghost of the selected row's label was drawn. */
 		content
-			.frame(height: ServerListLayout.rowHeight)
 			.contentShape(Rectangle())
 			.accessibilityLabel(accessibilityLabel)
 			.draggable(id)
 			.dropDestination(for: String.self) { identifiers, _ in
 				guard let identifier = identifiers.first else { return false }
-				return model.move(draggedIdentifier: identifier, beforeIdentifier: id)
+				return model.move(draggedIdentifier: identifier, ontoIdentifier: id)
 			}
 	}
 }
@@ -119,7 +122,7 @@ private struct ServerRowView: View {
 	let server: ServerRow
 
 	var body: some View {
-		HStack(spacing: 7) {
+		HStack(spacing: UISpacing.regular) {
 			Text(server.title)
 				.fontWeight(.semibold)
 				.foregroundStyle(server.isActive ? Color.primary : Color(nsColor: .tertiaryLabelColor))
@@ -130,10 +133,11 @@ private struct ServerRowView: View {
 				Image(systemName: "lock.fill")
 					.font(.system(size: 9, weight: .semibold))
 					.foregroundStyle(.secondary)
+					.help(MainWindowStrings.Toolbar.connectionSecurity)
 					.accessibilityLabel(MainWindowStrings.Toolbar.connectionSecurity)
 			}
 
-			Spacer(minLength: 4)
+			Spacer(minLength: UISpacing.tight)
 		}
 		.modifier(SidebarRowChrome(model: model, id: server.id, accessibilityLabel: accessibilityDescription))
 	}
@@ -150,12 +154,12 @@ private struct ChannelRowView: View {
 	let channel: ChannelRow
 
 	var body: some View {
-		HStack(spacing: 7) {
+		HStack(spacing: UISpacing.regular) {
 			if let symbolName {
 				Image(systemName: symbolName)
 					.font(.system(size: 12, weight: .medium))
 					.foregroundStyle(channel.isActive ? .secondary : .tertiary)
-					.frame(width: 16)
+					.frame(width: UIListMetrics.glyphWidth)
 					.accessibilityHidden(true)
 			}
 
@@ -164,16 +168,20 @@ private struct ChannelRowView: View {
 				.lineLimit(1)
 				.truncationMode(.tail)
 
-			Spacer(minLength: 4)
+			Spacer(minLength: UISpacing.tight)
 
 			if channel.showsUnreadBadge {
 				Text(channel.unreadCount, format: .number)
 					.font(.system(size: 11, weight: .semibold, design: .rounded))
 					.monospacedDigit()
-					.foregroundStyle(channel.isEmphasized ? Color.white : Color.primary)
-					.padding(.horizontal, 7)
-					.frame(minWidth: 22, minHeight: 18)
+					.foregroundStyle(badgeForeground)
+					.padding(.horizontal, UISpacing.regular)
+					.frame(minWidth: ServerListLayout.badgeWidth, minHeight: ServerListLayout.badgeHeight)
 					.background(badgeBackground, in: Capsule())
+					/* The row's label already counts what is unread for VoiceOver;
+					 the tooltip says it to a pointer, which the digits alone do
+					 not tell what they are counting. */
+					.help(ChannelSpotlightStrings.unreadMessages(channel.unreadCount))
 					.accessibilityHidden(true)
 			}
 		}
@@ -200,17 +208,22 @@ private struct ChannelRowView: View {
 		}
 	}
 
+	/** The chip a badge that asks for attention sits on.
+
+	 `selectedContentBackgroundColor` is the colour the reader chose for
+	 selection, and the one AppKit desaturates while the window is not key; the
+	 accent colour it replaces answered for neither, so a badge stayed vivid
+	 beside a grey selection in a background window. */
 	private var badgeBackground: Color {
 		guard channel.isEmphasized else {
 			return Color(nsColor: .quaternaryLabelColor)
 		}
-		if let color = TextualUserDefaults.container
-			.storedColor(for: Preferences.Badges.serverListUnreadHighlight),
-			color.alphaComponent > 0
-		{
-			return Color(nsColor: color)
-		}
-		return .accentColor
+
+		return channel.unreadBadgeTint ?? Color(nsColor: .selectedContentBackgroundColor)
+	}
+
+	private var badgeForeground: Color {
+		channel.isEmphasized ? Color(nsColor: .selectedMenuItemTextColor) : .primary
 	}
 
 	private var accessibilityDescription: String {

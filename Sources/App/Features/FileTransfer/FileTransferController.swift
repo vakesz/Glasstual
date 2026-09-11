@@ -159,7 +159,11 @@ public final class FileTransferController: ClientScoped {
 		transferEvents?.cancel()
 		lifecycleNotifications.cancelAll()
 		portMapperNotifications.cancelAll()
+		/* An open NAT-PMP mapping keeps its mapper alive so that mDNSResponder's
+		 callback context stays valid, so dropping the controller is not enough
+		 to release the router mapping: it has to be closed here. */
 		portMapping?.close()
+		portMapping = nil
 		if let transferProgressHandler {
 			ProcessInfo.processInfo.endActivity(transferProgressHandler)
 		}

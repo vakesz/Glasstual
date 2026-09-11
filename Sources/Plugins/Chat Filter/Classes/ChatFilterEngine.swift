@@ -40,6 +40,16 @@ import Foundation
 import GlasstualPluginKit
 
 final class ChatFilterEngine {
+	/** How much of an incoming message a filter's pattern is shown.
+
+	 Every filter is tried against every line that arrives, on the main actor,
+	 and the patterns are user-authored while the subject is whatever a peer
+	 sent. ICU backtracks without a budget, so an unbounded subject is the other
+	 half of a catastrophic pattern; the editor refuses the pattern shapes and
+	 this refuses the length. An IRC line is 512 bytes, so the cap only ever
+	 bites on something that is not a chat message. */
+	static let matchInputLimit = RegularExpression.inputLengthLimit
+
 	private let filtersProvider: () -> [ChatFilter]
 	private let host: PluginHostContext
 	private var lastActionDates: [String: TimeInterval] = [:]
@@ -93,7 +103,12 @@ final class ChatFilterEngine {
 
 		if !filter.senderMatch.isEmpty {
 			let identity = author.isServer ? author.nickname : author.hostmask
-			guard RegularExpression.string(identity, isMatchedByRegex: filter.senderMatch, withoutCase: true)
+			guard RegularExpression.string(
+				identity,
+				isMatchedByRegex: filter.senderMatch,
+				withoutCase: true,
+				inputLimit: Self.matchInputLimit
+			)
 			else {
 				return false
 			}
@@ -130,7 +145,12 @@ final class ChatFilterEngine {
 		if host.removesIRCFormatting == false {
 			text = IRCFormatting.removingControlCodes(from: text)
 		}
-		return RegularExpression.string(text, isMatchedByRegex: filter.match, withoutCase: true)
+		return RegularExpression.string(
+			text,
+			isMatchedByRegex: filter.match,
+			withoutCase: true,
+			inputLimit: Self.matchInputLimit
+		)
 	}
 
 	func receivedCommand(_ event: PluginIncomingCommandEvent) -> Bool {
@@ -274,30 +294,24 @@ final class ChatFilterEngine {
 		messageParameters: [String]
 	) {
 		guard isSafeToPerformAction(filter), !filter.action.isEmpty else { return }
-		var action = filter.action
-		let replacements: [String: String?] = [
-			"%_channelName_%": destination?.name,
+		var replacements: [String: String] = [
+			"%_channelName_%": destination?.name ?? "",
 			"%_localNickname_%": client.userNickname,
-			"%_networkName_%": client.networkName,
-			"%_originalMessage_%": text,
+			"%_networkName_%": client.networkName ?? "",
+			"%_originalMessage_%": text ?? "",
 			"%_senderNickname_%": author.nickname,
-			"%_senderUsername_%": author.username,
-			"%_senderAddress_%": author.address,
+			"%_senderUsername_%": author.username ?? "",
+			"%_senderAddress_%": author.address ?? "",
 			"%_senderHostmask_%": author.hostmask,
-			"%_serverAddress_%": client.serverAddress,
+			"%_serverAddress_%": client.serverAddress ?? "",
 		]
-		for (token, value) in replacements {
-			action = action.replacingOccurrences(of: token, with: value ?? "")
-		}
 		for index in 0 ... 9 {
-			let value = messageParameters.indices.contains(index) ? messageParameters[index] : ""
-			action = action.replacingOccurrences(of: "%_Parameter_\(index)_%", with: value)
+			replacements["%_Parameter_\(index)_%"] =
+				messageParameters.indices.contains(index) ? messageParameters[index] : ""
 		}
 
-		for line in action.components(separatedBy: .newlines)
-			where line.count > 1 && line.hasPrefix("/") && !line.hasPrefix("//")
-		{
-			client.sendCommand(String(line.dropFirst()))
+		for line in Self.actionCommands(in: filter.action, replacing: replacements) {
+			client.sendCommand(line)
 		}
 
 		guard filter.logsMatch else { return }
@@ -322,6 +336,71 @@ final class ChatFilterEngine {
 		}
 		client.print(message, authoredBy: nil, in: report, as: .privateMessage, command: "PRIVMSG")
 		client.markUnread(report)
+	}
+
+	/** The commands a filter action runs, with every token expanded.
+
+	 The order the three steps run in is the whole security property of this
+	 function, and it used to be the other way around:
+
+	 - The *template* is split into lines first. A line separator that arrives
+	   inside a substituted value can then never start a command, because the
+	   command boundaries were fixed before any remote text was in the string.
+	 - Every substituted value has its own line and paragraph separators
+	   stripped. `\u{2028}`, `\u{2029}`, `\u{0085}`, `\u{000B}` and `\u{000C}`
+	   are all legal in an IRC message body and all count as line breaks to
+	   `components(separatedBy: .newlines)`, so a peer used to be able to end
+	   the line the template put its text on and write `/quit` — or any other
+	   command, user scripts included — on the next one.
+	 - Substitution is a single left-to-right pass. Replacing token by token
+	   rescanned what earlier tokens had already inserted, so a message body
+	   containing the literal text `%_senderHostmask_%` was expanded by a later
+	   iteration; iterating a dictionary, the order that happened in was not
+	   even fixed. A value this pass writes is never looked at again. */
+	static func actionCommands(in template: String, replacing replacements: [String: String]) -> [String] {
+		let sanitized = replacements.mapValues(removingLineBreaks)
+		let tokens = sanitized.keys.sorted { $0.count > $1.count }
+
+		return templateLines(of: template).compactMap { line -> String? in
+			let expanded = expanding(line, tokens: tokens, values: sanitized)
+			guard expanded.count > 1, expanded.hasPrefix("/"), !expanded.hasPrefix("//") else {
+				return nil
+			}
+			return String(expanded.dropFirst())
+		}
+	}
+
+	/// The user-authored template split into lines. `\n` and `\r\n` are what a
+	/// text editor writes and the only separators a person can mean here; every
+	/// other separator is something that arrived from the network.
+	private static func templateLines(of template: String) -> [String] {
+		template.components(separatedBy: "\n").map { line in
+			line.hasSuffix("\r") ? String(line.dropLast()) : line
+		}
+	}
+
+	private static func expanding(_ line: String, tokens: [String], values: [String: String]) -> String {
+		guard line.contains("%_") else { return line }
+
+		var result = ""
+		var index = line.startIndex
+		while index < line.endIndex {
+			let remainder = line[index...]
+			if let token = tokens.first(where: { remainder.hasPrefix($0) }) {
+				result += values[token] ?? ""
+				index = line.index(index, offsetBy: token.count)
+			} else {
+				result.append(line[index])
+				index = line.index(after: index)
+			}
+		}
+		return result
+	}
+
+	private static func removingLineBreaks(_ value: String) -> String {
+		String(String.UnicodeScalarView(value.unicodeScalars.filter { scalar in
+			!CharacterSet.newlines.contains(scalar)
+		}))
 	}
 
 	private func isSafeToPerformAction(_ filter: ChatFilter) -> Bool {

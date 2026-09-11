@@ -15,20 +15,6 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 
-/** The IRCv3 `server-time` format without the fractional seconds.
-
- The specification writes the value as `YYYY-MM-DDThh:mm:ss.sssZ` and the
- shared formatter matches that exactly, but servers that leave the fractional
- part out are common. Refusing their timestamp files a whole replayed
- scrollback at the moment it arrived instead of when it was said. */
-private nonisolated let serverTimeWholeSecondsFormatter: DateFormatter = { // nonisolated: let
-	let dateFormatter = DateFormatter()
-	dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-	dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
-	dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-	return dateFormatter
-}()
-
 /** The largest `@time=` a bouncer's Unix timestamp may carry.
 
  The tag is read as whole seconds, and 1e11 of them is the year 5138: past that
@@ -36,6 +22,24 @@ private nonisolated let serverTimeWholeSecondsFormatter: DateFormatter = { // no
  text — a forty-digit one parses to a `Double` that no later narrowing can
  survive, and `Int64(_:)` traps on it rather than reporting the overflow. */
 private nonisolated let maximumServerTimeInterval: Double = 1e11 // nonisolated: let
+
+/** A wire parameter carrying whole Unix seconds, read as a date.
+
+ RPL_TOPICWHOTIME, RPL_WHOISIDLE and the mode-list numerics all end in a
+ timestamp the server generated, and it is no more trustworthy than the
+ `@time=` tag: `TimeInterval(param) ?? 0` read an empty or textual one as 1970,
+ and a forty-digit or infinite one as a date past the year 3000. The same
+ bound applies here, and `nil` means "the server said nothing usable", which
+ lets the caller leave the date out rather than print a wrong one. */
+nonisolated func ircWireTimestampDate(from value: String) -> Date? { // nonisolated: pure
+	guard let seconds = Double(value), seconds.isFinite,
+	      abs(seconds) <= maximumServerTimeInterval
+	else {
+		return nil
+	}
+
+	return Date(timeIntervalSince1970: seconds)
+}
 
 /// A `time` (or bouncer `t`) tag read as a date, or `nil` when it carries no
 /// timestamp the client can act on.
@@ -55,8 +59,10 @@ private nonisolated func serverTimeDate(from value: String) -> Date? { // noniso
 		return Date(timeIntervalSince1970: seconds)
 	}
 
+	/* The ISO parser takes the specification's `YYYY-MM-DDThh:mm:ss.sssZ` and
+	 the whole-second form common servers send; either way a replayed line is
+	 filed when it was said rather than when it arrived. */
 	return sharedISOStandardDateFormatter().date(from: value)
-		?? serverTimeWholeSecondsFormatter.date(from: value)
 }
 
 /** One line received from the server, parsed.

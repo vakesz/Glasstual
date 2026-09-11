@@ -151,6 +151,98 @@ extension MenuStrings {
 			String(localized: .TVCMainWindow.menuEditSelectAll)
 		}
 
+		static var useSelectionForFind: String {
+			String(localized: .TVCMainWindow.menuEditUseSelectionForFind)
+		}
+
+		static var pasteAndMatchStyle: String {
+			String(localized: .TVCMainWindow.menuEditPasteAndMatchStyle)
+		}
+
+		static var spellingAndGrammar: String {
+			String(localized: .TVCMainWindow.menuEditSpellingAndGrammar)
+		}
+
+		static var showSpellingAndGrammar: String {
+			String(localized: .TVCMainWindow.menuEditShowSpellingAndGrammar)
+		}
+
+		static var checkDocumentNow: String {
+			String(localized: .TVCMainWindow.menuEditCheckDocumentNow)
+		}
+
+		static var checkSpellingWhileTyping: String {
+			String(localized: .TVCMainWindow.menuEditCheckSpellingWhileTyping)
+		}
+
+		static var checkGrammarWithSpelling: String {
+			String(localized: .TVCMainWindow.menuEditCheckGrammarWithSpelling)
+		}
+
+		static var correctSpellingAutomatically: String {
+			String(localized: .TVCMainWindow.menuEditCorrectSpellingAutomatically)
+		}
+
+		static var substitutions: String {
+			String(localized: .TVCMainWindow.menuEditSubstitutions)
+		}
+
+		static var showSubstitutions: String {
+			String(localized: .TVCMainWindow.menuEditShowSubstitutions)
+		}
+
+		static var smartCopyPaste: String {
+			String(localized: .TVCMainWindow.menuEditSmartCopyPaste)
+		}
+
+		static var smartQuotes: String {
+			String(localized: .TVCMainWindow.menuEditSmartQuotes)
+		}
+
+		static var smartDashes: String {
+			String(localized: .TVCMainWindow.menuEditSmartDashes)
+		}
+
+		static var smartLinks: String {
+			String(localized: .TVCMainWindow.menuEditSmartLinks)
+		}
+
+		static var dataDetectors: String {
+			String(localized: .TVCMainWindow.menuEditDataDetectors)
+		}
+
+		static var textReplacement: String {
+			String(localized: .TVCMainWindow.menuEditTextReplacement)
+		}
+
+		static var transformations: String {
+			String(localized: .TVCMainWindow.menuEditTransformations)
+		}
+
+		static var makeUpperCase: String {
+			String(localized: .TVCMainWindow.menuEditMakeUpperCase)
+		}
+
+		static var makeLowerCase: String {
+			String(localized: .TVCMainWindow.menuEditMakeLowerCase)
+		}
+
+		static var capitalize: String {
+			String(localized: .TVCMainWindow.menuEditCapitalize)
+		}
+
+		static var speech: String {
+			String(localized: .TVCMainWindow.menuEditSpeech)
+		}
+
+		static var startSpeaking: String {
+			String(localized: .TVCMainWindow.menuEditStartSpeaking)
+		}
+
+		static var stopSpeaking: String {
+			String(localized: .TVCMainWindow.menuEditStopSpeaking)
+		}
+
 		static var find: String {
 			String(localized: .TVCMainWindow.menuEditFind)
 		}

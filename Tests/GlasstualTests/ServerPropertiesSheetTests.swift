@@ -79,6 +79,88 @@ struct ServerPropertiesSheetTests {
 		#expect(submitted.serverList.first?.pendingServerPassword == .set("server-secret"))
 	}
 
+	/** The sheet reads its three secrets from the keychain a moment after it
+	 opens, because `SecItemCopyMatching` is synchronous and the main actor is
+	 not the place for three of them. Every untouched field used to submit as
+	 `.edited("")` — which is `.cleared` — so pressing OK inside that moment
+	 deleted the server, NickServ and proxy passwords. */
+	@Test("Saving before the keychain answers asks for no change to any secret")
+	func savingBeforeSecretsLoadKeepsThem() throws {
+		let config = Self.configuration(withSecrets: false)
+		let items = try Self.storedSecrets(for: config)
+		defer { Self.deleteSecrets(items) }
+
+		let model = ServerPropertiesModel(config: config)
+		/* Nothing has answered yet, so the fields are showing secrets they do
+		 not have. */
+		#expect(model.serverPassword.isEmpty)
+		#expect(model.nicknamePassword.isEmpty)
+		#expect(model.proxyPassword.isEmpty)
+
+		let submitted = try #require(model.submittedConfig())
+
+		#expect(submitted.pendingNicknamePassword == .unchanged)
+		#expect(submitted.pendingProxyPassword == .unchanged)
+		#expect(submitted.serverList.first?.pendingServerPassword == .unchanged)
+	}
+
+	@Test("Saving after the keychain answers, with nothing typed, asks for no change")
+	func savingAfterSecretsLoadKeepsThem() async throws {
+		let config = Self.configuration(withSecrets: false)
+		let items = try Self.storedSecrets(for: config)
+		defer { Self.deleteSecrets(items) }
+
+		let model = ServerPropertiesModel(config: config)
+		model.loadSecrets()
+		for _ in 0 ..< 200 where model.nicknamePassword.isEmpty {
+			try await Task.sleep(for: .milliseconds(10))
+		}
+
+		#expect(model.nicknamePassword == "stored-nickname")
+		#expect(model.proxyPassword == "stored-proxy")
+		#expect(model.serverPassword == "stored-server")
+
+		let submitted = try #require(model.submittedConfig())
+
+		#expect(submitted.pendingNicknamePassword == .unchanged)
+		#expect(submitted.pendingProxyPassword == .unchanged)
+		#expect(submitted.serverList.first?.pendingServerPassword == .unchanged)
+
+		/* Emptying a field the person can now see is still what deletes the
+		 secret behind it. */
+		model.nicknamePassword = ""
+		model.serverPassword = "replacement"
+
+		let edited = try #require(model.submittedConfig())
+
+		#expect(edited.pendingNicknamePassword == .cleared)
+		#expect(edited.pendingProxyPassword == .unchanged)
+		#expect(edited.serverList.first?.pendingServerPassword == .set("replacement"))
+	}
+
+	/// Writes a distinct secret for each of the configuration's three keychain
+	/// items, the way a connection the user has already saved carries them.
+	private static func storedSecrets(for config: ClientConfig) throws -> [KeychainItem] {
+		let server = try #require(config.serverList.first)
+		let items: [(KeychainItem, String)] = [
+			(config.nicknamePasswordKeychainItem, "stored-nickname"),
+			(config.proxyPasswordKeychainItem, "stored-proxy"),
+			(server.keychainItem, "stored-server"),
+		]
+
+		for (item, password) in items {
+			#expect(item.write(password))
+		}
+
+		return items.map(\.0)
+	}
+
+	private static func deleteSecrets(_ items: [KeychainItem]) {
+		for item in items {
+			item.delete()
+		}
+	}
+
 	private static func configuration(withSecrets: Bool) -> ClientConfig {
 		var config = ClientConfig(connectionName: "Libera")
 		config.nickname = "someone"

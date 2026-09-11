@@ -126,8 +126,8 @@ public nonisolated extension Preferences { // nonisolated: value
 			if version > TranscriptTheme.currentFormatVersion {
 				return true
 			}
-			guard let theme = try? PropertyListDecoder().decode(TranscriptTheme.self, from: data) else { return false }
-			return theme.formatVersion == TranscriptTheme.currentFormatVersion && theme.isValid
+			// Everything else a stored document has to satisfy is what reading it says.
+			return (try? TranscriptTheme.decoded(from: data)) != nil
 		})
 		static let all: [any AnyPreferenceKey] = [transcriptTheme]
 	}

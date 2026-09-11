@@ -1,18 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "message-context-menu-replies-emoji" : {
-      "comment" : "Message context menu: replies and reactions. Legacy key: rct-ph.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emoji"
-          }
-        }
-      }
-    },
     "message-context-menu-replies-other" : {
       "comment" : "Message context menu: replies and reactions. Legacy key: rct-ot.",
       "extractionState" : "manual",
@@ -45,18 +33,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reply"
-          }
-        }
-      }
-    },
-    "message-context-menu-replies-send" : {
-      "comment" : "Message context menu: replies and reactions. Legacy key: rct-sd.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Send"
           }
         }
       }

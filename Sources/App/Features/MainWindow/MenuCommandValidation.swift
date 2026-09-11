@@ -50,6 +50,77 @@ private enum MenuValidationConstants {
 	static let fallbackSearchProviderName = "Google"
 }
 
+/// Where a Paste command puts what it is carrying.
+public nonisolated enum MenuPasteTarget: Sendable { // nonisolated: value
+	/// Whatever holds the keyboard.
+	case firstResponder
+	/// The chat input, which is where the main window sends a paste that has no
+	/// editable responder of its own to go to.
+	case inputField
+	/// Nowhere: nothing editable holds the keyboard and there is no input field.
+	case none
+}
+
+/** The two menu rules that were asking the wrong thing.
+
+ Paste asked whether the main window was key and then validated against the
+ chat input, so it read as enabled while the caret was in the toolbar's search
+ field or a sheet's field. Change Nickname asked whether the client was
+ connected while the action it enables guards on being logged in -- and closes
+ the presented sheet on the way -- so choosing it dismissed an unrelated sheet
+ and then did nothing. */
+@MainActor
+public enum MenuResponderCommandPolicy {
+	/** Paste is a property of the responder that will receive it.
+
+	 The menu item and the action ask the same question of the same three
+	 inputs: the item was enabled only for an editable responder while the
+	 action fell back to the message field, so ⌘V read as unavailable while the
+	 reader was in the transcript -- and the shortcut, which AppKit validates
+	 through the item, did nothing at all. */
+	public static func canPaste(
+		pasteboardHasText: Bool,
+		responderIsEditableText: Bool,
+		responderIsInInputBar: Bool,
+		hasInputField: Bool
+	) -> Bool {
+		guard pasteboardHasText else { return false }
+		return pasteTarget(
+			responderIsEditableText: responderIsEditableText,
+			responderIsInInputBar: responderIsInInputBar,
+			hasInputField: hasInputField
+		) != .none
+	}
+
+	/** Which of the two the paste is aimed at.
+
+	 The same question ``canPaste(pasteboardHasText:responderIsEditableText:responderIsInInputBar:hasInputField:)``
+	 answers, asked for the action rather than the menu item: the responder holding
+	 the keyboard is the destination, and the chat input is only a fallback. Sending
+	 every paste to the input field pulled the focus out of the toolbar's search
+	 field or a sheet's field and dropped the text into the conversation
+	 instead, so the field is chosen only when the responder belongs to the
+	 input bar already, or when nothing editable has the keyboard at all. */
+	public static func pasteTarget(
+		responderIsEditableText: Bool,
+		responderIsInInputBar: Bool,
+		hasInputField: Bool
+	) -> MenuPasteTarget {
+		if responderIsEditableText, responderIsInInputBar == false {
+			return .firstResponder
+		}
+		if hasInputField {
+			return .inputField
+		}
+		return responderIsEditableText ? .firstResponder : .none
+	}
+
+	/// Change Nickname needs a registered connection, not merely a socket.
+	public static func canChangeNickname(clientIsLoggedIn: Bool) -> Bool {
+		clientIsLoggedIn
+	}
+}
+
 @MainActor
 extension MenuActionCoordinator {
 	public func validate(_ menuItem: NSMenuItem) -> Bool {
@@ -175,7 +246,11 @@ extension MenuActionCoordinator {
 		case .channelList:
 			return client?.isLoggedIn == true
 		case .changeNickname:
-			return client?.isConnected == true
+			/* The action guards on `isLoggedIn`, and it closes the presented
+			 sheet before it gets there: validating on the looser `isConnected`
+			 offered a command that dismissed an unrelated sheet and then did
+			 nothing. */
+			return MenuResponderCommandPolicy.canChangeNickname(clientIsLoggedIn: client?.isLoggedIn == true)
 		case .duplicateServer, .addChannelToServer,
 		     .serverProperties:
 			return client != nil
@@ -268,7 +343,8 @@ extension MenuActionCoordinator {
 
 		switch item.command {
 		case .webChangeNickname:
-			return client?.isConnected == true
+			/* The same command from the transcript's menu, so the same guard. */
+			return MenuResponderCommandPolicy.canChangeNickname(clientIsLoggedIn: client?.isLoggedIn == true)
 		case .webSearch:
 			guard let transcriptView = selectedBackingView else { return false }
 			item.title = ApplicationStrings.search(with: searchProviderName)
@@ -335,12 +411,22 @@ extension MenuActionCoordinator {
 		}
 	}
 
+	/** Paste applies to whatever holds the keyboard.
+
+	 It used to validate against the chat input whenever the main window was
+	 key, so Paste read as enabled while the caret sat in the toolbar's search
+	 field or a sheet's field -- and then pasted into the wrong one. The
+	 responder is the answer in both branches, and the branches are the same
+	 ones ``MenuActionCoordinator/paste(_:)`` takes: the item has to be enabled
+	 wherever the action has somewhere to put the text. */
 	private func validatePaste() -> Bool {
-		guard NSPasteboard.general.string(forType: .string)?.isEmpty == false else { return false }
-		if mainWindow.isKeyWindow {
-			return mainWindow.inputTextField.isEditable
-		}
-		return (NSApp.keyWindow?.firstResponder as? NSText)?.isEditable == true
+		let responder = NSApp.keyWindow?.firstResponder
+		return MenuResponderCommandPolicy.canPaste(
+			pasteboardHasText: NSPasteboard.general.string(forType: .string)?.isEmpty == false,
+			responderIsEditableText: (responder as? NSText)?.isEditable == true,
+			responderIsInInputBar: responderBelongsToInputBar(responder),
+			hasInputField: mainWindow.isKeyWindow ? mainWindow.inputTextField != nil : false
+		)
 	}
 
 	private func validateCloseWindow(_ item: NSMenuItem, client: IRCClient?, channel: IRCChannel?) -> Bool {
@@ -377,6 +463,9 @@ extension MenuActionCoordinator {
 		switch item.command {
 		case .toggleServerList:
 			item.title = MainWindowStrings.Menu.serverList(isVisible: mainWindow.isServerListVisible)
+			/* Both sidebar toggles hide together with the window, and the rule
+			 under them has to go with them. */
+			item.menu?.item(for: .toggleSidebarsSeparator)?.isHidden = isMain == false
 		case .sortChannelList:
 			item.menu?.item(for: .sortChannelListSeparator)?.isHidden = isMain == false
 		case .resetWindow:

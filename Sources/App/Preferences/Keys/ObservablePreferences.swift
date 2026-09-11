@@ -35,7 +35,6 @@
  *
  *********************************************************************** */
 
-import Combine
 import Foundation
 import Observation
 import SwiftUI
@@ -57,8 +56,10 @@ public final class ObservablePreferences {
 	/// the mechanism, not part of the interface.
 	private var revision: UInt = 0
 
+	/// Cancels itself when it goes, which for this one is never: the store is a
+	/// singleton the process holds for as long as it runs.
 	@ObservationIgnored
-	private var observations: [AnyCancellable] = []
+	private let observations = NotificationSubscriptions()
 
 	private init() {
 		/* Two notifications, because the store posts one and the system posts
@@ -71,13 +72,9 @@ public final class ObservablePreferences {
 		 does anything writing off the main actor — and a write through any of
 		 them is a change this has to see. */
 		for name in [UserDefaults.didChangeNotification, .textualUserDefaultsDidChange] {
-			observations.append(
-				NotificationCenter.default.publisher(for: name)
-					.receive(on: DispatchQueue.main)
-					.sink { [weak self] _ in
-						self?.invalidate()
-					}
-			)
+			observations.observe(name) { [weak self] _ in
+				self?.invalidate()
+			}
 		}
 	}
 

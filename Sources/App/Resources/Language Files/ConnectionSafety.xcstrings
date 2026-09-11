@@ -1,0 +1,78 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "direct-chat-offer-refused-address" : {
+      "comment" : "Console notice when a DCC CHAT offer names an address the client refuses to dial (loopback, a private network, a documentation range). %1$@ is the sender's nickname, %2$@ the address the offer named.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refused a direct chat request from %1$@: %2$@ is not an address this client will connect to."
+          }
+        }
+      }
+    },
+    "direct-chat-request-with-address" : {
+      "comment" : "Body of the alert that asks whether to accept a DCC CHAT offer that names the address the client would dial. %1$@ is the sender's nickname, %2$@ the address. The sibling wants-to-start-a-direct-chat in Prompts.xcstrings is used for a passive offer, which names no address.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ wants to start a direct chat with you from %2$@. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address."
+          }
+        }
+      }
+    },
+    "file-transfer-offer-refused-crowded" : {
+      "comment" : "Console notice when an incoming file transfer offer is dropped because the file transfer list already holds as many downloads as it will track. %@ is the sender's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignored a file transfer offer from %@: too many downloads are listed already. Clear the finished ones and ask them to send it again."
+          }
+        }
+      }
+    },
+    "outgoing-line-truncated" : {
+      "comment" : "Console notice when a line this client was about to send was longer than the server accepts and had to be cut, so not all of what the user typed reached the server. %1$ld is the length of the assembled line in bytes, %2$ld how many bytes this server carries.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An outgoing line of %1$ld bytes was trimmed to the %2$ld this server accepts; the rest was not sent."
+          }
+        }
+      }
+    },
+    "sasl-authentication-timed-out" : {
+      "comment" : "Console notice when the server acknowledged the SASL capability and then never answered the authentication exchange, so the client gave up on it and finished registering.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server did not answer the SASL authentication request in time."
+          }
+        }
+      }
+    },
+    "sasl-credentials-contain-a-null-character" : {
+      "comment" : "Console notice when the configured SASL user name or password contains a U+0000 character. SASL PLAIN separates its fields with that character, so a field containing one cannot be sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The SASL user name or password contains a null character, which cannot be sent."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

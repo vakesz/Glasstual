@@ -117,6 +117,8 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		case .newIgnoreEntry: .addressBook
 		default: requested
 		}
+		// The sheet's keychain secrets are read once, when it opens.
+		model.loadSecrets()
 		startSheet()
 		if requested == .newIgnoreEntry {
 			if let hostmask = context as? String {
@@ -409,9 +411,11 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		Alerts.alert(
 			withMessage: ServerPropertiesStrings.ExternalChange.unsavedChangesWarning,
 			title: ServerPropertiesStrings.ExternalChange.reloadTitle,
-			defaultButton: PromptStrings.Action.yes,
-			alternateButton: PromptStrings.Action.no,
-			otherButton: nil
+			defaultButton: ServerPropertiesStrings.ExternalChange.reloadButton,
+			alternateButton: PromptStrings.Action.cancel,
+			otherButton: nil,
+			// Reloading throws away whatever the user has typed into the sheet.
+			destructiveButton: .default
 		) { [weak self] outcome in
 			guard outcome.response == .default, let self else { return }
 			client.updateStoredConfiguration()

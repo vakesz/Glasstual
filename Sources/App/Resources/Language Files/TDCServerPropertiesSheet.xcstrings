@@ -1,6 +1,126 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "add-channel-button": {
+      "comment": "Help tag and accessibility label for the button that adds a channel to the server's channel list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Channel"
+          }
+        }
+      }
+    },
+    "edit-channel-button": {
+      "comment": "Help tag and accessibility label for the button that edits the selected channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Channel"
+          }
+        }
+      }
+    },
+    "remove-channel-button": {
+      "comment": "Help tag and accessibility label for the button that removes the selected channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Channel"
+          }
+        }
+      }
+    },
+    "add-highlight-button": {
+      "comment": "Help tag and accessibility label for the button that adds a highlight rule.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Highlight"
+          }
+        }
+      }
+    },
+    "edit-highlight-button": {
+      "comment": "Help tag and accessibility label for the button that edits the selected highlight rule.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Highlight"
+          }
+        }
+      }
+    },
+    "remove-highlight-button": {
+      "comment": "Help tag and accessibility label for the button that removes the selected highlight rule.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Highlight"
+          }
+        }
+      }
+    },
+    "add-address-book-entry-button": {
+      "comment": "Help tag and accessibility label for the menu button that adds an Address Book entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Entry"
+          }
+        }
+      }
+    },
+    "edit-address-book-entry-button": {
+      "comment": "Help tag and accessibility label for the button that edits the selected Address Book entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Entry"
+          }
+        }
+      }
+    },
+    "remove-address-book-entry-button": {
+      "comment": "Help tag and accessibility label for the button that removes the selected Address Book entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Entry"
+          }
+        }
+      }
+    },
+    "reload-button": {
+      "comment": "Button that reloads the connection's configuration, discarding unsaved edits in the sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload"
+          }
+        }
+      }
+    },
     "add-user-ignore-entry": {
       "comment": "Menu item that adds an Address Book entry which ignores a user.",
       "extractionState": "manual",
@@ -188,7 +308,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose An Identity"
+            "value": "Choose an Identity"
           }
         }
       }

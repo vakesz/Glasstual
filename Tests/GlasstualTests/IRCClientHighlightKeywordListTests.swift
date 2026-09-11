@@ -13,7 +13,7 @@ import Testing
 private final class RecordingChannelPresentation: TreeItemPresentation {
 	private(set) var printedLines: [LogLine] = []
 
-	nonisolated let presentationIdentifier = "recording-presentation" // nonisolated: let
+	let presentationIdentifier = "recording-presentation"
 
 	/** The completion block reports the rendered line number, which only the
 	 real controller can supply; no caller here passes one. */
