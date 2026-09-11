@@ -54,8 +54,20 @@ nonisolated enum PromptStrings { // nonisolated: value
 			String(localized: .Prompts.directChatDccChatDecline)
 		}
 
+		static var delete: String {
+			String(localized: .Prompts.delete)
+		}
+
 		static var no: String {
 			String(localized: .Prompts.no)
+		}
+
+		static var open: String {
+			String(localized: .Prompts.open)
+		}
+
+		static var remove: String {
+			String(localized: .Prompts.remove)
 		}
 
 		static var save: String {
@@ -66,12 +78,22 @@ nonisolated enum PromptStrings { // nonisolated: value
 			String(localized: .Prompts.select)
 		}
 
+		static var send: String {
+			String(localized: .Prompts.send)
+		}
+
 		static var yes: String {
 			String(localized: .Prompts.yes)
 		}
 	}
 
 	enum Alert {
+		/// The standard macOS wording, used when an alert offers suppression
+		/// without naming the checkbox itself.
+		static var doNotAskAgain: String {
+			String(localized: .Prompts.doNotAskMeAgain)
+		}
+
 		static var doNotShowAgain: String {
 			String(localized: .Prompts.doNotShowThisMessageAgain)
 		}
@@ -293,20 +315,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 
 		static func unsignedTitle(pluginNames: String) -> String {
 			String(localized: .Prompts.glasstualRefusedToLoadTheseAddons(pluginNames))
-		}
-	}
-
-	enum TextSearch {
-		static var body: String {
-			String(localized: .Prompts.keyboardShortcutGCanBeUsed)
-		}
-
-		static var buttonTitle: String {
-			String(localized: .Prompts.search)
-		}
-
-		static var title: String {
-			String(localized: .Prompts.enterSomeTextToSearch)
 		}
 	}
 

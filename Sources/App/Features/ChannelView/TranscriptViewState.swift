@@ -33,11 +33,24 @@ import AppKit
 
 extension NSAttributedString.Key {
 	static let transcriptLineNumber = NSAttributedString.Key("GlasstualTranscriptLineNumber")
+	/// The name the run itself spells: the author's, on the name that heads the
+	/// line, and the mentioned member's, on a mention inside a message.
 	static let transcriptNickname = NSAttributedString.Key("GlasstualTranscriptNickname")
+	/** Who wrote the line this run belongs to. Every run of a line carries it,
+	 including the timestamp and the body, which is what lets a reply raised
+	 from anywhere in a message name its author. */
+	static let transcriptLineNickname = NSAttributedString.Key("GlasstualTranscriptLineNickname")
 	static let transcriptLineType = NSAttributedString.Key("GlasstualTranscriptLineType")
 	static let transcriptMessageIdentifier = NSAttributedString.Key("GlasstualTranscriptMessageIdentifier")
 	static let transcriptExcerpt = NSAttributedString.Key("GlasstualTranscriptExcerpt")
+	/// A `TranscriptAction`, stored as its `attributeValue`.
 	static let transcriptAction = NSAttributedString.Key("GlasstualTranscriptAction")
+	/// A `TranscriptReactionTarget`, stored as its `attributeValue`: the run is
+	/// a reaction chip, and clicking it reacts to that message.
+	static let transcriptReaction = NSAttributedString.Key("GlasstualTranscriptReaction")
+	/// The address an inline image was fetched from, on the character that
+	/// draws it.
+	static let transcriptInlineImage = NSAttributedString.Key("GlasstualTranscriptInlineImage")
 	static let transcriptSelectionSegment = NSAttributedString.Key("GlasstualTranscriptSelectionSegment")
 	/** A hairline drawn across the paragraph that carries it, in this colour,
 	 `transcriptRuleInset` points below the paragraph's top; the paragraph's
@@ -65,6 +78,8 @@ struct SelectionAnchor: Equatable {
 
 struct CachedTranscriptImage {
 	let linkIdentifier: String
+	/// Where the image came from, so its run can offer the link it stands for.
+	let sourceURL: URL
 	let image: NSImage
 	let originalSize: NSSize
 	let attachment: NSTextAttachment
@@ -91,6 +106,63 @@ extension TranscriptMarker {
 			true
 		} else {
 			false
+		}
+	}
+}
+
+/** The reaction one chip in a message's details stands for. Like
+ ``TranscriptAction`` it travels through the text storage as a string, and this
+ is the one place that string is written and read. */
+struct TranscriptReactionTarget: Equatable {
+	let messageIdentifier: String
+	let emoji: String
+
+	/// A separator no message identifier and no emoji can contain.
+	private static let separator: Character = "\u{1F}"
+
+	var attributeValue: String {
+		"\(messageIdentifier)\(Self.separator)\(emoji)"
+	}
+
+	init(messageIdentifier: String, emoji: String) {
+		self.messageIdentifier = messageIdentifier
+		self.emoji = emoji
+	}
+
+	init?(attributeValue: Any?) {
+		guard let value = attributeValue as? String else { return nil }
+		let parts = value.split(separator: Self.separator, maxSplits: 1, omittingEmptySubsequences: false)
+		guard parts.count == 2, parts[0].isEmpty == false, parts[1].isEmpty == false else { return nil }
+		messageIdentifier = String(parts[0])
+		emoji = String(parts[1])
+	}
+}
+
+/** What a run of transcript text stands for when it is clicked: a member's
+ name or a channel's. It travels through the text storage as a string, and
+ this is the one place that string is written and read. */
+enum TranscriptAction: Equatable {
+	case nickname(String)
+	case channel(String)
+
+	private static let nicknamePrefix = "nickname:"
+	private static let channelPrefix = "channel:"
+
+	var attributeValue: String {
+		switch self {
+		case let .nickname(name): Self.nicknamePrefix + name
+		case let .channel(name): Self.channelPrefix + name
+		}
+	}
+
+	init?(attributeValue: Any?) {
+		guard let value = attributeValue as? String else { return nil }
+		if value.hasPrefix(Self.nicknamePrefix) {
+			self = .nickname(String(value.dropFirst(Self.nicknamePrefix.count)))
+		} else if value.hasPrefix(Self.channelPrefix) {
+			self = .channel(String(value.dropFirst(Self.channelPrefix.count)))
+		} else {
+			return nil
 		}
 	}
 }

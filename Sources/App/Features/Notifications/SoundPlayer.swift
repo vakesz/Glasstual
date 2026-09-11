@@ -22,6 +22,10 @@ public final class SoundPlayer: NSObject {
 		category: "SoundPlayer"
 	)
 
+	/// The one sound that is not a file in a Sounds folder: the system alert,
+	/// which `NSSound.beep()` plays and a notification names as its default.
+	public static let beepSoundName = "Beep"
+
 	/** A SystemSoundID is an owned resource. Creating one per playback leaked it and
 	 rescanned three sound directories on the notification-delivery path. */
 	private static var soundCache: [String: SystemSoundID] = [:]
@@ -45,7 +49,7 @@ public final class SoundPlayer: NSObject {
 			return
 		}
 
-		if name == "Beep" {
+		if name == beepSoundName {
 			NSSound.beep()
 
 			return
@@ -63,7 +67,7 @@ public final class SoundPlayer: NSObject {
 	}
 
 	public static func uniqueListOfSounds() -> [String] {
-		var sounds = ["Beep"]
+		var sounds = [beepSoundName]
 
 		for catalog in [systemAlertSoundFiles, systemLibrarySoundFiles, userLibrarySoundFiles] {
 			for name in catalog?.keys ?? [String: String]().keys where !sounds.contains(name) {

@@ -28,7 +28,6 @@ struct IRCModelPersistenceTests {
 		#expect(connection.isConnected == false)
 		#expect(connection.isDisconnecting == false)
 		#expect(connection.isSecured == false)
-		#expect(connection.isSending == false)
 		#expect(connection.EOFReceived == false)
 	}
 
@@ -43,7 +42,6 @@ struct IRCModelPersistenceTests {
 		#expect(connection.isConnectedWithClientSideCertificate == false)
 		#expect(connection.isDisconnecting == false)
 		#expect(connection.isSecured == false)
-		#expect(connection.isSending == false)
 		#expect(connection.EOFReceived == false)
 		#expect(connection.connectedAddress == nil)
 	}

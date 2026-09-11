@@ -357,9 +357,16 @@ struct LogViewLifecycleTests {
 		view.cacheDisplay(in: view.bounds, to: bitmap)
 		let background = try #require(bitmap.colorAt(x: bitmap.pixelsWide - 2, y: bitmap.pixelsHigh / 2)?
 			.usingColorSpace(.deviceRGB))
+		/* `colorAt(x:y:)` is in pixels and the rule's position is in points, so
+		 the backing scale is part of the conversion: on a Retina display the
+		 probe used to read a row half way up the view from the one it meant, and
+		 found the background there whatever the rule did. */
+		let scale = CGFloat(bitmap.pixelsHigh) / view.bounds.height
 		func rowDiffers(_ pointInView: NSPoint) -> Bool {
-			let row = view.isFlipped ? Int(pointInView.y) : Int(view.bounds.height - pointInView.y)
-			for probe in (row - 1) ... (row + 1) where probe >= 0 && probe < bitmap.pixelsHigh {
+			let offset = view.isFlipped ? pointInView.y : view.bounds.height - pointInView.y
+			let row = Int(offset * scale)
+			let radius = Int(scale.rounded(.up))
+			for probe in (row - radius) ... (row + radius) where probe >= 0 && probe < bitmap.pixelsHigh {
 				for x in stride(from: 0, to: bitmap.pixelsWide, by: 4) {
 					guard let color = bitmap.colorAt(x: x, y: probe)?.usingColorSpace(.deviceRGB) else { continue }
 					if abs(color.redComponent - background.redComponent) > 0.05
@@ -561,6 +568,144 @@ struct LogViewLifecycleTests {
 		#expect(textView.textLayoutManager != nil)
 		#expect(try ruleIsDrawn(for: markerRange.location, in: logView, textView: textView))
 		#expect(try layoutFragment(for: markerRange.location, in: textView) is TranscriptRuleLayoutFragment)
+	}
+
+	/** The chevron says the topic has more to show, so a topic that fits on one
+	 line must not offer one at any text size.
+
+	 The threshold used to be a line of the field's own font while the string
+	 measured against it carried the scaled font `attributedTopic(_:)` writes,
+	 so at ⌘= every one-line topic measured as an overflow and got a chevron
+	 that unfolded onto nothing. */
+	@Test("A one-line topic offers no chevron at any text scale", arguments: [1.0, 2.0] as [CGFloat])
+	func oneLineTopicHasNoChevron(scale: CGFloat) throws {
+		let transcript = try makeTranscript(width: 800)
+		transcript.logView.setTopic("Short topic")
+		transcript.logView.setTextScale(scale)
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+
+		#expect(transcript.view.topicField.isHidden == false)
+		#expect(transcript.view.topicDisclosure.isHidden)
+	}
+
+	/// A topic too long for the column keeps its chevron, whatever the scale:
+	/// the fix must not have turned the disclosure off altogether.
+	@Test("A topic that does not fit keeps its chevron", arguments: [1.0, 2.0] as [CGFloat])
+	func wrappingTopicKeepsItsChevron(scale: CGFloat) throws {
+		let transcript = try makeTranscript(width: 400)
+		transcript.logView.setTopic(String(repeating: "a long topic that cannot fit on one line ", count: 6))
+		transcript.logView.setTextScale(scale)
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+
+		#expect(transcript.view.topicDisclosure.isHidden == false)
+	}
+
+	/** The popover a single click asks for is anchored to characters, so any
+	 edit that can move them has to call the click off.
+
+	 It used to be cancelled only by another click: a line arriving during the
+	 double-click interval left the popover to open a quarter of a second later
+	 against whatever text had taken that range. */
+	@Test("An edit during the double-click wait calls off the profile popover")
+	func appendingCancelsThePendingProfileClick() throws {
+		let transcript = try makeTranscript(width: 800)
+		transcript.logView.replaceLines([transcriptLine("hello there")])
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+
+		try clickNickname(in: transcript)
+		#expect(transcript.view.hasPendingNicknameClick)
+
+		transcript.logView.appendLines([transcriptLine("and another line")])
+		#expect(transcript.view.hasPendingNicknameClick == false)
+	}
+
+	/// Clearing and trimming reach the same characters, and the batch every
+	/// edit runs inside is where the click is called off.
+	@Test("Clearing the transcript calls off the pending profile popover")
+	func clearingCancelsThePendingProfileClick() throws {
+		let transcript = try makeTranscript(width: 800)
+		transcript.logView.replaceLines([transcriptLine("hello there")])
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+
+		try clickNickname(in: transcript)
+		#expect(transcript.view.hasPendingNicknameClick)
+
+		transcript.logView.clearLines()
+		#expect(transcript.view.hasPendingNicknameClick == false)
+	}
+
+	/// A transcript that leaves its window has nothing to anchor a popover to.
+	@Test("Leaving the window calls off the pending profile popover")
+	func leavingTheWindowCancelsThePendingProfileClick() throws {
+		let transcript = try makeTranscript(width: 800)
+		transcript.logView.replaceLines([transcriptLine("hello there")])
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+
+		try clickNickname(in: transcript)
+		#expect(transcript.view.hasPendingNicknameClick)
+
+		transcript.view.removeFromSuperview()
+		#expect(transcript.view.hasPendingNicknameClick == false)
+	}
+
+	private struct Transcript {
+		let window: MainWindow
+		let logView: LogView
+		let view: NativeTranscriptView
+	}
+
+	private func makeTranscript(width: CGFloat) throws -> Transcript {
+		let client = IRCClient(config: ClientConfig())
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: width, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = LogController(client: client, in: window)
+		let logView = controller.ensureBackingView()
+		let container = NSView(frame: NSRect(x: 0, y: 0, width: width, height: 600))
+		container.addSubview(logView.view)
+		NSLayoutConstraint.activate([
+			logView.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+			logView.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+			logView.view.topAnchor.constraint(equalTo: container.topAnchor),
+			logView.view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+		])
+		window.contentView = container
+		container.layoutSubtreeIfNeeded()
+		return try Transcript(
+			window: window,
+			logView: logView,
+			view: #require(logView.view as? NativeTranscriptView)
+		)
+	}
+
+	/// Clicks the middle of the first nickname the transcript drew, the way the
+	/// text view reports a click of its own.
+	private func clickNickname(in transcript: Transcript) throws {
+		let textView = transcript.view.textView
+		let storage = try #require(textView.textStorage)
+		var nicknameRange: NSRange?
+		storage.enumerateAttribute(
+			.transcriptAction,
+			in: NSRange(location: 0, length: storage.length)
+		) { value, range, stop in
+			if case .nickname = TranscriptAction(attributeValue: value) {
+				nicknameRange = range
+				stop.pointee = true
+			}
+		}
+		let range = try #require(nicknameRange)
+		let screenRect = textView.firstRect(forCharacterRange: range, actualRange: nil)
+		let windowRect = try #require(transcript.window.convertFromScreen(screenRect) as NSRect?)
+		let rect = textView.convert(windowRect, from: nil)
+		textView.onClick?(TranscriptClick(
+			point: NSPoint(x: rect.midX, y: rect.midY),
+			clickCount: 1,
+			modifiers: [],
+			dragged: false
+		))
 	}
 }
 

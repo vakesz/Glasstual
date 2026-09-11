@@ -36,24 +36,24 @@ struct PreferencesNotificationsPane: View {
 					title: PreferencesNotificationsStrings.onlySpeakSelection,
 					isOn: model.preferences.binding(for: Preferences.Notifications.onlySpeakForSelection)
 				)
-				VStack(alignment: .leading, spacing: 6) {
-					Text(verbatim: PreferencesNotificationsStrings.speechIncludeLabel)
-					PreferencesToggle(
-						title: PreferencesNotificationsStrings.speakChannelName,
-						isOn: model.preferences.gatedBinding(
-							for: Preferences.Notifications.flag(.channelMessage, .speakChannelName),
-							enabledWhen: { onlySpeakForSelection == false }
-						)
+				/* Each switch is its own form row, so the system draws the
+				 separators, spacing and label alignment instead of a hand-made
+				 stack indented by eye. */
+				Text(verbatim: PreferencesNotificationsStrings.speechIncludeLabel)
+				PreferencesToggle(
+					title: PreferencesNotificationsStrings.speakChannelName,
+					isOn: model.preferences.gatedBinding(
+						for: Preferences.Notifications.flag(.channelMessage, .speakChannelName),
+						enabledWhen: { onlySpeakForSelection == false }
 					)
-					.disabled(onlySpeakForSelection)
-					PreferencesToggle(
-						title: PreferencesNotificationsStrings.speakNickname,
-						isOn: model.preferences.binding(
-							for: Preferences.Notifications.flag(.channelMessage, .speakNickname)
-						)
+				)
+				.disabled(onlySpeakForSelection)
+				PreferencesToggle(
+					title: PreferencesNotificationsStrings.speakNickname,
+					isOn: model.preferences.binding(
+						for: Preferences.Notifications.flag(.channelMessage, .speakNickname)
 					)
-				}
-				.padding(.leading, 16)
+				)
 			} header: {
 				Text(verbatim: PreferencesNotificationsStrings.headingSpeech)
 			}
@@ -128,7 +128,8 @@ struct PreferencesHighlightsPane: View {
 					title: PreferencesHighlightsStrings.wordsLabel,
 					addLabel: PreferencesHighlightsStrings.addKeyword,
 					removeLabel: PreferencesHighlightsStrings.removeKeyword,
-					keywords: model.preferences.binding(for: Preferences.Highlights.matchKeywords)
+					keywords: model.preferences.binding(for: Preferences.Highlights.matchKeywords),
+					usesRegularExpression: usesRegularExpression
 				)
 				PreferencesKeywordList(
 					title: PreferencesHighlightsStrings.excludeWordsLabel,
@@ -151,6 +152,9 @@ struct PreferencesKeywordList: View {
 	let addLabel: String
 	let removeLabel: String
 	@Binding var keywords: [HighlightKeyword]
+	/// Whether these keywords are matched as regular expressions, which is what
+	/// decides whether an unusable pattern is an error worth showing.
+	var usesRegularExpression = false
 	@State private var selection: Int?
 
 	var body: some View {
@@ -159,9 +163,18 @@ struct PreferencesKeywordList: View {
 
 			List(selection: $selection) {
 				ForEach(keywords.indices, id: \.self) { index in
-					TextField("", text: binding(at: index))
-						.textFieldStyle(.plain)
-						.accessibilityLabel(Text(verbatim: title))
+					HStack(spacing: 4) {
+						TextField("", text: binding(at: index))
+							.textFieldStyle(.plain)
+							.accessibilityLabel(Text(verbatim: title))
+
+						if let error = patternError(at: index) {
+							Image(systemName: "exclamationmark.triangle.fill")
+								.foregroundStyle(.orange)
+								.help(Text(verbatim: error))
+								.accessibilityLabel(Text(verbatim: error))
+						}
+					}
 				}
 			}
 			.frame(height: Self.listHeight)
@@ -171,15 +184,30 @@ struct PreferencesKeywordList: View {
 				Button(action: add) {
 					Image(systemName: "plus")
 				}
+				.help(Text(verbatim: addLabel))
 				.accessibilityLabel(Text(verbatim: addLabel))
 
-				Button(action: remove) {
+				Button(role: .destructive, action: remove) {
 					Image(systemName: "minus")
 				}
+				.help(Text(verbatim: removeLabel))
 				.accessibilityLabel(Text(verbatim: removeLabel))
 				.disabled(selection == nil)
 			}
 		}
+	}
+
+	/// The keyword at `index` is reported where it is typed, rather than
+	/// failing silently in the renderer when the pattern will not compile.
+	private func patternError(at index: Int) -> String? {
+		guard keywords.indices.contains(index) else { return nil }
+		let keyword = keywords[index].string.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard keyword.isEmpty == false else { return nil }
+
+		return HighlightKeywordPattern.validationError(
+			for: keyword,
+			usesRegularExpression: usesRegularExpression
+		)
 	}
 
 	private func binding(at index: Int) -> Binding<String> {
@@ -225,27 +253,21 @@ struct PreferencesIncomingDataSections: View {
 				title: PreferencesIncomingDataStrings.replyCtcp,
 				isOn: model.preferences.binding(for: Preferences.Messages.replyToCTCPRequests)
 			)
-			VStack(alignment: .leading, spacing: 4) {
-				PreferencesToggle(
-					title: PreferencesIncomingDataStrings.highlightSpam,
-					isOn: model.preferences.binding(for: Preferences.Messages.detectHighlightSpam)
-				)
-				PreferencesNote(PreferencesIncomingDataStrings.highlightSpamNote)
-			}
-			VStack(alignment: .leading, spacing: 4) {
-				PreferencesToggle(
-					title: PreferencesIncomingDataStrings.removeFormatting,
-					isOn: model.preferences.binding(for: Preferences.Messages.removeAllFormatting)
-				)
-				PreferencesNote(PreferencesIncomingDataStrings.removeFormattingNote)
-			}
-			VStack(alignment: .leading, spacing: 4) {
-				PreferencesToggle(
-					title: PreferencesIncomingDataStrings.unicodeSpam,
-					isOn: model.preferences.binding(for: Preferences.Messages.filterUnicodeTextSpam)
-				)
-				PreferencesNote(PreferencesIncomingDataStrings.unicodeSpamNote)
-			}
+			PreferencesToggle(
+				title: PreferencesIncomingDataStrings.highlightSpam,
+				note: PreferencesIncomingDataStrings.highlightSpamNote,
+				isOn: model.preferences.binding(for: Preferences.Messages.detectHighlightSpam)
+			)
+			PreferencesToggle(
+				title: PreferencesIncomingDataStrings.removeFormatting,
+				note: PreferencesIncomingDataStrings.removeFormattingNote,
+				isOn: model.preferences.binding(for: Preferences.Messages.removeAllFormatting)
+			)
+			PreferencesToggle(
+				title: PreferencesIncomingDataStrings.unicodeSpam,
+				note: PreferencesIncomingDataStrings.unicodeSpamNote,
+				isOn: model.preferences.binding(for: Preferences.Messages.filterUnicodeTextSpam)
+			)
 		} header: {
 			Text(verbatim: PreferencesStrings.paneTitle(.incomingData))
 		}

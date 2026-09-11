@@ -43,10 +43,19 @@ public nonisolated extension Notification.Name { // nonisolated: value
 	static let textualUserDefaultsDidChange = FirstPartyPluginPreferences.defaultsDidChangeNotification
 }
 
+/** The `userInfo` of ``Notification/Name/textualUserDefaultsDidChange``.
+
+ Declared beside the store that posts it so an observer matches the spelling the
+ poster writes rather than repeating a literal that nothing checks. */
+public nonisolated enum PreferenceChangeNotification { // nonisolated: value
+	/// The name of the preference that changed.
+	public static let changedKeyUserInfoKey = "changedKey"
+}
+
 /** The application's preference store.
 
  Nonisolated because a preference is read from both sides of the connection
- host and from the transcript renderer: `PreferenceKey.detachedDefaults` and
+ host and from the transcript renderer: `PreferenceKey.detachedValue` and
  `LogController`'s historic-log filename take their own handle through
  ``suite()``, so the type cannot move onto the main actor. Nothing is shared
  across a domain to make it safe -- `UserDefaults` is not `Sendable`, and each
@@ -144,7 +153,7 @@ public final nonisolated class TextualUserDefaults: UserDefaults { // nonisolate
 		NotificationCenter.default.post(
 			name: .textualUserDefaultsDidChange,
 			object: self,
-			userInfo: ["changedKey": defaultName]
+			userInfo: [PreferenceChangeNotification.changedKeyUserInfoKey: defaultName]
 		)
 	}
 

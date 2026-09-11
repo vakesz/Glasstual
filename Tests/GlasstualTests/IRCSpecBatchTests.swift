@@ -455,11 +455,15 @@ struct IRCSpecBatchTests {
 	/// Which inbound commands can carry a label at all.
 	@Test("labeled-response: the responses that resolve a label")
 	func responseKindsAreClassified() {
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "ACK", commandNumeric: 0) == .acknowledgement)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "FAIL", commandNumeric: 0) == .failure)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "PRIVMSG", commandNumeric: 0) == .echo)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "NOTICE", commandNumeric: 0) == .echo)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "TAGMSG", commandNumeric: 0) == .echo)
-		#expect(IRCLabeledResponsePolicy.responseKind(command: "JOIN", commandNumeric: 0) == .unrelated)
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "ACK") == .acknowledgement)
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "FAIL") == .failure)
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "PRIVMSG") == .echo)
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "NOTICE") == .echo)
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "TAGMSG") == .echo)
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "JOIN") == .unrelated)
+		// The command is matched however the server spelled its case.
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "ack") == .acknowledgement)
+		// A command whose name merely starts the same way is not one of them.
+		#expect(IRCLabeledResponsePolicy.responseKind(command: "NOTE") == .unrelated)
 	}
 }

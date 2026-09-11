@@ -23,7 +23,7 @@ private final class DeliveryPresentation: TreeItemPresentation {
 		let reason: String?
 	}
 
-	nonisolated let presentationIdentifier = "delivery-presentation" // nonisolated: let
+	let presentationIdentifier = "delivery-presentation"
 	var updates: [Update] = []
 	func print(_: LogLine, completionBlock _: LogControllerPrintOperationCompletion?) {}
 	func lastPrintedLine() -> LogLine? {

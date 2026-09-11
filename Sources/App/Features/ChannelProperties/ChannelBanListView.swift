@@ -77,6 +77,15 @@ struct ChannelBanListView: View {
 			.onChange(of: model.sortOrder) { _, newOrder in model.sort(using: newOrder) }
 			.accessibilityLabel(ChannelAccessListStrings.accessList)
 
+			if let notice = model.truncationNotice {
+				Text(verbatim: notice)
+					.font(.callout)
+					.foregroundStyle(.secondary)
+					.frame(maxWidth: .infinity, alignment: .leading)
+					.padding(.horizontal, 20)
+					.padding(.top, 8)
+			}
+
 			Divider()
 			HStack {
 				Button(ChannelAccessListStrings.removeSelected, role: .destructive, action: removeSelected)

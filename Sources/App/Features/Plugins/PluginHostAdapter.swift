@@ -38,6 +38,7 @@
 import AppKit
 import Combine
 import GlasstualPluginKit
+import os
 
 private typealias PluginMessagePrinter = (
 	String,
@@ -56,6 +57,11 @@ private typealias PluginMessagePrinter = (
 /// reads, so the adapter injects plain main-actor closures: no thread hops, no
 /// transfer boxes and no runtime lookup by selector name.
 enum PluginHostAdapter {
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "PluginHostAdapter"
+	)
+
 	static func makeContext() -> PluginHostContext {
 		PluginHostContext(
 			defaults: TextualUserDefaults.container,
@@ -173,21 +179,85 @@ enum PluginHostAdapter {
 		)
 	}
 
+	/** The message a plugin handed back, or the original when what it handed
+	 back cannot be put on the wire.
+
+	 A plugin's returned command, prefix and parameters used to be copied onto
+	 the message unread. The message goes on to be serialised as an IRC line,
+	 where a space separates the fields and CR and LF end the line: a command or
+	 a sender with a space in it becomes two fields, and a CR or an LF anywhere
+	 becomes a second line.
+
+	 The plugin is not what is distrusted here — it is first-party and signed.
+	 What reaches it is remote: a plugin edits a message a peer sent, and the
+	 obvious way to write one splices some of that text into the edit. So the
+	 edit is checked rather than believed, and a refused edit leaves the message
+	 exactly as it arrived. */
 	static func applying(_ pluginMessage: PluginServerMessage, to message: Message) -> Message {
+		guard isValidCommand(pluginMessage.command) else {
+			logger.error(
+				"Discarding a plugin's edit to a server message: the command it returned is not a single token"
+			)
+			return message
+		}
+
+		guard pluginMessage.parameters.allSatisfy(isValidParameter) else {
+			logger.error(
+				"Discarding a plugin's edit to a server message: a parameter it returned would end the line"
+			)
+			return message
+		}
+
+		let sender = pluginMessage.sender
+		let senderFields: [String?] = [sender.nickname, sender.username, sender.address, sender.hostmask]
+		guard senderFields.allSatisfy({ $0.map(isValidSenderField) ?? true }) else {
+			logger.error(
+				"Discarding a plugin's edit to a server message: the sender it returned is not one prefix token"
+			)
+			return message
+		}
+
 		let copy = message.duplicate()
 
 		copy.sender = Prefix(
-			nickname: pluginMessage.sender.nickname,
-			username: pluginMessage.sender.username,
-			address: pluginMessage.sender.address,
-			hostmask: pluginMessage.sender.hostmask,
-			isServer: pluginMessage.sender.isServer
+			nickname: sender.nickname,
+			username: sender.username,
+			address: sender.address,
+			hostmask: sender.hostmask,
+			isServer: sender.isServer
 		)
 		copy.command = pluginMessage.command
 		copy.params = pluginMessage.parameters
 		copy.isPrintOnlyMessage = pluginMessage.isPrintOnlyMessage
 
 		return copy
+	}
+
+	/// A command is one token: no whitespace, and nothing that would end or
+	/// split the line it is written onto.
+	private static func isValidCommand(_ command: String) -> Bool {
+		command.isEmpty == false && command.unicodeScalars.allSatisfy { scalar in
+			scalar != "\0"
+				&& CharacterSet.whitespacesAndNewlines.contains(scalar) == false
+		}
+	}
+
+	/// A prefix is written as one token before the command, so a space anywhere
+	/// in it splits it into two fields, and a CR or an LF ends the line. Absent
+	/// and empty are both what a message with no prefix carries, so only the
+	/// characters are checked.
+	private static func isValidSenderField(_ value: String) -> Bool {
+		value.unicodeScalars.allSatisfy { scalar in
+			scalar != "\0" && CharacterSet.whitespacesAndNewlines.contains(scalar) == false
+		}
+	}
+
+	/// A parameter may hold spaces — the serialiser makes the last one a
+	/// trailing parameter — but never anything that ends the line.
+	private static func isValidParameter(_ parameter: String) -> Bool {
+		parameter.unicodeScalars.allSatisfy { scalar in
+			scalar != "\0" && scalar != "\r" && scalar != "\n"
+		}
 	}
 
 	/// A pure mapping, so the off-main message renderer can call it too.

@@ -74,7 +74,7 @@ struct PreferencesSessionTests {
 	}
 
 	@Test("A selected theme URL is processed after the picker has dismissed")
-	func selectedURLSurvivesDismissal() throws {
+	func selectedURLSurvivesDismissal() async throws {
 		let model = PreferencesPaneModel()
 		var pending = PendingFileRequest<PreferencesImportRequest>()
 		pending.present(.transcriptTheme)
@@ -84,7 +84,9 @@ struct PreferencesSessionTests {
 		let completed = pending.complete(request.id)
 		let kind = try #require(completed)
 		model.completeImport(.success(missingURL), request: kind)
-		// Reaching file validation proves the selected URL was not lost at dismissal.
+		/* The file is read off the main actor; reaching its validation proves
+		 the selected URL was not lost at dismissal. */
+		await model.themeImportTask?.value
 		#expect(model.presentationError != nil)
 		#expect(pending.request == nil)
 	}

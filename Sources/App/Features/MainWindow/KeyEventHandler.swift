@@ -39,6 +39,8 @@ public enum KeyCode: UInt16, Sendable {
 @MainActor
 public final class KeyEventHandler {
 	public typealias Action = @MainActor (NSEvent) -> Void
+	/// An action that can decline the event, leaving it to the responder chain.
+	public typealias ConditionalAction = @MainActor (NSEvent) -> Bool
 	private typealias DispatchAction = @MainActor (NSEvent) -> Bool
 
 	private var codeHandlerMap: [UInt: [UInt16: DispatchAction]] = [:]
@@ -70,6 +72,33 @@ public final class KeyEventHandler {
 			action(event)
 			return true
 		}
+	}
+
+	/** Registers a shortcut that decides for itself whether it applies.
+
+	 A `false` answer leaves the event untouched, so the view that has the
+	 keyboard still receives it. The name differs from `register` on purpose: a
+	 trailing closure carries no argument label, so an overload would be
+	 ambiguous with the unconditional form at every call site. */
+	public func registerConditional(
+		key: KeyCode,
+		modifiers: NSEvent.ModifierFlags = [],
+		perform action: @escaping ConditionalAction
+	) {
+		register(keyCode: key.rawValue, modifiers: modifiers.rawValue, perform: action)
+	}
+
+	/// The character form of the conditional registration above.
+	public func registerConditional(
+		character: Character,
+		modifiers: NSEvent.ModifierFlags = [],
+		perform action: @escaping ConditionalAction
+	) {
+		guard let characterCode = character.lowercased().utf16.first else {
+			preconditionFailure("Keyboard shortcut characters cannot be empty")
+		}
+
+		register(characterCode: characterCode, modifiers: modifiers.rawValue, perform: action)
 	}
 
 	public func processKeyEvent(_ event: NSEvent) -> Bool {

@@ -175,14 +175,7 @@ extension IRCClient {
 		let reason = invocation.remainingArguments.isEmpty
 			? environment.preferences.defaultKickMessage
 			: invocation.remainingArguments
-		let maximumLength = Int(min(supportInfo.maximumKickLength, UInt(reason.utf8.count)))
-		let truncatedReason = ClientWireUtilities.truncated(reason, toByteCount: maximumLength)
-		if truncatedReason != reason {
-			printDebugInformation(
-				IRCCommandStrings.kickMessageTooLong(networkName: networkNameAlt, maximumLength: maximumLength)
-			)
-		}
-		send("KICK", arguments: [invocation.channelName, invocation.nickname, truncatedReason])
+		send("KICK", arguments: [invocation.channelName, invocation.nickname, truncatedKickReason(reason)])
 	}
 
 	private func dispatchUserPrivilegeCommand(
@@ -213,13 +206,17 @@ extension IRCClient {
 			return true
 		}
 		guard requireArguments(arguments.rest, for: parsed.command) else { return true }
-		for change in compileListOfModeChanges(
-			forModeSymbol: mode.symbol,
-			modeIsSet: mode.isSet,
-			parameterString: arguments.rest
-		) {
-			send("MODE", arguments: [channelName, change])
-		}
+		/* Each change carries its mode string and its nicknames separately, so
+		 nothing has to take a joined string back apart: sent whole,
+		 `+ooo alice bob carol` was one parameter and opped nobody. */
+		sendModes(
+			compileListOfModeChanges(
+				forModeSymbol: mode.symbol,
+				modeIsSet: mode.isSet,
+				parameterString: arguments.rest
+			),
+			inChannelNamed: channelName
+		)
 		return true
 	}
 
@@ -420,8 +417,7 @@ extension IRCClient {
 			printInvalidSyntaxMessage(for: parsed.command)
 			return true
 		}
-		let parameters = arguments.isEmpty ? [channelName] : [channelName, arguments.rest]
-		send("MODE", arguments: parameters)
+		sendModes(arguments.isEmpty ? nil : arguments.rest, withParametersString: nil, inChannelNamed: channelName)
 		return true
 	}
 
@@ -439,12 +435,16 @@ extension IRCClient {
 			return true
 		}
 		if let existingQuery = findChannel(nickname) {
+			/* Delete/Cancel, not Yes/No: the button says what accepting does, and
+			 the destructive role is what tints it and tells VoiceOver the
+			 existing conversation is not coming back. */
 			let shouldDelete = output?.confirmModally(
 				AlertRequest(
 					title: PromptStrings.Deletion.existingQueryTitle(name: existingQuery.name),
 					body: PromptStrings.Deletion.warning(for: .query),
-					defaultButton: PromptStrings.Action.yes,
-					alternateButton: PromptStrings.Action.no,
+					defaultButton: PromptStrings.Action.delete,
+					alternateButton: PromptStrings.Action.cancel,
+					destructiveButton: .default,
 					style: .warning
 				)
 			) ?? true
@@ -504,13 +504,6 @@ extension IRCClient {
 			send("TOPIC", arguments: [channelName])
 			return
 		}
-		let maximumLength = Int(min(supportInfo.maximumTopicLength, UInt(topic.utf8.count)))
-		let truncatedTopic = ClientWireUtilities.truncated(topic, toByteCount: maximumLength)
-		if truncatedTopic != topic {
-			printDebugInformation(
-				IRCCommandStrings.topicTooLong(networkName: networkNameAlt, maximumLength: maximumLength)
-			)
-		}
-		send("TOPIC", arguments: [channelName, truncatedTopic])
+		sendTopic(to: topic, inChannelNamed: channelName)
 	}
 }

@@ -44,6 +44,15 @@ private let preferencesActionsLogger = Logger(
 	category: "PreferencesActions"
 )
 
+/// Reads a document the user chose off the main actor, bounded exactly like an
+/// imported configuration.
+private nonisolated enum PreferencesDocumentReader { // nonisolated: value
+	@concurrent
+	static func read(from url: URL) async throws -> Data {
+		try PreferencesArchive.readData(from: url)
+	}
+}
+
 /// Presentation intent and the resulting domain updates for Settings. SwiftUI
 /// presents each request; this model validates and applies the selected value.
 extension PreferencesPaneModel {
@@ -99,29 +108,57 @@ extension PreferencesPaneModel {
 	func completeImport(_ result: Result<URL, any Error>, request: PreferencesImportRequest) {
 		do {
 			let url = try result.get()
-			let accessWasGranted = url.startAccessingSecurityScopedResource()
-			defer {
-				if accessWasGranted {
-					url.stopAccessingSecurityScopedResource()
-				}
-			}
 
 			switch request {
 			case .transcriptTheme:
-				try themeController.importTheme(from: Data(contentsOf: url))
+				importTranscriptTheme(from: url)
 			case .transcriptFolder:
-				try setTranscriptFolder(securityScopedBookmark(for: url))
+				try withSecurityScopedAccess(to: url) {
+					try setTranscriptFolder(securityScopedBookmark(for: url))
+				}
 			case .downloadFolder:
-				try SharedApplication.sharedFileTransferCenter().setDownloadDestinationURL(
-					securityScopedBookmark(for: url)
-				)
-				refreshFolders()
+				try withSecurityScopedAccess(to: url) {
+					try SharedApplication.sharedFileTransferCenter().setDownloadDestinationURL(
+						securityScopedBookmark(for: url)
+					)
+					refreshFolders()
+				}
 			}
 		} catch {
 			// A closed file panel is the user saying "nothing", not a failure.
 			guard (error as? CocoaError)?.code != .userCancelled else { return }
 			present(error)
 		}
+	}
+
+	/** A chosen theme is arbitrary user input of arbitrary size.
+
+	 Reading it with `Data(contentsOf:)` on the main actor blocked the whole
+	 application for as long as the file took to read, so the read runs off the
+	 main actor under the same regular-file check and 16 MB cap an imported
+	 configuration gets, and takes its own security-scoped access. */
+	private func importTranscriptTheme(from url: URL) {
+		themeImportTask = Task { @MainActor in
+			do {
+				let data = try await PreferencesDocumentReader.read(from: url)
+				try themeController.importTheme(from: data)
+			} catch {
+				present(error)
+			}
+		}
+	}
+
+	/// Bookmarking a chosen folder needs the panel's security-scoped access for
+	/// the length of the call.
+	private func withSecurityScopedAccess<Value>(to url: URL, _ body: () throws -> Value) rethrows -> Value {
+		let accessWasGranted = url.startAccessingSecurityScopedResource()
+		defer {
+			if accessWasGranted {
+				url.stopAccessingSecurityScopedResource()
+			}
+		}
+
+		return try body()
 	}
 
 	func completeExport(_ result: Result<URL, any Error>) {

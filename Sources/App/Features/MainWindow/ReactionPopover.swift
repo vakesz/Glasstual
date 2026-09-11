@@ -14,7 +14,7 @@ import AppKit
 import SwiftUI
 
 nonisolated enum ReactionInput { // nonisolated: value
-	static func emoji(from input: String) -> String? { // nonisolated: pure
+	static func emoji(from input: String) -> String? {
 		let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
 		guard value.isEmpty == false else { return nil }
 
@@ -23,37 +23,118 @@ nonisolated enum ReactionInput { // nonisolated: value
 	}
 }
 
+/** Which reactions the picker offers, and in which order.
+
+ The picker used to be a text field: the user had to know an emoji, type or
+ paste it, and press Send. A reaction is a one-tap gesture everywhere else, so
+ the row is the control and the character palette is the way out for anything
+ that is not on it. What the user reaches for stays at the front of the row, and
+ the common set fills what is left so the row never changes length. */
+nonisolated enum RecentReactions { // nonisolated: value
+	/// The reactions offered before the user has picked anything.
+	static let common = ["👍", "❤️", "😂", "😮", "😢", "🎉"]
+	/// How many of the user's own choices are remembered.
+	static let maximumRememberedCount = 6
+	/// How many buttons the row shows, whatever the mix.
+	static let rowLength = 6
+
+	/// The row to draw: the user's own choices first, the common set filling the
+	/// rest, no repeats.
+	static func row(recent: [String]) -> [String] {
+		var result: [String] = []
+		for emoji in recent + common where result.contains(emoji) == false {
+			result.append(emoji)
+			if result.count == rowLength {
+				break
+			}
+		}
+		return result
+	}
+
+	/// What to store once `emoji` has been used: it moves to the front, and the
+	/// list stays bounded.
+	static func recording(_ emoji: String, in recent: [String]) -> [String] {
+		guard let emoji = ReactionInput.emoji(from: emoji) else {
+			return recent
+		}
+		return Array(([emoji] + recent.filter { $0 != emoji }).prefix(maximumRememberedCount))
+	}
+}
+
 private struct ReactionPopoverView: View {
 	let send: (String) -> Void
 
+	@State private var recent = Preferences.Reactions.recent.value
 	@State private var input = ""
 	@FocusState private var inputIsFocused: Bool
 
-	private var emoji: String? {
-		ReactionInput.emoji(from: input)
-	}
-
 	var body: some View {
-		HStack(spacing: 8) {
-			TextField(MessageMenuStrings.emojiPlaceholder, text: $input)
+		HStack(spacing: UISpacing.tight) {
+			ForEach(RecentReactions.row(recent: recent), id: \.self) { emoji in
+				Button {
+					submit(emoji)
+				} label: {
+					Text(emoji)
+						.font(.system(size: 20))
+						.frame(width: 30, height: 30)
+				}
+				.buttonStyle(.accessoryBar)
+				.help(MainWindowStrings.Reaction.reactWith(emoji))
+				.accessibilityLabel(MainWindowStrings.Reaction.reactWith(emoji))
+			}
+
+			Divider()
+				.frame(height: 22)
+
+			/* The palette inserts into whatever holds the keyboard, so the field
+			 stays: it is where the palette's choice lands, and
+			 `ReactionInput.emoji(from:)` still decides what counts. It also takes
+			 a pasted emoji, which is what the old field was for. */
+			TextField("", text: $input)
 				.textFieldStyle(.roundedBorder)
 				.multilineTextAlignment(.center)
+				.frame(width: 44)
 				.focused($inputIsFocused)
-				.onSubmit(submit)
+				/* One submission, on the change: the palette and a paste both
+				 write the field without pressing Return, so the change is what
+				 has to act -- and `onSubmit` beside it sent the same emoji a
+				 second time when the reader did press Return. The field is
+				 cleared on the way out, so the next character typed into a
+				 popover that is still open is a reaction of its own rather
+				 than the second character of the last one. */
+				.onChange(of: input) { _, newValue in
+					guard newValue.isEmpty == false else { return }
+					input = ""
+					submit(newValue)
+				}
+				.accessibilityLabel(MainWindowStrings.Reaction.custom)
+				.help(MainWindowStrings.Reaction.custom)
 
-			Button(MessageMenuStrings.sendReaction, action: submit)
-				.disabled(emoji == nil)
-				.keyboardShortcut(.defaultAction)
+			Button(MainWindowStrings.Reaction.moreEmoji, systemImage: "face.smiling") {
+				presentCharacterPalette()
+			}
+			.labelStyle(.iconOnly)
+			.buttonStyle(.accessoryBar)
+			.help(MainWindowStrings.Reaction.moreEmoji)
 		}
-		.padding(12)
-		.frame(width: 220)
-		.task {
-			inputIsFocused = true
+		.padding(UISpacing.regular)
+	}
+
+	/** The palette is a system panel that types into the first responder, so
+	 the field takes the keyboard first. The panel is ordered front on the next
+	 turn: asking for it in the same one races the focus change and the panel
+	 opens pointed at whatever had the keyboard before. */
+	private func presentCharacterPalette() {
+		inputIsFocused = true
+		Task { @MainActor in
+			NSApp.orderFrontCharacterPalette(nil)
 		}
 	}
 
-	private func submit() {
-		guard let emoji else { return }
+	private func submit(_ candidate: String) {
+		guard let emoji = ReactionInput.emoji(from: candidate) else { return }
+		recent = RecentReactions.recording(emoji, in: recent)
+		Preferences.Reactions.recent.value = recent
 		send(emoji)
 	}
 }

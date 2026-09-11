@@ -74,10 +74,25 @@ public final class MemberList: ChannelMemberListPresentation {
 	public var selectedMemberIDs: Set<User.ID> = []
 	public private(set) var groups: [MemberListGroup] = []
 	public private(set) var presentationRevision = 0
+	/** The pinned nickname colours the rows draw their avatars from.
+
+	 One read per invalidation, handed to every avatar in the list. Each avatar
+	 used to resolve its own fill straight out of the defaults store, which
+	 builds a handle on the suite per row -- and a busy channel rebuilds its
+	 rows on every join, part and mode change. */
+	public private(set) var nicknameColorOverrides = UserNicknameColorStyleGenerator.overridesSnapshot()
+	/** Whose profile popover is open, if anyone's.
+
+	 The list owns it rather than the row: a popover is modal to the pointer,
+	 so a second one would have to replace the first, and a row that kept its
+	 own flag could not know that. */
+	public private(set) var memberShowingProfile: User.ID?
 
 	@ObservationIgnored private weak var memberList: ChannelMemberList?
 	@ObservationIgnored private var members: [ChannelUser] = []
 	@ObservationIgnored private var indexesByUserID: [User.ID: Int] = [:]
+	/// The click waiting out the double-click interval, and who it was on.
+	@ObservationIgnored private var pendingProfile: (member: User.ID, task: Task<Void, Never>)?
 	private var updateDepth = 0
 	private var updateIsPending = false
 	private var lastInteractedMemberID: User.ID?
@@ -186,8 +201,13 @@ public final class MemberList: ChannelMemberListPresentation {
 			builtGroups.append(MemberListGroup(section: section, members: currentMembers))
 		}
 
+		/* One read for the whole rebuild. Asking inside the loop built a handle
+		 on the defaults suite for every member, and a busy channel rebuilds its
+		 rows on each join, part and mode change. */
+		let favorsServerStaff = Preferences.Appearance.memberListSortFavorsServerStaff.value
+
 		for member in members where admitted.insert(member.id).inserted {
-			let rank = Self.sectionRank(for: member)
+			let rank = Self.sectionRank(for: member, favoringServerStaff: favorsServerStaff)
 			if currentRank != rank {
 				appendCurrentGroup()
 				currentRank = rank
@@ -202,11 +222,14 @@ public final class MemberList: ChannelMemberListPresentation {
 		if let lastInteractedMemberID, admitted.contains(lastInteractedMemberID) == false {
 			self.lastInteractedMemberID = nil
 		}
+		dismissProfileIfMemberLeft(admitted)
 		invalidatePresentation()
 	}
 
-	private static func sectionRank(for member: ChannelUser) -> UserRank {
-		if member.user.isIRCop, Preferences.Appearance.memberListSortFavorsServerStaff.detachedValue {
+	/// The section a member belongs in. Pure in the preference it is handed, so
+	/// that one rebuild reads it once and groups every member under one answer.
+	private static func sectionRank(for member: ChannelUser, favoringServerStaff favorIRCop: Bool) -> UserRank {
+		if member.user.isIRCop, favorIRCop {
 			return .irCopByMode
 		}
 
@@ -239,13 +262,68 @@ public final class MemberList: ChannelMemberListPresentation {
 		return indexesByUserID[lastInteractedMemberID].map { members[$0] }
 	}
 
+	// MARK: - Profile popover
+
+	/** Opens `member`'s profile once `delay` has passed without a second click.
+
+	 One wait for the whole list. A row that timed its own click could not see
+	 the click that landed on another row, so the popover that opened was the
+	 one the reader had already moved on from, and it swallowed the click that
+	 was meant to dismiss it. */
+	func scheduleProfile(for member: User.ID, after delay: Duration) {
+		cancelPendingProfile()
+		memberShowingProfile = nil
+		let task = Task { [weak self] in
+			try? await Task.sleep(for: delay)
+			guard let self, Task.isCancelled == false else { return }
+			pendingProfile = nil
+			memberShowingProfile = member
+		}
+		pendingProfile = (member, task)
+	}
+
+	/// Opens the profile now, for the accessibility action that offers it
+	/// without a click to time.
+	func showProfile(for member: User.ID) {
+		cancelPendingProfile()
+		memberShowingProfile = member
+	}
+
+	func cancelPendingProfile() {
+		pendingProfile?.task.cancel()
+		pendingProfile = nil
+	}
+
+	/// Drops whatever `member`'s row was showing or about to show, and leaves
+	/// another row's popover alone.
+	func endProfileInteraction(with member: User.ID) {
+		if pendingProfile?.member == member {
+			cancelPendingProfile()
+		}
+		if memberShowingProfile == member {
+			memberShowingProfile = nil
+		}
+	}
+
+	private func dismissProfileIfMemberLeft(_ admitted: Set<User.ID>) {
+		if let pendingProfile, admitted.contains(pendingProfile.member) == false {
+			cancelPendingProfile()
+		}
+		if let memberShowingProfile, admitted.contains(memberShowingProfile) == false {
+			self.memberShowingProfile = nil
+		}
+	}
+
 	/** Tells the rows to draw themselves again.
 
 	 The list is a value projection: a row's appearance is a function of the
 	 member it holds and of preferences and appearance the row reads directly,
 	 so there is nothing to redraw a single row with. One revision is what every
-	 caller needs, whichever member prompted it. */
+	 caller needs, whichever member prompted it — and the rows take it as an
+	 input of their own, since none of their other inputs change when a badge
+	 colour or the appearance does. */
 	public func invalidatePresentation() {
+		nicknameColorOverrides = UserNicknameColorStyleGenerator.overridesSnapshot()
 		presentationRevision &+= 1
 	}
 

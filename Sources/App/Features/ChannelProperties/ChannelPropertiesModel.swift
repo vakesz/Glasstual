@@ -33,9 +33,16 @@ final class ChannelPropertiesModel {
 	private(set) var channelNameValidationError: String?
 	var isValidationMessagePresented = false
 	let channelNameIsEditable: Bool
+	/** The connection whose ISUPPORT decides what a channel name looks like.
 
-	init(config: ChannelConfig) {
+	 Weak because the sheet outlives nothing and the client outlives the sheet;
+	 a client that goes away mid-edit simply leaves the syntactic check behind,
+	 which is what a sheet opened without one uses anyway. */
+	private weak var client: IRCClient?
+
+	init(config: ChannelConfig, client: IRCClient? = nil) {
 		self.config = config
+		self.client = client
 		channelNameIsEditable = config.channelName.isEmpty
 		refreshValidation()
 	}
@@ -127,9 +134,29 @@ final class ChannelPropertiesModel {
 
 	private func refreshValidation() {
 		let candidate = channelName.firstToken
-		channelNameValidationError = candidate.isEmpty || (candidate as NSString).isChannelName == false
-			? ChannelPropertiesStrings.invalidChannelName
-			: nil
+		channelNameValidationError = isChannelName(candidate)
+			? nil
+			: ChannelPropertiesStrings.invalidChannelName
+	}
+
+	/** Whether the server this channel belongs to would call `candidate` a
+	 channel name.
+
+	 The connection-less check is a union of the prefixes networks are known to
+	 use, which is both too wide and too narrow: it accepts a `~channel` on a
+	 server that has no such type, and refuses a name under any `CHANTYPES` the
+	 list does not happen to include, so the name could never be saved. When
+	 there is a client to ask, its ISUPPORT is the answer. */
+	private func isChannelName(_ candidate: String) -> Bool {
+		guard candidate.isEmpty == false else {
+			return false
+		}
+
+		guard let client else {
+			return (candidate as NSString).isChannelName
+		}
+
+		return (candidate as NSString).isChannelName(on: client)
 	}
 
 	private static func nilIfEmpty(_ value: String) -> String? {

@@ -39,6 +39,11 @@ private struct OnboardingSceneRoot: View {
 				if session.cancel() {
 					dismiss()
 				}
+			},
+			setUpLaterAction: {
+				if session.setUpLater() {
+					dismiss()
+				}
 			}
 		)
 		/* The window keeps its close button even with the title bar hidden, and

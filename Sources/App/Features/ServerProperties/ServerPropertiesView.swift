@@ -222,7 +222,12 @@ struct ServerPropertiesView: View {
 				}
 			}
 			.frame(minHeight: 300)
-			listButtons(add: actions.addChannel, edit: actions.editChannel, delete: actions.deleteChannel,
+			listButtons(add: actions.addChannel,
+			            addLabel: ServerPropertiesStrings.ListButton.addChannel,
+			            edit: actions.editChannel,
+			            editLabel: ServerPropertiesStrings.ListButton.editChannel,
+			            delete: actions.deleteChannel,
+			            deleteLabel: ServerPropertiesStrings.ListButton.removeChannel,
 			            selectionExists: model.selectedChannelID != nil)
 		}
 	}
@@ -238,7 +243,12 @@ struct ServerPropertiesView: View {
 					}.tag(entry.uniqueIdentifier)
 				}
 			}.frame(minHeight: 300)
-			listButtons(add: actions.addHighlight, edit: actions.editHighlight, delete: actions.deleteHighlight,
+			listButtons(add: actions.addHighlight,
+			            addLabel: ServerPropertiesStrings.ListButton.addHighlight,
+			            edit: actions.editHighlight,
+			            editLabel: ServerPropertiesStrings.ListButton.editHighlight,
+			            delete: actions.deleteHighlight,
+			            deleteLabel: ServerPropertiesStrings.ListButton.removeHighlight,
 			            selectionExists: model.selectedHighlightID != nil)
 		}
 	}
@@ -259,10 +269,16 @@ struct ServerPropertiesView: View {
 					Button(ServerPropertiesStrings.AddressBookActions.addIgnoreEntry, action: actions.addIgnore)
 					Button(ServerPropertiesStrings.AddressBookActions.addTrackingEntry, action: actions.addTracking)
 				} label: { Image(systemName: "plus") }
+					.help(Text(verbatim: ServerPropertiesStrings.ListButton.addAddressBookEntry))
+					.accessibilityLabel(Text(verbatim: ServerPropertiesStrings.ListButton.addAddressBookEntry))
 				Button(action: actions.editAddressBookEntry) { Image(systemName: "pencil") }
 					.disabled(model.selectedAddressBookEntryID == nil)
+					.help(Text(verbatim: ServerPropertiesStrings.ListButton.editAddressBookEntry))
+					.accessibilityLabel(Text(verbatim: ServerPropertiesStrings.ListButton.editAddressBookEntry))
 				Button(role: .destructive, action: actions.deleteAddressBookEntry) { Image(systemName: "minus") }
 					.disabled(model.selectedAddressBookEntryID == nil)
+					.help(Text(verbatim: ServerPropertiesStrings.ListButton.removeAddressBookEntry))
+					.accessibilityLabel(Text(verbatim: ServerPropertiesStrings.ListButton.removeAddressBookEntry))
 				Spacer()
 			}
 			.buttonStyle(.borderless)
@@ -450,13 +466,30 @@ struct ServerPropertiesView: View {
 		}.frame(maxWidth: .infinity, alignment: .topLeading)
 	}
 
-	private func listButtons(add: @escaping () -> Void, edit: @escaping () -> Void, delete: @escaping () -> Void,
-	                         selectionExists: Bool) -> some View
-	{
+	/// Every button here is an icon and nothing else, so each one carries the
+	/// name of what it does — as a help tag for the pointer and as a label for
+	/// VoiceOver.
+	private func listButtons(
+		add: @escaping () -> Void,
+		addLabel: String,
+		edit: @escaping () -> Void,
+		editLabel: String,
+		delete: @escaping () -> Void,
+		deleteLabel: String,
+		selectionExists: Bool
+	) -> some View {
 		HStack {
 			Button(action: add) { Image(systemName: "plus") }
-			Button(action: edit) { Image(systemName: "pencil") }.disabled(!selectionExists)
-			Button(role: .destructive, action: delete) { Image(systemName: "minus") }.disabled(!selectionExists)
+				.help(Text(verbatim: addLabel))
+				.accessibilityLabel(Text(verbatim: addLabel))
+			Button(action: edit) { Image(systemName: "pencil") }
+				.disabled(!selectionExists)
+				.help(Text(verbatim: editLabel))
+				.accessibilityLabel(Text(verbatim: editLabel))
+			Button(role: .destructive, action: delete) { Image(systemName: "minus") }
+				.disabled(!selectionExists)
+				.help(Text(verbatim: deleteLabel))
+				.accessibilityLabel(Text(verbatim: deleteLabel))
 			Spacer()
 		}.buttonStyle(.borderless)
 	}

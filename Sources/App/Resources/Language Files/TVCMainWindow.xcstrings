@@ -218,6 +218,18 @@
         }
       }
     },
+    "custom-reaction": {
+      "comment": "Accessibility label and tooltip for the reaction picker's field, where a pasted or palette-chosen emoji lands.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom Reaction"
+          }
+        }
+      }
+    },
     "direct-chat": {
       "comment": "Direct-chat channel description. Legacy key: dcc-ch.",
       "extractionState": "manual",
@@ -266,6 +278,18 @@
         }
       }
     },
+    "enable-all-notifications": {
+      "comment": "Sidebar footer menu item, shown while notifications are muted; the counterpart of disable-all-notifications.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable All Notifications"
+          }
+        }
+      }
+    },
     "file-transfers": {
       "comment": "Toolbar & input bar accessibility. Legacy key: ib-m4.",
       "extractionState": "manual",
@@ -298,18 +322,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Half-Operators"
-          }
-        }
-      }
-    },
-    "hide-member-list": {
-      "comment": "Toolbar & input bar accessibility. Legacy key: ib-m5.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide Member List"
           }
         }
       }
@@ -477,7 +489,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mark All As Read"
+            "value": "Mark All as Read"
           }
         }
       }
@@ -566,6 +578,30 @@
         }
       }
     },
+    "member-list-width": {
+      "comment": "Accessibility label and tooltip for the draggable edge between the conversation and the member list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Member List Width"
+          }
+        }
+      }
+    },
+    "member-list-width-hint": {
+      "comment": "Accessibility hint telling the user how to resize the member list from the keyboard.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press Left Arrow or Right Arrow to resize the member list. Double-click to reset its width."
+          }
+        }
+      }
+    },
     "member-privilege-description-operator": {
       "comment": "Member privilege description. Legacy key: 0kn-s5.",
       "extractionState": "manual",
@@ -590,6 +626,18 @@
         }
       }
     },
+    "more-emoji": {
+      "comment": "Reaction picker button that opens the system character palette.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More Emoji\u2026"
+          }
+        }
+      }
+    },
     "no-privileges": {
       "comment": "Member privilege description. Legacy key: tjj-z2.",
       "extractionState": "manual",
@@ -610,6 +658,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not logged in"
+          }
+        }
+      }
+    },
+    "react-with-emoji": {
+      "comment": "Accessibility label and tooltip for one button in the reaction picker's row. The placeholder is the emoji itself.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "React with %@"
           }
         }
       }
@@ -706,18 +766,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Super Admin"
-          }
-        }
-      }
-    },
-    "toggle-member-list": {
-      "comment": "Toolbar & input bar accessibility. Legacy key: tb-ml.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toggle Member List"
           }
         }
       }
@@ -1055,7 +1103,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Print"
+            "value": "Print…"
           }
         }
       }
@@ -1128,6 +1176,282 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paste"
+          }
+        }
+      }
+    },
+    "menu-edit-paste-and-match-style": {
+      "comment": "Edit menu item title. Standard macOS command that pastes text without its formatting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste and Match Style"
+          }
+        }
+      }
+    },
+    "menu-edit-spelling-and-grammar": {
+      "comment": "Edit menu submenu title holding the standard macOS spelling commands.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling and Grammar"
+          }
+        }
+      }
+    },
+    "menu-edit-show-spelling-and-grammar": {
+      "comment": "Edit menu item title. Opens the standard spelling and grammar panel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Spelling and Grammar"
+          }
+        }
+      }
+    },
+    "menu-edit-check-document-now": {
+      "comment": "Edit menu item title. Checks the focused text once, now.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Document Now"
+          }
+        }
+      }
+    },
+    "menu-edit-check-spelling-while-typing": {
+      "comment": "Edit menu item title. Toggles continuous spell checking.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Spelling While Typing"
+          }
+        }
+      }
+    },
+    "menu-edit-check-grammar-with-spelling": {
+      "comment": "Edit menu item title. Toggles grammar checking alongside spelling.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Grammar With Spelling"
+          }
+        }
+      }
+    },
+    "menu-edit-correct-spelling-automatically": {
+      "comment": "Edit menu item title. Toggles automatic spelling correction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct Spelling Automatically"
+          }
+        }
+      }
+    },
+    "menu-edit-substitutions": {
+      "comment": "Edit menu submenu title holding the standard macOS text substitution commands.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Substitutions"
+          }
+        }
+      }
+    },
+    "menu-edit-show-substitutions": {
+      "comment": "Edit menu item title. Opens the standard substitutions panel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Substitutions"
+          }
+        }
+      }
+    },
+    "menu-edit-smart-copy-paste": {
+      "comment": "Edit menu item title. Toggles smart copy and paste spacing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Copy/Paste"
+          }
+        }
+      }
+    },
+    "menu-edit-smart-quotes": {
+      "comment": "Edit menu item title. Toggles curly quotation marks.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Quotes"
+          }
+        }
+      }
+    },
+    "menu-edit-smart-dashes": {
+      "comment": "Edit menu item title. Toggles dash substitution.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Dashes"
+          }
+        }
+      }
+    },
+    "menu-edit-smart-links": {
+      "comment": "Edit menu item title. Toggles automatic link detection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Links"
+          }
+        }
+      }
+    },
+    "menu-edit-data-detectors": {
+      "comment": "Edit menu item title. Toggles detection of dates, addresses and similar data.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data Detectors"
+          }
+        }
+      }
+    },
+    "menu-edit-text-replacement": {
+      "comment": "Edit menu item title. Toggles the system text replacement list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text Replacement"
+          }
+        }
+      }
+    },
+    "menu-edit-transformations": {
+      "comment": "Edit menu submenu title holding the standard macOS case commands.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transformations"
+          }
+        }
+      }
+    },
+    "menu-edit-make-upper-case": {
+      "comment": "Edit menu item title. Upper-cases the selected text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make Upper Case"
+          }
+        }
+      }
+    },
+    "menu-edit-make-lower-case": {
+      "comment": "Edit menu item title. Lower-cases the selected text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make Lower Case"
+          }
+        }
+      }
+    },
+    "menu-edit-capitalize": {
+      "comment": "Edit menu item title. Capitalizes the selected text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capitalize"
+          }
+        }
+      }
+    },
+    "menu-edit-speech": {
+      "comment": "Edit menu submenu title holding the standard macOS speech commands.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech"
+          }
+        }
+      }
+    },
+    "menu-edit-start-speaking": {
+      "comment": "Edit menu item title. Speaks the selected text aloud.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Speaking"
+          }
+        }
+      }
+    },
+    "menu-edit-stop-speaking": {
+      "comment": "Edit menu item title. Stops speaking the selected text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Speaking"
+          }
+        }
+      }
+    },
+    "menu-edit-use-selection-for-find": {
+      "comment": "Edit menu item title. Standard macOS command that puts the selected text into the find bar's search field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Selection for Find"
           }
         }
       }
@@ -1235,7 +1559,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mark All As Read"
+            "value": "Mark All as Read"
           }
         }
       }
@@ -1391,7 +1715,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete Server…"
+            "value": "Delete Server"
           }
         }
       }
@@ -1475,7 +1799,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modify Topic"
+            "value": "Modify Topic…"
           }
         }
       }
@@ -1547,7 +1871,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manage All Modes"
+            "value": "Manage All Modes…"
           }
         }
       }
@@ -1559,7 +1883,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "List of Bans"
+            "value": "List of Bans…"
           }
         }
       }
@@ -1907,7 +2231,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search channels…"
+            "value": "Search Channels…"
           }
         }
       }
@@ -2195,7 +2519,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search With Google"
+            "value": "Search with Google"
           }
         }
       }

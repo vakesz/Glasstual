@@ -54,7 +54,10 @@ final class NotificationSubscriptions {
 		center: NotificationCenter = .default,
 		using handler: @escaping @MainActor (Notification) -> Void
 	) {
-		// Creating the sequence registers now, before the consumer task starts.
+		/* The sequence registers when the task below first asks it for a value,
+		 not here: a notification posted between this call and that first turn is
+		 not delivered. Every caller sets its observations up before the state
+		 they watch can change. */
 		let notifications = center.notifications(named: name)
 		let task = Task { @MainActor in
 			for await notification in notifications {

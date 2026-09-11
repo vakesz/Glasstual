@@ -4,6 +4,7 @@
  *********************************************************************** */
 
 @testable import Glasstual
+import SwiftUI
 import Testing
 
 @Suite("Server-list rows")
@@ -12,7 +13,8 @@ struct ServerListRowTests {
 		kind: ChannelRow.Kind = .channel,
 		unread: Int = 0,
 		highlights: Int = 0,
-		showsUnreadCount: Bool = true
+		showsUnreadCount: Bool = true,
+		badgeTint: Color? = nil
 	) -> ChannelRow {
 		ChannelRow(
 			id: "id",
@@ -22,7 +24,8 @@ struct ServerListRowTests {
 			hasJoinError: false,
 			unreadCount: unread,
 			showsUnreadCount: showsUnreadCount,
-			highlightCount: highlights
+			highlightCount: highlights,
+			unreadBadgeTint: badgeTint
 		)
 	}
 
@@ -51,5 +54,10 @@ struct ServerListRowTests {
 	func rowEquality() {
 		#expect(channel(unread: 1) == channel(unread: 1))
 		#expect(channel(unread: 1) != channel(unread: 2))
+		/* The badge colour is drawn, so it is compared: read out of the defaults
+		 inside the row body instead, a changed preference left every row equal
+		 to the one before it and nothing redrew. */
+		#expect(channel(unread: 1, badgeTint: .red) != channel(unread: 1))
+		#expect(channel(unread: 1, badgeTint: .red) == channel(unread: 1, badgeTint: .red))
 	}
 }

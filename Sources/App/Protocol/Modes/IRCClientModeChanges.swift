@@ -38,12 +38,36 @@
 
 import Foundation
 
+/** One `MODE` command's arguments after the channel name.
+
+ A mode change is a mode string and the parameters that pair with it, and the
+ two are separate tokens on the wire. Carrying them as one space-joined string
+ meant the compiler built `"+ooo alice bob carol"` and `sendModes` took it apart
+ again with the wire tokeniser — a round trip through text whose only job was to
+ be undone, and one that could not carry a parameter containing a space. */
+public nonisolated struct ModeChangeGroup: Sendable, Equatable { // nonisolated: value
+	/// The mode string, signs included: `+ooo`, `-k+l`, `+nt`.
+	public var symbols: String
+	/// The parameters the mode string's letters pair with, in order.
+	public var parameters: [String]
+
+	public init(symbols: String, parameters: [String] = []) {
+		self.symbols = symbols
+		self.parameters = parameters
+	}
+
+	/// The group as the wire arguments that follow the channel name.
+	public var wireArguments: [String] {
+		[symbols] + parameters
+	}
+}
+
 public extension IRCClient {
 	func compileListOfModeChanges(
 		forModeSymbol modeSymbol: String,
 		modeIsSet: Bool,
 		parameterString: String
-	) -> [String] {
+	) -> [ModeChangeGroup] {
 		compileListOfModeChanges(
 			forModeSymbol: modeSymbol,
 			modeIsSet: modeIsSet,
@@ -57,7 +81,7 @@ public extension IRCClient {
 		modeIsSet: Bool,
 		parameterString: String,
 		characterSet: CharacterSet
-	) -> [String] {
+	) -> [ModeChangeGroup] {
 		compileListOfModeChanges(
 			forModeSymbol: modeSymbol,
 			modeIsSet: modeIsSet,
@@ -69,7 +93,7 @@ public extension IRCClient {
 		forModeSymbol modeSymbol: String,
 		modeIsSet: Bool,
 		modeParameters: [String]
-	) -> [String] {
+	) -> [ModeChangeGroup] {
 		ClientWireUtilities.compileModeChanges(
 			symbol: modeSymbol,
 			isSet: modeIsSet,

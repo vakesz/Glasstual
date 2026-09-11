@@ -93,8 +93,40 @@ final class HighlightEntryModel {
 	}
 
 	private static func validationError(for keyword: String) -> String? {
-		keyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-			? ApplicationStrings.requiredField
-			: nil
+		let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+
+		guard trimmed.isEmpty == false else {
+			return ApplicationStrings.requiredField
+		}
+
+		return HighlightKeywordPattern.validationError(
+			for: trimmed,
+			usesRegularExpression: HighlightKeywordPattern.matchesByRegularExpression
+		)
+	}
+}
+
+/** Whether a highlight keyword is one the matcher can actually use.
+
+ The Highlights pane decides how every keyword is matched, so a keyword saved
+ while that is Regular Expression has to compile. Nothing used to check: the
+ renderer builds the expression with `try?` and an unusable pattern simply
+ stopped highlighting, with nothing said anywhere. */
+nonisolated enum HighlightKeywordPattern { // nonisolated: value
+	@MainActor
+	static var matchesByRegularExpression: Bool {
+		Preferences.Highlights.matchingMethod.value == .regularExpression
+	}
+
+	static func validationError(for keyword: String, usesRegularExpression: Bool) -> String? {
+		guard usesRegularExpression, isValid(keyword) == false else {
+			return nil
+		}
+
+		return ApplicationStrings.invalidRegularExpression
+	}
+
+	static func isValid(_ pattern: String) -> Bool {
+		(try? NSRegularExpression(pattern: pattern)) != nil
 	}
 }

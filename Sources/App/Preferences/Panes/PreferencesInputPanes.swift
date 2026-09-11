@@ -78,65 +78,64 @@ struct PreferencesControlsPane: View {
 		}
 	}
 
+	@ViewBuilder
 	private var doubleClickToggles: some View {
-		VStack(alignment: .leading, spacing: 6) {
-			PreferencesToggle(
-				title: PreferencesControlsStrings.connectOnDoubleClick,
-				isOn: model.preferences.binding(for: Preferences.Appearance.connectOnDoubleClick)
-			)
-			PreferencesToggle(
-				title: PreferencesControlsStrings.disconnectOnDoubleClick,
-				isOn: model.preferences.binding(for: Preferences.Appearance.disconnectOnDoubleClick)
-			)
-			PreferencesToggle(
-				title: PreferencesControlsStrings.joinOnDoubleClick,
-				isOn: model.preferences.binding(for: Preferences.Appearance.joinOnDoubleClick)
-			)
-			PreferencesToggle(
-				title: PreferencesControlsStrings.leaveOnDoubleClick,
-				isOn: model.preferences.binding(for: Preferences.Appearance.leaveOnDoubleClick)
-			)
-		}
+		/* Each switch is its own form row: a `VStack` inside a grouped form is
+		 one row, so the system's separators, spacing and label alignment
+		 applied to the stack instead of to the settings in it. */
+		PreferencesToggle(
+			title: PreferencesControlsStrings.connectOnDoubleClick,
+			isOn: model.preferences.binding(for: Preferences.Appearance.connectOnDoubleClick)
+		)
+		PreferencesToggle(
+			title: PreferencesControlsStrings.disconnectOnDoubleClick,
+			isOn: model.preferences.binding(for: Preferences.Appearance.disconnectOnDoubleClick)
+		)
+		PreferencesToggle(
+			title: PreferencesControlsStrings.joinOnDoubleClick,
+			isOn: model.preferences.binding(for: Preferences.Appearance.joinOnDoubleClick)
+		)
+		PreferencesToggle(
+			title: PreferencesControlsStrings.leaveOnDoubleClick,
+			isOn: model.preferences.binding(for: Preferences.Appearance.leaveOnDoubleClick)
+		)
 	}
 
+	@ViewBuilder
 	private var spellingToggles: some View {
-		VStack(alignment: .leading, spacing: 6) {
-			PreferencesToggle(
-				title: PreferencesControlsStrings.spellCheck,
-				isOn: model.preferences.binding(for: Preferences.Input.automaticSpellCheck)
-			)
-			PreferencesToggle(
-				title: PreferencesControlsStrings.grammarCheck,
-				isOn: model.preferences.binding(for: Preferences.Input.automaticGrammarCheck)
-			)
-			PreferencesToggle(
-				title: PreferencesControlsStrings.spellCorrection,
-				isOn: model.preferences.binding(for: Preferences.Input.automaticSpellCorrection)
-			)
-		}
+		PreferencesToggle(
+			title: PreferencesControlsStrings.spellCheck,
+			isOn: model.preferences.binding(for: Preferences.Input.automaticSpellCheck)
+		)
+		PreferencesToggle(
+			title: PreferencesControlsStrings.grammarCheck,
+			isOn: model.preferences.binding(for: Preferences.Input.automaticGrammarCheck)
+		)
+		PreferencesToggle(
+			title: PreferencesControlsStrings.spellCorrection,
+			isOn: model.preferences.binding(for: Preferences.Input.automaticSpellCorrection)
+		)
 	}
 
+	@ViewBuilder
 	private var sendingToggles: some View {
-		VStack(alignment: .leading, spacing: 6) {
-			PreferencesToggle(
-				title: PreferencesControlsStrings.historyPerSelection,
-				isOn: model.preferences.binding(for: Preferences.Input.historyIsChannelSpecific) { _ in
-					TextualPreferences.performReloadAction(.inputHistoryScope)
-				}
-			)
-			PreferencesToggle(
-				title: PreferencesControlsStrings.commandReturnAction,
-				isOn: model.preferences.binding(for: Preferences.Input.commandReturnSendsAction) { _ in
-					TextualPreferences.performReloadAction(.inputHistoryScope)
-				}
-			)
-			PreferencesToggle(
-				title: PreferencesControlsStrings.controlEnterSends,
-				isOn: model.preferences.binding(for: Preferences.Input.controlEnterSendsMessage) { _ in
-					TextualPreferences.performReloadAction(.inputHistoryScope)
-				}
-			)
-		}
+		PreferencesToggle(
+			title: PreferencesControlsStrings.historyPerSelection,
+			isOn: model.preferences.binding(for: Preferences.Input.historyIsChannelSpecific) { _ in
+				TextualPreferences.performReloadAction(.inputHistoryScope)
+			}
+		)
+		/* Neither keyboard toggle reloads anything: they are read when a
+		 key is pressed. Copying the history-scope reload onto them threw
+		 the whole input history away every time one was flipped. */
+		PreferencesToggle(
+			title: PreferencesControlsStrings.commandReturnAction,
+			isOn: model.preferences.binding(for: Preferences.Input.commandReturnSendsAction)
+		)
+		PreferencesToggle(
+			title: PreferencesControlsStrings.controlEnterSends,
+			isOn: model.preferences.binding(for: Preferences.Input.controlEnterSendsMessage)
+		)
 	}
 
 	private var textSizePicker: some View {

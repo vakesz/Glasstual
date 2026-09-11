@@ -141,24 +141,22 @@ final class ClientServices {
 /** What a client needs from outside itself: the preference values it branches
  on and the services it calls into.
 
- It is a value so that it can be handed to a client at construction and copied
- into the objects the client makes; the services inside it are shared by
- reference, because they are the one window and the one menu bar. */
-nonisolated struct ClientEnvironment: Sendable { // nonisolated: value
+ It is main-actor state, because `services` is a box of main-actor references
+ and every reader of the preference half is on the main actor too. What crosses
+ a boundary is `ClientPreferences` on its own: it is a `Sendable` value, so a
+ caller that needs it elsewhere copies it out rather than carrying this. */
+struct ClientEnvironment {
 	var preferences: ClientPreferences
 	var services: ClientServices
 
-	@MainActor
 	var output: (any ClientOutput)? {
 		services.output
 	}
 
-	@MainActor
 	var menu: (any ClientMenuPresenting)? {
 		services.menu
 	}
 
-	@MainActor
 	var world: IRCWorld? {
 		services.world
 	}
@@ -168,13 +166,13 @@ extension ClientEnvironment {
 	/** The environment the running application installs, for the handful of
 	 protocol-layer entry points that have no client to ask — the URL scheme
 	 handler, chiefly. Clients hold their own copy and never read this. */
-	@MainActor static var shared = ClientEnvironment(
+	static var shared = ClientEnvironment(
 		preferences: ClientPreferences(),
 		services: ClientServices()
 	)
 
 	/// An environment with live preference values and no user interface.
-	@MainActor static func headless() -> ClientEnvironment {
+	static func headless() -> ClientEnvironment {
 		ClientEnvironment(preferences: .current(), services: ClientServices())
 	}
 }

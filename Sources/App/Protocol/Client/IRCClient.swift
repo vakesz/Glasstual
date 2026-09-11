@@ -42,7 +42,6 @@
 
 import CocoaExtensions
 import Foundation
-import Synchronization
 
 public extension Notification.Name {
 	static let IRCClientConfigurationWasUpdated = Self("IRCClientConfigurationWasUpdatedNotification")
@@ -96,20 +95,21 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		processIncomingMessageOnMainActor(message)
 	}
 
-	public var config: IRCClientConfig {
-		didSet { refreshDescription() }
-	}
+	public var config: IRCClientConfig
 
 	public lazy var supportInfo = IRCISupportInfo(client: self)
-	/** The ISUPPORT prefix and case-mapping values, republished by `supportInfo`
-	 whenever they change. Channel members rank, compare and mark themselves on
-	 the printing queue and must not read the live table for them. */
-	nonisolated let userPrefixes = Mutex(IRCUserPrefixTable()) // nonisolated: let
+	/** The ISUPPORT prefix and case-mapping values as they stand now,
+	 republished by `supportInfo` whenever a 005 line changes them.
 
-	/// The prefix table as it stands now. A member is stamped with it when the
-	/// list creates or edits one, because a member does not know its client.
-	nonisolated var currentUserPrefixes: IRCUserPrefixTable { // nonisolated: pure
-		userPrefixes.withLock { $0 }
+	 A member is stamped with a copy when the list creates or edits one, because
+	 a member does not know its client and ranks, compares and marks itself on
+	 the printing queue: what crosses that boundary is the `Sendable` table
+	 value, never this property. */
+	private(set) var currentUserPrefixes = IRCUserPrefixTable()
+
+	/// Publishes the table `supportInfo` derived from the newest 005 line.
+	func publishUserPrefixes(_ table: IRCUserPrefixTable) {
+		currentUserPrefixes = table
 	}
 
 	public var cachedHighlights: [HighlightLogEntry] = []
@@ -120,15 +120,19 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 ends, so the live connection keeps its password until then. */
 	var retiredServerKeychainItems: Set<KeychainItem> = []
 	public var isConnecting = false
-	public var isConnected = false {
-		didSet { refreshDescription() }
-	}
+	public var isConnected = false
 
 	/// KVO: `PluginHostAdapter` watches this through `publisher(for:)` to tell
 	/// plugins when a client finished registering.
 	@objc public dynamic var isLoggedIn = false {
 		didSet {
-			refreshDescription()
+			/* Registration is the only evidence the endpoint is actually usable,
+			 so it is what clears the reconnect backoff. Clearing it on a
+			 successful socket connection would let a server that drops the
+			 connection during registration be retried every twenty seconds. */
+			if isLoggedIn {
+				reconnectAttemptCount = 0
+			}
 			output?.updateMemberListVisibilityForSelection()
 		}
 	}
@@ -292,6 +296,15 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var autojoinDelayedWarningTimer: ClientTimer!
 	var pongTimer: ClientTimer!
 	var reconnectTimer: ClientTimer!
+	/// How many reconnection attempts have been scheduled since the last
+	/// successful registration, which is what the backoff is computed from.
+	var reconnectAttemptCount: UInt = 0
+	/** Bounds the SASL exchange.
+
+	 A server that acknowledges `sasl` and then never answers `AUTHENTICATE`
+	 leaves registration paused, and the only thing that ever noticed was the
+	 four-minute retry timer taking the whole connection down. */
+	var saslTimeoutTimer: ClientTimer!
 	var retryTimer: ClientTimer!
 	var autojoinDelayedWarningCount: UInt = 0
 	var channelsToAutojoin: [IRCChannel]?
@@ -342,32 +355,31 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var userStores: [User.ID: UserPersistentStore] = [:]
 	/// Timed commands the user scheduled, keyed by their identifier.
 	var timedCommandsByIdentifier: [String: TimedCommand] = [:]
+	/** How many CTCP queries this connection has answered lately.
+
+	 Main-actor state on the client that answers the queries. It used to live in
+	 a file-scope dictionary keyed by `uniqueIdentifier`, which outlived the
+	 client: a connection removed while a flood was still remembered left its
+	 entry behind with nothing able to reach it again. */
+	var ctcpReplyThrottle = CTCPReplyThrottle()
 
 	/** Preferences and services this client reads instead of reaching for the
 	 application's singletons. The world it belongs to keeps the preference half
-	 current; a client made without one gets the live values and no window.
-
-	 Behind a lock because the preference values are read from the printing and
-	 connection queues while the main actor republishes them. */
-	private nonisolated let environmentStorage: Mutex<ClientEnvironment> // nonisolated: let
-
-	nonisolated var environment: ClientEnvironment { // nonisolated: pure
-		get { environmentStorage.withLock { $0 } }
-		set { environmentStorage.withLock { $0 = newValue } }
-	}
+	 current; a client made without one gets the live values and no window. */
+	var environment: ClientEnvironment
 
 	@available(*, unavailable, message: "Use init(config:) or init(configDictionary:)")
 	override public init() {
 		fatalError("Unavailable")
 	}
 
-	@MainActor public convenience init(config: IRCClientConfig) {
+	public convenience init(config: IRCClientConfig) {
 		self.init(config: config, environment: .shared)
 	}
 
-	@MainActor init(config: IRCClientConfig, environment: ClientEnvironment) {
+	init(config: IRCClientConfig, environment: ClientEnvironment) {
 		self.config = config
-		environmentStorage = Mutex(environment)
+		self.environment = environment
 		super.init()
 		writePasswordsToKeychain()
 		prepareInitialState()
@@ -381,25 +393,11 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		[
 			autojoinTimer, autojoinDelayedWarningTimer,
 			isonTimer, pongTimer, reconnectTimer, retryTimer, whoTimer, readMarkerTimer,
+			saslTimeoutTimer,
 		].forEach { $0?.stop() }
 		startup.cancel()
 		trackedUserPopulationTask?.cancel()
 		rejoinTasks.values.forEach { $0.cancel() }
-	}
-
-	/** `NSObject.description` is nonisolated, so it cannot read the main-actor
-	 configuration and support info the text is built from. The text is published
-	 here instead whenever one of the values it names changes. */
-	private let descriptionSnapshot = Mutex("<IRCClient>")
-
-	override public nonisolated var description: String { // nonisolated: pure
-		descriptionSnapshot.withLock { $0 }
-	}
-
-	/// Republishes the text `description` returns.
-	func refreshDescription() {
-		let text = "<IRCClient [\(networkNameAlt)]: \(serverAddress ?? "(null)")>"
-		descriptionSnapshot.withLock { $0 = text }
 	}
 
 	override public var uniqueIdentifier: String {
@@ -448,7 +446,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		trackedUsers = AddressBookUserTrackingContainer(client: self)
 		requestedCommands = ClientRequestedCommands()
 		lastMessageServerTime = config.lastMessageServerTime
-		refreshDescription()
 
 		autojoinTimer = makeTimer { $0.onAutojoinTimer() }
 		autojoinDelayedWarningTimer = makeTimer { $0.onAutojoinDelayedWarningTimer() }
@@ -456,6 +453,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		reconnectTimer = makeTimer { $0.onReconnectTimer() }
 		retryTimer = makeTimer { $0.onRetryTimer() }
 		pongTimer = makeTimer { $0.onPongTimer() }
+		saslTimeoutTimer = makeTimer { $0.onSASLTimeoutTimer() }
 		whoTimer = makeTimer { $0.onWhoTimer() }
 		readMarkerTimer = makeTimer { $0.onReadMarkerTimer() }
 	}

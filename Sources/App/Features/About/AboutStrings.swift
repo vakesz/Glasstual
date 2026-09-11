@@ -25,7 +25,11 @@ nonisolated enum AboutStrings { // nonisolated: value
 		String(localized: .TDCAboutDialog.iconAccessibility(applicationName))
 	}
 
-	static func versionDescription(applicationName: String, version: String) -> String {
-		String(localized: .TDCAboutDialog.applicationNameFollowed(applicationName, version))
+	static func versionDescription(applicationName: String, version: String, build: String) -> String {
+		guard build.isEmpty == false, build != version else {
+			return String(localized: .TDCAboutDialog.applicationNameFollowed(applicationName, version))
+		}
+
+		return String(localized: .TDCAboutDialog.applicationVersionWithBuild(applicationName, version, build))
 	}
 }

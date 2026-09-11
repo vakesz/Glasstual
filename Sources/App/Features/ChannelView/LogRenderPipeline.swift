@@ -192,6 +192,14 @@ actor LogRenderPipeline {
 			guard isStopped == false, Task.isCancelled == false else { return }
 			await withCheckedContinuation { continuation in
 				drainWaiters[identifier] = continuation
+				/* `onCancel` hops back to the actor, so it can run before the
+				 continuation is stored and find nothing to resume. Storing it
+				 first and then reading the cancellation closes that window:
+				 whichever order the two arrive in, one of them resumes. */
+				guard Task.isCancelled == false else {
+					finishDrain(identifier)
+					return
+				}
 				let result = submissions.yield(LogRenderSubmission(
 					isStandalone: true,
 					waitsForAllSubmissions: includingStandalone

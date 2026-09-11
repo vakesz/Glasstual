@@ -196,6 +196,10 @@ public extension TextualPreferences {
 
 		if reloadAction.contains(.appearance) {
 			SharedApplication.sharedAppearance().updateAppearance()
+			/* Ahead of the redraws below: they resolve theme colours against the
+			 snapshot the controller publishes, and the notification
+			 `updateAppearance` posts would only reach it a turn later. */
+			SharedApplication.sharedThemeController().appearanceDidChange()
 			didReloadUserInterface = true
 		}
 

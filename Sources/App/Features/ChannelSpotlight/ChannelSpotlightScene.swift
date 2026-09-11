@@ -13,12 +13,20 @@ struct ChannelSpotlightApplicationScene: Scene {
 			ChannelSpotlightSceneRoot(scenes: scenes)
 		}
 		.windowResizability(.contentSize)
-		.windowStyle(.hiddenTitleBar)
+		/* A spotlight panel, not a document window: it floats over what it
+		 searches, opens in the middle of the screen, carries no chrome of its
+		 own so the glass effect is not drawn on an opaque square, and is never
+		 restored — a search nobody asked to resume. */
+		.windowStyle(.plain)
+		.windowLevel(.floating)
+		.defaultPosition(.center)
+		.restorationBehavior(.disabled)
 	}
 }
 
 private struct ChannelSpotlightSceneRoot: View {
 	@Environment(\.dismissWindow) private var dismissWindow
+	@Environment(\.controlActiveState) private var controlActiveState
 	let scenes: ApplicationScenes
 
 	var body: some View {
@@ -33,6 +41,11 @@ private struct ChannelSpotlightSceneRoot: View {
 			)
 			.onDisappear {
 				scenes.channelSpotlightDidClose()
+			}
+			.onChange(of: controlActiveState) { _, state in
+				// A spotlight panel goes away as soon as it stops being typed into.
+				guard state != .key else { return }
+				dismiss()
 			}
 		}
 	}

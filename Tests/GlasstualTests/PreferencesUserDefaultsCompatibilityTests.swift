@@ -24,7 +24,7 @@ struct PreferencesUserDefaultsCompatibilityTests {
 				object: defaults,
 				queue: nil
 			) { notification in
-				#expect(notification.userInfo?["changedKey"] as? String == key)
+				#expect(notification.userInfo?[PreferenceChangeNotification.changedKeyUserInfoKey] as? String == key)
 				changed()
 			}
 			defer { center.removeObserver(token) }

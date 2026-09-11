@@ -53,7 +53,10 @@ enum ServerPropertiesDestination {
  express. */
 @MainActor
 protocol TreeItemPresentation: AnyObject {
-	nonisolated var presentationIdentifier: String { get } // nonisolated: pure
+	/** Main actor: the only readers are the two termination logs
+	 (`Channel.prepareForApplicationTermination`, its client's counterpart),
+	 which already run there, so the identifier never leaves the main actor. */
+	var presentationIdentifier: String { get }
 
 	func print(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?)
 	/* Main actor: the newest printed line is the controller's own state, and
@@ -135,11 +138,25 @@ protocol ClientOutput: AnyObject {
 
 	/** A `+b`/`+e`/`+I`/`+q` list entry arrived from the server.
 
-	 `true` when a sheet is showing the list and took the entry, in which case
-	 the protocol layer does not also print it into the transcript. */
-	func accessListEntryReceived(mask: String, setBy author: String?, creationDate date: Date?) -> Bool
-	/// The end of such a list. `true` when a sheet took it.
-	func accessListFinished() -> Bool
+	 The connection, the channel and the mode letter all travel with the mask
+	 because a window is open on one list of one channel: this seam is shared
+	 with the transcript and is one object for every connection, so an entry
+	 routed to whichever list happened to be frontmost put another channel's bans
+	 in it. The receiver answers `false` for an entry that is not its own, and the
+	 protocol layer prints it into the transcript instead.
+
+	 `true` when a window is showing that list and took the entry, in which case
+	 the protocol layer does not also print it. */
+	func accessListEntryReceived(
+		for client: IRCClient,
+		inChannelNamed channelName: String,
+		modeSymbol: String,
+		mask: String,
+		setBy author: String?,
+		creationDate date: Date?
+	) -> Bool
+	/// The end of such a list. `true` when a window showing that list took it.
+	func accessListFinished(for client: IRCClient, inChannelNamed channelName: String, modeSymbol: String) -> Bool
 	/// Dismisses whatever sheet is scoped to a channel that is going away. The
 	/// protocol layer knows the channel is gone; which sheets were hanging off
 	/// it is the window layer's business.

@@ -76,6 +76,7 @@ public final class SendingMessage: NSObject {
 			 drops the rest — Libera answered a batched request with one ACK and
 			 registration hung for the ten it never saw. */
 			if isLastArgument, argument.hasPrefix(":") || argument.contains(" ") {
+				assertLastArgumentMayBeTrailing(command: uppercaseCommand, colonPosition: colonPosition)
 				line.append(":")
 			} else if colonPosition != NSNotFound, index == colonPosition {
 				line.append(":")
@@ -85,6 +86,32 @@ public final class SendingMessage: NSObject {
 		}
 
 		return line
+	}
+
+	/** Debug-only guard against a caller pre-joining several parameters.
+
+	 A command whose colon index says "never a trailing parameter" takes each of
+	 its parameters as its own wire token: `MODE #chan +ooo alice bob carol`, not
+	 `MODE #chan :+ooo alice bob carol`. When such a command reaches the
+	 colonising branch above, a caller has joined a list with spaces and the
+	 server will read the whole thing as one token — a `+ooo` that ops nobody.
+
+	 Two commands are exceptions the index cannot express. `CAP REQ :multi-prefix
+	 sasl` is how the protocol batches a capability request, and `PONG` echoes
+	 whatever token the server chose to `PING` with — if that token had spaces in
+	 it, it arrived as a trailing parameter and goes back as one.
+
+	 An `assert` rather than a `precondition`, because the shipping client should
+	 send a malformed line rather than terminate; the next pre-joined list fails
+	 a test instead of a connection. */
+	private static let commandsWithAnUnindexedTrailingParameter: Set<String> = ["CAP", "PONG"]
+
+	private static func assertLastArgumentMayBeTrailing(command: String, colonPosition: UInt) {
+		assert(
+			colonPosition != CommandIndex.colonPositionNever
+				|| commandsWithAnUnindexedTrailingParameter.contains(command),
+			"\(command) takes no trailing parameter, so its last argument cannot hold a space"
+		)
 	}
 
 	public static func string(command: String, arguments: [String]?, tags: [String: String]?) -> String {

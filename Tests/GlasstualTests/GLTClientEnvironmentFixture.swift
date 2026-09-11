@@ -54,17 +54,24 @@ final class GLTRecordingClientOutput: ClientOutput {
 	/// Every blocking confirmation the protocol layer asked for, in order.
 	private(set) var modalConfirmations: [AlertRequest] = []
 	private(set) var closedSheetClients: [IRCClient] = []
-	/// One `+b`/`+e`/`+I`/`+q` entry a sheet would have taken.
+	/// One `+b`/`+e`/`+I`/`+q` entry a window would have taken, and the list it
+	/// was routed to.
 	struct AccessListEntry: Equatable {
+		let channelName: String
+		let modeSymbol: String
 		let mask: String
 		let author: String?
 		let date: Date?
 	}
 
 	private(set) var accessListEntries: [AccessListEntry] = []
-	private(set) var accessListFinishedCount = 0
+	/// The `(channel, mode letter)` pairs an end-of-list reply was routed to.
+	private(set) var accessListFinishes: [String] = []
+	var accessListFinishedCount: Int {
+		accessListFinishes.count
+	}
 
-	/// What `confirmModally` answers, and whether an access list sheet is up.
+	/// What `confirmModally` answers, and whether an access list window is up.
 	var modalConfirmationAnswer = true
 	var showsAccessListSheet = false
 	/// The channels whose sheets the protocol layer asked to have closed.
@@ -94,18 +101,31 @@ final class GLTRecordingClientOutput: ClientOutput {
 		closedSheetClients.append(client)
 	}
 
-	func accessListEntryReceived(mask: String, setBy author: String?, creationDate date: Date?) -> Bool {
+	func accessListEntryReceived(
+		for _: IRCClient,
+		inChannelNamed channelName: String,
+		modeSymbol: String,
+		mask: String,
+		setBy author: String?,
+		creationDate date: Date?
+	) -> Bool {
 		guard showsAccessListSheet else { return false }
 
-		accessListEntries.append(AccessListEntry(mask: mask, author: author, date: date))
+		accessListEntries.append(AccessListEntry(
+			channelName: channelName,
+			modeSymbol: modeSymbol,
+			mask: mask,
+			author: author,
+			date: date
+		))
 
 		return true
 	}
 
-	func accessListFinished() -> Bool {
+	func accessListFinished(for _: IRCClient, inChannelNamed channelName: String, modeSymbol: String) -> Bool {
 		guard showsAccessListSheet else { return false }
 
-		accessListFinishedCount += 1
+		accessListFinishes.append("\(channelName) +\(modeSymbol)")
 
 		return true
 	}

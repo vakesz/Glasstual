@@ -165,6 +165,49 @@ struct IRCClientNotificationPolicyTests {
 		))
 	}
 
+	/** Only a message event forwarded `sound:` to the notification it posted, so
+	 every other event — connect, disconnect, a kick, an invite, a join, an
+	 address-book match, a file transfer — went silent as soon as the system took
+	 over playing sounds. Where an event's sound comes from is one decision now,
+	 and the events do not enter into it. */
+	@Test("The notification carries the sound wherever the system will play it")
+	func theNotificationCarriesTheSound() {
+		#expect(playback(systemPlaysSounds: true) == .withNotification)
+		#expect(playback(systemPlaysSounds: false) == .byApplication)
+	}
+
+	/// The settings read is a question for the system and lands a moment after
+	/// launch. Reading the unanswered state as "the system plays nothing" had
+	/// the application and the notification each play the first sounds.
+	@Test("Before the system has answered, the notification is the only one that plays")
+	func anUnknownAnswerDefersToTheNotification() {
+		#expect(playback(systemPlaysSounds: nil) == .withNotification)
+	}
+
+	/// Muting, an event with no sound of its own, and an event that is only
+	/// spoken — where nothing is posted to carry a sound — all play nothing.
+	@Test("Nothing plays where there is nothing to play, or nowhere to play it")
+	func nothingPlaysWithoutASoundOrANotification() {
+		#expect(playback(soundName: nil, systemPlaysSounds: true) == .silent)
+		#expect(playback(soundName: nil, isMuted: true, systemPlaysSounds: false) == .silent)
+		#expect(playback(isOnlySpoken: true, systemPlaysSounds: false) == .silent)
+		#expect(playback(isOnlySpoken: true, systemPlaysSounds: true) == .silent)
+	}
+
+	private func playback(
+		soundName: String? = "Beep",
+		isMuted: Bool = false,
+		isOnlySpoken: Bool = false,
+		systemPlaysSounds: Bool?
+	) -> IRCNotificationSoundPlayback {
+		IRCNotificationPolicy.soundPlayback(
+			soundName: soundName,
+			isMuted: isMuted,
+			isOnlySpoken: isOnlySpoken,
+			systemPlaysNotificationSounds: systemPlaysSounds
+		)
+	}
+
 	private func shouldPost(
 		event: NotificationEvent,
 		enabled: Bool = true,

@@ -118,7 +118,13 @@ private struct CompletionRequest {
 			   suffixRange.location - start < maximumSuffixDistance
 			{
 				let beforeSuffix = NSRange(location: start, length: suffixRange.location - start)
-				let whitespace = text.rangeOfCharacter(from: .whitespaces, options: [], range: beforeSuffix)
+				/* A line break between the caret and the suffix ends the word
+				 just as a space does. */
+				let whitespace = text.rangeOfCharacter(
+					from: .whitespacesAndNewlines,
+					options: [],
+					range: beforeSuffix
+				)
 
 				if whitespace.location == NSNotFound {
 					range.length = NSMaxRange(suffixRange) - start
@@ -146,11 +152,34 @@ private struct CompletionRequest {
 	private static let maximumSuffixDistance = 30
 
 	private static func isWordDelimiter(_ character: UniChar) -> Bool {
-		(CharacterSet.whitespaces as NSCharacterSet).characterIsMember(character) || character == 0x2C
+		NicknameCompletionDelimiters.isWordDelimiter(character)
 	}
 
 	private static func isSuffixDelimiter(_ character: UniChar) -> Bool {
-		isWordDelimiter(character) || character == 0x3A
+		NicknameCompletionDelimiters.isSuffixDelimiter(character)
+	}
+}
+
+/** What ends the word the caret sits in.
+
+ A line break is one. Option-Return puts a newline in the field, and with only
+ `whitespaces` the scan ran straight past it into the line above: a second line
+ beginning with `/` was read as starting at the field's start and completed as
+ a command, and a nickname on the previous line was offered as the word being
+ typed. */
+nonisolated enum NicknameCompletionDelimiters { // nonisolated: value
+	/// U+002C COMMA, which separates nicknames the user is addressing.
+	private static let comma: UniChar = 0x2C
+	/// U+003A COLON, the customary suffix after an addressed nickname.
+	private static let colon: UniChar = 0x3A
+
+	static func isWordDelimiter(_ character: UniChar) -> Bool {
+		(CharacterSet.whitespacesAndNewlines as NSCharacterSet).characterIsMember(character)
+			|| character == comma
+	}
+
+	static func isSuffixDelimiter(_ character: UniChar) -> Bool {
+		isWordDelimiter(character) || character == colon
 	}
 }
 
@@ -358,9 +387,12 @@ public final class NicknameCompletionStatus: NSObject {
 			}
 			priorityMember = mostWeightedMember(of: members)
 		} else {
-			/* With a search pattern the whole list is already ordered by
-			 conversation weight, so there is no separate priority candidate. */
-			sortedMembers = members.sorted { $0.compare(usingWeights: $1) == .orderedAscending }
+			/* With a search pattern the whole list is ordered by conversation
+			 weight, so there is no separate priority candidate. The ordering is
+			 the one the member list uses: `sortedByConversationWeight` reads the
+			 staff preference once and hands it to the pure comparator, rather
+			 than fetching it on every one of the n log n comparisons. */
+			sortedMembers = ChannelUser.sortedByConversationWeight(members)
 			priorityMember = nil
 		}
 

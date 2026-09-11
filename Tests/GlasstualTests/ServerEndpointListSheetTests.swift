@@ -173,6 +173,53 @@ struct ServerEndpointListSheetTests {
 		#expect(submitted.map(\.serverPort) == [7000])
 	}
 
+	/** A draft shows its endpoint's stored secret only once the one keychain read
+	 lands, so an untouched row is showing an empty field for a password it has.
+	 Submitting that as an edit — `.edited("")`, which is `.cleared` — deleted
+	 the password of every row the person had not typed into, a list they only
+	 reordered included. */
+	@Test("An endpoint nobody typed into asks for no change to its secret")
+	@MainActor
+	func untouchedEndpointsKeepTheirSecrets() throws {
+		let model = ServerEndpointListModel()
+		model.replace(with: [
+			Server(serverAddress: "irc.one.example", serverPort: 6667),
+			Server(serverAddress: "irc.two.example", serverPort: 6667),
+		])
+
+		#expect(model.entries.allSatisfy { $0.passwordWasEdited == false })
+		model.entries[1].password = "typed"
+
+		let submitted = try #require(model.validatedServers())
+		#expect(submitted[0].pendingServerPassword == .unchanged)
+		#expect(submitted[1].pendingServerPassword == .set("typed"))
+
+		// Emptying a field is still what asks for the item to go.
+		model.entries[1].password = ""
+		let emptied = try #require(model.validatedServers())
+		#expect(emptied[1].pendingServerPassword == .cleared)
+	}
+
+	/// An edit the parent sheet already collected reaches the draft as the field
+	/// contents and comes back unchanged when nobody typed over it.
+	@Test("An endpoint carrying an unflushed edit hands it back as it was")
+	@MainActor
+	func unflushedEndpointEditsSurviveUntouched() throws {
+		let model = ServerEndpointListModel()
+		model.replace(with: [
+			Server(serverAddress: "irc.one.example", serverPort: 6667, pendingServerPassword: .set("hunter2")),
+			Server(serverAddress: "irc.two.example", serverPort: 6667, pendingServerPassword: .cleared),
+		])
+
+		#expect(model.entries[0].password == "hunter2")
+		#expect(model.entries[1].password.isEmpty)
+
+		let submitted = try #require(model.validatedServers())
+
+		#expect(submitted[0].pendingServerPassword == .set("hunter2"))
+		#expect(submitted[1].pendingServerPassword == .cleared)
+	}
+
 	@Test("Every endpoint in a list has an identity of its own to diff by")
 	func entryIdentifiersAreDistinct() {
 		let entries = [Server(), Server(), Server()]

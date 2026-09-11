@@ -74,12 +74,10 @@ struct LogRendererSafetyTests {
 
 	@Test("Zero-width highlights never access an end index", arguments: ["$", "^", "(?=a)", "["], ["a", "\u{02}"])
 	func zeroWidthHighlightsAreIgnored(pattern: String, source: String) {
-		let previous = Preferences.Highlights.matchingMethod.value
-		defer { Preferences.Highlights.matchingMethod.value = previous }
-		Preferences.Highlights.matchingMethod.value = .regularExpression
-
 		let body = LogRenderer.renderNativeBody(source, withAttributes: TranscriptRenderOptions(
-			lineType: .privateMessage, highlightKeywords: [pattern]
+			lineType: .privateMessage,
+			highlightKeywords: [pattern],
+			textPolicy: TranscriptTextPolicy(highlightMatchingMethod: .regularExpression)
 		), members: [])
 
 		#expect(body.isHighlight == false)
@@ -88,12 +86,10 @@ struct LogRendererSafetyTests {
 
 	@Test("A zero-width first match does not hide a later nonempty highlight")
 	func nonemptyMatchAfterZeroWidthStillHighlights() {
-		let previous = Preferences.Highlights.matchingMethod.value
-		defer { Preferences.Highlights.matchingMethod.value = previous }
-		Preferences.Highlights.matchingMethod.value = .regularExpression
-
 		let body = LogRenderer.renderNativeBody("ba", withAttributes: TranscriptRenderOptions(
-			lineType: .privateMessage, highlightKeywords: ["a*"]
+			lineType: .privateMessage,
+			highlightKeywords: ["a*"],
+			textPolicy: TranscriptTextPolicy(highlightMatchingMethod: .regularExpression)
 		), members: [])
 
 		#expect(body.isHighlight)

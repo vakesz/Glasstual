@@ -270,7 +270,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 	}
 
 	public func formattedTimestamp(with format: String?) -> String {
-		let themeFormat = ThemeController.activeSnapshot?.timestampFormat
+		let themeFormat = ThemeSnapshotStore.current.timestampFormat
 		let selectedFormat = [
 			format,
 			themeFormat,

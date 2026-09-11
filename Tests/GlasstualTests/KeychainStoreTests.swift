@@ -47,9 +47,56 @@ struct KeychainStoreTests {
 	@Test("Deleting reports success once and failure afterwards")
 	func deleteReportsTheDataProtectionResult() {
 		let item = uniqueItem()
+		// Nothing is left behind if an expectation below fails part-way.
+		defer { item.delete() }
 
 		#expect(item.write("hunter2"))
 		#expect(item.delete())
 		#expect(item.delete() == false)
+	}
+
+	/// `PendingKeychainSecret(_ value: String?)` treated a non-nil empty string
+	/// as a secret to write, leaving an item holding nothing behind instead of
+	/// removing the one the user had just emptied.
+	@Test("An emptied field clears the item instead of storing an empty secret")
+	func emptyEditClearsTheItem() {
+		#expect(PendingKeychainSecret("") == .cleared)
+		#expect(PendingKeychainSecret(nil) == .cleared)
+		#expect(PendingKeychainSecret("hunter2") == .set("hunter2"))
+
+		let item = uniqueItem()
+		defer { item.delete() }
+
+		#expect(item.write("hunter2"))
+		item.apply(PendingKeychainSecret(""))
+
+		#expect(item.readPassword() == .missing)
+	}
+
+	/// Lookups filtered on `kSecAttrLabel` and `kSecAttrDescription`, which are
+	/// exactly the two attributes Keychain Access lets the user edit. Renaming
+	/// an item there made the update miss, the add that followed collide, and
+	/// the new password vanish without a word.
+	@Test("A renamed item still takes a new password")
+	func renamedItemStillTakesANewPassword() {
+		let item = uniqueItem()
+		defer { item.delete() }
+
+		#expect(item.write("hunter2"))
+
+		let identity: [CFString: Any] = [
+			kSecClass: kSecClassGenericPassword,
+			kSecAttrService: item.service,
+			kSecUseDataProtectionKeychain: true,
+		]
+		let rename: [CFString: Any] = [
+			kSecAttrLabel: "Renamed in Keychain Access",
+			kSecAttrDescription: "note to self",
+		]
+		#expect(SecItemUpdate(identity as CFDictionary, rename as CFDictionary) == errSecSuccess)
+
+		#expect(item.write("hunter3"))
+		#expect(item.password == "hunter3")
+		#expect(item.delete())
 	}
 }

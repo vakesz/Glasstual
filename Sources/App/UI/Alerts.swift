@@ -48,6 +48,9 @@ public nonisolated enum AlertResponse: UInt, Sendable { // nonisolated: value
 	case other = 1002
 }
 
+/// So the button a suppressed alert answers with can be stored beside the flag.
+extension AlertResponse: PreferenceEnum {}
+
 /// Everything one alert needs. Building the request is separate from showing
 /// it, which is what lets the suppression policy be exercised without a window
 /// server.
@@ -57,12 +60,21 @@ public nonisolated enum AlertStyle: Sendable { // nonisolated: value
 	case critical
 }
 
+/// Which of an alert's buttons destroys something. The panel gives that button
+/// the destructive role, which is what tints it and tells VoiceOver the action
+/// cannot be taken back.
+public nonisolated enum AlertDestructiveButton: Sendable { // nonisolated: value
+	case `default`
+	case alternate
+}
+
 public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 	public var title: String
 	public var body: String
 	public var defaultButton: String
 	public var alternateButton: String?
 	public var otherButton: String?
+	public var destructiveButton: AlertDestructiveButton?
 	/// The base key recording a "do not show again" choice. Without one the
 	/// checkbox is not offered, because nothing would remember the answer.
 	public var suppressionKey: String?
@@ -75,6 +87,7 @@ public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 		defaultButton: String,
 		alternateButton: String? = nil,
 		otherButton: String? = nil,
+		destructiveButton: AlertDestructiveButton? = nil,
 		suppressionKey: String? = nil,
 		suppressionText: String? = nil,
 		style: AlertStyle = .informational
@@ -84,6 +97,7 @@ public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 		self.defaultButton = defaultButton
 		self.alternateButton = alternateButton
 		self.otherButton = otherButton
+		self.destructiveButton = destructiveButton
 		self.suppressionKey = suppressionKey
 		self.suppressionText = suppressionText
 		self.style = style
@@ -119,7 +133,7 @@ public enum AlertPresentation {
 	case anyVisibleWindow
 }
 
-/// The AppKit half of showing an alert: build the panel, run it, report the
+/// The presentation half of showing an alert: build the panel, run it, report the
 /// button and whether the suppression checkbox ended up ticked. Injected so
 /// `Alerts`'s suppression policy is testable on its own.
 @MainActor
@@ -143,10 +157,16 @@ public nonisolated struct AlertPresenterResult: Equatable, Sendable { // nonisol
 public enum Alerts {
 	private static let suppressionPrefix = Preferences.Families.alertSuppression.pattern
 
+	/// Whether the alert has to be shown, or the answer a previous run recorded.
+	private enum PreparedAlert {
+		case show(AlertRequest, suppressionKey: String?)
+		case suppressed(AlertResponse)
+	}
+
 	/// Shows `request` and reports what the user chose. A request whose
-	/// suppression key was already recorded is not shown at all; it reports
-	/// `.default` and `isSuppressed`, which is the answer the user gave the
-	/// last time they saw it.
+	/// suppression key was already recorded is not shown at all; it repeats the
+	/// button the user pressed the last time they saw it, so ticking the
+	/// checkbox on a "No" keeps answering "No".
 	@MainActor
 	@discardableResult
 	public static func run(
@@ -154,12 +174,12 @@ public enum Alerts {
 		on presentation: AlertPresentation,
 		using presenter: any AlertPresenter = SwiftUIAlertPresenter()
 	) async -> AlertOutcome {
-		guard let prepared = prepare(request) else {
-			return AlertOutcome(response: .default, isSuppressed: true)
+		guard case let .show(prepared, suppressionKey) = prepare(request) else {
+			return suppressedOutcome(for: request)
 		}
 
-		let result = await presenter.present(prepared.request, in: presentation)
-		return finish(result, suppressionKey: prepared.resolvedKey)
+		let result = await presenter.present(prepared, in: presentation)
+		return finish(result, suppressionKey: suppressionKey)
 	}
 
 	/// The blocking form, for the call sites that need the answer before they
@@ -170,42 +190,49 @@ public enum Alerts {
 		_ request: AlertRequest,
 		using presenter: any AlertPresenter = SwiftUIAlertPresenter()
 	) -> AlertOutcome {
-		guard let prepared = prepare(request) else {
-			return AlertOutcome(response: .default, isSuppressed: true)
+		guard case let .show(prepared, suppressionKey) = prepare(request) else {
+			return suppressedOutcome(for: request)
 		}
 
-		let result = presenter.presentModal(prepared.request)
-		return finish(result, suppressionKey: prepared.resolvedKey)
+		let result = presenter.presentModal(prepared)
+		return finish(result, suppressionKey: suppressionKey)
 	}
 
-	/// `nil` when the alert has already been suppressed and must not be shown.
 	@MainActor
-	private static func prepare(_ request: AlertRequest) -> (request: AlertRequest, resolvedKey: String?)? {
+	private static func prepare(_ request: AlertRequest) -> PreparedAlert {
 		var request = request
 
 		guard let baseKey = request.suppressionKey else {
-			return (request, nil)
+			return .show(request, suppressionKey: nil)
 		}
 
 		let resolvedKey = suppressionKey(withBase: baseKey)
 
-		guard isSuppressed(fullKey: resolvedKey) == false else {
-			return nil
+		if let recorded = recordedResponse(fullKey: resolvedKey) {
+			return .suppressed(recorded)
 		}
 
 		request.suppressionKey = resolvedKey
 
 		if request.suppressionText?.isEmpty != false {
-			request.suppressionText = PromptStrings.Alert.doNotShowAgain
+			request.suppressionText = PromptStrings.Alert.doNotAskAgain
 		}
 
-		return (request, resolvedKey)
+		return .show(request, suppressionKey: resolvedKey)
+	}
+
+	@MainActor
+	private static func suppressedOutcome(for request: AlertRequest) -> AlertOutcome {
+		let response = request.suppressionKey
+			.flatMap { recordedResponse(fullKey: suppressionKey(withBase: $0)) } ?? .default
+		return AlertOutcome(response: response, isSuppressed: true)
 	}
 
 	@MainActor
 	private static func finish(_ result: AlertPresenterResult, suppressionKey: String?) -> AlertOutcome {
 		if result.suppressionChecked, let suppressionKey {
 			suppressionFlag(suppressionKey).value = true
+			suppressionResponse(suppressionKey).value = result.response
 		}
 
 		return AlertOutcome(response: result.response, isSuppressed: result.suppressionChecked)
@@ -215,10 +242,22 @@ public enum Alerts {
 // MARK: - Suppression
 
 public extension Alerts {
+	/// Distinguishes the flag from the response recorded beside it. Both live
+	/// in the alert suppression family, so both stay out of an export.
+	private static var responseSuffix: String {
+		" -> Response"
+	}
+
 	/// Whether the user has previously chosen "do not show again" for an alert
 	/// whose suppression key was `baseKey`.
 	static func isSuppressed(baseKey: String) -> Bool {
 		isSuppressed(fullKey: suppressionKey(withBase: baseKey))
+	}
+
+	/// The button a suppressed alert answers with, or `nil` when the user has
+	/// not chosen to stop seeing it.
+	static func suppressedResponse(baseKey: String) -> AlertResponse? {
+		recordedResponse(fullKey: suppressionKey(withBase: baseKey))
 	}
 
 	internal static func isSuppressed(fullKey: String) -> Bool {
@@ -232,6 +271,24 @@ public extension Alerts {
 		PreferenceKey(fullKey, default: false, traits: [.unregistered, .uncatalogued])
 	}
 
+	/** Which button was pressed when the checkbox was ticked.
+
+	 Recording only *that* an alert was suppressed made every later run answer
+	 with the default button, so a suppressed "No" opened the link or deleted
+	 the channel anyway. Flags written before this key existed read back as
+	 `.default`, which is the answer they used to give. */
+	private static func suppressionResponse(_ fullKey: String) -> PreferenceKey<AlertResponse> {
+		PreferenceKey(fullKey + responseSuffix, default: .default, traits: [.unregistered, .uncatalogued])
+	}
+
+	private static func recordedResponse(fullKey: String) -> AlertResponse? {
+		guard isSuppressed(fullKey: fullKey) else {
+			return nil
+		}
+
+		return suppressionResponse(fullKey).value
+	}
+
 	static func suppressionKey(withBase base: String) -> String {
 		if base.hasPrefix(suppressionPrefix) {
 			return base
@@ -243,92 +300,169 @@ public extension Alerts {
 
 // MARK: - SwiftUI presentation
 
+/// The checkbox state the panel writes and the session reads back.
 @MainActor
 @Observable
 private final class AlertPresentationModel {
 	var suppressionChecked = false
 }
 
+/** The panel every alert is drawn with, to the proportions the system uses.
+
+ SwiftUI owns presentation, so the alert look is built here rather than handed
+ to a panel class: the application icon over a centred title and message, the
+ buttons in one row along the bottom ordered right to left, a third button on
+ the far left, and the suppression checkbox above them. Escape and ⌘. answer
+ the cancel button, Return the default one, and a destructive button carries
+ the role that tints it and tells VoiceOver the action cannot be taken back. */
 @MainActor
-private struct AlertView: View {
+private struct AlertPanelView: View {
+	private enum Metrics {
+		/// What a system alert gives its text, and what the panel is sized from.
+		static let contentWidth: CGFloat = 260
+		static let iconSize: CGFloat = 64
+		static let badgeSize: CGFloat = 26
+	}
+
 	@Bindable var model: AlertPresentationModel
 	let request: AlertRequest
 	let respond: (AlertResponse) -> Void
 
-	var body: some View {
-		VStack(alignment: .leading, spacing: 18) {
-			HStack(alignment: .top, spacing: 14) {
-				Image(systemName: symbolName)
-					.font(.system(size: 30))
-					.foregroundStyle(symbolColor)
-					.accessibilityHidden(true)
+	@Environment(\.accessibilityReduceMotion) private var reduceMotion
+	@Environment(\.colorSchemeContrast) private var colorSchemeContrast
+	@State private var hasAppeared = false
 
-				VStack(alignment: .leading, spacing: 6) {
-					Text(verbatim: request.title)
-						.font(.headline)
-					Text(verbatim: request.body)
-						.foregroundStyle(.secondary)
-						.fixedSize(horizontal: false, vertical: true)
-				}
-			}
+	var body: some View {
+		VStack(spacing: 16) {
+			icon
+			message
 
 			if request.suppressionKey != nil {
-				Toggle(request.suppressionText ?? "", isOn: $model.suppressionChecked)
+				suppression
 			}
 
-			HStack {
-				Spacer()
+			buttons
+		}
+		.frame(width: Metrics.contentWidth)
+		.padding(.horizontal, 20)
+		.padding(.top, 18)
+		.padding(.bottom, 16)
+		.opacity(hasAppeared ? 1 : 0)
+		.animation(appearanceAnimation, value: hasAppeared)
+		.onAppear { hasAppeared = true }
+	}
 
-				if let otherButton = request.otherButton {
-					Button(otherButton) {
-						respond(.other)
-					}
-				}
+	/// The application icon, badged with the system caution mark for the two
+	/// styles that warn, which is how the system draws its own alerts.
+	@ViewBuilder private var icon: some View {
+		if let applicationIcon = NSApp.applicationIconImage {
+			Image(nsImage: applicationIcon)
+				.resizable()
+				.frame(width: Metrics.iconSize, height: Metrics.iconSize)
+				.overlay(alignment: .bottomTrailing) { badge }
+				.accessibilityHidden(true)
+		}
+	}
 
-				if let alternateButton = request.alternateButton {
-					Button(alternateButton) {
-						respond(.alternate)
-					}
+	@ViewBuilder private var badge: some View {
+		if let cautionIcon {
+			Image(nsImage: cautionIcon)
+				.resizable()
+				.frame(width: Metrics.badgeSize, height: Metrics.badgeSize)
+				.offset(x: 6, y: 6)
+		}
+	}
+
+	private var cautionIcon: NSImage? {
+		switch request.style {
+		case .informational: nil
+		case .warning, .critical: NSImage(named: NSImage.cautionName)
+		}
+	}
+
+	private var message: some View {
+		VStack(spacing: 6) {
+			Text(verbatim: request.title)
+				.font(.headline)
+				.multilineTextAlignment(.center)
+				.fixedSize(horizontal: false, vertical: true)
+
+			if request.body.isEmpty == false {
+				Text(verbatim: request.body)
+					.font(.subheadline)
+					.foregroundStyle(bodyStyle)
+					.multilineTextAlignment(.center)
+					.fixedSize(horizontal: false, vertical: true)
+			}
+		}
+		.frame(maxWidth: .infinity)
+	}
+
+	private var suppression: some View {
+		Toggle(isOn: $model.suppressionChecked) {
+			Text(verbatim: request.suppressionText ?? PromptStrings.Alert.doNotAskAgain)
+				.font(.subheadline)
+		}
+		.toggleStyle(.checkbox)
+		.frame(maxWidth: .infinity, alignment: .leading)
+	}
+
+	private var buttons: some View {
+		HStack(spacing: 12) {
+			if let otherButton = request.otherButton {
+				Button(otherButton) { respond(.other) }
+			}
+
+			Spacer(minLength: 0)
+
+			if let alternateButton = request.alternateButton {
+				Button(alternateButton, role: role(for: .alternate)) { respond(.alternate) }
 					.keyboardShortcut(.cancelAction)
-				}
-
-				Button(request.defaultButton) {
-					respond(.default)
-				}
-				.keyboardShortcut(.defaultAction)
 			}
+
+			Button(request.defaultButton, role: role(for: .default)) { respond(.default) }
+				.keyboardShortcut(.defaultAction)
+				.buttonStyle(.borderedProminent)
+				/* A prominent button keeps the accent colour whatever its role;
+				 the system alert draws a destructive default in red. */
+				.tint(role(for: .default) == .destructive ? Color.red : nil)
 		}
-		.padding(20)
-		.frame(width: 430)
+		.frame(maxWidth: .infinity)
 	}
 
-	private var symbolName: String {
-		switch request.style {
-		case .informational: "info.circle"
-		case .warning: "exclamationmark.triangle.fill"
-		case .critical: "xmark.octagon.fill"
-		}
+	private func role(for button: AlertDestructiveButton) -> ButtonRole? {
+		request.destructiveButton == button ? .destructive : nil
 	}
 
-	private var symbolColor: Color {
-		switch request.style {
-		case .informational: .accentColor
-		case .warning: .orange
-		case .critical: .red
-		}
+	/// Increased contrast asks for the secondary text to stop being secondary.
+	private var bodyStyle: HierarchicalShapeStyle {
+		colorSchemeContrast == .increased ? .primary : .secondary
+	}
+
+	private var appearanceAnimation: Animation? {
+		reduceMotion ? nil : .easeOut(duration: 0.12)
 	}
 }
 
-/// Hosts SwiftUI alert content in the AppKit window boundary required for
-/// attaching a sheet to an arbitrary existing window or running a modal alert
-/// before the application has a SwiftUI scene.
+/** Hosts the SwiftUI panel in the one AppKit boundary an alert still needs.
+
+ A window, because an alert has to be answerable during launch and migration,
+ before the application has a scene; and `beginSheet`, because a sheet has to
+ be attachable to a window SwiftUI does not own. The main window has a
+ state-driven sheet stack of its own, and that is what the alert uses there. */
 @MainActor
 private final class AlertPresentationSession {
+	private enum Host {
+		case unattached
+		case modal(NSWindow)
+		case sheet(parent: NSWindow, panel: NSWindow)
+		case mainWindowSheet(MainWindow)
+	}
+
 	private let request: AlertRequest
 	private let model = AlertPresentationModel()
-	private weak var mainWindow: MainWindow?
-	private var alertWindow: NSWindow?
-	private var response: AlertResponse = .default
+	private var host: Host = .unattached
+	private var response: AlertResponse?
 	private var continuation: CheckedContinuation<AlertPresenterResult, Never>?
 
 	init(request: AlertRequest) {
@@ -337,53 +471,67 @@ private final class AlertPresentationSession {
 
 	func presentModal() -> AlertPresenterResult {
 		let window = makeWindow()
+		host = .modal(window)
 		window.center()
-		let returnCode = NSApp.runModal(for: window)
+
+		let code = NSApp.runModal(for: window)
+
 		window.orderOut(nil)
-		return finish(returnCode)
+		return finish(code)
+	}
+
+	func presentSheet(on parent: NSWindow) async -> AlertPresenterResult {
+		let panel = makeWindow()
+		host = .sheet(parent: parent, panel: panel)
+
+		let code = await withCheckedContinuation { continuation in
+			parent.beginSheet(panel) { continuation.resume(returning: $0) }
+		}
+
+		return finish(code)
 	}
 
 	func presentSheet(in mainWindow: MainWindow) async -> AlertPresenterResult {
-		self.mainWindow = mainWindow
+		host = .mainWindowSheet(mainWindow)
 
 		return await withCheckedContinuation { continuation in
 			self.continuation = continuation
 			mainWindow.presentationModel.presentSheet(MainWindowSheetPresentation(
 				owner: self,
 				content: makeView(),
-				onDismiss: { [weak self] in self?.finishSwiftUISheet() }
+				onDismiss: { [weak self] in self?.finishMainWindowSheet() }
 			))
 		}
 	}
 
 	private func makeWindow() -> NSWindow {
-		precondition(alertWindow == nil)
-
 		let window = NSWindow(
-			contentRect: NSRect(origin: .zero, size: NSSize(width: 430, height: 180)),
+			contentRect: NSRect(origin: .zero, size: NSSize(width: 300, height: 200)),
 			styleMask: [.titled, .fullSizeContentView],
 			backing: .buffered,
 			defer: false
 		)
-		let rootView = makeView()
-		let hostingController = NSHostingController(rootView: rootView)
+		let hostingController = NSHostingController(rootView: makeView())
 
 		window.contentViewController = hostingController
 		hostingController.view.layoutSubtreeIfNeeded()
 		window.setContentSize(hostingController.view.fittingSize)
+		// The panel carries its own centred title, so the frame carries none.
+		window.titlebarAppearsTransparent = true
+		window.titleVisibility = .hidden
+		window.title = request.title
+		window.isMovableByWindowBackground = false
 		window.isReleasedWhenClosed = false
 		window.isRestorable = false
 		window.tabbingMode = .disallowed
 		window.preventsApplicationTerminationWhenModal = false
-		window.title = request.title
 		window.autorecalculatesKeyViewLoop = true
-		alertWindow = window
 
 		return window
 	}
 
-	private func makeView() -> AlertView {
-		AlertView(
+	private func makeView() -> AlertPanelView {
+		AlertPanelView(
 			model: model,
 			request: request,
 			respond: { [weak self] response in self?.end(with: response) }
@@ -392,39 +540,69 @@ private final class AlertPresentationSession {
 
 	private func end(with response: AlertResponse) {
 		self.response = response
+		let code = NSApplication.ModalResponse(rawValue: Int(response.rawValue))
 
-		if let mainWindow {
+		switch host {
+		case .unattached:
+			break
+		case .modal:
+			NSApp.stopModal(withCode: code)
+		case let .sheet(parent, panel):
+			parent.endSheet(panel, returnCode: code)
+		case let .mainWindowSheet(mainWindow):
 			mainWindow.presentationModel.dismissSheet(ownedBy: self)
-			return
 		}
-
-		guard alertWindow != nil else { return }
-		let returnCode = NSApplication.ModalResponse(rawValue: Int(response.rawValue))
-
-		NSApp.stopModal(withCode: returnCode)
 	}
 
-	private func finishSwiftUISheet() {
+	private func finish(_ code: NSApplication.ModalResponse) -> AlertPresenterResult {
 		let result = AlertPresenterResult(
-			response: response,
+			response: resolvedResponse(code),
 			suppressionChecked: model.suppressionChecked
 		)
-		mainWindow = nil
+
+		// Drops the hosting controller, and with it the panel's view tree.
+		switch host {
+		case let .modal(panel), let .sheet(_, panel):
+			panel.contentViewController = nil
+		case .unattached, .mainWindowSheet:
+			break
+		}
+
+		host = .unattached
+		return result
+	}
+
+	private func finishMainWindowSheet() {
+		let result = AlertPresenterResult(
+			response: response ?? dismissedResponse,
+			suppressionChecked: model.suppressionChecked
+		)
+		host = .unattached
 		continuation?.resume(returning: result)
 		continuation = nil
 	}
 
-	private func finish(_: NSApplication.ModalResponse) -> AlertPresenterResult {
-		let result = AlertPresenterResult(
-			response: response,
-			suppressionChecked: model.suppressionChecked
-		)
-		alertWindow?.contentViewController = nil
-		alertWindow = nil
-		return result
+	/** A modal session or a sheet someone else ended — `abort` or `stop` while
+	 the application is quitting, say — never answered the question, so it
+	 reads as the cancel button instead of silently agreeing to the default. */
+	private func resolvedResponse(_ code: NSApplication.ModalResponse) -> AlertResponse {
+		guard code.rawValue >= 0,
+		      let response = AlertResponse(rawValue: UInt(code.rawValue))
+		else {
+			return dismissedResponse
+		}
+
+		return response
+	}
+
+	private var dismissedResponse: AlertResponse {
+		request.alternateButton == nil ? .default : .alternate
 	}
 }
 
+/// Runs alerts as the SwiftUI panel above: a sheet where a window can host
+/// one, and a blocking window during launch and migration, before any scene
+/// exists.
 @MainActor
 public struct SwiftUIAlertPresenter: AlertPresenter {
 	public init() {}
@@ -444,11 +622,16 @@ public struct SwiftUIAlertPresenter: AlertPresenter {
 			if let mainWindow = AppController.shared.mainWindow, mainWindow.isVisible {
 				return await session.presentSheet(in: mainWindow)
 			}
+			if let window = NSApp.keyWindow ?? NSApp.windows.first(where: \.isVisible) {
+				return await session.presentSheet(on: window)
+			}
 			return session.presentModal()
 		}
 	}
 
 	public func presentModal(_ request: AlertRequest) -> AlertPresenterResult {
+		/* The session has to outlive the modal loop it runs: the panel holds it
+		 weakly, so a temporary would be gone before the first button press. */
 		let session = AlertPresentationSession(request: request)
 		return session.presentModal()
 	}
@@ -464,6 +647,7 @@ public extension Alerts {
 		title titleText: String,
 		defaultButton buttonDefault: String,
 		alternateButton buttonAlternate: String?,
+		destructiveButton buttonDestructive: AlertDestructiveButton? = nil,
 		suppressionKey suppressKey: String? = nil,
 		suppressionText suppressText: String? = nil
 	) -> Bool {
@@ -473,6 +657,7 @@ public extension Alerts {
 				body: bodyText,
 				defaultButton: buttonDefault,
 				alternateButton: buttonAlternate,
+				destructiveButton: buttonDestructive,
 				suppressionKey: suppressKey,
 				suppressionText: suppressText,
 				style: .warning
@@ -488,6 +673,7 @@ public extension Alerts {
 		defaultButton buttonDefault: String,
 		alternateButton buttonAlternate: String? = nil,
 		otherButton buttonOther: String? = nil,
+		destructiveButton buttonDestructive: AlertDestructiveButton? = nil,
 		suppressionKey suppressKey: String? = nil,
 		suppressionText suppressText: String? = nil,
 		completionBlock: AlertCompletion? = nil
@@ -498,6 +684,7 @@ public extension Alerts {
 			defaultButton: buttonDefault,
 			alternateButton: buttonAlternate,
 			otherButton: buttonOther,
+			destructiveButton: buttonDestructive,
 			suppressionKey: suppressKey,
 			suppressionText: suppressText
 		)
@@ -516,6 +703,7 @@ public extension Alerts {
 		defaultButton buttonDefault: String,
 		alternateButton buttonAlternate: String?,
 		otherButton buttonOther: String?,
+		destructiveButton buttonDestructive: AlertDestructiveButton? = nil,
 		suppressionKey suppressKey: String? = nil,
 		suppressionText suppressText: String? = nil,
 		completionBlock: AlertCompletion? = nil
@@ -526,6 +714,7 @@ public extension Alerts {
 			defaultButton: buttonDefault,
 			alternateButton: buttonAlternate,
 			otherButton: buttonOther,
+			destructiveButton: buttonDestructive,
 			suppressionKey: suppressKey,
 			suppressionText: suppressText
 		)

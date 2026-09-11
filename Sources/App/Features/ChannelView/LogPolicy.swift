@@ -13,6 +13,7 @@
 
 import AppKit
 import CocoaExtensions
+import UniformTypeIdentifiers
 
 private enum LogPolicySuppressionKey: String {
 	case openExternalURL = "open_non_http_url_warning"
@@ -27,6 +28,11 @@ public final class LogPolicyTarget: NSObject {
 	public var lineType: String?
 	public var lineNickname: String?
 	public var lineExcerpt: String?
+	/// The address an inline image under the pointer was fetched from.
+	public var inlineImageURL: String?
+	/// The decoded image itself, so the menu can copy or save what is on screen
+	/// rather than fetching it a second time.
+	public var inlineImage: NSImage?
 }
 
 @MainActor
@@ -59,11 +65,28 @@ public final class LogPolicy: NSObject {
 		AppController.shared.menuController?.showChannelModifyTopicSheet(nil)
 	}
 
+	/** Reacts with the emoji a chip in the transcript stands for.
+
+	 A chip is the reaction someone already left, so clicking it means joining
+	 them; the same command the message's React menu sends is what carries it. */
+	func reactionChipClicked(_ reaction: TranscriptReactionTarget) {
+		let sender = NSMenuItem()
+		sender.representedObject = MessageMenuContext(
+			messageIdentifier: reaction.messageIdentifier,
+			nickname: nil,
+			excerpt: nil
+		).reacting(with: reaction.emoji)
+		AppController.shared.menuController?.reactToMessage(sender)
+	}
+
 	private func menuItems(
 		for target: LogPolicyTarget,
 		in view: LogView,
 		defaultMenuItems: [NSMenuItem]
 	) -> [NSMenuItem] {
+		if target.inlineImage != nil {
+			return inlineImageMenuItems(for: target)
+		}
 		if let address = target.anchorURL {
 			return linkMenuItems(for: address)
 		}
@@ -80,6 +103,84 @@ public final class LogPolicy: NSObject {
 		var items = defaultMenuItems.filter { $0.action != #selector(NSTextView.cut(_:)) }
 		items.append(contentsOf: messageMenuItems(for: target, in: view))
 		return items
+	}
+
+	/** What an inline image offers on a right click.
+
+	 An image drawn into the transcript is otherwise unreachable: it is not a
+	 link the reader can copy and not text they can select, so copying it,
+	 keeping it and following it back to where it came from all have to be
+	 offered here. */
+	private func inlineImageMenuItems(for target: LogPolicyTarget) -> [NSMenuItem] {
+		var items: [NSMenuItem] = []
+		let copy = NSMenuItem(
+			title: TranscriptViewStrings.copyImage,
+			action: #selector(copyInlineImage(_:)),
+			keyEquivalent: ""
+		)
+		copy.target = self
+		copy.representedObject = target
+		copy.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: copy.title)
+		items.append(copy)
+
+		let save = NSMenuItem(
+			title: TranscriptViewStrings.saveImage,
+			action: #selector(saveInlineImage(_:)),
+			keyEquivalent: ""
+		)
+		save.target = self
+		save.representedObject = target
+		save.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: save.title)
+		items.append(save)
+
+		if let address = target.inlineImageURL, URL(string: address) != nil {
+			items.append(.separator())
+			let open = NSMenuItem(
+				title: TranscriptViewStrings.openImageLink,
+				action: #selector(openInlineImageLink(_:)),
+				keyEquivalent: ""
+			)
+			open.target = self
+			open.representedObject = target
+			open.image = NSImage(systemSymbolName: "safari", accessibilityDescription: open.title)
+			items.append(open)
+		}
+		return items
+	}
+
+	/** AppKit invokes a menu item by selector, which is a runtime boundary. */
+	@objc private func copyInlineImage(_ sender: Any?) {
+		guard let image = (sender as? NSMenuItem)?.representedObject as? LogPolicyTarget,
+		      let copied = image.inlineImage
+		else { return }
+		NSPasteboard.general.clearContents()
+		NSPasteboard.general.writeObjects([copied])
+	}
+
+	@objc private func saveInlineImage(_ sender: Any?) {
+		guard let target = (sender as? NSMenuItem)?.representedObject as? LogPolicyTarget,
+		      let image = target.inlineImage,
+		      let representation = image.tiffRepresentation,
+		      let bitmap = NSBitmapImageRep(data: representation),
+		      let data = bitmap.representation(using: .png, properties: [:])
+		else { return }
+		let panel = NSSavePanel()
+		panel.allowedContentTypes = [.png]
+		panel.nameFieldStringValue = target.inlineImageURL
+			.flatMap { URL(string: $0)?.deletingPathExtension().lastPathComponent }
+			.flatMap { $0.isEmpty ? nil : $0 }
+			.map { "\($0).png" } ?? "image.png"
+		panel.begin { response in
+			guard response == .OK, let url = panel.url else { return }
+			try? data.write(to: url, options: .atomic)
+		}
+	}
+
+	@objc private func openInlineImageLink(_ sender: Any?) {
+		guard let target = (sender as? NSMenuItem)?.representedObject as? LogPolicyTarget,
+		      let address = target.inlineImageURL, let url = URL(string: address)
+		else { return }
+		openWebpage(url)
 	}
 
 	private func linkMenuItems(for address: String) -> [NSMenuItem] {
@@ -154,11 +255,13 @@ public final class LogPolicy: NSObject {
 		}
 
 		let applicationName = NSWorkspace.shared.textual_nameOfApplication(toOpen: url) ?? ""
+		/* The buttons name what they do rather than answering the title as a
+		 question, which is what a reader skimming a dialog reads first. */
 		let shouldOpen = Alerts.modalAlert(
 			withMessage: PromptStrings.ExternalApplication.body(url: url.absoluteString),
 			title: PromptStrings.ExternalApplication.title(applicationName: applicationName),
-			defaultButton: PromptStrings.Action.yes,
-			alternateButton: PromptStrings.Action.no,
+			defaultButton: PromptStrings.Action.open,
+			alternateButton: PromptStrings.Action.cancel,
 			suppressionKey: LogPolicySuppressionKey.openExternalURL.rawValue,
 			suppressionText: nil
 		)

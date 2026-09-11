@@ -78,6 +78,10 @@ public extension MenuActionCoordinator {
 
 	func nicknameColorDidAccept(_: NicknameColorSheet) {
 		mainWindow.reloadTheme()
+		/* The transcript is redrawn by the theme reload; the member list's
+		 avatars take their pinned colours from a snapshot the list reads when
+		 its presentation is invalidated, and nothing else invalidates it here. */
+		mainWindow.memberList.invalidatePresentation()
 	}
 
 	func channelTopicDidAccept(_ sender: ChannelModifyTopicSheet, topic: String) {

@@ -59,8 +59,8 @@ public final class Application: NSApplication, CustomKeyboardEventResponder {
 			return Alerts.modalAlert(
 				withMessage: PromptStrings.Application.continueWithAnotherInstanceBody,
 				title: PromptStrings.Application.continueWithAnotherInstanceTitle,
-				defaultButton: PromptStrings.Action.yes,
-				alternateButton: PromptStrings.Action.no
+				defaultButton: PromptStrings.Action.continueAction,
+				alternateButton: PromptStrings.Action.cancel
 			)
 		}
 

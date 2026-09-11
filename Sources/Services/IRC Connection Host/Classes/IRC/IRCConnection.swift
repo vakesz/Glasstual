@@ -75,6 +75,12 @@ actor ConnectionHost {
 	 every connection, so an unbalanced disable would permanently pin the whole service. */
 	private var suddenTerminationDisableCount = 0
 
+	/** The App Nap activities this connection is holding.
+
+	 `beginActivity` hands back a token that has to be ended exactly once, and
+	 the process is shared, so they are counted rather than assumed to be one. */
+	private var appNapActivities: [any NSObjectProtocol] = []
+
 	// MARK: - Connection Lifecycle
 
 	init(client: any RemoteConnectionClientProtocol) {
@@ -90,6 +96,20 @@ actor ConnectionHost {
 		await close()
 
 		balanceSuddenTermination()
+		balanceAppNap()
+	}
+
+	/** The last chance to let go of what the process shares.
+
+	 `detach()` is the ordinary path, but it is driven by the XPC connection's
+	 handlers and a host released any other way would leave its activity and its
+	 sudden-termination disable held for the life of the process. */
+	isolated deinit {
+		eventTask?.cancel()
+		writerTask?.cancel()
+		floodControlTask?.cancel()
+		balanceSuddenTermination()
+		balanceAppNap()
 	}
 
 	// MARK: - Open/Close
@@ -98,6 +118,12 @@ actor ConnectionHost {
 		config.diagnostics?.record(.hostStarted)
 		guard socket == nil else {
 			ConnectionHostLog.connection.error("Cannot open a connection that is already open")
+			/* Returning in silence left the application waiting for a connection
+			 nothing was going to make: it had asked, and the only answer it ever
+			 gets is a callback. Refusing out loud is what lets it retry. */
+			client?.ircConnectionDidDisconnectWithError(
+				ConnectionError.other(message: "A connection is already open on this host")
+			)
 
 			return
 		}
@@ -121,9 +147,15 @@ actor ConnectionHost {
 		floodControlInterval = .seconds(Double(config.floodControlDelayInterval))
 		floodControlMaximumMessages = config.floodControlMaximumMessages
 
-		eventTask = Task { [weak self] in
+		/* Both references are weak. Holding the transport strongly kept it — and
+		 the file descriptor it owns — alive for as long as the stream had not
+		 finished, and a released host left the loop running with nothing to
+		 deliver to, reading from the socket for the life of the process. */
+		eventTask = Task { [weak self, weak socket] in
 			for await event in events {
-				await self?.handle(event, from: socket)
+				guard let self, let socket else { return }
+
+				await handle(event, from: socket)
 			}
 		}
 
@@ -132,6 +164,22 @@ actor ConnectionHost {
 		startFloodControlTimer()
 
 		await socket.open()
+
+		/* `detach()` runs from the XPC interruption and invalidation handlers
+		 rather than through the command queue, so it can land inside the
+		 suspension above. A socket dialled after that has no client to report
+		 to and nothing left holding it, so it is closed here instead. */
+		guard self.client != nil, closing == false, self.socket === socket else {
+			await socket.close()
+
+			/* Only if it is still the one being held: a later `open` may already
+			 have put its own transport there, and that one is not ours to drop. */
+			if self.socket === socket {
+				releaseSocket()
+			}
+
+			return
+		}
 	}
 
 	func close() async {
@@ -142,13 +190,21 @@ actor ConnectionHost {
 
 		resetState()
 
-		await socket.close()
+		/* The transport is not let go of here when a disconnect is on its way.
+		 Every path out of its connection task ends in a `.disconnected` event,
+		 and that event is what carries the disconnect to the client; dropping
+		 the reference first would make `handle(_:from:)` discard it as
+		 belonging to a transport nobody owns. `releaseSocket()` runs when the
+		 event lands.
 
-		/* The transport is not let go of here. Every path out of its connection
-		 task ends in a `.disconnected` event, and that event is what carries
-		 the disconnect to the client; dropping the reference first would make
-		 `handle(_:from:)` discard it as belonging to a transport nobody owns.
-		 `releaseSocket()` runs when the event lands. */
+		 A transport that never dialled has no such path, though, and closing it
+		 is a no-operation. Waiting for an event that is not coming left the
+		 reference in place for good, and every later `open` was refused. */
+		guard await socket.close() else {
+			releaseSocket()
+
+			return
+		}
 	}
 
 	/// Invoked when closing and again when the transport reports it
@@ -287,12 +343,40 @@ actor ConnectionHost {
 
 	// MARK: - App Nap and Sudden Termination
 
+	/** Lets the process nap again, one held activity at a time.
+
+	 What used to be here registered a default, which does nothing after launch
+	 and nothing at all to App Nap; the enabling half had no caller either, so a
+	 connection that asked to stay awake had no way to stop asking. Activities
+	 are counted the way the sudden-termination disables are, because the host
+	 process is shared by every connection: the last one to end its activity is
+	 what lets the process nap. */
 	func enableAppNap() {
-		UserDefaults.standard.register(defaults: [AppSleepPreference.name: false])
+		guard let activity = appNapActivities.popLast() else { return }
+
+		ProcessInfo.processInfo.endActivity(activity)
 	}
 
+	/** Keeps the process out of App Nap for as long as this connection is open.
+
+	 Idle system sleep is deliberately still allowed: a connection the user is
+	 not looking at is not a reason to keep the machine awake, only a reason not
+	 to have the process throttled while it is. */
 	func disableAppNap() {
-		UserDefaults.standard.register(defaults: [AppSleepPreference.name: true])
+		guard client != nil else { return }
+
+		appNapActivities.append(
+			ProcessInfo.processInfo.beginActivity(
+				options: .userInitiatedAllowingIdleSystemSleep,
+				reason: "An IRC connection is open"
+			)
+		)
+	}
+
+	private func balanceAppNap() {
+		while appNapActivities.isEmpty == false {
+			enableAppNap()
+		}
 	}
 
 	func enableSuddenTermination() {

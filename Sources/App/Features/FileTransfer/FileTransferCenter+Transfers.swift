@@ -114,6 +114,35 @@ public extension FileTransferCenter {
 		}
 	}
 
+	/// What the downloads already running or waiting still have to write. The
+	/// next offer has to fit alongside them, not after them.
+	var pendingReceiveByteCount: UInt64 {
+		model.pendingReceiveByteCount
+	}
+
+	/** Whether the volume `path` is on can still take `byteCount` bytes.
+
+	 `volumeAvailableCapacityForImportantUsage` is the figure that accounts for
+	 what the system would purge to make room, which is what a download the user
+	 asked for gets to use. A volume that will not answer at all — a network
+	 mount, a path that does not exist yet — is not evidence of being full, so
+	 the transfer is allowed to try and to fail the ordinary way. */
+	static func destination(_ path: String?, hasRoomFor byteCount: UInt64) -> Bool {
+		guard byteCount > 0, let path, path.isEmpty == false else {
+			return true
+		}
+
+		let values = try? URL(fileURLWithPath: path).resourceValues(
+			forKeys: [.volumeAvailableCapacityForImportantUsageKey]
+		)
+
+		guard let available = values?.volumeAvailableCapacityForImportantUsage else {
+			return true
+		}
+
+		return available >= 0 && UInt64(available) >= byteCount
+	}
+
 	func prepareForApplicationTermination() {
 		workspace.cancelPendingWork()
 		prepareForPermanentDestruction(model.transfers)
@@ -136,6 +165,12 @@ public extension FileTransferCenter {
 			fileTransferLogger.error(
 				"Maximum receiver count of \(FileTransferConstants.receiverHardLimit, privacy: .public) exceeded"
 			)
+			/* Dropping the offer silently reads as the sender never sending it.
+			 The user is the only one who can do anything about it — clear the
+			 finished rows — so the user is the one who has to be told. */
+			client.printDebugInformation(
+				toConsole: ConnectionSafetyStrings.FileTransfer.refusedBecauseCrowded(sender: nickname)
+			)
 			return nil
 		}
 
@@ -155,8 +190,22 @@ public extension FileTransferCenter {
 		addFileTransfer(controller)
 
 		if Preferences.FileTransfers.requestReplyAction.value == .automaticallyDownload {
+			let destinationPath = downloadDestinationURLPrivate?.path ?? PathInfo.userDownloads
+
+			/* Reserving the file first and finding out on the last block that the
+			 volume was full leaves a part-written download and a peer that spent
+			 the whole transfer on it. The offer states its size up front, so the
+			 room for it — beside what the downloads already running still have to
+			 write — can be settled before anything is accepted. */
+			guard Self.destination(destinationPath, hasRoomFor: totalFilesize + pendingReceiveByteCount) else {
+				fileTransferLogger.error("Refused an automatic download the destination volume has no room for")
+				controller.close(with: .storageFull, isFatalError: true)
+
+				return controller.uniqueIdentifier
+			}
+
 			controller.destinationAccessURL = downloadDestinationURLPrivate
-			controller.open(withPath: downloadDestinationURLPrivate?.path ?? PathInfo.userDownloads)
+			controller.open(withPath: destinationPath)
 		}
 
 		return controller.uniqueIdentifier

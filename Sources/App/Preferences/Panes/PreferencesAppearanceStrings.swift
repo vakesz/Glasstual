@@ -77,6 +77,22 @@ enum PreferencesInterfaceStrings {
 		String(localized: .TDCPreferencesController.interfaceResetToDefaults)
 	}
 
+	static var resetColorsConfirmationTitle: String {
+		String(localized: .TDCPreferencesController.interfaceResetColorsConfirmation)
+	}
+
+	static var resetColorsConfirmationBody: String {
+		String(localized: .TDCPreferencesController.interfaceResetColorsConfirmationBody)
+	}
+
+	static var resetThemeConfirmationTitle: String {
+		String(localized: .TDCPreferencesController.interfaceResetThemeConfirmation)
+	}
+
+	static var resetThemeConfirmationBody: String {
+		String(localized: .TDCPreferencesController.interfaceResetThemeConfirmationBody)
+	}
+
 	static var resetUnreadHighlightColor: String {
 		String(localized: .TDCPreferencesController.interfaceResetUnreadHighlightColor)
 	}

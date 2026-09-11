@@ -50,7 +50,10 @@ struct IRCClientWireUtilitiesTests {
 				isSet: true,
 				parameters: ["one", "", "two", "three", "four"],
 				maximumModes: 3
-			) == ["+bbb one two three", "+b four"]
+			) == [
+				ModeChangeGroup(symbols: "+bbb", parameters: ["one", "two", "three"]),
+				ModeChangeGroup(symbols: "+b", parameters: ["four"]),
+			]
 		)
 
 		#expect(
@@ -59,8 +62,27 @@ struct IRCClientWireUtilitiesTests {
 				isSet: false,
 				parameters: ["alice", "bob"],
 				maximumModes: 4
-			) == ["-oo alice bob"]
+			) == [ModeChangeGroup(symbols: "-oo", parameters: ["alice", "bob"])]
 		)
+	}
+
+	/** The compiler used to hand back `"+bbb one two three"` and `sendModes`
+	 split it again with the wire tokeniser — a round trip through text whose
+	 only purpose was to be undone, and one a mask containing a space would not
+	 have survived. The mode string and its parameters stay apart. */
+	@Test("A parameter containing a space stays one parameter")
+	func parametersWithSpacesSurviveCompilation() throws {
+		let groups = ClientWireUtilities.compileModeChanges(
+			symbol: "b",
+			isSet: true,
+			parameters: ["$r:real name", "*!*@example.org"],
+			maximumModes: 0
+		)
+		let group = try #require(groups.first)
+
+		#expect(groups.count == 1)
+		#expect(group.parameters == ["$r:real name", "*!*@example.org"])
+		#expect(group.wireArguments == ["+bb", "$r:real name", "*!*@example.org"])
 	}
 
 	/** A list sheet names its mode from ISUPPORT, and a server can withdraw the

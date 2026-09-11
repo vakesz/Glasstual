@@ -296,12 +296,30 @@ extension FileTransferController {
 			file: file,
 			fileSize: totalFilesize,
 			resumeOffset: processedFilesize,
-			/* Only a reverse DCC names the peer up front. For a plain DCC SEND
-				we listen and the peer announces itself by arriving, so there is
-				nothing to check the inbound address against. */
-			expectedPeerAddress: isActingAsServer ? hostAddress : "",
+			expectedPeerAddress: expectedPeerAddress,
 			sendTimeout: .seconds(FileTransferLimits.sendTimeout)
 		)
+	}
+
+	/** The address an inbound connection has to come from.
+
+	 A reverse DCC names the peer in its own offer, so that address is the
+	 answer. A plain `DCC SEND` negotiates none — we listen, and the peer
+	 announces itself by arriving — and there is nothing to compare against.
+
+	 The peer's hostmask is not that answer, however literal it looks. The
+	 address the server publishes is the one the peer reached *the server*
+	 from: a dual-stack peer that registered over IPv6 dials out over IPv4, a
+	 privacy address rotates under them, and behind NAT the server sees the
+	 gateway rather than the host. Refusing the transfer on any of those is a
+	 failure the user cannot do anything about, so only an address the offer
+	 itself named is checked. */
+	private var expectedPeerAddress: String {
+		guard isActingAsServer else {
+			return ""
+		}
+
+		return hostAddress
 	}
 
 	/// The file this transfer reads from, or the one it writes into.
@@ -413,8 +431,36 @@ extension FileTransferController {
 		}
 	}
 
+	/** What the RESUME wait does when it runs out.
+
+	 Cancellation is not the only way the wait becomes stale. The transfer may
+	 have been stopped and started again during the sleep, so the accept it is
+	 waiting on belongs to a newer session; or the `DCC ACCEPT` may have arrived
+	 and moved the transfer on, which is what clears the wait in the first place.
+	 Either way there is nothing left for the timeout to fail, and without these
+	 guards the sleep killed a transfer that had just begun.
+
+	 A step of its own so that the guards can be exercised without waiting out a
+	 real timeout.
+
+	 - Parameter sessionID: The session the wait was started for.
+	 - Returns: Whether the timeout closed the transfer. */
+	@discardableResult
+	func resumeTimeoutExpired(for sessionID: UUID) -> Bool {
+		guard self.sessionID == sessionID, transferStatus == .waitingForResumeAccept else {
+			return false
+		}
+
+		resumeRequestTimeout = nil
+		// A refused resume must not truncate the partial download.
+		close(with: .invalidResumePosition)
+
+		return true
+	}
+
 	private func requestResume(position: UInt64) {
 		resumeRequestTimeout?.cancel()
+		let sessionID = sessionID
 		resumeRequestTimeout = Task { [weak self] in
 			do {
 				try await Task.sleep(for: .seconds(FileTransferLimits.resumeAcceptTimeout))
@@ -422,9 +468,8 @@ extension FileTransferController {
 				return
 			}
 
-			self?.resumeRequestTimeout = nil
-			// A refused resume must not truncate the partial download.
-			self?.close(with: .invalidResumePosition)
+			guard !Task.isCancelled, let self else { return }
+			resumeTimeoutExpired(for: sessionID)
 		}
 		transferStatus = .waitingForResumeAccept
 		client?.sendFileResume(

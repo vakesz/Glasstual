@@ -115,28 +115,15 @@ enum SystemProfileReport {
 		)
 	}
 
-	static func systemDiskSpaceInformation() -> String {
-		let keys: Set<URLResourceKey> = [
-			.volumeNameKey,
-			.volumeTotalCapacityKey,
-			.volumeAvailableCapacityForImportantUsageKey,
-		]
-		let volumes = FileManager.default.mountedVolumeURLs(
-			includingResourceValuesForKeys: Array(keys),
-			options: .skipHiddenVolumes
-		) ?? []
-		let descriptions = volumes.enumerated().compactMap { index, volume -> String? in
-			guard let values = try? volume.resourceValues(forKeys: keys),
-			      let name = values.volumeName,
-			      let total = values.volumeTotalCapacity,
-			      let free = values.volumeAvailableCapacityForImportantUsage
-			else { return nil }
-			/* A mounted volume can be a network share, a disk image or a FUSE
-			 mount, and its capacities are whatever that filesystem reports;
-			 `volumeAvailableCapacityForImportantUsage` also goes negative when
-			 purgeable-space accounting overshoots. Neither is a byte count. */
-			let totalDescription = SystemProfileInformation.formattedByteCount(UInt64(clamping: total))
-			let freeDescription = SystemProfileInformation.formattedByteCount(UInt64(clamping: free))
+	/// Formats what ``SystemProfileInformation/mountedVolumeCapacities()``
+	/// collected. The collection is the slow half and does not run here: it
+	/// mounts nothing, but it stats every mounted volume, and a network share
+	/// or a sleeping disk answers when it answers.
+	static func systemDiskSpaceInformation(volumes: [SystemProfileInformation.VolumeCapacity]) -> String {
+		let descriptions = volumes.enumerated().map { index, volume -> String in
+			let totalDescription = SystemProfileInformation.formattedByteCount(volume.totalCapacity)
+			let freeDescription = SystemProfileInformation.formattedByteCount(volume.availableCapacity)
+			let name = volume.name
 			return if index == 0 {
 				SystemProfilerLocalization.string(.BasicLanguage.firstMountedDrive(
 					name,
@@ -189,45 +176,37 @@ enum SystemProfileReport {
 		}.joined()
 	}
 
-	static func systemInformation(defaults: UserDefaults) -> String {
+	/// Formats the facts ``SystemProfileInformation/hardwareFacts()`` collected.
+	/// Only the screen is read here, because only the screen has to be.
+	static func systemInformation(defaults: UserDefaults, facts: SystemProfileInformation.HardwareFacts) -> String {
 		func enabled(_ feature: SystemProfilerFeature) -> Bool {
 			defaults.bool(forKey: feature.disabledPreference.name) == false
 		}
 
 		var result = SystemProfilerLocalization.string(.BasicLanguage.systemInformationHeading)
-		if let identifier = SystemProfileInformation.modelIdentifier(), identifier.isEmpty == false {
-			result += SystemProfilerLocalization.string(
-				.BasicLanguage.modelSegment(SystemProfileInformation.modelName(for: identifier))
-			)
+		if let model = facts.modelName {
+			result += SystemProfilerLocalization.string(.BasicLanguage.modelSegment(model))
 		}
-		if enabled(.cpuModel), let processor = SystemProfileInformation.processor() {
+		if enabled(.cpuModel), let processor = facts.processor {
 			result += SystemProfilerLocalization.string(
-				.BasicLanguage.cpuCoreSegment(
-					processor,
-					UInt(SystemProfileInformation.physicalCoreCount())
-				)
+				.BasicLanguage.cpuCoreSegment(processor, UInt(facts.physicalCoreCount))
 			)
 		}
 		if enabled(.memoryInformation) {
 			result += SystemProfilerLocalization.string(
-				.BasicLanguage.memorySegment(
-					SystemProfileInformation.formattedByteCount(ProcessInfo.processInfo.physicalMemory)
-				)
+				.BasicLanguage.memorySegment(SystemProfileInformation.formattedByteCount(facts.physicalMemory))
 			)
 		}
 		if enabled(.systemUptime) {
-			let uptime = PluginHost.humanReadableTimeInterval(
-				ProcessInfo.processInfo.systemUptime,
-				shortValue: true
-			)
+			let uptime = PluginHost.humanReadableTimeInterval(facts.systemUptime, shortValue: true)
 			result += SystemProfilerLocalization.string(.BasicLanguage.uptimeSegment(uptime))
 		}
-		if enabled(.diskInformation), let disk = SystemProfileInformation.rootVolumeCapacity() {
+		if enabled(.diskInformation), let disk = facts.rootVolumeCapacity {
 			result += SystemProfilerLocalization.string(
 				.BasicLanguage.spaceSegment(SystemProfileInformation.formattedByteCount(disk))
 			)
 		}
-		if enabled(.gpuModel), let graphics = SystemProfileInformation.graphicsDescription() {
+		if enabled(.gpuModel), let graphics = facts.graphicsDescription {
 			result += SystemProfilerLocalization.string(.BasicLanguage.graphicsSegment(graphics))
 		}
 		if enabled(.screenResolution), let screen = NSScreen.main ?? NSScreen.screens.first {
@@ -294,7 +273,27 @@ enum SystemProfileReport {
 	}
 }
 
-enum SystemProfileInformation {
+nonisolated enum SystemProfileInformation { // nonisolated: value
+	/// One mounted volume, as `/diskspace` reports it. A value, so the
+	/// enumeration that produces it can run off the main actor.
+	struct VolumeCapacity: Sendable {
+		let name: String
+		let totalCapacity: UInt64
+		let availableCapacity: UInt64
+	}
+
+	/// What `/sysinfo` reports that is not the screen. A value, for the same
+	/// reason: `MTLCopyAllDevices()` alone can take a wake-up's worth of time.
+	struct HardwareFacts: Sendable {
+		var modelName: String?
+		var processor: String?
+		var physicalCoreCount: UInt64 = 0
+		var physicalMemory: UInt64 = 0
+		var systemUptime: TimeInterval = 0
+		var rootVolumeCapacity: UInt64?
+		var graphicsDescription: String?
+	}
+
 	struct NetworkStatistics {
 		let name: String
 		let received: UInt64
@@ -317,6 +316,77 @@ enum SystemProfileInformation {
 		sysctlInteger("hw.physicalcpu")
 	}
 
+	/** Every mounted volume's capacity.
+
+	 `@concurrent`, because this is I/O: `mountedVolumeURLs` enumerates the
+	 mount table and each `resourceValues` call stats a filesystem that may be a
+	 network share, a disk image or a sleeping external disk. Running it on the
+	 main actor stalled the whole window for as long as the slowest mount took
+	 to answer. */
+	@concurrent
+	static func mountedVolumeCapacities() async -> [VolumeCapacity] {
+		let keys: Set<URLResourceKey> = [
+			.volumeNameKey,
+			.volumeTotalCapacityKey,
+			.volumeAvailableCapacityForImportantUsageKey,
+		]
+		let volumes = FileManager.default.mountedVolumeURLs(
+			includingResourceValuesForKeys: Array(keys),
+			options: .skipHiddenVolumes
+		) ?? []
+
+		return volumes.compactMap { volume -> VolumeCapacity? in
+			guard let values = try? volume.resourceValues(forKeys: keys),
+			      let name = values.volumeName,
+			      let total = values.volumeTotalCapacity,
+			      let free = values.volumeAvailableCapacityForImportantUsage
+			else { return nil }
+
+			/* A mounted volume can be a network share, a disk image or a FUSE
+			 mount, and its capacities are whatever that filesystem reports;
+			 `volumeAvailableCapacityForImportantUsage` also goes negative when
+			 purgeable-space accounting overshoots. Neither is a byte count. */
+			return VolumeCapacity(
+				name: name,
+				totalCapacity: UInt64(clamping: total),
+				availableCapacity: UInt64(clamping: free)
+			)
+		}
+	}
+
+	/// The hardware half of `/sysinfo`. `@concurrent` for the same reason:
+	/// `MTLCopyAllDevices()` can wake a discrete GPU, and the root volume is
+	/// still a filesystem that has to answer.
+	@concurrent
+	static func hardwareFacts() async -> HardwareFacts {
+		var facts = HardwareFacts()
+		if let identifier = modelIdentifier(), identifier.isEmpty == false {
+			facts.modelName = modelName(for: identifier)
+		}
+		facts.processor = processor()
+		facts.physicalCoreCount = physicalCoreCount()
+		facts.physicalMemory = ProcessInfo.processInfo.physicalMemory
+		facts.systemUptime = ProcessInfo.processInfo.systemUptime
+		facts.rootVolumeCapacity = rootVolumeCapacity()
+		facts.graphicsDescription = graphicsDescription()
+		return facts
+	}
+
+	/** The shipped identifier-to-marketing-name table.
+
+	 Decoded once. `/sysinfo` used to decode all four hundred-odd entries on
+	 every invocation to read a single key out of them. */
+	private static let macintoshModels: [String: String] = {
+		guard let url = Bundle(for: SystemProfilerPlugin.self).url(
+			forResource: "MacintoshModels",
+			withExtension: "plist"
+		),
+			let data = try? Data(contentsOf: url),
+			let models = try? PropertyListDecoder().decode([String: String].self, from: data)
+		else { return [:] }
+		return models
+	}()
+
 	static func modelName(for identifier: String) -> String {
 		/* A virtual machine reports a model identifier with a build suffix, so
 		 the table is keyed on the hypervisor's name alone. */
@@ -327,14 +397,7 @@ enum SystemProfileInformation {
 		} else {
 			identifier
 		}
-		guard let url = Bundle(for: SystemProfilerPlugin.self).url(
-			forResource: "MacintoshModels",
-			withExtension: "plist"
-		),
-			let data = try? Data(contentsOf: url),
-			let models = try? PropertyListDecoder().decode([String: String].self, from: data)
-		else { return identifier }
-		return models[lookupKey] ?? identifier
+		return macintoshModels[lookupKey] ?? identifier
 	}
 
 	static func rootVolumeCapacity() -> UInt64? {
@@ -425,27 +488,57 @@ enum SystemProfileInformation {
 		return ProcessInfo.processInfo.physicalMemory > used ? ProcessInfo.processInfo.physicalMemory - used : 0
 	}
 
-	static func networkStatistics() -> [NetworkStatistics] {
-		var list: UnsafeMutablePointer<ifaddrs>?
-		guard getifaddrs(&list) == 0, let first = list else { return [] }
-		defer { freeifaddrs(list) }
+	/** Per-interface byte counters.
 
-		var result: [NetworkStatistics] = []
-		var current: UnsafeMutablePointer<ifaddrs>? = first
-		while let item = current?.pointee {
-			defer { current = item.ifa_next }
-			guard let address = item.ifa_addr, address.pointee.sa_family == UInt8(AF_LINK),
-			      item.ifa_flags & UInt32(IFF_UP | IFF_RUNNING) != 0,
-			      let rawData = item.ifa_data,
-			      let rawName = item.ifa_name
-			else { continue }
-			let name = String(cString: rawName)
-			guard name.hasPrefix("lo") == false else { continue }
-			let data = rawData.assumingMemoryBound(to: if_data.self).pointee
-			guard data.ifi_ibytes >= 20_000_000, data.ifi_obytes >= 2_000_000 else { continue }
-			result.append(.init(name: name, received: UInt64(data.ifi_ibytes), sent: UInt64(data.ifi_obytes)))
+	 Read through `NET_RT_IFLIST2`, whose `if_msghdr2` carries an `if_data64`.
+	 `getifaddrs` reports the 32-bit `if_data` instead, and those counters wrap
+	 every four gigabytes — a figure a single session passes — after which
+	 `/netstats` reported whatever was left over rather than what had moved. */
+	/// `u_short ifm_msglen`, `u_char ifm_version`, `u_char ifm_type`: the header
+	/// every routing-socket message begins with, whatever kind it is.
+	private static let routeMessageHeaderLength = 4
+
+	static func networkStatistics() -> [NetworkStatistics] {
+		var name: [Int32] = [CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0]
+		var size = 0
+		guard sysctl(&name, UInt32(name.count), nil, &size, nil, 0) == 0, size > 0 else { return [] }
+
+		var buffer = [UInt8](repeating: 0, count: size)
+		guard sysctl(&name, UInt32(name.count), &buffer, &size, nil, 0) == 0 else { return [] }
+
+		return buffer.withUnsafeBytes { raw -> [NetworkStatistics] in
+			var result: [NetworkStatistics] = []
+			var offset = 0
+
+			/* Every message in the list starts with the same four bytes —
+			 length, version, type — whatever kind it is, and the kernel mixes
+			 several kinds in. Requiring a whole `if_msghdr`, the largest of the
+			 fixed headers at 112 bytes, before looking at any of them ended the
+			 walk on the short messages rather than stepping over them. */
+			while offset + routeMessageHeaderLength <= size {
+				let length = Int(raw.loadUnaligned(fromByteOffset: offset, as: UInt16.self))
+				let type = raw.loadUnaligned(fromByteOffset: offset + 3, as: UInt8.self)
+				guard length > 0, offset + length <= size else { break }
+				defer { offset += length }
+
+				guard Int32(type) == RTM_IFINFO2, length >= MemoryLayout<if_msghdr2>.size else { continue }
+				let message = raw.loadUnaligned(fromByteOffset: offset, as: if_msghdr2.self)
+				guard message.ifm_flags & (IFF_UP | IFF_RUNNING) != 0 else { continue }
+
+				var interfaceName = [CChar](repeating: 0, count: Int(IFNAMSIZ))
+				guard if_indextoname(UInt32(message.ifm_index), &interfaceName) != nil else { continue }
+				let nameBytes = interfaceName.prefix { $0 != 0 }.map(UInt8.init(bitPattern:))
+				guard let interface = String(bytes: nameBytes, encoding: .utf8),
+				      interface.hasPrefix("lo") == false
+				else { continue }
+
+				let data = message.ifm_data
+				guard data.ifi_ibytes >= 20_000_000, data.ifi_obytes >= 2_000_000 else { continue }
+				result.append(.init(name: interface, received: data.ifi_ibytes, sent: data.ifi_obytes))
+			}
+
+			return result
 		}
-		return result
 	}
 
 	private static func sysctlString(_ name: String) -> String? {
@@ -464,7 +557,7 @@ enum SystemProfileInformation {
 	}
 }
 
-enum SystemProfilerLocalization {
+nonisolated enum SystemProfilerLocalization { // nonisolated: value
 	static func string(_ resource: LocalizedStringResource) -> String {
 		String(localized: resource)
 	}

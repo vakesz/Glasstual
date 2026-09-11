@@ -34,6 +34,11 @@ final class MainWindowPresentationModel {
 	 with its `@FocusState` in both directions, so setting it is what moves the
 	 keyboard into the field and clicking away is what clears it. */
 	var isSearchFieldFocused = false
+	/** Mirrors the notification controller's mute switch so the footer menu can
+	 name what the next press will do. The controller is not observable and the
+	 switch is thrown from the main menu as well, so the coordinator that owns
+	 the switch writes it here whenever it changes. */
+	var areNotificationsDisabled = false
 	private(set) var sheetStack: [MainWindowSheetPresentation] = []
 
 	@ObservationIgnored weak var window: MainWindow?
@@ -172,10 +177,6 @@ final class MainWindowPresentationModel {
 		return sheetStack[index]
 	}
 
-	func sheetOwner<Owner>(ofType _: Owner.Type) -> Owner? {
-		sheetStack.lazy.compactMap { $0.owner as? Owner }.first
-	}
-
 	func closeSheets(where shouldClose: (AnyObject) -> Bool) {
 		guard let index = sheetStack.firstIndex(where: { shouldClose($0.owner) }) else { return }
 		dismissSheets(startingAt: index)
@@ -208,6 +209,8 @@ struct MainWindowRootView: View {
 
 	@FocusState private var isSearchFieldFocused: Bool
 	@State private var memberListWidth = CGFloat(Preferences.MainWindow.memberListWidth.value)
+	@Environment(\.accessibilityReduceMotion) private var reduceMotion
+	@Environment(\.colorSchemeContrast) private var contrast
 
 	var body: some View {
 		let preferencesImportRequestID = model.preferencesImportRequest.request?.id
@@ -220,14 +223,20 @@ struct MainWindowRootView: View {
 						max: MainWindowConstants.serverListMaximumWidth
 					)
 			} detail: {
-				/* Beside the conversation, not in a split of its own. Presenting the
-				 member list as an inspector, or as a second `HSplitView` pane,
-				 inserts a pane into the detail column, and the column then grows
-				 by the pane's width instead of sharing its space: the columns
-				 spilled past the window, or AppKit gave up after three hundred
-				 layout passes with the transcript left at whatever width the loop
-				 was passing through. A stack inside the column changes nothing
-				 the split view measures, so the divider carries its own drag. */
+				/* Beside the conversation, not in a split of its own, and not an
+				 `.inspector` either.
+
+				 An inspector -- like a second `HSplitView` pane -- inserts a pane
+				 into the detail column, and the column then grows by the pane's
+				 width instead of sharing its space: the columns spilled past the
+				 window, or AppKit gave up after three hundred layout passes with
+				 the transcript left at whatever width the loop was passing
+				 through. What feeds that loop is still here: the transcript's
+				 bottom inset is measured in AppKit from the floating input bar's
+				 frame, so the detail column's width decides a value that moves a
+				 view inside it. A stack changes nothing the split view measures,
+				 so the divider carries its own drag -- with the pointer, keyboard
+				 and reset behaviour an inspector's divider would have given it. */
 				HStack(spacing: 0) {
 					conversation
 						.frame(
@@ -237,13 +246,31 @@ struct MainWindowRootView: View {
 						)
 					if model.isMemberListAvailable, model.isMemberListVisible {
 						MemberListResizeHandle(width: $memberListWidth)
+						/* The rows scroll up into the titlebar's safe area and
+						 the system's soft edge effect is what keeps the toolbar
+						 legible over them, so nothing here insets the list by
+						 hand. The list paints no ground of its own; the column's
+						 is the conversation's, so the divider is the only edge. */
 						MemberListView(model: memberList, redirectTyping: redirectTyping)
+							.scrollEdgeEffectStyle(.soft, for: .top)
 							.frame(width: memberListWidth)
-							/* The list paints no ground of its own; the column's is
-							 the conversation's, so the divider is the only edge. */
-							.background(conversationBackground)
 					}
 				}
+				/* One ground for both columns, up under the transparent titlebar.
+
+				 Measured: the list's own scroll view runs the full height of the
+				 window and insets its rows by the titlebar, while the transcript
+				 is an `NSViewRepresentable` that SwiftUI lays out inside the safe
+				 area. The two agree on where their content starts -- both at the
+				 safe-area top -- and disagree only about the strip above it, so
+				 each column painting its own ground left that strip in the theme
+				 colour beside the list and in the window's colour beside the
+				 transcript. A background changes nothing the split view measures,
+				 which is what keeps this out of the layout loop the comment on
+				 `conversation` describes; insetting the list to match the
+				 transcript, or lifting the transcript out of the safe area, would
+				 both put a column's own layout back into the column's insets. */
+				.background(conversationBackground.ignoresSafeArea(.container, edges: .top))
 			}
 			/* On the split view rather than on the sidebar: `.sidebar` placement
 			 draws the field above the server list, and the window's toolbar is
@@ -267,9 +294,16 @@ struct MainWindowRootView: View {
 			 own where the system wants it, and re-declaring it only moved it. */
 			if model.isMemberListAvailable {
 				ToolbarItem(placement: .primaryAction) {
-					Button(MainWindowStrings.Toolbar.toggleMemberList, systemImage: "sidebar.right") {
+					/* The title says which way the press goes and the symbol
+					 says which state the window is in, the way Mail's sidebar
+					 toggle does: filled while the pane is showing. */
+					Button(
+						MainWindowStrings.Menu.memberList(isVisible: model.isMemberListVisible),
+						systemImage: model.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
+					) {
 						model.toggleMemberList()
 					}
+					.help(MainWindowStrings.Menu.memberList(isVisible: model.isMemberListVisible))
 				}
 			}
 		}
@@ -353,8 +387,17 @@ struct MainWindowRootView: View {
 		}
 	}
 
+	/** Two icon-only controls at the sidebar's foot.
+
+	 The `plus` is Notes' New Folder button: a press adds a channel, a press and
+	 hold offers the whole list. It used to be a plain menu with the indicator
+	 hidden, which reads as an immediate action and then is not one. The
+	 overflow menu keeps its indicator hidden -- `ellipsis.circle` already says
+	 there is more behind it -- and neither icon is permanently dimmed any
+	 longer: secondary foreground on a control that is not disabled reads as
+	 disabled. */
 	private var sidebarFooter: some View {
-		HStack(spacing: 6) {
+		HStack(spacing: UISpacing.tight) {
 			Menu {
 				Button(MenuStrings.Server.addServer, systemImage: "server.rack") {
 					model.addServer()
@@ -363,18 +406,23 @@ struct MainWindowRootView: View {
 					model.addChannel()
 				}
 			} label: {
-				Image(systemName: "plus")
+				footerIcon("plus")
+			} primaryAction: {
+				model.addChannel()
 			}
-			.menuStyle(.borderlessButton)
+			.sidebarFooterMenu()
 			.help(MainWindowStrings.InputBar.addServerOrChannel)
 
-			Spacer(minLength: 8)
+			Spacer(minLength: UISpacing.regular)
 
 			Menu {
 				Button(MainWindowStrings.InputBar.markAllAsRead, systemImage: "checkmark.circle") {
 					model.markAllAsRead()
 				}
-				Button(MainWindowStrings.InputBar.disableAllNotifications, systemImage: "bell.slash") {
+				Button(
+					MainWindowStrings.Menu.notifications(areDisabled: model.areNotificationsDisabled),
+					systemImage: model.areNotificationsDisabled ? "bell" : "bell.slash"
+				) {
 					model.toggleNotifications()
 				}
 				Divider()
@@ -385,21 +433,32 @@ struct MainWindowRootView: View {
 					model.showFileTransfers()
 				}
 				Divider()
-				Button(MainWindowStrings.InputBar.hideMemberList, systemImage: "sidebar.right") {
+				Button(
+					MainWindowStrings.Menu.memberList(isVisible: model.isMemberListVisible),
+					systemImage: model.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
+				) {
 					model.toggleMemberList()
 				}
+				.disabled(model.isMemberListAvailable == false)
 				Button(MainWindowStrings.InputBar.settings, systemImage: "gear") {
 					model.showSettings()
 				}
 			} label: {
-				Image(systemName: "ellipsis.circle")
+				footerIcon("ellipsis.circle")
 			}
-			.menuStyle(.borderlessButton)
+			.sidebarFooterMenu()
+			.menuIndicator(.hidden)
 			.help(MainWindowStrings.InputBar.more)
 		}
-		.controlSize(.small)
-		.padding(.horizontal, 10)
+		.padding(.horizontal, UISpacing.wide)
 		.frame(height: MainWindowConstants.sidebarFooterHeight)
+	}
+
+	private func footerIcon(_ systemName: String) -> some View {
+		Image(systemName: systemName)
+			.font(.system(size: 14, weight: .medium))
+			.frame(width: MainWindowConstants.footerIconSize, height: MainWindowConstants.footerIconSize)
+			.contentShape(Rectangle())
 	}
 
 	/** The transcript fills the column and the input bar floats over its foot.
@@ -417,6 +476,25 @@ struct MainWindowRootView: View {
 		VStack(spacing: 0) {
 			TranscriptHistoryRecoveryView(controller: model.transcript?.viewController)
 			ZStack(alignment: .bottom) {
+				/* No `.scrollEdgeEffectStyle` beside the member list's, and it is
+				 not an oversight. The transcript is an AppKit `NSScrollView`
+				 that this view only hosts, and the modifier is SwiftUI's: it
+				 reaches SwiftUI's own scrollable content, not a scroll view
+				 inside an `NSViewRepresentable`. AppKit has no equivalent -- the
+				 macOS 26 SDK declares `NSScrollEdgeEffectStyle` but the only
+				 public properties that take one are on
+				 `NSTitlebarAccessoryViewController` and
+				 `NSSplitViewItemAccessoryViewController`, and `NSScrollView`
+				 exposes nothing at all -- so the transcript cannot ask for the
+				 soft treatment the lists get. It also has nothing to soften: the
+				 representable is laid out inside the safe area, so the
+				 conversation starts below the toolbar rather than scrolling
+				 under it, and the list -- whose own scroll view runs the full
+				 height and insets its rows by the titlebar instead -- starts its
+				 first row on the same line. `MainWindowColumnAlignmentTests`
+				 measures both. Insetting this column by hand to close the
+				 remaining difference is what the comment above rules out: it
+				 makes the column's insets depend on the column's own layout. */
 				MainWindowTranscriptRepresentable(
 					logView: model.transcript,
 					inputField: inputContentView,
@@ -442,17 +520,41 @@ struct MainWindowRootView: View {
 				MainWindowInputAccessoryView(model: inputContentView.textView.accessoryModel) {
 					inputContentView.textView.focus()
 				}
-				.padding(.horizontal, 18)
+				/* The banner's text starts where the field's does: the capsule's
+				 own inset plus the inset that holds the capsule off the column's
+				 edge. */
+				.padding(.horizontal, UISpacing.loose)
 
 				MainWindowInputRepresentable(contentView: inputContentView)
 					.frame(minHeight: 35, idealHeight: 44)
-					.padding(.horizontal, 10)
+					.padding(.horizontal, UISpacing.regular)
 					.padding(.vertical, MainWindowInputBarLayout.fieldVerticalPadding)
 					.glassEffect(.regular, in: .capsule)
-					.padding(.horizontal, 8)
+					.overlay(focusRing)
+					.padding(.horizontal, UISpacing.regular)
 					.padding(.bottom, MainWindowInputBarLayout.bottomPadding)
 			}
 		}
+	}
+
+	/** What says the keyboard is in the message field.
+
+	 Glass draws no focus ring of its own and the field's own ring is turned
+	 off, so nothing marked the field as the place typing would land. The
+	 capsule takes the accent colour while the field holds the keyboard, drawn
+	 thicker where the system asks for increased contrast. */
+	private var focusRing: some View {
+		Capsule()
+			.strokeBorder(
+				Color.accentColor,
+				lineWidth: contrast == .increased
+					? MainWindowConstants.focusRingWidthIncreasedContrast
+					: MainWindowConstants.focusRingWidth
+			)
+			.opacity(inputContentView.textView.focusModel.isFocused ? 1 : 0)
+			.animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: inputContentView.textView.focusModel
+				.isFocused)
+			.accessibilityHidden(true)
 	}
 
 	private var conversationBackground: Color {
@@ -534,6 +636,15 @@ extension View {
 	func redirectsPrintableInput(to action: @escaping (String) -> Void) -> some View {
 		modifier(MainWindowTypingRedirectModifier(action: action))
 	}
+
+	/// A footer control: a bare icon as the label, with the accessory bar's
+	/// hover and pressed treatment so it answers the pointer the way the rows
+	/// above it do. The label style is left alone so the menu's own items keep
+	/// their titles.
+	func sidebarFooterMenu() -> some View {
+		menuStyle(.button)
+			.buttonStyle(.accessoryBar)
+	}
 }
 
 private struct MainWindowInputRepresentable: NSViewRepresentable {
@@ -577,7 +688,6 @@ enum MainWindowInputBarLayout {
 	static let bottomPadding: CGFloat = 6
 	static let replyBannerHeight: CGFloat = 30
 	static let typingRowHeight: CGFloat = 18
-	static let accessorySpacing: CGFloat = 4
 
 	static func accessoryHeight(replyVisible: Bool, typingVisible: Bool) -> CGFloat {
 		var height: CGFloat = 0
@@ -588,7 +698,7 @@ enum MainWindowInputBarLayout {
 			height += typingRowHeight
 		}
 		if replyVisible, typingVisible {
-			height += accessorySpacing
+			height += UISpacing.tight
 		}
 		return height
 	}
@@ -602,37 +712,88 @@ enum MainWindowInputBarLayout {
 }
 
 /** The edge between the conversation and the member list: a divider the user
- can drag, with the width it settles on kept across launches. */
+ can drag, with the width it settles on kept across launches.
+
+ The pointer shape is `.pointerStyle`, not a `push()`/`pop()` pair on hover:
+ the pair is unbalanced the moment the view disappears mid-hover -- collapse
+ the member list from the menu with the pointer over the handle and the
+ resize cursor stayed on the stack for the rest of the session. The handle is
+ also reachable without the pointer: it takes focus, the arrow keys move it,
+ and a double-click returns it to the ideal width. */
 private struct MemberListResizeHandle: View {
 	@Binding var width: CGFloat
 	@State private var widthAtDragStart: CGFloat?
+	@FocusState private var isFocused: Bool
 
 	var body: some View {
 		Divider()
-			.frame(width: 7)
+			.frame(width: MainWindowConstants.memberListHandleWidth)
 			.contentShape(Rectangle())
-			.onHover { hovering in
-				if hovering {
-					NSCursor.resizeLeftRight.push()
-				} else {
-					NSCursor.pop()
+			/* The handle takes focus and the arrow keys resize from there, and
+			 nothing on screen said so: a control that answers the keyboard has
+			 to show when the keyboard is on it. A hairline in the accent colour
+			 over the divider's own line, which is the whole control. */
+			.overlay {
+				if isFocused {
+					Rectangle()
+						.fill(Color.accentColor)
+						.frame(width: 1)
+						.accessibilityHidden(true)
 				}
 			}
+			.pointerStyle(.columnResize)
 			.gesture(
 				DragGesture(minimumDistance: 1)
 					.onChanged { value in
 						let start = widthAtDragStart ?? width
 						widthAtDragStart = start
-						width = min(
-							MainWindowConstants.memberListMaximumWidth,
-							max(MainWindowConstants.memberListMinimumWidth, start - value.translation.width)
-						)
+						apply(start - value.translation.width, persist: false)
 					}
 					.onEnded { _ in
 						widthAtDragStart = nil
-						Preferences.MainWindow.memberListWidth.value = Double(width)
+						persistWidth()
 					}
 			)
+			.onTapGesture(count: 2) {
+				apply(MainWindowConstants.memberListIdealWidth, persist: true)
+			}
+			.focusable()
+			.focused($isFocused)
+			.onKeyPress(.leftArrow) {
+				apply(width + MainWindowConstants.memberListKeyboardResizeStep, persist: true)
+				return .handled
+			}
+			.onKeyPress(.rightArrow) {
+				apply(width - MainWindowConstants.memberListKeyboardResizeStep, persist: true)
+				return .handled
+			}
+			.accessibilityLabel(MainWindowStrings.Toolbar.memberListWidth)
+			.accessibilityHint(MainWindowStrings.Toolbar.memberListWidthHint)
+			.accessibilityAddTraits(.isButton)
+			.help(MainWindowStrings.Toolbar.memberListWidth)
+	}
+
+	private func apply(_ candidate: CGFloat, persist: Bool) {
+		width = MemberListWidthPolicy.clamped(candidate)
+		if persist {
+			persistWidth()
+		}
+	}
+
+	private func persistWidth() {
+		Preferences.MainWindow.memberListWidth.value = Double(width)
+	}
+}
+
+/// The widths the member list is allowed to settle on. A drag, an arrow key
+/// and the double-click reset all land here, so none of them can put a width
+/// into the preference that the column cannot lay out.
+enum MemberListWidthPolicy {
+	static func clamped(_ candidate: CGFloat) -> CGFloat {
+		min(
+			MainWindowConstants.memberListMaximumWidth,
+			max(MainWindowConstants.memberListMinimumWidth, candidate)
+		)
 	}
 }
 

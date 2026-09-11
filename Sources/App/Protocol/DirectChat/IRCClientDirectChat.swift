@@ -81,6 +81,17 @@ enum DCCChatPolicy {
 		return DCCChatOffer(address: address, port: UInt16(portValue), token: token)
 	}
 
+	/** Whether the client is willing to dial the address the offer names.
+
+	 An active offer decides which host this client connects to, exactly as a
+	 DCC SEND offer does, so it goes through the same refusal: loopback, a
+	 private network and the documentation ranges are not addresses a peer gets
+	 to point us at. A passive offer names none — the peer connects to us — so
+	 there is nothing to refuse. */
+	static func isDialable(_ offer: DCCChatOffer) -> Bool {
+		offer.isPassive || ClientWireUtilities.isDialableDCCAddress(offer.address)
+	}
+
 	static func listeningArguments(address: String, port: UInt16, token: String?) -> String {
 		let base = "chat \(address) \(port)"
 		return token.map { "\(base) \($0)" } ?? base
@@ -163,11 +174,26 @@ public extension IRCClient {
 			}
 		}
 
+		if DCCChatPolicy.isDialable(offer) == false {
+			directChatClientLogger.error("Refused a DCC CHAT offer for a non-routable address")
+			printDebugInformation(
+				toConsole: ConnectionSafetyStrings.DirectChat.refusedAddress(
+					sender: sender, address: offer.address
+				)
+			)
+			return
+		}
+
 		print(IRCDirectChatStrings.incomingRequest(sender: sender), by: nil, in: nil,
 		      as: .dccFileTransfer, command: LogLineFormat.defaultCommand)
+		/* The address is what the user is actually being asked to approve — the
+		 nickname alone says nothing about where the connection would go. */
+		let body = offer.isPassive
+			? PromptStrings.DirectChat.body(sender: sender)
+			: ConnectionSafetyStrings.DirectChat.requestBody(sender: sender, address: offer.address)
 		let request = AlertRequest(
 			title: PromptStrings.DirectChat.title(sender: sender),
-			body: PromptStrings.DirectChat.body(sender: sender),
+			body: body,
 			defaultButton: PromptStrings.DirectChat.acceptButtonTitle,
 			alternateButton: PromptStrings.DirectChat.declineButtonTitle
 		)

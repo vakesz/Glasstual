@@ -65,9 +65,9 @@ struct MemberListUserInfoView: View {
 	let content: MemberListUserInfoContent
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 12) {
-			HStack(spacing: 12) {
-				MemberAvatar(nickname: content.nickname, size: 64)
+		VStack(alignment: .leading, spacing: UISpacing.wide) {
+			HStack(spacing: UISpacing.wide) {
+				MemberAvatar(nickname: content.nickname, size: MemberListLayout.profileAvatarSize)
 					.accessibilityHidden(true)
 
 				Text(content.nickname)
@@ -76,7 +76,11 @@ struct MemberListUserInfoView: View {
 					.truncationMode(.tail)
 			}
 
-			Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 5) {
+			Grid(
+				alignment: .leading,
+				horizontalSpacing: UISpacing.regular,
+				verticalSpacing: UISpacing.tight
+			) {
 				infoRow(MemberListStrings.Info.username, content.username)
 				infoRow(MemberListStrings.Info.address, content.address)
 				infoRow(MemberListStrings.Info.realName, content.realName)
@@ -85,8 +89,8 @@ struct MemberListUserInfoView: View {
 				infoRow(MemberListStrings.Info.status, content.awayStatus)
 			}
 		}
-		.padding(16)
-		.frame(width: 340, alignment: .leading)
+		.padding(UISpacing.loose)
+		.frame(width: MemberListLayout.profileWidth, alignment: .leading)
 	}
 
 	private func infoRow(_ label: String, _ value: String) -> some View {
@@ -98,7 +102,7 @@ struct MemberListUserInfoView: View {
 			Text(label)
 				.font(.caption.weight(.semibold))
 				.foregroundStyle(.secondary)
-				.frame(width: 72, alignment: .trailing)
+				.frame(width: MemberListLayout.profileLabelWidth, alignment: .trailing)
 			Text(value)
 				.lineLimit(1)
 				.truncationMode(.tail)

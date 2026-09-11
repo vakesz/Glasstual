@@ -129,7 +129,7 @@ final class ChannelSpotlightSession {
 			self?.model.updateClientRestriction()
 		}
 		notifications.observe(.textualUserDefaultsDidChange) { [weak self] notification in
-			guard notification.userInfo?["changedKey"] as? String
+			guard notification.userInfo?[PreferenceChangeNotification.changedKeyUserInfoKey] as? String
 				== Preferences.Appearance.channelNavigationIsServerSpecific.name
 			else { return }
 			self?.model.updateClientRestriction()

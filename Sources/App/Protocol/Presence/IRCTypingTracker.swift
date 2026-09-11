@@ -124,7 +124,7 @@ public final class TypingTracker: NSObject {
 		}
 
 		let channelKey = channel.uniqueIdentifier
-		let nicknameKey = nickname.lowercased()
+		let nicknameKey = casefolded(nickname)
 		var channelEntries = entries[channelKey] ?? [:]
 		let existingEntry = channelEntries[nicknameKey]
 		var changed = false
@@ -165,7 +165,7 @@ public final class TypingTracker: NSObject {
 	}
 
 	public func removeNickname(_ nickname: String) {
-		let nicknameKey = nickname.lowercased()
+		let nicknameKey = casefolded(nickname)
 
 		for channelKey in Array(entries.keys) {
 			guard var channelEntries = entries[channelKey], channelEntries.removeValue(forKey: nicknameKey) != nil
@@ -186,6 +186,17 @@ public final class TypingTracker: NSObject {
 				postChange(for: channel)
 			}
 		}
+	}
+
+	/** The key a nickname is filed under.
+
+	 The server decides what two spellings of a nickname are the same one:
+	 under RFC 1459 `nick[home]` and `nick{home}` are, and `lowercased()` says
+	 they are not while also folding non-ASCII letters no server folds. A
+	 typing indicator filed under one spelling then never cleared when the
+	 `done` tag arrived spelled the other way. */
+	private func casefolded(_ nickname: String) -> String {
+		client?.casefoldNickname(nickname) ?? nickname.lowercased()
 	}
 
 	public func removeAll(in channel: IRCChannel) {

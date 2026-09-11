@@ -108,9 +108,13 @@ extension IRCClient {
 			trackedUsers.addTrackedUserWithoutDuplicateCheck(nickname)
 		}
 
-		for nickname in previousNicknames where currentNicknames.contains(where: {
-			$0.caseInsensitiveCompare(nickname) == .orderedSame
-		}) == false {
+		/* Folded the way the server folds nicknames: `caseInsensitiveCompare`
+		 is Unicode folding, under which `nick[home]` and `nick{home}` are two
+		 people and the tracked one is dropped from the watch list. */
+		let foldedCurrentNicknames = Set(currentNicknames.map(casefoldNickname))
+		for nickname in previousNicknames
+			where foldedCurrentNicknames.contains(casefoldNickname(nickname)) == false
+		{
 			removals.append(nickname)
 			trackedUsers.removeTrackedUserWithoutLookup(nickname)
 		}
@@ -273,14 +277,20 @@ extension IRCClient {
 		let trackingStatus = trackedUsers.status(of: entry)
 		guard trackingStatus != .unknown, let senderNickname = message.senderNickname else { return }
 
+		/* The entry's own nickname, not the sender's. A NICK is reported twice —
+		 once for the entry the old nickname matched and once for the entry the
+		 new one does — and both carry the same sender, who is the person under
+		 their *old* name. Recording the second transition against that name
+		 signed the wrong entry on and left the one renamed into unchanged. */
+		let nickname = entry.trackingNickname ?? senderNickname
 		let isAvailable = trackingStatus == .available
 		switch message.command.uppercased() {
 		case "JOIN" where isAvailable == false:
-			setTrackedNickname(senderNickname, status: .signedOn, notify: true)
+			setTrackedNickname(nickname, status: .signedOn, notify: true)
 		case "QUIT" where isAvailable:
-			setTrackedNickname(senderNickname, status: .signedOff, notify: true)
+			setTrackedNickname(nickname, status: .signedOff, notify: true)
 		case "NICK":
-			setTrackedNickname(senderNickname, status: isAvailable ? .signedOff : .signedOn, notify: true)
+			setTrackedNickname(nickname, status: isAvailable ? .signedOff : .signedOn, notify: true)
 		default:
 			break
 		}

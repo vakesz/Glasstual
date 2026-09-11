@@ -88,6 +88,9 @@ final class PreferencesPaneModel {
 	var presentationError: String?
 	var externalURL: URL?
 	var showsFontPicker = false
+	/// The read and import of a chosen theme file, for whoever needs to wait
+	/// for its outcome; the view does not.
+	@ObservationIgnored var themeImportTask: Task<Void, Never>?
 
 	@ObservationIgnored
 	let notificationItems: [NotificationConfigurationItem]

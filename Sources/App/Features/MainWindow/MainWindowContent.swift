@@ -246,14 +246,6 @@ extension MainWindow {
 		menu.popUp(positioning: nil, at: inputTextField.selectedRect.origin, in: inputTextField)
 	}
 
-	func exitFullscreenMode(_ event: NSEvent) {
-		if ceIsInFullscreenMode {
-			toggleFullScreen(nil)
-		} else {
-			inputTextField.keyDown(with: event)
-		}
-	}
-
 	func speakPendingNotifications(_: NSEvent) {
 		SharedApplication.sharedSpeechSynthesizer().stopSpeakingAndMoveForward()
 	}
@@ -285,6 +277,18 @@ extension MainWindow {
 	}
 }
 
+/** Which `beginGesture` starts a swipe the window will measure.
+
+ Anything else clears the remembered origin rather than leaving the previous
+ gesture's behind: the origin is what `endGesture` subtracts from, and a stale
+ one produced a delta past any threshold and switched the channel under a
+ gesture the user never made. */
+enum MainWindowSwipePolicy {
+	static func recordsOrigin(touchCount: Int, minimumSwipeLength: Double) -> Bool {
+		minimumSwipeLength >= 1 && touchCount == 2
+	}
+}
+
 // MARK: - Gestures and window utilities
 
 public extension MainWindow {
@@ -297,10 +301,21 @@ public extension MainWindow {
 		}
 	}
 
+	/** A gesture that does not qualify still has to clear the origin.
+
+	 Leaving the previous gesture's origin in place meant the next `endGesture`
+	 measured from wherever the fingers had been the time before: the delta was
+	 large enough to clear any threshold, and the channel changed under a
+	 gesture the user never made. */
 	override func beginGesture(with event: NSEvent) {
-		guard Preferences.Input.swipeMinimumLength.value >= 1 else { return }
 		let touches = Array(event.touches(matching: .touching, in: nil))
-		guard touches.count == 2 else { return }
+		guard MainWindowSwipePolicy.recordsOrigin(
+			touchCount: touches.count,
+			minimumSwipeLength: Preferences.Input.swipeMinimumLength.value
+		) else {
+			cachedSwipeOriginPoint = nil
+			return
+		}
 		cachedSwipeOriginPoint = point(between: touches[0], and: touches[1])
 	}
 
@@ -458,34 +473,37 @@ public extension MainWindow {
 		presentationModel.isServerListVisible = state.isServerListVisible
 	}
 
-	func expandServerList() {
-		withAnimation {
-			presentationModel.isServerListVisible = true
+	/** Moves a column, animated unless the system says not to.
+
+	 `withAnimation` slides the column in whatever the accessibility settings
+	 say, and a pane sweeping across the window is exactly the motion Reduce
+	 Motion asks an interface to drop. The state change itself is the same
+	 either way, so the pane simply appears. */
+	private func changeColumnVisibility(_ change: () -> Void) {
+		let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+		withAnimation(reduceMotion ? nil : .default) {
+			change()
 		}
+	}
+
+	func expandServerList() {
+		changeColumnVisibility { presentationModel.isServerListVisible = true }
 	}
 
 	func collapseServerList() {
-		withAnimation {
-			presentationModel.isServerListVisible = false
-		}
+		changeColumnVisibility { presentationModel.isServerListVisible = false }
 	}
 
 	@objc func toggleServerListVisibility() {
-		withAnimation {
-			presentationModel.isServerListVisible.toggle()
-		}
+		changeColumnVisibility { presentationModel.isServerListVisible.toggle() }
 	}
 
 	func expandMemberList() {
-		withAnimation {
-			presentationModel.isMemberListVisible = true
-		}
+		changeColumnVisibility { presentationModel.isMemberListVisible = true }
 	}
 
 	func collapseMemberList() {
-		withAnimation {
-			presentationModel.isMemberListVisible = false
-		}
+		changeColumnVisibility { presentationModel.isMemberListVisible = false }
 	}
 
 	func updateMemberListVisibilityForSelection() {

@@ -57,11 +57,53 @@ public extension IRCClient {
 		usersByNickname[casefoldNickname(nickname)]
 	}
 
+	/** Refiles the directory under the casemapping the server advertises now.
+
+	 A mapping can merge two keys that used to be distinct — `nick[home]` and
+	 `nick{home}` are one person under RFC 1459 and two under `ascii` — and the
+	 loser used to be dropped on the floor while its member rows stayed in every
+	 channel it was in. Those rows are keyed by person, so nothing could find,
+	 replace or remove them again: `findMember` answered for somebody the
+	 directory no longer knew. The loser is taken out of the channels too, and
+	 which of the two loses is decided by nickname so that the same 005 always
+	 produces the same directory. */
 	internal func rekeyUserList() {
-		usersByNickname = Dictionary(
-			usersByNickname.values.map { (casefoldNickname($0.nickname), $0) },
-			uniquingKeysWith: { _, latest in latest }
-		)
+		var rekeyed: [String: User] = [:]
+		rekeyed.reserveCapacity(usersByNickname.count)
+		var displaced: [User] = []
+
+		for user in usersByNickname.values.sorted(by: { $0.nickname < $1.nickname }) {
+			let foldedNickname = casefoldNickname(user.nickname)
+
+			if rekeyed[foldedNickname] == nil {
+				rekeyed[foldedNickname] = user
+			} else {
+				displaced.append(user)
+			}
+		}
+
+		usersByNickname = rekeyed
+
+		for user in displaced {
+			discardDisplacedUser(user)
+		}
+	}
+
+	/// Takes a user the rekey could not keep out of every channel it was in.
+	/// `remove(_:)` is not what this wants: it would delete the directory entry
+	/// the winner now holds under the same folded nickname.
+	private func discardDisplacedUser(_ user: User) {
+		for (channel, member) in relations(of: user) {
+			channel.memberInfo?.removeMember(member)
+		}
+
+		cancelRemoveUserTimer(for: user)
+
+		if let hostmask = user.hostmask {
+			clearAddressBookCache(forHostmask: hostmask)
+		}
+
+		userStores.removeValue(forKey: user.id)
 	}
 
 	/// An editable stand-in for `nickname`: a copy of the stored user, or a

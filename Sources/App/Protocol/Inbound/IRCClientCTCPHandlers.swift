@@ -66,6 +66,81 @@ private let ctcpLogger = Logger(
 	category: "IRCCTCP"
 )
 
+/** How many CTCP queries get an answer, and how quickly.
+
+ A reply is a `NOTICE` the client sends on its own, so a channel full of
+ `VERSION` queries — or one scripted sender — turns into as many outgoing lines
+ as the flood-control queue will hold, and the server kills the connection for
+ excess flood. The per-sender ceiling stops one person doing it; the overall
+ one stops a channel's worth of people doing it together.
+
+ The counts are timestamps rather than a running total so that the window
+ slides: a sender who asked five times a minute ago is answered again now. */
+nonisolated struct CTCPReplyThrottle: Sendable { // nonisolated: value
+	/// How long a reply is remembered for.
+	static let window: TimeInterval = 60
+	/// Replies one sender gets inside the window.
+	static let perSenderLimit = 5
+	/// Replies everyone together gets inside the window.
+	static let overallLimit = 30
+	/** Senders remembered at once.
+
+	 The dictionary is keyed by a nickname the network chooses, so it is
+	 bounded: a flood from ten thousand names would otherwise be a flood of
+	 dictionary entries. Past the ceiling the least recently heard from is
+	 dropped, which at worst forgives an old sender one reply.
+
+	 Larger than `overallLimit` on purpose: the overall ceiling is what a flood
+	 runs into first, and entries have to outlive it for the per-sender count to
+	 mean anything. */
+	static let maximumTrackedSenders = 128
+
+	private var replyTimesBySender: [String: [Date]] = [:]
+
+	/// Whether `sender` may be answered now, counting the reply if so.
+	mutating func recordReply(to sender: String, at now: Date) -> Bool {
+		expire(before: now.addingTimeInterval(-Self.window))
+
+		let senderCount = replyTimesBySender[sender]?.count ?? 0
+		let overallCount = replyTimesBySender.values.reduce(0) { $0 + $1.count }
+
+		guard senderCount < Self.perSenderLimit, overallCount < Self.overallLimit else {
+			return false
+		}
+
+		replyTimesBySender[sender, default: []].append(now)
+		evictOldestSenderIfNeeded()
+
+		return true
+	}
+
+	private mutating func expire(before cutoff: Date) {
+		for (sender, times) in replyTimesBySender {
+			let recent = times.filter { $0 > cutoff }
+
+			if recent.isEmpty {
+				replyTimesBySender.removeValue(forKey: sender)
+			} else {
+				replyTimesBySender[sender] = recent
+			}
+		}
+	}
+
+	private mutating func evictOldestSenderIfNeeded() {
+		guard replyTimesBySender.count > Self.maximumTrackedSenders else {
+			return
+		}
+
+		let oldest = replyTimesBySender.min { first, second in
+			(first.value.last ?? .distantPast) < (second.value.last ?? .distantPast)
+		}
+
+		guard let oldest else { return }
+
+		replyTimesBySender.removeValue(forKey: oldest.key)
+	}
+}
+
 @MainActor
 public extension IRCClient {
 	func receiveCTCPQuery(_ message: Message, text: String) {
@@ -97,32 +172,57 @@ public extension IRCClient {
 		print(IRCCTCPStrings.query(command: parsed.command, sender: sender), by: nil, in: printTarget, as: .ctcpQuery,
 		      command: message.command, receivedAt: message.receivedAt)
 
-		switch parsed.command {
+		guard let replyText = ctcpReplyText(for: parsed.command, arguments: parsed.arguments) else {
+			return
+		}
+
+		/* The query is still printed — it is the user's record of the flood —
+		 but answering every one of them is what gets the connection killed for
+		 excess flood. The throttle is consulted only once there is an answer to
+		 send, so a burst of commands this client does not implement cannot spend
+		 the allowance a real query needs. */
+		guard allowsCTCPReply(to: sender) else {
+			ctcpLogger.notice("Throttled a CTCP reply")
+			return
+		}
+
+		sendCTCPReply(sender, command: parsed.command, text: replyText)
+	}
+
+	/// What this client answers `command` with, or `nil` when it answers nothing.
+	private func ctcpReplyText(for command: String, arguments: String) -> String? {
+		switch command {
 		case "CLIENTINFO":
-			sendCTCPReply(sender, command: parsed.command, text: IRCCTCPStrings.clientInfoReply)
+			return IRCCTCPStrings.clientInfoReply
 		case "FINGER":
-			sendCTCPReply(sender, command: parsed.command, text: IRCCTCPStrings.fingerReply)
+			return IRCCTCPStrings.fingerReply
 		case "PING":
-			guard parsed.arguments.utf8.count <= 50 else {
+			guard arguments.utf8.count <= 50 else {
 				ctcpLogger.fault("Ignoring PING query that exceeds 50 bytes")
-				return
+				return nil
 			}
-			sendCTCPReply(sender, command: parsed.command, text: parsed.arguments)
+
+			return arguments
 		case "TIME":
-			sendCTCPReply(sender, command: parsed.command, text: sharedISOStandardDateFormatter().string(from: Date()))
+			return sharedISOStandardDateFormatter().string(from: Date())
 		case "USERINFO":
-			sendCTCPReply(sender, command: parsed.command, text: config.realName)
+			return config.realName
 		case "VERSION":
 			let masquerade = config.ctcpVersionReply?.nonEmpty ?? environment.preferences.masqueradeCTCPVersion?
 				.nonEmpty
-			let version = masquerade ?? IRCCTCPStrings.version(
+
+			return masquerade ?? IRCCTCPStrings.version(
 				applicationName: ApplicationInfo.applicationNameWithoutVersion(),
 				shortVersion: ApplicationInfo.applicationVersionShort()
 			)
-			sendCTCPReply(sender, command: parsed.command, text: version)
 		default:
-			break
+			return nil
 		}
+	}
+
+	/// Whether this query gets an answer, counting it against the throttle.
+	func allowsCTCPReply(to sender: String) -> Bool {
+		ctcpReplyThrottle.recordReply(to: sender, at: Date())
 	}
 
 	func receiveCTCPLagCheckQuery(_ message: Message, text: String) {
@@ -150,8 +250,11 @@ public extension IRCClient {
 		guard let parsed = IRCCTCPPolicy.commandAndArguments(from: text) else { return }
 		let sender = message.senderNickname ?? ""
 		let output: String
-		if parsed.command == "PING" {
-			let delta = Date().timeIntervalSince1970 - (Double(parsed.arguments) ?? 0)
+		/* Only a PING whose echo comes back as the number that was sent can be
+		 timed. An unparsable one used to read as zero — the epoch — and the
+		 client reported a lag of fifty-six years rather than saying nothing. */
+		if parsed.command == "PING", let echoedTime = Double(parsed.arguments), echoedTime.isFinite {
+			let delta = Date().timeIntervalSince1970 - echoedTime
 			output = IRCCTCPStrings.timedReply(sender: sender, command: parsed.command, seconds: delta)
 		} else {
 			output = IRCCTCPStrings.reply(sender: sender, command: parsed.command, arguments: parsed.arguments)

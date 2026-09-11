@@ -213,7 +213,10 @@ struct IRCCommandIndexCorpusTests {
 		ColonCase("ERROR", 0),
 		ColonCase("WALLOPS", 0),
 		ColonCase("SETNAME", 0),
-		/* PASS must never gain a trailing marker. */
+		/* PASS declares no colon position at all, which is not the same as
+			declaring that it never has a trailing parameter: a password with a
+			space in it can only reach the server as one, and
+			`colonPositionDrivesTheOutgoingLine` pins that. */
 		ColonCase("PASS", UInt(NSNotFound)),
 	]
 
@@ -232,7 +235,7 @@ struct IRCCommandIndexCorpusTests {
 	func commandsWithoutATrailingParameterUseTheSentinel(command: String) {
 		CommandIndex.populateCommandIndex()
 
-		#expect(CommandIndex.colonPosition(forRemoteCommand: command) == 999)
+		#expect(CommandIndex.colonPosition(forRemoteCommand: command) == CommandIndex.colonPositionNever)
 	}
 
 	@Test

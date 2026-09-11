@@ -21,7 +21,10 @@ struct UIShellLocalizationCatalogTests {
 				"Used when your nickname is already taken. Optional."
 		)
 		#expect(OnboardingStrings.Appearance.textSizeTitles == ["Small", "Medium", "Large"])
-		#expect(OnboardingStrings.Appearance.interfaceStyleTitles == ["System", "Light", "Dark"])
+		#expect(
+			PreferredAppearance.allCases.map(OnboardingStrings.Appearance.interfaceStyleTitle)
+				== ["System", "Light", "Dark"]
+		)
 		#expect(OnboardingStrings.Appearance.previewMessages == [
 			.init(nickname: "alice", message: "Good morning everyone"),
 			.init(nickname: "bob", message: "Morning! Anyone tried the new build?"),
@@ -29,7 +32,7 @@ struct UIShellLocalizationCatalogTests {
 		])
 		#expect(OnboardingStrings.Notifications.permissionGranted == "Notifications are allowed for Glasstual.")
 		#expect(OnboardingStrings.FirstNetwork.suggestedChannelsLabel == "Suggested channels:")
-		#expect(OnboardingStrings.NetworkPicker.customServerTitle == "Custom Server…")
+		#expect(OnboardingStrings.NetworkPicker.customServerTitle == "Custom Server")
 		#expect(OnboardingStrings.NetworkPicker.invalidPort == "Enter a port between 1 and 65535.")
 	}
 

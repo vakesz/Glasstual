@@ -11,7 +11,7 @@ import Testing
 
 @MainActor
 final class RemovalPresentation: TreeItemPresentation {
-	nonisolated let presentationIdentifier = UUID().uuidString // nonisolated: let
+	let presentationIdentifier = UUID().uuidString
 	private(set) var preservedRemovals = 0
 	private(set) var permanentRemovals = 0
 	private(set) var applicationTerminations = 0

@@ -54,49 +54,64 @@ public extension MenuActionCoordinator {
 		}
 	}
 
+	/** Runs Edit ▸ Find on the transcript's own find bar.
+
+	 Searching a document belongs inline above the text, where every macOS
+	 document window puts it: the modal prompt this replaced could not show how
+	 many matches there were, could not step through them without being
+	 reopened, and treated re-submitting the same phrase as no change at all,
+	 so asking for the same word twice never advanced. ⌘G and ⇧⌘G keep their
+	 meaning — they are the find bar's next and previous. */
 	private func showFindPrompt(_ sender: Any?) {
 		guard sender != nil, mainWindow.isKeyWindow else {
 			return
 		}
 
-		let command = (sender as? NSMenuItem)?.command
-		if command == .findText || currentSearchPhrase.isEmpty {
-			showFindPromptOpenDialog()
-			return
+		let action: NSTextFinder.Action = switch (sender as? NSMenuItem)?.command {
+		case .findNext: .nextMatch
+		case .findPrevious: .previousMatch
+		case .useSelectionForFind: .setSearchString
+		default: .showFindInterface
 		}
-
-		selectedBackingView?.findString(
-			currentSearchPhrase,
-			movingForward: command == .findNext
-		)
+		selectedBackingView?.performFindAction(action)
 	}
 
-	private func showFindPromptOpenDialog() {
-		InputPrompt.present(InputPromptRequest(
-			title: PromptStrings.TextSearch.title,
-			message: PromptStrings.TextSearch.body,
-			submitButtonTitle: PromptStrings.TextSearch.buttonTitle,
-			cancelButtonTitle: PromptStrings.Action.cancel,
-			initialValue: currentSearchPhrase
-		)) { [weak self] outcome in
-			guard let self,
-			      case let .submitted(result) = outcome,
-			      currentSearchPhrase != result
-			else {
-				return
-			}
-			currentSearchPhrase = result
-			selectedBackingView?.findString(result, movingForward: true)
-		}
-	}
+	/** Paste goes wherever the keyboard is.
 
+	 It used to focus the chat input whenever the main window was key, so pasting
+	 while the caret sat in the toolbar's search field or a sheet's field pulled
+	 the focus out of that field and dropped the text into the conversation. The
+	 field is still the fallback the main window wants -- a paste with nothing
+	 editable focused belongs in the message being written -- and
+	 `MenuResponderCommandPolicy` is what decides between the two, so the action
+	 and the menu item's validation answer the same question. */
 	private func paste(_ sender: Any?) {
-		if mainWindow.isKeyWindow, let textField = mainWindow.inputTextField {
-			textField.focus()
-			textField.paste(sender)
-			return
+		let responder = NSApp.keyWindow?.firstResponder
+		let inputTextField = mainWindow.isKeyWindow ? mainWindow.inputTextField : nil
+
+		switch MenuResponderCommandPolicy.pasteTarget(
+			responderIsEditableText: (responder as? NSText)?.isEditable == true,
+			responderIsInInputBar: responderBelongsToInputBar(responder),
+			hasInputField: inputTextField != nil
+		) {
+		case .inputField:
+			inputTextField?.focus()
+			inputTextField?.paste(sender)
+		case .firstResponder:
+			forwardResponderAction(#selector(NSText.paste(_:)), sender: sender)
+		case .none:
+			break
 		}
-		forwardResponderAction(#selector(NSText.paste(_:)), sender: sender)
+	}
+
+	/// Whether the responder is the message field or anything else the input bar
+	/// hosts, which is the one case where re-focusing the field changes nothing.
+	/// Menu validation asks it too, so that the item and the action agree.
+	func responderBelongsToInputBar(_ responder: NSResponder?) -> Bool {
+		guard let inputBar = mainWindow.inputContentView, let view = responder as? NSView else {
+			return false
+		}
+		return view.isDescendant(of: inputBar)
 	}
 
 	private func printContent(_ sender: Any?) {

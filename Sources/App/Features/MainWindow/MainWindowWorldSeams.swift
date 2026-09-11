@@ -131,38 +131,61 @@ extension MainWindow: ClientOutput {
 	}
 
 	func closeSheets(for client: IRCClient) {
+		let clientIdentifier = client.uniqueIdentifier
 		presentationModel.closeSheets { owner in
 			guard let clientSheet = owner as? ClientScoped else { return false }
 
-			return clientSheet.clientId == client.uniqueIdentifier
+			return clientSheet.clientId == clientIdentifier
 		}
+		/* The access and highlight lists are windows rather than sheets now, so
+		 the main window no longer takes them down with its own; a list of a
+		 connection that is going away has nothing left to show. */
+		let scenes = SharedApplication.sharedApplicationScenes()
+		scenes.closeChannelAccessList { $0.clientId == clientIdentifier }
+		scenes.closeServerHighlightList(for: clientIdentifier)
 	}
 
-	func accessListEntryReceived(mask: String, setBy author: String?, creationDate date: Date?) -> Bool {
-		guard let sheet = presentationModel.sheetOwner(ofType: ChannelBanListSheet.self) else {
+	func accessListEntryReceived(
+		for client: IRCClient,
+		inChannelNamed channelName: String,
+		modeSymbol: String,
+		mask: String,
+		setBy author: String?,
+		creationDate date: Date?
+	) -> Bool {
+		guard let session = accessListSession(for: client, channelNamed: channelName, modeSymbol: modeSymbol) else {
 			return false
 		}
 
-		/* The sheet holds the previous reply until the next one starts arriving,
-		 so that a refresh does not blank the table before the new list lands. */
-		if sheet.contentAlreadyReceived {
-			sheet.contentAlreadyReceived = false
-			sheet.clear()
-		}
-
-		sheet.addEntry(mask, setBy: author, creationDate: date)
+		session.receiveEntry(mask: mask, setBy: author, creationDate: date)
 
 		return true
 	}
 
-	func accessListFinished() -> Bool {
-		guard let sheet = presentationModel.sheetOwner(ofType: ChannelBanListSheet.self) else {
+	func accessListFinished(for client: IRCClient, inChannelNamed channelName: String, modeSymbol: String) -> Bool {
+		guard let session = accessListSession(for: client, channelNamed: channelName, modeSymbol: modeSymbol) else {
 			return false
 		}
 
-		sheet.contentAlreadyReceived = true
+		session.finishReceiving()
 
 		return true
+	}
+
+	/// The open access list this reply belongs to, or `nil` when the reply is
+	/// from another connection, for another channel, or for another of its lists.
+	private func accessListSession(
+		for client: IRCClient,
+		channelNamed channelName: String,
+		modeSymbol: String
+	) -> ChannelAccessListSession? {
+		guard let session = SharedApplication.sharedApplicationScenes().currentChannelAccessListSession(),
+		      session.matches(client: client, channelName: channelName, modeSymbol: modeSymbol)
+		else {
+			return nil
+		}
+
+		return session
 	}
 
 	func closeSheets(forChannelId channelId: String) {
@@ -170,14 +193,18 @@ extension MainWindow: ClientOutput {
 			guard let channelSheet = owner as? ChannelScoped else { return false }
 			return channelSheet.channelId == channelId
 		}
+		SharedApplication.sharedApplicationScenes().closeChannelAccessList { $0.channelId == channelId }
 	}
 
 	func highlightWasLogged(_ entry: HighlightLogEntry) {
-		guard let sheet = presentationModel.sheetOwner(ofType: ServerHighlightListSheet.self),
-		      sheet.clientId == entry.clientId
+		/* Only a window that is already open: nothing else is showing the list,
+		 and building a session for every highlight logged would keep one per
+		 connection alive for the life of the process. */
+		guard let session = SharedApplication.sharedApplicationScenes()
+			.openServerHighlightListSession(for: entry.clientId)
 		else { return }
 
-		sheet.addEntry(entry)
+		session.addEntry(entry)
 	}
 
 	func reloadServerListItems(for client: IRCClient) {
@@ -269,7 +296,7 @@ extension IRCTreeItem {
  already existed on the class; the protocol is what lets the IRC layer hold one
  without depending on the concrete `LogController`. */
 extension LogController: TreeItemPresentation {
-	public nonisolated var presentationIdentifier: String { // nonisolated: pure
+	public var presentationIdentifier: String {
 		uniqueIdentifier
 	}
 

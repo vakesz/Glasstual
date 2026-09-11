@@ -188,6 +188,12 @@ extension IRCInboundStrings {
 		static func nicknameUnavailable(_ nickname: String) -> String {
 			String(localized: .IRC.cannotUseNicknameTryingAnother(nickname))
 		}
+
+		/// Follows `nicknameUnavailable` once the client stops answering with a
+		/// further candidate.
+		static var nicknameRetriesExhausted: String {
+			String(localized: .IRC.nicknameRetriesExhausted)
+		}
 	}
 
 	nonisolated enum Whois { // nonisolated: value
@@ -270,12 +276,26 @@ enum IRCChannelAccessListKind: Sendable {
 	case banException
 	case quiet
 
+	/// The list numeric and the one that ends it name the same list, so both
+	/// map to it: the mode letter a reply belongs to has to be answerable for
+	/// the end of a list as well as for its entries.
 	init(numeric: UInt) {
 		switch numeric {
-		case IRCNumeric.banlist.rawValue: self = .ban
-		case IRCNumeric.invitelist.rawValue: self = .inviteException
-		case IRCNumeric.exceptlist.rawValue: self = .banException
+		case IRCNumeric.banlist.rawValue, IRCNumeric.endofbanlist.rawValue: self = .ban
+		case IRCNumeric.invitelist.rawValue, IRCNumeric.endofinvitelist.rawValue: self = .inviteException
+		case IRCNumeric.exceptlist.rawValue, IRCNumeric.endofexceptlist.rawValue: self = .banException
 		default: self = .quiet
+		}
+	}
+
+	/// The ISUPPORT list this kind is, which is what names its mode letter:
+	/// `EXCEPTS` and `INVEX` may advertise a letter other than `e` and `I`.
+	var supportListType: IRCISupportInfoListType {
+		switch self {
+		case .ban: .ban
+		case .banException: .banException
+		case .inviteException: .inviteException
+		case .quiet: .quiet
 		}
 	}
 }

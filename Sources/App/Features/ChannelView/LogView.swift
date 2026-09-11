@@ -53,10 +53,11 @@ public final class LogView: NSObject {
 	let viewIdentifier: String
 	public var contextMenuTarget = LogPolicyTarget()
 	public var selection: String?
+	/// The profile popover a click on a nickname opened, while it is open.
+	private var memberInformationPopover: NSPopover?
 
 	private lazy var nativeView = NativeTranscriptView(owner: self)
 	let policy = LogPolicy()
-	private let notifications = NotificationSubscriptions()
 
 	@available(*, unavailable, message: "Use init(viewController:)")
 	override public init() {
@@ -69,9 +70,9 @@ public final class LogView: NSObject {
 		viewIdentifier = viewController.uniqueIdentifier
 		super.init()
 		_ = nativeView
-		for name in [Notification.Name.themeWasModified, .themeAppearanceChanged] {
-			notifications.observe(name) { [weak self] _ in self?.nativeView.applyTheme() }
-		}
+		/* No theme observers here. The main window owns the fan-out: it answers
+		 the theme notifications once and calls `reloadTheme()` on every
+		 controller, and a transcript that also listened re-rendered twice. */
 	}
 
 	public var hasSelection: Bool {
@@ -103,11 +104,31 @@ public final class LogView: NSObject {
 		operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
 	}
 
+	/** Sends what the reader typed to the input field, and nothing else.
+
+	 Focusing the transcript is how someone reads back through it, so the keys
+	 that move a document have to reach the text view: redirecting every
+	 unmodified key sent Page Up and the arrows to the input field, which took
+	 the focus back and left the transcript unable to scroll at all. */
 	public func keyDown(_ event: NSEvent, in _: NSView) -> Bool {
 		let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-		guard modifiers.isDisjoint(with: [.command, .option, .control]) else { return false }
+		guard modifiers.isDisjoint(with: [.command, .option, .control]),
+		      Self.isTextInput(event.charactersIgnoringModifiers)
+		else { return false }
 		viewController?.logViewKeyDown(event)
 		return true
+	}
+
+	/** Whether a key stroke is text meant for the input field rather than a
+	 command to the transcript.
+
+	 AppKit spells the arrows, the paging keys, Home, End and the function keys
+	 as code points in the Unicode private use area, and the space bar is the
+	 page-down every document view has; all of them stay with the text view. */
+	nonisolated static func isTextInput(_ characters: String?) -> Bool { // nonisolated: pure
+		guard let scalar = characters?.unicodeScalars.first else { return false }
+		guard scalar.value >= 0x20, scalar.value != 0x7F, scalar != " " else { return false }
+		return (0xF700 ... 0xF8FF).contains(scalar.value) == false
 	}
 
 	public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
@@ -118,12 +139,37 @@ public final class LogView: NSObject {
 		return true
 	}
 
-	public func findString(_ searchString: String, movingForward: Bool) {
-		nativeView.find(searchString, movingForward: movingForward)
+	/// Runs one of the Edit ▸ Find commands on the transcript's own find bar.
+	public func performFindAction(_ action: NSTextFinder.Action) {
+		nativeView.performFindAction(action)
 	}
 
 	func prepareContextTarget(at point: NSPoint) {
 		contextMenuTarget = nativeView.contextTarget(at: point)
+	}
+
+	/** Shows the profile of a nickname the reader clicked in the transcript,
+	 anchored to the text that named them. Only someone in the conversation has
+	 a profile to show: a name that has since left is left alone. */
+	func showMemberInformation(for nickname: String, relativeTo rect: NSRect, of view: NSView) {
+		closeMemberInformation()
+		guard let member = viewController?.associatedChannel?.findMember(nickname) else { return }
+		let content = MemberListUserInfoContent(
+			member: member,
+			privileges: MemberListPresentation.privilegesDescription(for: member)
+		)
+		let popover = NSPopover()
+		popover.behavior = .transient
+		popover.delegate = self
+		popover.contentViewController = NSHostingController(rootView: MemberListUserInfoView(content: content))
+		memberInformationPopover = popover
+		/* The text view is flipped, so `.maxY` is the edge below the name. */
+		popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
+	}
+
+	func closeMemberInformation() {
+		memberInformationPopover?.close()
+		memberInformationPopover = nil
 	}
 
 	func contextMenu(defaultItems: [NSMenuItem]) -> NSMenu {
@@ -171,14 +217,22 @@ public final class LogView: NSObject {
 		)
 	}
 
+	/** Runs one batch of transcript edits.
+
+	 Every mutation goes through here, which is also why the profile popover is
+	 dismissed here: appending, trimming, restyling, a reaction, a decoded image
+	 or the unread marker can all move or remove the text the popover is
+	 anchored to, and an anchor that moves leaves the popover pointing at
+	 someone else's message. */
 	func performEditingBatch<Output>(_ edits: () -> Output) -> Output {
+		closeMemberInformation()
 		nativeView.beginEditing()
 		defer { nativeView.endEditing() }
 		return edits()
 	}
 
 	func clearLines() {
-		nativeView.clear()
+		performEditingBatch { nativeView.clear() }
 	}
 
 	func updateDelivery(_ update: TranscriptDeliveryUpdate) {
@@ -207,6 +261,14 @@ public final class LogView: NSObject {
 	}
 
 	func applyTheme() {
-		nativeView.applyTheme()
+		performEditingBatch { nativeView.applyTheme() }
+	}
+}
+
+extension LogView: NSPopoverDelegate {
+	public func popoverDidClose(_ notification: Notification) {
+		if notification.object as? NSPopover === memberInformationPopover {
+			memberInformationPopover = nil
+		}
 	}
 }

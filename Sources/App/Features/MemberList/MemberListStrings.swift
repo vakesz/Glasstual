@@ -30,6 +30,12 @@ nonisolated enum MemberListStrings { // nonisolated: value
 		String(localized: .TVCMainWindow.memberListCaptionShownBot)
 	}
 
+	/// The row's own catalog: what a pointer reaches by clicking and waiting is
+	/// reached here by name instead, and there was no migrated key for it.
+	static var showProfileAction: String {
+		String(localized: .MemberList.showProfileAction)
+	}
+
 	static var informationUnavailable: String {
 		String(localized: .TVCMainWindow.informationNotAvailable)
 	}

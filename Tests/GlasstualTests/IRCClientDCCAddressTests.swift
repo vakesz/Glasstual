@@ -78,6 +78,75 @@ struct IRCClientDCCAddressTests {
 	func routableAddressesAreDialable(_ address: String) {
 		#expect(ClientWireUtilities.isDialableDCCAddress(address))
 	}
+
+	/** Matching text prefixes let every IPv6 spelling of a refused IPv4 address
+	 through: `::ffff:` maps one, the deprecated compatible form embeds one with
+	 no marker at all, and `64:ff9b::/96` reaches one through NAT64. */
+	@Test(arguments: [
+		"::ffff:127.0.0.1", "::ffff:10.0.0.1", "::ffff:192.168.1.1", "::FFFF:169.254.1.1",
+		"::127.0.0.1", "64:ff9b::7f00:1", "64:ff9b::a00:1",
+	])
+	func ipv6SpellingsOfRefusedIPv4AddressesAreNotDialable(_ address: String) {
+		#expect(ClientWireUtilities.isDialableDCCAddress(address) == false)
+	}
+
+	/// `::1` written out in full is still loopback, and `::` in full is still
+	/// unspecified. Comparing the text against the compressed spelling missed both.
+	@Test(arguments: ["0:0:0:0:0:0:0:1", "0000:0000:0000:0000:0000:0000:0000:0001", "0:0:0:0:0:0:0:0"])
+	func expandedLoopbackAndUnspecifiedAddressesAreNotDialable(_ address: String) {
+		#expect(ClientWireUtilities.isDialableDCCAddress(address) == false)
+	}
+
+	/// The documentation and benchmarking ranges route nowhere, so an offer that
+	/// names one is either a mistake or an attempt to have the client dial itself.
+	@Test(arguments: [
+		"192.0.2.1", "192.0.0.1", "198.18.0.1", "198.19.255.254", "198.51.100.7", "203.0.113.9",
+	])
+	func documentationAndBenchmarkRangesAreNotDialable(_ address: String) {
+		#expect(ClientWireUtilities.isDialableDCCAddress(address) == false)
+	}
+
+	/// The neighbours of those ranges are ordinary routable space and stay dialable.
+	@Test(arguments: ["192.0.3.1", "198.20.0.1", "198.51.101.1", "203.0.114.1", "2606:4700::1111"])
+	func neighboursOfTheReservedRangesStayDialable(_ address: String) {
+		#expect(ClientWireUtilities.isDialableDCCAddress(address))
+	}
+
+	/// A mapped address whose embedded IPv4 half is routable is still routable.
+	@Test
+	func mappedRoutableAddressesAreDialable() {
+		#expect(ClientWireUtilities.isDialableDCCAddress("::ffff:8.8.8.8"))
+	}
+
+	/// `inet_pton` is strict where `inet_aton` is not: an octal, short or
+	/// zone-suffixed spelling is not an address a peer gets to name.
+	@Test(arguments: ["0177.0.0.1", "127.1", "2130706433", "fe80::1%en0", "1.2.3.4.5"])
+	func looselySpelledAddressesAreNotDialable(_ address: String) {
+		#expect(ClientWireUtilities.isDialableDCCAddress(address) == false)
+	}
+
+	/** One address has many spellings, and an expectation compared as text
+	 refused the very peer the offer named: `2001:0db8::1` and `2001:db8::1` are
+	 the same host, and `Network` reports what it resolved rather than what the
+	 offer wrote. The bytes are what a comparison has to be made on. */
+	@Test("Two spellings of one address reduce to the same bytes")
+	func addressSpellingsReduceToTheSameBytes() throws {
+		let padded = try #require(ClientWireUtilities.addressBytes(of: "2001:0db8:0000::0001"))
+		let compact = try #require(ClientWireUtilities.addressBytes(of: "2001:db8::1"))
+
+		#expect(padded == compact)
+		#expect(ClientWireUtilities.addressBytes(of: "203.0.113.9")?.count == 4)
+		#expect(compact.count == 16)
+		// Neither family's bytes can collide with the other's: the counts differ.
+		#expect(ClientWireUtilities.addressBytes(of: "203.0.113.9") != compact)
+	}
+
+	/// A cloak or a resolved name is not an address, so there is nothing to
+	/// canonicalise and the caller is left comparing the text it was given.
+	@Test(arguments: ["user/cloak", "host.example.net", ""])
+	func nonAddressesHaveNoBytes(_ text: String) {
+		#expect(ClientWireUtilities.addressBytes(of: text) == nil)
+	}
 }
 
 @MainActor

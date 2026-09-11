@@ -222,6 +222,66 @@ struct IRCISupportInfoTests {
 		#expect(supportInfo.maximumSilenceEntries == 0)
 	}
 
+	/// `MONITOR=5` says both that the server takes the command and how many
+	/// names it will hold. Only the first half was read, so the client kept
+	/// adding names the server answered with ERR_MONLISTFULL.
+	@Test("MONITOR and WATCH keep the list size they advertise")
+	func presenceListCeilingsAreParsed() {
+		let supportInfo = supportInfoWithConfiguration("MONITOR=5 WATCH=128")
+
+		#expect(supportInfo.maximumMonitorEntries == 5)
+		#expect(supportInfo.maximumWatchEntries == 128)
+
+		supportInfo.processConfigurationData("-MONITOR -WATCH")
+
+		#expect(supportInfo.maximumMonitorEntries == 0)
+		#expect(supportInfo.maximumWatchEntries == 0)
+	}
+
+	@Test("A bare MONITOR token is support without a ceiling")
+	func presenceListCeilingIsZeroWithoutAValue() {
+		let supportInfo = supportInfoWithConfiguration("MONITOR WATCH")
+
+		#expect(supportInfo.maximumMonitorEntries == 0)
+		#expect(supportInfo.maximumWatchEntries == 0)
+	}
+
+	/** `IRCClient.supportInfo` is `lazy`, so the table is built the first time
+	 anything reads it — and that can be long after the client recorded the
+	 capability facts `WATCH` and `MONITOR` stand in for. Construction used to
+	 run the reconnect reset, which withdraws those facts, so the first read of
+	 the table turned `WATCH` back off: `enableCapability(.watchCommand)` reads
+	 the ceiling on its way to asking about the tracked peers and undid itself,
+	 and nothing was ever sent. */
+	@Test("Building the table withdraws no capability the client already recorded")
+	func aFreshTableWithdrawsNothing() {
+		let client = GLTTestClient()
+		client.markAsLoggedIn()
+
+		client.enableCapability(.watchCommand)
+
+		#expect(client.isCapabilityEnabled(.watchCommand))
+		/* The first read of the lazy table, which is what used to withdraw it. */
+		#expect(client.supportInfo.maximumWatchEntries == 0)
+		#expect(client.isCapabilityEnabled(.watchCommand))
+	}
+
+	/// A reconnect really has lost what the old server advertised, so the reset
+	/// that follows one still withdraws the facts those tokens stood in for.
+	@Test("Resetting the table after a reconnect withdraws them")
+	func aResetWithdrawsTheFacts() {
+		let client = GLTTestClient()
+		client.markAsLoggedIn()
+		client.supportInfo.processConfigurationData("WATCH=128")
+
+		#expect(client.isCapabilityEnabled(.watchCommand))
+
+		client.supportInfo.reset()
+
+		#expect(client.isCapabilityEnabled(.watchCommand) == false)
+		#expect(client.supportInfo.maximumWatchEntries == 0)
+	}
+
 	private func supportInfoWithConfiguration(_ configuration: String) -> SupportInfo {
 		let client = GLTTestClient()
 		let supportInfo = SupportInfo(client: client)

@@ -44,10 +44,52 @@ public final class ModeParser: NSObject {
 		fatalError("ModeParser is a static namespace")
 	}
 
+	/** The channel modes RFC 1459 2.3 defines, for a server that has not said
+	 which it has.
+
+	 `CHANMODES` arrives in 005, which is after the client has already joined
+	 nothing and before it has joined anything — but a server may never send one
+	 at all, and a `MODE` or `RPL_CHANNELMODEIS` can arrive before it does. With
+	 no table every letter parsed as a plain flag, so `+b nick!*@*` recorded a
+	 ban with no mask and then read the mask as another run of modes, and
+	 `+kl secret 50` lost both the key and the limit. `e` and `I` are listed
+	 because a server that supports them and advertises nothing at all still
+	 parameterises them; one that advertises `CHANMODES` overrides every letter
+	 it names. */
+	static let rfc1459ChannelModeKinds: [Character: ChannelModeKind] = [
+		"b": .list, "e": .list, "I": .list,
+		"k": .setting,
+		"l": .settingWhenSet,
+		"i": .flag, "m": .flag, "n": .flag, "p": .flag, "s": .flag, "t": .flag,
+	]
+
+	/** `channelModeKinds` with the RFC 1459 table standing in where the server
+	 has advertised no `CHANMODES` of its own.
+
+	 The one place that decision is made. A table holding nothing but the
+	 `PREFIX` modes is one no `CHANMODES` has been read into yet; once one has,
+	 the server's answer stands even where it is narrower than the RFC's.
+	 Anything that has to know whether a mode takes a parameter — the parser
+	 here, `IRCISupportInfo.modeHasParameter` — asks through this, because a
+	 second copy of the rule is a second answer. */
+	public static func effectiveChannelModeKinds(
+		_ channelModeKinds: [Character: ChannelModeKind]
+	) -> [Character: ChannelModeKind] {
+		let hasAdvertisedChannelModes = channelModeKinds.values.contains { $0 != .userPrefix }
+
+		guard hasAdvertisedChannelModes == false else {
+			return channelModeKinds
+		}
+
+		return rfc1459ChannelModeKinds.merging(channelModeKinds) { _, advertised in advertised }
+	}
+
 	public static func parse(
 		_ modeString: String,
 		channelModeKinds: [Character: ChannelModeKind]
 	) -> [ModeInfo] {
+		let modeKinds = effectiveChannelModeKinds(channelModeKinds)
+
 		/* RFC 1459/2812 separate tokens on SPACE only. Splitting on the wider
 		 Unicode set would cut a mode parameter that legitimately contains one. */
 		let tokens = LineParser.wireTokens(in: modeString)
@@ -72,7 +114,7 @@ public final class ModeParser: NSObject {
 				case "-":
 					modeIsSet = false
 				default:
-					let policy = channelModeKinds[character]?.parameterPolicy ?? .never
+					let policy = modeKinds[character]?.parameterPolicy ?? .never
 					var modeParameter: String?
 
 					if policy.requiresParameter(whenModeIsSet: modeIsSet), tokenIndex < tokens.count {

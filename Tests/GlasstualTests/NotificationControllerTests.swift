@@ -6,6 +6,7 @@
 import Foundation
 @testable import Glasstual
 import Testing
+import UserNotifications
 
 @MainActor
 @Suite("Notification controller", .serialized)
@@ -130,6 +131,30 @@ struct NotificationControllerTests {
 		#expect(controller.disabledWhileAway(forEvent: eventType, in: nil))
 		#expect(controller.bounceDockIcon(forEvent: eventType, in: nil) == false)
 		#expect(controller.bounceDockIconRepeatedly(forEvent: eventType, in: nil))
+	}
+
+	/** What the delegate answers for a notification that arrives while Glasstual
+	 is frontmost. The options are the whole of what the system then does with
+	 it: without `.sound` the banner appears and the sound the notification
+	 carries is dropped, which was every sound raised while the application was
+	 in front. */
+	@Test("A notification presented in the foreground keeps its sound")
+	func foregroundPresentationKeepsTheSound() {
+		let presented = NotificationController.presentationOptions(notificationsAreDisabled: false)
+
+		#expect(presented.contains(.sound))
+		#expect(presented.contains(.banner))
+		#expect(presented.contains(.list))
+		#expect(NotificationController.presentationOptions(notificationsAreDisabled: true).isEmpty)
+	}
+
+	/// The system alert is the one sound that is not a file in a Sounds folder;
+	/// a notification names it by asking for the default sound.
+	@Test("The alert sound a notification carries is resolved by name")
+	func notificationSoundResolvesByName() {
+		#expect(NotificationController.notificationSound(named: NotificationAlertSound.noSoundPreferenceValue) == nil)
+		#expect(NotificationController.notificationSound(named: SoundPlayer.beepSoundName) == .default)
+		#expect(NotificationController.notificationSound(named: "Submarine") != nil)
 	}
 
 	@Test("Suppressing notifications is a plain toggle")

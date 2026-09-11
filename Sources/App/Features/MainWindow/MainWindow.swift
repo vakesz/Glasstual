@@ -62,8 +62,6 @@ private enum ServerListNavigationSelection {
 }
 
 enum MainWindowConstants {
-	static let restorableSelectionKey = "TVCMainWindowSelectedItem"
-	static let legacyRestorableSelectionKey = "TVCMainWindowSelectedItems"
 	static let legacyFrameKey = "NSWindow Frame -> Internal (v3) -> Main Window"
 	static let systemFrameKeyPrefix = "NSWindow Frame "
 	static let serverListMinimumWidth: CGFloat = 180
@@ -80,6 +78,35 @@ enum MainWindowConstants {
 	)
 	static let minimumRestoredVisibleSize = NSSize(width: 80, height: 40)
 	static let sidebarFooterHeight: CGFloat = 32
+
+	/// The footer icons' hit target: the smallest square that still reads as a
+	/// control at the sidebar's foot.
+	static let footerIconSize: CGFloat = 22
+	/// The draggable width of the edge between conversation and member list.
+	static let memberListHandleWidth: CGFloat = 7
+	/// One press of an arrow key on the focused resize handle.
+	static let memberListKeyboardResizeStep: CGFloat = 16
+	/// The stroke the input capsule draws while it holds the keyboard.
+	static let focusRingWidth: CGFloat = 2
+	/// The same stroke where the system asks for increased contrast.
+	static let focusRingWidthIncreasedContrast: CGFloat = 3
+}
+
+/** Whether a shortcut that edits the message field belongs to this key press.
+
+ `NSApplication` offers the window every key event before the responder chain
+ sees it, so a shortcut registered on the window fires wherever the keyboard
+ is: typing a filter in the toolbar's search field and pressing Tab completed a
+ nickname into the chat input and moved the keyboard there with it. These
+ shortcuts only apply while the input bar holds the keyboard; anywhere else the
+ window declines the event and the responder chain gets it. */
+enum MainWindowInputShortcutPolicy {
+	/// `inputBar` is the field's container, so the field, its scroll view's
+	/// clip view and any field editor inside it all count as the input bar.
+	static func shouldHandle(firstResponder: NSResponder?, inputBar: NSView?) -> Bool {
+		guard let inputBar, let responderView = firstResponder as? NSView else { return false }
+		return responderView === inputBar || responderView.isDescendant(of: inputBar)
+	}
 }
 
 enum MainWindowMemberListVisibilityPolicy {
@@ -136,7 +163,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	var cachedSwipeOriginPoint: NSPoint?
 	public internal(set) var textSizeMultiplier = 1.0
 	private var hasConfigured = false
-	private var hasInstalledFieldEditorMenu = false
 	private let notifications = NotificationSubscriptions()
 
 	public var ignoreServerListSelectionChanges = false
@@ -162,6 +188,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 
 	private func installUIObjects() {
 		formattingMenu = TextViewIRCFormattingMenu()
+		formattingMenu.attach(to: self)
 		inputContentView = MainWindowTextViewContentView(frame: .zero)
 		loadingScreen = MainWindowLoadingScreen()
 		memberList = MemberList()
@@ -188,9 +215,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		let controller: ApplicationController = AppController.shared
 		controller.applicationWakeStepOne()
 
-		/* Before `delegate = self`: building the input field puts controls in
-		 the window, and a control joining a window asks its delegate for a field
-		 editor, which is answered with the input field itself. */
 		inputContentView.configure()
 
 		delegate = self
@@ -201,6 +225,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		installWindowChrome()
 		formattingMenu.configure()
 		installFormattingMenuDecorations()
+		installInputFieldMenu()
 		updateAppearance()
 		_ = reloadLoadingScreen()
 		loadWindowState()
@@ -236,13 +261,17 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 
 	private func installWindowChrome() {
 		/* `.fullSizeContentView` is what lets the sidebar material run the full
-		 height of the window, behind the traffic lights. The titlebar stays
-		 opaque on purpose: the unified toolbar draws the glass, and a
-		 transparent titlebar instead leaves the toolbar's items floating over
-		 the transcript with the topic header sliding under them. */
+		 height of the window, behind the traffic lights, and the transparent
+		 titlebar is what lets the transcript and the member list run up under
+		 the toolbar the way Mail's and Notes' content does. What keeps the
+		 toolbar legible over them is the scroll edge effect the columns declare
+		 in SwiftUI, not an opaque bar: an opaque titlebar draws a hard seam
+		 across the window and forces every column to be inset below it by hand
+		 instead. `.none` for the separator for the same reason -- the edge
+		 effect is the separation. */
 		styleMask.insert(.fullSizeContentView)
-		titlebarAppearsTransparent = false
-		titlebarSeparatorStyle = .automatic
+		titlebarAppearsTransparent = true
+		titlebarSeparatorStyle = .none
 		toolbarStyle = .unified
 		titleVisibility = .visible
 		installSwiftUIContent()
@@ -357,24 +386,14 @@ extension MainWindow {
 		completionHandler(AppController.shared.mainWindow, nil)
 	}
 
-	override public func encodeRestorableState(with coder: NSCoder) {
-		super.encodeRestorableState(with: coder)
-		coder.encode(selectedItem?.uniqueIdentifier, forKey: MainWindowConstants.restorableSelectionKey)
-	}
-
-	override public func restoreState(with coder: NSCoder) {
-		super.restoreState(with: coder)
-		guard let world else { return }
-		let identifier = coder.decodeObject(
-			of: NSString.self,
-			forKey: MainWindowConstants.restorableSelectionKey
-		) as? String ?? (coder.decodeObject(
-			of: [NSArray.self, NSString.self],
-			forKey: MainWindowConstants.legacyRestorableSelectionKey
-		) as? [String])?.last
-		guard let identifier, let item = world.findItem(withId: identifier) else { return }
-		select(item)
-	}
+	/* The selected item is not encoded into the window's restorable state.
+	 `MainWindowStateStore` already persists it -- written at termination, read
+	 by `restoreSelectionDuringSetup()` once the world exists, and migrating the
+	 legacy array form on the way. The coder pair was a second, weaker copy of
+	 that: AppKit restores window state before the application finishes waking,
+	 so `world` was usually nil and `restoreState(with:)` returned having done
+	 nothing. `isRestorable` and the restoration class stay: the window frame is
+	 still AppKit's to restore. */
 }
 
 // MARK: - Window delegate
@@ -442,25 +461,26 @@ public extension MainWindow {
 	) -> NSApplication.PresentationOptions {
 		proposedOptions
 	}
-
-	func windowWillReturnFieldEditor(_: NSWindow, to _: Any?) -> Any? {
-		if hasInstalledFieldEditorMenu == false {
-			hasInstalledFieldEditorMenu = true
-			let editorMenu = inputTextField.menu ?? NSMenu()
-			let formatterMenu = formattingMenu.formatterMenu!
-			if editorMenu.indexOfItem(withTitle: formatterMenu.title) < 0 {
-				editorMenu.addItem(.separator())
-				editorMenu.addItem(formatterMenu)
-			}
-			inputTextField.menu = editorMenu
-		}
-		return inputTextField
-	}
 }
 
 // MARK: - Formatting menu
 
 private extension MainWindow {
+	/** The formatter submenu joins the input field's own context menu here,
+	 once. It used to be added from `windowWillReturnFieldEditor`, which also
+	 handed the input field to every control in the window as its field editor:
+	 the toolbar search field then edited through the chat input, an Escape
+	 there was inserted as a literal character, and the sidebar filtered on it. */
+	func installInputFieldMenu() {
+		let editorMenu = inputTextField.menu ?? NSMenu()
+		let formatterMenu = formattingMenu.formatterMenu!
+		if editorMenu.indexOfItem(withTitle: formatterMenu.title) < 0 {
+			editorMenu.addItem(.separator())
+			editorMenu.addItem(formatterMenu)
+		}
+		inputTextField.menu = editorMenu
+	}
+
 	func installFormattingMenuDecorations() {
 		for menu in [formattingMenu.foregroundColorMenu!, formattingMenu.backgroundColorMenu!] {
 			for item in menu.items where item.isSeparatorItem == false && item.action != nil {
@@ -533,6 +553,42 @@ extension MainWindow {
 		}
 	}
 
+	/// True while the message field, or anything inside its container, holds
+	/// the keyboard.
+	var inputBarHoldsKeyboardFocus: Bool {
+		MainWindowInputShortcutPolicy.shouldHandle(
+			firstResponder: firstResponder,
+			inputBar: inputContentView
+		)
+	}
+
+	/// A window-level shortcut that only applies to the message field. It is
+	/// declined -- and so left to whatever view has the keyboard -- otherwise.
+	private func registerForInputBar(
+		key: KeyCode,
+		modifiers: NSEvent.ModifierFlags = [],
+		perform action: @escaping (MainWindow, NSEvent) -> Void
+	) {
+		keyEventHandler.registerConditional(key: key, modifiers: modifiers) { [weak self] event in
+			guard let self, inputBarHoldsKeyboardFocus else { return false }
+			action(self, event)
+			return true
+		}
+	}
+
+	/// The character form of `registerForInputBar(key:modifiers:perform:)`.
+	private func registerForInputBar(
+		character: Character,
+		modifiers: NSEvent.ModifierFlags,
+		perform action: @escaping (MainWindow, NSEvent) -> Void
+	) {
+		keyEventHandler.registerConditional(character: character, modifiers: modifiers) { [weak self] event in
+			guard let self, inputBarHoldsKeyboardFocus else { return false }
+			action(self, event)
+			return true
+		}
+	}
+
 	private func registerInput(
 		key: KeyCode,
 		modifiers: NSEvent.ModifierFlags = [],
@@ -566,18 +622,33 @@ extension MainWindow {
 	}
 
 	private func registerKeyHandlers() {
-		register(key: .escape) { $0.exitFullscreenMode($1) }
-		register(key: .tab) { $0.tab($1) }
-		register(key: .tab, modifiers: .shift) { $0.shiftTab($1) }
+		/* Escape leaves full screen from anywhere; only the fall-through into
+		 the message field is the input bar's. */
+		keyEventHandler.registerConditional(key: .escape) { [weak self] event in
+			guard let self else { return false }
+			if ceIsInFullscreenMode {
+				toggleFullScreen(nil)
+				return true
+			}
+			guard inputBarHoldsKeyboardFocus else { return false }
+			inputTextField.keyDown(with: event)
+			return true
+		}
+		registerForInputBar(key: .tab) { $0.tab($1) }
+		registerForInputBar(key: .tab, modifiers: .shift) { $0.shiftTab($1) }
 		register(key: .tab, modifiers: .option) { $0.selectPreviousSelection($1) }
-		register(character: "b", modifiers: .command) { $0.textFormattingBold($1) }
-		register(character: "u", modifiers: [.control, .shift]) { $0.textFormattingUnderline($1) }
-		register(character: "i", modifiers: [.control, .shift]) { $0.textFormattingItalic($1) }
-		register(character: "c", modifiers: [.control, .shift]) { $0.textFormattingForegroundColor($1) }
-		register(character: "h", modifiers: [.control, .shift]) { $0.textFormattingBackgroundColor($1) }
+		/* Formatting edits the message being written, so it belongs to the input
+		 bar the way Tab and ⌃P/⌃N do. Registered unconditionally, ⌘B swallowed
+		 the key wherever the reader was -- in the toolbar's search field, in a
+		 sheet's field, in the transcript -- and gave nothing back. */
+		registerForInputBar(character: "b", modifiers: .command) { $0.textFormattingBold($1) }
+		registerForInputBar(character: "u", modifiers: [.control, .shift]) { $0.textFormattingUnderline($1) }
+		registerForInputBar(character: "i", modifiers: [.control, .shift]) { $0.textFormattingItalic($1) }
+		registerForInputBar(character: "c", modifiers: [.control, .shift]) { $0.textFormattingForegroundColor($1) }
+		registerForInputBar(character: "h", modifiers: [.control, .shift]) { $0.textFormattingBackgroundColor($1) }
 		register(character: ".", modifiers: .command) { $0.speakPendingNotifications($1) }
-		register(character: "p", modifiers: .control) { $0.inputHistoryUp($1) }
-		register(character: "n", modifiers: .control) { $0.inputHistoryDown($1) }
+		registerForInputBar(character: "p", modifiers: .control) { $0.inputHistoryUp($1) }
+		registerForInputBar(character: "n", modifiers: .control) { $0.inputHistoryDown($1) }
 
 		registerInput(key: .enter, modifiers: .control) { $0.sendControlEnterMessageMaybe($1) }
 		registerInput(key: .returnKey, modifiers: .command) { $0.sendMessageAsAction($1) }

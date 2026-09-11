@@ -3,7 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import Foundation
+import SwiftUI
 
 /// One server in the sidebar, with the conversations drawn beneath it.
 ///
@@ -18,10 +18,12 @@ struct ServerRow: Identifiable, Equatable {
 	/// What is drawn beneath the row, not what the user disclosed: a filter
 	/// shows matching conversations under a collapsed server too.
 	let isExpanded: Bool
-	/// Whether the chevron is offered. While a filter decides what is drawn
-	/// beneath a server, disclosure is not what a click there would change, so
-	/// the control is withdrawn rather than left pointing at the wrong state.
+	/// Whether the row is an outline group at all. A server with nothing under
+	/// it is a plain row: a chevron that opened onto an empty list would be
+	/// offering something the sidebar does not have.
 	let showsDisclosure: Bool
+	/// Every conversation under the server, disclosed or not — the outline hides
+	/// what is closed. A filter is the one thing that takes rows out of this.
 	let channels: [ChannelRow]
 }
 
@@ -42,6 +44,11 @@ struct ChannelRow: Identifiable, Equatable {
 	let unreadCount: Int
 	let showsUnreadCount: Bool
 	let highlightCount: Int
+	/// The colour the user chose for a badge that asks for attention, resolved
+	/// where the rows are built. A row is compared by what it draws, so a
+	/// colour it went and read for itself would change nothing here and the
+	/// list would keep the badges it already had.
+	let unreadBadgeTint: Color?
 
 	/// Asks for attention: a channel where the nickname was said, or a
 	/// conversation with one person that has anything unread — every line of a

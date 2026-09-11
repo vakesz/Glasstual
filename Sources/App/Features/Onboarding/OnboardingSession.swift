@@ -95,13 +95,34 @@ public final class OnboardingSession {
 		_ = cancel()
 	}
 
-	/// Cancel retains previously accepted steps, not an unfinished network draft.
+	/** Cancel retains previously accepted steps, not an unfinished network draft.
+
+	 Closing onboarding is an answer, so it is recorded even when no step was
+	 ever accepted. Returning early on an unaccepted identity left the window
+	 re-presenting itself at every launch, with no way to stop it. */
 	func cancel() -> Bool {
 		guard finished == false else { return true }
-		guard model.acceptedIdentity != nil else { return true }
+
+		guard model.acceptedIdentity != nil else {
+			return dismissWithoutSetup()
+		}
+
 		model.settings.clientConfig = nil
 		model.settings.channelsToJoin = []
 		return finish()
+	}
+
+	/// "Set Up Later": nothing is applied, and onboarding does not come back.
+	func setUpLater() -> Bool {
+		guard finished == false else { return true }
+
+		return dismissWithoutSetup()
+	}
+
+	private func dismissWithoutSetup() -> Bool {
+		markCompleted()
+		finished = true
+		return true
 	}
 
 	private func finish() -> Bool {

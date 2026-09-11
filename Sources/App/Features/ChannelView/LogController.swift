@@ -41,7 +41,6 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 import os
-import Synchronization
 
 public typealias LogControllerPrintOperationCompletion = (LogControllerPrintOperationContext) -> Void
 
@@ -49,18 +48,6 @@ private nonisolated let logControllerLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogController"
 )
-
-/** The controller state that is legitimately read from outside the main actor:
- the client and the channel the view is attached to, and the identifier that
- names it. All three are `Sendable` — two main-actor references and a string —
- and every write happens on the main actor. Everything else the controller owns
- is main-actor state. */
-private struct LogControllerSharedState: Sendable {
-	weak var client: IRCClient?
-	weak var channel: IRCChannel?
-	/// The item's identifier, which never changes once the controller is attached.
-	var uniqueIdentifier = ""
-}
 
 @MainActor
 public final class LogController: NSObject, ServerHistoryPresentation {
@@ -76,7 +63,6 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		backingView?.displayedBounds.newest
 	}
 
-	private nonisolated let sharedState = Mutex(LogControllerSharedState()) // nonisolated: let
 	private(set) var terminating = false
 	/* Loading history is the other half of this controller, and it lives in
 	 `LogControllerHistoryLoading.swift`: the initial replay, the scrollback
@@ -154,20 +140,22 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 	var deferredPrepends: [@MainActor () -> Void] = []
 	private var applicationTask: Task<Void, Never>?
 
-	public nonisolated var associatedClient: IRCClient! { // nonisolated: pure
-		sharedState.withLock { $0.client }
-	}
+	/** The item this view draws, fixed when the controller is made.
 
-	public nonisolated var associatedChannel: IRCChannel? { // nonisolated: pure
-		sharedState.withLock { $0.channel }
-	}
+	 Both references are weak, and both are optional to read. The world owns the
+	 client and the channel; the window's registry owns the controllers and
+	 drops them by identifier, so a controller can still be reached for as long
+	 as the removal is in flight -- which is why every read here is a `guard
+	 let`. The client used to be declared implicitly unwrapped, which promised
+	 the opposite of what those guards say and left an unwrap in reach that
+	 would have trapped exactly when the guards were right. */
+	public private(set) weak var associatedClient: IRCClient?
+	public private(set) weak var associatedChannel: IRCChannel?
+	/// The item's identifier, which never changes once the controller is attached.
+	public private(set) var uniqueIdentifier = ""
 
-	nonisolated var associatedItem: IRCTreeItem? { // nonisolated: pure
-		sharedState.withLock { $0.channel ?? $0.client }
-	}
-
-	public nonisolated var uniqueIdentifier: String { // nonisolated: pure
-		sharedState.withLock { $0.uniqueIdentifier }
+	var associatedItem: IRCTreeItem? {
+		associatedChannel ?? associatedClient
 	}
 
 	public var numberOfLines: UInt {
@@ -212,10 +200,8 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		self.inlineImageLoader = inlineImageLoader
 		self.historicLog = historicLog
 		historyPageFetcher = { await historicLog.fetchOutcome($0) }
-		sharedState.withLock {
-			$0.client = client
-			$0.uniqueIdentifier = client.uniqueIdentifier
-		}
+		associatedClient = client
+		uniqueIdentifier = client.uniqueIdentifier
 		attachedWindow = window
 		super.init()
 		setUp()
@@ -226,11 +212,9 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		historicLog = .sharedInstance
 		let storage = historicLog
 		historyPageFetcher = { await storage.fetchOutcome($0) }
-		sharedState.withLock {
-			$0.client = channel.associatedClient
-			$0.channel = channel
-			$0.uniqueIdentifier = channel.uniqueIdentifier
-		}
+		associatedClient = channel.associatedClient
+		associatedChannel = channel
+		uniqueIdentifier = channel.uniqueIdentifier
 		attachedWindow = window
 		super.init()
 		setUp()
@@ -481,6 +465,8 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		return LogLineRenderContext(
 			inlineMediaEnabled: inlineMediaEnabledForView,
 			isChannel: channel?.isChannel == true,
+			showsDateChanges: Preferences.Messages.showDateChanges.value,
+			textPolicy: .current(),
 			members: memberRenderCache.members(in: channel),
 			sessionReactions: reactionsByMessageIdentifier
 		)
@@ -777,16 +763,11 @@ public extension LogController {
 		let logLine = inputLogLine
 		lastLineStorage = logLine
 		let context = makeRenderContext()
-		let line = LogLineSnapshot(logLine, in: context)
-		enqueueRenderJob { [weak self] in
-			guard let viewController = self else {
-				return nil
-			}
-			let request = LogLineRenderRequest(
-				line: Self.applyingMessageRenderers(to: [line], for: viewController)[0],
-				context: context
-			)
-			return Self.renderJob(request)
+		/* The plugin renderers run here, on the main actor they are declared for;
+		 the render job that follows is a function of the snapshot alone. */
+		let line = Self.applyingMessageRenderers(to: [LogLineSnapshot(logLine, in: context)], for: self)[0]
+		enqueueRenderJob {
+			Self.renderJob(LogLineRenderRequest(line: line, context: context))
 		} apply: { [weak self] result in
 			self?.applyPrintedLine(logLine, result: result, completionBlock: postPrintBlock)
 		}

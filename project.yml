@@ -33,7 +33,7 @@ settings:
     # ---- Product identity -------------------------------------------------
     GLASSTUAL_BUNDLE_IDENTIFIER: com.vakesz.glasstual
     GLASSTUAL_GROUP_CONTAINER_IDENTIFIER: group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUNDLE_IDENTIFIER)
-    MARKETING_VERSION: "1.1.2"
+    MARKETING_VERSION: "1.1.3"
     # CFBundleVersion is what LaunchServices and updaters compare, so it has to
     # move every release. The release workflow overrides MARKETING_VERSION on
     # the xcodebuild line and refuses to run for a tag that already exists, so
@@ -695,8 +695,11 @@ targets:
     sources:
       - path: Tests/GlasstualTests
       - path: Sources/Plugins/Chat Filter/Classes/ChatFilter.swift
+      - path: Sources/Plugins/Chat Filter/Classes/ChatFilterEngine.swift
       - path: Sources/Plugins/Chat Filter/Classes/ChatFilterStore.swift
       - path: Sources/Plugins/Chat Filter/Resources/Language Files/TPI_ChatFilterExtension.xcstrings
+        buildPhase: resources
+      - path: Sources/Plugins/Chat Filter/Resources/Language Files/TPI_ChatFilterLogic.xcstrings
         buildPhase: resources
       # Specification corpora the IRCSpec suites read back at runtime. Only
       # the converted JSON ships; the YAML originals and the conversion

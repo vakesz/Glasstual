@@ -39,13 +39,12 @@ import Foundation
 
 /// A hyperlink located inside a string by `LinkParser`.
 ///
-/// This is the object exposed to plugins through `PluginPostedMessage`
-/// and attached to rendered text under ``RendererFormatting/url``.
-///
-/// `Sendable` because every stored property is an immutable value: a rendered
-/// line carries its links from the render pipeline back to the main actor, and
-/// a checked conformance has to be declared beside the type it applies to.
-public final nonisolated class LinkParserResult: NSObject, Sendable { // nonisolated: immutable
+/// It is attached to rendered text under ``RendererFormatting/url`` and
+/// travels on a `TranscriptBody` from the render pipeline back to the main
+/// actor. A value rather than an object, so the rendered line that carries it
+/// really is the value its own marker claims; what plugins receive is a
+/// `PluginHyperlink` built from this.
+public nonisolated struct LinkParserResult: Sendable, Hashable { // nonisolated: value
 	/// Random identifier that is unique to this result.
 	public let uniqueIdentifier: String
 
@@ -70,11 +69,77 @@ public final nonisolated class LinkParserResult: NSObject, Sendable { // nonisol
 	}
 }
 
+/** The expressions ``LinkParser`` scans with.
+
+ `NSDataDetector` and `NSRegularExpression` are references, so a value cannot
+ hold them and go on calling itself one. They are built once, never mutated,
+ and Foundation matches with them from any thread, which is what a holder of
+ `let`s says. */
+private final nonisolated class LinkParserExpressions: Sendable { // nonisolated: immutable
+	static let shared = LinkParserExpressions()
+
+	let detector: NSDataDetector
+	/// Matches that `NSDataDetector` does not produce on its own, paired with
+	/// whether the match carries a scheme.
+	let supplementary: [(expression: NSRegularExpression, hasScheme: Bool)]
+
+	private init() {
+		do {
+			detector = try NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+		} catch {
+			fatalError("NSDataDetector could not be created: \(error)")
+		}
+		let patterns: [(String, Bool)] = [
+			/* spotify:track:<id> */
+			("(?<!\\S)spotify:(?:track|album|artist|search|playlist|user|radio):[^\\s<>]+", true),
+			/* magnet:?xt=urn:btih:<hash> */
+			("(?<!\\S)magnet:\\?xt=urn:(?:bitprint|btih|ed2k|md5|sha1|tree:tiger):[A-Fa-f0-9]{20,80}\\S*", true),
+			/* /r/subreddit */
+			("(?<!\\S)/r/[A-Za-z0-9][A-Za-z0-9_]{2,20}(?![^\\s.,;:!?)\\]}'\"])", false),
+			/* host.local — mDNS names are not in the data detector's TLD list. */
+			("(?<![^\\s(\\[{<\"'“‘])[\\w-]+(?:\\.[\\w-]+)*\\.local(?::\\d+)?(?:/\\S*)?", false),
+		]
+		supplementary = patterns.compactMap { pattern, hasScheme in
+			guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+				return nil
+			}
+			return (expression, hasScheme)
+		}
+	}
+}
+
+/** Which schemes beyond the built-in ones the reader allows.
+
+ The declarations keep the key names the AutoHyperlinks framework that preceded
+ this parser used, so a user customization carries over. */
+public nonisolated struct LinkSchemePolicy: Sendable { // nonisolated: value
+	public var permitsAnyScheme = false
+	public var permittedSchemes: Set<String> = []
+
+	public init(permitsAnyScheme: Bool = false, permittedSchemes: Set<String> = []) {
+		self.permitsAnyScheme = permitsAnyScheme
+		self.permittedSchemes = permittedSchemes
+	}
+
+	/// The allowlist the reader's preferences describe right now.
+	@MainActor public static func current() -> LinkSchemePolicy {
+		LinkSchemePolicy(
+			permitsAnyScheme: Preferences.LinkSchemes.permitAny.value,
+			permittedSchemes: Set(Preferences.LinkSchemes.permittedDefault.value)
+				.union(Preferences.LinkSchemes.permitted.value)
+		)
+	}
+}
+
 public nonisolated enum LinkParser { // nonisolated: value
 	/// Locates hyperlinks in `string`.
 	///
 	/// Results are sorted by location and never overlap.
-	public static func locateLinks(in string: String) -> [LinkParserResult] {
+	///
+	/// - Parameters:
+	///   - string: The text to scan.
+	///   - policy: The reader's scheme customization, taken on the main actor.
+	public static func locateLinks(in string: String, allowing policy: LinkSchemePolicy) -> [LinkParserResult] {
 		let scanString = string as NSString
 
 		let fullRange = NSRange(location: 0, length: scanString.length)
@@ -85,7 +150,7 @@ public nonisolated enum LinkParser { // nonisolated: value
 
 		var candidates: [(range: NSRange, hasScheme: Bool)] = []
 
-		for match in linkDetector.matches(in: string, range: fullRange) {
+		for match in LinkParserExpressions.shared.detector.matches(in: string, range: fullRange) {
 			guard let url = match.url, let scheme = url.scheme?.lowercased() else {
 				continue
 			}
@@ -100,14 +165,14 @@ public nonisolated enum LinkParser { // nonisolated: value
 
 			let explicitScheme = prefix.hasPrefix(scheme + ":")
 
-			if explicitScheme, isPermittedScheme(scheme) == false {
+			if explicitScheme, isPermittedScheme(scheme, allowing: policy) == false {
 				continue
 			}
 
 			candidates.append((match.range, explicitScheme))
 		}
 
-		for (expression, hasScheme) in supplementaryExpressions {
+		for (expression, hasScheme) in LinkParserExpressions.shared.supplementary {
 			for match in expression.matches(in: string, range: fullRange) {
 				candidates.append((match.range, hasScheme))
 			}
@@ -152,8 +217,17 @@ public nonisolated enum LinkParser { // nonisolated: value
 		return results
 	}
 
+	/** The same scan for a caller already on the main actor, which can read the
+	 reader's scheme customization itself — a topic being drawn, a link the input
+	 field is completing. */
+	@MainActor
+	public static func locateLinks(in string: String) -> [LinkParserResult] {
+		locateLinks(in: string, allowing: .current())
+	}
+
 	/// Returns `string` with a scheme prepended when it is a URL in its entirety,
 	/// or `nil` when the string is not a URL.
+	@MainActor
 	public static func urlWithProperScheme(_ string: String) -> String? {
 		let fullRange = NSRange(location: 0, length: (string as NSString).length)
 
@@ -201,8 +275,10 @@ public nonisolated enum LinkParser { // nonisolated: value
 
 	/// Whether a scheme may be linked, and may be handed to `NSWorkspace`.
 	///
-	/// - Parameter scheme: A URL scheme, without the trailing colon.
-	static func isPermittedScheme(_ scheme: String) -> Bool {
+	/// - Parameters:
+	///   - scheme: A URL scheme, without the trailing colon.
+	///   - policy: The reader's scheme customization, taken on the main actor.
+	static func isPermittedScheme(_ scheme: String, allowing policy: LinkSchemePolicy) -> Bool {
 		let scheme = scheme.lowercased()
 
 		if deniedSchemes.contains(scheme) {
@@ -213,46 +289,15 @@ public nonisolated enum LinkParser { // nonisolated: value
 			return true
 		}
 
-		/* The declarations keep the key names the AutoHyperlinks framework that
-		 preceded this parser used, so a user customization carries over. */
-		if Preferences.LinkSchemes.permitAny.detachedValue {
-			return true
-		}
-
-		return Preferences.LinkSchemes.permittedDefault.detachedValue.contains(scheme)
-			|| Preferences.LinkSchemes.permitted.detachedValue.contains(scheme)
+		return policy.permitsAnyScheme || policy.permittedSchemes.contains(scheme)
 	}
 
-	private static let linkDetector: NSDataDetector = {
-		do {
-			return try NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-		} catch {
-			fatalError("NSDataDetector could not be created: \(error)")
-		}
-	}()
-
-	/// Matches that `NSDataDetector` does not produce on its own,
-	/// paired with whether the match carries a scheme.
-	private static let supplementaryExpressions: [(NSRegularExpression, Bool)] = {
-		let patterns: [(String, Bool)] = [
-			/* spotify:track:<id> */
-			("(?<!\\S)spotify:(?:track|album|artist|search|playlist|user|radio):[^\\s<>]+", true),
-			/* magnet:?xt=urn:btih:<hash> */
-			("(?<!\\S)magnet:\\?xt=urn:(?:bitprint|btih|ed2k|md5|sha1|tree:tiger):[A-Fa-f0-9]{20,80}\\S*", true),
-			/* /r/subreddit */
-			("(?<!\\S)/r/[A-Za-z0-9][A-Za-z0-9_]{2,20}(?![^\\s.,;:!?)\\]}'\"])", false),
-			/* host.local — mDNS names are not in the data detector's TLD list. */
-			("(?<![^\\s(\\[{<\"'“‘])[\\w-]+(?:\\.[\\w-]+)*\\.local(?::\\d+)?(?:/\\S*)?", false),
-		]
-
-		return patterns.compactMap { pattern, hasScheme in
-			guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-				return nil
-			}
-
-			return (expression, hasScheme)
-		}
-	}()
+	/** The same answer for a caller that is already on the main actor and so can
+	 read the live preferences itself — opening a clicked link, drawing a topic. */
+	@MainActor
+	static func isPermittedScheme(_ scheme: String) -> Bool {
+		isPermittedScheme(scheme, allowing: .current())
+	}
 
 	// MARK: - Trimming
 

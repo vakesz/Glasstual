@@ -68,7 +68,7 @@ extension IRCClient {
 			handleModeListNumeric(numeric, message: message, shouldPrint: shouldPrint)
 		case IRCNumeric.endofbanlist.rawValue, IRCNumeric.endofinvitelist.rawValue, IRCNumeric.endofexceptlist.rawValue,
 		     IRCNumeric.endofquietlist.rawValue:
-			handleEndOfModeListNumeric(message, shouldPrint: shouldPrint)
+			handleEndOfModeListNumeric(numeric, message: message, shouldPrint: shouldPrint)
 		default: return false
 		}
 		return true
@@ -109,11 +109,13 @@ extension IRCClient {
 		      postReceivedMessage(message, withText: nil, destinedFor: channel)
 		else { return }
 		let setter = (message.params[2] as NSString).nicknameFromHostmask
-		let date = Date(timeIntervalSince1970: TimeInterval(message.params[3]) ?? 0)
+		/* An unreadable timestamp leaves the date out rather than claiming the
+		 topic was set in 1970. */
+		let date = ircWireTimestampDate(from: message.params[3])
 		print(
 			IRCInboundStrings.ChannelEvent.topicSet(
 				by: setter,
-				date: formatDateLongStyle(date, true) ?? ""
+				date: date.flatMap { formatDateLongStyle($0, true) } ?? ""
 			),
 			by: nil,
 			in: channel,
@@ -143,8 +145,9 @@ extension IRCClient {
 		}
 		let online = LineParser.wireTokens(in: message.sequence)
 		let tracked = supportsAdvancedTracking ? [:] : trackedUsers.trackedUsers
+		let foldedOnline = Set(online.map(casefoldNickname))
 		for (nickname, previousValue) in tracked {
-			let isOnline = online.contains { $0.caseInsensitiveCompare(nickname) == .orderedSame }
+			let isOnline = foldedOnline.contains(casefoldNickname(nickname))
 			let status: IRCAddressBookUserTrackingStatus = if previousValue, !isOnline,
 			                                                  !invokingISONCommandForFirstTime
 			{
@@ -160,8 +163,7 @@ extension IRCClient {
 		}
 		invokingISONCommandForFirstTime = false
 		for channel in channelList where channel.isPrivateMessage {
-			let isOnline = online.contains { $0.caseInsensitiveCompare(channel.name) == .orderedSame }
-			applyPresence(isOnline, to: channel)
+			applyPresence(foldedOnline.contains(casefoldNickname(channel.name)), to: channel)
 		}
 	}
 
@@ -225,6 +227,12 @@ extension IRCClient {
 		/* The prefixes arrive in the server's rank order, so the set built from
 		 them is already ordered. */
 		let hostmask = String(rawName[nameStart...])
+
+		/* A token that is nothing but prefix characters names nobody. Taking it
+		 anyway added a member and a directory user under the empty nickname,
+		 which every later lookup then matched by accident. */
+		guard hostmask.isEmpty == false else { return }
+
 		let parsed = (hostmask as NSString).hostmask(on: self)
 		let nickname = parsed?.nickname ?? hostmask
 		let user: User
@@ -236,13 +244,13 @@ extension IRCClient {
 			newUser.address = parsed?.address
 			user = addAndReturn(newUser)
 		}
-		var editedMember: ChannelUser
-		if let member = userAssociated(user, with: channel) {
-			guard nicknameIsMyself(nickname) else { return }
-			editedMember = member
-		} else {
-			editedMember = ChannelUser(user: user, prefixes: currentUserPrefixes)
-		}
+		/* The NAMES reply is the server's own list, so its prefixes are the
+		 truth about every name in it — including one the client already holds a
+		 member for. Keeping the member and dropping its prefixes left an
+		 operator unmarked whenever the reply arrived after the JOIN did. */
+		var editedMember = userAssociated(user, with: channel)
+			?? ChannelUser(user: user, prefixes: currentUserPrefixes)
+		editedMember.prefixes = currentUserPrefixes
 		editedMember.modes = ChannelModeSymbolSet(letters: modes)
 		channel.memberInfo?.addMember(editedMember)
 	}
@@ -277,28 +285,69 @@ extension IRCClient {
 
 	private func handleModeListNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
 		guard message.params.count > 2 else { return }
-		let offset = numeric == IRCNumeric.quietlist.rawValue && message.params.count == 6 ? 1 : 0
+		/* RPL_QUIETLIST (728) writes the mode letter between the channel and the
+		 mask, and nothing else does. Counting parameters to find it only worked
+		 for the six-parameter shape: a 728 without the setter and timestamp read
+		 the mode letter as the mask, and one carrying an extra field slid past
+		 it. The letter itself is what says the field is there. */
+		let hasModeLetterField = numeric == IRCNumeric.quietlist.rawValue &&
+			message.params.count > 3 && (message.params[2] as NSString).isModeSymbol
+		let offset = hasModeLetterField ? 1 : 0
 		let mask = message.params[2 + offset]
 		let extended = message.params.count > 4 + offset
 		let author = extended ? (message.params[3 + offset] as NSString).nicknameFromHostmask : nil
-		let date = extended ? Date(timeIntervalSince1970: TimeInterval(message.params[4 + offset]) ?? 0) : nil
-		if output?.accessListEntryReceived(mask: mask, setBy: author, creationDate: date) == true {
+		/* An unreadable timestamp drops the "set by" clause rather than dating
+		 the entry to 1970. */
+		let date = extended ? ircWireTimestampDate(from: message.params[4 + offset]) : nil
+		let channelName = message.params[1]
+		let took = output?.accessListEntryReceived(
+			for: self,
+			inChannelNamed: channelName,
+			modeSymbol: hasModeLetterField ? message.params[2] : accessListModeSymbol(forNumeric: numeric),
+			mask: mask,
+			setBy: author,
+			creationDate: date
+		)
+		if took == true {
 			return
 		}
 		guard shouldPrint else { return }
 		let text = IRCChannelAccessListStrings.entry(
 			kind: IRCChannelAccessListKind(numeric: numeric),
-			channelName: message.params[1],
+			channelName: channelName,
 			mask: mask,
-			setBy: extended ? author ?? "" : nil,
-			date: extended ? date.flatMap { formatDateLongStyle($0, true) } ?? "" : nil
+			setBy: author,
+			date: date.flatMap { formatDateLongStyle($0, true) }
 		)
 		print(text, by: nil, in: nil, as: .debug, command: message.command, receivedAt: message.receivedAt)
 	}
 
-	private func handleEndOfModeListNumeric(_ message: Message, shouldPrint: Bool) {
-		if output?.accessListFinished() != true, shouldPrint {
+	private func handleEndOfModeListNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
+		/* RPL_ENDOFQUIETLIST writes the mode letter between the channel and the
+		 explanatory text, the way its RPL_QUIETLIST siblings do. */
+		let hasModeLetterField = numeric == IRCNumeric.endofquietlist.rawValue &&
+			message.params.count > 3 && (message.params[2] as NSString).isModeSymbol
+		let took = message.params.count > 1
+			? output?.accessListFinished(
+				for: self,
+				inChannelNamed: message.params[1],
+				modeSymbol: hasModeLetterField ? message.params[2] : accessListModeSymbol(forNumeric: numeric)
+			)
+			: nil
+		if took != true, shouldPrint {
 			printReply(message)
 		}
+	}
+
+	/** The mode letter the list a numeric belongs to is kept under.
+
+	 Only the quiet numerics write the letter on the wire; for the rest it is
+	 what ISUPPORT says, which is also what the window showing the list asked
+	 for. `EXCEPTS` and `INVEX` may name a letter other than `e` and `I`, so the
+	 letter is read from the same place the window read it rather than assumed.
+	 An unadvertised list has no letter, and an entry for one belongs to no
+	 window. */
+	private func accessListModeSymbol(forNumeric numeric: UInt) -> String {
+		supportInfo.modeSymbol(forList: IRCChannelAccessListKind(numeric: numeric).supportListType) ?? ""
 	}
 }

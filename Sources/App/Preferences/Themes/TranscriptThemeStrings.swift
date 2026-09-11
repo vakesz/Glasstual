@@ -41,6 +41,7 @@ nonisolated enum TranscriptThemeStrings { // nonisolated: value
 	static let showInlineImages = value(.TranscriptTheme.showInlineImages)
 	static let themeError = value(.TranscriptTheme.themeError)
 	static let themeName = value(.TranscriptTheme.themeName)
+	static let timestampText = value(.TranscriptTheme.timestampText)
 	static let transcriptTheme = value(.TranscriptTheme.transcriptTheme)
 	static let unreadMarker = value(.TranscriptTheme.unreadMarker)
 	static let yourNickname = value(.TranscriptTheme.yourNickname)

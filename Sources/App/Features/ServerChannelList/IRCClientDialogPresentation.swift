@@ -37,47 +37,31 @@
  *********************************************************************** */
 
 @MainActor
-extension IRCClient: ChannelBanListSheetDelegate {
-	func createChannelInviteExceptionListSheet() {
-		createChannelBanListSheet(entryType: .inviteException)
+extension IRCClient {
+	func openChannelInviteExceptionList() {
+		openChannelAccessList(entryType: .inviteException)
 	}
 
-	func createChannelBanExceptionListSheet() {
-		createChannelBanListSheet(entryType: .banException)
+	func openChannelBanExceptionList() {
+		openChannelAccessList(entryType: .banException)
 	}
 
-	func createChannelBanListSheet() {
-		createChannelBanListSheet(entryType: .ban)
+	func openChannelBanList() {
+		openChannelAccessList(entryType: .ban)
 	}
 
-	func createChannelQuietListSheet() {
-		createChannelBanListSheet(entryType: .quiet)
+	func openChannelQuietList() {
+		openChannelAccessList(entryType: .quiet)
 	}
 
-	func createChannelBanListSheet(entryType: ChannelBanListEntryType) {
-		AppController.shared.mainWindow.presentationModel.closePresentedSheet()
+	/** Opens the access list for the selected channel in its own window.
 
-		guard let mainWindow = AppController.shared.mainWindow,
-		      let channel = mainWindow.selectedChannel,
-		      let sheet = ChannelBanListSheet(entryType: entryType, inChannel: channel)
-		else { return }
-
-		sheet.delegate = self
-		sheet.window = mainWindow
-		sheet.start()
-	}
-
-	public func channelBanListSheetOnUpdate(_ sender: ChannelBanListSheet) {
-		guard let channel = sender.channel, let modeSymbol = sender.modeSymbol else { return }
-		sendModes("+\(modeSymbol)", withParametersString: nil, in: channel)
-	}
-
-	public func channelBanListSheetWillClose(_ sender: ChannelBanListSheet) {
-		guard let channel = sender.channel else { return }
-
-		for change in sender.listOfChanges ?? [] {
-			sendModes(change, withParametersString: nil, in: channel)
-		}
+	 A window rather than a sheet, so the channel the list is about can be read
+	 and typed into while its bans are being looked over; the mode changes the
+	 window makes are sent as they are made and it stays open for the next one. */
+	func openChannelAccessList(entryType: ChannelBanListEntryType) {
+		guard let channel = AppController.shared.mainWindow?.selectedChannel else { return }
+		SharedApplication.sharedApplicationScenes().openChannelAccessList(entryType: entryType, in: channel)
 	}
 
 	func channelListSession() -> ServerChannelListSession? {

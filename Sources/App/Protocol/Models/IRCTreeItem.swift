@@ -86,9 +86,7 @@ open class TreeItem: NSObject {
 
 	/** Weak: the world owns its clients, and an item routinely outlives the
 	 client that made it while teardown finishes. */
-	open weak var associatedClient: IRCClient! {
-		didSet { associatedClientDidChange() }
-	}
+	open weak var associatedClient: IRCClient!
 
 	/** Weak: the window's log controller registry owns the view this item is
 	 drawn into and installs itself here. An item with no window — a client
@@ -122,7 +120,4 @@ open class TreeItem: NSObject {
 	open func child(at _: Int) -> TreeItem? {
 		nil
 	}
-
-	/// Overridden by items whose `description` names the client they belong to.
-	func associatedClientDidChange() {}
 }

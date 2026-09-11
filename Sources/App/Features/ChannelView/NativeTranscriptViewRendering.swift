@@ -70,11 +70,17 @@ extension NativeTranscriptView {
 			.transcriptSelectionSegment: "timestamp",
 		]) { _, new in new }))
 		if !header.nickname.isEmpty || theme.layout == .bubbles {
+			let attributes = nicknameAttributes(for: line, paragraph: paragraph).merging([
+				.transcriptSelectionSegment: "nickname",
+			]) { _, new in new }
+			result.append(NSAttributedString(string: header.nickname, attributes: attributes))
+			/* The gap after the name carries none of the name's click action:
+			 it is not the name, and the popover is anchored to the name alone. */
+			var separatorAttributes = attributes
+			separatorAttributes.removeValue(forKey: .transcriptAction)
 			result.append(NSAttributedString(
-				string: header.nickname + (theme.layout == .bubbles ? "\n" : "  "),
-				attributes: nicknameAttributes(for: line, paragraph: paragraph).merging([
-					.transcriptSelectionSegment: "nickname",
-				]) { _, new in new }
+				string: theme.layout == .bubbles ? "\n" : "  ",
+				attributes: separatorAttributes
 			))
 		}
 
@@ -104,9 +110,14 @@ extension NativeTranscriptView {
 	) -> [NSAttributedString.Key: Any] {
 		let controller = SharedApplication.sharedThemeController()
 		let palette = controller.theme.palette
+		/* Digits of one width keep the column straight, and the theme's
+		 timestamp role keeps the clock from competing with the name beside it. */
 		var attributes = lineAttributes(for: line).merging([
-			.font: NSFont.systemFont(ofSize: max(9, effectiveFont(controller).pointSize - 1)),
-			.foregroundColor: controller.resolved(palette.secondaryText),
+			.font: NSFont.monospacedDigitSystemFont(
+				ofSize: max(9, effectiveFont(controller).pointSize - 1),
+				weight: .regular
+			),
+			.foregroundColor: controller.resolved(palette.timestampText),
 			.paragraphStyle: paragraph,
 		]) { _, new in new }
 		if let background = bubbleBackground(for: line) {
@@ -130,7 +141,7 @@ extension NativeTranscriptView {
 			.foregroundColor: color,
 			.paragraphStyle: paragraph,
 			.transcriptNickname: line.nickname ?? "",
-			.transcriptAction: "nickname:\(line.nickname ?? "")",
+			.transcriptAction: TranscriptAction.nickname(line.nickname ?? "").attributeValue,
 		]) { _, new in new }
 		if let background = bubbleBackground(for: line) {
 			attributes[.backgroundColor] = background
@@ -181,10 +192,10 @@ extension NativeTranscriptView {
 			attributes[.link] = url
 			attributes[.foregroundColor] = controller.resolved(palette.link)
 		case let .channel(name):
-			attributes[.transcriptAction] = "channel:\(name)"
+			attributes[.transcriptAction] = TranscriptAction.channel(name).attributeValue
 			attributes[.foregroundColor] = controller.resolved(palette.link)
 		case let .nickname(name):
-			attributes[.transcriptAction] = "nickname:\(name)"
+			attributes[.transcriptAction] = TranscriptAction.nickname(name).attributeValue
 			attributes[.transcriptNickname] = name
 			attributes[.foregroundColor] = nicknameColor(for: name)
 		case nil:
@@ -195,12 +206,15 @@ extension NativeTranscriptView {
 
 	/// A nickname's colour, remembered for the batch being rendered. Resolving
 	/// one reads the pinned-colour dictionary out of the defaults store, and a
-	/// batch of lines asks for the same few names repeatedly.
+	/// batch of lines asks for the same few names repeatedly -- so the table is
+	/// read on the first name the cache misses and reused for every one after.
 	func nicknameColor(for nickname: String) -> NSColor {
 		if let cached = nicknameColors[nickname] {
 			return cached
 		}
-		let color = UserNicknameColorStyleGenerator.color(for: nickname)
+		let overrides = nicknameColorOverrides ?? UserNicknameColorStyleGenerator.overridesSnapshot()
+		nicknameColorOverrides = overrides
+		let color = UserNicknameColorStyleGenerator.color(for: nickname, overrides: overrides)
 		nicknameColors[nickname] = color
 		return color
 	}
@@ -214,12 +228,18 @@ extension NativeTranscriptView {
 	}
 
 	func lineAttributes(for line: TranscriptLine) -> [NSAttributedString.Key: Any] {
-		[
+		var attributes: [NSAttributedString.Key: Any] = [
 			.transcriptLineNumber: line.lineNumber,
 			.transcriptLineType: line.lineTypeString,
 			.transcriptMessageIdentifier: line.messageIdentifier ?? "",
 			.transcriptExcerpt: line.body.plainText,
 		]
+		/* Carried by every run of the line, so a right-click anywhere in a
+		 message — its timestamp, its body, a reaction — can name its author. */
+		if let nickname = line.nickname, nickname.isEmpty == false {
+			attributes[.transcriptLineNickname] = nickname
+		}
+		return attributes
 	}
 
 	func appendDeliveryAndReactions(
@@ -227,29 +247,112 @@ extension NativeTranscriptView {
 		to result: NSMutableAttributedString,
 		paragraph: NSParagraphStyle
 	) {
+		appendDeliveryState(for: line, to: result, paragraph: paragraph)
+		appendReactions(for: line, to: result, paragraph: paragraph)
+	}
+
+	/// How one delivery state is drawn. The symbol is what carries the meaning;
+	/// the colour only reinforces it, so a reader who cannot tell the colours
+	/// apart still can.
+	private struct DeliveryPresentation {
+		let symbol: String
+		let label: String
+		let color: NSColor
+	}
+
+	private func deliveryPresentation(for line: TranscriptLine) -> DeliveryPresentation? {
 		let controller = SharedApplication.sharedThemeController()
 		let palette = controller.theme.palette
-		var details: [String] = []
-		switch line.deliveryState {
-		case .pending: details.append(TranscriptThemeStrings.pending)
-		case .delivered: details.append(TranscriptThemeStrings.delivered)
+		let clock = controller.resolved(palette.timestampText)
+		return switch line.deliveryState {
+		case .pending:
+			DeliveryPresentation(symbol: "clock", label: TranscriptThemeStrings.pending, color: clock)
+		case .delivered:
+			DeliveryPresentation(symbol: "checkmark", label: TranscriptThemeStrings.delivered, color: clock)
 		case .failed:
-			details.append(
-				TranscriptThemeStrings.failed + (line.deliveryFailureReason.map { ": \($0)" } ?? "")
+			DeliveryPresentation(
+				symbol: "exclamationmark.triangle.fill",
+				label: TranscriptThemeStrings.failed,
+				color: controller.resolved(palette.failure)
 			)
-		case .none: break
+		case .none:
+			nil
 		}
-		for emoji in line.reactions.keys.sorted() {
-			details.append("\(emoji) \(line.reactions[emoji]?.count ?? 0)")
-		}
-		guard details.isEmpty == false else { return }
+	}
+
+	private func appendDeliveryState(
+		for line: TranscriptLine,
+		to result: NSMutableAttributedString,
+		paragraph: NSParagraphStyle
+	) {
+		guard let presentation = deliveryPresentation(for: line) else { return }
+		let controller = SharedApplication.sharedThemeController()
+		let font = NSFont.systemFont(ofSize: max(9, effectiveFont(controller).pointSize - 1))
 		var attributes = lineAttributes(for: line)
-		attributes[.font] = NSFont.systemFont(ofSize: max(9, effectiveFont(controller).pointSize - 1))
-		attributes[.foregroundColor] = line.deliveryState == .failed
-			? controller.resolved(palette.failure)
-			: controller.resolved(palette.secondaryText)
+		attributes[.font] = font
 		attributes[.paragraphStyle] = paragraph
-		result.append(NSAttributedString(string: "  \(details.joined(separator: "  "))", attributes: attributes))
+		attributes[.foregroundColor] = presentation.color
+		attributes[.toolTip] = presentation.label
+		/* The glyph is the whole of the state for a sighted reader, so the words
+		 have to be somewhere an assistive reader can still reach them. */
+		attributes[.accessibilityCustomText] = [presentation.label]
+
+		let piece = NSMutableAttributedString(string: "  ")
+		let configuration = NSImage.SymbolConfiguration(pointSize: font.pointSize, weight: .regular)
+			.applying(NSImage.SymbolConfiguration(paletteColors: [presentation.color]))
+		if let symbol = NSImage(systemSymbolName: presentation.symbol, accessibilityDescription: presentation.label)?
+			.withSymbolConfiguration(configuration)
+		{
+			let attachment = NSTextAttachment()
+			attachment.image = symbol
+			piece.append(NSAttributedString(attachment: attachment))
+		} else {
+			piece.append(NSAttributedString(string: presentation.label))
+		}
+		if line.deliveryState == .failed, let reason = line.deliveryFailureReason, reason.isEmpty == false {
+			piece.append(NSAttributedString(string: " \(reason)"))
+		}
+		piece.addAttributes(attributes, range: NSRange(location: 0, length: piece.length))
+		result.append(piece)
+	}
+
+	/** Draws each reaction as a chip: one run, tinted, carrying the message and
+	 the emoji it stands for so a click on it reacts with that emoji.
+
+	 A chip is a run rather than an attachment cell on purpose — attachment
+	 cells are a TextKit 1 feature, and a storage that holds one moves the whole
+	 transcript back to TextKit 1, where its bottom alignment does not exist. */
+	private func appendReactions(
+		for line: TranscriptLine,
+		to result: NSMutableAttributedString,
+		paragraph: NSParagraphStyle
+	) {
+		guard line.reactions.isEmpty == false else { return }
+		let controller = SharedApplication.sharedThemeController()
+		let palette = controller.theme.palette
+		let font = NSFont.systemFont(ofSize: max(9, effectiveFont(controller).pointSize - 1))
+		let identifier = line.messageIdentifier ?? ""
+		for emoji in line.reactions.keys.sorted() {
+			let count = line.reactions[emoji]?.count ?? 0
+			guard count > 0 else { continue }
+			var attributes = lineAttributes(for: line)
+			attributes[.font] = font
+			attributes[.paragraphStyle] = paragraph
+			attributes[.foregroundColor] = controller.resolved(palette.primaryText)
+			attributes[.backgroundColor] = controller.resolved(palette.secondaryText).withAlphaComponent(0.14)
+			attributes[.accessibilityCustomText] = [
+				TranscriptViewStrings.reactionAccessibility(emoji: emoji, count: count),
+			]
+			if identifier.isEmpty == false {
+				attributes[.transcriptReaction] = TranscriptReactionTarget(
+					messageIdentifier: identifier, emoji: emoji
+				).attributeValue
+				attributes[.cursor] = NSCursor.pointingHand
+			}
+			result.append(NSAttributedString(string: "  ", attributes: [.paragraphStyle: paragraph, .font: font]))
+			/* Thin spaces stand in for the padding a run cannot have. */
+			result.append(NSAttributedString(string: "\u{2009}\(emoji) \(count)\u{2009}", attributes: attributes))
+		}
 	}
 
 	func append(
@@ -265,18 +368,32 @@ extension NativeTranscriptView {
 		let size = inlineImage.originalSize
 		let scale = min(1, maxSize.width / size.width, maxSize.height / size.height)
 		image.size = NSSize(width: size.width * scale, height: size.height * scale)
+		/* An image with no description is a blank to anyone who cannot see it;
+		 the address it came from is the one thing always known about it. */
+		let description = TranscriptViewStrings.imageAccessibility(source: inlineImage.sourceURL.absoluteString)
+		image.accessibilityDescription = description
 		let attachmentString = NSMutableAttributedString(string: "\n")
 		attachmentString.append(NSAttributedString(attachment: inlineImage.attachment))
-		attachmentString.addAttribute(.paragraphStyle, value: paragraph, range: attachmentString.fullRange)
+		attachmentString.addAttributes([
+			.paragraphStyle: paragraph,
+			.accessibilityCustomText: [description],
+			.toolTip: inlineImage.sourceURL.absoluteString,
+			.transcriptInlineImage: inlineImage.sourceURL.absoluteString,
+		], range: attachmentString.fullRange)
 		result.append(attachmentString)
 	}
 
 	func attributedTopic(_ topic: String) -> NSAttributedString {
 		let controller = SharedApplication.sharedThemeController()
 		let palette = controller.theme.palette
+		/* The topic is context, not conversation: secondary text at the body
+		 size, with only its links in the link colour. It follows ⌘= and ⌘−
+		 with the transcript, because it is text in the same window and a
+		 reader who needs the messages larger needs the topic larger too. */
+		let bodySize = NSFont.preferredFont(forTextStyle: .body).pointSize
 		let result = NSMutableAttributedString(string: topic, attributes: [
-			.font: NSFont.preferredFont(forTextStyle: .body),
-			.foregroundColor: controller.resolved(palette.primaryText),
+			.font: NSFont.systemFont(ofSize: bodySize * textScale),
+			.foregroundColor: controller.resolved(palette.secondaryText),
 		])
 		for link in LinkParser.locateLinks(in: topic)
 			where LogRenderer.isSafeLink(link.stringValue)
@@ -319,10 +436,15 @@ extension NativeTranscriptView {
 		 `inset` points below the paragraph's top, not `NSTextBlock` borders: a
 		 text block in the storage moves the whole view back to TextKit 1. */
 		var rule: (color: NSColor, inset: CGFloat)?
+		// What an assistive reader is told the marker says, where the drawing
+		// itself carries no words.
+		var spokenText: String?
 		switch marker {
 		case let .date(value):
 			text = value
-			color = controller.resolved(palette.secondaryText)
+			/* A date and a session boundary are clock-like text, the same as the
+			 timestamp column, and share its role. */
+			color = controller.resolved(palette.timestampText)
 			font = NSFont.systemFont(
 				ofSize: max(9, effectiveFont(controller).pointSize - 1),
 				weight: .medium
@@ -330,7 +452,7 @@ extension NativeTranscriptView {
 			paragraph.paragraphSpacing = 6
 		case let .currentSession(value):
 			text = value
-			color = controller.resolved(palette.secondaryText)
+			color = controller.resolved(palette.timestampText)
 			font = NSFont.systemFont(
 				ofSize: max(9, effectiveFont(controller).pointSize - 1),
 				weight: .medium
@@ -338,13 +460,19 @@ extension NativeTranscriptView {
 			paragraph.paragraphSpacingBefore = 10
 			paragraph.paragraphSpacing = 6
 			rule = (color.withAlphaComponent(0.22), 5)
-		case .unread:
-			// The previous Simplified theme used only a quiet accent hairline.
-			// Keeping the caption out of the transcript prevents an unread
-			// boundary from competing with actual messages.
-			text = "\u{200B}"
-			color = .clear
-			font = NSFont.systemFont(ofSize: 1)
+		case let .unread(value):
+			/* A quiet accent hairline keeps the boundary from competing with the
+			 messages around it, but a hairline is a colour and nothing else: a
+			 reader who has asked to be told things without colour, and a reader
+			 who is not looking at all, both need the words. */
+			let differentiates = NSWorkspace.shared.accessibilityDisplayShouldDifferentiateWithoutColor
+			text = differentiates ? value : "\u{200B}"
+			spokenText = value
+			color = differentiates ? controller.resolved(palette.unreadMarker) : .clear
+			font = NSFont.systemFont(
+				ofSize: differentiates ? max(9, effectiveFont(controller).pointSize - 1) : 1,
+				weight: .medium
+			)
 			paragraph.paragraphSpacingBefore = 5
 			paragraph.paragraphSpacing = 5
 			rule = (controller.resolved(palette.unreadMarker).withAlphaComponent(0.6), 5)
@@ -355,6 +483,10 @@ extension NativeTranscriptView {
 			.paragraphStyle: paragraph,
 			.transcriptLineNumber: lineNumber,
 		]
+		if let spokenText {
+			attributes[.accessibilityCustomText] = [spokenText]
+			attributes[.toolTip] = spokenText
+		}
 		if let rule {
 			attributes[.transcriptRuleColor] = rule.color
 			attributes[.transcriptRuleInset] = NSNumber(value: Double(rule.inset))

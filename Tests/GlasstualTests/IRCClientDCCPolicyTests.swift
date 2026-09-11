@@ -77,8 +77,8 @@ struct IRCClientDCCPolicyTests {
 	@Test("Both an active and a passive chat offer are understood")
 	func parsesActiveAndPassiveChatOffers() {
 		#expect(
-			DCCChatPolicy.parseOffer("CHAT chat 3232235777 5000")
-				== DCCChatOffer(address: "192.168.1.1", port: 5000, token: nil)
+			DCCChatPolicy.parseOffer("CHAT chat 1568397154 5000")
+				== DCCChatOffer(address: "93.123.215.98", port: 5000, token: nil)
 		)
 		#expect(
 			DCCChatPolicy.parseOffer("CHAT chat 0 0 T99")
@@ -86,6 +86,36 @@ struct IRCClientDCCPolicyTests {
 		)
 		#expect(DCCChatPolicy.parseOffer("CHAT chat invalid 5000") == nil)
 		#expect(DCCChatPolicy.parseOffer("CHAT chat 3232235777 0") == nil)
+	}
+
+	/** An active chat offer decides which host the client dials, exactly as a
+	 DCC SEND offer does. The parser understands a private address — it is a
+	 well-formed offer — but the client refuses to act on it. */
+	@Test("A chat offer naming an address the client will not dial is refused")
+	func refusesChatOffersForNonRoutableAddresses() throws {
+		let privateOffer = try #require(DCCChatPolicy.parseOffer("CHAT chat 3232235777 5000"))
+
+		#expect(privateOffer.address == "192.168.1.1")
+		#expect(DCCChatPolicy.isDialable(privateOffer) == false)
+
+		let loopbackOffer = try #require(DCCChatPolicy.parseOffer("CHAT chat 2130706433 5000"))
+
+		#expect(loopbackOffer.address == "127.0.0.1")
+		#expect(DCCChatPolicy.isDialable(loopbackOffer) == false)
+
+		let routableOffer = try #require(DCCChatPolicy.parseOffer("CHAT chat 1568397154 5000"))
+
+		#expect(DCCChatPolicy.isDialable(routableOffer))
+	}
+
+	/// A passive offer names no address at all: the peer connects to us, so
+	/// there is nothing to dial and nothing to refuse.
+	@Test("A passive chat offer is not refused for the placeholder address it carries")
+	func passiveChatOffersAreNotRefusedForTheirPlaceholderAddress() throws {
+		let offer = try #require(DCCChatPolicy.parseOffer("CHAT chat 0 0 T99"))
+
+		#expect(offer.isPassive)
+		#expect(DCCChatPolicy.isDialable(offer))
 	}
 
 	@Test("A direct chat is named and offered in the legacy wire format")

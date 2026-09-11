@@ -26,8 +26,15 @@ struct LocalizationCatalogBoundaryTests {
 				== "Invite Exceptions in #swift"
 		)
 		#expect(ChannelAccessListStrings.heading(for: .quiet, channelName: "#swift") == "Quiets in #swift")
-		#expect(ChannelAccessListStrings.entryCount(4, maximum: 0) == "4 entries")
-		#expect(ChannelAccessListStrings.entryCount(4, maximum: 100) == "4 of 100 entries")
+		#expect(ChannelAccessListStrings.entryCount(4, maximum: 0, isTruncated: false) == "4 entries")
+		#expect(ChannelAccessListStrings.entryCount(4, maximum: 100, isTruncated: false) == "4 of 100 entries")
+		/* A list cut at the window's cap must not read as a complete one that
+		 happens to be exactly that long. */
+		#expect(ChannelAccessListStrings.entryCount(4, maximum: 100, isTruncated: true) == "First 4 entries")
+		#expect(
+			ChannelAccessListStrings.truncationNotice(shownEntryCount: 4)
+				== "Showing the first 4 entries. The server sent more than this window keeps."
+		)
 	}
 
 	@Test("Channel spotlight pluralizes its unread and highlight counts")

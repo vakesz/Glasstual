@@ -52,12 +52,12 @@ enum MenuChannelModePolicy {
 public extension MenuActionCoordinator {
 	func performIRCAction(_ action: MenuIRCAction, sender: Any?) {
 		switch action {
-		case .showBanList: showModeList(symbol: "+b", presentation: { $0.createChannelBanListSheet() })
+		case .showBanList: showModeList(symbol: "+b", presentation: { $0.openChannelBanList() })
 		case .showBanExceptionList:
-			showModeList(symbol: "+e", presentation: { $0.createChannelBanExceptionListSheet() })
+			showModeList(symbol: "+e", presentation: { $0.openChannelBanExceptionList() })
 		case .showInviteExceptionList:
-			showModeList(symbol: "+I", presentation: { $0.createChannelInviteExceptionListSheet() })
-		case .showQuietList: showModeList(symbol: "+q", presentation: { $0.createChannelQuietListSheet() })
+			showModeList(symbol: "+I", presentation: { $0.openChannelInviteExceptionList() })
+		case .showQuietList: showModeList(symbol: "+q", presentation: { $0.openChannelQuietList() })
 		case .toggleModerationMode:
 			sendMode(MenuChannelModePolicy.moderationMode(for: senderCommand(sender)))
 		case .toggleInviteMode:

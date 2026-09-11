@@ -67,8 +67,10 @@ struct PreferencesInterfacePane: View {
 						Text(verbatim: Self.title(for: badge))
 					}
 				}
-				Button(PreferencesInterfaceStrings.resetToDefaults) { resetUserListColors() }
-					.accessibilityLabel(Text(verbatim: PreferencesInterfaceStrings.resetUserListColors))
+				Button(PreferencesInterfaceStrings.resetToDefaults, role: .destructive) {
+					confirmResetUserListColors()
+				}
+				.accessibilityLabel(Text(verbatim: PreferencesInterfaceStrings.resetUserListColors))
 			} header: {
 				Text(verbatim: PreferencesInterfaceStrings.headingUserListColors)
 			}
@@ -79,11 +81,22 @@ struct PreferencesInterfacePane: View {
 		Picker(selection: model.preferences.binding(for: Preferences.Appearance.preferredAppearance) { _ in
 			TextualPreferences.performReloadAction(.appearance)
 		}) {
-			Text(verbatim: PreferencesInterfaceStrings.appearanceSystem).tag(PreferredAppearance.inherited)
-			Text(verbatim: PreferencesInterfaceStrings.appearanceLight).tag(PreferredAppearance.light)
-			Text(verbatim: PreferencesInterfaceStrings.appearanceDark).tag(PreferredAppearance.dark)
+			/* From `allCases`, so the picker offers every appearance the type
+			 declares: three rows spelled out here is three rows that go on
+			 saying three when a fourth is added. */
+			ForEach(PreferredAppearance.allCases, id: \.self) { appearance in
+				Text(verbatim: Self.title(for: appearance)).tag(appearance)
+			}
 		} label: {
 			Text(verbatim: PreferencesInterfaceStrings.appearanceLabel)
+		}
+	}
+
+	private static func title(for appearance: PreferredAppearance) -> String {
+		switch appearance {
+		case .inherited: PreferencesInterfaceStrings.appearanceSystem
+		case .light: PreferencesInterfaceStrings.appearanceLight
+		case .dark: PreferencesInterfaceStrings.appearanceDark
 		}
 	}
 
@@ -104,6 +117,30 @@ struct PreferencesInterfacePane: View {
 			}
 			.accessibilityLabel(Text(verbatim: PreferencesInterfaceStrings.resetUnreadHighlightColor))
 		}
+	}
+
+	/// Colours the user picked are gone for good, so a reset that would throw
+	/// any away asks first. With nothing customised there is nothing to lose.
+	private func confirmResetUserListColors() {
+		guard hasCustomUserListColors else {
+			resetUserListColors()
+			return
+		}
+
+		Alerts.alert(
+			withMessage: PreferencesInterfaceStrings.resetColorsConfirmationBody,
+			title: PreferencesInterfaceStrings.resetColorsConfirmationTitle,
+			defaultButton: PreferencesInterfaceStrings.resetToDefaults,
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default
+		) { outcome in
+			guard outcome.response == .default else { return }
+			resetUserListColors()
+		}
+	}
+
+	private var hasCustomUserListColors: Bool {
+		UserListModeBadge.allCases.contains { model.preferences[stored: $0.preferenceKey] != nil }
 	}
 
 	private func resetUserListColors() {
@@ -134,6 +171,7 @@ private struct TranscriptThemeColorRole: Identifiable {
 		Self(id: "background", title: TranscriptThemeStrings.background, keyPath: \.background),
 		Self(id: "primaryText", title: TranscriptThemeStrings.primaryText, keyPath: \.primaryText),
 		Self(id: "secondaryText", title: TranscriptThemeStrings.secondaryText, keyPath: \.secondaryText),
+		Self(id: "timestampText", title: TranscriptThemeStrings.timestampText, keyPath: \.timestampText),
 		Self(id: "eventText", title: TranscriptThemeStrings.eventText, keyPath: \.eventText),
 		Self(id: "link", title: TranscriptThemeStrings.links, keyPath: \.link),
 		Self(id: "localNickname", title: TranscriptThemeStrings.yourNickname, keyPath: \.localNickname),
@@ -155,9 +193,16 @@ struct PreferencesStylePane: View {
 	private static let scrollbackPresets = [
 		"1000", "2000", "3000", "4000", "5000", "10000", "20000", "30000", "40000", "50000",
 	]
-	private static let nicknamePresets = ["%n: ", "%@%n: ", "(%n) ", "<%n> ", "<%@%n> ", "<%@%-9n>"]
+	/** The default first: a preset list whose first entry is not what the app
+	 ships with reads as though the shipped format were a custom one. */
+	private static let nicknamePresets = [
+		"%@%n:", "%@%n", "%n: ", "%@%n: ", "(%n) ", "<%n> ", "<%@%n> ", "<%@%-9n>",
+	]
+	/// The default first, for the reason above: what the app ships with is
+	/// `%H:%M:%S`, and a list that started with a bracketed format made the
+	/// shipped one look like something the person had typed themselves.
 	private static let timestampPresets = [
-		"[%H:%M]", "[%H:%M:%S]", "[%I:%M:%S %p]", "[%m/%d/%Y -:- %I:%M:%S %p]",
+		"%H:%M:%S", "[%H:%M]", "[%H:%M:%S]", "[%I:%M:%S %p]", "[%m/%d/%Y -:- %I:%M:%S %p]",
 	]
 
 	let model: PreferencesPaneModel
@@ -181,8 +226,8 @@ struct PreferencesStylePane: View {
 					Button(TranscriptThemeStrings.importTheme) { model.importTranscriptTheme() }
 					Button(TranscriptThemeStrings.exportTheme) { model.exportTranscriptTheme() }
 					Spacer()
-					Button(PreferencesInterfaceStrings.resetToDefaults) {
-						model.resetTranscriptTheme()
+					Button(PreferencesInterfaceStrings.resetToDefaults, role: .destructive) {
+						confirmResetTranscriptTheme()
 					}
 				}
 			} header: {
@@ -305,8 +350,13 @@ struct PreferencesStylePane: View {
 		}
 	}
 
+	/// Each format field is its own form row, with its note attached to it: one
+	/// stack holding both fields collapsed into a single row, so the system's
+	/// separators and label alignment applied to the stack rather than to the
+	/// settings inside it.
+	@ViewBuilder
 	private var formatFields: some View {
-		VStack(alignment: .leading, spacing: 10) {
+		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingSmall) {
 			LabeledContent {
 				PreferencesComboField(
 					title: PreferencesStyleStrings.nicknameFormatLabel,
@@ -317,10 +367,13 @@ struct PreferencesStylePane: View {
 				Text(verbatim: PreferencesStyleStrings.nicknameFormatLabel)
 			}
 			PreferencesNote(
-				"\(PreferencesStyleStrings.formatSymbolsLabel) %@ = \(PreferencesStyleStrings.nicknameFormatSymbolMode); "
+				"\(PreferencesStyleStrings.formatSymbolsLabel) %@ = "
+					+ "\(PreferencesStyleStrings.nicknameFormatSymbolMode); "
 					+ "%n = \(PreferencesStyleStrings.nicknameFormatSymbolNickname)"
 			)
+		}
 
+		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingSmall) {
 			LabeledContent {
 				PreferencesComboField(
 					title: PreferencesStyleStrings.timestampFormatLabel,
@@ -332,6 +385,31 @@ struct PreferencesStylePane: View {
 			}
 			PreferencesNote(PreferencesStyleStrings.timestampFormatNote)
 		}
+	}
+
+	/// A customised theme cannot be brought back once it is replaced, so the
+	/// reset asks first; a theme still at its defaults has nothing to lose.
+	private func confirmResetTranscriptTheme() {
+		guard hasCustomTranscriptTheme else {
+			model.resetTranscriptTheme()
+			return
+		}
+
+		Alerts.alert(
+			withMessage: PreferencesInterfaceStrings.resetThemeConfirmationBody,
+			title: PreferencesInterfaceStrings.resetThemeConfirmationTitle,
+			defaultButton: PreferencesInterfaceStrings.resetToDefaults,
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default
+		) { outcome in
+			guard outcome.response == .default else { return }
+			model.resetTranscriptTheme()
+		}
+	}
+
+	private var hasCustomTranscriptTheme: Bool {
+		let theme = model.transcriptTheme
+		return theme != (theme.layout == .bubbles ? .bubbles : .lines)
 	}
 
 	private var themeNameField: some View {

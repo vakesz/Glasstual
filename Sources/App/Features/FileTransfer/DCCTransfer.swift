@@ -359,6 +359,7 @@ public actor DCCTransfer {
 						"Rejected a DCC connection from an address other than the one the transfer was offered from"
 					)
 					rejectedAPeer = true
+					await reject(candidate)
 					continue
 				}
 
@@ -434,7 +435,7 @@ public actor DCCTransfer {
 			offeredSize: configuration.fileSize
 		)
 		while true {
-			let (payload, complete) = try await Self.receive(on: connection)
+			let (payload, complete) = try await receive(on: connection)
 			if let payload {
 				try acknowledgements.append(payload)
 			}
@@ -465,7 +466,7 @@ public actor DCCTransfer {
 			submittedBytes = processedBytes + UInt64(chunk.count)
 
 			try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
-				try await Self.send(chunk, over: connection)
+				try await connection.send(chunk)
 			}
 
 			processedBytes += UInt64(chunk.count)
@@ -504,7 +505,7 @@ public actor DCCTransfer {
 		if processedBytes == configuration.fileSize {
 			let acknowledgement = Self.acknowledgement(for: processedBytes)
 			try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
-				try await Self.send(acknowledgement, over: connection)
+				try await connection.send(acknowledgement)
 			}
 		}
 
@@ -514,8 +515,8 @@ public actor DCCTransfer {
 			let (payload, isComplete) = try await Self.withTimeout(
 				configuration.inactivityTimeout,
 				failingWith: .connectTimeout
-			) {
-				try await Self.receive(on: connection)
+			) { [self] in
+				try await receive(on: connection)
 			}
 
 			if let payload, payload.isEmpty == false {
@@ -529,7 +530,7 @@ public actor DCCTransfer {
 				 it goes out before the transfer is torn down for the excess. */
 				let acknowledgement = Self.acknowledgement(for: processedBytes)
 				try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
-					try await Self.send(acknowledgement, over: connection)
+					try await connection.send(acknowledgement)
 				}
 				emit(.progress(processedBytes: processedBytes))
 
@@ -542,6 +543,28 @@ public actor DCCTransfer {
 				throw DCCTransferError.closedByPeer
 			}
 		}
+	}
+
+	// MARK: - Reading and writing
+
+	/** Refuses one inbound connection.
+
+	 Half-closing tells whoever dialled that the port is not going to answer,
+	 rather than leaving them holding a socket that never carries anything, and
+	 releasing the last reference lets the stack finish tearing it down. */
+	private func reject(_ connection: NetworkConnection<TCP>) async {
+		try? await connection.send(Data(), endOfStream: true)
+	}
+
+	/** Reads whatever the peer has sent, and reports whether the peer is done.
+
+	 An instance method rather than a shared `nonisolated static` one: it is I/O
+	 on a connection this transfer owns, not a pure function of its inputs, so
+	 its isolation follows the socket. */
+	private func receive(on connection: NetworkConnection<TCP>) async throws -> (Data?, Bool) {
+		let message = try await connection.receive(atLeast: 1, atMost: Self.bufferSize)
+
+		return (message.content, message.metadata.endOfStream)
 	}
 
 	/// DCC acknowledges with the receiver's running total as a big-endian

@@ -40,7 +40,6 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 import os
-import Synchronization
 
 public extension Notification.Name {
 	static let ircChannelConfigurationWasUpdated = Notification.Name(
@@ -64,9 +63,7 @@ open class Channel: TreeItem {
 		category: "Termination"
 	)
 
-	public private(set) var config: ChannelConfig {
-		didSet { refreshDescription() }
-	}
+	public private(set) var config: ChannelConfig
 
 	public var topic: String? {
 		didSet {
@@ -119,7 +116,6 @@ open class Channel: TreeItem {
 
 		super.init()
 
-		refreshDescription()
 		self.config.writeSecretKeyToKeychain()
 	}
 
@@ -173,25 +169,6 @@ open class Channel: TreeItem {
 
 	public func copy(with _: NSZone? = nil) -> Any {
 		self
-	}
-
-	/** `NSObject.description` is nonisolated, so it cannot read the main-actor
-	 configuration the text is built from. The text is published here instead
-	 whenever the configuration changes. */
-	private let descriptionSnapshot = Mutex("<IRCChannel>")
-
-	override open nonisolated var description: String { // nonisolated: pure
-		descriptionSnapshot.withLock { $0 }
-	}
-
-	override func associatedClientDidChange() {
-		refreshDescription()
-	}
-
-	/// Republishes the text `description` returns.
-	func refreshDescription() {
-		let text = "<IRCChannel [\(associatedClient?.description ?? "")]: \(name)>"
-		descriptionSnapshot.withLock { $0 = text }
 	}
 
 	override open var uniqueIdentifier: String {

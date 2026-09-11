@@ -68,9 +68,6 @@ public nonisolated enum OutgoingCommandHandler: Equatable, Sendable { // nonisol
 /// Everything about the loaded plugins that a caller outside the main actor
 /// needs: a plugin's own object stays on the main actor, but which features
 /// exist, which commands are subscribed, and the suppression rules are values.
-///
-/// Message renderers are the exception: they run on the renderer's background
-/// queue, so `PluginMessageRendering` is `Sendable` and they are published here.
 private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 	var pluginsLoaded = false
 	var supportedFeatures: PluginSupportedFeature = []
@@ -78,7 +75,6 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 	var supportedUserInputCommands: [String] = []
 	var supportedServerInputCommands: [String] = []
 	var scripts = PluginScriptFacts()
-	var messageRenderers: [any PluginMessageRendering] = []
 
 	init() {}
 
@@ -92,16 +88,29 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 			outputSuppressionRules.append(contentsOf: plugin.outputSuppressionRules)
 			userInputCommands.formUnion(plugin.supportedUserInputCommands)
 			serverInputCommands.formUnion(plugin.supportedServerInputCommands)
-
-			if let renderer = plugin.primaryClass as? any PluginMessageRendering {
-				messageRenderers.append(renderer)
-			}
 		}
 
 		pluginsLoaded = true
 		supportedUserInputCommands = userInputCommands.sorted()
 		supportedServerInputCommands = serverInputCommands.sorted()
 	}
+}
+
+/** The message renderers, as the transcript's queue reaches them.
+
+ The plugin objects stay in `loadedPluginItems`, which is main-actor. What is
+ published here is one `@Sendable` call per renderer — the single function
+ `PluginMessageRendering` allows off the main actor — together with the
+ generation of the load it belongs to. Nothing outside the plugin's own module
+ can get from a call back to the object it belongs to, and the renderers are
+ replaced wholesale rather than edited. */
+private nonisolated struct PluginRendererFacts: Sendable { // nonisolated: value
+	/// Bumped by every publish and by `unloadPlugins()`, so which load the
+	/// published calls belong to is observable — from a log line, from a test
+	/// that has to tell one list from an identical-looking next one, and by a
+	/// render that has to notice it has been overtaken part-way through.
+	var generation: UInt64 = 0
+	var renderers: [@Sendable (PluginRenderEvent) -> String?] = []
 }
 
 /// Discovers, validates and loads Glasstual's plugin bundles.
@@ -115,8 +124,10 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 /// `PluginDispatcher.willRenderMessage` and `LogController.makePluginMessage`
 /// both run on the renderer's own queue, so the manager cannot move onto the
 /// main actor with the plugin objects it loads. What those callers read is the
-/// `Mutex`-guarded `PluginFacts` value below; the plugin objects themselves
-/// stay in `loadedPluginItems`, which is main-actor.
+/// `Mutex`-guarded `PluginFacts` value below, and — for the one callback that
+/// reaches a plugin off the main actor — `renderingMessage(_:kind:)`, which
+/// calls the published renderers under the lock that retires them. The plugin
+/// objects themselves stay in `loadedPluginItems`, which is main-actor.
 public final nonisolated class PluginManager: NSObject, Sendable { // nonisolated: guarded
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -145,6 +156,7 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 	private var loadedPluginItems: [PluginItem] = []
 
 	private let facts = Mutex(PluginFacts())
+	private let renderers = Mutex(PluginRendererFacts())
 	private let scheduling = Mutex(Scheduling())
 
 	private struct Scheduling {
@@ -237,6 +249,16 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 		loadedPluginItems = []
 		facts.withLock { $0 = PluginFacts() }
 
+		/* Withdrawn before the first `pluginWillUnload()`. Bumping the generation
+		 under the lock is what reaches a render already in flight: it re-reads
+		 the generation before each renderer, so one that has not reached its
+		 plugin yet stops there. A call already inside a plugin returns before the
+		 tear-down below can start, because that runs on the main actor and a
+		 render never holds it. */
+		renderers.withLock { facts in
+			facts = PluginRendererFacts(generation: facts.generation &+ 1, renderers: [])
+		}
+
 		for plugin in plugins {
 			plugin.unloadBundle()
 		}
@@ -266,6 +288,7 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 		}
 
 		loadedPluginItems = loadedPlugins
+		publishMessageRenderers(for: loadedPlugins)
 		var replacement = PluginFacts(loadedPlugins: loadedPlugins)
 		facts.withLock { facts in
 			/* A refresh that landed while discovery was still running has
@@ -292,9 +315,7 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 		presentRejectedBundlesAlert(for: discovery.rejected)
 		Self.presentObsoleteBundlesAlert(for: discovery.obsolete.compactMap(Bundle.init(url:)))
 	}
-}
 
-nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - Discovery
 
 	private static func discoverPluginBundles() -> PluginDiscovery {
@@ -399,9 +420,7 @@ nonisolated extension PluginManager { // nonisolated: pure
 
 		return true
 	}
-}
 
-nonisolated extension PluginManager { // nonisolated: pure
 	// MARK: - Signature Validation
 
 	private static func isBundledExtension(_ bundle: Bundle) -> Bool {
@@ -538,6 +557,153 @@ nonisolated extension PluginManager { // nonisolated: pure
 
 		throw validityError.takeRetainedValue() as Error
 	}
+
+	// MARK: - AppleScript Support
+
+	public var supportedAppleScriptCommands: [String] {
+		facts.withLock { $0.scripts.commandsByName.keys.sorted() }
+	}
+
+	public var supportedAppleScriptCommandsAndPaths: [String: String] {
+		facts.withLock { $0.scripts.commandsByName.mapValues(\.url.path) }
+	}
+
+	public func script(at url: URL) -> PluginScript? {
+		facts.withLock { $0.scripts.commandsByName.values.first { $0.url == url } }
+	}
+
+	public var customScriptsURL: URL? {
+		facts.withLock(\.scripts.customScriptsURL)
+	}
+
+	@concurrent
+	private static func discoverAppleScripts() async -> PluginScriptCatalog {
+		PluginScriptCatalog.discover(
+			customURL: PathInfo.customScriptsURL,
+			bundledURL: URL(fileURLWithPath: PathInfo.bundledScripts, isDirectory: true),
+			forbiddenCommands: Set(listOfForbiddenCommandNames)
+		)
+	}
+
+	private static var listOfForbiddenCommandNames: [String] {
+		ResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")?
+			.compactMap(\.string) ?? []
+	}
+
+	/// What claims an outgoing command the client has no built-in handler for.
+	public func handler(forOutgoingCommand command: String) -> OutgoingCommandHandler {
+		facts.withLock { facts in
+			let name = command.lowercased()
+			return switch (facts.scripts.commandsByName[name], facts.supportedUserInputCommands.contains(name)) {
+			case let (.some(script), false): .script(path: script.url.path)
+			case (.none, true): .pluginExtension
+			case (.some, true): .ambiguous
+			case (.none, false): .none
+			}
+		}
+	}
+
+	// MARK: - Message Rendering
+
+	/** `message` after every loaded renderer has had it.
+
+	 Called from the transcript renderer's own queue. The handles are copied out
+	 of the lock and called with it released: holding it across a plugin's
+	 callback put third-party code between the main actor and a lock the main
+	 actor takes, and a renderer that asked the manager anything at all — its own
+	 preferences pane, the renderer count — deadlocked on a `Mutex` that does not
+	 recurse.
+
+	 What is copied out is the generation as well as the calls, and the generation
+	 is read again before each call: `unloadPlugins()` bumps it under the lock
+	 before the first `pluginWillUnload()`, so a renderer the render has not
+	 reached yet is not called at all. No plugin is rendered through after it has
+	 been told it is going away. */
+	public func renderingMessage(_ message: String, kind: PluginMessageKind) -> String {
+		let published = renderers.withLock { facts in
+			(generation: facts.generation, calls: facts.renderers)
+		}
+		var result = message
+
+		for render in published.calls {
+			/* The generation again, before each call rather than once: a publish
+			 or an unload that lands here is what says the plugins behind the rest
+			 of this list are going away, and the call that has not been made yet
+			 is the one that must not reach them. */
+			guard renderers.withLock(\.generation) == published.generation else { break }
+
+			guard let returned = render(PluginRenderEvent(message: result, kind: kind)),
+			      returned.isEmpty == false
+			else {
+				continue
+			}
+
+			result = returned
+		}
+
+		return result
+	}
+
+	/// Publishes the renderers among `plugins`, retiring whatever the previous
+	/// load published. Loading is the caller; the step is its own so that
+	/// standing renderers up does not require a scan of the extension folders.
+	@MainActor
+	func publishMessageRenderers(for plugins: [PluginItem]) {
+		publishMessageRenderers(plugins.compactMap { plugin in
+			guard let renderer = plugin.primaryClass as? any PluginMessageRendering else { return nil }
+			return { event in renderer.willRenderMessage(event) }
+		})
+	}
+
+	/** Publishes `calls` as the message renderers, retiring the previous publish.
+
+	 The calls rather than the plugins, because this is also the seam a test
+	 stands a renderer up through: the plugin objects are main-actor and a
+	 `PluginItem` only comes from a bundle that loaded. */
+	func publishMessageRenderers(_ calls: [@Sendable (PluginRenderEvent) -> String?]) {
+		renderers.withLock { facts in
+			facts = PluginRendererFacts(generation: facts.generation &+ 1, renderers: calls)
+		}
+	}
+
+	/// Which load the published renderers belong to. Bumped by every publish and
+	/// by an unload, so a test can tell one list from the next.
+	public var messageRendererGeneration: UInt64 {
+		renderers.withLock(\.generation)
+	}
+
+	/// How many plugins are currently published as message renderers.
+	public var messageRendererCount: Int {
+		renderers.withLock(\.renderers.count)
+	}
+
+	// MARK: - Extension Information
+
+	public func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {
+		facts.withLock { $0.supportedFeatures.contains(feature) }
+	}
+
+	public var pluginOutputSuppressionRules: [PluginOutputSuppressionRule] {
+		facts.withLock(\.outputSuppressionRules)
+	}
+
+	public var supportedUserInputCommands: [String] {
+		facts.withLock(\.supportedUserInputCommands)
+	}
+
+	public var supportedServerInputCommands: [String] {
+		facts.withLock(\.supportedServerInputCommands)
+	}
+
+	@MainActor
+	public var pluginsWithPreferencePanes: [PluginItem] {
+		loadedPluginItems
+			.filter { $0.supportsFeature(.preferencePane) }
+			.sorted {
+				($0.pluginPreferencesPane?.title ?? "")
+					.compare($1.pluginPreferencesPane?.title ?? "") == .orderedAscending
+			}
+	}
 }
 
 extension PluginManager {
@@ -592,88 +758,5 @@ extension PluginManager {
 			Bundle.textual_openInstallationLocations(for: obsoleteBundles)
 			presentObsoleteBundlesAlert(for: obsoleteBundles)
 		}
-	}
-}
-
-public nonisolated extension PluginManager { // nonisolated: pure
-	// MARK: - AppleScript Support
-
-	var supportedAppleScriptCommands: [String] {
-		facts.withLock { $0.scripts.commandsByName.keys.sorted() }
-	}
-
-	var supportedAppleScriptCommandsAndPaths: [String: String] {
-		facts.withLock { $0.scripts.commandsByName.mapValues(\.url.path) }
-	}
-
-	func script(at url: URL) -> PluginScript? {
-		facts.withLock { $0.scripts.commandsByName.values.first { $0.url == url } }
-	}
-
-	var customScriptsURL: URL? {
-		facts.withLock(\.scripts.customScriptsURL)
-	}
-
-	@concurrent
-	private static func discoverAppleScripts() async -> PluginScriptCatalog {
-		PluginScriptCatalog.discover(
-			customURL: PathInfo.customScriptsURL,
-			bundledURL: URL(fileURLWithPath: PathInfo.bundledScripts, isDirectory: true),
-			forbiddenCommands: Set(listOfForbiddenCommandNames)
-		)
-	}
-
-	private static var listOfForbiddenCommandNames: [String] {
-		ResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")?
-			.compactMap(\.string) ?? []
-	}
-
-	/// What claims an outgoing command the client has no built-in handler for.
-	func handler(forOutgoingCommand command: String) -> OutgoingCommandHandler {
-		facts.withLock { facts in
-			let name = command.lowercased()
-			return switch (facts.scripts.commandsByName[name], facts.supportedUserInputCommands.contains(name)) {
-			case let (.some(script), false): .script(path: script.url.path)
-			case (.none, true): .pluginExtension
-			case (.some, true): .ambiguous
-			case (.none, false): .none
-			}
-		}
-	}
-}
-
-public nonisolated extension PluginManager { // nonisolated: pure
-	// MARK: - Extension Information
-
-	func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {
-		facts.withLock { $0.supportedFeatures.contains(feature) }
-	}
-
-	var pluginOutputSuppressionRules: [PluginOutputSuppressionRule] {
-		facts.withLock(\.outputSuppressionRules)
-	}
-
-	/// The plugins that rewrite message bodies, in load order. Published apart
-	/// from `loadedPlugins` because the renderer calls them off the main actor.
-	var messageRenderers: [any PluginMessageRendering] {
-		facts.withLock(\.messageRenderers)
-	}
-
-	var supportedUserInputCommands: [String] {
-		facts.withLock(\.supportedUserInputCommands)
-	}
-
-	var supportedServerInputCommands: [String] {
-		facts.withLock(\.supportedServerInputCommands)
-	}
-
-	@MainActor
-	var pluginsWithPreferencePanes: [PluginItem] {
-		loadedPluginItems
-			.filter { $0.supportsFeature(.preferencePane) }
-			.sorted {
-				($0.pluginPreferencesPane?.title ?? "")
-					.compare($1.pluginPreferencesPane?.title ?? "") == .orderedAscending
-			}
 	}
 }

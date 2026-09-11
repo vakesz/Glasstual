@@ -45,6 +45,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	private let notifications = NotificationSubscriptions()
 
 	private var hasConfigured = false
+	/// Set by the window that installs the menu; see `attach(to:)`.
+	private weak var hostWindow: NSWindow?
 
 	override public init() {
 		super.init()
@@ -191,12 +193,20 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		generateColorList()
 	}
 
-	private var textField: TextViewWithIRCFormatter? {
-		guard let firstResponder = NSApp.keyWindow?.firstResponder as? TextViewWithIRCFormatter else {
-			return nil
-		}
+	/** The window whose message field this menu formats.
 
-		return firstResponder
+	 Resolving through the key window loses the field the moment the user needs
+	 it most: clicking `NSColorPanel` makes the panel key, so every colour it
+	 reported went nowhere and the custom-colour items did nothing at all. A
+	 window keeps its own first responder whether or not it is key, so the
+	 window that owns the menu is the one to ask. */
+	public func attach(to window: NSWindow) {
+		hostWindow = window
+	}
+
+	private var textField: TextViewWithIRCFormatter? {
+		let window = hostWindow ?? NSApp.mainWindow
+		return window?.firstResponder as? TextViewWithIRCFormatter
 	}
 
 	public func validateMenuItem(_ item: NSMenuItem) -> Bool {

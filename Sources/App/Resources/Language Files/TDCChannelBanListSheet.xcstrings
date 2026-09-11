@@ -37,6 +37,18 @@
         }
       }
     },
+    "entry-count-truncated" : {
+      "comment" : "Replaces the ‘%1$@ of %2$@ entries’ count above a channel access list when the server sent more entries than the window keeps, so the count must not read as the whole list. %@ is how many entries are shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First %@ entries"
+          }
+        }
+      }
+    },
     "entry-count" : {
       "comment" : "Number of entries in a channel access list. The argument is the number of entries. Legacy key: n0f-cn.",
       "extractionState" : "manual",
@@ -131,6 +143,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hostmask"
+          }
+        }
+      }
+    },
+    "list-truncated-notice" : {
+      "comment" : "Notice shown under a channel access list when the server sent more entries than the window keeps. %ld is how many entries are shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing the first %ld entries. The server sent more than this window keeps."
           }
         }
       }

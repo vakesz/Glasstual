@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "show-profile-action" : {
+      "comment" : "Accessibility action on a member-list row. VoiceOver reads it as one of the actions available on the row, and performing it opens the profile popover that a plain click opens for a pointer. Name the action, not the person.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Profile"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

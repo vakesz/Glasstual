@@ -26,6 +26,11 @@
       "extractionState" : "manual",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Glasstual IRC Client: https://github.com/vakesz/Glasstual" } } }
     },
+    "invalid-regular-expression" : {
+      "comment" : "Validation message shown beside a highlight keyword that is not a usable regular expression, while highlights are set to match by regular expression.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This is not a valid regular expression." } } }
+    },
     "irc-color-list-entry" : {
       "comment" : "IRC color-list entry. The argument is the color index. Legacy key: ham-vk.",
       "extractionState" : "manual",

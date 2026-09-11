@@ -57,6 +57,12 @@ public nonisolated enum ApplicationInfo { // nonisolated: value
 		bundleValue(for: "CFBundleVersion")
 	}
 
+	/// The copyright line the bundle declares, which is what the standard About
+	/// panel would show.
+	public static func applicationCopyright() -> String {
+		bundleValue(for: "NSHumanReadableCopyright")
+	}
+
 	public static func applicationVersionShort() -> String {
 		bundleValue(for: "CFBundleShortVersionString")
 	}

@@ -61,6 +61,18 @@
         }
       }
     },
+    "list-truncated-notice" : {
+      "comment" : "Notice shown under the channel list when the server sent more channels than the window keeps. The argument is the number of channels the window kept, which the search field does not change.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server sent more channels than this window keeps; the first %ld are here. Narrow the search on the server to see the rest."
+          }
+        }
+      }
+    },
     "member-count" : {
       "comment" : "Column heading for the number of members in a public IRC channel.",
       "extractionState" : "manual",

@@ -73,13 +73,17 @@ struct ServerChannelListTests {
 	func searchMatchesNamesAndTopics() {
 		let model = populatedModel()
 
+		/* Typing is debounced; the matching itself is what is under test. */
 		model.searchString = "RUST"
+		model.applyFilterAndSort()
 		#expect(model.rows.map(\.channelName) == ["#Rust"])
 
 		model.searchString = "appkit"
+		model.applyFilterAndSort()
 		#expect(model.rows.map(\.channelName) == ["#cocoa"])
 
 		model.searchString = "   "
+		model.applyFilterAndSort()
 		#expect(model.rows.count == 3)
 	}
 
@@ -177,6 +181,108 @@ struct ServerChannelListTests {
 	@Test("The channel-list scene no longer bundles a nib")
 	func nativeSceneHasNoNib() {
 		#expect(Bundle.main.path(forResource: "TDCServerChannelListDialog", ofType: "nib") == nil)
+	}
+
+	@Test("The list stops growing at its cap and says how much it is showing")
+	func entriesAreCapped() {
+		let model = ServerChannelListModel()
+		let overflow = 5
+
+		for index in 0 ..< (ServerChannelListModel.maximumEntryCount + overflow) {
+			model.enqueue(channelName: "#channel\(index)", memberCount: 1, topic: nil)
+		}
+		model.flushQueuedEntries()
+
+		#expect(model.rows.count == ServerChannelListModel.maximumEntryCount)
+		#expect(model.discardedEntryCount == overflow)
+		#expect(model.truncationNotice != nil)
+	}
+
+	/** The notice counts what the window kept, which the search field does not
+	 change. It used to read as the number of channels on screen, so typing
+	 anything into the search field made it a count of rows that were not there. */
+	@Test("The truncation notice is about what was kept, not what is on screen")
+	func truncationNoticeCountsWhatWasKept() {
+		let model = ServerChannelListModel()
+
+		for index in 0 ..< (ServerChannelListModel.maximumEntryCount + 1) {
+			model.enqueue(channelName: "#channel\(index)", memberCount: 1, topic: nil)
+		}
+		model.flushQueuedEntries()
+
+		let notice = model.truncationNotice
+		#expect(notice != nil)
+
+		model.searchString = "#channel1"
+		model.applyFilterAndSort()
+
+		#expect(model.rows.count < ServerChannelListModel.maximumEntryCount)
+		#expect(model.truncationNotice == notice)
+	}
+
+	@Test("A complete list says nothing about truncation")
+	func completeListHasNoNotice() {
+		let model = populatedModel()
+
+		#expect(model.discardedEntryCount == 0)
+		#expect(model.truncationNotice == nil)
+	}
+
+	@Test("Replacing the entries wholesale is capped the same way")
+	func replacementIsCapped() {
+		let model = ServerChannelListModel()
+		let entries = (0 ..< (ServerChannelListModel.maximumEntryCount + 3)).map {
+			ServerChannelListEntry(channelName: "#channel\($0)", memberCount: 1)
+		}
+
+		model.replace(with: entries)
+
+		#expect(model.rows.count == ServerChannelListModel.maximumEntryCount)
+		#expect(model.discardedEntryCount == 3)
+	}
+
+	@Test("Clearing the list forgets that anything was discarded")
+	func clearingResetsTruncation() {
+		let model = ServerChannelListModel()
+		model.replace(with: (0 ..< (ServerChannelListModel.maximumEntryCount + 1)).map {
+			ServerChannelListEntry(channelName: "#channel\($0)", memberCount: 1)
+		})
+
+		model.clear()
+
+		#expect(model.discardedEntryCount == 0)
+		#expect(model.truncationNotice == nil)
+	}
+
+	@Test("A long topic is drawn bounded and kept whole for copying")
+	func longTopicsAreTruncatedForDisplay() {
+		let topic = String(repeating: "t", count: ServerChannelListModel.maximumDisplayedTopicLength + 50)
+		let entry = ServerChannelListEntry(channelName: "#chat", memberCount: 1, unformattedTopic: topic)
+
+		#expect(entry.displayedTopic.count == ServerChannelListModel.maximumDisplayedTopicLength + 1)
+		#expect(entry.displayedTopic.hasSuffix("…"))
+		#expect(entry.unformattedTopic == topic)
+		#expect(entry.copyText.contains(topic))
+	}
+
+	@Test("A topic that fits is shown as it is")
+	func shortTopicsAreLeftAlone() {
+		let entry = ServerChannelListEntry(channelName: "#chat", memberCount: 1, unformattedTopic: "systems")
+
+		#expect(entry.displayedTopic == "systems")
+	}
+
+	@Test("Typing does not filter until it stops, and the filter still runs")
+	func filteringIsDebounced() async throws {
+		let model = populatedModel()
+		let everything = model.rows.count
+
+		model.searchString = "Rust"
+		#expect(model.rows.count == everything, "Filtering on each keystroke is what made typing slow")
+
+		try await Task.sleep(for: ServerChannelListModel.filterDelay + .milliseconds(250))
+		#expect(model.rows.count < everything)
+		#expect(model.rows.allSatisfy { $0.matches("Rust") })
 	}
 
 	private func populatedModel() -> ServerChannelListModel {

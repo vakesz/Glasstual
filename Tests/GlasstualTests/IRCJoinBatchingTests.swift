@@ -126,6 +126,26 @@ struct IRCJoinBatchingTests {
 	func emptyInput() {
 		#expect(IRCJoinBatching.batches(for: []).isEmpty)
 	}
+
+	/// `LINELEN` counts the CR LF the line ends with. Spending those two bytes
+	/// on channel names put a server's `LINELEN=512` on the wire as 514.
+	@Test("The advertised line length leaves room for the CR LF")
+	func advertisedLineLengthLeavesRoomForTheTerminator() {
+		let names = (0 ..< 60).map { "#channel-number-\($0)" }
+		let batches = IRCJoinBatching.batches(for: targets(names), maximumLineLength: 512)
+
+		for batch in batches {
+			let line = "JOIN " + batch.channels.joined(separator: ",")
+
+			#expect(line.utf8.count + 2 <= 512)
+		}
+		#expect(batches.flatMap(\.channels).count == names.count)
+		// The default budget is the body length, which already excludes the pair.
+		#expect(
+			IRCJoinBatching.batches(for: targets(names), maximumLineLength: 0)
+				== IRCJoinBatching.batches(for: targets(names), maximumLineLength: 512)
+		)
+	}
 }
 
 @Suite("JOIN command emission")

@@ -169,6 +169,18 @@
         }
       }
     },
+    "delete": {
+      "comment": "Verb on the button that confirms deleting the item an alert names (a channel, a server, an entry). Destructive.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
     "direct-chat-dcc-chat-decline": {
       "comment": "Direct chat (DCC CHAT) request. Legacy key: dcc-c5.",
       "extractionState": "manual",
@@ -189,6 +201,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Direct chat request from %@"
+          }
+        }
+      }
+    },
+    "do-not-ask-me-again": {
+      "comment": "Label of the suppression checkbox on an alert that has no wording of its own; matches the standard macOS phrasing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not ask me again"
           }
         }
       }
@@ -249,18 +273,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@“\n\nInformation encrypted using: %2$@"
-          }
-        }
-      }
-    },
-    "enter-some-text-to-search": {
-      "comment": "Legacy key: akr-eh.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter some text to search for"
           }
         }
       }
@@ -385,18 +397,6 @@
         }
       }
     },
-    "keyboard-shortcut-g-can-be-used": {
-      "comment": "Legacy key: d2w-4o.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The keyboard shortcut ⌘G can be used to continue to the next search result. ⌘⇧G can be used to return to the previous search result."
-          }
-        }
-      }
-    },
     "last-known-error-message": {
       "comment": "Legacy key: nlz-um.",
       "extractionState": "manual",
@@ -489,6 +489,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "No logs were found"
+          }
+        }
+      }
+    },
+    "open": {
+      "comment": "Verb on the button that confirms opening the file, link or application an alert names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
           }
         }
       }
@@ -649,6 +661,18 @@
         }
       }
     },
+    "remove": {
+      "comment": "Verb on the button that confirms removing the item an alert names from a list, without deleting anything else.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        }
+      }
+    },
     "restart-glasstual-to-load-this-extension": {
       "comment": "Legacy key: k69-q0.",
       "extractionState": "manual",
@@ -721,18 +745,6 @@
         }
       }
     },
-    "search": {
-      "comment": "Legacy key: q5h-xx.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search"
-          }
-        }
-      }
-    },
     "select": {
       "comment": "Legacy key: xne-79.",
       "extractionState": "manual",
@@ -741,6 +753,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Select"
+          }
+        }
+      }
+    },
+    "send": {
+      "comment": "Verb on the button that confirms sending the message an alert is warning about, such as a paste large enough to flood the channel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
           }
         }
       }

@@ -13,10 +13,6 @@
 import Foundation
 
 nonisolated enum MessageMenuStrings { // nonisolated: value
-	static var emojiPlaceholder: String {
-		String(localized: .TXMenuController.messageContextMenuRepliesEmoji)
-	}
-
 	static var otherReaction: String {
 		String(localized: .TXMenuController.messageContextMenuRepliesOther)
 	}
@@ -27,10 +23,6 @@ nonisolated enum MessageMenuStrings { // nonisolated: value
 
 	static var reply: String {
 		String(localized: .TXMenuController.messageContextMenuRepliesReply)
-	}
-
-	static var sendReaction: String {
-		String(localized: .TXMenuController.messageContextMenuRepliesSend)
 	}
 
 	static var share: String {

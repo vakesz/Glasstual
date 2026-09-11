@@ -38,6 +38,17 @@
 
 import Foundation
 
+/// Where one event's alert sound comes from.
+enum IRCNotificationSoundPlayback: Equatable {
+	/// The notification carries it, so the system plays it.
+	case withNotification
+	/// The application plays it, because the system will not.
+	case byApplication
+	/// Nothing plays it: the sounds are muted, the event has none, or the event
+	/// is only being spoken and nothing is posted to carry one.
+	case silent
+}
+
 enum IRCNotificationAdmission: Equatable {
 	case discard
 	case handled
@@ -117,6 +128,31 @@ enum IRCNotificationPolicy {
 		}
 
 		return true
+	}
+
+	/** Who plays the alert sound for one event.
+
+	 A notification is where a sound belongs: the system applies Do Not Disturb,
+	 the alert volume and the notification's own settings to it, none of which an
+	 `AudioServicesPlayAlertSound` played behind its back honours. The
+	 application plays one itself only where the system will not — permission
+	 refused, or sounds switched off for the application.
+
+	 `systemPlaysNotificationSounds` is `nil` until the first settings read
+	 answers, which is a moment after launch. Reading that as "the system will
+	 not" is what would play the first sounds of a session twice: once here and
+	 once from the notification the system had every right to sound. */
+	static func soundPlayback(
+		soundName: String?,
+		isMuted: Bool,
+		isOnlySpoken: Bool,
+		systemPlaysNotificationSounds: Bool?
+	) -> IRCNotificationSoundPlayback {
+		guard isMuted == false, soundName != nil, isOnlySpoken == false else {
+			return .silent
+		}
+
+		return systemPlaysNotificationSounds == false ? .byApplication : .withNotification
 	}
 
 	static func notificationUserInfo(

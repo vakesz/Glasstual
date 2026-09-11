@@ -59,9 +59,13 @@ public extension IRCClient {
 		printDebugInformation(data, in: rawDataLogQuery)
 	}
 
+	/** Outgoing traffic is the half that carries the user's credentials —
+	 `PASS`, `AUTHENTICATE`, `OPER` and a NickServ `IDENTIFY` all put one on the
+	 wire — and this window is a transcript people paste into bug reports, so
+	 the secret is masked before it is printed while the command stays legible. */
 	func rawDataLogOutgoingTraffic(_ data: String) {
 		guard rawDataLogQuery != nil else { return }
-		rawDataLog("<< \(data)")
+		rawDataLog("<< \(ClientWireUtilities.redactedRawLogLine(data))")
 	}
 
 	func rawDataLogIncomingTraffic(_ data: String) {

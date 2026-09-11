@@ -8,10 +8,14 @@ import SwiftUI
 
 struct AboutApplicationScene: Scene {
 	var body: some Scene {
-		Window(AboutContent.current.applicationName, id: ApplicationSceneID.about) {
+		/* An About box is a panel: it belongs above the windows it describes, it
+		 is not something the Window menu lists or the system restores at the
+		 next launch, and it holds nothing worth restoring. */
+		UtilityWindow(AboutContent.current.applicationName, id: ApplicationSceneID.about) {
 			AboutSceneRoot()
 		}
 		.windowResizability(.contentSize)
+		.restorationBehavior(.disabled)
 	}
 }
 

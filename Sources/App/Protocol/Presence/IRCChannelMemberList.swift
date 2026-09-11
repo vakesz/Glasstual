@@ -136,12 +136,19 @@ public final class ChannelMemberList: NSObject {
 	private func sortedIndex(for member: ChannelUser) -> Int {
 		var lowerBound = 0
 		var upperBound = memberContainer.count
-		/* Read once rather than on every comparison. */
+		/* Read once rather than on every comparison, and fold every nickname in
+		 the search under one table so the binary search cannot walk past the
+		 slot it is looking for. */
 		let favorIRCop = preferences.memberListSortFavorsServerStaff
+		let prefixes = currentPrefixes
 
 		while lowerBound < upperBound {
 			let index = lowerBound + (upperBound - lowerBound) / 2
-			let comparison = memberContainer[index].compareRank(to: member, favoringServerStaff: favorIRCop)
+			let comparison = memberContainer[index].compareRank(
+				to: member,
+				favoringServerStaff: favorIRCop,
+				casefoldingWith: prefixes
+			)
 
 			if comparison == .orderedAscending {
 				lowerBound = index + 1
@@ -326,7 +333,9 @@ public final class ChannelMemberList: NSObject {
 		let visibleChange = oldMember.user != newMember.user || oldMember.modes != newMember.modes ||
 			oldMember.mark != newMember.mark
 		let needsResort = resort && visibleChange && oldMember.compareRank(
-			to: newMember, favoringServerStaff: preferences.memberListSortFavorsServerStaff
+			to: newMember,
+			favoringServerStaff: preferences.memberListSortFavorsServerStaff,
+			casefoldingWith: currentPrefixes
 		) != .orderedSame
 		if needsResort || oldMember.id != newMember.id ||
 			oldMember.user.nickname != newMember.user.nickname || oldMember.mark != newMember.mark
@@ -454,7 +463,11 @@ public final class ChannelMemberList: NSObject {
 		}
 
 		memberContainer.sort {
-			$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
+			$0.compareRank(
+				to: $1,
+				favoringServerStaff: favorIRCop,
+				casefoldingWith: prefixes
+			) == .orderedAscending
 		}
 		reindexMembers()
 		if zip(previousOrder, memberContainer).contains(where: { $0.0 != $1.id || $0.1 != $1.mark }) {

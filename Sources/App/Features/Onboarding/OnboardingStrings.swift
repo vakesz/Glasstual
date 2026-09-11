@@ -56,6 +56,10 @@ enum OnboardingStrings {
 			String(localized: .TDCOnboardingWindow.windowChromeSkip)
 		}
 
+		static var setUpLaterButton: String {
+			String(localized: .TDCOnboardingWindow.windowChromeSetUpLater)
+		}
+
 		static func progress(currentStep: Int, totalSteps: Int) -> String {
 			String(localized: .TDCOnboardingWindow.windowChromeStep(currentStep, totalSteps))
 		}
@@ -144,12 +148,14 @@ enum OnboardingStrings {
 			OnboardingTextSize.allCases.map(\.title)
 		}
 
-		static var interfaceStyleTitles: [String] {
-			[
-				String(localized: .TDCOnboardingWindow.stepLookAndFeelSystem),
-				String(localized: .TDCOnboardingWindow.stepLookAndFeelLight),
-				String(localized: .TDCOnboardingWindow.stepLookAndFeelDark),
-			]
+		/// One title per case of `PreferredAppearance`, so the picker cannot
+		/// drift out of step with the tags it sets.
+		static func interfaceStyleTitle(_ appearance: PreferredAppearance) -> String {
+			switch appearance {
+			case .inherited: String(localized: .TDCOnboardingWindow.stepLookAndFeelSystem)
+			case .light: String(localized: .TDCOnboardingWindow.stepLookAndFeelLight)
+			case .dark: String(localized: .TDCOnboardingWindow.stepLookAndFeelDark)
+			}
 		}
 
 		static var previewMessages: [OnboardingAppearancePreviewMessage] {

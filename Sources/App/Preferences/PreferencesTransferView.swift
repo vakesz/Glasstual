@@ -92,14 +92,17 @@ struct PreferencesTransferPreviewView: View {
 				Spacer()
 				Button(PromptStrings.Action.cancel) { session.cancelPreview(); dismiss() }
 					.keyboardShortcut(.cancelAction)
+				/* Restoring replaces every preference the file names, so Return
+				 must not do it: only Merge, which adds to what is there, is
+				 safe to bind to the default action. */
 				Button(preview.mode == .restore ? .PreferencesTransfer.restore : .PreferencesTransfer.merge) {
 					Task { await session.commitPreview() }
 				}
-				.keyboardShortcut(.defaultAction)
+				.keyboardShortcut(preview.mode == .restore ? nil : .defaultAction)
 				.disabled(plan == nil)
 			}
 		}
-		.padding(24)
+		.padding(PreferencesMetrics.sheetInset)
 		.frame(width: 580, height: 560)
 		.disabled(session.isBusy)
 		.interactiveDismissDisabled(session.isBusy)
@@ -217,7 +220,7 @@ struct PreferencesExportOptionsView: View {
 					.keyboardShortcut(.defaultAction)
 			}
 		}
-		.padding(24)
+		.padding(PreferencesMetrics.sheetInset)
 		.frame(width: 460)
 		.onAppear { includeConnectCommands = false }
 	}

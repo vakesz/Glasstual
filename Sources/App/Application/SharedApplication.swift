@@ -50,7 +50,7 @@ public enum SharedApplication {
 	/// reachable without the main actor; `PluginManager` is `Sendable`.
 	private nonisolated static let pluginManager = PluginManager() // nonisolated: let
 
-	public nonisolated static func sharedPluginManager() -> PluginManager { // nonisolated: let
+	public nonisolated static func sharedPluginManager() -> PluginManager { // nonisolated: pure
 		pluginManager
 	}
 

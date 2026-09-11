@@ -63,26 +63,6 @@ public nonisolated extension NSString { // nonisolated: pure
 		IRCHostmask(parsing: self as String, maximumNicknameLength: defaultHostmaskNicknameLength)
 	}
 
-	/// The receiver parsed as a hostmask, bounding the nickname by whatever
-	/// length `client` advertised in its ISUPPORT.
-	@MainActor
-	func hostmask(on client: IRCClient?) -> IRCHostmask? {
-		IRCHostmask(
-			parsing: self as String,
-			maximumNicknameLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
-		)
-	}
-
-	/// The receiver read as an RFC 2812 2.3.1 message prefix, or `nil` when it
-	/// names a server rather than a user.
-	@MainActor
-	func senderPrefix(on client: IRCClient?) -> Prefix? {
-		Prefix.user(
-			parsing: self as String,
-			maximumNicknameLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
-		)
-	}
-
 	var isHostmask: Bool {
 		hostmask != nil
 	}
@@ -102,27 +82,6 @@ public nonisolated extension NSString { // nonisolated: pure
 
 	var isHostmaskNickname: Bool {
 		IRCHostmask.isValidNickname(self as String, maximumLength: defaultHostmaskNicknameLength)
-	}
-
-	@MainActor
-	func isHostmaskNickname(on client: IRCClient?) -> Bool {
-		IRCHostmask.isValidNickname(
-			self as String,
-			maximumLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
-		)
-	}
-
-	@MainActor
-	func isChannelName(on client: IRCClient) -> Bool {
-		guard length > 0 else {
-			return false
-		}
-
-		let channelNamePrefixes = client.supportInfo.channelNamePrefixes
-		let channelName = self as String
-		let firstCharacter = String(channelName.prefix(1))
-
-		return channelName.hasPrefix("~#") || channelNamePrefixes.contains(firstCharacter)
 	}
 
 	/** Whether the name starts with any prefix an IRC network is known to use.
@@ -200,5 +159,48 @@ public nonisolated extension NSString { // nonisolated: pure
 		}
 
 		return CharacterSet.textualLetter.contains(scalar)
+	}
+}
+
+/** The same questions, narrowed by what one connection advertised.
+
+ Each of these reads ISUPPORT off the client, so none is a pure function of its
+ arguments and none belongs in the `nonisolated` extension above. */
+public extension NSString {
+	/// The receiver parsed as a hostmask, bounding the nickname by whatever
+	/// length `client` advertised in its ISUPPORT.
+	func hostmask(on client: IRCClient?) -> IRCHostmask? {
+		IRCHostmask(
+			parsing: self as String,
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
+		)
+	}
+
+	/// The receiver read as an RFC 2812 2.3.1 message prefix, or `nil` when it
+	/// names a server rather than a user.
+	func senderPrefix(on client: IRCClient?) -> Prefix? {
+		Prefix.user(
+			parsing: self as String,
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
+		)
+	}
+
+	func isHostmaskNickname(on client: IRCClient?) -> Bool {
+		IRCHostmask.isValidNickname(
+			self as String,
+			maximumLength: maximumHostmaskNicknameLength(on: client, inputLength: length)
+		)
+	}
+
+	func isChannelName(on client: IRCClient) -> Bool {
+		guard length > 0 else {
+			return false
+		}
+
+		let channelNamePrefixes = client.supportInfo.channelNamePrefixes
+		let channelName = self as String
+		let firstCharacter = String(channelName.prefix(1))
+
+		return channelName.hasPrefix("~#") || channelNamePrefixes.contains(firstCharacter)
 	}
 }

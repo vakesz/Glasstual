@@ -177,8 +177,8 @@ public final class ResourceFileImporter {
 			AlertRequest(
 				title: PromptStrings.DocumentImport.documentOpenTitle(filename: filename),
 				body: PromptStrings.DocumentImport.documentOpenBody,
-				defaultButton: PromptStrings.Action.yes,
-				alternateButton: PromptStrings.Action.no,
+				defaultButton: PromptStrings.Action.open,
+				alternateButton: PromptStrings.Action.cancel,
 				style: .warning
 			),
 			on: .anyVisibleWindow

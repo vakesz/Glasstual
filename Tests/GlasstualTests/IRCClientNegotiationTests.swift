@@ -342,6 +342,182 @@ struct IRCClientNegotiationTests {
 		#expect(client.printedLines.count == 0)
 	}
 
+	// MARK: - SASL bounds
+
+	/** `AUTHENTICATE` has no reply the protocol obliges the server to send, so a
+	 server that acknowledges `sasl` and then says nothing left capability
+	 negotiation paused with `CAP END` unsent. Nothing noticed until the
+	 four-minute retry timer took the whole connection down, which reads to the
+	 user as the network being broken rather than as authentication failing. */
+	@Test("Acknowledging SASL starts a deadline, and answering it stops one")
+	func saslNegotiationIsBounded() throws {
+		let client = makeClient(configuration: ["usesSASL": true], nicknamePassword: "secret")
+		defer { client.stopAllTimers() }
+		client.isConnected = true
+
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=PLAIN",
+			on: client
+		))
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * ACK :sasl",
+			on: client
+		))
+
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
+		#expect(client.saslTimeoutTimer.isActive)
+
+		client.finishSASLNegotiation(failed: false)
+
+		#expect(client.saslTimeoutTimer.isActive == false)
+	}
+
+	/** The deadline bounds the wait for the server's next word, not the exchange
+	 as a whole. SCRAM is three challenges, each of which the client answers and
+	 then waits again; armed once, the last round got whatever was left of the
+	 thirty seconds the first one had already spent. */
+	@Test("Every AUTHENTICATE the server sends re-arms the deadline")
+	func eachSASLRoundIsBounded() throws {
+		let client = makeClient(configuration: ["usesSASL": true], nicknamePassword: "secret")
+		defer { client.stopAllTimers() }
+		client.isConnected = true
+
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=PLAIN",
+			on: client
+		))
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * ACK :sasl",
+			on: client
+		))
+
+		#expect(client.saslTimeoutTimer.isActive)
+
+		/* Stopped so that the next round having its own deadline is what the
+		 assertion sees, rather than the one the request already armed. */
+		client.stopSASLTimeoutTimer()
+
+		#expect(client.saslTimeoutTimer.isActive == false)
+
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net AUTHENTICATE +",
+			on: client
+		))
+
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
+		#expect(client.saslTimeoutTimer.isActive)
+	}
+
+	/// Giving up has to leave registration able to finish: the deadline aborts
+	/// the exchange and lets capability negotiation run to `CAP END`.
+	@Test("The deadline aborts SASL and lets registration continue")
+	func saslDeadlineAbortsAndContinues() throws {
+		let client = makeClient(configuration: ["usesSASL": true], nicknamePassword: "secret")
+		defer { client.stopAllTimers() }
+		client.isConnected = true
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=PLAIN",
+			on: client
+		))
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * ACK :sasl",
+			on: client
+		))
+
+		client.onSASLTimeoutTimer()
+
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
+		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL) == false)
+		#expect(client.saslTimeoutTimer.isActive == false)
+		#expect(sentLines(of: client).contains { $0.hasPrefix("AUTHENTICATE") && $0.hasSuffix("*") })
+		#expect(capabilityCommands(of: client).contains("END"))
+		expectPrintedLineContaining(ConnectionSafetyStrings.SASL.timedOut, on: client)
+	}
+
+	/// A server that offered no mechanism this client can speak gets no
+	/// deadline either, because nothing was ever asked of it.
+	@Test("No deadline runs when SASL was never requested")
+	func noDeadlineWithoutSASL() throws {
+		let client = makeClient(configuration: ["usesSASL": false], nicknamePassword: "secret")
+		defer { client.stopAllTimers() }
+
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=PLAIN",
+			on: client
+		))
+
+		#expect(client.saslTimeoutTimer.isActive == false)
+	}
+
+	/** PLAIN is three fields separated by U+0000. A field containing one splits
+	 somewhere else on the server, which either authenticates as a name the user
+	 did not type or sends the tail of the password as a separate field. */
+	@Test("A credential containing a null character is refused rather than sent")
+	func nullCharactersInCredentialsAbortSASL() throws {
+		let client = makeClient(configuration: ["usesSASL": true], nicknamePassword: "hunter\u{0}2")
+		defer { client.stopAllTimers() }
+		client.isConnected = true
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=PLAIN",
+			on: client
+		))
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * ACK :sasl",
+			on: client
+		))
+
+		try client.handleCapabilityOrAuthenticationRequest(message("AUTHENTICATE +", on: client))
+
+		let lines = sentLines(of: client)
+
+		#expect(lines.contains { $0.contains("hunter") } == false)
+		#expect(lines.contains { $0.hasPrefix("AUTHENTICATE") && $0.hasSuffix("*") })
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
+		expectPrintedLineContaining(
+			ConnectionSafetyStrings.SASL.credentialsContainNullCharacter, on: client
+		)
+	}
+
+	/** Asking whether SASL can be requested is a question. It is asked again on
+	 every `CAP NEW` and `CAP DEL`, so choosing the mechanism inside it let a
+	 late advertisement replace the mechanism of an exchange already in flight —
+	 and the reply the client then sent belonged to neither. */
+	@Test("A late SASL advertisement does not replace an in-flight mechanism")
+	func aLateAdvertisementDoesNotReplaceTheMechanism() throws {
+		let client = makeClient(
+			configuration: ["usesSASL": true, "saslMechanismPreference": "SCRAM-SHA-256"],
+			nicknamePassword: "secret"
+		)
+		defer { client.stopAllTimers() }
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=SCRAM-SHA-256,PLAIN",
+			on: client
+		))
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * ACK :sasl",
+			on: client
+		))
+
+		let chosen = client.saslMechanism
+
+		#expect(chosen == SCRAMClient.mechanismName)
+
+		try client.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * NEW :sasl=PLAIN",
+			on: client
+		))
+
+		#expect(client.saslMechanism == chosen)
+	}
+
+	private func expectPrintedLineContaining(_ text: String, on client: GLTTestClient) {
+		let bodies = (client.printedLines as NSArray).compactMap {
+			($0 as? [String: Any])?["messageBody"] as? String
+		}
+
+		#expect(bodies.contains { $0.contains(text) })
+	}
+
 	private func makeClient(configuration: NSDictionary, nicknamePassword: String) -> GLTTestClient {
 		guard let configuration = configuration as? [String: Any] else {
 			preconditionFailure("Test configuration must bridge to a Swift dictionary")

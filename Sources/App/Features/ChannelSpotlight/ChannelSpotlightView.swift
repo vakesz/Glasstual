@@ -13,6 +13,9 @@ struct ChannelSpotlightView: View {
 	let close: () -> Void
 
 	@FocusState private var searchIsFocused: Bool
+	/// Scrolling the result list under the keyboard is motion the system can be
+	/// asked to stop making.
+	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 
 	private var contentHeight: CGFloat {
 		if model.searchText.isEmpty {
@@ -73,6 +76,10 @@ struct ChannelSpotlightView: View {
 						}
 						.onChange(of: model.selectedResultID) { _, identifier in
 							guard let identifier else { return }
+							guard reduceMotion == false else {
+								proxy.scrollTo(identifier, anchor: .center)
+								return
+							}
 							withAnimation { proxy.scrollTo(identifier, anchor: .center) }
 						}
 					}
@@ -161,8 +168,11 @@ private struct ChannelSpotlightRow: View {
 		}
 		.padding(.horizontal, 16)
 		.frame(height: 54)
-		.background(isSelected ? Color.accentColor : .clear)
-		.foregroundStyle(isSelected ? Color.white : Color.primary)
+		/* The system's own selection colours: an accent fill with white text is
+		 wrong under increased contrast, under a graphite accent, and wherever
+		 the user has told the system to draw selection differently. */
+		.background(isSelected ? Color(nsColor: .selectedContentBackgroundColor) : .clear)
+		.foregroundStyle(isSelected ? Color(nsColor: .alternateSelectedControlTextColor) : Color.primary)
 		.task(id: channel?.uniqueIdentifier) {
 			guard let channel else { return }
 			highlightCount = Int(channel.nicknameHighlightCount)

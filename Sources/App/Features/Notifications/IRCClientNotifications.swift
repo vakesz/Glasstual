@@ -331,8 +331,21 @@ public extension IRCClient {
 			targetIsSelected: targetIsSelected
 		)
 
-		if !Preferences.Notifications.soundIsMuted.value {
-			if !onlySpeak, let soundName = controller.sound(forEvent: event, in: target) {
+		let soundIsMuted = Preferences.Notifications.soundIsMuted.value
+		let soundName = soundIsMuted ? nil : controller.sound(forEvent: event, in: target)
+		let soundPlayback = IRCNotificationPolicy.soundPlayback(
+			soundName: soundName,
+			isMuted: soundIsMuted,
+			isOnlySpoken: onlySpeak,
+			systemPlaysNotificationSounds: controller.systemPlaysNotificationSounds
+		)
+		/* Exactly one of the two plays it: the notification carries the sound
+		 unless the system will not play it, in which case the application does
+		 and the notification is posted silent. */
+		let notificationSound = soundPlayback == .withNotification ? soundName : nil
+
+		if !soundIsMuted {
+			if soundPlayback == .byApplication, let soundName {
 				SoundPlayer.playAlertSound(soundName)
 			}
 			speakEvent(event, lineType: lineType, target: target, nickname: nickname, text: text)
@@ -360,10 +373,23 @@ public extension IRCClient {
 			text: text
 		) else { return true }
 
+		if let sender = content.sender {
+			controller.notifyMessage(
+				from: sender,
+				in: content.title,
+				message: content.description ?? "",
+				sound: notificationSound,
+				userInfo: userInfo,
+				categoryIdentifier: NotificationController.categoryIdentifier(for: event)
+			)
+			return true
+		}
+
 		controller.notify(
 			event,
 			title: content.title,
 			description: content.description,
+			sound: notificationSound,
 			userInfo: userInfo
 		)
 		return true
@@ -376,7 +402,7 @@ public extension IRCClient {
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?
-	) -> (title: String?, description: String?)? {
+	) -> NotificationContentFields? {
 		switch event {
 		case .highlight, .newPrivateMessage, .channelMessage, .channelNotice, .privateMessage, .privateNotice:
 			textNotificationContent(
@@ -392,10 +418,10 @@ public extension IRCClient {
 			fileTransferNotificationContent(nickname: nickname, text: text)
 
 		case .connect, .disconnect:
-			(networkNameAlt, nil)
+			NotificationContentFields(title: networkNameAlt)
 
 		case .addressBookMatch:
-			text.map { (nil, $0) }
+			text.map { NotificationContentFields(description: $0) }
 
 		case .kick, .invite, .userJoined, .userParted, .userDisconnected:
 			membershipNotificationContent(
@@ -407,6 +433,12 @@ public extension IRCClient {
 		}
 	}
 
+	/** Who said it, where, and what they said — as three fields.
+
+	 A message notification reads like every other one on the system: the
+	 nickname in the title, the channel in the subtitle, the message in the
+	 body. An action keeps its composed "nickname does something" body, because
+	 there the nickname is part of the sentence. */
 	@MainActor
 	private func textNotificationContent(
 		for event: NotificationEvent,
@@ -414,27 +446,32 @@ public extension IRCClient {
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?
-	) -> (title: String?, description: String?)? {
+	) -> NotificationContentFields? {
 		guard let nickname, let text else { return nil }
-		let title: String? = switch event {
+		let location: String? = switch event {
 		case .highlight, .channelMessage, .channelNotice: target?.name
 		default: nil
 		}
 		let formattedNickname = formatNickname(nickname, in: target)
-		return (title, IRCNotificationPolicy.textEventDescription(
-			lineType: lineType,
-			nickname: nickname,
-			formattedNickname: formattedNickname,
-			text: text
-		))
+		let isAction = lineType == .action || lineType == .actionNoHighlight
+		let body = isAction
+			? IRCNotificationPolicy.textEventDescription(
+				lineType: lineType,
+				nickname: nickname,
+				formattedNickname: formattedNickname,
+				text: text
+			)
+			: text
+
+		return NotificationContentFields(sender: formattedNickname, title: location, description: body)
 	}
 
 	private func fileTransferNotificationContent(
 		nickname: String?,
 		text: String?
-	) -> (title: String?, description: String?)? {
+	) -> NotificationContentFields? {
 		guard let nickname, let text else { return nil }
-		return (nickname, text)
+		return NotificationContentFields(title: nickname, description: text)
 	}
 
 	private func membershipNotificationContent(
@@ -442,7 +479,7 @@ public extension IRCClient {
 		target: IRCChannel?,
 		nickname: String?,
 		text: String?
-	) -> (title: String?, description: String?)? {
+	) -> NotificationContentFields? {
 		guard let nickname else { return nil }
 		let description: String?
 
@@ -473,6 +510,14 @@ public extension IRCClient {
 			return nil
 		}
 
-		return (networkNameAlt, description)
+		return NotificationContentFields(title: networkNameAlt, description: description)
 	}
+}
+
+/// What one notification says: who it is from, where it happened, and the text
+/// itself. A message fills all three; every other event fills what it has.
+struct NotificationContentFields {
+	var sender: String?
+	var title: String?
+	var description: String?
 }

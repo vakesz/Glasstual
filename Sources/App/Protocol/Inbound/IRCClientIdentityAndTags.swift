@@ -115,9 +115,13 @@ public extension IRCClient {
 			}
 		}
 
+		/* Folded the way the server folds nicknames: comparing the raw strings
+		 read our own TAGMSG echoed back under a different casing as somebody
+		 else's and filed it in a query with ourselves. */
+		let senderIsMyself = sender.isEmpty == false && nicknameIsMyself(sender)
 		let channel: IRCChannel? = if stringIsChannelName(target) {
 			findChannel(target)
-		} else if !sender.isEmpty, sender != userNickname {
+		} else if !sender.isEmpty, !senderIsMyself {
 			findChannel(sender)
 		} else if !target.isEmpty {
 			findChannel(target)
@@ -132,7 +136,7 @@ public extension IRCClient {
 		// typing indicator at all.
 		if let typing = clientTags["typing"],
 		   let channel,
-		   sender != userNickname,
+		   !senderIsMyself,
 		   environment.preferences.displayTypingNotifications,
 		   message.isHistoric == false
 		{

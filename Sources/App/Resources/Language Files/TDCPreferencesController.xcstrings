@@ -2485,6 +2485,54 @@
         }
       }
     },
+    "interface-reset-colors-confirmation": {
+      "comment": "Title of the alert confirming that every member-list colour the user picked will be replaced by the defaults.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset the member list colors to their defaults?"
+          }
+        }
+      }
+    },
+    "interface-reset-colors-confirmation-body": {
+      "comment": "Body of the alert confirming a reset of the member-list colors. Says what is lost.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The colors you chose will be replaced and cannot be brought back."
+          }
+        }
+      }
+    },
+    "interface-reset-theme-confirmation": {
+      "comment": "Title of the alert confirming that the customised transcript theme will be replaced by a default one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset the transcript theme to its defaults?"
+          }
+        }
+      }
+    },
+    "interface-reset-theme-confirmation-body": {
+      "comment": "Body of the alert confirming a reset of the transcript theme. Says what is lost.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The fonts and colors you chose will be replaced and cannot be brought back. Export the theme first to keep a copy."
+          }
+        }
+      }
+    },
     "interface-reset-to-defaults": {
       "comment": "Button that restores every user list colour to its default.",
       "extractionState": "manual",
