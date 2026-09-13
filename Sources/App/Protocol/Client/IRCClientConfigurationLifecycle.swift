@@ -52,7 +52,7 @@ enum IRCClientConfigurationPolicy {
 	}
 
 	static func storedChannelConfigurations(
-		from channels: [IRCChannel],
+		from channels: [Channel],
 		rememberQueries: Bool
 	) -> [ChannelConfig] {
 		channels.compactMap { channel in
@@ -190,8 +190,8 @@ public extension IRCClient {
 		guard isTerminating == false else { return }
 		isTerminating = true
 		let clientIdentifier = uniqueIdentifier
-		clientTerminationLogger.info("Preparing client: <\(clientIdentifier, privacy: .public)>")
-		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Closing dialogs")
+		clientTerminationLogger.debug("Preparing client: <\(clientIdentifier, privacy: .public)>")
+		clientTerminationLogger.debug("[\(clientIdentifier, privacy: .public)] Closing dialogs")
 		closeDialogs()
 
 		guard IRCClientLifecyclePolicy.requiresDisconnect(
@@ -202,7 +202,7 @@ public extension IRCClient {
 			return
 		}
 
-		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Performing disconnect")
+		clientTerminationLogger.debug("[\(clientIdentifier, privacy: .public)] Performing disconnect")
 		addDisconnectCallback { [weak self] in
 			self?.prepareForApplicationTerminationPostflight()
 		}
@@ -214,27 +214,27 @@ public extension IRCClient {
 		guard terminationPostflightFinished == false else { return }
 		terminationPostflightFinished = true
 		let clientIdentifier = uniqueIdentifier
-		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Closing log file")
+		clientTerminationLogger.debug("[\(clientIdentifier, privacy: .public)] Closing log file")
 		closeLogFile()
-		clientTerminationLogger.info(
+		clientTerminationLogger.debug(
 			"[\(clientIdentifier, privacy: .public)] Removing unspoken messages from speech synthesizer"
 		)
 		clearEventsToSpeak()
-		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Emptying Address Book cache")
+		clientTerminationLogger.debug("[\(clientIdentifier, privacy: .public)] Emptying Address Book cache")
 		clearAddressBookCache()
-		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Removing all tracked users")
+		clientTerminationLogger.debug("[\(clientIdentifier, privacy: .public)] Removing all tracked users")
 		clearTrackedUsers()
 		let channels = channelList
-		clientTerminationLogger.info(
+		clientTerminationLogger.debug(
 			"[\(clientIdentifier, privacy: .public)] Preparing channels: \(channels.count, privacy: .public)"
 		)
 		channels.forEach { $0.prepareForApplicationTermination() }
 		let viewIdentifier = presentation?.presentationIdentifier ?? ""
-		clientTerminationLogger.info(
+		clientTerminationLogger.debug(
 			"[\(clientIdentifier, privacy: .public)] Preparing view controller: <\(viewIdentifier, privacy: .public)>"
 		)
 		presentation?.tearDown(.applicationTermination)
-		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Decrementing client count")
+		clientTerminationLogger.debug("[\(clientIdentifier, privacy: .public)] Decrementing client count")
 		environment.services.applicationState?.noteClientDidFinishTerminating()
 	}
 
@@ -269,9 +269,9 @@ public extension IRCClient {
 		}
 	}
 
-	/// Called by `IRCWorld` before the channel is torn down, so what the client
+	/// Called by `World` before the channel is torn down, so what the client
 	/// holds for it is dropped while the channel is still whole.
-	func willDestroyChannel(_ channel: IRCChannel) {
+	func willDestroyChannel(_ channel: Channel) {
 		guard channel.associatedClient === self else { return }
 		if channel.isPrivateMessage {
 			stopTrackingQueryPeer(channel.name)
@@ -293,7 +293,7 @@ public extension IRCClient {
 	                               preservingUnmatchedQueries: Bool)
 	{
 		var remainingChannels = channelList
-		var updatedChannels: [IRCChannel] = []
+		var updatedChannels: [Channel] = []
 		var insertedNames = Set<String>()
 		guard let world else { return }
 

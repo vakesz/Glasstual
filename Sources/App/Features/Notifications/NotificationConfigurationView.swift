@@ -5,160 +5,131 @@
 
 import SwiftUI
 
-/// Native SwiftUI editor shared by application-wide notification settings and
-/// a channel's three-state overrides.
+/** The notification settings shared by the application-wide pane and a
+ channel's overrides.
+
+ Every event is a row and every setting a column, so the whole table is
+ readable at once and one event can be compared with its neighbours. It used to
+ be a pop-up that revealed one of nineteen events at a time, which made "which
+ events bounce the Dock?" a question you answered by clicking nineteen times. */
 @MainActor
 struct NotificationConfigurationView: View {
-	private enum SoundSelection: Hashable {
-		case defaultSound
-		case noSound
-		case named(String)
-	}
-
-	let notifications: [NotificationConfigurationItem]
-	let allowsInheritedState: Bool
-	private let soundNames: [String]
-
-	@State private var activeIndex: Int
-	@State private var revision = 0
+	@State private var model: NotificationConfigurationModel
 
 	init(notifications: [NotificationConfigurationItem], allowsInheritedState: Bool) {
-		self.notifications = notifications
-		self.allowsInheritedState = allowsInheritedState
-		soundNames = SoundPlayer.uniqueListOfSounds()
-		_activeIndex = State(initialValue: notifications.firstIndex { $0.configuration != nil } ?? 0)
+		_model = State(
+			initialValue: NotificationConfigurationModel(
+				notifications: notifications,
+				allowsInheritedState: allowsInheritedState
+			)
+		)
 	}
 
-	private var activeConfiguration: (any NotificationConfiguration)? {
-		guard notifications.indices.contains(activeIndex) else { return nil }
-		return notifications[activeIndex].configuration
+	/// An override needs room for three named states; a plain switch is a
+	/// checkbox and needs room for nothing.
+	private var settingColumnWidth: CGFloat {
+		model.allowsInheritedState ? 104 : 68
 	}
 
 	var body: some View {
-		if let configuration = activeConfiguration {
-			VStack(alignment: .leading, spacing: 14) {
-				Picker(NotificationConfigurationStrings.selectedAlert, selection: $activeIndex) {
-					ForEach(Array(notifications.enumerated()), id: \.offset) { index, item in
-						if let alert = item.configuration {
-							Text(verbatim: alert.displayName).tag(index)
-						} else {
-							Divider()
-						}
-					}
-				}
-
-				settingControl(
-					NotificationConfigurationStrings.showNotification,
-					value: binding(
-						get: { configuration.pushNotification },
-						set: { configuration.pushNotification = $0 }
-					)
-				)
-				settingControl(
-					NotificationConfigurationStrings.speak,
-					value: binding(
-						get: { configuration.speakEvent },
-						set: { configuration.speakEvent = $0 }
-					)
-				)
-				settingControl(
-					NotificationConfigurationStrings.disableWhileAway,
-					value: binding(
-						get: { configuration.disabledWhileAway },
-						set: { configuration.disabledWhileAway = $0 }
-					)
-				)
-				settingControl(
-					NotificationConfigurationStrings.bounceDockIcon,
-					value: binding(get: { configuration.bounceDockIcon }, set: { configuration.bounceDockIcon = $0 })
-				)
-				settingControl(
-					NotificationConfigurationStrings.bounceRepeatedly,
-					value: binding(
-						get: { configuration.bounceDockIconRepeatedly },
-						set: { configuration.bounceDockIconRepeatedly = $0 }
-					)
-				)
-				.disabled(configuration.bounceDockIcon == .off)
-
-				Picker(
-					NotificationConfigurationStrings.sound,
-					selection: soundBinding(for: configuration)
-				) {
-					Text(verbatim: NotificationAlertSound.localizedDefaultTitle)
-						.tag(SoundSelection.defaultSound)
-					Text(verbatim: NotificationAlertSound.localizedNoSoundTitle)
-						.tag(SoundSelection.noSound)
-					Divider()
-					ForEach(soundNames, id: \.self) { soundName in
-						Text(verbatim: soundName).tag(SoundSelection.named(soundName))
-					}
-				}
-			}
-			.id(revision)
-		} else {
+		if model.rows.isEmpty {
 			ContentUnavailableView(
-				NotificationConfigurationStrings.noAlerts,
+				NotificationConfigurationStrings.noEvents,
 				systemImage: "bell.slash"
 			)
+		} else {
+			Table(model.rows) {
+				TableColumn(NotificationConfigurationStrings.event) { row in
+					Text(verbatim: row.name)
+				}
+				.width(min: 140, ideal: 180)
+
+				TableColumn(NotificationConfigurationStrings.showNotification) { row in
+					setting(
+						NotificationConfigurationStrings.showNotification,
+						value: row.showsNotification
+					) { row.showsNotification = $0 }
+				}
+				.width(settingColumnWidth)
+
+				TableColumn(NotificationConfigurationStrings.speak) { row in
+					setting(NotificationConfigurationStrings.speak, value: row.speaks) { row.speaks = $0 }
+				}
+				.width(settingColumnWidth)
+
+				TableColumn(NotificationConfigurationStrings.disableWhileAway) { row in
+					setting(
+						NotificationConfigurationStrings.disableWhileAway,
+						value: row.disabledWhileAway
+					) { row.disabledWhileAway = $0 }
+				}
+				.width(settingColumnWidth)
+
+				TableColumn(NotificationConfigurationStrings.bounceDockIcon) { row in
+					setting(
+						NotificationConfigurationStrings.bounceDockIcon,
+						value: row.bouncesDockIcon
+					) { row.bouncesDockIcon = $0 }
+				}
+				.width(settingColumnWidth)
+
+				TableColumn(NotificationConfigurationStrings.bounceRepeatedly) { row in
+					setting(
+						NotificationConfigurationStrings.bounceRepeatedly,
+						value: row.bouncesRepeatedly
+					) { row.bouncesRepeatedly = $0 }
+						/* Repeating a bounce that does not happen is not a
+						 setting, and inheriting the Dock bounce is not agreeing
+						 to it either, so only an explicit "on" enables this. */
+						.disabled(row.bouncesDockIcon != .on)
+				}
+				.width(settingColumnWidth)
+
+				TableColumn(NotificationConfigurationStrings.sound) { row in
+					soundPicker(for: row)
+				}
+				.width(min: 120, ideal: 150)
+			}
+			.frame(minHeight: 260)
 		}
 	}
 
+	/// The label is hidden because the column heading already names the
+	/// setting, and kept because that heading is not the control's own
+	/// accessibility label.
 	@ViewBuilder
-	private func settingControl(_ title: String, value: Binding<ChannelEventOverride>) -> some View {
-		if allowsInheritedState {
-			Picker(title, selection: value) {
+	private func setting(
+		_ title: String,
+		value: ChannelEventOverride,
+		set: @escaping @MainActor @Sendable (ChannelEventOverride) -> Void
+	) -> some View {
+		if model.allowsInheritedState {
+			Picker(title, selection: Binding(get: { value }, set: set)) {
 				Text(verbatim: NotificationConfigurationStrings.inherit).tag(ChannelEventOverride.inherited)
 				Text(verbatim: NotificationConfigurationStrings.off).tag(ChannelEventOverride.off)
 				Text(verbatim: NotificationConfigurationStrings.on).tag(ChannelEventOverride.on)
 			}
-			.pickerStyle(.segmented)
+			.labelsHidden()
 		} else {
-			Toggle(
-				title,
-				isOn: Binding(
-					get: { value.wrappedValue == .on },
-					set: { value.wrappedValue = $0 ? .on : .off }
-				)
-			)
-			.toggleStyle(.switch)
+			Toggle(title, isOn: Binding(get: { value == .on }, set: { set($0 ? .on : .off) }))
+				.labelsHidden()
 		}
 	}
 
-	private func binding(
-		get: @escaping @MainActor @Sendable () -> ChannelEventOverride,
-		set: @escaping @MainActor @Sendable (ChannelEventOverride) -> Void
-	) -> Binding<ChannelEventOverride> {
-		Binding(
-			get: get,
-			set: { value in
-				set(value)
-				revision &+= 1
+	private func soundPicker(for row: NotificationSettingRow) -> some View {
+		Picker(
+			NotificationConfigurationStrings.sound,
+			selection: Binding(get: { row.sound }, set: { row.sound = $0 })
+		) {
+			Text(verbatim: NotificationAlertSound.localizedDefaultTitle)
+				.tag(NotificationSoundSelection.defaultSound)
+			Text(verbatim: NotificationAlertSound.localizedNoSoundTitle)
+				.tag(NotificationSoundSelection.noSound)
+			Divider()
+			ForEach(model.soundNames, id: \.self) { soundName in
+				Text(verbatim: soundName).tag(NotificationSoundSelection.named(soundName))
 			}
-		)
-	}
-
-	private func soundBinding(for configuration: any NotificationConfiguration) -> Binding<SoundSelection> {
-		Binding(
-			get: {
-				switch configuration.alertSound {
-				case nil: .defaultSound
-				case NotificationAlertSound.noSoundPreferenceValue: .noSound
-				case let .some(name): .named(name)
-				}
-			},
-			set: { selection in
-				let name: String? = switch selection {
-				case .defaultSound: nil
-				case .noSound: NotificationAlertSound.noSoundPreferenceValue
-				case let .named(name): name
-				}
-				if let name {
-					SoundPlayer.playAlertSound(name)
-				}
-				configuration.alertSound = name
-				revision &+= 1
-			}
-		)
+		}
+		.labelsHidden()
 	}
 }

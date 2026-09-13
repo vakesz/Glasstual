@@ -83,14 +83,38 @@ struct StringCatalogStructureTests {
 		for catalog in try StringCatalog.all() {
 			for (key, entry) in catalog.strings {
 				let english = try #require(entry.localizations[catalog.sourceLanguage], "\(catalog.name):\(key)")
-				let source = try #require(english.stringUnits.first, "\(catalog.name):\(key)")
-				let shape = try StringCatalog.placeholderShape(of: source.value)
+				var sourceShapes: [String: String] = [:]
+				for (path, unit) in english.addressedStringUnits() {
+					sourceShapes[path] = try StringCatalog.placeholderShape(
+						of: unit.value,
+						substitutions: english.substitutions ?? [:]
+					)
+				}
+				#expect(sourceShapes.isEmpty == false, "\(catalog.name):\(key)")
+
 				for (language, localization) in entry.localizations {
-					#expect(localization.stringUnits.isEmpty == false, "\(catalog.name):\(key):\(language)")
-					for unit in localization.stringUnits {
+					let units = localization.addressedStringUnits()
+					#expect(units.isEmpty == false, "\(catalog.name):\(key):\(language)")
+					let substitutions = localization.substitutions ?? [:]
+					for (path, unit) in units {
+						let shape = try StringCatalog.placeholderShape(of: unit.value, substitutions: substitutions)
+						let position = path.isEmpty ? "" : " at \(path)"
+
+						guard let expected = sourceShapes[path] else {
+							/* A plural category the source language has no form
+							 for — Hungarian's "few" under an English "one" and
+							 "other" — has no counterpart to compare against, so
+							 it has to match one of the forms English does have. */
+							#expect(
+								sourceShapes.values.contains(shape),
+								"\(catalog.name):\(key):\(language)\(position) changes the argument contract: \(unit.value)"
+							)
+							continue
+						}
+
 						#expect(
-							try StringCatalog.placeholderShape(of: unit.value) == shape,
-							"\(catalog.name):\(key):\(language) changes the argument contract: \(unit.value)"
+							shape == expected,
+							"\(catalog.name):\(key):\(language)\(position) changes the argument contract: \(unit.value)"
 						)
 					}
 				}
@@ -107,6 +131,25 @@ struct StringCatalogStructureTests {
 		#expect(throws: (any Error).self) { try StringCatalog.placeholderShape(of: "%1$@ %3$@") }
 		#expect(throws: (any Error).self) { try StringCatalog.placeholderShape(of: "%1$@ %1$d") }
 		#expect(throws: (any Error).self) { try StringCatalog.placeholderShape(of: "%1$@ %@") }
+	}
+
+	/// A `%#@name@` fills the slot its substitution declares, so a plural does
+	/// not read as a stray `%@` with a `#` flag and does not leave a hole in
+	/// the positions either.
+	@Test("A substitution reference occupies the slot its declaration names")
+	func substitutionPlaceholderFixtures() throws {
+		let count = ["arg2": StringCatalog.Substitution(argNum: 2, formatSpecifier: "lu")]
+
+		#expect(
+			try StringCatalog.placeholderShape(of: "%1$@ said %#@arg2@", substitutions: count)
+				== StringCatalog.placeholderShape(of: "%1$@ %2$lu")
+		)
+		#expect(
+			try StringCatalog.placeholderShape(of: "%#@arg2@ from %1$@", substitutions: count)
+				!= StringCatalog.placeholderShape(of: "%1$@ %2$@")
+		)
+		// Without the declaration there is no slot to fill, so the shape is unknowable.
+		#expect(throws: (any Error).self) { try StringCatalog.placeholderShape(of: "%1$@ %#@arg2@") }
 	}
 
 	@Test("Device and plural variations are traversed recursively")
@@ -175,14 +218,39 @@ private struct StringCatalog: Decodable {
 		var localizations: [String: Localization] = [:]
 	}
 
+	struct Substitution: Decodable {
+		let argNum: Int
+		let formatSpecifier: String
+	}
+
 	struct Localization: Decodable {
 		var stringUnit: StringUnit?
+		var substitutions: [String: Substitution]?
 		var variations: [String: [String: Localization]]?
 
-		var stringUnits: [StringUnit] {
-			(stringUnit.map { [$0] } ?? []) + (variations ?? [:]).values.flatMap {
-				$0.values.flatMap(\.stringUnits)
+		/** Every unit this localization holds, each under the variation path
+		 that reaches it: `""` for a plain string, `"plural.one"`, or
+		 `"device.mac.plural.other"` where both vary.
+
+		 The path is what makes two languages comparable. English spells the
+		 count out in one plural form and omits it in another — "the first one
+		 is here" beside "the first %ld are here" — so the forms of one string
+		 do not share an argument contract, only the same form across languages
+		 does. */
+		func addressedStringUnits(under path: String = "") -> [(path: String, unit: StringUnit)] {
+			let own = stringUnit.map { [(path, $0)] } ?? []
+
+			return own + (variations ?? [:]).sorted { $0.key < $1.key }.flatMap { dimension, cases in
+				cases.sorted { $0.key < $1.key }.flatMap { name, localization in
+					localization.addressedStringUnits(
+						under: path.isEmpty ? "\(dimension).\(name)" : "\(path).\(dimension).\(name)"
+					)
+				}
 			}
+		}
+
+		var stringUnits: [StringUnit] {
+			addressedStringUnits().map(\.unit)
 		}
 	}
 
@@ -224,38 +292,52 @@ private struct StringCatalog: Decodable {
 		return first.isLetter ? first.lowercased() + joined.dropFirst() : "_" + joined
 	}
 
-	/// Compare argument slots, not textual order or presentation flags. A
-	/// translation can repeat an argument but cannot change its ABI type.
-	static func placeholderShape(of value: String) throws -> String {
+	/** Compare argument slots, not textual order or presentation flags. A
+	 translation can repeat an argument but cannot change its ABI type.
+
+	 A `%#@name@` reference is an argument like any other: the slot it fills and
+	 the type it prints come from the substitution the localization declares,
+	 not from the text, so `substitutions` has to be the ones that belong to the
+	 value being read. */
+	static func placeholderShape(
+		of value: String,
+		substitutions: [String: Substitution] = [:]
+	) throws -> String {
+		/* The substitution reference comes first in the alternation: its `%#@`
+		 prefix is otherwise a well-formed `%@` conversion with a `#` flag. */
 		let pattern = try NSRegularExpression(
-			pattern: #"%%|%(?:(\d+)\$)?[-+ #0]*(?:\d+)?(?:\.\d+)?(hh|h|ll|l|q|j|z|t|L)?([@diouxXeEfgGaAcsp])"#
+			pattern: #"%%|%#@([A-Za-z0-9_]+)@"#
+				+ #"|%(?:(\d+)\$)?[-+ #0]*(?:\d+)?(?:\.\d+)?(hh|h|ll|l|q|j|z|t|L)?([@diouxXeEfgGaAcsp])"#
 		)
 		let range = NSRange(value.startIndex ..< value.endIndex, in: value)
 		var slots: [Int: String] = [:]
 		var nextIndex = 1
 		var positional: Bool?
+
+		func claim(_ index: Int, as type: String) throws {
+			guard slots[index] == nil || slots[index] == type else { throw ContractError.conflictingTypes }
+			slots[index] = type
+		}
+
 		for match in pattern.matches(in: value, range: range) {
 			let token = (value as NSString).substring(with: match.range)
 			if token == "%%" {
 				continue
 			}
-			let explicit = match.range(at: 1).location != NSNotFound
+			if match.range(at: 1).location != NSNotFound {
+				let name = (value as NSString).substring(with: match.range(at: 1))
+				guard let substitution = substitutions[name] else { throw ContractError.unknownSubstitution }
+				try claim(substitution.argNum, as: Self.slotType(of: substitution.formatSpecifier))
+				continue
+			}
+			let explicit = match.range(at: 2).location != NSNotFound
 			guard positional == nil || positional == explicit else { throw ContractError.mixedPositions }
 			positional = explicit
-			let index = explicit ? Int((value as NSString).substring(with: match.range(at: 1))) ?? 0 : nextIndex
+			let index = explicit ? Int((value as NSString).substring(with: match.range(at: 2))) ?? 0 : nextIndex
 			nextIndex += 1
-			let length = match.range(at: 2).location == NSNotFound ? "" : (value as NSString)
-				.substring(with: match.range(at: 2))
-			let conversion = (value as NSString).substring(with: match.range(at: 3))
-			let kind = switch conversion {
-			case "d", "i": "d"
-			case "o", "u", "x", "X": "u"
-			case "e", "E", "f", "g", "G", "a", "A": "f"
-			default: conversion
-			}
-			let type = length + kind
-			guard slots[index] == nil || slots[index] == type else { throw ContractError.conflictingTypes }
-			slots[index] = type
+			let length = match.range(at: 3).location == NSNotFound ? "" : (value as NSString)
+				.substring(with: match.range(at: 3))
+			try claim(index, as: Self.slotType(of: length + (value as NSString).substring(with: match.range(at: 4))))
 		}
 		if let highest = slots.keys.max() {
 			guard highest > 0, Set(slots.keys) == Set(1 ... highest) else { throw ContractError.missingPosition }
@@ -263,8 +345,22 @@ private struct StringCatalog: Decodable {
 		return slots.keys.sorted().map { "\($0):\(slots[$0] ?? "")" }.joined(separator: " ")
 	}
 
+	/// A format specifier reduced to the ABI type it prints, so that `%i` and
+	/// `%d`, or `%e` and `%f`, compare equal.
+	private static func slotType(of specifier: String) -> String {
+		let length = specifier.dropLast()
+		let kind = switch specifier.last {
+		case "d", "i": "d"
+		case "o", "u", "x", "X": "u"
+		case "e", "E", "f", "g", "G", "a", "A": "f"
+		case let conversion?: String(conversion)
+		case nil: ""
+		}
+		return length + kind
+	}
+
 	private enum ContractError: Error {
-		case mixedPositions, conflictingTypes, missingPosition, missingCatalogs
+		case mixedPositions, conflictingTypes, missingPosition, missingCatalogs, unknownSubstitution
 	}
 
 	static func words(in text: String) -> Set<String> {

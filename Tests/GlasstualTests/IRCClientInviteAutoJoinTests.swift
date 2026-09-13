@@ -54,14 +54,14 @@ struct IRCClientInviteAutoJoinTests {
 		try body()
 	}
 
-	private func loggedInClient() -> GLTTestClient {
-		let client = GLTTestClient()
+	private func loggedInClient() -> TestClient {
+		let client = TestClient()
 		client.userNickname = "mynick"
 		client.markAsLoggedIn()
 		return client
 	}
 
-	private func sentLines(of client: GLTTestClient) -> [String] {
+	private func sentLines(of client: TestClient) -> [String] {
 		(client.sentLines as NSArray).compactMap { $0 as? String }
 	}
 

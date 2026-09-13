@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -42,16 +42,16 @@ import CocoaExtensions
 enum MenuWindowPolicy {
 	static let alertSuppressionPrefix = Preferences.Families.alertSuppression.pattern
 
-	static func nextAppearance(current: PreferredAppearance, systemIsDark: Bool) -> PreferredAppearance {
-		switch current {
-		case .inherited: systemIsDark ? .light : .dark
-		case .light: .dark
-		case .dark: .light
-		@unknown default: .inherited
+	static func appearance(for command: MenuCommand?) -> PreferredAppearance? {
+		switch command {
+		case .appearanceSystem: .inherited
+		case .appearanceLight: .light
+		case .appearanceDark: .dark
+		default: nil
 		}
 	}
 
-	static func channelsOrderedBeforeQueries(_ lhs: IRCChannel, _ rhs: IRCChannel) -> Bool {
+	static func channelsOrderedBeforeQueries(_ lhs: Channel, _ rhs: Channel) -> Bool {
 		/* Both directions have to be answered. Without the second branch a
 		 query and a channel compare as "unordered" one way and "ordered" the
 		 other, which is not a strict weak ordering and lets sort(by:) produce
@@ -63,32 +63,119 @@ enum MenuWindowPolicy {
 	}
 }
 
-@MainActor
+// MARK: - Window, appearance and application-wide commands
+
 public extension MenuActionCoordinator {
-	func performWindowAction(_ action: MenuWindowAction, sender: Any?) {
+	@objc func closeWindow(_ sender: Any?) {
+		let action = Preferences.Input.commandWKeyAction.value
+		if action == .closeWindow || mainWindow.isKeyWindow == false {
+			(NSApp.keyWindow ?? NSApp.mainWindow)?.performClose(sender)
+			return
+		}
+		guard let client = selectedClient else { return }
 		switch action {
-		case .close: closeWindow(sender)
-		case .showMainWindow: mainWindow.makeKeyAndOrderFront(sender)
-		case .centerMainWindow: mainWindow.ce_exactlyCenter()
-		case .resetMainWindowFrame: resetMainWindowFrame(sender)
-		case .sortChannelList: sortChannelList()
-		case .focusSearchField: mainWindow.presentationModel.focusSearchField()
-		case .markAllAsRead: mainWindow.markAllAsRead()
-		case .importPreferences: mainWindow.presentationModel.requestPreferencesImport()
-		case .exportPreferences: mainWindow.presentationModel.requestPreferencesExport()
-		case .toggleNotificationSounds:
-			let soundsAreMuted = Preferences.Notifications.soundIsMuted.value
-			setNotificationSoundsMuted(soundsAreMuted == false)
-		case .toggleNotifications:
-			setNotificationsMuted(SharedApplication.sharedNotificationController().areNotificationsDisabled == false)
-		case .toggleAppearance: toggleAppearance()
-		case .toggleServerList: mainWindow.toggleServerListVisibility()
-		case .toggleMemberList:
-			mainWindow.toggleMemberListVisibility()
-		case .reloadTheme: mainWindow.reloadTheme()
-		case .toggleDeveloperMode: toggleDeveloperMode()
-		case .resetSuppressedWarnings: resetSuppressedWarnings()
-		@unknown default: break
+		case .partChannel:
+			guard let channel = selectedChannel else { return }
+			if channel.isChannel {
+				guard channel.isActive else { return }
+				client.part(channel)
+			} else {
+				world?.destroyChannel(channel)
+			}
+		case .disconnect:
+			guard client.isConnecting || client.isConnected else { return }
+			client.quit()
+		case .terminate:
+			NSApp.terminate(sender)
+		case .closeWindow:
+			break
+		@unknown default:
+			break
+		}
+	}
+
+	@objc func showMainWindow(_ sender: Any?) {
+		mainWindow.makeKeyAndOrderFront(sender)
+	}
+
+	@objc func centerMainWindow(_: Any?) {
+		mainWindow.ce_exactlyCenter()
+	}
+
+	@objc func resetMainWindowFrame(_ sender: Any?) {
+		if mainWindow.ceIsInFullscreenMode {
+			mainWindow.toggleFullScreen(sender)
+		}
+		mainWindow.setFrame(mainWindow.defaultWindowFrame, display: true, animate: true)
+		mainWindow.ce_exactlyCenter()
+	}
+
+	@objc func sortChannelListNames(_: Any?) {
+		guard let world else { return }
+		for client in world.clientList {
+			let sortedChannels = client.channelList.sorted(by: MenuWindowPolicy.channelsOrderedBeforeQueries)
+			world.setChannelList(sortedChannels, on: client)
+		}
+		world.save()
+	}
+
+	@objc func focusSearchField(_: Any?) {
+		mainWindow.presentationModel.focusSearchField()
+	}
+
+	@objc func markAllAsRead(_: Any?) {
+		mainWindow.markAllAsRead()
+	}
+
+	@objc func importSettings(_: Any?) {
+		mainWindow.presentationModel.preferencesTransfer.requestImport()
+	}
+
+	@objc func exportSettings(_: Any?) {
+		mainWindow.presentationModel.preferencesTransfer.requestExport()
+	}
+
+	/** Cuts the notification being spoken short and moves on to the next one.
+
+	 This was a bare Command+Period registration on the window, which is the
+	 system's Cancel: every sheet, panel and alert in the application answers
+	 that key, and nothing in any menu said the window had taken it. */
+	@objc func skipSpokenNotification(_: Any?) {
+		SharedApplication.sharedSpeechSynthesizer().stopSpeakingAndMoveForward()
+	}
+
+	@objc func toggleMuteOnNotificationSounds(_: Any?) {
+		setNotificationSoundsMuted(Preferences.Notifications.soundIsMuted.value == false)
+	}
+
+	@objc func toggleMuteOnNotifications(_: Any?) {
+		setNotificationsMuted(SharedApplication.sharedNotificationController().areNotificationsDisabled == false)
+	}
+
+	@objc func changeAppearance(_ sender: Any?) {
+		guard let appearance = MenuWindowPolicy.appearance(for: (sender as? NSMenuItem)?.command) else { return }
+		Preferences.Appearance.preferredAppearance.value = appearance
+		TextualPreferences.performReloadAction(.appearance)
+	}
+
+	@objc func toggleServerListVisibility(_: Any?) {
+		mainWindow.toggleServerListVisibility()
+	}
+
+	@objc func toggleMemberListVisibility(_: Any?) {
+		mainWindow.toggleMemberListVisibility()
+	}
+
+	@objc func toggleDeveloperMode(_: Any?) {
+		Preferences.Commands.developerMode.value.toggle()
+	}
+
+	@objc func resetSuppressedWarnings(_: Any?) {
+		let defaults = TextualUserDefaults.container
+		for key in defaults.dictionaryRepresentation().keys
+			where key.hasPrefix(MenuWindowPolicy.alertSuppressionPrefix)
+		{
+			defaults.set(false, forKey: key)
 		}
 	}
 
@@ -109,76 +196,5 @@ public extension MenuActionCoordinator {
 		let state: NSControl.StateValue = muted ? .on : .off
 		menuController?.muteNotificationsSoundsDockMenuItem?.state = state
 		menuController?.muteNotificationsSoundsFileMenuItem?.state = state
-	}
-
-	private func closeWindow(_ sender: Any?) {
-		let action = Preferences.Input.commandWKeyAction.value
-		if action == .closeWindow || mainWindow.isKeyWindow == false {
-			(NSApp.keyWindow ?? NSApp.mainWindow)?.performClose(sender)
-			return
-		}
-		guard let client = selectedClient else { return }
-		switch action {
-		case .partChannel:
-			guard let channel = selectedChannel else { return }
-			if channel.isChannel {
-				guard channel.isActive else { return }
-				client.part(channel)
-			} else {
-				world?.destroy(channel)
-			}
-		case .disconnect:
-			guard client.isConnecting || client.isConnected else { return }
-			client.quit()
-		case .terminate:
-			NSApp.terminate(sender)
-		case .closeWindow:
-			break
-		@unknown default:
-			break
-		}
-	}
-
-	private func resetMainWindowFrame(_ sender: Any?) {
-		if mainWindow.ceIsInFullscreenMode {
-			mainWindow.toggleFullScreen(sender)
-		}
-		mainWindow.setFrame(mainWindow.defaultWindowFrame, display: true, animate: true)
-		mainWindow.ce_exactlyCenter()
-	}
-
-	private func sortChannelList() {
-		guard let world else { return }
-		for client in world.clientList {
-			let sortedChannels = client.channelList.sorted(by: MenuWindowPolicy.channelsOrderedBeforeQueries)
-			world.setChannelList(sortedChannels, on: client)
-		}
-		world.save()
-	}
-
-	private func setAppearance(_ appearance: PreferredAppearance) {
-		Preferences.Appearance.preferredAppearance.value = appearance
-		TextualPreferences.performReloadAction(.appearance)
-	}
-
-	private func toggleAppearance() {
-		setAppearance(MenuWindowPolicy.nextAppearance(
-			current: Preferences.Appearance.preferredAppearance.value,
-			systemIsDark: SharedApplication.sharedAppearance().properties.isDarkAppearance
-		))
-	}
-
-	private func toggleDeveloperMode() {
-		Preferences.Commands.developerMode.value.toggle()
-		TextualPreferences.performReloadAction(.ircCommandCache)
-	}
-
-	private func resetSuppressedWarnings() {
-		let defaults = TextualUserDefaults.container
-		for key in defaults.dictionaryRepresentation().keys
-			where key.hasPrefix(MenuWindowPolicy.alertSuppressionPrefix)
-		{
-			defaults.set(false, forKey: key)
-		}
 	}
 }

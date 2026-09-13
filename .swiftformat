@@ -1,6 +1,8 @@
 --swiftversion 6.0
 --indent tab
 --tabwidth 4
---maxwidth 120
+# Matches line_length in .swiftlint.yml: the formatter wraps at this width and
+# the linter rejects what it could not wrap.
+--maxwidth 140
 --wraparguments preserve
 --wrapcollections preserve

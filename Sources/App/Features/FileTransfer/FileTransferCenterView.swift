@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -17,11 +17,20 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct FileTransferCenterView: View {
-	@Bindable var model: FileTransferCenterModel
-	let perform: (FileTransferAction, Set<String>) -> Void
-	let clearStopped: () -> Void
-	let close: () -> Void
-	let chooseDestination: (Result<URL, Error>) -> Void
+	let center: FileTransferCenter
+	@Bindable private var model: FileTransferCenterModel
+
+	init(center: FileTransferCenter) {
+		self.center = center
+		model = center.model
+	}
+
+	/** Which directions the window was last showing.
+
+	 The model stays the authority — a notification action can widen the filter
+	 to reveal the transfer it names — so this only remembers what the model was
+	 last set to, and restores it when the window comes back. */
+	@SceneStorage("file-transfer-filter") private var shownDirections = FileTransferSelection.all
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -32,9 +41,7 @@ struct FileTransferCenterView: View {
 					Text(verbatim: FileTransferStrings.receiving).tag(FileTransferSelection.receiving)
 				}
 				.pickerStyle(.segmented)
-				.labelsHidden()
-				.frame(width: 260)
-				.accessibilityLabel(FileTransferStrings.filterTransfers)
+				.fixedSize()
 
 				Spacer()
 				Text(verbatim: FileTransferStrings.transferCount(model.visibleTransfers.count))
@@ -46,11 +53,7 @@ struct FileTransferCenterView: View {
 
 			List(selection: $model.selection) {
 				ForEach(model.visibleTransfers, id: \.uniqueIdentifier) { transfer in
-					FileTransferRowView(transfer: transfer)
-						.tag(transfer.uniqueIdentifier)
-						.contextMenu {
-							transferMenu(for: model.contextSelection(for: transfer.uniqueIdentifier))
-						}
+					row(for: transfer)
 				}
 			}
 			.listStyle(.inset(alternatesRowBackgrounds: true))
@@ -64,36 +67,38 @@ struct FileTransferCenterView: View {
 				}
 			}
 			.onChange(of: model.selection) { model.selectionDidChange() }
+			.onChange(of: model.filter) { shownDirections = model.filter }
 			.onKeyPress(.space) {
 				guard model.canPerform(.preview) else { return .ignored }
-				perform(.preview, model.selection)
+				center.perform(.preview, on: model.selection)
 				return .handled
 			}
+			.onDeleteCommand(perform: model.selection.isEmpty ? nil : { center.perform(.remove, on: model.selection) })
 			.accessibilityLabel(FileTransferStrings.fileTransfers)
 
 			Divider()
 			HStack(spacing: 8) {
-				Button(FileTransferStrings.clearStopped, action: clearStopped)
+				Button(FileTransferStrings.clearStopped, action: center.clearStoppedTransfers)
 					.disabled(model.canClearStoppedTransfers == false)
 
 				Spacer()
 
 				Button {
-					perform(.start, model.selection)
+					center.perform(.start, on: model.selection)
 				} label: {
-					Label(FileTransferStrings.startTransfer, systemImage: "play.fill")
+					Label(model.startActionTitle(), systemImage: "play.fill")
 				}
 				.disabled(model.canPerform(.start) == false)
 
 				Button {
-					perform(.stop, model.selection)
+					center.perform(.stop, on: model.selection)
 				} label: {
 					Label(FileTransferStrings.cancelTransfer, systemImage: "stop.fill")
 				}
 				.disabled(model.canPerform(.stop) == false)
 
 				Button {
-					perform(.preview, model.selection)
+					center.perform(.preview, on: model.selection)
 				} label: {
 					Label(FileTransferStrings.quickLook, systemImage: "eye")
 				}
@@ -102,7 +107,8 @@ struct FileTransferCenterView: View {
 			.controlSize(.small)
 			.padding(10)
 		}
-		.onExitCommand(perform: close)
+		.task { model.filter = shownDirections }
+		.onExitCommand(perform: center.dismiss)
 		.quickLookPreview($model.previewSelection, in: model.previewItems)
 		.onDisappear {
 			model.previewSelection = nil
@@ -111,23 +117,51 @@ struct FileTransferCenterView: View {
 		.fileImporter(
 			isPresented: $model.isChoosingDestination,
 			allowedContentTypes: [.folder],
-			onCompletion: chooseDestination
+			onCompletion: center.completeDestinationSelection
 		)
+	}
+
+	/// A finished transfer's file can be dragged out of the window. The check is
+	/// on the status first: asking for the URL costs a security-scope round trip
+	/// and a `stat`, which a row that is still moving bytes redraws too often to
+	/// be worth paying.
+	@ViewBuilder
+	private func row(for transfer: FileTransferController) -> some View {
+		let identifiers = model.contextSelection(for: transfer.uniqueIdentifier)
+		let content = FileTransferRowView(transfer: transfer)
+			.tag(transfer.uniqueIdentifier)
+			.contextMenu { transferMenu(for: identifiers) }
+			/* Opening on a double click is what a row of finished downloads is
+			 for; a simultaneous gesture leaves the single click selecting. */
+			.simultaneousGesture(TapGesture(count: 2).onEnded {
+				guard model.canPerform(.open, on: identifiers) else { return }
+				center.perform(.open, on: identifiers)
+			})
+
+		if transfer.transferStatus == .complete,
+		   let fileURL = model.selectedFileURLs(for: [transfer.uniqueIdentifier]).first
+		{
+			content.draggable(fileURL) {
+				Text(verbatim: transfer.filename)
+			}
+		} else {
+			content
+		}
 	}
 
 	@ViewBuilder
 	private func transferMenu(for identifiers: Set<String>) -> some View {
-		Button(FileTransferStrings.startTransfer) { perform(.start, identifiers) }
+		Button(model.startActionTitle(for: identifiers)) { center.perform(.start, on: identifiers) }
 			.disabled(model.canPerform(.start, on: identifiers) == false)
-		Button(FileTransferStrings.cancelTransfer) { perform(.stop, identifiers) }
+		Button(FileTransferStrings.cancelTransfer) { center.perform(.stop, on: identifiers) }
 			.disabled(model.canPerform(.stop, on: identifiers) == false)
 
 		Divider()
-		Button(FileTransferStrings.quickLook) { perform(.preview, identifiers) }
+		Button(FileTransferStrings.quickLook) { center.perform(.preview, on: identifiers) }
 			.disabled(model.canPerform(.preview, on: identifiers) == false)
-		Button(FileTransferStrings.openFile) { perform(.open, identifiers) }
+		Button(FileTransferStrings.openFile) { center.perform(.open, on: identifiers) }
 			.disabled(model.canPerform(.open, on: identifiers) == false)
-		Button(FileTransferStrings.showInFinder) { perform(.reveal, identifiers) }
+		Button(FileTransferStrings.showInFinder) { center.perform(.reveal, on: identifiers) }
 			.disabled(model.canPerform(.reveal, on: identifiers) == false)
 
 		/* Asking the model settles the rows' local files once for the whole
@@ -140,7 +174,7 @@ struct FileTransferCenterView: View {
 
 		Divider()
 		Button(FileTransferStrings.removeFromList, role: .destructive) {
-			perform(.remove, identifiers)
+			center.perform(.remove, on: identifiers)
 		}
 	}
 }

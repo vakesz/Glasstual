@@ -153,7 +153,7 @@ struct IRCJoinBatchingTests {
 struct IRCClientJoinCommandTests {
 	@Test("Offline and stopping clients cannot start single or batched joins", arguments: 0 ..< 16)
 	func joinRequiresAvailableClient(flags: Int) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.isLoggedIn = flags & 1 != 0
 		client.isQuitting = flags & 2 != 0
 		client.isDisconnecting = flags & 4 != 0
@@ -171,9 +171,9 @@ struct IRCClientJoinCommandTests {
 
 	@Test("JOIN rejects another client's channel, queries, and active channels")
 	func joinRequiresOwnedInactiveChannel() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
-		let other = GLTTestClient()
+		let other = TestClient()
 		let foreign = try #require(other.findChannelOrCreate("#foreign"))
 		let query = try #require(client.findChannelOrCreate("friend", isPrivateMessage: true))
 		let active = try #require(client.findChannelOrCreate("#active"))
@@ -189,7 +189,7 @@ struct IRCClientJoinCommandTests {
 
 	@Test("A pending join remains retryable with explicit, absent, or empty passwords")
 	func pendingJoinCanRetry() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		let channel = try #require(client.findChannelOrCreate("#retry"))
 		client.join(channel, password: "explicit-fixture-key")
@@ -209,7 +209,7 @@ struct IRCClientJoinCommandTests {
 		arguments: [403, 437, 471, 473, 474, 475, 477]
 	)
 	func joinFailureRetiresPendingState(numeric: Int) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		let channel = try #require(client.findChannelOrCreate("#retry"))
 		client.join(channel)
@@ -232,7 +232,7 @@ struct IRCClientJoinCommandTests {
 
 	@Test("Mode errors and stale join failures do not alter nonpending channels", arguments: [403, 437, 477])
 	func nonpendingErrorsDoNotPartChannels(numeric: Int) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		let channel = try #require(client.findChannelOrCreate("#retry"))
 		for active in [false, true] {
@@ -251,7 +251,7 @@ struct IRCClientJoinCommandTests {
 
 	@Test("Nickname-shaped 437 and server-shaped 402 do not retire a pending join")
 	func otherTargetErrorsLeaveJoinPending() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		let channel = try #require(client.findChannelOrCreate("#retry"))
 		client.join(channel)
@@ -267,7 +267,7 @@ struct IRCClientJoinCommandTests {
 
 	@Test("Many autojoin channels go out as several JOIN lines")
 	func splitsAcrossLines() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 
 		let channels = try (0 ..< 60).map { index in

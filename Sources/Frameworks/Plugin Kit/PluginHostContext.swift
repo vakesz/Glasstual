@@ -322,14 +322,6 @@ public final class PluginChannel: Hashable {
 	}
 }
 
-public struct PluginPrintResult: Equatable, Sendable {
-	public let isHighlight: Bool
-
-	public init(isHighlight: Bool) {
-		self.isHighlight = isHighlight
-	}
-}
-
 /// A snapshot of one IRC connection, plus the operations a plugin may run
 /// against it. As with `PluginChannel`, the scalar fields are taken when the
 /// value is made and `channels` on its first read; bound to the main actor
@@ -380,7 +372,7 @@ public final class PluginClient: Hashable {
 		String,
 		Date,
 		Bool,
-		@escaping (PluginPrintResult) -> Void
+		@escaping (_ isHighlight: Bool) -> Void
 	) -> Void
 	private let unreadMarker: (PluginChannel, Bool) -> Void
 	private let highlightMarker: (PluginChannel) -> Void
@@ -418,7 +410,7 @@ public final class PluginClient: Hashable {
 			String,
 			Date,
 			Bool,
-			@escaping (PluginPrintResult) -> Void
+			@escaping (_ isHighlight: Bool) -> Void
 		) -> Void,
 		markUnread: @escaping (PluginChannel, Bool) -> Void,
 		markHighlight: @escaping (PluginChannel) -> Void,
@@ -505,7 +497,7 @@ public final class PluginClient: Hashable {
 		command: String,
 		receivedAt: Date = Date(),
 		isEncrypted: Bool = false,
-		completion: @escaping (PluginPrintResult) -> Void = { _ in }
+		completion: @escaping (_ isHighlight: Bool) -> Void = { _ in }
 	) {
 		messagePrinter(message, nickname, channel, kind, command, receivedAt, isEncrypted, completion)
 	}

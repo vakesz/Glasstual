@@ -59,14 +59,12 @@ public extension IRCClient {
 
 	/** Refiles the directory under the casemapping the server advertises now.
 
-	 A mapping can merge two keys that used to be distinct — `nick[home]` and
+	 A mapping can merge two keys that were distinct — `nick[home]` and
 	 `nick{home}` are one person under RFC 1459 and two under `ascii` — and the
-	 loser used to be dropped on the floor while its member rows stayed in every
-	 channel it was in. Those rows are keyed by person, so nothing could find,
-	 replace or remove them again: `findMember` answered for somebody the
-	 directory no longer knew. The loser is taken out of the channels too, and
-	 which of the two loses is decided by nickname so that the same 005 always
-	 produces the same directory. */
+	 loser has to leave the channels too. Member rows are keyed by person, so a
+	 row left behind is one nothing can find, replace or remove again. Which of
+	 the two loses is decided by nickname, so the same 005 always produces the
+	 same directory. */
 	internal func rekeyUserList() {
 		var rekeyed: [String: User] = [:]
 		rekeyed.reserveCapacity(usersByNickname.count)
@@ -127,7 +125,7 @@ public extension IRCClient {
 	@discardableResult
 	internal func addAndReturn(_ user: User) -> User {
 		usersByNickname[casefoldNickname(user.nickname)] = user
-		becamePrimaryUser(user)
+		relinkRelations(for: user)
 		return user
 	}
 
@@ -219,8 +217,8 @@ extension IRCClient {
 	}
 
 	/// The channels `user` is in, paired with their member in each.
-	func relations(of user: User) -> [(channel: IRCChannel, member: ChannelUser)] {
-		persistentStore(for: user).relations.relatedChannels.compactMap { channel in
+	func relations(of user: User) -> [(channel: Channel, member: ChannelUser)] {
+		persistentStore(for: user).relatedChannels.compactMap { channel in
 			guard let member = channel.memberInfo?.findMember(withUserID: user.id) else {
 				return nil
 			}
@@ -229,21 +227,25 @@ extension IRCClient {
 	}
 
 	/// `user`'s member in `channel`, if they are in it.
-	func userAssociated(_ user: User, with channel: IRCChannel) -> ChannelUser? {
-		guard persistentStore(for: user).relations.isAssociated(with: channel) else {
+	func userAssociated(_ user: User, with channel: Channel) -> ChannelUser? {
+		guard persistentStore(for: user).relatedChannels.contains(channel) else {
 			return nil
 		}
 
 		return channel.memberInfo?.findMember(withUserID: user.id)
 	}
 
-	func associate(_ user: User, with channel: IRCChannel) {
-		persistentStore(for: user).relations.associate(with: channel)
+	/// A query is not a shared room, so it is not a relation: only a channel
+	/// keeps a person in the directory.
+	func associate(_ user: User, with channel: Channel) {
+		guard channel.isChannel else { return }
+
+		persistentStore(for: user).relatedChannels.insert(channel)
 		toggleRemoveUserTimer(for: user)
 	}
 
-	func disassociate(_ user: User, from channel: IRCChannel) {
-		persistentStore(for: user).relations.disassociate(from: channel)
+	func disassociate(_ user: User, from channel: Channel) {
+		persistentStore(for: user).relatedChannels.remove(channel)
 		toggleRemoveUserTimer(for: user)
 	}
 
@@ -251,9 +253,8 @@ extension IRCClient {
 	 slot when it is.
 
 	 A server repeats 301 for every message sent to an away user, so it is rate
-	 limited. Asking is what opens the next window, which is why this is a
-	 method: it used to read as a property and quietly moved the clock on every
-	 access. */
+	 limited. Asking is what opens the next window, which is why this is a method
+	 rather than a property: reading it moves the clock. */
 	func claimAwayMessagePresentation(for user: User) -> Bool {
 		let store = persistentStore(for: user)
 		let now = CFAbsoluteTimeGetCurrent()
@@ -270,29 +271,15 @@ extension IRCClient {
 	/// Writes `user` into the member every channel it is in holds for it, so a
 	/// rename or an edit reaches the member lists.
 	func relinkRelations(for user: User) {
-		for channel in persistentStore(for: user).relations.relatedChannels {
+		for channel in persistentStore(for: user).relatedChannels {
 			channel.memberInfo?.updateMember(withUserID: user.id) { $0.changeUser(to: user) }
 		}
 	}
 
-	/// The directory has taken `user` as the stored copy of that person.
-	func becamePrimaryUser(_ user: User) {
-		updateRemoveUserTimerBlockToFire(for: user)
-		relinkRelations(for: user)
-	}
-
 	// MARK: Remove-user timer
 
-	private func updateRemoveUserTimerBlockToFire(for user: User) {
-		guard let removeUserTimer = userStores[user.id]?.removeUserTimer else {
-			return
-		}
-
-		removeUserTimer.setEventHandler(handler: removeUserTimerBlockToFire(for: user))
-	}
-
 	private func toggleRemoveUserTimer(for user: User) {
-		if persistentStore(for: user).relations.numberOfRelations > 0 {
+		if persistentStore(for: user).relatedChannels.isEmpty == false {
 			cancelRemoveUserTimer(for: user)
 		} else {
 			startRemoveUserTimer(for: user)
@@ -302,35 +289,30 @@ extension IRCClient {
 	private func startRemoveUserTimer(for user: User) {
 		let store = persistentStore(for: user)
 
-		if store.removeUserTimer != nil {
+		guard store.removeUserTask == nil else {
 			return
 		}
 
-		let removeUserTimer = DispatchSource.makeTimerSource(queue: .main)
-		removeUserTimer.schedule(deadline: .now() + removeUserTimerInterval)
-		removeUserTimer.setEventHandler(handler: removeUserTimerBlockToFire(for: user))
-		store.removeUserTimer = removeUserTimer
-		removeUserTimer.activate()
+		/* The person is identified by `User.ID` rather than by the value that
+		 started the timer: a rename or an edit replaces that value, and the one
+		 to retire is whichever the directory holds when the timer comes due. */
+		let identifier = user.id
+
+		store.removeUserTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(removeUserTimerInterval))
+
+			guard Task.isCancelled == false, let self,
+			      let user = userList.first(where: { $0.id == identifier })
+			else {
+				return
+			}
+
+			remove(user)
+		}
 	}
 
 	func cancelRemoveUserTimer(for user: User) {
 		userStores[user.id]?.cancelRemoveUserTimer()
-	}
-
-	private func removeUserTimerBlockToFire(for user: User) -> @Sendable () -> Void {
-		let nickname = user.nickname
-
-		/* The timer fires off the main actor, so the handler carries the
-		 nickname and looks the user up again on the way in. */
-		return { [weak self] in
-			Task { @MainActor [weak self] in
-				guard let self, let user = findUser(nickname) else {
-					return
-				}
-
-				remove(user)
-			}
-		}
 	}
 }
 
@@ -353,7 +335,7 @@ extension IRCClient {
 		}
 
 		guard let updated = findUser(user.nickname) else { return }
-		output?.updateDrawingForUser(updated)
+		output?.updateDrawingForUserInUserList(updated)
 	}
 
 	func resetAwayStatusForUsers() {

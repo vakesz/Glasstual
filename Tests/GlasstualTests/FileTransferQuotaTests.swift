@@ -38,7 +38,7 @@ struct FileTransferQuotaTests {
 		FileTransferStatus.complete, .stopped, .fatalError, .recoverableError,
 	])
 	func finishedRowsDoNotSpendTheLimit(_ status: FileTransferStatus) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let model = FileTransferCenterModel()
 		let transfer = try receiver(on: client, filename: "photo.jpg")
 		model.add(transfer)
@@ -53,7 +53,7 @@ struct FileTransferQuotaTests {
 		.waitingForResumeAccept, .waitingForLocalIPAddress,
 	])
 	func runningAndWaitingRowsSpendTheLimit(_ status: FileTransferStatus) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let model = FileTransferCenterModel()
 		let transfer = try receiver(on: client, filename: "photo.jpg")
 		model.add(transfer)
@@ -67,7 +67,7 @@ struct FileTransferQuotaTests {
 	/// files the user picked, and has never counted.
 	@Test("Outgoing transfers are not receivers")
 	func sendersDoNotSpendTheLimit() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let model = FileTransferCenterModel()
 		let transfer = try receiver(on: client, filename: "photo.jpg")
 		transfer.isSender = true
@@ -83,7 +83,7 @@ struct FileTransferQuotaTests {
 	 a hundred of them agree they each fit. */
 	@Test("Outstanding bytes count towards the next offer's room")
 	func outstandingBytesAreCounted() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let model = FileTransferCenterModel()
 		let running = try receiver(on: client, filename: "big.iso", filesize: 1000)
 		running.transferStatus = .receiving
@@ -102,7 +102,7 @@ struct FileTransferQuotaTests {
 	/// wrap the unsigned subtraction into a demand for sixteen exabytes.
 	@Test("An over-long transfer reports no outstanding bytes")
 	func overLongTransfersDoNotUnderflow() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let model = FileTransferCenterModel()
 		let running = try receiver(on: client, filename: "big.iso", filesize: 1000)
 		running.transferStatus = .receiving

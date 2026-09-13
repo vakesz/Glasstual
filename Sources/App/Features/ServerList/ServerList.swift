@@ -56,12 +56,13 @@ public final class ServerList {
 	/// shows every channel whose name contains it, under its server, whether or
 	/// not that server is disclosed.
 	public var filterText = "" {
-		didSet { rebuildRows() }
+		didSet {
+			selectableItemsStorage = nil
+			rebuildRows()
+		}
 	}
 
 	@ObservationIgnored weak var mainWindow: MainWindow?
-	/// Set for the length of a disclosure toggle, the one rebuild that animates.
-	@ObservationIgnored private var isTogglingDisclosure = false
 	/** Where the servers come from.
 
 	 The window's world, once one is attached. Holding it as a source rather
@@ -70,9 +71,25 @@ public final class ServerList {
 	 the world itself is the application's, and a test that filled it would be
 	 editing the reader's own conversations. */
 	@ObservationIgnored var clientSource: @MainActor () -> [IRCClient] = { [] }
+	/// The world those servers live in, held as a source for the same reason:
+	/// reordering is answered here rather than reached for through the window.
+	@ObservationIgnored var worldSource: @MainActor () -> World? = { nil }
 
-	private var updateDepth = 0
-	private var updateIsPending = false
+	/** The index space, resolved once per change rather than per question.
+
+	 Selecting an item asks for its row, the replacement search walks every
+	 row, and channel navigation rotates the whole list, so one command used to
+	 flatten the tree a dozen times. The list is dropped whenever anything it
+	 is derived from changes -- and dropped rather than rebuilt, because a
+	 change arrives before the rows are rebuilt and the answer has to be
+	 current for the selection that follows it in the same turn. */
+	@ObservationIgnored private var selectableItemsStorage: [TreeItem]?
+
+	/// Bookkeeping for the coalescing below, and nothing the view draws: observed
+	/// it would mark the model changed on every inbound burst -- a list update
+	/// per counter write, published from wherever the burst arrived.
+	@ObservationIgnored private var updateDepth = 0
+	@ObservationIgnored private var updateIsPending = false
 	@ObservationIgnored private var refreshTask: Task<Void, Never>?
 
 	public init() {}
@@ -83,20 +100,32 @@ public final class ServerList {
 		precondition(mainWindow == nil || mainWindow === window)
 		mainWindow = window
 		clientSource = { [weak window] in window?.world?.clientList ?? [] }
+		worldSource = { [weak window] in window?.world }
 	}
 
 	// MARK: - Rows
 
 	/** Rebuilds what the list draws.
 
-	 Without animation, unless a disclosure toggle asked for it: the sidebar's
-	 table applies the selection to a row only once that row materialises, and
-	 an animated insert or replace beside the selected row left that row's
-	 outgoing copy drawn under the incoming one, a ghost label with a stale
-	 highlight. The chevron's own open and close animation is the one the
-	 reader expects, so a disclosure toggle keeps it. */
-	private func rebuildRows() {
-		guard isTogglingDisclosure == false else {
+	 Every rebuild publishes under a transaction of its own naming, and they all
+	 name the same one unless the reader worked the chevron. Two rows values
+	 published in one turn under *different* transactions are two list updates
+	 rather than one, and the outline begins the second while it is still
+	 applying the first -- a reentrant operation in its own table delegate,
+	 which AppKit warns about on every launch and says it will assert on. That
+	 is what happened here: the world published its first rows without
+	 animation, and the saved expansion followed in the same turn through a
+	 path that left the transaction to whatever was ambient.
+
+	 Without animation, because the sidebar's table applies the selection to a
+	 row only once that row materialises, and an animated insert or replace
+	 beside the selected row left that row's outgoing copy drawn under the
+	 incoming one, a ghost label with a stale highlight. The chevron's own open
+	 and close animation is the one the reader expects, so the one rebuild the
+	 reader asked for by working it keeps the ambient transaction instead. */
+	private func rebuildRows(animated: Bool = false) {
+		selectableItemsStorage = builtSelectableItems()
+		guard animated == false else {
 			rows = builtRows()
 			return
 		}
@@ -129,7 +158,7 @@ public final class ServerList {
 	 A row draws what its value says and is compared by it, so a colour the row
 	 read out of the defaults for itself was invisible to that comparison: the
 	 preference changed, every row's value was unchanged, and nothing redrew. */
-	private var unreadBadgeTint: Color? {
+	private var unreadBadgeTint: NSColor? {
 		guard let color = TextualUserDefaults.container
 			.storedColor(for: Preferences.Badges.serverListUnreadHighlight),
 			color.alphaComponent > 0
@@ -137,10 +166,10 @@ public final class ServerList {
 			return nil
 		}
 
-		return Color(nsColor: color)
+		return color
 	}
 
-	private func channelRow(_ channel: IRCChannel, unreadBadgeTint: Color?) -> ChannelRow {
+	private func channelRow(_ channel: Channel, unreadBadgeTint: NSColor?) -> ChannelRow {
 		let kind: ChannelRow.Kind = if channel.isChannel {
 			.channel
 		} else if channel.isDirectChat {
@@ -167,6 +196,10 @@ public final class ServerList {
 		clientSource()
 	}
 
+	private var world: World? {
+		worldSource()
+	}
+
 	/** The index space every selection command addresses.
 
 	 Not what the filter leaves on screen. The filter is a way of looking at the
@@ -182,8 +215,17 @@ public final class ServerList {
 	 do have rows. Leaving them out meant clicking one answered `selectedRow`
 	 with -1, and ⌥↑/⌥↓ walked from a row that was not in the list. Whatever is
 	 drawn is selectable; nothing that is drawn is left out. */
-	private var selectableItems: [IRCTreeItem] {
-		clients.flatMap { client -> [IRCTreeItem] in
+	var selectableItems: [TreeItem] {
+		if let selectableItemsStorage {
+			return selectableItemsStorage
+		}
+		let items = builtSelectableItems()
+		selectableItemsStorage = items
+		return items
+	}
+
+	private func builtSelectableItems() -> [TreeItem] {
+		clients.flatMap { client -> [TreeItem] in
 			if isExpanded(client) {
 				return [client] + client.channelList
 			}
@@ -200,12 +242,12 @@ public final class ServerList {
 		return selectableItems.firstIndex { $0.uniqueIdentifier == selectedItemIdentifier } ?? -1
 	}
 
-	public var selectedItem: IRCTreeItem? {
+	public var selectedItem: TreeItem? {
 		guard let selectedItemIdentifier else { return nil }
-		return mainWindow?.world?.findItem(withId: selectedItemIdentifier)
+		return world?.findItem(withId: selectedItemIdentifier)
 	}
 
-	public var groupItems: [IRCTreeItem] {
+	public var groupItems: [TreeItem] {
 		clients
 	}
 
@@ -214,12 +256,13 @@ public final class ServerList {
 	}
 
 	public func row(forItem item: Any?) -> Int {
-		guard let item = item as? IRCTreeItem else { return -1 }
+		guard let item = item as? TreeItem else { return -1 }
 		return selectableItems.firstIndex { $0 === item } ?? -1
 	}
 
-	public func selectItem(at row: Int) {
-		guard let item = item(atRow: row) as? IRCTreeItem else { return }
+	/// Selects `item`, if it is one of the rows the sidebar is showing.
+	public func select(_ item: TreeItem?) {
+		guard let item, row(forItem: item) >= 0 else { return }
 		selectedItemIdentifier = item.uniqueIdentifier
 	}
 
@@ -229,19 +272,14 @@ public final class ServerList {
 		mainWindow?.serverListSelectionDidChangeFromSwiftUI()
 	}
 
-	public func items(inContainingGroupOf item: Any) -> [IRCTreeItem]? {
-		guard let item = item as? IRCTreeItem, let client = item.associatedClient else { return nil }
+	public func items(inContainingGroupOf item: Any) -> [TreeItem]? {
+		guard let item = item as? TreeItem, let client = item.associatedClient else { return nil }
 		return client.channelList
 	}
 
-	public func indexesOfItems(inGroup item: Any) -> IndexSet? {
-		guard let item = item as? IRCTreeItem, let client = item.associatedClient else { return nil }
-		return IndexSet(client.channelList.compactMap { channel in
-			let row = row(forItem: channel)
-			return row >= 0 ? row : nil
-		})
-	}
-
+	/// Whether the server's conversations are disclosed. `setExpanded` is the
+	/// only writer: the cached index space is dropped there, and a flag set
+	/// behind the list's back would leave it holding the old rows.
 	public func isExpanded(_ client: IRCClient) -> Bool {
 		client.sidebarItemIsExpanded
 	}
@@ -265,7 +303,7 @@ public final class ServerList {
 	 Disclosure is the outline's to apply: the rows carry the whole tree so that
 	 a server keeps its chevron while it is closed, and only the filter takes
 	 conversations out of them. */
-	private func listedChannels(for client: IRCClient) -> [IRCChannel] {
+	private func listedChannels(for client: IRCClient) -> [Channel] {
 		guard isFiltering else { return client.channelList }
 		return client.channelList.filter { $0.label.localizedStandardContains(filterQuery) }
 	}
@@ -277,12 +315,22 @@ public final class ServerList {
 			|| listedChannels(for: client).isEmpty == false
 	}
 
+	/** Discloses a server's conversations, or closes them.
+
+	 Not animated: this is the application's own call -- the saved expansion
+	 restored at launch, and the server a selection had to be disclosed to reach
+	 -- and those arrive in the same turn as the rows the world has just
+	 published. ``setExpanded(_:forServerID:)`` is the reader's chevron and is
+	 the one that animates. */
 	public func setExpanded(_ expanded: Bool, for client: IRCClient) {
+		setExpanded(expanded, for: client, animated: false)
+	}
+
+	private func setExpanded(_ expanded: Bool, for client: IRCClient, animated: Bool) {
 		guard client.sidebarItemIsExpanded != expanded else { return }
 		client.sidebarItemIsExpanded = expanded
-		isTogglingDisclosure = true
-		defer { isTogglingDisclosure = false }
-		rebuildRows()
+		selectableItemsStorage = nil
+		rebuildRows(animated: animated)
 
 		if expanded == false, selectedItem?.associatedClient === client, selectedItem !== client {
 			selectedItemIdentifier = client.uniqueIdentifier
@@ -291,6 +339,7 @@ public final class ServerList {
 	}
 
 	/// The disclosure toggle, from a row that only knows the server's identity.
+	/// The reader worked the chevron, so this is the rebuild that animates.
 	func setExpanded(_ expanded: Bool, forServerID serverID: String) {
 		/* A filter draws every match, disclosed or not, so the chevron it leaves
 		 open is not describing the server's own state and closing it would only
@@ -299,11 +348,11 @@ public final class ServerList {
 		guard isFiltering == false,
 		      let client = clients.first(where: { $0.uniqueIdentifier == serverID })
 		else { return }
-		setExpanded(expanded, for: client)
+		setExpanded(expanded, for: client, animated: true)
 	}
 
 	public func expandItem(_ item: Any?) {
-		guard let client = (item as? IRCTreeItem)?.associatedClient else { return }
+		guard let client = (item as? TreeItem)?.associatedClient else { return }
 		setExpanded(true, for: client)
 	}
 
@@ -321,6 +370,7 @@ public final class ServerList {
 	}
 
 	private func contentsChanged() {
+		selectableItemsStorage = nil
 		updateIsPending = true
 		guard updateDepth == 0, refreshTask == nil else { return }
 		// Inbound bursts can invalidate the same rows several times before the
@@ -334,48 +384,35 @@ public final class ServerList {
 		}
 	}
 
-	public func addItem(toList _: UInt, inParent _: Any?) {
+	/** Something about the tree changed: rebuild the rows from it.
+
+	 The rows are values derived from the world, so what changed does not
+	 matter -- there is one answer and it is recomputed whole. This used to be
+	 seven entry points carrying insertion indices, parents and occlusion
+	 flags from the outline view the sidebar no longer is, every one of them
+	 ignoring its arguments while the callers still computed them. */
+	public func setNeedsRefresh() {
 		contentsChanged()
 	}
 
-	public func removeItem(fromList item: Any) {
-		if let item = item as? IRCTreeItem, item.uniqueIdentifier == selectedItemIdentifier {
+	/// The same, for an item that is going away: it cannot stay selected.
+	public func itemWasRemoved(_ item: TreeItem) {
+		if item.uniqueIdentifier == selectedItemIdentifier {
 			selectedItemIdentifier = nil
 		}
 		contentsChanged()
 	}
 
-	public func moveItem(at _: Int, inParent _: Any?, to _: Int, inParent _: Any?) {
-		contentsChanged()
-	}
-
-	public func reloadItem(_: Any?, reloadChildren _: Bool = false) {
-		contentsChanged()
-	}
-
-	public func refreshAllDrawings() {
-		contentsChanged()
-	}
-
-	public func refreshDrawing(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
-		contentsChanged()
-	}
-
-	public func refreshMessageCount(forItem _: IRCTreeItem, skipOcclusionCheck _: Bool = false) {
-		contentsChanged()
-	}
-
+	/// A new appearance changes what the rows draw, so they are rebuilt at
+	/// once rather than coalesced with the next inbound burst.
 	public func applicationAppearanceChanged() {
-		rebuildRows()
-	}
-
-	public func systemAppearanceChanged() {
+		selectableItemsStorage = nil
 		rebuildRows()
 	}
 
 	func menu(for identifiers: Set<String>) -> (menu: NSMenu, context: AppMenuContext)? {
 		guard let controller = AppController.shared.menuController else { return nil }
-		let item = identifiers.first.flatMap { mainWindow?.world?.findItem(withId: $0) }
+		let item = identifiers.first.flatMap { world?.findItem(withId: $0) }
 		let menu: NSMenu? = if let item {
 			if item.isClient {
 				controller.mainMenuServerMenuItem?.submenu
@@ -389,42 +426,42 @@ public final class ServerList {
 		return (menu, AppMenuContext(coordinator: controller.actionCoordinator, item: item))
 	}
 
-	/// A row was dropped on `destinationIdentifier`, which means the dragged
-	/// conversation is to take that row's place.
-	func move(draggedIdentifier: String, ontoIdentifier destinationIdentifier: String) -> Bool {
-		guard let world = mainWindow?.world,
-		      let draggedItem = world.findItem(withId: draggedIdentifier),
-		      let destination = world.findItem(withId: destinationIdentifier),
-		      draggedItem !== destination
+	/** Reorders the servers.
+
+	 Not while the sidebar is filtered: the rows on screen are then a different
+	 list from the one the world holds, and an index into them means nothing to
+	 it. The order the reader set stands once the field is cleared. */
+	@discardableResult
+	func moveServers(fromOffsets offsets: IndexSet, toOffset destination: Int) -> Bool {
+		guard isFiltering == false,
+		      let world,
+		      let move = ServerListReorderPolicy.move(fromOffsets: offsets, toOffset: destination),
+		      world.clientList.indices.contains(move.from)
 		else { return false }
 
-		if draggedItem is IRCClient, destination is IRCClient {
-			guard let move = ServerListReorderPolicy.move(
-				in: world.clientList.map(\.uniqueIdentifier),
-				dragging: draggedIdentifier,
-				onto: destinationIdentifier
-			) else { return false }
-			world.moveClient(from: move.from, to: move.to)
-			return true
-		}
+		world.moveClient(from: move.from, to: move.to)
+		return true
+	}
 
-		guard let draggedChannel = draggedItem as? IRCChannel,
-		      let destinationChannel = destination as? IRCChannel,
-		      let client = draggedChannel.associatedClient
+	/// Reorders one server's conversations. Channels and one-to-one
+	/// conversations are two lists drawn as one, and neither moves into the
+	/// other.
+	@discardableResult
+	func moveChannels(onServerWithID serverID: String, fromOffsets offsets: IndexSet, toOffset destination: Int)
+		-> Bool
+	{
+		guard isFiltering == false,
+		      let world,
+		      let client = clients.first(where: { $0.uniqueIdentifier == serverID }),
+		      let move = ServerListReorderPolicy.move(fromOffsets: offsets, toOffset: destination),
+		      client.channelList.indices.contains(move.from),
+		      client.channelList.indices.contains(move.to)
 		else { return false }
 
-		let moveIsPermitted = ServerListReorderPolicy.permitsChannelMove(
-			sharesClient: destinationChannel.associatedClient === client,
-			draggedIsChannel: draggedChannel.isChannel,
-			destinationIsChannel: destinationChannel.isChannel
-		)
-		guard moveIsPermitted,
-		      let move = ServerListReorderPolicy.move(
-		      	in: client.channelList.map(\.uniqueIdentifier),
-		      	dragging: draggedIdentifier,
-		      	onto: destinationIdentifier
-		      )
-		else { return false }
+		guard ServerListReorderPolicy.permitsChannelMove(
+			draggedIsChannel: client.channelList[move.from].isChannel,
+			destinationIsChannel: client.channelList[move.to].isChannel
+		) else { return false }
 
 		world.moveChannel(on: client, from: move.from, to: move.to)
 		return true
@@ -439,29 +476,26 @@ nonisolated struct ServerListRowMove: Equatable { // nonisolated: value
 }
 
 nonisolated enum ServerListReorderPolicy { // nonisolated: value
-	/** The move a drop asks for.
+	/** The move a drag asks for, as `World` performs it.
 
-	 The whole row is the target — there is no insertion line between rows to
-	 aim at — so a drop means "put this where that one is", and the row that was
-	 there gives way. `IRCWorld` takes the dragged item out before putting it
-	 back, which has already shifted a destination below it up by one; correcting
-	 for that as well was what made dragging onto the row below a no-op and left
-	 the last position in the list unreachable. */
-	static func move(in identifiers: [String], dragging draggedID: String, onto destinationID: String)
-		-> ServerListRowMove?
-	{
-		guard let from = identifiers.firstIndex(of: draggedID),
-		      let to = identifiers.firstIndex(of: destinationID),
-		      from != to
-		else { return nil }
+	 A list names the place a row is being inserted *before*, counted in the
+	 order the rows are in now. `World` takes the row out before putting it
+	 back, so a destination past the row's own place has already shifted up by
+	 one; not correcting for that left the last position unreachable.
+
+	 The sidebar carries one selected row at a time, so one row is what a drag
+	 can be carrying. */
+	static func move(fromOffsets offsets: IndexSet, toOffset destination: Int) -> ServerListRowMove? {
+		guard offsets.count == 1, let from = offsets.first else { return nil }
+
+		let to = destination > from ? destination - 1 : destination
+		guard to != from, to >= 0 else { return nil }
 		return ServerListRowMove(from: from, to: to)
 	}
 
-	static func permitsChannelMove(
-		sharesClient: Bool,
-		draggedIsChannel: Bool,
-		destinationIsChannel: Bool
-	) -> Bool {
-		sharesClient && draggedIsChannel == destinationIsChannel
+	/// Channels and one-to-one conversations are two lists drawn as one, and a
+	/// row does not move out of the one it belongs to.
+	static func permitsChannelMove(draggedIsChannel: Bool, destinationIsChannel: Bool) -> Bool {
+		draggedIsChannel == destinationIsChannel
 	}
 }

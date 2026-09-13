@@ -46,11 +46,11 @@ import Testing
 @Suite("IRCv3 message extensions")
 @MainActor
 struct IRCSpecCapabilityBehaviourTests {
-	private func client(nickname: String = "me") -> GLTTestClient {
-		GLTTestClient(configDictionary: ["nickname": nickname, "username": nickname])
+	private func client(nickname: String = "me") -> TestClient {
+		TestClient(configDictionary: ["nickname": nickname, "username": nickname])
 	}
 
-	private func joinedChannel(_ name: String, on client: GLTTestClient) throws -> Channel {
+	private func joinedChannel(_ name: String, on client: TestClient) throws -> Channel {
 		let channel = try #require(client.findChannelOrCreate(name))
 
 		channel.activate()
@@ -58,15 +58,15 @@ struct IRCSpecCapabilityBehaviourTests {
 		return channel
 	}
 
-	private func deliver(_ line: String, on client: GLTTestClient) throws {
+	private func deliver(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 
 		client.forwardsProcessedMessages = true
 		client.processIncomingMessage(message)
 	}
 
-	private func printedChannelNames(of client: GLTTestClient) -> [String] {
-		client.printedLines.compactMap { ($0 as? [String: Any])?["channel"] as? IRCChannel }.map(\.name)
+	private func printedChannelNames(of client: TestClient) -> [String] {
+		client.printedLines.compactMap { ($0 as? [String: Any])?["channel"] as? Channel }.map(\.name)
 	}
 
 	// MARK: - server-time

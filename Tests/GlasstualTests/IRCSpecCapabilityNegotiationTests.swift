@@ -44,21 +44,31 @@ import Testing
 @Suite("IRCv3 capability negotiation")
 @MainActor
 struct IRCSpecCapabilityNegotiationTests {
-	private func client(nickname: String = "me", password: String? = nil) -> GLTTestClient {
-		GLTTestClient(
+	private func client(nickname: String = "me", password: String? = nil) -> TestClient {
+		TestClient(
 			configDictionary: ["nickname": nickname, "username": nickname],
 			nicknamePassword: password,
-			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+			fixture: ClientEnvironmentFixture(preferences: ClientPreferences())
 		)
 	}
 
-	private func receive(_ line: String, on client: GLTTestClient) throws {
+	private func receive(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 
 		client.handleCapabilityOrAuthenticationRequest(message)
 	}
 
-	private func capabilityCommands(of client: GLTTestClient) -> [String] {
+	/// Drives the authentication numeric handler the way `receiveNumericReply`
+	/// routes to it.
+	private func handleAuthentication(_ message: Message, on client: TestClient) throws {
+		let numeric = try #require(IRCNumeric(rawValue: message.commandNumeric))
+
+		#expect(numeric.group == .authentication)
+
+		client.handleAuthenticationTrackingNumeric(numeric, message: message, shouldPrint: false)
+	}
+
+	private func capabilityCommands(of client: TestClient) -> [String] {
 		client.sentCapabilityCommands.compactMap { $0 as? String }
 	}
 
@@ -399,9 +409,9 @@ struct IRCSpecCapabilityNegotiationTests {
 	func newCapabilityUsesEnabledDependencies(_ serverTimeName: String) throws {
 		var preferences = ClientPreferences()
 		preferences.requestChatHistory = true
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: [:], nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: preferences)
+			fixture: ClientEnvironmentFixture(preferences: preferences)
 		)
 		client.markAsLoggedIn()
 		try receive("CAP me ACK :batch message-tags \(serverTimeName)", on: client)
@@ -452,15 +462,15 @@ struct IRCSpecCapabilityNegotiationTests {
 
 	@Test("Successful SASL results do not apply the failure policy", arguments: [903, 907])
 	func successfulSASLResult(_ numeric: Int) throws {
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: ["disconnectOnSASLFailure": true], nicknamePassword: "secret",
-			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+			fixture: ClientEnvironmentFixture(preferences: ClientPreferences())
 		)
 		client.isConnected = true
 		try receive("CAP * LS :sasl=PLAIN", on: client)
 		try receive("CAP me ACK :sasl", on: client)
 		let result = try #require(Message(line: ":irc.example.net \(numeric) me :Authenticated", on: client))
-		#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+		try handleAuthentication(result, on: client)
 		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL))
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
 		#expect(client.isQuitting == false)
@@ -469,16 +479,16 @@ struct IRCSpecCapabilityNegotiationTests {
 
 	@Test("All terminal SASL failures use the configured policy", arguments: [902, 904, 905, 906, 908], [true, false])
 	func terminalSASLFailurePolicy(_ numeric: Int, _ disconnect: Bool) throws {
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: ["nickname": "me", "username": "me", "disconnectOnSASLFailure": disconnect],
 			nicknamePassword: "secret",
-			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+			fixture: ClientEnvironmentFixture(preferences: ClientPreferences())
 		)
 		client.isConnected = true
 		try receive("CAP * LS :sasl=PLAIN", on: client)
 		try receive("CAP me ACK :sasl", on: client)
 		let result = try #require(Message(line: ":irc.example.net \(numeric) me PLAIN :Failed", on: client))
-		#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+		try handleAuthentication(result, on: client)
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
 		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL) == false)
 		#expect(client.isQuitting == disconnect)
@@ -489,10 +499,10 @@ struct IRCSpecCapabilityNegotiationTests {
 
 	@Test("SCRAM integrity failures use the same terminal policy", arguments: [900, 903, 907, 0], [true, false])
 	func scramIntegrityFailurePolicy(_ numeric: Int, _ disconnect: Bool) throws {
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: ["nickname": "me", "username": "me", "disconnectOnSASLFailure": disconnect],
 			nicknamePassword: "secret",
-			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+			fixture: ClientEnvironmentFixture(preferences: ClientPreferences())
 		)
 		client.isConnected = true
 		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: client)
@@ -505,7 +515,7 @@ struct IRCSpecCapabilityNegotiationTests {
 				line: ":irc.example.net \(numeric) me me!u@h account :Authenticated",
 				on: client
 			))
-			#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+			try handleAuthentication(result, on: client)
 		}
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
 		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL) == false)
@@ -515,7 +525,7 @@ struct IRCSpecCapabilityNegotiationTests {
 
 		// The server's response to our abort cannot retry PLAIN or resume twice.
 		let aborted = try #require(Message(line: ":irc.example.net 906 me :Aborted", on: client))
-		#expect(client.handleTrackingNumeric(aborted.commandNumeric, message: aborted, shouldPrint: false))
+		try handleAuthentication(aborted, on: client)
 		#expect(capabilityCommands(of: client).filter { $0 == "END" }.count == (disconnect ? 0 : 1))
 		#expect(client.sentLines.contains("AUTHENTICATE PLAIN") == false)
 	}
@@ -536,7 +546,7 @@ struct IRCSpecCapabilityNegotiationTests {
 		#expect(capabilityCommands(of: client) == ["REQ sasl"])
 
 		let result = try #require(Message(line: ":irc.example.net 903 me :SASL authentication successful", on: client))
-		#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+		try handleAuthentication(result, on: client)
 
 		#expect(capabilityCommands(of: client) == ["REQ sasl", "END"])
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
@@ -699,12 +709,12 @@ struct IRCSpecCapabilityNegotiationTests {
 		#expect(client.saslMechanism == SCRAMClient.mechanismName)
 
 		let mechanisms = try #require(Message(line: ":irc.example.net 908 me PLAIN :Available mechanisms", on: client))
-		#expect(client.handleTrackingNumeric(mechanisms.commandNumeric, message: mechanisms, shouldPrint: false))
+		try handleAuthentication(mechanisms, on: client)
 		#expect(client.saslMechanism == "PLAIN")
 		#expect(client.sentLines.contains("AUTHENTICATE PLAIN"))
 		#expect(capabilityCommands(of: client).contains("END") == false)
 
-		#expect(client.handleTrackingNumeric(mechanisms.commandNumeric, message: mechanisms, shouldPrint: false))
+		try handleAuthentication(mechanisms, on: client)
 		#expect(client.isCapabilityEnabled(.isInSASLNegotiation) == false)
 		#expect(capabilityCommands(of: client).last == "END")
 	}

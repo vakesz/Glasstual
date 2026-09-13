@@ -174,19 +174,10 @@ actor LogRenderPipeline {
 		}
 	}
 
-	/** Waits for the ordered lane, not outstanding standalone work. Stopping
-	 the pipeline or cancelling the caller also ends the wait. Tests use this
-	 instead of sleeping; the app has no reason to. */
-	func drain() async {
-		await waitForSubmissions(includingStandalone: false)
-	}
-
-	/// A fence in the submission stream. Later submissions do not extend this wait.
+	/** A fence in the submission stream: everything submitted before this call
+	 has been applied when it returns, and later submissions do not extend the
+	 wait. Stopping the pipeline or cancelling the caller also ends it. */
 	func barrier() async {
-		await waitForSubmissions(includingStandalone: true)
-	}
-
-	private func waitForSubmissions(includingStandalone: Bool) async {
 		let identifier = UUID()
 		await withTaskCancellationHandler {
 			guard isStopped == false, Task.isCancelled == false else { return }
@@ -202,7 +193,7 @@ actor LogRenderPipeline {
 				}
 				let result = submissions.yield(LogRenderSubmission(
 					isStandalone: true,
-					waitsForAllSubmissions: includingStandalone
+					waitsForAllSubmissions: true
 				) { [weak self] in
 					{ Task { await self?.finishDrain(identifier) } }
 				})

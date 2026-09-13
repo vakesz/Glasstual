@@ -24,11 +24,6 @@ struct LogControllerReactionTests {
 		/* The transcript only draws live lines once the initial history load has
 		 finished; loading it lazily waits for a visible view, which a headless
 		 window never becomes. */
-		let lazyHistory = Preferences.Logging.loadHistoryLazily
-		let wasLazy = lazyHistory.value
-		lazyHistory.value = false
-		defer { lazyHistory.value = wasLazy }
-
 		let client = IRCClient(config: ClientConfig())
 		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
@@ -37,9 +32,10 @@ struct LogControllerReactionTests {
 			defer: false
 		)
 		let controller = window.logControllers.controller(for: client)
+		controller.loadsHistoryLazily = { false }
 		let logView = controller.ensureBackingView()
-		logView.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView.view
+		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
 		await controller.drainRenderJobs()
 
 		var line = LogLine()
@@ -49,7 +45,7 @@ struct LogControllerReactionTests {
 		line.messageIdentifier = "msg-\(UUID().uuidString)"
 		controller.print(line)
 
-		let transcript = try #require(textView(in: logView.view))
+		let transcript = try #require(textView(in: logView))
 		await controller.drainRenderJobs()
 		try #require(transcript.string.contains("shipping it"))
 

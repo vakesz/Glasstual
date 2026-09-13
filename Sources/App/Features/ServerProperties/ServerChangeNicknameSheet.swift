@@ -42,8 +42,6 @@ import SwiftUI
 @MainActor
 public protocol ServerChangeNicknameSheetDelegate: NSObjectProtocol {
 	func serverChangeNicknameSheet(_ sender: ServerChangeNicknameSheet, didInputNickname nickname: String)
-
-	func serverChangeNicknameSheetWillClose(_ sender: ServerChangeNicknameSheet)
 }
 
 @MainActor
@@ -51,7 +49,6 @@ public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScop
 	public private(set) var client: IRCClient?
 	public private(set) var clientId: String?
 
-	private let content: ServerNicknameChangeContent
 	private let model: ServerNicknameChangeModel
 
 	public init(client: IRCClient) {
@@ -59,7 +56,6 @@ public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScop
 
 		self.client = client
 		clientId = client.uniqueIdentifier
-		content = .current
 		model = ServerNicknameChangeModel(currentNickname: currentNickname) { candidate in
 			if candidate.isEmpty {
 				return ApplicationStrings.requiredField
@@ -79,12 +75,11 @@ public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScop
 	private func installSheet() {
 		let rootView = ServerNicknameChangeView(
 			model: model,
-			content: content,
 			submit: { [weak self] in
-				self?.ok(nil)
+				self?.submit()
 			},
 			cancel: { [weak self] in
-				self?.cancel(nil)
+				self?.cancel()
 			}
 		)
 		setContent(rootView)
@@ -94,8 +89,8 @@ public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScop
 		startSheet()
 	}
 
-	override public func ok(_ sender: Any?) {
-		guard okOrError() else {
+	override public func submit() {
+		guard model.validateForSubmission() else {
 			return
 		}
 
@@ -104,14 +99,6 @@ public final class ServerChangeNicknameSheet: MainWindowSheetSession, ClientScop
 			didInputNickname: model.normalizedNickname
 		)
 
-		super.ok(sender)
-	}
-
-	public func okOrError() -> Bool {
-		model.validateForSubmission()
-	}
-
-	override public func sheetDidEnd(withReturnCode _: Int) {
-		(delegate as? ServerChangeNicknameSheetDelegate)?.serverChangeNicknameSheetWillClose(self)
+		super.submit()
 	}
 }

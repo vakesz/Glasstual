@@ -14,8 +14,8 @@ import Testing
 @MainActor
 @Suite("Inbound wire parsing")
 struct InboundWireParsingTests {
-	private func client(nickname: String = "me") -> GLTTestClient {
-		GLTTestClient(configDictionary: ["nickname": nickname, "username": nickname])
+	private func client(nickname: String = "me") -> TestClient {
+		TestClient(configDictionary: ["nickname": nickname, "username": nickname])
 	}
 
 	// MARK: - Parameter count

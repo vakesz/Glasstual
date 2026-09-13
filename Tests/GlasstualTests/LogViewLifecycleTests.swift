@@ -50,8 +50,8 @@ struct LogViewLifecycleTests {
 		let controller = LogController(client: client, in: window)
 		let logView = controller.ensureBackingView()
 
-		#expect(logView.view.subviews.isEmpty == false)
-		#expect(logView.view.window == nil)
+		#expect(logView.subviews.isEmpty == false)
+		#expect(logView.window == nil)
 	}
 
 	@Test("The view keeps only a weak controller reference")
@@ -75,7 +75,7 @@ struct LogViewLifecycleTests {
 
 	@Test("A topic received while connecting is fixed above the transcript")
 	func connectingTopicAppearsInHeader() throws {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig())
 		let channel = fixture.world.createChannel(
 			with: ChannelConfig.seed(withName: "#swift"),
@@ -102,7 +102,7 @@ struct LogViewLifecycleTests {
 		host.view.layoutSubtreeIfNeeded()
 
 		let topicField = try #require(
-			descendants(of: NSTextField.self, in: logView.view)
+			descendants(of: NSTextField.self, in: logView)
 				.first { $0.stringValue == "Native AppKit discussion" }
 		)
 		#expect(topicField.isHidden == false)
@@ -140,10 +140,10 @@ struct LogViewLifecycleTests {
 
 		let minimum = hostingView.fittingSize
 		let ideal = hostingView.intrinsicContentSize
-		let frame = logView.view.convert(logView.view.bounds, to: hostingView)
+		let frame = logView.convert(logView.bounds, to: hostingView)
 		let columnMinimum = MainWindowConstants.conversationMinimumWidth
-		#expect(minimum.width <= columnMinimum, "minimum \(minimum) fitting \(logView.view.fittingSize)")
-		#expect(ideal.width >= columnMinimum, "ideal \(ideal) fitting \(logView.view.fittingSize)")
+		#expect(minimum.width <= columnMinimum, "minimum \(minimum) fitting \(logView.fittingSize)")
+		#expect(ideal.width >= columnMinimum, "ideal \(ideal) fitting \(logView.fittingSize)")
 		#expect(abs(frame.width - 800) < 1, "frame \(frame)")
 	}
 
@@ -155,7 +155,7 @@ struct LogViewLifecycleTests {
 	 list needs is exactly what the transcript has to give up. */
 	@Test("The transcript makes room for the member list and takes it back")
 	func transcriptMakesRoomForMemberList() throws {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig())
 		let channel = fixture.world.createChannel(
 			with: ChannelConfig.seed(withName: "#swift"),
@@ -183,19 +183,18 @@ struct LogViewLifecycleTests {
 		window.contentViewController = host
 		window.setContentSize(size)
 		window.presentationModel.transcript = logView
-		window.presentationModel.isMemberListAvailable = false
+		window.presentationModel.applyMemberListAvailability(false)
 		logView.setTopic("Native AppKit discussion")
 		logView.replaceLines([transcriptLine("hello there")])
 		window.contentView?.layoutSubtreeIfNeeded()
-		let frameAlone = logView.view.convert(logView.view.bounds, to: host.view)
+		let frameAlone = logView.convert(logView.bounds, to: host.view)
 
-		window.presentationModel.isMemberListAvailable = true
-		window.presentationModel.isMemberListVisible = true
+		window.presentationModel.applyMemberListAvailability(true)
 		window.contentView?.layoutSubtreeIfNeeded()
 		host.view.layoutSubtreeIfNeeded()
 
 		let rootFrame = host.view.frame
-		let transcriptFrame = logView.view.convert(logView.view.bounds, to: host.view)
+		let transcriptFrame = logView.convert(logView.bounds, to: host.view)
 		#expect(transcriptFrame.minX >= 0, "transcript \(transcriptFrame) root \(rootFrame)")
 		#expect(transcriptFrame.maxX <= rootFrame.width + 0.5, "transcript \(transcriptFrame) root \(rootFrame)")
 		#expect(transcriptFrame.width >= MainWindowConstants.conversationMinimumWidth, "transcript \(transcriptFrame)")
@@ -206,17 +205,17 @@ struct LogViewLifecycleTests {
 
 		/* The bar floats over the transcript, and the inset is what keeps the
 		 last line out from under it. */
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView.view).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
 		let field = window.inputContentView.frame
 		let barHeight = field.height + MainWindowInputBarLayout.fieldVerticalPadding * 2
 			+ MainWindowInputBarLayout.bottomPadding
 		let inset = scrollView.contentInsets.bottom
 		#expect(abs(inset - barHeight) < 1, "inset \(inset) bar \(barHeight)")
 
-		window.presentationModel.isMemberListVisible = false
+		window.presentationModel.toggleMemberList()
 		window.contentView?.layoutSubtreeIfNeeded()
 		host.view.layoutSubtreeIfNeeded()
-		let frameAgain = logView.view.convert(logView.view.bounds, to: host.view)
+		let frameAgain = logView.convert(logView.bounds, to: host.view)
 		#expect(abs(frameAgain.width - frameAlone.width) < 1, "alone \(frameAlone) again \(frameAgain)")
 	}
 
@@ -236,7 +235,7 @@ struct LogViewLifecycleTests {
 		logView.setTopic(topic)
 
 		let topicField = try #require(
-			descendants(of: NSTextField.self, in: logView.view)
+			descendants(of: NSTextField.self, in: logView)
 				.first { $0.stringValue == topic }
 		)
 		let attributedTopic = topicField.attributedStringValue
@@ -266,13 +265,13 @@ struct LogViewLifecycleTests {
 		)
 		let controller = LogController(client: client, in: window)
 		let logView = controller.ensureBackingView()
-		logView.view.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView.view
-		logView.view.layoutSubtreeIfNeeded()
+		logView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
+		logView.layoutSubtreeIfNeeded()
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView.view).first)
-		let allTopicFieldsHidden = descendants(of: NSTextField.self, in: logView.view).allSatisfy(\.isHidden)
-		#expect(scrollView.frame.maxY == logView.view.bounds.maxY)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
+		let allTopicFieldsHidden = descendants(of: NSTextField.self, in: logView).allSatisfy(\.isHidden)
+		#expect(scrollView.frame.maxY == logView.bounds.maxY)
 		#expect(allTopicFieldsHidden)
 	}
 
@@ -287,12 +286,12 @@ struct LogViewLifecycleTests {
 		)
 		let controller = LogController(client: client, in: window)
 		let logView = controller.ensureBackingView()
-		logView.view.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView.view
+		logView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
 		logView.replaceLines([transcriptLine("hello")])
-		logView.view.layoutSubtreeIfNeeded()
+		logView.layoutSubtreeIfNeeded()
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView.view).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		let layoutManager = try #require(textView.textLayoutManager)
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
@@ -327,20 +326,20 @@ struct LogViewLifecycleTests {
 	 something other than the background, and the row just above it does not.
 	 The view is drawn into an 800 by 600 window for the check. */
 	private func ruleIsDrawn(for location: Int, in logView: LogView, textView: NSTextView) throws -> Bool {
-		let window = try #require(logView.view.window ?? {
+		let window = try #require(logView.window ?? {
 			let window = MainWindow(
 				contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
 				styleMask: .borderless,
 				backing: .buffered,
 				defer: false
 			)
-			logView.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-			window.contentView = logView.view
+			logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+			window.contentView = logView
 			return window
 		}())
 		_ = window
-		logView.view.layoutSubtreeIfNeeded()
-		logView.view.displayIfNeeded()
+		logView.layoutSubtreeIfNeeded()
+		logView.displayIfNeeded()
 		let layoutManager = try #require(textView.textLayoutManager)
 		let storage = try #require(textView.textStorage)
 		let inset = try #require(
@@ -350,7 +349,7 @@ struct LogViewLifecycleTests {
 		let fragment = try #require(layoutManager.textLayoutFragment(for: start))
 		let origin = textView.textContainerOrigin
 		let ruleY = fragment.layoutFragmentFrame.minY + origin.y + CGFloat(inset.doubleValue)
-		let view = logView.view
+		let view = logView
 		let ruleInView = textView.convert(NSPoint(x: textView.bounds.midX, y: ruleY), to: view)
 		let aboveInView = textView.convert(NSPoint(x: textView.bounds.midX, y: ruleY - 3), to: view)
 		guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return false }
@@ -396,13 +395,13 @@ struct LogViewLifecycleTests {
 		)
 		let controller = LogController(client: client, in: window)
 		let logView = controller.ensureBackingView()
-		logView.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView.view
+		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
 		logView.replaceLines([transcriptLine("hello"), transcriptLine("there")])
-		logView.view.layoutSubtreeIfNeeded()
-		logView.view.displayIfNeeded()
+		logView.layoutSubtreeIfNeeded()
+		logView.displayIfNeeded()
 
-		let firstRow = try #require(firstDrawnRowFraction(in: logView.view))
+		let firstRow = try #require(firstDrawnRowFraction(in: logView))
 		#expect(firstRow > 0.6, "first drawn row at \(firstRow) of the height")
 	}
 
@@ -423,12 +422,12 @@ struct LogViewLifecycleTests {
 		logView.appendLines([transcriptLine("hello")])
 		logView.appendLines([transcriptLine("there")])
 
-		logView.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView.view
-		logView.view.layoutSubtreeIfNeeded()
-		logView.view.displayIfNeeded()
+		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
+		logView.layoutSubtreeIfNeeded()
+		logView.displayIfNeeded()
 
-		let firstRow = try #require(firstDrawnRowFraction(in: logView.view))
+		let firstRow = try #require(firstDrawnRowFraction(in: logView))
 		#expect(firstRow > 0.6, "first drawn row at \(firstRow) of the height")
 	}
 
@@ -452,12 +451,12 @@ struct LogViewLifecycleTests {
 		 which is where a query that opened unseen carries the marker. */
 		logView.setUnreadMarker(.line("missing"))
 
-		logView.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView.view
-		logView.view.layoutSubtreeIfNeeded()
-		logView.view.displayIfNeeded()
+		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
+		logView.layoutSubtreeIfNeeded()
+		logView.displayIfNeeded()
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView.view).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		/* The marker must not have moved the view back to TextKit 1; the
 		 alignment below only exists on TextKit 2. */
@@ -468,7 +467,7 @@ struct LogViewLifecycleTests {
 			.transcriptRuleColor, at: markerRange.location, effectiveRange: nil
 		)
 		#expect(ruleColor != nil)
-		let firstRow = try #require(firstDrawnRowFraction(in: logView.view))
+		let firstRow = try #require(firstDrawnRowFraction(in: logView))
 		#expect(firstRow > 0.6, "first drawn row at \(firstRow) of the height")
 	}
 
@@ -483,12 +482,12 @@ struct LogViewLifecycleTests {
 		)
 		let controller = LogController(client: client, in: window)
 		let logView = controller.ensureBackingView()
-		logView.view.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView.view
+		logView.frame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
 		logView.replaceLines((0 ..< 100).map { transcriptLine("message \($0)") })
-		logView.view.layoutSubtreeIfNeeded()
+		logView.layoutSubtreeIfNeeded()
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView.view).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		let layoutManager = try #require(textView.textLayoutManager)
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
@@ -512,7 +511,7 @@ struct LogViewLifecycleTests {
 
 		logView.replaceLines([transcriptLine("history"), liveLine])
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView.view).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		let markerRange = (textView.string as NSString).range(of: "Current Session")
 		let paragraph = try #require(
@@ -554,7 +553,7 @@ struct LogViewLifecycleTests {
 
 		logView.replaceLines([transcriptLine("read"), unreadLine])
 
-		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView.view).first)
+		let scrollView = try #require(descendants(of: NSScrollView.self, in: logView).first)
 		let textView = try #require(scrollView.documentView as? NSTextView)
 		#expect(textView.string.contains("Unread messages") == false)
 		let markerRange = (textView.string as NSString).range(of: "\u{200B}")
@@ -578,83 +577,84 @@ struct LogViewLifecycleTests {
 	 so at ⌘= every one-line topic measured as an overflow and got a chevron
 	 that unfolded onto nothing. */
 	@Test("A one-line topic offers no chevron at any text scale", arguments: [1.0, 2.0] as [CGFloat])
-	func oneLineTopicHasNoChevron(scale: CGFloat) throws {
-		let transcript = try makeTranscript(width: 800)
+	func oneLineTopicHasNoChevron(scale: CGFloat) {
+		let transcript = makeTranscript(width: 800)
 		transcript.logView.setTopic("Short topic")
 		transcript.logView.setTextScale(scale)
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
-		#expect(transcript.view.topicField.isHidden == false)
-		#expect(transcript.view.topicDisclosure.isHidden)
+		#expect(transcript.logView.topicField.isHidden == false)
+		#expect(transcript.logView.topicDisclosure.isHidden)
 	}
 
 	/// A topic too long for the column keeps its chevron, whatever the scale:
 	/// the fix must not have turned the disclosure off altogether.
 	@Test("A topic that does not fit keeps its chevron", arguments: [1.0, 2.0] as [CGFloat])
-	func wrappingTopicKeepsItsChevron(scale: CGFloat) throws {
-		let transcript = try makeTranscript(width: 400)
+	func wrappingTopicKeepsItsChevron(scale: CGFloat) {
+		let transcript = makeTranscript(width: 400)
 		transcript.logView.setTopic(String(repeating: "a long topic that cannot fit on one line ", count: 6))
 		transcript.logView.setTextScale(scale)
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
-		#expect(transcript.view.topicDisclosure.isHidden == false)
+		#expect(transcript.logView.topicDisclosure.isHidden == false)
 	}
 
-	/** The popover a single click asks for is anchored to characters, so any
-	 edit that can move them has to call the click off.
-
-	 It used to be cancelled only by another click: a line arriving during the
-	 double-click interval left the popover to open a quarter of a second later
-	 against whatever text had taken that range. */
-	@Test("An edit during the double-click wait calls off the profile popover")
-	func appendingCancelsThePendingProfileClick() throws {
-		let transcript = try makeTranscript(width: 800)
+	/** The profile used to wait out the double-click interval before opening,
+	 which follows the reader's Double-click speed and can be seconds. It
+	 opens on the click now; the double click that opens a conversation takes
+	 it down. */
+	@Test("A click on a name opens the profile at once")
+	func clickingANameOpensTheProfileAtOnce() throws {
+		let transcript = makeTranscript(width: 800, withMember: "alice")
 		transcript.logView.replaceLines([transcriptLine("hello there")])
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
 		try clickNickname(in: transcript)
-		#expect(transcript.view.hasPendingNicknameClick)
-
-		transcript.logView.appendLines([transcriptLine("and another line")])
-		#expect(transcript.view.hasPendingNicknameClick == false)
+		#expect(transcript.logView.memberInformationPopover != nil)
 	}
 
-	/// Clearing and trimming reach the same characters, and the batch every
-	/// edit runs inside is where the click is called off.
-	@Test("Clearing the transcript calls off the pending profile popover")
-	func clearingCancelsThePendingProfileClick() throws {
-		let transcript = try makeTranscript(width: 800)
+	/// Clearing and trimming remove the characters the popover is anchored
+	/// to, so they take it down rather than leave it pointing at other text.
+	@Test("Clearing the transcript closes the profile popover")
+	func clearingClosesTheProfilePopover() throws {
+		let transcript = makeTranscript(width: 800, withMember: "alice")
 		transcript.logView.replaceLines([transcriptLine("hello there")])
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
 		try clickNickname(in: transcript)
-		#expect(transcript.view.hasPendingNicknameClick)
+		#expect(transcript.logView.memberInformationPopover != nil)
 
 		transcript.logView.clearLines()
-		#expect(transcript.view.hasPendingNicknameClick == false)
+		#expect(transcript.logView.memberInformationPopover == nil)
 	}
 
 	/// A transcript that leaves its window has nothing to anchor a popover to.
-	@Test("Leaving the window calls off the pending profile popover")
-	func leavingTheWindowCancelsThePendingProfileClick() throws {
-		let transcript = try makeTranscript(width: 800)
+	@Test("Leaving the window closes the profile popover")
+	func leavingTheWindowClosesTheProfilePopover() throws {
+		let transcript = makeTranscript(width: 800, withMember: "alice")
 		transcript.logView.replaceLines([transcriptLine("hello there")])
 		transcript.window.contentView?.layoutSubtreeIfNeeded()
 
 		try clickNickname(in: transcript)
-		#expect(transcript.view.hasPendingNicknameClick)
+		#expect(transcript.logView.memberInformationPopover != nil)
 
-		transcript.view.removeFromSuperview()
-		#expect(transcript.view.hasPendingNicknameClick == false)
+		transcript.logView.removeFromSuperview()
+		#expect(transcript.logView.memberInformationPopover == nil)
 	}
 
 	private struct Transcript {
 		let window: MainWindow
 		let logView: LogView
-		let view: NativeTranscriptView
+		/// Held here because the view, the controller and the channel hold
+		/// the controller, the channel and the client weakly.
+		let controller: LogController
+		let client: IRCClient
+		let channel: Channel?
 	}
 
-	private func makeTranscript(width: CGFloat) throws -> Transcript {
+	/// A transcript over a channel when `member` is given, so a click on that
+	/// name has a profile to show; over the connection alone otherwise.
+	private func makeTranscript(width: CGFloat, withMember member: String? = nil) -> Transcript {
 		let client = IRCClient(config: ClientConfig())
 		let window = MainWindow(
 			contentRect: NSRect(x: 0, y: 0, width: width, height: 600),
@@ -662,36 +662,45 @@ struct LogViewLifecycleTests {
 			backing: .buffered,
 			defer: false
 		)
-		let controller = LogController(client: client, in: window)
+		let controller: LogController
+		var channel: Channel?
+		if let member {
+			let profileChannel = Channel(config: ChannelConfig(channelName: "#profile"))
+			profileChannel.associatedClient = client
+			profileChannel.activate()
+			profileChannel.addMember(
+				ChannelUser(user: client.findUserOrCreate(member), prefixes: client.currentUserPrefixes)
+			)
+			controller = LogController(channel: profileChannel, in: window)
+			channel = profileChannel
+		} else {
+			controller = LogController(client: client, in: window)
+		}
 		let logView = controller.ensureBackingView()
 		let container = NSView(frame: NSRect(x: 0, y: 0, width: width, height: 600))
-		container.addSubview(logView.view)
+		container.addSubview(logView)
 		NSLayoutConstraint.activate([
-			logView.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-			logView.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-			logView.view.topAnchor.constraint(equalTo: container.topAnchor),
-			logView.view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+			logView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+			logView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+			logView.topAnchor.constraint(equalTo: container.topAnchor),
+			logView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
 		])
 		window.contentView = container
 		container.layoutSubtreeIfNeeded()
-		return try Transcript(
-			window: window,
-			logView: logView,
-			view: #require(logView.view as? NativeTranscriptView)
-		)
+		return Transcript(window: window, logView: logView, controller: controller, client: client, channel: channel)
 	}
 
 	/// Clicks the middle of the first nickname the transcript drew, the way the
 	/// text view reports a click of its own.
 	private func clickNickname(in transcript: Transcript) throws {
-		let textView = transcript.view.textView
+		let textView = transcript.logView.textView
 		let storage = try #require(textView.textStorage)
 		var nicknameRange: NSRange?
 		storage.enumerateAttribute(
 			.transcriptAction,
 			in: NSRange(location: 0, length: storage.length)
 		) { value, range, stop in
-			if case .nickname = TranscriptAction(attributeValue: value) {
+			if case .nickname = value as? TranscriptAction {
 				nicknameRange = range
 				stop.pointee = true
 			}

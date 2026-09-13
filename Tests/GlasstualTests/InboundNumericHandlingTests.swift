@@ -14,11 +14,11 @@ import Testing
 @MainActor
 @Suite("Inbound numeric handling")
 struct InboundNumericHandlingTests {
-	private func client(nickname: String = "me") -> GLTTestClient {
-		GLTTestClient(configDictionary: ["nickname": nickname, "username": nickname])
+	private func client(nickname: String = "me") -> TestClient {
+		TestClient(configDictionary: ["nickname": nickname, "username": nickname])
 	}
 
-	private func joinedChannel(_ name: String, on client: GLTTestClient) throws -> Channel {
+	private func joinedChannel(_ name: String, on client: TestClient) throws -> Channel {
 		let channel = try #require(client.findChannelOrCreate(name))
 
 		channel.activate()
@@ -26,7 +26,7 @@ struct InboundNumericHandlingTests {
 		return channel
 	}
 
-	private func receive(_ line: String, on client: GLTTestClient) throws {
+	private func receive(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 
 		if message.commandNumeric > 0 {
@@ -37,7 +37,7 @@ struct InboundNumericHandlingTests {
 		}
 	}
 
-	private func printedBodies(on client: GLTTestClient, forCommand command: String) -> [String] {
+	private func printedBodies(on client: TestClient, forCommand command: String) -> [String] {
 		(client.printedLines as NSArray).compactMap { line in
 			guard let line = line as? [String: Any], line["command"] as? String == command else {
 				return nil

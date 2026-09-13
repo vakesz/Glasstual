@@ -261,32 +261,3 @@ public extension String {
 		return tokenizer.nextToken()
 	}
 }
-
-public extension NSMutableAttributedString {
-	/// Consumes the next whitespace-delimited token and returns it as plain
-	/// text, leaving the rest of the attributed line -- attributes intact --
-	/// in the receiver.
-	func nextTokenAsString() -> String {
-		consume { $0.nextToken() }
-	}
-
-	/// Consumes the quoted token at the start of the receiver and returns it
-	/// as plain text. The receiver is left untouched when it does not start
-	/// with one.
-	func nextQuotedTokenAsString() -> String {
-		consume { $0.nextQuotedToken() }
-	}
-
-	private func consume(_ body: (inout CommandTokenizer) -> String) -> String {
-		var tokenizer = CommandTokenizer(string)
-		let token = body(&tokenizer)
-
-		let consumed = tokenizer.consumedUTF16Length
-
-		if consumed > 0 {
-			deleteCharacters(in: NSRange(location: 0, length: consumed))
-		}
-
-		return token
-	}
-}

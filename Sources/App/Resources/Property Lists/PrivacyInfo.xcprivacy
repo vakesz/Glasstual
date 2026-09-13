@@ -30,15 +30,18 @@
 				<string>DDA9.1</string>
 			</array>
 		</dict>
-		<!-- Reached through the in-process System Info extension, which reports
-		     free space to the person using the app rather than checking whether
-		     a write will fit, so 85F4.1 rather than E174.1. -->
+		<!-- 85F4.1 covers the in-process System Info extension, which reports
+		     free space to the person using the app. E174.1 covers file
+		     transfers: an incoming DCC offer states its size up front, and the
+		     receiving volume's available capacity is read to decide whether the
+		     download will fit before anything is accepted. -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>85F4.1</string>
+				<string>E174.1</string>
 			</array>
 		</dict>
 		<dict>

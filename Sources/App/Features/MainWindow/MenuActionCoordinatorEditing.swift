@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -39,21 +39,9 @@
 import AppKit
 import CocoaExtensions
 
-@MainActor
-public extension MenuActionCoordinator {
-	func performEditingAction(_ action: MenuEditingAction, sender: Any?) {
-		switch action {
-		case .showFindPrompt:
-			showFindPrompt(sender)
-		case .paste:
-			paste(sender)
-		case .print:
-			printContent(sender)
-		@unknown default:
-			break
-		}
-	}
+// MARK: - Editing commands
 
+public extension MenuActionCoordinator {
 	/** Runs Edit ▸ Find on the transcript's own find bar.
 
 	 Searching a document belongs inline above the text, where every macOS
@@ -62,7 +50,7 @@ public extension MenuActionCoordinator {
 	 reopened, and treated re-submitting the same phrase as no change at all,
 	 so asking for the same word twice never advanced. ⌘G and ⇧⌘G keep their
 	 meaning — they are the find bar's next and previous. */
-	private func showFindPrompt(_ sender: Any?) {
+	@objc func showFindPrompt(_ sender: Any?) {
 		guard sender != nil, mainWindow.isKeyWindow else {
 			return
 		}
@@ -85,7 +73,7 @@ public extension MenuActionCoordinator {
 	 editable focused belongs in the message being written -- and
 	 `MenuResponderCommandPolicy` is what decides between the two, so the action
 	 and the menu item's validation answer the same question. */
-	private func paste(_ sender: Any?) {
+	@objc func paste(_ sender: Any?) {
 		let responder = NSApp.keyWindow?.firstResponder
 		let inputTextField = mainWindow.isKeyWindow ? mainWindow.inputTextField : nil
 
@@ -104,6 +92,14 @@ public extension MenuActionCoordinator {
 		}
 	}
 
+	@objc func printTranscript(_ sender: Any?) {
+		if mainWindow.isKeyWindow {
+			selectedBackingView?.printContent()
+			return
+		}
+		forwardResponderAction(#selector(NSView.printView(_:)), sender: sender)
+	}
+
 	/// Whether the responder is the message field or anything else the input bar
 	/// hosts, which is the one case where re-focusing the field changes nothing.
 	/// Menu validation asks it too, so that the item and the action agree.
@@ -112,14 +108,6 @@ public extension MenuActionCoordinator {
 			return false
 		}
 		return view.isDescendant(of: inputBar)
-	}
-
-	private func printContent(_ sender: Any?) {
-		if mainWindow.isKeyWindow {
-			selectedBackingView?.printContent()
-			return
-		}
-		forwardResponderAction(#selector(NSView.printView(_:)), sender: sender)
 	}
 
 	private func forwardResponderAction(_ selector: Selector, sender: Any?) {

@@ -10,10 +10,6 @@ enum ServerHighlightListStrings {
 		String(localized: .TDCServerHighlightListSheet.windowTitle(networkName))
 	}
 
-	static func heading(networkName: String) -> String {
-		String(localized: .TDCServerHighlightListSheet.heading(networkName))
-	}
-
 	static var channel: String {
 		String(localized: .TDCServerHighlightListSheet.channel)
 	}
@@ -32,6 +28,18 @@ enum ServerHighlightListStrings {
 
 	static var clearList: String {
 		String(localized: .TDCServerHighlightListSheet.clearList)
+	}
+
+	static var clearListConfirmationTitle: String {
+		String(localized: .TDCServerHighlightListSheet.clearListConfirmationTitle)
+	}
+
+	static var clearListConfirmationMessage: String {
+		String(localized: .TDCServerHighlightListSheet.clearListConfirmationMessage)
+	}
+
+	static var goToMessage: String {
+		String(localized: .TDCServerHighlightListSheet.goToMessage)
 	}
 
 	static var actionNote: String {

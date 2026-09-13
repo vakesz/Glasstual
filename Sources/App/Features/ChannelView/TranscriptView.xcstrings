@@ -13,17 +13,76 @@
       "comment" : "Spoken description of an image drawn inline in a conversation. Nothing is known about the picture beyond where it came from, so its address stands in. %@ is the web address it was fetched from.",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Image from %@" } } }
     },
+    "copy-topic" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Context menu command on the topic bar above a conversation. Copies the topic as it reads, without the IRC formatting codes it arrived in.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy Topic" } } }
+    },
+    "open-link-in-application" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Title of the alert shown before a link the browser cannot open is handed to another application. %@ is the name of the application macOS would open it with.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Open this link in “%@”?" } } }
+    },
+    "open-link-in-unknown-application" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Title of the alert shown before a link the browser cannot open is handed to another application, where macOS names no application for it.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Open this link in another app?" } } }
+    },
     "open-image-link" : {
       "extractionState" : "manual",
       "generatesSymbol" : true,
       "comment" : "Context menu command on an image drawn inline in a conversation. Opens the address the picture was fetched from in the browser.",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Link" } } }
     },
+    "transcript-accessibility" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken name of the transcript itself, so one conversation's messages can be told from another's. %@ is the channel or network the transcript belongs to.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Messages in %@" } } }
+    },
+    "transcript-role" : {
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "comment" : "Spoken description of what kind of thing the transcript is, said after its name. Lower case: VoiceOver reads it as part of a sentence.",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "transcript" } } }
+    },
     "reaction-accessibility" : {
       "extractionState" : "manual",
       "generatesSymbol" : true,
-      "comment" : "Spoken description of one reaction chip beneath a message. %1$@ is the emoji people reacted with and %2$lld is how many of them did.",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Reaction %1$@, %2$lld" } } }
+      "comment" : "Spoken description of one reaction chip beneath a message. %1$@ is the emoji people reacted with and the second argument is how many of them did.",
+      "localizations" : {
+        "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reaction"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reactions"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %#@arg2@"
+          }
+        }
+      }
     },
     "save-image" : {
       "extractionState" : "manual",

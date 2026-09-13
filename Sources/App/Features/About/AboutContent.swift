@@ -16,25 +16,22 @@ struct AboutContent: Equatable, Sendable {
 	let applicationName: String
 	let versionDescription: String
 	/// `NSHumanReadableCopyright`, the same line the standard About panel
-	/// shows. An About box without one is not a complete About box.
+	/// shows. It already says this is a fork of Textual, so the panel says it
+	/// once rather than twice.
 	let copyright: String
-	let upstreamAttribution: String
 	let acknowledgementsButtonTitle: String
 	let applicationIconAccessibilityLabel: String
 
 	static var current: Self {
-		let applicationName = ApplicationInfo.applicationNameWithoutVersion()
-		let version = ApplicationInfo.applicationVersionShort()
+		let applicationName = ApplicationInfo.applicationName()
 
 		return Self(
 			applicationName: applicationName,
 			versionDescription: AboutStrings.versionDescription(
-				applicationName: applicationName,
-				version: version,
+				version: ApplicationInfo.applicationVersionShort(),
 				build: ApplicationInfo.applicationVersion()
 			),
 			copyright: ApplicationInfo.applicationCopyright(),
-			upstreamAttribution: AboutStrings.upstreamAttribution,
 			acknowledgementsButtonTitle: AboutStrings.acknowledgementsButtonTitle,
 			applicationIconAccessibilityLabel: AboutStrings.applicationIconAccessibilityLabel(
 				applicationName: applicationName

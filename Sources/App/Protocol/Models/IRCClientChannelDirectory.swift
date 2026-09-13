@@ -40,12 +40,12 @@ import Foundation
 import GlasstualPluginKit
 
 public extension IRCClient {
-	internal func findChannel(_ name: String, in channelList: [IRCChannel]) -> IRCChannel? {
+	internal func findChannel(_ name: String, in channelList: [Channel]) -> Channel? {
 		let foldedName = casefoldNickname(name)
 		return channelList.first { casefoldNickname($0.name) == foldedName }
 	}
 
-	func findChannel(_ name: String) -> IRCChannel? {
+	func findChannel(_ name: String) -> Channel? {
 		let foldedName = casefoldNickname(name)
 
 		// A hit is only trusted while it still folds to the name asked for: a
@@ -60,7 +60,7 @@ public extension IRCClient {
 	/// Rebuilds the casefolded mirror of the channel list. Earlier channels win
 	/// a collision, matching the order the linear scan used to return.
 	internal func rebuildChannelIndex() {
-		var index: [String: IRCChannel] = [:]
+		var index: [String: Channel] = [:]
 		index.reserveCapacity(channelList.count)
 
 		for channel in channelList {
@@ -74,19 +74,15 @@ public extension IRCClient {
 		channelsByFoldedName = index
 	}
 
-	func findChannelOrCreate(_ name: String) -> IRCChannel? {
-		findChannelOrCreate(name, isPrivateMessage: false)
-	}
-
-	func findChannelOrCreate(_ name: String, isPrivateMessage: Bool) -> IRCChannel? {
+	func findChannelOrCreate(_ name: String, isPrivateMessage: Bool = false) -> Channel? {
 		findChannelOrCreate(name, as: isPrivateMessage ? .privateMessage : .channel)
 	}
 
-	internal func findChannelOrCreate(_ name: String, isUtility: Bool) -> IRCChannel? {
+	internal func findChannelOrCreate(_ name: String, isUtility: Bool) -> Channel? {
 		findChannelOrCreate(name, as: isUtility ? .utility : .channel)
 	}
 
-	internal func findChannelOrCreate(_ name: String, as type: ChannelType) -> IRCChannel? {
+	internal func findChannelOrCreate(_ name: String, as type: ChannelType) -> Channel? {
 		if let channel = findChannel(name) {
 			return channel
 		}

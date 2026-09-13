@@ -14,9 +14,27 @@ import CocoaExtensions
 import Foundation
 import SwiftUI
 
+extension Binding where Value == Bool {
+	/** Reads as off and writes nothing while `isEnabled` is false.
+
+	 A setting another setting has made irrelevant has one condition behind it,
+	 so the switch cannot read as on while it is drawn disabled. */
+	func gated(by isEnabled: Bool) -> Binding<Bool> {
+		let stored = self
+
+		return Binding(
+			get: { isEnabled && stored.wrappedValue },
+			set: { newValue in
+				guard isEnabled else { return }
+				stored.wrappedValue = newValue
+			}
+		)
+	}
+}
+
 /** The shapes a control needs that a stored value does not have: a slider wants
  a `Double`, a text field wants a `String` it may not have finished typing, and
- three checkboxes read the opposite of what they store.
+ two switches read the opposite of what they store.
 
  Everything here still goes through the typed key, so no pane touches a raw
  defaults name. */
@@ -30,31 +48,7 @@ extension ObservablePreferences {
 		)
 	}
 
-	/// A checkbox that reads as off while `enabledWhen` is false, the way the
-	/// nib's disabled checkboxes did, and still writes its own key.
-	func gatedBinding(
-		for key: PreferenceKey<Bool>,
-		enabledWhen isEnabled: @escaping () -> Bool
-	) -> Binding<Bool> {
-		Binding(
-			get: { isEnabled() && self[key] },
-			set: { self[key] = $0 }
-		)
-	}
-
-	func sliderBinding(
-		for key: PreferenceKey<Double>,
-		didSet: @escaping () -> Void = {}
-	) -> Binding<Double> {
-		Binding(
-			get: { self[key] },
-			set: { newValue in
-				self[key] = newValue
-				didSet()
-			}
-		)
-	}
-
+	/// A slider over a count the store keeps as a whole number.
 	func sliderBinding(
 		for key: PreferenceKey<UInt>,
 		didSet: @escaping () -> Void = {}
@@ -77,8 +71,7 @@ extension ObservablePreferences {
 		Binding(
 			get: { String(self[key]) },
 			set: { newValue in
-				guard let value = UInt(newValue), let object = value.preferenceObject,
-				      let plist = PropertyListValue(propertyList: object), key.coerce(plist) != nil else { return }
+				guard let value = UInt(newValue), key.accepts(value) else { return }
 				self[key] = value
 				didSet()
 			}
@@ -114,8 +107,8 @@ extension ObservablePreferences {
 		)
 	}
 
-	/// The same declaration-level port constraints used by configuration import,
-	/// including the ordered-pair rule the two ends of a range share.
+	/// The same declaration-level port constraints an imported file goes
+	/// through, including the ordered-pair rule the two ends of a range share.
 	func portFieldBinding(
 		for key: PreferenceKey<UInt16>,
 		limitedBy other: PreferenceKey<UInt16>?
@@ -123,13 +116,12 @@ extension ObservablePreferences {
 		Binding(
 			get: { String(self[key]) },
 			set: { newValue in
-				guard let value = UInt16(newValue), let object = value.preferenceObject,
-				      let plist = PropertyListValue(propertyList: object) else { return }
-				var values: [String: PropertyListValue] = [:]
+				guard let value = UInt16(newValue) else { return }
+				var others: [String: PropertyListValue] = [:]
 				if let other {
-					values[other.name] = other.propertyListValue
+					others[other.name] = other.propertyListValue
 				}
-				guard key.isValid(plist, in: values) else { return }
+				guard key.accepts(value, alongside: others) else { return }
 				self[key] = value
 			}
 		)

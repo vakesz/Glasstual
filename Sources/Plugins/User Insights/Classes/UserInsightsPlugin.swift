@@ -78,7 +78,7 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 	private func listUsers(in channel: PluginChannel, client: PluginClient, parameters: String) {
 		var members = channel.members
 		guard members.isEmpty == false else {
-			client.printDebug(localized(.BasicLanguage.noUsersInChannel(channel.name)), in: channel)
+			client.printDebug(String(localized: .BasicLanguage.noUsersInChannel(channel.name)), in: channel)
 			return
 		}
 
@@ -103,15 +103,15 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 
 		guard matches.isEmpty == false else {
 			let message = hasQuery
-				? localized(.BasicLanguage.noHostmaskQueryMatches(channel.name, query))
-				: localized(.BasicLanguage.noHostmaskMatches(channel.name))
+				? String(localized: .BasicLanguage.noHostmaskQueryMatches(channel.name, query))
+				: String(localized: .BasicLanguage.noHostmaskMatches(channel.name))
 			client.printDebug(message, in: channel)
 			return
 		}
 
 		let summary = hasQuery
-			? localized(.BasicLanguage.hostmaskQueryMatchCount(UInt(matches.count), channel.name, query))
-			: localized(.BasicLanguage.hostmaskMatchCount(UInt(matches.count), channel.name))
+			? String(localized: .BasicLanguage.hostmaskQueryMatchCount(UInt(matches.count), channel.name, query))
+			: String(localized: .BasicLanguage.hostmaskMatchCount(UInt(matches.count), channel.name))
 		client.printDebug(summary, in: channel)
 
 		for member in matches {
@@ -130,11 +130,11 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		}
 
 		guard clones.isEmpty == false else {
-			client.printDebug(localized(.BasicLanguage.noClones), in: channel)
+			client.printDebug(String(localized: .BasicLanguage.noClones), in: channel)
 			return
 		}
 
-		client.printDebug(localized(.BasicLanguage.cloneCount(UInt(clones.count), channel.name)), in: channel)
+		client.printDebug(String(localized: .BasicLanguage.cloneCount(UInt(clones.count), channel.name)), in: channel)
 		for (address, nicknames) in clones.sorted(by: { $0.key < $1.key }) {
 			client.printDebug("*!*@\(address) -> \(nicknames.joined(separator: ", "))", in: channel)
 		}
@@ -178,7 +178,7 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		var result = pluralized(.channels, value: counts.channels)
 		result += pluralized(.networks, value: counts.networks)
 		if counts.powerOverUsers == 0 {
-			result += localized(.BasicLanguage.bragNoPower)
+			result += String(localized: .BasicLanguage.bragNoPower)
 		} else {
 			result += pluralized(.operators, value: counts.operators)
 			result += pluralized(.channelOperators, value: counts.channelOperators)
@@ -223,11 +223,7 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 	}
 
 	private func pluralized(_ metric: BragMetric, value: Int) -> String {
-		localized(metric.resource(value: value))
-	}
-
-	private func localized(_ resource: LocalizedStringResource) -> String {
-		String(localized: resource)
+		String(localized: metric.resource(value: value))
 	}
 }
 

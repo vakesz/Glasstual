@@ -21,11 +21,11 @@ extension OnboardingTextSize {
 	var title: String {
 		switch self {
 		case .small:
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelSmall)
+			String(localized: .Onboarding.stepLookAndFeelSmall)
 		case .medium:
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelMedium)
+			String(localized: .Onboarding.stepLookAndFeelMedium)
 		case .large:
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelLarge)
+			String(localized: .Onboarding.stepLookAndFeelLarge)
 		}
 	}
 }
@@ -33,144 +33,148 @@ extension OnboardingTextSize {
 enum OnboardingStrings {
 	enum Window {
 		static var connectionUnavailable: String {
-			String(localized: .OnboardingCompletion.connectionUnavailable)
+			String(localized: .Onboarding.connectionUnavailable)
+		}
+
+		static var connectionUnavailableRecovery: String {
+			String(localized: .Onboarding.connectionUnavailableRecovery)
 		}
 
 		static var title: String {
-			String(localized: .TDCOnboardingWindow.windowChromeWelcomeToGlasstual)
+			String(localized: .Onboarding.windowChromeWelcomeToGlasstual)
 		}
 
 		static var backButton: String {
-			String(localized: .TDCOnboardingWindow.windowChromeBack)
+			String(localized: .Onboarding.windowChromeBack)
 		}
 
 		static var continueButton: String {
-			String(localized: .TDCOnboardingWindow.windowChromeContinue)
+			String(localized: .Onboarding.windowChromeContinue)
 		}
 
 		static var finishButton: String {
-			String(localized: .TDCOnboardingWindow.windowChromeFinish)
+			String(localized: .Onboarding.windowChromeFinish)
 		}
 
 		static var skipButton: String {
-			String(localized: .TDCOnboardingWindow.windowChromeSkip)
+			String(localized: .Onboarding.windowChromeSkip)
 		}
 
 		static var setUpLaterButton: String {
-			String(localized: .TDCOnboardingWindow.windowChromeSetUpLater)
+			String(localized: .Onboarding.windowChromeSetUpLater)
 		}
 
 		static func progress(currentStep: Int, totalSteps: Int) -> String {
-			String(localized: .TDCOnboardingWindow.windowChromeStep(currentStep, totalSteps))
+			String(localized: .Onboarding.windowChromeStep(currentStep, totalSteps))
 		}
 	}
 
 	enum Identity {
 		static var title: String {
-			String(localized: .TDCOnboardingWindow.welcomeToGlasstual)
+			String(localized: .Onboarding.welcomeToGlasstual)
 		}
 
 		static var subtitle: String {
-			String(localized: .TDCOnboardingWindow.glasstualIsAnIrcClientBuilt)
+			String(localized: .Onboarding.glasstualIsAnIrcClientBuilt)
 		}
 
 		static var nicknameLabel: String {
-			String(localized: .TDCOnboardingWindow.stepWelcomeAndIdentityNickname)
+			String(localized: .Onboarding.stepWelcomeAndIdentityNickname)
+		}
+
+		static var nicknameRequired: String {
+			String(localized: .Onboarding.stepWelcomeAndIdentityNicknameRequired)
 		}
 
 		static var realNameLabel: String {
-			String(localized: .TDCOnboardingWindow.realName)
+			String(localized: .Onboarding.realName)
 		}
 
 		static var alternateNicknameLabel: String {
-			String(localized: .TDCOnboardingWindow.alternateNickname)
+			String(localized: .Onboarding.alternateNickname)
 		}
 
 		static var alternateNicknameHelp: String {
-			String(localized: .TDCOnboardingWindow.usedWhenYourNicknameIsAlready)
+			String(localized: .Onboarding.usedWhenYourNicknameIsAlready)
 		}
 
 		static var nicknamePlaceholder: String {
-			String(localized: .TDCOnboardingWindow.nickname)
+			String(localized: .Onboarding.nickname)
 		}
 
 		static var realNamePlaceholder: String {
-			String(localized: .TDCOnboardingWindow.yourNameOrAnythingYouLike)
+			String(localized: .Onboarding.yourNameOrAnythingYouLike)
 		}
 
 		static var optionalPlaceholder: String {
-			String(localized: .TDCOnboardingWindow.stepWelcomeAndIdentityOptional)
+			String(localized: .Onboarding.stepWelcomeAndIdentityOptional)
 		}
 	}
 
 	enum Appearance {
 		static var title: String {
-			String(localized: .TDCOnboardingWindow.lookAndFeel)
+			String(localized: .Onboarding.lookAndFeel)
 		}
 
 		static var subtitle: String {
-			String(localized: .TDCOnboardingWindow.chooseHowConversationsAreDisplayed)
+			String(localized: .Onboarding.chooseHowConversationsAreDisplayed)
 		}
 
 		static var bubblesTitle: String {
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelBubbles)
+			String(localized: .Onboarding.stepLookAndFeelBubbles)
 		}
 
 		static var bubblesDescription: String {
-			String(localized: .TDCOnboardingWindow.messagesInRoundedBubbles)
+			String(localized: .Onboarding.messagesInRoundedBubbles)
 		}
 
 		static var linesTitle: String {
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelLines)
+			String(localized: .Onboarding.stepLookAndFeelLines)
 		}
 
 		static var linesDescription: String {
-			String(localized: .TDCOnboardingWindow.classicLineByLineView)
+			String(localized: .Onboarding.classicLineByLineView)
 		}
 
 		static var textSizeLabel: String {
-			String(localized: .TDCOnboardingWindow.textSize)
+			String(localized: .Onboarding.textSize)
 		}
 
 		static var interfaceStyleLabel: String {
-			String(localized: .TDCOnboardingWindow.stepLookAndFeelAppearance)
+			String(localized: .Onboarding.stepLookAndFeelAppearance)
 		}
 
 		static var previewAccessibilityLabel: String {
-			String(localized: .TDCOnboardingWindow.chatStyle)
+			String(localized: .Onboarding.chatStyle)
 		}
 
 		static var previewTime: String {
-			String(localized: .TDCOnboardingWindow.stepLookAndFeel)
-		}
-
-		static var textSizeTitles: [String] {
-			OnboardingTextSize.allCases.map(\.title)
+			String(localized: .Onboarding.stepLookAndFeel)
 		}
 
 		/// One title per case of `PreferredAppearance`, so the picker cannot
 		/// drift out of step with the tags it sets.
 		static func interfaceStyleTitle(_ appearance: PreferredAppearance) -> String {
 			switch appearance {
-			case .inherited: String(localized: .TDCOnboardingWindow.stepLookAndFeelSystem)
-			case .light: String(localized: .TDCOnboardingWindow.stepLookAndFeelLight)
-			case .dark: String(localized: .TDCOnboardingWindow.stepLookAndFeelDark)
+			case .inherited: String(localized: .Onboarding.stepLookAndFeelSystem)
+			case .light: String(localized: .Onboarding.stepLookAndFeelLight)
+			case .dark: String(localized: .Onboarding.stepLookAndFeelDark)
 			}
 		}
 
 		static var previewMessages: [OnboardingAppearancePreviewMessage] {
 			[
 				OnboardingAppearancePreviewMessage(
-					nickname: String(localized: .TDCOnboardingWindow.stepLookAndFeelAlice),
-					message: String(localized: .TDCOnboardingWindow.goodMorningEveryone)
+					nickname: String(localized: .Onboarding.stepLookAndFeelAlice),
+					message: String(localized: .Onboarding.goodMorningEveryone)
 				),
 				OnboardingAppearancePreviewMessage(
-					nickname: String(localized: .TDCOnboardingWindow.stepLookAndFeelBob),
-					message: String(localized: .TDCOnboardingWindow.morningAnyoneTriedTheNewBuild)
+					nickname: String(localized: .Onboarding.stepLookAndFeelBob),
+					message: String(localized: .Onboarding.morningAnyoneTriedTheNewBuild)
 				),
 				OnboardingAppearancePreviewMessage(
-					nickname: String(localized: .TDCOnboardingWindow.stepLookAndFeelYou),
-					message: String(localized: .TDCOnboardingWindow.yesItWorksWellSoFar)
+					nickname: String(localized: .Onboarding.stepLookAndFeelYou),
+					message: String(localized: .Onboarding.yesItWorksWellSoFar)
 				),
 			]
 		}
@@ -178,147 +182,197 @@ enum OnboardingStrings {
 
 	enum Notifications {
 		static var title: String {
-			String(localized: .TDCOnboardingWindow.stepNotifications)
+			String(localized: .Onboarding.stepNotifications)
 		}
 
 		static var subtitle: String {
-			String(localized: .TDCOnboardingWindow.chooseWhatGlasstualShouldTell)
+			String(localized: .Onboarding.chooseWhatGlasstualShouldTell)
 		}
 
 		static var mentionCheckbox: String {
-			String(localized: .TDCOnboardingWindow.notifyMeWhenSomeoneMentionsMe)
+			String(localized: .Onboarding.notifyMeWhenSomeoneMentionsMe)
 		}
 
 		static var privateMessageCheckbox: String {
-			String(localized: .TDCOnboardingWindow.notifyMeAboutPrivateMessages)
+			String(localized: .Onboarding.notifyMeAboutPrivateMessages)
 		}
 
 		static var soundCheckbox: String {
-			String(localized: .TDCOnboardingWindow.playSounds)
+			String(localized: .Onboarding.playSounds)
 		}
 
 		static var permissionExplanation: String {
-			String(localized: .TDCOnboardingWindow.glasstualWillAskMacosForPermission)
+			String(localized: .Onboarding.glasstualWillAskMacosForPermission)
 		}
 
 		static var permissionGranted: String {
-			String(localized: .TDCOnboardingWindow.notificationsAreAllowedForGlasstual)
+			String(localized: .Onboarding.notificationsAreAllowedForGlasstual)
 		}
 
 		static var permissionDenied: String {
-			String(localized: .TDCOnboardingWindow.notificationsAreTurnedOffForGlasstual)
+			String(localized: .Onboarding.notificationsAreTurnedOffForGlasstual)
 		}
 	}
 
 	enum FirstNetwork {
 		static var title: String {
-			String(localized: .TDCOnboardingWindow.yourFirstNetwork)
+			String(localized: .Onboarding.yourFirstNetwork)
 		}
 
 		static var subtitle: String {
-			String(localized: .TDCOnboardingWindow.pickANetworkToJoin)
+			String(localized: .Onboarding.pickANetworkToJoin)
 		}
 
 		static var connectWhenFinished: String {
-			String(localized: .TDCOnboardingWindow.connectWhenFinished)
+			String(localized: .Onboarding.connectWhenFinished)
 		}
 
 		static var suggestedChannelsLabel: String {
-			String(localized: .TDCOnboardingWindow.suggestedChannels)
+			String(localized: .Onboarding.suggestedChannels)
 		}
 
 		static var suggestedChannelsPlaceholder: String {
-			String(localized: .TDCOnboardingWindow.chooseANetworkToSeeSuggested)
+			String(localized: .Onboarding.chooseANetworkToSeeSuggested)
+		}
+	}
+
+	enum Summary {
+		static var title: String {
+			String(localized: .Onboarding.summary)
 		}
 
-		static var invalidNetwork: String {
-			String(localized: .TDCOnboardingWindow.pleaseCheckTheNetworkDetails)
+		static var subtitle: String {
+			String(localized: .Onboarding.summaryReviewYourChoices)
+		}
+
+		static var nicknameLabel: String {
+			String(localized: .Onboarding.summaryNickname)
+		}
+
+		static var chatStyleLabel: String {
+			String(localized: .Onboarding.summaryChatStyle)
+		}
+
+		static var textSizeLabel: String {
+			String(localized: .Onboarding.summaryTextSize)
+		}
+
+		static var appearanceLabel: String {
+			String(localized: .Onboarding.summaryAppearance)
+		}
+
+		static var notificationsLabel: String {
+			String(localized: .Onboarding.summaryNotifications)
+		}
+
+		static var networkLabel: String {
+			String(localized: .Onboarding.summaryNetwork)
+		}
+
+		static var channelsLabel: String {
+			String(localized: .Onboarding.summaryChannels)
+		}
+
+		static var nothingChosen: String {
+			String(localized: .Onboarding.summaryNothingChosen)
+		}
+
+		static var mentions: String {
+			String(localized: .Onboarding.summaryMentions)
+		}
+
+		static var privateMessages: String {
+			String(localized: .Onboarding.summaryPrivateMessages)
+		}
+
+		static var sounds: String {
+			String(localized: .Onboarding.summarySounds)
+		}
+
+		static var settingUp: String {
+			String(localized: .Onboarding.summarySettingThingsUp)
 		}
 	}
 
 	enum NetworkPicker {
 		static var accountIdentityHelp: String {
-			String(localized: .OnboardingCompletion.accountIdentityHelp)
+			String(localized: .Onboarding.accountIdentityHelp)
 		}
 
 		static var invalidAccount: String {
-			String(localized: .OnboardingCompletion.invalidAccount)
+			String(localized: .Onboarding.invalidAccount)
 		}
 
 		static var searchPlaceholder: String {
-			String(localized: .TDCOnboardingWindow.searchNetworks)
+			String(localized: .Onboarding.searchNetworks)
 		}
 
 		static var accessibilityLabel: String {
-			String(localized: .TDCOnboardingWindow.networkPickerNetworks)
+			String(localized: .Onboarding.networkPickerNetworks)
 		}
 
 		static var popularGroup: String {
-			String(localized: .TDCOnboardingWindow.networkPickerPopular)
+			String(localized: .Onboarding.networkPickerPopular)
 		}
 
 		static var allNetworksGroup: String {
-			String(localized: .TDCOnboardingWindow.allNetworks)
+			String(localized: .Onboarding.allNetworks)
 		}
 
 		static var customServerTitle: String {
-			String(localized: .TDCOnboardingWindow.customServer)
+			String(localized: .Onboarding.customServer)
 		}
 
 		static var customServerDescription: String {
-			String(localized: .TDCOnboardingWindow.connectToAnyIrcServer)
+			String(localized: .Onboarding.connectToAnyIrcServer)
 		}
 
 		static var secureConnectionAccessibilityLabel: String {
-			String(localized: .TDCOnboardingWindow.secureConnection)
+			String(localized: .Onboarding.secureConnection)
 		}
 
 		static var serverAddressLabel: String {
-			String(localized: .TDCOnboardingWindow.serverAddress)
+			String(localized: .Onboarding.serverAddress)
 		}
 
 		static var serverAddressPlaceholder: String {
-			String(localized: .TDCOnboardingWindow.ircExampleOrg)
+			String(localized: .Onboarding.ircExampleOrg)
 		}
 
 		static var portLabel: String {
-			String(localized: .TDCOnboardingWindow.networkPickerPort)
-		}
-
-		static var portPlaceholder: String {
-			String(localized: .TDCOnboardingWindow.networkPicker)
+			String(localized: .Onboarding.networkPickerPort)
 		}
 
 		static var useTLSCheckbox: String {
-			String(localized: .TDCOnboardingWindow.useSslTls)
+			String(localized: .Onboarding.useSslTls)
 		}
 
 		static var accountGroup: String {
-			String(localized: .TDCOnboardingWindow.networkPickerAccount)
+			String(localized: .Onboarding.networkPickerAccount)
 		}
 
 		static var accountNameLabel: String {
-			String(localized: .TDCOnboardingWindow.accountName)
+			String(localized: .Onboarding.accountName)
 		}
 
 		static var passwordLabel: String {
-			String(localized: .TDCOnboardingWindow.networkPickerPassword)
+			String(localized: .Onboarding.networkPickerPassword)
 		}
 
 		static var useSASLCheckbox: String {
-			String(localized: .TDCOnboardingWindow.signInWithSasl)
+			String(localized: .Onboarding.signInWithSasl)
 		}
 
 		static var registrationRequired: String {
-			String(localized: .TDCOnboardingWindow.registrationRequired)
+			String(localized: .Onboarding.registrationRequired)
 		}
 
 		static var missingServer: String {
-			String(localized: .TDCOnboardingWindow.chooseANetworkOrEnter)
+			String(localized: .Onboarding.chooseANetworkOrEnter)
 		}
 
 		static var invalidPort: String {
-			String(localized: .TDCOnboardingWindow.enterAPortBetween1)
+			String(localized: .Onboarding.enterAPortBetween1)
 		}
 	}
 }

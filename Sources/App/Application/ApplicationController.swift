@@ -38,6 +38,29 @@ private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage
 	}
 }
 
+/** How far shutdown has got.
+
+ One value instead of the five booleans that used to answer for it, each of
+ which could disagree with the others: a stage only ever moves forward, and
+ every step reads the same value to decide whether its work has already been
+ done. */
+enum ApplicationTerminationStage: Int, Comparable, Sendable {
+	/// Nothing has asked the application to quit.
+	case running
+	/// The quit confirmation is on screen and its answer decides.
+	case confirming
+	/// Clients are leaving IRC.
+	case disconnecting
+	/// The transcript files and the history store are being flushed.
+	case savingLogs
+	/// `NSApp` has been told it may quit.
+	case finished
+
+	static func < (lhs: Self, rhs: Self) -> Bool {
+		lhs.rawValue < rhs.rawValue
+	}
+}
+
 /** What `applicationShouldTerminate` does with the request.
 
  Every route ends at `.terminateLater` and the three termination steps report
@@ -98,29 +121,29 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	public private(set) var ghostModeIsOn = false
 	public private(set) var applicationIsActive = false
 	public private(set) var applicationIsLaunched = false
-	public private(set) var applicationIsTerminating = false
 	public private(set) var applicationIsChangingActiveState = false
+
+	/// Teardown has begun: nothing may act on the connection tree any more.
+	public var applicationIsTerminating: Bool {
+		terminationStage >= .disconnecting
+	}
 
 	public var skipTerminateSave = false
 
-	private var terminateHistoricLogSaveStarted = false
-	private var terminateHistoricLogSaveFinished = false
-	private var terminateFileLogDrainFinished = false
-	private var terminateStepThreePerformed = false
+	private var terminationStage: ApplicationTerminationStage = .running
+	/// The two log drains still running. Step three waits for both, or for the
+	/// deadline, whichever comes first.
+	private var pendingLogDrains = 0
 	/// Bounds both history persistence and the independent transcript-file drain.
 	private var historicLogSaveTimeoutTask: Task<Void, Never>?
 	private var skipTerminateConfirmation = false
-	/// Raised while the quit confirmation sheet is on screen. Sheets stack, so
-	/// without it a second ⌘Q queues a second sheet and both completions run:
-	/// two shutdowns, or a cancel answered on top of one already in flight.
-	private var terminationConfirmationIsPending = false
 	private let notifications = NotificationSubscriptions()
 	private lazy var resourceFileImporter = ResourceFileImporter()
 
 	/// IUO preserves the established launch-time contract while allowing nil in tests.
 	public var mainWindow: MainWindow!
 	public weak var menuController: MenuController?
-	public var world: IRCWorld!
+	public var world: World!
 
 	public var terminatingClientCount: UInt = 0 {
 		didSet {
@@ -176,12 +199,12 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		_ = SharedApplication.sharedAppearance()
 
 		let window = MainWindow(
-			contentRect: NSRect(x: 0, y: 0, width: 800, height: 477),
+			contentRect: NSRect(origin: .zero, size: MainWindowConstants.minimumContentSize),
 			styleMask: [.titled, .closable, .miniaturizable, .resizable],
 			backing: .buffered,
 			defer: false
 		)
-		window.title = "Glasstual"
+		window.title = ApplicationInfo.applicationName()
 		window.identifier = NSUserInterfaceItemIdentifier("TVCMainWindow")
 		window.contentMinSize = MainWindowConstants.minimumContentSize
 		window.setFrameAutosaveName("Main Window")
@@ -194,7 +217,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	public func applicationWakeStepOne() {
-		world = IRCWorld()
+		world = World()
 	}
 
 	/** Hands the IRC layer the window, the menus and this controller, and makes
@@ -217,8 +240,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	public func applicationWakeStepTwo() {
-		CommandIndex.populateCommandIndex()
-
 		SystemInformation.beginObservingSleepState()
 
 		prepareNetworkReachabilityNotifier()
@@ -253,6 +274,14 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			andEventID: AEEventID(kAEGetURL)
 		)
 
+		/* The mask has to be set before anything creates the shared panel, which
+		 is the only reason a colour-picker detail is settled at launch. The
+		 panel itself is not touched here: reading `NSColorPanel.shared` builds
+		 the whole system picker, and its colour wheel draws through CoreImage,
+		 so every launch loaded Metal and its shader caches for a picker most
+		 sessions never open. Each presenter configures the panel it shows —
+		 the formatting menu turns alpha off, a SwiftUI `ColorPicker` sets it
+		 from `supportsOpacity`. */
 		NSColorPanel.setPickerMask([
 			.rgbModeMask,
 			.grayModeMask,
@@ -260,7 +289,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			.wheelModeMask,
 			.crayonModeMask,
 		])
-		NSColorPanel.shared.showsAlpha = true
 
 		Task {
 			await ResourceManager.copyResourcesToApplicationSupportFolder()
@@ -294,16 +322,11 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	// MARK: - NSApplication Delegate
 
 	public func applicationWillFinishLaunching(_: Notification) {
+		/* A second copy used to be met with a modal warning that the
+		 preferences "may become corrupted". `LSMultipleInstancesProhibited`
+		 means there is never a second copy to warn about: Launch Services
+		 activates the one that is already running. */
 		SharedApplication.sharedApplicationScenes().install(in: NSApp)
-
-		#if !DEBUG
-			/* Asking the user about another running copy needs an alert, and
-			 an alert needs NSApp — so this cannot run before
-			 NSApplicationMain, which is where it used to live. */
-			if Application.shouldContinueLaunching() == false {
-				exit(EXIT_SUCCESS)
-			}
-		#endif
 
 		/* UserNotifications.framework wants delegation set before app has
 		 finished launching. A simple access to the singleton will set this
@@ -335,7 +358,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			return
 		}
 
-		menuController?.showOnboardingWindow(nil)
+		SharedApplication.sharedApplicationScenes().openOnboarding()
 	}
 
 	public func applicationWillResignActive(_: Notification) {
@@ -395,7 +418,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		switch ApplicationTerminationPolicy.decision(
 			isTerminating: applicationIsTerminating,
-			isAwaitingConfirmation: terminationConfirmationIsPending,
+			isAwaitingConfirmation: terminationStage == .confirming,
 			skipConfirmation: skipTerminateConfirmation,
 			confirmQuitPreference: Preferences.Connection.confirmQuit.value,
 			hasLiveConnection: stillConnected
@@ -418,9 +441,14 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		return .terminateLater
 	}
 
-	/// The sheet's completion reports to NSApp and begins termination itself.
+	/** The sheet's completion reports to NSApp and begins termination itself.
+
+	 Sheets stack, so a second ⌘Q while this one is up would queue a second
+	 sheet and run both completions: two shutdowns, or a cancel answered on top
+	 of one already in flight. The stage is what keeps the second request from
+	 asking again. */
 	private func presentTerminationConfirmation() {
-		terminationConfirmationIsPending = true
+		terminationStage = .confirming
 
 		Alerts.alertSheet(
 			body: PromptStrings.Application.quitBody,
@@ -429,7 +457,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			alternateButton: PromptStrings.Action.cancel,
 			otherButton: nil
 		) { [weak self] outcome in
-			self?.terminationConfirmationIsPending = false
+			guard let self else { return }
+			terminationStage = .running
 
 			let result = outcome.response == .default
 
@@ -440,16 +469,17 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 				return
 			}
 
-			self?.performApplicationTerminationStepOne()
+			performApplicationTerminationStepOne()
 		}
 	}
 
 	private func terminatingClientsDidFinish() {
-		if applicationIsTerminating == false || terminateHistoricLogSaveStarted {
+		guard terminationStage == .disconnecting else {
 			return
 		}
 
-		terminateHistoricLogSaveStarted = true
+		terminationStage = .savingLogs
+		pendingLogDrains = 2
 
 		Self.terminationLogger.debug("All clients finished; saving history and draining transcript files")
 
@@ -459,7 +489,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			try? await Task.sleep(for: .seconds(terminationHistoricLogSaveTimeout))
 			guard Task.isCancelled == false, let self else { return }
 			Self.terminationLogger.error("Log shutdown deadline expired; pending log data may be lost")
-			completeHistoricLogSaveAndContinueTermination(timedOut: true)
+			finishTermination()
 		}
 
 		FileLogger.prepareForApplicationTermination { [weak self] succeeded in
@@ -467,41 +497,30 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			if !succeeded {
 				Self.terminationLogger.error("Transcript drain completed with file errors; some log data was not saved")
 			}
-			terminateFileLogDrainFinished = true
-			completeHistoricLogSaveAndContinueTermination()
+			logDrainDidFinish()
 		}
 
-		LogControllerHistoricLogFile.shared()
+		LogControllerHistoricLogFile.shared
 			.prepareForApplicationTermination { [weak self] in
-				guard let self else {
-					return
-				}
-
-				Task { @MainActor [weak self] in
-					self?.terminateHistoricLogSaveFinished = true
-					self?.completeHistoricLogSaveAndContinueTermination()
+				Task { @MainActor in
+					self?.logDrainDidFinish()
 				}
 			}
 	}
 
-	private func completeHistoricLogSaveAndContinueTermination(timedOut: Bool = false) {
-		guard timedOut || (terminateHistoricLogSaveFinished && terminateFileLogDrainFinished) else { return }
+	private func logDrainDidFinish() {
+		guard terminationStage == .savingLogs, pendingLogDrains > 0 else { return }
+		pendingLogDrains -= 1
+		guard pendingLogDrains == 0 else { return }
+		finishTermination()
+	}
+
+	/// Runs step three once, whether both drains reported in or the deadline
+	/// expired first.
+	private func finishTermination() {
+		guard terminationStage == .savingLogs else { return }
 		historicLogSaveTimeoutTask?.cancel()
 		historicLogSaveTimeoutTask = nil
-
-		if terminateStepThreePerformed {
-			return
-		}
-
-		if applicationIsTerminating == false {
-			return
-		}
-
-		if terminateHistoricLogSaveStarted == false {
-			return
-		}
-
-		terminateStepThreePerformed = true
 		performApplicationTerminationStepThree()
 	}
 
@@ -516,7 +535,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		Self.terminationLogger.debug("Step one entry")
 
-		applicationIsTerminating = true
+		terminationStage = .disconnecting
 
 		SharedApplication.sharedAppearance().prepareForApplicationTermination()
 
@@ -564,11 +583,9 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	}
 
 	private func performApplicationTerminationStepThree() {
-		guard applicationIsTerminating else {
-			return
-		}
-
 		Self.terminationLogger.debug("Step three entry")
+
+		terminationStage = .finished
 
 		if skipTerminateSave == false {
 			Self.terminationLogger.debug("Saving IRC world")

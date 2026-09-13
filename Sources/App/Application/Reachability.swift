@@ -44,7 +44,7 @@ enum ReachabilityPathEvent: Int {
 	case becameUnreachable = 2
 }
 
-/** Reachability changes drive `IRCWorld`, which lives on the main actor, so the
+/** Reachability changes drive `World`, which lives on the main actor, so the
  notifier does too: no lock, no queue hop, no opting out of the checker. */
 @MainActor
 public final class Reachability: NSObject {

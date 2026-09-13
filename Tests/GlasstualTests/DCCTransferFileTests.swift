@@ -128,7 +128,7 @@ struct DCCTransferFileTests {
 	func writeDeadlineCancelsOperation() async {
 		let (events, continuation) = AsyncStream<Bool>.makeStream()
 		await #expect(throws: DCCTransferError.writeTimeout) {
-			try await DCCTransfer.withTimeout(.milliseconds(50), failingWith: .writeTimeout) {
+			try await DCCTransport.withTimeout(.milliseconds(50), failingWith: .writeTimeout) {
 				defer { continuation.yield(Task.isCancelled); continuation.finish() }
 				try await Task.sleep(for: .seconds(60))
 			}

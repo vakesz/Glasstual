@@ -94,14 +94,15 @@ private actor HistoricLogStoreHarness {
 		limitToDate: Date? = nil
 	) async -> [HistoricLogEntry] {
 		if let before {
-			return await store.fetchEntries(forView: view, before: before, fetchLimit: limit, limitToDate: limitToDate)
+			return await store.fetchOutcome(HistoricLogFetchRequest(
+				viewIdentifier: view,
+				kind: .before(uniqueIdentifier: before, fetchLimit: limit, limitToDate: limitToDate)
+			)).entries
 		}
-		return await store.fetchEntries(
-			forView: view,
-			ascending: ascending,
-			fetchLimit: limit,
-			limitToDate: limitToDate
-		)
+		return await store.fetchOutcome(HistoricLogFetchRequest(
+			viewIdentifier: view,
+			kind: .newest(ascending: ascending, fetchLimit: limit, limitToDate: limitToDate)
+		)).entries
 	}
 
 	func fetchOutcome(_ request: HistoricLogFetchRequest) async -> HistoricLogFetchOutcome {
@@ -127,12 +128,7 @@ private actor HistoricLogStoreHarness {
 	}
 
 	func lineCount(inView view: String, limit: UInt = 100) async -> Int {
-		await store.fetchEntries(
-			forView: view,
-			ascending: true,
-			fetchLimit: limit,
-			limitToDate: nil
-		).count
+		await store.fetchOutcome(.newestEntries(forView: view, fetchLimit: limit)).entries.count
 	}
 }
 
@@ -439,9 +435,9 @@ struct HistoricLogStoreConcurrencyTests {
 			)
 			try context.save()
 			context.reset()
-			let saved = HistoricLogDatabase.fetchEntries(
+			let saved = HistoricLogDatabase.fetchOutcome(
 				in: context, viewIdentifier: "history", ascending: true, fetchLimit: 0, limitToDate: nil
-			)
+			).entries
 			#expect(saved.map(\.data) == [line.data])
 		}
 		await harness.shutdown()

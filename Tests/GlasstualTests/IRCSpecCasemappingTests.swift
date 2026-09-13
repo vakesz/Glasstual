@@ -60,11 +60,11 @@ nonisolated struct IRCSpecCaseFoldPair: CustomTestStringConvertible { // nonisol
 @Suite("Name case folding")
 @MainActor
 struct IRCSpecCasemappingTests {
-	private func client(nickname: String = "me") -> GLTTestClient {
-		GLTTestClient(configDictionary: ["nickname": nickname, "username": nickname])
+	private func client(nickname: String = "me") -> TestClient {
+		TestClient(configDictionary: ["nickname": nickname, "username": nickname])
 	}
 
-	private func joinedChannel(_ name: String, on client: GLTTestClient) throws -> Channel {
+	private func joinedChannel(_ name: String, on client: TestClient) throws -> Channel {
 		let channel = try #require(client.findChannelOrCreate(name))
 
 		channel.activate()
@@ -72,7 +72,7 @@ struct IRCSpecCasemappingTests {
 		return channel
 	}
 
-	private func deliver(_ line: String, on client: GLTTestClient) throws {
+	private func deliver(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 
 		client.forwardsProcessedMessages = true

@@ -33,10 +33,6 @@
 import AppKit
 
 public extension NSWindow {
-	var ceIsOccluded: Bool {
-		!occlusionState.contains(.visible)
-	}
-
 	var ceIsInactive: Bool {
 		!isKeyWindow && !isMainWindow
 	}
@@ -68,17 +64,6 @@ public extension NSWindow {
 			deepestWindow = attachedSheet
 		}
 		return deepestWindow
-	}
-
-	var ceTitlebarFrame: NSRect {
-		guard let contentView else {
-			return .zero
-		}
-
-		var titlebarFrame = frame
-		titlebarFrame.origin.y += contentView.frame.height
-		titlebarFrame.size.height -= contentView.frame.height
-		return titlebarFrame
 	}
 
 	private static var ceWindowBeneathMouse: NSWindow? {

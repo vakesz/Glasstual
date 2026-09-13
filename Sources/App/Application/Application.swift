@@ -40,33 +40,6 @@ public final class Application: NSApplication, CustomKeyboardEventResponder {
 		fatalError("Application does not support decoding")
 	}
 
-	public static func shouldContinueLaunching() -> Bool {
-		let ourProcessIdentifier = ProcessInfo.processInfo.processIdentifier
-
-		guard let ourIdentifier = Bundle.main.bundleIdentifier else {
-			return true
-		}
-
-		for application in NSWorkspace.shared.runningApplications {
-			guard application.bundleIdentifier == ourIdentifier else {
-				continue
-			}
-
-			if application.processIdentifier == ourProcessIdentifier {
-				continue
-			}
-
-			return Alerts.modalAlert(
-				withMessage: PromptStrings.Application.continueWithAnotherInstanceBody,
-				title: PromptStrings.Application.continueWithAnotherInstanceTitle,
-				defaultButton: PromptStrings.Action.continueAction,
-				alternateButton: PromptStrings.Action.cancel
-			)
-		}
-
-		return true
-	}
-
 	override public func sendEvent(_ event: NSEvent) {
 		if performedCustomKeyboardEvent(event) {
 			return

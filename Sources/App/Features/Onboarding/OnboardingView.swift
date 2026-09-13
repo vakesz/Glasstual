@@ -6,101 +6,158 @@
 import SwiftUI
 
 struct OnboardingView: View {
-	@Bindable var model: OnboardingModel
+	@Bindable var session: OnboardingSession
 	let applicationIcon: Image
-	let continueAction: () -> Void
-	let backAction: () -> Void
-	let skipAction: () -> Void
-	let cancelAction: () -> Void
-	let setUpLaterAction: () -> Void
+	let dismiss: () -> Void
 
 	/// Sliding a full panel across the window is exactly the motion Reduce
 	/// Motion asks applications to stop making.
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+	private var model: OnboardingModel {
+		session.model
+	}
+
 	var body: some View {
 		VStack(spacing: 0) {
-			VStack(spacing: 6) {
-				applicationIcon
-					.resizable()
-					.scaledToFit()
-					.frame(width: 72, height: 72)
-					.accessibilityHidden(true)
-
-				Text(verbatim: model.currentStep.title)
-					.font(.system(size: 26, weight: .bold))
-					.contentTransition(.numericText())
-
-				Text(verbatim: model.currentStep.subtitle)
-					.foregroundStyle(.secondary)
-					.multilineTextAlignment(.center)
-					.frame(maxWidth: 560)
-			}
-			.padding(.top, 24)
-			.padding(.bottom, 14)
+			header
 
 			Group {
-				switch model.currentStep {
-				case .identity:
-					OnboardingIdentityView(settings: model.settings)
-				case .appearance:
-					OnboardingAppearanceView(settings: model.settings)
-				case .notifications:
-					OnboardingNotificationsView(model: model, settings: model.settings)
-				case .network:
-					OnboardingNetworkView(
-						settings: model.settings,
-						picker: model.networkPicker,
-						confirm: continueAction
+				if session.isCompleting {
+					OnboardingCompletionProgress()
+				} else {
+					ScrollView {
+						stepContent
+							.padding(.horizontal, 32)
+							.padding(.bottom, 16)
+					}
+					.scrollBounceBehavior(.basedOnSize)
+					.id(model.currentStep)
+					.transition(
+						reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .trailing))
 					)
 				}
 			}
-			.id(model.currentStep)
-			.transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .trailing)))
 			.frame(maxWidth: .infinity, maxHeight: .infinity)
-			.padding(.horizontal, 32)
 
 			Divider()
 
-			HStack {
-				Button(PromptStrings.Action.cancel, action: cancelAction)
-				/* Onboarding has to be dismissible without answering it, and
-				 without it asking again at the next launch. */
-				Button(OnboardingStrings.Window.setUpLaterButton, action: setUpLaterAction)
-					.buttonStyle(.link)
-				if model.currentStep.isSkippable {
-					Button(OnboardingStrings.Window.skipButton, action: skipAction)
-						.buttonStyle(.link)
-				}
-
-				Spacer()
-
-				OnboardingPageIndicator(
-					currentStep: model.currentStep.rawValue,
-					stepCount: OnboardingStep.allCases.count,
-					accessibilityDescription: model.progressDescription
-				)
-
-				Spacer()
-
-				Button(OnboardingStrings.Window.backButton, action: backAction)
-					.disabled(model.isFirstStep)
-					.opacity(model.isFirstStep ? 0 : 1)
-					.keyboardShortcut(.leftArrow, modifiers: .command)
-
-				Button(model.primaryButtonTitle, action: continueAction)
-					.keyboardShortcut(.defaultAction)
-			}
-			.padding(16)
+			footer
 		}
-		.frame(width: 720, height: 700)
+		.frame(minWidth: 720, idealWidth: 720, minHeight: 620, idealHeight: 700)
 		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: model.currentStep)
-		.onExitCommand(perform: cancelAction)
-		.alert(model.currentStep.title, isPresented: $model.isValidationPresented) {
+		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: session.isCompleting)
+		.onExitCommand(perform: setUpLater)
+		.alert(
+			Text(verbatim: OnboardingStrings.Window.connectionUnavailable),
+			isPresented: $session.isCompletionFailurePresented
+		) {
 			Button(PromptStrings.Action.confirmation, role: .cancel) {}
 		} message: {
-			Text(verbatim: model.validationMessage)
+			Text(verbatim: OnboardingStrings.Window.connectionUnavailableRecovery)
 		}
+	}
+
+	private var header: some View {
+		VStack(spacing: 6) {
+			applicationIcon
+				.resizable()
+				.scaledToFit()
+				.frame(width: 72, height: 72)
+				.accessibilityHidden(true)
+
+			Text(verbatim: model.currentStep.title)
+				.font(.largeTitle.weight(.bold))
+				.contentTransition(.numericText())
+
+			Text(verbatim: model.currentStep.subtitle)
+				.foregroundStyle(.secondary)
+				.multilineTextAlignment(.center)
+				.frame(maxWidth: 560)
+		}
+		.padding(.top, 24)
+		.padding(.bottom, 14)
+	}
+
+	@ViewBuilder
+	private var stepContent: some View {
+		switch model.currentStep {
+		case .identity:
+			OnboardingIdentityView(model: model, settings: model.settings)
+		case .appearance:
+			OnboardingAppearanceView(settings: model.settings)
+		case .notifications:
+			OnboardingNotificationsView(model: model, settings: model.settings)
+		case .network:
+			OnboardingNetworkView(
+				settings: model.settings,
+				picker: model.networkPicker,
+				confirm: advance
+			)
+		case .summary:
+			OnboardingSummaryView(model: model)
+		}
+	}
+
+	private var footer: some View {
+		HStack {
+			/* Onboarding has to be dismissible without answering it, and
+			 without it asking again at the next launch. */
+			Button(OnboardingStrings.Window.setUpLaterButton, action: setUpLater)
+				.buttonStyle(.link)
+
+			Button(OnboardingStrings.Window.skipButton) { model.skip() }
+				.buttonStyle(.link)
+				.disabled(model.currentStep.isSkippable == false)
+				.opacity(model.currentStep.isSkippable ? 1 : 0)
+
+			Spacer()
+
+			OnboardingPageIndicator(
+				currentStep: model.currentStep.rawValue,
+				stepCount: OnboardingStep.allCases.count,
+				accessibilityDescription: model.progressDescription
+			)
+
+			Spacer()
+
+			Button(OnboardingStrings.Window.backButton, action: model.moveBack)
+				.disabled(model.isFirstStep)
+				.opacity(model.isFirstStep ? 0 : 1)
+				.keyboardShortcut(.leftArrow, modifiers: .command)
+
+			Button(model.primaryButtonTitle, action: advance)
+				.keyboardShortcut(.defaultAction)
+				.disabled(model.isCurrentStepValid == false)
+		}
+		.disabled(session.isCompleting)
+		.padding(16)
+	}
+
+	private func advance() {
+		guard model.advance() else { return }
+
+		Task {
+			if await session.finish() {
+				dismiss()
+			}
+		}
+	}
+
+	private func setUpLater() {
+		session.setUpLater()
+		dismiss()
+	}
+}
+
+private struct OnboardingCompletionProgress: View {
+	var body: some View {
+		ProgressView {
+			Text(verbatim: OnboardingStrings.Summary.settingUp)
+		}
+		.progressViewStyle(.circular)
+		.controlSize(.large)
+		.frame(maxWidth: .infinity, maxHeight: .infinity)
 	}
 }
 
@@ -122,7 +179,28 @@ private struct OnboardingPageIndicator: View {
 	}
 }
 
+/// A form row whose complaint is shown under the control it belongs to, rather
+/// than in an alert after the fact.
+struct OnboardingValidatedRow<Content: View>: View {
+	let label: String
+	let problem: String?
+	@ViewBuilder let content: Content
+
+	var body: some View {
+		LabeledContent(label) {
+			VStack(alignment: .leading, spacing: 4) {
+				content
+				if let problem {
+					ValidationMessageLabel(problem)
+						.fixedSize(horizontal: false, vertical: true)
+				}
+			}
+		}
+	}
+}
+
 private struct OnboardingIdentityView: View {
+	let model: OnboardingModel
 	@Bindable var settings: OnboardingSettings
 	@FocusState private var focusedField: Field?
 
@@ -133,48 +211,45 @@ private struct OnboardingIdentityView: View {
 	}
 
 	var body: some View {
-		Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 12) {
-			GridRow {
-				Text(verbatim: OnboardingStrings.Identity.nicknameLabel)
-					.gridColumnAlignment(.trailing)
-				TextField(
-					OnboardingStrings.Identity.nicknamePlaceholder,
-					text: $settings.nickname
-				)
-				.focused($focusedField, equals: .nickname)
-				.accessibilityIdentifier("onboarding-nickname")
+		Form {
+			OnboardingValidatedRow(
+				label: OnboardingStrings.Identity.nicknameLabel,
+				problem: model.nicknameProblem
+			) {
+				TextField(OnboardingStrings.Identity.nicknamePlaceholder, text: $settings.nickname)
+					.focused($focusedField, equals: .nickname)
+					.accessibilityIdentifier("onboarding-nickname")
 			}
 
-			GridRow {
-				Text(verbatim: OnboardingStrings.Identity.realNameLabel)
-				TextField(
-					OnboardingStrings.Identity.realNamePlaceholder,
-					text: $settings.realName
-				)
-				.focused($focusedField, equals: .realName)
-				.accessibilityIdentifier("onboarding-real-name")
+			OnboardingValidatedRow(
+				label: OnboardingStrings.Identity.realNameLabel,
+				problem: model.realNameProblem
+			) {
+				TextField(OnboardingStrings.Identity.realNamePlaceholder, text: $settings.realName)
+					.focused($focusedField, equals: .realName)
+					.accessibilityIdentifier("onboarding-real-name")
 			}
 
-			GridRow {
-				Text(verbatim: OnboardingStrings.Identity.alternateNicknameLabel)
+			OnboardingValidatedRow(
+				label: OnboardingStrings.Identity.alternateNicknameLabel,
+				problem: model.alternateNicknameProblem
+			) {
 				TextField(
 					OnboardingStrings.Identity.optionalPlaceholder,
 					text: $settings.alternateNickname
 				)
 				.focused($focusedField, equals: .alternateNickname)
 				.accessibilityIdentifier("onboarding-alternate-nickname")
-			}
 
-			GridRow {
-				Color.clear.frame(width: 1, height: 1)
 				Text(verbatim: OnboardingStrings.Identity.alternateNicknameHelp)
 					.font(.callout)
 					.foregroundStyle(.secondary)
 					.fixedSize(horizontal: false, vertical: true)
 			}
 		}
-		.frame(width: 460)
-		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+		.formStyle(.columns)
+		.frame(maxWidth: 460)
+		.frame(maxWidth: .infinity, alignment: .center)
 		.padding(.top, 30)
 		.onAppear { focusedField = .nickname }
 	}
@@ -196,35 +271,27 @@ private struct OnboardingAppearanceView: View {
 			}
 			.accessibilityElement(children: .contain)
 			.accessibilityLabel(Text(verbatim: OnboardingStrings.Appearance.previewAccessibilityLabel))
-			Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 12) {
-				GridRow {
-					Text(verbatim: OnboardingStrings.Appearance.textSizeLabel)
-						.gridColumnAlignment(.trailing)
-					Picker("", selection: $settings.textSize) {
-						ForEach(OnboardingTextSize.allCases) { size in
-							Text(verbatim: size.title).tag(size)
-						}
-					}
-					.labelsHidden()
-					.pickerStyle(.segmented)
-					.frame(width: 240)
-				}
 
-				GridRow {
-					Text(verbatim: OnboardingStrings.Appearance.interfaceStyleLabel)
-					Picker("", selection: $settings.appearance) {
-						ForEach(PreferredAppearance.allCases, id: \.self) { appearance in
-							Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitle(appearance))
-								.tag(appearance)
-						}
+			Form {
+				Picker(OnboardingStrings.Appearance.textSizeLabel, selection: $settings.textSize) {
+					ForEach(OnboardingTextSize.allCases) { size in
+						Text(verbatim: size.title).tag(size)
 					}
-					.labelsHidden()
-					.pickerStyle(.segmented)
-					.frame(width: 240)
 				}
+				.pickerStyle(.segmented)
+
+				Picker(OnboardingStrings.Appearance.interfaceStyleLabel, selection: $settings.appearance) {
+					ForEach(PreferredAppearance.allCases, id: \.self) { appearance in
+						Text(verbatim: OnboardingStrings.Appearance.interfaceStyleTitle(appearance))
+							.tag(appearance)
+					}
+				}
+				.pickerStyle(.segmented)
 			}
+			.formStyle(.columns)
+			.frame(maxWidth: 360)
 		}
-		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+		.frame(maxWidth: .infinity, alignment: .center)
 	}
 }
 
@@ -346,8 +413,8 @@ private struct OnboardingNotificationsView: View {
 			}
 			.padding(.top, 22)
 		}
-		.frame(width: 440)
-		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+		.frame(maxWidth: 440, alignment: .leading)
+		.frame(maxWidth: .infinity, alignment: .center)
 		.padding(.top, 30)
 		.task { await model.refreshNotificationPermission() }
 	}
@@ -362,7 +429,7 @@ private struct OnboardingNetworkView: View {
 		VStack(alignment: .leading, spacing: 10) {
 			NetworkPickerView(model: picker, confirm: confirm)
 
-			HStack(alignment: .firstTextBaseline, spacing: 8) {
+			VStack(alignment: .leading, spacing: 6) {
 				Text(verbatim: OnboardingStrings.FirstNetwork.suggestedChannelsLabel)
 				if picker.suggestedChannels.isEmpty {
 					Text(verbatim: OnboardingStrings.FirstNetwork.suggestedChannelsPlaceholder)
@@ -370,19 +437,7 @@ private struct OnboardingNetworkView: View {
 						.foregroundStyle(.secondary)
 				} else {
 					ForEach(picker.suggestedChannels, id: \.self) { channel in
-						Toggle(
-							channel,
-							isOn: Binding(
-								get: { picker.selectedChannels.contains(channel) },
-								set: { selected in
-									if selected {
-										picker.selectedChannels.insert(channel)
-									} else {
-										picker.selectedChannels.remove(channel)
-									}
-								}
-							)
-						)
+						Toggle(channel, isOn: $picker.selectedChannels.containing(channel))
 					}
 				}
 			}
@@ -390,5 +445,86 @@ private struct OnboardingNetworkView: View {
 			Toggle(OnboardingStrings.FirstNetwork.connectWhenFinished, isOn: $settings.connectWhenFinished)
 		}
 		.padding(.bottom, 10)
+	}
+}
+
+private struct OnboardingSummaryView: View {
+	let model: OnboardingModel
+
+	var body: some View {
+		Form {
+			LabeledContent(
+				OnboardingStrings.Summary.nicknameLabel,
+				value: model.acceptedIdentity?.nickname ?? OnboardingStrings.Summary.nothingChosen
+			)
+			LabeledContent(
+				OnboardingStrings.Summary.chatStyleLabel,
+				value: model.acceptedAppearance?.transcriptStyle.title ?? OnboardingStrings.Summary.nothingChosen
+			)
+			LabeledContent(
+				OnboardingStrings.Summary.textSizeLabel,
+				value: model.acceptedAppearance?.textSize.title ?? OnboardingStrings.Summary.nothingChosen
+			)
+			LabeledContent(
+				OnboardingStrings.Summary.appearanceLabel,
+				value: model.acceptedAppearance.map {
+					OnboardingStrings.Appearance.interfaceStyleTitle($0.preferredAppearance)
+				} ?? OnboardingStrings.Summary.nothingChosen
+			)
+			LabeledContent(
+				OnboardingStrings.Summary.notificationsLabel,
+				value: notificationSummary
+			)
+			LabeledContent(
+				OnboardingStrings.Summary.networkLabel,
+				value: model.settings.clientConfig?.connectionName ?? OnboardingStrings.Summary.nothingChosen
+			)
+			LabeledContent(
+				OnboardingStrings.Summary.channelsLabel,
+				value: channelSummary
+			)
+		}
+		.formStyle(.columns)
+		.frame(maxWidth: 460)
+		.frame(maxWidth: .infinity, alignment: .center)
+	}
+
+	private var notificationSummary: String {
+		guard let notifications = model.acceptedNotifications else {
+			return OnboardingStrings.Summary.nothingChosen
+		}
+
+		let kinds = [
+			notifications.highlight ? OnboardingStrings.Summary.mentions : nil,
+			notifications.privateMessage ? OnboardingStrings.Summary.privateMessages : nil,
+			notifications.sounds ? OnboardingStrings.Summary.sounds : nil,
+		].compactMap(\.self)
+
+		return kinds.isEmpty
+			? OnboardingStrings.Summary.nothingChosen
+			: kinds.formatted(.list(type: .and))
+	}
+
+	private var channelSummary: String {
+		let channels = model.settings.channelsToJoin
+		return channels.isEmpty
+			? OnboardingStrings.Summary.nothingChosen
+			: channels.formatted(.list(type: .and))
+	}
+}
+
+private extension Binding where Value == Set<String> {
+	/// Presents one member of the set as the `Bool` a `Toggle` binds to.
+	func containing(_ member: String) -> Binding<Bool> {
+		Binding<Bool>(
+			get: { wrappedValue.contains(member) },
+			set: { isSelected in
+				if isSelected {
+					wrappedValue.insert(member)
+				} else {
+					wrappedValue.remove(member)
+				}
+			}
+		)
 	}
 }

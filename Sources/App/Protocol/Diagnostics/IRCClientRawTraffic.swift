@@ -45,13 +45,13 @@ public extension IRCClient {
 		else { return }
 
 		rawDataLogQuery = query
-		output?.selectItem(query)
+		output?.select(query)
 		rawDataLog(IRCDiagnosticStrings.rawTrafficNotice)
 	}
 
 	func destroyRawDataLogQuery() {
 		guard !isTerminating, let query = rawDataLogQuery else { return }
-		world?.destroy(query)
+		world?.destroyChannel(query)
 	}
 
 	func rawDataLog(_ data: String) {
@@ -65,7 +65,7 @@ public extension IRCClient {
 	 the secret is masked before it is printed while the command stays legible. */
 	func rawDataLogOutgoingTraffic(_ data: String) {
 		guard rawDataLogQuery != nil else { return }
-		rawDataLog("<< \(ClientWireUtilities.redactedRawLogLine(data))")
+		rawDataLog("<< \(WireRedaction.redactedRawLogLine(data))")
 	}
 
 	func rawDataLogIncomingTraffic(_ data: String) {

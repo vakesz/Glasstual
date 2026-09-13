@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -25,11 +25,10 @@ nonisolated enum ReactionInput { // nonisolated: value
 
 /** Which reactions the picker offers, and in which order.
 
- The picker used to be a text field: the user had to know an emoji, type or
- paste it, and press Send. A reaction is a one-tap gesture everywhere else, so
- the row is the control and the character palette is the way out for anything
- that is not on it. What the user reaches for stays at the front of the row, and
- the common set fills what is left so the row never changes length. */
+ A reaction is a one-tap gesture everywhere else, so the row is the control and
+ the character palette is the way out for anything that is not on it. What the
+ reader reaches for stays at the front of the row, and the common set fills what
+ is left so the row never changes length. */
 nonisolated enum RecentReactions { // nonisolated: value
 	/// The reactions offered before the user has picked anything.
 	static let common = ["👍", "❤️", "😂", "😮", "😢", "🎉"]
@@ -67,6 +66,9 @@ private struct ReactionPopoverView: View {
 	@State private var recent = Preferences.Reactions.recent.value
 	@State private var input = ""
 	@FocusState private var inputIsFocused: Bool
+	/// The row's hit targets, scaled with the reader's text size so the emoji
+	/// drawn in them are never clipped.
+	@ScaledMetric private var buttonSize: CGFloat = 30
 
 	var body: some View {
 		HStack(spacing: UISpacing.tight) {
@@ -75,8 +77,8 @@ private struct ReactionPopoverView: View {
 					submit(emoji)
 				} label: {
 					Text(emoji)
-						.font(.system(size: 20))
-						.frame(width: 30, height: 30)
+						.font(.title2)
+						.frame(width: buttonSize, height: buttonSize)
 				}
 				.buttonStyle(.accessoryBar)
 				.help(MainWindowStrings.Reaction.reactWith(emoji))
@@ -84,13 +86,14 @@ private struct ReactionPopoverView: View {
 			}
 
 			Divider()
-				.frame(height: 22)
+				.frame(height: buttonSize * 0.75)
 
 			/* The palette inserts into whatever holds the keyboard, so the field
 			 stays: it is where the palette's choice lands, and
 			 `ReactionInput.emoji(from:)` still decides what counts. It also takes
 			 a pasted emoji, which is what the old field was for. */
-			TextField("", text: $input)
+			TextField(MainWindowStrings.Reaction.custom, text: $input)
+				.labelsHidden()
 				.textFieldStyle(.roundedBorder)
 				.multilineTextAlignment(.center)
 				.frame(width: 44)
@@ -107,7 +110,6 @@ private struct ReactionPopoverView: View {
 					input = ""
 					submit(newValue)
 				}
-				.accessibilityLabel(MainWindowStrings.Reaction.custom)
 				.help(MainWindowStrings.Reaction.custom)
 
 			Button(MainWindowStrings.Reaction.moreEmoji, systemImage: "face.smiling") {

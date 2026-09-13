@@ -13,9 +13,11 @@ struct AboutFeatureTests {
 	func contentUsesGeneratedApplicationMetadataAndLocalizedCopy() {
 		let content = AboutContent.current
 
-		#expect(content.applicationName == ApplicationInfo.applicationNameWithoutVersion())
+		#expect(content.applicationName == ApplicationInfo.applicationName())
 		#expect(content.versionDescription.contains(ApplicationInfo.applicationVersionShort()))
-		#expect(content.upstreamAttribution.isEmpty == false)
+		/* The name is drawn above the version, so the version line does not
+		 repeat it. */
+		#expect(content.versionDescription.contains(content.applicationName) == false)
 		#expect(content.acknowledgementsButtonTitle.isEmpty == false)
 		#expect(content.applicationIconAccessibilityLabel.contains(content.applicationName))
 	}

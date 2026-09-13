@@ -47,6 +47,25 @@ struct TextFormatterMenuTargetTests {
 		#expect(menu.validateMenuItem(boldItem()) == false)
 	}
 
+	/** The IRC palette used to be attached to `NSColorPanel.shared` while the
+	 main window was still installing this menu. Asking for the shared panel
+	 builds the whole system picker, and its colour wheel draws through
+	 CoreImage, so a launch loaded Metal and its shader caches for a picker most
+	 sessions never open. The palette is attached from the presentation instead.
+
+	 The shared panel is process-wide, so what is pinned is that installing the
+	 menu does not change whether it exists — not that it never does. */
+	@Test("Installing the formatting menu does not build the shared colour panel")
+	func installingTheMenuLeavesTheColorPanelUnbuilt() {
+		let existedBefore = NSColorPanel.sharedColorPanelExists
+		let menu = TextViewIRCFormattingMenu()
+		let (window, _) = makeWindow()
+		menu.attach(to: window)
+		_ = menu.makeMenu()
+
+		#expect(NSColorPanel.sharedColorPanelExists == existedBefore)
+	}
+
 	@Test("The attached window's first responder is the target, key or not")
 	func attachedWindowSuppliesTheTarget() {
 		let menu = TextViewIRCFormattingMenu()

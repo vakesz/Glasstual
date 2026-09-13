@@ -70,10 +70,6 @@ host also reads; only what the `IRCConnectionHost` target lists crosses the
 process boundary. First-party plugin preference names live under
 `Sources/Plugins/Shared/`, compiled into the app and every bundled plugin.
 
-Before editing or running E2E workflows, read `Documentation/E2E.md` for the
-process, signing and disposable-login contracts. `make e2e-fixtures` checks
-loopback peers without launching the app; it is not a GUI E2E pass.
-
 ## Isolation rules
 
 Every piece of mutable state belongs to exactly one isolation domain — the main
@@ -91,16 +87,9 @@ on every `make lint`.
   `DispatchQueue(label:)`, an `OperationQueue()`, or a
   `perform{A,}synchronouslyOnMainQueue` hop. `Mutex<Value>` is the only
   permitted lock, and only around a value type — never around a reference, and
-  never held across I/O or an `await`.
-- **One private queue survives, and it is documented.**
-  `FSEventStreamSetDispatchQueue` takes a queue and will not take anything else,
-  and the queue has to be serial because teardown runs on it so that
-  invalidating the stream cannot overlap a callback already in flight.
-  `XRFileSystemMonitor.events(for:)` creates it, never lets it escape, and feeds
-  what FSEvents reports into an `AsyncStream`; its line carries
-  `// lock-queue: fsevents`, which is what the gate accepts. That marker is for that one construct — on any other line the
-  gate reports it as an exemption for nothing. Nothing else earns a second one:
-  a new queue means the state it guards belongs in an actor.
+  never held across I/O or an `await`. There is no exemption and no marker that
+  buys one: a new queue means the state it guards belongs in an actor, and an
+  Apple API that insists on a queue is answered by the bullet below.
 - **Where an Apple API forces a bridge, route around the API.** A nonisolated
   AppKit callback is answered from a `Sendable` snapshot the main actor keeps
   current; `sink` and KVO handlers become `for await` loops in a main-actor
@@ -130,12 +119,11 @@ on every `make lint`.
   types. If a site fits none of the six, it is not a `nonisolated` site: a
   nonisolated class with mutable state becomes an actor or a main-actor class.
 
-Five SwiftLint custom rules cover these categories over `Sources/` and `Tests/`
+Four SwiftLint custom rules cover these categories over `Sources/` and `Tests/`
 alike, and fail when they find any: `isolation_escape_hatch`,
-`manual_lock_or_queue`, `misplaced_fsevents_queue_marker`,
-`unmarked_nonisolated` and `value_marker_on_class`. A test helper is a
-`nonisolated` site like any other and carries the same marker.
-All five are at zero and stay there: there is no ceiling to raise, no
+`manual_lock_or_queue`, `unmarked_nonisolated` and `value_marker_on_class`. A
+test helper is a `nonisolated` site like any other and carries the same marker.
+All four are at zero and stay there: there is no ceiling to raise, no
 ratchet, and no exception to add. A change that trips the gate has put a
 boundary in the wrong place — move the state into the domain that uses it, or
 hand a `Sendable` snapshot across.

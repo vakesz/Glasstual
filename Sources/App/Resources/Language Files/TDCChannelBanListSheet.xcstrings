@@ -38,13 +38,13 @@
       }
     },
     "entry-count-truncated" : {
-      "comment" : "Replaces the ‘%1$@ of %2$@ entries’ count above a channel access list when the server sent more entries than the window keeps, so the count must not read as the whole list. %@ is how many entries are shown.",
+      "comment" : "Replaces the ‘%1$ld of %2$ld entries’ count above a channel access list when the server sent more entries than the window keeps, so the count must not read as the whole list. The argument is how many entries are shown.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "First %@ entries"
+            "value" : "First %ld entries"
           }
         }
       }
@@ -148,13 +148,13 @@
       }
     },
     "list-truncated-notice" : {
-      "comment" : "Notice shown under a channel access list when the server sent more entries than the window keeps. %ld is how many entries are shown.",
+      "comment" : "Notice shown under a channel access list the window had to cut short.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Showing the first %ld entries. The server sent more than this window keeps."
+            "value" : "The server sent more entries than this window keeps."
           }
         }
       }
@@ -172,13 +172,13 @@
       }
     },
     "of-entries" : {
-      "comment" : "MAXLIST Legacy key: n0f-mx.",
+      "comment" : "Count above a channel access list whose server advertised a MAXLIST limit. The first argument is how many entries are shown and the second is the limit. Legacy key: n0f-mx.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ of %2$@ entries"
+            "value" : "%1$ld of %2$ld entries"
           }
         }
       }

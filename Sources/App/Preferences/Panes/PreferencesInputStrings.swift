@@ -14,224 +14,228 @@ import Foundation
 
 enum PreferencesControlsStrings {
 	static var commandReturnAction: String {
-		String(localized: .TDCPreferencesController.controlsCommandReturnAction)
+		String(localized: .Settings.controlsCommandReturnAction)
 	}
 
 	static var commandWCloseWindow: String {
-		String(localized: .TDCPreferencesController.controlsCommandWCloseWindow)
+		String(localized: .Settings.controlsCommandWCloseWindow)
 	}
 
 	static var commandWDisconnect: String {
-		String(localized: .TDCPreferencesController.controlsCommandWDisconnect)
+		String(localized: .Settings.controlsCommandWDisconnect)
 	}
 
 	static var commandWLabel: String {
-		String(localized: .TDCPreferencesController.controlsCommandWLabel)
+		String(localized: .Settings.controlsCommandWLabel)
 	}
 
 	static var commandWPartChannel: String {
-		String(localized: .TDCPreferencesController.controlsCommandWPartChannel)
+		String(localized: .Settings.controlsCommandWPartChannel)
 	}
 
 	static var commandWTerminate: String {
-		String(localized: .TDCPreferencesController.controlsCommandWTerminate)
+		String(localized: .Settings.controlsCommandWTerminate)
 	}
 
 	static func completionPreview(suffix: String) -> String {
-		String(localized: .TDCPreferencesController.controlsCompletionPreview(suffix))
+		String(localized: .Settings.controlsCompletionPreview(suffix))
 	}
 
 	static var completionPreviewLabel: String {
-		String(localized: .TDCPreferencesController.controlsCompletionPreviewLabel)
+		String(localized: .Settings.controlsCompletionPreviewLabel)
 	}
 
 	static var completionSuffixAccessibility: String {
-		String(localized: .TDCPreferencesController.controlsCompletionSuffixAccessibility)
+		String(localized: .Settings.controlsCompletionSuffixAccessibility)
 	}
 
 	static var completionSuffixLabel: String {
-		String(localized: .TDCPreferencesController.controlsCompletionSuffixLabel)
+		String(localized: .Settings.controlsCompletionSuffixLabel)
 	}
 
 	static var connectOnDoubleClick: String {
-		String(localized: .TDCPreferencesController.controlsConnectOnDoubleClick)
+		String(localized: .Settings.controlsConnectOnDoubleClick)
 	}
 
 	static var controlEnterSends: String {
-		String(localized: .TDCPreferencesController.controlsControlEnterSends)
+		String(localized: .Settings.controlsControlEnterSends)
 	}
 
 	static var copyOnSelect: String {
-		String(localized: .TDCPreferencesController.controlsCopyOnSelect)
+		String(localized: .Settings.controlsCopyOnSelect)
 	}
 
 	static var copyOnSelectNote: String {
-		String(localized: .TDCPreferencesController.controlsCopyOnSelectNote)
+		String(localized: .Settings.controlsCopyOnSelectNote)
 	}
 
 	static var disconnectOnDoubleClick: String {
-		String(localized: .TDCPreferencesController.controlsDisconnectOnDoubleClick)
+		String(localized: .Settings.controlsDisconnectOnDoubleClick)
 	}
 
 	static var grammarCheck: String {
-		String(localized: .TDCPreferencesController.controlsGrammarCheck)
+		String(localized: .Settings.controlsGrammarCheck)
 	}
 
 	static var headingKeyboardMouse: String {
-		String(localized: .TDCPreferencesController.controlsHeadingKeyboardMouse)
+		String(localized: .Settings.controlsHeadingKeyboardMouse)
 	}
 
 	static var headingTextField: String {
-		String(localized: .TDCPreferencesController.controlsHeadingTextField)
+		String(localized: .Settings.controlsHeadingTextField)
 	}
 
 	static var historyPerSelection: String {
-		String(localized: .TDCPreferencesController.controlsHistoryPerSelection)
+		String(localized: .Settings.controlsHistoryPerSelection)
 	}
 
 	static var joinOnDoubleClick: String {
-		String(localized: .TDCPreferencesController.controlsJoinOnDoubleClick)
+		String(localized: .Settings.controlsJoinOnDoubleClick)
 	}
 
 	static var leaveOnDoubleClick: String {
-		String(localized: .TDCPreferencesController.controlsLeaveOnDoubleClick)
+		String(localized: .Settings.controlsLeaveOnDoubleClick)
 	}
 
 	static var navigationServerSpecific: String {
-		String(localized: .TDCPreferencesController.controlsNavigationServerSpecific)
+		String(localized: .Settings.controlsNavigationServerSpecific)
+	}
+
+	static var openLinksInBackground: String {
+		String(localized: .Settings.controlsOpenLinksInBackground)
 	}
 
 	static var spellCheck: String {
-		String(localized: .TDCPreferencesController.controlsSpellCheck)
+		String(localized: .Settings.controlsSpellCheck)
 	}
 
 	static var spellCorrection: String {
-		String(localized: .TDCPreferencesController.controlsSpellCorrection)
+		String(localized: .Settings.controlsSpellCorrection)
 	}
 
 	static var tabKeyComplete: String {
-		String(localized: .TDCPreferencesController.controlsTabKeyComplete)
+		String(localized: .Settings.controlsTabKeyComplete)
 	}
 
 	static var tabKeyLabel: String {
-		String(localized: .TDCPreferencesController.controlsTabKeyLabel)
+		String(localized: .Settings.controlsTabKeyLabel)
 	}
 
 	static var tabKeyNone: String {
-		String(localized: .TDCPreferencesController.controlsTabKeyNone)
+		String(localized: .Settings.controlsTabKeyNone)
 	}
 
 	static var tabKeyUnread: String {
-		String(localized: .TDCPreferencesController.controlsTabKeyUnread)
+		String(localized: .Settings.controlsTabKeyUnread)
 	}
 
 	static var textSizeExtraLarge: String {
-		String(localized: .TDCPreferencesController.controlsTextSizeExtraLarge)
+		String(localized: .Settings.controlsTextSizeExtraLarge)
 	}
 
 	static var textSizeHumongous: String {
-		String(localized: .TDCPreferencesController.controlsTextSizeHumongous)
+		String(localized: .Settings.controlsTextSizeHumongous)
 	}
 
 	static var textSizeLabel: String {
-		String(localized: .TDCPreferencesController.controlsTextSizeLabel)
+		String(localized: .Settings.controlsTextSizeLabel)
 	}
 
 	static var textSizeLarge: String {
-		String(localized: .TDCPreferencesController.controlsTextSizeLarge)
+		String(localized: .Settings.controlsTextSizeLarge)
 	}
 
 	static var textSizeNormal: String {
-		String(localized: .TDCPreferencesController.controlsTextSizeNormal)
+		String(localized: .Settings.controlsTextSizeNormal)
 	}
 
 	static var userDoubleClickInsert: String {
-		String(localized: .TDCPreferencesController.controlsUserDoubleClickInsert)
+		String(localized: .Settings.controlsUserDoubleClickInsert)
 	}
 
 	static var userDoubleClickLabel: String {
-		String(localized: .TDCPreferencesController.controlsUserDoubleClickLabel)
+		String(localized: .Settings.controlsUserDoubleClickLabel)
 	}
 
 	static var userDoubleClickQuery: String {
-		String(localized: .TDCPreferencesController.controlsUserDoubleClickQuery)
+		String(localized: .Settings.controlsUserDoubleClickQuery)
 	}
 
 	static var userDoubleClickWhois: String {
-		String(localized: .TDCPreferencesController.controlsUserDoubleClickWhois)
+		String(localized: .Settings.controlsUserDoubleClickWhois)
 	}
 }
 
 enum PreferencesAddOnsStrings {
-	static var commandsLabel: String {
-		String(localized: .TDCPreferencesController.addonsCommandsLabel)
+	static var commandsHeading: String {
+		String(localized: .Settings.addonsCommandsHeading)
 	}
 
 	static var commandsList: String {
-		String(localized: .TDCPreferencesController.addonsCommandsList)
+		String(localized: .Settings.addonsCommandsList)
 	}
 
 	static var commandsNote: String {
-		String(localized: .TDCPreferencesController.addonsCommandsNote)
+		String(localized: .Settings.addonsCommandsNote)
 	}
 
-	static var locationLabel: String {
-		String(localized: .TDCPreferencesController.addonsLocationLabel)
+	static var locationHeading: String {
+		String(localized: .Settings.addonsFolderHeading)
 	}
 
 	static var openInFinder: String {
-		String(localized: .TDCPreferencesController.addonsOpenInFinder)
+		String(localized: .Settings.addonsOpenInFinder)
 	}
 
 	static var openInFinderHelp: String {
-		String(localized: .TDCPreferencesController.addonsOpenInFinderHelp)
+		String(localized: .Settings.addonsOpenInFinderHelp)
 	}
 }
 
 enum PreferencesDefaultIdentityStrings {
 	static var allOptional: String {
-		String(localized: .TDCPreferencesController.defaultIdentityAllOptional)
+		String(localized: .Settings.defaultIdentityAllOptional)
 	}
 
 	static var awayNickname: String {
-		String(localized: .TDCPreferencesController.defaultIdentityAwayNickname)
+		String(localized: .Settings.defaultIdentityAwayNickname)
 	}
 
 	static var nickname: String {
-		String(localized: .TDCPreferencesController.defaultIdentityNickname)
+		String(localized: .Settings.defaultIdentityNickname)
 	}
 
 	static var note: String {
-		String(localized: .TDCPreferencesController.defaultIdentityNote)
+		String(localized: .Settings.defaultIdentityNote)
 	}
 
 	static var optional: String {
-		String(localized: .TDCPreferencesController.defaultIdentityOptional)
+		String(localized: .Settings.defaultIdentityOptional)
 	}
 
 	static var realname: String {
-		String(localized: .TDCPreferencesController.defaultIdentityRealname)
+		String(localized: .Settings.defaultIdentityRealname)
 	}
 
 	static var username: String {
-		String(localized: .TDCPreferencesController.defaultIdentityUsername)
+		String(localized: .Settings.defaultIdentityUsername)
 	}
 }
 
 enum PreferencesIRCopStrings {
 	static var glineLabel: String {
-		String(localized: .TDCPreferencesController.ircopGlineLabel)
+		String(localized: .Settings.ircopGlineLabel)
 	}
 
 	static var includesBanLength: String {
-		String(localized: .TDCPreferencesController.ircopIncludesBanLength)
+		String(localized: .Settings.ircopIncludesBanLength)
 	}
 
 	static var killLabel: String {
-		String(localized: .TDCPreferencesController.ircopKillLabel)
+		String(localized: .Settings.ircopKillLabel)
 	}
 
 	static var shunLabel: String {
-		String(localized: .TDCPreferencesController.ircopShunLabel)
+		String(localized: .Settings.ircopShunLabel)
 	}
 }

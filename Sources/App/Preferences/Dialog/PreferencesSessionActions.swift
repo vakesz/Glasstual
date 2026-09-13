@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -67,7 +67,7 @@ extension PreferencesPaneModel {
 			exportedThemeData = try themeController.exportTheme()
 			exportedThemeFilename = "\(themeController.name).plist"
 		} catch {
-			present(error)
+			report(error, from: .exportTranscriptTheme)
 		}
 	}
 
@@ -127,7 +127,7 @@ extension PreferencesPaneModel {
 		} catch {
 			// A closed file panel is the user saying "nothing", not a failure.
 			guard (error as? CocoaError)?.code != .userCancelled else { return }
-			present(error)
+			report(error, from: request.operation)
 		}
 	}
 
@@ -143,7 +143,7 @@ extension PreferencesPaneModel {
 				let data = try await PreferencesDocumentReader.read(from: url)
 				try themeController.importTheme(from: data)
 			} catch {
-				present(error)
+				report(error, from: .importTranscriptTheme)
 			}
 		}
 	}
@@ -164,7 +164,7 @@ extension PreferencesPaneModel {
 	func completeExport(_ result: Result<URL, any Error>) {
 		exportedThemeData = nil
 		if case let .failure(error) = result, (error as? CocoaError)?.code != .userCancelled {
-			present(error)
+			report(error, from: .exportTranscriptTheme)
 		}
 	}
 
@@ -203,7 +203,13 @@ extension PreferencesPaneModel {
 		}
 	}
 
-	private func present(_ error: any Error) {
-		presentationError = error.localizedDescription
+	func report(_ error: any Error, from operation: PreferencesOperation) {
+		report(error.localizedDescription, from: operation)
+	}
+
+	/// Names the operation that stopped, so the alert can say what to do about
+	/// it rather than only that something in Settings went wrong.
+	func report(_ reason: String, from operation: PreferencesOperation) {
+		presentationFailure = PreferencesOperationFailure(operation: operation, reason: reason)
 	}
 }

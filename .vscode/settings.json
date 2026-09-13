@@ -24,8 +24,7 @@
   },
   "search.exclude": {
     "**/DerivedData": true,
-    "**/build": true,
-    "**/Sources/Frameworks/Static Libraries/Libraries": true
+    "**/build": true
   },
   "[objective-c]": {
     "editor.defaultFormatter": "xaver.clang-format"

@@ -137,9 +137,8 @@ public nonisolated extension Preferences { // nonisolated: value
 
 /** The user-list mode badges, keyed by the mode symbol they colour.
 
- The symbol, the preference key, the shipped colour and the tag the colour well
- in the preferences nib carries used to be four separate literal lists in three
- files; they are one declaration here. */
+ The symbol, the preference key and the shipped colour are one declaration
+ here rather than three literal lists in as many files. */
 public nonisolated enum UserListModeBadge: String, CaseIterable, Sendable { // nonisolated: value
 	case ircOperator = "+y"
 	case channelOwner = "+q"
@@ -220,11 +219,21 @@ public nonisolated extension Preferences { // nonisolated: value
 			"Window -> Main Window -> Member List Width",
 			default: 200.0,
 			traits: [.unregistered, .excludedFromExport],
-			validation: { $0.isFinite && $0 >= 160 && $0 <= 260 }
+			validation: { MemberListWidthPolicy.clamped(CGFloat($0)) == CGFloat($0) }
+		)
+
+		/// The transcript zoom the View menu last left, so Increase and
+		/// Decrease Font Size survive a relaunch the way the column widths do.
+		public static let textSizeMultiplier = PreferenceKey(
+			"Window -> Main Window -> Text Size Multiplier",
+			default: 1.0,
+			traits: [.unregistered, .excludedFromExport],
+			validation: { $0.isFinite && $0 >= 0.5 && $0 <= 3.0 }
 		)
 
 		static let all: [any AnyPreferenceKey] = [
 			serverListVisible, memberListVisible, serverListSelection, memberListWidth,
+			textSizeMultiplier,
 		]
 	}
 }

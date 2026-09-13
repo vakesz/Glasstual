@@ -42,7 +42,8 @@ enum AppSession {
 	}
 
 	/// Launch the independent responsiveness probe and wait for its first sample.
-	static func startProbe(prefix: String, driver: AccessibilityDriver) async throws -> Process {
+	static func startProbe(driver: AccessibilityDriver) async throws -> Process {
+		let prefix = driver.artifactPrefix
 		let probe = Process()
 		probe.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])
 		probe.arguments = ["probe"]
@@ -56,7 +57,8 @@ enum AppSession {
 	}
 
 	/// Ask the probe to stop and require a normal exit with its completion marker.
-	static func stopProbe(_ probe: Process, prefix: String, driver: AccessibilityDriver) async throws {
+	static func stopProbe(_ probe: Process, driver: AccessibilityDriver) async throws {
+		let prefix = driver.artifactPrefix
 		try HarnessFiles.write("stop", to: prefix + "probe-stop")
 		try await driver.wait("probe stops normally", deadline: HarnessFiles.now + 3) { _ in !probe.isRunning }
 		guard probe.terminationReason == .exit, probe.terminationStatus == 0,
@@ -73,7 +75,6 @@ enum AppSession {
 	static func quitAndVerify(
 		_ app: Process,
 		driver: AccessibilityDriver,
-		prefix: String,
 		also: @escaping () throws -> Bool = { true }
 	) async throws -> Double {
 		guard app.isRunning else { throw HarnessFailure.assertion("App exited before Quit") }
@@ -86,7 +87,7 @@ enum AppSession {
 		guard app.terminationReason == .exit, app.terminationStatus == 0 else {
 			throw HarnessFailure.assertion("Quit crashed or exited with nonzero status")
 		}
-		try HarnessFiles.remove(prefix + "quit-deadline")
+		try HarnessFiles.remove(driver.artifactPrefix + "quit-deadline")
 		try HarnessFiles.unregister(app.processIdentifier)
 		release(app)
 		return seconds

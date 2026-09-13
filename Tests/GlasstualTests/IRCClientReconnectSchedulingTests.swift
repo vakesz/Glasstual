@@ -19,8 +19,8 @@ import Testing
 @MainActor
 @Suite("Reconnect scheduling")
 struct IRCClientReconnectSchedulingTests {
-	private func client(autoReconnect: Bool, autoSleepModeDisconnect: Bool = true) -> GLTTestClient {
-		let client = GLTTestClient(configDictionary: ["nickname": "mara", "username": "mara"])
+	private func client(autoReconnect: Bool, autoSleepModeDisconnect: Bool = true) -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "mara", "username": "mara"])
 		client.config.autoReconnect = autoReconnect
 		client.config.autoSleepModeDisconnect = autoSleepModeDisconnect
 

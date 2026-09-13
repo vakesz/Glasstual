@@ -14,15 +14,12 @@ struct ChannelBanListView: View {
 	}
 
 	@Bindable var model: ChannelBanListModel
-	let heading: String
 	let update: () -> Void
 	let removeSelected: () -> Void
-	let close: () -> Void
 
 	var body: some View {
 		VStack(spacing: 0) {
 			HStack {
-				Text(verbatim: heading).font(.headline)
 				Spacer()
 				if model.isRefreshing {
 					ProgressView()
@@ -74,6 +71,13 @@ struct ChannelBanListView: View {
 			}
 			.copyable(model.selectedMasks)
 			.onDeleteCommand(perform: removeSelected)
+			.contextMenu(forSelectionType: ChannelBanListSheetEntry.ID.self) { selection in
+				Button(ChannelAccessListStrings.removeSelected, role: .destructive) {
+					model.selection = selection
+					removeSelected()
+				}
+				.disabled(selection.isEmpty)
+			}
 			.onChange(of: model.sortOrder) { _, newOrder in model.sort(using: newOrder) }
 			.accessibilityLabel(ChannelAccessListStrings.accessList)
 
@@ -93,12 +97,9 @@ struct ChannelBanListView: View {
 				Spacer()
 				Button(ChannelAccessListStrings.updateList, action: update)
 					.disabled(model.isRefreshing)
-				Button(PromptStrings.Action.close, action: close)
-					.keyboardShortcut(.cancelAction)
 			}
 			.padding(12)
 		}
-		.onExitCommand(perform: close)
 		.frame(
 			minWidth: Layout.minimumWidth,
 			idealWidth: Layout.idealWidth,

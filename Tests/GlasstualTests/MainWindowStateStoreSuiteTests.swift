@@ -21,6 +21,7 @@ struct MainWindowStateStoreSuiteTests {
 		Preferences.MainWindow.serverListVisible.name,
 		Preferences.MainWindow.memberListVisible.name,
 		Preferences.MainWindow.serverListSelection.name,
+		Preferences.MainWindow.textSizeMultiplier.name,
 	]
 
 	/// Preference export/import reads these keys out of the group container, so
@@ -58,6 +59,30 @@ struct MainWindowStateStoreSuiteTests {
 		#expect(reloaded.isServerListVisible == false)
 		#expect(reloaded.isMemberListVisible == false)
 		#expect(store.loadSelectionItemIdentifier() == "an-identifier")
+	}
+
+	/** The zoom used to live only in the window object, so Increase Font Size
+	 was undone by the next launch. A stored zoom outside the range the View
+	 menu can reach is not applied: it would leave the transcript at a size no
+	 command could walk back. */
+	@Test("The transcript zoom survives a relaunch, and a stored zoom out of range does not")
+	func textSizeMultiplierRoundTripsAndIsValidated() {
+		let container = TextualUserDefaults.container
+		let key = Preferences.MainWindow.textSizeMultiplier.name
+		container.removeObject(forKey: key)
+		defer { container.removeObject(forKey: key) }
+
+		let store = MainWindowStateStore()
+		#expect(store.loadTextSizeMultiplier() == 1.0)
+
+		store.saveTextSizeMultiplier(1.44)
+		#expect(store.loadTextSizeMultiplier() == 1.44)
+
+		store.saveTextSizeMultiplier(12)
+		#expect(store.loadTextSizeMultiplier() == 1.0)
+
+		store.saveTextSizeMultiplier(.nan)
+		#expect(store.loadTextSizeMultiplier() == 1.0)
 	}
 
 	@Test("Window restoration keys are catalogued but excluded from settings export")

@@ -38,7 +38,7 @@ import SecurityInterface
  while the answer is decided on the main actor, and the closure is what carries
  the decision back across. */
 public typealias TrustDecisionHandler = @Sendable (Bool) -> Void
-public typealias TrustPanelCompletion = (SecTrust, Bool, Any?) -> Void
+public typealias TrustPanelCompletion = (SecTrust, Bool) -> Void
 
 /// Presents the system's certificate trust sheet.
 ///
@@ -55,33 +55,7 @@ public final class TrustPanelPresenter: NSObject {
 		trust: SecTrust,
 		completion: @escaping TrustPanelCompletion
 	) -> SFCertificateTrustPanel {
-		present(
-			in: window,
-			body: body,
-			title: title,
-			defaultButton: defaultButton,
-			alternateButton: alternateButton,
-			trust: trust,
-			completion: completion,
-			context: nil
-		)
-	}
-
-	public static func present(
-		in window: NSWindow?,
-		body: String,
-		title: String,
-		defaultButton: String,
-		alternateButton: String?,
-		trust: SecTrust,
-		completion: @escaping TrustPanelCompletion,
-		context: Any?
-	) -> SFCertificateTrustPanel {
-		let callback = TrustPanelContext(
-			trust: trust,
-			completion: completion,
-			context: context
-		)
+		let callback = TrustPanelContext(trust: trust, completion: completion)
 		let panel = SFCertificateTrustPanel()
 		/* The panel owns the callback, because `didEnd` is not the only way a
 		 sheet goes away: a caller that dismisses it with `orderOut(_:)` never
@@ -110,7 +84,7 @@ public final class TrustPanelPresenter: NSObject {
 		contextInfo: UnsafeMutableRawPointer
 	) {
 		let context = Unmanaged<TrustPanelContext>.fromOpaque(contextInfo).takeUnretainedValue()
-		context.completion(context.trust, returnCode == NSApplication.ModalResponse.OK.rawValue, context.context)
+		context.completion(context.trust, returnCode == NSApplication.ModalResponse.OK.rawValue)
 	}
 
 	/// Keys the callback the panel carries. The token is never read: only the
@@ -127,11 +101,9 @@ private final class TrustPanelContext: NSObject {
 	/* SecTrust is ARC-managed in Swift; holding it strongly keeps the retain balanced. */
 	let trust: SecTrust
 	let completion: TrustPanelCompletion
-	let context: Any?
 
-	init(trust: SecTrust, completion: @escaping TrustPanelCompletion, context: Any?) {
+	init(trust: SecTrust, completion: @escaping TrustPanelCompletion) {
 		self.trust = trust
 		self.completion = completion
-		self.context = context
 	}
 }

@@ -38,10 +38,16 @@
 
 import Foundation
 
+/// Where a menu asks ``ServerPropertiesSheet`` to open, and what it opens
+/// there with. The payloads used to travel beside the case as an `Any?` the
+/// sheet cast back.
 enum ServerPropertiesDestination {
 	case `default`
 	case addressBook
-	case newIgnoreEntry
+	/// A new ignore entry, pre-filled with the hostmask `/ignore` collected.
+	case newIgnoreEntry(hostmask: String?)
+	/// The address book entry the member-list menu asked to edit.
+	case editIgnoreEntry(AddressBookEntry)
 }
 
 /** The view a single tree item is drawn into, as the protocol layer sees it.
@@ -60,10 +66,20 @@ protocol TreeItemPresentation: AnyObject {
 
 	func print(_ logLine: LogLine, completionBlock: LogControllerPrintOperationCompletion?)
 	/* Main actor: the newest printed line is the controller's own state, and
-	 both callers (`IRCChannel.lastLine`, `IRCClient.lastLine`) are already
+	 both callers (`Channel.lastLine`, `IRCClient.lastLine`) are already
 	 there. */
 	func lastPrintedLine() -> LogLine?
 	func lastRenderedLineDate() -> Date?
+	/** The newest line a person wrote that this view knows about, ignoring the
+	 events the client narrates — a join, a mode, a topic. A line printed in this
+	 turn counts, whether or not it has rendered yet.
+
+	 A received read marker is answered against this: the burst a join prints is
+	 stamped now, and none of it is news the badge should count. */
+	func newestConversationLineDate() -> Date?
+	/// How many of the view's conversation lines are newer than `date`, which is
+	/// how many messages a read marker placed at `date` leaves unread.
+	func conversationLineCount(after date: Date) -> Int
 	func setTopic(_ topic: String?)
 
 	func mark()
@@ -84,13 +100,23 @@ extension TreeItemPresentation {
 	func lastRenderedLineDate() -> Date? {
 		lastPrintedLine()?.receivedAt
 	}
+
+	/// A presentation that keeps no history of its own answers from the last line
+	/// it printed, which is a conversation line or nothing.
+	func newestConversationLineDate() -> Date? {
+		guard let logLine = lastPrintedLine(), logLine.lineType.isConversation else { return nil }
+
+		return logLine.receivedAt
+	}
+
+	func conversationLineCount(after date: Date) -> Int {
+		newestConversationLineDate().map { $0 > date } == true ? 1 : 0
+	}
 }
 
-/** Why a tree item's view is being torn down.
-
- The three were three protocol members, so every conformer answered the same
- question three times and every caller had to know which of them meant what a
- `preservingLocalData` flag was saying elsewhere. */
+/// Why a tree item's view is being torn down. One question the conformer
+/// answers once, rather than three protocol members a caller has to match up
+/// with the `preservingLocalData` flag elsewhere.
 enum TreeItemTeardown {
 	/// The application is quitting. The transcript is flushed and its historic
 	/// log closed; nothing is deleted.
@@ -108,21 +134,19 @@ enum TreeItemTeardown {
 protocol ClientOutput: AnyObject {
 	// MARK: Selection
 
-	var selectedItem: IRCTreeItem? { get }
+	var selectedItem: TreeItem? { get }
 	var selectedClient: IRCClient? { get }
-	var selectedChannel: IRCChannel? { get }
-	func selectedChannel(on client: IRCClient) -> IRCChannel?
-	func selectItem(_ item: IRCTreeItem)
-	func isItemSelectedInWindow(_ item: IRCTreeItem) -> Bool
-	func isItemVisible(_ item: IRCTreeItem) -> Bool
+	var selectedChannel: Channel? { get }
+	func selectedChannel(on client: IRCClient) -> Channel?
+	func select(_ item: TreeItem?)
+	func isItemSelected(_ item: TreeItem?) -> Bool
+	func isItemVisible(_ item: TreeItem) -> Bool
 
-	var windowIsKey: Bool { get }
-	var windowIsMain: Bool { get }
-	/** Puts a sheet in front of the user.
-
-	 The protocol layer says what to ask; what the sheet hangs from is the window
-	 layer's business. This used to hand an `NSWindow` back, which is how AppKit
-	 reached into the protocol layer at all. */
+	var isKeyWindow: Bool { get }
+	var isMainWindow: Bool { get }
+	/// Puts a sheet in front of the user. The protocol layer says what to ask;
+	/// what the sheet hangs from is the window layer's business, and no
+	/// `NSWindow` crosses back.
 	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion)
 	/** Asks a yes/no question and blocks until the user answers, reporting
 	 `true` for the default button.
@@ -168,32 +192,27 @@ protocol ClientOutput: AnyObject {
 
 	// MARK: Server list
 
-	func reloadTreeItem(_ item: IRCTreeItem)
-	func reloadTreeGroup(_ item: IRCTreeItem)
+	func reloadTreeItem(_ item: TreeItem)
+	func reloadTreeGroup(_ item: TreeItem)
 	/// Reloads a client and its children in place, keeping the selection.
 	func reloadServerListItems(for client: IRCClient)
-	func refreshMessageCount(for item: IRCTreeItem)
+	func refreshMessageCount(for item: TreeItem)
 
 	// MARK: Titles and chrome
 
-	func updateTitle(for item: IRCTreeItem)
+	func updateTitle(for item: TreeItem)
 	func updateTitle()
-	func updateDrawingForUser(_ user: User)
+	func updateDrawingForUserInUserList(_ user: User)
 
 	// MARK: Member list
 
-	/// `false` when there is no member list to update, in which case
-	/// `endMemberListUpdates()` must not be called.
-	func beginMemberListUpdates() -> Bool
-	func endMemberListUpdates()
-	func refreshMemberListDrawing(forMemberAt index: Int)
-	func assignMemberList(to channel: IRCChannel)
+	func assignMemberList(to channel: Channel)
 	func updateMemberListVisibilityForSelection()
 
 	// MARK: Views
 
-	func clearContents(of item: IRCTreeItem)
-	func destroyInputHistory(for item: IRCTreeItem)
+	func clearContents(of item: TreeItem)
+	func destroyInputHistory(for item: TreeItem)
 	/// Tells every view that the window's appearance changed.
 	func notifyAllViewsAppearanceDidChange()
 }
@@ -203,12 +222,10 @@ protocol ClientOutput: AnyObject {
 @MainActor
 protocol ClientMenuPresenting: AnyObject {
 	func toggleMuteOnNotificationSoundsShortcut(on muted: Bool)
-	func showServerPropertiesSheet(for client: IRCClient, selection: ServerPropertiesDestination, context: Any?)
+	func showServerPropertiesSheet(for client: IRCClient, selection: ServerPropertiesDestination)
 	func showNicknameColorSheet(forNickname nickname: String)
 	func openAcknowledgements(_ sender: Any?)
 	func navigateToTreeItem(at url: URL)
-	func connectToGlasstualHelpChannel(_ sender: Any?)
-	func connectToGlasstualTestingChannel(_ sender: Any?)
 	/// Reveals a folder of the application's in the Finder. What "reveal" means
 	/// is the app layer's business; the protocol layer only knows the folder.
 	func revealInFinder(_ url: URL)

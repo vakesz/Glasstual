@@ -83,7 +83,7 @@ enum CTCPPayload {
 public extension IRCClient {
 	@MainActor
 	@discardableResult
-	func sendReaction(_ emoji: String, toMessageIdentifier messageIdentifier: String, in channel: IRCChannel) -> Bool {
+	func sendReaction(_ emoji: String, toMessageIdentifier messageIdentifier: String, in channel: Channel) -> Bool {
 		guard emoji.isEmpty == false, messageIdentifier.isEmpty == false, channel.isUtility == false else {
 			return false
 		}
@@ -99,15 +99,15 @@ public extension IRCClient {
 		return true
 	}
 
-	func sendPrivmsg(_ message: String, to channel: IRCChannel) {
+	func sendPrivmsg(_ message: String, to channel: Channel) {
 		sendText(NSAttributedString(string: message), as: .privmsg, to: channel)
 	}
 
-	func sendAction(_ message: String, to channel: IRCChannel) {
+	func sendAction(_ message: String, to channel: Channel) {
 		sendText(NSAttributedString(string: message), as: .privmsgAction, to: channel)
 	}
 
-	func sendNotice(_ message: String, to channel: IRCChannel) {
+	func sendNotice(_ message: String, to channel: Channel) {
 		sendText(NSAttributedString(string: message), as: .notice, to: channel)
 	}
 

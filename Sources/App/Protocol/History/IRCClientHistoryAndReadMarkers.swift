@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -86,12 +86,12 @@ final class PendingServerHistoryRequest {
 	 went away between the request and the reply would silently turn a callback
 	 request into a transcript one. */
 	let delivery: ServerHistoryDelivery
-	weak var channel: IRCChannel?
+	weak var channel: Channel?
 	weak var presentation: (any ServerHistoryPresentation)?
 	var cancelled = false
 	var timeoutTask: Task<Void, Never>?
 
-	init(request: ServerHistoryRequest, label: String?, channel: IRCChannel, connectionIdentifier: String?,
+	init(request: ServerHistoryRequest, label: String?, channel: Channel, connectionIdentifier: String?,
 	     presentation: (any ServerHistoryPresentation)?)
 	{
 		self.request = request
@@ -125,7 +125,7 @@ public extension IRCClient {
 		IRCChatHistoryPolicy.requestLimit(serverMaximum: supportInfo.chatHistoryMaximumLines)
 	}
 
-	func chatHistoryIsAvailable(for channel: IRCChannel) -> Bool {
+	func chatHistoryIsAvailable(for channel: Channel) -> Bool {
 		let target = casefoldedTarget(channel.name)
 		return IRCChatHistoryPolicy.canUseServerHistory(
 			isLoggedIn: isLoggedIn,
@@ -143,40 +143,45 @@ public extension IRCClient {
 	}
 
 	func chatHistoryTimestamp(for date: Date) -> String {
-		"timestamp=\(sharedISOStandardDateFormatter().string(from: date))"
+		"timestamp=\(ISOStandardDateFormatter().string(from: date))"
 	}
 
+	/// The request goes out as arguments rather than an assembled line: the
+	/// outbound transport is what builds the line and attaches the message tags
+	/// a labelled request needs.
 	func chatHistoryLatestArguments(target: String, since date: Date?) -> [String] {
-		ClientWireUtilities.chatHistoryArguments(
-			subcommand: "LATEST",
-			target: target,
-			selector: date.map(chatHistoryTimestamp(for:)) ?? "*",
-			limit: chatHistoryRequestLimit()
-		)
+		["LATEST", target, date.map(chatHistoryTimestamp(for:)) ?? "*", String(chatHistoryRequestLimit())]
 	}
 
 	func chatHistoryBeforeArguments(target: String, date: Date) -> [String] {
-		ClientWireUtilities.chatHistoryArguments(
-			subcommand: "BEFORE",
-			target: target,
-			selector: chatHistoryTimestamp(for: date),
-			limit: chatHistoryRequestLimit()
-		)
+		["BEFORE", target, chatHistoryTimestamp(for: date), String(chatHistoryRequestLimit())]
 	}
 
-	func newestKnownLineDate(for channel: IRCChannel) -> Date? {
+	func newestKnownLineDate(for channel: Channel) -> Date? {
 		let viewDate = channel.lastLine?.receivedAt
-		let storeDate = LogControllerHistoricLogFile.shared().newestLineDate(forView: channel.uniqueIdentifier)
+		let storeDate = LogControllerHistoricLogFile.shared.newestLineDate(forView: channel.uniqueIdentifier)
 		return [viewDate, storeDate].compactMap(\.self).max()
 	}
 
-	func noteChannelActivated(_ channel: IRCChannel) {
+	/** The newest line a person wrote in `channel`, on screen or in storage.
+
+	 A read marker is answered against this rather than ``newestKnownLineDate``:
+	 joining prints a join line, a topic and a mode stamped now, and a marker
+	 older than that burst does not mean anything in it went unread. */
+	func newestKnownConversationLineDate(for channel: Channel) -> Date? {
+		let viewDate = channel.presentation?.newestConversationLineDate()
+		let storeDate = LogControllerHistoricLogFile.shared
+			.newestConversationLineDate(forView: channel.uniqueIdentifier)
+		return [viewDate, storeDate].compactMap(\.self).max()
+	}
+
+	func noteChannelActivated(_ channel: Channel) {
 		guard !isTerminating else { return }
 		requestChatHistory(for: channel)
 		requestReadMarker(for: channel)
 	}
 
-	func requestChatHistory(for channel: IRCChannel) {
+	func requestChatHistory(for channel: Channel) {
 		guard chatHistoryIsAvailable(for: channel) else { return }
 		send(
 			ClientWireUtilities.chatHistoryCommand,
@@ -187,13 +192,13 @@ public extension IRCClient {
 		)
 	}
 
-	func requestChatHistory(before date: Date, in channel: IRCChannel) {
+	func requestChatHistory(before date: Date, in channel: Channel) {
 		_ = requestServerHistory(ServerHistoryRequest(id: UUID(), before: date, oldestLineNumber: nil), in: channel)
 	}
 
 	func chatHistoryMessageIsDuplicate(_ message: Message) -> Bool {
 		guard let channel = channel(forTargetedMessage: message) else { return false }
-		let historicLog = LogControllerHistoricLogFile.shared()
+		let historicLog = LogControllerHistoricLogFile.shared
 		if let identifier = message.messageIdentifier, !identifier.isEmpty {
 			return historicLog.containsMessageIdentifier(identifier, forView: channel.uniqueIdentifier)
 		}
@@ -232,7 +237,7 @@ public extension IRCClient {
 		return true
 	}
 
-	func readMarkerIsAvailable(for channel: IRCChannel) -> Bool {
+	func readMarkerIsAvailable(for channel: Channel) -> Bool {
 		IRCChatHistoryPolicy.canUseServerHistory(
 			isLoggedIn: isLoggedIn,
 			capabilityEnabled: environment.preferences.synchronizeReadMarkers
@@ -244,12 +249,12 @@ public extension IRCClient {
 		)
 	}
 
-	func requestReadMarker(for channel: IRCChannel) {
+	func requestReadMarker(for channel: Channel) {
 		guard readMarkerIsAvailable(for: channel) else { return }
 		send("MARKREAD", arguments: [channel.name])
 	}
 
-	func markChannel(asRead channel: IRCChannel) {
+	func markChannel(asRead channel: Channel) {
 		let viewedDate = if let presentation = channel.presentation {
 			presentation.lastRenderedLineDate()
 		} else {
@@ -259,7 +264,7 @@ public extension IRCClient {
 		scheduleReadMarker(for: channel, date: date)
 	}
 
-	func scheduleReadMarker(for channel: IRCChannel, date: Date) {
+	func scheduleReadMarker(for channel: Channel, date: Date) {
 		guard readMarkerIsAvailable(for: channel),
 		      IRCChatHistoryPolicy.shouldAdvanceMarker(
 		      	candidate: date,
@@ -282,12 +287,12 @@ public extension IRCClient {
 		}
 	}
 
-	func sendReadMarker(for channel: IRCChannel) {
+	func sendReadMarker(for channel: Channel) {
 		guard let date = newestKnownLineDate(for: channel) else { return }
 		sendReadMarker(for: channel, date: date)
 	}
 
-	internal func sendReadMarker(for channel: IRCChannel, date newestDate: Date) {
+	internal func sendReadMarker(for channel: Channel, date newestDate: Date) {
 		guard !isTerminating, readMarkerIsAvailable(for: channel),
 		      IRCChatHistoryPolicy.shouldAdvanceMarker(
 		      	candidate: newestDate,
@@ -301,7 +306,7 @@ public extension IRCClient {
 	func receiveReadMarker(_ message: Message) {
 		guard message.params.count >= 2, let channel = findChannel(message.params[0]),
 		      message.params[1].hasPrefix("timestamp="),
-		      let date = sharedISOStandardDateFormatter().date(from: String(message.params[1].dropFirst(10)))
+		      let date = ISOStandardDateFormatter().date(from: String(message.params[1].dropFirst(10)))
 		else { return }
 		if IRCChatHistoryPolicy.shouldAdvanceMarker(
 			candidate: date,
@@ -312,8 +317,14 @@ public extension IRCClient {
 		applyReadMarker(readMarkerSentDates[channel.uniqueIdentifier] ?? date, to: channel)
 	}
 
-	func applyReadMarker(_ date: Date, to channel: IRCChannel) {
-		let newestDate = newestKnownLineDate(for: channel)
+	/** Brings `channel`'s badge in line with the point the server says was read.
+
+	 Only what a person said counts on either side of the comparison. A join
+	 prints its own line, the topic and the channel modes stamped with now, so a
+	 marker from before the join is older than the newest line in the view while
+	 nothing in it is unread. */
+	func applyReadMarker(_ date: Date, to channel: Channel) {
+		let newestDate = newestKnownConversationLineDate(for: channel)
 		if newestDate.map({ $0 > date }) != true {
 			if channel.isUnread || channel.nicknameHighlightCount > 0 {
 				channel.resetState()
@@ -324,23 +335,26 @@ public extension IRCClient {
 		}
 
 		guard let output,
-		      !output.isItemVisible(channel) || !output.windowIsKey
+		      !output.isItemVisible(channel) || !output.isKeyWindow
 		else { return }
 		channel.presentation?.mark(at: date)
 		/* The lines past the marker may have arrived in a join burst, which is
 		 printed without touching the unread count. The server has just said they
 		 are unread, so the badge comes from here instead. setUnreadState leaves a
-		 channel selected in the key window alone, and the count is set rather
-		 than accumulated: the marker says "unread from here", not "one more". */
+		 channel selected in the key window alone, and this only ever raises a
+		 badge the channel does not already have: the count is the number of
+		 messages past the marker, so it says "these went unread" rather than
+		 adding one to whatever a live line had already counted. */
 		if channel.isUnread == false {
-			setUnreadState(for: channel)
+			let unreadCount = channel.presentation?.conversationLineCount(after: date) ?? 0
+			setUnreadState(for: channel, count: max(1, unreadCount))
 		}
 	}
 }
 
 extension IRCClient {
 	@discardableResult
-	func requestServerHistory(_ request: ServerHistoryRequest, in channel: IRCChannel,
+	func requestServerHistory(_ request: ServerHistoryRequest, in channel: Channel,
 	                          presentation: (any ServerHistoryPresentation)? = nil) -> Bool
 	{
 		guard serverHistoryRequestIsAdmissible(for: channel) else { return false }
@@ -371,11 +385,11 @@ extension IRCClient {
 	 answer to the request that timed out, so a retry would be answered by
 	 whichever arrived first. The transcript asks this before it offers a Retry
 	 the client would silently drop. */
-	func canRetryServerHistory(for channel: IRCChannel) -> Bool {
+	func canRetryServerHistory(for channel: Channel) -> Bool {
 		serverHistoryRequestIsAdmissible(for: channel)
 	}
 
-	private func serverHistoryRequestIsAdmissible(for channel: IRCChannel) -> Bool {
+	private func serverHistoryRequestIsAdmissible(for channel: Channel) -> Bool {
 		!isTerminating && chatHistoryIsAvailable(for: channel)
 			&& serverHistoryRequests[channel.uniqueIdentifier] == nil
 			&& serverHistoryRequests.count < IRCChatHistoryPolicy.maximumPendingRequests
@@ -470,7 +484,7 @@ extension IRCClient {
 			if inPage {
 				pageMessageCount += 1
 				guard !chatHistoryMessageIsDuplicate(message) else { continue }
-				message.markAsHistoric()
+				message.isHistoric = true
 			}
 			processIncomingMessage(message)
 		}

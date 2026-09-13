@@ -27,9 +27,12 @@ function_body_length:
   error: 200
 
 function_parameter_count:
-  # AppKit responder callbacks and typed plugin events fix the arity of a few
-  # boundary adapters. Ten keeps those interfaces readable without
-  # forcing call-site dictionaries or untyped argument bags.
+  # Initializers are exempt from this rule, so it only ever applies to free
+  # functions and methods. The widest in the tree take seven — the transcript's
+  # history loader, the plugin dispatch entry points and the trust panel among
+  # them — and each one's arity is fixed by the request or callback it builds.
+  # Ten keeps those readable without forcing call-site dictionaries or untyped
+  # argument bags, while making further growth an error.
   warning: 10
   error: 12
 
@@ -43,7 +46,8 @@ identifier_name:
     warning: 2
     error: 1
   excluded:
-    # Conventional collection indexes and geometry coordinates.
+    # A conventional collection index, the geometry coordinates, and `/j`,
+    # which is the IRC alias for JOIN and so is spelled the way users type it.
     - i
     - j
     - x
@@ -57,6 +61,9 @@ type_name:
     error: 60
 
 line_length:
+  # The same limit SwiftFormat wraps at (--maxwidth in .swiftformat), stated
+  # again for the lines it cannot break — a long literal, an identifier chain —
+  # which is the only way this rule ever fires.
   warning: 140
   error: 180
   ignores_comments: true
@@ -84,14 +91,8 @@ custom_rules:
 
   manual_lock_or_queue:
     name: "Manual Lock or Queue"
-    regex: '(?m)^(?![^\n]*//\s*lock-queue:\s*fsevents\s*$)[^\n]*(?:NSLock\(|NSRecursiveLock\(|objc_sync_enter|DispatchQueue\(label:|OperationQueue\(\)|perform(?:Asynchronously|Synchronously)OnMainQueue)'
+    regex: '(?:NSLock\(|NSRecursiveLock\(|objc_sync_enter|DispatchQueue\(label:|OperationQueue\(\)|perform(?:Asynchronously|Synchronously)OnMainQueue)'
     message: "Use actor isolation, or Mutex<Value> for a small synchronous value."
-    severity: error
-
-  misplaced_fsevents_queue_marker:
-    name: "Misplaced FSEvents Queue Marker"
-    regex: '(?m)^(?![^\n]*DispatchQueue\(label:)[^\n]*//\s*lock-queue:\s*fsevents\s*$'
-    message: "The FSEvents marker belongs only on its required serial queue."
     severity: error
 
   unmarked_nonisolated:
@@ -122,13 +123,6 @@ custom_rules:
     included: 'Tests/.*\.swift'
     regex: '\bwithKnownIssue\b'
     message: "Do not turn a known failure green; fix it or remove the test."
-    severity: error
-
-  stringly_typed_window_lookup:
-    name: "Stringly Typed Window Lookup"
-    included: 'Sources/.*\.swift'
-    regex: '(?:window\(fromWindowList:|windows\(fromWindowList:|maybeBringWindowForward\(|removeWindow\(fromWindowList:|withDescription:)[^\n)]*"'
-    message: "Derive the window-list key from its class instead of spelling its runtime name."
     severity: error
 
   raw_notification_observation:

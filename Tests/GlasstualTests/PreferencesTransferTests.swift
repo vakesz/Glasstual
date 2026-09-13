@@ -248,18 +248,20 @@ struct PreferencesTransferTests {
 				committed = String(value)
 			}
 		})
-		var draft = PreferencesNumberDraft()
+		var draft = PreferencesFieldDraft()
 		for input in ["", "1", "12", "123"] {
-			draft.text = input
+			draft.edit(input)
 			#expect(committed == "15000")
+			#expect(draft.displayed(committed) == input)
 		}
 		draft.commit(to: binding)
 		#expect(committed == "123")
-		#expect(!draft.rejected)
-		draft.text = "-4"
+		#expect(draft.wasRejected == false)
+		#expect(draft.displayed(committed) == "123")
+		draft.edit("-4")
 		draft.commit(to: binding)
 		#expect(committed == "123")
-		#expect(draft.rejected)
+		#expect(draft.wasRejected)
 	}
 
 	@Test("Theme fallback preserves unsupported bytes and all font fields follow the authoritative theme")
@@ -281,8 +283,8 @@ struct PreferencesTransferTests {
 		replacement.fontSize = 24
 		replacement.fontName = "Menlo"
 		#expect(controller.apply(replacement))
-		#expect(model.channelViewFontName == "Menlo")
-		#expect(model.channelViewFontSize == 24)
+		#expect(model.transcriptTheme.fontName == "Menlo")
+		#expect(model.transcriptTheme.fontSize == 24)
 		model.updateTheme { $0.name = "Edited from Settings" }
 		#expect(controller.theme.fontName == "Menlo")
 		#expect(controller.theme.fontSize == 24)
@@ -319,13 +321,13 @@ struct PreferencesTransferTests {
 		) == false)
 	}
 
-	@Test("Plugin pane identities do not depend on their position in the loaded inventory")
-	func stablePluginPaneIdentity() {
+	@Test("Add-on row identities do not depend on their position in the loaded inventory")
+	func stableAddOnRowIdentity() {
 		let bundle = "com.example.preference-plugin"
-		let identifier = PreferencesPaneCatalog.pluginIdentifier(bundleIdentifier: bundle)
-		#expect(PreferencesPaneCatalog.pluginBundleIdentifier(from: identifier) == bundle)
-		#expect(PreferencesPaneCatalog.pluginBundleIdentifier(from: "plugin:") == nil)
-		#expect(PreferencesPaneCatalog.pluginBundleIdentifier(from: "plugin-0") == nil)
+		let identifier = PreferencesSelection.plugin(bundleIdentifier: bundle).storedIdentifier
+		#expect(PreferencesSelection(storedIdentifier: identifier) == .plugin(bundleIdentifier: bundle))
+		#expect(PreferencesSelection(storedIdentifier: "plugin:") == nil)
+		#expect(PreferencesSelection(storedIdentifier: "plugin-0") == nil)
 	}
 
 	@Test("Imported servers have auto-connect cleared while the exported source is unchanged")
@@ -373,7 +375,7 @@ struct PreferencesTransferTests {
 		let query = ChannelConfig(channelName: "RememberedPeer", type: .privateMessage)
 		configuration.channelList.append(query)
 		let sourceArchive = source.stores.snapshot(clients: [configuration])
-		let model = GLTClientEnvironmentFixture(preferences: .current(stores: target.stores))
+		let model = ClientEnvironmentFixture(preferences: .current(stores: target.stores))
 		if existingClient {
 			var previous = configuration
 			previous.channelList.removeLast()
@@ -401,7 +403,7 @@ struct PreferencesTransferTests {
 		let fixture = try Fixture()
 		defer { fixture.cleanUp() }
 		fixture.stores.set(false, for: Preferences.Appearance.rememberQueryStates)
-		let model = GLTClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
+		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
 		let live = model.world.createClient(with: client("Existing live query"))
 		let query = model.world.createPrivateMessage("ExistingPeer", on: live)
 		#expect(!live.config.channelList.contains { $0.uniqueIdentifier == query.uniqueIdentifier })
@@ -425,7 +427,7 @@ struct PreferencesTransferTests {
 	func removedClientRecoveryRestoresLocalAuthenticationConfiguration() async throws {
 		let fixture = try Fixture()
 		defer { fixture.cleanUp() }
-		let model = GLTClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
+		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
 		var configuration = client("Recover local authentication")
 		configuration.loginCommands = ["mode +i"]
 		configuration.identityClientSideCertificate = Data("fixture-certificate-reference".utf8)
@@ -487,7 +489,7 @@ struct PreferencesTransferTests {
 		var original = client("Command presence")
 		original.loginCommands = ["mode +i"]
 		original.identityClientSideCertificate = Data("existing-local-reference".utf8)
-		let model = GLTClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
+		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
 		let live = model.world.createClient(with: original)
 		var imported = original
 		imported.loginCommands = emptyCommands ? [] : ["whois TestNick"]
@@ -515,7 +517,7 @@ struct PreferencesTransferTests {
 		defer { fixture.cleanUp() }
 		var original = client("Legacy commands")
 		original.loginCommands = ["mode +i"]
-		let model = GLTClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
+		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
 		let live = model.world.createClient(with: original)
 		var imported = original
 		imported.loginCommands = ["whois TestNick"]
@@ -556,7 +558,7 @@ struct PreferencesTransferTests {
 		let fixture = try Fixture()
 		defer { fixture.cleanUp() }
 		let original = client("Empty local authentication configuration")
-		let model = GLTClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
+		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
 		let session = fixture.session(world: model.world)
 		let backup = try await session.recoveryStore.save(fixture.stores.snapshot(clients: [original]))
 		var changed = original
@@ -578,7 +580,7 @@ struct PreferencesTransferTests {
 	func localAuthenticationChangesInvalidatePreview() async throws {
 		let fixture = try Fixture()
 		defer { fixture.cleanUp() }
-		let model = GLTClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
+		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
 		let live = model.world.createClient(with: client("Changed local authentication"))
 		let session = fixture.session(world: model.world)
 		var archive = try session.liveSnapshot()
@@ -601,7 +603,7 @@ extension PreferencesTransferTests {
 		let fixture = try Fixture()
 		defer { fixture.cleanUp() }
 		fixture.stores.set(.boolean(rememberQueries), for: Preferences.Appearance.rememberQueryStates)
-		let model = GLTClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
+		let model = ClientEnvironmentFixture(preferences: .current(stores: fixture.stores))
 		let live = model.world.createClient(with: client("Exact query restore"))
 		let session = fixture.session(world: model.world)
 		let original = try session.liveSnapshot()

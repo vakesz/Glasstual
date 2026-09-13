@@ -75,6 +75,10 @@ public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 	public var alternateButton: String?
 	public var otherButton: String?
 	public var destructiveButton: AlertDestructiveButton?
+	/// Which button Escape presses. An alert with an alternate button assumes
+	/// that one; name another where the way out is somewhere else, as it is
+	/// when the third button is the one that changes nothing.
+	public var cancelButton: AlertResponse?
 	/// The base key recording a "do not show again" choice. Without one the
 	/// checkbox is not offered, because nothing would remember the answer.
 	public var suppressionKey: String?
@@ -88,6 +92,7 @@ public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 		alternateButton: String? = nil,
 		otherButton: String? = nil,
 		destructiveButton: AlertDestructiveButton? = nil,
+		cancelButton: AlertResponse? = nil,
 		suppressionKey: String? = nil,
 		suppressionText: String? = nil,
 		style: AlertStyle = .informational
@@ -98,9 +103,33 @@ public nonisolated struct AlertRequest: Sendable { // nonisolated: value
 		self.alternateButton = alternateButton
 		self.otherButton = otherButton
 		self.destructiveButton = destructiveButton
+		self.cancelButton = cancelButton
 		self.suppressionKey = suppressionKey
 		self.suppressionText = suppressionText
 		self.style = style
+	}
+
+	/** The button Escape presses.
+
+	 Every alert has one: an alert with no way out but its own action is a trap,
+	 and Escape on a single-button alert means "I have read it". */
+	public var escapeButton: AlertResponse {
+		if let cancelButton {
+			return cancelButton
+		}
+		return alternateButton == nil ? .default : .alternate
+	}
+
+	/** The button Return presses, if any.
+
+	 Never the destructive one: a confirmation whose Return key erases something
+	 turns a reflex into a loss. Where the destructive button is the only one,
+	 nothing is defaulted and the reader has to choose.  */
+	public var returnButton: AlertResponse? {
+		guard destructiveButton == .default else {
+			return .default
+		}
+		return alternateButton == nil ? nil : .alternate
 	}
 }
 
@@ -350,6 +379,10 @@ private struct AlertPanelView: View {
 		.opacity(hasAppeared ? 1 : 0)
 		.animation(appearanceAnimation, value: hasAppeared)
 		.onAppear { hasAppeared = true }
+		/* Escape and ⌘. answer the way out, whichever button that is. A
+		 keyboard shortcut on the button itself cannot serve an alert whose
+		 only button is also its default. */
+		.onExitCommand { respond(request.escapeButton) }
 	}
 
 	/// The application icon, badged with the system caution mark for the two
@@ -410,28 +443,42 @@ private struct AlertPanelView: View {
 	private var buttons: some View {
 		HStack(spacing: 12) {
 			if let otherButton = request.otherButton {
-				Button(otherButton) { respond(.other) }
+				button(otherButton, response: .other)
 			}
 
 			Spacer(minLength: 0)
 
 			if let alternateButton = request.alternateButton {
-				Button(alternateButton, role: role(for: .alternate)) { respond(.alternate) }
-					.keyboardShortcut(.cancelAction)
+				button(alternateButton, response: .alternate)
 			}
 
-			Button(request.defaultButton, role: role(for: .default)) { respond(.default) }
-				.keyboardShortcut(.defaultAction)
-				.buttonStyle(.borderedProminent)
-				/* A prominent button keeps the accent colour whatever its role;
-				 the system alert draws a destructive default in red. */
-				.tint(role(for: .default) == .destructive ? Color.red : nil)
+			button(request.defaultButton, response: .default)
 		}
 		.frame(maxWidth: .infinity)
 	}
 
-	private func role(for button: AlertDestructiveButton) -> ButtonRole? {
-		request.destructiveButton == button ? .destructive : nil
+	/// The Return button is the prominent one, and it is never the destructive
+	/// one; the destructive button carries the role that tints it and tells
+	/// VoiceOver the action cannot be taken back.
+	@ViewBuilder
+	private func button(_ title: String, response: AlertResponse) -> some View {
+		let action = Button(title, role: role(for: response)) { respond(response) }
+
+		if response == request.returnButton {
+			action
+				.keyboardShortcut(.defaultAction)
+				.buttonStyle(.borderedProminent)
+		} else {
+			action
+		}
+	}
+
+	private func role(for response: AlertResponse) -> ButtonRole? {
+		switch request.destructiveButton {
+		case .default: response == .default ? .destructive : nil
+		case .alternate: response == .alternate ? .destructive : nil
+		case nil: nil
+		}
 	}
 
 	/// Increased contrast asks for the secondary text to stop being secondary.
@@ -539,6 +586,8 @@ private final class AlertPresentationSession {
 	}
 
 	private func end(with response: AlertResponse) {
+		/* Escape and a button press can both arrive for one alert. */
+		guard self.response == nil else { return }
 		self.response = response
 		let code = NSApplication.ModalResponse(rawValue: Int(response.rawValue))
 
@@ -589,14 +638,14 @@ private final class AlertPresentationSession {
 		guard code.rawValue >= 0,
 		      let response = AlertResponse(rawValue: UInt(code.rawValue))
 		else {
-			return dismissedResponse
+			return request.escapeButton
 		}
 
 		return response
 	}
 
 	private var dismissedResponse: AlertResponse {
-		request.alternateButton == nil ? .default : .alternate
+		request.escapeButton
 	}
 }
 
@@ -648,6 +697,7 @@ public extension Alerts {
 		defaultButton buttonDefault: String,
 		alternateButton buttonAlternate: String?,
 		destructiveButton buttonDestructive: AlertDestructiveButton? = nil,
+		cancelButton buttonCancel: AlertResponse? = nil,
 		suppressionKey suppressKey: String? = nil,
 		suppressionText suppressText: String? = nil
 	) -> Bool {
@@ -658,6 +708,7 @@ public extension Alerts {
 				defaultButton: buttonDefault,
 				alternateButton: buttonAlternate,
 				destructiveButton: buttonDestructive,
+				cancelButton: buttonCancel,
 				suppressionKey: suppressKey,
 				suppressionText: suppressText,
 				style: .warning
@@ -674,6 +725,7 @@ public extension Alerts {
 		alternateButton buttonAlternate: String? = nil,
 		otherButton buttonOther: String? = nil,
 		destructiveButton buttonDestructive: AlertDestructiveButton? = nil,
+		cancelButton buttonCancel: AlertResponse? = nil,
 		suppressionKey suppressKey: String? = nil,
 		suppressionText suppressText: String? = nil,
 		completionBlock: AlertCompletion? = nil
@@ -685,6 +737,7 @@ public extension Alerts {
 			alternateButton: buttonAlternate,
 			otherButton: buttonOther,
 			destructiveButton: buttonDestructive,
+			cancelButton: buttonCancel,
 			suppressionKey: suppressKey,
 			suppressionText: suppressText
 		)
@@ -704,6 +757,7 @@ public extension Alerts {
 		alternateButton buttonAlternate: String?,
 		otherButton buttonOther: String?,
 		destructiveButton buttonDestructive: AlertDestructiveButton? = nil,
+		cancelButton buttonCancel: AlertResponse? = nil,
 		suppressionKey suppressKey: String? = nil,
 		suppressionText suppressText: String? = nil,
 		completionBlock: AlertCompletion? = nil
@@ -715,6 +769,7 @@ public extension Alerts {
 			alternateButton: buttonAlternate,
 			otherButton: buttonOther,
 			destructiveButton: buttonDestructive,
+			cancelButton: buttonCancel,
 			suppressionKey: suppressKey,
 			suppressionText: suppressText
 		)

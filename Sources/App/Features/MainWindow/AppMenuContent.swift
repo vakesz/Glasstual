@@ -12,7 +12,7 @@ struct AppMenuContext {
 	let coordinator: MenuActionCoordinator
 	let context: MenuActionCoordinator.MenuContext
 
-	init(coordinator: MenuActionCoordinator, item: IRCTreeItem?) {
+	init(coordinator: MenuActionCoordinator, item: TreeItem?) {
 		self.coordinator = coordinator
 		context = .treeItem(item)
 	}
@@ -23,7 +23,7 @@ struct AppMenuContext {
 	}
 
 	/// The server-list row this context names, if it names one at all.
-	var treeItem: IRCTreeItem? {
+	var treeItem: TreeItem? {
 		guard case let .treeItem(item) = context else { return nil }
 		return item
 	}
@@ -79,6 +79,10 @@ struct AppMenuEntry: Identifiable {
 	let title: String
 	let symbolName: String?
 	let isEnabled: Bool
+	/// Whether the command is currently in force. AppKit draws this as a tick;
+	/// SwiftUI draws it by making the row a toggle.
+	let isOn: Bool
+	let shortcut: KeyboardShortcut?
 	let content: Content
 	private let context: AppMenuContext?
 
@@ -115,10 +119,36 @@ struct AppMenuEntry: Identifiable {
 				title: item.title,
 				symbolName: item.command?.symbolName,
 				isEnabled: item.isEnabled,
+				isOn: item.state == .on,
+				shortcut: shortcut(for: item),
 				content: content,
 				context: context
 			)
 		}
+	}
+
+	/// The item's key equivalent, as SwiftUI spells one. AppKit stores the
+	/// character and the modifiers separately and a command with no shortcut
+	/// stores an empty string.
+	private static func shortcut(for item: NSMenuItem) -> KeyboardShortcut? {
+		guard let character = item.keyEquivalent.first else { return nil }
+
+		var modifiers: EventModifiers = []
+		let mask = item.keyEquivalentModifierMask
+		if mask.contains(.command) {
+			modifiers.insert(.command)
+		}
+		if mask.contains(.shift) {
+			modifiers.insert(.shift)
+		}
+		if mask.contains(.option) {
+			modifiers.insert(.option)
+		}
+		if mask.contains(.control) {
+			modifiers.insert(.control)
+		}
+
+		return KeyboardShortcut(KeyEquivalent(character), modifiers: modifiers)
 	}
 
 	@discardableResult
@@ -155,14 +185,26 @@ private struct AppMenuItemContent: View {
 				menuLabel
 			}
 			.disabled(entry.isEnabled == false)
-		case .command:
-			Button {
-				entry.perform(prepareSelection: prepareSelection)
-			} label: {
+			.modifier(KeyboardShortcutModifier(shortcut: entry.shortcut))
+		case .command where entry.isOn:
+			/* A ticked command is a state, and a toggle is how SwiftUI draws
+			 one inside a menu. */
+			Toggle(isOn: Binding(get: { true }, set: { _ in perform() })) {
 				menuLabel
 			}
 			.disabled(entry.isEnabled == false)
+			.modifier(KeyboardShortcutModifier(shortcut: entry.shortcut))
+		case .command:
+			Button(action: perform) {
+				menuLabel
+			}
+			.disabled(entry.isEnabled == false)
+			.modifier(KeyboardShortcutModifier(shortcut: entry.shortcut))
 		}
+	}
+
+	private func perform() {
+		entry.perform(prepareSelection: prepareSelection)
 	}
 
 	@ViewBuilder
@@ -171,6 +213,20 @@ private struct AppMenuItemContent: View {
 			Label(entry.title, systemImage: symbolName)
 		} else {
 			Text(entry.title)
+		}
+	}
+}
+
+/// `keyboardShortcut(_:)` takes a shortcut, not an optional one, and applying a
+/// placeholder to a command that has none would claim a key the menu bar owns.
+private struct KeyboardShortcutModifier: ViewModifier {
+	let shortcut: KeyboardShortcut?
+
+	func body(content: Content) -> some View {
+		if let shortcut {
+			content.keyboardShortcut(shortcut)
+		} else {
+			content
 		}
 	}
 }

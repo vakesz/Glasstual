@@ -220,8 +220,8 @@ struct FileLoggerIdleSweepTests {
 		let destination = FileLogDestination(folder: .directory(directory), relativePath: "Console")
 		var preferences = ClientPreferences()
 		preferences.logToDiskIsEnabled = true
-		let fixture = GLTClientEnvironmentFixture(preferences: preferences)
-		let client = GLTTestClient(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		let fixture = ClientEnvironmentFixture(preferences: preferences)
+		let client = TestClient(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
 		for body in ["first body", "second body"] {
 			client.logFile = FileLogger(client: client, commands: commands, destination: destination)
 			var line = LogLine()

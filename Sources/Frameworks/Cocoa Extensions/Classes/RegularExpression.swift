@@ -40,36 +40,32 @@ public enum RegularExpression {
 		let caseless: Bool
 	}
 
-	/** One compiled pattern.
+	/** Everything the cache remembers about a pattern.
 
 	 `NSRegularExpression` is declared `NS_SWIFT_SENDABLE` by Foundation and is
-	 immutable once built, so the cache below is a value whose every member is
-	 `Sendable` — which is what the `Mutex` guarding it asks for. The wrapper
-	 gives that fact a name and a place to say it; it is not what makes it
-	 true. */
-	private struct CompiledExpression: Sendable {
-		let expression: NSRegularExpression
-	}
-
-	/** Everything the cache remembers about a pattern.
+	 immutable once built, so this is a value whose every member is `Sendable` —
+	 which is what the `Mutex` guarding it asks for.
 
 	 A pattern that fails to compile is remembered too. Patterns come from chat
 	 filters and from plugin output-suppression rules, and are tried once per
 	 incoming message, so a broken one used to be recompiled — and re-logged —
-	 for every line that arrived. Recording the failure makes the second attempt as cheap as a hit
-	 and keeps the log to one line per distinct pattern. */
+	 for every line that arrived. Recording the failure makes the second attempt
+	 as cheap as a hit and keeps the log to one line per distinct pattern. */
 	private struct ExpressionCache {
-		var compiled: [CacheKey: CompiledExpression] = [:]
+		var compiled: [CacheKey: NSRegularExpression] = [:]
 		var failed: Set<CacheKey> = []
-		/// How many times each pattern has been handed to `NSRegularExpression`.
-		/// The whole point of the cache is that this stops at one, and nothing
-		/// else observes it: a remembered failure and a fresh one answer a
-		/// caller identically.
-		var compilations: [CacheKey: Int] = [:]
+	}
+
+	/// What the cache knows about one pattern, which is not the same question as
+	/// whether it compiles: a pattern nothing has tried yet has to be tried.
+	private enum CacheLookup {
+		case compiled(NSRegularExpression)
+		case failed
+		case unknown
 	}
 
 	private static let logger = Logger(
-		subsystem: "com.codeux.frameworks.CocoaExtensions",
+		subsystem: Logging.frameworkSubsystem,
 		category: "RegularExpression"
 	)
 
@@ -94,87 +90,32 @@ public enum RegularExpression {
 	 something that is not a chat message. */
 	public static let inputLengthLimit = 4096
 
-	/** How many times this pattern has been handed to `NSRegularExpression`.
-
-	 One is what a pattern costs however often it is used, a pattern that cannot
-	 compile included — which is otherwise unobservable, because a remembered
-	 failure answers a caller exactly as a fresh one does. Scoped to the pattern
-	 so that what anything else in the process compiles does not enter into it.
-	 It resets with the cache it counts. */
-	public static func compilationCount(of pattern: String, caseless: Bool = false) -> Int {
-		expressionCache.withLock { $0.compilations[CacheKey(pattern: pattern, caseless: caseless)] ?? 0 }
-	}
-
-	/// `haystack` cut to at most `limit` characters, so a caller can bound the
-	/// work a user-authored pattern is allowed to do on remote input.
-	public static func boundedInput(_ haystack: String, limit: Int = inputLengthLimit) -> String {
-		guard limit >= 0 else { return "" }
-		guard haystack.count > limit else { return haystack }
-		return String(haystack.prefix(limit))
-	}
-
-	public static func string(_ haystack: String, isMatchedByRegex needle: String) -> Bool {
-		string(haystack, isMatchedByRegex: needle, withoutCase: false)
-	}
-
-	public static func string(_ haystack: String, isMatchedByRegex needle: String, withoutCase caseless: Bool) -> Bool {
-		makeExpression(needle, caseless: caseless)?.firstMatch(in: haystack, range: haystack.fullRange) != nil
-	}
-
-	/// The same test with the subject cut to `inputLimit` characters first.
-	/// Callers matching a user-authored pattern against remote text use this.
+	/// Whether `haystack` matches `needle`, with the subject cut to `inputLimit`
+	/// characters first; `nil` leaves the subject alone. Callers matching a
+	/// user-authored pattern against remote text pass a limit.
 	public static func string(
 		_ haystack: String,
 		isMatchedByRegex needle: String,
-		withoutCase caseless: Bool,
-		inputLimit: Int
+		withoutCase caseless: Bool = false,
+		inputLimit: Int? = nil
 	) -> Bool {
-		string(boundedInput(haystack, limit: inputLimit), isMatchedByRegex: needle, withoutCase: caseless)
+		let subject = boundedInput(haystack, limit: inputLimit)
+
+		return makeExpression(needle, caseless: caseless)?
+			.firstMatch(in: subject, range: subject.fullRange) != nil
 	}
 
-	public static func string(_ haystack: String, rangeOfRegex needle: String) -> NSRange {
-		string(haystack, rangeOfRegex: needle, withoutCase: false)
-	}
-
-	public static func string(_ haystack: String, rangeOfRegex needle: String, withoutCase caseless: Bool) -> NSRange {
-		makeExpression(needle, caseless: caseless)?.rangeOfFirstMatch(in: haystack, range: haystack.fullRange)
-			?? NSRange(location: NSNotFound, length: 0)
-	}
-
-	public static func string(_ haystack: String, replacedByRegex needle: String, with replacement: String) -> String {
-		makeExpression(needle)?.stringByReplacingMatches(
-			in: haystack,
-			range: haystack.fullRange,
-			withTemplate: replacement
-		)
-			?? haystack
-	}
-
-	public static func matches(
-		in haystack: String,
-		withRegex needle: String,
-		withoutCase caseless: Bool,
-		substringGroups: Bool
-	) -> [String] {
-		matches(
-			in: haystack,
-			withRegex: needle,
-			withoutCase: caseless,
-			substringGroups: substringGroups,
-			inputLimit: nil
-		)
-	}
-
-	/// The same enumeration with the subject cut to `inputLimit` characters
-	/// first; `nil` leaves the subject alone.
+	/// Every match of `needle` in `haystack`, or every capture group of every
+	/// match when `substringGroups` is set, with the same optional bound on the
+	/// subject as ``string(_:isMatchedByRegex:withoutCase:inputLimit:)``.
 	public static func matches(
 		in haystack: String,
 		withRegex needle: String,
 		withoutCase caseless: Bool,
 		substringGroups: Bool,
-		inputLimit: Int?
+		inputLimit: Int? = nil
 	) -> [String] {
-		let subject = inputLimit.map { boundedInput(haystack, limit: $0) } ?? haystack
+		let subject = boundedInput(haystack, limit: inputLimit)
 		guard let expression = makeExpression(needle, caseless: caseless) else { return [] }
 
 		return expression.matches(in: subject, range: subject.fullRange).flatMap { result in
@@ -187,23 +128,36 @@ public enum RegularExpression {
 		}
 	}
 
+	/// `haystack` cut to at most `limit` characters, so a user-authored pattern
+	/// is bounded in what it is allowed to do on remote input. Cutting by
+	/// characters rather than by code units keeps a subject from ending in half
+	/// of a grapheme.
+	private static func boundedInput(_ haystack: String, limit: Int?) -> String {
+		guard let limit else { return haystack }
+		guard limit > 0 else { return "" }
+		guard haystack.count > limit else { return haystack }
+
+		return String(haystack.prefix(limit))
+	}
+
 	private static func makeExpression(_ pattern: String, caseless: Bool = false) -> NSRegularExpression? {
 		let key = CacheKey(pattern: pattern, caseless: caseless)
 
-		let remembered = expressionCache.withLock { cache -> CompiledExpression?? in
+		let remembered = expressionCache.withLock { cache -> CacheLookup in
 			if let cached = cache.compiled[key] {
-				return .some(.some(cached))
+				return .compiled(cached)
 			}
 
-			return cache.failed.contains(key) ? .some(nil) : nil
+			return cache.failed.contains(key) ? .failed : .unknown
 		}
 
-		if let remembered {
-			return remembered?.expression
+		switch remembered {
+		case let .compiled(expression): return expression
+		case .failed: return nil
+		case .unknown: break
 		}
 
 		let expression: NSRegularExpression
-		expressionCache.withLock { $0.compilations[key, default: 0] += 1 }
 
 		do {
 			expression = try NSRegularExpression(
@@ -214,7 +168,6 @@ public enum RegularExpression {
 			let isFirstFailure = expressionCache.withLock { cache in
 				if cache.failed.count >= expressionCacheLimit {
 					cache.failed.removeAll(keepingCapacity: true)
-					cache.compilations.removeAll(keepingCapacity: true)
 				}
 
 				return cache.failed.insert(key).inserted
@@ -232,10 +185,9 @@ public enum RegularExpression {
 		expressionCache.withLock { cache in
 			if cache.compiled.count >= expressionCacheLimit {
 				cache.compiled.removeAll(keepingCapacity: true)
-				cache.compilations.removeAll(keepingCapacity: true)
 			}
 
-			cache.compiled[key] = CompiledExpression(expression: expression)
+			cache.compiled[key] = expression
 		}
 
 		return expression

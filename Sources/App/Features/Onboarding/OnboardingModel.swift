@@ -93,6 +93,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
 	case appearance
 	case notifications
 	case network
+	case summary
 
 	var id: Self {
 		self
@@ -104,6 +105,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
 		case .appearance: OnboardingStrings.Appearance.title
 		case .notifications: OnboardingStrings.Notifications.title
 		case .network: OnboardingStrings.FirstNetwork.title
+		case .summary: OnboardingStrings.Summary.title
 		}
 	}
 
@@ -113,11 +115,14 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
 		case .appearance: OnboardingStrings.Appearance.subtitle
 		case .notifications: OnboardingStrings.Notifications.subtitle
 		case .network: OnboardingStrings.FirstNetwork.subtitle
+		case .summary: OnboardingStrings.Summary.subtitle
 		}
 	}
 
+	/// Identity is what every later step is written into, and the summary is
+	/// the review of what was chosen, so neither can be passed over.
 	var isSkippable: Bool {
-		self != .identity
+		self != .identity && self != .summary
 	}
 }
 
@@ -160,28 +165,45 @@ final class OnboardingSettings {
 
 @Observable
 final class OnboardingModel {
-	struct Identity {
+	struct Identity: Equatable {
 		let nickname: String
 		let realName: String
 		let alternateNickname: String
 	}
 
-	struct Notifications {
+	struct Notifications: Equatable {
 		let highlight: Bool
 		let privateMessage: Bool
 		let sounds: Bool
 	}
 
+	struct Appearance: Equatable {
+		let transcriptStyle: OnboardingTranscriptStyle
+		let textSize: OnboardingTextSize
+		let preferredAppearance: PreferredAppearance
+
+		var theme: TranscriptTheme {
+			var theme = transcriptStyle.theme
+			theme.fontSize = OnboardingSettings.fontSize(for: textSize)
+			return theme
+		}
+	}
+
 	let settings: OnboardingSettings
 	let networkPicker: NetworkPickerModel
 	private let notificationAuthorization: OnboardingNotificationAuthorization
+	private var authorizationTask: Task<Void, Never>?
+
+	/** What each step contributed, rather than what its controls currently show.
+
+	 A step contributes only once it has been accepted with Continue: passing
+	 over a step with Skip, or leaving onboarding without reaching it, has to
+	 leave the corresponding preferences exactly as they were. */
 	private(set) var acceptedIdentity: Identity?
-	private(set) var acceptedAppearance: (theme: TranscriptTheme, appearance: PreferredAppearance)?
+	private(set) var acceptedAppearance: Appearance?
 	private(set) var acceptedNotifications: Notifications?
 
 	var currentStep: OnboardingStep = .identity
-	var validationMessage = ""
-	var isValidationPresented = false
 	var notificationPermissionMessage = OnboardingStrings.Notifications.permissionExplanation
 	var notificationPermissionSymbol = "bell.badge"
 
@@ -200,7 +222,7 @@ final class OnboardingModel {
 	}
 
 	var isLastStep: Bool {
-		currentStep == .network
+		currentStep == .summary
 	}
 
 	var primaryButtonTitle: String {
@@ -214,21 +236,57 @@ final class OnboardingModel {
 		)
 	}
 
+	// MARK: - Validation
+
+	/// The complaint to show under the nickname field, or `nil` when it holds a
+	/// nickname the server will accept.
+	var nicknameProblem: String? {
+		let nickname = settings.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+		if nickname.isEmpty {
+			return OnboardingStrings.Identity.nicknameRequired
+		}
+		return ServerPropertiesValidation.isNickname(nickname) ? nil : CommonValidationStrings.invalidNickname
+	}
+
+	var alternateNicknameProblem: String? {
+		let alternate = settings.alternateNickname.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard alternate.isEmpty == false else { return nil }
+		return ServerPropertiesValidation.isNickname(alternate) ? nil : CommonValidationStrings.invalidNickname
+	}
+
+	var realNameProblem: String? {
+		settings.realName.rangeOfCharacter(from: .controlCharacters) == nil
+			? nil
+			: CommonValidationStrings.singleLineRequired
+	}
+
+	/// Drives the primary button. Nothing is rejected after the fact, so every
+	/// step either shows what is wrong beside the field or lets Continue work.
+	var isCurrentStepValid: Bool {
+		switch currentStep {
+		case .identity:
+			nicknameProblem == nil && alternateNicknameProblem == nil && realNameProblem == nil
+		case .network:
+			networkPicker.isValid
+		case .appearance, .notifications, .summary:
+			true
+		}
+	}
+
+	// MARK: - Navigation
+
 	func moveBack() {
 		guard let previous = OnboardingStep(rawValue: currentStep.rawValue - 1) else { return }
 		currentStep = previous
 		prepareCurrentStep()
 	}
 
-	/// Returns `true` when the final step committed successfully.
-	func continueFlow() -> Bool {
-		do {
-			try commitCurrentStep()
-		} catch {
-			validationMessage = (error as? OnboardingStepError)?.message ?? error.localizedDescription
-			isValidationPresented = validationMessage.isEmpty == false
-			return false
-		}
+	/// Accepts the current step. Returns `true` when the last step was accepted
+	/// and the collected settings are ready to be applied.
+	func advance() -> Bool {
+		guard isCurrentStepValid else { return false }
+
+		acceptCurrentStep()
 
 		guard let next = OnboardingStep(rawValue: currentStep.rawValue + 1) else {
 			return true
@@ -239,7 +297,30 @@ final class OnboardingModel {
 		return false
 	}
 
-	func prepareCurrentStep() {
+	/// Moves past the current step without accepting it, and drops anything an
+	/// earlier visit to it had accepted.
+	func skip() {
+		guard currentStep.isSkippable, let next = OnboardingStep(rawValue: currentStep.rawValue + 1) else {
+			return
+		}
+
+		switch currentStep {
+		case .appearance:
+			acceptedAppearance = nil
+		case .notifications:
+			acceptedNotifications = nil
+		case .network:
+			settings.clientConfig = nil
+			settings.channelsToJoin = []
+		case .identity, .summary:
+			break
+		}
+
+		currentStep = next
+		prepareCurrentStep()
+	}
+
+	private func prepareCurrentStep() {
 		switch currentStep {
 		case .notifications:
 			Task { await refreshNotificationPermission() }
@@ -250,15 +331,10 @@ final class OnboardingModel {
 		}
 	}
 
-	/// Skip accepts the visible optional choices, but never creates a network.
-	func skipRemainingSteps() -> Bool {
-		guard currentStep.isSkippable, acceptedIdentity != nil else { return false }
-		if currentStep != .network {
-			try? commitCurrentStep(requestsNotificationPermission: false)
-		}
-		settings.clientConfig = nil
-		settings.channelsToJoin = []
-		return true
+	/// Waits for the permission prompt the notifications step raised, so the
+	/// window cannot close out from under a dialog the system is still showing.
+	func completePendingWork() async {
+		await authorizationTask?.value
 	}
 
 	func refreshNotificationPermission() async {
@@ -277,57 +353,59 @@ final class OnboardingModel {
 		}
 	}
 
-	private func commitCurrentStep(requestsNotificationPermission: Bool = true) throws {
+	// MARK: - Accepting a step
+
+	private func acceptCurrentStep() {
 		switch currentStep {
 		case .identity:
-			try commitIdentity()
+			acceptIdentity()
 		case .appearance:
-			var theme = settings.transcriptStyle.theme
-			theme.fontSize = OnboardingSettings.fontSize(for: settings.textSize)
-			acceptedAppearance = (theme, settings.appearance)
+			acceptedAppearance = Appearance(
+				transcriptStyle: settings.transcriptStyle,
+				textSize: settings.textSize,
+				preferredAppearance: settings.appearance
+			)
 		case .notifications:
 			acceptedNotifications = Notifications(
 				highlight: settings.notifyOnHighlight,
 				privateMessage: settings.notifyOnPrivateMessage,
 				sounds: settings.playSounds
 			)
-			if requestsNotificationPermission {
-				requestNotificationAuthorization()
-			}
+			requestNotificationAuthorization()
 		case .network:
-			try commitNetwork()
+			acceptNetwork()
+		case .summary:
+			break
 		}
 	}
 
-	private func commitIdentity() throws {
-		let nickname = settings.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
-		let alternate = settings.alternateNickname.trimmingCharacters(in: .whitespacesAndNewlines)
-
-		guard nickname.isEmpty == false else {
-			throw OnboardingStepError(ApplicationStrings.requiredField)
-		}
-		guard ServerPropertiesValidation.isNickname(nickname) else {
-			throw OnboardingStepError(CommonValidationStrings.invalidNickname)
-		}
-		guard alternate.isEmpty || ServerPropertiesValidation.isNickname(alternate) else {
-			throw OnboardingStepError(CommonValidationStrings.invalidNickname)
-		}
-		guard settings.realName.rangeOfCharacter(from: .controlCharacters) == nil else {
-			throw OnboardingStepError(CommonValidationStrings.singleLineRequired)
-		}
-
-		settings.nickname = nickname
+	private func acceptIdentity() {
+		settings.nickname = settings.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
 		settings.realName = settings.realName.trimmingCharacters(in: .whitespacesAndNewlines)
-		settings.alternateNickname = alternate
+		settings.alternateNickname = settings.alternateNickname
+			.trimmingCharacters(in: .whitespacesAndNewlines)
 		acceptedIdentity = Identity(
 			nickname: settings.nickname,
 			realName: settings.realName,
-			alternateNickname: alternate
+			alternateNickname: settings.alternateNickname
 		)
 	}
 
+	private func acceptNetwork() {
+		guard networkPicker.hasSelection else {
+			settings.clientConfig = nil
+			settings.channelsToJoin = []
+			return
+		}
+
+		settings.clientConfig = networkPicker.clientConfig()
+		settings.channelsToJoin = networkPicker.suggestedChannels.filter {
+			networkPicker.selectedChannels.contains($0)
+		}
+	}
+
 	private func requestNotificationAuthorization() {
-		Task {
+		authorizationTask = Task {
 			do {
 				_ = try await notificationAuthorization.request()
 				await refreshNotificationPermission()
@@ -338,27 +416,5 @@ final class OnboardingModel {
 				)
 			}
 		}
-	}
-
-	private func commitNetwork() throws {
-		guard networkPicker.hasSelection else {
-			settings.clientConfig = nil
-			settings.channelsToJoin = []
-			return
-		}
-
-		try networkPicker.validate()
-		settings.clientConfig = networkPicker.clientConfig()
-		settings.channelsToJoin = networkPicker.suggestedChannels.filter {
-			networkPicker.selectedChannels.contains($0)
-		}
-	}
-}
-
-struct OnboardingStepError: Error {
-	let message: String
-
-	init(_ message: String) {
-		self.message = message
 	}
 }

@@ -45,8 +45,8 @@ import Testing
 struct IRCClientHistoryTests {
 	private static let joinLeavePreferenceKey = "DisplayEventInLogView -> Join, Part, Quit"
 
-	private func makeHistoryClient() -> GLTTestClient {
-		let client = GLTTestClient()
+	private func makeHistoryClient() -> TestClient {
+		let client = TestClient()
 		client.enableCapability(.batch)
 		client.enableCapability(.serverTime)
 		client.enableCapability(.messageTags)
@@ -60,7 +60,7 @@ struct IRCClientHistoryTests {
 	/// so the preference is set for the test and put back afterwards.
 	private func withNetsplitClient(
 		showingJoinsAndQuits showJoinLeave: Bool,
-		_ body: (GLTTestClient) throws -> Void
+		_ body: (TestClient) throws -> Void
 	) rethrows {
 		let defaults = TextualUserDefaults.container
 		let original = defaults.object(forKey: Self.joinLeavePreferenceKey)
@@ -74,7 +74,7 @@ struct IRCClientHistoryTests {
 
 		defaults.set(showJoinLeave, forKey: Self.joinLeavePreferenceKey)
 
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.enableCapability(.batch)
 		client.forwardsProcessedMessages = true
 
@@ -86,11 +86,11 @@ struct IRCClientHistoryTests {
 	/// indexed it unless the view is forgotten again.
 	private func withChannel(
 		named name: String,
-		on client: GLTTestClient,
+		on client: TestClient,
 		_ body: (Channel) throws -> Void
 	) throws {
 		let channel = try #require(client.findChannelOrCreate(name))
-		defer { LogControllerHistoricLogFile.shared().forgetView(channel.uniqueIdentifier) }
+		defer { LogControllerHistoricLogFile.shared.removeHistory(forView: channel.uniqueIdentifier, forget: true) }
 
 		try body(channel)
 	}
@@ -113,10 +113,10 @@ struct IRCClientHistoryTests {
 	}
 
 	private func index(_ line: LogLine, for channel: Channel) {
-		LogControllerHistoricLogFile.shared().indexLogLine(line, forView: channel.uniqueIdentifier)
+		LogControllerHistoricLogFile.shared.indexLogLine(line, forView: channel.uniqueIdentifier)
 	}
 
-	private func feed(_ lines: [String], to client: GLTTestClient) throws {
+	private func feed(_ lines: [String], to client: TestClient) throws {
 		for line in lines {
 			let parsedMessage = try message(line, on: client)
 
@@ -136,23 +136,23 @@ struct IRCClientHistoryTests {
 		try #require(Message(line: line, on: client))
 	}
 
-	private func sentLines(of client: GLTTestClient) -> [String] {
+	private func sentLines(of client: TestClient) -> [String] {
 		(client.sentLines as NSArray).compactMap { $0 as? String }
 	}
 
-	private func capabilityCommands(of client: GLTTestClient) -> [String] {
+	private func capabilityCommands(of client: TestClient) -> [String] {
 		(client.sentCapabilityCommands as NSArray).compactMap { $0 as? String }
 	}
 
-	private func processedMessages(of client: GLTTestClient) -> [Message] {
+	private func processedMessages(of client: TestClient) -> [Message] {
 		(client.processedMessages as NSArray).compactMap { $0 as? Message }
 	}
 
-	private func printedLine(at index: Int, on client: GLTTestClient) -> [String: Any]? {
+	private func printedLine(at index: Int, on client: TestClient) -> [String: Any]? {
 		client.printedLines[index] as? [String: Any]
 	}
 
-	private func printedLines(from index: Int, on client: GLTTestClient) -> [[String: Any]] {
+	private func printedLines(from index: Int, on client: TestClient) -> [[String: Any]] {
 		let count = client.printedLines.count - index
 		guard count > 0 else { return [] }
 
@@ -162,7 +162,7 @@ struct IRCClientHistoryTests {
 
 	@Test("Chat history is only requested once the capabilities it depends on are there")
 	func chatHistoryIsRequestedOnlyWithItsDependencies() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let partialList = try message(
 			":irc.example.net CAP * LS :draft/chathistory draft/read-marker",
 			on: client
@@ -172,7 +172,7 @@ struct IRCClientHistoryTests {
 
 		#expect(capabilityCommands(of: client) == ["REQ draft/read-marker"])
 
-		let complete = GLTTestClient()
+		let complete = TestClient()
 		let completeList = try message(
 			":irc.example.net CAP * LS :batch server-time message-tags chathistory read-marker",
 			on: complete
@@ -235,7 +235,7 @@ struct IRCClientHistoryTests {
 
 	@Test("Nothing is requested without the chat history capability")
 	func latestRequestNeedsTheCapability() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.isLoggedIn = true
 
 		try withChannel(named: "#chat", on: client) { channel in
@@ -429,7 +429,9 @@ struct IRCClientHistoryTests {
 			let otherTime = try message("@time=2023-11-14T22:13:21.000Z :b!u@h PRIVMSG #chat :two", on: client)
 			let noTime = try message(":b!u@h PRIVMSG #chat :two", on: client)
 
-			[sameLine, otherSender, otherTime].forEach { $0.markAsHistoric() }
+			for message in [sameLine, otherSender, otherTime] {
+				message.isHistoric = true
+			}
 			#expect(client.chatHistoryMessageIsDuplicate(sameLine))
 			#expect(client.chatHistoryMessageIsDuplicate(otherSender) == false)
 			#expect(client.chatHistoryMessageIsDuplicate(otherTime) == false)

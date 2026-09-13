@@ -10,32 +10,39 @@ import SwiftUI
 import Testing
 
 @MainActor
-private final class NicknameColorDelegateSpy: NSObject, NicknameColorSheetDelegate {
-	private(set) var didAccept = false
-	private(set) var didClose = false
-
-	@objc(nicknameColorSheetOnOk:)
-	func nicknameColorSheetOnOk(_: NicknameColorSheet) {
-		didAccept = true
-	}
-
-	@objc(nicknameColorSheetWillClose:)
-	func nicknameColorSheetWillClose(_: NicknameColorSheet) {
-		didClose = true
-	}
-}
-
-@MainActor
 @Suite("Nickname color sheet", .serialized)
 struct NicknameColorFeatureTests {
-	@Test("Every string the sheet shows comes from the catalog")
-	func contentUsesKeyedLocalizedCopy() {
-		let content = NicknameColorContent.current
+	/** The sheet was untitled, never said whose colour it was changing, and
+	 offered "Save" for a choice that changes a colour rather than writing a
+	 document. */
+	@Test("Every string the sheet shows comes from the catalog, and names what it does")
+	func sheetCopyNamesTheNicknameAndTheVerb() {
+		#expect(NicknameColorStrings.windowTitle(nickname: "alice") == "Color for “alice”")
+		#expect(NicknameColorStrings.colorPickerLabel == "Color")
+		#expect(NicknameColorStrings.useDefaultColorTitle == "Use default color")
+		#expect(NicknameColorStrings.changeColor == "Change Color")
+		#expect(
+			NicknameColorStrings.previewAccessibilityLabel(nickname: "alice")
+				== "Preview of alice in the chosen color"
+		)
+	}
 
-		#expect(content.colorPickerLabel == "Change nickname color to:")
-		#expect(content.useDefaultColorTitle == "Use default color")
-		#expect(content.saveButtonTitle == "Save")
-		#expect(content.cancelButtonTitle == "Cancel")
+	/** The sheet shows the nickname in the colour being chosen. Asked for the
+	 default, the preview is the colour the nickname hashes to — not whatever
+	 override is still stored, which is what the transcript would stop using. */
+	@Test("The preview is what the transcript would draw")
+	func previewFollowsTheChoice() {
+		let nickname = "nickname-color-preview-\(UUID().uuidString)"
+		let customColor = NSColor(calibratedRed: 0.2, green: 0.4, blue: 0.6, alpha: 1)
+		let model = NicknameColorModel(nickname: nickname, overrideColor: customColor)
+
+		expectColorsEqual(model.previewColor, customColor)
+
+		model.setUsesDefaultColor(true)
+		expectColorsEqual(
+			model.previewColor,
+			UserNicknameColorStyleGenerator.generatedColor(for: nickname)
+		)
 	}
 
 	@Test("Choosing the default color withholds a color from persistence without forgetting the old one")
@@ -70,13 +77,13 @@ struct NicknameColorFeatureTests {
 	}
 
 	@Test("Accepting writes the chosen color, and the default color clears it again")
-	func adapterPersistsSelectionAndPreservesDelegateCallbacks() throws {
+	func adapterPersistsSelectionAndReportsTheChange() throws {
 		let nickname = "nickname-color-feature-\(UUID().uuidString)"
 		// The generator looks overrides up by lowercased nickname, so that is
 		// the key the sheet has to have written under.
 		let overrideKey = nickname.lowercased()
 		let customColor = NSColor(calibratedRed: 0.15, green: 0.35, blue: 0.75, alpha: 0.9)
-		let delegate = NicknameColorDelegateSpy()
+		var changeCount = 0
 
 		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(nil, forKey: overrideKey)
 		defer {
@@ -84,22 +91,20 @@ struct NicknameColorFeatureTests {
 		}
 
 		let adapter = NicknameColorSheet(nickname: nickname)
-		adapter.delegate = delegate
-		adapter.selectColor(customColor)
-		adapter.ok(nil)
+		adapter.colorDidChange = { changeCount += 1 }
+		adapter.model.selectColor(customColor)
+		adapter.submit()
 
 		let persistedColor = try #require(
 			UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: overrideKey)
 		)
 		expectColorsEqual(persistedColor, customColor)
-		#expect(delegate.didAccept)
+		#expect(changeCount == 1)
 
-		adapter.setUsesDefaultColor(true)
-		adapter.ok(nil)
+		adapter.model.setUsesDefaultColor(true)
+		adapter.submit()
 		#expect(UserNicknameColorStyleGenerator.nicknameColorStyleOverride(forKey: overrideKey) == nil)
-
-		adapter.sheetDidEnd(withReturnCode: 0)
-		#expect(delegate.didClose)
+		#expect(changeCount == 2)
 	}
 
 	private func expectColorsEqual(

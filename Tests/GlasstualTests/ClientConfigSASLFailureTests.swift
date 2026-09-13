@@ -25,33 +25,33 @@ struct ClientConfigSASLFailureTests {
 
 	@Test("The option is off by default")
 	func defaultsToOff() {
-		#expect(IRCClientConfig().disconnectOnSASLFailure == false)
+		#expect(ClientConfig().disconnectOnSASLFailure == false)
 	}
 
 	@Test("The value survives a round trip through the dictionary representation")
 	func roundTripsThroughADictionary() throws {
-		var config = IRCClientConfig()
+		var config = ClientConfig()
 		config.disconnectOnSASLFailure = true
 
 		let dictionary = config.dictionaryValue
 		#expect(dictionary[Self.key]?.boolean == true)
 
-		let restored = try #require(PropertyListModel.decode(IRCClientConfig.self, from: dictionary))
+		let restored = try #require(PropertyListModel.decode(ClientConfig.self, from: dictionary))
 		#expect(restored.disconnectOnSASLFailure)
 	}
 
 	@Test("A dictionary without the key reads back as off")
 	func absentKeyReadsAsOff() throws {
-		var dictionary = IRCClientConfig().dictionaryValue
+		var dictionary = ClientConfig().dictionaryValue
 		dictionary.removeValue(forKey: Self.key)
 
-		let restored = try #require(PropertyListModel.decode(IRCClientConfig.self, from: dictionary))
+		let restored = try #require(PropertyListModel.decode(ClientConfig.self, from: dictionary))
 		#expect(restored.disconnectOnSASLFailure == false)
 	}
 
 	@Test("An off value is not written to the dictionary")
 	func offIsTheDefault() {
-		#expect(IRCClientConfig().dictionaryValue[Self.key] == nil)
+		#expect(ClientConfig().dictionaryValue[Self.key] == nil)
 	}
 
 	@Test("The numerics that mean SASL was refused are the ones the option acts on")

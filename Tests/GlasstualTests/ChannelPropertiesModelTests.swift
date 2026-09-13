@@ -49,19 +49,39 @@ struct ChannelPropertiesModelTests {
 	 channels the sheet would never let the user save. */
 	@Test("Validation follows the server's CHANTYPES when there is a connection")
 	func validationFollowsTheServersChannelTypes() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANTYPES=#&!+")
 
 		let exclamation = ChannelPropertiesModel(config: ChannelConfig(channelName: "!glasstual"), client: client)
 
-		#expect(exclamation.channelNameValidationError == nil)
+		#expect(exclamation.channelNameIsValid)
 		#expect(exclamation.validateForSubmission())
 
 		// `~` is in the connection-less union but not in this server's answer.
 		let tilde = ChannelPropertiesModel(config: ChannelConfig(channelName: "~glasstual"), client: client)
 
-		#expect(tilde.channelNameValidationError != nil)
+		#expect(tilde.channelNameIsValid == false)
 		#expect(tilde.validateForSubmission() == false)
+	}
+
+	/** A sheet for a channel that does not exist yet opens on an empty field.
+	 The name is already known to be unusable, but saying so beside the field —
+	 in red, with a border around it — before anything has been typed tells the
+	 person they got something wrong before they did anything. */
+	@Test("An untouched field carries no message, and a refused save does")
+	func theMessageWaitsForASaveToBeRefused() {
+		let model = ChannelPropertiesModel(config: ChannelConfig())
+
+		#expect(model.channelNameIsValid == false)
+		#expect(model.channelNameValidationMessage == nil)
+
+		#expect(model.validateForSubmission() == false)
+		#expect(model.channelNameValidationMessage == ChannelPropertiesStrings.invalidChannelName)
+
+		// And it goes as soon as the name is one, without another save.
+		model.channelName = "#glasstual"
+
+		#expect(model.channelNameValidationMessage == nil)
 	}
 
 	/// A sheet opened without a connection still has to validate something, so
@@ -69,11 +89,11 @@ struct ChannelPropertiesModelTests {
 	@Test("Validation falls back to the syntactic check with no connection")
 	func validationFallsBackWithoutAClient() {
 		#expect(ChannelPropertiesModel(config: ChannelConfig(channelName: "#glasstual"))
-			.channelNameValidationError == nil)
+			.channelNameIsValid)
 		#expect(ChannelPropertiesModel(config: ChannelConfig(channelName: "glasstual"))
-			.channelNameValidationError != nil)
+			.channelNameIsValid == false)
 		#expect(ChannelPropertiesModel(config: ChannelConfig(channelName: ""))
-			.channelNameValidationError != nil)
+			.channelNameIsValid == false)
 	}
 
 	/** Every edit is re-validated, and against whatever answer is available at
@@ -82,21 +102,21 @@ struct ChannelPropertiesModelTests {
 	 from then on. */
 	@Test("Editing a name re-validates it, and against the syntactic check once the client is gone")
 	func editingRevalidates() throws {
-		var client: GLTTestClient? = GLTTestClient()
+		var client: TestClient? = TestClient()
 		weak let weakClient = client
 		client?.supportInfo.processConfigurationData("CHANTYPES=#")
 		let model = ChannelPropertiesModel(config: ChannelConfig(), client: client)
 
-		#expect(model.channelNameValidationError != nil)
+		#expect(model.channelNameIsValid == false)
 
 		// `&` is a channel prefix, but not one this server named.
 		model.channelName = "&glasstual"
 
-		#expect(model.channelNameValidationError != nil)
+		#expect(model.channelNameIsValid == false)
 
 		model.channelName = "#glasstual"
 
-		#expect(model.channelNameValidationError == nil)
+		#expect(model.channelNameIsValid)
 
 		client = nil
 
@@ -106,10 +126,10 @@ struct ChannelPropertiesModelTests {
 		 prefixes networks are known to use — which does include `&`. */
 		model.channelName = "&elsewhere"
 
-		#expect(model.channelNameValidationError == nil)
+		#expect(model.channelNameIsValid)
 
 		model.channelName = "glasstual"
 
-		#expect(model.channelNameValidationError != nil)
+		#expect(model.channelNameIsValid == false)
 	}
 }

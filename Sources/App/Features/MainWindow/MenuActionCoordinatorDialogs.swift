@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -38,52 +38,16 @@
 
 import AppKit
 
-@MainActor
+// MARK: - Sheets, panels and windows
+
 public extension MenuActionCoordinator {
-	func performDialogAction(_ action: MenuDialogAction, sender: Any?) {
-		switch action {
-		case .showChannelProperties: showChannelProperties()
-		case .sendInvite: showChannelInvite(sender)
-		case .showAddressBook: showServerProperties(selection: .addressBook, context: nil)
-		case .showOnboarding: showOnboarding()
-		case .showAbout: showAbout()
-		case .showServerProperties: showServerProperties(selection: .default, context: nil)
-		case .showServerHighlightList: showServerHighlightList()
-		case .showChannelTopic: showChannelTopic()
-		case .showChannelModes: showChannelModes()
-		case .showChannelSpotlight: showChannelSpotlight()
-		case .showChangeNickname: showChangeNickname()
-		case .showPreferences: showPreferences(.default)
-		case .showNotificationPreferences: showPreferences(.notifications)
-		case .showStylePreferences: showPreferences(.style)
-		case .showHiddenPreferences: showPreferences(.hiddenPreferences)
-		@unknown default: break
-		}
-	}
-
-	internal func showServerProperties(
-		for client: IRCClient,
-		selection: ServerPropertiesDestination,
-		context: Any?
-	) {
-		presentServerProperties(for: client, selection: selection, context: context)
-	}
-
-	func showNicknameColorSheet(for nickname: String) {
-		mainWindow.presentationModel.closePresentedSheet()
-		guard selectedClient != nil else { return }
-		let sheet = NicknameColorSheet(nickname: nickname)
-		present(sheet) { $0.start() }
-	}
-
-	private func showChannelProperties() {
+	@objc func showChannelPropertiesSheet(_: Any?) {
 		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
-		let sheet = ChannelPropertiesSheet(channel: channel)
-		present(sheet) { $0.start() }
+		present(ChannelPropertiesSheet(channel: channel)) { $0.start() }
 	}
 
-	private func showChannelInvite(_ sender: Any?) {
+	@objc func memberSendInvite(_ sender: Any?) {
 		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient, let selectedChannel,
 		      client.isLoggedIn, selectedChannel.isChannel, selectedChannel.isActive
@@ -95,61 +59,102 @@ public extension MenuActionCoordinator {
 			channel !== selectedChannel && channel.isChannel ? channel.name : nil
 		}
 		guard channels.isEmpty == false else { return }
-		let sheet = ChannelInviteSheet(nicknames: nicknames, on: client)
-		present(sheet) { $0.start(withChannels: channels) }
+		present(ChannelInviteSheet(nicknames: nicknames, on: client)) { $0.start(withChannels: channels) }
 	}
 
-	private func showOnboarding() {
+	@objc func showAddressBook(_: Any?) {
+		showServerProperties(selection: .addressBook)
+	}
+
+	@objc func showOnboardingWindow(_: Any?) {
 		mainWindow.presentationModel.closePresentedSheet()
 		SharedApplication.sharedApplicationScenes().openOnboarding()
 	}
 
-	private func showAbout() {
+	@objc func showAboutWindow(_: Any?) {
 		SharedApplication.sharedApplicationScenes().openAbout()
 	}
 
-	private func showServerProperties(selection: ServerPropertiesDestination, context: Any?) {
-		guard let client = selectedClient else { return }
-		presentServerProperties(for: client, selection: selection, context: context)
-	}
-
-	private func presentServerProperties(for client: IRCClient, selection: ServerPropertiesDestination, context: Any?) {
-		mainWindow.presentationModel.closePresentedSheet()
-		let sheet = ServerPropertiesSheet(client: client)
-		present(sheet) { $0.start(at: selection, context: context) }
+	@objc func showServerPropertiesSheet(_: Any?) {
+		showServerProperties(selection: .default)
 	}
 
 	/// A window rather than a sheet: the list exists to jump into the transcript
 	/// with, and a sheet had to be dismissed to get there and reopened for the
 	/// next highlight.
-	private func showServerHighlightList() {
+	@objc func showServerHighlightList(_: Any?) {
 		guard let client = selectedClient else { return }
 		SharedApplication.sharedApplicationScenes().openServerHighlightList(for: client)
 	}
 
-	private func showChannelTopic() {
+	@objc func showChannelModifyTopicSheet(_: Any?) {
 		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
-		let sheet = ChannelModifyTopicSheet(channel: channel)
-		present(sheet) { $0.start() }
+		present(ChannelModifyTopicSheet(channel: channel)) { $0.start() }
 	}
 
-	private func showChannelModes() {
+	@objc func showChannelModifyModesSheet(_: Any?) {
 		mainWindow.presentationModel.closePresentedSheet()
 		guard let channel = selectedChannel, channel.isChannel else { return }
-		let sheet = ChannelModifyModesSheet(channel: channel)
-		present(sheet) { $0.start() }
+		present(ChannelModifyModesSheet(channel: channel)) { $0.start() }
 	}
 
-	private func showChannelSpotlight() {
+	@objc func showChannelSpotlightWindow(_: Any?) {
 		SharedApplication.sharedApplicationScenes().openChannelSpotlight()
 	}
 
-	private func showChangeNickname() {
+	@objc func showServerChangeNicknameSheet(_: Any?) {
 		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient, client.isLoggedIn else { return }
-		let sheet = ServerChangeNicknameSheet(client: client)
+		present(ServerChangeNicknameSheet(client: client)) { $0.start() }
+	}
+
+	@objc func showPreferencesWindow(_: Any?) {
+		showPreferences(.default)
+	}
+
+	@objc func showHiddenPreferences(_: Any?) {
+		showPreferences(.hiddenPreferences)
+	}
+
+	func showNotificationPreferences(_: Any?) {
+		showPreferences(.notifications)
+	}
+
+	func showPreferencesWindow(with selection: PreferencesSceneSelection) {
+		showPreferences(selection)
+	}
+
+	@objc func showFileTransfersWindow(_: Any?) {
+		fileTransferCenter.present()
+	}
+
+	internal func showServerProperties(for client: IRCClient, selection: ServerPropertiesDestination) {
+		mainWindow.presentationModel.closePresentedSheet()
+		present(ServerPropertiesSheet(client: client)) { $0.start(at: selection) }
+	}
+
+	/// Named for its argument so that the member-list menu can own the plain
+	/// `memberChangeColor:` selector.
+	func showNicknameColorSheet(for nickname: String) {
+		mainWindow.presentationModel.closePresentedSheet()
+		guard selectedClient != nil else { return }
+		let sheet = NicknameColorSheet(nickname: nickname)
+		sheet.colorDidChange = { [weak self] in
+			guard let self else { return }
+			mainWindow.reloadTheme()
+			/* The transcript is redrawn by the theme reload; the member list's
+			 avatars take their pinned colours from a snapshot the list reads
+			 when its presentation is invalidated, and nothing else invalidates
+			 it here. */
+			mainWindow.memberList.invalidatePresentation()
+		}
 		present(sheet) { $0.start() }
+	}
+
+	private func showServerProperties(selection: ServerPropertiesDestination) {
+		guard let client = selectedClient else { return }
+		showServerProperties(for: client, selection: selection)
 	}
 
 	private func showPreferences(_ selection: PreferencesSceneSelection) {

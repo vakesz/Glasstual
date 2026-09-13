@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -40,44 +40,41 @@ import Foundation
 
 @MainActor
 extension IRCClient {
-	func handleWhoisNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) -> Bool {
+	func handleWhoisNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		let selectedChannel = output?.selectedChannel(on: self)
 		switch numeric {
-		case IRCNumeric.whoisbot.rawValue:
+		case .whoisbot:
 			handleWhoisBot(message, shouldPrint: shouldPrint, channel: selectedChannel)
-		case IRCNumeric.channelsmsg.rawValue, IRCNumeric.whoishelpop.rawValue, IRCNumeric.whoishost.rawValue,
-		     IRCNumeric.whoismodes.rawValue,
-		     IRCNumeric.whoisoperator.rawValue, IRCNumeric.whoisrealip.rawValue, IRCNumeric.whoisregnick.rawValue,
-		     IRCNumeric.whoissecure.rawValue, IRCNumeric.whoisspecial.rawValue:
+		case .channelsmsg, .whoishelpop, .whoishost, .whoismodes,
+		     .whoisoperator, .whoisrealip, .whoisregnick, .whoissecure, .whoisspecial:
 			if shouldPrint, message.params.count > 2 {
 				printReply(message, in: selectedChannel)
 			}
-		case IRCNumeric.whoisactually.rawValue:
+		case .whoisactually:
 			handleWhoisActually(message, shouldPrint: shouldPrint, channel: selectedChannel)
-		case IRCNumeric.whoisuser.rawValue, IRCNumeric.whowasuser.rawValue:
+		case .whoisuser, .whowasuser:
 			handleWhoisUser(numeric, message: message, shouldPrint: shouldPrint, channel: selectedChannel)
-		case IRCNumeric.whoisserver.rawValue:
+		case .whoisserver:
 			handleWhoisServer(message, shouldPrint: shouldPrint, channel: selectedChannel)
-		case IRCNumeric.whoisidle.rawValue:
+		case .whoisidle:
 			handleWhoisIdle(message, shouldPrint: shouldPrint, channel: selectedChannel)
-		case IRCNumeric.whoischannels.rawValue:
-			guard shouldPrint, message.params.count == 3 else { return true }
+		case .whoischannels:
+			guard shouldPrint, message.params.count == 3 else { return }
 			printWhoisLine(
 				IRCInboundStrings.Whois.channels(nickname: message.params[1], channels: message.params[2]),
 				message: message, channel: selectedChannel
 			)
-		case IRCNumeric.whoisaccount.rawValue:
-			guard shouldPrint, message.params.count == 4 else { return true }
+		case .whoisaccount:
+			guard shouldPrint, message.params.count == 4 else { return }
 			printWhoisLine("\(message.params[1]) \(message.sequence(3)) \(message.params[2])",
 			               message: message, channel: selectedChannel)
-		case IRCNumeric.endofwhois.rawValue:
+		case .endofwhois:
 			inWhoisResponse = false
-		case IRCNumeric.endofwhowas.rawValue:
+		case .endofwhowas:
 			inWhowasResponse = false
 		default:
-			return false
+			break
 		}
-		return true
 	}
 
 	/** RPL_WHOISACTUALLY (338), which no specification pins down.
@@ -87,7 +84,7 @@ extension IRCClient {
 	 `<me> <nick> <ip> :is actually using host` instead, and swallowing that one
 	 as handled printed nothing at all: the generic reply printer spells it out
 	 the way the server wrote it. */
-	private func handleWhoisActually(_ message: Message, shouldPrint: Bool, channel: IRCChannel?) {
+	private func handleWhoisActually(_ message: Message, shouldPrint: Bool, channel: Channel?) {
 		guard shouldPrint else { return }
 
 		if message.params.count == 5 {
@@ -108,7 +105,7 @@ extension IRCClient {
 		printReply(message, in: channel)
 	}
 
-	private func handleWhoisBot(_ message: Message, shouldPrint: Bool, channel: IRCChannel?) {
+	private func handleWhoisBot(_ message: Message, shouldPrint: Bool, channel: Channel?) {
 		guard message.params.count > 1 else { return }
 		let nickname = message.params[1]
 		modifyUser(withNickname: nickname) { $0.isBot = true }
@@ -127,14 +124,14 @@ extension IRCClient {
 		}
 	}
 
-	private func handleWhoisServer(_ message: Message, shouldPrint: Bool, channel: IRCChannel?) {
+	private func handleWhoisServer(_ message: Message, shouldPrint: Bool, channel: Channel?) {
 		guard shouldPrint, message.params.count == 4 else { return }
 		let serverInfo = message.params[3]
 		let text = if inWhowasResponse {
 			IRCInboundStrings.Whois.connectedAt(
 				nickname: message.params[1],
 				server: message.params[2],
-				date: formatDateLongStyle(serverInfo, true) ?? serverInfo
+				date: formatDate(serverInfo, .long, .long, true) ?? serverInfo
 			)
 		} else {
 			IRCInboundStrings.Whois.server(
@@ -146,13 +143,13 @@ extension IRCClient {
 		printWhoisLine(text, message: message, channel: channel)
 	}
 
-	private func handleWhoisIdle(_ message: Message, shouldPrint: Bool, channel: IRCChannel?) {
+	private func handleWhoisIdle(_ message: Message, shouldPrint: Bool, channel: Channel?) {
 		guard shouldPrint, message.params.count >= 4 else { return }
-		let idle = humanReadableTimeInterval(TimeInterval(message.params[2]) ?? 0, false, 0) as String? ?? ""
+		let idle = humanReadableTimeInterval(TimeInterval(message.params[2]) ?? 0, false, 0)
 		/* An unreadable sign-on timestamp leaves the date out rather than
 		 reporting that the person connected in 1970. */
 		let connected = ircWireTimestampDate(from: message.params[3])
-			.flatMap { formatDateLongStyle($0, true) } ?? ""
+			.flatMap { formatDate($0, .long, .long, true) } ?? ""
 		printWhoisLine(
 			IRCInboundStrings.Whois.signOnAndIdle(
 				nickname: message.params[1],
@@ -164,14 +161,14 @@ extension IRCClient {
 		)
 	}
 
-	private func handleWhoisUser(_ numeric: UInt, message: Message, shouldPrint: Bool, channel: IRCChannel?) {
+	private func handleWhoisUser(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool, channel: Channel?) {
 		guard message.params.count >= 6 else { return }
 		let nickname = message.params[1]
 		let username = message.params[2]
 		let address = message.params[3]
 		let realName = String(message.params[5].drop(while: { $0 == ":" }))
-		inWhoisResponse = numeric == IRCNumeric.whoisuser.rawValue
-		inWhowasResponse = numeric == IRCNumeric.whowasuser.rawValue
+		inWhoisResponse = numeric == .whoisuser
+		inWhowasResponse = numeric == .whowasuser
 		if !inWhowasResponse, nicknameIsMyself(nickname) {
 			userHostmask = "\(nickname)!\(username)@\(address)"
 		}
@@ -186,7 +183,7 @@ extension IRCClient {
 		printWhoisLine(text, message: message, channel: channel)
 	}
 
-	private func printWhoisLine(_ text: String, message: Message, channel: IRCChannel?) {
+	private func printWhoisLine(_ text: String, message: Message, channel: Channel?) {
 		print(text, by: nil, in: channel, as: .debug, command: message.command, receivedAt: message.receivedAt)
 	}
 }

@@ -194,43 +194,6 @@ public extension String {
 		return CGFloat(commonCharacterCount) - distancePenalty - weight * lengthPenalty
 	}
 
-	/// The range of each character of `characters`, searched for in order with
-	/// each search starting where the previous match ended. Scanning stops at
-	/// the first character that is not found.
-	///
-	/// Ranges are UTF-16 offsets because the only consumer applies attributes
-	/// to an `NSAttributedString` built from the receiver.
-	func rangesOfFirstOccurrences(
-		ofCharactersIn characters: String,
-		options: NSString.CompareOptions
-	) -> [NSRange] {
-		let source = self as NSString
-
-		guard source.length > 0 else {
-			return []
-		}
-
-		var ranges: [NSRange] = []
-		var currentPosition = 0
-
-		for character in characters {
-			let range = source.range(
-				of: String(character),
-				options: options,
-				range: NSRange(location: currentPosition, length: source.length - currentPosition)
-			)
-
-			guard range.location != NSNotFound else {
-				break
-			}
-
-			ranges.append(range)
-			currentPosition = NSMaxRange(range)
-		}
-
-		return ranges
-	}
-
 	/// The longest prefix of the receiver that fits in `limit` UTF-8 bytes
 	/// without splitting a character.
 	func truncated(toUTF8Bytes limit: Int) -> String {
@@ -253,6 +216,54 @@ public extension String {
 		}
 
 		return result
+	}
+
+	func substring(with nsrange: NSRange) -> Substring? {
+		guard let range = Range(nsrange, in: self) else {
+			return nil
+		}
+
+		return self[range]
+	}
+
+	var isIPv4Address: Bool {
+		IPv4AddressBytes != nil
+	}
+
+	private var IPv4AddressBytes: Data? {
+		if isEmpty {
+			return nil
+		}
+
+		var sa = sockaddr_in()
+
+		if inet_pton(AF_INET, self, &(sa.sin_addr)) == 1 {
+			return Data(bytes: &(sa.sin_addr.s_addr), count: 4)
+		}
+
+		return nil
+	}
+
+	var isIPv6Address: Bool {
+		IPv6AddressBytes != nil
+	}
+
+	private var IPv6AddressBytes: Data? {
+		if isEmpty {
+			return nil
+		}
+
+		var sa = sockaddr_in6()
+
+		if inet_pton(AF_INET6, self, &(sa.sin6_addr)) == 1 {
+			return Data(bytes: &(sa.sin6_addr), count: 16)
+		}
+
+		return nil
+	}
+
+	var isIPAddress: Bool {
+		isIPv4Address || isIPv6Address
 	}
 }
 
@@ -283,13 +294,6 @@ public extension String.Encoding {
 		}
 
 		return result
-	}
-
-	/// The IANA character set name for a raw `String.Encoding` value, e.g.
-	/// "utf-8". `nil` when the encoding has no registered name.
-	static func ianaCharsetName(forRawValue rawValue: UInt) -> String? {
-		let coreFoundationEncoding = CFStringConvertNSStringEncodingToEncoding(rawValue)
-		return CFStringConvertEncodingToIANACharSetName(coreFoundationEncoding) as String?
 	}
 }
 

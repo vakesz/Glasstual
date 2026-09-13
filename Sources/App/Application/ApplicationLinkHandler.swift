@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -131,7 +131,10 @@ enum ApplicationLinkHandler {
 		case let .connect(intent):
 			ServerConnectionCoordinator.connect(using: intent)
 		case nil:
-			break
+			/* A link the application was handed and could not read. It is not
+			 the reader's mistake to answer for, but dropping it without a
+			 word leaves nothing to diagnose it with. */
+			applicationLinkLogger.info("Ignoring a malformed application link")
 		}
 	}
 
@@ -151,9 +154,9 @@ enum ApplicationLinkHandler {
 		case .goto:
 			menu?.navigateToTreeItem(at: source)
 		case .supportChannel:
-			menu?.connectToGlasstualHelpChannel(nil)
+			ServerConnectionCoordinator.connect(to: .help)
 		case .testingChannel:
-			menu?.connectToGlasstualTestingChannel(nil)
+			ServerConnectionCoordinator.connect(to: .testing)
 		case let .unknown(name):
 			/* A link naming something this build does not have. Say which,
 			 rather than dropping it silently. */

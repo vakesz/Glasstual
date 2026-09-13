@@ -44,7 +44,7 @@ struct IRCClientLiberaRegistrationReplayTests {
 
 	@Test("Without SASL the client ends negotiation after the delayed listing and logs in")
 	func registersWithoutSASL() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"], nicknamePassword: nil)
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"], nicknamePassword: nil)
 		client.forwardsProcessedMessages = true
 		client.isConnected = true
 
@@ -64,7 +64,7 @@ struct IRCClientLiberaRegistrationReplayTests {
 
 	@Test("With a password the client authenticates with SASL PLAIN, ends negotiation and logs in")
 	func registersWithSASL() throws {
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: ["nickname": "me", "username": "me"],
 			nicknamePassword: "secret"
 		)
@@ -106,7 +106,7 @@ struct IRCClientLiberaRegistrationReplayTests {
 	 that line matches every name back so `CAP END` follows. */
 	@Test("A batched request goes out as one trailing parameter that Libera acknowledges whole")
 	func batchedRequestIsATrailingParameterOnTheWire() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"], nicknamePassword: nil)
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"], nicknamePassword: nil)
 		client.forwardsProcessedMessages = true
 		client.forwardsSentLines = true
 		client.isConnected = true
@@ -127,8 +127,8 @@ struct IRCClientLiberaRegistrationReplayTests {
 	/// client sends with the acknowledgement Libera would give, until the
 	/// client stops asking.
 	private func replayRegistration(
-		on client: GLTTestClient,
-		afterEachAnswer: (GLTTestClient) throws -> Void = { _ in }
+		on client: TestClient,
+		afterEachAnswer: (TestClient) throws -> Void = { _ in }
 	) throws {
 		for line in Self.preRegistrationNotices {
 			try receive(line, on: client)
@@ -148,7 +148,7 @@ struct IRCClientLiberaRegistrationReplayTests {
 		}
 	}
 
-	private func receive(_ line: String, on client: GLTTestClient) throws {
+	private func receive(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 		if message.commandNumeric > 0 {
 			client.receiveNumericReply(message)
@@ -157,11 +157,11 @@ struct IRCClientLiberaRegistrationReplayTests {
 		}
 	}
 
-	private func capabilityCommands(of client: GLTTestClient) -> [String] {
+	private func capabilityCommands(of client: TestClient) -> [String] {
 		(client.sentCapabilityCommands as NSArray).compactMap { $0 as? String }
 	}
 
-	private func sentLines(of client: GLTTestClient) -> [String] {
+	private func sentLines(of client: TestClient) -> [String] {
 		(client.sentLines as NSArray).compactMap { $0 as? String }
 	}
 }

@@ -40,7 +40,7 @@ import CocoaExtensions
 import Foundation
 import os
 
-public extension FileTransferCenter {
+extension FileTransferCenter {
 	/// Locates the transfer a DCC `RESUME`/`ACCEPT` refers to.
 	///
 	/// A port on its own identifies nothing: it is unique to neither a network
@@ -52,16 +52,15 @@ public extension FileTransferCenter {
 		client: IRCClient,
 		peerNickname: String,
 		filename: String,
-		isSender: Bool? = nil
+		isSender: Bool
 	) -> FileTransferController? {
-		firstFileTransfer {
-			$0.hostPort == port
-				&& !$0.isReversed && (isSender == nil || $0.isSender == isSender)
+		model.transfers.first {
+			$0.hostPort == port && !$0.isReversed && $0.isSender == isSender
 				&& Self.transfer($0, belongsTo: client, peerNickname: peerNickname, filename: filename)
 		}
 	}
 
-	internal static func transfer(
+	static func transfer(
 		_ transfer: FileTransferController,
 		belongsTo client: IRCClient,
 		peerNickname: String,
@@ -76,17 +75,15 @@ public extension FileTransferCenter {
 
 		/* The peer echoes back the name we sent it, which crossed the wire in
 		 its sanitised form, so compare the sanitised forms. */
-		let ourFilename = transfer.wireFilename
-
-		return ourFilename == filename
+		return transfer.wireFilename == filename
 	}
 
 	func fileTransfer(withUniqueIdentifier identifier: String) -> FileTransferController? {
-		firstFileTransfer { $0.uniqueIdentifier == identifier }
+		model.transfers.first { $0.uniqueIdentifier == identifier }
 	}
 
 	func fileTransferExists(withToken transferToken: String) -> Bool {
-		firstFileTransfer { $0.transferToken == transferToken } != nil
+		model.transfers.contains { $0.transferToken == transferToken }
 	}
 
 	func fileTransferSender(
@@ -95,7 +92,7 @@ public extension FileTransferCenter {
 		peerNickname: String,
 		filename: String
 	) -> FileTransferController? {
-		firstFileTransfer {
+		model.transfers.first {
 			$0.transferToken == transferToken && $0.isSender
 				&& Self.transfer($0, belongsTo: client, peerNickname: peerNickname, filename: filename)
 		}
@@ -108,16 +105,10 @@ public extension FileTransferCenter {
 		filename: String,
 		isSender: Bool
 	) -> FileTransferController? {
-		firstFileTransfer {
+		model.transfers.first {
 			$0.isReversed && $0.transferToken == token && $0.isSender == isSender
 				&& Self.transfer($0, belongsTo: client, peerNickname: peerNickname, filename: filename)
 		}
-	}
-
-	/// What the downloads already running or waiting still have to write. The
-	/// next offer has to fit alongside them, not after them.
-	var pendingReceiveByteCount: UInt64 {
-		model.pendingReceiveByteCount
 	}
 
 	/** Whether the volume `path` is on can still take `byteCount` bytes.
@@ -145,11 +136,13 @@ public extension FileTransferCenter {
 
 	func prepareForApplicationTermination() {
 		workspace.cancelPendingWork()
-		prepareForPermanentDestruction(model.transfers)
+		for transfer in model.transfers {
+			transfer.prepareForPermanentDestruction()
+		}
 		clearIPAddress()
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 		downloadDestinationURLPrivate = nil
-		SharedApplication.sharedApplicationScenes().closeFileTransfers()
+		dismiss()
 	}
 
 	func addReceiver(
@@ -161,7 +154,7 @@ public extension FileTransferCenter {
 		filesize totalFilesize: UInt64,
 		token transferToken: String?
 	) -> String? {
-		guard receiverCount < FileTransferConstants.receiverHardLimit else {
+		guard model.receiverCount < FileTransferConstants.receiverHardLimit else {
 			fileTransferLogger.error(
 				"Maximum receiver count of \(FileTransferConstants.receiverHardLimit, privacy: .public) exceeded"
 			)
@@ -187,7 +180,7 @@ public extension FileTransferCenter {
 		}
 
 		present()
-		addFileTransfer(controller)
+		model.add(controller)
 
 		if Preferences.FileTransfers.requestReplyAction.value == .automaticallyDownload {
 			let destinationPath = downloadDestinationURLPrivate?.path ?? PathInfo.userDownloads
@@ -197,7 +190,8 @@ public extension FileTransferCenter {
 			 the whole transfer on it. The offer states its size up front, so the
 			 room for it — beside what the downloads already running still have to
 			 write — can be settled before anything is accepted. */
-			guard Self.destination(destinationPath, hasRoomFor: totalFilesize + pendingReceiveByteCount) else {
+			let required = totalFilesize + model.pendingReceiveByteCount
+			guard Self.destination(destinationPath, hasRoomFor: required) else {
 				fileTransferLogger.error("Refused an automatic download the destination volume has no room for")
 				controller.close(with: .storageFull, isFatalError: true)
 
@@ -228,7 +222,7 @@ public extension FileTransferCenter {
 		}
 
 		present()
-		addFileTransfer(controller)
+		model.add(controller)
 
 		if autoOpen {
 			controller.open()
@@ -237,47 +231,16 @@ public extension FileTransferCenter {
 		return controller.uniqueIdentifier
 	}
 
-	internal func clientWillBeDestroyed(_ notification: Notification) {
+	func clientWillBeDestroyed(_ notification: Notification) {
 		guard let client = notification.object as? IRCClient else { return }
-		removeFileTransfers(matching: client)
+		removeFileTransfers(model.transfers.filter { $0.client === client })
 	}
 
-	internal func clearStoppedTransfers() {
+	func clearStoppedTransfers() {
 		removeFileTransfers(model.stoppedTransfers)
 	}
 
-	private func startTransfers(_ transfers: [FileTransferController]) {
-		let savePath = downloadDestinationURLPrivate?.path
-		var pending: [FileTransferController] = []
-
-		for transfer in transfers where transfer.canStart {
-			if transfer.isSender || transfer.path != nil {
-				transfer.open()
-			} else if let savePath {
-				transfer.destinationAccessURL = downloadDestinationURLPrivate
-				transfer.open(withPath: savePath)
-			} else {
-				pending.append(transfer)
-			}
-		}
-
-		guard !pending.isEmpty else { return }
-
-		pendingDestinationTransferIDs.formUnion(pending.map(\.uniqueIdentifier))
-		model.isChoosingDestination = true
-	}
-
-	func completeDestinationSelection(_ result: Result<URL, Error>) {
-		defer { pendingDestinationTransferIDs = [] }
-		guard case let .success(url) = result else { return }
-		for transfer in model.transfers(with: pendingDestinationTransferIDs) {
-			guard !transfer.isSender, transfer.canStart else { continue }
-			transfer.destinationAccessURL = url
-			transfer.open(withPath: url.path)
-		}
-	}
-
-	internal func perform(_ action: FileTransferAction, on identifiers: Set<String>) {
+	func perform(_ action: FileTransferAction, on identifiers: Set<String>) {
 		let transfers = model.transfers(with: identifiers)
 		switch action {
 		case .start:
@@ -294,19 +257,45 @@ public extension FileTransferCenter {
 			model.selection = identifiers
 			model.presentPreview()
 		}
-		model.refreshPresentation()
 	}
 
-	/// Notification actions use the same start/destination workflow as the list.
-	internal func respondToNotification(for identifier: String, clientIdentifier: String?, accept: Bool) -> Bool {
-		guard let transfer = fileTransfer(withUniqueIdentifier: identifier),
-		      clientIdentifier == nil || clientIdentifier == transfer.clientId else { return false }
+	/** Brings the transfer a notification names into view, and starts it when
+	 the notification's Accept action asked for that.
+
+	 Opening the notification is a request to see the transfer, so the filter is
+	 widened to make sure the row it names is actually on screen. */
+	func respondToNotification(for identifier: String, clientIdentifier: String?, accept: Bool) -> Bool {
+		guard let transfer = notifiedTransfer(identifier, of: clientIdentifier) else { return false }
 		model.filter = .all
 		model.selection = [identifier]
 		if accept, !transfer.isSender, transfer.transferStatus == .stopped {
 			perform(.start, on: [identifier])
 		}
 		return true
+	}
+
+	/** Refuses the transfer a notification's Decline action names.
+
+	 Answered where it was asked: the person has said what they wanted, and a
+	 window they did not open has no business changing its filter and selection
+	 on the strength of it. */
+	@discardableResult
+	func declineNotification(for identifier: String, clientIdentifier: String?) -> Bool {
+		guard let transfer = notifiedTransfer(identifier, of: clientIdentifier) else { return false }
+		transfer.closeAndPostNotification(false)
+		return true
+	}
+
+	/// The transfer a notification names, if it is still listed and still
+	/// belongs to the connection the notification was posted for.
+	private func notifiedTransfer(_ identifier: String, of clientIdentifier: String?) -> FileTransferController? {
+		guard let transfer = fileTransfer(withUniqueIdentifier: identifier),
+		      clientIdentifier == nil || clientIdentifier == transfer.clientId
+		else {
+			return nil
+		}
+
+		return transfer
 	}
 
 	func updateMaintenanceTimer() {
@@ -334,55 +323,68 @@ public extension FileTransferCenter {
 		}
 	}
 
-	internal func onMaintenanceTimer() {
+	func onMaintenanceTimer() {
 		model.activeTransfers.forEach { $0.onMaintenanceTimer() }
-		model.refreshPresentation()
 	}
 
-	internal var senderFileTransfers: [FileTransferController] {
-		fileTransfers(matching: \.isSender)
+	private func startTransfers(_ transfers: [FileTransferController]) {
+		let savePath = downloadDestinationURLPrivate?.path
+		var pending: [FileTransferController] = []
+
+		for transfer in transfers where transfer.canStart {
+			if transfer.isSender || transfer.path != nil {
+				transfer.open()
+			} else if let savePath {
+				transfer.destinationAccessURL = downloadDestinationURLPrivate
+				transfer.open(withPath: savePath)
+			} else {
+				pending.append(transfer)
+			}
+		}
+
+		guard !pending.isEmpty else { return }
+
+		pendingDestinationTransferIDs.formUnion(pending.map(\.uniqueIdentifier))
+		model.isChoosingDestination = true
 	}
 
-	/// Every transfer, whatever the toolbar is showing.
-	private var receiverCount: Int {
-		model.receiverCount
-	}
+	/** Answers the folder picker the pending downloads were waiting on.
 
-	private func addFileTransfer(_ controller: FileTransferController) {
-		/* Newest first, and stored whether or not the toolbar is showing its
-		 direction — the filter is applied when the rows are built. */
-		model.add(controller)
-	}
+	 A picker the user cancelled leaves the transfers where they were, ready to
+	 be started again. One that failed has no folder to offer them, and saying
+	 nothing left the rows looking as though Start had never been pressed. */
+	func completeDestinationSelection(_ result: Result<URL, Error>) {
+		let pending = model.transfers(with: pendingDestinationTransferIDs)
+		pendingDestinationTransferIDs = []
 
-	private func removeFileTransfers(matching client: IRCClient) {
-		removeFileTransfers(fileTransfers { $0.client === client })
+		let url: URL
+		switch result {
+		case let .success(chosen):
+			url = chosen
+		case let .failure(error):
+			fileTransferLogger.error(
+				"Could not choose a download folder: \(error.localizedDescription, privacy: .public)"
+			)
+			for transfer in pending where transfer.canStart {
+				transfer.close(with: .fileHandlerFailed)
+			}
+			return
+		}
+
+		for transfer in pending {
+			guard !transfer.isSender, transfer.canStart else { continue }
+			transfer.destinationAccessURL = url
+			transfer.open(withPath: url.path)
+		}
 	}
 
 	private func removeFileTransfers(_ transfers: [FileTransferController]) {
 		guard transfers.isEmpty == false else { return }
 
-		prepareForPermanentDestruction(transfers)
-
-		model.remove(transfers)
-	}
-
-	private func prepareForPermanentDestruction(
-		_ transfers: [FileTransferController]
-	) {
 		for transfer in transfers {
 			transfer.prepareForPermanentDestruction()
 		}
-	}
 
-	private func fileTransfers(
-		matching predicate: (FileTransferController) -> Bool
-	) -> [FileTransferController] {
-		model.transfers.filter(predicate)
-	}
-
-	private func firstFileTransfer(
-		matching predicate: (FileTransferController) -> Bool
-	) -> FileTransferController? {
-		model.transfers.first(where: predicate)
+		model.remove(transfers)
 	}
 }

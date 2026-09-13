@@ -30,6 +30,14 @@ private func maximumHostmaskNicknameLength(on client: IRCClient?, inputLength: I
 	return configuredMaximum > 0 ? Int(min(configuredMaximum, UInt(inputLength))) : defaultHostmaskNicknameLength
 }
 
+nonisolated extension String { // nonisolated: pure
+	/// The string, or `nil` when it is empty: an absent wire parameter and an
+	/// empty one say the same thing to everything that reads one.
+	var nonEmpty: String? {
+		isEmpty ? nil : self
+	}
+}
+
 /** The string-level questions the protocol layer asks about a name.
 
  Every one of these reads a name the server sent or the user typed and says

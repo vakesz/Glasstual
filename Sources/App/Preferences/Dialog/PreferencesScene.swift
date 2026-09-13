@@ -18,6 +18,20 @@ final class SettingsSceneRequest {
 	}
 }
 
+/// The `Settings` scene, as a named type like every other application scene.
+struct PreferencesApplicationScene: Scene {
+	let request: SettingsSceneRequest
+
+	var body: some Scene {
+		Settings {
+			PreferencesSceneRoot(request: request)
+		}
+		/* The pages declare their own minimum, and the window used to let
+		 itself be dragged narrower than any of them could lay out. */
+		.windowResizability(.contentMinSize)
+	}
+}
+
 struct PreferencesSceneRoot: View {
 	let request: SettingsSceneRequest
 	@State private var session = PreferencesSession()

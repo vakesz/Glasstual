@@ -224,7 +224,7 @@ struct IRCSpecISupportTests {
 	/// together are the same user.
 	@Test("CASEMAPPING: the client compares its own nickname with the mapping")
 	func clientComparesNicknamesWithTheMapping() {
-		let client = GLTTestClient(configDictionary: ["nickname": "user[at]home"])
+		let client = TestClient(configDictionary: ["nickname": "user[at]home"])
 
 		client.supportInfo.processConfigurationData("CASEMAPPING=rfc1459")
 
@@ -237,7 +237,7 @@ struct IRCSpecISupportTests {
 
 	@Test("CHANTYPES lists the prefixes that start a channel name")
 	func chanTypesListsChannelPrefixes() {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		client.supportInfo.processConfigurationData("CHANTYPES=#&")
 
@@ -310,9 +310,9 @@ struct IRCSpecISupportTests {
 	func targetsAreChunkedToTheLimit() {
 		let targets = ["#a", "#b", "#c", "#d", "#e"]
 
-		#expect(IRCISupportInfo.chunkTargets(targets, limit: 2) == [["#a", "#b"], ["#c", "#d"], ["#e"]])
-		#expect(IRCISupportInfo.chunkTargets(targets, limit: 5) == [targets])
-		#expect(IRCISupportInfo.chunkTargets(targets, limit: 0) == targets.map { [$0] })
+		#expect(ISupportTokenParser.chunkTargets(targets, limit: 2) == [["#a", "#b"], ["#c", "#d"], ["#e"]])
+		#expect(ISupportTokenParser.chunkTargets(targets, limit: 5) == [targets])
+		#expect(ISupportTokenParser.chunkTargets(targets, limit: 0) == targets.map { [$0] })
 	}
 
 	/// `MODES=n` is how many parameterised modes may ride on one MODE command.
@@ -358,7 +358,7 @@ struct IRCSpecISupportTests {
 	/// comes from `NICKLEN` once the server has advertised it.
 	@Test("NICKLEN bounds what the client will treat as a nickname")
 	func nicknameLengthIsBounded() {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		client.supportInfo.processConfigurationData("NICKLEN=8")
 
@@ -411,7 +411,7 @@ struct IRCSpecISupportTests {
 	/// the user types can be mistaken for one.
 	@Test("CHANTYPES= leaves no string that reads as a channel name")
 	func anEmptyChannelTypeListRecognisesNoChannels() {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		client.supportInfo.processConfigurationData("CHANTYPES=")
 

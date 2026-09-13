@@ -195,7 +195,7 @@ struct IRCClientTextEncodingCorpusTests {
 struct IRCClientTextEncodingClientCorpusTests {
 	@Test
 	func defaultsToUTF8WithALatin1Fallback() {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		#expect(client.effectivePrimaryEncoding == .utf8)
 		#expect(client.effectiveFallbackEncoding == .isoLatin1)
@@ -203,7 +203,7 @@ struct IRCClientTextEncodingClientCorpusTests {
 
 	@Test
 	func configuredEncodingsAreUsed() {
-		let client = GLTTestClient(configDictionary: [
+		let client = TestClient(configDictionary: [
 			"primaryEncoding": String.Encoding.isoLatin1.rawValue,
 			"fallbackEncoding": String.Encoding.ascii.rawValue,
 		])
@@ -214,7 +214,7 @@ struct IRCClientTextEncodingClientCorpusTests {
 
 	@Test
 	func utf8OnlyServersPinBothEncodings() {
-		let client = GLTTestClient(configDictionary: [
+		let client = TestClient(configDictionary: [
 			"primaryEncoding": String.Encoding.isoLatin1.rawValue,
 			"fallbackEncoding": String.Encoding.ascii.rawValue,
 		])
@@ -227,7 +227,7 @@ struct IRCClientTextEncodingClientCorpusTests {
 
 	@Test(arguments: ["hello", "h\u{00E9}llo", "\u{2713} check", "\u{65E5}\u{672C}\u{8A9E}"])
 	func roundTripsThroughTheCommonEncoding(text: String) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let encoded = try #require(client.convert(toCommonEncoding: text))
 		let decoded = try #require(client.convert(fromCommonEncoding: encoded))
 

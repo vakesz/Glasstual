@@ -12,7 +12,7 @@
 
 import SwiftUI
 
-struct PreferencesNotificationsPane: View {
+struct PreferencesNotificationsSections: View {
 	let model: PreferencesPaneModel
 
 	private var onlySpeakForSelection: Bool {
@@ -20,67 +20,70 @@ struct PreferencesNotificationsPane: View {
 	}
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				NotificationConfigurationView(
-					notifications: model.notificationItems,
-					allowsInheritedState: false
-				)
-				.accessibilityLabel(Text(verbatim: PreferencesNotificationsStrings.headingAlerts))
-			} header: {
-				Text(verbatim: PreferencesNotificationsStrings.headingAlerts)
-			}
+		Section {
+			NotificationConfigurationView(
+				notifications: model.notificationItems,
+				allowsInheritedState: false
+			)
+			.accessibilityLabel(Text(verbatim: PreferencesNotificationsStrings.headingAlerts))
+		} header: {
+			Text(verbatim: PreferencesNotificationsStrings.headingAlerts)
+		}
 
-			Section {
-				PreferencesToggle(
-					title: PreferencesNotificationsStrings.onlySpeakSelection,
-					isOn: model.preferences.binding(for: Preferences.Notifications.onlySpeakForSelection)
-				)
-				/* Each switch is its own form row, so the system draws the
-				 separators, spacing and label alignment instead of a hand-made
-				 stack indented by eye. */
-				Text(verbatim: PreferencesNotificationsStrings.speechIncludeLabel)
-				PreferencesToggle(
-					title: PreferencesNotificationsStrings.speakChannelName,
-					isOn: model.preferences.gatedBinding(
-						for: Preferences.Notifications.flag(.channelMessage, .speakChannelName),
-						enabledWhen: { onlySpeakForSelection == false }
-					)
-				)
-				.disabled(onlySpeakForSelection)
-				PreferencesToggle(
-					title: PreferencesNotificationsStrings.speakNickname,
-					isOn: model.preferences.binding(
-						for: Preferences.Notifications.flag(.channelMessage, .speakNickname)
-					)
-				)
-			} header: {
-				Text(verbatim: PreferencesNotificationsStrings.headingSpeech)
-			}
+		Section {
+			PreferencesToggle(
+				title: PreferencesNotificationsStrings.onlySpeakSelection,
+				isOn: model.preferences.binding(for: Preferences.Notifications.onlySpeakForSelection)
+			)
+		} header: {
+			Text(verbatim: PreferencesNotificationsStrings.headingSpeech)
+		}
 
-			Section {
-				PreferencesToggle(
-					title: PreferencesNotificationsStrings.dockBadgePrivate,
-					isOn: model.preferences.binding(for: Preferences.Notifications.displayDockBadge)
+		Section {
+			PreferencesToggle(
+				title: PreferencesNotificationsStrings.speakChannelName,
+				isEnabled: onlySpeakForSelection == false,
+				isOn: model.preferences.binding(
+					for: Preferences.Notifications.flag(.channelMessage, .speakChannelName)
 				)
-				PreferencesToggle(
-					title: PreferencesNotificationsStrings.dockBadgePublic,
-					isOn: model.preferences.binding(
-						for: Preferences.Notifications.publicMessageCountOnDockBadge
-					)
+			)
+			PreferencesToggle(
+				title: PreferencesNotificationsStrings.speakNickname,
+				isOn: model.preferences.binding(
+					for: Preferences.Notifications.flag(.channelMessage, .speakNickname)
 				)
-				PreferencesToggle(
-					title: PreferencesNotificationsStrings.postWhileInFocus,
-					isOn: model.preferences.binding(for: Preferences.Notifications.postWhileInFocus)
+			)
+		} header: {
+			Text(verbatim: PreferencesNotificationsStrings.headingSpeechInclude)
+		}
+
+		Section {
+			PreferencesToggle(
+				title: PreferencesNotificationsStrings.dockBadgePrivate,
+				isOn: model.preferences.binding(for: Preferences.Notifications.displayDockBadge)
+			)
+			PreferencesToggle(
+				title: PreferencesNotificationsStrings.dockBadgePublic,
+				isOn: model.preferences.binding(
+					for: Preferences.Notifications.publicMessageCountOnDockBadge
 				)
-			} header: {
-				Text(verbatim: PreferencesSectionStrings.advanced)
-			}
+			)
+		} header: {
+			Text(verbatim: PreferencesNotificationsStrings.headingDockIcon)
+		}
+
+		Section {
+			PreferencesToggle(
+				title: PreferencesNotificationsStrings.postWhileInFocus,
+				isOn: model.preferences.binding(for: Preferences.Notifications.postWhileInFocus)
+			)
+		} header: {
+			Text(verbatim: PreferencesNotificationsStrings.headingDelivery)
 		}
 	}
 }
 
-struct PreferencesHighlightsPane: View {
+struct PreferencesHighlightsSections: View {
 	let model: PreferencesPaneModel
 
 	private var matchingMethod: NicknameHighlightMatchMode {
@@ -92,53 +95,48 @@ struct PreferencesHighlightsPane: View {
 	}
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				Picker(selection: model.preferences.binding(for: Preferences.Highlights.matchingMethod)) {
-					Text(verbatim: PreferencesHighlightsStrings.matchTypePartial)
-						.tag(NicknameHighlightMatchMode.partial)
-					Text(verbatim: PreferencesHighlightsStrings.matchTypeExact)
-						.tag(NicknameHighlightMatchMode.exact)
-					Text(verbatim: PreferencesHighlightsStrings.matchTypeRegex)
-						.tag(NicknameHighlightMatchMode.regularExpression)
-				} label: {
-					Text(verbatim: PreferencesHighlightsStrings.matchTypeLabel)
+		Section {
+			Picker(selection: model.preferences.binding(for: Preferences.Highlights.matchingMethod)) {
+				Text(verbatim: PreferencesHighlightsStrings.matchTypePartial)
+					.tag(NicknameHighlightMatchMode.partial)
+				Text(verbatim: PreferencesHighlightsStrings.matchTypeExact)
+					.tag(NicknameHighlightMatchMode.exact)
+				Text(verbatim: PreferencesHighlightsStrings.matchTypeRegex)
+					.tag(NicknameHighlightMatchMode.regularExpression)
+			} label: {
+				Text(verbatim: PreferencesHighlightsStrings.matchTypeLabel)
+			}
+			.labelsHidden()
+			.accessibilityLabel(Text(verbatim: PreferencesHighlightsStrings.matchTypeLabel))
+
+			PreferencesToggle(
+				title: PreferencesHighlightsStrings.logToWindow,
+				isOn: model.preferences.binding(for: Preferences.Logging.logHighlights) { _ in
+					TextualPreferences.performReloadAction(.highlightLogging)
 				}
-				.labelsHidden()
-				.accessibilityLabel(Text(verbatim: PreferencesHighlightsStrings.matchTypeLabel))
+			)
+			PreferencesToggle(
+				title: PreferencesHighlightsStrings.trackLocalNickname,
+				isEnabled: usesRegularExpression == false,
+				isOn: model.preferences.binding(for: Preferences.Highlights.trackLocalNickname)
+			)
+		}
 
-				PreferencesToggle(
-					title: PreferencesHighlightsStrings.logToWindow,
-					isOn: model.preferences.binding(for: Preferences.Logging.logHighlights) { _ in
-						TextualPreferences.performReloadAction(.highlightLogging)
-					}
-				)
-				PreferencesToggle(
-					title: PreferencesHighlightsStrings.trackLocalNickname,
-					isOn: model.preferences.gatedBinding(
-						for: Preferences.Highlights.trackLocalNickname,
-						enabledWhen: { usesRegularExpression == false }
-					)
-				)
-				.disabled(usesRegularExpression)
-			}
-
-			Section {
-				PreferencesKeywordList(
-					title: PreferencesHighlightsStrings.wordsLabel,
-					addLabel: PreferencesHighlightsStrings.addKeyword,
-					removeLabel: PreferencesHighlightsStrings.removeKeyword,
-					keywords: model.preferences.binding(for: Preferences.Highlights.matchKeywords),
-					usesRegularExpression: usesRegularExpression
-				)
-				PreferencesKeywordList(
-					title: PreferencesHighlightsStrings.excludeWordsLabel,
-					addLabel: PreferencesHighlightsStrings.addExcluded,
-					removeLabel: PreferencesHighlightsStrings.removeExcluded,
-					keywords: model.preferences.binding(for: Preferences.Highlights.excludeKeywords)
-				)
-				.disabled(usesRegularExpression)
-			}
+		Section {
+			PreferencesKeywordList(
+				title: PreferencesHighlightsStrings.wordsLabel,
+				addLabel: PreferencesHighlightsStrings.addKeyword,
+				removeLabel: PreferencesHighlightsStrings.removeKeyword,
+				keywords: model.preferences.binding(for: Preferences.Highlights.matchKeywords),
+				usesRegularExpression: usesRegularExpression
+			)
+			PreferencesKeywordList(
+				title: PreferencesHighlightsStrings.excludeWordsLabel,
+				addLabel: PreferencesHighlightsStrings.addExcluded,
+				removeLabel: PreferencesHighlightsStrings.removeExcluded,
+				keywords: model.preferences.binding(for: Preferences.Highlights.excludeKeywords)
+			)
+			.disabled(usesRegularExpression)
 		}
 	}
 }
@@ -156,17 +154,25 @@ struct PreferencesKeywordList: View {
 	/// decides whether an unusable pattern is an error worth showing.
 	var usesRegularExpression = false
 	@State private var selection: Int?
+	@FocusState private var focusedKeyword: Int?
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 6) {
+		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingMedium) {
 			Text(verbatim: title)
 
 			List(selection: $selection) {
 				ForEach(keywords.indices, id: \.self) { index in
-					HStack(spacing: 4) {
-						TextField("", text: binding(at: index))
-							.textFieldStyle(.plain)
-							.accessibilityLabel(Text(verbatim: title))
+					HStack(spacing: PreferencesMetrics.spacingSmall) {
+						TextField(
+							text: binding(at: index),
+							prompt: Text(verbatim: PreferencesHighlightsStrings.newKeyword)
+						) {
+							Text(verbatim: title)
+						}
+						.labelsHidden()
+						.textFieldStyle(.plain)
+						.focused($focusedKeyword, equals: index)
+						.accessibilityLabel(Text(verbatim: title))
 
 						if let error = patternError(at: index) {
 							Image(systemName: "exclamationmark.triangle.fill")
@@ -179,8 +185,18 @@ struct PreferencesKeywordList: View {
 			}
 			.frame(height: Self.listHeight)
 			.accessibilityLabel(Text(verbatim: title))
+			/* A row that was added and then left blank is one nobody asked for:
+			 dropping it here is what keeps a placeholder keyword out of the
+			 stored list, which is where the renderer reads it from. */
+			.onChange(of: focusedKeyword) { previous, _ in
+				guard let previous, isBlank(at: previous) else { return }
+				keywords.remove(at: previous)
+				if selection == previous {
+					selection = nil
+				}
+			}
 
-			HStack(spacing: 6) {
+			HStack(spacing: PreferencesMetrics.spacingMedium) {
 				Button(action: add) {
 					Image(systemName: "plus")
 				}
@@ -210,6 +226,11 @@ struct PreferencesKeywordList: View {
 		)
 	}
 
+	private func isBlank(at index: Int) -> Bool {
+		guard keywords.indices.contains(index) else { return false }
+		return keywords[index].string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+	}
+
 	private func binding(at index: Int) -> Binding<String> {
 		Binding(
 			get: { keywords.indices.contains(index) ? keywords[index].string : "" },
@@ -221,8 +242,9 @@ struct PreferencesKeywordList: View {
 	}
 
 	private func add() {
-		keywords.append(HighlightKeyword(string: PreferencesHighlightsStrings.newKeyword))
+		keywords.append(HighlightKeyword(string: ""))
 		selection = keywords.count - 1
+		focusedKeyword = selection
 	}
 
 	private func remove() {
@@ -232,18 +254,6 @@ struct PreferencesKeywordList: View {
 	}
 }
 
-struct PreferencesIncomingDataPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesIncomingDataSections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// its neighbours.
 struct PreferencesIncomingDataSections: View {
 	let model: PreferencesPaneModel
 
@@ -269,105 +279,109 @@ struct PreferencesIncomingDataSections: View {
 				isOn: model.preferences.binding(for: Preferences.Messages.filterUnicodeTextSpam)
 			)
 		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.incomingData))
+			Text(verbatim: PreferencesPane.incomingData.title)
 		}
 	}
 }
 
-struct PreferencesFloodControlPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesFloodControlSections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// its neighbours.
 struct PreferencesFloodControlSections: View {
-	/* The nib's sliders only stopped on tick marks; the step keeps that. */
+	/* The steps keep the tick marks the sliders have always stopped on. */
 	private static let delayStep = 0.5
+	private static let delayRange = 0.0 ... 10.0
 	private static let channelSizeStep = 40.0
-	private static let channelSizeMaximum = 2000.0
+	private static let channelSizeRange = 0.0 ... 2000.0
 
 	let model: PreferencesPaneModel
 
 	var body: some View {
 		Section {
-			delaySlider(
-				label: PreferencesFloodControlStrings.identifyDelayLabel,
-				note: PreferencesFloodControlStrings.identifyDelayNote,
-				value: model.preferences.sliderBinding(
-					for: Preferences.Connection.autojoinDelayAfterIdentification
-				),
-				range: 0.0 ... 10.0
-			)
+			delayRow
+			PreferencesNote(PreferencesFloodControlStrings.identifyDelayNote)
+			channelSizeRow
+			PreferencesNote(PreferencesFloodControlStrings.whoLimitNote)
 			PreferencesNote(PreferencesFloodControlStrings.note)
-			channelSizeSlider
 		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.floodControl))
+			Text(verbatim: PreferencesPane.floodControl.title)
 		}
 	}
 
-	private func delaySlider(
-		label: String,
-		note: String,
-		value: Binding<Double>,
-		range: ClosedRange<Double>
-	) -> some View {
-		VStack(alignment: .leading, spacing: 4) {
-			Text(verbatim: label)
-			PreferencesNote(note)
-			Text(verbatim: PreferencesFloodControlStrings.secondsValue(value: secondsText(value.wrappedValue)))
-				.font(.callout)
-				.foregroundStyle(.secondary)
-			HStack(spacing: 8) {
-				Text(verbatim: secondsText(range.lowerBound))
-					.font(.callout)
-					.foregroundStyle(.secondary)
-				Slider(value: value, in: range, step: Self.delayStep)
-					.accessibilityLabel(Text(verbatim: label))
-				Text(verbatim: secondsText(range.upperBound))
-					.font(.callout)
-					.foregroundStyle(.secondary)
-			}
-		}
+	private var delayRow: some View {
+		let value = model.preferences.binding(
+			for: Preferences.Connection.autojoinDelayAfterIdentification
+		)
+		return PreferencesSliderRow(
+			label: PreferencesFloodControlStrings.identifyDelayLabel,
+			valueText: PreferencesFloodControlStrings.secondsValue(
+				value: Self.secondsText(value.wrappedValue)
+			),
+			range: Self.delayRange,
+			step: Self.delayStep,
+			minimumLabel: Self.secondsText(Self.delayRange.lowerBound),
+			maximumLabel: Self.secondsText(Self.delayRange.upperBound),
+			value: value
+		)
 	}
 
-	private var channelSizeSlider: some View {
+	private var channelSizeRow: some View {
 		let value = model.preferences.sliderBinding(
 			for: Preferences.Appearance.trackUserAwayStatusMaximumChannelSize
 		)
-		return VStack(alignment: .leading, spacing: 4) {
-			Text(verbatim: PreferencesFloodControlStrings.whoLimitLabel)
-			PreferencesNote(PreferencesFloodControlStrings.whoLimitNote)
-			Text(verbatim: PreferencesFloodControlStrings.countValue(value: Self.countText(value.wrappedValue)))
-				.font(.callout)
-				.foregroundStyle(.secondary)
-			HStack(spacing: 8) {
-				Text(verbatim: PreferencesFloodControlStrings.disabledMarker)
-					.font(.callout)
-					.foregroundStyle(.secondary)
-				Slider(value: value, in: 0 ... Self.channelSizeMaximum, step: Self.channelSizeStep)
-					.accessibilityLabel(Text(verbatim: PreferencesFloodControlStrings.whoLimitLabel))
-				Text(verbatim: Self.countText(Self.channelSizeMaximum))
-					.font(.callout)
-					.foregroundStyle(.secondary)
-			}
-		}
+		return PreferencesSliderRow(
+			label: PreferencesFloodControlStrings.whoLimitLabel,
+			valueText: PreferencesFloodControlStrings.countValue(
+				value: Self.countText(value.wrappedValue)
+			),
+			range: Self.channelSizeRange,
+			step: Self.channelSizeStep,
+			minimumLabel: PreferencesFloodControlStrings.disabledMarker,
+			maximumLabel: Self.countText(Self.channelSizeRange.upperBound),
+			value: value
+		)
 	}
 
-	private func secondsText(_ value: Double) -> String {
+	private static func secondsText(_ value: Double) -> String {
 		value.formatted(.number.precision(.fractionLength(1)))
 	}
 
-	/** The value comes from a stored count that a hand-edited defaults file can
-	 put anywhere in `UInt`, so the conversion has to be total: `Int(_:)` traps
-	 on a `Double` outside `Int`, and this label is not worth a crash. */
-	static func countText(_ value: Double) -> String {
-		let count = Int(exactly: value.rounded()) ?? (value < 0 ? Int.min : Int.max)
-		return count.formatted(.number)
+	/** Formatted as a `Double`, because the stored count a hand-edited defaults
+	 file can leave here is not always one an `Int` can hold, and a label is not
+	 worth a trap. */
+	private static func countText(_ value: Double) -> String {
+		value.rounded().formatted(.number.precision(.fractionLength(0)))
+	}
+}
+
+/// One slider row: the setting's name and current value on the left, the
+/// slider between the ends of its range on the right.
+private struct PreferencesSliderRow: View {
+	let label: String
+	let valueText: String
+	let range: ClosedRange<Double>
+	let step: Double
+	let minimumLabel: String
+	let maximumLabel: String
+	@Binding var value: Double
+
+	var body: some View {
+		Slider(value: $value, in: range, step: step) {
+			VStack(alignment: .leading, spacing: 2) {
+				Text(verbatim: label)
+				Text(verbatim: valueText)
+					.font(.callout)
+					.foregroundStyle(.secondary)
+			}
+		} minimumValueLabel: {
+			endLabel(minimumLabel)
+		} maximumValueLabel: {
+			endLabel(maximumLabel)
+		}
+		.accessibilityLabel(Text(verbatim: label))
+		.accessibilityValue(Text(verbatim: valueText))
+	}
+
+	private func endLabel(_ text: String) -> some View {
+		Text(verbatim: text)
+			.font(.callout)
+			.foregroundStyle(.secondary)
 	}
 }

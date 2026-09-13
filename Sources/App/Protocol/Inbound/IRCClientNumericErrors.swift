@@ -40,34 +40,34 @@ import Foundation
 import GlasstualPluginKit
 
 private enum IRCNumericErrorGroup {
-	static let missingTarget: Set<UInt> = [IRCNumeric.nosuchserver.rawValue, IRCNumeric.nosuchchannel.rawValue]
-	static let nicknameCollision: Set<UInt> = [IRCNumeric.nicknameinuse.rawValue, IRCNumeric.erroneusnickname.rawValue]
-	static let joinFailure: Set<UInt> = [
-		IRCNumeric.admonly.rawValue, IRCNumeric.badchanmask.rawValue, IRCNumeric.badchanname.rawValue,
-		IRCNumeric.badchannel.rawValue,
-		IRCNumeric.badchannelkey.rawValue, IRCNumeric.bannedfromchan.rawValue, IRCNumeric.channelisfull.rawValue,
-		IRCNumeric.delayrejoin.rawValue,
-		IRCNumeric.forbiddenchannel.rawValue, IRCNumeric.inviteonlychan.rawValue, IRCNumeric.linkchannel.rawValue,
-		IRCNumeric.needreggednick.rawValue,
-		IRCNumeric.nohiding.rawValue, IRCNumeric.operonly.rawValue, IRCNumeric.operspverify.rawValue,
-		IRCNumeric.secureonlychan.rawValue,
-		IRCNumeric.throttle.rawValue, IRCNumeric.toomanychannels.rawValue, IRCNumeric.toomanyjoins.rawValue,
+	static let missingTarget: Set<IRCNumeric> = [.nosuchserver, .nosuchchannel]
+	static let nicknameCollision: Set<IRCNumeric> = [.nicknameinuse, .erroneusnickname]
+	static let joinFailure: Set<IRCNumeric> = [
+		.admonly, .badchanmask, .badchanname, .badchannel, .badchannelkey, .bannedfromchan,
+		.channelisfull, .delayrejoin, .forbiddenchannel, .inviteonlychan, .linkchannel,
+		.needreggednick, .nohiding, .operonly, .operspverify, .secureonlychan, .throttle,
+		.toomanychannels, .toomanyjoins,
 	]
-	static let whoFailure: Set<UInt> = [IRCNumeric.whosyntax.rawValue, IRCNumeric.wholimexceed.rawValue]
-	static let commandFailure: Set<UInt> = [
-		IRCNumeric.disabled.rawValue,
-		IRCNumeric.unknowncommand.rawValue,
-		IRCNumeric.needmoreparams.rawValue,
-	]
+	static let whoFailure: Set<IRCNumeric> = [.whosyntax, .wholimexceed]
+	static let commandFailure: Set<IRCNumeric> = [.disabled, .unknowncommand, .needmoreparams]
 }
 
 @MainActor
 public extension IRCClient {
 	func receiveErrorNumericReply(_ message: Message) {
-		let numeric = message.commandNumeric
 		let shouldPrint = postReceivedMessage(message)
 
-		if numeric == IRCNumeric.nosuchnick.rawValue || numeric == IRCNumeric.cannotsendtochan.rawValue {
+		/* Servers send error numerics this catalog has no case for, and those
+		 print the way any other error does. */
+		guard let numeric = IRCNumeric(rawValue: message.commandNumeric) else {
+			if shouldPrint {
+				printErrorReply(message)
+			}
+
+			return
+		}
+
+		if numeric == .nosuchnick || numeric == .cannotsendtochan {
 			guard shouldPrint else { return }
 			printError(message, inTargetChannelNamed: message.param(at: 1))
 			return
@@ -106,9 +106,9 @@ public extension IRCClient {
 
 @MainActor
 private extension IRCClient {
-	func handleNicknameError(_ message: Message, numeric: UInt, shouldPrint: Bool) -> Bool {
+	func handleNicknameError(_ message: Message, numeric: IRCNumeric, shouldPrint: Bool) -> Bool {
 		let isNicknameCollision = IRCNumericErrorGroup.nicknameCollision.contains(numeric)
-		let isUnavailableResource = numeric == IRCNumeric.unavailresource.rawValue
+		let isUnavailableResource = numeric == .unavailresource
 		guard isNicknameCollision || isUnavailableResource else { return false }
 
 		let unavailableTargetIsNickname = isUnavailableResource && stringIsNickname(message.param(at: 1))
@@ -122,12 +122,11 @@ private extension IRCClient {
 		return true
 	}
 
-	func handleJoinFailure(_ message: Message, numeric: UInt, shouldPrint: Bool) -> Bool {
+	func handleJoinFailure(_ message: Message, numeric: IRCNumeric, shouldPrint: Bool) -> Bool {
 		let target = message.param(at: 1)
 		let channel = findChannel(target)
 		let isPendingJoin = channel?.isChannel == true && channel?.status == .joining && stringIsChannelName(target)
-		let unavailableResource = IRCNumeric.unavailresource.rawValue
-		let isUnavailableChannel = numeric == IRCNumeric.nosuchchannel.rawValue || numeric == unavailableResource
+		let isUnavailableChannel = numeric == .nosuchchannel || numeric == .unavailresource
 		guard IRCNumericErrorGroup.joinFailure.contains(numeric) || (isUnavailableChannel && isPendingJoin)
 		else { return false }
 		if let channel {

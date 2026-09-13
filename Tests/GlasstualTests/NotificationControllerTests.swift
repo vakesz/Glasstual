@@ -1,4 +1,4 @@
-/*  *********************************************************************
+/* *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
@@ -15,14 +15,12 @@ struct NotificationControllerTests {
 		SharedApplication.sharedNotificationController()
 	}
 
-	@Test("Every event type has a title to show")
-	func titleForEventReturnsLocalizedNonEmptyStrings() {
-		let controller = notificationController()
-
-		#expect(controller.title(forEvent: .highlight).isEmpty == false)
-		#expect(controller.title(forEvent: .connect).isEmpty == false)
-		#expect(controller.title(forEvent: .fileTransferReceiveRequested).isEmpty == false)
-		#expect(controller.title(forEvent: .userJoined).isEmpty == false)
+	/// The table lists every event by this name and a notification that is not
+	/// someone speaking carries it as its title, so an event without one is an
+	/// unlabelled row and a blank notification.
+	@Test("Every event has a name", arguments: NotificationEvent.allCases)
+	func everyEventHasAName(event: NotificationEvent) {
+		#expect(NotificationStrings.eventTypeTitle(for: event).isEmpty == false)
 	}
 
 	@Test("A thread identifier needs a client, and takes the channel when there is one")
@@ -31,38 +29,6 @@ struct NotificationControllerTests {
 		#expect(NotificationController.threadIdentifier(forClient: "client-a", channel: nil) == "client-a")
 		#expect(
 			NotificationController.threadIdentifier(forClient: "client-a", channel: "chan-b") == "client-a-chan-b"
-		)
-	}
-
-	@Test("A notification without a thread still gets a distinct identifier")
-	func notificationIdentifierUsesStableNSStringHashLayout() {
-		let title = "Hello"
-		let message = "World"
-		let thread = "client-channel"
-		let expected = String(
-			format: "TXNotification-%@-%ld-%ld",
-			thread,
-			(title as NSString).hash,
-			(message as NSString).hash
-		)
-		let actual = NotificationController.notificationIdentifier(
-			title: title,
-			message: message,
-			threadIdentifier: thread
-		)
-
-		#expect(actual == expected)
-
-		let noThreadExpected = String(
-			format: "TXNotification-%@-%ld-%ld",
-			"<No Thread>",
-			(title as NSString).hash,
-			(message as NSString).hash
-		)
-
-		#expect(
-			NotificationController.notificationIdentifier(title: title, message: message, threadIdentifier: nil)
-				== noThreadExpected
 		)
 	}
 

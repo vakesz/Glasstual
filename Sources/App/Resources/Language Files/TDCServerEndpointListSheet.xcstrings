@@ -26,7 +26,7 @@
       }
     },
     "enter-a-whole-number-between-1" : {
-      "comment" : "Recovery suggestion for an invalid server port. Legacy key: ox2-od.",
+      "comment" : "Validation message shown under the list when a row has no properly formatted server port. Legacy key: ox2-od.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -44,19 +44,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Glasstual tries these servers from top to bottom. Drag rows or use the arrow buttons to change their order; the first server is primary."
-          }
-        }
-      }
-    },
-    "intentionally-empty-recovery-suggestion" : {
-      "comment" : "Intentionally empty recovery suggestion for an invalid server address. Legacy key: k0c-3u.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
+            "value" : "Glasstual tries these servers from top to bottom. Use the arrow buttons to change their order; the first server is primary."
           }
         }
       }
@@ -146,43 +134,31 @@
       }
     },
     "server-password-help" : {
-      "comment" : "Help text clarifying that the server password is sent with PASS and is not a NickServ password.",
+      "comment" : "Explanation under the endpoint list, saying what the server password is and where it is kept.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sent using the PASS command. This is not your NickServ password."
+            "value" : "Sent with the PASS command when connecting, and stored in your keychain. This is not your NickServ password."
           }
         }
       }
     },
     "value-you-entered-is-not" : {
-      "comment" : "Validation error shown when a server address is not properly formatted. Legacy key: iis-gr.",
+      "comment" : "Validation message shown under the list when a row has no properly formatted server address. Legacy key: iis-gr.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The value you entered is not a properly formatted server address"
-          }
-        }
-      }
-    },
-    "value-you-entered-is-not-a-properly-formatted-server" : {
-      "comment" : "Validation error shown when a server port is not properly formatted. Legacy key: qeb-ip.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The value you entered is not a properly formatted server port"
+            "value" : "Enter a server address, such as irc.example.com."
           }
         }
       }
     },
     "window-title" : {
-      "comment" : "Title of the sheet for editing alternate IRC server endpoints.",
+      "comment" : "Title of the sheet for editing alternate IRC server endpoints, shown as its heading.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

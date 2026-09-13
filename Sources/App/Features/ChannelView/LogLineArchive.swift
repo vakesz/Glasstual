@@ -42,26 +42,6 @@ private nonisolated enum LogLineArchiveKey { // nonisolated: value
  */
 @objc(TVCLogLine)
 public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendable { // nonisolated: immutable
-	/// The values one archive carried, before defaults are applied.
-	struct DecodedValues {
-		var receivedAt = Date()
-		var excludeKeywords: [String]?
-		var highlightKeywords: [String]?
-		var isEncrypted = false
-		var isFirstForDay = false
-		var command = LogLineFormat.defaultCommand
-		var messageBody = ""
-		var messageIdentifier: String?
-		var replyToMessageIdentifier: String?
-		var reactions: [String: [String]]?
-		var nickname: String?
-		var lineType = LogLineType.undefined
-		var memberType = LogLineMemberType.normal
-		var deliveryState = LogLineDeliveryState.none
-		var uniqueIdentifier: String?
-		var sessionIdentifier: UInt = 0
-	}
-
 	public let line: LogLine
 
 	public init(_ line: LogLine) {
@@ -71,60 +51,57 @@ public final nonisolated class LogLineArchive: NSObject, NSSecureCoding, Sendabl
 	}
 
 	public required init?(coder: NSCoder) {
-		var decoded = DecodedValues()
+		var line = LogLine()
 
-		decoded.receivedAt = coder
+		line.receivedAt = coder
 			.decodeObject(of: NSDate.self, forKey: LogLineArchiveKey.receivedAt) as Date? ?? Date()
 
 		let stringArrayClasses: [AnyClass] = [NSArray.self, NSString.self]
-		decoded.excludeKeywords = coder.decodeObject(
+		line.excludeKeywords = coder.decodeObject(
 			of: stringArrayClasses,
 			forKey: LogLineArchiveKey.excludeKeywords
 		) as? [String]
-		decoded.highlightKeywords = coder.decodeObject(
+		line.highlightKeywords = coder.decodeObject(
 			of: stringArrayClasses,
 			forKey: LogLineArchiveKey.highlightKeywords
 		) as? [String]
 
-		decoded.isEncrypted = coder.decodeBool(forKey: LogLineArchiveKey.isEncrypted)
-		decoded.isFirstForDay = coder.decodeBool(forKey: LogLineArchiveKey.isFirstForDay)
-		decoded.command = coder.textual_decodeString(
+		line.isEncrypted = coder.decodeBool(forKey: LogLineArchiveKey.isEncrypted)
+		line.isFirstForDay = coder.decodeBool(forKey: LogLineArchiveKey.isFirstForDay)
+		line.command = coder.textual_decodeString(
 			forKey: LogLineArchiveKey.command
 		) as String? ?? LogLineFormat.defaultCommand
-		decoded.messageBody = coder.textual_decodeString(forKey: LogLineArchiveKey.messageBody) as String? ?? ""
-		decoded.messageIdentifier = coder.textual_decodeString(
+		line.messageBody = coder.textual_decodeString(forKey: LogLineArchiveKey.messageBody) as String? ?? ""
+		line.messageIdentifier = coder.textual_decodeString(
 			forKey: LogLineArchiveKey.messageIdentifier
 		) as String?
-		decoded.replyToMessageIdentifier = coder.textual_decodeString(
+		line.replyToMessageIdentifier = coder.textual_decodeString(
 			forKey: LogLineArchiveKey.replyToMessageIdentifier
 		) as String?
 
 		let reactionClasses: [AnyClass] = [NSDictionary.self, NSArray.self, NSString.self]
-		decoded.reactions = coder.decodeObject(
+		line.reactions = coder.decodeObject(
 			of: reactionClasses,
 			forKey: LogLineArchiveKey.reactions
 		) as? [String: [String]]
-		decoded.nickname = coder.textual_decodeString(forKey: LogLineArchiveKey.nickname) as String?
+		line.nickname = coder.textual_decodeString(forKey: LogLineArchiveKey.nickname) as String?
 		/* Nothing here was ever encoded negative, so a negative value belongs to
 		 a damaged or hand-written archive. `UInt(exactly:)` sends it to the same
 		 default an unknown raw value takes rather than trapping the conversion. */
-		decoded.lineType = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.lineType))
+		line.lineType = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.lineType))
 			.flatMap(LogLineType.init(rawValue:)) ?? .undefined
-		decoded.memberType = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.memberType))
+		line.memberType = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.memberType))
 			.flatMap(LogLineMemberType.init(rawValue:)) ?? .normal
 
 		/* A line that was still in flight when the app last quit is not pending
 		 any more; nothing is going to deliver it. */
-		let decodedDeliveryState = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.deliveryState))
+		let deliveryState = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.deliveryState))
 			.flatMap(LogLineDeliveryState.init(rawValue:)) ?? .none
-		decoded.deliveryState = decodedDeliveryState == .pending ? .none : decodedDeliveryState
-		decoded.uniqueIdentifier = coder.textual_decodeString(
-			forKey: LogLineArchiveKey.uniqueIdentifier
-		) as String?
-		decoded.sessionIdentifier = UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.sessionIdentifier)) ?? 0
-
-		var line = LogLine()
-		line.restore(from: decoded)
+		line.deliveryState = deliveryState == .pending ? .none : deliveryState
+		line.restoreIdentity(
+			uniqueIdentifier: coder.textual_decodeString(forKey: LogLineArchiveKey.uniqueIdentifier) as String?,
+			sessionIdentifier: UInt(exactly: coder.decodeInteger(forKey: LogLineArchiveKey.sessionIdentifier)) ?? 0
+		)
 		line.populateDefaultsPostflight()
 		self.line = line
 

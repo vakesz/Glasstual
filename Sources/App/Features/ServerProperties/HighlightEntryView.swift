@@ -16,117 +16,87 @@ import SwiftUI
 @MainActor
 struct HighlightEntryView: View {
 	@Bindable var model: HighlightEntryModel
+
+	let submit: () -> Void
+	let cancel: () -> Void
+
 	@FocusState private var keywordFieldIsFocused: Bool
 
-	let content: HighlightEntryContent
-	let behaviorDidChange: @MainActor (HighlightMatchBehavior) -> Void
-	let keywordDidChange: @MainActor (String) -> Void
-	let channelSelectionDidChange: @MainActor (HighlightChannelSelection) -> Void
-	let submit: @MainActor () -> Void
-	let cancel: @MainActor () -> Void
-
-	private var behavior: Binding<HighlightMatchBehavior> {
-		Binding(
-			get: { model.behavior },
-			set: behaviorDidChange
-		)
-	}
-
-	private var keyword: Binding<String> {
-		Binding(
-			get: { model.keyword },
-			set: keywordDidChange
-		)
-	}
-
-	private var channelSelection: Binding<HighlightChannelSelection> {
-		Binding(
-			get: { model.channelSelection },
-			set: channelSelectionDidChange
-		)
-	}
-
 	var body: some View {
-		VStack(alignment: .leading, spacing: 16) {
-			HStack(alignment: .firstTextBaseline, spacing: 8) {
-				Picker(content.matchTypeAccessibilityLabel, selection: behavior) {
-					ForEach(HighlightMatchBehavior.allCases) { behavior in
-						Text(verbatim: content.title(for: behavior))
+		VStack(spacing: 0) {
+			VStack(alignment: .leading, spacing: 6) {
+				Text(verbatim: HighlightEntryStrings.windowTitle)
+					.font(.title2.weight(.semibold))
+				Text(verbatim: HighlightEntryStrings.ruleDescription)
+					.foregroundStyle(.secondary)
+					.fixedSize(horizontal: false, vertical: true)
+			}
+			.frame(maxWidth: .infinity, alignment: .leading)
+			.padding([.horizontal, .top], 20)
+			.padding(.bottom, 12)
+
+			Form {
+				Section {
+					Picker(HighlightEntryStrings.matchTypeLabel, selection: $model.behavior) {
+						ForEach(HighlightMatchBehavior.allCases) { behavior in
+							Text(verbatim: ServerPropertiesStrings.Highlight.matchType(
+								isExcluded: behavior.excludesMatches
+							))
 							.tag(behavior)
-					}
-				}
-				.labelsHidden()
-				.frame(width: 100)
-				.accessibilityLabel(Text(verbatim: content.matchTypeAccessibilityLabel))
-
-				Text(verbatim: content.keywordConnector)
-					.fixedSize()
-
-				TextField("", text: keyword)
-					.labelsHidden()
-					.focused($keywordFieldIsFocused)
-					.accessibilityLabel(Text(verbatim: content.keywordAccessibilityLabel))
-					.accessibilityHint(
-						Text(verbatim: model.validationError ?? content.keywordAccessibilityHint)
-					)
-					.overlay {
-						if model.validationError != nil {
-							RoundedRectangle(cornerRadius: 5)
-								.stroke(.red, lineWidth: 1)
-								.allowsHitTesting(false)
 						}
 					}
-					.popover(isPresented: $model.isValidationMessagePresented) {
-						if let validationError = model.validationError {
-							Text(verbatim: validationError)
-								.padding(10)
+
+					LabeledContent(HighlightEntryStrings.keywordLabel) {
+						TextField(HighlightEntryStrings.keywordPlaceholder, text: $model.keyword)
+							.labelsHidden()
+							.focused($keywordFieldIsFocused)
+							.accessibilityLabel(HighlightEntryStrings.keywordLabel)
+							.onSubmit(submit)
+					}
+
+					if let message = model.validationMessage {
+						ValidationMessageLabel(message)
+					}
+				} footer: {
+					Text(verbatim: HighlightEntryStrings.keywordHelp)
+				}
+
+				Section {
+					Picker(HighlightEntryStrings.channelLabel, selection: $model.channelSelection) {
+						Text(verbatim: ServerPropertiesStrings.Highlight.allChannels)
+							.tag(HighlightChannelSelection.all)
+
+						if model.channels.isEmpty == false {
+							Divider()
+						}
+
+						ForEach(model.channels) { channel in
+							Text(verbatim: channel.name)
+								.tag(HighlightChannelSelection.channel(id: channel.id))
 						}
 					}
-					.onSubmit(submit)
-			}
-
-			HStack(alignment: .firstTextBaseline, spacing: 8) {
-				Text(verbatim: content.channelConnector)
-					.fixedSize()
-
-				Picker(content.channelAccessibilityLabel, selection: channelSelection) {
-					Text(verbatim: content.allChannelsTitle)
-						.tag(HighlightChannelSelection.all)
-
-					if model.channels.isEmpty == false {
-						Divider()
-					}
-
-					ForEach(model.channels) { channel in
-						Text(verbatim: channel.name)
-							.tag(HighlightChannelSelection.channel(id: channel.id))
-					}
+				} footer: {
+					Text(verbatim: HighlightEntryStrings.channelHelp)
 				}
-				.labelsHidden()
-				.frame(maxWidth: .infinity)
-				.accessibilityLabel(Text(verbatim: content.channelAccessibilityLabel))
-				.accessibilityHint(Text(verbatim: content.channelAccessibilityHint))
 			}
+			.formStyle(.grouped)
 
+			Divider()
 			HStack(spacing: 8) {
 				Spacer()
-
-				Button(action: cancel) {
-					Text(verbatim: content.cancelButtonTitle)
-				}
-				.keyboardShortcut(.cancelAction)
-
-				Button(action: submit) {
-					Text(verbatim: content.saveButtonTitle)
-				}
-				.keyboardShortcut(.defaultAction)
+				Button(PromptStrings.Action.cancel, action: cancel)
+					.keyboardShortcut(.cancelAction)
+				/* The rule is written back into the connection the sheet
+				 belongs to, which is what saves it. */
+				Button(PromptStrings.Action.confirmation, action: submit)
+					.keyboardShortcut(.defaultAction)
+					.disabled(model.validationMessage != nil)
 			}
+			.padding(12)
 		}
-		.padding(20)
-		.frame(width: 500, height: 150)
+		.frame(minWidth: 460, idealWidth: 520, maxWidth: .infinity)
 		.onAppear {
 			keywordFieldIsFocused = true
 		}
-		.onExitCommand(perform: cancel)
 	}
 }

@@ -55,13 +55,6 @@ struct IRCClientConnectionDelegatePolicyTests {
 		#expect(ConnectionErrorCode.unableToSecure.rawValue == 1002)
 	}
 
-	@Test("Only a connecting or connected client transitions off")
-	func transitionRequiresConnectingOrConnectedState() {
-		#expect(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: false, isConnected: false) == false)
-		#expect(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: true, isConnected: false))
-		#expect(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: false, isConnected: true))
-	}
-
 	@Test("An untrusted certificate overrides the configured disconnect mode")
 	func badCertificateErrorOverridesConfiguredDisconnectMode() {
 		#expect(
@@ -139,30 +132,30 @@ struct IRCClientConnectionDelegatePolicyTests {
 	}
 
 	@Test("The stored server time only advances for a newer stamped message")
-	func historicMessagePolicyAdvancesOnlyNewServerTime() {
-		#expect(
-			IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
-				isLoggedIn: true,
-				hasServerTime: true,
-				receivedTime: 20,
-				lastServerTime: 10
-			)
-		)
-		#expect(
-			IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
-				isLoggedIn: true,
-				hasServerTime: true,
-				receivedTime: 10,
-				lastServerTime: 10
-			) == false
-		)
-		#expect(
-			IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
-				isLoggedIn: true,
-				hasServerTime: false,
-				receivedTime: 20,
-				lastServerTime: 10
-			) == false
-		)
+	func historicMessagePolicyAdvancesOnlyNewServerTime() throws {
+		let client = TestClient(configDictionary: ["nickname": "me"])
+
+		client.isLoggedIn = true
+		client.enableCapability(.serverTime)
+
+		let stamped = try #require(Message(line: "@time=2026-01-01T00:00:20.000Z :s PING :x", on: client))
+
+		client.processIncomingMessageOnMainActor(stamped)
+
+		let advanced = client.lastMessageServerTime
+
+		#expect(advanced == stamped.receivedAt.timeIntervalSince1970)
+
+		let older = try #require(Message(line: "@time=2026-01-01T00:00:10.000Z :s PING :x", on: client))
+
+		client.processIncomingMessageOnMainActor(older)
+
+		#expect(client.lastMessageServerTime == advanced)
+
+		let unstamped = try #require(Message(line: ":s PING :x", on: client))
+
+		client.processIncomingMessageOnMainActor(unstamped)
+
+		#expect(client.lastMessageServerTime == advanced)
 	}
 }

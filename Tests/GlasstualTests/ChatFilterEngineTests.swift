@@ -127,9 +127,7 @@ struct ChatFilterEngineTests {
 	/// arriving line, so the subject a user-authored pattern sees is bounded.
 	@Test("Filter matching is bounded to a message-sized subject")
 	func matchingIsBounded() {
-		#expect(ChatFilterEngine.matchInputLimit == RegularExpression.inputLengthLimit)
-
-		let subject = String(repeating: "a", count: ChatFilterEngine.matchInputLimit + 32) + "needle"
+		let subject = String(repeating: "a", count: RegularExpression.inputLengthLimit + 32) + "needle"
 
 		#expect(RegularExpression.string(subject, isMatchedByRegex: "needle", withoutCase: true))
 		#expect(
@@ -137,7 +135,7 @@ struct ChatFilterEngineTests {
 				subject,
 				isMatchedByRegex: "needle",
 				withoutCase: true,
-				inputLimit: ChatFilterEngine.matchInputLimit
+				inputLimit: RegularExpression.inputLengthLimit
 			) == false
 		)
 	}

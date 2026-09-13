@@ -21,11 +21,6 @@
       "extractionState" : "manual",
       "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Connection %@, Disconnected" } } }
     },
-    "error-icon" : {
-      "comment" : "Error icon in validation popover. Migrated from legacy key c4e-rr.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Error" } } }
-    },
     "main-window" : {
       "comment" : "Main window title description. Migrated from legacy key k79-1a.",
       "extractionState" : "manual",

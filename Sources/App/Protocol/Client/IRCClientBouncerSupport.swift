@@ -44,34 +44,8 @@ private let bouncerSupportLogger = Logger(
 	category: "IRCBouncer"
 )
 
-struct BouncerNotificationContext {
-	let isRequestedChatHistory: Bool
-	let isConnectedToBouncer: Bool
-	let ignoresBouncerUsers: Bool
-	let channelIsBouncerUser: Bool
-	let ignoresPlayback: Bool
-	let supportsBatch: Bool
-	let batchType: String?
-	let isHistoric: Bool
-}
-
-enum BouncerNotificationPolicy {
-	static func shouldPost(_ context: BouncerNotificationContext) -> Bool {
-		guard context.isRequestedChatHistory == false else { return false }
-		guard context.isConnectedToBouncer else { return true }
-		guard context.ignoresBouncerUsers == false || context.channelIsBouncerUser == false else { return false }
-		guard context.ignoresPlayback else { return true }
-
-		if context.supportsBatch {
-			return context.batchType != IRCServerQuirks.ZNC.playbackBatchType
-		}
-
-		return context.isHistoric == false
-	}
-}
-
 public extension IRCClient {
-	internal func clearZNCPlayback(for channel: IRCChannel) {
+	internal func clearZNCPlayback(for channel: Channel) {
 		guard isConnectedToZNC else { return }
 		clearPlayback(for: channel)
 	}
@@ -89,21 +63,30 @@ public extension IRCClient {
 		return IRCServerQuirks.ZNC.nickname(forModuleNamed: nickname)
 	}
 
-	internal func isSafeToPostNotification(for message: Message, in channel: IRCChannel?) -> Bool {
-		let requestedHistory = batchMessage(ofType: IRCServerQuirks.chatHistoryBatchType, containing: message) != nil
-		let channelIsBouncerUser = channel.map { nicknameIsZNCUser($0.name) } ?? false
+	/** Whether `message` may raise a notification.
 
-		let context = BouncerNotificationContext(
-			isRequestedChatHistory: requestedHistory,
-			isConnectedToBouncer: isConnectedToZNC,
-			ignoresBouncerUsers: config.zncIgnoreUserNotifications,
-			channelIsBouncerUser: channelIsBouncerUser,
-			ignoresPlayback: config.zncIgnorePlaybackNotifications,
-			supportsBatch: isCapabilityEnabled(.batch),
-			batchType: message.parentBatchMessage?.batchType,
-			isHistoric: message.isHistoric
-		)
-		return BouncerNotificationPolicy.shouldPost(context)
+	 Chat history the client asked for never does. Past that the question is
+	 only what a bouncer replays: a playback batch is recognised by its type
+	 where the server negotiated `batch`, and by the historic flag where it did
+	 not. */
+	internal func isSafeToPostNotification(for message: Message, in channel: Channel?) -> Bool {
+		guard batchMessage(ofType: IRCServerQuirks.chatHistoryBatchType, containing: message) == nil else {
+			return false
+		}
+
+		guard isConnectedToZNC else { return true }
+
+		if config.zncIgnoreUserNotifications, channel.map({ nicknameIsZNCUser($0.name) }) == true {
+			return false
+		}
+
+		guard config.zncIgnorePlaybackNotifications else { return true }
+
+		if isCapabilityEnabled(.batch) {
+			return message.parentBatchMessage?.batchType != IRCServerQuirks.ZNC.playbackBatchType
+		}
+
+		return message.isHistoric == false
 	}
 
 	internal func detectZNC(from message: Message) {

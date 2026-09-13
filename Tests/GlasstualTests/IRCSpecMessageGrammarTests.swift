@@ -146,7 +146,7 @@ struct IRCSpecMessageGrammarTests {
 	/// received."
 	@Test("RFC 1459 §2.3: a message with no prefix comes from the server")
 	func absentPrefixMeansTheServerSentIt() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(Message(line: "PING :12345", on: client))
 
 		#expect(message.senderIsServer)
@@ -159,7 +159,7 @@ struct IRCSpecMessageGrammarTests {
 	/// name, which is what a bare `servername` prefix is.
 	@Test("RFC 2812 §2.3.1: a full hostmask prefix splits into nick, user and host")
 	func fullHostmaskPrefixSplits() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(Message(line: ":nick!user@example.org PRIVMSG #chan :hi", on: client))
 
 		#expect(message.senderIsServer == false)
@@ -171,7 +171,7 @@ struct IRCSpecMessageGrammarTests {
 
 	@Test("RFC 2812 §2.3.1: a bare servername prefix is a server")
 	func serverNamePrefixIsAServer() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(Message(line: ":irc.example.org NOTICE * :hello", on: client))
 
 		#expect(message.senderIsServer)

@@ -170,7 +170,7 @@ struct IRCSpecNumericsTests {
 	/// does not.
 	@Test("A three-digit command is dispatched as a numeric")
 	func threeDigitCommandsAreNumerics() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let numeric = try #require(Message(line: ":irc.example.net 433 * taken :Nickname is in use", on: client))
 		let command = try #require(Message(line: ":irc.example.net NOTICE * :hello", on: client))
 
@@ -180,11 +180,11 @@ struct IRCSpecNumericsTests {
 
 	// MARK: - Routing
 
-	private func client() -> GLTTestClient {
-		GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+	private func client() -> TestClient {
+		TestClient(configDictionary: ["nickname": "me", "username": "me"])
 	}
 
-	private func receive(_ line: String, on client: GLTTestClient) throws {
+	private func receive(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 
 		client.receiveNumericReply(message)

@@ -61,18 +61,6 @@
         }
       }
     },
-    "heading" : {
-      "comment" : "Heading above a server's highlight list. The placeholder is the network name. Migrated from the legacy interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlights for \"%@\""
-          }
-        }
-      }
-    },
     "highlight-list" : {
       "comment" : "Accessibility label for the table of cached highlighted messages. Migrated from the legacy interface file.",
       "extractionState" : "manual",
@@ -117,6 +105,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Highlights for %@"
+          }
+        }
+      }
+    },
+    "clear-list-confirmation-title" : {
+      "comment" : "Title of the confirmation shown before the cached highlights of a connection are discarded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the highlight list?"
+          }
+        }
+      }
+    },
+    "clear-list-confirmation-message" : {
+      "comment" : "Body of the confirmation shown before the cached highlights of a connection are discarded.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The highlights logged for this connection are removed. This cannot be undone."
+          }
+        }
+      }
+    },
+    "go-to-message" : {
+      "comment" : "Context menu item and primary action that selects the channel a highlight was logged in and scrolls to the line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Message"
           }
         }
       }

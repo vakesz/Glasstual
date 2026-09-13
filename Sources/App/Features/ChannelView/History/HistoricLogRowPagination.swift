@@ -109,18 +109,8 @@ nonisolated extension HistoricLogDatabase { // nonisolated: value
 
 nonisolated extension HistoricLogRowCursor: Comparable { // nonisolated: value
 	static func < (left: Self, right: Self) -> Bool {
-		if left.timestamp != right.timestamp {
-			return left.timestamp < right.timestamp
-		}
-		if left.insertionIdentifier != right
-			.insertionIdentifier
-		{
-			return left.insertionIdentifier < right.insertionIdentifier
-		}
-		if left.lineIdentifier != right.lineIdentifier {
-			return left.lineIdentifier < right.lineIdentifier
-		}
-		return left.rowURI < right.rowURI
+		(left.timestamp, left.insertionIdentifier, left.lineIdentifier, left.rowURI)
+			< (right.timestamp, right.insertionIdentifier, right.lineIdentifier, right.rowURI)
 	}
 
 	init?(object: NSManagedObject) {

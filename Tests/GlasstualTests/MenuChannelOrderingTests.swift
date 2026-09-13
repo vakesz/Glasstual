@@ -11,7 +11,7 @@ import Testing
 @MainActor
 @Suite("Channel list sort ordering")
 struct MenuChannelOrderingTests {
-	private func makeChannel(named name: String, isQuery: Bool) -> IRCChannel {
+	private func makeChannel(named name: String, isQuery: Bool) -> Channel {
 		Channel(
 			config: ChannelConfig(channelName: name, type: isQuery ? .privateMessage : .channel)
 		)

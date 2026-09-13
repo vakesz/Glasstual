@@ -14,6 +14,43 @@
 import Foundation
 import Observation
 
+/// Channel modes edited by the channel-modes feature.
+///
+/// IRC mode letters are a wire-format boundary. Keeping that mapping here
+/// prevents view and presentation code from passing unvalidated magic strings.
+enum ChannelMode: String, CaseIterable, Sendable {
+	case inviteOnly = "i"
+	case moderated = "m"
+	case noExternalMessages = "n"
+	case privateChannel = "p"
+	case secretChannel = "s"
+	case operatorTopic = "t"
+	case key = "k"
+	case userLimit = "l"
+
+	static let booleanModes: [Self] = [
+		.secretChannel,
+		.privateChannel,
+		.noExternalMessages,
+		.operatorTopic,
+		.inviteOnly,
+		.moderated,
+	]
+
+	var title: String {
+		switch self {
+		case .inviteOnly: ChannelModesStrings.inviteOnlyModeTitle
+		case .moderated: ChannelModesStrings.moderatedModeTitle
+		case .noExternalMessages: ChannelModesStrings.noExternalMessagesModeTitle
+		case .privateChannel: ChannelModesStrings.privateChannelModeTitle
+		case .secretChannel: ChannelModesStrings.secretChannelModeTitle
+		case .operatorTopic: ChannelModesStrings.operatorTopicModeTitle
+		case .key: ChannelModesStrings.channelKeyModeTitle
+		case .userLimit: ChannelModesStrings.userLimitModeTitle
+		}
+	}
+}
+
 @MainActor
 @Observable
 final class ChannelModesModel {
@@ -24,7 +61,6 @@ final class ChannelModesModel {
 
 	private(set) var secretKey: String
 	private(set) var userLimit: String
-	private(set) var hasPresentedMaximumKeyLengthWarning = false
 
 	let maximumKeyLength: Int
 
@@ -68,20 +104,20 @@ final class ChannelModesModel {
 		}
 	}
 
-	@discardableResult
-	func updateSecretKey(_ secretKey: String) -> Bool {
+	func updateSecretKey(_ secretKey: String) {
 		self.secretKey = secretKey
+	}
 
-		/* KEYLEN is an octet count, so the key is measured in UTF-8 bytes. */
-		guard maximumKeyLength > 0,
-		      secretKey.utf8.count > maximumKeyLength,
-		      hasPresentedMaximumKeyLengthWarning == false
-		else {
-			return false
-		}
+	/// How many octets of key the server still has room for, or `nil` where it
+	/// named no limit. KEYLEN is an octet count, so the key is measured in
+	/// UTF-8 bytes. Negative once the key no longer fits, which is what
+	/// disables the button and turns the footer into a warning.
+	var remainingKeyLength: Int? {
+		maximumKeyLength > 0 ? maximumKeyLength - secretKey.utf8.count : nil
+	}
 
-		hasPresentedMaximumKeyLengthWarning = true
-		return true
+	var fitsMaximumKeyLength: Bool {
+		(remainingKeyLength ?? 0) >= 0
 	}
 
 	func updateUserLimit(_ userLimit: String) {

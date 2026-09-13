@@ -59,6 +59,13 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		String(localized: .Notifications.bodyActionWithNickname(nickname, text))
 	}
 
+	/** What one notification event is called.
+
+	 The notification settings table names its rows with this, and a
+	 notification that is not someone speaking carries it as its title: the two
+	 are the same phrase, so they are the same entry. Titles used to be a second
+	 family of "<Category>: <subject>" strings that repeated in the title what
+	 the subtitle already said. */
 	static func eventTypeTitle(for event: NotificationEvent) -> String {
 		switch event {
 		case .addressBookMatch:
@@ -102,87 +109,68 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		}
 	}
 
-	static func deliveredTitle(for event: NotificationEvent, subject: String?) -> String? {
-		switch event {
-		case .highlight:
-			String(localized: .Notifications.titleHighlight(subject ?? ""))
-		case .newPrivateMessage:
-			String(localized: .Notifications.titleNewPrivateMessage)
-		case .channelMessage:
-			String(localized: .Notifications.titleChannelMessage(subject ?? ""))
-		case .channelNotice:
-			String(localized: .Notifications.titleChannelNotice(subject ?? ""))
-		case .privateMessage:
-			String(localized: .Notifications.titlePrivateMessage)
-		case .privateNotice:
-			String(localized: .Notifications.titlePrivateNotice)
-		case .kick:
-			String(localized: .Notifications.titleKicked(subject ?? ""))
-		case .invite:
-			String(localized: .Notifications.titleInvited(subject ?? ""))
-		case .connect:
-			String(localized: .Notifications.titleConnected(subject ?? ""))
-		case .disconnect:
-			String(localized: .Notifications.titleDisconnected(subject ?? ""))
-		case .addressBookMatch:
-			String(localized: .Notifications.titleAddressBook)
-		case .fileTransferSendSuccessful:
-			String(localized: .Notifications.titleFileTransferSendSuccessful(subject ?? ""))
-		case .fileTransferReceiveSuccessful:
-			String(localized: .Notifications.titleFileTransferReceiveSuccessful(subject ?? ""))
-		case .fileTransferSendFailed:
-			String(localized: .Notifications.titleFileTransferSendFailed(subject ?? ""))
-		case .fileTransferReceiveFailed:
-			String(localized: .Notifications.titleFileTransferReceiveFailed(subject ?? ""))
-		case .fileTransferReceiveRequested:
-			String(localized: .Notifications.titleFileTransferRequest(subject ?? ""))
-		case .userJoined:
-			String(localized: .Notifications.titleUserJoined(subject ?? ""))
-		case .userParted:
-			String(localized: .Notifications.titleUserParted(subject ?? ""))
-		case .userDisconnected:
-			String(localized: .Notifications.titleUserDisconnected(subject ?? ""))
-		}
-	}
-
-	static func deliveredBody(for event: NotificationEvent, fallback: String?) -> String? {
-		switch event {
-		case .connect:
-			String(localized: .Notifications.bodyConnectionSuccessful)
-		case .disconnect:
-			String(localized: .Notifications.bodyDisconnectionSuccessful)
-		default:
-			fallback
-		}
-	}
-
 	enum Spoken {
-		static var channelMessage: String {
-			String(localized: .Notifications.spokenChannelMessage)
+		/** One spoken sentence for a channel message, notice or highlight.
+
+		 Which parts a sentence names is the person's choice, so there is an
+		 entry per shape rather than a label, a channel, a nickname and a comma
+		 concatenated in code: a translator cannot reorder or inflect fragments
+		 that Swift glues together in English word order. */
+		static func channelEvent(
+			_ event: NotificationEvent,
+			channelName: String?,
+			nickname: String?,
+			text: String
+		) -> String {
+			switch event {
+			case .highlight: highlight(channelName: channelName, nickname: nickname, text: text)
+			case .channelNotice: channelNotice(channelName: channelName, nickname: nickname, text: text)
+			default: channelMessage(channelName: channelName, nickname: nickname, text: text)
+			}
 		}
 
-		static var channelNotice: String {
-			String(localized: .Notifications.spokenChannelNotice)
+		/// A highlight in a private message always names who it came from.
+		static func privateHighlight(from nickname: String, text: String) -> String {
+			String(localized: .Notifications.spokenHighlightInPrivateMessageFromUser(nickname, text))
 		}
 
-		static var highlight: String {
-			String(localized: .Notifications.spokenHighlight)
+		private static func highlight(channelName: String?, nickname: String?, text: String) -> String {
+			switch (channelName, nickname) {
+			case let (.some(channel), .some(nickname)):
+				String(localized: .Notifications.spokenHighlightInChannelByUser(channel, nickname, text))
+			case let (.some(channel), nil):
+				String(localized: .Notifications.spokenHighlightInChannel(channel, text))
+			case let (nil, .some(nickname)):
+				String(localized: .Notifications.spokenHighlightByUser(nickname, text))
+			case (nil, nil):
+				text
+			}
 		}
 
-		static var privateMessageLocation: String {
-			String(localized: .Notifications.spokenInPrivateMessage)
+		private static func channelMessage(channelName: String?, nickname: String?, text: String) -> String {
+			switch (channelName, nickname) {
+			case let (.some(channel), .some(nickname)):
+				String(localized: .Notifications.spokenChannelMessageInChannelByUser(channel, nickname, text))
+			case let (.some(channel), nil):
+				String(localized: .Notifications.spokenChannelMessageInChannel(channel, text))
+			case let (nil, .some(nickname)):
+				String(localized: .Notifications.spokenChannelMessageByUser(nickname, text))
+			case (nil, nil):
+				text
+			}
 		}
 
-		static var separator: String {
-			String(localized: .Notifications.spokenSeparator)
-		}
-
-		static func author(_ nickname: String) -> String {
-			String(localized: .Notifications.spokenByUser(nickname))
-		}
-
-		static func channel(_ channelName: String) -> String {
-			String(localized: .Notifications.spokenInChannel(channelName))
+		private static func channelNotice(channelName: String?, nickname: String?, text: String) -> String {
+			switch (channelName, nickname) {
+			case let (.some(channel), .some(nickname)):
+				String(localized: .Notifications.spokenChannelNoticeInChannelByUser(channel, nickname, text))
+			case let (.some(channel), nil):
+				String(localized: .Notifications.spokenChannelNoticeInChannel(channel, text))
+			case let (nil, .some(nickname)):
+				String(localized: .Notifications.spokenChannelNoticeByUser(nickname, text))
+			case (nil, nil):
+				text
+			}
 		}
 
 		static func connected(to networkName: String) -> String {
@@ -191,10 +179,6 @@ nonisolated enum NotificationStrings { // nonisolated: value
 
 		static func disconnected(from networkName: String) -> String {
 			String(localized: .Notifications.spokenDisconnected(networkName))
-		}
-
-		static func privateMessageAuthor(_ nickname: String) -> String {
-			String(localized: .Notifications.spokenFromUser(nickname))
 		}
 
 		static func privateMessage(
@@ -259,25 +243,34 @@ nonisolated enum NotificationStrings { // nonisolated: value
 		}
 	}
 
+	/** The sentence under a membership notification's heading.
+
+	 The channel and the network are already the notification's title and
+	 subtitle, so these name only the person and, where there is one, their
+	 reason. */
 	enum Membership {
-		static func kicked(by nickname: String, from channelName: String, reason: String) -> String {
-			String(localized: .Notifications.bodyKicked(nickname, channelName, reason))
+		static func kicked(by nickname: String, reason: String?) -> String {
+			if let reason, reason.isEmpty == false {
+				return String(localized: .Notifications.bodyKicked(nickname, reason))
+			}
+
+			return String(localized: .Notifications.bodyKickedWithoutReason(nickname))
 		}
 
 		static func invited(by nickname: String, to channelName: String) -> String {
 			String(localized: .Notifications.bodyInvited(nickname, channelName))
 		}
 
-		static func joined(nickname: String, channelName: String) -> String {
-			String(localized: .Notifications.bodyUserJoined(nickname, channelName))
+		static func joined(nickname: String) -> String {
+			String(localized: .Notifications.bodyUserJoined(nickname))
 		}
 
-		static func parted(nickname: String, channelName: String, reason: String?) -> String {
+		static func parted(nickname: String, reason: String?) -> String {
 			if let reason, reason.isEmpty == false {
-				return String(localized: .Notifications.bodyUserPartedWithReason(nickname, channelName, reason))
+				return String(localized: .Notifications.bodyUserPartedWithReason(nickname, reason))
 			}
 
-			return String(localized: .Notifications.bodyUserParted(nickname, channelName))
+			return String(localized: .Notifications.bodyUserParted(nickname))
 		}
 
 		static func disconnected(nickname: String, reason: String?) -> String {
@@ -348,56 +341,56 @@ nonisolated enum NotificationStrings { // nonisolated: value
 
 nonisolated enum NotificationSoundStrings { // nonisolated: value
 	static var defaultSound: String {
-		String(localized: .TVCNotificationConfigurationView.defaultSound)
+		String(localized: .NotificationSettings.defaultSound)
 	}
 
 	static var noSound: String {
-		String(localized: .TVCNotificationConfigurationView.noSound)
+		String(localized: .NotificationSettings.noSound)
 	}
 }
 
 nonisolated enum NotificationConfigurationStrings { // nonisolated: value
-	static var bounceDockIcon: String {
-		String(localized: .TVCNotificationConfigurationView.bounceDockIcon)
-	}
-
-	static var bounceRepeatedly: String {
-		String(localized: .TVCNotificationConfigurationView.bounceRepeatedly)
-	}
-
-	static var disableWhileAway: String {
-		String(localized: .TVCNotificationConfigurationView.disableWhileAway)
-	}
-
-	static var inherit: String {
-		String(localized: .TVCNotificationConfigurationView.inherit)
-	}
-
-	static var noAlerts: String {
-		String(localized: .TVCNotificationConfigurationView.noAlerts)
-	}
-
-	static var off: String {
-		String(localized: .TVCNotificationConfigurationView.off)
-	}
-
-	static var on: String {
-		String(localized: .TVCNotificationConfigurationView.on)
-	}
-
-	static var selectedAlert: String {
-		String(localized: .TVCNotificationConfigurationView.selectedAlert)
+	static var event: String {
+		String(localized: .NotificationSettings.event)
 	}
 
 	static var showNotification: String {
-		String(localized: .TVCNotificationConfigurationView.showNotification)
-	}
-
-	static var sound: String {
-		String(localized: .TVCNotificationConfigurationView.sound)
+		String(localized: .NotificationSettings.showNotification)
 	}
 
 	static var speak: String {
-		String(localized: .TVCNotificationConfigurationView.speak)
+		String(localized: .NotificationSettings.speak)
+	}
+
+	static var disableWhileAway: String {
+		String(localized: .NotificationSettings.disableWhileAway)
+	}
+
+	static var bounceDockIcon: String {
+		String(localized: .NotificationSettings.bounceDockIcon)
+	}
+
+	static var bounceRepeatedly: String {
+		String(localized: .NotificationSettings.bounceRepeatedly)
+	}
+
+	static var sound: String {
+		String(localized: .NotificationSettings.sound)
+	}
+
+	static var inherit: String {
+		String(localized: .NotificationSettings.inherit)
+	}
+
+	static var off: String {
+		String(localized: .NotificationSettings.off)
+	}
+
+	static var on: String {
+		String(localized: .NotificationSettings.on)
+	}
+
+	static var noEvents: String {
+		String(localized: .NotificationSettings.noNotificationEvents)
 	}
 }

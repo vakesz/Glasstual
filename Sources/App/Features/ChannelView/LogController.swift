@@ -50,7 +50,7 @@ private nonisolated let logControllerLogger = Logger( // nonisolated: let
 )
 
 @MainActor
-public final class LogController: NSObject, ServerHistoryPresentation {
+public final class LogController: ServerHistoryPresentation {
 	public private(set) var backingView: LogView?
 	public private(set) var viewIsLoaded = false
 	public private(set) weak var attachedWindow: MainWindow?
@@ -110,6 +110,13 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 
 	var historyPageFetcher: @Sendable @concurrent (HistoricLogFetchRequest) async
 		-> HistoricLogFetchOutcome
+	/** Whether the first history read waits until the view becomes visible.
+
+	 A closure rather than a direct read so a test can pin the decision for one
+	 controller; writing `Preferences.Logging.loadHistoryLazily` instead would
+	 change what every other suite running beside it sees. Read on each reload,
+	 so a preference change still takes effect at once. */
+	var loadsHistoryLazily: @MainActor () -> Bool = { Preferences.Logging.loadHistoryLazily.value }
 
 	private let memberRenderCache = MemberListRenderCache()
 	let inlineImageLoader: NativeInlineImageLoader
@@ -117,6 +124,14 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 	private(set) var historicLogMutationTask: Task<Void, Never>?
 
 	private var lastVisitedHighlight: String?
+	/// Whether any line on screen is a highlight. Cheap: the transcript counts
+	/// them as it is edited, and menu validation asks for this on every pass.
+	public var hasHighlightedLines: Bool {
+		backingView?.hasHighlightedLines == true
+	}
+
+	/// The highlights in the order they are drawn, for the commands that step
+	/// through them. Walked on demand, which is once per keystroke.
 	private var highlightedLineNumbers: [String] {
 		backingView?.displayedLines.filter(\.body.isHighlight).map(\.lineNumber) ?? []
 	}
@@ -124,6 +139,19 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 	private(set) var reactionsByMessageIdentifier: [String: [String: [String]]] = [:]
 	private(set) var viewLoadedTimestamp: TimeInterval = 0
 	var lastLineStorage: LogLine?
+	/** The lines handed to `print` that have not been applied to the view yet.
+
+	 Rendering continues off the main actor, so `displayedLines` is empty for a
+	 line printed in this turn. The read marker a server sends arrives in the same
+	 turn as the burst it refers to, and answering it from the view alone would
+	 miss every line of that burst.
+
+	 The invariant is that what the pipeline drops, the seams forget: a line
+	 leaves this list when it is applied, when the queued jobs are cancelled, and
+	 when the view is torn down, so nothing here is ever a line the view will
+	 never show. Single-purpose: the two conversation seams in
+	 `MainWindowWorldSeams` are the only readers. */
+	private(set) var linesAwaitingRender: [LogLine] = []
 	var transcriptProjection = TranscriptProjectionState()
 	var transcriptSessionBoundary = TranscriptSessionBoundaryState()
 
@@ -150,11 +178,11 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 	 the opposite of what those guards say and left an unwrap in reach that
 	 would have trapped exactly when the guards were right. */
 	public private(set) weak var associatedClient: IRCClient?
-	public private(set) weak var associatedChannel: IRCChannel?
+	public private(set) weak var associatedChannel: Channel?
 	/// The item's identifier, which never changes once the controller is attached.
 	public private(set) var uniqueIdentifier = ""
 
-	var associatedItem: IRCTreeItem? {
+	var associatedItem: TreeItem? {
 		associatedChannel ?? associatedClient
 	}
 
@@ -184,18 +212,13 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		return attachedWindow.isItemVisible(associatedClient)
 	}
 
-	@available(*, unavailable, message: "Use init(client:in:) or init(channel:in:)")
-	override public init() {
-		fatalError("Use a designated log controller initializer")
-	}
-
 	public convenience init(client: IRCClient, in window: MainWindow) {
 		self.init(client: client, in: window, inlineImageLoader: .shared)
 	}
 
 	init(
 		client: IRCClient, in window: MainWindow, inlineImageLoader: NativeInlineImageLoader,
-		historicLog: LogControllerHistoricLogFile = .sharedInstance
+		historicLog: LogControllerHistoricLogFile = .shared
 	) {
 		self.inlineImageLoader = inlineImageLoader
 		self.historicLog = historicLog
@@ -203,20 +226,18 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		associatedClient = client
 		uniqueIdentifier = client.uniqueIdentifier
 		attachedWindow = window
-		super.init()
 		setUp()
 	}
 
-	public init(channel: IRCChannel, in window: MainWindow) {
+	public init(channel: Channel, in window: MainWindow) {
 		inlineImageLoader = .shared
-		historicLog = .sharedInstance
+		historicLog = .shared
 		let storage = historicLog
 		historyPageFetcher = { await storage.fetchOutcome($0) }
 		associatedClient = channel.associatedClient
 		associatedChannel = channel
 		uniqueIdentifier = channel.uniqueIdentifier
 		attachedWindow = window
-		super.init()
 		setUp()
 	}
 
@@ -279,6 +300,7 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		renderGeneration += 1
 		cancelOlderHistory()
 		pendingApplications.removeAll()
+		linesAwaitingRender.removeAll()
 		deferredPrepends.removeAll()
 		applicationTask?.cancel()
 		applicationTask = nil
@@ -327,14 +349,14 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		guard let associatedItem else {
 			return
 		}
-		historicLogMutationTask = historicLog.forgetView(associatedItem.uniqueIdentifier)
+		historicLogMutationTask = historicLog.removeHistory(forView: associatedItem.uniqueIdentifier, forget: true)
 	}
 
 	private func historicLogResetChannel() {
 		guard let associatedItem else {
 			return
 		}
-		historicLogMutationTask = historicLog.resetData(forView: associatedItem.uniqueIdentifier)
+		historicLogMutationTask = historicLog.removeHistory(forView: associatedItem.uniqueIdentifier, forget: false)
 	}
 
 	private func closeHistoricLog() {
@@ -357,6 +379,7 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		}
 		renderGeneration += 1
 		terminating = true
+		linesAwaitingRender.removeAll()
 		refreshServerRetryAvailability()
 		cancelOlderHistory()
 		pendingApplications.removeAll()
@@ -485,8 +508,15 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		backingView?.setTopic(topic?.isEmpty == false ? topic : nil)
 	}
 
-	public func moveToBottom() {
-		backingView?.scrollToBottom()
+	/** Redraws the topic bar's mode caption from the channel as it stands now.
+
+	 The modes are not pushed to the view the way the topic is: nothing in the
+	 IRC layer addresses one transcript when they change. The bar is refreshed
+	 where the change already surfaces — the mode line landing in this view, the
+	 view coming back on screen, and the window retitling this item. */
+	func refreshTopicBar() {
+		guard !terminating else { return }
+		backingView?.refreshTopicBar()
 	}
 
 	public func mark() {
@@ -508,7 +538,7 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 	public func goToMark() {
 		switch transcriptProjection.mark {
 		case .none: break
-		case .latest: moveToBottom()
+		case .latest: jumpToPresent()
 		case let .line(identifier):
 			jump(toLine: backingView?.displayedLines
 				.first(where: { $0.matches(identifier: identifier) })?.lineNumber
@@ -522,34 +552,15 @@ public final class LogController: NSObject, ServerHistoryPresentation {
 		}
 	}
 
-	func applyReloadedLines(
-		_ results: [LogLineRenderResult],
-		isReload: Bool,
-		suppressingPluginMessages lineNumbersToSuppress: Set<String> = []
-	) {
+	func applyReloadedLines(_ results: [LogLineRenderResult], isReload: Bool) {
 		guard results.isEmpty == false else {
 			return
-		}
-		var pluginObjects: [PluginPostedMessage] = []
-		let channel = associatedChannel
-		let suppressed = lineNumbersToSuppress.union(transcriptProjection.pendingLineNumbers)
-		for result in results {
-			if let pluginMessage = result.pluginMessage,
-			   suppressed.contains(result.lineNumber) == false,
-			   result.transcriptLine.historyCursor.map({ suppressed.contains($0.lineIdentifier) }) != true
-			{
-				pluginObjects.append(pluginMessage.makeObject(resolvingMembersIn: channel))
-			}
 		}
 		let lines = results.map { applyingCurrentState(to: $0.transcriptLine) }
 		if isReload {
 			backingView?.appendLines(lines)
 		} else {
 			backingView?.replaceLines(lines)
-		}
-		for var pluginObject in pluginObjects {
-			pluginObject.isProcessedInBulk = true
-			PluginDispatcher.dispatchDidPostNewMessage(pluginObject)
 		}
 		for result in results where result.processesInlineMedia {
 			processInlineMedia(result.links, atLineNumber: result.lineNumber)
@@ -574,19 +585,16 @@ public extension LogController {
 	}
 
 	func jumpToPresent() {
-		moveToBottom()
+		backingView?.scrollToBottom()
 	}
 
-	func jump(toLine lineNumber: String) {
-		jump(toLine: lineNumber, completionHandler: nil)
-	}
-
-	func jump(toLine lineNumber: String, completionHandler: ((Bool) -> Void)?) {
+	func jump(toLine lineNumber: String, completionHandler: ((Bool) -> Void)? = nil) {
 		let successful = backingView?.jump(to: lineNumber) == true
 		completionHandler?(successful)
 	}
 
 	func notifyDidBecomeVisible() {
+		refreshTopicBar()
 		maybeReloadHistory()
 	}
 
@@ -669,13 +677,6 @@ public extension LogController {
 			}
 		}
 		return requestIdentifier
-	}
-
-	func highlightAvailable(_: Bool) -> Bool {
-		guard viewIsLoaded, !terminating else {
-			return false
-		}
-		return !highlightedLineNumbers.isEmpty
 	}
 
 	func nextHighlight() {
@@ -761,15 +762,24 @@ public extension LogController {
 		/* A snapshot: the caller still holds the line it handed over, and rendering
 		 continues off the main actor after this returns. */
 		let logLine = inputLogLine
+		if logLine.lineType == .mode {
+			refreshTopicBar()
+		}
 		lastLineStorage = logLine
 		let context = makeRenderContext()
 		/* The plugin renderers run here, on the main actor they are declared for;
 		 the render job that follows is a function of the snapshot alone. */
-		let line = Self.applyingMessageRenderers(to: [LogLineSnapshot(logLine, in: context)], for: self)[0]
-		enqueueRenderJob {
+		let line = Self.applyingMessageRenderers(to: [LogLineSnapshot(logLine, in: context)])[0]
+		let enqueued = enqueueRenderJob {
 			Self.renderJob(LogLineRenderRequest(line: line, context: context))
 		} apply: { [weak self] result in
 			self?.applyPrintedLine(logLine, result: result, completionBlock: postPrintBlock)
+		}
+		/* Only a line the pipeline took can be applied, and only an applied line
+		 is withdrawn again: a job refused because the application is quitting
+		 would otherwise stay awaiting a render that never comes. */
+		if enqueued {
+			linesAwaitingRender.append(logLine)
 		}
 	}
 
@@ -778,6 +788,9 @@ public extension LogController {
 		result: LogLineRenderResult,
 		completionBlock postPrintBlock: LogControllerPrintOperationCompletion?
 	) {
+		/* Withdrawn before any guard below, so a line one of them drops is not
+		 left counted as a line that is still on its way to the view. */
+		linesAwaitingRender.removeAll { $0.uniqueIdentifier == logLine.uniqueIdentifier }
 		guard !terminating else {
 			return
 		}
@@ -788,7 +801,7 @@ public extension LogController {
 		}
 		let lineNumber = result.lineNumber
 		let channel = associatedChannel
-		let alreadyDisplayed = backingView?.displayedLines.contains { $0.matches(identifier: lineNumber) } == true
+		let alreadyDisplayed = backingView?.containsLine(identifier: lineNumber) == true
 		let isDuplicate = alreadyDisplayed || transcriptProjection
 			.containsLine(withIdentifier: logLine.uniqueIdentifier)
 			|| logLine.messageIdentifier.map { historicLog.containsMessageIdentifier(
@@ -800,7 +813,7 @@ public extension LogController {
 				client.cacheHighlight(in: channel, with: logLine)
 			}
 		}
-		let projectionAction = transcriptProjection.record(logLine, rendered: result)
+		let projectionAction = transcriptProjection.record(result)
 		if case .append = projectionAction, !alreadyDisplayed {
 			var displayedLine = applyingCurrentState(to: result.transcriptLine)
 			if transcriptSessionBoundary.consumePendingMarker(for: result) {
@@ -810,9 +823,6 @@ public extension LogController {
 				)
 			}
 			backingView?.appendLines([displayedLine])
-		}
-		if let pluginMessage = result.pluginMessage, !alreadyDisplayed {
-			PluginDispatcher.dispatchDidPostNewMessage(pluginMessage.makeObject(resolvingMembersIn: channel))
 		}
 		if case .append = projectionAction, !alreadyDisplayed, result.processesInlineMedia {
 			processInlineMedia(result.links, atLineNumber: lineNumber)
@@ -918,7 +928,7 @@ public extension LogController {
 	}
 
 	func logViewReceivedDrop(withFile filename: String) {
-		AppController.shared.menuController?.memberSendDroppedFiles(toSelectedChannel: [filename])
+		AppController.shared.menuController?.actionCoordinator.sendDroppedFilesToSelectedChannel([filename])
 	}
 
 	/// The newest line this view printed. The IRC layer consults it when it

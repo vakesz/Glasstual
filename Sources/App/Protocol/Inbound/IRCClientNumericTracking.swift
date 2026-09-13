@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -40,18 +40,10 @@ import Foundation
 
 @MainActor
 extension IRCClient {
-	func handleTrackingNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) -> Bool {
-		if handlePresenceTrackingNumeric(numeric, message: message, shouldPrint: shouldPrint) {
-			return true
-		}
-
-		return handleAuthenticationTrackingNumeric(numeric, message: message, shouldPrint: shouldPrint)
-	}
-
-	private func handlePresenceTrackingNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) -> Bool {
+	func handlePresenceTrackingNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		switch numeric {
-		case IRCNumeric.youreoper.rawValue:
-			guard !userIsIRCop else { return true }
+		case .youreoper:
+			guard !userIsIRCop else { return }
 			userIsIRCop = true
 			if shouldPrint {
 				print(
@@ -62,9 +54,9 @@ extension IRCClient {
 					command: message.command, receivedAt: message.receivedAt
 				)
 			}
-		case IRCNumeric.channelUrl.rawValue:
+		case .channelUrl:
 			guard shouldPrint, message.params.count == 3,
-			      let channel = findChannel(message.params[1]) else { return true }
+			      let channel = findChannel(message.params[1]) else { return }
 			print(
 				IRCInboundStrings.Numeric.website(message.params[2]),
 				by: nil,
@@ -72,57 +64,48 @@ extension IRCClient {
 				as: .website,
 				command: message.command, receivedAt: message.receivedAt
 			)
-		case IRCNumeric.watchstat.rawValue, IRCNumeric.watchlist.rawValue, IRCNumeric.watchoff.rawValue,
-		     IRCNumeric.endofwatchlist.rawValue,
-		     IRCNumeric.monlist.rawValue, IRCNumeric.endofmonlist.rawValue:
+		case .watchstat, .watchlist, .watchoff, .endofwatchlist, .monlist, .endofmonlist:
 			if shouldPrint {
 				printReplyToHiddenCommandResponsesQuery(message)
 			}
-		case IRCNumeric.reaway.rawValue, IRCNumeric.goneaway.rawValue, IRCNumeric.notaway.rawValue:
+		case .reaway, .goneaway, .notaway:
 			handleTrackedAwayNumeric(numeric, message: message, shouldPrint: shouldPrint)
-		case IRCNumeric.logon.rawValue, IRCNumeric.logoff.rawValue, IRCNumeric.nowon.rawValue,
-		     IRCNumeric.nowoff.rawValue:
+		case .logon, .logoff, .nowon, .nowoff:
 			handleTrackedStatusNumeric(numeric, message: message, shouldPrint: shouldPrint)
-		case IRCNumeric.toomanywatch.rawValue, IRCNumeric.monlistfull.rawValue:
+		case .toomanywatch, .monlistfull:
 			if shouldPrint {
 				printErrorReply(message)
 			}
-		case IRCNumeric.mononline.rawValue, IRCNumeric.monoffline.rawValue:
+		case .mononline, .monoffline:
 			handleMonitorStatusNumeric(numeric, message: message, shouldPrint: shouldPrint)
-		case IRCNumeric.targumodeg.rawValue:
+		case .targumodeg:
 			break
 		default:
-			return false
+			break
 		}
-
-		return true
 	}
 
-	private func handleAuthenticationTrackingNumeric(
-		_ numeric: UInt,
-		message: Message,
-		shouldPrint: Bool
-	) -> Bool {
+	func handleAuthenticationTrackingNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		switch numeric {
-		case IRCNumeric.targnotify.rawValue:
+		case .targnotify:
 			if shouldPrint, message.params.count == 3 {
 				printDebugInformation(IRCInboundStrings.Numeric.cannotMessageUnrecognizedUser(message.params[1]))
 			}
-		case IRCNumeric.umodegmsg.rawValue: handleUserModeMessageNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.loggedin.rawValue:
+		case .umodegmsg: handleUserModeMessageNumeric(message, shouldPrint: shouldPrint)
+		case .loggedin:
 			guard message.params.count == 4, message.senderIsServer,
 			      nicknameIsMyself(message.params[0]), message.params[2] != "*",
-			      !message.params[2].isEmpty else { return true }
+			      !message.params[2].isEmpty else { return }
 			guard scramMutualAuthenticationIsSatisfied() else {
 				abortUnverifiedSASLSuccess()
-				return true
+				return
 			}
 			noteAccountAuthenticated()
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 3)
 			}
-		case IRCNumeric.loggedout.rawValue:
-			guard message.params.count == 3 else { return true }
+		case .loggedout:
+			guard message.params.count == 3 else { return }
 			resetSASLNegotiation()
 			if startup.authentication == .confirmed {
 				startup.authentication = .pending
@@ -131,53 +114,49 @@ extension IRCClient {
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 2)
 			}
-		case IRCNumeric.saslmechs.rawValue: handleSASLMechanismsNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.saslsuccess.rawValue, IRCNumeric.nicklocked.rawValue, IRCNumeric.saslfail.rawValue,
-		     IRCNumeric.sasltoolong.rawValue,
-		     IRCNumeric.saslaborted.rawValue, IRCNumeric.saslalready.rawValue:
+		case .saslmechs: handleSASLMechanismsNumeric(message, shouldPrint: shouldPrint)
+		case .saslsuccess, .nicklocked, .saslfail, .sasltoolong, .saslaborted, .saslalready:
 			handleSASLResultNumeric(numeric, message: message, shouldPrint: shouldPrint)
-		default: return false
+		default: break
 		}
-
-		return true
 	}
 
-	private func handleTrackedAwayNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
+	private func handleTrackedAwayNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		guard message.params.count > 4 else { return }
 		if shouldPrint {
 			printReplyToHiddenCommandResponsesQuery(message)
 		}
 		let nickname = message.params[1]
 		guard findUserTrackingAddressBookEntry(forNickname: nickname) != nil else { return }
-		modifyUser(withNickname: nickname, asAway: numeric != IRCNumeric.notaway.rawValue)
+		modifyUser(withNickname: nickname, asAway: numeric != .notaway)
 	}
 
-	private func handleTrackedStatusNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
+	private func handleTrackedStatusNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		guard message.params.count > 4 else { return }
 		if shouldPrint {
 			printReplyToHiddenCommandResponsesQuery(message)
 		}
 		let nickname = message.params[1]
-		let isOnline = numeric == IRCNumeric.logon.rawValue || numeric == IRCNumeric.nowon.rawValue
+		let isOnline = numeric == .logon || numeric == .nowon
 		applyPresence(isOnline, toQueryWith: nickname)
 		guard findUserTrackingAddressBookEntry(forNickname: nickname) != nil else { return }
 		let status: IRCAddressBookUserTrackingStatus
 		let notify: Bool
 		switch numeric {
-		case IRCNumeric.logon.rawValue: status = .signedOn; notify = true
-		case IRCNumeric.logoff.rawValue: status = .signedOff; notify = true
-		case IRCNumeric.nowon.rawValue: status = .available; notify = false
+		case .logon: status = .signedOn; notify = true
+		case .logoff: status = .signedOff; notify = true
+		case .nowon: status = .available; notify = false
 		default: status = .notAvailable; notify = false
 		}
 		setTrackedNickname(nickname, status: status, notify: notify)
 	}
 
-	private func handleMonitorStatusNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
+	private func handleMonitorStatusNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		guard message.params.count == 2 else { return }
 		if shouldPrint {
 			printReplyToHiddenCommandResponsesQuery(message)
 		}
-		let isOnline = numeric == IRCNumeric.mononline.rawValue
+		let isOnline = numeric == .mononline
 		for changedUser in message.params[1].components(separatedBy: ",") {
 			let nickname = (changedUser as NSString).nicknameFromHostmask
 			applyPresence(isOnline, toQueryWith: nickname)
@@ -215,16 +194,11 @@ extension IRCClient {
 
 	/// The numerics that mean the server refused this SASL attempt, as opposed
 	/// to 903 (success) or 907 (already authenticated).
-	private static let saslFailureNumerics: Set<UInt> = [
-		IRCNumeric.nicklocked.rawValue,
-		IRCNumeric.saslfail.rawValue,
-		IRCNumeric.sasltoolong.rawValue,
-		IRCNumeric.saslaborted.rawValue,
-	]
+	private static let saslFailureNumerics: Set<IRCNumeric> = [.nicklocked, .saslfail, .sasltoolong, .saslaborted]
 
-	private func handleSASLResultNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
+	private func handleSASLResultNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		if shouldPrint {
-			if numeric == IRCNumeric.saslsuccess.rawValue {
+			if numeric == .saslsuccess {
 				printReply(message)
 			} else {
 				printErrorReply(message)

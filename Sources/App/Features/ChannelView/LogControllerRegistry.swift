@@ -64,12 +64,12 @@ public final class LogControllerRegistry {
 
 	/// The controller drawing `item`, made on first use.
 	@discardableResult
-	public func controller(for item: IRCTreeItem) -> LogController {
+	public func controller(for item: TreeItem) -> LogController {
 		if let existing = controllers[item.uniqueIdentifier] {
 			return existing
 		}
 
-		let controller = if let channel = item as? IRCChannel {
+		let controller = if let channel = item as? Channel {
 			LogController(channel: channel, in: window)
 		} else if let client = item as? IRCClient {
 			LogController(client: client, in: window)
@@ -83,7 +83,7 @@ public final class LogControllerRegistry {
 	}
 
 	/// The controller drawing `item` if one has already been made.
-	public func existingController(for item: IRCTreeItem) -> LogController? {
+	public func existingController(for item: TreeItem) -> LogController? {
 		controllers[item.uniqueIdentifier]
 	}
 
@@ -102,7 +102,7 @@ public final class LogControllerRegistry {
 
 	/// Forgets the controller for `item`. The caller has already told the
 	/// controller to tear itself down.
-	public func forget(_ item: IRCTreeItem) {
+	public func forget(_ item: TreeItem) {
 		if item.presentation === controllers[item.uniqueIdentifier] {
 			item.presentation = nil
 		}

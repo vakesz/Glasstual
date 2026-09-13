@@ -186,25 +186,15 @@ func monospaceFontMatching(_ baseFont: NSFont?) -> NSFont {
 	return NSFont(descriptor: descriptor, size: pointSize) ?? monospaceFont
 }
 
-public final class TextFormatterEffect: NSObject {
-	public private(set) var type: IRCTextFormatterEffectType = .none
-	public private(set) var value: String?
-	public private(set) var controlCharacter: unichar = 0
-	public private(set) var length: UInt = 0
+/// One formatting run as it goes out on the wire: the control character it is
+/// written with, the value that follows it, and how many bytes the pair costs.
+public struct TextFormatterEffect {
+	public let type: IRCTextFormatterEffectType
+	public let value: String?
+	public let controlCharacter: unichar
+	public let length: UInt
 
-	public convenience init?(effect type: IRCTextFormatterEffectType) {
-		self.init(effect: type, withValue: nil)
-	}
-
-	public init?(effect type: IRCTextFormatterEffectType, withValue value: Any?) {
-		super.init()
-
-		guard setup(effect: type, withValue: value) else {
-			return nil
-		}
-	}
-
-	private func setup(effect type: IRCTextFormatterEffectType, withValue value: Any?) -> Bool {
+	public init?(effect type: IRCTextFormatterEffectType, withValue value: Any? = nil) {
 		var controlCharacter: unichar = 0
 		var valueLength: UInt = 0
 		var valueOut: String?
@@ -237,7 +227,7 @@ public final class TextFormatterEffect: NSObject {
 			}
 
 			guard let resolvedValue = valueOut else {
-				return false
+				return nil
 			}
 
 			if type == .foregroundColor {
@@ -246,15 +236,13 @@ public final class TextFormatterEffect: NSObject {
 				valueLength = UInt(resolvedValue.utf8.count) + 1
 			}
 		default:
-			return false
+			return nil
 		}
 
 		self.type = type
 		self.controlCharacter = controlCharacter
 		self.value = valueOut
 		length = valueLength
-
-		return true
 	}
 
 	public func appendToStart(of string: inout String) {
@@ -407,10 +395,8 @@ extension IRCLineBudget {
 /** One message's text, consumed one wire line at a time.
 
  A message longer than the line budget goes out as several lines, and each of
- them is cut from the front of what is left. That used to be one shared mutable
- attributed string the caller deleted from as it went, which put a mutable
- AppKit object in the middle of the send path; the cursor is a value that hands
- back the remainder instead. */
+ them is cut from the front of what is left. The cursor is a value that hands
+ back the remainder, so no mutable AppKit object sits in the send path. */
 @MainActor
 public struct IRCLineCursor {
 	private var remaining: NSAttributedString
@@ -431,9 +417,9 @@ public struct IRCLineCursor {
 
 	/** The next wire line, or `nil` once there is nothing left to send.
 
-	 `nil` also answers the case the callers used to guard by hand: formatting
-	 that consumed nothing would loop forever, so a pass that fails to make
-	 progress ends the message rather than spinning. */
+	 `nil` also answers the case a caller would otherwise have to guard by hand:
+	 formatting that consumed nothing loops forever, so a pass that makes no
+	 progress ends the message instead. */
 	public mutating func nextLine(
 		forChannel channelName: String,
 		on client: IRCClient,
@@ -625,9 +611,7 @@ public nonisolated extension String { // nonisolated: pure
 
 	 Truncates this string back to the last space within `maxDistance` UTF-16
 	 units of its end and answers how many units went; `NSNotFound` when there is
-	 no space to break at, in which case the string is left alone. It used to be
-	 a method on Foundation's mutable string, which is the only reason a
-	 protocol-layer accumulator had to be one.
+	 no space to break at, in which case the string is left alone.
 
 	 `maximumGiveBack` is how many units the caller can hand back to the queue.
 	 Truncating more than that drops text: the characters leave the line being
@@ -790,9 +774,8 @@ public nonisolated extension NSString { // nonisolated: pure
 	/// The colours a colour control code names, and how many characters of the
 	/// code were read.
 	///
-	/// A digit code names palette indices and a hex code names literal colours;
-	/// they used to be written through one `AnyObject?` out-parameter each, so
-	/// which kind arrived was not knowable at the call site.
+	/// A digit code names palette indices and a hex code names literal colours,
+	/// and the result says which kind was read.
 	func colorComponents(ofCharacter character: unichar, startingAt rangeStart: UInt) -> IRCColorComponents {
 		/* A start past the end is a question about a range this string does not
 		 have, and the answer is "nothing was read". It used to be a

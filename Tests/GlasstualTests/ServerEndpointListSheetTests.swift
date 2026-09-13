@@ -13,6 +13,7 @@
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
+import SwiftUI
 import Testing
 
 /// The endpoint table used to get all of this from Cocoa Bindings: the address
@@ -28,8 +29,8 @@ struct ServerEndpointListSheetTests {
 		"An address that names a host is accepted",
 		arguments: ["irc.example.com", "localhost", "127.0.0.1", "example-server.net"]
 	)
-	func validAddressesAreAccepted(address: String) throws {
-		#expect(try ServerEndpointValidation.validatedAddress(address) == address)
+	func validAddressesAreAccepted(address: String) {
+		#expect(ServerEndpointValidation.validatedAddress(address) == address)
 	}
 
 	@Test(
@@ -37,29 +38,12 @@ struct ServerEndpointListSheetTests {
 		arguments: ["", "irc example.com", "irc.example.com/path", "irc:6667"]
 	)
 	func invalidAddressesAreRejected(address: String) {
-		#expect(throws: (any Error).self) {
-			try ServerEndpointValidation.validatedAddress(address)
-		}
-	}
-
-	@Test("A rejected address carries the error the bindings used to raise")
-	func rejectedAddressCarriesItsError() {
-		var raised: NSError?
-
-		do {
-			_ = try ServerEndpointValidation.validatedAddress("")
-		} catch {
-			raised = error as NSError
-		}
-
-		#expect(raised?.domain == ServerEndpointValidation.errorDomain)
-		#expect(raised?.code == ServerEndpointValidation.invalidAddressCode)
-		#expect(raised?.localizedDescription.isEmpty == false)
+		#expect(ServerEndpointValidation.validatedAddress(address) == nil)
 	}
 
 	@Test("A port inside the range is accepted", arguments: ["1", "6667", "6697", "65535"])
-	func validPortsAreAccepted(port: String) throws {
-		#expect(try ServerEndpointValidation.validatedPort(port) == UInt16(port))
+	func validPortsAreAccepted(port: String) {
+		#expect(ServerEndpointValidation.validatedPort(port) == UInt16(port))
 	}
 
 	@Test(
@@ -67,23 +51,49 @@ struct ServerEndpointListSheetTests {
 		arguments: ["", "0x1BCB", "65536", "99999", "-1", "six-six-six-seven"]
 	)
 	func invalidPortsAreRejected(port: String) {
-		#expect(throws: (any Error).self) {
-			try ServerEndpointValidation.validatedPort(port)
-		}
+		#expect(ServerEndpointValidation.validatedPort(port) == nil)
 	}
 
-	@Test("A rejected port carries the error the bindings used to raise")
-	func rejectedPortCarriesItsError() {
-		var raised: NSError?
+	/** A refused row used to throw an `NSError` carrying a domain, a code, a
+	 description and a recovery suggestion, none of which anything read: the
+	 sheet caught it, looked at the code, and showed a string of its own. The
+	 fault says which field, and carries the message the sheet shows. */
+	@Test("A refused row names the field that refused it, and what to do about it")
+	func aRefusedRowNamesItsFault() {
+		let model = ServerEndpointListModel()
+		model.replace(with: [
+			Server(serverAddress: "not a host", serverPort: 6667),
+			Server(serverAddress: "irc.example.com", serverPort: 6667),
+		])
+		model.port(for: model.entries[1].id).wrappedValue = "70000"
 
-		do {
-			_ = try ServerEndpointValidation.validatedPort("65536")
-		} catch {
-			raised = error as NSError
-		}
+		#expect(model.validatedServers() == nil)
+		#expect(model.faults == [.address, .port])
+		#expect(ServerEndpointFault.address.message.isEmpty == false)
+		#expect(ServerEndpointFault.port.message.isEmpty == false)
+		// Selecting the first refused row is what points at the message.
+		#expect(model.selectedID == model.entries[0].id)
+	}
 
-		#expect(raised?.domain == ServerEndpointValidation.errorDomain)
-		#expect(raised?.code == ServerEndpointValidation.invalidPortCode)
+	/// A column of a `Table` hands back the row rather than a binding into the
+	/// list, so the editors take theirs from the model by identity.
+	@Test("An editor writes through to the row it belongs to")
+	func editorsWriteThroughByIdentity() {
+		let model = ServerEndpointListModel()
+		model.replace(with: [Server(serverAddress: "irc.example.com", serverPort: 6667)])
+		let id = model.entries[0].id
+
+		model.address(for: id).wrappedValue = "irc.other.example"
+		model.port(for: id).wrappedValue = "7000"
+		model.password(for: id).wrappedValue = "hunter2"
+		model.isSecured(for: id).wrappedValue = true
+
+		#expect(model.entries[0].address == "irc.other.example")
+		#expect(model.entries[0].password == "hunter2")
+		#expect(model.entries[0].prefersSecuredConnection)
+		// The transport moved a default port, and 7000 is not one.
+		#expect(model.entries[0].port == "7000")
+		#expect(model.address(for: "no-such-endpoint").wrappedValue.isEmpty)
 	}
 
 	// MARK: - The port that follows the transport

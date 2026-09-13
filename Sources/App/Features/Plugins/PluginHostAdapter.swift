@@ -48,7 +48,7 @@ private typealias PluginMessagePrinter = (
 	String,
 	Date,
 	Bool,
-	@escaping (PluginPrintResult) -> Void
+	@escaping (_ isHighlight: Bool) -> Void
 ) -> Void
 
 /// Builds the Plugin Kit view of the running application.
@@ -147,7 +147,7 @@ enum PluginHostAdapter {
 		)
 	}
 
-	static func makeChannel(_ channel: IRCChannel) -> PluginChannel {
+	static func makeChannel(_ channel: Channel) -> PluginChannel {
 		PluginChannel(
 			identifier: channel.uniqueIdentifier,
 			name: channel.name,
@@ -182,18 +182,26 @@ enum PluginHostAdapter {
 	/** The message a plugin handed back, or the original when what it handed
 	 back cannot be put on the wire.
 
-	 A plugin's returned command, prefix and parameters used to be copied onto
-	 the message unread. The message goes on to be serialised as an IRC line,
-	 where a space separates the fields and CR and LF end the line: a command or
-	 a sender with a space in it becomes two fields, and a CR or an LF anywhere
-	 becomes a second line.
+	 The message goes on to be serialised as an IRC line, where a space separates
+	 the fields and CR and LF end the line: a command or a sender with a space in
+	 it becomes two fields, and a CR or an LF anywhere becomes a second line.
 
 	 The plugin is not what is distrusted here — it is first-party and signed.
 	 What reaches it is remote: a plugin edits a message a peer sent, and the
 	 obvious way to write one splices some of that text into the edit. So the
 	 edit is checked rather than believed, and a refused edit leaves the message
-	 exactly as it arrived. */
+	 exactly as it arrived.
+
+	 What is checked is the edit. A plugin that hands back what it was given has
+	 edited nothing, so the message it was given is the answer: validating that
+	 case judged the remote peer's line rather than the plugin's edit, and a
+	 server whose text carried a character the wire format reserves drew an
+	 error for every line of it. */
 	static func applying(_ pluginMessage: PluginServerMessage, to message: Message) -> Message {
+		guard pluginMessage != makeServerMessage(message) else {
+			return message
+		}
+
 		guard isValidCommand(pluginMessage.command) else {
 			logger.error(
 				"Discarding a plugin's edit to a server message: the command it returned is not a single token"
@@ -260,24 +268,23 @@ enum PluginHostAdapter {
 		}
 	}
 
+	/** The transcript line types a plugin has a message kind for.
+
+	 The two vocabularies name the same six things, so the pairing is written
+	 once rather than as two switches that can drift apart. Anything not listed
+	 is `.other` to a plugin and `.undefined` to the transcript. */
+	private nonisolated static let messageKinds: [(kind: PluginMessageKind, lineType: LogLineType)] = [ // nonisolated: let
+		(.privateMessage, .privateMessage),
+		(.privateMessageNoHighlight, .privateMessageNoHighlight),
+		(.action, .action),
+		(.actionNoHighlight, .actionNoHighlight),
+		(.notice, .notice),
+		(.debug, .debug),
+	]
+
 	/// A pure mapping, so the off-main message renderer can call it too.
 	nonisolated static func messageKind(for lineType: LogLineType) -> PluginMessageKind { // nonisolated: pure
-		switch lineType {
-		case .privateMessage:
-			.privateMessage
-		case .privateMessageNoHighlight:
-			.privateMessageNoHighlight
-		case .action:
-			.action
-		case .actionNoHighlight:
-			.actionNoHighlight
-		case .notice:
-			.notice
-		case .debug:
-			.debug
-		default:
-			.other
-		}
+		messageKinds.first { $0.lineType == lineType }?.kind ?? .other
 	}
 
 	private static func makeUser(_ user: User) -> PluginUser {
@@ -311,34 +318,19 @@ enum PluginHostAdapter {
 				isEncrypted: isEncrypted,
 				referenceMessage: nil
 			) { context in
-				completion(PluginPrintResult(isHighlight: context.isHighlight))
+				completion(context.isHighlight)
 			}
 		}
 	}
 
 	/// Plugin Kit values carry the host's identifier rather than the host object
 	/// itself, so a plugin can never reach into an app model it was not handed.
-	private static func hostChannel(_ channel: PluginChannel, on client: IRCClient) -> IRCChannel? {
+	private static func hostChannel(_ channel: PluginChannel, on client: IRCClient) -> Channel? {
 		client.channelList.first { $0.uniqueIdentifier == channel.identifier }
 	}
 
 	private static func logLineType(for kind: PluginMessageKind) -> LogLineType {
-		switch kind {
-		case .privateMessage:
-			.privateMessage
-		case .privateMessageNoHighlight:
-			.privateMessageNoHighlight
-		case .action:
-			.action
-		case .actionNoHighlight:
-			.actionNoHighlight
-		case .notice:
-			.notice
-		case .debug:
-			.debug
-		case .other:
-			.undefined
-		}
+		messageKinds.first { $0.kind == kind }?.lineType ?? .undefined
 	}
 
 	private static func makeApplicationMetrics() -> PluginApplicationMetrics {

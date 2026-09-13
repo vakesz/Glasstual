@@ -12,134 +12,192 @@
 
 import Foundation
 
-/** Which typed keys each pane binds to.
+/// One setting a pane binds: the typed key, and the words the pane puts beside
+/// its control.
+struct PreferencesBoundKey {
+	let key: any AnyPreferenceKey
+	let displayName: LocalizedStringResource
+
+	init(_ key: any AnyPreferenceKey, _ displayName: LocalizedStringResource) {
+		self.key = key
+		self.displayName = displayName
+	}
+}
+
+/** Which typed keys each pane binds to, and what each one is called.
 
  The panes read and write through these declarations, and this list is what
  `PreferencesPaneInventoryTests` checks against the catalogue: a key a pane
  binds to that the catalogue does not know is a setting that would never be
- exported, imported or registered. */
+ exported, imported or registered.
+
+ The display name is the pane's own label, which is what lets an import preview
+ name the settings it is about to change without printing the defaults keys
+ they are stored under. */
 enum PreferencesPaneKeys {
-	static let keysByPane: [PreferencesPaneIdentifier: [any AnyPreferenceKey]] = [
-		.general: [Preferences.Connection.confirmQuit],
-		.behavior: [
-			Preferences.Messages.openBrowserInBackground,
-			Preferences.Connection.rejoinOnKick,
-			Preferences.Connection.autojoinOnInvite,
-			Preferences.Connection.awayOnScreenSleep,
-			Preferences.Logging.reloadScrollbackOnLaunch,
-			Preferences.Appearance.rememberQueryStates,
+	static let keysByPane: [PreferencesPane: [PreferencesBoundKey]] = [
+		.general: [
+			.init(Preferences.Connection.confirmQuit, .Settings.generalConfirmQuit),
+			.init(Preferences.Connection.awayOnScreenSleep, .Settings.generalAwayOnScreenSleep),
+			.init(Preferences.Connection.rejoinOnKick, .Settings.generalRejoinOnKick),
+			.init(Preferences.Connection.autojoinOnInvite, .Settings.generalAutojoinOnInvite),
+			.init(Preferences.Logging.reloadScrollbackOnLaunch, .Settings.generalReloadScrollback),
+			.init(Preferences.Appearance.rememberQueryStates, .Settings.generalRememberQueries),
 		],
 		.ircv3: [
-			Preferences.Connection.displayTypingNotifications,
-			Preferences.Connection.sendTypingNotifications,
-			Preferences.Connection.echoMessageCapability,
-			Preferences.Connection.requestChatHistory,
-			Preferences.Connection.synchronizeReadMarkers,
-			Preferences.Connection.disabledCapabilities,
+			.init(Preferences.Connection.displayTypingNotifications, .Settings.ircv3DisplayTypingNotifications),
+			.init(Preferences.Connection.sendTypingNotifications, .Settings.ircv3SendTypingNotifications),
+			.init(Preferences.Connection.echoMessageCapability, .Settings.ircv3EchoMessage),
+			.init(Preferences.Connection.requestChatHistory, .Settings.ircv3RequestChatHistory),
+			.init(Preferences.Connection.synchronizeReadMarkers, .Settings.ircv3SynchronizeReadMarkers),
+			.init(Preferences.Connection.disabledCapabilities, .Settings.ircv3Capabilities),
 		],
 		.notifications: [
-			Preferences.Notifications.onlySpeakForSelection,
-			Preferences.Notifications.flag(.channelMessage, .speakChannelName),
-			Preferences.Notifications.flag(.channelMessage, .speakNickname),
-			Preferences.Notifications.displayDockBadge,
-			Preferences.Notifications.publicMessageCountOnDockBadge,
-			Preferences.Notifications.postWhileInFocus,
+			.init(Preferences.Notifications.onlySpeakForSelection, .Settings.notificationsOnlySpeakSelection),
+			.init(
+				Preferences.Notifications.flag(.channelMessage, .speakChannelName),
+				.Settings.notificationsSpeakChannelName
+			),
+			.init(
+				Preferences.Notifications.flag(.channelMessage, .speakNickname),
+				.Settings.notificationsSpeakNickname
+			),
+			.init(Preferences.Notifications.displayDockBadge, .Settings.notificationsDockBadgePrivate),
+			.init(
+				Preferences.Notifications.publicMessageCountOnDockBadge,
+				.Settings.notificationsDockBadgePublic
+			),
+			.init(Preferences.Notifications.postWhileInFocus, .Settings.notificationsPostWhileInFocus),
 		],
 		.highlights: [
-			Preferences.Highlights.matchingMethod,
-			Preferences.Logging.logHighlights,
-			Preferences.Highlights.trackLocalNickname,
-			Preferences.Highlights.matchKeywords,
-			Preferences.Highlights.excludeKeywords,
+			.init(Preferences.Highlights.matchingMethod, .Settings.highlightsMatchTypeLabel),
+			.init(Preferences.Logging.logHighlights, .Settings.highlightsLogToWindow),
+			.init(Preferences.Highlights.trackLocalNickname, .Settings.highlightsTrackLocalNickname),
+			.init(Preferences.Highlights.matchKeywords, .Settings.highlightsWordsLabel),
+			.init(Preferences.Highlights.excludeKeywords, .Settings.highlightsExcludeWordsLabel),
 		],
 		.interface: [
-			Preferences.Messages.rightToLeftFormatting,
-			Preferences.Appearance.preferredAppearance,
-			Preferences.Appearance.memberListNoModeSymbol,
-			Preferences.Appearance.memberListSortFavorsServerStaff,
-			Preferences.Appearance.memberListUpdatesPopoverOnScroll,
-			Preferences.Badges.serverListUnreadHighlight,
-		] + Preferences.Badges.userListMode,
+			.init(Preferences.Messages.rightToLeftFormatting, .Settings.interfaceRightToLeftText),
+			.init(Preferences.Appearance.preferredAppearance, .Settings.interfaceAppearanceLabel),
+			.init(Preferences.Appearance.memberListNoModeSymbol, .Settings.interfaceNoModeSymbol),
+			.init(Preferences.Appearance.memberListSortFavorsServerStaff, .Settings.interfaceStaffAtTop),
+			.init(
+				Preferences.Appearance.memberListUpdatesPopoverOnScroll,
+				.Settings.interfacePopoverUpdatesOnScroll
+			),
+			.init(
+				Preferences.Badges.serverListUnreadHighlight,
+				.Settings.interfaceUnreadHighlightColorLabel
+			),
+		] + UserListModeBadge.allCases.map { .init($0.preferenceKey, $0.displayName) },
 		.style: [
-			Preferences.Theme.transcriptTheme,
-			Preferences.Messages.autoAddScrollbackMark,
-			Preferences.Messages.showDateChanges,
-			Preferences.Messages.showJoinLeave,
-			Preferences.Messages.showInlineMedia,
-			Preferences.Logging.scrollbackSaveLimit,
-			Preferences.Messages.disableNicknameColorHashing,
-			Preferences.Appearance.conversationTrackingIncludesModeSymbol,
-			Preferences.Connection.displayServerMOTD,
+			.init(Preferences.Theme.transcriptTheme, .TranscriptTheme.transcriptTheme),
+			.init(Preferences.Messages.autoAddScrollbackMark, .Settings.styleAutoScrollbackMarker),
+			.init(Preferences.Messages.showDateChanges, .Settings.styleShowDateChanges),
+			.init(Preferences.Messages.showJoinLeave, .Settings.styleShowJoinLeave),
+			.init(Preferences.Messages.showInlineMedia, .TranscriptTheme.showInlineImages),
+			.init(Preferences.Logging.scrollbackSaveLimit, .Settings.styleScrollbackSaveLimit),
+			.init(Preferences.Messages.disableNicknameColorHashing, .Settings.styleDisableNicknameColors),
+			.init(Preferences.Connection.displayServerMOTD, .Settings.styleShowMotd),
 		],
 		.controls: [
-			Preferences.Appearance.channelNavigationIsServerSpecific,
-			Preferences.Input.userDoubleClickAction,
-			Preferences.Input.commandWKeyAction,
-			Preferences.Appearance.connectOnDoubleClick,
-			Preferences.Appearance.disconnectOnDoubleClick,
-			Preferences.Appearance.joinOnDoubleClick,
-			Preferences.Appearance.leaveOnDoubleClick,
-			Preferences.Messages.copyOnSelect,
-			Preferences.Input.automaticSpellCheck,
-			Preferences.Input.automaticGrammarCheck,
-			Preferences.Input.automaticSpellCorrection,
-			Preferences.Input.historyIsChannelSpecific,
-			Preferences.Input.commandReturnSendsAction,
-			Preferences.Input.controlEnterSendsMessage,
-			Preferences.Input.textViewFontSize,
-			Preferences.Input.tabKeyAction,
-			Preferences.Input.tabCompletionSuffix,
+			.init(
+				Preferences.Appearance.channelNavigationIsServerSpecific,
+				.Settings.controlsNavigationServerSpecific
+			),
+			.init(Preferences.Input.userDoubleClickAction, .Settings.controlsUserDoubleClickLabel),
+			.init(Preferences.Input.commandWKeyAction, .Settings.controlsCommandWLabel),
+			.init(Preferences.Appearance.connectOnDoubleClick, .Settings.controlsConnectOnDoubleClick),
+			.init(Preferences.Appearance.disconnectOnDoubleClick, .Settings.controlsDisconnectOnDoubleClick),
+			.init(Preferences.Appearance.joinOnDoubleClick, .Settings.controlsJoinOnDoubleClick),
+			.init(Preferences.Appearance.leaveOnDoubleClick, .Settings.controlsLeaveOnDoubleClick),
+			.init(Preferences.Messages.copyOnSelect, .Settings.controlsCopyOnSelect),
+			.init(Preferences.Messages.openBrowserInBackground, .Settings.controlsOpenLinksInBackground),
+			.init(Preferences.Input.automaticSpellCheck, .Settings.controlsSpellCheck),
+			.init(Preferences.Input.automaticGrammarCheck, .Settings.controlsGrammarCheck),
+			.init(Preferences.Input.automaticSpellCorrection, .Settings.controlsSpellCorrection),
+			.init(Preferences.Input.historyIsChannelSpecific, .Settings.controlsHistoryPerSelection),
+			.init(Preferences.Input.commandReturnSendsAction, .Settings.controlsCommandReturnAction),
+			.init(Preferences.Input.controlEnterSendsMessage, .Settings.controlsControlEnterSends),
+			.init(Preferences.Input.textViewFontSize, .Settings.controlsTextSizeLabel),
+			.init(Preferences.Input.tabKeyAction, .Settings.controlsTabKeyLabel),
+			.init(Preferences.Input.tabCompletionSuffix, .Settings.controlsCompletionSuffixLabel),
 		],
 		// The pane lists what the plugin manager reports; it binds nothing.
 		.addOns: [],
 		.channelManagement: [
-			Preferences.Commands.banFormat,
-			Preferences.Commands.kickMessage,
+			.init(Preferences.Commands.banFormat, .Settings.channelManagementBanFormatLabel),
+			.init(Preferences.Commands.kickMessage, .Settings.channelManagementKickReasonLabel),
 		],
 		.commandScope: [
-			Preferences.Commands.amsgAllConnections,
-			Preferences.Commands.awayAllConnections,
-			Preferences.Commands.nickAllConnections,
-			Preferences.Commands.clearAllConnections,
-			Preferences.Commands.giveFocusOnMessageCommand,
-			Preferences.Commands.noticeDestination,
+			.init(Preferences.Commands.amsgAllConnections, .Settings.commandScopeAmsg),
+			.init(Preferences.Commands.awayAllConnections, .Settings.commandScopeAway),
+			.init(Preferences.Commands.nickAllConnections, .Settings.commandScopeNick),
+			.init(Preferences.Commands.clearAllConnections, .Settings.commandScopeClearall),
+			.init(Preferences.Commands.giveFocusOnMessageCommand, .Settings.commandScopeFocusOnMessage),
+			.init(Preferences.Commands.noticeDestination, .Settings.commandScopeNoticeLabel),
 		],
 		.floodControl: [
-			Preferences.Connection.autojoinDelayAfterIdentification,
-			Preferences.Appearance.trackUserAwayStatusMaximumChannelSize,
+			.init(
+				Preferences.Connection.autojoinDelayAfterIdentification,
+				.Settings.floodControlIdentifyDelayLabel
+			),
+			.init(
+				Preferences.Appearance.trackUserAwayStatusMaximumChannelSize,
+				.Settings.floodControlWhoLimitLabel
+			),
 		],
 		.incomingData: [
-			Preferences.Messages.replyToCTCPRequests,
-			Preferences.Messages.detectHighlightSpam,
-			Preferences.Messages.removeAllFormatting,
-			Preferences.Messages.filterUnicodeTextSpam,
+			.init(Preferences.Messages.replyToCTCPRequests, .Settings.incomingDataReplyCtcp),
+			.init(Preferences.Messages.detectHighlightSpam, .Settings.incomingDataHighlightSpam),
+			.init(Preferences.Messages.removeAllFormatting, .Settings.incomingDataRemoveFormatting),
+			.init(Preferences.Messages.filterUnicodeTextSpam, .Settings.incomingDataUnicodeSpam),
 		],
 		.fileTransfers: [
-			Preferences.FileTransfers.requestReplyAction,
-			Preferences.FileTransfers.ipAddressDetectionMethod,
-			Preferences.FileTransfers.manuallyEnteredIPAddress,
-			Preferences.FileTransfers.portRangeStart,
-			Preferences.FileTransfers.portRangeEnd,
-			Preferences.FileTransfers.requestsAreReversed,
-			Preferences.FileTransfers.preventIdleSystemSleep,
+			.init(Preferences.FileTransfers.requestReplyAction, .Settings.fileTransfersReplyActionLabel),
+			.init(Preferences.FileTransfers.ipAddressDetectionMethod, .Settings.fileTransfersDetectionLabel),
+			.init(
+				Preferences.FileTransfers.manuallyEnteredIPAddress,
+				.Settings.fileTransfersManualAddressLabel
+			),
+			.init(Preferences.FileTransfers.portRangeStart, .Settings.fileTransfersPortRangeFirst),
+			.init(Preferences.FileTransfers.portRangeEnd, .Settings.fileTransfersPortRangeLast),
+			.init(Preferences.FileTransfers.requestsAreReversed, .Settings.fileTransfersReverseDcc),
+			.init(Preferences.FileTransfers.preventIdleSystemSleep, .Settings.fileTransfersPreventSleep),
 		],
-		.logLocation: [Preferences.Logging.logToDisk],
+		.logLocation: [.init(Preferences.Logging.logToDisk, .Settings.logLocationToggle)],
 		.defaultIdentity: [
-			Preferences.Identity.nickname,
-			Preferences.Identity.awayNickname,
-			Preferences.Identity.username,
-			Preferences.Identity.realName,
+			.init(Preferences.Identity.nickname, .Settings.defaultIdentityNickname),
+			.init(Preferences.Identity.awayNickname, .Settings.defaultIdentityAwayNickname),
+			.init(Preferences.Identity.username, .Settings.defaultIdentityUsername),
+			.init(Preferences.Identity.realName, .Settings.defaultIdentityRealname),
 		],
 		.defaultIRCopMessages: [
-			Preferences.Commands.irCopKillMessage,
-			Preferences.Commands.irCopGlineMessage,
-			Preferences.Commands.irCopShunMessage,
+			.init(Preferences.Commands.irCopKillMessage, .Settings.ircopKillLabel),
+			.init(Preferences.Commands.irCopGlineMessage, .Settings.ircopGlineLabel),
+			.init(Preferences.Commands.irCopShunMessage, .Settings.ircopShunLabel),
 		],
 		.hidden: [
-			Preferences.Internals.appSleepDisabled,
-			Preferences.Logging.loadHistoryLazily,
-			Preferences.Appearance.disableSidebarTranslucency,
-			Preferences.Logging.scrollbackVisibleLimit,
+			.init(Preferences.Internals.appSleepDisabled, .Settings.hiddenAppNap),
+			.init(Preferences.Logging.loadHistoryLazily, .Settings.hiddenLoadHistoryLazily),
+			.init(Preferences.Appearance.disableSidebarTranslucency, .Settings.hiddenSidebarTranslucency),
+			.init(Preferences.Logging.scrollbackVisibleLimit, .Settings.hiddenScrollbackVisibleLimit),
 		],
 	]
+
+	private static let displayNamesByKeyName: [String: LocalizedStringResource] = {
+		var names: [String: LocalizedStringResource] = [:]
+
+		for entry in keysByPane.values.joined() {
+			names[entry.key.name] = entry.displayName
+		}
+
+		return names
+	}()
+
+	/// What Settings calls a stored key, or `nil` for a key no pane shows —
+	/// which is a key whose raw name is no use to anyone either.
+	static func displayName(forKeyNamed name: String) -> String? {
+		displayNamesByKeyName[name].map { String(localized: $0) }
+	}
 }

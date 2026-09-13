@@ -17,15 +17,15 @@ import Testing
 @MainActor
 @Suite("Nickname collision retry")
 struct IRCClientNicknameCollisionTests {
-	private func registeringClient() -> GLTTestClient {
-		let client = GLTTestClient(configDictionary: ["nickname": "mara", "username": "mara"])
+	private func registeringClient() -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "mara", "username": "mara"])
 		client.config.alternateNicknames = ["mara-alt", "mara-alt2"]
 		client.isConnected = true
 
 		return client
 	}
 
-	private func sentLines(of client: GLTTestClient) -> [String] {
+	private func sentLines(of client: TestClient) -> [String] {
 		(client.sentLines as NSArray).compactMap { $0 as? String }
 	}
 

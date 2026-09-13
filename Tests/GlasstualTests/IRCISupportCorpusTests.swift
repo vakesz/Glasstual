@@ -311,9 +311,9 @@ struct IRCISupportCorpusTests {
 	func chunksTargetsByLimit() {
 		let targets = ["a", "b", "c", "d", "e"]
 
-		#expect(IRCISupportInfo.chunkTargets(targets, limit: 2) == [["a", "b"], ["c", "d"], ["e"]])
-		#expect(IRCISupportInfo.chunkTargets(targets, limit: 0) == [["a"], ["b"], ["c"], ["d"], ["e"]])
-		#expect(IRCISupportInfo.chunkTargets([], limit: 3).isEmpty)
+		#expect(ISupportTokenParser.chunkTargets(targets, limit: 2) == [["a", "b"], ["c", "d"], ["e"]])
+		#expect(ISupportTokenParser.chunkTargets(targets, limit: 0) == [["a"], ["b"], ["c"], ["d"], ["e"]])
+		#expect(ISupportTokenParser.chunkTargets([], limit: 3).isEmpty)
 	}
 
 	// MARK: - Other tokens and non-crash behaviour

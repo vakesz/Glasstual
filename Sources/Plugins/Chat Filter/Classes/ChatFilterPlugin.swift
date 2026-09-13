@@ -94,7 +94,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 
 	var pluginPreferencesPane: PluginPreferencesPane? {
 		guard let store, let host else { return nil }
-		return PluginPreferencesPane(title: String(localized: .TPIChatFilterExtension.preferencesPaneTitle)) {
+		return PluginPreferencesPane(title: String(localized: .ChatFilter.preferencesPaneTitle)) {
 			ChatFilterPreferencesView(
 				store: store,
 				clients: { Self.clientOptions(from: host.clients) }

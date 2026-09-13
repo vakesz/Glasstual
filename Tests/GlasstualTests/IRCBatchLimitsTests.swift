@@ -44,7 +44,7 @@ import Testing
 struct IRCBatchLimitsTests {
 	@Test("A duplicate active wire token cannot replace its batch or create a parent cycle")
 	func duplicateActiveTokenIsRejected() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.enableCapability(.batch)
 		try client.receiveBatch(message("BATCH +outer example/outer", on: client))
 		let original = try #require(client.batchMessages.queuedEntry(withBatchToken: "outer"))
@@ -61,7 +61,7 @@ struct IRCBatchLimitsTests {
 
 	@Test("Teardown releases real nested wire queues, including a child already closed", arguments: [true, false])
 	func teardownReleasesNestedWireQueues(_ closeChild: Bool) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.enableCapability(.batch)
 		try client.receiveBatch(message("BATCH +outer example/outer", on: client))
 		try client.receiveBatch(message("@batch=outer BATCH +inner example/inner", on: client))
@@ -105,15 +105,15 @@ struct IRCBatchLimitsTests {
 	/// A batch the server never closes used to queue messages without limit.
 	@Test
 	func batchQueueRejectsEntriesPastItsCeiling() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let batch = closedBatch(token: "full")
 
 		for index in 0 ..< MessageBatch.maximumQueuedEntries {
-			try #expect(batch.queueEntry(message(":a!u@h PRIVMSG #c :\(index)", on: client)))
+			try #expect(batch.queueEntry(.message(message(":a!u@h PRIVMSG #c :\(index)", on: client))))
 		}
 
 		#expect(batch.queuedEntries.count == MessageBatch.maximumQueuedEntries)
-		try #expect(batch.queueEntry(message(":a!u@h PRIVMSG #c :overflow", on: client)) == false)
+		try #expect(batch.queueEntry(.message(message(":a!u@h PRIVMSG #c :overflow", on: client))) == false)
 		#expect(batch.queuedEntries.count == MessageBatch.maximumQueuedEntries)
 	}
 
@@ -121,7 +121,7 @@ struct IRCBatchLimitsTests {
 	/// unlimited number of batches and leave every one of them open.
 	@Test
 	func openingMoreBatchesThanTheCeilingIsRefused() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		for index in 0 ..< MessageBatchContainer.maximumOpenBatches {
 			try client.receiveBatch(message("BATCH +b\(index) chathistory", on: client))
@@ -139,7 +139,7 @@ struct IRCBatchLimitsTests {
 	/// ceiling however many batches it sends in sequence.
 	@Test
 	func closingABatchFreesItsSlot() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		for index in 0 ..< (MessageBatchContainer.maximumOpenBatches * 2) {
 			try client.receiveBatch(message("BATCH +b\(index) chathistory", on: client))
@@ -153,14 +153,14 @@ struct IRCBatchLimitsTests {
 	/// without bound.
 	@Test
 	func nestedBatchesDeeperThanTheLimitAreNotProcessed() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let batches = (0 ... IRCBatchPolicy.maximumParentDepth).map { closedBatch(token: "b\($0)") }
 
 		for index in 0 ..< (batches.count - 1) {
-			batches[index].queueEntry(batches[index + 1])
+			batches[index].queueEntry(.batch(batches[index + 1]))
 		}
 
-		try batches[batches.count - 1].queueEntry(message(":a!u@h PRIVMSG #c :deep", on: client))
+		try batches[batches.count - 1].queueEntry(.message(message(":a!u@h PRIVMSG #c :deep", on: client)))
 
 		client.recursivelyProcessBatchMessage(batches[0], depth: 0)
 
@@ -169,12 +169,12 @@ struct IRCBatchLimitsTests {
 
 	@Test
 	func shallowlyNestedBatchesAreStillProcessed() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let outer = closedBatch(token: "outer")
 		let inner = closedBatch(token: "inner")
 
-		outer.queueEntry(inner)
-		try inner.queueEntry(message(":a!u@h PRIVMSG #c :hello", on: client))
+		outer.queueEntry(.batch(inner))
+		try inner.queueEntry(.message(message(":a!u@h PRIVMSG #c :hello", on: client)))
 
 		client.recursivelyProcessBatchMessage(outer, depth: 0)
 
@@ -208,7 +208,7 @@ struct IRCClientOfferedCapabilityLimitTests {
 	/// nothing but continuations grew it for as long as it stayed connected.
 	@Test
 	func continuedCapabilityListsPastTheLimitEndNegotiation() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let perLine = 32
 		let lines = (ClientNegotiationUtilities.maximumOfferedCapabilities / perLine) + 1
 
@@ -225,7 +225,7 @@ struct IRCClientOfferedCapabilityLimitTests {
 
 	@Test
 	func aCapabilityListWithinTheLimitIsStillAccumulated() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(Message(line: "CAP * LS * :sasl multi-prefix", on: client))
 
 		client.handleCapabilityOrAuthenticationRequest(message)
@@ -240,7 +240,7 @@ struct IRCClientSASLPayloadLimitTests {
 	/// ceiling, so a server could grow it until the process died.
 	@Test
 	func oversizedSASLPayloadsAbortNegotiation() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.enableCapability(.isInSASLNegotiation)
 
 		let chunk = String(repeating: "A", count: 400)

@@ -23,11 +23,8 @@ final class OverlayScrollView: NSScrollView {
 
 	override var scrollerStyle: NSScroller.Style {
 		get { .overlay }
-		set {
-			/* The value is deliberately ignored; SwiftLint asks for the read. */
-			_ = newValue
-			super.scrollerStyle = .overlay
-		}
+		// Whatever AppKit writes back, the answer is overlay.
+		set { super.scrollerStyle = newValue == .overlay ? newValue : .overlay }
 	}
 }
 
@@ -40,28 +37,36 @@ final class OverlayScrollView: NSScrollView {
  `enclosingScrollView` alone would find nothing; the search walks a few levels
  up and looks for the nearest scroll view below each ancestor. AppKit resets
  the style whenever the system preference changes, so the notification is
- watched and the style re-applied. Delivery through `NotificationSubscriptions`
- is asynchronous, and deliberately so: AppKit writes the preferred style onto
- every scroll view while that notification is being posted, so a style applied
- inline is overwritten. Arriving a turn later puts this after AppKit's own
- reset. */
+ watched and the style re-applied. */
 private struct OverlayScrollersAdapter: NSViewRepresentable {
 	func makeNSView(context _: Context) -> OverlayScrollersProbeView {
 		OverlayScrollersProbeView()
 	}
 
 	func updateNSView(_ view: OverlayScrollersProbeView, context _: Context) {
-		view.applyOverlayStyle()
+		view.scheduleOverlayStyle()
 	}
 }
 
 private final class OverlayScrollersProbeView: NSView {
 	private let notifications = NotificationSubscriptions()
+	/// Set while a style application is already queued for the next turn, so a
+	/// burst of invalidations resolves the scroll views once.
+	private var styleTask: Task<Void, Never>?
+	/** The scroll views this probe stands for.
+
+	 Finding them walks four ancestors by three levels of subviews with a
+	 coordinate conversion per candidate, and `updateNSView` runs on every
+	 SwiftUI invalidation of the list this decorates. Where they are cannot
+	 change without the probe moving, so the walk runs once per placement. */
+	private weak var enclosing: NSScrollView?
+	private weak var neighbour: NSScrollView?
+	private var hasResolvedScrollViews = false
 
 	override init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)
 		notifications.observe(NSScroller.preferredScrollerStyleDidChangeNotification) { [weak self] _ in
-			self?.applyOverlayStyle()
+			self?.scheduleOverlayStyle()
 		}
 	}
 
@@ -76,12 +81,44 @@ private final class OverlayScrollersProbeView: NSView {
 
 	override func viewDidMoveToSuperview() {
 		super.viewDidMoveToSuperview()
-		applyOverlayStyle()
+		invalidateResolvedScrollViews()
 	}
 
 	override func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
-		applyOverlayStyle()
+		invalidateResolvedScrollViews()
+	}
+
+	private func invalidateResolvedScrollViews() {
+		hasResolvedScrollViews = false
+		enclosing = nil
+		neighbour = nil
+		scheduleOverlayStyle()
+	}
+
+	/** Styles the scroll views on the next main-actor turn, never inline.
+
+	 Writing `scrollerStyle` is a write AppKit answers by tiling the scroll
+	 view, and every caller here arrives from inside a SwiftUI update:
+	 `updateNSView` runs in the graph's own update pass, and the two
+	 `viewDidMoveTo…` callbacks in the layout pass that installs the view.
+	 Tiling there re-enters the list that is being updated -- the scroll view
+	 resizes the list's rows, one of them lays out, and its hosting view renders
+	 while the graph is still updating, which aborts the process with
+	 "AttributeGraph precondition failure: setting value during update" and the
+	 reentrant-delegate warning that precedes it. A turn later the list has
+	 finished and the same write is an ordinary resize.
+
+	 The scroller-preference notification needed the same hop for its own
+	 reason: AppKit writes the preferred style onto every scroll view while
+	 that notification is being posted, so a style applied inline is
+	 overwritten. */
+	func scheduleOverlayStyle() {
+		guard styleTask == nil else { return }
+		styleTask = Task { [weak self] in
+			self?.styleTask = nil
+			self?.applyOverlayStyle()
+		}
 	}
 
 	/** Both candidates are styled, not the first one found.
@@ -91,8 +128,16 @@ private final class OverlayScrollersProbeView: NSView {
 	 scroll views. Taking `enclosingScrollView` and stopping because it was
 	 already overlay left the list -- the view this modifier was asked about --
 	 with the system's legacy scrollers. */
-	func applyOverlayStyle() {
-		for scrollView in [enclosingScrollView, neighbouringScrollView()].compactMap(\.self)
+	private func applyOverlayStyle() {
+		if hasResolvedScrollViews == false {
+			enclosing = enclosingScrollView
+			neighbour = neighbouringScrollView()
+			/* Neither exists until the list has built its own scroll view, so
+			 an empty answer is retried rather than remembered. */
+			hasResolvedScrollViews = enclosing != nil || neighbour != nil
+		}
+
+		for scrollView in [enclosing, neighbour].compactMap(\.self)
 			where scrollView.scrollerStyle != .overlay
 		{
 			scrollView.scrollerStyle = .overlay
@@ -101,12 +146,10 @@ private final class OverlayScrollersProbeView: NSView {
 
 	/** The scroll view this probe is standing in for.
 
-	 The walk used to take the first scroll view it met under any of four
-	 ancestors, and in the main window the member list's ancestors reach the
-	 conversation column: it found the transcript's `OverlayScrollView`, which is
-	 already overlay, declared itself finished, and the list kept the system's
-	 legacy scrollers. Containment is the discriminant now: a candidate has to be
-	 drawn where the probe is. */
+	 Containment is the discriminant: the member list's ancestors reach the
+	 conversation column, so the first scroll view under any of them can be the
+	 transcript's rather than the list's. A candidate has to be drawn where the
+	 probe is. */
 	private func neighbouringScrollView() -> NSScrollView? {
 		var ancestor = superview
 		for _ in 0 ..< 4 {

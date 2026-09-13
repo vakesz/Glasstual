@@ -46,6 +46,7 @@ enum FileTransferLimits {
 	static let connectTimeout: TimeInterval = 30
 	static let sendTimeout: TimeInterval = 30
 	static let resumeAcceptTimeout: TimeInterval = 10
+	static let reverseOfferTimeout: Duration = .seconds(120)
 }
 
 let fileTransferLogger = Logger(
@@ -70,6 +71,55 @@ public enum FileTransferStatus: UInt, Sendable {
 	case waitingForResumeAccept
 }
 
+/** What each status means to the rest of the feature.
+
+ The same handful of status groups used to be spelled out as a set literal at
+ every place that asked — the receiver limit, the row list, the close path, the
+ address lookup — and a new status had to be remembered in all of them. */
+public extension FileTransferStatus {
+	/// Bytes are moving right now.
+	var isActive: Bool {
+		self == .sending || self == .receiving
+	}
+
+	/// The two ends are still agreeing how to reach each other. No byte of the
+	/// file has crossed yet, but the transfer is under way.
+	var isNegotiating: Bool {
+		switch self {
+		case .connecting, .initializing, .isListeningAsReceiver, .isListeningAsSender,
+		     .mappingListeningPort, .waitingForLocalIPAddress, .waitingForReceiverToAccept,
+		     .waitingForResumeAccept:
+			true
+		case .complete, .fatalError, .receiving, .recoverableError, .sending, .stopped:
+			false
+		}
+	}
+
+	/// Whether the transfer is spending resources: a slot against the receiver
+	/// limit, room on the destination volume, a tick of the maintenance timer.
+	var isRunning: Bool {
+		isActive || isNegotiating
+	}
+
+	/// The transfer reached an answer. `stopped` is not one: it is a transfer
+	/// that has not been started.
+	var isFinished: Bool {
+		self == .complete || self == .fatalError || self == .recoverableError
+	}
+
+	/// The phase an address lookup is allowed to move the transfer on from.
+	var isAwaitingAddress: Bool {
+		self == .initializing || self == .mappingListeningPort || self == .waitingForLocalIPAddress
+	}
+
+	/// The transfer is idle, and the reason it is idle is one a retry can get
+	/// past. Every place that offers to start a transfer asks this, so they
+	/// cannot drift apart.
+	var canRetry: Bool {
+		self == .stopped || self == .recoverableError
+	}
+}
+
 /// Owns one DCC file transfer: what the user sees of it, and the negotiation
 /// that surrounds it.
 ///
@@ -78,10 +128,13 @@ public enum FileTransferStatus: UInt, Sendable {
 /// turns them into the status the dialog, IRCClient and the maintenance timer
 /// read -- all of which are main-actor too.
 @MainActor
+@Observable
 public final class FileTransferController: ClientScoped {
 	public internal(set) var client: IRCClient?
 	public internal(set) var clientId: String?
 
+	/// Whether the bytes continue a partly transferred file, which is what
+	/// decides if a restart keeps ``processedFilesize`` or zeroes it.
 	public internal(set) var isResume = false
 	public internal(set) var isReversed = false
 	public internal(set) var isSender = false
@@ -99,29 +152,24 @@ public final class FileTransferController: ClientScoped {
 	public internal(set) var hostPort: UInt16 = 0
 
 	public internal(set) var speedRecords: [UInt64] = []
+	public internal(set) var transferStatus: FileTransferStatus = .stopped
 
 	/// The descriptor this transfer reads from or writes into, and the
 	/// authority for all byte I/O and resume validation.
-	var ownedFile: DCCTransferFile? {
-		didSet {
-			/* The reservation is what settles which directory the user let us
-			 reach, and the row still has to open and reveal the file once the
-			 descriptor is closed. Keep the URL after the file goes, and never
-			 replace a known one with nothing. */
-			if let ownedFile {
-				fileAccessURL = ownedFile.accessURL
-			}
-		}
-	}
+	var ownedFile: DCCTransferFile?
 
-	/// An inactive capability URL, not an outstanding security-scope lease.
+	/** The directory the user let us reach, kept after the descriptor is gone.
+
+	 The row still has to open and reveal the file once the transfer is closed,
+	 which is why this outlives ``ownedFile`` rather than being read off it. An
+	 inactive capability URL, not an outstanding security-scope lease. */
 	var fileAccessURL: URL?
 	var destinationAccessURL: URL?
 	var negotiationTask: Task<Void, Never>?
 	var stopTask: Task<Void, Never>?
 	var sessionID = UUID()
 	public internal(set) var completion: DCCTransfer.Completion?
-	var portMapping: XRPortMapper?
+	var portMapping: PortMapper?
 	var transfer: DCCTransfer?
 	var transferEvents: Task<Void, Never>?
 	/// Gives up on an unanswered RESUME without truncating the partial file.
@@ -131,25 +179,19 @@ public final class FileTransferController: ClientScoped {
 	var lifecycleNotifications = NotificationSubscriptions()
 	var portMapperNotifications = NotificationSubscriptions()
 
-	public internal(set) var transferStatus: FileTransferStatus = .stopped {
-		didSet {
-			if oldValue != transferStatus {
-				reloadStatusInformation()
-			}
-		}
-	}
-
-	/// Whether starting this transfer would do anything: it is idle, and the
-	/// reason it is idle is one a retry can get past. Every place that offers
-	/// to start a transfer asks this, so they cannot drift apart.
 	public var canStart: Bool {
-		[.stopped, .recoverableError].contains(transferStatus)
+		transferStatus.canRetry
 	}
 
 	private init(client: IRCClient) {
 		self.client = client
 		clientId = client.uniqueIdentifier
-		prepareInitialState()
+		lifecycleNotifications.observe(.IRCClientDidDisconnect, object: client) { [weak self] notification in
+			self?.clientDisconnected(notification)
+		}
+		lifecycleNotifications.observe(.IRCClientUserNicknameChanged, object: client) { [weak self] notification in
+			self?.peerNicknameChanged(notification)
+		}
 	}
 
 	isolated deinit {
@@ -230,17 +272,85 @@ public final class FileTransferController: ClientScoped {
 		controller.path = (path as NSString).deletingLastPathComponent
 		controller.filename = filename
 		controller.wireFilename = filename.safeFilename
-		controller.ownedFile = file
+		controller.takeOwnership(of: file)
 		controller.totalFilesize = totalFilesize
 		return controller
 	}
 
-	private func prepareInitialState() {
-		lifecycleNotifications.observe(.IRCClientDidDisconnect, object: client) { [weak self] notification in
-			self?.clientDisconnected(notification)
+	/// Takes the descriptor, and the directory reservation that came with it.
+	func takeOwnership(of file: DCCTransferFile) {
+		ownedFile = file
+		fileAccessURL = file.accessURL
+	}
+}
+
+// MARK: - Where the transfer's file is
+
+extension FileTransferController {
+	var isActingAsServer: Bool {
+		isSender != isReversed
+	}
+
+	var filePath: String? {
+		guard let path else { return nil }
+		return (path as NSString).appendingPathComponent(filename)
+	}
+
+	var fileURL: URL? {
+		filePath.map { URL(fileURLWithPath: $0) }
+	}
+
+	var localFile: FileTransferLocalFile? {
+		fileURL.map { FileTransferLocalFile(url: $0, accessURL: fileAccessURL ?? $0) }
+	}
+
+	var transferCenter: FileTransferCenter {
+		SharedApplication.sharedFileTransferCenter()
+	}
+}
+
+// MARK: - Ordering the tasks a transfer leaves behind
+
+extension FileTransferController {
+	/** Chains `step` onto the transfer's stop sequence.
+
+	 Tearing a transfer down means cancelling an actor and closing a descriptor,
+	 both of which take an await. Two teardowns that overlap close a file the
+	 other is still writing, so each one waits for the one before it. */
+	func enqueueStop(_ step: @escaping @Sendable () async -> Void) {
+		let stopping = stopTask
+		stopTask = Task {
+			await stopping?.value
+			await step()
 		}
-		lifecycleNotifications.observe(.IRCClientUserNicknameChanged, object: client) { [weak self] notification in
-			self?.peerNicknameChanged(notification)
+	}
+
+	/** Whether a task started for `session` still speaks for this transfer.
+
+	 A transfer that was stopped and started again is a new session, and the
+	 timeouts and negotiation steps the old one left behind must not report into
+	 the transfer that replaced it. Cancellation is the other half of the same
+	 question, which is why both are asked here. */
+	func isCurrent(_ session: UUID) -> Bool {
+		Task.isCancelled == false && sessionID == session
+	}
+}
+
+// MARK: - Progress
+
+public extension FileTransferController {
+	/// Folds the last second's bytes into the rolling average the row's speed
+	/// and time-remaining are read from.
+	func onMaintenanceTimer() {
+		guard transferStatus.isActive else {
+			assertionFailure("Maintenance timer fired for an inactive transfer")
+			return
 		}
+
+		speedRecords.append(currentRecord)
+		if speedRecords.count > FileTransferLimits.speedRecordCount {
+			speedRecords.removeFirst()
+		}
+		currentRecord = 0
 	}
 }

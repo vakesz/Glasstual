@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -16,7 +16,11 @@ import CocoaExtensions
 import UniformTypeIdentifiers
 
 private enum LogPolicySuppressionKey: String {
-	case openExternalURL = "open_non_http_url_warning"
+	/** A key of its own rather than the one the question used to carry: the
+	 recorded answer is a button, and the buttons this alert offers changed
+	 sides, so a reader who once ticked "Do not ask again" for Open would have
+	 been answering Cancel from then on. */
+	case openExternalURL = "open_link_in_external_application"
 }
 
 public final class LogPolicyTarget: NSObject {
@@ -38,7 +42,7 @@ public final class LogPolicyTarget: NSObject {
 @MainActor
 public final class LogPolicy: NSObject {
 	func contextMenu(for transcript: LogView, defaultMenuItems: [NSMenuItem]) -> NSMenu {
-		let menu = NSMenu(title: "Context Menu")
+		let menu = NSMenu()
 		for item in menuItems(
 			for: transcript.takeContextMenuTarget(),
 			in: transcript,
@@ -52,17 +56,18 @@ public final class LogPolicy: NSObject {
 
 	public func channelNameDoubleClicked(in view: LogView) {
 		guard let channelName = view.takeContextMenuTarget().channelName else { return }
-		AppController.shared.menuController?.joinChannelClicked(channelName)
+		AppController.shared.menuController?.actionCoordinator.joinChannelClicked(channelName)
 	}
 
 	public func nicknameDoubleClicked(in view: LogView) {
 		guard let nickname = view.takeContextMenuTarget().nickname else { return }
-		AppController.shared.menuController?.pointedNickname = nickname
-		AppController.shared.menuController?.memberInChannelViewDoubleClicked(nil)
+		guard let commands = AppController.shared.menuController?.actionCoordinator else { return }
+		commands.pointedNickname = nickname
+		commands.memberInChannelViewDoubleClicked(nil)
 	}
 
 	public func topicBarDoubleClicked() {
-		AppController.shared.menuController?.showChannelModifyTopicSheet(nil)
+		AppController.shared.menuController?.actionCoordinator.showChannelModifyTopicSheet(nil)
 	}
 
 	/** Reacts with the emoji a chip in the transcript stands for.
@@ -76,7 +81,7 @@ public final class LogPolicy: NSObject {
 			nickname: nil,
 			excerpt: nil
 		).reacting(with: reaction.emoji)
-		AppController.shared.menuController?.reactToMessage(sender)
+		AppController.shared.menuController?.actionCoordinator.reactToMessage(sender)
 	}
 
 	private func menuItems(
@@ -90,8 +95,10 @@ public final class LogPolicy: NSObject {
 		if let address = target.anchorURL {
 			return linkMenuItems(for: address)
 		}
-		if let nickname = target.nickname {
-			return nicknameMenuItems(for: nickname, target: target, in: view)
+		if let nickname = target.nickname,
+		   let items = nicknameMenuItems(for: nickname, target: target, in: view)
+		{
+			return items
 		}
 		if let channelName = target.channelName {
 			return copiedMenuItems(
@@ -189,21 +196,25 @@ public final class LogPolicy: NSObject {
 			userInfo: address
 		)
 		items.append(.separator())
-		if let url = URL(string: address),
-		   let share = AppController.shared.menuController?.shareMenuItem(forItems: [url])
-		{
-			items.append(share)
+		if let url = URL(string: address) {
+			items.append(MenuPresentation.shareMenuItem(for: [url]))
 		}
 		return items
 	}
 
+	/** What a right click on a nickname offers, or `nil` where the commands
+	 need a conversation this view does not have.
+
+	 Answering with a single disabled item told the reader nothing and took the
+	 text view's own Copy and Look Up away with it; `nil` sends the click back
+	 to those. */
 	private func nicknameMenuItems(
 		for nickname: String,
 		target: LogPolicyTarget,
 		in view: LogView
-	) -> [NSMenuItem] {
+	) -> [NSMenuItem]? {
 		guard let channel = view.viewController?.associatedChannel, channel.isUtility == false else {
-			return [NSMenuItem(title: ApplicationStrings.noActionsAvailable, action: nil, keyEquivalent: "")]
+			return nil
 		}
 		var items = copiedMenuItems(
 			from: AppController.shared.menuController?.userControlMenu,
@@ -235,8 +246,8 @@ public final class LogPolicy: NSObject {
 		else {
 			return []
 		}
-		return AppController.shared.menuController?.messageReplyMenuItems(
-			forMessageIdentifier: messageIdentifier,
+		return AppController.shared.menuController?.actionCoordinator.messageReplyItems(
+			messageIdentifier: messageIdentifier,
 			nickname: target.lineNickname,
 			excerpt: target.lineExcerpt
 		) ?? []
@@ -254,18 +265,21 @@ public final class LogPolicy: NSObject {
 			return
 		}
 
-		let applicationName = NSWorkspace.shared.textual_nameOfApplication(toOpen: url) ?? ""
-		/* The buttons name what they do rather than answering the title as a
-		 question, which is what a reader skimming a dialog reads first. */
-		let shouldOpen = Alerts.modalAlert(
-			withMessage: PromptStrings.ExternalApplication.body(url: url.absoluteString),
-			title: PromptStrings.ExternalApplication.title(applicationName: applicationName),
-			defaultButton: PromptStrings.Action.open,
-			alternateButton: PromptStrings.Action.cancel,
+		/* Handing an address to another application is the risky answer, so
+		 Cancel is the one Return presses. The buttons name what they do, and
+		 the address itself is the message: it is the one fact that decides
+		 whether the reader wants this at all. */
+		let cancelled = Alerts.modalAlert(
+			withMessage: url.absoluteString,
+			title: TranscriptViewStrings.openLinkTitle(
+				applicationName: NSWorkspace.shared.textual_nameOfApplication(toOpen: url) ?? ""
+			),
+			defaultButton: PromptStrings.Action.cancel,
+			alternateButton: PromptStrings.Action.open,
 			suppressionKey: LogPolicySuppressionKey.openExternalURL.rawValue,
 			suppressionText: nil
 		)
-		if shouldOpen {
+		if cancelled == false {
 			OpenLink.open(url: url, inBackground: openInBackground)
 		}
 	}

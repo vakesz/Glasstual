@@ -102,14 +102,6 @@ nonisolated struct HistoricLogEntry: Sendable { // nonisolated: value
 		self.viewIdentifier = viewIdentifier
 		self.sessionIdentifier = sessionIdentifier
 		self.creationDate = creationDate
-		if !managedObject.objectID.isTemporaryID,
-		   let insertion = managedObject.value(forKey: HistoricLogAttribute.entryIdentifier.rawValue) as? NSNumber
-		{
-			cursor = HistoricLogRowCursor(timestamp: creationDate, insertionIdentifier: insertion.int64Value,
-			                              lineIdentifier: uniqueIdentifier,
-			                              rowURI: managedObject.objectID.uriRepresentation().absoluteString)
-		} else {
-			cursor = nil
-		}
+		cursor = HistoricLogRowCursor(object: managedObject)
 	}
 }

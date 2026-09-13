@@ -40,7 +40,7 @@ public protocol NotificationConfiguration: AnyObject {
 
 public extension NotificationConfiguration {
 	var displayName: String {
-		SharedApplication.sharedNotificationController().title(forEvent: eventType)
+		NotificationStrings.eventTypeTitle(for: eventType)
 	}
 }
 
@@ -120,38 +120,38 @@ public final class ChannelNotificationConfiguration: NotificationConfiguration {
 
 	public var alertSound: String? {
 		get { config?.sound(forEvent: eventType) }
-		set { sheet?.config.setSound(newValue, forEvent: eventType) }
+		set { sheet?.model.config.setSound(newValue, forEvent: eventType) }
 	}
 
 	public var pushNotification: ChannelEventOverride {
 		get { config?.notificationEnabled(forEvent: eventType) ?? .inherited }
-		set { sheet?.config.setNotificationEnabled(newValue, forEvent: eventType) }
+		set { sheet?.model.config.setNotificationEnabled(newValue, forEvent: eventType) }
 	}
 
 	public var speakEvent: ChannelEventOverride {
 		get { config?.speakEvent(eventType) ?? .inherited }
-		set { sheet?.config.setEventIsSpoken(newValue, forEvent: eventType) }
+		set { sheet?.model.config.setEventIsSpoken(newValue, forEvent: eventType) }
 	}
 
 	public var disabledWhileAway: ChannelEventOverride {
 		get { config?.disabledWhileAway(forEvent: eventType) ?? .inherited }
-		set { sheet?.config.setDisabledWhileAway(newValue, forEvent: eventType) }
+		set { sheet?.model.config.setDisabledWhileAway(newValue, forEvent: eventType) }
 	}
 
 	public var bounceDockIcon: ChannelEventOverride {
 		get { config?.bounceDockIcon(forEvent: eventType) ?? .inherited }
-		set { sheet?.config.setBounceDockIcon(newValue, forEvent: eventType) }
+		set { sheet?.model.config.setBounceDockIcon(newValue, forEvent: eventType) }
 	}
 
 	public var bounceDockIconRepeatedly: ChannelEventOverride {
 		get { config?.bounceDockIconRepeatedly(forEvent: eventType) ?? .inherited }
-		set { sheet?.config.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
+		set { sheet?.model.config.setBounceDockIconRepeatedly(newValue, forEvent: eventType) }
 	}
 
 	/// A nil config (the sheet is gone) reads back as `.inherited`: the neutral
 	/// value the checkbox already understands, and the default for a channel
 	/// that carries no override of its own.
 	private var config: ChannelConfig? {
-		sheet?.config
+		sheet?.model.config
 	}
 }

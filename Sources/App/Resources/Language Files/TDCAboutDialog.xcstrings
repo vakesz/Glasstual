@@ -13,26 +13,26 @@
         }
       }
     },
-    "application-name-followed" : {
-      "comment" : "Application name followed by its short version. The arguments are the application name and version. Legacy key: zjd-al.",
+    "application-version" : {
+      "comment" : "The application version, shown under the application name. The argument is the short version. Legacy key: zjd-al.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ %@"
+            "value" : "Version %@"
           }
         }
       }
     },
     "application-version-with-build" : {
-      "comment" : "Application name, its short version, and the build number in parentheses. The arguments are the application name, the version, and the build number.",
+      "comment" : "The application version and the build number in parentheses, shown under the application name. The arguments are the version and the build number.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ %2$@ (%3$@)"
+            "value" : "Version %1$@ (%2$@)"
           }
         }
       }
@@ -45,18 +45,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ application icon"
-          }
-        }
-      }
-    },
-    "upstream-attribution" : {
-      "comment" : "Short attribution shown below the application version.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fork of Textual for macOS 26+"
           }
         }
       }

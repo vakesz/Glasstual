@@ -15,32 +15,25 @@ import SwiftUI
 @MainActor
 public protocol ChannelPropertiesSheetDelegate: AnyObject {
 	func channelPropertiesSheet(_ sender: ChannelPropertiesSheet, onOk config: ChannelConfig)
-	func channelPropertiesSheetWillClose(_ sender: ChannelPropertiesSheet)
 }
 
 @objc(TDCChannelPropertiesSheet)
 @MainActor
 public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped {
 	public private(set) var client: IRCClient?
-	public private(set) var channel: IRCChannel?
+	public private(set) var channel: Channel?
 	public private(set) var clientId: String?
 	public private(set) var channelId: String?
 
 	let model: ChannelPropertiesModel
 	private var notificationItems: [NotificationConfigurationItem] = []
 	private let notifications = NotificationSubscriptions()
-	private var secretKeyLengthAlertDisplayed = false
-
-	public var config: ChannelConfig {
-		get { model.config }
-		set { model.replace(with: newValue) }
-	}
 
 	public convenience init(client: IRCClient) {
 		self.init(config: nil, onClient: client)
 	}
 
-	public init(channel: IRCChannel) {
+	public init(channel: Channel) {
 		client = channel.associatedClient
 		clientId = channel.associatedClient?.uniqueIdentifier
 		self.channel = channel
@@ -73,12 +66,9 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		let rootView = ChannelPropertiesView(
 			model: model,
 			notificationItems: notificationItems,
-			secretKeyChanged: { [weak self] value in self?.checkSecretKeyLength(value) },
-			submit: { [weak self] in self?.ok(nil) },
-			cancel: { [weak self] in self?.cancel(nil) }
+			submit: { [weak self] in self?.submit() },
+			cancel: { [weak self] in self?.cancel() }
 		)
-		/* `ChannelPropertiesView` owns the size; a second frame here would only
-		 fight it. */
 		setContent(rootView)
 	}
 
@@ -86,37 +76,17 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		startSheet()
 	}
 
-	override public func ok(_ sender: Any?) {
+	override public func submit() {
 		guard model.validateForSubmission() else { return }
 		removeConfigurationObserver()
 		model.config = model.submittedConfig
 		(delegate as? any ChannelPropertiesSheetDelegate)?.channelPropertiesSheet(self, onOk: model.config)
-		super.ok(sender)
+		super.submit()
 	}
 
-	override public func cancel(_ sender: Any?) {
+	override public func cancel() {
 		removeConfigurationObserver()
-		super.cancel(sender)
-	}
-
-	private func checkSecretKeyLength(_ value: String) {
-		guard let client else { return }
-		let maximum = client.supportInfo.maximumKeyLength
-		guard maximum > 0, value.count > maximum, secretKeyLengthAlertDisplayed == false else { return }
-		secretKeyLengthAlertDisplayed = true
-		Alerts.alert(
-			withMessage: ChannelValidationStrings.maximumKeyLengthMessage,
-			title: ChannelValidationStrings.maximumKeyLengthTitle(
-				networkName: client.networkNameAlt,
-				maximumLength: Int(clamping: maximum)
-			),
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil,
-			otherButton: nil,
-			suppressionKey: ChannelValidationSuppressionKey.maximumSecretKeyLength.rawValue,
-			suppressionText: nil,
-			completionBlock: nil
-		)
+		super.cancel()
 	}
 
 	private func observeConfigurationChanges() {
@@ -130,24 +100,28 @@ public final class ChannelPropertiesSheet: MainWindowSheetSession, ChannelScoped
 		notifications.cancelAll()
 	}
 
+	/** The channel was reconfigured from somewhere else while the sheet is open.
+
+	 The alert is a sheet on the window this sheet is already on, so it arrives
+	 over the edits it is asking about rather than on whatever window happened
+	 to be visible. Keeping what is typed is the default; reloading is the
+	 destructive answer, because it throws those edits away. */
 	private func underlyingConfigurationChanged(_ notification: Notification) {
-		guard let channel = notification.object as? IRCChannel else { return }
-		Alerts.alert(
-			withMessage: ChannelPropertiesStrings.unsavedChangesWarning,
+		guard let channel = notification.object as? Channel else { return }
+		Alerts.alertSheet(
+			body: ChannelPropertiesStrings.unsavedChangesWarning,
 			title: ChannelPropertiesStrings.configurationChangedTitle,
-			defaultButton: ChannelPropertiesStrings.reloadButton,
-			alternateButton: PromptStrings.Action.cancel,
+			defaultButton: PromptStrings.Action.cancel,
+			alternateButton: ChannelPropertiesStrings.reloadButton,
 			otherButton: nil,
-			// Reloading throws away whatever the user has typed into the sheet.
-			destructiveButton: .default
+			destructiveButton: .alternate
 		) { [weak self] outcome in
-			guard let self, outcome.response == .default else { return }
+			guard let self, outcome.response == .alternate else { return }
 			model.replace(with: channel.config)
 		}
 	}
 
-	override public func sheetDidEnd(withReturnCode _: Int) {
+	override public func sheetDidEnd() {
 		removeConfigurationObserver()
-		(delegate as? any ChannelPropertiesSheetDelegate)?.channelPropertiesSheetWillClose(self)
 	}
 }

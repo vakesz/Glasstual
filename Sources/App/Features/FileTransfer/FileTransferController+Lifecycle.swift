@@ -46,16 +46,6 @@ extension FileTransferController {
 		releaseOwnedFile()
 	}
 
-	private func releaseOwnedFile() {
-		guard let file = ownedFile else { return }
-		ownedFile = nil
-		let stopping = stopTask
-		stopTask = Task {
-			await stopping?.value
-			await file.close()
-		}
-	}
-
 	public func close() {
 		closeAndPostNotification(true)
 	}
@@ -69,12 +59,14 @@ extension FileTransferController {
 		offerTimeout = nil
 
 		stopTransfer()
-		if transferStatus == .complete || transferStatus == .fatalError {
+		/* A recoverable failure keeps its descriptor and its partial bytes: that
+		 is the whole of what Start Transfer has left to resume from. */
+		if transferStatus.isFinished, transferStatus.canRetry == false {
 			releaseOwnedFile()
 		}
 		closePortMapping()
 
-		if ![.complete, .fatalError, .recoverableError].contains(transferStatus) {
+		if transferStatus.isFinished == false {
 			transferStatus = .stopped
 		}
 
@@ -95,6 +87,10 @@ extension FileTransferController {
 		close()
 	}
 
+	func closeWithClientDisconnectedErrorImmediately() {
+		close(with: .notConnectedToIRC)
+	}
+
 	func peerNicknameChanged(_ notification: Notification) {
 		guard let oldNickname = notification.userInfo?["oldNickname"] as? String,
 		      peerNickname == oldNickname,
@@ -105,8 +101,11 @@ extension FileTransferController {
 		peerNickname = newNickname
 	}
 
+	/// A transfer still negotiating cannot finish without the connection it was
+	/// negotiated over; one already moving bytes is on its own socket.
 	func clientDisconnected(_: Notification) {
-		closeWithClientDisconnectedError()
+		guard transferStatus.isNegotiating else { return }
+		closeWithClientDisconnectedErrorImmediately()
 	}
 
 	func disableSystemSleep() {
@@ -116,30 +115,17 @@ extension FileTransferController {
 		) as NSObjectProtocol
 	}
 
+	private func releaseOwnedFile() {
+		guard let file = ownedFile else { return }
+		ownedFile = nil
+		enqueueStop { await file.close() }
+	}
+
 	private func enableSystemSleep() {
 		guard let transferProgressHandler else { return }
 
 		ProcessInfo.processInfo.endActivity(transferProgressHandler)
 		self.transferProgressHandler = nil
-	}
-
-	private func closeWithClientDisconnectedError() {
-		let pendingStatuses: Set<FileTransferStatus> = [
-			.connecting,
-			.initializing,
-			.isListeningAsReceiver,
-			.isListeningAsSender,
-			.mappingListeningPort,
-			.waitingForLocalIPAddress,
-			.waitingForReceiverToAccept,
-			.waitingForResumeAccept,
-		]
-		guard pendingStatuses.contains(transferStatus) else { return }
-		closeWithClientDisconnectedErrorImmediately()
-	}
-
-	func closeWithClientDisconnectedErrorImmediately() {
-		close(with: .notConnectedToIRC)
 	}
 
 	private func postCompletionNotificationIfNeeded() {

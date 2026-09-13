@@ -201,7 +201,7 @@ struct IRCSpecModeTests {
 	/// tokens directly.
 	@Test("A MODE line from the wire parses into the same changes")
 	func wireLinesParseIntoTheSameChanges() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(
 			Message(line: ":op!u@h MODE #chan +oo-v alice bob carol", on: client)
 		)
@@ -223,7 +223,7 @@ struct IRCSpecModeTests {
 	/// parameter — `MODE #chan :+i` — is still one mode change.
 	@Test("A trailing-parameter MODE is the same as a middle-parameter one")
 	func trailingParameterModesParseTheSame() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(Message(line: ":op MODE #chan :+i", on: client))
 
 		#expect(message.params == ["#chan", "+i"])

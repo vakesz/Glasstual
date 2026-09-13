@@ -20,17 +20,14 @@ struct ChannelAccessListApplicationScene: Scene {
 }
 
 private struct ChannelAccessListSceneRoot: View {
-	@Environment(\.dismissWindow) private var dismissWindow
 	let scenes: ApplicationScenes
 
 	var body: some View {
 		if let session = scenes.channelAccessListWindowState.session {
 			ChannelBanListView(
 				model: session.model,
-				heading: session.heading,
 				update: session.updateList,
-				removeSelected: session.removeSelectedEntries,
-				close: dismiss
+				removeSelected: session.removeSelectedEntries
 			)
 			.navigationTitle(session.heading)
 			.onDisappear {
@@ -44,9 +41,5 @@ private struct ChannelAccessListSceneRoot: View {
 			)
 			.frame(minWidth: 480, minHeight: 300)
 		}
-	}
-
-	private func dismiss() {
-		dismissWindow(id: ApplicationSceneID.channelAccessList)
 	}
 }

@@ -4,7 +4,7 @@
     "client-to-client-ctcp" : {
       "comment" : "Checkbox for ignoring Client-to-Client Protocol messages.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Client-to-Client (CTCP)" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Client-to-client (CTCP)" } } }
     },
     "display-message-when-user-becomes-available" : {
       "comment" : "Checkbox for announcing when a tracked user becomes available.",
@@ -29,7 +29,7 @@
     "file-transfer-requests" : {
       "comment" : "Checkbox for ignoring file transfer requests.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "File Transfer Requests" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "File transfer requests" } } }
     },
     "format" : {
       "comment" : "Label introducing the hostmask format.",
@@ -39,7 +39,7 @@
     "general-event-messages" : {
       "comment" : "Checkbox for ignoring join, part, quit, and similar event messages.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "General Event Messages" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "General event messages" } } }
     },
     "hostmask" : {
       "comment" : "Label for an IRC hostmask field.",
@@ -69,7 +69,7 @@
     "inline-media" : {
       "comment" : "Checkbox for ignoring inline media.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Inline Media" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Inline media" } } }
     },
     "matches-addresses-ending-in-info" : {
       "comment" : "IRC hostmask example and explanation.",
@@ -104,32 +104,32 @@
     "notice-messages" : {
       "comment" : "Checkbox for ignoring notice messages.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Notice Messages" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Notice messages" } } }
     },
     "please-enter-a-properly-formatted-ignore" : {
       "comment" : "Validation error shown when an ignore mask is not properly formatted. Legacy key: csu-bv.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter a properly formatted ignore mask." } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter a hostmask, such as nickname!username@address." } } }
     },
     "private-highlights" : {
       "comment" : "Checkbox for ignoring private-message highlights.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Private Highlights" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Private highlights" } } }
     },
     "private-messages" : {
       "comment" : "Checkbox for ignoring private messages.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Private Messages" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Private messages" } } }
     },
     "public-highlights" : {
       "comment" : "Checkbox for ignoring public-message highlights.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Public Highlights" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Public highlights" } } }
     },
     "public-messages" : {
       "comment" : "Checkbox for ignoring public messages.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Public Messages" } } }
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Public messages" } } }
     },
     "track-user" : {
       "comment" : "Title of the tracked-user editor.",

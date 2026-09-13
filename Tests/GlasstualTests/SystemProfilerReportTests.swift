@@ -92,7 +92,7 @@ struct SystemProfilerReportTests {
 			sendCommand: { _ in },
 			sendLine: { _ in },
 			joinChannel: { _ in },
-			printMessage: { _, _, _, _, _, _, _, completion in completion(PluginPrintResult(isHighlight: false)) },
+			printMessage: { _, _, _, _, _, _, _, completion in completion(false) },
 			markUnread: { _, _ in },
 			markHighlight: { _ in },
 			refreshSidebar: {}

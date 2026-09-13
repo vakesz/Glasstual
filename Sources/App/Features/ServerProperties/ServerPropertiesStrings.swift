@@ -80,8 +80,8 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 	}
 
 	enum Navigation {
-		static var serverProperties: String {
-			String(localized: .TDCServerPropertiesSheet.serverProperties)
+		static var connection: String {
+			String(localized: .TDCServerPropertiesSheet.navigationSectionConnection)
 		}
 
 		static var vendorSpecific: String {
@@ -143,9 +143,40 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 		static var proxyServer: String {
 			String(localized: .TDCServerPropertiesSheet.proxyServer)
 		}
+	}
 
-		static var redundancy: String {
-			String(localized: .TDCServerPropertiesSheet.serverPropertiesNavigationMenuRedundancy)
+	/// The network list a new connection sheet opens on.
+	enum Template {
+		static var title: String {
+			String(localized: .TDCServerPropertiesSheet.templatePickerTitle)
+		}
+
+		static var help: String {
+			String(localized: .TDCServerPropertiesSheet.templatePickerHelp)
+		}
+
+		static var customServerHelp: String {
+			String(localized: .TDCServerPropertiesSheet.templateCustomServerHelp)
+		}
+
+		static var suggestedChannels: String {
+			String(localized: .TDCServerPropertiesSheet.templateSuggestedChannels)
+		}
+
+		static var suggestedChannelsHelp: String {
+			String(localized: .TDCServerPropertiesSheet.templateSuggestedChannelsHelp)
+		}
+
+		static var noSuggestedChannels: String {
+			String(localized: .TDCServerPropertiesSheet.templateNoSuggestedChannels)
+		}
+
+		static var registrationRequired: String {
+			String(localized: .TDCServerPropertiesSheet.templateRegistrationRequired)
+		}
+
+		static var website: String {
+			String(localized: .TDCServerPropertiesSheet.templateWebsite)
 		}
 	}
 
@@ -160,6 +191,12 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 
 		static var serverPort: String {
 			String(localized: .TDCServerPropertiesSheet.serverPort)
+		}
+
+		/// Spoken for the Server Address field, whose completions are the bundled
+		/// networks. Nothing else says the list is there.
+		static var serverAddressNetworkHint: String {
+			String(localized: .TDCServerPropertiesSheet.serverAddressNetworkHint)
 		}
 
 		static var serverPassword: String {
@@ -184,6 +221,10 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 
 		static var disconnectWhenComputerSleeps: String {
 			String(localized: .TDCServerPropertiesSheet.disconnectWhenComputerSleeps)
+		}
+
+		static var serverPasswordHelp: String {
+			String(localized: .TDCServerPropertiesSheet.serverPasswordHelp)
 		}
 	}
 
@@ -231,11 +272,9 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 		static var disconnectOnSASLFailure: String {
 			String(localized: .TDCServerPropertiesSheet.disconnectOnSaslFailure)
 		}
-	}
 
-	enum ChannelList {
-		static var joinOnConnect: String {
-			String(localized: .TDCServerPropertiesSheet.joinOnConnect)
+		static var nicknamePasswordHelp: String {
+			String(localized: .TDCServerPropertiesSheet.nicknamePasswordHelp)
 		}
 	}
 
@@ -382,6 +421,10 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 		static var torBrowserNote: String {
 			String(localized: .TDCServerPropertiesSheet.torBrowserNote)
 		}
+
+		static var passwordHelp: String {
+			String(localized: .TDCServerPropertiesSheet.proxyPasswordHelp)
+		}
 	}
 
 	enum FloodControl {
@@ -441,8 +484,18 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 			String(localized: .TDCServerPropertiesSheet.resetCertificate)
 		}
 
-		static var copyFingerprint: String {
-			String(localized: .TDCServerPropertiesSheet.copyFingerprint)
+		static var copyNickServCommand: String {
+			String(localized: .TDCServerPropertiesSheet.copyNickservCommand)
+		}
+
+		/// Every fingerprint has a button of its own, so each says which digest
+		/// it is about rather than all three reading "Copy".
+		static func copyNickServCommand(forDigest digest: String) -> String {
+			String(localized: .TDCServerPropertiesSheet.copyNickservCommandFor(digest))
+		}
+
+		static var fingerprintHelp: String {
+			String(localized: .TDCServerPropertiesSheet.certificateFingerprintHelp)
 		}
 
 		static var chooseTitle: String {
@@ -467,12 +520,12 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 			String(localized: .TDCServerPropertiesSheet.cipherSuitesLabel)
 		}
 
-		static var viewList: String {
+		static var suiteList: String {
 			String(localized: .TDCServerPropertiesSheet.viewCipherSuites)
 		}
 
 		/// The picker's name for a collection, which is also the name the
-		/// "includes the following cipher suites" alert quotes.
+		/// explanation under the suite list quotes.
 		static func collectionName(_ collection: CipherSuiteCollection) -> String {
 			switch collection {
 			case .default: String(localized: .TDCServerPropertiesSheet.cipherSuitesDefault)
@@ -482,22 +535,8 @@ nonisolated enum ServerPropertiesStrings { // nonisolated: value
 			}
 		}
 
-		static func title(collectionName: String) -> String {
+		static func listExplanation(collectionName: String) -> String {
 			String(localized: .TDCServerPropertiesSheet.includesTheFollowingCipherSuites(collectionName))
-		}
-
-		static func description(_ suites: String) -> String {
-			String(localized: .TDCServerPropertiesSheet.theseCipherSuitesAreOrdered(suites))
-		}
-	}
-
-	enum NickServ {
-		static var missingPasswordTitle: String {
-			String(localized: .TDCServerPropertiesSheet.preferenceYouHaveEnabledWillNot)
-		}
-
-		static var missingPasswordRecovery: String {
-			String(localized: .TDCServerPropertiesSheet.enterYourNickservPasswordInto)
 		}
 	}
 

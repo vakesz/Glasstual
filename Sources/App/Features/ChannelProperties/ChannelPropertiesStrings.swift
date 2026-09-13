@@ -13,8 +13,12 @@
 import Foundation
 
 nonisolated enum ChannelPropertiesStrings { // nonisolated: value
-	static var windowTitle: String {
+	static var heading: String {
 		String(localized: .TDCChannelPropertiesSheet.channelPropertiesWindowTitle)
+	}
+
+	static var sectionPickerLabel: String {
+		String(localized: .TDCChannelPropertiesSheet.sectionPickerLabel)
 	}
 
 	static var general: String {
@@ -67,6 +71,22 @@ nonisolated enum ChannelPropertiesStrings { // nonisolated: value
 
 	static var labelLabel: String {
 		String(localized: .TDCChannelPropertiesSheet.labelLabel)
+	}
+
+	static var channelNamePlaceholder: String {
+		String(localized: .TDCChannelPropertiesSheet.channelNamePlaceholder)
+	}
+
+	static var passwordHelp: String {
+		String(localized: .TDCChannelPropertiesSheet.passwordHelp)
+	}
+
+	static func secretKeyLength(_ length: Int, maximum: Int) -> String {
+		String(localized: .TDCChannelPropertiesSheet.secretKeyLength(length, maximum))
+	}
+
+	static func secretKeyTooLong(networkName: String, maximumLength: Int) -> String {
+		String(localized: .TDCChannelPropertiesSheet.secretKeyTooLong(networkName, maximumLength))
 	}
 
 	static var optional: String {

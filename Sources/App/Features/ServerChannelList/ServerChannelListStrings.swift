@@ -14,66 +14,70 @@ import Foundation
 
 enum ServerChannelListStrings {
 	static var channelName: String {
-		String(localized: .TDCServerChannelListDialog.channelName)
+		String(localized: .ServerChannelList.channelName)
 	}
 
 	static var memberCount: String {
-		String(localized: .TDCServerChannelListDialog.memberCount)
+		String(localized: .ServerChannelList.memberCount)
 	}
 
 	static var topic: String {
-		String(localized: .TDCServerChannelListDialog.topic)
+		String(localized: .ServerChannelList.topic)
 	}
 
 	static var searchPlaceholder: String {
-		String(localized: .TDCServerChannelListDialog.searchChannels)
-	}
-
-	static var searchAccessibilityLabel: String {
-		String(localized: .TDCServerChannelListDialog.channelListSearch)
+		String(localized: .ServerChannelList.searchChannels)
 	}
 
 	static var channelListAccessibilityLabel: String {
-		String(localized: .TDCServerChannelListDialog.publicChannelList)
+		String(localized: .ServerChannelList.publicChannelList)
 	}
 
 	static var joinSelectedChannels: String {
-		String(localized: .TDCServerChannelListDialog.joinSelectedChannels)
+		String(localized: .ServerChannelList.joinSelectedChannels)
 	}
 
-	static var updateList: String {
-		String(localized: .TDCServerChannelListDialog.updateList)
+	static var refresh: String {
+		String(localized: .ServerChannelList.updateList)
 	}
 
 	static var requestingChannelList: String {
-		String(localized: .TDCServerChannelListDialog.requestingChannelList)
+		String(localized: .ServerChannelList.requestingChannelList)
 	}
 
 	static var emptyTitle: String {
-		String(localized: .TDCServerChannelListDialog.noPublicChannels)
+		String(localized: .ServerChannelList.noPublicChannels)
 	}
 
 	static var emptyDescription: String {
-		String(localized: .TDCServerChannelListDialog.changeTheSearchOrUpdate)
+		String(localized: .ServerChannelList.changeTheSearchOrUpdate)
 	}
 
 	static var minimumUserCountLabel: String {
-		String(localized: .TDCServerChannelListDialog.minimumUsers)
+		String(localized: .ServerChannelList.minimumUsers)
 	}
 
-	static var minimumUserCountHint: String {
-		String(localized: .TDCServerChannelListDialog.onlyListChannelsWithAtLeast)
+	static var minimumUserCountFooter: String {
+		String(localized: .ServerChannelList.onlyListChannelsWithAtLeast)
 	}
 
-	static func heading(networkName: String) -> String {
-		String(localized: .TDCServerChannelListDialog.channelList(networkName))
+	static var windowGroupTitle: String {
+		String(localized: .ServerChannelList.windowGroupTitle)
+	}
+
+	static var noChannelListTitle: String {
+		String(localized: .ServerChannelList.noChannelList)
+	}
+
+	static var noChannelListDescription: String {
+		String(localized: .ServerChannelList.noChannelListDescription)
 	}
 
 	static func truncationNotice(keptChannelCount: Int) -> String {
-		String(localized: .TDCServerChannelListDialog.listTruncatedNotice(keptChannelCount))
+		String(localized: .ServerChannelList.listTruncatedNotice(keptChannelCount))
 	}
 
-	static func windowTitle(publicChannelCount: Int) -> String {
-		String(localized: .TDCServerChannelListDialog.publicChannelCount(publicChannelCount))
+	static func windowSubtitle(publicChannelCount: Int) -> String {
+		String(localized: .ServerChannelList.publicChannelCount(publicChannelCount))
 	}
 }

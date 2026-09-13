@@ -137,9 +137,9 @@ public final class ObservablePreferences {
 		invalidate()
 	}
 
-	/// Marks every reading view stale. Public because the panes' AppKit shell
-	/// writes some values (a folder bookmark, the channel font) outside the key
-	/// store's own notifications.
+	/// Marks every reading view stale. Public because a few values (a folder
+	/// bookmark, the channel font) are written outside the key store, so
+	/// nothing announces them.
 	public func invalidate() {
 		revision &+= 1
 	}

@@ -13,30 +13,6 @@
         }
       }
     },
-    "are-you-sure-you-want": {
-      "comment": "Legacy key: 5oq-vv.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you sure you want to open “%@” with this application?"
-          }
-        }
-      }
-    },
-    "are-you-sure-you-want-to-continue": {
-      "comment": "Legacy key: kx4-q8.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you sure you want to continue?"
-          }
-        }
-      }
-    },
     "are-you-sure-you-want-to-open-the-file-named": {
       "comment": "Legacy key: xfl-8e.",
       "extractionState": "manual",
@@ -128,7 +104,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The connection named “%1$@“ is already configured to connect to this server address.\n\nDo you want to add these channels to that connection or would you rather create a new connection?"
+            "value": "The connection named “%1$@” is already configured to connect to this server address.\n\nDo you want to add these channels to that connection or would you rather create a new connection?"
           }
         }
       }
@@ -140,7 +116,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The connection named “%1$@“ is already configured to connect to this server address.\n\nDo you want to add this channel to that connection or would you rather create a new connection?"
+            "value": "The connection named “%1$@” is already configured to connect to this server address.\n\nDo you want to add this channel to that connection or would you rather create a new connection?"
           }
         }
       }
@@ -153,6 +129,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continue"
+          }
+        }
+      }
+    },
+    "could-not-open-saved-conversation-history": {
+      "comment": "Title of the alert shown when the saved conversation history could not be opened. Legacy key: h99-3q.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual could not open your saved conversation history. Please report this problem at https://github.com/vakesz/Glasstual/issues"
           }
         }
       }
@@ -229,14 +217,14 @@
         }
       }
     },
-    "do-you-want-to-delete": {
-      "comment": "Confirmation title for deleting the selected connection or channel. Consolidates the identical legacy i8o-7z entry. Legacy key: 0kz-wd.",
+    "do-you-want-to-delete-named": {
+      "comment": "Confirmation title for deleting the selected connection or channel; %@ is its name. Consolidates the identical legacy i8o-7z entry. Legacy key: 0kz-wd.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Do you want to delete the selection?"
+            "value": "Do you want to delete “%@”?"
           }
         }
       }
@@ -260,7 +248,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@“"
+            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@”"
           }
         }
       }
@@ -272,7 +260,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@“\n\nInformation encrypted using: %2$@"
+            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@”\n\nInformation encrypted using: %2$@"
           }
         }
       }
@@ -314,13 +302,13 @@
       }
     },
     "glasstual-is-unable-to-access": {
-      "comment": "Legacy key: b7o-v4.",
+      "comment": "Alert title shown when the saved security-scoped bookmark for the log folder no longer resolves. Legacy key: 6ep-0d.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glasstual is unable to access the folder that's configured for your log location because the resource is 'stale'"
+            "value": "Glasstual can no longer reach the folder set as its log location."
           }
         }
       }
@@ -332,7 +320,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glasstual is using an encrypted connection to “%@“"
+            "value": "Glasstual is using an encrypted connection to “%@”"
           }
         }
       }
@@ -464,7 +452,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navigate to Preferences ➜ Advanced ➜ Log Location to repair this preference"
+            "value": "Choose the folder again in Settings › Advanced › Log Location."
           }
         }
       }
@@ -512,7 +500,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please contact the developer of each addon to receive information on updating.\n\nIf you are the developer of one of these addons: In the Info.plist file of your project, set the value of the property “MinimumGlasstualVersion” to “%@“, then rebuild to check for any errors."
+            "value": "Please contact the developer of each addon to receive information on updating.\n\nIf you are the developer of one of these addons: In the Info.plist file of your project, set the value of the property “MinimumGlasstualVersion” to ”%@“, then rebuild to check for any errors."
           }
         }
       }
@@ -589,30 +577,6 @@
         }
       }
     },
-    "preferences-may-become-corrupted-if": {
-      "comment": "Legacy key: hcb-3i.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preferences may become corrupted if you have more than one copy of Glasstual open"
-          }
-        }
-      }
-    },
-    "process-responsible-for-managing-scrollback": {
-      "comment": "Legacy key: h99-3q.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The process responsible for managing scrollback is not working correctly. Please report this problem at https://github.com/vakesz/Glasstual/issues"
-          }
-        }
-      }
-    },
     "query-named-already-exists-do": {
       "comment": "Legacy key: d22-76.",
       "extractionState": "manual",
@@ -620,7 +584,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A query named “%@“ already exists. Do you want to delete this query?"
+            "value": "A query named “%@” already exists. Do you want to delete this query?"
           }
         }
       }
@@ -788,7 +752,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The preferences could not be imported."
+            "value": "The settings could not be imported."
           }
         }
       }
@@ -800,7 +764,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The selected file is not a Glasstual preferences file."
+            "value": "The selected file is not a Glasstual settings file."
           }
         }
       }
@@ -865,18 +829,6 @@
         }
       }
     },
-    "to-install-this-script-save": {
-      "comment": "Legacy key: 0bj-ic.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To install this script, save it inside the folder:\n[home folder] ➜ Library ➜ Application Scripts ➜ %@\n\nCreate this folder if it does not exist."
-          }
-        }
-      }
-    },
     "type-into-the-main-input-text": {
       "comment": "Legacy key: 3ze-xh.",
       "extractionState": "manual",
@@ -909,6 +861,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "The version of Glasstual that you are using is no longer compatible with these addons: %@"
+          }
+        }
+      }
+    },
+    "vhost-placeholder": {
+      "comment": "Placeholder text for the vHost input prompt: an example host name, not a translated phrase.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "apple.vhost"
           }
         }
       }
@@ -980,7 +944,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You have clicked a link that will connect you to “%1$@“ and join the channel %2$@"
+            "value": "You have clicked a link that will connect you to “%1$@” and join the channel %2$@"
           }
         }
       }
@@ -992,19 +956,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You have clicked a link that will connect you to “%1$@“ and join the channels: %2$@"
-          }
-        }
-      }
-    },
-    "you-have-clicked-on-a-link": {
-      "comment": "Legacy key: 2ul-cl.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You have clicked on a link that will open the application “%@”"
+            "value": "You have clicked a link that will connect you to “%1$@” and join the channels: %2$@"
           }
         }
       }
@@ -1016,7 +968,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your current preferences could not be backed up, so nothing was changed."
+            "value": "Your current settings could not be backed up, so nothing was changed."
           }
         }
       }

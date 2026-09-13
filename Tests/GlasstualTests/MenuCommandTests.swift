@@ -90,7 +90,7 @@ struct MenuCommandTests {
 	@Test("Grouping does not follow the tag's numeric band")
 	func groupingIsNotDerivedFromBand() {
 		#expect(MenuCommand.segmentedAddChannel.validationGroup == .general)
-		#expect(MenuCommand.dockDisableNotifications.validationGroup == .general)
+		#expect(MenuCommand.dockMuteNotifications.validationGroup == .general)
 		#expect(MenuCommand.queryLogs.validationGroup == .general)
 	}
 
@@ -104,12 +104,11 @@ struct MenuCommandTests {
 					applicationIsLaunched: false,
 					mainWindowHasAttachedSheet: true,
 					mainWindowIsFocused: false,
-					mainWindowIsBeneathMouse: false,
 					hasExplicitMenuContext: false
 				)
 			)
 		}
-		#expect(MenuCommand.allCases.count(where: \.isTopLevelMenu) == 10)
+		#expect(MenuCommand.allCases.count(where: \.isTopLevelMenu) == 11)
 	}
 
 	@Test("A sheet leaves the settings commands live and the channel commands dead")
@@ -121,13 +120,12 @@ struct MenuCommandTests {
 				applicationIsLaunched: true,
 				mainWindowHasAttachedSheet: true,
 				mainWindowIsFocused: true,
-				mainWindowIsBeneathMouse: false,
 				hasExplicitMenuContext: false
 			)
 		}
 
 		#expect(validate(.settings))
-		#expect(validate(.disableNotifications))
+		#expect(validate(.muteNotifications))
 		#expect(validate(.joinChannel) == false)
 	}
 
@@ -141,7 +139,6 @@ struct MenuCommandTests {
 					applicationIsLaunched: false,
 					mainWindowHasAttachedSheet: false,
 					mainWindowIsFocused: true,
-					mainWindowIsBeneathMouse: false,
 					hasExplicitMenuContext: false
 				)
 			)
@@ -159,7 +156,7 @@ struct MenuCommandTests {
 			#expect(MenuValidationPolicy.validate(
 				command: .joinChannel, commandSpecificResult: eligible,
 				applicationIsLaunched: launched, mainWindowHasAttachedSheet: sheet,
-				mainWindowIsFocused: false, mainWindowIsBeneathMouse: false,
+				mainWindowIsFocused: false,
 				hasExplicitMenuContext: true
 			) == expected)
 		}
@@ -174,7 +171,6 @@ struct MenuCommandTests {
 				applicationIsLaunched: true,
 				mainWindowHasAttachedSheet: false,
 				mainWindowIsFocused: true,
-				mainWindowIsBeneathMouse: false,
 				hasExplicitMenuContext: false
 			) == false
 		)

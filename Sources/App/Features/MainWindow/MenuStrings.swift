@@ -33,6 +33,10 @@ extension MenuStrings {
 			String(localized: .TVCMainWindow.menuBarEdit)
 		}
 
+		static var format: String {
+			String(localized: .TVCMainWindow.menuBarFormat)
+		}
+
 		static var view: String {
 			String(localized: .TVCMainWindow.menuBarView)
 		}
@@ -101,12 +105,12 @@ extension MenuStrings {
 
 extension MenuStrings {
 	enum File {
-		static var disableNotifications: String {
-			String(localized: .TVCMainWindow.menuFileDisableNotifications)
+		static var importSettings: String {
+			String(localized: .TVCMainWindow.menuFileImportSettings)
 		}
 
-		static var disableNotificationSounds: String {
-			String(localized: .TVCMainWindow.menuFileDisableNotificationSounds)
+		static var exportSettings: String {
+			String(localized: .TVCMainWindow.menuFileExportSettings)
 		}
 
 		static var print: String {
@@ -115,6 +119,22 @@ extension MenuStrings {
 
 		static var closeWindow: String {
 			String(localized: .TVCMainWindow.menuFileCloseWindow)
+		}
+	}
+}
+
+// MARK: - Notifications
+
+extension MenuStrings {
+	/// The two application-wide mute toggles, which the application menu and
+	/// the Dock menu both offer.
+	enum Notifications {
+		static var muteNotifications: String {
+			String(localized: .TVCMainWindow.menuMuteNotifications)
+		}
+
+		static var muteNotificationSounds: String {
+			String(localized: .TVCMainWindow.menuMuteNotificationSounds)
 		}
 	}
 }
@@ -243,6 +263,10 @@ extension MenuStrings {
 			String(localized: .TVCMainWindow.menuEditStopSpeaking)
 		}
 
+		static var skipSpokenNotification: String {
+			String(localized: .TVCMainWindow.menuEditSkipSpokenNotification)
+		}
+
 		static var find: String {
 			String(localized: .TVCMainWindow.menuEditFind)
 		}
@@ -287,6 +311,26 @@ extension MenuStrings {
 
 		static var decreaseFontSize: String {
 			String(localized: .TVCMainWindow.menuViewDecreaseFontSize)
+		}
+
+		static var actualSize: String {
+			String(localized: .TVCMainWindow.menuViewActualSize)
+		}
+
+		static var appearance: String {
+			String(localized: .TVCMainWindow.menuViewAppearance)
+		}
+
+		static var appearanceSystem: String {
+			String(localized: .TVCMainWindow.menuViewAppearanceSystem)
+		}
+
+		static var appearanceLight: String {
+			String(localized: .TVCMainWindow.menuViewAppearanceLight)
+		}
+
+		static var appearanceDark: String {
+			String(localized: .TVCMainWindow.menuViewAppearanceDark)
 		}
 
 		static var enterFullScreen: String {
@@ -377,16 +421,8 @@ extension MenuStrings {
 			String(localized: .TVCMainWindow.menuChannelModeModerated)
 		}
 
-		static var modeUnmoderated: String {
-			String(localized: .TVCMainWindow.menuChannelModeUnmoderated)
-		}
-
 		static var modeInviteOnly: String {
 			String(localized: .TVCMainWindow.menuChannelModeInviteOnly)
-		}
-
-		static var modeAnyoneCanJoin: String {
-			String(localized: .TVCMainWindow.menuChannelModeAnyoneCanJoin)
 		}
 
 		static var modeManageAll: String {
@@ -539,10 +575,6 @@ extension MenuStrings {
 			String(localized: .TVCMainWindow.menuWindowZoom)
 		}
 
-		static var toggleAppearance: String {
-			String(localized: .TVCMainWindow.menuWindowToggleAppearance)
-		}
-
 		static var sortChannelList: String {
 			String(localized: .TVCMainWindow.menuWindowSortChannelList)
 		}
@@ -561,10 +593,6 @@ extension MenuStrings {
 
 		static var addressBook: String {
 			String(localized: .TVCMainWindow.menuWindowAddressBook)
-		}
-
-		static var ignoreList: String {
-			String(localized: .TVCMainWindow.menuWindowIgnoreList)
 		}
 
 		static var viewLogs: String {
@@ -613,15 +641,7 @@ extension MenuStrings {
 			String(localized: .TVCMainWindow.menuHelpHiddenSettings)
 		}
 
-		static var exportPreferences: String {
-			String(localized: .TVCMainWindow.menuHelpExportPreferences)
-		}
-
-		static var importPreferences: String {
-			String(localized: .TVCMainWindow.menuHelpImportPreferences)
-		}
-
-		static var resetDontAskMeWarnings: String {
+		static var resetWarnings: String {
 			String(localized: .TVCMainWindow.menuHelpResetWarnings)
 		}
 
@@ -635,10 +655,6 @@ extension MenuStrings {
 
 extension MenuStrings {
 	enum Transcript {
-		static var searchWithProvider: String {
-			String(localized: .TVCMainWindow.menuTranscriptSearchWithGoogle)
-		}
-
 		static var lookUpInDictionary: String {
 			String(localized: .TVCMainWindow.menuTranscriptLookUpInDictionary)
 		}
@@ -689,10 +705,6 @@ extension MenuStrings {
 			String(localized: .TVCMainWindow.menuMemberGiveVoice)
 		}
 
-		static var allModesGiven: String {
-			String(localized: .TVCMainWindow.menuMemberAllModesGiven)
-		}
-
 		static var takeOp: String {
 			String(localized: .TVCMainWindow.menuMemberTakeOp)
 		}
@@ -703,10 +715,6 @@ extension MenuStrings {
 
 		static var takeVoice: String {
 			String(localized: .TVCMainWindow.menuMemberTakeVoice)
-		}
-
-		static var allModesTaken: String {
-			String(localized: .TVCMainWindow.menuMemberAllModesTaken)
 		}
 
 		static var ban: String {

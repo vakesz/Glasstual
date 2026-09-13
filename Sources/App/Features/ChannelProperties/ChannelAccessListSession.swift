@@ -42,7 +42,7 @@ public struct ChannelBanListSheetEntry: Identifiable, Hashable, Sendable {
 			return ApplicationStrings.unknownValue
 		}
 
-		return formatDateLongStyle(entryCreationDate, true) ?? ApplicationStrings.unknownValue
+		return entryCreationDate.formatted(date: .abbreviated, time: .shortened)
 	}
 }
 
@@ -66,12 +66,7 @@ struct ChannelBanListComparator: SortComparator {
 			(lhs.entryCreationDate ?? .distantPast).compare(rhs.entryCreationDate ?? .distantPast)
 		}
 
-		guard order == .reverse else { return result }
-		return switch result {
-		case .orderedAscending: .orderedDescending
-		case .orderedDescending: .orderedAscending
-		case .orderedSame: .orderedSame
-		}
+		return result.ordered(by: order)
 	}
 }
 
@@ -108,9 +103,7 @@ final class ChannelBanListModel {
 	/// is. The count above the table cannot say this on its own: a list cut at
 	/// the cap reads as a complete one that happens to be exactly that long.
 	var truncationNotice: String? {
-		guard discardedEntryCount > 0 else { return nil }
-
-		return ChannelAccessListStrings.truncationNotice(shownEntryCount: entries.count)
+		discardedEntryCount > 0 ? ChannelAccessListStrings.truncationNotice : nil
 	}
 
 	func add(_ entry: ChannelBanListSheetEntry) {
@@ -168,7 +161,7 @@ final class ChannelAccessListWindowState {
 @Observable
 public final class ChannelAccessListSession: ChannelScoped {
 	public let client: IRCClient
-	public let channel: IRCChannel
+	public let channel: Channel
 	public let entryType: ChannelBanListEntryType
 	public let clientId: String?
 	public let channelId: String?
@@ -188,7 +181,7 @@ public final class ChannelAccessListSession: ChannelScoped {
 
 	let model = ChannelBanListModel()
 
-	public init?(entryType: ChannelBanListEntryType, in channel: IRCChannel) {
+	public init?(entryType: ChannelBanListEntryType, in channel: Channel) {
 		guard Self.channel(channel, supportsEntryType: entryType),
 		      let client = channel.associatedClient
 		else { return nil }
@@ -267,7 +260,7 @@ public final class ChannelAccessListSession: ChannelScoped {
 		replyIsComplete = false
 		guard let modeSymbol else { return }
 		/* `MODE #channel +b` with no mask is the request for the list. */
-		client.sendModes([ModeChangeGroup(symbols: "+\(modeSymbol)")], in: channel)
+		client.sendModes([ModeChangeGroup(symbols: "+\(modeSymbol)")], inChannelNamed: channel.name)
 	}
 
 	/** Removing entries does not close the list.
@@ -285,13 +278,13 @@ public final class ChannelAccessListSession: ChannelScoped {
 				modeIsSet: false,
 				modeParameters: masks
 			),
-			in: channel
+			inChannelNamed: channel.name
 		)
 		model.remove(masks: masks)
 	}
 
 	public static func channel(
-		_ channel: IRCChannel,
+		_ channel: Channel,
 		supportsEntryType entryType: ChannelBanListEntryType
 	) -> Bool {
 		guard let client = channel.associatedClient else {

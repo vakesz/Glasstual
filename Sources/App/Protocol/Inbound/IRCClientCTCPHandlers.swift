@@ -204,7 +204,7 @@ public extension IRCClient {
 
 			return arguments
 		case "TIME":
-			return sharedISOStandardDateFormatter().string(from: Date())
+			return ISOStandardDateFormatter().string(from: Date())
 		case "USERINFO":
 			return config.realName
 		case "VERSION":
@@ -212,7 +212,7 @@ public extension IRCClient {
 				.nonEmpty
 
 			return masquerade ?? IRCCTCPStrings.version(
-				applicationName: ApplicationInfo.applicationNameWithoutVersion(),
+				applicationName: ApplicationInfo.applicationName(),
 				shortVersion: ApplicationInfo.applicationVersionShort()
 			)
 		default:
@@ -263,14 +263,8 @@ public extension IRCClient {
 		      command: message.command, receivedAt: message.receivedAt)
 	}
 
-	private func noticePrintTarget() -> IRCChannel? {
+	private func noticePrintTarget() -> Channel? {
 		guard environment.preferences.locationToSendNotices == .selectedChannel else { return nil }
 		return output?.selectedChannel(on: self)
-	}
-}
-
-private extension String {
-	var nonEmpty: String? {
-		isEmpty ? nil : self
 	}
 }

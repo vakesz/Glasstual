@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -42,13 +42,17 @@ import Foundation
 /// command has passed its command-specific checks.
 @MainActor
 public enum MenuValidationPolicy {
+	/** Whether the command is available at all, given what has the keyboard.
+
+	 The pointer used to be part of this: a command was live while the main
+	 window merely sat under the mouse, so what a menu offered depended on where
+	 the pointer happened to be rather than on what was focused. */
 	public static func validate(
 		command: MenuCommand?,
 		commandSpecificResult: Bool,
 		applicationIsLaunched: Bool,
 		mainWindowHasAttachedSheet: Bool,
 		mainWindowIsFocused: Bool,
-		mainWindowIsBeneathMouse: Bool,
 		hasExplicitMenuContext: Bool
 	) -> Bool {
 		guard commandSpecificResult else {
@@ -59,23 +63,19 @@ public enum MenuValidationPolicy {
 			return true
 		}
 
-		let anotherWindowOrSheetHasFocus =
-			mainWindowHasAttachedSheet
-				|| (mainWindowIsFocused == false && mainWindowIsBeneathMouse == false && !hasExplicitMenuContext)
+		/* A contextual menu names the row it was opened on, which answers for
+		 the main window whether or not the window is focused. */
+		let mainWindowIsAnswering = mainWindowHasAttachedSheet == false
+			&& (mainWindowIsFocused || hasExplicitMenuContext)
 
-		var result = applicationIsLaunched && anotherWindowOrSheetHasFocus == false
-
-		if result == false,
-		   anotherWindowOrSheetHasFocus,
-		   command?.isAvailableDuringSheets == true
-		{
-			result = true
+		if applicationIsLaunched, mainWindowIsAnswering {
+			return true
 		}
 
-		if result == false, command?.isEssential == true {
-			result = true
+		if mainWindowIsAnswering == false, command?.isAvailableDuringSheets == true {
+			return true
 		}
 
-		return result
+		return command?.isEssential == true
 	}
 }

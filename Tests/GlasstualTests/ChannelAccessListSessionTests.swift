@@ -22,7 +22,7 @@ struct ChannelAccessListSessionTests {
 	/// did not fit an `Int` used to end the process while opening the list.
 	@Test("A ban limit too large for the list is saturated rather than fatal")
 	func oversizedListLimitIsSaturated() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData(
 			"CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ MAXLIST=b:18446744073709551615"
 		)
@@ -40,7 +40,7 @@ struct ChannelAccessListSessionTests {
 	 the new list lands. */
 	@Test("A reply arriving after the last one finished replaces the rows")
 	func aNewReplyReplacesTheRows() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 		let channel = try #require(client.findChannelOrCreate("#refresh"))
 		channel.activate()
@@ -61,7 +61,7 @@ struct ChannelAccessListSessionTests {
 	 stays open for the next removal. */
 	@Test("Removing the selected masks drops their rows and keeps the list")
 	func removingSelectedMasksKeepsTheList() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 		let channel = try #require(client.findChannelOrCreate("#removal"))
 		channel.activate()
@@ -83,7 +83,7 @@ struct ChannelAccessListSessionTests {
 	 change one compiles to nothing rather than ending the process. */
 	@Test("A list mode the server stops advertising leaves the session with no symbol")
 	func withdrawnListModeLeavesNoSymbol() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ EXCEPTS=e")
 		let channel = try #require(client.findChannelOrCreate("#withdrawn"))
 		channel.activate()
@@ -161,7 +161,7 @@ struct ChannelAccessListSessionTests {
 		#expect(model.discardedEntryCount == 3)
 		#expect(model.truncationNotice != nil)
 		// Naming the server's MAXLIST here would read as the list being all of it.
-		#expect(model.entryCountDescription.contains(formattedNumber(50000) as String) == false)
+		#expect(model.entryCountDescription.contains(formattedNumber(50000)) == false)
 	}
 
 	/// Nothing was dropped, so nothing warns about it and the count is the
@@ -183,7 +183,7 @@ struct ChannelAccessListSessionTests {
 	 until the first entry of the new reply arrives. */
 	@Test("A refresh keeps the rows up until the new reply starts arriving")
 	func refreshingKeepsTheRowsUntilTheReplyStarts() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 		let channel = try #require(client.findChannelOrCreate("#hold"))
@@ -208,7 +208,7 @@ struct ChannelAccessListSessionTests {
 	 mode letter travel with the entry now, and a list takes only its own. */
 	@Test("A list ignores entries for another channel or another of its modes")
 	func entriesForAnotherListAreIgnored() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ EXCEPTS=e")
 		let channel = try #require(client.findChannelOrCreate("#Mine"))
 		channel.activate()
@@ -221,7 +221,7 @@ struct ChannelAccessListSessionTests {
 		#expect(session.matches(client: client, channelName: "#Mine", modeSymbol: "e") == false)
 		/* The seam is one object for every connection, so another connection's
 		 channel of the same name is not this list's either. */
-		let otherClient = GLTTestClient()
+		let otherClient = TestClient()
 		otherClient.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 
 		#expect(session.matches(client: otherClient, channelName: "#Mine", modeSymbol: "b") == false)

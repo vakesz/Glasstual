@@ -29,6 +29,51 @@ public enum TextFormatterCommand: Int, CaseIterable, Sendable {
 	case backgroundColorMissing = 110
 	case rainbowColor = 299
 	case hexColor = 300
+
+	/// The character effect a command turns on and off, where it is a plain
+	/// one. Spoiler is not: it carries two colours with it, and the colour
+	/// commands take a value rather than a state.
+	var effect: IRCTextFormatterEffectType? {
+		switch self {
+		case .bold: .bold
+		case .italics: .italic
+		case .monospace: .monospace
+		case .strikethrough: .strikethrough
+		case .underline: .underline
+		case .spoiler: .spoiler
+		case .foregroundColorSet, .foregroundColorMissing: .foregroundColor
+		case .backgroundColorSet, .backgroundColorMissing: .backgroundColor
+		case .rainbowColor, .hexColor: nil
+		}
+	}
+
+	/// What the Format menu calls the effect.
+	var menuTitle: String {
+		switch self {
+		case .bold: MainWindowStrings.Formatting.bold
+		case .italics: MainWindowStrings.Formatting.italics
+		case .underline: MainWindowStrings.Formatting.underline
+		case .strikethrough: MainWindowStrings.Formatting.strikethrough
+		case .monospace: MainWindowStrings.Formatting.monospace
+		case .spoiler: MainWindowStrings.Formatting.spoiler
+		case .foregroundColorSet, .foregroundColorMissing: MainWindowStrings.Formatting.textColor
+		case .backgroundColorSet, .backgroundColorMissing: MainWindowStrings.Formatting.backgroundColor
+		case .rainbowColor: MainWindowStrings.Formatting.rainbow
+		case .hexColor: MainWindowStrings.Formatting.other
+		}
+	}
+
+	/// Bold, Italic and Underline carry the shortcuts every macOS text editor
+	/// binds them to. The rest carry none: a chat client has no claim on more
+	/// of the Command row than the three everyone already knows.
+	var keyEquivalent: String {
+		switch self {
+		case .bold: "b"
+		case .italics: "i"
+		case .underline: "u"
+		default: ""
+		}
+	}
 }
 
 @MainActor
@@ -44,9 +89,15 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	/// The shared colour panel's close notification, held while the panel is up.
 	private let notifications = NotificationSubscriptions()
 
-	private var hasConfigured = false
+	private var hasAttachedColorList = false
 	/// Set by the window that installs the menu; see `attach(to:)`.
 	private weak var hostWindow: NSWindow?
+
+	/// The six character effects, in the order the menu offers them, with the
+	/// three that carry a key equivalent first.
+	private static let formattingCommands: [TextFormatterCommand] = [
+		.bold, .italics, .underline, .strikethrough, .monospace, .spoiler,
+	]
 
 	override public init() {
 		super.init()
@@ -58,51 +109,26 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		formatterMenu = NSMenuItem(title: root.title, action: nil, keyEquivalent: "")
 		formatterMenu.submenu = root
 
-		addFormattingItem(
-			MainWindowStrings.Formatting.bold,
-			command: .bold,
-			action: #selector(insertBoldCharIntoTextBox),
-			to: root
-		)
-		addFormattingItem(
-			MainWindowStrings.Formatting.italics,
-			command: .italics,
-			action: #selector(insertItalicCharIntoTextBox),
-			to: root
-		)
-		addFormattingItem(
-			MainWindowStrings.Formatting.monospace,
-			command: .monospace,
-			action: #selector(insertMonospaceCharIntoTextBox),
-			to: root
-		)
-		addFormattingItem(
-			MainWindowStrings.Formatting.spoiler,
-			command: .spoiler,
-			action: #selector(insertSpoilerCharIntoTextBox),
-			to: root
-		)
-		addFormattingItem(
-			MainWindowStrings.Formatting.strikethrough,
-			command: .strikethrough,
-			action: #selector(insertStrikethroughCharIntoTextBox),
-			to: root
-		)
-		addFormattingItem(
-			MainWindowStrings.Formatting.underline,
-			command: .underline,
-			action: #selector(insertUnderlineCharIntoTextBox),
-			to: root
-		)
+		for command in Self.formattingCommands {
+			let item = NSMenuItem(
+				title: command.menuTitle,
+				action: #selector(toggleFormatting(_:)),
+				keyEquivalent: command.keyEquivalent
+			)
+			item.keyEquivalentModifierMask = command.keyEquivalent.isEmpty ? [] : .command
+			item.tag = command.rawValue
+			item.target = self
+			root.addItem(item)
+		}
+
 		root.addItem(.separator())
 
 		foregroundColorMenu = colorMenu(
-			title: MainWindowStrings.Formatting.textColor,
+			title: TextFormatterCommand.foregroundColorSet.menuTitle,
 			action: #selector(insertForegroundColorCharIntoTextBox)
 		)
 		addColorItems(
 			to: root,
-			title: MainWindowStrings.Formatting.textColor,
 			setCommand: .foregroundColorSet,
 			missingCommand: .foregroundColorMissing,
 			removeAction: #selector(removeForegroundColorCharFromTextBox),
@@ -110,39 +136,91 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		)
 
 		backgroundColorMenu = colorMenu(
-			title: MainWindowStrings.Formatting.backgroundColor,
+			title: TextFormatterCommand.backgroundColorSet.menuTitle,
 			action: #selector(insertBackgroundColorCharIntoTextBox)
 		)
 		addColorItems(
 			to: root,
-			title: MainWindowStrings.Formatting.backgroundColor,
 			setCommand: .backgroundColorSet,
 			missingCommand: .backgroundColorMissing,
 			removeAction: #selector(removeBackgroundColorCharFromTextBox),
 			menu: backgroundColorMenu
 		)
+
+		installDecorations()
 	}
 
-	private func addFormattingItem(
-		_ title: String,
-		command: TextFormatterCommand,
-		action: Selector,
-		to menu: NSMenu
-	) {
-		let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
-		item.tag = command.rawValue
-		item.target = self
-		menu.addItem(item)
+	/** What the menu shows rather than says: a colour swatch beside every
+	 colour, the monospace item set in the monospaced face, and the spoiler item
+	 drawn the way a spoiler is -- label on label, so it has to be selected to
+	 be read. `makeMenu()` copies the items, so the menu bar's Format menu
+	 carries them too. */
+	private func installDecorations() {
+		for menu in [foregroundColorMenu!, backgroundColorMenu!] {
+			for item in menu.items where item.isSeparatorItem == false && item.action != nil {
+				item.image = Self.colorSwatch(forColorTag: item.tag)
+			}
+		}
+
+		guard let root = formatterMenu.submenu else { return }
+		if let monospaceItem = root.item(withTag: TextFormatterCommand.monospace.rawValue) {
+			monospaceItem.attributedTitle = NSAttributedString(
+				string: monospaceItem.title,
+				attributes: [.font: NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)]
+			)
+		}
+		if let spoilerItem = root.item(withTag: TextFormatterCommand.spoiler.rawValue) {
+			spoilerItem.attributedTitle = NSAttributedString(
+				string: spoilerItem.title,
+				attributes: [
+					.font: NSFont.menuFont(ofSize: 0),
+					.foregroundColor: NSColor.windowBackgroundColor,
+					.backgroundColor: NSColor.labelColor,
+				]
+			)
+		}
 	}
 
+	private static func colorSwatch(forColorTag tag: Int) -> NSImage? {
+		if TextFormatterCommand(rawValue: tag) == .rainbowColor {
+			return NSImage(systemSymbolName: "rainbow", accessibilityDescription: nil)
+		}
+		let colors = NSColor.formatterColors
+		guard tag >= 0, tag < colors.count else { return nil }
+		let color = colors[tag]
+		let image = NSImage(size: NSSize(width: 16, height: 16), flipped: false) { rect in
+			let circle = NSBezierPath(ovalIn: rect.insetBy(dx: 1.5, dy: 1.5))
+			color.setFill()
+			circle.fill()
+			NSColor.separatorColor.withAlphaComponent(0.6).setStroke()
+			circle.lineWidth = 1
+			circle.stroke()
+			return true
+		}
+		image.isTemplate = false
+		return image
+	}
+
+	/** A second copy of the formatting menu, for the menu bar's Format menu.
+
+	 An `NSMenu` belongs to one supermenu, so the menu bar cannot hang the same
+	 instance the input field's context menu already holds. The copy carries the
+	 items' targets, tags, key equivalents and the swatches and styled titles the
+	 window decorates them with. */
+	public func makeMenu() -> NSMenu? {
+		formatterMenu.submenu?.copy() as? NSMenu
+	}
+
+	/// The two halves of one colour command: the item that removes the colour
+	/// while one is set, and the palette submenu that offers one while none is.
 	private func addColorItems(
 		to root: NSMenu,
-		title: String,
 		setCommand: TextFormatterCommand,
 		missingCommand: TextFormatterCommand,
 		removeAction: Selector,
 		menu: NSMenu
 	) {
+		let title = setCommand.menuTitle
 		let remove = NSMenuItem(title: title, action: removeAction, keyEquivalent: "")
 		remove.tag = setCommand.rawValue
 		remove.target = self
@@ -171,26 +249,14 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		}
 
 		menu.addItem(.separator())
-		let rainbow = NSMenuItem(title: MainWindowStrings.Formatting.rainbow, action: action, keyEquivalent: "")
-		rainbow.tag = TextFormatterCommand.rainbowColor.rawValue
-		rainbow.target = self
-		menu.addItem(rainbow)
-
-		let custom = NSMenuItem(title: MainWindowStrings.Formatting.other, action: action, keyEquivalent: "")
-		custom.tag = TextFormatterCommand.hexColor.rawValue
-		custom.target = self
-		menu.addItem(custom)
-		return menu
-	}
-
-	/// Completes menu configuration once the application graph is available.
-	public func configure() {
-		guard hasConfigured == false else {
-			return
+		for command in [TextFormatterCommand.rainbowColor, .hexColor] {
+			let item = NSMenuItem(title: command.menuTitle, action: action, keyEquivalent: "")
+			item.tag = command.rawValue
+			item.target = self
+			menu.addItem(item)
 		}
 
-		hasConfigured = true
-		generateColorList()
+		return menu
 	}
 
 	/** The window whose message field this menu formats.
@@ -209,89 +275,43 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		return window?.firstResponder as? TextViewWithIRCFormatter
 	}
 
+	/** One rule per command instead of six near-identical branches.
+
+	 Each character effect is ticked while it is in force and untouched
+	 otherwise; the two colour commands are a set/unset pair, so only the half
+	 that applies is shown. */
 	public func validateMenuItem(_ item: NSMenuItem) -> Bool {
 		guard textField != nil else {
 			return false
 		}
 
 		switch TextFormatterCommand(rawValue: item.tag) {
-		case .bold:
-			let boldText = textIsBold
-			item.state = boldText ? .on : .off
-			item.action =
-				boldText
-					? #selector(removeBoldCharFromTextBox(_:))
-					: #selector(insertBoldCharIntoTextBox(_:))
-			return true
-
-		case .italics:
-			let italicText = textIsItalicized
-			item.state = italicText ? .on : .off
-			item.action =
-				italicText
-					? #selector(removeItalicCharFromTextBox(_:))
-					: #selector(insertItalicCharIntoTextBox(_:))
-			return true
-
-		case .monospace:
-			let monospaceText = textIsMonospace
-			item.state = monospaceText ? .on : .off
-			item.action =
-				monospaceText
-					? #selector(removeMonospaceCharFromTextBox(_:))
-					: #selector(insertMonospaceCharIntoTextBox(_:))
-			return true
-
-		case .spoiler:
-			let spoilerText = textHasSpoiler
-			item.state = spoilerText ? .on : .off
-			item.action =
-				spoilerText
-					? #selector(removeSpoilerCharFromTextBox(_:))
-					: #selector(insertSpoilerCharIntoTextBox(_:))
-			return true
-
-		case .strikethrough:
-			let struckthroughText = textIsStruckthrough
-			item.state = struckthroughText ? .on : .off
-			item.action =
-				struckthroughText
-					? #selector(removeStrikethroughCharFromTextBox(_:))
-					: #selector(insertStrikethroughCharIntoTextBox(_:))
-			return true
-
-		case .underline:
-			let underlineText = textIsUnderlined
-			item.state = underlineText ? .on : .off
-			item.action =
-				underlineText
-					? #selector(removeUnderlineCharFromTextBox(_:))
-					: #selector(insertUnderlineCharIntoTextBox(_:))
+		case .bold, .italics, .monospace, .spoiler, .strikethrough, .underline:
+			item.state = isSet(TextFormatterCommand(rawValue: item.tag)) ? .on : .off
 			return true
 
 		case .foregroundColorMissing:
-			item.isHidden = textHasForegroundColor
+			item.isHidden = isSet(.foregroundColorSet)
 			return true
 
 		case .foregroundColorSet:
-			item.isHidden = textHasForegroundColor == false
-			/* Do not enable menu item when there is spoiler */
-			return textHasSpoiler == false
+			item.isHidden = isSet(.foregroundColorSet) == false
+			/* A spoiler owns both colours; changing one of them would show what
+			 the spoiler is hiding. */
+			return isSet(.spoiler) == false
 
 		case .backgroundColorMissing:
-			item.isHidden = textHasBackgroundColor
-			/* Require foreground color before background color can be set */
-			return textHasForegroundColor
+			item.isHidden = isSet(.backgroundColorSet)
+			/* A background colour is only meaningful over a foreground one. */
+			return isSet(.foregroundColorSet)
 
 		case .backgroundColorSet:
-			item.isHidden = textHasBackgroundColor == false
-			return textHasSpoiler == false
+			item.isHidden = isSet(.backgroundColorSet) == false
+			return isSet(.spoiler) == false
 
 		case .rainbowColor, .hexColor, nil:
-			break
+			return true
 		}
-
-		return true
 	}
 
 	@objc(emptyAction:)
@@ -301,10 +321,23 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 	// MARK: - Menu Generation
 
-	private func generateColorList() {
-		/* While we could technically load this from a file; we don't need to.
-		 That just adds extra space to the app when we already need to have an
-		 array of colors in the binary. */
+	/** Puts the IRC palette in the colour panel's list picker, once.
+
+	 Attached from the presentation rather than when the window installs the
+	 menu. `NSColorPanel.shared` builds the entire system picker the first time
+	 anything asks for it — the colour wheel included, which draws through
+	 CoreImage and so loads Metal and its shader caches — and a session that
+	 never opens a colour picker has no use for any of that.
+
+	 The list is built here rather than loaded from a file: the colours are
+	 already an array in the binary. */
+	private func attachColorList() {
+		guard hasAttachedColorList == false else {
+			return
+		}
+
+		hasAttachedColorList = true
+
 		let colorList = NSColorList(name: ApplicationStrings.ircColors)
 
 		for (index, color) in NSColor.formatterColors.enumerated() {
@@ -314,48 +347,59 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		NSColorPanel.shared.attachColorList(colorList)
 	}
 
-	// MARK: - Formatting Properties
+	// MARK: - Formatting state
 
-	private func propertyIsSet(_ formatterEffect: IRCTextFormatterEffectType) -> Bool {
-		guard let textField else {
+	/// Whether the effect a command stands for is set across the selection.
+	public func isSet(_ command: TextFormatterCommand?) -> Bool {
+		guard let effect = command?.effect, let textField else {
 			return false
 		}
 
-		let selectedTextRange = textField.selectedRange()
-		return textField.attributedString().ircFormatterAttributeSet(inRange: formatterEffect, range: selectedTextRange)
+		return textField.attributedString().ircFormatterAttributeSet(
+			inRange: effect,
+			range: textField.selectedRange()
+		)
 	}
 
-	public var textIsBold: Bool {
-		propertyIsSet(.bold)
+	/// Turns a character effect on or off across the selection. A spoiler
+	/// carries the two colours that hide the text with it.
+	public func setEffect(_ command: TextFormatterCommand, enabled: Bool) {
+		guard let effect = command.effect, let textField else {
+			return
+		}
+
+		let range = textField.selectedRange()
+		let value: Any? = enabled ? true : nil
+
+		if command == .spoiler {
+			let colorValue: Any? = enabled ? NSNumber(value: Self.spoilerColorCode) : nil
+			if enabled {
+				applyEffectToTextBox(.spoiler, withValue: value, inRange: range)
+			}
+			applyEffectToTextBox(.foregroundColor, withValue: colorValue, inRange: range)
+			applyEffectToTextBox(.backgroundColor, withValue: colorValue, inRange: range)
+			if enabled == false {
+				applyEffectToTextBox(.spoiler, withValue: nil, inRange: range)
+			}
+			return
+		}
+
+		applyEffectToTextBox(effect, withValue: value, inRange: range)
 	}
 
-	public var textIsItalicized: Bool {
-		propertyIsSet(.italic)
+	/// Reverses the effect the clicked item names.
+	@objc public func toggleFormatting(_ sender: Any?) {
+		guard let tag = (sender as? NSMenuItem)?.tag,
+		      let command = TextFormatterCommand(rawValue: tag)
+		else { return }
+
+		setEffect(command, enabled: isSet(command) == false)
 	}
 
-	public var textIsMonospace: Bool {
-		propertyIsSet(.monospace)
-	}
-
-	public var textIsStruckthrough: Bool {
-		propertyIsSet(.strikethrough)
-	}
-
-	public var textIsUnderlined: Bool {
-		propertyIsSet(.underline)
-	}
-
-	public var textHasForegroundColor: Bool {
-		propertyIsSet(.foregroundColor)
-	}
-
-	public var textHasBackgroundColor: Bool {
-		propertyIsSet(.backgroundColor)
-	}
-
-	public var textHasSpoiler: Bool {
-		propertyIsSet(.spoiler)
-	}
+	/// The palette entry a spoiler paints itself with, foreground and
+	/// background alike, so the text reads as a solid block until it is
+	/// selected.
+	private static let spoilerColorCode = 14
 
 	// MARK: - Formatting Storage Helpers
 
@@ -428,111 +472,43 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		textField.setSelectedRange(limitRange)
 	}
 
-	// MARK: - Add Formatting
-
-	@objc(insertBoldCharIntoTextBox:)
-	public func insertBoldCharIntoTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.bold, withValue: true, inRange: textField.selectedRange())
-	}
-
-	@objc(insertItalicCharIntoTextBox:)
-	public func insertItalicCharIntoTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.italic, withValue: true, inRange: textField.selectedRange())
-	}
-
-	@objc(insertMonospaceCharIntoTextBox:)
-	public func insertMonospaceCharIntoTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.monospace, withValue: true, inRange: textField.selectedRange())
-	}
-
-	@objc(insertStrikethroughCharIntoTextBox:)
-	public func insertStrikethroughCharIntoTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.strikethrough, withValue: true, inRange: textField.selectedRange())
-	}
-
-	@objc(insertUnderlineCharIntoTextBox:)
-	public func insertUnderlineCharIntoTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.underline, withValue: true, inRange: textField.selectedRange())
-	}
+	// MARK: - Colours
 
 	@objc(insertForegroundColorCharIntoTextBox:)
 	public func insertForegroundColorCharIntoTextBox(_ sender: Any?) {
-		guard let sender = sender as? NSMenuItem else {
-			return
-		}
-
-		if TextFormatterCommand(rawValue: sender.tag) == .rainbowColor {
-			insertRainbowColorCharInfoTextBox(asForegroundColor: true)
-			return
-		}
-
-		if TextFormatterCommand(rawValue: sender.tag) == .hexColor {
-			presentColorPanel(
-				with: #selector(foregroundColorPanelColorChanged(_:)),
-				initialColor: .formatterWhiteColor
-			)
-			return
-		}
-
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(
-			.foregroundColor,
-			withValue: NSNumber(value: sender.tag),
-			inRange: textField.selectedRange()
-		)
+		insertColor(from: sender, asForegroundColor: true)
 	}
 
 	@objc(insertBackgroundColorCharIntoTextBox:)
 	public func insertBackgroundColorCharIntoTextBox(_ sender: Any?) {
+		insertColor(from: sender, asForegroundColor: false)
+	}
+
+	private func insertColor(from sender: Any?, asForegroundColor: Bool) {
 		guard let sender = sender as? NSMenuItem else {
 			return
 		}
 
-		if TextFormatterCommand(rawValue: sender.tag) == .rainbowColor {
-			insertRainbowColorCharInfoTextBox(asForegroundColor: false)
-			return
-		}
-
-		if TextFormatterCommand(rawValue: sender.tag) == .hexColor {
+		switch TextFormatterCommand(rawValue: sender.tag) {
+		case .rainbowColor:
+			insertRainbowColorCharInfoTextBox(asForegroundColor: asForegroundColor)
+		case .hexColor:
 			presentColorPanel(
-				with: #selector(backgroundColorPanelColorChanged(_:)),
-				initialColor: .formatterBlackColor
+				with: asForegroundColor
+					? #selector(foregroundColorPanelColorChanged(_:))
+					: #selector(backgroundColorPanelColorChanged(_:)),
+				initialColor: asForegroundColor ? .formatterWhiteColor : .formatterBlackColor
 			)
-			return
+		default:
+			guard let textField else {
+				return
+			}
+			applyEffectToTextBox(
+				asForegroundColor ? .foregroundColor : .backgroundColor,
+				withValue: NSNumber(value: sender.tag),
+				inRange: textField.selectedRange()
+			)
 		}
-
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(
-			.backgroundColor,
-			withValue: NSNumber(value: sender.tag),
-			inRange: textField.selectedRange()
-		)
 	}
 
 	private func insertRainbowColorCharInfoTextBox(asForegroundColor: Bool) {
@@ -586,6 +562,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	 closes the target and action are cleared so a later, unrelated
 	 presentation does not keep formatting the input field. */
 	private func presentColorPanel(with action: Selector, initialColor: NSColor) {
+		attachColorList()
+
 		let colorPanel = NSColorPanel.shared
 
 		colorPanel.setTarget(self)
@@ -625,103 +603,26 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 	}
 
 	@objc private func foregroundColorPanelColorChanged(_ sender: NSColorPanel) {
-		guard let textField else {
-			return
-		}
-
-		let selectedTextRange = textField.selectedRange()
-		let color = sender.color
-		let colorDigit = NSColor.formatterColors.firstIndex(of: color)
-
-		if let colorDigit {
-			applyEffectToTextBox(
-				.foregroundColor,
-				withValue: NSNumber(value: colorDigit),
-				inRange: selectedTextRange
-			)
-		} else {
-			applyEffectToTextBox(.foregroundColor, withValue: color, inRange: selectedTextRange)
-		}
+		applyPanelColor(sender.color, asForegroundColor: true)
 	}
 
 	@objc private func backgroundColorPanelColorChanged(_ sender: NSColorPanel) {
+		applyPanelColor(sender.color, asForegroundColor: false)
+	}
+
+	private func applyPanelColor(_ color: NSColor, asForegroundColor: Bool) {
 		guard let textField else {
 			return
 		}
 
+		let effect: IRCTextFormatterEffectType = asForegroundColor ? .foregroundColor : .backgroundColor
 		let selectedTextRange = textField.selectedRange()
-		let color = sender.color
-		let colorDigit = NSColor.formatterColors.firstIndex(of: color)
 
-		if let colorDigit {
-			applyEffectToTextBox(
-				.backgroundColor,
-				withValue: NSNumber(value: colorDigit),
-				inRange: selectedTextRange
-			)
+		if let colorDigit = NSColor.formatterColors.firstIndex(of: color) {
+			applyEffectToTextBox(effect, withValue: NSNumber(value: colorDigit), inRange: selectedTextRange)
 		} else {
-			applyEffectToTextBox(.backgroundColor, withValue: color, inRange: selectedTextRange)
+			applyEffectToTextBox(effect, withValue: color, inRange: selectedTextRange)
 		}
-	}
-
-	@objc(insertSpoilerCharIntoTextBox:)
-	public func insertSpoilerCharIntoTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		let selectedTextRange = textField.selectedRange()
-
-		applyEffectToTextBox(.spoiler, withValue: true, inRange: selectedTextRange)
-		applyEffectToTextBox(.foregroundColor, withValue: NSNumber(value: 14), inRange: selectedTextRange)
-		applyEffectToTextBox(.backgroundColor, withValue: NSNumber(value: 14), inRange: selectedTextRange)
-	}
-
-	// MARK: - Remove Formatting
-
-	@objc
-	public func removeBoldCharFromTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.bold, withValue: nil, inRange: textField.selectedRange())
-	}
-
-	@objc
-	public func removeItalicCharFromTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.italic, withValue: nil, inRange: textField.selectedRange())
-	}
-
-	@objc
-	public func removeMonospaceCharFromTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.monospace, withValue: nil, inRange: textField.selectedRange())
-	}
-
-	@objc
-	public func removeStrikethroughCharFromTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.strikethrough, withValue: nil, inRange: textField.selectedRange())
-	}
-
-	@objc
-	public func removeUnderlineCharFromTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		applyEffectToTextBox(.underline, withValue: nil, inRange: textField.selectedRange())
 	}
 
 	@objc(removeForegroundColorCharFromTextBox:)
@@ -740,18 +641,5 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		}
 
 		applyEffectToTextBox(.backgroundColor, withValue: nil, inRange: textField.selectedRange())
-	}
-
-	@objc
-	public func removeSpoilerCharFromTextBox(_: Any?) {
-		guard let textField else {
-			return
-		}
-
-		let selectedTextRange = textField.selectedRange()
-
-		applyEffectToTextBox(.foregroundColor, withValue: nil, inRange: selectedTextRange)
-		applyEffectToTextBox(.backgroundColor, withValue: nil, inRange: selectedTextRange)
-		applyEffectToTextBox(.spoiler, withValue: nil, inRange: selectedTextRange)
 	}
 }

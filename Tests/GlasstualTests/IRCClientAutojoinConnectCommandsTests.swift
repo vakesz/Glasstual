@@ -22,15 +22,15 @@ struct IRCClientAutojoinConnectCommandsTests {
 		waitsForConnectCommands: Bool,
 		connectCommands: [String] = [],
 		delay: TimeInterval = IRCClientAutojoinConnectCommandsTests.settlingDelay
-	) -> GLTTestClient {
-		let client = GLTTestClient(
+	) -> TestClient {
+		let client = TestClient(
 			configDictionary: [
 				"autojoinWaitsForConnectCommands": waitsForConnectCommands,
 				"autojoinDelayAfterConnectCommands": delay,
 				"onConnectCommands": connectCommands,
 			],
 			nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+			fixture: ClientEnvironmentFixture(preferences: ClientPreferences())
 		)
 		client.userNickname = "swift-user"
 		client.markAsLoggedIn()
@@ -39,14 +39,14 @@ struct IRCClientAutojoinConnectCommandsTests {
 
 	/// Waits for the settling task rather than for a fixed interval, so a busy
 	/// machine cannot turn the delay into a failure.
-	private func waitForJoin(on client: GLTTestClient) async throws {
+	private func waitForJoin(on client: TestClient) async throws {
 		let deadline = ContinuousClock.now + .seconds(5)
 		while joinLines(of: client).isEmpty, ContinuousClock.now < deadline {
 			try await Task.sleep(for: .milliseconds(10), clock: .continuous)
 		}
 	}
 
-	private func joinLines(of client: GLTTestClient) -> [String] {
+	private func joinLines(of client: TestClient) -> [String] {
 		(client.sentLines as NSArray)
 			.compactMap { $0 as? String }
 			.filter { $0.hasPrefix("JOIN") }

@@ -254,24 +254,6 @@ actor HistoricLogStore {
 		return outcome
 	}
 
-	func fetchEntries(forView identifier: String, ascending: Bool, fetchLimit: UInt,
-	                  limitToDate: Date?) async -> [HistoricLogEntry]
-	{
-		await fetchOutcome(HistoricLogFetchRequest(
-			viewIdentifier: identifier,
-			kind: .newest(ascending: ascending, fetchLimit: fetchLimit, limitToDate: limitToDate)
-		)).entries
-	}
-
-	func fetchEntries(forView identifier: String, before line: String, fetchLimit: UInt,
-	                  limitToDate: Date?) async -> [HistoricLogEntry]
-	{
-		await fetchOutcome(HistoricLogFetchRequest(
-			viewIdentifier: identifier,
-			kind: .before(uniqueIdentifier: line, fetchLimit: fetchLimit, limitToDate: limitToDate)
-		)).entries
-	}
-
 	func fetchOutcome(_ request: HistoricLogFetchRequest) async -> HistoricLogFetchOutcome {
 		guard !Task.isCancelled else { return .cancelled }
 		guard lifecycle == .open else { return .failed(.unavailable) }

@@ -214,7 +214,7 @@ struct IRCColorFormatTests {
 
 	@Test("A long channel message is truncated and reports the range it consumed")
 	func channelFormattingTruncatesLongMessagesAndReportsEffectiveRange() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let payload = String(repeating: "abcdefghij ", count: 73).prefix(800)
 		let string = NSAttributedString(string: String(payload))
 		var effectiveRange = NSRange(location: NSNotFound, length: 0)
@@ -235,7 +235,7 @@ struct IRCColorFormatTests {
 
 	@Test("The cursor drops the prefix each line consumed")
 	func lineCursorDropsTheConsumedPrefix() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let payload = String(String(repeating: "word ", count: 160).prefix(800))
 		var cursor = IRCLineCursor(NSAttributedString(string: payload))
 
@@ -258,7 +258,7 @@ struct IRCColorFormatTests {
 	 pass that consumed nothing would loop forever. */
 	@Test("The lines together consume every character exactly once")
 	func linesConsumeEveryCharacterExactlyOnce() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let payload = String(String(repeating: "word ", count: 160).prefix(800))
 		var cursor = IRCLineCursor(NSAttributedString(string: payload))
 		let payloadLength = cursor.length
@@ -289,7 +289,7 @@ struct IRCColorFormatTests {
 	 repeat a few words at the seam, or lose them. */
 	@Test("A formatted message splits without duplicating or dropping text")
 	func formattedLinesReassembleIntoTheSource() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let words = (0 ..< 240).map { "word\($0)" }.joined(separator: " ")
 		let text = NSMutableAttributedString(string: words)
 		let bold = formatterKey(IRCTextFormatterAttributeName.boldAttributeName)
@@ -445,7 +445,7 @@ struct IRCColorFormatTests {
 	 fall between the halves of a family and send two unrelated people. */
 	@Test("A line never breaks inside a zero-width joiner sequence")
 	func linesDoNotSplitJoinedEmoji() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let family = "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}"
 		let payload = String(repeating: "\(family) ", count: 60)
 		var cursor = IRCLineCursor(NSAttributedString(string: payload))
@@ -473,7 +473,7 @@ struct IRCColorFormatTests {
 	 the next line as text: the reader sees a stray "04" where a colour was. */
 	@Test("A line never breaks between a colour code and its digits")
 	func linesDoNotSplitColourCodes() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let payload = String(repeating: "\u{3}04word\u{3} ", count: 120)
 		var cursor = IRCLineCursor(NSAttributedString(string: payload))
 		var reassembled = ""

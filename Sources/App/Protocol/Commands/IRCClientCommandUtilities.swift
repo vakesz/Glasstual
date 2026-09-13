@@ -49,13 +49,13 @@ public extension IRCClient {
 
 	 A command the client itself assembles has parameters it already knows the
 	 boundaries of, so it goes through `send(_:arguments:)` instead, which marks
-	 the trailing one from the command index. */
+	 the trailing one from `IRCRemoteCommand.trailingParameter`. */
 	func sendCommand(_ command: String, withData data: String) {
 		sendLine("\(command) \(data)")
 	}
 
 	func printInvalidSyntaxMessage(for command: String) {
-		guard let syntax = CommandIndex.syntax(forLocalCommand: command) else { return }
-		printDebugInformation(IRCCommandStrings.invalidSyntax(syntax))
+		guard let localCommand = IRCLocalCommand(typedName: command) else { return }
+		printDebugInformation(IRCCommandStrings.invalidSyntax(localCommand.syntax))
 	}
 }

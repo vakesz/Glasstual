@@ -56,10 +56,7 @@ public enum DockIcon {
 		cachedMessageCount = 0
 		cachedHighlightCount = 0
 
-		let dockTile = NSApp.dockTile
-		dockTile.badgeLabel = nil
-		dockTile.contentView = nil
-		dockTile.display()
+		clearTile()
 	}
 
 	@MainActor public static func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
@@ -71,10 +68,7 @@ public enum DockIcon {
 		cachedMessageCount = Int(messageCount)
 
 		guard highlightCount > 0 || messageCount > 0 else {
-			let dockTile = NSApp.dockTile
-			dockTile.badgeLabel = nil
-			dockTile.contentView = nil
-			dockTile.display()
+			clearTile()
 			return
 		}
 
@@ -96,18 +90,31 @@ public enum DockIcon {
 		dockTile.display()
 	}
 
+	@MainActor private static func clearTile() {
+		let dockTile = NSApp.dockTile
+		dockTile.badgeLabel = nil
+		dockTile.contentView = nil
+		dockTile.display()
+	}
+
 	public static func badgeString(forCount count: UInt) -> String {
 		if count > maximumDisplayedCount {
 			return MainWindowStrings.Dock.overflowBadge(
-				maximum: formattedNumber(Int(maximumDisplayedCount)) as String
+				maximum: formattedNumber(Int(maximumDisplayedCount))
 			)
 		}
-		return formattedNumber(Int(count)) as String
+		return formattedNumber(Int(count))
 	}
 }
 
 typealias DockIconBadgeHostingView = NSHostingView<DockIconBadgeContent>
 
+/** Two counts on one tile, which `badgeLabel` cannot draw.
+
+ Highlights and unread messages are separate things — one names you, the other
+ does not — and the standard badge holds a single string. The colours are the
+ system's own, so they follow the accessibility settings that change what red
+ and green mean. */
 struct DockIconBadgeContent: View {
 	private enum Layout {
 		static let stackSpacing: CGFloat = 1
@@ -132,11 +139,12 @@ struct DockIconBadgeContent: View {
 				}
 
 				VStack(alignment: .trailing, spacing: Layout.stackSpacing) {
+					let height = geometry.size.height * Layout.badgeHeightRatio
 					if highlightCount > 0 {
-						badge(highlightCount, color: .green, height: geometry.size.height * Layout.badgeHeightRatio)
+						badge(highlightCount, color: Color(nsColor: .systemGreen), height: height)
 					}
 					if messageCount > 0 {
-						badge(messageCount, color: .red, height: geometry.size.height * Layout.badgeHeightRatio)
+						badge(messageCount, color: Color(nsColor: .systemRed), height: height)
 					}
 				}
 				.padding(.top, Layout.topPadding)

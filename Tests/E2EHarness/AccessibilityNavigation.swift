@@ -3,6 +3,9 @@ import ApplicationServices
 import Foundation
 
 extension AccessibilityDriver {
+	/// The accessibility identifier `PreferencesRootView` puts on its sidebar.
+	private static let settingsSidebar = "settings-sidebar"
+
 	func window(titled title: String) async throws -> AXUIElement {
 		var result: AXUIElement?
 		try await wait("fixture window \(title)") { deadline in
@@ -19,15 +22,10 @@ extension AccessibilityDriver {
 		var result: AXUIElement?
 		try await wait("Settings sidebar") { deadline in
 			let windows = try value(root, kAXWindowsAttribute, deadline: deadline) as? [AXUIElement] ?? []
-			for window in windows {
-				if try named("General", role: kAXStaticTextRole, from: window, deadline: deadline) != nil,
-				   try named("Add-ons", role: kAXStaticTextRole, from: window, deadline: deadline) != nil
-				{
-					result = window
-					return true
-				}
+			result = try windows.first { window in
+				try identified(Self.settingsSidebar, from: window, deadline: deadline) != nil
 			}
-			return false
+			return result != nil
 		}
 		guard let result else { throw HarnessFailure.assertion("Settings window missing") }
 		return result
@@ -93,43 +91,16 @@ extension AccessibilityDriver {
 		try key(48)
 	}
 
+	/** The Settings sidebar is one level deep, so every page — the application's
+	 own and each add-on's — is a row in the list this identifier names. */
 	func selectPreferencePage(_ title: String, in window: AXUIElement) async throws {
-		var popup: AXUIElement?
-		try await wait("choose plugin preference page") { deadline in
-			if let radio = try named(title, role: kAXRadioButtonRole, from: window, deadline: deadline) {
-				try press(radio, deadline: deadline)
-				return true
-			}
-			popup = try find(from: window, deadline: deadline) {
-				guard try text($0, kAXRoleAttribute, deadline: deadline) == kAXPopUpButtonRole else { return false }
-				let labels = [
-					"Add-ons",
-					"Advanced",
-					"Installed Add-ons",
-					"Smiley Converter",
-					"Identity",
-					"Connection",
-					"Channels",
-					"Media",
-					"System",
-				]
-				return try labels.contains(text($0, kAXDescriptionAttribute, deadline: deadline)) ||
-					labels.contains(text($0, kAXTitleAttribute, deadline: deadline)) ||
-					labels.contains(text($0, kAXValueAttribute, deadline: deadline))
-			}
-			guard let popup else { return false }
-			try press(popup, deadline: deadline)
-			return true
+		var sidebar: AXUIElement?
+		try await wait("Settings sidebar list") { deadline in
+			sidebar = try identified(Self.settingsSidebar, from: window, deadline: deadline)
+			return sidebar != nil
 		}
-		if let popup {
-			try await wait("plugin page in picker menu") { deadline in
-				guard let item = try named(title, role: kAXMenuItemRole, from: popup, deadline: deadline)
-				else { return false }
-				guard try value(item, kAXEnabledAttribute, deadline: deadline) as? Bool == true else { return false }
-				try press(item, deadline: deadline)
-				return true
-			}
-		}
+		guard let sidebar else { throw HarnessFailure.assertion("Settings sidebar missing") }
+		try await selectRow(title, from: sidebar)
 	}
 
 	func named(_ title: String, role: String, from parent: AXUIElement, deadline: Double) throws -> AXUIElement? {

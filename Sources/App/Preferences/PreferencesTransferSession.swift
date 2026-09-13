@@ -6,6 +6,12 @@
 import CocoaExtensions
 import Foundation
 import Observation
+import os
+
+private let transferLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "PreferencesTransfer"
+)
 
 struct PreferencesTransferPreview: Identifiable {
 	let id = UUID()
@@ -49,7 +55,7 @@ enum PreferencesTransferHost {
 
 enum PreferencesTransferClientSource {
 	case application, stored
-	case world(IRCWorld)
+	case world(World)
 }
 
 private enum PreferencesTransferInput {
@@ -77,6 +83,12 @@ nonisolated struct PreferencesTransferResult: Sendable { // nonisolated: value
 			changedPreferences, addedClients, updatedClients, removedClients, ignoredKeys
 		))
 	}
+}
+
+/// One message the transfer workflow is waiting to have acknowledged.
+struct PreferencesTransferMessage: Equatable {
+	let title: String
+	let body: String
 }
 
 /// What a completed transfer has to say for itself.
@@ -136,7 +148,7 @@ final class PreferencesTransferSession {
 	private let stores: PreferencesTransferStores
 	private let clientSource: PreferencesTransferClientSource
 
-	private var world: IRCWorld? {
+	private var world: World? {
 		switch clientSource {
 		case .application: AppController.shared.world
 		case .stored: nil
@@ -210,6 +222,27 @@ final class PreferencesTransferSession {
 	var result: PreferencesTransferResult? {
 		guard case let .finished(.imported(result)) = state else { return nil }
 		return result
+	}
+
+	/** The one message on offer, whichever way the workflow ended.
+
+	 Derived from the state rather than assembled per alert, so two alerts can
+	 never both think they are the current one. */
+	var pendingMessage: PreferencesTransferMessage? {
+		switch state {
+		case let .failed(message, _):
+			PreferencesTransferMessage(
+				title: String(localized: .PreferencesTransfer.configurationTransferStopped),
+				body: message
+			)
+		case let .finished(outcome):
+			PreferencesTransferMessage(
+				title: String(localized: .PreferencesTransfer.configurationTransferComplete),
+				body: outcome.summary
+			)
+		case .idle, .preparing, .previewing, .committing:
+			nil
+		}
 	}
 
 	/// Whether a new import or export may begin. A prepared preview is still
@@ -375,7 +408,7 @@ final class PreferencesTransferSession {
 
 	/// The clients whose configuration, or whose channel list under Restore,
 	/// the plan changes.
-	private func clientsAffected(by plan: PreferencesTransferPlan, in world: IRCWorld) -> [IRCClient] {
+	private func clientsAffected(by plan: PreferencesTransferPlan, in world: World) -> [IRCClient] {
 		let desired = plan.result.clients ?? []
 		return world.clientList.filter { client in
 			let before = plan.before.clients?.first { $0.uniqueIdentifier == client.uniqueIdentifier }
@@ -439,7 +472,7 @@ final class PreferencesTransferSession {
 
 	/// Everything after the barrier: publish the imported values, then bring
 	/// the world's clients into line with the plan's.
-	private func apply(_ plan: PreferencesTransferPlan, to world: IRCWorld, changed: [IRCClient]) {
+	private func apply(_ plan: PreferencesTransferPlan, to world: World, changed: [IRCClient]) {
 		let desired = plan.result.clients ?? []
 		for client in changed {
 			client.cancelReconnect()
@@ -495,6 +528,12 @@ final class PreferencesTransferSession {
 	func report(_ error: any Error) {
 		// A closed file panel is the user saying "nothing", not a failure.
 		guard (error as? CocoaError)?.code != .userCancelled else { return }
+		/* The alert says a value was refused; which one is a question for
+		 whoever is looking at the file, so the name goes to the log rather
+		 than into a sentence full of defaults spelling. */
+		if case let PreferencesTransferError.invalidValue(name) = error {
+			transferLogger.error("Refused the stored value for \(name, privacy: .public).")
+		}
 		state = .failed(message: error.localizedDescription, preview: preview)
 	}
 

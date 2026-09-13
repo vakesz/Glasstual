@@ -43,16 +43,6 @@ public nonisolated enum ApplicationInfo { // nonisolated: value
 		bundleValue(for: "CFBundleName")
 	}
 
-	public static func applicationNameWithoutVersion() -> String {
-		let name = applicationName()
-
-		guard let separator = name.firstIndex(of: " "), separator != name.startIndex else {
-			return name
-		}
-
-		return String(name[..<separator])
-	}
-
 	public static func applicationVersion() -> String {
 		bundleValue(for: "CFBundleVersion")
 	}

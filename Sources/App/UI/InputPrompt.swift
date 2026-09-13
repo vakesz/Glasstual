@@ -9,6 +9,9 @@ import SwiftUI
 public struct InputPromptRequest: Equatable, Sendable {
 	public let title: String
 	public let message: String
+	/// What the empty field shows: an example of what to type, not a
+	/// restatement of the question the message above already asks.
+	public let placeholder: String
 	public let submitButtonTitle: String
 	public let cancelButtonTitle: String
 	public let initialValue: String
@@ -16,12 +19,14 @@ public struct InputPromptRequest: Equatable, Sendable {
 	public init(
 		title: String,
 		message: String,
+		placeholder: String = "",
 		submitButtonTitle: String,
 		cancelButtonTitle: String,
 		initialValue: String = ""
 	) {
 		self.title = title
 		self.message = message
+		self.placeholder = placeholder
 		self.submitButtonTitle = submitButtonTitle
 		self.cancelButtonTitle = cancelButtonTitle
 		self.initialValue = initialValue
@@ -76,10 +81,13 @@ struct InputPromptView: View {
 					.fixedSize(horizontal: false, vertical: true)
 			}
 
-			TextField("", text: $presentation.value)
+			TextField(text: $presentation.value, prompt: promptText) { EmptyView() }
 				.labelsHidden()
 				.focused($inputIsFocused)
-				.onSubmit(submit)
+				.onSubmit {
+					guard hasInput else { return }
+					submit()
+				}
 
 			HStack {
 				Spacer()
@@ -87,6 +95,10 @@ struct InputPromptView: View {
 					.keyboardShortcut(.cancelAction)
 				Button(presentation.request.submitButtonTitle, action: submit)
 					.keyboardShortcut(.defaultAction)
+					/* Submitting an empty field used to close the prompt and
+					 then do nothing, because every caller drops an empty
+					 answer. */
+					.disabled(hasInput == false)
 			}
 		}
 		.padding(20)
@@ -94,6 +106,15 @@ struct InputPromptView: View {
 		.onAppear {
 			inputIsFocused = true
 		}
+	}
+
+	private var hasInput: Bool {
+		presentation.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+	}
+
+	private var promptText: Text? {
+		let placeholder = presentation.request.placeholder
+		return placeholder.isEmpty ? nil : Text(verbatim: placeholder)
 	}
 }
 

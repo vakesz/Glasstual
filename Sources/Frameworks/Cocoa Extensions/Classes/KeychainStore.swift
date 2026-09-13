@@ -158,24 +158,18 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	/// The stored secret, telling an absent item apart from a keychain that
 	/// refused the read — which `password` cannot.
 	public func readPassword() -> KeychainReadOutcome {
-		KeychainStore.readPassword(kind: itemClass, username: nil, service: service)
+		KeychainStore.readPassword(kind: itemClass, service: service)
 	}
 
 	/// Writes `password`, creating the item when it does not exist yet.
 	@discardableResult
 	public func write(_ password: String) -> Bool {
-		KeychainStore.modifyOrAddItem(
-			label,
-			kind: itemClass,
-			username: nil,
-			newPassword: password,
-			service: service
-		)
+		KeychainStore.modifyOrAddItem(label, kind: itemClass, newPassword: password, service: service)
 	}
 
 	@discardableResult
 	public func delete() -> Bool {
-		KeychainStore.deleteItem(kind: itemClass, username: nil, service: service)
+		KeychainStore.deleteItem(kind: itemClass, service: service)
 	}
 
 	/// Writes or deletes the item so it matches `secret`. `.unchanged` leaves
@@ -204,24 +198,14 @@ public enum KeychainReadOutcome: Sendable, Equatable {
 /// the whole surface anything outside this framework needs.
 enum KeychainStore {
 	@discardableResult
-	static func deleteItem(
-		kind: KeychainItemClass,
-		username: String?,
-		service: String
-	) -> Bool {
-		let status = SecItemDelete(identityQuery(
-			kind: kind,
-			username: username,
-			service: service
-		) as CFDictionary)
-		return status == errSecSuccess
+	static func deleteItem(kind: KeychainItemClass, service: String) -> Bool {
+		SecItemDelete(identityQuery(kind: kind, service: service) as CFDictionary) == errSecSuccess
 	}
 
 	@discardableResult
 	static func modifyOrAddItem(
 		_ name: String,
 		kind: KeychainItemClass,
-		username: String?,
 		newPassword: String?,
 		service: String
 	) -> Bool {
@@ -231,7 +215,7 @@ enum KeychainStore {
 		if let newPassword {
 			changes[kSecValueData] = Data(newPassword.utf8)
 		}
-		let query = identityQuery(kind: kind, username: username, service: service)
+		let query = identityQuery(kind: kind, service: service)
 		let status = SecItemUpdate(query as CFDictionary, changes as CFDictionary)
 		guard status == errSecItemNotFound else {
 			return status == errSecSuccess
@@ -244,13 +228,7 @@ enum KeychainStore {
 		 between the two calls, or one may exist with attributes this add does
 		 not repeat. Updating the existing item is what the caller asked for,
 		 so a duplicate is a second chance rather than a dropped password. */
-		let addStatus = addItem(
-			name,
-			kind: kind,
-			username: username,
-			password: newPassword,
-			service: service
-		)
+		let addStatus = addItem(name, kind: kind, password: newPassword, service: service)
 		guard addStatus == errSecDuplicateItem else {
 			return addStatus == errSecSuccess
 		}
@@ -263,11 +241,10 @@ enum KeychainStore {
 	static func addItem(
 		_ name: String,
 		kind: KeychainItemClass,
-		username: String?,
 		password: String,
 		service: String
 	) -> OSStatus {
-		var query = identityQuery(kind: kind, username: username, service: service)
+		var query = identityQuery(kind: kind, service: service)
 		/* Written once, at creation, and never looked up by: these are the two
 		 attributes Keychain Access lets the user edit. */
 		query[kSecAttrLabel] = name
@@ -277,12 +254,8 @@ enum KeychainStore {
 		return SecItemAdd(query as CFDictionary, nil)
 	}
 
-	static func readPassword(
-		kind: KeychainItemClass,
-		username: String?,
-		service: String
-	) -> KeychainReadOutcome {
-		var query = identityQuery(kind: kind, username: username, service: service)
+	static func readPassword(kind: KeychainItemClass, service: String) -> KeychainReadOutcome {
+		var query = identityQuery(kind: kind, service: service)
 		query[kSecMatchLimit] = kSecMatchLimitOne
 		query[kSecReturnData] = true
 
@@ -308,19 +281,11 @@ enum KeychainStore {
 	/// not hide it from the update that follows — which used to fail as
 	/// `errSecItemNotFound`, then fail again as `errSecDuplicateItem` when the
 	/// add ran, dropping the new password without saying so.
-	private static func identityQuery(
-		kind: KeychainItemClass,
-		username: String?,
-		service: String
-	) -> [CFString: Any] {
-		var query: [CFString: Any] = [
+	private static func identityQuery(kind: KeychainItemClass, service: String) -> [CFString: Any] {
+		[
 			kSecClass: kind.secClass,
 			kSecAttrService: service,
 			kSecUseDataProtectionKeychain: true,
 		]
-		if let username, username.isEmpty == false {
-			query[kSecAttrAccount] = username
-		}
-		return query
 	}
 }

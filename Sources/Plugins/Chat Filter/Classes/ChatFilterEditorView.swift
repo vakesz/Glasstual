@@ -42,18 +42,18 @@ private struct ChatFilterEventOption: Identifiable {
 	}
 
 	static let all: [Self] = [
-		Self(event: .plainTextMessage, title: .TPIChatFilterEditFilterSheet.plainTextMessageEvent),
-		Self(event: .actionMessage, title: .TPIChatFilterEditFilterSheet.actionMessageEvent),
-		Self(event: .noticeMessage, title: .TPIChatFilterEditFilterSheet.noticeMessageEvent),
-		Self(event: .userJoinedChannel, title: .TPIChatFilterEditFilterSheet.userJoinedChannelEvent),
-		Self(event: .userLeftChannel, title: .TPIChatFilterEditFilterSheet.userLeftChannelEvent),
-		Self(event: .userKickedFromChannel, title: .TPIChatFilterEditFilterSheet.userKickedFromChannelEvent),
-		Self(event: .userDisconnected, title: .TPIChatFilterEditFilterSheet.userDisconnectedEvent),
-		Self(event: .userChangedNickname, title: .TPIChatFilterEditFilterSheet.userChangedNicknameEvent),
-		Self(event: .channelTopicReceived, title: .TPIChatFilterEditFilterSheet.channelTopicReceivedEvent),
-		Self(event: .channelTopicChanged, title: .TPIChatFilterEditFilterSheet.channelTopicChangedEvent),
-		Self(event: .channelModeReceived, title: .TPIChatFilterEditFilterSheet.channelModeReceivedEvent),
-		Self(event: .channelModeChanged, title: .TPIChatFilterEditFilterSheet.channelModeChangedEvent),
+		Self(event: .plainTextMessage, title: .ChatFilterEditor.plainTextMessageEvent),
+		Self(event: .actionMessage, title: .ChatFilterEditor.actionMessageEvent),
+		Self(event: .noticeMessage, title: .ChatFilterEditor.noticeMessageEvent),
+		Self(event: .userJoinedChannel, title: .ChatFilterEditor.userJoinedChannelEvent),
+		Self(event: .userLeftChannel, title: .ChatFilterEditor.userLeftChannelEvent),
+		Self(event: .userKickedFromChannel, title: .ChatFilterEditor.userKickedFromChannelEvent),
+		Self(event: .userDisconnected, title: .ChatFilterEditor.userDisconnectedEvent),
+		Self(event: .userChangedNickname, title: .ChatFilterEditor.userChangedNicknameEvent),
+		Self(event: .channelTopicReceived, title: .ChatFilterEditor.channelTopicReceivedEvent),
+		Self(event: .channelTopicChanged, title: .ChatFilterEditor.channelTopicChangedEvent),
+		Self(event: .channelModeReceived, title: .ChatFilterEditor.channelModeReceivedEvent),
+		Self(event: .channelModeChanged, title: .ChatFilterEditor.channelModeChangedEvent),
 	]
 }
 
@@ -62,30 +62,60 @@ private struct ChatFilterActionPlaceholder: Identifiable {
 	let title: LocalizedStringResource
 
 	static let all: [Self] = [
-		Self(id: "%_channelName_%", title: .TPIChatFilterEditFilterSheet.tokenChannelName),
-		Self(id: "%_localNickname_%", title: .TPIChatFilterEditFilterSheet.tokenLocalNickname),
-		Self(id: "%_networkName_%", title: .TPIChatFilterEditFilterSheet.tokenNetworkName),
-		Self(id: "%_originalMessage_%", title: .TPIChatFilterEditFilterSheet.tokenOriginalMessage),
-		Self(id: "%_senderNickname_%", title: .TPIChatFilterEditFilterSheet.tokenSenderNickname),
-		Self(id: "%_senderUsername_%", title: .TPIChatFilterEditFilterSheet.tokenSenderUsername),
-		Self(id: "%_senderAddress_%", title: .TPIChatFilterEditFilterSheet.tokenSenderAddress),
-		Self(id: "%_senderHostmask_%", title: .TPIChatFilterEditFilterSheet.tokenSenderHostmask),
-		Self(id: "%_serverAddress_%", title: .TPIChatFilterEditFilterSheet.tokenServerAddress),
-		Self(id: "%_Parameter_0_%", title: .TPIChatFilterEditFilterSheet.tokenParameter1),
-		Self(id: "%_Parameter_1_%", title: .TPIChatFilterEditFilterSheet.tokenParameter2),
-		Self(id: "%_Parameter_2_%", title: .TPIChatFilterEditFilterSheet.tokenParameter3),
-		Self(id: "%_Parameter_3_%", title: .TPIChatFilterEditFilterSheet.tokenParameter4),
-		Self(id: "%_Parameter_4_%", title: .TPIChatFilterEditFilterSheet.tokenParameter5),
-		Self(id: "%_Parameter_5_%", title: .TPIChatFilterEditFilterSheet.tokenParameter6),
-		Self(id: "%_Parameter_6_%", title: .TPIChatFilterEditFilterSheet.tokenParameter7),
-		Self(id: "%_Parameter_7_%", title: .TPIChatFilterEditFilterSheet.tokenParameter8),
-		Self(id: "%_Parameter_8_%", title: .TPIChatFilterEditFilterSheet.tokenParameter9),
+		Self(id: "%_channelName_%", title: .ChatFilterEditor.tokenChannelName),
+		Self(id: "%_localNickname_%", title: .ChatFilterEditor.tokenLocalNickname),
+		Self(id: "%_networkName_%", title: .ChatFilterEditor.tokenNetworkName),
+		Self(id: "%_originalMessage_%", title: .ChatFilterEditor.tokenOriginalMessage),
+		Self(id: "%_senderNickname_%", title: .ChatFilterEditor.tokenSenderNickname),
+		Self(id: "%_senderUsername_%", title: .ChatFilterEditor.tokenSenderUsername),
+		Self(id: "%_senderAddress_%", title: .ChatFilterEditor.tokenSenderAddress),
+		Self(id: "%_senderHostmask_%", title: .ChatFilterEditor.tokenSenderHostmask),
+		Self(id: "%_serverAddress_%", title: .ChatFilterEditor.tokenServerAddress),
+		Self(id: "%_Parameter_0_%", title: .ChatFilterEditor.tokenParameter1),
+		Self(id: "%_Parameter_1_%", title: .ChatFilterEditor.tokenParameter2),
+		Self(id: "%_Parameter_2_%", title: .ChatFilterEditor.tokenParameter3),
+		Self(id: "%_Parameter_3_%", title: .ChatFilterEditor.tokenParameter4),
+		Self(id: "%_Parameter_4_%", title: .ChatFilterEditor.tokenParameter5),
+		Self(id: "%_Parameter_5_%", title: .ChatFilterEditor.tokenParameter6),
+		Self(id: "%_Parameter_6_%", title: .ChatFilterEditor.tokenParameter7),
+		Self(id: "%_Parameter_7_%", title: .ChatFilterEditor.tokenParameter8),
+		Self(id: "%_Parameter_8_%", title: .ChatFilterEditor.tokenParameter9),
 	]
+}
+
+/** What a match pattern is: whether it compiles at all, and whether its shape
+ can backtrack for a long time.
+
+ Compiling is the expensive half, and a `body` pass asks four questions about
+ two patterns, so this is computed when a pattern changes rather than each time
+ the sheet is drawn. */
+private struct ChatFilterPatternValidation: Equatable {
+	var error: String?
+	var warning: String?
+
+	init(pattern: String = "") {
+		guard pattern.isEmpty == false else { return }
+
+		do {
+			_ = try NSRegularExpression(pattern: pattern)
+		} catch let failure {
+			error = String(
+				localized: .ChatFilterEditor.regularExpressionInvalid(failure.localizedDescription)
+			)
+			return
+		}
+
+		guard RegularExpression.hasNestedQuantifier(pattern) else { return }
+
+		warning = String(localized: .ChatFilterEditor.regularExpressionNestedQuantifier)
+	}
 }
 
 struct ChatFilterEditorView: View {
 	@State private var filter: ChatFilter
 	@State private var selectedTab: ChatFilterEditorTab = .filter
+	@State private var matchValidation = ChatFilterPatternValidation()
+	@State private var senderValidation = ChatFilterPatternValidation()
 
 	let clients: [ChatFilterClientOption]
 	let onSave: (ChatFilter) -> Void
@@ -107,22 +137,22 @@ struct ChatFilterEditorView: View {
 		VStack(spacing: 0) {
 			TabView(selection: $selectedTab) {
 				generalForm
-					.tabItem { Text(String(localized: .TPIChatFilterEditFilterSheet.filterTab)) }
+					.tabItem { Text(String(localized: .ChatFilterEditor.filterTab)) }
 					.tag(ChatFilterEditorTab.filter)
 				channelsForm
-					.tabItem { Text(String(localized: .TPIChatFilterEditFilterSheet.channelsTab)) }
+					.tabItem { Text(String(localized: .ChatFilterEditor.channelsTab)) }
 					.tag(ChatFilterEditorTab.channels)
 				eventsForm
-					.tabItem { Text(String(localized: .TPIChatFilterEditFilterSheet.eventsTab)) }
+					.tabItem { Text(String(localized: .ChatFilterEditor.eventsTab)) }
 					.tag(ChatFilterEditorTab.events)
 				senderForm
-					.tabItem { Text(String(localized: .TPIChatFilterEditFilterSheet.senderTab)) }
+					.tabItem { Text(String(localized: .ChatFilterEditor.senderTab)) }
 					.tag(ChatFilterEditorTab.sender)
 				notesForm
-					.tabItem { Text(String(localized: .TPIChatFilterEditFilterSheet.notesTab)) }
+					.tabItem { Text(String(localized: .ChatFilterEditor.notesTab)) }
 					.tag(ChatFilterEditorTab.notes)
 				advancedForm
-					.tabItem { Text(String(localized: .TPIChatFilterEditFilterSheet.advancedTab)) }
+					.tabItem { Text(String(localized: .ChatFilterEditor.advancedTab)) }
 					.tag(ChatFilterEditorTab.advanced)
 			}
 			.padding(20)
@@ -131,9 +161,9 @@ struct ChatFilterEditorView: View {
 
 			HStack {
 				Spacer()
-				Button(String(localized: .TPIChatFilterEditFilterSheet.cancelButton), action: onCancel)
+				Button(String(localized: .ChatFilterEditor.cancelButton), action: onCancel)
 					.keyboardShortcut(.cancelAction)
-				Button(String(localized: .TPIChatFilterEditFilterSheet.saveButton)) {
+				Button(String(localized: .ChatFilterEditor.saveButton)) {
 					save()
 				}
 				.keyboardShortcut(.defaultAction)
@@ -142,23 +172,29 @@ struct ChatFilterEditorView: View {
 			.padding(16)
 		}
 		.frame(width: 680, height: 560)
+		.onChange(of: filter.match, initial: true) { _, pattern in
+			matchValidation = ChatFilterPatternValidation(pattern: pattern)
+		}
+		.onChange(of: filter.senderMatch, initial: true) { _, pattern in
+			senderValidation = ChatFilterPatternValidation(pattern: pattern)
+		}
 	}
 
 	private var generalForm: some View {
 		Form {
-			TextField(String(localized: .TPIChatFilterEditFilterSheet.filterTitleLabel), text: $filter.title)
-			TextField(String(localized: .TPIChatFilterEditFilterSheet.filterMatchLabel), text: $filter.match)
+			TextField(String(localized: .ChatFilterEditor.filterTitleLabel), text: $filter.title)
+			TextField(String(localized: .ChatFilterEditor.filterMatchLabel), text: $filter.match)
 			validationMessage(matchError)
 			validationWarning(matchWarning)
 			Text(Self.patternLimitsExplanation)
 				.font(.caption)
 				.foregroundStyle(.secondary)
 
-			Section(String(localized: .TPIChatFilterEditFilterSheet.filterActionSection)) {
+			Section(String(localized: .ChatFilterEditor.filterActionSection)) {
 				TextEditor(text: $filter.action)
 					.font(.body.monospaced())
 					.frame(minHeight: 110)
-				Menu(String(localized: .TPIChatFilterEditFilterSheet.insertPlaceholderButton)) {
+				Menu(String(localized: .ChatFilterEditor.insertPlaceholderButton)) {
 					ForEach(ChatFilterActionPlaceholder.all) { placeholder in
 						Button(String(localized: placeholder.title)) {
 							filter.action.append(placeholder.id)
@@ -172,7 +208,7 @@ struct ChatFilterEditorView: View {
 
 	private var channelsForm: some View {
 		Form {
-			Picker(String(localized: .TPIChatFilterEditFilterSheet.limitFilterLabel), selection: $filter.destination) {
+			Picker(String(localized: .ChatFilterEditor.limitFilterLabel), selection: $filter.destination) {
 				ForEach(ChatFilterDestination.allCases) { destination in
 					Text(destinationTitle(destination)).tag(destination)
 				}
@@ -180,10 +216,10 @@ struct ChatFilterEditorView: View {
 			.pickerStyle(.radioGroup)
 
 			if filter.destination == .specificItems {
-				Section(String(localized: .TPIChatFilterEditFilterSheet.specificItemsSection)) {
+				Section(String(localized: .ChatFilterEditor.specificItemsSection)) {
 					if clients.isEmpty {
 						ContentUnavailableView(
-							String(localized: .TPIChatFilterEditFilterSheet.noConnectedServersTitle),
+							String(localized: .ChatFilterEditor.noConnectedServersTitle),
 							systemImage: "network.slash"
 						)
 						.frame(minHeight: 180)
@@ -208,7 +244,7 @@ struct ChatFilterEditorView: View {
 
 	private var eventsForm: some View {
 		Form {
-			Section(String(localized: .TPIChatFilterEditFilterSheet.standardEventsSection)) {
+			Section(String(localized: .ChatFilterEditor.standardEventsSection)) {
 				LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading) {
 					ForEach(ChatFilterEventOption.all) { option in
 						Toggle(String(localized: option.title), isOn: eventBinding(option.event))
@@ -218,13 +254,13 @@ struct ChatFilterEditorView: View {
 				}
 			}
 
-			Section(String(localized: .TPIChatFilterEditFilterSheet.additionalCommandsSection)) {
+			Section(String(localized: .ChatFilterEditor.additionalCommandsSection)) {
 				TextField(
-					String(localized: .TPIChatFilterEditFilterSheet.additionalCommandsPlaceholder),
+					String(localized: .ChatFilterEditor.additionalCommandsPlaceholder),
 					text: additionalCommands
 				)
 				validationMessage(commandsError)
-				Text(String(localized: .TPIChatFilterEditFilterSheet.additionalCommandsExplanation))
+				Text(String(localized: .ChatFilterEditor.additionalCommandsExplanation))
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -236,17 +272,17 @@ struct ChatFilterEditorView: View {
 		Form {
 			Section {
 				Toggle(
-					String(localized: .TPIChatFilterEditFilterSheet.ignoreOperatorsToggle),
+					String(localized: .ChatFilterEditor.ignoreOperatorsToggle),
 					isOn: $filter.ignoresOperators
 				)
 				.disabled(hasMessageEvent == false)
 				Toggle(
-					String(localized: .TPIChatFilterEditFilterSheet.onlyMyMessagesToggle),
+					String(localized: .ChatFilterEditor.onlyMyMessagesToggle),
 					isOn: $filter.isLimitedToMyself
 				)
 			}
 
-			TextField(String(localized: .TPIChatFilterEditFilterSheet.senderMatchLabel), text: $filter.senderMatch)
+			TextField(String(localized: .ChatFilterEditor.senderMatchLabel), text: $filter.senderMatch)
 				.disabled(filter.isLimitedToMyself)
 			validationMessage(senderMatchError)
 			validationWarning(senderMatchWarning)
@@ -254,22 +290,22 @@ struct ChatFilterEditorView: View {
 				.font(.caption)
 				.foregroundStyle(.secondary)
 
-			Section(String(localized: .TPIChatFilterEditFilterSheet.membershipAgeSection)) {
+			Section(String(localized: .ChatFilterEditor.membershipAgeSection)) {
 				Picker(
-					String(localized: .TPIChatFilterEditFilterSheet.ageComparatorLabel),
+					String(localized: .ChatFilterEditor.ageComparatorLabel),
 					selection: $filter.ageComparator
 				) {
-					Text(String(localized: .TPIChatFilterEditFilterSheet.lessThanOption))
+					Text(String(localized: .ChatFilterEditor.lessThanOption))
 						.tag(ChatFilterAgeComparator.lessThan)
-					Text(String(localized: .TPIChatFilterEditFilterSheet.greaterThanOption))
+					Text(String(localized: .ChatFilterEditor.greaterThanOption))
 						.tag(ChatFilterAgeComparator.greaterThan)
 				}
 				TextField(
-					String(localized: .TPIChatFilterEditFilterSheet.ageSecondsLabel),
+					String(localized: .ChatFilterEditor.ageSecondsLabel),
 					value: $filter.ageLimit,
 					format: .number
 				)
-				Text(String(localized: .TPIChatFilterEditFilterSheet.zeroDisablesExplanation))
+				Text(String(localized: .ChatFilterEditor.zeroDisablesExplanation))
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -279,7 +315,7 @@ struct ChatFilterEditorView: View {
 
 	private var notesForm: some View {
 		Form {
-			Section(String(localized: .TPIChatFilterEditFilterSheet.notesSection)) {
+			Section(String(localized: .ChatFilterEditor.notesSection)) {
 				TextEditor(text: $filter.notes)
 					.frame(minHeight: 300)
 			}
@@ -291,27 +327,29 @@ struct ChatFilterEditorView: View {
 		Form {
 			Section {
 				Toggle(
-					String(localized: .TPIChatFilterEditFilterSheet.hideOriginalMessageToggle),
+					String(localized: .ChatFilterEditor.hideOriginalMessageToggle),
 					isOn: $filter.ignoresContent
 				)
-				Toggle(String(localized: .TPIChatFilterEditFilterSheet.logFilterMatchToggle), isOn: $filter.logsMatch)
+				.toggleStyle(.checkbox)
+				Toggle(String(localized: .ChatFilterEditor.logFilterMatchToggle), isOn: $filter.logsMatch)
+					.toggleStyle(.checkbox)
 			}
 
-			Section(String(localized: .TPIChatFilterEditFilterSheet.forwardDestinationSection)) {
+			Section(String(localized: .ChatFilterEditor.forwardDestinationSection)) {
 				TextField(
-					String(localized: .TPIChatFilterEditFilterSheet.forwardDestinationLabel),
+					String(localized: .ChatFilterEditor.forwardDestinationLabel),
 					text: $filter.forwardDestination
 				)
 				validationMessage(forwardDestinationError)
 			}
 
-			Section(String(localized: .TPIChatFilterEditFilterSheet.floodControlSection)) {
+			Section(String(localized: .ChatFilterEditor.floodControlSection)) {
 				TextField(
-					String(localized: .TPIChatFilterEditFilterSheet.floodControlSecondsLabel),
+					String(localized: .ChatFilterEditor.floodControlSecondsLabel),
 					value: $filter.actionFloodControlInterval,
 					format: .number
 				)
-				Text(String(localized: .TPIChatFilterEditFilterSheet.zeroDisablesExplanation))
+				Text(String(localized: .ChatFilterEditor.zeroDisablesExplanation))
 					.font(.caption)
 					.foregroundStyle(.secondary)
 			}
@@ -334,24 +372,24 @@ struct ChatFilterEditorView: View {
 	}
 
 	private var matchError: String? {
-		regularExpressionError(filter.match)
+		matchValidation.error
 	}
 
 	private var senderMatchError: String? {
-		filter.isLimitedToMyself ? nil : regularExpressionError(filter.senderMatch)
+		filter.isLimitedToMyself ? nil : senderValidation.error
 	}
 
 	private var matchWarning: String? {
-		regularExpressionWarning(filter.match)
+		matchValidation.warning
 	}
 
 	private var senderMatchWarning: String? {
-		filter.isLimitedToMyself ? nil : regularExpressionWarning(filter.senderMatch)
+		filter.isLimitedToMyself ? nil : senderValidation.warning
 	}
 
 	private var commandsError: String? {
 		normalizedCommands(from: filter.additionalCommands.joined(separator: ", ")) == nil
-			? String(localized: .TPIChatFilterEditFilterSheet.commandsInvalid)
+			? String(localized: .ChatFilterEditor.commandsInvalid)
 			: nil
 	}
 
@@ -359,10 +397,10 @@ struct ChatFilterEditorView: View {
 		let destination = filter.forwardDestination.trimmingCharacters(in: .whitespacesAndNewlines)
 		guard destination.isEmpty == false else { return nil }
 		if destination.count > 125 {
-			return String(localized: .TPIChatFilterEditFilterSheet.destinationTooLong)
+			return String(localized: .ChatFilterEditor.destinationTooLong)
 		}
 		let isValid = destination.allSatisfy { $0.isLetter || $0.isNumber || "-_ ".contains($0) }
-		return isValid ? nil : String(localized: .TPIChatFilterEditFilterSheet.destinationInvalid)
+		return isValid ? nil : String(localized: .ChatFilterEditor.destinationInvalid)
 	}
 
 	private var additionalCommands: Binding<String> {
@@ -456,10 +494,10 @@ struct ChatFilterEditorView: View {
 
 	private func destinationTitle(_ destination: ChatFilterDestination) -> String {
 		let resource: LocalizedStringResource = switch destination {
-		case .unrestricted: .TPIChatFilterEditFilterSheet.unrestrictedDestination
-		case .channels: .TPIChatFilterEditFilterSheet.channelsDestination
-		case .privateMessages: .TPIChatFilterEditFilterSheet.privateMessagesDestination
-		case .specificItems: .TPIChatFilterEditFilterSheet.specificItemsDestination
+		case .unrestricted: .ChatFilterEditor.unrestrictedDestination
+		case .channels: .ChatFilterEditor.channelsDestination
+		case .privateMessages: .ChatFilterEditor.privateMessagesDestination
+		case .specificItems: .ChatFilterEditor.specificItemsDestination
 		}
 		return String(localized: resource)
 	}
@@ -474,9 +512,12 @@ struct ChatFilterEditorView: View {
 		}
 	}
 
-	/// Shown beside a field whose pattern is legal but slow. It does not stop
-	/// the filter being saved: the shape is a heuristic, and the person typing
-	/// the pattern is the one who knows what it is for.
+	/** Shown beside a field whose pattern is legal but slow.
+
+	 It does not stop the filter being saved: recognising the shape is a
+	 heuristic, the pattern may well be the one the person meant, and what
+	 bounds the damage is the cap on how much of a message a filter is matched
+	 against. */
 	@ViewBuilder
 	private func validationWarning(_ message: String?) -> some View {
 		if let message {
@@ -491,36 +532,10 @@ struct ChatFilterEditorView: View {
 	/// and that a pattern which can backtrack without bound is pointed out here
 	/// rather than at the point a peer sends the line that triggers it.
 	private static let patternLimitsExplanation = String(
-		localized: .TPIChatFilterEditFilterSheet.regularExpressionLimitsExplanation(
-			ChatFilterEngine.matchInputLimit.formatted(.number)
+		localized: .ChatFilterEditor.regularExpressionLimitsExplanation(
+			RegularExpression.inputLengthLimit.formatted(.number)
 		)
 	)
-
-	private func regularExpressionError(_ pattern: String) -> String? {
-		guard pattern.isEmpty == false else { return nil }
-		do {
-			_ = try NSRegularExpression(pattern: pattern)
-		} catch {
-			return String(localized: .TPIChatFilterEditFilterSheet.regularExpressionInvalid(error.localizedDescription))
-		}
-		return nil
-	}
-
-	/** A pattern that compiles but has a shape that can backtrack for a long
-	 time.
-
-	 Compiling says nothing about how long matching takes, and ICU has no budget
-	 to stop it, so the place to point this out is where a person types the
-	 pattern. It is said rather than enforced: recognising the shape is a
-	 heuristic, the pattern may well be the one the person meant, and what bounds
-	 the damage is the cap on how much of a message a filter is matched
-	 against. */
-	private func regularExpressionWarning(_ pattern: String) -> String? {
-		guard pattern.isEmpty == false, regularExpressionError(pattern) == nil else { return nil }
-		guard RegularExpression.hasNestedQuantifier(pattern) else { return nil }
-
-		return String(localized: .TPIChatFilterEditFilterSheet.regularExpressionNestedQuantifier)
-	}
 
 	private func normalizedCommands(from value: String) -> [String]? {
 		var result: [String] = []

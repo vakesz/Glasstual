@@ -13,12 +13,24 @@
 import Foundation
 
 nonisolated enum ChannelModesStrings { // nonisolated: value
+	static var cancelButtonTitle: String {
+		PromptStrings.Action.cancel
+	}
+
+	static var changeModesButtonTitle: String {
+		String(localized: .TDCChannelModifyModesSheet.changeModesButton)
+	}
+
 	static var channelKeyFieldHint: String {
 		String(localized: .TDCChannelModifyModesSheet.channelKeyFieldHint)
 	}
 
 	static var channelKeyModeTitle: String {
 		String(localized: .TDCChannelModifyModesSheet.channelKeyMode)
+	}
+
+	static var channelKeyPlaceholder: String {
+		String(localized: .TDCChannelModifyModesSheet.channelKeyPlaceholder)
 	}
 
 	static var inviteOnlyModeTitle: String {
@@ -53,11 +65,19 @@ nonisolated enum ChannelModesStrings { // nonisolated: value
 		String(localized: .TDCChannelModifyModesSheet.userLimitMode)
 	}
 
-	static var windowTitle: String {
-		String(localized: .TDCChannelModifyModesSheet.windowTitle)
+	static var userLimitPlaceholder: String {
+		String(localized: .TDCChannelModifyModesSheet.userLimitPlaceholder)
 	}
 
 	static func headingTitle(channelName: String) -> String {
 		String(localized: .TDCChannelModifyModesSheet.heading(channelName))
+	}
+
+	/// The footer under the channel key field, which says how far past the
+	/// server's limit the key is; below the limit there is nothing to say.
+	static func keyLengthWarning(remaining: Int) -> String? {
+		remaining < 0
+			? String(localized: .TDCChannelModifyModesSheet.channelKeyCharactersOverLimit(arg1: -remaining))
+			: nil
 	}
 }

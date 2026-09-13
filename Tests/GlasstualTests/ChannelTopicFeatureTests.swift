@@ -11,14 +11,8 @@ import Testing
 @MainActor
 private final class ChannelTopicDelegateSpy: NSObject, ChannelModifyTopicSheetDelegate {
 	private(set) var acceptedTopic: String?
-	private(set) var didClose = false
-
 	func channelModifyTopicSheet(_: ChannelModifyTopicSheet, onOk topic: String) {
 		acceptedTopic = topic
-	}
-
-	func channelModifyTopicSheetWillClose(_: ChannelModifyTopicSheet) {
-		didClose = true
 	}
 }
 
@@ -27,40 +21,42 @@ private final class ChannelTopicDelegateSpy: NSObject, ChannelModifyTopicSheetDe
 struct ChannelTopicFeatureTests {
 	@Test("The sheet's copy is read from the namespaced catalogue, placeholders included")
 	func contentUsesNamespacedLocalizedCopy() {
-		let content = ChannelTopicContent.current(channelName: "#swift")
-
-		#expect(content.headerTitle == "Topic for #swift:")
-		#expect(content.editorAccessibilityHint == "Edit the topic. IRC text formatting is preserved.")
-		#expect(content.changeButtonTitle == "Change Topic")
-		#expect(content.cancelButtonTitle == "Cancel")
-		#expect(content.windowTitle == "Change Topic")
+		#expect(ChannelTopicStrings.headerTitle(channelName: "#swift") == "Topic for #swift")
 		#expect(
-			ChannelTopicStrings.maximumLengthMessage
-				== "If you continue typing, the end of your topic may be cut off."
+			ChannelTopicStrings.editorAccessibilityHint
+				== "Edit the topic. IRC text formatting is preserved."
 		)
-		#expect(
-			ChannelTopicStrings.maximumLengthTitle(networkName: "ExampleNet", maximumLength: 120)
-				== "You have exceeded the maximum topic length defined by ExampleNet which is 120 characters"
-		)
+		#expect(ChannelTopicStrings.changeButtonTitle == "Change Topic")
+		#expect(ChannelTopicStrings.cancelButtonTitle == "Cancel")
 	}
 
-	@Test("The length warning is raised once, on the first crossing of a non-zero limit")
-	func modelWarnsOnlyOnceAfterCrossingNonzeroOctetLimit() {
+	/// The sheet counts down beside the editor instead of raising an alert on
+	/// the keystroke that crosses the limit, and refuses to submit past it.
+	@Test("The remaining length counts down, goes negative, and gates submission")
+	func remainingLengthCountsDownAndGatesSubmission() {
 		let model = ChannelTopicModel(formattedTopic: "1234", maximumLength: 5)
 
 		#expect(model.formattedTopicLength == 4)
-		#expect(model.updateFormattedTopic("12345") == false)
-		#expect(model.updateFormattedTopic("123456"))
-		#expect(model.hasPresentedMaximumLengthWarning)
-		#expect(model.updateFormattedTopic("1234567") == false)
+		#expect(model.remainingLength == 1)
+		#expect(model.fitsMaximumLength)
+		#expect(ChannelTopicStrings.lengthFooter(remaining: 1) == "1 character remaining")
 
-		let emojiModel = ChannelTopicModel(formattedTopic: "", maximumLength: 1)
-		#expect(emojiModel.updateFormattedTopic("💬"))
+		model.formattedTopic = "123456"
+		#expect(model.remainingLength == -1)
+		#expect(model.fitsMaximumLength == false)
+		#expect(ChannelTopicStrings.lengthFooter(remaining: -1) == "1 character too many")
+		#expect(ChannelTopicStrings.lengthFooter(remaining: 2) == "2 characters remaining")
+
 		// TOPICLEN is an octet count, so an emoji is four, not two.
+		let emojiModel = ChannelTopicModel(formattedTopic: "💬", maximumLength: 1)
 		#expect(emojiModel.formattedTopicLength == 4)
+		#expect(emojiModel.remainingLength == -3)
 
+		// A server that names no limit has nothing to count down.
 		let unlimitedModel = ChannelTopicModel(formattedTopic: "", maximumLength: 0)
-		#expect(unlimitedModel.updateFormattedTopic(String(repeating: "x", count: 1000)) == false)
+		unlimitedModel.formattedTopic = String(repeating: "x", count: 1000)
+		#expect(unlimitedModel.remainingLength == nil)
+		#expect(unlimitedModel.fitsMaximumLength)
 	}
 
 	@Test("Submission flattens newlines to spaces without discarding IRC formatting")
@@ -100,7 +96,7 @@ struct ChannelTopicFeatureTests {
 
 	@Test("The adapter keeps identity, the formatted topic, and the typed delegate callbacks")
 	func adapterPreservesIdentityFormattedTopicAndTypedDelegateCallbacks() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
 		channel.associatedClient = client
 		channel.topic = "first\n\u{02}bold"
@@ -115,10 +111,7 @@ struct ChannelTopicFeatureTests {
 		#expect(channelPrototype.clientId == client.uniqueIdentifier)
 		#expect(channelPrototype.channelId == channel.uniqueIdentifier)
 		#expect(adapter.model.formattedTopic == "first\n\u{02}bold")
-		adapter.ok(nil)
+		adapter.submit()
 		#expect(delegate.acceptedTopic == "first \u{02}bold")
-
-		adapter.sheetDidEnd(withReturnCode: 0)
-		#expect(delegate.didClose)
 	}
 }

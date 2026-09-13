@@ -13,80 +13,67 @@
 import Foundation
 
 enum PreferencesSectionStrings {
-	static var advanced: String {
-		String(localized: .TDCPreferencesController.headingAdvanced)
-	}
-
 	static var general: String {
-		String(localized: .TDCPreferencesController.headingGeneral)
+		String(localized: .Settings.headingGeneral)
 	}
 }
 
-enum PreferencesAdvancedStrings {
-	static var channels: String {
-		String(localized: .TDCPreferencesController.advancedChannels)
+/// Copy shared by the reusable Settings controls rather than owned by a pane.
+enum PreferencesFieldStrings {
+	static var presetsHelp: String {
+		String(localized: .Settings.comboPresetsHelp)
 	}
 
-	static var connection: String {
-		String(localized: .TDCPreferencesController.advancedConnection)
-	}
-
-	static var identity: String {
-		String(localized: .TDCPreferencesController.advancedIdentity)
-	}
-
-	static var media: String {
-		String(localized: .TDCPreferencesController.advancedMedia)
-	}
-
-	static var system: String {
-		String(localized: .TDCPreferencesController.advancedSystem)
+	static var wholeNumberRequired: String {
+		String(localized: .PreferencesTransfer.enterAValidWholeNumber)
 	}
 }
 
 enum PreferencesGeneralStrings {
-	static var confirmQuit: String {
-		String(localized: .TDCPreferencesController.generalConfirmQuit)
-	}
-}
-
-enum PreferencesBehaviorStrings {
 	static var autojoinOnInvite: String {
-		String(localized: .TDCPreferencesController.behaviorAutojoinOnInvite)
+		String(localized: .Settings.generalAutojoinOnInvite)
 	}
 
 	static var awayOnScreenSleep: String {
-		String(localized: .TDCPreferencesController.behaviorAwayOnScreenSleep)
+		String(localized: .Settings.generalAwayOnScreenSleep)
 	}
 
-	static var openLinksInBackground: String {
-		String(localized: .TDCPreferencesController.behaviorOpenLinksInBackground)
+	static var confirmQuit: String {
+		String(localized: .Settings.generalConfirmQuit)
+	}
+
+	static var headingChannels: String {
+		String(localized: .Settings.generalHeadingChannels)
+	}
+
+	static var headingOnLaunch: String {
+		String(localized: .Settings.generalHeadingOnLaunch)
 	}
 
 	static var rejoinOnKick: String {
-		String(localized: .TDCPreferencesController.behaviorRejoinOnKick)
+		String(localized: .Settings.generalRejoinOnKick)
 	}
 
 	static var reloadScrollback: String {
-		String(localized: .TDCPreferencesController.behaviorReloadScrollback)
+		String(localized: .Settings.generalReloadScrollback)
 	}
 
 	static var rememberQueries: String {
-		String(localized: .TDCPreferencesController.behaviorRememberQueries)
+		String(localized: .Settings.generalRememberQueries)
 	}
 }
 
 enum PreferencesIRCv3Strings {
 	static var capabilities: String {
-		String(localized: .TDCPreferencesController.ircv3Capabilities)
+		String(localized: .Settings.ircv3Capabilities)
 	}
 
 	static var capabilitySpecification: String {
-		String(localized: .TDCPreferencesController.ircv3CapabilitySpecification)
+		String(localized: .Settings.ircv3CapabilitySpecification)
 	}
 
 	static func capabilityAccessibilityLabel(name: String, summary: String) -> String {
-		String(localized: .TDCPreferencesController.ircv3CapabilityAccessibilityLabel(name, summary))
+		String(localized: .Settings.ircv3CapabilityAccessibilityLabel(name, summary))
 	}
 
 	/** What a capability does, in one sentence, for the switch that turns it
@@ -100,148 +87,148 @@ enum PreferencesIRCv3Strings {
 	}
 
 	private static let capabilitySummaries: [String: LocalizedStringResource] = [
-		"account-notify": .TDCPreferencesController.ircv3CapabilityAccountNotify,
-		"account-tag": .TDCPreferencesController.ircv3CapabilityAccountTag,
-		"away-notify": .TDCPreferencesController.ircv3CapabilityAwayNotify,
-		"batch": .TDCPreferencesController.ircv3CapabilityBatch,
-		"cap-notify": .TDCPreferencesController.ircv3CapabilityCapNotify,
-		"chghost": .TDCPreferencesController.ircv3CapabilityChghost,
-		"extended-join": .TDCPreferencesController.ircv3CapabilityExtendedJoin,
-		"extended-monitor": .TDCPreferencesController.ircv3CapabilityExtendedMonitor,
-		"invite-notify": .TDCPreferencesController.ircv3CapabilityInviteNotify,
-		"labeled-response": .TDCPreferencesController.ircv3CapabilityLabeledResponse,
-		"message-tags": .TDCPreferencesController.ircv3CapabilityMessageTags,
-		"multi-prefix": .TDCPreferencesController.ircv3CapabilityMultiPrefix,
-		"pre-away": .TDCPreferencesController.ircv3CapabilityPreAway,
-		"sasl": .TDCPreferencesController.ircv3CapabilitySasl,
-		"server-time": .TDCPreferencesController.ircv3CapabilityServerTime,
-		"setname": .TDCPreferencesController.ircv3CapabilitySetname,
-		"standard-replies": .TDCPreferencesController.ircv3CapabilityStandardReplies,
-		"userhost-in-names": .TDCPreferencesController.ircv3CapabilityUserhostInNames,
-		"znc.in/playback": .TDCPreferencesController.ircv3CapabilityZncPlayback,
-		"znc.in/self-message": .TDCPreferencesController.ircv3CapabilityZncSelfMessage,
-		"znc.in/server-time": .TDCPreferencesController.ircv3CapabilityZncServerTime,
-		"znc.in/server-time-iso": .TDCPreferencesController.ircv3CapabilityZncServerTimeIso,
-		"znc.in/tlsinfo": .TDCPreferencesController.ircv3CapabilityZncTlsinfo,
+		"account-notify": .Settings.ircv3CapabilityAccountNotify,
+		"account-tag": .Settings.ircv3CapabilityAccountTag,
+		"away-notify": .Settings.ircv3CapabilityAwayNotify,
+		"batch": .Settings.ircv3CapabilityBatch,
+		"cap-notify": .Settings.ircv3CapabilityCapNotify,
+		"chghost": .Settings.ircv3CapabilityChghost,
+		"extended-join": .Settings.ircv3CapabilityExtendedJoin,
+		"extended-monitor": .Settings.ircv3CapabilityExtendedMonitor,
+		"invite-notify": .Settings.ircv3CapabilityInviteNotify,
+		"labeled-response": .Settings.ircv3CapabilityLabeledResponse,
+		"message-tags": .Settings.ircv3CapabilityMessageTags,
+		"multi-prefix": .Settings.ircv3CapabilityMultiPrefix,
+		"pre-away": .Settings.ircv3CapabilityPreAway,
+		"sasl": .Settings.ircv3CapabilitySasl,
+		"server-time": .Settings.ircv3CapabilityServerTime,
+		"setname": .Settings.ircv3CapabilitySetname,
+		"standard-replies": .Settings.ircv3CapabilityStandardReplies,
+		"userhost-in-names": .Settings.ircv3CapabilityUserhostInNames,
+		"znc.in/playback": .Settings.ircv3CapabilityZncPlayback,
+		"znc.in/self-message": .Settings.ircv3CapabilityZncSelfMessage,
+		"znc.in/server-time": .Settings.ircv3CapabilityZncServerTime,
+		"znc.in/server-time-iso": .Settings.ircv3CapabilityZncServerTimeIso,
+		"znc.in/tlsinfo": .Settings.ircv3CapabilityZncTlsinfo,
 	]
 
 	static var connectedServers: String {
-		String(localized: .TDCPreferencesController.ircv3ConnectedServers)
+		String(localized: .Settings.ircv3ConnectedServers)
 	}
 
 	static var disconnected: String {
-		String(localized: .TDCPreferencesController.ircv3Disconnected)
+		String(localized: .Settings.ircv3Disconnected)
 	}
 
 	static var displayTypingNotifications: String {
-		String(localized: .TDCPreferencesController.ircv3DisplayTypingNotifications)
+		String(localized: .Settings.ircv3DisplayTypingNotifications)
 	}
 
 	static var echoMessage: String {
-		String(localized: .TDCPreferencesController.ircv3EchoMessage)
+		String(localized: .Settings.ircv3EchoMessage)
 	}
 
 	static var history: String {
-		String(localized: .TDCPreferencesController.ircv3History)
+		String(localized: .Settings.ircv3History)
 	}
 
 	static var historyNote: String {
-		String(localized: .TDCPreferencesController.ircv3HistoryNote)
+		String(localized: .Settings.ircv3HistoryNote)
 	}
 
 	static var messages: String {
-		String(localized: .TDCPreferencesController.ircv3Messages)
+		String(localized: .Settings.ircv3Messages)
 	}
 
 	static var noCapabilities: String {
-		String(localized: .TDCPreferencesController.ircv3NoCapabilities)
+		String(localized: .Settings.ircv3NoCapabilities)
 	}
 
 	static var noConnections: String {
-		String(localized: .TDCPreferencesController.ircv3NoConnections)
+		String(localized: .Settings.ircv3NoConnections)
 	}
 
 	static var reconnectNote: String {
-		String(localized: .TDCPreferencesController.ircv3ReconnectNote)
+		String(localized: .Settings.ircv3ReconnectNote)
 	}
 
 	static var requestChatHistory: String {
-		String(localized: .TDCPreferencesController.ircv3RequestChatHistory)
+		String(localized: .Settings.ircv3RequestChatHistory)
 	}
 
 	static var sendTypingNotifications: String {
-		String(localized: .TDCPreferencesController.ircv3SendTypingNotifications)
+		String(localized: .Settings.ircv3SendTypingNotifications)
 	}
 
 	static var synchronizeReadMarkers: String {
-		String(localized: .TDCPreferencesController.ircv3SynchronizeReadMarkers)
+		String(localized: .Settings.ircv3SynchronizeReadMarkers)
 	}
 }
 
 enum PreferencesCommandScopeStrings {
 	static var amsg: String {
-		String(localized: .TDCPreferencesController.commandScopeAmsg)
+		String(localized: .Settings.commandScopeAmsg)
 	}
 
 	static var away: String {
-		String(localized: .TDCPreferencesController.commandScopeAway)
+		String(localized: .Settings.commandScopeAway)
 	}
 
 	static var clearall: String {
-		String(localized: .TDCPreferencesController.commandScopeClearall)
+		String(localized: .Settings.commandScopeClearall)
 	}
 
 	static var focusOnMessage: String {
-		String(localized: .TDCPreferencesController.commandScopeFocusOnMessage)
+		String(localized: .Settings.commandScopeFocusOnMessage)
 	}
 
 	static var nick: String {
-		String(localized: .TDCPreferencesController.commandScopeNick)
+		String(localized: .Settings.commandScopeNick)
 	}
 
 	static var noticeLabel: String {
-		String(localized: .TDCPreferencesController.commandScopeNoticeLabel)
+		String(localized: .Settings.commandScopeNoticeLabel)
 	}
 
 	static var noticeQuery: String {
-		String(localized: .TDCPreferencesController.commandScopeNoticeQuery)
+		String(localized: .Settings.commandScopeNoticeQuery)
 	}
 
 	static var noticeSelectedChannel: String {
-		String(localized: .TDCPreferencesController.commandScopeNoticeSelectedChannel)
+		String(localized: .Settings.commandScopeNoticeSelectedChannel)
 	}
 
 	static var noticeServerConsole: String {
-		String(localized: .TDCPreferencesController.commandScopeNoticeServerConsole)
+		String(localized: .Settings.commandScopeNoticeServerConsole)
 	}
 }
 
 enum PreferencesChannelManagementStrings {
 	static var banFormatExact: String {
-		String(localized: .TDCPreferencesController.channelManagementBanFormatExact)
+		String(localized: .Settings.channelManagementBanFormatExact)
 	}
 
 	static var banFormatLabel: String {
-		String(localized: .TDCPreferencesController.channelManagementBanFormatLabel)
+		String(localized: .Settings.channelManagementBanFormatLabel)
 	}
 
 	static var banFormatNote: String {
-		String(localized: .TDCPreferencesController.channelManagementBanFormatNote)
+		String(localized: .Settings.channelManagementBanFormatNote)
 	}
 
 	static var banFormatWhainn: String {
-		String(localized: .TDCPreferencesController.channelManagementBanFormatWhainn)
+		String(localized: .Settings.channelManagementBanFormatWhainn)
 	}
 
 	static var banFormatWhanni: String {
-		String(localized: .TDCPreferencesController.channelManagementBanFormatWhanni)
+		String(localized: .Settings.channelManagementBanFormatWhanni)
 	}
 
 	static var banFormatWhnin: String {
-		String(localized: .TDCPreferencesController.channelManagementBanFormatWhnin)
+		String(localized: .Settings.channelManagementBanFormatWhnin)
 	}
 
 	static var kickReasonLabel: String {
-		String(localized: .TDCPreferencesController.channelManagementKickReasonLabel)
+		String(localized: .Settings.channelManagementKickReasonLabel)
 	}
 }

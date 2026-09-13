@@ -1,8 +1,8 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "channel-accessibility-hint" : {
-      "comment" : "Accessibility hint for the channel picker in a server highlight rule.",
+    "channel-help" : {
+      "comment" : "Explanation under the channel picker in a server highlight rule. Legacy key: channel-accessibility-hint.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -13,86 +13,86 @@
         }
       }
     },
-    "channel-accessibility-label" : {
-      "comment" : "Accessibility label for the channel picker in a server highlight rule. Migrated from the TDCHighlightEntrySheet interface file.",
+    "channel-label" : {
+      "comment" : "Label for the channel picker in a server highlight rule. Legacy key: channel-accessibility-label.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Limit Highlight to Channel"
+            "value" : "Channel"
           }
         }
       }
     },
-    "channel-connector" : {
-      "comment" : "Text between the highlight keyword editor and its channel picker. Migrated from the TDCHighlightEntrySheet interface file.",
+    "keyword-help" : {
+      "comment" : "Explanation under the keyword field in a server highlight rule. Legacy key: keyword-accessibility-hint.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "in the channel"
+            "value" : "The word or phrase this rule matches."
           }
         }
       }
     },
-    "keyword-accessibility-hint" : {
-      "comment" : "Accessibility hint for the keyword field in a server highlight rule.",
+    "keyword-label" : {
+      "comment" : "Label for the keyword field in a server highlight rule. Legacy key: keyword-accessibility-label.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter the word or phrase that controls this highlight rule."
+            "value" : "Keyword"
           }
         }
       }
     },
-    "keyword-accessibility-label" : {
-      "comment" : "Accessibility label for the keyword field in a server highlight rule. Migrated from the TDCHighlightEntrySheet interface file.",
+    "match-type-label" : {
+      "comment" : "Label for the Match or Exclude picker in a server highlight rule. Legacy key: match-type-accessibility-label.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Highlight Match Keyword"
-          }
-        }
-      }
-    },
-    "keyword-connector" : {
-      "comment" : "Text between the match behavior picker and keyword field. Migrated from the TDCHighlightEntrySheet interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "the keyword"
-          }
-        }
-      }
-    },
-    "match-type-accessibility-label" : {
-      "comment" : "Accessibility label for the Match or Exclude picker in a server highlight rule. Migrated from the TDCHighlightEntrySheet interface file.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlight Match Type"
+            "value" : "Match Type"
           }
         }
       }
     },
     "window-title" : {
-      "comment" : "Title of the sheet used to add or edit a server highlight rule.",
+      "comment" : "Title of the sheet used to add or edit a server highlight rule, shown as its heading.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Highlight Rule"
+          }
+        }
+      }
+    },
+    "rule-description" : {
+      "comment" : "Explanation under the heading of the server highlight rule sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight or ignore a keyword on this connection alone."
+          }
+        }
+      }
+    },
+    "keyword-placeholder" : {
+      "comment" : "Placeholder for the keyword field in a server highlight rule.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Word or phrase"
           }
         }
       }

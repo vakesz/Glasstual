@@ -48,11 +48,15 @@ struct TranscriptHistoryRecoveryView: View {
 	let controller: LogController?
 
 	var body: some View {
-		let state = controller?.historyRecovery ?? LogControllerHistoricLogFile.sharedInstance.recovery
+		let state = controller?.historyRecovery ?? LogControllerHistoricLogFile.shared.recovery
 		let message = state.localMessage ?? controller?.historyStorageRecovery.localMessage
 		if message != nil || state.serverFailed || state.isRetrying {
 			HStack(alignment: .top) {
-				Image(systemName: "exclamationmark.triangle")
+				/* The glyph is the only thing that says this is a warning, so it
+				 is tinted like one and named for a reader who cannot see it. */
+				Image(systemName: "exclamationmark.triangle.fill")
+					.foregroundStyle(.orange)
+					.accessibilityLabel(String(localized: .TranscriptHistory.warningAccessibility))
 				VStack(alignment: .leading, spacing: 4) {
 					Text(state
 						.serverFailed && message == nil ?
@@ -74,7 +78,7 @@ struct TranscriptHistoryRecoveryView: View {
 						} else {
 							state.isRetrying = true
 							Task {
-								_ = await LogControllerHistoricLogFile.sharedInstance.retryLoading()
+								_ = await LogControllerHistoricLogFile.shared.retryLoading()
 								state.isRetrying = false
 							}
 						}

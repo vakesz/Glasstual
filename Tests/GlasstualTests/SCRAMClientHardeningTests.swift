@@ -151,10 +151,20 @@ struct IRCClientSCRAMMutualAuthenticationTests {
 		try client.handleCapabilityOrAuthenticationRequest(#require(Message(line: line, on: client)))
 	}
 
-	private func derivingClient() async throws -> (GLTTestClient, AsyncStream<Void>.Continuation) {
-		let client = GLTTestClient(
+	/// Drives the authentication numeric handler the way `receiveNumericReply`
+	/// routes to it.
+	private func handleAuthentication(_ message: Message, on client: IRCClient) throws {
+		let numeric = try #require(IRCNumeric(rawValue: message.commandNumeric))
+
+		#expect(numeric.group == .authentication)
+
+		client.handleAuthenticationTrackingNumeric(numeric, message: message, shouldPrint: false)
+	}
+
+	private func derivingClient() async throws -> (TestClient, AsyncStream<Void>.Continuation) {
+		let client = TestClient(
 			configDictionary: ["nickname": "user"], nicknamePassword: "pencil",
-			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+			fixture: ClientEnvironmentFixture(preferences: ClientPreferences())
 		)
 		client.socket = Connection(config: IRCConnectionConfig(), onClient: client)
 		client.isConnected = true
@@ -199,7 +209,7 @@ struct IRCClientSCRAMMutualAuthenticationTests {
 		try receive("AUTHENTICATE \(verified)", on: client)
 		#expect(client.saslScramClient?.state == .authenticated)
 		let result = try #require(Message(line: ":server 903 user :Authenticated", on: client))
-		#expect(client.handleTrackingNumeric(result.commandNumeric, message: result, shouldPrint: false))
+		try handleAuthentication(result, on: client)
 		#expect(client.isCapabilityEnabled(.isIdentifiedWithSASL))
 	}
 
@@ -214,7 +224,7 @@ struct IRCClientSCRAMMutualAuthenticationTests {
 		case .retry: #expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
 		case .failure:
 			let message = try #require(Message(line: ":server 902 user :Locked", on: client))
-			#expect(client.handleTrackingNumeric(message.commandNumeric, message: message, shouldPrint: false))
+			try handleAuthentication(message, on: client)
 		case .abort: try receive("AUTHENTICATE !invalid!", on: client)
 		case .disconnect: client.disconnect()
 		case .termination: client.isTerminating = true
@@ -276,8 +286,8 @@ struct IRCClientSCRAMMutualAuthenticationTests {
 		#expect(client.sentLines.compactMap { $0 as? String } == sent)
 	}
 
-	private func client(mechanism: String?, scram: SCRAMClient?) -> GLTTestClient {
-		let client = GLTTestClient()
+	private func client(mechanism: String?, scram: SCRAMClient?) -> TestClient {
+		let client = TestClient()
 		client.saslMechanism = mechanism
 		client.saslScramClient = scram
 		return client

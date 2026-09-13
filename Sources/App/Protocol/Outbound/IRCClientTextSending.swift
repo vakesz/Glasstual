@@ -114,15 +114,15 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	internal func dispatchMessageCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
+	internal func dispatchMessageCommand(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		let silentlyConnecting = isPerformingConnectCommands && config.runConnectCommandsSilently
 		guard let invocation = OutboundMessageInvocation(
 			command: parsed.localCommand,
 			silentlyConnecting: silentlyConnecting
-		) else { return false }
+		) else { return }
 		guard isLoggedIn else {
 			printDebugInformation(toConsole: IRCTransportStrings.notConnected)
-			return true
+			return
 		}
 
 		var cursor = parsed.arguments
@@ -130,7 +130,7 @@ public extension IRCClient {
 		if invocation.isOperatorMessage {
 			guard let prefix = supportInfo.statusMessagePrefix(forModeSymbol: "o") else {
 				printDebugInformation(IRCTransportStrings.operatorMessageUnsupported)
-				return true
+				return
 			}
 			operatorPrefix = prefix
 		} else {
@@ -143,12 +143,12 @@ public extension IRCClient {
 		{
 			guard targetChannel.isUtility == false else {
 				printDebugInformation(IRCCommandStrings.commandUnavailableInWindow)
-				return true
+				return
 			}
 			if targetChannel.isDirectChat {
 				// An empty action still has to carry a body onto the wire.
 				sendDirectChatText(Self.actionBody(cursor.attributedRest), as: .privmsgAction, to: targetChannel)
-				return true
+				return
 			}
 			targetName = targetChannel.name
 		} else if invocation.isOperatorMessage,
@@ -160,21 +160,21 @@ public extension IRCClient {
 		} else {
 			targetName = cursor.next()
 		}
-		guard requireArguments(targetName, for: parsed.command) else { return true }
+		guard requireArguments(targetName, for: parsed.command) else { return }
 
 		let body = cursor.attributedRest
 		if body.length == 0, invocation.outbound.lineType != .action {
-			return true
+			return
 		}
 		let arguments = Self.actionBody(body)
 
 		var destinations = targetName.components(separatedBy: ",")
-		var destinationToSelect: IRCChannel?
+		var destinationToSelect: Channel?
 		if invocation.isSecretMessage == false, silentlyConnecting == false,
 		   operatorPrefix == nil,
 		   supportInfo.groupsMultipleTargets(forCommand: invocation.outbound.wireCommand)
 		{
-			let groupedChannels = destinations.compactMap { destinationName -> IRCChannel? in
+			let groupedChannels = destinations.compactMap { destinationName -> Channel? in
 				guard let channel = self.findChannel(destinationName), channel.isChannel, channel.isActive else {
 					return nil
 				}
@@ -204,11 +204,10 @@ public extension IRCClient {
 			}
 		}
 		selectCommandDestination(destinationToSelect)
-		return true
 	}
 
 	@MainActor
-	func inputText(_ input: Any, destination: IRCTreeItem) {
+	func inputText(_ input: Any, destination: TreeItem) {
 		inputText(input, as: .privmsg, destination: destination)
 	}
 
@@ -219,7 +218,7 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	func inputText(_ input: Any, as command: IRCRemoteCommand, destination: IRCTreeItem) {
+	func inputText(_ input: Any, as command: IRCRemoteCommand, destination: TreeItem) {
 		guard isTerminating == false, let text = attributedInput(input), text.length > 0 else { return }
 		guard OutboundTextCommand(command) != nil else {
 			assertionFailure("Unsupported outbound text command")
@@ -245,7 +244,7 @@ public extension IRCClient {
 				continue
 			}
 
-			guard let channel = (destination as AnyObject) as? IRCChannel else {
+			guard let channel = (destination as AnyObject) as? Channel else {
 				assertionFailure("Non-client IRC tree destinations must be channels")
 				continue
 			}
@@ -262,7 +261,7 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, to channel: IRCChannel) {
+	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, to channel: Channel) {
 		guard text.length > 0 else { return }
 		guard channel.isUtility == false else {
 			printDebugInformation(IRCTransportStrings.messagesUnavailableInWindow, in: channel)
@@ -292,7 +291,7 @@ public extension IRCClient {
 				replyIdentifier = nil
 				nextLineReplyToMessageIdentifier = lineReplyIdentifier
 
-				let redactedMessage = IRCClient.redactedServiceMessage(message, sentTo: channel.name)
+				let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: channel.name)
 				let deliveryLabel = printLocallyIfNeeded(
 					redactedMessage,
 					channel: channel,
@@ -322,7 +321,7 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, toChannels channels: [IRCChannel]) {
+	func sendText(_ text: NSAttributedString, as command: IRCRemoteCommand, toChannels channels: [Channel]) {
 		guard text.length > 0, channels.isEmpty == false, let outbound = OutboundTextCommand(command) else { return }
 		/* Grouping needs the server's word for it: without an advertised limit
 		 above one, every channel gets its own line. A query is never grouped
@@ -330,7 +329,7 @@ public extension IRCClient {
 		 the user reads is per-conversation. */
 		let groupsTargets = supportInfo.groupsMultipleTargets(forCommand: outbound.wireCommand)
 		let targetLimit = supportInfo.maximumTargets(forCommand: outbound.wireCommand)
-		var groupedChannels: [IRCChannel] = []
+		var groupedChannels: [Channel] = []
 		for channel in channels {
 			if groupsTargets, channel.isChannel {
 				groupedChannels.append(channel)
@@ -339,7 +338,7 @@ public extension IRCClient {
 			}
 		}
 		guard groupedChannels.isEmpty == false else { return }
-		let targetGroups = IRCISupportInfo.chunkTargets(groupedChannels.map(\.name), limit: targetLimit)
+		let targetGroups = ISupportTokenParser.chunkTargets(groupedChannels.map(\.name), limit: targetLimit)
 		var groupOffset = 0
 		for targetGroup in targetGroups {
 			let groupChannels = Array(groupedChannels[groupOffset ..< groupOffset + targetGroup.count])
@@ -359,7 +358,7 @@ public extension IRCClient {
 					var deliveryLabel: String?
 					for (index, channel) in groupChannels.enumerated() {
 						let label = printLocallyIfNeeded(
-							Self.redactedServiceMessage(message, sentTo: channel.name),
+							WireRedaction.redactedServiceMessage(message, sentTo: channel.name),
 							channel: channel,
 							outbound: outbound,
 							registeringDelivery: index == 0
@@ -418,7 +417,7 @@ public extension IRCClient {
 
 	private func printLocallyIfNeeded(
 		_ message: String,
-		channel: IRCChannel,
+		channel: Channel,
 		outbound: OutboundTextCommand,
 		localCommand: String? = nil,
 		registeringDelivery: Bool = true
@@ -461,7 +460,7 @@ public extension IRCClient {
 		invocation: OutboundMessageInvocation,
 		localCommand: String,
 		silentlyConnecting: Bool
-	) -> IRCChannel? {
+	) -> Channel? {
 		let explicitPrefix = supportInfo.extractStatusMessagePrefix(fromChannelNamed: rawDestination)
 		let prefix = explicitPrefix.isEmpty ? operatorPrefix : explicitPrefix
 		let destinationName = explicitPrefix.isEmpty ? rawDestination : String(rawDestination.dropFirst())
@@ -480,7 +479,7 @@ public extension IRCClient {
 			on: self,
 			with: invocation.outbound.lineType
 		) {
-			let redactedMessage = Self.redactedServiceMessage(message, sentTo: wireTarget)
+			let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: wireTarget)
 			let deliveryLabel: String?
 			if silentlyConnecting {
 				printDebugInformation(
@@ -523,8 +522,8 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	private func selectCommandDestination(_ channel: IRCChannel?) {
+	private func selectCommandDestination(_ channel: Channel?) {
 		guard let channel else { return }
-		output?.selectItem(channel)
+		output?.select(channel)
 	}
 }

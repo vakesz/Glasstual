@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -27,6 +27,9 @@ public extension Notification.Name {
 public nonisolated struct ThemeSnapshot: Sendable, Equatable { // nonisolated: value
 	public let transcript: TranscriptTheme
 	public let isDarkAppearance: Bool
+	/// Whether the reader has asked the system for increased contrast, which
+	/// picks the stronger half of every colour role.
+	public let increasesContrast: Bool
 
 	public var timestampFormat: String {
 		transcript.timestampFormat
@@ -43,7 +46,8 @@ public nonisolated struct ThemeSnapshot: Sendable, Equatable { // nonisolated: v
 public nonisolated enum ThemeSnapshotStore { // nonisolated: value
 	private static let published = Mutex(ThemeSnapshot(
 		transcript: .lines,
-		isDarkAppearance: false
+		isDarkAppearance: false,
+		increasesContrast: false
 	))
 
 	/// The theme and appearance a render should use right now.
@@ -111,6 +115,16 @@ public final class ThemeController: NSObject {
 				self?.appearanceDidChange()
 			}
 		}
+
+		/* Increase Contrast and Differentiate Without Color both change what a
+		 line draws as, and neither is an appearance switch or a preference of
+		 ours; the workspace's own notification is what says they moved. */
+		notifications.observe(
+			NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
+			center: NSWorkspace.shared.notificationCenter
+		) { [weak self] _ in
+			self?.appearanceDidChange()
+		}
 	}
 
 	public func reload() {
@@ -166,11 +180,13 @@ public final class ThemeController: NSObject {
 		return try encoder.encode(theme)
 	}
 
-	/// Republishes the snapshot for the appearance now in effect, and says so.
+	/// Republishes the snapshot for the appearance and contrast now in effect,
+	/// and says so.
 	///
-	/// The preference path and the system's own switch both arrive here, and the
-	/// second of them is not news: a snapshot that already says what this one
-	/// would say leaves the transcript alone rather than redrawing it twice.
+	/// The preference path, the system's own switch and its accessibility
+	/// settings all arrive here, and the second of them is not news: a snapshot
+	/// that already says what this one would say leaves the transcript alone
+	/// rather than redrawing it twice.
 	public func appearanceDidChange() {
 		guard publishSnapshot() else {
 			return
@@ -180,7 +196,10 @@ public final class ThemeController: NSObject {
 	}
 
 	public func resolved(_ color: AdaptiveTranscriptColor) -> NSColor {
-		color.resolved(isDark: SharedApplication.sharedAppearance().properties.isDarkAppearance)
+		color.resolved(
+			isDark: SharedApplication.sharedAppearance().properties.isDarkAppearance,
+			increasesContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+		)
 	}
 
 	private func publish(_ newTheme: TranscriptTheme, persist: Bool) {
@@ -206,7 +225,8 @@ public final class ThemeController: NSObject {
 	private func publishSnapshot() -> Bool {
 		let snapshot = ThemeSnapshot(
 			transcript: theme,
-			isDarkAppearance: SharedApplication.sharedAppearance().properties.isDarkAppearance
+			isDarkAppearance: SharedApplication.sharedAppearance().properties.isDarkAppearance,
+			increasesContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
 		)
 
 		return ThemeSnapshotStore.publish(snapshot)

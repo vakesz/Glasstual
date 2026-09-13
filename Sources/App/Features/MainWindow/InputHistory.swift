@@ -128,7 +128,7 @@ public final class InputHistory: NSObject {
 		super.init()
 	}
 
-	public func destroy(_ treeItem: IRCTreeItem) {
+	public func destroy(_ treeItem: TreeItem) {
 		guard Preferences.Input.historyIsChannelSpecific.value else {
 			return
 		}
@@ -147,7 +147,7 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	public func moveFocus(to treeItem: IRCTreeItem) {
+	public func moveFocus(to treeItem: TreeItem) {
 		guard Preferences.Input.historyIsChannelSpecific.value,
 		      let textView = window?.inputTextField
 		else {

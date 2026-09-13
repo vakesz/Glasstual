@@ -58,4 +58,61 @@ struct IRCStringCatalogTests {
 				== "This server does not support changing the real name (setname)"
 		)
 	}
+
+	/** Every one of these used to read "1 characters", "1 users left" or
+	 "1 seconds": the count was interpolated into a fixed English plural, so no
+	 translation could agree with its own grammar either. */
+	@Test("Every counted console line reads its singular and its plural")
+	func countedConsoleLinesPluralizeTheirCounts() {
+		#expect(
+			IRCConnectionStrings.delayedAutoConnect(seconds: 1) == "Delaying auto connect for 1 second"
+		)
+		#expect(
+			IRCConnectionStrings.delayedAutoConnect(seconds: 30) == "Delaying auto connect for 30 seconds"
+		)
+
+		#expect(
+			IRCCommandStrings.topicTooLong(networkName: "Libera.Chat", maximumLength: 1)
+				.contains("which is 1 character.")
+		)
+		#expect(
+			IRCCommandStrings.kickMessageTooLong(networkName: "Libera.Chat", maximumLength: 1)
+				.contains("which is 1 character.")
+		)
+		#expect(
+			IRCCommandStrings.awayMessageTooLong(networkName: "Libera.Chat", maximumLength: 300)
+				.contains("which is 300 characters.")
+		)
+
+		#expect(
+			IRCISupportStrings.channelNameTooLong(channelName: "#swift", maximumLength: 1)
+				.hasSuffix("channel names of at most 1 character.")
+		)
+		#expect(
+			IRCISupportStrings.channelLimitExceeded(channelName: "#swift", limit: 1, prefix: "#")
+				.contains("the limit of 1 channel with")
+		)
+		#expect(
+			IRCISupportStrings.presenceListIsFull(droppedCount: 2, ceiling: 1)
+				.hasSuffix("keeps at most 1 presence entry.")
+		)
+
+		#expect(
+			IRCInboundStrings.History.netsplit(
+				firstServer: "irc.hub",
+				secondServer: "irc.leaf",
+				userCount: 1,
+				nicknames: "alice"
+			).contains(": 1 user left (")
+		)
+		#expect(
+			IRCInboundStrings.History.netjoin(
+				firstServer: "irc.hub",
+				secondServer: "irc.leaf",
+				userCount: 1,
+				nicknames: "alice"
+			).contains(": 1 user rejoined (")
+		)
+		#expect(IRCInboundStrings.History.abbreviatedNicknames("alice", remaining: 1) == "alice, … and 1 more")
+	}
 }

@@ -9,7 +9,7 @@ struct ChannelSpotlightApplicationScene: Scene {
 	let scenes: ApplicationScenes
 
 	var body: some Scene {
-		Window(ChannelSpotlightStrings.accessibilityTitle, id: ApplicationSceneID.channelSpotlight) {
+		Window(ChannelSpotlightStrings.windowTitle, id: ApplicationSceneID.channelSpotlight) {
 			ChannelSpotlightSceneRoot(scenes: scenes)
 		}
 		.windowResizability(.contentSize)

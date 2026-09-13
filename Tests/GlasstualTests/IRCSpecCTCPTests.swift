@@ -64,25 +64,25 @@ nonisolated struct IRCSpecCTCPSplitCase: CustomTestStringConvertible { // noniso
 struct IRCSpecCTCPTests {
 	private static let delimiter = "\u{01}"
 
-	private func client(replyingToRequests: Bool = true) -> GLTTestClient {
+	private func client(replyingToRequests: Bool = true) -> TestClient {
 		var preferences = ClientPreferences()
 
 		preferences.replyToCTCPRequests = replyingToRequests
 
-		return GLTTestClient(
+		return TestClient(
 			configDictionary: ["nickname": "me", "username": "me", "realName": "Me Myself"],
 			nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: preferences)
+			fixture: ClientEnvironmentFixture(preferences: preferences)
 		)
 	}
 
-	private func deliver(_ line: String, on client: GLTTestClient) throws {
+	private func deliver(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 
 		client.receivePrivmsgAndNotice(message)
 	}
 
-	private func sentLines(of client: GLTTestClient) -> [String] {
+	private func sentLines(of client: TestClient) -> [String] {
 		client.sentLines.compactMap { $0 as? String }
 	}
 

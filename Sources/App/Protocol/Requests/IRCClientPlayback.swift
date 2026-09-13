@@ -54,7 +54,7 @@ enum PlaybackRequestPolicy {
 }
 
 extension IRCClient {
-	func clearPlayback(for channel: IRCChannel) {
+	func clearPlayback(for channel: Channel) {
 		guard isCapabilityEnabled(.playback) else { return }
 		guard channel.isPrivateMessage, channel.isPrivateMessageForZNCUser == false else { return }
 

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -41,37 +41,34 @@ import GlasstualPluginKit
 
 @MainActor
 extension IRCClient {
-	func handleChannelNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) -> Bool {
+	func handleChannelNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		switch numeric {
-		case IRCNumeric.channelmodeis.rawValue: handleChannelModeNumeric(message)
-		case IRCNumeric.topic.rawValue: handleTopicNumeric(message)
-		case IRCNumeric.topicwhotime.rawValue: handleTopicMetadataNumeric(message)
-		case IRCNumeric.creationtime.rawValue: break
-		case IRCNumeric.inviting.rawValue: handleInvitingNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.ison.rawValue: handleISONNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.whoreply.rawValue: handleWHONumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.whospcrpl.rawValue: handleWHOXNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.endofwho.rawValue:
+		case .channelmodeis: handleChannelModeNumeric(message)
+		case .topic: handleTopicNumeric(message)
+		case .topicwhotime: handleTopicMetadataNumeric(message)
+		case .creationtime: break
+		case .inviting: handleInvitingNumeric(message, shouldPrint: shouldPrint)
+		case .ison: handleISONNumeric(message, shouldPrint: shouldPrint)
+		case .whoreply: handleWHONumeric(message, shouldPrint: shouldPrint)
+		case .whospcrpl: handleWHOXNumeric(message, shouldPrint: shouldPrint)
+		case .endofwho:
 			let visible = requestedCommands.visibleWhoRequest
 			requestedCommands.recordWhoRequestClosed()
 			if visible, shouldPrint {
 				printReplyToHiddenCommandResponsesQuery(message)
 			}
-		case IRCNumeric.namereply.rawValue: handleNamesNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.endofnames.rawValue: handleEndOfNamesNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.liststart.rawValue:
+		case .namereply: handleNamesNumeric(message, shouldPrint: shouldPrint)
+		case .endofnames: handleEndOfNamesNumeric(message, shouldPrint: shouldPrint)
+		case .liststart:
 			channelListSession()?.receiveListStart()
-		case IRCNumeric.list.rawValue: handleListNumeric(message)
-		case IRCNumeric.listend.rawValue: channelListSession()?.finishRefresh()
-		case IRCNumeric.banlist.rawValue, IRCNumeric.invitelist.rawValue, IRCNumeric.exceptlist.rawValue,
-		     IRCNumeric.quietlist.rawValue:
+		case .list: handleListNumeric(message)
+		case .listend: channelListSession()?.finishRefresh()
+		case .banlist, .invitelist, .exceptlist, .quietlist:
 			handleModeListNumeric(numeric, message: message, shouldPrint: shouldPrint)
-		case IRCNumeric.endofbanlist.rawValue, IRCNumeric.endofinvitelist.rawValue, IRCNumeric.endofexceptlist.rawValue,
-		     IRCNumeric.endofquietlist.rawValue:
+		case .endofbanlist, .endofinvitelist, .endofexceptlist, .endofquietlist:
 			handleEndOfModeListNumeric(numeric, message: message, shouldPrint: shouldPrint)
-		default: return false
+		default: break
 		}
-		return true
 	}
 
 	private func handleChannelModeNumeric(_ message: Message) {
@@ -115,7 +112,7 @@ extension IRCClient {
 		print(
 			IRCInboundStrings.ChannelEvent.topicSet(
 				by: setter,
-				date: date.flatMap { formatDateLongStyle($0, true) } ?? ""
+				date: date.flatMap { formatDate($0, .long, .long, true) } ?? ""
 			),
 			by: nil,
 			in: channel,
@@ -187,7 +184,7 @@ extension IRCClient {
 
 	private func handleWHOXNumeric(_ message: Message, shouldPrint: Bool) {
 		guard message.params.count >= 9 else { return }
-		guard message.params[1] == IRCServerQuirks.whoxResponseToken, !requestedCommands.visibleWhoRequest else {
+		guard message.params[1] == IRCServerQuirks.whoxToken, !requestedCommands.visibleWhoRequest else {
 			if shouldPrint {
 				printReplyToHiddenCommandResponsesQuery(message)
 			}
@@ -215,7 +212,7 @@ extension IRCClient {
 		}
 	}
 
-	private func addName(_ rawName: String, to channel: IRCChannel) {
+	private func addName(_ rawName: String, to channel: Channel) {
 		var modes = ""
 		var nameStart = rawName.startIndex
 		while nameStart < rawName.endIndex,
@@ -265,7 +262,7 @@ extension IRCClient {
 		sendInitialWhoRequest(to: channel)
 		if channel.numberOfMembers == 1, !isBrokenIRCdKnownAsTwitch {
 			if let defaultModes = channel.config.defaultModes, !defaultModes.isEmpty {
-				sendModes(defaultModes, withParametersString: nil, in: channel)
+				sendModes(defaultModes, withParametersString: nil, inChannelNamed: channel.name)
 			}
 			if let defaultTopic = channel.config.defaultTopic, !defaultTopic.isEmpty {
 				sendTopic(to: defaultTopic, in: channel)
@@ -283,14 +280,13 @@ extension IRCClient {
 		)
 	}
 
-	private func handleModeListNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
+	private func handleModeListNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		guard message.params.count > 2 else { return }
 		/* RPL_QUIETLIST (728) writes the mode letter between the channel and the
-		 mask, and nothing else does. Counting parameters to find it only worked
-		 for the six-parameter shape: a 728 without the setter and timestamp read
-		 the mode letter as the mask, and one carrying an extra field slid past
-		 it. The letter itself is what says the field is there. */
-		let hasModeLetterField = numeric == IRCNumeric.quietlist.rawValue &&
+		 mask, and nothing else does. The letter itself is what says the field is
+		 there: counting parameters misreads a 728 that omits the setter and
+		 timestamp, and one that carries an extra field. */
+		let hasModeLetterField = numeric == .quietlist &&
 			message.params.count > 3 && (message.params[2] as NSString).isModeSymbol
 		let offset = hasModeLetterField ? 1 : 0
 		let mask = message.params[2 + offset]
@@ -317,15 +313,15 @@ extension IRCClient {
 			channelName: channelName,
 			mask: mask,
 			setBy: author,
-			date: date.flatMap { formatDateLongStyle($0, true) }
+			date: date.flatMap { formatDate($0, .long, .long, true) }
 		)
 		print(text, by: nil, in: nil, as: .debug, command: message.command, receivedAt: message.receivedAt)
 	}
 
-	private func handleEndOfModeListNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
+	private func handleEndOfModeListNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		/* RPL_ENDOFQUIETLIST writes the mode letter between the channel and the
 		 explanatory text, the way its RPL_QUIETLIST siblings do. */
-		let hasModeLetterField = numeric == IRCNumeric.endofquietlist.rawValue &&
+		let hasModeLetterField = numeric == .endofquietlist &&
 			message.params.count > 3 && (message.params[2] as NSString).isModeSymbol
 		let took = message.params.count > 1
 			? output?.accessListFinished(
@@ -347,7 +343,7 @@ extension IRCClient {
 	 letter is read from the same place the window read it rather than assumed.
 	 An unadvertised list has no letter, and an entry for one belongs to no
 	 window. */
-	private func accessListModeSymbol(forNumeric numeric: UInt) -> String {
+	private func accessListModeSymbol(forNumeric numeric: IRCNumeric) -> String {
 		supportInfo.modeSymbol(forList: IRCChannelAccessListKind(numeric: numeric).supportListType) ?? ""
 	}
 }

@@ -26,14 +26,6 @@ nonisolated enum HistoricLogFetchOutcome: Sendable { // nonisolated: value
 	case page([HistoricLogEntry])
 	case failed(HistoricLogFetchFailure)
 	case cancelled
-	/// The original array API deliberately collapses errors; production reads the case.
-	var entries: [HistoricLogEntry] {
-		if case let .page(entries) = self {
-			entries
-		} else {
-			[]
-		}
-	}
 }
 
 nonisolated enum HistoricLogStoreOperation: Sendable { // nonisolated: value

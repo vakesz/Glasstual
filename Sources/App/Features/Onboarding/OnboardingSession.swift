@@ -23,6 +23,27 @@ private let onboardingLogger = Logger(
 @Observable
 public final class OnboardingSession {
 	let model: OnboardingModel
+
+	/// Shown on the summary step while the choices are being applied and the
+	/// first connection created, so Finish is not a window that just vanishes.
+	private(set) var isCompleting = false
+
+	/// The one failure onboarding cannot show beside a field: the application
+	/// was not ready to create the connection. Presented as an alert, and
+	/// cleared when the person dismisses it so Finish can be tried again.
+	var completionFailure: String?
+
+	/// Drives the alert the failure is shown in; dismissing it clears the
+	/// failure so Finish can be pressed again.
+	var isCompletionFailurePresented: Bool {
+		get { completionFailure != nil }
+		set {
+			if newValue == false {
+				completionFailure = nil
+			}
+		}
+	}
+
 	private var finished = false
 	private let createConnection: (ClientConfig, Bool) -> Bool
 	private let applySettings: (OnboardingModel) -> Void
@@ -65,85 +86,62 @@ public final class OnboardingSession {
 		self.markCompleted = markCompleted
 	}
 
-	/// Advances one step and applies the collected settings after the last step.
-	/// Returns `true` when the scene should close.
-	func continueFlow() -> Bool {
-		guard finished == false else { return true }
-		if model.continueFlow() {
-			return finish()
-		}
-		return false
-	}
+	/** Applies what the accepted steps chose and creates the first connection.
 
-	func moveBack() {
-		model.moveBack()
-	}
-
-	func skipRemainingSteps() -> Bool {
-		guard finished == false else { return true }
-		guard model.skipRemainingSteps() else { return false }
-		return finish()
-	}
-
-	/** The title-bar close button.
-
-	 Closing the window is the same decision as pressing Cancel — the user is
-	 done with onboarding — so it persists what Cancel persists. Treating it as
-	 "nothing happened" is what made onboarding come back at every launch after
-	 the user had closed it. */
-	func windowDidClose() {
-		_ = cancel()
-	}
-
-	/** Cancel retains previously accepted steps, not an unfinished network draft.
-
-	 Closing onboarding is an answer, so it is recorded even when no step was
-	 ever accepted. Returning early on an unaccepted identity left the window
-	 re-presenting itself at every launch, with no way to stop it. */
-	func cancel() -> Bool {
+	 Returns `true` when the window should close. A connection that could not be
+	 created leaves onboarding open and unmarked, so Finish can be pressed
+	 again once the application has finished starting up. */
+	func finish() async -> Bool {
 		guard finished == false else { return true }
 
-		guard model.acceptedIdentity != nil else {
-			return dismissWithoutSetup()
-		}
+		isCompleting = true
+		defer { isCompleting = false }
 
-		model.settings.clientConfig = nil
-		model.settings.channelsToJoin = []
-		return finish()
-	}
+		/* The notifications step raises the system permission prompt in a task
+		 of its own; closing the window while it is still up would leave the
+		 answer landing on a dismissed scene. */
+		await model.completePendingWork()
 
-	/// "Set Up Later": nothing is applied, and onboarding does not come back.
-	func setUpLater() -> Bool {
+		/* The title-bar close button still works while this runs, and closing
+		 the window is a dismissal that answers onboarding on its own. */
 		guard finished == false else { return true }
 
-		return dismissWithoutSetup()
-	}
-
-	private func dismissWithoutSetup() -> Bool {
-		markCompleted()
-		finished = true
-		return true
-	}
-
-	private func finish() -> Bool {
-		guard finished == false else { return true }
-		guard let identity = model.acceptedIdentity else { return false }
-		if var config = model.settings.clientConfig {
-			config.nickname = identity.nickname
-			config.realName = identity.realName
-			config.alternateNicknames = identity.alternateNickname.isEmpty ? [] : [identity.alternateNickname]
-			config.autoConnect = model.settings.connectWhenFinished
-			config.channelList = model.settings.channelsToJoin.map(ChannelConfig.seed(withName:))
+		if let config = configuredClient() {
 			guard createConnection(config, model.settings.connectWhenFinished) else {
-				model.validationMessage = OnboardingStrings.Window.connectionUnavailable
-				model.isValidationPresented = true
+				completionFailure = OnboardingStrings.Window.connectionUnavailable
 				return false
 			}
 		}
+
 		applySettings(model)
 		markCompleted()
 		finished = true
 		return true
+	}
+
+	/** "Set Up Later", Escape, and the title-bar close button.
+
+	 Nothing the person typed is applied, but the fact that they answered is
+	 recorded: leaving onboarding unmarked is what made the window re-present
+	 itself at every launch with no way to stop it. */
+	func setUpLater() {
+		guard finished == false else { return }
+
+		markCompleted()
+		finished = true
+	}
+
+	private func configuredClient() -> ClientConfig? {
+		guard let identity = model.acceptedIdentity, var config = model.settings.clientConfig else {
+			return nil
+		}
+
+		config.nickname = identity.nickname
+		config.realName = identity.realName
+		config.alternateNicknames = identity.alternateNickname.isEmpty ? [] : [identity.alternateNickname]
+		config.autoConnect = model.settings.connectWhenFinished
+		config.channelList = model.settings.channelsToJoin.map(ChannelConfig.seed(withName:))
+		return config
 	}
 
 	private static func applyAcceptedSettings(_ model: OnboardingModel) {
@@ -153,8 +151,8 @@ public final class OnboardingSession {
 		}
 		if let appearance = model.acceptedAppearance {
 			SharedApplication.sharedThemeController().apply(appearance.theme)
-			if Preferences.Appearance.preferredAppearance.value != appearance.appearance {
-				Preferences.Appearance.preferredAppearance.value = appearance.appearance
+			if Preferences.Appearance.preferredAppearance.value != appearance.preferredAppearance {
+				Preferences.Appearance.preferredAppearance.value = appearance.preferredAppearance
 				TextualPreferences.performReloadAction(.appearance)
 			}
 		}

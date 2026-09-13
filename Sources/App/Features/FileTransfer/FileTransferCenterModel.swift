@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -11,9 +11,35 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+import Foundation
+import GlasstualPluginKit
 import Observation
+
+/// Which transfer directions the window is showing.
+public enum FileTransferSelection: String, CaseIterable, Identifiable, Sendable {
+	case all
+	case sending
+	case receiving
+
+	public var id: String {
+		rawValue
+	}
+
+	public func shownTransfers<Transfer>(
+		in transfers: [Transfer],
+		isSender: (Transfer) -> Bool
+	) -> [Transfer] {
+		switch self {
+		case .all:
+			transfers
+		case .sending:
+			transfers.filter(isSender)
+		case .receiving:
+			transfers.filter { isSender($0) == false }
+		}
+	}
+}
 
 enum FileTransferAction: Sendable {
 	case start
@@ -45,31 +71,21 @@ final class FileTransferCenterModel {
 	 way Open, Reveal and Quick Look take theirs. */
 	@ObservationIgnored private var shareAccessLeases: [FileTransferAccessLease] = []
 
-	/** Which transfers have a readable local file, as of one presentation.
-
-	 Answering costs a security-scope round trip and a `stat` per row, and a
-	 single row menu asks four separate questions of it: whether Open, Reveal
-	 and Quick Look apply, and what Share would hand over. */
-	@ObservationIgnored private var localFileCache: (revision: Int, files: [String: FileTransferLocalFile?]) = (-1, [:])
-
 	var isChoosingDestination = false
 	var filter = FileTransferSelection.all {
 		didSet { retainVisibleSelection() }
 	}
 
-	private var presentationRevision = 0
-
 	var visibleTransfers: [FileTransferController] {
-		_ = presentationRevision
-		return filter.shownTransfers(in: transfers, isSender: \.isSender)
+		filter.shownTransfers(in: transfers, isSender: \.isSender)
 	}
 
 	var stoppedTransfers: [FileTransferController] {
-		transfers.filter { Self.stoppedStatuses.contains($0.transferStatus) }
+		transfers.filter { $0.transferStatus.isRunning == false }
 	}
 
 	var activeTransfers: [FileTransferController] {
-		transfers.filter { [.receiving, .sending].contains($0.transferStatus) }
+		transfers.filter(\.transferStatus.isActive)
 	}
 
 	/** How many downloads are actually in flight or still waiting to start.
@@ -79,7 +95,7 @@ final class FileTransferCenterModel {
 	 them, and counting them spent the limit permanently — a session that had
 	 finished a hundred and twenty downloads refused the next offer outright. */
 	var receiverCount: Int {
-		transfers.count { $0.isSender == false && Self.activeOrPendingStatuses.contains($0.transferStatus) }
+		transfers.count { $0.isSender == false && $0.transferStatus.isRunning }
 	}
 
 	/// How many bytes the downloads that are running or waiting still have left
@@ -87,7 +103,7 @@ final class FileTransferCenterModel {
 	var pendingReceiveByteCount: UInt64 {
 		transfers.reduce(into: UInt64(0)) { total, transfer in
 			guard transfer.isSender == false,
-			      Self.activeOrPendingStatuses.contains(transfer.transferStatus),
+			      transfer.transferStatus.isRunning,
 			      transfer.totalFilesize > transfer.processedFilesize
 			else { return }
 
@@ -101,7 +117,6 @@ final class FileTransferCenterModel {
 
 	func add(_ transfer: FileTransferController) {
 		transfers.insert(transfer, at: 0)
-		refreshPresentation()
 	}
 
 	func remove(_ removedTransfers: [FileTransferController]) {
@@ -109,7 +124,6 @@ final class FileTransferCenterModel {
 		transfers.removeAll { identifiers.contains($0.uniqueIdentifier) }
 		selection.subtract(identifiers)
 		selectionDidChange()
-		refreshPresentation()
 	}
 
 	func transfers(with identifiers: Set<String>) -> [FileTransferController] {
@@ -128,14 +142,30 @@ final class FileTransferCenterModel {
 		case .start:
 			return selected.contains(where: \.canStart)
 		case .stop:
-			return selected.contains { Self.activeOrPendingStatuses.contains($0.transferStatus) }
+			return selected.contains { $0.transferStatus.isRunning }
 		case .remove:
 			return true
 		case .open, .reveal:
-			return selected.contains { hasLocalFile($0) }
+			return selected.contains { localFile(of: $0) != nil }
 		case .preview:
-			return selected.allSatisfy { hasLocalFile($0) }
+			return selected.allSatisfy { localFile(of: $0) != nil }
 		}
+	}
+
+	/** What the button that starts `identifiers` should be called.
+
+	 An offer that has arrived and not been answered is accepted, not started,
+	 and a transfer that failed for a reason a retry can get past is tried
+	 again. A mixed selection has no one answer, so it keeps the generic verb. */
+	func startActionTitle(for identifiers: Set<String>? = nil) -> String {
+		let startable = transfers(with: identifiers ?? selection).filter(\.canStart)
+		if startable.isEmpty == false, startable.allSatisfy({ $0.transferStatus == .recoverableError }) {
+			return FileTransferStrings.retryTransfer
+		}
+		if startable.isEmpty == false, startable.allSatisfy({ $0.isSender == false && $0.transferStatus == .stopped }) {
+			return FileTransferStrings.acceptTransfer
+		}
+		return FileTransferStrings.startTransfer
 	}
 
 	func selectedFileURLs(for identifiers: Set<String>? = nil) -> [URL] {
@@ -181,58 +211,15 @@ final class FileTransferCenterModel {
 		previewSelection = items.first
 	}
 
-	func refreshPresentation() {
-		presentationRevision &+= 1
-	}
-
 	private func retainVisibleSelection() {
 		selection.formIntersection(Set(visibleTransfers.map(\.uniqueIdentifier)))
 	}
 
-	private static let stoppedStatuses: Set<FileTransferStatus> = [
-		.complete, .stopped, .fatalError, .recoverableError,
-	]
-
-	private static let activeOrPendingStatuses: Set<FileTransferStatus> = [
-		.initializing,
-		.connecting,
-		.receiving,
-		.isListeningAsSender,
-		.isListeningAsReceiver,
-		.sending,
-		.mappingListeningPort,
-		.waitingForLocalIPAddress,
-		.waitingForReceiverToAccept,
-		.waitingForResumeAccept,
-	]
-
-	private func hasLocalFile(_ transfer: FileTransferController) -> Bool {
-		localFile(of: transfer) != nil
-	}
-
-	/// The transfer's readable local file, answered once per presentation.
+	/// The transfer's local file, if there is one a menu item can act on.
 	///
-	/// Only the rows something asks about are looked up: the maintenance timer
-	/// refreshes the presentation once a second while a transfer is running,
-	/// and sweeping every row on each of those would cost far more than the
-	/// repetition this is here to remove.
+	/// A download that has not completed has nothing to open, and a file the
+	/// user moved or deleted since is no longer there to reveal.
 	private func localFile(of transfer: FileTransferController) -> FileTransferLocalFile? {
-		if localFileCache.revision != presentationRevision {
-			localFileCache = (presentationRevision, [:])
-		}
-
-		let identifier = transfer.uniqueIdentifier
-
-		if let answered = localFileCache.files[identifier] {
-			return answered
-		}
-
-		let file = Self.readableLocalFile(of: transfer)
-		localFileCache.files[identifier] = file
-		return file
-	}
-
-	private static func readableLocalFile(of transfer: FileTransferController) -> FileTransferLocalFile? {
 		if transfer.isSender == false, transfer.transferStatus != .complete {
 			return nil
 		}
@@ -279,7 +266,7 @@ struct FileTransferRowPresentation {
 			status = FileTransferStrings.unacknowledgedCompletion(peerNickname: transfer.peerNickname)
 		} else if [.fatalError, .recoverableError].contains(transfer.transferStatus) {
 			status = transfer.errorMessageDescription ?? ""
-		} else if [.sending, .receiving].contains(transfer.transferStatus) {
+		} else if transfer.transferStatus.isActive {
 			status = Self.activeStatus(for: transfer, processedSize: processedSize, totalSize: totalSize)
 		} else {
 			status = FileTransferStrings.status(
@@ -329,7 +316,11 @@ struct FileTransferRowPresentation {
 
 	private static func timeRemainingDescription(for interval: TimeInterval) -> String? {
 		guard interval > 0 else { return nil }
-		let units = NSCalendar.Unit([.day, .hour, .minute, .second]).rawValue
-		return humanReadableTimeInterval(interval, true, units) as String?
+
+		return PluginHost.humanReadableTimeInterval(
+			interval,
+			shortValue: true,
+			units: [.day, .hour, .minute, .second]
+		)
 	}
 }

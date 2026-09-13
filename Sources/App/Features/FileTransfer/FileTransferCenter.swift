@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -38,43 +38,20 @@
 
 import Foundation
 
-public enum FileTransferSelection: UInt, CaseIterable, Identifiable, Sendable {
-	case all
-	case sending
-	case receiving
-
-	public var id: UInt {
-		rawValue
-	}
-
-	public func shownTransfers<Transfer>(
-		in transfers: [Transfer],
-		isSender: (Transfer) -> Bool
-	) -> [Transfer] {
-		switch self {
-		case .all:
-			transfers
-		case .sending:
-			transfers.filter(isSender)
-		case .receiving:
-			transfers.filter { isSender($0) == false }
-		}
-	}
-}
-
 enum FileTransferConstants {
 	static let receiverHardLimit = 120
 	static let maintenanceInterval: Duration = .seconds(1)
 }
 
 @MainActor
-public final class FileTransferCenter: InternetAddressLookupDelegate {
+public final class FileTransferCenter {
 	let model = FileTransferCenterModel()
 
-	var ipAddressRequest: InternetAddressLookup?
 	var maintenanceTask: Task<Void, Never>?
 	var downloadDestinationURLPrivate: URL?
-	var ipAddressCompletionBlocks: [(String?) -> Void] = []
+	/// The lookup every transfer waiting on an address shares, so two concurrent
+	/// DCC offers ask the address service once between them.
+	var ipAddressLookup: Task<String?, Never>?
 	var cachedIPAddress: String?
 	var pendingDestinationTransferIDs: Set<String> = []
 	let workspace = FileTransferWorkspace()
@@ -90,10 +67,14 @@ public final class FileTransferCenter: InternetAddressLookupDelegate {
 		SharedApplication.sharedApplicationScenes().openFileTransfers()
 	}
 
+	func dismiss() {
+		SharedApplication.sharedApplicationScenes().closeFileTransfers()
+	}
+
 	isolated deinit {
 		notifications.cancelAll()
 		maintenanceTask?.cancel()
-		ipAddressRequest?.cancelLookup()
+		ipAddressLookup?.cancel()
 		downloadDestinationURLPrivate?.stopAccessingSecurityScopedResource()
 	}
 }

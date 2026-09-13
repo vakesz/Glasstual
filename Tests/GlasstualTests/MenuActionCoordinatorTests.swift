@@ -61,7 +61,7 @@ struct MenuActionCoordinatorTests {
 
 	@Test("Connection commands reject every stopping state", arguments: 0 ..< 32)
 	func serverConnectionActionsShareStateGuards(flags: Int) {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.isConnecting = flags & 1 != 0
 		client.isConnected = flags & 2 != 0
 		client.isQuitting = flags & 4 != 0
@@ -77,7 +77,7 @@ struct MenuActionCoordinatorTests {
 
 	@Test("Proxy bypass requires a proxy and all connection commands require a client")
 	func connectionCommandsRequireTheirTargets() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.proxyType = .none
 		#expect(MenuServerActionPolicy(client: client).canConnect)
 		#expect(MenuServerActionPolicy(client: client).canConnectWithoutProxy == false)
@@ -90,7 +90,7 @@ struct MenuActionCoordinatorTests {
 
 	@Test("Cancel reconnect is eligible only while a live client is waiting")
 	func cancelReconnectRequiresWaitingClient() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		#expect(MenuServerActionPolicy(client: client).canCancelReconnect == false)
 		client.reconnectTimer.start(3600, repeats: false)
 		defer { client.reconnectTimer.stop() }
@@ -109,7 +109,7 @@ struct MenuActionCoordinatorTests {
 	func connectionMenuPreservesVisibility(flags: Int) {
 		let controller = MenuController()
 		let coordinator = controller.actionCoordinator
-		let client = GLTTestClient()
+		let client = TestClient()
 		coordinator.pointedClient = client
 		client.isConnecting = flags & 1 != 0
 		client.isConnected = flags & 2 != 0
@@ -132,38 +132,36 @@ struct MenuActionCoordinatorTests {
 	func disconnectActionAndValidationAgree() {
 		let controller = MenuController()
 		let coordinator = controller.actionCoordinator
-		let client = GLTTestClient()
+		let client = TestClient()
 		coordinator.pointedClient = client
 		client.isConnecting = true
 		let item = NSMenuItem()
 		item.command = .disconnect
 
 		#expect(coordinator.validateServerCommand(item))
-		coordinator.performServerChannelAction(.disconnect, sender: item)
+		coordinator.disconnect(item)
 		#expect(client.isQuitting)
 		#expect(coordinator.validateServerCommand(item) == false)
 		#expect(item.isHidden == false)
 		let titleUpdateCount = client.recordedOutput.titleUpdates.count
-		coordinator.performServerChannelAction(.disconnect, sender: item)
+		coordinator.disconnect(item)
 		#expect(client.recordedOutput.titleUpdates.count == titleUpdateCount)
 	}
 
-	@Test("A channel-mode command decides whether the mode is set or removed")
-	func channelModeCommandsChooseTheModeChange() {
-		#expect(MenuChannelModePolicy.moderationMode(for: .channelModeModerated) == "+m")
-		#expect(MenuChannelModePolicy.moderationMode(for: .channelModeUnmoderated) == "-m")
-		#expect(MenuChannelModePolicy.moderationMode(for: nil) == "+m")
-		#expect(MenuChannelModePolicy.inviteMode(for: .channelModeInviteOnly) == "+i")
-		#expect(MenuChannelModePolicy.inviteMode(for: .channelModeAnyoneCanJoin) == "-i")
-		#expect(MenuChannelModePolicy.inviteMode(for: nil) == "+i")
+	@Test("Each appearance menu item names the appearance it selects")
+	func appearanceItemsNameOneAppearanceEach() {
+		#expect(MenuWindowPolicy.appearance(for: .appearanceSystem) == .inherited)
+		#expect(MenuWindowPolicy.appearance(for: .appearanceLight) == .light)
+		#expect(MenuWindowPolicy.appearance(for: .appearanceDark) == .dark)
+		#expect(MenuWindowPolicy.appearance(for: .about) == nil)
+		#expect(MenuWindowPolicy.appearance(for: nil) == nil)
 	}
 
-	@Test("The appearance toggle cycles away from whatever the system is showing")
-	func appearanceTogglePolicyPreservesLegacyCycle() {
-		#expect(MenuWindowPolicy.nextAppearance(current: .inherited, systemIsDark: false) == .dark)
-		#expect(MenuWindowPolicy.nextAppearance(current: .inherited, systemIsDark: true) == .light)
-		#expect(MenuWindowPolicy.nextAppearance(current: .light, systemIsDark: false) == .dark)
-		#expect(MenuWindowPolicy.nextAppearance(current: .dark, systemIsDark: false) == .light)
+	/// The name says a copy, not a truncated original: the connection used to
+	/// be called "Libera_".
+	@Test("A duplicated connection is named the way a duplicated file is")
+	func duplicateConnectionNamePreservesTheOriginal() {
+		#expect(MenuServerNamePolicy.duplicateName(of: "Libera") == "Libera copy")
 	}
 
 	/// The prefix names the defaults keys already on disk; changing it forgets

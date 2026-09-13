@@ -57,16 +57,12 @@ struct LogControllerHistoryLatchTests {
 	@Test("A history job dropped mid-flight still leaves the view able to reload",
 	      .timeLimit(.minutes(1)))
 	func droppedHistoryJobDoesNotLatchTheReload() async {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
 		let reload = Preferences.Logging.reloadScrollbackOnLaunch.value
-		Preferences.Logging.loadHistoryLazily.value = false
 		Preferences.Logging.reloadScrollbackOnLaunch.value = true
-		defer {
-			Preferences.Logging.loadHistoryLazily.value = lazy
-			Preferences.Logging.reloadScrollbackOnLaunch.value = reload
-		}
+		defer { Preferences.Logging.reloadScrollbackOnLaunch.value = reload }
 		let client = IRCClient(config: ClientConfig())
 		let controller = LogController(client: client, in: window())
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		let gate = FirstFetchGate()
 		controller.historyPageFetcher = { _ in await gate.fetch() }
@@ -91,11 +87,9 @@ struct LogControllerHistoryLatchTests {
 	 down: closing it would refuse every later reload for good. */
 	@Test("A reload with nothing to attribute the lines to does not latch the flag")
 	func reloadWithoutAnItemDoesNotLatchTheFlag() async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		var client: IRCClient? = IRCClient(config: ClientConfig())
 		let controller = try LogController(client: #require(client), in: window())
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .failed(.unavailable) }
 
@@ -157,13 +151,13 @@ struct LogControllerHistoryLatchTests {
 	/// has no channel to ask about, so it never offers the button.
 	@Test("Retry Server History is offered only while the view can ask again")
 	func serverHistoryRetryAvailability() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.enableCapability(.batch)
 		client.enableCapability(.serverTime)
 		client.enableCapability(.messageTags)
 		client.enableCapability(.chatHistory)
 		client.isLoggedIn = true
-		let channel = IRCChannel(config: ChannelConfig(channelName: "#retry"))
+		let channel = Channel(config: ChannelConfig(channelName: "#retry"))
 		channel.associatedClient = client
 		channel.activate()
 		let window = window()

@@ -16,8 +16,9 @@ struct PromptLocalizationTests {
 		try expectLocalizedCopy(PromptStrings.Action.confirmation, .Prompts.genericAcknowledgementButtonTitleOk, "OK")
 		try expectLocalizedCopy(PromptStrings.Action.no, .Prompts.no, "No")
 		try expectLocalizedCopy(PromptStrings.Action.yes, .Prompts.yes, "Yes")
-		try expectLocalizedCopy(PromptStrings.Deletion.confirmationTitle, .Prompts.doYouWantToDelete,
-		                        "Do you want to delete the selection?")
+		try expectLocalizedCopy(PromptStrings.Deletion.confirmationTitle(named: "#swift"),
+		                        .Prompts.doYouWantToDeleteNamed("#swift"),
+		                        "Do you want to delete “#swift”?")
 		let cases: [(PromptDeletionTarget, (LocalizedStringResource, String))] = [
 			(.channel, (.Prompts.thereIsNoUndoAndAll, "channel")),
 			(.query, (.Prompts.thereIsNoUndoAndAllDataRelated, "query")),
@@ -34,11 +35,11 @@ struct PromptLocalizationTests {
 		try expectLocalizedCopy(PromptStrings.ConnectionLink.title(
 			serverAddress: "irc.example.com", channelNames: "#swift", includesMultipleChannels: false
 		), .Prompts.youHaveClickedALink("irc.example.com", "#swift"),
-		"You have clicked a link that will connect you to “irc.example.com“ and join the channel #swift")
+		"You have clicked a link that will connect you to “irc.example.com” and join the channel #swift")
 		try expectLocalizedCopy(PromptStrings.ConnectionLink.title(
 			serverAddress: "irc.example.com", channelNames: "#swift, #macos", includesMultipleChannels: true
 		), .Prompts.youHaveClickedALinkThatWillConnect("irc.example.com", "#swift, #macos"),
-		"You have clicked a link that will connect you to “irc.example.com“ and join the channels: #swift, #macos")
+		"You have clicked a link that will connect you to “irc.example.com” and join the channels: #swift, #macos")
 	}
 
 	@Test("The transport security summary marks a deprecated cipher suite")
@@ -55,7 +56,7 @@ struct PromptLocalizationTests {
 		try expectLocalizedCopy(PromptStrings.TransportSecurity.certificateSummary(
 			policyName: "irc.example.com", cipherSummary: cipher
 		), .Prompts.encryptionWithADigitalCertificateKeepsInformation("irc.example.com", cipher), """
-		Encryption with a digital certificate keeps information private as it’s sent to or from the server “irc.example.com“
+		Encryption with a digital certificate keeps information private as it’s sent to or from the server “irc.example.com”
 
 		Information encrypted using: TLS 1.3 with the cipher suite: TLS_AES_256_GCM_SHA384
 		""")

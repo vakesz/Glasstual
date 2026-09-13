@@ -12,15 +12,17 @@ import Testing
  The real controller supplies the rendered line number and whether the line
  highlighted; nothing here renders, so both are stated by the test. */
 @MainActor
-private final class GLTCompletingPresentation: TreeItemPresentation {
+private final class CompletingPresentation: TreeItemPresentation {
 	private(set) var printedLines: [LogLine] = []
 	var isHighlight = false
 	var defersCompletions = false
 	var isDisplayed = true
 	private var completions: [@MainActor () -> Void] = []
 	private var renderedDate: Date?
+	/// Every date the unread divider was moved to, in order.
+	private(set) var markedDates: [Date] = []
 	weak var client: IRCClient?
-	weak var channel: IRCChannel?
+	weak var channel: Channel?
 
 	let presentationIdentifier = "join-burst-presentation"
 
@@ -58,13 +60,26 @@ private final class GLTCompletingPresentation: TreeItemPresentation {
 		renderedDate
 	}
 
+	/** The real controller answers both of these from every line it has been
+	 handed, rendered or not, so the stub does the same. */
+	func newestConversationLineDate() -> Date? {
+		printedLines.filter(\.lineType.isConversation).map(\.receivedAt).max()
+	}
+
+	func conversationLineCount(after date: Date) -> Int {
+		printedLines.count { $0.lineType.isConversation && $0.receivedAt > date }
+	}
+
 	func lastPrintedLine() -> LogLine? {
 		printedLines.last
 	}
 
 	nonisolated func setTopic(_: String?) {} // nonisolated: pure
 	func mark() {}
-	func mark(at _: Date) {}
+	func mark(at date: Date) {
+		markedDates.append(date)
+	}
+
 	func noteReaction(_: String, fromNickname _: String, toMessageIdentifier _: String) {}
 	func updateDeliveryState(
 		forLineNumber _: String,
@@ -96,8 +111,8 @@ struct IRCClientJoinBurstTests {
 		try body()
 	}
 
-	private func makeClient() -> GLTTestClient {
-		let client = GLTTestClient()
+	private func makeClient() -> TestClient {
+		let client = TestClient()
 		client.linePrintObserver = nil
 		client.enableCapability(.serverTime)
 		client.enableCapability(.messageTags)
@@ -109,20 +124,34 @@ struct IRCClientJoinBurstTests {
 	}
 
 	private func stamp(_ date: Date) -> String {
-		sharedISOStandardDateFormatter().string(from: date)
+		ISOStandardDateFormatter().string(from: date)
 	}
 
 	private func message(_ line: String, on client: IRCClient) throws -> Message {
 		try #require(Message(line: line, on: client))
 	}
 
+	/// A moment on a whole millisecond, which is all the wire stamps carry, so
+	/// a date this test writes out comes back from the server's copy unchanged.
+	private func whollyStampedNow() -> Date {
+		Date(timeIntervalSince1970: (Date().timeIntervalSince1970 * 1000).rounded() / 1000)
+	}
+
+	/// Feeds numeric replies through the handler the dispatch calls, which is
+	/// what prints the topic and mode lines a join is answered with.
+	private func receiveNumerics(_ lines: [String], on client: TestClient) throws {
+		for line in lines {
+			try client.receiveNumericReply(message(line, on: client))
+		}
+	}
+
 	/// Joins `#chat` as the local user at `joinedAt` and hands back the channel
 	/// with a view attached, exactly as the production JOIN path leaves it.
 	private func joinedChannel(
-		on client: GLTTestClient,
+		on client: TestClient,
 		at joinedAt: Date,
-		drawnInto presentation: GLTCompletingPresentation
-	) throws -> IRCChannel {
+		drawnInto presentation: CompletingPresentation
+	) throws -> Channel {
 		let join = try message("@time=\(stamp(joinedAt)) :mara!u@h JOIN #chat", on: client)
 
 		client.receiveJoin(join)
@@ -139,7 +168,7 @@ struct IRCClientJoinBurstTests {
 	func delayedPrintCannotRestoreClearedBadge() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			presentation.defersCompletions = true
 			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
 			try client.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :hello", on: client))
@@ -156,11 +185,11 @@ struct IRCClientJoinBurstTests {
 	func backgroundMessagesAndOwnEchoes() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
 			client.recordedOutput.selectedChannel = channel
 			client.recordedOutput.visibleItems = [channel]
-			client.recordedOutput.windowIsKey = false
+			client.recordedOutput.isKeyWindow = false
 			for line in [":mara!u@h PRIVMSG #chat :own", ":bob!u@h PRIVMSG #chat :hello",
 			             ":bob!u@h PRIVMSG #chat :\u{1}ACTION waves\u{1}"]
 			{
@@ -174,7 +203,7 @@ struct IRCClientJoinBurstTests {
 	func immediateLiveMessageIsUnread() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
 			try client.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :hello", on: client))
 			#expect(channel.treeUnreadCount == 1)
@@ -185,11 +214,11 @@ struct IRCClientJoinBurstTests {
 	func delayedPlaybackDoesNotCount() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
 			channel.activate(at: Date().addingTimeInterval(-60))
 			let replay = try message(":bob!u@h PRIVMSG #chat :old message", on: client)
-			replay.markAsHistoric()
+			replay.isHistoric = true
 			client.receivePrivmsgAndNotice(replay)
 			#expect(channel.treeUnreadCount == 0)
 		}
@@ -199,7 +228,7 @@ struct IRCClientJoinBurstTests {
 	func replayedLineInsideTheWindowIsNotUnread() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			let now = Date()
 			let channel = try joinedChannel(on: client, at: now, drawnInto: presentation)
 
@@ -212,11 +241,11 @@ struct IRCClientJoinBurstTests {
 				on: client
 			)
 
-			replayed.markAsHistoric()
+			replayed.isHistoric = true
 
 			#expect(client.lineArrivedAlreadySeen(replayed, in: channel))
 
-			replayed.markAsHistoric()
+			replayed.isHistoric = true
 			client.receivePrivmsgAndNotice(replayed)
 
 			#expect(presentation.printedLines.last?.messageBody == "did you see this")
@@ -232,7 +261,7 @@ struct IRCClientJoinBurstTests {
 		try withNotificationsSilenced {
 			let client = makeClient()
 			client.isConnectedToZNC = true
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			let now = Date()
 			/* A bouncer that replays the JOIN stamps it with when it happened,
 			 minutes ago; measured from that stamp the window would already be
@@ -247,11 +276,11 @@ struct IRCClientJoinBurstTests {
 				on: client
 			)
 
-			replayed.markAsHistoric()
+			replayed.isHistoric = true
 
 			#expect(client.lineArrivedAlreadySeen(replayed, in: channel))
 
-			replayed.markAsHistoric()
+			replayed.isHistoric = true
 			client.receivePrivmsgAndNotice(replayed)
 
 			#expect(presentation.printedLines.last?.messageBody == "while you were out")
@@ -263,7 +292,7 @@ struct IRCClientJoinBurstTests {
 	func replayedHighlightInsideTheWindowRaisesNoBadge() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			presentation.isHighlight = true
 			let now = Date()
 			let channel = try joinedChannel(on: client, at: now, drawnInto: presentation)
@@ -272,7 +301,7 @@ struct IRCClientJoinBurstTests {
 				on: client
 			)
 
-			replayed.markAsHistoric()
+			replayed.isHistoric = true
 			client.receivePrivmsgAndNotice(replayed)
 
 			#expect(presentation.printedLines.count == 1)
@@ -285,7 +314,7 @@ struct IRCClientJoinBurstTests {
 	func liveLineOutsideTheWindowIsUnread() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			let now = Date()
 			/* Joined twenty seconds ago: past the grace period, but not so far
 			 back that the JOIN reads as a replayed one measured from arrival. */
@@ -310,7 +339,7 @@ struct IRCClientJoinBurstTests {
 	func lineBehindTheReadMarkerIsNotUnread() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			let now = Date()
 			let channel = try joinedChannel(
 				on: client,
@@ -342,12 +371,12 @@ struct IRCClientJoinBurstTests {
 	func replayedLinesDoNotAdvanceTheReadMarker() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			let now = Date()
 			let channel = try joinedChannel(on: client, at: now, drawnInto: presentation)
 			/* Visible in the key window but not selected, which is the state that
 			 otherwise marks every printed line as read. */
-			client.recordedOutput.windowIsKey = true
+			client.recordedOutput.isKeyWindow = true
 			client.recordedOutput.visibleItems = [channel]
 
 			let replayed = try message(
@@ -355,7 +384,7 @@ struct IRCClientJoinBurstTests {
 				on: client
 			)
 
-			replayed.markAsHistoric()
+			replayed.isHistoric = true
 			client.receivePrivmsgAndNotice(replayed)
 
 			#expect(client.readMarkerPendingChannels.isEmpty)
@@ -373,14 +402,160 @@ struct IRCClientJoinBurstTests {
 		}
 	}
 
+	@Test("A read marker from before the join raises no badge for the burst the join printed")
+	func readMarkerOlderThanTheJoinBurstRaisesNoBadge() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = CompletingPresentation()
+			let now = whollyStampedNow()
+			let channel = try joinedChannel(on: client, at: now, drawnInto: presentation)
+
+			/* The topic, who set it and the channel modes: everything a join is
+			 answered with, printed now and none of it anything a person said. */
+			try receiveNumerics([
+				":irc.example.net 332 mara #chat :the topic",
+				":irc.example.net 333 mara #chat bob!u@h 1700000000",
+				":irc.example.net 324 mara #chat +nt",
+			], on: client)
+
+			let printedTypes = presentation.printedLines.map(\.lineType)
+
+			#expect(printedTypes.contains(.topic))
+			#expect(printedTypes.contains(.mode))
+			#expect(printedTypes.allSatisfy { $0.isConversation == false })
+
+			let marker = try message(
+				":irc.example.net MARKREAD #chat timestamp=\(stamp(now.addingTimeInterval(-3600)))",
+				on: client
+			)
+
+			client.receiveReadMarker(marker)
+
+			#expect(channel.treeUnreadCount == 0)
+			#expect(channel.dockUnreadCount == 0)
+			#expect(channel.isUnread == false)
+			#expect(presentation.markedDates.isEmpty)
+		}
+	}
+
+	@Test("A read marker behind a replayed burst counts the messages past it and nothing else")
+	func readMarkerBehindReplayedMessagesRaisesCountedBadge() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = CompletingPresentation()
+			let now = whollyStampedNow()
+			let channel = try joinedChannel(on: client, at: now, drawnInto: presentation)
+			let markerDate = now.addingTimeInterval(-30)
+
+			for line in [
+				"@time=\(stamp(now.addingTimeInterval(-20))) :bob!u@h PRIVMSG #chat :first",
+				"@time=\(stamp(now.addingTimeInterval(-10))) :bob!u@h PRIVMSG #chat :second",
+			] {
+				let replayed = try message(line, on: client)
+				replayed.isHistoric = true
+				client.receivePrivmsgAndNotice(replayed)
+			}
+
+			/* Printed after both messages and newer than the marker, so counting
+			 lines of any kind would report three unread instead of two. */
+			try receiveNumerics([":irc.example.net 332 mara #chat :the topic"], on: client)
+
+			#expect(channel.treeUnreadCount == 0)
+
+			let marker = try message(
+				":irc.example.net MARKREAD #chat timestamp=\(stamp(markerDate))",
+				on: client
+			)
+
+			client.receiveReadMarker(marker)
+
+			#expect(presentation.markedDates.count == 1)
+			#expect(abs((presentation.markedDates.first ?? .distantPast).timeIntervalSince(markerDate)) < 0.002)
+			#expect(channel.treeUnreadCount == 2)
+		}
+	}
+
+	/** The `MARKREAD` reply arrives in the same turn as the burst it refers to,
+	 while the lines are still rendering. Answering it from the view alone would
+	 find nothing past the marker and leave the burst unbadged. */
+	@Test("A read marker behind a burst that has not rendered yet still raises its badge")
+	func readMarkerBehindUnrenderedReplayRaisesCountedBadge() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = CompletingPresentation()
+			let now = whollyStampedNow()
+			let channel = try joinedChannel(on: client, at: now, drawnInto: presentation)
+			let markerDate = now.addingTimeInterval(-30)
+
+			presentation.defersCompletions = true
+
+			for line in [
+				"@time=\(stamp(now.addingTimeInterval(-20))) :bob!u@h PRIVMSG #chat :first",
+				"@time=\(stamp(now.addingTimeInterval(-10))) :bob!u@h PRIVMSG #chat :second",
+			] {
+				let replayed = try message(line, on: client)
+				replayed.isHistoric = true
+				client.receivePrivmsgAndNotice(replayed)
+			}
+
+			let marker = try message(
+				":irc.example.net MARKREAD #chat timestamp=\(stamp(markerDate))",
+				on: client
+			)
+
+			client.receiveReadMarker(marker)
+
+			#expect(presentation.markedDates.count == 1)
+			#expect(channel.treeUnreadCount == 2)
+
+			/* The burst finishes rendering afterwards, and being a replay it still
+			 counts for nothing: the badge the marker raised is what is left. */
+			presentation.finishPrinting()
+
+			#expect(channel.treeUnreadCount == 2)
+		}
+	}
+
+	@Test("A read marker past the last message clears the badge a later topic cannot hold open")
+	func readMarkerPastTheLastMessageClearsBadgeDespiteLaterTopic() throws {
+		try withNotificationsSilenced {
+			let client = makeClient()
+			let presentation = CompletingPresentation()
+			let now = whollyStampedNow()
+			/* Joined twenty seconds ago, so the message below is live and counts. */
+			let channel = try joinedChannel(on: client, at: now.addingTimeInterval(-20), drawnInto: presentation)
+
+			try client.receivePrivmsgAndNotice(
+				message("@time=\(stamp(now)) :bob!u@h PRIVMSG #chat :hello", on: client)
+			)
+
+			#expect(channel.treeUnreadCount == 1)
+
+			try receiveNumerics([
+				"@time=\(stamp(now.addingTimeInterval(20))) :irc.example.net 332 mara #chat :the topic",
+			], on: client)
+
+			let marker = try message(
+				":irc.example.net MARKREAD #chat timestamp=\(stamp(now.addingTimeInterval(10)))",
+				on: client
+			)
+
+			client.receiveReadMarker(marker)
+
+			#expect(channel.treeUnreadCount == 0)
+			#expect(channel.dockUnreadCount == 0)
+			#expect(channel.isUnread == false)
+		}
+	}
+
 	@Test("Rendering into a pending view cannot acknowledge the message")
 	func bufferedLineCannotAdvanceReadMarker() throws {
 		try withNotificationsSilenced {
 			let client = makeClient()
-			let presentation = GLTCompletingPresentation()
+			let presentation = CompletingPresentation()
 			presentation.isDisplayed = false
 			let channel = try joinedChannel(on: client, at: Date(), drawnInto: presentation)
-			client.recordedOutput.windowIsKey = true
+			client.recordedOutput.isKeyWindow = true
 			client.recordedOutput.visibleItems = [channel]
 			try client.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :still loading", on: client))
 			#expect(client.readMarkerPendingChannels.isEmpty)

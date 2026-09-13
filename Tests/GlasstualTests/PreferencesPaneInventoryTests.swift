@@ -15,122 +15,158 @@ struct PreferencesPaneInventoryTests {
 	@Test("Every catalogued pane declares the keys it binds")
 	func everyPaneDeclaresItsKeys() {
 		let declared = Set(PreferencesPaneKeys.keysByPane.keys)
-		#expect(declared == Set(PreferencesPaneIdentifier.allCases))
+		#expect(declared == Set(PreferencesPane.allCases))
 	}
 
 	/** A pane may only bind to a key the code declares: a name spelled straight
 	 into a view would miss the registration domain, export and import. */
 	@Test("Every key a pane binds to is one the key store declares")
 	func boundKeysAreDeclared() {
-		for (pane, keys) in PreferencesPaneKeys.keysByPane {
-			for key in keys {
+		for (pane, entries) in PreferencesPaneKeys.keysByPane {
+			for entry in entries {
 				#expect(
-					Preferences.key(named: key.name) != nil,
-					"\(pane.rawValue) binds to the undeclared key \(key.name)"
+					Preferences.key(named: entry.key.name) != nil,
+					"\(pane.rawValue) binds to the undeclared key \(entry.key.name)"
 				)
 			}
 		}
 	}
 
-	@Test("Every catalogued pane belongs to exactly one sub-page")
-	func everyPaneBelongsToOneSubPage() {
-		var seen: [String: Int] = [:]
-		for section in PreferencesSession.sections() {
-			for pane in section.subPages.flatMap(\.panes) {
-				seen[pane.identifier, default: 0] += 1
-			}
-		}
-		for pane in PreferencesPaneIdentifier.allCases {
-			#expect(seen[pane.rawValue] == 1, "\(pane.rawValue) appears in \(seen[pane.rawValue] ?? 0) sub-pages")
-		}
-	}
-
-	@Test("Every section has a title, a symbol and at least one sub-page")
-	func sectionsAreComplete() {
-		let sections = PreferencesSession.sections()
-		#expect(Set(sections.map(\.identifier)) == Set(PreferencesSectionIdentifier.allCases))
-		for section in sections {
-			#expect(section.title.isEmpty == false)
-			#expect(section.symbolName.isEmpty == false)
-			#expect(section.subPages.isEmpty == false, "\(section.identifier.rawValue) shows nothing")
-		}
-	}
-
-	@Test("A sub-page names something the window can show")
-	func subPagesResolve() {
-		for section in PreferencesSession.sections() {
-			for subPage in section.subPages {
+	/** Nothing shows a raw defaults name to anyone: an import preview names the
+	 settings it is about to change, so every key a pane binds carries the
+	 words that pane puts beside its control. */
+	@Test("Every key a pane binds to has a name the window can show")
+	func boundKeysHaveDisplayNames() {
+		for (pane, entries) in PreferencesPaneKeys.keysByPane {
+			for entry in entries {
+				let displayName = PreferencesPaneKeys.displayName(forKeyNamed: entry.key.name)
 				#expect(
-					PreferencesSession.paneExists(subPage.identifier),
-					"unknown sub-page \(subPage.identifier)"
+					displayName?.isEmpty == false,
+					"\(pane.rawValue) shows \(entry.key.name) with no name of its own"
 				)
-				for pane in subPage.panes {
-					#expect(PreferencesSession.paneExists(pane.identifier), "unknown pane \(pane.identifier)")
-				}
+				/* A defaults name is a path, not a phrase: "Preferences ->
+				 Something" reaching an alert is exactly what this rules out. */
+				#expect(
+					displayName?.contains(" -> ") == false,
+					"\(pane.rawValue) shows \(entry.key.name) under its defaults name"
+				)
 			}
 		}
 	}
 
-	@Test("The Advanced section keeps to five sub-pages")
-	func advancedSectionIsGrouped() throws {
-		let advanced = PreferencesSession.sections().first { $0.identifier == .advanced }
-		let subPages = try #require(advanced?.subPages)
-		#expect(subPages.count == PreferencesAdvancedGroup.allCases.count)
+	/// A key no pane shows has no name worth printing either, so the lookup
+	/// says so rather than handing back the defaults spelling.
+	@Test("A key no pane binds has no display name")
+	func unboundKeysHaveNoDisplayName() {
+		#expect(PreferencesPaneKeys.displayName(forKeyNamed: "Not A Preference") == nil)
+		#expect(
+			PreferencesPaneKeys.displayName(
+				forKeyNamed: Preferences.Internals.selectedPreferencePane.name
+			) == nil
+		)
 	}
 
-	@Test("A pane identifier stored before the grouping still finds its sub-page")
+	/// A pane no row draws is a pane nothing can reach, and a pane two rows
+	/// draw is a setting shown in two places.
+	@Test("Every catalogued pane is drawn by exactly one sidebar row")
+	func everyPaneBelongsToOneRow() {
+		var seen: [PreferencesPane: Int] = [:]
+		for destination in PreferencesDestination.builtIn {
+			for pane in destination.panes {
+				seen[pane, default: 0] += 1
+			}
+		}
+		for pane in PreferencesPane.allCases {
+			#expect(seen[pane] == 1, "\(pane.rawValue) is drawn by \(seen[pane] ?? 0) rows")
+		}
+	}
+
+	@Test("Every sidebar row has a title, a symbol and something to draw")
+	func rowsAreComplete() {
+		for destination in PreferencesDestination.builtIn {
+			#expect(destination.title.isEmpty == false)
+			#expect(destination.symbolName.isEmpty == false)
+			#expect(
+				destination.panes.isEmpty == false,
+				"\(destination.selection.storedIdentifier) shows nothing"
+			)
+		}
+	}
+
+	/// The sidebar is one level deep, so a title appearing twice would give the
+	/// user two rows that read the same.
+	@Test("No two sidebar rows share a title or a selection")
+	func rowsAreDistinct() {
+		let destinations = PreferencesDestination.builtIn
+		#expect(Set(destinations.map(\.title)).count == destinations.count)
+		#expect(Set(destinations.map(\.selection)).count == destinations.count)
+		#expect(Set(destinations.map(\.selection.storedIdentifier)).count == destinations.count)
+	}
+
+	/// Every pane gathered with a neighbour wears its own heading, so a row
+	/// that draws two of them says which settings are which.
+	@Test("Every pane has a heading of its own")
+	func panesHaveTitles() {
+		for pane in PreferencesPane.allCases {
+			#expect(pane.title.isEmpty == false, "\(pane.rawValue) has no heading")
+		}
+	}
+
+	/// What the window stores has to name the same row when it is read back.
+	@Test("A stored row identifier round-trips")
+	func storedIdentifiersRoundTrip() {
+		for destination in PreferencesDestination.builtIn {
+			let stored = destination.selection.storedIdentifier
+			#expect(PreferencesSelection(storedIdentifier: stored) == destination.selection)
+		}
+		let addOn = PreferencesSelection.plugin(bundleIdentifier: "com.example.addon")
+		#expect(PreferencesSelection(storedIdentifier: addOn.storedIdentifier) == addOn)
+	}
+
+	/** A name written before the sidebar was flattened points at a pane rather
+	 than at a row, and still has to land on the row that draws it. */
+	@Test("A pane identifier stored before the flattening finds its row")
 	func storedPaneIdentifiersResolve() {
-		let advanced = PreferencesSession.sections().first { $0.identifier == .advanced }
-		let subPage = advanced?.subPages.first { $0.contains(PreferencesPaneIdentifier.hidden.rawValue) }
-		#expect(subPage?.identifier == PreferencesAdvancedGroup.system.identifier)
+		#expect(PreferencesSelection(storedIdentifier: PreferencesPane.hidden.rawValue) == .advanced)
+		#expect(PreferencesSelection(storedIdentifier: PreferencesPane.floodControl.rawValue) == .connection)
+		#expect(
+			PreferencesSelection(storedIdentifier: PreferencesPane.defaultIRCopMessages.rawValue) == .identity
+		)
 	}
 
-	@Test("An identifier nothing answers to is not shown")
+	@Test("An identifier nothing answers to names no row")
 	func unknownIdentifiersAreRejected() {
-		#expect(PreferencesSession.paneExists("not-a-pane") == false)
-		#expect(PreferencesSession.paneExists("plugin-9999") == false)
+		#expect(PreferencesSelection(storedIdentifier: "not-a-pane") == nil)
+		#expect(PreferencesSelection(storedIdentifier: "plugin-9999") == nil)
+		#expect(PreferencesSelection(storedIdentifier: "plugin:") == nil)
+		// The Behavior pane was folded into General and Controls.
+		#expect(PreferencesSelection(storedIdentifier: "behavior") == nil)
 	}
 
-	@Test("The main sections show one pane each")
-	func mainSectionsHoldOnePane() {
-		for section in PreferencesSession.sections() where section.identifier.pane != nil {
-			#expect(section.subPages.count == 1, "\(section.identifier.rawValue) is not a single pane")
-			#expect(section.subPages.first?.identifier == section.identifier.pane?.rawValue)
-		}
-	}
-
-	@Test("Changing sections replaces the section and sub-page together")
-	func selectionChangesAtomically() {
+	@Test("Every sidebar row is a destination the model accepts")
+	func everyRowIsSelectable() {
 		let model = PreferencesPaneModel()
-		model.sections = PreferencesSession.sections()
+		model.destinations = PreferencesSession.destinations()
 		var changes: [PreferencesSelection] = []
 		model.onSelectionChange = { changes.append($0) }
 
-		let selection = PreferencesSelection(
-			sectionIdentifier: .advanced,
-			subPageIdentifier: PreferencesAdvancedGroup.channels.identifier
-		)
-
-		#expect(model.select(selection))
-		#expect(model.selection == selection)
-		#expect(model.currentSection?.subPages.contains { $0.identifier == model.selection.subPageIdentifier } == true)
-		#expect(changes == [selection])
+		let expected = model.destinations.map(\.selection).filter { $0 != model.selection }
+		for selection in expected {
+			#expect(model.select(selection))
+			#expect(model.selection == selection)
+		}
+		#expect(changes == expected)
 	}
 
-	@Test("An invalid section and sub-page pair is rejected without publishing")
+	@Test("A row the sidebar is not listing is rejected without publishing")
 	func invalidSelectionIsRejected() {
 		let model = PreferencesPaneModel()
-		model.sections = PreferencesSession.sections()
+		model.destinations = PreferencesSession.destinations()
 		let original = model.selection
 		var changeCount = 0
 		model.onSelectionChange = { _ in changeCount += 1 }
 
-		let invalid = PreferencesSelection(
-			sectionIdentifier: .general,
-			subPageIdentifier: PreferencesAdvancedGroup.channels.identifier
-		)
-
-		#expect(model.select(invalid) == false)
+		#expect(model.select(.plugin(bundleIdentifier: "com.example.absent")) == false)
 		#expect(model.selection == original)
 		#expect(changeCount == 0)
 	}
@@ -191,14 +227,22 @@ struct PreferencesFacadeBindingTests {
 		#expect(preferences.invertedBinding(for: key).wrappedValue == false)
 	}
 
-	@Test("A gated binding reads as off while its gate is closed")
+	/// The switch another setting has made irrelevant reads as off and refuses
+	/// the write, so a disabled row cannot leave a value behind it.
+	@Test("A gated binding reads as off and writes nothing while its gate is closed")
 	func gatedBinding() {
 		let key = Preferences.Messages.showInlineMedia
 		defer { key.reset() }
 
 		key.value = true
-		#expect(preferences.gatedBinding(for: key, enabledWhen: { false }).wrappedValue == false)
-		#expect(preferences.gatedBinding(for: key, enabledWhen: { true }).wrappedValue)
+		#expect(preferences.binding(for: key).gated(by: false).wrappedValue == false)
+		#expect(preferences.binding(for: key).gated(by: true).wrappedValue)
+
+		preferences.binding(for: key).gated(by: false).wrappedValue = false
+		#expect(key.value)
+
+		preferences.binding(for: key).gated(by: true).wrappedValue = false
+		#expect(key.value == false)
 	}
 
 	/** The bounds the field enforces are the key's own, so an imported file
@@ -282,8 +326,8 @@ struct PreferencesFacadeBindingTests {
 	}
 
 	/** The Settings slider is a `Double`, so a stored count has to survive that
-	 round trip: `Int(Double(UInt(Int.max)))` is one past `Int.max` and traps
-	 while the label is being drawn. */
+	 round trip and be renderable at the far end of it: `Int(Double(UInt.max))`
+	 traps, which is why the label never converts to an `Int`. */
 	@Test("The away-tracking limit stays inside what the slider can render")
 	func awayTrackingLimitSurvivesTheSliderRoundTrip() {
 		let key = Preferences.Appearance.trackUserAwayStatusMaximumChannelSize
@@ -295,13 +339,15 @@ struct PreferencesFacadeBindingTests {
 		key.value = UInt(Int32.max)
 		let rendered = preferences.sliderBinding(for: key).wrappedValue
 		#expect(Int(exactly: rendered.rounded()) == Int(Int32.max))
-		#expect(PreferencesFloodControlSections.countText(rendered) == Int(Int32.max).formatted(.number))
+		#expect(
+			rendered.rounded().formatted(.number.precision(.fractionLength(0)))
+				== Int(Int32.max).formatted(.number)
+		)
 
 		// The old bound let a file store a count whose Double round trip traps.
 		TextualUserDefaults.container.set(NSNumber(value: UInt.max), forKey: key.name)
-		#expect(PreferencesFloodControlSections.countText(
-			preferences.sliderBinding(for: key).wrappedValue
-		).isEmpty == false)
+		let stored = preferences.sliderBinding(for: key).wrappedValue
+		#expect(stored.rounded().formatted(.number.precision(.fractionLength(0))).isEmpty == false)
 	}
 
 	@Test("A slider binding rounds onto the stored integer")

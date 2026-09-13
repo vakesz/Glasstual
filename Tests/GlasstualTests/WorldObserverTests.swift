@@ -62,73 +62,73 @@ enum RecordedWorldEvent: Equatable {
 final class RecordingWorldObserver: WorldObserver {
 	private(set) var events: [RecordedWorldEvent] = []
 
-	func worldWillBeginBulkUpdate(_: IRCWorld) {
+	func worldWillBeginBulkUpdate(_: World) {
 		events.append(.willBeginBulkUpdate)
 	}
 
-	func worldDidEndBulkUpdate(_: IRCWorld) {
+	func worldDidEndBulkUpdate(_: World) {
 		events.append(.didEndBulkUpdate)
 	}
 
-	func world(_: IRCWorld, didAddClient client: IRCClient, at index: Int) {
+	func world(_: World, didAddClient client: IRCClient, at index: Int) {
 		events.append(.addedClient(client.uniqueIdentifier, index))
 	}
 
-	func world(_: IRCWorld, didRemoveClient client: IRCClient) {
+	func world(_: World, didRemoveClient client: IRCClient) {
 		events.append(.removedClient(client.uniqueIdentifier))
 	}
 
-	func world(_: IRCWorld, didMoveClientFrom oldIndex: Int, to newIndex: Int) {
+	func world(_: World, didMoveClientFrom oldIndex: Int, to newIndex: Int) {
 		events.append(.movedClient(oldIndex, newIndex))
 	}
 
-	func world(_: IRCWorld, didAddChannel channel: IRCChannel, on client: IRCClient, at index: Int) {
+	func world(_: World, didAddChannel channel: Channel, on client: IRCClient, at index: Int) {
 		events.append(.addedChannel(channel.name, on: client.uniqueIdentifier, at: index))
 	}
 
-	func world(_: IRCWorld, didRemoveChannel channel: IRCChannel, on client: IRCClient) {
+	func world(_: World, didRemoveChannel channel: Channel, on client: IRCClient) {
 		events.append(.removedChannel(channel.name, on: client.uniqueIdentifier))
 	}
 
-	func world(_: IRCWorld, didMoveChannelOn client: IRCClient, from oldIndex: Int, to newIndex: Int) {
+	func world(_: World, didMoveChannelOn client: IRCClient, from oldIndex: Int, to newIndex: Int) {
 		events.append(.movedChannel(on: client.uniqueIdentifier, from: oldIndex, to: newIndex))
 	}
 
-	func world(_: IRCWorld, requestsSelectionOf item: IRCTreeItem) {
+	func world(_: World, requestsSelectionOf item: TreeItem) {
 		events.append(.selectionRequested(item.uniqueIdentifier))
 	}
 
-	func world(_: IRCWorld, requestsDeselectionOf item: IRCTreeItem) {
+	func world(_: World, requestsDeselectionOf item: TreeItem) {
 		events.append(.deselectionRequested(item.uniqueIdentifier))
 	}
 
-	func world(_: IRCWorld, requestsGroupDeselectionOf item: IRCTreeItem) {
+	func world(_: World, requestsGroupDeselectionOf item: TreeItem) {
 		events.append(.groupDeselectionRequested(item.uniqueIdentifier))
 	}
 
-	func worldRequestsSelectionAdjustment(_: IRCWorld) {
+	func worldRequestsSelectionAdjustment(_: World) {
 		events.append(.selectionAdjustmentRequested)
 	}
 
-	func worldClientListDidChange(_: IRCWorld) {
+	func worldClientListDidChange(_: World) {
 		events.append(.clientListChanged)
 	}
 
-	func worldNavigationListDidChange(_: IRCWorld) {
+	func worldNavigationListDidChange(_: World) {
 		events.append(.navigationListChanged)
 	}
 
-	func worldPreferencesDidChange(_: IRCWorld) {
+	func worldPreferencesDidChange(_: World) {
 		events.append(.preferencesChanged)
 	}
 }
 
 @MainActor
 private struct WorldFixture {
-	let fixture = GLTClientEnvironmentFixture()
+	let fixture = ClientEnvironmentFixture()
 	let observer = RecordingWorldObserver()
 
-	var world: IRCWorld {
+	var world: World {
 		fixture.world
 	}
 

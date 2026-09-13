@@ -37,7 +37,8 @@
 
 /// Numeric replies and errors sent by IRC servers.
 ///
-/// Raw values intentionally match the wire protocol catalog that this type replaces.
+/// The raw value is the three-digit number the server sends; the cases are in
+/// that order.
 enum IRCNumeric: UInt, CaseIterable, Sendable {
 	case welcome = 1
 	case yourhost = 2
@@ -101,35 +102,6 @@ enum IRCNumeric: UInt, CaseIterable, Sendable {
 	case whoishost = 378
 	case whoismodes = 379
 	case youreoper = 381
-	case reaway = 597
-	case goneaway = 598
-	case notaway = 599
-	case logon = 600
-	case logoff = 601
-	case watchoff = 602
-	case watchstat = 603
-	case nowon = 604
-	case nowoff = 605
-	case watchlist = 606
-	case endofwatchlist = 607
-	case clearwatch = 608
-	case channelsmsg = 651
-	case whowasip = 652
-	case whoissecure = 671
-	case whoisrealip = 672
-	case targumodeg = 716
-	case targnotify = 717
-	case umodegmsg = 718
-	case quietlist = 728
-	case endofquietlist = 729
-	case mononline = 730
-	case monoffline = 731
-	case monlist = 732
-	case endofmonlist = 733
-	case loggedin = 900
-	case loggedout = 901
-	case saslsuccess = 903
-	case saslmechs = 908
 	case nosuchnick = 401
 	case nosuchserver = 402
 	case nosuchchannel = 403
@@ -165,13 +137,83 @@ enum IRCNumeric: UInt, CaseIterable, Sendable {
 	case whosyntax = 522
 	case wholimexceed = 523
 	case operspverify = 524
+	case reaway = 597
+	case goneaway = 598
+	case notaway = 599
+	case logon = 600
+	case logoff = 601
+	case watchoff = 602
+	case watchstat = 603
+	case nowon = 604
+	case nowoff = 605
+	case watchlist = 606
+	case endofwatchlist = 607
+	case clearwatch = 608
+	case channelsmsg = 651
+	case whowasip = 652
+	case whoissecure = 671
+	case whoisrealip = 672
+	case targumodeg = 716
+	case targnotify = 717
+	case umodegmsg = 718
+	case quietlist = 728
+	case endofquietlist = 729
+	case mononline = 730
+	case monoffline = 731
+	case monlist = 732
+	case endofmonlist = 733
 	case monlistfull = 734
+	case loggedin = 900
+	case loggedout = 901
 	case nicklocked = 902
+	case saslsuccess = 903
 	case saslfail = 904
 	case sasltoolong = 905
 	case saslaborted = 906
 	case saslalready = 907
+	case saslmechs = 908
 	case badchannel = 926
+
+	/// Which handler answers the numeric.
+	///
+	/// `receiveNumericReply` makes one routing decision from this and the
+	/// handler it picks answers with a plain switch. `nil` means no handler
+	/// claims the numeric, so it takes the generic reply path.
+	var group: Group? {
+		switch self {
+		case .welcome, .yourhost, .created, .myinfo, .isupport, .redir, .umodeis, .statsconn,
+		     .luserclient, .luserhop, .luserunknown, .luserchannels, .luserme, .localusers, .globalusers,
+		     .silelist, .endofsilelist, .away, .unaway, .nowaway, .motd, .motdstart, .endofmotd, .nomotd:
+			.connection
+		case .whoisregnick, .whoishelpop, .whoisuser, .whoisserver, .whoisoperator, .whowasuser,
+		     .whoisidle, .endofwhois, .whoischannels, .whoisspecial, .whoisaccount, .whoisbot,
+		     .whoisactually, .endofwhowas, .whoishost, .whoismodes, .channelsmsg, .whoissecure, .whoisrealip:
+			.whois
+		case .ison, .liststart, .list, .listend, .channelmodeis, .creationtime, .topic, .topicwhotime,
+		     .inviting, .invitelist, .endofinvitelist, .exceptlist, .endofexceptlist, .whoreply,
+		     .namereply, .whospcrpl, .endofwho, .endofnames, .banlist, .endofbanlist,
+		     .quietlist, .endofquietlist:
+			.channel
+		case .youreoper, .channelUrl, .reaway, .goneaway, .notaway, .logon, .logoff, .watchoff,
+		     .watchstat, .nowon, .nowoff, .watchlist, .endofwatchlist, .toomanywatch,
+		     .mononline, .monoffline, .monlist, .endofmonlist, .monlistfull, .targumodeg:
+			.presence
+		case .targnotify, .umodegmsg, .loggedin, .loggedout, .saslsuccess, .saslmechs,
+		     .nicklocked, .saslfail, .sasltoolong, .saslaborted, .saslalready:
+			.authentication
+		default:
+			nil
+		}
+	}
+
+	/// The reply is printed whether or not a plugin asked for it to be
+	/// suppressed, because its handler reads state out of it either way.
+	var requiresSpecialFiltering: Bool {
+		switch self {
+		case .umodeis, .channelmodeis, .topic, .topicwhotime: true
+		default: false
+		}
+	}
 
 	var isErrorReply: Bool {
 		Self.isErrorReply(rawValue)
@@ -183,5 +225,14 @@ enum IRCNumeric: UInt, CaseIterable, Sendable {
 	/// have to reach the error path.
 	static func isErrorReply(_ rawValue: UInt) -> Bool {
 		rawValue > 400 && rawValue < 597 && rawValue != IRCNumeric.nomotd.rawValue
+	}
+
+	/// The handler a numeric belongs to.
+	enum Group: Sendable {
+		case connection
+		case whois
+		case channel
+		case presence
+		case authentication
 	}
 }

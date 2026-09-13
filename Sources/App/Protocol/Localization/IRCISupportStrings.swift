@@ -70,14 +70,14 @@ nonisolated enum IRCISupportStrings { // nonisolated: value
 		limit: UInt,
 		prefix: String
 	) -> String {
-		String(localized: .IRC.joiningWouldExceedTheLimit(channelName, limit, prefix))
+		String(localized: .IRC.joiningWouldExceedTheLimit(channelName, arg2: limit, prefix))
 	}
 
 	static func channelNameTooLong(channelName: String, maximumLength: UInt) -> String {
-		String(localized: .IRC.joinRefusedNameTooLong(channelName, Int(clamping: maximumLength)))
+		String(localized: .IRC.joinRefusedNameTooLong(channelName, arg2: Int(clamping: maximumLength)))
 	}
 
 	static func presenceListIsFull(droppedCount: Int, ceiling: UInt) -> String {
-		String(localized: .IRC.presenceListIsFull(droppedCount, Int(clamping: ceiling)))
+		String(localized: .IRC.presenceListIsFull(droppedCount, arg2: Int(clamping: ceiling)))
 	}
 }

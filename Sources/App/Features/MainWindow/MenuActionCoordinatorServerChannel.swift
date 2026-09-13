@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -59,65 +59,47 @@ struct MenuServerActionPolicy {
 	}
 }
 
-@MainActor
+// MARK: - Server and channel commands
+
 public extension MenuActionCoordinator {
-	func performServerChannelAction(_ action: MenuServerChannelAction, sender: Any?) {
-		guard AppController.shared.applicationIsTerminating == false else { return }
-		switch action {
-		case .connect: connect(bypassingProxy: false)
-		case .connectBypassingProxy: connect(bypassingProxy: true)
-		case .disconnect: disconnect()
-		case .cancelReconnection:
-			guard let client = selectedClient, MenuServerActionPolicy(client: client).canCancelReconnect else { return }
-			client.cancelReconnect()
-		case .showChannelList: showServerChannelList()
-		case .addServer: addServer()
-		case .duplicateServer: duplicateServer()
-		case .deleteServer: deleteServer()
-		case .joinChannel: joinSelectedChannel()
-		case .leaveChannel: leaveSelectedChannel()
-		case .addChannel: addChannel()
-		case .deleteChannel: deleteChannel()
-		case .copyUniqueIdentifier: copyUniqueIdentifier()
-		case .joinClickedChannel: joinClickedChannel(sender)
-		@unknown default: break
-		}
+	@objc func connect(_: Any?) {
+		connect(bypassingProxy: false)
 	}
 
-	private func connect(bypassingProxy: Bool) {
-		guard let client = selectedClient else { return }
-		let policy = MenuServerActionPolicy(client: client)
-		guard bypassingProxy ? policy.canConnectWithoutProxy : policy.canConnect else { return }
-		if bypassingProxy {
-			client.connect(.normal, bypassProxy: true)
-		} else {
-			client.connect()
-		}
-		mainWindow.expandClient(client)
+	@objc func connectBypassingProxy(_: Any?) {
+		connect(bypassingProxy: true)
 	}
 
-	private func disconnect() {
-		guard let client = selectedClient,
+	@objc func disconnect(_: Any?) {
+		guard isRunning, let client = selectedClient,
 		      MenuServerActionPolicy(client: client).canDisconnect
 		else { return }
 		client.quit()
 	}
 
-	private func showServerChannelList() {
-		guard let client = selectedClient, client.isLoggedIn else { return }
-		client.openServerChannelList()
+	@objc func cancelReconnection(_: Any?) {
+		guard isRunning, let client = selectedClient,
+		      MenuServerActionPolicy(client: client).canCancelReconnect
+		else { return }
+		client.cancelReconnect()
 	}
 
-	private func addServer() {
+	@objc func showServerChannelList(_: Any?) {
+		guard isRunning, let client = selectedClient, client.isLoggedIn else { return }
+		SharedApplication.sharedApplicationScenes().openServerChannelList(for: client)
+	}
+
+	@objc func addServer(_: Any?) {
+		guard isRunning else { return }
 		mainWindow.presentationModel.closePresentedSheet()
 		present(ServerPropertiesSheet(client: nil)) { $0.start() }
 	}
 
-	private func duplicateServer() {
-		guard let client = selectedClient, let world else { return }
+	@objc func duplicateServer(_: Any?) {
+		guard isRunning, let client = selectedClient, let world else { return }
 
 		var config = client.config.uniqueCopy()
-		config.connectionName += "_"
+		config.connectionName = MenuServerNamePolicy.duplicateName(of: config.connectionName)
 		let newClient = world.createClient(with: config)
 		if newClient.config.sidebarItemExpanded {
 			mainWindow.expandClient(newClient)
@@ -125,8 +107,8 @@ public extension MenuActionCoordinator {
 		world.save()
 	}
 
-	private func deleteServer() {
-		guard let client = selectedClient,
+	@objc func deleteServer(_: Any?) {
+		guard isRunning, let client = selectedClient,
 		      let world,
 		      client.isConnecting == false,
 		      client.isConnected == false
@@ -136,14 +118,15 @@ public extension MenuActionCoordinator {
 			      client.isConnecting == false,
 			      client.isConnected == false
 			else { return }
-			world.destroy(client)
+			world.destroyClient(client)
 			world.save()
 		}
 		/* Delete/Cancel, not Yes/No: the default button says what it does, which
-		 is what makes a destructive confirmation readable at a glance. */
+		 is what makes a destructive confirmation readable at a glance. The
+		 Return key still belongs to Cancel — see `AlertRequest`. */
 		Alerts.alert(
 			withMessage: PromptStrings.Deletion.warning(for: .server),
-			title: PromptStrings.Deletion.confirmationTitle,
+			title: PromptStrings.Deletion.confirmationTitle(named: client.name),
 			defaultButton: PromptStrings.Action.delete,
 			alternateButton: PromptStrings.Action.cancel,
 			destructiveButton: .default,
@@ -151,47 +134,48 @@ public extension MenuActionCoordinator {
 		)
 	}
 
-	private func joinSelectedChannel() {
-		guard let client = selectedClient, let channel = selectedChannel,
+	@objc func joinChannel(_: Any?) {
+		guard isRunning, let client = selectedClient, let channel = selectedChannel,
 		      client.canJoin(channel)
 		else { return }
 		client.join(channel)
-		selectInMainWindow(channel)
+		mainWindow.select(channel)
 	}
 
-	private func leaveSelectedChannel() {
-		guard let client = selectedClient, let channel = selectedChannel,
+	@objc func leaveChannel(_: Any?) {
+		guard isRunning, let client = selectedClient, let channel = selectedChannel,
 		      channel.associatedClient === client
 		else { return }
 		if channel.isChannel {
 			guard client.canJoinChannels, channel.isActive else { return }
 			client.part(channel)
 		} else {
-			world?.destroy(channel)
+			world?.destroyChannel(channel)
 		}
 	}
 
-	private func addChannel() {
+	@objc func addChannel(_: Any?) {
+		guard isRunning else { return }
 		mainWindow.presentationModel.closePresentedSheet()
 		guard let client = selectedClient else { return }
 		present(ChannelPropertiesSheet(client: client)) { $0.start() }
 	}
 
-	private func deleteChannel() {
-		guard let channel = selectedChannel, let world else { return }
+	@objc func deleteChannel(_: Any?) {
+		guard isRunning, let channel = selectedChannel, let world else { return }
 		if channel.isChannel == false {
-			world.destroy(channel)
+			world.destroyChannel(channel)
 			world.save()
 			return
 		}
 		let completion: AlertCompletion = { outcome in
 			guard outcome.response == .default else { return }
-			world.destroy(channel)
+			world.destroyChannel(channel)
 			world.save()
 		}
 		Alerts.alert(
 			withMessage: PromptStrings.Deletion.warning(for: .channel),
-			title: PromptStrings.Deletion.confirmationTitle,
+			title: PromptStrings.Deletion.confirmationTitle(named: channel.name),
 			defaultButton: PromptStrings.Action.delete,
 			alternateButton: PromptStrings.Action.cancel,
 			destructiveButton: .default,
@@ -201,13 +185,13 @@ public extension MenuActionCoordinator {
 		)
 	}
 
-	private func copyUniqueIdentifier() {
+	@objc func copyUniqueIdentifier(_: Any?) {
 		guard let identifier = selectedChannel?.uniqueIdentifier else { return }
 		NSPasteboard.general.setString(identifier, forType: .string)
 	}
 
-	private func joinClickedChannel(_ sender: Any?) {
-		guard let client = selectedClient, client.canJoinChannels else { return }
+	@objc func joinChannelClicked(_ sender: Any?) {
+		guard isRunning, let client = selectedClient, client.canJoinChannels else { return }
 		let channelName: String? = if let menuItem = sender as? NSMenuItem {
 			menuItem.textualUserInfo
 		} else {
@@ -217,10 +201,32 @@ public extension MenuActionCoordinator {
 		      let channel = client.findChannelOrCreate(channelName)
 		else { return }
 		client.join(channel)
-		selectInMainWindow(channel)
+		mainWindow.select(channel)
 	}
 
-	private func selectInMainWindow(_ channel: IRCChannel) {
-		mainWindow.select(channel)
+	/// Nothing may act on the connection tree once the application has begun
+	/// shutting down.
+	private var isRunning: Bool {
+		AppController.shared.applicationIsTerminating == false
+	}
+
+	private func connect(bypassingProxy: Bool) {
+		guard isRunning, let client = selectedClient else { return }
+		let policy = MenuServerActionPolicy(client: client)
+		guard bypassingProxy ? policy.canConnectWithoutProxy : policy.canConnect else { return }
+		if bypassingProxy {
+			client.connect(.normal, bypassProxy: true)
+		} else {
+			client.connect()
+		}
+		mainWindow.expandClient(client)
+	}
+}
+
+/// What a duplicated connection is called. A trailing underscore read as a
+/// truncated name; "copy" is the word the Finder uses for the same idea.
+nonisolated enum MenuServerNamePolicy { // nonisolated: value
+	static func duplicateName(of name: String) -> String {
+		ApplicationStrings.duplicatedName(name)
 	}
 }

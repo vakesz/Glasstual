@@ -61,19 +61,11 @@ nonisolated enum ServerEndpointStrings { // nonisolated: value
 		String(localized: .TDCServerEndpointListSheet.moveDown)
 	}
 
-	static var invalidAddressDescription: String {
+	static var invalidAddress: String {
 		String(localized: .TDCServerEndpointListSheet.valueYouEnteredIsNot)
 	}
 
-	static var invalidAddressRecoverySuggestion: String {
-		String(localized: .TDCServerEndpointListSheet.intentionallyEmptyRecoverySuggestion)
-	}
-
-	static var invalidPortDescription: String {
-		String(localized: .TDCServerEndpointListSheet.valueYouEnteredIsNotAProperlyFormattedServer)
-	}
-
-	static var invalidPortRecoverySuggestion: String {
+	static var invalidPort: String {
 		String(localized: .TDCServerEndpointListSheet.enterAWholeNumberBetween1)
 	}
 }

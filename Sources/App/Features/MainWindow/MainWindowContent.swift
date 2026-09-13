@@ -54,12 +54,36 @@ extension MainWindow {
 		let next = bigger ? textSizeMultiplier * TextZoomPolicy.step : textSizeMultiplier / TextZoomPolicy.step
 		guard TextZoomPolicy.allowedRange.contains(next) else { return }
 		textSizeMultiplier = next
-		guard let world else { return }
-		for client in world.clientList {
-			client.logController?.changeTextSize(bigger)
-			for channel in client.channelList {
-				channel.logController?.changeTextSize(bigger)
+		for controller in logControllersInWorld {
+			controller.changeTextSize(bigger)
+		}
+	}
+
+	/// Actual Size: back to the unscaled text, in as many steps as it took to
+	/// leave it. The controllers only know how to step, so the window walks
+	/// them back rather than teaching them a second way to be told.
+	public func resetTextSize() {
+		while textSizeMultiplier > 1.0 {
+			let previous = textSizeMultiplier
+			changeTextSize(false)
+			if textSizeMultiplier == previous || textSizeMultiplier < 1.0 {
+				break
 			}
+		}
+		while textSizeMultiplier < 1.0 {
+			let previous = textSizeMultiplier
+			changeTextSize(true)
+			if textSizeMultiplier == previous || textSizeMultiplier > 1.0 {
+				break
+			}
+		}
+		textSizeMultiplier = 1.0
+	}
+
+	private var logControllersInWorld: [LogController] {
+		guard let world else { return [] }
+		return world.clientList.flatMap { client in
+			[client.logController].compactMap(\.self) + client.channelList.compactMap(\.logController)
 		}
 	}
 
@@ -82,12 +106,8 @@ extension MainWindow {
 	}
 
 	public func reloadTheme() {
-		guard let world else { return }
-		for client in world.clientList {
-			client.logController?.reloadTheme()
-			for channel in client.channelList {
-				channel.logController?.reloadTheme()
-			}
+		for controller in logControllersInWorld {
+			controller.reloadTheme()
 		}
 	}
 
@@ -97,7 +117,7 @@ extension MainWindow {
 		reloadTreeItem(client)
 	}
 
-	public func clearContents(of channel: IRCChannel) {
+	public func clearContents(of channel: Channel) {
 		channel.resetState()
 		channel.logController?.clear()
 		reloadTreeItem(channel)
@@ -198,43 +218,19 @@ extension MainWindow {
 		)
 	}
 
-	func textFormattingBold(_: NSEvent) {
-		if formattingMenu.textIsBold {
-			formattingMenu.removeBoldCharFromTextBox(nil)
-		} else {
-			formattingMenu.insertBoldCharIntoTextBox(nil)
-		}
-	}
-
-	func textFormattingItalic(_: NSEvent) {
-		if formattingMenu.textIsItalicized {
-			formattingMenu.removeItalicCharFromTextBox(nil)
-		} else {
-			formattingMenu.insertItalicCharIntoTextBox(nil)
-		}
-	}
-
-	func textFormattingUnderline(_: NSEvent) {
-		if formattingMenu.textIsUnderlined {
-			formattingMenu.removeUnderlineCharFromTextBox(nil)
-		} else {
-			formattingMenu.insertUnderlineCharIntoTextBox(nil)
-		}
-	}
-
 	func textFormattingForegroundColor(_: NSEvent) {
-		guard formattingMenu.textHasSpoiler == false else { return }
-		if formattingMenu.textHasForegroundColor {
-			formattingMenu.removeForegroundColorCharFromTextBox(nil)
+		guard formattingMenu.isSet(.spoiler) == false else { return }
+		if formattingMenu.isSet(.foregroundColorSet) {
+			formattingMenu.setEffect(.foregroundColorSet, enabled: false)
 			return
 		}
 		popUpColorMenu(formattingMenu.foregroundColorMenu)
 	}
 
 	func textFormattingBackgroundColor(_: NSEvent) {
-		guard formattingMenu.textHasSpoiler == false, formattingMenu.textHasForegroundColor else { return }
-		if formattingMenu.textHasBackgroundColor {
-			formattingMenu.removeBackgroundColorCharFromTextBox(nil)
+		guard formattingMenu.isSet(.spoiler) == false, formattingMenu.isSet(.foregroundColorSet) else { return }
+		if formattingMenu.isSet(.backgroundColorSet) {
+			formattingMenu.setEffect(.backgroundColorSet, enabled: false)
 			return
 		}
 		popUpColorMenu(formattingMenu.backgroundColorMenu)
@@ -246,12 +242,8 @@ extension MainWindow {
 		menu.popUp(positioning: nil, at: inputTextField.selectedRect.origin, in: inputTextField)
 	}
 
-	func speakPendingNotifications(_: NSEvent) {
-		SharedApplication.sharedSpeechSynthesizer().stopSpeakingAndMoveForward()
-	}
-
 	func focusTranscript(_: NSEvent) {
-		guard attachedSheet == nil, let view = selectedViewController?.backingView?.view else { return }
+		guard attachedSheet == nil, let view = selectedViewController?.backingView else { return }
 		makeFirstResponder(view)
 	}
 
@@ -270,22 +262,8 @@ extension MainWindow {
 	}
 
 	public func inputText(_ string: Any, asCommand command: IRCRemoteCommand) {
-		guard selectedItem != nil,
-		      let value = PluginDispatcher.interceptUserInput(string, command: command)
-		else { return }
-		selectedClient?.inputText(value, as: command)
-	}
-}
-
-/** Which `beginGesture` starts a swipe the window will measure.
-
- Anything else clears the remembered origin rather than leaving the previous
- gesture's behind: the origin is what `endGesture` subtracts from, and a stale
- one produced a delta past any threshold and switched the channel under a
- gesture the user never made. */
-enum MainWindowSwipePolicy {
-	static func recordsOrigin(touchCount: Int, minimumSwipeLength: Double) -> Bool {
-		minimumSwipeLength >= 1 && touchCount == 2
+		guard selectedItem != nil else { return }
+		selectedClient?.inputText(string, as: command)
 	}
 }
 
@@ -301,18 +279,12 @@ public extension MainWindow {
 		}
 	}
 
-	/** A gesture that does not qualify still has to clear the origin.
-
-	 Leaving the previous gesture's origin in place meant the next `endGesture`
-	 measured from wherever the fingers had been the time before: the delta was
-	 large enough to clear any threshold, and the channel changed under a
-	 gesture the user never made. */
+	/** A gesture that does not qualify still has to clear the origin: the next
+	 `endGesture` measures from it, and a stale one is a delta past any
+	 threshold -- the channel changing under a gesture nobody made. */
 	override func beginGesture(with event: NSEvent) {
 		let touches = Array(event.touches(matching: .touching, in: nil))
-		guard MainWindowSwipePolicy.recordsOrigin(
-			touchCount: touches.count,
-			minimumSwipeLength: Preferences.Input.swipeMinimumLength.value
-		) else {
+		guard touches.count == 2, Preferences.Input.swipeMinimumLength.value >= 1 else {
 			cachedSwipeOriginPoint = nil
 			return
 		}
@@ -379,7 +351,7 @@ public extension MainWindow {
 // MARK: - Selection and transcript view
 
 public extension MainWindow {
-	var previouslySelectedItem: IRCTreeItem? {
+	var previouslySelectedItem: TreeItem? {
 		guard let previousSelectedItemId else { return nil }
 		return world?.findItem(withId: previousSelectedItemId)
 	}
@@ -388,9 +360,9 @@ public extension MainWindow {
 		selectedItem?.associatedClient
 	}
 
-	var selectedChannel: IRCChannel? {
+	var selectedChannel: Channel? {
 		guard let selectedItem, selectedItem.isClient == false else { return nil }
-		return nativeChannel(selectedItem)
+		return selectedItem as? Channel
 	}
 
 	var selectedViewController: LogController? {
@@ -400,11 +372,11 @@ public extension MainWindow {
 		return selectedClient?.logController
 	}
 
-	func isItemVisible(_ item: IRCTreeItem) -> Bool {
+	func isItemVisible(_ item: TreeItem) -> Bool {
 		isItemSelected(item)
 	}
 
-	func isItemSelected(_ item: IRCTreeItem?) -> Bool {
+	func isItemSelected(_ item: TreeItem?) -> Bool {
 		item != nil && selectedItem === item
 	}
 
@@ -441,7 +413,7 @@ public extension MainWindow {
 			return
 		}
 
-		memberList.assign(to: changedTo.isChannel ? nativeChannel(changedTo) : nil)
+		memberList.assign(to: changedTo.isChannel ? changedTo as? Channel : nil)
 		if Preferences.Input.focusTextViewOnSelectionChange.value,
 		   Accessibility.isVoiceOverEnabled == false
 		{
@@ -458,30 +430,20 @@ public extension MainWindow {
 	}
 
 	func saveContentSplitViewState() {
-		MainWindowStateStore().saveLayout(
-			MainWindowLayoutState(
-				isServerListVisible: isServerListVisible,
-				isMemberListVisible: memberList.isHiddenByUser == false
-			)
-		)
+		MainWindowStateStore().saveLayout(presentationModel.columnState)
 	}
 
 	func restoreSavedContentSplitViewState() {
-		let state = MainWindowStateStore().loadLayout()
-		memberList.isHiddenByUser = !state.isMemberListVisible
-		presentationModel.isMemberListVisible = state.isMemberListVisible
-		presentationModel.isServerListVisible = state.isServerListVisible
+		presentationModel.restoreColumns(MainWindowStateStore().loadLayout())
 	}
 
 	/** Moves a column, animated unless the system says not to.
 
-	 `withAnimation` slides the column in whatever the accessibility settings
-	 say, and a pane sweeping across the window is exactly the motion Reduce
-	 Motion asks an interface to drop. The state change itself is the same
-	 either way, so the pane simply appears. */
+	 A pane sweeping across the window is exactly the motion Reduce Motion asks
+	 an interface to drop. The state change itself is the same either way, so
+	 the pane simply appears. */
 	private func changeColumnVisibility(_ change: () -> Void) {
-		let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-		withAnimation(reduceMotion ? nil : .default) {
+		withAnimation(ReduceMotion.animation(.default)) {
 			change()
 		}
 	}
@@ -498,51 +460,19 @@ public extension MainWindow {
 		changeColumnVisibility { presentationModel.isServerListVisible.toggle() }
 	}
 
-	func expandMemberList() {
-		changeColumnVisibility { presentationModel.isMemberListVisible = true }
-	}
-
-	func collapseMemberList() {
-		changeColumnVisibility { presentationModel.isMemberListVisible = false }
-	}
-
+	/// The member list belongs beside a channel the connection has joined; the
+	/// model derives the column's own visibility from that and from whether the
+	/// reader has closed it.
 	func updateMemberListVisibilityForSelection() {
-		let isAvailable = MainWindowMemberListVisibilityPolicy.isAvailable(
-			isChannel: selectedItem?.isChannel == true,
-			isLoggedIn: selectedItem?.associatedClient?.isLoggedIn == true
-		)
-		presentationModel.isMemberListAvailable = isAvailable
-
-		let shouldExpand = MainWindowMemberListVisibilityPolicy.shouldExpand(
-			isChannel: selectedItem?.isChannel == true,
-			isLoggedIn: selectedItem?.associatedClient?.isLoggedIn == true,
-			isHiddenByUser: memberList.isHiddenByUser
-		)
-
-		if shouldExpand {
-			expandMemberList()
-		} else {
-			collapseMemberList()
+		changeColumnVisibility {
+			presentationModel.applyMemberListAvailability(
+				selectedItem?.isChannel == true && selectedItem?.associatedClient?.isLoggedIn == true
+			)
 		}
 	}
 
 	@objc func toggleMemberListVisibility() {
-		if presentationModel.isMemberListVisible == false {
-			guard MainWindowMemberListVisibilityPolicy.shouldExpand(
-				isChannel: selectedItem?.isChannel == true,
-				isLoggedIn: selectedItem?.associatedClient?.isLoggedIn == true,
-				isHiddenByUser: false
-			) else {
-				memberList.isHiddenByUser = true
-				return
-			}
-
-			memberList.isHiddenByUser = false
-			expandMemberList()
-		} else {
-			memberList.isHiddenByUser = true
-			collapseMemberList()
-		}
+		changeColumnVisibility { presentationModel.toggleMemberList() }
 	}
 
 	var isMemberListVisible: Bool {
@@ -553,27 +483,29 @@ public extension MainWindow {
 		presentationModel.isServerListVisible
 	}
 
-	func setLoadingScreenProgressViewReason(_ reason: String) {
-		loadingScreen.setProgressViewReason(reason)
-	}
+	/** Puts the loading screen into the state the world is in: waiting for the
+	 configuration, offering to add the first server, or out of the way.
 
+	 The answer is whether the window is showing conversations, which is what
+	 decides whether the application may start connecting. */
+	@discardableResult
 	func reloadLoadingScreen() -> Bool {
 		guard let world else {
 			loadingScreen.showProgressView(withReason: MainWindowStrings.Loading.configuration)
 			return false
 		}
-		if world.isImportingConfiguration {
-			return false
-		}
-		if AppController.shared.applicationIsLaunched == false {
+		/* An import is replacing the world underneath: whatever the screen is
+		 showing is what it keeps showing until that finishes. */
+		guard world.isImportingConfiguration == false else { return false }
+		guard AppController.shared.applicationIsLaunched else {
 			loadingScreen.showProgressView(withReason: MainWindowStrings.Loading.configuration)
 			return false
 		}
-		if world.clientCount <= 0 {
-			loadingScreen.showWelcomeAddServerView()
+		guard world.clientCount > 0 else {
+			loadingScreen.showNoServersView()
 			return false
 		}
-		loadingScreen.hideAnimated()
+		loadingScreen.hide()
 		return true
 	}
 }
@@ -581,7 +513,12 @@ public extension MainWindow {
 // MARK: - Window title
 
 public extension MainWindow {
-	func updateTitle(for item: IRCTreeItem) {
+	func updateTitle(for item: TreeItem) {
+		/* The topic bar carries the channel's modes as a caption, and the same
+		 events that retitle the window are what change them. Nothing in the IRC
+		 layer addresses one transcript when a mode lands, so the redraw rides
+		 along here. */
+		item.logController?.refreshTopicBar()
 		if isItemSelected(item) || (item.isClient && selectedClient === item) {
 			updateTitle()
 		}
@@ -591,8 +528,6 @@ public extension MainWindow {
 		let content = MainWindowTitleContent(client: selectedClient, channel: selectedChannel)
 		title = content.title
 		subtitle = content.subtitle
-
-		setAccessibilityIdentifier("main-window")
 		setAccessibilityTitle([content.title, content.subtitle].filter { $0.isEmpty == false }.joined(separator: ", "))
 	}
 
@@ -627,42 +562,44 @@ public extension MainWindow {
 		select(item)
 	}
 
+	/// The first connection that comes up on its own, opened at its first
+	/// conversation; failing that, whatever the sidebar's first row is.
 	private func selectBestChoiceDuringSetup() {
-		let first = world?.clientList.first(where: { $0.config.autoConnect && $0.config.sidebarItemExpanded })
-		if let first {
-			var row = serverList.row(forItem: first)
-			if first.channelCount > 0 {
-				row += 1
-			}
-			serverList.selectItem(at: row)
-		} else {
-			serverList.selectItem(at: 0)
+		guard let first = world?.clientList
+			.first(where: { $0.config.autoConnect && $0.config.sidebarItemExpanded })
+		else {
+			serverList.select(serverList.selectableItems.first)
+			return
 		}
+		serverList.select(first.channelList.first ?? first)
 	}
 
 	func setupTrees() {
 		restoreExpandedClients()
 		restoreSelectionDuringSetup()
 		serverListSelectionDidChange()
-		menuController.populateNavigationChannelList()
+		menuController.actionCoordinator.populateNavigationChannelList()
 	}
 
-	func selectedChannel(on client: IRCClient) -> IRCChannel? {
+	func selectedChannel(on client: IRCClient) -> Channel? {
 		selectedClient === client ?
 			selectedChannel : nil
 	}
 
-	func reloadTreeItem(_ item: IRCTreeItem) {
-		serverList.refreshDrawing(forItem: item)
+	/** The sidebar's rows are values derived from the tree, so every one of
+	 these is the same instruction: rebuild them. The three names are
+	 `ClientOutput` requirements that the IRC layer calls at different
+	 granularities; the sidebar has only one. */
+	func reloadTreeItem(_: TreeItem) {
+		serverList.setNeedsRefresh()
 	}
 
-	func reloadTreeGroup(_ item: IRCTreeItem) {
-		guard item.isClient, let client = item.associatedClient else { return }
-		serverList.reloadItem(client, reloadChildren: true)
+	func reloadTreeGroup(_: TreeItem) {
+		serverList.setNeedsRefresh()
 	}
 
 	func reloadTree() {
-		serverList.refreshAllDrawings()
+		serverList.setNeedsRefresh()
 	}
 
 	func expandClient(_ client: IRCClient) {
@@ -671,7 +608,7 @@ public extension MainWindow {
 
 	func adjustSelection() {
 		guard let selectedItem, serverList.row(forItem: selectedItem) >= 0 else {
-			selectReplacement(excluding: nil)
+			selectReplacement(excluding: [])
 			return
 		}
 		select(selectedItem)
@@ -690,40 +627,44 @@ public extension MainWindow {
 		select(previous)
 	}
 
-	func select(_ item: IRCTreeItem?) {
+	func select(_ item: TreeItem?) {
 		guard let item else {
-			selectReplacement(excluding: nil)
+			selectReplacement(excluding: [])
 			return
 		}
 		if item.isClient == false {
 			serverList.expandItem(item.associatedClient)
 		}
-		let row = serverList.row(forItem: item)
-		guard row >= 0 else { return }
-		serverList.selectItem(at: row)
+		guard serverList.row(forItem: item) >= 0 else { return }
+		serverList.select(item)
 		selectionDidChange()
 	}
 
-	func deselect(_ item: IRCTreeItem) {
+	func deselect(_ item: TreeItem) {
 		guard selectedItem === item else { return }
-		let row = serverList.row(forItem: item)
-		selectReplacement(excluding: row >= 0 ? IndexSet(integer: row) : nil)
+		selectReplacement(excluding: [ObjectIdentifier(item)])
 	}
 
-	func deselectGroup(_ item: IRCTreeItem) {
-		guard item.isClient, selectedItem?.associatedClient === item.associatedClient else { return }
-		var excluded = serverList.indexesOfItems(inGroup: item) ?? []
-		let row = serverList.row(forItem: item)
-		if row >= 0 {
-			excluded.insert(row)
-		}
-		selectReplacement(excluding: excluded)
+	func deselectGroup(_ item: TreeItem) {
+		guard item.isClient, let client = item.associatedClient,
+		      selectedItem?.associatedClient === client
+		else { return }
+		selectReplacement(excluding: Set(([client] as [TreeItem] + client.channelList).map(ObjectIdentifier.init)))
 	}
 
-	private func selectReplacement(excluding excludedRows: IndexSet?) {
+	/** Moves the selection off the rows that are going away.
+
+	 The nearest row at or after the one that was selected, or the last row
+	 before it; the rows are compared by identity rather than by index, so a
+	 group that is being closed takes its own conversations out of the running
+	 without the caller having to turn them into row numbers first. */
+	private func selectReplacement(excluding excluded: Set<ObjectIdentifier>) {
 		let currentRow = max(serverList.selectedRow, 0)
-		let candidates = (0 ..< serverList.numberOfRows).filter { excludedRows?.contains($0) != true }
-		guard let row = candidates.first(where: { $0 >= currentRow }) ?? candidates.last else {
+		let candidates = serverList.selectableItems.enumerated()
+			.filter { excluded.contains(ObjectIdentifier($0.element)) == false }
+		guard let replacement = candidates.first(where: { $0.offset >= currentRow })?.element
+			?? candidates.last?.element
+		else {
 			storePreviousSelection()
 			selectedItem?.logController?.notifyDidBecomeHidden()
 			selectedItem = nil
@@ -731,7 +672,7 @@ public extension MainWindow {
 			selectionDidChangePostflight()
 			return
 		}
-		serverList.selectItem(at: row)
+		serverList.select(replacement)
 		selectionDidChange()
 	}
 }

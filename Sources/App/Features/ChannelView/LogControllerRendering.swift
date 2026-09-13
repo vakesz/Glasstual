@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -17,7 +17,6 @@ import GlasstualPluginKit
 /// Initial replay keeps raw archives distinct from the native rows it rendered.
 nonisolated struct TranscriptHistoryRenderOutput: Sendable { // nonisolated: value
 	let historicEntries: [LogLine]
-	let entries: [LogLine]
 	let results: [LogLineRenderResult]
 	let fetchSucceeded: Bool
 	let failure: HistoricLogFetchFailure?
@@ -137,47 +136,10 @@ nonisolated struct LogLineRenderRequest: Sendable { // nonisolated: value
 	}
 }
 
-nonisolated struct RenderedPluginMessage: Sendable { // nonisolated: value
-	var keywordMatchFound = false
-	var lineTypeRawValue: UInt = 0
-	var memberTypeRawValue: UInt = 0
-	var senderNickname: String?
-	var receivedAt = Date()
-	var lineNumber = ""
-	var messageContents = ""
-	var hyperlinks: [LinkParserResult] = []
-	var nicknames: [String] = []
-
-	@MainActor
-	func makeObject(resolvingMembersIn channel: IRCChannel?) -> PluginPostedMessage {
-		var pluginObject = PluginPostedMessage()
-		pluginObject.keywordMatchFound = keywordMatchFound
-		pluginObject.lineTypeRawValue = lineTypeRawValue
-		pluginObject.memberTypeRawValue = memberTypeRawValue
-		pluginObject.senderNickname = senderNickname
-		pluginObject.receivedAt = receivedAt
-		pluginObject.lineNumber = lineNumber
-		pluginObject.messageContents = messageContents
-		pluginObject.hyperlinks = hyperlinks.map {
-			PluginHyperlink(
-				uniqueIdentifier: $0.uniqueIdentifier,
-				stringValue: $0.stringValue,
-				range: $0.range,
-				strictMatch: $0.strictMatch
-			)
-		}
-		pluginObject.users = nicknames
-			.compactMap { channel?.findMember($0) }
-			.map(PluginHostAdapter.makeMember)
-		return pluginObject
-	}
-}
-
 nonisolated struct LogLineRenderResult: Sendable { // nonisolated: value
 	var transcriptLine: TranscriptLine
 	var fromCurrentSession: Bool
 	var processesInlineMedia: Bool
-	var pluginMessage: RenderedPluginMessage?
 
 	var lineNumber: String {
 		transcriptLine.lineNumber
@@ -209,18 +171,10 @@ extension LogController {
 	 that is not a function of its inputs, so it is taken before a render job
 	 starts rather than inside one. */
 	@MainActor
-	static func applyingMessageRenderers(
-		to lines: [LogLineSnapshot],
-		for viewController: LogController
-	) -> [LogLineSnapshot] {
+	static func applyingMessageRenderers(to lines: [LogLineSnapshot]) -> [LogLineSnapshot] {
 		lines.map { line in
 			var line = line
-			line.messageBody = PluginDispatcher.willRenderMessage(
-				line.messageBody,
-				forViewController: viewController,
-				lineType: line.lineType,
-				memberType: line.memberType
-			)
+			line.messageBody = PluginDispatcher.willRenderMessage(line.messageBody, lineType: line.lineType)
 			return line
 		}
 	}
@@ -229,18 +183,12 @@ extension LogController {
 		_ lines: [LogLineSnapshot],
 		context: LogLineRenderContext
 	) -> [LogLineRenderResult] {
-		lines.map { render(LogLineRenderRequest(line: $0, context: context)) }
+		lines.map { renderJob(LogLineRenderRequest(line: $0, context: context)) }
 	}
 
-	nonisolated static func renderJob(_ request: LogLineRenderRequest) -> LogLineRenderResult { // nonisolated: pure
-		render(request)
-	}
-
-	private nonisolated static func render( // nonisolated: pure
+	nonisolated static func renderJob( // nonisolated: pure
 		_ request: LogLineRenderRequest
-	)
-		-> LogLineRenderResult
-	{
+	) -> LogLineRenderResult {
 		let line = request.line
 		let attributes = TranscriptRenderOptions(
 			renderLinks: !LinkParser.bannedLineTypes.contains(LogLine.string(for: line.lineType) ?? ""),
@@ -279,8 +227,7 @@ extension LogController {
 		return LogLineRenderResult(
 			transcriptLine: transcriptLine,
 			fromCurrentSession: line.fromCurrentSession,
-			processesInlineMedia: inlineMedia,
-			pluginMessage: makePluginMessage(for: line, body: body)
+			processesInlineMedia: inlineMedia
 		)
 	}
 
@@ -294,25 +241,5 @@ extension LogController {
 			result.append(.date(formatDate(request.line.receivedAt, .long, .none, false) ?? ""))
 		}
 		return result
-	}
-
-	private nonisolated static func makePluginMessage( // nonisolated: pure
-		for line: LogLineSnapshot,
-		body: TranscriptBody
-	) -> RenderedPluginMessage? {
-		guard SharedApplication.sharedPluginManager().supportsFeature(.newMessagePostedEvent) else {
-			return nil
-		}
-		return RenderedPluginMessage(
-			keywordMatchFound: body.isHighlight,
-			lineTypeRawValue: line.lineType.rawValue,
-			memberTypeRawValue: line.memberType.rawValue,
-			senderNickname: line.nickname,
-			receivedAt: line.receivedAt,
-			lineNumber: line.uniqueIdentifier,
-			messageContents: body.plainText,
-			hyperlinks: body.links,
-			nicknames: body.mentionedNicknames
-		)
 	}
 }

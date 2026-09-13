@@ -47,7 +47,7 @@ import os
 /// stream without a `closed`.
 public nonisolated enum DCCChatEvent: Sendable { // nonisolated: value
 	case listening(port: UInt16)
-	case connected(peerAddress: String?)
+	case connected
 	/// One line as it arrived, without its newline. Still in the peer's
 	/// encoding: only the client knows which one that is.
 	case line(Data)
@@ -63,7 +63,7 @@ private nonisolated let directChatConnectionLogger = Logger( // nonisolated: let
 )
 
 /// The file-transfer side of DCC is ``DCCTransfer``, and the two share the
-/// Network.framework helpers in `DCCTransfer+Network.swift`. What differs is
+/// Network.framework helpers in ``DCCTransport``. What differs is
 /// what travels: a chat carries newline-terminated lines in both directions for
 /// as long as the peer stays, so there is no length to count down and no
 /// acknowledgement protocol — the session ends when one side closes.
@@ -174,7 +174,7 @@ public actor DCCChatConnection {
 			throw DCCTransferError.closedByPeer
 		}
 
-		try await DCCTransfer.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+		try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
 			try await connection.send(payload)
 		}
 	}
@@ -185,7 +185,7 @@ public actor DCCChatConnection {
 		do {
 			let connection = try await establishConnection()
 			readyConnection = connection
-			emit(.connected(peerAddress: connection.remoteEndpoint.flatMap(DCCTransfer.host(of:))))
+			emit(.connected)
 
 			try await readLines(over: connection)
 
@@ -261,7 +261,7 @@ public actor DCCChatConnection {
 			throw DCCTransferError.badParameter
 		}
 
-		let parameters = DCCTransfer.parameters(interfaceName: interfaceName, connectTimeout: timeout)
+		let parameters = DCCTransport.parameters(interfaceName: interfaceName, connectTimeout: timeout)
 		let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: networkPort)
 		let connection = NetworkConnection<TCP>(
 			to: endpoint,
@@ -269,7 +269,7 @@ public actor DCCChatConnection {
 		)
 		self.connection = connection
 
-		try await DCCTransfer.withTimeout(timeout, failingWith: .connectTimeout) {
+		try await DCCTransport.withTimeout(timeout, failingWith: .connectTimeout) {
 			/* Typed Network connections establish on first I/O. Empty data puts no
 			 bytes on the chat stream but makes the connected event truthful. */
 			try await connection.send(Data())
@@ -279,7 +279,7 @@ public actor DCCChatConnection {
 	}
 
 	private func acceptConnection(portRange: ClosedRange<UInt16>) async throws -> NetworkConnection<TCP> {
-		let listening = try await DCCTransfer.startListener(portRange: portRange)
+		let listening = try await DCCTransport.startListener(portRange: portRange)
 		listener = listening.listener
 		listenerTask = listening.task
 
@@ -294,7 +294,7 @@ public actor DCCChatConnection {
 			/* The transfer side checks this too. Nothing negotiates an address
 			 for a chat, so the expectation is normally empty and every caller
 			 gets in; a caller that configures one is held to it. */
-			guard DCCTransfer.connection(candidate, isFrom: expectedPeerAddress) else {
+			guard DCCTransport.connection(candidate, isFrom: expectedPeerAddress) else {
 				directChatConnectionLogger.error(
 					"Rejected a DCC CHAT connection from an address other than the one the offer named"
 				)
@@ -339,7 +339,7 @@ public actor DCCChatConnection {
 	 on a connection this session owns, not a pure function of its inputs, so
 	 its isolation follows the socket. */
 	private func receive(on connection: NetworkConnection<TCP>) async throws -> (Data?, Bool) {
-		let message = try await connection.receive(atLeast: 1, atMost: DCCTransfer.bufferSize)
+		let message = try await connection.receive(atLeast: 1, atMost: DCCTransport.bufferSize)
 
 		return (message.content, message.metadata.endOfStream)
 	}

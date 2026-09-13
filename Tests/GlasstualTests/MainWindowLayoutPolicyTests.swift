@@ -79,16 +79,6 @@ struct MainWindowToggleTitleTests {
 		#expect(hidden.isEmpty == false)
 	}
 
-	@Test("The notification title follows the mute switch")
-	func notificationTitleFollowsState() {
-		let muted = MainWindowStrings.Menu.notifications(areDisabled: true)
-		let unmuted = MainWindowStrings.Menu.notifications(areDisabled: false)
-
-		#expect(muted != unmuted)
-		#expect(muted.isEmpty == false)
-		#expect(unmuted.isEmpty == false)
-	}
-
 	@Test("The resize handle carries a label and a keyboard hint")
 	func resizeHandleIsDescribed() {
 		#expect(MainWindowStrings.Toolbar.memberListWidth.isEmpty == false)

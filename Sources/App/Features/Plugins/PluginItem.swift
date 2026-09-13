@@ -22,16 +22,13 @@ public nonisolated struct PluginSupportedFeature: OptionSet, Sendable { // nonis
 		self.rawValue = rawValue
 	}
 
-	public static let didReceiveCommandEvent = Self(rawValue: 1 << 1)
-	public static let didReceivePlainTextMessageEvent = Self(rawValue: 1 << 2)
-	public static let newMessagePostedEvent = Self(rawValue: 1 << 4)
-	public static let outputSuppressionRules = Self(rawValue: 1 << 5)
-	public static let preferencePane = Self(rawValue: 1 << 6)
-	public static let serverInputDataInterception = Self(rawValue: 1 << 7)
-	public static let subscribedServerInputCommands = Self(rawValue: 1 << 8)
-	public static let subscribedUserInputCommands = Self(rawValue: 1 << 9)
-	public static let userInputDataInterception = Self(rawValue: 1 << 10)
-	public static let willRenderMessageEvent = Self(rawValue: 1 << 12)
+	public static let didReceiveCommandEvent = Self(rawValue: 1 << 0)
+	public static let didReceivePlainTextMessageEvent = Self(rawValue: 1 << 1)
+	public static let preferencePane = Self(rawValue: 1 << 2)
+	public static let serverInputDataInterception = Self(rawValue: 1 << 3)
+	public static let subscribedServerInputCommands = Self(rawValue: 1 << 4)
+	public static let subscribedUserInputCommands = Self(rawValue: 1 << 5)
+	public static let willRenderMessageEvent = Self(rawValue: 1 << 6)
 }
 
 /// One successfully loaded plugin bundle and everything the host learned about
@@ -41,7 +38,7 @@ public nonisolated struct PluginSupportedFeature: OptionSet, Sendable { // nonis
 /// either returns a fully populated item or `nil`. Nothing observes a
 /// half-configured plugin.
 @MainActor
-public final class PluginItem: NSObject {
+public final class PluginItem {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginItem"
@@ -56,7 +53,6 @@ public final class PluginItem: NSObject {
 	public let supportedFeatures: PluginSupportedFeature
 	public let supportedUserInputCommands: [String]
 	public let supportedServerInputCommands: [String]
-	public let outputSuppressionRules: [PluginOutputSuppressionRule]
 	@MainActor public let pluginPreferencesPane: PluginPreferencesPane?
 
 	private init(
@@ -65,7 +61,6 @@ public final class PluginItem: NSObject {
 		supportedFeatures: PluginSupportedFeature,
 		supportedUserInputCommands: [String],
 		supportedServerInputCommands: [String],
-		outputSuppressionRules: [PluginOutputSuppressionRule],
 		pluginPreferencesPane: PluginPreferencesPane?
 	) {
 		self.bundle = bundle
@@ -73,7 +68,6 @@ public final class PluginItem: NSObject {
 		self.supportedFeatures = supportedFeatures
 		self.supportedUserInputCommands = supportedUserInputCommands
 		self.supportedServerInputCommands = supportedServerInputCommands
-		self.outputSuppressionRules = outputSuppressionRules
 		self.pluginPreferencesPane = pluginPreferencesPane
 	}
 
@@ -98,12 +92,6 @@ public final class PluginItem: NSObject {
 		plugin.pluginLoaded(using: host)
 
 		var features = detectedFeatures(of: plugin)
-
-		let suppressionRules = (plugin as? any PluginOutputSuppressionProviding)?
-			.pluginOutputSuppressionRules ?? []
-		if suppressionRules.isEmpty == false {
-			features.insert(.outputSuppressionRules)
-		}
 
 		let preferencePane = preferencePane(of: plugin)
 		if preferencePane != nil {
@@ -130,7 +118,6 @@ public final class PluginItem: NSObject {
 			supportedFeatures: features,
 			supportedUserInputCommands: userInputCommands,
 			supportedServerInputCommands: serverInputCommands,
-			outputSuppressionRules: suppressionRules,
 			pluginPreferencesPane: preferencePane
 		)
 	}
@@ -163,17 +150,11 @@ public final class PluginItem: NSObject {
 	@MainActor
 	private static func detectedFeatures(of plugin: any GlasstualPlugin) -> PluginSupportedFeature {
 		var features: PluginSupportedFeature = []
-		if plugin is any PluginPostedMessageHandling {
-			features.insert(.newMessagePostedEvent)
-		}
 		if plugin is any PluginMessageRendering {
 			features.insert(.willRenderMessageEvent)
 		}
 		if plugin is any PluginServerMessageIntercepting {
 			features.insert(.serverInputDataInterception)
-		}
-		if plugin is any PluginUserInputIntercepting {
-			features.insert(.userInputDataInterception)
 		}
 		if plugin is any PluginTextEventHandling {
 			features.insert(.didReceivePlainTextMessageEvent)

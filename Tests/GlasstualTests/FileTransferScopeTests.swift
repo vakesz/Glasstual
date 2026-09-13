@@ -7,8 +7,8 @@ import Testing
 @Suite("File transfer scope")
 @MainActor
 struct FileTransferScopeTests {
-	private func client() -> GLTTestClient {
-		GLTTestClient()
+	private func client() -> TestClient {
+		TestClient()
 	}
 
 	private func receiver(

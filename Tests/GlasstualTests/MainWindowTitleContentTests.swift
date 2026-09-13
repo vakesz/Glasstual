@@ -20,7 +20,7 @@ struct MainWindowTitleContentTests {
 
 	@Test("A server selection composes status, nickname, and address in order")
 	func serverSelectionComposition() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.connectionName = "Libera"
 		client.server = Server(serverAddress: "irc.example.test")
 		client.userNickname = "Alice"
@@ -35,9 +35,12 @@ struct MainWindowTitleContentTests {
 		].joined(separator: " · "))
 	}
 
-	@Test("A channel selection adds the network, identity, and member count")
+	/** The subtitle is one line under a unified toolbar, so it truncates: it
+	 used to carry status, network, nickname, member count and the channel's
+	 mode string, and the mode string is what survived on a narrow window. */
+	@Test("A channel selection carries its status, network and member count, and nothing else")
 	func channelSelectionComposition() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.connectionName = "Libera"
 		client.userNickname = "Alice"
 		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
@@ -48,14 +51,28 @@ struct MainWindowTitleContentTests {
 		#expect(content.subtitle == [
 			MainWindowStrings.ConnectionStatus.disconnected.title,
 			"Libera",
-			"Alice",
-			MainWindowStrings.Conversation.userCount(formattedNumber(0) as String),
+			MainWindowStrings.Conversation.memberCount(0),
 		].joined(separator: " · "))
+	}
+
+	/// The reader's own nickname belongs to the connection, so it is on the
+	/// server row -- where the away marker is a format string rather than a
+	/// catalog value beginning with a space.
+	@Test("An away nickname is marked on the server row")
+	func awayNicknameIsMarked() {
+		let client = TestClient()
+		client.config.connectionName = "Libera"
+		client.userNickname = "Alice"
+		client.userIsAway = true
+
+		let content = MainWindowTitleContent(client: client, channel: nil)
+
+		#expect(content.subtitle.contains("Alice (away)"))
 	}
 
 	@Test("Disconnecting outranks connecting, logging on, and disconnected", arguments: 0 ..< 16)
 	func disconnectingStatusTakesPrecedence(flags: Int) {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.isConnecting = flags & 1 != 0
 		client.isConnected = flags & 2 != 0
 		client.isLoggedIn = flags & 4 != 0
@@ -69,7 +86,7 @@ struct MainWindowTitleContentTests {
 	@Test("The native window updates a selected child's status when its client changes")
 	func selectedChildReceivesClientTitleUpdates() {
 		let window = MainWindow(contentRect: .zero, styleMask: .titled, backing: .buffered, defer: false)
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.connectionName = "Test Network"
 		client.userNickname = "Alice"
 		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
@@ -92,8 +109,7 @@ struct MainWindowTitleContentTests {
 			let expectedSubtitle = [
 				status?.title,
 				"Test Network",
-				"Alice",
-				MainWindowStrings.Conversation.userCount(formattedNumber(0) as String),
+				MainWindowStrings.Conversation.memberCount(0),
 			].compactMap(\.self).joined(separator: " · ")
 			#expect(window.subtitle == expectedSubtitle)
 			#expect(window.accessibilityIdentifier() == "main-window")
@@ -104,7 +120,7 @@ struct MainWindowTitleContentTests {
 	@Test("Unselected siblings and other networks do not update the native title")
 	func unrelatedItemsDoNotUpdateTitle() {
 		let window = MainWindow(contentRect: .zero, styleMask: .titled, backing: .buffered, defer: false)
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.connectionName = "Test Network"
 		let selected = Channel(config: ChannelConfig(channelName: "#selected"))
 		selected.associatedClient = client
@@ -117,7 +133,7 @@ struct MainWindowTitleContentTests {
 
 		client.isConnecting = true
 		window.updateTitle(for: sibling)
-		window.updateTitle(for: GLTTestClient())
+		window.updateTitle(for: TestClient())
 		#expect(window.subtitle == subtitle)
 		#expect(window.accessibilityTitle() == accessibleTitle)
 
@@ -128,7 +144,7 @@ struct MainWindowTitleContentTests {
 	@Test("A selected child's native title distinguishes waiting, cancelled, and retrying connections")
 	func reconnectTitleTransitions() {
 		let window = MainWindow(contentRect: .zero, styleMask: .titled, backing: .buffered, defer: false)
-		let client = GLTTestClient()
+		let client = TestClient()
 		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
 		channel.associatedClient = client
 		window.selectedItem = channel
@@ -153,7 +169,7 @@ struct MainWindowTitleContentTests {
 	@Test("Server selection and clearing selection replace both native and accessible titles")
 	func serverAndEmptySelectionReplaceAccessibleTitle() {
 		let window = MainWindow(contentRect: .zero, styleMask: .titled, backing: .buffered, defer: false)
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.connectionName = "Test Network"
 		window.selectedItem = client
 		window.updateTitle(for: client)

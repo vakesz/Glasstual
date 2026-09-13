@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -39,8 +39,12 @@
 import AppKit
 
 /// Owns the visual policy for AppKit menu symbols. Keeping this policy in one
-/// place prevents the menu bar and the menus assembled at runtime from
-/// drifting apart.
+/// place prevents the contextual menus assembled at runtime from drifting
+/// apart.
+///
+/// The menu bar is not among them: macOS draws no images beside its own
+/// menu-bar commands, so this application draws none either — and the
+/// transparent spacer a half-illustrated column needed went with them.
 @MainActor
 public enum MenuPresentation {
 	private static let symbolConfiguration = NSImage.SymbolConfiguration(
@@ -48,34 +52,25 @@ public enum MenuPresentation {
 		weight: .regular,
 		scale: .medium
 	)
-	/// One stable instance lets repeated passes distinguish padding from a
-	/// real symbol. A transparent bitmap is treated as no image on macOS 26.
-	private static let symbolSpacer: NSImage? = {
-		let configuration = symbolConfiguration.applying(
-			NSImage.SymbolConfiguration(paletteColors: [.clear])
-		)
-		guard let image = NSImage(
-			systemSymbolName: "circle",
-			accessibilityDescription: nil
-		)?.withSymbolConfiguration(configuration) else {
-			return nil
-		}
-
-		image.isTemplate = false
-
-		return image
-	}()
-
-	static func symbolName(for command: MenuCommand?) -> String? {
-		command?.symbolName
-	}
-
-	static var symbolMappings: [MenuCommand: String] {
-		MenuCommand.symbolNames
-	}
 
 	public static func apply(to menu: NSMenu?) {
-		apply(symbolConfiguration, to: menu)
+		guard let menu else {
+			return
+		}
+
+		for item in menu.items {
+			if item.image == nil,
+			   let symbolName = item.command?.symbolName
+			{
+				item.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: item.title)
+			}
+
+			item.image = item.image?.withSymbolConfiguration(symbolConfiguration) ?? item.image
+
+			if item.hasSubmenu {
+				apply(to: item.submenu)
+			}
+		}
 	}
 
 	public static func messageReplyItems(
@@ -91,11 +86,10 @@ public enum MenuPresentation {
 		)
 
 		let separator = NSMenuItem.separator()
-		separator.command = .webReplySeparator
 
 		let reply = NSMenuItem(
 			title: MessageMenuStrings.reply,
-			action: #selector(MenuController.replyToMessage(_:)),
+			action: #selector(MenuActionCoordinator.replyToMessage(_:)),
 			keyEquivalent: ""
 		)
 		reply.target = target
@@ -115,7 +109,7 @@ public enum MenuPresentation {
 		for emoji in ["👍", "❤️", "😂", "😮", "😢", "👎"] {
 			let item = NSMenuItem(
 				title: emoji,
-				action: #selector(MenuController.reactToMessage(_:)),
+				action: #selector(MenuActionCoordinator.reactToMessage(_:)),
 				keyEquivalent: ""
 			)
 			item.target = target
@@ -128,7 +122,7 @@ public enum MenuPresentation {
 
 		let other = NSMenuItem(
 			title: MessageMenuStrings.otherReaction,
-			action: #selector(MenuController.reactToMessageWithOtherEmoji(_:)),
+			action: #selector(MenuActionCoordinator.reactToMessageWithOtherEmoji(_:)),
 			keyEquivalent: ""
 		)
 		other.target = target
@@ -140,6 +134,11 @@ public enum MenuPresentation {
 		return [separator, reply, react]
 	}
 
+	/** The system's own Share item, renamed.
+
+	 AppKit gives the standard item the title "Share" and a submenu of the
+	 services; the ellipsis the application used to add promised a dialog the
+	 submenu never shows. */
 	public static func shareMenuItem(for items: [Any]) -> NSMenuItem {
 		let title = MessageMenuStrings.share
 		let menuItem: NSMenuItem
@@ -160,67 +159,6 @@ public enum MenuPresentation {
 		)?.withSymbolConfiguration(symbolConfiguration)
 
 		return menuItem
-	}
-
-	private static func apply(_ configuration: NSImage.SymbolConfiguration, to menu: NSMenu?) {
-		guard let menu else {
-			return
-		}
-
-		var hasSymbol = false
-
-		for item in menu.items {
-			if item.image == nil,
-			   let symbolName = symbolName(for: item.command),
-			   let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: item.title)
-			{
-				item.image = symbol
-			}
-
-			let currentImage = item.image
-
-			if let symbolSpacer, currentImage === symbolSpacer {
-				hasSymbol = true
-			} else if let configuredImage = currentImage?.withSymbolConfiguration(configuration) {
-				item.image = configuredImage
-				hasSymbol = true
-			}
-
-			/* Every item that ends up carrying an image wants this, not just
-			 the spacers added below; otherwise real symbols stay hidden while
-			 the blank spacers next to them are shown. */
-			if item.image != nil {
-				preferVisibleImage(for: item)
-			}
-
-			if item.hasSubmenu {
-				apply(configuration, to: item.submenu)
-			}
-		}
-
-		guard hasSymbol else {
-			return
-		}
-
-		guard let symbolSpacer else {
-			return
-		}
-
-		for item in menu.items where item.isSeparatorItem == false && item.image == nil {
-			item.image = symbolSpacer
-
-			preferVisibleImage(for: item)
-		}
-	}
-
-	private static func preferVisibleImage(for item: NSMenuItem) {
-		/* Xcode 26 does not declare this macOS 27 API, so runtime availability
-		 alone is insufficient when the release runner uses its older compiler. */
-		#if compiler(>=6.4)
-			if #available(macOS 27.0, *) {
-				item.preferredImageVisibility = .visible
-			}
-		#endif
 	}
 }
 

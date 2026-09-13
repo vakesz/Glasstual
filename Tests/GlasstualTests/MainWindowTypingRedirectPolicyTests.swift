@@ -20,6 +20,27 @@ struct MainWindowTypingRedirectPolicyTests {
 		)
 	}
 
+	/** AppKit maps the arrow, function, page and Home/End keys into the Unicode
+	 private-use area rather than to control characters, so they passed the
+	 control-character test: pressing an arrow key in a sidebar inserted an
+	 undrawable character into the message field instead of moving the
+	 selection. */
+	@Test(
+		"Function keys mapped into the private-use area stay with the sidebar",
+		arguments: [0xF700, 0xF701, 0xF702, 0xF703, 0xF72B, 0xF8FF]
+	)
+	func functionKeysAreNotRedirected(scalarValue: Int) throws {
+		let scalar = try #require(Unicode.Scalar(UInt32(scalarValue)))
+
+		#expect(
+			MainWindowTypingRedirectPolicy.text(
+				for: String(Character(scalar)),
+				commandIsPressed: false,
+				controlIsPressed: false
+			) == nil
+		)
+	}
+
 	@Test("Commands and navigation control characters stay with the sidebar")
 	func commandsAndControlsAreNotRedirected() {
 		#expect(

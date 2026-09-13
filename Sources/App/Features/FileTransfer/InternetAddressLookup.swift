@@ -14,111 +14,73 @@ import CocoaExtensions
 import Foundation
 import os
 
-@MainActor
-public protocol InternetAddressLookupDelegate: AnyObject {
-	func internetAddressLookupReturnedAddress(_ address: String)
-	func internetAddressLookupFailed()
-}
+private let internetAddressLookupLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "InternetAddressLookup"
+)
 
-@MainActor
-public final class InternetAddressLookup {
+/// Asks a public address service what this Mac looks like from the internet,
+/// which is the address a DCC offer has to name.
+public enum InternetAddressLookup {
 	private static let requestTimeout: TimeInterval = 30
+	private nonisolated static let responseByteLimit = 1024 // nonisolated: let
 	private static let firstPartySourceURL = URL(string: "https://api.ipify.org")!
 	private static let thirdPartySourceURLs = [
 		URL(string: "https://wtfismyip.com/text")!,
 		URL(string: "https://canhazip.com/")!,
 		URL(string: "https://ifconfig.me/ip")!,
 	]
-	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-		category: "InternetAddressLookup"
-	)
 
-	public var ipv4AddressIsValid = true
-	public var ipv6AddressIsValid = true
-
-	private weak var requestDelegate: InternetAddressLookupDelegate?
-	private var session: URLSession?
-	private var lookupTask: Task<Void, Never>?
-	private var address: String?
-	/** Identifies the lookup a completion belongs to so that a cancelled or superseded
-	 request cannot report back to the delegate. */
-	private var lookupGeneration: UInt64 = 0
-
-	public init(delegate: InternetAddressLookupDelegate) {
-		requestDelegate = delegate
+	/// The address the configured source reports, or `nil` when no usable one
+	/// came back — a refusal, an unreadable body, or a cancelled request.
+	public static func address() async -> String? {
+		await address(from: sourceURL)
 	}
 
-	isolated deinit {
-		lookupTask?.cancel()
-		session?.invalidateAndCancel()
-	}
-
-	public func performLookup() {
-		performLookup(from: addressSourceURL)
-	}
-
-	func performLookup(from sourceURL: URL) {
-		/* A second request while one is in flight restarts rather than aborting the app;
-		 two concurrent DCC offers can reach this. */
-		cancelLookup()
-
-		lookupGeneration &+= 1
-		let generation = lookupGeneration
-
+	static func address(from sourceURL: URL) async -> String? {
 		let configuration = URLSessionConfiguration.ephemeral
 		configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-		configuration.timeoutIntervalForRequest = Self.requestTimeout
-		configuration.timeoutIntervalForResource = Self.requestTimeout
+		configuration.timeoutIntervalForRequest = requestTimeout
+		configuration.timeoutIntervalForResource = requestTimeout
 
 		let session = URLSession(configuration: configuration)
-		self.session = session
-		lookupTask = Task { [weak self] in
-			do {
-				let (bytes, response) = try await session.bytes(from: sourceURL)
-				guard let http = response as? HTTPURLResponse, http.statusCode == 200,
-				      response.expectedContentLength <= 1024 else { throw URLError(.badServerResponse) }
-				var data = Data()
-				for try await byte in bytes {
-					guard data.count < 1024 else { throw URLError(.dataLengthExceedsMaximum) }
-					data.append(byte)
-				}
+		defer { session.invalidateAndCancel() }
 
-				self?.completeLookup(generation: generation, data: data, response: response, error: nil)
-			} catch {
-				self?.completeLookup(generation: generation, data: nil, response: nil, error: error)
+		do {
+			let (bytes, response) = try await session.bytes(from: sourceURL)
+			guard let http = response as? HTTPURLResponse, http.statusCode == 200,
+			      response.expectedContentLength <= responseByteLimit
+			else {
+				throw URLError(.badServerResponse)
 			}
+
+			/* Read the body as it arrives rather than after it: a chunked
+			 response that never terminates would otherwise be refused only when
+			 the resource timeout ran out. */
+			var data = Data()
+			for try await byte in bytes {
+				guard data.count < responseByteLimit else { throw URLError(.dataLengthExceedsMaximum) }
+				data.append(byte)
+			}
+
+			return address(from: data, response: response)
+		} catch {
+			internetAddressLookupLogger.error("Lookup failed: \(error.localizedDescription, privacy: .public)")
+			return nil
 		}
 	}
 
-	public func cancelLookup() {
-		/* Retiring the generation stops the in-flight completion from reporting a
-		 cancellation to the delegate as a lookup failure. */
-		lookupGeneration &+= 1
-		teardownConnection()
-	}
-
-	public nonisolated static func address( // nonisolated: pure
-		from data: Data?,
-		response: URLResponse?,
-		allowIPv4: Bool,
-		allowIPv6: Bool
-	) -> String? {
+	/// The address a response body names, or `nil` when it names none.
+	public nonisolated static func address(from data: Data?, response: URLResponse?) -> String? { // nonisolated: pure
 		guard
 			let response = response as? HTTPURLResponse,
 			response.statusCode == 200,
 			let data,
 			!data.isEmpty,
-			data.count <= 1024,
+			data.count <= responseByteLimit,
 			let address = String(data: data, encoding: .utf8)?
-			.trimmingCharacters(in: .whitespacesAndNewlines)
-		else {
-			return nil
-		}
-
-		guard
-			(allowIPv4 && address.isIPv4Address)
-			|| (allowIPv6 && address.isIPv6Address)
+			.trimmingCharacters(in: .whitespacesAndNewlines),
+			address.isIPv4Address || address.isIPv6Address
 		else {
 			return nil
 		}
@@ -126,46 +88,11 @@ public final class InternetAddressLookup {
 		return address
 	}
 
-	private var addressSourceURL: URL {
+	private static var sourceURL: URL {
 		if Preferences.FileTransfers.ipAddressDetectionMethod.value == .routerAndThirdParty {
-			return Self.thirdPartySourceURLs.randomElement()!
+			return thirdPartySourceURLs.randomElement()!
 		}
 
-		return Self.firstPartySourceURL
-	}
-
-	private func completeLookup(generation: UInt64, data: Data?, response: URLResponse?, error: Error?) {
-		guard generation == lookupGeneration else { return }
-
-		if let error {
-			Self.logger.error("Lookup failed: \(error.localizedDescription, privacy: .public)")
-		} else {
-			address = Self.address(
-				from: data,
-				response: response,
-				allowIPv4: ipv4AddressIsValid,
-				allowIPv6: ipv6AddressIsValid
-			)
-		}
-
-		teardownConnection()
-		informDelegate()
-		address = nil
-	}
-
-	private func teardownConnection() {
-		lookupTask?.cancel()
-		lookupTask = nil
-
-		session?.invalidateAndCancel()
-		session = nil
-	}
-
-	private func informDelegate() {
-		if let address {
-			requestDelegate?.internetAddressLookupReturnedAddress(address)
-		} else {
-			requestDelegate?.internetAddressLookupFailed()
-		}
+		return firstPartySourceURL
 	}
 }

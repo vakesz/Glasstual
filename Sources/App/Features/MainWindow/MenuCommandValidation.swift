@@ -3,10 +3,10 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,10 +44,30 @@ private enum MenuValidationConstants {
 	static let maximumDictionaryLookupLength = 40
 	static let maximumDictionaryMenuTitleLength = 25
 	static let truncatedDictionaryMenuTitleLength = 24
-	static let preferredWebServicesKey = "NSPreferredWebServices"
-	static let webSearchProviderKey = "NSWebServicesProviderWebSearch"
-	static let defaultDisplayNameKey = "NSDefaultDisplayName"
-	static let fallbackSearchProviderName = "Google"
+}
+
+/// Which web-search service the system is set to use, which is what the
+/// transcript's Search command has to name. The menu is built with it and
+/// validation refreshes it, so the item never says "Google" to someone whose
+/// system is set to DuckDuckGo.
+@MainActor
+public enum MenuSearchProvider {
+	private static let preferredWebServicesKey = "NSPreferredWebServices"
+	private static let webSearchProviderKey = "NSWebServicesProviderWebSearch"
+	private static let defaultDisplayNameKey = "NSDefaultDisplayName"
+	private static let fallbackName = "Google"
+
+	public static var name: String {
+		let services = UserDefaults.standard.dictionary(forKey: preferredWebServicesKey)
+		let provider = services?[webSearchProviderKey]
+			.flatMap(PropertyListValue.init(propertyList:))
+
+		return provider?.dictionary?[defaultDisplayNameKey]?.string ?? fallbackName
+	}
+
+	public static var menuTitle: String {
+		ApplicationStrings.search(with: name)
+	}
 }
 
 /// Where a Paste command puts what it is carrying.
@@ -121,9 +141,19 @@ public enum MenuResponderCommandPolicy {
 	}
 }
 
+/** Menu validation.
+
+ Availability is enablement, not visibility: a command the selection cannot
+ carry out is dimmed where it always sits, so the menus keep their shape and
+ stay learnable. The one exception is a pair of commands that are two states of
+ the same thing — Connect and Disconnect, Join and Leave — where showing both
+ would offer a choice that does not exist. */
 @MainActor
 extension MenuActionCoordinator {
-	public func validate(_ menuItem: NSMenuItem) -> Bool {
+	/// AppKit asks the item's target, which is this object: the menu controller
+	/// is the menus' delegate, and a delegate is not consulted about
+	/// enablement.
+	public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
 		let appController: ApplicationController = AppController.shared
 		guard appController.applicationIsTerminating == false else { return false }
 
@@ -133,7 +163,6 @@ extension MenuActionCoordinator {
 			applicationIsLaunched: appController.applicationIsLaunched,
 			mainWindowHasAttachedSheet: mainWindow.attachedSheet != nil,
 			mainWindowIsFocused: mainWindow.isMainWindow,
-			mainWindowIsBeneathMouse: mainWindow.ceIsBeneathMouse,
 			hasExplicitMenuContext: hasExplicitMenuContext
 		)
 	}
@@ -155,58 +184,34 @@ extension MenuActionCoordinator {
 		}
 	}
 
-	/** The Channel and Query menu bar items carry their menu only while the
-	 selection has one to show. AppKit never validates a menu bar item, so the
-	 selection has to hand the menu over itself; validation calls the same code
-	 for the items that do get validated. */
-	func attachChannelMenu(to item: NSMenuItem?) {
-		guard let item else { return }
-		let visible = selectedChannel?.isChannel == true
-		item.isHidden = visible == false
-		item.submenu = visible ? menuController?.mainMenuChannelMenu : nil
-	}
-
-	func attachQueryMenu(to item: NSMenuItem?) {
-		guard let item else { return }
-		let channel = selectedChannel
-		let visible = channel.map { $0.isPrivateMessage || $0.isUtility || $0.isDirectChat } == true
-		item.isHidden = visible == false
-		item.submenu = visible ? menuController?.mainMenuQueryMenu : nil
-	}
-
 	private func validateGeneralCommand(_ item: NSMenuItem) -> Bool {
-		let client = selectedClient
-		let channel = selectedChannel
-
 		switch item.command {
-		case .channelMenu:
-			attachChannelMenu(to: item)
-			return true
-		case .queryMenu:
-			attachQueryMenu(to: item)
-			return true
 		case .closeWindow:
-			return validateCloseWindow(item, client: client, channel: channel)
+			return validateCloseWindow(item)
 		case .paste:
 			return validatePaste()
 		case .markScrollback, .scrollbackMarker,
 		     .markAllRead, .clearScrollback,
-		     .increaseFont, .decreaseFont,
+		     .increaseFont, .decreaseFont, .actualSize,
 		     .jumpToCurrentSession, .jumpToPresent:
 			return selectedViewController != nil
 		case .nextHighlight, .previousHighlight:
-			return selectedViewController?.highlightAvailable(
-				item.command == .previousHighlight
-			) == true
+			return selectedViewController?.hasHighlightedLines == true
 		case .segmentedAddChannel:
-			return client != nil
+			return selectedClient != nil
 		case .queryLogs:
-			let isQuery = channel?.isPrivateMessage == true
-			item.isHidden = isQuery == false
-			item.menu?.item(for: .closeQuerySeparator)?.isHidden = isQuery == false
-			return TextualPreferences.logToDiskIsEnabled()
+			return selectedChannel?.isPrivateMessage == true && TextualPreferences.logToDiskIsEnabled()
 		case .developerMode:
 			item.state = Preferences.Commands.developerMode.value ? .on : .off
+			return true
+		case .muteNotifications, .dockMuteNotifications:
+			/* A mode is ticked while it is in force. The item used to be
+			 renamed instead, so the menu read as a command and its two homes
+			 disagreed about what to call it. */
+			item.state = SharedApplication.sharedNotificationController().areNotificationsDisabled ? .on : .off
+			return true
+		case .muteNotificationSounds, .dockMuteNotificationSounds:
+			item.state = Preferences.Notifications.soundIsMuted.value ? .on : .off
 			return true
 		default:
 			return true
@@ -216,32 +221,19 @@ extension MenuActionCoordinator {
 	func validateServerCommand(_ item: NSMenuItem) -> Bool {
 		let client = selectedClient
 		let policy = MenuServerActionPolicy(client: client)
+		/* Connect and Disconnect are one command in two states, so only the one
+		 that applies is shown; the proxy-free variant is Connect's Option
+		 alternate and follows it. */
+		let isConnected = client.map { $0.isConnected || $0.isConnecting } == true
 
 		switch item.command {
-		case .connect:
-			guard let client else {
-				item.isHidden = false
-				return false
-			}
-			let connected = client.isConnected || client.isConnecting
-			item.isHidden = connected
-			return policy.canConnect
-		case .connectWithoutProxy:
-			let flags = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
-			guard flags == .shift, let client else {
-				item.isHidden = true
-				return false
-			}
-			let unavailable = client.isConnected || client.isConnecting || client.config.proxyType == .none
-			item.isHidden = unavailable
-			return policy.canConnectWithoutProxy
+		case .connect, .connectWithoutProxy:
+			item.isHidden = isConnected
+			return item.command == .connect ? policy.canConnect : policy.canConnectWithoutProxy
 		case .disconnect:
-			let connected = client.map { $0.isConnected || $0.isConnecting } == true
-			item.isHidden = connected == false
+			item.isHidden = isConnected == false
 			return policy.canDisconnect
 		case .cancelReconnect:
-			let reconnecting = client?.isReconnecting == true
-			item.isHidden = reconnecting == false
 			return policy.canCancelReconnect
 		case .channelList:
 			return client?.isLoggedIn == true
@@ -251,8 +243,7 @@ extension MenuActionCoordinator {
 			 offered a command that dismissed an unrelated sheet and then did
 			 nothing. */
 			return MenuResponderCommandPolicy.canChangeNickname(clientIsLoggedIn: client?.isLoggedIn == true)
-		case .duplicateServer, .addChannelToServer,
-		     .serverProperties:
+		case .duplicateServer, .addChannelToServer, .serverProperties:
 			return client != nil
 		case .deleteServer:
 			return client.map { $0.isConnecting == false && $0.isConnected == false } == true
@@ -267,7 +258,7 @@ extension MenuActionCoordinator {
 		/* The mirror of `IRCClient.canJoin`, for a channel that is already
 		 joined: the same connection, the same channel list, and a channel the
 		 client has not finished with. */
-		let canActOnChannel = channel.map { channel in
+		let isJoined = channel.map { channel in
 			client?.canJoinChannels == true
 				&& channel.associatedClient === client
 				&& client?.channelList.contains(where: { $0 === channel }) == true
@@ -276,30 +267,33 @@ extension MenuActionCoordinator {
 
 		switch item.command {
 		case .joinChannel:
-			let canJoin = channel.map { client?.canJoin($0) == true } == true
-			item.isHidden = !canJoin
-			return canJoin
+			item.isHidden = isJoined
+			return channel.map { client?.canJoin($0) == true } == true
 		case .leaveChannel:
-			item.isHidden = !canActOnChannel
-			let joinHidden = item.menu?.item(for: .joinChannel)?.isHidden == true
-			item.menu?.item(for: .leaveChannelSeparator)?.isHidden =
-				item.isHidden && joinHidden
-			return canActOnChannel
+			item.isHidden = isJoined == false
+			return isJoined
 		case .addChannel:
 			return client != nil
 		case .viewChannelLogs:
-			return TextualPreferences.logToDiskIsEnabled()
-		case .modifyTopic, .modes, .bans:
-			return canActOnChannel
+			return channel != nil && TextualPreferences.logToDiskIsEnabled()
+		case .modifyTopic, .modes, .channelModeManageAll, .bans:
+			return isJoined
+		case .channelModeModerated:
+			item.state = channelModeIsSet("m") ? .on : .off
+			return isJoined
+		case .channelModeInviteOnly:
+			item.state = channelModeIsSet("i") ? .on : .off
+			return isJoined
 		case .banExceptions:
-			item.isHidden = client?.supportInfo.isListSupported(.banException) != true
-			return canActOnChannel
+			return isJoined && client?.supportInfo.isListSupported(.banException) == true
 		case .inviteExceptions:
-			item.isHidden = client?.supportInfo.isListSupported(.inviteException) != true
-			return canActOnChannel
+			return isJoined && client?.supportInfo.isListSupported(.inviteException) == true
 		case .quiets:
-			item.isHidden = client?.supportInfo.isListSupported(.quiet) != true
-			return canActOnChannel
+			return isJoined && client?.supportInfo.isListSupported(.quiet) == true
+		case .channelProperties:
+			return channel?.isChannel == true
+		case .copyChannelIdentifier:
+			return channel != nil
 		default:
 			return true
 		}
@@ -310,27 +304,23 @@ extension MenuActionCoordinator {
 		let channel = selectedChannel
 
 		switch item.command {
-		case .toggleServerList, .sortChannelList,
-		     .centerWindow, .resetWindow:
-			return validateMainWindowCommand(item)
-		case .mainWindow:
-			item.isHidden = mainWindow.isMainWindow
-			return true
+		case .toggleServerList:
+			item.title = MainWindowStrings.Menu.serverList(isVisible: mainWindow.isServerListVisible)
+			return mainWindow.isMainWindow
 		case .toggleMemberList:
-			item.isHidden = mainWindow.isMainWindow == false
 			item.title = MainWindowStrings.Menu.memberList(isVisible: mainWindow.isMemberListVisible)
-			return channel?.isChannel == true && client?.isLoggedIn == true
-		case .toggleAppearance:
-			item.isHidden = mainWindow.isMainWindow == false
-			item.menu?.item(for: .toggleAppearanceSeparator)?.isHidden = item.isHidden
+			return mainWindow.isMainWindow && channel?.isChannel == true && client?.isLoggedIn == true
+		case .appearanceSystem, .appearanceLight, .appearanceDark:
+			let appearance = MenuWindowPolicy.appearance(for: item.command)
+			item.state = appearance == Preferences.Appearance.preferredAppearance.value ? .on : .off
 			return true
-		case .addressBook, .ignoreList:
-			item.isHidden = mainWindow.isMainWindow == false
+		case .sortChannelList, .centerWindow, .resetWindow:
+			return mainWindow.isMainWindow
+		case .addressBook:
 			return client != nil
 		case .viewLogs:
 			return TextualPreferences.logToDiskIsEnabled()
 		case .highlightList:
-			item.isHidden = mainWindow.isMainWindow == false
 			return client != nil && Preferences.Logging.logHighlights.value
 		default:
 			return true
@@ -346,22 +336,16 @@ extension MenuActionCoordinator {
 			/* The same command from the transcript's menu, so the same guard. */
 			return MenuResponderCommandPolicy.canChangeNickname(clientIsLoggedIn: client?.isLoggedIn == true)
 		case .webSearch:
-			guard let transcriptView = selectedBackingView else { return false }
-			item.title = ApplicationStrings.search(with: searchProviderName)
-			return transcriptView.hasSelection
+			item.title = MenuSearchProvider.menuTitle
+			return selectedBackingView?.hasSelection == true
 		case .webDictionary:
 			return validateDictionaryLookup(item)
 		case .webPaste:
 			return validatePaste()
 		case .webQueryLogs:
-			item.isHidden = channel?.isPrivateMessage != true
-			return TextualPreferences.logToDiskIsEnabled()
+			return channel?.isPrivateMessage == true && TextualPreferences.logToDiskIsEnabled()
 		case .webChannelMenu:
-			item.isHidden = channel?.isChannel != true
-			let queryLogsHidden = item.menu?.item(for: .webQueryLogs)?.isHidden == true
-			item.menu?.item(for: .webPasteSeparator)?.isHidden =
-				item.isHidden && queryLogsHidden
-			return true
+			return channel?.isChannel == true
 		case .webReply, .webReact:
 			return client != nil
 				&& channel?.isUtility == false
@@ -377,37 +361,81 @@ extension MenuActionCoordinator {
 
 		switch item.command {
 		case .addIgnore:
-			return validateAddIgnore(item, client: client, channel: channel)
+			return existingIgnore(for: item) == .none
 		case .modifyIgnore, .removeIgnore:
-			return true
+			return existingIgnore(for: item) == .some
 		case .inviteTo:
 			guard let client, client.isLoggedIn, channel?.isUtility == false else { return false }
 			return client.channelList.contains { $0 !== channel && $0.isChannel }
-		case .whois, .ctcp:
+		case .whois, .ctcp, .ctcpSendFile, .ctcpPing, .ctcpTime,
+		     .ctcpClientInfo, .ctcpVersion, .ctcpFinger, .ctcpUserInfo:
 			return client?.isLoggedIn == true && channel?.isUtility == false
 		case .privateMessage:
-			item.isHidden = channel?.isChannel != true
-			return client?.isLoggedIn == true && channel?.isUtility == false
+			return client?.isLoggedIn == true && channel?.isChannel == true
 		case .changeColor:
-			item.isHidden = channel?.isChannel != true
 			return channel?.isChannel == true
-		case .giveOp, .giveHalfop, .giveVoice,
-		     .takeOp, .takeHalfop, .takeVoice:
-			return client?.isLoggedIn == true && channel?.isActive == true
-		case .allModesGiven:
-			return false
-		case .allModesTaken:
-			return validateModeVisibility(item, client: client, channel: channel)
+		case .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop, .takeVoice:
+			return validateMemberMode(item, client: client, channel: channel)
 		case .ban, .kick, .kickban:
-			let isChannel = channel?.isChannel == true
-			item.isHidden = isChannel == false
-			item.menu?.item(for: .kickbanSeparator)?.isHidden = isChannel == false
-			return client?.isLoggedIn == true && isChannel && channel?.isActive == true
-		case .ircOperator:
-			item.isHidden = client?.userIsIRCop != true
-			return client?.isLoggedIn == true && channel?.isUtility == false
+			return client?.isLoggedIn == true && channel?.isChannel == true && channel?.isActive == true
+		case .ircOperator, .operatorSetVirtualHost, .operatorKill, .operatorShun, .operatorGline:
+			return client?.userIsIRCop == true && client?.isLoggedIn == true && channel?.isUtility == false
 		default:
 			return true
+		}
+	}
+
+	/// Whether the clicked member already has an ignore entry. `nil` where the
+	/// question does not apply — no single member, no hostmask, no connection —
+	/// which disables all three ignore commands.
+	private enum MemberIgnoreState {
+		case none
+		case some
+		case unknown
+	}
+
+	private func existingIgnore(for item: NSMenuItem) -> MemberIgnoreState {
+		guard selectedChannel?.isUtility == false,
+		      let client = selectedClient
+		else { return .unknown }
+
+		let members = selectedMembers(for: item)
+		guard members.count == 1, let hostmask = members.first?.user.hostmask else {
+			return .unknown
+		}
+
+		return client.findIgnores(forHostmask: hostmask).isEmpty ? .none : .some
+	}
+
+	/// A rank command applies when the member does not already stand where it
+	/// would put them, and the server knows the rank at all.
+	private func validateMemberMode(_ item: NSMenuItem, client: IRCClient?, channel: Channel?) -> Bool {
+		guard client?.isLoggedIn == true, channel?.isChannel == true, channel?.isActive == true else {
+			return false
+		}
+
+		let members = selectedMembers(for: item)
+		let supportsHalfOp = client?.supportInfo.modeSymbolIsUserPrefix("h") == true
+
+		guard members.count == 1, let user = members.first else {
+			/* A multiple selection has no single rank to compare against, so
+			 every rank command applies to it. */
+			return members.isEmpty == false
+				&& (supportsHalfOp || (item.command != .giveHalfop && item.command != .takeHalfop))
+		}
+
+		let hasOp = user.ranks.contains(.normalOperator)
+		let hasVoice = user.ranks.contains(.voiced)
+		let hasHalfOp = supportsHalfOp && user.ranks.contains(.halfOperator)
+
+		return switch item.command {
+		case .giveOp: hasOp == false
+		case .takeOp: hasOp
+		case .giveVoice: hasVoice == false
+		case .takeVoice: hasVoice
+		case .giveHalfop: supportsHalfOp && hasHalfOp == false
+		case .takeHalfop: supportsHalfOp && hasHalfOp
+		default: false
 		}
 	}
 
@@ -429,17 +457,20 @@ extension MenuActionCoordinator {
 		)
 	}
 
-	private func validateCloseWindow(_ item: NSMenuItem, client: IRCClient?, channel: IRCChannel?) -> Bool {
+	private func validateCloseWindow(_ item: NSMenuItem) -> Bool {
 		let action = Preferences.Input.commandWKeyAction.value
 		if action == .closeWindow || mainWindow.isKeyWindow == false {
 			item.title = ApplicationStrings.closeWindow
 			return true
 		}
-		guard let client else { return false }
+		guard let client = selectedClient else {
+			item.title = ApplicationStrings.closeWindow
+			return false
+		}
 
 		switch action {
 		case .partChannel:
-			guard let channel else {
+			guard let channel = selectedChannel else {
 				item.title = ApplicationStrings.closeWindow
 				return false
 			}
@@ -454,104 +485,6 @@ extension MenuActionCoordinator {
 		default:
 			return true
 		}
-	}
-
-	private func validateMainWindowCommand(_ item: NSMenuItem) -> Bool {
-		let isMain = mainWindow.isMainWindow
-		item.isHidden = isMain == false
-
-		switch item.command {
-		case .toggleServerList:
-			item.title = MainWindowStrings.Menu.serverList(isVisible: mainWindow.isServerListVisible)
-			/* Both sidebar toggles hide together with the window, and the rule
-			 under them has to go with them. */
-			item.menu?.item(for: .toggleSidebarsSeparator)?.isHidden = isMain == false
-		case .sortChannelList:
-			item.menu?.item(for: .sortChannelListSeparator)?.isHidden = isMain == false
-		case .resetWindow:
-			item.menu?.item(for: .resetWindowSeparator)?.isHidden = isMain == false
-		default:
-			break
-		}
-		return true
-	}
-
-	private func validateAddIgnore(_ item: NSMenuItem, client: IRCClient?, channel: IRCChannel?) -> Bool {
-		let modify = item.menu?.item(for: .modifyIgnore)
-		let remove = item.menu?.item(for: .removeIgnore)
-
-		guard channel?.isUtility == false else {
-			modify?.isHidden = true
-			remove?.isHidden = true
-			item.isHidden = false
-			return false
-		}
-
-		let members = selectedMembers(for: item)
-		guard members.count == 1, let hostmask = members.first?.user.hostmask, let client else {
-			modify?.isHidden = true
-			remove?.isHidden = true
-			item.isHidden = false
-			return false
-		}
-
-		let canAdd = client.findIgnores(forHostmask: hostmask).isEmpty
-		modify?.isHidden = canAdd
-		remove?.isHidden = canAdd
-		item.isHidden = canAdd == false
-		return true
-	}
-
-	private func validateModeVisibility(_ item: NSMenuItem, client: IRCClient?, channel: IRCChannel?) -> Bool {
-		func hide(_ command: MenuCommand, _ hidden: Bool) {
-			item.menu?.item(for: command)?.isHidden = hidden
-		}
-
-		guard channel?.isChannel == true else {
-			for command in [
-				MenuCommand.giveOp, .giveHalfop, .giveVoice,
-				.takeOp, .takeHalfop, .takeVoice,
-				.allModesGiven, .allModesGivenSeparator,
-				.allModesTaken, .allModesTakenSeparator,
-			] {
-				hide(command, true)
-			}
-			return false
-		}
-
-		hide(.allModesGivenSeparator, false)
-		hide(.allModesTakenSeparator, false)
-		let members = selectedMembers(for: item)
-
-		guard members.count == 1, let user = members.first else {
-			for command in [
-				MenuCommand.giveOp, .giveHalfop, .giveVoice,
-				.takeOp, .takeHalfop, .takeVoice,
-			] {
-				hide(command, false)
-			}
-			hide(.allModesGiven, true)
-			hide(.allModesTaken, true)
-			return false
-		}
-
-		let hasOp = user.ranks.contains(.normalOperator)
-		let hasVoice = user.ranks.contains(.voiced)
-		let supportsHalfOp = client?.supportInfo.modeSymbolIsUserPrefix("h") == true
-		let hasHalfOp = supportsHalfOp && user.ranks.contains(.halfOperator)
-
-		hide(.giveOp, hasOp)
-		hide(.takeOp, hasOp == false)
-		hide(.giveVoice, hasVoice)
-		hide(.takeVoice, hasVoice == false)
-		hide(.giveHalfop, supportsHalfOp == false || hasHalfOp)
-		hide(.takeHalfop, supportsHalfOp == false || hasHalfOp == false)
-		hide(
-			.allModesGiven,
-			hasOp == false || hasVoice == false || (supportsHalfOp && hasHalfOp == false)
-		)
-		hide(.allModesTaken, hasOp || hasHalfOp || hasVoice)
-		return false
 	}
 
 	private func validateDictionaryLookup(_ item: NSMenuItem) -> Bool {
@@ -570,14 +503,5 @@ extension MenuActionCoordinator {
 			: selection
 		item.title = ApplicationStrings.lookUpInDictionary(titleSelection)
 		return true
-	}
-
-	private var searchProviderName: String {
-		let services = UserDefaults.standard.dictionary(forKey: MenuValidationConstants.preferredWebServicesKey)
-		let provider = services?[MenuValidationConstants.webSearchProviderKey]
-			.flatMap(PropertyListValue.init(propertyList:))
-
-		return provider?.dictionary?[MenuValidationConstants.defaultDisplayNameKey]?.string
-			?? MenuValidationConstants.fallbackSearchProviderName
 	}
 }

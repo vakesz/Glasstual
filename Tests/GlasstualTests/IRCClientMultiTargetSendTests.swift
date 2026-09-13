@@ -15,14 +15,14 @@ import Testing
 @MainActor
 @Suite("Multi-target text sending")
 struct IRCClientMultiTargetSendTests {
-	private func client() -> GLTTestClient {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+	private func client() -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"])
 		client.userHostmask = "me!user@example.org"
 
 		return client
 	}
 
-	private func channels(_ names: [String], on client: GLTTestClient) throws -> [IRCChannel] {
+	private func channels(_ names: [String], on client: TestClient) throws -> [Channel] {
 		try names.map { name in
 			let channel = try #require(client.findChannelOrCreate(name))
 			channel.activate()

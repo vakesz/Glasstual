@@ -14,13 +14,13 @@
       }
     },
     "channel-key-mode" : {
-      "comment" : "Title of the checkbox that enables IRC channel key mode +k. Migrated from the legacy XIB.",
+      "comment" : "Title of the checkbox that enables IRC channel key mode +k. Named for the IRC term rather than “password”, which is what the legacy XIB called it. Migrated from the legacy XIB.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Password (+k):"
+            "value" : "Channel key (+k)"
           }
         }
       }
@@ -128,19 +128,77 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Limit number of users (+l):"
+            "value" : "Limit number of users (+l)"
           }
         }
       }
     },
-    "window-title" : {
-      "comment" : "Semantic title of the channel modes sheet. The legacy XIB used the placeholder title Window.",
+    "change-modes-button" : {
+      "comment" : "Title of the button that submits the edited channel modes.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Channel Modes"
+            "value" : "Change Modes"
+          }
+        }
+      }
+    },
+    "channel-key-placeholder" : {
+      "comment" : "Placeholder in the empty channel key field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel key"
+          }
+        }
+      }
+    },
+    "user-limit-placeholder" : {
+      "comment" : "Placeholder in the empty channel user-limit field. The range is the one the sheet accepts.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0–99999"
+          }
+        }
+      }
+    },
+    "channel-key-characters-over-limit" : {
+      "comment" : "Footer below the channel key field once the key is longer than the server accepts. Replaces the warning alert that used to interrupt typing. The Change Modes button stays disabled until the key fits.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg character too many"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg characters too many"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@arg1@"
           }
         }
       }

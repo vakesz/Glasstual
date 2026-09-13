@@ -35,17 +35,20 @@ private func makeSnapshot(
 	)
 }
 
+/// A line from a session other than this one, built the way an archive
+/// restores one: the identity comes back from the archive rather than being
+/// minted, which is what makes it belong to an earlier session.
 private func makePreviousSessionLine(body: String = "previous") -> LogLine {
-	var values = LogLineArchive.DecodedValues()
-	values.messageBody = body
-	values.lineType = .privateMessage
-	values.nickname = "alice"
-	values.uniqueIdentifier = "previous-session-line"
-	values.sessionIdentifier = LogLine.currentSessionIdentifier() == 1
-		? 2
-		: LogLine.currentSessionIdentifier() - 1
 	var line = LogLine()
-	line.restore(from: values)
+	line.messageBody = body
+	line.lineType = .privateMessage
+	line.nickname = "alice"
+	line.restoreIdentity(
+		uniqueIdentifier: "previous-session-line",
+		sessionIdentifier: LogLine.currentSessionIdentifier() == 1
+			? 2
+			: LogLine.currentSessionIdentifier() - 1
+	)
 	return line
 }
 

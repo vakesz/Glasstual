@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -38,9 +38,14 @@
 
 import AppKit
 
-@MainActor
-public extension MenuActionCoordinator {
-	func channelPropertiesDidAccept(_ sender: ChannelPropertiesSheet, config: ChannelConfig) {
+/// The sheets the menu commands raise report back here. `present(_:start:)`
+/// makes this object their delegate, so the command and its answer live
+/// together.
+extension MenuActionCoordinator: ChannelInviteSheetDelegate, ChannelModifyTopicSheetDelegate,
+	ChannelModifyModesSheetDelegate, ChannelPropertiesSheetDelegate,
+	ServerChangeNicknameSheetDelegate, ServerPropertiesSheetDelegate
+{
+	public func channelPropertiesSheet(_ sender: ChannelPropertiesSheet, onOk config: ChannelConfig) {
 		guard let client = sender.client else { return }
 		guard let world else { return }
 		guard let channel = sender.channel else {
@@ -52,14 +57,14 @@ public extension MenuActionCoordinator {
 		world.save()
 	}
 
-	func channelInviteDidSelect(_ sender: ChannelInviteSheet, channelName: String) {
+	public func channelInviteSheet(_ sender: ChannelInviteSheet, onSelectChannel channelName: String) {
 		guard let client = sender.client, client.isLoggedIn else { return }
 		for nickname in sender.nicknames {
 			client.sendInvite(to: nickname, toJoinChannelNamed: channelName)
 		}
 	}
 
-	func serverPropertiesDidAccept(_ sender: ServerPropertiesSheet, config: IRCClientConfig) {
+	public func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: ClientConfig) {
 		guard let world else { return }
 		guard let client = sender.client else {
 			let client = world.createClient(with: config)
@@ -76,31 +81,23 @@ public extension MenuActionCoordinator {
 		world.save()
 	}
 
-	func nicknameColorDidAccept(_: NicknameColorSheet) {
-		mainWindow.reloadTheme()
-		/* The transcript is redrawn by the theme reload; the member list's
-		 avatars take their pinned colours from a snapshot the list reads when
-		 its presentation is invalidated, and nothing else invalidates it here. */
-		mainWindow.memberList.invalidatePresentation()
-	}
-
-	func channelTopicDidAccept(_ sender: ChannelModifyTopicSheet, topic: String) {
+	public func channelModifyTopicSheet(_ sender: ChannelModifyTopicSheet, onOk topic: String) {
 		guard let client = sender.client, let channel = sender.channel,
 		      client.isLoggedIn, channel.isChannel
 		else { return }
 		client.sendTopic(to: topic, in: channel)
 	}
 
-	func channelModesDidAccept(_ sender: ChannelModifyModesSheet, modes: ChannelModeContainer) {
+	public func channelModifyModesSheet(_ sender: ChannelModifyModesSheet, onOk modes: ChannelModeContainer) {
 		guard let client = sender.client, let channel = sender.channel,
 		      client.isLoggedIn, channel.isChannel,
 		      let changeString = channel.modeInfo?.changeCommand(for: modes),
 		      changeString.isEmpty == false
 		else { return }
-		client.sendModes(changeString, withParametersString: nil, in: channel)
+		client.sendModes(changeString, withParametersString: nil, inChannelNamed: channel.name)
 	}
 
-	func serverNicknameDidAccept(_ sender: ServerChangeNicknameSheet, nickname: String) {
+	public func serverChangeNicknameSheet(_ sender: ServerChangeNicknameSheet, didInputNickname nickname: String) {
 		guard let client = sender.client, client.isConnected else { return }
 		client.changeNickname(nickname)
 	}

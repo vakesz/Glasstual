@@ -16,22 +16,18 @@ import SwiftUI
 @MainActor
 public protocol ChannelModifyModesSheetDelegate: NSObjectProtocol {
 	func channelModifyModesSheet(_ sender: ChannelModifyModesSheet, onOk modes: ChannelModeContainer)
-
-	func channelModifyModesSheetWillClose(_ sender: ChannelModifyModesSheet)
 }
 
 @MainActor
 public final class ChannelModifyModesSheet: MainWindowSheetSession, ChannelScoped {
 	public private(set) var client: IRCClient?
-	public private(set) var channel: IRCChannel?
+	public private(set) var channel: Channel?
 	public private(set) var clientId: String?
 	public private(set) var channelId: String?
 
 	let model: ChannelModesModel
 
-	private let content: ChannelModesContent
-
-	public init(channel: IRCChannel) {
+	public init(channel: Channel) {
 		guard let client = channel.associatedClient else {
 			preconditionFailure("ChannelModifyModesSheet requires an associated client")
 		}
@@ -40,7 +36,6 @@ public final class ChannelModifyModesSheet: MainWindowSheetSession, ChannelScope
 		self.channel = channel
 		clientId = client.uniqueIdentifier
 		channelId = channel.uniqueIdentifier
-		content = .current(channelName: channel.name)
 
 		let sourceModes = channel.modeInfo?.modes ?? ChannelModeContainer(client: client)
 		model = ChannelModesModel(
@@ -49,71 +44,24 @@ public final class ChannelModifyModesSheet: MainWindowSheetSession, ChannelScope
 		)
 
 		super.init(window: nil)
-		installSheet()
-	}
-
-	private func installSheet() {
-		let rootView = ChannelModesView(
+		setContent(ChannelModesView(
 			model: model,
-			content: content,
-			secretKeyDidChange: { [weak self] secretKey in
-				self?.secretKeyDidChange(secretKey)
-			},
-			userLimitDidChange: { [weak self] userLimit in
-				self?.model.updateUserLimit(userLimit)
-			},
-			submit: { [weak self] in
-				self?.ok(nil)
-			},
-			cancel: { [weak self] in
-				self?.cancel(nil)
-			}
-		)
-		setContent(rootView.frame(width: 440, height: 390))
+			channelName: channel.name,
+			submit: { [weak self] in self?.submit() },
+			cancel: { [weak self] in self?.cancel() }
+		))
 	}
 
 	public func start() {
 		startSheet()
 	}
 
-	private func secretKeyDidChange(_ secretKey: String) {
-		guard model.updateSecretKey(secretKey) else {
-			return
-		}
-
-		presentMaximumKeyLengthWarning()
-	}
-
-	private func presentMaximumKeyLengthWarning() {
-		guard let client else {
-			return
-		}
-
-		Alerts.alert(
-			withMessage: ChannelValidationStrings.maximumKeyLengthMessage,
-			title: ChannelValidationStrings.maximumKeyLengthTitle(
-				networkName: client.networkNameAlt,
-				maximumLength: model.maximumKeyLength
-			),
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil,
-			otherButton: nil,
-			suppressionKey: ChannelValidationSuppressionKey.maximumSecretKeyLength.rawValue,
-			suppressionText: nil,
-			completionBlock: nil
-		)
-	}
-
-	override public func ok(_ sender: Any?) {
+	override public func submit() {
 		(delegate as? ChannelModifyModesSheetDelegate)?.channelModifyModesSheet(
 			self,
 			onOk: model.modesForSubmission()
 		)
 
-		super.ok(sender)
-	}
-
-	override public func sheetDidEnd(withReturnCode _: Int) {
-		(delegate as? ChannelModifyModesSheetDelegate)?.channelModifyModesSheetWillClose(self)
+		super.submit()
 	}
 }

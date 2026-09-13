@@ -94,6 +94,23 @@ struct MainWindowStateStore {
 		)
 	}
 
+	func saveTextSizeMultiplier(_ multiplier: Double) {
+		defaults.set(multiplier, forKey: Preferences.MainWindow.textSizeMultiplier.name)
+	}
+
+	/// The stored transcript zoom, or the declared default when what is stored
+	/// is not a zoom the window is willing to apply.
+	func loadTextSizeMultiplier() -> Double {
+		let key = Preferences.MainWindow.textSizeMultiplier
+		guard let stored = (defaults.object(forKey: key.name) as? NSNumber)?.doubleValue,
+		      key.accepts(stored)
+		else {
+			return key.defaultValue
+		}
+
+		return stored
+	}
+
 	func saveSelection(itemIdentifier: String?) {
 		guard let itemIdentifier, itemIdentifier.isEmpty == false else {
 			defaults.removeObject(forKey: Preferences.MainWindow.serverListSelection.name)

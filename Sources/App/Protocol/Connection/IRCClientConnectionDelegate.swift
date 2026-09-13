@@ -41,10 +41,6 @@ import Foundation
 import Security
 
 enum IRCClientDisconnectPolicy {
-	static func shouldTransitionOff(isConnecting: Bool, isConnected: Bool) -> Bool {
-		isConnecting || isConnected
-	}
-
 	static func effectiveMode(
 		configured: IRCClientDisconnectMode,
 		errorDomain: String?,
@@ -139,15 +135,8 @@ public extension IRCClient {
 		removeAllUsers()
 	}
 
-	func changeStateOff() {
-		changeStateOff(withError: nil)
-	}
-
-	func changeStateOff(withError disconnectError: Error?) {
-		guard IRCClientDisconnectPolicy.shouldTransitionOff(
-			isConnecting: isConnecting,
-			isConnected: isConnected
-		) else { return }
+	func changeStateOff(withError disconnectError: Error? = nil) {
+		guard isConnecting || isConnected else { return }
 
 		let terminating = isTerminating
 		socket = nil
@@ -209,13 +198,9 @@ public extension IRCClient {
 		performedSTSUpgrade = false
 		output?.reloadTreeItem(self)
 		output?.updateTitle(for: self)
-		guard let protocolDescription = SecureTransportSupport.description(forProtocolType: protocolType),
-		      let cipherDescription = SecureTransportSupport.description(forCipherSuite: cipherSuite)
-		else { return }
-
 		let description = IRCConnectionStrings.cipherSuite(
-			protocolName: protocolDescription,
-			cipherName: cipherDescription,
+			protocolName: SecureTransportSupport.description(forProtocolType: protocolType),
+			cipherName: SecureTransportSupport.description(forCipherSuite: cipherSuite),
 			deprecated: SecureTransportSupport.isCipherSuiteDeprecated(cipherSuite)
 		)
 		printDebugInformation(toConsole: IRCConnectionStrings.secured(using: description))

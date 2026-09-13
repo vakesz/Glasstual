@@ -93,7 +93,7 @@ struct LogViewTranscriptBufferTests {
 	func prependAtCapacityRetainsAdjacentRows() {
 		let limit = LogViewBufferPolicy.validLimits.upperBound
 		let view = makeLogView(bufferLimit: limit)
-		view.view.removeFromSuperview()
+		view.removeFromSuperview()
 		view.appendLines((0 ..< limit - 1).map(message))
 		#expect(view.prependLines([transcriptLine("oldest"), transcriptLine("adjacent")]) == ["adjacent"])
 		#expect(view.displayedBounds.remainingCapacity == 0)
@@ -190,8 +190,8 @@ struct LogViewTranscriptBufferTests {
 		)
 		let controller = LogController(client: client, in: window)
 		let logView = controller.ensureBackingView()
-		logView.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = logView.view
+		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = logView
 		logView.setBufferLimit(bufferLimit)
 		return logView
 	}
@@ -224,7 +224,7 @@ struct LogViewTranscriptBufferTests {
 				(view as? NSTextView).map { [$0] } ?? descendants(in: view)
 			}
 		}
-		return try #require(descendants(in: logView.view).first)
+		return try #require(descendants(in: logView).first)
 	}
 
 	/** The view is hidden while a channel is not selected, and lines keep
@@ -241,13 +241,13 @@ struct LogViewTranscriptBufferTests {
 		)
 		let controller = LogController(client: client, in: window)
 		let logView = controller.ensureBackingView()
-		logView.view.frame = NSRect(x: 0, y: 0, width: 800, height: 200)
+		logView.frame = NSRect(x: 0, y: 0, width: 800, height: 200)
 
 		/* Detached, as a channel that is not selected is: nothing on screen. */
 		logView.appendLines((1 ... 200).map(message))
 
-		window.contentView = logView.view
-		logView.view.layoutSubtreeIfNeeded()
+		window.contentView = logView
+		logView.layoutSubtreeIfNeeded()
 
 		let textView = try textView(of: logView)
 		let scrollView = try #require(textView.enclosingScrollView)
@@ -270,18 +270,17 @@ struct LogViewTranscriptBufferTests {
 	 has to be asked for. A hidden view that is never marked dirty never lays
 	 out again, and the transcript stays parked where the reader left it. */
 	@Test("A scroll to the end asked for while hidden marks the view for layout")
-	func hiddenScrollToBottomRequestsLayout() throws {
+	func hiddenScrollToBottomRequestsLayout() {
 		let logView = makeLogView()
-		let native = try #require(logView.view as? NativeTranscriptView)
 		logView.appendLines((1 ... 20).map(message))
-		native.layoutSubtreeIfNeeded()
-		native.isHidden = true
-		native.layoutSubtreeIfNeeded()
-		#expect(native.needsLayout == false)
+		logView.layoutSubtreeIfNeeded()
+		logView.isHidden = true
+		logView.layoutSubtreeIfNeeded()
+		#expect(logView.needsLayout == false)
 
 		logView.scrollToBottom()
 
-		#expect(native.needsLayout)
+		#expect(logView.needsLayout)
 	}
 
 	private func document(of logView: LogView) throws -> String {
@@ -370,7 +369,7 @@ struct LogViewTranscriptBufferTests {
 			textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
 		}
 		// A pending first layout must not undo the navigation either.
-		logView.view.layoutSubtreeIfNeeded()
+		logView.layoutSubtreeIfNeeded()
 		logView.appendLines((200 ..< 220).map(message))
 		let layoutManager = try #require(textView.textLayoutManager)
 		layoutManager.ensureLayout(for: layoutManager.documentRange)
@@ -390,9 +389,9 @@ struct LogViewTranscriptBufferTests {
 	func steppingThroughMatchesKeepsFirstResponder() throws {
 		let logView = makeLogView()
 		logView.appendLines((0 ..< 20).map(message))
-		let window = try #require(logView.view.window)
+		let window = try #require(logView.window)
 		let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 100, height: 20))
-		logView.view.addSubview(field)
+		logView.addSubview(field)
 		#expect(window.makeFirstResponder(field))
 		let editor = window.firstResponder
 
@@ -411,7 +410,7 @@ struct LogViewTranscriptBufferTests {
 	func failedJumpKeepsBottomFollowing() throws {
 		let logView = makeLogView()
 		logView.appendLines((0 ..< 200).map(message))
-		logView.view.layoutSubtreeIfNeeded()
+		logView.layoutSubtreeIfNeeded()
 		#expect(logView.jump(to: "missing") == false)
 		logView.appendLines([message(200)])
 		let textView = try textView(of: logView)
@@ -500,7 +499,7 @@ struct LogViewTranscriptBufferTests {
 		let logView = makeLogView(bufferLimit: 120)
 		logView.appendLines((0 ..< 100).map(message))
 		logView.prependLines((0 ..< 10).map { transcriptLine("older \($0)") })
-		logView.view.layoutSubtreeIfNeeded()
+		logView.layoutSubtreeIfNeeded()
 
 		func scrollOffset(after lineNumber: String) throws -> CGFloat {
 			#expect(logView.jump(to: lineNumber))

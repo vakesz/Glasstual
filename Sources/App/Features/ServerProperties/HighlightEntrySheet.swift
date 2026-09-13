@@ -38,22 +38,16 @@
 
 import SwiftUI
 
-/// The highlight condition is a value type, so this protocol is dispatched in
-/// Swift rather than through the delegate's Objective-C selector table.
 @MainActor
 public protocol HighlightEntrySheetDelegate: AnyObject {
 	func highlightEntrySheet(_ sender: HighlightEntrySheet, didSave configuration: HighlightMatchCondition)
-	func highlightEntrySheetDidClose(_ sender: HighlightEntrySheet)
 }
 
 @MainActor
 public final class HighlightEntrySheet: MainWindowSheetSession {
 	let model: HighlightEntryModel
 
-	private let content: HighlightEntryContent
-
 	public init(config: HighlightMatchCondition?, channels: [ChannelConfig]) {
-		content = .current
 		model = HighlightEntryModel(
 			configuration: config,
 			channels: channels.map {
@@ -68,21 +62,11 @@ public final class HighlightEntrySheet: MainWindowSheetSession {
 	private func installSheet() {
 		let rootView = HighlightEntryView(
 			model: model,
-			content: content,
-			behaviorDidChange: { [weak self] behavior in
-				self?.model.setBehavior(behavior)
-			},
-			keywordDidChange: { [weak self] keyword in
-				self?.model.updateKeyword(keyword)
-			},
-			channelSelectionDidChange: { [weak self] selection in
-				self?.model.setChannelSelection(selection)
-			},
 			submit: { [weak self] in
-				self?.ok(nil)
+				self?.submit()
 			},
 			cancel: { [weak self] in
-				self?.cancel(nil)
+				self?.cancel()
 			}
 		)
 		setContent(rootView)
@@ -92,7 +76,7 @@ public final class HighlightEntrySheet: MainWindowSheetSession {
 		startSheet()
 	}
 
-	override public func ok(_ sender: Any?) {
+	override public func submit() {
 		guard model.validateForSubmission() else {
 			return
 		}
@@ -102,10 +86,6 @@ public final class HighlightEntrySheet: MainWindowSheetSession {
 			didSave: model.configurationForSubmission()
 		)
 
-		super.ok(sender)
-	}
-
-	override public func sheetDidEnd(withReturnCode _: Int) {
-		(delegate as? any HighlightEntrySheetDelegate)?.highlightEntrySheetDidClose(self)
+		super.submit()
 	}
 }

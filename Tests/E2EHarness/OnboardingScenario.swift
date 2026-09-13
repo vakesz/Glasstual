@@ -21,7 +21,7 @@ enum OnboardingScenario {
 					deadline: deadline
 				) != nil }
 			}
-			let probe = try await AppSession.startProbe(prefix: prefix, driver: driver)
+			let probe = try await AppSession.startProbe(driver: driver)
 			if launch == 0 {
 				try await complete(kind: kind, driver: driver)
 			}
@@ -46,8 +46,8 @@ enum OnboardingScenario {
 				}
 			}
 			try await verifyCompletedIdentity(driver)
-			try await AppSession.stopProbe(probe, prefix: prefix, driver: driver)
-			let quitSeconds = try await AppSession.quitAndVerify(app, driver: driver, prefix: prefix)
+			try await AppSession.stopProbe(probe, driver: driver)
+			let quitSeconds = try await AppSession.quitAndVerify(app, driver: driver)
 			evidence.append(["pid": app.processIdentifier, "exitReason": "exit", "exitStatus": app.terminationStatus,
 			                 "identityVisible": true, "quitSeconds": quitSeconds])
 			if launch == 0 {
@@ -64,14 +64,18 @@ enum OnboardingScenario {
 		try await driver.fill("onboarding-real-name", with: "Synthetic E2E User", from: window)
 		try await driver.fill("onboarding-alternate-nickname", with: "e2ealternate", from: window)
 		try await driver.button("Continue", from: window)
-		try await driver.wait("appearance step") { deadline in try driver.named(
-			"Look and Feel",
-			role: kAXStaticTextRole,
-			from: window,
-			deadline: deadline
-		) != nil }
+		try await awaitStep("Look and Feel", driver, window)
 		if kind == .onboardingSkip {
+			/* Skip passes over one step, so reaching the end takes one press per
+			 optional step. Identity and the summary are not skippable, which is
+			 why this run still finishes on the summary's Finish. */
 			try await driver.button("Skip", from: window)
+			try await awaitStep("Notifications", driver, window)
+			try await driver.button("Skip", from: window)
+			try await awaitStep("Your First Network", driver, window)
+			try await driver.button("Skip", from: window)
+			try await awaitStep("Ready to Go", driver, window)
+			try await driver.button("Finish", from: window)
 			return
 		}
 		try await driver.button("Continue", from: window)
@@ -92,10 +96,11 @@ enum OnboardingScenario {
 				deadline: deadline
 			) != nil
 		}
+		/* The picker is `searchable`, so the field is the navigation container's
+		 own search field rather than a text field the step lays out. */
 		try await driver.wait("filter public network picker to synthetic custom server") { deadline in
 			guard let search = try driver.find(from: window, deadline: deadline, matching: {
-				try driver.text($0, kAXRoleAttribute, deadline: deadline) == kAXTextFieldRole &&
-					driver.text($0, kAXPlaceholderValueAttribute, deadline: deadline) == "Search networks"
+				try driver.text($0, kAXSubroleAttribute, deadline: deadline) == kAXSearchFieldSubrole
 			}) else { return false }
 			try driver.set(
 				search,
@@ -105,13 +110,27 @@ enum OnboardingScenario {
 			)
 			return true
 		}
-		try await driver.selectRow("Custom Server\u{2026}", from: window)
+		try await driver.selectRow("Custom Server", from: window)
 		try await driver.fill("network-address", with: "127.0.0.1", from: window)
 		try await driver.fill("network-port", with: HarnessFiles.read("port"), from: window)
 		try await driver.toggle("Use SSL/TLS", to: false, from: window)
 		try await driver.toggle("Sign in with SASL", to: false, from: window)
 		try await driver.toggle("Connect when finished", to: false, from: window)
+		try await driver.button("Continue", from: window)
+		try await awaitStep("Ready to Go", driver, window)
 		try await driver.button("Finish", from: window)
+	}
+
+	/// Waits for the step whose header reads `title`, which is how the window
+	/// says which step it is on.
+	private static func awaitStep(
+		_ title: String,
+		_ driver: AccessibilityDriver,
+		_ window: AXUIElement
+	) async throws {
+		try await driver.wait("onboarding reaches \(title)") { deadline in
+			try driver.named(title, role: kAXStaticTextRole, from: window, deadline: deadline) != nil
+		}
 	}
 
 	private static func exerciseConnection(_ driver: AccessibilityDriver, peer: Process) async throws {
@@ -150,7 +169,6 @@ enum OnboardingScenario {
 			try await Task.sleep(for: .milliseconds(150))
 		} while HarnessFiles.now < end
 		let settings = try await driver.settingsWindow()
-		try await driver.selectRow("Advanced", from: settings)
 		try await driver.selectPreferencePage("Identity", in: settings)
 		try await driver.wait("synthetic onboarding identity persisted in Settings") { deadline in
 			guard let nickname = try driver.named(
@@ -160,7 +178,7 @@ enum OnboardingScenario {
 				deadline: deadline
 			),
 				let realName = try driver.named(
-					"Real name:",
+					"Real name",
 					role: kAXTextFieldRole,
 					from: settings,
 					deadline: deadline

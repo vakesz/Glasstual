@@ -36,7 +36,7 @@ struct ApplicationSupportTests {
 		#expect(ApplicationInfo.applicationProcessID() > 0)
 		#expect(ApplicationInfo.timeIntervalSinceApplicationLaunch() >= 0)
 		#expect(ApplicationInfo.applicationBirthday() == 1_279_871_580)
-		#expect(ApplicationInfo.applicationNameWithoutVersion().isEmpty == false)
+		#expect(ApplicationInfo.applicationName().isEmpty == false)
 	}
 
 	@Test("Bundle and bundled resource locations point into the main bundle")
@@ -130,7 +130,7 @@ struct ApplicationSupportTests {
 
 	@Test("A transcript path is built from the client folder and the item's kind")
 	func fileLoggerBuildsConsoleChannelAndQueryPaths() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let root = "/tmp/glasstual-logs"
 		let identifier = String(client.uniqueIdentifier.prefix(5))
 		let clientFolder = "\(client.name.safeFilename) (\(identifier))"
@@ -160,7 +160,7 @@ struct ApplicationSupportTests {
 
 	@Test("A utility channel has no transcript path, and neither has a client without a folder")
 	func fileLoggerSkipsUtilityChannelsAndRequiresTranscriptFolder() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let utility = makeChannel(named: "Utility", type: .utility, client: client)
 
 		let utilityTreeItem: TreeItem = utility
@@ -172,7 +172,7 @@ struct ApplicationSupportTests {
 	func fileLoggerWriteWithoutTranscriptFolderDoesNotOpenFile() async {
 		let sink = RecordingFileLogSink()
 		let commands = FileLogCommands(sink: sink)
-		let client = GLTTestClient()
+		let client = TestClient()
 		let logger = FileLogger(client: client, commands: commands)
 
 		logger.writePlainText("should not write")
@@ -255,7 +255,7 @@ struct ApplicationSupportTests {
 	@Test("A stored date that is a moment still formats")
 	func storedDatesThatAreMomentsStillFormat() throws {
 		let date = Date(timeIntervalSince1970: 1_709_641_800) as NSDate
-		let formatted = try #require(formattedTimestamp(date, "[%H:%M:%S]" as NSString) as String?)
+		let formatted = try #require(formattedTimestamp(date, "[%H:%M:%S]" as NSString))
 
 		#expect(formatted.hasPrefix("["))
 		#expect(formatted.hasSuffix("]"))

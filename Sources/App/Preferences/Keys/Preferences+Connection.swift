@@ -115,7 +115,7 @@ public nonisolated extension Preferences { // nonisolated: value
 			traits: .excludedFromExport
 		)
 
-		public static let clientList = UntypedPreferenceKey(IRCWorldClientListDefaultsKey)
+		public static let clientList = UntypedPreferenceKey(worldClientListDefaultsKey)
 
 		static let all: [any AnyPreferenceKey] = [
 			autojoinOnInvite, autojoinDelayAfterIdentification, disconnectOnSleep, awayOnScreenSleep,

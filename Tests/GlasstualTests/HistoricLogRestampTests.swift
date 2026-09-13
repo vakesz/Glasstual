@@ -68,13 +68,14 @@ struct HistoricLogRestampTests {
 		let context = try HistoricLogDatabase.makeStack(at: url)
 
 		return await context.perform {
-			HistoricLogDatabase.fetchEntries(
+			HistoricLogDatabase.fetchOutcome(
 				in: context,
 				viewIdentifier: Self.view,
 				ascending: true,
 				fetchLimit: 0,
 				limitToDate: nil
 			)
+			.entries
 			.reduce(into: [:]) { result, entry in
 				result[entry.uniqueIdentifier] = entry.creationDate
 			}

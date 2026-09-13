@@ -14,34 +14,24 @@ import SwiftUI
 
 struct ServerHighlightListView: View {
 	@Bindable var model: ServerHighlightListModel
-	let networkName: String
 	let activate: (String) -> Void
 	let clear: () -> Void
-	let close: () -> Void
+
+	@State private var clearConfirmationIsPresented = false
 
 	var body: some View {
 		VStack(spacing: 0) {
-			Text(verbatim: ServerHighlightListStrings.heading(networkName: networkName))
-				.font(.headline)
-				.frame(maxWidth: .infinity, alignment: .leading)
-				.padding(.horizontal, 20)
-				.padding(.vertical, 12)
-
 			Table(model.rows, selection: $model.selection, sortOrder: $model.sortOrder) {
 				TableColumn(
 					ServerHighlightListStrings.channel,
 					sortUsing: ServerHighlightListComparator(field: .channel, order: .forward)
 				) { row in
-					cell(row.channelName, rowID: row.id)
+					Text(verbatim: row.channelName).lineLimit(1)
 				}
 				.width(min: 90, ideal: 130)
 
 				TableColumn(ServerHighlightListStrings.message) { row in
-					Text(row.message)
-						.lineLimit(1)
-						.frame(maxWidth: .infinity, alignment: .leading)
-						.contentShape(.rect)
-						.onTapGesture(count: 2) { activate(row.id) }
+					Text(row.message).lineLimit(1)
 				}
 				.width(min: 220, ideal: 420)
 
@@ -49,7 +39,7 @@ struct ServerHighlightListView: View {
 					ServerHighlightListStrings.time,
 					sortUsing: ServerHighlightListComparator(field: .time, order: .forward)
 				) { row in
-					cell(row.timeLabel, rowID: row.id)
+					Text(verbatim: row.timeLabel).lineLimit(1)
 				}
 				.width(min: 100, ideal: 130)
 			}
@@ -63,6 +53,15 @@ struct ServerHighlightListView: View {
 				}
 			}
 			.copyable(model.selectedCopyItems)
+			/* Opening the row is the table's primary action, so it is a
+			 double-click, Return and the context menu at once -- which a tap
+			 gesture on each cell was none of. */
+			.contextMenu(forSelectionType: ServerHighlightListRow.ID.self) { selection in
+				Button(ServerHighlightListStrings.goToMessage) { open(selection) }
+					.disabled(selection.count != 1)
+			} primaryAction: { selection in
+				open(selection)
+			}
 			.onChange(of: model.sortOrder) { _, newOrder in model.sort(using: newOrder) }
 			.accessibilityLabel(ServerHighlightListStrings.highlightList)
 
@@ -72,14 +71,22 @@ struct ServerHighlightListView: View {
 					.font(.caption)
 					.foregroundStyle(.secondary)
 				Spacer()
-				Button(ServerHighlightListStrings.clearList, role: .destructive, action: clear)
-					.disabled(model.rows.isEmpty)
-				Button(PromptStrings.Action.close, action: close)
-					.keyboardShortcut(.cancelAction)
+				Button(ServerHighlightListStrings.clearList, role: .destructive) {
+					clearConfirmationIsPresented = true
+				}
+				.disabled(model.rows.isEmpty)
 			}
 			.padding(12)
 		}
-		.onExitCommand(perform: close)
+		.confirmationDialog(
+			ServerHighlightListStrings.clearListConfirmationTitle,
+			isPresented: $clearConfirmationIsPresented
+		) {
+			Button(ServerHighlightListStrings.clearList, role: .destructive, action: clear)
+			Button(PromptStrings.Action.cancel, role: .cancel) {}
+		} message: {
+			Text(verbatim: ServerHighlightListStrings.clearListConfirmationMessage)
+		}
 		.frame(
 			minWidth: 620,
 			idealWidth: 760,
@@ -90,11 +97,8 @@ struct ServerHighlightListView: View {
 		)
 	}
 
-	private func cell(_ text: String, rowID: String) -> some View {
-		Text(verbatim: text)
-			.lineLimit(1)
-			.frame(maxWidth: .infinity, alignment: .leading)
-			.contentShape(.rect)
-			.onTapGesture(count: 2) { activate(rowID) }
+	private func open(_ selection: Set<ServerHighlightListRow.ID>) {
+		guard let id = selection.first, selection.count == 1 else { return }
+		activate(id)
 	}
 }

@@ -224,7 +224,7 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 			parameters.remove(at: 1)
 			let values = captures.filter { $0.isEmpty == false }
 			parameters.append(contentsOf: values.prefix(2))
-		} else if let captures = captures(in: body, pattern: #"^set mode: ([^\s]+)( .*)?$"#) {
+		} else if let captures = captures(in: body, pattern: #"^set mode: ([^\s]+)(.*)$"#) {
 			mutableInput.command = "MODE"
 			parameters.remove(at: 1)
 			/* The mode string and each of its arguments are separate IRC
@@ -245,15 +245,23 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		return mutableInput
 	}
 
+	/** The capture groups of the first match of `pattern`, or `nil` when it does
+	 not match.
+
+	 A group that did not take part in the match is not reported at all, so every
+	 pattern above keeps its groups mandatory rather than optional: an alternation
+	 reports the branch that matched, and a group that can be empty reports an
+	 empty string. */
 	private func captures(in string: String, pattern: String) -> [String]? {
-		guard let expression = try? NSRegularExpression(pattern: pattern),
-		      let match = expression.firstMatch(in: string, range: NSRange(string.startIndex..., in: string))
-		else { return nil }
-		return (1 ..< match.numberOfRanges).map { index in
-			let range = match.range(at: index)
-			guard range.location != NSNotFound, let swiftRange = Range(range, in: string) else { return "" }
-			return String(string[swiftRange])
-		}
+		let groups = RegularExpression.matches(
+			in: string,
+			withRegex: pattern,
+			withoutCase: false,
+			substringGroups: true
+		)
+
+		// The whole match leads; the groups follow it.
+		return groups.isEmpty ? nil : Array(groups.dropFirst())
 	}
 
 	private func handleIRCSideDisconnect(_ client: PluginClient) {

@@ -45,8 +45,8 @@ struct ObjCRuntimeNameTests {
 	func observedKeyPathsResolve() {
 		let observed: [(String, AnyKeyPath)] = [
 			("IRCClient.isLoggedIn", \IRCClient.isLoggedIn),
-			("IRCTreeItem.nicknameHighlightCount", \IRCTreeItem.nicknameHighlightCount),
-			("IRCTreeItem.treeUnreadCount", \IRCTreeItem.treeUnreadCount),
+			("TreeItem.nicknameHighlightCount", \TreeItem.nicknameHighlightCount),
+			("TreeItem.treeUnreadCount", \TreeItem.treeUnreadCount),
 		]
 
 		for (name, keyPath) in observed {
@@ -59,7 +59,7 @@ struct ObjCRuntimeNameTests {
 	/// observation goes quiet without failing anywhere.
 	@Test("An observed property still posts its changes")
 	func observedPropertyPostsChanges() {
-		let item = IRCTreeItem()
+		let item = TreeItem()
 
 		let received = Mutex<[Int]>([])
 		let observation = item.observe(\.treeUnreadCount, options: [.new]) { _, change in

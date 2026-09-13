@@ -6,15 +6,18 @@
 import Foundation
 import Observation
 
+/// What the network list can have selected: one of the bundled networks, keyed
+/// by its own name, or the custom server the last row offers.
+enum NetworkPickerSelection: Hashable {
+	case network(String)
+	case customServer
+}
+
 struct NetworkPickerOption: Identifiable {
 	let network: Network?
-	let isCustom: Bool
 
-	var id: String {
-		if let network {
-			return network.networkName.lowercased()
-		}
-		return "__custom_server__"
+	var id: NetworkPickerSelection {
+		network.map { .network($0.networkName.lowercased()) } ?? .customServer
 	}
 
 	var title: String {
@@ -30,28 +33,47 @@ struct NetworkPickerOption: Identifiable {
 	}
 }
 
+/** The connection details the network step is filling in.
+
+ Choosing a network replaces the whole draft rather than assigning field by
+ field, so there is one description of what a selection means and no order in
+ which a half-applied selection can be observed. */
+struct NetworkPickerDraft: Equatable {
+	var serverAddress = ""
+	var serverPort: UInt16 = 6697
+	var prefersSecuredConnection = true
+	var accountName = ""
+	var accountPassword = ""
+	var usesSASL = true
+
+	init() {}
+
+	init(network: Network?, accountName: String) {
+		if let network {
+			serverAddress = network.serverAddress
+			serverPort = network.serverPort
+			prefersSecuredConnection = network.prefersSecuredConnection
+			usesSASL = network.saslSupported
+		}
+		self.accountName = accountName
+	}
+}
+
 @Observable
 final class NetworkPickerModel {
 	let networkList: NetworkList
 	var query = ""
-	var selectionID: String? {
+	var draft = NetworkPickerDraft()
+	var selectedChannels: Set<String> = []
+
+	var selection: NetworkPickerSelection? {
 		didSet {
-			if selectionID != oldValue {
+			if selection != oldValue {
 				applySelection()
 			}
 		}
 	}
 
-	var serverAddress = ""
-	var serverPort = "6697"
-	var prefersSecuredConnection = true
-	var accountName = ""
-	var accountPassword = ""
-	var usesSASL = true
-	var selectedChannels: Set<String> = []
-
-	private(set) var selectedNetwork: Network?
-	private(set) var customServerSelected = false
 	private var defaultNickname = ""
 	private var accountNameEdited = false
 
@@ -59,13 +81,18 @@ final class NetworkPickerModel {
 		self.networkList = networkList
 	}
 
+	var selectedNetwork: Network? {
+		guard case let .network(name) = selection else { return nil }
+		return networkList.network(named: name)
+	}
+
 	var hasSelection: Bool {
-		selectedNetwork != nil || customServerSelected
+		selection == .customServer || selectedNetwork != nil
 	}
 
 	var popularOptions: [NetworkPickerOption] {
 		guard normalizedQuery.isEmpty else { return [] }
-		return networkList.popularNetworks.map { NetworkPickerOption(network: $0, isCustom: false) }
+		return networkList.popularNetworks.map { NetworkPickerOption(network: $0) }
 	}
 
 	var remainingOptions: [NetworkPickerOption] {
@@ -73,11 +100,17 @@ final class NetworkPickerModel {
 		let candidates = normalizedQuery.isEmpty
 			? networkList.listOfNetworks.filter { popularNames.contains($0.networkName.lowercased()) == false }
 			: networkList.listOfNetworks.filter(matchesQuery)
-		return candidates.map { NetworkPickerOption(network: $0, isCustom: false) }
+		return candidates.map { NetworkPickerOption(network: $0) }
 	}
 
 	var customOption: NetworkPickerOption {
-		NetworkPickerOption(network: nil, isCustom: true)
+		NetworkPickerOption(network: nil)
+	}
+
+	/// The custom server row always matches, so an empty result is only ever a
+	/// search that found no network.
+	var hasNoSearchResults: Bool {
+		normalizedQuery.isEmpty == false && remainingOptions.isEmpty
 	}
 
 	var selectedTitle: String {
@@ -89,11 +122,11 @@ final class NetworkPickerModel {
 	}
 
 	var accountFieldsApply: Bool {
-		selectedNetwork?.accountFieldsApply ?? customServerSelected
+		selectedNetwork?.accountFieldsApply ?? (selection == .customServer)
 	}
 
 	var saslIsSupported: Bool {
-		selectedNetwork?.saslSupported ?? customServerSelected
+		selectedNetwork?.saslSupported ?? (selection == .customServer)
 	}
 
 	var registrationNote: String? {
@@ -112,54 +145,67 @@ final class NetworkPickerModel {
 	func updateDefaultNickname(_ nickname: String) {
 		defaultNickname = nickname
 		if accountNameEdited == false {
-			accountName = nickname
+			draft.accountName = nickname
 		}
 	}
 
 	func setAccountName(_ name: String) {
 		accountNameEdited = true
-		accountName = name
+		draft.accountName = name
 	}
 
-	func validate() throws {
-		guard hasSelection else {
-			throw OnboardingStepError(OnboardingStrings.NetworkPicker.missingServer)
+	// MARK: - Validation
+
+	var serverAddressProblem: String? {
+		guard hasSelection else { return nil }
+		let address = draft.serverAddress.trimmingCharacters(in: .whitespacesAndNewlines)
+		return ServerPropertiesValidation.isInternetAddress(address)
+			? nil
+			: CommonValidationStrings.invalidServerAddress
+	}
+
+	var serverPortProblem: String? {
+		guard hasSelection else { return nil }
+		return draft.serverPort > 0 ? nil : OnboardingStrings.NetworkPicker.invalidPort
+	}
+
+	var accountProblem: String? {
+		guard hasSelection, draft.accountPassword.isEmpty == false else { return nil }
+		let account = draft.accountName.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard account.isEmpty || ServerPropertiesValidation.isUsername(account) else {
+			return OnboardingStrings.NetworkPicker.invalidAccount
 		}
-		guard ServerPropertiesValidation
-			.isInternetAddress(serverAddress.trimmingCharacters(in: .whitespacesAndNewlines))
-		else {
-			throw OnboardingStepError(CommonValidationStrings.invalidServerAddress)
-		}
-		guard ServerPropertiesValidation.isInternetPort(serverPort) else {
-			throw OnboardingStepError(OnboardingStrings.NetworkPicker.invalidPort)
-		}
-		let account = accountName.trimmingCharacters(in: .whitespacesAndNewlines)
-		guard accountPassword.isEmpty || account.isEmpty || ServerPropertiesValidation.isUsername(account) else {
-			throw OnboardingStepError(OnboardingStrings.NetworkPicker.invalidAccount)
-		}
-		guard accountPassword.rangeOfCharacter(from: .controlCharacters) == nil else {
-			throw OnboardingStepError(OnboardingStrings.NetworkPicker.invalidAccount)
-		}
+		return draft.accountPassword.rangeOfCharacter(from: .controlCharacters) == nil
+			? nil
+			: OnboardingStrings.NetworkPicker.invalidAccount
+	}
+
+	/// Leaving the network step without a selection is a supported choice, so
+	/// only a half-filled selection blocks Continue.
+	var isValid: Bool {
+		serverAddressProblem == nil && serverPortProblem == nil && accountProblem == nil
 	}
 
 	func clientConfig() -> ClientConfig? {
-		guard (try? validate()) != nil, let port = UInt16(serverPort) else { return nil }
+		guard hasSelection, isValid else { return nil }
 
-		let normalizedAddress = serverAddress.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+		let normalizedAddress = draft.serverAddress
+			.trimmingCharacters(in: .whitespacesAndNewlines)
+			.lowercased()
 		var config = ClientConfig()
-		config.usesSASL = usesSASL && saslIsSupported
+		config.usesSASL = draft.usesSASL && saslIsSupported
 		config.connectionName = selectedNetwork?.networkName ?? normalizedAddress
 		config.serverList = [
 			Server(
 				serverAddress: normalizedAddress,
-				serverPort: port,
-				prefersSecuredConnection: prefersSecuredConnection
+				serverPort: draft.serverPort,
+				prefersSecuredConnection: draft.prefersSecuredConnection
 			),
 		]
 
-		if accountPassword.isEmpty == false {
-			config.nicknamePassword = accountPassword
-			let name = accountName.trimmingCharacters(in: .whitespacesAndNewlines)
+		if draft.accountPassword.isEmpty == false {
+			config.nicknamePassword = draft.accountPassword
+			let name = draft.accountName.trimmingCharacters(in: .whitespacesAndNewlines)
 			if name.isEmpty == false {
 				config.username = name
 			}
@@ -180,39 +226,8 @@ final class NetworkPickerModel {
 	}
 
 	private func applySelection() {
-		guard let selectionID else {
-			selectedNetwork = nil
-			customServerSelected = false
-			selectedChannels = []
-			return
-		}
-
 		accountNameEdited = false
-		accountName = defaultNickname
-		accountPassword = ""
-
-		if selectionID == customOption.id {
-			selectedNetwork = nil
-			customServerSelected = true
-			serverAddress = ""
-			serverPort = "6697"
-			prefersSecuredConnection = true
-			usesSASL = true
-			selectedChannels = []
-			return
-		}
-
-		guard let network = networkList.network(named: selectionID) else {
-			self.selectionID = nil
-			return
-		}
-
-		selectedNetwork = network
-		customServerSelected = false
-		serverAddress = network.serverAddress
-		serverPort = String(network.serverPort)
-		prefersSecuredConnection = network.prefersSecuredConnection
-		usesSASL = network.saslSupported
-		selectedChannels = Set(network.suggestedChannels)
+		draft = NetworkPickerDraft(network: selectedNetwork, accountName: defaultNickname)
+		selectedChannels = Set(suggestedChannels)
 	}
 }

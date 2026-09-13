@@ -29,7 +29,7 @@ struct PreferencesSessionTests {
 		let completed = pending.complete(request.id)
 		let kind = try #require(completed)
 		model.completeImport(.failure(Self.importFailure), request: kind)
-		#expect(model.presentationError == "Import failed")
+		#expect(model.presentationFailure?.reason == "Import failed")
 		#expect(pending.request == nil)
 	}
 
@@ -43,7 +43,7 @@ struct PreferencesSessionTests {
 		let completed = pending.complete(first.id)
 		let kind = try #require(completed)
 		model.completeImport(.failure(Self.cancellation), request: kind)
-		#expect(model.presentationError == nil)
+		#expect(model.presentationFailure == nil)
 		#expect(pending.request == nil)
 
 		pending.present(.transcriptFolder)
@@ -53,7 +53,7 @@ struct PreferencesSessionTests {
 		#expect(pending.complete(first.id) == nil)
 		#expect(pending.isPresented)
 		#expect(pending.request?.id == second.id)
-		#expect(model.presentationError == nil)
+		#expect(model.presentationFailure == nil)
 		#expect(pending.complete(second.id) != nil)
 		#expect(!pending.isPresented)
 		#expect(pending.request == nil)
@@ -68,7 +68,7 @@ struct PreferencesSessionTests {
 		pending.present(.downloadFolder)
 		let second = try #require(pending.request)
 		#expect(pending.complete(first.id) == nil)
-		#expect(model.presentationError == nil)
+		#expect(model.presentationFailure == nil)
 		#expect(pending.request?.id == second.id)
 		#expect(pending.isPresented)
 	}
@@ -87,7 +87,7 @@ struct PreferencesSessionTests {
 		/* The file is read off the main actor; reaching its validation proves
 		 the selected URL was not lost at dismissal. */
 		await model.themeImportTask?.value
-		#expect(model.presentationError != nil)
+		#expect(model.presentationFailure != nil)
 		#expect(pending.request == nil)
 	}
 
@@ -102,11 +102,5 @@ struct PreferencesSessionTests {
 		#expect(pending.request == nil)
 		#expect(!pending.isPresented)
 		#expect(pending.complete(request.id) == nil)
-	}
-
-	/// A pane the sidebar cannot reach is a pane nobody can open.
-	@Test("The catalog covers every declared pane")
-	func paneCatalogCoversEveryDeclaredPane() {
-		#expect(Set(PreferencesPaneCatalog.panes.map(\.identifier)) == Set(PreferencesPaneIdentifier.allCases))
 	}
 }

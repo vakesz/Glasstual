@@ -20,7 +20,7 @@ nonisolated enum PreferencesTransferError: LocalizedError { // nonisolated: valu
 		case .invalidDocument: String(localized: .PreferencesTransfer.fileIsNotAValidConfigurationSnapshot)
 		case .unsupportedVersion: String(localized: .PreferencesTransfer.configurationSnapshotUsesANewerFormat)
 		case .tooLarge: String(localized: .PreferencesTransfer.configurationFileExceedsSizeLimit)
-		case let .invalidValue(key): String(localized: .PreferencesTransfer.invalidValue(key))
+		case .invalidValue: String(localized: .PreferencesTransfer.invalidValue)
 		case .legacyRestore: String(localized: .PreferencesTransfer.legacyNotice)
 		case .stalePreview: String(localized: .PreferencesTransfer.configurationChangedAfterPreview)
 		case .busy: String(localized: .PreferencesTransfer.configurationTransferInProgress)
@@ -232,11 +232,29 @@ struct PreferencesTransferStores {
 		persistentDomain(for: key.storage)[key.name].flatMap(PropertyListValue.init(propertyList:))
 	}
 
+	/** Everything a domain has persisted, read from the current-user, any-host
+	 source a suite writes to.
+
+	 `persistentDomain(forName:)` answers the same question, but it also opens
+	 the any-user, by-host source, which cfprefsd refuses for an application
+	 group container: it detaches from the domain and logs "Using
+	 kCFPreferencesAnyUser with a container is only allowed for System
+	 Containers" every time it is asked. */
 	func persistentDomain(for storage: PreferenceStorage) -> [String: Any] {
-		switch storage {
-		case .container: container.persistentDomain(forName: containerDomain) ?? [:]
-		case .standard: standard.persistentDomain(forName: standardDomain) ?? [:]
+		let domain = (storage == .standard ? standardDomain : containerDomain) as CFString
+		guard let names = CFPreferencesCopyKeyList(
+			domain, kCFPreferencesCurrentUser, kCFPreferencesAnyHost
+		) as? [String] else { return [:] }
+		var values: [String: Any] = [:]
+		values.reserveCapacity(names.count)
+		for name in names {
+			if let value = CFPreferencesCopyValue(
+				name as CFString, domain, kCFPreferencesCurrentUser, kCFPreferencesAnyHost
+			) {
+				values[name] = value
+			}
 		}
+		return values
 	}
 
 	subscript<Value>(key: PreferenceKey<Value>) -> Value {
@@ -311,12 +329,11 @@ struct PreferencesTransferStores {
 				unset.insert(key.name)
 			}
 		}
-		for (storage, domain) in [(container, containerDomain), (standard, standardDomain)] {
-			for (name, object) in storage.persistentDomain(forName: domain) ?? [:]
+		for storage in PreferenceStorage.allCases {
+			for (name, object) in persistentDomain(for: storage)
 				where Preferences.key(named: name) == nil && !Preferences.isExcludedFromExport(name)
 			{
-				let key = UntypedPreferenceKey(name, storage: Preferences.storage(for: name))
-				guard store(for: key) === storage else { continue }
+				guard Preferences.storage(for: name) == storage else { continue }
 				values[name] = PropertyListValue(propertyList: object)
 			}
 		}

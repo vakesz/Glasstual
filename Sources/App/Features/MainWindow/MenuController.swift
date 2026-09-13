@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -37,13 +37,15 @@
  *********************************************************************** */
 
 import AppKit
-import os
 
-private let menuControllerLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "MenuController"
-)
+/** The menus themselves, and the four AppKit protocols that reach them.
 
+ Commands live on ``MenuActionCoordinator``: the menu items target it directly,
+ so a command is one `@objc` method rather than a forwarder, an enum case and a
+ switch arm. What is left here is what only a menu controller can be — the
+ menus AppKit pops up, the delegate and validation callbacks it sends, the
+ world's notification that the tree changed, and the seam the protocol layer
+ raises sheets through. */
 @MainActor
 public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidation {
 	public var channelViewChannelNameMenu = NSMenu()
@@ -56,6 +58,7 @@ public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidatio
 	public var mainMenuChannelMenuItem: NSMenuItem?
 	public var mainMenuQueryMenuItem: NSMenuItem?
 	public var mainMenuServerMenuItem: NSMenuItem?
+	public var mainMenuFormatMenuItem: NSMenuItem?
 	public var mainWindowSegmentedControllerCellMenu = NSMenu()
 	public var serverListNoSelectionMenu = NSMenu()
 	public var userControlMenu = NSMenu()
@@ -64,14 +67,11 @@ public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidatio
 	public var muteNotificationsSoundsDockMenuItem: NSMenuItem?
 	public var muteNotificationsSoundsFileMenuItem: NSMenuItem?
 
-	public var pointedNickname: String?
-	/** Created on first use rather than in prepareInitialState(): menu
-	 validation can run before the main window finishes loading (a theme-load
-	 alert during launch is enough), and an unset coordinator crashed there. */
-	lazy var actionCoordinator = MenuActionCoordinator(menuController: self)
+	public let actionCoordinator = MenuActionCoordinator()
 
 	override public init() {
 		super.init()
+		actionCoordinator.menuController = self
 		MenuFactory.install(on: self)
 	}
 
@@ -84,16 +84,11 @@ public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidatio
 	}
 
 	public func prepareForApplicationTermination() {
-		menuControllerLogger.debug("Preparing menu controller")
 		actionCoordinator.prepareForApplicationTermination()
 	}
 
-	public func preferencesChanged() {
-		actionCoordinator.preferencesChanged()
-	}
-
 	public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-		actionCoordinator.validate(menuItem)
+		actionCoordinator.validateMenuItem(menuItem)
 	}
 
 	public func menuWillOpen(_ menu: NSMenu) {
@@ -103,49 +98,17 @@ public final class MenuController: NSObject, NSMenuDelegate, NSMenuItemValidatio
 	public func menuDidClose(_ menu: NSMenu) {
 		actionCoordinator.menuDidClose(menu)
 	}
-
-	public func resetSelectedItems() {
-		actionCoordinator.resetSelectedItems()
-	}
-
-	public var selectedClient: IRCClient? {
-		actionCoordinator.selectedClient
-	}
-
-	public var selectedChannel: IRCChannel? {
-		actionCoordinator.selectedChannel
-	}
-
-	public var selectedViewController: LogController? {
-		actionCoordinator.selectedViewController
-	}
-
-	public var selectedViewControllerBackingView: LogView? {
-		actionCoordinator.selectedBackingView
-	}
-
-	public func selectedMembers(_ sender: Any) -> [ChannelUser] {
-		actionCoordinator.selectedMembers(for: sender)
-	}
-
-	public func selectedMembersNicknames(_ sender: Any) -> [String] {
-		actionCoordinator.selectedNicknames(for: sender)
-	}
-
-	public func deselectMembers(_ sender: Any) {
-		actionCoordinator.deselectMembers(for: sender)
-	}
 }
 
 /** The menus the connection tree feeds. The world tells the controller when the
  shape of that tree changed rather than being called into. */
 extension MenuController: WorldObserver {
-	func worldNavigationListDidChange(_: IRCWorld) {
-		populateNavigationChannelList()
+	func worldNavigationListDidChange(_: World) {
+		actionCoordinator.populateNavigationChannelList()
 	}
 
-	func worldPreferencesDidChange(_: IRCWorld) {
-		preferencesChanged()
+	func worldPreferencesDidChange(_: World) {
+		actionCoordinator.preferencesChanged()
 	}
 }
 
@@ -153,5 +116,25 @@ extension MenuController: WorldObserver {
 extension MenuController: ClientMenuPresenting {
 	func revealInFinder(_ url: URL) {
 		NSWorkspace.shared.open(url)
+	}
+
+	func toggleMuteOnNotificationSoundsShortcut(on muted: Bool) {
+		actionCoordinator.setNotificationSoundsMuted(muted)
+	}
+
+	func showServerPropertiesSheet(for client: IRCClient, selection: ServerPropertiesDestination) {
+		actionCoordinator.showServerProperties(for: client, selection: selection)
+	}
+
+	func showNicknameColorSheet(forNickname nickname: String) {
+		actionCoordinator.showNicknameColorSheet(for: nickname)
+	}
+
+	func openAcknowledgements(_ sender: Any?) {
+		actionCoordinator.openAcknowledgements(sender)
+	}
+
+	func navigateToTreeItem(at url: URL) {
+		actionCoordinator.navigateToTreeItem(at: url)
 	}
 }

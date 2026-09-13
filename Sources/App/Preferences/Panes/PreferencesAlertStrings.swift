@@ -14,156 +14,164 @@ import Foundation
 
 enum PreferencesNotificationsStrings {
 	static var dockBadgePrivate: String {
-		String(localized: .TDCPreferencesController.notificationsDockBadgePrivate)
+		String(localized: .Settings.notificationsDockBadgePrivate)
 	}
 
 	static var dockBadgePublic: String {
-		String(localized: .TDCPreferencesController.notificationsDockBadgePublic)
+		String(localized: .Settings.notificationsDockBadgePublic)
 	}
 
 	static var headingAlerts: String {
-		String(localized: .TDCPreferencesController.notificationsHeadingAlerts)
+		String(localized: .Settings.notificationsHeadingAlerts)
+	}
+
+	static var headingDelivery: String {
+		String(localized: .Settings.notificationsHeadingDelivery)
+	}
+
+	static var headingDockIcon: String {
+		String(localized: .Settings.notificationsHeadingDockIcon)
 	}
 
 	static var headingSpeech: String {
-		String(localized: .TDCPreferencesController.notificationsHeadingSpeech)
+		String(localized: .Settings.notificationsHeadingSpeech)
+	}
+
+	static var headingSpeechInclude: String {
+		String(localized: .Settings.notificationsHeadingSpeechInclude)
 	}
 
 	static var onlySpeakSelection: String {
-		String(localized: .TDCPreferencesController.notificationsOnlySpeakSelection)
+		String(localized: .Settings.notificationsOnlySpeakSelection)
 	}
 
 	static var postWhileInFocus: String {
-		String(localized: .TDCPreferencesController.notificationsPostWhileInFocus)
+		String(localized: .Settings.notificationsPostWhileInFocus)
 	}
 
 	static var speakChannelName: String {
-		String(localized: .TDCPreferencesController.notificationsSpeakChannelName)
+		String(localized: .Settings.notificationsSpeakChannelName)
 	}
 
 	static var speakNickname: String {
-		String(localized: .TDCPreferencesController.notificationsSpeakNickname)
-	}
-
-	static var speechIncludeLabel: String {
-		String(localized: .TDCPreferencesController.notificationsSpeechIncludeLabel)
+		String(localized: .Settings.notificationsSpeakNickname)
 	}
 }
 
 enum PreferencesHighlightsStrings {
 	static var addExcluded: String {
-		String(localized: .TDCPreferencesController.highlightsAddExcluded)
+		String(localized: .Settings.highlightsAddExcluded)
 	}
 
 	static var addKeyword: String {
-		String(localized: .TDCPreferencesController.highlightsAddKeyword)
+		String(localized: .Settings.highlightsAddKeyword)
 	}
 
 	static var excludeWordsLabel: String {
-		String(localized: .TDCPreferencesController.highlightsExcludeWordsLabel)
+		String(localized: .Settings.highlightsExcludeWordsLabel)
 	}
 
 	static var logToWindow: String {
-		String(localized: .TDCPreferencesController.highlightsLogToWindow)
+		String(localized: .Settings.highlightsLogToWindow)
 	}
 
 	static var matchTypeExact: String {
-		String(localized: .TDCPreferencesController.highlightsMatchTypeExact)
+		String(localized: .Settings.highlightsMatchTypeExact)
 	}
 
 	static var matchTypeLabel: String {
-		String(localized: .TDCPreferencesController.highlightsMatchTypeLabel)
+		String(localized: .Settings.highlightsMatchTypeLabel)
 	}
 
 	static var matchTypePartial: String {
-		String(localized: .TDCPreferencesController.highlightsMatchTypePartial)
+		String(localized: .Settings.highlightsMatchTypePartial)
 	}
 
 	static var matchTypeRegex: String {
-		String(localized: .TDCPreferencesController.highlightsMatchTypeRegex)
+		String(localized: .Settings.highlightsMatchTypeRegex)
 	}
 
 	static var newKeyword: String {
-		String(localized: .TDCPreferencesController.highlightsNewKeyword)
+		String(localized: .Settings.highlightsNewKeyword)
 	}
 
 	static var removeExcluded: String {
-		String(localized: .TDCPreferencesController.highlightsRemoveExcluded)
+		String(localized: .Settings.highlightsRemoveExcluded)
 	}
 
 	static var removeKeyword: String {
-		String(localized: .TDCPreferencesController.highlightsRemoveKeyword)
+		String(localized: .Settings.highlightsRemoveKeyword)
 	}
 
 	static var trackLocalNickname: String {
-		String(localized: .TDCPreferencesController.highlightsTrackLocalNickname)
+		String(localized: .Settings.highlightsTrackLocalNickname)
 	}
 
 	static var wordsLabel: String {
-		String(localized: .TDCPreferencesController.highlightsWordsLabel)
+		String(localized: .Settings.highlightsWordsLabel)
 	}
 }
 
 enum PreferencesIncomingDataStrings {
 	static var highlightSpam: String {
-		String(localized: .TDCPreferencesController.incomingDataHighlightSpam)
+		String(localized: .Settings.incomingDataHighlightSpam)
 	}
 
 	static var highlightSpamNote: String {
-		String(localized: .TDCPreferencesController.incomingDataHighlightSpamNote)
+		String(localized: .Settings.incomingDataHighlightSpamNote)
 	}
 
 	static var removeFormatting: String {
-		String(localized: .TDCPreferencesController.incomingDataRemoveFormatting)
+		String(localized: .Settings.incomingDataRemoveFormatting)
 	}
 
 	static var removeFormattingNote: String {
-		String(localized: .TDCPreferencesController.incomingDataRemoveFormattingNote)
+		String(localized: .Settings.incomingDataRemoveFormattingNote)
 	}
 
 	static var replyCtcp: String {
-		String(localized: .TDCPreferencesController.incomingDataReplyCtcp)
+		String(localized: .Settings.incomingDataReplyCtcp)
 	}
 
 	static var unicodeSpam: String {
-		String(localized: .TDCPreferencesController.incomingDataUnicodeSpam)
+		String(localized: .Settings.incomingDataUnicodeSpam)
 	}
 
 	static var unicodeSpamNote: String {
-		String(localized: .TDCPreferencesController.incomingDataUnicodeSpamNote)
+		String(localized: .Settings.incomingDataUnicodeSpamNote)
 	}
 }
 
 enum PreferencesFloodControlStrings {
 	static func countValue(value: String) -> String {
-		String(localized: .TDCPreferencesController.floodControlCountValue(value))
+		String(localized: .Settings.floodControlCountValue(value))
 	}
 
 	static var disabledMarker: String {
-		String(localized: .TDCPreferencesController.floodControlDisabledMarker)
+		String(localized: .Settings.floodControlDisabledMarker)
 	}
 
 	static var identifyDelayLabel: String {
-		String(localized: .TDCPreferencesController.floodControlIdentifyDelayLabel)
+		String(localized: .Settings.floodControlIdentifyDelayLabel)
 	}
 
 	static var identifyDelayNote: String {
-		String(localized: .TDCPreferencesController.floodControlIdentifyDelayNote)
+		String(localized: .Settings.floodControlIdentifyDelayNote)
 	}
 
 	static var note: String {
-		String(localized: .TDCPreferencesController.floodControlNote)
+		String(localized: .Settings.floodControlNote)
 	}
 
 	static func secondsValue(value: String) -> String {
-		String(localized: .TDCPreferencesController.floodControlSecondsValue(value))
+		String(localized: .Settings.floodControlSecondsValue(value))
 	}
 
 	static var whoLimitLabel: String {
-		String(localized: .TDCPreferencesController.floodControlWhoLimitLabel)
+		String(localized: .Settings.floodControlWhoLimitLabel)
 	}
 
 	static var whoLimitNote: String {
-		String(localized: .TDCPreferencesController.floodControlWhoLimitNote)
+		String(localized: .Settings.floodControlWhoLimitNote)
 	}
 }

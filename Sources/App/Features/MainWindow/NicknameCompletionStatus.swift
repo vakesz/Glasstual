@@ -17,7 +17,7 @@ import AppKit
 protocol NicknameCompletionWindow: AnyObject {
 	var inputTextField: MainWindowTextView! { get }
 	var selectedClient: IRCClient? { get }
-	var selectedChannel: IRCChannel? { get }
+	var selectedChannel: Channel? { get }
 }
 
 extension MainWindow: NicknameCompletionWindow {}
@@ -429,11 +429,21 @@ public final class NicknameCompletionStatus: NSObject {
 			addNickname(member.user.nickname, includeTrimmedVariant: includeTrimmedNicknames)
 		}
 
+		/* None of these is in the channel, so none of them belongs in the cycle
+		 the reader walks by pressing Tab on an empty word: that offered
+		 "NickServ" and the application's own name between two people who are
+		 actually in the room. Once something has been typed they are worth
+		 completing -- a service name and the network's name are both things one
+		 addresses -- so they join the list only then. */
+		guard searchPatternIsEmpty == false else {
+			return candidates
+		}
+
 		for nickname in ["NickServ", "RootServ", "OperServ", "HostServ", "ChanServ", "MemoServ"] {
 			addNickname(nickname, includeTrimmedVariant: false)
 		}
 
-		addNickname(ApplicationInfo.applicationNameWithoutVersion(), includeTrimmedVariant: false)
+		addNickname(ApplicationInfo.applicationName(), includeTrimmedVariant: false)
 
 		if let networkName = client.supportInfo.networkName {
 			addNickname(networkName, includeTrimmedVariant: false)

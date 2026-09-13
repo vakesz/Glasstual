@@ -177,10 +177,6 @@ extension IRCClient {
 		stringIsChannelName(string) || string == "0"
 	}
 
-	class func redactedServiceMessage(_ message: String, sentTo target: String?) -> String {
-		ClientWireUtilities.redactedServiceMessage(message, sentTo: target)
-	}
-
 	func enableCapability(_ capability: ClientIRCv3SupportedCapability) {
 		let couldTrackPresence = supportsAdvancedTracking
 		capabilityNegotiation.enable(capability)
@@ -219,12 +215,8 @@ extension IRCClient {
 		capabilities.contains(capability)
 	}
 
-	private var capabilityRegistry: CapabilityRegistry {
-		.defaultRegistry
-	}
-
 	public func isCapabilitySupported(_ capability: String) -> Bool {
-		capabilityRegistry.isCapabilitySupported(capability, preferences: environment.preferences)
+		CapabilityRegistry.defaultRegistry.isCapabilitySupported(capability, preferences: environment.preferences)
 	}
 
 	public var enabledCapabilitiesStringValue: String {
@@ -236,7 +228,7 @@ extension IRCClient {
 	/// withdrawn it, and every dependency it names is already acknowledged.
 	@MainActor private func eligibleCapabilityRequests() -> [String] {
 		let offer = capabilityNegotiation.requestableOffer
-		let requestable = capabilityRegistry.capabilitiesToRequest(
+		let requestable = CapabilityRegistry.defaultRegistry.capabilitiesToRequest(
 			fromOffered: offer,
 			preferences: environment.preferences,
 			enabledCapabilities: capabilities
@@ -248,7 +240,7 @@ extension IRCClient {
 			guard capabilityNegotiation.isAcknowledged(name) == false,
 			      capabilityNegotiation.isOutstanding(name) == false,
 			      capabilityNegotiation.isWithdrawn(name) == false,
-			      capabilityRegistry.dependenciesSatisfied(for: capability, by: capabilities)
+			      CapabilityRegistry.defaultRegistry.dependenciesSatisfied(for: capability, by: capabilities)
 			else {
 				return nil
 			}
@@ -809,32 +801,15 @@ extension IRCClient {
 	}
 }
 
-private extension String {
-	var nonEmpty: String? {
-		isEmpty ? nil : self
-	}
-}
-
 /// Registration uses the base IRC line limit, including CRLF and the trailing-parameter prefix.
 nonisolated enum CapabilityRequestBatching { // nonisolated: value
 	static func groups(_ names: [String], maximumLineBytes: Int = 512) -> [[String]] {
 		let budget = maximumLineBytes - "CAP REQ :\r\n".utf8.count
-		var groups: [[String]] = []
-		var group: [String] = []
-		var used = 0
-		for name in names where !name.isEmpty && name.utf8.count <= budget {
-			let cost = name.utf8.count + (group.isEmpty ? 0 : 1)
-			if used + cost > budget {
-				groups.append(group)
-				group = []
-				used = 0
-			}
-			used += name.utf8.count + (group.isEmpty ? 0 : 1)
-			group.append(name)
-		}
-		if !group.isEmpty {
-			groups.append(group)
-		}
-		return groups
+		// A name that cannot fit a line of its own has no request to go in.
+		let requestable = names.filter { $0.isEmpty == false && $0.utf8.count <= budget }
+
+		return WireBatching.pack(requestable, budget: budget, cost: { name, group in
+			(group.isEmpty ? 0 : 1) + name.utf8.count
+		})
 	}
 }

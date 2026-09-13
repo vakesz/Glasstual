@@ -40,16 +40,6 @@ import Foundation
 import GlasstualPluginKit
 
 final class ChatFilterEngine {
-	/** How much of an incoming message a filter's pattern is shown.
-
-	 Every filter is tried against every line that arrives, on the main actor,
-	 and the patterns are user-authored while the subject is whatever a peer
-	 sent. ICU backtracks without a budget, so an unbounded subject is the other
-	 half of a catastrophic pattern; the editor refuses the pattern shapes and
-	 this refuses the length. An IRC line is 512 bytes, so the cap only ever
-	 bites on something that is not a chat message. */
-	static let matchInputLimit = RegularExpression.inputLengthLimit
-
 	private let filtersProvider: () -> [ChatFilter]
 	private let host: PluginHostContext
 	private var lastActionDates: [String: TimeInterval] = [:]
@@ -107,7 +97,7 @@ final class ChatFilterEngine {
 				identity,
 				isMatchedByRegex: filter.senderMatch,
 				withoutCase: true,
-				inputLimit: Self.matchInputLimit
+				inputLimit: RegularExpression.inputLengthLimit
 			)
 			else {
 				return false
@@ -139,6 +129,14 @@ final class ChatFilterEngine {
 		return true
 	}
 
+	/** Whether the filter's pattern matches, over a message-sized subject.
+
+	 Every filter is tried against every line that arrives, on the main actor,
+	 and the patterns are user-authored while the subject is whatever a peer
+	 sent. ICU backtracks without a budget, so an unbounded subject is the other
+	 half of a catastrophic pattern: the editor refuses the pattern shapes and
+	 `inputLimit` refuses the length. An IRC line is 512 bytes, so the cap only
+	 ever bites on something that is not a chat message. */
 	private func matchesText(_ filter: ChatFilter, text: String?, allowingNil: Bool) -> Bool {
 		guard var text else { return allowingNil }
 		guard !filter.match.isEmpty else { return true }
@@ -149,7 +147,7 @@ final class ChatFilterEngine {
 			text,
 			isMatchedByRegex: filter.match,
 			withoutCase: true,
-			inputLimit: Self.matchInputLimit
+			inputLimit: RegularExpression.inputLengthLimit
 		)
 	}
 
@@ -244,7 +242,7 @@ final class ChatFilterEngine {
 		else {
 			return
 		}
-		let message = String(localized: .TPIChatFilterLogic.forwardedMessage(command, text))
+		let message = String(localized: .ChatFilterLogic.forwardedMessage(command, text))
 		client.print(message, authoredBy: nil, in: destination, as: .debug, command: "", receivedAt: receivedAt) { _ in
 			client.markUnread(destination)
 		}
@@ -273,14 +271,14 @@ final class ChatFilterEngine {
 			command: command,
 			receivedAt: receivedAt,
 			isEncrypted: wasEncrypted
-		) { context in
+		) { isHighlight in
 			if kind == .notice {
 				client.markUnread(destination)
 			} else {
-				if context.isHighlight {
+				if isHighlight {
 					client.markHighlight(destination)
 				}
-				client.markUnread(destination, isHighlight: context.isHighlight)
+				client.markUnread(destination, isHighlight: isHighlight)
 			}
 		}
 	}
@@ -320,7 +318,7 @@ final class ChatFilterEngine {
 		}
 		let message = if let destination {
 			String(
-				localized: .TPIChatFilterExtension.actionLogUserInChannel(
+				localized: .ChatFilter.actionLogUserInChannel(
 					filter.title,
 					author.nickname,
 					destination.name
@@ -328,7 +326,7 @@ final class ChatFilterEngine {
 			)
 		} else {
 			String(
-				localized: .TPIChatFilterExtension.actionLogUser(
+				localized: .ChatFilter.actionLogUser(
 					filter.title,
 					author.nickname
 				)

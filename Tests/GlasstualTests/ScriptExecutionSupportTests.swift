@@ -21,7 +21,7 @@ struct ScriptExecutionSupportTests {
 
 	@Test("Delayed script output cannot target a replacement connection or channel")
 	func staleScriptDestination() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.isConnected = true
 		let channel = try #require(client.findChannelOrCreate("#scripts"))
 		let original = ScriptInvocation(client: client, target: channel.name)

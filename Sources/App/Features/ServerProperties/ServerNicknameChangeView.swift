@@ -17,69 +17,64 @@ import SwiftUI
 struct ServerNicknameChangeView: View {
 	@Bindable var model: ServerNicknameChangeModel
 
-	let content: ServerNicknameChangeContent
 	let submit: () -> Void
 	let cancel: () -> Void
 
 	@FocusState private var nicknameFieldIsFocused: Bool
 
 	var body: some View {
-		VStack(spacing: 18) {
-			Grid(horizontalSpacing: 8, verticalSpacing: 12) {
-				GridRow {
-					Text(verbatim: content.currentNicknameLabel)
-						.gridColumnAlignment(.trailing)
+		VStack(spacing: 0) {
+			VStack(alignment: .leading, spacing: 6) {
+				Text(verbatim: ServerNicknameChangeStrings.changeButtonTitle)
+					.font(.title2.weight(.semibold))
+				Text(verbatim: ServerNicknameChangeStrings.changeDescription)
+					.foregroundStyle(.secondary)
+					.fixedSize(horizontal: false, vertical: true)
+			}
+			.frame(maxWidth: .infinity, alignment: .leading)
+			.padding([.horizontal, .top], 20)
+			.padding(.bottom, 12)
 
-					Text(verbatim: model.currentNickname)
-						.fontWeight(.semibold)
-						.textSelection(.enabled)
-						.frame(width: 190, alignment: .leading)
-				}
+			Form {
+				Section {
+					LabeledContent(
+						ServerNicknameChangeStrings.currentNicknameLabel,
+						value: model.currentNickname
+					)
+					.textSelection(.enabled)
 
-				GridRow {
-					Text(verbatim: content.newNicknameLabel)
-
-					TextField("", text: $model.proposedNickname)
+					LabeledContent(ServerNicknameChangeStrings.newNicknameLabel) {
+						TextField(
+							ServerNicknameChangeStrings.newNicknamePlaceholder,
+							text: $model.proposedNickname
+						)
 						.labelsHidden()
 						.focused($nicknameFieldIsFocused)
-						.frame(width: 190)
-						.accessibilityLabel(Text(verbatim: content.newNicknameLabel))
-						.accessibilityHint(Text(verbatim: model.validationError ?? ""))
-						.overlay {
-							if model.validationError != nil {
-								RoundedRectangle(cornerRadius: 5)
-									.stroke(.red, lineWidth: 1)
-									.allowsHitTesting(false)
-							}
-						}
-						.popover(isPresented: $model.isValidationMessagePresented) {
-							if let validationError = model.validationError {
-								Text(verbatim: validationError)
-									.padding(10)
-							}
-						}
+						.accessibilityLabel(ServerNicknameChangeStrings.newNicknameLabel)
+						.onSubmit(submit)
+					}
+
+					if let message = model.validationMessage {
+						ValidationMessageLabel(message)
+					}
 				}
 			}
+			.formStyle(.grouped)
 
+			Divider()
 			HStack(spacing: 8) {
 				Spacer()
-
-				Button(action: cancel) {
-					Text(verbatim: content.cancelButtonTitle)
-				}
-				.keyboardShortcut(.cancelAction)
-
-				Button(action: submit) {
-					Text(verbatim: content.changeButtonTitle)
-				}
-				.keyboardShortcut(.defaultAction)
+				Button(PromptStrings.Action.cancel, action: cancel)
+					.keyboardShortcut(.cancelAction)
+				Button(ServerNicknameChangeStrings.changeButtonTitle, action: submit)
+					.keyboardShortcut(.defaultAction)
+					.disabled(model.validationMessage != nil)
 			}
+			.padding(12)
 		}
-		.padding(20)
-		.frame(width: 350, height: 131)
+		.frame(minWidth: 400, idealWidth: 440, maxWidth: .infinity)
 		.onAppear {
 			nicknameFieldIsFocused = true
 		}
-		.onExitCommand(perform: cancel)
 	}
 }

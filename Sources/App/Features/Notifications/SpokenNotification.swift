@@ -32,7 +32,7 @@ public struct SpokenNotification: Sendable {
 	public init(
 		notificationType: NotificationEvent,
 		lineType: LogLineType,
-		target: IRCTreeItem?,
+		target: TreeItem?,
 		nickname: String?,
 		text: String?
 	) {
@@ -44,7 +44,7 @@ public struct SpokenNotification: Sendable {
 			channelIdentifier = nil
 		} else {
 			clientIdentifier = target?.associatedClient?.uniqueIdentifier
-			channelIdentifier = (target as? IRCChannel)?.uniqueIdentifier
+			channelIdentifier = (target as? Channel)?.uniqueIdentifier
 		}
 
 		self.nickname = nickname

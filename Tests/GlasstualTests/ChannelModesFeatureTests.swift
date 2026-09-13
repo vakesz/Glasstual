@@ -12,15 +12,9 @@ import Testing
 @MainActor
 private final class ChannelModesDelegateSpy: NSObject, ChannelModifyModesSheetDelegate {
 	private(set) var acceptedModes: ChannelModeContainer?
-	private(set) var events: [String] = []
 
 	func channelModifyModesSheet(_: ChannelModifyModesSheet, onOk modes: ChannelModeContainer) {
 		acceptedModes = modes
-		events.append("accept")
-	}
-
-	func channelModifyModesSheetWillClose(_: ChannelModifyModesSheet) {
-		events.append("close")
 	}
 }
 
@@ -33,13 +27,6 @@ struct ChannelModesFeatureTests {
 		#expect(ChannelMode.booleanModes == [
 			.secretChannel, .privateChannel, .noExternalMessages, .operatorTopic, .inviteOnly, .moderated,
 		])
-	}
-
-	/// The key is what a suppressed alert is remembered by, so it outlives the
-	/// build that wrote it.
-	@Test("The maximum key length alert keeps the key it is suppressed under")
-	func suppressionKeySurvivesRenames() {
-		#expect(ChannelValidationSuppressionKey.maximumSecretKeyLength.rawValue == "maximum_secret_key_length")
 	}
 
 	@Test("The model copies every mode and parameter, leaving the channel's own modes alone")
@@ -122,57 +109,57 @@ struct ChannelModesFeatureTests {
 		}
 	}
 
-	@Test("The key length warning is shown once, and only for a limit the server declared")
-	func maximumKeyLengthWarningIsNonzeroAndOneTime() throws {
+	/// The sheet warns beside the field instead of raising an alert on the
+	/// keystroke that crosses the limit, and refuses to submit past it.
+	@Test("The remaining key length gates submission, and only where a limit was declared")
+	func remainingKeyLengthGatesSubmission() throws {
 		let (_, model) = try makeModel(maximumKeyLength: 3)
 
-		#expect(model.updateSecretKey("abc") == false)
-		#expect(model.updateSecretKey("abcd"))
-		#expect(model.hasPresentedMaximumKeyLengthWarning)
-		#expect(model.updateSecretKey("abcde") == false)
-		#expect(model.updateSecretKey("a") == false)
+		model.updateSecretKey("abc")
+		#expect(model.remainingKeyLength == 0)
+		#expect(model.fitsMaximumKeyLength)
+		#expect(ChannelModesStrings.keyLengthWarning(remaining: 0) == nil)
+
+		model.updateSecretKey("abcde")
+		#expect(model.remainingKeyLength == -2)
+		#expect(model.fitsMaximumKeyLength == false)
+		#expect(ChannelModesStrings.keyLengthWarning(remaining: -2) == "2 characters too many")
+		#expect(ChannelModesStrings.keyLengthWarning(remaining: -1) == "1 character too many")
 
 		let (_, unlimitedModel) = try makeModel(maximumKeyLength: 0)
-		#expect(unlimitedModel.updateSecretKey(String(repeating: "x", count: 1000)) == false)
-
-		let (_, roomyModel) = try makeModel(maximumKeyLength: 8)
-		#expect(roomyModel.updateSecretKey("hunter2") == false)
+		unlimitedModel.updateSecretKey(String(repeating: "x", count: 1000))
+		#expect(unlimitedModel.remainingKeyLength == nil)
+		#expect(unlimitedModel.fitsMaximumKeyLength)
 
 		// KEYLEN is an octet count, so a single emoji is four bytes over a
 		// one-byte limit.
 		let (_, graphemeModel) = try makeModel(maximumKeyLength: 1)
-		#expect(graphemeModel.updateSecretKey("💬"))
+		graphemeModel.updateSecretKey("💬")
+		#expect(graphemeModel.remainingKeyLength == -3)
 	}
 
-	@Test("Sheet copy comes from the namespaced table and the shared validation table")
-	func contentUsesNamespacedLocalizedCopyAndSharedValidationCopy() {
-		let content = ChannelModesContent.current(channelName: "#swift")
-
-		#expect(content.headingTitle == "Modes for #swift")
-		#expect(content.title(for: .secretChannel) == "Secret channel (+s)")
-		#expect(content.title(for: .privateChannel) == "Private channel (+p)")
-		#expect(content.title(for: .noExternalMessages) == "No external channel messages (+n)")
-		#expect(content.title(for: .operatorTopic) == "Only operators can change topic (+t)")
-		#expect(content.title(for: .inviteOnly) == "Invite-only channel (+i)")
-		#expect(content.title(for: .moderated) == "Moderated channel (+m)")
-		#expect(content.title(for: .key) == "Password (+k):")
-		#expect(content.title(for: .userLimit) == "Limit number of users (+l):")
-		#expect(content.saveButtonTitle == "Save")
-		#expect(content.cancelButtonTitle == "Cancel")
-		#expect(content.windowTitle == "Channel Modes")
-		#expect(
-			ChannelValidationStrings.maximumKeyLengthMessage ==
-				"If you continue typing, the end of your secret key may be cut off."
-		)
-		#expect(
-			ChannelValidationStrings.maximumKeyLengthTitle(networkName: "ExampleNet", maximumLength: 16) ==
-				"You have exceeded the secret key length defined by ExampleNet which is 16 characters"
-		)
+	@Test("Sheet copy comes from the namespaced table")
+	func contentUsesNamespacedLocalizedCopy() {
+		#expect(ChannelModesStrings.headingTitle(channelName: "#swift") == "Modes for #swift")
+		#expect(ChannelMode.secretChannel.title == "Secret channel (+s)")
+		#expect(ChannelMode.privateChannel.title == "Private channel (+p)")
+		#expect(ChannelMode.noExternalMessages.title == "No external channel messages (+n)")
+		#expect(ChannelMode.operatorTopic.title == "Only operators can change topic (+t)")
+		#expect(ChannelMode.inviteOnly.title == "Invite-only channel (+i)")
+		#expect(ChannelMode.moderated.title == "Moderated channel (+m)")
+		// Named for the IRC term, and with no trailing colon: the checkbox is
+		// also the field's label for an assistive reader.
+		#expect(ChannelMode.key.title == "Channel key (+k)")
+		#expect(ChannelMode.userLimit.title == "Limit number of users (+l)")
+		#expect(ChannelModesStrings.changeModesButtonTitle == "Change Modes")
+		#expect(ChannelModesStrings.cancelButtonTitle == "Cancel")
+		#expect(ChannelModesStrings.channelKeyPlaceholder == "Channel key")
+		#expect(ChannelModesStrings.userLimitPlaceholder == "0–99999")
 	}
 
 	@Test("The sheet adapter copies the channel's modes and reports edits to its delegate")
 	func adapterPreservesIdentityCopiedModesAndTypedDelegateCallbacks() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+ KEYLEN=8")
 		let channel = try #require(client.findChannelOrCreate("#swift"))
 		channel.activate()
@@ -197,23 +184,19 @@ struct ChannelModesFeatureTests {
 		adapter.model.updateSecretKey("edited")
 		#expect(channel.modeInfo?.modes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "original")
 
-		adapter.ok(nil)
+		adapter.submit()
 
 		let acceptedModes = try #require(delegate.acceptedModes)
 		let acceptedModerated = try #require(acceptedModes.modeInfo(for: ChannelMode.moderated.rawValue))
 		#expect(acceptedModerated.modeIsSet)
 		#expect(acceptedModes.modeInfo(for: ChannelMode.key.rawValue)?.modeParameter == "edited")
-		#expect(delegate.events == ["accept"])
-
-		adapter.sheetDidEnd(withReturnCode: 0)
-		#expect(delegate.events == ["accept", "close"])
 	}
 
 	private func makeModel(
 		modeString: String = "",
 		maximumKeyLength: UInt = 0
 	) throws -> (ChannelModeContainer, ChannelModesModel) {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 		let channel = try #require(client.findChannelOrCreate("#test"))
 		let state = ChannelModeState(channel: channel)

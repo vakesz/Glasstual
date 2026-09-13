@@ -79,7 +79,6 @@ struct ServerChannelListComparator: SortComparator {
 
 @Observable
 final class ServerChannelListModel {
-	static let maximumSelectionCount = 8
 	/** How many channels the window keeps.
 
 	 A large network answers `LIST` with hundreds of thousands of rows, and
@@ -126,6 +125,11 @@ final class ServerChannelListModel {
 		guard discardedEntryCount > 0 else { return nil }
 
 		return ServerChannelListStrings.truncationNotice(keptChannelCount: allEntries.count)
+	}
+
+	/// How many channels the window kept, which the search field does not change.
+	var keptEntryCount: Int {
+		allEntries.count
 	}
 
 	var selectedChannelNames: [String] {
@@ -209,27 +213,6 @@ final class ServerChannelListModel {
 		discardedEntryCount = entries.count - allEntries.count
 		selection.removeAll()
 		applyFilterAndSort()
-	}
-
-	func limitSelection(from oldSelection: Set<ServerChannelListEntry.ID>) {
-		guard selection.count > Self.maximumSelectionCount else { return }
-
-		let proposedSelection = selection
-		var allowed = oldSelection.intersection(proposedSelection)
-		let remainingCapacity = Self.maximumSelectionCount - allowed.count
-		if remainingCapacity > 0 {
-			let additions = rows
-				.compactMap { entry in
-					proposedSelection.contains(entry.id) && allowed.contains(entry.id) == false ? entry.id : nil
-				}
-				.prefix(remainingCapacity)
-			allowed.formUnion(additions)
-		}
-		selection = allowed
-	}
-
-	func selectOnly(_ id: ServerChannelListEntry.ID) {
-		selection = [id]
 	}
 
 	func clearSelection() {

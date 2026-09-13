@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -74,7 +74,7 @@ enum IRCLabeledResponsePolicy {
 
 final class LabeledDelivery: NSObject {
 	var label = ""
-	weak var channel: IRCChannel?
+	weak var channel: Channel?
 	var lineNumber: String?
 	var resolved = false
 	var state: LogLineDeliveryState = .none
@@ -100,7 +100,7 @@ public extension IRCClient {
 		return "g\(labelCounter)"
 	}
 
-	func registerPendingDelivery(for channel: IRCChannel?) -> String? {
+	func registerPendingDelivery(for channel: Channel?) -> String? {
 		guard labeledResponseTrackingEnabled(),
 		      pendingDeliveries.count < IRCLabeledResponsePolicy.maximumPendingDeliveries else { return nil }
 		let label = nextMessageLabel()

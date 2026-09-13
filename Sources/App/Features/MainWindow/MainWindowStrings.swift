@@ -44,24 +44,16 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			String(localized: .TVCMainWindow.welcomeToGlasstual)
 		}
 
+		static var noServersTitle: String {
+			String(localized: .TVCMainWindow.noServers)
+		}
+
 		static var welcomeDescription: String {
 			String(localized: .TVCMainWindow.getStartedDescription)
 		}
 
-		static var continueAction: String {
-			String(localized: .TVCMainWindow.continue)
-		}
-
-		static var beginSetup: String {
-			String(localized: .TVCMainWindow.beginSetup)
-		}
-
 		static var configuration: String {
 			String(localized: .TVCMainWindow.loadingConfiguration)
-		}
-
-		static var preferences: String {
-			String(localized: .TVCMainWindow.importingPreferences)
 		}
 	}
 
@@ -116,12 +108,13 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			String(localized: .TVCMainWindow.directChat)
 		}
 
+		/// The message field's name, and what is drawn in it while it is empty.
 		static var inputPlaceholder: String {
 			String(localized: .TVCMainWindow.sendMessage)
 		}
 
-		static var awayNicknameSuffix: String {
-			String(localized: .TVCMainWindow.suffixAppendedAway)
+		static func awayNickname(_ nickname: String) -> String {
+			String(localized: .TVCMainWindow.awayNickname(nickname))
 		}
 
 		static var currentSession: String {
@@ -132,8 +125,14 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			String(localized: .TVCMainWindow.unreadMessages)
 		}
 
-		static func userCount(_ formattedCount: String) -> String {
-			String(localized: .TVCMainWindow.mainWindowConnectionStatusUsers(formattedCount))
+		/// The count reaches the catalog twice: once as text, so the digits are
+		/// grouped the way the reader's locale groups them, and once as a number,
+		/// so the noun beside it takes the right plural form.
+		static func memberCount(_ count: Int) -> String {
+			String(localized: .TVCMainWindow.mainWindowConnectionStatusUsers(
+				formattedNumber(count),
+				count: count
+			))
 		}
 	}
 
@@ -158,8 +157,8 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			String(localized: .TVCMainWindow.addServerOrChannel)
 		}
 
-		static var searchChannels: String {
-			String(localized: .TVCMainWindow.searchChannels)
+		static var filterSidebar: String {
+			String(localized: .TVCMainWindow.filterSidebar)
 		}
 
 		static var settings: String {
@@ -172,14 +171,6 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 
 		static var markAllAsRead: String {
 			String(localized: .TVCMainWindow.markAllAsRead)
-		}
-
-		static var addressBook: String {
-			String(localized: .TVCMainWindow.addressBook)
-		}
-
-		static var fileTransfers: String {
-			String(localized: .TVCMainWindow.fileTransfers)
 		}
 	}
 
@@ -194,13 +185,6 @@ nonisolated enum MainWindowStrings { // nonisolated: value
 			isVisible
 				? String(localized: .TVCMainWindow.dynamicViewWindowMenuHideMemberList)
 				: String(localized: .TVCMainWindow.showMemberList)
-		}
-
-		/// A switch names what the next press does, not the state it is in.
-		static func notifications(areDisabled: Bool) -> String {
-			areDisabled
-				? String(localized: .TVCMainWindow.enableAllNotifications)
-				: String(localized: .TVCMainWindow.disableAllNotifications)
 		}
 	}
 

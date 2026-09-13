@@ -34,10 +34,9 @@ enum ServerPropertiesValidation {
 		isSingleLine(value) && value.count <= maximumCommentLength
 	}
 
-	static func areAlternateNicknamesValid(_ value: String) -> Bool {
-		invalidAlternateNickname(in: value) == nil
-	}
-
+	/// The first alternative nickname the server would refuse, or `nil` when
+	/// every one of them is usable. The message names it, so the check reports
+	/// which one rather than only that one of them failed.
 	static func invalidAlternateNickname(in value: String) -> String? {
 		value.components(separatedBy: .whitespaces)
 			.first { $0.isEmpty == false && isNickname($0) == false }

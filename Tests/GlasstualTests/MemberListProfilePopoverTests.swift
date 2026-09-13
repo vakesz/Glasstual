@@ -14,14 +14,14 @@ import Testing
 @MainActor
 @Suite("Member list profile and rank")
 struct MemberListProfilePopoverTests {
-	private let client: GLTTestClient
+	private let client: TestClient
 	private let memberList: MemberList
-	private let channel: IRCChannel
+	private let channel: Channel
 
 	init() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let memberList = MemberList()
-		let channel = IRCChannel(config: ChannelConfig(channelName: "#profile"))
+		let channel = Channel(config: ChannelConfig(channelName: "#profile"))
 		channel.associatedClient = client
 		channel.activate()
 		memberList.assign(to: channel)
@@ -31,42 +31,26 @@ struct MemberListProfilePopoverTests {
 		self.channel = channel
 	}
 
-	@Test("A click on a second member replaces the first one's wait")
-	func aSecondClickReplacesThePendingProfile() async throws {
-		let alice = try add("alice")
-		let bob = try add("bob")
-
-		memberList.scheduleProfile(for: alice.id, after: .milliseconds(20))
-		memberList.scheduleProfile(for: bob.id, after: .milliseconds(20))
-		try await Task.sleep(for: .milliseconds(200))
-
-		#expect(memberList.memberShowingProfile == bob.id)
-	}
-
-	@Test("A click on another member takes the open popover with it")
-	func openingAProfileDismissesTheOneBefore() async throws {
+	/// The profile used to wait out the double-click interval, which follows
+	/// the reader's Double-click speed and can be seconds.
+	@Test("A click opens the profile at once, and a click on another member replaces it")
+	func aClickOpensTheProfileAtOnce() throws {
 		let alice = try add("alice")
 		let bob = try add("bob")
 
 		memberList.showProfile(for: alice.id)
 		#expect(memberList.memberShowingProfile == alice.id)
 
-		memberList.scheduleProfile(for: bob.id, after: .milliseconds(20))
-		/* Not "when the wait is over": the popover the reader clicked past is
-		 gone as soon as they click, or their click lands in it instead. */
-		#expect(memberList.memberShowingProfile == nil)
-
-		try await Task.sleep(for: .milliseconds(200))
+		memberList.showProfile(for: bob.id)
 		#expect(memberList.memberShowingProfile == bob.id)
 	}
 
-	@Test("The double click that opens the conversation opens no profile")
-	func aDoubleClickCancelsTheWait() async throws {
+	@Test("The double click that opens the conversation takes the profile down")
+	func aDoubleClickHidesTheProfile() throws {
 		let alice = try add("alice")
 
-		memberList.scheduleProfile(for: alice.id, after: .milliseconds(20))
-		memberList.cancelPendingProfile()
-		try await Task.sleep(for: .milliseconds(200))
+		memberList.showProfile(for: alice.id)
+		memberList.hideProfile()
 
 		#expect(memberList.memberShowingProfile == nil)
 	}
@@ -127,12 +111,43 @@ struct MemberListProfilePopoverTests {
 		defer { key.detachedStoredValue = previous }
 
 		key.detachedValue = true
-		#expect(MemberListPresentation.symbolName(for: UserRank.none) != nil)
-		#expect(MemberListPresentation.symbolName(for: .voiced) == "mic.fill")
+		#expect(MemberListPresentationStyle.current().symbolName(for: UserRank.none) != nil)
+		#expect(MemberListPresentationStyle.current().symbolName(for: .voiced) == "mic.fill")
 
 		key.detachedValue = false
-		#expect(MemberListPresentation.symbolName(for: UserRank.none) == nil)
-		#expect(MemberListPresentation.symbolName(for: .voiced) == "mic.fill")
+		#expect(MemberListPresentationStyle.current().symbolName(for: UserRank.none) == nil)
+		#expect(MemberListPresentationStyle.current().symbolName(for: .voiced) == "mic.fill")
+	}
+
+	/** The rows read their preferences once, out of a snapshot the list hands
+	 down. Three reads per row per redraw — glyph, tooltip, label — each built
+	 its own handle on the defaults suite, on every row of a channel that
+	 rebuilds on each join, part and mode change. */
+	@Test("One snapshot answers for every row, and it changes when the preferences do")
+	func presentationStyleIsOneSnapshotOfThePreferences() {
+		let staff = Preferences.Appearance.memberListSortFavorsServerStaff
+		let noMode = Preferences.Appearance.memberListNoModeSymbol
+		let previousStaff = staff.detachedStoredValue
+		let previousNoMode = noMode.detachedStoredValue
+		defer {
+			staff.detachedStoredValue = previousStaff
+			noMode.detachedStoredValue = previousNoMode
+		}
+
+		staff.detachedValue = true
+		noMode.detachedValue = true
+		let favouring = MemberListPresentationStyle.current()
+		#expect(favouring.favorsServerStaff)
+		#expect(favouring.marksMembersWithNoMode)
+		#expect(favouring.displayRank(isIRCOperator: true, channelRank: .voiced) == .irCopByMode)
+		#expect(favouring.displayRank(isIRCOperator: false, channelRank: .voiced) == .voiced)
+
+		staff.detachedValue = false
+		noMode.detachedValue = false
+		let plain = MemberListPresentationStyle.current()
+		#expect(plain.displayRank(isIRCOperator: true, channelRank: .voiced) == .voiced)
+		#expect(plain.symbolName(for: UserRank.none) == nil)
+		#expect(plain != favouring)
 	}
 
 	@discardableResult

@@ -72,7 +72,7 @@ struct IRCISupportPrefixTests {
 	}
 
 	private func supportInfo(_ configuration: String) -> IRCISupportInfo {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let supportInfo = IRCISupportInfo(client: client)
 
 		supportInfo.processConfigurationData(configuration)

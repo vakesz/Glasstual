@@ -13,21 +13,25 @@ import Testing
 @Suite("Main window input shortcuts")
 @MainActor
 struct MainWindowShortcutPolicyTests {
-	private func makeInputBar() -> (container: NSView, field: NSTextView) {
-		let container = NSView(frame: NSRect(x: 0, y: 0, width: 200, height: 40))
-		let scrollView = NSScrollView(frame: container.bounds)
-		let field = NSTextView(frame: container.bounds)
-		scrollView.documentView = field
-		container.addSubview(scrollView)
-		return (container, field)
+	private func makeWindow() -> MainWindow {
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
+			styleMask: [.titled],
+			backing: .buffered,
+			defer: false
+		)
+		let inputBar = window.inputContentView!
+		inputBar.frame = NSRect(x: 0, y: 0, width: 400, height: 40)
+		window.contentView?.addSubview(inputBar)
+		return window
 	}
 
 	@Test("The message field, and anything inside its container, owns the shortcut")
 	func inputBarOwnsTheShortcut() {
-		let (container, field) = makeInputBar()
+		let window = makeWindow()
 
-		#expect(MainWindowInputShortcutPolicy.shouldHandle(firstResponder: field, inputBar: container))
-		#expect(MainWindowInputShortcutPolicy.shouldHandle(firstResponder: container, inputBar: container))
+		#expect(window.makeFirstResponder(window.inputTextField))
+		#expect(window.inputBarHoldsKeyboardFocus)
 	}
 
 	/** The regression: typing a filter in the toolbar's search field and
@@ -35,21 +39,15 @@ struct MainWindowShortcutPolicyTests {
 	 keyboard there with it. */
 	@Test("A responder outside the input bar does not")
 	func otherRespondersDoNot() {
-		let (container, _) = makeInputBar()
-		let searchField = NSSearchField(frame: .zero)
+		let window = makeWindow()
+		let searchField = NSSearchField(frame: NSRect(x: 0, y: 100, width: 200, height: 24))
+		window.contentView?.addSubview(searchField)
 
-		#expect(MainWindowInputShortcutPolicy.shouldHandle(firstResponder: searchField, inputBar: container) == false)
-		#expect(MainWindowInputShortcutPolicy.shouldHandle(firstResponder: nil, inputBar: container) == false)
-		#expect(MainWindowInputShortcutPolicy.shouldHandle(firstResponder: nil, inputBar: nil) == false)
-	}
+		#expect(window.makeFirstResponder(searchField))
+		#expect(window.inputBarHoldsKeyboardFocus == false)
 
-	/// A window that has not built its input bar yet answers no rather than
-	/// claiming the event.
-	@Test("No input bar means no claim")
-	func missingInputBarDeclines() {
-		let (_, field) = makeInputBar()
-
-		#expect(MainWindowInputShortcutPolicy.shouldHandle(firstResponder: field, inputBar: nil) == false)
+		window.makeFirstResponder(nil)
+		#expect(window.inputBarHoldsKeyboardFocus == false)
 	}
 
 	/** A declined shortcut has to leave the event alone, not swallow it: the
@@ -90,24 +88,5 @@ struct MainWindowShortcutPolicyTests {
 			isARepeat: false,
 			keyCode: keyCode
 		)
-	}
-}
-
-/// A stale swipe origin produced a delta past any threshold, and the channel
-/// changed under a gesture the user never made.
-@Suite("Main window swipe origin")
-@MainActor
-struct MainWindowSwipePolicyTests {
-	@Test("Only a two-finger gesture with swiping enabled records an origin")
-	func twoFingersRecordAnOrigin() {
-		#expect(MainWindowSwipePolicy.recordsOrigin(touchCount: 2, minimumSwipeLength: 30))
-	}
-
-	@Test("Everything else clears it")
-	func anythingElseClearsTheOrigin() {
-		#expect(MainWindowSwipePolicy.recordsOrigin(touchCount: 1, minimumSwipeLength: 30) == false)
-		#expect(MainWindowSwipePolicy.recordsOrigin(touchCount: 3, minimumSwipeLength: 30) == false)
-		#expect(MainWindowSwipePolicy.recordsOrigin(touchCount: 0, minimumSwipeLength: 30) == false)
-		#expect(MainWindowSwipePolicy.recordsOrigin(touchCount: 2, minimumSwipeLength: 0) == false)
 	}
 }

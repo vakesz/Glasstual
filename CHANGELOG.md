@@ -36,6 +36,10 @@ lose, above all the changes a user notices without reading a commit.
 
 ### Fixed
 
+- Joining a server no longer badges every channel as unread. The server's read
+  marker is compared against what people said, so the topic, mode and join
+  lines a join prints cannot make a channel look unread on their own, and the
+  badge a marker does raise counts the messages past it.
 - The TLS lock indicator never appeared, because the secured state was
   checked before the handshake had run.
 - Clearing a server, NickServ or proxy password did not remove it from the
@@ -48,3 +52,7 @@ lose, above all the changes a user notices without reading a commit.
 - Context menus showed items that should have been hidden, such as both
   Connect and Disconnect on a connected server.
 - A quit confirmation could be shown twice and run the shutdown twice.
+- The Server Properties address field lists the bundled networks again: typing
+  or choosing one — "Libera.Chat" rather than `irc.libera.chat` — fills in its
+  address, port and encryption, and typing your own host afterwards puts your
+  port and encryption back.

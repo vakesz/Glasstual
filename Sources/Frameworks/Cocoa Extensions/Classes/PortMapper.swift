@@ -45,7 +45,7 @@ import dnssd
 import Foundation
 
 public extension Notification.Name {
-	/// Posted by the `XRPortMapper` whose mapping changed. Both observers are in
+	/// Posted by the `PortMapper` whose mapping changed. Both observers are in
 	/// process, so the raw string crosses no boundary and is not persisted.
 	static let portMapperDidChange = Notification.Name("com.vakesz.glasstual.portMapperDidChange")
 }
@@ -55,7 +55,7 @@ public extension Notification.Name {
 /// Main actor throughout: every caller is a DCC transfer or dialog that already
 /// runs there, and the mDNSResponder callback is delivered on the main queue.
 @MainActor
-public final class XRPortMapper: NSObject {
+public final class PortMapper: NSObject {
 	public var mapTCP = true
 	public var mapUDP = false
 	public var desiredPublicPort: UInt16 = 0
@@ -68,7 +68,7 @@ public final class XRPortMapper: NSObject {
 	private var service: DNSServiceRef?
 	/// The `+1` handed to mDNSResponder as the callback context, released in
 	/// `disconnect()`. It is a box that names the mapper weakly, not the mapper
-	/// itself: see ``XRPortMapperCallbackBox``.
+	/// itself: see ``PortMapperCallbackBox``.
 	private var callbackContext: UnsafeMutableRawPointer?
 	/// Which mapping is open, counting up from the first. A reply carries the
 	/// number of the mapping it belongs to, which is what tells a reply for the
@@ -76,10 +76,6 @@ public final class XRPortMapper: NSObject {
 	/// reopened since. A `DNSServiceRef` could not: it is a pointer, and the
 	/// allocator is free to hand the next mapping the address the last one had.
 	private var mappingGeneration: UInt64 = 0
-
-	override public convenience init() {
-		self.init(port: 0)
-	}
 
 	public init(port: UInt16) {
 		self.port = port
@@ -118,7 +114,7 @@ public final class XRPortMapper: NSObject {
 		 released the mapper between the callback firing and the hop to the main
 		 actor, which is a guarantee no caller was told about. */
 		let context = Unmanaged.passRetained(
-			XRPortMapperCallbackBox(mapper: self, generation: mappingGeneration)
+			PortMapperCallbackBox(mapper: self, generation: mappingGeneration)
 		).toOpaque()
 		let status = DNSServiceNATPortMappingCreate(
 			&newService,
@@ -132,7 +128,7 @@ public final class XRPortMapper: NSObject {
 			context
 		)
 		guard status == kDNSServiceErr_NoError, let newService else {
-			Unmanaged<XRPortMapperCallbackBox>.fromOpaque(context).release()
+			Unmanaged<PortMapperCallbackBox>.fromOpaque(context).release()
 			/* Report what mDNSResponder said: "NAT-PMP unsupported" and "bad
 			 parameter" ask the caller for different things. */
 			error = status == kDNSServiceErr_NoError ? Int32(kDNSServiceErr_Unknown) : status
@@ -152,20 +148,6 @@ public final class XRPortMapper: NSObject {
 	public func close() {
 		disconnect()
 		error = 0
-	}
-
-	public nonisolated static var localAddress: String? { // nonisolated: pure
-		string(from: rawLocalAddress)
-	}
-
-	public nonisolated static var localAddressIsPrivate: Bool { // nonisolated: pure
-		let address = UInt32(bigEndian: rawLocalAddress)
-		let ranges: [(UInt32, UInt32)] = [
-			(0xFF00_0000, 0x0000_0000), (0xFF00_0000, 0x0A00_0000),
-			(0xFF00_0000, 0x7F00_0000), (0xFFFF_0000, 0xA9FE_0000),
-			(0xFFF0_0000, 0xAC10_0000), (0xFFFF_0000, 0xC0A8_0000),
-		]
-		return ranges.contains { address & $0.0 == $0.1 }
 	}
 
 	/** What one mDNSResponder reply means for the mapping.
@@ -222,7 +204,7 @@ public final class XRPortMapper: NSObject {
 		 this queue, so nothing is in flight to be released out from under. */
 		if let callbackContext {
 			self.callbackContext = nil
-			Unmanaged<XRPortMapperCallbackBox>.fromOpaque(callbackContext).release()
+			Unmanaged<PortMapperCallbackBox>.fromOpaque(callbackContext).release()
 		}
 	}
 
@@ -264,36 +246,35 @@ public final class XRPortMapper: NSObject {
  A reply arrives on the main queue but carries no isolation, so it hops; the
  callback itself only takes the box unretained and hands it to that hop. */
 @MainActor
-private final class XRPortMapperCallbackBox {
-	weak var mapper: XRPortMapper?
+private final class PortMapperCallbackBox {
+	weak var mapper: PortMapper?
 	/// Which mapping this box was made for. A reply for an earlier one is
 	/// rejected even though the box is only ever used by one.
 	let generation: UInt64
 
-	init(mapper: XRPortMapper, generation: UInt64) {
+	init(mapper: PortMapper, generation: UInt64) {
 		self.mapper = mapper
 		self.generation = generation
 	}
 }
 
-private let portMapperCallback: DNSServiceNATPortMappingReply =
-	{ _, _, _, errorCode, publicAddress, _, _, publicPort, _, context in
-		guard let context else { return }
-		/* Unretained: the `+1` belongs to the service, not to one reply, and a
-		 retained take here would release it on the first callback of a mapping
-		 that goes on reporting for as long as it is renewed. The box outlives
-		 the hop below because the hop holds a reference of its own. */
-		let box = Unmanaged<XRPortMapperCallbackBox>.fromOpaque(context).takeUnretainedValue()
-		/* mDNSResponder delivers on the main queue, but the callback signature
-		 carries no isolation, so hop rather than assume. `update` re-checks that
-		 the reply still belongs to the mapping being held, because a close can
-		 land inside the hop. */
-		Task { @MainActor in
-			box.mapper?.update(
-				fromGeneration: box.generation,
-				error: errorCode,
-				address: publicAddress,
-				port: publicPort
-			)
-		}
+private let portMapperCallback: DNSServiceNATPortMappingReply = { _, _, _, errorCode, publicAddress, _, _, publicPort, _, context in
+	guard let context else { return }
+	/* Unretained: the `+1` belongs to the service, not to one reply, and a
+	 retained take here would release it on the first callback of a mapping
+	 that goes on reporting for as long as it is renewed. The box outlives
+	 the hop below because the hop holds a reference of its own. */
+	let box = Unmanaged<PortMapperCallbackBox>.fromOpaque(context).takeUnretainedValue()
+	/* mDNSResponder delivers on the main queue, but the callback signature
+	 carries no isolation, so hop rather than assume. `update` re-checks that
+	 the reply still belongs to the mapping being held, because a close can
+	 land inside the hop. */
+	Task { @MainActor in
+		box.mapper?.update(
+			fromGeneration: box.generation,
+			error: errorCode,
+			address: publicAddress,
+			port: publicPort
+		)
 	}
+}

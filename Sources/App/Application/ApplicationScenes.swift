@@ -57,10 +57,8 @@ final class ApplicationScenes {
 		ServerHighlightListApplicationScene(scenes: self)
 	}
 
-	private lazy var settingsRepresentation = NSHostingSceneRepresentation {
-		Settings {
-			PreferencesSceneRoot(request: settingsRequest)
-		}
+	private lazy var settingsRepresentation = NSHostingSceneRepresentation { [unowned self] in
+		PreferencesApplicationScene(request: settingsRequest)
 	}
 
 	private var isInstalled = false
@@ -151,9 +149,11 @@ final class ApplicationScenes {
 	/** Opens one channel's access list, replacing whatever the window was
 	 showing.
 
-	 The mode query that fills it is sent by the caller, so the session is in
-	 place before the first reply can arrive. */
-	func openChannelAccessList(entryType: ChannelBanListEntryType, in channel: IRCChannel) {
+	 A window rather than a sheet, so the channel the list is about can be read
+	 and typed into while its bans are being looked over. The mode query that
+	 fills it is sent by the caller, so the session is in place before the first
+	 reply can arrive. */
+	func openChannelAccessList(entryType: ChannelBanListEntryType, in channel: Channel) {
 		guard let session = ChannelAccessListSession(entryType: entryType, in: channel) else { return }
 		channelAccessListWindowState.session = session
 		channelAccessListRepresentation.environment.openWindow(id: ApplicationSceneID.channelAccessList)

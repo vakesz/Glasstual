@@ -12,75 +12,51 @@
 
 import SwiftUI
 
-struct PreferencesGeneralPane: View {
+struct PreferencesGeneralSections: View {
 	let model: PreferencesPaneModel
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				PreferencesToggle(
-					title: PreferencesGeneralStrings.confirmQuit,
-					isOn: model.preferences.binding(for: Preferences.Connection.confirmQuit)
-				)
-			}
-			PreferencesRecoverySection()
+		Section {
+			PreferencesToggle(
+				title: PreferencesGeneralStrings.confirmQuit,
+				isOn: model.preferences.binding(for: Preferences.Connection.confirmQuit)
+			)
+			PreferencesToggle(
+				title: PreferencesGeneralStrings.awayOnScreenSleep,
+				isOn: model.preferences.binding(for: Preferences.Connection.awayOnScreenSleep)
+			)
 		}
+
+		Section {
+			PreferencesToggle(
+				title: PreferencesGeneralStrings.rejoinOnKick,
+				isOn: model.preferences.binding(for: Preferences.Connection.rejoinOnKick)
+			)
+			PreferencesToggle(
+				title: PreferencesGeneralStrings.autojoinOnInvite,
+				isOn: model.preferences.binding(for: Preferences.Connection.autojoinOnInvite)
+			)
+		} header: {
+			Text(verbatim: PreferencesGeneralStrings.headingChannels)
+		}
+
+		Section {
+			PreferencesToggle(
+				title: PreferencesGeneralStrings.reloadScrollback,
+				isOn: model.preferences.binding(for: Preferences.Logging.reloadScrollbackOnLaunch)
+			)
+			PreferencesToggle(
+				title: PreferencesGeneralStrings.rememberQueries,
+				isOn: model.preferences.binding(for: Preferences.Appearance.rememberQueryStates)
+			)
+		} header: {
+			Text(verbatim: PreferencesGeneralStrings.headingOnLaunch)
+		}
+
+		PreferencesRecoverySection()
 	}
 }
 
-struct PreferencesBehaviorPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				PreferencesToggle(
-					title: PreferencesBehaviorStrings.openLinksInBackground,
-					isOn: model.preferences.binding(for: Preferences.Messages.openBrowserInBackground)
-				)
-			}
-
-			Section {
-				PreferencesToggle(
-					title: PreferencesBehaviorStrings.rejoinOnKick,
-					isOn: model.preferences.binding(for: Preferences.Connection.rejoinOnKick)
-				)
-				PreferencesToggle(
-					title: PreferencesBehaviorStrings.autojoinOnInvite,
-					isOn: model.preferences.binding(for: Preferences.Connection.autojoinOnInvite)
-				)
-				PreferencesToggle(
-					title: PreferencesBehaviorStrings.awayOnScreenSleep,
-					isOn: model.preferences.binding(for: Preferences.Connection.awayOnScreenSleep)
-				)
-			}
-
-			Section {
-				PreferencesToggle(
-					title: PreferencesBehaviorStrings.reloadScrollback,
-					isOn: model.preferences.binding(for: Preferences.Logging.reloadScrollbackOnLaunch)
-				)
-				PreferencesToggle(
-					title: PreferencesBehaviorStrings.rememberQueries,
-					isOn: model.preferences.binding(for: Preferences.Appearance.rememberQueryStates)
-				)
-			}
-		}
-	}
-}
-
-struct PreferencesCommandScopePane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesCommandScopeSections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// its neighbours.
 struct PreferencesCommandScopeSections: View {
 	let model: PreferencesPaneModel
 
@@ -122,23 +98,11 @@ struct PreferencesCommandScopeSections: View {
 			}
 			.pickerStyle(.radioGroup)
 		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.commandScope))
+			Text(verbatim: PreferencesPane.commandScope.title)
 		}
 	}
 }
 
-struct PreferencesChannelManagementPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesChannelManagementSections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// its neighbours.
 struct PreferencesChannelManagementSections: View {
 	let model: PreferencesPaneModel
 
@@ -161,17 +125,12 @@ struct PreferencesChannelManagementSections: View {
 				Text(verbatim: PreferencesChannelManagementStrings.banFormatLabel)
 			}
 			PreferencesNote(PreferencesChannelManagementStrings.banFormatNote)
-			VStack(alignment: .leading, spacing: 6) {
+			TextField(text: model.preferences.binding(for: Preferences.Commands.kickMessage)) {
 				Text(verbatim: PreferencesChannelManagementStrings.kickReasonLabel)
-				TextField(
-					"",
-					text: model.preferences.binding(for: Preferences.Commands.kickMessage)
-				)
-				.labelsHidden()
-				.accessibilityLabel(Text(verbatim: PreferencesChannelManagementStrings.kickReasonLabel))
 			}
+			.accessibilityLabel(Text(verbatim: PreferencesChannelManagementStrings.kickReasonLabel))
 		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.channelManagement))
+			Text(verbatim: PreferencesPane.channelManagement.title)
 		}
 	}
 }

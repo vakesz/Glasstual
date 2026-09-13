@@ -255,16 +255,6 @@ struct PluginRuntimeTests {
 		}
 	}
 
-	@Test("An output suppression rule holds what it was given")
-	func outputSuppressionRulesUsePluginKitModel() {
-		var rule = PluginOutputSuppressionRule()
-		rule.match = "NOTICE"
-		rule.restrictConsole = true
-
-		#expect(rule.match == "NOTICE")
-		#expect(rule.restrictConsole)
-	}
-
 	@MainActor
 	@Test("A preference reload never hands the renderer a half-built snapshot")
 	func smileyConverterRendersFromCompleteSnapshotsDuringPreferenceReloads() async throws {
@@ -401,7 +391,7 @@ private func makePluginClient(maximumNicknameLength: UInt = 30, isConnectedToZNC
 		sendCommand: { _ in },
 		sendLine: { _ in },
 		joinChannel: { _ in },
-		printMessage: { _, _, _, _, _, _, _, completion in completion(PluginPrintResult(isHighlight: false)) },
+		printMessage: { _, _, _, _, _, _, _, completion in completion(false) },
 		markUnread: { _, _ in },
 		markHighlight: { _ in },
 		refreshSidebar: {}

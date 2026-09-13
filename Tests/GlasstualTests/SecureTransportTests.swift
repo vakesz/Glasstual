@@ -80,4 +80,22 @@ struct SecureTransportTests {
 
 		#expect(cipherSuites.contains(NSNumber(value: TLS_RSA_WITH_AES_256_GCM_SHA384)) == false)
 	}
+
+	@Test("A closed session is not reported as an untrusted certificate")
+	func closedSessionIsNotACertificateError() {
+		/* -9816 is errSSLClosedNoNotify: the server dropped the session, which
+		 is what a throttled reconnect looks like. -9825 is the peer rejecting
+		 the client's certificate. Neither is the server's certificate failing. */
+		#expect(SecureTransportSupport.description(forBadCertificateErrorCode: -9816) == nil)
+		#expect(SecureTransportSupport.description(forBadCertificateErrorCode: -9825) == nil)
+		#expect(SecureTransportSupport.description(forBadCertificateErrorCode: -9830) == nil)
+		#expect(SecureTransportSupport.description(forErrorCode: -9816).isEmpty == false)
+	}
+
+	@Test("A certificate the client cannot trust is reported as one")
+	func serverCertificateFailuresAreCertificateErrors() {
+		for code in [-9807, -9808, -9812, -9813, -9814, -9815, -9843] {
+			#expect(SecureTransportSupport.description(forBadCertificateErrorCode: code) != nil, "\(code)")
+		}
+	}
 }

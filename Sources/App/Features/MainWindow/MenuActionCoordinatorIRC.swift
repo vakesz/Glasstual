@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -38,50 +38,53 @@
 
 import AppKit
 
-enum MenuChannelModePolicy {
-	static func moderationMode(for command: MenuCommand?) -> String {
-		command == .channelModeUnmoderated ? "-m" : "+m"
-	}
+// MARK: - Channel mode commands
 
-	static func inviteMode(for command: MenuCommand?) -> String {
-		command == .channelModeAnyoneCanJoin ? "-i" : "+i"
-	}
-}
-
-@MainActor
 public extension MenuActionCoordinator {
-	func performIRCAction(_ action: MenuIRCAction, sender: Any?) {
-		switch action {
-		case .showBanList: showModeList(symbol: "+b", presentation: { $0.openChannelBanList() })
-		case .showBanExceptionList:
-			showModeList(symbol: "+e", presentation: { $0.openChannelBanExceptionList() })
-		case .showInviteExceptionList:
-			showModeList(symbol: "+I", presentation: { $0.openChannelInviteExceptionList() })
-		case .showQuietList: showModeList(symbol: "+q", presentation: { $0.openChannelQuietList() })
-		case .toggleModerationMode:
-			sendMode(MenuChannelModePolicy.moderationMode(for: senderCommand(sender)))
-		case .toggleInviteMode:
-			sendMode(MenuChannelModePolicy.inviteMode(for: senderCommand(sender)))
-		@unknown default: break
-		}
+	@objc func showChannelBanList(_: Any?) {
+		showModeList(entryType: .ban, symbol: "+b")
 	}
 
-	private func showModeList(symbol: String, presentation: (IRCClient) -> Void) {
+	@objc func showChannelBanExceptionList(_: Any?) {
+		showModeList(entryType: .banException, symbol: "+e")
+	}
+
+	@objc func showChannelInviteExceptionList(_: Any?) {
+		showModeList(entryType: .inviteException, symbol: "+I")
+	}
+
+	@objc func showChannelQuietList(_: Any?) {
+		showModeList(entryType: .quiet, symbol: "+q")
+	}
+
+	/// One ticked item per mode, so the command says which way it is about to
+	/// go. It used to be two items — "Moderated" and "Unmoderated" — neither of
+	/// which showed which one was in force.
+	@objc func toggleChannelModerationMode(_: Any?) {
+		sendMode("m", set: channelModeIsSet("m") == false)
+	}
+
+	@objc func toggleChannelInviteMode(_: Any?) {
+		sendMode("i", set: channelModeIsSet("i") == false)
+	}
+
+	/// Whether the selected channel is known to carry `symbol`.
+	func channelModeIsSet(_ symbol: String) -> Bool {
+		selectedChannel?.modeInfo?.modeInfo(for: symbol)?.modeIsSet == true
+	}
+
+	private func showModeList(entryType: ChannelBanListEntryType, symbol: String) {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      client.isLoggedIn, channel.isChannel
 		else { return }
-		presentation(client)
-		client.sendModes(symbol, withParametersString: nil, in: channel)
+		SharedApplication.sharedApplicationScenes().openChannelAccessList(entryType: entryType, in: channel)
+		client.sendModes(symbol, withParametersString: nil, inChannelNamed: channel.name)
 	}
 
-	private func sendMode(_ symbol: String) {
+	private func sendMode(_ symbol: String, set: Bool) {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      client.isLoggedIn, channel.isChannel
 		else { return }
-		client.sendModes(symbol, withParametersString: nil, in: channel)
-	}
-
-	private func senderCommand(_ sender: Any?) -> MenuCommand? {
-		(sender as? NSMenuItem)?.command
+		client.sendModes("\(set ? "+" : "-")\(symbol)", withParametersString: nil, inChannelNamed: channel.name)
 	}
 }

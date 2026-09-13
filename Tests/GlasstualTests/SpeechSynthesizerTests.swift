@@ -117,8 +117,8 @@ struct SpeechSynthesizerTests {
 		engine.simulateActiveUtterance()
 
 		let synthesizer = SpeechSynthesizer(engine: engine)
-		let firstClient = GLTTestClient()
-		let secondClient = GLTTestClient()
+		let firstClient = TestClient()
+		let secondClient = TestClient()
 		var firstNotification = SpokenNotification(
 			notificationType: .connect,
 			lineType: .notice,
@@ -158,7 +158,7 @@ struct SpeechSynthesizerTests {
 		let unformatted = SpokenNotification(
 			notificationType: .connect,
 			lineType: .notice,
-			target: GLTTestClient(),
+			target: TestClient(),
 			nickname: "nobody",
 			text: "unformatted"
 		)

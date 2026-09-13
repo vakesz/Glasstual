@@ -218,7 +218,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cannot find channel named “%@“"
+            "value" : "Cannot find channel named “%@”"
           }
         }
       }
@@ -230,7 +230,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cannot remove ignore for \u0002%@\u0002 because Glasstual isn't sure which to remove. More than one ignore exists that matches this user. To remove a specific ignore, open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
+            "value" : "Cannot remove ignore for \u0002%@\u0002 because Glasstual isn’t sure which to remove. More than one ignore exists that matches this user. To remove a specific ignore, open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
           }
         }
       }
@@ -254,7 +254,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cannot set color for “%@“ because that does not appear to be a valid nickname."
+            "value" : "Cannot set color for “%@” because that does not appear to be a valid nickname."
           }
         }
       }
@@ -266,7 +266,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cannot use nickname “%@“ — Trying another…"
+            "value" : "Cannot use nickname “%@” — Trying another…"
           }
         }
       }
@@ -504,9 +504,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lu",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg second"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg seconds"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delaying auto connect for %lu seconds"
+            "value" : "Delaying auto connect for %#@arg1@"
           }
         }
       }
@@ -806,7 +828,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u0002ID:\u0002 %1$@ • \u0002Status:\u0002 %2$@ • \u0002Interval:\u0002 %3$@ • \u0002Next Fire:\u0002 %4$@ • \u0002Command:\u0002 “%5$@“"
+            "value" : "\u0002ID:\u0002 %1$@ • \u0002Status:\u0002 %2$@ • \u0002Interval:\u0002 %3$@ • \u0002Next Fire:\u0002 %4$@ • \u0002Command:\u0002 “%5$@”"
           }
         }
       }
@@ -818,7 +840,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u0002ID:\u0002 %1$@ • \u0002Status:\u0002 %2$@ • \u0002Interval:\u0002 %3$@ • \u0002Next Fire:\u0002 %4$@ • \u0002Repeat:\u0002 Yes • \u0002Repeat Limit:\u0002 %5$@ • \u0002Iteration:\u0002 %6$ld • \u0002Command:\u0002 “%7$@“"
+            "value" : "\u0002ID:\u0002 %1$@ • \u0002Status:\u0002 %2$@ • \u0002Interval:\u0002 %3$@ • \u0002Next Fire:\u0002 %4$@ • \u0002Repeat:\u0002 Yes • \u0002Repeat Limit:\u0002 %5$@ • \u0002Iteration:\u0002 %6$ld • \u0002Command:\u0002 “%7$@”"
           }
         }
       }
@@ -842,7 +864,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid syntax: “%@“"
+            "value" : "Invalid syntax: “%@”"
           }
         }
       }
@@ -878,7 +900,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invite Exception in %1$@: %2$@"
+            "value" : "Invite exception in %1$@: %2$@"
           }
         }
       }
@@ -890,7 +912,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invite Exception in %1$@: %2$@ set by %3$@ on %4$@"
+            "value" : "Invite exception in %1$@: %2$@ set by %3$@ on %4$@"
           }
         }
       }
@@ -1070,7 +1092,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Joining channels has been delayed because because you haven't identified. Perform “/autojoin” to join channels without identifying."
+            "value" : "Joining channels has been delayed because you haven’t identified. Perform “/autojoin” to join channels without identifying."
           }
         }
       }
@@ -1080,9 +1102,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "ld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg character"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg characters"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not joining %1$@ because this server accepts channel names of at most %2$ld characters."
+            "value" : "Not joining %1$@ because this server accepts channel names of at most %#@arg2@."
           }
         }
       }
@@ -1092,9 +1136,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lu",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg channel"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg channels"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Joining %1$@ would exceed the limit of %2$lu channels with the prefix “%3$@” on this server. The server may refuse the join."
+            "value" : "Joining %1$@ would exceed the limit of %#@arg2@ with the prefix “%3$@” on this server. The server may refuse the join."
           }
         }
       }
@@ -1214,7 +1280,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%.0f minutes have elapsed since last response from this connection. It's possible the connection is timing out."
+            "value" : "%.0f minutes have elapsed since last response from this connection. It’s possible the connection is timing out."
           }
         }
       }
@@ -1298,7 +1364,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Message(%1$d): %2$@"
+            "value" : "Message (%1$d): %2$@"
           }
         }
       }
@@ -1440,9 +1506,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg3" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lu",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg user rejoined"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg users rejoined"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Netjoin between \u0002%1$@\u0002 and \u0002%2$@\u0002: %3$lu users rejoined (%4$@)"
+            "value" : "Netjoin between \u0002%1$@\u0002 and \u0002%2$@\u0002: %#@arg3@ (%4$@)"
           }
         }
       }
@@ -1452,9 +1540,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lu",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg more"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg more"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@, … and %2$lu more"
+            "value" : "%1$@, … and %#@arg2@"
           }
         }
       }
@@ -1464,9 +1574,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg3" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lu",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg user left"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg users left"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Netsplit between \u0002%1$@\u0002 and \u0002%2$@\u0002: %3$lu users left (%4$@)"
+            "value" : "Netsplit between \u0002%1$@\u0002 and \u0002%2$@\u0002: %#@arg3@ (%4$@)"
           }
         }
       }
@@ -1620,9 +1752,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "ld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg presence entry"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg presence entries"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not watching %1$ld of the nicknames you track: this server keeps at most %2$ld presence entries."
+            "value" : "Not watching %1$ld of the nicknames you track: this server keeps at most %#@arg2@."
           }
         }
       }
@@ -2102,7 +2256,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This command cannot be used unless the checkbox labeled “Disable nickname colors” is unchecked in the \u0002Style\u0002 section of \u0002Preferences\u0002."
+            "value" : "This command cannot be used unless the checkbox labeled “Disable nickname colors” is unchecked in the \u0002Style\u0002 section of \u0002Settings\u0002."
           }
         }
       }
@@ -2210,7 +2364,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The timer command can be used to perform a command after a specific amount of time and optionally repeat it.\n\nTo learn more, type:\n\t“/timer help <topic>“\n\nAvailable topics: ADD, REMOVE, LIST, STOP, RESTART"
+            "value" : "The timer command can be used to perform a command after a specific amount of time and optionally repeat it.\n\nTo learn more, type:\n\t“/timer help <topic>”\n\nAvailable topics: ADD, REMOVE, LIST, STOP, RESTART"
           }
         }
       }
@@ -2248,7 +2402,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timer identifier is not properly formatted. Type “/timer list“ for a list of timers."
+            "value" : "Timer identifier is not properly formatted. Type “/timer list” for a list of timers."
           }
         }
       }
@@ -2272,7 +2426,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“/timer list“\n\nList timers"
+            "value" : "“/timer list”\n\nList timers"
           }
         }
       }
@@ -2284,7 +2438,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“/timer remove <identifier>“\n\nRemove the timer assigned to \u0002<identifier>\u0002.\n\nTo remove all timers, pass “all” as \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”"
+            "value" : "“/timer remove <identifier>”\n\nRemove the timer assigned to \u0002<identifier>\u0002.\n\nTo remove all timers, pass “all” as \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”"
           }
         }
       }
@@ -2308,7 +2462,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“/timer restart <identifier>“\n\nRestart the timer assigned to \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”\n\nWhen restarting a timer, the iteration count is reset\nwhich means a timer that is setup to repeat X number\nof times will start over from the beginning."
+            "value" : "“/timer restart <identifier>”\n\nRestart the timer assigned to \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”\n\nWhen restarting a timer, the iteration count is reset\nwhich means a timer that is setup to repeat X number\nof times will start over from the beginning."
           }
         }
       }
@@ -2320,7 +2474,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“/timer <seconds> <repeat> <command>“\n\n\u0002<seconds>\u0002 is the interval of the timer.\nThe interval must be a \u0002whole number that is greater than zero (0)\u0002.\n\n\u0002<repeat>\u0002 is the repeat count for the timer.\n• To perform the timer only once, use one (1) as the repeat count.\n• To repeat the timer until manually stopped, use zero (0) as the repeat count.\n• To repeat the timer X number of times, use that number as the repeat count.\n\n\u0002<command>\u0002 is the command to perform when the timer fires.\n\u0002Example:\u0002 “msg #glasstual-testing Hey everyone!”\n\u0002Scope:\u0002 The channel or query that is selected when a timer is added is used as the target for commands that do not take a channel name as an argument.\n\n\u0002Example #1:\u0002 “/timer 10 1 <command>” — perform command one time, after ten seconds.\n\u0002Example #2:\u0002 “/timer 10 20 <command>” — perform command twenty times, once every ten seconds.\n\u0002Example #3:\u0002 “/timer 10 0 <command>” — perform command every ten seconds until the heat death of the universe."
+            "value" : "“/timer <seconds> <repeat> <command>”\n\n\u0002<seconds>\u0002 is the interval of the timer.\nThe interval must be a \u0002whole number that is greater than zero (0)\u0002.\n\n\u0002<repeat>\u0002 is the repeat count for the timer.\n• To perform the timer only once, use one (1) as the repeat count.\n• To repeat the timer until manually stopped, use zero (0) as the repeat count.\n• To repeat the timer X number of times, use that number as the repeat count.\n\n\u0002<command>\u0002 is the command to perform when the timer fires.\n\u0002Example:\u0002 “msg #glasstual-testing Hey everyone!”\n\u0002Scope:\u0002 The channel or query that is selected when a timer is added is used as the target for commands that do not take a channel name as an argument.\n\n\u0002Example #1:\u0002 “/timer 10 1 <command>” — perform command one time, after ten seconds.\n\u0002Example #2:\u0002 “/timer 10 20 <command>” — perform command twenty times, once every ten seconds.\n\u0002Example #3:\u0002 “/timer 10 0 <command>” — perform command every ten seconds until the heat death of the universe."
           }
         }
       }
@@ -2332,7 +2486,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“/timer stop <identifier>“\n\nStop the timer assigned to \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”"
+            "value" : "“/timer stop <identifier>”\n\nStop the timer assigned to \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”"
           }
         }
       }
@@ -2344,7 +2498,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timer with identifier “%@“ can't be restarted. Add a new timer."
+            "value" : "Timer with identifier “%@” can’t be restarted. Add a new timer."
           }
         }
       }
@@ -2356,7 +2510,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timer with identifier “%@“ does not exist. Type “/timer list“ for a list of timers."
+            "value" : "Timer with identifier “%@” does not exist. Type “/timer list” for a list of timers."
           }
         }
       }
@@ -2368,7 +2522,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timer with identifier “%@“ is already stopped"
+            "value" : "Timer with identifier “%@” is already stopped"
           }
         }
       }
@@ -2380,7 +2534,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timer with identifier “%@“ removed"
+            "value" : "Timer with identifier “%@” removed"
           }
         }
       }
@@ -2392,7 +2546,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timer with identifier “%@“ restarted"
+            "value" : "Timer with identifier “%@” restarted"
           }
         }
       }
@@ -2404,7 +2558,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Timer with identifier “%@“ stopped"
+            "value" : "Timer with identifier “%@” stopped"
           }
         }
       }
@@ -2678,9 +2832,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "ld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg character"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg characters"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You have exceeded the maximum away message length for %1$@ which is %2$ld characters. The end of your away message may have been cut off."
+            "value" : "You have exceeded the maximum away message length for %1$@ which is %#@arg2@. The end of your away message may have been cut off."
           }
         }
       }
@@ -2690,9 +2866,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "ld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg character"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg characters"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You have exceeded the maximum kick message length for %1$@ which is %2$ld characters. The end of your kick message may have been cut off."
+            "value" : "You have exceeded the maximum kick message length for %1$@ which is %#@arg2@. The end of your kick message may have been cut off."
           }
         }
       }
@@ -2702,9 +2900,31 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg2" : {
+              "argNum" : 2,
+              "formatSpecifier" : "ld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg character"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg characters"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You have exceeded the maximum topic length for %1$@ which is %2$ld characters. The end of your topic may have been cut off."
+            "value" : "You have exceeded the maximum topic length for %1$@ which is %#@arg2@. The end of your topic may have been cut off."
           }
         }
       }
@@ -2728,7 +2948,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're now known as \u0002%@\u0002"
+            "value" : "You’re now known as \u0002%@\u0002"
           }
         }
       }

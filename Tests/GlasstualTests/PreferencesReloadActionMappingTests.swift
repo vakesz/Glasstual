@@ -24,7 +24,7 @@ struct PreferencesReloadActionMappingTests {
 	func actionsAreDistinct() {
 		let actions: [PreferencesReloadAction] = [
 			.appearance, .dockIconBadges, .highlightKeywords,
-			.highlightLogging, .ircCommandCache, .inputHistoryScope, .logTranscripts,
+			.highlightLogging, .inputHistoryScope, .logTranscripts,
 			.memberList, .memberListSortOrder, .memberListUserBadges, .preferencesChanged,
 			.scrollbackSaveLimit, .scrollbackVisibleLimit, .serverList, .serverListUnreadBadges,
 			.style, .textDirection, .textFieldFontSize,
@@ -36,7 +36,7 @@ struct PreferencesReloadActionMappingTests {
 	@Test("LogTranscript and the client list reach an action")
 	func newlyMappedKeys() {
 		#expect(TextualPreferences.reloadAction(forKeys: ["LogTranscript"]).contains(.logTranscripts))
-		#expect(TextualPreferences.reloadAction(forKeys: [IRCWorldClientListDefaultsKey]).contains(.serverList))
+		#expect(TextualPreferences.reloadAction(forKeys: [worldClientListDefaultsKey]).contains(.serverList))
 	}
 
 	@Test("An unrelated key still asks observers to re-read preferences")

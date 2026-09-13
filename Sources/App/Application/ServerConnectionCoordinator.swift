@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -141,8 +141,38 @@ nonisolated struct ServerConnectionRequest: Equatable, Sendable { // nonisolated
 	}
 }
 
+/// What the reader chose when a link named a server they are already connected
+/// to. Cancel is a real answer: a link that opens an alert with no way out is a
+/// link that makes a connection whether or not it was wanted.
+enum ServerConnectionMergeChoice: Sendable {
+	case useExisting
+	case createNew
+	case cancel
+}
+
+/// The application's own channels, which the Help menu and the
+/// `glasstual://support-channel` link both open.
+enum SupportChannel: String, Sendable {
+	case help = "#glasstual"
+	case testing = "#glasstual-testing"
+
+	static let serverInfo = "irc.libera.chat +6697"
+}
+
 @MainActor
 enum ServerConnectionCoordinator {
+	static func connect(to channel: SupportChannel) {
+		connect(
+			to: SupportChannel.serverInfo,
+			channels: channel.rawValue,
+			options: ServerConnectionOptions(
+				connectWhenCreated: true,
+				mergeConnectionIfPossible: true,
+				selectFirstChannelAdded: true
+			)
+		)
+	}
+
 	static func connect(
 		to serverInfo: String,
 		channels: String?,
@@ -157,7 +187,7 @@ enum ServerConnectionCoordinator {
 	static func connect(
 		using request: ServerConnectionRequest,
 		clients: [IRCClient]? = nil,
-		confirmMerge: @MainActor (IRCClient, String, [String]) -> Bool = shouldMerge,
+		confirmMerge: @MainActor (IRCClient, String, [String]) -> ServerConnectionMergeChoice = mergeChoice,
 		mergeConnection: @MainActor (ServerConnectionRequest, IRCClient) -> Void = merge,
 		createConnection: @MainActor (ServerConnectionRequest) -> Void = createClient
 	) {
@@ -168,10 +198,12 @@ enum ServerConnectionCoordinator {
 			}
 		}
 
-		if let matchedClient = existingClient,
-		   confirmMerge(matchedClient, request.serverAddress, request.channels) == false
-		{
-			existingClient = nil
+		if let matchedClient = existingClient {
+			switch confirmMerge(matchedClient, request.serverAddress, request.channels) {
+			case .useExisting: break
+			case .createNew: existingClient = nil
+			case .cancel: return
+			}
 		}
 
 		if let existingClient {
@@ -207,7 +239,7 @@ enum ServerConnectionCoordinator {
 	}
 
 	private static func merge(_ request: ServerConnectionRequest, into client: IRCClient) {
-		var firstChannel: IRCChannel?
+		var firstChannel: Channel?
 		for name in request.channels {
 			let channel = client.findChannelOrCreate(name, isPrivateMessage: false)
 			firstChannel = firstChannel ?? channel
@@ -218,7 +250,7 @@ enum ServerConnectionCoordinator {
 
 		client.world?.save()
 		if request.options.selectFirstChannelAdded, let firstChannel {
-			client.output?.selectItem(firstChannel)
+			client.output?.select(firstChannel)
 		}
 	}
 
@@ -248,22 +280,37 @@ enum ServerConnectionCoordinator {
 		}
 	}
 
-	private static func shouldMerge(_ client: IRCClient, address: String, channels: [String]) -> Bool {
+	private static func mergeChoice(
+		_ client: IRCClient,
+		address: String,
+		channels: [String]
+	) -> ServerConnectionMergeChoice {
 		let hasMultipleChannels = channels.count > 1
 		let channelNames = hasMultipleChannels ? channels.joined(separator: ", ") : channels[0]
 
-		return Alerts.modalAlert(
-			withMessage: PromptStrings.ConnectionLink.existingConnectionBody(
-				name: client.name,
-				includesMultipleChannels: hasMultipleChannels
-			),
+		/* Three buttons, because the question has three answers. Making
+		 "Create New Connection" the Escape button meant dismissing the alert
+		 connected somewhere the reader had not agreed to go. */
+		let outcome = Alerts.runModal(AlertRequest(
 			title: PromptStrings.ConnectionLink.title(
 				serverAddress: address,
 				channelNames: channelNames,
 				includesMultipleChannels: hasMultipleChannels
 			),
+			body: PromptStrings.ConnectionLink.existingConnectionBody(
+				name: client.name,
+				includesMultipleChannels: hasMultipleChannels
+			),
 			defaultButton: PromptStrings.ConnectionLink.useExistingConnectionButtonTitle,
-			alternateButton: PromptStrings.ConnectionLink.createNewConnectionButtonTitle
-		)
+			alternateButton: PromptStrings.Action.cancel,
+			otherButton: PromptStrings.ConnectionLink.createNewConnectionButtonTitle,
+			style: .warning
+		))
+
+		return switch outcome.response {
+		case .default: .useExisting
+		case .other: .createNew
+		case .alternate: .cancel
+		}
 	}
 }

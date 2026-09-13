@@ -15,53 +15,51 @@ import SwiftUI
 
 @MainActor
 struct ChannelInviteView: View {
-	let content: ChannelInviteContent
+	let headline: String
+	let channels: [String]
+	@Binding var selectedChannel: String
 	let invite: (String) -> Void
 	let cancel: () -> Void
 
-	@Binding private var selectedChannel: String
-
-	init(
-		content: ChannelInviteContent,
-		selectedChannel: Binding<String>,
-		invite: @escaping (String) -> Void,
-		cancel: @escaping () -> Void
-	) {
-		self.content = content
-		self.invite = invite
-		self.cancel = cancel
-		_selectedChannel = selectedChannel
-	}
-
 	var body: some View {
-		VStack(alignment: .leading, spacing: 16) {
-			Text(verbatim: content.headerTitle)
-				.font(.headline)
-				.textSelection(.enabled)
+		VStack(spacing: 0) {
+			VStack(alignment: .leading, spacing: 6) {
+				Text(verbatim: ChannelInviteStrings.windowTitle)
+					.font(.title2.weight(.semibold))
+				Text(verbatim: headline)
+					.foregroundStyle(.secondary)
+					.textSelection(.enabled)
+					.fixedSize(horizontal: false, vertical: true)
+			}
+			.frame(maxWidth: .infinity, alignment: .leading)
+			.padding([.horizontal, .top], 20)
+			.padding(.bottom, 12)
 
-			Picker(content.channelPickerLabel, selection: $selectedChannel) {
-				ForEach(content.channels, id: \.self) { channel in
-					Text(verbatim: channel).tag(channel)
+			Form {
+				Section {
+					Picker(ChannelInviteStrings.channelPickerLabel, selection: $selectedChannel) {
+						ForEach(channels, id: \.self) { channel in
+							Text(verbatim: channel).tag(channel)
+						}
+					}
+					.pickerStyle(.menu)
 				}
 			}
-			.pickerStyle(.menu)
-			.accessibilityLabel(Text(verbatim: content.channelPickerLabel))
+			.formStyle(.grouped)
 
+			Divider()
 			HStack(spacing: 8) {
 				Spacer()
-
-				Button(content.cancelButtonTitle, action: cancel)
+				Button(PromptStrings.Action.cancel, action: cancel)
 					.keyboardShortcut(.cancelAction)
-
-				Button(content.inviteButtonTitle) {
+				Button(ChannelInviteStrings.inviteButtonTitle) {
 					invite(selectedChannel)
 				}
 				.keyboardShortcut(.defaultAction)
 				.disabled(selectedChannel.isEmpty)
 			}
+			.padding(12)
 		}
-		.padding(20)
-		.frame(width: 340)
-		.onExitCommand(perform: cancel)
+		.frame(minWidth: 380, idealWidth: 420, maxWidth: .infinity)
 	}
 }

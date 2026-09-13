@@ -12,41 +12,41 @@
 
 import SwiftUI
 
-struct PreferencesControlsPane: View {
+struct PreferencesControlsSections: View {
 	let model: PreferencesPaneModel
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				PreferencesToggle(
-					title: PreferencesControlsStrings.navigationServerSpecific,
-					isOn: model.preferences.binding(
-						for: Preferences.Appearance.channelNavigationIsServerSpecific
-					)
+		Section {
+			PreferencesToggle(
+				title: PreferencesControlsStrings.navigationServerSpecific,
+				isOn: model.preferences.binding(
+					for: Preferences.Appearance.channelNavigationIsServerSpecific
 				)
-				doubleClickPicker
-				commandWPicker
-				doubleClickToggles
-				VStack(alignment: .leading, spacing: 4) {
-					PreferencesToggle(
-						title: PreferencesControlsStrings.copyOnSelect,
-						isOn: model.preferences.binding(for: Preferences.Messages.copyOnSelect)
-					)
-					PreferencesNote(PreferencesControlsStrings.copyOnSelectNote)
-				}
-			} header: {
-				Text(verbatim: PreferencesControlsStrings.headingKeyboardMouse)
-			}
+			)
+			doubleClickPicker
+			commandWPicker
+			doubleClickToggles
+			PreferencesToggle(
+				title: PreferencesControlsStrings.copyOnSelect,
+				note: PreferencesControlsStrings.copyOnSelectNote,
+				isOn: model.preferences.binding(for: Preferences.Messages.copyOnSelect)
+			)
+			PreferencesToggle(
+				title: PreferencesControlsStrings.openLinksInBackground,
+				isOn: model.preferences.binding(for: Preferences.Messages.openBrowserInBackground)
+			)
+		} header: {
+			Text(verbatim: PreferencesControlsStrings.headingKeyboardMouse)
+		}
 
-			Section {
-				spellingToggles
-				sendingToggles
-				textSizePicker
-				tabKeyPicker
-				completionSuffixRow
-			} header: {
-				Text(verbatim: PreferencesControlsStrings.headingTextField)
-			}
+		Section {
+			spellingToggles
+			sendingToggles
+			textSizePicker
+			tabKeyPicker
+			completionSuffixRow
+		} header: {
+			Text(verbatim: PreferencesControlsStrings.headingTextField)
 		}
 	}
 
@@ -80,9 +80,6 @@ struct PreferencesControlsPane: View {
 
 	@ViewBuilder
 	private var doubleClickToggles: some View {
-		/* Each switch is its own form row: a `VStack` inside a grouped form is
-		 one row, so the system's separators, spacing and label alignment
-		 applied to the stack instead of to the settings in it. */
 		PreferencesToggle(
 			title: PreferencesControlsStrings.connectOnDoubleClick,
 			isOn: model.preferences.binding(for: Preferences.Appearance.connectOnDoubleClick)
@@ -193,57 +190,39 @@ struct PreferencesControlsPane: View {
 	}
 }
 
-struct PreferencesAddOnsPane: View {
+struct PreferencesAddOnsSections: View {
 	private static let listHeight = 200.0
 
 	let model: PreferencesPaneModel
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				VStack(alignment: .leading, spacing: 6) {
-					Text(verbatim: PreferencesAddOnsStrings.commandsLabel)
-					List(model.addOnCommands, id: \.self) { command in
-						Text(verbatim: command)
-					}
-					.frame(height: Self.listHeight)
-					.accessibilityLabel(Text(verbatim: PreferencesAddOnsStrings.commandsList))
-					PreferencesNote(PreferencesAddOnsStrings.commandsNote)
-				}
+		Section {
+			List(model.addOnCommands, id: \.self) { command in
+				Text(verbatim: command)
 			}
+			.frame(height: Self.listHeight)
+			.accessibilityLabel(Text(verbatim: PreferencesAddOnsStrings.commandsList))
+		} header: {
+			Text(verbatim: PreferencesAddOnsStrings.commandsHeading)
+		} footer: {
+			PreferencesNote(PreferencesAddOnsStrings.commandsNote)
+		}
 
-			Section {
-				VStack(alignment: .leading, spacing: 6) {
-					HStack {
-						Text(verbatim: PreferencesAddOnsStrings.locationLabel)
-							.bold()
-						Spacer()
-						Button {
-							model.openCustomAddOnsFolder()
-						} label: {
-							Text(verbatim: PreferencesAddOnsStrings.openInFinder)
-						}
-						.accessibilityLabel(Text(verbatim: PreferencesAddOnsStrings.openInFinderHelp))
-					}
-					PreferencesNote(model.scriptInstallationInstructions)
-				}
+		Section {
+			Button {
+				model.openCustomAddOnsFolder()
+			} label: {
+				Text(verbatim: PreferencesAddOnsStrings.openInFinder)
 			}
+			.accessibilityLabel(Text(verbatim: PreferencesAddOnsStrings.openInFinderHelp))
+		} header: {
+			Text(verbatim: PreferencesAddOnsStrings.locationHeading)
+		} footer: {
+			PreferencesNote(model.addOnInstallationNote)
 		}
 	}
 }
 
-struct PreferencesDefaultIdentityPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesDefaultIdentitySections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// its neighbours.
 struct PreferencesDefaultIdentitySections: View {
 	let model: PreferencesPaneModel
 
@@ -268,7 +247,7 @@ struct PreferencesDefaultIdentitySections: View {
 			)
 			PreferencesNote(PreferencesDefaultIdentityStrings.allOptional)
 		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.defaultIdentity))
+			Text(verbatim: PreferencesPane.defaultIdentity.title)
 		}
 	}
 
@@ -283,18 +262,6 @@ struct PreferencesDefaultIdentitySections: View {
 	}
 }
 
-struct PreferencesIRCopMessagesPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesIRCopMessagesSections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// its neighbours.
 struct PreferencesIRCopMessagesSections: View {
 	let model: PreferencesPaneModel
 
@@ -316,23 +283,18 @@ struct PreferencesIRCopMessagesSections: View {
 				key: Preferences.Commands.irCopShunMessage
 			)
 		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.defaultIRCopMessages))
+			Text(verbatim: PreferencesPane.defaultIRCopMessages.title)
 		}
 	}
 
 	private func field(label: String, note: String?, key: PreferenceKey<String>) -> some View {
-		VStack(alignment: .leading, spacing: 6) {
-			HStack(spacing: 6) {
-				Text(verbatim: label)
-				if let note {
-					Text(verbatim: note)
-						.font(.callout)
-						.foregroundStyle(.secondary)
-				}
+		TextField(text: model.preferences.binding(for: key)) {
+			Text(verbatim: label)
+
+			if let note {
+				Text(verbatim: note)
 			}
-			TextField("", text: model.preferences.binding(for: key))
-				.labelsHidden()
-				.accessibilityLabel(Text(verbatim: label))
 		}
+		.accessibilityLabel(Text(verbatim: label))
 	}
 }

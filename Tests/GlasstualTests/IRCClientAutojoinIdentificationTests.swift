@@ -15,13 +15,13 @@ import Testing
 @MainActor
 @Suite("Autojoin waiting for identification")
 struct IRCClientAutojoinIdentificationTests {
-	private func makeClient(waitsForNickServ: Bool = true, joinDelay: TimeInterval = 0) -> GLTTestClient {
+	private func makeClient(waitsForNickServ: Bool = true, joinDelay: TimeInterval = 0) -> TestClient {
 		var preferences = ClientPreferences()
 		preferences.autojoinDelayAfterIdentification = joinDelay
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: ["autojoinWaitsForNickServ": waitsForNickServ],
 			nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: preferences)
+			fixture: ClientEnvironmentFixture(preferences: preferences)
 		)
 		client.userNickname = "swift-user"
 		client.markAsLoggedIn()
@@ -31,7 +31,7 @@ struct IRCClientAutojoinIdentificationTests {
 		return client
 	}
 
-	private func receive(_ line: String, on client: GLTTestClient) throws {
+	private func receive(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 		if message.commandNumeric > 0 {
 			client.receiveNumericReply(message)
@@ -40,7 +40,7 @@ struct IRCClientAutojoinIdentificationTests {
 		}
 	}
 
-	private func joinLines(of client: GLTTestClient) -> [String] {
+	private func joinLines(of client: TestClient) -> [String] {
 		client.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("JOIN") }
 	}
 
@@ -57,7 +57,7 @@ struct IRCClientAutojoinIdentificationTests {
 	 file nothing is sent back, which is the connect-command case: the
 	 identification went out through a command, so the client is not waiting
 	 on a reply of its own. */
-	private func holdingClient(waitsForNickServ: Bool = true) throws -> GLTTestClient {
+	private func holdingClient(waitsForNickServ: Bool = true) throws -> TestClient {
 		let client = makeClient(waitsForNickServ: waitsForNickServ)
 		_ = try #require(client.findChannelOrCreate("#swift"))
 		try receive(Self.registeredNotice, on: client)
@@ -70,8 +70,8 @@ struct IRCClientAutojoinIdentificationTests {
 		return client
 	}
 
-	private func registeredIdentificationClient() throws -> GLTTestClient {
-		let client = GLTTestClient(configDictionary: ["onConnectCommands": ["msg NickServ IDENTIFY secret"]])
+	private func registeredIdentificationClient() throws -> TestClient {
+		let client = TestClient(configDictionary: ["onConnectCommands": ["msg NickServ IDENTIFY secret"]])
 		client.userNickname = "swift-user"
 		client.isConnected = true
 		client.forwardsProcessedMessages = true
@@ -108,7 +108,7 @@ struct IRCClientAutojoinIdentificationTests {
 
 	@Test("A welcome received while disconnecting cannot restart connect commands")
 	func welcomeDuringDisconnectIsIgnored() throws {
-		let client = GLTTestClient(configDictionary: ["onConnectCommands": ["msg NickServ IDENTIFY secret"]])
+		let client = TestClient(configDictionary: ["onConnectCommands": ["msg NickServ IDENTIFY secret"]])
 		client.userNickname = "swift-user"
 		client.isConnected = true
 		client.isDisconnecting = true
@@ -193,7 +193,7 @@ struct IRCClientAutojoinIdentificationTests {
 	      arguments: ["msg NickServ IDENTIFY secret", "/raw PRIVMSG NickServ :IDENTIFY secret",
 	                  "quote PRIVMSG NickServ :IDENTIFY swift-user secret"])
 	func configuredIdentificationWaits(_ command: String) throws {
-		let client = GLTTestClient(configDictionary: ["onConnectCommands": [command]])
+		let client = TestClient(configDictionary: ["onConnectCommands": [command]])
 		client.userNickname = "swift-user"
 		client.forwardsProcessedMessages = true
 		client.isConnected = true

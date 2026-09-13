@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -13,67 +13,67 @@
 import AppKit
 import SwiftUI
 
-struct PreferencesInterfacePane: View {
+struct PreferencesInterfaceSections: View {
 	let model: PreferencesPaneModel
 
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				PreferencesToggle(
-					title: PreferencesInterfaceStrings.rightToLeftText,
-					isOn: model.preferences.binding(for: Preferences.Messages.rightToLeftFormatting) { _ in
-						TextualPreferences.performReloadAction([.style, .textDirection])
-					}
-				)
-				appearancePicker
-				PreferencesToggle(
-					title: PreferencesInterfaceStrings.noModeSymbol,
-					isOn: model.preferences.binding(for: Preferences.Appearance.memberListNoModeSymbol) { _ in
-						TextualPreferences.performReloadAction([.memberListUserBadges, .memberList])
-					}
-				)
-				PreferencesToggle(
-					title: PreferencesInterfaceStrings.staffAtTop,
-					isOn: model.preferences.binding(
-						for: Preferences.Appearance.memberListSortFavorsServerStaff
-					) { _ in TextualPreferences.performReloadAction(.memberListSortOrder) }
-				)
-				PreferencesToggle(
-					title: PreferencesInterfaceStrings.popoverUpdatesOnScroll,
-					isOn: model.preferences.binding(for: Preferences.Appearance.memberListUpdatesPopoverOnScroll)
-				)
-			} header: {
-				Text(verbatim: PreferencesSectionStrings.general)
-			}
-
-			Section {
-				serverListBadgeColor
-			} header: {
-				Text(verbatim: PreferencesInterfaceStrings.headingServerListColors)
-			}
-
-			Section {
-				PreferencesNote(PreferencesInterfaceStrings.userListColorsNote)
-				ForEach(UserListModeBadge.allCases, id: \.self) { badge in
-					ColorPicker(
-						selection: model.preferences.colorBinding(for: badge.preferenceKey) {
-							TextualPreferences.performReloadAction(
-								.memberListUserBadges,
-								forKey: badge.preferenceKey.name
-							)
-						},
-						supportsOpacity: false
-					) {
-						Text(verbatim: Self.title(for: badge))
-					}
+		Section {
+			PreferencesToggle(
+				title: PreferencesInterfaceStrings.rightToLeftText,
+				isOn: model.preferences.binding(for: Preferences.Messages.rightToLeftFormatting) { _ in
+					TextualPreferences.performReloadAction([.style, .textDirection])
 				}
-				Button(PreferencesInterfaceStrings.resetToDefaults, role: .destructive) {
-					confirmResetUserListColors()
+			)
+			appearancePicker
+			PreferencesToggle(
+				title: PreferencesInterfaceStrings.noModeSymbol,
+				isOn: model.preferences.binding(for: Preferences.Appearance.memberListNoModeSymbol) { _ in
+					TextualPreferences.performReloadAction([.memberListUserBadges, .memberList])
 				}
-				.accessibilityLabel(Text(verbatim: PreferencesInterfaceStrings.resetUserListColors))
-			} header: {
-				Text(verbatim: PreferencesInterfaceStrings.headingUserListColors)
+			)
+			PreferencesToggle(
+				title: PreferencesInterfaceStrings.staffAtTop,
+				isOn: model.preferences.binding(
+					for: Preferences.Appearance.memberListSortFavorsServerStaff
+				) { _ in TextualPreferences.performReloadAction(.memberListSortOrder) }
+			)
+			PreferencesToggle(
+				title: PreferencesInterfaceStrings.popoverUpdatesOnScroll,
+				isOn: model.preferences.binding(for: Preferences.Appearance.memberListUpdatesPopoverOnScroll)
+			)
+		} header: {
+			Text(verbatim: PreferencesSectionStrings.general)
+		}
+
+		Section {
+			serverListBadgeColor
+		} header: {
+			Text(verbatim: PreferencesInterfaceStrings.headingServerListColors)
+		}
+
+		Section {
+			ForEach(UserListModeBadge.allCases, id: \.self) { badge in
+				ColorPicker(
+					selection: model.preferences.colorBinding(for: badge.preferenceKey) {
+						TextualPreferences.performReloadAction(
+							.memberListUserBadges,
+							forKey: badge.preferenceKey.name
+						)
+					},
+					supportsOpacity: false
+				) {
+					Text(verbatim: badge.title)
+				}
 			}
+			Button(PreferencesInterfaceStrings.resetToDefaults, role: .destructive) {
+				confirmResetUserListColors()
+			}
+			.help(Text(verbatim: PreferencesInterfaceStrings.resetUserListColors))
+			.accessibilityLabel(Text(verbatim: PreferencesInterfaceStrings.resetUserListColors))
+		} header: {
+			Text(verbatim: PreferencesInterfaceStrings.headingUserListColors)
+		} footer: {
+			PreferencesNote(PreferencesInterfaceStrings.userListColorsNote)
 		}
 	}
 
@@ -85,18 +85,10 @@ struct PreferencesInterfacePane: View {
 			 declares: three rows spelled out here is three rows that go on
 			 saying three when a fourth is added. */
 			ForEach(PreferredAppearance.allCases, id: \.self) { appearance in
-				Text(verbatim: Self.title(for: appearance)).tag(appearance)
+				Text(verbatim: appearance.title).tag(appearance)
 			}
 		} label: {
 			Text(verbatim: PreferencesInterfaceStrings.appearanceLabel)
-		}
-	}
-
-	private static func title(for appearance: PreferredAppearance) -> String {
-		switch appearance {
-		case .inherited: PreferencesInterfaceStrings.appearanceSystem
-		case .light: PreferencesInterfaceStrings.appearanceLight
-		case .dark: PreferencesInterfaceStrings.appearanceDark
 		}
 	}
 
@@ -115,6 +107,7 @@ struct PreferencesInterfacePane: View {
 				model.preferences.reset(Preferences.Badges.serverListUnreadHighlight)
 				TextualPreferences.performReloadAction(.serverListUnreadBadges)
 			}
+			.help(Text(verbatim: PreferencesInterfaceStrings.resetUnreadHighlightColor))
 			.accessibilityLabel(Text(verbatim: PreferencesInterfaceStrings.resetUnreadHighlightColor))
 		}
 	}
@@ -149,17 +142,6 @@ struct PreferencesInterfacePane: View {
 		}
 		TextualPreferences.performReloadAction([.memberListUserBadges, .memberList])
 	}
-
-	private static func title(for badge: UserListModeBadge) -> String {
-		switch badge {
-		case .ircOperator: PreferencesInterfaceStrings.modeServerStaff
-		case .channelOwner: PreferencesInterfaceStrings.modeChannelOwner
-		case .superOperator: PreferencesInterfaceStrings.modeChannelAdministrator
-		case .normalOperator: PreferencesInterfaceStrings.modeChannelOperator
-		case .halfOperator: PreferencesInterfaceStrings.modeChannelHalfOperator
-		case .voiced: PreferencesInterfaceStrings.modeVoicedUser
-		}
-	}
 }
 
 private struct TranscriptThemeColorRole: Identifiable {
@@ -189,7 +171,7 @@ private struct TranscriptThemeColorRole: Identifiable {
 	]
 }
 
-struct PreferencesStylePane: View {
+struct PreferencesStyleSections: View {
 	private static let scrollbackPresets = [
 		"1000", "2000", "3000", "4000", "5000", "10000", "20000", "30000", "40000", "50000",
 	]
@@ -207,140 +189,147 @@ struct PreferencesStylePane: View {
 
 	let model: PreferencesPaneModel
 
-	/// The name being typed, held here until it is committed. A theme with an
-	/// empty name is rejected, so writing every keystroke through made the
-	/// field snap back as soon as the last character was deleted.
-	@State private var themeNameDraft: String?
-	@FocusState private var themeNameIsFocused: Bool
-
 	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				LabeledContent(TranscriptThemeStrings.themeName) { themeNameField }
-				Picker(TranscriptThemeStrings.layout, selection: themeLayout) {
-					Text(verbatim: TranscriptThemeStrings.lines).tag(TranscriptThemeLayout.lines)
-					Text(verbatim: TranscriptThemeStrings.bubbles).tag(TranscriptThemeLayout.bubbles)
-				}
-				fontRow
-				HStack {
-					Button(TranscriptThemeStrings.importTheme) { model.importTranscriptTheme() }
-					Button(TranscriptThemeStrings.exportTheme) { model.exportTranscriptTheme() }
-					Spacer()
-					Button(PreferencesInterfaceStrings.resetToDefaults, role: .destructive) {
-						confirmResetTranscriptTheme()
-					}
-				}
-			} header: {
-				Text(verbatim: TranscriptThemeStrings.transcriptTheme)
+		Section {
+			LabeledContent {
+				PreferencesCommittedField(title: TranscriptThemeStrings.themeName, text: themeName)
+			} label: {
+				Text(verbatim: TranscriptThemeStrings.themeName)
 			}
-
-			Section {
-				ForEach(TranscriptThemeColorRole.all) { role in
-					HStack {
-						Text(role.title)
-						Spacer()
-						ColorPicker(
-							TranscriptThemeStrings.light,
-							selection: color(role, dark: false),
-							supportsOpacity: true
-						)
-						.labelsHidden()
-						ColorPicker(
-							TranscriptThemeStrings.dark,
-							selection: color(role, dark: true),
-							supportsOpacity: true
-						)
-						.labelsHidden()
-					}
-					.accessibilityElement(children: .contain)
-				}
-				PreferencesNote(TranscriptThemeStrings.roleColorNote)
-			} header: {
-				HStack {
-					Text(verbatim: TranscriptThemeStrings.colors)
-					Spacer()
-					Text(verbatim: "\(TranscriptThemeStrings.light)   \(TranscriptThemeStrings.dark)")
-						.font(.caption)
-						.foregroundStyle(.secondary)
-				}
+			Picker(TranscriptThemeStrings.layout, selection: themeLayout) {
+				Text(verbatim: TranscriptThemeStrings.lines).tag(TranscriptThemeLayout.lines)
+				Text(verbatim: TranscriptThemeStrings.bubbles).tag(TranscriptThemeLayout.bubbles)
 			}
-
-			Section {
-				formatFields
-				Stepper(
-					"\(TranscriptThemeStrings.lineSpacing): \(model.transcriptTheme.lineSpacing.formatted())",
-					value: lineSpacing,
-					in: 0 ... 16
-				)
-				Stepper(
-					"\(TranscriptThemeStrings.messageSpacing): \(model.transcriptTheme.messageSpacing.formatted())",
-					value: messageSpacing,
-					in: 0 ... 32
-				)
-				Stepper(
-					"\(TranscriptThemeStrings.horizontalPadding): \(model.transcriptTheme.horizontalPadding.formatted())",
-					value: horizontalPadding,
-					in: 0 ... 48
-				)
-			} header: {
-				Text(verbatim: PreferencesSectionStrings.advanced)
-			}
-
-			Section {
-				PreferencesToggle(
-					title: PreferencesStyleStrings.autoScrollbackMarker,
-					isOn: model.preferences.binding(for: Preferences.Messages.autoAddScrollbackMark)
-				)
-				PreferencesToggle(
-					title: PreferencesStyleStrings.showDateChanges,
-					isOn: model.preferences.binding(for: Preferences.Messages.showDateChanges)
-				)
-				PreferencesToggle(
-					title: PreferencesStyleStrings.showJoinLeave,
-					isOn: model.preferences.binding(for: Preferences.Messages.showJoinLeave)
-				)
-				PreferencesToggle(
-					title: TranscriptThemeStrings.showInlineImages,
-					isOn: model.preferences.binding(for: Preferences.Messages.showInlineMedia)
-				)
-				PreferencesToggle(
-					title: PreferencesStyleStrings.disableNicknameColors,
-					isOn: model.preferences.binding(for: Preferences.Messages.disableNicknameColorHashing)
-				)
-				PreferencesToggle(
-					title: PreferencesStyleStrings.showMotd,
-					isOn: model.preferences.binding(for: Preferences.Connection.displayServerMOTD)
-				)
-			} header: {
-				Text(verbatim: PreferencesSectionStrings.general)
-			}
-
-			Section {
-				LabeledContent {
-					PreferencesComboField(
-						title: PreferencesStyleStrings.scrollbackSaveLimit,
-						presets: Self.scrollbackPresets,
-						commitsOnEndEditing: true,
-						text: model.preferences.numberFieldBinding(
-							for: Preferences.Logging.scrollbackSaveLimit
-						) { TextualPreferences.performReloadAction(.scrollbackSaveLimit) }
-					)
-				} label: {
-					Text(verbatim: PreferencesStyleStrings.scrollbackSaveLimit)
+			fontRow
+			HStack {
+				Button(TranscriptThemeStrings.importTheme) { model.importTranscriptTheme() }
+				Button(TranscriptThemeStrings.exportTheme) { model.exportTranscriptTheme() }
+				Spacer()
+				Button(PreferencesInterfaceStrings.resetToDefaults, role: .destructive) {
+					confirmResetTranscriptTheme()
 				}
-				PreferencesNote(PreferencesStyleStrings.scrollbackSaveLimitNote)
-			} header: {
-				Text(verbatim: PreferencesStyleStrings.headingScrollback)
+				.help(Text(verbatim: PreferencesInterfaceStrings.resetThemeConfirmationTitle))
+			}
+		} header: {
+			Text(verbatim: TranscriptThemeStrings.transcriptTheme)
+		}
+
+		Section {
+			colorGrid
+		} header: {
+			Text(verbatim: TranscriptThemeStrings.colors)
+		} footer: {
+			PreferencesNote(TranscriptThemeStrings.roleColorNote)
+		}
+
+		Section {
+			formatFields
+			spacingStepper(TranscriptThemeStrings.lineSpacing, value: lineSpacing, in: 0 ... 16)
+			spacingStepper(TranscriptThemeStrings.messageSpacing, value: messageSpacing, in: 0 ... 32)
+			spacingStepper(TranscriptThemeStrings.horizontalPadding, value: horizontalPadding, in: 0 ... 48)
+		} header: {
+			Text(verbatim: PreferencesStyleStrings.headingLayout)
+		}
+
+		Section {
+			PreferencesToggle(
+				title: PreferencesStyleStrings.autoScrollbackMarker,
+				isOn: model.preferences.binding(for: Preferences.Messages.autoAddScrollbackMark)
+			)
+			PreferencesToggle(
+				title: PreferencesStyleStrings.showDateChanges,
+				isOn: model.preferences.binding(for: Preferences.Messages.showDateChanges)
+			)
+			PreferencesToggle(
+				title: PreferencesStyleStrings.showJoinLeave,
+				isOn: model.preferences.binding(for: Preferences.Messages.showJoinLeave)
+			)
+			PreferencesToggle(
+				title: TranscriptThemeStrings.showInlineImages,
+				isOn: model.preferences.binding(for: Preferences.Messages.showInlineMedia)
+			)
+			PreferencesToggle(
+				title: PreferencesStyleStrings.disableNicknameColors,
+				isOn: model.preferences.binding(for: Preferences.Messages.disableNicknameColorHashing)
+			)
+			PreferencesToggle(
+				title: PreferencesStyleStrings.showMotd,
+				isOn: model.preferences.binding(for: Preferences.Connection.displayServerMOTD)
+			)
+		} header: {
+			Text(verbatim: PreferencesSectionStrings.general)
+		}
+
+		Section {
+			LabeledContent {
+				PreferencesComboField(
+					title: PreferencesStyleStrings.scrollbackSaveLimit,
+					presets: Self.scrollbackPresets,
+					commitsOnEndEditing: true,
+					text: model.preferences.numberFieldBinding(
+						for: Preferences.Logging.scrollbackSaveLimit
+					) { TextualPreferences.performReloadAction(.scrollbackSaveLimit) }
+				)
+			} label: {
+				Text(verbatim: PreferencesStyleStrings.scrollbackSaveLimit)
+			}
+		} header: {
+			Text(verbatim: PreferencesStyleStrings.headingScrollback)
+		} footer: {
+			PreferencesNote(PreferencesStyleStrings.scrollbackSaveLimitNote)
+		}
+	}
+
+	/// The light and dark wells of every colour role, in a grid so that the
+	/// two columns line up and carry real headings.
+	private var colorGrid: some View {
+		Grid(
+			alignment: .leading,
+			horizontalSpacing: PreferencesMetrics.spacingLarge,
+			verticalSpacing: PreferencesMetrics.spacingMedium
+		) {
+			GridRow {
+				Color.clear.frame(width: 0, height: 0)
+				columnHeader(TranscriptThemeStrings.light)
+				columnHeader(TranscriptThemeStrings.dark)
+			}
+			.accessibilityHidden(true)
+
+			ForEach(TranscriptThemeColorRole.all) { role in
+				GridRow {
+					Text(verbatim: role.title)
+						.gridColumnAlignment(.leading)
+					colorWell(role, dark: false)
+					colorWell(role, dark: true)
+				}
 			}
 		}
+		.frame(maxWidth: .infinity, alignment: .leading)
+	}
+
+	private func columnHeader(_ title: String) -> some View {
+		Text(verbatim: title)
+			.font(.caption)
+			.foregroundStyle(.secondary)
+	}
+
+	private func colorWell(_ role: TranscriptThemeColorRole, dark: Bool) -> some View {
+		let appearance = dark ? TranscriptThemeStrings.dark : TranscriptThemeStrings.light
+		return ColorPicker(appearance, selection: color(role, dark: dark), supportsOpacity: true)
+			.labelsHidden()
+			.accessibilityLabel(Text(verbatim: PreferencesStyleStrings.colorAccessibility(
+				role: role.title,
+				appearance: appearance
+			)))
 	}
 
 	private var fontRow: some View {
 		LabeledContent {
 			HStack {
 				Text(verbatim: PreferencesStyleStrings.fontDescription(
-					name: model.channelViewFontName,
-					size: Double(model.channelViewFontSize).formatted(.number.precision(.fractionLength(0 ... 1)))
+					name: model.transcriptTheme.fontName,
+					size: Double(model.transcriptTheme.fontSize)
+						.formatted(.number.precision(.fractionLength(0 ... 1)))
 				))
 				Spacer()
 				Button(PreferencesStyleStrings.fontChange) { model.selectChannelViewFont() }
@@ -350,40 +339,45 @@ struct PreferencesStylePane: View {
 		}
 	}
 
-	/// Each format field is its own form row, with its note attached to it: one
-	/// stack holding both fields collapsed into a single row, so the system's
-	/// separators and label alignment applied to the stack rather than to the
-	/// settings inside it.
+	private func spacingStepper(
+		_ label: String,
+		value: Binding<Double>,
+		in range: ClosedRange<Double>
+	) -> some View {
+		LabeledContent {
+			Stepper(value: value, in: range) {
+				Text(verbatim: value.wrappedValue.formatted())
+			}
+			.accessibilityLabel(Text(verbatim: label))
+		} label: {
+			Text(verbatim: label)
+		}
+	}
+
 	@ViewBuilder
 	private var formatFields: some View {
-		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingSmall) {
-			LabeledContent {
-				PreferencesComboField(
-					title: PreferencesStyleStrings.nicknameFormatLabel,
-					presets: Self.nicknamePresets,
-					text: nicknameFormat
-				)
-			} label: {
-				Text(verbatim: PreferencesStyleStrings.nicknameFormatLabel)
-			}
-			PreferencesNote(
-				"\(PreferencesStyleStrings.formatSymbolsLabel) %@ = "
-					+ "\(PreferencesStyleStrings.nicknameFormatSymbolMode); "
-					+ "%n = \(PreferencesStyleStrings.nicknameFormatSymbolNickname)"
+		LabeledContent {
+			PreferencesComboField(
+				title: PreferencesStyleStrings.nicknameFormatLabel,
+				presets: Self.nicknamePresets,
+				text: nicknameFormat
 			)
+		} label: {
+			Text(verbatim: PreferencesStyleStrings.nicknameFormatLabel)
+			Text(verbatim: "\(PreferencesStyleStrings.formatSymbolsLabel) %@ = "
+				+ "\(PreferencesStyleStrings.nicknameFormatSymbolMode); "
+				+ "%n = \(PreferencesStyleStrings.nicknameFormatSymbolNickname)")
 		}
 
-		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingSmall) {
-			LabeledContent {
-				PreferencesComboField(
-					title: PreferencesStyleStrings.timestampFormatLabel,
-					presets: Self.timestampPresets,
-					text: timestampFormat
-				)
-			} label: {
-				Text(verbatim: PreferencesStyleStrings.timestampFormatLabel)
-			}
-			PreferencesNote(PreferencesStyleStrings.timestampFormatNote)
+		LabeledContent {
+			PreferencesComboField(
+				title: PreferencesStyleStrings.timestampFormatLabel,
+				presets: Self.timestampPresets,
+				text: timestampFormat
+			)
+		} label: {
+			Text(verbatim: PreferencesStyleStrings.timestampFormatLabel)
+			Text(verbatim: PreferencesStyleStrings.timestampFormatNote)
 		}
 	}
 
@@ -412,32 +406,17 @@ struct PreferencesStylePane: View {
 		return theme != (theme.layout == .bubbles ? .bubbles : .lines)
 	}
 
-	private var themeNameField: some View {
-		TextField("", text: Binding(
-			get: { themeNameDraft ?? model.transcriptTheme.name },
-			set: { themeNameDraft = $0 }
-		))
-		.focused($themeNameIsFocused)
-		.onSubmit { commitThemeName() }
-		.onChange(of: themeNameIsFocused) { _, isFocused in
-			if isFocused == false {
-				commitThemeName()
+	/// A theme with an empty name is rejected, so a blank entry restores the
+	/// stored one rather than being written.
+	private var themeName: Binding<String> {
+		Binding(
+			get: { model.transcriptTheme.name },
+			set: { newValue in
+				let name = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+				guard name.isEmpty == false, name != model.transcriptTheme.name else { return }
+				model.updateTheme { $0.name = name }
 			}
-		}
-	}
-
-	/// Commits the typed name, or drops it and restores the stored one when it
-	/// is blank.
-	private func commitThemeName() {
-		guard let draft = themeNameDraft else { return }
-
-		themeNameDraft = nil
-
-		let name = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-
-		guard name.isEmpty == false, name != model.transcriptTheme.name else { return }
-
-		model.updateTheme { $0.name = name }
+		)
 	}
 
 	private var themeLayout: Binding<TranscriptThemeLayout> {

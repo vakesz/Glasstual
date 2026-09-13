@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -19,9 +19,7 @@ import Observation
 final class AddressBookEntryModel {
 	let entryType: IRCAddressBookEntryType
 
-	var hostmask: String {
-		didSet { validationMessage = nil }
-	}
+	var hostmask: String
 
 	var ignoreClientToClientProtocol: Bool
 	var ignoreFileTransferRequests: Bool
@@ -34,7 +32,17 @@ final class AddressBookEntryModel {
 	var ignorePublicMessages: Bool
 	var trackUserActivity: Bool
 
-	private(set) var validationMessage: String?
+	/** Why the hostmask cannot be saved, once saving has been tried.
+
+	 Nothing is said before that: a new entry opens on an empty field, and an
+	 error beside it tells the person they got something wrong before they have
+	 typed anything at all. After a refused save it follows what is in the
+	 field, so it goes as soon as the mask is one. */
+	var validationMessage: String? {
+		submissionWasAttempted ? validationError(for: hostmask.firstToken) : nil
+	}
+
+	private var submissionWasAttempted = false
 	private let source: AddressBookEntry
 
 	convenience init(entryType: IRCAddressBookEntryType) {
@@ -67,13 +75,12 @@ final class AddressBookEntryModel {
 	}
 
 	func validatedEntry() -> AddressBookEntry? {
+		submissionWasAttempted = true
+
 		let value = hostmask.firstToken
 		/* An empty hostmask is neither a mask nor a nickname, so the validator
 		 already refuses it with a message of its own. */
-		if let error = validationError(for: value) {
-			validationMessage = error
-			return nil
-		}
+		guard validationError(for: value) == nil else { return nil }
 
 		var entry = source
 		entry.hostmask = value
@@ -93,7 +100,6 @@ final class AddressBookEntryModel {
 			entry.trackUserActivity = trackUserActivity
 		}
 
-		validationMessage = nil
 		return entry
 	}
 

@@ -39,21 +39,21 @@ struct PreferencesTransferFixture {
 		try? FileManager.default.removeItem(at: directory)
 	}
 
-	func session(backupDirectory: URL? = nil, world: IRCWorld? = nil) -> PreferencesTransferSession {
+	func session(backupDirectory: URL? = nil, world: World? = nil) -> PreferencesTransferSession {
 		PreferencesTransferSession(stores: stores,
 		                           recoveryDirectory: backupDirectory ?? directory
 		                           	.appendingPathComponent("Backups"),
 		                           clientSource: world.map(PreferencesTransferClientSource.world) ?? .stored)
 	}
 
-	func reopenWorld() throws -> GLTClientEnvironmentFixture {
+	func reopenWorld() throws -> ClientEnvironmentFixture {
 		let reopenedStores = try PreferencesTransferStores(
 			container: #require(UserDefaults(suiteName: stores.containerDomain)),
 			containerDomain: stores.containerDomain,
 			standard: #require(UserDefaults(suiteName: stores.standardDomain)),
 			standardDomain: stores.standardDomain
 		)
-		let fixture = GLTClientEnvironmentFixture(preferences: .current(stores: reopenedStores))
+		let fixture = ClientEnvironmentFixture(preferences: .current(stores: reopenedStores))
 		let key = Preferences.Connection.clientList
 		let saved = reopenedStores.store(for: key).object(forKey: key.name)
 			.flatMap(PropertyListValue.init(propertyList:))

@@ -52,40 +52,63 @@ struct MainWindowPersistenceTests {
 		#expect(defaults.string(forKey: key) == "channel")
 	}
 
-	@Test("The member list only expands for a channel on a session that has logged in")
-	func memberListVisibilityRequiresAnActiveServerSession() {
-		#expect(MainWindowMemberListVisibilityPolicy.isAvailable(isChannel: true, isLoggedIn: true))
-		#expect(MainWindowMemberListVisibilityPolicy.isAvailable(isChannel: true, isLoggedIn: false) == false)
-		#expect(MainWindowMemberListVisibilityPolicy.isAvailable(isChannel: false, isLoggedIn: true) == false)
+	/** One fact, one place: the column is available beside a joined channel,
+	 and it is open while it is available and the reader has not closed it.
+	 "Hide Member List" used to write a second copy of that preference onto the
+	 member list itself, and a "Show Member List" pressed where there was no
+	 member list recorded "hide it". */
+	@Test("The member list only opens for a channel on a session that has logged in")
+	func memberListOpensOnlyForAJoinedChannel() {
+		let model = MainWindowPresentationModel()
 
-		#expect(
-			MainWindowMemberListVisibilityPolicy.shouldExpand(
-				isChannel: true,
-				isLoggedIn: false,
-				isHiddenByUser: false
-			) == false
-		)
-		#expect(
-			MainWindowMemberListVisibilityPolicy.shouldExpand(
-				isChannel: true,
-				isLoggedIn: true,
-				isHiddenByUser: false
-			)
-		)
-		#expect(
-			MainWindowMemberListVisibilityPolicy.shouldExpand(
-				isChannel: false,
-				isLoggedIn: true,
-				isHiddenByUser: false
-			) == false
-		)
-		#expect(
-			MainWindowMemberListVisibilityPolicy.shouldExpand(
-				isChannel: true,
-				isLoggedIn: true,
-				isHiddenByUser: true
-			) == false
-		)
+		model.applyMemberListAvailability(false)
+		#expect(model.isMemberListAvailable == false)
+		#expect(model.isMemberListVisible == false)
+
+		model.applyMemberListAvailability(true)
+		#expect(model.isMemberListVisible)
+	}
+
+	@Test("Closing the column is remembered across selections, and reopening it restores it")
+	func memberListRemembersTheReadersChoice() {
+		let model = MainWindowPresentationModel()
+		model.applyMemberListAvailability(true)
+
+		model.toggleMemberList()
+		#expect(model.isMemberListVisible == false)
+		#expect(model.userPrefersMemberList == false)
+
+		/* A server row in between does not count as closing it. */
+		model.applyMemberListAvailability(false)
+		model.applyMemberListAvailability(true)
+		#expect(model.isMemberListVisible == false)
+
+		model.toggleMemberList()
+		#expect(model.isMemberListVisible)
+		#expect(model.columnState.isMemberListVisible)
+	}
+
+	@Test("The toggle does nothing where there is no member list to show")
+	func memberListToggleIsInertWithoutAChannel() {
+		let model = MainWindowPresentationModel()
+		model.applyMemberListAvailability(false)
+
+		model.toggleMemberList()
+
+		#expect(model.userPrefersMemberList)
+		#expect(model.isMemberListVisible == false)
+	}
+
+	@Test("Restoring the saved layout restores the reader's choice, not the column's last state")
+	func memberListRestoresTheStoredPreference() {
+		let model = MainWindowPresentationModel()
+
+		model.restoreColumns(MainWindowLayoutState(isServerListVisible: false, isMemberListVisible: false))
+		#expect(model.isServerListVisible == false)
+		#expect(model.userPrefersMemberList == false)
+
+		model.applyMemberListAvailability(true)
+		#expect(model.isMemberListVisible == false)
 	}
 
 	@Test("Corrupt and off-screen frames are repaired without moving valid windows")

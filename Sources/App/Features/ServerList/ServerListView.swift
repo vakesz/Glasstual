@@ -5,16 +5,8 @@
  *********************************************************************** */
 
 import AppKit
+import Foundation
 import SwiftUI
-
-/// The unread badge's own size, and nothing else. Everything the sidebar is
-/// spaced and sized by is `UISpacing` and `UIListMetrics`, which the member
-/// list beside it shares; indentation, row insets and the disclosure control
-/// belong to the sidebar list style.
-private enum ServerListLayout {
-	static let badgeWidth: CGFloat = 24
-	static let badgeHeight: CGFloat = 20
-}
 
 /** The rows of the sidebar. The filter field that narrows them belongs to the
  window toolbar, not to this list: `MainWindowRootView` owns it and writes
@@ -34,19 +26,33 @@ struct ServerListView: View {
 					DisclosureGroup(isExpanded: disclosure(of: server)) {
 						channelRows(server)
 					} label: {
-						ServerRowView(model: model, server: server)
+						ServerRowView(server: server)
 					}
 					.tag(server.id)
-					.listRowSeparator(.hidden)
 				} else {
-					ServerRowView(model: model, server: server)
+					ServerRowView(server: server)
 						.tag(server.id)
-						.listRowSeparator(.hidden)
 				}
+			}
+			/* Reordering is the list's own, which is what draws the insertion
+			 line between rows and keeps the drag off the pasteboard: the row
+			 used to export its identifier, so dropping a conversation into any
+			 other application pasted a bare UUID. */
+			.onMove { offsets, destination in
+				model.moveServers(fromOffsets: offsets, toOffset: destination)
 			}
 		}
 		.listStyle(.sidebar)
-		.overlayScrollers()
+		/* No forced overlay scrollers here, and the member list beside it still
+		 has them. Writing the scroller style onto the list's own scroll view is
+		 a write AppKit answers by tiling it, and the tile resizes the outline
+		 inside SwiftUI's next list update: the outline lays a row out there to
+		 place its disclosure control, the row's hosting view renders inside the
+		 update that is already running, and the process aborts with
+		 "AttributeGraph precondition failure: setting value during update".
+		 Measured at launch with the reader's own servers: every run with the
+		 style forced, none without. Only an outline runs that row layout, which
+		 is why the flat lists keep the modifier. */
 		.accessibilityIdentifier("server-list")
 		.scrollContentBackground(.hidden)
 		/* A filter that matches nothing left a blank sidebar, which reads as a
@@ -74,9 +80,11 @@ struct ServerListView: View {
 
 	private func channelRows(_ server: ServerRow) -> some View {
 		ForEach(server.channels) { channel in
-			ChannelRowView(model: model, channel: channel)
+			ChannelRowView(channel: channel)
 				.tag(channel.id)
-				.listRowSeparator(.hidden)
+		}
+		.onMove { offsets, destination in
+			model.moveChannels(onServerWithID: server.id, fromOffsets: offsets, toOffset: destination)
 		}
 	}
 
@@ -95,30 +103,7 @@ struct ServerListView: View {
 	}
 }
 
-/// What a server row and a channel row share: the frame, the drag handle and
-/// the drop target, keyed by the tree item's identity.
-private struct SidebarRowChrome: ViewModifier {
-	let model: ServerList
-	let id: String
-	let accessibilityLabel: String
-
-	func body(content: Content) -> some View {
-		/* No fixed height: the sidebar style sizes its own cells, and content
-		 pinned shorter than the cell sat 4 pt below its origin, which is where
-		 a ghost of the selected row's label was drawn. */
-		content
-			.contentShape(Rectangle())
-			.accessibilityLabel(accessibilityLabel)
-			.draggable(id)
-			.dropDestination(for: String.self) { identifiers, _ in
-				guard let identifier = identifiers.first else { return false }
-				return model.move(draggedIdentifier: identifier, ontoIdentifier: id)
-			}
-	}
-}
-
 private struct ServerRowView: View {
-	let model: ServerList
 	let server: ServerRow
 
 	var body: some View {
@@ -131,33 +116,54 @@ private struct ServerRowView: View {
 
 			if server.isSecured {
 				Image(systemName: "lock.fill")
-					.font(.system(size: 9, weight: .semibold))
+					.font(.caption2.weight(.semibold))
+					.imageScale(.small)
 					.foregroundStyle(.secondary)
+					/* The row's own label already says the connection is
+					 encrypted; the padlock is for the pointer, which has
+					 nothing else to read it with. */
 					.help(MainWindowStrings.Toolbar.connectionSecurity)
-					.accessibilityLabel(MainWindowStrings.Toolbar.connectionSecurity)
+					.accessibilityHidden(true)
 			}
 
 			Spacer(minLength: UISpacing.tight)
 		}
-		.modifier(SidebarRowChrome(model: model, id: server.id, accessibilityLabel: accessibilityDescription))
+		/* No fixed height: the sidebar style sizes its own cells, and content
+		 pinned shorter than the cell sat 4 pt below its origin, which is where
+		 a ghost of the selected row's label was drawn. */
+		.contentShape(Rectangle())
+		.accessibilityLabel(accessibilityDescription)
 	}
 
 	private var accessibilityDescription: String {
-		server.isActive
-			? AccessibilityStrings.connectedServer(server.title)
-			: AccessibilityStrings.disconnectedServer(server.title)
+		var phrases = [
+			server.isActive
+				? AccessibilityStrings.connectedServer(server.title)
+				: AccessibilityStrings.disconnectedServer(server.title),
+		]
+		/* The padlock is hidden from assistive technology, so whether the
+		 connection is encrypted has to be said here or not at all. */
+		if server.isSecured {
+			phrases.append(MainWindowStrings.Toolbar.connectionSecurity)
+		}
+		return phrases.formatted(.list(type: .and))
 	}
 }
 
 private struct ChannelRowView: View {
-	let model: ServerList
 	let channel: ChannelRow
+
+	/// `.increased` is what a list row's ground reports while it is selected.
+	/// A row that did not ask drew its own accent on top of the selection's.
+	@Environment(\.backgroundProminence) private var backgroundProminence
+	@ScaledMetric(relativeTo: .caption) private var badgeWidth: CGFloat = 24
+	@ScaledMetric(relativeTo: .caption) private var badgeHeight: CGFloat = 20
 
 	var body: some View {
 		HStack(spacing: UISpacing.regular) {
 			if let symbolName {
 				Image(systemName: symbolName)
-					.font(.system(size: 12, weight: .medium))
+					.imageScale(.small)
 					.foregroundStyle(channel.isActive ? .secondary : .tertiary)
 					.frame(width: UIListMetrics.glyphWidth)
 					.accessibilityHidden(true)
@@ -172,11 +178,10 @@ private struct ChannelRowView: View {
 
 			if channel.showsUnreadBadge {
 				Text(channel.unreadCount, format: .number)
-					.font(.system(size: 11, weight: .semibold, design: .rounded))
-					.monospacedDigit()
+					.font(.system(.caption, design: .rounded, weight: .semibold).monospacedDigit())
 					.foregroundStyle(badgeForeground)
 					.padding(.horizontal, UISpacing.regular)
-					.frame(minWidth: ServerListLayout.badgeWidth, minHeight: ServerListLayout.badgeHeight)
+					.frame(minWidth: badgeWidth, minHeight: badgeHeight)
 					.background(badgeBackground, in: Capsule())
 					/* The row's label already counts what is unread for VoiceOver;
 					 the tooltip says it to a pointer, which the digits alone do
@@ -185,15 +190,23 @@ private struct ChannelRowView: View {
 					.accessibilityHidden(true)
 			}
 		}
-		.modifier(SidebarRowChrome(model: model, id: channel.id, accessibilityLabel: accessibilityDescription))
+		.contentShape(Rectangle())
+		.accessibilityLabel(accessibilityDescription)
+	}
+
+	private var isSelected: Bool {
+		backgroundProminence == .increased
 	}
 
 	private var labelColor: Color {
 		if channel.hasJoinError {
-			return .red
+			return Color(nsColor: .systemRed)
 		}
-		if channel.isActive, channel.isEmphasized {
-			return .blue
+		/* The reader's accent, and only while the row is not the selected one:
+		 a literal blue on the selection's own blue was a label that could not
+		 be read, and it claimed a colour the reader had not chosen. */
+		if channel.isActive, channel.isEmphasized, isSelected == false {
+			return .accentColor
 		}
 		return channel.isActive ? .primary : Color(nsColor: .tertiaryLabelColor)
 	}
@@ -214,20 +227,28 @@ private struct ChannelRowView: View {
 	 selection, and the one AppKit desaturates while the window is not key; the
 	 accent colour it replaces answered for neither, so a badge stayed vivid
 	 beside a grey selection in a background window. */
-	private var badgeBackground: Color {
+	private var badgeFill: NSColor {
 		guard channel.isEmphasized else {
-			return Color(nsColor: .quaternaryLabelColor)
+			return .quaternaryLabelColor
 		}
 
-		return channel.unreadBadgeTint ?? Color(nsColor: .selectedContentBackgroundColor)
+		return channel.unreadBadgeTint ?? .selectedContentBackgroundColor
 	}
 
+	private var badgeBackground: Color {
+		Color(nsColor: badgeFill)
+	}
+
+	/// Black or white, whichever the fill can be read against. The menu text
+	/// colour this replaces answered for a menu's ground, not for a capsule the
+	/// reader may have tinted any colour at all.
 	private var badgeForeground: Color {
-		channel.isEmphasized ? Color(nsColor: .selectedMenuItemTextColor) : .primary
+		guard channel.isEmphasized else { return .primary }
+		return Color(nsColor: MemberAvatar.initialColor(on: badgeFill))
 	}
 
 	private var accessibilityDescription: String {
-		var description: String = if channel.kind != .channel {
+		let identity: String = if channel.kind != .channel {
 			AccessibilityStrings.privateMessageQuery(with: channel.title)
 		} else if channel.isActive {
 			AccessibilityStrings.joinedChannel(channel.title)
@@ -235,18 +256,13 @@ private struct ChannelRowView: View {
 			AccessibilityStrings.unjoinedChannel(channel.title)
 		}
 
+		var phrases = [identity]
 		if channel.unreadCount > 0 {
-			description = ChannelSpotlightStrings.combined(
-				description,
-				ChannelSpotlightStrings.unreadMessages(channel.unreadCount)
-			)
+			phrases.append(ChannelSpotlightStrings.unreadMessages(channel.unreadCount))
 		}
 		if channel.highlightCount > 0 {
-			description = ChannelSpotlightStrings.combined(
-				description,
-				ChannelSpotlightStrings.highlights(channel.highlightCount)
-			)
+			phrases.append(ChannelSpotlightStrings.highlights(channel.highlightCount))
 		}
-		return description
+		return phrases.formatted(.list(type: .and))
 	}
 }

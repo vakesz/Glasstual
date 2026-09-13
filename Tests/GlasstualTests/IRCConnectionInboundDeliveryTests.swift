@@ -14,7 +14,7 @@ import Testing
 struct IRCConnectionInboundDeliveryTests {
 	@Test("A missing XPC service ends startup explicitly")
 	func unavailableConnectionService() async throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.isConnecting = true
 		let connection = Connection(config: IRCConnectionConfig(), onClient: client, closeClock: .continuous,
 		                            makeService: { NSXPCConnection(serviceName: "test.glasstual.unavailable-service") })
@@ -86,7 +86,7 @@ struct IRCConnectionInboundDeliveryTests {
 		#expect(budget.admit(bytes: ConnectionInputBudget.maximumBytes) == .overflow)
 		budget.consumed(bytes: 1)
 		#expect(budget.admit(bytes: 1) == .closed)
-		#expect(budget.snapshot.peakBytes == ConnectionInputBudget.maximumBytes)
+		#expect(budget.snapshot.bytes == 0)
 	}
 
 	@Test("Wire STS preserves pending and keychain PASS through reset", arguments: [true, false])
@@ -179,8 +179,8 @@ struct IRCConnectionInboundDeliveryTests {
 		#expect(client.sentLines.compactMap { $0 as? String }.contains { $0.hasPrefix("PASS ") } == false)
 	}
 
-	private func connectedClient() -> (GLTTestClient, Connection) {
-		let client = GLTTestClient()
+	private func connectedClient() -> (TestClient, Connection) {
+		let client = TestClient()
 		client.forwardsProcessedMessages = true
 		client.isConnected = true
 		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
@@ -252,7 +252,7 @@ struct IRCConnectionInboundDeliveryTests {
 
 	@Test("Terminating clients cannot schedule another connection or reconnect timer")
 	func terminationRejectsScheduledConnections() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.autoConnect(withDelay: 20, afterWakeUp: false)
 		client.startReconnectTimer()
 		let scheduled = client.pendingConnectionTask
@@ -272,7 +272,7 @@ struct IRCConnectionInboundDeliveryTests {
 
 	@Test("A silent service is invalidated at five seconds and completes disconnect exactly once")
 	func closeDeadlineCompletesExactlyOnce() async {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let listener = NSXPCListener.anonymous()
 		let (ticks, tick) = AsyncStream<Void>.makeStream()
 		var waits: [TimeInterval] = []
