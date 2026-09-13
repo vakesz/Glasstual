@@ -12,7 +12,51 @@ private struct ChatFilterEditorPresentation: Identifiable {
 	let replacingIdentifier: ChatFilter.ID?
 }
 
+/** A filter command that stopped, with the sentence that says what to do next.
+
+ One title per operation: an export that could not be written is not a file
+ that could not be read, and saying so is the difference between a message
+ someone can act on and one they cannot. */
+private struct ChatFilterFailure: Identifiable {
+	enum Operation {
+		case importing
+		case exporting
+		case saving
+
+		var title: LocalizedStringResource {
+			switch self {
+			case .importing: .ChatFilter.importFailedTitle
+			case .exporting: .ChatFilter.exportFailedTitle
+			case .saving: .ChatFilter.saveFailedTitle
+			}
+		}
+
+		var recovery: LocalizedStringResource? {
+			switch self {
+			case .importing: .ChatFilter.importFailedRecovery
+			case .exporting: .ChatFilter.exportFailedRecovery
+			case .saving: nil
+			}
+		}
+	}
+
+	let id = UUID()
+	let operation: Operation
+	let reason: String
+
+	var title: String {
+		String(localized: operation.title)
+	}
+
+	var message: String {
+		guard let recovery = operation.recovery else { return reason }
+		return "\(reason)\n\n\(String(localized: recovery))"
+	}
+}
+
 struct ChatFilterPreferencesView: View {
+	private static let listHeight = 240.0
+
 	@Bindable var store: ChatFilterStore
 	let clients: () -> [ChatFilterClientOption]
 
@@ -21,92 +65,47 @@ struct ChatFilterPreferencesView: View {
 	@State private var showsImporter = false
 	@State private var exportData: Data?
 	@State private var showsExporter = false
-	@State private var importError: String?
-	@State private var exportError: String?
+	@State private var failure: ChatFilterFailure?
 
 	var body: some View {
-		VStack(spacing: 0) {
-			List(selection: $store.selection) {
-				ForEach(store.filters) { filter in
-					Text(filter.description)
-						.tag(filter.id)
-						.contentShape(.rect)
-						.onTapGesture(count: 2) {
-							editor = ChatFilterEditorPresentation(filter: filter, replacingIdentifier: filter.id)
-						}
-				}
-				.onMove(perform: store.move)
-			}
-			.listStyle(.inset(alternatesRowBackgrounds: true))
-			.overlay {
-				if store.filters.isEmpty {
-					ContentUnavailableView(
-						String(localized: .TPIChatFilterExtension.noFiltersTitle),
-						systemImage: "line.3.horizontal.decrease.circle",
-						description: Text(String(localized: .TPIChatFilterExtension.noFiltersDescription))
-					)
-				}
-			}
-
-			Divider()
-
-			HStack(spacing: 8) {
-				Button {
-					editor = ChatFilterEditorPresentation(filter: ChatFilter(), replacingIdentifier: nil)
-				} label: {
-					Label(String(localized: .TPIChatFilterExtension.addFilterButton), systemImage: "plus")
-				}
-
-				Button {
-					showsDeleteConfirmation = true
-				} label: {
-					Label(String(localized: .TPIChatFilterExtension.removeFilterButton), systemImage: "minus")
-				}
-				.disabled(store.selectedFilter == nil)
-
-				Button {
-					editSelection()
-				} label: {
-					Label(String(localized: .TPIChatFilterExtension.editFilterButton), systemImage: "pencil")
-				}
-				.disabled(store.selectedFilter == nil)
-
-				Spacer()
-
-				Menu {
-					Button(String(localized: .TPIChatFilterExtension.duplicateFilterButton)) {
-						duplicateSelection()
-					}
-					.disabled(store.selectedFilter == nil)
-
-					Divider()
-
-					Button(String(localized: .TPIChatFilterExtension.importFilterButton)) {
-						showsImporter = true
-					}
-					Button(String(localized: .TPIChatFilterExtension.exportFilterButton)) {
-						if let filter = store.selectedFilter {
-							do {
-								exportData = try filter.propertyListData()
-								showsExporter = true
-							} catch {
-								exportError = error.localizedDescription
+		Form {
+			Section {
+				List(selection: $store.selection) {
+					ForEach(store.filters) { filter in
+						Text(filter.description)
+							.tag(filter.id)
+							.contentShape(.rect)
+							.onTapGesture(count: 2) {
+								editor = ChatFilterEditorPresentation(
+									filter: filter,
+									replacingIdentifier: filter.id
+								)
 							}
-						}
 					}
-					.disabled(store.selectedFilter == nil)
-				} label: {
-					Label(String(localized: .TPIChatFilterExtension.moreActionsButton), systemImage: "ellipsis.circle")
+					.onMove(perform: store.move)
 				}
-				.menuStyle(.borderlessButton)
+				.frame(height: Self.listHeight)
+				.overlay {
+					if store.filters.isEmpty {
+						ContentUnavailableView(
+							String(localized: .ChatFilter.noFiltersTitle),
+							systemImage: "line.3.horizontal.decrease.circle",
+							description: Text(String(localized: .ChatFilter.noFiltersDescription))
+						)
+					}
+				}
+
+				commands
 			}
-			.padding(12)
 		}
-		.frame(minWidth: 520, minHeight: 300)
+		.formStyle(.grouped)
 		.sheet(item: $editor) { presentation in
 			ChatFilterEditorView(filter: presentation.filter, clients: clients()) { filter in
 				if store.save(filter, replacing: presentation.replacingIdentifier) == false {
-					importError = String(localized: .TPIChatFilterExtension.editedFilterRemoved)
+					failure = ChatFilterFailure(
+						operation: .saving,
+						reason: String(localized: .ChatFilter.editedFilterRemoved)
+					)
 				}
 				editor = nil
 			} onCancel: {
@@ -126,54 +125,89 @@ struct ChatFilterPreferencesView: View {
 			defaultFilename: "filter.plist"
 		) { result in
 			if case let .failure(error) = result {
-				exportError = error.localizedDescription
+				failure = ChatFilterFailure(operation: .exporting, reason: error.localizedDescription)
 			}
 			exportData = nil
 		}
 		.alert(
-			String(localized: .TPIChatFilterExtension.unreadableConfigurationTitle),
-			isPresented: Binding(
-				get: { importError != nil },
-				set: {
-					if !$0 {
-						importError = nil
-					}
-				}
-			)
-		) {
-			Button(String(localized: .TPIChatFilterExtension.okButton)) {
-				importError = nil
+			failure?.title ?? "",
+			isPresented: failureIsPresented,
+			presenting: failure
+		) { _ in
+			Button(String(localized: .ChatFilter.okButton)) {
+				failure = nil
 			}
-		} message: {
-			Text(importError ?? "")
+		} message: { failure in
+			Text(failure.message)
 		}
 		.alert(
-			String(localized: .TPIChatFilterExtension.unreadableConfigurationTitle),
-			isPresented: Binding(
-				get: { exportError != nil },
-				set: {
-					if !$0 {
-						exportError = nil
-					}
-				}
-			)
-		) {
-			Button(String(localized: .TPIChatFilterExtension.okButton)) {
-				exportError = nil
-			}
-		} message: {
-			Text(exportError ?? "")
-		}
-		.alert(
-			String(localized: .TPIChatFilterExtension.deleteFilterTitle),
+			String(localized: .ChatFilter.deleteFilterTitle),
 			isPresented: $showsDeleteConfirmation
 		) {
-			Button(String(localized: .TPIChatFilterExtension.deleteFilterButton), role: .destructive) {
+			Button(String(localized: .ChatFilter.deleteFilterButton), role: .destructive) {
 				store.removeSelection()
 			}
-			Button(String(localized: .TPIChatFilterExtension.cancelButton), role: .cancel) {}
+			Button(String(localized: .ChatFilter.cancelButton), role: .cancel) {}
 		} message: {
-			Text(String(localized: .TPIChatFilterExtension.deleteFilterMessage))
+			Text(String(localized: .ChatFilter.deleteFilterMessage))
+		}
+	}
+
+	private var failureIsPresented: Binding<Bool> {
+		Binding(
+			get: { failure != nil },
+			set: {
+				if $0 == false {
+					failure = nil
+				}
+			}
+		)
+	}
+
+	private var commands: some View {
+		HStack(spacing: 8) {
+			Button {
+				editor = ChatFilterEditorPresentation(filter: ChatFilter(), replacingIdentifier: nil)
+			} label: {
+				Label(String(localized: .ChatFilter.addFilterButton), systemImage: "plus")
+			}
+
+			Button {
+				showsDeleteConfirmation = true
+			} label: {
+				Label(String(localized: .ChatFilter.deleteFilterButton), systemImage: "minus")
+			}
+			.disabled(store.selectedFilter == nil)
+
+			Button {
+				editSelection()
+			} label: {
+				Label(String(localized: .ChatFilter.editFilterButton), systemImage: "pencil")
+			}
+			.disabled(store.selectedFilter == nil)
+
+			Spacer()
+
+			Menu {
+				Button(String(localized: .ChatFilter.duplicateFilterButton)) {
+					duplicateSelection()
+				}
+				.disabled(store.selectedFilter == nil)
+
+				Divider()
+
+				Button(String(localized: .ChatFilter.importFilterButton)) {
+					showsImporter = true
+				}
+				Button(String(localized: .ChatFilter.exportFilterButton)) {
+					exportSelection()
+				}
+				.disabled(store.selectedFilter == nil)
+			} label: {
+				Label(String(localized: .ChatFilter.moreActionsButton), systemImage: "ellipsis.circle")
+			}
+			.menuStyle(.borderlessButton)
+			.fixedSize()
 		}
 	}
 
@@ -185,8 +219,18 @@ struct ChatFilterPreferencesView: View {
 	private func duplicateSelection() {
 		guard var filter = store.selectedFilter else { return }
 		filter.id = UUID().uuidString
-		filter.title = String(localized: .TPIChatFilterExtension.duplicateFilterTitle(filter.title))
+		filter.title = String(localized: .ChatFilter.duplicateFilterTitle(filter.title))
 		editor = ChatFilterEditorPresentation(filter: filter, replacingIdentifier: nil)
+	}
+
+	private func exportSelection() {
+		guard let filter = store.selectedFilter else { return }
+		do {
+			exportData = try filter.propertyListData()
+			showsExporter = true
+		} catch {
+			failure = ChatFilterFailure(operation: .exporting, reason: error.localizedDescription)
+		}
 	}
 
 	private func importFilter(_ result: Result<[URL], any Error>) {
@@ -202,7 +246,7 @@ struct ChatFilterPreferencesView: View {
 			filter.id = UUID().uuidString
 			editor = ChatFilterEditorPresentation(filter: filter, replacingIdentifier: nil)
 		} catch {
-			importError = error.localizedDescription
+			failure = ChatFilterFailure(operation: .importing, reason: error.localizedDescription)
 		}
 	}
 }

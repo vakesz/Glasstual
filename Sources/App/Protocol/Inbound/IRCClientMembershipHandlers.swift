@@ -55,7 +55,7 @@ public extension IRCClient {
 		guard let channelName = message.params.first, let sender = message.senderNickname else { return }
 		let printOnly = message.isPrintOnlyMessage
 		let isLocalUser = nicknameIsMyself(sender)
-		let channel: IRCChannel
+		let channel: Channel
 
 		if !printOnly, isLocalUser {
 			guard let found = findChannelOrCreate(channelName), !found.isActive, found.isChannel else { return }
@@ -121,7 +121,7 @@ public extension IRCClient {
 		output?.updateTitle(for: channel)
 		if isLocalUser {
 			if config.sendWhoCommandRequestsToChannels, !isBrokenIRCdKnownAsTwitch {
-				requestModes(for: channel)
+				requestModes(inChannelNamed: channel.name)
 			}
 		} else {
 			_ = notifyEvent(.userJoined, lineType: .join, target: channel, nickname: sender, text: nil)
@@ -250,7 +250,7 @@ public extension IRCClient {
 			)
 		}
 
-		func process(_ channel: IRCChannel) {
+		func process(_ channel: Channel) {
 			if !isLocalUser, !printOnly, let user {
 				if channel.isChannel {
 					guard let member = userAssociated(user, with: channel) else { return }
@@ -339,7 +339,7 @@ public extension IRCClient {
 			? IRCInboundStrings.Membership.localNicknameChanged(to: newNickname)
 			: IRCInboundStrings.Membership.nicknameChanged(from: oldNickname, to: newNickname)
 
-		func process(_ channel: IRCChannel) {
+		func process(_ channel: Channel) {
 			if !printOnly, let user {
 				if channel.isChannel {
 					guard let member = userAssociated(user, with: channel) else { return }
@@ -384,7 +384,7 @@ public extension IRCClient {
 	 person it was with is not there any more. Leaving it alone stranded it: it
 	 was never renamed and `stopTrackingQueryPeer` was never called, so the watch
 	 list kept asking after a nickname that now belongs to somebody else. */
-	private func renameQuery(_ query: IRCChannel, from oldNickname: String, to newNickname: String) {
+	private func renameQuery(_ query: Channel, from oldNickname: String, to newNickname: String) {
 		guard let existing = findChannel(newNickname) else {
 			stopTrackingQueryPeer(oldNickname)
 			query.name = newNickname

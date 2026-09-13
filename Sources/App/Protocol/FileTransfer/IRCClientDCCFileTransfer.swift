@@ -85,7 +85,7 @@ enum DCCFileTransferRequestParser {
 			else { return nil }
 			return .send(
 				filename: filename,
-				address: ClientWireUtilities.displayDCCAddress(section2),
+				address: DCCWireFormat.displayAddress(section2),
 				port: port,
 				filesize: filesize,
 				token: token
@@ -110,7 +110,7 @@ enum DCCFileTransferRequestParser {
 		position: UInt64,
 		token: String?
 	) -> String {
-		let base = "\(ClientWireUtilities.escapedDCCFilename(filename)) \(port) \(position)"
+		let base = "\(DCCWireFormat.escapedFilename(filename)) \(port) \(position)"
 		return token.map { "\(base) \($0)" } ?? base
 	}
 
@@ -121,7 +121,7 @@ enum DCCFileTransferRequestParser {
 		filesize: UInt64,
 		token: String?
 	) -> String {
-		let base = "\(ClientWireUtilities.escapedDCCFilename(filename)) \(address) \(port) \(filesize)"
+		let base = "\(DCCWireFormat.escapedFilename(filename)) \(address) \(port) \(filesize)"
 		return token.flatMap { $0.isEmpty ? nil : "\(base) \($0)" } ?? base
 	}
 
@@ -261,12 +261,12 @@ public extension IRCClient {
 	}
 
 	var DCCTransferAddress: String? {
-		guard let address = fileTransferCenter.IPAddress else { return nil }
+		guard let address = fileTransferCenter.ipAddress else { return nil }
 		return DCCFormattedAddress(address)
 	}
 
 	func DCCFormattedAddress(_ address: String) -> String? {
-		let formattedAddress = ClientWireUtilities.wireDCCAddress(address)
+		let formattedAddress = DCCWireFormat.wireAddress(address)
 		if formattedAddress == nil {
 			dccFileTransferLogger.error("The configured file-transfer address is invalid")
 		}
@@ -278,7 +278,7 @@ public extension IRCClient {
 		case let .send(filename, address, port, filesize, token):
 			// The offer decides which host the client dials, so a peer must
 			// not be able to point it at loopback or a private network.
-			guard ClientWireUtilities.isDialableDCCAddress(address) else {
+			guard DCCWireFormat.isDialableAddress(address) else {
 				dccFileTransferLogger.error("Refused a DCC SEND offer for a non-routable address")
 				printInvalidDCCRequest(from: sender)
 				return

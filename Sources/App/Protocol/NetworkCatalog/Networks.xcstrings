@@ -1,0 +1,510 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Activist network; TLS-only connections." : {
+      "comment" : "One-line description of the AnonOps IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activist network; TLS-only connections."
+          }
+        }
+      }
+    },
+    "Anime and general chat network." : {
+      "comment" : "One-line description of the IRCHighWay IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anime and general chat network."
+          }
+        }
+      }
+    },
+    "Chat for the TWiT podcast network." : {
+      "comment" : "One-line description of the TWiT IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat for the TWiT podcast network."
+          }
+        }
+      }
+    },
+    "Community network with services and SASL." : {
+      "comment" : "One-line description of the AlphaChat IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community network with services and SASL."
+          }
+        }
+      }
+    },
+    "Create an account at https://gamesurge.net/createaccount/ then sign in with /msg AuthServ AUTH <account> <password>" : {
+      "comment" : "How to register a nickname on GameSurge, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an account at https://gamesurge.net/createaccount/ then sign in with /msg AuthServ AUTH <account> <password>"
+          }
+        }
+      }
+    },
+    "Create an account at https://www.quakenet.org/help/q/how-to-register-an-account-with-q then sign in with /msg Q@CServe.quakenet.org AUTH <account> <password>" : {
+      "comment" : "How to register a nickname on QuakeNet, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an account at https://www.quakenet.org/help/q/how-to-register-an-account-with-q then sign in with /msg Q@CServe.quakenet.org AUTH <account> <password>"
+          }
+        }
+      }
+    },
+    "Create an account at https://www.undernet.org/cservice then sign in with /msg X@channels.undernet.org LOGIN <account> <password>" : {
+      "comment" : "How to register a nickname on Undernet, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an account at https://www.undernet.org/cservice then sign in with /msg X@channels.undernet.org LOGIN <account> <password>"
+          }
+        }
+      }
+    },
+    "Gaming community network." : {
+      "comment" : "One-line description of the Global Gamers IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gaming community network."
+          }
+        }
+      }
+    },
+    "Gaming network using AuthServ for accounts." : {
+      "comment" : "One-line description of the GameSurge IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gaming network using AuthServ for accounts."
+          }
+        }
+      }
+    },
+    "General chat and tech community." : {
+      "comment" : "One-line description of the ChatLounge IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General chat and tech community."
+          }
+        }
+      }
+    },
+    "General chat network popular with gaming communities." : {
+      "comment" : "One-line description of the SwiftIRC IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General chat network popular with gaming communities."
+          }
+        }
+      }
+    },
+    "General chat network." : {
+      "comment" : "One-line description of the MindForge, Slashnet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General chat network."
+          }
+        }
+      }
+    },
+    "General-purpose network with web-chat communities." : {
+      "comment" : "One-line description of the HybridIRC IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General-purpose network with web-chat communities."
+          }
+        }
+      }
+    },
+    "German-language general chat network." : {
+      "comment" : "One-line description of the German-Elite IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "German-language general chat network."
+          }
+        }
+      }
+    },
+    "Home of many free and open-source software projects." : {
+      "comment" : "One-line description of the Libera.Chat IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home of many free and open-source software projects."
+          }
+        }
+      }
+    },
+    "Home of the Fuel Rats, the Elite Dangerous rescue group." : {
+      "comment" : "One-line description of the Fuel Rats IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home of the Fuel Rats, the Elite Dangerous rescue group."
+          }
+        }
+      }
+    },
+    "Home of the InspIRCd project and general chat." : {
+      "comment" : "One-line description of the Chatspike IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home of the InspIRCd project and general chat."
+          }
+        }
+      }
+    },
+    "Hungarian-language network operating since 2010." : {
+      "comment" : "One-line description of the DumaNet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hungarian-language network operating since 2010."
+          }
+        }
+      }
+    },
+    "Italian general chat network." : {
+      "comment" : "One-line description of the Azzurra IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Italian general chat network."
+          }
+        }
+      }
+    },
+    "Large European network. No services; nicknames are not registered." : {
+      "comment" : "One-line description of the IRCnet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Large European network. No services; nicknames are not registered."
+          }
+        }
+      }
+    },
+    "Large gaming network using Q for accounts. No TLS." : {
+      "comment" : "One-line description of the QuakeNet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Large gaming network using Q for accounts. No TLS."
+          }
+        }
+      }
+    },
+    "Large general chat and anime network." : {
+      "comment" : "One-line description of the Rizon IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Large general chat and anime network."
+          }
+        }
+      }
+    },
+    "Large long-running network using X for accounts." : {
+      "comment" : "One-line description of the Undernet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Large long-running network using X for accounts."
+          }
+        }
+      }
+    },
+    "Linux and open-source community network." : {
+      "comment" : "One-line description of the SpotChat IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linux and open-source community network."
+          }
+        }
+      }
+    },
+    "Network for Reddit communities." : {
+      "comment" : "One-line description of the Snoonet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network for Reddit communities."
+          }
+        }
+      }
+    },
+    "Network for gaming and open-source communities." : {
+      "comment" : "One-line description of the EsperNet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network for gaming and open-source communities."
+          }
+        }
+      }
+    },
+    "Network of the 2600 hacker community." : {
+      "comment" : "One-line description of the 2600net IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network of the 2600 hacker community."
+          }
+        }
+      }
+    },
+    "Network of the hacker and Chaos Computer Club community." : {
+      "comment" : "One-line description of the hackint IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network of the hacker and Chaos Computer Club community."
+          }
+        }
+      }
+    },
+    "Network of the tildeverse public-access Unix communities; TLS-only." : {
+      "comment" : "One-line description of the Tilde.Chat IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network of the tildeverse public-access Unix communities; TLS-only."
+          }
+        }
+      }
+    },
+    "One of the oldest IRC networks, with NickServ and ChanServ." : {
+      "comment" : "One-line description of the DALnet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One of the oldest IRC networks, with NickServ and ChanServ."
+          }
+        }
+      }
+    },
+    "Open and Free Technology Community; hosts Debian and other projects." : {
+      "comment" : "One-line description of the OFTC IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open and Free Technology Community; hosts Debian and other projects."
+          }
+        }
+      }
+    },
+    "Public test server for the Ergo IRCv3 server. Good for testing modern IRC features." : {
+      "comment" : "One-line description of the Ergo testnet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public test server for the Ergo IRCv3 server. Good for testing modern IRC features."
+          }
+        }
+      }
+    },
+    "Register at https://www.dumanet.hu/register, then identify with NickServ after connecting." : {
+      "comment" : "How to register a nickname on DumaNet, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register at https://www.dumanet.hu/register, then identify with NickServ after connecting."
+          }
+        }
+      }
+    },
+    "Register with NickServ: /msg NickServ REGISTER <password> <email>" : {
+      "comment" : "How to register a nickname on 2600net, AccessIRC, AlphaChat and 24 other networks, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register with NickServ: /msg NickServ REGISTER <password> <email>"
+          }
+        }
+      }
+    },
+    "Register with NickServ: /msg NickServ REGISTER <password> <email>. See https://libera.chat/guides/registration" : {
+      "comment" : "How to register a nickname on Libera.Chat, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register with NickServ: /msg NickServ REGISTER <password> <email>. See https://libera.chat/guides/registration"
+          }
+        }
+      }
+    },
+    "Register with NickServ: /msg NickServ REGISTER <password> <email>. See https://www.oftc.net/Services/" : {
+      "comment" : "How to register a nickname on OFTC, shown in the network picker. The IRC commands, service names and addresses are literal and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register with NickServ: /msg NickServ REGISTER <password> <email>. See https://www.oftc.net/Services/"
+          }
+        }
+      }
+    },
+    "Science and technology community; TLS-only." : {
+      "comment" : "One-line description of the darkscience IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Science and technology community; TLS-only."
+          }
+        }
+      }
+    },
+    "Small general-purpose community network." : {
+      "comment" : "One-line description of the AccessIRC IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Small general-purpose community network."
+          }
+        }
+      }
+    },
+    "Small general-purpose network." : {
+      "comment" : "One-line description of the LizardIRC IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Small general-purpose network."
+          }
+        }
+      }
+    },
+    "Small network for technology and open-source projects." : {
+      "comment" : "One-line description of the Interlinked IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Small network for technology and open-source projects."
+          }
+        }
+      }
+    },
+    "Tech community network." : {
+      "comment" : "One-line description of the GeekShed IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tech community network."
+          }
+        }
+      }
+    },
+    "The original IRC network. No services; nicknames are not registered." : {
+      "comment" : "One-line description of the EFnet IRC network, shown under its name in the network picker. Network names are proper nouns and stay as they are.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The original IRC network. No services; nicknames are not registered."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

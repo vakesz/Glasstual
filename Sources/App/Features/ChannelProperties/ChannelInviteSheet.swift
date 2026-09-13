@@ -42,8 +42,6 @@ import SwiftUI
 @MainActor
 public protocol ChannelInviteSheetDelegate: NSObjectProtocol {
 	func channelInviteSheet(_ sender: ChannelInviteSheet, onSelectChannel channelName: String)
-
-	func channelInviteSheetWillClose(_ sender: ChannelInviteSheet)
 }
 
 @MainActor
@@ -69,13 +67,14 @@ public final class ChannelInviteSheet: MainWindowSheetSession, ClientScoped {
 
 		availableChannels = channels
 		selectedChannel = channels[0]
-		installSheet(content: ChannelInviteContent(nicknames: nicknames, channels: channels))
+		installSheet(channels: channels)
 		startSheet()
 	}
 
-	private func installSheet(content: ChannelInviteContent) {
+	private func installSheet(channels: [String]) {
 		let rootView = ChannelInviteView(
-			content: content,
+			headline: ChannelInviteStrings.invitationTitle(for: nicknames),
+			channels: channels,
 			selectedChannel: Binding(
 				get: { [weak self] in self?.selectedChannel ?? "" },
 				set: { [weak self] in self?.selectedChannel = $0 }
@@ -84,15 +83,15 @@ public final class ChannelInviteSheet: MainWindowSheetSession, ClientScoped {
 				self?.completeInvitation(to: channel)
 			},
 			cancel: { [weak self] in
-				self?.cancel(nil)
+				self?.cancel()
 			}
 		)
 		setContent(rootView)
 	}
 
-	override public func ok(_: Any?) {
+	override public func submit() {
 		guard availableChannels.contains(selectedChannel) else {
-			cancel(nil)
+			cancel()
 			return
 		}
 
@@ -102,10 +101,6 @@ public final class ChannelInviteSheet: MainWindowSheetSession, ClientScoped {
 	private func completeInvitation(to channel: String) {
 		(delegate as? ChannelInviteSheetDelegate)?.channelInviteSheet(self, onSelectChannel: channel)
 
-		super.ok(nil)
-	}
-
-	override public func sheetDidEnd(withReturnCode _: Int) {
-		(delegate as? ChannelInviteSheetDelegate)?.channelInviteSheetWillClose(self)
+		super.submit()
 	}
 }

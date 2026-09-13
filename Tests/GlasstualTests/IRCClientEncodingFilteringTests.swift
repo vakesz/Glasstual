@@ -85,38 +85,4 @@ struct IRCClientEncodingFilteringTests {
 				["Alice!user@example.com", "Alice!*@*"]
 		)
 	}
-
-	@Test("A suppression rule only fires for the destinations it names")
-	func outputSuppressionHonorsDestinationRestrictions() {
-		let rule = IRCOutputSuppressionRule(pattern: "^secret$", channel: true)
-
-		#expect(IRCOutputSuppressionPolicy.matches(message: "secret", destination: .channel, rules: [rule]))
-		#expect(
-			IRCOutputSuppressionPolicy.matches(message: "secret", destination: .console, rules: [rule]) == false
-		)
-		#expect(
-			IRCOutputSuppressionPolicy.matches(message: "public", destination: .channel, rules: [rule]) == false
-		)
-	}
-
-	@Test("An unparsable pattern suppresses nothing, and neither does an unnamed destination")
-	func outputSuppressionRejectsInvalidPatternsAndOtherDestinations() {
-		let invalidRule = IRCOutputSuppressionRule(pattern: "(", console: true)
-		let utilityRule = IRCOutputSuppressionRule(pattern: ".*", channel: true, privateMessage: true)
-
-		#expect(
-			IRCOutputSuppressionPolicy.matches(
-				message: "anything",
-				destination: .console,
-				rules: [invalidRule]
-			) == false
-		)
-		#expect(
-			IRCOutputSuppressionPolicy.matches(
-				message: "anything",
-				destination: .other,
-				rules: [utilityRule]
-			) == false
-		)
-	}
 }

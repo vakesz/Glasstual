@@ -16,46 +16,51 @@ import SwiftUI
 struct ChannelTopicView: View {
 	@Bindable var model: ChannelTopicModel
 
-	let content: ChannelTopicContent
-	let topicDidChange: @MainActor (String) -> Void
+	let channelName: String
 	let submit: @MainActor () -> Void
 	let cancel: @MainActor () -> Void
 
-	private var formattedTopic: Binding<String> {
-		Binding(
-			get: { model.formattedTopic },
-			set: topicDidChange
-		)
-	}
-
 	var body: some View {
-		VStack(alignment: .leading, spacing: 10) {
-			Text(verbatim: content.headerTitle)
-
-			IRCFormattingTopicEditor(
-				formattedText: formattedTopic,
-				accessibilityLabel: content.headerTitle,
-				submit: submit
-			)
-			.frame(height: 94)
-			.accessibilityHint(Text(verbatim: content.editorAccessibilityHint))
+		VStack(spacing: 12) {
+			Form {
+				Section {
+					IRCFormattingTopicEditor(
+						formattedText: $model.formattedTopic,
+						accessibilityLabel: ChannelTopicStrings.headerTitle(channelName: channelName),
+						submit: submit
+					)
+					.frame(minHeight: 94)
+					.accessibilityHint(Text(verbatim: ChannelTopicStrings.editorAccessibilityHint))
+				} header: {
+					Text(verbatim: ChannelTopicStrings.headerTitle(channelName: channelName))
+				} footer: {
+					/* The count replaces the alert this sheet used to raise on
+					 the keystroke that crossed the limit: the answer belongs
+					 beside the text being typed, not in a dialog over it. */
+					if let remaining = model.remainingLength {
+						Text(verbatim: ChannelTopicStrings.lengthFooter(remaining: remaining))
+							.foregroundStyle(model.fitsMaximumLength ? AnyShapeStyle(.secondary) : AnyShapeStyle(.red))
+					}
+				}
+			}
+			.formStyle(.grouped)
 
 			HStack(spacing: 8) {
 				Spacer()
 
 				Button(action: cancel) {
-					Text(verbatim: content.cancelButtonTitle)
+					Text(verbatim: ChannelTopicStrings.cancelButtonTitle)
 				}
 				.keyboardShortcut(.cancelAction)
 
 				Button(action: submit) {
-					Text(verbatim: content.changeButtonTitle)
+					Text(verbatim: ChannelTopicStrings.changeButtonTitle)
 				}
 				.keyboardShortcut(.defaultAction)
+				.disabled(model.fitsMaximumLength == false)
 			}
 		}
 		.padding(20)
-		.frame(width: 600, height: 201)
-		.onExitCommand(perform: cancel)
+		.frame(minWidth: 480, idealWidth: 600, minHeight: 260, idealHeight: 280)
 	}
 }

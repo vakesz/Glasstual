@@ -16,14 +16,9 @@ struct LogControllerHistoryRecoveryTests {
 		arguments: [false, true]
 	)
 	func retrySameDatabase(olderPage: Bool) async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
 		let reload = Preferences.Logging.reloadScrollbackOnLaunch.value
-		Preferences.Logging.loadHistoryLazily.value = false
 		Preferences.Logging.reloadScrollbackOnLaunch.value = true
-		defer {
-			Preferences.Logging.loadHistoryLazily.value = lazy
-			Preferences.Logging.reloadScrollbackOnLaunch.value = reload
-		}
+		defer { Preferences.Logging.reloadScrollbackOnLaunch.value = reload }
 		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
 			UUID().uuidString,
 			isDirectory: true
@@ -52,6 +47,7 @@ struct LogControllerHistoryRecoveryTests {
 		let window = MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
 		let controller = LogController(client: client, in: window, inlineImageLoader: NativeInlineImageLoader(),
 		                               historicLog: LogControllerHistoricLogFile(client: historyClient))
+		controller.loadsHistoryLazily = { false }
 		if !olderPage {
 			try await setSession(nil, context: context, view: identifier)
 		}
@@ -72,7 +68,7 @@ struct LogControllerHistoryRecoveryTests {
 		#expect(!controller.historyRecovery.isRetrying)
 		#expect(controller.historyRecovery.localMessage == nil)
 		#expect(view.displayedLines.contains { $0.body.plainText == "row0" })
-		#expect(await store.fetchEntries(forView: identifier, ascending: true, fetchLimit: 1000, limitToDate: nil)
+		#expect(await store.fetchOutcome(.newestEntries(forView: identifier, fetchLimit: 1000)).entries
 			.count == count)
 		#expect(controller.historicLogMutationTask == nil)
 		controller.tearDown(.preservingRemoval)
@@ -109,11 +105,11 @@ struct LogControllerHistoryRecoveryTests {
 		#expect(await history.fetchOutcome(otherRequest).entries.count == 1)
 		try await setSession(nil, context: context, view: "view")
 		if forget {
-			await history.forgetView("view").value
+			await history.removeHistory(forView: "view", forget: true).value
 		} else {
-			await history.resetData(forView: "view").value
+			await history.removeHistory(forView: "view", forget: false).value
 		}
-		await history.forgetView("other-view").value
+		await history.removeHistory(forView: "other-view", forget: true).value
 		let failures = history.recovery.deletionFailures
 		#expect(Set(failures.keys) == ["view", "other-view"])
 		#expect(history.recovery.localMessage != nil)
@@ -135,13 +131,13 @@ struct LogControllerHistoryRecoveryTests {
 			[old.uniqueIdentifier, newer.uniqueIdentifier])
 		#expect(await history.fetchOutcome(otherRequest).entries.map(\.uniqueIdentifier) == [old.uniqueIdentifier])
 
-		await history.resetData(forView: "view").value
+		await history.removeHistory(forView: "view", forget: false).value
 		#expect(await history.fetchOutcome(request).entries.isEmpty)
 		#expect(!history.containsMessageIdentifier("old-message", forView: "view"))
 		#expect(try history.recovery.deletionFailures == ["other-view": #require(failures["other-view"])])
 		#expect(history.recovery.localMessage != nil)
 		#expect(await history.fetchOutcome(otherRequest).entries.count == 1)
-		await history.forgetView("other-view").value
+		await history.removeHistory(forView: "other-view", forget: true).value
 		#expect(await history.fetchOutcome(otherRequest).entries.isEmpty)
 		#expect(history.recovery.deletionFailures.isEmpty)
 		#expect(history.recovery.localMessage == nil)

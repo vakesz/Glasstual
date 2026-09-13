@@ -51,16 +51,15 @@ struct IRCISupportInfoTests {
 		arguments: [UInt(0), 3, UInt(Int.max), UInt(Int.max) + 1, UInt.max]
 	)
 	func lengthBudgetsReachCommandConsumers(_ limit: UInt) {
-		CommandIndex.populateCommandIndex()
-		let fixture = GLTClientEnvironmentFixture(preferences: ClientPreferences())
-		let awayClient = fixture.world.createClient(with: IRCClientConfig())
+		let fixture = ClientEnvironmentFixture(preferences: ClientPreferences())
+		let awayClient = fixture.world.createClient(with: ClientConfig())
 		awayClient.isLoggedIn = true
 		awayClient.supportInfo.processConfigurationData("AWAYLEN=\(limit)")
 		awayClient.sendCommand("AWAY \u{e9}\u{e9}ab", completeTarget: false, target: nil)
 		let expected = limit == 3 ? "\u{e9}" : "\u{e9}\u{e9}ab"
 		#expect(awayClient.lastAwayMessage == expected)
 
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.isConnected = true
 		client.markAsLoggedIn()
 		client.supportInfo.processConfigurationData("KICKLEN=\(limit) TOPICLEN=\(limit)")
@@ -77,7 +76,7 @@ struct IRCISupportInfoTests {
 		arguments: [UInt(3), 8, UInt(Int.max), UInt(Int.max) + 1, UInt.max]
 	)
 	func nicknameLimitsReachNameConsumers(_ limit: UInt) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("NICKLEN=\(limit)")
 		#expect(client.stringIsNickname("alice") == (limit >= 5))
 		#expect(("alice!u@host" as NSString).hostmask(on: client)?.nickname == (limit >= 5 ? "alice" : nil))
@@ -101,8 +100,9 @@ struct IRCISupportInfoTests {
 			: limit == 2 ? [["a", "b"], ["c", "d"], ["e"]] : [targets]
 
 		#expect(info.maximumTargets(forCommand: "PRIVMSG") == limit)
-		#expect(SupportInfo.chunkTargets(targets, limit: info.maximumTargets(forCommand: "PRIVMSG")) == expected)
-		#expect(SupportInfo.chunkTargets([], limit: info.maximumTargets(forCommand: "PRIVMSG")).isEmpty)
+		#expect(ISupportTokenParser
+			.chunkTargets(targets, limit: info.maximumTargets(forCommand: "PRIVMSG")) == expected)
+		#expect(ISupportTokenParser.chunkTargets([], limit: info.maximumTargets(forCommand: "PRIVMSG")).isEmpty)
 	}
 
 	@Test("A server that says nothing about case mapping gets RFC 1459")
@@ -181,9 +181,9 @@ struct IRCISupportInfoTests {
 
 		let targets = ["a", "b", "c", "d", "e"]
 
-		#expect(SupportInfo.chunkTargets(targets, limit: 2) == [["a", "b"], ["c", "d"], ["e"]])
+		#expect(ISupportTokenParser.chunkTargets(targets, limit: 2) == [["a", "b"], ["c", "d"], ["e"]])
 
-		let conservativeChunks = SupportInfo.chunkTargets(["a", "b"], limit: 0)
+		let conservativeChunks = ISupportTokenParser.chunkTargets(["a", "b"], limit: 0)
 
 		#expect(conservativeChunks == [["a"], ["b"]])
 	}
@@ -255,7 +255,7 @@ struct IRCISupportInfoTests {
 	 and nothing was ever sent. */
 	@Test("Building the table withdraws no capability the client already recorded")
 	func aFreshTableWithdrawsNothing() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 
 		client.enableCapability(.watchCommand)
@@ -270,7 +270,7 @@ struct IRCISupportInfoTests {
 	/// that follows one still withdraws the facts those tokens stood in for.
 	@Test("Resetting the table after a reconnect withdraws them")
 	func aResetWithdrawsTheFacts() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		client.supportInfo.processConfigurationData("WATCH=128")
 
@@ -283,7 +283,7 @@ struct IRCISupportInfoTests {
 	}
 
 	private func supportInfoWithConfiguration(_ configuration: String) -> SupportInfo {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let supportInfo = SupportInfo(client: client)
 
 		supportInfo.processConfigurationData(configuration)

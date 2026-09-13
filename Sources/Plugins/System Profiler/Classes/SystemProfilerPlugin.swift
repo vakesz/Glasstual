@@ -47,7 +47,7 @@ final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandli
 	var pluginPreferencesPane: PluginPreferencesPane? {
 		guard let host else { return nil }
 		return PluginPreferencesPane(
-			title: SystemProfilerLocalization.string(.BasicLanguage.preferencesPaneTitle)
+			title: String(localized: .BasicLanguage.preferencesPaneTitle)
 		) {
 			SystemProfilerPreferencesView(defaults: host.defaults)
 		}

@@ -80,7 +80,7 @@ struct HistoricLogTransactionTests {
 		#expect(await writer.value == .accepted)
 		#expect(await store.close() == .saved)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
-		let rows = await store.fetchEntries(forView: "view", ascending: true, fetchLimit: 10, limitToDate: nil)
+		let rows = await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries
 		#expect(rows.map(\.data) == [entry("new").data])
 		await store.close()
 	}
@@ -107,7 +107,7 @@ struct HistoricLogTransactionTests {
 		#expect(await writer.value == .accepted)
 		#expect(await close.value == .saved)
 		#expect(await store.openDatabase(inDirectory: directory.path).isOpen)
-		#expect(await store.fetchEntries(forView: "view", ascending: true, fetchLimit: 10, limitToDate: nil)
+		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries
 			.map(\.uniqueIdentifier) == ["admitted"])
 		await store.close()
 	}
@@ -147,7 +147,7 @@ struct HistoricLogTransactionTests {
 		#expect(await store.close() == .saved)
 		let reopened = HistoricLogStore(filenameStore: HistoricLogFilenameFixture())
 		#expect(await reopened.openDatabase(inDirectory: directory.path).isOpen)
-		#expect(await reopened.fetchEntries(forView: "view", ascending: true, fetchLimit: 10, limitToDate: nil)
+		#expect(await reopened.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 10)).entries
 			.map(\.data) == [row.data])
 		await reopened.close()
 	}

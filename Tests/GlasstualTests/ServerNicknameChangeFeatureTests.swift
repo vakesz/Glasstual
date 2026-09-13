@@ -11,8 +11,6 @@ import Testing
 @MainActor
 private final class ServerNicknameChangeDelegateSpy: NSObject, ServerChangeNicknameSheetDelegate {
 	private(set) var acceptedNickname: String?
-	private(set) var didClose = false
-
 	@objc(serverChangeNicknameSheet:didInputNickname:)
 	func serverChangeNicknameSheet(
 		_: ServerChangeNicknameSheet,
@@ -20,25 +18,18 @@ private final class ServerNicknameChangeDelegateSpy: NSObject, ServerChangeNickn
 	) {
 		acceptedNickname = nickname
 	}
-
-	@objc(serverChangeNicknameSheetWillClose:)
-	func serverChangeNicknameSheetWillClose(_: ServerChangeNicknameSheet) {
-		didClose = true
-	}
 }
 
 @MainActor
 @Suite("Server nickname change sheet")
 struct ServerNicknameChangeFeatureTests {
 	@Test("The sheet's copy comes from the localized catalog")
-	func contentUsesKeyedLocalizedCopy() {
-		let content = ServerNicknameChangeContent.current
-
-		#expect(content.currentNicknameLabel == "Current nickname:")
-		#expect(content.newNicknameLabel == "New nickname:")
-		#expect(content.changeButtonTitle == "Change Nickname")
-		#expect(content.cancelButtonTitle == "Cancel")
-		#expect(content.windowTitle == content.changeButtonTitle)
+	func sheetUsesKeyedLocalizedCopy() {
+		#expect(ServerNicknameChangeStrings.currentNicknameLabel == "Current Nickname")
+		#expect(ServerNicknameChangeStrings.newNicknameLabel == "New Nickname")
+		#expect(ServerNicknameChangeStrings.changeButtonTitle == "Change Nickname")
+		#expect(ServerNicknameChangeStrings.changeDescription.isEmpty == false)
+		#expect(ServerNicknameChangeStrings.newNicknamePlaceholder.isEmpty == false)
 	}
 
 	@Test("Validation runs on every keystroke but is only shown once the sheet is submitted")
@@ -48,24 +39,24 @@ struct ServerNicknameChangeFeatureTests {
 		}
 
 		#expect(model.validationError == nil)
-		#expect(model.isValidationMessagePresented == false)
+		#expect(model.validationMessage == nil)
 
 		model.proposedNickname = "invalid"
 		#expect(model.validationError == "Invalid nickname")
-		#expect(model.isValidationMessagePresented == false)
+		#expect(model.validationMessage == nil)
 		#expect(model.validateForSubmission() == false)
-		#expect(model.isValidationMessagePresented)
+		#expect(model.validationMessage == "Invalid nickname")
 
 		model.proposedNickname = "NewNick"
 		#expect(model.validationError == nil)
-		#expect(model.isValidationMessagePresented == false)
+		#expect(model.validationMessage == nil)
 		#expect(model.validateForSubmission())
 		#expect(model.normalizedNickname == "NewNick")
 	}
 
 	@Test("The sheet session keeps client identity and forwards its outcome")
 	func sessionKeepsClientAndDelegateContracts() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.userNickname = "OldNick"
 		let adapter = ServerChangeNicknameSheet(client: client)
 		let clientPrototype: ClientScoped = adapter
@@ -75,10 +66,7 @@ struct ServerNicknameChangeFeatureTests {
 
 		#expect(adapter.client === client)
 		#expect(clientPrototype.clientId == client.uniqueIdentifier)
-		adapter.ok(nil)
+		adapter.submit()
 		#expect(delegate.acceptedNickname == "OldNick")
-
-		adapter.sheetDidEnd(withReturnCode: 0)
-		#expect(delegate.didClose)
 	}
 }

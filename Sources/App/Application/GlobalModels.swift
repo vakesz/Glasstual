@@ -80,7 +80,7 @@ public nonisolated struct ISOStandardDateFormatter: Sendable { // nonisolated: v
 	}
 }
 
-public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? { // nonisolated: pure
+public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> String? { // nonisolated: pure
 	/* The date can come off disk: a historic log row carries an archived
 	 `NSDate`, and one that is not a moment `localtime_r` can name traps on the
 	 narrowing rather than reporting it. Every caller already falls back to the
@@ -104,27 +104,19 @@ public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -
 
 	let bytes = outputBuffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
 
-	guard let timestamp = String(bytes: bytes, encoding: .utf8) else {
-		return nil
-	}
-
-	return NSString(string: timestamp)
+	return String(bytes: bytes, encoding: .utf8)
 }
 
 public nonisolated func humanReadableTimeInterval( // nonisolated: pure
 	_ dateInterval: TimeInterval,
 	_ shortValue: Bool,
 	_ orderMatrix: UInt
-) -> NSString? {
+) -> String {
 	PluginHost.humanReadableTimeInterval(
 		dateInterval,
 		shortValue: shortValue,
 		units: NSCalendar.Unit(rawValue: orderMatrix)
-	) as NSString
-}
-
-public nonisolated func formatDateLongStyle(_ dateObject: Any, _ relativeOutput: Bool) -> String? { // nonisolated: pure
-	formatDateValue(dateObject, .long, .long, relativeOutput)
+	)
 }
 
 public nonisolated func formatDate( // nonisolated: pure
@@ -142,31 +134,65 @@ private nonisolated func formatDateValue( // nonisolated: pure
 	_ timeStyle: DateFormatter.Style,
 	_ relativeOutput: Bool
 ) -> String? {
+	guard let date = dateValue(dateObject) else {
+		return nil
+	}
+
+	guard relativeOutput else {
+		/* A format style is a value Foundation resolves once per locale, where
+		 the `DateFormatter` this replaced was built again on every line the
+		 transcript drew a date separator for. */
+		return date.formatted(Date.FormatStyle(
+			date: formatStyleDate(for: dateStyle),
+			time: formatStyleTime(for: timeStyle)
+		))
+	}
+
+	/* "Today" and "Yesterday" are `DateFormatter.doesRelativeDateFormatting`
+	 and nothing else: `Date.FormatStyle` has no equivalent, and
+	 `Date.RelativeFormatStyle` says "3 days ago" instead of naming the day. */
 	let dateFormatter = DateFormatter()
-	dateFormatter.doesRelativeDateFormatting = relativeOutput
-	dateFormatter.isLenient = true
+	dateFormatter.doesRelativeDateFormatting = true
 	dateFormatter.dateStyle = dateStyle
 	dateFormatter.timeStyle = timeStyle
 
-	if let string = dateObject as? String {
-		/* DateFormatter.string(for:) returns nil for anything that is not an
-		 NSDate, so a string has to be parsed before it can be formatted. */
-		guard let date = parseDateValue(string) else {
-			return nil
-		}
+	return dateFormatter.string(from: date)
+}
 
-		return dateFormatter.string(from: date)
+/// The moment a caller handed over, as a `Date`. Strings arrive from servers
+/// and have to be parsed before anything can format them.
+private nonisolated func dateValue(_ dateObject: Any) -> Date? { // nonisolated: pure
+	switch dateObject {
+	case let string as String: parseDateValue(string)
+	case let date as Date: date
+	case let date as NSDate: date as Date
+	default: nil
 	}
+}
 
-	if let date = dateObject as? Date {
-		return dateFormatter.string(from: date)
+private nonisolated func formatStyleDate( // nonisolated: pure
+	for style: DateFormatter.Style
+) -> Date.FormatStyle.DateStyle {
+	switch style {
+	case .none: .omitted
+	case .short: .numeric
+	case .medium: .abbreviated
+	case .long: .long
+	case .full: .complete
+	@unknown default: .abbreviated
 	}
+}
 
-	if let date = dateObject as? NSDate {
-		return dateFormatter.string(from: date as Date)
+private nonisolated func formatStyleTime( // nonisolated: pure
+	for style: DateFormatter.Style
+) -> Date.FormatStyle.TimeStyle {
+	switch style {
+	case .none: .omitted
+	case .short: .shortened
+	case .medium: .standard
+	case .long, .full: .complete
+	@unknown default: .shortened
 	}
-
-	return nil
 }
 
 /// Parses the date representations servers actually send: an ISO 8601
@@ -175,7 +201,7 @@ private nonisolated func formatDateValue( // nonisolated: pure
 private nonisolated func parseDateValue(_ string: String) -> Date? { // nonisolated: pure
 	let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
 
-	if let date = sharedISOStandardDateFormatter().date(from: trimmed) {
+	if let date = ISOStandardDateFormatter().date(from: trimmed) {
 		return date
 	}
 
@@ -186,15 +212,6 @@ private nonisolated func parseDateValue(_ string: String) -> Date? { // nonisola
 	}
 
 	return nil
-}
-
-/** An `ISOStandardDateFormatter` of the caller's own.
-
- Named for the call sites it replaced, where "shared" meant one mutable
- `DateFormatter` the whole process reached for. Nothing is shared any more: this
- returns a value, and two callers cannot reach each other through it. */
-public nonisolated func sharedISOStandardDateFormatter() -> ISOStandardDateFormatter { // nonisolated: pure
-	ISOStandardDateFormatter()
 }
 
 /** A number below `maximum`, drawn from `generator`, or zero when there is no
@@ -222,6 +239,6 @@ public nonisolated func randomNumber(_ maximum: UInt32) -> UInt { // nonisolated
 	return randomNumber(maximum, using: &generator)
 }
 
-public nonisolated func formattedNumber(_ number: Int) -> NSString { // nonisolated: pure
-	PluginHost.formattedNumber(number) as NSString
+public nonisolated func formattedNumber(_ number: Int) -> String { // nonisolated: pure
+	PluginHost.formattedNumber(number)
 }

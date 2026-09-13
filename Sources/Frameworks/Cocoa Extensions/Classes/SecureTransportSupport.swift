@@ -80,7 +80,7 @@ public enum SecureTransportSupport {
 		.TLSv12
 	}
 
-	public static func description(forProtocolType type: tls_protocol_version_t) -> String? {
+	public static func description(forProtocolType type: tls_protocol_version_t) -> String {
 		switch type.rawValue {
 		case 0x0303: "Transport Layer Security (TLS), version 1.2"
 		case 0x0304: "Transport Layer Security (TLS), version 1.3"
@@ -89,11 +89,9 @@ public enum SecureTransportSupport {
 		}
 	}
 
-	public static func description(forCipherSuite suite: tls_ciphersuite_t) -> String? {
-		description(forCipherSuite: suite, withProtocol: false)
-	}
-
-	public static func description(forCipherSuite suite: tls_ciphersuite_t, withProtocol: Bool) -> String? {
+	public static func description(forCipherSuite suite: tls_ciphersuite_t,
+	                               withProtocol: Bool = false) -> String
+	{
 		guard let name = cipherNames[suite.rawValue] else { return "Unknown" }
 		return withProtocol && (0x1301 ... 0x1303).contains(suite.rawValue) ? "\(name) (TLS 1.3)" : name
 	}
@@ -102,25 +100,23 @@ public enum SecureTransportSupport {
 		deprecatedSuites.contains(suite.rawValue)
 	}
 
-	public static func descriptions(forCipherListCollection collection: CipherSuiteCollection) -> [String] {
-		descriptions(forCipherListCollection: collection, withProtocol: false)
-	}
-
 	/// What the server-properties sheet shows the user. It has to name the same
 	/// suites the transport offers, which is why every entry of every
 	/// collection is a value `tls_ciphersuite_t` defines.
 	public static func descriptions(forCipherListCollection collection: CipherSuiteCollection,
-	                                withProtocol: Bool) -> [String]
+	                                withProtocol: Bool = false) -> [String]
 	{
 		cipherSuites(inCollection: collection).map { number in
 			guard let suite = tls_ciphersuite_t(rawValue: number.uint16Value) else { return "Unknown" }
 
-			return description(forCipherSuite: suite, withProtocol: withProtocol) ?? "Unknown"
+			return description(forCipherSuite: suite, withProtocol: withProtocol)
 		}
 	}
 
-	public static func cipherSuites(inCollection collection: CipherSuiteCollection) -> [NSNumber] {
-		let suites: [UInt16] = switch collection {
+	public static func cipherSuites(inCollection collection: CipherSuiteCollection,
+	                                includeDeprecated: Bool = false) -> [NSNumber]
+	{
+		var suites: [UInt16] = switch collection {
 		case .none:
 			[]
 		case .mozilla2015:
@@ -128,15 +124,11 @@ public enum SecureTransportSupport {
 		case .default, .mozilla2017:
 			modernSuites
 		}
-		return suites.map(NSNumber.init(value:))
-	}
 
-	public static func cipherSuites(inCollection collection: CipherSuiteCollection,
-	                                includeDeprecated: Bool) -> [NSNumber]
-	{
-		guard includeDeprecated else { return cipherSuites(inCollection: collection) }
-		var suites = cipherSuites(inCollection: collection).map(\.uint16Value)
-		suites.append(contentsOf: deprecatedSuites)
+		if includeDeprecated {
+			suites.append(contentsOf: deprecatedSuites)
+		}
+
 		return suites.map(NSNumber.init(value:))
 	}
 
@@ -152,7 +144,7 @@ public enum SecureTransportSupport {
 		isBadCertificateErrorCode(code) ? description(forErrorCode: code) : nil
 	}
 
-	public static func isBadCertificateErrorCode(_ code: Int) -> Bool {
+	private static func isBadCertificateErrorCode(_ code: Int) -> Bool {
 		badCertificateErrors.contains(code)
 	}
 
@@ -225,9 +217,13 @@ public enum SecureTransportSupport {
 		0x000A: "RSA-3DES-EDE-CBC-SHA1",
 	]
 
+	/** Only the codes that mean the server's certificate failed validation:
+	 chain invalid, bad, unknown or missing root, expired, not yet valid, and
+	 a host-name mismatch. A peer alert about the client's own certificate,
+	 or a session the server closed without a close-notify (-9816, the usual
+	 shape of a throttled reconnect), is a plain TLS failure and reads as one. */
 	private static let badCertificateErrors: Set<Int> = [
-		-9808, -9812, -9814, -9825, -9827, -9828, -9829,
-		-9813, -9816, -9826, -9830, -9831, -9843,
+		-9807, -9808, -9812, -9813, -9814, -9815, -9843,
 	]
 }
 
@@ -248,14 +244,18 @@ private struct SecureTransportErrorCode: Sendable {
 private enum SecureTransportErrorLocalization {
 	static func description(for code: SecureTransportErrorCode) -> String {
 		let bundle = Bundle(for: SecureTransportLocalizationBundleToken.self)
+		/* The reason is keyed by the OSStatus itself, so it is read by key
+		 rather than through a generated symbol. */
 		let reason = bundle.localizedString(
 			forKey: code.localizationKey,
 			value: nil,
 			table: "SecureTransportErrorCodes"
 		)
-		let resource = LocalizedStringResource.SecureTransportErrorCodes.errorDescription(reason, code.value)
-		let format = bundle.localizedString(forKey: resource.key, value: nil, table: resource.table)
-		return String(format: format, reason, code.value)
+
+		return bundle.localizedString(
+			for: .SecureTransportErrorCodes.errorDescription(reason, code.value),
+			arguments: [reason, code.value]
+		)
 	}
 }
 

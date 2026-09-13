@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import Testing
 
@@ -63,5 +64,44 @@ struct IRCNetworkCatalogTransportTests {
 
 		#expect(network.serverPort == 6697)
 		#expect(network.prefersSecuredConnection)
+	}
+
+	/** The picker shows both of these under the network's name, and the
+	 property list is data rather than code: there is no typed symbol to reach
+	 them through, so the English text is the `Networks` catalog key. A network
+	 whose blurb is missing from that catalog is one nobody can translate, and
+	 the property list is where a new network is added. */
+	@Test("Every bundled blurb and registration note is a Networks catalog key")
+	func everyBlurbIsTranslatable() throws {
+		let keys = try Self.networksCatalogKeys()
+		let networks = NetworkList().listOfNetworks
+		#expect(networks.isEmpty == false)
+
+		for network in networks {
+			#expect(
+				keys.contains(network.networkDescription),
+				"\(network.networkName): “\(network.networkDescription)” is not a Networks catalog key"
+			)
+
+			guard let note = network.registrationNote else {
+				continue
+			}
+
+			#expect(keys.contains(note), "\(network.networkName): “\(note)” is not a Networks catalog key")
+		}
+	}
+
+	/// The catalog is read from the source tree rather than the built bundle:
+	/// a key that resolves to itself is indistinguishable from a missing one,
+	/// which is the whole failure this is looking for.
+	private static func networksCatalogKeys() throws -> Set<String> {
+		let url = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+			.appending(path: "Sources/App/Protocol/NetworkCatalog/Networks.xcstrings")
+		let catalog = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+
+		return Set((catalog?["strings"] as? [String: Any] ?? [:]).keys)
 	}
 }

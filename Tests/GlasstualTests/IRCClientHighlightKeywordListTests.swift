@@ -55,17 +55,17 @@ struct IRCClientHighlightKeywordListTests {
 		excludeKeywords: [String] = [],
 		highlightCurrentNickname: Bool = false,
 		matchingMethod: NicknameHighlightMatchMode = .partial
-	) -> GLTTestClient {
+	) -> TestClient {
 		var preferences = ClientPreferences()
 		preferences.highlightMatchKeywords = matchKeywords
 		preferences.highlightExcludeKeywords = excludeKeywords
 		preferences.highlightCurrentNickname = highlightCurrentNickname
 		preferences.highlightMatchingMethod = matchingMethod
 
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: [:],
 			nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: preferences)
+			fixture: ClientEnvironmentFixture(preferences: preferences)
 		)
 		client.linePrintObserver = nil
 		client.userNickname = "mara"
@@ -75,9 +75,9 @@ struct IRCClientHighlightKeywordListTests {
 
 	private func channel(
 		named name: String,
-		on client: GLTTestClient,
+		on client: TestClient,
 		drawnInto presentation: RecordingChannelPresentation
-	) throws -> IRCChannel {
+	) throws -> Channel {
 		let channel = try #require(client.findChannelOrCreate(name))
 		channel.presentation = presentation
 
@@ -86,8 +86,8 @@ struct IRCClientHighlightKeywordListTests {
 
 	/// The lists as they reached the channel, for a line said by someone else.
 	private func keywordLists(
-		fromRemoteMessageIn channel: IRCChannel,
-		on client: GLTTestClient,
+		fromRemoteMessageIn channel: Channel,
+		on client: TestClient,
 		drawnInto presentation: RecordingChannelPresentation
 	) throws -> (exclude: [String]?, match: [String]?) {
 		client.print(

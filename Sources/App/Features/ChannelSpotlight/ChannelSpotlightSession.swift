@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -48,16 +48,18 @@ final class ChannelSpotlightModel {
 		}
 	}
 
-	private(set) var allResults: [ChannelSpotlightSearchResult] = []
 	private(set) var displayedResults: [ChannelSpotlightSearchResult] = []
 	var selectedResultID: ChannelSpotlightSearchResult.ID?
 
-	private var restrictedClientID: String?
+	@ObservationIgnored private var allResults: [ChannelSpotlightSearchResult] = []
+	@ObservationIgnored private var restrictedClientID: String?
 
 	func populate() {
-		allResults = AppController.shared.world.clientList.flatMap { client in
-			client.channelList.map(ChannelSpotlightSearchResult.init(channel:))
-		}
+		var admitted: Set<ChannelSpotlightSearchResult.ID> = []
+		allResults = AppController.shared.world.clientList
+			.flatMap(\.channelList)
+			.map(ChannelSpotlightSearchResult.init(channel:))
+			.filter { admitted.insert($0.id).inserted }
 		refreshDisplayedResults()
 	}
 
@@ -70,12 +72,15 @@ final class ChannelSpotlightModel {
 		refreshDisplayedResults()
 	}
 
+	/// Moves the selection by `offset`, stopping at either end: a spotlight list
+	/// is read top to bottom, and wrapping from the last match back to the first
+	/// looked like the arrow key had done nothing.
 	func selectRelativeResult(offset: Int) {
 		guard displayedResults.isEmpty == false else { return }
 		let currentIndex = selectedResultID.flatMap { selectedID in
 			displayedResults.firstIndex { $0.id == selectedID }
 		} ?? 0
-		let nextIndex = (currentIndex + offset + displayedResults.count) % displayedResults.count
+		let nextIndex = min(max(currentIndex + offset, 0), displayedResults.count - 1)
 		selectedResultID = displayedResults[nextIndex].id
 	}
 
@@ -90,18 +95,10 @@ final class ChannelSpotlightModel {
 	}
 
 	private func refreshDisplayedResults() {
-		for result in allResults {
-			result.recalculateDistance(with: searchText)
-		}
-
-		var admitted: Set<ChannelSpotlightSearchResult.ID> = []
 		displayedResults = ChannelSpotlightSearchResults.displayed(
-			allResults,
-			restrictedToClient: restrictedClientID,
-			distance: \.distance,
-			clientID: \.clientId
+			allResults.map { $0.scored(against: searchText) },
+			restrictedToClient: restrictedClientID
 		)
-		.filter { admitted.insert($0.id).inserted }
 
 		if let selectedResultID,
 		   displayedResults.contains(where: { $0.id == selectedResultID })
@@ -143,7 +140,11 @@ final class ChannelSpotlightSession {
 	}
 
 	func select(_ result: ChannelSpotlightSearchResult?) {
-		guard let channel = result?.channel else { return }
+		/* The row holds the channel's identity rather than the channel: one can
+		 close while the spotlight is open, and the world is what knows. */
+		guard let result,
+		      let channel = AppController.shared.world.findItem(withId: result.id) as? Channel
+		else { return }
 		AppController.shared.mainWindow.select(channel)
 	}
 

@@ -229,20 +229,12 @@ enum HarnessSupervisor {
 			if try await cleanup() {
 				throw HarnessFailure.assertion("Owned processes required cleanup")
 			}
-			try HarnessFiles.write("0", to: "exit-status")
 		} catch {
 			await sampleOwnedApp()
 			let cleanupRequired = await (try? cleanup()) ?? true
 			if cleanupRequired {
-				try? HarnessFiles.write("1", to: "exit-status")
 				throw HarnessFailure.assertion("Run failed and owned processes required cleanup")
 			}
-			let status = if case HarnessFailure.setup = error {
-				"2"
-			} else {
-				"1"
-			}
-			try? HarnessFiles.write(status, to: "exit-status")
 			throw error
 		}
 	}
@@ -340,17 +332,10 @@ enum HarnessSupervisor {
 			if FileManager.default.fileExists(atPath: scenario.appendingPathComponent("scenario-failed").path) {
 				throw HarnessFailure.assertion("A matrix scenario failed")
 			}
-			for name in [
-				"scenario-deadline",
-				"recovery-deadline",
-				"ax-deadline",
-				"disconnect-deadline",
-				"quit-deadline",
-				"probe-deadline",
-				"relaunch-ax-deadline",
-				"relaunch-probe-deadline",
-				"relaunch-quit-deadline",
-			] {
+			let armed = (try? FileManager.default.contentsOfDirectory(atPath: scenario.path)) ?? []
+			// Whatever the driver armed, named the way `removeArmedDeadlines`
+			// clears it: a new deadline is watched without being listed twice.
+			for name in armed where name.hasSuffix("-deadline") {
 				let content: String
 				do {
 					content = try String(contentsOf: scenario.appendingPathComponent(name), encoding: .utf8)
@@ -378,60 +363,76 @@ enum HarnessSupervisor {
 		return directories
 	}
 
+	/// Leaves a redacted main-thread sample of the owned app beside the
+	/// scenario's artifacts.
+	///
+	/// Best effort, and deliberately so: this runs on the failure path, where
+	/// the deadlines every other child command is held to have usually expired
+	/// already, so it bounds itself and never fails a run.
 	private static func sampleOwnedApp() async {
 		for directory in (try? scenarioDirectories()) ?? [] {
 			for prefix in ["", "relaunch-"] {
-				guard let record = try? String(
-					contentsOf: directory.appendingPathComponent(prefix + "app-process"),
-					encoding: .utf8
-				),
-					let pidText = record.split(separator: " ").first, let pid = Int32(pidText), pid > 1,
-					let birth = HarnessFiles.identity(pid), record == "\(pid) \(birth)",
-					birth == (try? HarnessFiles.read("owned/\(pid)")) else { continue }
-				let sampler = Process()
-				sampler.executableURL = URL(fileURLWithPath: "/usr/bin/sample")
-				sampler.arguments = [String(pid), "1", "10", "-file", "/dev/stdout"]
-				let pipe = Pipe()
-				sampler.standardOutput = pipe
-				sampler.standardError = FileHandle.nullDevice
-				let fd = pipe.fileHandleForReading.fileDescriptor
-				_ = fcntl(fd, F_SETFL, O_NONBLOCK)
+				guard let pid = ownedApplication(in: directory, prefix: prefix) else { continue }
+				let destination = directory.appendingPathComponent(prefix + "process-sample.txt")
+
 				do {
-					try HarnessFiles.launch(sampler)
-					try pipe.fileHandleForWriting.close()
-					let deadline = HarnessFiles.now + 3
-					var captured = Data()
-					while HarnessFiles.now < deadline {
-						var buffer = [UInt8](repeating: 0, count: 4096)
-						let count = Darwin.read(fd, &buffer, buffer.count)
-						if count > 0, captured.count < 131_072 {
-							captured.append(contentsOf: buffer.prefix(min(count, 131_072 - captured.count)))
-						}
-						if count == 0, !sampler.isRunning {
-							break
-						}
-						try await Task.sleep(for: .milliseconds(25))
-					}
-					if sampler.isRunning {
-						sampler.terminate()
-					}
-					if sampler.isRunning {
-						kill(sampler.processIdentifier, SIGKILL)
-					}
-					let status = sampler.isRunning ? "sampler cleanup pending" : "sampler status \(sampler.terminationStatus)"
-					try Data((status + "\n" + ProcessDiagnostics.summary(captured)).utf8)
-						.write(to: directory.appendingPathComponent(prefix + "process-sample.txt"), options: .atomic)
-					if !sampler.isRunning {
-						try HarnessFiles.unregister(sampler.processIdentifier)
-					}
+					try await writeSample(ofProcess: pid, to: destination)
 				} catch {
-					try? Data("Bounded sample unavailable".utf8)
-						.write(to: directory.appendingPathComponent(prefix + "process-sample.txt"))
+					try? Data("Bounded sample unavailable".utf8).write(to: destination)
 				}
-				try? pipe.fileHandleForReading.close()
+
 				return
 			}
 		}
+	}
+
+	/// The process `prefix + "app-process"` names, when it is still the one this
+	/// run launched. The record carries the start time beside the PID, so a PID
+	/// the system has reused since does not answer for it.
+	private static func ownedApplication(in directory: URL, prefix: String) -> pid_t? {
+		guard let record = try? String(
+			contentsOf: directory.appendingPathComponent(prefix + "app-process"),
+			encoding: .utf8
+		),
+			let pidText = record.split(separator: " ").first, let pid = pid_t(pidText), pid > 1,
+			let birth = HarnessFiles.identity(pid), record == "\(pid) \(birth)",
+			birth == (try? HarnessFiles.read("owned/\(pid)"))
+		else { return nil }
+
+		return pid
+	}
+
+	private static func writeSample(ofProcess pid: pid_t, to destination: URL) async throws {
+		let raw = destination.deletingPathExtension().appendingPathExtension("raw")
+		defer { try? FileManager.default.removeItem(at: raw) }
+		let sampler = Process()
+		sampler.executableURL = URL(fileURLWithPath: "/usr/bin/sample")
+		/* `-file` rather than a pipe: the sampler writes its own output, so this
+		 process has nothing to drain while the app it is sampling is already
+		 unresponsive. */
+		sampler.arguments = [String(pid), "1", "10", "-file", raw.path]
+		sampler.standardOutput = FileHandle.nullDevice
+		sampler.standardError = FileHandle.nullDevice
+		try HarnessFiles.launch(sampler)
+		let deadline = HarnessFiles.now + 5
+
+		while sampler.isRunning, HarnessFiles.now < deadline {
+			try await Task.sleep(for: .milliseconds(25))
+		}
+
+		if sampler.isRunning {
+			sampler.terminate()
+		}
+
+		if sampler.isRunning {
+			kill(sampler.processIdentifier, SIGKILL)
+		} else {
+			try HarnessFiles.unregister(sampler.processIdentifier)
+		}
+
+		let captured = (try? Data(contentsOf: raw)) ?? Data()
+		try Data(ProcessDiagnostics.summary(captured.prefix(131_072)).utf8)
+			.write(to: destination, options: .atomic)
 	}
 
 	private static func cleanup() async throws -> Bool {

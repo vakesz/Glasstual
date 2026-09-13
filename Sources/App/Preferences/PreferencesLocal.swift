@@ -51,7 +51,7 @@ private var preferences: TextualUserDefaults {
 
 @MainActor
 public extension TextualPreferences {
-	class func populateDefaultNickname() {
+	static func populateDefaultNickname() {
 		let nickname = "\(Preferences.Identity.nickname.defaultValue)\(randomNumber(100))"
 		preferences.registerDefault(nickname, for: Preferences.Identity.nickname)
 	}
@@ -61,11 +61,11 @@ public extension TextualPreferences {
 
 @MainActor
 public extension TextualPreferences {
-	class func clientList() -> [[String: PropertyListValue]]? {
+	static func clientList() -> [[String: PropertyListValue]]? {
 		Preferences.Connection.clientList.propertyListValue?.array?.compactMap(\.dictionary)
 	}
 
-	class func setClientList(_ value: [[String: PropertyListValue]]?) {
+	static func setClientList(_ value: [[String: PropertyListValue]]?) {
 		Preferences.Connection.clientList.propertyListValue = value.map { list in
 			.array(list.map(PropertyListValue.dictionary))
 		}
@@ -76,7 +76,7 @@ public extension TextualPreferences {
 
 @MainActor
 public extension TextualPreferences {
-	class func logToDiskIsEnabled() -> Bool {
+	static func logToDiskIsEnabled() -> Bool {
 		Preferences.Logging.logToDisk.value && PathInfo.transcriptFolderURL != nil
 	}
 }
@@ -87,13 +87,13 @@ public extension TextualPreferences {
 public extension TextualPreferences {
 	/// Drops the entries that match nothing and sorts what is left, so the
 	/// Settings list and the stored value stay in one order.
-	private class func cleanKeywords(for key: PreferenceKey<[HighlightKeyword]>) {
+	private static func cleanKeywords(for key: PreferenceKey<[HighlightKeyword]>) {
 		key.value = Preferences.Highlights.keywords(in: key.value)
 			.sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
 			.map(HighlightKeyword.init(string:))
 	}
 
-	class func cleanUpHighlightKeywords() {
+	static func cleanUpHighlightKeywords() {
 		cleanKeywords(for: Preferences.Highlights.matchKeywords)
 		cleanKeywords(for: Preferences.Highlights.excludeKeywords)
 	}
@@ -103,15 +103,7 @@ public extension TextualPreferences {
 
 @MainActor
 public extension TextualPreferences {
-	class func appNapEnabled() -> Bool {
-		Preferences.Internals.appSleepDisabled.value == false
-	}
-
-	class func setAppNapEnabled(_ value: Bool) {
-		Preferences.Internals.appSleepDisabled.value = (value == false)
-	}
-
-	class func registerPreferencesDictionaryVersion() {
+	static func registerPreferencesDictionaryVersion() {
 		guard Preferences.Internals.dictionaryVersion.value < preferencesDictionaryVersion else {
 			return
 		}
@@ -119,11 +111,11 @@ public extension TextualPreferences {
 		Preferences.Internals.dictionaryVersion.value = preferencesDictionaryVersion
 	}
 
-	class func defaultPreferences() -> [String: PropertyListValue] {
+	static func defaultPreferences() -> [String: PropertyListValue] {
 		preferences.registeredDefaults
 	}
 
-	class func registerDynamicDefaults() {
+	static func registerDynamicDefaults() {
 		populateDefaultNickname()
 		registerPreferencesDictionaryVersion()
 	}
@@ -131,14 +123,14 @@ public extension TextualPreferences {
 	/** The registration domain is built from the key declarations rather than
 	 read out of a plist, so a key that exists in the code always has a default
 	 and a read of it cannot come back empty because a plist entry was renamed. */
-	class func registerDefaults() {
+	static func registerDefaults() {
 		UserDefaults.standard.register(defaults: Preferences.registrationDomain(for: .standard).propertyListObject)
 		preferences.register(defaults: Preferences.registrationDomain(for: .container).propertyListObject)
 		registerDynamicDefaults()
 		PreferencesTransferStores.live.removeValuesDeclarationsRefuse()
 	}
 
-	class func initPreferences() {
+	static func initPreferences() {
 		ApplicationInfo.incrementApplicationRunCount()
 		registerDefaults()
 		PathInfo.startUsingTranscriptFolderURL()

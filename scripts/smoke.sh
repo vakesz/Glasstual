@@ -17,8 +17,8 @@
 #
 # Exit status
 #   0  clean run
-#   1  a probe timed out, the app crashed, quit hung, or the log carried an
-#      error or fault that the allowlist does not cover
+#   1  a probe timed out, the app crashed, quit hung, or the log carried any
+#      error or fault from one of the app's own subsystems
 #   2  the environment is not set up (no app, no source preferences)
 #
 # Requires: an accessibility grant for the terminal running it (System Settings
@@ -193,12 +193,11 @@ fi
 	--predicate "(messageType == error OR messageType == fault) AND subsystem BEGINSWITH \"com.vakesz\" AND (processIdentifier == $pid OR process != \"Glasstual\")" \
 	--style compact 2> /dev/null | grep -v '^Timestamp' > "$log_output"
 
-unexpected="$(cat "$log_output")"
 echo "smoke: $(grep -c . "$log_output") error/fault lines from com.vakesz subsystems"
 
-if [ -n "$unexpected" ]; then
+if [ -s "$log_output" ]; then
 	echo "smoke: unexpected error/fault lines:" >&2
-	printf '%s\n' "$unexpected" >&2
+	cat "$log_output" >&2
 	status=1
 fi
 

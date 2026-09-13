@@ -34,7 +34,7 @@ import Foundation
 import os
 
 private let propertyListModelLogger = Logger(
-	subsystem: "com.vakesz.glasstual",
+	subsystem: Logging.frameworkSubsystem,
 	category: "PropertyListModel"
 )
 
@@ -112,7 +112,7 @@ public extension KeyedDecodingContainer {
 	func decode<Value: Decodable>(
 		_ type: Value.Type,
 		forKey key: Key,
-		aliases: [Key],
+		aliases: [Key] = [],
 		default defaultValue: Value
 	) -> Value {
 		for candidate in [key] + aliases {

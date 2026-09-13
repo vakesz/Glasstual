@@ -16,30 +16,92 @@ import SwiftUI
 
 struct ServerChannelListView: View {
 	@Bindable var model: ServerChannelListModel
-	let networkName: String
 	let supportsMinimumUserCount: Bool
 	let joinSelected: () -> Void
-	let activate: (ServerChannelListEntry.ID) -> Void
 	let update: () -> Void
-	let close: () -> Void
 
 	var body: some View {
 		VStack(spacing: 0) {
-			VStack(spacing: 10) {
-				HStack {
-					Text(verbatim: ServerChannelListStrings.heading(networkName: networkName))
-						.font(.headline)
-					Spacer()
-					if model.isRefreshing {
-						ProgressView()
-							.controlSize(.small)
-							.accessibilityLabel(ServerChannelListStrings.requestingChannelList)
-					}
-				}
+			channelTable
+			Divider()
+			footer
+		}
+		.searchable(
+			text: $model.searchString,
+			placement: .toolbar,
+			prompt: Text(verbatim: ServerChannelListStrings.searchPlaceholder)
+		)
+	}
 
-				HStack {
-					if supportsMinimumUserCount {
-						Text(verbatim: ServerChannelListStrings.minimumUserCountLabel)
+	private var channelTable: some View {
+		Table(model.rows, selection: $model.selection, sortOrder: $model.sortOrder) {
+			TableColumn(
+				ServerChannelListStrings.channelName,
+				sortUsing: ServerChannelListComparator(field: .channelName, order: .forward)
+			) { entry in
+				Text(verbatim: entry.channelName)
+					.lineLimit(1)
+			}
+			.width(min: 100, ideal: 150)
+
+			TableColumn(
+				ServerChannelListStrings.memberCount,
+				sortUsing: ServerChannelListComparator(field: .memberCount, order: .forward)
+			) { entry in
+				Text(entry.memberCount, format: .number)
+					.monospacedDigit()
+			}
+			.width(min: 70, ideal: 90, max: 120)
+
+			TableColumn(
+				ServerChannelListStrings.topic,
+				sortUsing: ServerChannelListComparator(field: .topic, order: .forward)
+			) { entry in
+				Text(formattedTopic(entry.displayedTopic))
+					.lineLimit(1)
+					.help(entry.plainTopic)
+			}
+			.width(min: 220, ideal: 420)
+		}
+		/* The table's own selection menu, which is what carries the clicked rows
+		 into the command and makes the double click the same command again. */
+		.contextMenu(forSelectionType: ServerChannelListEntry.ID.self) { identifiers in
+			Button(ServerChannelListStrings.joinSelectedChannels) {
+				join(identifiers)
+			}
+			.disabled(identifiers.isEmpty)
+		} primaryAction: { identifiers in
+			join(identifiers)
+		}
+		.overlay {
+			if model.rows.isEmpty {
+				if model.isRefreshing {
+					ProgressView(ServerChannelListStrings.requestingChannelList)
+				} else {
+					ContentUnavailableView(
+						ServerChannelListStrings.emptyTitle,
+						systemImage: "number",
+						description: Text(verbatim: ServerChannelListStrings.emptyDescription)
+					)
+				}
+			}
+		}
+		.copyable(model.selectedCopyItems)
+		.accessibilityLabel(ServerChannelListStrings.channelListAccessibilityLabel)
+	}
+
+	private var footer: some View {
+		VStack(alignment: .leading, spacing: UISpacing.regular) {
+			if let notice = model.truncationNotice {
+				Text(verbatim: notice)
+					.font(.callout)
+					.foregroundStyle(.secondary)
+					.frame(maxWidth: .infinity, alignment: .leading)
+			}
+
+			HStack(alignment: .firstTextBaseline, spacing: UISpacing.regular) {
+				if supportsMinimumUserCount {
+					LabeledContent(ServerChannelListStrings.minimumUserCountLabel) {
 						TextField(
 							"0",
 							text: Binding(
@@ -49,106 +111,48 @@ struct ServerChannelListView: View {
 						)
 						.frame(width: 64)
 						.monospacedDigit()
-						.help(ServerChannelListStrings.minimumUserCountHint)
 					}
-
-					Spacer()
-
-					TextField(ServerChannelListStrings.searchPlaceholder, text: $model.searchString)
-						.frame(width: 240)
-						.accessibilityLabel(ServerChannelListStrings.searchAccessibilityLabel)
+					.fixedSize()
 				}
-			}
-			.padding(.horizontal, 16)
-			.padding(.vertical, 12)
 
-			Table(model.rows, selection: $model.selection, sortOrder: $model.sortOrder) {
-				TableColumn(
-					ServerChannelListStrings.channelName,
-					sortUsing: ServerChannelListComparator(field: .channelName, order: .forward)
-				) { entry in
-					interactiveCell(entry.channelName, entryID: entry.id)
+				Spacer()
+
+				if model.isRefreshing {
+					ProgressView()
+						.controlSize(.small)
+						.accessibilityLabel(ServerChannelListStrings.requestingChannelList)
 				}
-				.width(min: 100, ideal: 150)
 
-				TableColumn(
-					ServerChannelListStrings.memberCount,
-					sortUsing: ServerChannelListComparator(field: .memberCount, order: .forward)
-				) { entry in
-					interactiveCell(String(entry.memberCount), entryID: entry.id)
-						.monospacedDigit()
-				}
-				.width(min: 70, ideal: 90, max: 120)
+				Button(ServerChannelListStrings.refresh, action: update)
+					.disabled(model.isRefreshing)
 
-				TableColumn(
-					ServerChannelListStrings.topic,
-					sortUsing: ServerChannelListComparator(field: .topic, order: .forward)
-				) { entry in
-					Text(formattedTopic(entry.displayedTopic))
-						.lineLimit(1)
-						.frame(maxWidth: .infinity, alignment: .leading)
-						.contentShape(.rect)
-						.help(entry.plainTopic)
-						.onTapGesture(count: 2) { activate(entry.id) }
-				}
-				.width(min: 220, ideal: 420)
-			}
-			.overlay {
-				if model.rows.isEmpty {
-					if model.isRefreshing {
-						ProgressView(ServerChannelListStrings.requestingChannelList)
-					} else {
-						ContentUnavailableView(
-							ServerChannelListStrings.emptyTitle,
-							systemImage: "number",
-							description: Text(verbatim: ServerChannelListStrings.emptyDescription)
-						)
-					}
-				}
-			}
-			.copyable(model.selectedCopyItems)
-			.onChange(of: model.selection) { oldSelection, _ in
-				model.limitSelection(from: oldSelection)
-			}
-			.accessibilityLabel(ServerChannelListStrings.channelListAccessibilityLabel)
-
-			if let notice = model.truncationNotice {
-				Text(verbatim: notice)
-					.font(.callout)
-					.foregroundStyle(.secondary)
-					.frame(maxWidth: .infinity, alignment: .leading)
-					.padding(.horizontal, 12)
-					.padding(.top, 8)
-			}
-
-			Divider()
-			HStack {
 				Button(ServerChannelListStrings.joinSelectedChannels, action: joinSelected)
 					.buttonStyle(.borderedProminent)
+					.keyboardShortcut(.defaultAction)
 					.disabled(model.selection.isEmpty)
-				Spacer()
-				Button(ServerChannelListStrings.updateList, action: update)
-					.disabled(model.isRefreshing)
-				Button(PromptStrings.Action.close, action: close)
-					.keyboardShortcut(.cancelAction)
 			}
-			.padding(12)
+
+			if supportsMinimumUserCount {
+				Text(verbatim: ServerChannelListStrings.minimumUserCountFooter)
+					.font(.footnote)
+					.foregroundStyle(.secondary)
+			}
 		}
-		.onExitCommand(perform: close)
+		.padding(UISpacing.wide)
 	}
 
-	private func interactiveCell(_ text: String, entryID: ServerChannelListEntry.ID) -> some View {
-		Text(verbatim: text)
-			.lineLimit(1)
-			.frame(maxWidth: .infinity, alignment: .leading)
-			.contentShape(.rect)
-			.onTapGesture(count: 2) { activate(entryID) }
+	/// Joins what the menu or the double click named, which is not necessarily
+	/// what was selected before it landed.
+	private func join(_ identifiers: Set<ServerChannelListEntry.ID>) {
+		guard identifiers.isEmpty == false else { return }
+		model.selection = identifiers
+		joinSelected()
 	}
 
 	private func formattedTopic(_ topic: String) -> AttributedString {
 		guard topic.isEmpty == false else { return AttributedString() }
 		let formatted = (topic as NSString).attributedString(
-			withIRCFormatting: NSFont.systemFont(ofSize: 13),
+			withIRCFormatting: NSFont.systemFont(ofSize: NSFont.systemFontSize),
 			preferredFontColor: .controlTextColor
 		) ?? NSAttributedString()
 		return AttributedString(formatted)

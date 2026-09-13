@@ -1,4 +1,4 @@
-/*  *********************************************************************
+/* *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
@@ -8,7 +8,7 @@ import AppKit
 import Testing
 
 @MainActor
-private final class GLTCompletionWindow: NicknameCompletionWindow {
+private final class CompletionWindow: NicknameCompletionWindow {
 	var inputTextField: MainWindowTextView!
 	var selectedClient: IRCClient?
 	var selectedChannel: Channel?
@@ -70,8 +70,8 @@ struct InputHandlingTests {
 		return textField
 	}
 
-	private func makeChannel(on client: IRCClient, nicknames: [String]) -> IRCChannel {
-		let channel = IRCChannel(config: ChannelConfig(channelName: "#chat"))
+	private func makeChannel(on client: IRCClient, nicknames: [String]) -> Channel {
+		let channel = Channel(config: ChannelConfig(channelName: "#chat"))
 		channel.associatedClient = client
 		channel.activate()
 		for nickname in nicknames {
@@ -158,11 +158,9 @@ struct InputHandlingTests {
 
 	@Test("Completing a local command keeps the command prefix and adds a space")
 	func nicknameCompletionCompletesLocalCommandAndPreservesCommandPrefix() {
-		CommandIndex.populateCommandIndex()
-
 		let host = hostWindow()
 		let textField = makeTextField(in: host)
-		let window = GLTCompletionWindow()
+		let window = CompletionWindow()
 		window.inputTextField = textField
 		textField.stringValue = "/jo"
 		textField.setSelectedRange(NSRange(location: 3, length: 0))
@@ -177,12 +175,12 @@ struct InputHandlingTests {
 	@Test("Completing a nickname draws on the channel members and the configured suffix")
 	func nicknameCompletionUsesChannelMembersAndConfiguredSuffix() {
 		withPreference(Self.completionSuffixKey, setTo: ": ") {
-			let client = GLTTestClient()
+			let client = TestClient()
 			let channel = makeChannel(on: client, nicknames: ["Alice"])
 
 			let host = hostWindow()
 			let textField = makeTextField(in: host)
-			let window = GLTCompletionWindow()
+			let window = CompletionWindow()
 			window.selectedClient = client
 			window.selectedChannel = channel
 			window.inputTextField = textField
@@ -199,12 +197,12 @@ struct InputHandlingTests {
 	@Test("Repeated completion cycles through one coherent session in both directions")
 	func nicknameCompletionCyclesThroughCandidates() {
 		withPreference(Self.completionSuffixKey, setTo: ": ") {
-			let client = GLTTestClient()
+			let client = TestClient()
 			let channel = makeChannel(on: client, nicknames: ["Bob", "Alice"])
 
 			let host = hostWindow()
 			let textField = makeTextField(in: host)
-			let window = GLTCompletionWindow()
+			let window = CompletionWindow()
 			window.selectedClient = client
 			window.selectedChannel = channel
 			window.inputTextField = textField
@@ -225,8 +223,8 @@ struct InputHandlingTests {
 
 	@Test("Production completion over a large attached member list never publishes weight decay")
 	func largeMemberListCompletionDoesNotPublish() {
-		let client = GLTTestClient()
-		let channel = IRCChannel(config: ChannelConfig(channelName: "#completion"))
+		let client = TestClient()
+		let channel = Channel(config: ChannelConfig(channelName: "#completion"))
 		channel.associatedClient = client
 		channel.activate()
 		let memberList = MemberList()
@@ -247,7 +245,7 @@ struct InputHandlingTests {
 
 		let host = hostWindow()
 		let textField = makeTextField(in: host)
-		let window = GLTCompletionWindow()
+		let window = CompletionWindow()
 		window.inputTextField = textField
 		window.selectedClient = client
 		window.selectedChannel = channel
@@ -283,12 +281,12 @@ struct InputHandlingTests {
 	@Test("A refused completion changes neither the field nor the session")
 	func nicknameCompletionLeavesNoSessionWhenTheEditIsRefused() {
 		withPreference(Self.completionSuffixKey, setTo: ": ") {
-			let client = GLTTestClient()
+			let client = TestClient()
 			let channel = makeChannel(on: client, nicknames: ["Alice"])
 
 			let host = hostWindow()
 			let textField = makeTextField(in: host)
-			let window = GLTCompletionWindow()
+			let window = CompletionWindow()
 			window.selectedClient = client
 			window.selectedChannel = channel
 			window.inputTextField = textField

@@ -119,7 +119,7 @@ public extension IRCClient {
 		 read our own TAGMSG echoed back under a different casing as somebody
 		 else's and filed it in a query with ourselves. */
 		let senderIsMyself = sender.isEmpty == false && nicknameIsMyself(sender)
-		let channel: IRCChannel? = if stringIsChannelName(target) {
+		let channel: Channel? = if stringIsChannelName(target) {
 			findChannel(target)
 		} else if !sender.isEmpty, !senderIsMyself {
 			findChannel(sender)
@@ -141,7 +141,7 @@ public extension IRCClient {
 		   message.isHistoric == false
 		{
 			typingTracker.noteTypingState(
-				IRCTypingTracker.state(forTagValue: typing),
+				TypingTracker.state(forTagValue: typing),
 				fromNickname: sender,
 				in: channel,
 				at: Date()
@@ -158,7 +158,7 @@ public extension IRCClient {
 	/// Hands the one client tag pair that has a destination — a reaction — to
 	/// the view drawing `item`.
 	@MainActor
-	func deliverTags(_ clientTags: [String: String], fromSender sender: String, in item: IRCTreeItem) {
+	func deliverTags(_ clientTags: [String: String], fromSender sender: String, in item: TreeItem) {
 		guard let reaction = clientTags["draft/react"], !reaction.isEmpty,
 		      let reactedTo = clientTags["draft/reply"], !reactedTo.isEmpty,
 		      !sender.isEmpty

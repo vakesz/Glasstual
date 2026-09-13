@@ -66,7 +66,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("A continued capability listing is not answered until the last line arrives")
 	func capabilityListContinuationDefersRequests() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS * :multi-prefix sasl=PLAIN,EXTERNAL",
@@ -89,7 +89,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("An acknowledgement enables the capability and asks for the next one")
 	func acknowledgementEnablesCapabilityAndContinuesNegotiation() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :multi-prefix server-time",
@@ -119,7 +119,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("A vendor spelling of server-time enables the generic capability")
 	func vendorServerTimeEnablesGenericBit() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		try client.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :znc.in/server-time-iso",
@@ -204,7 +204,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("Nested batches are replayed in the order the server sent them")
 	func nestedBatchesAreReplayedInOrder() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.enableCapability(.batch)
 		let lines = [
 			":irc.example.net BATCH +outer example.com/outer",
@@ -240,7 +240,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("A message tagged with an unknown batch is delivered rather than queued")
 	func messagesOutsideAnOpenBatchAreNotQueued() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.enableCapability(.batch)
 
 		let filtered = try client.filterBatchCommandIncomingData(message(
@@ -253,7 +253,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("A standard reply is printed to the channel it names, or to the console")
 	func standardRepliesArePrintedToConsoleOrChannel() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		try client.receiveStandardReply(message(
 			":irc.example.net FAIL BOX BOXES_INVALID STACK CLOCKWISE :Given boxes are not supported",
@@ -306,7 +306,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("A tag message is only sent once message tags are negotiated")
 	func tagMessageIsOnlySentWithMessageTagsEnabled() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let typing = ["+typing": "active"]
 
 		#expect(client.sendTagMessage(typing, toTarget: "#c") == false)
@@ -321,7 +321,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("Tags are dropped from a command until message tags are negotiated")
 	func tagsAreDroppedFromCommandsWithoutMessageTags() {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		client.sendCommand("PRIVMSG", arguments: ["#c", "hello"], tags: ["+draft/reply": "abc"])
 		#expect(sentLines(of: client) == ["PRIVMSG #c :hello"])
@@ -334,7 +334,7 @@ struct IRCClientNegotiationTests {
 
 	@Test("A received tag message carrying no client-only tag prints nothing")
 	func receivedTagMessageWithoutClientTagsIsIgnored() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 
 		try client.receiveTagMessage(message("@msgid=1 :a!u@h TAGMSG #c", on: client))
 		try client.receiveTagMessage(message("@+typing=active;msgid=2 :a!u@h TAGMSG #c", on: client))
@@ -510,7 +510,7 @@ struct IRCClientNegotiationTests {
 		#expect(client.saslMechanism == chosen)
 	}
 
-	private func expectPrintedLineContaining(_ text: String, on client: GLTTestClient) {
+	private func expectPrintedLineContaining(_ text: String, on client: TestClient) {
 		let bodies = (client.printedLines as NSArray).compactMap {
 			($0 as? [String: Any])?["messageBody"] as? String
 		}
@@ -518,12 +518,12 @@ struct IRCClientNegotiationTests {
 		#expect(bodies.contains { $0.contains(text) })
 	}
 
-	private func makeClient(configuration: NSDictionary, nicknamePassword: String) -> GLTTestClient {
+	private func makeClient(configuration: NSDictionary, nicknamePassword: String) -> TestClient {
 		guard let configuration = configuration as? [String: Any] else {
 			preconditionFailure("Test configuration must bridge to a Swift dictionary")
 		}
 
-		return GLTTestClient(
+		return TestClient(
 			configDictionary: configuration,
 			nicknamePassword: nicknamePassword
 		)
@@ -533,21 +533,21 @@ struct IRCClientNegotiationTests {
 		try #require(Message(line: line, on: client))
 	}
 
-	private func capabilityCommands(of client: GLTTestClient) -> [String] {
+	private func capabilityCommands(of client: TestClient) -> [String] {
 		(client.sentCapabilityCommands as NSArray).compactMap { $0 as? String }
 	}
 
-	private func sentLines(of client: GLTTestClient) -> [String] {
+	private func sentLines(of client: TestClient) -> [String] {
 		(client.sentLines as NSArray).compactMap { $0 as? String }
 	}
 
-	private func printedLine(at index: Int, on client: GLTTestClient) -> [String: Any]? {
+	private func printedLine(at index: Int, on client: TestClient) -> [String: Any]? {
 		client.printedLines[index] as? [String: Any]
 	}
 
 	private func expectPrintedLine(
 		at index: Int,
-		on client: GLTTestClient,
+		on client: TestClient,
 		body: String,
 		type: LogLineType,
 		channel: Channel?,

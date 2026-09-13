@@ -81,7 +81,7 @@ struct IRCWHOReply {
 
 @MainActor
 extension IRCClient {
-	func receiveWhoReply(in channel: IRCChannel, reply: IRCWHOReply) {
+	func receiveWhoReply(in channel: Channel, reply: IRCWHOReply) {
 		let parsedFlags = IRCWHOFlags.parse(
 			reply.flags,
 			monitorAwayStatus: monitorAwayStatus,

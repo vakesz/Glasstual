@@ -66,9 +66,9 @@ struct HistoricLogFetchOutcomeTests {
 					return
 				}
 				#expect(olderReason == reason)
-				#expect(HistoricLogDatabase.fetchEntries(
+				#expect(HistoricLogDatabase.fetchOutcome(
 					in: context, viewIdentifier: "view", ascending: true, fetchLimit: 10, limitToDate: nil
-				).isEmpty)
+				).entries.isEmpty)
 				return
 			}
 			guard case let .page(entries) = result else {

@@ -28,7 +28,7 @@ struct CompatibilitySurfaceTests {
 		#expect(clientConfig.awayNickname == "")
 		#expect(clientConfig.proxyAddress == nil)
 
-		let client = GLTTestClient()
+		let client = TestClient()
 		let connection = Connection(config: Glasstual.IRCConnectionConfig(), onClient: client)
 		#expect(connection.client != nil)
 		#expect(connection.uniqueIdentifier.isEmpty == false)

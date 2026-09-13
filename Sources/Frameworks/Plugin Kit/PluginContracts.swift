@@ -120,18 +120,3 @@ public protocol PluginServerMessageIntercepting: AnyObject {
 public protocol PluginMessageRendering: AnyObject, Sendable {
 	nonisolated func willRenderMessage(_ event: PluginRenderEvent) -> String? // nonisolated: pure
 }
-
-@MainActor
-public protocol PluginUserInputIntercepting: AnyObject {
-	func interceptUserInput(_ input: PluginUserInput) -> Any?
-}
-
-@MainActor
-public protocol PluginPostedMessageHandling: AnyObject {
-	func didPostNewMessage(_ message: PluginPostedMessage)
-}
-
-@MainActor
-public protocol PluginOutputSuppressionProviding: AnyObject {
-	var pluginOutputSuppressionRules: [PluginOutputSuppressionRule] { get }
-}

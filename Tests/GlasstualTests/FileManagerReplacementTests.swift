@@ -31,7 +31,9 @@ struct FileManagerReplacementTests {
 		#expect(try Data(contentsOf: destination) == Data("old".utf8))
 		#expect(try Data(contentsOf: source) == Data("new".utf8))
 		#expect(try manager.contentsOfDirectory(atPath: root.path).sorted() == ["destination", "source"])
-		#expect(manager.replaceItem(at: destination, withItemAt: root.appendingPathComponent("missing")) == false)
+		#expect(throws: (any Error).self) {
+			try manager.stageAndReplaceItem(at: destination, withItemAt: root.appendingPathComponent("missing"))
+		}
 		#expect(try Data(contentsOf: destination) == Data("old".utf8))
 		try manager.stageAndReplaceItem(at: source, withItemAt: source, options: .removeIfExists)
 		#expect(try Data(contentsOf: source) == Data("new".utf8))

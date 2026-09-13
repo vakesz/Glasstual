@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -16,7 +16,6 @@ import SwiftUI
 @MainActor
 public protocol AddressBookSheetDelegate: AnyObject {
 	func addressBookSheet(_ sender: AddressBookSheet, onOk entry: AddressBookEntry)
-	func addressBookSheetWillClose(_ sender: AddressBookSheet)
 }
 
 @MainActor
@@ -42,8 +41,8 @@ public final class AddressBookSheet: MainWindowSheetSession {
 	private func installSheet() {
 		let rootView = AddressBookEntryView(
 			model: model,
-			submit: { [weak self] in self?.ok(nil) },
-			cancel: { [weak self] in self?.cancel(nil) }
+			submit: { [weak self] in self?.submit() },
+			cancel: { [weak self] in self?.cancel() }
 		)
 		setContent(rootView)
 	}
@@ -52,14 +51,10 @@ public final class AddressBookSheet: MainWindowSheetSession {
 		startSheet()
 	}
 
-	override public func ok(_ sender: Any?) {
+	override public func submit() {
 		guard let entry = model.validatedEntry() else { return }
 
 		entryDelegate?.addressBookSheet(self, onOk: entry)
-		super.ok(sender)
-	}
-
-	override public func sheetDidEnd(withReturnCode _: Int) {
-		entryDelegate?.addressBookSheetWillClose(self)
+		super.submit()
 	}
 }

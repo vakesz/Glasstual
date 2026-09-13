@@ -93,7 +93,7 @@ nonisolated enum IRCServerQuirks { // nonisolated: value
 		static let sendQueueExceeded = "(Max SendQ exceeded)"
 	}
 
-	/// The WHOX token the client tags its own WHO requests with, so it can
-	/// recognise the replies to them.
-	static let whoxResponseToken = "152"
+	/// The WHOX token the client tags its own WHO requests with, and matches the
+	/// replies against: the request and the reply carry the same number.
+	static let whoxToken = "152"
 }

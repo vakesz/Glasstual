@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -36,34 +36,13 @@
  *
  *********************************************************************** */
 
+/** The channel-list window, as the protocol layer asks for it.
+
+ `Protocol/` must not depend on feature presentation, so the two calls it makes
+ land here, beside the scene that answers them. Every other caller reaches
+ ``ApplicationScenes`` directly. */
 @MainActor
 extension IRCClient {
-	func openChannelInviteExceptionList() {
-		openChannelAccessList(entryType: .inviteException)
-	}
-
-	func openChannelBanExceptionList() {
-		openChannelAccessList(entryType: .banException)
-	}
-
-	func openChannelBanList() {
-		openChannelAccessList(entryType: .ban)
-	}
-
-	func openChannelQuietList() {
-		openChannelAccessList(entryType: .quiet)
-	}
-
-	/** Opens the access list for the selected channel in its own window.
-
-	 A window rather than a sheet, so the channel the list is about can be read
-	 and typed into while its bans are being looked over; the mode changes the
-	 window makes are sent as they are made and it stays open for the next one. */
-	func openChannelAccessList(entryType: ChannelBanListEntryType) {
-		guard let channel = AppController.shared.mainWindow?.selectedChannel else { return }
-		SharedApplication.sharedApplicationScenes().openChannelAccessList(entryType: entryType, in: channel)
-	}
-
 	func channelListSession() -> ServerChannelListSession? {
 		SharedApplication.sharedApplicationScenes().serverChannelList(for: uniqueIdentifier)
 	}

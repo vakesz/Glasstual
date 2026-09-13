@@ -12,14 +12,14 @@ import Testing
 struct DateValueFormattingTests {
 	@Test("A Date is formatted")
 	func formatsDate() {
-		let formatted = formatDateLongStyle(Date(timeIntervalSince1970: 0) as Any, false)
+		let formatted = formatDate(Date(timeIntervalSince1970: 0) as Any, .long, .long, false)
 
 		#expect(formatted?.isEmpty == false)
 	}
 
 	@Test("An ISO 8601 string is parsed before it is formatted")
 	func formatsISOString() throws {
-		let formatted = try #require(formatDateLongStyle("2024-03-05T12:30:00.000Z" as Any, false))
+		let formatted = try #require(formatDate("2024-03-05T12:30:00.000Z" as Any, .long, .long, false))
 
 		#expect(formatted.contains("2024"))
 		// The raw server text must not simply be echoed back.
@@ -28,14 +28,14 @@ struct DateValueFormattingTests {
 
 	@Test("A Unix timestamp string is parsed before it is formatted")
 	func formatsEpochString() throws {
-		let formatted = try #require(formatDateLongStyle("1709641800" as Any, false))
+		let formatted = try #require(formatDate("1709641800" as Any, .long, .long, false))
 
 		#expect(formatted.contains("2024"))
 	}
 
 	@Test("An unparseable string yields nil so callers can show it verbatim")
 	func rejectsUnparseableString() {
-		#expect(formatDateLongStyle("not a date" as Any, false) == nil)
+		#expect(formatDate("not a date" as Any, .long, .long, false) == nil)
 	}
 
 	/// `TimeInterval("inf")` and `TimeInterval("nan")` both parse, so a server
@@ -45,6 +45,6 @@ struct DateValueFormattingTests {
 		arguments: ["inf", "-inf", "infinity", "nan", "1e400"]
 	)
 	func rejectsNonFiniteEpochString(_ text: String) {
-		#expect(formatDateLongStyle(text as Any, false) == nil)
+		#expect(formatDate(text as Any, .long, .long, false) == nil)
 	}
 }

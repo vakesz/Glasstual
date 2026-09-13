@@ -21,7 +21,7 @@ struct FileTransferControllerTests {
 		try payload.write(to: source)
 		let counts = Mutex((started: 0, stopped: 0))
 		let model = FileTransferCenterModel()
-		let client = GLTTestClient()
+		let client = TestClient()
 		var files: [DCCTransferFile] = []
 		for index in 0 ..< 24 {
 			let receiving = try DCCTransfer(configuration: TransferFixture.listeningReceiver(
@@ -48,7 +48,7 @@ struct FileTransferControllerTests {
 			controller.isSender = true
 			controller.path = directory.path
 			controller.filename = source.lastPathComponent
-			controller.ownedFile = file
+			controller.takeOwnership(of: file)
 			controller.transferStatus = .connecting
 			model.add(controller)
 			let configuration = TransferFixture.diallingSender(
@@ -91,9 +91,9 @@ struct FileTransferControllerTests {
 			startAccess: { _ in counts.withLock { $0.started += 1 }; return true },
 			stopAccess: { _ in counts.withLock { $0.stopped += 1 } }
 		)
-		let controller = try receiver(on: GLTTestClient())
+		let controller = try receiver(on: TestClient())
 		controller.client = nil
-		controller.ownedFile = file
+		controller.takeOwnership(of: file)
 		let transfer = DCCTransfer(configuration: TransferFixture.listeningSender(file: file, fileSize: 1))
 		controller.transfer = transfer
 		let (gate, continuation) = AsyncStream<Void>.makeStream()
@@ -102,7 +102,7 @@ struct FileTransferControllerTests {
 			var iterator = gate.makeAsyncIterator()
 			_ = await iterator.next()
 		}
-		controller.transferDidReport(.finished, from: transfer, sessionID: controller.sessionID)
+		controller.transferDidReport(.finished, from: transfer)
 		#expect(try await file.read(at: 0, count: 1) == Data([7]))
 		#expect(counts.withLock { $0.started == 1 && $0.stopped == 0 })
 		#expect(try openDescriptorCount(for: source) == 1)
@@ -124,9 +124,9 @@ struct FileTransferControllerTests {
 			stopAccess: { _ in counts.withLock { $0.stopped += 1 } }
 		)
 		try await file.write(Data([1, 2]), at: 0)
-		let controller = try receiver(on: GLTTestClient())
+		let controller = try receiver(on: TestClient())
 		controller.client = nil
-		controller.ownedFile = file
+		controller.takeOwnership(of: file)
 		controller.path = directory.path
 		controller.filename = destination.lastPathComponent
 		controller.processedFilesize = 2
@@ -172,9 +172,9 @@ struct FileTransferControllerTests {
 			stopAccess: { _ in counts.withLock { $0.stopped += 1 } }
 		)
 		try await file.write(Data([1, 2]), at: 0)
-		let controller = try receiver(on: GLTTestClient())
+		let controller = try receiver(on: TestClient())
 		controller.client = nil
-		controller.ownedFile = file
+		controller.takeOwnership(of: file)
 		controller.transferStatus = recoverable ? .recoverableError : .receiving
 		controller.closeAndPostNotification(false)
 		await controller.stopTask?.value
@@ -207,7 +207,7 @@ struct FileTransferControllerTests {
 		let source = directory.appendingPathComponent("source")
 		let payload = TransferFixture.payload(byteCount: 100_003)
 		try payload.write(to: source)
-		let client = GLTTestClient()
+		let client = TestClient()
 		let sender = try #require(FileTransferController.sender(for: client, nickname: "alice", path: source.path))
 		sender.isReversed = false
 		let configuration = try TransferFixture.listeningSender(
@@ -262,7 +262,7 @@ struct FileTransferControllerTests {
 		guard case let .listening(port) = await iterator.next() else { Issue.record("Sender did not listen"); return }
 		let senderEvents = TransferFixture.collectEvents(from: sender)
 		#expect(await sender.commitResumeOffset(37003))
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		let receiver = try receiver(on: client, port: port, size: UInt64(payload.count))
 		receiver.path = directory.path
@@ -299,7 +299,7 @@ struct FileTransferControllerTests {
 		var iterator = receiver.events.makeAsyncIterator()
 		guard case let .listening(port) = await iterator.next() else { Issue.record("Receiver did not listen"); return }
 		let receiving = TransferFixture.collectEvents(from: receiver)
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		let sender = try #require(FileTransferController.sender(for: client, nickname: "alice", path: source.path))
 		sender.isReversed = true
@@ -322,7 +322,7 @@ struct FileTransferControllerTests {
 	func stopInitializing() async throws {
 		let directory = try TransferFixture.makeDirectory()
 		defer { TransferFixture.remove(directory) }
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		let transfer = try receiver(on: client)
 		transfer.open(withPath: directory.path)
@@ -345,7 +345,7 @@ struct FileTransferControllerTests {
 		defer { TransferFixture.remove(directory) }
 		let source = directory.appendingPathComponent("source")
 		try Data([1, 2, 3]).write(to: source)
-		let client = GLTTestClient()
+		let client = TestClient()
 		let first = try #require(FileTransferController.sender(for: client, nickname: "alice", path: source.path))
 		let second = try #require(FileTransferController.sender(for: client, nickname: "bob", path: source.path))
 		let firstFile = try #require(first.ownedFile)
@@ -360,7 +360,7 @@ struct FileTransferControllerTests {
 
 	@Test("Retired actor events cannot change a replacement session")
 	func retiredEventsAreIgnored() async throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let controller = try receiver(on: client)
 		let directory = try TransferFixture.makeDirectory()
 		defer { TransferFixture.remove(directory) }
@@ -370,26 +370,25 @@ struct FileTransferControllerTests {
 		)
 		let retired = DCCTransfer(configuration: configuration)
 		let current = DCCTransfer(configuration: configuration)
-		let retiredID = controller.sessionID
 		controller.transfer = retired
 		controller.stopTransfer()
 		await controller.stopTask?.value
 		controller.transfer = current
 		controller.transferStatus = .connecting
-		controller.transferDidReport(.progress(processedBytes: 9), from: retired, sessionID: retiredID)
-		controller.transferDidReport(.finished, from: retired, sessionID: retiredID)
+		controller.transferDidReport(.progress(processedBytes: 9), from: retired)
+		controller.transferDidReport(.finished, from: retired)
 		#expect(controller.processedFilesize == 0)
 		#expect(controller.transferStatus == .connecting)
 		controller.prepareForPermanentDestruction()
 	}
 
-	@Test("Reverse address lookup failure settles receivers as well as senders")
+	@Test("Giving up on the address settles receivers as well as senders")
 	func reverseReceiverLookupFailure() throws {
 		let center = FileTransferCenter()
-		let receiver = try receiver(on: GLTTestClient(), token: "42")
+		let receiver = try receiver(on: TestClient(), token: "42")
 		receiver.transferStatus = .waitingForLocalIPAddress
 		center.model.add(receiver)
-		center.internetAddressLookupFailed()
+		center.clearIPAddress()
 		#expect(receiver.transferStatus == .recoverableError)
 		receiver.prepareForPermanentDestruction()
 	}
@@ -397,7 +396,7 @@ struct FileTransferControllerTests {
 	@Test("Notification Accept asks for the normal destination and body click only selects")
 	func notificationUsesNormalDestination() throws {
 		let center = FileTransferCenter()
-		let transfer = try receiver(on: GLTTestClient())
+		let transfer = try receiver(on: TestClient())
 		center.model.add(transfer)
 		center.model.filter = .sending
 		#expect(center.respondToNotification(
@@ -423,7 +422,7 @@ struct FileTransferControllerTests {
 	@Test("Reverse ACCEPT lookup matches a receiver, token, peer, client and wire filename")
 	func reverseAcceptScope() throws {
 		let center = FileTransferCenter()
-		let client = GLTTestClient()
+		let client = TestClient()
 		let receiver = try receiver(on: client, token: "42")
 		receiver.filename = "file_1.bin"
 		let sender = try self.receiver(on: client, token: "42")
@@ -453,7 +452,7 @@ struct FileTransferControllerTests {
 		) == nil)
 		#expect(center.fileTransfer(
 			matchingToken: "42",
-			client: GLTTestClient(),
+			client: TestClient(),
 			peerNickname: "alice",
 			filename: "file.bin",
 			isSender: false
@@ -469,7 +468,7 @@ struct FileTransferControllerTests {
 
 	@Test("An ACKless completion stays explicit in the transfer row")
 	func acklessRowStatus() throws {
-		let transfer = try receiver(on: GLTTestClient())
+		let transfer = try receiver(on: TestClient())
 		transfer.isSender = true
 		transfer.completion = .unacknowledged
 		transfer.transferStatus = .complete

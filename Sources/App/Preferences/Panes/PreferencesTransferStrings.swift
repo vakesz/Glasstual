@@ -14,134 +14,134 @@ import Foundation
 
 enum PreferencesFileTransfersStrings {
 	static var destinationLabel: String {
-		String(localized: .TDCPreferencesController.fileTransfersDestinationLabel)
+		String(localized: .Settings.fileTransfersDestinationLabel)
 	}
 
 	static var destinationNote: String {
-		String(localized: .TDCPreferencesController.fileTransfersDestinationNote)
+		String(localized: .Settings.fileTransfersDestinationNote)
 	}
 
 	static var detectionAccessibility: String {
-		String(localized: .TDCPreferencesController.fileTransfersDetectionAccessibility)
+		String(localized: .Settings.fileTransfersDetectionAccessibility)
 	}
 
 	static var detectionLabel: String {
-		String(localized: .TDCPreferencesController.fileTransfersDetectionLabel)
+		String(localized: .Settings.fileTransfersDetectionLabel)
 	}
 
 	static var detectionManual: String {
-		String(localized: .TDCPreferencesController.fileTransfersDetectionManual)
+		String(localized: .Settings.fileTransfersDetectionManual)
 	}
 
 	static var detectionRouterFirstParty: String {
-		String(localized: .TDCPreferencesController.fileTransfersDetectionRouterFirstParty)
+		String(localized: .Settings.fileTransfersDetectionRouterFirstParty)
 	}
 
 	static var detectionRouterOnly: String {
-		String(localized: .TDCPreferencesController.fileTransfersDetectionRouterOnly)
+		String(localized: .Settings.fileTransfersDetectionRouterOnly)
 	}
 
 	static var detectionRouterThirdParty: String {
-		String(localized: .TDCPreferencesController.fileTransfersDetectionRouterThirdParty)
+		String(localized: .Settings.fileTransfersDetectionRouterThirdParty)
 	}
 
 	static var manualAddressAccessibility: String {
-		String(localized: .TDCPreferencesController.fileTransfersManualAddressAccessibility)
+		String(localized: .Settings.fileTransfersManualAddressAccessibility)
 	}
 
 	static var manualAddressLabel: String {
-		String(localized: .TDCPreferencesController.fileTransfersManualAddressLabel)
+		String(localized: .Settings.fileTransfersManualAddressLabel)
 	}
 
 	static var portRangeFirst: String {
-		String(localized: .TDCPreferencesController.fileTransfersPortRangeFirst)
+		String(localized: .Settings.fileTransfersPortRangeFirst)
 	}
 
 	static var portRangeLabel: String {
-		String(localized: .TDCPreferencesController.fileTransfersPortRangeLabel)
+		String(localized: .Settings.fileTransfersPortRangeLabel)
 	}
 
 	static var portRangeLast: String {
-		String(localized: .TDCPreferencesController.fileTransfersPortRangeLast)
+		String(localized: .Settings.fileTransfersPortRangeLast)
 	}
 
 	static var portRangeSeparator: String {
-		String(localized: .TDCPreferencesController.fileTransfersPortRangeSeparator)
+		String(localized: .Settings.fileTransfersPortRangeSeparator)
 	}
 
 	static var preventSleep: String {
-		String(localized: .TDCPreferencesController.fileTransfersPreventSleep)
+		String(localized: .Settings.fileTransfersPreventSleep)
 	}
 
 	static var replyActionAccessibility: String {
-		String(localized: .TDCPreferencesController.fileTransfersReplyActionAccessibility)
+		String(localized: .Settings.fileTransfersReplyActionAccessibility)
 	}
 
 	static var replyActionLabel: String {
-		String(localized: .TDCPreferencesController.fileTransfersReplyActionLabel)
+		String(localized: .Settings.fileTransfersReplyActionLabel)
 	}
 
 	static var replyDownload: String {
-		String(localized: .TDCPreferencesController.fileTransfersReplyDownload)
+		String(localized: .Settings.fileTransfersReplyDownload)
 	}
 
 	static var replyIgnore: String {
-		String(localized: .TDCPreferencesController.fileTransfersReplyIgnore)
+		String(localized: .Settings.fileTransfersReplyIgnore)
 	}
 
 	static var replyOpenDialog: String {
-		String(localized: .TDCPreferencesController.fileTransfersReplyOpenDialog)
+		String(localized: .Settings.fileTransfersReplyOpenDialog)
 	}
 
 	static var reverseDcc: String {
-		String(localized: .TDCPreferencesController.fileTransfersReverseDcc)
+		String(localized: .Settings.fileTransfersReverseDcc)
 	}
 }
 
 enum PreferencesLogLocationStrings {
 	static var clearDestination: String {
-		String(localized: .TDCPreferencesController.logLocationClearDestination)
+		String(localized: .Settings.logLocationClearDestination)
 	}
 
-	static var label: String {
-		String(localized: .TDCPreferencesController.logLocationLabel)
+	static var folderLabel: String {
+		String(localized: .Settings.logLocationFolderLabel)
+	}
+
+	static var logToDisk: String {
+		String(localized: .Settings.logLocationToggle)
 	}
 
 	static var selectDestination: String {
-		String(localized: .TDCPreferencesController.logLocationSelectDestination)
+		String(localized: .Settings.logLocationSelectDestination)
 	}
 }
 
 enum PreferencesHiddenStrings {
 	static var appNap: String {
-		String(localized: .TDCPreferencesController.hiddenAppNap)
+		String(localized: .Settings.hiddenAppNap)
 	}
 
 	static var loadHistoryLazily: String {
-		String(localized: .TDCPreferencesController.hiddenLoadHistoryLazily)
+		String(localized: .Settings.hiddenLoadHistoryLazily)
 	}
 
 	static var restartNote: String {
-		String(localized: .TDCPreferencesController.hiddenRestartNote)
+		String(localized: .Settings.hiddenRestartNote)
 	}
 
 	static var scrollbackVisibleLimit: String {
-		String(localized: .TDCPreferencesController.hiddenScrollbackVisibleLimit)
+		String(localized: .Settings.hiddenScrollbackVisibleLimit)
 	}
 
 	static var scrollbackVisibleLimitNote: String {
-		String(localized: .TDCPreferencesController.hiddenScrollbackVisibleLimitNote)
+		String(localized: .Settings.hiddenScrollbackVisibleLimitNote)
 	}
 
 	static var sidebarTranslucency: String {
-		String(localized: .TDCPreferencesController.hiddenSidebarTranslucency)
+		String(localized: .Settings.hiddenSidebarTranslucency)
 	}
 
 	static var warning: String {
-		String(localized: .TDCPreferencesController.hiddenWarning)
-	}
-
-	static var warningLabel: String {
-		String(localized: .TDCPreferencesController.hiddenWarningLabel)
+		String(localized: .Settings.hiddenWarning)
 	}
 }

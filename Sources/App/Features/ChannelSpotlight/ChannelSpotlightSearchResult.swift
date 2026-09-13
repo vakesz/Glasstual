@@ -38,42 +38,91 @@
 import CocoaExtensions
 import Foundation
 
-public final class ChannelSpotlightSearchResult: NSObject, Identifiable {
-	/// The channel this row stands for, captured when the row was made.
-	///
-	/// A channel can close while the spotlight is open, so the reference is
-	/// weak — but the identity must not go with it, or the table would lose
-	/// the row it is still drawing.
+/// One channel the spotlight can offer, as the row draws it.
+///
+/// A value rather than the channel itself: a channel can close while the
+/// spotlight is open, so the row keeps the identity the world can be asked for
+/// again and the counts as they stood when the list was built.
+public nonisolated struct ChannelSpotlightSearchResult: Identifiable, Hashable, Sendable { // nonisolated: value
 	public let id: String
+	/// The server the channel belongs to, which channel navigation can be
+	/// restricted to.
+	public let clientID: String
+	public let channelName: String
+	/// Empty when the channel has no server, which is what the title falls back
+	/// to the bare channel name for.
+	public let networkName: String
+	public let highlightCount: Int
+	public let unreadCount: Int
+	/// How well the channel name matches what was typed. Zero until it is
+	/// scored, which is also what an empty search leaves it at.
+	public var distance = 0.0
 
-	public private(set) weak var channel: IRCChannel?
-	public private(set) var distance = 0.0
-	/// The server the channel belongs to, likewise captured up front.
-	public let clientId: String
-
-	@available(*, unavailable)
-	override public init() {
-		fatalError("init() is unavailable; use init(channel:)")
+	public init(
+		id: String,
+		clientID: String,
+		channelName: String,
+		networkName: String,
+		highlightCount: Int = 0,
+		unreadCount: Int = 0,
+		distance: Double = 0
+	) {
+		self.id = id
+		self.clientID = clientID
+		self.channelName = channelName
+		self.networkName = networkName
+		self.highlightCount = highlightCount
+		self.unreadCount = unreadCount
+		self.distance = distance
 	}
 
-	public init(channel: IRCChannel) {
-		id = channel.uniqueIdentifier
-		clientId = channel.associatedClient?.uniqueIdentifier ?? ""
-		self.channel = channel
-		super.init()
+	/// The channel and the server it is on, or the bare name when it has no
+	/// server to name.
+	public var title: String {
+		guard networkName.isEmpty == false else { return channelName }
+		return ChannelSpotlightStrings.channelOnNetwork(channelName, networkName)
 	}
 
-	public func recalculateDistance(with searchString: String) {
-		guard searchString.isEmpty == false, let channel else {
-			distance = 0
-			return
-		}
+	/** What is waiting in the channel, or nothing at all.
 
-		distance = Double(
-			channel.name.matchScore(
-				against: searchString,
-				lengthPenaltyWeight: 1.0
+	 Every row used to read "0 highlights, 0 unread messages", which is the
+	 state a channel is in for most of the time it is open. A count is worth a
+	 line when there is something to count. */
+	public var activity: String? {
+		switch (highlightCount, unreadCount) {
+		case (0, 0):
+			nil
+		case let (highlights, 0):
+			ChannelSpotlightStrings.highlights(highlights)
+		case let (0, unread):
+			ChannelSpotlightStrings.unreadMessages(unread)
+		case let (highlights, unread):
+			ChannelSpotlightStrings.combined(
+				ChannelSpotlightStrings.highlights(highlights),
+				ChannelSpotlightStrings.unreadMessages(unread)
 			)
+		}
+	}
+
+	public func scored(against searchString: String) -> Self {
+		var scored = self
+		scored.distance = searchString.isEmpty
+			? 0
+			: Double(channelName.matchScore(against: searchString, lengthPenaltyWeight: 1.0))
+		return scored
+	}
+}
+
+public extension ChannelSpotlightSearchResult {
+	@MainActor
+	init(channel: Channel) {
+		self.init(
+			id: channel.uniqueIdentifier,
+			clientID: channel.associatedClient?.uniqueIdentifier ?? "",
+			channelName: channel.name,
+			networkName: channel.associatedClient?.networkNameAlt ?? "",
+			highlightCount: channel.nicknameHighlightCount,
+			unreadCount: channel.treeUnreadCount
 		)
 	}
 }
@@ -93,14 +142,12 @@ public nonisolated enum ChannelSpotlightSearchResults { // nonisolated: value
 	/// - Parameter clientID: the only server to show channels from, or `nil`
 	///   for every server. An empty string matches only results with no server,
 	///   which is what the predicate did when no client was selected.
-	public static func displayed<Result>(
-		_ results: [Result],
-		restrictedToClient clientID: String?,
-		distance: (Result) -> Double,
-		clientID clientIDOf: (Result) -> String
-	) -> [Result] {
+	public static func displayed(
+		_ results: [ChannelSpotlightSearchResult],
+		restrictedToClient clientID: String?
+	) -> [ChannelSpotlightSearchResult] {
 		let matches = results.enumerated().filter { _, result in
-			guard distance(result) >= minimumDistance else {
+			guard result.distance >= minimumDistance else {
 				return false
 			}
 
@@ -108,21 +155,18 @@ public nonisolated enum ChannelSpotlightSearchResults { // nonisolated: value
 				return true
 			}
 
-			return clientIDOf(result).caseInsensitiveCompare(clientID) == .orderedSame
+			return result.clientID.caseInsensitiveCompare(clientID) == .orderedSame
 		}
 
 		/* Ties keep the order they arrived in: the row a result lands on is
 		 also its ⌘-number shortcut, so it must not shuffle between redraws. */
 		return matches
 			.sorted { lhs, rhs in
-				let lhsDistance = distance(lhs.element)
-				let rhsDistance = distance(rhs.element)
-
-				if lhsDistance == rhsDistance {
+				if lhs.element.distance == rhs.element.distance {
 					return lhs.offset < rhs.offset
 				}
 
-				return lhsDistance > rhsDistance
+				return lhs.element.distance > rhs.element.distance
 			}
 			.map(\.element)
 	}

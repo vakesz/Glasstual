@@ -13,32 +13,32 @@
 import Foundation
 
 nonisolated enum HighlightEntryStrings { // nonisolated: value
-	static var channelAccessibilityHint: String {
-		String(localized: .TDCHighlightEntrySheet.channelAccessibilityHint)
+	static var channelHelp: String {
+		String(localized: .TDCHighlightEntrySheet.channelHelp)
 	}
 
-	static var channelAccessibilityLabel: String {
-		String(localized: .TDCHighlightEntrySheet.channelAccessibilityLabel)
+	static var channelLabel: String {
+		String(localized: .TDCHighlightEntrySheet.channelLabel)
 	}
 
-	static var channelConnector: String {
-		String(localized: .TDCHighlightEntrySheet.channelConnector)
+	static var ruleDescription: String {
+		String(localized: .TDCHighlightEntrySheet.ruleDescription)
 	}
 
-	static var keywordAccessibilityHint: String {
-		String(localized: .TDCHighlightEntrySheet.keywordAccessibilityHint)
+	static var keywordHelp: String {
+		String(localized: .TDCHighlightEntrySheet.keywordHelp)
 	}
 
-	static var keywordAccessibilityLabel: String {
-		String(localized: .TDCHighlightEntrySheet.keywordAccessibilityLabel)
+	static var keywordLabel: String {
+		String(localized: .TDCHighlightEntrySheet.keywordLabel)
 	}
 
-	static var keywordConnector: String {
-		String(localized: .TDCHighlightEntrySheet.keywordConnector)
+	static var keywordPlaceholder: String {
+		String(localized: .TDCHighlightEntrySheet.keywordPlaceholder)
 	}
 
-	static var matchTypeAccessibilityLabel: String {
-		String(localized: .TDCHighlightEntrySheet.matchTypeAccessibilityLabel)
+	static var matchTypeLabel: String {
+		String(localized: .TDCHighlightEntrySheet.matchTypeLabel)
 	}
 
 	static var windowTitle: String {

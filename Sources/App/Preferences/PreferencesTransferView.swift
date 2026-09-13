@@ -7,28 +7,37 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// One alert per message the transfer workflow produces, shown by whichever
-/// view owns the presentation.
+/// The one message the transfer workflow is waiting to have acknowledged,
+/// shown by whichever view owns the presentation.
 private struct PreferencesTransferAlert: ViewModifier {
-	let title: String
-	let message: String?
-	let isEnabled: Bool
+	let message: PreferencesTransferMessage?
 	let acknowledge: () -> Void
 
 	func body(content: Content) -> some View {
-		content.alert(title, isPresented: Binding(
-			get: { isEnabled && message != nil },
-			set: { isPresented in
-				if isPresented == false {
-					acknowledge()
+		content.alert(
+			message?.title ?? "",
+			isPresented: Binding(
+				get: { message != nil },
+				set: { isPresented in
+					if isPresented == false {
+						acknowledge()
+					}
 				}
-			}
-		)) {
+			),
+			presenting: message
+		) { _ in
 			Button(PromptStrings.Action.confirmation, action: acknowledge)
-		} message: {
-			Text(verbatim: message ?? "")
+		} message: { message in
+			Text(verbatim: message.body)
 		}
 	}
+}
+
+/// One setting an import would change, as the Settings window names it.
+private struct PreferencesChangedSetting: Identifiable {
+	let id: String
+	let displayName: String
+	let isRemoved: Bool
 }
 
 struct PreferencesTransferPreviewView: View {
@@ -44,7 +53,7 @@ struct PreferencesTransferPreviewView: View {
 
 	var body: some View {
 		let plan = preview.plan
-		return VStack(alignment: .leading, spacing: 16) {
+		return VStack(alignment: .leading, spacing: PreferencesMetrics.spacingLarge) {
 			Text(.PreferencesTransfer.previewTitle).font(.title2)
 			Text(verbatim: preview.filename).foregroundStyle(.secondary)
 			/* A legacy file has no restore plan at all, so that segment is
@@ -65,19 +74,14 @@ struct PreferencesTransferPreviewView: View {
 				: .PreferencesTransfer.passwordsAndCertificatesStayOnThisMac)
 				.font(.callout).foregroundStyle(.secondary)
 			ScrollView {
-				VStack(alignment: .leading, spacing: 8) {
+				VStack(alignment: .leading, spacing: PreferencesMetrics.spacingMedium) {
 					if let plan {
-						Text(.PreferencesTransfer.preferencesChanged(plan.changedKeys.count))
-						ForEach(plan.changedKeys, id: \.self) { name in
-							Label(name, systemImage: plan.removedKeys.contains(name) ? "minus.circle" : "pencil")
-								.font(.caption)
-						}
+						changedSettings(in: plan)
 						clientList(plan.addedClients, title: String(localized: .PreferencesTransfer.serversToAdd))
 						clientList(plan.updatedClients, title: String(localized: .PreferencesTransfer.serversToUpdate))
 						clientList(plan.removedClients, title: String(localized: .PreferencesTransfer.serversToRemove))
-						if !preview.archive.ignoredKeys.isEmpty {
+						if preview.archive.ignoredKeys.isEmpty == false {
 							Text(.PreferencesTransfer.keysNotImported(preview.archive.ignoredKeys.count))
-							ForEach(preview.archive.ignoredKeys, id: \.self) { Text(verbatim: $0).font(.caption) }
 						}
 					} else {
 						Text(.PreferencesTransfer.fileIsNotAValidConfigurationSnapshot).foregroundStyle(.red)
@@ -107,17 +111,49 @@ struct PreferencesTransferPreviewView: View {
 		.disabled(session.isBusy)
 		.interactiveDismissDisabled(session.isBusy)
 		.modifier(PreferencesTransferAlert(
-			title: String(localized: .PreferencesTransfer.configurationTransferStopped),
-			message: session.errorMessage,
-			isEnabled: true,
+			message: session.pendingMessage,
 			acknowledge: session.acknowledge
 		))
 	}
 
+	/** What the import would change, under the names the Settings window uses.
+
+	 A stored key the window never shows has no name worth printing — its
+	 defaults spelling means nothing to the person reading the list — so those
+	 are counted rather than listed. */
+	@ViewBuilder
+	private func changedSettings(in plan: PreferencesTransferPlan) -> some View {
+		let named = plan.changedKeys
+			.compactMap { name in
+				PreferencesPaneKeys.displayName(forKeyNamed: name).map {
+					PreferencesChangedSetting(
+						id: name,
+						displayName: $0,
+						isRemoved: plan.removedKeys.contains(name)
+					)
+				}
+			}
+			.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+
+		Text(.PreferencesTransfer.preferencesChanged(plan.changedKeys.count))
+		ForEach(named) { setting in
+			Label(setting.displayName, systemImage: setting.isRemoved ? "minus.circle" : "pencil")
+				.font(.caption)
+		}
+		if plan.changedKeys.count > named.count {
+			Text(.PreferencesTransfer.otherSettingsChanged(plan.changedKeys.count - named.count))
+				.font(.caption)
+				.foregroundStyle(.secondary)
+		}
+	}
+
+	@ViewBuilder
 	private func clientList(_ names: [String], title: String) -> some View {
-		VStack(alignment: .leading) {
-			Text(verbatim: title).font(.headline)
-			Text(verbatim: names.isEmpty ? "0" : names.joined(separator: ", "))
+		if names.isEmpty == false {
+			VStack(alignment: .leading) {
+				Text(verbatim: title).font(.headline)
+				Text(verbatim: names.formatted(.list(type: .and)))
+			}
 		}
 	}
 }
@@ -126,9 +162,19 @@ struct PreferencesTransferPreviewView: View {
 struct PreferencesRecoverySection: View {
 	@Bindable var session = PreferencesTransferSession.shared
 	@State private var importRequest = PendingFileRequest<Void>()
-	@State private var exporting = false
 	@State private var choosingExportOptions = false
 	@State private var document: PreferencesPropertyListDocument?
+
+	private var exporting: Binding<Bool> {
+		Binding(
+			get: { document != nil },
+			set: {
+				if $0 == false {
+					document = nil
+				}
+			}
+		)
+	}
 
 	var body: some View {
 		let importRequestID = importRequest.request?.id
@@ -144,12 +190,9 @@ struct PreferencesRecoverySection: View {
 				}
 			}
 			.disabled(
-				session.canStart == false || importRequest.request != nil || exporting || choosingExportOptions
+				session.canStart == false || importRequest.request != nil
+					|| document != nil || choosingExportOptions
 			)
-			Text(.PreferencesTransfer.backupsNotice).font(.callout).foregroundStyle(.secondary)
-			if let result = session.result {
-				Text(verbatim: result.summary)
-			}
 			ForEach(session.backups) { backup in
 				HStack {
 					Text(backup.created, format: .dateTime.year().month().day().hour().minute().second())
@@ -169,36 +212,39 @@ struct PreferencesRecoverySection: View {
 					NSWorkspace.shared.activateFileViewerSelecting([newest.url])
 				}
 			}
-		} header: { Text(.PreferencesTransfer.configuration) }
-			.task { await session.refreshBackups() }
-			.modifier(PreferencesExportOptionsPresentation(
-				isPresented: $choosingExportOptions,
-				export: { includeCommands in
-					Task {
-						do {
-							document = try await PreferencesPropertyListDocument(data: session
-								.exportData(includeConnectCommands: includeCommands))
-							exporting = true
-						} catch { session.report(error) }
-					}
-				}
-			))
-			.fileImporter(
-				isPresented: PendingFileRequest<Void>.presentation($importRequest),
-				allowedContentTypes: [.propertyList]
-			) { result in
-				guard let importRequestID, importRequest.complete(importRequestID) != nil else { return }
-				switch result {
-				case let .success(url): Task { await session.prepareImport(from: url) }
-				case let .failure(error): session.report(error)
+		} header: {
+			Text(.PreferencesTransfer.settingsAndRecovery)
+		} footer: {
+			Text(.PreferencesTransfer.backupsNotice).font(.callout).foregroundStyle(.secondary)
+		}
+		.task { await session.refreshBackups() }
+		.modifier(PreferencesExportOptionsPresentation(
+			isPresented: $choosingExportOptions,
+			export: { includeCommands in
+				Task {
+					do {
+						document = try await PreferencesPropertyListDocument(data: session
+							.exportData(includeConnectCommands: includeCommands))
+					} catch { session.report(error) }
 				}
 			}
-			.fileExporter(isPresented: $exporting, document: document, contentType: .propertyList,
-			              defaultFilename: PreferencesImportExport.defaultArchiveFilename)
-			{ result in
-				document = nil
-				session.completeExport(result)
+		))
+		.fileImporter(
+			isPresented: PendingFileRequest<Void>.presentation($importRequest),
+			allowedContentTypes: [.propertyList]
+		) { result in
+			guard let importRequestID, importRequest.complete(importRequestID) != nil else { return }
+			switch result {
+			case let .success(url): Task { await session.prepareImport(from: url) }
+			case let .failure(error): session.report(error)
 			}
+		}
+		.fileExporter(isPresented: exporting, document: document, contentType: .propertyList,
+		              defaultFilename: PreferencesImportExport.defaultArchiveFilename)
+		{ result in
+			document = nil
+			session.completeExport(result)
+		}
 	}
 }
 
@@ -209,7 +255,7 @@ struct PreferencesExportOptionsView: View {
 	@State private var includeConnectCommands = false
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 16) {
+		VStack(alignment: .leading, spacing: PreferencesMetrics.spacingLarge) {
 			Text(.PreferencesTransfer.exportOptions).font(.title2)
 			Toggle(.PreferencesTransfer.includeConnectCommands, isOn: $includeConnectCommands)
 			Text(.PreferencesTransfer.connectCommandsWarning).font(.callout).foregroundStyle(.secondary)
@@ -226,6 +272,10 @@ struct PreferencesExportOptionsView: View {
 	}
 }
 
+/** The export options sheet, and the choice it hands back.
+
+ The choice is applied on dismissal because the save panel that follows is a
+ sheet of its own, and the two cannot be on screen at once. */
 struct PreferencesExportOptionsPresentation: ViewModifier {
 	@Binding var isPresented: Bool
 	let export: (Bool) -> Void
@@ -272,15 +322,7 @@ struct PreferencesTransferPresentation: ViewModifier {
 					.onAppear { previewIsPresented = true }
 			})
 			.modifier(PreferencesTransferAlert(
-				title: String(localized: .PreferencesTransfer.configurationTransferStopped),
-				message: session.errorMessage,
-				isEnabled: ownsPresentation,
-				acknowledge: session.acknowledge
-			))
-			.modifier(PreferencesTransferAlert(
-				title: String(localized: .PreferencesTransfer.configurationTransferComplete),
-				message: session.completionMessage,
-				isEnabled: ownsPresentation,
+				message: ownsPresentation ? session.pendingMessage : nil,
 				acknowledge: session.acknowledge
 			))
 	}

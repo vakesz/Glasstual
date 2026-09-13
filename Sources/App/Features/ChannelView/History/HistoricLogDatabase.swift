@@ -96,13 +96,12 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 	/// on the parent context's queue instead of being carried across.
 	enum Deletion: Sendable {
 		case everything
-		case entriesBelow(entryIdentifier: UInt)
 		case retainingNewest(count: UInt)
 	}
 
-	/// Rows a deletion removed, together with the unique identifiers the client
-	/// has to be told about. Returned rather than reported from here: the
-	/// remote object proxy belongs to the actor, not to the context's queue.
+	/// Rows a deletion removed, together with the unique identifiers the store's
+	/// owner has to be told about. Returned rather than reported from here:
+	/// telling anyone belongs to the actor, not to the context's queue.
 	struct DeletionResult: Sendable {
 		let deletedCount: UInt
 		let uniqueIdentifiers: [String]
@@ -166,15 +165,16 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		viewIdentifier: String,
 		ascending: Bool = true,
 		fetchLimit: UInt = 0,
-		lowestEntryIdentifier: UInt = 0,
-		highestEntryIdentifier: UInt = UInt(Int.max),
 		limitToDate: Date? = nil,
 		resultType: NSFetchRequestResultType
 	) -> NSFetchRequest<NSManagedObject>? {
+		/* The stored template bounds the entry identifier as well as the date.
+		 Nothing asks for a narrower band than the whole store, so the bounds
+		 are the whole range rather than two parameters every caller defaults. */
 		let variables: [String: Any] = [
 			"view_id": viewIdentifier,
-			"entry_id_lowest": NSNumber(value: lowestEntryIdentifier),
-			"entry_id_highest": NSNumber(value: highestEntryIdentifier),
+			"entry_id_lowest": NSNumber(value: UInt.zero),
+			"entry_id_highest": NSNumber(value: UInt(Int.max)),
 			"creation_date": NSNumber(value: (limitToDate ?? .distantFuture).timeIntervalSince1970),
 		]
 
@@ -204,29 +204,11 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 
 	// MARK: - Reads
 
-	static func fetchEntries(
-		in context: NSManagedObjectContext,
-		viewIdentifier: String,
-		ascending: Bool,
-		fetchLimit: UInt,
-		lowestEntryIdentifier: UInt = 0,
-		highestEntryIdentifier: UInt = UInt(Int.max),
-		limitToDate: Date?
-	) -> [HistoricLogEntry] {
-		fetchOutcome(
-			in: context, viewIdentifier: viewIdentifier, ascending: ascending, fetchLimit: fetchLimit,
-			lowestEntryIdentifier: lowestEntryIdentifier, highestEntryIdentifier: highestEntryIdentifier,
-			limitToDate: limitToDate
-		).entries
-	}
-
 	static func fetchOutcome(
 		in context: NSManagedObjectContext,
 		viewIdentifier: String,
 		ascending: Bool,
 		fetchLimit: UInt,
-		lowestEntryIdentifier: UInt = 0,
-		highestEntryIdentifier: UInt = UInt(Int.max),
 		limitToDate: Date?
 	) -> HistoricLogFetchOutcome {
 		if let limitToDate, !limitToDate.timeIntervalSince1970.isFinite {
@@ -237,8 +219,6 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 			viewIdentifier: viewIdentifier,
 			ascending: ascending,
 			fetchLimit: fetchLimit,
-			lowestEntryIdentifier: lowestEntryIdentifier,
-			highestEntryIdentifier: highestEntryIdentifier,
 			limitToDate: limitToDate,
 			resultType: .managedObjectResultType
 		) else { return .failed(.invalidRequest) }
@@ -277,17 +257,6 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 		) as? NSNumber)?.int64Value ?? 0
 
 		return (lineCount, UInt(max(0, maximum)))
-	}
-
-	static func fetchEntries(
-		in context: NSManagedObjectContext,
-		viewIdentifier: String,
-		before uniqueIdentifier: String,
-		fetchLimit: UInt,
-		limitToDate: Date?
-	) -> [HistoricLogEntry] {
-		fetchOutcome(in: context, viewIdentifier: viewIdentifier, before: uniqueIdentifier,
-		             fetchLimit: fetchLimit, limitToDate: limitToDate).entries
 	}
 
 	static func fetchOutcome(
@@ -539,13 +508,6 @@ nonisolated enum HistoricLogDatabase { // nonisolated: value
 			let doomed: [NSManagedObject] = switch deletion {
 			case .everything: objects
 			case let .retainingNewest(count): Array(objects.prefix(max(0, objects.count - Int(clamping: count))))
-			case let .entriesBelow(identifier):
-				objects
-					.filter {
-						(($0.value(forKey: HistoricLogAttribute.entryIdentifier.rawValue) as? NSNumber)?
-							.int64Value ?? 0) <=
-							Int64(clamping: identifier)
-					}
 			}
 			let ids = Set(doomed.map(\.objectID))
 			let removed = Set(doomed

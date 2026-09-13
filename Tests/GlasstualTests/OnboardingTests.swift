@@ -11,11 +11,28 @@ import UserNotifications
 @MainActor
 @Suite("SwiftUI onboarding")
 struct OnboardingTests {
+	/// The live value reaches for the application's notification controller, so
+	/// the tests supply their own answer and their own sound-delivery hook.
 	private var testAuthorization: OnboardingNotificationAuthorization {
-		OnboardingNotificationAuthorization(
+		var authorization = OnboardingNotificationAuthorization(
 			currentStatus: { .notDetermined },
 			request: { true }
 		)
+		authorization.soundDeliveryDidChange = {}
+		return authorization
+	}
+
+	private func identifiedModel(nickname: String = "alice") -> OnboardingModel {
+		let settings = OnboardingSettings()
+		settings.nickname = nickname
+		return OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
+	}
+
+	/// Walks to `step` by accepting everything in front of it.
+	private func advance(_ model: OnboardingModel, to step: OnboardingStep) {
+		while model.currentStep != step {
+			#expect(model.advance() == false)
+		}
 	}
 
 	@MainActor
@@ -37,29 +54,57 @@ struct OnboardingTests {
 		settings.nickname = "alice"
 		let model = OnboardingModel(settings: settings, notificationAuthorization: authorization)
 
-		_ = model.continueFlow()
-		_ = model.continueFlow()
-		_ = model.continueFlow()
+		advance(model, to: .network)
 
-		#expect(model.currentStep == .network)
-
-		/* The prompt is answered in a task of its own, so the answer lands after
-		 the step has moved on. */
-		for _ in 0 ..< 200 where refreshes.count == 0 {
-			try? await Task.sleep(for: .milliseconds(5))
-		}
+		/* The prompt is answered in a task of its own, and the window must not
+		 close while the system is still showing it. */
+		await model.completePendingWork()
 
 		#expect(refreshes.count == 1)
 	}
 
-	@Test("Identity validation keeps the user on the first step")
-	func invalidIdentityDoesNotAdvance() {
+	/// Skipping the notifications step is a refusal, so it must not raise the
+	/// system permission prompt either.
+	@Test("Skipping the notifications step asks for no permission")
+	func skippingNotificationsAsksForNothing() async {
+		let refreshes = SoundDeliveryRefreshes()
+		var authorization = testAuthorization
+		authorization.soundDeliveryDidChange = { refreshes.count += 1 }
 		let settings = OnboardingSettings()
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
+		settings.nickname = "alice"
+		let model = OnboardingModel(settings: settings, notificationAuthorization: authorization)
 
-		#expect(model.continueFlow() == false)
+		advance(model, to: .notifications)
+		model.skip()
+
+		#expect(model.currentStep == .network)
+		await model.completePendingWork()
+		#expect(refreshes.count == 0)
+		#expect(model.acceptedNotifications == nil)
+	}
+
+	@Test("An unusable nickname is reported beside the field and blocks Continue")
+	func invalidIdentityIsReportedInline() {
+		let model = identifiedModel(nickname: "")
+
+		#expect(model.nicknameProblem == OnboardingStrings.Identity.nicknameRequired)
+		#expect(model.isCurrentStepValid == false)
+		#expect(model.advance() == false)
 		#expect(model.currentStep == .identity)
-		#expect(model.isValidationPresented)
+
+		model.settings.nickname = "not a nickname"
+		#expect(model.nicknameProblem == CommonValidationStrings.invalidNickname)
+
+		model.settings.nickname = "alice"
+		model.settings.alternateNickname = "not a nickname"
+		#expect(model.nicknameProblem == nil)
+		#expect(model.alternateNicknameProblem == CommonValidationStrings.invalidNickname)
+		#expect(model.isCurrentStepValid == false)
+
+		model.settings.alternateNickname = ""
+		model.settings.realName = "Alice\nExample"
+		#expect(model.realNameProblem == CommonValidationStrings.singleLineRequired)
+		#expect(model.isCurrentStepValid == false)
 	}
 
 	@Test("A valid identity advances and is normalized")
@@ -70,7 +115,7 @@ struct OnboardingTests {
 		settings.alternateNickname = "  alice_  "
 		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
 
-		#expect(model.continueFlow() == false)
+		#expect(model.advance() == false)
 		#expect(model.currentStep == .appearance)
 		#expect(settings.nickname == "alice")
 		#expect(settings.realName == "Alice Example")
@@ -79,41 +124,69 @@ struct OnboardingTests {
 
 	@Test("Back navigation returns to the previous step")
 	func backNavigation() {
-		let settings = OnboardingSettings()
-		settings.nickname = "alice"
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
-		_ = model.continueFlow()
+		let model = identifiedModel()
+		_ = model.advance()
 
 		model.moveBack()
 
 		#expect(model.currentStep == .identity)
 	}
 
+	/** Skip used to finish the whole flow, which is not what the word means.
+
+	 It now passes over exactly one step, and drops whatever an earlier visit to
+	 that step had accepted so a skipped step changes no preference. */
+	@Test("Skip passes over one step and drops what that step accepted")
+	func skipAdvancesOneStepAndForgetsIt() {
+		let model = identifiedModel()
+
+		advance(model, to: .appearance)
+		model.settings.textSize = .large
+		#expect(model.advance() == false)
+		#expect(model.currentStep == .notifications)
+		#expect(model.acceptedAppearance?.textSize == .large)
+
+		model.moveBack()
+		model.skip()
+
+		#expect(model.currentStep == .notifications)
+		#expect(model.acceptedAppearance == nil)
+	}
+
+	@Test("Identity and the summary cannot be skipped")
+	func requiredStepsRefuseSkip() {
+		let model = identifiedModel()
+
+		model.skip()
+		#expect(model.currentStep == .identity)
+
+		advance(model, to: .summary)
+		model.skip()
+		#expect(model.currentStep == .summary)
+		#expect(model.isLastStep)
+	}
+
 	@Test("Finishing without a network remains a supported choice")
 	func networkIsOptional() {
-		let settings = OnboardingSettings()
-		settings.nickname = "alice"
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
-		_ = model.continueFlow()
-		_ = model.continueFlow()
-		_ = model.continueFlow()
+		let model = identifiedModel()
 
-		#expect(model.currentStep == .network)
-		#expect(model.continueFlow())
-		#expect(settings.clientConfig == nil)
-		#expect(settings.channelsToJoin.isEmpty)
+		advance(model, to: .summary)
+
+		#expect(model.advance())
+		#expect(model.settings.clientConfig == nil)
+		#expect(model.settings.channelsToJoin.isEmpty)
 	}
 
 	@Test("A custom server produces a typed client configuration")
 	func customServerConfiguration() throws {
 		let model = NetworkPickerModel()
 		model.updateDefaultNickname("alice")
-		model.selectionID = model.customOption.id
-		model.serverAddress = "IRC.EXAMPLE.ORG"
-		model.serverPort = "6697"
-		model.accountPassword = "secret"
+		model.selection = .customServer
+		model.draft.serverAddress = "IRC.EXAMPLE.ORG"
+		model.draft.serverPort = 6697
+		model.draft.accountPassword = "secret"
 
-		try model.validate()
+		#expect(model.isValid)
 		let config = try #require(model.clientConfig())
 		let server = try #require(config.serverList.first)
 
@@ -126,79 +199,56 @@ struct OnboardingTests {
 		#expect(server.prefersSecuredConnection)
 	}
 
+	/// The port is a number all the way through, so the only value the field can
+	/// hold that no server can listen on is zero.
+	@Test("Network details are reported field by field")
+	func networkProblemsAreReportedPerField() {
+		let picker = NetworkPickerModel()
+
+		#expect(picker.isValid)
+		#expect(picker.serverAddressProblem == nil)
+
+		picker.selection = .customServer
+		#expect(picker.serverAddressProblem == CommonValidationStrings.invalidServerAddress)
+		#expect(picker.isValid == false)
+
+		picker.draft.serverAddress = "irc.example.test"
+		picker.draft.serverPort = 0
+		#expect(picker.serverPortProblem == OnboardingStrings.NetworkPicker.invalidPort)
+
+		picker.draft.serverPort = 6697
+		picker.draft.accountPassword = "secret"
+		picker.setAccountName("not a username")
+		#expect(picker.accountProblem == OnboardingStrings.NetworkPicker.invalidAccount)
+
+		picker.setAccountName("alice")
+		#expect(picker.isValid)
+	}
+
 	@Test("Turning SASL off persists the choice without deleting NickServ credentials")
 	func saslChoiceDoesNotDeleteCredentials() throws {
 		let picker = NetworkPickerModel()
-		picker.selectionID = picker.customOption.id
-		picker.serverAddress = "irc.example.test"
+		picker.selection = .customServer
+		picker.draft.serverAddress = "irc.example.test"
 		picker.setAccountName("account")
-		picker.accountPassword = "secret"
-		picker.usesSASL = false
+		picker.draft.accountPassword = "secret"
+		picker.draft.usesSASL = false
 		let config = try #require(picker.clientConfig())
 		#expect(config.usesSASL == false)
 		#expect(config.pendingNicknamePassword == .set("secret"))
 		#expect(config.username == "account")
-		picker.selectionID = picker.customOption.id
-		#expect(picker.accountPassword == "secret")
-		#expect(picker.accountName == "account")
+		picker.selection = .customServer
+		#expect(picker.draft.accountPassword == "secret")
+		#expect(picker.draft.accountName == "account")
 	}
 
-	@Test("Skip saves accepted identity and visible appearance once without creating a network")
-	func skipPersistsOnce() {
-		let settings = OnboardingSettings()
-		settings.nickname = " alice "
-		settings.realName = " Alice Example "
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
-		var saves = 0
-		var completed = 0
-		let session = OnboardingSession(
-			model: model,
-			createConnection: { _, _ in Issue.record("Skip created a connection"); return false },
-			applySettings: { accepted in
-				#expect(accepted.acceptedIdentity?.nickname == "alice")
-				#expect(accepted.acceptedIdentity?.realName == "Alice Example")
-				#expect(accepted.acceptedAppearance?.theme.fontSize == 15)
-				#expect(accepted.acceptedNotifications == nil)
-				saves += 1
-			},
-			markCompleted: { completed += 1 }
-		)
-		#expect(session.skipRemainingSteps() == false)
-		#expect(session.continueFlow() == false)
-		settings.textSize = .large
-		#expect(session.skipRemainingSteps())
-		#expect(session.skipRemainingSteps())
-		#expect(session.cancel())
-		#expect(saves == 1)
-		#expect(completed == 1)
-	}
+	/** "Set Up Later" is the one way out that applies nothing.
 
-	/** Cancelling on the very first step is still an answer.
-
-	 It used to persist nothing at all, so onboarding re-presented itself at
-	 every launch with no way to stop it: nothing is applied, but the fact that
-	 the user closed it is recorded. */
-	@Test("Cancel without accepted identity applies nothing and still completes")
-	func cancelBeforeIdentity() {
-		let model = OnboardingModel(settings: OnboardingSettings(), notificationAuthorization: testAuthorization)
-		var events: [String] = []
-		let session = OnboardingSession(
-			model: model,
-			createConnection: { _, _ in Issue.record("Cancel created a connection"); return false },
-			applySettings: { _ in Issue.record("Unaccepted settings were saved") },
-			markCompleted: { events.append("complete") }
-		)
-
-		#expect(session.cancel())
-		#expect(session.cancel())
-		#expect(events == ["complete"])
-	}
-
+	 It used to share its behaviour with a Cancel button that committed every
+	 preference the person had typed on their way past it. */
 	@Test("Set Up Later applies nothing and does not come back")
 	func setUpLaterCompletesWithoutApplying() {
-		let settings = OnboardingSettings()
-		settings.nickname = "alice"
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
+		let model = identifiedModel()
 		var events: [String] = []
 		let session = OnboardingSession(
 			model: model,
@@ -206,85 +256,33 @@ struct OnboardingTests {
 			applySettings: { _ in Issue.record("Set Up Later saved settings") },
 			markCompleted: { events.append("complete") }
 		)
-		_ = session.continueFlow()
+		_ = model.advance()
 
-		#expect(session.setUpLater())
+		session.setUpLater()
+		session.setUpLater()
+
 		#expect(events == ["complete"])
 	}
 
-	@Test("Cancel preserves the last accepted values rather than later edits")
-	func cancelKeepsAcceptedValues() {
-		let settings = OnboardingSettings()
-		settings.nickname = "alice"
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
-		var saves = 0
-		let session = OnboardingSession(
-			model: model,
-			createConnection: { _, _ in Issue.record("Cancel created a connection"); return false },
-			applySettings: { accepted in
-				#expect(accepted.acceptedIdentity?.nickname == "alice")
-				#expect(accepted.acceptedAppearance?.theme.fontSize == 15)
-				saves += 1
-			},
-			markCompleted: {}
-		)
-		_ = session.continueFlow()
-		settings.textSize = .large
-		_ = session.continueFlow()
-		session.moveBack()
-		settings.textSize = .small
-		session.moveBack()
-		settings.nickname = "invalid nickname"
-		#expect(session.cancel())
-		#expect(saves == 1)
-	}
-
-	/** Closing the window used to leave onboarding unfinished, so it came back
-	 at every launch however far the user had got. It is a Cancel: the accepted
-	 steps are saved and onboarding is marked complete, exactly once. */
-	@Test("Closing the window behaves like Cancel")
-	func windowCloseBehavesLikeCancel() {
-		let settings = OnboardingSettings()
-		settings.nickname = "alice"
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
+	/** Closing the window used to save everything the person had typed. It is a
+	 dismissal, so it applies nothing — but onboarding is still marked answered,
+	 because leaving it unmarked is what made it come back at every launch. */
+	@Test("Closing the window applies nothing and still completes once")
+	func windowCloseAppliesNothing() {
+		let model = identifiedModel()
 		var events: [String] = []
 		let session = OnboardingSession(
 			model: model,
 			createConnection: { _, _ in Issue.record("Closing the window created a connection"); return false },
-			applySettings: { accepted in
-				#expect(accepted.acceptedIdentity?.nickname == "alice")
-				events.append("save")
-			},
+			applySettings: { _ in Issue.record("Closing the window saved settings") },
 			markCompleted: { events.append("complete") }
 		)
-		_ = session.continueFlow()
+		advance(model, to: .summary)
 
-		session.windowDidClose()
-		session.windowDidClose()
+		session.setUpLater()
 
-		#expect(events == ["save", "complete"])
-		#expect(settings.clientConfig == nil)
-		#expect(settings.channelsToJoin.isEmpty)
-	}
-
-	/// Nothing was accepted, so there is nothing to apply — but the window was
-	/// closed on purpose, and asking again at the next launch is what the user
-	/// just declined.
-	@Test("Closing the window before the first step applies nothing and completes")
-	func windowCloseBeforeIdentityAppliesNothing() {
-		let model = OnboardingModel(settings: OnboardingSettings(), notificationAuthorization: testAuthorization)
-		var events: [String] = []
-		let session = OnboardingSession(
-			model: model,
-			createConnection: { _, _ in Issue.record("Closing the window created a connection"); return false },
-			applySettings: { _ in Issue.record("Unaccepted settings were saved") },
-			markCompleted: { events.append("complete") }
-		)
-
-		session.windowDidClose()
-
-		#expect(model.acceptedIdentity == nil)
 		#expect(events == ["complete"])
+		#expect(model.settings.clientConfig == nil)
 	}
 
 	@Test("Every appearance the picker offers has a title of its own")
@@ -297,36 +295,69 @@ struct OnboardingTests {
 	}
 
 	@Test("Finish without a network saves preferences and completes once")
-	func sessionFinishesWithoutNetwork() {
-		let settings = OnboardingSettings()
-		settings.nickname = "alice"
-		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
+	func sessionFinishesWithoutNetwork() async {
+		let model = identifiedModel()
 		var events: [String] = []
 		let session = OnboardingSession(
 			model: model,
 			createConnection: { _, _ in Issue.record("Unexpected connection"); return false },
-			applySettings: { _ in events.append("save") },
+			applySettings: { accepted in
+				#expect(accepted.acceptedIdentity?.nickname == "alice")
+				events.append("save")
+			},
 			markCompleted: { events.append("complete") }
 		)
-		for _ in 0 ..< 3 {
-			#expect(session.continueFlow() == false)
-		}
+		advance(model, to: .summary)
+		#expect(model.advance())
 		#expect(events.isEmpty)
-		#expect(session.continueFlow())
-		#expect(session.continueFlow())
+
+		#expect(await session.finish())
+		#expect(await session.finish())
+
 		#expect(events == ["save", "complete"])
+		#expect(session.isCompleting == false)
+	}
+
+	/// A skipped step leaves its preferences alone, which is the whole reason a
+	/// step records what it accepted rather than what its controls show.
+	@Test("Only the steps that were accepted are applied")
+	func skippedStepsApplyNothing() async {
+		let model = identifiedModel()
+		var saves = 0
+		let session = OnboardingSession(
+			model: model,
+			createConnection: { _, _ in Issue.record("Unexpected connection"); return false },
+			applySettings: { accepted in
+				#expect(accepted.acceptedIdentity?.nickname == "alice")
+				#expect(accepted.acceptedAppearance == nil)
+				#expect(accepted.acceptedNotifications?.highlight == true)
+				saves += 1
+			},
+			markCompleted: {}
+		)
+
+		#expect(model.advance() == false)
+		model.skip()
+		#expect(model.currentStep == .notifications)
+		#expect(model.advance() == false)
+		model.skip()
+		#expect(model.currentStep == .summary)
+		#expect(model.advance())
+
+		#expect(await session.finish())
+		#expect(saves == 1)
 	}
 
 	@Test("Failed client creation remains retryable and never marks completion")
-	func failedFinishCanRetry() {
+	func failedFinishCanRetry() async {
 		let settings = OnboardingSettings()
 		settings.nickname = "alice"
 		settings.realName = "Alice"
 		settings.alternateNickname = "alice_"
 		settings.connectWhenFinished = false
 		let model = OnboardingModel(settings: settings, notificationAuthorization: testAuthorization)
-		model.networkPicker.selectionID = model.networkPicker.customOption.id
-		model.networkPicker.serverAddress = "irc.example.test"
+		model.networkPicker.selection = .customServer
+		model.networkPicker.draft.serverAddress = "irc.example.test"
 		var attempts = 0
 		var events: [String] = []
 		let session = OnboardingSession(
@@ -343,14 +374,17 @@ struct OnboardingTests {
 			applySettings: { _ in events.append("save") },
 			markCompleted: { events.append("complete") }
 		)
-		for _ in 0 ..< 3 {
-			_ = session.continueFlow()
-		}
-		#expect(session.continueFlow() == false)
-		#expect(model.isValidationPresented)
+		advance(model, to: .summary)
+		#expect(model.advance())
+
+		#expect(await session.finish() == false)
+		#expect(session.completionFailure == OnboardingStrings.Window.connectionUnavailable)
+		#expect(session.isCompletionFailurePresented)
 		#expect(events.isEmpty)
-		#expect(session.continueFlow())
-		#expect(session.continueFlow())
+
+		session.isCompletionFailurePresented = false
+		#expect(session.completionFailure == nil)
+		#expect(await session.finish())
 		#expect(attempts == 2)
 		#expect(events == ["save", "complete"])
 	}

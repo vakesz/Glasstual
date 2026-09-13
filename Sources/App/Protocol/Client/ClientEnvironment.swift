@@ -41,7 +41,7 @@ import Foundation
 /** Every preference the IRC layer reads, taken once and handed to the clients.
 
  The values are a snapshot rather than live lookups so that the connection code
- has one place to read from and tests can hand it a different one. `IRCWorld`
+ has one place to read from and tests can hand it a different one. `World`
  rebuilds the snapshot whenever the defaults store reports a write, which is the
  only way any of these values can change. */
 nonisolated struct ClientPreferences: Sendable, Equatable { // nonisolated: value
@@ -123,13 +123,13 @@ final class ClientServices {
 	weak var output: (any ClientOutput)?
 	weak var menu: (any ClientMenuPresenting)?
 	weak var applicationState: (any ClientApplicationState)?
-	weak var world: IRCWorld?
+	weak var world: World?
 
 	init(
 		output: (any ClientOutput)? = nil,
 		menu: (any ClientMenuPresenting)? = nil,
 		applicationState: (any ClientApplicationState)? = nil,
-		world: IRCWorld? = nil
+		world: World? = nil
 	) {
 		self.output = output
 		self.menu = menu
@@ -157,7 +157,7 @@ struct ClientEnvironment {
 		services.menu
 	}
 
-	var world: IRCWorld? {
+	var world: World? {
 		services.world
 	}
 }
@@ -189,7 +189,7 @@ extension IRCClient {
 		environment.services.menu
 	}
 
-	var world: IRCWorld? {
+	var world: World? {
 		environment.services.world
 	}
 }

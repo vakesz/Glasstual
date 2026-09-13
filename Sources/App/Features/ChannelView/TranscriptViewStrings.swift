@@ -6,7 +6,8 @@
 import Foundation
 
 /// The text the transcript itself shows: what a reader hears in place of a
-/// picture or a reaction, and what an image offers on a right click.
+/// picture or a reaction, what an image offers on a right click, and what a
+/// link that leaves the browser asks before it opens.
 nonisolated enum TranscriptViewStrings { // nonisolated: value
 	static var copyImage: String {
 		String(localized: .TranscriptView.copyImage)
@@ -20,11 +21,32 @@ nonisolated enum TranscriptViewStrings { // nonisolated: value
 		String(localized: .TranscriptView.openImageLink)
 	}
 
+	static var copyTopic: String {
+		String(localized: .TranscriptView.copyTopic)
+	}
+
+	static func transcriptAccessibility(conversation: String) -> String {
+		String(localized: .TranscriptView.transcriptAccessibility(conversation))
+	}
+
+	static var transcriptRoleDescription: String {
+		String(localized: .TranscriptView.transcriptRole)
+	}
+
+	/// The question asked before a link is handed to another application.
+	/// macOS does not always name the application that would open an address,
+	/// and a name that is missing must not be quoted as an empty one.
+	static func openLinkTitle(applicationName: String) -> String {
+		applicationName.isEmpty
+			? String(localized: .TranscriptView.openLinkInUnknownApplication)
+			: String(localized: .TranscriptView.openLinkInApplication(applicationName))
+	}
+
 	static func imageAccessibility(source: String) -> String {
 		String(localized: .TranscriptView.imageAccessibility(source))
 	}
 
 	static func reactionAccessibility(emoji: String, count: Int) -> String {
-		String(localized: .TranscriptView.reactionAccessibility(emoji, count))
+		String(localized: .TranscriptView.reactionAccessibility(emoji, arg2: count))
 	}
 }

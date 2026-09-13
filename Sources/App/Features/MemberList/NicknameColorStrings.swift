@@ -14,18 +14,30 @@ import Foundation
 
 nonisolated enum NicknameColorStrings { // nonisolated: value
 	static var colorPickerAccessibilityHint: String {
-		String(localized: .TDCNicknameColorSheet.colorPickerAccessibilityHint)
+		String(localized: .NicknameColor.colorPickerAccessibilityHint)
 	}
 
 	static var colorPickerLabel: String {
-		String(localized: .TDCNicknameColorSheet.colorPickerLabel)
+		String(localized: .NicknameColor.colorPickerLabel)
 	}
 
 	static var useDefaultColorAccessibilityHint: String {
-		String(localized: .TDCNicknameColorSheet.useDefaultColorAccessibilityHint)
+		String(localized: .NicknameColor.useDefaultColorAccessibilityHint)
 	}
 
 	static var useDefaultColorTitle: String {
-		String(localized: .TDCNicknameColorSheet.useDefaultColor)
+		String(localized: .NicknameColor.useDefaultColor)
+	}
+
+	static func windowTitle(nickname: String) -> String {
+		String(localized: .NicknameColor.windowTitle(nickname))
+	}
+
+	static var changeColor: String {
+		String(localized: .NicknameColor.changeColor)
+	}
+
+	static func previewAccessibilityLabel(nickname: String) -> String {
+		String(localized: .NicknameColor.previewAccessibilityLabel(nickname))
 	}
 }

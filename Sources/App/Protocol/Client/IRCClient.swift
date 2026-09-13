@@ -54,16 +54,14 @@ public extension Notification.Name {
 	static let IRCClientUserNicknameChanged = Self("IRCClientUserNicknameChangedNotification")
 }
 
-open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
+open class IRCClient: TreeItem {
 	#if DEBUG
 		var linePrintObserver: ((IRCLinePrintRequest) -> Void)?
 	#endif
 
 	/* The three seams a test double replaces live in the class body rather than
 	 in the extensions that hold the rest of the transport and dispatch, because
-	 Swift only dispatches a class-body method through the vtable. They used to
-	 be `@objc` in an extension, which made the override work through the
-	 Objective-C runtime instead. */
+	 Swift only dispatches a class-body method through the vtable. */
 
 	/// Writes one already-framed line to the server.
 	public func sendLine(_ line: String) {
@@ -95,7 +93,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		processIncomingMessageOnMainActor(message)
 	}
 
-	public var config: IRCClientConfig
+	public var config: ClientConfig
 
 	public lazy var supportInfo = IRCISupportInfo(client: self)
 	/** The ISUPPORT prefix and case-mapping values as they stand now,
@@ -278,14 +276,14 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var lastServerSelected = UInt(NSNotFound)
 	var tryingNicknameNumber: UInt = 0
 	var tryingNicknameSentNickname: String?
-	var channelListPrivate: [IRCChannel] = []
+	var channelListPrivate: [Channel] = []
 	/** `findChannel(_:)` sits on the path of nearly every inbound line, so the
 	 channel list is mirrored by casefolded name. The mirror is rebuilt whenever
 	 the list or a channel's configuration changes; a lookup still verifies its
 	 hit and falls back to a scan, because a rename or a new CASEMAPPING can
 	 arrive without either. */
-	var channelsByFoldedName: [String: IRCChannel] = [:]
-	public weak var lastSelectedChannel: IRCChannel?
+	var channelsByFoldedName: [String: Channel] = [:]
+	public weak var lastSelectedChannel: Channel?
 	var addressBookMatchCache: AddressBookMatchCache!
 	var collapsedNetsplitBatch: Any?
 	public var isConnectedToZNC = false
@@ -307,10 +305,10 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var saslTimeoutTimer: ClientTimer!
 	var retryTimer: ClientTimer!
 	var autojoinDelayedWarningCount: UInt = 0
-	var channelsToAutojoin: [IRCChannel]?
+	var channelsToAutojoin: [Channel]?
 	var requestedCommands: ClientRequestedCommands!
-	var rawDataLogQuery: IRCChannel?
-	var hiddenCommandResponsesQuery: IRCChannel?
+	var rawDataLogQuery: Channel?
+	var hiddenCommandResponsesQuery: Channel?
 	var lastWhoRequestChannelListIndex: UInt = 0
 	var typingTracker: TypingTracker!
 	var nextMessageReplyIdentifier: String?
@@ -320,7 +318,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	/** Whether a logging session banner has been written and not yet closed. A line
 	 counter cannot express this: writing the banner is itself a write. */
 	public var logFileSessionIsOpen = false
-	var chatHistoryPrependChannel: IRCChannel?
+	var chatHistoryPrependChannel: Channel?
 	var chatHistoryPrependedLines: [LogLine]?
 	var batchMessages: MessageBatchContainer!
 	/// Casefolded targets whose history request the server refused.
@@ -355,12 +353,8 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var userStores: [User.ID: UserPersistentStore] = [:]
 	/// Timed commands the user scheduled, keyed by their identifier.
 	var timedCommandsByIdentifier: [String: TimedCommand] = [:]
-	/** How many CTCP queries this connection has answered lately.
-
-	 Main-actor state on the client that answers the queries. It used to live in
-	 a file-scope dictionary keyed by `uniqueIdentifier`, which outlived the
-	 client: a connection removed while a flood was still remembered left its
-	 entry behind with nothing able to reach it again. */
+	/// How many CTCP queries this connection has answered lately. Main-actor
+	/// state on the client that answers them, so it goes when the client does.
 	var ctcpReplyThrottle = CTCPReplyThrottle()
 
 	/** Preferences and services this client reads instead of reaching for the
@@ -373,11 +367,11 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		fatalError("Unavailable")
 	}
 
-	public convenience init(config: IRCClientConfig) {
+	public convenience init(config: ClientConfig) {
 		self.init(config: config, environment: .shared)
 	}
 
-	init(config: IRCClientConfig, environment: ClientEnvironment) {
+	init(config: ClientConfig, environment: ClientEnvironment) {
 		self.config = config
 		self.environment = environment
 		super.init()
@@ -425,7 +419,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		set {}
 	}
 
-	override public var associatedChannel: IRCChannel? {
+	override public var associatedChannel: Channel? {
 		nil
 	}
 

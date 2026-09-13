@@ -40,13 +40,11 @@ import CocoaExtensions
 import Foundation
 import os
 
+// MARK: - Starting
+
 extension FileTransferController {
 	public func open() {
 		open(withPath: nil)
-	}
-
-	public func openWithPathOrUserDownloads() {
-		open(withPath: path == nil ? PathInfo.userDownloads : nil)
 	}
 
 	public func open(withPath path: String?) {
@@ -75,154 +73,21 @@ extension FileTransferController {
 		}
 	}
 
-	func listeningServerDidStart(on port: UInt16) {
-		guard transferStatus == .initializing else {
-			assertionFailure("Listener started in an invalid transfer state")
-			return
-		}
-
-		hostPort = port
-		let mapper = XRPortMapper(port: port)
-		mapper.mapTCP = true
-		mapper.mapUDP = false
-		mapper.desiredPublicPort = port
-		portMapping = mapper
-
-		portMapperNotifications.cancelAll()
-		portMapperNotifications.observe(.portMapperDidChange, object: mapper) { [weak self] notification in
-			self?.portMapperDidFinishWork(notification)
-		}
-		transferStatus = .mappingListeningPort
-
-		if !mapper.open() {
-			portMapperDidFinishWork(nil)
-		}
-	}
-
-	func closePortMapping() {
-		guard let portMapping else { return }
-
-		portMapperNotifications.cancelAll()
-		self.portMapping = nil
-		portMapping.close()
-	}
-
-	public func noteIPAddressLookupSucceeded() {
-		guard [.initializing, .mappingListeningPort, .waitingForLocalIPAddress].contains(transferStatus) else { return }
-		if isSender {
-			transferStatus = isReversed ? .waitingForReceiverToAccept : .isListeningAsSender
-		} else if isReversed {
-			transferStatus = .isListeningAsReceiver
-		} else {
-			return
-		}
-		sendTransferRequestToClient()
-		if isSender, isReversed {
-			let sessionID = sessionID
-			offerTimeout?.cancel()
-			offerTimeout = Task { [weak self] in
-				do { try await Task.sleep(for: .seconds(120)) } catch { return }
-				guard let self, self.sessionID == sessionID,
-				      transferStatus == .waitingForReceiverToAccept else { return }
-				close(with: FileTransferFailure(.connectTimeout))
-			}
-		}
-	}
-
-	public func noteIPAddressLookupFailed() {
-		guard [.initializing, .mappingListeningPort, .waitingForLocalIPAddress].contains(transferStatus) else { return }
-		close(with: .sourceIPAddressUnknown)
-	}
-
-	public func didReceiveResumeRequest(_ proposedPosition: UInt64) {
-		guard isSender, proposedPosition > 0, totalFilesize >= proposedPosition,
-		      [.waitingForReceiverToAccept, .isListeningAsSender].contains(transferStatus) else { return }
-		let sessionID = sessionID
-		let transfer = transfer
-		negotiationTask?.cancel()
-		negotiationTask = Task { [weak self] in
-			if let transfer, await transfer.commitResumeOffset(proposedPosition) == false {
-				return
-			}
-			guard !Task.isCancelled, let self, self.sessionID == sessionID else { return }
-			isResume = true
-			processedFilesize = proposedPosition
-			sendTransferResumeAcceptToClient()
-		}
-	}
-
-	public func didReceiveResumeAccept(_ proposedPosition: UInt64) {
-		/* An accept is only ever an answer to a resume this transfer asked for.
-		 One that arrives at any other moment would move the offset into a file
-		 nothing has claimed. */
-		guard !isSender, transferStatus == .waitingForResumeAccept else { return }
-
-		resumeRequestTimeout?.cancel()
-		resumeRequestTimeout = nil
-
-		guard proposedPosition > 0, proposedPosition <= totalFilesize, processedFilesize == proposedPosition else {
-			close(
-				with: .invalidResumePosition,
-				isFatalError: true
+	/// Reserves once with O_EXCL. Retries keep the descriptor and partial bytes;
+	/// the local suffix never changes the filename used in DCC negotiation.
+	func claimDestinationFilename() {
+		guard ownedFile == nil, let path else { return }
+		do {
+			let url = URL(fileURLWithPath: path).appendingPathComponent(wireFilename)
+			let file = try DCCTransferFile(
+				url: url,
+				receiving: true,
+				accessURL: destinationAccessURL ?? url.deletingLastPathComponent()
 			)
-			return
-		}
-
-		isResume = true
-		openTransfer()
-	}
-
-	public func didReceiveSendRequest(_ hostAddress: String, hostPort: UInt16) {
-		guard isSender, isReversed, transferStatus == .waitingForReceiverToAccept else { return }
-		self.hostAddress = hostAddress
-		self.hostPort = hostPort
-		transferStatus = .connecting
-		let negotiation = negotiationTask
-		let sessionID = sessionID
-		Task { [weak self] in
-			await negotiation?.value
-			guard let self, self.sessionID == sessionID, transferStatus == .connecting else { return }
-			openConnectionToHost()
-		}
-	}
-
-	public func sendTransferRequestToClient() {
-		guard let client else { return }
-
-		if isSender {
-			if isReversed {
-				/* Offering a reverse DCC without a token is a malformed request
-				 rather than a transfer the peer can complete. Report it. */
-				guard buildTransferToken() else {
-					fileTransferLogger.error("Could not mint a reverse DCC transfer token")
-					close(with: .connectionUnavailable)
-					return
-				}
-
-				client.sendFile(
-					peerNickname,
-					port: 0,
-					filename: wireFilename,
-					filesize: totalFilesize,
-					token: transferToken
-				)
-			} else {
-				client.sendFile(
-					peerNickname,
-					port: hostPort,
-					filename: wireFilename,
-					filesize: totalFilesize,
-					token: nil
-				)
-			}
-		} else if isReversed {
-			client.sendFile(
-				peerNickname,
-				port: hostPort,
-				filename: wireFilename,
-				filesize: totalFilesize,
-				token: transferToken
-			)
+			takeOwnership(of: file)
+			filename = (file.path as NSString).lastPathComponent
+		} catch {
+			close(with: FileTransferFailure(.fileUnwritable))
 		}
 	}
 
@@ -230,7 +95,7 @@ extension FileTransferController {
 		switch (isSender, isReversed) {
 		case (true, true):
 			closeAndPostNotification(false)
-			resetProperties()
+			resetProperties(keepingOffset: isResume)
 			transferStatus = .initializing
 			updateIPAddress()
 		case (true, false), (false, true):
@@ -242,7 +107,7 @@ extension FileTransferController {
 
 	private func openConnectionToHost() {
 		closeAndPostNotification(false)
-		resetProperties()
+		resetProperties(keepingOffset: isResume)
 		transferStatus = .connecting
 
 		guard !hostAddress.isEmpty, hostPort != 0 else {
@@ -267,7 +132,7 @@ extension FileTransferController {
 
 	private func openConnectionAsServer() {
 		closeAndPostNotification(false)
-		resetProperties()
+		resetProperties(keepingOffset: isResume)
 		transferStatus = .initializing
 
 		let portRangeStart = Preferences.FileTransfers.portRangeStart.value
@@ -336,7 +201,81 @@ extension FileTransferController {
 		return ownedFile
 	}
 
-	/** `XRPortMapper` reports on every mDNSResponder callback, and a NAT-PMP
+	private func resetProperties(keepingOffset: Bool) {
+		completion = nil
+		if keepingOffset == false {
+			processedFilesize = 0
+		}
+		currentRecord = 0
+		errorMessageDescription = nil
+		speedRecords.removeAll(keepingCapacity: true)
+	}
+}
+
+// MARK: - Listening, port mapping and this Mac's address
+
+extension FileTransferController {
+	func listeningServerDidStart(on port: UInt16) {
+		guard transferStatus == .initializing else {
+			assertionFailure("Listener started in an invalid transfer state")
+			return
+		}
+
+		hostPort = port
+		let mapper = PortMapper(port: port)
+		mapper.mapTCP = true
+		mapper.mapUDP = false
+		mapper.desiredPublicPort = port
+		portMapping = mapper
+
+		portMapperNotifications.cancelAll()
+		portMapperNotifications.observe(.portMapperDidChange, object: mapper) { [weak self] notification in
+			self?.portMapperDidFinishWork(notification)
+		}
+		transferStatus = .mappingListeningPort
+
+		if !mapper.open() {
+			portMapperDidFinishWork(nil)
+		}
+	}
+
+	func closePortMapping() {
+		guard let portMapping else { return }
+
+		portMapperNotifications.cancelAll()
+		self.portMapping = nil
+		portMapping.close()
+	}
+
+	public func noteIPAddressLookupSucceeded() {
+		guard transferStatus.isAwaitingAddress else { return }
+		if isSender {
+			transferStatus = isReversed ? .waitingForReceiverToAccept : .isListeningAsSender
+		} else if isReversed {
+			transferStatus = .isListeningAsReceiver
+		} else {
+			return
+		}
+		sendTransferRequestToClient()
+		guard isSender, isReversed else { return }
+
+		/* A reverse offer the peer never answers leaves a listening port open and
+		 a row that says it is waiting, with nothing left to wait for. */
+		let session = sessionID
+		offerTimeout?.cancel()
+		offerTimeout = Task { [weak self] in
+			do { try await Task.sleep(for: FileTransferLimits.reverseOfferTimeout) } catch { return }
+			guard let self, isCurrent(session), transferStatus == .waitingForReceiverToAccept else { return }
+			close(with: .connectTimeout)
+		}
+	}
+
+	public func noteIPAddressLookupFailed() {
+		guard transferStatus.isAwaitingAddress else { return }
+		close(with: .sourceIPAddressUnknown)
+	}
+
+	/** `PortMapper` reports on every mDNSResponder callback, and a NAT-PMP
 	 mapping is renewed for as long as it is held — so this fires again long
 	 after the first result moved the transfer on. Only the first one has
 	 anything to do. */
@@ -363,7 +302,7 @@ extension FileTransferController {
 	}
 
 	private func updateIPAddress() {
-		var address = transferCenter.IPAddress
+		var address = transferCenter.ipAddress
 		let detectionMethod = Preferences.FileTransfers.ipAddressDetectionMethod.value
 		let manuallyDetect = detectionMethod == .manual
 
@@ -371,7 +310,7 @@ extension FileTransferController {
 		   let publicAddress = portMapping?.publicAddress,
 		   publicAddress.isIPAddress
 		{
-			transferCenter.IPAddress = publicAddress
+			transferCenter.ipAddress = publicAddress
 			address = publicAddress
 		}
 
@@ -380,54 +319,107 @@ extension FileTransferController {
 				noteIPAddressLookupFailed()
 			} else {
 				transferStatus = .waitingForLocalIPAddress
-				transferCenter.requestIPAddress()
+				Task { await transferCenter.lookUpIPAddress() }
 			}
 			return
 		}
 
 		noteIPAddressLookupSucceeded()
 	}
+}
 
-	/// Mints the token that identifies a reverse-DCC offer.
-	///
-	/// The token is the only thing tying an inbound connection on the listening
-	/// port to this offer, so it is drawn from the system CSPRNG over the full
-	/// 64-bit range rather than the four decimal digits a third party could
-	/// enumerate during the window the port is open.
-	private func buildTransferToken() -> Bool {
-		for _ in 0 ..< 300 {
-			let candidate = String(UInt64.random(in: 1 ... UInt64.max))
-			if !transferCenter.fileTransferExists(withToken: candidate) {
-				transferToken = candidate
-				return true
+// MARK: - The DCC negotiation this transfer answers
+
+extension FileTransferController {
+	public func didReceiveResumeRequest(_ proposedPosition: UInt64) {
+		guard isSender, proposedPosition > 0, totalFilesize >= proposedPosition,
+		      [.waitingForReceiverToAccept, .isListeningAsSender].contains(transferStatus) else { return }
+		let session = sessionID
+		let transfer = transfer
+		negotiationTask?.cancel()
+		negotiationTask = Task { [weak self] in
+			if let transfer, await transfer.commitResumeOffset(proposedPosition) == false {
+				return
 			}
+			guard let self, isCurrent(session) else { return }
+			isResume = true
+			processedFilesize = proposedPosition
+			sendTransferResumeAcceptToClient()
 		}
-
-		transferToken = nil
-		return false
 	}
 
-	private func sendTransferResumeRequestToClient() {
-		guard let ownedFile else { return }
-		transferStatus = .initializing
-		let sessionID = sessionID
-		let stopping = stopTask
-		negotiationTask = Task { [weak self] in
-			await stopping?.value
-			do {
-				let size = try await ownedFile.size()
-				guard !Task.isCancelled, let self, self.sessionID == sessionID else { return }
-				guard size <= totalFilesize else { close(with: .invalidResumePosition, isFatalError: true); return }
-				processedFilesize = size
-				isResume = false
-				if size == 0 {
-					openTransfer(); return
+	public func didReceiveResumeAccept(_ proposedPosition: UInt64) {
+		/* An accept is only ever an answer to a resume this transfer asked for.
+		 One that arrives at any other moment would move the offset into a file
+		 nothing has claimed. */
+		guard !isSender, transferStatus == .waitingForResumeAccept else { return }
+
+		resumeRequestTimeout?.cancel()
+		resumeRequestTimeout = nil
+
+		guard proposedPosition > 0, proposedPosition <= totalFilesize, processedFilesize == proposedPosition else {
+			close(
+				with: .invalidResumePosition,
+				isFatalError: true
+			)
+			return
+		}
+
+		isResume = true
+		openTransfer()
+	}
+
+	public func didReceiveSendRequest(_ hostAddress: String, hostPort: UInt16) {
+		guard isSender, isReversed, transferStatus == .waitingForReceiverToAccept else { return }
+		self.hostAddress = hostAddress
+		self.hostPort = hostPort
+		transferStatus = .connecting
+		let negotiation = negotiationTask
+		let session = sessionID
+		Task { [weak self] in
+			await negotiation?.value
+			guard let self, isCurrent(session), transferStatus == .connecting else { return }
+			openConnectionToHost()
+		}
+	}
+
+	public func sendTransferRequestToClient() {
+		guard let client else { return }
+
+		if isSender {
+			if isReversed {
+				/* Offering a reverse DCC without a token is a malformed request
+				 rather than a transfer the peer can complete. Report it. */
+				guard buildTransferToken() else {
+					fileTransferLogger.error("Could not mint a reverse DCC transfer token")
+					close(with: .connectionUnavailable)
+					return
 				}
-				requestResume(position: size)
-			} catch {
-				guard !Task.isCancelled, let self, self.sessionID == sessionID else { return }
-				close(with: .invalidResumePosition, isFatalError: true)
+
+				client.sendFile(
+					peerNickname,
+					port: 0,
+					filename: wireFilename,
+					filesize: totalFilesize,
+					token: transferToken
+				)
+			} else {
+				client.sendFile(
+					peerNickname,
+					port: hostPort,
+					filename: wireFilename,
+					filesize: totalFilesize,
+					token: nil
+				)
 			}
+		} else if isReversed {
+			client.sendFile(
+				peerNickname,
+				port: hostPort,
+				filename: wireFilename,
+				filesize: totalFilesize,
+				token: transferToken
+			)
 		}
 	}
 
@@ -458,9 +450,56 @@ extension FileTransferController {
 		return true
 	}
 
+	/// Mints the token that identifies a reverse-DCC offer.
+	///
+	/// The token is the only thing tying an inbound connection on the listening
+	/// port to this offer, so it is drawn from the system CSPRNG over the full
+	/// 64-bit range rather than the four decimal digits a third party could
+	/// enumerate during the window the port is open.
+	private func buildTransferToken() -> Bool {
+		for _ in 0 ..< 300 {
+			let candidate = String(UInt64.random(in: 1 ... UInt64.max))
+			if !transferCenter.fileTransferExists(withToken: candidate) {
+				transferToken = candidate
+				return true
+			}
+		}
+
+		transferToken = nil
+		return false
+	}
+
+	private func sendTransferResumeRequestToClient() {
+		guard let ownedFile else { return }
+		transferStatus = .initializing
+		let session = sessionID
+		let stopping = stopTask
+		negotiationTask = Task { [weak self] in
+			await stopping?.value
+			do {
+				let size = try await ownedFile.size()
+				guard let self, isCurrent(session) else { return }
+				guard size <= totalFilesize else {
+					close(with: .invalidResumePosition, isFatalError: true)
+					return
+				}
+				processedFilesize = size
+				isResume = false
+				if size == 0 {
+					openTransfer()
+					return
+				}
+				requestResume(position: size)
+			} catch {
+				guard let self, isCurrent(session) else { return }
+				close(with: .invalidResumePosition, isFatalError: true)
+			}
+		}
+	}
+
 	private func requestResume(position: UInt64) {
 		resumeRequestTimeout?.cancel()
-		let sessionID = sessionID
+		let session = sessionID
 		resumeRequestTimeout = Task { [weak self] in
 			do {
 				try await Task.sleep(for: .seconds(FileTransferLimits.resumeAcceptTimeout))
@@ -468,8 +507,8 @@ extension FileTransferController {
 				return
 			}
 
-			guard !Task.isCancelled, let self else { return }
-			resumeTimeoutExpired(for: sessionID)
+			guard Task.isCancelled == false, let self else { return }
+			resumeTimeoutExpired(for: session)
 		}
 		transferStatus = .waitingForResumeAccept
 		client?.sendFileResume(
@@ -490,14 +529,84 @@ extension FileTransferController {
 			token: isReversed ? transferToken : nil
 		)
 	}
+}
 
-	private func resetProperties() {
-		completion = nil
-		if !isResume {
-			processedFilesize = 0
+// MARK: - Following the transfer actor
+
+extension FileTransferController {
+	/// Hands the transfer to a ``DCCTransfer`` actor and follows it.
+	///
+	/// Every event arrives back here on the main actor, which is where the
+	/// status, the progress and the dialog all live, so nothing the actor
+	/// reports has to cross isolation a second time.
+	func startTransfer(with configuration: DCCTransfer.Configuration) {
+		let transfer = DCCTransfer(configuration: configuration)
+		self.transfer = transfer
+
+		let stopping = stopTask
+
+		transferEvents = Task { [weak self] in
+			await stopping?.value
+			guard Task.isCancelled == false else { await transfer.cancel(); return }
+			await transfer.start()
+
+			for await event in transfer.events {
+				guard Task.isCancelled == false else { return }
+				self?.transferDidReport(event, from: transfer)
+			}
 		}
-		currentRecord = 0
-		errorMessageDescription = nil
-		speedRecords.removeAll(keepingCapacity: true)
+	}
+
+	/// Stops the running transfer, if there is one.
+	func stopTransfer() {
+		sessionID = UUID()
+		transferEvents?.cancel()
+		transferEvents = nil
+
+		guard let transfer else {
+			return
+		}
+
+		self.transfer = nil
+		enqueueStop { await transfer.cancel() }
+	}
+
+	func transferDidReport(_ event: DCCTransferEvent, from transfer: DCCTransfer) {
+		guard self.transfer === transfer else { return }
+		switch event {
+		case let .listening(port):
+			listeningServerDidStart(on: port)
+		case .connected:
+			transferStatus = isSender ? .sending : .receiving
+			transferCenter.updateMaintenanceTimer()
+		case let .progress(processedBytes):
+			transferDidProgress(to: processedBytes)
+		case let .completion(completion):
+			self.completion = completion
+		case .finished:
+			transferStatus = .complete
+			close()
+		case let .failed(error):
+			transferDidFail(with: error)
+		}
+	}
+
+	private func transferDidProgress(to processedBytes: UInt64) {
+		/* `currentRecord` is the byte count the maintenance timer turns into a
+		 transfer rate once a second, so it takes the delta, not the total. */
+		if processedBytes > processedFilesize {
+			currentRecord += processedBytes - processedFilesize
+		}
+
+		processedFilesize = processedBytes
+	}
+
+	private func transferDidFail(with error: DCCTransferError) {
+		guard transferStatus.isFinished == false else {
+			return
+		}
+
+		fileTransferLogger.error("DCC transfer failed: \(String(describing: error), privacy: .public)")
+		close(with: FileTransferFailure(error))
 	}
 }

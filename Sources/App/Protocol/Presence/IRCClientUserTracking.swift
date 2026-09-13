@@ -156,7 +156,7 @@ extension IRCClient {
 	/// reported it: MONITOR, WATCH, ISON, a QUIT, a message arriving, or login.
 	/// Address-book tracking is a separate concern with its own notifications;
 	/// this only recolours the row.
-	func applyPresence(_ isOnline: Bool, to query: IRCChannel) {
+	func applyPresence(_ isOnline: Bool, to query: Channel) {
 		guard query.isActive != isOnline else { return }
 		if isOnline {
 			query.activate()
@@ -212,7 +212,7 @@ extension IRCClient {
 	 that first request waited for a two-minute tick that starts ten seconds
 	 after login and takes five channels at a time. */
 	@MainActor
-	func sendInitialWhoRequest(to channel: IRCChannel) {
+	func sendInitialWhoRequest(to channel: Channel) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
 		      channel.isActive, channel.isChannel, channel.sentInitialWhoRequest == false,
 		      config.sendWhoCommandRequestsToChannels,
@@ -223,7 +223,7 @@ extension IRCClient {
 	}
 
 	@MainActor
-	func sendTimedWhoRequests(to channels: [IRCChannel]) {
+	func sendTimedWhoRequests(to channels: [Channel]) {
 		guard isLoggedIn, isBrokenIRCdKnownAsTwitch == false,
 		      let range = UserTrackingWhoBatchPolicy.indexRange(
 		      	startingAt: Int(lastWhoRequestChannelListIndex),
@@ -233,7 +233,7 @@ extension IRCClient {
 
 		var endIndex = range.upperBound
 		var totalMemberCount: UInt = 0
-		var channelsToQuery: [IRCChannel] = []
+		var channelsToQuery: [Channel] = []
 
 		for index in range {
 			let channel = channels[index]

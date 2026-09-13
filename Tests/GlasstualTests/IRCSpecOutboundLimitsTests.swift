@@ -52,8 +52,8 @@ import Testing
 struct IRCSpecOutboundLimitsTests {
 	private static let hostmask = "me!user@example.org"
 
-	private func client(lineLength: UInt = 0) -> GLTTestClient {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "user"])
+	private func client(lineLength: UInt = 0) -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "user"])
 
 		client.userHostmask = Self.hostmask
 
@@ -72,7 +72,7 @@ struct IRCSpecOutboundLimitsTests {
 	private func split(
 		_ text: String,
 		target: String,
-		on client: GLTTestClient,
+		on client: TestClient,
 		as lineType: LogLineType
 	) -> [String] {
 		var cursor = IRCLineCursor(NSAttributedString(string: text))
@@ -311,7 +311,7 @@ struct IRCSpecOutboundLimitsTests {
 	/// said nothing yet.
 	@Test("The connection's line length follows ISUPPORT and resets with it")
 	func connectionLineLengthFollowsISupport() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "user"])
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "user"])
 		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
 		client.socket = connection
 
@@ -331,7 +331,7 @@ struct IRCSpecOutboundLimitsTests {
 	 what the server saw, and only the unified log ever said so. */
 	@Test("A cut line is reported where the user can see it")
 	func aCutLineIsReportedInTheTranscript() {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "user"])
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "user"])
 		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
 		client.socket = connection
 
@@ -353,7 +353,7 @@ struct IRCSpecOutboundLimitsTests {
 	/// reported as having been trimmed to itself.
 	@Test("A line that fits is not reported")
 	func aLineThatFitsIsNotReported() {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "user"])
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "user"])
 		let connection = Connection(config: IRCConnectionConfig(), onClient: client)
 		client.socket = connection
 

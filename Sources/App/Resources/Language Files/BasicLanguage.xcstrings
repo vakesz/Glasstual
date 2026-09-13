@@ -1,96 +1,210 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "close-query" : {
-      "comment" : "Close-query menu title. Legacy key: hri-l0.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close Query" } } }
+  "sourceLanguage": "en",
+  "strings": {
+    "close-query": {
+      "comment": "Close-query menu title. Legacy key: hri-l0.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Query"
+          }
+        }
+      }
     },
-    "close-window" : {
-      "comment" : "Close-window menu title. Legacy key: 1f6-bg.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close Window" } } }
+    "close-window": {
+      "comment": "Close-window menu title. Legacy key: 1f6-bg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Window"
+          }
+        }
+      }
     },
-    "disconnect-menu-title" : {
-      "comment" : "Disconnect menu title. The argument is the network name. Legacy key: w3a-je.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Disconnect from %@" } } }
+    "disconnect-menu-title": {
+      "comment": "Disconnect menu title. The argument is the network name. Legacy key: w3a-je.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect from %@"
+          }
+        }
+      }
     },
-    "fill-out-this-field" : {
-      "comment" : "Required-field validation message. Legacy key: fo8-1h.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fill out this field" } } }
+    "fill-out-this-field": {
+      "comment": "Required-field validation message. Legacy key: fo8-1h.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This field is required."
+          }
+        }
+      }
     },
-    "glasstual-irc-client" : {
-      "comment" : "Default quit message advertising the application. Legacy key: 1dd-0f.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Glasstual IRC Client: https://github.com/vakesz/Glasstual" } } }
+    "duplicated-connection-name": {
+      "comment": "Name given to a duplicated connection. The argument is the original connection name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ copy"
+          }
+        }
+      }
     },
-    "invalid-regular-expression" : {
-      "comment" : "Validation message shown beside a highlight keyword that is not a usable regular expression, while highlights are set to match by regular expression.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This is not a valid regular expression." } } }
+    "glasstual-irc-client": {
+      "comment": "Default quit message advertising the application. Legacy key: 1dd-0f.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual IRC Client: https://github.com/vakesz/Glasstual"
+          }
+        }
+      }
     },
-    "irc-color-list-entry" : {
-      "comment" : "IRC color-list entry. The argument is the color index. Legacy key: ham-vk.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Color %ld" } } }
+    "invalid-regular-expression": {
+      "comment": "Validation message shown beside a highlight keyword that is not a usable regular expression, while highlights are set to match by regular expression.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is not a valid regular expression."
+          }
+        }
+      }
     },
-    "irc-colors" : {
-      "comment" : "IRC color-list title. Legacy key: iwp-cg.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "IRC Colors" } } }
+    "irc-color-list-entry": {
+      "comment": "IRC color-list entry. The argument is the color index. Legacy key: ham-vk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color %ld"
+          }
+        }
+      }
     },
-    "leave-channel" : {
-      "comment" : "Leave-channel menu title. Legacy key: 5td-3f.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Leave Channel" } } }
+    "irc-colors": {
+      "comment": "IRC color-list title. Legacy key: iwp-cg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRC Colors"
+          }
+        }
+      }
     },
-    "look-up" : {
-      "comment" : "Dictionary lookup title. The argument is the selected text. Legacy key: zxs-yy.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Look Up “%@”" } } }
+    "leave-channel": {
+      "comment": "Leave-channel menu title. Legacy key: 5td-3f.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave Channel"
+          }
+        }
+      }
     },
-    "look-up-in-dictionary" : {
-      "comment" : "Dictionary lookup menu title. Legacy key: o5l-4s.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Look Up in Dictionary" } } }
+    "look-up": {
+      "comment": "Dictionary lookup title. The argument is the selected text. Legacy key: zxs-yy.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look Up “%@”"
+          }
+        }
+      }
     },
-    "my-mac-has-gone-to-sleep" : {
-      "comment" : "Default quit message used when the Mac sleeps. Legacy key: qi7-5y.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "My Mac has gone to sleep. ZZZzzz…" } } }
+    "look-up-in-dictionary": {
+      "comment": "Dictionary lookup menu title. Legacy key: o5l-4s.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look Up in Dictionary"
+          }
+        }
+      }
     },
-    "no-actions-available" : {
-      "comment" : "Placeholder shown when a contextual menu has no actions. Legacy key: 7kc-mo.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No Actions Available" } } }
+    "my-mac-has-gone-to-sleep": {
+      "comment": "Default quit message used when the Mac sleeps. Legacy key: qi7-5y.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Mac has gone to sleep. ZZZzzz…"
+          }
+        }
+      }
     },
-    "quit-glasstual" : {
-      "comment" : "Quit-application menu title. Legacy key: x97-ro.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Quit Glasstual" } } }
+    "quit-glasstual": {
+      "comment": "Quit-application menu title. Legacy key: x97-ro.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Glasstual"
+          }
+        }
+      }
     },
-    "relative-date-suffix-ago" : {
-      "comment" : "Relative date suffix. The argument is a formatted duration. Legacy key: 4um-w4.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ ago" } } }
+    "search-provider-menu-title": {
+      "comment": "Search-provider menu title. The argument is the provider name. Legacy key: 1ll-h9.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search With %@"
+          }
+        }
+      }
     },
-    "search-provider-menu-title" : {
-      "comment" : "Search-provider menu title. The argument is the provider name. Legacy key: 1ll-h9.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Search With %@" } } }
+    "unknown-value-placeholder": {
+      "comment": "Unknown-value placeholder. Legacy key: vbl-xi.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        }
+      }
     },
-    "unknown-value-placeholder" : {
-      "comment" : "Unknown-value placeholder. Legacy key: vbl-xi.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Unknown" } } }
-    },
-    "untitled-connection" : {
-      "comment" : "Default name for a new connection. Legacy key: vfu-c0.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled Connection" } } }
+    "untitled-connection": {
+      "comment": "Default name for a new connection. Legacy key: vfu-c0.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled Connection"
+          }
+        }
+      }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

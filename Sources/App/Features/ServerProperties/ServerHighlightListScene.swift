@@ -31,7 +31,6 @@ struct ServerHighlightListApplicationScene: Scene {
 }
 
 private struct ServerHighlightListSceneRoot: View {
-	@Environment(\.dismissWindow) private var dismissWindow
 	let clientIdentifier: String?
 	let scenes: ApplicationScenes
 
@@ -39,12 +38,8 @@ private struct ServerHighlightListSceneRoot: View {
 		if let clientIdentifier, let session = scenes.serverHighlightList(for: clientIdentifier) {
 			ServerHighlightListView(
 				model: session.model,
-				networkName: session.networkName,
 				activate: session.activateHighlight(withID:),
-				clear: session.clearHighlights,
-				close: {
-					dismissWindow(id: ApplicationSceneID.serverHighlightList, value: clientIdentifier)
-				}
+				clear: session.clearHighlights
 			)
 			.navigationTitle(ServerHighlightListStrings.windowTitle(networkName: session.networkName))
 			.onDisappear {

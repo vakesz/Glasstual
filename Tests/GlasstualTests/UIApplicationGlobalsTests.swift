@@ -51,7 +51,7 @@ struct UIApplicationGlobalsTests {
 	 parsed; two callers cannot reach each other through a value. */
 	@Test("The ISO spelling is UTC to the millisecond")
 	func formatterWritesUTCMilliseconds() {
-		let formatter = sharedISOStandardDateFormatter()
+		let formatter = ISOStandardDateFormatter()
 
 		#expect(formatter.string(from: Date(timeIntervalSince1970: 1_700_000_000.5))
 			== "2023-11-14T22:13:20.500Z")
@@ -65,7 +65,7 @@ struct UIApplicationGlobalsTests {
 	 CHATHISTORY and CTCP TIME stamp went out a millisecond early. */
 	@Test("A fractional second is rounded rather than truncated")
 	func fractionalSecondsAreRounded() {
-		let formatter = sharedISOStandardDateFormatter()
+		let formatter = ISOStandardDateFormatter()
 
 		#expect(formatter.string(from: Date(timeIntervalSince1970: 1_700_000_000.123))
 			== "2023-11-14T22:13:20.123Z")
@@ -79,7 +79,7 @@ struct UIApplicationGlobalsTests {
 
 	@Test("The ISO representation round-trips, and only that representation parses")
 	func formatterRoundTripsUTC() throws {
-		let formatter = sharedISOStandardDateFormatter()
+		let formatter = ISOStandardDateFormatter()
 		let moment = Date(timeIntervalSince1970: 1_700_000_000.123)
 
 		let text = formatter.string(from: moment)

@@ -43,7 +43,7 @@ import Foundation
 public extension IRCClient {
 	private func formatSpokenNotification(
 		_ event: NotificationEvent,
-		channel: IRCChannel?,
+		channel: Channel?,
 		nickname: String?,
 		text rawText: String?
 	) -> String? {
@@ -89,7 +89,7 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	private func formatSpokenHighlight(channel: IRCChannel?, nickname: String?, text: String?) -> String? {
+	private func formatSpokenHighlight(channel: Channel?, nickname: String?, text: String?) -> String? {
 		guard let channel, let nickname, let text, !text.isEmpty else { return nil }
 		let visibility = IRCSpokenNotificationPolicy.highlightVisibility(
 			isChannel: channel.isChannel,
@@ -98,27 +98,23 @@ public extension IRCClient {
 			includeConfiguredChannelName: Preferences.Notifications.flag(.channelMessage, .speakChannelName).value,
 			includeConfiguredNickname: Preferences.Notifications.flag(.channelMessage, .speakNickname).value
 		)
-		var message = NotificationStrings.Spoken.highlight
-		if visibility.includesChannelName || visibility.includesNickname {
-			if visibility.includesChannelName {
-				message += channel.isChannel
-					? NotificationStrings.Spoken.channel(spokenChannelName(channel))
-					: NotificationStrings.Spoken.privateMessageLocation
-			}
-			if visibility.includesNickname {
-				message += channel.isChannel
-					? NotificationStrings.Spoken.author(nickname)
-					: NotificationStrings.Spoken.privateMessageAuthor(nickname)
-			}
-			message += NotificationStrings.Spoken.separator
+
+		guard channel.isChannel else {
+			return NotificationStrings.Spoken.privateHighlight(from: nickname, text: text)
 		}
-		return message + text
+
+		return NotificationStrings.Spoken.channelEvent(
+			.highlight,
+			channelName: visibility.includesChannelName ? spokenChannelName(channel) : nil,
+			nickname: visibility.includesNickname ? nickname : nil,
+			text: text
+		)
 	}
 
 	@MainActor
 	private func formatSpokenChannelEvent(
 		_ event: NotificationEvent,
-		channel: IRCChannel?,
+		channel: Channel?,
 		nickname: String?,
 		text: String?
 	) -> String? {
@@ -131,20 +127,12 @@ public extension IRCClient {
 		)
 		guard visibility.shouldSpeak else { return nil }
 
-		var message = ""
-		if visibility.includesChannelName || visibility.includesNickname {
-			message += event == .channelMessage
-				? NotificationStrings.Spoken.channelMessage
-				: NotificationStrings.Spoken.channelNotice
-			if visibility.includesChannelName {
-				message += NotificationStrings.Spoken.channel(spokenChannelName(channel))
-			}
-			if visibility.includesNickname {
-				message += NotificationStrings.Spoken.author(nickname)
-			}
-			message += NotificationStrings.Spoken.separator
-		}
-		return message + text
+		return NotificationStrings.Spoken.channelEvent(
+			event,
+			channelName: visibility.includesChannelName ? spokenChannelName(channel) : nil,
+			nickname: visibility.includesNickname ? nickname : nil,
+			text: text
+		)
 	}
 
 	private func formatSpokenPrivateEvent(
@@ -157,7 +145,7 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	private func formatSpokenKick(channel: IRCChannel?, nickname: String?) -> String? {
+	private func formatSpokenKick(channel: Channel?, nickname: String?) -> String? {
 		guard let channel, let nickname else { return nil }
 		return NotificationStrings.Spoken.kicked(from: spokenChannelName(channel), by: nickname)
 	}
@@ -176,7 +164,7 @@ public extension IRCClient {
 	@MainActor
 	private func formatSpokenMembership(
 		_ event: NotificationEvent,
-		channel: IRCChannel?,
+		channel: Channel?,
 		nickname: String?
 	) -> String? {
 		guard let channel, let nickname else { return nil }
@@ -198,12 +186,12 @@ public extension IRCClient {
 	}
 
 	@MainActor
-	private func spokenChannelName(_ channel: IRCChannel) -> String {
+	private func spokenChannelName(_ channel: Channel) -> String {
 		(channel.name as NSString).channelNameWithoutPrefix
 	}
 
 	@MainActor
-	private func isSelected(_ channel: IRCChannel?) -> Bool {
+	private func isSelected(_ channel: Channel?) -> Bool {
 		guard let channel else { return false }
 		return AppController.shared.mainWindow?.isItemSelected(channel) ?? false
 	}
@@ -215,12 +203,12 @@ public extension IRCClient {
 	func speakEvent(
 		_ event: NotificationEvent,
 		lineType: LogLineType,
-		target: IRCTreeItem?,
+		target: TreeItem?,
 		nickname: String?,
 		text: String?
 	) {
 		let resolvedTarget = target ?? self
-		let channel = resolvedTarget as? IRCChannel
+		let channel = resolvedTarget as? Channel
 		guard SharedApplication.sharedNotificationController().speakEvent(event, in: channel) else { return }
 		var notification = SpokenNotification(
 			notificationType: event,
@@ -240,68 +228,25 @@ public extension IRCClient {
 		SharedApplication.sharedSpeechSynthesizer().speak(.notification(notification))
 	}
 
-	func notifyText(
-		_ event: NotificationEvent,
-		lineType: LogLineType,
-		target: IRCChannel,
-		nickname: String,
-		text: String
-	) -> Bool {
-		notifyEvent(event, lineType: lineType, target: target, nickname: nickname, text: text, userInfo: nil)
-	}
+	/** Raises one event: the Dock bounce, the sound, the spoken line and the
+	 notification itself.
 
-	func notifyEvent(_ event: NotificationEvent, lineType: LogLineType) -> Bool {
-		notifyEvent(event, lineType: lineType, target: nil, nickname: nil, text: nil, userInfo: nil)
-	}
-
-	func notifyEvent(
-		_ event: NotificationEvent,
-		lineType: LogLineType,
-		target: IRCChannel?,
-		nickname: String?,
-		text: String?
-	) -> Bool {
-		notifyEvent(event, lineType: lineType, target: target, nickname: nickname, text: text, userInfo: nil)
-	}
-
-	func notifyEvent(
-		_ event: NotificationEvent,
-		lineType: LogLineType,
-		target: IRCChannel?,
-		nickname: String?,
-		text: String?,
-		userInfo: NotificationPayload?
-	) -> Bool {
-		deliverNotification(
-			event,
-			lineType: lineType,
-			target: target,
-			nickname: nickname,
-			text: text,
-			userInfo: userInfo
-		)
-	}
-
+	 Returns whether the event was answered — `false` only where the event is
+	 discarded outright, which is what tells the caller nothing was shown. */
 	@MainActor
-	private func deliverNotification(
+	func notifyEvent(
 		_ event: NotificationEvent,
 		lineType: LogLineType,
-		target: IRCChannel?,
-		nickname: String?,
-		text: String?,
-		userInfo suppliedUserInfo: NotificationPayload?
+		target: Channel? = nil,
+		nickname: String? = nil,
+		text: String? = nil,
+		userInfo suppliedUserInfo: NotificationPayload? = nil
 	) -> Bool {
-		let outputIsSuppressed = if let target, let text {
-			outputRuleMatched(in: text, channel: target)
-		} else {
-			false
-		}
 		let admission = IRCNotificationPolicy.admission(for: IRCNotificationAdmissionContext(
 			event: event,
 			isTerminating: isTerminating,
 			isCollapsingNetsplit: collapsedNetsplitBatch != nil,
 			nicknameIsLocalUser: nickname.map(nicknameIsMyself) ?? false,
-			outputIsSuppressed: outputIsSuppressed,
 			targetIgnoresHighlights: target?.config.ignoreHighlights ?? false,
 			targetDisablesPush: target.map { !$0.config.pushNotifications } ?? false
 		))
@@ -337,7 +282,7 @@ public extension IRCClient {
 			soundName: soundName,
 			isMuted: soundIsMuted,
 			isOnlySpoken: onlySpeak,
-			systemPlaysNotificationSounds: controller.systemPlaysNotificationSounds
+			systemSoundDelivery: controller.systemSoundDelivery
 		)
 		/* Exactly one of the two plays it: the notification carries the sound
 		 unless the system will not play it, in which case the application does
@@ -373,36 +318,32 @@ public extension IRCClient {
 			text: text
 		) else { return true }
 
-		if let sender = content.sender {
-			controller.notifyMessage(
-				from: sender,
-				in: content.title,
-				message: content.description ?? "",
-				sound: notificationSound,
-				userInfo: userInfo,
-				categoryIdentifier: NotificationController.categoryIdentifier(for: event)
-			)
-			return true
-		}
-
-		controller.notify(
-			event,
+		controller.post(
 			title: content.title,
-			description: content.description,
+			subtitle: content.subtitle,
+			body: content.body,
 			sound: notificationSound,
-			userInfo: userInfo
+			userInfo: userInfo,
+			categoryIdentifier: NotificationController.categoryIdentifier(for: event)
 		)
+
 		return true
 	}
 
+	/** What one event's notification says.
+
+	 The title is who or what it is about, the subtitle is where it happened and
+	 the body is the detail — the shape Messages and Mail use, and the shape
+	 every event takes. An event nobody spoke is titled with its own name, the
+	 same phrase the notification settings table lists it under. */
 	@MainActor
 	private func notificationContent(
 		for event: NotificationEvent,
 		lineType: LogLineType,
-		target: IRCChannel?,
+		target: Channel?,
 		nickname: String?,
 		text: String?
-	) -> NotificationContentFields? {
+	) -> NotificationContent? {
 		switch event {
 		case .highlight, .newPrivateMessage, .channelMessage, .channelNotice, .privateMessage, .privateNotice:
 			textNotificationContent(
@@ -415,13 +356,28 @@ public extension IRCClient {
 
 		case .fileTransferSendSuccessful, .fileTransferReceiveSuccessful, .fileTransferSendFailed,
 		     .fileTransferReceiveFailed, .fileTransferReceiveRequested:
-			fileTransferNotificationContent(nickname: nickname, text: text)
+			nickname.map {
+				NotificationContent(
+					title: NotificationStrings.eventTypeTitle(for: event),
+					subtitle: $0,
+					body: text
+				)
+			}
 
 		case .connect, .disconnect:
-			NotificationContentFields(title: networkNameAlt)
+			NotificationContent(
+				title: NotificationStrings.eventTypeTitle(for: event),
+				subtitle: networkNameAlt
+			)
 
 		case .addressBookMatch:
-			text.map { NotificationContentFields(description: $0) }
+			text.map {
+				NotificationContent(
+					title: NotificationStrings.eventTypeTitle(for: event),
+					subtitle: networkNameAlt,
+					body: $0
+				)
+			}
 
 		case .kick, .invite, .userJoined, .userParted, .userDisconnected:
 			membershipNotificationContent(
@@ -443,10 +399,10 @@ public extension IRCClient {
 	private func textNotificationContent(
 		for event: NotificationEvent,
 		lineType: LogLineType,
-		target: IRCChannel?,
+		target: Channel?,
 		nickname: String?,
 		text: String?
-	) -> NotificationContentFields? {
+	) -> NotificationContent? {
 		guard let nickname, let text else { return nil }
 		let location: String? = switch event {
 		case .highlight, .channelMessage, .channelNotice: target?.name
@@ -455,69 +411,72 @@ public extension IRCClient {
 		let formattedNickname = formatNickname(nickname, in: target)
 		let isAction = lineType == .action || lineType == .actionNoHighlight
 		let body = isAction
-			? IRCNotificationPolicy.textEventDescription(
-				lineType: lineType,
-				nickname: nickname,
-				formattedNickname: formattedNickname,
-				text: text
-			)
+			? NotificationStrings.actionBody(nickname: nickname, text: text)
 			: text
 
-		return NotificationContentFields(sender: formattedNickname, title: location, description: body)
+		return NotificationContent(title: formattedNickname, subtitle: location, body: body)
 	}
 
-	private func fileTransferNotificationContent(
-		nickname: String?,
-		text: String?
-	) -> NotificationContentFields? {
-		guard let nickname, let text else { return nil }
-		return NotificationContentFields(title: nickname, description: text)
-	}
+	/** Where it happened in the title and subtitle, who did it in the body.
 
+	 The channel and the network are the notification's own heading, so the
+	 sentence underneath names only the person and their reason. */
 	private func membershipNotificationContent(
 		for event: NotificationEvent,
-		target: IRCChannel?,
+		target: Channel?,
 		nickname: String?,
 		text: String?
-	) -> NotificationContentFields? {
+	) -> NotificationContent? {
 		guard let nickname else { return nil }
-		let description: String?
+		let title = NotificationStrings.eventTypeTitle(for: event)
 
 		switch event {
 		case .kick:
-			guard let target, let text else { return nil }
-			description = NotificationStrings.Membership.kicked(
-				by: nickname,
-				from: target.name,
-				reason: text
+			guard let target else { return nil }
+			return NotificationContent(
+				title: title,
+				subtitle: target.name,
+				body: NotificationStrings.Membership.kicked(by: nickname, reason: text)
 			)
 		case .invite:
 			guard let text else { return nil }
-			description = NotificationStrings.Membership.invited(by: nickname, to: text)
+			return NotificationContent(
+				title: title,
+				subtitle: networkNameAlt,
+				body: NotificationStrings.Membership.invited(by: nickname, to: text)
+			)
 		case .userJoined:
 			guard let target else { return nil }
-			description = NotificationStrings.Membership.joined(nickname: nickname, channelName: target.name)
+			return NotificationContent(
+				title: title,
+				subtitle: target.name,
+				body: NotificationStrings.Membership.joined(nickname: nickname)
+			)
 		case .userParted:
 			guard let target else { return nil }
-			description = NotificationStrings.Membership.parted(
-				nickname: nickname,
-				channelName: target.name,
-				reason: text
+			return NotificationContent(
+				title: title,
+				subtitle: target.name,
+				body: NotificationStrings.Membership.parted(nickname: nickname, reason: text)
 			)
 		case .userDisconnected:
-			description = NotificationStrings.Membership.disconnected(nickname: nickname, reason: text)
+			return NotificationContent(
+				title: title,
+				subtitle: networkNameAlt,
+				body: NotificationStrings.Membership.disconnected(nickname: nickname, reason: text)
+			)
 		default:
 			return nil
 		}
-
-		return NotificationContentFields(title: networkNameAlt, description: description)
 	}
 }
 
-/// What one notification says: who it is from, where it happened, and the text
-/// itself. A message fills all three; every other event fills what it has.
-struct NotificationContentFields {
-	var sender: String?
-	var title: String?
-	var description: String?
+/** What one notification says.
+
+ The title is who or what it is about, the subtitle is where it happened and
+ the body is the detail. Every event fills the title; the rest is what it has. */
+struct NotificationContent {
+	var title: String
+	var subtitle: String?
+	var body: String?
 }

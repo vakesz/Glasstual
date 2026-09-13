@@ -87,37 +87,11 @@ struct StringHelperTests {
 		#expect("#Glasstual".matchScore(against: "GLASS", lengthPenaltyWeight: 0.1) > 0)
 	}
 
-	@Test("Each searched character starts where the last match ended")
-	func occurrenceRangesAdvance() {
-		let ranges = "banana".rangesOfFirstOccurrences(ofCharactersIn: "an", options: [])
-
-		#expect(ranges.map(\.location) == [1, 2])
-	}
-
-	@Test("Scanning stops at the first character that is missing")
-	func occurrenceRangesStopOnMiss() {
-		#expect("banana".rangesOfFirstOccurrences(ofCharactersIn: "az", options: []).count == 1)
-		#expect("".rangesOfFirstOccurrences(ofCharactersIn: "a", options: []).isEmpty)
-	}
-
-	@Test("Case-insensitive scanning is what the spotlight table asks for")
-	func occurrenceRangesHonorOptions() {
-		let ranges = "Glasstual".rangesOfFirstOccurrences(ofCharactersIn: "gl", options: .caseInsensitive)
-
-		#expect(ranges.map(\.location) == [0, 1])
-	}
-
 	@Test("Truncation cuts on a character boundary")
 	func truncationRespectsCharacters() {
 		#expect("abc".truncated(toUTF8Bytes: 10) == "abc")
 		#expect("aあb".truncated(toUTF8Bytes: 3) == "a")
 		#expect("aあb".truncated(toUTF8Bytes: 4) == "aあ")
-	}
-
-	@Test("An encoding resolves to its IANA name")
-	func encodingsCarryCharsetNames() {
-		#expect(String.Encoding.ianaCharsetName(forRawValue: String.Encoding.utf8.rawValue) == "utf-8")
-		#expect(String.Encoding.ianaCharsetName(forRawValue: 0) == nil)
 	}
 
 	@Test("The encoding table is keyed by localized name and favours UTF-8")

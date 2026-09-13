@@ -39,15 +39,19 @@
 import Foundation
 
 @MainActor
-extension IRCClient: IRCDirectChatConnectionDelegate {
-	public func directChatConnection(_ connection: DirectChatConnection, didStartListeningOnPort port: UInt16) {
+public extension IRCClient {
+	func directChatConnection(_ connection: DirectChatConnection, didStartListeningOnPort port: UInt16) {
 		guard let channel = directChatChannel(for: connection) else {
 			connection.close()
 			return
 		}
 		let nickname = connection.peerNickname
 		let transferToken = connection.transferToken
-		SharedApplication.sharedFileTransferCenter().requestIPAddress { [weak self] address in
+		Task { [weak self] in
+			let address = await SharedApplication.sharedFileTransferCenter().lookUpIPAddress()
+
+			/* The lookup can reach a public service, so the offer this answers
+			 may have been closed by the time it returns. */
 			guard let self,
 			      channel.directChatConnection === connection,
 			      connection.state == .listening
@@ -68,7 +72,7 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 		}
 	}
 
-	public func directChatConnectionDidConnect(_ connection: DirectChatConnection) {
+	func directChatConnectionDidConnect(_ connection: DirectChatConnection) {
 		guard let channel = directChatChannel(for: connection) else {
 			connection.close()
 			return
@@ -79,7 +83,7 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 		printDebugInformation(IRCDirectChatStrings.established(nickname: connection.peerNickname), in: channel)
 	}
 
-	public func directChatConnection(
+	func directChatConnection(
 		_ connection: DirectChatConnection,
 		didReceiveMessage message: String,
 		isAction: Bool
@@ -89,10 +93,10 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 		let lineType: LogLineType = isAction ? .action : .privateMessage
 		print(message, by: nickname, in: channel, as: lineType, command: "PRIVMSG",
 		      receivedAt: Date(), isEncrypted: false)
-		_ = notifyText(.privateMessage, lineType: lineType, target: channel, nickname: nickname, text: message)
+		_ = notifyEvent(.privateMessage, lineType: lineType, target: channel, nickname: nickname, text: message)
 	}
 
-	public func directChatConnection(_ connection: DirectChatConnection, didCloseWithError error: Error?) {
+	func directChatConnection(_ connection: DirectChatConnection, didCloseWithError error: Error?) {
 		guard let channel = directChatChannel(for: connection) else { return }
 		channel.directChatConnection = nil
 		printDebugInformation(

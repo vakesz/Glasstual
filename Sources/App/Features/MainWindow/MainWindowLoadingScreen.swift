@@ -12,50 +12,35 @@ import SwiftUI
 public final class MainWindowLoadingScreen {
 	enum Content: Equatable {
 		case hidden
-		case welcome
+		case noServers
 		case progress(String)
 	}
 
 	private(set) var content = Content.hidden
 
-	@ObservationIgnored var visibilityDidChange: ((Bool) -> Void)?
-
 	public var viewIsVisible: Bool {
 		content != .hidden
 	}
 
-	public func showWelcomeAddServerView() {
-		show(.welcome)
+	/// The empty state: the application has no connection configured yet.
+	public func showNoServersView() {
+		content = .noServers
 	}
 
 	public func showProgressView(withReason reason: String) {
-		show(.progress(reason))
-	}
-
-	public func setProgressViewReason(_ reason: String) {
-		guard case .progress = content else { return }
 		content = .progress(reason)
 	}
 
-	public func hideAnimated() {
-		hideAnimated(true)
-	}
+	/** Takes the overlay down.
 
-	public func hideAnimated(_ animated: Bool) {
+	 A full-window cross-fade is the largest piece of motion in the window, so
+	 it is the first thing Reduce Motion asks an interface to drop; the overlay
+	 simply goes. */
+	public func hide() {
 		guard viewIsVisible else { return }
-		visibilityDidChange?(false)
-		if animated {
-			withAnimation(.easeOut(duration: 0.25)) {
-				content = .hidden
-			}
-		} else {
+		withAnimation(ReduceMotion.animation(.easeOut(duration: 0.25))) {
 			content = .hidden
 		}
-	}
-
-	private func show(_ content: Content) {
-		self.content = content
-		visibilityDidChange?(true)
 	}
 }
 
@@ -67,60 +52,50 @@ struct MainWindowLoadingContent: View {
 			switch model.content {
 			case .hidden:
 				EmptyView()
-			case .welcome:
-				ViewThatFits(in: .vertical) {
-					welcome(iconSize: 150, spacing: 14, padding: 28)
-					welcome(iconSize: 72, spacing: 8, padding: 12)
-				}
+			case .noServers:
+				noServers
 			case let .progress(reason):
-				ViewThatFits(in: .vertical) {
-					progress(reason: reason, iconSize: 150, spacing: 14, padding: 28)
-					progress(reason: reason, iconSize: 72, spacing: 8, padding: 12)
-				}
+				progress(reason: reason)
 			}
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity)
 		.background(.regularMaterial)
 	}
 
-	private func welcome(iconSize: CGFloat, spacing: CGFloat, padding: CGFloat) -> some View {
-		VStack(spacing: spacing) {
-			applicationIcon(size: iconSize)
-			Text(verbatim: MainWindowStrings.Loading.welcomeTitle)
-				.font(.largeTitle)
+	/// The system's empty state, so the title, the description and the action
+	/// carry the placement, spacing and text styles every other one has.
+	private var noServers: some View {
+		ContentUnavailableView {
+			Label(MainWindowStrings.Loading.noServersTitle, systemImage: "server.rack")
+		} description: {
 			Text(verbatim: MainWindowStrings.Loading.welcomeDescription)
-				.multilineTextAlignment(.center)
-				.foregroundStyle(.secondary)
-				.fixedSize(horizontal: false, vertical: true)
-				.frame(maxWidth: 440)
-			Button(MainWindowStrings.Loading.continueAction) {
-				AppController.shared.menuController?.showOnboardingWindow(nil)
+		} actions: {
+			Button(MenuStrings.Server.addServer) {
+				AppController.shared.menuController?.actionCoordinator.addServer(nil)
 			}
 			.keyboardShortcut(.defaultAction)
-			.accessibilityLabel(MainWindowStrings.Loading.beginSetup)
 		}
-		.padding(padding)
 	}
 
-	private func progress(reason: String, iconSize: CGFloat, spacing: CGFloat, padding: CGFloat) -> some View {
-		VStack(spacing: spacing) {
-			applicationIcon(size: iconSize)
+	private func progress(reason: String) -> some View {
+		VStack(spacing: UISpacing.wide) {
+			Image(nsImage: NSApp.applicationIconImage)
+				.resizable()
+				.scaledToFit()
+				.frame(width: applicationIconSize, height: applicationIconSize)
+				.accessibilityHidden(true)
 			Text(verbatim: MainWindowStrings.Loading.welcomeTitle)
 				.font(.largeTitle)
-			HStack(spacing: 8) {
+			HStack(spacing: UISpacing.regular) {
 				Text(verbatim: reason)
 				ProgressView()
 					.controlSize(.small)
 			}
 		}
-		.padding(padding)
+		.padding(UISpacing.loose)
 	}
 
-	private func applicationIcon(size: CGFloat) -> some View {
-		Image(nsImage: NSApp.applicationIconImage)
-			.resizable()
-			.scaledToFit()
-			.frame(width: size, height: size)
-			.accessibilityHidden(true)
-	}
+	/// The application icon at the size the Finder's own Get Info panel draws
+	/// it, scaled with the reader's text size.
+	@ScaledMetric private var applicationIconSize: CGFloat = 128
 }

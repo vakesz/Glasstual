@@ -43,8 +43,8 @@ import Testing
 @Suite("IRCv3 batch and labeled-response")
 @MainActor
 struct IRCSpecBatchTests {
-	private func batchClient() -> GLTTestClient {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+	private func batchClient() -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"])
 
 		client.enableCapability(.batch)
 		client.enableCapability(.messageTags)
@@ -52,14 +52,14 @@ struct IRCSpecBatchTests {
 		return client
 	}
 
-	private func message(_ line: String, on client: GLTTestClient) throws -> Message {
+	private func message(_ line: String, on client: TestClient) throws -> Message {
 		try #require(Message(line: line, on: client))
 	}
 
 	/// Replays the order the socket reader uses: the batch filter first, then
 	/// `BATCH` itself, then ordinary dispatch.
 	@discardableResult
-	private func feed(_ line: String, on client: GLTTestClient) throws -> Bool {
+	private func feed(_ line: String, on client: TestClient) throws -> Bool {
 		let message = try message(line, on: client)
 
 		if client.filterBatchCommandIncomingData(message) {
@@ -179,7 +179,7 @@ struct IRCSpecBatchTests {
 	/// negotiated. Without it, a tagged message is ordinary traffic.
 	@Test("batch: the tag is ignored without the capability")
 	func batchTagNeedsTheCapability() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me"])
+		let client = TestClient(configDictionary: ["nickname": "me"])
 		let message = try message("@batch=ref :alice!a@h PRIVMSG #chan :hi", on: client)
 
 		#expect(message.batchToken == nil)
@@ -250,8 +250,8 @@ struct IRCSpecBatchTests {
 
 	// MARK: - labeled-response
 
-	private func labelledClient() -> GLTTestClient {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+	private func labelledClient() -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"])
 
 		client.enableCapability(.messageTags)
 		client.enableCapability(.echoMessage)
@@ -342,12 +342,12 @@ struct IRCSpecBatchTests {
 	/// `message-tags`; without either there is nothing to correlate with.
 	@Test("labeled-response: no label is issued without message-tags")
 	func noLabelWithoutTheCapabilities() throws {
-		let bare = GLTTestClient(configDictionary: ["nickname": "me"])
+		let bare = TestClient(configDictionary: ["nickname": "me"])
 		let bareChannel = try #require(bare.findChannelOrCreate("#chan"))
 
 		#expect(bare.registerPendingDelivery(for: bareChannel) == nil)
 
-		let untagged = GLTTestClient(configDictionary: ["nickname": "me"])
+		let untagged = TestClient(configDictionary: ["nickname": "me"])
 
 		untagged.enableCapability(.labeledResponse)
 
@@ -362,7 +362,7 @@ struct IRCSpecBatchTests {
 	/// it had every message go out untracked.
 	@Test("labeled-response: labels are issued without echo-message")
 	func labelsAreIssuedWithoutEchoMessage() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me"])
+		let client = TestClient(configDictionary: ["nickname": "me"])
 
 		client.enableCapability(.messageTags)
 		client.enableCapability(.labeledResponse)
@@ -385,7 +385,7 @@ struct IRCSpecBatchTests {
 	/// grouped message uncorrelated and its delivery state stuck.
 	@Test("labeled-response: a grouped message carries one label")
 	func groupedMessagesCarryOneLabel() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"])
 
 		client.enableCapability(.messageTags)
 		client.enableCapability(.labeledResponse)
@@ -423,7 +423,7 @@ struct IRCSpecBatchTests {
 	/// grouped command goes out plain.
 	@Test("labeled-response: a grouped message is untagged without the capabilities")
 	func groupedMessagesAreUntaggedWithoutTheCapabilities() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"])
 
 		client.userHostmask = "me!user@example.org"
 		client.supportInfo.processConfigurationData("TARGMAX=PRIVMSG:4")

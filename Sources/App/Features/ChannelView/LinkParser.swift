@@ -42,8 +42,7 @@ import Foundation
 /// It is attached to rendered text under ``RendererFormatting/url`` and
 /// travels on a `TranscriptBody` from the render pipeline back to the main
 /// actor. A value rather than an object, so the rendered line that carries it
-/// really is the value its own marker claims; what plugins receive is a
-/// `PluginHyperlink` built from this.
+/// really is the value its own marker claims.
 public nonisolated struct LinkParserResult: Sendable, Hashable { // nonisolated: value
 	/// Random identifier that is unique to this result.
 	public let uniqueIdentifier: String

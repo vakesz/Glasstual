@@ -17,7 +17,6 @@ import SwiftUI
 @MainActor
 public protocol ServerEndpointListSheetDelegate: AnyObject {
 	func serverEndpointListSheet(_ sender: ServerEndpointListSheet, onOk serverList: [Server])
-	func serverEndpointListSheetWillClose(_ sender: ServerEndpointListSheet)
 }
 
 @MainActor
@@ -32,8 +31,8 @@ public final class ServerEndpointListSheet: MainWindowSheetSession {
 	private func installSheet() {
 		let rootView = ServerEndpointListView(
 			model: model,
-			submit: { [weak self] in self?.ok(nil) },
-			cancel: { [weak self] in self?.cancel(nil) }
+			submit: { [weak self] in self?.submit() },
+			cancel: { [weak self] in self?.cancel() }
 		)
 		setContent(rootView)
 	}
@@ -43,17 +42,13 @@ public final class ServerEndpointListSheet: MainWindowSheetSession {
 		startSheet()
 	}
 
-	override public func ok(_ sender: Any?) {
+	override public func submit() {
 		guard let servers = model.validatedServers() else {
 			return
 		}
 
 		(delegate as? any ServerEndpointListSheetDelegate)?.serverEndpointListSheet(self, onOk: servers)
-		super.ok(sender)
-	}
-
-	override public func sheetDidEnd(withReturnCode _: Int) {
-		(delegate as? any ServerEndpointListSheetDelegate)?.serverEndpointListSheetWillClose(self)
+		super.submit()
 	}
 }
 
@@ -101,14 +96,21 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 		passwordWasEdited = false
 	}
 
-	func validatedServer() throws -> Server {
-		try Server(
+	func validatedServer() -> Result<Server, ServerEndpointFault> {
+		guard let address = ServerEndpointValidation.validatedAddress(address) else {
+			return .failure(.address)
+		}
+		guard let port = ServerEndpointValidation.validatedPort(port) else {
+			return .failure(.port)
+		}
+
+		return .success(Server(
 			uniqueIdentifier: id,
-			serverAddress: ServerEndpointValidation.validatedAddress(address),
-			serverPort: ServerEndpointValidation.validatedPort(port),
+			serverAddress: address,
+			serverPort: port,
 			prefersSecuredConnection: prefersSecuredConnection,
 			pendingServerPassword: passwordWasEdited ? .edited(password) : storedPassword
-		)
+		))
 	}
 }
 
@@ -156,9 +158,8 @@ final class ServerEndpointListModel {
 		guard Task.isCancelled == false else { return }
 
 		for server in servers {
-			/* A field the person has already typed into keeps what they typed —
-			 an emptied one included, which is why this asks what was edited
-			 rather than what is empty. */
+			// See `ServerEndpointDraft.passwordWasEdited`: an emptied field is
+			// an edit too, so this asks what was typed into, not what is empty.
 			guard let index = entries.firstIndex(where: { $0.id == server.uniqueIdentifier }),
 			      entries[index].passwordWasEdited == false
 			else { continue }
@@ -199,6 +200,44 @@ final class ServerEndpointListModel {
 		entries.move(fromOffsets: offsets, toOffset: destination)
 	}
 
+	/// The address of one endpoint, by identity: a table column hands back the
+	/// row's value rather than a binding into the list it came from.
+	func address(for entryID: String) -> Binding<String> {
+		binding(for: entryID, \.address) { $0.addressDidChange(for: entryID) }
+	}
+
+	func port(for entryID: String) -> Binding<String> {
+		binding(for: entryID, \.port) { $0.portDidChange(for: entryID) }
+	}
+
+	func password(for entryID: String) -> Binding<String> {
+		binding(for: entryID, \.password) { _ in }
+	}
+
+	func isSecured(for entryID: String) -> Binding<Bool> {
+		Binding(
+			get: { [weak self] in
+				self?.entries.first { $0.id == entryID }?.prefersSecuredConnection ?? false
+			},
+			set: { [weak self] secured in self?.setSecured(secured, for: entryID) }
+		)
+	}
+
+	private func binding(
+		for entryID: String,
+		_ keyPath: WritableKeyPath<ServerEndpointDraft, String>,
+		didChange: @escaping (ServerEndpointListModel) -> Void
+	) -> Binding<String> {
+		Binding(
+			get: { [weak self] in self?.entries.first { $0.id == entryID }?[keyPath: keyPath] ?? "" },
+			set: { [weak self] value in
+				guard let self, let index = entries.firstIndex(where: { $0.id == entryID }) else { return }
+				entries[index][keyPath: keyPath] = value
+				didChange(self)
+			}
+		)
+	}
+
 	func moveSelection(by offset: Int) {
 		guard let selectedIndex else { return }
 		let destination = selectedIndex + offset
@@ -230,6 +269,21 @@ final class ServerEndpointListModel {
 		invalidPortIDs.remove(entryID)
 	}
 
+	/// The faults the last validation found, in the order the sheet shows them
+	/// under the table. One message per kind, because a list that repeats
+	/// "enter a server address" once per row says nothing extra.
+	var faults: [ServerEndpointFault] {
+		var faults: [ServerEndpointFault] = []
+		if invalidAddressIDs.isEmpty == false {
+			faults.append(.address)
+		}
+		if invalidPortIDs.isEmpty == false {
+			faults.append(.port)
+		}
+
+		return faults
+	}
+
 	func validatedServers() -> [Server]? {
 		clearValidation()
 		var servers: [Server] = []
@@ -237,16 +291,23 @@ final class ServerEndpointListModel {
 		/* An empty address is an invalid address, not a row to drop: silently
 		 discarding it loses whatever else the user typed into it. */
 		for entry in entries {
-			do {
-				try servers.append(entry.validatedServer())
-			} catch let error as NSError where error.code == ServerEndpointValidation.invalidAddressCode {
+			switch entry.validatedServer() {
+			case let .success(server):
+				servers.append(server)
+			case .failure(.address):
 				invalidAddressIDs.insert(entry.id)
-			} catch {
+			case .failure(.port):
 				invalidPortIDs.insert(entry.id)
 			}
 		}
 
-		return invalidAddressIDs.isEmpty && invalidPortIDs.isEmpty ? servers : nil
+		guard invalidAddressIDs.isEmpty, invalidPortIDs.isEmpty else {
+			// Selecting the first refused row is what points at the message.
+			selectedID = entries.first { invalidAddressIDs.contains($0.id) || invalidPortIDs.contains($0.id) }?.id
+			return nil
+		}
+
+		return servers
 	}
 
 	private func clearValidation() {

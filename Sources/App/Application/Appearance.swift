@@ -29,26 +29,25 @@ public extension Notification.Name {
 /// An immutable snapshot of the appearance the application is currently
 /// drawing in. It is built once per appearance change and only ever read
 /// afterwards, so it is a value.
-public struct AppearancePropertyCollection: AppearanceProperties, Equatable, Sendable {
+public struct AppearancePropertyCollection: Equatable, Sendable {
 	public var appearanceName = ""
 	public var appearanceType: AppearanceType = .light
 	public var isDarkAppearance = false
-	public var appKitAppearanceTarget: AppKitAppearanceTarget = .none
+	/// Whether the appearance is the application's own choice rather than the
+	/// system's. Only then does a window carry an `NSAppearance`.
+	public var overridesAppKitAppearance = false
 
 	public var appKitAppearance: NSAppearance? {
-		if appKitAppearanceTarget == .none {
+		guard overridesAppKitAppearance else {
 			return nil
 		}
 
-		if isDarkAppearance {
-			return Self.appKitDarkAppearance()
-		}
-
-		return Self.appKitLightAppearance()
+		return isDarkAppearance ? Self.appKitDarkAppearance() : Self.appKitLightAppearance()
 	}
 
-	public var shortAppearanceDescription: String {
-		isDarkAppearance ? "dark" : "light"
+	/// Compatibility with `MainWindow.swift:324`; see ``AppKitAppearanceTarget``.
+	public var appKitAppearanceTarget: AppKitAppearanceTarget {
+		overridesAppKitAppearance ? .window : .none
 	}
 
 	@MainActor public static func systemWideDarkModeEnabled() -> Bool {
@@ -169,16 +168,13 @@ public final class Appearance: NSObject {
 
 		let isAppearanceDark = appearanceType == .dark
 
-		var appKitAppearanceTarget: AppKitAppearanceTarget = .none
-		if preferredAppearance != .inherited {
-			appKitAppearanceTarget = .window
-		}
+		let overridesAppKitAppearance = preferredAppearance != .inherited
 
 		let oldProperties = properties
 		let changeAppearance =
 			hasResolvedAppearance == false
 				|| oldProperties.appearanceType != appearanceType
-				|| oldProperties.appKitAppearanceTarget != appKitAppearanceTarget
+				|| oldProperties.overridesAppKitAppearance != overridesAppKitAppearance
 
 		var systemChanged = systemChanged
 
@@ -194,7 +190,7 @@ public final class Appearance: NSObject {
 			appearanceName: appearanceDefaultName,
 			appearanceType: appearanceType,
 			isDarkAppearance: isAppearanceDark,
-			appKitAppearanceTarget: appKitAppearanceTarget
+			overridesAppKitAppearance: overridesAppKitAppearance
 		)
 		hasResolvedAppearance = true
 

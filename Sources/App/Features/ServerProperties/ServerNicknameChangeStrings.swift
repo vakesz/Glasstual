@@ -25,4 +25,12 @@ nonisolated enum ServerNicknameChangeStrings { // nonisolated: value
 	static var newNicknameLabel: String {
 		String(localized: .TDCServerChangeNicknameSheet.newNicknameLabel)
 	}
+
+	static var newNicknamePlaceholder: String {
+		String(localized: .TDCServerChangeNicknameSheet.newNicknamePlaceholder)
+	}
+
+	static var changeDescription: String {
+		String(localized: .TDCServerChangeNicknameSheet.nicknameChangeDescription)
+	}
 }

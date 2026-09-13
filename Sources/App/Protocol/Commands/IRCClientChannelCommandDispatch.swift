@@ -41,7 +41,7 @@ import Foundation
 private struct ChannelModerationInvocation {
 	let command: IRCLocalCommand
 	let channelName: String
-	let channel: IRCChannel?
+	let channel: Channel?
 	let nickname: String
 	let remainingArguments: String
 
@@ -59,56 +59,65 @@ private struct ChannelModerationInvocation {
 @MainActor
 extension IRCClient {
 	func dispatchNativeChannelCommand(
-		_ parsed: ParsedUserCommand,
-		targetChannel: IRCChannel?
-	) -> Bool {
-		guard parsed.localCommand != nil else { return false }
-		return dispatchBroadcastCommand(parsed) ||
-			dispatchCTCPCommand(parsed, targetChannel: targetChannel) ||
-			dispatchUserPrivilegeCommand(parsed, targetChannel: targetChannel) ||
-			dispatchChannelModerationCommand(parsed, targetChannel: targetChannel) ||
-			dispatchChannelLifecycleCommand(parsed, targetChannel: targetChannel) ||
-			dispatchChannelNavigationCommand(parsed) ||
-			dispatchChannelWindowCommand(parsed, targetChannel: targetChannel) ||
-			dispatchChannelMembershipCommand(parsed, targetChannel: targetChannel) ||
-			dispatchChannelModeCommand(parsed, targetChannel: targetChannel) ||
-			dispatchQueryRenameCommand(parsed, targetChannel: targetChannel) ||
+		_ group: IRCLocalCommand.ChannelGroup,
+		parsed: ParsedUserCommand,
+		targetChannel: Channel?
+	) {
+		switch group {
+		case .broadcast:
+			dispatchBroadcastCommand(parsed)
+		case .ctcp:
+			dispatchCTCPCommand(parsed, targetChannel: targetChannel)
+		case .privilege:
+			dispatchUserPrivilegeCommand(parsed, targetChannel: targetChannel)
+		case .moderation:
+			dispatchChannelModerationCommand(parsed, targetChannel: targetChannel)
+		case .lifecycle:
+			dispatchChannelLifecycleCommand(parsed, targetChannel: targetChannel)
+		case .navigation:
+			dispatchChannelNavigationCommand(parsed)
+		case .window:
+			dispatchChannelWindowCommand(parsed, targetChannel: targetChannel)
+		case .membership:
+			dispatchChannelMembershipCommand(parsed, targetChannel: targetChannel)
+		case .mode:
+			dispatchChannelModeCommand(parsed, targetChannel: targetChannel)
+		case .queryRename:
+			dispatchQueryRenameCommand(parsed, targetChannel: targetChannel)
+		case .conversation:
 			dispatchChannelConversationCommand(parsed, targetChannel: targetChannel)
+		}
 	}
 
-	private func dispatchBroadcastCommand(_ parsed: ParsedUserCommand) -> Bool {
-		let command = parsed.localCommand
-		guard command == .ame || command == .amsg else { return false }
-		guard isLoggedIn else { return true }
-		guard requireArguments(parsed.arguments, for: parsed.command) else { return true }
-		let remoteCommand: IRCRemoteCommand = command == .amsg ? .privmsg : .privmsgAction
+	private func dispatchBroadcastCommand(_ parsed: ParsedUserCommand) {
+		guard isLoggedIn else { return }
+		guard requireArguments(parsed.arguments, for: parsed.command) else { return }
+		let remoteCommand: IRCRemoteCommand = parsed.localCommand == .amsg ? .privmsg : .privmsgAction
 		for client in (world?.clientList ?? [])
 			where client === self || environment.preferences.amsgAllConnections
 		{
 			let channels = client.channelList.filter { $0.isActive && $0.isChannel }
 			client.sendText(parsed.arguments.attributedRest, as: remoteCommand, toChannels: channels)
 		}
-		return true
 	}
 
-	private func dispatchCTCPCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
+	private func dispatchCTCPCommand(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		let command = parsed.localCommand
-		guard command == .ctcp || command == .ctcpreply else { return false }
-		guard isLoggedIn else { return true }
+		guard isLoggedIn else { return }
 		var arguments = parsed.arguments
 		let selectedChannel = output?.selectedChannel
 		let targetName: String
 		if let targetChannel, targetChannel !== selectedChannel {
 			guard targetChannel.isUtility == false else {
 				printDebugInformation(IRCCommandStrings.commandUnavailableInWindow)
-				return true
+				return
 			}
 			targetName = targetChannel.name
 		} else {
 			targetName = arguments.next()
 		}
 		let subcommand = arguments.next().uppercased()
-		guard requireArguments(subcommand, for: parsed.command) else { return true }
+		guard requireArguments(subcommand, for: parsed.command) else { return }
 		if command == .ctcpreply {
 			sendCTCPReply(targetName, command: subcommand, text: arguments.rest)
 		} else if subcommand == "PING" {
@@ -116,22 +125,17 @@ extension IRCClient {
 		} else {
 			sendCTCPQuery(targetName, command: subcommand, text: arguments.rest)
 		}
-		return true
 	}
 
 	private func dispatchChannelModerationCommand(
 		_ parsed: ParsedUserCommand,
-		targetChannel: IRCChannel?
-	) -> Bool {
-		guard let command = parsed.localCommand,
-		      ChannelModerationInvocation.modeCommands.contains(command)
-		      || ChannelModerationInvocation.kickCommands.contains(command)
-		else { return false }
-		guard isLoggedIn else { return true }
+		targetChannel: Channel?
+	) {
+		guard let command = parsed.localCommand, isLoggedIn else { return }
 		var arguments = parsed.arguments
 		var nickname = arguments.next()
 		let channelName: String
-		let channel: IRCChannel?
+		let channel: Channel?
 		if stringIsChannelName(nickname) {
 			channelName = nickname
 			channel = findChannel(channelName)
@@ -141,9 +145,9 @@ extension IRCClient {
 			channel = targetChannel
 		} else {
 			printDebugInformation(IRCCommandStrings.channelRequired)
-			return true
+			return
 		}
-		guard requireArguments(nickname, for: parsed.command) else { return true }
+		guard requireArguments(nickname, for: parsed.command) else { return }
 		let invocation = ChannelModerationInvocation(
 			command: command,
 			channelName: channelName,
@@ -151,9 +155,8 @@ extension IRCClient {
 			nickname: nickname,
 			remainingArguments: arguments.rest
 		)
-		guard applyModerationModeIfNeeded(invocation) else { return true }
+		guard applyModerationModeIfNeeded(invocation) else { return }
 		applyModerationKickIfNeeded(invocation)
-		return true
 	}
 
 	private func applyModerationModeIfNeeded(_ invocation: ChannelModerationInvocation) -> Bool {
@@ -180,8 +183,8 @@ extension IRCClient {
 
 	private func dispatchUserPrivilegeCommand(
 		_ parsed: ParsedUserCommand,
-		targetChannel: IRCChannel?
-	) -> Bool {
+		targetChannel: Channel?
+	) {
 		let mode: (symbol: String, isSet: Bool)? = switch parsed.localCommand {
 		case .op: ("o", true)
 		case .deop: ("o", false)
@@ -191,11 +194,11 @@ extension IRCClient {
 		case .devoice: ("v", false)
 		default: nil
 		}
-		guard let mode else { return false }
-		guard isLoggedIn else { return true }
+
+		guard let mode, isLoggedIn else { return }
 		guard supportInfo.modeSymbolIsUserPrefix(mode.symbol) else {
 			printDebugInformation(IRCCommandStrings.unsupportedMode(mode.symbol))
-			return true
+			return
 		}
 		var arguments = parsed.arguments
 		let channelName = stringIsChannelName(arguments.rest)
@@ -203,9 +206,9 @@ extension IRCClient {
 			: (targetChannel?.isChannel == true ? targetChannel?.name : nil)
 		guard let channelName else {
 			printDebugInformation(IRCCommandStrings.channelRequired)
-			return true
+			return
 		}
-		guard requireArguments(arguments.rest, for: parsed.command) else { return true }
+		guard requireArguments(arguments.rest, for: parsed.command) else { return }
 		/* Each change carries its mode string and its nicknames separately, so
 		 nothing has to take a joined string back apart: sent whole,
 		 `+ooo alice bob carol` was one parameter and opped nobody. */
@@ -217,39 +220,37 @@ extension IRCClient {
 			),
 			inChannelNamed: channelName
 		)
-		return true
 	}
 
 	private func dispatchChannelLifecycleCommand(
 		_ parsed: ParsedUserCommand,
-		targetChannel: IRCChannel?
-	) -> Bool {
-		guard let command = parsed.localCommand else { return false }
+		targetChannel: Channel?
+	) {
+		guard let command = parsed.localCommand else { return }
 		switch command {
 		case .j, .join:
-			guard isLoggedIn else { return true }
+			guard isLoggedIn else { return }
 			joinCommandChannel(parsed, targetChannel: targetChannel)
 		case .joinRandom:
-			guard isLoggedIn else { return true }
+			guard isLoggedIn else { return }
 			joinRandomDebugChannels(parsed)
 		case .cycle, .hop, .rejoin:
-			guard isLoggedIn else { return true }
+			guard isLoggedIn else { return }
 			guard let targetChannel, targetChannel.isChannel else {
 				printDebugInformation(IRCCommandStrings.channelRequired)
-				return true
+				return
 			}
 			part(targetChannel)
 			forceJoinChannel(targetChannel.name, password: targetChannel.secretKey)
 		case .leave, .part:
-			guard isLoggedIn else { return true }
+			guard isLoggedIn else { return }
 			partCommandChannel(parsed, targetChannel: targetChannel)
 		default:
-			return false
+			break
 		}
-		return true
 	}
 
-	private func joinCommandChannel(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) {
+	private func joinCommandChannel(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		var arguments = parsed.arguments
 		let channelName: String
 		if arguments.isEmpty {
@@ -279,11 +280,11 @@ extension IRCClient {
 		}
 	}
 
-	private func partCommandChannel(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) {
+	private func partCommandChannel(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		var arguments = parsed.arguments
 		let explicitChannel = stringIsChannelName(arguments.rest) ? arguments.next() : nil
 		if explicitChannel == nil, let targetChannel, targetChannel.isChannel == false {
-			world?.destroy(targetChannel)
+			world?.destroyChannel(targetChannel)
 			return
 		}
 		guard let channelName = explicitChannel ?? targetChannel?.name else { return }
@@ -291,12 +292,11 @@ extension IRCClient {
 		send("PART", arguments: [channelName, reason])
 	}
 
-	private func dispatchChannelNavigationCommand(_ parsed: ParsedUserCommand) -> Bool {
-		guard parsed.localCommand == .goto else { return false }
-		guard let mainWindow = output else { return true }
+	private func dispatchChannelNavigationCommand(_ parsed: ParsedUserCommand) {
+		guard let mainWindow = output else { return }
 		var arguments = parsed.arguments
 		let needle = arguments.next()
-		guard requireArguments(needle, for: parsed.command) else { return true }
+		guard requireArguments(needle, for: parsed.command) else { return }
 		var bestMatch = mainWindow.selectedItem
 		var bestScore: CGFloat = 0
 		for client in world?.clientList ?? [] {
@@ -308,25 +308,25 @@ extension IRCClient {
 			}
 		}
 		if let bestMatch {
-			mainWindow.selectItem(bestMatch)
+			mainWindow.select(bestMatch)
 		}
-		return true
 	}
 
 	private func dispatchChannelWindowCommand(
 		_ parsed: ParsedUserCommand,
-		targetChannel: IRCChannel?
-	) -> Bool {
-		guard let command = parsed.localCommand else { return false }
-		guard let mainWindow = output else { return false }
+		targetChannel: Channel?
+	) {
+		guard let command = parsed.localCommand else { return }
 		switch command {
 		case .clear:
+			guard let mainWindow = output else { return }
 			if let targetChannel {
 				mainWindow.clearContents(of: targetChannel)
 			} else {
 				mainWindow.clearContents(of: self)
 			}
 		case .clearall:
+			guard let mainWindow = output else { return }
 			for client in (world?.clientList ?? [])
 				where client === self || environment.preferences.clearAllConnections
 			{
@@ -336,22 +336,21 @@ extension IRCClient {
 		case .close, .remove:
 			closeCommandChannel(parsed, targetChannel: targetChannel)
 		case .list:
-			guard isLoggedIn else { return true }
+			guard isLoggedIn else { return }
 			openServerChannelList()
 		case .setcolor:
 			setColorForCommandNickname(parsed)
 		default:
-			return false
+			break
 		}
-		return true
 	}
 
-	private func closeCommandChannel(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) {
+	private func closeCommandChannel(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		var arguments = parsed.arguments
 		let channelName = arguments.next()
 		if channelName.isEmpty {
 			if let targetChannel {
-				world?.destroy(targetChannel)
+				world?.destroyChannel(targetChannel)
 			}
 			return
 		}
@@ -359,7 +358,7 @@ extension IRCClient {
 			printDebugInformation(IRCCommandStrings.channelNotFound(channelName))
 			return
 		}
-		world?.destroy(channel)
+		world?.destroyChannel(channel)
 	}
 
 	private func setColorForCommandNickname(_ parsed: ParsedUserCommand) {
@@ -379,12 +378,11 @@ extension IRCClient {
 
 	private func dispatchChannelMembershipCommand(
 		_ parsed: ParsedUserCommand,
-		targetChannel: IRCChannel?
-	) -> Bool {
-		guard parsed.localCommand == .invite else { return false }
-		guard isLoggedIn else { return true }
+		targetChannel: Channel?
+	) {
+		guard isLoggedIn else { return }
 		let arguments = parsed.arguments
-		guard requireArguments(arguments, for: parsed.command) else { return true }
+		guard requireArguments(arguments, for: parsed.command) else { return }
 		var nicknames = arguments.rest.components(separatedBy: .whitespaces)
 		let channelName: String?
 		if let lastArgument = nicknames.last, stringIsChannelName(lastArgument) {
@@ -395,18 +393,15 @@ extension IRCClient {
 		}
 		guard let channelName else {
 			printDebugInformation(IRCCommandStrings.channelRequired)
-			return true
+			return
 		}
 		for nickname in nicknames where stringIsNickname(nickname) {
 			send("INVITE", arguments: [nickname, channelName])
 		}
-		return true
 	}
 
-	private func dispatchChannelModeCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		let command = parsed.localCommand
-		guard command == .modeShortcut || command == .mode else { return false }
-		guard isLoggedIn else { return true }
+	private func dispatchChannelModeCommand(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
+		guard isLoggedIn else { return }
 		var arguments = parsed.arguments
 		let modeString = arguments.rest
 		let usesSelectedTarget = modeString.isEmpty || modeString.hasPrefix("+") || modeString.hasPrefix("-")
@@ -415,24 +410,22 @@ extension IRCClient {
 			: arguments.next()
 		guard let channelName else {
 			printInvalidSyntaxMessage(for: parsed.command)
-			return true
+			return
 		}
 		sendModes(arguments.isEmpty ? nil : arguments.rest, withParametersString: nil, inChannelNamed: channelName)
-		return true
 	}
 
-	private func dispatchQueryRenameCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		guard parsed.localCommand == .setqueryname else { return false }
+	private func dispatchQueryRenameCommand(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		guard let targetChannel, targetChannel.isPrivateMessage else {
 			printDebugInformation(IRCCommandStrings.queryRequired)
-			return true
+			return
 		}
 		var arguments = parsed.arguments
 		let nickname = arguments.next()
-		guard requireArguments(nickname, for: parsed.command) else { return true }
+		guard requireArguments(nickname, for: parsed.command) else { return }
 		guard stringIsNickname(nickname) else {
 			printDebugInformation(IRCCommandStrings.invalidArguments)
-			return true
+			return
 		}
 		if let existingQuery = findChannel(nickname) {
 			/* Delete/Cancel, not Yes/No: the button says what accepting does, and
@@ -448,32 +441,30 @@ extension IRCClient {
 					style: .warning
 				)
 			) ?? true
-			guard shouldDelete else { return true }
-			world?.destroy(existingQuery)
+			guard shouldDelete else { return }
+			world?.destroyChannel(existingQuery)
 		}
 		targetChannel.name = nickname
 		if let mainWindow = output {
 			mainWindow.reloadTreeItem(targetChannel)
 			mainWindow.updateTitle(for: targetChannel)
 		}
-		return true
 	}
 
 	private func dispatchChannelConversationCommand(
 		_ parsed: ParsedUserCommand,
-		targetChannel: IRCChannel?
-	) -> Bool {
-		guard let command = parsed.localCommand else { return false }
+		targetChannel: Channel?
+	) {
+		guard let command = parsed.localCommand else { return }
 		switch command {
 		case .query:
 			openCommandQuery(parsed)
 		case .topicShortcut, .topic:
-			guard isLoggedIn else { return true }
+			guard isLoggedIn else { return }
 			setCommandTopic(parsed, targetChannel: targetChannel)
 		default:
-			return false
+			break
 		}
-		return true
 	}
 
 	private func openCommandQuery(_ parsed: ParsedUserCommand) {
@@ -487,13 +478,13 @@ extension IRCClient {
 		guard let query = findChannelOrCreate(nickname, isPrivateMessage: true),
 		      let mainWindow = output
 		else { return }
-		mainWindow.selectItem(query)
+		mainWindow.select(query)
 		if arguments.isEmpty == false {
 			sendText(arguments.attributedRest, as: .privmsg, to: query)
 		}
 	}
 
-	private func setCommandTopic(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) {
+	private func setCommandTopic(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		var arguments = parsed.arguments
 		let channelName = stringIsChannelName(arguments.rest)
 			? arguments.next()

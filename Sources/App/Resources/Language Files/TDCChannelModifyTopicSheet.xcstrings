@@ -37,50 +37,82 @@
         }
       }
     },
-    "maximum-length-message" : {
-      "comment" : "Message below the title of the warning shown when a channel topic exceeds the server limit. Migrated from the legacy key zm4-cr.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If you continue typing, the end of your topic may be cut off."
-          }
-        }
-      }
-    },
-    "maximum-length-title" : {
-      "comment" : "Title of the warning shown when the topic is longer than the server limit. The first argument is the network name and the second is the maximum number of characters. Migrated from the legacy key 27l-qx.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You have exceeded the maximum topic length defined by %1$@ which is %2$ld characters"
-          }
-        }
-      }
-    },
     "topic-label" : {
-      "comment" : "Label above the topic editor. The argument is the IRC channel name.",
+      "comment" : "Heading above the topic editor. The argument is the IRC channel name.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Topic for %@:"
+            "value" : "Topic for %@"
           }
         }
       }
     },
-    "window-title" : {
-      "comment" : "Title of the channel topic sheet.",
+    "characters-remaining" : {
+      "comment" : "Footer below the topic editor counting the characters remaining before the server's topic limit. Replaces the warning alert that used to interrupt typing. Migrated from the legacy keys zm4-cr and 27l-qx.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg character remaining"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg characters remaining"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Change Topic"
+            "value" : "%#@arg1@"
+          }
+        }
+      }
+    },
+    "characters-over-limit" : {
+      "comment" : "Footer below the topic editor once the topic is longer than the server accepts, counting the characters over the limit. The Change Topic button stays disabled until the topic fits.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg character too many"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg characters too many"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@arg1@"
           }
         }
       }

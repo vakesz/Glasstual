@@ -53,13 +53,9 @@ struct ServerHighlightListRow: Identifiable, Equatable {
 		time = entry.timeLogged
 	}
 
-	/// How long ago the highlight arrived, read at the moment the row is drawn.
-	/// Freezing it at construction left every row showing the age it had when it
-	/// was added, so nothing in an open sheet ever grew older.
+	/// How long ago the highlight arrived.
 	var timeLabel: String {
-		let formattedInterval = humanReadableTimeInterval(time.timeIntervalSinceNow, true, 0) as String? ?? ""
-
-		return ApplicationStrings.relativeTime(formattedInterval)
+		time.formatted(.relative(presentation: .numeric))
 	}
 
 	var copyText: String {
@@ -84,12 +80,7 @@ struct ServerHighlightListComparator: SortComparator {
 			lhs.time.compare(rhs.time)
 		}
 
-		guard order == .reverse else { return result }
-		return switch result {
-		case .orderedAscending: .orderedDescending
-		case .orderedDescending: .orderedAscending
-		case .orderedSame: .orderedSame
-		}
+		return result.ordered(by: order)
 	}
 }
 

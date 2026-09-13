@@ -20,71 +20,47 @@ struct PreferencesRootView: View {
 	@Bindable var model: PreferencesPaneModel
 	@Environment(\.openURL) private var openURL
 
-	private var sectionSelection: Binding<PreferencesSectionIdentifier?> {
+	private var selection: Binding<PreferencesSelection?> {
 		Binding(
-			get: { model.selection.sectionIdentifier },
-			set: { identifier in
-				guard let identifier else { return }
-				model.selectSection(identifier)
+			get: { model.selection },
+			set: { destination in
+				guard let destination else { return }
+				model.select(destination)
 			}
-		)
-	}
-
-	private var subPages: [PreferencesSubPage] {
-		model.currentSection?.subPages ?? []
-	}
-
-	private var currentSubPage: PreferencesSubPage? {
-		subPages.first { $0.identifier == model.selection.subPageIdentifier }
-	}
-
-	/** Resolved against the section's own sub-pages rather than read straight off
-	 the selection. While a section change settles, the picker can be asked to
-	 draw with the incoming selection and the outgoing section's tags, and a
-	 selection with no matching tag is undefined behaviour SwiftUI logs about. */
-	private var selectedSubPage: Binding<String> {
-		Binding(
-			get: { currentSubPage?.identifier ?? subPages.first?.identifier ?? "" },
-			set: { _ = model.selectSubPage($0) }
 		)
 	}
 
 	var body: some View {
 		let fileRequest = model.fileRequest.request
 		return NavigationSplitView(columnVisibility: .constant(.all)) {
-			List(selection: sectionSelection) {
-				ForEach(model.sections) { section in
-					Label(section.title, systemImage: section.symbolName)
-						.tag(section.identifier)
-				}
+			/* The rows are identified by their selection, so the list needs no
+			 tags: choosing one hands back the destination it stands for. */
+			List(model.destinations, selection: selection) { destination in
+				Label(destination.title, systemImage: destination.symbolName)
 			}
 			.listStyle(.sidebar)
 			.scrollEdgeEffectStyle(.soft, for: .all)
+			.accessibilityIdentifier("settings-sidebar")
 			.navigationTitle(PreferencesStrings.accessibilityTitle)
-			/* The section list is pinned open, so the toggle a split view adds
-			 by default is a button that can never do anything. This belongs on
-			 the column's content: on the split view itself it does nothing. */
+			/* The sidebar is pinned open, so the toggle a split view adds by
+			 default is a button that can never do anything. This belongs on the
+			 column's content: on the split view itself it does nothing. */
 			.toolbar(removing: .sidebarToggle)
-			.navigationSplitViewColumnWidth(
-				min: PreferencesLayout.sidebarWidth,
-				ideal: PreferencesLayout.sidebarWidth,
-				max: PreferencesLayout.sidebarWidth + 40
-			)
+			.navigationSplitViewColumnWidth(PreferencesMetrics.sidebarWidth)
 		} detail: {
 			detail
 		}
 		.navigationSplitViewStyle(.balanced)
 		.modifier(PreferencesTransferPresentation(session: .shared, host: .settings))
-		/* The Settings window takes its size from here and nowhere else. The
-		 infinite maxima are what make it resizable: with a minimum alone the
-		 content refuses to grow and the window has nothing to resize into. */
+		/* The Settings window takes its size from here and nowhere else: one
+		 ideal size for every pane, so moving between them does not resize the
+		 window, and a floor the shortest form still draws inside. Each pane's
+		 own height comes from its form, which scrolls. */
 		.frame(
-			minWidth: PreferencesLayout.minimumWindowSize.width,
-			idealWidth: PreferencesLayout.windowSize.width,
-			maxWidth: .infinity,
-			minHeight: PreferencesLayout.minimumWindowSize.height,
-			idealHeight: PreferencesLayout.windowSize.height,
-			maxHeight: .infinity
+			minWidth: PreferencesMetrics.minimumWindowSize.width,
+			idealWidth: PreferencesMetrics.windowSize.width,
+			minHeight: PreferencesMetrics.minimumWindowSize.height,
+			idealHeight: PreferencesMetrics.windowSize.height
 		)
 		.fileImporter(
 			isPresented: PendingFileRequest<PreferencesImportRequest>.presentation($model.fileRequest),
@@ -103,15 +79,14 @@ struct PreferencesRootView: View {
 			model.completeExport(result)
 		}
 		.alert(
-			TranscriptThemeStrings.themeError,
-			isPresented: errorIsPresented,
-			actions: {
-				Button(PromptStrings.Action.confirmation) { model.presentationError = nil }
-			},
-			message: {
-				Text(verbatim: model.presentationError ?? "")
-			}
-		)
+			model.presentationFailure?.title ?? "",
+			isPresented: failureIsPresented,
+			presenting: model.presentationFailure
+		) { _ in
+			Button(PromptStrings.Action.confirmation) { model.presentationFailure = nil }
+		} message: { failure in
+			Text(verbatim: failure.message)
+		}
 		.sheet(isPresented: $model.showsFontPicker) {
 			PreferencesFontPicker(
 				fontName: model.transcriptTheme.fontName,
@@ -137,190 +112,95 @@ struct PreferencesRootView: View {
 		)
 	}
 
-	private var errorIsPresented: Binding<Bool> {
+	private var failureIsPresented: Binding<Bool> {
 		Binding(
-			get: { model.presentationError != nil },
+			get: { model.presentationFailure != nil },
 			set: {
 				if $0 == false {
-					model.presentationError = nil
+					model.presentationFailure = nil
 				}
 			}
 		)
 	}
 
+	@ViewBuilder
 	private var detail: some View {
-		VStack(spacing: 0) {
-			if let section = model.currentSection {
-				/* Identified by its section, so that moving to another one
-				 rebuilds the picker rather than updating one whose tags still
-				 belong to the section being left. */
-				PreferencesSubPagePicker(
-					sectionTitle: section.title,
-					subPages: section.subPages,
-					selection: selectedSubPage
-				)
-				.id(section.identifier)
-			}
-			if let currentSubPage {
-				PreferencesSubPageView(model: model, subPage: currentSubPage)
-			} else {
-				ContentUnavailableView(
-					PreferencesStrings.accessibilityTitle,
-					systemImage: "gearshape"
-				)
-			}
+		if let destination = model.currentDestination {
+			PreferencesDestinationView(model: model, destination: destination)
+				.navigationTitle(destination.title)
+		} else {
+			ContentUnavailableView(
+				PreferencesStrings.noSelectionTitle,
+				systemImage: "gearshape",
+				description: Text(verbatim: PreferencesStrings.noSelectionMessage)
+			)
+			.navigationTitle(PreferencesStrings.accessibilityTitle)
 		}
-		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-		.navigationTitle(model.currentSection?.title ?? PreferencesStrings.accessibilityTitle)
 	}
 }
 
-/// When a section's sub-page picker can be drawn at all.
-enum PreferencesSubPagePickerPolicy {
-	/** A picker needs more than one segment to be worth drawing, and it needs a
-	 selection one of those segments carries as its tag: SwiftUI reports a
-	 selection with no matching tag as undefined and draws nothing sensible. */
-	static func drawsPicker(subPageIdentifiers: [String], selection: String) -> Bool {
-		subPageIdentifiers.count > 1 && subPageIdentifiers.contains(selection)
-	}
-}
-
-/** The segmented row that picks between one section's sub-pages.
-
- It keeps to the form's own width so no section can push the window wider, and
- a section with more sub-pages than a segmented row holds lists them in a
- pop-up instead. */
-private struct PreferencesSubPagePicker: View {
-	let sectionTitle: String
-	let subPages: [PreferencesSubPage]
-	@Binding var selection: String
-
-	var body: some View {
-		if PreferencesSubPagePickerPolicy.drawsPicker(
-			subPageIdentifiers: subPages.map(\.identifier),
-			selection: selection
-		) {
-			pickerContent
-				.frame(maxWidth: .infinity)
-				.padding(.horizontal, PreferencesLayout.contentInset)
-				.padding(.top, PreferencesMetrics.spacingLarge)
-		}
-	}
-
-	/// Uses segments when they fit and automatically falls back to a menu.
-	private var pickerContent: some View {
-		ViewThatFits(in: .horizontal) {
-			picker
-				.pickerStyle(.segmented)
-				.fixedSize()
-			picker
-				.pickerStyle(.menu)
-				.fixedSize()
-		}
-	}
-
-	private var picker: some View {
-		Picker(selection: $selection) {
-			ForEach(subPages) { subPage in
-				Text(verbatim: subPage.title).tag(subPage.identifier)
-			}
-		} label: {
-			EmptyView()
-		}
-		.labelsHidden()
-		.accessibilityLabel(Text(verbatim: sectionTitle))
-	}
-}
-
-/** One segment's content: the pane on its own, or the several panes an Advanced
- group gathers, drawn as one form whose sections carry the old pane names. */
-struct PreferencesSubPageView: View {
+/** What one sidebar row shows: the panes it gathers, drawn as one form whose
+ sections carry the pane names, or the whole view an add-on supplies. */
+private struct PreferencesDestinationView: View {
 	let model: PreferencesPaneModel
-	let subPage: PreferencesSubPage
+	let destination: PreferencesDestination
 
 	var body: some View {
-		if subPage.panes.count == 1, let pane = subPage.panes.first {
-			PreferencesPaneRouter(model: model, identifier: pane.identifier)
+		if case let .plugin(bundleIdentifier) = destination.selection {
+			PreferencesAddOnPaneView(bundleIdentifier: bundleIdentifier)
 		} else {
 			PreferencesPaneLayout {
-				ForEach(subPage.panes) { pane in
-					PreferencesGroupedPaneSections(model: model, identifier: pane.identifier)
+				ForEach(destination.panes, id: \.self) { pane in
+					PreferencesPaneSections(model: model, pane: pane)
 				}
 			}
 		}
 	}
 }
 
-/// The sections of one advanced pane, for the group that gathers it.
-struct PreferencesGroupedPaneSections: View {
+/// The sections of one pane, whether its row shows it on its own or gathers it
+/// with its neighbours.
+private struct PreferencesPaneSections: View {
 	let model: PreferencesPaneModel
-	let identifier: String
+	let pane: PreferencesPane
 
 	var body: some View {
-		switch PreferencesPaneIdentifier(rawValue: identifier) {
+		switch pane {
+		case .addOns: PreferencesAddOnsSections(model: model)
 		case .channelManagement: PreferencesChannelManagementSections(model: model)
 		case .commandScope: PreferencesCommandScopeSections(model: model)
+		case .controls: PreferencesControlsSections(model: model)
 		case .defaultIRCopMessages: PreferencesIRCopMessagesSections(model: model)
 		case .defaultIdentity: PreferencesDefaultIdentitySections(model: model)
 		case .fileTransfers: PreferencesFileTransfersSections(model: model)
 		case .floodControl: PreferencesFloodControlSections(model: model)
+		case .general: PreferencesGeneralSections(model: model)
 		case .hidden: PreferencesHiddenSections(model: model)
+		case .highlights: PreferencesHighlightsSections(model: model)
 		case .incomingData: PreferencesIncomingDataSections(model: model)
+		case .interface: PreferencesInterfaceSections(model: model)
+		case .ircv3: PreferencesIRCv3Sections(model: model)
 		case .logLocation: PreferencesLogLocationSections(model: model)
-		default: EmptyView()
+		case .notifications: PreferencesNotificationsSections(model: model)
+		case .style: PreferencesStyleSections(model: model)
 		}
 	}
 }
 
-/// Maps a pane identifier onto the view that answers to it.
-struct PreferencesPaneRouter: View {
-	/// Plugin panes are SwiftUI values, so the Settings scene owns their layout.
-	private static let pluginPaneHeight = 420.0
+/// An add-on's own pane, wearing the chrome the application's panes wear.
+private struct PreferencesAddOnPaneView: View {
+	let bundleIdentifier: String
 
-	let model: PreferencesPaneModel
-	let identifier: String?
+	private var pane: PluginPreferencesPane? {
+		SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
+			.first { $0.preferencePaneIdentifier == bundleIdentifier }?
+			.pluginPreferencesPane
+	}
 
 	var body: some View {
-		if let paneIdentifier = identifier.flatMap(PreferencesPaneCatalog.pluginBundleIdentifier(from:)) {
-			pluginPane(paneIdentifier: paneIdentifier)
-		} else if let pane = identifier.flatMap(PreferencesPaneIdentifier.init(rawValue:)) {
-			view(for: pane)
-		} else {
-			PreferencesGeneralPane(model: model)
-		}
-	}
-
-	@ViewBuilder
-	private func view(for pane: PreferencesPaneIdentifier) -> some View {
-		switch pane {
-		case .addOns: PreferencesAddOnsPane(model: model)
-		case .behavior: PreferencesBehaviorPane(model: model)
-		case .channelManagement: PreferencesChannelManagementPane(model: model)
-		case .commandScope: PreferencesCommandScopePane(model: model)
-		case .controls: PreferencesControlsPane(model: model)
-		case .defaultIRCopMessages: PreferencesIRCopMessagesPane(model: model)
-		case .defaultIdentity: PreferencesDefaultIdentityPane(model: model)
-		case .fileTransfers: PreferencesFileTransfersPane(model: model)
-		case .floodControl: PreferencesFloodControlPane(model: model)
-		case .general: PreferencesGeneralPane(model: model)
-		case .hidden: PreferencesHiddenPane(model: model)
-		case .highlights: PreferencesHighlightsPane(model: model)
-		case .incomingData: PreferencesIncomingDataPane(model: model)
-		case .interface: PreferencesInterfacePane(model: model)
-		case .ircv3: PreferencesIRCv3Pane(model: model)
-		case .logLocation: PreferencesLogLocationPane(model: model)
-		case .notifications: PreferencesNotificationsPane(model: model)
-		case .style: PreferencesStylePane(model: model)
-		}
-	}
-
-	@ViewBuilder
-	private func pluginPane(paneIdentifier: String) -> some View {
-		let plugins = SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
-		if let pane = plugins.first(where: { $0.preferencePaneIdentifier == paneIdentifier })?.pluginPreferencesPane {
+		if let pane {
 			pane.makeView()
-				.frame(minHeight: Self.pluginPaneHeight)
-				.padding(20)
+				.modifier(PreferencesFormChrome())
 		}
 	}
 }

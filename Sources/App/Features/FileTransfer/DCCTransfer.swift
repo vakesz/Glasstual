@@ -65,7 +65,7 @@ public nonisolated enum DCCTransferError: Error, Equatable, Sendable { // noniso
 /// transfer ends the stream without a terminal event.
 public nonisolated enum DCCTransferEvent: Sendable { // nonisolated: value
 	case listening(port: UInt16)
-	case connected(peerAddress: String?)
+	case connected
 	case progress(processedBytes: UInt64)
 	case completion(DCCTransfer.Completion)
 	case finished
@@ -149,8 +149,6 @@ public actor DCCTransfer {
 		}
 	}
 
-	/// Read buffer, and the ceiling on a single connection receive.
-	static let bufferSize = 64 * 1024
 	/// The transfer paces itself to this many bytes a second so a local
 	/// transfer cannot starve the rest of the app.
 	static let rateLimitBytesPerSecond: UInt64 = 10 * 1024 * 1024
@@ -236,7 +234,7 @@ public actor DCCTransfer {
 			try Task.checkCancellation()
 			bytesStarted = true
 			submittedBytes = configuration.resumeOffset
-			emit(.connected(peerAddress: connection.remoteEndpoint.flatMap(Self.host(of:))))
+			emit(.connected)
 
 			switch configuration.role {
 			case .sender:
@@ -318,7 +316,7 @@ public actor DCCTransfer {
 			throw DCCTransferError.badParameter
 		}
 
-		let parameters = Self.parameters(interfaceName: interfaceName, connectTimeout: timeout)
+		let parameters = DCCTransport.parameters(interfaceName: interfaceName, connectTimeout: timeout)
 		let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: networkPort)
 		let connection = NetworkConnection<TCP>(
 			to: endpoint,
@@ -326,7 +324,7 @@ public actor DCCTransfer {
 		)
 		self.connection = connection
 
-		try await Self.withTimeout(timeout, failingWith: .connectTimeout) {
+		try await DCCTransport.withTimeout(timeout, failingWith: .connectTimeout) {
 			/* Typed Network connections establish on first I/O. Empty data puts no
 			 bytes on the DCC stream but makes the connected event truthful. */
 			try await connection.send(Data())
@@ -340,8 +338,8 @@ public actor DCCTransfer {
 		 the timeout to each in turn gave a slow bind twice what was asked. */
 		let deadline = configuration.acceptanceTimeout.map { ContinuousClock.now + $0 }
 
-		let listening = try await Self.withDeadline(deadline, failingWith: .connectTimeout) {
-			try await Self.startListener(portRange: portRange)
+		let listening = try await DCCTransport.withDeadline(deadline, failingWith: .connectTimeout) {
+			try await DCCTransport.startListener(portRange: portRange)
 		}
 		listener = listening.listener
 		listenerTask = listening.task
@@ -350,11 +348,11 @@ public actor DCCTransfer {
 
 		let expectedPeerAddress = configuration.expectedPeerAddress
 		let sendTimeout = configuration.sendTimeout
-		return try await Self.withDeadline(deadline, failingWith: .connectTimeout) { [self] in
+		return try await DCCTransport.withDeadline(deadline, failingWith: .connectTimeout) { [self] in
 			var rejectedAPeer = false
 			for await candidate in listening.connections {
 				try Task.checkCancellation()
-				guard Self.connection(candidate, isFrom: expectedPeerAddress) else {
+				guard DCCTransport.connection(candidate, isFrom: expectedPeerAddress) else {
 					Self.logger.error(
 						"Rejected a DCC connection from an address other than the one the transfer was offered from"
 					)
@@ -366,7 +364,7 @@ public actor DCCTransfer {
 				/* One listener serves one transfer. Leaving the port open past the
 				 first accept only gives somebody else a window to reach it. */
 				await accepted(candidate)
-				try await Self.withTimeout(sendTimeout, failingWith: .connectTimeout) {
+				try await DCCTransport.withTimeout(sendTimeout, failingWith: .connectTimeout) {
 					try await candidate.send(Data())
 				}
 
@@ -460,12 +458,12 @@ public actor DCCTransfer {
 		while processedBytes < configuration.fileSize {
 			try Task.checkCancellation()
 
-			let count = Int(min(UInt64(Self.bufferSize), configuration.fileSize - processedBytes))
+			let count = Int(min(UInt64(DCCTransport.bufferSize), configuration.fileSize - processedBytes))
 			let chunk = try await file.read(at: processedBytes, count: count)
 			try Task.checkCancellation()
 			submittedBytes = processedBytes + UInt64(chunk.count)
 
-			try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+			try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
 				try await connection.send(chunk)
 			}
 
@@ -504,7 +502,7 @@ public actor DCCTransfer {
 		var processedBytes = configuration.resumeOffset
 		if processedBytes == configuration.fileSize {
 			let acknowledgement = Self.acknowledgement(for: processedBytes)
-			try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+			try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
 				try await connection.send(acknowledgement)
 			}
 		}
@@ -512,7 +510,7 @@ public actor DCCTransfer {
 		while processedBytes < configuration.fileSize {
 			try Task.checkCancellation()
 
-			let (payload, isComplete) = try await Self.withTimeout(
+			let (payload, isComplete) = try await DCCTransport.withTimeout(
 				configuration.inactivityTimeout,
 				failingWith: .connectTimeout
 			) { [self] in
@@ -529,7 +527,7 @@ public actor DCCTransfer {
 				/* The DCC acknowledgement is the receiver's running total, so
 				 it goes out before the transfer is torn down for the excess. */
 				let acknowledgement = Self.acknowledgement(for: processedBytes)
-				try await Self.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
+				try await DCCTransport.withTimeout(configuration.sendTimeout, failingWith: .writeTimeout) {
 					try await connection.send(acknowledgement)
 				}
 				emit(.progress(processedBytes: processedBytes))
@@ -562,7 +560,7 @@ public actor DCCTransfer {
 	 on a connection this transfer owns, not a pure function of its inputs, so
 	 its isolation follows the socket. */
 	private func receive(on connection: NetworkConnection<TCP>) async throws -> (Data?, Bool) {
-		let message = try await connection.receive(atLeast: 1, atMost: Self.bufferSize)
+		let message = try await connection.receive(atLeast: 1, atMost: DCCTransport.bufferSize)
 
 		return (message.content, message.metadata.endOfStream)
 	}

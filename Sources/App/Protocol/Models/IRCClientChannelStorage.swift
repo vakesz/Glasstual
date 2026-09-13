@@ -38,37 +38,33 @@
 
 import Foundation
 
-enum IRCClientChannelStoragePolicy {
-	static func insertionIndex(isChannel: Bool, existingKinds: [Bool]) -> Int {
-		guard isChannel else { return existingKinds.endIndex }
-		return existingKinds.firstIndex(of: false) ?? existingKinds.endIndex
-	}
-}
-
 public extension IRCClient {
 	@MainActor
 	func selectFirstChannelInChannelList() {
 		guard let firstChannel = channelList.first else { return }
 
-		output?.selectItem(firstChannel)
+		output?.select(firstChannel)
 	}
 
-	func add(_ channel: IRCChannel) {
+	/// Channels are kept ahead of queries, so a channel goes in front of the
+	/// first query and everything else goes on the end.
+	func add(_ channel: Channel) {
 		guard channelListPrivate.contains(channel) == false else { return }
-		let index = IRCClientChannelStoragePolicy.insertionIndex(
-			isChannel: channel.isChannel,
-			existingKinds: channelListPrivate.map(\.isChannel)
-		)
+
+		let index = channel.isChannel
+			? channelListPrivate.firstIndex { $0.isChannel == false } ?? channelListPrivate.endIndex
+			: channelListPrivate.endIndex
+
 		channelListPrivate.insert(channel, at: index)
 		updateStoredChannelList()
 	}
 
-	func remove(_ channel: IRCChannel) {
+	func remove(_ channel: Channel) {
 		channelListPrivate.removeAll { $0 === channel }
 		updateStoredChannelList()
 	}
 
-	func index(of channel: IRCChannel) -> UInt {
+	func index(of channel: Channel) -> UInt {
 		guard let index = channelListPrivate.firstIndex(of: channel) else {
 			return UInt(NSNotFound)
 		}
@@ -79,7 +75,7 @@ public extension IRCClient {
 		UInt(channelListPrivate.count)
 	}
 
-	var channelList: [IRCChannel] {
+	var channelList: [Channel] {
 		get { channelListPrivate }
 		set {
 			channelListPrivate = newValue
@@ -87,7 +83,7 @@ public extension IRCClient {
 		}
 	}
 
-	func channel(at index: UInt) -> IRCChannel? {
+	func channel(at index: UInt) -> Channel? {
 		guard index < channelListPrivate.count else { return nil }
 		return channelListPrivate[Int(index)]
 	}

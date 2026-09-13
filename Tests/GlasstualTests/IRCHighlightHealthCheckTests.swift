@@ -64,7 +64,7 @@ struct IRCHighlightHealthCheckTests {
 	/// A malformed persisted entry is skipped rather than carried forward.
 	@Test
 	func malformedHighlightEntriesAreSkippedOnLoad() {
-		let config = PropertyListModel.decode(IRCClientConfig.self, from: [
+		let config = PropertyListModel.decode(ClientConfig.self, from: [
 			"highlightList": [
 				["matchKeyword": "keep"],
 				["matchIsExcluded": true],
@@ -84,7 +84,7 @@ struct IRCUserClientReferenceTests {
 	 the list stamped it with. */
 	@Test
 	func aUserAndItsMemberOutliveTheirClient() throws {
-		var client: GLTTestClient? = GLTTestClient()
+		var client: TestClient? = TestClient()
 		let user = User(nickname: "nick")
 		var member = try ChannelUser(user: user, prefixes: #require(client).currentUserPrefixes)
 		member.modes = ChannelModeSymbolSet(letters: "o")

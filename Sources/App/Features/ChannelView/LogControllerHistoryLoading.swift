@@ -63,7 +63,7 @@ extension LogController {
 			channel?.isUtility == true ||
 			channel?.isDirectChat == true ||
 			(firstLoad && channel?.isPrivateMessage == true && !Preferences.Appearance.rememberQueryStates.value))
-		if Preferences.Logging.loadHistoryLazily.value, !viewIsVisible {
+		if loadsHistoryLazily(), !viewIsVisible {
 			return
 		}
 
@@ -100,26 +100,25 @@ private extension LogController {
 			let outcome = includeStoredHistory ? await fetch(request) : .page([])
 			guard let viewController = self, !Task.isCancelled,
 			      await viewController.acceptsRenderGeneration(generation) else { return nil }
-			let xpcEntries: [HistoricLogEntry]
+			let storedEntries: [HistoricLogEntry]
 			let failure: HistoricLogFetchFailure?
 			let fetchSucceeded: Bool
 			switch outcome {
 			case let .page(entries):
-				xpcEntries = entries
+				storedEntries = entries
 				failure = nil
 				fetchSucceeded = true
 			case let .failed(reason):
-				xpcEntries = []
+				storedEntries = []
 				failure = reason
 				fetchSucceeded = false
 			case .cancelled:
-				xpcEntries = []
+				storedEntries = []
 				failure = nil
 				fetchSucceeded = false
 			}
-			let rows = Array(xpcEntries.reversed())
+			let rows = Array(storedEntries.reversed())
 			let historicEntries = HistoricLogClient.logLines(from: rows)
-			let entries = historicEntries + replay.lines
 			let renderedReplay = Dictionary(uniqueKeysWithValues: replay.results.map { ($0.lineNumber, $0) })
 			var consumedReplay = Set<String>()
 			var slots: [LogLineRenderResult?] = []
@@ -143,7 +142,7 @@ private extension LogController {
 			 page. Turning the text into runs stays here, off the main actor. */
 			if freshSnapshots.isEmpty == false {
 				let prepared = await MainActor.run {
-					LogController.applyingMessageRenderers(to: freshSnapshots, for: viewController)
+					LogController.applyingMessageRenderers(to: freshSnapshots)
 				}
 				for (slot, rendered) in zip(freshSlots, Self.renderJob(prepared, context: context)) {
 					slots[slot] = rendered
@@ -153,19 +152,16 @@ private extension LogController {
 			results += replay.results.filter { !consumedReplay.contains($0.lineNumber) }
 			return TranscriptHistoryRenderOutput(
 				historicEntries: historicEntries,
-				entries: entries,
 				results: results,
-				fetchSucceeded: fetchSucceeded && historicEntries.count == xpcEntries.count,
-				failure: historicEntries.count == xpcEntries.count ? failure : .invalidEntry
+				fetchSucceeded: fetchSucceeded && historicEntries.count == storedEntries.count,
+				failure: historicEntries.count == storedEntries.count ? failure : .invalidEntry
 			)
 		} apply: { [weak self] (loaded: TranscriptHistoryRenderOutput) in
 			self?.applyReloadedHistory(
 				loaded.historicEntries,
-				loaded.entries,
 				results: loaded.results,
 				forView: viewIdentifier,
 				firstLoad: firstLoad,
-				replayedLineNumbers: replay.lineNumbers,
 				fetchSucceeded: loaded.fetchSucceeded,
 				failure: loaded.failure
 			)
@@ -174,19 +170,20 @@ private extension LogController {
 
 	private func applyReloadedHistory(
 		_ historicEntries: [LogLine],
-		_ entries: [LogLine],
 		results inputResults: [LogLineRenderResult],
 		forView viewIdentifier: String,
 		firstLoad: Bool,
-		replayedLineNumbers: Set<String>,
 		fetchSucceeded: Bool,
 		failure: HistoricLogFetchFailure?
 	) {
 		historyLoadFailure = failure
 		var results = inputResults
 		historicLog.indexLogLines(historicEntries, forView: viewIdentifier)
+		/* Only where nothing has been printed this session: every line this
+		 process prints sets it, so anything newer than the stored page is
+		 already there. */
 		if lastLineStorage == nil {
-			lastLineStorage = entries.last
+			lastLineStorage = historicEntries.last
 		}
 		if firstLoad {
 			let markerLineNumber = transcriptSessionBoundary.prepareInitialHistory(
@@ -204,11 +201,7 @@ private extension LogController {
 				)
 			}
 		}
-		enqueueReloadedLines(
-			Array(results.suffix(bufferPolicy.hardLimit)),
-			isReload: !firstLoad,
-			suppressingPluginMessages: replayedLineNumbers.union(transcriptProjection.pendingLineNumbers)
-		) { [weak self] in
+		enqueueReloadedLines(Array(results.suffix(bufferPolicy.hardLimit)), isReload: !firstLoad) { [weak self] in
 			self?.continueHistoryReplay(fetchSucceeded: fetchSucceeded)
 		}
 	}
@@ -216,7 +209,6 @@ private extension LogController {
 	private func enqueueReloadedLines(
 		_ results: [LogLineRenderResult],
 		isReload: Bool,
-		suppressingPluginMessages suppressed: Set<String>,
 		completion: @escaping @MainActor () -> Void
 	) {
 		let generation = renderGeneration
@@ -225,7 +217,7 @@ private extension LogController {
 			let chunk = Array(results[start ..< min(start + 32, results.count)])
 			applications.append { [weak self] in
 				guard let self, acceptsRenderGeneration(generation) else { return }
-				applyReloadedLines(chunk, isReload: isReload || start > 0, suppressingPluginMessages: suppressed)
+				applyReloadedLines(chunk, isReload: isReload || start > 0)
 			}
 		}
 		applications.append { [weak self] in
@@ -246,9 +238,7 @@ private extension LogController {
 			)
 		}
 		if !pending.isEmpty {
-			enqueueReloadedLines(pending, isReload: true,
-			                     suppressingPluginMessages: Set(pending.map(\.lineNumber)))
-			{ [weak self] in
+			enqueueReloadedLines(pending, isReload: true) { [weak self] in
 				self?.continueHistoryReplay(fetchSucceeded: fetchSucceeded)
 			}
 			return
@@ -377,9 +367,9 @@ extension LogController {
 				loadingOlderHistory = false
 				return
 			}
-			let xpcEntries: [HistoricLogEntry]
+			let storedEntries: [HistoricLogEntry]
 			switch outcome {
-			case let .page(entries): xpcEntries = entries
+			case let .page(entries): storedEntries = entries
 			case let .failed(failure):
 				loadingOlderHistory = false
 				olderHistoryFailure = failure
@@ -389,12 +379,12 @@ extension LogController {
 				return
 			}
 			let ordered: [HistoricLogEntry] = if case .rowPage = request.kind {
-				Array(xpcEntries.reversed())
+				Array(storedEntries.reversed())
 			} else {
-				xpcEntries
+				storedEntries
 			}
 			let entries = HistoricLogClient.logLines(from: ordered)
-			guard entries.count == xpcEntries.count else {
+			guard entries.count == storedEntries.count else {
 				loadingOlderHistory = false
 				olderHistoryFailure = .invalidEntry
 				return
@@ -526,7 +516,7 @@ extension LogController {
 		}
 		/* The plugin renderers run here, on the main actor they are declared for;
 		 the render job that follows is a function of the snapshots alone. */
-		let snapshots = Self.applyingMessageRenderers(to: lines, for: self)
+		let snapshots = Self.applyingMessageRenderers(to: lines)
 		enqueueRenderJob {
 			Self.renderJob(snapshots, context: context)
 		} apply: { [weak self] (results: [LogLineRenderResult]) in
@@ -562,14 +552,8 @@ extension LogController {
 		historicLog.indexLogLines(
 			zip(logLines, results).filter { accepted.contains($0.1.lineNumber) }.map(\.0), forView: viewIdentifier
 		)
-		for result in results where accepted.contains(result.lineNumber) {
-			if var pluginMessage = result.pluginMessage?.makeObject(resolvingMembersIn: associatedChannel) {
-				pluginMessage.isProcessedInBulk = true
-				PluginDispatcher.dispatchDidPostNewMessage(pluginMessage)
-			}
-			if result.processesInlineMedia {
-				processInlineMedia(result.links, atLineNumber: result.lineNumber)
-			}
+		for result in results where accepted.contains(result.lineNumber) && result.processesInlineMedia {
+			processInlineMedia(result.links, atLineNumber: result.lineNumber)
 		}
 		return results.map(\.lineNumber).filter { accepted.contains($0) }
 	}

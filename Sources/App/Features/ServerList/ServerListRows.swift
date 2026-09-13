@@ -3,7 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import SwiftUI
+import AppKit
 
 /// One server in the sidebar, with the conversations drawn beneath it.
 ///
@@ -48,7 +48,7 @@ struct ChannelRow: Identifiable, Equatable {
 	/// where the rows are built. A row is compared by what it draws, so a
 	/// colour it went and read for itself would change nothing here and the
 	/// list would keep the badges it already had.
-	let unreadBadgeTint: Color?
+	let unreadBadgeTint: NSColor?
 
 	/// Asks for attention: a channel where the nickname was said, or a
 	/// conversation with one person that has anything unread — every line of a

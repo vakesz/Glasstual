@@ -93,7 +93,7 @@ struct AddressBookSheetTests {
 
 		#expect(Bundle.main.path(forResource: "TDCAddressBookSheet", ofType: "nib") == nil)
 
-		sheet.ok(nil)
+		sheet.submit()
 		let submitted = try #require(delegate.submittedEntry)
 		#expect(submitted.hostmask == "vakesz")
 	}
@@ -104,7 +104,5 @@ struct AddressBookSheetTests {
 		func addressBookSheet(_: AddressBookSheet, onOk entry: AddressBookEntry) {
 			submittedEntry = entry
 		}
-
-		func addressBookSheetWillClose(_: AddressBookSheet) {}
 	}
 }

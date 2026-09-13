@@ -69,7 +69,7 @@ struct IRCBridgeContractTests {
 
 	@Test("A member's rank comes from its modes, and the higher rank sorts first")
 	func rankAdaptersAndComparisonPreserveNativeBehavior() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.supportInfo.processConfigurationData("PREFIX=(ov)@+")
 		let operatorMember = mutableMember(named: "zeta", modes: "o", on: client)
 		let voicedMember = mutableMember(named: "alpha", modes: "v", on: client)

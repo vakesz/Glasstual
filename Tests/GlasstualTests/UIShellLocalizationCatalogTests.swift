@@ -15,12 +15,12 @@ struct UIShellLocalizationCatalogTests {
 	func onboardingBoundaryResolvesSemanticCopyAndFormatting() {
 		#expect(OnboardingStrings.Window.title == "Welcome to Glasstual")
 		#expect(OnboardingStrings.Window.progress(currentStep: 2, totalSteps: 4) == "Step 2 of 4")
-		#expect(OnboardingStrings.Identity.nicknameLabel == "Nickname:")
+		#expect(OnboardingStrings.Identity.nicknameLabel == "Nickname")
 		#expect(
 			OnboardingStrings.Identity.alternateNicknameHelp ==
 				"Used when your nickname is already taken. Optional."
 		)
-		#expect(OnboardingStrings.Appearance.textSizeTitles == ["Small", "Medium", "Large"])
+		#expect(OnboardingTextSize.allCases.map(\.title) == ["Small", "Medium", "Large"])
 		#expect(
 			PreferredAppearance.allCases.map(OnboardingStrings.Appearance.interfaceStyleTitle)
 				== ["System", "Light", "Dark"]
@@ -31,7 +31,7 @@ struct UIShellLocalizationCatalogTests {
 			.init(nickname: "you", message: "Yes, it works well so far."),
 		])
 		#expect(OnboardingStrings.Notifications.permissionGranted == "Notifications are allowed for Glasstual.")
-		#expect(OnboardingStrings.FirstNetwork.suggestedChannelsLabel == "Suggested channels:")
+		#expect(OnboardingStrings.FirstNetwork.suggestedChannelsLabel == "Suggested channels")
 		#expect(OnboardingStrings.NetworkPicker.customServerTitle == "Custom Server")
 		#expect(OnboardingStrings.NetworkPicker.invalidPort == "Enter a port between 1 and 65535.")
 	}
@@ -44,7 +44,7 @@ struct UIShellLocalizationCatalogTests {
 		#expect(ServerPropertiesStrings.Highlight.matchType(isExcluded: false) == "Match")
 		#expect(
 			[
-				ServerPropertiesStrings.Navigation.serverProperties,
+				ServerPropertiesStrings.Navigation.connection,
 				ServerPropertiesStrings.Navigation.vendorSpecific,
 				ServerPropertiesStrings.Navigation.advanced,
 				ServerPropertiesStrings.Navigation.addressBook,
@@ -60,40 +60,43 @@ struct UIShellLocalizationCatalogTests {
 				ServerPropertiesStrings.Navigation.floodControl,
 				ServerPropertiesStrings.Navigation.networkSocket,
 				ServerPropertiesStrings.Navigation.proxyServer,
-				ServerPropertiesStrings.Navigation.redundancy,
 			] == [
-				"Server Properties", "Vendor Specific", "Advanced", "Address Book", "Channel List",
+				"Connection", "Vendor Specific", "Advanced", "Address Book", "Channel List",
 				"Connect Commands", "Encoding", "General", "Identity", "Highlights", "Messages",
 				"ZNC Bouncer", "Client Certificate", "Flood Control", "Network Socket", "Proxy Server",
-				"Redundancy",
 			]
 		)
 		#expect(
 			ServerPropertiesStrings.Validation.invalidAlternateNickname("bad nick") ==
-				"""
-				Please enter a list of properly formatted nicknames.
-
-				Failed on nickname: “bad nick“
-
-				List of nicknames should be space separated.
-				For example: “Guest1 Guest2 Guest3“
-				"""
+				"“bad nick” is not a valid nickname. Separate alternative nicknames with spaces, "
+				+ "for example: Guest1 Guest2 Guest3"
 		)
 		#expect(
-			ServerPropertiesStrings.CipherSuites.description("TLS_AES_256_GCM_SHA384") ==
-				"TLS_AES_256_GCM_SHA384\n\nThese cipher suites are ordered by preference with the most "
-				+ "preferred at the top."
+			ServerPropertiesStrings.CipherSuites.listExplanation(collectionName: "Default list") ==
+				"The “Default list” prefers these cipher suites, most preferred first."
 		)
+		/* The alert asks whether to reload, and its buttons are Cancel and
+		 Reload -- so the body cannot name a "Yes" button that is not there. */
+		#expect(ServerPropertiesStrings.ExternalChange.reloadTitle == "Reload the connection’s settings?")
 		#expect(
 			ServerPropertiesStrings.ExternalChange.unsavedChangesWarning ==
-				"You will lose unsaved changes if you click “Yes”"
+				"Your unsaved changes will be discarded."
 		)
 	}
 
 	@Test("Main window copy is keyed by the typed status and the typed member rank")
 	func mainWindowBoundaryUsesTypedStatusAndRankMappings() {
 		#expect(MemberListStrings.privilegeDescription(for: .normalOperator) == "Operator")
-		#expect(MemberListStrings.privilegeDescription(for: .none) == "No Privileges")
+		/* A rank column reads down; "No Privileges" was a sentence where every
+		 other row held a word. */
+		#expect(MemberListStrings.privilegeDescription(for: .none) == "None")
+		/* One name per concept: the privilege and the section a server operator
+		 is grouped under used to disagree with each other. */
+		#expect(MemberListStrings.privilegeDescription(for: .irCopByMode) == "Server Staff")
+		#expect(MemberListStrings.privilegeDescription(for: .superOperator) == "Admin")
+		#expect(MemberListStrings.sectionTitle(for: .superOperator) == "Admins")
+		#expect(MemberListStrings.privilegeDescription(for: .halfOperator) == "Half-Operator")
+		#expect(MemberListStrings.sectionTitle(for: .halfOperator) == "Half-Operators")
 		#expect(MemberListStrings.sectionTitle(for: .irCopByMode) == "Server Staff")
 		#expect(MemberListStrings.sectionTitle(for: .none) == "Members")
 		#expect(MemberListStrings.loggedIn(account: "alice") == "Logged in as alice")
@@ -103,7 +106,14 @@ struct UIShellLocalizationCatalogTests {
 		#expect(MainWindowStrings.ConnectionStatus.reconnecting.title == "Reconnecting")
 		#expect(MainWindowStrings.ConnectionStatus.loggingOn.title == "Logging on")
 		#expect(MainWindowStrings.ConnectionStatus.disconnecting.title == "Disconnecting")
-		#expect(MainWindowStrings.Conversation.userCount("1,234") == "1,234 users")
+		/* "1 users" was the subtitle of every one-member channel; the digits
+		 are still grouped the way the reader's locale groups them. */
+		#expect(MainWindowStrings.Conversation.memberCount(1) == "1 member")
+		#expect(
+			MainWindowStrings.Conversation.memberCount(1234)
+				== "\(formattedNumber(1234)) members"
+		)
+		#expect(MainWindowStrings.Conversation.awayNickname("alice") == "alice (away)")
 		#expect(MainWindowStrings.Menu.serverList(isVisible: false) == "Show Server List")
 		#expect(MainWindowStrings.Menu.serverList(isVisible: true) == "Hide Server List")
 		#expect(MainWindowStrings.Menu.memberList(isVisible: false) == "Show Member List")
@@ -122,22 +132,31 @@ struct UIShellLocalizationCatalogTests {
 	@Test("Multi-argument entries keep their placeholder contracts")
 	func multiArgumentValuesKeepTheirPlaceholderContracts() throws {
 		let expectedValues = [
-			"TDCOnboardingWindow": ["window-chrome-step": "Step %1$ld of %2$ld"],
+			"Onboarding": ["window-chrome-step": "Step %1$ld of %2$ld"],
 			"TDCServerPropertiesSheet": [
-				"these-cipher-suites-are-ordered":
-					"%@\n\nThese cipher suites are ordered by preference with the most preferred at the top.",
 				"please-enter-a-list-of-properly":
-					"Please enter a list of properly formatted nicknames.\n\n"
-					+ "Failed on nickname: “%@“\n\n"
-					+ "List of nicknames should be space separated.\n"
-					+ "For example: “Guest1 Guest2 Guest3“",
-				"includes-the-following-cipher-suites": "The “%@” includes the following cipher suites:",
+					"“%@” is not a valid nickname. Separate alternative nicknames with spaces, "
+					+ "for example: Guest1 Guest2 Guest3",
+				"includes-the-following-cipher-suites":
+					"The “%@” prefers these cipher suites, most preferred first.",
+				"copy-nickserv-command-for": "Copy NickServ Command for %@",
+			],
+			"TDCChannelPropertiesSheet": [
+				"secret-key-length": "%1$ld of %2$ld characters",
+				"secret-key-too-long":
+					"%1$@ accepts at most %2$ld characters. Anything past that may be cut off.",
+			],
+			/* The member-list entries moved into the feature's own catalog with
+				the list itself. */
+			"MemberList": [
+				"logged-in-as": "Logged in as %@",
 			],
 			"TVCMainWindow": [
-				"member-account-status-description-logged": "Logged in as %@",
 				"dock-icon-badge-shown": "%@+",
 				"input-bar-reply-banner-replying": "Replying to %@",
-				"main-window-connection-status-users": "%@ users",
+				/* The count twice: as text for the digits, as a number for the
+					noun's plural form. */
+				"main-window-connection-status-users": "%1$@ %#@count@",
 				"is-typing": "%@ is typing…",
 				"are-typing": "%@ and %@ are typing…",
 			],
@@ -154,19 +173,27 @@ struct UIShellLocalizationCatalogTests {
 		}
 	}
 
+	/// A catalog lives beside the feature that owns it, so it is found by its
+	/// own name rather than in one fixed directory.
 	private func catalog(named tableName: String) throws -> UIShellCatalog {
-		try JSONDecoder().decode(
-			UIShellCatalog.self,
-			from: Data(contentsOf: languageFilesURL.appending(path: "\(tableName).xcstrings"))
-		)
+		let sourcesURL = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+			.appending(path: "Sources/App")
+		guard let walker = FileManager.default.enumerator(at: sourcesURL, includingPropertiesForKeys: nil) else {
+			throw CatalogLookupError.notFound(tableName)
+		}
+
+		for case let url as URL in walker where url.lastPathComponent == "\(tableName).xcstrings" {
+			return try JSONDecoder().decode(UIShellCatalog.self, from: Data(contentsOf: url))
+		}
+
+		throw CatalogLookupError.notFound(tableName)
 	}
 
-	private var languageFilesURL: URL {
-		URL(fileURLWithPath: #filePath)
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.deletingLastPathComponent()
-			.appending(path: "Sources/App/Resources/Language Files")
+	private enum CatalogLookupError: Error {
+		case notFound(String)
 	}
 }
 

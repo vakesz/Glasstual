@@ -12,42 +12,36 @@
 
 import Foundation
 
-nonisolated enum ServerEndpointValidation { // nonisolated: value
-	static let errorDomain = "GlasstualErrorDomain"
-	static let invalidAddressCode = 71013
-	static let invalidPortCode = 71014
+/// Why an endpoint the person typed cannot become a `Server`. The sheet shows
+/// one message per kind of fault, which is all a caller ever did with the
+/// `NSError`s this used to throw: nobody read their domain, code, description
+/// or recovery suggestion.
+nonisolated enum ServerEndpointFault: Error, Hashable { // nonisolated: value
+	case address
+	case port
 
+	var message: String {
+		switch self {
+		case .address: ServerEndpointStrings.invalidAddress
+		case .port: ServerEndpointStrings.invalidPort
+		}
+	}
+}
+
+nonisolated enum ServerEndpointValidation { // nonisolated: value
 	static let plainTextPort: UInt16 = 6667
 	static let securedPort: UInt16 = 6697
 
-	static func validatedAddress(_ address: String) throws -> String {
-		guard (address as NSString).isValidInternetAddress else {
-			throw NSError(
-				domain: errorDomain,
-				code: invalidAddressCode,
-				userInfo: [
-					NSLocalizedDescriptionKey: ServerEndpointStrings.invalidAddressDescription,
-					NSLocalizedRecoverySuggestionErrorKey: ServerEndpointStrings.invalidAddressRecoverySuggestion,
-				]
-			)
-		}
-
-		return address
+	/// The address, or `nil` when it is not one. An empty address is not one
+	/// either: a row nobody typed a host into cannot be connected to.
+	static func validatedAddress(_ address: String) -> String? {
+		(address as NSString).isValidInternetAddress ? address : nil
 	}
 
-	static func validatedPort(_ port: String) throws -> UInt16 {
-		guard (port as NSString).isValidInternetPort, let value = UInt16(port) else {
-			throw NSError(
-				domain: errorDomain,
-				code: invalidPortCode,
-				userInfo: [
-					NSLocalizedDescriptionKey: ServerEndpointStrings.invalidPortDescription,
-					NSLocalizedRecoverySuggestionErrorKey: ServerEndpointStrings.invalidPortRecoverySuggestion,
-				]
-			)
-		}
+	static func validatedPort(_ port: String) -> UInt16? {
+		guard (port as NSString).isValidInternetPort else { return nil }
 
-		return value
+		return UInt16(port)
 	}
 
 	static func server(_ server: Server, preferringSecuredConnection prefers: Bool) -> Server {

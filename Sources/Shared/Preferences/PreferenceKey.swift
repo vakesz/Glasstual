@@ -280,7 +280,7 @@ nonisolated extension Array: PreferenceValue where Element: PreferenceValue { //
 // MARK: - Keys
 
 /// Which defaults database a preference lives in.
-public nonisolated enum PreferenceStorage: Sendable { // nonisolated: value
+public nonisolated enum PreferenceStorage: CaseIterable, Sendable { // nonisolated: value
 	/// The application-group container shared with the XPC connection host.
 	case container
 	/// `UserDefaults.standard`, for keys AppKit or a vendored library reads out
@@ -384,6 +384,21 @@ public nonisolated struct PreferenceKey<Value: PreferenceValue>: AnyPreferenceKe
 	public func isValid(_ value: PropertyListValue, in values: [String: PropertyListValue]) -> Bool {
 		guard let coerced = Value.preferenceValue(from: value.propertyListObject) else { return false }
 		return validation(coerced) && relatedValidation(coerced, values)
+	}
+
+	/** Whether the declaration accepts this typed value, including the rules it
+	 shares with other keys.
+
+	 A field checks what an imported file is checked against, so a count the
+	 importer would refuse is a count the field refuses too. */
+	public func accepts(_ value: Value, alongside others: [String: PropertyListValue] = [:]) -> Bool {
+		guard let object = value.preferenceObject,
+		      let candidate = PropertyListValue(propertyList: object)
+		else {
+			return false
+		}
+
+		return isValid(candidate, in: others)
 	}
 }
 

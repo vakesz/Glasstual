@@ -14,7 +14,7 @@ import Testing
 struct IRCModelPersistenceTests {
 	@Test("A connection copies the config it was made with and starts idle")
 	func connectionInitialStateAndConfigIsolation() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		var sourceConfig = Glasstual.IRCConnectionConfig()
 		sourceConfig.serverAddress = "irc.example.test"
 
@@ -33,7 +33,7 @@ struct IRCModelPersistenceTests {
 
 	@Test("Resetting a connection clears every transient flag and the connected address")
 	func connectionResetClearsTransientState() {
-		let connection = Connection(config: Glasstual.IRCConnectionConfig(), onClient: GLTTestClient())
+		let connection = Connection(config: Glasstual.IRCConnectionConfig(), onClient: TestClient())
 
 		connection.resetState()
 
@@ -189,15 +189,16 @@ struct IRCModelPersistenceTests {
 		#expect(entry.timeLogged == line.receivedAt)
 	}
 
-	@Test("A user's persistent store keeps its relations and leaves the timer slot empty")
+	@Test("A user's persistent store keeps its channels and leaves the timer slot empty")
 	func userPersistentStoreHoldsRelationsAndTimerSlot() {
 		let store = UserPersistentStore()
-		let relations = UserRelations()
-		store.relations = relations
+		let channel = Channel(config: ChannelConfig(channelName: "#channel"))
+
+		store.relatedChannels.insert(channel)
 		store.presentAwayMessageFor301LastEvent = 12.5
 
-		#expect(store.relations === relations)
+		#expect(store.relatedChannels == [channel])
 		#expect(store.presentAwayMessageFor301LastEvent == 12.5)
-		#expect(store.removeUserTimer == nil)
+		#expect(store.removeUserTask == nil)
 	}
 }

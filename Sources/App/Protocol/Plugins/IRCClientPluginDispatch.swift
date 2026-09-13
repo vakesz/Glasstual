@@ -35,7 +35,7 @@ private struct PluginIncomingCommandContext {
 	let command: String
 	let text: String?
 	let author: Prefix
-	let destination: IRCChannel?
+	let destination: Channel?
 	let client: IRCClient
 	let receivedAt: Date
 	let message: Message
@@ -70,7 +70,7 @@ public extension IRCClient {
 		postReceivedMessage(message, withText: message.sequence, destinedFor: nil)
 	}
 
-	func postReceivedMessage(_ message: Message, withText text: String?, destinedFor destination: IRCChannel?) -> Bool {
+	func postReceivedMessage(_ message: Message, withText text: String?, destinedFor destination: Channel?) -> Bool {
 		postReceivedCommand(
 			message.command,
 			withText: text,
@@ -82,7 +82,7 @@ public extension IRCClient {
 	func postReceivedCommand(
 		_ command: String,
 		withText text: String?,
-		destinedFor destination: IRCChannel?,
+		destinedFor destination: Channel?,
 		referenceMessage message: Message
 	) -> Bool {
 		let context = PluginIncomingCommandContext(

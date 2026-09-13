@@ -59,9 +59,9 @@ enum SystemProfileReport {
 		let sidebar = SystemProfileInformation.sidebarAppearance(usesDarkAppearance: metrics.usesDarkSidebar)
 		let theme = SystemProfileInformation.themeAppearance(host: host)
 		let appearance = sidebar == theme
-			? SystemProfilerLocalization.string(.BasicLanguage.appearance(sidebar))
-			: SystemProfilerLocalization.string(.BasicLanguage.separateAppearances(theme, sidebar))
-		return SystemProfilerLocalization.string(.BasicLanguage.currentStyle(snapshot.name, storage, appearance))
+			? String(localized: .BasicLanguage.appearance(sidebar))
+			: String(localized: .BasicLanguage.separateAppearances(theme, sidebar))
+		return String(localized: .BasicLanguage.currentStyle(snapshot.name, storage, appearance))
 	}
 
 	static func applicationAndSystemUptime(host: PluginHostContext) -> String {
@@ -76,12 +76,12 @@ enum SystemProfileReport {
 			shortValue: false,
 			units: units
 		)
-		return SystemProfilerLocalization.string(.BasicLanguage.uptimes(system, application))
+		return String(localized: .BasicLanguage.uptimes(system, application))
 	}
 
 	static func applicationBandwidthStatistics(metrics: PluginApplicationMetrics) -> String {
-		SystemProfilerLocalization.string(
-			.BasicLanguage.applicationBandwidthStatistics(
+		String(
+			localized: .BasicLanguage.applicationBandwidthStatistics(
 				PluginHost.formattedNumber(Int(metrics.messagesSent)),
 				PluginHost.formattedNumber(Int(metrics.messagesReceived)),
 				PluginHost.humanReadableTimeInterval(metrics.lastMessageReceived, shortValue: true, units: .second),
@@ -92,8 +92,8 @@ enum SystemProfileReport {
 	}
 
 	static func applicationMemoryUsage(metrics: PluginApplicationMetrics) -> String {
-		SystemProfilerLocalization.string(
-			.BasicLanguage.applicationMemoryUsage(
+		String(
+			localized: .BasicLanguage.applicationMemoryUsage(
 				SystemProfileInformation.formattedByteCount(SystemProfileInformation.applicationMemoryUsage()),
 				PluginHost.formattedNumber(metrics.visibleLineCount)
 			)
@@ -107,8 +107,8 @@ enum SystemProfileReport {
 
 		let birthday = Date().timeIntervalSince(Date(timeIntervalSince1970: snapshot.birthday))
 		let runtime = min(snapshot.timeIntervalSinceInstall, birthday)
-		return SystemProfilerLocalization.string(
-			.BasicLanguage.applicationRuntimeStatistics(
+		return String(
+			localized: .BasicLanguage.applicationRuntimeStatistics(
 				PluginHost.formattedNumber(Int(clamping: snapshot.runCount)),
 				PluginHost.humanReadableTimeInterval(runtime, shortValue: false)
 			)
@@ -125,21 +125,15 @@ enum SystemProfileReport {
 			let freeDescription = SystemProfileInformation.formattedByteCount(volume.availableCapacity)
 			let name = volume.name
 			return if index == 0 {
-				SystemProfilerLocalization.string(.BasicLanguage.firstMountedDrive(
-					name,
-					totalDescription,
-					freeDescription
-				))
+				String(localized: .BasicLanguage.firstMountedDrive(name, totalDescription, freeDescription))
 			} else {
-				SystemProfilerLocalization.string(
-					.BasicLanguage.additionalMountedDrive(name, totalDescription, freeDescription)
-				)
+				String(localized: .BasicLanguage.additionalMountedDrive(name, totalDescription, freeDescription))
 			}
 		}
 		guard descriptions.isEmpty == false else {
-			return SystemProfilerLocalization.string(.BasicLanguage.mountedDrivesUnavailable)
+			return String(localized: .BasicLanguage.mountedDrivesUnavailable)
 		}
-		return SystemProfilerLocalization.string(.BasicLanguage.mountedDrivesHeading(descriptions.joined()))
+		return String(localized: .BasicLanguage.mountedDrivesHeading(descriptions.joined()))
 	}
 
 	static func systemDisplayInformation() -> String {
@@ -148,25 +142,20 @@ enum SystemProfileReport {
 			let number = UInt(index + 1)
 			return switch (index == 0, refreshRate) {
 			case (true, nil):
-				SystemProfilerLocalization.string(.BasicLanguage.firstDisplay(
-					number,
-					screen.textualScreenResolutionString
-				))
+				String(localized: .BasicLanguage.firstDisplay(number, screen.textualScreenResolutionString))
 			case (true, let refreshRate?):
-				SystemProfilerLocalization.string(
-					.BasicLanguage.firstDisplayWithRefreshRate(
+				String(
+					localized: .BasicLanguage.firstDisplayWithRefreshRate(
 						number,
 						screen.textualScreenResolutionString,
 						refreshRate
 					)
 				)
 			case (false, nil):
-				SystemProfilerLocalization.string(
-					.BasicLanguage.additionalDisplay(number, screen.textualScreenResolutionString)
-				)
+				String(localized: .BasicLanguage.additionalDisplay(number, screen.textualScreenResolutionString))
 			case (false, let refreshRate?):
-				SystemProfilerLocalization.string(
-					.BasicLanguage.additionalDisplayWithRefreshRate(
+				String(
+					localized: .BasicLanguage.additionalDisplayWithRefreshRate(
 						number,
 						screen.textualScreenResolutionString,
 						refreshRate
@@ -183,49 +172,41 @@ enum SystemProfileReport {
 			defaults.bool(forKey: feature.disabledPreference.name) == false
 		}
 
-		var result = SystemProfilerLocalization.string(.BasicLanguage.systemInformationHeading)
+		var result = String(localized: .BasicLanguage.systemInformationHeading)
 		if let model = facts.modelName {
-			result += SystemProfilerLocalization.string(.BasicLanguage.modelSegment(model))
+			result += String(localized: .BasicLanguage.modelSegment(model))
 		}
 		if enabled(.cpuModel), let processor = facts.processor {
-			result += SystemProfilerLocalization.string(
-				.BasicLanguage.cpuCoreSegment(processor, UInt(facts.physicalCoreCount))
-			)
+			result += String(localized: .BasicLanguage.cpuCoreSegment(processor, UInt(facts.physicalCoreCount)))
 		}
 		if enabled(.memoryInformation) {
-			result += SystemProfilerLocalization.string(
-				.BasicLanguage.memorySegment(SystemProfileInformation.formattedByteCount(facts.physicalMemory))
-			)
+			result += String(localized: .BasicLanguage.memorySegment(SystemProfileInformation.formattedByteCount(facts.physicalMemory)))
 		}
 		if enabled(.systemUptime) {
 			let uptime = PluginHost.humanReadableTimeInterval(facts.systemUptime, shortValue: true)
-			result += SystemProfilerLocalization.string(.BasicLanguage.uptimeSegment(uptime))
+			result += String(localized: .BasicLanguage.uptimeSegment(uptime))
 		}
 		if enabled(.diskInformation), let disk = facts.rootVolumeCapacity {
-			result += SystemProfilerLocalization.string(
-				.BasicLanguage.spaceSegment(SystemProfileInformation.formattedByteCount(disk))
-			)
+			result += String(localized: .BasicLanguage.spaceSegment(SystemProfileInformation.formattedByteCount(disk)))
 		}
 		if enabled(.gpuModel), let graphics = facts.graphicsDescription {
-			result += SystemProfilerLocalization.string(.BasicLanguage.graphicsSegment(graphics))
+			result += String(localized: .BasicLanguage.graphicsSegment(graphics))
 		}
 		if enabled(.screenResolution), let screen = NSScreen.main ?? NSScreen.screens.first {
 			if let refreshRate = SystemProfileInformation.refreshRate(for: screen) {
-				result += SystemProfilerLocalization.string(
-					.BasicLanguage.displayWithRefreshRateSegment(
+				result += String(
+					localized: .BasicLanguage.displayWithRefreshRateSegment(
 						screen.textualScreenResolutionString,
 						refreshRate
 					)
 				)
 			} else {
-				result += SystemProfilerLocalization.string(
-					.BasicLanguage.displaySegment(screen.textualScreenResolutionString)
-				)
+				result += String(localized: .BasicLanguage.displaySegment(screen.textualScreenResolutionString))
 			}
 		}
 		if enabled(.operatingSystemVersion) {
-			result += SystemProfilerLocalization.string(
-				.BasicLanguage.operatingSystemSegment(
+			result += String(
+				localized: .BasicLanguage.operatingSystemSegment(
 					SystemInformation.systemOperatingSystemName,
 					SystemInformation.systemStandardVersion,
 					SystemInformation.systemBuildVersion ?? ""
@@ -245,8 +226,8 @@ enum SystemProfileReport {
 		let usedSegments = total == 0 ? 0 : min(10, Int(Double(used) / Double(total) * 10))
 		let meter = "\u{0003}04" + String(repeating: "❙", count: usedSegments + 1)
 			+ "\u{0003}|\u{0003}03" + String(repeating: "❙", count: 11 - usedSegments) + "\u{0003}"
-		return SystemProfilerLocalization.string(
-			.BasicLanguage.systemMemory(
+		return String(
+			localized: .BasicLanguage.systemMemory(
 				SystemProfileInformation.formattedByteCount(free),
 				SystemProfileInformation.formattedByteCount(used),
 				SystemProfileInformation.formattedByteCount(total),
@@ -258,18 +239,18 @@ enum SystemProfileReport {
 	static func systemNetworkInformation() -> String {
 		let interfaces = SystemProfileInformation.networkStatistics()
 		guard interfaces.isEmpty == false else {
-			return SystemProfilerLocalization.string(.BasicLanguage.networkStatisticsUnavailable)
+			return String(localized: .BasicLanguage.networkStatisticsUnavailable)
 		}
 		let text = interfaces.enumerated().map { index, item in
 			let received = SystemProfileInformation.formattedByteCount(item.received)
 			let sent = SystemProfileInformation.formattedByteCount(item.sent)
 			return if index == 0 {
-				SystemProfilerLocalization.string(.BasicLanguage.firstNetworkInterface(item.name, received, sent))
+				String(localized: .BasicLanguage.firstNetworkInterface(item.name, received, sent))
 			} else {
-				SystemProfilerLocalization.string(.BasicLanguage.additionalNetworkInterface(item.name, received, sent))
+				String(localized: .BasicLanguage.additionalNetworkInterface(item.name, received, sent))
 			}
 		}.joined()
-		return SystemProfilerLocalization.string(.BasicLanguage.networkTrafficHeading(text))
+		return String(localized: .BasicLanguage.networkTrafficHeading(text))
 	}
 }
 
@@ -411,28 +392,24 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 		guard names.isEmpty == false else { return nil }
 		return names.enumerated().map { index, name in
 			index == 0
-				? SystemProfilerLocalization.string(.BasicLanguage.firstListItem(name))
-				: SystemProfilerLocalization.string(.BasicLanguage.additionalListItem(name))
+				? String(localized: .BasicLanguage.firstListItem(name))
+				: String(localized: .BasicLanguage.additionalListItem(name))
 		}.joined()
 	}
 
 	@MainActor static func sidebarAppearance(usesDarkAppearance: Bool) -> String {
-		SystemProfilerLocalization.string(
-			usesDarkAppearance ? .BasicLanguage.darkAppearance : .BasicLanguage.lightAppearance
-		)
+		String(localized: usesDarkAppearance ? .BasicLanguage.darkAppearance : .BasicLanguage.lightAppearance)
 	}
 
 	@MainActor static func themeAppearance(host: PluginHostContext) -> String {
 		let appearance = host.themeSnapshot?.resolvedAppearance
-		return SystemProfilerLocalization.string(
-			appearance == .dark ? .BasicLanguage.darkAppearance : .BasicLanguage.lightAppearance
-		)
+		return String(localized: appearance == .dark ? .BasicLanguage.darkAppearance : .BasicLanguage.lightAppearance)
 	}
 
 	static func refreshRate(for screen: NSScreen) -> String? {
 		let rate = screen.textualScreenRefreshRate
 		guard rate <= 58.5 || rate >= 61.5 else { return nil }
-		return SystemProfilerLocalization.string(.BasicLanguage.screenRefreshRate(Float(rate)))
+		return String(localized: .BasicLanguage.screenRefreshRate(Float(rate)))
 	}
 
 	static func applicationMemoryUsage() -> UInt64 {
@@ -554,11 +531,5 @@ nonisolated enum SystemProfileInformation { // nonisolated: value
 		var value: UInt64 = 0
 		var size = MemoryLayout.size(ofValue: value)
 		return sysctlbyname(name, &value, &size, nil, 0) == 0 ? value : 0
-	}
-}
-
-nonisolated enum SystemProfilerLocalization { // nonisolated: value
-	static func string(_ resource: LocalizedStringResource) -> String {
-		String(localized: resource)
 	}
 }

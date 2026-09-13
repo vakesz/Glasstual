@@ -50,7 +50,7 @@ public extension IRCClient {
 		else { return }
 
 		hiddenCommandResponsesQuery = query
-		output?.selectItem(query)
+		output?.select(query)
 		printDebugInformation(IRCDiagnosticStrings.hiddenCommandResponsesNotice, in: query)
 	}
 

@@ -87,19 +87,42 @@ struct IRCNumericReplyCorpusTests {
 
 	/// Replies whose text the client rewrites are printed even when a plugin
 	/// or filter would otherwise swallow them.
-	@Test(arguments: [
-		NumericCase(221, isError: false),
-		NumericCase(324, isError: false),
-		NumericCase(332, isError: false),
-		NumericCase(333, isError: false),
-	])
-	func specialFilteringCoversModeAndTopicReplies(testCase: NumericCase) {
-		#expect(IRCNumericReplyPolicy.requiresSpecialFiltering(testCase.numeric))
+	@Test(arguments: [IRCNumeric.umodeis, .channelmodeis, .topic, .topicwhotime])
+	func specialFilteringCoversModeAndTopicReplies(numeric: IRCNumeric) {
+		#expect(numeric.requiresSpecialFiltering)
 	}
 
-	@Test(arguments: [1 as UInt, 5, 353, 366, 401, 422, 433, 900])
-	func specialFilteringCoversNothingElse(numeric: UInt) {
-		#expect(IRCNumericReplyPolicy.requiresSpecialFiltering(numeric) == false)
+	@Test(arguments: [IRCNumeric.welcome, .isupport, .namereply, .endofnames, .nosuchnick, .nomotd,
+	                  .nicknameinuse, .loggedin])
+	func specialFilteringCoversNothingElse(numeric: IRCNumeric) {
+		#expect(numeric.requiresSpecialFiltering == false)
+	}
+
+	/// Every numeric a handler answers names its group, and the routing switch
+	/// in `receiveNumericReply` is what turns that into the call.
+	@Test
+	func groupedNumericsAreRoutedToExactlyOneHandler() {
+		let grouped = IRCNumeric.allCases.filter { $0.group != nil }
+
+		#expect(grouped.count == 96)
+		#expect(IRCNumeric.welcome.group == .connection)
+		#expect(IRCNumeric.whoisuser.group == .whois)
+		#expect(IRCNumeric.namereply.group == .channel)
+		#expect(IRCNumeric.mononline.group == .presence)
+		#expect(IRCNumeric.saslsuccess.group == .authentication)
+
+		/* A numeric no handler claims takes the generic reply path. */
+		#expect(IRCNumeric.whoiscertfp.group == nil)
+		#expect(IRCNumeric.clearwatch.group == nil)
+	}
+
+	/// The cases are declared in numeric order, which is how a reader finds one.
+	@Test
+	func catalogIsInNumericOrder() {
+		let rawValues = IRCNumeric.allCases.map(\.rawValue)
+
+		#expect(rawValues == rawValues.sorted())
+		#expect(Set(rawValues).count == rawValues.count)
 	}
 
 	@Test
@@ -181,7 +204,7 @@ struct IRCNumericReplyCorpusTests {
 	 nickname was nothing but underscores. */
 	@Test
 	func aRetriedNicknameIsPaddedToTheAdvertisedNicknameLength() {
-		let client = GLTTestClient(configDictionary: ["nickname": "abcdefghi", "username": "abcdefghi"])
+		let client = TestClient(configDictionary: ["nickname": "abcdefghi", "username": "abcdefghi"])
 
 		client.supportInfo.processConfigurationData("NICKLEN=9")
 		client.isConnected = true
@@ -195,7 +218,7 @@ struct IRCNumericReplyCorpusTests {
 	/// still stands in.
 	@Test
 	func aRetryBeforeISupportUsesTheDefaultLength() {
-		let client = GLTTestClient(configDictionary: ["nickname": "nick", "username": "nick"])
+		let client = TestClient(configDictionary: ["nickname": "nick", "username": "nick"])
 
 		client.isConnected = true
 		client.tryingNicknameSentNickname = "nick"
@@ -208,10 +231,8 @@ struct IRCNumericReplyCorpusTests {
 /// The WHOX request token and the reply token that matches it.
 @MainActor
 struct IRCWHOXCorpusTests {
-	private static func loggedInClient(supporting configuration: String?) -> GLTTestClient {
-		CommandIndex.populateCommandIndex()
-
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+	private static func loggedInClient(supporting configuration: String?) -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"])
 		client.markAsLoggedIn()
 
 		if let configuration {
@@ -221,7 +242,7 @@ struct IRCWHOXCorpusTests {
 		return client
 	}
 
-	private static func sentLines(of client: GLTTestClient) -> [String] {
+	private static func sentLines(of client: TestClient) -> [String] {
 		(client.sentLines as NSArray).compactMap { $0 as? String }
 	}
 
@@ -245,9 +266,7 @@ struct IRCWHOXCorpusTests {
 
 	@Test
 	func sendsNothingBeforeLogin() {
-		CommandIndex.populateCommandIndex()
-
-		let client = GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+		let client = TestClient(configDictionary: ["nickname": "me", "username": "me"])
 
 		client.sendWho(toChannelNamed: "#chat")
 

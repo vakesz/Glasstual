@@ -11,8 +11,11 @@ import Security
 import SecurityInterface
 import SwiftUI
 
+/// One pane of the connection sheet. Every case is a pane the sidebar lists and
+/// the detail view draws: the entry points a menu can open the sheet at are
+/// `ServerPropertiesDestination`, which is a different question and used to be
+/// mixed in here as two cases nothing could select.
 enum ServerPropertiesSelection: CaseIterable, Hashable {
-	case `default`
 	case addressBook
 	case autojoin
 	case connectCommands
@@ -26,14 +29,11 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 	case floodControl
 	case networkSocket
 	case proxyServer
-	case redundancy
-	case newIgnoreEntry
 }
 
 @MainActor
 public protocol ServerPropertiesSheetDelegate: AnyObject {
 	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: ClientConfig)
-	func serverPropertiesSheetWillClose(_ sender: ServerPropertiesSheet)
 }
 
 @objc(TDCServerPropertiesSheet)
@@ -47,19 +47,14 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	let model: ServerPropertiesModel
 
 	private let notifications = NotificationSubscriptions()
-	private var addressBookSheet: AddressBookSheet?
-	private var channelSheet: ChannelPropertiesSheet?
-	private var highlightSheet: HighlightEntrySheet?
-	private var serverEndpointSheet: ServerEndpointListSheet?
+	/* Weak: the window's presentation chain owns a sheet while it is up, so a
+	 child that has been dismissed reads as `nil` here without a callback to
+	 clear it. These four exist only to take the children down with the parent. */
+	private weak var addressBookSheet: AddressBookSheet?
+	private weak var channelSheet: ChannelPropertiesSheet?
+	private weak var highlightSheet: HighlightEntrySheet?
+	private weak var serverEndpointSheet: ServerEndpointListSheet?
 	private weak var clientCertificatePanel: SFChooseIdentityPanel?
-
-	var config: ClientConfig {
-		get { model.config }
-		set {
-			model.replace(with: newValue)
-			updateClientCertificateDetails()
-		}
-	}
 
 	public init(client: IRCClient?) {
 		self.client = client
@@ -68,7 +63,8 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 			client.updateStoredConfiguration()
 			model = ServerPropertiesModel(config: client.config)
 		} else {
-			model = ServerPropertiesModel(config: ClientConfig())
+			// A new connection starts from the network list rather than a blank form.
+			model = ServerPropertiesModel(config: ClientConfig(), offersTemplates: true)
 		}
 		super.init(window: nil)
 		installSheet()
@@ -78,23 +74,46 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 
 	private func installSheet() {
 		let actions = ServerPropertiesActions(
-			submit: { [weak self] in self?.ok(nil) },
-			cancel: { [weak self] in self?.cancel(nil) },
+			submit: { [weak self] in self?.submit() },
+			cancel: { [weak self] in self?.cancel() },
+			applyTemplate: { [weak self] in self?.model.applySelectedTemplate() },
 			editEndpoints: { [weak self] in self?.editServerEndpoints() },
-			addChannel: { [weak self] in self?.addChannel() },
-			editChannel: { [weak self] in self?.editChannel() },
-			deleteChannel: { [weak self] in self?.deleteChannel() },
-			addHighlight: { [weak self] in self?.addHighlight() },
-			editHighlight: { [weak self] in self?.editHighlight() },
-			deleteHighlight: { [weak self] in self?.deleteHighlight() },
-			addIgnore: { [weak self] in self?.addIgnoreAddressBookEntry(hostmask: nil) },
-			addTracking: { [weak self] in self?.addTrackingAddressBookEntry() },
-			editAddressBookEntry: { [weak self] in self?.editAddressBookEntry() },
-			deleteAddressBookEntry: { [weak self] in self?.deleteAddressBookEntry() },
-			chooseCertificate: { [weak self] in self?.chooseCertificate() },
-			resetCertificate: { [weak self] in self?.resetCertificate() },
-			copyCertificateFingerprint: { [weak self] value in self?.copyCertificateFingerprint(value) },
-			showCipherSuites: { [weak self] in self?.showCipherSuites() }
+			channels: ServerPropertiesListActions(
+				addLabel: ServerPropertiesStrings.ListButton.addChannel,
+				add: { [weak self] in self?.addChannel() },
+				selected: ServerPropertiesSelectedEntryActions(
+					editLabel: ServerPropertiesStrings.ListButton.editChannel,
+					edit: { [weak self] in self?.editChannel() },
+					removeLabel: ServerPropertiesStrings.ListButton.removeChannel,
+					remove: { [weak self] in self?.deleteChannel() }
+				)
+			),
+			highlights: ServerPropertiesListActions(
+				addLabel: ServerPropertiesStrings.ListButton.addHighlight,
+				add: { [weak self] in self?.addHighlight() },
+				selected: ServerPropertiesSelectedEntryActions(
+					editLabel: ServerPropertiesStrings.ListButton.editHighlight,
+					edit: { [weak self] in self?.editHighlight() },
+					removeLabel: ServerPropertiesStrings.ListButton.removeHighlight,
+					remove: { [weak self] in self?.deleteHighlight() }
+				)
+			),
+			addressBook: ServerPropertiesAddressBookActions(
+				addLabel: ServerPropertiesStrings.ListButton.addAddressBookEntry,
+				addIgnore: { [weak self] in self?.addIgnoreAddressBookEntry(hostmask: nil) },
+				addTracking: { [weak self] in self?.addTrackingAddressBookEntry() },
+				selected: ServerPropertiesSelectedEntryActions(
+					editLabel: ServerPropertiesStrings.ListButton.editAddressBookEntry,
+					edit: { [weak self] in self?.editAddressBookEntry() },
+					removeLabel: ServerPropertiesStrings.ListButton.removeAddressBookEntry,
+					remove: { [weak self] in self?.deleteAddressBookEntry() }
+				)
+			),
+			certificate: ServerPropertiesCertificateActions(
+				choose: { [weak self] in self?.chooseCertificate() },
+				reset: { [weak self] in self?.resetCertificate() },
+				copyNickServCommand: { [weak self] value in self?.copyNickServCommand(for: value) }
+			)
 		)
 		/* No frame here: `ServerPropertiesView` declares the sheet's minimum and
 		 ideal size. Two owners meant the host asked for less than the content
@@ -102,46 +121,41 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		setContent(ServerPropertiesView(model: model, actions: actions))
 	}
 
-	public func start() {
-		start(at: .default, context: nil)
-	}
-
-	func start(at destination: ServerPropertiesDestination, context: Any?) {
-		let requested: ServerPropertiesSelection = switch destination {
-		case .default: .default
-		case .addressBook: .addressBook
-		case .newIgnoreEntry: .newIgnoreEntry
-		}
-		model.selection = switch requested {
+	/// Opens the sheet at the pane a menu asked for, on whatever that pane
+	/// needs to start on.
+	func start(at destination: ServerPropertiesDestination = .default) {
+		model.selection = switch destination {
 		case .default: .general
-		case .newIgnoreEntry: .addressBook
-		default: requested
+		case .addressBook, .newIgnoreEntry, .editIgnoreEntry: .addressBook
 		}
 		// The sheet's keychain secrets are read once, when it opens.
 		model.loadSecrets()
 		startSheet()
-		if requested == .newIgnoreEntry {
-			if let hostmask = context as? String {
-				addIgnoreAddressBookEntry(hostmask: hostmask)
-			} else if let entry = context as? AddressBookEntry {
-				editAddressBookEntry(with: entry)
-			}
+
+		switch destination {
+		case .default, .addressBook:
+			break
+		case let .newIgnoreEntry(hostmask):
+			addIgnoreAddressBookEntry(hostmask: hostmask)
+		case let .editIgnoreEntry(entry):
+			model.selectedAddressBookEntryID = entry.uniqueIdentifier
+			editAddressBookEntry()
 		}
 	}
 
-	override public func ok(_ sender: Any?) {
+	override public func submit() {
 		guard let submitted = model.submittedConfig() else { return }
 		model.config = submitted
 		removeConfigurationDidChangeObserver()
 		closeChildSheets()
 		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheet(self, onOk: submitted)
-		super.ok(sender)
+		super.submit()
 	}
 
-	override public func cancel(_ sender: Any?) {
+	override public func cancel() {
 		removeConfigurationDidChangeObserver()
 		closeChildSheets()
-		super.cancel(sender)
+		super.cancel()
 	}
 
 	private func editServerEndpoints() {
@@ -154,10 +168,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 
 	public func serverEndpointListSheet(_: ServerEndpointListSheet, onOk serverList: [Server]) {
 		model.applyServerList(serverList)
-	}
-
-	public func serverEndpointListSheetWillClose(_: ServerEndpointListSheet) {
-		serverEndpointSheet = nil
 	}
 
 	private func addChannel() {
@@ -191,10 +201,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 			model.config.channelList.append(config)
 		}
 		model.selectedChannelID = config.uniqueIdentifier
-	}
-
-	public func channelPropertiesSheetWillClose(_: ChannelPropertiesSheet) {
-		channelSheet = nil
 	}
 
 	private func addHighlight() {
@@ -232,10 +238,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		model.selectedHighlightID = config.uniqueIdentifier
 	}
 
-	public func highlightEntrySheetDidClose(_: HighlightEntrySheet) {
-		highlightSheet = nil
-	}
-
 	private func addIgnoreAddressBookEntry(hostmask: String? = nil) {
 		let controller = hostmask.map { AddressBookSheet(config: .newIgnoreEntry(forHostmask: $0)) }
 			?? AddressBookSheet(entryType: .ignore)
@@ -244,11 +246,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 
 	private func addTrackingAddressBookEntry() {
 		presentAddressBookSheet(AddressBookSheet(entryType: .userTracking))
-	}
-
-	func editAddressBookEntry(with entry: AddressBookEntry) {
-		model.selectedAddressBookEntryID = entry.uniqueIdentifier
-		editAddressBookEntry()
 	}
 
 	private func editAddressBookEntry() {
@@ -279,47 +276,14 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		model.selectedAddressBookEntryID = entry.uniqueIdentifier
 	}
 
-	public func addressBookSheetWillClose(_: AddressBookSheet) {
-		addressBookSheet = nil
-	}
-
-	private struct CertificateDetails {
-		let commonName: String
-		let sha512: String
-		let sha256: String
-		let sha1: String
-	}
-
-	private func certificateDetails() -> CertificateDetails? {
-		guard let reference = model.config.identityClientSideCertificate else { return nil }
-		let query: [CFString: Any] = [kSecClass: kSecClassCertificate, kSecValuePersistentRef: reference,
-		                              kSecReturnRef: true]
-		var result: CFTypeRef?
-		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-		      let result, CFGetTypeID(result) == SecCertificateGetTypeID() else { return nil }
-		let certificate = unsafeDowncast(result, to: SecCertificate.self)
-		var commonNameReference: CFString?
-		guard SecCertificateCopyCommonName(certificate, &commonNameReference) == errSecSuccess,
-		      let commonName = commonNameReference as String? else { return nil }
-		let data = SecCertificateCopyData(certificate) as Data
-		return CertificateDetails(
-			commonName: commonName,
-			sha512: (data as NSData).textualSha512.uppercased(),
-			sha256: (data as NSData).textualSha256.uppercased(),
-			sha1: (data as NSData).textualSha1.uppercased()
-		)
-	}
-
 	private func updateClientCertificateDetails() {
-		let details = certificateDetails()
-		let empty = ServerPropertiesStrings.Certificate.noneSelected
-		model.certificateName = details?.commonName ?? empty
-		model.certificateSHA512 = details?.sha512 ?? empty
-		model.certificateSHA256 = details?.sha256 ?? empty
-		model.certificateSHA1 = details?.sha1 ?? empty
+		model.loadCertificate()
 	}
 
-	private func copyCertificateFingerprint(_ fingerprint: String) {
+	/// Copies the command that registers the fingerprint with NickServ, which
+	/// is what the button beside a fingerprint has always put on the pasteboard
+	/// — the button used to say only "Copy".
+	private func copyNickServCommand(for fingerprint: String) {
 		guard model.config.identityClientSideCertificate != nil else { return }
 		NSPasteboard.general.textualStringContent = "/msg NickServ cert add \(fingerprint)"
 	}
@@ -336,11 +300,13 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
 		      let identities = result as? [SecIdentity], !identities.isEmpty
 		else {
-			Alerts.alert(
-				withMessage: ServerPropertiesStrings.Certificate.noneAvailableExplanation,
+			// A sheet on the window this sheet is on, not on whatever is visible.
+			Alerts.alertSheet(
+				body: ServerPropertiesStrings.Certificate.noneAvailableExplanation,
 				title: ServerPropertiesStrings.Certificate.noneAvailableTitle,
 				defaultButton: PromptStrings.Action.confirmation,
-				alternateButton: nil
+				alternateButton: nil,
+				otherButton: nil
 			)
 			return
 		}
@@ -379,22 +345,6 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		updateClientCertificateDetails()
 	}
 
-	private func showCipherSuites() {
-		let descriptions = SecureTransportSupport.descriptions(
-			forCipherListCollection: model.config.cipherSuites,
-			withProtocol: true
-		)
-		Alerts.alert(
-			withMessage: ServerPropertiesStrings.CipherSuites.description(descriptions.joined(separator: "\n")),
-			title: ServerPropertiesStrings.CipherSuites.title(
-				collectionName: ServerPropertiesStrings.CipherSuites.collectionName(model.config.cipherSuites)
-			),
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil,
-			otherButton: nil
-		)
-	}
-
 	private func addConfigurationDidChangeObserver() {
 		guard let client else { return }
 		notifications.observe(.IRCClientConfigurationWasUpdated, object: client) { [weak self] notification in
@@ -406,18 +356,23 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 		notifications.cancelAll()
 	}
 
+	/** The connection was reconfigured from somewhere else while the sheet is
+	 open.
+
+	 The alert is a sheet on the window this sheet is already on, so it arrives
+	 over the edits it is asking about. Keeping what is typed is the default;
+	 reloading is the destructive answer, because it throws those edits away. */
 	private func underlyingConfigurationChanged(_ notification: Notification) {
 		guard let client = notification.object as? IRCClient else { return }
-		Alerts.alert(
-			withMessage: ServerPropertiesStrings.ExternalChange.unsavedChangesWarning,
+		Alerts.alertSheet(
+			body: ServerPropertiesStrings.ExternalChange.unsavedChangesWarning,
 			title: ServerPropertiesStrings.ExternalChange.reloadTitle,
-			defaultButton: ServerPropertiesStrings.ExternalChange.reloadButton,
-			alternateButton: PromptStrings.Action.cancel,
+			defaultButton: PromptStrings.Action.cancel,
+			alternateButton: ServerPropertiesStrings.ExternalChange.reloadButton,
 			otherButton: nil,
-			// Reloading throws away whatever the user has typed into the sheet.
-			destructiveButton: .default
+			destructiveButton: .alternate
 		) { [weak self] outcome in
-			guard outcome.response == .default, let self else { return }
+			guard outcome.response == .alternate, let self else { return }
 			client.updateStoredConfiguration()
 			model.replace(with: client.config)
 			updateClientCertificateDetails()
@@ -425,17 +380,16 @@ public final class ServerPropertiesSheet: MainWindowSheetSession, ClientScoped,
 	}
 
 	private func closeChildSheets() {
-		addressBookSheet?.close()
-		channelSheet?.close()
-		highlightSheet?.close()
-		serverEndpointSheet?.close()
+		addressBookSheet?.cancel()
+		channelSheet?.cancel()
+		highlightSheet?.cancel()
+		serverEndpointSheet?.cancel()
 		if let panel = clientCertificatePanel {
 			panel.sheetParent?.endSheet(panel, returnCode: .cancel)
 		}
 	}
 
-	override public func sheetDidEnd(withReturnCode _: Int) {
+	override public func sheetDidEnd() {
 		removeConfigurationDidChangeObserver()
-		(delegate as? any ServerPropertiesSheetDelegate)?.serverPropertiesSheetWillClose(self)
 	}
 }

@@ -38,23 +38,13 @@
 
 import Foundation
 
-enum ChannelUnreadPolicy {
-	static func incrementsDockUnreadCount(isChannel: Bool, displaysPublicMessageCount: Bool) -> Bool {
-		isChannel == false || displaysPublicMessageCount
-	}
-
-	static func refreshesTreeBadge(isHighlight: Bool, showsTreeBadgeCount: Bool) -> Bool {
-		isHighlight || showsTreeBadgeCount
-	}
-}
-
 @MainActor
 public extension IRCClient {
-	private func channelIsSelectedInKeyWindow(_ channel: IRCChannel, output: any ClientOutput) -> Bool {
-		output.windowIsKey && output.isItemSelectedInWindow(channel)
+	private func channelIsSelectedInKeyWindow(_ channel: Channel, output: any ClientOutput) -> Bool {
+		output.isKeyWindow && output.isItemSelected(channel)
 	}
 
-	func setHighlightState(for channel: IRCChannel) {
+	func setHighlightState(for channel: Channel) {
 		guard let output else { return }
 		guard channelIsSelectedInKeyWindow(channel, output: output) == false else { return }
 
@@ -63,28 +53,30 @@ public extension IRCClient {
 		output.reloadTreeItem(channel)
 	}
 
-	func setUnreadState(for channel: IRCChannel) {
-		setUnreadState(for: channel, isHighlight: false)
-	}
+	/** Raises the unread counts by `count`, which defaults to the single line
+	 that is raising them.
 
-	func setUnreadState(for channel: IRCChannel, isHighlight: Bool) {
+	 A larger count belongs to the one caller that learns about several unread
+	 lines at once: a read marker the server sends names a point, and everything
+	 a person said after it is unread. */
+	func setUnreadState(for channel: Channel, isHighlight: Bool = false, count: Int = 1) {
+		assert(count >= 1, "An unread badge counts at least one line")
+
+		let count = max(1, count)
+
 		guard let output else { return }
 		guard channelIsSelectedInKeyWindow(channel, output: output) == false else { return }
 
-		if ChannelUnreadPolicy.incrementsDockUnreadCount(
-			isChannel: channel.isChannel,
-			displaysPublicMessageCount: environment.preferences.displayPublicMessageCountOnDockBadge
-		) {
-			channel.dockUnreadCount += 1
+		/* A query always counts on the dock badge; a channel does so only when
+		 the user asked for public messages to be counted there. */
+		if channel.isChannel == false || environment.preferences.displayPublicMessageCountOnDockBadge {
+			channel.dockUnreadCount += count
 			DockIcon.updateDockIcon()
 		}
 
-		channel.treeUnreadCount += 1
+		channel.treeUnreadCount += count
 
-		if ChannelUnreadPolicy.refreshesTreeBadge(
-			isHighlight: isHighlight,
-			showsTreeBadgeCount: channel.config.showTreeBadgeCount
-		) {
+		if isHighlight || channel.config.showTreeBadgeCount {
 			output.refreshMessageCount(for: channel)
 		}
 	}

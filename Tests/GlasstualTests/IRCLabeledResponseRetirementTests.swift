@@ -113,8 +113,8 @@ struct IRCLabeledResponseRetirementTests {
 		client.timeoutDelivery(withLabel: second)
 	}
 
-	private func clientWithLabeledResponse() -> GLTTestClient {
-		let client = GLTTestClient()
+	private func clientWithLabeledResponse() -> TestClient {
+		let client = TestClient()
 		client.enableCapability(.messageTags)
 		client.enableCapability(.echoMessage)
 		client.enableCapability(.labeledResponse)
@@ -245,7 +245,7 @@ struct IRCLabeledResponseRetirementTests {
 struct IRCClientDisconnectCallbackTests {
 	@Test("Every registered disconnect action runs, not only the last one")
 	func allCallbacksRun() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let recorder = CallbackRecorder()
 
 		client.addDisconnectCallback { recorder.record("first") }
@@ -258,7 +258,7 @@ struct IRCClientDisconnectCallbackTests {
 
 	@Test("Callbacks are cleared once invoked")
 	func callbacksRunOnlyOnce() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let recorder = CallbackRecorder()
 
 		client.addDisconnectCallback { recorder.record("only") }

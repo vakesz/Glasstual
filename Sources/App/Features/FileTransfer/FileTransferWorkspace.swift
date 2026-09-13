@@ -6,17 +6,6 @@
 import AppKit
 import os
 
-/// UI access is independent of the descriptor used for transfer/retry I/O.
-struct FileTransferLocalFile {
-	let url: URL
-	let accessURL: URL
-
-	func withAccess<Value>(_ operation: (URL) throws -> Value) rethrows -> Value {
-		let lease = FileTransferAccessLease(url: accessURL)
-		return try withExtendedLifetime(lease) { try operation(url) }
-	}
-}
-
 /// The feature's narrow bridge to Finder and the user's default applications.
 ///
 /// Opening a file is asynchronous — LaunchServices answers once the

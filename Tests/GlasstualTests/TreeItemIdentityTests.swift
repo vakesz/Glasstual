@@ -39,7 +39,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/** `IRCTreeItem` is a type alias for `TreeItem`, so the three `legacyTreeItem`
+/** `TreeItem` is a type alias for `TreeItem`, so the three `legacyTreeItem`
  shims that "converted" a channel to one were identity functions — one of them
  an `as?` cast that could never fail. Their callers pass the channel straight
  through now; these pin the facts that made that safe. */
@@ -47,9 +47,9 @@ import Testing
 struct TreeItemIdentityTests {
 	@Test("A channel is already a tree item, so no conversion is involved")
 	func channelIsATreeItem() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let channel = try #require(client.findChannelOrCreate("#chat"))
-		let item: IRCTreeItem = channel
+		let item: TreeItem = channel
 
 		#expect(item === channel)
 		#expect(item.uniqueIdentifier == channel.uniqueIdentifier)
@@ -59,10 +59,10 @@ struct TreeItemIdentityTests {
 	/// channel's own — the shims' only observable contribution.
 	@Test("The identifier the historic log is keyed by is the channel's own")
 	func historicLogKeyIsTheChannelIdentifier() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let channel = try #require(client.findChannelOrCreate("#chat"))
 
 		#expect(channel.uniqueIdentifier.isEmpty == false)
-		#expect((channel as AnyObject as? IRCTreeItem)?.uniqueIdentifier == channel.uniqueIdentifier)
+		#expect((channel as AnyObject as? TreeItem)?.uniqueIdentifier == channel.uniqueIdentifier)
 	}
 }

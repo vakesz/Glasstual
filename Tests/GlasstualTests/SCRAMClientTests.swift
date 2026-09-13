@@ -1,8 +1,4 @@
-import Foundation
-@testable import Glasstual
-import Testing
-
-/** *********************************************************************
+/* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -38,6 +34,11 @@ import Testing
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+
+import Foundation
+@testable import Glasstual
+import Testing
+
 @MainActor
 @Suite("SCRAM-SHA-256 client")
 struct SCRAMClientTests {

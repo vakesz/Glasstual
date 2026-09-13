@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 @testable import Glasstual
+import GlasstualPluginKit
 import Testing
 
 @MainActor
@@ -54,18 +55,14 @@ struct IRCClientShellPolicyTests {
 
 	@Test("Channels are stored ahead of queries")
 	func channelStoragePlacesChannelsBeforeQueries() {
-		#expect(
-			IRCClientChannelStoragePolicy.insertionIndex(
-				isChannel: true,
-				existingKinds: [true, true, false, false]
-			) == 2
-		)
-		#expect(
-			IRCClientChannelStoragePolicy.insertionIndex(
-				isChannel: false,
-				existingKinds: [true, false]
-			) == 2
-		)
+		let client = TestClient()
+
+		client.add(Channel(config: ChannelConfig(channelName: "#first")))
+		client.add(Channel(config: ChannelConfig(channelName: "someone", type: .privateMessage)))
+		client.add(Channel(config: ChannelConfig(channelName: "#second")))
+		client.add(Channel(config: ChannelConfig(channelName: "other", type: .privateMessage)))
+
+		#expect(client.channelList.map(\.name) == ["#first", "#second", "someone", "other"])
 	}
 
 	@Test("A utility window or a direct chat is never written to the stored configuration")

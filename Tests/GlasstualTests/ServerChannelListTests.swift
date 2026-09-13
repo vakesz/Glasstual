@@ -114,15 +114,19 @@ struct ServerChannelListTests {
 		#expect(Set(model.rows.map(\.id)).count == 2)
 	}
 
-	@Test("Selection is capped at eight rows")
-	func selectionLimit() {
+	/** The window used to cap the selection at eight and drop the rest without
+	 saying so. What a JOIN may carry is the server's business -- CHANNELLEN and
+	 the CHANLIMIT warning both live on the client -- so the table keeps whatever
+	 was selected. */
+	@Test("Selecting more rows than one JOIN would carry keeps every one of them")
+	func selectionIsNotCapped() {
 		let model = ServerChannelListModel()
 		model.replace(with: (0 ..< 10).map { entry(name: "#\($0)", count: $0) })
+
 		model.selection = Set(model.rows.map(\.id))
 
-		model.limitSelection(from: [])
-
-		#expect(model.selection.count == ServerChannelListModel.maximumSelectionCount)
+		#expect(model.selection.count == 10)
+		#expect(model.selectedChannelNames.count == 10)
 	}
 
 	@Test("Clearing cancels queued server replies")
@@ -218,6 +222,22 @@ struct ServerChannelListTests {
 
 		#expect(model.rows.count < ServerChannelListModel.maximumEntryCount)
 		#expect(model.truncationNotice == notice)
+	}
+
+	/** The window's subtitle counts what arrived, not what is on screen: it used
+	 to count the table's rows, so typing anything into the search field made the
+	 title a count of channels the server had never stopped sending. */
+	@Test("The window's channel count is what was kept, not what the search left")
+	func keptEntryCountIgnoresTheSearchField() {
+		let model = populatedModel()
+		let kept = model.keptEntryCount
+		#expect(kept == model.rows.count)
+
+		model.searchString = "#swift"
+		model.applyFilterAndSort()
+
+		#expect(model.rows.count == 1)
+		#expect(model.keptEntryCount == kept)
 	}
 
 	@Test("A complete list says nothing about truncation")

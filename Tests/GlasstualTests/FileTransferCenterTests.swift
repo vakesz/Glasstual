@@ -71,7 +71,7 @@ struct FileTransferCenterTests {
 
 	@Test("The filter reads the direction off a real transfer")
 	func filterReadsRealTransfers() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let incoming = try transfer(on: client, filename: "photo.jpg")
 		let outgoing = try transfer(on: client, filename: "notes.txt")
 		outgoing.isSender = true
@@ -90,7 +90,7 @@ struct FileTransferCenterTests {
 
 	@Test("Each transfer carries a distinct identity for the table to diff on")
 	func transfersHaveDistinctIdentifiers() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let first = try transfer(on: client, filename: "photo.jpg")
 		let second = try transfer(on: client, filename: "photo.jpg")
 
@@ -100,7 +100,7 @@ struct FileTransferCenterTests {
 
 	@Test("Removing transfers by identity keeps the order of the rest")
 	func removingByIdentityKeepsOrder() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let first = try transfer(on: client, filename: "one.jpg")
 		let second = try transfer(on: client, filename: "two.jpg")
 		let third = try transfer(on: client, filename: "three.jpg")
@@ -122,7 +122,7 @@ struct FileTransferCenterTests {
 
 	@Test("The model owns newest-first ordering, filtering, and selection")
 	func modelOwnsListState() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let incoming = try transfer(on: client, filename: "incoming.jpg")
 		let outgoing = try transfer(on: client, filename: "outgoing.jpg")
 		outgoing.isSender = true
@@ -147,7 +147,7 @@ struct FileTransferCenterTests {
 
 	@Test("Rows project transfer state without retaining a view")
 	func rowPresentationIsAValueSnapshot() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let transfer = try transfer(on: client, filename: "archive.zip")
 
 		let presentation = FileTransferRowPresentation(transfer: transfer)
@@ -156,6 +156,51 @@ struct FileTransferCenterTests {
 		#expect(presentation.totalSize.isEmpty == false)
 		#expect(presentation.status.isEmpty == false)
 		#expect(presentation.progress == .hidden)
+	}
+
+	/// The status groups used to be spelled out as a set literal at every place
+	/// that asked, so a new status could be left out of one of them.
+	@Test("Every status belongs to exactly one of running, finished and idle")
+	func statusPredicatesPartitionTheEnum() {
+		let statuses: [FileTransferStatus] = [
+			.complete, .connecting, .fatalError, .initializing, .isListeningAsReceiver,
+			.isListeningAsSender, .mappingListeningPort, .receiving, .recoverableError, .sending,
+			.stopped, .waitingForLocalIPAddress, .waitingForReceiverToAccept, .waitingForResumeAccept,
+		]
+		for status in statuses {
+			#expect(!(status.isActive && status.isNegotiating), "\(status) is both active and negotiating")
+			#expect(status.isRunning == (status.isActive || status.isNegotiating))
+			#expect(!(status.isRunning && status.isFinished), "\(status) is both running and finished")
+		}
+		#expect(statuses.filter(\.isActive) == [.receiving, .sending])
+		#expect(statuses.filter(\.isFinished) == [.complete, .fatalError, .recoverableError])
+		#expect(statuses.filter(\.canRetry) == [.recoverableError, .stopped])
+		#expect(
+			statuses.filter(\.isAwaitingAddress)
+				== [.initializing, .mappingListeningPort, .waitingForLocalIPAddress]
+		)
+	}
+
+	@Test("The start button says what starting the selection would actually do")
+	func startActionTitleFollowsTheSelection() throws {
+		let client = TestClient()
+		let offered = try transfer(on: client, filename: "offered.jpg")
+		let failed = try transfer(on: client, filename: "failed.jpg")
+		failed.transferStatus = .recoverableError
+		let model = FileTransferCenterModel()
+		model.add(offered)
+		model.add(failed)
+
+		#expect(model.startActionTitle(for: [offered.uniqueIdentifier]) == FileTransferStrings.acceptTransfer)
+		#expect(model.startActionTitle(for: [failed.uniqueIdentifier]) == FileTransferStrings.retryTransfer)
+		/* Two rows that would do different things share the generic verb. */
+		#expect(
+			model.startActionTitle(for: [offered.uniqueIdentifier, failed.uniqueIdentifier])
+				== FileTransferStrings.startTransfer
+		)
+		/* An outgoing offer is started, never "accepted". */
+		offered.isSender = true
+		#expect(model.startActionTitle(for: [offered.uniqueIdentifier]) == FileTransferStrings.startTransfer)
 	}
 
 	@Test("The feature ships no legacy nib")

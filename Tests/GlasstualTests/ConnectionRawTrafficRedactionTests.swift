@@ -19,15 +19,15 @@ struct ConnectionRawTrafficRedactionTests {
 
 	@Test("A server password is masked and the command stays legible")
 	func serverPasswordIsMasked() {
-		#expect(ClientWireUtilities.redactedRawLogLine("PASS :hunter2") == "PASS \(mask)")
-		#expect(ClientWireUtilities.redactedRawLogLine("PASS hunter2") == "PASS \(mask)")
+		#expect(WireRedaction.redactedRawLogLine("PASS :hunter2") == "PASS \(mask)")
+		#expect(WireRedaction.redactedRawLogLine("PASS hunter2") == "PASS \(mask)")
 	}
 
 	/// A bouncer password is several parameters wide (`PASS user/network:pass`
 	/// is one form, `PASS pass 0210 ident` another), so none of them survive.
 	@Test("Every parameter of a multi-parameter PASS is masked")
 	func multiParameterPasswordsAreFullyMasked() {
-		let redacted = ClientWireUtilities.redactedRawLogLine("PASS hunter2 0210 ident")
+		let redacted = WireRedaction.redactedRawLogLine("PASS hunter2 0210 ident")
 
 		#expect(redacted == "PASS \(mask)")
 		#expect(redacted.contains("hunter2") == false)
@@ -36,41 +36,41 @@ struct ConnectionRawTrafficRedactionTests {
 
 	@Test("A SASL payload is masked, and its two control answers are not")
 	func saslPayloadsAreMasked() {
-		#expect(ClientWireUtilities.redactedRawLogLine("AUTHENTICATE bWFyYQBtYXJhAHM=") == "AUTHENTICATE \(mask)")
+		#expect(WireRedaction.redactedRawLogLine("AUTHENTICATE bWFyYQBtYXJhAHM=") == "AUTHENTICATE \(mask)")
 		// "+" is the empty response and "*" aborts: neither carries a secret.
-		#expect(ClientWireUtilities.redactedRawLogLine("AUTHENTICATE +") == "AUTHENTICATE +")
-		#expect(ClientWireUtilities.redactedRawLogLine("AUTHENTICATE *") == "AUTHENTICATE *")
+		#expect(WireRedaction.redactedRawLogLine("AUTHENTICATE +") == "AUTHENTICATE +")
+		#expect(WireRedaction.redactedRawLogLine("AUTHENTICATE *") == "AUTHENTICATE *")
 		/* The mechanism name is what makes the exchange readable at all: masked,
 		 the log could not say which mechanism a login failed under. Only the
 		 names this client is able to send are spared; anything else is a
 		 payload. */
-		#expect(ClientWireUtilities.redactedRawLogLine("AUTHENTICATE PLAIN") == "AUTHENTICATE PLAIN")
-		#expect(ClientWireUtilities.redactedRawLogLine("AUTHENTICATE EXTERNAL") == "AUTHENTICATE EXTERNAL")
+		#expect(WireRedaction.redactedRawLogLine("AUTHENTICATE PLAIN") == "AUTHENTICATE PLAIN")
+		#expect(WireRedaction.redactedRawLogLine("AUTHENTICATE EXTERNAL") == "AUTHENTICATE EXTERNAL")
 		#expect(
-			ClientWireUtilities.redactedRawLogLine("AUTHENTICATE SCRAM-SHA-256")
+			WireRedaction.redactedRawLogLine("AUTHENTICATE SCRAM-SHA-256")
 				== "AUTHENTICATE SCRAM-SHA-256"
 		)
-		#expect(ClientWireUtilities.redactedRawLogLine("AUTHENTICATE ANONYMOUS") == "AUTHENTICATE \(mask)")
+		#expect(WireRedaction.redactedRawLogLine("AUTHENTICATE ANONYMOUS") == "AUTHENTICATE \(mask)")
 	}
 
 	/// The oper name is not the secret, and losing it would leave the line
 	/// saying nothing about which account was used.
 	@Test("OPER keeps its account name and loses its password")
 	func operPasswordIsMasked() {
-		#expect(ClientWireUtilities.redactedRawLogLine("OPER mara hunter2") == "OPER mara \(mask)")
+		#expect(WireRedaction.redactedRawLogLine("OPER mara hunter2") == "OPER mara \(mask)")
 	}
 
 	@Test("A NickServ IDENTIFY is masked whichever command carried it")
 	func nickServIdentificationIsMasked() {
 		#expect(
-			ClientWireUtilities.redactedRawLogLine("PRIVMSG NickServ :IDENTIFY hunter2")
+			WireRedaction.redactedRawLogLine("PRIVMSG NickServ :IDENTIFY hunter2")
 				== "PRIVMSG NickServ :IDENTIFY \(mask)"
 		)
 		#expect(
-			ClientWireUtilities.redactedRawLogLine("NICKSERV IDENTIFY hunter2")
+			WireRedaction.redactedRawLogLine("NICKSERV IDENTIFY hunter2")
 				== "NICKSERV IDENTIFY \(mask)"
 		)
-		#expect(ClientWireUtilities.redactedRawLogLine("NS IDENTIFY mara hunter2").contains("hunter2") == false)
+		#expect(WireRedaction.redactedRawLogLine("NS IDENTIFY mara hunter2").contains("hunter2") == false)
 	}
 
 	/** The redacted line is a log of what went out, so it has to keep the shape
@@ -80,15 +80,15 @@ struct ConnectionRawTrafficRedactionTests {
 	@Test("A trailing parameter stays a trailing parameter")
 	func trailingParametersKeepTheirColon() {
 		#expect(
-			ClientWireUtilities.redactedRawLogLine("NICKSERV :IDENTIFY hunter2")
+			WireRedaction.redactedRawLogLine("NICKSERV :IDENTIFY hunter2")
 				== "NICKSERV :IDENTIFY \(mask)"
 		)
 		#expect(
-			ClientWireUtilities.redactedRawLogLine("NICKSERV IDENTIFY :hunter2 extra")
+			WireRedaction.redactedRawLogLine("NICKSERV IDENTIFY :hunter2 extra")
 				== "NICKSERV IDENTIFY :\(mask) \(mask)"
 		)
 		#expect(
-			ClientWireUtilities.redactedRawLogLine("NS SET PASSWORD :hunter2")
+			WireRedaction.redactedRawLogLine("NS SET PASSWORD :hunter2")
 				== "NS SET PASSWORD :\(mask)"
 		)
 	}
@@ -98,7 +98,7 @@ struct ConnectionRawTrafficRedactionTests {
 	@Test("Tags and a source prefix are kept whole")
 	func tagsAndPrefixSurvive() {
 		#expect(
-			ClientWireUtilities.redactedRawLogLine("@label=42 PRIVMSG NickServ :IDENTIFY hunter2")
+			WireRedaction.redactedRawLogLine("@label=42 PRIVMSG NickServ :IDENTIFY hunter2")
 				== "@label=42 PRIVMSG NickServ :IDENTIFY \(mask)"
 		)
 	}
@@ -113,7 +113,7 @@ struct ConnectionRawTrafficRedactionTests {
 		"",
 	])
 	func ordinaryTrafficIsUntouched(_ line: String) {
-		#expect(ClientWireUtilities.redactedRawLogLine(line) == line)
+		#expect(WireRedaction.redactedRawLogLine(line) == line)
 	}
 
 	/// A message to somebody who merely happens to start a line with IDENTIFY
@@ -122,14 +122,14 @@ struct ConnectionRawTrafficRedactionTests {
 	func messagesToPeopleAreNotRedacted() {
 		let line = "PRIVMSG mara :IDENTIFY yourself"
 
-		#expect(ClientWireUtilities.redactedRawLogLine(line) == line)
+		#expect(WireRedaction.redactedRawLogLine(line) == line)
 	}
 
 	/// The window prints what this returns, so the whole path is what matters:
 	/// a client with the traffic window open must not log the password.
 	@Test("The traffic window prints the redacted line")
 	func theWindowPrintsTheRedactedLine() {
-		let client = GLTTestClient(configDictionary: ["nickname": "mara"])
+		let client = TestClient(configDictionary: ["nickname": "mara"])
 		client.createRawDataLogQuery()
 
 		client.rawDataLogOutgoingTraffic("PASS :hunter2")

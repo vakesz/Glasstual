@@ -24,29 +24,25 @@ struct ServerEndpointListView: View {
 					.font(.title2.weight(.semibold))
 				Text(verbatim: ServerEndpointStrings.explanation)
 					.foregroundStyle(.secondary)
+					.fixedSize(horizontal: false, vertical: true)
 			}
 			.frame(maxWidth: .infinity, alignment: .leading)
 			.padding([.horizontal, .top], 20)
 			.padding(.bottom, 12)
 
-			columnHeader
+			endpointTable
 
-			List(selection: $model.selectedID) {
-				ForEach($model.entries) { $entry in
-					ServerEndpointRow(
-						entry: $entry,
-						addressIsInvalid: model.invalidAddressIDs.contains(entry.id),
-						portIsInvalid: model.invalidPortIDs.contains(entry.id),
-						securedDidChange: { model.setSecured($0, for: entry.id) },
-						addressDidChange: { model.addressDidChange(for: entry.id) },
-						portDidChange: { model.portDidChange(for: entry.id) }
-					)
-					.tag(entry.id)
+			VStack(alignment: .leading, spacing: 4) {
+				ForEach(model.faults, id: \.self) { fault in
+					ValidationMessageLabel(fault.message)
 				}
-				.onDelete(perform: model.removeEntries)
-				.onMove(perform: model.moveEntries)
+				Text(verbatim: ServerEndpointStrings.serverPasswordHelp)
+					.font(.caption)
+					.foregroundStyle(.secondary)
 			}
-			.accessibilityLabel(ServerEndpointStrings.serverList)
+			.frame(maxWidth: .infinity, alignment: .leading)
+			.padding(.horizontal, 20)
+			.padding(.vertical, 8)
 
 			Divider()
 			HStack(spacing: 8) {
@@ -82,15 +78,17 @@ struct ServerEndpointListView: View {
 				Spacer()
 				Button(PromptStrings.Action.cancel, action: cancel)
 					.keyboardShortcut(.cancelAction)
-				Button(PromptStrings.Action.save, action: submit)
+				/* The list is handed back to the connection sheet, which is
+				 what saves it. */
+				Button(PromptStrings.Action.confirmation, action: submit)
 					.keyboardShortcut(.defaultAction)
+					.disabled(model.faults.isEmpty == false)
 			}
 			.padding(12)
 		}
-		.onExitCommand(perform: cancel)
 		.frame(
-			minWidth: 560,
-			idealWidth: 640,
+			minWidth: 620,
+			idealWidth: 700,
 			maxWidth: .infinity,
 			minHeight: 360,
 			idealHeight: 440,
@@ -98,69 +96,69 @@ struct ServerEndpointListView: View {
 		)
 	}
 
-	private var columnHeader: some View {
-		HStack(spacing: 12) {
-			Text(verbatim: ServerEndpointStrings.serverAddress)
-				.frame(maxWidth: .infinity, alignment: .leading)
-			Text(verbatim: ServerEndpointStrings.port)
-				.frame(width: 80, alignment: .leading)
-			Text(verbatim: ServerEndpointStrings.connectSecurely)
-				.frame(width: 72, alignment: .center)
-			Text(verbatim: ServerEndpointStrings.serverPassword)
-				.frame(maxWidth: .infinity, alignment: .leading)
-		}
-		.font(.caption.weight(.semibold))
-		.foregroundStyle(.secondary)
-		.padding(.horizontal, 28)
-		.padding(.vertical, 6)
-	}
-}
+	/** The endpoints, as a table rather than a stack of rows under hand-drawn
+	 headings.
 
-private struct ServerEndpointRow: View {
-	@Binding var entry: ServerEndpointDraft
-	let addressIsInvalid: Bool
-	let portIsInvalid: Bool
-	let securedDidChange: @MainActor @Sendable (Bool) -> Void
-	let addressDidChange: () -> Void
-	let portDidChange: () -> Void
-
-	var body: some View {
-		VStack(alignment: .leading, spacing: 4) {
-			HStack(spacing: 12) {
-				TextField(ServerEndpointStrings.serverAddress, text: $entry.address)
-					.textFieldStyle(.roundedBorder)
-					.onChange(of: entry.address) { addressDidChange() }
-
-				TextField(ServerEndpointStrings.port, text: $entry.port)
-					.textFieldStyle(.roundedBorder)
-					.frame(width: 80)
-					.onChange(of: entry.port) { portDidChange() }
-
-				Toggle(
-					ServerEndpointStrings.connectSecurely,
-					isOn: Binding(
-						get: { entry.prefersSecuredConnection },
-						set: securedDidChange
-					)
+	 A `Table` column names itself, sizes itself and can be resized by the
+	 person, none of which the header row of literal widths could do. Its
+	 columns hand back the row's value rather than a binding into the list, so
+	 the editors take theirs from the model by identity. */
+	private var endpointTable: some View {
+		Table(model.entries, selection: $model.selectedID) {
+			TableColumn(ServerEndpointStrings.serverAddress) { entry in
+				TextField(
+					ServerEndpointStrings.serverAddress,
+					text: model.address(for: entry.id)
 				)
 				.labelsHidden()
-				.frame(width: 72)
-
-				SecureField(ServerEndpointStrings.serverPassword, text: $entry.password)
-					.textFieldStyle(.roundedBorder)
-					.help(ServerEndpointStrings.serverPasswordHelp)
+				.accessibilityLabel(ServerEndpointStrings.serverAddress)
 			}
+			.width(min: 160, ideal: 240)
 
-			if addressIsInvalid {
-				Text(verbatim: ServerEndpointStrings.invalidAddressDescription)
-					.foregroundStyle(.red)
-					.font(.caption)
-			} else if portIsInvalid {
-				Text(verbatim: ServerEndpointStrings.invalidPortRecoverySuggestion)
-					.foregroundStyle(.red)
-					.font(.caption)
+			TableColumn(ServerEndpointStrings.port) { entry in
+				TextField(ServerEndpointStrings.port, text: model.port(for: entry.id))
+					.labelsHidden()
+					.accessibilityLabel(ServerEndpointStrings.port)
 			}
+			.width(min: 60, ideal: 80)
+
+			TableColumn(ServerEndpointStrings.connectSecurely) { entry in
+				Toggle(ServerEndpointStrings.connectSecurely, isOn: model.isSecured(for: entry.id))
+					.labelsHidden()
+					.accessibilityLabel(ServerEndpointStrings.connectSecurely)
+			}
+			.width(min: 52, ideal: 64)
+
+			TableColumn(ServerEndpointStrings.serverPassword) { entry in
+				SecureField(
+					ServerEndpointStrings.serverPassword,
+					text: model.password(for: entry.id)
+				)
+				.labelsHidden()
+				.accessibilityLabel(ServerEndpointStrings.serverPassword)
+			}
+			.width(min: 120, ideal: 200)
 		}
-		.padding(.vertical, 3)
+		.onDeleteCommand(perform: model.removeSelection)
+		.contextMenu(forSelectionType: ServerEndpointDraft.ID.self) { selection in
+			Button(ServerEndpointStrings.moveUp) { move(selection, by: -1) }
+				.disabled(selection.count != 1)
+			Button(ServerEndpointStrings.moveDown) { move(selection, by: 1) }
+				.disabled(selection.count != 1)
+			Divider()
+			Button(ServerEndpointStrings.removeServer, role: .destructive) {
+				guard let id = selection.first else { return }
+				model.selectedID = id
+				model.removeSelection()
+			}
+			.disabled(selection.isEmpty)
+		}
+		.accessibilityLabel(ServerEndpointStrings.serverList)
+	}
+
+	private func move(_ selection: Set<ServerEndpointDraft.ID>, by offset: Int) {
+		guard let id = selection.first else { return }
+		model.selectedID = id
+		model.moveSelection(by: offset)
 	}
 }

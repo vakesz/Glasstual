@@ -84,7 +84,7 @@ struct IRCSpecWhoTests {
 		client.socket = connection
 		client.isConnected = true
 		let line = whox
-			? ":server 354 me \(IRCServerQuirks.whoxResponseToken) #first ali example.org alice G* account :Alice Example"
+			? ":server 354 me \(IRCServerQuirks.whoxToken) #first ali example.org alice G* account :Alice Example"
 			: ":server 352 me #first ali example.org server alice G* :0 Alice Example"
 		client.ircConnection(connection, didReceiveData: line)
 		for (index, list) in [firstList, secondList].enumerated() {
@@ -102,11 +102,11 @@ struct IRCSpecWhoTests {
 		secondList.assign(to: nil)
 	}
 
-	private func client() -> GLTTestClient {
-		GLTTestClient(configDictionary: ["nickname": "me", "username": "me"])
+	private func client() -> TestClient {
+		TestClient(configDictionary: ["nickname": "me", "username": "me"])
 	}
 
-	private func joinedChannel(_ name: String, on client: GLTTestClient) throws -> Channel {
+	private func joinedChannel(_ name: String, on client: TestClient) throws -> Channel {
 		let channel = try #require(client.findChannelOrCreate(name))
 
 		channel.activate()
@@ -114,7 +114,7 @@ struct IRCSpecWhoTests {
 		return channel
 	}
 
-	private func receive(_ line: String, on client: GLTTestClient) throws {
+	private func receive(_ line: String, on client: TestClient) throws {
 		let message = try #require(Message(line: line, on: client))
 
 		client.receiveNumericReply(message)
@@ -223,7 +223,7 @@ struct IRCSpecWhoTests {
 	func whoxRepliesCarryTheAccount() throws {
 		let client = client()
 		let channel = try joinedChannel("#chan", on: client)
-		let token = IRCServerQuirks.whoxResponseToken
+		let token = IRCServerQuirks.whoxToken
 
 		try receive(
 			":irc.example.net 354 me \(token) #chan ali example.org alice H aliceacct :Alice Example",
@@ -258,7 +258,7 @@ struct IRCSpecWhoTests {
 	func whoxZeroMeansNoAccount() throws {
 		let client = client()
 		let channel = try joinedChannel("#chan", on: client)
-		let token = IRCServerQuirks.whoxResponseToken
+		let token = IRCServerQuirks.whoxToken
 
 		try receive(
 			":irc.example.net 354 me \(token) #chan b example.net bob H 0 :Bob Example",

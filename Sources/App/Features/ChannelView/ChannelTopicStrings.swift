@@ -50,24 +50,15 @@ nonisolated enum ChannelTopicStrings { // nonisolated: value
 		String(localized: .TDCChannelModifyTopicSheet.editorAccessibilityHint)
 	}
 
-	static var maximumLengthMessage: String {
-		String(localized: .TDCChannelModifyTopicSheet.maximumLengthMessage)
-	}
-
-	static var windowTitle: String {
-		String(localized: .TDCChannelModifyTopicSheet.windowTitle)
-	}
-
 	static func headerTitle(channelName: String) -> String {
 		String(localized: .TDCChannelModifyTopicSheet.topicLabel(channelName))
 	}
 
-	static func maximumLengthTitle(networkName: String, maximumLength: Int) -> String {
-		String(
-			localized: .TDCChannelModifyTopicSheet.maximumLengthTitle(
-				networkName,
-				maximumLength
-			)
-		)
+	/// What the footer under the editor says about the server's topic limit:
+	/// how much room is left, or how far past it the topic already is.
+	static func lengthFooter(remaining: Int) -> String {
+		remaining < 0
+			? String(localized: .TDCChannelModifyTopicSheet.charactersOverLimit(arg1: -remaining))
+			: String(localized: .TDCChannelModifyTopicSheet.charactersRemaining(arg1: remaining))
 	}
 }

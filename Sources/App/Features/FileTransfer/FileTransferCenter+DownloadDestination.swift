@@ -39,7 +39,7 @@
 import Foundation
 import os
 
-public extension FileTransferCenter {
+extension FileTransferCenter {
 	var downloadDestinationURL: URL? {
 		downloadDestinationURLPrivate
 	}

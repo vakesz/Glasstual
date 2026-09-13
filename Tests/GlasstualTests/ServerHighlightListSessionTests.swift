@@ -77,7 +77,7 @@ struct ServerHighlightListSessionTests {
 	 cache it was opened with; a window is open long enough to matter. */
 	@Test("A highlight logged while the window is open joins the table")
 	func aHighlightLoggedWhileOpenIsAdded() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.cachedHighlights = [entry(body: "earlier", receivedAt: Date(timeIntervalSince1970: 100))]
 		let session = ServerHighlightListSession(client: client)
 
@@ -93,7 +93,7 @@ struct ServerHighlightListSessionTests {
 	/// the next time the window opened.
 	@Test("Clearing the window clears the client's logged highlights")
 	func clearingTheWindowClearsTheClientLog() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.cachedHighlights = [entry(body: "message", receivedAt: .now)]
 		let session = ServerHighlightListSession(client: client)
 

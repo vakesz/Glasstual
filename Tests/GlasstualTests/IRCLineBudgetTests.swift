@@ -140,7 +140,7 @@ struct IRCLineSplittingProgressTests {
 	/// nothing while the callers looped until the string was empty.
 	@Test(.timeLimit(.minutes(1)))
 	func splittingMakesProgressWhenTheBudgetIsAlreadyExhausted() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.userHostmask = String(repeating: "h", count: 400)
 
 		let channelName = "#" + String(repeating: "c", count: 300)
@@ -159,7 +159,7 @@ struct IRCLineSplittingProgressTests {
 
 	@Test
 	func splittingStillConsumesTheWholeLineWithAnOrdinaryBudget() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.userHostmask = "nick!user@host"
 
 		var cursor = IRCLineCursor(NSAttributedString(string: "hello world"))

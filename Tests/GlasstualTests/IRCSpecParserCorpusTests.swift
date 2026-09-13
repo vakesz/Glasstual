@@ -312,7 +312,7 @@ struct IRCSpecParserCorpusTests {
 	/// the message is not filed as one the server sent.
 	@Test("userhost-split: a nick@host prefix on a real line names a user")
 	func partialPrefixesOnTheWireNameAUser() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(Message(line: ":coolguy@127.0.0.1 PRIVMSG #chan :hi", on: client))
 
 		#expect(message.senderIsServer == false)
@@ -332,7 +332,7 @@ struct IRCSpecParserCorpusTests {
 		arguments: ["irc.example.org", "coolguy!ag", "*"]
 	)
 	func sourcesWithoutAHostStayServerNames(_ source: String) throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(Message(line: ":\(source) NOTICE * :hello", on: client))
 
 		#expect(message.senderIsServer)
@@ -344,7 +344,7 @@ struct IRCSpecParserCorpusTests {
 	/// notification and no query.
 	@Test("userhost-split: a bare nickname on a real line names a user")
 	func bareNicknameOnTheWireNamesAUser() throws {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let message = try #require(Message(line: ":coolguy NOTICE * :hello", on: client))
 
 		#expect(message.senderIsServer == false)

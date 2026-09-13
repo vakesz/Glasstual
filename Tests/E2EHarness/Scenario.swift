@@ -125,7 +125,7 @@ enum Scenario {
 	{
 		let originalPID = application.processIdentifier
 		try await driver.waitForConnectionStatus(connected: false)
-		let probe = try await AppSession.startProbe(prefix: "", driver: driver)
+		let probe = try await AppSession.startProbe(driver: driver)
 		for rejection in 0 ..< kind.rejectionCount {
 			let recoveryDeadline = HarnessFiles.now + 30
 			try HarnessFiles.write(String(rejection + 1), to: "recovery-iteration")
@@ -180,11 +180,11 @@ enum Scenario {
 			try await SettingsSnapshotScenario.run(driver: driver)
 		}
 		try driver.saveSnapshot()
-		try await AppSession.stopProbe(probe, prefix: "", driver: driver)
+		try await AppSession.stopProbe(probe, driver: driver)
 		if kind.connectedQuit {
 			try await driver.waitForConnectionStatus(connected: true, channel: kind.finalChannel)
 		}
-		let quitSeconds = try await AppSession.quitAndVerify(appProcess, driver: driver, prefix: "") {
+		let quitSeconds = try await AppSession.quitAndVerify(appProcess, driver: driver) {
 			try !peer.isRunning && HarnessFiles.exists("peer-complete")
 		}
 		if kind.connectedQuit {
@@ -235,7 +235,7 @@ enum Scenario {
 	{
 		let evidence: [String: Any] = [
 			"scenario": kind.rawValue, "originalPID": originalPID, "finalPID": finalPID,
-			"rejections": kind.rejectionCount, "connectedQuit": kind.connectedQuit,
+			"rejections": kind.rejectionCount,
 			"shutdownSeconds": shutdownSeconds, "appExitReason": "exit", "appExitStatus": appExitStatus,
 		]
 		try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys])

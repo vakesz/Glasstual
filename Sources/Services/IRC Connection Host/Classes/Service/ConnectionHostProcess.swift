@@ -40,21 +40,10 @@ import Foundation
 
 /// One thing the application asked the host to do.
 ///
-/// The commands are values so that they can wait their turn in a queue. NSXPC
+/// The commands are closures so that they can wait their turn in a queue. NSXPC
 /// delivers messages in order on its own serial queue; putting each one in here
 /// is what carries that order across to the actor.
-private enum HostCommand: Sendable {
-	case open(IRCConnectionConfig)
-	case close
-	case send(Data, bypassQueue: Bool)
-	case exportSecureConnectionInformation(SecureConnectionInformationReceiver)
-	case enforceFloodControl
-	case clearSendQueue
-	case enableAppNap
-	case disableAppNap
-	case enableSuddenTermination
-	case disableSuddenTermination
-}
+private typealias HostCommand = @Sendable (ConnectionHost) async -> Void
 
 /// The object NSXPC exports for a connection host.
 ///
@@ -80,7 +69,7 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 		commandTask = Task {
 			for await command in commands {
 				guard Task.isCancelled == false else { return }
-				await Self.perform(command, on: host)
+				await command(host)
 			}
 		}
 
@@ -94,37 +83,13 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 		commands.finish()
 	}
 
-	private static func perform(_ command: HostCommand, on host: ConnectionHost) async {
-		switch command {
-		case let .open(config):
-			await host.open(with: config)
-		case .close:
-			await host.close()
-		case let .send(data, bypassQueue):
-			await host.send(data, bypassQueue: bypassQueue)
-		case let .exportSecureConnectionInformation(receiver):
-			await receiver(host.secureConnectionInformation())
-		case .enforceFloodControl:
-			await host.enforceFloodControl()
-		case .clearSendQueue:
-			await host.clearSendQueue()
-		case .enableAppNap:
-			await host.enableAppNap()
-		case .disableAppNap:
-			await host.disableAppNap()
-		case .enableSuddenTermination:
-			await host.enableSuddenTermination()
-		case .disableSuddenTermination:
-			await host.disableSuddenTermination()
-		}
-	}
-
 	func open(with config: ConnectionConfigEnvelope) {
-		commands.yield(.open(config.config))
+		let config = config.config
+		commands.yield { await $0.open(with: config) }
 	}
 
 	func close() {
-		commands.yield(.close)
+		commands.yield { await $0.close() }
 	}
 
 	func send(_ data: Data) {
@@ -132,36 +97,36 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	}
 
 	func send(_ data: Data, bypassQueue: Bool) {
-		commands.yield(.send(data, bypassQueue: bypassQueue))
+		commands.yield { await $0.send(data, bypassQueue: bypassQueue) }
 	}
 
 	func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver) {
 		/* The caller treats this as a reply block, so it has to be invoked on
 		 every path. */
-		commands.yield(.exportSecureConnectionInformation(receiver))
+		commands.yield { await receiver($0.secureConnectionInformation()) }
 	}
 
 	func enforceFloodControl() {
-		commands.yield(.enforceFloodControl)
+		commands.yield { await $0.enforceFloodControl() }
 	}
 
 	func clearSendQueue() {
-		commands.yield(.clearSendQueue)
+		commands.yield { await $0.clearSendQueue() }
 	}
 
 	func enableAppNap() {
-		commands.yield(.enableAppNap)
+		commands.yield { await $0.enableAppNap() }
 	}
 
 	func disableAppNap() {
-		commands.yield(.disableAppNap)
+		commands.yield { await $0.disableAppNap() }
 	}
 
 	func enableSuddenTermination() {
-		commands.yield(.enableSuddenTermination)
+		commands.yield { await $0.enableSuddenTermination() }
 	}
 
 	func disableSuddenTermination() {
-		commands.yield(.disableSuddenTermination)
+		commands.yield { await $0.disableSuddenTermination() }
 	}
 }

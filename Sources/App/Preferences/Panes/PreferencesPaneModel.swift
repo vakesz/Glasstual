@@ -21,6 +21,55 @@ struct IRCv3ConnectionSummary: Equatable, Identifiable {
 	let capabilities: [String]
 }
 
+/** A Settings operation that failed.
+
+ Each one names itself and says what to do next, so an alert never reports only
+ that something went wrong somewhere in Settings. */
+enum PreferencesOperation {
+	case importTranscriptTheme
+	case exportTranscriptTheme
+	case applyTranscriptTheme
+	case selectTranscriptFolder
+	case selectDownloadFolder
+
+	var failureTitle: String {
+		let resource: LocalizedStringResource = switch self {
+		case .importTranscriptTheme: .Settings.failureImportThemeTitle
+		case .exportTranscriptTheme: .Settings.failureExportThemeTitle
+		case .applyTranscriptTheme: .Settings.failureApplyThemeTitle
+		case .selectTranscriptFolder: .Settings.failureTranscriptFolderTitle
+		case .selectDownloadFolder: .Settings.failureDownloadFolderTitle
+		}
+		return String(localized: resource)
+	}
+
+	var failureRecovery: String {
+		let resource: LocalizedStringResource = switch self {
+		case .importTranscriptTheme: .Settings.failureImportThemeRecovery
+		case .exportTranscriptTheme: .Settings.failureExportThemeRecovery
+		case .applyTranscriptTheme: .Settings.failureApplyThemeRecovery
+		case .selectTranscriptFolder: .Settings.failureTranscriptFolderRecovery
+		case .selectDownloadFolder: .Settings.failureDownloadFolderRecovery
+		}
+		return String(localized: resource)
+	}
+}
+
+/// What stopped one Settings operation, ready to be shown as an alert.
+struct PreferencesOperationFailure: Equatable {
+	let operation: PreferencesOperation
+	/// What went wrong, in the words of whatever refused the work.
+	let reason: String
+
+	var title: String {
+		operation.failureTitle
+	}
+
+	var message: String {
+		"\(reason)\n\n\(operation.failureRecovery)"
+	}
+}
+
 enum PreferencesImportRequest {
 	case transcriptTheme
 	case transcriptFolder
@@ -30,6 +79,16 @@ enum PreferencesImportRequest {
 		switch self {
 		case .transcriptTheme: [.propertyList]
 		case .transcriptFolder, .downloadFolder: [.folder]
+		}
+	}
+
+	/// What the alert says the user was doing when the chosen file or folder
+	/// turned out to be unusable.
+	var operation: PreferencesOperation {
+		switch self {
+		case .transcriptTheme: .importTranscriptTheme
+		case .transcriptFolder: .selectTranscriptFolder
+		case .downloadFolder: .selectDownloadFolder
 		}
 	}
 }
@@ -42,18 +101,16 @@ final class PreferencesPaneModel {
 	/// Bindings for everything that *is* a preference key.
 	let preferences = ObservablePreferences.shared
 
-	/// The sidebar's sections, with the panes each one shows.
-	var sections: [PreferencesSection] = []
+	/// The sidebar's rows, in order, with the panes each one shows.
+	var destinations: [PreferencesDestination] = []
 
-	/// The sidebar item and the sub-page it contains change as one value.
 	private(set) var selection = PreferencesSelection.general
-	private var lastSubPageBySection: [PreferencesSectionIdentifier: String] = [:]
 
 	@ObservationIgnored
 	var onSelectionChange: ((PreferencesSelection) -> Void)?
 
-	var currentSection: PreferencesSection? {
-		sections.first { $0.identifier == selection.sectionIdentifier }
+	var currentDestination: PreferencesDestination? {
+		destinations.first { $0.selection == selection }
 	}
 
 	let themeController: ThemeController
@@ -62,21 +119,13 @@ final class PreferencesPaneModel {
 		themeController.theme
 	}
 
-	var channelViewFontName: String {
-		transcriptTheme.fontName
-	}
-
-	var channelViewFontSize: CGFloat {
-		transcriptTheme.fontSize
-	}
-
 	/// `nil` when no folder is configured, which the popup shows as its
 	/// "no location selected" title.
 	var transcriptFolder: URL?
 	var downloadFolder: URL?
 
 	var addOnCommands: [String] = []
-	var scriptInstallationInstructions = ""
+	var addOnInstallationNote = ""
 	var ircv3Connections: [IRCv3ConnectionSummary] = []
 
 	/// Presentation requests consumed by the SwiftUI Settings scene. The file
@@ -85,7 +134,7 @@ final class PreferencesPaneModel {
 	var fileRequest = PendingFileRequest<PreferencesImportRequest>()
 	var exportedThemeData: Data?
 	var exportedThemeFilename = ""
-	var presentationError: String?
+	var presentationFailure: PreferencesOperationFailure?
 	var externalURL: URL?
 	var showsFontPicker = false
 	/// The read and import of a chosen theme file, for whoever needs to wait
@@ -100,50 +149,20 @@ final class PreferencesPaneModel {
 		notificationItems = Self.defaultNotificationItems
 	}
 
-	/// Applies a complete destination only when the sub-page belongs to the
-	/// section. Callers never have to repair a partially updated selection.
+	/// Shows a row the sidebar is actually listing. A row that has gone away
+	/// with the add-on that supplied it leaves the window where it is.
 	@discardableResult
 	func select(_ destination: PreferencesSelection) -> Bool {
-		guard let section = sections.first(where: { $0.identifier == destination.sectionIdentifier }),
-		      section.subPages.contains(where: { $0.identifier == destination.subPageIdentifier })
-		else {
-			return false
-		}
-		guard selection != destination else {
+		guard destinations.contains(where: { $0.selection == destination }), selection != destination else {
 			return false
 		}
 		selection = destination
-		lastSubPageBySection[destination.sectionIdentifier] = destination.subPageIdentifier
 		onSelectionChange?(destination)
 		return true
 	}
 
-	/// Selects a sidebar section and restores the sub-page last used in it.
-	@discardableResult
-	func selectSection(_ identifier: PreferencesSectionIdentifier) -> Bool {
-		guard let section = sections.first(where: { $0.identifier == identifier }),
-		      let subPage = lastSubPageBySection[identifier] ?? section.subPages.first?.identifier
-		else {
-			return false
-		}
-
-		return select(PreferencesSelection(
-			sectionIdentifier: identifier,
-			subPageIdentifier: subPage
-		))
-	}
-
-	/// Changes the picker within the current sidebar section.
-	@discardableResult
-	func selectSubPage(_ identifier: String) -> Bool {
-		select(PreferencesSelection(
-			sectionIdentifier: selection.sectionIdentifier,
-			subPageIdentifier: identifier
-		))
-	}
-
 	/** The nil entries are the separators the alert list draws between groups of
-	 related events; the order is the one the nib shipped. */
+	 related events. */
 	private static let defaultNotificationItems: [NotificationConfigurationItem] = {
 		let eventTypes: [NotificationEvent?] = [
 			.addressBookMatch, nil, .connect, .disconnect, nil, .highlight, nil, .invite, .kick, nil,
@@ -163,7 +182,7 @@ final class PreferencesPaneModel {
 		update(&changed)
 
 		if themeController.apply(changed) == false {
-			presentationError = TranscriptThemeStrings.invalidValues
+			report(TranscriptThemeStrings.invalidValues, from: .applyTranscriptTheme)
 		}
 	}
 
@@ -178,9 +197,7 @@ final class PreferencesPaneModel {
 		addOnCommands = commands.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
 		let folderName = manager.customScriptsURL?.lastPathComponent
 			?? ApplicationInfo.applicationBundleIdentifier()
-		scriptInstallationInstructions = PromptStrings.DocumentImport.scriptSavePanelBody(
-			bundleIdentifier: folderName
-		)
+		addOnInstallationNote = String(localized: .Settings.addonsInstallNote(folderName))
 	}
 
 	func refreshIRCv3Connections() {

@@ -96,7 +96,7 @@ struct IRCClientOutboundPolicyTests {
 	/// added the separator on top, so the line went out `WATCH  +alice +bob`.
 	@Test("WATCH separates its nicknames with a single space")
 	func watchListLinesCarryOneSpaceBetweenNicknames() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.markAsLoggedIn()
 		client.enableCapability(.watchCommand)
 
@@ -162,10 +162,10 @@ struct IRCClientOutboundPolicyTests {
 		let client = loggedInClient()
 		let channel = try #require(client.findChannelOrCreate("#chat"))
 
-		client.sendModes("-k+l hunter2 50", withParametersString: nil, in: channel)
-		client.sendModes("+k secret", withParametersString: nil, in: channel)
-		client.sendModes("-bbb m1 m2 m3", withParametersString: nil, in: channel)
-		client.requestModes(for: channel)
+		client.sendModes("-k+l hunter2 50", withParametersString: nil, inChannelNamed: channel.name)
+		client.sendModes("+k secret", withParametersString: nil, inChannelNamed: channel.name)
+		client.sendModes("-bbb m1 m2 m3", withParametersString: nil, inChannelNamed: channel.name)
+		client.requestModes(inChannelNamed: channel.name)
 
 		#expect(sentLines(of: client) == [
 			"MODE #chat -k+l hunter2 50",
@@ -275,10 +275,10 @@ struct IRCClientOutboundPolicyTests {
 	func nonCommandPathsApplyTheServerByteBudgets() throws {
 		var preferences = ClientPreferences()
 		preferences.defaultKickMessage = "Goodbye everyone"
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: ["nickname": "tester"],
 			nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: preferences)
+			fixture: ClientEnvironmentFixture(preferences: preferences)
 		)
 		client.isConnected = true
 		client.markAsLoggedIn()
@@ -405,10 +405,10 @@ struct IRCClientOutboundPolicyTests {
 	func ctcpQueryFloodSendsBoundedReplies() throws {
 		var preferences = ClientPreferences()
 		preferences.replyToCTCPRequests = true
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: ["nickname": "me"],
 			nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: preferences)
+			fixture: ClientEnvironmentFixture(preferences: preferences)
 		)
 		client.isConnected = true
 		client.markAsLoggedIn()
@@ -425,7 +425,7 @@ struct IRCClientOutboundPolicyTests {
 
 	@Test("A CTCP PING echo that is not a timestamp is reported without a lag")
 	func ctcpPingReplyWithoutATimestampIsNotTimed() throws {
-		let client = GLTTestClient(configDictionary: ["nickname": "me"])
+		let client = TestClient(configDictionary: ["nickname": "me"])
 		client.isConnected = true
 		client.markAsLoggedIn()
 		let message = try #require(
@@ -442,10 +442,8 @@ struct IRCClientOutboundPolicyTests {
 
 	// MARK: - Helpers
 
-	private func loggedInClient() -> GLTTestClient {
-		CommandIndex.populateCommandIndex()
-
-		let client = GLTTestClient(configDictionary: ["nickname": "tester"])
+	private func loggedInClient() -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "tester"])
 
 		client.isConnected = true
 		client.markAsLoggedIn()
@@ -453,11 +451,11 @@ struct IRCClientOutboundPolicyTests {
 		return client
 	}
 
-	private func sentLines(of client: GLTTestClient) -> [String] {
+	private func sentLines(of client: TestClient) -> [String] {
 		client.sentLines.compactMap { $0 as? String }
 	}
 
-	private func expectPrintedLineContaining(_ text: String, on client: GLTTestClient) {
+	private func expectPrintedLineContaining(_ text: String, on client: TestClient) {
 		let bodies = client.printedLines.compactMap {
 			($0 as? [String: Any])?["messageBody"] as? String
 		}

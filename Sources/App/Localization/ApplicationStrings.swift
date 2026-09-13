@@ -63,10 +63,6 @@ nonisolated enum ApplicationStrings { // nonisolated: value
 		String(localized: .BasicLanguage.searchProviderMenuTitle(providerName))
 	}
 
-	static var noActionsAvailable: String {
-		String(localized: .BasicLanguage.noActionsAvailable)
-	}
-
 	static var requiredField: String {
 		String(localized: .BasicLanguage.fillOutThisField)
 	}
@@ -83,7 +79,7 @@ nonisolated enum ApplicationStrings { // nonisolated: value
 		String(localized: .BasicLanguage.ircColorListEntry(index))
 	}
 
-	static func relativeTime(_ duration: String) -> String {
-		String(localized: .BasicLanguage.relativeDateSuffixAgo(duration))
+	static func duplicatedName(_ name: String) -> String {
+		String(localized: .BasicLanguage.duplicatedConnectionName(name))
 	}
 }

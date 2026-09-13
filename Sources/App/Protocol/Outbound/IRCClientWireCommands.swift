@@ -32,8 +32,6 @@
 import Foundation
 import os
 
-private let whoxRequestToken = "152"
-
 private nonisolated let wireCommandLogger = Logger( // nonisolated: let
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCWireCommands"
@@ -58,33 +56,16 @@ nonisolated enum OutboundParameterChunking { // nonisolated: value
 	///     dropped: they cannot survive as their own wire token anyway.
 	///   - maximumCount: The most parameters one command takes.
 	///   - budget: The bytes one command has for its parameters, the spaces
-	///     between them included. A parameter longer than the whole budget
-	///     still goes out on a line of its own rather than being dropped.
+	///     between them included.
 	static func chunks(of parameters: [String], maximumCount: Int, budget: Int) -> [[String]] {
-		var result: [[String]] = []
-		var current: [String] = []
-		var currentLength = 0
-
-		for parameter in parameters where parameter.isEmpty == false {
-			let separator = current.isEmpty ? 0 : 1
-
-			if current.isEmpty == false,
-			   current.count >= maximumCount || currentLength + separator + parameter.utf8.count > budget
-			{
-				result.append(current)
-				current = []
-				currentLength = 0
+		WireBatching.pack(
+			parameters.filter { $0.isEmpty == false },
+			maximumCount: maximumCount,
+			budget: budget,
+			cost: { parameter, chunk in
+				(chunk.isEmpty ? 0 : 1) + parameter.utf8.count
 			}
-
-			currentLength += (current.isEmpty ? 0 : 1) + parameter.utf8.count
-			current.append(parameter)
-		}
-
-		if current.isEmpty == false {
-			result.append(current)
-		}
-
-		return result
+		)
 	}
 }
 
@@ -139,40 +120,28 @@ nonisolated enum OutboundModeCommands { // nonisolated: value
 			return [group]
 		}
 
-		var result: [ModeChangeGroup] = []
-		var currentChanges: [(sign: Character, symbol: Character)] = []
-		var currentParameters: [String] = []
+		let pairs = zip(changes, group.parameters).map { (change: $0, parameter: $1) }
+		let batches = WireBatching.pack(
+			pairs,
+			maximumCount: maximumModes > 0 ? Int(maximumModes) : 0,
+			budget: budget,
+			cost: { pair, batch in
+				/* The rebuilt mode string repeats a sign only where it changes,
+				 so a pair costs its sign only when it opens the batch or turns
+				 it around. */
+				let signCost = batch.last?.change.sign == pair.change.sign
+					? 0 : String(pair.change.sign).utf8.count
 
-		func flush() {
-			guard currentChanges.isEmpty == false else { return }
-			result.append(ModeChangeGroup(symbols: modeString(for: currentChanges), parameters: currentParameters))
-			currentChanges = []
-			currentParameters = []
-		}
-
-		func length(changes: [(sign: Character, symbol: Character)], parameters: [String]) -> Int {
-			modeString(for: changes).utf8.count + parameters.reduce(0) { $0 + 1 + $1.utf8.count }
-		}
-
-		for (change, parameter) in zip(changes, group.parameters) {
-			let wouldBeLength = length(
-				changes: currentChanges + [change],
-				parameters: currentParameters + [parameter]
-			)
-
-			if currentChanges.isEmpty == false,
-			   maximumModes > 0 && UInt(currentChanges.count) >= maximumModes || wouldBeLength > budget
-			{
-				flush()
+				return signCost + String(pair.change.symbol).utf8.count + 1 + pair.parameter.utf8.count
 			}
+		)
 
-			currentChanges.append(change)
-			currentParameters.append(parameter)
+		return batches.map { batch in
+			ModeChangeGroup(
+				symbols: modeString(for: batch.map(\.change)),
+				parameters: batch.map(\.parameter)
+			)
 		}
-
-		flush()
-
-		return result
 	}
 
 	/// The `(sign, symbol)` pairs a mode string names, in order.
@@ -220,29 +189,17 @@ public extension IRCClient {
 		send("NICK", arguments: [truncated(nickname, toLimit: supportInfo.maximumNicknameLength)])
 	}
 
-	func part(_ channel: IRCChannel) {
-		part(channel, withComment: nil)
-	}
-
-	func part(_ channel: IRCChannel, withComment comment: String?) {
+	func part(_ channel: Channel, withComment comment: String? = nil) {
 		guard isLoggedIn, channel.isChannel, channel.isActive else { return }
 		send("PART", arguments: [channel.name, comment ?? config.normalLeavingComment])
 	}
 
-	func sendWho(to channel: IRCChannel) {
-		sendWho(to: channel, hideResponse: false)
-	}
-
-	func sendWho(to channel: IRCChannel, hideResponse: Bool) {
+	func sendWho(to channel: Channel, hideResponse: Bool = false) {
 		guard channel.isChannel else { return }
 		sendWho(toChannelNamed: channel.name, hideResponse: hideResponse)
 	}
 
-	func sendWho(toChannelNamed channelName: String) {
-		sendWho(toChannelNamed: channelName, hideResponse: false)
-	}
-
-	func sendWho(toChannelNamed channelName: String, hideResponse: Bool) {
+	func sendWho(toChannelNamed channelName: String, hideResponse: Bool = false) {
 		guard isLoggedIn, channelName.isEmpty == false else { return }
 		if hideResponse {
 			requestedCommands.recordWhoRequestOpened()
@@ -250,7 +207,7 @@ public extension IRCClient {
 			requestedCommands.recordWhoRequestOpenedAsVisible()
 		}
 		if supportInfo.whoxSupported {
-			send("WHO", arguments: [channelName, "%tcuhnfar,\(whoxRequestToken)"])
+			send("WHO", arguments: [channelName, "%tcuhnfar,\(IRCServerQuirks.whoxToken)"])
 		} else {
 			send("WHO", arguments: [channelName])
 		}
@@ -261,7 +218,7 @@ public extension IRCClient {
 		send("WHOIS", arguments: [nickname, nickname])
 	}
 
-	func kick(_ nickname: String, in channel: IRCChannel) {
+	func kick(_ nickname: String, in channel: Channel) {
 		guard isLoggedIn, channel.isChannel, channel.isActive, nickname.isEmpty == false else { return }
 		send(
 			"KICK",
@@ -321,10 +278,6 @@ public extension IRCClient {
 		return result
 	}
 
-	func requestModes(for channel: IRCChannel) {
-		requestModes(inChannelNamed: channel.name)
-	}
-
 	/// Asks the server what modes a channel is under: `MODE` with nothing after
 	/// the channel name.
 	func requestModes(inChannelNamed channelName: String) {
@@ -333,17 +286,13 @@ public extension IRCClient {
 		send("MODE", arguments: [channelName])
 	}
 
-	func sendModes(_ symbols: String?, withParametersString parameters: String?, in channel: IRCChannel) {
-		sendModes(symbols, withParametersString: parameters, inChannelNamed: channel.name)
-	}
-
 	/** Sends `groups` as `MODE` commands on `channelName`.
 
 	 The structured entry point, and the one anything that knows what it is
 	 changing should call: each group arrives already separated into a mode
 	 string and its parameters, and is cut here only to respect the server's
 	 `MODES` and the line length. Nothing to change sends nothing — asking the
-	 server for a channel's modes is ``requestModes(for:)``.
+	 server for a channel's modes is ``requestModes(inChannelNamed:)``.
 
 	 A group whose mode string is empty is dropped rather than sent: it is what
 	 the mode compiler answers with for a list the server stopped advertising. */
@@ -361,10 +310,6 @@ public extension IRCClient {
 				send("MODE", arguments: [channelName] + command.wireArguments)
 			}
 		}
-	}
-
-	func sendModes(_ groups: [ModeChangeGroup], in channel: IRCChannel) {
-		sendModes(groups, inChannelNamed: channel.name)
 	}
 
 	/** Sends the mode changes the text `symbols` and `parameters` describe.
@@ -394,10 +339,7 @@ public extension IRCClient {
 	 than one byte, so a command with impossible framing still makes progress
 	 rather than looping. */
 	func outboundParameterBudget(forCommand command: String, fixedArguments: [String]) -> Int {
-		let advertised = Int(supportInfo.maximumLineLength)
-		let maximum = advertised > IRCProtocolLimits.lineTerminatorLength
-			? advertised - IRCProtocolLimits.lineTerminatorLength
-			: IRCProtocolLimits.maximumBodyLength
+		let maximum = IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: Int(supportInfo.maximumLineLength))
 		let overhead = fixedArguments.reduce(command.utf8.count) { $0 + 1 + $1.utf8.count } + 1
 
 		return max(maximum - overhead, 1)
@@ -413,7 +355,7 @@ public extension IRCClient {
 		send("PONG", arguments: [token])
 	}
 
-	func sendInvite(to nickname: String, toJoin channel: IRCChannel) {
+	func sendInvite(to nickname: String, toJoin channel: Channel) {
 		guard channel.isChannel else { return }
 		sendInvite(to: nickname, toJoinChannelNamed: channel.name)
 	}
@@ -423,7 +365,7 @@ public extension IRCClient {
 		send("INVITE", arguments: [nickname, channelName])
 	}
 
-	func sendTopic(to topic: String?, in channel: IRCChannel) {
+	func sendTopic(to topic: String?, in channel: Channel) {
 		guard channel.isChannel, channel.isActive else { return }
 		sendTopic(to: topic, inChannelNamed: channel.name)
 	}
@@ -442,17 +384,13 @@ public extension IRCClient {
 		send("AUTHENTICATE", arguments: [data])
 	}
 
-	func sendIson(forNicknames nicknames: [String]) {
-		sendIson(forNicknames: nicknames, hideResponse: false)
-	}
-
 	/** Asks the server which of `nicknames` are online.
 
 	 One parameter per nickname, over as many commands as the list needs: joined
 	 into one they became a single trailing parameter, so the server answered
 	 about a nickname called "alice bob carol". Each command opens its own
 	 request, because each draws its own `RPL_ISON`. */
-	func sendIson(forNicknames nicknames: [String], hideResponse: Bool) {
+	func sendIson(forNicknames nicknames: [String], hideResponse: Bool = false) {
 		guard isLoggedIn, nicknames.isEmpty == false else { return }
 
 		for group in OutboundParameterChunking.chunks(
@@ -470,11 +408,7 @@ public extension IRCClient {
 		}
 	}
 
-	func requestChannelList() {
-		requestChannelList(withArguments: nil)
-	}
-
-	func requestChannelList(withArguments arguments: String?) {
+	func requestChannelList(withArguments arguments: String? = nil) {
 		guard isLoggedIn else { return }
 		send("LIST", arguments: arguments.map { [$0] } ?? [])
 	}

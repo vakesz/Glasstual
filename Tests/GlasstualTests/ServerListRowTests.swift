@@ -3,8 +3,8 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import AppKit
 @testable import Glasstual
-import SwiftUI
 import Testing
 
 @Suite("Server-list rows")
@@ -14,7 +14,7 @@ struct ServerListRowTests {
 		unread: Int = 0,
 		highlights: Int = 0,
 		showsUnreadCount: Bool = true,
-		badgeTint: Color? = nil
+		badgeTint: NSColor? = nil
 	) -> ChannelRow {
 		ChannelRow(
 			id: "id",
@@ -57,7 +57,7 @@ struct ServerListRowTests {
 		/* The badge colour is drawn, so it is compared: read out of the defaults
 		 inside the row body instead, a changed preference left every row equal
 		 to the one before it and nothing redrew. */
-		#expect(channel(unread: 1, badgeTint: .red) != channel(unread: 1))
-		#expect(channel(unread: 1, badgeTint: .red) == channel(unread: 1, badgeTint: .red))
+		#expect(channel(unread: 1, badgeTint: .systemRed) != channel(unread: 1))
+		#expect(channel(unread: 1, badgeTint: .systemRed) == channel(unread: 1, badgeTint: .systemRed))
 	}
 }

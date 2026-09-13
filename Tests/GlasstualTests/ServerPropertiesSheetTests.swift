@@ -27,6 +27,33 @@ struct ServerPropertiesSheetTests {
 		model.serverPort = "70000"
 		#expect(model.submittedConfig() == nil)
 		#expect(model.selection == .general)
+		#expect(model.validationMessage == CommonValidationStrings.invalidInternetPort)
+	}
+
+	/** A new connection opens on empty fields, which are not a connection — but
+	 the sheet used to answer that with a popover the moment it was shown. The
+	 message waits for a refused save and then follows the fields, so it goes
+	 without another press of Save. */
+	@Test("The sheet says nothing until a save is refused, and stops once it is fixed")
+	func theMessageWaitsForASaveToBeRefused() {
+		let model = ServerPropertiesModel(config: ClientConfig())
+
+		#expect(model.validationFault != nil)
+		#expect(model.validationMessage == nil)
+
+		#expect(model.validate() == false)
+		#expect(model.validationMessage == CommonValidationStrings.invalidServerAddress)
+		#expect(model.selection == .general)
+
+		var config = ClientConfig(connectionName: "Libera")
+		config.nickname = "someone"
+		config.username = "someone"
+		config.realName = "Someone"
+		config.serverList = [Server(serverAddress: "irc.libera.chat", serverPort: 6697)]
+		model.replace(with: config)
+
+		#expect(model.validationFault == nil)
+		#expect(model.validationMessage == nil)
 	}
 
 	/** SASL was settable only in the onboarding network picker, so a connection
@@ -241,7 +268,7 @@ struct ServerPropertiesSheetTests {
 		model.serverPort = "70000"
 		#expect(model.serverListForEditing() == nil)
 		#expect(model.serverPort == "70000")
-		#expect(model.isValidationMessagePresented)
+		#expect(model.validationMessage == CommonValidationStrings.invalidInternetPort)
 	}
 
 	@Test("Promoting an alternate endpoint keeps each endpoint's own secret intent")
@@ -266,10 +293,11 @@ struct ServerPropertiesSheetTests {
 		#expect(ServerPropertiesValidation.isNickname("invalid nickname") == false)
 		#expect(ServerPropertiesValidation.isUsername("valid-user"))
 		#expect(ServerPropertiesValidation.isUsername("invalid user") == false)
-		#expect(ServerPropertiesValidation.areAlternateNicknamesValid(""))
-		#expect(ServerPropertiesValidation.areAlternateNicknamesValid("   "))
-		#expect(ServerPropertiesValidation.areAlternateNicknamesValid("first second"))
-		#expect(ServerPropertiesValidation.areAlternateNicknamesValid("first invalid!nick") == false)
+		#expect(ServerPropertiesValidation.invalidAlternateNickname(in: "") == nil)
+		#expect(ServerPropertiesValidation.invalidAlternateNickname(in: "   ") == nil)
+		#expect(ServerPropertiesValidation.invalidAlternateNickname(in: "first second") == nil)
+		// The message names the one that failed, so the check reports it.
+		#expect(ServerPropertiesValidation.invalidAlternateNickname(in: "first invalid!nick") == "invalid!nick")
 	}
 
 	@Test("An endpoint needs a host that resolves as a name or an address, and a port in range")

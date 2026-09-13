@@ -140,24 +140,14 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		}
 	}
 
-	/// Restores the state an archive carried. Only ``LogLineArchive`` calls it.
-	mutating func restore(from decoded: LogLineArchive.DecodedValues) {
-		receivedAt = decoded.receivedAt
-		excludeKeywords = decoded.excludeKeywords
-		highlightKeywords = decoded.highlightKeywords
-		isEncrypted = decoded.isEncrypted
-		isFirstForDay = decoded.isFirstForDay
-		command = decoded.command
-		messageBody = decoded.messageBody
-		messageIdentifier = decoded.messageIdentifier
-		replyToMessageIdentifier = decoded.replyToMessageIdentifier
-		reactions = decoded.reactions
-		nickname = decoded.nickname
-		lineType = decoded.lineType
-		memberType = decoded.memberType
-		deliveryState = decoded.deliveryState
-		uniqueIdentifier = decoded.uniqueIdentifier ?? ""
-		sessionIdentifier = decoded.sessionIdentifier
+	/// Restores the two identities an archive carried. Every other field is
+	/// settable within the module; these are the line's own, so only
+	/// ``LogLineArchive`` puts them back. An archive that carried none leaves
+	/// them empty, which is what tells `populateDefaultsPostflight` to mint a
+	/// fresh one.
+	mutating func restoreIdentity(uniqueIdentifier: String?, sessionIdentifier: UInt) {
+		self.uniqueIdentifier = uniqueIdentifier ?? ""
+		self.sessionIdentifier = sessionIdentifier
 	}
 
 	/// The identifier as the archive recorded it: empty when the archive
@@ -278,7 +268,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 		.compactMap(\.self)
 		.first { !$0.isEmpty } ?? ""
 
-		return Glasstual.formattedTimestamp(receivedAt as NSDate, selectedFormat as NSString) as String? ?? ""
+		return Glasstual.formattedTimestamp(receivedAt as NSDate, selectedFormat as NSString) ?? ""
 	}
 
 	@MainActor public var formattedNickname: String {
@@ -286,12 +276,12 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 	}
 
 	@MainActor
-	public func formattedNickname(in channel: IRCChannel?) -> String? {
+	public func formattedNickname(in channel: Channel?) -> String? {
 		formattedNickname(in: channel, with: nil)
 	}
 
 	@MainActor
-	public func formattedNickname(in channel: IRCChannel?, with format: String?) -> String? {
+	public func formattedNickname(in channel: Channel?, with format: String?) -> String? {
 		guard let nickname else {
 			return nil
 		}
@@ -335,7 +325,7 @@ public nonisolated struct LogLine: Codable, Hashable, Sendable, CustomStringConv
 	}
 
 	@MainActor
-	public func renderedBodyForTranscriptLog(in channel: IRCChannel?) -> String {
+	public func renderedBodyForTranscriptLog(in channel: Channel?) -> String {
 		var components = [formattedTimestamp(with: LogLineFormat.loggerClock)]
 
 		let nicknameFormat = switch lineType {

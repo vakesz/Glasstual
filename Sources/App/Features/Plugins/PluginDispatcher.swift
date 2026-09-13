@@ -30,37 +30,20 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 	///
 	/// The registry-wide check comes first so the common case — no plugin wants
 	/// this event — costs one lock and no allocation.
-	@MainActor
-	private static func handlers<Handler>(for feature: PluginSupportedFeature) -> [Handler] {
-		guard SharedApplication.sharedPluginManager().supportsFeature(feature) else {
-			return []
-		}
-
-		return plugins.compactMap { plugin in
-			guard plugin.supportsFeature(feature) else {
-				return nil
-			}
-
-			return plugin.primaryClass as? Handler
-		}
-	}
-
-	/// As `handlers(for:)`, but also requires the plugin to have subscribed to
-	/// `command`.
+	///
+	/// - Parameter subscription: A further requirement on the plugin, such as
+	/// having subscribed to the command the event carries.
 	@MainActor
 	private static func handlers<Handler>(
 		for feature: PluginSupportedFeature,
-		subscribedTo command: String,
-		commands: (PluginItem) -> [String]?
+		where subscription: ((PluginItem) -> Bool)? = nil
 	) -> [Handler] {
 		guard SharedApplication.sharedPluginManager().supportsFeature(feature) else {
 			return []
 		}
 
 		return plugins.compactMap { plugin in
-			guard plugin.supportsFeature(feature),
-			      commands(plugin)?.contains(command) == true
-			else {
+			guard plugin.supportsFeature(feature), subscription?(plugin) != false else {
 				return nil
 			}
 
@@ -73,7 +56,7 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 		_ command: String,
 		withText text: String?,
 		authoredBy textAuthor: Prefix,
-		destinedFor textDestination: IRCChannel?,
+		destinedFor textDestination: Channel?,
 		onClient client: IRCClient,
 		receivedAt: Date,
 		referenceMessage: Message?
@@ -93,24 +76,17 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 			messageParameters: referenceMessage?.params ?? []
 		)
 
-		/* Every handler is asked in turn, and the first refusal stops the
-		 message. The call is the point of the loop, not a filter on it. */
-		for handler in handlers {
-			let handlerAcceptedEvent = handler.receivedCommand(event)
-
-			if handlerAcceptedEvent == false {
-				return false
-			}
-		}
-
-		return true
+		/* Every handler is asked in turn and the first refusal stops the
+		 message, which is what `allSatisfy` does: it calls each handler and
+		 returns at the first `false`. */
+		return handlers.allSatisfy { $0.receivedCommand(event) }
 	}
 
 	@MainActor
 	public static func dispatchReceivedText(
 		_ text: String,
 		authoredBy textAuthor: Prefix,
-		destinedFor textDestination: IRCChannel?,
+		destinedFor textDestination: Channel?,
 		as lineType: LogLineType,
 		onClient client: IRCClient,
 		receivedAt: Date,
@@ -131,15 +107,7 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 			wasEncrypted: wasEncrypted
 		)
 
-		for handler in handlers {
-			let handlerAcceptedEvent = handler.receivedText(event)
-
-			if handlerAcceptedEvent == false {
-				return false
-			}
-		}
-
-		return true
+		return handlers.allSatisfy { $0.receivedText(event) }
 	}
 
 	@MainActor
@@ -166,61 +134,11 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 		return returnValue
 	}
 
-	@MainActor
-	public static func interceptUserInput(_ inputObject: Any, command commandString: IRCRemoteCommand) -> Any? {
-		let interceptors: [any PluginUserInputIntercepting] = handlers(for: .userInputDataInterception)
-		guard interceptors.isEmpty == false else {
-			return inputObject
-		}
-
-		var returnValue: Any = inputObject
-
-		for interceptor in interceptors {
-			guard let returnedValue = interceptor.interceptUserInput(
-				PluginUserInput(value: returnValue, commandRawValue: commandString.rawValue)
-			) else {
-				return nil
-			}
-
-			returnValue = merging(returnedValue, into: returnValue)
-		}
-
-		return returnValue
-	}
-
-	/// Adopts an interceptor's replacement only when it is a string the host can
-	/// use, and copies mutable strings so a plugin cannot edit it afterwards.
-	@MainActor
-	private static func merging(_ returnedValue: Any, into returnValue: Any) -> Any {
-		let equal: Bool = if let left = returnValue as? NSObject, let right = returnedValue as? NSObject {
-			left.isEqual(right)
-		} else {
-			false
-		}
-
-		guard equal == false,
-		      returnedValue is String || returnedValue is NSAttributedString
-		else {
-			return returnValue
-		}
-
-		if returnedValue is NSMutableString || returnedValue is NSMutableAttributedString {
-			return (returnedValue as AnyObject).copy()
-		}
-
-		return returnedValue
-	}
-
 	/// The one dispatch that is not main-actor: the message renderer runs on its
 	/// own queue and calls this synchronously. Reading the renderers and calling
 	/// them is one operation the manager performs, so an unload cannot land
 	/// between the two.
-	public static func willRenderMessage(
-		_ newMessage: String,
-		forViewController _: LogController,
-		lineType: LogLineType,
-		memberType _: LogLineMemberType
-	) -> String {
+	public static func willRenderMessage(_ newMessage: String, lineType: LogLineType) -> String {
 		SharedApplication.sharedPluginManager().renderingMessage(
 			newMessage,
 			kind: PluginHostAdapter.messageKind(for: lineType)
@@ -233,11 +151,10 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 		commandString: String,
 		messageString: String
 	) {
-		let handlers: [any PluginCommandHandling] = handlers(
-			for: .subscribedUserInputCommands,
-			subscribedTo: commandString.lowercased(),
-			commands: \.supportedUserInputCommands
-		)
+		let command = commandString.lowercased()
+		let handlers: [any PluginCommandHandling] = handlers(for: .subscribedUserInputCommands) {
+			$0.supportedUserInputCommands.contains(command)
+		}
 		guard handlers.isEmpty == false else {
 			return
 		}
@@ -258,11 +175,10 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 
 	@MainActor
 	public static func didReceiveServerInput(_ inputObject: Message, onClient client: IRCClient) {
-		let handlers: [any PluginServerInputHandling] = handlers(
-			for: .subscribedServerInputCommands,
-			subscribedTo: inputObject.command.lowercased(),
-			commands: \.supportedServerInputCommands
-		)
+		let command = inputObject.command.lowercased()
+		let handlers: [any PluginServerInputHandling] = handlers(for: .subscribedServerInputCommands) {
+			$0.supportedServerInputCommands.contains(command)
+		}
 		guard handlers.isEmpty == false else {
 			return
 		}
@@ -274,16 +190,6 @@ public nonisolated enum PluginDispatcher { // nonisolated: value
 
 		for handler in handlers {
 			handler.didReceiveServerInput(messageObject, client: pluginClient)
-		}
-	}
-
-	/// Called in transcript application order, including dormant projections.
-	@MainActor
-	public static func dispatchDidPostNewMessage(_ messageObject: PluginPostedMessage) {
-		let handlers: [any PluginPostedMessageHandling] = handlers(for: .newMessagePostedEvent)
-
-		for handler in handlers {
-			handler.didPostNewMessage(messageObject)
 		}
 	}
 }

@@ -216,6 +216,54 @@ struct TranscriptThemeControllerTests {
 		#expect(controller.theme.palette.timestampText == theme.palette.secondaryText)
 	}
 
+	/** Version 3 gave every role a second pair for the system's Increase
+	 Contrast setting. A version 2 palette carries none, and the roles it never
+	 recoloured take the ones that ship beside them now. */
+	@Test("A version 2 theme adopts the increased-contrast pair for the roles it never changed")
+	func versionTwoAdoptsDefaultHighContrastVariants() throws {
+		let fixture = try PreferencesTransferFixture()
+		defer { fixture.cleanUp() }
+		let chosen = AdaptiveTranscriptColor(
+			light: TranscriptThemeColor(red: 0.1, green: 0.2, blue: 0.3),
+			dark: TranscriptThemeColor(red: 0.4, green: 0.5, blue: 0.6)
+		)
+		var legacy = TranscriptTheme.lines
+		legacy.formatVersion = 2
+		legacy.palette.eventText = chosen
+
+		let controller = makeController(fixture)
+		try controller.importTheme(from: encoded(legacy))
+
+		#expect(controller.theme.formatVersion == TranscriptTheme.currentFormatVersion)
+		let palette = controller.theme.palette
+		#expect(palette.timestampText == TranscriptTheme.defaultPalette.timestampText)
+		#expect(
+			palette.timestampText.resolved(isDark: false, increasesContrast: true)
+				!= palette.timestampText.resolved(isDark: false)
+		)
+		/* A colour somebody picked is the answer in both settings: inventing a
+		 stronger one for it would draw something they never chose. */
+		#expect(palette.eventText == chosen)
+		#expect(
+			palette.eventText.resolved(isDark: true, increasesContrast: true)
+				== palette.eventText.resolved(isDark: true)
+		)
+	}
+
+	@Test("Choosing a colour drops the increased-contrast pair that shipped beside it")
+	func editingARoleDropsItsHighContrastVariant() {
+		var palette = TranscriptTheme.defaultPalette
+		let chosen = TranscriptThemeColor(red: 0.1, green: 0.2, blue: 0.3)
+		palette.link.light = chosen
+
+		#expect(palette.link.resolved(isDark: false, increasesContrast: true) == chosen.color)
+		// The other appearance keeps what it had; only the edited side is a choice.
+		#expect(
+			palette.link.resolved(isDark: true, increasesContrast: true)
+				== TranscriptTheme.defaultPalette.link.resolved(isDark: true, increasesContrast: true)
+		)
+	}
+
 	/** `appearanceDidChange()` had no callers, so the snapshot the transcript
 	 resolves colours from off the main actor kept whichever appearance was in
 	 effect when the theme last changed. */

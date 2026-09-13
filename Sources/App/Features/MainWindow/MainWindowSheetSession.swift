@@ -7,12 +7,23 @@ import Foundation
 import Observation
 import SwiftUI
 
+/** One sheet the main window is showing, and whatever that sheet raised on top
+ of itself.
+
+ The chain is what makes a sheet-over-a-sheet work: SwiftUI presents a sheet
+ from the view it is attached to, so a second one is presented by the first.
+ This used to be an array the window indexed into, with two hand-written
+ `Binding<Bool>` shims translating "is position N occupied" into a
+ presentation and a host that recursed on `index + 1`. */
 @MainActor
 @Observable
 final class MainWindowSheetPresentation: Identifiable {
 	let id = UUID()
 	let owner: AnyObject
 	let content: AnyView
+	/// The sheet this one raised, if any. Written by the presentation model,
+	/// which is what keeps the chain and the owners in step.
+	var child: MainWindowSheetPresentation?
 
 	@ObservationIgnored private var didFinish = false
 	@ObservationIgnored private let onDismiss: () -> Void
@@ -23,7 +34,15 @@ final class MainWindowSheetPresentation: Identifiable {
 		self.onDismiss = onDismiss
 	}
 
+	/// This sheet and everything above it, outermost first.
+	var chain: [MainWindowSheetPresentation] {
+		[self] + (child?.chain ?? [])
+	}
+
+	/// Tells the owners their sheets are gone, the innermost first.
 	func finish() {
+		child?.finish()
+		child = nil
 		guard didFinish == false else { return }
 		didFinish = true
 		onDismiss()
@@ -59,7 +78,7 @@ open class MainWindowSheetSession: NSObject {
 		mainWindow.presentationModel.presentSheet(MainWindowSheetPresentation(
 			owner: self,
 			content: content,
-			onDismiss: { [weak self] in self?.sheetDidEnd(withReturnCode: 0) }
+			onDismiss: { [weak self] in self?.sheetDidEnd() }
 		))
 	}
 
@@ -67,17 +86,16 @@ open class MainWindowSheetSession: NSObject {
 		window?.presentationModel.dismissSheet(ownedBy: self)
 	}
 
-	open func sheetDidEnd(withReturnCode _: Int) {}
+	/// The sheet has left the window, however it went.
+	open func sheetDidEnd() {}
 
-	open func ok(_: Any?) {
+	/// The user accepted the sheet.
+	open func submit() {
 		endSheet()
 	}
 
-	open func cancel(_: Any?) {
+	/// The sheet is going away without being accepted.
+	open func cancel() {
 		endSheet()
-	}
-
-	open func close() {
-		cancel(nil)
 	}
 }

@@ -30,6 +30,16 @@ public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine,
 
 	private let speechSynthesizer = AVSpeechSynthesizer()
 
+	/** The voice the notifications are spoken in.
+
+	 What is spoken is the application's own copy — "Channel Message in …",
+	 "Connected to …" — so it is spoken in the language the application is
+	 running in rather than in whichever voice the synthesizer defaults to for
+	 the person's region. A language with no installed voice leaves this `nil`,
+	 which is the synthesizer's own fallback. */
+	private let voice = Bundle.main.preferredLocalizations.first
+		.flatMap(AVSpeechSynthesisVoice.init(language:))
+
 	override public init() {
 		super.init()
 
@@ -47,6 +57,7 @@ public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine,
 	public func speakText(_ text: String) {
 		let utterance = AVSpeechUtterance(string: text)
 		utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+		utterance.voice = voice
 
 		speechSynthesizer.speak(utterance)
 	}

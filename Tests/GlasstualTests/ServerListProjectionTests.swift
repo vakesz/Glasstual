@@ -13,16 +13,16 @@ import Testing
 @Suite("Server list projection")
 struct ServerListProjectionTests {
 	private let list = ServerList()
-	private let alpha: GLTTestClient
-	private let beta: GLTTestClient
-	private let alphaChannels: [IRCChannel]
-	private let betaChannels: [IRCChannel]
+	private let alpha: TestClient
+	private let beta: TestClient
+	private let alphaChannels: [Channel]
+	private let betaChannels: [Channel]
 
 	init() {
 		/* Locals first: a closure over a stored property would capture `self`
 		 before every property is initialised, which the compiler refuses. */
-		let alpha = GLTTestClient()
-		let beta = GLTTestClient()
+		let alpha = TestClient()
+		let beta = TestClient()
 		alpha.config.connectionName = "Alpha"
 		beta.config.connectionName = "Beta"
 		let alphaChannels = ["#swift", "#coffee"].map { Self.channel(named: $0, on: alpha) }
@@ -40,10 +40,28 @@ struct ServerListProjectionTests {
 		list.filterText = ""
 	}
 
-	private static func channel(named name: String, on client: IRCClient) -> IRCChannel {
-		let channel = IRCChannel(config: ChannelConfig(channelName: name))
+	private static func channel(named name: String, on client: IRCClient) -> Channel {
+		let channel = Channel(config: ChannelConfig(channelName: name))
 		channel.associatedClient = client
 		return channel
+	}
+
+	/** The index space is cached, and the cache is dropped the moment the tree
+	 changes rather than when the rows are next rebuilt: the world adds a
+	 conversation and asks for it to be selected in the same turn, and the
+	 rebuild is coalesced to the next one. */
+	@Test("A conversation added since the last rebuild is selectable at once")
+	func newConversationsAreSelectableBeforeTheRowsAreRebuilt() {
+		let added = Self.channel(named: "#new", on: alpha)
+		#expect(list.row(forItem: added) == -1)
+
+		alpha.channelList = alphaChannels + [added]
+		list.setNeedsRefresh()
+
+		let row = list.row(forItem: added)
+		#expect(row >= 0)
+		list.select(added)
+		#expect(list.selectedRow == row)
 	}
 
 	@Test("Every conversation is listed, and disclosure decides what is drawn")
@@ -107,7 +125,7 @@ struct ServerListProjectionTests {
 
 		#expect(list.numberOfRows == 4)
 		#expect(list.row(forItem: openChannel) == rowBeforeFiltering)
-		#expect(list.item(atRow: rowBeforeFiltering) as? IRCChannel === openChannel)
+		#expect(list.item(atRow: rowBeforeFiltering) as? Channel === openChannel)
 	}
 
 	/** The other half of the same rule: a filter draws the matches under a
@@ -128,10 +146,39 @@ struct ServerListProjectionTests {
 		#expect(try #require(list.rows.last).channels.map(\.title) == ["#swiftui"])
 		let row = list.row(forItem: hidden)
 		#expect(row >= 0)
-		#expect(list.item(atRow: row) as? IRCChannel === hidden)
+		#expect(list.item(atRow: row) as? Channel === hidden)
 
-		list.selectItem(at: row)
+		list.select(hidden)
 		#expect(list.selectedRow == row)
+	}
+
+	/** Disclosing a server has two entry points because they animate
+	 differently, and only because of that: the reader's chevron takes the
+	 ambient transaction so the outline opens the way the reader expects, while
+	 the application's own call -- the saved expansion restored at launch, the
+	 server a selection has to be disclosed to reach -- publishes with animation
+	 off, so it cannot land as a second, differently-transacted list update in
+	 the same turn as the rows the world has just published. Two updates in one
+	 turn is what made the outline begin the second from inside the first, the
+	 reentrant delegate operation AppKit warns about on every launch. What they
+	 must not differ in is the answer, which is what this pins. */
+	@Test("The chevron and the application disclose a server the same way")
+	func bothWaysOfDisclosingAServerAgree() throws {
+		let hidden = try #require(betaChannels.first)
+		#expect(list.row(forItem: hidden) == -1)
+
+		list.setExpanded(true, forServerID: beta.uniqueIdentifier)
+		let disclosedByReader = list.rows
+		#expect(list.isExpanded(beta))
+		#expect(list.row(forItem: hidden) == 4)
+
+		list.setExpanded(false, for: beta)
+		#expect(list.isExpanded(beta) == false)
+		#expect(list.row(forItem: hidden) == -1)
+
+		list.setExpanded(true, for: beta)
+		#expect(list.rows == disclosedByReader)
+		#expect(list.row(forItem: hidden) == 4)
 	}
 
 	@Test("A collapsed server's conversations have no row to move onto")
@@ -139,7 +186,7 @@ struct ServerListProjectionTests {
 		let hidden = try #require(betaChannels.first)
 		#expect(list.row(forItem: hidden) == -1)
 
-		beta.sidebarItemIsExpanded = true
+		list.setExpanded(true, for: beta)
 
 		#expect(list.row(forItem: hidden) == 4)
 		#expect(list.numberOfRows == 5)

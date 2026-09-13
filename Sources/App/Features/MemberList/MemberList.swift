@@ -70,9 +70,18 @@ public struct MemberListGroup: Identifiable {
 @MainActor
 @Observable
 public final class MemberList: ChannelMemberListPresentation {
-	public var isHiddenByUser = false
 	public var selectedMemberIDs: Set<User.ID> = []
 	public private(set) var groups: [MemberListGroup] = []
+	/** The badge colours and rank preferences every row draws from.
+
+	 Read once per invalidation and handed down. A row used to ask the defaults
+	 store three times over — once for its glyph, once for the tooltip and once
+	 for the accessibility label — and each ask builds its own handle on the
+	 suite, on every row, on each rebuild a busy channel provokes. */
+	private(set) var presentationStyle = MemberListPresentationStyle.current()
+	/// How many times the list has told its rows to draw themselves again. The
+	/// rows do not read it; it is what says that a burst of changes published
+	/// once rather than once per change.
 	public private(set) var presentationRevision = 0
 	/** The pinned nickname colours the rows draw their avatars from.
 
@@ -89,100 +98,55 @@ public final class MemberList: ChannelMemberListPresentation {
 	public private(set) var memberShowingProfile: User.ID?
 
 	@ObservationIgnored private weak var memberList: ChannelMemberList?
+	/// The channel's ordering as the protocol layer last published it. The rows
+	/// come from ``groups``; this is what the next rebuild reads.
 	@ObservationIgnored private var members: [ChannelUser] = []
-	@ObservationIgnored private var indexesByUserID: [User.ID: Int] = [:]
-	/// The click waiting out the double-click interval, and who it was on.
-	@ObservationIgnored private var pendingProfile: (member: User.ID, task: Task<Void, Never>)?
-	private var updateDepth = 0
-	private var updateIsPending = false
 	private var lastInteractedMemberID: User.ID?
 
 	public init() {}
 
-	public func assign(to channel: IRCChannel?) {
+	public func assign(to channel: Channel?) {
 		memberList?.assign(nil)
 		memberList = channel?.memberInfo
 		if let memberList {
 			memberList.assign(self)
 		} else {
-			replaceContents([])
+			membersDidChange([])
 		}
 	}
 
-	public func memberListDidEnd() {
-		memberList = nil
-		replaceContents([])
-	}
-
-	public func replaceContents(_ contents: [ChannelUser]) {
-		members = contents
-		reindexMembers()
-		membersChanged()
-	}
-
-	public func insert(_ member: ChannelUser, atArrangedObjectIndex index: Int) {
-		guard index >= 0, index <= members.count else { return }
-		members.insert(member, at: index)
-		reindexMembers()
-		membersChanged()
-	}
-
-	public func replace(_ member: ChannelUser, atArrangedObjectIndex index: Int) {
-		guard members.indices.contains(index) else { return }
-		if members[index].id != member.id {
-			indexesByUserID.removeValue(forKey: members[index].id)
-			indexesByUserID[member.id] = index
-		}
-		members[index] = member
-		membersChanged()
-	}
-
-	public func remove(atArrangedObjectIndex index: Int) {
-		guard members.indices.contains(index) else { return }
-		members.remove(at: index)
-		reindexMembers()
-		membersChanged()
-	}
-
-	private func reindexMembers() {
-		indexesByUserID = Dictionary(members.enumerated().map { ($0.element.id, $0.offset) },
-		                             uniquingKeysWith: { _, latest in latest })
-	}
-
-	public var selectedMembers: [ChannelUser] {
-		selectedMemberIDs.compactMap { indexesByUserID[$0] }.sorted().compactMap { index in
-			let member = members[index]
-			if let memberList {
-				return memberList.findMember(withUserID: member.id)
-			}
-			return member
-		}
-	}
-
-	public func beginUpdates() {
-		updateDepth += 1
-	}
-
-	public func endUpdates() {
-		guard updateDepth > 0 else { return }
-		updateDepth -= 1
-
-		if updateDepth == 0, updateIsPending {
-			updateIsPending = false
-			rebuildRows()
-		}
-	}
-
-	public func membersChanged() {
-		guard updateDepth == 0 else {
-			updateIsPending = true
-			return
-		}
-
+	public func membersDidChange(_ members: [ChannelUser]) {
+		self.members = members
 		rebuildRows()
 	}
 
+	/** The members the reader has selected, in the order the list draws them.
+
+	 Each one is read back out of the channel rather than returned from the
+	 published ordering: a protocol message still assembling an ordering has
+	 already left, renamed or re-ranked people the list is still drawing, and
+	 the caller acts on who they are now. */
+	public var selectedMembers: [ChannelUser] {
+		members.compactMap { member in
+			guard selectedMemberIDs.contains(member.id) else {
+				return nil
+			}
+
+			guard let memberList else {
+				return member
+			}
+
+			return memberList.findMember(withUserID: member.id)
+		}
+	}
+
 	private func rebuildRows() {
+		/* One read for the whole rebuild, and the same one the rows draw from.
+		 Asking inside the loop built a handle on the defaults suite for every
+		 member, and a busy channel rebuilds on each join, part and mode change. */
+		invalidatePresentation()
+		let style = presentationStyle
+
 		var ordinalsByRank: [UserRank: Int] = [:]
 		var builtGroups: [MemberListGroup] = []
 		var admitted: Set<User.ID> = []
@@ -201,13 +165,8 @@ public final class MemberList: ChannelMemberListPresentation {
 			builtGroups.append(MemberListGroup(section: section, members: currentMembers))
 		}
 
-		/* One read for the whole rebuild. Asking inside the loop built a handle
-		 on the defaults suite for every member, and a busy channel rebuilds its
-		 rows on each join, part and mode change. */
-		let favorsServerStaff = Preferences.Appearance.memberListSortFavorsServerStaff.value
-
 		for member in members where admitted.insert(member.id).inserted {
-			let rank = Self.sectionRank(for: member, favoringServerStaff: favorsServerStaff)
+			let rank = style.displayRank(isIRCOperator: member.user.isIRCop, channelRank: member.rank)
 			if currentRank != rank {
 				appendCurrentGroup()
 				currentRank = rank
@@ -223,17 +182,6 @@ public final class MemberList: ChannelMemberListPresentation {
 			self.lastInteractedMemberID = nil
 		}
 		dismissProfileIfMemberLeft(admitted)
-		invalidatePresentation()
-	}
-
-	/// The section a member belongs in. Pure in the preference it is handed, so
-	/// that one rebuild reads it once and groups every member under one answer.
-	private static func sectionRank(for member: ChannelUser, favoringServerStaff favorIRCop: Bool) -> UserRank {
-		if member.user.isIRCop, favorIRCop {
-			return .irCopByMode
-		}
-
-		return member.rank
 	}
 
 	public func deselectAll(_: Any?) {
@@ -249,8 +197,7 @@ public final class MemberList: ChannelMemberListPresentation {
 	}
 
 	func notePrimaryInteraction(withID identifier: User.ID) {
-		guard let index = indexesByUserID[identifier] else { return }
-		let member = members[index]
+		guard let member = members.first(where: { $0.id == identifier }) else { return }
 		notePrimaryInteraction(with: member)
 	}
 
@@ -259,56 +206,32 @@ public final class MemberList: ChannelMemberListPresentation {
 		if let memberList {
 			return memberList.findMember(withUserID: lastInteractedMemberID)
 		}
-		return indexesByUserID[lastInteractedMemberID].map { members[$0] }
+		return members.first { $0.id == lastInteractedMemberID }
 	}
 
 	// MARK: - Profile popover
 
-	/** Opens `member`'s profile once `delay` has passed without a second click.
-
-	 One wait for the whole list. A row that timed its own click could not see
-	 the click that landed on another row, so the popover that opened was the
-	 one the reader had already moved on from, and it swallowed the click that
-	 was meant to dismiss it. */
-	func scheduleProfile(for member: User.ID, after delay: Duration) {
-		cancelPendingProfile()
-		memberShowingProfile = nil
-		let task = Task { [weak self] in
-			try? await Task.sleep(for: delay)
-			guard let self, Task.isCancelled == false else { return }
-			pendingProfile = nil
-			memberShowingProfile = member
-		}
-		pendingProfile = (member, task)
-	}
-
-	/// Opens the profile now, for the accessibility action that offers it
-	/// without a click to time.
+	/** Opens `member`'s profile at once. The list owns the one popover, so a
+	 click on another row replaces it rather than stacking a second one. */
 	func showProfile(for member: User.ID) {
-		cancelPendingProfile()
 		memberShowingProfile = member
 	}
 
-	func cancelPendingProfile() {
-		pendingProfile?.task.cancel()
-		pendingProfile = nil
+	/// Takes the open profile down: the double click that opens a conversation
+	/// must not leave the first click's popover behind.
+	func hideProfile() {
+		memberShowingProfile = nil
 	}
 
-	/// Drops whatever `member`'s row was showing or about to show, and leaves
-	/// another row's popover alone.
+	/// Drops whatever `member`'s row was showing, and leaves another row's
+	/// popover alone.
 	func endProfileInteraction(with member: User.ID) {
-		if pendingProfile?.member == member {
-			cancelPendingProfile()
-		}
 		if memberShowingProfile == member {
 			memberShowingProfile = nil
 		}
 	}
 
 	private func dismissProfileIfMemberLeft(_ admitted: Set<User.ID>) {
-		if let pendingProfile, admitted.contains(pendingProfile.member) == false {
-			cancelPendingProfile()
-		}
 		if let memberShowingProfile, admitted.contains(memberShowingProfile) == false {
 			self.memberShowingProfile = nil
 		}
@@ -317,13 +240,12 @@ public final class MemberList: ChannelMemberListPresentation {
 	/** Tells the rows to draw themselves again.
 
 	 The list is a value projection: a row's appearance is a function of the
-	 member it holds and of preferences and appearance the row reads directly,
-	 so there is nothing to redraw a single row with. One revision is what every
-	 caller needs, whichever member prompted it — and the rows take it as an
-	 input of their own, since none of their other inputs change when a badge
-	 colour or the appearance does. */
+	 member it holds and of the style and pinned colours the list hands it, so
+	 there is nothing to redraw a single row with. One snapshot is what every
+	 caller needs, whichever member prompted it. */
 	public func invalidatePresentation() {
 		nicknameColorOverrides = UserNicknameColorStyleGenerator.overridesSnapshot()
+		presentationStyle = .current()
 		presentationRevision &+= 1
 	}
 

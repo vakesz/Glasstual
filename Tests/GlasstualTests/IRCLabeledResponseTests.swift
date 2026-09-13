@@ -1,4 +1,4 @@
-/*  *********************************************************************
+/* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -46,7 +46,7 @@ struct IRCLabeledResponseTests {
 	/// resolves the delivery without echo-message.
 	@Test("Tracking needs message-tags and labeled-response")
 	func trackingRequiresBothCapabilities() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.enableCapability(.labeledResponse)
 
 		#expect(client.labeledResponseTrackingEnabled() == false)
@@ -109,15 +109,15 @@ struct IRCLabeledResponseTests {
 		try #require(Message(line: line, on: client))
 	}
 
-	private func clientWithLabeledResponse() -> GLTTestClient {
-		let client = GLTTestClient()
+	private func clientWithLabeledResponse() -> TestClient {
+		let client = TestClient()
 		client.enableCapability(.messageTags)
 		client.enableCapability(.echoMessage)
 		client.enableCapability(.labeledResponse)
 		return client
 	}
 
-	private func makeChannel(named name: String, on client: GLTTestClient) throws -> Channel {
+	private func makeChannel(named name: String, on client: TestClient) throws -> Channel {
 		try #require(client.findChannelOrCreate(name))
 	}
 }

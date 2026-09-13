@@ -39,19 +39,15 @@
 import Foundation
 
 enum IRCAddressBookLookupPolicy {
-	static func nickname(fromHostmask hostmask: String) -> String? {
-		(hostmask as NSString).nicknameFromHostmask
-	}
-
+	/// A nickname as the hostmask a user-tracking rule is written with.
 	static func trackingHostmask(forNickname nickname: String) -> String {
 		"\(nickname)!*@*"
 	}
 
+	/// Both keys a hostmask's match may be cached under: the hostmask itself,
+	/// and the tracking mask its nickname alone is looked up by.
 	static func cacheKeys(forHostmask hostmask: String) -> [String] {
-		guard let nickname = nickname(fromHostmask: hostmask) else {
-			return [hostmask]
-		}
-		return [hostmask, trackingHostmask(forNickname: nickname)]
+		[hostmask, trackingHostmask(forNickname: (hostmask as NSString).nicknameFromHostmask)]
 	}
 
 	/** The tracking rule inside a match, or `nil` when the match only ignores.
@@ -87,10 +83,7 @@ public extension IRCClient {
 	}
 
 	internal func findUserTrackingAddressBookEntry(forHostmask hostmask: String) -> AddressBookEntry? {
-		guard let nickname = IRCAddressBookLookupPolicy.nickname(fromHostmask: hostmask) else {
-			return nil
-		}
-		return findUserTrackingAddressBookEntry(forNickname: nickname)
+		findUserTrackingAddressBookEntry(forNickname: (hostmask as NSString).nicknameFromHostmask)
 	}
 
 	internal func findUserTrackingAddressBookEntry(forNickname nickname: String) -> AddressBookEntry? {

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -40,11 +40,11 @@ import Foundation
 
 extension IRCClient {
 	func description(for timedCommand: TimedCommand) -> String {
-		let timerInterval = humanReadableTimeInterval(timedCommand.timerInterval, false, 0) as String? ?? ""
-		let timeRemaining = humanReadableTimeInterval(timedCommand.timeRemaining, false, 0) as String? ?? ""
-		let timerStatus = IRCTimerStrings.status(active: timedCommand.timerIsActive)
+		let timerInterval = humanReadableTimeInterval(timedCommand.timer.interval, false, 0)
+		let timeRemaining = humanReadableTimeInterval(timedCommand.timer.timeRemaining, false, 0)
+		let timerStatus = IRCTimerStrings.status(active: timedCommand.timer.isActive)
 
-		guard timedCommand.repeatTimer else {
+		guard timedCommand.timer.repeats else {
 			return IRCTimerStrings.summary(
 				identifier: timedCommand.identifier,
 				status: timerStatus,
@@ -54,9 +54,9 @@ extension IRCClient {
 			)
 		}
 
-		let repeatLimit = timedCommand.iterations == 0
+		let repeatLimit = timedCommand.timer.iterations == 0
 			? IRCTimerStrings.noLimit
-			: String(timedCommand.iterations)
+			: String(timedCommand.timer.iterations)
 
 		return IRCTimerStrings.repeatingSummary(
 			identifier: timedCommand.identifier,
@@ -64,7 +64,7 @@ extension IRCClient {
 			interval: timerInterval,
 			nextFire: timeRemaining,
 			repeatLimit: repeatLimit,
-			iteration: timedCommand.currentIteration,
+			iteration: timedCommand.timer.currentIteration,
 			command: timedCommand.command
 		)
 	}
@@ -91,7 +91,7 @@ extension IRCClient {
 
 	@MainActor
 	func onTimedCommand(_ timedCommand: TimedCommand) {
-		if timedCommand.timerIsActive == false {
+		if timedCommand.timer.isActive == false {
 			removeTimedCommand(timedCommand)
 		}
 

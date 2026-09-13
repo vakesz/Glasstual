@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -44,34 +44,18 @@ private let menuSupportLogger = Logger(
 	category: "MenuSupport"
 )
 
-@MainActor
+// MARK: - Logs, credits and the support channels
+
 public extension MenuActionCoordinator {
-	func performSupportAction(_ action: MenuSupportAction, sender _: Any?) {
-		switch action {
-		case .openLogLocation: openLog(at: PathInfo.transcriptFolderURL)
-		case .openChannelLogs: openLog(at: selectedChannel?.logFilePath)
-		case .openAcknowledgements: openAcknowledgements()
-		case .connectToHelpChannel: connectToSupportChannel("#glasstual")
-		case .connectToTestingChannel: connectToSupportChannel("#glasstual-testing")
-		@unknown default: break
-		}
+	@objc func openLogLocation(_: Any?) {
+		openLog(at: PathInfo.transcriptFolderURL)
 	}
 
-	private func openLog(at url: URL?) {
-		guard let url else { return }
-		if FileManager.default.fileExists(atPath: url.path) {
-			NSWorkspace.shared.open(url)
-			return
-		}
-		Alerts.alert(
-			withMessage: PromptStrings.Logging.emptyAlertBody,
-			title: PromptStrings.Logging.noLogsTitle,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil
-		)
+	@objc func openChannelLogs(_: Any?) {
+		openLog(at: selectedChannel?.logFilePath)
 	}
 
-	private func openAcknowledgements() {
+	@objc func openAcknowledgements(_: Any?) {
 		guard let url = Bundle.main.url(
 			forResource: "Acknowledgements",
 			withExtension: "pdf",
@@ -83,15 +67,24 @@ public extension MenuActionCoordinator {
 		NSWorkspace.shared.open(url)
 	}
 
-	private func connectToSupportChannel(_ channel: String) {
-		ServerConnectionCoordinator.connect(
-			to: "irc.libera.chat +6697",
-			channels: channel,
-			options: ServerConnectionOptions(
-				connectWhenCreated: true,
-				mergeConnectionIfPossible: true,
-				selectFirstChannelAdded: true
-			)
+	@objc func connectToGlasstualHelpChannel(_: Any?) {
+		ServerConnectionCoordinator.connect(to: .help)
+	}
+
+	@objc func connectToGlasstualTestingChannel(_: Any?) {
+		ServerConnectionCoordinator.connect(to: .testing)
+	}
+
+	private func openLog(at url: URL?) {
+		guard let url else { return }
+		if FileManager.default.fileExists(atPath: url.path) {
+			NSWorkspace.shared.open(url)
+			return
+		}
+		Alerts.alert(
+			withMessage: PromptStrings.Logging.emptyAlertBody,
+			title: PromptStrings.Logging.noLogsTitle,
+			defaultButton: PromptStrings.Action.confirmation
 		)
 	}
 }

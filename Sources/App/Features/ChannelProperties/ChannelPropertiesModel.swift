@@ -30,9 +30,26 @@ enum ChannelPropertiesSection: Int, CaseIterable, Identifiable {
 final class ChannelPropertiesModel {
 	var config: ChannelConfig
 	var selection: ChannelPropertiesSection = .general
-	private(set) var channelNameValidationError: String?
-	var isValidationMessagePresented = false
 	let channelNameIsEditable: Bool
+
+	/// Whether the name in the field is one the server would accept.
+	var channelNameIsValid: Bool {
+		isChannelName(channelName.firstToken)
+	}
+
+	/** Why the name cannot be saved, once saving has been tried.
+
+	 A sheet for a channel that does not exist yet opens on an empty field, and
+	 the message used to be there — with a red border around the field — before
+	 anything had been typed into it. */
+	var channelNameValidationMessage: String? {
+		submissionWasAttempted && channelNameIsValid == false
+			? ChannelPropertiesStrings.invalidChannelName
+			: nil
+	}
+
+	private var submissionWasAttempted = false
+
 	/** The connection whose ISUPPORT decides what a channel name looks like.
 
 	 Weak because the sheet outlives nothing and the client outlives the sheet;
@@ -44,16 +61,11 @@ final class ChannelPropertiesModel {
 		self.config = config
 		self.client = client
 		channelNameIsEditable = config.channelName.isEmpty
-		refreshValidation()
 	}
 
 	var channelName: String {
 		get { config.channelName }
-		set {
-			config.channelName = newValue
-			refreshValidation()
-			isValidationMessagePresented = false
-		}
+		set { config.channelName = newValue }
 	}
 
 	var label: String {
@@ -107,10 +119,9 @@ final class ChannelPropertiesModel {
 
 	@discardableResult
 	func validateForSubmission() -> Bool {
-		refreshValidation()
-		if channelNameValidationError != nil {
+		submissionWasAttempted = true
+		guard channelNameIsValid else {
 			selection = .general
-			isValidationMessagePresented = true
 			return false
 		}
 		return true
@@ -128,15 +139,52 @@ final class ChannelPropertiesModel {
 
 	func replace(with config: ChannelConfig) {
 		self.config = config
-		refreshValidation()
-		isValidationMessagePresented = false
+		submissionWasAttempted = false
 	}
 
-	private func refreshValidation() {
-		let candidate = channelName.firstToken
-		channelNameValidationError = isChannelName(candidate)
-			? nil
-			: ChannelPropertiesStrings.invalidChannelName
+	/// What a connection says about how long a channel key may be, and how much
+	/// of that the field holds.
+	private struct SecretKeyLimit {
+		let used: Int
+		let maximum: Int
+		let networkName: String
+
+		var isExceeded: Bool {
+			used > maximum
+		}
+	}
+
+	/** The server's limit on a channel key, what is used of it, and who said
+	 so. `nil` when no connection has advertised one, because a limit nobody
+	 named would be a guess. */
+	private var secretKeyLimit: SecretKeyLimit? {
+		guard let client else { return nil }
+		let maximum = Int(clamping: client.supportInfo.maximumKeyLength)
+		guard maximum > 0 else { return nil }
+
+		return SecretKeyLimit(used: secretKey.count, maximum: maximum, networkName: client.networkNameAlt)
+	}
+
+	/** What to say under the password field about the server's key length.
+
+	 A modal alert used to interrupt the person mid-keystroke — once per sheet,
+	 suppressible, and gone the moment it was dismissed. The counter is there
+	 the whole time the field is, and becomes the warning as soon as the key is
+	 longer than the server accepts. */
+	var secretKeyLengthCaption: String? {
+		guard let limit = secretKeyLimit else { return nil }
+		guard limit.isExceeded else {
+			return ChannelPropertiesStrings.secretKeyLength(limit.used, maximum: limit.maximum)
+		}
+
+		return ChannelPropertiesStrings.secretKeyTooLong(
+			networkName: limit.networkName,
+			maximumLength: limit.maximum
+		)
+	}
+
+	var secretKeyIsTooLong: Bool {
+		secretKeyLimit?.isExceeded ?? false
 	}
 
 	/** Whether the server this channel belongs to would call `candidate` a

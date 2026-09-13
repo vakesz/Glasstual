@@ -1,38 +1,56 @@
 # Localization catalog notices
 
-The following notice and license apply to the application String Catalogs under
-`Sources/App/Resources/Language Files`:
+The following notice and license apply to every application String Catalog,
+wherever it sits: the shared tables under
+`Sources/App/Resources/Language Files`, and the feature-owned ones that live
+beside the code that reads them under `Sources/App/Features` and
+`Sources/App/Preferences`.
 
 Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 Please see `Acknowledgements.pdf` for additional information.
 
-The migrated source tables retain these original copyright ranges:
+The migrated source tables retain these original copyright ranges, listed under
+the names their catalogs carry today:
 
 * `Accessibility.xcstrings`, `BasicLanguage.xcstrings`,
-  `Notifications.xcstrings`, `TDCAboutDialog.xcstrings`,
-  `TDCChannelBanListSheet.xcstrings`, `TDCChannelInviteSheet.xcstrings`,
-  `TDCChannelSpotlightController.xcstrings`,
-  `TDCFileTransferDialog.xcstrings`, `TDCOnboardingWindow.xcstrings`,
-  `TDCServerChannelListDialog.xcstrings`,
+  `ChannelSpotlight.xcstrings`, `FileTransfers.xcstrings`,
+  `Notifications.xcstrings`, `NotificationSettings.xcstrings`,
+  `Onboarding.xcstrings`, `ServerChannelList.xcstrings`,
+  `TDCAboutDialog.xcstrings`, `TDCChannelBanListSheet.xcstrings`,
+  `TDCChannelInviteSheet.xcstrings`,
   `TDCServerEndpointListSheet.xcstrings`,
   `TDCServerHighlightListSheet.xcstrings`,
-  `TDCServerPropertiesSheet.xcstrings`,
-  `TVCNotificationConfigurationView.xcstrings`, and
-  `TXMenuController.xcstrings`: Copyright (c) 2010 - 2018 Codeux Software,
-  LLC & respective contributors.
+  `TDCServerPropertiesSheet.xcstrings`, and `TXMenuController.xcstrings`:
+  Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
 * `CommonErrors.xcstrings`, `TDCAddressBookSheet.xcstrings`,
   `TDCChannelModifyModesSheet.xcstrings`,
   `TDCChannelModifyTopicSheet.xcstrings`, and
   `TDCChannelPropertiesSheet.xcstrings`: Copyright (c) 2018 Codeux Software,
   LLC & respective contributors.
-* `IRC.xcstrings`, `Prompts.xcstrings`, `TDCPreferencesController.xcstrings`,
-  and `TVCMainWindow.xcstrings`: Copyright (c) 2010 - 2020 Codeux Software,
+* `IRC.xcstrings`, `Prompts.xcstrings`, `Settings.xcstrings`, and
+  `TVCMainWindow.xcstrings`: Copyright (c) 2010 - 2020 Codeux Software,
   LLC & respective contributors.
+
+Six of those were renamed as they were migrated, so a diff against the
+original tables reads as a rename rather than a deletion:
+`ChannelSpotlight.xcstrings` was `TDCChannelSpotlightController`,
+`FileTransfers.xcstrings` was `TDCFileTransferDialog`,
+`NotificationSettings.xcstrings` was `TVCNotificationConfigurationView`,
+`Onboarding.xcstrings` was `TDCOnboardingWindow`,
+`ServerChannelList.xcstrings` was `TDCServerChannelListDialog`, and
+`Settings.xcstrings` was `TDCPreferencesController`.
+
+`NicknameColor.xcstrings` was `TDCNicknameColorSheet`, and carries the same
+notice as the tables above.
+
 The same notice and license apply to the bundled extension String Catalogs
 under `Sources/Plugins`, with the original source-file copyright ranges:
 
 * Caffeine and Chat Filter: Copyright (c) 2015 - 2018 Codeux Software, LLC &
-  respective contributors.
+  respective contributors. Chat Filter's `ChatFilter.xcstrings`,
+  `ChatFilterEditor.xcstrings` and `ChatFilterLogic.xcstrings` were
+  `TPI_ChatFilterExtension`, `TPI_ChatFilterEditFilterSheet` and
+  `TPI_ChatFilterLogic`.
 * Smiley Converter and User Insights: Copyright (c) 2013 - 2018 Codeux
   Software, LLC & respective contributors.
 * System Profiler: Copyright (c) 2012 - 2020 Codeux Software, LLC & respective
@@ -42,13 +60,6 @@ under `Sources/Plugins`, with the original source-file copyright ranges:
 
 Please see `Acknowledgements.pdf` for additional information about these
 bundled extensions.
-
-`ChannelValidation.xcstrings` consolidates identical channel-key warnings
-migrated from `TDCChannelModifyModesSheet.strings` and
-`TDCChannelPropertiesSheet.strings`. Both source tables are:
-
-Copyright (c) 2018 Codeux Software, LLC & respective contributors.
-Please see `Acknowledgements.pdf` for additional information.
 
 Portions of `TDCChannelInviteSheet.xcstrings` and
 `TDCServerChangeNicknameSheet.xcstrings` are also:

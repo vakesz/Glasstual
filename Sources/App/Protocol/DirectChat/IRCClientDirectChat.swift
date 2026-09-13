@@ -65,7 +65,7 @@ enum DCCChatPolicy {
 		let dccSubcommand = input.nextUppercaseToken()
 		let chatProtocol = input.nextUppercaseToken()
 		guard dccSubcommand == "CHAT", chatProtocol == "CHAT" else { return nil }
-		let address = ClientWireUtilities.displayDCCAddress(input.nextToken())
+		let address = DCCWireFormat.displayAddress(input.nextToken())
 		let portText = input.nextToken()
 		let rawToken = input.nextToken()
 		let tokenText = rawToken.hasPrefix("T") ? String(rawToken.dropFirst()) : rawToken
@@ -89,7 +89,7 @@ enum DCCChatPolicy {
 	 to point us at. A passive offer names none — the peer connects to us — so
 	 there is nothing to refuse. */
 	static func isDialable(_ offer: DCCChatOffer) -> Bool {
-		offer.isPassive || ClientWireUtilities.isDialableDCCAddress(offer.address)
+		offer.isPassive || DCCWireFormat.isDialableAddress(offer.address)
 	}
 
 	static func listeningArguments(address: String, port: UInt16, token: String?) -> String {
@@ -108,11 +108,11 @@ public extension IRCClient {
 		DCCChatPolicy.channelName(for: nickname)
 	}
 
-	func directChatChannel(for connection: DirectChatConnection) -> IRCChannel? {
+	func directChatChannel(for connection: DirectChatConnection) -> Channel? {
 		channelList.first { $0.isDirectChat && $0.directChatConnection === connection }
 	}
 
-	func directChatChannel(forNickname nickname: String) -> IRCChannel? {
+	func directChatChannel(forNickname nickname: String) -> Channel? {
 		let channel = findChannel(directChatChannelName(forNickname: nickname))
 		return channel?.isDirectChat == true ? channel : nil
 	}
@@ -120,7 +120,7 @@ public extension IRCClient {
 	func handleDCCCommand(
 		_ input: CommandArguments,
 		command: String,
-		targetChannel: IRCChannel?
+		targetChannel: Channel?
 	) {
 		var input = input
 		switch input.next().uppercased() {
@@ -221,7 +221,7 @@ public extension IRCClient {
 		openDirectChat(withNickname: nickname, listeningWithToken: nil)
 	}
 
-	func prepareDirectChatChannel(forNickname nickname: String) -> IRCChannel? {
+	func prepareDirectChatChannel(forNickname nickname: String) -> Channel? {
 		guard let channel = findChannelOrCreate(
 			directChatChannelName(forNickname: nickname), as: .directChat
 		) else { return nil }
@@ -235,32 +235,32 @@ public extension IRCClient {
 	func openDirectChat(withNickname nickname: String, address: String, port: UInt16) {
 		guard let channel = prepareDirectChatChannel(forNickname: nickname) else { return }
 		let connection = DirectChatConnection.connection(
-			toPeer: nickname, address: address, port: port, onClient: self, delegate: self
+			toPeer: nickname, address: address, port: port, onClient: self
 		)
 		channel.directChatConnection = connection
 		printDebugInformation(
 			IRCDirectChatStrings.connecting(nickname: nickname, address: address, port: port),
 			in: channel
 		)
-		output?.selectItem(channel)
+		output?.select(channel)
 		connection.open()
 	}
 
 	func openDirectChat(withNickname nickname: String, listeningWithToken token: String?) {
 		guard let channel = prepareDirectChatChannel(forNickname: nickname) else { return }
 		let connection = DirectChatConnection.listeningConnection(
-			forPeer: nickname, token: token, onClient: self, delegate: self
+			forPeer: nickname, token: token, onClient: self
 		)
 		channel.directChatConnection = connection
 		printDebugInformation(IRCDirectChatStrings.offering(to: nickname), in: channel)
-		output?.selectItem(channel)
+		output?.select(channel)
 		connection.open()
 	}
 
 	func sendDirectChatText(
 		_ string: NSAttributedString,
 		as command: IRCRemoteCommand,
-		to channel: IRCChannel
+		to channel: Channel
 	) {
 		guard let connection = channel.directChatConnection, connection.isConnected else {
 			printDebugInformation(IRCDirectChatStrings.notConnected, in: channel)

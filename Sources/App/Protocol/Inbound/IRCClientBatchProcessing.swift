@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -85,7 +85,7 @@ public extension IRCClient {
 		else { return false }
 
 		let rootBatch = batch.rootBatch
-		if rootBatch.queueEntry(message) == false {
+		if rootBatch.queueEntry(.message(message)) == false {
 			rootBatch.deliveryState = .failed
 			batchProcessingLogger.error("Dropped a message from a batch that exceeded its queue limit")
 		}
@@ -151,7 +151,7 @@ public extension IRCClient {
 		return nil
 	}
 
-	func channel(forTargetedMessage message: Message) -> IRCChannel? {
+	func channel(forTargetedMessage message: Message) -> Channel? {
 		guard var target = message.params.first else { return nil }
 		if !stringIsChannelName(target), nicknameIsMyself(target) {
 			target = message.senderNickname ?? ""
@@ -171,7 +171,7 @@ public extension IRCClient {
 			return
 		}
 
-		let channel: IRCChannel? = if message.params.count > 3, stringIsChannelName(message.params[2]) {
+		let channel: Channel? = if message.params.count > 3, stringIsChannelName(message.params[2]) {
 			findChannel(message.params[2])
 		} else {
 			nil

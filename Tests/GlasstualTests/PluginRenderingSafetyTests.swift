@@ -296,6 +296,25 @@ struct PluginRenderingSafetyTests {
 		#expect(result.command == "PONG")
 	}
 
+	/** Every message passes through here while any plugin intercepts server
+	 input, whether or not that plugin touched it, so what is judged has to be
+	 the edit rather than the message.
+
+	 Judging the message judged the remote peer's own line: a server that put a
+	 character the wire format reserves into text it sent drew a discarded-edit
+	 error for every line of it, and the message nobody had edited was replaced
+	 by a copy of itself. */
+	@Test("A message a plugin handed back untouched is passed through, not judged")
+	func unchangedPluginMessagesArePassedThrough() throws {
+		let message = try #require(Message(line: ":server 372 me :- motd line\u{0D}"))
+		try #require(message.params == ["me", "- motd line\u{0D}"])
+
+		let result = PluginHostAdapter.applying(PluginHostAdapter.makeServerMessage(message), to: message)
+
+		#expect(result === message)
+		#expect(result.params == ["me", "- motd line\u{0D}"])
+	}
+
 	/// The edits that can go on the wire still apply, spaces in a trailing
 	/// parameter included.
 	@Test("A plugin edit that fits on one line still applies")

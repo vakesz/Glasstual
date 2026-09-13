@@ -120,15 +120,15 @@ nonisolated enum IRCCommandStrings { // nonisolated: value
 	}
 
 	static func kickMessageTooLong(networkName: String, maximumLength: Int) -> String {
-		String(localized: .IRC.youHaveExceededTheMaximumKick(networkName, maximumLength))
+		String(localized: .IRC.youHaveExceededTheMaximumKick(networkName, arg2: maximumLength))
 	}
 
 	static func topicTooLong(networkName: String, maximumLength: Int) -> String {
-		String(localized: .IRC.youHaveExceededTheMaximumTopic(networkName, maximumLength))
+		String(localized: .IRC.youHaveExceededTheMaximumTopic(networkName, arg2: maximumLength))
 	}
 
 	static func awayMessageTooLong(networkName: String, maximumLength: Int) -> String {
-		String(localized: .IRC.youHaveExceededTheMaximumAway(networkName, maximumLength))
+		String(localized: .IRC.youHaveExceededTheMaximumAway(networkName, arg2: maximumLength))
 	}
 
 	static func channelNotFound(_ channelName: String) -> String {

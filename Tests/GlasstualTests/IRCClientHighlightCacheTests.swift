@@ -11,18 +11,18 @@ import Testing
 @MainActor
 @Suite("Client highlight cache")
 struct IRCClientHighlightCacheTests {
-	private func makeClient() -> GLTTestClient {
+	private func makeClient() -> TestClient {
 		var preferences = ClientPreferences()
 		preferences.logHighlights = true
 
-		return GLTTestClient(
+		return TestClient(
 			configDictionary: [:],
 			nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: preferences)
+			fixture: ClientEnvironmentFixture(preferences: preferences)
 		)
 	}
 
-	private func makeChannel(on client: IRCClient) -> IRCChannel {
+	private func makeChannel(on client: IRCClient) -> Channel {
 		let channel = Channel(config: ChannelConfig(channelName: "#chat", type: .channel))
 		channel.associatedClient = client
 
@@ -51,10 +51,10 @@ struct IRCClientHighlightCacheTests {
 
 	@Test("Highlights are not cached when the preference is off")
 	func highlightsAreNotCachedWhenLoggingIsOff() {
-		let client = GLTTestClient(
+		let client = TestClient(
 			configDictionary: [:],
 			nicknamePassword: nil,
-			fixture: GLTClientEnvironmentFixture(preferences: ClientPreferences())
+			fixture: ClientEnvironmentFixture(preferences: ClientPreferences())
 		)
 		let channel = makeChannel(on: client)
 

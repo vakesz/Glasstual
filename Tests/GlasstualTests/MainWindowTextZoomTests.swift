@@ -38,6 +38,30 @@ struct MainWindowTextZoomTests {
 		#expect(abs(window.textSizeMultiplier - 1.2) < 0.000_001)
 	}
 
+	/** Actual Size, the third of the triple Safari, Mail, Xcode and Preview all
+	 ship: from anywhere in the range, one command returns the transcript to the
+	 size it started at. */
+	@Test("Actual Size returns the multiplier to one from either direction")
+	func actualSizeReturnsToOne() {
+		let bigger = window()
+		bigger.changeTextSize(true)
+		bigger.changeTextSize(true)
+		#expect(bigger.textSizeMultiplier > 1.0)
+		bigger.resetTextSize()
+		#expect(bigger.textSizeMultiplier == 1.0)
+
+		let smaller = window()
+		smaller.changeTextSize(false)
+		smaller.changeTextSize(false)
+		#expect(smaller.textSizeMultiplier < 1.0)
+		smaller.resetTextSize()
+		#expect(smaller.textSizeMultiplier == 1.0)
+
+		let unchanged = window()
+		unchanged.resetTextSize()
+		#expect(unchanged.textSizeMultiplier == 1.0)
+	}
+
 	/// The step that would leave the range is refused whole: the multiplier
 	/// stays where it was rather than being clamped to the boundary.
 	@Test("A step past either end of the range changes nothing")

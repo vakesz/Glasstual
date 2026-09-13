@@ -3,16 +3,20 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import Testing
 
 @MainActor
 @Suite("Localized dialog copy")
 struct LocalizationCatalogBoundaryTests {
-	@Test("The server channel list interpolates its network name and channel count")
+	@Test("The server channel list counts what it kept, in the singular too")
 	func serverChannelListCopyAndFormatting() {
-		#expect(ServerChannelListStrings.heading(networkName: "Libera.Chat") == "Channel List for “Libera.Chat”")
-		#expect(ServerChannelListStrings.windowTitle(publicChannelCount: 42) == "Channel List — 42 Public Channels")
+		#expect(ServerChannelListStrings.windowSubtitle(publicChannelCount: 1) == "1 public channel")
+		#expect(ServerChannelListStrings.windowSubtitle(publicChannelCount: 42) == "42 public channels")
+		/* The notice used to read "the first 1 are here" whatever the count. */
+		#expect(ServerChannelListStrings.truncationNotice(keptChannelCount: 1).contains("the first one is here"))
+		#expect(ServerChannelListStrings.truncationNotice(keptChannelCount: 20).contains("the first 20 are here"))
 	}
 
 	@Test("A channel access list names its own mode, and a maximum of zero states no limit")
@@ -31,16 +35,29 @@ struct LocalizationCatalogBoundaryTests {
 		/* A list cut at the window's cap must not read as a complete one that
 		 happens to be exactly that long. */
 		#expect(ChannelAccessListStrings.entryCount(4, maximum: 100, isTruncated: true) == "First 4 entries")
+		/* The notice under the list says why the count is not the whole of it;
+		 repeating the count in it said the same thing twice. */
 		#expect(
-			ChannelAccessListStrings.truncationNotice(shownEntryCount: 4)
-				== "Showing the first 4 entries. The server sent more than this window keeps."
+			ChannelAccessListStrings.truncationNotice
+				== "The server sent more entries than this window keeps."
 		)
+	}
+
+	/** The three counts above an access list used to mix `formattedNumber`'s
+	 grouped output with a raw `%ld`, so the same number was grouped in one of
+	 them and printed bare in the others. */
+	@Test("Every count above an access list formats its number the same way")
+	func accessListCountsFormatOneNumberOneWay() {
+		let formatted = 20000.formatted(.number)
+
+		#expect(ChannelAccessListStrings.entryCount(20000, maximum: 0, isTruncated: false).contains(formatted))
+		#expect(ChannelAccessListStrings.entryCount(20000, maximum: 50000, isTruncated: false).contains(formatted))
+		#expect(ChannelAccessListStrings.entryCount(20000, maximum: 50000, isTruncated: true).contains(formatted))
 	}
 
 	@Test("Channel spotlight pluralizes its unread and highlight counts")
 	func channelSpotlightCopyAndFormatting() {
-		#expect(ChannelSpotlightStrings.channelName("#swift") == "#swift")
-		#expect(ChannelSpotlightStrings.networkSuffix("Libera.Chat") == " on Libera.Chat")
+		#expect(ChannelSpotlightStrings.channelOnNetwork("#swift", "Libera.Chat") == "#swift on Libera.Chat")
 		#expect(ChannelSpotlightStrings.unreadMessages(1) == "1 unread message")
 		#expect(ChannelSpotlightStrings.unreadMessages(2) == "2 unread messages")
 		#expect(ChannelSpotlightStrings.highlights(1) == "1 highlight")

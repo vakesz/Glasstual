@@ -67,24 +67,19 @@ enum ChannelAccessListStrings {
 	///   then: both read as the list being all of it.
 	static func entryCount(_ count: Int, maximum: Int, isTruncated: Bool) -> String {
 		if isTruncated {
-			return String(
-				localized: .TDCChannelBanListSheet.entryCountTruncated(formattedNumber(count) as String)
-			)
+			return String(localized: .TDCChannelBanListSheet.entryCountTruncated(count))
 		}
 
 		guard maximum > 0 else {
 			return String(localized: .TDCChannelBanListSheet.entryCount(count))
 		}
 
-		return String(
-			localized: .TDCChannelBanListSheet.ofEntries(
-				formattedNumber(count) as String,
-				formattedNumber(maximum) as String
-			)
-		)
+		return String(localized: .TDCChannelBanListSheet.ofEntries(count, maximum))
 	}
 
-	static func truncationNotice(shownEntryCount: Int) -> String {
-		String(localized: .TDCChannelBanListSheet.listTruncatedNotice(shownEntryCount))
+	/// Why the count above the list is not the whole list. Saying how many are
+	/// shown as well would repeat the count itself.
+	static var truncationNotice: String {
+		String(localized: .TDCChannelBanListSheet.listTruncatedNotice)
 	}
 }

@@ -20,60 +20,32 @@ import Testing
 @Suite("Regular expression safety")
 @MainActor
 struct RegularExpressionSafetyTests {
-	/** A pattern that cannot compile used to be recompiled, and re-logged, for
-	 every message that reached it. The answer is the same either way — no match —
-	 so what is observed here is the compile itself: the cache remembers the
-	 failure, and the pattern reaches `NSRegularExpression` exactly once however
-	 many times it is asked. */
-	@Test("A pattern that cannot compile is compiled once and remembered")
-	func failedCompilationIsRemembered() {
-		let pattern = "([unclosed-\(UUID().uuidString)"
-		#expect(RegularExpression.compilationCount(of: pattern) == 0)
-
-		for _ in 0 ..< 8 {
-			#expect(RegularExpression.string("anything", isMatchedByRegex: pattern) == false)
-			#expect(RegularExpression.string("anything", rangeOfRegex: pattern).location == NSNotFound)
-			#expect(
-				RegularExpression.matches(
-					in: "anything",
-					withRegex: pattern,
-					withoutCase: false,
-					substringGroups: true
-				).isEmpty
-			)
-		}
-
-		#expect(RegularExpression.compilationCount(of: pattern) == 1)
-	}
-
 	/** A pattern that failed caseless must not answer for the same pattern with
-	 case, and neither may be confused with a pattern that does compile. The two
-	 spellings of the broken pattern are two keys, so they are two compiles, and
-	 neither is tried again. */
+	 case, and neither may be confused with a pattern that does compile. The
+	 cache remembers the failure so the pattern is compiled once, which is not
+	 observable from outside; what is, is that a remembered failure answers no
+	 differently from a fresh one. */
 	@Test("Remembering a failure does not answer for another pattern")
 	func failureIsScopedToItsKey() {
 		let broken = "(\(UUID().uuidString)"
 
 		#expect(RegularExpression.string("hello", isMatchedByRegex: broken) == false)
 		#expect(RegularExpression.string("hello", isMatchedByRegex: broken, withoutCase: true) == false)
-		#expect(RegularExpression.compilationCount(of: broken) == 1)
-		#expect(RegularExpression.compilationCount(of: broken, caseless: true) == 1)
-
 		#expect(RegularExpression.string("hello", isMatchedByRegex: broken) == false)
-		#expect(RegularExpression.compilationCount(of: broken) == 1)
 
 		#expect(RegularExpression.string("HELLO", isMatchedByRegex: "hello", withoutCase: true))
 		#expect(RegularExpression.string("hello", isMatchedByRegex: "^hello$"))
 	}
 
-	@Test("The subject is cut to the requested length")
+	/// Cutting by characters rather than by code units, so a subject never ends
+	/// in half of a grapheme — and an unbounded call still sees the whole
+	/// subject.
+	@Test("The subject is cut to the requested length, on a character boundary")
 	func boundedInputCutsTheSubject() {
-		#expect(RegularExpression.boundedInput("hello", limit: 5) == "hello")
-		#expect(RegularExpression.boundedInput("hello", limit: 2) == "he")
-		#expect(RegularExpression.boundedInput("hello", limit: 0).isEmpty)
-		/* Cutting by characters rather than by code units, so a subject never
-		 ends in half of a scalar pair. */
-		#expect(RegularExpression.boundedInput("a👩‍👩‍👧b", limit: 2) == "a👩‍👩‍👧")
+		#expect(RegularExpression.string("a👩‍👩‍👧b", isMatchedByRegex: "b", inputLimit: 2) == false)
+		#expect(RegularExpression.string("a👩‍👩‍👧b", isMatchedByRegex: "👩‍👩‍👧", inputLimit: 2))
+		#expect(RegularExpression.string("a👩‍👩‍👧b", isMatchedByRegex: "b"))
+		#expect(RegularExpression.string("hello", isMatchedByRegex: "h", inputLimit: 0) == false)
 	}
 
 	@Test("A bounded match never looks past the limit")

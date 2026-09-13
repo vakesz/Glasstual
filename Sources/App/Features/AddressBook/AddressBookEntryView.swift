@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -50,13 +50,24 @@ struct AddressBookEntryView: View {
 				Spacer()
 				Button(PromptStrings.Action.cancel, action: cancel)
 					.keyboardShortcut(.cancelAction)
-				Button(PromptStrings.Action.save, action: submit)
+				/* The entry is only written back into the connection the sheet
+				 belongs to, which is what saves it; this one says the editor is
+				 done with it. */
+				Button(PromptStrings.Action.confirmation, action: submit)
 					.keyboardShortcut(.defaultAction)
+					.disabled(model.validationMessage != nil)
 			}
 			.padding(12)
 		}
+		.frame(
+			minWidth: 480,
+			idealWidth: 540,
+			maxWidth: .infinity,
+			minHeight: 360,
+			idealHeight: 440,
+			maxHeight: .infinity
+		)
 		.onAppear { hostmaskFieldIsFocused = true }
-		.onExitCommand(perform: cancel)
 	}
 
 	private var description: String {
@@ -80,10 +91,7 @@ struct AddressBookEntryView: View {
 			}
 
 			if let validationMessage = model.validationMessage {
-				Label(validationMessage, systemImage: "exclamationmark.circle.fill")
-					.font(.caption)
-					.foregroundStyle(.red)
-					.accessibilityLabel(validationMessage)
+				ValidationMessageLabel(validationMessage)
 			}
 		}
 	}
@@ -126,7 +134,6 @@ struct AddressBookEntryView: View {
 				}
 				GridRow {
 					Toggle(AddressBookStrings.inlineMedia, isOn: $model.ignoreInlineMedia)
-					Color.clear.frame(height: 1)
 				}
 			}
 			.toggleStyle(.checkbox)

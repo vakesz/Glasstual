@@ -3,8 +3,19 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import Combine
 import SwiftUI
+
+/// What the spotlight panel is built from. The panel sizes itself to its
+/// content, so the heights the rows are drawn at are also the heights the
+/// window is asked for; naming them once is what keeps the two in step.
+private enum ChannelSpotlightLayout {
+	static let width: CGFloat = 600
+	static let searchFieldHeight: CGFloat = 76
+	static let rowHeight: CGFloat = 54
+	static let emptyStateHeight: CGFloat = 72
+	/// How many matches the panel grows to before it starts scrolling.
+	static let maximumVisibleRows = 6
+}
 
 @MainActor
 struct ChannelSpotlightView: View {
@@ -18,27 +29,29 @@ struct ChannelSpotlightView: View {
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 
 	private var contentHeight: CGFloat {
-		if model.searchText.isEmpty {
-			return 76
+		guard model.searchText.isEmpty == false else {
+			return ChannelSpotlightLayout.searchFieldHeight
 		}
-		if model.displayedResults.isEmpty {
-			return 148
+		guard model.displayedResults.isEmpty == false else {
+			return ChannelSpotlightLayout.searchFieldHeight + ChannelSpotlightLayout.emptyStateHeight
 		}
-		return 76 + CGFloat(min(model.displayedResults.count, 6)) * 54
+
+		let visibleRows = min(model.displayedResults.count, ChannelSpotlightLayout.maximumVisibleRows)
+		return ChannelSpotlightLayout.searchFieldHeight
+			+ CGFloat(visibleRows) * ChannelSpotlightLayout.rowHeight
 	}
 
 	var body: some View {
 		VStack(spacing: 0) {
-			HStack(spacing: 12) {
+			HStack(spacing: UISpacing.wide) {
 				Image(systemName: "magnifyingglass")
-					.font(.system(size: 20, weight: .medium))
+					.imageScale(.small)
 					.foregroundStyle(.secondary)
 				TextField(
 					ChannelSpotlightStrings.searchPlaceholder,
 					text: $model.searchText
 				)
 				.textFieldStyle(.plain)
-				.font(.system(size: 25, weight: .light))
 				.focused($searchIsFocused)
 				.onSubmit {
 					if let result = model.selectedResult {
@@ -46,8 +59,9 @@ struct ChannelSpotlightView: View {
 					}
 				}
 			}
-			.padding(.horizontal, 16)
-			.frame(height: 76)
+			.font(.largeTitle.weight(.light))
+			.padding(.horizontal, UISpacing.loose)
+			.frame(height: ChannelSpotlightLayout.searchFieldHeight)
 
 			if model.searchText.isEmpty == false {
 				Divider()
@@ -56,39 +70,14 @@ struct ChannelSpotlightView: View {
 						ChannelSpotlightStrings.noResults,
 						systemImage: "magnifyingglass"
 					)
-					.frame(height: 72)
+					.frame(height: ChannelSpotlightLayout.emptyStateHeight)
 				} else {
-					ScrollViewReader { proxy in
-						ScrollView {
-							LazyVStack(spacing: 0) {
-								ForEach(Array(model.displayedResults.enumerated()), id: \.element.id) { index, result in
-									ChannelSpotlightRow(
-										result: result,
-										shortcut: shortcut(for: index, isSelected: model.selectedResultID == result.id),
-										isSelected: model.selectedResultID == result.id
-									)
-									.contentShape(.rect)
-									.onTapGesture(count: 2) { select(result) }
-									.onTapGesture { model.selectedResultID = result.id }
-									.id(result.id)
-								}
-							}
-						}
-						.onChange(of: model.selectedResultID) { _, identifier in
-							guard let identifier else { return }
-							guard reduceMotion == false else {
-								proxy.scrollTo(identifier, anchor: .center)
-								return
-							}
-							withAnimation { proxy.scrollTo(identifier, anchor: .center) }
-						}
-					}
-					.accessibilityLabel(ChannelSpotlightStrings.resultsAccessibilityLabel)
+					resultList
 				}
 			}
 		}
 		.glassEffect(.regular, in: .rect(cornerRadius: 22))
-		.frame(width: 600, height: contentHeight)
+		.frame(width: ChannelSpotlightLayout.width, height: contentHeight)
 		.onAppear {
 			searchIsFocused = true
 		}
@@ -119,17 +108,47 @@ struct ChannelSpotlightView: View {
 		}
 	}
 
-	/** The shortcut label for one row.
+	/** The matches, as a list rather than a stack of tapped rectangles.
 
-	 The row is built inside a `LazyVStack`, so its content closure runs against
-	 whatever `displayedResults` holds at that moment while `index` names a
-	 position in the snapshot `ForEach` captured. Nothing here reads the model
-	 back by that index: the caller already has the row it is drawing. */
-	private func shortcut(for index: Int, isSelected: Bool) -> String {
-		guard index < 10 else { return "" }
-		if isSelected {
+	 A list is what VoiceOver counts its rows out of, and what the pointer gets
+	 the row-sized hit target from. Typing stays in the search field, so the
+	 list never takes the keyboard: the arrow keys above move the selection and
+	 a single click opens the match under the pointer, the way a search panel
+	 answers rather than the way a table is edited. */
+	private var resultList: some View {
+		ScrollViewReader { proxy in
+			List(model.displayedResults, selection: $model.selectedResultID) { result in
+				ChannelSpotlightRow(
+					result: result,
+					shortcut: shortcut(for: result)
+				)
+				.listRowInsets(EdgeInsets())
+				.listRowSeparator(.hidden)
+				.contentShape(.rect)
+				.onTapGesture { select(result) }
+			}
+			.listStyle(.plain)
+			.scrollContentBackground(.hidden)
+			.overlayScrollers()
+			.onChange(of: model.selectedResultID) { _, identifier in
+				guard let identifier else { return }
+				guard reduceMotion == false else {
+					proxy.scrollTo(identifier, anchor: .center)
+					return
+				}
+				withAnimation { proxy.scrollTo(identifier, anchor: .center) }
+			}
+		}
+		.accessibilityLabel(ChannelSpotlightStrings.resultsAccessibilityLabel)
+	}
+
+	/// The shortcut label for one row: ⌘1 … ⌘0 for the first ten matches, and
+	/// the Return key for whichever one Return would open.
+	private func shortcut(for result: ChannelSpotlightSearchResult) -> String {
+		if model.selectedResultID == result.id {
 			return "↩︎"
 		}
+		guard let index = model.displayedResults.firstIndex(of: result), index < 10 else { return "" }
 		return "⌘\(index == 9 ? 0 : index + 1)"
 	}
 }
@@ -138,68 +157,30 @@ struct ChannelSpotlightView: View {
 private struct ChannelSpotlightRow: View {
 	let result: ChannelSpotlightSearchResult
 	let shortcut: String
-	let isSelected: Bool
 
-	/* The counts live on an `NSObject` the row cannot observe, so the two tasks
-	 below mirror them into state. Storing them is what redraws the row; giving
-	 the row a new identity would tear the observations down with it. */
-	@State private var highlightCount = 0
-	@State private var unreadCount = 0
-
-	private var channel: IRCChannel? {
-		result.channel
-	}
+	/// `.increased` is what a list row's ground reports while it is selected,
+	/// which is the only way a row knows to stop drawing its own emphasis.
+	@Environment(\.backgroundProminence) private var backgroundProminence
 
 	var body: some View {
-		HStack(spacing: 12) {
+		HStack(spacing: UISpacing.wide) {
 			VStack(alignment: .leading, spacing: 2) {
-				Text(verbatim: channelTitle)
+				Text(verbatim: result.title)
 					.font(.headline)
 					.lineLimit(1)
-				Text(verbatim: unreadDescription)
-					.font(.caption)
-					.foregroundStyle(isSelected ? .primary : .secondary)
-					.lineLimit(1)
+				if let activity = result.activity {
+					Text(verbatim: activity)
+						.font(.caption)
+						.foregroundStyle(backgroundProminence == .increased ? .primary : .secondary)
+						.lineLimit(1)
+				}
 			}
 			Spacer()
 			Text(verbatim: shortcut)
 				.font(.callout.monospacedDigit())
 				.foregroundStyle(.secondary)
 		}
-		.padding(.horizontal, 16)
-		.frame(height: 54)
-		/* The system's own selection colours: an accent fill with white text is
-		 wrong under increased contrast, under a graphite accent, and wherever
-		 the user has told the system to draw selection differently. */
-		.background(isSelected ? Color(nsColor: .selectedContentBackgroundColor) : .clear)
-		.foregroundStyle(isSelected ? Color(nsColor: .alternateSelectedControlTextColor) : Color.primary)
-		.task(id: channel?.uniqueIdentifier) {
-			guard let channel else { return }
-			highlightCount = Int(channel.nicknameHighlightCount)
-			for await count in channel.publisher(for: \.nicknameHighlightCount, options: [.new]).bufferedValues {
-				highlightCount = Int(count)
-			}
-		}
-		.task(id: channel?.uniqueIdentifier) {
-			guard let channel else { return }
-			unreadCount = Int(channel.treeUnreadCount)
-			for await count in channel.publisher(for: \.treeUnreadCount, options: [.new]).bufferedValues {
-				unreadCount = Int(count)
-			}
-		}
-	}
-
-	private var channelTitle: String {
-		guard let channel else { return "" }
-		return ChannelSpotlightStrings.channelName(channel.name)
-			+ ChannelSpotlightStrings.networkSuffix(channel.associatedClient?.networkNameAlt ?? "")
-	}
-
-	private var unreadDescription: String {
-		guard channel != nil else { return "" }
-		return ChannelSpotlightStrings.combined(
-			ChannelSpotlightStrings.highlights(highlightCount),
-			ChannelSpotlightStrings.unreadMessages(unreadCount)
-		)
+		.padding(.horizontal, UISpacing.loose)
+		.frame(height: ChannelSpotlightLayout.rowHeight)
 	}
 }

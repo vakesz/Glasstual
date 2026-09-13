@@ -73,13 +73,13 @@ struct HistoricLogRetentionTests {
 			#expect(await store.writeLogLine(entry("line-\(index)")) == .accepted)
 		}
 		// The pass the eleventh write armed is parked for the full half hour.
-		#expect(await store.fetchEntries(forView: "view", ascending: true, fetchLimit: 100, limitToDate: nil)
+		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 100)).entries
 			.count == 12)
 
 		delay.withLock { $0 = .zero }
 		await store.setMaximumLineCount(5)
 		await passes.wait(for: 1)
-		#expect(await store.fetchEntries(forView: "view", ascending: true, fetchLimit: 100, limitToDate: nil)
+		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 100)).entries
 			.map(\.uniqueIdentifier) == (7 ..< 12).map { "line-\($0)" })
 
 		/* Nothing lowers the limit again: the write alone has to be able to arm
@@ -87,7 +87,7 @@ struct HistoricLogRetentionTests {
 		 back. */
 		#expect(await store.writeLogLine(entry("line-12")) == .accepted)
 		await passes.wait(for: 2)
-		#expect(await store.fetchEntries(forView: "view", ascending: true, fetchLimit: 100, limitToDate: nil)
+		#expect(await store.fetchOutcome(.newestEntries(forView: "view", fetchLimit: 100)).entries
 			.map(\.uniqueIdentifier) == (8 ..< 13).map { "line-\($0)" })
 		#expect(await store.close() == .saved)
 	}

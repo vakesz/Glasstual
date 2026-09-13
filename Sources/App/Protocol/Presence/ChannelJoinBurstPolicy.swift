@@ -60,36 +60,28 @@ enum ChannelJoinBurstPolicy {
 	}
 }
 
-/// Whether a line is behind the read marker the server last reported.
-enum ChannelReadMarkerPolicy {
-	/** Whether the user has already read `receivedAt`.
-
-	 `marker` is the newest point this client has told the server it read, or
-	 the newest point the server told it about in a `MARKREAD`. A line at or
-	 before it was read somewhere else — another client, another session — so
-	 it is not this channel's news either. Without a marker nothing is known
-	 to have been read. */
-	static func lineIsRead(receivedAt: Date, marker: Date?) -> Bool {
-		guard let marker else { return false }
-
-		return receivedAt <= marker
-	}
-}
-
 @MainActor
 extension IRCClient {
 	/** Whether an inbound line arrived already seen, so it prints without
 	 touching the unread count, the highlight badge or a notification.
 
 	 Decided at arrival because printing is asynchronous. */
-	func lineArrivedAlreadySeen(_ message: Message, in channel: IRCChannel?) -> Bool {
+	func lineArrivedAlreadySeen(_ message: Message, in channel: Channel?) -> Bool {
 		guard let channel else { return false }
 
-		return lineIsJoinBurst(message, in: channel)
-			|| ChannelReadMarkerPolicy.lineIsRead(
-				receivedAt: message.receivedAt,
-				marker: readMarkerSentDates[channel.uniqueIdentifier]
-			)
+		if lineIsJoinBurst(message, in: channel) {
+			return true
+		}
+
+		/* The read marker is the newest point this client has told the server it
+		 read, or the newest the server reported in a `MARKREAD`. A line at or
+		 before it was read somewhere else, so it is not this channel's news
+		 either. Without a marker nothing is known to have been read. */
+		guard let marker = readMarkerSentDates[channel.uniqueIdentifier] else {
+			return false
+		}
+
+		return message.receivedAt <= marker
 	}
 
 	/** Whether the line came in with the post-join replay burst.
@@ -97,7 +89,7 @@ extension IRCClient {
 	 Separate from `lineArrivedAlreadySeen` because the read marker must not
 	 gate itself: a line behind the marker cannot move the marker forward
 	 anyway, while a replayed line ahead of it could, and must not. */
-	func lineIsJoinBurst(_ message: Message?, in channel: IRCChannel?) -> Bool {
+	func lineIsJoinBurst(_ message: Message?, in channel: Channel?) -> Bool {
 		guard let message, let channel else { return false }
 
 		return ChannelJoinBurstPolicy.isJoinBurstLine(

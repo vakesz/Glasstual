@@ -53,6 +53,44 @@ struct AlertRequestTests {
 		"AlertRequestTests \(UUID().uuidString)"
 	}
 
+	/** Escape has to answer every alert, and Return must never be the button
+	 that destroys something. */
+	@Test("Every alert has a way out, and a destructive alert has no Return default")
+	func keyboardAnswersAreSafe() {
+		let twoButtons = AlertRequest(
+			title: "Title", body: "Body", defaultButton: "OK", alternateButton: "Cancel"
+		)
+		#expect(twoButtons.escapeButton == .alternate)
+		#expect(twoButtons.returnButton == .default)
+
+		/* A single-button alert used to have no Escape at all: the only way out
+		 was to reach for the mouse. */
+		let oneButton = AlertRequest(title: "Title", body: "Body", defaultButton: "OK")
+		#expect(oneButton.escapeButton == .default)
+		#expect(oneButton.returnButton == .default)
+
+		/* The third button is the way out where the second one acts. */
+		let namedCancel = AlertRequest(
+			title: "Title", body: "Body", defaultButton: "Use Existing",
+			alternateButton: "Cancel", otherButton: "Create New", cancelButton: .alternate
+		)
+		#expect(namedCancel.escapeButton == .alternate)
+
+		let destructive = AlertRequest(
+			title: "Title", body: "Body", defaultButton: "Delete",
+			alternateButton: "Cancel", destructiveButton: .default
+		)
+		#expect(destructive.escapeButton == .alternate)
+		#expect(destructive.returnButton == .alternate)
+
+		/* Nothing safe to fall back to means nothing is defaulted. */
+		let unavoidable = AlertRequest(
+			title: "Title", body: "Body", defaultButton: "Delete", destructiveButton: .default
+		)
+		#expect(unavoidable.returnButton == nil)
+		#expect(unavoidable.escapeButton == .default)
+	}
+
 	@Test("A request without a suppression key is presented as written")
 	func plainRequestIsPresented() async {
 		let presenter = RecordingAlertPresenter(response: .alternate)

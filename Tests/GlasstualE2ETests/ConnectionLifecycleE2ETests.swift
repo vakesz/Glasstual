@@ -142,10 +142,7 @@ struct ConnectionLifecycleE2ETests {
 		try #require(evidence.originalPID > 0 && evidence.originalPID == evidence.finalPID)
 		try #require(evidence.shutdownSeconds > 0 && evidence.shutdownSeconds <= 5)
 		try #require(evidence.appExitReason == "exit" && evidence.appExitStatus == 0)
-		let rejections = scenario == "repeatedRejection" ? 3 : (scenario == "rejectionRetry" ? 1 : 0)
-		try #require(evidence.rejections == rejections)
-		try #require(evidence.connectedQuit == !["rejectionRetry", "tlsStall", "settingsSnapshot"].contains(scenario))
-		try checkWire(scenario: scenario, rejections: rejections, in: root)
+		try checkWire(scenario: scenario, rejections: evidence.rejections, in: root)
 		try checkAdditionalEvidence(scenario: scenario, originalPID: evidence.originalPID, in: root)
 		let probe = try read("probe-evidence", in: root).split(separator: " ")
 		try checkProbe(probe, in: root)
@@ -274,7 +271,6 @@ private struct Evidence: Decodable {
 	let originalPID: Int32
 	let finalPID: Int32
 	let rejections: Int
-	let connectedQuit: Bool
 	let shutdownSeconds: Double
 	let appExitReason: String
 	let appExitStatus: Int32

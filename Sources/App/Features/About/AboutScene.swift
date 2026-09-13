@@ -27,7 +27,7 @@ private struct AboutSceneRoot: View {
 			content: .current,
 			applicationIcon: Image(nsImage: NSApp.applicationIconImage),
 			openAcknowledgements: {
-				AppController.shared.menuController?.openAcknowledgements(nil)
+				AppController.shared.menuController?.actionCoordinator.openAcknowledgements(nil)
 			},
 			close: {
 				dismissWindow(id: ApplicationSceneID.about)

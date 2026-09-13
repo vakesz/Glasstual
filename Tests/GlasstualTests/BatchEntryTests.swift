@@ -22,8 +22,8 @@ struct BatchEntryTests {
 		let child = batch(token: "child")
 		let message = try #require(Message(line: "PING :first"))
 
-		parent.queueEntry(message)
-		parent.queueEntry(child)
+		parent.queueEntry(.message(message))
+		parent.queueEntry(.batch(child))
 
 		let entries = parent.queuedEntries
 		#expect(entries.count == 2)
@@ -47,11 +47,11 @@ struct BatchEntryTests {
 		let first = try #require(Message(line: "PING :first"))
 		let second = try #require(Message(line: "PING :second"))
 
-		parent.queueEntry(first)
-		parent.queueEntry(first)
-		parent.queueEntry(second)
+		parent.queueEntry(.message(first))
+		parent.queueEntry(.message(first))
+		parent.queueEntry(.message(second))
 
-		parent.dequeueEntry(first)
+		parent.dequeueEntry(.message(first))
 
 		#expect(parent.queuedEntries.count == 1)
 		#expect(parent.queuedEntries.first?.object === second)
@@ -63,11 +63,11 @@ struct BatchEntryTests {
 
 		for index in 0 ..< MessageBatch.maximumQueuedEntries {
 			let message = try #require(Message(line: "PING :\(index)"))
-			#expect(full.queueEntry(message))
+			#expect(full.queueEntry(.message(message)))
 		}
 
 		let overflow = try #require(Message(line: "PING :overflow"))
-		#expect(full.queueEntry(overflow) == false)
+		#expect(full.queueEntry(.message(overflow)) == false)
 		#expect(full.queuedEntries.count == MessageBatch.maximumQueuedEntries)
 	}
 }

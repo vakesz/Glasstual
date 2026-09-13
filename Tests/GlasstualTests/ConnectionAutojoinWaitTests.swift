@@ -17,8 +17,8 @@ import Testing
 @MainActor
 @Suite("Autojoin wait for identification")
 struct ConnectionAutojoinWaitTests {
-	private func waitingClient() -> GLTTestClient {
-		let client = GLTTestClient(configDictionary: ["nickname": "mara", "autojoinWaitsForNickServ": true])
+	private func waitingClient() -> TestClient {
+		let client = TestClient(configDictionary: ["nickname": "mara", "autojoinWaitsForNickServ": true])
 		client.markAsLoggedIn()
 		client.startup.commands = .ready
 		client.startup.requiresAuthentication = true

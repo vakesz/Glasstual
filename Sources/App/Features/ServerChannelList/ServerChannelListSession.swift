@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -36,12 +36,9 @@
  *
  *********************************************************************** */
 
-import Observation
-
 /// Owns one server's public-channel list and connects its SwiftUI scene to the
 /// IRC client. Window lifecycle and restoration belong to SwiftUI.
 @MainActor
-@Observable
 final class ServerChannelListSession {
 	let client: IRCClient
 	let model = ServerChannelListModel()
@@ -85,11 +82,6 @@ final class ServerChannelListSession {
 
 	func finishRefresh() {
 		model.finishRefresh()
-	}
-
-	func activate(_ entryID: ServerChannelListEntry.ID) {
-		model.selectOnly(entryID)
-		joinSelectedChannels()
 	}
 
 	func joinSelectedChannels() {

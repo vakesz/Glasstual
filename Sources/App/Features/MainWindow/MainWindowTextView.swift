@@ -43,11 +43,6 @@ private enum MainWindowTextViewNotification {
 	static let typingChannelKey = "channel"
 }
 
-// Insets for the scroll view inside the input bar.
-private let inputBarTrailingInset: CGFloat = 10.0
-private let inputBarVerticalInset: CGFloat = 3.0
-private let inputBarMinimumHeight: CGFloat = 19.0
-
 /// How much of the window the input bar may take before it stops growing.
 enum MainWindowInputBarHeightPolicy {
 	/// The transcript keeps the rest. The bar used to be capped against its own
@@ -89,7 +84,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	public let focusModel = MainWindowInputFocusModel()
 	private var observingTyping = false
 	private var typingObservations: [Task<Void, Never>] = []
-	private weak var typingChannel: IRCChannel?
+	private weak var typingChannel: Channel?
 	private var userInterfaceObjects: MainWindowTextViewAppearance?
 	private var observingUserDefaults = false
 	private var userDefaultsObservation: Task<Void, Never>?
@@ -212,7 +207,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 	}
 
 	private func typingStateDidChange(_ notification: Notification) {
-		guard let channel = notification.userInfo?[MainWindowTextViewNotification.typingChannelKey] as? IRCChannel,
+		guard let channel = notification.userInfo?[MainWindowTextViewNotification.typingChannelKey] as? Channel,
 		      channel === AppController.shared.mainWindow.selectedChannel
 		else {
 			return
@@ -416,6 +411,14 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	public func textView(_: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
 		if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+			/* AppKit's standard key bindings send `insertNewline:` for Return
+			 and for Shift+Return alike, so swallowing the command whole meant
+			 Shift+Return sent the message and Option+Return was the only way to
+			 get a second line into one. Declining leaves the text view to do
+			 what it already does with the key. */
+			if NSApp.currentEvent?.modifierFlags.contains(.shift) == true {
+				return false
+			}
 			(window as? MainWindow)?.textEntered()
 			return true
 		}
@@ -498,6 +501,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 		)
 
 		inputPlaceholderAttributedString = placeholder
+		setAccessibilityPlaceholderValue(placeholder.string)
 		installPlaceholderLabelIfNeeded()
 		placeholderLabel.attributedStringValue = placeholder
 		needsLayout = true
@@ -619,10 +623,9 @@ public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObser
 
 	// MARK: - NSTextView preferences
 
-	/** Preferences drive these nine properties, never the other way round. Each
-	 one used to write itself back from a `didSet`, and `UserDefaults.set` posts
-	 its notification unconditionally, so any single preference change produced
-	 nine writes, each of which produced another notification. */
+	/** Preferences drive these nine properties, never the other way round: a
+	 property that writes its preference back from a `didSet` turns one
+	 preference change into nine writes and nine more notifications. */
 	private func applyObservedPreference(_ keyPath: String) {
 		switch keyPath {
 		case Preferences.Input.automaticSpellCheck.name:
@@ -685,13 +688,22 @@ public final class MainWindowTextViewContentView: NSView {
 		inputBarContainerView.translatesAutoresizingMaskIntoConstraints = false
 		addSubview(inputBarContainerView)
 
-		let inputBarTopConstraint = inputBarContainerView.topAnchor.constraint(equalTo: topAnchor, constant: 7)
-		textViewHeightConstraint = heightAnchor.constraint(equalToConstant: 38)
+		let layout = MainWindowInputBarLayout.self
+		textViewHeightConstraint = heightAnchor.constraint(equalToConstant: layout.hostInitialHeight)
 		NSLayoutConstraint.activate([
-			inputBarContainerView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
-			inputBarContainerView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
-			inputBarTopConstraint,
-			inputBarContainerView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -6),
+			inputBarContainerView.leadingAnchor.constraint(
+				equalTo: leadingAnchor,
+				constant: layout.containerHorizontalInset
+			),
+			trailingAnchor.constraint(
+				equalTo: inputBarContainerView.trailingAnchor,
+				constant: layout.containerHorizontalInset
+			),
+			inputBarContainerView.topAnchor.constraint(equalTo: topAnchor, constant: layout.containerTopInset),
+			bottomAnchor.constraint(
+				equalTo: inputBarContainerView.bottomAnchor,
+				constant: layout.containerBottomInset
+			),
 			textViewHeightConstraint,
 		])
 	}
@@ -728,7 +740,7 @@ public final class MainWindowTextViewContentView: NSView {
 		let scrollView = makeScrollView()
 		scrollView.documentView = textView
 
-		textView.minSize = NSSize(width: 0, height: inputBarMinimumHeight)
+		textView.minSize = NSSize(width: 0, height: MainWindowInputBarLayout.minimumTextHeight)
 		textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
 		textView.isVerticallyResizable = true
 		textView.isHorizontallyResizable = false
@@ -738,6 +750,10 @@ public final class MainWindowTextViewContentView: NSView {
 		textView.isRichText = false
 		textView.drawsBackground = false
 		textView.insertionPointColor = .controlTextColor
+		/* The field's name and its placeholder are the same noun, but they are
+		 two different things to VoiceOver: the label is what the field is, the
+		 placeholder is what is drawn in it while it is empty. Announcing the
+		 placeholder as the label read the field out as a command. */
 		textView.setAccessibilityLabel(MainWindowStrings.Conversation.inputPlaceholder)
 		textView.setAccessibilityIdentifier("message-input")
 
@@ -747,15 +763,15 @@ public final class MainWindowTextViewContentView: NSView {
 			scrollView.leadingAnchor.constraint(equalTo: inputBarContainerView.leadingAnchor),
 			inputBarContainerView.trailingAnchor.constraint(
 				equalTo: scrollView.trailingAnchor,
-				constant: inputBarTrailingInset
+				constant: MainWindowInputBarLayout.scrollViewTrailingInset
 			),
 			scrollView.topAnchor.constraint(
 				equalTo: inputBarContainerView.topAnchor,
-				constant: inputBarVerticalInset
+				constant: MainWindowInputBarLayout.scrollViewVerticalInset
 			),
 			inputBarContainerView.bottomAnchor.constraint(
 				equalTo: scrollView.bottomAnchor,
-				constant: inputBarVerticalInset
+				constant: MainWindowInputBarLayout.scrollViewVerticalInset
 			),
 		])
 

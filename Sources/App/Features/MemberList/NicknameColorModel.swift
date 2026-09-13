@@ -37,8 +37,23 @@ final class NicknameColorModel {
 		usesDefaultColor ? nil : selectedColor
 	}
 
+	/// The colour the transcript would draw the nickname in, as the sheet
+	/// stands: what was chosen, or the colour the nickname hashes to when the
+	/// sheet is offering to pin nothing.
+	var previewColor: NSColor {
+		usesDefaultColor
+			? UserNicknameColorStyleGenerator.generatedColor(for: nickname)
+			: selectedColor
+	}
+
 	func setUsesDefaultColor(_ usesDefaultColor: Bool) {
 		self.usesDefaultColor = usesDefaultColor
+
+		/* The system colour panel is shared and modeless. Left open over a
+		 picker that is now disabled it goes on offering colours to nothing. */
+		if usesDefaultColor, NSColorPanel.sharedColorPanelExists {
+			NSColorPanel.shared.close()
+		}
 	}
 
 	func selectColor(_ color: NSColor) {

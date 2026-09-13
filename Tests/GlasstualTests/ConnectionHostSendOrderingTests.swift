@@ -254,7 +254,7 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 	func connectCommandsPrecedeJoinOnWire() async throws {
 		let server = try LoopbackTCPServer()
 		let port = try await server.start()
-		let client = GLTTestClient(configDictionary: [
+		let client = TestClient(configDictionary: [
 			"nickname": "tester",
 			"onConnectCommands": ["raw MODE tester +i", "msg NickServ IDENTIFY test-only", "raw WHOIS tester"],
 		])
@@ -431,6 +431,30 @@ nonisolated struct ConnectionHostSendOrderingTests { // nonisolated: value
 				return
 			}
 		}
+	}
+
+	/** Every CR at the end of a line belongs to the terminator.
+
+	 A server whose MOTD file has CRLF line endings writes each of those lines
+	 as `CR CR LF`. Stripping a single CR left one on the end of the trailing
+	 parameter, where nothing downstream may carry it. Both framing paths are
+	 covered: the line that arrives whole inside one read, and the line that had
+	 to wait in the buffer for its terminator. */
+	@Test("A doubled terminator leaves no carriage return on the line")
+	@concurrent
+	func doubledCarriageReturnsAreTerminators() async throws {
+		let result = try await Self.receiveFromPeer([
+			Data(":server 372 me :- whole\r\r\n".utf8),
+			Data(":server 372 me :- frag".utf8),
+			Data("mented\r\r".utf8),
+			Data("\nERROR :finished\r\n".utf8),
+		])
+		let lines = result.compactMap { event -> String? in
+			guard case let .received(data) = event else { return nil }
+			return String(data: data, encoding: .utf8)
+		}
+
+		#expect(lines == [":server 372 me :- whole", ":server 372 me :- fragmented", "ERROR :finished"])
 	}
 
 	@Test("Host rejects an oversized line whether or not its last chunk includes a newline", arguments: [true, false])

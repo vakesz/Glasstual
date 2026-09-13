@@ -64,6 +64,78 @@ enum ISupportValue: Sendable, Equatable {
 	case text(String)
 }
 
+/** A token the client reads out of an ISUPPORT line.
+
+ The raw value is the token name as the server writes it, upper-cased. Only a
+ token with a case here is read at all, and every one of them is cleared by
+ `reset`, so a case added below is a token the client both reads and forgets.
+ */
+nonisolated enum ISupportToken: String, CaseIterable, Sendable { // nonisolated: value
+	case awaylen = "AWAYLEN"
+	case bot = "BOT"
+	case callerid = "CALLERID"
+	case casemapping = "CASEMAPPING"
+	case chanlimit = "CHANLIMIT"
+	case chanmodes = "CHANMODES"
+	case channellen = "CHANNELLEN"
+	case chantypes = "CHANTYPES"
+	case chathistory = "CHATHISTORY"
+	case clienttagdeny = "CLIENTTAGDENY"
+	case deaf = "DEAF"
+	case elist = "ELIST"
+	case excepts = "EXCEPTS"
+	case extban = "EXTBAN"
+	case invex = "INVEX"
+	case keylen = "KEYLEN"
+	case kicklen = "KICKLEN"
+	case linelen = "LINELEN"
+	case maxlist = "MAXLIST"
+	case maxtargets = "MAXTARGETS"
+	case modes = "MODES"
+	case monitor = "MONITOR"
+	case namesx = "NAMESX"
+	case network = "NETWORK"
+	case nicklen = "NICKLEN"
+	case prefix = "PREFIX"
+	case safelist = "SAFELIST"
+	case silence = "SILENCE"
+	case statusmsg = "STATUSMSG"
+	case targmax = "TARGMAX"
+	case topiclen = "TOPICLEN"
+	case uhnames = "UHNAMES"
+	case utf8only = "UTF8ONLY"
+	case watch = "WATCH"
+	case whox = "WHOX"
+
+	/// Matches the token however the server capitalised it, and under the
+	/// draft name a server may still advertise it by.
+	init?(tokenName: String) {
+		let normalized = tokenName.uppercased()
+
+		if normalized == Self.draftChatHistoryName {
+			self = .chathistory
+
+			return
+		}
+
+		self.init(rawValue: normalized)
+	}
+
+	/** Whether an explicitly empty value means "the server has none of these".
+
+	 modern.ircdocs.horse gives an empty value that meaning for the tokens whose
+	 value is a list of characters. For every other token an empty value says no
+	 more than the bare token does. */
+	var readsAnEmptyValueAsNone: Bool {
+		switch self {
+		case .chantypes, .prefix, .statusmsg: true
+		default: false
+		}
+	}
+
+	private static let draftChatHistoryName = "DRAFT/CHATHISTORY"
+}
+
 /// The two prefix modes every server is assumed to have until it says
 /// otherwise.
 private nonisolated let defaultUserModePrefixPairs: [(modeSymbol: String, character: String)] = [ // nonisolated: let
@@ -256,67 +328,57 @@ public class IRCISupportInfo: NSObject {
 		serverAddress = nil
 		userModePrefixPairs = defaultUserModePrefixPairs
 
-		for key in Self.resettableSettings() {
-			resetSetting(key, withdrawingCapabilityFacts: withdrawingCapabilityFacts)
+		for token in ISupportToken.allCases {
+			resetSetting(token, withdrawingCapabilityFacts: withdrawingCapabilityFacts)
 		}
-	}
-
-	public static func resettableSettings() -> [String] {
-		[
-			"AWAYLEN", "BOT", "CALLERID", "CASEMAPPING", "CHANLIMIT", "CHANMODES",
-			"CHANNELLEN", "CHANTYPES", "CHATHISTORY", "CLIENTTAGDENY", "DEAF", "ELIST", "EXCEPTS",
-			"EXTBAN", "INVEX", "KEYLEN", "KICKLEN", "LINELEN", "MAXLIST",
-			"MAXTARGETS", "MODES", "NETWORK", "NICKLEN", "PREFIX", "SAFELIST", "SILENCE",
-			"STATUSMSG", "TARGMAX", "TOPICLEN", "UTF8ONLY", "WHOX", "MONITOR", "WATCH", "NAMESX", "UHNAMES",
-		]
 	}
 
 	public func resetSetting(_ key: String) {
-		resetSetting(key, withdrawingCapabilityFacts: true)
+		guard let token = ISupportToken(tokenName: key) else { return }
+
+		resetSetting(token, withdrawingCapabilityFacts: true)
 	}
 
-	private func resetSetting(_ key: String, withdrawingCapabilityFacts: Bool) {
-		let normalizedKey = key.uppercased()
-
-		if resetLengthSetting(normalizedKey) {
+	private func resetSetting(_ token: ISupportToken, withdrawingCapabilityFacts: Bool) {
+		if resetLengthSetting(token) {
 			return
 		}
 
-		if resetModeSetting(normalizedKey) {
+		if resetModeSetting(token) {
 			return
 		}
 
-		if resetCollectionSetting(normalizedKey) {
+		if resetCollectionSetting(token) {
 			return
 		}
 
-		resetFeatureSetting(normalizedKey, withdrawingCapabilityFacts: withdrawingCapabilityFacts)
+		resetFeatureSetting(token, withdrawingCapabilityFacts: withdrawingCapabilityFacts)
 	}
 
-	private func resetLengthSetting(_ key: String) -> Bool {
-		switch key {
-		case "AWAYLEN":
+	private func resetLengthSetting(_ token: ISupportToken) -> Bool {
+		switch token {
+		case .awaylen:
 			maximumAwayLength = 0
-		case "CHANNELLEN":
+		case .channellen:
 			maximumChannelNameLength = 0
-		case "CHATHISTORY", "DRAFT/CHATHISTORY":
+		case .chathistory:
 			chatHistoryMaximumLines = 0
-		case "KEYLEN":
+		case .keylen:
 			maximumKeyLength = 0
-		case "KICKLEN":
+		case .kicklen:
 			maximumKickLength = 0
-		case "LINELEN":
+		case .linelen:
 			maximumLineLength = 0
-		case "MAXTARGETS":
+		case .maxtargets:
 			maximumTargets = 0
-		case "MODES":
+		case .modes:
 			maximumModeCount = UInt(IRCProtocolLimits.maximumNodesPerModeCommand)
-		case "NICKLEN":
+		case .nicklen:
 			maximumNicknameLength = UInt(IRCProtocolLimits.defaultNicknameMaximumLength)
-		case "SILENCE":
+		case .silence:
 			silenceSupported = false
 			maximumSilenceEntries = 0
-		case "TOPICLEN":
+		case .topiclen:
 			maximumTopicLength = 0
 		default:
 			return false
@@ -325,27 +387,27 @@ public class IRCISupportInfo: NSObject {
 		return true
 	}
 
-	private func resetModeSetting(_ key: String) -> Bool {
-		switch key {
-		case "BOT":
+	private func resetModeSetting(_ token: ISupportToken) -> Bool {
+		switch token {
+		case .bot:
 			botModeSymbol = nil
-		case "CALLERID":
+		case .callerid:
 			callerIDModeSymbol = nil
-		case "CASEMAPPING":
+		case .casemapping:
 			caseMapping = .rfc1459
-		case "CHANMODES":
+		case .chanmodes:
 			advertisedChannelModeKinds = [:]
-		case "CHANTYPES":
+		case .chantypes:
 			channelNamePrefixes = ["#"]
-		case "DEAF":
+		case .deaf:
 			deafModeSymbol = nil
-		case "EXCEPTS":
+		case .excepts:
 			banExceptionModeSymbol = nil
-		case "INVEX":
+		case .invex:
 			inviteExceptionModeSymbol = nil
-		case "PREFIX":
+		case .prefix:
 			userModePrefixPairs = defaultUserModePrefixPairs
-		case "STATUSMSG":
+		case .statusmsg:
 			statusMessagePrefixCharacters = []
 		default:
 			return false
@@ -354,23 +416,23 @@ public class IRCISupportInfo: NSObject {
 		return true
 	}
 
-	private func resetCollectionSetting(_ key: String) -> Bool {
-		switch key {
-		case "CHANLIMIT":
+	private func resetCollectionSetting(_ token: ISupportToken) -> Bool {
+		switch token {
+		case .chanlimit:
 			channelLimits = [:]
-		case "CLIENTTAGDENY":
+		case .clienttagdeny:
 			clientTagDenyList = []
-		case "ELIST":
+		case .elist:
 			extendedListTokens = []
-		case "EXTBAN":
+		case .extban:
 			extendedBanPrefix = nil
 			extendedBanTypes = []
-		case "MAXLIST":
+		case .maxlist:
 			maximumListEntries = [:]
-		case "NETWORK":
+		case .network:
 			networkName = nil
 			networkNameFormatted = nil
-		case "TARGMAX":
+		case .targmax:
 			maximumTargetsByCommand = [:]
 		default:
 			return false
@@ -379,7 +441,7 @@ public class IRCISupportInfo: NSObject {
 		return true
 	}
 
-	private func resetFeatureSetting(_ key: String, withdrawingCapabilityFacts: Bool) {
+	private func resetFeatureSetting(_ token: ISupportToken, withdrawingCapabilityFacts: Bool) {
 		/// The fact this token stands in for, withdrawn only when the token it
 		/// came from is being taken away rather than merely cleared.
 		func withdraw(_ capability: ClientIRCv3SupportedCapability) {
@@ -387,22 +449,22 @@ public class IRCISupportInfo: NSObject {
 			client?.removeCapabilityFacts(capability)
 		}
 
-		switch key {
-		case "MONITOR":
+		switch token {
+		case .monitor:
 			maximumMonitorEntries = 0
 			withdraw(.monitorCommand)
-		case "WATCH":
+		case .watch:
 			maximumWatchEntries = 0
 			withdraw(.watchCommand)
-		case "NAMESX":
+		case .namesx:
 			withdraw(.multiPrefix)
-		case "UHNAMES":
+		case .uhnames:
 			withdraw(.userhostInNames)
-		case "SAFELIST":
+		case .safelist:
 			safeListSupported = false
-		case "UTF8ONLY":
+		case .utf8only:
 			utf8Only = false
-		case "WHOX":
+		case .whox:
 			whoxSupported = false
 		default:
 			break
@@ -414,11 +476,6 @@ public class IRCISupportInfo: NSObject {
 			lastConfiguration.removeValue(forKey: cachedKey)
 		}
 	}
-
-	/// The tokens whose value is a list of characters, and for which
-	/// modern.ircdocs.horse therefore reads an explicitly empty value as "the
-	/// server has none of these" rather than as the bare token.
-	private static let keysWithMeaningfulEmptyValue: Set<String> = ["CHANTYPES", "PREFIX", "STATUSMSG"]
 
 	public func processConfigurationData(_ configurationData: String) {
 		let trimmed = configurationData.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -439,11 +496,8 @@ public class IRCISupportInfo: NSObject {
 				segmentKey = String(segment[..<equalSignIndex])
 				segmentValue = String(segment[segment.index(after: equalSignIndex)...])
 
-				/* For most tokens an empty value says no more than the bare
-				 token does, but modern.ircdocs.horse gives one a meaning of its
-				 own for the three that list characters: the server has none. */
 				if segmentValue?.isEmpty == true,
-				   Self.keysWithMeaningfulEmptyValue.contains(segmentKey.uppercased()) == false
+				   ISupportToken(tokenName: segmentKey)?.readsAnEmptyValueAsNone != true
 				{
 					segmentValue = nil
 				}
@@ -461,11 +515,15 @@ public class IRCISupportInfo: NSObject {
 
 			configuration[segmentKey] = segmentValue.map(ISupportValue.text) ?? .flag
 
-			if let segmentValue {
-				processValueSegment(segmentKey: segmentKey, segmentValue: segmentValue)
+			guard let token = ISupportToken(tokenName: segmentKey) else {
+				continue
 			}
 
-			processFlagSegment(segmentKey: segmentKey, segmentValue: segmentValue, client: client)
+			if let segmentValue {
+				processValueSegment(token, segmentValue: segmentValue)
+			}
+
+			processFlagSegment(token, segmentValue: segmentValue, client: client)
 		}
 
 		if configuration.isEmpty == false {
@@ -518,14 +576,6 @@ public class IRCISupportInfo: NSObject {
 	 */
 	public func groupsMultipleTargets(forCommand command: String) -> Bool {
 		maximumTargets(forCommand: command) > 1
-	}
-
-	/// Splits `targets` into lists no longer than `limit` allows, in order.
-	///
-	/// A `limit` of zero or one puts one target on each line, which is what an
-	/// unadvertised limit means here; see ``groupsMultipleTargets(forCommand:)``.
-	public static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
-		ISupportTokenParser.chunkTargets(targets, limit: limit)
 	}
 
 	public func maximumListEntries(forModeSymbol modeSymbol: ChannelModeSymbol) -> UInt {
@@ -722,53 +772,51 @@ private extension IRCISupportInfo {
 		reset(withdrawingCapabilityFacts: false)
 	}
 
-	func processValueSegment(segmentKey: String, segmentValue: String) {
-		let normalizedKey = segmentKey.uppercased()
-
-		if processPositiveLengthValue(normalizedKey, value: segmentValue) {
+	func processValueSegment(_ token: ISupportToken, segmentValue: String) {
+		if processPositiveLengthValue(token, value: segmentValue) {
 			return
 		}
 
-		if processChannelValue(normalizedKey, value: segmentValue) {
+		if processChannelValue(token, value: segmentValue) {
 			return
 		}
 
-		processCollectionValue(normalizedKey, value: segmentValue)
+		processCollectionValue(token, value: segmentValue)
 	}
 
-	func processPositiveLengthValue(_ key: String, value: String) -> Bool {
+	func processPositiveLengthValue(_ token: ISupportToken, value: String) -> Bool {
 		guard let parsedValue = positiveInteger(from: value) else {
 			return false
 		}
 
-		switch key {
-		case "AWAYLEN":
+		switch token {
+		case .awaylen:
 			maximumAwayLength = parsedValue
-		case "CHANNELLEN":
+		case .channellen:
 			maximumChannelNameLength = parsedValue
-		case "CHATHISTORY", "DRAFT/CHATHISTORY":
+		case .chathistory:
 			chatHistoryMaximumLines = parsedValue
-		case "KEYLEN":
+		case .keylen:
 			maximumKeyLength = parsedValue
-		case "KICKLEN":
+		case .kicklen:
 			maximumKickLength = parsedValue
-		case "LINELEN":
+		case .linelen:
 			maximumLineLength = min(parsedValue, UInt(IRCProtocolLimits.maximumServerLineLength))
-		case "MAXTARGETS":
+		case .maxtargets:
 			maximumTargets = parsedValue
-		case "MODES":
+		case .modes:
 			maximumModeCount = parsedValue
 		/* The count is the whole point of these two: past it the server answers
 		 ERR_MONLISTFULL or ERR_TOOMANYWATCH and the tail of the list is simply
 		 not tracked. The flag half of the token still enables the capability in
 		 `processCapabilityFlag`. */
-		case "MONITOR":
+		case .monitor:
 			maximumMonitorEntries = parsedValue
-		case "WATCH":
+		case .watch:
 			maximumWatchEntries = parsedValue
-		case "NICKLEN":
+		case .nicklen:
 			maximumNicknameLength = parsedValue
-		case "TOPICLEN":
+		case .topiclen:
 			maximumTopicLength = parsedValue
 		default:
 			return false
@@ -777,22 +825,22 @@ private extension IRCISupportInfo {
 		return true
 	}
 
-	func processChannelValue(_ key: String, value: String) -> Bool {
-		switch key {
-		case "CASEMAPPING":
+	func processChannelValue(_ token: ISupportToken, value: String) -> Bool {
+		switch token {
+		case .casemapping:
 			parseCaseMapping(value)
-		case "CHANMODES":
+		case .chanmodes:
 			/* A re-sent CHANMODES replaces the table rather than adding to it,
 			 so a shorter one does not leave the modes it dropped behind. */
 			advertisedChannelModeKinds = ISupportTokenParser.channelModeKinds(from: value, merging: [:])
-		case "CHANTYPES":
+		case .chantypes:
 			updateChannelNamePrefixes(from: value)
-		case "NETWORK":
+		case .network:
 			networkName = value
 			networkNameFormatted = IRCISupportStrings.networkName(value)
-		case "PREFIX":
+		case .prefix:
 			parseUserModeSymbols(value)
-		case "STATUSMSG":
+		case .statusmsg:
 			statusMessagePrefixCharacters = value.map(String.init)
 		default:
 			return false
@@ -801,21 +849,21 @@ private extension IRCISupportInfo {
 		return true
 	}
 
-	func processCollectionValue(_ key: String, value: String) {
-		switch key {
-		case "CHANLIMIT":
+	func processCollectionValue(_ token: ISupportToken, value: String) {
+		switch token {
+		case .chanlimit:
 			channelLimits = ISupportTokenParser.channelLimits(from: value)
-		case "CLIENTTAGDENY":
+		case .clienttagdeny:
 			clientTagDenyList = value.components(separatedBy: ",")
-		case "ELIST":
+		case .elist:
 			extendedListTokens = value.uppercased().map(String.init)
-		case "EXTBAN":
+		case .extban:
 			let configuration = ISupportTokenParser.extendedBanConfiguration(from: value)
 			extendedBanPrefix = configuration.prefix
 			extendedBanTypes = configuration.types
-		case "MAXLIST":
+		case .maxlist:
 			maximumListEntries = ISupportTokenParser.maximumListEntries(from: value)
-		case "TARGMAX":
+		case .targmax:
 			maximumTargetsByCommand = ISupportTokenParser.maximumTargets(from: value)
 		default:
 			break
@@ -842,33 +890,31 @@ private extension IRCISupportInfo {
 		channelNamePrefixes = value.map(String.init)
 	}
 
-	func processFlagSegment(segmentKey: String, segmentValue: String?, client: IRCClient?) {
-		let normalizedKey = segmentKey.uppercased()
-
-		if processModeFlag(normalizedKey, value: segmentValue) {
+	func processFlagSegment(_ token: ISupportToken, segmentValue: String?, client: IRCClient?) {
+		if processModeFlag(token, value: segmentValue) {
 			return
 		}
 
-		if processCapabilityFlag(normalizedKey, client: client) {
+		if processCapabilityFlag(token, client: client) {
 			return
 		}
 
-		processAvailabilityFlag(normalizedKey, value: segmentValue)
+		processAvailabilityFlag(token, value: segmentValue)
 	}
 
-	func processModeFlag(_ key: String, value: String?) -> Bool {
-		switch key {
-		case "BOT":
+	func processModeFlag(_ token: ISupportToken, value: String?) -> Bool {
+		switch token {
+		case .bot:
 			if value?.isModeSymbol == true {
 				botModeSymbol = value
 			}
-		case "CALLERID":
+		case .callerid:
 			callerIDModeSymbol = validatedModeSymbol(value, fallback: "g")
-		case "DEAF":
+		case .deaf:
 			deafModeSymbol = validatedModeSymbol(value, fallback: "D")
-		case "EXCEPTS":
+		case .excepts:
 			banExceptionModeSymbol = validatedModeSymbol(value, fallback: "e")
-		case "INVEX":
+		case .invex:
 			inviteExceptionModeSymbol = validatedModeSymbol(value, fallback: "I")
 		default:
 			return false
@@ -885,15 +931,15 @@ private extension IRCISupportInfo {
 		return value
 	}
 
-	func processCapabilityFlag(_ key: String, client: IRCClient?) -> Bool {
-		switch key {
-		case "MONITOR":
+	func processCapabilityFlag(_ token: ISupportToken, client: IRCClient?) -> Bool {
+		switch token {
+		case .monitor:
 			client?.enableCapability(.monitorCommand)
-		case "NAMESX":
+		case .namesx:
 			enableLegacyCapability(.multiPrefix, command: "PROTOCTL NAMESX", on: client)
-		case "UHNAMES":
+		case .uhnames:
 			enableLegacyCapability(.userhostInNames, command: "PROTOCTL UHNAMES", on: client)
-		case "WATCH":
+		case .watch:
 			client?.enableCapability(.watchCommand)
 		default:
 			return false
@@ -915,18 +961,18 @@ private extension IRCISupportInfo {
 		client.addCapabilityFacts(capability)
 	}
 
-	func processAvailabilityFlag(_ key: String, value: String?) {
-		switch key {
-		case "SAFELIST":
+	func processAvailabilityFlag(_ token: ISupportToken, value: String?) {
+		switch token {
+		case .safelist:
 			safeListSupported = true
-		case "SILENCE":
+		case .silence:
 			silenceSupported = true
 			if let value, let limit = positiveInteger(from: value) {
 				maximumSilenceEntries = limit
 			}
-		case "UTF8ONLY":
+		case .utf8only:
 			utf8Only = true
-		case "WHOX":
+		case .whox:
 			whoxSupported = true
 		default:
 			break

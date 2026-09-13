@@ -1,38 +1,26 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "cancel-button" : {
-      "comment" : "Title of the button that closes the invitation sheet without sending an invitation.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
-          }
-        }
-      }
-    },
     "channel-picker-label" : {
-      "comment" : "Visible and accessibility label for the channel picker.",
+      "comment" : "Label for the channel picker.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Channel to invite users to"
+            "value" : "Channel"
           }
         }
       }
     },
     "heading-above-the-channel-invite" : {
-      "comment" : "Heading above the channel picker. The argument describes the users being invited. Legacy key: 0lg-er.",
+      "comment" : "Headline above the channel picker. The argument describes the users being invited. Legacy key: 0lg-er.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invite %@ to:"
+            "value" : "Invite %@"
           }
         }
       }
@@ -76,7 +64,7 @@
       }
     },
     "window-title" : {
-      "comment" : "Title of the channel invitation sheet.",
+      "comment" : "Title of the channel invitation sheet, shown as its heading.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

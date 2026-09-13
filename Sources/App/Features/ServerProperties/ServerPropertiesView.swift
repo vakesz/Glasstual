@@ -6,24 +6,48 @@
 import CocoaExtensions
 import SwiftUI
 
+/// What the pencil and minus buttons under one of the sheet's lists do, and the
+/// names its icon-only buttons say out loud. Also what a row's context menu and
+/// the Delete key reach.
+struct ServerPropertiesSelectedEntryActions {
+	let editLabel: String
+	let edit: () -> Void
+	let removeLabel: String
+	let remove: () -> Void
+}
+
+/// A list whose plus button adds the one kind of thing the list holds.
+struct ServerPropertiesListActions {
+	let addLabel: String
+	let add: () -> Void
+	let selected: ServerPropertiesSelectedEntryActions
+}
+
+/// The Address Book list, whose plus button is a menu because an entry is
+/// either an ignore or a tracked user.
+struct ServerPropertiesAddressBookActions {
+	let addLabel: String
+	let addIgnore: () -> Void
+	let addTracking: () -> Void
+	let selected: ServerPropertiesSelectedEntryActions
+}
+
+struct ServerPropertiesCertificateActions {
+	let choose: () -> Void
+	let reset: () -> Void
+	let copyNickServCommand: (String) -> Void
+}
+
 struct ServerPropertiesActions {
 	let submit: () -> Void
 	let cancel: () -> Void
+	/// Continue on the template step a new connection opens on.
+	let applyTemplate: () -> Void
 	let editEndpoints: () -> Void
-	let addChannel: () -> Void
-	let editChannel: () -> Void
-	let deleteChannel: () -> Void
-	let addHighlight: () -> Void
-	let editHighlight: () -> Void
-	let deleteHighlight: () -> Void
-	let addIgnore: () -> Void
-	let addTracking: () -> Void
-	let editAddressBookEntry: () -> Void
-	let deleteAddressBookEntry: () -> Void
-	let chooseCertificate: () -> Void
-	let resetCertificate: () -> Void
-	let copyCertificateFingerprint: (String) -> Void
-	let showCipherSuites: () -> Void
+	let channels: ServerPropertiesListActions
+	let highlights: ServerPropertiesListActions
+	let addressBook: ServerPropertiesAddressBookActions
+	let certificate: ServerPropertiesCertificateActions
 }
 
 struct ServerPropertiesView: View {
@@ -43,16 +67,39 @@ struct ServerPropertiesView: View {
 	]
 	private static let proxyTypes: [IRCConnectionProxyType] = [.none, .automatic, .socks5, .HTTP, .tor]
 
-	private let encodings: [(value: UInt, title: String)] = {
+	/// Built once for the process: the list is the same for every sheet, and
+	/// sorting several hundred encoding names is not work to repeat per view.
+	private static let encodings: [(value: UInt, title: String)] = {
 		let values = String.Encoding.supportedEncodingsByTitle(favoringUTF8: false)
 		return values.map { ($0.value.uintValue, $0.key) }.sorted { $0.title < $1.title }
 	}()
 
 	var body: some View {
+		Group {
+			if let picker = model.templatePicker {
+				ServerTemplatePickerView(model: model, picker: picker, actions: actions)
+			} else {
+				form
+			}
+		}
+		/* The sheet takes its size from here and nowhere else. The infinite
+		 maxima are what let the user drag its edges: without them the content
+		 refuses to grow and the sheet has nothing to resize into. */
+		.frame(
+			minWidth: 820,
+			idealWidth: 900,
+			maxWidth: .infinity,
+			minHeight: 590,
+			idealHeight: 650,
+			maxHeight: .infinity
+		)
+	}
+
+	private var form: some View {
 		VStack(spacing: 0) {
 			NavigationSplitView {
 				List(selection: $model.selection) {
-					Section(ServerPropertiesStrings.Navigation.serverProperties) {
+					Section(ServerPropertiesStrings.Navigation.connection) {
 						navigationRow(.general, ServerPropertiesStrings.Navigation.general, "network")
 						navigationRow(.identity, ServerPropertiesStrings.Navigation.identity, "person.crop.circle")
 						navigationRow(.autojoin, ServerPropertiesStrings.Navigation.channelList, "number")
@@ -82,26 +129,12 @@ struct ServerPropertiesView: View {
 							"arrow.triangle.branch"
 						)
 						navigationRow(.floodControl, ServerPropertiesStrings.Navigation.floodControl, "speedometer")
-						navigationRow(
-							.redundancy,
-							ServerPropertiesStrings.Navigation.redundancy,
-							"arrow.triangle.2.circlepath"
-						)
 					}
 				}
 				.listStyle(.sidebar)
 				.navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 260)
 			} detail: {
-				ScrollView {
-					selectedPane
-						.frame(maxWidth: 680, alignment: .topLeading)
-						.padding(24)
-				}
-				.popover(isPresented: $model.isValidationMessagePresented) {
-					if let message = model.validationMessage {
-						Text(verbatim: message).padding(12)
-					}
-				}
+				selectedPane
 			}
 			/* A sheet has no toolbar to put a sidebar toggle in, so the one the
 			 split view adds by default lands on top of the section list. The
@@ -110,36 +143,28 @@ struct ServerPropertiesView: View {
 
 			Divider()
 			HStack {
+				if let message = model.validationMessage {
+					ValidationMessageLabel(message)
+				}
 				Spacer()
 				Button(PromptStrings.Action.cancel, action: actions.cancel)
 					.keyboardShortcut(.cancelAction)
 				Button(PromptStrings.Action.save, action: actions.submit)
 					.keyboardShortcut(.defaultAction)
+					.disabled(model.validationMessage != nil)
 			}
 			.padding(12)
 		}
-		/* The sheet takes its size from here and nowhere else. The infinite
-		 maxima are what let the user drag its edges: without them the content
-		 refuses to grow and the sheet has nothing to resize into. */
-		.frame(
-			minWidth: 820,
-			idealWidth: 900,
-			maxWidth: .infinity,
-			minHeight: 590,
-			idealHeight: 650,
-			maxHeight: .infinity
-		)
-		.onExitCommand(perform: actions.cancel)
 	}
 
 	@ViewBuilder
 	private var selectedPane: some View {
 		switch model.selection {
-		case .default, .general: generalPane
+		case .general: generalPane
 		case .identity: identityPane
 		case .autojoin: channelPane
 		case .highlights: highlightPane
-		case .addressBook, .newIgnoreEntry: addressBookPane
+		case .addressBook: addressBookPane
 		case .connectCommands: commandsPane
 		case .disconnectMessages: messagesPane
 		case .encoding: encodingPane
@@ -148,112 +173,162 @@ struct ServerPropertiesView: View {
 		case .networkSocket: socketPane
 		case .proxyServer: proxyPane
 		case .floodControl: floodPane
-		case .redundancy: redundancyPane
 		}
 	}
 
-	private func navigationRow(_ selection: ServerPropertiesSelection, _ title: String, _ symbol: String) -> some View {
+	private func navigationRow(
+		_ selection: ServerPropertiesSelection,
+		_ title: String,
+		_ symbol: String
+	) -> some View {
 		Label(title, systemImage: symbol).tag(selection)
 	}
+}
 
-	private var generalPane: some View {
+// MARK: - Panes
+
+private extension ServerPropertiesView {
+	var generalPane: some View {
 		pane(ServerPropertiesStrings.Navigation.general) {
 			Form {
-				TextField(ServerPropertiesStrings.General.connectionName, text: $model.config.connectionName)
-				TextField(ServerPropertiesStrings.General.serverAddress, text: $model.serverAddress)
-				TextField(ServerPropertiesStrings.General.serverPort, text: $model.serverPort)
-				SecureField(ServerPropertiesStrings.General.serverPassword, text: $model.serverPassword)
-				Toggle(ServerPropertiesStrings.General.connectSecurely, isOn: $model.primaryServerIsSecured)
-				Button(ServerPropertiesStrings.General.modifyAlternateServers, action: actions.editEndpoints)
-				Divider()
-				Toggle(ServerPropertiesStrings.General.connectOnLaunch, isOn: $model.config.autoConnect)
-				Toggle(ServerPropertiesStrings.General.reconnectAfterDisconnect, isOn: $model.config.autoReconnect)
-				Toggle(
-					ServerPropertiesStrings.General.disconnectWhenComputerSleeps,
-					isOn: $model.config.autoSleepModeDisconnect
-				)
+				Section {
+					TextField(ServerPropertiesStrings.General.connectionName, text: $model.config.connectionName)
+					TextField(ServerPropertiesStrings.General.serverAddress, text: $model.serverAddress)
+						/* The suggestion rows complete to a network's name, and the
+						 model turns that name into the network's address, port and
+						 TLS state. A sighted person sees the list drop down; the
+						 hint is what says it is there. */
+						.textInputSuggestions(model.serverAddressSuggestions, id: \.networkName) { network in
+							Text(verbatim: network.networkName)
+								.textInputCompletion(network.networkName)
+						}
+						.accessibilityHint(ServerPropertiesStrings.General.serverAddressNetworkHint)
+						.onChange(of: model.serverAddress) { model.serverAddressTextDidChange() }
+					TextField(ServerPropertiesStrings.General.serverPort, text: $model.serverPort)
+					Toggle(ServerPropertiesStrings.General.connectSecurely, isOn: $model.primaryServerIsSecured)
+					SecureField(ServerPropertiesStrings.General.serverPassword, text: $model.serverPassword)
+				} footer: {
+					Text(verbatim: ServerPropertiesStrings.General.serverPasswordHelp)
+				}
+
+				Section {
+					Button(ServerPropertiesStrings.General.modifyAlternateServers, action: actions.editEndpoints)
+				}
+
+				Section {
+					Toggle(ServerPropertiesStrings.General.connectOnLaunch, isOn: $model.config.autoConnect)
+					Toggle(
+						ServerPropertiesStrings.General.reconnectAfterDisconnect,
+						isOn: $model.config.autoReconnect
+					)
+					Toggle(
+						ServerPropertiesStrings.General.disconnectWhenComputerSleeps,
+						isOn: $model.config.autoSleepModeDisconnect
+					)
+				}
 			}
+			.formStyle(.grouped)
 		}
 	}
 
-	private var identityPane: some View {
+	var identityPane: some View {
 		pane(ServerPropertiesStrings.Navigation.identity) {
 			Form {
-				TextField(ServerPropertiesStrings.Identity.nickname, text: $model.config.nickname)
-				TextField(ServerPropertiesStrings.Identity.awayNickname, text: optionalBinding(\.awayNickname))
-				TextField(ServerPropertiesStrings.Identity.alternativeNicknames, text: $model.alternateNicknames)
-				TextField(ServerPropertiesStrings.Identity.username, text: $model.config.username)
-				TextField(ServerPropertiesStrings.Identity.realName, text: $model.config.realName)
-				TextField(ServerPropertiesStrings.Identity.ctcpVersionReply, text: optionalBinding(\.ctcpVersionReply))
-				SecureField(ServerPropertiesStrings.Identity.nicknamePassword, text: $model.nicknamePassword)
-				Divider()
-				/* The onboarding network picker was the only place this could be
-				 chosen, so a connection made any other way was stuck with the
-				 default until someone hand-edited the stored configuration. */
-				Toggle(ServerPropertiesStrings.Identity.signInWithSASL, isOn: $model.config.usesSASL)
-				Toggle(
-					ServerPropertiesStrings.Identity.autojoinWaitsForNickServ,
-					isOn: $model.config.autojoinWaitsForNickServ
-				)
-				Toggle(ServerPropertiesStrings.Identity.warnWhenChannelsCannotBeJoined, isOn: warningBinding)
-				Toggle(
-					ServerPropertiesStrings.Identity.disconnectOnSASLFailure,
-					isOn: $model.config.disconnectOnSASLFailure
-				)
+				Section {
+					TextField(ServerPropertiesStrings.Identity.nickname, text: $model.config.nickname)
+					TextField(
+						ServerPropertiesStrings.Identity.awayNickname,
+						text: optionalBinding(\.awayNickname)
+					)
+					TextField(
+						ServerPropertiesStrings.Identity.alternativeNicknames,
+						text: $model.alternateNicknames
+					)
+					TextField(ServerPropertiesStrings.Identity.username, text: $model.config.username)
+					TextField(ServerPropertiesStrings.Identity.realName, text: $model.config.realName)
+					TextField(
+						ServerPropertiesStrings.Identity.ctcpVersionReply,
+						text: optionalBinding(\.ctcpVersionReply)
+					)
+				}
+
+				Section {
+					SecureField(
+						ServerPropertiesStrings.Identity.nicknamePassword,
+						text: $model.nicknamePassword
+					)
+					/* The onboarding network picker was the only place this
+					 could be chosen, so a connection made any other way was
+					 stuck with the default until someone hand-edited the
+					 stored configuration. */
+					Toggle(ServerPropertiesStrings.Identity.signInWithSASL, isOn: $model.config.usesSASL)
+					Toggle(
+						ServerPropertiesStrings.Identity.disconnectOnSASLFailure,
+						isOn: $model.config.disconnectOnSASLFailure
+					)
+					Toggle(
+						ServerPropertiesStrings.Identity.autojoinWaitsForNickServ,
+						isOn: $model.config.autojoinWaitsForNickServ
+					)
+				} footer: {
+					Text(verbatim: ServerPropertiesStrings.Identity.nicknamePasswordHelp)
+				}
+
+				Section {
+					Toggle(
+						ServerPropertiesStrings.Identity.warnWhenChannelsCannotBeJoined,
+						isOn: warningBinding
+					)
+				}
 			}
+			.formStyle(.grouped)
 		}
 	}
 
-	private var channelPane: some View {
+	var channelPane: some View {
 		pane(ServerPropertiesStrings.Navigation.channelList) {
 			List(selection: $model.selectedChannelID) {
 				ForEach(model.displayedChannels, id: \.uniqueIdentifier) { channel in
 					HStack {
 						Toggle(
-							ServerPropertiesStrings.ChannelList.joinOnConnect,
+							ChannelPropertiesStrings.joinOnConnect,
 							isOn: channelAutoJoinBinding(channel.uniqueIdentifier)
 						).labelsHidden()
 						Text(verbatim: channel.channelName)
 						Spacer()
-						if let key = channel.secretKey, !key.isEmpty {
+						if let key = channel.secretKey, key.isEmpty == false {
 							Image(systemName: "key.fill")
+								.accessibilityLabel(ChannelPropertiesStrings.passwordLabel)
 						}
 					}.tag(channel.uniqueIdentifier)
 				}
 			}
-			.frame(minHeight: 300)
-			listButtons(add: actions.addChannel,
-			            addLabel: ServerPropertiesStrings.ListButton.addChannel,
-			            edit: actions.editChannel,
-			            editLabel: ServerPropertiesStrings.ListButton.editChannel,
-			            delete: actions.deleteChannel,
-			            deleteLabel: ServerPropertiesStrings.ListButton.removeChannel,
-			            selectionExists: model.selectedChannelID != nil)
+			.listCommands(actions.channels.selected, selection: $model.selectedChannelID)
+
+			listButtons(actions.channels, hasSelection: model.selectedChannelID != nil)
 		}
 	}
 
-	private var highlightPane: some View {
+	var highlightPane: some View {
 		pane(ServerPropertiesStrings.Navigation.highlights) {
 			List(selection: $model.selectedHighlightID) {
 				ForEach(model.config.highlightList, id: \.uniqueIdentifier) { entry in
 					VStack(alignment: .leading) {
 						Text(verbatim: entry.matchKeyword)
-						Text(verbatim: ServerPropertiesStrings.Highlight.matchType(isExcluded: entry.matchIsExcluded))
-							.font(.caption).foregroundStyle(.secondary)
+						Text(verbatim: ServerPropertiesStrings.Highlight.matchType(
+							isExcluded: entry.matchIsExcluded
+						))
+						.font(.caption).foregroundStyle(.secondary)
 					}.tag(entry.uniqueIdentifier)
 				}
-			}.frame(minHeight: 300)
-			listButtons(add: actions.addHighlight,
-			            addLabel: ServerPropertiesStrings.ListButton.addHighlight,
-			            edit: actions.editHighlight,
-			            editLabel: ServerPropertiesStrings.ListButton.editHighlight,
-			            delete: actions.deleteHighlight,
-			            deleteLabel: ServerPropertiesStrings.ListButton.removeHighlight,
-			            selectionExists: model.selectedHighlightID != nil)
+			}
+			.listCommands(actions.highlights.selected, selection: $model.selectedHighlightID)
+
+			listButtons(actions.highlights, hasSelection: model.selectedHighlightID != nil)
 		}
 	}
 
-	private var addressBookPane: some View {
+	var addressBookPane: some View {
 		pane(ServerPropertiesStrings.Navigation.addressBook) {
 			List(selection: $model.selectedAddressBookEntryID) {
 				ForEach(model.config.ignoreList, id: \.uniqueIdentifier) { entry in
@@ -263,258 +338,406 @@ struct ServerPropertiesView: View {
 							.font(.caption).foregroundStyle(.secondary)
 					}.tag(entry.uniqueIdentifier)
 				}
-			}.frame(minHeight: 300)
+			}
+			.listCommands(actions.addressBook.selected, selection: $model.selectedAddressBookEntryID)
+
 			HStack {
 				Menu {
-					Button(ServerPropertiesStrings.AddressBookActions.addIgnoreEntry, action: actions.addIgnore)
-					Button(ServerPropertiesStrings.AddressBookActions.addTrackingEntry, action: actions.addTracking)
-				} label: { Image(systemName: "plus") }
-					.help(Text(verbatim: ServerPropertiesStrings.ListButton.addAddressBookEntry))
-					.accessibilityLabel(Text(verbatim: ServerPropertiesStrings.ListButton.addAddressBookEntry))
-				Button(action: actions.editAddressBookEntry) { Image(systemName: "pencil") }
-					.disabled(model.selectedAddressBookEntryID == nil)
-					.help(Text(verbatim: ServerPropertiesStrings.ListButton.editAddressBookEntry))
-					.accessibilityLabel(Text(verbatim: ServerPropertiesStrings.ListButton.editAddressBookEntry))
-				Button(role: .destructive, action: actions.deleteAddressBookEntry) { Image(systemName: "minus") }
-					.disabled(model.selectedAddressBookEntryID == nil)
-					.help(Text(verbatim: ServerPropertiesStrings.ListButton.removeAddressBookEntry))
-					.accessibilityLabel(Text(verbatim: ServerPropertiesStrings.ListButton.removeAddressBookEntry))
+					addressBookAddButtons
+				} label: {
+					Image(systemName: "plus")
+				}
+				.menuIndicator(.hidden)
+				.help(Text(verbatim: actions.addressBook.addLabel))
+				.accessibilityLabel(Text(verbatim: actions.addressBook.addLabel))
+
+				editAndRemoveButtons(
+					actions.addressBook.selected,
+					hasSelection: model.selectedAddressBookEntryID != nil
+				)
 				Spacer()
 			}
 			.buttonStyle(.borderless)
 		}
 	}
 
-	private var commandsPane: some View {
+	@ViewBuilder
+	var addressBookAddButtons: some View {
+		Button(
+			ServerPropertiesStrings.AddressBookActions.addIgnoreEntry,
+			action: actions.addressBook.addIgnore
+		)
+		Button(
+			ServerPropertiesStrings.AddressBookActions.addTrackingEntry,
+			action: actions.addressBook.addTracking
+		)
+	}
+
+	var commandsPane: some View {
 		pane(ServerPropertiesStrings.Navigation.connectCommands) {
-			Text(verbatim: ServerPropertiesStrings.ConnectCommands.heading)
-				.frame(maxWidth: .infinity, alignment: .leading)
-			TextEditor(text: $model.connectCommands).font(.system(.body, design: .monospaced)).frame(minHeight: 280)
-			Toggle(
-				ServerPropertiesStrings.ConnectCommands.setInvisibleMode,
-				isOn: $model.config.setInvisibleModeOnConnect
-			)
-			Toggle(ServerPropertiesStrings.ConnectCommands.runSilently, isOn: $model.config.runConnectCommandsSilently)
-			Toggle(
-				ServerPropertiesStrings.ConnectCommands.autojoinWaitsForConnectCommands,
-				isOn: $model.config.autojoinWaitsForConnectCommands
-			)
-			Stepper(
-				value: $model.config.autojoinDelayAfterConnectCommands,
-				in: 0 ... ClientConfigDefaults.maximumAutojoinConnectCommandDelay,
-				step: 1
-			) {
-				Text(verbatim: ServerPropertiesStrings.ConnectCommands.autojoinDelay(
-					seconds: Int(model.config.autojoinDelayAfterConnectCommands)
-				))
+			Form {
+				Section(ServerPropertiesStrings.ConnectCommands.heading) {
+					TextEditor(text: $model.connectCommands)
+						.font(.system(.body, design: .monospaced))
+						.frame(minHeight: 180)
+						.accessibilityLabel(ServerPropertiesStrings.ConnectCommands.heading)
+				}
+
+				Section {
+					Toggle(
+						ServerPropertiesStrings.ConnectCommands.setInvisibleMode,
+						isOn: $model.config.setInvisibleModeOnConnect
+					)
+					Toggle(
+						ServerPropertiesStrings.ConnectCommands.runSilently,
+						isOn: $model.config.runConnectCommandsSilently
+					)
+					Toggle(
+						ServerPropertiesStrings.ConnectCommands.autojoinWaitsForConnectCommands,
+						isOn: $model.config.autojoinWaitsForConnectCommands
+					)
+					Stepper(
+						value: $model.config.autojoinDelayAfterConnectCommands,
+						in: 0 ... ClientConfigDefaults.maximumAutojoinConnectCommandDelay,
+						step: 1
+					) {
+						Text(verbatim: ServerPropertiesStrings.ConnectCommands.autojoinDelay(
+							seconds: Int(model.config.autojoinDelayAfterConnectCommands)
+						))
+					}
+					.disabled(model.config.autojoinWaitsForConnectCommands == false)
+				} footer: {
+					Text(verbatim: ServerPropertiesStrings.ConnectCommands.identificationExplanation)
+				}
 			}
-			.disabled(model.config.autojoinWaitsForConnectCommands == false)
-			Text(verbatim: ServerPropertiesStrings.ConnectCommands.identificationExplanation)
-				.font(.callout)
-				.foregroundStyle(.secondary)
+			.formStyle(.grouped)
 		}
 	}
 
-	private var messagesPane: some View {
+	var messagesPane: some View {
 		pane(ServerPropertiesStrings.Navigation.messages) {
 			Form {
-				TextField(ServerPropertiesStrings.LeavingMessages.normal, text: $model.config.normalLeavingComment)
-				TextField(
-					ServerPropertiesStrings.LeavingMessages.sleepMode,
-					text: $model.config.sleepModeLeavingComment
-				)
+				Section {
+					TextField(
+						ServerPropertiesStrings.LeavingMessages.normal,
+						text: $model.config.normalLeavingComment
+					)
+					TextField(
+						ServerPropertiesStrings.LeavingMessages.sleepMode,
+						text: $model.config.sleepModeLeavingComment
+					)
+				}
 			}
+			.formStyle(.grouped)
 		}
 	}
 
-	private var encodingPane: some View {
+	var encodingPane: some View {
 		pane(ServerPropertiesStrings.Navigation.encoding) {
 			Form {
-				Picker(ServerPropertiesStrings.Encoding.primary, selection: $model.config.primaryEncoding) {
-					ForEach(encodings, id: \.value) { Text(verbatim: $0.title).tag($0.value) }
-				}
-				Picker(ServerPropertiesStrings.Encoding.fallback, selection: $model.config.fallbackEncoding) {
-					ForEach(encodings, id: \.value) { Text(verbatim: $0.title).tag($0.value) }
+				Section {
+					Picker(ServerPropertiesStrings.Encoding.primary, selection: $model.config.primaryEncoding) {
+						ForEach(Self.encodings, id: \.value) { Text(verbatim: $0.title).tag($0.value) }
+					}
+					Picker(ServerPropertiesStrings.Encoding.fallback, selection: $model.config.fallbackEncoding) {
+						ForEach(Self.encodings, id: \.value) { Text(verbatim: $0.title).tag($0.value) }
+					}
 				}
 			}
+			.formStyle(.grouped)
 		}
 	}
 
-	private var zncPane: some View {
+	var zncPane: some View {
 		pane(ServerPropertiesStrings.Navigation.zncBouncer) {
-			Toggle(
-				ServerPropertiesStrings.ZNC.ignoreConfiguredAutojoin,
-				isOn: $model.config.zncIgnoreConfiguredAutojoin
-			)
-			Toggle(
-				ServerPropertiesStrings.ZNC.ignorePlaybackNotifications,
-				isOn: $model.config.zncIgnorePlaybackNotifications
-			)
-			Toggle(ServerPropertiesStrings.ZNC.onlyPlaybackLatest, isOn: $model.config.zncOnlyPlaybackLatest)
-			Text(verbatim: ServerPropertiesStrings.ZNC.versionNote).foregroundStyle(.secondary)
+			Form {
+				Section {
+					Toggle(
+						ServerPropertiesStrings.ZNC.ignoreConfiguredAutojoin,
+						isOn: $model.config.zncIgnoreConfiguredAutojoin
+					)
+					Toggle(
+						ServerPropertiesStrings.ZNC.ignorePlaybackNotifications,
+						isOn: $model.config.zncIgnorePlaybackNotifications
+					)
+					Toggle(
+						ServerPropertiesStrings.ZNC.onlyPlaybackLatest,
+						isOn: $model.config.zncOnlyPlaybackLatest
+					)
+				} footer: {
+					Text(verbatim: ServerPropertiesStrings.ZNC.versionNote)
+				}
+			}
+			.formStyle(.grouped)
 		}
 	}
 
-	private var certificatePane: some View {
+	var certificatePane: some View {
 		pane(ServerPropertiesStrings.Navigation.clientCertificate) {
 			Form {
-				LabeledContent(ServerPropertiesStrings.Certificate.name, value: model.certificateName)
-				fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA512, model.certificateSHA512)
-				fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA256, model.certificateSHA256)
-				fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA1, model.certificateSHA1)
+				Section {
+					if let certificate = model.certificate {
+						LabeledContent(
+							ServerPropertiesStrings.Certificate.name,
+							value: certificate.commonName
+						)
+					} else {
+						Text(verbatim: ServerPropertiesStrings.Certificate.noneSelected)
+							.foregroundStyle(.secondary)
+					}
+					HStack {
+						Button(
+							ServerPropertiesStrings.Certificate.select,
+							action: actions.certificate.choose
+						)
+						Button(
+							ServerPropertiesStrings.Certificate.reset,
+							role: .destructive,
+							action: actions.certificate.reset
+						)
+						.disabled(model.certificate == nil)
+					}
+				} footer: {
+					Text(verbatim: ServerPropertiesStrings.Certificate.chooseExplanation)
+				}
+
+				if let certificate = model.certificate {
+					Section {
+						fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA512, certificate.sha512)
+						fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA256, certificate.sha256)
+						fingerprint(ServerPropertiesStrings.Certificate.fingerprintSHA1, certificate.sha1)
+					} footer: {
+						Text(verbatim: ServerPropertiesStrings.Certificate.fingerprintHelp)
+					}
+				}
 			}
-			HStack {
-				Button(ServerPropertiesStrings.Certificate.select, action: actions.chooseCertificate)
-				Button(ServerPropertiesStrings.Certificate.reset, action: actions.resetCertificate)
-					.disabled(model.config.identityClientSideCertificate == nil)
-			}
+			.formStyle(.grouped)
 		}
 	}
 
-	private var socketPane: some View {
+	var socketPane: some View {
 		pane(ServerPropertiesStrings.Navigation.networkSocket) {
-			Picker(ServerPropertiesStrings.Socket.connectUsing, selection: $model.config.addressType) {
-				ForEach(Self.addressTypes, id: \.self) { addressType in
-					Text(verbatim: ServerPropertiesStrings.Socket.addressType(addressType)).tag(addressType)
+			Form {
+				Section {
+					Picker(ServerPropertiesStrings.Socket.connectUsing, selection: $model.config.addressType) {
+						ForEach(Self.addressTypes, id: \.self) { addressType in
+							Text(verbatim: ServerPropertiesStrings.Socket.addressType(addressType)).tag(addressType)
+						}
+					}
+					.pickerStyle(.radioGroup)
 				}
-			}.pickerStyle(.radioGroup)
-			Toggle(
-				ServerPropertiesStrings.Socket.validateCertificateChain,
-				isOn: $model.config.validateServerCertificateChain
-			)
-			Toggle(ServerPropertiesStrings.Socket.performPongTimer, isOn: $model.config.performPongTimer)
-			Toggle(
-				ServerPropertiesStrings.Socket.disconnectOnPongTimer,
-				isOn: $model.config.performDisconnectOnPongTimer
-			)
-			Toggle(
-				ServerPropertiesStrings.Socket.disconnectOnReachabilityChange,
-				isOn: $model.config.performDisconnectOnReachabilityChange
-			)
-			Picker(ServerPropertiesStrings.CipherSuites.label, selection: $model.config.cipherSuites) {
-				ForEach(Self.cipherSuiteCollections, id: \.self) { collection in
-					Text(verbatim: ServerPropertiesStrings.CipherSuites.collectionName(collection)).tag(collection)
+
+				Section {
+					Toggle(
+						ServerPropertiesStrings.Socket.validateCertificateChain,
+						isOn: $model.config.validateServerCertificateChain
+					)
+					Toggle(ServerPropertiesStrings.Socket.performPongTimer, isOn: $model.config.performPongTimer)
+					Toggle(
+						ServerPropertiesStrings.Socket.disconnectOnPongTimer,
+						isOn: $model.config.performDisconnectOnPongTimer
+					)
+					Toggle(
+						ServerPropertiesStrings.Socket.disconnectOnReachabilityChange,
+						isOn: $model.config.performDisconnectOnReachabilityChange
+					)
+				}
+
+				Section {
+					Picker(ServerPropertiesStrings.CipherSuites.label, selection: $model.config.cipherSuites) {
+						ForEach(Self.cipherSuiteCollections, id: \.self) { collection in
+							Text(verbatim: ServerPropertiesStrings.CipherSuites.collectionName(collection))
+								.tag(collection)
+						}
+					}
+					if model.config.cipherSuites != .none {
+						cipherSuiteList
+					}
+				} footer: {
+					if model.config.cipherSuites != .none {
+						Text(verbatim: ServerPropertiesStrings.CipherSuites.listExplanation(
+							collectionName: ServerPropertiesStrings.CipherSuites
+								.collectionName(model.config.cipherSuites)
+						))
+					}
 				}
 			}
-			Button(ServerPropertiesStrings.CipherSuites.viewList, action: actions.showCipherSuites)
-				.disabled(model.config.cipherSuites == .none)
+			.formStyle(.grouped)
 		}
 	}
 
-	private var proxyPane: some View {
+	/// The suites of the chosen collection, in the pane rather than in an alert
+	/// whose body was a hundred lines of proportional text.
+	var cipherSuiteList: some View {
+		DisclosureGroup(ServerPropertiesStrings.CipherSuites.suiteList) {
+			VStack(alignment: .leading, spacing: 2) {
+				ForEach(
+					SecureTransportSupport.descriptions(
+						forCipherListCollection: model.config.cipherSuites,
+						withProtocol: true
+					),
+					id: \.self
+				) { suite in
+					Text(verbatim: suite).textSelection(.enabled)
+				}
+			}
+			.font(.system(.caption, design: .monospaced))
+			.frame(maxWidth: .infinity, alignment: .leading)
+			.padding(.top, 4)
+		}
+	}
+
+	var proxyPane: some View {
 		pane(ServerPropertiesStrings.Navigation.proxyServer) {
-			Picker(ServerPropertiesStrings.Proxy.type, selection: $model.config.proxyType) {
-				ForEach(Self.proxyTypes, id: \.self) { proxyType in
-					Text(verbatim: ServerPropertiesStrings.Proxy.typeName(proxyType)).tag(proxyType)
-				}
-			}
-			if ServerPropertiesModel.proxyTypeUsesAddress(model.config.proxyType) {
-				Form {
-					TextField(ServerPropertiesStrings.Proxy.address, text: $model.proxyAddress)
-					TextField(ServerPropertiesStrings.Proxy.port, text: $model.proxyPort)
-					if model.config.proxyType == .socks5 {
-						TextField(ServerPropertiesStrings.Proxy.username, text: $model.proxyUsername)
-						SecureField(ServerPropertiesStrings.Proxy.password, text: $model.proxyPassword)
+			Form {
+				Section {
+					Picker(ServerPropertiesStrings.Proxy.type, selection: $model.config.proxyType) {
+						ForEach(Self.proxyTypes, id: \.self) { proxyType in
+							Text(verbatim: ServerPropertiesStrings.Proxy.typeName(proxyType)).tag(proxyType)
+						}
 					}
 				}
-			} else if model.config.proxyType == .automatic {
-				Button(ServerPropertiesStrings.Proxy.openSystemSettings) {
-					if let url = Self.networkProxySettingsURL {
-						openURL(url)
+
+				if ServerPropertiesModel.proxyTypeUsesAddress(model.config.proxyType) {
+					Section {
+						TextField(ServerPropertiesStrings.Proxy.address, text: $model.proxyAddress)
+						TextField(ServerPropertiesStrings.Proxy.port, text: $model.proxyPort)
+						if model.config.proxyType == .socks5 {
+							TextField(ServerPropertiesStrings.Proxy.username, text: $model.proxyUsername)
+							SecureField(ServerPropertiesStrings.Proxy.password, text: $model.proxyPassword)
+						}
+					} footer: {
+						if model.config.proxyType == .socks5 {
+							Text(verbatim: ServerPropertiesStrings.Proxy.passwordHelp)
+						}
+					}
+				} else if model.config.proxyType == .automatic {
+					Section {
+						Button(ServerPropertiesStrings.Proxy.openSystemSettings) {
+							if let url = Self.networkProxySettingsURL {
+								openURL(url)
+							}
+						}
+					}
+				} else if model.config.proxyType == .tor {
+					Section {
+						Text(verbatim: ServerPropertiesStrings.Proxy.torBrowserNote)
+							.foregroundStyle(.secondary)
 					}
 				}
-			} else if model.config.proxyType == .tor {
-				Text(verbatim: ServerPropertiesStrings.Proxy.torBrowserNote).foregroundStyle(.secondary)
 			}
+			.formStyle(.grouped)
 		}
 	}
 
-	private var floodPane: some View {
+	var floodPane: some View {
 		pane(ServerPropertiesStrings.Navigation.floodControl) {
-			LabeledContent(
-				ServerPropertiesStrings.FloodControl.messageCount,
-				value: String(model.config.floodControlMaximumMessages)
-			)
-			Slider(value: uintBinding(\.floodControlMaximumMessages), in: 1 ... 60, step: 1)
-			LabeledContent(
-				ServerPropertiesStrings.FloodControl.interval,
-				value: String(model.config.floodControlDelayTimerInterval)
-			)
-			Slider(value: uintBinding(\.floodControlDelayTimerInterval), in: 1 ... 60, step: 1)
+			Form {
+				Section {
+					slider(
+						ServerPropertiesStrings.FloodControl.messageCount,
+						value: uintBinding(\.floodControlMaximumMessages),
+						current: Int(model.config.floodControlMaximumMessages)
+					)
+					slider(
+						ServerPropertiesStrings.FloodControl.interval,
+						value: uintBinding(\.floodControlDelayTimerInterval),
+						current: Int(model.config.floodControlDelayTimerInterval)
+					)
+				}
+			}
+			.formStyle(.grouped)
 		}
 	}
 
-	private var redundancyPane: some View {
-		pane(ServerPropertiesStrings.Navigation.redundancy) {
-			Toggle(ServerPropertiesStrings.General.reconnectAfterDisconnect, isOn: $model.config.autoReconnect)
-			Toggle(
-				ServerPropertiesStrings.General.disconnectWhenComputerSleeps,
-				isOn: $model.config.autoSleepModeDisconnect
-			)
-			Toggle(
-				ServerPropertiesStrings.Socket.disconnectOnReachabilityChange,
-				isOn: $model.config.performDisconnectOnReachabilityChange
-			)
-			Button(ServerPropertiesStrings.General.modifyAlternateServers, action: actions.editEndpoints)
-		}
-	}
+	// MARK: - Building blocks
 
-	private func pane(_ title: String, @ViewBuilder content: () -> some View) -> some View {
-		VStack(alignment: .leading, spacing: 16) {
-			Text(verbatim: title).font(.title2).fontWeight(.semibold)
+	func pane(_ title: String, @ViewBuilder content: () -> some View) -> some View {
+		VStack(alignment: .leading, spacing: 12) {
+			Text(verbatim: title)
+				.font(.title2)
+				.fontWeight(.semibold)
+				.padding([.horizontal, .top], 20)
 			content()
-		}.frame(maxWidth: .infinity, alignment: .topLeading)
+		}
+		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 	}
 
 	/// Every button here is an icon and nothing else, so each one carries the
 	/// name of what it does — as a help tag for the pointer and as a label for
 	/// VoiceOver.
-	private func listButtons(
-		add: @escaping () -> Void,
-		addLabel: String,
-		edit: @escaping () -> Void,
-		editLabel: String,
-		delete: @escaping () -> Void,
-		deleteLabel: String,
-		selectionExists: Bool
-	) -> some View {
+	func listButtons(_ actions: ServerPropertiesListActions, hasSelection: Bool) -> some View {
 		HStack {
-			Button(action: add) { Image(systemName: "plus") }
-				.help(Text(verbatim: addLabel))
-				.accessibilityLabel(Text(verbatim: addLabel))
-			Button(action: edit) { Image(systemName: "pencil") }
-				.disabled(!selectionExists)
-				.help(Text(verbatim: editLabel))
-				.accessibilityLabel(Text(verbatim: editLabel))
-			Button(role: .destructive, action: delete) { Image(systemName: "minus") }
-				.disabled(!selectionExists)
-				.help(Text(verbatim: deleteLabel))
-				.accessibilityLabel(Text(verbatim: deleteLabel))
+			Button(action: actions.add) { Image(systemName: "plus") }
+				.help(Text(verbatim: actions.addLabel))
+				.accessibilityLabel(Text(verbatim: actions.addLabel))
+			editAndRemoveButtons(actions.selected, hasSelection: hasSelection)
 			Spacer()
-		}.buttonStyle(.borderless)
+		}
+		.buttonStyle(.borderless)
+		.padding(.horizontal, 20)
+		.padding(.bottom, 12)
 	}
 
-	private func fingerprint(_ label: String, _ value: String) -> some View {
-		HStack {
-			LabeledContent(label, value: value)
-			Button(ServerPropertiesStrings.Certificate.copyFingerprint) { actions.copyCertificateFingerprint(value) }
-				.disabled(model.config.identityClientSideCertificate == nil)
+	@ViewBuilder
+	func editAndRemoveButtons(
+		_ actions: ServerPropertiesSelectedEntryActions,
+		hasSelection: Bool
+	) -> some View {
+		Button(action: actions.edit) { Image(systemName: "pencil") }
+			.disabled(hasSelection == false)
+			.help(Text(verbatim: actions.editLabel))
+			.accessibilityLabel(Text(verbatim: actions.editLabel))
+		Button(role: .destructive, action: actions.remove) { Image(systemName: "minus") }
+			.disabled(hasSelection == false)
+			.help(Text(verbatim: actions.removeLabel))
+			.accessibilityLabel(Text(verbatim: actions.removeLabel))
+	}
+
+	func fingerprint(_ label: String, _ value: String) -> some View {
+		LabeledContent(label) {
+			HStack {
+				Text(verbatim: value)
+					.font(.system(.caption, design: .monospaced))
+					.textSelection(.enabled)
+					.lineLimit(1)
+					.truncationMode(.middle)
+				Button(ServerPropertiesStrings.Certificate.copyNickServCommand) {
+					actions.certificate.copyNickServCommand(value)
+				}
+				.help(Text(verbatim: ServerPropertiesStrings.Certificate.copyNickServCommand(forDigest: label)))
+				.accessibilityLabel(
+					Text(verbatim: ServerPropertiesStrings.Certificate.copyNickServCommand(forDigest: label))
+				)
+			}
 		}
 	}
 
-	private func optionalBinding(_ keyPath: WritableKeyPath<ClientConfig, String?>) -> Binding<String> {
+	func slider(_ label: String, value: Binding<Double>, current: Int) -> some View {
+		LabeledContent(label) {
+			HStack {
+				Slider(value: value, in: 1 ... 60, step: 1)
+					.accessibilityLabel(label)
+				Text(current, format: .number)
+					.monospacedDigit()
+					.frame(width: 28, alignment: .trailing)
+			}
+		}
+	}
+
+	func optionalBinding(_ keyPath: WritableKeyPath<ClientConfig, String?>) -> Binding<String> {
 		Binding(
 			get: { model.config[keyPath: keyPath] ?? "" },
 			set: { model.config[keyPath: keyPath] = $0.isEmpty ? nil : $0 }
 		)
 	}
 
-	private var warningBinding: Binding<Bool> {
-		Binding(get: { !model.config.hideAutojoinDelayedWarnings },
-		        set: { model.config.hideAutojoinDelayedWarnings = !$0 })
+	var warningBinding: Binding<Bool> {
+		Binding(get: { model.config.hideAutojoinDelayedWarnings == false },
+		        set: { model.config.hideAutojoinDelayedWarnings = $0 == false })
 	}
 
-	private func channelAutoJoinBinding(_ identifier: String) -> Binding<Bool> {
+	func channelAutoJoinBinding(_ identifier: String) -> Binding<Bool> {
 		Binding(
 			get: { model.config.channelList.first { $0.uniqueIdentifier == identifier }?.autoJoin ?? false },
 			set: { value in
@@ -525,8 +748,39 @@ struct ServerPropertiesView: View {
 		)
 	}
 
-	private func uintBinding(_ keyPath: WritableKeyPath<ClientConfig, UInt>) -> Binding<Double> {
+	func uintBinding(_ keyPath: WritableKeyPath<ClientConfig, UInt>) -> Binding<Double> {
 		Binding(get: { Double(model.config[keyPath: keyPath]) },
 		        set: { model.config[keyPath: keyPath] = UInt($0) })
+	}
+}
+
+private extension View {
+	/** The keyboard and context menu every one of the sheet's lists answers to.
+
+	 The three lists were selection and two buttons and nothing else: Delete did
+	 nothing, a secondary click offered nothing, and opening a row meant finding
+	 the pencil. `primaryAction` is the double-click and Return at once. */
+	func listCommands(
+		_ actions: ServerPropertiesSelectedEntryActions,
+		selection: Binding<String?>
+	) -> some View {
+		onDeleteCommand(perform: actions.remove)
+			.contextMenu(forSelectionType: String.self) { identifiers in
+				Button(actions.editLabel) {
+					selection.wrappedValue = identifiers.first
+					actions.edit()
+				}
+				.disabled(identifiers.count != 1)
+				Divider()
+				Button(actions.removeLabel, role: .destructive) {
+					selection.wrappedValue = identifiers.first
+					actions.remove()
+				}
+				.disabled(identifiers.isEmpty)
+			} primaryAction: { identifiers in
+				guard identifiers.count == 1 else { return }
+				selection.wrappedValue = identifiers.first
+				actions.edit()
+			}
 	}
 }

@@ -43,9 +43,8 @@ import SwiftUI
 
 public extension Notification.Name {
 	static let mainWindowAppearanceChanged = Notification.Name("TVCMainWindowAppearanceChangedNotification")
-	/// The one declaration of the selection notification. It was declared in
-	/// four places and written as a bare string in a fifth, so an observer
-	/// could quietly watch a name nobody posted.
+	/// The one declaration of the selection notification; an observer that
+	/// spells the name itself is watching a name nobody posts.
 	static let mainWindowSelectionChanged = Notification.Name("TVCMainWindowSelectionChangedNotification")
 }
 
@@ -61,7 +60,7 @@ private enum ServerListNavigationSelection {
 	case server
 }
 
-enum MainWindowConstants {
+nonisolated enum MainWindowConstants { // nonisolated: value
 	static let legacyFrameKey = "NSWindow Frame -> Internal (v3) -> Main Window"
 	static let systemFrameKeyPrefix = "NSWindow Frame "
 	static let serverListMinimumWidth: CGFloat = 180
@@ -92,42 +91,6 @@ enum MainWindowConstants {
 	static let focusRingWidthIncreasedContrast: CGFloat = 3
 }
 
-/** Whether a shortcut that edits the message field belongs to this key press.
-
- `NSApplication` offers the window every key event before the responder chain
- sees it, so a shortcut registered on the window fires wherever the keyboard
- is: typing a filter in the toolbar's search field and pressing Tab completed a
- nickname into the chat input and moved the keyboard there with it. These
- shortcuts only apply while the input bar holds the keyboard; anywhere else the
- window declines the event and the responder chain gets it. */
-enum MainWindowInputShortcutPolicy {
-	/// `inputBar` is the field's container, so the field, its scroll view's
-	/// clip view and any field editor inside it all count as the input bar.
-	static func shouldHandle(firstResponder: NSResponder?, inputBar: NSView?) -> Bool {
-		guard let inputBar, let responderView = firstResponder as? NSView else { return false }
-		return responderView === inputBar || responderView.isDescendant(of: inputBar)
-	}
-}
-
-enum MainWindowMemberListVisibilityPolicy {
-	static func isAvailable(isChannel: Bool, isLoggedIn: Bool) -> Bool {
-		isChannel && isLoggedIn
-	}
-
-	static func shouldExpand(
-		isChannel: Bool,
-		isLoggedIn: Bool,
-		isHiddenByUser: Bool
-	) -> Bool {
-		isAvailable(isChannel: isChannel, isLoggedIn: isLoggedIn) && isHiddenByUser == false
-	}
-}
-
-@inline(__always)
-func nativeChannel(_ item: IRCTreeItem?) -> IRCChannel? {
-	item as? IRCChannel
-}
-
 @MainActor
 @objc(TVCMainWindow)
 public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomKeyboardEventResponder {
@@ -150,6 +113,8 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	/// hold only a weak back-reference the registry installs.
 	private(set) lazy var logControllers = LogControllerRegistry(window: self)
 	private var appearanceStorage: MainWindowAppearance?
+	/// The application-wide snapshot ``appearanceStorage`` was built from.
+	private var appearanceSnapshot: AppearancePropertyCollection?
 	public var userInterfaceObjects: MainWindowAppearance {
 		guard let appearanceStorage else {
 			preconditionFailure("Main-window appearance requested before initialization finished")
@@ -157,11 +122,22 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		return appearanceStorage
 	}
 
-	public internal(set) var selectedItem: IRCTreeItem?
+	public internal(set) var selectedItem: TreeItem?
 	var previousSelectedItemId: String?
 	private var keyEventHandler: KeyEventHandler!
 	var cachedSwipeOriginPoint: NSPoint?
-	public internal(set) var textSizeMultiplier = 1.0
+	/** The transcript zoom the View menu last left.
+
+	 Stored beside the column widths rather than held for the session only: the
+	 zoom is a reading preference, and it used to be back at 100% on the next
+	 launch. Every new transcript view reads it as it loads. */
+	public internal(set) var textSizeMultiplier = 1.0 {
+		didSet {
+			guard textSizeMultiplier != oldValue else { return }
+			MainWindowStateStore().saveTextSizeMultiplier(textSizeMultiplier)
+		}
+	}
+
 	private var hasConfigured = false
 	private let notifications = NotificationSubscriptions()
 
@@ -179,6 +155,10 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	private func prepareInitialState() {
+		/* A constant, so it is set once here rather than restated by every
+		 title update -- which used to mean on every selection change and every
+		 connection-state change. */
+		setAccessibilityIdentifier("main-window")
 		installUIObjects()
 		inputHistory = InputHistory(window: self)
 		keyEventHandler = KeyEventHandler()
@@ -195,10 +175,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		serverList = ServerList()
 		serverList.attach(to: self)
 		presentationModel.attach(to: self)
-		loadingScreen.visibilityDidChange = { [weak self] visible in
-			self?.inputTextField.isEditable = !visible
-			self?.inputTextField.isSelectable = !visible
-		}
 	}
 
 	/// Completes the programmatic window graph and starts the application.
@@ -223,11 +199,9 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		isRestorable = true
 		restorationClass = Self.self
 		installWindowChrome()
-		formattingMenu.configure()
-		installFormattingMenuDecorations()
 		installInputFieldMenu()
 		updateAppearance()
-		_ = reloadLoadingScreen()
+		reloadLoadingScreen()
 		loadWindowState()
 		SharedApplication.sharedThemeController().reload()
 		controller.menuController?.prepareInitialState()
@@ -244,7 +218,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 
 	/// The world the window draws. It is `nil` until the application finishes
 	/// waking, which window restoration can precede.
-	var world: IRCWorld? {
+	var world: World? {
 		AppController.shared.world
 	}
 
@@ -253,10 +227,6 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 			preconditionFailure("Menu controller is unavailable while the main window is loading")
 		}
 		return menuController
-	}
-
-	public func inputHistoryManager() -> InputHistory {
-		inputHistory
 	}
 
 	private func installWindowChrome() {
@@ -318,10 +288,22 @@ extension MainWindow {
 		userInterfaceObjects.isDarkAppearance
 	}
 
+	/** Rebuilds the window's appearance objects, when there is a new appearance
+	 to build them from.
+
+	 Each one decodes a property list, and this used to run for every
+	 appearance notification and every screen change: dragging the window
+	 between displays reparsed two files and bumped `appearanceRevision`, which
+	 rebuilds the whole transcript representable. The snapshot the objects are
+	 built from is a value, so comparing it answers whether there is anything
+	 to rebuild. */
 	private func updateAppearance() {
+		let properties = ApplicationAppearance.currentApplicationProperties
+		guard appearanceStorage == nil || appearanceSnapshot != properties else { return }
 		guard let appearance = MainWindowAppearance() else { return }
+		appearanceSnapshot = properties
 		appearanceStorage = appearance
-		self.appearance = appearance.appKitAppearanceTarget == .window ? appearance.appKitAppearance : nil
+		self.appearance = appearance.appKitAppearance
 		notifyMainWindowAppearanceChanged()
 	}
 
@@ -340,6 +322,7 @@ extension MainWindow {
 		migrateLegacyWindowFrame()
 		repairRestoredWindowFrame()
 		restoreSavedContentSplitViewState()
+		textSizeMultiplier = MainWindowStateStore().loadTextSizeMultiplier()
 	}
 
 	private func repairRestoredWindowFrame() {
@@ -399,11 +382,12 @@ extension MainWindow {
 // MARK: - Window delegate
 
 public extension MainWindow {
-	private func reloadMainWindowFrameOnScreenChange() {
+	/// The dock tile is drawn for the screen the window is on, so a move
+	/// between displays redraws it. Nothing else about the window changes.
+	private func redrawDockIconForScreenChange() {
 		guard AppController.shared.applicationIsTerminating == false else { return }
 		DockIcon.resetCachedCount()
 		DockIcon.updateDockIcon()
-		updateAppearance()
 	}
 
 	private func resetSelectedItemState() {
@@ -415,15 +399,13 @@ public extension MainWindow {
 		DockIcon.updateDockIcon()
 	}
 
-	func noteItemWasViewed(_ item: IRCTreeItem) {
+	func noteItemWasViewed(_ item: TreeItem) {
 		guard isKeyWindow, let channel = item.associatedChannel else { return }
 		channel.associatedClient.markChannel(asRead: channel)
 	}
 
-	func windowDidDeminiaturize(_: Notification) {}
-
 	func windowDidChangeScreen(_: Notification) {
-		reloadMainWindowFrameOnScreenChange()
+		redrawDockIconForScreenChange()
 	}
 
 	func windowDidBecomeKey(_: Notification) {
@@ -450,27 +432,15 @@ public extension MainWindow {
 	func windowShouldZoom(_: NSWindow, toFrame _: NSRect) -> Bool {
 		ceIsInFullscreenMode == false
 	}
-
-	func window(_: NSWindow, willUseFullScreenContentSize proposedSize: NSSize) -> NSSize {
-		proposedSize
-	}
-
-	func window(
-		_: NSWindow,
-		willUseFullScreenPresentationOptions proposedOptions: NSApplication.PresentationOptions
-	) -> NSApplication.PresentationOptions {
-		proposedOptions
-	}
 }
 
 // MARK: - Formatting menu
 
 private extension MainWindow {
 	/** The formatter submenu joins the input field's own context menu here,
-	 once. It used to be added from `windowWillReturnFieldEditor`, which also
-	 handed the input field to every control in the window as its field editor:
-	 the toolbar search field then edited through the chat input, an Escape
-	 there was inserted as a literal character, and the sidebar filtered on it. */
+	 once, and not from `windowWillReturnFieldEditor`: answering that hands the
+	 input field to every control in the window as its field editor, and the
+	 toolbar's search field then edits through the chat input. */
 	func installInputFieldMenu() {
 		let editorMenu = inputTextField.menu ?? NSMenu()
 		let formatterMenu = formattingMenu.formatterMenu!
@@ -479,52 +449,6 @@ private extension MainWindow {
 			editorMenu.addItem(formatterMenu)
 		}
 		inputTextField.menu = editorMenu
-	}
-
-	func installFormattingMenuDecorations() {
-		for menu in [formattingMenu.foregroundColorMenu!, formattingMenu.backgroundColorMenu!] {
-			for item in menu.items where item.isSeparatorItem == false && item.action != nil {
-				item.image = Self.formattingMenuImage(forColorTag: item.tag)
-			}
-		}
-
-		guard let formatterMenu = formattingMenu.formatterMenu?.submenu else { return }
-		if let monospaceItem = formatterMenu.item(withTag: TextFormatterCommand.monospace.rawValue) {
-			monospaceItem.attributedTitle = NSAttributedString(
-				string: monospaceItem.title,
-				attributes: [.font: NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)]
-			)
-		}
-		if let spoilerItem = formatterMenu.item(withTag: TextFormatterCommand.spoiler.rawValue) {
-			spoilerItem.attributedTitle = NSAttributedString(
-				string: spoilerItem.title,
-				attributes: [
-					.font: NSFont.menuFont(ofSize: 0),
-					.foregroundColor: NSColor.windowBackgroundColor,
-					.backgroundColor: NSColor.labelColor,
-				]
-			)
-		}
-	}
-
-	static func formattingMenuImage(forColorTag tag: Int) -> NSImage? {
-		if TextFormatterCommand(rawValue: tag) == .rainbowColor {
-			return NSImage(systemSymbolName: "rainbow", accessibilityDescription: nil)
-		}
-		let colors = NSColor.formatterColors
-		guard tag >= 0, tag < colors.count else { return nil }
-		let color = colors[tag]
-		let image = NSImage(size: NSSize(width: 16, height: 16), flipped: false) { rect in
-			let circle = NSBezierPath(ovalIn: rect.insetBy(dx: 1.5, dy: 1.5))
-			color.setFill()
-			circle.fill()
-			NSColor.separatorColor.withAlphaComponent(0.6).setStroke()
-			circle.lineWidth = 1
-			circle.stroke()
-			return true
-		}
-		image.isTemplate = false
-		return image
 	}
 }
 
@@ -553,13 +477,18 @@ extension MainWindow {
 		}
 	}
 
-	/// True while the message field, or anything inside its container, holds
-	/// the keyboard.
+	/** Whether the message field, or anything inside its container, holds the
+	 keyboard.
+
+	 `NSApplication` offers the window every key event before the responder
+	 chain sees it, so a shortcut registered on the window otherwise fires
+	 wherever the keyboard is: typing a filter in the toolbar's search field and
+	 pressing Tab completed a nickname into the chat input and moved the
+	 keyboard there with it. The container is what is asked about, so the field,
+	 its scroll view's clip view and any field editor inside it all count. */
 	var inputBarHoldsKeyboardFocus: Bool {
-		MainWindowInputShortcutPolicy.shouldHandle(
-			firstResponder: firstResponder,
-			inputBar: inputContentView
-		)
+		guard let inputContentView, let responder = firstResponder as? NSView else { return false }
+		return responder === inputContentView || responder.isDescendant(of: inputContentView)
 	}
 
 	/// A window-level shortcut that only applies to the message field. It is
@@ -622,38 +551,43 @@ extension MainWindow {
 	}
 
 	private func registerKeyHandlers() {
-		/* Escape leaves full screen from anywhere; only the fall-through into
-		 the message field is the input bar's. */
+		/* Escape is the text field's first: it dismisses a spelling suggestion,
+		 cancels a reply and closes the completion popup. Only when nothing
+		 editable holds the keyboard does it leave full screen -- which is
+		 otherwise the green button's and Control+Command+F's job anyway. */
 		keyEventHandler.registerConditional(key: .escape) { [weak self] event in
 			guard let self else { return false }
-			if ceIsInFullscreenMode {
-				toggleFullScreen(nil)
+			if inputBarHoldsKeyboardFocus {
+				inputTextField.keyDown(with: event)
 				return true
 			}
-			guard inputBarHoldsKeyboardFocus else { return false }
-			inputTextField.keyDown(with: event)
+			guard ceIsInFullscreenMode else { return false }
+			toggleFullScreen(nil)
 			return true
 		}
 		registerForInputBar(key: .tab) { $0.tab($1) }
 		registerForInputBar(key: .tab, modifiers: .shift) { $0.shiftTab($1) }
 		register(key: .tab, modifiers: .option) { $0.selectPreviousSelection($1) }
-		/* Formatting edits the message being written, so it belongs to the input
-		 bar the way Tab and ⌃P/⌃N do. Registered unconditionally, ⌘B swallowed
-		 the key wherever the reader was -- in the toolbar's search field, in a
-		 sheet's field, in the transcript -- and gave nothing back. */
-		registerForInputBar(character: "b", modifiers: .command) { $0.textFormattingBold($1) }
-		registerForInputBar(character: "u", modifiers: [.control, .shift]) { $0.textFormattingUnderline($1) }
-		registerForInputBar(character: "i", modifiers: [.control, .shift]) { $0.textFormattingItalic($1) }
+		/* The two colour commands pop a menu up at the caret, which no menu item
+		 can do, so they stay registrations. Bold, italics and underline are
+		 Format menu items with key equivalents of their own; registering them
+		 here as well gave the window a second, unvalidated copy of each.
+		 Registered unconditionally, ⌘B also swallowed the key wherever the
+		 reader was -- in the toolbar's search field, in a sheet's field, in the
+		 transcript -- and gave nothing back, which is why what is left is
+		 scoped to the input bar. */
 		registerForInputBar(character: "c", modifiers: [.control, .shift]) { $0.textFormattingForegroundColor($1) }
 		registerForInputBar(character: "h", modifiers: [.control, .shift]) { $0.textFormattingBackgroundColor($1) }
-		register(character: ".", modifiers: .command) { $0.speakPendingNotifications($1) }
 		registerForInputBar(character: "p", modifiers: .control) { $0.inputHistoryUp($1) }
 		registerForInputBar(character: "n", modifiers: .control) { $0.inputHistoryDown($1) }
 
 		registerInput(key: .enter, modifiers: .control) { $0.sendControlEnterMessageMaybe($1) }
 		registerInput(key: .returnKey, modifiers: .command) { $0.sendMessageAsAction($1) }
 		registerInput(key: .enter, modifiers: .command) { $0.sendMessageAsAction($1) }
-		registerInput(character: "l", modifiers: [.option, .command]) { $0.focusTranscript($1) }
+		/* Control+Command+T, beside Control+Command+S for the server list:
+		 Option+Command+L is the Window menu's File Transfers, and
+		 Option+Command+T is the system's Show/Hide Toolbar. */
+		registerInput(character: "t", modifiers: [.control, .command]) { $0.focusTranscript($1) }
 		registerInput(key: .upArrow) { $0.inputHistoryUpWithScrollCheck($1) }
 		registerInput(key: .upArrow, modifiers: .option) { $0.inputHistoryUpWithScrollCheck($1) }
 		registerInput(key: .downArrow) { $0.inputHistoryDownWithScrollCheck($1) }
@@ -664,42 +598,52 @@ extension MainWindow {
 // MARK: - Navigation
 
 public extension MainWindow {
-	private func navigateServerListEntries(
-		_ scannedRows: [IRCTreeItem]?,
-		entryCount: Int,
-		startingPoint: Int,
+	/** Moves the selection to the next row that qualifies.
+
+	 `rows` is rotated so the walk starts one past the current selection and
+	 comes back round to it, and the first row that is both of the right kind
+	 and in the right state wins. A selection that is not in `rows` -- nothing
+	 selected, or a row the filter has taken out of the list -- has nowhere to
+	 walk from, so nothing moves. */
+	private func navigate(
+		_ rows: [TreeItem],
+		from startingPoint: Int,
 		isMovingDown: Bool,
 		navigationType: ServerListNavigationMovement,
 		selectionType: ServerListNavigationSelection
 	) {
-		guard entryCount > 0, startingPoint >= 0, startingPoint < entryCount else { return }
-		var position = startingPoint
-		repeat {
-			position += isMovingDown ? 1 : -1
-			if position >= entryCount || position < 0 {
-				position = isMovingDown ? 0 : entryCount - 1
-			}
-			if position == startingPoint {
-				return
-			}
-			guard let item = scannedRows?[position] ?? serverList.item(atRow: position) as? IRCTreeItem
-			else { continue }
-			switch selectionType {
-			case .channel
-				where item.isChannel == false && item.isPrivateMessage == false
-				&& item.associatedChannel?.isDirectChat != true:
-				continue
-			case .server where item.isClient == false:
-				continue
-			default:
-				break
-			}
-			let matches = navigationType == .all || (navigationType == .active && item.isActive) ||
-				(navigationType == .unread && item.isUnread)
-			if matches {
-				select(item); return
-			}
-		} while true
+		guard rows.indices.contains(startingPoint) else { return }
+		let count = rows.count
+		let rotated = (1 ..< count).lazy.map { offset -> TreeItem in
+			let position = isMovingDown ? startingPoint + offset : startingPoint - offset + count
+			return rows[position % count]
+		}
+		guard let destination = rotated.first(where: {
+			Self.item($0, is: selectionType) && Self.item($0, matches: navigationType)
+		}) else { return }
+		select(destination)
+	}
+
+	private static func item(_ item: TreeItem, is selectionType: ServerListNavigationSelection) -> Bool {
+		switch selectionType {
+		case .any:
+			true
+		case .channel:
+			item.isChannel || item.isPrivateMessage || item.associatedChannel?.isDirectChat == true
+		case .server:
+			item.isClient
+		}
+	}
+
+	private static func item(_ item: TreeItem, matches navigationType: ServerListNavigationMovement) -> Bool {
+		switch navigationType {
+		case .all:
+			true
+		case .active:
+			item.isActive
+		case .unread:
+			item.isUnread
+		}
 	}
 
 	func navigateChannelEntries(_ isMovingDown: Bool, withNavigationType navigationType: ServerListNavigationMovement) {
@@ -714,10 +658,10 @@ public extension MainWindow {
 		_ isMovingDown: Bool,
 		navigationType: ServerListNavigationMovement
 	) {
-		navigateServerListEntries(
-			nil,
-			entryCount: serverList.numberOfRows,
-			startingPoint: serverList.row(forItem: selectedItem),
+		let rows = serverList.selectableItems
+		navigate(
+			rows,
+			from: serverList.row(forItem: selectedItem),
 			isMovingDown: isMovingDown,
 			navigationType: navigationType,
 			selectionType: .channel
@@ -731,10 +675,9 @@ public extension MainWindow {
 		guard let selectedClient else { return }
 		var rows = serverList.items(inContainingGroupOf: selectedItem as Any) ?? []
 		rows.append(selectedClient)
-		navigateServerListEntries(
+		navigate(
 			rows,
-			entryCount: rows.count,
-			startingPoint: rows.firstIndex(where: { $0 === selectedItem }) ?? -1,
+			from: rows.firstIndex { $0 === selectedItem } ?? -1,
 			isMovingDown: isMovingDown,
 			navigationType: navigationType,
 			selectionType: .channel
@@ -743,10 +686,9 @@ public extension MainWindow {
 
 	func navigateServerEntries(_ isMovingDown: Bool, withNavigationType navigationType: ServerListNavigationMovement) {
 		let rows = serverList.groupItems
-		navigateServerListEntries(
+		navigate(
 			rows,
-			entryCount: rows.count,
-			startingPoint: rows.firstIndex(where: { $0 === selectedClient }) ?? -1,
+			from: rows.firstIndex { $0 === selectedClient } ?? -1,
 			isMovingDown: isMovingDown,
 			navigationType: navigationType,
 			selectionType: .server
@@ -754,10 +696,10 @@ public extension MainWindow {
 	}
 
 	func navigateToNextEntry(_ isMovingDown: Bool) {
-		navigateServerListEntries(
-			nil,
-			entryCount: serverList.numberOfRows,
-			startingPoint: serverList.row(forItem: selectedItem),
+		let rows = serverList.selectableItems
+		navigate(
+			rows,
+			from: serverList.row(forItem: selectedItem),
 			isMovingDown: isMovingDown,
 			navigationType: .all,
 			selectionType: .any

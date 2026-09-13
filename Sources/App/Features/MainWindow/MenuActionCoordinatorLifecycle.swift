@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -57,7 +57,6 @@ enum MenuLifecyclePolicy {
 	}
 }
 
-@MainActor
 public extension MenuActionCoordinator {
 	func prepareInitialState() {
 		guard let menuController else {
@@ -77,6 +76,11 @@ public extension MenuActionCoordinator {
 		menuController.channelViewGeneralMenu.item(for: .webChannelMenu)?.submenu =
 			menuController.mainMenuChannelMenu.copy() as? NSMenu
 
+		/* Formatting applies to the message being written, and the formatter
+		 belongs to the window that holds the field, so the Format menu can only
+		 be filled in once that window exists. */
+		menuController.mainMenuFormatMenuItem?.submenu = mainWindow.formattingMenu?.makeMenu()
+
 		SharedApplication.sharedFileTransferCenter().startUsingDownloadDestinationURL()
 		applyMenuSymbols()
 
@@ -89,10 +93,6 @@ public extension MenuActionCoordinator {
 		notifications.observe(.mainWindowSelectionChanged) { [weak self] notification in
 			self?.mainWindowSelectionChanged(notification)
 		}
-
-		// The first selection is already in place by the time the menu is built.
-		attachChannelMenu(to: menuController.mainMenuChannelMenuItem)
-		attachQueryMenu(to: menuController.mainMenuQueryMenuItem)
 	}
 
 	func prepareForApplicationTermination() {
@@ -127,11 +127,9 @@ public extension MenuActionCoordinator {
 				return
 			}
 
-			let shouldReset = MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(
+			if MenuLifecyclePolicy.shouldResetSelectionAfterMenuCloses(
 				performedAction: menuPerformedActionLastOpen
-			)
-
-			if shouldReset {
+			) {
 				resetSelectedItems()
 			}
 		}
@@ -142,20 +140,23 @@ public extension MenuActionCoordinator {
 		pointedChannel = nil
 	}
 
+	/** Symbols are for the menus that pop up under the pointer.
+
+	 The menu bar is deliberately absent from this list: macOS draws no images
+	 beside its own menu-bar commands, and the blank spacers a mixed column
+	 needed went with them. */
 	private func applyMenuSymbols() {
 		guard let menuController else {
 			return
 		}
 
 		let menus = [
-			NSApp.mainMenu,
 			menuController.channelViewChannelNameMenu,
 			menuController.channelViewGeneralMenu,
 			menuController.channelViewURLMenu,
 			menuController.dockMenu,
 			menuController.mainMenuChannelMenu,
 			menuController.mainMenuQueryMenu,
-			menuController.mainMenuNavigationChannelListMenu,
 			menuController.mainWindowSegmentedControllerCellMenu,
 			menuController.serverListNoSelectionMenu,
 			menuController.userControlMenu,
@@ -170,23 +171,17 @@ public extension MenuActionCoordinator {
 		if menuIsOpen == false {
 			resetSelectedItems()
 		}
-
-		attachChannelMenu(to: menuController?.mainMenuChannelMenuItem)
-		attachQueryMenu(to: menuController?.mainMenuQueryMenuItem)
-
-		menuController?.mainMenuChannelMenuItem?.submenu?.update()
-		menuController?.mainMenuQueryMenuItem?.submenu?.update()
 	}
 
 	private func menuItemWillPerformAction(_ notification: Notification) {
-		guard notificationMenuItem(notification)?.target === menuController else {
+		guard notificationMenuItem(notification)?.target === self else {
 			return
 		}
 		menuPerformedActionLastOpen = true
 	}
 
 	private func menuItemDidPerformAction(_ notification: Notification) {
-		guard notificationMenuItem(notification)?.target === menuController else {
+		guard notificationMenuItem(notification)?.target === self else {
 			return
 		}
 		resetSelectedItems()

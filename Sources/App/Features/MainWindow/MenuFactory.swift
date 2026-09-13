@@ -25,6 +25,7 @@ enum MenuFactory {
 		let action: Selector?
 		let key: String
 		let modifiers: NSEvent.ModifierFlags
+		let isAlternate: Bool
 		let children: [Entry]
 		let isSeparator: Bool
 
@@ -34,42 +35,44 @@ enum MenuFactory {
 			_ action: Selector? = nil,
 			key: String = "",
 			modifiers: NSEvent.ModifierFlags = .command,
+			isAlternate: Bool = false,
 			children: [Entry] = []
 		) -> Entry {
 			Entry(title: title, command: command, action: action, key: key,
-			      modifiers: modifiers, children: children, isSeparator: false)
+			      modifiers: modifiers, isAlternate: isAlternate, children: children,
+			      isSeparator: false)
 		}
 
-		static func separator(_ command: MenuCommand? = nil) -> Entry {
-			Entry(title: "", command: command, action: nil, key: "", modifiers: [], children: [],
-			      isSeparator: true)
+		static func separator() -> Entry {
+			Entry(title: "", command: nil, action: nil, key: "", modifiers: [],
+			      isAlternate: false, children: [], isSeparator: true)
 		}
 	}
 
 	static func install(on controller: MenuController) {
 		controller.serverListNoSelectionMenu = contextMenu([
-			.item(MenuStrings.Server.addServer, .serverListAddServer, #selector(MenuController.addServer(_:))),
+			.item(MenuStrings.Server.addServer, .serverListAddServer, #selector(MenuActionCoordinator.addServer(_:))),
 		], controller)
 		controller.channelViewChannelNameMenu = contextMenu([
 			.item(
 				MenuStrings.Channel.joinChannel,
 				.channelNameJoinChannel,
-				#selector(MenuController.joinChannelClicked(_:))
+				#selector(MenuActionCoordinator.joinChannelClicked(_:))
 			),
 		], controller)
 		controller.channelViewURLMenu = contextMenu([
-			.item(MenuStrings.Transcript.copyURL, .copyLinkURL, #selector(MenuController.copyUrl(_:))),
+			.item(MenuStrings.Transcript.copyURL, .copyLinkURL, #selector(MenuActionCoordinator.copyURL(_:))),
 		], controller)
 		controller.dockMenu = contextMenu([
 			.item(
-				MenuStrings.File.disableNotifications,
-				.dockDisableNotifications,
-				#selector(MenuController.toggleMuteOnNotifications(_:))
+				MenuStrings.Notifications.muteNotifications,
+				.dockMuteNotifications,
+				#selector(MenuActionCoordinator.toggleMuteOnNotifications(_:))
 			),
 			.item(
-				MenuStrings.File.disableNotificationSounds,
-				.dockDisableNotificationSounds,
-				#selector(MenuController.toggleMuteOnNotificationSounds(_:))
+				MenuStrings.Notifications.muteNotificationSounds,
+				.dockMuteNotificationSounds,
+				#selector(MenuActionCoordinator.toggleMuteOnNotificationSounds(_:))
 			),
 		], controller)
 		controller.channelViewGeneralMenu = contextMenu(channelViewEntries, controller)
@@ -82,16 +85,26 @@ enum MenuFactory {
 		controller.mainMenuServerMenuItem = mainMenu.item(for: .serverMenu)
 		controller.mainMenuChannelMenuItem = mainMenu.item(for: .channelMenu)
 		controller.mainMenuQueryMenuItem = mainMenu.item(for: .queryMenu)
+		controller.mainMenuFormatMenuItem = mainMenu.item(for: .formatMenu)
 		controller.mainMenuNavigationChannelListMenu = mainMenu.item(for: .navigationChannelList)?.submenu ?? NSMenu()
-		controller.muteNotificationsFileMenuItem = mainMenu.item(for: .disableNotifications)
-		controller.muteNotificationsSoundsFileMenuItem = mainMenu.item(for: .disableNotificationSounds)
-		controller.muteNotificationsDockMenuItem = controller.dockMenu.item(for: .dockDisableNotifications)
-		controller.muteNotificationsSoundsDockMenuItem = controller.dockMenu.item(for: .dockDisableNotificationSounds)
+		controller.muteNotificationsFileMenuItem = mainMenu.item(for: .muteNotifications)
+		controller.muteNotificationsSoundsFileMenuItem = mainMenu.item(for: .muteNotificationSounds)
+		controller.muteNotificationsDockMenuItem = controller.dockMenu.item(for: .dockMuteNotifications)
+		controller.muteNotificationsSoundsDockMenuItem = controller.dockMenu.item(for: .dockMuteNotificationSounds)
+
+		/* The Channel and Query menus are installed once and stay installed:
+		 a menu bar whose menus come and go with the selection is a menu bar
+		 the reader cannot learn. Validation disables what the selection
+		 cannot do. */
+		controller.mainMenuChannelMenuItem?.submenu = controller.mainMenuChannelMenu
+		controller.mainMenuQueryMenuItem?.submenu = controller.mainMenuQueryMenu
 
 		NSApp.mainMenu = mainMenu
 		NSApp.servicesMenu = mainMenu.item(for: .services)?.submenu
-		NSApp.windowsMenu = mainMenu.item(for: .windowMenu)?.submenu
 		NSApp.helpMenu = mainMenu.item(for: .helpMenu)?.submenu
+		/* `NSApp.windowsMenu` is deliberately not set: AppKit would append its
+		 own list of open windows to a menu that already names every window
+		 this application opens, so each one appeared twice. */
 	}
 
 	/** A menu that is only ever popped up, never hung under a titled item.
@@ -125,10 +138,12 @@ enum MenuFactory {
 					} else if responderActions.contains(action) {
 						item.target = nil
 					} else {
-						item.target = controller
+						item.target = controller.actionCoordinator
 					}
 				}
-				item.keyEquivalentModifierMask = entry.key.isEmpty ? [] : entry.modifiers
+				item.keyEquivalentModifierMask =
+					entry.key.isEmpty && entry.isAlternate == false ? [] : entry.modifiers
+				item.isAlternate = entry.isAlternate
 				if !entry.children.isEmpty {
 					item.submenu = menu(entry.title, entry.children, controller)
 				} else if entry.command == .services {
@@ -189,6 +204,10 @@ private extension MenuFactory {
 		.item(MenuStrings.MenuBar.application, .applicationMenu, children: applicationEntries),
 		.item(MenuStrings.MenuBar.file, .fileMenu, children: fileEntries),
 		.item(MenuStrings.MenuBar.edit, .editMenu, children: editEntries),
+		/* The formatting commands belong to the message being written, so the
+			window's formatter fills this in once it exists; see
+			`MenuActionCoordinator.prepareInitialState()`. */
+		.item(MenuStrings.MenuBar.format, .formatMenu, children: [.item("")]),
 		.item(MenuStrings.MenuBar.view, .viewMenu, children: viewEntries),
 		.item(MenuStrings.MenuBar.server, .serverMenu, children: serverEntries),
 		.item(MenuStrings.MenuBar.channel, .channelMenu),
@@ -199,17 +218,32 @@ private extension MenuFactory {
 	]
 
 	static let applicationEntries: [Entry] = [
-		.item(MenuStrings.Application.about, .about, #selector(MenuController.showAboutWindow(_:))),
-		.separator(.aboutSeparator),
+		.item(MenuStrings.Application.about, .about, #selector(MenuActionCoordinator.showAboutWindow(_:))),
+		.separator(),
 		.item(
 			MenuStrings.Application.settings,
 			.settings,
-			#selector(MenuController.showPreferencesWindow(_:)),
+			#selector(MenuActionCoordinator.showPreferencesWindow(_:)),
 			key: ","
 		),
-		.separator(.settingsSeparator),
+		.separator(),
+		/* Muting is an application-wide mode, not a document command: it sits
+			beside Settings rather than in a File menu it has nothing to do with. */
+		.item(
+			MenuStrings.Notifications.muteNotifications,
+			.muteNotifications,
+			#selector(MenuActionCoordinator.toggleMuteOnNotifications(_:))
+		),
+		.item(
+			MenuStrings.Notifications.muteNotificationSounds,
+			.muteNotificationSounds,
+			#selector(MenuActionCoordinator.toggleMuteOnNotificationSounds(_:)),
+			key: "m",
+			modifiers: [.command, .shift]
+		),
+		.separator(),
 		.item(MenuStrings.Application.services, .services, children: []),
-		.separator(.servicesSeparator),
+		.separator(),
 		.item(MenuStrings.Application.hide, .hideApplication, #selector(NSApplication.hide(_:)), key: "h"),
 		.item(
 			MenuStrings.Application.hideOthers,
@@ -219,59 +253,74 @@ private extension MenuFactory {
 			modifiers: [.command, .option]
 		),
 		.item(MenuStrings.Application.showAll, .showAll, #selector(NSApplication.unhideAllApplications(_:))),
-		.separator(.showAllSeparator),
+		.separator(),
 		.item(MenuStrings.Application.quit, .quit, #selector(NSApplication.terminate(_:)), key: "q"),
 	]
 
 	static let fileEntries: [Entry] = [
+		.item(MenuStrings.File.print, .printLog, #selector(MenuActionCoordinator.printTranscript(_:)), key: "p"),
+		.separator(),
 		.item(
-			MenuStrings.File.disableNotifications,
-			.disableNotifications,
-			#selector(MenuController.toggleMuteOnNotifications(_:))
+			MenuStrings.File.importSettings,
+			.importSettings,
+			#selector(MenuActionCoordinator.importSettings(_:))
 		),
 		.item(
-			MenuStrings.File.disableNotificationSounds,
-			.disableNotificationSounds,
-			#selector(MenuController.toggleMuteOnNotificationSounds(_:)),
-			key: "M"
+			MenuStrings.File.exportSettings,
+			.exportSettings,
+			#selector(MenuActionCoordinator.exportSettings(_:))
 		),
-		.separator(.disableNotificationSoundsSeparator),
-		.item(MenuStrings.File.print, .printLog, #selector(MenuController.print(_:)), key: "p"),
-		.separator(.printLogSeparator),
-		.item(MenuStrings.File.closeWindow, .closeWindow, #selector(MenuController.closeWindow(_:)), key: "w"),
+		.separator(),
+		.item(MenuStrings.File.closeWindow, .closeWindow, #selector(MenuActionCoordinator.closeWindow(_:)), key: "w"),
 	]
 
 	static let editEntries: [Entry] = [
 		.item(MenuStrings.Edit.undo, .undo, #selector(StandardEditingActions.undo(_:)), key: "z"),
-		.item(MenuStrings.Edit.redo, .redo, #selector(StandardEditingActions.redo(_:)), key: "Z"),
-		.separator(.redoSeparator),
+		.item(
+			MenuStrings.Edit.redo,
+			.redo,
+			#selector(StandardEditingActions.redo(_:)),
+			key: "z",
+			modifiers: [.command, .shift]
+		),
+		.separator(),
 		.item(MenuStrings.Edit.cut, .cut, #selector(NSText.cut(_:)), key: "x"),
 		.item(MenuStrings.Edit.copy, .copy, #selector(NSText.copy(_:)), key: "c"),
-		.item(MenuStrings.Edit.paste, .paste, #selector(MenuController.paste(_:)), key: "v"),
+		.item(MenuStrings.Edit.paste, .paste, #selector(MenuActionCoordinator.paste(_:)), key: "v"),
 		.item(
 			MenuStrings.Edit.pasteAndMatchStyle,
 			nil,
 			#selector(NSTextView.pasteAsPlainText(_:)),
-			key: "V",
+			key: "v",
 			modifiers: [.command, .option, .shift]
 		),
 		.item(MenuStrings.Edit.delete, .delete, #selector(NSText.delete(_:))),
 		.item(MenuStrings.Edit.selectAll, .selectAll, #selector(NSText.selectAll(_:)), key: "a"),
-		.separator(.selectAllSeparator),
+		.separator(),
 		.item(MenuStrings.Edit.find, .find, children: [
-			.item(MenuStrings.Edit.findText, .findText, #selector(MenuController.showFindPrompt(_:)), key: "f"),
-			.item(MenuStrings.Edit.findNext, .findNext, #selector(MenuController.showFindPrompt(_:)), key: "g"),
+			.item(
+				MenuStrings.Edit.findText,
+				.findText,
+				#selector(MenuActionCoordinator.showFindPrompt(_:)),
+				key: "f"
+			),
+			.item(
+				MenuStrings.Edit.findNext,
+				.findNext,
+				#selector(MenuActionCoordinator.showFindPrompt(_:)),
+				key: "g"
+			),
 			.item(
 				MenuStrings.Edit.findPrevious,
 				.findPrevious,
-				#selector(MenuController.showFindPrompt(_:)),
-				key: "G",
+				#selector(MenuActionCoordinator.showFindPrompt(_:)),
+				key: "g",
 				modifiers: [.command, .shift]
 			),
 			.item(
 				MenuStrings.Edit.useSelectionForFind,
 				.useSelectionForFind,
-				#selector(MenuController.showFindPrompt(_:)),
+				#selector(MenuActionCoordinator.showFindPrompt(_:)),
 				key: "e"
 			),
 		]),
@@ -343,6 +392,17 @@ private extension MenuFactory {
 		.item(MenuStrings.Edit.speech, nil, children: [
 			.item(MenuStrings.Edit.startSpeaking, nil, #selector(NSTextView.startSpeaking(_:))),
 			.item(MenuStrings.Edit.stopSpeaking, nil, #selector(NSTextView.stopSpeaking(_:))),
+			.separator(),
+			/* Option+Command+Period, because Command+Period alone is the
+				system's Cancel -- which is what this command was bound to, as a
+				window registration no menu declared and nothing validated. */
+			.item(
+				MenuStrings.Edit.skipSpokenNotification,
+				.skipSpokenNotification,
+				#selector(MenuActionCoordinator.skipSpokenNotification(_:)),
+				key: ".",
+				modifiers: [.command, .option]
+			),
 		]),
 		/* No Emoji & Symbols and no Start Dictation: AppKit adds both to this
 			menu as soon as the main menu is installed -- that is what
@@ -359,51 +419,88 @@ private extension MenuFactory {
 		.item(
 			MainWindowStrings.Menu.serverList(isVisible: true),
 			.toggleServerList,
-			#selector(MenuController.toggleServerListVisibility(_:)),
+			#selector(MenuActionCoordinator.toggleServerListVisibility(_:)),
 			key: "s",
-			modifiers: [.command, .option]
+			modifiers: [.command, .control]
 		),
 		.item(
 			MainWindowStrings.Menu.memberList(isVisible: true),
 			.toggleMemberList,
-			#selector(MenuController.toggleMemberListVisibility(_:)),
-			key: "u",
+			#selector(MenuActionCoordinator.toggleMemberListVisibility(_:)),
+			key: "i",
 			modifiers: [.command, .option]
 		),
-		/* Named, because the two toggles above it are hidden whenever this is
-			not the main window: a bare separator stayed behind and left the View
-			menu opening on a rule. */
-		.separator(.toggleSidebarsSeparator),
-		.item(MenuStrings.View.markScrollback, .markScrollback, #selector(MenuController.markScrollback(_:)), key: "l"),
+		.separator(),
+		.item(
+			MenuStrings.View.markScrollback,
+			.markScrollback,
+			#selector(MenuActionCoordinator.markScrollback(_:)),
+			key: "l"
+		),
 		.item(
 			MenuStrings.View.scrollbackMarker,
 			.scrollbackMarker,
-			#selector(MenuController.gotoScrollbackMarker(_:)),
+			#selector(MenuActionCoordinator.gotoScrollbackMarker(_:)),
 			key: "l",
 			modifiers: [.command, .control]
 		),
-		.separator(.scrollbackMarkerSeparator),
-		.item(MenuStrings.View.markAllAsRead, .markAllRead, #selector(MenuController.markAllAsRead(_:)), key: "U"),
+		.separator(),
+		.item(
+			MenuStrings.View.markAllAsRead,
+			.markAllRead,
+			#selector(MenuActionCoordinator.markAllAsRead(_:)),
+			key: "u",
+			modifiers: [.command, .shift]
+		),
 		.item(
 			MenuStrings.View.clearScrollback,
 			.clearScrollback,
-			#selector(MenuController.clearScrollback(_:)),
+			#selector(MenuActionCoordinator.clearScrollback(_:)),
 			key: "k"
 		),
-		.separator(.clearScrollbackSeparator),
+		.separator(),
 		.item(
 			MenuStrings.View.increaseFontSize,
 			.increaseFont,
-			#selector(MenuController.increaseLogFontSize(_:)),
+			#selector(MenuActionCoordinator.increaseLogFontSize(_:)),
 			key: "="
 		),
 		.item(
 			MenuStrings.View.decreaseFontSize,
 			.decreaseFont,
-			#selector(MenuController.decreaseLogFontSize(_:)),
+			#selector(MenuActionCoordinator.decreaseLogFontSize(_:)),
 			key: "-"
 		),
-		.separator(.decreaseFontSeparator),
+		/* The third of the triple Safari, Mail, Xcode and Preview all ship:
+			without it there is no way back to the size the reader started at. */
+		.item(
+			MenuStrings.View.actualSize,
+			.actualSize,
+			#selector(MenuActionCoordinator.resetLogFontSize(_:)),
+			key: "0"
+		),
+		.separator(),
+		/* One ticked choice per appearance, not a toggle: a command named
+			"Toggle" cannot say which appearance is in force, and the three-way
+			preference has no "toggle" to express. */
+		.item(MenuStrings.View.appearance, nil, children: [
+			.item(
+				MenuStrings.View.appearanceSystem,
+				.appearanceSystem,
+				#selector(MenuActionCoordinator.changeAppearance(_:))
+			),
+			.item(
+				MenuStrings.View.appearanceLight,
+				.appearanceLight,
+				#selector(MenuActionCoordinator.changeAppearance(_:))
+			),
+			.item(
+				MenuStrings.View.appearanceDark,
+				.appearanceDark,
+				#selector(MenuActionCoordinator.changeAppearance(_:))
+			),
+		]),
+		.separator(),
 		.item(
 			MenuStrings.View.enterFullScreen,
 			.enterFullScreen,
@@ -414,127 +511,158 @@ private extension MenuFactory {
 	]
 
 	static let serverEntries: [Entry] = [
-		.item(MenuStrings.Server.connect, .connect, #selector(MenuController.connect(_:))),
+		.item(MenuStrings.Server.connect, .connect, #selector(MenuActionCoordinator.connect(_:))),
+		/* Option reveals the proxy-free variant in place, which is how macOS
+			offers a modified form of the command above it. */
 		.item(
 			MenuStrings.Server.connectWithoutProxy,
 			.connectWithoutProxy,
-			#selector(MenuController.connectBypassingProxy(_:))
+			#selector(MenuActionCoordinator.connectBypassingProxy(_:)),
+			modifiers: [.command, .option],
+			isAlternate: true
 		),
-		.item(MenuStrings.Server.disconnect, .disconnect, #selector(MenuController.disconnect(_:))),
+		.item(MenuStrings.Server.disconnect, .disconnect, #selector(MenuActionCoordinator.disconnect(_:))),
 		.item(
 			MenuStrings.Server.cancelReconnect,
 			.cancelReconnect,
-			#selector(MenuController.cancelReconnection(_:))
+			#selector(MenuActionCoordinator.cancelReconnection(_:))
 		),
-		.separator(.cancelReconnectSeparator),
-		.item(MenuStrings.Server.channelList, .channelList, #selector(MenuController.showServerChannelList(_:))),
+		.separator(),
+		.item(
+			MenuStrings.Server.channelList,
+			.channelList,
+			#selector(MenuActionCoordinator.showServerChannelList(_:))
+		),
 		.item(
 			MenuStrings.Server.changeNickname,
 			.changeNickname,
-			#selector(MenuController.showServerChangeNicknameSheet(_:))
+			#selector(MenuActionCoordinator.showServerChangeNicknameSheet(_:))
 		),
-		.separator(.changeNicknameSeparator),
-		.item(MenuStrings.Server.addServer, .addServer, #selector(MenuController.addServer(_:))),
-		.item(MenuStrings.Server.duplicateServer, .duplicateServer, #selector(MenuController.duplicateServer(_:))),
-		.item(MenuStrings.Server.deleteServer, .deleteServer, #selector(MenuController.deleteServer(_:))),
-		.separator(.deleteServerSeparator),
-		.item(MenuStrings.Server.addChannel, .addChannelToServer, #selector(MenuController.addChannel(_:))),
-		.separator(.addChannelToServerSeparator),
+		.separator(),
+		.item(MenuStrings.Server.addServer, .addServer, #selector(MenuActionCoordinator.addServer(_:))),
+		.item(
+			MenuStrings.Server.duplicateServer,
+			.duplicateServer,
+			#selector(MenuActionCoordinator.duplicateServer(_:))
+		),
+		.item(MenuStrings.Server.deleteServer, .deleteServer, #selector(MenuActionCoordinator.deleteServer(_:))),
+		.separator(),
+		.item(
+			MenuStrings.Server.addChannel,
+			.addChannelToServer,
+			#selector(MenuActionCoordinator.addChannel(_:))
+		),
+		.separator(),
+		/* ⌘U belongs to Underline now. The comma key already names "the
+			settings of", so the three scopes read as one family: ⌘, for the
+			application, ⇧⌘, for the server, ⌥⌘, for the channel. */
 		.item(
 			MenuStrings.Server.serverProperties,
 			.serverProperties,
-			#selector(MenuController.showServerPropertiesSheet(_:)),
-			key: "u"
+			#selector(MenuActionCoordinator.showServerPropertiesSheet(_:)),
+			key: ",",
+			modifiers: [.command, .shift]
 		),
 	]
 
 	static let channelEntries: [Entry] = [
-		.item(MenuStrings.Channel.joinChannel, .joinChannel, #selector(MenuController.joinChannel(_:))),
-		.item(MenuStrings.Channel.leaveChannel, .leaveChannel, #selector(MenuController.leaveChannel(_:))),
-		.separator(.leaveChannelSeparator),
+		.item(MenuStrings.Channel.joinChannel, .joinChannel, #selector(MenuActionCoordinator.joinChannel(_:))),
+		.item(MenuStrings.Channel.leaveChannel, .leaveChannel, #selector(MenuActionCoordinator.leaveChannel(_:))),
+		.separator(),
 		.item(
 			MenuStrings.Server.addChannel,
 			.addChannel,
-			#selector(MenuController.addChannel(_:)),
+			#selector(MenuActionCoordinator.addChannel(_:)),
 			key: "+",
 			modifiers: [.command, .shift]
 		),
-		.item(MenuStrings.Channel.deleteChannel, .deleteChannel, #selector(MenuController.deleteChannel(_:))),
-		.separator(.deleteChannelSeparator),
+		.item(
+			MenuStrings.Channel.deleteChannel,
+			.deleteChannel,
+			#selector(MenuActionCoordinator.deleteChannel(_:))
+		),
+		.separator(),
 		.item(
 			MenuStrings.Channel.viewLogs,
 			.viewChannelLogs,
-			#selector(MenuController.openChannelLogs(_:)),
-			key: "L"
+			#selector(MenuActionCoordinator.openChannelLogs(_:)),
+			key: "l",
+			modifiers: [.command, .shift]
 		),
-		.separator(.viewChannelLogsSeparator),
+		.separator(),
 		.item(
 			MenuStrings.Channel.modifyTopic,
 			.modifyTopic,
-			#selector(MenuController.showChannelModifyTopicSheet(_:)),
+			#selector(MenuActionCoordinator.showChannelModifyTopicSheet(_:)),
 			key: "t"
 		),
 		.item(MenuStrings.Channel.modes, .modes, children: [
 			.item(
 				MenuStrings.Channel.modeModerated,
 				.channelModeModerated,
-				#selector(MenuController.toggleChannelModerationMode(_:))
-			),
-			.item(
-				MenuStrings.Channel.modeUnmoderated,
-				.channelModeUnmoderated,
-				#selector(MenuController.toggleChannelModerationMode(_:))
+				#selector(MenuActionCoordinator.toggleChannelModerationMode(_:))
 			),
 			.item(
 				MenuStrings.Channel.modeInviteOnly,
 				.channelModeInviteOnly,
-				#selector(MenuController.toggleChannelInviteMode(_:))
+				#selector(MenuActionCoordinator.toggleChannelInviteMode(_:))
 			),
-			.item(
-				MenuStrings.Channel.modeAnyoneCanJoin,
-				.channelModeAnyoneCanJoin,
-				#selector(MenuController.toggleChannelInviteMode(_:))
-			),
+			.separator(),
 			.item(
 				MenuStrings.Channel.modeManageAll,
 				.channelModeManageAll,
-				#selector(MenuController.showChannelModifyModesSheet(_:))
+				#selector(MenuActionCoordinator.showChannelModifyModesSheet(_:))
 			),
 		]),
-		.separator(.modesSeparator),
-		.item(MenuStrings.Channel.bans, .bans, #selector(MenuController.showChannelBanList(_:)), key: "B"),
+		.separator(),
+		.item(
+			MenuStrings.Channel.bans,
+			.bans,
+			#selector(MenuActionCoordinator.showChannelBanList(_:)),
+			key: "b",
+			modifiers: [.command, .shift]
+		),
 		.item(
 			MenuStrings.Channel.banExceptions,
 			.banExceptions,
-			#selector(MenuController.showChannelBanExceptionList(_:)),
-			key: "E"
+			#selector(MenuActionCoordinator.showChannelBanExceptionList(_:)),
+			key: "e",
+			modifiers: [.command, .shift]
 		),
 		.item(
 			MenuStrings.Channel.inviteExceptions,
 			.inviteExceptions,
-			#selector(MenuController.showChannelInviteExceptionList(_:)),
-			key: "I"
+			#selector(MenuActionCoordinator.showChannelInviteExceptionList(_:)),
+			key: "i",
+			modifiers: [.command, .shift]
 		),
-		.item(MenuStrings.Channel.quiets, .quiets, #selector(MenuController.showChannelQuietList(_:))),
-		.separator(.quietsSeparator),
+		.item(MenuStrings.Channel.quiets, .quiets, #selector(MenuActionCoordinator.showChannelQuietList(_:))),
+		.separator(),
 		.item(
 			MenuStrings.Channel.channelProperties,
 			.channelProperties,
-			#selector(MenuController.showChannelPropertiesSheet(_:)),
-			key: "i"
+			#selector(MenuActionCoordinator.showChannelPropertiesSheet(_:)),
+			key: ",",
+			modifiers: [.command, .option]
 		),
-		.separator(.channelPropertiesSeparator),
+		.separator(),
 		.item(
 			MenuStrings.Channel.copyUniqueIdentifier,
 			.copyChannelIdentifier,
-			#selector(MenuController.copyUniqueIdentifier(_:))
+			#selector(MenuActionCoordinator.copyUniqueIdentifier(_:))
 		),
 	]
 
 	static let queryEntries: [Entry] = [
-		.item(MenuStrings.Query.closeQuery, .closeQuery, #selector(MenuController.leaveChannel(_:))),
-		.separator(.closeQuerySeparator),
-		.item(MenuStrings.Query.queryLogs, .queryLogs, #selector(MenuController.openChannelLogs(_:)), key: "L"),
+		.item(MenuStrings.Query.closeQuery, .closeQuery, #selector(MenuActionCoordinator.leaveChannel(_:))),
+		.separator(),
+		.item(
+			MenuStrings.Query.queryLogs,
+			.queryLogs,
+			#selector(MenuActionCoordinator.openChannelLogs(_:)),
+			key: "l",
+			modifiers: [.command, .shift]
+		),
 	]
 
 	static let navigationEntries: [Entry] = [
@@ -542,109 +670,117 @@ private extension MenuFactory {
 			.item(
 				MenuStrings.Navigation.nextServer,
 				.nextServer,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
 			.item(
 				MenuStrings.Navigation.previousServer,
 				.previousServer,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
-			.separator(.previousServerSeparator),
+			.separator(),
 			.item(
 				MenuStrings.Navigation.nextActiveServer,
 				.nextActiveServer,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
 			.item(
 				MenuStrings.Navigation.previousActiveServer,
 				.previousActiveServer,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
 		]),
 		.item(MenuStrings.Navigation.channels, .navigationChannels, children: [
 			.item(
 				MenuStrings.Navigation.nextChannel,
 				.nextChannel,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
 			.item(
 				MenuStrings.Navigation.previousChannel,
 				.previousChannel,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
-			.separator(.previousChannelSeparator),
+			.separator(),
 			.item(
 				MenuStrings.Navigation.nextActiveChannel,
 				.nextActiveChannel,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
 			.item(
 				MenuStrings.Navigation.previousActiveChannel,
 				.previousActiveChannel,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
-			.separator(.previousActiveChannelSeparator),
+			.separator(),
 			.item(
 				MenuStrings.Navigation.nextUnreadChannel,
 				.nextUnreadChannel,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
 			.item(
 				MenuStrings.Navigation.previousUnreadChannel,
 				.previousUnreadChannel,
-				#selector(MenuController.performNavigationAction(_:))
+				#selector(MenuActionCoordinator.performNavigationAction(_:))
 			),
 		]),
-		.separator(.navigationChannelsSeparator),
+		.separator(),
 		.item(
 			MenuStrings.Navigation.moveBackward,
 			.moveBackward,
-			#selector(MenuController.performNavigationAction(_:))
+			#selector(MenuActionCoordinator.performNavigationAction(_:))
 		),
 		.item(
 			MenuStrings.Navigation.moveForward,
 			.moveForward,
-			#selector(MenuController.performNavigationAction(_:))
+			#selector(MenuActionCoordinator.performNavigationAction(_:))
 		),
-		.separator(.moveForwardSeparator),
+		.separator(),
 		.item(
 			MenuStrings.Navigation.previousSelection,
 			.previousSelection,
-			#selector(MenuController.performNavigationAction(_:))
+			#selector(MenuActionCoordinator.performNavigationAction(_:))
 		),
-		.separator(.previousSelectionSeparator),
-		.item(MenuStrings.Navigation.nextHighlight, .nextHighlight, #selector(MenuController.onNextHighlight(_:))),
+		.separator(),
+		.item(
+			MenuStrings.Navigation.nextHighlight,
+			.nextHighlight,
+			#selector(MenuActionCoordinator.onNextHighlight(_:))
+		),
 		.item(
 			MenuStrings.Navigation.previousHighlight,
 			.previousHighlight,
-			#selector(MenuController.onPreviousHighlight(_:))
+			#selector(MenuActionCoordinator.onPreviousHighlight(_:))
 		),
-		.separator(.previousHighlightSeparator),
+		.separator(),
 		.item(
 			MenuStrings.Navigation.jumpToCurrentSession,
 			.jumpToCurrentSession,
-			#selector(MenuController.jumpToCurrentSession(_:))
+			#selector(MenuActionCoordinator.jumpToCurrentSession(_:))
 		),
-		.item(MenuStrings.Navigation.jumpToPresent, .jumpToPresent, #selector(MenuController.jumpToPresent(_:))),
-		.separator(.jumpToPresentSeparator),
+		.item(
+			MenuStrings.Navigation.jumpToPresent,
+			.jumpToPresent,
+			#selector(MenuActionCoordinator.jumpToPresent(_:))
+		),
+		.separator(),
 		/* The untitled child is what gives the item a submenu to hand to
 			`mainMenuNavigationChannelListMenu`; the tree replaces it wholesale. */
 		.item(MenuStrings.Navigation.channelList, .navigationChannelList, children: [.item("")]),
-		.separator(.navigationChannelListSeparator),
+		.separator(),
 		/* The sidebar filter moved into the window toolbar, so this focuses that
-			field. Channel Spotlight keeps its own item below rather than being
+			field. Channel Search keeps its own item below rather than being
 			left with no way in. */
 		.item(
 			MenuStrings.Navigation.searchChannels,
 			.searchChannels,
-			#selector(MenuController.focusSearchField(_:)),
+			#selector(MenuActionCoordinator.focusSearchField(_:)),
 			key: "f",
 			modifiers: [.command, .option]
 		),
 		.item(
 			MenuStrings.Navigation.channelSpotlight,
 			.channelSpotlight,
-			#selector(MenuController.showChannelSpotlightWindow(_:)),
+			#selector(MenuActionCoordinator.showChannelSpotlightWindow(_:)),
 			key: "d",
 			modifiers: [.command, .option]
 		),
@@ -653,67 +789,58 @@ private extension MenuFactory {
 	static let windowEntries: [Entry] = [
 		.item(MenuStrings.Window.minimize, .minimize, #selector(NSWindow.performMiniaturize(_:)), key: "m"),
 		.item(MenuStrings.Window.zoom, .zoom, #selector(NSWindow.performZoom(_:))),
-		.separator(.zoomSeparator),
-		.item(
-			MenuStrings.Window.toggleAppearance,
-			.toggleAppearance,
-			#selector(MenuController.toggleMainWindowAppearance(_:)),
-			key: "D"
-		),
-		.separator(.toggleAppearanceSeparator),
+		.separator(),
+		/* No key equivalent: ⌘R reads as Reload everywhere else on the system,
+			and this rearranges the sidebar. */
 		.item(
 			MenuStrings.Window.sortChannelList,
 			.sortChannelList,
-			#selector(MenuController.sortChannelListNames(_:)),
-			key: "r"
+			#selector(MenuActionCoordinator.sortChannelListNames(_:))
 		),
-		.separator(.sortChannelListSeparator),
-		.item(MenuStrings.Window.centerWindow, .centerWindow, #selector(MenuController.centerMainWindow(_:))),
-		.item(MenuStrings.Window.resetWindow, .resetWindow, #selector(MenuController.resetMainWindowFrame(_:))),
-		.separator(.resetWindowSeparator),
+		.separator(),
+		.item(
+			MenuStrings.Window.centerWindow,
+			.centerWindow,
+			#selector(MenuActionCoordinator.centerMainWindow(_:))
+		),
+		.item(
+			MenuStrings.Window.resetWindow,
+			.resetWindow,
+			#selector(MenuActionCoordinator.resetMainWindowFrame(_:))
+		),
+		.separator(),
 		.item(
 			MenuStrings.Window.mainWindow,
 			.mainWindow,
-			#selector(MenuController.showMainWindow(_:)),
-			key: "1",
-			modifiers: .control
+			#selector(MenuActionCoordinator.showMainWindow(_:)),
+			key: "1"
 		),
 		.item(
 			MenuStrings.Window.addressBook,
 			.addressBook,
-			#selector(MenuController.showAddressBook(_:)),
-			key: "2",
-			modifiers: .control
-		),
-		.item(
-			MenuStrings.Window.ignoreList,
-			.ignoreList,
-			#selector(MenuController.showIgnoreList(_:)),
-			key: "3",
-			modifiers: .control
+			#selector(MenuActionCoordinator.showAddressBook(_:)),
+			key: "2"
 		),
 		.item(
 			MenuStrings.Window.viewLogs,
 			.viewLogs,
-			#selector(MenuController.openLogLocation(_:)),
-			key: "4",
-			modifiers: .control
+			#selector(MenuActionCoordinator.openLogLocation(_:)),
+			key: "3"
 		),
 		.item(
 			MenuStrings.Window.highlightList,
 			.highlightList,
-			#selector(MenuController.showServerHighlightList(_:)),
-			key: "5",
-			modifiers: .control
+			#selector(MenuActionCoordinator.showServerHighlightList(_:)),
+			key: "4"
 		),
 		.item(
 			MenuStrings.Window.fileTransfers,
 			.fileTransfers,
-			#selector(MenuController.showFileTransfersWindow(_:)),
-			key: "6",
-			modifiers: .control
+			#selector(MenuActionCoordinator.showFileTransfersWindow(_:)),
+			key: "l",
+			modifiers: [.command, .option]
 		),
-		.separator(.fileTransfersSeparator),
+		.separator(),
 		.item(
 			MenuStrings.Window.bringAllToFront,
 			.bringAllToFront,
@@ -722,140 +849,180 @@ private extension MenuFactory {
 	]
 
 	static let helpEntries: [Entry] = [
-		.item(
-			MenuStrings.Help.acknowledgements,
-			.acknowledgements,
-			#selector(MenuController.openAcknowledgements(_:))
-		),
-		.separator(.acknowledgementsSeparator),
+		/* ⌘? is the system's help key, and the support channel is where this
+		 application's help actually is: there is no help book to open. */
 		.item(
 			MenuStrings.Help.connectToHelpChannel,
 			.connectToHelpChannel,
-			#selector(MenuController.connectToGlasstualHelpChannel(_:))
+			#selector(MenuActionCoordinator.connectToGlasstualHelpChannel(_:)),
+			key: "?"
 		),
 		.item(
 			MenuStrings.Help.connectToTestingChannel,
 			.connectToTestingChannel,
-			#selector(MenuController.connectToGlasstualTestingChannel(_:))
+			#selector(MenuActionCoordinator.connectToGlasstualTestingChannel(_:))
 		),
-		.separator(.connectToTestingChannelSeparator),
+		.separator(),
+		.item(MenuStrings.Help.welcome, .welcome, #selector(MenuActionCoordinator.showOnboardingWindow(_:))),
+		.item(
+			MenuStrings.Help.acknowledgements,
+			.acknowledgements,
+			#selector(MenuActionCoordinator.openAcknowledgements(_:))
+		),
+		.separator(),
 		.item(MenuStrings.Help.advanced, .advanced, children: [
 			.item(
 				MenuStrings.Help.developerMode,
 				.developerMode,
-				#selector(MenuController.toggleDeveloperMode(_:))
+				#selector(MenuActionCoordinator.toggleDeveloperMode(_:))
 			),
 			.item(
 				MenuStrings.Help.hiddenSettings,
 				.hiddenSettings,
-				#selector(MenuController.showHiddenPreferences(_:))
+				#selector(MenuActionCoordinator.showHiddenPreferences(_:))
 			),
 			.item(
-				MenuStrings.Help.exportPreferences,
-				.exportPreferences,
-				#selector(MenuController.exportPreferences(_:))
-			),
-			.item(
-				MenuStrings.Help.importPreferences,
-				.importPreferences,
-				#selector(MenuController.importPreferences(_:))
-			),
-			.item(
-				MenuStrings.Help.resetDontAskMeWarnings,
-				.resetDontAskMeWarnings,
-				#selector(MenuController.resetDoNotAskMePopupWarnings(_:))
+				MenuStrings.Help.resetWarnings,
+				.resetWarnings,
+				#selector(MenuActionCoordinator.resetSuppressedWarnings(_:))
 			),
 		]),
-		.separator(.advancedSeparator),
-		.item(MenuStrings.Help.welcome, .welcome, #selector(MenuController.showOnboardingWindow(_:))),
 	]
 
 	static let channelViewEntries: [Entry] = [
 		.item(
 			MenuStrings.Server.changeNickname,
 			.webChangeNickname,
-			#selector(MenuController.showServerChangeNicknameSheet(_:))
+			#selector(MenuActionCoordinator.showServerChangeNicknameSheet(_:))
 		),
-		.separator(.webChangeNicknameSeparator),
-		.item(MenuStrings.Transcript.searchWithProvider, .webSearch, #selector(MenuController.searchGoogle(_:))),
+		.separator(),
+		.item(
+			MenuSearchProvider.menuTitle,
+			.webSearch,
+			#selector(MenuActionCoordinator.searchWeb(_:))
+		),
 		.item(
 			MenuStrings.Transcript.lookUpInDictionary,
 			.webDictionary,
-			#selector(MenuController.lookUpInDictionary(_:))
+			#selector(MenuActionCoordinator.lookUpInDictionary(_:))
 		),
-		.separator(.webDictionarySeparator),
+		.separator(),
 		.item(MenuStrings.Edit.copy, .webCopy, #selector(NSText.copy(_:)), key: "c"),
-		.item(MenuStrings.Edit.paste, .webPaste, #selector(MenuController.paste(_:)), key: "v"),
-		.separator(.webPasteSeparator),
-		.item(MenuStrings.Query.queryLogs, .webQueryLogs, #selector(MenuController.openChannelLogs(_:)), key: "L"),
+		.item(MenuStrings.Edit.paste, .webPaste, #selector(MenuActionCoordinator.paste(_:)), key: "v"),
+		.separator(),
+		.item(
+			MenuStrings.Query.queryLogs,
+			.webQueryLogs,
+			#selector(MenuActionCoordinator.openChannelLogs(_:)),
+			key: "l",
+			modifiers: [.command, .shift]
+		),
 		.item(MenuStrings.MenuBar.channel, .webChannelMenu),
 	]
 
 	static let segmentedEntries: [Entry] = [
-		.item(MenuStrings.Server.addServer, .segmentedAddServer, #selector(MenuController.addServer(_:))),
-		.separator(.segmentedAddServerSeparator),
-		.item(MenuStrings.Server.addChannel, .segmentedAddChannel, #selector(MenuController.addChannel(_:))),
+		.item(
+			MenuStrings.Server.addServer,
+			.segmentedAddServer,
+			#selector(MenuActionCoordinator.addServer(_:))
+		),
+		.separator(),
+		.item(
+			MenuStrings.Server.addChannel,
+			.segmentedAddChannel,
+			#selector(MenuActionCoordinator.addChannel(_:))
+		),
 	]
 
 	static let memberEntries: [Entry] = [
-		.item(MenuStrings.Member.addIgnore, .addIgnore, #selector(MenuController.memberAddIgnore(_:))),
-		.item(MenuStrings.Member.modifyIgnore, .modifyIgnore, #selector(MenuController.memberModifyIgnore(_:))),
-		.item(MenuStrings.Member.removeIgnore, .removeIgnore, #selector(MenuController.memberRemoveIgnore(_:))),
-		.separator(.removeIgnoreSeparator),
-		.item(MenuStrings.Member.inviteTo, .inviteTo, #selector(MenuController.memberSendInvite(_:))),
-		.separator(.inviteToSeparator),
-		.item(MenuStrings.Member.whois, .whois, #selector(MenuController.memberSendWhois(_:))),
+		.item(MenuStrings.Member.addIgnore, .addIgnore, #selector(MenuActionCoordinator.memberAddIgnore(_:))),
+		.item(
+			MenuStrings.Member.modifyIgnore,
+			.modifyIgnore,
+			#selector(MenuActionCoordinator.memberModifyIgnore(_:))
+		),
+		.item(
+			MenuStrings.Member.removeIgnore,
+			.removeIgnore,
+			#selector(MenuActionCoordinator.memberRemoveIgnore(_:))
+		),
+		.separator(),
+		.item(MenuStrings.Member.inviteTo, .inviteTo, #selector(MenuActionCoordinator.memberSendInvite(_:))),
+		.separator(),
+		.item(MenuStrings.Member.whois, .whois, #selector(MenuActionCoordinator.memberSendWhois(_:))),
 		.item(
 			MenuStrings.Member.privateMessage,
 			.privateMessage,
-			#selector(MenuController.memberStartPrivateMessage(_:))
+			#selector(MenuActionCoordinator.memberStartPrivateMessage(_:))
 		),
-		.separator(.privateMessageSeparator),
-		.item(MenuStrings.Member.giveOp, .giveOp, #selector(MenuController.memberModeGiveOp(_:))),
-		.item(MenuStrings.Member.giveHalfop, .giveHalfop, #selector(MenuController.memberModeGiveHalfop(_:))),
-		.item(MenuStrings.Member.giveVoice, .giveVoice, #selector(MenuController.memberModeGiveVoice(_:))),
-		.item(MenuStrings.Member.allModesGiven, .allModesGiven),
-		.separator(.allModesGivenSeparator),
-		.item(MenuStrings.Member.takeOp, .takeOp, #selector(MenuController.memberModeTakeOp(_:))),
-		.item(MenuStrings.Member.takeHalfop, .takeHalfop, #selector(MenuController.memberModeTakeHalfop(_:))),
-		.item(MenuStrings.Member.takeVoice, .takeVoice, #selector(MenuController.memberModeTakeVoice(_:))),
-		.item(MenuStrings.Member.allModesTaken, .allModesTaken),
-		.separator(.allModesTakenSeparator),
-		.item(MenuStrings.Member.ban, .ban, #selector(MenuController.memberBanFromChannel(_:))),
-		.item(MenuStrings.Member.kick, .kick, #selector(MenuController.memberKickFromChannel(_:))),
-		.item(MenuStrings.Member.kickban, .kickban, #selector(MenuController.memberKickbanFromChannel(_:))),
-		.separator(.kickbanSeparator),
+		.separator(),
+		.item(MenuStrings.Member.giveOp, .giveOp, #selector(MenuActionCoordinator.memberModeGiveOp(_:))),
+		.item(
+			MenuStrings.Member.giveHalfop,
+			.giveHalfop,
+			#selector(MenuActionCoordinator.memberModeGiveHalfop(_:))
+		),
+		.item(MenuStrings.Member.giveVoice, .giveVoice, #selector(MenuActionCoordinator.memberModeGiveVoice(_:))),
+		.separator(),
+		.item(MenuStrings.Member.takeOp, .takeOp, #selector(MenuActionCoordinator.memberModeTakeOp(_:))),
+		.item(
+			MenuStrings.Member.takeHalfop,
+			.takeHalfop,
+			#selector(MenuActionCoordinator.memberModeTakeHalfop(_:))
+		),
+		.item(MenuStrings.Member.takeVoice, .takeVoice, #selector(MenuActionCoordinator.memberModeTakeVoice(_:))),
+		.separator(),
+		.item(MenuStrings.Member.ban, .ban, #selector(MenuActionCoordinator.memberBanFromChannel(_:))),
+		.item(MenuStrings.Member.kick, .kick, #selector(MenuActionCoordinator.memberKickFromChannel(_:))),
+		.item(
+			MenuStrings.Member.kickban,
+			.kickban,
+			#selector(MenuActionCoordinator.memberKickbanFromChannel(_:))
+		),
+		.separator(),
 		.item(MenuStrings.Member.ctcp, .ctcp, children: [
-			.item(MenuStrings.Member.sendFile, .ctcpSendFile, #selector(MenuController.memberSendFileRequest(_:))),
-			.separator(.ctcpSendFileSeparator),
-			.item(MenuStrings.Member.ctcpPing, .ctcpPing, #selector(MenuController.memberSendCTCPPing(_:))),
-			.item(MenuStrings.Member.ctcpTime, .ctcpTime, #selector(MenuController.memberSendCTCPTime(_:))),
-			.separator(.ctcpTimeSeparator),
+			.item(
+				MenuStrings.Member.sendFile,
+				.ctcpSendFile,
+				#selector(MenuActionCoordinator.memberSendFileRequest(_:))
+			),
+			.separator(),
+			.item(MenuStrings.Member.ctcpPing, .ctcpPing, #selector(MenuActionCoordinator.memberSendCTCPPing(_:))),
+			.item(MenuStrings.Member.ctcpTime, .ctcpTime, #selector(MenuActionCoordinator.memberSendCTCPTime(_:))),
+			.separator(),
 			.item(
 				MenuStrings.Member.ctcpClientInfo,
 				.ctcpClientInfo,
-				#selector(MenuController.memberSendCTCPClientInfo(_:))
+				#selector(MenuActionCoordinator.memberSendCTCPClientInfo(_:))
 			),
-			.item(MenuStrings.Member.ctcpVersion, .ctcpVersion, #selector(MenuController.memberSendCTCPVersion(_:))),
-			.separator(.ctcpVersionSeparator),
-			.item(MenuStrings.Member.ctcpFinger, .ctcpFinger, #selector(MenuController.memberSendCTCPFinger(_:))),
+			.item(
+				MenuStrings.Member.ctcpVersion,
+				.ctcpVersion,
+				#selector(MenuActionCoordinator.memberSendCTCPVersion(_:))
+			),
+			.separator(),
+			.item(
+				MenuStrings.Member.ctcpFinger,
+				.ctcpFinger,
+				#selector(MenuActionCoordinator.memberSendCTCPFinger(_:))
+			),
 			.item(
 				MenuStrings.Member.ctcpUserInfo,
 				.ctcpUserInfo,
-				#selector(MenuController.memberSendCTCPUserinfo(_:))
+				#selector(MenuActionCoordinator.memberSendCTCPUserinfo(_:))
 			),
 		]),
 		.item(MenuStrings.Member.ircOperator, .ircOperator, children: [
 			.item(
 				MenuStrings.Member.setVirtualHost,
 				.operatorSetVirtualHost,
-				#selector(MenuController.showSetVhostPrompt(_:))
+				#selector(MenuActionCoordinator.memberSetVirtualHost(_:))
 			),
-			.separator(.operatorSetVirtualHostSeparator),
-			.item(MenuStrings.Member.kill, .operatorKill, #selector(MenuController.memberKillFromServer(_:))),
-			.item(MenuStrings.Member.shun, .operatorShun, #selector(MenuController.memberShunOnServer(_:))),
-			.item(MenuStrings.Member.gline, .operatorGline, #selector(MenuController.memberBanFromServer(_:))),
+			.separator(),
+			.item(MenuStrings.Member.kill, .operatorKill, #selector(MenuActionCoordinator.memberKillFromServer(_:))),
+			.item(MenuStrings.Member.shun, .operatorShun, #selector(MenuActionCoordinator.memberShunOnServer(_:))),
+			.item(MenuStrings.Member.gline, .operatorGline, #selector(MenuActionCoordinator.memberBanFromServer(_:))),
 		]),
-		.item(MenuStrings.Member.changeColor, .changeColor, #selector(MenuController.memberChangeColor(_:))),
+		.item(MenuStrings.Member.changeColor, .changeColor, #selector(MenuActionCoordinator.memberChangeColor(_:))),
 	]
 }

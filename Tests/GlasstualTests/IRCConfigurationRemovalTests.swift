@@ -47,7 +47,7 @@ final class RemovalPresentation: TreeItemPresentation {
 struct IRCConfigurationRemovalTests {
 	@Test("Restore removes the client and tears down every presentation without deleting secret intent")
 	func preservingClientRemoval() throws {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		var config = ClientConfig(connectionName: "Removal fixture")
 		config.channelList = [ChannelConfig(channelName: "#removed"),
 		                      ChannelConfig(channelName: "Query", type: .privateMessage)]
@@ -97,7 +97,7 @@ struct IRCConfigurationRemovalTests {
 
 	@Test("The disconnect callback retains the preserving removal option")
 	func preservingClientRemovalAfterDisconnect() {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Deferred removal"))
 		let presentation = RemovalPresentation()
 		client.presentation = presentation
@@ -120,7 +120,7 @@ struct IRCConfigurationRemovalTests {
 
 	@Test("Transfer reconciliation releases removed channels even when redraw is batched")
 	func preservingChannelReconciliation() throws {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let observer = RecordingWorldObserver()
 		fixture.world.addObserver(observer)
 		var config = ClientConfig(connectionName: "Reconcile fixture")
@@ -153,7 +153,7 @@ struct IRCConfigurationRemovalTests {
 	@Test("A same-name conversation replaces the old identity and respects query persistence",
 	      arguments: [false, true], [false, true])
 	func replacingChannelIdentity(isQuery: Bool, rememberQueries: Bool) throws {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		var preferences = fixture.world.environment.preferences
 		preferences.rememberServerListQueryStates = rememberQueries
 		fixture.world.applyPreferences(preferences)
@@ -180,7 +180,7 @@ struct IRCConfigurationRemovalTests {
 
 	@Test("Only legacy reconciliation retires a removed active endpoint's keychain item", arguments: [false, true])
 	func serverPasswordRetirement(preservingLocalData: Bool) {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Endpoint fixture"))
 		let endpoint = Server(serverAddress: "irc.example.test", pendingServerPassword: .set("fixture-server"))
 		client.config.serverList = [endpoint]
@@ -204,7 +204,7 @@ struct IRCConfigurationRemovalTests {
 
 	@Test("Ordinary server edits retain unmatched live queries")
 	func serverEditorRetainsQueries() {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Before edit"))
 		let query = fixture.world.createPrivateMessage("KeptPeer", on: client)
 		let presentation = RemovalPresentation()
@@ -224,7 +224,7 @@ struct IRCConfigurationRemovalTests {
 
 	@Test("Ordinary channel deactivation does not tear down its presentation")
 	func deactivationKeepsPresentation() {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig(connectionName: "Deactivation fixture"))
 		let channel = fixture.world.createChannel(with: ChannelConfig(channelName: "#parted"), on: client)
 		let presentation = RemovalPresentation()

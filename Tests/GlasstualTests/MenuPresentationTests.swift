@@ -7,68 +7,52 @@ import AppKit
 @testable import Glasstual
 import Testing
 
-/// A headless AppKit host can be built without the SF Symbols catalogue, and
-/// can decline to hold a symbol image on a menu item. The symbol pass has
-/// nothing to place on such a host, so the tests that check it are skipped.
-private nonisolated func menuSymbolImagesAreAvailable() -> Bool { // nonisolated: pure
-	guard
-		let symbol = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil),
-		NSImage(systemSymbolName: "arrowshape.turn.up.left", accessibilityDescription: nil) != nil
-	else {
-		return false
-	}
-
-	let item = NSMenuItem(title: "Copy", action: nil, keyEquivalent: "")
-	item.image = symbol
-
-	return item.image != nil
-}
-
 @MainActor
 @Suite("Menu presentation")
 struct MenuPresentationTests {
 	/// That every mapped symbol exists in the system catalogue is stated once,
-	/// in `MenuCommandTests.symbolNamesResolve`; what this adds is the lookup
-	/// the presentation layer does over it.
-	@Test("A command's symbol is looked up by the command, and nothing maps to no command")
-	func mainMenuSymbolLookupIsByCommand() {
-		#expect(MenuCommand.settings.symbolName == "gear")
-		#expect(MenuCommand.findText.symbolName == "magnifyingglass")
-		#expect(MenuPresentation.symbolName(for: .settings) == "gear")
-		#expect(MenuPresentation.symbolName(for: nil) == nil)
+	/// in `MenuCommandTests.symbolNamesResolve`; what this adds is that the
+	/// symbols belong to the contextual menus and to nothing else.
+	@Test("Only the commands contextual menus carry take a symbol")
+	func symbolsBelongToContextualMenusOnly() {
+		#expect(MenuCommand.connect.symbolName == "bolt")
+		#expect(MenuCommand.whois.symbolName == "info.circle")
+		/* The menu bar draws no images: macOS draws none beside its own
+		 commands, and a column of symbols next to Cut, Copy and Quit reads as
+		 decoration. */
+		#expect(MenuCommand.settings.symbolName == nil)
+		#expect(MenuCommand.quit.symbolName == nil)
+		#expect(MenuCommand.selectAll.symbolName == nil)
+		#expect(MenuCommand.zoom.symbolName == nil)
 	}
 
 	@Test("The symbol pass adds an image without touching the item's command or key equivalent")
 	func symbolPassAssignsMappedImageWithoutChangingMenuIdentity() {
-		let menu = NSMenu(title: "Application")
-		let item = NSMenuItem(title: "Settings…", action: nil, keyEquivalent: ",")
-		item.command = .settings
+		let menu = NSMenu(title: "Server")
+		let item = NSMenuItem(title: "Connect", action: nil, keyEquivalent: "k")
+		item.command = .connect
 		menu.addItem(item)
 
 		MenuPresentation.apply(to: menu)
 
-		#expect(item.title == "Settings…")
-		#expect(item.command == .settings)
-		#expect(item.keyEquivalent == ",")
+		#expect(item.title == "Connect")
+		#expect(item.command == .connect)
+		#expect(item.keyEquivalent == "k")
 		#expect(item.image != nil)
 	}
 
-	@Test(
-		"An item with no symbol is padded to align with its neighbours, submenus included",
-		.enabled(if: menuSymbolImagesAreAvailable(), "SF Symbols are unavailable in this test host")
-	)
-	func symbolPassPadsPlainItemsAndPreservesSubmenus() throws {
+	/// The transparent "circle" spacer that used to pad unmapped items is gone
+	/// with the menu-bar symbols it existed for.
+	@Test("An item with no symbol is left without an image, submenus included")
+	func symbolPassLeavesUnmappedItemsPlain() {
 		let menu = NSMenu(title: "Root")
-		let symbolItem = NSMenuItem(title: "Copy", action: nil, keyEquivalent: "")
-		symbolItem.image = try #require(NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil))
-		let plainItem = NSMenuItem(title: "Paste", action: nil, keyEquivalent: "")
+		let symbolItem = NSMenuItem(title: "Connect", action: nil, keyEquivalent: "")
+		symbolItem.command = .connect
+		let plainItem = NSMenuItem(title: "Nested", action: nil, keyEquivalent: "")
 		let submenu = NSMenu(title: "Nested")
-		let nestedSymbol = NSMenuItem(title: "Reply", action: nil, keyEquivalent: "")
-		nestedSymbol.image = try #require(NSImage(
-			systemSymbolName: "arrowshape.turn.up.left",
-			accessibilityDescription: nil
-		))
-		let nestedPlain = NSMenuItem(title: "React", action: nil, keyEquivalent: "")
+		let nestedSymbol = NSMenuItem(title: "Get Info", action: nil, keyEquivalent: "")
+		nestedSymbol.command = .whois
+		let nestedPlain = NSMenuItem(title: "Plain", action: nil, keyEquivalent: "")
 
 		submenu.addItem(nestedSymbol)
 		submenu.addItem(nestedPlain)
@@ -79,22 +63,9 @@ struct MenuPresentationTests {
 		MenuPresentation.apply(to: menu)
 
 		#expect(symbolItem.image != nil)
-		#expect(plainItem.image != nil)
+		#expect(plainItem.image == nil)
 		#expect(nestedSymbol.image != nil)
-		#expect(nestedPlain.image != nil)
-
-		let paddingImage = try #require(plainItem.image)
-
-		#expect(paddingImage.isTemplate == false)
-
-		#if compiler(>=6.4)
-			if #available(macOS 27.0, *) {
-				#expect(symbolItem.preferredImageVisibility == .visible)
-				#expect(plainItem.preferredImageVisibility == .visible)
-				#expect(nestedSymbol.preferredImageVisibility == .visible)
-				#expect(nestedPlain.preferredImageVisibility == .visible)
-			}
-		#endif
+		#expect(nestedPlain.image == nil)
 	}
 
 	@Test("A reply menu carries the responder selectors and the message it was built for")

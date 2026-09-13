@@ -43,61 +43,61 @@ import AppKit
 /** The window draws what the world publishes. Nothing here reaches back into
  the IRC layer; every entry point is an event the world posted. */
 extension MainWindow: WorldObserver {
-	func worldWillBeginBulkUpdate(_: IRCWorld) {
+	func worldWillBeginBulkUpdate(_: World) {
 		serverList?.beginUpdates()
 	}
 
-	func worldDidEndBulkUpdate(_: IRCWorld) {
+	func worldDidEndBulkUpdate(_: World) {
 		serverList?.endUpdates()
 	}
 
-	func world(_: IRCWorld, didAddClient client: IRCClient, at index: Int) {
+	func world(_: World, didAddClient client: IRCClient, at _: Int) {
 		/* The views have to exist before the row that shows them does. */
 		logControllers.registerTree(of: client)
-		serverList?.addItem(toList: UInt(index), inParent: nil)
+		serverList?.setNeedsRefresh()
 	}
 
-	func world(_: IRCWorld, didRemoveClient client: IRCClient) {
-		serverList?.removeItem(fromList: client)
+	func world(_: World, didRemoveClient client: IRCClient) {
+		serverList?.itemWasRemoved(client)
 		logControllers.forgetTree(of: client)
 	}
 
-	func world(_: IRCWorld, didMoveClientFrom oldIndex: Int, to newIndex: Int) {
-		serverList?.moveItem(at: oldIndex, inParent: nil, to: newIndex, inParent: nil)
+	func world(_: World, didMoveClientFrom _: Int, to _: Int) {
+		serverList?.setNeedsRefresh()
 	}
 
-	func world(_: IRCWorld, didAddChannel channel: IRCChannel, on client: IRCClient, at index: Int) {
+	func world(_: World, didAddChannel channel: Channel, on _: IRCClient, at _: Int) {
 		logControllers.controller(for: channel)
-		serverList?.addItem(toList: UInt(index), inParent: client)
+		serverList?.setNeedsRefresh()
 	}
 
-	func world(_: IRCWorld, didRemoveChannel channel: IRCChannel, on _: IRCClient) {
-		serverList?.removeItem(fromList: channel)
+	func world(_: World, didRemoveChannel channel: Channel, on _: IRCClient) {
+		serverList?.itemWasRemoved(channel)
 		logControllers.forget(channel)
 	}
 
-	func world(_: IRCWorld, didMoveChannelOn client: IRCClient, from oldIndex: Int, to newIndex: Int) {
-		serverList?.moveItem(at: oldIndex, inParent: client, to: newIndex, inParent: client)
+	func world(_: World, didMoveChannelOn _: IRCClient, from _: Int, to _: Int) {
+		serverList?.setNeedsRefresh()
 	}
 
-	func world(_: IRCWorld, requestsSelectionOf item: IRCTreeItem) {
+	func world(_: World, requestsSelectionOf item: TreeItem) {
 		select(item)
 	}
 
-	func world(_: IRCWorld, requestsDeselectionOf item: IRCTreeItem) {
+	func world(_: World, requestsDeselectionOf item: TreeItem) {
 		deselect(item)
 	}
 
-	func world(_: IRCWorld, requestsGroupDeselectionOf item: IRCTreeItem) {
+	func world(_: World, requestsGroupDeselectionOf item: TreeItem) {
 		deselectGroup(item)
 	}
 
-	func worldRequestsSelectionAdjustment(_: IRCWorld) {
+	func worldRequestsSelectionAdjustment(_: World) {
 		adjustSelection()
 	}
 
-	func worldClientListDidChange(_: IRCWorld) {
-		_ = reloadLoadingScreen()
+	func worldClientListDidChange(_: World) {
+		reloadLoadingScreen()
 	}
 }
 
@@ -106,22 +106,6 @@ extension MainWindow: WorldObserver {
 /** The window-side work the IRC layer asks for. Most of it forwards to a method
  that already existed; the seam is what keeps the caller from knowing that. */
 extension MainWindow: ClientOutput {
-	func selectItem(_ item: IRCTreeItem) {
-		select(item)
-	}
-
-	func isItemSelectedInWindow(_ item: IRCTreeItem) -> Bool {
-		isItemSelected(item)
-	}
-
-	var windowIsKey: Bool {
-		isKeyWindow
-	}
-
-	var windowIsMain: Bool {
-		isMainWindow
-	}
-
 	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion) {
 		Alerts.alertSheet(request: request, completionBlock: completion)
 	}
@@ -207,53 +191,35 @@ extension MainWindow: ClientOutput {
 		session.addEntry(entry)
 	}
 
-	func reloadServerListItems(for client: IRCClient) {
+	func reloadServerListItems(for _: IRCClient) {
 		guard let serverList else { return }
 
 		ignoreServerListSelectionChanges = true
 		serverList.beginUpdates()
-		serverList.reloadItem(client, reloadChildren: true)
+		serverList.setNeedsRefresh()
 		serverList.endUpdates()
 		adjustSelection()
 		ignoreServerListSelectionChanges = false
 	}
 
-	func refreshMessageCount(for item: IRCTreeItem) {
-		serverList?.refreshMessageCount(forItem: item)
+	func refreshMessageCount(for _: TreeItem) {
+		serverList?.setNeedsRefresh()
 	}
 
-	func updateDrawingForUser(_ user: User) {
-		updateDrawingForUserInUserList(user)
-	}
-
-	func beginMemberListUpdates() -> Bool {
-		guard let memberList else { return false }
-		memberList.beginUpdates()
-		return true
-	}
-
-	func endMemberListUpdates() {
-		memberList?.endUpdates()
-	}
-
-	func refreshMemberListDrawing(forMemberAt _: Int) {
-		memberList?.invalidatePresentation()
-	}
-
-	func assignMemberList(to channel: IRCChannel) {
+	func assignMemberList(to channel: Channel) {
 		memberList?.assign(to: channel)
 	}
 
-	func clearContents(of item: IRCTreeItem) {
-		if let channel = item as? IRCChannel {
+	func clearContents(of item: TreeItem) {
+		if let channel = item as? Channel {
 			clearContents(of: channel)
 		} else if let client = item as? IRCClient {
 			clearContents(of: client)
 		}
 	}
 
-	func destroyInputHistory(for item: IRCTreeItem) {
-		inputHistoryManager().destroy(item)
+	func destroyInputHistory(for item: TreeItem) {
+		inputHistory.destroy(item)
 	}
 
 	func notifyAllViewsAppearanceDidChange() {
@@ -273,13 +239,13 @@ extension MainWindow: ClientOutput {
 
 extension MainWindow {
 	/// The view controller drawing `item`, if the window has made one.
-	func viewController(for item: IRCTreeItem?) -> LogController? {
+	func viewController(for item: TreeItem?) -> LogController? {
 		guard let item else { return nil }
 		return logControllers.existingController(for: item)
 	}
 }
 
-extension IRCTreeItem {
+extension TreeItem {
 	/** The view this item is drawn into, if a window has made one.
 
 	 This reads the weak seam the registry installed rather than a property the
@@ -302,6 +268,27 @@ extension LogController: TreeItemPresentation {
 
 	func lastRenderedLineDate() -> Date? {
 		backingView?.displayedLines.map(\.receivedAt).max()
+	}
+
+	/** Both conversation seams answer from the union of what the view is showing
+	 and what it has been handed but not applied yet. A line moves from the second
+	 to the first synchronously on the main actor, so neither holds it twice.
+
+	 Lines loaded from storage are in neither list, which is why `IRCClient`
+	 combines this with the historic log's index: history seeding fills that index
+	 synchronously, so it already accounts for the scrollback. */
+	func newestConversationLineDate() -> Date? {
+		let displayed = backingView?.displayedLines.filter(\.lineType.isConversation).map(\.receivedAt) ?? []
+		let awaiting = linesAwaitingRender.filter(\.lineType.isConversation).map(\.receivedAt)
+
+		return (displayed + awaiting).max()
+	}
+
+	func conversationLineCount(after date: Date) -> Int {
+		let displayed = backingView?.displayedLines
+			.count { $0.lineType.isConversation && $0.receivedAt > date } ?? 0
+
+		return displayed + linesAwaitingRender.count { $0.lineType.isConversation && $0.receivedAt > date }
 	}
 
 	public func lastPrintedLine() -> LogLine? {

@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -32,13 +32,13 @@ public final class FileLogger {
 	private let commands: FileLogCommands
 	private let fixedDestination: FileLogDestination?
 	private weak var client: IRCClient?
-	private weak var channel: IRCChannel?
+	private weak var channel: Channel?
 
 	public convenience init(client: IRCClient) {
 		self.init(client: client, commands: Self.commands)
 	}
 
-	public init(channel: IRCChannel) {
+	public init(channel: Channel) {
 		client = channel.associatedClient
 		self.channel = channel
 		commands = Self.commands
@@ -83,7 +83,7 @@ public final class FileLogger {
 		}
 		let bookmark = Preferences.Logging.transcriptFolderBookmark.value
 		guard !bookmark.isEmpty else { return nil }
-		let item: IRCTreeItem? = if let channel {
+		let item: TreeItem? = if let channel {
 			channel
 		} else {
 			client
@@ -99,17 +99,17 @@ public final class FileLogger {
 		commands.finish(completion: completion)
 	}
 
-	public static func writePath(for item: IRCTreeItem) -> String? {
+	public static func writePath(for item: TreeItem) -> String? {
 		guard let sourcePath = PathInfo.transcriptFolder else { return nil }
 		return writePath(for: item, relativeTo: sourcePath)
 	}
 
-	public static func writePath(for item: IRCTreeItem, relativeTo sourcePath: String) -> String? {
+	public static func writePath(for item: TreeItem, relativeTo sourcePath: String) -> String? {
 		guard let relativePath = relativeTranscriptPath(for: item) else { return nil }
 		return (sourcePath as NSString).appendingPathComponent(relativePath)
 	}
 
-	private static func relativeTranscriptPath(for item: IRCTreeItem) -> String? {
+	private static func relativeTranscriptPath(for item: TreeItem) -> String? {
 		let channel = item.associatedChannel
 		if let channel, channel.isUtility {
 			return nil
@@ -136,8 +136,7 @@ public final class FileLogger {
 		Alerts.alert(
 			withMessage: PromptStrings.Logging.resumeAfterLowStorageBody,
 			title: PromptStrings.Logging.disabledForLowStorageTitle,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil
+			defaultButton: PromptStrings.Action.confirmation
 		) { _ in
 			noSpaceAlert.dismiss()
 		}

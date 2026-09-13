@@ -35,6 +35,6 @@ struct ServerNicknameChangeValidationTests {
 
 		#expect(model.normalizedNickname.isEmpty)
 		#expect(model.validateForSubmission() == false)
-		#expect(model.isValidationMessagePresented)
+		#expect(model.validationMessage == "invalid")
 	}
 }

@@ -34,29 +34,30 @@ import Foundation
 
 @MainActor
 extension IRCClient {
-	func dispatchIgnoreCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		let command = parsed.localCommand
-		guard command == .ignore || command == .unignore else { return false }
-		let isIgnore = command == .ignore
+	func dispatchIgnoreCommand(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
+		let isIgnore = parsed.localCommand == .ignore
 		var arguments = parsed.arguments
 		let nickname = arguments.next()
 		guard nickname.isEmpty == false, targetChannel != nil, let member = findUser(nickname) else {
-			showIgnoreConfiguration(isIgnore: isIgnore, context: isIgnore ? nickname : nil)
-			return true
+			menu?.showServerPropertiesSheet(
+				for: self,
+				selection: isIgnore ? .newIgnoreEntry(hostmask: nickname) : .addressBook
+			)
+			return
 		}
 		let hostmask = member.hostmask ?? "\(nickname)!*@*"
 		let matches = config.ignoreList.filter { $0.entryType == .ignore && $0.checkMatch(hostmask) }
 		if isIgnore, matches.isEmpty == false {
 			printDebugInformation(IRCCommandStrings.Ignore.alreadyExists(nickname: member.nickname))
-			return true
+			return
 		}
 		if isIgnore == false, matches.isEmpty {
 			printDebugInformation(IRCCommandStrings.Ignore.notFound(nickname: member.nickname))
-			return true
+			return
 		}
 		if isIgnore == false, matches.count > 1 {
 			printDebugInformation(IRCCommandStrings.Ignore.ambiguous(nickname: member.nickname))
-			return true
+			return
 		}
 		var mutableConfig = config
 		if isIgnore {
@@ -73,15 +74,5 @@ extension IRCClient {
 		}
 		updateConfig(mutableConfig)
 		clearAddressBookCache(forHostmask: hostmask)
-		return true
-	}
-
-	private func showIgnoreConfiguration(isIgnore: Bool, context: String?) {
-		let selection: ServerPropertiesDestination = isIgnore ? .newIgnoreEntry : .addressBook
-		menu?.showServerPropertiesSheet(
-			for: self,
-			selection: selection,
-			context: isIgnore ? (context ?? "") : nil
-		)
 	}
 }

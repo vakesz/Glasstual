@@ -1,40 +1,40 @@
 /* *********************************************************************
-  *                  _____         _               _
-  *                 |_   _|____  _| |_ _   _  __ _| |
-  *                   | |/ _ \ \/ / __| | | |/ _` | |
-  *                   | |  __/>  <| |_| |_| | (_| | |
-  *                   |_|\\___/_/\_\\__|\\__,_|\\__,_|_|
-  *
-  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
-  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
-  *       Please see Acknowledgements.pdf for additional information.
- + *
-  * Redistribution and use in source and binary forms, with or without
-  * modification, are permitted provided that the following conditions
-  * are met:
-  *
-  *  * Redistributions of source code must retain the above copyright
-  *    notice, this list of conditions and the following disclaimer.
-  *  * Redistributions in binary form must reproduce the above copyright
-  *    notice, this list of conditions and the following disclaimer in the
-  *    documentation and/or other materials provided with the distribution.
-  *  * Neither the name of Textual, "Codeux Software, LLC", nor the
-  *    names of its contributors may be used to endorse or promote products
-  *    derived from this software without specific prior written permission.
-  *
-  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-  * SUCH DAMAGE.
-  *
-  *********************************************************************** */
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
 
 import Foundation
 
@@ -86,7 +86,7 @@ enum IRCLinePresentationPolicy {
 struct IRCLinePrintRequest {
 	let messageBody: String
 	let nickname: String?
-	let channel: IRCChannel?
+	let channel: Channel?
 	let lineType: LogLineType
 	let command: String?
 	let receivedAt: Date
@@ -97,7 +97,7 @@ struct IRCLinePrintRequest {
 }
 
 public extension IRCClient {
-	func formatNickname(_ nickname: String, in channel: IRCChannel?, withFormat format: String? = nil) -> String {
+	func formatNickname(_ nickname: String, in channel: Channel?, withFormat format: String? = nil) -> String {
 		let requestedFormat = format?.isEmpty == false ? format : nil
 		let themeFormat = SharedApplication.sharedThemeController().theme.nicknameFormat
 		let resolvedFormat = requestedFormat ?? themeFormat
@@ -118,7 +118,7 @@ public extension IRCClient {
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
-		in channel: IRCChannel?,
+		in channel: Channel?,
 		as lineType: LogLineType,
 		command: String
 	) {
@@ -129,7 +129,7 @@ public extension IRCClient {
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
-		in channel: IRCChannel?,
+		in channel: Channel?,
 		as lineType: LogLineType,
 		command: String,
 		escapeMessage: Bool
@@ -141,7 +141,7 @@ public extension IRCClient {
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
-		in channel: IRCChannel?,
+		in channel: Channel?,
 		as lineType: LogLineType,
 		command: String,
 		receivedAt: Date
@@ -153,7 +153,7 @@ public extension IRCClient {
 	func print(
 		_ messageBody: String,
 		by nickname: String?,
-		in channel: IRCChannel?,
+		in channel: Channel?,
 		as lineType: LogLineType,
 		command: String?,
 		receivedAt: Date,
@@ -185,29 +185,15 @@ public extension IRCClient {
 }
 
 public extension IRCClient {
-	func printReply(_ message: Message) {
-		printReply(message, in: nil)
-	}
-
-	func printReply(_ message: Message, in channel: IRCChannel?) {
-		printReply(message, in: channel, withSequence: 1)
-	}
-
-	func printReply(_ message: Message, in channel: IRCChannel?, withSequence sequence: UInt) {
+	func printReply(_ message: Message, in channel: Channel? = nil, withSequence sequence: UInt = 1) {
 		print(message.sequence(sequence), by: nil, in: channel, as: .debug, command: message.command,
 		      receivedAt: message.receivedAt)
 	}
 
-	func printErrorReply(_ message: Message) {
-		printErrorReply(message, in: nil)
-	}
-
-	func printErrorReply(_ message: Message, in channel: IRCChannel?) {
-		printErrorReply(message, in: channel, withSequence: UInt(NSNotFound))
-	}
-
-	func printErrorReply(_ message: Message, in channel: IRCChannel?, withSequence sequence: UInt) {
-		let sequenceMessage = sequence == UInt(NSNotFound) ? message.sequence : message.sequence(sequence)
+	/// - Parameter sequence: The parameter the error text starts at; `nil` for
+	/// the whole parameter list.
+	func printErrorReply(_ message: Message, in channel: Channel? = nil, withSequence sequence: UInt? = nil) {
+		let sequenceMessage = sequence.map { message.sequence($0) } ?? message.sequence
 		let errorMessage = IRCDiagnosticStrings.malformedMessage(
 			numeric: message.commandNumeric,
 			sequence: sequenceMessage
@@ -250,7 +236,7 @@ public extension IRCClient {
 
 	func printDebugInformation(
 		_ message: String,
-		in channel: IRCChannel?,
+		in channel: Channel?,
 		asCommand command: String = LogLineFormat.defaultCommand,
 		escapeMessage: Bool = true
 	) {
@@ -277,8 +263,6 @@ private extension IRCClient {
 
 		let command = request.command ?? request.referenceMessage?.command ?? LogLineFormat.defaultCommand
 		let channel = request.channel
-		guard outputRuleMatched(in: request.messageBody, channel: channel) == false else { return }
-
 		let memberType = IRCLinePresentationPolicy.memberType(nickname: request.nickname, localNickname: userNickname)
 		let keywordLists = highlightKeywordLists(
 			for: channel,
@@ -331,7 +315,7 @@ private extension IRCClient {
 		if IRCLinePresentationPolicy.needsScrollbackMark(
 			autoMark: environment.preferences.autoAddScrollbackMark,
 			itemIsVisible: output.isItemVisible(channel),
-			windowIsMain: output.windowIsMain,
+			windowIsMain: output.isMainWindow,
 			channelIsUnread: channel.isUnread,
 			lineType: lineType
 		) {
@@ -346,14 +330,14 @@ private extension IRCClient {
 			      socket?.uniqueIdentifier == connectionIdentifier,
 			      channel.associatedClient === self else { return }
 			guard context.isDisplayed, !context.isDuplicate, !isPlayback, channel.readStateGeneration == readGeneration,
-			      self.output?.windowIsKey == true, self.output?.isItemVisible(channel) == true else { return }
+			      self.output?.isKeyWindow == true, self.output?.isItemVisible(channel) == true else { return }
 			scheduleReadMarker(for: channel, date: request.receivedAt)
 		}
 	}
 
 	@MainActor
 	func highlightKeywordLists(
-		for channel: IRCChannel?,
+		for channel: Channel?,
 		lineType: LogLineType,
 		memberType: LogLineMemberType
 	) -> (exclude: [String]?, match: [String]?) {

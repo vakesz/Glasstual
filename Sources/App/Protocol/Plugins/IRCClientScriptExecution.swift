@@ -154,7 +154,7 @@ final class ScriptInvocation {
 	let sessionIdentifier: UUID
 	let connectionIdentifier: String?
 	let targetName: String?
-	weak var channel: IRCChannel?
+	weak var channel: Channel?
 
 	init(client: IRCClient, target: String?) {
 		sessionIdentifier = client.startup.identifier

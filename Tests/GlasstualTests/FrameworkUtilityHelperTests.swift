@@ -3,7 +3,6 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
 import CryptoKit
 import Foundation
@@ -78,8 +77,12 @@ struct FrameworkUtilityHelperTests {
 		let remote = try #require(URL(string: "https://example.test/theme"))
 		let local = FileManager.default.temporaryDirectory.appendingPathComponent("glasstual-test")
 
-		#expect(FileManager.default.replaceItem(at: local, withItemAt: remote) == false)
-		#expect(FileManager.default.replaceItem(at: remote, withItemAt: local) == false)
+		#expect(throws: (any Error).self) {
+			try FileManager.default.stageAndReplaceItem(at: local, withItemAt: remote)
+		}
+		#expect(throws: (any Error).self) {
+			try FileManager.default.stageAndReplaceItem(at: remote, withItemAt: local)
+		}
 	}
 
 	@Test("An existing destination is not silently reported as replaced")
@@ -94,61 +97,16 @@ struct FrameworkUtilityHelperTests {
 		try Data("a".utf8).write(to: source)
 		try Data("b".utf8).write(to: destination)
 
-		#expect(FileManager.default.replaceItem(at: destination, withItemAt: source, options: []) == false)
+		#expect(throws: (any Error).self) {
+			try FileManager.default.stageAndReplaceItem(at: destination, withItemAt: source, options: [])
+		}
 		#expect(try Data(contentsOf: destination) == Data("b".utf8))
 
-		#expect(FileManager.default.replaceItem(
+		try FileManager.default.stageAndReplaceItem(
 			at: destination,
 			withItemAt: source,
 			options: .removeIfExists
-		))
+		)
 		#expect(try Data(contentsOf: destination) == Data("a".utf8))
-	}
-
-	@Test("The row beneath the mouse is absent rather than -1 when there is no window")
-	func rowBeneathMouseIsOptional() {
-		let table = NSTableView(frame: NSRect(x: 0, y: 0, width: 100, height: 100))
-
-		#expect(table.rowBeneathMouse == nil)
-	}
-
-	@Test("Invalidating the selection background does not disturb the selection")
-	func invalidatingSelectionKeepsTheSelection() {
-		let table = SelectionCountingTableView(frame: NSRect(x: 0, y: 0, width: 100, height: 100))
-		let source = SelectionCountingDataSource()
-		table.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("column")))
-		table.dataSource = source
-		table.reloadData()
-		table.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
-
-		table.selectionChangeCount = 0
-		table.invalidateSelectionBackground()
-
-		#expect(table.selectedRowIndexes == IndexSet(integer: 1))
-		#expect(table.selectionChangeCount == 0)
-	}
-}
-
-private final class SelectionCountingTableView: NSTableView {
-	var selectionChangeCount = 0
-
-	override func selectRowIndexes(_ indexes: IndexSet, byExtendingSelection extend: Bool) {
-		selectionChangeCount += 1
-		super.selectRowIndexes(indexes, byExtendingSelection: extend)
-	}
-
-	override func deselectAll(_ sender: Any?) {
-		selectionChangeCount += 1
-		super.deselectAll(sender)
-	}
-}
-
-private final class SelectionCountingDataSource: NSObject, NSTableViewDataSource {
-	func numberOfRows(in _: NSTableView) -> Int {
-		3
-	}
-
-	func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {
-		"row \(row)"
 	}
 }

@@ -17,8 +17,7 @@ import Observation
 @MainActor
 @Observable
 final class ChannelTopicModel {
-	private(set) var formattedTopic: String
-	private(set) var hasPresentedMaximumLengthWarning = false
+	var formattedTopic: String
 
 	let maximumLength: Int
 
@@ -32,22 +31,18 @@ final class ChannelTopicModel {
 		formattedTopic.utf8.count
 	}
 
-	var topicForSubmission: String {
-		formattedTopic.replacingOccurrences(of: "\n", with: " ")
+	/// What the sheet counts down, or `nil` where the server named no limit.
+	/// Negative once the topic no longer fits, which is what disables the
+	/// button and turns the footer into a warning.
+	var remainingLength: Int? {
+		maximumLength > 0 ? maximumLength - formattedTopicLength : nil
 	}
 
-	@discardableResult
-	func updateFormattedTopic(_ topic: String) -> Bool {
-		formattedTopic = topic
+	var fitsMaximumLength: Bool {
+		(remainingLength ?? 0) >= 0
+	}
 
-		guard maximumLength > 0,
-		      formattedTopicLength > maximumLength,
-		      hasPresentedMaximumLengthWarning == false
-		else {
-			return false
-		}
-
-		hasPresentedMaximumLengthWarning = true
-		return true
+	var topicForSubmission: String {
+		formattedTopic.replacingOccurrences(of: "\n", with: " ")
 	}
 }

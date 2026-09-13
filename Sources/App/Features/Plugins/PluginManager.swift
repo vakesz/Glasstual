@@ -28,26 +28,6 @@ private nonisolated struct PluginDiscovery: Sendable { // nonisolated: value
 	var scriptGeneration: UInt64 = 0
 }
 
-/** The AppleScript commands on disk, and which scan found them.
-
- The generation is what tells a stale scan from a current one: discovery and a
- refresh both run off the main actor and can land in either order, so a scan
- whose generation is no longer the reserved one has been overtaken and its
- catalog is dropped. */
-private nonisolated struct PluginScriptFacts: Sendable { // nonisolated: value
-	var commandsByName: [String: PluginScript] = [:]
-	var customScriptsURL: URL?
-	var generation: UInt64 = 0
-
-	init() {}
-
-	init(catalog: PluginScriptCatalog, generation: UInt64) {
-		commandsByName = catalog.commandsByName
-		customScriptsURL = catalog.customScriptsURL
-		self.generation = generation
-	}
-}
-
 /** What an add-on command typed into the input field is dispatched to.
 
  The client asks this before falling back to sending the command to the server
@@ -67,14 +47,19 @@ public nonisolated enum OutgoingCommandHandler: Equatable, Sendable { // nonisol
 
 /// Everything about the loaded plugins that a caller outside the main actor
 /// needs: a plugin's own object stays on the main actor, but which features
-/// exist, which commands are subscribed, and the suppression rules are values.
+/// exist and which commands are subscribed are values.
 private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 	var pluginsLoaded = false
 	var supportedFeatures: PluginSupportedFeature = []
-	var outputSuppressionRules: [PluginOutputSuppressionRule] = []
 	var supportedUserInputCommands: [String] = []
 	var supportedServerInputCommands: [String] = []
-	var scripts = PluginScriptFacts()
+	var scripts = PluginScriptCatalog()
+	/** Which scan the published catalog came from.
+
+	 Discovery and a refresh both run off the main actor and can land in either
+	 order, so a scan whose generation is no longer the reserved one has been
+	 overtaken and its catalog is dropped. */
+	var scriptGeneration: UInt64 = 0
 
 	init() {}
 
@@ -85,7 +70,6 @@ private nonisolated struct PluginFacts: Sendable { // nonisolated: value
 
 		for plugin in loadedPlugins {
 			supportedFeatures.formUnion(plugin.supportedFeatures)
-			outputSuppressionRules.append(contentsOf: plugin.outputSuppressionRules)
 			userInputCommands.formUnion(plugin.supportedUserInputCommands)
 			serverInputCommands.formUnion(plugin.supportedServerInputCommands)
 		}
@@ -121,14 +105,14 @@ private nonisolated struct PluginRendererFacts: Sendable { // nonisolated: value
 /// and logged.
 ///
 /// Nonisolated because the transcript renderer reads it off the main actor:
-/// `PluginDispatcher.willRenderMessage` and `LogController.makePluginMessage`
-/// both run on the renderer's own queue, so the manager cannot move onto the
-/// main actor with the plugin objects it loads. What those callers read is the
-/// `Mutex`-guarded `PluginFacts` value below, and — for the one callback that
-/// reaches a plugin off the main actor — `renderingMessage(_:kind:)`, which
-/// calls the published renderers under the lock that retires them. The plugin
-/// objects themselves stay in `loadedPluginItems`, which is main-actor.
-public final nonisolated class PluginManager: NSObject, Sendable { // nonisolated: guarded
+/// `PluginDispatcher.willRenderMessage` runs on the renderer's own queue, so
+/// the manager cannot move onto the main actor with the plugin objects it
+/// loads. What that caller reads is the `Mutex`-guarded `PluginFacts` value
+/// below, and — for the one callback that reaches a plugin off the main actor
+/// — `renderingMessage(_:kind:)`, which calls the published renderers under
+/// the lock that retires them. The plugin objects themselves stay in
+/// `loadedPluginItems`, which is main-actor.
+public final nonisolated class PluginManager: Sendable { // nonisolated: guarded
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginManager"
@@ -157,28 +141,31 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 
 	private let facts = Mutex(PluginFacts())
 	private let renderers = Mutex(PluginRendererFacts())
-	private let scheduling = Mutex(Scheduling())
 
-	private struct Scheduling {
-		var didScheduleLoad = false
-		var didScheduleUnload = false
+	/** How far the manager has got.
+
+	 Main actor, because every step that moves it is main-actor work: loading
+	 runs the plugins' load callbacks, unloading runs their tear-down, and a
+	 discovery that lands after `unloaded` is dropped rather than loaded into an
+	 application on its way out. */
+	@MainActor
+	private var lifecycle = Lifecycle.idle
+
+	private enum Lifecycle {
+		case idle
+		case loading
+		case unloaded
 	}
 
 	// MARK: - Retain & Release
 
+	@MainActor
 	public func loadPlugins() {
-		let shouldSchedule = scheduling.withLock { state in
-			guard state.didScheduleLoad == false else {
-				return false
-			}
-
-			state.didScheduleLoad = true
-			return true
-		}
-
-		guard shouldSchedule else {
+		guard lifecycle == .idle else {
 			return
 		}
+
+		lifecycle = .loading
 
 		let generation = reserveScriptGeneration()
 		Task { [weak self] in
@@ -210,17 +197,17 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 
 	func reserveScriptGeneration() -> UInt64 {
 		facts.withLock {
-			$0.scripts.generation &+= 1
-			return $0.scripts.generation
+			$0.scriptGeneration &+= 1
+			return $0.scriptGeneration
 		}
 	}
 
 	@MainActor
 	func publishScriptCatalog(_ catalog: PluginScriptCatalog, generation: UInt64) {
-		guard scheduling.withLock(\.didScheduleUnload) == false else { return }
+		guard lifecycle != .unloaded else { return }
 		let published = facts.withLock { facts in
-			guard facts.scripts.generation == generation else { return false }
-			facts.scripts = PluginScriptFacts(catalog: catalog, generation: generation)
+			guard facts.scriptGeneration == generation else { return false }
+			facts.scripts = catalog
 			return true
 		}
 		if published {
@@ -232,18 +219,11 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 	/// AppKit state the plugin set up while loading.
 	@MainActor
 	public func unloadPlugins() {
-		let shouldSchedule = scheduling.withLock { state in
-			guard state.didScheduleUnload == false else {
-				return false
-			}
-
-			state.didScheduleUnload = true
-			return true
-		}
-
-		guard shouldSchedule else {
+		guard lifecycle != .unloaded else {
 			return
 		}
+
+		lifecycle = .unloaded
 
 		let plugins = loadedPluginItems
 		loadedPluginItems = []
@@ -270,7 +250,7 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 		 time it lands. Loading now would run every plugin's load callback during
 		 termination and leave them there: `unloadPlugins()` has already run and
 		 will not run twice. */
-		guard scheduling.withLock(\.didScheduleUnload) == false else {
+		guard lifecycle != .unloaded else {
 			Self.logger.info("Discarding a plugin load that finished after unloading")
 			return
 		}
@@ -294,8 +274,9 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 			/* A refresh that landed while discovery was still running has
 			 already published a newer catalog; discovery's own is then the
 			 stale one and only the plugin facts are replaced. */
-			replacement.scripts = facts.scripts.generation == discovery.scriptGeneration
-				? PluginScriptFacts(catalog: discovery.scriptCatalog, generation: facts.scripts.generation)
+			replacement.scriptGeneration = facts.scriptGeneration
+			replacement.scripts = facts.scriptGeneration == discovery.scriptGeneration
+				? discovery.scriptCatalog
 				: facts.scripts
 			facts = replacement
 		}
@@ -608,11 +589,10 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 	/** `message` after every loaded renderer has had it.
 
 	 Called from the transcript renderer's own queue. The handles are copied out
-	 of the lock and called with it released: holding it across a plugin's
-	 callback put third-party code between the main actor and a lock the main
-	 actor takes, and a renderer that asked the manager anything at all — its own
-	 preferences pane, the renderer count — deadlocked on a `Mutex` that does not
-	 recurse.
+	 of the lock and called with it released: `Mutex` does not recurse, so a
+	 renderer that asks the manager anything at all — its own preferences pane,
+	 the renderer count — would deadlock against a lock held across its own
+	 callback.
 
 	 What is copied out is the generation as well as the calls, and the generation
 	 is read again before each call: `unloadPlugins()` bumps it under the lock
@@ -681,10 +661,6 @@ public final nonisolated class PluginManager: NSObject, Sendable { // nonisolate
 
 	public func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {
 		facts.withLock { $0.supportedFeatures.contains(feature) }
-	}
-
-	public var pluginOutputSuppressionRules: [PluginOutputSuppressionRule] {
-		facts.withLock(\.outputSuppressionRules)
 	}
 
 	public var supportedUserInputCommands: [String] {

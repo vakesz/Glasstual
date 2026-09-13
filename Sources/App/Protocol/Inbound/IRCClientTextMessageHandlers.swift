@@ -267,13 +267,13 @@ public extension IRCClient {
 			      channel.readStateGeneration == readGeneration else { return }
 			if isNotice {
 				if isSafeToPostNotification(for: message, in: channel) {
-					_ = notifyText(.channelNotice, lineType: lineType, target: channel, nickname: sender, text: text)
+					_ = notifyEvent(.channelNotice, lineType: lineType, target: channel, nickname: sender, text: text)
 				}
 				return
 			}
 			let highlight = context.isHighlight
 			if isSafeToPostNotification(for: message, in: channel) {
-				_ = notifyText(
+				_ = notifyEvent(
 					highlight ? .highlight : .channelMessage,
 					lineType: lineType, target: channel, nickname: sender, text: text
 				)
@@ -339,7 +339,7 @@ public extension IRCClient {
 			if isSafeToPostNotification(for: message, in: query) {
 				let event: NotificationEvent = isNotice ? .privateNotice
 					: (highlight ? .highlight : (newPrivateMessage ? .newPrivateMessage : .privateMessage))
-				_ = notifyText(
+				_ = notifyEvent(
 					event,
 					lineType: lineType,
 					target: query,
@@ -384,8 +384,8 @@ public extension IRCClient {
 	}
 
 	private func channelServiceNoticeDestination(
-		current: IRCChannel?, text: String
-	) -> (IRCChannel?, String) {
+		current: Channel?, text: String
+	) -> (Channel?, String) {
 		guard let notice = IRCServiceNoticePolicy.channelNotice(from: text),
 		      stringIsChannelName(notice.channelName),
 		      let channel = findChannel(notice.channelName)
@@ -434,7 +434,7 @@ public extension IRCClient {
 	private func dispatchTextThroughPlugins(
 		_ text: String,
 		message: Message,
-		destination: IRCChannel?,
+		destination: Channel?,
 		lineType: LogLineType
 	) -> Bool {
 		let author = message.sender

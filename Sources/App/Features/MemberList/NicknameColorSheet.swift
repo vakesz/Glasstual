@@ -38,12 +38,6 @@
 import AppKit
 import SwiftUI
 
-public protocol NicknameColorSheetDelegate: NSObjectProtocol {
-	func nicknameColorSheetOnOk(_ sender: NicknameColorSheet)
-
-	func nicknameColorSheetWillClose(_ sender: NicknameColorSheet)
-}
-
 @MainActor
 public final class NicknameColorSheet: MainWindowSheetSession {
 	/* The style generator normalises with lowercased() before looking an
@@ -51,6 +45,9 @@ public final class NicknameColorSheet: MainWindowSheetSession {
 	 override it stores is never applied. */
 	private let overrideKey: String
 	let model: NicknameColorModel
+	/// Run once the override has been stored, so the caller can redraw whatever
+	/// draws a nickname in it.
+	var colorDidChange: (() -> Void)?
 
 	public init(nickname: String) {
 		let normalizedKey = nickname.lowercased()
@@ -65,54 +62,25 @@ public final class NicknameColorSheet: MainWindowSheetSession {
 	}
 
 	private func installSheet() {
-		let content = NicknameColorContent.current
-		let rootView = NicknameColorView(
+		setContent(NicknameColorView(
 			model: model,
-			content: content,
-			selectColor: { [weak self] color in
-				self?.selectColor(color)
-			},
-			setUsesDefaultColor: { [weak self] usesDefaultColor in
-				self?.setUsesDefaultColor(usesDefaultColor)
-			},
-			save: { [weak self] in
-				self?.ok(nil)
-			},
-			cancel: { [weak self] in
-				self?.cancel(nil)
-			}
-		)
-		setContent(rootView)
+			changeColor: { [weak self] in self?.submit() },
+			cancel: { [weak self] in self?.cancel() }
+		))
 	}
 
 	public func start() {
 		startSheet()
 	}
 
-	override public func ok(_ sender: Any?) {
+	override public func submit() {
 		UserNicknameColorStyleGenerator.setNicknameColorStyleOverride(
 			model.colorForPersistence,
 			forKey: overrideKey
 		)
 
-		(delegate as? NicknameColorSheetDelegate)?.nicknameColorSheetOnOk(self)
+		colorDidChange?()
 
-		super.ok(sender)
-	}
-
-	public func setUsesDefaultColor(_ usesDefaultColor: Bool) {
-		model.setUsesDefaultColor(usesDefaultColor)
-
-		if usesDefaultColor, NSColorPanel.sharedColorPanelExists {
-			NSColorPanel.shared.close()
-		}
-	}
-
-	public func selectColor(_ color: NSColor) {
-		model.selectColor(color)
-	}
-
-	override public func sheetDidEnd(withReturnCode _: Int) {
-		(delegate as? NicknameColorSheetDelegate)?.nicknameColorSheetWillClose(self)
+		super.submit()
 	}
 }

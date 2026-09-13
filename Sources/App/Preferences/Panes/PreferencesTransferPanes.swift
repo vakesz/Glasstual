@@ -12,18 +12,6 @@
 
 import SwiftUI
 
-struct PreferencesFileTransfersPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesFileTransfersSections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// inline media.
 struct PreferencesFileTransfersSections: View {
 	let model: PreferencesPaneModel
 
@@ -54,8 +42,6 @@ struct PreferencesFileTransfersSections: View {
 				title: PreferencesFileTransfersStrings.preventSleep,
 				isOn: model.preferences.binding(for: Preferences.FileTransfers.preventIdleSystemSleep)
 			)
-		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.fileTransfers))
 		}
 	}
 
@@ -105,21 +91,23 @@ struct PreferencesFileTransfersSections: View {
 	private var portRange: some View {
 		LabeledContent {
 			HStack(spacing: 6) {
-				PreferencesCommittedNumberField(
+				PreferencesCommittedField(
 					title: PreferencesFileTransfersStrings.portRangeFirst,
 					text: model.preferences.portFieldBinding(
 						for: Preferences.FileTransfers.portRangeStart,
 						limitedBy: Preferences.FileTransfers.portRangeEnd
-					)
+					),
+					rejectionMessage: PreferencesFieldStrings.wholeNumberRequired
 				)
 				.frame(width: 80)
 				Text(verbatim: PreferencesFileTransfersStrings.portRangeSeparator)
-				PreferencesCommittedNumberField(
+				PreferencesCommittedField(
 					title: PreferencesFileTransfersStrings.portRangeLast,
 					text: model.preferences.portFieldBinding(
 						for: Preferences.FileTransfers.portRangeEnd,
 						limitedBy: Preferences.FileTransfers.portRangeStart
-					)
+					),
+					rejectionMessage: PreferencesFieldStrings.wholeNumberRequired
 				)
 				.frame(width: 80)
 				Spacer()
@@ -130,8 +118,8 @@ struct PreferencesFileTransfersSections: View {
 	}
 }
 
-/// The nib's folder popups: the chosen folder with its icon, plus the two
-/// commands that change it.
+/// A folder picker: the chosen folder with its icon, plus the two commands
+/// that change it.
 struct PreferencesFolderPicker: View {
 	let label: String
 	let accessibilityLabel: String
@@ -169,18 +157,6 @@ struct PreferencesFolderPicker: View {
 	}
 }
 
-struct PreferencesLogLocationPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesLogLocationSections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// the hidden preferences.
 struct PreferencesLogLocationSections: View {
 	let model: PreferencesPaneModel
 
@@ -191,37 +167,24 @@ struct PreferencesLogLocationSections: View {
 	var body: some View {
 		Section {
 			PreferencesToggle(
-				title: PreferencesLogLocationStrings.label,
+				title: PreferencesLogLocationStrings.logToDisk,
 				isOn: model.preferences.binding(for: Preferences.Logging.logToDisk)
 			)
 			PreferencesFolderPicker(
-				label: PreferencesLogLocationStrings.label,
+				label: PreferencesLogLocationStrings.folderLabel,
 				accessibilityLabel: PreferencesStrings.transcriptFolderAccessibilityLabel,
 				folder: model.transcriptFolder,
 				emptyTitle: PreferencesStrings.noTranscriptFolder,
 				select: { model.selectTranscriptFolder() },
 				clear: { model.clearTranscriptFolder() }
 			)
-			.labelsHidden()
 			.disabled(logsToDisk == false)
 		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.logLocation))
+			Text(verbatim: PreferencesPane.logLocation.title)
 		}
 	}
 }
 
-struct PreferencesHiddenPane: View {
-	let model: PreferencesPaneModel
-
-	var body: some View {
-		PreferencesPaneLayout {
-			PreferencesHiddenSections(model: model)
-		}
-	}
-}
-
-/// The pane as one form section, for the Advanced group that gathers it with
-/// the log location.
 struct PreferencesHiddenSections: View {
 	private static let scrollbackPresets = [
 		"100", "500", "1000", "1500", "2000", "2500", "3000", "3500", "4000", "4500", "5000",
@@ -231,12 +194,6 @@ struct PreferencesHiddenSections: View {
 
 	var body: some View {
 		Section {
-			HStack(alignment: .firstTextBaseline, spacing: 4) {
-				Text(verbatim: PreferencesHiddenStrings.warningLabel)
-					.bold()
-				Text(verbatim: PreferencesHiddenStrings.warning)
-				Spacer()
-			}
 			PreferencesToggle(
 				title: PreferencesHiddenStrings.appNap,
 				isOn: model.preferences.invertedBinding(for: Preferences.Internals.appSleepDisabled)
@@ -252,31 +209,31 @@ struct PreferencesHiddenSections: View {
 				)
 			)
 			scrollbackLimitRow
-			PreferencesNote(PreferencesHiddenStrings.restartNote)
 		} header: {
-			Text(verbatim: PreferencesStrings.paneTitle(.hidden))
+			Text(verbatim: PreferencesPane.hidden.title)
+		} footer: {
+			VStack(alignment: .leading, spacing: PreferencesMetrics.spacingSmall) {
+				PreferencesNote(PreferencesHiddenStrings.warning)
+				PreferencesNote(PreferencesHiddenStrings.restartNote)
+			}
 		}
 	}
 
 	private var scrollbackLimitRow: some View {
 		LabeledContent {
-			HStack(spacing: 6) {
-				PreferencesComboField(
-					title: PreferencesHiddenStrings.scrollbackVisibleLimit,
-					presets: Self.scrollbackPresets,
-					commitsOnEndEditing: true,
-					text: model.preferences.numberFieldBinding(
-						for: Preferences.Logging.scrollbackVisibleLimit
-					) {
-						TextualPreferences.performReloadAction(.scrollbackVisibleLimit)
-					}
-				)
-				Text(verbatim: PreferencesHiddenStrings.scrollbackVisibleLimitNote)
-					.font(.callout)
-					.foregroundStyle(.secondary)
-			}
+			PreferencesComboField(
+				title: PreferencesHiddenStrings.scrollbackVisibleLimit,
+				presets: Self.scrollbackPresets,
+				commitsOnEndEditing: true,
+				text: model.preferences.numberFieldBinding(
+					for: Preferences.Logging.scrollbackVisibleLimit
+				) {
+					TextualPreferences.performReloadAction(.scrollbackVisibleLimit)
+				}
+			)
 		} label: {
 			Text(verbatim: PreferencesHiddenStrings.scrollbackVisibleLimit)
+			Text(verbatim: PreferencesHiddenStrings.scrollbackVisibleLimitNote)
 		}
 	}
 }

@@ -21,11 +21,32 @@ final class HighlightEntryModel {
 
 	private var workingConfiguration: HighlightMatchCondition
 
-	private(set) var behavior: HighlightMatchBehavior
-	private(set) var keyword: String
-	private(set) var channelSelection: HighlightChannelSelection
-	private(set) var validationError: String?
-	var isValidationMessagePresented = false
+	var behavior: HighlightMatchBehavior
+	var keyword: String
+
+	/// A channel the connection no longer has is not a channel to limit a rule
+	/// to, so choosing one falls back to every channel.
+	var channelSelection: HighlightChannelSelection {
+		didSet {
+			if case let .channel(id) = channelSelection,
+			   channels.contains(where: { $0.id == id }) == false
+			{
+				channelSelection = .all
+			}
+		}
+	}
+
+	var validationError: String? {
+		Self.validationError(for: keyword)
+	}
+
+	/// The refusal, once saving has been tried. A new rule opens on an empty
+	/// keyword, and saying so before anything was typed is not a refusal.
+	var validationMessage: String? {
+		submissionWasAttempted ? validationError : nil
+	}
+
+	private var submissionWasAttempted = false
 
 	init(
 		configuration: HighlightMatchCondition?,
@@ -46,37 +67,16 @@ final class HighlightEntryModel {
 		} else {
 			channelSelection = .all
 		}
-
-		validationError = Self.validationError(for: workingConfiguration.matchKeyword)
 	}
 
 	var normalizedKeyword: String {
 		keyword.trimmingCharacters(in: .whitespacesAndNewlines)
 	}
 
-	func setBehavior(_ behavior: HighlightMatchBehavior) {
-		self.behavior = behavior
-	}
-
-	func updateKeyword(_ keyword: String) {
-		self.keyword = keyword
-		refreshValidation()
-		isValidationMessagePresented = false
-	}
-
-	func setChannelSelection(_ selection: HighlightChannelSelection) {
-		switch selection {
-		case .all:
-			channelSelection = .all
-		case let .channel(id):
-			channelSelection = channels.contains(where: { $0.id == id }) ? selection : .all
-		}
-	}
-
 	@discardableResult
 	func validateForSubmission() -> Bool {
-		refreshValidation()
-		isValidationMessagePresented = validationError != nil
+		submissionWasAttempted = true
+
 		return validationError == nil
 	}
 
@@ -86,10 +86,6 @@ final class HighlightEntryModel {
 		workingConfiguration.matchChannelId = channelSelection.channelID
 
 		return workingConfiguration
-	}
-
-	private func refreshValidation() {
-		validationError = Self.validationError(for: keyword)
 	}
 
 	private static func validationError(for keyword: String) -> String? {

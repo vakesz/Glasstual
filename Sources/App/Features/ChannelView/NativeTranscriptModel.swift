@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -86,6 +86,11 @@ nonisolated struct TranscriptLine: Equatable, Sendable { // nonisolated: value
 		lineNumber == identifier || historyCursor?.lineIdentifier == identifier
 	}
 
+	/// Both of them, for the set the transcript answers duplicate questions from.
+	var identifiers: [String] {
+		[lineNumber, historyCursor?.lineIdentifier].compactMap(\.self)
+	}
+
 	mutating func mergeReactions(_ delta: [String: [String]]) {
 		for (emoji, nicknames) in delta {
 			for nickname in nicknames where !reactions[emoji, default: []].contains(nickname) {
@@ -96,7 +101,7 @@ nonisolated struct TranscriptLine: Equatable, Sendable { // nonisolated: value
 
 	func header(using theme: TranscriptTheme) -> (timestamp: String, nickname: String) {
 		let timestamp = Glasstual
-			.formattedTimestamp(receivedAt as NSDate, theme.timestampFormat as NSString) as String? ?? ""
+			.formattedTimestamp(receivedAt as NSDate, theme.timestampFormat as NSString) ?? ""
 		guard let nickname else { return (timestamp, "") }
 		let formattedNickname: String = switch lineType {
 		case .action: String(format: LogLineFormat.actionNickname, nickname)

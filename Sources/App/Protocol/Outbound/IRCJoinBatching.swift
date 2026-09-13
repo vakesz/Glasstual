@@ -114,15 +114,9 @@ enum IRCJoinBatching {
 	}
 
 	private static func lineBudget(maximumLineLength: Int) -> Int {
-		/* `LINELEN` counts the CR LF that ends the line; the RFC default of 510
-		 is the body alone. Spending the pair on channel names put a server's
-		 `LINELEN=512` on the wire as 514 bytes. */
-		let advertised = maximumLineLength > 0
-			? maximumLineLength - IRCProtocolLimits.lineTerminatorLength
-			: IRCProtocolLimits.maximumBodyLength
 		// Never let a nonsensical LINELEN shrink the budget to nothing: a
 		// batch always has to be able to carry at least one channel.
-		return max(advertised - commandOverhead, 1)
+		max(IRCProtocolLimits.bodyLimit(forAdvertisedLineLength: maximumLineLength) - commandOverhead, 1)
 	}
 
 	private static func batches(
@@ -131,58 +125,38 @@ enum IRCJoinBatching {
 		targetCap: Int,
 		channelLimits: [Character: UInt]
 	) -> [Batch] {
-		var result: [Batch] = []
-		var current = Batch(channels: [], keys: [])
-		var currentLength = 0
-		var countByPrefix: [Character: Int] = [:]
+		let batches = WireBatching.pack(
+			entries,
+			maximumCount: targetCap,
+			budget: budget,
+			closesBatch: { entry, batch in
+				guard let prefix = entry.name.first else {
+					// A nameless entry has no prefix, so no per-prefix limit applies.
+					return false
+				}
 
-		func flush() {
-			guard current.channels.isEmpty == false else { return }
-			result.append(current)
-			current = Batch(channels: [], keys: [])
-			currentLength = 0
-			countByPrefix = [:]
+				/* RFC 2812's ISUPPORT draft gives `#:` — an empty limit — the
+				 meaning "no limit for this prefix", and a server writing `#:0`
+				 is saying the same thing rather than "no channels at all":
+				 nobody advertises a prefix in CHANLIMIT to forbid it. Both
+				 parse to zero here, and zero means unlimited. */
+				guard let limit = channelLimits[prefix], limit > 0 else {
+					return false
+				}
+
+				return UInt(batch.count { $0.name.first == prefix }) >= limit
+			},
+			cost: { entry, batch in
+				// One comma in the channel list, plus one in the key list when
+				// this batch carries keys.
+				let separators = batch.isEmpty ? 0 : (entry.key.isEmpty ? 1 : 2)
+
+				return separators + entry.name.utf8.count + entry.key.utf8.count
+			}
+		)
+
+		return batches.map { batch in
+			Batch(channels: batch.map(\.name), keys: batch.compactMap { $0.key.isEmpty ? nil : $0.key })
 		}
-
-		for entry in entries {
-			// A nameless entry has no prefix, so no per-prefix limit applies.
-			let prefix = entry.name.first
-			/* RFC 2812's ISUPPORT draft gives `#:` — an empty limit — the
-			 meaning "no limit for this prefix", and a server writing `#:0` is
-			 saying the same thing rather than "no channels at all": nobody
-			 advertises a prefix in CHANLIMIT to forbid it. Both parse to zero
-			 here, and zero means unlimited. */
-			let advertisedPrefixLimit = prefix.flatMap { channelLimits[$0] } ?? 0
-			let prefixLimit = advertisedPrefixLimit == 0
-				? entries.count : Int(min(advertisedPrefixLimit, UInt(entries.count)))
-			let prefixCount = prefix.map { countByPrefix[$0, default: 0] } ?? 0
-			// One comma in the channel list, plus one in the key list when
-			// this batch carries keys.
-			let separators = entry.key.isEmpty ? 1 : 2
-			let entryLength = entry.name.utf8.count + entry.key.utf8.count
-
-			if current.channels.isEmpty == false,
-			   currentLength + separators + entryLength > budget
-			   || current.channels.count >= targetCap
-			   || prefixCount >= prefixLimit
-			{
-				flush()
-			}
-
-			if current.channels.isEmpty == false {
-				currentLength += separators
-			}
-			currentLength += entryLength
-			current.channels.append(entry.name)
-			if entry.key.isEmpty == false {
-				current.keys.append(entry.key)
-			}
-			if let prefix {
-				countByPrefix[prefix, default: 0] += 1
-			}
-		}
-		flush()
-
-		return result
 	}
 }

@@ -6,34 +6,10 @@
       "extractionState": "manual",
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Background Color" } } }
     },
-    "begin-setup": {
-      "comment": "Welcome screen accessibility label.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Begin Setup"
-          }
-        }
-      }
-    },
     "bold": {
       "comment": "IRC formatting menu item.",
       "extractionState": "manual",
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Bold" } } }
-    },
-    "continue": {
-      "comment": "Welcome screen primary action.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue"
-          }
-        }
-      }
     },
     "irc-formatting": {
       "comment": "Title of the IRC formatting menu.",
@@ -44,36 +20,6 @@
       "comment": "IRC formatting menu item.",
       "extractionState": "manual",
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Italics" } } }
-    },
-    "member-account": {
-      "comment": "Member information popover row label.",
-      "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Account" } } }
-    },
-    "member-address": {
-      "comment": "Member information popover row label.",
-      "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Address" } } }
-    },
-    "member-privileges": {
-      "comment": "Member information popover row label.",
-      "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Privileges" } } }
-    },
-    "member-real-name": {
-      "comment": "Member information popover row label.",
-      "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Real Name" } } }
-    },
-    "member-status": {
-      "comment": "Member information popover row label.",
-      "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Status" } } }
-    },
-    "member-username": {
-      "comment": "Member information popover row label.",
-      "extractionState": "manual",
-      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Username" } } }
     },
     "monospace": {
       "comment": "IRC formatting menu item.",
@@ -142,18 +88,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add Server or Channel"
-          }
-        }
-      }
-    },
-    "address-book": {
-      "comment": "Toolbar & input bar accessibility. Legacy key: ib-m3.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Address Book…"
           }
         }
       }
@@ -237,19 +171,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Direct chat"
-          }
-        }
-      }
-    },
-    "disable-all-notifications": {
-      "comment": "Toolbar & input bar accessibility. Legacy key: ib-m2.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disable All Notifications"
+            "value": "Direct Chat"
           }
         }
       }
@@ -278,54 +200,6 @@
         }
       }
     },
-    "enable-all-notifications": {
-      "comment": "Sidebar footer menu item, shown while notifications are muted; the counterpart of disable-all-notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enable All Notifications"
-          }
-        }
-      }
-    },
-    "file-transfers": {
-      "comment": "Toolbar & input bar accessibility. Legacy key: ib-m4.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "File Transfers…"
-          }
-        }
-      }
-    },
-    "half-op": {
-      "comment": "Member privilege description. Legacy key: 0nn-te.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Half-op"
-          }
-        }
-      }
-    },
-    "half-operators": {
-      "comment": "Member list section headers. Legacy key: mls-ho.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Half-Operators"
-          }
-        }
-      }
-    },
     "hide-server-list": {
       "comment": "Dynamic View/Window menu titles. Legacy key: mnu-hsl.",
       "extractionState": "manual",
@@ -334,30 +208,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hide Server List"
-          }
-        }
-      }
-    },
-    "importing-preferences": {
-      "comment": "Main-window loading status. Legacy key: 5g1-i9.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Importing preferences…"
-          }
-        }
-      }
-    },
-    "information-not-available": {
-      "comment": "Fallback shown when member information is unavailable. Legacy key: d85-9n.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Information Not Available"
           }
         }
       }
@@ -471,13 +321,35 @@
       }
     },
     "main-window-connection-status-users": {
-      "comment": "Main-window connection status. Legacy key: st-uc.",
+      "comment": "Main-window subtitle for a channel. The first argument is the member count as text, the second the same count for pluralisation. Legacy key: st-uc.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ users"
+            "value": "%1$@ %#@count@"
+          },
+          "substitutions": {
+            "count": {
+              "argNum": 2,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "member"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "members"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -490,90 +362,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mark All as Read"
-          }
-        }
-      }
-    },
-    "member-account-status-description-logged": {
-      "comment": "Member account-status description. Legacy key: acc-in.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Logged in as %@"
-          }
-        }
-      }
-    },
-    "member-list-caption-shown-bot": {
-      "comment": "Member list caption shown after a bot's nickname. Legacy key: b0t-lb.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bot"
-          }
-        }
-      }
-    },
-    "member-list-section-headers-admins": {
-      "comment": "Member list section headers. Legacy key: mls-ad.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Admins"
-          }
-        }
-      }
-    },
-    "member-list-section-headers-members": {
-      "comment": "Member list section headers. Legacy key: mls-me.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Members"
-          }
-        }
-      }
-    },
-    "member-list-section-headers-operators": {
-      "comment": "Member list section headers. Legacy key: mls-op.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operators"
-          }
-        }
-      }
-    },
-    "member-list-section-headers-owners": {
-      "comment": "Member list section headers. Legacy key: mls-ow.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Owners"
-          }
-        }
-      }
-    },
-    "member-list-section-headers-voiced": {
-      "comment": "Member list section headers. Legacy key: mls-vo.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Voiced"
           }
         }
       }
@@ -591,37 +379,13 @@
       }
     },
     "member-list-width-hint": {
-      "comment": "Accessibility hint telling the user how to resize the member list from the keyboard.",
+      "comment": "Accessibility hint for the draggable edge between the conversation and the member list.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Press Left Arrow or Right Arrow to resize the member list. Double-click to reset its width."
-          }
-        }
-      }
-    },
-    "member-privilege-description-operator": {
-      "comment": "Member privilege description. Legacy key: 0kn-s5.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operator"
-          }
-        }
-      }
-    },
-    "member-privilege-description-voice": {
-      "comment": "Member privilege description. Legacy key: ya1-sk.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Voice"
+            "value": "Double-click to reset the member list to its default width."
           }
         }
       }
@@ -633,31 +397,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "More Emoji\u2026"
-          }
-        }
-      }
-    },
-    "no-privileges": {
-      "comment": "Member privilege description. Legacy key: tjj-z2.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No Privileges"
-          }
-        }
-      }
-    },
-    "not-logged": {
-      "comment": "Member account-status description. Legacy key: acc-nl.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not logged in"
+            "value": "More Emoji…"
           }
         }
       }
@@ -674,50 +414,19 @@
         }
       }
     },
-    "search-channels": {
-      "comment": "Toolbar & input bar accessibility. Legacy key: ib-sf.",
+    "filter-sidebar": {
+      "comment": "Placeholder of the sidebar's filter field in the window toolbar. Legacy key: ib-sf.",
       "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search Channels"
-          }
-        }
-      }
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Filter Sidebar" } } }
     },
     "send-message": {
-      "comment": "Main message input placeholder. Legacy key: 8r3-ih.",
+      "comment": "Main message input placeholder and accessibility label. Legacy key: 8r3-ih.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send message…"
-          }
-        }
-      }
-    },
-    "server-staff": {
-      "comment": "Member list section headers. Legacy key: mls-sf.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server Staff"
-          }
-        }
-      }
-    },
-    "server-staff-member-irc-operator": {
-      "comment": "Member privilege description. Legacy key: i8t-vb.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server Staff Member (IRC Operator)"
+            "value": "Message"
           }
         }
       }
@@ -742,30 +451,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show Server List"
-          }
-        }
-      }
-    },
-    "suffix-appended-away": {
-      "comment": "Suffix appended to an away nickname. Legacy key: nxz-l9.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": " (away)"
-          }
-        }
-      }
-    },
-    "super-admin": {
-      "comment": "Member privilege description. Legacy key: som-zo.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Super Admin"
           }
         }
       }
@@ -801,8 +486,18 @@
         "en": {
           "variations": {
             "plural": {
-              "one": { "stringUnit": { "state": "translated", "value": "%ld person is typing\u2026" } },
-              "other": { "stringUnit": { "state": "translated", "value": "%ld people are typing\u2026" } }
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld person is typing…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%ld people are typing…"
+                }
+              }
             }
           }
         }
@@ -820,18 +515,6 @@
         }
       }
     },
-    "user-is-a-bot": {
-      "comment": "Member bot-status description. Legacy key: b0t-ac.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User is a bot"
-          }
-        }
-      }
-    },
     "user-is-away": {
       "comment": "Member away-status description. Legacy key: jkr-ed.",
       "extractionState": "manual",
@@ -840,18 +523,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "User is away"
-          }
-        }
-      }
-    },
-    "user-is-not-away": {
-      "comment": "Member away-status description. Legacy key: gi6-wf.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User is not away"
           }
         }
       }
@@ -1068,30 +739,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quit Glasstual"
-          }
-        }
-      }
-    },
-    "menu-file-disable-notifications": {
-      "comment": "File menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disable All Notifications"
-          }
-        }
-      }
-    },
-    "menu-file-disable-notification-sounds": {
-      "comment": "File menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disable All Notification Sounds"
           }
         }
       }
@@ -1828,18 +1475,6 @@
         }
       }
     },
-    "menu-channel-mode-unmoderated": {
-      "comment": "Channel menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unmoderated (-m)"
-          }
-        }
-      }
-    },
     "menu-channel-mode-invite-only": {
       "comment": "Channel menu item title.",
       "extractionState": "manual",
@@ -1848,18 +1483,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Invite Only (+i)"
-          }
-        }
-      }
-    },
-    "menu-channel-mode-anyone-can-join": {
-      "comment": "Channel menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anyone Can Join (-i)"
           }
         }
       }
@@ -1895,7 +1518,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "List of Ban Exceptions"
+            "value": "List of Ban Exceptions…"
           }
         }
       }
@@ -1907,7 +1530,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "List of Invite Exceptions"
+            "value": "List of Invite Exceptions…"
           }
         }
       }
@@ -1919,7 +1542,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "List of Quiets"
+            "value": "List of Quiets…"
           }
         }
       }
@@ -2219,7 +1842,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Channel Spotlight…"
+            "value": "Channel Search…"
           }
         }
       }
@@ -2231,7 +1854,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search Channels…"
+            "value": "Filter Sidebar"
           }
         }
       }
@@ -2256,18 +1879,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zoom"
-          }
-        }
-      }
-    },
-    "menu-window-toggle-appearance": {
-      "comment": "Window menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toggle Window Appearance"
           }
         }
       }
@@ -2328,18 +1939,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Address Book"
-          }
-        }
-      }
-    },
-    "menu-window-ignore-list": {
-      "comment": "Window menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ignore List"
           }
         }
       }
@@ -2441,13 +2040,13 @@
       }
     },
     "menu-help-developer-mode": {
-      "comment": "Help menu item title.",
+      "comment": "Help ▸ Advanced menu item title. Ticked while developer mode is on, so the title names the mode rather than the act of enabling it.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enable Developer Mode"
+            "value": "Developer Mode"
           }
         }
       }
@@ -2464,30 +2063,6 @@
         }
       }
     },
-    "menu-help-export-preferences": {
-      "comment": "Help menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Export Preferences"
-          }
-        }
-      }
-    },
-    "menu-help-import-preferences": {
-      "comment": "Help menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Import Preferences"
-          }
-        }
-      }
-    },
     "menu-help-reset-warnings": {
       "comment": "Help menu item title.",
       "extractionState": "manual",
@@ -2495,7 +2070,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset Don't Ask Me Warnings"
+            "value": "Reset All Warnings"
           }
         }
       }
@@ -2508,18 +2083,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Welcome to Glasstual…"
-          }
-        }
-      }
-    },
-    "menu-transcript-search-with-google": {
-      "comment": "Transcript context menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search with Google"
           }
         }
       }
@@ -2555,7 +2118,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add Ignore"
+            "value": "Add Ignore…"
           }
         }
       }
@@ -2567,7 +2130,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modify Ignore"
+            "value": "Modify Ignore…"
           }
         }
       }
@@ -2656,18 +2219,6 @@
         }
       }
     },
-    "menu-member-all-modes-given": {
-      "comment": "Member list context menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All Modes Given"
-          }
-        }
-      }
-    },
     "menu-member-take-op": {
       "comment": "Member list context menu item title.",
       "extractionState": "manual",
@@ -2700,18 +2251,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Take Voice (-v)"
-          }
-        }
-      }
-    },
-    "menu-member-all-modes-taken": {
-      "comment": "Member list context menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All Modes Taken"
           }
         }
       }
@@ -2867,7 +2406,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Set Virtual Host (vHost)"
+            "value": "Set Virtual Host (vHost)…"
           }
         }
       }
@@ -2916,6 +2455,162 @@
           "stringUnit": {
             "state": "translated",
             "value": "Change Color…"
+          }
+        }
+      }
+    },
+    "away-nickname": {
+      "comment": "A nickname shown while that user is marked away. The argument is the nickname. Legacy key: nxz-l9.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (away)"
+          }
+        }
+      }
+    },
+    "menu-bar-format": {
+      "comment": "Menu bar title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format"
+          }
+        }
+      }
+    },
+    "menu-edit-skip-spoken-notification": {
+      "comment": "Edit menu item title. Stops the notification being spoken and moves on to the next one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip Spoken Notification"
+          }
+        }
+      }
+    },
+    "menu-file-export-settings": {
+      "comment": "File menu item title. Legacy key: menu-help-export-preferences.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Settings…"
+          }
+        }
+      }
+    },
+    "menu-file-import-settings": {
+      "comment": "File menu item title. Legacy key: menu-help-import-preferences.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Settings…"
+          }
+        }
+      }
+    },
+    "menu-mute-notification-sounds": {
+      "comment": "Application and Dock menu item title. Ticked while notification sounds are muted. Legacy key: menu-file-disable-notification-sounds.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mute Notification Sounds"
+          }
+        }
+      }
+    },
+    "menu-mute-notifications": {
+      "comment": "Application and Dock menu item title. Ticked while notifications are muted.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mute Notifications"
+          }
+        }
+      }
+    },
+    "menu-view-actual-size": {
+      "comment": "View menu item title. Returns the transcript to its unscaled text size.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actual Size"
+          }
+        }
+      }
+    },
+    "menu-view-appearance": {
+      "comment": "View menu submenu title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        }
+      }
+    },
+    "menu-view-appearance-dark": {
+      "comment": "View ▸ Appearance menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        }
+      }
+    },
+    "menu-view-appearance-light": {
+      "comment": "View ▸ Appearance menu item title.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        }
+      }
+    },
+    "menu-view-appearance-system": {
+      "comment": "View ▸ Appearance menu item title: follow the system setting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "no-servers": {
+      "comment": "Title of the main window's empty state, shown before the first server is configured.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Servers"
           }
         }
       }

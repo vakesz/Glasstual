@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -46,8 +46,6 @@ nonisolated struct TranscriptDeliveryUpdate: Equatable, Sendable { // nonisolate
 }
 
 nonisolated struct TranscriptReplaySnapshot: Sendable { // nonisolated: value
-	let lines: [LogLine]
-	let lineNumbers: Set<String>
 	let results: [LogLineRenderResult]
 }
 
@@ -96,8 +94,11 @@ nonisolated struct TranscriptSessionBoundaryState: Sendable { // nonisolated: va
 }
 
 /** Owns the bounded transcript while its native view does not exist or is
- rebuilding. It deliberately stores raw lines so a theme change can render
- them again from semantic values. */
+ rebuilding.
+
+ What it stores is the rendered rows: a ``TranscriptLine`` is already the
+ semantic form a theme change re-renders from, so keeping the archives beside
+ them was a second copy of the same conversation under a second ceiling. */
 nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 	enum Phase: Equatable, Sendable {
 		case dormant
@@ -115,25 +116,19 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 	private(set) var deliveryUpdates: [String: TranscriptDeliveryUpdate] = [:]
 
 	private var capacity: Int
-	private var recentLines: [LogLine] = []
-	private var recentResults: [String: LogLineRenderResult] = [:]
+	/// The retained rows, oldest first.
+	private var recentResults: [LogLineRenderResult] = []
+	/// What ``recentResults`` holds, so a duplicate check is an answer rather
+	/// than a walk.
+	private var recentLineNumbers: Set<String> = []
 	private var pendingResults: [LogLineRenderResult] = []
-	/** Where each retained line sits, counted from the first line the state ever
-	 held rather than from the head of `recentLines`. Trimming the head then
-	 costs nothing to record: `droppedLineCount` moves instead of every entry. */
-	private var positions: [String: Int] = [:]
-	private var droppedLineCount = 0
-
-	var pendingLineNumbers: Set<String> {
-		Set(pendingResults.map(\.lineNumber))
-	}
 
 	func containsLine(withIdentifier identifier: String) -> Bool {
-		positions[identifier] != nil
+		recentLineNumbers.contains(identifier)
 	}
 
 	var lineCount: Int {
-		recentLines.count
+		recentResults.count
 	}
 
 	init(capacity: Int = LogViewBufferPolicy.defaultHardLimit) {
@@ -145,18 +140,15 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		trimToCapacity()
 	}
 
-	mutating func record(_ line: LogLine, rendered result: LogLineRenderResult) -> LiveLineAction {
-		if let existing = index(of: line.uniqueIdentifier) {
-			/* Re-recording a line the tail already holds moves it to the end, and
-			 only then is renumbering what follows worth the walk. */
-			recentLines.remove(at: existing)
-			for offset in existing ..< recentLines.count {
-				positions[recentLines[offset].uniqueIdentifier] = droppedLineCount + offset
-			}
+	mutating func record(_ result: LogLineRenderResult) -> LiveLineAction {
+		/* A line printed a second time moves to the end rather than appearing
+		 twice. It is rare enough to be worth a walk when it happens, and the
+		 set above is what keeps the common case from walking at all. */
+		if recentLineNumbers.contains(result.lineNumber) {
+			recentResults.removeAll { $0.lineNumber == result.lineNumber }
 		}
-		positions[line.uniqueIdentifier] = droppedLineCount + recentLines.count
-		recentLines.append(line)
-		recentResults[line.uniqueIdentifier] = result
+		recentResults.append(result)
+		recentLineNumbers.insert(result.lineNumber)
 		trimToCapacity()
 
 		switch phase {
@@ -176,11 +168,7 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 	mutating func beginReplay() -> TranscriptReplaySnapshot {
 		phase = .loading
 		pendingResults.removeAll(keepingCapacity: true)
-		return TranscriptReplaySnapshot(
-			lines: recentLines,
-			lineNumbers: Set(recentLines.map(\.uniqueIdentifier)),
-			results: recentLines.compactMap { recentResults[$0.uniqueIdentifier] }
-		)
+		return TranscriptReplaySnapshot(results: recentResults)
 	}
 
 	mutating func finishReplay(displaying lineNumbers: Set<String>) -> [LogLineRenderResult] {
@@ -204,18 +192,9 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		phase = .dormant
 		mark = .none
 		deliveryUpdates.removeAll()
-		recentLines.removeAll()
 		recentResults.removeAll()
+		recentLineNumbers.removeAll()
 		pendingResults.removeAll()
-		positions.removeAll()
-		droppedLineCount = 0
-	}
-
-	/// Where a retained line sits in `recentLines`, or `nil` when it is not one.
-	private func index(of uniqueIdentifier: String) -> Int? {
-		guard let position = positions[uniqueIdentifier] else { return nil }
-		let index = position - droppedLineCount
-		return recentLines.indices.contains(index) ? index : nil
 	}
 
 	mutating func setMark(_ mark: TranscriptScrollbackMark) {
@@ -236,29 +215,25 @@ nonisolated struct TranscriptProjectionState: Sendable { // nonisolated: value
 		)
 		/* An ack can arrive after its line has been trimmed away. Recording one
 		 for a line the state no longer holds would keep it for the session:
-		 only lines still in `recentLines` are ever trimmed from here. */
-		guard let index = index(of: lineNumber) else {
+		 only lines it still holds are ever trimmed from here. The row itself is
+		 not rewritten -- `applyingCurrentState(to:)` folds the update in when
+		 the row is drawn, which is what a replayed row needs anyway. */
+		guard recentLineNumbers.contains(lineNumber) else {
 			return
 		}
 		deliveryUpdates[lineNumber] = update
-		recentLines[index].deliveryState = state
-		if let messageIdentifier, messageIdentifier.isEmpty == false {
-			recentLines[index].messageIdentifier = messageIdentifier
-		}
 	}
 
 	private mutating func trimToCapacity() {
-		guard recentLines.count > capacity else {
+		guard recentResults.count > capacity else {
 			return
 		}
-		let removalCount = recentLines.count - capacity
-		let removedLineNumbers = recentLines.prefix(removalCount).map(\.uniqueIdentifier)
-		recentLines.removeFirst(removalCount)
-		droppedLineCount += removalCount
+		let removalCount = recentResults.count - capacity
+		let removedLineNumbers = recentResults.prefix(removalCount).map(\.lineNumber)
+		recentResults.removeFirst(removalCount)
 		for lineNumber in removedLineNumbers {
-			recentResults.removeValue(forKey: lineNumber)
+			recentLineNumbers.remove(lineNumber)
 			deliveryUpdates.removeValue(forKey: lineNumber)
-			positions.removeValue(forKey: lineNumber)
 		}
 	}
 }

@@ -61,7 +61,7 @@ public extension IRCClient {
 		openedLogFile().writeLogLine(logLine)
 	}
 
-	/// Same shape as `IRCChannel.openedLogFile()`, for the same compiler reason.
+	/// Same shape as `Channel.openedLogFile()`, for the same compiler reason.
 	private func openedLogFile() -> FileLogger {
 		if let logFile {
 			return logFile
@@ -71,7 +71,7 @@ public extension IRCClient {
 		return opened
 	}
 
-	func logFileRecordSessionChanged(_ startsSession: Bool, in channel: IRCChannel?) {
+	func logFileRecordSessionChanged(_ startsSession: Bool, in channel: Channel?) {
 		precondition(channel?.isUtility != true)
 		let message = IRCLogStrings.sessionMarker(startsSession: startsSession)
 

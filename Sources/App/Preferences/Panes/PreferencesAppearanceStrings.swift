@@ -14,176 +14,229 @@ import Foundation
 
 enum PreferencesInterfaceStrings {
 	static var appearanceDark: String {
-		String(localized: .TDCPreferencesController.interfaceAppearanceDark)
+		String(localized: .Settings.interfaceAppearanceDark)
 	}
 
 	static var appearanceLabel: String {
-		String(localized: .TDCPreferencesController.interfaceAppearanceLabel)
+		String(localized: .Settings.interfaceAppearanceLabel)
 	}
 
 	static var appearanceLight: String {
-		String(localized: .TDCPreferencesController.interfaceAppearanceLight)
+		String(localized: .Settings.interfaceAppearanceLight)
 	}
 
 	static var appearanceSystem: String {
-		String(localized: .TDCPreferencesController.interfaceAppearanceSystem)
+		String(localized: .Settings.interfaceAppearanceSystem)
 	}
 
 	static var headingServerListColors: String {
-		String(localized: .TDCPreferencesController.interfaceHeadingServerListColors)
+		String(localized: .Settings.interfaceHeadingServerListColors)
 	}
 
 	static var headingUserListColors: String {
-		String(localized: .TDCPreferencesController.interfaceHeadingUserListColors)
+		String(localized: .Settings.interfaceHeadingUserListColors)
 	}
 
 	static var modeChannelAdministrator: String {
-		String(localized: .TDCPreferencesController.interfaceModeChannelAdministrator)
+		String(localized: .Settings.interfaceModeChannelAdministrator)
 	}
 
 	static var modeChannelHalfOperator: String {
-		String(localized: .TDCPreferencesController.interfaceModeChannelHalfOperator)
+		String(localized: .Settings.interfaceModeChannelHalfOperator)
 	}
 
 	static var modeChannelOperator: String {
-		String(localized: .TDCPreferencesController.interfaceModeChannelOperator)
+		String(localized: .Settings.interfaceModeChannelOperator)
 	}
 
 	static var modeChannelOwner: String {
-		String(localized: .TDCPreferencesController.interfaceModeChannelOwner)
+		String(localized: .Settings.interfaceModeChannelOwner)
 	}
 
 	static var modeServerStaff: String {
-		String(localized: .TDCPreferencesController.interfaceModeServerStaff)
+		String(localized: .Settings.interfaceModeServerStaff)
 	}
 
 	static var modeVoicedUser: String {
-		String(localized: .TDCPreferencesController.interfaceModeVoicedUser)
+		String(localized: .Settings.interfaceModeVoicedUser)
 	}
 
 	static var noModeSymbol: String {
-		String(localized: .TDCPreferencesController.interfaceNoModeSymbol)
+		String(localized: .Settings.interfaceNoModeSymbol)
 	}
 
 	static var popoverUpdatesOnScroll: String {
-		String(localized: .TDCPreferencesController.interfacePopoverUpdatesOnScroll)
+		String(localized: .Settings.interfacePopoverUpdatesOnScroll)
 	}
 
 	static var reset: String {
-		String(localized: .TDCPreferencesController.interfaceReset)
+		String(localized: .Settings.interfaceReset)
 	}
 
 	static var resetToDefaults: String {
-		String(localized: .TDCPreferencesController.interfaceResetToDefaults)
+		String(localized: .Settings.interfaceResetToDefaults)
 	}
 
 	static var resetColorsConfirmationTitle: String {
-		String(localized: .TDCPreferencesController.interfaceResetColorsConfirmation)
+		String(localized: .Settings.interfaceResetColorsConfirmation)
 	}
 
 	static var resetColorsConfirmationBody: String {
-		String(localized: .TDCPreferencesController.interfaceResetColorsConfirmationBody)
+		String(localized: .Settings.interfaceResetColorsConfirmationBody)
 	}
 
 	static var resetThemeConfirmationTitle: String {
-		String(localized: .TDCPreferencesController.interfaceResetThemeConfirmation)
+		String(localized: .Settings.interfaceResetThemeConfirmation)
 	}
 
 	static var resetThemeConfirmationBody: String {
-		String(localized: .TDCPreferencesController.interfaceResetThemeConfirmationBody)
+		String(localized: .Settings.interfaceResetThemeConfirmationBody)
 	}
 
 	static var resetUnreadHighlightColor: String {
-		String(localized: .TDCPreferencesController.interfaceResetUnreadHighlightColor)
+		String(localized: .Settings.interfaceResetUnreadHighlightColor)
 	}
 
 	static var resetUserListColors: String {
-		String(localized: .TDCPreferencesController.interfaceResetUserListColors)
+		String(localized: .Settings.interfaceResetUserListColors)
 	}
 
 	static var rightToLeftText: String {
-		String(localized: .TDCPreferencesController.interfaceRightToLeftText)
+		String(localized: .Settings.interfaceRightToLeftText)
 	}
 
 	static var staffAtTop: String {
-		String(localized: .TDCPreferencesController.interfaceStaffAtTop)
+		String(localized: .Settings.interfaceStaffAtTop)
 	}
 
 	static var unreadHighlightColorLabel: String {
-		String(localized: .TDCPreferencesController.interfaceUnreadHighlightColorLabel)
+		String(localized: .Settings.interfaceUnreadHighlightColorLabel)
 	}
 
 	static var userListColorsNote: String {
-		String(localized: .TDCPreferencesController.interfaceUserListColorsNote)
+		String(localized: .Settings.interfaceUserListColorsNote)
 	}
 }
 
 enum PreferencesStyleStrings {
 	static var autoScrollbackMarker: String {
-		String(localized: .TDCPreferencesController.styleAutoScrollbackMarker)
+		String(localized: .Settings.styleAutoScrollbackMarker)
 	}
 
 	static var disableNicknameColors: String {
-		String(localized: .TDCPreferencesController.styleDisableNicknameColors)
+		String(localized: .Settings.styleDisableNicknameColors)
 	}
 
 	static var fontChange: String {
-		String(localized: .TDCPreferencesController.styleFontChange)
+		String(localized: .Settings.styleFontChange)
 	}
 
 	static func fontDescription(name: String, size: String) -> String {
-		String(localized: .TDCPreferencesController.styleFontDescription(name, size))
+		String(localized: .Settings.styleFontDescription(name, size))
 	}
 
 	static var fontLabel: String {
-		String(localized: .TDCPreferencesController.styleFontLabel)
+		String(localized: .Settings.styleFontLabel)
+	}
+
+	static var fontPickerChoose: String {
+		String(localized: .Settings.styleFontPickerChoose)
+	}
+
+	static var fontPickerTitle: String {
+		String(localized: .Settings.styleFontPickerTitle)
+	}
+
+	static var fontSizeLabel: String {
+		String(localized: .Settings.styleFontSizeLabel)
+	}
+
+	static func colorAccessibility(role: String, appearance: String) -> String {
+		String(localized: .Settings.styleColorAccessibility(role, appearance))
 	}
 
 	static var formatSymbolsLabel: String {
-		String(localized: .TDCPreferencesController.styleFormatSymbolsLabel)
+		String(localized: .Settings.styleFormatSymbolsLabel)
+	}
+
+	static var headingLayout: String {
+		String(localized: .Settings.styleHeadingLayout)
 	}
 
 	static var headingScrollback: String {
-		String(localized: .TDCPreferencesController.styleHeadingScrollback)
+		String(localized: .Settings.styleHeadingScrollback)
 	}
 
 	static var nicknameFormatLabel: String {
-		String(localized: .TDCPreferencesController.styleNicknameFormatLabel)
+		String(localized: .Settings.styleNicknameFormatLabel)
 	}
 
 	static var nicknameFormatSymbolMode: String {
-		String(localized: .TDCPreferencesController.styleNicknameFormatSymbolMode)
+		String(localized: .Settings.styleNicknameFormatSymbolMode)
 	}
 
 	static var nicknameFormatSymbolNickname: String {
-		String(localized: .TDCPreferencesController.styleNicknameFormatSymbolNickname)
+		String(localized: .Settings.styleNicknameFormatSymbolNickname)
 	}
 
 	static var scrollbackSaveLimit: String {
-		String(localized: .TDCPreferencesController.styleScrollbackSaveLimit)
+		String(localized: .Settings.styleScrollbackSaveLimit)
 	}
 
 	static var scrollbackSaveLimitNote: String {
-		String(localized: .TDCPreferencesController.styleScrollbackSaveLimitNote)
+		String(localized: .Settings.styleScrollbackSaveLimitNote)
 	}
 
 	static var showDateChanges: String {
-		String(localized: .TDCPreferencesController.styleShowDateChanges)
+		String(localized: .Settings.styleShowDateChanges)
 	}
 
 	static var showJoinLeave: String {
-		String(localized: .TDCPreferencesController.styleShowJoinLeave)
+		String(localized: .Settings.styleShowJoinLeave)
 	}
 
 	static var showMotd: String {
-		String(localized: .TDCPreferencesController.styleShowMotd)
+		String(localized: .Settings.styleShowMotd)
 	}
 
 	static var timestampFormatLabel: String {
-		String(localized: .TDCPreferencesController.styleTimestampFormatLabel)
+		String(localized: .Settings.styleTimestampFormatLabel)
 	}
 
 	static var timestampFormatNote: String {
-		String(localized: .TDCPreferencesController.styleTimestampFormatNote)
+		String(localized: .Settings.styleTimestampFormatNote)
+	}
+}
+
+/** What the settings call each user-list mode.
+
+ The pane's colour wells and the inventory that gives every bound key a
+ user-facing name read the same declaration, so a mode cannot be spelled one
+ way beside its colour and another in an import preview. */
+extension UserListModeBadge {
+	var displayName: LocalizedStringResource {
+		switch self {
+		case .ircOperator: .Settings.interfaceModeServerStaff
+		case .channelOwner: .Settings.interfaceModeChannelOwner
+		case .superOperator: .Settings.interfaceModeChannelAdministrator
+		case .normalOperator: .Settings.interfaceModeChannelOperator
+		case .halfOperator: .Settings.interfaceModeChannelHalfOperator
+		case .voiced: .Settings.interfaceModeVoicedUser
+		}
+	}
+
+	var title: String {
+		String(localized: displayName)
+	}
+}
+
+extension PreferredAppearance {
+	var title: String {
+		let resource: LocalizedStringResource = switch self {
+		case .inherited: .Settings.interfaceAppearanceSystem
+		case .light: .Settings.interfaceAppearanceLight
+		case .dark: .Settings.interfaceAppearanceDark
+		}
+		return String(localized: resource)
 	}
 }

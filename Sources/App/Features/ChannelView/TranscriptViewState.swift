@@ -43,10 +43,10 @@ extension NSAttributedString.Key {
 	static let transcriptLineType = NSAttributedString.Key("GlasstualTranscriptLineType")
 	static let transcriptMessageIdentifier = NSAttributedString.Key("GlasstualTranscriptMessageIdentifier")
 	static let transcriptExcerpt = NSAttributedString.Key("GlasstualTranscriptExcerpt")
-	/// A `TranscriptAction`, stored as its `attributeValue`.
+	/// A `TranscriptAction`: what the run stands for when it is clicked.
 	static let transcriptAction = NSAttributedString.Key("GlasstualTranscriptAction")
-	/// A `TranscriptReactionTarget`, stored as its `attributeValue`: the run is
-	/// a reaction chip, and clicking it reacts to that message.
+	/// A `TranscriptReactionTarget`: the run is a reaction chip, and clicking
+	/// it reacts to that message.
 	static let transcriptReaction = NSAttributedString.Key("GlasstualTranscriptReaction")
 	/// The address an inline image was fetched from, on the character that
 	/// draws it.
@@ -110,59 +110,26 @@ extension TranscriptMarker {
 	}
 }
 
-/** The reaction one chip in a message's details stands for. Like
- ``TranscriptAction`` it travels through the text storage as a string, and this
- is the one place that string is written and read. */
-struct TranscriptReactionTarget: Equatable {
+/** The reaction one chip in a message's details stands for.
+
+ It is the attribute's value itself. The text storage is in-process state that
+ is never archived, so a run carries the value it means rather than a delimited
+ string that has to be spelled one way and parsed back the other.
+
+ `Hashable`, because the value is boxed into an `NSAttributedString` attribute:
+ the storage coalesces and compares runs through `-isEqual:` and `-hash`, and a
+ Swift value that is only `Equatable` is hashed by the runtime's fallback --
+ which warns on first use and collides every value of the type into one bucket.
+ ``TranscriptAction`` is stored the same way and conforms for the same reason. */
+struct TranscriptReactionTarget: Hashable {
 	let messageIdentifier: String
 	let emoji: String
-
-	/// A separator no message identifier and no emoji can contain.
-	private static let separator: Character = "\u{1F}"
-
-	var attributeValue: String {
-		"\(messageIdentifier)\(Self.separator)\(emoji)"
-	}
-
-	init(messageIdentifier: String, emoji: String) {
-		self.messageIdentifier = messageIdentifier
-		self.emoji = emoji
-	}
-
-	init?(attributeValue: Any?) {
-		guard let value = attributeValue as? String else { return nil }
-		let parts = value.split(separator: Self.separator, maxSplits: 1, omittingEmptySubsequences: false)
-		guard parts.count == 2, parts[0].isEmpty == false, parts[1].isEmpty == false else { return nil }
-		messageIdentifier = String(parts[0])
-		emoji = String(parts[1])
-	}
 }
 
-/** What a run of transcript text stands for when it is clicked: a member's
- name or a channel's. It travels through the text storage as a string, and
- this is the one place that string is written and read. */
-enum TranscriptAction: Equatable {
+/// What a run of transcript text stands for when it is clicked: a member's
+/// name or a channel's. Like ``TranscriptReactionTarget`` it is the attribute
+/// value itself, and `Hashable` for the same reason.
+enum TranscriptAction: Hashable {
 	case nickname(String)
 	case channel(String)
-
-	private static let nicknamePrefix = "nickname:"
-	private static let channelPrefix = "channel:"
-
-	var attributeValue: String {
-		switch self {
-		case let .nickname(name): Self.nicknamePrefix + name
-		case let .channel(name): Self.channelPrefix + name
-		}
-	}
-
-	init?(attributeValue: Any?) {
-		guard let value = attributeValue as? String else { return nil }
-		if value.hasPrefix(Self.nicknamePrefix) {
-			self = .nickname(String(value.dropFirst(Self.nicknamePrefix.count)))
-		} else if value.hasPrefix(Self.channelPrefix) {
-			self = .channel(String(value.dropFirst(Self.channelPrefix.count)))
-		} else {
-			return nil
-		}
-	}
 }

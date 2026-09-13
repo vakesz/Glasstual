@@ -69,33 +69,92 @@ struct LogControllerTranscriptApplicationTests {
 		let controller = LogController(client: client, in: window())
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .page([]) }
+		controller.loadsHistoryLazily = { false }
 		let message = line("waiting for the view")
 		var wasDisplayed: Bool?
 		controller.print(message) { wasDisplayed = $0.isDisplayed }
 		await controller.drainRenderJobs()
 		#expect(wasDisplayed == false)
 		#expect(controller.lastRenderedLineDate() == nil)
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
 		_ = controller.ensureBackingView()
-		Preferences.Logging.loadHistoryLazily.value = lazy
 		await controller.drainRenderJobs()
 		#expect(controller.lastRenderedLineDate() == message.receivedAt)
 	}
 
+	/** A read marker is answered in the turn the line was printed in, before the
+	 render job has applied it, so the controller counts what it has been handed
+	 as well as what it is showing — and counts it once. */
+	@Test("A printed conversation line counts before it renders and only once afterwards")
+	func conversationLinesCountBeforeRenderingAndOnlyOnce() async {
+		let client = IRCClient(config: ClientConfig())
+		let controller = LogController(client: client, in: window())
+		defer { controller.tearDown(.permanentRemoval) }
+		controller.historyPageFetcher = { _ in .page([]) }
+		controller.loadsHistoryLazily = { false }
+		_ = controller.ensureBackingView()
+		await controller.drainRenderJobs()
+		let marker = Date(timeIntervalSince1970: 50)
+		let message = line("said out loud", date: 100)
+		var topic = line("the topic", date: 200)
+		topic.lineType = .topic
+
+		controller.print(message)
+
+		#expect(controller.newestConversationLineDate() == message.receivedAt)
+		#expect(controller.conversationLineCount(after: marker) == 1)
+
+		await controller.drainRenderJobs()
+
+		#expect(controller.newestConversationLineDate() == message.receivedAt)
+		#expect(controller.conversationLineCount(after: marker) == 1)
+		#expect(controller.conversationLineCount(after: message.receivedAt) == 0)
+
+		controller.print(topic)
+		await controller.drainRenderJobs()
+
+		#expect(controller.newestConversationLineDate() == message.receivedAt)
+		#expect(controller.conversationLineCount(after: marker) == 1)
+	}
+
+	/// What the pipeline drops, the seams forget: clearing the view cancels the
+	/// queued jobs, so a line that was waiting on one must stop answering for a
+	/// view that is never going to show it.
+	@Test("Cancelling the queued rendering forgets the lines that were waiting on it")
+	func cancelledRenderingForgetsWaitingLines() async {
+		let client = IRCClient(config: ClientConfig())
+		let controller = LogController(client: client, in: window())
+		defer { controller.tearDown(.permanentRemoval) }
+		controller.historyPageFetcher = { _ in .page([]) }
+		controller.loadsHistoryLazily = { false }
+		_ = controller.ensureBackingView()
+		await controller.drainRenderJobs()
+
+		controller.print(line("said out loud", date: 100))
+
+		#expect(controller.conversationLineCount(after: .distantPast) == 1)
+
+		controller.clear()
+
+		#expect(controller.newestConversationLineDate() == nil)
+		#expect(controller.conversationLineCount(after: .distantPast) == 0)
+
+		await controller.drainRenderJobs()
+
+		#expect(controller.newestConversationLineDate() == nil)
+		#expect(controller.conversationLineCount(after: .distantPast) == 0)
+	}
+
 	@Test("Jump to Present resumes following from either the present or historical text", arguments: [false, true])
 	func jumpToPresentFollowsSubsequentPrints(fromHistory: Bool) async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		let client = IRCClient(config: ClientConfig())
 		let window = window()
 		let controller = LogController(client: client, in: window)
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .page([]) }
 		let view = controller.ensureBackingView()
-		view.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
-		window.contentView = view.view
+		view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = view
 		await controller.drainRenderJobs()
 		view.setBufferLimit(1000)
 		let first = line("first message", date: 0)
@@ -104,9 +163,9 @@ struct LogControllerTranscriptApplicationTests {
 			controller.print(line("message \(index)", date: Double(index)))
 		}
 		await controller.drainRenderJobs()
-		view.view.layoutSubtreeIfNeeded()
-		controller.moveToBottom()
-		let scroll = try #require(view.view.subviews.compactMap { $0 as? NSScrollView }.first)
+		view.layoutSubtreeIfNeeded()
+		controller.jumpToPresent()
+		let scroll = try #require(view.subviews.compactMap { $0 as? NSScrollView }.first)
 		let text = try #require(scroll.documentView as? NSTextView)
 		let layout = try #require(text.textLayoutManager)
 		try #require(text.frame.height > scroll.contentView.bounds.height)
@@ -121,7 +180,7 @@ struct LogControllerTranscriptApplicationTests {
 			controller.print(line("new message \(index)", date: Double(index)))
 		}
 		await controller.drainRenderJobs()
-		view.view.layoutSubtreeIfNeeded()
+		view.layoutSubtreeIfNeeded()
 		layout.ensureLayout(for: layout.documentRange)
 		text.sizeToFit()
 		#expect(text.frame.height > oldHeight)
@@ -140,12 +199,10 @@ struct LogControllerTranscriptApplicationTests {
 		arguments: [false, true]
 	)
 	func staleOlderPageCannotMutateController(destroy: Bool) async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		let client = IRCClient(config: ClientConfig())
 		let window = window()
 		let controller = LogController(client: client, in: window)
+		controller.loadsHistoryLazily = { false }
 		let gate = TranscriptPageGate()
 		controller.historyPageFetcher = { request in
 			if case .before = request.kind {
@@ -171,7 +228,7 @@ struct LogControllerTranscriptApplicationTests {
 		await retiredFetch?.value
 		await controller.drainRenderJobs()
 		#expect(view.displayedLines.allSatisfy { $0.lineNumber != stale.uniqueIdentifier })
-		#expect(try LogControllerHistoricLogFile.shared().containsMessageIdentifier(
+		#expect(try LogControllerHistoricLogFile.shared.containsMessageIdentifier(
 			#require(stale.messageIdentifier), forView: controller.uniqueIdentifier
 		) == false)
 		if !destroy {
@@ -181,17 +238,13 @@ struct LogControllerTranscriptApplicationTests {
 
 	@Test("Initial replay merges archived reactions with deltas and retains live prints")
 	func initialReplayKeepsLiveState() async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
 		let reload = Preferences.Logging.reloadScrollbackOnLaunch.value
-		Preferences.Logging.loadHistoryLazily.value = false
 		Preferences.Logging.reloadScrollbackOnLaunch.value = true
-		defer {
-			Preferences.Logging.loadHistoryLazily.value = lazy
-			Preferences.Logging.reloadScrollbackOnLaunch.value = reload
-		}
+		defer { Preferences.Logging.reloadScrollbackOnLaunch.value = reload }
 		let client = IRCClient(config: ClientConfig())
 		let window = window()
 		let controller = LogController(client: client, in: window)
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		let gate = TranscriptPageGate()
 		controller.historyPageFetcher = { _ in await gate.suspend() }
@@ -224,12 +277,10 @@ struct LogControllerTranscriptApplicationTests {
 
 	@Test("Trimming during an older fetch cannot create a skipped interval")
 	func movedDisplayedCursorRejectsPage() async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		let client = IRCClient(config: ClientConfig())
 		let window = window()
 		let controller = LogController(client: client, in: window)
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .page([]) }
 		let view = controller.ensureBackingView()
@@ -257,7 +308,7 @@ struct LogControllerTranscriptApplicationTests {
 		await gate.finish([stale.historicEntry(forView: controller.uniqueIdentifier)])
 		await controller.drainRenderJobs()
 		#expect(view.displayedLines.map(\.lineNumber) == [current.uniqueIdentifier])
-		#expect(try !LogControllerHistoricLogFile.shared().containsMessageIdentifier(
+		#expect(try !LogControllerHistoricLogFile.shared.containsMessageIdentifier(
 			#require(stale.messageIdentifier), forView: controller.uniqueIdentifier
 		))
 		let currentIdentifier = current.uniqueIdentifier
@@ -275,12 +326,10 @@ struct LogControllerTranscriptApplicationTests {
 
 	@Test("A failed older fetch leaves its cursor retryable and merges reactions on prepend")
 	func failedPageDoesNotAdvanceCursor() async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		let client = IRCClient(config: ClientConfig())
 		let window = window()
 		let controller = LogController(client: client, in: window)
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .page([]) }
 		let view = controller.ensureBackingView()
@@ -309,12 +358,10 @@ struct LogControllerTranscriptApplicationTests {
 
 	@Test("Batched production prints preserve completion order and visible bounds after trimming")
 	func completionOrderSurvivesBatchingAndTrim() async {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		let client = IRCClient(config: ClientConfig())
 		let window = window()
 		let controller = LogController(client: client, in: window)
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .page([]) }
 		let view = controller.ensureBackingView()
@@ -422,7 +469,7 @@ struct LogControllerTranscriptApplicationTests {
 			#expect(!controller.serverHistoryFailed)
 			#expect(controller.serverHistoryExhaustedBefore == nil)
 			#expect(controller.backingView?.displayedLines.map(\.receivedAt) == [Date(timeIntervalSince1970: 200)])
-			#expect(!LogControllerHistoricLogFile.shared().containsMessageIdentifier(
+			#expect(!LogControllerHistoricLogFile.shared.containsMessageIdentifier(
 				identifier,
 				forView: channel.uniqueIdentifier
 			))
@@ -448,7 +495,7 @@ struct LogControllerTranscriptApplicationTests {
 			let label = try #require(try outgoingHistoryLabel(on: client))
 			let duplicate = line("already stored", date: 50)
 			let identifier = try #require(duplicate.messageIdentifier)
-			LogControllerHistoricLogFile.shared().indexLogLines([duplicate], forView: channel.uniqueIdentifier)
+			LogControllerHistoricLogFile.shared.indexLogLines([duplicate], forView: channel.uniqueIdentifier)
 			for wire in [
 				"@label=\(label) BATCH +page chathistory \(channel.name)",
 				"@batch=page;msgid=\(identifier);time=1970-01-01T00:00:50.000Z :alice!u@h PRIVMSG \(channel.name) :already stored",
@@ -481,7 +528,7 @@ struct LogControllerTranscriptApplicationTests {
 			#expect(controller.serverHistoryExhaustedBefore == nil)
 			#expect(controller.backingView?.displayedLines.map(\.receivedAt) == [50, 100]
 				.map { Date(timeIntervalSince1970: $0) })
-			#expect(LogControllerHistoricLogFile.shared().containsMessageIdentifier(
+			#expect(LogControllerHistoricLogFile.shared.containsMessageIdentifier(
 				identifier,
 				forView: channel.uniqueIdentifier
 			))
@@ -505,7 +552,7 @@ struct LogControllerTranscriptApplicationTests {
 		}
 	}
 
-	private func outgoingHistoryLabel(on client: GLTTestClient) throws -> String? {
+	private func outgoingHistoryLabel(on client: TestClient) throws -> String? {
 		let wire = try #require(client.sentLines.compactMap { $0 as? String }
 			.last { $0.contains("CHATHISTORY BEFORE ") })
 		return try #require(Message(line: wire, on: client)).messageTags?["label"]
@@ -513,17 +560,13 @@ struct LogControllerTranscriptApplicationTests {
 
 	@Test("An initial read failure keeps live rendering active and allows history retry")
 	func initialReadFailureIsRetryable() async {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
 		let reload = Preferences.Logging.reloadScrollbackOnLaunch.value
-		Preferences.Logging.loadHistoryLazily.value = false
 		Preferences.Logging.reloadScrollbackOnLaunch.value = true
-		defer {
-			Preferences.Logging.loadHistoryLazily.value = lazy
-			Preferences.Logging.reloadScrollbackOnLaunch.value = reload
-		}
+		defer { Preferences.Logging.reloadScrollbackOnLaunch.value = reload }
 		let client = IRCClient(config: ClientConfig())
 		let window = window()
 		let controller = LogController(client: client, in: window)
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .failed(.read("Cannot read history")) }
 		let view = controller.ensureBackingView()
@@ -542,17 +585,15 @@ struct LogControllerTranscriptApplicationTests {
 
 	@Test("Controller renders refresh the retained member snapshot after relevant member edits")
 	func memberCacheTracksNicknameAndMarkChanges() async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
-		let client = GLTTestClient()
-		let channel = IRCChannel(config: ChannelConfig(channelName: "#members"))
+		let client = TestClient()
+		let channel = Channel(config: ChannelConfig(channelName: "#members"))
 		channel.associatedClient = client
 		channel.activate()
 		let member = ChannelUser(user: client.findUserOrCreate("alice"), prefixes: client.currentUserPrefixes)
 		channel.addMember(member)
 		let window = window()
 		let controller = LogController(channel: channel, in: window)
+		controller.loadsHistoryLazily = { false }
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .page([]) }
 		let view = controller.ensureBackingView()
@@ -575,15 +616,12 @@ struct LogControllerTranscriptApplicationTests {
 
 	private func withServerHistoryController(
 		labeled: Bool,
-		_ body: (GLTTestClient, IRCChannel, LogController) async throws -> Void
+		_ body: (TestClient, Channel, LogController) async throws -> Void
 	) async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		var preferences = ClientPreferences()
 		preferences.requestChatHistory = true
-		let client = GLTTestClient(configDictionary: ["nickname": "me"], nicknamePassword: nil,
-		                           fixture: GLTClientEnvironmentFixture(preferences: preferences))
+		let client = TestClient(configDictionary: ["nickname": "me"], nicknamePassword: nil,
+		                        fixture: ClientEnvironmentFixture(preferences: preferences))
 		client.enableCapability([.batch, .serverTime, .messageTags, .chatHistory])
 		if labeled {
 			client.enableCapability(.labeledResponse)
@@ -596,6 +634,7 @@ struct LogControllerTranscriptApplicationTests {
 		client.linePrintObserver = nil
 		let window = window()
 		let controller = LogController(channel: channel, in: window)
+		controller.loadsHistoryLazily = { false }
 		channel.presentation = controller
 		defer {
 			controller.tearDown(.permanentRemoval)

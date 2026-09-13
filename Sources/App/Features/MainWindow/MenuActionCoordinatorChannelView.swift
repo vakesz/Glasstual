@@ -1,7 +1,7 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
@@ -39,44 +39,10 @@
 import AppKit
 import CocoaExtensions
 
-@MainActor
+// MARK: - Transcript commands
+
 public extension MenuActionCoordinator {
-	func performChannelViewAction(_ action: MenuChannelViewAction, sender: Any?) {
-		switch action {
-		case .reply: reply(to: sender)
-		case .react: react(to: sender)
-		case .reactWithOtherEmoji: reactWithOtherEmoji(to: sender)
-		case .markScrollback: selectedViewController?.mark()
-		case .goToScrollbackMarker: selectedViewController?.goToMark()
-		case .clearScrollback: clearScrollback()
-		case .increaseFontSize: mainWindow.changeTextSize(true)
-		case .decreaseFontSize: mainWindow.changeTextSize(false)
-		case .searchWeb: searchSelectedText()
-		case .lookUpInDictionary: lookUpSelectedText()
-		case .copyURL: copyURL(sender)
-		@unknown default: break
-		}
-	}
-
-	func messageReplyItems(messageIdentifier: String, nickname: String?, excerpt: String?) -> [NSMenuItem] {
-		guard let menuController else { return [] }
-		return MenuPresentation.messageReplyItems(
-			messageIdentifier: messageIdentifier,
-			nickname: nickname,
-			excerpt: excerpt,
-			target: menuController
-		)
-	}
-
-	func shareMenuItem(for items: [Any]) -> NSMenuItem {
-		MenuPresentation.shareMenuItem(for: items)
-	}
-
-	private func messageContext(from sender: Any?) -> MessageMenuContext? {
-		(sender as? NSMenuItem)?.representedObject as? MessageMenuContext
-	}
-
-	private func reply(to sender: Any?) {
+	@objc func replyToMessage(_ sender: Any?) {
 		guard let context = messageContext(from: sender),
 		      context.messageIdentifier.isEmpty == false
 		else { return }
@@ -87,24 +53,15 @@ public extension MenuActionCoordinator {
 		)
 	}
 
-	private func react(to sender: Any?) {
+	@objc func reactToMessage(_ sender: Any?) {
 		guard let context = messageContext(from: sender) else { return }
 		sendReaction(context.emoji, messageIdentifier: context.messageIdentifier)
 	}
 
-	private func sendReaction(_ emoji: String?, messageIdentifier: String?) {
-		guard let emoji, emoji.isEmpty == false,
-		      let messageIdentifier, messageIdentifier.isEmpty == false,
-		      let client = mainWindow.selectedClient,
-		      let channel = mainWindow.selectedChannel
-		else { return }
-		client.sendReaction(emoji, toMessageIdentifier: messageIdentifier, in: channel)
-	}
-
-	private func reactWithOtherEmoji(to sender: Any?) {
+	@objc func reactToMessageWithOtherEmoji(_ sender: Any?) {
 		guard let identifier = messageContext(from: sender)?.messageIdentifier,
 		      identifier.isEmpty == false,
-		      let anchorView = selectedBackingView?.view,
+		      let anchorView = selectedBackingView,
 		      let window = anchorView.window
 		else { return }
 
@@ -118,7 +75,15 @@ public extension MenuActionCoordinator {
 		reactionPopover = popover
 	}
 
-	private func clearScrollback() {
+	@objc func markScrollback(_: Any?) {
+		selectedViewController?.mark()
+	}
+
+	@objc func gotoScrollbackMarker(_: Any?) {
+		selectedViewController?.goToMark()
+	}
+
+	@objc func clearScrollback(_: Any?) {
 		guard let client = selectedClient else { return }
 		if let channel = selectedChannel {
 			mainWindow.clearContents(of: channel)
@@ -127,7 +92,19 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	private func searchSelectedText() {
+	@objc func increaseLogFontSize(_: Any?) {
+		mainWindow.changeTextSize(true)
+	}
+
+	@objc func decreaseLogFontSize(_: Any?) {
+		mainWindow.changeTextSize(false)
+	}
+
+	@objc func resetLogFontSize(_: Any?) {
+		mainWindow.resetTextSize()
+	}
+
+	@objc func searchWeb(_: Any?) {
 		guard let selection = selectedBackingView?.selection,
 		      selection.isEmpty == false
 		else { return }
@@ -141,7 +118,7 @@ public extension MenuActionCoordinator {
 		NSPerformService("Search With %WebSearchProvider@", pasteboard)
 	}
 
-	private func lookUpSelectedText() {
+	@objc func lookUpInDictionary(_: Any?) {
 		guard let selection = selectedBackingView?.selection,
 		      selection.isEmpty == false,
 		      let encodedSelection = selection.addingPercentEncoding(
@@ -151,8 +128,30 @@ public extension MenuActionCoordinator {
 		OpenLink.open(string: "dict://\(encodedSelection)")
 	}
 
-	private func copyURL(_ sender: Any?) {
+	@objc func copyURL(_ sender: Any?) {
 		guard let url = (sender as? NSMenuItem)?.textualUserInfo, url.isEmpty == false else { return }
 		NSPasteboard.general.setString(url, forType: .string)
+	}
+
+	func messageReplyItems(messageIdentifier: String, nickname: String?, excerpt: String?) -> [NSMenuItem] {
+		MenuPresentation.messageReplyItems(
+			messageIdentifier: messageIdentifier,
+			nickname: nickname,
+			excerpt: excerpt,
+			target: self
+		)
+	}
+
+	private func messageContext(from sender: Any?) -> MessageMenuContext? {
+		(sender as? NSMenuItem)?.representedObject as? MessageMenuContext
+	}
+
+	private func sendReaction(_ emoji: String?, messageIdentifier: String?) {
+		guard let emoji, emoji.isEmpty == false,
+		      let messageIdentifier, messageIdentifier.isEmpty == false,
+		      let client = mainWindow.selectedClient,
+		      let channel = mainWindow.selectedChannel
+		else { return }
+		client.sendReaction(emoji, toMessageIdentifier: messageIdentifier, in: channel)
 	}
 }

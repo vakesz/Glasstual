@@ -314,12 +314,12 @@ struct IRCClientUserIdentityTests {
 		#expect(capabilityCommands(of: client) == ["END"])
 	}
 
-	private func makeClient(named nickname: String) -> GLTTestClient {
-		GLTTestClient(configDictionary: ["nickname": nickname, "username": nickname])
+	private func makeClient(named nickname: String) -> TestClient {
+		TestClient(configDictionary: ["nickname": nickname, "username": nickname])
 	}
 
 	@discardableResult
-	private func joinChannel(_ name: String, on client: GLTTestClient) throws -> Channel {
+	private func joinChannel(_ name: String, on client: TestClient) throws -> Channel {
 		let channel = try #require(client.findChannelOrCreate(name))
 		channel.activate()
 
@@ -327,7 +327,7 @@ struct IRCClientUserIdentityTests {
 	}
 
 	@discardableResult
-	private func addUser(named nickname: String, to channel: Channel, on client: GLTTestClient) -> User {
+	private func addUser(named nickname: String, to channel: Channel, on client: TestClient) -> User {
 		let user = client.findUserOrCreate(nickname)
 		channel.addMember(ChannelUser(user: user))
 
@@ -338,15 +338,15 @@ struct IRCClientUserIdentityTests {
 		try #require(Message(line: line, on: client))
 	}
 
-	private func sentLines(of client: GLTTestClient) -> [String] {
+	private func sentLines(of client: TestClient) -> [String] {
 		(client.sentLines as NSArray).compactMap { $0 as? String }
 	}
 
-	private func capabilityCommands(of client: GLTTestClient) -> [String] {
+	private func capabilityCommands(of client: TestClient) -> [String] {
 		(client.sentCapabilityCommands as NSArray).compactMap { $0 as? String }
 	}
 
-	private func printedLine(at index: Int, on client: GLTTestClient) -> [String: Any]? {
+	private func printedLine(at index: Int, on client: TestClient) -> [String: Any]? {
 		client.printedLines[index] as? [String: Any]
 	}
 }

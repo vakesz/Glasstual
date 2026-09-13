@@ -44,7 +44,7 @@ import Testing
 struct ClientEnvironmentTests {
 	@Test("A client made by a world carries that world's environment")
 	func clientsInheritTheWorldEnvironment() {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig())
 
 		#expect(client.world === fixture.world)
@@ -57,7 +57,7 @@ struct ClientEnvironmentTests {
 		var preferences = ClientPreferences()
 		preferences.showJoinLeave = true
 		preferences.defaultKickMessage = "so long"
-		let fixture = GLTClientEnvironmentFixture(preferences: preferences)
+		let fixture = ClientEnvironmentFixture(preferences: preferences)
 
 		let client = fixture.world.createClient(with: ClientConfig())
 
@@ -67,7 +67,7 @@ struct ClientEnvironmentTests {
 
 	@Test("Refreshing the world's snapshot republishes it to every client")
 	func refreshReachesExistingClients() {
-		let fixture = GLTClientEnvironmentFixture(preferences: ClientPreferences())
+		let fixture = ClientEnvironmentFixture(preferences: ClientPreferences())
 		let client = fixture.world.createClient(with: ClientConfig())
 		#expect(client.environment.preferences.showJoinLeave == false)
 
@@ -80,7 +80,7 @@ struct ClientEnvironmentTests {
 
 	@Test("A snapshot with the same values is not republished")
 	func refreshIsIdempotent() {
-		let fixture = GLTClientEnvironmentFixture(preferences: ClientPreferences())
+		let fixture = ClientEnvironmentFixture(preferences: ClientPreferences())
 		let client = fixture.world.createClient(with: ClientConfig())
 
 		fixture.world.applyPreferences(ClientPreferences())
@@ -90,7 +90,7 @@ struct ClientEnvironmentTests {
 
 	@Test("A tree item falls back to the declared defaults once its client has gone")
 	func itemsWithoutAClientUseTheDeclaredDefaults() {
-		let item = IRCTreeItem()
+		let item = TreeItem()
 
 		#expect(item.clientPreferences == ClientPreferences())
 	}
@@ -144,7 +144,7 @@ struct ClientEnvironmentTests {
 
 	@Test("Services are shared by reference, so installing a window reaches the clients")
 	func servicesAreSharedByReference() {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig())
 
 		fixture.environment.services.output = nil

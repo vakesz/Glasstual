@@ -37,13 +37,6 @@ struct AboutView: View {
 				.textSelection(.enabled)
 				.padding(.top, 4)
 
-			Text(verbatim: content.upstreamAttribution)
-				.font(.caption)
-				.foregroundStyle(.secondary)
-				.multilineTextAlignment(.center)
-				.textSelection(.enabled)
-				.padding(.top, 4)
-
 			if content.copyright.isEmpty == false {
 				Text(verbatim: content.copyright)
 					.font(.caption2)
@@ -53,16 +46,17 @@ struct AboutView: View {
 					.padding(.top, 6)
 			}
 
-			Spacer(minLength: 8)
-
 			Button(action: openAcknowledgements) {
 				Text(verbatim: content.acknowledgementsButtonTitle)
 			}
+			.padding(.top, 18)
 		}
-		.padding(.horizontal, 16)
-		.padding(.top, 20)
-		.padding(.bottom, 20)
-		.frame(width: 244, height: 320)
+		.padding(.horizontal, 24)
+		.padding(.vertical, 24)
+		/* Only the width is fixed: a panel sized to a number rather than to
+		 its text left a band of empty space under the button, and grew one
+		 when a longer translation wrapped. */
+		.frame(width: 260)
 		.onExitCommand(perform: close)
 	}
 }

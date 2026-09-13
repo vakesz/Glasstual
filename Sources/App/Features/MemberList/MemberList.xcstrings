@@ -1,0 +1,366 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "away-status-available": {
+      "comment": "Value of the Status row in the member profile, for a member who is not away.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available"
+          }
+        }
+      }
+    },
+    "away-status-away": {
+      "comment": "Value of the Status row in the member profile, for a member who is away.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away"
+          }
+        }
+      }
+    },
+    "bot-caption": {
+      "comment": "Badge drawn beside a bot's nickname in the member list, and the caption after its privileges in the profile. Legacy key: b0t-lb.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bot"
+          }
+        }
+      }
+    },
+    "info-account": {
+      "comment": "Member profile row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "info-address": {
+      "comment": "Member profile row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address"
+          }
+        }
+      }
+    },
+    "info-privileges": {
+      "comment": "Member profile row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privileges"
+          }
+        }
+      }
+    },
+    "info-real-name": {
+      "comment": "Member profile row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real Name"
+          }
+        }
+      }
+    },
+    "info-status": {
+      "comment": "Member profile row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "info-username": {
+      "comment": "Member profile row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username"
+          }
+        }
+      }
+    },
+    "information-unavailable": {
+      "comment": "Stands in for a member profile row whose information the server has not given us. An em dash: the row is empty, not broken. Legacy key: d85-9n.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "—"
+          }
+        }
+      }
+    },
+    "logged-in-as": {
+      "comment": "Member account status. The argument is the account name. Legacy key: acc-in.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logged in as %@"
+          }
+        }
+      }
+    },
+    "not-logged-in": {
+      "comment": "Value of the Account row in the member profile, for a member with no account. Legacy key: acc-nl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not logged in"
+          }
+        }
+      }
+    },
+    "privilege-admin": {
+      "comment": "Member privilege description, for channel mode +a. Legacy key: som-zo.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin"
+          }
+        }
+      }
+    },
+    "privilege-channel-owner": {
+      "comment": "Member privilege description. Legacy key: p1z-sc.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Owner"
+          }
+        }
+      }
+    },
+    "privilege-half-operator": {
+      "comment": "Member privilege description, for channel mode +h. Legacy key: 0nn-te.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Half-Operator"
+          }
+        }
+      }
+    },
+    "privilege-none": {
+      "comment": "Member privilege description, for a member with no mode. Legacy key: tjj-z2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      }
+    },
+    "privilege-operator": {
+      "comment": "Member privilege description, for channel mode +o. Legacy key: 0kn-s5.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operator"
+          }
+        }
+      }
+    },
+    "privilege-voice": {
+      "comment": "Member privilege description, for channel mode +v. Legacy key: ya1-sk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice"
+          }
+        }
+      }
+    },
+    "privileges-with-caption": {
+      "comment": "Member privileges followed by a caption. The arguments are the privilege description and the caption, such as Bot.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "rank-server-staff": {
+      "comment": "What an IRC operator is called, both as a privilege and as the member list section they are grouped into. Legacy keys: i8t-vb, mls-sf.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Staff"
+          }
+        }
+      }
+    },
+    "section-admins": {
+      "comment": "Member list section header. Legacy key: mls-ad.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admins"
+          }
+        }
+      }
+    },
+    "section-half-operators": {
+      "comment": "Member list section header. Legacy key: mls-ho.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Half-Operators"
+          }
+        }
+      }
+    },
+    "section-members": {
+      "comment": "Member list section header. Legacy key: mls-me.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Members"
+          }
+        }
+      }
+    },
+    "section-operators": {
+      "comment": "Member list section header. Legacy key: mls-op.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operators"
+          }
+        }
+      }
+    },
+    "section-owners": {
+      "comment": "Member list section header. Legacy key: mls-ow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Owners"
+          }
+        }
+      }
+    },
+    "section-voiced": {
+      "comment": "Member list section header. Legacy key: mls-vo.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voiced"
+          }
+        }
+      }
+    },
+    "show-profile-action": {
+      "comment": "Accessibility action on a member-list row. VoiceOver reads it as one of the actions available on the row, and performing it opens the profile popover that a plain click opens for a pointer. Name the action, not the person.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Profile"
+          }
+        }
+      }
+    },
+    "user-is-a-bot": {
+      "comment": "Spoken bot status of a member, read as part of the row's accessibility label. Legacy key: b0t-ac.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User is a bot"
+          }
+        }
+      }
+    },
+    "user-is-away": {
+      "comment": "Spoken away status of a member, read as part of the row's accessibility label. Legacy key: jkr-ed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User is away"
+          }
+        }
+      }
+    },
+    "user-is-not-away": {
+      "comment": "Spoken away status of a member. Legacy key: gi6-wf.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User is not away"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

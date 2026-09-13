@@ -50,17 +50,16 @@ private enum ClientDefaultFeature: String {
 
 @MainActor
 extension IRCClient {
-	func dispatchDefaultsCommand(_ parsed: ParsedUserCommand) -> Bool {
-		guard parsed.localCommand == .defaults else { return false }
+	func dispatchDefaultsCommand(_ parsed: ParsedUserCommand) {
 		var arguments = parsed.arguments
 		guard arguments.isEmpty == false else {
 			printDebugInformation(IRCCommandStrings.Defaults.invalidSyntax)
-			return true
+			return
 		}
 		let action = arguments.next().lowercased()
 		if action == "help" {
 			printDebugInformation(multiline: IRCCommandStrings.Defaults.help)
-			return true
+			return
 		}
 		var featureName = arguments.nextQuoted()
 		let appliesToAll = featureName == "-a"
@@ -69,14 +68,14 @@ extension IRCClient {
 		}
 		guard featureName.isEmpty == false else {
 			printDebugInformation(IRCCommandStrings.Defaults.invalidSyntax)
-			return true
+			return
 		}
 		let enablesFeature = action == "enable"
 		guard let feature = ClientDefaultFeature(rawValue: featureName) else {
 			printDebugInformation(
 				IRCCommandStrings.Defaults.unsupportedFeature(featureName, enabling: enablesFeature)
 			)
-			return true
+			return
 		}
 		for client in (world?.clientList ?? []) where client === self || appliesToAll {
 			var mutableConfig = client.config
@@ -87,6 +86,5 @@ extension IRCClient {
 			)
 		}
 		world?.save()
-		return true
 	}
 }

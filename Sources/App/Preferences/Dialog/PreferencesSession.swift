@@ -52,16 +52,16 @@ public final class PreferencesSession {
 	let model = PreferencesPaneModel()
 	private lazy var notifications = NotificationSubscriptions()
 	private var notificationsAreActive = false
-	private var pendingPluginSelection: String?
+	private var pendingAddOnSelection: PreferencesSelection?
 
 	public init() {
 		prepareInitialState()
 	}
 
 	private func prepareInitialState() {
-		model.sections = Self.sections()
+		model.destinations = Self.destinations()
 		model.onSelectionChange = { [weak self] selection in
-			self?.paneChanged(to: selection)
+			self?.selectionChanged(to: selection)
 		}
 		model.refreshAll()
 	}
@@ -79,13 +79,13 @@ public final class PreferencesSession {
 			self?.model.refreshAddOnCommands()
 		}
 		notifications.observe(PluginManager.finishedLoadingNotification) { [weak self] _ in
-			self?.refreshPluginPanes()
+			self?.refreshAddOnDestinations()
 		}
 	}
 
 	func activate(selection: PreferencesSceneSelection) {
 		prepareNotifications()
-		model.sections = Self.sections()
+		model.destinations = Self.destinations()
 		model.refreshAll()
 		select(selection)
 	}
@@ -96,170 +96,82 @@ public final class PreferencesSession {
 		TextualPreferences.performReloadAction([.highlightKeywords, .preferencesChanged])
 	}
 
+	/** Opens the row a caller asked for, or the one the window was left on.
+
+	 An add-on's row does not exist until its bundle has loaded, so a remembered
+	 add-on is held until the plugin manager reports in. */
 	private func select(_ selection: PreferencesSceneSelection) {
-		let requestedPane: PreferencesPaneIdentifier = switch selection {
+		let requested: PreferencesSelection = switch selection {
 		case .notifications: .notifications
 		case .style: .style
-		case .hiddenPreferences: .hidden
-		case .default: .general
+		case .hiddenPreferences: .advanced
+		case .default: remembered ?? .general
 		}
-		var identifier = requestedPane.rawValue
-		if selection == .default,
-		   let remembered = Preferences.Internals.selectedPreferencePane.storedValue,
-		   PreferencesPaneCatalog.pluginBundleIdentifier(from: remembered) != nil,
-		   SharedApplication.sharedPluginManager().loadedPlugins == nil
-		{
-			pendingPluginSelection = remembered
+		if case .plugin = requested, model.select(requested) == false {
+			pendingAddOnSelection = requested
 			return
 		}
-		if selection == .default,
-		   let remembered = Preferences.Internals.selectedPreferencePane.storedValue,
-		   Self.paneExists(remembered)
-		{
-			identifier = remembered
-		}
-		selectPane(withIdentifier: identifier)
+		show(requested)
 	}
 
-	private func refreshPluginPanes() {
-		model.sections = Self.sections()
+	/// Where the window was left, as long as it still names a row.
+	private var remembered: PreferencesSelection? {
+		Preferences.Internals.selectedPreferencePane.storedValue
+			.flatMap(PreferencesSelection.init(storedIdentifier:))
+	}
+
+	private func refreshAddOnDestinations() {
+		model.destinations = Self.destinations()
 		model.refreshAddOnCommands()
-		let identifier = pendingPluginSelection ?? model.selection.subPageIdentifier
-		pendingPluginSelection = nil
-		selectPane(withIdentifier: Self.paneExists(identifier) ? identifier : PreferencesPaneIdentifier.addOns.rawValue)
+		let requested = pendingAddOnSelection ?? model.selection
+		pendingAddOnSelection = nil
+		show(model.destinations.contains { $0.selection == requested } ? requested : .addOns)
 	}
 
-	// MARK: - Sections
-
-	/** The sidebar sections: one for each main pane, one gathering the add-on
-	 panes the plugins supply, and one gathering the advanced panes. */
-	static func sections() -> [PreferencesSection] {
-		PreferencesSectionIdentifier.allCases.map { identifier in
-			PreferencesSection(
-				identifier: identifier,
-				title: sectionTitle(identifier),
-				subPages: subPages(in: identifier)
-			)
+	/** Shows a row and reports where the window ended up, even when that is the
+	 row already showing: the first destination it opens on is not a change, but
+	 it is still what the window has to remember. */
+	private func show(_ selection: PreferencesSelection) {
+		if model.select(selection) == false {
+			selectionChanged(to: model.selection)
 		}
 	}
 
-	private static func sectionTitle(_ identifier: PreferencesSectionIdentifier) -> String {
-		if let pane = identifier.pane {
-			return PreferencesStrings.paneTitle(pane)
-		}
-		return identifier == .addOns
-			? PreferencesStrings.addOnsGroupTitle
-			: PreferencesStrings.advancedGroupTitle
+	// MARK: - Sidebar
+
+	/// Every row the sidebar lists: the window's own, then one for each add-on
+	/// that supplies a pane.
+	static func destinations() -> [PreferencesDestination] {
+		PreferencesDestination.builtIn + addOnDestinations()
 	}
 
-	private static func subPages(in section: PreferencesSectionIdentifier) -> [PreferencesSubPage] {
-		if let pane = section.pane {
-			return [subPage(for: entry(for: pane))]
-		}
-		if section == .addOns {
-			return ([entry(for: .addOns)] + pluginEntries()).map(subPage(for:))
-		}
-		return PreferencesAdvancedGroup.allCases.map { group in
-			PreferencesSubPage(
-				identifier: group.identifier,
-				title: advancedGroupTitle(group),
-				panes: group.panes.map(entry(for:))
-			)
-		}
-	}
-
-	private static func subPage(for pane: PreferencesPaneEntry) -> PreferencesSubPage {
-		PreferencesSubPage(identifier: pane.identifier, title: pane.title, panes: [pane])
-	}
-
-	private static func advancedGroupTitle(_ group: PreferencesAdvancedGroup) -> String {
-		switch group {
-		case .connection: PreferencesAdvancedStrings.connection
-		case .channels: PreferencesAdvancedStrings.channels
-		case .identity: PreferencesAdvancedStrings.identity
-		case .media: PreferencesAdvancedStrings.media
-		case .system: PreferencesAdvancedStrings.system
-		}
-	}
-
-	private static func entry(for pane: PreferencesPaneIdentifier) -> PreferencesPaneEntry {
-		let descriptor = PreferencesPaneCatalog.descriptor(for: pane.rawValue)
-		return PreferencesPaneEntry(
-			identifier: pane.rawValue,
-			title: PreferencesStrings.paneTitle(pane),
-			symbolName: descriptor?.symbolName ?? "gearshape",
-			group: descriptor?.group ?? .main
-		)
-	}
-
-	private static func pluginEntries() -> [PreferencesPaneEntry] {
+	private static func addOnDestinations() -> [PreferencesDestination] {
 		SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
 			.map { plugin in
-				let title: String = if let suppliedTitle = plugin.pluginPreferencesPane?.title,
-				                       suppliedTitle.isEmpty == false
-				{
-					suppliedTitle
-				} else {
-					PreferencesStrings.addOnPaneTitle
-				}
-				/* A bundle with no identifier is named by its location instead
-				 of dropping out of the sidebar, which is what an add-on with a
+				let supplied = plugin.pluginPreferencesPane?.title ?? ""
+				/* A bundle with no title of its own is named "Add-on" instead of
+				 dropping out of the sidebar, which is what an add-on with a
 				 malformed Info.plist used to do. */
-				return PreferencesPaneEntry(
-					identifier: PreferencesPaneCatalog.pluginIdentifier(
-						bundleIdentifier: plugin.preferencePaneIdentifier
-					),
-					title: title,
-					symbolName: "puzzlepiece.extension",
-					group: .addOns
+				return PreferencesDestination(
+					.plugin(bundleIdentifier: plugin.preferencePaneIdentifier),
+					symbol: "puzzlepiece",
+					title: supplied.isEmpty ? PreferencesStrings.addOnPaneTitle : supplied,
+					panes: []
 				)
 			}
 	}
 
-	/** Whether an identifier still names a pane the window can show. A remembered
-	 plugin pane disappears with the plugin, so the check is not only over the
-	 enumeration. */
-	static func paneExists(_ identifier: String) -> Bool {
-		if let paneIdentifier = PreferencesPaneCatalog.pluginBundleIdentifier(from: identifier) {
-			return SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
-				.contains { $0.preferencePaneIdentifier == paneIdentifier }
-		}
-		if PreferencesPaneIdentifier(rawValue: identifier) != nil {
-			return true
-		}
-		return PreferencesAdvancedGroup.allCases.contains { $0.identifier == identifier }
-	}
-
 	// MARK: - Selection
 
-	/** Shows whichever sub-page holds `identifier`, which may name a sub-page or
-	 one of the panes inside it — a value stored before the advanced panes were
-	 grouped still finds its way home. */
-	private func selectPane(withIdentifier identifier: String) {
-		guard let section = model.sections.first(where: { section in
-			section.subPages.contains { $0.contains(identifier) }
-		}),
-			let subPage = section.subPages.first(where: { $0.contains(identifier) })
-		else { return }
-		let selection = PreferencesSelection(
-			sectionIdentifier: section.identifier,
-			subPageIdentifier: subPage.identifier
-		)
-		if model.select(selection) == false {
-			paneChanged(to: selection)
-		}
-	}
-
-	private func paneChanged(to selection: PreferencesSelection) {
-		pendingPluginSelection = nil
-		let identifier = selection.subPageIdentifier
-		Preferences.Internals.selectedPreferencePane.value = identifier
+	private func selectionChanged(to selection: PreferencesSelection) {
+		pendingAddOnSelection = nil
+		Preferences.Internals.selectedPreferencePane.value = selection.storedIdentifier
 		// The two panes whose content is read from outside the key store are
 		// refreshed as they are opened rather than polled.
-		if identifier == PreferencesPaneIdentifier.addOns.rawValue {
-			model.refreshAddOnCommands()
-		} else if identifier == PreferencesPaneIdentifier.ircv3.rawValue {
-			model.refreshIRCv3Connections()
+		switch selection {
+		case .addOns: model.refreshAddOnCommands()
+		case .ircv3: model.refreshIRCv3Connections()
+		default: break
 		}
 	}
 }

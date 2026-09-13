@@ -29,16 +29,6 @@ struct RegularExpressionCacheTests {
 		#expect(RegularExpression.string("anything", isMatchedByRegex: "([unclosed") == false)
 	}
 
-	@Test("Replacement and range lookups agree with matching")
-	func replacementAndRangeAgree() {
-		#expect(RegularExpression.string("a1b2", replacedByRegex: "[0-9]", with: "#") == "a#b#")
-
-		let range = RegularExpression.string("a1b2", rangeOfRegex: "[0-9]")
-
-		#expect(range.location == 1)
-		#expect(range.length == 1)
-	}
-
 	@Test("Capture groups survive caching")
 	func captureGroupsSurvive() {
 		let matches = RegularExpression.matches(
@@ -49,5 +39,42 @@ struct RegularExpressionCacheTests {
 		)
 
 		#expect(matches == ["key=value", "key", "value"])
+	}
+
+	/** The whole match leads, and a group that did not take part in the match is
+	 not reported at all. The ZNC playback rewriter reads its groups by position
+	 after dropping the first, so a pattern it hands over keeps every group
+	 mandatory rather than optional. */
+	@Test("Groups are reported behind the whole match, and only when they matched")
+	func groupsFollowTheWholeMatch() {
+		let alternation = RegularExpression.matches(
+			in: "quit: bye",
+			withRegex: #"^(?:quit with message: \[(.*)\]|quit: (.*))$"#,
+			withoutCase: false,
+			substringGroups: true
+		)
+
+		#expect(alternation == ["quit: bye", "bye"])
+
+		let empty = RegularExpression.matches(
+			in: "set mode: +o",
+			withRegex: #"^set mode: ([^\s]+)(.*)$"#,
+			withoutCase: false,
+			substringGroups: true
+		)
+
+		#expect(empty == ["set mode: +o", "+o", ""])
+	}
+
+	@Test("Without capture groups only the whole match is reported")
+	func wholeMatchesOnly() {
+		let matches = RegularExpression.matches(
+			in: "a1b2",
+			withRegex: "[0-9]",
+			withoutCase: false,
+			substringGroups: false
+		)
+
+		#expect(matches == ["1", "2"])
 	}
 }

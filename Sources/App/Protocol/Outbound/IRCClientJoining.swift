@@ -95,21 +95,13 @@ extension IRCClient {
 		isLoggedIn && !isQuitting && !isDisconnecting && !isTerminating
 	}
 
-	func canJoin(_ channel: IRCChannel) -> Bool {
+	func canJoin(_ channel: Channel) -> Bool {
 		canJoinChannels && channel.associatedClient === self
 			&& channelList.contains { $0 === channel }
 			&& channel.isChannel && !channel.isActive && channel.status != .terminated
 	}
 
-	func join(_ channel: IRCChannel) {
-		join(channel, password: nil)
-	}
-
-	func joinUnlistedChannel(_ channelName: String) {
-		joinUnlistedChannel(channelName, password: nil)
-	}
-
-	func join(_ channel: IRCChannel, password: String?) {
+	func join(_ channel: Channel, password: String? = nil) {
 		guard canJoin(channel) else { return }
 		channel.errorOnLastJoinAttempt = false
 		channel.status = .joining
@@ -118,7 +110,7 @@ extension IRCClient {
 		forceJoinChannel(channel.name, password: password ?? channel.secretKey)
 	}
 
-	func joinUnlistedChannel(_ channelName: String, password: String?) {
+	func joinUnlistedChannel(_ channelName: String, password: String? = nil) {
 		guard stringIsChannelName(channelName) else {
 			if channelName == "0" {
 				forceJoinChannel(channelName, password: password)
@@ -178,7 +170,7 @@ extension IRCClient {
 		return accepted
 	}
 
-	func joinChannels(_ channels: [IRCChannel]) {
+	func joinChannels(_ channels: [Channel]) {
 		guard canJoinChannels, channels.isEmpty == false else { return }
 		let acceptedNames = Set(channelNamesWithinServerLimit(channels.map(\.name)))
 		let pending = channels.filter { canJoin($0) && acceptedNames.contains($0.name) }
@@ -244,11 +236,7 @@ extension IRCClient {
 		}
 	}
 
-	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: String) {
-		joinUnlistedChannelsAndSelectBestMatch(channelNames, passwords: nil)
-	}
-
-	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: String, passwords: String?) {
+	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: String, passwords: String? = nil) {
 		guard channelNames.isEmpty == false else { return }
 		joinUnlistedChannelsAndSelectBestMatch(
 			channelNames.components(separatedBy: ","),
@@ -256,11 +244,7 @@ extension IRCClient {
 		)
 	}
 
-	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: [String]) {
-		joinUnlistedChannelsAndSelectBestMatch(channelNames, passwords: nil)
-	}
-
-	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: [String], passwords: String?) {
+	func joinUnlistedChannelsAndSelectBestMatch(_ channelNames: [String], passwords: String? = nil) {
 		guard canJoinChannels, channelNames.isEmpty == false else { return }
 
 		let selection = channelNames.lazy
@@ -283,6 +267,6 @@ extension IRCClient {
 		}
 
 		guard let selection else { return }
-		output?.selectItem(selection)
+		output?.select(selection)
 	}
 }

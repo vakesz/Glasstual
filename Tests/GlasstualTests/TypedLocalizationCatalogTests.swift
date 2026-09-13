@@ -14,19 +14,17 @@ struct TypedLocalizationCatalogTests {
 	func typedBoundariesResolveMigratedCatalogValues() {
 		#expect(AccessibilityStrings.userListEntry(for: "Alice") == "User Alice in User List")
 		#expect(AccessibilityStrings.mainWindow == "Main Window")
-		#expect(CommonValidationStrings.invalidNickname == "Please enter a properly formatted nickname.")
+		/* A validation message says what to enter; "properly formatted" told
+		 the reader only that what they typed was wrong. */
+		#expect(CommonValidationStrings.invalidNickname.hasPrefix("A nickname can contain "))
 		#expect(CommonValidationStrings.maximumLength(390) == "Maximum length is 390 characters.")
-		#expect(NotificationStrings.eventTypeTitle(for: .invite) == "Channel Invitation")
+		#expect(CommonValidationStrings.maximumLength(1) == "Maximum length is 1 character.")
+		#expect(NotificationStrings.eventTypeTitle(for: .invite) == "Invitation")
 		#expect(
-			NotificationStrings.deliveredTitle(for: .highlight, subject: "#textual") == "Highlight: #textual"
+			NotificationStrings.Membership.parted(nickname: "Alice", reason: "Leaving")
+				== "Alice parted with reason: Leaving"
 		)
-		#expect(
-			NotificationStrings.Membership.parted(
-				nickname: "Alice",
-				channelName: "#textual",
-				reason: "Leaving"
-			) == "Alice parted #textual with reason: Leaving"
-		)
+		#expect(NotificationStrings.Membership.parted(nickname: "Alice", reason: nil) == "Alice parted")
 		#expect(
 			NotificationStrings.FileTransfer.description(
 				for: .fileTransferReceiveSuccessful,

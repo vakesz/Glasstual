@@ -34,7 +34,7 @@ struct AppKitSupportTests {
 	func preferencesSessionOwnsSettingsState() {
 		let session = PreferencesSession()
 
-		#expect(session.model.sections.isEmpty == false)
+		#expect(session.model.destinations.isEmpty == false)
 		#expect(session.model.fileRequest.request == nil)
 	}
 
@@ -49,7 +49,7 @@ struct AppKitSupportTests {
 
 	@Test("The SwiftUI topic sheet keeps hold of its channel")
 	func channelModifyTopicSheetKeepsItsChannel() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let channel = makeChannel(named: "#chat", client: client)
 		let sheet = ChannelModifyTopicSheet(channel: channel)
 
@@ -60,7 +60,7 @@ struct AppKitSupportTests {
 
 	@Test("A notification about a client names that client and no channel")
 	func spokenNotificationResolvesClientTarget() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let notification = SpokenNotification(
 			notificationType: .connect,
 			lineType: .notice,
@@ -79,7 +79,7 @@ struct AppKitSupportTests {
 
 	@Test("A notification about a channel names the channel and the client behind it")
 	func spokenNotificationResolvesChannelAndItsClient() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let channel = makeChannel(named: "#chat", client: client)
 		let notification = SpokenNotification(
 			notificationType: .channelMessage,

@@ -38,8 +38,12 @@
 
 import Foundation
 
-public extension FileTransferCenter {
-	var IPAddress: String? {
+extension FileTransferCenter {
+	/** The address this Mac's DCC offers name.
+
+	 A manually entered address always wins; otherwise it is whatever the last
+	 successful port mapping or address lookup reported. */
+	var ipAddress: String? {
 		get {
 			if Preferences.FileTransfers.ipAddressDetectionMethod.value == .manual {
 				let address = Preferences.FileTransfers.manuallyEnteredIPAddress.storedValue
@@ -51,71 +55,59 @@ public extension FileTransferCenter {
 		set { cachedIPAddress = newValue }
 	}
 
-	@MainActor func clearIPAddress() {
-		IPAddress = nil
-		ipAddressRequest?.cancelLookup()
-		ipAddressRequest = nil
-		flushIPAddressCompletionBlocks(with: nil)
+	func clearIPAddress() {
+		ipAddress = nil
+		ipAddressLookup?.cancel()
+		ipAddressLookup = nil
 		for transfer in model.transfers where transfer.transferStatus == .waitingForLocalIPAddress {
 			transfer.noteIPAddressLookupFailed()
 		}
 	}
 
-	@MainActor
-	func requestIPAddress(_ completion: @escaping (String?) -> Void) {
-		if let address = IPAddress {
-			completion(address)
-			return
+	/** The address this Mac's DCC offers name, asking the address service for
+	 it when it is not known yet.
+
+	 The service is asked at most once at a time: two concurrent DCC offers
+	 both reach this, and both have to be answered by the same lookup rather
+	 than asking a public service twice for an answer that cannot have changed
+	 in between.
+
+	 `nil` when the user entered the address by hand or left it to the router,
+	 because neither is an address this side can discover. */
+	@discardableResult
+	func lookUpIPAddress() async -> String? {
+		if let ipAddress {
+			return ipAddress
 		}
 
 		let method = Preferences.FileTransfers.ipAddressDetectionMethod.value
+
 		guard method != .manual, method != .routerOnly else {
-			completion(nil)
-			return
+			return nil
 		}
 
-		ipAddressCompletionBlocks.append(completion)
-		requestIPAddress()
-	}
+		if let running = ipAddressLookup {
+			return await running.value
+		}
 
-	@MainActor func requestIPAddress() {
-		guard ipAddressRequest == nil else { return }
+		let lookup = Task { await InternetAddressLookup.address() }
+		ipAddressLookup = lookup
+		let address = await lookup.value
 
-		let request = InternetAddressLookup(delegate: self)
-		request.performLookup()
-		ipAddressRequest = request
-	}
+		/* A cancelled lookup was cancelled by `clearIPAddress()`, which has
+		 already told the waiting transfers. */
+		guard lookup.isCancelled == false else { return nil }
 
-	func internetAddressLookupReturnedAddress(_ address: String) {
-		completeIPAddressLookup(with: address)
-	}
-
-	func internetAddressLookupFailed() {
-		completeFailedIPAddressLookup()
-	}
-
-	private func flushIPAddressCompletionBlocks(with address: String?) {
-		let blocks = ipAddressCompletionBlocks
-		ipAddressCompletionBlocks.removeAll()
-		blocks.forEach { $0(address) }
-	}
-
-	@MainActor private func completeIPAddressLookup(with address: String) {
-		IPAddress = address
+		ipAddressLookup = nil
+		ipAddress = address
 		for transfer in model.transfers where transfer.transferStatus == .waitingForLocalIPAddress {
-			transfer.noteIPAddressLookupSucceeded()
+			if address == nil {
+				transfer.noteIPAddressLookupFailed()
+			} else {
+				transfer.noteIPAddressLookupSucceeded()
+			}
 		}
 
-		ipAddressRequest = nil
-		flushIPAddressCompletionBlocks(with: address)
-	}
-
-	@MainActor private func completeFailedIPAddressLookup() {
-		for transfer in model.transfers where transfer.transferStatus == .waitingForLocalIPAddress {
-			transfer.noteIPAddressLookupFailed()
-		}
-
-		ipAddressRequest = nil
-		flushIPAddressCompletionBlocks(with: nil)
+		return address
 	}
 }

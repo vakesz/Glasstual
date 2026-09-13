@@ -30,16 +30,16 @@ struct TranscriptProjectionDeliveryTests {
 			line.lineType = .privateMessage
 			lines.append(line)
 		}
-		_ = state.record(lines[0], rendered: rendered(lines[0]))
+		_ = state.record(rendered(lines[0]))
 		state.updateDelivery(
 			lineNumber: lines[0].uniqueIdentifier, state: .delivered, messageIdentifier: nil, reason: nil
 		)
 		#expect(state.deliveryUpdates[lines[0].uniqueIdentifier]?.state == .delivered)
 
 		for line in lines.dropFirst() {
-			_ = state.record(line, rendered: rendered(line))
+			_ = state.record(rendered(line))
 		}
-		_ = state.record(lines[1], rendered: rendered(lines[1]))
+		_ = state.record(rendered(lines[1]))
 		#expect(state.deliveryUpdates[lines[0].uniqueIdentifier] == nil)
 
 		/* The ack the server sends after the line has scrolled out of the buffer
@@ -68,8 +68,7 @@ struct TranscriptProjectionDeliveryTests {
 				body: TranscriptBody(plainText: line.messageBody)
 			),
 			fromCurrentSession: line.fromCurrentSession,
-			processesInlineMedia: false,
-			pluginMessage: nil
+			processesInlineMedia: false
 		)
 	}
 }

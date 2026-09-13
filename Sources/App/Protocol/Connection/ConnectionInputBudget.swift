@@ -17,7 +17,6 @@ final nonisolated class ConnectionInputBudget: Sendable { // nonisolated: immuta
 	struct State: Sendable {
 		var bytes = 0
 		var entries = 0
-		var peakBytes = 0
 		var failed = false
 	}
 
@@ -34,7 +33,6 @@ final nonisolated class ConnectionInputBudget: Sendable { // nonisolated: immuta
 			}
 			$0.bytes += bytes
 			$0.entries += 1
-			$0.peakBytes = max($0.peakBytes, $0.bytes)
 			return .accepted
 		}
 	}

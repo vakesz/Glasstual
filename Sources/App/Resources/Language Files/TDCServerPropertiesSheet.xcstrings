@@ -128,7 +128,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add User Ignore Entry"
+            "value": "Add User Ignore Entry…"
           }
         }
       }
@@ -140,7 +140,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add User Tracking Entry"
+            "value": "Add User Tracking Entry…"
           }
         }
       }
@@ -416,7 +416,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect Securely"
+            "value": "Connect securely"
           }
         }
       }
@@ -457,14 +457,38 @@
         }
       }
     },
-    "copy-fingerprint": {
-      "comment": "Button that copies a certificate fingerprint to the pasteboard.",
+    "copy-nickserv-command": {
+      "comment": "Button that copies the NickServ command which registers a certificate fingerprint.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy"
+            "value": "Copy NickServ Command"
+          }
+        }
+      }
+    },
+    "copy-nickserv-command-for": {
+      "comment": "Help tag and accessibility label for the button beside one certificate fingerprint. The placeholder names the digest, such as “SHA-256 Fingerprint”.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy NickServ Command for %@"
+          }
+        }
+      }
+    },
+    "certificate-fingerprint-help": {
+      "comment": "Explanation under the certificate fingerprints, saying what the copied command is for.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The command tells NickServ to recognise you by this certificate. Send it once you are identified."
           }
         }
       }
@@ -553,14 +577,14 @@
         }
       }
     },
-    "enter-your-nickserv-password-into": {
-      "comment": "Enabling wait for NickServ without a password. Legacy key: 26u-j8.",
+    "nickname-password-help": {
+      "comment": "Explanation under the NickServ or SASL password field.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter your NickServ password into the field labeled “Personal Password”"
+            "value": "Used to identify with NickServ, or as your SASL password. Stored in your keychain."
           }
         }
       }
@@ -602,25 +626,13 @@
       }
     },
     "includes-the-following-cipher-suites": {
-      "comment": "Cipher suites. Legacy key: yko-5g.",
+      "comment": "Explanation under the cipher suite list. The placeholder is the name of the selected collection. Legacy key: yko-5g.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The “%@” includes the following cipher suites:"
-          }
-        }
-      }
-    },
-    "join-on-connect": {
-      "comment": "Accessibility label for the per-channel autojoin checkbox in the channel list.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Join on connect"
+            "value": "The “%@” prefers these cipher suites, most preferred first."
           }
         }
       }
@@ -632,7 +644,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modify Alternate Servers"
+            "value": "Modify Alternate Servers…"
           }
         }
       }
@@ -704,7 +716,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open System Settings"
+            "value": "Open System Settings…"
           }
         }
       }
@@ -722,13 +734,13 @@
       }
     },
     "perform-commands-on-connect": {
-      "comment": "Heading above the editor holding commands run after connecting.",
+      "comment": "Section title above the editor holding commands run after connecting. Also its accessibility label.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Perform commands on connect:"
+            "value": "Perform Commands on Connect"
           }
         }
       }
@@ -746,13 +758,13 @@
       }
     },
     "please-enter-a-list-of-properly": {
-      "comment": "Error localizations. Legacy key: wlz-tb.",
+      "comment": "Validation message shown when one of the alternative nicknames is not properly formatted. The argument is the nickname that failed. Legacy key: wlz-tb.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a list of properly formatted nicknames.\n\nFailed on nickname: “%@“\n\nList of nicknames should be space separated.\nFor example: “Guest1 Guest2 Guest3“"
+            "value": "“%@” is not a valid nickname. Separate alternative nicknames with spaces, for example: Guest1 Guest2 Guest3"
           }
         }
       }
@@ -764,7 +776,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a properly formatted proxy address."
+            "value": "Enter a proxy address, such as proxy.example.com."
           }
         }
       }
@@ -776,7 +788,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a properly formatted real name."
+            "value": "Enter a real name on one line."
           }
         }
       }
@@ -788,19 +800,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a properly formatted username."
-          }
-        }
-      }
-    },
-    "preference-you-have-enabled-will-not": {
-      "comment": "Enabling wait for NickServ without a password. Legacy key: 94r-eq.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The preference you have enabled will not work correctly because you do not have a password set"
+            "value": "Enter a username without spaces."
           }
         }
       }
@@ -825,6 +825,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Password"
+          }
+        }
+      }
+    },
+    "proxy-password-help": {
+      "comment": "Explanation under the proxy password field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored in your keychain."
           }
         }
       }
@@ -1004,7 +1016,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select Certificate"
+            "value": "Select Certificate…"
           }
         }
       }
@@ -1033,6 +1045,18 @@
         }
       }
     },
+    "server-password-help": {
+      "comment": "Explanation under the server password field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent with the PASS command when connecting, and stored in your keychain."
+          }
+        }
+      }
+    },
     "server-port": {
       "comment": "Field label for the primary server's port on the server properties General pane.",
       "extractionState": "manual",
@@ -1041,18 +1065,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Port"
-          }
-        }
-      }
-    },
-    "server-properties": {
-      "comment": "Server properties navigation menu. Legacy key: lww-pc.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server Properties"
           }
         }
       }
@@ -1129,14 +1141,14 @@
         }
       }
     },
-    "server-properties-navigation-menu-redundancy": {
-      "comment": "Server properties navigation menu. Legacy key: 36n-u9.",
+    "navigation-section-connection": {
+      "comment": "Server properties navigation section holding the panes that describe the connection itself. Legacy key: lww-pc.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Redundancy"
+            "value": "Connection"
           }
         }
       }
@@ -1237,18 +1249,6 @@
         }
       }
     },
-    "these-cipher-suites-are-ordered": {
-      "comment": "Cipher suites. Legacy key: k50-8n.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@\n\nThese cipher suites are ordered by preference with the most preferred at the top."
-          }
-        }
-      }
-    },
     "this-connections-configuration-has-changed-do": {
       "comment": "Cloud changes. Legacy key: bzh-il.",
       "extractionState": "manual",
@@ -1256,7 +1256,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This connection's configuration has changed. Do you want to reload the Server Properties dialog?"
+            "value": "Reload the connection’s settings?"
           }
         }
       }
@@ -1334,13 +1334,13 @@
       }
     },
     "view-cipher-suites": {
-      "comment": "Button that shows the cipher suites in the selected collection.",
+      "comment": "Disclosure label that reveals the cipher suites of the selected collection.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "View List"
+            "value": "Cipher suites in this list"
           }
         }
       }
@@ -1358,13 +1358,13 @@
       }
     },
     "you-will-loose-unsaved-changes-if": {
-      "comment": "Cloud changes. Legacy key: oz4-kb.",
+      "comment": "Alert body warning that reloading the externally changed connection discards unsaved edits. Legacy key: oz4-kb.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You will lose unsaved changes if you click “Yes”"
+            "value": "Your unsaved changes will be discarded."
           }
         }
       }
@@ -1443,6 +1443,114 @@
           "stringUnit": {
             "state": "translated",
             "value": "A kapcsolódási parancsok a csatornákhoz csatlakozás előtt kerülnek elküldésre. A NickServ-azonosítás legfeljebb 30 másodpercig vár a megerősítésre. A fenti késleltetés más parancslistákra vonatkozik."
+          }
+        }
+      }
+    },
+    "server-address-network-hint": {
+      "comment": "Accessibility hint spoken for the server address field on the server properties General pane, whose suggestions are the names of the bundled IRC networks.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type a network name, such as Libera.Chat, to fill in its address, port and encryption."
+          }
+        }
+      }
+    },
+    "template-picker-title": {
+      "comment": "Heading of the network list a new connection sheet opens on, shown beside the list until a row is chosen.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a Network"
+          }
+        }
+      }
+    },
+    "template-picker-help": {
+      "comment": "Explains the network list a new connection sheet opens on. Custom Server is the last row of that list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a network to fill in its connection details, or choose Custom Server to enter your own."
+          }
+        }
+      }
+    },
+    "template-custom-server-help": {
+      "comment": "Shown when the Custom Server row of the network list is selected on a new connection sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the server’s address, port and password on the next screen."
+          }
+        }
+      }
+    },
+    "template-suggested-channels": {
+      "comment": "Section title listing the channels a bundled network suggests joining, on the new connection sheet's network list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested Channels"
+          }
+        }
+      }
+    },
+    "template-suggested-channels-help": {
+      "comment": "Footer under the suggested channels of a bundled network on the new connection sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These channels are added to the connection’s channel list, where any of them can be removed."
+          }
+        }
+      }
+    },
+    "template-no-suggested-channels": {
+      "comment": "Placeholder for a bundled network that suggests no channels, on the new connection sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This network suggests no channels."
+          }
+        }
+      }
+    },
+    "template-registration-required": {
+      "comment": "Badge beside a bundled network's name when the network requires a registered account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registration required"
+          }
+        }
+      }
+    },
+    "template-website": {
+      "comment": "Row label for the link to a bundled network's website on the new connection sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website"
           }
         }
       }

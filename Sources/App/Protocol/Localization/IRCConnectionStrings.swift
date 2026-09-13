@@ -127,7 +127,7 @@ nonisolated enum IRCConnectionStrings { // nonisolated: value
 	}
 
 	static func delayedAutoConnect(seconds: UInt) -> String {
-		String(localized: .IRC.delayingAutoConnectForSeconds(seconds))
+		String(localized: .IRC.delayingAutoConnectForSeconds(arg1: seconds))
 	}
 
 	static func timeout(minutes: Double) -> String {

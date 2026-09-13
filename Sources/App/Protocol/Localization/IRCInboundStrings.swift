@@ -252,7 +252,7 @@ extension IRCInboundStrings {
 			userCount: UInt,
 			nicknames: String
 		) -> String {
-			String(localized: .IRC.netsplitBetweenAndUsersLeft(firstServer, secondServer, userCount, nicknames))
+			String(localized: .IRC.netsplitBetweenAndUsersLeft(firstServer, secondServer, arg3: userCount, nicknames))
 		}
 
 		static func netjoin(
@@ -261,11 +261,11 @@ extension IRCInboundStrings {
 			userCount: UInt,
 			nicknames: String
 		) -> String {
-			String(localized: .IRC.netjoinBetweenAndUsersRejoined(firstServer, secondServer, userCount, nicknames))
+			String(localized: .IRC.netjoinBetweenAndUsersRejoined(firstServer, secondServer, arg3: userCount, nicknames))
 		}
 
 		static func abbreviatedNicknames(_ shown: String, remaining: UInt) -> String {
-			String(localized: .IRC.netsplitAndNetjoinSummariesMore(shown, remaining))
+			String(localized: .IRC.netsplitAndNetjoinSummariesMore(shown, arg2: remaining))
 		}
 	}
 }
@@ -279,11 +279,11 @@ enum IRCChannelAccessListKind: Sendable {
 	/// The list numeric and the one that ends it name the same list, so both
 	/// map to it: the mode letter a reply belongs to has to be answerable for
 	/// the end of a list as well as for its entries.
-	init(numeric: UInt) {
+	init(numeric: IRCNumeric) {
 		switch numeric {
-		case IRCNumeric.banlist.rawValue, IRCNumeric.endofbanlist.rawValue: self = .ban
-		case IRCNumeric.invitelist.rawValue, IRCNumeric.endofinvitelist.rawValue: self = .inviteException
-		case IRCNumeric.exceptlist.rawValue, IRCNumeric.endofexceptlist.rawValue: self = .banException
+		case .banlist, .endofbanlist: self = .ban
+		case .invitelist, .endofinvitelist: self = .inviteException
+		case .exceptlist, .endofexceptlist: self = .banException
 		default: self = .quiet
 		}
 	}

@@ -91,13 +91,21 @@ enum MenuNavigationAction: Sendable, CaseIterable {
 	case previousSelection
 }
 
+/** Every command the application's menus issue.
+
+ The menu items target this object, so a command is the `@objc` method the item
+ sends and nothing else: there is no forwarder on the menu controller, no enum
+ case naming the command a second time, and no switch taking the two apart
+ again. */
 @MainActor
-public final class MenuActionCoordinator: NSObject {
+public final class MenuActionCoordinator: NSObject, NSMenuItemValidation {
 	weak var menuController: MenuController?
 	var menuIsOpen = false
 	var menuPerformedActionLastOpen = false
 	weak var pointedClient: IRCClient?
-	weak var pointedChannel: IRCChannel?
+	weak var pointedChannel: Channel?
+	/// The nickname the transcript recorded for the row a menu was opened on.
+	public var pointedNickname: String?
 	/** What an explicitly clicked row means while a contextual menu validates
 	 and runs its commands.
 
@@ -108,7 +116,7 @@ public final class MenuActionCoordinator: NSObject {
 	public enum MenuContext {
 		/// A server-list row. A nil item is the list's background: the server,
 		/// or empty space, rather than the window's selected channel.
-		case treeItem(IRCTreeItem?)
+		case treeItem(TreeItem?)
 		/// Member-list rows, in the order the list shows them.
 		case members([ChannelUser])
 	}
@@ -125,11 +133,6 @@ public final class MenuActionCoordinator: NSObject {
 	/// termination can cancel one that has not run yet.
 	var selectionResetTask: Task<Void, Never>?
 
-	public init(menuController: MenuController) {
-		self.menuController = menuController
-		super.init()
-	}
-
 	var mainWindow: MainWindow {
 		AppController.shared.mainWindow
 	}
@@ -143,9 +146,9 @@ public final class MenuActionCoordinator: NSObject {
 		return pointedClient ?? mainWindow.selectedClient
 	}
 
-	var selectedChannel: IRCChannel? {
+	var selectedChannel: Channel? {
 		if case let .treeItem(item) = menuContext {
-			return item as? IRCChannel
+			return item as? Channel
 		}
 		return pointedChannel ?? mainWindow.selectedChannel
 	}
@@ -169,7 +172,7 @@ public final class MenuActionCoordinator: NSObject {
 		selectedViewController?.backingView
 	}
 
-	private var fileTransferCenter: FileTransferCenter {
+	var fileTransferCenter: FileTransferCenter {
 		SharedApplication.sharedFileTransferCenter()
 	}
 
@@ -179,7 +182,7 @@ public final class MenuActionCoordinator: NSObject {
 	/// This used to be one `-> [Any]` switched on a `returnNicknames` flag,
 	/// with every caller casting the result back.
 	public func selectedMembers(for sender: Any) -> [ChannelUser] {
-		guard let pointedNickname = pointedNickname(for: sender) else {
+		guard let nickname = targetedNickname(for: sender) else {
 			return selectedMemberListMembers()
 		}
 
@@ -187,23 +190,22 @@ public final class MenuActionCoordinator: NSObject {
 			return []
 		}
 
-		return channel.findMember(pointedNickname).map { [$0] } ?? []
+		return channel.findMember(nickname).map { [$0] } ?? []
 	}
 
 	public func selectedNicknames(for sender: Any) -> [String] {
-		guard let pointedNickname = pointedNickname(for: sender) else {
+		guard let nickname = targetedNickname(for: sender) else {
 			return selectedMemberListMembers().map(\.user.nickname)
 		}
 
-		return [pointedNickname]
+		return [nickname]
 	}
 
 	/// The nickname the command was aimed at, if it was aimed at one: either
 	/// the menu item's own, or the one the log view recorded. `nil` means "use
 	/// the member list's selection".
-	private func pointedNickname(for sender: Any) -> String? {
-		guard let controller = menuController,
-		      let client = selectedClient,
+	private func targetedNickname(for sender: Any) -> String? {
+		guard let client = selectedClient,
 		      let channel = selectedChannel,
 		      client.isLoggedIn,
 		      channel.isActive
@@ -215,20 +217,20 @@ public final class MenuActionCoordinator: NSObject {
 			return menuItem.textualUserInfo
 		}
 
-		return controller.pointedNickname
+		return pointedNickname
 	}
 
-	/// Attaches a dialog to the menu controller and main window before starting
-	/// its state-driven SwiftUI presentation.
+	/// Attaches a dialog to this coordinator and the main window before
+	/// starting its state-driven SwiftUI presentation.
 	func present<Dialog: AnyObject>(_ dialog: Dialog, start: (Dialog) -> Void) {
-		(dialog as? MainWindowSheetSession)?.delegate = menuController
+		(dialog as? MainWindowSheetSession)?.delegate = self
 		(dialog as? MainWindowSheetSession)?.window = mainWindow
 		start(dialog)
 	}
 
 	/// The world the menu acts on. It is set once the application has finished
 	/// launching, which is before any menu command can run.
-	var world: IRCWorld? {
+	var world: World? {
 		AppController.shared.world
 	}
 
@@ -256,106 +258,159 @@ public final class MenuActionCoordinator: NSObject {
 		{
 			return
 		}
-		if menuController?.pointedNickname != nil {
-			menuController?.pointedNickname = nil
+		if pointedNickname != nil {
+			pointedNickname = nil
 			return
 		}
 		mainWindow.memberList.deselectAll(sender)
 	}
+}
 
-	public func performMemberAction(_ action: MenuMemberAction, sender: Any?) {
-		let sender = sender ?? NSNull()
-		switch action {
-		case .addIgnore:
-			performIgnore(sender: sender, remove: false)
-		case .removeIgnore:
-			performIgnore(sender: sender, remove: true)
-		case .modifyIgnore:
-			modifyIgnore(sender: sender)
-		case .memberListDoubleClick:
-			guard mainWindow.memberList.primaryInteractedMember != nil else { return }
-			performDoubleClick(sender: sender)
-		case .channelViewDoubleClick:
-			performDoubleClick(sender: sender)
-		case .insertNickname:
-			insertNicknames(sender: sender)
-		case .whois:
-			performForNicknames(sender: sender) { $0.sendWhois($1) }
-		case .privateMessage:
-			startPrivateMessages(sender: sender)
-		case .ctcpPing:
-			performForNicknames(sender: sender) { $0.sendCTCPPing($1) }
-		case .ctcpFinger:
-			performCTCP("FINGER", sender: sender)
-		case .ctcpTime:
-			performCTCP("TIME", sender: sender)
-		case .ctcpVersion:
-			performCTCP("VERSION", sender: sender)
-		case .ctcpUserinfo:
-			performCTCP("USERINFO", sender: sender)
-		case .ctcpClientInfo:
-			performCTCP("CLIENTINFO", sender: sender)
-		case .changeColor:
-			changeColorForSelectedMember(sender: sender)
-		case .giveOp, .takeOp, .giveHalfop, .takeHalfop, .giveVoice, .takeVoice,
-		     .kick, .ban, .kickban, .kill, .gline, .shun, .setVhost, .sendFile:
-			performModerationAction(action, sender: sender)
-		@unknown default:
-			break
+// MARK: - Member commands
+
+public extension MenuActionCoordinator {
+	@objc func memberAddIgnore(_ sender: Any?) {
+		performIgnore(sender: sender ?? NSNull(), remove: false)
+	}
+
+	@objc func memberRemoveIgnore(_ sender: Any?) {
+		performIgnore(sender: sender ?? NSNull(), remove: true)
+	}
+
+	@objc func memberModifyIgnore(_ sender: Any?) {
+		modifyIgnore(sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendWhois(_ sender: Any?) {
+		performForNicknames(sender: sender ?? NSNull()) { $0.sendWhois($1) }
+	}
+
+	@objc func memberStartPrivateMessage(_ sender: Any?) {
+		startPrivateMessages(sender: sender ?? NSNull())
+	}
+
+	@objc func memberChangeColor(_ sender: Any?) {
+		guard selectedClient != nil, selectedChannel != nil,
+		      let nickname = selectedNicknames(for: sender ?? NSNull()).first
+		else { return }
+
+		showNicknameColorSheet(for: nickname)
+	}
+
+	@objc func memberSendCTCPPing(_ sender: Any?) {
+		performForNicknames(sender: sender ?? NSNull()) { $0.sendCTCPPing($1) }
+	}
+
+	@objc func memberSendCTCPFinger(_ sender: Any?) {
+		performCTCP("FINGER", sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendCTCPTime(_ sender: Any?) {
+		performCTCP("TIME", sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendCTCPVersion(_ sender: Any?) {
+		performCTCP("VERSION", sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendCTCPUserinfo(_ sender: Any?) {
+		performCTCP("USERINFO", sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendCTCPClientInfo(_ sender: Any?) {
+		performCTCP("CLIENTINFO", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeGiveOp(_ sender: Any?) {
+		performMode("OP", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeTakeOp(_ sender: Any?) {
+		performMode("DEOP", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeGiveHalfop(_ sender: Any?) {
+		performMode("HALFOP", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeTakeHalfop(_ sender: Any?) {
+		performMode("DEHALFOP", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeGiveVoice(_ sender: Any?) {
+		performMode("VOICE", sender: sender ?? NSNull())
+	}
+
+	@objc func memberModeTakeVoice(_ sender: Any?) {
+		performMode("DEVOICE", sender: sender ?? NSNull())
+	}
+
+	@objc func memberKickFromChannel(_ sender: Any?) {
+		performChannelModeration(sender: sender ?? NSNull()) { client, channel, nickname in
+			client.kick(nickname, in: channel)
 		}
 	}
 
-	private func performModerationAction(_ action: MenuMemberAction, sender: Any) {
-		switch action {
-		case .giveOp:
-			performMode("OP", sender: sender)
-		case .takeOp:
-			performMode("DEOP", sender: sender)
-		case .giveHalfop:
-			performMode("HALFOP", sender: sender)
-		case .takeHalfop:
-			performMode("DEHALFOP", sender: sender)
-		case .giveVoice:
-			performMode("VOICE", sender: sender)
-		case .takeVoice:
-			performMode("DEVOICE", sender: sender)
-		case .kick:
-			performChannelModeration(sender: sender) { client, channel, nickname in
-				client.kick(nickname, in: channel)
-			}
-		case .ban:
-			performChannelModeration(sender: sender) { client, channel, nickname in
-				client.sendCommand("BAN \(nickname)", completeTarget: true, target: channel.name)
-			}
-		case .kickban:
-			performChannelModeration(sender: sender) { client, channel, nickname in
-				client.sendCommand(
-					MenuMemberCommand.kickban(nickname, reason: Preferences.Commands.kickMessage.value),
-					completeTarget: true,
-					target: channel.name
-				)
-			}
-		case .kill:
-			performOperatorCommand("KILL", reason: Preferences.Commands.irCopKillMessage.value, sender: sender)
-		case .gline:
-			performGline(sender: sender)
-		case .shun:
-			performOperatorCommand("SHUN", reason: Preferences.Commands.irCopShunMessage.value, sender: sender)
-		case .setVhost:
-			showSetVhostPrompt(sender: sender)
-		case .sendFile:
-			showFilePicker(sender: sender)
-		case .addIgnore, .removeIgnore, .modifyIgnore, .memberListDoubleClick,
-		     .channelViewDoubleClick, .insertNickname, .whois, .privateMessage,
-		     .ctcpPing, .ctcpFinger, .ctcpTime, .ctcpVersion, .ctcpUserinfo,
-		     .ctcpClientInfo, .changeColor:
-			break
-		@unknown default:
-			break
+	@objc func memberBanFromChannel(_ sender: Any?) {
+		performChannelModeration(sender: sender ?? NSNull()) { client, channel, nickname in
+			client.sendCommand("BAN \(nickname)", completeTarget: true, target: channel.name)
 		}
 	}
 
-	private func performIgnore(sender: Any, remove: Bool) {
+	@objc func memberKickbanFromChannel(_ sender: Any?) {
+		performChannelModeration(sender: sender ?? NSNull()) { client, channel, nickname in
+			client.sendCommand(
+				MenuMemberCommand.kickban(nickname, reason: Preferences.Commands.kickMessage.value),
+				completeTarget: true,
+				target: channel.name
+			)
+		}
+	}
+
+	@objc func memberKillFromServer(_ sender: Any?) {
+		performOperatorCommand(
+			"KILL",
+			reason: Preferences.Commands.irCopKillMessage.value,
+			sender: sender ?? NSNull()
+		)
+	}
+
+	@objc func memberShunOnServer(_ sender: Any?) {
+		performOperatorCommand(
+			"SHUN",
+			reason: Preferences.Commands.irCopShunMessage.value,
+			sender: sender ?? NSNull()
+		)
+	}
+
+	@objc func memberBanFromServer(_ sender: Any?) {
+		performGline(sender: sender ?? NSNull())
+	}
+
+	@objc func memberSetVirtualHost(_ sender: Any?) {
+		showSetVirtualHostPrompt(sender: sender ?? NSNull())
+	}
+
+	@objc func memberSendFileRequest(_ sender: Any?) {
+		showFilePicker(sender: sender ?? NSNull())
+	}
+
+	func memberInMemberListDoubleClicked(_ sender: Any) {
+		guard mainWindow.memberList.primaryInteractedMember != nil else { return }
+		performDoubleClick(sender: sender)
+	}
+
+	func memberInChannelViewDoubleClicked(_ sender: Any?) {
+		performDoubleClick(sender: sender ?? NSNull())
+	}
+
+	func memberInsertNameIntoTextField(_ sender: Any) {
+		insertNicknames(sender: sender)
+	}
+}
+
+private extension MenuActionCoordinator {
+	func performIgnore(sender: Any, remove: Bool) {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      let nickname = selectedNicknames(for: sender).first
 		else { return }
@@ -364,7 +419,7 @@ public final class MenuActionCoordinator: NSObject {
 		client.sendCommand(command, completeTarget: true, target: channel.name)
 	}
 
-	private func modifyIgnore(sender: Any) {
+	func modifyIgnore(sender: Any) {
 		guard let client = selectedClient else { return }
 		let selectedMembers = selectedMembers(for: sender)
 		deselectMembers(for: sender)
@@ -373,34 +428,26 @@ public final class MenuActionCoordinator: NSObject {
 		else { return }
 		let ignores = client.findIgnores(forHostmask: hostmask)
 		if ignores.count == 1 {
-			menuController?.showServerPropertiesSheet(
-				for: client,
-				selection: .newIgnoreEntry,
-				context: ignores[0]
-			)
+			showServerProperties(for: client, selection: .editIgnoreEntry(ignores[0]))
 		} else {
-			menuController?.showServerPropertiesSheet(
-				for: client,
-				selection: .addressBook,
-				context: nil
-			)
+			showServerProperties(for: client, selection: .addressBook)
 		}
 	}
 
-	private func performDoubleClick(sender: Any) {
+	func performDoubleClick(sender: Any) {
 		switch Preferences.Input.userDoubleClickAction.value {
 		case .whois:
-			performMemberAction(.whois, sender: sender)
+			memberSendWhois(sender)
 		case .privateMessage:
-			performMemberAction(.privateMessage, sender: sender)
+			memberStartPrivateMessage(sender)
 		case .insertTextField:
-			performMemberAction(.insertNickname, sender: sender)
+			insertNicknames(sender: sender)
 		@unknown default:
 			break
 		}
 	}
 
-	private func insertNicknames(sender: Any) {
+	func insertNicknames(sender: Any) {
 		guard selectedClient != nil, selectedChannel != nil else { return }
 		let nicknames = selectedNicknames(for: sender)
 		guard nicknames.isEmpty == false else { return }
@@ -441,15 +488,7 @@ public final class MenuActionCoordinator: NSObject {
 		textView.focus()
 	}
 
-	private func changeColorForSelectedMember(sender: Any) {
-		guard selectedClient != nil, selectedChannel != nil,
-		      let nickname = selectedNicknames(for: sender).first
-		else { return }
-
-		showNicknameColorSheet(for: nickname)
-	}
-
-	private func performForNicknames(sender: Any, action: (IRCClient, String) -> Void) {
+	func performForNicknames(sender: Any, action: (IRCClient, String) -> Void) {
 		guard let client = selectedClient, selectedChannel != nil else { return }
 		for nickname in selectedNicknames(for: sender) {
 			action(client, nickname)
@@ -457,7 +496,7 @@ public final class MenuActionCoordinator: NSObject {
 		deselectMembers(for: sender)
 	}
 
-	private func startPrivateMessages(sender: Any) {
+	func startPrivateMessages(sender: Any) {
 		guard let client = selectedClient, selectedChannel != nil else { return }
 		for nickname in selectedNicknames(for: sender) {
 			guard let query = client.findChannelOrCreate(nickname, isPrivateMessage: true) else { continue }
@@ -466,11 +505,11 @@ public final class MenuActionCoordinator: NSObject {
 		deselectMembers(for: sender)
 	}
 
-	private func performCTCP(_ command: String, sender: Any) {
+	func performCTCP(_ command: String, sender: Any) {
 		performForNicknames(sender: sender) { $0.sendCTCPQuery($1, command: command, text: nil) }
 	}
 
-	private func performMode(_ command: String, sender: Any) {
+	func performMode(_ command: String, sender: Any) {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      client.isLoggedIn, channel.isChannel
 		else { return }
@@ -483,9 +522,9 @@ public final class MenuActionCoordinator: NSObject {
 		)
 	}
 
-	private func performChannelModeration(
+	func performChannelModeration(
 		sender: Any,
-		action: (IRCClient, IRCChannel, String) -> Void
+		action: (IRCClient, Channel, String) -> Void
 	) {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      client.isLoggedIn, channel.isChannel
@@ -496,7 +535,7 @@ public final class MenuActionCoordinator: NSObject {
 		deselectMembers(for: sender)
 	}
 
-	private func performOperatorCommand(_ command: String, reason: String, sender: Any) {
+	func performOperatorCommand(_ command: String, reason: String, sender: Any) {
 		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
 		for nickname in selectedNicknames(for: sender) {
 			client.sendCommand(MenuMemberCommand.operatorCommand(command, nickname: nickname, reason: reason))
@@ -504,7 +543,7 @@ public final class MenuActionCoordinator: NSObject {
 		deselectMembers(for: sender)
 	}
 
-	private func performGline(sender: Any) {
+	func performGline(sender: Any) {
 		guard let client = selectedClient, let channel = selectedChannel, client.isLoggedIn else { return }
 		for nickname in selectedNicknames(for: sender) {
 			if client.nicknameIsMyself(nickname) {
@@ -523,7 +562,7 @@ public final class MenuActionCoordinator: NSObject {
 		deselectMembers(for: sender)
 	}
 
-	private func showSetVhostPrompt(sender: Any) {
+	func showSetVirtualHostPrompt(sender: Any) {
 		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
 		let nicknames = selectedNicknames(for: sender)
 		guard nicknames.isEmpty == false else { return }
@@ -531,6 +570,7 @@ public final class MenuActionCoordinator: NSObject {
 		InputPrompt.present(InputPromptRequest(
 			title: PromptStrings.VirtualHost.title,
 			message: PromptStrings.VirtualHost.body,
+			placeholder: PromptStrings.VirtualHost.placeholder,
 			submitButtonTitle: PromptStrings.Action.confirmation,
 			cancelButtonTitle: PromptStrings.Action.cancel
 		)) { outcome in
@@ -547,7 +587,7 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
-	private func showFilePicker(sender: Any) {
+	func showFilePicker(sender: Any) {
 		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
 		let nicknames = selectedNicknames(for: sender)
 		guard nicknames.isEmpty == false else { return }
@@ -567,15 +607,19 @@ public final class MenuActionCoordinator: NSObject {
 			}
 		}
 	}
+}
 
-	public func sendDroppedFilesToSelectedChannel(_ files: [String]) {
+// MARK: - Dropped files
+
+public extension MenuActionCoordinator {
+	func sendDroppedFilesToSelectedChannel(_ files: [String]) {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      client.isLoggedIn, channel.isPrivateMessage
 		else { return }
 		sendDroppedFiles(files, nickname: channel.name)
 	}
 
-	public func sendDroppedFiles(_ files: [String], nickname: String) {
+	func sendDroppedFiles(_ files: [String], nickname: String) {
 		guard let client = selectedClient, client.isLoggedIn else { return }
 		for file in files {
 			var isDirectory: ObjCBool = false
@@ -585,28 +629,37 @@ public final class MenuActionCoordinator: NSObject {
 			_ = fileTransferCenter.addSender(for: client, nickname: nickname, path: file, autoOpen: true)
 		}
 	}
+}
 
-	public func navigateToTreeItem(at url: URL) {
+// MARK: - Navigation
+
+public extension MenuActionCoordinator {
+	func navigateToTreeItem(at url: URL) {
 		let identifier = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 		guard identifier.isEmpty == false else { return }
 		navigateToTreeItem(withIdentifier: identifier)
 	}
 
-	public func navigateToTreeItem(withIdentifier identifier: String) {
+	func navigateToTreeItem(withIdentifier identifier: String) {
 		guard identifier.count == 36,
 		      let item = world?.findItem(withId: identifier)
 		else { return }
 		navigateToTreeItem(item)
 	}
 
-	public func navigateToTreeItem(_ item: IRCTreeItem) {
+	func navigateToTreeItem(_ item: TreeItem) {
 		mainWindow.select(item)
 	}
 
-	public func populateNavigationChannelList() {
+	/** The Navigation menu's list of every channel.
+
+	 No key equivalents: the list is ordered by where a channel happens to sit
+	 in the sidebar, so ⌘1 meant a different conversation as soon as a server
+	 connected or a channel was joined — and it took the digits the Window menu
+	 names windows with. */
+	func populateNavigationChannelList() {
 		guard let menu = menuController?.mainMenuNavigationChannelListMenu, let world else { return }
 		menu.removeAllItems()
-		var channelCount = 0
 		for client in world.clientList {
 			let submenu = NSMenu()
 			let clientItem = NSMenuItem()
@@ -615,29 +668,25 @@ public final class MenuActionCoordinator: NSObject {
 			for channel in client.channelList {
 				let item = NSMenuItem(
 					title: channel.name,
-					action: #selector(MenuController.navigateToChannelInNavigationList(_:)),
-					keyEquivalent: channelCount < 10 ? String((channelCount + 1) % 10) : ""
+					action: #selector(navigateToChannelInNavigationList(_:)),
+					keyEquivalent: ""
 				)
-				item.target = menuController
-				if channelCount < 10 {
-					item.keyEquivalentModifierMask = .command
-				}
+				item.target = self
 				item.textualUserInfo = world.pasteboardString(for: channel)
 				submenu.addItem(item)
-				channelCount += 1
 			}
 			menu.addItem(clientItem)
 		}
 	}
 
-	@objc public func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
+	@objc func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
 		guard let pasteboardString = sender.textualUserInfo,
 		      let item = world?.findItem(withPasteboardString: pasteboardString)
 		else { return }
 		mainWindow.select(item)
 	}
 
-	public func performNavigationAction(_ sender: Any?) {
+	@objc func performNavigationAction(_ sender: Any?) {
 		guard selectedClient != nil,
 		      let menuItem = sender as? NSMenuItem,
 		      let action = Self.navigationAction(for: menuItem.command)
@@ -645,10 +694,26 @@ public final class MenuActionCoordinator: NSObject {
 		perform(action)
 	}
 
+	@objc func onNextHighlight(_: Any?) {
+		moveHighlightOrScrollback(for: .nextHighlight)
+	}
+
+	@objc func onPreviousHighlight(_: Any?) {
+		moveHighlightOrScrollback(for: .previousHighlight)
+	}
+
+	@objc func jumpToCurrentSession(_: Any?) {
+		moveHighlightOrScrollback(for: .jumpToCurrentSession)
+	}
+
+	@objc func jumpToPresent(_: Any?) {
+		moveHighlightOrScrollback(for: .jumpToPresent)
+	}
+
 	/// The menu items used to be dispatched by selector string onto the main
 	/// window, whose handlers are declared `(NSEvent)` and were handed an
 	/// `NSMenuItem`. They are called directly now, with no event.
-	static func navigationAction(for command: MenuCommand?) -> MenuNavigationAction? {
+	internal static func navigationAction(for command: MenuCommand?) -> MenuNavigationAction? {
 		switch command {
 		case .nextServer: .nextServer
 		case .previousServer: .previousServer
@@ -667,6 +732,17 @@ public final class MenuActionCoordinator: NSObject {
 		}
 	}
 
+	func moveHighlightOrScrollback(for command: MenuCommand?) {
+		guard let controller = selectedViewController else { return }
+		switch command {
+		case .nextHighlight: controller.nextHighlight()
+		case .previousHighlight: controller.previousHighlight()
+		case .jumpToCurrentSession: controller.jumpToCurrentSession()
+		case .jumpToPresent: controller.jumpToPresent()
+		default: break
+		}
+	}
+
 	private func perform(_ action: MenuNavigationAction) {
 		switch action {
 		case .nextServer: mainWindow.selectNextServer(nil)
@@ -682,17 +758,6 @@ public final class MenuActionCoordinator: NSObject {
 		case .moveBackward: mainWindow.selectPreviousWindow(nil)
 		case .moveForward: mainWindow.selectNextWindow(nil)
 		case .previousSelection: mainWindow.selectPreviousSelection(nil)
-		}
-	}
-
-	public func moveHighlightOrScrollback(for command: MenuCommand?) {
-		guard let controller = selectedViewController else { return }
-		switch command {
-		case .nextHighlight: controller.nextHighlight()
-		case .previousHighlight: controller.previousHighlight()
-		case .jumpToCurrentSession: controller.jumpToCurrentSession()
-		case .jumpToPresent: controller.jumpToPresent()
-		default: break
 		}
 	}
 }

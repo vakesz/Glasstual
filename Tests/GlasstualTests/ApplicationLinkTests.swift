@@ -1,13 +1,14 @@
+/* *********************************************************************
+ * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+ * Please see Acknowledgements.pdf for additional information.
+ *********************************************************************** */
+
 import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
 import Testing
 
-/** *********************************************************************
- * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
- * Please see Acknowledgements.pdf for additional information.
- *********************************************************************** */
 @MainActor
 @Suite("Application links and server connection requests")
 struct ApplicationLinkTests {
@@ -109,10 +110,17 @@ struct ApplicationLinkTests {
 		#expect(source.absoluteString == "textual://goto/item%2Fname")
 	}
 
-	@Test("External links confirm reuse and preserve their no-connect options", arguments: [true, false])
-	func reuseRequiresConfirmation(accept: Bool) throws {
+	@Test(
+		"External links confirm reuse and preserve their no-connect options",
+		arguments: [
+			ServerConnectionMergeChoice.useExisting,
+			.createNew,
+			.cancel,
+		]
+	)
+	func reuseRequiresConfirmation(choice: ServerConnectionMergeChoice) throws {
 		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.serverList = [Server(
 			serverAddress: "irc.example.test",
 			serverPort: 6697,
@@ -129,14 +137,14 @@ struct ApplicationLinkTests {
 				#expect(address == request.serverAddress)
 				#expect(channels == request.channels)
 				confirmations += 1
-				return accept
+				return choice
 			},
 			mergeConnection: { value, _ in merged.append(value) },
 			createConnection: { created.append($0) }
 		)
 		#expect(confirmations == 1)
-		#expect(merged == (accept ? [request] : []))
-		#expect(created == (accept ? [] : [request]))
+		#expect(merged == (choice == .useExisting ? [request] : []))
+		#expect(created == (choice == .createNew ? [request] : []))
 		#expect(request.options.connectWhenCreated == false)
 	}
 
@@ -146,7 +154,7 @@ struct ApplicationLinkTests {
 	)
 	func mismatchedConnectionsAreNotOffered(kind: String) throws {
 		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.serverList = [Server(
 			serverAddress: "irc.example.test",
 			serverPort: kind == "port" ? 7000 : 6697,
@@ -162,7 +170,10 @@ struct ApplicationLinkTests {
 		ServerConnectionCoordinator.connect(
 			using: request,
 			clients: [client],
-			confirmMerge: { _, _, _ in Issue.record("Mismatched connection offered"); return true },
+			confirmMerge: { _, _, _ in
+				Issue.record("Mismatched connection offered")
+				return .useExisting
+			},
 			mergeConnection: { _, _ in Issue.record("Mismatched connection reused") },
 			createConnection: { value in
 				#expect(value == request)
@@ -175,19 +186,19 @@ struct ApplicationLinkTests {
 	@Test("The real merge path does not JOIN for an external link, even on a logged-in client")
 	func externalMergeDoesNotJoin() throws {
 		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.serverList = [Server(
 			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
 		)]
 		client.isLoggedIn = true
-		let channel = IRCChannel(config: .seed(withName: "#chat"))
+		let channel = Channel(config: .seed(withName: "#chat"))
 		channel.associatedClient = client
 		client.add(channel)
 		try #require(client.canJoin(channel))
 		ServerConnectionCoordinator.connect(
 			using: request,
 			clients: [client],
-			confirmMerge: { _, _, _ in true },
+			confirmMerge: { _, _, _ in .useExisting },
 			createConnection: { _ in Issue.record("Expected reuse") }
 		)
 		#expect(channel.status != .joining)
@@ -203,7 +214,7 @@ struct ApplicationLinkTests {
 		ServerConnectionCoordinator.connect(
 			using: command,
 			clients: [client],
-			confirmMerge: { _, _, _ in true },
+			confirmMerge: { _, _, _ in .useExisting },
 			createConnection: { _ in Issue.record("Expected reuse") }
 		)
 		#expect(channel.status == .joining)
@@ -212,7 +223,7 @@ struct ApplicationLinkTests {
 	@Test("A matching saved endpoint cannot hide a different live socket")
 	func liveEndpointMustAlsoMatch() throws {
 		let request = try #require(connectionIntent(for: "ircs://irc.example.test/chat"))
-		let client = GLTTestClient()
+		let client = TestClient()
 		client.config.serverList = [Server(
 			serverAddress: "irc.example.test", serverPort: 6697, prefersSecuredConnection: true
 		)]

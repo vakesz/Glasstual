@@ -80,12 +80,9 @@ struct HistoricLogShippedFixtureTests {
 		else { Issue.record("Retention failed"); return }
 		#expect(result.deletedCount == 2)
 		#expect(result.uniqueIdentifiers == ["old"])
-		let retained = await store.fetchEntries(
-			forView: "v1.0.7-fixture",
-			ascending: true,
-			fetchLimit: 10,
-			limitToDate: nil
-		)
+		let retained = await store.fetchOutcome(
+			.newestEntries(forView: "v1.0.7-fixture", fetchLimit: 10)
+		).entries
 		#expect(retained.count == 4)
 		#expect(retained.filter { $0.uniqueIdentifier == "duplicate" }.count == 2)
 		#expect(Set(retained.map(\.data)).isSubset(of: Set(appendedPage.entries.map(\.data))))

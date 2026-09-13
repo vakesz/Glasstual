@@ -41,12 +41,11 @@ import Foundation
 
 @MainActor
 extension IRCClient {
-	func dispatchTimerCommand(_ parsed: ParsedUserCommand, targetChannel: IRCChannel?) -> Bool {
-		guard parsed.localCommand == .timer else { return false }
+	func dispatchTimerCommand(_ parsed: ParsedUserCommand, targetChannel: Channel?) {
 		var arguments = parsed.arguments
 		guard arguments.isEmpty == false else {
 			printDebugInformation(IRCTimerStrings.invalidSyntax)
-			return true
+			return
 		}
 		let action = arguments.next().lowercased()
 		switch action {
@@ -63,7 +62,6 @@ extension IRCClient {
 		default:
 			addTimer(intervalString: action, arguments: arguments, targetChannel: targetChannel)
 		}
-		return true
 	}
 
 	private func showTimerHelp(topic: String) {
@@ -74,7 +72,7 @@ extension IRCClient {
 
 	private func stopTimer(identifier: String) {
 		guard let timedCommand = existingTimer(identifier: identifier) else { return }
-		guard timedCommand.timerIsActive else {
+		guard timedCommand.timer.isActive else {
 			printDebugInformation(IRCTimerStrings.alreadyStopped(identifier: identifier))
 			return
 		}
@@ -132,7 +130,7 @@ extension IRCClient {
 	private func addTimer(
 		intervalString: String,
 		arguments: CommandArguments,
-		targetChannel: IRCChannel?
+		targetChannel: Channel?
 	) {
 		guard let interval = Int(intervalString), interval > 0 else {
 			printDebugInformation(IRCTimerStrings.invalidInterval)

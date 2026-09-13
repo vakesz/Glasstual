@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -40,54 +40,50 @@ import Foundation
 
 @MainActor
 extension IRCClient {
-	func handleConnectionNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) -> Bool {
+	func handleConnectionNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
 		switch numeric {
-		case IRCNumeric.welcome.rawValue:
+		case .welcome:
 			receiveInit(message)
 			if shouldPrint {
 				printReply(message)
 			}
-		case IRCNumeric.yourhost.rawValue, IRCNumeric.created.rawValue, IRCNumeric.myinfo.rawValue,
-		     IRCNumeric.statsconn.rawValue,
-		     IRCNumeric.luserclient.rawValue, IRCNumeric.luserhop.rawValue, IRCNumeric.luserunknown.rawValue,
-		     IRCNumeric.luserchannels.rawValue, IRCNumeric.luserme.rawValue:
+		case .yourhost, .created, .myinfo, .statsconn,
+		     .luserclient, .luserhop, .luserunknown, .luserchannels, .luserme:
 			if shouldPrint {
 				printReply(message)
 			}
-		case IRCNumeric.isupport.rawValue:
+		case .isupport:
 			handleISupportNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.redir.rawValue:
+		case .redir:
 			handleRedirectNumeric(message)
-		case IRCNumeric.localusers.rawValue, IRCNumeric.globalusers.rawValue:
-			guard shouldPrint else { return true }
+		case .localusers, .globalusers:
+			guard shouldPrint else { return }
 			let text = message.params.count == 4 ? message.sequence(3) : message.sequence
 			print(text, by: nil, in: nil, as: .debug, command: message.command, receivedAt: message.receivedAt)
-		case IRCNumeric.motd.rawValue, IRCNumeric.motdstart.rawValue, IRCNumeric.endofmotd.rawValue,
-		     IRCNumeric.nomotd.rawValue:
-			guard shouldPrint, environment.preferences.displayServerMOTD else { return true }
-			if numeric == IRCNumeric.nomotd.rawValue {
+		case .motd, .motdstart, .endofmotd, .nomotd:
+			guard shouldPrint, environment.preferences.displayServerMOTD else { return }
+			if numeric == .nomotd {
 				printErrorReply(message)
 			} else {
 				printReply(message)
 			}
-		case IRCNumeric.umodeis.rawValue:
+		case .umodeis:
 			handleUserModeNumeric(message)
-		case IRCNumeric.away.rawValue:
+		case .away:
 			handleAwayNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.silelist.rawValue:
+		case .silelist:
 			handleSilenceListNumeric(message, shouldPrint: shouldPrint)
-		case IRCNumeric.endofsilelist.rawValue:
+		case .endofsilelist:
 			if shouldPrint {
 				printDebugInformation(IRCInboundStrings.Numeric.endOfSilenceList,
 				                      in: output?.selectedChannel(on: self),
 				                      asCommand: message.command)
 			}
-		case IRCNumeric.unaway.rawValue, IRCNumeric.nowaway.rawValue:
+		case .unaway, .nowaway:
 			handleOwnAwayNumeric(numeric, message: message, shouldPrint: shouldPrint)
 		default:
-			return false
+			break
 		}
-		return true
 	}
 
 	private func handleISupportNumeric(_ message: Message, shouldPrint: Bool) {
@@ -210,8 +206,8 @@ extension IRCClient {
 		                      asCommand: message.command)
 	}
 
-	private func handleOwnAwayNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
-		let away = numeric == IRCNumeric.nowaway.rawValue
+	private func handleOwnAwayNumeric(_ numeric: IRCNumeric, message: Message, shouldPrint: Bool) {
+		let away = numeric == .nowaway
 		userIsAway = away
 		output?.updateTitle()
 		if shouldPrint {

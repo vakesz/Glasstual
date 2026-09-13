@@ -10,14 +10,9 @@ import Testing
 @MainActor
 private final class ChannelInviteDelegateSpy: NSObject, ChannelInviteSheetDelegate {
 	private(set) var selectedChannel: String?
-	private(set) var didClose = false
 
 	func channelInviteSheet(_: ChannelInviteSheet, onSelectChannel channelName: String) {
 		selectedChannel = channelName
-	}
-
-	func channelInviteSheetWillClose(_: ChannelInviteSheet) {
-		didClose = true
 	}
 }
 
@@ -25,40 +20,35 @@ private final class ChannelInviteDelegateSpy: NSObject, ChannelInviteSheetDelega
 @Suite("Channel invite sheet")
 struct ChannelInviteFeatureTests {
 	@Test(
-		"The header names one invitee, two invitees, or counts them",
+		"The headline names one invitee, two invitees, or counts them",
 		arguments: [
-			(["alice"], "Invite alice to:"),
-			(["alice", "bob"], "Invite alice and bob to:"),
-			(["alice", "bob", "carol"], "Invite 3 users to:"),
+			(["alice"], "Invite alice"),
+			(["alice", "bob"], "Invite alice and bob"),
+			(["alice", "bob", "carol"], "Invite 3 users"),
 		]
 	)
-	func presentationDescribesOneTwoAndManyInvitees(_ nicknames: [String], _ headerTitle: String) {
-		let content = ChannelInviteContent(nicknames: nicknames, channels: ["#general", "#support"])
-
-		#expect(content.headerTitle == headerTitle)
+	func headlineDescribesOneTwoAndManyInvitees(_ nicknames: [String], _ headline: String) {
+		#expect(ChannelInviteStrings.invitationTitle(for: nicknames) == headline)
 	}
 
-	@Test("The channels are offered in the order they were given, under localized controls")
-	func presentationPreservesChannelOrderAndLocalizedControls() {
-		let content = ChannelInviteContent(nicknames: ["alice"], channels: ["#zeta", "#alpha"])
-
-		#expect(content.channels == ["#zeta", "#alpha"])
-		#expect(content.channelPickerLabel == "Channel to invite users to")
-		#expect(content.inviteButtonTitle == "Invite")
-		#expect(content.cancelButtonTitle == "Cancel")
+	/// The sheet is titled, and the picker beneath it is labelled for what it
+	/// chooses rather than repeating the sentence above it.
+	@Test("The sheet names itself and its one control")
+	func sheetCopyComesFromTheCatalog() {
+		#expect(ChannelInviteStrings.windowTitle == "Invite to Channel")
+		#expect(ChannelInviteStrings.channelPickerLabel == "Channel")
+		#expect(ChannelInviteStrings.inviteButtonTitle == "Invite")
 	}
 
-	@Test("Accepting the sheet reports the selected channel, and closing it reports the close")
+	@Test("Accepting the sheet reports the selected channel")
 	func adapterUsesTheTypedLegacyDelegateContract() {
-		let adapter = ChannelInviteSheet(nicknames: ["alice"], on: GLTTestClient())
+		let adapter = ChannelInviteSheet(nicknames: ["alice"], on: TestClient())
 		let delegate = ChannelInviteDelegateSpy()
 		adapter.delegate = delegate
 
 		adapter.start(withChannels: ["#general", "#support"])
-		adapter.ok(nil)
-		adapter.sheetDidEnd(withReturnCode: 0)
+		adapter.submit()
 
 		#expect(delegate.selectedChannel == "#general")
-		#expect(delegate.didClose)
 	}
 }

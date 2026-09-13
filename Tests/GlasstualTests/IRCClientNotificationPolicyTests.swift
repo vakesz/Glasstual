@@ -52,11 +52,10 @@ struct IRCClientNotificationPolicyTests {
 		#expect(admission(event: .userParted, collapsingNetsplit: true) == .proceed)
 	}
 
-	@Test("Our own text and suppressed output are discarded, but our own kick is not")
-	func admissionDiscardsLocalTextAndSuppressedOutput() {
+	@Test("Our own text is discarded, but our own kick is not")
+	func admissionDiscardsLocalText() {
 		#expect(admission(event: .channelMessage, nicknameIsLocalUser: true) == .discard)
 		#expect(admission(event: .kick, nicknameIsLocalUser: true) == .proceed)
-		#expect(admission(event: .privateMessage, outputIsSuppressed: true) == .discard)
 	}
 
 	@Test("A target that ignores highlights or disables push has handled the event itself")
@@ -150,7 +149,6 @@ struct IRCClientNotificationPolicyTests {
 		terminating: Bool = false,
 		collapsingNetsplit: Bool = false,
 		nicknameIsLocalUser: Bool = false,
-		outputIsSuppressed: Bool = false,
 		ignoresHighlights: Bool = false,
 		disablesPush: Bool = false
 	) -> IRCNotificationAdmission {
@@ -159,7 +157,6 @@ struct IRCClientNotificationPolicyTests {
 			isTerminating: terminating,
 			isCollapsingNetsplit: collapsingNetsplit,
 			nicknameIsLocalUser: nicknameIsLocalUser,
-			outputIsSuppressed: outputIsSuppressed,
 			targetIgnoresHighlights: ignoresHighlights,
 			targetDisablesPush: disablesPush
 		))
@@ -172,8 +169,23 @@ struct IRCClientNotificationPolicyTests {
 	 and the events do not enter into it. */
 	@Test("The notification carries the sound wherever the system will play it")
 	func theNotificationCarriesTheSound() {
-		#expect(playback(systemPlaysSounds: true) == .withNotification)
-		#expect(playback(systemPlaysSounds: false) == .byApplication)
+		#expect(playback(delivery: .system) == .withNotification)
+	}
+
+	/// Sounds switched off for the application in System Settings still deliver
+	/// the notification, so something has to play the alert or nothing is heard.
+	@Test("The application plays the sound only where the notification will not")
+	func theApplicationPlaysASilencedSound() {
+		#expect(playback(delivery: .silenced) == .byApplication)
+	}
+
+	/** Refusing permission is refusing the notification, and with it the sound.
+	 Playing one anyway sounds through Do Not Disturb and a Focus, because
+	 `AudioServicesPlayAlertSound` answers to neither — which is how a refused
+	 application stayed audible. */
+	@Test("Refused permission plays nothing at all")
+	func refusedPermissionIsSilent() {
+		#expect(playback(delivery: .refused) == .silent)
 	}
 
 	/// The settings read is a question for the system and lands a moment after
@@ -181,30 +193,30 @@ struct IRCClientNotificationPolicyTests {
 	/// the application and the notification each play the first sounds.
 	@Test("Before the system has answered, the notification is the only one that plays")
 	func anUnknownAnswerDefersToTheNotification() {
-		#expect(playback(systemPlaysSounds: nil) == .withNotification)
+		#expect(playback(delivery: nil) == .withNotification)
 	}
 
 	/// Muting, an event with no sound of its own, and an event that is only
 	/// spoken — where nothing is posted to carry a sound — all play nothing.
 	@Test("Nothing plays where there is nothing to play, or nowhere to play it")
 	func nothingPlaysWithoutASoundOrANotification() {
-		#expect(playback(soundName: nil, systemPlaysSounds: true) == .silent)
-		#expect(playback(soundName: nil, isMuted: true, systemPlaysSounds: false) == .silent)
-		#expect(playback(isOnlySpoken: true, systemPlaysSounds: false) == .silent)
-		#expect(playback(isOnlySpoken: true, systemPlaysSounds: true) == .silent)
+		#expect(playback(soundName: nil, delivery: .system) == .silent)
+		#expect(playback(soundName: nil, isMuted: true, delivery: .silenced) == .silent)
+		#expect(playback(isOnlySpoken: true, delivery: .silenced) == .silent)
+		#expect(playback(isOnlySpoken: true, delivery: .system) == .silent)
 	}
 
 	private func playback(
 		soundName: String? = "Beep",
 		isMuted: Bool = false,
 		isOnlySpoken: Bool = false,
-		systemPlaysSounds: Bool?
+		delivery: NotificationSoundDelivery?
 	) -> IRCNotificationSoundPlayback {
 		IRCNotificationPolicy.soundPlayback(
 			soundName: soundName,
 			isMuted: isMuted,
 			isOnlySpoken: isOnlySpoken,
-			systemPlaysNotificationSounds: systemPlaysSounds
+			systemSoundDelivery: delivery
 		)
 	}
 

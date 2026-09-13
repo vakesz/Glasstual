@@ -17,19 +17,17 @@ nonisolated enum AboutStrings { // nonisolated: value
 		String(localized: .TDCAboutDialog.acknowledgementsButton)
 	}
 
-	static var upstreamAttribution: String {
-		String(localized: .TDCAboutDialog.upstreamAttribution)
-	}
-
 	static func applicationIconAccessibilityLabel(applicationName: String) -> String {
 		String(localized: .TDCAboutDialog.iconAccessibility(applicationName))
 	}
 
-	static func versionDescription(applicationName: String, version: String, build: String) -> String {
+	/// The application name is drawn above this, so the line under it says what
+	/// version that name is at rather than repeating the name.
+	static func versionDescription(version: String, build: String) -> String {
 		guard build.isEmpty == false, build != version else {
-			return String(localized: .TDCAboutDialog.applicationNameFollowed(applicationName, version))
+			return String(localized: .TDCAboutDialog.applicationVersion(version))
 		}
 
-		return String(localized: .TDCAboutDialog.applicationVersionWithBuild(applicationName, version, build))
+		return String(localized: .TDCAboutDialog.applicationVersionWithBuild(version, build))
 	}
 }

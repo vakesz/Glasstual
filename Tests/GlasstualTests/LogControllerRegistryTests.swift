@@ -42,7 +42,7 @@ import Testing
 @MainActor
 private struct RegistryFixture {
 	let window: MainWindow
-	let fixture = GLTClientEnvironmentFixture()
+	let fixture = ClientEnvironmentFixture()
 	let client: IRCClient
 
 	var registry: LogControllerRegistry {
@@ -59,7 +59,7 @@ private struct RegistryFixture {
 		client = fixture.world.createClient(with: ClientConfig())
 	}
 
-	func makeChannel(named name: String) -> IRCChannel {
+	func makeChannel(named name: String) -> Channel {
 		fixture.world.createChannel(
 			with: ChannelConfig.seed(withName: name),
 			on: client,
@@ -181,7 +181,7 @@ struct LogControllerRegistryTests {
 
 	@Test("A tree item with no window has no view to print into")
 	func itemsWithoutAWindowHaveNoPresentation() {
-		let fixture = GLTClientEnvironmentFixture()
+		let fixture = ClientEnvironmentFixture()
 		let client = fixture.world.createClient(with: ClientConfig())
 
 		#expect(client.presentation == nil)

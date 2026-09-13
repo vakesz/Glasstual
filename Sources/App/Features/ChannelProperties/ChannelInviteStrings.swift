@@ -14,10 +14,6 @@
 import Foundation
 
 nonisolated enum ChannelInviteStrings { // nonisolated: value
-	static var cancelButtonTitle: String {
-		String(localized: .TDCChannelInviteSheet.cancelButton)
-	}
-
 	static var channelPickerLabel: String {
 		String(localized: .TDCChannelInviteSheet.channelPickerLabel)
 	}
@@ -30,15 +26,20 @@ nonisolated enum ChannelInviteStrings { // nonisolated: value
 		String(localized: .TDCChannelInviteSheet.windowTitle)
 	}
 
-	static func inviteeCount(_ count: Int) -> String {
-		String(localized: .TDCChannelInviteSheet.inviteeCount(count))
-	}
+	/// Who the invitation is for: the one nickname, both of them, or how many
+	/// there are once naming them all would be a paragraph.
+	static func invitationTitle(for nicknames: [String]) -> String {
+		let invitees = switch nicknames.count {
+		case 0:
+			""
+		case 1:
+			nicknames[0]
+		case 2:
+			String(localized: .TDCChannelInviteSheet.joinsExactlyTwoNicknames(nicknames[0], nicknames[1]))
+		default:
+			String(localized: .TDCChannelInviteSheet.inviteeCount(nicknames.count))
+		}
 
-	static func inviteePair(_ firstNickname: String, _ secondNickname: String) -> String {
-		String(localized: .TDCChannelInviteSheet.joinsExactlyTwoNicknames(firstNickname, secondNickname))
-	}
-
-	static func invitationTitle(inviteeDescription: String) -> String {
-		String(localized: .TDCChannelInviteSheet.headingAboveTheChannelInvite(inviteeDescription))
+		return String(localized: .TDCChannelInviteSheet.headingAboveTheChannelInvite(invitees))
 	}
 }

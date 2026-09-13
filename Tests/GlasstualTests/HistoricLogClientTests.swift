@@ -132,7 +132,7 @@ struct HistoricLogClientTests {
 			await client.prepareForTermination()
 			return
 		}
-		#expect(await client.fetchEntries(request).isEmpty)
+		#expect(await client.fetchOutcome(request).entries.isEmpty)
 		await service.setFetchFailure(nil)
 		guard case let .page(entries) = await client.fetchOutcome(request) else {
 			Issue.record("A read failure prevented retry")
@@ -190,7 +190,7 @@ struct HistoricLogClientTests {
 		var tasks: [Task<[HistoricLogEntry], Never>] = []
 
 		for request in requests {
-			tasks.append(Task { await queue.fetch(request) })
+			tasks.append(Task { await queue.fetchOutcome(request).entries })
 
 			while await queue.pendingCount < tasks.count {
 				await Task.yield()
@@ -322,17 +322,17 @@ struct HistoricLogClientTests {
 		await withTaskGroup(of: Void.self) { group in
 			for _ in 0 ..< 10 {
 				group.addTask { await client.writeEntry(entry) }
-				group.addTask { #expect(await client.fetchEntries(request).isEmpty) }
+				group.addTask { #expect(await client.fetchOutcome(request).entries.isEmpty) }
 			}
 			await service.openGate.open()
 		}
 		#expect(await firstWrite.value == .unavailable)
 		for _ in 0 ..< 3 {
 			await client.writeEntry(entry)
-			#expect(await client.fetchEntries(request).isEmpty)
+			#expect(await client.fetchOutcome(request).entries.isEmpty)
 		}
-		await client.forgetView("a")
-		await client.resetData(forView: "a")
+		await client.removeHistory("a", forget: true)
+		await client.removeHistory("a", forget: false)
 		#expect(await service.openCount == 1)
 		#expect(await service.entries.isEmpty)
 		#expect(await service.fetchCount == 0)
@@ -343,7 +343,7 @@ struct HistoricLogClientTests {
 
 		#expect(await client.retryLoading() == false)
 		await client.writeEntry(entry)
-		#expect(await client.fetchEntries(request).isEmpty)
+		#expect(await client.fetchOutcome(request).entries.isEmpty)
 		#expect(await service.openCount == 2)
 		#expect(reports == [message, message])
 
@@ -355,11 +355,11 @@ struct HistoricLogClientTests {
 		#expect(await client.isLoaded)
 		#expect(await client.isUnavailable == false)
 		await client.writeEntry(entry)
-		#expect(await client.fetchEntries(request).map(\.uniqueIdentifier) == ["line"])
+		#expect(await client.fetchOutcome(request).entries.map(\.uniqueIdentifier) == ["line"])
 		let newest = HistoricLogFetchRequest(
 			viewIdentifier: "a", kind: .newest(ascending: true, fetchLimit: 1, limitToDate: nil)
 		)
-		#expect(await client.fetchEntries(newest).map(\.uniqueIdentifier) == ["line"])
+		#expect(await client.fetchOutcome(newest).entries.map(\.uniqueIdentifier) == ["line"])
 		#expect(await client.retryLoading())
 		#expect(await service.openCount == 3)
 		#expect(await service.fetchCount == 2)
@@ -383,14 +383,14 @@ struct HistoricLogClientTests {
 			databaseDirectory: { await service.databaseDirectory() },
 			reportFailure: { _ in Issue.record("No database open failed") }
 		)
-		let result = await client.fetchEntries(Self.request(view: "a", label: "a1"))
+		let result = await client.fetchOutcome(Self.request(view: "a", label: "a1")).entries
 
 		#expect(result.isEmpty)
 		#expect(await client.isLoaded == false)
 		#expect(await client.isUnavailable == false)
 		#expect(await service.openCount == 0)
 		await service.setDirectory("/injected/history")
-		_ = await client.fetchEntries(Self.request(view: "a", label: "a1"))
+		_ = await client.fetchOutcome(Self.request(view: "a", label: "a1")).entries
 		#expect(await client.isLoaded)
 		#expect(await service.openCount == 1)
 		#expect(await service.fetchCount == 1)

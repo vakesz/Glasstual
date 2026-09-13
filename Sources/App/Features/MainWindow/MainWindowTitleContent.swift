@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -15,14 +15,20 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 
-/// The complete title-bar projection for one main-window selection.
-/// Connection state, identity, and conversation details are composed here so
-/// the window only applies the resulting strings to AppKit.
+/** The complete title-bar projection for one main-window selection.
+
+ A subtitle is one line under the title, and with a unified toolbar it
+ truncates: it used to join up to five facts with middots, so the channel's
+ mode string survived on a narrow window while the network name -- the fact the
+ reader wants -- was cut. What is left is what identifies the conversation:
+ where it is, and how big it is. The channel's modes have the Channel menu and
+ the modes sheet; the reader's own nickname is on the server row, where the
+ title is the network rather than the conversation. */
 struct MainWindowTitleContent: Equatable {
 	let title: String
 	let subtitle: String
 
-	init(client: IRCClient?, channel: IRCChannel?) {
+	init(client: IRCClient?, channel: Channel?) {
 		guard let client else {
 			title = ApplicationInfo.applicationName()
 			subtitle = ""
@@ -31,18 +37,19 @@ struct MainWindowTitleContent: Equatable {
 
 		let network = client.networkNameAlt
 		let status = Self.connectionStatus(for: client)?.title
-		let nickname = Self.displayNickname(for: client)
-		var subtitleParts = [status, network, nickname].compactMap(Self.nonempty)
 
-		if let channel {
-			title = channel.name
-			subtitleParts.append(contentsOf: Self.conversationDetails(for: channel, on: client))
-		} else {
+		guard let channel else {
 			title = network.isEmpty ? ApplicationInfo.applicationName() : network
-			subtitleParts = [status, nickname, client.serverAddress].compactMap(Self.nonempty)
+			subtitle = Self.joined([status, Self.displayNickname(for: client), client.serverAddress])
+			return
 		}
 
-		subtitle = subtitleParts.joined(separator: " · ")
+		title = channel.name
+		subtitle = Self.joined([status, network] + Self.conversationDetails(for: channel, on: client))
+	}
+
+	private static func joined(_ parts: [String?]) -> String {
+		parts.compactMap(nonempty).joined(separator: " · ")
 	}
 
 	private static func connectionStatus(for client: IRCClient) -> MainWindowStrings.ConnectionStatus? {
@@ -66,21 +73,13 @@ struct MainWindowTitleContent: Equatable {
 		guard nickname.isEmpty == false else {
 			return nil
 		}
-		return client.userIsAway ? nickname + MainWindowStrings.Conversation.awayNicknameSuffix : nickname
+		return client.userIsAway ? MainWindowStrings.Conversation.awayNickname(nickname) : nickname
 	}
 
-	private static func conversationDetails(for channel: IRCChannel, on client: IRCClient) -> [String] {
+	private static func conversationDetails(for channel: Channel, on client: IRCClient) -> [String] {
 		switch channel.type {
 		case .channel:
-			var details = [
-				MainWindowStrings.Conversation.userCount(
-					formattedNumber(Int(channel.numberOfMembers)) as String
-				),
-			]
-			if let modes = channel.modeInfo?.stringWithMaskedPassword, modes.count > 1 {
-				details.append(modes)
-			}
-			return details
+			return [MainWindowStrings.Conversation.memberCount(Int(channel.numberOfMembers))]
 		case .privateMessage:
 			return [client.findUser(channel.name)?.hostmaskFragment].compactMap(nonempty)
 		case .directChat:

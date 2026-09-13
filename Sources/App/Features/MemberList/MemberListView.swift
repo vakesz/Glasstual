@@ -5,6 +5,7 @@
 
 import AppKit
 import CocoaExtensions
+import Foundation
 import GlasstualPluginKit
 import SwiftUI
 
@@ -15,7 +16,12 @@ enum MemberListLayout {
 	static let avatarSize: CGFloat = 24
 	static let profileAvatarSize: CGFloat = 64
 	static let profileLabelWidth: CGFloat = 72
-	static let profileWidth: CGFloat = 340
+	static let profileMinimumWidth: CGFloat = 280
+	static let profileIdealWidth: CGFloat = 340
+	static let profileMaximumWidth: CGFloat = 420
+	/// How many lines an address or a real name may wrap onto before it is cut.
+	/// A hostmask is routinely longer than the popover is wide.
+	static let profileValueLineLimit = 3
 }
 
 struct MemberListView: View {
@@ -50,7 +56,7 @@ struct MemberListView: View {
 			guard let identifier = identities.first else { return }
 			model.selectedMemberIDs = identities
 			model.notePrimaryInteraction(withID: identifier)
-			AppController.shared.menuController?.memberInMemberListDoubleClicked(model)
+			AppController.shared.menuController?.actionCoordinator.memberInMemberListDoubleClicked(model)
 		}
 		.redirectsPrintableInput(to: redirectTyping)
 	}
@@ -77,7 +83,7 @@ struct MemberListView: View {
 				model: model,
 				member: member,
 				overrides: model.nicknameColorOverrides,
-				presentationToken: model.presentationRevision
+				style: model.presentationStyle
 			)
 			.tag(member.id)
 			.listRowSeparator(.hidden)
@@ -93,17 +99,21 @@ private struct MemberListRowView: View {
 	/// ChannelUser equality omits user details. Keep the full user as a view input
 	/// so rename, account and host changes refresh the row and its open popover too.
 	let user: User
-	/** What the row draws that its member does not carry: the badge colours, the
-	 rank preferences and the appearance behind them. The list bumps one token
-	 for all of them, and a row that did not take it as an input would keep the
-	 glyph it first drew. */
-	let presentationToken: Int
+	/// The badge colours and the rank preferences behind them, read once for the
+	/// whole list. A row that did not take them as an input would keep the glyph
+	/// it first drew.
+	let style: MemberListPresentationStyle
 
-	init(model: MemberList, member: ChannelUser, overrides: NicknameColorOverrides?, presentationToken: Int) {
+	init(
+		model: MemberList,
+		member: ChannelUser,
+		overrides: NicknameColorOverrides?,
+		style: MemberListPresentationStyle
+	) {
 		self.model = model
 		self.member = member
 		self.overrides = overrides
-		self.presentationToken = presentationToken
+		self.style = style
 		user = member.user
 	}
 
@@ -121,16 +131,18 @@ private struct MemberListRowView: View {
 
 				if user.isBot {
 					Text(MemberListStrings.botCaption)
-						.font(.caption.weight(.medium))
-						.foregroundStyle(.secondary)
+						.font(.caption2.weight(.medium))
+						.padding(.horizontal, UISpacing.tight)
+						.background(.quaternary, in: Capsule())
+						.accessibilityHidden(true)
 				}
 			}
 			.frame(maxWidth: .infinity, alignment: .leading)
 
-			if let symbol = MemberListPresentation.symbolName(for: displayRank) {
+			if let symbol = style.symbolName(for: displayRank) {
 				Image(systemName: symbol)
-					.font(.system(size: 11, weight: .medium))
-					.foregroundStyle(MemberListPresentation.color(for: displayRank))
+					.imageScale(.small)
+					.foregroundStyle(style.color(for: displayRank))
 					.frame(width: UIListMetrics.glyphWidth)
 					/* The glyph stays hidden from assistive technology because the
 					 row's own label already names the rank; the tooltip is for the
@@ -139,26 +151,25 @@ private struct MemberListRowView: View {
 					.accessibilityHidden(true)
 			}
 		}
-		.frame(height: UIListMetrics.rowHeight)
 		.contentShape(Rectangle())
 		.accessibilityLabel(accessibilityDescription)
 		.accessibilityAction(named: MemberListStrings.showProfileAction) {
 			model.showProfile(for: member.id)
 		}
-		/* A plain click opens the profile once the double-click interval has
-		 passed without a second click; the double click itself is the list's
-		 own primary action and opens the conversation. Both gestures run
-		 alongside the list's click rather than instead of it, so selection --
-		 Command and Shift clicks included -- stays the list's, and a modified
-		 click opens nothing. Hovering used to open the popover after a second,
-		 which meant one timer per row and popovers that opened while the
-		 pointer was passing through. */
+		/* A plain click opens the profile at once; the double click is the
+		 list's own primary action, opens the conversation, and takes the
+		 first click's popover down. Waiting out the double-click interval
+		 before opening made the profile trail the click by however long the
+		 reader's Double-click speed is set to. Both gestures run alongside
+		 the list's click rather than instead of it, so selection -- Command
+		 and Shift clicks included -- stays the list's, and a modified click
+		 opens nothing. */
 		.simultaneousGesture(TapGesture(count: 2).onEnded {
-			model.cancelPendingProfile()
+			model.hideProfile()
 		})
 		.simultaneousGesture(TapGesture().onEnded {
 			guard clickOffersProfile else { return }
-			model.scheduleProfile(for: member.id, after: .seconds(NSEvent.doubleClickInterval))
+			model.showProfile(for: member.id)
 		})
 		.onDisappear {
 			model.endProfileInteraction(with: member.id)
@@ -167,14 +178,14 @@ private struct MemberListRowView: View {
 			MemberListUserInfoView(
 				content: MemberListUserInfoContent(
 					member: member,
-					privileges: MemberListPresentation.privilegesDescription(for: member)
+					privileges: MemberListStrings.privilegeDescription(for: displayRank)
 				)
 			)
 		}
 		.dropDestination(for: URL.self) { urls, _ in
 			let files = urls.filter(\.isFileURL).map(\.path)
 			guard files.isEmpty == false else { return false }
-			AppController.shared.menuController?.memberSendDroppedFiles(files, to: user.nickname)
+			AppController.shared.menuController?.actionCoordinator.sendDroppedFiles(files, nickname: user.nickname)
 			return true
 		}
 	}
@@ -209,22 +220,24 @@ private struct MemberListRowView: View {
 	}
 
 	private var displayRank: UserRank {
-		MemberListPresentation.displayRank(for: member)
+		style.displayRank(isIRCOperator: user.isIRCop, channelRank: member.rank)
 	}
 
 	private var accessibilityDescription: String {
-		var description = AccessibilityStrings.userListEntry(for: user.nickname)
-		description += ", \(MemberListPresentation.privilegesDescription(for: member))"
+		var phrases = [
+			AccessibilityStrings.userListEntry(for: user.nickname),
+			MemberListStrings.privilegeDescription(for: displayRank),
+		]
 		if user.isAway {
-			description += ", \(MemberListStrings.userIsAway)"
+			phrases.append(MemberListStrings.userIsAway)
 		}
 		if user.isBot {
-			description += ", \(MemberListStrings.userIsBot)"
+			phrases.append(MemberListStrings.userIsBot)
 		}
 		if let account = user.account, account.isEmpty == false {
-			description += ", \(MemberListStrings.loggedIn(account: account))"
+			phrases.append(MemberListStrings.loggedIn(account: account))
 		}
-		return description
+		return phrases.formatted(.list(type: .and))
 	}
 }
 
@@ -252,58 +265,15 @@ private struct MemberListContextMenu: View {
 	}
 }
 
+/// What a member is called outside the list, where there is one member to draw
+/// rather than a column of them and no snapshot in hand.
 enum MemberListPresentation {
-	/** The rank a row stands for.
-
-	 One answer for the glyph, the tooltip, the accessibility label and the
-	 profile: with server staff sorted to the top, an IRC operator is drawn as
-	 one whatever the channel gave them, and a label that named the channel
-	 rank instead disagreed with the glyph beside it. */
 	static func displayRank(for member: ChannelUser) -> UserRank {
-		/* The shared main-actor store, not a detached read: this is asked once
-		 for the glyph, once for the tooltip and once for the accessibility
-		 label of every visible row, and each detached read builds its own
-		 handle on the defaults suite. */
-		if member.user.isIRCop, Preferences.Appearance.memberListSortFavorsServerStaff.value {
-			return .irCopByMode
-		}
-		return member.rank
+		MemberListPresentationStyle.current()
+			.displayRank(isIRCOperator: member.user.isIRCop, channelRank: member.rank)
 	}
 
 	static func privilegesDescription(for member: ChannelUser) -> String {
 		MemberListStrings.privilegeDescription(for: displayRank(for: member))
-	}
-
-	static func symbolName(for rank: UserRank) -> String? {
-		switch rank {
-		case .irCopByMode: "checkmark.shield.fill"
-		case .channelOwner: "crown.fill"
-		case .superOperator: "star.fill"
-		case .normalOperator: "shield.fill"
-		case .halfOperator: "shield.lefthalf.filled"
-		case .voiced: "mic.fill"
-		/* "Use an x to indicate a user with no mode set", as the preference
-		 offers it: a rank column that is blank for most of a channel reads as
-		 unfinished to the readers who asked for the mark. */
-		default: Preferences.Appearance.memberListNoModeSymbol.value ? "xmark" : nil
-		}
-	}
-
-	static func color(for rank: UserRank) -> Color {
-		guard let badge = badge(for: rank) else { return .secondary }
-		let color = TextualUserDefaults.container.color(for: badge.preferenceKey)
-		return color.alphaComponent > 0 ? Color(nsColor: color) : .secondary
-	}
-
-	private static func badge(for rank: UserRank) -> UserListModeBadge? {
-		switch rank {
-		case .irCopByMode: .ircOperator
-		case .channelOwner: .channelOwner
-		case .superOperator: .superOperator
-		case .normalOperator: .normalOperator
-		case .halfOperator: .halfOperator
-		case .voiced: .voiced
-		default: nil
-		}
 	}
 }

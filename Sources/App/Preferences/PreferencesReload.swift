@@ -54,7 +54,6 @@ public struct PreferencesReloadAction: OptionSet, Sendable {
 	public static let dockIconBadges = Self(rawValue: 1 << 2)
 	public static let highlightKeywords = Self(rawValue: 1 << 3)
 	public static let highlightLogging = Self(rawValue: 1 << 4)
-	public static let ircCommandCache = Self(rawValue: 1 << 5)
 	public static let inputHistoryScope = Self(rawValue: 1 << 6)
 	public static let logTranscripts = Self(rawValue: 1 << 7)
 	public static let memberList = Self(rawValue: 1 << 9)
@@ -72,13 +71,13 @@ public struct PreferencesReloadAction: OptionSet, Sendable {
 
 @MainActor
 public extension TextualPreferences {
-	class func performReloadAction(forKeys keys: [String]) {
+	static func performReloadAction(forKeys keys: [String]) {
 		performReloadAction(reloadAction(forKeys: keys))
 	}
 
 	/// The mapping is kept separate from performing it so it can be checked
 	/// without a main window.
-	class func reloadAction(forKeys keys: [String]) -> PreferencesReloadAction {
+	static func reloadAction(forKeys keys: [String]) -> PreferencesReloadAction {
 		var reloadAction: PreferencesReloadAction = []
 
 		if keys.contains(where: styleReloadKeys.contains) {
@@ -130,10 +129,6 @@ public extension TextualPreferences {
 			reloadAction.insert(.serverListUnreadBadges)
 		}
 
-		if keys.contains(Preferences.Commands.developerMode.name) {
-			reloadAction.insert(.ircCommandCache)
-		}
-
 		if keys.contains(Preferences.Logging.scrollbackSaveLimit.name) {
 			reloadAction.insert(.scrollbackSaveLimit)
 		}
@@ -146,7 +141,7 @@ public extension TextualPreferences {
 			reloadAction.insert(.logTranscripts)
 		}
 
-		if keys.contains(IRCWorldClientListDefaultsKey) {
+		if keys.contains(worldClientListDefaultsKey) {
 			reloadAction.insert(.serverList)
 		}
 
@@ -154,18 +149,18 @@ public extension TextualPreferences {
 		return reloadAction
 	}
 
-	class func performReloadAction(_ reloadAction: PreferencesReloadAction) {
+	static func performReloadAction(_ reloadAction: PreferencesReloadAction) {
 		performReloadAction(reloadAction, forKey: nil)
 	}
 
-	class func performReloadAction(_ reloadAction: PreferencesReloadAction, forKey key: String?) {
+	static func performReloadAction(_ reloadAction: PreferencesReloadAction, forKey key: String?) {
 		let didReloadActiveStyle = reloadInterface(for: reloadAction, changedKey: key)
 		reloadMemberOrderingAndHighlights(for: reloadAction)
 		reloadInputAndStorage(for: reloadAction, didReloadActiveStyle: didReloadActiveStyle)
 		notifyPreferenceObservers(for: reloadAction)
 	}
 
-	private class func reloadInterface(
+	private static func reloadInterface(
 		for reloadAction: PreferencesReloadAction,
 		changedKey key: String?
 	) -> Bool {
@@ -215,7 +210,7 @@ public extension TextualPreferences {
 			}
 		} else if reloadAction.contains(.serverListUnreadBadges) {
 			if didReloadUserInterface == false {
-				(serverList as ServerList?)?.refreshAllDrawings()
+				serverList?.setNeedsRefresh()
 			}
 		}
 
@@ -228,7 +223,7 @@ public extension TextualPreferences {
 		return didReloadActiveStyle
 	}
 
-	private class func reloadMemberOrderingAndHighlights(for reloadAction: PreferencesReloadAction) {
+	private static func reloadMemberOrderingAndHighlights(for reloadAction: PreferencesReloadAction) {
 		let appController: ApplicationController = AppController.shared
 		let memberList = appController.mainWindow?.memberList
 
@@ -263,7 +258,7 @@ public extension TextualPreferences {
 		}
 	}
 
-	private class func reloadInputAndStorage(
+	private static func reloadInputAndStorage(
 		for reloadAction: PreferencesReloadAction,
 		didReloadActiveStyle: Bool
 	) {
@@ -287,11 +282,7 @@ public extension TextualPreferences {
 		}
 
 		if reloadAction.contains(.inputHistoryScope) {
-			mainWindow.inputHistoryManager().noteInputHistoryObjectScopeDidChange()
-		}
-
-		if reloadAction.contains(.ircCommandCache) {
-			CommandIndex.invalidateCaches()
+			mainWindow.inputHistory.noteInputHistoryObjectScopeDidChange()
 		}
 
 		if reloadAction.contains(.logTranscripts) {
@@ -305,7 +296,7 @@ public extension TextualPreferences {
 		}
 
 		if reloadAction.contains(.scrollbackSaveLimit) {
-			LogControllerHistoricLogFile.shared().resetMaximumLineCount()
+			LogControllerHistoricLogFile.shared.resetMaximumLineCount()
 		}
 
 		if reloadAction.contains(.scrollbackVisibleLimit) {
@@ -319,7 +310,7 @@ public extension TextualPreferences {
 		}
 	}
 
-	private class func notifyPreferenceObservers(for reloadAction: PreferencesReloadAction) {
+	private static func notifyPreferenceObservers(for reloadAction: PreferencesReloadAction) {
 		if reloadAction.contains(.preferencesChanged) {
 			let appController: ApplicationController = AppController.shared
 			guard let mainWindow = appController.mainWindow else { return }
@@ -329,7 +320,7 @@ public extension TextualPreferences {
 		}
 	}
 
-	private class var styleReloadKeys: Set<String> {
+	private static var styleReloadKeys: Set<String> {
 		[
 			Preferences.Theme.transcriptTheme.name,
 			Preferences.Messages.filterUnicodeTextSpam.name,
@@ -341,7 +332,7 @@ public extension TextualPreferences {
 		]
 	}
 
-	private class var memberListReloadKeys: Set<String> {
+	private static var memberListReloadKeys: Set<String> {
 		Set(UserListModeBadge.allCases.map(\.preferenceKey.name))
 			.union([Preferences.Appearance.memberListNoModeSymbol.name])
 	}

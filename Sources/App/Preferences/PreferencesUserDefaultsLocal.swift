@@ -41,11 +41,11 @@ import Foundation
  name against every entry with a per-entry comparator. They are now answered by
  the key declarations, which is the same data without the second copy. */
 public extension TextualUserDefaults {
-	class func keyAppearsInPreferenceCatalog(_ defaultName: String) -> Bool {
+	static func keyAppearsInPreferenceCatalog(_ defaultName: String) -> Bool {
 		Preferences.isCatalogued(defaultName)
 	}
 
-	class func keyIsExcludedFromContainer(_ defaultName: String) -> Bool {
+	static func keyIsExcludedFromContainer(_ defaultName: String) -> Bool {
 		Preferences.storage(for: defaultName) == .standard
 	}
 }

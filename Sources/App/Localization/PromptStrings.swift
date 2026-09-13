@@ -100,14 +100,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 	}
 
 	enum Application {
-		static var continueWithAnotherInstanceBody: String {
-			String(localized: .Prompts.areYouSureYouWantToContinue)
-		}
-
-		static var continueWithAnotherInstanceTitle: String {
-			String(localized: .Prompts.preferencesMayBecomeCorruptedIf)
-		}
-
 		static var quitBody: String {
 			String(localized: .Prompts.quittingWillDisconnectYouFromAny)
 		}
@@ -180,8 +172,10 @@ nonisolated enum PromptStrings { // nonisolated: value
 	}
 
 	enum Deletion {
-		static var confirmationTitle: String {
-			String(localized: .Prompts.doYouWantToDelete)
+		/// Names what is about to be deleted: a confirmation that says only
+		/// "the selection" leaves the reader to work out what they clicked.
+		static func confirmationTitle(named name: String) -> String {
+			String(localized: .Prompts.doYouWantToDeleteNamed(name))
 		}
 
 		static func warning(for target: PromptDeletionTarget) -> String {
@@ -242,20 +236,6 @@ nonisolated enum PromptStrings { // nonisolated: value
 		static func scriptInstalledTitle(name: String) -> String {
 			String(localized: .Prompts.scriptNamedHasBeenSuccessfullyInstalled(name))
 		}
-
-		static func scriptSavePanelBody(bundleIdentifier: String) -> String {
-			String(localized: .Prompts.toInstallThisScriptSave(bundleIdentifier))
-		}
-	}
-
-	enum ExternalApplication {
-		static func body(url: String) -> String {
-			String(localized: .Prompts.areYouSureYouWant(url))
-		}
-
-		static func title(applicationName: String) -> String {
-			String(localized: .Prompts.youHaveClickedOnALink(applicationName))
-		}
 	}
 
 	enum Logging {
@@ -280,7 +260,7 @@ nonisolated enum PromptStrings { // nonisolated: value
 		}
 
 		static var scrollbackFailureTitle: String {
-			String(localized: .Prompts.processResponsibleForManagingScrollback)
+			String(localized: .Prompts.couldNotOpenSavedConversationHistory)
 		}
 
 		static var staleLocationBody: String {
@@ -367,6 +347,10 @@ nonisolated enum PromptStrings { // nonisolated: value
 	enum VirtualHost {
 		static var body: String {
 			String(localized: .Prompts.pleaseEnterDesiredVhostEG)
+		}
+
+		static var placeholder: String {
+			String(localized: .Prompts.vhostPlaceholder)
 		}
 
 		static var title: String {

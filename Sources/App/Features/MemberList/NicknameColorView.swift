@@ -1,13 +1,6 @@
 /* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\__|\__,_|\__,_|_|
- *
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
- *
+ * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
 import AppKit
@@ -16,56 +9,67 @@ import SwiftUI
 @MainActor
 struct NicknameColorView: View {
 	@Bindable var model: NicknameColorModel
-
-	let content: NicknameColorContent
-	let selectColor: @MainActor @Sendable (NSColor) -> Void
-	let setUsesDefaultColor: @MainActor @Sendable (Bool) -> Void
-	let save: @MainActor @Sendable () -> Void
-	let cancel: @MainActor @Sendable () -> Void
+	let changeColor: @MainActor () -> Void
+	let cancel: @MainActor () -> Void
 
 	private var selectedColor: Binding<Color> {
 		Binding(
 			get: { Color(nsColor: model.selectedColor) },
-			set: { selectColor(NSColor($0)) }
+			set: { model.selectColor(NSColor($0)) }
 		)
 	}
 
 	private var usesDefaultColor: Binding<Bool> {
 		Binding(
 			get: { model.usesDefaultColor },
-			set: setUsesDefaultColor
+			set: model.setUsesDefaultColor
 		)
 	}
 
 	var body: some View {
-		VStack(spacing: 18) {
-			HStack(spacing: 12) {
-				ColorPicker(content.colorPickerLabel, selection: selectedColor)
+		VStack(alignment: .leading, spacing: UISpacing.loose) {
+			Text(verbatim: NicknameColorStrings.windowTitle(nickname: model.nickname))
+				.font(.headline)
+
+			/* The nickname as the transcript will draw it, in the colour being
+			 chosen: a swatch in a picker says nothing about whether the name is
+			 legible where it is read. */
+			Text(verbatim: model.nickname)
+				.font(.body.weight(.semibold))
+				.foregroundStyle(Color(nsColor: model.previewColor))
+				.lineLimit(1)
+				.truncationMode(.tail)
+				.frame(maxWidth: .infinity, alignment: .leading)
+				.padding(.vertical, UISpacing.regular)
+				.padding(.horizontal, UISpacing.wide)
+				.background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+				.accessibilityLabel(
+					NicknameColorStrings.previewAccessibilityLabel(nickname: model.nickname)
+				)
+
+			HStack(spacing: UISpacing.wide) {
+				ColorPicker(NicknameColorStrings.colorPickerLabel, selection: selectedColor)
 					.disabled(model.usesDefaultColor)
-					.accessibilityHint(Text(verbatim: content.colorPickerAccessibilityHint))
+					.accessibilityHint(Text(verbatim: NicknameColorStrings.colorPickerAccessibilityHint))
 
 				Toggle(isOn: usesDefaultColor) {
-					Text(verbatim: content.useDefaultColorTitle)
+					Text(verbatim: NicknameColorStrings.useDefaultColorTitle)
 				}
-				.accessibilityHint(Text(verbatim: content.useDefaultColorAccessibilityHint))
+				.accessibilityHint(Text(verbatim: NicknameColorStrings.useDefaultColorAccessibilityHint))
 			}
 
-			HStack(spacing: 8) {
+			HStack(spacing: UISpacing.regular) {
 				Spacer()
 
-				Button(action: cancel) {
-					Text(verbatim: content.cancelButtonTitle)
-				}
-				.keyboardShortcut(.cancelAction)
+				Button(PromptStrings.Action.cancel, action: cancel)
+					.keyboardShortcut(.cancelAction)
 
-				Button(action: save) {
-					Text(verbatim: content.saveButtonTitle)
-				}
-				.keyboardShortcut(.defaultAction)
+				Button(NicknameColorStrings.changeColor, action: changeColor)
+					.keyboardShortcut(.defaultAction)
 			}
 		}
-		.padding(20)
-		.frame(width: 390, height: 112)
+		.padding(UISpacing.loose + UISpacing.tight)
+		.frame(width: 390)
 		.onExitCommand(perform: cancel)
 	}
 }

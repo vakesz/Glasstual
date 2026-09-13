@@ -60,17 +60,17 @@ enum OutboundTypingPolicy {
 }
 
 public extension IRCClient {
-	func typingNotificationsAvailable(for channel: IRCChannel?) -> Bool {
+	func typingNotificationsAvailable(for channel: Channel?) -> Bool {
 		guard let channel, channel.isUtility == false else { return false }
 		guard channel.isChannel || channel.isPrivateMessage else { return false }
 		return isLoggedIn && isCapabilityEnabled(.messageTags)
 	}
 
-	func noteLocalUserTyping(_ text: String, in channel: IRCChannel?) {
+	func noteLocalUserTyping(_ text: String, in channel: Channel?) {
 		noteLocalUserTyping(text, in: channel, at: Date())
 	}
 
-	func noteLocalUserTyping(_ text: String, in channel: IRCChannel?, at date: Date) {
+	func noteLocalUserTyping(_ text: String, in channel: Channel?, at date: Date) {
 		guard typingNotificationsAvailable(for: channel), let channel else { return }
 
 		if OutboundTypingPolicy.shouldFinish(
@@ -96,7 +96,7 @@ public extension IRCClient {
 	}
 
 	/// Replaces the pending "paused" notification for `channel`.
-	private func scheduleTypingPause(for channel: IRCChannel) {
+	private func scheduleTypingPause(for channel: Channel) {
 		let key = channel.uniqueIdentifier
 		cancelTypingPause(forKey: key)
 
@@ -114,7 +114,7 @@ public extension IRCClient {
 		typingPauseTasks.removeValue(forKey: key)?.cancel()
 	}
 
-	func typingPauseTimerFired(_ channel: IRCChannel) {
+	func typingPauseTimerFired(_ channel: Channel) {
 		let key = channel.uniqueIdentifier
 		guard typingStateSent[key] == .active else { return }
 
@@ -128,7 +128,7 @@ public extension IRCClient {
 		}
 	}
 
-	func sendTypingDone(in channel: IRCChannel?) {
+	func sendTypingDone(in channel: Channel?) {
 		guard let channel else { return }
 		let key = channel.uniqueIdentifier
 
@@ -143,11 +143,11 @@ public extension IRCClient {
 		}
 	}
 
-	func localUserSentMessage(in channel: IRCChannel?) {
+	func localUserSentMessage(in channel: Channel?) {
 		sendTypingDone(in: channel)
 	}
 
-	func localUserClearedText(in channel: IRCChannel?) {
+	func localUserClearedText(in channel: Channel?) {
 		sendTypingDone(in: channel)
 	}
 }

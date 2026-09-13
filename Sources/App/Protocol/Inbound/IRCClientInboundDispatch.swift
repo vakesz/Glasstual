@@ -47,15 +47,6 @@ enum IRCClientHistoricMessagePolicy {
 	{
 		inReplayBatch || (isKnownBouncer && arrivedAt.timeIntervalSince(serverTime) > liveServerTimeTolerance)
 	}
-
-	static func shouldAdvanceServerTime(
-		isLoggedIn: Bool,
-		hasServerTime: Bool,
-		receivedTime: TimeInterval,
-		lastServerTime: TimeInterval
-	) -> Bool {
-		isLoggedIn && hasServerTime && receivedTime > lastServerTime
-	}
 }
 
 public extension IRCClient {
@@ -109,18 +100,14 @@ private extension IRCClient {
 	 was decided when it was parsed. */
 	func processIncomingMessageAttributes(_ message: Message) {
 		let receivedTime = message.receivedAt.timeIntervalSince1970
-		guard IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
-			isLoggedIn: isLoggedIn,
-			hasServerTime: message.hasServerTime,
-			receivedTime: receivedTime,
-			lastServerTime: lastMessageServerTime
-		) else { return }
+
+		guard isLoggedIn, message.hasServerTime, receivedTime > lastMessageServerTime else { return }
 
 		lastMessageServerTime = receivedTime
 	}
 
 	func dispatchRemoteCommand(_ message: Message) {
-		guard let command = IRCRemoteCommand(rawValue: CommandIndex.index(ofRemoteCommand: message.command)) else {
+		guard let command = IRCRemoteCommand(wireName: message.command) else {
 			return
 		}
 		if dispatchCoreRemoteCommand(command, message: message) {

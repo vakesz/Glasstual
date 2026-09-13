@@ -6,29 +6,6 @@
 import Darwin
 import Foundation
 
-/// Each recipient owns an independent scope count, including across retries.
-final nonisolated class FileTransferAccessLease: Sendable { // nonisolated: immutable
-	let url: URL
-	let isAccessing: Bool
-	private let stopAccess: @Sendable (URL) -> Void
-
-	init(
-		url: URL,
-		startAccess: @Sendable (URL) -> Bool = { $0.startAccessingSecurityScopedResource() },
-		stopAccess: @escaping @Sendable (URL) -> Void = { $0.stopAccessingSecurityScopedResource() }
-	) {
-		self.url = url
-		self.stopAccess = stopAccess
-		isAccessing = startAccess(url)
-	}
-
-	deinit {
-		if isAccessing {
-			stopAccess(url)
-		}
-	}
-}
-
 /// The descriptor, not its display path, is the authority for transfer I/O.
 public actor DCCTransferFile {
 	public nonisolated let path: String // nonisolated: let

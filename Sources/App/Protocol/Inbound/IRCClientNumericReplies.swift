@@ -3,7 +3,7 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
@@ -38,43 +38,40 @@
 
 import Foundation
 
-enum IRCNumericReplyPolicy {
-	static func requiresSpecialFiltering(_ numeric: UInt) -> Bool {
-		[
-			IRCNumeric.umodeis.rawValue, IRCNumeric.channelmodeis.rawValue, IRCNumeric.topic.rawValue,
-			IRCNumeric.topicwhotime.rawValue,
-		].contains(numeric)
-	}
-}
-
 @MainActor
 public extension IRCClient {
 	func receiveNumericReply(_ message: Message) {
-		let numeric = message.commandNumeric
-		if IRCNumeric.isErrorReply(numeric) {
+		let rawNumeric = message.commandNumeric
+
+		if IRCNumeric.isErrorReply(rawNumeric) {
 			receiveErrorNumericReply(message)
 			return
 		}
 
-		let shouldPrint = IRCNumericReplyPolicy.requiresSpecialFiltering(numeric) || postReceivedMessage(message)
-		if handleConnectionNumeric(numeric, message: message, shouldPrint: shouldPrint) {
-			return
-		}
-		if handleWhoisNumeric(numeric, message: message, shouldPrint: shouldPrint) {
-			return
-		}
-		if handleChannelNumeric(numeric, message: message, shouldPrint: shouldPrint) {
-			return
-		}
-		if handleTrackingNumeric(numeric, message: message, shouldPrint: shouldPrint) {
+		let numeric = IRCNumeric(rawValue: rawNumeric)
+		let shouldPrint = numeric?.requiresSpecialFiltering == true || postReceivedMessage(message)
+
+		if let numeric, let group = numeric.group {
+			switch group {
+			case .connection:
+				handleConnectionNumeric(numeric, message: message, shouldPrint: shouldPrint)
+			case .whois:
+				handleWhoisNumeric(numeric, message: message, shouldPrint: shouldPrint)
+			case .channel:
+				handleChannelNumeric(numeric, message: message, shouldPrint: shouldPrint)
+			case .presence:
+				handlePresenceTrackingNumeric(numeric, message: message, shouldPrint: shouldPrint)
+			case .authentication:
+				handleAuthenticationTrackingNumeric(numeric, message: message, shouldPrint: shouldPrint)
+			}
+
 			return
 		}
 
-		/* The wire token, not the number: `String(numeric)` dropped the leading
-		 zeros a numeric is always written with, so a plugin subscribed to "001"
-		 was never asked about one. `PluginItem` stores what it subscribed to
-		 lowercased, which for a three-digit numeric changes nothing but is the
-		 contract the set is keyed by. */
+		/* A plugin subscribes by the wire token, which keeps the leading zeros a
+		 numeric is always written with: "001", never "1". `PluginItem` stores
+		 the subscription lowercased, which is the contract the set is keyed
+		 by. */
 		let subscribedCommand = message.command.lowercased()
 		guard !SharedApplication.sharedPluginManager().supportedServerInputCommands
 			.contains(subscribedCommand)

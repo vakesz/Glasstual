@@ -149,7 +149,7 @@ struct ChatFilter: Identifiable {
 	}
 
 	var description: String {
-		String(localized: .TPIChatFilterExtension.filterDescription(title))
+		String(localized: .ChatFilter.filterDescription(title))
 	}
 
 	var dictionaryValue: [String: PropertyListValue] {

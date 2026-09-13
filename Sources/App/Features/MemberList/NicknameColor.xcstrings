@@ -1,0 +1,90 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "change-color": {
+      "comment": "Button that applies the chosen nickname color.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Color"
+          }
+        }
+      }
+    },
+    "color-picker-accessibility-hint": {
+      "comment": "Accessibility hint for the nickname color picker.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a custom color for this nickname."
+          }
+        }
+      }
+    },
+    "color-picker-label": {
+      "comment": "Label of the nickname color picker.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color"
+          }
+        }
+      }
+    },
+    "preview-accessibility-label": {
+      "comment": "Accessibility label of the live nickname preview. The argument is the nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview of %@ in the chosen color"
+          }
+        }
+      }
+    },
+    "use-default-color": {
+      "comment": "Title of the toggle that removes a custom nickname color.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use default color"
+          }
+        }
+      }
+    },
+    "use-default-color-accessibility-hint": {
+      "comment": "Accessibility hint for the default nickname color toggle.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the custom color override for this nickname."
+          }
+        }
+      }
+    },
+    "window-title": {
+      "comment": "Title of the nickname color sheet, which was untitled and never said whose color it was changing. The argument is the nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color for “%@”"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

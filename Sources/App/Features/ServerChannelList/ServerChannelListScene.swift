@@ -10,7 +10,7 @@ struct ServerChannelListApplicationScene: Scene {
 
 	var body: some Scene {
 		WindowGroup(
-			ServerChannelListStrings.channelListAccessibilityLabel,
+			ServerChannelListStrings.windowGroupTitle,
 			id: ApplicationSceneID.serverChannelList,
 			for: String.self
 		) { clientIdentifier in
@@ -20,12 +20,13 @@ struct ServerChannelListApplicationScene: Scene {
 			)
 		}
 		.defaultSize(width: 720, height: 420)
-		.windowResizability(.contentSize)
+		/* A table of a whole network's channels: the window has a floor, not a
+		 ceiling, and the reader is the one who decides how much of it to see. */
+		.windowResizability(.contentMinSize)
 	}
 }
 
 private struct ServerChannelListSceneRoot: View {
-	@Environment(\.dismissWindow) private var dismissWindow
 	let clientIdentifier: String?
 	let scenes: ApplicationScenes
 
@@ -35,31 +36,26 @@ private struct ServerChannelListSceneRoot: View {
 		{
 			ServerChannelListView(
 				model: session.model,
-				networkName: session.networkName,
 				supportsMinimumUserCount: session.supportsMinimumUserCount,
 				joinSelected: session.joinSelectedChannels,
-				activate: session.activate,
-				update: session.beginRefresh,
-				close: {
-					dismissWindow(id: ApplicationSceneID.serverChannelList, value: clientIdentifier)
-				}
+				update: session.beginRefresh
 			)
-			.frame(
-				minWidth: 600,
-				idealWidth: 720,
-				maxWidth: 1024,
-				minHeight: 320,
-				idealHeight: 420,
-				maxHeight: 720
+			.frame(minWidth: 600, idealWidth: 720, minHeight: 320, idealHeight: 420)
+			/* The network names the window; how much of it arrived is a subtitle,
+			 and it counts what the window kept rather than what the search field
+			 has narrowed the table to. */
+			.navigationTitle(session.networkName)
+			.navigationSubtitle(
+				ServerChannelListStrings.windowSubtitle(publicChannelCount: session.model.keptEntryCount)
 			)
-			.navigationTitle(ServerChannelListStrings.windowTitle(publicChannelCount: session.model.rows.count))
 			.onDisappear {
 				scenes.serverChannelListDidClose(for: clientIdentifier)
 			}
 		} else {
 			ContentUnavailableView(
-				ServerChannelListStrings.channelListAccessibilityLabel,
-				systemImage: "number"
+				ServerChannelListStrings.noChannelListTitle,
+				systemImage: "number",
+				description: Text(verbatim: ServerChannelListStrings.noChannelListDescription)
 			)
 			.frame(minWidth: 600, minHeight: 320)
 		}

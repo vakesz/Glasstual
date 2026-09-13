@@ -94,15 +94,11 @@ struct MainWindowInputAccessoryView: View {
 	private var replyBanner: some View {
 		HStack(spacing: UISpacing.tight) {
 			Image(systemName: "arrowshape.turn.up.left")
-				.font(.system(size: 12, weight: .medium))
+				.font(.caption.weight(.medium))
 				.foregroundStyle(.secondary)
 				.accessibilityHidden(true)
 
-			Text(replyText)
-				.font(.caption)
-				.lineLimit(1)
-				.truncationMode(.tail)
-				.help(model.replyExcerpt ?? "")
+			replyLabel
 
 			Spacer(minLength: UISpacing.tight)
 
@@ -113,10 +109,29 @@ struct MainWindowInputAccessoryView: View {
 			.labelStyle(.iconOnly)
 			.buttonStyle(.plain)
 			.foregroundStyle(.secondary)
+			.help(MainWindowStrings.Reply.cancel)
 		}
 		.padding(.horizontal, UISpacing.wide)
 		.frame(height: MainWindowInputBarLayout.replyBannerHeight)
 		.glassEffect(.regular, in: .rect(cornerRadius: 8))
+	}
+
+	/** The banner's own text, with the message it is quoting as its tooltip.
+
+	 Only where there is one to show: `help("")` installs an empty tooltip,
+	 which AppKit draws as an empty yellow box over the banner. */
+	@ViewBuilder
+	private var replyLabel: some View {
+		let label = Text(replyText)
+			.font(.caption)
+			.lineLimit(1)
+			.truncationMode(.tail)
+
+		if let excerpt = model.replyExcerpt, excerpt.isEmpty == false {
+			label.help(excerpt)
+		} else {
+			label
+		}
 	}
 
 	private var replyText: AttributedString {
@@ -138,7 +153,7 @@ struct MainWindowInputAccessoryView: View {
 			/* The dots pulse forever, which is exactly what Reduce Motion asks
 			 an interface not to do; the row itself still says who is typing. */
 			Image(systemName: "ellipsis")
-				.font(.system(size: 13, weight: .bold))
+				.font(.footnote.bold())
 				.symbolEffect(
 					.variableColor.cumulative.reversing,
 					options: reduceMotion ? .nonRepeating : .repeating

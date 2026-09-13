@@ -56,6 +56,36 @@ struct ThemePaletteContrastTests {
 		}
 	}
 
+	/** The increased-contrast pair is what the system's Increase Contrast
+	 setting asks for, so it is held to the AAA minimum rather than the AA one
+	 the ordinary pair clears — otherwise turning the setting on would promise
+	 something it does not give. */
+	@Test("Every role clears AAA contrast once increased contrast is asked for")
+	func highContrastRolesClearAAAContrast() {
+		let palette = TranscriptTheme.defaultPalette
+
+		for isDark in [false, true] {
+			let ground = palette.background.resolved(isDark: isDark, increasesContrast: true)
+
+			for role in textRoles {
+				let ratio = palette[keyPath: role.color]
+					.resolved(isDark: isDark, increasesContrast: true)
+					.contrastRatio(against: ground)
+				#expect(ratio >= 7, "\(role.name) on the \(isDark ? "dark" : "light") ground: \(ratio)")
+			}
+
+			let highlight = palette.highlightText.resolved(isDark: isDark, increasesContrast: true)
+				.contrastRatio(against: palette.highlightBackground.resolved(isDark: isDark, increasesContrast: true))
+			#expect(highlight >= 7, "highlightText on the \(isDark ? "dark" : "light") highlight: \(highlight)")
+
+			for bubble in [palette.bubbleIncoming, palette.bubbleOutgoing] {
+				let ratio = palette.primaryText.resolved(isDark: isDark, increasesContrast: true)
+					.contrastRatio(against: bubble.resolved(isDark: isDark, increasesContrast: true))
+				#expect(ratio >= 7, "primaryText on a \(isDark ? "dark" : "light") bubble: \(ratio)")
+			}
+		}
+	}
+
 	/// The clock is meant to recede behind the names and the message it labels;
 	/// what it may not do is recede out of legibility.
 	@Test("The timestamp is quieter than the secondary text it used to share")

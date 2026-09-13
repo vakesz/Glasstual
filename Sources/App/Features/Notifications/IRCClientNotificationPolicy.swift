@@ -49,6 +49,24 @@ enum IRCNotificationSoundPlayback: Equatable {
 	case silent
 }
 
+/** What the system does with the sound a notification carries.
+
+ The two reasons it might not play one are not the same decision. Sounds
+ switched off for the application leave the notification itself delivered, so
+ an application that wants to be heard has to play the sound; permission
+ refused means no notification is delivered at all, and a sound played anyway
+ sounds through Do Not Disturb and a Focus — which is the state the person
+ chose when they refused. */
+enum NotificationSoundDelivery: Equatable {
+	/// Notifications are delivered and their sound is on.
+	case system
+	/// Notifications are delivered, but their sound is switched off for the
+	/// application in System Settings.
+	case silenced
+	/// Permission is refused, so nothing is delivered.
+	case refused
+}
+
 enum IRCNotificationAdmission: Equatable {
 	case discard
 	case handled
@@ -60,7 +78,6 @@ struct IRCNotificationAdmissionContext {
 	let isTerminating: Bool
 	let isCollapsingNetsplit: Bool
 	let nicknameIsLocalUser: Bool
-	let outputIsSuppressed: Bool
 	let targetIgnoresHighlights: Bool
 	let targetDisablesPush: Bool
 }
@@ -87,10 +104,6 @@ enum IRCNotificationPolicy {
 		}
 
 		if isTextEvent(context.event), context.nicknameIsLocalUser {
-			return .discard
-		}
-
-		if context.outputIsSuppressed {
 			return .discard
 		}
 
@@ -135,24 +148,30 @@ enum IRCNotificationPolicy {
 	 A notification is where a sound belongs: the system applies Do Not Disturb,
 	 the alert volume and the notification's own settings to it, none of which an
 	 `AudioServicesPlayAlertSound` played behind its back honours. The
-	 application plays one itself only where the system will not — permission
-	 refused, or sounds switched off for the application.
+	 application plays one itself only where the notification is delivered but
+	 its sound is not — and never where permission is refused, because then
+	 there is no notification to replace and nothing the person has agreed to
+	 hear.
 
-	 `systemPlaysNotificationSounds` is `nil` until the first settings read
-	 answers, which is a moment after launch. Reading that as "the system will
-	 not" is what would play the first sounds of a session twice: once here and
-	 once from the notification the system had every right to sound. */
+	 `systemSoundDelivery` is `nil` until the first settings read answers, which
+	 is a moment after launch. Reading that as "the system will not" is what
+	 would play the first sounds of a session twice: once here and once from the
+	 notification the system had every right to sound. */
 	static func soundPlayback(
 		soundName: String?,
 		isMuted: Bool,
 		isOnlySpoken: Bool,
-		systemPlaysNotificationSounds: Bool?
+		systemSoundDelivery: NotificationSoundDelivery?
 	) -> IRCNotificationSoundPlayback {
 		guard isMuted == false, soundName != nil, isOnlySpoken == false else {
 			return .silent
 		}
 
-		return systemPlaysNotificationSounds == false ? .byApplication : .withNotification
+		return switch systemSoundDelivery {
+		case .silenced: .byApplication
+		case .refused: .silent
+		case .system, nil: .withNotification
+		}
 	}
 
 	static func notificationUserInfo(
@@ -160,19 +179,6 @@ enum IRCNotificationPolicy {
 		channelIdentifier: String?
 	) -> NotificationPayload {
 		NotificationPayload(clientIdentifier: clientIdentifier, channelIdentifier: channelIdentifier)
-	}
-
-	static func textEventDescription(
-		lineType: LogLineType,
-		nickname: String,
-		formattedNickname: String,
-		text: String
-	) -> String {
-		if lineType == .action || lineType == .actionNoHighlight {
-			return NotificationStrings.actionBody(nickname: nickname, text: text)
-		}
-
-		return NotificationStrings.messageBody(formattedNickname: formattedNickname, text: text)
 	}
 }
 

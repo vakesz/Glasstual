@@ -16,15 +16,15 @@ enum HistoryRelaunchScenario {
 		try await driver.wait("relaunch main window") { deadline in
 			try driver.identified("main-window", from: driver.root, deadline: deadline) != nil
 		}
-		let probe = try await AppSession.startProbe(prefix: "relaunch-", driver: driver)
+		let probe = try await AppSession.startProbe(driver: driver)
 		try await driver.selectChannel("#e2e", joined: false)
 		try await driver.waitForConnectionStatus(connected: false, channel: "#e2e")
 		for marker in ["E2E_TYPED_MESSAGE", "E2E_SERVER_REPLY", "E2E_REPLY_ACK"] {
 			try await driver.waitForTranscript(marker)
 		}
 		try await Task.sleep(for: .seconds(2))
-		try await AppSession.stopProbe(probe, prefix: "relaunch-", driver: driver)
-		let quitSeconds = try await AppSession.quitAndVerify(app, driver: driver, prefix: "relaunch-")
+		try await AppSession.stopProbe(probe, driver: driver)
+		let quitSeconds = try await AppSession.quitAndVerify(app, driver: driver)
 		let evidence: [String: Any] = ["firstPID": previous.processIdentifier, "relaunchPID": app.processIdentifier,
 		                               "historyTranscript": true, "disconnected": true,
 		                               "exitReason": "exit", "exitStatus": app.terminationStatus,

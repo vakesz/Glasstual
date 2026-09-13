@@ -43,33 +43,45 @@ struct ChannelJoinBurstPolicyTests {
 /** What the server says has been read is the only thing that survives the
  suppressed burst, so the comparison against the marker has to include the
  marker itself: a line at the marker is the last line the user read. */
+@MainActor
 @Suite("Read marker line policy")
-struct ChannelReadMarkerPolicyTests {
+struct ChannelReadMarkerTests {
 	private let marker = Date(timeIntervalSince1970: 1_700_000_000)
 
+	/// Asks a client whether a line stamped `receivedAt` arrives already seen,
+	/// with `marker` standing for what the server last reported as read.
+	private func lineIsRead(receivedAt: Date, marker: Date?) throws -> Bool {
+		let client = TestClient(configDictionary: ["nickname": "me"])
+		let channel = try #require(client.findChannelOrCreate("#channel"))
+
+		if let marker {
+			client.readMarkerSentDates[channel.uniqueIdentifier] = marker
+		}
+
+		let message = try #require(Message(line: ":a!u@h PRIVMSG #channel :hello", on: client))
+
+		message.receivedAt = receivedAt
+
+		return client.lineArrivedAlreadySeen(message, in: channel)
+	}
+
 	@Test("With no marker nothing is known to have been read")
-	func nothingIsReadWithoutAMarker() {
-		#expect(ChannelReadMarkerPolicy.lineIsRead(receivedAt: marker, marker: nil) == false)
+	func nothingIsReadWithoutAMarker() throws {
+		try #expect(lineIsRead(receivedAt: marker, marker: nil) == false)
 	}
 
 	@Test("A line before the marker is read")
-	func linesBeforeTheMarkerAreRead() {
-		#expect(ChannelReadMarkerPolicy.lineIsRead(
-			receivedAt: marker.addingTimeInterval(-1),
-			marker: marker
-		))
+	func linesBeforeTheMarkerAreRead() throws {
+		try #expect(lineIsRead(receivedAt: marker.addingTimeInterval(-1), marker: marker))
 	}
 
 	@Test("A line at the marker is read")
-	func linesAtTheMarkerAreRead() {
-		#expect(ChannelReadMarkerPolicy.lineIsRead(receivedAt: marker, marker: marker))
+	func linesAtTheMarkerAreRead() throws {
+		try #expect(lineIsRead(receivedAt: marker, marker: marker))
 	}
 
 	@Test("A line after the marker is unread")
-	func linesAfterTheMarkerAreUnread() {
-		#expect(ChannelReadMarkerPolicy.lineIsRead(
-			receivedAt: marker.addingTimeInterval(0.001),
-			marker: marker
-		) == false)
+	func linesAfterTheMarkerAreUnread() throws {
+		try #expect(lineIsRead(receivedAt: marker.addingTimeInterval(0.001), marker: marker) == false)
 	}
 }

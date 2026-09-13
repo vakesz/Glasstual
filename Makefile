@@ -13,10 +13,10 @@ E2E_OUTPUT ?= build/e2e
 GENERATED_XCODE_DIR := Generated/Xcode
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
 
-.PHONY: help generate validate-generated-metadata build release archive run test tsan smoke e2e e2e-fixtures coverage lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate validate-generated-metadata build archive run test tsan smoke e2e e2e-fixtures coverage lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
-	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-27s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 ensure-xcodegen:
 	@command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
@@ -38,9 +38,6 @@ validate-generated-metadata: ## Validate XcodeGen-owned Info.plists and entitlem
 
 build: generate ## Build the app (CONFIG=Debug|Release)
 	$(XCODEBUILD) -configuration $(CONFIG) build
-
-release: ## Build a Release configuration
-	$(MAKE) build CONFIG=Release
 
 archive: generate ## Create a Release archive in build/
 	$(XCODEBUILD) -configuration Release -archivePath build/Glasstual.xcarchive archive
@@ -67,7 +64,7 @@ tsan: generate ## Run the test suite under ThreadSanitizer (local only, not in C
 smoke: ## Seeded 40s launch with an accessibility probe (see scripts/smoke.sh)
 	./scripts/smoke.sh
 
-e2e: generate ## Real-app Swift Testing gate (disposable GUI login + AX grant; see Documentation/E2E.md)
+e2e: generate ## Real-app Swift Testing gate (disposable GUI login + AX grant)
 	E2E_APP="$(abspath $(E2E_APP))" E2E_OUTPUT="$(abspath $(E2E_OUTPUT))" \
 		DERIVED_DATA="$(abspath $(DERIVED_DATA))" bash scripts/e2e.sh
 

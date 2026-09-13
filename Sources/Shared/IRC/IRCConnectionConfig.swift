@@ -65,11 +65,7 @@ public nonisolated enum IRCConnectionDefaults { // nonisolated: value
 	public static let serverPortSecure: UInt16 = 6697
 	public static let proxyPort: UInt16 = 1080
 	public static let floodControlDelayInterval: UInt = 2
-	public static let minimumFloodControlDelayInterval: UInt = 1
-	public static let maximumFloodControlDelayInterval: UInt = 60
 	public static let floodControlMaximumMessages: UInt = 6
-	public static let minimumFloodControlMaximumMessages: UInt = 1
-	public static let maximumFloodControlMaximumMessages: UInt = 60
 }
 
 /** What one socket needs to reach one endpoint.
@@ -105,11 +101,6 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		didSet { floodControlMaximumMessages = Self.clampedFloodValue(floodControlMaximumMessages, oldValue) }
 	}
 
-	// Retained Codable/XPC fields for external envelope consumers. The current
-	// host transports bytes; only the app interprets character encodings.
-	public var primaryEncoding: UInt = 0
-	public var fallbackEncoding: UInt = 0
-
 	public init() {}
 
 	private enum CodingKeys: String, CodingKey {
@@ -129,8 +120,6 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		case proxyPassword
 		case floodControlDelayInterval
 		case floodControlMaximumMessages
-		case primaryEncoding
-		case fallbackEncoding
 	}
 
 	public init(from decoder: any Decoder) throws {
@@ -139,15 +128,14 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		self.init()
 		diagnostics = container.decodeOptional(ConnectionDiagnostics.self, forKey: .diagnostics)
 
-		serverAddress = container.decode(String.self, forKey: .serverAddress, aliases: [], default: "")
+		serverAddress = container.decode(String.self, forKey: .serverAddress, default: "")
 		serverPort = container.decode(
 			UInt16.self,
 			forKey: .serverPort,
-			aliases: [],
 			default: IRCConnectionDefaults.serverPort
 		)
 		addressType = IRCConnectionAddressType(
-			rawValue: container.decode(UInt.self, forKey: .addressType, aliases: [], default: 0)
+			rawValue: container.decode(UInt.self, forKey: .addressType, default: 0)
 		) ?? .default
 
 		decodeSecurity(from: container)
@@ -156,17 +144,13 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		floodControlDelayInterval = container.decode(
 			UInt.self,
 			forKey: .floodControlDelayInterval,
-			aliases: [],
 			default: IRCConnectionDefaults.floodControlDelayInterval
 		)
 		floodControlMaximumMessages = container.decode(
 			UInt.self,
 			forKey: .floodControlMaximumMessages,
-			aliases: [],
 			default: IRCConnectionDefaults.floodControlMaximumMessages
 		)
-		primaryEncoding = container.decode(UInt.self, forKey: .primaryEncoding, aliases: [], default: 0)
-		fallbackEncoding = container.decode(UInt.self, forKey: .fallbackEncoding, aliases: [], default: 0)
 
 		repairDecodedValues()
 	}
@@ -175,26 +159,22 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		connectionPrefersSecuredConnection = container.decode(
 			Bool.self,
 			forKey: .connectionPrefersSecuredConnection,
-			aliases: [],
 			default: false
 		)
 		connectionPrefersModernCiphersOnly = container.decode(
 			Bool.self,
 			forKey: .connectionPrefersModernCiphersOnly,
-			aliases: [],
 			default: false
 		)
 		connectionShouldValidateCertificateChain = container.decode(
 			Bool.self,
 			forKey: .connectionShouldValidateCertificateChain,
-			aliases: [],
 			default: false
 		)
 		cipherSuites = CipherSuiteCollection(
 			rawValue: container.decode(
 				UInt.self,
 				forKey: .cipherSuites,
-				aliases: [],
 				default: CipherSuiteCollection.default.rawValue
 			)
 		) ?? .default
@@ -205,13 +185,12 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 	}
 
 	private mutating func decodeProxy(from container: KeyedDecodingContainer<CodingKeys>) {
-		let rawProxyType = container.decode(UInt.self, forKey: .proxyType, aliases: [], default: 0)
+		let rawProxyType = container.decode(UInt.self, forKey: .proxyType, default: 0)
 		proxyType = Self.sanitizedProxyType(rawProxyType)
 		proxyAddress = container.decodeOptional(String.self, forKey: .proxyAddress)
 		proxyPort = container.decode(
 			UInt16.self,
 			forKey: .proxyPort,
-			aliases: [],
 			default: IRCConnectionDefaults.proxyPort
 		)
 		proxyUsername = container.decodeOptional(String.self, forKey: .proxyUsername)
@@ -240,8 +219,6 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		try container.encodeIfPresent(proxyPassword, forKey: .proxyPassword)
 		try container.encode(floodControlDelayInterval, forKey: .floodControlDelayInterval)
 		try container.encode(floodControlMaximumMessages, forKey: .floodControlMaximumMessages)
-		try container.encode(primaryEncoding, forKey: .primaryEncoding)
-		try container.encode(fallbackEncoding, forKey: .fallbackEncoding)
 	}
 
 	/** Puts a decoded configuration back inside the range the rest of the host
@@ -287,10 +264,13 @@ public nonisolated struct IRCConnectionConfig: Codable, Sendable, Equatable { //
 		return value
 	}
 
-	/// Flood-control values outside 1...60 used to trip a `precondition`; an
-	/// out-of-range value is now clamped back to the last good one.
+	/// The range the connection host reads these two settings in.
+	private static let floodValueRange: ClosedRange<UInt> = 1 ... 60
+
+	/// A value outside ``floodValueRange`` used to trip a `precondition`; it is
+	/// now clamped back to the last good one.
 	private static func clampedFloodValue(_ value: UInt, _ previous: UInt) -> UInt {
-		(1 ... 60).contains(value) ? value : previous
+		floodValueRange.contains(value) ? value : previous
 	}
 }
 
@@ -361,9 +341,20 @@ nonisolated struct ConnectionDiagnostics: Codable, Sendable, Equatable { // noni
 		case firstJoin, disconnected
 	}
 
+	/** One `Logger`, and `debug` rather than `info`.
+
+	 Every milestone here is a timing trace: a dozen of them per connection
+	 attempt, useful only when someone is measuring where a connection spends
+	 its time. `debug` is the level the unified log keeps out of the persisted
+	 store and out of `log show` unless it is asked for, which is what makes the
+	 trace free to emit on every attempt. The state a developer or a user acts
+	 on — connected, secured, disconnected, failed — is logged by the paths that
+	 decide it, at the level that decision deserves. */
+	private static let logger = Logger(subsystem: "com.vakesz.glasstual", category: "IRCStartup")
+
 	func record(_ event: Event) {
 		let elapsed = ProcessInfo.processInfo.systemUptime - requestedAt
-		Logger(subsystem: "com.vakesz.glasstual", category: "IRCStartup").info(
+		Self.logger.debug(
 			"Attempt \(identifier.uuidString, privacy: .public) \(event.rawValue, privacy: .public) elapsed=\(elapsed, privacy: .public)s"
 		)
 	}

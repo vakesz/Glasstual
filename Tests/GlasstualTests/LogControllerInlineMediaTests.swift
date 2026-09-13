@@ -28,6 +28,7 @@ private final class TranscriptMediaFixture {
 			inlineImageLoader: NativeInlineImageLoader(budget: budget, protocolClasses: [InlineImageTestProtocol.self])
 		)
 		controller.historyPageFetcher = { _ in .page([]) }
+		controller.loadsHistoryLazily = { false }
 		view = controller.ensureBackingView()
 		line.messageBody = "image"
 		line.lineType = .privateMessage
@@ -63,9 +64,6 @@ struct LogControllerInlineMediaTests {
 	@Test("Completed previews are released on trim, clear and replacement using the same row ID",
 	      arguments: TranscriptMediaRetirement.allCases)
 	func retiredPreviewReleasesBudget(retirement: TranscriptMediaRetirement) async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		let fixture = TranscriptMediaFixture()
 		defer { fixture.controller.tearDown(.permanentRemoval) }
 		await fixture.populate()
@@ -92,7 +90,7 @@ struct LogControllerInlineMediaTests {
 		}
 		#expect(fixture.budget.entryCount == 0)
 		#expect(fixture.budget.reservedByteCount == 0)
-		let scroll = try #require(fixture.view.view.subviews.compactMap { $0 as? NSScrollView }.first)
+		let scroll = try #require(fixture.view.subviews.compactMap { $0 as? NSScrollView }.first)
 		let text = try #require(scroll.documentView as? NSTextView)
 		var attachments = 0
 		text.textStorage?.enumerateAttribute(
@@ -108,9 +106,6 @@ struct LogControllerInlineMediaTests {
 
 	@Test("A refused completion releases its token without removing the retained attachment")
 	func refusedCompletionReleasesToken() async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		let fixture = TranscriptMediaFixture()
 		defer { fixture.controller.tearDown(.permanentRemoval) }
 		await fixture.populate()
@@ -133,9 +128,6 @@ struct LogControllerInlineMediaTests {
 
 	@Test("Clear retires active requests and an old token cannot cancel the replacement")
 	func generationCancellationKeepsReplacementToken() async throws {
-		let lazy = Preferences.Logging.loadHistoryLazily.value
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer { Preferences.Logging.loadHistoryLazily.value = lazy }
 		let fixture = TranscriptMediaFixture()
 		defer { fixture.controller.tearDown(.permanentRemoval) }
 		await fixture.populate()

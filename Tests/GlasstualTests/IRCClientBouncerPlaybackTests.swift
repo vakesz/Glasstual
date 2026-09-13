@@ -83,31 +83,32 @@ struct IRCClientBouncerPlaybackTests {
 	}
 
 	@Test("Chat history the client asked for never posts a notification")
-	func requestedChatHistoryNeverPostsNotifications() {
-		#expect(notificationDecision(isRequestedChatHistory: true) == false)
+	func requestedChatHistoryNeverPostsNotifications() throws {
+		try #expect(notificationDecision(batchType: "chathistory") == false)
 	}
 
 	@Test("Ordinary server messages post when no bouncer is involved")
-	func ordinaryServerMessagesPostWithoutABouncer() {
-		#expect(notificationDecision(isConnectedToBouncer: false))
+	func ordinaryServerMessagesPostWithoutABouncer() throws {
+		try #expect(notificationDecision(isConnectedToBouncer: false))
 	}
 
 	@Test("A user the config marks as the bouncer does not post notifications")
-	func configuredBouncerUsersDoNotPostNotifications() {
-		#expect(notificationDecision(
+	func configuredBouncerUsersDoNotPostNotifications() throws {
+		try #expect(notificationDecision(
 			ignoresBouncerUsers: true,
 			channelIsBouncerUser: true
 		) == false)
+		try #expect(notificationDecision(ignoresBouncerUsers: true, channelIsBouncerUser: false))
 	}
 
 	@Test("Only the playback batch is silenced when playback is ignored")
-	func playbackBatchDoesNotPostWhenPlaybackIsIgnored() {
-		#expect(notificationDecision(
+	func playbackBatchDoesNotPostWhenPlaybackIsIgnored() throws {
+		try #expect(notificationDecision(
 			ignoresPlayback: true,
 			supportsBatch: true,
 			batchType: "znc.in/playback"
 		) == false)
-		#expect(notificationDecision(
+		try #expect(notificationDecision(
 			ignoresPlayback: true,
 			supportsBatch: true,
 			batchType: "other"
@@ -115,45 +116,48 @@ struct IRCClientBouncerPlaybackTests {
 	}
 
 	@Test("Without batch support the historic flag stands in for the playback batch")
-	func historicFallbackDoesNotPostWithoutBatchSupport() {
-		#expect(notificationDecision(
+	func historicFallbackDoesNotPostWithoutBatchSupport() throws {
+		try #expect(notificationDecision(
 			ignoresPlayback: true,
 			supportsBatch: false,
 			isHistoric: true
 		) == false)
-		#expect(notificationDecision(
+		try #expect(notificationDecision(
 			ignoresPlayback: true,
 			supportsBatch: false,
 			isHistoric: false
 		))
 	}
 
-	@Test("The unread counters follow the dock and tree badge preferences")
-	func channelUnreadPolicyMatchesDockAndTreePreferences() {
-		#expect(ChannelUnreadPolicy.incrementsDockUnreadCount(
-			isChannel: false,
-			displaysPublicMessageCount: false
-		))
-		#expect(ChannelUnreadPolicy.incrementsDockUnreadCount(
-			isChannel: true,
-			displaysPublicMessageCount: false
-		) == false)
-		#expect(ChannelUnreadPolicy.incrementsDockUnreadCount(
-			isChannel: true,
-			displaysPublicMessageCount: true
-		))
-		#expect(ChannelUnreadPolicy.refreshesTreeBadge(
-			isHighlight: true,
-			showsTreeBadgeCount: false
-		))
-		#expect(ChannelUnreadPolicy.refreshesTreeBadge(
-			isHighlight: false,
-			showsTreeBadgeCount: false
-		) == false)
+	@Test("A query always counts on the dock badge; a channel only when asked to")
+	func dockUnreadCountFollowsThePublicMessagePreference() throws {
+		try #expect(dockUnreadCount(isChannel: false, displaysPublicMessageCount: false) == 1)
+		try #expect(dockUnreadCount(isChannel: true, displaysPublicMessageCount: false) == 0)
+		try #expect(dockUnreadCount(isChannel: true, displaysPublicMessageCount: true) == 1)
 	}
 
+	/// Asks a client for a channel's dock count after one unread line.
+	private func dockUnreadCount(isChannel: Bool, displaysPublicMessageCount: Bool) throws -> Int {
+		var preferences = ClientPreferences()
+
+		preferences.displayPublicMessageCountOnDockBadge = displaysPublicMessageCount
+
+		let client = TestClient(
+			configDictionary: ["nickname": "me"],
+			nicknamePassword: nil,
+			fixture: ClientEnvironmentFixture(preferences: preferences)
+		)
+		let channel = try #require(
+			client.findChannelOrCreate(isChannel ? "#channel" : "someone", isPrivateMessage: isChannel == false)
+		)
+
+		client.setUnreadState(for: channel)
+
+		return channel.dockUnreadCount
+	}
+
+	/// Asks a configured client whether a message carrying `batchType` may post.
 	private func notificationDecision(
-		isRequestedChatHistory: Bool = false,
 		isConnectedToBouncer: Bool = true,
 		ignoresBouncerUsers: Bool = false,
 		channelIsBouncerUser: Bool = false,
@@ -161,16 +165,37 @@ struct IRCClientBouncerPlaybackTests {
 		supportsBatch: Bool = false,
 		batchType: String? = nil,
 		isHistoric: Bool = false
-	) -> Bool {
-		BouncerNotificationPolicy.shouldPost(BouncerNotificationContext(
-			isRequestedChatHistory: isRequestedChatHistory,
-			isConnectedToBouncer: isConnectedToBouncer,
-			ignoresBouncerUsers: ignoresBouncerUsers,
-			channelIsBouncerUser: channelIsBouncerUser,
-			ignoresPlayback: ignoresPlayback,
-			supportsBatch: supportsBatch,
-			batchType: batchType,
-			isHistoric: isHistoric
-		))
+	) throws -> Bool {
+		let client = TestClient(configDictionary: [
+			"nickname": "me",
+			"zncIgnoreUserNotifications": ignoresBouncerUsers,
+			"zncIgnorePlaybackNotifications": ignoresPlayback,
+		])
+
+		client.isConnectedToZNC = isConnectedToBouncer
+
+		if supportsBatch {
+			client.enableCapability(.batch)
+		}
+
+		let message = try #require(Message(line: ":sender!u@h PRIVMSG #channel :hello", on: client))
+
+		if isHistoric {
+			message.isHistoric = true
+		}
+
+		if let batchType {
+			let batch = MessageBatch()
+			batch.batchToken = "b1"
+			batch.batchType = batchType
+			message.parentBatchMessage = batch
+		}
+
+		let channelName = channelIsBouncerUser
+			? IRCServerQuirks.ZNC.nickname(forModuleNamed: "status") : "#channel"
+
+		let channel = try #require(client.findChannelOrCreate(channelName))
+
+		return client.isSafeToPostNotification(for: message, in: channel)
 	}
 }

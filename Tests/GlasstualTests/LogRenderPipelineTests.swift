@@ -75,7 +75,10 @@ private final nonisolated class DeliverySignal: Sendable { // nonisolated: immut
 
 @Suite("Log render pipeline")
 struct LogRenderPipelineTests {
-	@Test("The barrier waits for standalone delivery while ordered drain remains independent")
+	/// Standalone work is what the initial history load is submitted as, and
+	/// the barrier is what a reload waits on: a fence that let the load through
+	/// would report a transcript that is not there yet.
+	@Test("The barrier waits for standalone delivery too")
 	func barrierIncludesStandaloneWork() async {
 		let pipeline = LogRenderPipeline()
 		let runner = Task { await pipeline.run() }
@@ -92,7 +95,6 @@ struct LogRenderPipelineTests {
 			await pipeline.barrier()
 			log.append("barrier")
 		}
-		await pipeline.drain()
 		#expect(log.labels.isEmpty)
 		await gate.open()
 		await barrier.value
@@ -141,7 +143,7 @@ struct LogRenderPipelineTests {
 		}
 
 		for pipeline in pipelines {
-			await pipeline.drain()
+			await pipeline.barrier()
 			await pipeline.stop()
 		}
 		for runner in runners {
@@ -195,7 +197,7 @@ struct LogRenderPipelineTests {
 			})
 		}
 
-		await pipeline.drain()
+		await pipeline.barrier()
 
 		#expect(log.labels == ["0", "1", "2", "3", "4"])
 		#expect(probe.labels.sorted() == ["0", "1", "2", "3", "4"])
@@ -229,7 +231,7 @@ struct LogRenderPipelineTests {
 		#expect(log.labels.isEmpty, "the second line was applied ahead of the first")
 
 		await gate.open()
-		await pipeline.drain()
+		await pipeline.barrier()
 
 		#expect(log.labels == ["first", "second"])
 
@@ -255,11 +257,15 @@ struct LogRenderPipelineTests {
 				standaloneDelivered.fire()
 			}
 		})
+		let batchedDelivered = DeliverySignal()
 		pipeline.submissions.yield(LogRenderSubmission(isStandalone: false) {
-			{ log.append("batched") }
+			{
+				log.append("batched")
+				batchedDelivered.fire()
+			}
 		})
 
-		await pipeline.drain()
+		await batchedDelivered.wait()
 
 		#expect(log.labels == ["batched"], "the batched job waited for the standalone one")
 
@@ -285,7 +291,7 @@ struct LogRenderPipelineTests {
 			})
 		}
 
-		await pipeline.drain()
+		await pipeline.barrier()
 
 		#expect(log.labels == ["0", "1", "2", "3", "4"])
 
@@ -345,25 +351,25 @@ struct LogRenderPipelineTests {
 		#expect(delivered.labels.isEmpty)
 	}
 
-	@Test("Drain returns when the pipeline is already stopped or its stream has ended")
-	func drainRejectsStoppedAndTerminatedPipelines() async {
+	@Test("The barrier returns when the pipeline is already stopped or its stream has ended")
+	func barrierRejectsStoppedAndTerminatedPipelines() async {
 		let stopped = LogRenderPipeline()
 		await stopped.stop()
-		await stopped.drain()
+		await stopped.barrier()
 
 		let terminated = LogRenderPipeline()
 		terminated.submissions.finish()
-		await terminated.drain()
+		await terminated.barrier()
 	}
 
-	@Test("Stopping releases every drain caller even without a running consumer")
-	func stopReleasesAllDrainWaiters() async {
+	@Test("Stopping releases every barrier caller even without a running consumer")
+	func stopReleasesAllBarrierWaiters() async {
 		let pipeline = LogRenderPipeline()
 		let started = (0 ..< 8).map { _ in DeliverySignal() }
 		let waiters = started.map { signal in
 			Task {
 				signal.fire()
-				await pipeline.drain()
+				await pipeline.barrier()
 			}
 		}
 		for signal in started {
@@ -375,13 +381,13 @@ struct LogRenderPipelineTests {
 		}
 	}
 
-	@Test("Cancelling a drain caller does not stop the pipeline or drop ordered work")
-	func cancellingDrainKeepsOrderedWork() async {
+	@Test("Cancelling a barrier caller does not stop the pipeline or drop ordered work")
+	func cancellingBarrierKeepsOrderedWork() async {
 		let pipeline = LogRenderPipeline()
 		let started = DeliverySignal()
 		let waiter = Task {
 			started.fire()
-			await pipeline.drain()
+			await pipeline.barrier()
 		}
 		await started.wait()
 		waiter.cancel()
@@ -392,13 +398,13 @@ struct LogRenderPipelineTests {
 			{ log.append("retained") }
 		})
 		let runner = Task { await pipeline.run() }
-		await pipeline.drain()
+		await pipeline.barrier()
 		#expect(log.labels == ["retained"])
 		await pipeline.stop()
 		await runner.value
 	}
 
-	@Test("Cancelling the runner cancels in-flight delivery and releases drain callers")
+	@Test("Cancelling the runner cancels in-flight delivery and releases barrier callers")
 	func cancellingRunnerStopsPipeline() async {
 		let pipeline = LogRenderPipeline()
 		let gate = RenderGate()
@@ -411,12 +417,12 @@ struct LogRenderPipelineTests {
 		})
 		let runner = Task { await pipeline.run() }
 		await rendering.wait()
-		let waiter = Task { await pipeline.drain() }
+		let waiter = Task { await pipeline.barrier() }
 		runner.cancel()
 		await waiter.value
 		await gate.open()
 		await runner.value
 		#expect(log.labels.isEmpty)
-		await pipeline.drain()
+		await pipeline.barrier()
 	}
 }

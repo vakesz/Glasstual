@@ -14,13 +14,8 @@ struct LogControllerRemovalTests {
 	      arguments: [false, true], [false, true])
 	func removalPolicy(preservingLocalData: Bool, reloadScrollback: Bool) async throws {
 		let previousReload = Preferences.Logging.reloadScrollbackOnLaunch.value
-		let previousLazy = Preferences.Logging.loadHistoryLazily.value
 		Preferences.Logging.reloadScrollbackOnLaunch.value = reloadScrollback
-		Preferences.Logging.loadHistoryLazily.value = false
-		defer {
-			Preferences.Logging.reloadScrollbackOnLaunch.value = previousReload
-			Preferences.Logging.loadHistoryLazily.value = previousLazy
-		}
+		defer { Preferences.Logging.reloadScrollbackOnLaunch.value = previousReload }
 		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
 			UUID().uuidString,
 			isDirectory: true
@@ -37,6 +32,7 @@ struct LogControllerRemovalTests {
 		let controller = LogController(
 			client: client, in: window, inlineImageLoader: NativeInlineImageLoader(), historicLog: history
 		)
+		controller.loadsHistoryLazily = { false }
 		controller.historyPageFetcher = { await historyClient.fetchOutcome($0) }
 		var line = LogLine()
 		line.messageBody = "retained archive"

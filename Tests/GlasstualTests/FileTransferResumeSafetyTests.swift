@@ -16,7 +16,7 @@ import Testing
 @MainActor
 struct FileTransferResumeSafetyTests {
 	@Test("An offered name already in use is never the one written into")
-	func anExistingFileIsNotResumedInto() throws {
+	func anExistingFileIsNotResumedInto() async throws {
 		let directory = try temporaryDirectory()
 		defer { try? FileManager.default.removeItem(atPath: directory) }
 		let existing = (directory as NSString).appendingPathComponent("photo.jpg")
@@ -27,7 +27,7 @@ struct FileTransferResumeSafetyTests {
 
 		#expect(transfer.filename != "photo.jpg")
 		/* Nothing to resume from, so the client offers no RESUME at all. */
-		#expect(transfer.currentFilesize == 0)
+		#expect(try await #require(transfer.ownedFile).size() == 0)
 		let untouched = try #require(FileManager.default.contents(atPath: existing))
 		#expect(untouched.count == 512)
 	}
@@ -46,7 +46,6 @@ struct FileTransferResumeSafetyTests {
 		transfer.claimDestinationFilename()
 
 		#expect(transfer.filename == claimed)
-		#expect(transfer.currentFilesize == 128)
 		#expect(try await file.size() == 128)
 		#expect(transfer.wireFilename == "photo.jpg")
 	}
@@ -109,7 +108,7 @@ struct FileTransferResumeSafetyTests {
 
 	private func receiver(filename: String, in directory: String) throws -> FileTransferController {
 		let transfer = try #require(FileTransferController.receiver(
-			for: GLTTestClient(),
+			for: TestClient(),
 			nickname: "alice",
 			address: "203.0.113.5",
 			port: 1234,

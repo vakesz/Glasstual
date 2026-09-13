@@ -24,59 +24,123 @@ struct FeatureLocalizationTests {
 	func channelPropertiesStringsPreserveLegacyValues() throws {
 		try expectLocalizedCopy(ChannelPropertiesStrings.invalidChannelName,
 		                        .TDCChannelPropertiesSheet.pleaseEnterAProperlyFormattedChannel,
-		                        "Please enter a properly formatted channel name.")
+		                        "Enter a channel name beginning with a channel prefix, such as #example.")
+		/* The alert asks whether to reload and offers Cancel and Reload, so
+		 neither half of it may name a "Yes" button that is not there. */
 		try expectLocalizedCopy(ChannelPropertiesStrings.configurationChangedTitle,
 		                        .TDCChannelPropertiesSheet.thisChannelsConfigurationHasChangedDo,
-		                        "This channel's configuration has changed. Do you want to reload the Channel Properties dialog?")
+		                        "Reload the channel’s settings?")
 		try expectLocalizedCopy(ChannelPropertiesStrings.unsavedChangesWarning,
 		                        .TDCChannelPropertiesSheet.youWillLooseUnsavedChangesIf,
-		                        "You will lose unsaved changes if you click “Yes”")
+		                        "Your unsaved changes will be discarded.")
 	}
 
-	@Test("Every typed transfer failure names its own cause")
+	@Test("Every typed transfer failure names its own cause and what to do about it")
 	func fileTransferFailureStringsUseTypedErrors() throws {
 		let cases: [(FileTransferFailure, (LocalizedStringResource, String))] = [
-			(.connectionUnavailable, (.TDCFileTransferDialog.transferWithFailedCouldNotEstablish("Alice"),
-			                          "Transfer with Alice failed. Could not establish connection")),
-			(.fileHandlerFailed, (.TDCFileTransferDialog.transferWithFailedFileHandlerThrew("Alice"),
-			                      "Transfer with Alice failed. File handler threw an exception")),
-			(.invalidResumePosition, (.TDCFileTransferDialog.transferWithFailedProposedResumePosition("Alice"),
-			                          "Transfer with Alice failed. Proposed resume position is bad")),
-			(.noListeningPort, (.TDCFileTransferDialog.transferWithFailedThereIsNo("Alice"),
-			                    "Transfer with Alice failed. There is no open port")),
-			(.notConnectedToIRC, (.TDCFileTransferDialog.transferWithFailedYouAreNot("Alice"),
-			                      "Transfer with Alice failed. You are not connected to IRC")),
-			(.sourceFileUnreadable, (.TDCFileTransferDialog.transferWithFailedCouldNotRead("Alice"),
-			                         "Transfer with Alice failed. Could not read source file")),
-			(.sourceIPAddressUnknown, (.TDCFileTransferDialog.transferWithFailedUnknownSourceIp("Alice"),
-			                           "Transfer with Alice failed. Unknown source IP address")),
-			(.storageFull, (.TDCFileTransferDialog.transferWithFailedNoSpaceLeft("Alice"),
-			                "Transfer with Alice failed. No space left on device")),
-			(.underlying("Timed out"), (.TDCFileTransferDialog.transferWithFailed("Alice", "Timed out"),
-			                            "Transfer with Alice failed: Timed out")),
+			(.connectionUnavailable, (
+				.FileTransfers.transferWithFailedCouldNotEstablish("Alice"),
+				"Could not connect to Alice. They may be offline or behind a firewall."
+			)),
+			(.connectTimeout, (
+				.FileTransfers.transferWithFailedNoAnswer("Alice"),
+				"Alice did not answer in time. They may be offline or behind a firewall."
+			)),
+			(.fileHandlerFailed, (
+				.FileTransfers.transferWithFailedFileHandlerThrew("Alice"),
+				"Could not write the file from Alice. Check that the destination folder still exists and that you can write to it."
+			)),
+			(.invalidResumePosition, (
+				.FileTransfers.transferWithFailedProposedResumePosition("Alice"),
+				"Could not resume the transfer with Alice. Remove the partly transferred file, then start it again."
+			)),
+			(.noListeningPort, (
+				.FileTransfers.transferWithFailedThereIsNo("Alice"),
+				"No port was free for the transfer with Alice. Widen the port range in File Transfer settings, then try again."
+			)),
+			(.notConnectedToIRC, (
+				.FileTransfers.transferWithFailedYouAreNot("Alice"),
+				"Transfer with Alice stopped because the connection to the server was lost. Reconnect, then start it again."
+			)),
+			(.oversizedTransfer, (
+				.FileTransfers.transferFromFailedBecauseTheSender("Alice"),
+				"Alice sent more than the offer stated, so the transfer was stopped."
+			)),
+			(.peerClosedConnection, (
+				.FileTransfers.transferWithFailedPeerClosed("Alice"),
+				"Alice closed the connection before the transfer finished. Start it again to resume."
+			)),
+			(.sourceFileUnreadable, (
+				.FileTransfers.transferWithFailedCouldNotRead("Alice"),
+				"Could not read the file being sent to Alice. Check that it still exists and that you can open it."
+			)),
+			(.sourceIPAddressUnknown, (
+				.FileTransfers.transferWithFailedUnknownSourceIp("Alice"),
+				"Could not work out this Mac\u{2019}s IP address for the transfer with Alice. Enter one in "
+					+ "File Transfer settings, then try again."
+			)),
+			(.storageFull, (
+				.FileTransfers.transferWithFailedNoSpaceLeft("Alice"),
+				"There is not enough free space to save the file from Alice. Free some space, then start the transfer again."
+			)),
+			(.writeTimeout, (
+				.FileTransfers.transferWithFailedStalled("Alice"),
+				"The connection to Alice stopped responding, so the transfer was cancelled. Start it again to resume."
+			)),
+			(.underlying("Timed out"), (
+				.FileTransfers.transferWithFailed("Alice", "Timed out"),
+				"Transfer with Alice failed: Timed out"
+			)),
 		]
 		for (failure, (resource, english)) in cases {
 			try expectLocalizedCopy(FileTransferStrings.failure(failure, peerNickname: "Alice"), resource, english)
 		}
 	}
 
-	@Test("Transfer statuses preserve direction and share the acceptance message")
-	func fileTransferStatusesPreserveDirectionAndDeduplicateAcceptanceMessage() throws {
+	/// Every transport error has to reach copy of its own: an `NSError`
+	/// description in English was what the three timeouts used to show.
+	@Test("No transport error falls through to an unlocalized description")
+	func everyTransportErrorHasLocalizedCopy() {
+		let transportErrors: [DCCTransferError] = [
+			.connectTimeout, .writeTimeout, .closedByPeer, .noOpenPort, .badParameter,
+			.rejectedPeerAddress, .oversizedTransfer, .fileUnreadable, .fileUnwritable, .storageFull,
+		]
+		for error in transportErrors {
+			if case .underlying = FileTransferFailure(error) {
+				Issue.record("\(error) has no localized failure of its own")
+			}
+		}
+		#expect(FileTransferFailure(.network("Boom")) == .underlying("Boom"))
+	}
+
+	@Test("Transfer statuses preserve direction, and every preparing step reads as one wait")
+	func fileTransferStatusesPreserveDirectionAndCollapsePreparation() throws {
 		try expectLocalizedCopy(FileTransferStrings.status(.stopped, direction: .incoming, peerNickname: "Alice"),
-		                        .TDCFileTransferDialog.transferFromIsStoppedControlClick("Alice"),
-		                        "Transfer from Alice is stopped. Control click to start.")
+		                        .FileTransfers.transferFromIsStopped("Alice"),
+		                        "Transfer from Alice has not started. Choose Start Transfer to begin.")
 		try expectLocalizedCopy(FileTransferStrings.status(.stopped, direction: .outgoing, peerNickname: "Alice"),
-		                        .TDCFileTransferDialog.transferToIsStoppedControlClick("Alice"),
-		                        "Transfer to Alice is stopped. Control click to start.")
+		                        .FileTransfers.transferToIsStopped("Alice"),
+		                        "Transfer to Alice has not started. Choose Start Transfer to begin.")
 		let listening = FileTransferStrings.status(.isListeningAsSender, direction: .outgoing, peerNickname: "Alice")
 		let waiting = FileTransferStrings.status(
 			.waitingForReceiverToAccept,
 			direction: .outgoing,
 			peerNickname: "Alice"
 		)
-		try expectLocalizedCopy(listening, .TDCFileTransferDialog.transferToIsReadyWaiting("Alice"),
-		                        "Transfer to Alice is ready. Waiting for them to accept.")
+		try expectLocalizedCopy(listening, .FileTransfers.transferToIsReadyWaiting("Alice"),
+		                        "Waiting for Alice to accept.")
 		#expect(waiting == listening)
+
+		let preparing: [FileTransferStatus] = [.initializing, .mappingListeningPort, .waitingForLocalIPAddress]
+		for status in preparing {
+			for direction in [FileTransferDirection.incoming, .outgoing] {
+				try expectLocalizedCopy(
+					FileTransferStrings.status(status, direction: direction, peerNickname: "Alice"),
+					.FileTransfers.preparingTheTransfer,
+					"Preparing the transfer…"
+				)
+			}
+		}
 	}
 
 	@Test("Transfer progress fills positional placeholders in the declared order")
@@ -84,31 +148,32 @@ struct FeatureLocalizationTests {
 		try expectLocalizedCopy(FileTransferStrings.progress(
 			direction: .incoming, processedSize: "1 MB", totalSize: "4 MB", speed: "2 MB",
 			peerNickname: "Alice", timeRemaining: "2 seconds"
-		), .TDCFileTransferDialog.ofSReceivedFromRemaining("1 MB", "4 MB", "2 MB", "Alice", "2 seconds"),
+		), .FileTransfers.ofSReceivedFromRemaining("1 MB", "4 MB", "2 MB", "Alice", "2 seconds"),
 		"1 MB of 4 MB (2 MB/s) received from Alice — 2 seconds remaining")
 		try expectLocalizedCopy(FileTransferStrings.progress(
 			direction: .outgoing, processedSize: "1 MB", totalSize: "4 MB", speed: "2 MB",
 			peerNickname: "Alice", timeRemaining: nil
-		), .TDCFileTransferDialog.ofSSent("1 MB", "4 MB", "2 MB", "Alice"),
+		), .FileTransfers.ofSSent("1 MB", "4 MB", "2 MB", "Alice"),
 		"1 MB of 4 MB (2 MB/s) sent to Alice")
 	}
 
-	@Test("Preferences copy is keyed by the typed pane")
+	@Test("Settings copy is keyed by the typed pane and the sidebar row")
 	func preferencesStringsUseTypedPaneState() throws {
+		try expectLocalizedCopy(PreferencesPane.general.title, .Settings.titleOfTheGeneral, "General")
 		try expectLocalizedCopy(
-			PreferencesStrings.paneTitle(.general),
-			.TDCPreferencesController.titleOfTheGeneral,
-			"General"
-		)
-		try expectLocalizedCopy(
-			PreferencesStrings.paneTitle(.fileTransfers),
-			.TDCPreferencesController.fileTransfers,
+			PreferencesPane.fileTransfers.title,
+			.Settings.fileTransfers,
 			"File Transfers"
 		)
-		try expectLocalizedCopy(PreferencesStrings.addOnsGroupTitle, .TDCPreferencesController.addOns, "Add-ons")
+		let rows = PreferencesDestination.builtIn
 		try expectLocalizedCopy(
-			PreferencesStrings.advancedGroupTitle,
-			.TDCPreferencesController.titleOfTheAdvanced,
+			rows.first { $0.selection == .addOns }?.title,
+			.Settings.addOns,
+			"Add-ons"
+		)
+		try expectLocalizedCopy(
+			rows.first { $0.selection == .advanced }?.title,
+			.Settings.titleOfTheAdvanced,
 			"Advanced"
 		)
 	}

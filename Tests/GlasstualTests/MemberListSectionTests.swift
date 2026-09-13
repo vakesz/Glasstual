@@ -44,15 +44,15 @@ import Testing
 @MainActor
 @Suite("Member list sections")
 struct MemberListSectionTests {
-	private let client: GLTTestClient
+	private let client: TestClient
 	private let memberList: MemberList
-	private let channel: IRCChannel
+	private let channel: Channel
 
 	init() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let memberList = MemberList()
 
-		let channel = IRCChannel(config: ChannelConfig(channelName: "#members"))
+		let channel = Channel(config: ChannelConfig(channelName: "#members"))
 		channel.associatedClient = client
 		channel.activate()
 		memberList.assign(to: channel)
@@ -64,8 +64,8 @@ struct MemberListSectionTests {
 
 	@Test("Members of a single rank are shown as a flat list")
 	func singleRankIsAFlatList() {
-		insert(makeMember(named: "alice"), at: 0)
-		insert(makeMember(named: "bob"), at: 1)
+		channel.addMember(makeMember(named: "alice"))
+		channel.addMember(makeMember(named: "bob"))
 
 		#expect(memberList.groups.count == 1)
 		#expect(memberList.groups.first?.members.count == 2)
@@ -74,9 +74,9 @@ struct MemberListSectionTests {
 
 	@Test("A second rank gives every section a header row")
 	func secondRankAddsHeadersForEverySection() {
-		insert(makeMember(named: "alice"), at: 0)
-		insert(makeMember(named: "bob"), at: 1)
-		insert(makeMember(named: "carol", modes: "o"), at: 0)
+		channel.addMember(makeMember(named: "alice"))
+		channel.addMember(makeMember(named: "bob"))
+		channel.addMember(makeMember(named: "carol", modes: "o"))
 
 		#expect(rowDescriptions == ["[Operators]", "carol", "[Members]", "alice", "bob"])
 		#expect(memberList.groups.map(\.section.rank) == [.normalOperator, .none])
@@ -84,9 +84,9 @@ struct MemberListSectionTests {
 
 	@Test("Removing the last member of a section drops its header")
 	func removingLastMemberOfASectionDropsItsHeader() {
-		insert(makeMember(named: "alice"), at: 0)
-		insert(makeMember(named: "carol", modes: "o"), at: 0)
-		insert(makeMember(named: "dave", modes: "v"), at: 1)
+		channel.addMember(makeMember(named: "alice"))
+		channel.addMember(makeMember(named: "carol", modes: "o"))
+		channel.addMember(makeMember(named: "dave", modes: "v"))
 
 		#expect(rowDescriptions == [
 			"[Operators]", "carol", "[Voiced]", "dave", "[Members]", "alice",
@@ -104,7 +104,7 @@ struct MemberListSectionTests {
 
 	@Test("Removing the only member leaves an empty flat list")
 	func removingOnlyMemberLeavesAnEmptyFlatList() {
-		insert(makeMember(named: "alice"), at: 0)
+		channel.addMember(makeMember(named: "alice"))
 
 		channel.removeMember(withNickname: "alice")
 
@@ -129,8 +129,8 @@ struct MemberListSectionTests {
 
 	@Test("Selection resolves only member identities in presentation order")
 	func selectionResolvesMemberIdentities() throws {
-		insert(makeMember(named: "alice"), at: 0)
-		insert(makeMember(named: "carol", modes: "o"), at: 0)
+		channel.addMember(makeMember(named: "alice"))
+		channel.addMember(makeMember(named: "carol", modes: "o"))
 
 		let carol = try #require(channel.findMember("carol"))
 		let alice = try #require(channel.findMember("alice"))
@@ -303,7 +303,7 @@ struct MemberListSectionTests {
 		#expect(cache.rebuildCount == 1)
 		let displayed = try #require(memberList.groups.first?.members.first)
 		let details = MemberListUserInfoContent(member: displayed, privileges: "")
-		#expect(details.awayStatus == MemberListStrings.userIsAway)
+		#expect(details.awayStatus == MemberListStrings.awayStatus(isAway: true))
 		#expect(details.account == "account")
 		#expect(details.username == "username")
 
@@ -343,16 +343,29 @@ struct MemberListSectionTests {
 		#expect(memberList.presentationRevision == revision + 1)
 	}
 
+	/** The presentation hears about a list that has gone away as an empty
+	 ordering, which is the same thing it hears when a channel has no members:
+	 there is nothing left to draw either way, and a separate "it ended" call
+	 only gave the two answers different names. */
+	@Test("Detaching from a channel empties the rows and the selection")
+	func detachingEmptiesTheList() throws {
+		channel.addMember(makeMember(named: "alice"))
+		try select(#require(channel.findMember("alice")))
+
+		memberList.assign(to: nil)
+
+		#expect(memberList.groups.isEmpty)
+		#expect(memberList.selectedMemberIDs.isEmpty)
+		#expect(memberList.selectedMembers.isEmpty)
+		#expect(memberList.primaryInteractedMember == nil)
+	}
+
 	private func makeMember(named nickname: String, modes: ChannelModeSymbolSet = "") -> ChannelUser {
 		let user = client.findUserOrCreate(nickname)
 		var member = ChannelUser(user: user, prefixes: client.currentUserPrefixes)
 		member.modes = modes
 
 		return member
-	}
-
-	private func insert(_ member: ChannelUser, at _: Int) {
-		channel.addMember(member)
 	}
 
 	private func replaceContents(_ members: [ChannelUser]) {

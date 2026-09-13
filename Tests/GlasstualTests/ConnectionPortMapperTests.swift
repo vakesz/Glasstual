@@ -25,14 +25,14 @@ struct ConnectionPortMapperTests {
 	@Test("Success with no public port is a refusal, whatever was asked for")
 	func successWithoutAPublicPortIsARefusal() {
 		#expect(
-			XRPortMapper.resolvedError(reportedError: 0, publicPort: 0)
+			PortMapper.resolvedError(reportedError: 0, publicPort: 0)
 				== DNSServiceErrorType(kDNSServiceErr_NATPortMappingUnsupported)
 		)
 	}
 
 	@Test("A mapped port is reported as success")
 	func aMappedPortIsSuccess() {
-		#expect(XRPortMapper.resolvedError(reportedError: 0, publicPort: 6000) == 0)
+		#expect(PortMapper.resolvedError(reportedError: 0, publicPort: 6000) == 0)
 	}
 
 	/// mDNSResponder's own error is more specific than "unsupported" and is
@@ -41,8 +41,8 @@ struct ConnectionPortMapperTests {
 	func aReportedErrorIsPassedThrough() {
 		let refused = DNSServiceErrorType(kDNSServiceErr_Refused)
 
-		#expect(XRPortMapper.resolvedError(reportedError: refused, publicPort: 0) == refused)
-		#expect(XRPortMapper.resolvedError(reportedError: refused, publicPort: 6000) == refused)
+		#expect(PortMapper.resolvedError(reportedError: refused, publicPort: 0) == refused)
+		#expect(PortMapper.resolvedError(reportedError: refused, publicPort: 6000) == refused)
 	}
 
 	/** An open mapping used to keep its own mapper alive.
@@ -58,10 +58,10 @@ struct ConnectionPortMapperTests {
 	 request, letting go of the mapper deallocates it. */
 	@Test("An open mapping does not keep its mapper alive")
 	func anOpenMappingDoesNotRetainItsMapper() {
-		weak var released: XRPortMapper?
+		weak var released: PortMapper?
 
 		do {
-			let mapper = XRPortMapper(port: 0)
+			let mapper = PortMapper(port: 0)
 			released = mapper
 			/* A refusal is a fine outcome here — it is the retain that is under
 			 test, and `open()` takes it before it asks. */
@@ -76,7 +76,7 @@ struct ConnectionPortMapperTests {
 	/// was never opened is not an error to show the user.
 	@Test("An unopened mapper reports nothing, and closing it is harmless")
 	func anUnopenedMapperIsQuiet() {
-		let mapper = XRPortMapper(port: 6000)
+		let mapper = PortMapper(port: 6000)
 
 		#expect(mapper.isMapped == false)
 		#expect(mapper.publicAddress == nil)

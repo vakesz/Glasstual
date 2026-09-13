@@ -58,14 +58,14 @@ final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProvidin
 	private func disableSleep() {
 		guard activity == nil else { return }
 		activity = ProcessInfo.processInfo.beginActivity(options: .userInitiated, reason: "Disable sleep mode")
-		Self.logger.info("Disabled sleep mode")
+		Self.logger.debug("Disabled sleep mode")
 	}
 
 	private func enableSleep() {
 		guard let activity else { return }
 		ProcessInfo.processInfo.endActivity(activity)
 		self.activity = nil
-		Self.logger.info("Enabled sleep mode")
+		Self.logger.debug("Enabled sleep mode")
 	}
 
 	private func updateSleepState(hasConnectedClient: Bool) {

@@ -19,27 +19,38 @@ private let mainWindowRootViewLogger = Logger(
 @Observable
 final class MainWindowPresentationModel {
 	var isServerListVisible = true
-	var isMemberListAvailable = false
-	var isMemberListVisible = true
+	/// Whether the selection has a member list at all: a joined channel has
+	/// one, a server row and a one-to-one conversation do not.
+	private(set) var isMemberListAvailable = false
+	/// Whether the column is showing. Derived, never set from outside: the
+	/// member list shows while the selection has one and the reader has not
+	/// closed it.
+	private(set) var isMemberListVisible = true
+	/** Whether the reader wants the member list beside a channel that has one.
+
+	 The pane's own visibility cannot carry this: it is false for every server
+	 row too, so restoring it would have closed the list for good the first
+	 time the reader left a server selected. This used to live on `MemberList`
+	 as `isHiddenByUser`, a second store of the same fact that six call sites
+	 kept in step with this one. */
+	private(set) var userPrefersMemberList = true
 	var transcript: LogView?
 	var appearanceRevision = 0
 	var isChoosingTransferFiles = false
-	var preferencesImportRequest = PendingFileRequest<Void>()
-	var isExportingPreferencesArchive = false
-	var isChoosingPreferencesExportOptions = false
-	var preferencesArchiveDocument: PreferencesPropertyListDocument?
-	let preferencesTransfer = PreferencesTransferSession.shared
+	let preferencesTransfer = MainWindowPreferencesTransferModel()
 	var inputPrompt: InputPromptPresentation?
 	/** Mirrors the toolbar search field's focus. The root view keeps it in step
 	 with its `@FocusState` in both directions, so setting it is what moves the
 	 keyboard into the field and clicking away is what clears it. */
 	var isSearchFieldFocused = false
 	/** Mirrors the notification controller's mute switch so the footer menu can
-	 name what the next press will do. The controller is not observable and the
-	 switch is thrown from the main menu as well, so the coordinator that owns
-	 the switch writes it here whenever it changes. */
+	 tick it. The controller is not observable and the switch is thrown from the
+	 main menu as well, so the coordinator that owns the switch writes it here
+	 whenever it changes. */
 	var areNotificationsDisabled = false
-	private(set) var sheetStack: [MainWindowSheetPresentation] = []
+	/// The outermost sheet the window is showing; each one holds whatever it
+	/// raised on top of itself.
+	private(set) var presentedSheet: MainWindowSheetPresentation?
 
 	@ObservationIgnored weak var window: MainWindow?
 	@ObservationIgnored private var transferFileSelection: (([URL]) -> Void)?
@@ -49,42 +60,52 @@ final class MainWindowPresentationModel {
 		self.window = window
 	}
 
-	func addServer() {
-		window?.menuController.addServer(nil)
-	}
-
-	func addChannel() {
-		window?.menuController.addChannel(nil)
-	}
-
 	/// Puts the keyboard in the sidebar filter field, which now lives in the
 	/// window toolbar. Channel Spotlight has a command of its own.
 	func focusSearchField() {
 		isSearchFieldFocused = true
 	}
 
-	func markAllAsRead() {
-		window?.menuController.markAllAsRead(nil)
+	/// The commands the sidebar's footer menus issue. They are the menu bar's
+	/// commands, sent to the object that performs them, rather than eight
+	/// methods on this model that only renamed them.
+	var commands: MenuActionCoordinator? {
+		AppController.shared.menuController?.actionCoordinator
 	}
 
-	func toggleNotifications() {
-		window?.menuController.toggleMuteOnNotifications(nil)
+	/** Applies a selection to the member-list column.
+
+	 One derivation, so the two facts cannot disagree: the column is available
+	 beside a joined channel, and it is open while it is available and the
+	 reader has not closed it. */
+	func applyMemberListAvailability(_ isAvailable: Bool) {
+		isMemberListAvailable = isAvailable
+		isMemberListVisible = isAvailable && userPrefersMemberList
 	}
 
-	func showAddressBook() {
-		window?.menuController.showAddressBook(nil)
-	}
+	/** The reader's own switch, from either menu or the toolbar.
 
-	func showFileTransfers() {
-		window?.menuController.showFileTransfersWindow(nil)
-	}
-
-	func showSettings() {
-		window?.menuController.showPreferencesWindow(nil)
-	}
-
+	 Nothing happens where there is no member list to show: both menus disable
+	 the command there, and a "Show Member List" that quietly recorded "hide it"
+	 is what the guard is for. */
 	func toggleMemberList() {
-		window?.toggleMemberListVisibility()
+		guard isMemberListAvailable else { return }
+		userPrefersMemberList.toggle()
+		isMemberListVisible = userPrefersMemberList
+	}
+
+	/// Restores what the reader last left the columns at.
+	func restoreColumns(_ state: MainWindowLayoutState) {
+		isServerListVisible = state.isServerListVisible
+		userPrefersMemberList = state.isMemberListVisible
+		isMemberListVisible = state.isMemberListVisible
+	}
+
+	var columnState: MainWindowLayoutState {
+		MainWindowLayoutState(
+			isServerListVisible: isServerListVisible,
+			isMemberListVisible: userPrefersMemberList
+		)
 	}
 
 	func chooseTransferFiles(perform: @escaping ([URL]) -> Void) {
@@ -100,43 +121,6 @@ final class MainWindowPresentationModel {
 		case let .failure(error):
 			mainWindowRootViewLogger.error("Choosing files to transfer failed: \(error)")
 		}
-	}
-
-	func requestPreferencesImport() {
-		guard preferencesImportRequest.request == nil, preferencesTransfer.canStart else { return }
-		preferencesTransfer.host = .mainWindow
-		preferencesImportRequest.present()
-	}
-
-	func completePreferencesImport(_ result: Result<URL, Error>, requestID: UUID) {
-		guard preferencesImportRequest.complete(requestID) != nil else { return }
-		switch result {
-		case let .success(url):
-			Task { await preferencesTransfer.prepareImport(from: url) }
-		case let .failure(error): preferencesTransfer.report(error)
-		}
-	}
-
-	func requestPreferencesExport() {
-		guard preferencesTransfer.canStart,
-		      !isExportingPreferencesArchive, !isChoosingPreferencesExportOptions else { return }
-		preferencesTransfer.host = .mainWindow
-		isChoosingPreferencesExportOptions = true
-	}
-
-	func exportPreferences(includeConnectCommands: Bool) {
-		Task { @MainActor in
-			do {
-				preferencesArchiveDocument = try await PreferencesPropertyListDocument(data: preferencesTransfer
-					.exportData(includeConnectCommands: includeConnectCommands))
-				isExportingPreferencesArchive = true
-			} catch { preferencesTransfer.report(error) }
-		}
-	}
-
-	func completePreferencesExport(_ result: Result<URL, Error>) {
-		preferencesArchiveDocument = nil
-		preferencesTransfer.completeExport(result)
 	}
 
 	func presentInputPrompt(
@@ -159,43 +143,45 @@ final class MainWindowPresentationModel {
 		self.inputPrompt = nil
 	}
 
+	/// Raises a sheet: the first one on the window, any after it on whichever
+	/// sheet is innermost.
 	func presentSheet(_ presentation: MainWindowSheetPresentation) {
-		sheetStack.append(presentation)
+		guard let innermost = presentedSheet?.chain.last else {
+			presentedSheet = presentation
+			return
+		}
+		innermost.child = presentation
 	}
 
 	func dismissSheet(ownedBy owner: AnyObject) {
-		guard let index = sheetStack.firstIndex(where: { $0.owner === owner }) else { return }
-		dismissSheets(startingAt: index)
+		closeSheets { $0 === owner }
 	}
 
 	func dismissPresentedSheet() {
-		dismissSheets(startingAt: 0)
-	}
-
-	func sheet(at index: Int) -> MainWindowSheetPresentation? {
-		guard sheetStack.indices.contains(index) else { return nil }
-		return sheetStack[index]
+		dismiss(presentedSheet)
 	}
 
 	func closeSheets(where shouldClose: (AnyObject) -> Bool) {
-		guard let index = sheetStack.firstIndex(where: { shouldClose($0.owner) }) else { return }
-		dismissSheets(startingAt: index)
+		dismiss(presentedSheet?.chain.first { shouldClose($0.owner) })
 	}
 
 	func closePresentedSheet() {
-		if sheetStack.isEmpty == false {
+		if presentedSheet != nil {
 			dismissPresentedSheet()
 		} else {
 			window?.attachedSheet?.close()
 		}
 	}
 
-	func dismissSheets(startingAt index: Int) {
-		guard sheetStack.indices.contains(index) else { return }
-		for presentation in sheetStack[index...].reversed() {
-			presentation.finish()
+	/// Takes `presentation` down, and everything it raised with it.
+	func dismiss(_ presentation: MainWindowSheetPresentation?) {
+		guard let presentation else { return }
+		if presentedSheet === presentation {
+			presentedSheet = nil
+		} else {
+			presentedSheet?.chain.first { $0.child === presentation }?.child = nil
 		}
-		sheetStack.removeSubrange(index...)
+		presentation.finish()
 	}
 }
 
@@ -213,7 +199,6 @@ struct MainWindowRootView: View {
 	@Environment(\.colorSchemeContrast) private var contrast
 
 	var body: some View {
-		let preferencesImportRequestID = model.preferencesImportRequest.request?.id
 		ZStack {
 			NavigationSplitView(columnVisibility: serverListVisibility) {
 				serverSidebar
@@ -278,7 +263,7 @@ struct MainWindowRootView: View {
 			.searchable(
 				text: $serverList.filterText,
 				placement: .toolbar,
-				prompt: Text(MainWindowStrings.InputBar.searchChannels)
+				prompt: Text(MainWindowStrings.InputBar.filterSidebar)
 			)
 			.searchFocused($isSearchFieldFocused)
 			.disabled(loadingScreen.viewIsVisible)
@@ -292,22 +277,23 @@ struct MainWindowRootView: View {
 		.toolbar {
 			/* No sidebar toggle is declared here: the split view contributes its
 			 own where the system wants it, and re-declaring it only moved it. */
-			if model.isMemberListAvailable {
-				ToolbarItem(placement: .primaryAction) {
-					/* The title says which way the press goes and the symbol
-					 says which state the window is in, the way Mail's sidebar
-					 toggle does: filled while the pane is showing. */
-					Button(
-						MainWindowStrings.Menu.memberList(isVisible: model.isMemberListVisible),
-						systemImage: model.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
-					) {
-						model.toggleMemberList()
-					}
-					.help(MainWindowStrings.Menu.memberList(isVisible: model.isMemberListVisible))
+			ToolbarItem(placement: .primaryAction) {
+				/* Declared whatever the selection is, and disabled where there
+				 is no member list: a toolbar whose only button disappears on a
+				 server row is a toolbar that changes shape as the reader moves
+				 down the sidebar. The title says which way the press goes and
+				 the symbol says which state the window is in, the way Mail's
+				 sidebar toggle does: filled while the pane is showing. */
+				Button(
+					MainWindowStrings.Menu.memberList(isVisible: model.isMemberListVisible),
+					systemImage: model.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
+				) {
+					toggleMemberList()
 				}
+				.disabled(model.isMemberListAvailable == false)
+				.help(MainWindowStrings.Menu.memberList(isVisible: model.isMemberListVisible))
 			}
 		}
-		.presentedWindowToolbarStyle(.unified)
 		/* Two directions: the menu command sets the model's flag to move the
 		 keyboard into the field, and the field reports back so the flag still
 		 reads true when the user focused it themselves. */
@@ -323,25 +309,7 @@ struct MainWindowRootView: View {
 			allowsMultipleSelection: true,
 			onCompletion: model.completeTransferFileSelection
 		)
-		.fileImporter(
-			isPresented: PendingFileRequest<Void>.presentation($model.preferencesImportRequest),
-			allowedContentTypes: [.propertyList]
-		) { result in
-			guard let preferencesImportRequestID else { return }
-			model.completePreferencesImport(result, requestID: preferencesImportRequestID)
-		}
-		.fileExporter(
-			isPresented: $model.isExportingPreferencesArchive,
-			document: model.preferencesArchiveDocument,
-			contentType: .propertyList,
-			defaultFilename: PreferencesImportExport.defaultArchiveFilename,
-			onCompletion: model.completePreferencesExport
-		)
-		.modifier(PreferencesTransferPresentation(session: model.preferencesTransfer, host: .mainWindow))
-		.modifier(PreferencesExportOptionsPresentation(
-			isPresented: $model.isChoosingPreferencesExportOptions,
-			export: model.exportPreferences
-		))
+		.preferencesTransfer(model.preferencesTransfer)
 		.sheet(item: $model.inputPrompt, onDismiss: model.inputPromptDidDismiss) { prompt in
 			InputPromptView(
 				presentation: prompt,
@@ -353,25 +321,25 @@ struct MainWindowRootView: View {
 				}
 			)
 		}
-		.sheet(isPresented: rootSheetIsPresented) {
-			if let presentation = model.sheet(at: 0) {
-				MainWindowSheetHost(model: model, presentation: presentation, index: 0)
-			}
+		.sheet(item: presentedSheet) { presentation in
+			MainWindowSheetHost(model: model, presentation: presentation)
 		}
 	}
 
 	private var serverListVisibility: Binding<NavigationSplitViewVisibility> {
 		Binding(
-			get: { model.isServerListVisible ? .all : .detailOnly },
+			get: { model.isServerListVisible ? .doubleColumn : .detailOnly },
 			set: { model.isServerListVisible = $0 != .detailOnly }
 		)
 	}
 
-	private var rootSheetIsPresented: Binding<Bool> {
+	/// Dismissing has to reach the session that raised the sheet, so the
+	/// binding's write goes through the model rather than clearing the item.
+	private var presentedSheet: Binding<MainWindowSheetPresentation?> {
 		Binding(
-			get: { model.sheetStack.isEmpty == false },
-			set: { isPresented in
-				if isPresented == false {
+			get: { model.presentedSheet },
+			set: { presentation in
+				if presentation == nil {
 					model.dismissPresentedSheet()
 				}
 			}
@@ -400,15 +368,15 @@ struct MainWindowRootView: View {
 		HStack(spacing: UISpacing.tight) {
 			Menu {
 				Button(MenuStrings.Server.addServer, systemImage: "server.rack") {
-					model.addServer()
+					model.commands?.addServer(nil)
 				}
 				Button(MenuStrings.Server.addChannel, systemImage: "number") {
-					model.addChannel()
+					model.commands?.addChannel(nil)
 				}
 			} label: {
-				footerIcon("plus")
+				footerIcon("plus", titled: MainWindowStrings.InputBar.addServerOrChannel)
 			} primaryAction: {
-				model.addChannel()
+				model.commands?.addChannel(nil)
 			}
 			.sidebarFooterMenu()
 			.help(MainWindowStrings.InputBar.addServerOrChannel)
@@ -417,34 +385,35 @@ struct MainWindowRootView: View {
 
 			Menu {
 				Button(MainWindowStrings.InputBar.markAllAsRead, systemImage: "checkmark.circle") {
-					model.markAllAsRead()
+					model.commands?.markAllAsRead(nil)
 				}
-				Button(
-					MainWindowStrings.Menu.notifications(areDisabled: model.areNotificationsDisabled),
-					systemImage: model.areNotificationsDisabled ? "bell" : "bell.slash"
-				) {
-					model.toggleNotifications()
-				}
+				/* A mode is ticked while it is in force, which is what the
+				 application menu and the Dock menu already do with it. Renaming
+				 the item instead left one command with three names. */
+				Toggle(MenuStrings.Notifications.muteNotifications, isOn: Binding(
+					get: { model.areNotificationsDisabled },
+					set: { _ in model.commands?.toggleMuteOnNotifications(nil) }
+				))
 				Divider()
-				Button(MainWindowStrings.InputBar.addressBook, systemImage: "person.crop.circle") {
-					model.showAddressBook()
+				Button(MenuStrings.Window.addressBook, systemImage: "person.crop.circle") {
+					model.commands?.showAddressBook(nil)
 				}
-				Button(MainWindowStrings.InputBar.fileTransfers, systemImage: "arrow.down.circle") {
-					model.showFileTransfers()
+				Button(MenuStrings.Window.fileTransfers, systemImage: "arrow.down.circle") {
+					model.commands?.showFileTransfersWindow(nil)
 				}
 				Divider()
 				Button(
 					MainWindowStrings.Menu.memberList(isVisible: model.isMemberListVisible),
 					systemImage: model.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
 				) {
-					model.toggleMemberList()
+					toggleMemberList()
 				}
 				.disabled(model.isMemberListAvailable == false)
 				Button(MainWindowStrings.InputBar.settings, systemImage: "gear") {
-					model.showSettings()
+					model.commands?.showPreferencesWindow(nil)
 				}
 			} label: {
-				footerIcon("ellipsis.circle")
+				footerIcon("ellipsis.circle", titled: MainWindowStrings.InputBar.more)
 			}
 			.sidebarFooterMenu()
 			.menuIndicator(.hidden)
@@ -454,9 +423,14 @@ struct MainWindowRootView: View {
 		.frame(height: MainWindowConstants.sidebarFooterHeight)
 	}
 
-	private func footerIcon(_ systemName: String) -> some View {
-		Image(systemName: systemName)
-			.font(.system(size: 14, weight: .medium))
+	/// A bare `Image` carries no accessibility label, so VoiceOver announced
+	/// the two always-visible sidebar controls as "plus, menu" and nothing at
+	/// all. A `Label` keeps the name for assistive technology while drawing
+	/// only the symbol.
+	private func footerIcon(_ systemName: String, titled title: String) -> some View {
+		Label(title, systemImage: systemName)
+			.labelStyle(.iconOnly)
+			.font(.callout.weight(.medium))
 			.frame(width: MainWindowConstants.footerIconSize, height: MainWindowConstants.footerIconSize)
 			.contentShape(Rectangle())
 	}
@@ -526,7 +500,10 @@ struct MainWindowRootView: View {
 				.padding(.horizontal, UISpacing.loose)
 
 				MainWindowInputRepresentable(contentView: inputContentView)
-					.frame(minHeight: 35, idealHeight: 44)
+					.frame(
+						minHeight: MainWindowInputBarLayout.minimumHostHeight,
+						idealHeight: MainWindowInputBarLayout.idealHostHeight
+					)
 					.padding(.horizontal, UISpacing.regular)
 					.padding(.vertical, MainWindowInputBarLayout.fieldVerticalPadding)
 					.glassEffect(.regular, in: .capsule)
@@ -541,25 +518,37 @@ struct MainWindowRootView: View {
 
 	 Glass draws no focus ring of its own and the field's own ring is turned
 	 off, so nothing marked the field as the place typing would land. The
-	 capsule takes the accent colour while the field holds the keyboard, drawn
-	 thicker where the system asks for increased contrast. */
+	 capsule takes the system's own focus-ring colour while the field holds the
+	 keyboard -- which tracks both the accent setting and Increase Contrast --
+	 drawn thicker where the system asks for increased contrast. */
 	private var focusRing: some View {
 		Capsule()
 			.strokeBorder(
-				Color.accentColor,
+				Color(nsColor: .keyboardFocusIndicatorColor),
 				lineWidth: contrast == .increased
 					? MainWindowConstants.focusRingWidthIncreasedContrast
 					: MainWindowConstants.focusRingWidth
 			)
 			.opacity(inputContentView.textView.focusModel.isFocused ? 1 : 0)
-			.animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: inputContentView.textView.focusModel
-				.isFocused)
+			.animation(
+				reduceMotion ? nil : .easeOut(duration: 0.12),
+				value: inputContentView.textView.focusModel.isFocused
+			)
 			.accessibilityHidden(true)
 	}
 
 	private var conversationBackground: Color {
 		_ = model.appearanceRevision
 		return Color(nsColor: SharedApplication.sharedThemeController().backgroundColor)
+	}
+
+	/** A pane sweeping across the window is exactly the motion Reduce Motion
+	 asks an interface to drop, so the column simply appears instead. The state
+	 change is the view's to animate: the model only records it. */
+	private func toggleMemberList() {
+		withAnimation(ReduceMotion.animation(.default)) {
+			model.toggleMemberList()
+		}
 	}
 
 	private func redirectTyping(_ text: String) {
@@ -570,9 +559,8 @@ struct MainWindowRootView: View {
 }
 
 private struct MainWindowSheetHost: View {
-	@Bindable var model: MainWindowPresentationModel
-	let presentation: MainWindowSheetPresentation
-	let index: Int
+	let model: MainWindowPresentationModel
+	@Bindable var presentation: MainWindowSheetPresentation
 
 	var body: some View {
 		presentation.content
@@ -580,19 +568,17 @@ private struct MainWindowSheetHost: View {
 			 the content's ideal size and leaves the user free to drag the sheet
 			 anywhere between the content's minimum and maximum. */
 			.presentationSizing(.fitted)
-			.sheet(isPresented: nestedSheetIsPresented) {
-				if let nested = model.sheet(at: index + 1) {
-					MainWindowSheetHost(model: model, presentation: nested, index: index + 1)
-				}
+			.sheet(item: child) { nested in
+				MainWindowSheetHost(model: model, presentation: nested)
 			}
 	}
 
-	private var nestedSheetIsPresented: Binding<Bool> {
+	private var child: Binding<MainWindowSheetPresentation?> {
 		Binding(
-			get: { model.sheet(at: index + 1) != nil },
-			set: { isPresented in
-				if isPresented == false {
-					model.dismissSheets(startingAt: index + 1)
+			get: { presentation.child },
+			set: { nested in
+				if nested == nil {
+					model.dismiss(presentation.child)
 				}
 			}
 		)
@@ -600,6 +586,15 @@ private struct MainWindowSheetHost: View {
 }
 
 enum MainWindowTypingRedirectPolicy {
+	/** Where AppKit puts the keys that are not characters.
+
+	 Tab, Return and Escape arrive as control characters, but the arrow,
+	 function, page and Home/End keys are mapped into the Unicode private-use
+	 area instead -- so an arrow press in a sidebar passed the control-character
+	 test and was inserted into the message field as an undrawable character
+	 rather than moving the selection. */
+	private static let functionKeys = Unicode.Scalar(0xF700)! ... Unicode.Scalar(0xF8FF)!
+
 	static func text(
 		for characters: String,
 		commandIsPressed: Bool,
@@ -608,10 +603,14 @@ enum MainWindowTypingRedirectPolicy {
 		guard commandIsPressed == false,
 		      controlIsPressed == false,
 		      characters.isEmpty == false,
-		      characters.unicodeScalars.allSatisfy({ CharacterSet.controlCharacters.contains($0) == false })
+		      characters.unicodeScalars.allSatisfy(isTypable)
 		else { return nil }
 
 		return characters
+	}
+
+	private static func isTypable(_ scalar: Unicode.Scalar) -> Bool {
+		CharacterSet.controlCharacters.contains(scalar) == false && functionKeys.contains(scalar) == false
 	}
 }
 
@@ -688,6 +687,28 @@ enum MainWindowInputBarLayout {
 	static let bottomPadding: CGFloat = 6
 	static let replyBannerHeight: CGFloat = 30
 	static let typingRowHeight: CGFloat = 18
+	/// What SwiftUI proposes for the field's host view; the field's own height
+	/// constraint moves within it as the text grows.
+	static let minimumHostHeight: CGFloat = 35
+	static let idealHostHeight: CGFloat = 44
+
+	/* The same capsule measured from the AppKit side: the container the field's
+	 scroll view sits in, inset from the host view, and the scroll view's own
+	 inset within that container. They used to be five literals in
+	 `installContainer()` beside four named constants here, describing one shape
+	 from two directions. */
+
+	/// The container's inset from the host view.
+	static let containerTopInset: CGFloat = 7
+	static let containerBottomInset: CGFloat = 6
+	static let containerHorizontalInset: CGFloat = 10
+	/// The host view's height before the field has measured any text.
+	static let hostInitialHeight: CGFloat = 38
+	/// The scroll view's inset inside the container.
+	static let scrollViewTrailingInset: CGFloat = 10
+	static let scrollViewVerticalInset: CGFloat = 3
+	/// The shortest the text view itself may be: one line.
+	static let minimumTextHeight: CGFloat = 19
 
 	static func accessoryHeight(replyVisible: Bool, typingVisible: Bool) -> CGFloat {
 		var height: CGFloat = 0
@@ -759,17 +780,36 @@ private struct MemberListResizeHandle: View {
 			}
 			.focusable()
 			.focused($isFocused)
-			.onKeyPress(.leftArrow) {
-				apply(width + MainWindowConstants.memberListKeyboardResizeStep, persist: true)
-				return .handled
-			}
-			.onKeyPress(.rightArrow) {
-				apply(width - MainWindowConstants.memberListKeyboardResizeStep, persist: true)
+			/* The width is written back when the key comes up, not on every
+			 repeat: a held arrow key otherwise wrote `UserDefaults` -- and
+			 posted its change notification, which the message field listens to
+			 -- forty times a second. The drag does the same on its own end. */
+			.onKeyPress(keys: [.leftArrow, .rightArrow], phases: [.down, .repeat, .up]) { press in
+				guard press.phase != .up else {
+					persistWidth()
+					return .handled
+				}
+				let step = MainWindowConstants.memberListKeyboardResizeStep
+				apply(width + (press.key == .leftArrow ? step : -step), persist: false)
 				return .handled
 			}
 			.accessibilityLabel(MainWindowStrings.Toolbar.memberListWidth)
 			.accessibilityHint(MainWindowStrings.Toolbar.memberListWidthHint)
-			.accessibilityAddTraits(.isButton)
+			/* A splitter adjusts, it does not activate: the button trait
+			 offered VoiceOver a "press" that does nothing, and described the
+			 arrow keys in prose instead of exposing them. */
+			.accessibilityValue(Text(Int(width.rounded()), format: .number))
+			.accessibilityAdjustableAction { direction in
+				let step = MainWindowConstants.memberListKeyboardResizeStep
+				switch direction {
+				case .increment:
+					apply(width + step, persist: true)
+				case .decrement:
+					apply(width - step, persist: true)
+				@unknown default:
+					break
+				}
+			}
 			.help(MainWindowStrings.Toolbar.memberListWidth)
 	}
 
@@ -788,7 +828,7 @@ private struct MemberListResizeHandle: View {
 /// The widths the member list is allowed to settle on. A drag, an arrow key
 /// and the double-click reset all land here, so none of them can put a width
 /// into the preference that the column cannot lay out.
-enum MemberListWidthPolicy {
+nonisolated enum MemberListWidthPolicy { // nonisolated: value
 	static func clamped(_ candidate: CGFloat) -> CGFloat {
 		min(
 			MainWindowConstants.memberListMaximumWidth,
@@ -856,10 +896,10 @@ final class MainWindowTranscriptHostView: NSView {
 			}
 		}
 		guard logView !== nextLogView else { return }
-		logView?.view.removeFromSuperview()
+		logView?.removeFromSuperview()
 		logView = nextLogView
 
-		guard let transcriptView = nextLogView?.view else { return }
+		guard let transcriptView = nextLogView else { return }
 		transcriptView.translatesAutoresizingMaskIntoConstraints = false
 		addSubview(transcriptView)
 		NSLayoutConstraint.activate([

@@ -8,7 +8,6 @@ enum PluginAndBurstScenarios {
 		if kind == .pluginSmiley {
 			for (index, enabled) in [false, true, false].enumerated() {
 				let settings = try await driver.settingsWindow()
-				try await driver.selectRow("Add-ons", from: settings)
 				try await driver.selectPreferencePage("Smiley Converter", in: settings)
 				try await driver.toggle("Enable Smiley Converter", to: enabled, from: settings)
 				try await driver.closeWindow(settings)
@@ -25,7 +24,7 @@ enum PluginAndBurstScenarios {
 				guard try !HarnessFiles.exists("burst-complete")
 				else { throw HarnessFailure.assertion("Burst ended before UI switching") }
 				let settings = try await driver.settingsWindow()
-				try await driver.selectRow("General", from: settings)
+				try await driver.selectPreferencePage("General", in: settings)
 				try await driver.wait("Settings remains responsive during burst") { deadline in
 					try driver.named(
 						"Request confirmation before quitting Glasstual",

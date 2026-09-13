@@ -6,12 +6,13 @@
 import AppKit
 @testable import Glasstual
 import GlasstualPluginKit
+import SwiftUI
 import Testing
 
 /// A validator that expresses availability the way the application's own menu
 /// validators do: by hiding the item rather than by disabling it.
 @MainActor
-private final class GLTMenuValidator: NSObject, NSMenuItemValidation {
+private final class MenuValidator: NSObject, NSMenuItemValidation {
 	var hiddenTitles: Set<String> = []
 	var disabledTitles: Set<String> = []
 	private(set) var validationCount = 0
@@ -45,7 +46,6 @@ struct AppMenuContentTests {
 			let previous = try #require(previousClient.findChannelOrCreate("#active"))
 			previous.activate()
 			window.select(previous)
-			coordinator.menuWillOpen(controller.mainMenuChannelMenu)
 			client.join(channel)
 			try client.receiveNumericReply(#require(Message(
 				line: ":irc.example.test 477 mynick #retry :You need to identify to a registered nick", on: client
@@ -73,12 +73,14 @@ struct AppMenuContentTests {
 			_ = AppMenuEntry.validating(controller.mainMenuChannelMenu)
 			let performed = join.perform {
 				window.serverList.selectFromSwiftUI(channel.uniqueIdentifier)
-				#expect(coordinator.pointedChannel === previous)
 			}
 			#expect(performed)
+			/* Clicking the row publishes it, and the command runs against the
+			 row the menu was opened on rather than against what the window was
+			 showing before the click. */
 			#expect(window.selectedChannel === channel)
-			#expect(coordinator.selectedClient === previousClient)
-			#expect(coordinator.selectedChannel === previous)
+			#expect(coordinator.selectedClient === client)
+			#expect(coordinator.selectedChannel === channel)
 			#expect(client.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("JOIN ") }
 				== ["JOIN #retry", "JOIN #retry"])
 			#expect(other.sentLines.count == 0)
@@ -101,13 +103,18 @@ struct AppMenuContentTests {
 			let coordinator = controller.actionCoordinator
 			coordinator.pointedClient = client
 			coordinator.pointedChannel = nil
-			for item in [other as IRCTreeItem?, nil] {
+			for item in [other as TreeItem?, nil] {
 				let entries = AppMenuEntry.validating(
 					controller.mainMenuChannelMenu,
 					context: AppMenuContext(coordinator: coordinator, item: item)
 				)
-				#expect(entries
-					.contains { $0.item.command == .joinChannel || $0.item.command == .leaveChannel } == false)
+				/* Disabled, not absent: a menu whose shape follows the
+				 selection is a menu nobody can learn. */
+				let channelCommands = entries.filter {
+					$0.item.command == .joinChannel || $0.item.command == .leaveChannel
+				}
+				#expect(channelCommands.isEmpty == false)
+				#expect(channelCommands.allSatisfy { $0.isEnabled == false })
 				coordinator.withContext(.treeItem(item)) {
 					#expect(coordinator.selectedClient === item)
 					#expect(coordinator.selectedChannel == nil)
@@ -180,8 +187,92 @@ struct AppMenuContentTests {
 		}
 	}
 
+	/** HIG: disable, do not remove.
+
+	 Availability used to be expressed by hiding, so the menus changed shape as
+	 the selection moved and nobody could learn where a command lived. Two pairs
+	 are the exception — Connect and Disconnect, Join and Leave — because each
+	 pair is one command in two states and showing both offers a choice that
+	 does not exist. */
+	@Test("Only the two state pairs are ever hidden")
+	func availabilityIsExpressedByEnablement() async throws {
+		try await withChannelMenu { controller, _, _, _ in
+			let menus = try [
+				#require(NSApp.mainMenu),
+				controller.mainMenuChannelMenu,
+				controller.mainMenuQueryMenu,
+				controller.userControlMenu,
+				controller.channelViewGeneralMenu,
+			]
+			let allowedToHide: Set<MenuCommand> = [
+				.connect, .connectWithoutProxy, .disconnect, .joinChannel, .leaveChannel,
+			]
+
+			var hidden: [String] = []
+			for menu in menus {
+				/* Only the items this application validates: AppKit owns the
+				 visibility of the ones it answers itself, and it hides Enter
+				 Full Screen for a window that cannot go full screen. */
+				for item in Self.items(of: menu) where item.target != nil {
+					_ = controller.validateMenuItem(item)
+					guard let command = item.command, item.isHidden else { continue }
+					if allowedToHide.contains(command) == false {
+						hidden.append("\(command) (\(item.title))")
+					}
+				}
+			}
+
+			#expect(hidden.isEmpty, "Commands answering availability by hiding: \(hidden.sorted())")
+		}
+	}
+
+	/// A mode is a state, so the item that sets it is ticked while it is in
+	/// force rather than paired with an opposite that says nothing.
+	@Test("A channel mode is one ticked item, not two commands")
+	func channelModesAreTicked() async throws {
+		try await withChannelMenu { controller, window, client, _ in
+			client.markAsLoggedIn()
+			let channel = try #require(client.findChannelOrCreate("#modes"))
+			channel.activate()
+			window.select(channel)
+
+			let moderated = try #require(controller.mainMenuChannelMenu.item(for: .channelModeModerated))
+			_ = controller.validateMenuItem(moderated)
+			#expect(moderated.state == .off)
+
+			_ = channel.modeInfo?.updateModes("+m")
+			_ = controller.validateMenuItem(moderated)
+			#expect(moderated.state == .on)
+			#expect(controller.actionCoordinator.channelModeIsSet("m"))
+		}
+	}
+
+	/// The SwiftUI mirror used to drop the tick and the shortcut, so the same
+	/// menu said less than the AppKit one it was built from.
+	@Test("A snapshot carries the item's tick and its key equivalent")
+	func snapshotCarriesStateAndShortcut() {
+		let menu = NSMenu(title: "Root")
+		let ticked = NSMenuItem(title: "Muted", action: nil, keyEquivalent: "m")
+		ticked.keyEquivalentModifierMask = [.command, .shift]
+		ticked.state = .on
+		let plain = NSMenuItem(title: "Plain", action: nil, keyEquivalent: "")
+		menu.addItem(ticked)
+		menu.addItem(plain)
+
+		let entries = AppMenuEntry.validating(menu)
+
+		#expect(entries[0].isOn)
+		#expect(entries[0].shortcut == KeyboardShortcut("m", modifiers: [.command, .shift]))
+		#expect(entries[1].isOn == false)
+		#expect(entries[1].shortcut == nil)
+	}
+
+	private static func items(of menu: NSMenu) -> [NSMenuItem] {
+		menu.items.flatMap { [$0] + ($0.submenu.map(items(of:)) ?? []) }
+	}
+
 	private func withChannelMenu(
-		_ body: (MenuController, MainWindow, GLTTestClient, GLTTestClient) throws -> Void
+		_ body: (MenuController, MainWindow, TestClient, TestClient) throws -> Void
 	) async throws {
 		let app = try #require(AppController.shared)
 		try #require(app.applicationIsLaunched)
@@ -203,9 +294,9 @@ struct AppMenuContentTests {
 		let originalServicesMenu = NSApp.servicesMenu
 		let originalWindowsMenu = NSApp.windowsMenu
 		let originalHelpMenu = NSApp.helpMenu
-		let fixture = GLTClientEnvironmentFixture()
-		let client = GLTTestClient(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
-		let other = GLTTestClient(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		let fixture = ClientEnvironmentFixture()
+		let client = TestClient(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		let other = TestClient(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
 		fixture.world.clientList = [client, other]
 		window.inputContentView.configure()
 		let controller = MenuController()
@@ -228,13 +319,13 @@ struct AppMenuContentTests {
 
 	private func menu(
 		_ titles: [String],
-		validatedBy validator: GLTMenuValidator
+		validatedBy validator: MenuValidator
 	) -> NSMenu {
 		let menu = NSMenu(title: "")
 		for title in titles {
 			let item = NSMenuItem(
 				title: title,
-				action: #selector(GLTMenuValidator.invoke(_:)),
+				action: #selector(MenuValidator.invoke(_:)),
 				keyEquivalent: ""
 			)
 			item.target = validator
@@ -248,7 +339,7 @@ struct AppMenuContentTests {
 	/// Rendering every item showed "Connect" beside "Disconnect".
 	@Test("An item the validator hid is not rendered")
 	func hiddenItemsAreDropped() {
-		let validator = GLTMenuValidator()
+		let validator = MenuValidator()
 		validator.hiddenTitles = ["Disconnect"]
 
 		let entries = AppMenuEntry.validating(menu(["Connect", "Disconnect"], validatedBy: validator))
@@ -258,7 +349,7 @@ struct AppMenuContentTests {
 
 	@Test("Enablement is read back from the item the validator settled")
 	func enablementComesFromValidation() {
-		let validator = GLTMenuValidator()
+		let validator = MenuValidator()
 		validator.disabledTitles = ["Kick"]
 
 		let entries = AppMenuEntry.validating(menu(["Ban", "Kick"], validatedBy: validator))
@@ -272,7 +363,7 @@ struct AppMenuContentTests {
 	/// view mutated titles, hidden flags and submenu attachment again.
 	@Test("The menu is validated once, before the content is described")
 	func validationRunsOnceOutsideTheViewBody() {
-		let validator = GLTMenuValidator()
+		let validator = MenuValidator()
 		let menu = menu(["Ban", "Kick"], validatedBy: validator)
 
 		let entries = AppMenuEntry.validating(menu)
@@ -288,7 +379,7 @@ struct AppMenuContentTests {
 
 	@Test("Separators and submenus keep their shape")
 	func separatorsAndSubmenusAreDescribed() {
-		let validator = GLTMenuValidator()
+		let validator = MenuValidator()
 		let parent = menu(["Client-to-Client"], validatedBy: validator)
 		parent.addItem(.separator())
 		parent.item(at: 0)?.submenu = menu(["Lag (PING)"], validatedBy: validator)
@@ -309,7 +400,7 @@ struct AppMenuContentTests {
 
 	@Test("A hidden item inside a submenu is dropped too")
 	func hiddenSubmenuItemsAreDropped() {
-		let validator = GLTMenuValidator()
+		let validator = MenuValidator()
 		validator.hiddenTitles = ["Take Op (-o)"]
 
 		let parent = menu(["Modes"], validatedBy: validator)

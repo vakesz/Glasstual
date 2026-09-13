@@ -9,15 +9,16 @@ import SwiftUI
 struct ChannelPropertiesView: View {
 	@Bindable var model: ChannelPropertiesModel
 	let notificationItems: [NotificationConfigurationItem]
-	let secretKeyChanged: (String) -> Void
 	let submit: () -> Void
 	let cancel: () -> Void
 
 	@FocusState private var channelNameIsFocused: Bool
 
 	var body: some View {
-		VStack(spacing: 12) {
-			Picker("", selection: $model.selection) {
+		VStack(spacing: 0) {
+			heading
+
+			Picker(ChannelPropertiesStrings.sectionPickerLabel, selection: $model.selection) {
 				ForEach(ChannelPropertiesSection.allCases) { section in
 					Text(verbatim: section.title)
 						.tag(section)
@@ -26,25 +27,28 @@ struct ChannelPropertiesView: View {
 			}
 			.labelsHidden()
 			.pickerStyle(.segmented)
+			.accessibilityLabel(ChannelPropertiesStrings.sectionPickerLabel)
+			.padding(.horizontal, 20)
 
-			Group {
-				switch model.selection {
-				case .general: generalPane
-				case .defaults: defaultsPane
-				case .notifications: notificationsPane
-				}
+			switch model.selection {
+			case .general: generalPane
+			case .defaults: defaultsPane
+			case .notifications: notificationsPane
 			}
-			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-			HStack(spacing: 8) {
+			Divider()
+			HStack {
 				Spacer()
 				Button(PromptStrings.Action.cancel, action: cancel)
 					.keyboardShortcut(.cancelAction)
-				Button(PromptStrings.Action.save, action: submit)
+				/* The channel is written back into the connection that owns it,
+				 which is what saves it; this one says the editor is done. */
+				Button(PromptStrings.Action.confirmation, action: submit)
 					.keyboardShortcut(.defaultAction)
+					.disabled(model.channelNameValidationMessage != nil)
 			}
+			.padding(12)
 		}
-		.padding(20)
 		.frame(
 			minWidth: 560,
 			idealWidth: 620,
@@ -54,7 +58,6 @@ struct ChannelPropertiesView: View {
 			maxHeight: .infinity
 		)
 		.onAppear { channelNameIsFocused = model.channelNameIsEditable }
-		.onExitCommand(perform: cancel)
 		.onChange(of: model.config.pushNotifications) { _, enabled in
 			if enabled == false, model.selection == .notifications {
 				model.selection = .general
@@ -62,60 +65,95 @@ struct ChannelPropertiesView: View {
 		}
 	}
 
+	/// The channel this is about, named under the sheet's own title. A sheet
+	/// opened to create a channel has nothing to name yet.
+	private var heading: some View {
+		VStack(alignment: .leading, spacing: 6) {
+			Text(verbatim: ChannelPropertiesStrings.heading)
+				.font(.title2.weight(.semibold))
+			if model.channelNameIsEditable == false {
+				Text(verbatim: model.channelName)
+					.foregroundStyle(.secondary)
+			}
+		}
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.padding([.horizontal, .top], 20)
+		.padding(.bottom, 12)
+	}
+
 	private var generalPane: some View {
 		Form {
-			LabeledContent(ChannelPropertiesStrings.nameLabel) {
-				TextField("#example", text: $model.channelName)
-					.labelsHidden()
-					.disabled(model.channelNameIsEditable == false)
-					.focused($channelNameIsFocused)
-					.accessibilityLabel(ChannelPropertiesStrings.nameLabel)
-					.overlay {
-						if model.channelNameValidationError != nil {
-							RoundedRectangle(cornerRadius: 5).stroke(.red, lineWidth: 1)
-						}
-					}
-					.popover(isPresented: $model.isValidationMessagePresented) {
-						if let error = model.channelNameValidationError {
-							Text(verbatim: error).padding(10)
-						}
-					}
-			}
-			LabeledContent(ChannelPropertiesStrings.passwordLabel) {
-				SecureField(ChannelPropertiesStrings.optional, text: $model.secretKey)
-					.labelsHidden()
-					.accessibilityLabel(ChannelPropertiesStrings.passwordLabel)
-					.onChange(of: model.secretKey) { _, value in secretKeyChanged(value) }
-			}
-			LabeledContent(ChannelPropertiesStrings.labelLabel) {
-				TextField(ChannelPropertiesStrings.optional, text: $model.label)
-					.labelsHidden()
-					.accessibilityLabel(ChannelPropertiesStrings.labelLabel)
-			}
-			Text(verbatim: ChannelPropertiesStrings.labelHelp)
-				.font(.caption)
-				.foregroundStyle(.secondary)
+			Section {
+				LabeledContent(ChannelPropertiesStrings.nameLabel) {
+					TextField(ChannelPropertiesStrings.channelNamePlaceholder, text: $model.channelName)
+						.labelsHidden()
+						.disabled(model.channelNameIsEditable == false)
+						.focused($channelNameIsFocused)
+						.accessibilityLabel(ChannelPropertiesStrings.nameLabel)
+				}
+				if let message = model.channelNameValidationMessage {
+					ValidationMessageLabel(message)
+				}
 
-			Toggle(ChannelPropertiesStrings.joinOnConnect, isOn: $model.config.autoJoin)
-			Toggle(ChannelPropertiesStrings.showNotifications, isOn: $model.config.pushNotifications)
-			Toggle(ChannelPropertiesStrings.showUnreadCount, isOn: $model.config.showTreeBadgeCount)
-			Toggle(ChannelPropertiesStrings.disableGeneralEvents, isOn: $model.config.ignoreGeneralEventMessages)
-			Toggle(ChannelPropertiesStrings.disableHighlights, isOn: $model.config.ignoreHighlights)
-			Toggle(model.inlineMediaOverrideTitle, isOn: $model.inlineMediaOverride)
+				LabeledContent(ChannelPropertiesStrings.passwordLabel) {
+					SecureField(ChannelPropertiesStrings.optional, text: $model.secretKey)
+						.labelsHidden()
+						.accessibilityLabel(ChannelPropertiesStrings.passwordLabel)
+				}
+				if let caption = model.secretKeyLengthCaption {
+					if model.secretKeyIsTooLong {
+						ValidationMessageLabel(caption)
+					} else {
+						Text(verbatim: caption)
+							.font(.caption)
+							.foregroundStyle(.secondary)
+							.monospacedDigit()
+					}
+				}
+			} footer: {
+				Text(verbatim: ChannelPropertiesStrings.passwordHelp)
+			}
+
+			Section {
+				LabeledContent(ChannelPropertiesStrings.labelLabel) {
+					TextField(ChannelPropertiesStrings.optional, text: $model.label)
+						.labelsHidden()
+						.accessibilityLabel(ChannelPropertiesStrings.labelLabel)
+				}
+			} footer: {
+				Text(verbatim: ChannelPropertiesStrings.labelHelp)
+			}
+
+			Section {
+				Toggle(ChannelPropertiesStrings.joinOnConnect, isOn: $model.config.autoJoin)
+				Toggle(ChannelPropertiesStrings.showNotifications, isOn: $model.config.pushNotifications)
+				Toggle(ChannelPropertiesStrings.showUnreadCount, isOn: $model.config.showTreeBadgeCount)
+				Toggle(
+					ChannelPropertiesStrings.disableGeneralEvents,
+					isOn: $model.config.ignoreGeneralEventMessages
+				)
+				Toggle(ChannelPropertiesStrings.disableHighlights, isOn: $model.config.ignoreHighlights)
+				Toggle(model.inlineMediaOverrideTitle, isOn: $model.inlineMediaOverride)
+			}
 		}
 		.formStyle(.grouped)
 	}
 
 	private var defaultsPane: some View {
 		Form {
-			Text(verbatim: ChannelPropertiesStrings.defaultsHelp)
-			LabeledContent(ChannelPropertiesStrings.topicLabel) {
-				TextField(ChannelPropertiesStrings.optional, text: $model.defaultTopic)
-					.labelsHidden()
-			}
-			LabeledContent(ChannelPropertiesStrings.modesLabel) {
-				TextField(ChannelPropertiesStrings.optional, text: $model.defaultModes)
-					.labelsHidden()
+			Section {
+				LabeledContent(ChannelPropertiesStrings.topicLabel) {
+					TextField(ChannelPropertiesStrings.optional, text: $model.defaultTopic)
+						.labelsHidden()
+						.accessibilityLabel(ChannelPropertiesStrings.topicLabel)
+				}
+				LabeledContent(ChannelPropertiesStrings.modesLabel) {
+					TextField(ChannelPropertiesStrings.optional, text: $model.defaultModes)
+						.labelsHidden()
+						.accessibilityLabel(ChannelPropertiesStrings.modesLabel)
+				}
+			} footer: {
+				Text(verbatim: ChannelPropertiesStrings.defaultsHelp)
 			}
 		}
 		.formStyle(.grouped)

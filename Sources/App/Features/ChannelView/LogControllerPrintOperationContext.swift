@@ -12,14 +12,14 @@ import Foundation
  rendered outcome the caller asked to hear about. */
 public struct LogControllerPrintOperationContext {
 	public private(set) weak var client: IRCClient?
-	public private(set) weak var channel: IRCChannel?
+	public private(set) weak var channel: Channel?
 	public let isHighlight: Bool
 	public let logLine: LogLine
 	public let lineNumber: String
 	var isDuplicate = false
 	var isDisplayed = true
 
-	init(client: IRCClient, channel: IRCChannel?, highlight: Bool, logLine: LogLine, lineNumber: String) {
+	init(client: IRCClient, channel: Channel?, highlight: Bool, logLine: LogLine, lineNumber: String) {
 		self.client = client
 		self.channel = channel
 		isHighlight = highlight

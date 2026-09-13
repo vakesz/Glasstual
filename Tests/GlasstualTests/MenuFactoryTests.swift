@@ -73,12 +73,16 @@ struct MenuFactoryTests {
 
 		let unlocalized = menus
 			.flatMap(factoryItems(of:))
-			/* One item is deliberately untitled: the placeholder that gives
-			 Navigation ▸ Channel List a submenu to hand to
-			 `mainMenuNavigationChannelListMenu`, which the tree replaces
-			 wholesale before anyone reads it. An empty title is not an
-			 untranslated one. */
+			/* Two items are deliberately untitled: the placeholders that give
+			 Navigation ▸ Channel List and Format submenus to hand to the tree
+			 and to the window's formatter, both of which replace them wholesale
+			 before anyone reads them. An empty title is not an untranslated
+			 one. */
 			.filter { $0.title.isEmpty == false }
+			/* The transcript's Search item names whichever service the system
+			 is set to use, dropped into `search-provider-menu-title` in
+			 BasicLanguage rather than held whole in this catalog. */
+			.filter { $0.command != .webSearch }
 			.map(\.title)
 			.filter { values.contains($0) == false }
 
@@ -95,11 +99,11 @@ struct MenuFactoryTests {
 		let mainMenu = try #require(NSApp.mainMenu)
 
 		let search = try #require(mainMenu.item(for: .searchChannels))
-		#expect(search.action == #selector(MenuController.focusSearchField(_:)))
-		#expect(search.target === controller)
+		#expect(search.action == #selector(MenuActionCoordinator.focusSearchField(_:)))
+		#expect(search.target === controller.actionCoordinator)
 
 		let spotlight = try #require(mainMenu.item(for: .channelSpotlight))
-		#expect(spotlight.action == #selector(MenuController.showChannelSpotlightWindow(_:)))
+		#expect(spotlight.action == #selector(MenuActionCoordinator.showChannelSpotlightWindow(_:)))
 		#expect(spotlight.title == MenuStrings.Navigation.channelSpotlight)
 	}
 
@@ -119,12 +123,15 @@ struct MenuFactoryTests {
 			#expect(window.item(for: command) == nil)
 		}
 
+		/* Control-Command-S shows and hides the sidebar in Finder, Mail, Notes
+		 and Freeform; Option-Command-I is the system's inspector shortcut, and
+		 the member list is one. */
 		let serverList = try #require(view.item(for: .toggleServerList))
 		#expect(serverList.keyEquivalent == "s")
-		#expect(serverList.keyEquivalentModifierMask == [.command, .option])
+		#expect(serverList.keyEquivalentModifierMask == [.command, .control])
 
 		let memberList = try #require(view.item(for: .toggleMemberList))
-		#expect(memberList.keyEquivalent == "u")
+		#expect(memberList.keyEquivalent == "i")
 		#expect(memberList.keyEquivalentModifierMask == [.command, .option])
 	}
 
@@ -166,8 +173,10 @@ struct MenuFactoryTests {
 			#expect(item.target == nil, "\(title) must be answered by the first responder")
 		}
 
+		/* Shift is in the modifier mask and never in the character: spelling it
+		 three different ways across the graph is what made it unreadable. */
 		let paste = try #require(items.first { $0.title == MenuStrings.Edit.pasteAndMatchStyle })
-		#expect(paste.keyEquivalent == "V")
+		#expect(paste.keyEquivalent == "v")
 		#expect(paste.keyEquivalentModifierMask == [.command, .option, .shift])
 	}
 
@@ -219,13 +228,124 @@ struct MenuFactoryTests {
 			MenuStrings.Channel.modifyTopic,
 			MenuStrings.Channel.bans,
 			MenuStrings.Server.changeNickname,
-			MenuStrings.Navigation.searchChannels,
+			MenuStrings.Navigation.channelSpotlight,
+			MenuStrings.Member.addIgnore,
+			MenuStrings.Member.setVirtualHost,
 		] {
 			#expect(title.hasSuffix("…"), "\(title) opens a sheet, so it needs an ellipsis")
 		}
 
+		/* A confirmation alert is not more input being asked for, and the
+		 sidebar filter is a field that is already on screen. */
 		#expect(MenuStrings.Server.deleteServer.hasSuffix("…") == false)
-		#expect(MenuStrings.Navigation.searchChannels.hasPrefix("Search Channels"))
+		#expect(MenuStrings.Navigation.searchChannels.hasSuffix("…") == false)
+	}
+
+	/** Formatting is a menu of its own, with the shortcuts every macOS text
+	 editor uses. The commands used to exist only in the input field's context
+	 menu, with no key equivalent and no menu-bar home. */
+	@Test("The Format menu carries the three standard text shortcuts")
+	func formatMenuCarriesTheStandardShortcuts() throws {
+		let controller = MenuController()
+		let mainMenu = try #require(NSApp.mainMenu)
+		let format = try #require(mainMenu.item(for: .formatMenu))
+		#expect(format.title == MenuStrings.MenuBar.format)
+
+		/* The window's formatter fills the submenu in; before that it is the
+		 placeholder the factory leaves behind. */
+		let formatter = TextViewIRCFormattingMenu()
+		let menu = try #require(formatter.makeMenu())
+		controller.mainMenuFormatMenuItem?.submenu = menu
+
+		let expected: [(TextFormatterCommand, String)] = [(.bold, "b"), (.italics, "i"), (.underline, "u")]
+		for (command, key) in expected {
+			let item = try #require(menu.items.first { $0.tag == command.rawValue })
+			#expect(item.keyEquivalent == key)
+			#expect(item.keyEquivalentModifierMask == .command)
+		}
+
+		/* The same menu, so the input field's context menu offers the same
+		 commands with the same shortcuts. */
+		let contextMenu = try #require(formatter.formatterMenu.submenu)
+		#expect(contextMenu.items.map(\.tag) == menu.items.map(\.tag))
+	}
+
+	/** The Window menu names windows; a digit that means "the fourth channel in
+	 whatever order the sidebar happens to be in" does not. */
+	@Test("The Window menu owns the Command-digit shortcuts")
+	func windowMenuOwnsTheDigitShortcuts() throws {
+		_ = MenuController()
+		let mainMenu = try #require(NSApp.mainMenu)
+
+		let expected: [(MenuCommand, String)] = [
+			(.mainWindow, "1"), (.addressBook, "2"), (.viewLogs, "3"), (.highlightList, "4"),
+		]
+		for (command, key) in expected {
+			let item = try #require(mainMenu.item(for: command))
+			#expect(item.keyEquivalent == key)
+			#expect(item.keyEquivalentModifierMask == .command)
+		}
+
+		let transfers = try #require(mainMenu.item(for: .fileTransfers))
+		#expect(transfers.keyEquivalent == "l")
+		#expect(transfers.keyEquivalentModifierMask == [.command, .option])
+
+		/* "Ignore List" opened the address book, which is where ignores live:
+		 one command with two names and two shortcuts. */
+		#expect(MenuCommand.allCases.contains { $0 == .addressBook })
+		#expect(mainMenu.items.contains { $0.title == "Ignore List" } == false)
+	}
+
+	/// Importing and exporting are file commands, not help topics.
+	@Test("Settings import and export live in the File menu")
+	func settingsTransferLivesInTheFileMenu() throws {
+		_ = MenuController()
+		let mainMenu = try #require(NSApp.mainMenu)
+		let file = try #require(mainMenu.item(for: .fileMenu)?.submenu)
+		let help = try #require(mainMenu.item(for: .helpMenu)?.submenu)
+
+		#expect(file.item(for: .importSettings) != nil)
+		#expect(file.item(for: .exportSettings) != nil)
+		#expect(help.item(for: .importSettings) == nil)
+		#expect(help.item(for: .exportSettings) == nil)
+		#expect(MenuStrings.File.importSettings == "Import Settings…")
+		#expect(MenuStrings.File.exportSettings == "Export Settings…")
+	}
+
+	/** Muting is an application-wide mode, and a mode is ticked rather than
+	 renamed. It used to sit in the File menu under two different names. */
+	@Test("The mute toggles sit in the application menu")
+	func muteTogglesLiveInTheApplicationMenu() throws {
+		_ = MenuController()
+		let mainMenu = try #require(NSApp.mainMenu)
+		let application = try #require(mainMenu.item(for: .applicationMenu)?.submenu)
+		let file = try #require(mainMenu.item(for: .fileMenu)?.submenu)
+
+		#expect(application.item(for: .muteNotifications) != nil)
+		#expect(application.item(for: .muteNotificationSounds) != nil)
+		#expect(file.item(for: .muteNotifications) == nil)
+		#expect(MenuStrings.Notifications.muteNotifications == "Mute Notifications")
+	}
+
+	/// A menu whose shape follows the selection cannot be learned, so the
+	/// Channel and Query menus are installed once and stay installed.
+	@Test("The Channel and Query menus are always in the menu bar")
+	func channelAndQueryMenusStayInstalled() throws {
+		let controller = MenuController()
+		let mainMenu = try #require(NSApp.mainMenu)
+
+		#expect(mainMenu.item(for: .channelMenu)?.submenu === controller.mainMenuChannelMenu)
+		#expect(mainMenu.item(for: .queryMenu)?.submenu === controller.mainMenuQueryMenu)
+		#expect(mainMenu.item(for: .channelMenu)?.isHidden == false)
+		#expect(mainMenu.item(for: .queryMenu)?.isHidden == false)
+	}
+
+	/// AppKit would append its own list of open windows to a menu that already
+	/// names every window this application opens.
+	@Test("The Window menu is not handed to AppKit to fill in")
+	func windowMenuIsNotDelegatedToAppKit() {
+		_ = MenuController()
+		#expect(NSApp.windowsMenu == nil)
 	}
 
 	private func allItems(of menu: NSMenu) -> [NSMenuItem] {

@@ -11,14 +11,8 @@ import Testing
 @MainActor
 private final class HighlightEntryDelegateSpy: NSObject, HighlightEntrySheetDelegate {
 	private(set) var savedConfiguration: HighlightMatchCondition?
-	private(set) var didClose = false
-
 	func highlightEntrySheet(_: HighlightEntrySheet, didSave configuration: HighlightMatchCondition) {
 		savedConfiguration = configuration
-	}
-
-	func highlightEntrySheetDidClose(_: HighlightEntrySheet) {
-		didClose = true
 	}
 }
 
@@ -55,9 +49,9 @@ struct HighlightEntryFeatureTests {
 		#expect(model.keyword == " original ")
 		#expect(model.channelSelection == .channel(id: "channel-a"))
 
-		model.setBehavior(.include)
-		model.updateKeyword(" replacement ")
-		model.setChannelSelection(.channel(id: "channel-b"))
+		model.behavior = .include
+		model.keyword = " replacement "
+		model.channelSelection = .channel(id: "channel-b")
 		let submitted = model.configurationForSubmission()
 
 		#expect(source.matchIsExcluded)
@@ -79,40 +73,40 @@ struct HighlightEntryFeatureTests {
 
 		#expect(model.channelSelection == .all)
 
-		model.setChannelSelection(.channel(id: "unknown-channel"))
+		model.channelSelection = .channel(id: "unknown-channel")
 		#expect(model.channelSelection == .all)
 		#expect(model.configurationForSubmission().matchChannelId == nil)
 	}
 
-	@Test("The keyword is trimmed, and its error only shows once submission is attempted")
+	/** A new rule opens on an empty keyword, which is not a keyword — but the
+	 field had a red border around it before anything had been typed into it.
+	 The refusal waits for a save to be refused, and then follows the field. */
+	@Test("The keyword is trimmed, and its message only shows once a save is refused")
 	func keywordValidationTrimsInputAndPresentsOnlyOnSubmission() {
 		let model = HighlightEntryModel(configuration: nil, channels: [])
 
 		#expect(model.validationError == ApplicationStrings.requiredField)
-		#expect(model.isValidationMessagePresented == false)
+		#expect(model.validationMessage == nil)
 		#expect(model.validateForSubmission() == false)
-		#expect(model.isValidationMessagePresented)
+		#expect(model.validationMessage == ApplicationStrings.requiredField)
 
-		model.updateKeyword("  ping me  ")
+		model.keyword = "  ping me  "
 		#expect(model.validationError == nil)
-		#expect(model.isValidationMessagePresented == false)
+		#expect(model.validationMessage == nil)
 		#expect(model.validateForSubmission())
 		#expect(model.normalizedKeyword == "ping me")
 		#expect(model.configurationForSubmission().matchKeyword == "ping me")
 	}
 
 	@Test("The sheet copy comes from the namespaced, deduplicated catalog entries")
-	func contentUsesNamespacedAndDeduplicatedLocalizedCopy() {
-		let content = HighlightEntryContent.current
-
-		#expect(content.title(for: .include) == "Match")
-		#expect(content.title(for: .exclude) == "Exclude")
-		#expect(content.allChannelsTitle == "All Channels")
-		#expect(content.keywordConnector == "the keyword")
-		#expect(content.channelConnector == "in the channel")
-		#expect(content.saveButtonTitle == "Save")
-		#expect(content.cancelButtonTitle == "Cancel")
-		#expect(content.windowTitle == "Highlight Rule")
+	func sheetUsesNamespacedAndDeduplicatedLocalizedCopy() {
+		#expect(ServerPropertiesStrings.Highlight.matchType(isExcluded: false) == "Match")
+		#expect(ServerPropertiesStrings.Highlight.matchType(isExcluded: true) == "Exclude")
+		#expect(ServerPropertiesStrings.Highlight.allChannels == "All Channels")
+		#expect(HighlightEntryStrings.windowTitle == "Highlight Rule")
+		#expect(HighlightEntryStrings.matchTypeLabel == "Match Type")
+		#expect(HighlightEntryStrings.keywordLabel == "Keyword")
+		#expect(HighlightEntryStrings.channelLabel == "Channel")
 	}
 
 	@Test("The sheet session reports through typed delegate callbacks")
@@ -124,17 +118,14 @@ struct HighlightEntryFeatureTests {
 
 		adapter.delegate = delegate
 
-		adapter.model.setBehavior(.exclude)
-		adapter.model.updateKeyword(" mention ")
-		adapter.model.setChannelSelection(.channel(id: "channel-a"))
-		adapter.ok(nil)
+		adapter.model.behavior = .exclude
+		adapter.model.keyword = " mention "
+		adapter.model.channelSelection = .channel(id: "channel-a")
+		adapter.submit()
 
 		let savedConfiguration = try #require(delegate.savedConfiguration)
 		#expect(savedConfiguration.matchIsExcluded)
 		#expect(savedConfiguration.matchKeyword == "mention")
 		#expect(savedConfiguration.matchChannelId == "channel-a")
-
-		adapter.sheetDidEnd(withReturnCode: 0)
-		#expect(delegate.didClose)
 	}
 }

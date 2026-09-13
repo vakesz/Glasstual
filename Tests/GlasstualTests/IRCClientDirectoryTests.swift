@@ -44,7 +44,7 @@ import Testing
 struct IRCClientDirectoryTests {
 	@Test("A user is found under any casing the server considers the same")
 	func userDirectoryUsesServerCasefolding() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let user = client.findUserOrCreate("Alice")
 
 		#expect(client.findUser("ALICE") == user)
@@ -54,7 +54,7 @@ struct IRCClientDirectoryTests {
 
 	@Test("Adding a draft user stores that very instance")
 	func addingADraftUserStoresThatInstance() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let draftUser = client.draftUser(withNickname: "Alice")
 		let storedUser = client.addAndReturn(draftUser)
 
@@ -66,7 +66,7 @@ struct IRCClientDirectoryTests {
 
 	@Test("Renaming a user rekeys the directory")
 	func renamingRekeysTheDirectory() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let originalUser = client.findUserOrCreate("Alice")
 
 		client.rename(originalUser, to: "Bob")
@@ -78,7 +78,7 @@ struct IRCClientDirectoryTests {
 
 	@Test("Removing a user updates the published list and the count")
 	func removingUserUpdatesSnapshotsAndCount() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let alice = client.findUserOrCreate("Alice")
 		_ = client.findUserOrCreate("Bob")
 
@@ -91,7 +91,7 @@ struct IRCClientDirectoryTests {
 
 	@Test("Removing every user empties the directory")
 	func removeAllUsersClearsDirectory() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		_ = client.findUserOrCreate("Alice")
 		_ = client.findUserOrCreate("Bob")
 
@@ -103,7 +103,7 @@ struct IRCClientDirectoryTests {
 
 	@Test("A channel is found under any casing the server considers the same, and is never duplicated")
 	func channelDirectoryUsesServerCasefoldingAndDoesNotDuplicate() {
-		let client = GLTTestClient()
+		let client = TestClient()
 		let channel = client.findChannelOrCreate("#Chat")
 
 		#expect(channel != nil)
